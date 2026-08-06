@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0D1B38">
+  <title>Path Uren & Facturatie</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <section class="login-screen" id="login-screen" aria-labelledby="login-title">
+    <div class="login-panel">
+      <div class="login-brand">
+        <img src="assets/path-logo.png" alt="Path Consultancy">
+        <span>Uren &amp; Facturatie</span>
+      </div>
+      <span class="section-label">Veilige demo</span>
+      <h1 id="login-title">Hoe wil je de app bekijken?</h1>
+      <p>Kies een rol. In de productieversie logt iedereen in met een eigen beveiligd Google Workspace-account.</p>
+      <div class="demo-account-grid">
+        <div class="demo-employee-picker">
+          <label for="login-admin">Test als beheerder</label>
+          <select id="login-admin" aria-describedby="login-admin-help"></select>
+          <small id="login-admin-help">Kies Gio of Joyce en druk op Enter, of gebruik de knop Beheerder.</small>
+        </div>
+        <div class="demo-employee-picker">
+          <label for="login-employee">Test als medewerker</label>
+          <select id="login-employee" aria-describedby="login-employee-help"></select>
+          <small id="login-employee-help">Kies een actieve medewerker en druk op Enter, of gebruik de knop Medewerker.</small>
+        </div>
+      </div>
+      <div class="login-options">
+        <button class="login-option" data-login-role="admin">
+          <span class="login-avatar" id="login-admin-avatar">GM</span>
+          <span><strong>Beheerder</strong><small id="login-admin-summary">Gio Maatsen · uren controleren, facturen en instellingen</small></span>
+          <span class="login-arrow">→</span>
+        </button>
+        <button class="login-option" data-login-role="employee">
+          <span class="login-avatar employee" id="login-employee-avatar">SV</span>
+          <span><strong>Medewerker</strong><small id="login-employee-summary">Stasjo van Bakel · eigen uren invullen en indienen</small></span>
+          <span class="login-arrow">→</span>
+        </button>
+      </div>
+      <p class="login-note">De standaardgegevens gebruiken veilige voorbeeldadressen. Je mag zelf echte gegevens invoeren; deze demo bewaart ze alleen lokaal en verstuurt niets.</p>
+    </div>
+  </section>
+
+  <div class="app-shell" id="app-shell" hidden>
+    <aside class="sidebar" aria-label="Hoofdnavigatie">
+      <a class="brand" href="#" data-home aria-label="Path Uren & Facturatie">
+        <img src="assets/path-logo.png" alt="Path Consultancy">
+        <span>Uren & Facturatie</span>
+      </a>
+
+      <nav class="nav-list">
+        <button class="nav-item is-active role-admin-only" data-view="dashboard">
+          <span class="nav-marker"></span><span>Dashboard</span>
+        </button>
+        <button class="nav-item role-employee-only" data-view="employee-dashboard" hidden>
+          <span class="nav-marker"></span><span>Dashboard</span>
+        </button>
+        <button class="nav-item" data-view="timesheet">
+          <span class="nav-marker"></span><span>Mijn uren</span>
+        </button>
+        <button class="nav-item role-employee-only" data-view="employee-announcements" hidden>
+          <span class="nav-marker"></span><span>Mededelingen</span>
+        </button>
+        <button class="nav-item role-admin-only" data-view="approvals">
+          <span class="nav-marker"></span><span>Goedkeuringen</span>
+          <span class="nav-count" id="approval-count">2</span>
+        </button>
+        <button class="nav-item role-admin-only" data-view="invoices">
+          <span class="nav-marker"></span><span>Facturen</span>
+        </button>
+        <button class="nav-item role-admin-only" data-view="announcements">
+          <span class="nav-marker"></span><span>Mededelingen</span>
+        </button>
+        <button class="nav-item role-admin-only" data-view="employees">
+          <span class="nav-marker"></span><span>Medewerkers</span>
+        </button>
+        <button class="nav-item role-admin-only" data-view="settings">
+          <span class="nav-marker"></span><span>Instellingen</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="workspace-user">
+          <span class="avatar" id="workspace-avatar">GM</span>
+          <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
+        </div>
+        <button class="switch-role" id="switch-role">Andere rol kiezen</button>
+        <span class="demo-badge">Veilige demo v0.8.6</span>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Path Consultancy</p>
+          <h1 id="page-title">Urenoverzicht</h1>
+        </div>
+        <div class="topbar-actions">
+          <span class="safety-badge">Demo · e-mail uitgeschakeld</span>
+          <div class="period-control" aria-label="Periode kiezen">
+            <button id="period-prev" aria-label="Vorige maand">‹</button>
+            <label class="period-picker-wrap">
+              <span class="period-picker-caption">Maand / jaar</span>
+              <input id="period-picker" type="month" value="2026-07" aria-label="Kies maand en jaar" title="Kies direct een maand en jaar">
+              <strong class="sr-only" id="period-label">Juli 2026</strong>
+            </label>
+            <button id="period-next" aria-label="Volgende maand">›</button>
+          </div>
+          <div class="topbar-popover">
+            <button class="notification-button" id="notification-button" aria-label="Meldingen" aria-expanded="false" aria-controls="notification-panel"><span class="bell-shape"></span><b id="notification-count" hidden>0</b></button>
+            <section class="popover-panel notification-panel" id="notification-panel" aria-label="Meldingen" hidden>
+              <div class="popover-heading"><div><small>Meldingen</small><strong id="notification-title">Geen nieuwe meldingen</strong></div><button class="icon-button" id="mark-notifications-read" aria-label="Alles als gelezen markeren">✓</button></div>
+              <div class="notification-list" id="notification-list"></div>
+              <div class="notification-test-actions">
+                <small>Testmeldingen</small>
+                <div id="notification-test-buttons"></div>
+              </div>
+            </section>
+          </div>
+          <div class="topbar-popover">
+            <button class="profile-menu-button" id="profile-menu-button" aria-label="Profielmenu" aria-expanded="false" aria-controls="profile-menu"><span class="topbar-avatar" id="topbar-avatar">GM</span></button>
+            <section class="popover-panel profile-menu" id="profile-menu" aria-label="Profielmenu" hidden>
+              <div class="profile-menu-person"><span class="profile-menu-avatar" id="profile-menu-avatar">GM</span><span><strong id="profile-menu-name">Gio Maatsen</strong><small id="profile-menu-role">Beheerder</small></span></div>
+              <button data-profile-action="profile">Mijn profiel</button>
+              <button data-profile-action="preferences">Voorkeuren</button>
+              <button data-profile-action="help">Hulp &amp; contact</button>
+              <button data-profile-action="switch">Andere demo-rol kiezen</button>
+              <button class="danger-menu-item" data-profile-action="logout">Uitloggen</button>
+            </section>
+          </div>
+        </div>
+      </header>
+
+      <section class="view role-employee-only" id="view-employee-dashboard" data-title="Mijn overzicht">
+        <div class="employee-hero">
+          <div>
+            <span class="section-label">Mijn uren</span>
+            <h2 id="employee-dashboard-greeting">Goedemiddag</h2>
+            <p id="employee-dashboard-next">Bekijk wat je voor deze maand nog moet doen.</p>
+            <button class="button button-primary" id="employee-dashboard-action" data-go="timesheet">Uren verder invullen</button>
+          </div>
+          <div class="employee-month-progress">
+            <small id="employee-dashboard-period">Juli 2026</small>
+            <strong id="employee-dashboard-hours">153,0 uur</strong>
+            <span id="employee-dashboard-contract">van 153,0 contracturen</span>
+            <div class="linear-progress"><span id="employee-dashboard-progress" style="width:100%"></span></div>
+          </div>
+        </div>
+        <section class="correction-banner dashboard-correction" id="employee-dashboard-correction" hidden>
+          <span class="correction-banner-icon">!</span>
+          <div><strong>Correctie gevraagd</strong><p id="employee-dashboard-correction-message"></p><small id="employee-dashboard-correction-meta"></small></div>
+          <button class="button button-primary" data-go="timesheet">Correctie openen</button>
+        </section>
+        <div class="metric-grid employee-metrics">
+          <article class="metric-card"><span class="metric-label">Status</span><strong class="compact-metric" id="employee-dashboard-status">Ingediend</strong><span class="metric-note" id="employee-dashboard-status-note">Wacht op controle</span></article>
+          <article class="metric-card"><span class="metric-label">Declarabel</span><strong id="employee-dashboard-billable">153,0</strong><span class="metric-note">uur in deze maand</span></article>
+          <article class="metric-card"><span class="metric-label">Verlof en ziekte</span><strong id="employee-dashboard-absence">0,0</strong><span class="metric-note">uur verantwoord</span></article>
+          <article class="metric-card"><span class="metric-label">Verschil</span><strong id="employee-dashboard-difference">0,0</strong><span class="metric-note">blokkeert indienen niet</span></article>
+        </div>
+        <section class="panel">
+          <div class="panel-heading"><div><span class="section-label">Historie</span><h3>Mijn eerdere maanden</h3></div><button class="text-button" data-go="timesheet">Naar Mijn uren</button></div>
+          <div class="employee-history" id="employee-history"></div>
+        </section>
+      </section>
+
+      <section class="view is-active" id="view-dashboard" data-title="Urenoverzicht">
+        <div class="hero-card">
+          <div class="hero-copy">
+            <span class="section-label">Maandafsluiting</span>
+            <h2 id="admin-dashboard-greeting">Goedemiddag, Gio</h2>
+            <p id="admin-attention-note">Dit vraagt nu je aandacht: bekijk open urencontroles en rond daarna de maand af.</p>
+            <div class="hero-actions">
+              <button class="button button-primary" data-go="approvals">Open goedkeuringen</button>
+              <button class="button button-ghost" id="open-payroll">Open EasySalary-uren</button>
+            </div>
+          </div>
+          <div class="close-card" aria-label="Voortgang maandafsluiting">
+            <div class="progress-ring" id="close-progress-ring" style="--progress:75"><span id="close-progress-value">75%</span></div>
+            <div><strong id="close-progress-title">3 van 4 compleet</strong><small id="close-progress-note">Nog twee acties voor afsluiting</small></div>
+          </div>
+        </div>
+
+        <div class="metric-grid">
+          <article class="metric-card">
+            <span class="metric-label">Uren ingediend</span>
+            <strong id="metric-submitted">4 <small>/ 4</small></strong>
+            <span class="metric-note positive" id="metric-submitted-note">Iedereen op tijd</span>
+            <button class="metric-link" data-scroll-target="dashboard-team-title">Bekijk teamstatus</button>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label">Goedgekeurd</span>
+            <strong id="metric-approved">2 <small>/ 4</small></strong>
+            <span class="metric-note" id="metric-approved-note">2 wachten op controle</span>
+            <button class="metric-link" id="metric-approved-action" data-go="approvals">Open controles</button>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label">Facturen klaar</span>
+            <strong id="metric-invoice-total">€ 25.272</strong>
+            <span class="metric-note">Exclusief btw</span>
+            <button class="metric-link" data-go="invoices">Open facturen</button>
+          </article>
+          <article class="metric-card attention">
+            <span class="metric-label">Acties nodig</span>
+            <strong id="metric-actions">2</strong>
+            <span class="metric-note">Controleer voor verzending</span>
+            <button class="metric-link" data-scroll-target="dashboard-action-list">Bekijk acties</button>
+          </article>
+        </div>
+
+        <section class="panel attention-list-panel">
+          <div class="panel-heading"><div><span class="section-label">Acties</span><h3>Wat moet ik nu doen?</h3></div><span class="updated-label">Alle maanden meegenomen</span></div>
+          <div class="dashboard-action-list" id="dashboard-action-list"></div>
+        </section>
+
+        <section class="panel workflow-panel">
+          <div class="panel-heading">
+            <div><span class="section-label">Proces</span><h3 id="workflow-period-title">Maandafsluiting juli 2026</h3></div>
+            <span class="updated-label">Laatst bijgewerkt vandaag, 14:12</span>
+          </div>
+          <div class="workflow-track">
+            <div class="workflow-step is-done" id="workflow-hours"><span>1</span><div><strong>Uren</strong><small id="workflow-hours-note">4 ingediend</small></div></div>
+            <div class="workflow-line is-done"></div>
+            <div class="workflow-step is-current" id="workflow-approval"><span>2</span><div><strong>Controle</strong><small id="workflow-approval-note">2 open</small></div></div>
+            <div class="workflow-line"></div>
+            <div class="workflow-step" id="workflow-invoices"><span>3</span><div><strong>Facturen</strong><small id="workflow-invoices-note">2 facturen klaar</small></div></div>
+            <div class="workflow-line"></div>
+            <div class="workflow-step" id="workflow-send"><span>4</span><div><strong>Verzendtest</strong><small id="workflow-send-note">Nog niet getest</small></div></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div><span class="section-label">Team</span><h3 id="dashboard-team-title">Overzicht per medewerker · Juli 2026</h3></div>
+            <button class="text-button" data-go="employees">Alle medewerkers</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Medewerker</th><th>Opdracht</th><th>Uren</th><th>Bedrag</th><th>Status</th><th></th></tr></thead>
+              <tbody id="dashboard-employee-rows"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section class="view" id="view-timesheet" data-title="Mijn uren">
+        <div class="view-heading">
+          <div><span class="section-label">Urenregistratie</span><h2 id="timesheet-period-title">Juli 2026</h2><p>Vul alleen declarabele klanturen in. Iedere maand wordt apart lokaal bewaard.</p></div>
+          <span class="status-pill status-concept" id="timesheet-status">Nog invullen</span>
+        </div>
+
+        <section class="correction-banner" id="timesheet-correction-banner" hidden>
+          <span class="correction-banner-icon">!</span>
+          <div><strong>Deze uren zijn teruggestuurd voor correctie</strong><p id="timesheet-correction-message"></p><small id="timesheet-correction-meta"></small></div>
+        </section>
+
+        <div class="timesheet-layout">
+          <section class="panel timesheet-panel">
+            <div class="assignment-bar">
+              <div><small>Opdracht</small><strong id="timesheet-assignment">IND · Test Engineer</strong></div>
+              <div><small>Medewerker</small><strong id="timesheet-employee">Stasjo van Bakel</strong></div>
+              <div><small>Projectcode</small><strong id="timesheet-project">IND-TST-2026</strong></div>
+            </div>
+            <div class="table-wrap">
+              <table class="hours-table">
+                <thead><tr><th>Week</th><th>Ma</th><th>Di</th><th>Wo</th><th>Do</th><th>Vr</th><th>Totaal</th></tr></thead>
+                <tbody id="hours-grid"></tbody>
+                <tfoot><tr><th colspan="6">Totaal declarabel</th><th id="hours-total">0,0</th></tr></tfoot>
+              </table>
+            </div>
+            <div class="timesheet-actions">
+              <p><strong id="hours-target-message">Declarabele uren worden met contracturen vergeleken.</strong><small id="hours-target-help">Dit is alleen een controlebericht en blokkeert indienen nooit.</small></p>
+              <button class="button button-primary" id="submit-timesheet">Uren indienen</button>
+            </div>
+          </section>
+
+          <aside class="panel summary-card">
+            <span class="section-label">Samenvatting</span>
+            <h3>Deze maand</h3>
+            <dl>
+              <div><dt>Declarabel</dt><dd id="summary-billable">0,0 uur</dd></div>
+              <div><dt><label for="summary-leave">Verlof</label></dt><dd><input class="summary-hours-input" id="summary-leave" type="number" min="0" step="0.5" value="0" aria-label="Verlofuren"></dd></div>
+              <div><dt><label for="summary-sick">Ziekte</label></dt><dd><input class="summary-hours-input" id="summary-sick" type="number" min="0" step="0.5" value="0" aria-label="Ziekte-uren"></dd></div>
+              <div><dt>Contracturen</dt><dd id="summary-contract">144,0 uur</dd></div>
+            </dl>
+            <div class="summary-note"><strong>Waarom gescheiden?</strong><p>EasySalary krijgt alleen de uren voor de salarisverwerking, geen factuurgegevens. De definitieve exportindeling bevestigen we voor productie.</p></div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="view" id="view-approvals" data-title="Goedkeuringen">
+        <div class="view-heading">
+          <div><span class="section-label">Controle</span><h2 id="approval-period-title">Alle openstaande uren</h2><p id="approval-scope-note">Een totaaloverzicht over alle maanden. Iedere open regel toont zelf bij welke periode hij hoort.</p></div>
+          <div class="heading-actions approval-heading-actions">
+            <div class="segmented-control" role="group" aria-label="Goedkeuringen filteren">
+              <button class="is-active" data-approval-scope="all">Alle openstaande</button>
+              <button data-approval-scope="month" id="approval-month-filter">Juli 2026</button>
+            </div>
+            <button class="button button-ghost" id="approve-all">Alles goedkeuren</button>
+          </div>
+        </div>
+        <div class="approval-list" id="approval-list"></div>
+        <div class="empty-state" id="approval-empty" hidden>
+          <span class="empty-check">✓</span><h3 id="approval-empty-title">Alles is gecontroleerd</h3><p id="approval-empty-text">Er staan in geen enkele maand nog uren open.</p>
+        </div>
+      </section>
+
+      <section class="view" id="view-invoices" data-title="Facturen">
+        <div class="view-heading">
+          <div><span class="section-label">Facturatie</span><h2 id="invoice-period-title">Facturen juli 2026</h2><p>Je ziet direct wat nog op urencontrole wacht, welke factuur klaar is en welke verzendtest al is gedaan.</p></div>
+          <div class="heading-actions"><button class="button button-ghost" id="open-payroll-from-invoices">Bekijk EasySalary-route</button><button class="button button-primary" id="test-month-delivery">Maandverzending klaarzetten</button></div>
+        </div>
+        <div class="invoice-status-guide" aria-label="Uitleg factuurstatussen">
+          <div><span>1</span><p><strong>Nog niet klaar</strong><small>Wacht op de medewerker of keur ingediende uren goed.</small></p></div>
+          <div><span>2</span><p><strong>Factuur klaar</strong><small>Open het mailvoorbeeld en controleer factuur en bijlagen.</small></p></div>
+          <div><span>3</span><p><strong>Test gedaan</strong><small>De verzendtest is afgerond; er is niets verstuurd.</small></p></div>
+        </div>
+        <section class="panel">
+          <div class="invoice-toolbar">
+            <div class="segmented-control" role="group" aria-label="Factuurfilter">
+              <button class="is-active" data-invoice-filter="all">Alle</button>
+              <button data-invoice-filter="concept">Nog niet klaar</button>
+              <button data-invoice-filter="ready">Factuur klaar</button>
+              <button data-invoice-filter="simulated">Test gedaan</button>
+            </div>
+            <button class="text-button" id="download-invoice-list">Download overzicht</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table invoice-table">
+              <thead><tr><th>Factuur</th><th>Consultant</th><th>Broker</th><th>Bedrag</th><th>Status</th><th>Actie</th></tr></thead>
+              <tbody id="invoice-rows"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section class="view" id="view-payroll" data-title="EasySalary">
+        <div class="view-heading">
+          <div><span class="section-label">Salarisuren</span><h2 id="payroll-period-title">EasySalary-uren · Juli 2026</h2><p>EasySalary loopt mee in dezelfde verzendactie, maar krijgt een eigen bericht per medewerker. Standaard staat de factuurbijlage uit. Er is geen aparte EasySalary-bulkactie meer.</p></div>
+          <div class="heading-actions"><button class="button button-ghost" id="back-to-invoices">Terug naar Facturen</button></div>
+        </div>
+        <div class="mail-route-guide" aria-label="Drie gescheiden verzendroutes">
+          <article><span>1</span><div><strong>Broker</strong><small>Factuur; daadwerkelijke uren in de tekst; geen urenstaat</small></div></article>
+          <article><span>2</span><div><strong>Boekhouder</strong><small>Factuur; daadwerkelijke uren in de tekst; geen BCC</small></div></article>
+          <article class="is-payroll"><span>3</span><div><strong>EasySalary</strong><small>Dezelfde ureninformatie; standaard geen bijlage</small></div></article>
+        </div>
+        <section class="panel">
+          <div class="panel-heading"><div><span class="section-label">Ontvanger in deze demo</span><h3 id="payroll-recipient">salaris@example.invalid</h3></div><span class="safety-badge">Geen echte verzending</span></div>
+          <div class="table-wrap">
+            <table class="data-table payroll-table">
+              <thead><tr><th>Medewerker</th><th>Periode</th><th>Uren</th><th>Inhoud</th><th>Status</th><th></th></tr></thead>
+              <tbody id="payroll-rows"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section class="view" id="view-announcements" data-title="Mededelingen">
+        <div class="view-heading">
+          <div><span class="section-label">Teamcommunicatie</span><h2>Mededelingen aan medewerkers</h2><p>Maak een concept of plaats een bericht voor iedereen, één klantgroep of zelf gekozen medewerkers. Een fout bericht kan worden gewijzigd of met behoud van historie worden ingetrokken.</p></div>
+          <button class="button button-primary" id="add-announcement">Nieuwe mededeling</button>
+        </div>
+        <div class="mail-route-guide announcement-route-guide" aria-label="Werking mededelingen">
+          <article><span>1</span><div><strong>In de app</strong><small>Altijd zichtbaar voor iedere gekozen ontvanger</small></div></article>
+          <article><span>2</span><div><strong>E-mail optioneel</strong><small>Alleen afzonderlijk en alleen als de medewerker dit aan heeft</small></div></article>
+          <article><span>3</span><div><strong>Interne historie</strong><small>Beheerders houden versies controleerbaar; medewerkers zien alleen de nieuwste</small></div></article>
+        </div>
+        <section class="panel">
+          <div class="panel-heading"><div><span class="section-label">Concepten & verzendhistorie</span><h3>Mededelingen</h3></div><small>Demo: e-mail wordt uitsluitend gesimuleerd</small></div>
+          <div class="announcement-list" id="announcement-list"></div>
+        </section>
+      </section>
+
+      <section class="view" id="view-employee-announcements" data-title="Mijn mededelingen">
+        <div class="view-heading">
+          <div><span class="section-label">Berichtenarchief</span><h2>Mijn mededelingen</h2><p>Bekijk jouw actuele mededelingen, ook nadat je ze via de bel als gelezen hebt gemarkeerd. Na een wijziging zie je alleen de nieuwste tekst.</p></div>
+        </div>
+        <div class="segmented-control announcement-archive-filter" role="group" aria-label="Mededelingen filteren">
+          <button class="is-active" data-announcement-archive-filter="all">Alles</button>
+          <button data-announcement-archive-filter="unread">Ongelezen</button>
+          <button data-announcement-archive-filter="withdrawn">Ingetrokken</button>
+        </div>
+        <section class="panel">
+          <div class="panel-heading"><div><span class="section-label">Persoonlijke historie</span><h3>Ontvangen mededelingen</h3></div><small>Alleen zichtbaar voor jouw account</small></div>
+          <div class="employee-announcement-list" id="employee-announcement-list"></div>
+        </section>
+      </section>
+
+      <section class="view" id="view-employees" data-title="Medewerkers">
+        <div class="view-heading">
+          <div><span class="section-label">Team</span><h2>Medewerkers & opdrachten</h2><p>De getoonde statussen horen bij <strong id="employee-period-label">juli 2026</strong>. Tarief- en routeringsgegevens gelden voor alle maanden.</p></div>
+          <div class="heading-actions"><button class="button button-ghost" id="add-admin">Beheerder toevoegen</button><button class="button button-primary" id="add-employee">Medewerker toevoegen</button></div>
+        </div>
+        <div class="segmented-control employee-scope-filter" role="group" aria-label="Medewerkers filteren">
+          <button class="is-active" data-employee-scope="active">Actief</button>
+          <button data-employee-scope="inactive">Inactief</button>
+          <button data-employee-scope="all">Alle</button>
+        </div>
+        <div class="employee-grid" id="employee-grid"></div>
+        <section class="panel administrators-panel">
+          <div class="panel-heading"><div><span class="section-label">Toegang</span><h3>Beheerders</h3></div><small>Minimaal één beheerder blijft altijd actief</small></div>
+          <div class="administrator-list" id="administrator-list"></div>
+        </section>
+      </section>
+
+      <section class="view" id="view-settings" data-title="Instellingen">
+        <div class="view-heading">
+          <div><span class="section-label">Beheer</span><h2>Bedrijf & verzending</h2><p>Je mag zelf ieder geldig e-mailadres invoeren. De demoversie bewaart alles alleen lokaal en kan geen echte e-mail versturen. Druk op Enter om een kort invoerveld op te slaan.</p></div>
+          <div class="heading-actions"><button class="button button-ghost" id="reset-demo">Demo herstellen</button><button class="button button-primary" id="save-settings">Wijzigingen opslaan</button></div>
+        </div>
+        <div class="settings-grid">
+          <section class="panel settings-card">
+            <h3>Factuurgegevens uit juli</h3>
+            <div class="form-grid">
+              <label>Naam op PDF<input id="setting-company-name"></label>
+              <label>KvK-nummer<input id="setting-kvk"></label>
+              <label>BTW-nummer<input id="setting-vat"></label>
+              <label>IBAN<input id="setting-iban"></label>
+              <label>Adres<input id="setting-address"></label>
+              <label>Postcode, plaats<input id="setting-postal-city"></label>
+              <label>GSM<input id="setting-phone"></label>
+              <label>E-mail op factuur<input id="setting-invoice-email" type="email"></label>
+              <label>Betalingstermijn<select id="setting-payment-term"><option value="30">30 dagen</option><option value="14">14 dagen</option></select></label>
+            </div>
+            <p class="settings-warning">Overgenomen uit de vier aangeleverde juli-facturen. QSI Consultancy is de facturerende naam; Path Consultancy blijft de merknaam van de app.</p>
+          </section>
+          <section class="panel settings-card">
+            <div class="email-template-heading"><h3>Mailroutering - veilig</h3><span class="status-pill status-warning">Niet verzendbaar</span></div>
+            <div class="form-grid">
+              <label>Afzender<input id="setting-sender" type="email"></label>
+              <label>Verzendmodus<select id="setting-send-mode" disabled><option>Alleen verzending testen</option></select></label>
+            </div>
+            <div class="recipient-settings-heading"><div><span class="section-label">Vaste ontvangers</span><h4>Boekhouder, EasySalary en extra ontvangers</h4></div><button class="small-button" id="add-mail-recipient" type="button">Ontvanger toevoegen</button></div>
+            <div class="mail-recipient-settings-list" id="mail-recipient-settings-list"></div>
+            <p class="safe-domain-note">Standaard staan hier veilige voorbeeldadressen. Echte adressen zijn toegestaan, maar daadwerkelijke verzending is technisch uitgeschakeld.</p>
+            <button class="text-button" id="connect-gmail">Waarom is Gmail uitgeschakeld?</button>
+          </section>
+          <section class="panel settings-card full-width">
+            <div class="email-template-heading">
+              <div><span class="section-label">Per medewerker</span><h3>Brokeradressen en voorbeeldmailteksten</h3></div>
+              <span class="status-pill status-warning">Proces samen of apart nog bevestigen</span>
+            </div>
+            <div class="template-list" id="mail-template-list"></div>
+          </section>
+          <section class="panel settings-card full-width">
+            <h3>Veiligheidsregels</h3>
+            <div class="toggle-grid">
+              <label><input id="setting-approval-required" type="checkbox" checked><span></span><p><strong>Goedkeuring verplicht</strong><small>Nooit een verzendtest zonder controle</small></p></label>
+              <label><input id="setting-lock-invoice" type="checkbox" checked><span></span><p><strong>Factuurnummer vastzetten</strong><small>Na de verzendtest niet meer wijzigbaar</small></p></label>
+              <label><input id="setting-audit-log" type="checkbox" checked><span></span><p><strong>Auditlog bijhouden</strong><small>Wie wijzigde of testte wat en wanneer</small></p></label>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <button class="help-launcher" id="help-launcher" aria-label="Hulp openen" aria-expanded="false" aria-controls="help-panel" hidden><span>?</span><strong>Hulp</strong></button>
+  <section class="help-panel" id="help-panel" aria-label="Hulp bij de urenapp" hidden>
+    <header><div><small>Path Hulp</small><strong id="help-greeting">Waarmee kan ik helpen?</strong></div><button class="icon-button" id="help-close" aria-label="Hulp sluiten">×</button></header>
+    <div class="help-messages" id="help-messages" aria-live="polite"></div>
+    <div class="help-suggestions" id="help-suggestions"></div>
+    <form class="help-form" id="help-form">
+      <label class="sr-only" for="help-input">Stel een vraag over de urenapp</label>
+      <input id="help-input" autocomplete="off" placeholder="Stel je vraag over de app…">
+      <button type="submit">Stuur</button>
+    </form>
+  </section>
+
+  <div class="modal-backdrop" id="modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <button class="modal-close" id="modal-close" aria-label="Sluiten">×</button>
+      <span class="section-label" id="modal-label">Controle</span>
+      <h2 id="modal-title">Factuur verzenden?</h2>
+      <p id="modal-message">Deze actie wordt alleen lokaal in de veilige demo uitgevoerd.</p>
+      <div class="modal-summary" id="modal-summary"></div>
+      <div class="modal-actions">
+        <button class="button button-ghost" id="modal-cancel">Annuleren</button>
+        <button class="button button-ghost" id="modal-secondary" hidden>Terugsturen</button>
+        <button class="button button-primary" id="modal-confirm">Bevestigen</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script vite-ignore defer src="assets/jspdf.umd.min.js"></script>
+  <script vite-ignore defer src="assets/invoice-fonts.js"></script>
+  <script vite-ignore defer src="assets/app.js"></script>
+</body>
+</html>
