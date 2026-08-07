@@ -6,8 +6,15 @@ USE path_urenregistratie;
 
 CREATE TABLE companies (
   id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  slug VARCHAR(100) NOT NULL UNIQUE,
   legal_name VARCHAR(160) NOT NULL,
   trade_name VARCHAR(160) NOT NULL,
+  app_name VARCHAR(120) NOT NULL DEFAULT 'Uren & Facturatie',
+  support_name VARCHAR(160) NULL,
+  support_email VARCHAR(190) NULL,
+  brand_primary CHAR(7) NOT NULL DEFAULT '#0d1b38',
+  brand_accent CHAR(7) NOT NULL DEFAULT '#3abd9d',
+  brand_logo_key VARCHAR(255) NULL,
   chamber_of_commerce_number VARCHAR(32) NOT NULL,
   vat_number VARCHAR(32) NULL,
   iban VARCHAR(64) NULL,
@@ -129,6 +136,7 @@ CREATE TABLE mail_recipients (
   id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
   company_id BIGINT UNSIGNED NOT NULL,
   recipient_key VARCHAR(80) NULL,
+  recipient_category VARCHAR(60) NOT NULL DEFAULT 'other',
   display_name VARCHAR(160) NOT NULL,
   email VARCHAR(190) NOT NULL,
   active BOOLEAN NOT NULL DEFAULT TRUE,

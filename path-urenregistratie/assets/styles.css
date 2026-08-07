@@ -431,6 +431,10 @@ select:focus-visible {
 .settings-card.full-width { grid-column: 1/-1; }
 .settings-card h3 { margin-bottom: 20px; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 15px; }
+.organization-settings-grid { align-items: start; }
+.brand-logo-setting { display: grid; gap: 10px; }
+.brand-logo-preview { display: flex; align-items: center; gap: 14px; min-height: 72px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-muted); padding: 12px 14px; }
+.brand-logo-preview img { width: 130px; max-height: 54px; object-fit: contain; object-position: left center; }
 .form-grid label { color: var(--muted); font-size: 10px; font-weight: 700; }
 .form-grid input, .form-grid select { width: 100%; height: 42px; margin-top: 6px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); padding: 0 12px; }
 .form-grid input.is-invalid, .modal-form input.is-invalid, .modal-form textarea.is-invalid { border-color: var(--danger); background: #fff7f7; box-shadow: 0 0 0 3px rgba(163,75,75,.09); }
@@ -637,6 +641,15 @@ select:focus-visible {
 .employee-history-row small { margin-top: 3px; color: var(--muted); font-size: 9px; }
 
 .attention-list-panel { margin-bottom: 18px; }
+.open-periods-panel { margin-bottom: 18px; }
+.open-periods-intro { margin: 0; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; padding: 13px 24px; }
+.open-periods-list { display: grid; }
+.open-period-row { display: grid; grid-template-columns: minmax(150px,.7fr) minmax(260px,1.3fr) auto; gap: 18px; align-items: center; border-top: 1px solid var(--line); padding: 15px 24px; }
+.open-period-row.is-overdue { box-shadow: inset 3px 0 0 var(--warning); }
+.open-period-month strong, .open-period-month small, .open-period-status strong, .open-period-status small { display: block; }
+.open-period-month strong { color: var(--navy); font-family: "Roboto Slab", Georgia, serif; font-size: 15px; }
+.open-period-month small, .open-period-status small { margin-top: 3px; color: var(--muted); font-size: 9px; }
+.open-period-status strong { font-size: 11px; }
 .dashboard-action-list { display: grid; }
 .dashboard-action-item { display: grid; grid-template-columns: auto 1fr auto; gap: 13px; align-items: center; border-top: 1px solid var(--line); padding: 14px 24px; }
 .dashboard-action-icon { display: grid; width: 35px; height: 35px; place-items: center; border-radius: 10px; background: var(--green-light); color: var(--teal); font-size: 12px; font-weight: 900; }
@@ -825,6 +838,9 @@ select:focus-visible {
 .help-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; border-bottom: 1px solid var(--line); background: var(--surface); padding: 11px; }
 .help-form input { min-width: 0; height: 40px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); padding: 0 11px; }
 .help-form button { border: 0; border-radius: 10px; background: var(--mint); color: var(--navy); cursor: pointer; font-size: 10px; font-weight: 900; padding: 0 14px; }
+.help-inline-topics { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.help-inline-topics button { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--navy); cursor: pointer; font-size: 10px; font-weight: 900; padding: 8px 11px; text-align: left; }
+.help-inline-topics button:hover { border-color: var(--mint); background: var(--green-light); }
 
 html[data-theme="dark"] { color-scheme: dark; --ink: #e7eef4; --muted: #9aaab7; --line: #2a3a4a; --surface: #111d2b; --background: #09131f; --green-light: #15352f; --teal: #64d7bd; --mint-dark: #51caae; --warning-bg: #332618; --warning: #efb76f; --shadow: 0 14px 35px rgba(0,0,0,.35); }
 html[data-theme="dark"] .login-screen { background: radial-gradient(circle at 15% 15%, rgba(58,189,157,.17), transparent 28%), #07111d; }
@@ -907,6 +923,8 @@ html[data-theme="dark"] .mail-route-guide article.is-payroll { border-color: #28
   .correction-banner.dashboard-correction .button { grid-column: 1/-1; width: 100%; }
   .dashboard-action-item { grid-template-columns: auto 1fr; }
   .dashboard-action-item .small-button { grid-column: 1/-1; width: 100%; }
+  .open-period-row { grid-template-columns: 1fr; }
+  .open-period-row .small-button { width: 100%; }
   .administrator-row { grid-template-columns: 1fr; }
   .mail-recipient-setting, .mail-route-choice { grid-template-columns: 1fr; }
   .recipient-settings-heading { align-items: flex-start; flex-direction: column; }

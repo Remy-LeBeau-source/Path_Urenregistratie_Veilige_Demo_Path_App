@@ -1,4 +1,4 @@
-# Veilige demo en placeholders - versie 0.8.9
+# Veilige demo en placeholders - versie 0.9.2
 
 Deze versie bevat de aangeleverde medewerkers, klanten, brokers, tarieven en factuurgegevens. Alleen e-mailadressen zijn bewust vervangen door onbestelbare placeholders.
 
@@ -50,7 +50,7 @@ Een nieuw bericht kan eerst als concept worden opgeslagen. Concepten zijn alleen
 
 Iedere medewerker heeft onder **Mededelingen** een eigen archief. Dat toont uitsluitend de actuele berichten waarvoor die medewerker ontvanger was en bevat filters voor alles, ongelezen en ingetrokken berichten. Interne versiehistorie, correctielabels en berichtnummers zijn voor medewerkers verborgen.
 
-De hulpbot geeft vaste uitleg over alle aanwezige functies. Bij een eerste onbekende vraag vraagt de bot om één duidelijkere formulering. Alleen als ook de tweede poging onbekend blijft, maakt hij een vooraf ingevuld Gmail-concept, een link voor Outlook/de standaard mailapp en een kopieerbare mailtekst voor Path Backoffice. Beide formuleringen worden in het concept opgenomen. De gebruiker moet die mail altijd zelf controleren en verzenden. Een lokale mailapp kan vanuit de cloudbrowser niet worden gestart, maar werkt op een eigen apparaat als die als standaard mailapp is ingesteld.
+De hulpbot geeft vaste uitleg over alle aanwezige functies. Korte of onvolledige zoekwoorden, zoals `mede`, geven eerst passende keuzes zoals Mededelingen sturen, Medewerker aanpassen en Medewerker toevoegen. Bij een eerste onbekende vraag vraagt de bot om één duidelijkere formulering. Alleen als ook de tweede poging onbekend blijft, maakt hij een vooraf ingevuld Gmail-concept, een link voor Outlook/de standaard mailapp en een kopieerbare mailtekst voor Path Backoffice. Beide formuleringen worden in het concept opgenomen. De gebruiker moet die mail altijd zelf controleren en verzenden. Een lokale mailapp kan vanuit de cloudbrowser niet worden gestart, maar werkt op een eigen apparaat als die als standaard mailapp is ingesteld.
 
 ## Correcties op uren
 
@@ -59,9 +59,11 @@ Op iedere open urenkaart staat direct **Correctie vragen**. Een beheerder kan in
 ## Vooraf klaargezette demosituaties
 
 - Juni 2026: alle uren goedgekeurd en alle factuurverzendtests afgerond.
-- Juli 2026: twee urencontroles open, één factuur klaar en één factuurverzendtest afgerond.
+- Juli 2026: Marc, Stasjo en Shawn hebben een bevestigde conceptfactuur die direct kan worden bekeken en gedownload; Brians ingediende uren staan klaar om de goedkeuringsroute te demonstreren.
 - Augustus 2026: één concepturenstaat, één correctieverzoek met een concrete voorbeeldtoelichting, één goedgekeurde urenstaat met factuur klaar en één ingediende urenstaat die op controle wacht.
+- Mededelingen: een geplaatst algemeen bericht, een intern bewaarde eerdere versie, de nieuwste medewerkerstekst, een concept en een volledig ingetrokken voorbeeld staan vooraf klaar.
 - **Alle openstaande uren** combineert de controles uit verschillende maanden in één beheerderslijst; het maandfilter toont alleen de gekozen periode.
+- **Openstaande maanden** op het dashboard combineert concepturen, correcties, goedkeuringen en nog te controleren verzendroutes. De oudste maand staat bovenaan en een doorklik selecteert altijd eerst die maand.
 
 Met **Demo herstellen** worden deze uitgangssituaties opnieuw geladen.
 
@@ -69,7 +71,7 @@ Met **Demo herstellen** worden deze uitgangssituaties opnieuw geladen.
 
 - Er worden geen verschillende ontvangers via CC of BCC in één bericht gecombineerd.
 - Per medewerker maakt één actie een afzonderlijk bericht voor de broker en iedere aangevinkte centrale ontvanger.
-- Boekhouder, EasySalary en extra ontvangers worden één keer centraal aangemaakt bij **Instellingen**. Daarna wordt per medewerker aangevinkt wie de mail krijgt.
+- Boekhouder, salarisadministratie en extra ontvangers worden centraal bewaard. Een eigen naam of kopje, zoals **Salarisadministratie**, **EasySalary** of **Salarisadmin**, kan direct tijdens **Medewerker toevoegen** worden ingevuld of later onder **Instellingen** worden beheerd. Daarna wordt per medewerker aangevinkt wie de mail krijgt.
 - Een nieuw aangemaakte ontvanger staat standaard uit bij bestaande en nieuwe medewerkers, totdat een beheerder hem bewust aanvinkt.
 - Zelf aangemaakte extra ontvangers kunnen definitief worden verwijderd. Als ze bij medewerkers zijn aangevinkt, waarschuwt de app en verwijdert hij alleen die routeringskeuzes; uren en facturen blijven staan. De vaste systeemrollen Boekhouder en EasySalary kunnen wel worden gedeactiveerd, maar niet per ongeluk worden verwijderd.
 - Alle ontvangers gebruiken dezelfde begeleidende basistekst met medewerker, maand en het daadwerkelijke goedgekeurde urentotaal.
@@ -78,7 +80,7 @@ Met **Demo herstellen** worden deze uitgangssituaties opnieuw geladen.
 - Een urenstaat wordt aan geen van de drie routes toegevoegd; het urentotaal staat in de tekst.
 - Tarief, klant, broker, verlof- en ziektegegevens worden niet in het EasySalary-overzicht opgenomen.
 - Een Excel- of CSV-bestand wordt alleen toegevoegd als EasySalary later expliciet een vaste importindeling verplicht stelt.
-- Met één knop **Maandverzending klaarzetten** kunnen alle geselecteerde routes samen worden gestart, maar de app maakt intern per medewerker en per ontvanger afzonderlijke berichten.
+- Met één knop **Maandverzending controleren** worden alle geselecteerde routes samen gecontroleerd. De demo voert daarna uitsluitend een verzendtest uit; de app maakt intern per medewerker en per ontvanger afzonderlijke berichten.
 - EasySalary staat niet als apart hoofdmenu-item en heeft geen aparte bulkknop; controle en maandverzending starten vanuit **Facturen**.
 
 De standaard begeleidende tekst is:

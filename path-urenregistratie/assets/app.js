@@ -119,7 +119,7 @@ function makeRecord(total, contractHours, timesheetStatus, invoiceStatus, invoic
     sick: 0,
     timesheetStatus,
     invoiceStatus,
-    payrollStatus: timesheetStatus === "approved" ? "ready" : "concept",
+    payrollStatus: invoiceStatus === "simulated" ? "simulated" : timesheetStatus === "approved" ? "ready" : "concept",
     invoiceNumber,
     correctionHistory: []
   };
@@ -139,9 +139,168 @@ function makeCorrectionRecord(total, contractHours, invoiceNumber, periodKey, me
   return record;
 }
 
+function demoAnnouncements() {
+  return [
+    {
+      id: 1,
+      title: "Uren juli indienen",
+      message: "Dien je uren over juli uiterlijk vrijdag 31 juli in.",
+      audienceLabel: "Alle actieve medewerkers",
+      audienceValue: "all",
+      recipientIds: [1, 2, 3, 4],
+      emailRequested: false,
+      emailRecipientIds: [],
+      correctionOfId: null,
+      withdrawalOfId: null,
+      kind: "standard",
+      status: "sent",
+      createdBy: "Gio Maatsen",
+      createdAt: "29 juli 2026 om 09:00",
+      createdAtIso: "2026-07-29T07:00:00.000Z",
+      updatedAt: "29 juli 2026 om 09:00",
+      updatedAtIso: "2026-07-29T07:00:00.000Z",
+      supersededById: 2
+    },
+    {
+      id: 2,
+      title: "Uren juli indienen",
+      message: "Dien je uren over juli uiterlijk maandag 3 augustus in. Controleer vóór het indienen of alle werkdagen zijn ingevuld.",
+      audienceLabel: "Alle actieve medewerkers",
+      audienceValue: "fixed",
+      recipientIds: [1, 2, 3, 4],
+      emailRequested: true,
+      emailRecipientIds: [1, 2, 3, 4],
+      correctionOfId: 1,
+      withdrawalOfId: null,
+      kind: "correction",
+      status: "sent",
+      createdBy: "Joyce van der Steenhoven",
+      createdAt: "30 juli 2026 om 10:15",
+      createdAtIso: "2026-07-30T08:15:00.000Z",
+      updatedAt: "30 juli 2026 om 10:15",
+      updatedAtIso: "2026-07-30T08:15:00.000Z",
+      supersededById: null
+    },
+    {
+      id: 3,
+      title: "Planning augustus beschikbaar",
+      message: "De urenregistratie voor augustus staat klaar. Je kunt je uren tussentijds opslaan en aan het einde van de maand indienen.",
+      audienceLabel: "Alle actieve medewerkers",
+      audienceValue: "all",
+      recipientIds: [1, 2, 3, 4],
+      emailRequested: false,
+      emailRecipientIds: [],
+      correctionOfId: null,
+      withdrawalOfId: null,
+      kind: "standard",
+      status: "sent",
+      createdBy: "Gio Maatsen",
+      createdAt: "3 augustus 2026 om 08:45",
+      createdAtIso: "2026-08-03T06:45:00.000Z",
+      updatedAt: "3 augustus 2026 om 08:45",
+      updatedAtIso: "2026-08-03T06:45:00.000Z",
+      supersededById: null
+    },
+    {
+      id: 4,
+      title: "Concept: onderhoud urenapp",
+      message: "De urenapp is woensdagavond kort niet beschikbaar wegens gepland onderhoud.",
+      audienceLabel: "Alle actieve medewerkers",
+      audienceValue: "all",
+      recipientIds: [1, 2, 3, 4],
+      emailRequested: false,
+      emailRecipientIds: [],
+      correctionOfId: null,
+      withdrawalOfId: null,
+      kind: "standard",
+      status: "draft",
+      createdBy: "Joyce van der Steenhoven",
+      createdAt: "6 augustus 2026 om 14:20",
+      createdAtIso: "2026-08-06T12:20:00.000Z",
+      updatedAt: "6 augustus 2026 om 14:20",
+      updatedAtIso: "2026-08-06T12:20:00.000Z",
+      supersededById: null
+    },
+    {
+      id: 5,
+      title: "Onderhoud vrijdagavond",
+      message: "De urenapp is vrijdagavond van 19:00 tot 20:00 niet beschikbaar.",
+      audienceLabel: "Alle actieve medewerkers",
+      audienceValue: "all",
+      recipientIds: [1, 2, 3, 4],
+      emailRequested: false,
+      emailRecipientIds: [],
+      correctionOfId: null,
+      withdrawalOfId: null,
+      withdrawalReason: "Het onderhoud is verplaatst; de app blijft vrijdagavond beschikbaar.",
+      withdrawnBy: "Joyce van der Steenhoven",
+      withdrawnAt: "7 augustus 2026 om 09:30",
+      withdrawnAtIso: "2026-08-07T07:30:00.000Z",
+      kind: "standard",
+      status: "withdrawn",
+      createdBy: "Gio Maatsen",
+      createdAt: "6 augustus 2026 om 15:00",
+      createdAtIso: "2026-08-06T13:00:00.000Z",
+      updatedAt: "7 augustus 2026 om 09:30",
+      updatedAtIso: "2026-08-07T07:30:00.000Z",
+      supersededById: null
+    },
+    {
+      id: 6,
+      title: "Mededeling ingetrokken",
+      message: "Het aangekondigde onderhoud van vrijdagavond gaat niet door. De urenapp blijft beschikbaar.",
+      audienceLabel: "Zelfde ontvangers als bericht #5",
+      audienceValue: "fixed",
+      recipientIds: [1, 2, 3, 4],
+      emailRequested: false,
+      emailRecipientIds: [],
+      correctionOfId: null,
+      withdrawalOfId: 5,
+      kind: "withdrawal",
+      status: "sent",
+      createdBy: "Joyce van der Steenhoven",
+      createdAt: "7 augustus 2026 om 09:30",
+      createdAtIso: "2026-08-07T07:30:00.000Z",
+      updatedAt: "7 augustus 2026 om 09:30",
+      updatedAtIso: "2026-08-07T07:30:00.000Z",
+      supersededById: null
+    }
+  ];
+}
+
+function demoNotifications() {
+  const notifications = [
+    { id: 1, audience: "admin", employeeId: 2, title: "Correctie nodig", message: "Stasjo moet augustus nog aanpassen.", periodKey: "2026-08", view: "approvals", read: false, createdAt: "5 augustus, 10:15" },
+    { id: 2, audience: "admin", employeeId: 4, title: "Uren ingediend", message: "Shawn-Douglas heeft Augustus 2026 ingediend.", periodKey: "2026-08", view: "approvals", read: false, createdAt: "Vandaag, 09:18" },
+    { id: 3, audience: "admin", title: "Drie facturen klaar", message: "Drie bevestigde facturen over Juli 2026 staan klaar; één urencontrole staat nog open.", periodKey: "2026-07", view: "invoices", read: false, createdAt: "Vandaag, 09:25" },
+    { id: 4, audience: "employee", employeeId: 2, title: "Correctie gevraagd", message: "Controleer 12 augustus en dien de maand daarna opnieuw in.", periodKey: "2026-08", view: "timesheet", read: false, createdAt: "5 augustus, 10:15" },
+    { id: 5, audience: "employee", employeeId: 4, title: "Uren wachten op controle", message: "Je uren voor Augustus 2026 zijn ingediend.", periodKey: "2026-08", view: "employee-dashboard", read: false, createdAt: "Vandaag, 09:18" }
+  ];
+  let id = notifications.length + 1;
+  [2, 3, 6].forEach(announcementId => {
+    [1, 2, 3, 4].forEach(employeeId => {
+      const announcement = demoAnnouncements().find(item => item.id === announcementId);
+      notifications.push({
+        id: id++,
+        audience: "employee",
+        type: "announcement",
+        employeeId,
+        title: announcement.title,
+        message: announcement.message,
+        announcementId,
+        emailRequested: announcement.emailRecipientIds.includes(employeeId),
+        view: "employee-announcements",
+        read: announcementId === 2 && employeeId < 3,
+        createdAt: announcement.createdAt
+      });
+    });
+  });
+  return notifications;
+}
+
 function freshState() {
   return {
-    schemaVersion: 17,
+    schemaVersion: 20,
     currentRole: null,
     currentAdminId: "gio",
     currentEmployeeId: 2,
@@ -163,6 +322,13 @@ function freshState() {
       { id: "joyce", name: "Joyce van der Steenhoven", email: "joyce@example.invalid", active: true, emailNotificationsEnabled: true, photo: "" }
     ],
     settings: {
+      organizationName: "Path Consultancy",
+      appName: "Uren & Facturatie",
+      supportName: "Path Backoffice",
+      supportEmail: "backoffice@pathconsultancy.nl",
+      brandPrimary: "#0d1b38",
+      brandAccent: "#3abd9d",
+      brandLogo: "",
       companyName: "QSI Consultancy",
       kvk: "89320018",
       vat: "NL001622017B32",
@@ -175,11 +341,11 @@ function freshState() {
       sender: "backoffice@example.invalid",
       bookkeeperName: "Boekhouder",
       bookkeeper: "boekhouder@example.invalid",
-      payrollName: "EasySalary",
+      payrollName: "Salarisadministratie (EasySalary)",
       payroll: "salaris@example.invalid",
       mailRecipients: [
-        { id: "bookkeeper", name: "Boekhouder", email: "boekhouder@example.invalid", active: true },
-        { id: "payroll", name: "EasySalary", email: "salaris@example.invalid", active: true }
+        { id: "bookkeeper", category: "accounting", name: "Boekhouder", email: "boekhouder@example.invalid", active: true },
+        { id: "payroll", category: "payroll", name: "Salarisadministratie (EasySalary)", email: "salaris@example.invalid", active: true }
       ],
       approvalRequired: true,
       lockInvoice: true,
@@ -306,12 +472,8 @@ function freshState() {
         mailRecipientRoutes: defaultMailRecipientRoutes()
       }
     ],
-    notifications: [
-      { id: 1, audience: "admin", employeeId: 2, title: "Uren ingediend", message: "Stasjo heeft Juli 2026 ingediend.", periodKey: "2026-07", view: "approvals", read: false, createdAt: "Vandaag, 09:12" },
-      { id: 2, audience: "admin", employeeId: 3, title: "Uren ingediend", message: "Brian heeft Juli 2026 ingediend.", periodKey: "2026-07", view: "approvals", read: false, createdAt: "Vandaag, 09:18" },
-      { id: 3, audience: "employee", employeeId: 2, title: "Uren wachten op controle", message: "Je uren voor Juli 2026 zijn ingediend.", periodKey: "2026-07", view: "employee-dashboard", read: false, createdAt: "Vandaag, 09:12" }
-    ],
-    announcements: [],
+    notifications: demoNotifications(),
+    announcements: demoAnnouncements(),
     records: {
       "2026-06": {
         "1": makeRecord(144, 144, "approved", "simulated", "IND-2026-juni", "2026-06"),
@@ -321,8 +483,8 @@ function freshState() {
       },
       "2026-07": {
         "1": makeRecord(164, 164, "approved", "ready", "IND-2026-juli", "2026-07"),
-        "2": makeRecord(153, 153, "submitted", "concept", "IND-StvB-2026-juli", "2026-07"),
-        "3": makeRecord(117, 153, "submitted", "concept", "COA-2026-juli", "2026-07"),
+        "2": makeRecord(153, 153, "approved", "ready", "IND-StvB-2026-juli", "2026-07"),
+        "3": makeRecord(117, 117, "submitted", "concept", "COA-2026-juli", "2026-07"),
         "4": makeRecord(144, 144, "approved", "ready", "Bel-Shawn-2026-juli", "2026-07")
       },
       "2026-08": {
@@ -339,7 +501,7 @@ function loadState() {
   const fallback = freshState();
   try {
     const saved = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
-    if (!saved || ![7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17].includes(saved.schemaVersion) || !parsePeriodKey(saved.selectedPeriodKey)) return fallback;
+    if (!saved || ![7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].includes(saved.schemaVersion) || !parsePeriodKey(saved.selectedPeriodKey)) return fallback;
     const previousSchemaVersion = Number(saved.schemaVersion || 0);
     const hadLightDefault = saved.preferences && saved.preferences.themeDefaultVersion === 1;
     saved.preferences = Object.assign({}, fallback.preferences, saved.preferences || {});
@@ -356,16 +518,30 @@ function loadState() {
     }
     if (!Array.isArray(saved.settings.mailRecipients) || !saved.settings.mailRecipients.length) {
       saved.settings.mailRecipients = [
-        { id: "bookkeeper", name: saved.settings.bookkeeperName || "Boekhouder", email: saved.settings.bookkeeper || fallback.settings.bookkeeper, active: true },
-        { id: "payroll", name: saved.settings.payrollName || "EasySalary", email: saved.settings.payroll || fallback.settings.payroll, active: true }
+        { id: "bookkeeper", category: "accounting", name: saved.settings.bookkeeperName || "Boekhouder", email: saved.settings.bookkeeper || fallback.settings.bookkeeper, active: true },
+        { id: "payroll", category: "payroll", name: saved.settings.payrollName || "Salarisadministratie (EasySalary)", email: saved.settings.payroll || fallback.settings.payroll, active: true }
       ];
     }
     saved.settings.mailRecipients = saved.settings.mailRecipients.map((recipient, index) => Object.assign({
       id: "recipient-" + (index + 1),
       name: "Ontvanger " + (index + 1),
       email: "ontvanger-" + (index + 1) + DEMO_DOMAIN,
+      category: "other",
       active: true
     }, recipient));
+    if (previousSchemaVersion < 19) {
+      const payrollRecipient = saved.settings.mailRecipients.find(recipient => recipient.id === "payroll");
+      if (payrollRecipient && String(payrollRecipient.name || "").trim() === "EasySalary") {
+        payrollRecipient.name = "Salarisadministratie (EasySalary)";
+      }
+    }
+    if (previousSchemaVersion < 20) {
+      saved.settings.mailRecipients.forEach(recipient => {
+        if (recipient.id === "bookkeeper") recipient.category = "accounting";
+        else if (recipient.id === "payroll") recipient.category = "payroll";
+        else if (!recipient.category) recipient.category = "other";
+      });
+    }
     const savedBookkeeper = saved.settings.mailRecipients.find(recipient => recipient.id === "bookkeeper");
     const savedPayroll = saved.settings.mailRecipients.find(recipient => recipient.id === "payroll");
     if (savedBookkeeper) {
@@ -378,7 +554,18 @@ function loadState() {
     }
     saved.admins = Array.isArray(saved.admins) && saved.admins.length ? saved.admins : fallback.admins;
     saved.notifications = Array.isArray(saved.notifications) ? saved.notifications : fallback.notifications;
+    const shouldSeedAnnouncements = previousSchemaVersion < 18 && (!Array.isArray(saved.announcements) || saved.announcements.length === 0);
     saved.announcements = Array.isArray(saved.announcements) ? saved.announcements : [];
+    if (shouldSeedAnnouncements) {
+      saved.announcements = fallback.announcements.map(item => Object.assign({}, item, {
+        recipientIds: [...item.recipientIds],
+        emailRecipientIds: [...item.emailRecipientIds]
+      }));
+      let nextId = saved.notifications.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1;
+      fallback.notifications.filter(item => item.announcementId).forEach(item => {
+        saved.notifications.push(Object.assign({}, item, { id: nextId++ }));
+      });
+    }
     saved.announcements = saved.announcements.map(item => Object.assign({
       status: "sent",
       kind: item && item.correctionOfId ? "correction" : "standard",
@@ -402,7 +589,7 @@ function loadState() {
         record.correctionHistory = Array.isArray(record.correctionHistory) ? record.correctionHistory : [];
       });
     });
-    saved.schemaVersion = 17;
+    saved.schemaVersion = 20;
     saved.employees = Array.isArray(saved.employees) && saved.employees.length ? saved.employees : fallback.employees;
     saved.admins = saved.admins.map((admin, index) => Object.assign({
       id: "admin-" + (index + 1),
@@ -478,6 +665,16 @@ function loadState() {
     if (previousSchemaVersion < 17 && saved.records["2026-07"] && saved.records["2026-07"]["4"]) {
       saved.records["2026-07"]["4"].invoiceStatus = "ready";
     }
+    if (previousSchemaVersion < 18 && saved.records["2026-07"]) {
+      [["2", 153]].forEach(([employeeId, confirmedHours]) => {
+        const record = saved.records["2026-07"][employeeId];
+        if (!record || totalEntries(record.entries) !== confirmedHours || record.invoiceStatus !== "concept") return;
+        record.contractHours = confirmedHours;
+        record.timesheetStatus = "approved";
+        record.invoiceStatus = "ready";
+        record.payrollStatus = "ready";
+      });
+    }
     saved.currentRole = null;
     if (!saved.admins.some(admin => String(admin.id) === String(saved.currentAdminId) && admin.active !== false)) {
       saved.currentAdminId = String((saved.admins.find(admin => admin.active !== false) || saved.admins[0]).id);
@@ -499,6 +696,7 @@ let state = loadState();
 let modalAction = null;
 let modalSecondaryAction = null;
 let pendingProfilePhoto = "";
+let pendingBrandLogo = "";
 let unresolvedHelpQuestion = "";
 
 const roleProfiles = {
@@ -506,7 +704,7 @@ const roleProfiles = {
   employee: { label: "Medewerker", home: "employee-dashboard" }
 };
 
-const adminViews = new Set(["dashboard", "approvals", "invoices", "payroll", "announcements", "employees", "settings"]);
+const adminViews = new Set(["dashboard", "approvals", "invoices", "announcements", "employees", "settings"]);
 const statusLabels = {
   draft: ["Nog invullen", "status-concept"],
   correction: ["Correctie nodig", "status-warning"],
@@ -514,7 +712,7 @@ const statusLabels = {
   submitted: ["Ingediend", "status-submitted"],
   concept: ["Nog niet klaar", "status-concept"],
   ready: ["Factuur klaar", "status-ready"],
-  simulated: ["Test gedaan", "status-sent"]
+  simulated: ["Verzendtest afgerond", "status-sent"]
 };
 
 const pageTitles = {
@@ -523,7 +721,6 @@ const pageTitles = {
   timesheet: "Mijn uren",
   approvals: "Goedkeuringen",
   invoices: "Facturen",
-  payroll: "EasySalary",
   announcements: "Mededelingen",
   "employee-announcements": "Mijn mededelingen",
   employees: "Medewerkers",
@@ -536,13 +733,13 @@ const HELP_TOPICS = [
   { id: "month", roles: ["admin", "employee"], label: "Maand kiezen", terms: "maand jaar periode vorige volgende kalender kiezen", answer: "Gebruik bovenaan de maand- en jaarkiezer of de pijlen. Je kunt rechtstreeks naar iedere maand en ieder jaar. Iedere maand wordt apart bewaard." },
   { id: "submit", roles: ["admin", "employee"], label: "Maand indienen", terms: "dien dient indien indienen versturen maand submit knop slechts een", answer: "De knop Uren indienen dient uitsluitend de geselecteerde maand in. Andere maanden blijven ongewijzigd. Na indienen ziet de beheerder een melding en verschijnt de maand bij Goedkeuringen.", view: "timesheet" },
   { id: "difference", roles: ["admin", "employee"], label: "Meer of minder uren", terms: "meer minder afwijking contracturen verschil blokkeren", answer: "Meer of minder uren dan de contracturen geeft alleen een controlebericht. Het blokkeert opslaan of indienen nooit." },
-  { id: "absence", roles: ["admin", "employee"], label: "Verlof of ziekte", terms: "verlof vakantie ziek ziekte afwezig", answer: "Vul verlof en ziekte rechts bij de maandsamenvatting in. Ze blijven apart van declarabele klanturen. De EasySalary-mail bevat in deze opzet alleen het goedgekeurde gewerkte urentotaal.", view: "timesheet" },
+  { id: "absence", roles: ["admin", "employee"], label: "Verlof of ziekte", terms: "verlof vakantie ziek ziekte afwezig", answer: "Vul verlof en ziekte rechts bij de maandsamenvatting in. Ze blijven apart van declarabele klanturen. De salarisadministratieroute bevat in deze opzet alleen het goedgekeurde gewerkte urentotaal.", view: "timesheet" },
   { id: "status", roles: ["admin", "employee"], label: "Status uitleg", terms: "status nog invullen ingediend goedgekeurd correctie", answer: "Nog invullen betekent dat de medewerker werkt aan de maand. Ingediend wacht op controle. Correctie nodig betekent aanpassen en opnieuw indienen. Goedgekeurd betekent dat de urencontrole klaar is." },
   { id: "approvals", roles: ["admin"], label: "Goedkeuringen", terms: "keur keuren goed goedkeuren controle uren alle openstaande maand terugsturen afkeuren correctie reden toelichting", answer: "Goedkeuringen opent standaard alle openstaande maanden. Je kunt filteren op de gekozen maand, uren bekijken, met een verplichte toelichting terugsturen voor correctie of goedkeuren. De medewerker ziet de reden bij de melding en urenstaat. Na goedkeuring staat de factuur klaar.", view: "approvals" },
   { id: "invoices", roles: ["admin"], label: "Facturen", terms: "factuur facturen klaar mailvoorbeeld ongefactureerd", answer: "Facturen toont per gekozen maand wat nog op uren wacht, wat klaarstaat en welke verzendtest is gedaan. De demo maakt alleen een veilig mailvoorbeeld en verstuurt niets.", view: "invoices" },
   { id: "invoice-test", roles: ["admin"], label: "Verzendtest", terms: "verzendtest test mail e-mail bijlagen sturen boekhouder broker ontvanger", answer: "Eén actie maakt een afzonderlijk bericht voor iedere aangevinkte ontvanger. De tekst bevat medewerker, maand en daadwerkelijke goedgekeurde uren. Per medewerker stel je in wie mail krijgt en of de factuur als PDF wordt toegevoegd. Een urenstaat wordt niet bijgevoegd en BCC wordt niet gebruikt.", view: "invoices" },
-  { id: "invoice-filter", roles: ["admin"], label: "Factuurfilters", terms: "filter factuur nog niet klaar test gedaan alle", answer: "Gebruik boven de factuurlijst de filters Alle, Nog niet klaar, Factuur klaar en Test gedaan. De maandkiezer blijft bepalen welke maand je ziet.", view: "invoices" },
-  { id: "easysalary", roles: ["admin"], label: "EasySalary", terms: "easysalary salaris loon uren mail per medewerker excel csv een knop maandverzending", answer: "EasySalary loopt mee in dezelfde maandverzending, maar ontvangt een eigen bericht per medewerker. Standaard gaat alleen de tekst met naam, maand en goedgekeurde uren mee en geen factuur. De aparte EasySalary-bulkactie is daarom verwijderd.", view: "invoices" },
+  { id: "invoice-filter", roles: ["admin"], label: "Factuurfilters", terms: "filter factuur nog niet klaar verzendtest afgerond alle", answer: "Gebruik boven de factuurlijst de filters Alle, Nog niet klaar, Factuur klaar en Verzendtest afgerond. De maandkiezer blijft bepalen welke maand je ziet.", view: "invoices" },
+  { id: "easysalary", roles: ["admin"], label: "Salarisadministratie", terms: "easysalary salaris salarisadmin loon uren mail per medewerker excel csv een knop maandverzending", answer: "De ingestelde salarisadministratie loopt mee in dezelfde maandverzending, maar ontvangt een eigen bericht per medewerker. Standaard gaat alleen de tekst met naam, maand en goedgekeurde uren mee en geen factuur.", view: "invoices" },
   { id: "announcements", roles: ["admin"], label: "Mededelingen sturen", terms: "mededeling bericht iedereen groep medewerkers mail e-mail correctie intrekken concept verbeteren algemeen update versie", answer: "Onder Mededelingen maak je een concept of stuur je een app-update naar alle actieve medewerkers, één klantgroep of zelf gekozen medewerkers. Bij een wijziging zien medewerkers uitsluitend de nieuwste tekst; de oudere versie blijft alleen intern voor beheerders controleerbaar. Intrekken vereist een reden. Aanvullende e-mailmeldingen worden per ontvanger en volgens de persoonlijke voorkeur behandeld.", view: "announcements" },
   { id: "announcement-archive", roles: ["employee"], label: "Eerdere mededelingen", terms: "mededelingen archief eerdere gelezen ongelezen ingetrokken bericht terugvinden", answer: "Open Mededelingen in het menu. Daar staan jouw actuele berichten, ook als je ze via de bel al hebt gelezen. Wanneer een beheerder een tekst wijzigt, zie jij alleen de nieuwste versie en niet dat er een eerdere versie was.", view: "employee-announcements" },
   { id: "employee-add", roles: ["admin"], label: "Medewerker toevoegen", terms: "medewerker persoon toevoegen uitnodigen nieuwe account", answer: "Open Medewerkers en kies Medewerker toevoegen. Vul account, contracturen en opdrachtgegevens in. In de demo wordt alles lokaal opgeslagen en wordt een uitnodiging alleen nagebootst.", view: "employees" },
@@ -553,7 +750,7 @@ const HELP_TOPICS = [
   { id: "notifications", roles: ["admin", "employee"], label: "Meldingen", terms: "melding meldingen bel herinnering maandag goedgekeurd e-mail aan uit", answer: "De bel toont uren- en algemene meldingen voor jouw account. In Voorkeuren kun je aanvullende e-mailmeldingen aan- of uitzetten. Berichten in de app blijven zichtbaar. De demo simuleert e-mail en verstuurt niets." },
   { id: "profile", roles: ["admin", "employee"], label: "Profiel en foto", terms: "profiel foto profielfoto naam e-mail account", answer: "Klik rechtsboven op je initialen en kies Mijn profiel. In de demo kun je lokaal een foto kiezen. In productie komen naam, zakelijk e-mailadres en standaardfoto uit Google Workspace." },
   { id: "theme", roles: ["admin", "employee"], label: "Licht of donker", terms: "donker dark licht light automatisch thema uiterlijk voorkeur", answer: "Open rechtsboven Voorkeuren en kies Licht, Automatisch of Donker. Licht is standaard; Automatisch volgt de instelling van je computer of telefoon." },
-  { id: "settings", roles: ["admin"], label: "Instellingen", terms: "instellingen bedrijf iban kvk btw betalingstermijn mailroutering ontvanger toevoegen", answer: "Instellingen bevat bedrijfsgegevens, mailroutering, vaste ontvangers en veiligheidsregels. Boekhouder, EasySalary of een extra ontvanger maak je hier één keer aan; daarna vink je die per medewerker aan. De demo bewaart dit alleen lokaal en heeft geen echte verzendkoppeling.", view: "settings" },
+  { id: "settings", roles: ["admin"], label: "Instellingen", terms: "instellingen organisatie logo kleuren bedrijf iban kvk btw betalingstermijn mailroutering ontvanger toevoegen", answer: "Instellingen bevat de eigen organisatienaam, huisstijl, factuurgegevens, mailroutering, vaste ontvangers en veiligheidsregels. Ontvangers krijgen een type en een zelfgekozen naam; daarna vink je ze per medewerker aan. De demo bewaart dit alleen lokaal en heeft geen echte verzendkoppeling.", view: "settings" },
   { id: "placeholders", roles: ["admin"], label: "E-mailadressen in de demo", terms: "placeholder example invalid echt e-mailadres veilig waarom", answer: "De standaardvoorbeelden gebruiken @example.invalid, maar je kunt zelf ieder geldig adres invoeren. Ook met een echt adres wordt niets verstuurd, omdat de demo geen e-mailkoppeling bevat." },
   { id: "google", roles: ["admin", "employee"], label: "Google-login", terms: "google gmail workspace inloggen wachtwoord 2fa e-mail wijzigen", answer: "De demo gebruikt een rolkeuze. In productie logt iedereen in met Google Workspace. Wachtwoord, e-mailadres en tweestapsverificatie worden daarom niet in deze app beheerd." },
   { id: "contact", roles: ["admin", "employee"], label: "Contact opnemen", terms: "contact opnemen backoffice iemand spreken medewerker mail email e-mail gmail outlook mailapp bereiken", answer: "Je kunt Path Backoffice bereiken via backoffice@pathconsultancy.nl. Kies hieronder hoe je een vooraf ingevuld bericht wilt openen of kopiëren. Er wordt niets automatisch verzonden.", contact: true, contactQuestion: "Ik wil contact opnemen over de urenapp." },
@@ -638,6 +835,52 @@ function mailRecipientById(id) {
 
 function activeMailRecipients() {
   return (state.settings.mailRecipients || []).filter(recipient => recipient.active !== false);
+}
+
+function recipientCategoryLabel(category) {
+  return ({ accounting: "Boekhouding", payroll: "Salarisadministratie", other: "Overig" })[category] || "Overig";
+}
+
+function supportEmail() {
+  return String(state.settings.supportEmail || SUPPORT_EMAIL).trim();
+}
+
+function supportName() {
+  return String(state.settings.supportName || "Ondersteuning").trim();
+}
+
+function brandLogoUrl() {
+  return String(state.settings.brandLogo || PATH_LOGO_DATA_URL);
+}
+
+function normalizedBrandColor(value, fallback) {
+  const color = String(value || "").trim().toLowerCase();
+  return /^#[0-9a-f]{6}$/.test(color) ? color : fallback;
+}
+
+function hexColorToRgb(value, fallback) {
+  const color = normalizedBrandColor(value, fallback).slice(1);
+  return [0, 2, 4].map(index => Number.parseInt(color.slice(index, index + 2), 16));
+}
+
+function applyOrganizationBranding() {
+  const organizationName = String(state.settings.organizationName || "Organisatie").trim();
+  const appName = String(state.settings.appName || "Uren & Facturatie").trim();
+  const logo = brandLogoUrl();
+  document.title = organizationName + " · " + appName;
+  document.querySelectorAll("[data-app-name]").forEach(element => { element.textContent = appName; });
+  document.querySelectorAll("[data-brand-logo]").forEach(image => {
+    image.src = logo;
+    image.alt = organizationName + " logo";
+  });
+  const organizationLabel = document.querySelector("#organization-name");
+  if (organizationLabel) organizationLabel.textContent = organizationName;
+  const sidebarBrand = document.querySelector("#sidebar-brand");
+  if (sidebarBrand) sidebarBrand.setAttribute("aria-label", organizationName + " " + appName);
+  const helpSupportName = document.querySelector("#help-support-name");
+  if (helpSupportName) helpSupportName.textContent = supportName();
+  document.documentElement.style.setProperty("--navy", normalizedBrandColor(state.settings.brandPrimary, "#0d1b38"));
+  document.documentElement.style.setProperty("--mint", normalizedBrandColor(state.settings.brandAccent, "#3abd9d"));
 }
 
 function mailRecipientRouteFor(employee, recipientId) {
@@ -730,6 +973,7 @@ function normalizeRecord(record, employee, periodKey) {
   record.timesheetStatus = record.timesheetStatus || "draft";
   record.invoiceStatus = record.invoiceStatus || "concept";
   record.payrollStatus = record.payrollStatus || (record.timesheetStatus === "approved" ? "ready" : "concept");
+  if (record.invoiceStatus === "simulated") record.payrollStatus = "simulated";
   record.invoiceNumber = record.invoiceNumber || invoiceNumberFor(employee.id, period.key);
   record.correctionHistory = Array.isArray(record.correctionHistory) ? record.correctionHistory : [];
   return record;
@@ -887,7 +1131,7 @@ function statusPill(status) {
 }
 
 function invoiceStatusInfo(record) {
-  if (record.invoiceStatus === "simulated") return ["Test gedaan", "status-sent"];
+  if (record.invoiceStatus === "simulated") return ["Verzendtest afgerond", "status-sent"];
   if (record.invoiceStatus === "ready") return ["Factuur klaar", "status-ready"];
   if (record.timesheetStatus === "submitted") return ["Urencontrole nodig", "status-submitted"];
   return ["Wacht op medewerker", "status-concept"];
@@ -895,19 +1139,6 @@ function invoiceStatusInfo(record) {
 
 function invoiceStatusPill(record) {
   const info = invoiceStatusInfo(record);
-  return '<span class="status-pill ' + info[1] + '">' + info[0] + "</span>";
-}
-
-function payrollStatusInfo(record) {
-  if (record.payrollStatus === "simulated") return ["Mailtest gedaan", "status-sent"];
-  if (record.timesheetStatus === "approved") return ["Uren klaar", "status-ready"];
-  if (record.timesheetStatus === "submitted") return ["Wacht op controle", "status-submitted"];
-  if (record.timesheetStatus === "correction") return ["Correctie nodig", "status-warning"];
-  return ["Nog niet klaar", "status-concept"];
-}
-
-function payrollStatusPill(record) {
-  const info = payrollStatusInfo(record);
   return '<span class="status-pill ' + info[1] + '">' + info[0] + "</span>";
 }
 
@@ -957,7 +1188,7 @@ function applyTheme() {
   document.documentElement.dataset.theme = resolved;
   document.documentElement.dataset.themeChoice = choice;
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.content = resolved === "dark" ? "#09131f" : "#0D1B38";
+  if (meta) meta.content = resolved === "dark" ? "#09131f" : normalizedBrandColor(state.settings.brandPrimary, "#0d1b38");
 }
 
 function greetingForNow() {
@@ -1059,18 +1290,67 @@ function renderDashboardActions() {
   const selectedRows = activeEmployees().map(employee => ({ employee, record: recordFor(employee.id) }));
   const missing = selectedRows.filter(item => ["draft", "correction"].includes(item.record.timesheetStatus));
   const ready = selectedRows.filter(item => item.record.invoiceStatus === "ready");
-  const payrollReady = selectedRows.filter(item => item.record.timesheetStatus === "approved" && item.record.payrollStatus !== "simulated");
+  const pendingDelivery = selectedRows.filter(item => item.record.timesheetStatus === "approved" && (item.record.invoiceStatus !== "simulated" || item.record.payrollStatus !== "simulated"));
   const actions = [];
   if (allOpen.length) actions.push({ icon: "U", title: allOpen.length + " urenregistratie" + (allOpen.length === 1 ? "" : "s") + " controleren", note: "Openstaand over alle maanden", view: "approvals", label: "Controleren" });
   if (missing.length) actions.push({ icon: "M", title: missing.length + " medewerker" + (missing.length === 1 ? "" : "s") + " nog niet klaar", note: period.label + " · herinnering kan worden getest", view: "employees", label: "Bekijken" });
   if (ready.length) actions.push({ icon: "F", title: ready.length + " factu" + (ready.length === 1 ? "ur" : "ren") + " klaar", note: "Controleer het veilige mailvoorbeeld", view: "invoices", label: "Open facturen" });
-  if (payrollReady.length) actions.push({ icon: "S", title: payrollReady.length + " EasySalary-urenmail" + (payrollReady.length === 1 ? "" : "s") + " klaar", note: period.label + " · afzonderlijk per medewerker", view: "payroll", label: "Open salarisuren" });
   const admin = currentAdmin();
   document.querySelector("#admin-dashboard-greeting").textContent = greetingForNow() + ", " + (admin ? admin.name.split(/\s+/)[0] : "beheerder");
   document.querySelector("#admin-attention-note").textContent = actions.length
     ? "Dit vraagt nu je aandacht: er staan " + actions.length + " soorten acties klaar."
     : "Er staat niets open: alle urenacties voor " + period.label + " zijn afgerond.";
+  const deliveryAction = document.querySelector("#open-delivery-check");
+  deliveryAction.hidden = pendingDelivery.length === 0;
+  deliveryAction.textContent = "Maandverzending controleren · " + pendingDelivery.length;
   document.querySelector("#dashboard-action-list").innerHTML = actions.map(action => '<div class="dashboard-action-item"><span class="dashboard-action-icon">' + action.icon + '</span><div><strong>' + escapeHtml(action.title) + '</strong><small>' + escapeHtml(action.note) + '</small></div><button class="small-button" data-dashboard-view="' + action.view + '">' + escapeHtml(action.label) + '</button></div>').join("") || '<div class="dashboard-action-empty">Er staat nu niets open. Kies een andere maand om die periode te bekijken.</div>';
+}
+
+function recordHasPeriodActivity(record) {
+  return totalEntries(record.entries) > 0 || Number(record.leave || 0) > 0 || Number(record.sick || 0) > 0 || record.timesheetStatus !== "draft" || record.invoiceStatus !== "concept" || record.payrollStatus !== "concept" || correctionHistoryFor(record).length > 0;
+}
+
+function openPeriodSummaries() {
+  const now = new Date();
+  const currentMonthKey = makePeriodKey(now.getFullYear(), now.getMonth());
+  return Object.keys(state.records)
+    .filter(key => parsePeriodKey(key))
+    .sort((left, right) => left.localeCompare(right))
+    .map(periodKey => {
+      const items = state.employees
+        .map(employee => ({ employee, record: recordFor(employee.id, periodKey) }))
+        .filter(item => recordHasPeriodActivity(item.record));
+      if (!items.length) return null;
+      const drafts = items.filter(item => item.record.timesheetStatus === "draft").length;
+      const corrections = items.filter(item => item.record.timesheetStatus === "correction").length;
+      const approvals = items.filter(item => item.record.timesheetStatus === "submitted").length;
+      const deliveries = items.filter(item => item.record.timesheetStatus === "approved" && (item.record.invoiceStatus !== "simulated" || item.record.payrollStatus !== "simulated")).length;
+      if (drafts + corrections + approvals + deliveries === 0) return null;
+      const parts = [];
+      if (drafts) parts.push(drafts + " " + (drafts === 1 ? "concepturenstaat" : "concepturenstaten"));
+      if (corrections) parts.push(corrections + " " + (corrections === 1 ? "correctie" : "correcties"));
+      if (approvals) parts.push(approvals + " " + (approvals === 1 ? "goedkeuring" : "goedkeuringen"));
+      if (deliveries) parts.push(deliveries + " " + (deliveries === 1 ? "verzending" : "verzendingen"));
+      const view = approvals ? "approvals" : deliveries ? "invoices" : "employees";
+      const action = approvals ? "Uren controleren" : deliveries ? "Verzending controleren" : "Medewerkers bekijken";
+      const timing = periodKey < currentMonthKey ? "Eerdere maand · nog niet afgerond" : periodKey === currentMonthKey ? "Huidige maand" : "Geplande maand";
+      return { periodKey, period: periodFromKey(periodKey), isOverdue: periodKey < currentMonthKey, timing, parts, view, action };
+    })
+    .filter(Boolean);
+}
+
+function renderOpenPeriods() {
+  const summaries = openPeriodSummaries();
+  const panel = document.querySelector("#open-periods-panel");
+  const list = document.querySelector("#open-periods-list");
+  panel.hidden = summaries.length === 0;
+  list.innerHTML = summaries.map(item =>
+    '<div class="open-period-row' + (item.isOverdue ? " is-overdue" : "") + '" data-open-period-row="' + item.periodKey + '">' +
+      '<div class="open-period-month"><strong>' + escapeHtml(item.period.label) + '</strong><small>' + escapeHtml(item.timing) + '</small></div>' +
+      '<div class="open-period-status"><strong>' + escapeHtml(item.parts.join(" · ")) + '</strong><small>Blijft zichtbaar totdat alle onderdelen zijn afgerond.</small></div>' +
+      '<button class="small-button" data-open-period="' + item.periodKey + '" data-open-period-view="' + item.view + '">' + escapeHtml(item.action) + '</button>' +
+    '</div>'
+  ).join("");
 }
 
 function setWorkflowStep(id, visualState) {
@@ -1127,12 +1407,13 @@ function renderDashboard() {
   document.querySelector("#workflow-hours-note").textContent = submitted + " ingediend";
   document.querySelector("#workflow-approval-note").textContent = open + " open";
   document.querySelector("#workflow-invoices-note").textContent = ready + " facturen klaar";
-  document.querySelector("#workflow-send-note").textContent = simulated ? simulated + " tests gedaan" : "Nog niet getest";
+  document.querySelector("#workflow-send-note").textContent = simulated ? simulated + " verzendtests afgerond" : "Nog niet getest";
   setWorkflowStep("#workflow-hours", submitted === rows.length ? "is-done" : submitted ? "is-current" : "");
   setWorkflowStep("#workflow-approval", approved === rows.length ? "is-done" : open ? "is-current" : "");
   setWorkflowStep("#workflow-invoices", ready + simulated === rows.length ? "is-done" : ready ? "is-current" : "");
   setWorkflowStep("#workflow-send", simulated === rows.length ? "is-done" : simulated ? "is-current" : "");
   renderDashboardActions();
+  renderOpenPeriods();
 }
 
 function allOpenApprovals() {
@@ -1203,10 +1484,10 @@ function renderApprovals() {
 }
 
 function renderInvoices() {
-  const rows = state.employees
+  const periodRows = state.employees
     .map(employee => ({ employee, record: recordFor(employee.id) }))
-    .filter(item => item.employee.active !== false || totalEntries(item.record.entries) > 0 || item.record.timesheetStatus !== "draft")
-    .filter(item => state.invoiceFilter === "all" || item.record.invoiceStatus === state.invoiceFilter);
+    .filter(item => item.employee.active !== false || totalEntries(item.record.entries) > 0 || item.record.timesheetStatus !== "draft");
+  const rows = periodRows.filter(item => state.invoiceFilter === "all" || item.record.invoiceStatus === state.invoiceFilter);
   const tbody = document.querySelector("#invoice-rows");
   tbody.innerHTML = rows.map(item => {
     const employee = item.employee;
@@ -1228,47 +1509,17 @@ function renderInvoices() {
   if (!rows.length) {
     tbody.innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:#6c7886">Geen facturen binnen dit filter.</td></tr>';
   }
-}
-
-function renderPayroll() {
-  const period = currentPeriod();
-  const rows = state.employees
-    .map(employee => ({ employee, record: recordFor(employee.id) }))
-    .filter(item => item.employee.active !== false || totalEntries(item.record.entries) > 0 || item.record.timesheetStatus !== "draft");
-  document.querySelector("#payroll-period-title").textContent = "EasySalary-uren · " + period.label;
-  const payrollRecipient = mailRecipientById("payroll") || { email: state.settings.payroll || "", active: true };
-  document.querySelector("#payroll-recipient").textContent = payrollRecipient.active === false ? "EasySalary is gedeactiveerd" : payrollRecipient.email;
-  document.querySelector("#payroll-rows").innerHTML = rows.map(item => {
-    const employee = item.employee;
-    const record = item.record;
-    const total = totalEntries(record.entries);
-    const route = mailRecipientRouteFor(employee, "payroll");
-    const enabled = payrollRecipient.active !== false && route.enabled !== false;
-    let action = '<span class="invoice-action-note">Eerst uren goedkeuren</span>';
-    if (!enabled) action = '<span class="invoice-action-note">Niet aangevinkt voor deze medewerker</span>';
-    if (enabled && record.timesheetStatus === "approved" && record.payrollStatus !== "simulated") {
-      action = '<button class="small-button" data-simulate-payroll="' + employee.id + '">Mailvoorbeeld openen</button>';
-    }
-    if (record.payrollStatus === "simulated") {
-      action = '<button class="small-button" data-view-payroll="' + employee.id + '">Test bekijken</button>';
-    }
-    return "<tr>" +
-      '<td><div class="person-cell"><span class="mini-avatar">' + initials(employee.name) + '</span><span><strong>' + escapeHtml(employee.name) + '</strong><small>Afzonderlijk EasySalary-bericht</small></span></div></td>' +
-      '<td><strong>' + escapeHtml(period.label) + '</strong><small>één medewerker</small></td>' +
-      '<td><strong>' + hoursFormat.format(total) + ' uur</strong><small>goedgekeurd gewerkt totaal</small></td>' +
-      '<td><strong>' + (route.invoiceAttachment === true ? "Naam, maand, uren en factuur" : "Alleen naam, maand en uren") + '</strong><small>' + (enabled ? (route.invoiceAttachment === true ? "factuur is voor deze route aangezet" : "geen factuurbijlage") : "route staat uit") + '</small></td>' +
-      '<td>' + payrollStatusPill(record) + '</td>' +
-      '<td><div class="invoice-action">' + action + '</div></td>' +
-      "</tr>";
-  }).join("");
-  const approved = rows.filter(item => item.record.timesheetStatus === "approved");
+  const payrollRecipient = mailRecipientById("payroll") || { name: "Salarisadministratie", email: state.settings.payroll || "", active: true };
+  const payrollName = payrollRecipient.name || "Salarisadministratie";
+  document.querySelector("#payroll-privacy-note").textContent = payrollName + " krijgt alleen de toegestane ureninformatie en standaard geen factuurgegevens.";
+  const approved = periodRows.filter(item => item.record.timesheetStatus === "approved");
   const pendingMonthDelivery = approved.filter(item => item.record.invoiceStatus !== "simulated" || item.record.payrollStatus !== "simulated");
   const monthDelivery = document.querySelector("#test-month-delivery");
   monthDelivery.disabled = approved.length === 0 || pendingMonthDelivery.length === 0;
   monthDelivery.textContent = !approved.length
     ? "Eerst uren goedkeuren"
     : pendingMonthDelivery.length
-      ? "Maandverzending klaarzetten · " + pendingMonthDelivery.length
+      ? "Maandverzending controleren · " + pendingMonthDelivery.length
       : "Maandverzending veilig getest";
 }
 
@@ -1763,11 +2014,11 @@ function renderMailRecipientSettings() {
   const recipients = state.settings.mailRecipients || [];
   list.innerHTML = recipients.length ? recipients.map(recipient =>
     '<article class="mail-recipient-setting' + (recipient.active === false ? " is-inactive" : "") + '">' +
-      '<div><strong>' + escapeHtml(recipient.name) + '</strong><small>' + escapeHtml(recipient.email) + '</small></div>' +
+      '<div><strong>' + escapeHtml(recipient.name) + '</strong><small>' + escapeHtml(recipientCategoryLabel(recipient.category)) + ' · ' + escapeHtml(recipient.email) + '</small></div>' +
       '<span class="status-pill ' + (recipient.active === false ? "status-concept" : "status-approved") + '">' + (recipient.active === false ? "Inactief" : "Beschikbaar") + '</span>' +
       '<div><button class="small-button" data-edit-mail-recipient="' + escapeHtml(recipient.id) + '">Aanpassen</button> <button class="text-button" data-toggle-mail-recipient="' + escapeHtml(recipient.id) + '">' + (recipient.active === false ? "Activeren" : "Deactiveren") + '</button>' + (recipient.id === "bookkeeper" || recipient.id === "payroll" ? "" : ' <button class="text-button danger-text" data-delete-mail-recipient="' + escapeHtml(recipient.id) + '">Verwijderen</button>') + '</div>' +
     '</article>'
-  ).join("") : '<div class="dashboard-action-empty"><strong>Nog geen vaste ontvangers.</strong><br>Voeg bijvoorbeeld de boekhouder of EasySalary toe.</div>';
+  ).join("") : '<div class="dashboard-action-empty"><strong>Nog geen vaste ontvangers.</strong><br>Voeg bijvoorbeeld boekhouding of een salarisadministratie toe.</div>';
 }
 
 function nextMailRecipientId() {
@@ -1778,9 +2029,10 @@ function nextMailRecipientId() {
 
 function showMailRecipientEditor(recipientId) {
   const existing = recipientId ? mailRecipientById(recipientId) : null;
-  const recipient = existing || { id: nextMailRecipientId(), name: "", email: "nieuw-adres@example.invalid", active: true };
+  const recipient = existing || { id: nextMailRecipientId(), category: "other", name: "", email: "nieuw-adres@example.invalid", active: true };
   const summary = '<div class="modal-form">' +
-    '<label>Naam ontvanger<input id="edit-mail-recipient-name" value="' + escapeHtml(recipient.name) + '" placeholder="Bijvoorbeeld: EasySalary"></label>' +
+    '<label>Type ontvanger<select id="edit-mail-recipient-category"><option value="accounting">Boekhouding</option><option value="payroll">Salarisadministratie</option><option value="other">Overig</option></select></label>' +
+    '<label>Eigen naam / kopje<input id="edit-mail-recipient-name" value="' + escapeHtml(recipient.name) + '" placeholder="Bijvoorbeeld: EasySalary of Salarisadmin"></label>' +
     '<label>E-mailadres<input id="edit-mail-recipient-email" type="email" value="' + escapeHtml(recipient.email) + '"></label>' +
     '<p class="full form-help">Deze ontvanger wordt centraal opgeslagen. Daarna kun je hem bij iedere medewerker aanvinken en apart kiezen of de factuur meegaat.</p>' +
   '</div>';
@@ -1800,7 +2052,7 @@ function showMailRecipientEditor(recipientId) {
         toast("Vul een naam en een geldig e-mailadres in.");
         return;
       }
-      const updated = Object.assign({}, recipient, { name: nameInput.value.trim(), email: emailInput.value.trim(), active: recipient.active !== false });
+      const updated = Object.assign({}, recipient, { category: document.querySelector("#edit-mail-recipient-category").value, name: nameInput.value.trim(), email: emailInput.value.trim(), active: recipient.active !== false });
       if (existing) state.settings.mailRecipients[state.settings.mailRecipients.findIndex(item => item.id === existing.id)] = updated;
       else state.settings.mailRecipients.push(updated);
       syncLegacyRecipientSettings();
@@ -1810,6 +2062,7 @@ function showMailRecipientEditor(recipientId) {
       toast(updated.name + " is als vaste ontvanger opgeslagen.");
     }
   });
+  document.querySelector("#edit-mail-recipient-category").value = recipient.category || "other";
   document.querySelector("#edit-mail-recipient-name").focus();
 }
 
@@ -1850,6 +2103,14 @@ function showDeleteMailRecipient(recipientId) {
 
 function populateSettings() {
   const settings = state.settings;
+  document.querySelector("#setting-organization-name").value = settings.organizationName;
+  document.querySelector("#setting-app-name").value = settings.appName;
+  document.querySelector("#setting-support-name").value = settings.supportName;
+  document.querySelector("#setting-support-email").value = settings.supportEmail;
+  document.querySelector("#setting-brand-primary").value = normalizedBrandColor(settings.brandPrimary, "#0d1b38");
+  document.querySelector("#setting-brand-accent").value = normalizedBrandColor(settings.brandAccent, "#3abd9d");
+  pendingBrandLogo = String(settings.brandLogo || "");
+  document.querySelector("#setting-brand-logo-preview").src = pendingBrandLogo || PATH_LOGO_DATA_URL;
   document.querySelector("#setting-company-name").value = settings.companyName;
   document.querySelector("#setting-kvk").value = settings.kvk;
   document.querySelector("#setting-vat").value = settings.vat;
@@ -1867,7 +2128,7 @@ function populateSettings() {
 }
 
 function saveSettings() {
-  const emailInputs = [document.querySelector("#setting-sender"), document.querySelector("#setting-invoice-email")];
+  const emailInputs = [document.querySelector("#setting-sender"), document.querySelector("#setting-invoice-email"), document.querySelector("#setting-support-email")];
   const invalid = emailInputs.filter(input => !isValidEmail(input.value));
   document.querySelectorAll(".is-invalid").forEach(input => input.classList.remove("is-invalid"));
   if (invalid.length) {
@@ -1876,6 +2137,13 @@ function saveSettings() {
     return;
   }
   state.settings = Object.assign({}, state.settings, {
+    organizationName: document.querySelector("#setting-organization-name").value.trim() || "Organisatie",
+    appName: document.querySelector("#setting-app-name").value.trim() || "Uren & Facturatie",
+    supportName: document.querySelector("#setting-support-name").value.trim() || "Ondersteuning",
+    supportEmail: document.querySelector("#setting-support-email").value.trim(),
+    brandPrimary: normalizedBrandColor(document.querySelector("#setting-brand-primary").value, "#0d1b38"),
+    brandAccent: normalizedBrandColor(document.querySelector("#setting-brand-accent").value, "#3abd9d"),
+    brandLogo: pendingBrandLogo,
     companyName: document.querySelector("#setting-company-name").value.trim(),
     kvk: document.querySelector("#setting-kvk").value.trim(),
     vat: document.querySelector("#setting-vat").value.trim(),
@@ -2017,23 +2285,37 @@ function addHelpMessage(text, type, options) {
     button.textContent = options.label || "Open dit onderdeel";
     item.append(button);
   }
+  if (options && Array.isArray(options.topics) && options.topics.length) {
+    const choices = document.createElement("div");
+    choices.className = "help-inline-topics";
+    options.topics.forEach(topic => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.helpTopic = topic.id;
+      button.textContent = topic.label;
+      choices.append(button);
+    });
+    item.append(choices);
+  }
   if (options && options.contact) {
     const profile = currentProfileData();
-    const subject = "Vraag over Path Uren & Facturatie";
-    const body = "Hallo Path Backoffice,\n\nIk heb een vraag over de urenapp.\n\nMijn vraag:\n" + (options.question || "Schrijf hier je vraag") + "\n\nNaam: " + profile.name + "\nPeriode: " + currentPeriod().label;
+    const contactEmail = supportEmail();
+    const contactName = supportName();
+    const subject = "Vraag over " + (state.settings.appName || "de urenapp");
+    const body = "Hallo " + contactName + ",\n\nIk heb een vraag over de urenapp.\n\nMijn vraag:\n" + (options.question || "Schrijf hier je vraag") + "\n\nNaam: " + profile.name + "\nPeriode: " + currentPeriod().label;
     const actions = document.createElement("div");
     actions.className = "help-contact-actions";
     const gmail = document.createElement("a");
-    gmail.href = "https://mail.google.com/mail/?view=cm&fs=1&to=" + encodeURIComponent(SUPPORT_EMAIL) + "&su=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+    gmail.href = "https://mail.google.com/mail/?view=cm&fs=1&to=" + encodeURIComponent(contactEmail) + "&su=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
     gmail.target = "_blank";
     gmail.rel = "noopener noreferrer";
     gmail.textContent = "Open in Gmail";
     const mailApp = document.createElement("a");
-    mailApp.href = "mailto:" + SUPPORT_EMAIL + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+    mailApp.href = "mailto:" + contactEmail + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
     mailApp.textContent = "Open in Outlook / mailapp";
     const copy = document.createElement("button");
     copy.type = "button";
-    copy.dataset.copySupport = subject + "\n\nAan: " + SUPPORT_EMAIL + "\n\n" + body;
+    copy.dataset.copySupport = subject + "\n\nAan: " + contactEmail + "\n\n" + body;
     copy.textContent = "Kopieer bericht";
     actions.append(gmail, mailApp, copy);
     item.append(actions);
@@ -2104,7 +2386,38 @@ function findHelpTopic(question) {
   return bestScore > 0 ? best : null;
 }
 
+function partialHelpTopicSuggestions(question) {
+  const words = normalizeHelpWords(question);
+  if (words.length !== 1) return [];
+  const word = words[0];
+  if (word.length < 2) return [];
+  const exactTopic = helpRoleTopics().find(topic => normalizeHelpWords(topic.label).includes(word));
+  if (exactTopic) return [];
+  return helpRoleTopics()
+    .map(topic => {
+      const labelWords = normalizeHelpWords(topic.label);
+      const termWords = normalizeHelpWords(topic.terms);
+      let score = 0;
+      if (labelWords.some(term => term.startsWith(word))) score += 4;
+      if (termWords.some(term => term.startsWith(word))) score += 2;
+      return { topic, score };
+    })
+    .filter(item => item.score > 0)
+    .sort((left, right) => right.score - left.score || left.topic.label.localeCompare(right.topic.label, "nl"))
+    .slice(0, 4)
+    .map(item => item.topic);
+}
+
 function answerHelpQuestion(question, explicitTopicId) {
+  if (!explicitTopicId) {
+    const partialSuggestions = partialHelpTopicSuggestions(question);
+    if (partialSuggestions.length) {
+      addHelpMessage(question, "user");
+      unresolvedHelpQuestion = "";
+      addHelpMessage("Je invoer lijkt nog niet compleet. Welk onderdeel bedoel je?", "bot", { topics: partialSuggestions });
+      return;
+    }
+  }
   const topic = explicitTopicId ? HELP_TOPICS.find(item => item.id === explicitTopicId && item.roles.includes(state.currentRole)) : findHelpTopic(question);
   if (!explicitTopicId) addHelpMessage(question, "user");
   if (topic) {
@@ -2119,7 +2432,10 @@ function answerHelpQuestion(question, explicitTopicId) {
       options.contact = true;
       options.question = topic.contactQuestion || question || "Ik wil contact opnemen over de urenapp.";
     }
-    addHelpMessage(topic.answer, "bot", Object.keys(options).length ? options : null);
+    const answer = topic.contact
+      ? "Je kunt " + supportName() + " bereiken via " + supportEmail() + ". Kies hieronder hoe je een vooraf ingevuld bericht wilt openen of kopiëren. Er wordt niets automatisch verzonden."
+      : topic.answer;
+    addHelpMessage(answer, "bot", Object.keys(options).length ? options : null);
     return;
   }
   if (!unresolvedHelpQuestion) {
@@ -2129,10 +2445,11 @@ function answerHelpQuestion(question, explicitTopicId) {
   }
   const combinedQuestion = "Eerste formulering: " + unresolvedHelpQuestion + "\nTweede formulering: " + question;
   unresolvedHelpQuestion = "";
-  addHelpMessage("Ook na je tweede formulering heb ik geen betrouwbaar standaardantwoord. Kies hieronder Gmail, Outlook / je standaard mailapp of kopieer het bericht voor Path Backoffice. Er wordt niets automatisch verzonden.", "bot", { contact: true, question: combinedQuestion });
+  addHelpMessage("Ook na je tweede formulering heb ik geen betrouwbaar standaardantwoord. Kies hieronder Gmail, Outlook / je standaard mailapp of kopieer het bericht voor " + supportName() + ". Er wordt niets automatisch verzonden.", "bot", { contact: true, question: combinedQuestion });
 }
 
 function renderAll() {
+  applyOrganizationBranding();
   renderLoginAdminPicker();
   renderLoginEmployeePicker();
   renderPeriodHeadings();
@@ -2140,7 +2457,6 @@ function renderAll() {
   renderEmployeeDashboard();
   renderApprovals();
   renderInvoices();
-  renderPayroll();
   renderAnnouncements();
   renderEmployeeAnnouncementArchive();
   renderEmployees();
@@ -2420,7 +2736,7 @@ function invoicePreviewMarkup(data) {
     : "";
   const recipientAddress = brokerInvoiceAddressParts(employee);
   return '<article class="invoice-document-preview invoice-branded-template">' +
-    '<header class="invoice-brand-header"><div class="invoice-brand-logo"><img src="' + PATH_LOGO_DATA_URL + '" alt="Path Consultancy"><span>Uren &amp; Facturatie</span></div>' +
+    '<header class="invoice-brand-header"><div class="invoice-brand-logo"><img src="' + brandLogoUrl() + '" alt="' + escapeHtml(state.settings.organizationName) + '"><span>' + escapeHtml(state.settings.appName) + '</span></div>' +
       '<div class="invoice-brand-title"><h3>FACTUUR</h3><div class="invoice-brand-number-line"><span>Factuurnummer:</span><strong>' + escapeHtml(data.record.invoiceNumber) + '</strong></div><small>Factuurdatum ' + escapeHtml(data.invoiceDate) + ' &nbsp;|&nbsp; Betreft ' + escapeHtml(data.period.month) + '</small><span>CONCEPT - NIET VERZONDEN</span></div></header>' +
     '<div class="invoice-brand-accent"></div>' +
     '<section class="invoice-brand-parties"><div class="invoice-brand-party sender"><span class="invoice-brand-label">Facturerende onderneming</span><h4>' + escapeHtml(state.settings.companyName) + '</h4>' +
@@ -2436,7 +2752,7 @@ function invoicePreviewMarkup(data) {
     '<div class="invoice-brand-totals"><span>Totaal exclusief</span><strong>' + invoiceMoney(data.subtotal) + '</strong><span>BTW ' + data.vatRate + ' %</span><strong>' + invoiceMoney(data.vatAmount) + '</strong><span class="invoice-preview-total">Totaal inclusief</span><strong class="invoice-preview-total">' + invoiceMoney(data.total) + '</strong></div>' +
     '<div class="invoice-brand-payment"><span class="invoice-brand-label">Betalingsinformatie</span><p>U wordt vriendelijk verzocht uw betaling binnen ' + escapeHtml(String(state.settings.paymentTerm)) + ' dagen van de factuurdatum over te maken op rekening: <strong>' + escapeHtml(state.settings.iban) + '</strong> onder vermelding van factuurnummer: <strong>' + escapeHtml(data.record.invoiceNumber) + '</strong></p></div>' +
     '<div class="invoice-brand-closing"><p>Met vriendelijke groet,</p><strong>' + escapeHtml(state.settings.companyName) + '</strong></div>' +
-    '<footer class="invoice-brand-footer"><span>Path-vormgeving &nbsp;|&nbsp; Facturerende onderneming: ' + escapeHtml(state.settings.companyName) + '</span><strong>CONCEPTVOORBEELD</strong></footer>' +
+    '<footer class="invoice-brand-footer"><span>' + escapeHtml(state.settings.organizationName) + ' &nbsp;|&nbsp; Facturerende onderneming: ' + escapeHtml(state.settings.companyName) + '</span><strong>CONCEPTVOORBEELD</strong></footer>' +
   '</article>';
 }
 
@@ -2463,9 +2779,9 @@ function downloadInvoicePdf(employeeId) {
   }
   const recipientAddress = brokerInvoiceAddressParts(data.employee);
   const references = invoiceReferenceRows(data.employee);
-  const navy = [13, 27, 56];
+  const navy = hexColorToRgb(state.settings.brandPrimary, "#0d1b38");
   const navySoft = [21, 39, 71];
-  const mint = [58, 189, 157];
+  const mint = hexColorToRgb(state.settings.brandAccent, "#3abd9d");
   const mintLight = [231, 248, 243];
   const ink = [23, 35, 50];
   const muted = [108, 120, 134];
@@ -2488,7 +2804,7 @@ function downloadInvoicePdf(employeeId) {
   doc.rect(0, 0, 210, 46, "F");
   doc.setFillColor(...mint);
   doc.rect(0, 46, 210, 1.5, "F");
-  doc.addImage(PATH_LOGO_DATA_URL, "PNG", 15, 14, 45, 15);
+  doc.addImage(brandLogoUrl(), "PNG", 15, 14, 45, 15);
   drawText("UREN & FACTURATIE", 15, 38, 6.8, [191, 217, 210], "bold");
   drawText("FACTUUR", 195, 20, 21, [255, 255, 255], "bold", { align: "right" });
   drawText("Factuurnummer: " + data.record.invoiceNumber, 195, 30, 9.2, [255, 255, 255], "bold", { align: "right" });
@@ -2571,7 +2887,7 @@ function downloadInvoicePdf(employeeId) {
 
   doc.setFillColor(...navy);
   doc.rect(0, 282, 210, 15, "F");
-  drawText("Path-vormgeving  |  Facturerende onderneming: " + state.settings.companyName, 14, 291, 6.2, [221, 233, 230]);
+  drawText(state.settings.organizationName + "  |  Facturerende onderneming: " + state.settings.companyName, 14, 291, 6.2, [221, 233, 230]);
   drawText("CONCEPTVOORBEELD", 196, 291, 6.2, mint, "bold", { align: "right" });
   const filename = "Conceptfactuur_" + safeFilename(data.record.invoiceNumber) + "_" + safeFilename(data.employee.name) + ".pdf";
   doc.save(filename);
@@ -2591,64 +2907,6 @@ function showInvoiceDocumentPreview(employeeId) {
     confirm: "Sluiten",
     wide: true,
     action: closeModal
-  });
-}
-
-function payrollSummary(employeeId) {
-  const employee = employeeById(employeeId);
-  const record = recordFor(employee.id);
-  const period = currentPeriod();
-  const total = totalEntries(record.entries);
-  const subject = "Doorgifte uren " + period.month + " " + period.year + " - " + employee.name;
-  const body = formatTemplate(employee.mailBody, employee, record.invoiceNumber);
-  const payroll = mailRecipientById("payroll") || { name: "EasySalary", email: state.settings.payroll || "" };
-  const payrollRoute = mailRecipientRouteFor(employee, "payroll");
-  const payrollAttachment = payrollRoute.invoiceAttachment === true ? "Factuur als PDF" : "Geen";
-  return {
-    employee,
-    record,
-    period,
-    total,
-    subject,
-    body,
-    payroll,
-    enabled: payroll.active !== false && payrollRoute.enabled !== false,
-    html: "<div><span>Aan</span><strong>" + escapeHtml(payroll.email) + "</strong></div>" +
-      "<div><span>Onderwerp</span><strong>" + escapeHtml(subject) + "</strong></div>" +
-      "<div><span>Medewerker</span><strong>" + escapeHtml(employee.name) + "</strong></div>" +
-      "<div><span>Goedgekeurde uren</span><strong>" + hoursFormat.format(total) + " uur</strong></div>" +
-      "<div><span>Bijlagen</span><strong>" + payrollAttachment + "</strong></div>" +
-      "<div><span>Tariefgegevens</span><strong>Niet opgenomen</strong></div>"
-  };
-}
-
-function showPayrollPreview(employeeId, allowTest) {
-  const info = payrollSummary(employeeId);
-  if (!info.enabled) {
-    toast("EasySalary is voor deze medewerker niet aangevinkt.");
-    return;
-  }
-  if (![state.settings.sender, info.payroll.email].every(isValidEmail)) {
-    toast("EasySalary-mailtest geblokkeerd: controleer de e-mailadressen.");
-    return;
-  }
-  if (info.record.timesheetStatus !== "approved") {
-    toast("EasySalary-mail geblokkeerd: keur de uren eerst goed.");
-    return;
-  }
-  showModal({
-    label: "Aparte EasySalary-urenmail",
-    title: info.employee.name + " · " + info.period.label,
-    message: "Mailtekst:\n\n" + info.body + "\n\nDit is één afzonderlijk bericht. De factuurbijlage volgt de ingestelde route; een urenstaat gaat nooit mee.",
-    summary: info.html,
-    confirm: allowTest ? "Mailtest uitvoeren" : "Sluiten",
-    action: allowTest ? () => {
-      info.record.payrollStatus = "simulated";
-      persistState();
-      closeModal();
-      renderAll();
-      toast("EasySalary-mail voor " + info.employee.name + " is veilig getest. Er is niets verstuurd.");
-    } : closeModal
   });
 }
 
@@ -2689,7 +2947,7 @@ function showEmployeeEditor(employeeId) {
     const preference = mailRecipientRouteFor(employee, recipient.id);
     const enabled = preference.enabled !== false;
     return '<article class="mail-route-choice">' +
-      '<div><strong>' + escapeHtml(recipient.name) + '</strong><small>' + escapeHtml(recipient.email) + '</small></div>' +
+      '<div><strong>' + escapeHtml(recipient.name) + '</strong><small>' + escapeHtml(recipientCategoryLabel(recipient.category)) + ' · ' + escapeHtml(recipient.email) + '</small></div>' +
       '<label class="route-toggle"><input type="checkbox" data-mail-recipient-enabled="' + escapeHtml(recipient.id) + '"' + (enabled ? " checked" : "") + '><span>Ontvangt mail</span></label>' +
       '<label class="route-toggle"><input type="checkbox" data-mail-recipient-invoice="' + escapeHtml(recipient.id) + '"' + (preference.invoiceAttachment === true ? " checked" : "") + (enabled ? "" : " disabled") + '><span>Factuur meesturen</span></label>' +
     '</article>';
@@ -2714,9 +2972,15 @@ function showEmployeeEditor(employeeId) {
     '<label class="full">Onderwerp<input id="edit-subject" value="' + escapeHtml(employee.mailSubject) + '"></label>' +
     '<label class="full">Begeleidende tekst<textarea id="edit-body" rows="5">' + escapeHtml(employee.mailBody) + "</textarea></label>" +
     '<p class="full form-help">Beschikbare velden: {medewerker}, {klant}, {broker}, {maand}, {jaar}, {uren}, {factuurnummer}, {overeenkomstnummer}</p>' +
-    '<p class="full form-help">Ontvangers en factuurbijlagen · iedere aangevinkte ontvanger krijgt een aparte mail; een urenstaat wordt nergens toegevoegd</p>' +
+    '<p class="full form-help">Vaste ontvangers: boekhouding en salarisadministratie · iedere aangevinkte ontvanger krijgt een aparte mail; een urenstaat wordt nergens toegevoegd</p>' +
     '<div class="mail-route-choice-list full"><article class="mail-route-choice"><div><strong>' + escapeHtml(employee.broker || "Broker") + '</strong><small>' + escapeHtml(employee.brokerEmail) + ' · broker van deze medewerker</small></div><label class="route-toggle"><input id="edit-broker-enabled" type="checkbox"' + (employee.brokerMailEnabled !== false ? " checked" : "") + '><span>Ontvangt mail</span></label><label class="route-toggle"><input id="edit-broker-invoice" type="checkbox"' + (employee.brokerInvoiceAttachment !== false ? " checked" : "") + (employee.brokerMailEnabled !== false ? "" : " disabled") + '><span>Factuur meesturen</span></label></article>' + routeChoices + '</div>' +
-    '<p class="full form-help">Boekhouder, EasySalary en extra ontvangers beheer je één keer onder Instellingen. Hier vink je per medewerker aan wie de mail krijgt.</p>' +
+    '<p class="full form-help">Nieuwe vaste ontvanger toevoegen (optioneel)</p>' +
+    '<label>Type ontvanger<select id="edit-new-recipient-category"><option value="accounting">Boekhouding</option><option value="payroll">Salarisadministratie</option><option value="other">Overig</option></select></label>' +
+    '<label>Naam / kopje<input id="edit-new-recipient-name" placeholder="Bijvoorbeeld: Salarisadministratie of EasySalary"></label>' +
+    '<label>E-mailadres<input id="edit-new-recipient-email" type="email" placeholder="naam@example.invalid"></label>' +
+    '<label class="check-row"><input id="edit-new-recipient-enabled" type="checkbox" checked><span>Deze medewerker ontvangt via deze ontvanger mail</span></label>' +
+    '<label class="check-row"><input id="edit-new-recipient-invoice" type="checkbox"><span>Factuur als PDF meesturen</span></label>' +
+    '<p class="full form-help">De naam bepaal je zelf. De ontvanger wordt centraal bewaard en is daarna ook bij andere medewerkers beschikbaar.</p>' +
     '<label class="check-row full"><input id="edit-notifications" type="checkbox"' + (employee.notificationsEnabled !== false ? " checked" : "") + '><span>Urenherinneringen en statusmeldingen activeren</span></label>' +
     '<label class="check-row full"><input id="edit-email-notifications" type="checkbox"' + (employee.emailNotificationsEnabled !== false ? " checked" : "") + '><span>Aanvullende e-mailmeldingen activeren (in-app berichten blijven altijd zichtbaar)</span></label>' +
     (!existing ? '<label class="check-row"><input id="edit-invite" type="checkbox" checked><span>Uitnodiging klaarzetten (demo verstuurt niets)</span></label><label class="check-row"><input id="edit-add-another" type="checkbox"><span>Hierna nog iemand toevoegen</span></label>' : "") +
@@ -2732,12 +2996,23 @@ function showEmployeeEditor(employeeId) {
       const brokerEmailInput = document.querySelector("#edit-broker-email");
       const accountEmailInput = document.querySelector("#edit-account-email");
       const nameInput = document.querySelector("#edit-name");
-      [brokerEmailInput, accountEmailInput, nameInput].forEach(input => input.classList.remove("is-invalid"));
-      if (!nameInput.value.trim() || !isValidEmail(brokerEmailInput.value) || !isValidEmail(accountEmailInput.value)) {
+      const newRecipientNameInput = document.querySelector("#edit-new-recipient-name");
+      const newRecipientEmailInput = document.querySelector("#edit-new-recipient-email");
+      const newRecipientRequested = Boolean(newRecipientNameInput.value.trim() || newRecipientEmailInput.value.trim());
+      [brokerEmailInput, accountEmailInput, nameInput, newRecipientNameInput, newRecipientEmailInput].forEach(input => input.classList.remove("is-invalid"));
+      if (!nameInput.value.trim() || !isValidEmail(brokerEmailInput.value) || !isValidEmail(accountEmailInput.value) || (newRecipientRequested && (!newRecipientNameInput.value.trim() || !isValidEmail(newRecipientEmailInput.value)))) {
         if (!nameInput.value.trim()) nameInput.classList.add("is-invalid");
         if (!isValidEmail(brokerEmailInput.value)) brokerEmailInput.classList.add("is-invalid");
         if (!isValidEmail(accountEmailInput.value)) accountEmailInput.classList.add("is-invalid");
-        toast("Vul een naam en geldige account- en brokeradressen in.");
+        if (newRecipientRequested && !newRecipientNameInput.value.trim()) newRecipientNameInput.classList.add("is-invalid");
+        if (newRecipientRequested && !isValidEmail(newRecipientEmailInput.value)) newRecipientEmailInput.classList.add("is-invalid");
+        toast("Vul een naam en geldige account-, broker- en ontvangeradressen in.");
+        return;
+      }
+      const duplicateRecipient = newRecipientRequested && state.settings.mailRecipients.find(recipient => recipient.email.toLowerCase() === newRecipientEmailInput.value.trim().toLowerCase());
+      if (duplicateRecipient) {
+        newRecipientEmailInput.classList.add("is-invalid");
+        toast("Dit e-mailadres bestaat al als vaste ontvanger: " + duplicateRecipient.name + ".");
         return;
       }
       const mailRecipientRoutes = Object.assign({}, employee.mailRecipientRoutes || {});
@@ -2746,6 +3021,22 @@ function showEmployeeEditor(employeeId) {
         const invoiceInput = [...document.querySelectorAll("[data-mail-recipient-invoice]")].find(item => item.dataset.mailRecipientInvoice === id);
         mailRecipientRoutes[id] = { enabled: input.checked, invoiceAttachment: input.checked && Boolean(invoiceInput && invoiceInput.checked) };
       });
+      if (newRecipientRequested) {
+        const newRecipientId = nextMailRecipientId();
+        const newRecipientEnabled = document.querySelector("#edit-new-recipient-enabled").checked;
+        state.settings.mailRecipients.push({
+          id: newRecipientId,
+          category: document.querySelector("#edit-new-recipient-category").value,
+          name: newRecipientNameInput.value.trim(),
+          email: newRecipientEmailInput.value.trim(),
+          active: true
+        });
+        mailRecipientRoutes[newRecipientId] = {
+          enabled: newRecipientEnabled,
+          invoiceAttachment: newRecipientEnabled && document.querySelector("#edit-new-recipient-invoice").checked
+        };
+        syncLegacyRecipientSettings();
+      }
       const updated = Object.assign({}, employee, {
         name: nameInput.value.trim(),
         email: accountEmailInput.value.trim(),
@@ -2808,6 +3099,12 @@ function showEmployeeEditor(employeeId) {
   brokerEnabledInput.addEventListener("change", () => {
     brokerInvoiceInput.disabled = !brokerEnabledInput.checked;
     if (!brokerEnabledInput.checked) brokerInvoiceInput.checked = false;
+  });
+  const newRecipientEnabledInput = document.querySelector("#edit-new-recipient-enabled");
+  const newRecipientInvoiceInput = document.querySelector("#edit-new-recipient-invoice");
+  newRecipientEnabledInput.addEventListener("change", () => {
+    newRecipientInvoiceInput.disabled = !newRecipientEnabledInput.checked;
+    if (!newRecipientEnabledInput.checked) newRecipientInvoiceInput.checked = false;
   });
 }
 
@@ -3031,6 +3328,16 @@ document.addEventListener("click", event => {
   const dashboardView = event.target.closest("[data-dashboard-view]");
   if (dashboardView) showView(dashboardView.dataset.dashboardView);
 
+  const openPeriod = event.target.closest("[data-open-period]");
+  if (openPeriod) {
+    const targetView = openPeriod.dataset.openPeriodView || "dashboard";
+    if (targetView === "approvals") state.approvalScope = "month";
+    setPeriod(openPeriod.dataset.openPeriod);
+    persistState();
+    renderAll();
+    showView(targetView);
+  }
+
   const scrollTarget = event.target.closest("[data-scroll-target]");
   if (scrollTarget) {
     const target = document.getElementById(scrollTarget.dataset.scrollTarget);
@@ -3197,11 +3504,6 @@ document.addEventListener("click", event => {
     });
   }
 
-  const simulatePayroll = event.target.closest("[data-simulate-payroll]");
-  if (simulatePayroll) showPayrollPreview(Number(simulatePayroll.dataset.simulatePayroll), true);
-
-  const viewPayroll = event.target.closest("[data-view-payroll]");
-  if (viewPayroll) showPayrollPreview(Number(viewPayroll.dataset.viewPayroll), false);
 });
 
 document.querySelector("#hours-grid").addEventListener("input", () => updateHoursTotal(true));
@@ -3315,10 +3617,6 @@ document.querySelectorAll("[data-invoice-filter]").forEach(button => button.addE
   renderInvoices();
 }));
 
-document.querySelector("#open-payroll").addEventListener("click", () => showView("payroll"));
-document.querySelector("#open-payroll-from-invoices").addEventListener("click", () => showView("payroll"));
-document.querySelector("#back-to-invoices").addEventListener("click", () => showView("invoices"));
-
 document.querySelector("#test-month-delivery").addEventListener("click", () => {
   const approved = state.employees
     .map(employee => ({ employee, record: recordFor(employee.id) }))
@@ -3344,10 +3642,10 @@ document.querySelector("#test-month-delivery").addEventListener("click", () => {
   const routeSummary = [...routeCounters.values()].map(counter => "<div><span>" + escapeHtml(counter.name) + "</span><strong>" + counter.messages + " bericht" + (counter.messages === 1 ? "" : "en") + " · " + counter.invoices + " met factuur</strong></div>").join("");
   showModal({
     label: "Eén knop · gescheiden routes",
-    title: "Maandverzending voor " + currentPeriod().label + " klaarzetten?",
+    title: "Maandverzending voor " + currentPeriod().label + " controleren?",
     message: "Na één bevestiging maakt de demo per medewerker een afzonderlijk bericht voor iedere aangevinkte ontvanger, met naam, maand en daadwerkelijke goedgekeurde uren. De factuur gaat alleen mee waar Factuur meesturen is aangevinkt. Een urenstaat gaat nooit mee. Er wordt geen CC of BCC gebruikt en er gaat niets echt naar buiten.",
     summary: routeSummary + "<div><span>Urenstaat</span><strong>Nooit toegevoegd; uren staan in de tekst</strong></div>",
-    confirm: "Alles veilig testen",
+    confirm: "Verzendtest uitvoeren",
     action: () => {
       approved.forEach(item => {
         item.record.invoiceStatus = "simulated";
@@ -3424,6 +3722,27 @@ document.querySelector("#add-admin").addEventListener("click", () => showAdminEd
 document.querySelector("#add-announcement").addEventListener("click", () => showAnnouncementEditor(null, null));
 document.querySelector("#add-mail-recipient").addEventListener("click", () => showMailRecipientEditor(null));
 document.querySelector("#save-settings").addEventListener("click", saveSettings);
+document.querySelector("#setting-brand-logo").addEventListener("change", event => {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  if (file.type !== "image/png" || file.size > 700000) {
+    toast("Kies een PNG-logo kleiner dan 700 KB.");
+    event.target.value = "";
+    return;
+  }
+  const reader = new FileReader();
+  reader.addEventListener("load", () => {
+    pendingBrandLogo = String(reader.result || "");
+    document.querySelector("#setting-brand-logo-preview").src = pendingBrandLogo || PATH_LOGO_DATA_URL;
+  });
+  reader.readAsDataURL(file);
+});
+document.querySelector("#reset-brand-logo").addEventListener("click", () => {
+  pendingBrandLogo = "";
+  document.querySelector("#setting-brand-logo").value = "";
+  document.querySelector("#setting-brand-logo-preview").src = PATH_LOGO_DATA_URL;
+  toast("Het standaardlogo staat klaar. Kies Wijzigingen opslaan om dit te bewaren.");
+});
 document.querySelectorAll(".summary-hours-input").forEach(input => input.addEventListener("input", () => updateHoursTotal(true)));
 
 document.querySelector("#reset-demo").addEventListener("click", () => showModal({

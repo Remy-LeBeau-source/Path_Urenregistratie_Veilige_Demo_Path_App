@@ -1,6 +1,6 @@
 # Path Uren & Facturatie
 
-Interactieve veilige demo v0.8.9 van de uren- en facturatieapp voor Path Consultancy B.V.
+Interactieve veilige demo v0.9.2 van een configureerbare uren- en facturatieapp. Path Consultancy B.V. is de volledig ingevulde voorbeeldorganisatie.
 
 ## Wat deze versie laat zien
 
@@ -12,26 +12,29 @@ Interactieve veilige demo v0.8.9 van de uren- en facturatieapp voor Path Consult
 - Onbeperkte maand- en jaarselectie met afzonderlijke uren en statussen per periode.
 - Vorige/volgende maand werkt ook over jaargrenzen; dezelfde periode geldt in beide rollen en alle relevante menu's.
 - Wijzigbare instellingen die alleen lokaal in de browser worden bewaard.
+- Organisatienaam, appnaam, ondersteuning, logo en twee huisstijlkleuren zijn instelbaar; factuurvoorbeeld en interface nemen deze branding over.
 - Enter slaat uren, instellingen en medewerkerformulieren op; in een tekstvak gebruikt opslaan `Ctrl+Enter`.
 - Uren invoeren per werkdag en week.
 - Scheiding tussen contracturen en declarabele uren.
 - Meer of minder declarabele uren dan contracturen geeft alleen een controlebericht en blokkeert indienen nooit.
 - Uren indienen en door een beheerder laten goedkeuren.
-- De verse demo bevat meerdere combinaties om direct te testen: juni volledig afgerond, juli met open controles, factuur klaar en verzendtest gedaan, en augustus met concepturen, een correctieverzoek met voorbeeldtekst, ingediende uren en een factuur die klaarstaat.
+- De verse demo is rijk vooraf gevuld: juni is een afgeronde historische verzendtest, juli bevat drie direct te openen bevestigde conceptfacturen en één open urencontrole, en augustus bevat concepturen, een correctieverzoek met voorbeeldtekst, ingediende uren en een factuur die klaarstaat.
+- Het dashboard toont **Openstaande maanden** over alle perioden, oudste maand eerst. Een oudere maand blijft staan zolang uren, correcties, goedkeuringen of gekozen verzendroutes nog open zijn. Iedere actie selecteert eerst precies die maand; meerdere maanden worden nooit ongemerkt samen verwerkt.
 - Iedere open urenkaart heeft direct de knop **Correctie vragen**. Een beheerder kan uren alleen met een verplichte eigen toelichting terugsturen; de medewerker ziet de reden bij de melding, op het dashboard en boven de urenstaat.
 - Correctieverzoeken bewaren beheerder, datum, tijd, tekst en het moment van opnieuw indienen in de lokale historie.
 - Uren worden altijd voor één geselecteerde maand ingediend.
 - Goedkeuringen tonen één centrale lijst met alle openstaande maanden, met een apart filter voor alleen de gekozen maand.
 - Goedgekeurde facturen klaarzetten en de verzending veilig testen zonder e-mail te versturen.
-- EasySalary-controle via **Facturen**: per medewerker één eigen bericht binnen dezelfde verzendactie; geen dubbel hoofdmenu-item en geen aparte bulkknop.
-- Broker, boekhouder, EasySalary en eventuele extra ontvangers worden als gescheiden routes behandeld; CC/BCC wordt niet gebruikt om verschillende gegevensstromen te combineren.
+- Salarisadministratie loopt mee via het gewone **Mailvoorbeeld** en **Maandverzending controleren**. Er is geen apart scherm, geen vaste EasySalary-knop en geen aparte bulkknop. **EasySalary** is alleen de ingestelde Path-voorbeeldnaam.
+- Broker, boekhouding, salarisadministratie en eventuele extra ontvangers worden als gescheiden configureerbare routes behandeld; CC/BCC wordt niet gebruikt om verschillende gegevensstromen te combineren.
 - De begeleidende tekst bevat medewerker, maand en de daadwerkelijk goedgekeurde uren. De broker en boekhouder krijgen standaard de factuur; EasySalary standaard geen bijlage. Een urenstaat wordt niet toegevoegd.
-- Boekhouder, EasySalary en extra ontvangers worden één keer centraal onder **Instellingen** aangemaakt of gedeactiveerd. Zelf aangemaakte extra ontvangers kunnen na een waarschuwing ook definitief worden verwijderd; uren- en factuurhistorie blijft behouden.
+- Boekhouder, salarisadministratie en extra ontvangers worden centraal bewaard. Een nieuwe vaste ontvanger kan direct tijdens **Medewerker toevoegen** worden aangemaakt of later onder **Instellingen** worden beheerd. Zelf aangemaakte extra ontvangers kunnen na een waarschuwing ook definitief worden verwijderd; uren- en factuurhistorie blijft behouden.
 - Per medewerker is met vinkjes instelbaar of de broker en iedere centrale ontvanger een mail krijgen en of die ontvanger de factuur als PDF-bijlage ontvangt.
 - De bevestigde ItaQ- en Circle8-factuuradressen zijn exact uit de aangeleverde facturen ingevuld. Voor Shawn blijven ook overeenkomstnummer, crediteurennummer en nummer opdrachtuitvoerder op de factuur bewaard.
 - **Factuurnummer: [nummer]** staat als één witte regel in de factuurkop. De nummers gebruiken koppeltekens zonder spaties. Per medewerker blijft het vaste patroon gelijk; bij een nieuwe periode veranderen automatisch alleen de maand en het jaar.
 - Een nieuw aangemaakte centrale ontvanger wordt niet automatisch voor alle medewerkers geselecteerd.
-- Eén knop **Maandverzending klaarzetten** test na één bevestiging alle aangevinkte routes, maar houdt inhoud en ontvangers strikt gescheiden.
+- Eén knop **Maandverzending controleren** toont alle aangevinkte routes en bijlagen en voert na bevestiging alleen een veilige verzendtest uit. In productie volgt daarna pas **Definitief verzenden**.
+- De afgeronde demostatus heet **Verzendtest afgerond**. Dat betekent dat alle gekozen routes zijn gecontroleerd; er is niets echt verstuurd.
 - Iedere factuur die klaarstaat heeft een zichtbaar conceptvoorbeeld en kan als echte PDF worden gedownload. Alle facturen gebruiken dezelfde professionele Path-vormgeving met logo, donkerblauw en mintgroen. Shawn behoudt daarnaast uitsluitend op zijn eigen Circle8-factuur de drie verplichte brokerreferenties. De PDF is duidelijk gemarkeerd als niet-verzonden concept; definitieve productie-PDF's worden later server-side gemaakt.
 - Mededelingen, zoals een nieuwe appversie of belangrijke wijziging, naar alle actieve medewerkers, één klantgroep of zelf gekozen medewerkers.
 - Een mededeling kan eerst als concept worden opgeslagen, opnieuw worden bewerkt, verzonden of vóór verzending worden verwijderd. Een concept maakt nooit meldingen of e-mailtests.
@@ -44,9 +47,9 @@ Interactieve veilige demo v0.8.9 van de uren- en facturatieapp voor Path Consult
 - Medewerkers en beheerders lokaal toevoegen, aanpassen, deactiveren en opnieuw activeren zonder historie te verwijderen.
 - Profielmenu met lokale profielfoto, lichte modus, donkere modus en automatische systeemmodus.
 - Meldingenvenster met rolgebonden meldingen, een duidelijke lege toestand en veilige testmeldingen.
-- Ingebouwde hulpbot met vaste uitleg over alle functies; bij een onbekende vraag vraagt hij eerst om één duidelijkere formulering en toont pas na een tweede mislukte poging een Gmail-concept, Outlook/standaard-mailapplink en kopieerbare mailtekst voor Path Backoffice.
-- Path-logo, kleuren en responsive mobiele navigatie.
-- Datamodel voor een aparte MySQL-database op TransIP.
+- Ingebouwde hulpbot met vaste uitleg over alle functies. Een half zoekwoord toont eerst passende onderwerpkeuzes; bij een onbekende vraag vraagt de hulp eerst om één duidelijkere formulering en toont pas na een tweede mislukte poging een Gmail-concept, Outlook/standaard-mailapplink en kopieerbare mailtekst voor Path Backoffice.
+- Configureerbare branding en responsive mobiele navigatie; de verse demo gebruikt het Path-logo en de Path-kleuren.
+- Multi-tenant datamodel voor een MySQL-database: gebruikers, medewerkers, opdrachten, ontvangers, perioden, facturen, meldingen en auditlog zijn per organisatie gescheiden.
 
 De standaardontvangers en accountadressen zijn veilige placeholders. Beheerders mogen echte adressen invoeren; die worden uitsluitend lokaal in de browser bewaard. Alleen `backoffice@pathconsultancy.nl` is als handmatige hulplink opgenomen. De demo heeft geen verzendkoppeling, verstuurt zelf geen e-mail en schrijft niet naar TransIP.
 
@@ -84,4 +87,4 @@ De productie-uitvoer wordt in `dist/` geplaatst.
 5. Beveiligde rollen: medewerker, goedkeurder en beheerder.
 6. Auditlog, vergrendelde factuurnummers en herstelbare verzending.
 
-Zie `STAMGEGEVENS-EN-PLACEHOLDERS.md` voor de veiligheidsregels van de demo. Zie `PRODUCTIE-CHECKLIST.md` voor de technische gegevens die vóór ingebruikname nodig zijn.
+Zie `STAMGEGEVENS-EN-PLACEHOLDERS.md` voor de veiligheidsregels van de demo, `PRODUCTIE-CHECKLIST.md` voor de technische gegevens vóór ingebruikname en `PRODUCTARCHITECTUUR-v0.9.0.md` voor de route naar een verkoopbare multi-tenant dienst.

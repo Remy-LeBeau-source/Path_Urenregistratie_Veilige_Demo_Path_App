@@ -16,6 +16,7 @@ Dit is een levende checklist. Bevestigde punten worden uit **Nog te beslissen** 
 - Gio en Joyce zijn de beoogde beheerders.
 - `backoffice@pathconsultancy.nl` is het bevestigde hulpadres voor vragen die de ingebouwde hulp niet kan beantwoorden.
 - Iedere medewerker dient precies één gekozen maand in en ziet alleen de eigen uren.
+- Oudere onvoltooide maanden blijven op het dashboard staan totdat uren, correcties, goedkeuringen en alle gekozen verzendroutes zijn afgerond. Een maandactie verwerkt nooit meerdere maanden tegelijk.
 - EasySalary krijgt per medewerker en maand standaard alleen de begeleidende tekst met het goedgekeurde urentotaal; de factuurbijlage staat voor deze route standaard uit.
 - Broker en iedere centraal aangemaakte ontvanger zijn gescheiden routes; CC/BCC wordt niet gebruikt om verschillende inhoud te combineren.
 - Boekhouder, EasySalary en extra ontvangers worden centraal beheerd en per medewerker aangevinkt.
