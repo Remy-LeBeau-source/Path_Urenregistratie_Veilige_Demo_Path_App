@@ -68,7 +68,7 @@ assert(/\.invoice-brand-number-line\s+strong\s*\{[^}]*color:\s*#fff/.test(styles
 assert(/\.invoice-brand-references\s+strong\s*\{[^}]*color:\s*#fff/.test(styles), "Shawns drie brokerreferenties moeten wit en zichtbaar zijn in het donkerblauwe referentieblok");
 
 assert(document.querySelectorAll("#dashboard-employee-rows tr").length === 4, "Dashboard moet vier demo-medewerkers tonen");
-assert(document.querySelector(".demo-badge").textContent.includes("v0.8.6"), "De zichtbare demoversie moet v0.8.6 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("v0.8.7"), "De zichtbare demoversie moet v0.8.7 zijn");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("ItaQ Consultancy"), "De echte brokernaam moet zichtbaar zijn");
@@ -93,7 +93,7 @@ const employeePicker = document.querySelector("#login-employee");
 employeePicker.value = "4";
 employeePicker.dispatchEvent(new Event("change", { bubbles: true }));
 const demoScenarioState = JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(demoScenarioState.schemaVersion === 16, "Versie 0.8.6 moet wijzigingen onder de juiste gegevensversie bewaren");
+assert(demoScenarioState.schemaVersion === 17, "Versie 0.8.7 moet wijzigingen onder de juiste gegevensversie bewaren");
 assert(demoScenarioState.records["2026-08"]["1"].timesheetStatus === "draft", "Augustus moet een concepturenstaat bevatten");
 assert(demoScenarioState.records["2026-08"]["2"].timesheetStatus === "correction", "Augustus moet een urenstaat met correctieverzoek bevatten");
 assert(demoScenarioState.records["2026-08"]["2"].correctionHistory[0].message.includes("12 augustus"), "De voorbeeldcorrectie moet een concrete toelichting bevatten");
@@ -107,7 +107,7 @@ assert(dom.window.invoiceNumberFor(3, "2027-01") === "COA-2027-januari", "Brians
 assert(dom.window.invoiceNumberFor(4, "2027-01") === "Bel-Shawn-2027-januari", "Shawns factuurnummer moet bij een nieuw jaar automatisch 2027 gebruiken");
 assert(demoScenarioState.records["2026-08"]["3"].invoiceStatus === "ready", "Augustus moet een goedgekeurde urenstaat met factuur klaar bevatten");
 assert(demoScenarioState.records["2026-08"]["4"].timesheetStatus === "submitted", "Augustus moet een ingediende urenstaat bevatten");
-assert(demoScenarioState.records["2026-07"]["4"].invoiceStatus === "simulated", "Juli moet een afgeronde factuurverzendtest bevatten");
+assert(demoScenarioState.records["2026-07"]["4"].invoiceStatus === "ready", "Shawn moet net als andere goedgekeurde medewerkers met Factuur klaar beginnen");
 pressEnter("#login-employee");
 assert(document.querySelector("#timesheet-employee").textContent === "Shawn-Douglas Nahar", "Enter in de medewerkerkiezer moet met de gekozen medewerker inloggen");
 assert(document.querySelector('[data-view="approvals"]').hidden, "Ook een andere medewerker mag geen beheerfuncties zien");
@@ -547,6 +547,7 @@ click('[data-view="invoices"]');
 assert(document.querySelector("#invoice-rows").textContent.includes("Urencontrole nodig"), "De factuurlijst moet praktisch aangeven dat urencontrole nodig is");
 assert(document.querySelector("#invoice-rows").textContent.includes("Uren goedkeuren"), "Een open urencontrole moet rechtstreeks vanuit de factuurlijst te openen zijn");
 assert(document.querySelector("#invoice-rows").textContent.includes("Mailvoorbeeld"), "Een klare factuur moet een duidelijke volgende actie tonen");
+assert(!document.querySelector("#invoice-rows").textContent.includes("Mailtest bekijken"), "Shawn mag bij het openen niet afwijkend als vooraf geteste mail worden getoond");
 assert(document.querySelector("#invoice-rows").textContent.includes("Factuur bekijken"), "Een klare factuur moet als document bekeken kunnen worden");
 click('[data-invoice-filter="concept"]');
 assert(document.querySelectorAll("#invoice-rows tr").length >= 1, "Het filter Nog niet klaar moet conceptfacturen tonen");
@@ -721,8 +722,9 @@ const migrationPicker = migrationDom.window.document.querySelector("#login-admin
 migrationPicker.value = "joyce";
 migrationPicker.dispatchEvent(new migrationDom.window.Event("change", { bubbles: true }));
 const migratedState = JSON.parse(migrationDom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(migratedState.schemaVersion === 16, "Bestaande browsergegevens moeten automatisch naar v0.8.6 migreren");
+assert(migratedState.schemaVersion === 17, "Bestaande browsergegevens moeten automatisch naar v0.8.7 migreren");
 assert(migratedState.records["2026-07"]["4"].invoiceNumber === "Bel-Shawn-2026-juli", "Migratie moet ook bestaande factuurnummers omzetten naar de afgesproken koppeltekens");
+assert(migratedState.records["2026-07"]["4"].invoiceStatus === "ready", "Migratie moet de vooraf ingevulde Shawn-mailtest terugzetten naar Factuur klaar");
 assert(Array.isArray(migratedState.records["2026-07"]["1"].correctionHistory), "Migratie moet de correctiehistorie toevoegen zonder bestaande uren te wissen");
 assert(migratedState.records["2026-07"]["1"].payrollStatus, "Migratie moet de aparte EasySalary-status toevoegen zonder bestaande uren te wissen");
 assert(migratedState.announcements[0].status === "sent" && migratedState.announcements[0].kind === "standard", "Migratie moet oude mededelingen als verzonden standaardhistorie behouden");
@@ -742,4 +744,4 @@ assert(migratedState.employees.every(employee => employee.mailRecipientRoutes.bo
 assert(migratedState.employees.every(employee => employee.mailBody.includes("{uren}")), "Migratie moet de oude standaardtekst aanvullen met de daadwerkelijke uren");
 assert(migratedState.records["2026-07"]["1"].entries.flat().reduce((sum, value) => sum + value, 0) === 164, "Migratie moet bestaande uren volledig behouden");
 
-console.log("Path demo v0.8.6 volledige smoke test: geslaagd");
+console.log("Path demo v0.8.7 volledige smoke test: geslaagd");

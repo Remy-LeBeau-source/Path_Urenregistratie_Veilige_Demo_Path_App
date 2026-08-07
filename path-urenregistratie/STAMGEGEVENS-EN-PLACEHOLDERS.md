@@ -1,4 +1,4 @@
-# Veilige demo en placeholders - versie 0.8.6
+# Veilige demo en placeholders - versie 0.8.7
 
 Deze versie bevat de aangeleverde medewerkers, klanten, brokers, tarieven en factuurgegevens. Alleen e-mailadressen zijn bewust vervangen door onbestelbare placeholders.
 
@@ -133,4 +133,3 @@ Totdat deze punten zijn bevestigd, blijven de bijbehorende waarden voorlopige de
 ## Productiegegevens
 
 Echte e-mailadressen worden pas later via een afgeschermde productieconfiguratie toegevoegd. Ze horen niet in deze demo of in de broncode. De overige aangeleverde bedrijfs- en opdrachtgegevens zijn al zichtbaar.
-test

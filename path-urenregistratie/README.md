@@ -1,6 +1,6 @@
 # Path Uren & Facturatie
 
-Interactieve veilige demo v0.8.6 van de uren- en facturatieapp voor Path Consultancy B.V.
+Interactieve veilige demo v0.8.7 van de uren- en facturatieapp voor Path Consultancy B.V.
 
 ## Wat deze versie laat zien
 

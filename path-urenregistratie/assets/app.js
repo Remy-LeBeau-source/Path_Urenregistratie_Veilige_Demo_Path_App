@@ -141,7 +141,7 @@ function makeCorrectionRecord(total, contractHours, invoiceNumber, periodKey, me
 
 function freshState() {
   return {
-    schemaVersion: 16,
+    schemaVersion: 17,
     currentRole: null,
     currentAdminId: "gio",
     currentEmployeeId: 2,
@@ -323,7 +323,7 @@ function freshState() {
         "1": makeRecord(164, 164, "approved", "ready", "IND-2026-juli", "2026-07"),
         "2": makeRecord(153, 153, "submitted", "concept", "IND-StvB-2026-juli", "2026-07"),
         "3": makeRecord(117, 153, "submitted", "concept", "COA-2026-juli", "2026-07"),
-        "4": makeRecord(144, 144, "approved", "simulated", "Bel-Shawn-2026-juli", "2026-07")
+        "4": makeRecord(144, 144, "approved", "ready", "Bel-Shawn-2026-juli", "2026-07")
       },
       "2026-08": {
         "1": makeRecord(0, 151.2, "draft", "concept", "IND-2026-augustus", "2026-08"),
@@ -339,7 +339,7 @@ function loadState() {
   const fallback = freshState();
   try {
     const saved = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
-    if (!saved || ![7, 8, 9, 10, 11, 12, 13, 14, 15, 16].includes(saved.schemaVersion) || !parsePeriodKey(saved.selectedPeriodKey)) return fallback;
+    if (!saved || ![7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17].includes(saved.schemaVersion) || !parsePeriodKey(saved.selectedPeriodKey)) return fallback;
     const previousSchemaVersion = Number(saved.schemaVersion || 0);
     const hadLightDefault = saved.preferences && saved.preferences.themeDefaultVersion === 1;
     saved.preferences = Object.assign({}, fallback.preferences, saved.preferences || {});
@@ -402,7 +402,7 @@ function loadState() {
         record.correctionHistory = Array.isArray(record.correctionHistory) ? record.correctionHistory : [];
       });
     });
-    saved.schemaVersion = 16;
+    saved.schemaVersion = 17;
     saved.employees = Array.isArray(saved.employees) && saved.employees.length ? saved.employees : fallback.employees;
     saved.admins = saved.admins.map((admin, index) => Object.assign({
       id: "admin-" + (index + 1),
@@ -474,6 +474,9 @@ function loadState() {
           }
         });
       });
+    }
+    if (previousSchemaVersion < 17 && saved.records["2026-07"] && saved.records["2026-07"]["4"]) {
+      saved.records["2026-07"]["4"].invoiceStatus = "ready";
     }
     saved.currentRole = null;
     if (!saved.admins.some(admin => String(admin.id) === String(saved.currentAdminId) && admin.active !== false)) {
