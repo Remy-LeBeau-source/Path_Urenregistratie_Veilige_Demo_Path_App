@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0D1B38">
   <title>Uren & Facturatie</title>
-  <link rel="stylesheet" crossorigin href="/assets/index-COccL1Js.css">
+  <link rel="stylesheet" crossorigin href="/assets/index-BiOWLWh0.css">
 </head>
 <body>
   <section class="login-screen" id="login-screen" aria-labelledby="login-title">
@@ -97,7 +97,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 0.9.15</span>
+      <span class="demo-badge">Versie 0.9.16</span>
       </div>
     </aside>
 
@@ -199,12 +199,14 @@
             <p id="admin-attention-note">Dit vraagt nu je aandacht: bekijk open urencontroles en rond daarna de maand af.</p>
             <div class="hero-actions">
               <button class="button button-primary" id="open-work-queue" data-scroll-target="admin-task-panel">Open werkvoorraad</button>
-              <button class="button button-ghost" id="open-delivery-check">Bekijk taken van deze maand</button>
+              <button class="button button-ghost" id="open-delivery-check" data-scroll-target="admin-task-panel">Bekijk verdeling per maand</button>
             </div>
           </div>
-          <div class="close-card" aria-label="Procesvoortgang van de geselecteerde maand; dit is geen taakteller">
-            <div class="progress-ring" id="close-progress-ring" style="--progress:75"><span id="close-progress-value">75%</span></div>
-            <div><strong id="close-progress-title">Procesmeter · 3 van 4 fasen</strong><small id="close-progress-note">Geen taakteller · klanturenstaten staan hier los van</small></div>
+          <div class="hero-task-math" aria-label="Controle van het totaal aan open acties">
+            <span>Open werkvoorraad</span>
+            <strong id="hero-task-total">7 open acties</strong>
+            <div><small>Per maand</small><b id="hero-task-months">Juli 1 + Augustus 6 = 7</b></div>
+            <div><small>Per eigenaar</small><b id="hero-task-owners">Backoffice 4 + medewerkers 3 = 7</b></div>
           </div>
         </div>
 
@@ -228,7 +230,7 @@
             <button class="metric-link" data-go="invoices">Open facturen</button>
           </article>
           <article class="metric-card attention">
-            <span class="metric-label">Open taken</span>
+            <span class="metric-label">Open acties</span>
             <strong id="metric-actions">2</strong>
             <span class="metric-note" id="metric-actions-note">Over alle maanden</span>
             <button class="metric-link" data-scroll-target="admin-task-panel">Bekijk werkvoorraad</button>
@@ -237,17 +239,11 @@
 
         <section class="panel admin-task-panel" id="admin-task-panel">
           <div class="panel-heading admin-task-heading">
-            <div><span class="section-label">Zonder maanden wisselen</span><h3>Alle open taken</h3><p id="admin-task-summary">Bekijk per taak of de actie bij Backoffice of bij een medewerker ligt.</p></div>
-            <button class="button button-primary" id="admin-next-task" type="button">Start eerste Backoffice-taak</button>
+            <div><span class="section-label">Zonder maanden wisselen</span><h3>Alle open acties per maand</h3><p id="admin-task-summary">Iedere regel is één actie en toont wie hem moet uitvoeren.</p></div>
+            <button class="button button-primary" id="admin-next-task" type="button">Start eerste Backoffice-actie</button>
           </div>
           <div class="admin-task-filters" id="admin-task-filters" role="group" aria-label="Open taken filteren"></div>
           <div class="admin-task-list" id="admin-task-list"></div>
-        </section>
-
-        <section class="panel open-periods-panel" id="open-periods-panel">
-          <div class="panel-heading"><div><span class="section-label">Extra controle per periode</span><h3>Samenvatting per maand</h3></div><span class="updated-label">Alleen voor overzicht</span></div>
-          <p class="open-periods-intro">Hier zie je welke maanden nog niet volledig zijn afgerond. Gebruik hierboven Alle open taken om zonder handmatig wisselen van maand te zien bij wie iedere actie ligt.</p>
-          <div class="open-periods-list" id="open-periods-list"></div>
         </section>
 
         <section class="panel customer-timesheet-admin-panel" id="customer-timesheet-admin-panel">
@@ -260,6 +256,10 @@
           <div class="panel-heading">
             <div><span class="section-label">Procesvoortgang · geen taaktelling</span><h3 id="workflow-period-title">Vier procesfasen voor juli 2026</h3></div>
             <div class="workflow-heading-meta"><strong id="workflow-open-count">Deze maand: 1 open taak</strong><small id="workflow-open-breakdown">0 bij Backoffice · 1 bij medewerkers · waarvan 1 klanturenstaat</small><span class="updated-label">De taakverdeling staat ernaast</span></div>
+          </div>
+          <div class="workflow-progress-card" aria-label="Procesvoortgang van de geselecteerde maand; dit is geen taakteller">
+            <div class="progress-ring" id="close-progress-ring" style="--progress:75"><span id="close-progress-value">75%</span></div>
+            <div><strong id="close-progress-title">Procesmeter · 3 van 4 fasen</strong><small id="close-progress-note">Geen taakteller · klanturenstaten staan hier los van</small></div>
           </div>
           <div class="workflow-track">
             <div class="workflow-step is-done" id="workflow-hours"><span>1</span><div><strong>Uren</strong><small id="workflow-hours-note">4 ingediend</small></div></div>

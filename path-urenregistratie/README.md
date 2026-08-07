@@ -1,6 +1,6 @@
 # Path Uren & Facturatie
 
-Lokale voorbereidingsversie v0.9.15 van een configureerbare uren- en facturatieapp. Path Consultancy B.V. is de volledig ingevulde voorbeeldorganisatie.
+Lokale voorbereidingsversie v0.9.16 van een configureerbare uren- en facturatieapp. Path Consultancy B.V. is de volledig ingevulde voorbeeldorganisatie.
 
 ## Wat deze versie laat zien
 
@@ -19,15 +19,15 @@ Lokale voorbereidingsversie v0.9.15 van een configureerbare uren- en facturatiea
 - Scheiding tussen contracturen en declarabele uren.
 - Meer of minder declarabele uren dan contracturen geeft alleen een controlebericht en blokkeert indienen nooit.
 - Uren indienen en door een beheerder laten goedkeuren.
-- De verse voorbeeldomgeving is doelgericht gevuld: juni is afgerond, juli heeft 1 wachtende taak en augustus 6 taken. Over beide open maanden zijn er precies **4 directe beheertaken** en **3 taken die op een medewerker wachten**.
-- Het beheerdersdashboard begint met **Alle open taken** over alle perioden. Iedere zichtbare regel telt precies één keer en heeft één eigenaar: **Actie bij Backoffice** of **Actie bij medewerker**. De filters tonen hetzelfde totaal en dezelfde verdeling.
-- De dashboardkaart **Open taken** toont eerst het volledige aantal over alle maanden. Daaronder staan het aantal bij Backoffice, het aantal bij medewerkers en de betrokken maanden; **3 totaal = 0 bij Backoffice + 3 bij medewerkers**.
-- De hoofdknop heet altijd **Bekijk alle open taken [totaal]**. Een tweede knop is bewust een deelverzameling en benoemt daarom de maand, taaksoort, eigenaar en het aantal, bijvoorbeeld **Augustus 2026 · 2 urentaken bij medewerkers**.
-- De standaarddemo start bewust met 7 taken over 2 maanden: 4 direct voor Backoffice en 3 wachtend op medewerkers. Juli laat 1 rustige achterstand zien; augustus laat met 6 taken een drukkere maand zien.
-- Iedere taak toont zelf medewerker, klant/broker en maand. Een urencontrole, klanturenstaatcontrole, brokercontrole of verzendcontrole opent rechtstreeks voor die periode; de algemene maandkiezer hoeft daarvoor niet te worden aangepast.
-- **Samenvatting per maand** blijft als tweede, compact overzicht beschikbaar. Iedere maand toont eerst zijn eigen taaktotaal en daarna de verdeling, in de standaarddemo **juli: 1 taak** en **augustus: 6 taken**. Een oudere maand blijft staan zolang uren, correcties, klantdocumenten of gekozen verzendroutes nog open zijn.
-- De gefilterde teamtitel zegt expliciet **Uren wachten op medewerker**, met de geselecteerde maand en het aantal medewerkers. Daardoor kan dit maandcijfer niet meer worden verward met het totale aantal open taken over meerdere maanden.
-- De voortgangscirkel heet expliciet **Procesmeter [maand] · [aantal] van 4 fasen** en vermeldt **Geen taakteller**. Een open klanturenstaat wordt ernaast genoemd, omdat het klantdocument een apart proces blijft.
+- De verse voorbeeldomgeving is doelgericht gevuld: juni is afgerond, juli heeft 1 open actie en augustus 6. Dat zijn **7 acties in 5 dossiers**, verdeeld als **4 bij Backoffice + 3 bij medewerkers = 7**.
+- Bovenaan bewijst het beheerdersdashboard hetzelfde totaal op twee manieren: **Juli 1 + Augustus 6 = 7** en **Backoffice 4 + medewerkers 3 = 7**. Daardoor is direct zichtbaar waar het totaal vandaan komt.
+- De hoofdknop heet **Bekijk alle 7 open acties**. De tweede knop toont de volledige maandverdeling en is geen deelverzameling van alleen de gekozen detailmaand.
+- **Alle open acties per maand** toont juli en augustus als afzonderlijke blokken onder elkaar, oudste maand eerst. Binnen iedere maand staan **Nu doen door Backoffice** en **Wacht op medewerkers** als aparte groepen.
+- Iedere zichtbare regel is precies één actie met één eigenaar, één medewerker, één duidelijke omschrijving en één actieknop. Brian en Shawn mogen daardoor ieder twee verschillende acties in hetzelfde maanddossier hebben zonder dat dit als een verborgen dubbeltelling voelt.
+- De filters **Alle acties**, **Bij Backoffice** en **Bij medewerkers** gebruiken exact dezelfde zeven regels en telling.
+- Het eerdere losse paneel **Samenvatting per maand** is verwijderd; dezelfde informatie staat nu direct bij de echte taakregels en hoeft niet dubbel te worden gelezen.
+- De algemene maandkiezer stuurt alleen de maanddetails, teamstatus en facturen. De volledige werkvoorraad blijft altijd over alle open maanden zichtbaar.
+- De voortgangscirkel staat niet meer in de globale hoofdsamenvatting, maar lager bij de maanddetails. Hij heet **Procesmeter [maand] · [aantal] van 4 fasen** en vermeldt **Geen taakteller**.
 - De procesbalk benoemt de vier procesfasen als procesvoortgang en toont daarnaast het concrete taaktotaal van de geselecteerde maand, uitgesplitst naar Backoffice, medewerkers en klanturenstaten.
 - Ook in Facturen worden wachtstatussen onderscheiden als **Nog niet ingediend** en **Correctie nodig**, in plaats van één algemene status.
 - Iedere open urenkaart heeft direct de knop **Correctie vragen**. Een beheerder kan uren alleen met een verplichte eigen toelichting terugsturen; de medewerker ziet de reden bij de melding, op het dashboard en boven de urenstaat.
