@@ -82,7 +82,7 @@ assert(/\.invoice-brand-references\s+strong\s*\{[^}]*color:\s*#fff/.test(styles)
 assert(document.querySelectorAll("select:not([hidden])").length === 0, "De vaste interface mag geen zichtbare native browserdropdowns meer bevatten");
 
 assert(document.querySelectorAll("#dashboard-employee-rows tr").length === 4, "Dashboard moet vier demo-medewerkers tonen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.21"), "Het zichtbare versienummer moet 0.9.21 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.22"), "Het zichtbare versienummer moet 0.9.22 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -92,7 +92,7 @@ assert(document.querySelector("#metric-approved-note").textContent.includes("Gee
 assert(document.querySelector("#hours-total").textContent === "153,0", "Juli moet voor Stasjo van Bakel 153,0 uur tonen");
 assert(document.querySelectorAll("#approval-list .approval-card").length === 0, "De verse demo mag niet onnodig met open urencontroles starten");
 assert(document.querySelector("#period-month-picker").tagName === "BUTTON" && document.querySelector("#period-year-picker").type === "number" && !document.querySelector("#period-month-panel select"), "De algemene maandkeuze moet uit gewone knoppen bestaan en geen vastlopend browsermenu gebruiken");
-assert(document.querySelector(".period-picker-caption").textContent === "Alle maanden · kies maand", "De maandkiezer moet duidelijk maken dat overzichten alle maanden meenemen en de keuze alleen de detailmaand opent");
+assert(document.querySelector(".period-picker-caption").textContent === "Maanddetail", "De algemene maandkiezer moet duidelijk maken dat hij alleen de gekozen maanddetail wijzigt");
 click("#period-month-picker");
 assert(!document.querySelector("#period-month-panel").hidden && document.querySelector("#period-month-picker").getAttribute("aria-expanded") === "true", "Het eigen maandvenster moet bij iedere klik openen");
 click("#period-month-picker");
@@ -115,7 +115,7 @@ const employeePicker = document.querySelector("#login-employee");
 employeePicker.value = "4";
 employeePicker.dispatchEvent(new Event("change", { bubbles: true }));
 const demoScenarioState = JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(demoScenarioState.schemaVersion === 23, "Versie 0.9.21 moet wijzigingen onder de juiste gegevensversie bewaren");
+assert(demoScenarioState.schemaVersion === 23, "Versie 0.9.22 moet wijzigingen onder de juiste gegevensversie bewaren");
 const freshOpenActions = dom.window.adminOpenTasks();
 const freshJulyActions = freshOpenActions.filter(task => task.periodKey === "2026-07");
 const freshAugustActions = freshOpenActions.filter(task => task.periodKey === "2026-08");
@@ -159,9 +159,15 @@ assert(julyBatchReadiness.total === 4 && julyBatchReadiness.ready === 4 && julyB
 assert(document.querySelector("#month-batch-card").dataset.state === "ready" && document.querySelector("#month-batch-ready-count").textContent === "1 klaar · 3 gecontroleerd" && document.querySelector("#test-month-delivery").textContent === "Ga verder · 1 resterend" && !document.querySelector("#test-month-delivery").disabled, "De julikaart en CTA moeten de resterende groene maandcontrole exact tonen");
 assert(document.querySelector("#invoice-status-blocked-count").textContent === "0" && document.querySelector("#invoice-status-ready-count").textContent === "1" && document.querySelector("#invoice-status-controlled-count").textContent === "3", "De factuurstatussen moeten actuele aantallen tonen en geen genummerde stappen suggereren");
 assert(!document.querySelector("#invoice-batch-count").hidden && document.querySelector("#invoice-batch-blocked-count").textContent === "1" && !document.querySelector("#invoice-batch-blocked-count").hidden && document.querySelector("#invoice-batch-ready-count").textContent === "1" && !document.querySelector("#invoice-batch-ready-count").hidden, "Facturen moet standaard één oranje en één groen maandbolletje tonen");
-assert(document.querySelector("#invoice-month-overview-title").textContent === "2 open maandcontroles over alle maanden" && document.querySelector("#invoice-month-overview-list").textContent.includes("Juli 2026") && document.querySelector("#invoice-month-overview-list").textContent.includes("1 resterend · 3 gecontroleerd") && document.querySelector("#invoice-month-overview-list").textContent.includes("Augustus 2026") && document.querySelector("#invoice-month-overview-list").textContent.includes("2 blokkades"), "Bij juli moet het overzicht beide open maandcontroles naast elkaar uitleggen");
+assert(document.querySelector("#invoice-period-title").textContent === "Facturen", "Facturen moet niet suggereren dat alle maanden onder de gekozen maand vallen");
+assert(document.querySelector("#invoice-month-overview-title").textContent === "Alle maanden met open maandcontrole" && !document.querySelector("#invoice-month-overview-list").textContent.includes("Juni 2026") && document.querySelector("#invoice-month-overview-list").textContent.includes("Juli 2026") && document.querySelector("#invoice-month-overview-list").textContent.includes("1 resterend · 3 gecontroleerd") && document.querySelector("#invoice-month-overview-list").textContent.includes("Augustus 2026") && document.querySelector("#invoice-month-overview-list").textContent.includes("2 blokkades") && document.querySelector("#invoice-month-overview-list").textContent.includes("Open detail") && document.querySelector("#month-batch-label").textContent === "Gekozen maand · Juli 2026", "Het factuuroverzicht moet alle maanden met actie in één blok tonen en de gekozen maanddetail apart benoemen");
+assert(document.querySelector("#invoice-detail-toggle").textContent === "Toon gekozen maand" && document.querySelector("#month-batch-card").hidden && document.querySelector("#invoice-status-guide").hidden && document.querySelector("#invoice-detail-panel").hidden, "Facturen moet standaard eerst alleen het alle-maanden-overzicht tonen");
+click("#invoice-detail-toggle");
+assert(document.querySelector("#invoice-detail-toggle").textContent === "Verberg gekozen maand" && !document.querySelector("#month-batch-card").hidden && !document.querySelector("#invoice-status-guide").hidden && !document.querySelector("#invoice-detail-panel").hidden, "De gekozen maanddetails moeten bewust geopend kunnen worden vanuit het alle-maanden-overzicht");
+click("#invoice-detail-toggle");
+assert(document.querySelector("#invoice-detail-toggle").textContent === "Toon gekozen maand" && document.querySelector("#month-batch-card").hidden && document.querySelector("#invoice-status-guide").hidden && document.querySelector("#invoice-detail-panel").hidden, "De gekozen maanddetails moeten weer inklapbaar zijn zodat alleen het alle-maanden-overzicht overblijft");
 click('[data-invoice-overview-period="2026-08"]');
-assert(dom.window.currentPeriod().key === "2026-08" && document.querySelector("#invoice-period-title").textContent.includes("augustus 2026"), "Een maandregel in het overzicht moet direct naar die factuurmaand springen");
+assert(dom.window.currentPeriod().key === "2026-08" && document.querySelector("#invoice-period-title").textContent === "Facturen" && document.querySelector("#month-batch-label").textContent === "Gekozen maand · Augustus 2026" && !document.querySelector("#month-batch-card").hidden && !document.querySelector("#invoice-detail-panel").hidden, "Een maandknop in het overzicht moet de maanddetail wijzigen en de detailweergave weer openen zonder het alle-maanden hoofdscherm te verlaten");
 choosePeriod("#period-month-picker", "#period-year-picker", "2026-07");
 assert(demoScenarioState.records["2026-07"]["3"].customerTimesheet.status === "missing" && julyBatchReadiness.state === "ready", "Een ontbrekende klanturenstaat mag de maandbatch volgens de huidige productregel niet blokkeren");
 
@@ -724,7 +730,7 @@ assert(document.querySelectorAll("#approval-list .approval-card").length === 1, 
 dom.window.setPeriod("2026-08");
 click('[data-view="invoices"]');
 assert(!document.querySelector("#global-period-control").hidden, "Bij Facturen moet de maandkiezer zichtbaar blijven");
-assert(document.querySelector("#invoice-period-title").textContent.includes("augustus 2026"), "Facturen moeten de gekozen periode gebruiken");
+assert(document.querySelector("#invoice-period-title").textContent === "Facturen" && document.querySelector("#month-batch-label").textContent === "Gekozen maand · Augustus 2026" && document.querySelector("#month-batch-card").hidden, "Facturen moeten standaard eerst alle maanden tonen en de gekozen maanddetail pas openen na keuze");
 click('[data-view="employees"]');
 assert(!document.querySelector("#global-period-control").hidden, "Bij Medewerkers moet de maandkiezer zichtbaar blijven voor maandstatussen");
 assert(document.querySelector("#employee-period-label").textContent === "augustus 2026", "Medewerkerstatussen moeten de gekozen periode gebruiken");
@@ -1322,7 +1328,7 @@ const migrationPicker = migrationDom.window.document.querySelector("#login-admin
 migrationPicker.value = "joyce";
 migrationPicker.dispatchEvent(new migrationDom.window.Event("change", { bubbles: true }));
 const migratedState = JSON.parse(migrationDom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(migratedState.schemaVersion === 23, "Bestaande browsergegevens moeten ook in v0.9.21 veilig behouden blijven");
+assert(migratedState.schemaVersion === 23, "Bestaande browsergegevens moeten ook in v0.9.22 veilig behouden blijven");
 assert(migratedState.settings.mailRecipients.find(recipient => recipient.id === "payroll").name.includes("Salarisadministratie"), "Migratie moet EasySalary als duidelijke salarisadministratieroute benoemen");
 assert(migratedState.records["2026-07"]["4"].invoiceNumber === "Bel-Shawn-2026-juli", "Migratie moet ook bestaande factuurnummers omzetten naar de afgesproken koppeltekens");
 assert(migratedState.records["2026-07"]["4"].invoiceStatus === "ready", "Migratie moet de vooraf ingevulde Shawn-mailtest terugzetten naar Factuur klaar");
@@ -1349,4 +1355,4 @@ assert(Object.values(migratedState.records).flatMap(periodRecords => Object.valu
 assert(migratedState.employees.every(employee => employee.mailBody.includes("{uren}")), "Migratie moet de oude standaardtekst aanvullen met de daadwerkelijke uren");
 assert(migratedState.records["2026-07"]["1"].entries.flat().reduce((sum, value) => sum + value, 0) === 164, "Migratie moet bestaande uren volledig behouden");
 
-console.log("Path v0.9.21 volledige smoke test: geslaagd");
+console.log("Path v0.9.22 volledige smoke test: geslaagd");

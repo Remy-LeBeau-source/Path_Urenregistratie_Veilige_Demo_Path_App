@@ -355,6 +355,7 @@ function freshState() {
     currentEmployeeId: 2,
     selectedPeriodKey: "2026-07",
     invoiceFilter: "all",
+    invoiceDetailCollapsed: true,
     approvalScope: "all",
     dashboardTeamScope: "all",
     adminTaskFilter: "all",
@@ -600,6 +601,7 @@ function loadState() {
     const previousSchemaVersion = Number(saved.schemaVersion || 0);
     saved.hoursWeekScope = typeof saved.hoursWeekScope === "string" ? saved.hoursWeekScope : "all";
     saved.hoursWeekScopeTouched = saved.hoursWeekScopeTouched === true;
+    saved.invoiceDetailCollapsed = saved.invoiceDetailCollapsed === true;
     saved.adminTaskMonthState = saved.adminTaskMonthState && typeof saved.adminTaskMonthState === "object" && !Array.isArray(saved.adminTaskMonthState)
       ? Object.fromEntries(Object.entries(saved.adminTaskMonthState).filter(([stateKey, monthState]) => {
         const [scope, periodKey] = stateKey.split(":");
@@ -1447,7 +1449,7 @@ function renderPeriodHeadings() {
   syncPeriodControls("#period-month-picker", "#period-year-picker", period.key);
   document.querySelector("#workflow-period-title").textContent = "Vier procesfasen voor " + period.month + " " + period.year;
   document.querySelector("#timesheet-period-title").textContent = period.label;
-  document.querySelector("#invoice-period-title").textContent = "Facturen " + period.month + " " + period.year;
+  document.querySelector("#invoice-period-title").textContent = "Facturen";
   document.querySelector("#employee-period-label").textContent = period.month + " " + period.year;
 }
 
@@ -2681,6 +2683,13 @@ function monthBatchOverviewMeta(readiness) {
       detail: readiness.blockers.length + " " + (readiness.blockers.length === 1 ? "blokkade" : "blokkades") + " · " + readiness.pendingDelivery + " klaar"
     };
   }
+  if (readiness.state === "controlled") {
+    return {
+      tone: "controlled",
+      label: "Afgerond",
+      detail: readiness.controlled + "/" + readiness.total + " gecontroleerd"
+    };
+  }
   return {
     tone: "ready",
     label: readiness.controlled > 0 ? "Bezig" : "Klaar",
@@ -2722,27 +2731,29 @@ function renderInvoiceMonthOverview() {
   const title = document.querySelector("#invoice-month-overview-title");
   const note = document.querySelector("#invoice-month-overview-note");
   const list = document.querySelector("#invoice-month-overview-list");
-  panel.hidden = summary.total === 0;
+  panel.hidden = false;
   if (summary.total === 0) {
-    panel.dataset.state = "empty";
-    title.textContent = "Geen open maandcontroles";
-    note.textContent = "Alle maandcontroles zijn afgerond.";
-    list.innerHTML = "";
+    panel.dataset.state = "ready";
+    title.textContent = "Alle maanden";
+    note.textContent = "Er zijn geen maanden met open factuuractie. Kies bovenaan een maanddetail om afgeronde of historische facturen te bekijken.";
+    list.innerHTML = '<div class="invoice-month-overview-empty">Geen open maandacties</div>';
     return;
   }
   panel.dataset.state = summary.blocked > 0 ? "blocked" : "ready";
-  title.textContent = summary.total + " open maandcontrole" + (summary.total === 1 ? "" : "s") + " over alle maanden";
+  title.textContent = "Alle maanden met open maandcontrole";
   const noteParts = [];
   if (summary.blocked) noteParts.push(summary.blocked + " geblokkeerd");
   if (summary.ready) noteParts.push(summary.ready + " klaar voor controle");
-  note.textContent = noteParts.join(" · ") + ". Kies hieronder direct de maand die je wilt openen.";
+  note.textContent = summary.total + " open maandcontrole" + (summary.total === 1 ? "" : "s") + " · " + noteParts.join(" · ") + ". Klik een maandknop of gebruik Maanddetail bovenaan.";
   list.innerHTML = summary.batches.map(readiness => {
     const period = periodFromKey(readiness.periodKey);
     const meta = monthBatchOverviewMeta(readiness);
     const isCurrent = readiness.periodKey === currentPeriod().key;
-    return '<button class="invoice-month-overview-item is-' + meta.tone + (isCurrent ? " is-current" : "") + '" type="button" data-invoice-overview-period="' + readiness.periodKey + '">' +
+    const detailOpen = isCurrent && state.invoiceDetailCollapsed !== true;
+    const actionLabel = detailOpen ? "Detail open" : "Open detail";
+    return '<button class="invoice-month-overview-item is-' + meta.tone + (isCurrent ? " is-current" : "") + (detailOpen ? " is-detail-open" : "") + '" type="button" data-invoice-overview-period="' + readiness.periodKey + '" aria-pressed="' + (detailOpen ? "true" : "false") + '" aria-label="' + escapeHtml((detailOpen ? "Geopend maanddetail: " : "Open maanddetail: ") + period.label + ", " + meta.label + ", " + meta.detail) + '">' +
       '<span><strong>' + escapeHtml(period.label) + '</strong><small>' + escapeHtml(meta.detail) + '</small></span>' +
-      '<span class="status-pill ' + (meta.tone === "blocked" ? "status-warning" : "status-ready") + '">' + escapeHtml(meta.label) + '</span>' +
+      '<span class="invoice-month-overview-action"><span class="status-pill ' + (meta.tone === "blocked" ? "status-warning" : meta.tone === "controlled" ? "status-approved" : "status-ready") + '">' + escapeHtml(meta.label) + '</span><small>' + actionLabel + '</small></span>' +
     '</button>';
   }).join("");
 }
@@ -2763,16 +2774,33 @@ function renderInvoiceStatusSummary(readiness) {
   });
 }
 
+function renderInvoiceDetailVisibility() {
+  const collapsed = state.invoiceDetailCollapsed === true;
+  const toggle = document.querySelector("#invoice-detail-toggle");
+  const detailCard = document.querySelector("#month-batch-card");
+  const statusGuide = document.querySelector("#invoice-status-guide");
+  const detailPanel = document.querySelector("#invoice-detail-panel");
+  if (detailCard) detailCard.hidden = collapsed;
+  if (statusGuide) statusGuide.hidden = collapsed;
+  if (detailPanel) detailPanel.hidden = collapsed;
+  if (toggle) {
+    toggle.textContent = collapsed ? "Toon gekozen maand" : "Verberg gekozen maand";
+    toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+  }
+}
+
 function renderMonthBatchReadiness(readiness) {
   const card = document.querySelector("#month-batch-card");
   if (!card) return;
   const period = periodFromKey(readiness.periodKey);
+  const label = document.querySelector("#month-batch-label");
   const status = document.querySelector("#month-batch-status");
   const note = document.querySelector("#month-batch-note");
   const blockers = document.querySelector("#month-batch-blockers");
   const progress = document.querySelector("#month-batch-progress");
   const percent = readiness.total ? Math.round(readiness.controlled / readiness.total * 100) : 0;
   card.dataset.state = readiness.state;
+  if (label) label.textContent = "Gekozen maand · " + period.label;
   document.querySelector("#month-batch-ready-count").textContent = readiness.state === "controlled"
     ? readiness.controlled + " van " + readiness.total + " gecontroleerd"
     : readiness.state === "ready"
@@ -2812,6 +2840,7 @@ function renderMonthBatchReadiness(readiness) {
   monthDelivery.disabled = cta.disabled;
   monthDelivery.setAttribute("aria-controls", readiness.state === "blocked" ? "month-batch-blockers" : "modal");
   renderInvoiceStatusSummary(readiness);
+  renderInvoiceDetailVisibility();
 }
 
 function openMonthBatchBlocker(employeeId, periodKey) {
@@ -4198,13 +4227,19 @@ function renderAll() {
   applyTheme();
 }
 
-function showView(view) {
+function showView(view, options = {}) {
   if (state.currentRole === "employee" && adminViews.has(view)) view = "employee-dashboard";
   if (state.currentRole === "admin" && view === "timesheet") view = "dashboard";
   if (state.currentRole === "admin" && view === "employee-dashboard") view = "dashboard";
   if (state.currentRole === "admin" && view === "employee-announcements") view = "dashboard";
   const target = document.querySelector("#view-" + view);
   if (!target) return;
+  const wasInvoicesActive = document.querySelector("#view-invoices")?.classList.contains("is-active");
+  if (view === "invoices" && !wasInvoicesActive && options.keepInvoiceDetail !== true && state.invoiceDetailCollapsed !== true) {
+    state.invoiceDetailCollapsed = true;
+    persistState();
+    renderInvoices();
+  }
   document.querySelector("#global-period-control").hidden = ["approvals", "announcements", "employee-announcements", "settings"].includes(view);
   document.querySelectorAll(".view").forEach(item => item.classList.toggle("is-active", item === target));
   document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("is-active", item.dataset.view === view));
@@ -5345,8 +5380,22 @@ document.addEventListener("click", event => {
 
   const invoiceOverviewPeriod = event.target.closest("[data-invoice-overview-period]");
   if (invoiceOverviewPeriod) {
+    const previousPeriod = state.selectedPeriodKey;
+    state.invoiceDetailCollapsed = false;
     setPeriod(invoiceOverviewPeriod.dataset.invoiceOverviewPeriod);
-    showView("invoices");
+    if (previousPeriod === state.selectedPeriodKey) {
+      persistState();
+      renderAll();
+    }
+    showView("invoices", { keepInvoiceDetail: true });
+    return;
+  }
+
+  const invoiceDetailToggle = event.target.closest("#invoice-detail-toggle");
+  if (invoiceDetailToggle) {
+    state.invoiceDetailCollapsed = !state.invoiceDetailCollapsed;
+    persistState();
+    renderAll();
     return;
   }
 
@@ -5769,6 +5818,7 @@ function setPeriod(periodKey) {
     return true;
   }
   state.selectedPeriodKey = next;
+  if (document.querySelector("#view-invoices")?.classList.contains("is-active")) state.invoiceDetailCollapsed = false;
   ensurePeriodRecords(next);
   state.invoiceFilter = "all";
   state.dashboardTeamScope = "all";

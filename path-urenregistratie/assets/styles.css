@@ -457,21 +457,31 @@ select:focus-visible {
 .approval-empty-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
 
 .invoice-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 17px 22px; }
-.invoice-month-overview { display: grid; grid-template-columns: minmax(0,.75fr) minmax(320px,1.25fr); gap: 16px; align-items: center; margin-bottom: 17px; border: 1px solid var(--line); border-left: 4px solid var(--mint); border-radius: 15px; background: #fff; padding: 16px 18px; box-shadow: 0 5px 18px rgba(13,27,56,.025); }
+.invoice-month-overview { display: grid; gap: 16px; margin-bottom: 17px; border: 1px solid var(--line); border-left: 4px solid var(--mint); border-radius: 15px; background: #fff; padding: 16px 18px; box-shadow: 0 5px 18px rgba(13,27,56,.025); }
 .invoice-month-overview[hidden] { display: none; }
 .invoice-month-overview[data-state="blocked"] { border-left-color: var(--warning); background: linear-gradient(135deg,#fff,#fffaf4); }
 .invoice-month-overview[data-state="ready"] { border-left-color: var(--mint); background: linear-gradient(135deg,#fff,#f7fffc); }
+.invoice-month-overview-head { display: grid; grid-template-columns: minmax(0,.7fr) minmax(360px,1.3fr); gap: 16px; align-items: center; }
 .invoice-month-overview-copy h3 { margin: 5px 0 0; color: var(--navy); font-family: "Roboto Slab", Georgia, serif; font-size: 18px; }
 .invoice-month-overview-copy p { margin: 6px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
 .invoice-month-overview-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 8px; }
-.invoice-month-overview-item { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px; align-items: center; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.82); color: var(--navy); cursor: pointer; padding: 10px 12px; text-align: left; }
-.invoice-month-overview-item:hover, .invoice-month-overview-item.is-current { border-color: #9edccb; background: var(--green-light); }
+.invoice-month-overview-item { display: grid; min-height: 62px; grid-template-columns: minmax(0,1fr) auto; gap: 12px; align-items: center; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.82); color: var(--navy); cursor: pointer; padding: 10px 12px; text-align: left; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+.invoice-month-overview-item:hover, .invoice-month-overview-item.is-current { border-color: #9edccb; background: var(--green-light); box-shadow: 0 8px 18px rgba(13,27,56,.07); transform: translateY(-1px); }
 .invoice-month-overview[data-state="blocked"] .invoice-month-overview-item.is-blocked,
 .invoice-month-overview-item.is-blocked.is-current { border-color: #f0d2a8; background: var(--warning-bg); }
+.invoice-month-overview-item.is-controlled { border-color: #cfe8e0; background: #f7fffc; }
+.invoice-month-overview-item.is-controlled.is-current { border-color: var(--mint-dark); background: var(--green-light); }
 .invoice-month-overview-item strong, .invoice-month-overview-item small { display: block; }
 .invoice-month-overview-item strong { overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .invoice-month-overview-item small { margin-top: 3px; color: var(--muted); font-size: 9px; line-height: 1.4; }
+.invoice-month-overview-action { display: grid; gap: 4px; justify-items: end; }
+.invoice-month-overview-action small { border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--navy); font-size: 9px; font-weight: 900; padding: 5px 8px; text-decoration: none; }
+.invoice-month-overview-item.is-detail-open .invoice-month-overview-action small { border-color: var(--mint-dark); background: var(--mint); }
+.invoice-month-overview-item.is-blocked .invoice-month-overview-action small { border-color: #f0d2a8; }
+.invoice-month-overview-empty { border: 1px dashed var(--line); border-radius: 12px; background: rgba(255,255,255,.65); color: var(--muted); font-size: 10px; font-weight: 800; padding: 13px; text-align: center; }
 .month-batch-card { display: grid; grid-template-columns: minmax(0,1fr) minmax(190px,260px); gap: 18px 26px; align-items: center; margin-bottom: 17px; border: 1px solid var(--line); border-left: 4px solid var(--mint-dark); border-radius: 15px; background: var(--surface); padding: 19px 21px; box-shadow: 0 5px 18px rgba(13,27,56,.025); }
+.month-batch-card[hidden], .invoice-status-guide[hidden], #invoice-detail-panel[hidden] { display: none; }
+.invoice-month-overview .month-batch-card { margin-bottom: 0; box-shadow: none; }
 .month-batch-card[data-state="blocked"] { border-left-color: var(--warning); background: linear-gradient(135deg, #fff, #fffaf4); }
 .month-batch-card[data-state="ready"] { border-left-color: var(--mint); background: linear-gradient(135deg, #fff, #f7fffc); }
 .month-batch-card[data-state="controlled"] { border-left-color: var(--mint-dark); }
@@ -694,7 +704,8 @@ select:focus-visible {
   .hours-visible-total { text-align: left; }
   .reminder-rule { grid-template-columns: 1fr 1fr; }
   .reminder-rule .check-row { grid-column: 1/-1; }
-  .invoice-month-overview { grid-template-columns: 1fr; }
+  .invoice-month-overview-head { grid-template-columns: 1fr; }
+  .invoice-month-overview-action { justify-items: start; }
   .month-batch-card { grid-template-columns: 1fr; }
   .month-batch-blockers { grid-column: auto; }
   .invoice-status-guide { grid-template-columns: 1fr; }
@@ -1145,6 +1156,7 @@ html[data-theme="dark"] .invoice-month-overview-item { border-color: var(--line)
 html[data-theme="dark"] .invoice-month-overview-item:hover,
 html[data-theme="dark"] .invoice-month-overview-item.is-current { background: #10231f; }
 html[data-theme="dark"] .invoice-month-overview-item.is-blocked.is-current { background: var(--warning-bg); }
+html[data-theme="dark"] .invoice-month-overview-empty { background: rgba(9,19,31,.42); }
 html[data-theme="dark"] .month-batch-progress::before { background: #263746; }
 html[data-theme="dark"] .topbar { border-color: var(--line); background: rgba(9,19,31,.92); }
 html[data-theme="dark"] .demo-employee-picker,
