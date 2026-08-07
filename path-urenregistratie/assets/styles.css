@@ -1269,3 +1269,439 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
   .help-suggestions { grid-template-columns: 1fr; }
   .help-suggestions [data-help-topic="contact"] { grid-column: 1; }
 }
+
+/* v0.9.23 · mobiele bediening: dezelfde functies, maar met duidelijke touch-layouts. */
+@media (max-width: 720px) {
+  html, body { overflow-x: hidden; }
+
+  .main-content {
+    width: 100%;
+    padding: 0 14px 96px;
+  }
+
+  .topbar {
+    display: grid;
+    min-height: auto;
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 10px;
+    padding: 13px 0 12px;
+  }
+
+  .topbar h1 {
+    overflow: hidden;
+    max-width: 100%;
+    font-size: 22px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .topbar-actions {
+    display: grid;
+    width: 100%;
+    grid-template-columns: minmax(0,1fr) auto auto;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .period-control {
+    order: -1;
+    grid-column: 1 / -1;
+    width: 100%;
+    min-height: 54px;
+    justify-content: space-between;
+    gap: 5px;
+    padding: 4px;
+  }
+
+  .period-control > button {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    font-size: 24px;
+  }
+
+  .period-picker-wrap {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 3px 5px;
+  }
+
+  .period-picker-caption {
+    font-size: 7px;
+    text-align: center;
+  }
+
+  .period-picker-fields {
+    grid-template-columns: minmax(0,1fr) 76px;
+    gap: 5px;
+  }
+
+  .period-control .month-picker-trigger,
+  .period-picker-fields input {
+    min-height: 32px;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .month-choice-panel {
+    left: 50%;
+    width: min(330px, calc(100vw - 32px));
+    max-height: 58vh;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    overflow-y: auto;
+    transform: translateX(-50%);
+  }
+
+  .period-control .month-choice-panel button,
+  .customer-timesheet-upload-grid .month-choice-panel button {
+    min-height: 42px;
+    font-size: 11px;
+  }
+
+  .notification-button,
+  .profile-menu-button {
+    width: 42px;
+    height: 42px;
+  }
+
+  .popover-panel {
+    position: fixed;
+    top: 82px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-height: calc(100vh - 170px);
+    overflow-y: auto;
+  }
+
+  .view-heading {
+    gap: 12px;
+    margin: 24px 0 16px;
+  }
+
+  .view-heading h2 {
+    font-size: clamp(25px, 8vw, 33px);
+    line-height: 1.08;
+  }
+
+  .view-heading p {
+    font-size: 12px;
+  }
+
+  .heading-actions,
+  .heading-actions .button,
+  .heading-actions .small-button {
+    width: 100%;
+  }
+
+  .invoice-month-overview,
+  .month-batch-card,
+  .panel,
+  .metric-card,
+  .employee-customer-timesheet-card,
+  .dashboard-next-action-card {
+    border-radius: 15px;
+  }
+
+  .invoice-month-overview {
+    padding: 14px;
+  }
+
+  .invoice-month-overview-head {
+    grid-template-columns: 1fr;
+    gap: 13px;
+  }
+
+  .invoice-month-overview-copy h3 {
+    font-size: 17px;
+  }
+
+  .invoice-month-overview-list {
+    grid-template-columns: 1fr;
+  }
+
+  .invoice-month-overview-item {
+    min-height: 74px;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .invoice-month-overview-item strong {
+    white-space: normal;
+  }
+
+  .invoice-month-overview-action {
+    align-self: stretch;
+    justify-items: end;
+  }
+
+  .invoice-detail-toggle {
+    width: 100%;
+    min-height: 42px;
+    margin-top: 10px;
+  }
+
+  .month-batch-card {
+    grid-template-columns: 1fr;
+    padding: 15px;
+  }
+
+  .month-batch-title-row h3 {
+    font-size: 18px;
+  }
+
+  .month-batch-progress {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  .month-batch-progress > strong {
+    justify-self: start;
+  }
+
+  .invoice-status-guide {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+
+  .invoice-status-guide > div {
+    min-height: 58px;
+    padding: 12px;
+  }
+
+  .invoice-toolbar {
+    gap: 11px;
+    padding: 13px 14px;
+  }
+
+  .invoice-toolbar .segmented-control {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    overflow: visible;
+  }
+
+  .invoice-toolbar .segmented-control button {
+    min-height: 40px;
+    padding-inline: 8px;
+    white-space: normal;
+  }
+
+  .table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .invoice-table {
+    min-width: 0;
+  }
+
+  .invoice-table thead {
+    display: none;
+  }
+
+  .invoice-table,
+  .invoice-table tbody,
+  .invoice-table tr,
+  .invoice-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .invoice-table tr {
+    border-top: 1px solid var(--line);
+    padding: 12px 14px;
+  }
+
+  .invoice-table tr:first-child {
+    border-top: 0;
+  }
+
+  .invoice-table td {
+    display: grid;
+    grid-template-columns: minmax(94px,.42fr) minmax(0,1fr);
+    gap: 12px;
+    align-items: start;
+    border: 0;
+    padding: 8px 0;
+    white-space: normal;
+  }
+
+  .invoice-table td::before {
+    color: var(--muted);
+    content: "";
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+
+  .invoice-table td:nth-child(1)::before { content: "Factuur"; }
+  .invoice-table td:nth-child(2)::before { content: "Consultant"; }
+  .invoice-table td:nth-child(3)::before { content: "Broker"; }
+  .invoice-table td:nth-child(4)::before { content: "Bedrag"; }
+  .invoice-table td:nth-child(5)::before { content: "Status"; }
+  .invoice-table td:nth-child(6)::before { content: "Actie"; }
+
+  .invoice-action {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 7px;
+    justify-items: stretch;
+  }
+
+  .invoice-action .small-button,
+  .invoice-action-note {
+    width: 100%;
+    min-height: 40px;
+    text-align: center;
+  }
+
+  .admin-task-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 10px 14px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-task-filters button {
+    flex: 0 0 auto;
+    min-height: 39px;
+  }
+
+  .admin-task-month-heading,
+  .admin-task-owner-heading,
+  .admin-task-row,
+  .open-period-row,
+  .open-periods-intro,
+  .administrator-row,
+  .announcement-item,
+  .employee-announcement-card {
+    padding-inline: 14px;
+  }
+
+  .admin-task-row {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+
+  .admin-task-kind strong,
+  .admin-task-person strong,
+  .admin-task-note small,
+  .month-batch-blocker-copy strong,
+  .month-batch-blocker-owner strong {
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .button,
+  .small-button,
+  .text-button,
+  .metric-link {
+    min-height: 42px;
+  }
+
+  .metric-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-card {
+    min-height: auto;
+    padding: 16px;
+  }
+
+  .hero-card,
+  .employee-hero {
+    min-height: auto;
+    margin-top: 16px;
+    padding: 22px 18px;
+  }
+
+  .hero-copy h2,
+  .employee-hero h2 {
+    font-size: clamp(27px, 9vw, 34px);
+  }
+
+  .employee-customer-timesheet-card,
+  .employee-history-row {
+    grid-template-columns: 1fr;
+  }
+
+  .employee-customer-timesheet-actions {
+    justify-content: stretch;
+  }
+
+  .modal-backdrop {
+    align-items: end;
+    padding: 10px;
+  }
+
+  .modal {
+    width: 100%;
+    max-height: calc(100vh - 20px);
+    overflow-y: auto;
+    border-radius: 20px 20px 16px 16px;
+    padding: 24px 18px 18px;
+  }
+
+  .modal h2 {
+    padding-right: 38px;
+    font-size: 23px;
+    line-height: 1.12;
+  }
+
+  .modal-summary > div {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .modal-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .modal-actions .button {
+    width: 100%;
+  }
+
+  .modal-queue {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .modal-queue > div {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .help-launcher {
+    right: 12px;
+    bottom: 78px;
+    min-height: 44px;
+    padding-right: 8px;
+  }
+
+  .help-launcher strong {
+    display: none;
+  }
+
+  .help-panel {
+    right: 12px;
+    bottom: 132px;
+    left: 12px;
+    width: auto;
+    max-height: calc(100vh - 150px);
+  }
+}
+
+@media (max-width: 390px) {
+  .main-content { padding-inline: 10px; }
+  .period-picker-fields { grid-template-columns: minmax(0,1fr) 66px; }
+  .period-control > button { width: 38px; flex-basis: 38px; }
+  .topbar-actions { grid-template-columns: minmax(0,1fr) auto auto; }
+  .invoice-month-overview-item { grid-template-columns: 1fr; }
+  .invoice-month-overview-action { justify-items: start; }
+  .invoice-toolbar .segmented-control { grid-template-columns: 1fr; }
+  .invoice-table td { grid-template-columns: 1fr; gap: 3px; }
+}
