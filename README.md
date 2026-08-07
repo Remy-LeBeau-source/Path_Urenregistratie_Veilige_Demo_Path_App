@@ -86,3 +86,4 @@ De productie-uitvoer wordt in `dist/` geplaatst.
 6. Auditlog, vergrendelde factuurnummers en herstelbare verzending.
 
 Zie `STAMGEGEVENS-EN-PLACEHOLDERS.md` voor de veiligheidsregels van de demo. Zie `PRODUCTIE-CHECKLIST.md` voor de technische gegevens die vóór ingebruikname nodig zijn.
+test
