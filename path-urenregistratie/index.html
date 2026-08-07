@@ -89,7 +89,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-        <span class="demo-badge">Veilige demo v0.8.7</span>
+        <span class="demo-badge">Veilige demo v0.8.9</span>
       </div>
     </aside>
 
@@ -458,16 +458,19 @@
     </main>
   </div>
 
-  <button class="help-launcher" id="help-launcher" aria-label="Hulp openen" aria-expanded="false" aria-controls="help-panel" hidden><span>?</span><strong>Hulp</strong></button>
+  <button class="help-launcher" id="help-launcher" aria-label="Hulp en contact openen" aria-expanded="false" aria-controls="help-panel" hidden><span>?</span><strong>Hulp &amp; contact</strong></button>
   <section class="help-panel" id="help-panel" aria-label="Hulp bij de urenapp" hidden>
     <header><div><small>Path Hulp</small><strong id="help-greeting">Waarmee kan ik helpen?</strong></div><button class="icon-button" id="help-close" aria-label="Hulp sluiten">×</button></header>
-    <div class="help-messages" id="help-messages" aria-live="polite"></div>
-    <div class="help-suggestions" id="help-suggestions"></div>
     <form class="help-form" id="help-form">
       <label class="sr-only" for="help-input">Stel een vraag over de urenapp</label>
-      <input id="help-input" autocomplete="off" placeholder="Stel je vraag over de app…">
-      <button type="submit">Stuur</button>
+      <input id="help-input" autocomplete="off" placeholder="Vind je antwoord…">
+      <button type="submit">Zoek</button>
     </form>
+    <div class="help-messages" id="help-messages" aria-live="polite"></div>
+    <section class="help-faq" aria-labelledby="help-faq-title">
+      <div class="help-faq-heading"><strong id="help-faq-title">Veelgestelde vragen</strong><small>Kies een onderwerp</small></div>
+      <div class="help-suggestions" id="help-suggestions"></div>
+    </section>
   </section>
 
   <div class="modal-backdrop" id="modal" hidden>

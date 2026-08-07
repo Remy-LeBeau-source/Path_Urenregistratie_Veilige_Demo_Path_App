@@ -556,7 +556,8 @@ const HELP_TOPICS = [
   { id: "settings", roles: ["admin"], label: "Instellingen", terms: "instellingen bedrijf iban kvk btw betalingstermijn mailroutering ontvanger toevoegen", answer: "Instellingen bevat bedrijfsgegevens, mailroutering, vaste ontvangers en veiligheidsregels. Boekhouder, EasySalary of een extra ontvanger maak je hier één keer aan; daarna vink je die per medewerker aan. De demo bewaart dit alleen lokaal en heeft geen echte verzendkoppeling.", view: "settings" },
   { id: "placeholders", roles: ["admin"], label: "E-mailadressen in de demo", terms: "placeholder example invalid echt e-mailadres veilig waarom", answer: "De standaardvoorbeelden gebruiken @example.invalid, maar je kunt zelf ieder geldig adres invoeren. Ook met een echt adres wordt niets verstuurd, omdat de demo geen e-mailkoppeling bevat." },
   { id: "google", roles: ["admin", "employee"], label: "Google-login", terms: "google gmail workspace inloggen wachtwoord 2fa e-mail wijzigen", answer: "De demo gebruikt een rolkeuze. In productie logt iedereen in met Google Workspace. Wachtwoord, e-mailadres en tweestapsverificatie worden daarom niet in deze app beheerd." },
-  { id: "help", roles: ["admin", "employee"], label: "Hulp en contact", terms: "hulp contact backoffice vraag antwoord chatbot bot gmail outlook mailapp", answer: "Deze hulpbot geeft vaste, betrouwbare antwoorden over iedere functie. Begrijpt hij een vraag niet, dan vraagt hij eerst om één duidelijkere formulering. Pas als ook die tweede poging onbekend blijft, kun je een vooraf ingevuld bericht openen in Gmail, Outlook / je standaard mailapp of de tekst kopiëren voor backoffice@pathconsultancy.nl. Jij moet de e-mail altijd zelf verzenden." },
+  { id: "contact", roles: ["admin", "employee"], label: "Contact opnemen", terms: "contact opnemen backoffice iemand spreken medewerker mail email e-mail gmail outlook mailapp bereiken", answer: "Je kunt Path Backoffice bereiken via backoffice@pathconsultancy.nl. Kies hieronder hoe je een vooraf ingevuld bericht wilt openen of kopiëren. Er wordt niets automatisch verzonden.", contact: true, contactQuestion: "Ik wil contact opnemen over de urenapp." },
+  { id: "help", roles: ["admin", "employee"], label: "Uitleg hulpbot", terms: "hulp vraag antwoord chatbot bot werking onbekende vraag", answer: "Deze hulpbot geeft vaste antwoorden over de urenapp. Is er geen betrouwbaar antwoord, dan vraagt hij je eerst om de vraag één keer anders of concreter te formuleren. Alleen als ook die tweede poging onbekend blijft, verschijnen de contactmogelijkheden." },
   { id: "install", roles: ["admin", "employee"], label: "App installeren", terms: "installeren pwa telefoon desktop apple google store", answer: "Installeren komt zodra de productie-app op het Path-domein staat. Eerst wordt het een installeerbare webapp; plaatsing in de Apple- en Google-stores kan daarna." }
 ];
 
@@ -1703,9 +1704,9 @@ function renderHoursGrid() {
   }
   document.querySelector("#hours-grid").innerHTML = period.weekRows.map((week, weekIndex) => {
     const cells = week.days.map((day, dayIndex) => {
-      if (!day) return '<td class="outside-month"><span aria-hidden="true">—</span></td>';
+      if (!day) return '<td class="outside-month"><span class="outside-month-mark" aria-hidden="true">—</span></td>';
       const value = record.entries[weekIndex][dayIndex];
-      return '<td><span class="date-number">' + day.day + '</span><input class="hours-input" data-week-index="' + weekIndex + '" data-day-index="' + dayIndex + '" type="number" min="0" max="24" step="0.5" value="' + value + '" aria-label="' + escapeHtml(day.label) + '"></td>';
+      return '<td class="workday-cell"><label class="hours-day-entry"><span class="date-number">' + day.day + ' ' + escapeHtml(period.month.slice(0, 3)) + '</span><input class="hours-input" data-week-index="' + weekIndex + '" data-day-index="' + dayIndex + '" type="number" min="0" max="24" step="0.5" value="' + value + '" aria-label="' + escapeHtml(day.label) + '"></label></td>';
     }).join("");
     const yearNote = week.year === period.year ? "" : " · " + week.year;
     return "<tr><td>Week " + week.number + yearNote + "</td>" + cells + '<td class="week-total">0,0</td></tr>';
@@ -1996,8 +1997,8 @@ function renderHelpSuggestions() {
   const target = document.querySelector("#help-suggestions");
   if (!target) return;
   const preferred = state.currentRole === "admin"
-    ? ["approvals", "invoices", "employee-add", "notifications", "theme"]
-    : ["hours", "submit", "status", "notifications", "absence"];
+    ? ["contact", "approvals", "invoices", "employee-add", "notifications", "theme"]
+    : ["contact", "hours", "submit", "status", "notifications", "absence"];
   const topics = preferred.map(id => HELP_TOPICS.find(topic => topic.id === id)).filter(Boolean);
   target.innerHTML = topics.map(topic => '<button data-help-topic="' + topic.id + '">' + escapeHtml(topic.label) + '</button>').join("");
 }
@@ -2048,7 +2049,7 @@ function openHelp() {
   const profile = currentProfileData();
   document.querySelector("#help-greeting").textContent = "Waarmee kan ik helpen, " + profile.name.split(/\s+/)[0] + "?";
   if (!document.querySelector("#help-messages").children.length) {
-    addHelpMessage("Hallo " + profile.name.split(/\s+/)[0] + ". Stel een vraag over een functie of kies hieronder een veelgestelde vraag.", "bot");
+    addHelpMessage("Hallo " + profile.name.split(/\s+/)[0] + ". Zoek een antwoord of kies een onderwerp bij Veelgestelde vragen.", "bot");
   }
   renderHelpSuggestions();
   document.querySelector("#help-input").focus();
@@ -2109,17 +2110,26 @@ function answerHelpQuestion(question, explicitTopicId) {
   if (topic) {
     unresolvedHelpQuestion = "";
     const view = topic.view === "home" ? profileForRole(state.currentRole).home : topic.view;
-    addHelpMessage(topic.answer, "bot", view ? { view, label: "Open " + pageTitles[view] } : null);
+    const options = {};
+    if (view) {
+      options.view = view;
+      options.label = "Open " + pageTitles[view];
+    }
+    if (topic.contact) {
+      options.contact = true;
+      options.question = topic.contactQuestion || question || "Ik wil contact opnemen over de urenapp.";
+    }
+    addHelpMessage(topic.answer, "bot", Object.keys(options).length ? options : null);
     return;
   }
   if (!unresolvedHelpQuestion) {
     unresolvedHelpQuestion = question;
-    addHelpMessage("Ik begrijp je vraag nog niet helemaal. Wil je hem één keer anders of iets concreter formuleren? Bijvoorbeeld: ‘Hoe dien ik mijn uren voor juli in?’", "bot");
+    addHelpMessage("Ik heb hier nog geen betrouwbaar standaardantwoord op. Wil je je vraag één keer anders of iets concreter formuleren? Bijvoorbeeld: ‘Hoe dien ik mijn uren voor juli in?’", "bot");
     return;
   }
   const combinedQuestion = "Eerste formulering: " + unresolvedHelpQuestion + "\nTweede formulering: " + question;
   unresolvedHelpQuestion = "";
-  addHelpMessage("Ook na je tweede formulering heb ik nog geen betrouwbaar standaardantwoord. Kies hieronder Gmail, Outlook / je standaard mailapp of kopieer het bericht. Een mailprogramma opent alleen als het op jouw apparaat is ingesteld; er wordt niets automatisch verzonden.", "bot", { contact: true, question: combinedQuestion });
+  addHelpMessage("Ook na je tweede formulering heb ik geen betrouwbaar standaardantwoord. Kies hieronder Gmail, Outlook / je standaard mailapp of kopieer het bericht voor Path Backoffice. Er wordt niets automatisch verzonden.", "bot", { contact: true, question: combinedQuestion });
 }
 
 function renderAll() {

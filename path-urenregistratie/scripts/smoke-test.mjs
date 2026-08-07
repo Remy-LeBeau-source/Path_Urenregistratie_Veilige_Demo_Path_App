@@ -68,7 +68,7 @@ assert(/\.invoice-brand-number-line\s+strong\s*\{[^}]*color:\s*#fff/.test(styles
 assert(/\.invoice-brand-references\s+strong\s*\{[^}]*color:\s*#fff/.test(styles), "Shawns drie brokerreferenties moeten wit en zichtbaar zijn in het donkerblauwe referentieblok");
 
 assert(document.querySelectorAll("#dashboard-employee-rows tr").length === 4, "Dashboard moet vier demo-medewerkers tonen");
-assert(document.querySelector(".demo-badge").textContent.includes("v0.8.7"), "De zichtbare demoversie moet v0.8.7 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("v0.8.9"), "De zichtbare demoversie moet v0.8.9 zijn");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("ItaQ Consultancy"), "De echte brokernaam moet zichtbaar zijn");
@@ -93,7 +93,7 @@ const employeePicker = document.querySelector("#login-employee");
 employeePicker.value = "4";
 employeePicker.dispatchEvent(new Event("change", { bubbles: true }));
 const demoScenarioState = JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(demoScenarioState.schemaVersion === 17, "Versie 0.8.7 moet wijzigingen onder de juiste gegevensversie bewaren");
+assert(demoScenarioState.schemaVersion === 17, "Versie 0.8.9 moet wijzigingen onder de juiste gegevensversie bewaren");
 assert(demoScenarioState.records["2026-08"]["1"].timesheetStatus === "draft", "Augustus moet een concepturenstaat bevatten");
 assert(demoScenarioState.records["2026-08"]["2"].timesheetStatus === "correction", "Augustus moet een urenstaat met correctieverzoek bevatten");
 assert(demoScenarioState.records["2026-08"]["2"].correctionHistory[0].message.includes("12 augustus"), "De voorbeeldcorrectie moet een concrete toelichting bevatten");
@@ -155,6 +155,12 @@ reminderNotification.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 assert(document.querySelector("#view-timesheet").classList.contains("is-active"), "Een urenmelding moet direct naar de juiste urenstaat navigeren");
 click("#help-launcher");
 assert(!document.querySelector("#help-panel").hidden, "De hulpbot moet rechtsonder openen");
+assert(document.querySelector("#help-launcher").textContent.includes("Hulp & contact"), "De vaste hulpknop moet contact expliciet noemen");
+assert(document.querySelector('[data-help-topic="contact"]'), "De hulpbot moet altijd een zichtbare knop Contact opnemen tonen");
+assert(document.querySelector("#help-faq-title").textContent === "Veelgestelde vragen", "Het hulpmenu moet een duidelijk FAQ-kopje tonen");
+assert(document.querySelector("#help-input").placeholder === "Vind je antwoord…", "Het hulpmenu moet als antwoordzoeker herkenbaar zijn");
+assert(document.querySelector("#help-suggestions button:first-child").dataset.helpTopic === "contact", "Contact opnemen moet als eerste vaste keuze zichtbaar zijn");
+assert(!document.querySelector("#help-panel").textContent.includes("Recent bericht"), "De hulp mag geen livechat- of berichteninbox suggereren");
 document.querySelector("#help-input").value = "Hoe dien ik mijn maand in?";
 document.querySelector("#help-form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
 assert(document.querySelector("#help-messages").textContent.includes("uitsluitend de geselecteerde maand"), "De hulpbot moet functies inhoudelijk uitleggen");
@@ -167,6 +173,14 @@ document.querySelector("#help-form").dispatchEvent(new Event("submit", { bubbles
 assert(document.querySelector('#help-messages a[href^="https://mail.google.com/mail/"]'), "Een onbekende vraag moet een vooraf ingevuld Gmail-concept aanbieden");
 assert(document.querySelector('#help-messages a[href^="mailto:backoffice@pathconsultancy.nl"]'), "Een onbekende vraag moet ook de standaard mailapp of Outlook kunnen openen");
 assert(document.querySelector('#help-messages [data-copy-support]'), "Een onbekende vraag moet ook als e-mailtekst gekopieerd kunnen worden");
+const messageCountBeforeContact = document.querySelectorAll("#help-messages .help-message").length;
+document.querySelector("#help-input").value = "contact";
+document.querySelector("#help-form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+const directContactMessage = document.querySelectorAll("#help-messages .help-message")[messageCountBeforeContact + 1];
+assert(directContactMessage.textContent.includes("backoffice@pathconsultancy.nl"), "De vraag contact moet direct het juiste Path Backoffice-adres tonen");
+assert(directContactMessage.querySelector('a[href^="https://mail.google.com/mail/"]'), "Contact moet direct een Gmail-knop tonen");
+assert(directContactMessage.querySelector('a[href^="mailto:backoffice@pathconsultancy.nl"]'), "Contact moet direct een Outlook- of mailappknop tonen");
+assert(directContactMessage.querySelector("[data-copy-support]"), "Contact moet direct een kopieerknop tonen");
 click("#help-close");
 click('[data-view="timesheet"]');
 assert(!document.querySelector("#submit-timesheet").disabled, "Een verschil met contracturen mag indienen nooit blokkeren");
@@ -180,6 +194,9 @@ assert(document.querySelector("#timesheet-period-title").textContent === "Januar
 assert(document.querySelector("#hours-total").textContent === "0,0", "Een nieuw gekozen maand moet eigen lege uren hebben");
 assert(!document.querySelector("#submit-timesheet").disabled, "Ook een lege of afwijkende maand moet ingediend kunnen worden");
 assert(document.querySelector("#hours-target-help").textContent.includes("Alleen Januari 2024 wordt ingediend"), "Indienen moet expliciet tot één geselecteerde maand beperkt zijn");
+assert(document.querySelectorAll(".workday-cell .hours-day-entry").length === document.querySelectorAll(".hours-input").length, "Iedere datum en ureninvoer moeten samen in één gecentreerd dagblok staan");
+assert(document.querySelector(".hours-day-entry .date-number").textContent.includes("jan"), "De datum boven het urenveld moet ook de maandafkorting tonen");
+assert(!/\.hours-table\s+\.date-number\s*\{[^}]*position:\s*absolute/.test(styles), "De datum mag niet meer los linksboven van het urenveld staan");
 
 const firstHoursInput = document.querySelector(".hours-input");
 const nextHoursInput = document.querySelectorAll(".hours-input")[1];
@@ -722,7 +739,7 @@ const migrationPicker = migrationDom.window.document.querySelector("#login-admin
 migrationPicker.value = "joyce";
 migrationPicker.dispatchEvent(new migrationDom.window.Event("change", { bubbles: true }));
 const migratedState = JSON.parse(migrationDom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(migratedState.schemaVersion === 17, "Bestaande browsergegevens moeten automatisch naar v0.8.7 migreren");
+assert(migratedState.schemaVersion === 17, "Bestaande browsergegevens moeten automatisch naar v0.8.9 migreren");
 assert(migratedState.records["2026-07"]["4"].invoiceNumber === "Bel-Shawn-2026-juli", "Migratie moet ook bestaande factuurnummers omzetten naar de afgesproken koppeltekens");
 assert(migratedState.records["2026-07"]["4"].invoiceStatus === "ready", "Migratie moet de vooraf ingevulde Shawn-mailtest terugzetten naar Factuur klaar");
 assert(Array.isArray(migratedState.records["2026-07"]["1"].correctionHistory), "Migratie moet de correctiehistorie toevoegen zonder bestaande uren te wissen");
@@ -744,4 +761,4 @@ assert(migratedState.employees.every(employee => employee.mailRecipientRoutes.bo
 assert(migratedState.employees.every(employee => employee.mailBody.includes("{uren}")), "Migratie moet de oude standaardtekst aanvullen met de daadwerkelijke uren");
 assert(migratedState.records["2026-07"]["1"].entries.flat().reduce((sum, value) => sum + value, 0) === 164, "Migratie moet bestaande uren volledig behouden");
 
-console.log("Path demo v0.8.7 volledige smoke test: geslaagd");
+console.log("Path demo v0.8.9 volledige smoke test: geslaagd");

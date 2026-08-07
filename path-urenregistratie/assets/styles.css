@@ -343,14 +343,18 @@ select:focus-visible {
 .assignment-bar small, .assignment-bar strong { display: block; }
 .assignment-bar small { color: #9fb0c0; font-size: 9px; letter-spacing: .05em; text-transform: uppercase; }
 .assignment-bar strong { margin-top: 5px; font-size: 12px; }
-.hours-table th, .hours-table td { min-width: 78px; border-bottom: 1px solid #edf1f2; padding: 12px 10px; text-align: center; }
+.hours-table th, .hours-table td { min-width: 88px; border-bottom: 1px solid #edf1f2; padding: 11px 10px; text-align: center; vertical-align: middle; }
 .hours-table th { background: #fafcfc; color: #7a8792; font-size: 10px; }
-.hours-table td:first-child { color: var(--teal); font-size: 11px; font-weight: 800; }
-.hours-table input { width: 58px; height: 38px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: var(--navy); text-align: center; }
-.hours-table input:focus { border-color: var(--mint); }
-.hours-table td { position: relative; }
-.hours-table .date-number { position: absolute; top: 4px; left: 7px; color: #99a4ae; font-size: 8px; font-weight: 700; }
+.hours-table tbody tr { transition: background .15s ease; }
+.hours-table tbody tr:hover { background: #fbfdfd; }
+.hours-table td:first-child { min-width: 100px; color: var(--teal); font-size: 11px; font-weight: 800; }
+.hours-day-entry { display: grid; justify-items: center; gap: 7px; width: fit-content; margin: 0 auto; cursor: text; }
+.hours-table .date-number { display: inline-flex; min-width: 46px; min-height: 19px; align-items: center; justify-content: center; border-radius: 999px; background: var(--green-light); color: var(--teal); font-size: 8px; font-weight: 900; letter-spacing: .02em; text-transform: lowercase; }
+.hours-table input { width: 64px; height: 42px; border: 1px solid var(--line); border-radius: 11px; background: #fff; color: var(--navy); font-size: 14px; font-weight: 700; text-align: center; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+.hours-table input:hover { border-color: #b9d9d1; }
+.hours-table input:focus { outline: 0; border-color: var(--mint); box-shadow: 0 0 0 4px rgba(58,189,157,.14); transform: translateY(-1px); }
 .hours-table .outside-month { background: #fafcfc; color: #c6ced1; }
+.outside-month-mark { display: grid; width: 64px; height: 42px; place-items: center; margin: 26px auto 0; border-radius: 11px; background: #f4f7f7; color: #bdc7cb; }
 .hours-table .week-total { color: var(--navy); font-size: 12px; font-weight: 800; }
 .hours-table tfoot th { border: 0; background: var(--green-light); color: var(--teal); text-align: right; }
 .hours-table tfoot th:last-child { text-align: center; }
@@ -795,7 +799,7 @@ select:focus-visible {
 .help-launcher { position: fixed; right: 24px; bottom: 22px; z-index: 80; display: flex; min-height: 48px; align-items: center; gap: 8px; border: 0; border-radius: 999px; background: var(--navy); color: #fff; cursor: pointer; box-shadow: 0 16px 38px rgba(13,27,56,.25); padding: 6px 15px 6px 7px; }
 .help-launcher > span { display: grid; width: 35px; height: 35px; place-items: center; border-radius: 50%; background: var(--mint); color: var(--navy); font-size: 16px; font-weight: 900; }
 .help-launcher strong { font-size: 11px; }
-.help-panel { position: fixed; right: 24px; bottom: 82px; z-index: 90; display: grid; width: min(390px, calc(100vw - 28px)); max-height: min(650px, calc(100vh - 110px)); grid-template-rows: auto minmax(120px,1fr) auto auto; overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); box-shadow: 0 28px 70px rgba(13,27,56,.24); }
+.help-panel { position: fixed; right: 24px; bottom: 82px; z-index: 90; display: grid; width: min(420px, calc(100vw - 28px)); max-height: min(700px, calc(100vh - 110px)); grid-template-rows: auto auto minmax(120px,1fr) auto; overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); box-shadow: 0 28px 70px rgba(13,27,56,.24); }
 .help-panel header { display: flex; align-items: center; justify-content: space-between; gap: 15px; background: linear-gradient(135deg, #0d1b38, #174b55); color: #fff; padding: 18px; }
 .help-panel header small, .help-panel header strong { display: block; }
 .help-panel header small { color: #9eb0c1; font-size: 9px; text-transform: uppercase; }
@@ -809,9 +813,16 @@ select:focus-visible {
 .help-contact-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 9px; }
 .help-contact-actions a, .help-contact-actions button { display: inline-flex; align-items: center; width: auto; margin: 0; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--teal); cursor: pointer; font: inherit; font-size: 9px; font-weight: 800; padding: 7px 9px; text-decoration: none; }
 .help-contact-actions a:hover, .help-contact-actions button:hover { border-color: var(--teal); }
-.help-suggestions { display: flex; gap: 6px; overflow-x: auto; border-top: 1px solid var(--line); background: var(--surface); padding: 9px 12px; }
-.help-suggestions button { flex: 0 0 auto; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--teal); cursor: pointer; font-size: 9px; padding: 7px 10px; }
-.help-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; border-top: 1px solid var(--line); background: var(--surface); padding: 11px; }
+.help-faq { border-top: 1px solid var(--line); background: var(--surface); padding: 12px; }
+.help-faq-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.help-faq-heading strong { color: var(--navy); font-size: 11px; }
+.help-faq-heading small { color: var(--muted); font-size: 8px; }
+.help-suggestions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; margin-top: 9px; max-height: 150px; overflow-y: auto; }
+.help-suggestions button { display: flex; min-height: 36px; align-items: center; justify-content: space-between; gap: 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--teal); cursor: pointer; font-size: 9px; font-weight: 700; padding: 8px 10px; text-align: left; }
+.help-suggestions button::after { content: "›"; font-size: 14px; line-height: 1; }
+.help-suggestions button:hover { border-color: var(--teal); background: var(--green-light); }
+.help-suggestions [data-help-topic="contact"] { grid-column: 1 / -1; border-color: transparent; background: var(--green-light); color: var(--navy); font-weight: 900; }
+.help-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; border-bottom: 1px solid var(--line); background: var(--surface); padding: 11px; }
 .help-form input { min-width: 0; height: 40px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); padding: 0 11px; }
 .help-form button { border: 0; border-radius: 10px; background: var(--mint); color: var(--navy); cursor: pointer; font-size: 10px; font-weight: 900; padding: 0 14px; }
 
@@ -855,6 +866,9 @@ html[data-theme="dark"] .hours-table td,
 html[data-theme="dark"] .summary-card dl div { border-color: var(--line); }
 html[data-theme="dark"] .hours-table th,
 html[data-theme="dark"] .hours-table .outside-month { background: #0d1825; }
+html[data-theme="dark"] .hours-table tbody tr:hover { background: #0e1a27; }
+html[data-theme="dark"] .outside-month-mark { background: #111d2b; color: #607181; }
+html[data-theme="dark"] .help-faq-heading strong { color: var(--ink); }
 html[data-theme="dark"] .metric-card.attention { border-color: #5f4327; background: linear-gradient(150deg,#111d2b,#211a12); }
 html[data-theme="dark"] .modal { background: var(--surface); color: var(--ink); }
 html[data-theme="dark"] .correction-banner { border-color: #60482a; }
@@ -919,4 +933,6 @@ html[data-theme="dark"] .mail-route-guide article.is-payroll { border-color: #28
   .recipient-choice-grid { grid-template-columns: 1fr; }
   .help-launcher { right: 12px; bottom: 78px; }
   .help-panel { right: 12px; bottom: 136px; max-height: calc(100vh - 155px); }
+  .help-suggestions { grid-template-columns: 1fr; }
+  .help-suggestions [data-help-topic="contact"] { grid-column: 1; }
 }

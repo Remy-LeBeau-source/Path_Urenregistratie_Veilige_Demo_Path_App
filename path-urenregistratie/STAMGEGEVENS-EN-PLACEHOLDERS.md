@@ -1,4 +1,4 @@
-# Veilige demo en placeholders - versie 0.8.7
+# Veilige demo en placeholders - versie 0.8.9
 
 Deze versie bevat de aangeleverde medewerkers, klanten, brokers, tarieven en factuurgegevens. Alleen e-mailadressen zijn bewust vervangen door onbestelbare placeholders.
 
