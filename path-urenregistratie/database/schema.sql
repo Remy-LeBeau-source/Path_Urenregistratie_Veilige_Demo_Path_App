@@ -196,7 +196,7 @@ CREATE TABLE timesheets (
   billable_hours DECIMAL(7,2) NOT NULL DEFAULT 0,
   leave_hours DECIMAL(7,2) NOT NULL DEFAULT 0,
   sickness_hours DECIMAL(7,2) NOT NULL DEFAULT 0,
-  status ENUM('draft', 'submitted', 'approved', 'rejected', 'invoiced') NOT NULL DEFAULT 'draft',
+  status ENUM('draft', 'submitted', 'approved', 'correction', 'rejected', 'invoiced') NOT NULL DEFAULT 'draft',
   employee_note TEXT NULL,
   review_note TEXT NULL,
   submitted_at TIMESTAMP NULL,
@@ -246,7 +246,7 @@ CREATE TABLE customer_timesheets (
   period_id BIGINT UNSIGNED NOT NULL,
   employee_id BIGINT UNSIGNED NOT NULL,
   assignment_id BIGINT UNSIGNED NOT NULL,
-  status ENUM('missing', 'draft', 'received', 'approved', 'resubmit', 'sent_to_broker') NOT NULL DEFAULT 'missing',
+  status ENUM('missing', 'draft', 'received', 'approved', 'resubmit', 'skipped', 'sent', 'sent_to_broker') NOT NULL DEFAULT 'missing',
   storage_key VARCHAR(255) NULL,
   original_file_name VARCHAR(255) NULL,
   stored_file_name VARCHAR(255) NULL,
@@ -397,28 +397,4 @@ CREATE TABLE audit_log (
   CONSTRAINT fk_audit_actor FOREIGN KEY (actor_user_id) REFERENCES users(id),
   INDEX idx_audit_entity (entity_type, entity_id, created_at),
   INDEX idx_audit_company_date (company_id, created_at)
-);
-
-INSERT INTO companies (
-  legal_name,
-  trade_name,
-  chamber_of_commerce_number,
-  vat_number,
-  iban,
-  address_line,
-  postal_code,
-  city,
-  invoice_prefix,
-  payment_term_days
-) VALUES (
-  'QSI Consultancy',
-  'Path Consultancy',
-  '89320018',
-  'NL001622017B32',
-  'NL95INGB0006947972',
-  'Du Perronstraat 12',
-  '3067 HN',
-  'Rotterdam',
-  'QSI',
-  30
 );

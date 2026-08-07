@@ -321,7 +321,7 @@ function demoNotifications() {
   const notifications = [
     { id: 1, audience: "admin", employeeId: 2, title: "Correctie nodig", message: "Stasjo moet augustus nog aanpassen.", periodKey: "2026-08", view: "approvals", read: false, createdAt: "5 augustus, 10:15" },
     { id: 2, audience: "admin", employeeId: 4, title: "Uren ingediend", message: "Shawn-Douglas heeft Augustus 2026 ingediend.", periodKey: "2026-08", view: "approvals", read: false, createdAt: "Vandaag, 09:18" },
-    { id: 3, audience: "admin", title: "Twee facturen klaar", message: "Twee bevestigde facturen over Juli 2026 staan klaar; alle overige acties staan in Alle open acties per maand.", periodKey: "2026-07", view: "invoices", read: false, createdAt: "Vandaag, 09:25" },
+    { id: 3, audience: "admin", title: "Maandcontrole juli bijna klaar", message: "Juli 2026 heeft nog één resterende verzendcontrole; augustus toont de open blokkades.", periodKey: "2026-07", view: "invoices", read: false, createdAt: "Vandaag, 09:25" },
     { id: 4, audience: "employee", employeeId: 2, title: "Correctie gevraagd", message: "Controleer 12 augustus en dien de maand daarna opnieuw in.", periodKey: "2026-08", view: "timesheet", read: false, createdAt: "5 augustus, 10:15" },
     { id: 5, audience: "employee", employeeId: 4, title: "Uren wachten op controle", message: "Je uren voor Augustus 2026 zijn ingediend.", periodKey: "2026-08", view: "employee-dashboard", read: false, createdAt: "Vandaag, 09:18" }
   ];
@@ -580,12 +580,12 @@ function freshState() {
         "1": seedCustomerTimesheet(makeRecord(164, 164, "approved", "simulated", "IND-2026-juli", "2026-07"), "sent", "Klanturenstaat_Marc_de_Roon_2026-07.pdf"),
         "2": seedCustomerTimesheet(makeRecord(153, 153, "approved", "simulated", "IND-StvB-2026-juli", "2026-07"), "sent", "Klanturenstaat_Stasjo_van_Bakel_2026-07.pdf"),
         "3": seedCustomerTimesheet(makeRecord(117, 117, "approved", "simulated", "COA-2026-juli", "2026-07"), "missing"),
-        "4": seedCustomerTimesheet(makeRecord(144, 144, "approved", "simulated", "Bel-Shawn-2026-juli", "2026-07"), "sent", "Klanturenstaat_Shawn-Douglas_Nahar_2026-07.pdf")
+        "4": seedCustomerTimesheet(makeRecord(144, 144, "approved", "ready", "Bel-Shawn-2026-juli", "2026-07"), "sent", "Klanturenstaat_Shawn-Douglas_Nahar_2026-07.pdf")
       },
       "2026-08": {
         "1": seedCustomerTimesheet(makeRecord(0, 151.2, "draft", "concept", "IND-2026-augustus", "2026-08"), "sent", "Klanturenstaat_Marc_de_Roon_2026-08.pdf"),
         "2": seedCustomerTimesheet(makeCorrectionRecord(80, 151.2, "IND-StvB-2026-augustus", "2026-08", "Controleer 12 augustus: daar staat 8 uur, maar volgens de planning hoort dit 4 uur te zijn."), "sent", "Klanturenstaat_Stasjo_van_Bakel_2026-08.pdf"),
-        "3": seedCustomerTimesheet(makeRecord(144, 151.2, "approved", "ready", "COA-2026-augustus", "2026-08"), "approved", "Klanturenstaat_Brian_Hek_2026-08.pdf"),
+        "3": seedCustomerTimesheet(makeRecord(144, 151.2, "approved", "ready", "COA-2026-augustus", "2026-08"), "sent", "Klanturenstaat_Brian_Hek_2026-08.pdf"),
         "4": seedCustomerTimesheet(makeRecord(144, 151.2, "approved", "ready", "Bel-Shawn-2026-augustus", "2026-08"), "received", "Klanturenstaat_Shawn-Douglas_Nahar_2026-08.pdf")
       }
     }
@@ -817,6 +817,7 @@ function loadState() {
 let state = loadState();
 let modalAction = null;
 let modalSecondaryAction = null;
+let adminTaskWorkflow = null;
 let pendingProfilePhoto = "";
 let pendingBrandLogo = "";
 let unresolvedHelpQuestion = "";
@@ -1725,16 +1726,174 @@ function renderAdminTaskQueue() {
   }).join("") || '<div class="dashboard-action-empty">' + (filter === "actionable" ? "Er ligt niets meer bij Backoffice." : filter === "waiting" ? "Er liggen geen acties bij medewerkers." : "Alle acties zijn afgerond.") + '</div>';
 }
 
-function openAdminTask(taskId) {
-  const task = adminOpenTasks().find(item => item.id === taskId) || adminOpenTasks().find(item => item.actionable);
-  if (!task || !task.actionable) {
-    toast("Er staat geen directe beheeractie meer open.");
+function actionableAdminTasks() {
+  return adminOpenTasks().filter(task => task.actionable);
+}
+
+function orderedAdminWorkflowTasks() {
+  const currentTasks = actionableAdminTasks();
+  if (!adminTaskWorkflow) return currentTasks;
+  const taskById = new Map(currentTasks.map(task => [task.id, task]));
+  const ordered = adminTaskWorkflow.taskIds.map(taskId => taskById.get(taskId)).filter(Boolean);
+  currentTasks.forEach(task => {
+    if (!ordered.some(item => item.id === task.id)) ordered.push(task);
+  });
+  adminTaskWorkflow.taskIds = ordered.map(task => task.id);
+  return ordered;
+}
+
+function beginAdminTaskWorkflow(taskId) {
+  const tasks = actionableAdminTasks();
+  if (!tasks.some(task => task.id === taskId)) return false;
+  adminTaskWorkflow = { taskIds: tasks.map(task => task.id), activeTaskId: taskId, completedCount: 0 };
+  return true;
+}
+
+function modalTaskFormIsDirty() {
+  return [...document.querySelectorAll("#modal-summary input, #modal-summary textarea")]
+    .some(field => field.value !== field.defaultValue);
+}
+
+function renderModalTaskNavigation(taskId) {
+  const navigation = document.querySelector("#modal-queue");
+  const previous = document.querySelector("#modal-queue-previous");
+  const next = document.querySelector("#modal-queue-next");
+  if (!adminTaskWorkflow) {
+    navigation.hidden = true;
     return;
   }
-  if (task.type === "hours-review") showHoursReview(task.employee.id, task.periodKey);
-  if (task.type === "customer-review") showCustomerTimesheetDetails(task.employee.id, task.periodKey, true);
-  if (task.type === "customer-broker") showCustomerTimesheetBrokerCheck(task.employee.id, task.periodKey);
-  if (task.type === "invoice-delivery") showInvoiceDeliveryCheck(task.employee.id, task.periodKey);
+  const tasks = orderedAdminWorkflowTasks();
+  const index = tasks.findIndex(task => task.id === taskId);
+  if (index < 0) {
+    navigation.hidden = true;
+    return;
+  }
+  adminTaskWorkflow.activeTaskId = taskId;
+  navigation.hidden = false;
+  document.querySelector("#modal-queue-progress").textContent = "Actie " + (index + 1) + " van " + tasks.length + " bij Backoffice";
+  const dirty = modalTaskFormIsDirty();
+  document.querySelector("#modal-queue-note").textContent = dirty
+    ? "Rond de wijziging af of annuleer eerst."
+    : (adminTaskWorkflow.completedCount ? adminTaskWorkflow.completedCount + " afgehandeld in deze sessie · bladeren wijzigt niets." : "Vorige en volgende wijzigen niets.");
+  previous.disabled = index === 0 || dirty;
+  next.disabled = index === tasks.length - 1 || dirty;
+}
+
+function moveAdminTaskWorkflow(direction) {
+  if (!adminTaskWorkflow || modalTaskFormIsDirty()) {
+    if (modalTaskFormIsDirty()) toast("Rond de wijziging af of annuleer eerst; Vorige en Volgende slaan niets op.");
+    return;
+  }
+  const tasks = orderedAdminWorkflowTasks();
+  const index = tasks.findIndex(task => task.id === adminTaskWorkflow.activeTaskId);
+  const target = tasks[index + direction];
+  if (!target) return;
+  openAdminTask(target.id, { continueWorkflow: true });
+}
+
+function showAdminTaskEmailBlocker(taskId, employee, periodKey, invalidAddresses, contextLabel) {
+  const period = periodFromKey(periodKey);
+  const invalidSender = invalidAddresses.some(item => item.kind === "sender");
+  const summary = invalidAddresses.map(item => '<div><span>' + escapeHtml(item.name) + '</span><strong>' + escapeHtml(item.email || "Niet ingevuld") + '</strong></div>').join("") +
+    '<div><span>Status</span><strong>Actie blijft open</strong></div>';
+  showModal({
+    label: "Actie geblokkeerd",
+    title: employee.name + " · " + period.label,
+    message: contextLabel + " kan pas worden afgerond nadat " + (invalidAddresses.length === 1 ? "dit e-mailadres is" : "deze e-mailadressen zijn") + " hersteld. Je kunt met Vorige en Volgende wel door de overige Backoffice-acties bladeren.",
+    summary,
+    secondary: invalidSender ? "E-mailinstellingen openen" : "Mailroute aanpassen",
+    secondaryAction: () => {
+      closeModal();
+      if (invalidSender) showView("settings");
+      else showEmployeeEditor(employee.id);
+    },
+    confirm: "Werkmodus sluiten",
+    action: closeModal,
+    adminTaskId: taskId
+  });
+  return true;
+}
+
+function finishAdminTaskAndContinue(taskId, mutate, toastMessage) {
+  const workflowActive = Boolean(adminTaskWorkflow && adminTaskWorkflow.activeTaskId === taskId);
+  const previousOrder = adminTaskWorkflow ? [...adminTaskWorkflow.taskIds] : actionableAdminTasks().map(task => task.id);
+  const completedTask = actionableAdminTasks().find(task => task.id === taskId);
+  mutate();
+  persistState();
+  renderAll();
+  if (!workflowActive) {
+    closeModal();
+    toast(toastMessage);
+    return;
+  }
+  adminTaskWorkflow.completedCount += 1;
+  const remaining = actionableAdminTasks().filter(task => task.id !== taskId);
+  if (!remaining.length) {
+    const waiting = adminOpenTasks().filter(task => !task.actionable);
+    showModal({
+      label: "Werkvoorraad afgerond",
+      title: "Alle Backoffice-acties zijn afgehandeld",
+      message: waiting.length
+        ? waiting.length + " " + (waiting.length === 1 ? "actie wacht" : "acties wachten") + " nog op medewerkers."
+        : "Er staat voor niemand meer een actie open.",
+      summary: '<div><span>Afgehandeld in deze sessie</span><strong>' + adminTaskWorkflow.completedCount + '</strong></div><div><span>Wacht op medewerkers</span><strong>' + waiting.length + '</strong></div>',
+      confirm: "Werkvoorraad sluiten",
+      action: closeModal
+    });
+    toast(toastMessage + " De Backoffice-werkvoorraad is afgerond.");
+    return;
+  }
+  const sameDossierTask = completedTask
+    ? remaining.find(task => task.periodKey === completedTask.periodKey && Number(task.employee.id) === Number(completedTask.employee.id))
+    : null;
+  const previousIndex = previousOrder.indexOf(taskId);
+  const nextFromPreviousOrder = previousOrder.slice(previousIndex + 1)
+    .map(previousId => remaining.find(task => task.id === previousId))
+    .find(Boolean);
+  const nextTask = sameDossierTask || nextFromPreviousOrder || remaining[0];
+  const remainingIds = previousOrder.filter(previousId => remaining.some(task => task.id === previousId));
+  if (sameDossierTask) {
+    const existingIndex = remainingIds.indexOf(sameDossierTask.id);
+    if (existingIndex >= 0) remainingIds.splice(existingIndex, 1);
+    const insertionIndex = previousIndex < 0 ? 0 : Math.min(previousIndex, remainingIds.length);
+    remainingIds.splice(insertionIndex, 0, sameDossierTask.id);
+  }
+  remaining.forEach(task => {
+    if (!remainingIds.includes(task.id)) remainingIds.push(task.id);
+  });
+  adminTaskWorkflow.taskIds = remainingIds;
+  const opened = openAdminTask(nextTask.id, { continueWorkflow: true });
+  if (!opened) {
+    closeModal();
+    toast(toastMessage + " De volgende Backoffice-actie kon niet veilig worden geopend.");
+    return;
+  }
+  toast(toastMessage + " Volgende Backoffice-actie geopend.");
+}
+
+function openAdminTask(taskId, options = {}) {
+  const task = actionableAdminTasks().find(item => item.id === taskId);
+  if (!task) {
+    toast("Deze Backoffice-actie staat niet meer open.");
+    renderAll();
+    return false;
+  }
+  const previousWorkflow = adminTaskWorkflow
+    ? { taskIds: [...adminTaskWorkflow.taskIds], activeTaskId: adminTaskWorkflow.activeTaskId, completedCount: adminTaskWorkflow.completedCount }
+    : null;
+  if (!options.continueWorkflow || !adminTaskWorkflow) beginAdminTaskWorkflow(task.id);
+  let opened = false;
+  if (task.type === "hours-review") opened = showHoursReview(task.employee.id, task.periodKey, task.id);
+  if (task.type === "customer-review") opened = showCustomerTimesheetDetails(task.employee.id, task.periodKey, true, task.id);
+  if (task.type === "customer-broker") opened = showCustomerTimesheetBrokerCheck(task.employee.id, task.periodKey, task.id);
+  if (task.type === "invoice-delivery") opened = showInvoiceDeliveryCheck(task.employee.id, task.periodKey, task.id);
+  if (!opened) {
+    adminTaskWorkflow = previousWorkflow;
+    if (previousWorkflow && !document.querySelector("#modal").hidden) renderModalTaskNavigation(previousWorkflow.activeTaskId);
+    else document.querySelector("#modal-queue").hidden = true;
+    return false;
+  }
+  return true;
 }
 
 function renderDashboardNextAction(tasks) {
@@ -1983,7 +2142,7 @@ function renderCustomerTimesheetAdmin() {
   }).join("") || '<div class="dashboard-action-empty">Voor deze maand worden geen klanturenstaten verwacht.</div>';
 }
 
-function showCustomerTimesheetDetails(employeeId, periodKey, reviewMode) {
+function showCustomerTimesheetDetails(employeeId, periodKey, reviewMode, adminTaskId = "") {
   const employee = employeeById(employeeId);
   const period = periodFromKey(periodKey);
   const record = recordFor(employeeId, period.key);
@@ -2009,25 +2168,44 @@ function showCustomerTimesheetDetails(employeeId, periodKey, reviewMode) {
       summary,
       confirm: "Goedkeuren",
       secondary: "Opnieuw uploaden vragen",
+      adminTaskId,
       action: () => {
-        documentRecord.status = "approved";
-        const timestamp = correctionTimestamp();
-        documentRecord.reviewedAt = timestamp.label;
-        documentRecord.reviewedBy = currentAdmin().name;
-        documentRecord.reviewNote = "";
-        addNotification({ audience: "employee", type: "customer-timesheet", employeeId: employee.id, title: "Klanturenstaat goedgekeurd", message: "Je klanturenstaat voor " + period.label + " is gecontroleerd.", periodKey: period.key, view: "timesheet" }, true);
-        persistState(); closeModal(); renderAll(); toast("De klanturenstaat van " + employee.name + " is goedgekeurd.");
+        const mutate = () => {
+          documentRecord.status = "approved";
+          const timestamp = correctionTimestamp();
+          documentRecord.reviewedAt = timestamp.label;
+          documentRecord.reviewedBy = currentAdmin().name;
+          documentRecord.reviewNote = "";
+          addNotification({ audience: "employee", type: "customer-timesheet", employeeId: employee.id, title: "Klanturenstaat goedgekeurd", message: "Je klanturenstaat voor " + period.label + " is gecontroleerd.", periodKey: period.key, view: "timesheet" }, true);
+        };
+        const toastMessage = "De klanturenstaat van " + employee.name + " is goedgekeurd.";
+        if (adminTaskId) {
+          finishAdminTaskAndContinue(adminTaskId, mutate, toastMessage);
+          return;
+        }
+        mutate();
+        persistState(); closeModal(); renderAll(); toast(toastMessage);
       },
       secondaryAction: () => {
-        documentRecord.status = "resubmit";
-        documentRecord.reviewNote = "Upload de juiste of definitieve PDF van de klant.";
-        addNotification({ audience: "employee", type: "customer-timesheet", employeeId: employee.id, title: "Klanturenstaat opnieuw uploaden", message: "Upload voor " + period.label + " de juiste of definitieve PDF van de klant.", periodKey: period.key, view: "timesheet" }, true);
-        persistState(); closeModal(); renderAll(); toast("Er is in de app gevraagd om een nieuwe PDF. Er is niets gemaild.");
+        const mutate = () => {
+          documentRecord.status = "resubmit";
+          documentRecord.reviewNote = "Upload de juiste of definitieve PDF van de klant.";
+          addNotification({ audience: "employee", type: "customer-timesheet", employeeId: employee.id, title: "Klanturenstaat opnieuw uploaden", message: "Upload voor " + period.label + " de juiste of definitieve PDF van de klant.", periodKey: period.key, view: "timesheet" }, true);
+        };
+        const toastMessage = "Er is in de app gevraagd om een nieuwe PDF. Er is niets gemaild.";
+        if (adminTaskId) {
+          finishAdminTaskAndContinue(adminTaskId, mutate, toastMessage);
+          return;
+        }
+        mutate();
+        persistState(); closeModal(); renderAll(); toast(toastMessage);
       }
     });
-    return;
+    return true;
   }
+  if (adminTaskId) return false;
   showModal({ label: "Klanturenstaat", title: employee.name + " · " + period.label, message: "Dit is een apart klantdocument en geen door de app gemaakte urenstaat.", summary, confirm: "Sluiten", action: closeModal });
+  return true;
 }
 
 function remindCustomerTimesheet(employeeId, periodKey) {
@@ -2126,11 +2304,11 @@ function showCustomerTimesheetSubmissionMailEditor() {
   });
 }
 
-function showCustomerTimesheetBrokerCheck(employeeId, periodKey) {
+function showCustomerTimesheetBrokerCheck(employeeId, periodKey, adminTaskId = "") {
   const employee = employeeById(employeeId);
   const record = recordFor(employeeId, periodKey);
   const documentRecord = customerTimesheetFor(record);
-  if (documentRecord.status !== "approved" || employee.customerTimesheetBrokerEnabled === false) return;
+  if (documentRecord.status !== "approved" || employee.customerTimesheetBrokerEnabled === false) return false;
   const email = customerTimesheetBrokerEmail(employee);
   const defaultMail = customerTimesheetBrokerMail(employee, periodKey);
   const mail = {
@@ -2138,8 +2316,11 @@ function showCustomerTimesheetBrokerCheck(employeeId, periodKey) {
     body: documentRecord.brokerBody || defaultMail.body
   };
   if (!isValidEmail(email)) {
+    if (adminTaskId) {
+      return showAdminTaskEmailBlocker(adminTaskId, employee, periodKey, [{ name: "Klanturenstaatroute", email, kind: "employee" }], "De brokerroute voor de klanturenstaat");
+    }
     toast("Controleer eerst het e-mailadres voor de klanturenstaat bij deze medewerker.");
-    return;
+    return false;
   }
   showModal({
     label: "Aparte brokerroute",
@@ -2148,6 +2329,7 @@ function showCustomerTimesheetBrokerCheck(employeeId, periodKey) {
     summary: '<div><span>Aan</span><strong>' + escapeHtml(email) + '</strong></div><div><span>Bijlage</span><strong>' + escapeHtml(documentRecord.fileName) + '</strong></div><div class="modal-form full"><label class="full">Onderwerp<input id="customer-timesheet-broker-subject" value="' + escapeHtml(mail.subject) + '"></label><label class="full">Begeleidende tekst<textarea id="customer-timesheet-broker-body" rows="8">' + escapeHtml(mail.body) + '</textarea></label></div>',
     confirm: "Controle afronden",
     wide: true,
+    adminTaskId,
     action: () => {
       const subject = document.querySelector("#customer-timesheet-broker-subject").value.trim();
       const body = document.querySelector("#customer-timesheet-broker-body").value.trim();
@@ -2155,13 +2337,22 @@ function showCustomerTimesheetBrokerCheck(employeeId, periodKey) {
         toast("Vul een onderwerp en begeleidende tekst in.");
         return;
       }
-      documentRecord.brokerSubject = subject;
-      documentRecord.brokerBody = body;
-      documentRecord.status = "sent";
-      documentRecord.sentAt = correctionTimestamp().label;
-      persistState(); closeModal(); renderAll(); toast("Brokerroute gecontroleerd. Er is niets echt verzonden.");
+      const mutate = () => {
+        documentRecord.brokerSubject = subject;
+        documentRecord.brokerBody = body;
+        documentRecord.status = "sent";
+        documentRecord.sentAt = correctionTimestamp().label;
+      };
+      const toastMessage = "Brokerroute gecontroleerd. Er is niets echt verzonden.";
+      if (adminTaskId) {
+        finishAdminTaskAndContinue(adminTaskId, mutate, toastMessage);
+        return;
+      }
+      mutate();
+      persistState(); closeModal(); renderAll(); toast(toastMessage);
     }
   });
+  return true;
 }
 
 function showAdminHoursDetail(employeeId, periodKey) {
@@ -2397,6 +2588,244 @@ function invoicePeriodRows(periodKey) {
     .filter(item => item.employee.active !== false || totalEntries(item.record.entries) > 0 || item.record.timesheetStatus !== "draft");
 }
 
+function monthBatchReadiness(periodKey) {
+  const key = periodKey || currentPeriod().key;
+  const rows = invoicePeriodRows(key);
+  const readyRows = rows.filter(item => item.record.timesheetStatus === "approved");
+  const pendingRows = readyRows.filter(item => item.record.invoiceStatus !== "simulated" || item.record.payrollStatus !== "simulated");
+  const controlledRows = readyRows.filter(item => item.record.invoiceStatus === "simulated" && item.record.payrollStatus === "simulated");
+  const blockers = rows
+    .filter(item => item.record.timesheetStatus !== "approved")
+    .map(item => {
+      const status = statusLabels[item.record.timesheetStatus] || statusLabels.draft;
+      const actionable = item.record.timesheetStatus === "submitted";
+      return {
+        employee: item.employee,
+        record: item.record,
+        employeeId: item.employee.id,
+        periodKey: key,
+        status: item.record.timesheetStatus,
+        statusLabel: item.record.timesheetStatus === "draft" ? "Nog niet ingediend" : status[0],
+        actionable,
+        owner: actionable ? "Backoffice" : "medewerker",
+        action: actionable ? "review" : "status",
+        actionLabel: actionable ? "Uren controleren" : "Status bekijken"
+      };
+    });
+  const batchState = rows.length === 0
+    ? "empty"
+    : blockers.length
+      ? "blocked"
+      : pendingRows.length
+        ? "ready"
+        : "controlled";
+  return {
+    periodKey: key,
+    total: rows.length,
+    ready: readyRows.length,
+    blockers,
+    pendingDelivery: pendingRows.length,
+    controlled: controlledRows.length,
+    state: batchState,
+    rows,
+    readyRows,
+    pendingRows,
+    controlledRows
+  };
+}
+
+function monthBatchCtaState(readiness) {
+  if (readiness.state === "blocked") {
+    return {
+      label: "Bekijk " + readiness.blockers.length + " " + (readiness.blockers.length === 1 ? "blokkade" : "blokkades"),
+      disabled: false
+    };
+  }
+  if (readiness.state === "ready") return {
+    label: readiness.controlled > 0
+      ? "Ga verder · " + readiness.pendingDelivery + " resterend"
+      : "Start maandcontrole · " + readiness.pendingDelivery,
+    disabled: false
+  };
+  if (readiness.state === "controlled") return { label: "Maandcontrole afgerond", disabled: true };
+  return { label: "Geen uren voor deze maand", disabled: true };
+}
+
+function invoiceBatchAttentionSummary() {
+  const batches = Object.keys(state.records || {})
+    .sort()
+    .map(periodKey => monthBatchReadiness(periodKey))
+    .filter(readiness => readiness.total > 0 && readiness.state !== "controlled" && readiness.state !== "empty" && monthBatchHasAttentionActivity(readiness));
+  return {
+    total: batches.length,
+    ready: batches.filter(readiness => readiness.state === "ready").length,
+    blocked: batches.filter(readiness => readiness.state === "blocked").length,
+    batches
+  };
+}
+
+function monthBatchHasAttentionActivity(readiness) {
+  return readiness.rows.some(item =>
+    item.record.timesheetStatus !== "draft" ||
+    item.record.invoiceStatus !== "concept" ||
+    item.record.payrollStatus !== "concept" ||
+    totalEntries(item.record.entries) > 0
+  );
+}
+
+function monthBatchOverviewMeta(readiness) {
+  if (readiness.state === "blocked") {
+    return {
+      tone: "blocked",
+      label: "Geblokkeerd",
+      detail: readiness.blockers.length + " " + (readiness.blockers.length === 1 ? "blokkade" : "blokkades") + " · " + readiness.pendingDelivery + " klaar"
+    };
+  }
+  return {
+    tone: "ready",
+    label: readiness.controlled > 0 ? "Bezig" : "Klaar",
+    detail: readiness.controlled > 0
+      ? readiness.pendingDelivery + " resterend · " + readiness.controlled + " gecontroleerd"
+      : readiness.pendingDelivery + " klaar voor controle"
+  };
+}
+
+function renderInvoiceBatchBadge() {
+  const badge = document.querySelector("#invoice-batch-count");
+  const blockedBadge = document.querySelector("#invoice-batch-blocked-count");
+  const readyBadge = document.querySelector("#invoice-batch-ready-count");
+  if (!badge) return;
+  const summary = invoiceBatchAttentionSummary();
+  badge.hidden = summary.total === 0;
+  if (blockedBadge) {
+    blockedBadge.hidden = summary.blocked === 0;
+    blockedBadge.textContent = String(summary.blocked);
+  }
+  if (readyBadge) {
+    readyBadge.hidden = summary.ready === 0;
+    readyBadge.textContent = String(summary.ready);
+  }
+  const parts = [];
+  if (summary.blocked) parts.push(summary.blocked + " geblokkeerd");
+  if (summary.ready) parts.push(summary.ready + " klaar voor controle");
+  const label = summary.total === 0
+    ? "Geen open maandcontroles"
+    : summary.total + " open maandcontrole" + (summary.total === 1 ? "" : "s") + ": " + parts.join(", ");
+  badge.setAttribute("aria-label", label);
+  badge.title = label;
+}
+
+function renderInvoiceMonthOverview() {
+  const panel = document.querySelector("#invoice-month-overview");
+  if (!panel) return;
+  const summary = invoiceBatchAttentionSummary();
+  const title = document.querySelector("#invoice-month-overview-title");
+  const note = document.querySelector("#invoice-month-overview-note");
+  const list = document.querySelector("#invoice-month-overview-list");
+  panel.hidden = summary.total === 0;
+  if (summary.total === 0) {
+    panel.dataset.state = "empty";
+    title.textContent = "Geen open maandcontroles";
+    note.textContent = "Alle maandcontroles zijn afgerond.";
+    list.innerHTML = "";
+    return;
+  }
+  panel.dataset.state = summary.blocked > 0 ? "blocked" : "ready";
+  title.textContent = summary.total + " open maandcontrole" + (summary.total === 1 ? "" : "s") + " over alle maanden";
+  const noteParts = [];
+  if (summary.blocked) noteParts.push(summary.blocked + " geblokkeerd");
+  if (summary.ready) noteParts.push(summary.ready + " klaar voor controle");
+  note.textContent = noteParts.join(" · ") + ". Kies hieronder direct de maand die je wilt openen.";
+  list.innerHTML = summary.batches.map(readiness => {
+    const period = periodFromKey(readiness.periodKey);
+    const meta = monthBatchOverviewMeta(readiness);
+    const isCurrent = readiness.periodKey === currentPeriod().key;
+    return '<button class="invoice-month-overview-item is-' + meta.tone + (isCurrent ? " is-current" : "") + '" type="button" data-invoice-overview-period="' + readiness.periodKey + '">' +
+      '<span><strong>' + escapeHtml(period.label) + '</strong><small>' + escapeHtml(meta.detail) + '</small></span>' +
+      '<span class="status-pill ' + (meta.tone === "blocked" ? "status-warning" : "status-ready") + '">' + escapeHtml(meta.label) + '</span>' +
+    '</button>';
+  }).join("");
+}
+
+function renderInvoiceStatusSummary(readiness) {
+  const values = {
+    blocked: readiness.blockers.length,
+    ready: readiness.pendingDelivery,
+    controlled: readiness.controlled
+  };
+  Object.entries(values).forEach(([key, value]) => {
+    const card = document.querySelector("#invoice-status-" + key);
+    const count = document.querySelector("#invoice-status-" + key + "-count");
+    if (!card || !count) return;
+    count.textContent = String(value);
+    card.classList.toggle("is-current", value > 0);
+    card.classList.toggle("is-blocked", key === "blocked" && value > 0);
+  });
+}
+
+function renderMonthBatchReadiness(readiness) {
+  const card = document.querySelector("#month-batch-card");
+  if (!card) return;
+  const period = periodFromKey(readiness.periodKey);
+  const status = document.querySelector("#month-batch-status");
+  const note = document.querySelector("#month-batch-note");
+  const blockers = document.querySelector("#month-batch-blockers");
+  const progress = document.querySelector("#month-batch-progress");
+  const percent = readiness.total ? Math.round(readiness.controlled / readiness.total * 100) : 0;
+  card.dataset.state = readiness.state;
+  document.querySelector("#month-batch-ready-count").textContent = readiness.state === "controlled"
+    ? readiness.controlled + " van " + readiness.total + " gecontroleerd"
+    : readiness.state === "ready"
+      ? readiness.pendingDelivery + " klaar · " + readiness.controlled + " gecontroleerd"
+      : readiness.ready + " van " + readiness.total + " gereed voor controle";
+  status.className = "status-pill " + (readiness.state === "blocked" ? "status-warning" : readiness.state === "ready" ? "status-ready" : readiness.state === "controlled" ? "status-approved" : "status-concept");
+  status.textContent = readiness.state === "blocked"
+    ? readiness.blockers.length + " " + (readiness.blockers.length === 1 ? "blokkade" : "blokkades")
+    : readiness.state === "ready"
+      ? readiness.controlled > 0 ? "Controle bezig" : "Klaar om te starten"
+      : readiness.state === "controlled"
+        ? "Afgerond"
+        : "Geen uren verwacht";
+  note.textContent = readiness.state === "blocked"
+    ? "De maandverzending wacht nog op " + readiness.blockers.length + " urenregistratie" + (readiness.blockers.length === 1 ? "" : "s") + ". Klanturenstaten blijven een aparte route en blokkeren deze batch niet."
+    : readiness.state === "ready"
+      ? "Alle uren zijn goedgekeurd. De maandverzending voor " + period.label + " staat klaar voor controle; klanturenstaten blijven apart."
+      : readiness.state === "controlled"
+        ? "Alle " + readiness.controlled + " verzending" + (readiness.controlled === 1 ? " is" : "en zijn") + " gecontroleerd. Klanturenstaten blijven een aparte route."
+        : "Voor deze maand staat geen uren- of factuurbatch klaar.";
+  progress.setAttribute("aria-label", readiness.controlled + " van " + readiness.total + " verzendingen gecontroleerd");
+  progress.setAttribute("aria-valuemax", String(readiness.total));
+  progress.setAttribute("aria-valuenow", String(readiness.controlled));
+  document.querySelector("#month-batch-progress-bar").style.width = percent + "%";
+  document.querySelector("#month-batch-progress-value").textContent = readiness.controlled + "/" + readiness.total + " gecontroleerd";
+  blockers.hidden = readiness.blockers.length === 0;
+  blockers.innerHTML = readiness.blockers.map(blocker =>
+    '<article class="month-batch-blocker" data-month-batch-blocker="' + blocker.employeeId + '">' +
+      '<div class="month-batch-blocker-copy"><strong>' + escapeHtml(blocker.employee.name) + '</strong><small>' + escapeHtml(blocker.statusLabel + " · " + blocker.employee.client) + '</small></div>' +
+      '<div class="month-batch-blocker-owner"><strong>Actie bij ' + escapeHtml(blocker.owner) + '</strong><small>' + (blocker.actionable ? "Deze uren wachten op controle." : "De medewerker moet deze status oplossen.") + '</small></div>' +
+      '<button class="small-button" type="button" data-month-blocker-action="' + blocker.action + '" data-employee-id="' + blocker.employeeId + '" data-period-key="' + blocker.periodKey + '">' + escapeHtml(blocker.actionLabel) + '</button>' +
+    '</article>'
+  ).join("");
+  const cta = monthBatchCtaState(readiness);
+  const monthDelivery = document.querySelector("#test-month-delivery");
+  monthDelivery.textContent = cta.label;
+  monthDelivery.disabled = cta.disabled;
+  monthDelivery.setAttribute("aria-controls", readiness.state === "blocked" ? "month-batch-blockers" : "modal");
+  renderInvoiceStatusSummary(readiness);
+}
+
+function openMonthBatchBlocker(employeeId, periodKey) {
+  const readiness = monthBatchReadiness(periodKey);
+  const blocker = readiness.blockers.find(item => Number(item.employeeId) === Number(employeeId));
+  if (!blocker) {
+    toast("Deze blokkade is inmiddels opgelost.");
+    renderAll();
+    return;
+  }
+  if (blocker.action === "review") showHoursReview(blocker.employeeId, blocker.periodKey);
+  else showAdminHoursDetail(blocker.employeeId, blocker.periodKey);
+}
+
 function renderInvoices() {
   const periodRows = invoicePeriodRows();
   const rows = periodRows.filter(item => state.invoiceFilter === "all" || item.record.invoiceStatus === state.invoiceFilter);
@@ -2424,18 +2853,9 @@ function renderInvoices() {
   const payrollRecipient = mailRecipientById("payroll") || { name: "Salarisadministratie", email: state.settings.payroll || "", active: true };
   const payrollName = payrollRecipient.name || "Salarisadministratie";
   document.querySelector("#payroll-privacy-note").textContent = payrollName + " krijgt alleen de toegestane ureninformatie en standaard geen factuurgegevens.";
-  const approved = periodRows.filter(item => item.record.timesheetStatus === "approved");
-  const openMonthRows = periodRows.filter(item => item.record.timesheetStatus !== "approved");
-  const pendingMonthDelivery = approved.filter(item => item.record.invoiceStatus !== "simulated" || item.record.payrollStatus !== "simulated");
-  const monthDelivery = document.querySelector("#test-month-delivery");
-  monthDelivery.disabled = openMonthRows.length === 0 && (approved.length === 0 || pendingMonthDelivery.length === 0);
-  monthDelivery.textContent = openMonthRows.length
-    ? openMonthRows.length + " openstaand" + (openMonthRows.length === 1 ? "" : "e") + " · bekijken"
-    : !approved.length
-      ? "Geen uren voor deze maand"
-      : pendingMonthDelivery.length
-        ? "Maandverzending controleren · " + pendingMonthDelivery.length
-        : "Maandverzending gecontroleerd";
+  renderMonthBatchReadiness(monthBatchReadiness(currentPeriod().key));
+  renderInvoiceMonthOverview();
+  renderInvoiceBatchBadge();
 }
 
 function announcementCorrectionRootId(item, announcements) {
@@ -3843,7 +4263,7 @@ function toast(message) {
 }
 
 function showModal(options) {
-  const settings = Object.assign({ label: "Controle", title: "", message: "", summary: "", confirm: "Bevestigen", action: null, secondary: "", secondaryAction: null, wide: false }, options);
+  const settings = Object.assign({ label: "Controle", title: "", message: "", summary: "", confirm: "Bevestigen", action: null, secondary: "", secondaryAction: null, wide: false, adminTaskId: "", taskNavigation: true }, options);
   document.querySelector("#modal-label").textContent = settings.label;
   document.querySelector("#modal-title").textContent = settings.title;
   document.querySelector("#modal-message").textContent = settings.message;
@@ -3858,6 +4278,15 @@ function showModal(options) {
   modalAction = settings.action;
   modalSecondaryAction = settings.secondaryAction;
   document.querySelector("#modal").hidden = false;
+  const taskNavigation = document.querySelector("#modal-queue");
+  if (settings.adminTaskId && settings.taskNavigation !== false && adminTaskWorkflow) {
+    renderModalTaskNavigation(settings.adminTaskId);
+    document.querySelectorAll("#modal-summary input, #modal-summary textarea").forEach(field => {
+      field.addEventListener("input", () => renderModalTaskNavigation(settings.adminTaskId));
+    });
+  } else {
+    taskNavigation.hidden = true;
+  }
   document.querySelector("#modal-confirm").focus();
 }
 
@@ -3866,11 +4295,13 @@ function closeModal() {
   document.querySelector(".modal").classList.remove("is-wide");
   document.querySelector("#modal-secondary").hidden = true;
   document.querySelector("#modal-confirm").disabled = false;
+  document.querySelector("#modal-queue").hidden = true;
   modalAction = null;
   modalSecondaryAction = null;
+  adminTaskWorkflow = null;
 }
 
-function showHoursReview(employeeId, periodKey) {
+function showHoursReview(employeeId, periodKey, adminTaskId = "") {
   const employee = employeeById(employeeId);
   const key = periodKey || currentPeriod().key;
   const period = periodFromKey(key);
@@ -3879,7 +4310,7 @@ function showHoursReview(employeeId, periodKey) {
   if (record.timesheetStatus !== "submitted") {
     toast("Deze urenregistratie wacht niet meer op controle.");
     renderAll();
-    return;
+    return false;
   }
   showModal({
     label: "Urencontrole",
@@ -3887,16 +4318,23 @@ function showHoursReview(employeeId, periodKey) {
     message: "Controleer de uren en het tarief voor " + period.label + ". De geselecteerde maand bovenaan hoeft hiervoor niet te worden gewijzigd.",
     summary: "<div><span>Maand</span><strong>" + escapeHtml(period.label) + "</strong></div><div><span>Declarabel</span><strong>" + hoursFormat.format(total) + " uur</strong></div><div><span>Tarief</span><strong>" + currency.format(employee.rate) + " per uur</strong></div><div><span>Verwacht factuurbedrag</span><strong>" + currency.format(total * employee.rate) + "</strong></div>",
     secondary: "Terugsturen voor correctie",
-    secondaryAction: () => showCorrectionEditor(employee.id, key),
+    secondaryAction: () => showCorrectionEditor(employee.id, key, adminTaskId),
     confirm: "Goedkeuren",
+    adminTaskId,
     action: () => {
+      if (adminTaskId) {
+        const toastMessage = employee.name + " is goedgekeurd voor " + period.label + "; de factuur staat klaar.";
+        finishAdminTaskAndContinue(adminTaskId, () => approveEmployeeState(employee.id, key), toastMessage);
+        return;
+      }
       closeModal();
       approveEmployee(employee.id, key);
     }
   });
+  return true;
 }
 
-function approveEmployee(id, periodKey) {
+function approveEmployeeState(id, periodKey) {
   const key = periodKey || currentPeriod().key;
   const record = recordFor(id, key);
   record.timesheetStatus = "approved";
@@ -3904,12 +4342,17 @@ function approveEmployee(id, periodKey) {
   record.payrollStatus = "ready";
   addNotification({ audience: "employee", type: "approved", employeeId: Number(id), title: "Uren goedgekeurd", message: "Je uren voor " + periodFromKey(key).label + " zijn goedgekeurd.", periodKey: key, view: "employee-dashboard" });
   addNotification({ audience: "admin", type: "invoice", employeeId: Number(id), title: "Factuur klaar", message: "De factuur voor " + employeeById(id).name + " staat klaar.", periodKey: key, view: "invoices" });
+}
+
+function approveEmployee(id, periodKey) {
+  const key = periodKey || currentPeriod().key;
+  approveEmployeeState(id, key);
   persistState();
   renderAll();
   toast(employeeById(id).name + " is goedgekeurd voor " + periodFromKey(key).label + "; de factuur staat klaar.");
 }
 
-function showCorrectionEditor(id, periodKey) {
+function showCorrectionEditor(id, periodKey, adminTaskId = "") {
   const key = periodKey || currentPeriod().key;
   const employee = employeeById(id);
   const period = periodFromKey(key);
@@ -3919,7 +4362,11 @@ function showCorrectionEditor(id, periodKey) {
     message: "Schrijf concreet wat er niet klopt. De medewerker ziet deze tekst bij de melding en de urenstaat.",
     summary: '<div class="modal-form"><label class="full" for="correction-reason">Reden voor correctie<textarea id="correction-reason" maxlength="1000" placeholder="Bijvoorbeeld: controleer de uren van 14 juli; daar staat 8 uur in plaats van 4 uur."></textarea></label><p class="full form-help" id="correction-reason-help">Verplicht veld · maximaal 1000 tekens · Enter maakt een nieuwe regel · Ctrl+Enter verstuurt.</p></div>',
     confirm: "Terugsturen",
-    action: () => returnEmployeeForCorrection(employee.id, key, document.querySelector("#correction-reason").value)
+    secondary: adminTaskId ? "Terug naar controle" : "",
+    secondaryAction: adminTaskId ? () => showHoursReview(employee.id, key, adminTaskId) : null,
+    adminTaskId,
+    taskNavigation: false,
+    action: () => returnEmployeeForCorrection(employee.id, key, document.querySelector("#correction-reason").value, adminTaskId)
   });
   const textarea = document.querySelector("#correction-reason");
   const confirm = document.querySelector("#modal-confirm");
@@ -3941,7 +4388,7 @@ function showCorrectionEditor(id, periodKey) {
   textarea.focus();
 }
 
-function returnEmployeeForCorrection(id, periodKey, reason) {
+function returnEmployeeForCorrection(id, periodKey, reason, adminTaskId = "") {
   const key = periodKey || currentPeriod().key;
   const employee = employeeById(id);
   const record = recordFor(id, key);
@@ -3956,25 +4403,33 @@ function returnEmployeeForCorrection(id, periodKey, reason) {
     }
     return;
   }
-  const requestedBy = currentAdmin() ? currentAdmin().name : "Beheerder";
-  const requestedAt = correctionTimestamp();
-  correctionHistoryFor(record).push({
-    id: correctionHistoryFor(record).length + 1,
-    message,
-    requestedBy,
-    requestedAt: requestedAt.label,
-    requestedAtIso: requestedAt.iso,
-    resubmittedAt: null,
-    resubmittedAtIso: null
-  });
-  record.timesheetStatus = "correction";
-  record.invoiceStatus = "concept";
-  record.payrollStatus = "concept";
-  addNotification({ audience: "employee", type: "correction", employeeId: Number(id), title: "Correctie nodig", message: requestedBy + " vraagt je om " + periodFromKey(key).label + " aan te passen. Reden: " + message, periodKey: key, view: "timesheet" });
+  const mutate = () => {
+    const requestedBy = currentAdmin() ? currentAdmin().name : "Beheerder";
+    const requestedAt = correctionTimestamp();
+    correctionHistoryFor(record).push({
+      id: correctionHistoryFor(record).length + 1,
+      message,
+      requestedBy,
+      requestedAt: requestedAt.label,
+      requestedAtIso: requestedAt.iso,
+      resubmittedAt: null,
+      resubmittedAtIso: null
+    });
+    record.timesheetStatus = "correction";
+    record.invoiceStatus = "concept";
+    record.payrollStatus = "concept";
+    addNotification({ audience: "employee", type: "correction", employeeId: Number(id), title: "Correctie nodig", message: requestedBy + " vraagt je om " + periodFromKey(key).label + " aan te passen. Reden: " + message, periodKey: key, view: "timesheet" });
+  };
+  const toastMessage = "De uren van " + employee.name + " zijn met toelichting teruggestuurd. Er is niets gemaild.";
+  if (adminTaskId) {
+    finishAdminTaskAndContinue(adminTaskId, mutate, toastMessage);
+    return;
+  }
+  mutate();
   persistState();
   closeModal();
   renderAll();
-  toast("De uren van " + employee.name + " zijn met toelichting teruggestuurd. Er is niets gemaild.");
+  toast(toastMessage);
 }
 
 function invoiceSummary(employeeId, periodKey) {
@@ -4006,19 +4461,26 @@ function invoiceSummary(employeeId, periodKey) {
   };
 }
 
-function showInvoiceDeliveryCheck(employeeId, periodKey) {
+function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
   const key = periodKey || currentPeriod().key;
   const period = periodFromKey(key);
   const info = invoiceSummary(employeeId, key);
   if (info.record.timesheetStatus !== "approved" || (info.record.invoiceStatus === "simulated" && info.record.payrollStatus === "simulated")) {
     toast("Deze verzending staat niet meer als beheeractie open.");
     renderAll();
-    return;
+    return false;
   }
   const safe = [state.settings.sender, ...info.routes.map(route => route.email)].every(isValidEmail);
   if (!safe) {
+    if (adminTaskId) {
+      const invalidAddresses = [
+        { name: "Afzender", email: state.settings.sender, kind: "sender" },
+        ...info.routes.map(route => ({ name: route.name, email: route.email, kind: "employee" }))
+      ].filter(item => !isValidEmail(item.email));
+      return showAdminTaskEmailBlocker(adminTaskId, info.employee, key, invalidAddresses, "De factuur- en salarisroutes");
+    }
     toast("Verzendcontrole geblokkeerd: minimaal één e-mailadres is ongeldig.");
-    return;
+    return false;
   }
   const routeText = info.routes.map(route => route.name + ": " + (route.invoiceAttachment ? "factuur als PDF" : "geen bijlage") + ".").join("\n");
   showModal({
@@ -4027,15 +4489,25 @@ function showInvoiceDeliveryCheck(employeeId, periodKey) {
     message: "Begeleidende tekst voor ieder afzonderlijk bericht voor de factuur:\n\n" + info.body + "\n\n" + routeText + "\n\nDe officiële klanturenstaat heeft een eigen upload-, controle- en brokerroute. De geselecteerde maand bovenaan hoeft voor deze controle niet te worden gewijzigd. E-mailverzending is uitgeschakeld.",
     summary: info.html,
     confirm: "Controle afronden",
+    adminTaskId,
     action: () => {
-      info.record.invoiceStatus = "simulated";
-      info.record.payrollStatus = "simulated";
+      const mutate = () => {
+        info.record.invoiceStatus = "simulated";
+        info.record.payrollStatus = "simulated";
+      };
+      const toastMessage = "Verzending voor " + info.employee.name + " · " + period.label + " is gecontroleerd. Er is niets verstuurd.";
+      if (adminTaskId) {
+        finishAdminTaskAndContinue(adminTaskId, mutate, toastMessage);
+        return;
+      }
+      mutate();
       persistState();
       closeModal();
       renderAll();
-      toast("Verzending voor " + info.employee.name + " · " + period.label + " is gecontroleerd. Er is niets verstuurd.");
+      toast(toastMessage);
     }
   });
+  return true;
 }
 
 function invoiceData(employeeId) {
@@ -4858,11 +5330,31 @@ document.addEventListener("click", event => {
     }
   }
 
+  const adminTaskRowAction = event.target.closest(".admin-task-action button");
+  const actionableTaskRow = adminTaskRowAction && adminTaskRowAction.closest("[data-admin-task-row].is-actionable");
+  if (actionableTaskRow) {
+    openAdminTask(actionableTaskRow.dataset.adminTaskRow);
+    return;
+  }
+
   const nextAdminTask = event.target.closest("#dashboard-next-action-button");
   if (nextAdminTask) openAdminTask(nextAdminTask.dataset.adminTaskId);
 
   const adminTaskInvoice = event.target.closest("[data-admin-task-invoice]");
   if (adminTaskInvoice) showInvoiceDeliveryCheck(Number(adminTaskInvoice.dataset.adminTaskInvoice), adminTaskInvoice.dataset.periodKey);
+
+  const invoiceOverviewPeriod = event.target.closest("[data-invoice-overview-period]");
+  if (invoiceOverviewPeriod) {
+    setPeriod(invoiceOverviewPeriod.dataset.invoiceOverviewPeriod);
+    showView("invoices");
+    return;
+  }
+
+  const monthBlockerAction = event.target.closest("[data-month-blocker-action]");
+  if (monthBlockerAction) {
+    openMonthBatchBlocker(Number(monthBlockerAction.dataset.employeeId), monthBlockerAction.dataset.periodKey || currentPeriod().key);
+    return;
+  }
 
   const dashboardTeamFilter = event.target.closest("[data-dashboard-team-filter]");
   if (dashboardTeamFilter) {
@@ -5197,31 +5689,23 @@ document.querySelectorAll("[data-invoice-filter]").forEach(button => button.addE
   renderInvoices();
 }));
 
-document.querySelector("#test-month-delivery").addEventListener("click", () => {
-  const periodRows = invoicePeriodRows();
-  const openMonthRows = periodRows.filter(item => item.record.timesheetStatus !== "approved");
-  if (openMonthRows.length) {
-    const openSummary = openMonthRows.map(item => "<div><span>" + escapeHtml(item.employee.name) + "</span><strong>" + escapeHtml((statusLabels[item.record.timesheetStatus] || statusLabels.draft)[0]) + "</strong></div>").join("");
-    showModal({
-      label: "Maand nog niet volledig klaar",
-      title: openMonthRows.length + (openMonthRows.length === 1 ? " openstaande urenregistratie" : " openstaande urenregistraties"),
-      message: "De maandverzending is geblokkeerd zolang niet iedere urenregistratie van " + currentPeriod().label + " is goedgekeurd. Zo ontbreekt er nooit per ongeluk een medewerker in de maandcontrole.",
-      summary: openSummary + "<div><span>Maandverzending</span><strong>Geblokkeerd tot alles is goedgekeurd</strong></div>",
-      confirm: "Openstaande uren bekijken",
-      action: () => {
-        state.approvalScope = "month";
-        persistState();
-        closeModal();
-        renderAll();
-        showView("dashboard");
-        toast("Bekijk op het dashboard wie nog moet invullen, indienen of worden goedgekeurd.");
-      }
-    });
+function handleMonthDelivery() {
+  const readiness = monthBatchReadiness(currentPeriod().key);
+  const periodRows = readiness.rows;
+  if (readiness.state === "blocked") {
+    if (readiness.blockers.length === 1) {
+      const blocker = readiness.blockers[0];
+      openMonthBatchBlocker(blocker.employeeId, blocker.periodKey);
+      return;
+    }
+    const firstBlockerAction = document.querySelector("#month-batch-blockers [data-month-blocker-action]");
+    const blockerPanel = document.querySelector("#month-batch-card");
+    if (blockerPanel && typeof blockerPanel.scrollIntoView === "function") blockerPanel.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (firstBlockerAction) firstBlockerAction.focus();
+    toast("Bekijk de " + readiness.blockers.length + " blokkades en open per medewerker direct de juiste status.");
     return;
   }
-  const approved = periodRows
-    .filter(item => item.record.timesheetStatus === "approved")
-    .filter(item => item.record.invoiceStatus !== "simulated" || item.record.payrollStatus !== "simulated");
+  const approved = readiness.pendingRows;
   if (!approved.length) {
     toast("Er staat geen goedgekeurde maandverzending meer klaar.");
     return;
@@ -5261,7 +5745,9 @@ document.querySelector("#test-month-delivery").addEventListener("click", () => {
       toast("Maandverzending gecontroleerd: afzonderlijke berichten per ontvanger; e-mailverzending is uitgeschakeld.");
     }
   });
-});
+}
+
+document.querySelector("#test-month-delivery").addEventListener("click", handleMonthDelivery);
 
 document.querySelector("#download-invoice-list").addEventListener("click", () => {
   const period = currentPeriod();
@@ -5581,6 +6067,8 @@ document.querySelector("#modal-close").addEventListener("click", closeModal);
 document.querySelector("#modal-cancel").addEventListener("click", closeModal);
 document.querySelector("#modal-secondary").addEventListener("click", () => modalSecondaryAction ? modalSecondaryAction() : closeModal());
 document.querySelector("#modal-confirm").addEventListener("click", () => modalAction ? modalAction() : closeModal());
+document.querySelector("#modal-queue-previous").addEventListener("click", () => moveAdminTaskWorkflow(-1));
+document.querySelector("#modal-queue-next").addEventListener("click", () => moveAdminTaskWorkflow(1));
 document.querySelector("#modal").addEventListener("click", event => { if (event.target.id === "modal") closeModal(); });
 document.addEventListener("keydown", event => {
   if (event.key === "Escape") {

@@ -1,6 +1,6 @@
 # Path Uren & Facturatie
 
-Lokale voorbereidingsversie v0.9.17 van een configureerbare uren- en facturatieapp. Path Consultancy B.V. is de volledig ingevulde voorbeeldorganisatie.
+Lokale voorbereidingsversie v0.9.21 van een configureerbare uren- en facturatieapp. Path Consultancy B.V. is de volledig ingevulde voorbeeldorganisatie.
 
 ## Wat deze versie laat zien
 
@@ -19,9 +19,10 @@ Lokale voorbereidingsversie v0.9.17 van een configureerbare uren- en facturatiea
 - Scheiding tussen contracturen en declarabele uren.
 - Meer of minder declarabele uren dan contracturen geeft alleen een controlebericht en blokkeert indienen nooit.
 - Uren indienen en door een beheerder laten goedkeuren.
-- De verse voorbeeldomgeving is doelgericht gevuld: juni is afgerond, juli heeft 1 open actie en augustus 6. Dat zijn **7 acties in 5 dossiers**, verdeeld als **4 bij Backoffice + 3 bij medewerkers = 7**.
-- Bovenaan bewijst het beheerdersdashboard hetzelfde totaal op twee manieren: **Juli 1 + Augustus 6 = 7** en **Backoffice 4 + medewerkers 3 = 7**. Daardoor is direct zichtbaar waar het totaal vandaan komt.
+- De verse voorbeeldomgeving is doelgericht gevuld: juni is afgerond, juli heeft 2 open acties en augustus 5. Dat zijn **7 acties in 6 dossiers**, verdeeld als **4 bij Backoffice + 3 bij medewerkers = 7**.
+- Bovenaan bewijst het beheerdersdashboard hetzelfde totaal op twee manieren: **Juli 2 + Augustus 5 = 7** en **Backoffice 4 + medewerkers 3 = 7**. Daardoor is direct zichtbaar waar het totaal vandaan komt.
 - Direct onder de hoofdsamenvatting staat één vaste kaart **Volgende actie**. Deze toont de eerstvolgende uitvoerbare Backoffice-actie met taak, medewerker, maand, klant/broker en knop **Start deze actie**. Na afronden schuift de volgende actie automatisch naar voren.
+- Een gestarte Backoffice-actie opent een doorlopende werksessie. **Vorige** en **Volgende** bladeren veilig door de open Backoffice-acties zonder iets te wijzigen; na goedkeuren, terugsturen of afronden opent automatisch de logisch volgende actie in dezelfde modal.
 - Als Backoffice niets direct hoeft te doen, verandert dezelfde kaart in **Voor jou is nu niets te doen** en toont hij de eerstvolgende medewerker waarop wordt gewacht, inclusief passende herinnerings- of statusknop. Als alles klaar is, blijft een compacte groene afrondmelding staan.
 - De vierde KPI toont **Acties bij Backoffice** en daaronder hoeveel acties op medewerkers wachten. De link verwijst naar het volledige totaal, bijvoorbeeld **Bekijk alle 7 acties**.
 - In de hoofdsamenvatting staat nog maar één rustige knop **Bekijk alle 7 open acties**. De dubbele knop naar dezelfde werkvoorraad en de knop in de kop van de takenlijst zijn verwijderd.
@@ -55,7 +56,9 @@ Lokale voorbereidingsversie v0.9.17 van een configureerbare uren- en facturatiea
 - De bevestigde ItaQ- en Circle8-factuuradressen zijn exact uit de aangeleverde facturen ingevuld. Voor Shawn blijven ook overeenkomstnummer, crediteurennummer en nummer opdrachtuitvoerder op de factuur bewaard.
 - **Factuurnummer: [nummer]** staat als één witte regel in de factuurkop. De nummers gebruiken koppeltekens zonder spaties. Per medewerker blijft het vaste patroon gelijk; bij een nieuwe periode veranderen automatisch alleen de maand en het jaar.
 - Een nieuw aangemaakte centrale ontvanger wordt niet automatisch voor alle medewerkers geselecteerd.
-- Eén knop **Maandverzending controleren** toont alle aangevinkte routes en bijlagen en rondt na bevestiging alleen de controle af. Staat nog minimaal één urenstaat open, dan toont de knop het openstaande aantal en blokkeert de app de maandcontrole. In productie volgt daarna pas **Definitief verzenden**.
+- Boven het factuuroverzicht staat eerst een overzicht van alle open maandcontroles naast elkaar en daarna de kaart voor de gekozen maand. Zo blijft zichtbaar waarom de Facturen-badge aandacht vraagt, ook wanneer je op een afgeronde maand staat.
+- De Facturen-badge splitst open maandcontroles in aparte bolletjes: oranje voor geblokkeerde maanden en groen voor maanden die klaarstaan voor Backoffice-controle.
+- Eén knop **Maandverzending controleren** toont alle aangevinkte routes en bijlagen en rondt na bevestiging alleen de controle af. Bij meerdere blokkades springt de knop naar de medewerkerregels; bij één blokkade opent hij direct de juiste status of urencontrole. In productie volgt daarna pas **Definitief verzenden**.
 - De afgeronde status heet **Verzending gecontroleerd**. Dat betekent dat alle gekozen routes zijn gecontroleerd; er is niets echt verstuurd.
 - De actie bij een factuur blijft vóór en na de controle **Mailvoorbeeld** heten; de status maakt duidelijk of de verzending al is gecontroleerd.
 - Iedere factuur die klaarstaat heeft een zichtbaar conceptvoorbeeld en kan als echte PDF worden gedownload. Alle facturen gebruiken dezelfde professionele Path-vormgeving met logo, donkerblauw en mintgroen. Shawn behoudt daarnaast uitsluitend op zijn eigen Circle8-factuur de drie verplichte brokerreferenties. De PDF is duidelijk gemarkeerd als niet-verzonden concept; definitieve productie-PDF's worden later server-side gemaakt.

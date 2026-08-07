@@ -82,7 +82,7 @@ assert(/\.invoice-brand-references\s+strong\s*\{[^}]*color:\s*#fff/.test(styles)
 assert(document.querySelectorAll("select:not([hidden])").length === 0, "De vaste interface mag geen zichtbare native browserdropdowns meer bevatten");
 
 assert(document.querySelectorAll("#dashboard-employee-rows tr").length === 4, "Dashboard moet vier demo-medewerkers tonen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.17"), "Het zichtbare versienummer moet 0.9.17 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.21"), "Het zichtbare versienummer moet 0.9.21 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -92,6 +92,7 @@ assert(document.querySelector("#metric-approved-note").textContent.includes("Gee
 assert(document.querySelector("#hours-total").textContent === "153,0", "Juli moet voor Stasjo van Bakel 153,0 uur tonen");
 assert(document.querySelectorAll("#approval-list .approval-card").length === 0, "De verse demo mag niet onnodig met open urencontroles starten");
 assert(document.querySelector("#period-month-picker").tagName === "BUTTON" && document.querySelector("#period-year-picker").type === "number" && !document.querySelector("#period-month-panel select"), "De algemene maandkeuze moet uit gewone knoppen bestaan en geen vastlopend browsermenu gebruiken");
+assert(document.querySelector(".period-picker-caption").textContent === "Alle maanden · kies maand", "De maandkiezer moet duidelijk maken dat overzichten alle maanden meenemen en de keuze alleen de detailmaand opent");
 click("#period-month-picker");
 assert(!document.querySelector("#period-month-panel").hidden && document.querySelector("#period-month-picker").getAttribute("aria-expanded") === "true", "Het eigen maandvenster moet bij iedere klik openen");
 click("#period-month-picker");
@@ -114,20 +115,20 @@ const employeePicker = document.querySelector("#login-employee");
 employeePicker.value = "4";
 employeePicker.dispatchEvent(new Event("change", { bubbles: true }));
 const demoScenarioState = JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(demoScenarioState.schemaVersion === 23, "Versie 0.9.17 moet wijzigingen onder de juiste gegevensversie bewaren");
+assert(demoScenarioState.schemaVersion === 23, "Versie 0.9.21 moet wijzigingen onder de juiste gegevensversie bewaren");
 const freshOpenActions = dom.window.adminOpenTasks();
 const freshJulyActions = freshOpenActions.filter(task => task.periodKey === "2026-07");
 const freshAugustActions = freshOpenActions.filter(task => task.periodKey === "2026-08");
 const freshBackofficeActions = freshOpenActions.filter(task => task.actionable);
 const freshEmployeeActions = freshOpenActions.filter(task => !task.actionable);
-assert(freshOpenActions.length === 7 && freshJulyActions.length === 1 && freshAugustActions.length === 6, "De standaarddemo moet exact Juli 1 + Augustus 6 = 7 open acties bevatten");
+assert(freshOpenActions.length === 7 && freshJulyActions.length === 2 && freshAugustActions.length === 5, "De standaarddemo moet exact Juli 2 + Augustus 5 = 7 open acties bevatten");
 assert(freshBackofficeActions.length === 4 && freshEmployeeActions.length === 3, "De standaarddemo moet exact Backoffice 4 + medewerkers 3 = 7 tonen");
-assert(new Set(freshOpenActions.map(task => task.periodKey + ":" + task.employee.id)).size === 5, "De zeven standaardacties moeten vijf medewerker-maanddossiers vormen");
-assert(document.querySelector("#hero-task-months").textContent === "Juli 1 + Augustus 6 = 7" && document.querySelector("#hero-task-owners").textContent === "Backoffice 4 + medewerkers 3 = 7", "De bovenkant moet beide standaardrekensommen direct tonen");
-assert(document.querySelector('[data-admin-task-month="2026-07"]')?.querySelectorAll("[data-admin-task-row]").length === 1 && document.querySelector('[data-admin-task-month="2026-08"]')?.querySelectorAll("[data-admin-task-row]").length === 6, "De zeven standaardacties moeten zichtbaar onder juli en augustus worden gegroepeerd");
+assert(new Set(freshOpenActions.map(task => task.periodKey + ":" + task.employee.id)).size === 6, "De zeven standaardacties moeten zes medewerker-maanddossiers vormen");
+assert(document.querySelector("#hero-task-months").textContent === "Juli 2 + Augustus 5 = 7" && document.querySelector("#hero-task-owners").textContent === "Backoffice 4 + medewerkers 3 = 7", "De bovenkant moet beide standaardrekensommen direct tonen");
+assert(document.querySelector('[data-admin-task-month="2026-07"]')?.querySelectorAll("[data-admin-task-row]").length === 2 && document.querySelector('[data-admin-task-month="2026-08"]')?.querySelectorAll("[data-admin-task-row]").length === 5, "De zeven standaardacties moeten zichtbaar onder juli en augustus worden gegroepeerd");
 assert(document.querySelector('[data-admin-task-month-toggle="2026-07"]').getAttribute("aria-expanded") === "true" && document.querySelector('[data-admin-task-month-toggle="2026-08"]').getAttribute("aria-expanded") === "true", "De oudste achterstallige en huidige open maand moeten standaard openstaan");
-assert(document.querySelector("#dashboard-next-action-label").textContent === "Volgende actie · 1 van 4 bij Backoffice" && document.querySelector("#dashboard-next-action-title").textContent === "Klanturenstaat controleren", "De vaste prioriteitenkaart moet de eerste van vier concrete Backoffice-acties tonen");
-assert(document.querySelector("#dashboard-next-action-person").textContent === "Shawn-Douglas Nahar" && document.querySelector("#dashboard-next-action-period").textContent.includes("Augustus 2026") && document.querySelector("#dashboard-next-action-button"), "De volgende actie moet medewerker, maand en een directe startknop tonen");
+assert(document.querySelector("#dashboard-next-action-label").textContent === "Volgende actie · 1 van 4 bij Backoffice" && document.querySelector("#dashboard-next-action-title").textContent === "Verzending controleren", "De vaste prioriteitenkaart moet de eerste van vier concrete Backoffice-acties tonen");
+assert(document.querySelector("#dashboard-next-action-person").textContent === "Shawn-Douglas Nahar" && document.querySelector("#dashboard-next-action-period").textContent.includes("Juli 2026") && document.querySelector("#dashboard-next-action-button"), "De volgende actie moet medewerker, maand en een directe startknop tonen");
 assert(document.querySelector("#metric-actions").textContent === "4" && document.querySelector("#metric-actions-note").textContent === "3 acties wachten op medewerkers" && document.querySelector("#metric-actions-link").textContent === "Bekijk alle 7 acties", "De vierde KPI moet directe Backoffice-acties tonen en naar alle zeven acties verwijzen");
 assert(demoScenarioState.settings.weeklyReminderDay === "friday" && demoScenarioState.settings.weeklyReminderTime === "15:00", "De standaard weekherinnering moet vrijdag om 15:00 zijn");
 assert(demoScenarioState.settings.monthEndReminderTime === "15:00" && demoScenarioState.settings.overdueReminderTime === "09:00" && demoScenarioState.settings.approvalReminderTime === "10:00", "De maand-, achterstands- en goedkeuringsherinneringen moeten veilige standaardmomenten hebben");
@@ -135,7 +136,7 @@ assert(demoScenarioState.settings.customerTimesheetReminderEnabled && demoScenar
 assert(demoScenarioState.records["2026-07"]["2"].customerTimesheet.status === "sent" && demoScenarioState.records["2026-07"]["3"].customerTimesheet.status === "missing", "De rustige maand moet afgeronde en ontbrekende klanturenstaten bevatten");
 assert(demoScenarioState.records["2026-07"]["2"].customerTimesheet.isExample && demoScenarioState.records["2026-07"]["2"].customerTimesheet.fileName.startsWith("Voorbeeld_") && demoScenarioState.records["2026-07"]["2"].customerTimesheet.fileData.endsWith("voorbeeld-klanturenstaat.pdf"), "Vooringevulde documenten moeten herkenbaar en als echt downloadbaar voorbeeldbestand gekoppeld zijn");
 assert(demoScenarioState.employees.find(employee => employee.id === 2).customerTimesheetBrokerEmail === "urenstaten-itaq@example.invalid", "Een klanturenstaat moet een afwijkend brokeradres kunnen gebruiken");
-assert(["1", "2", "3", "4"].every(id => demoScenarioState.records["2026-07"][id].invoiceStatus === "simulated"), "Juli moet als afgerond factuurproces beginnen");
+assert(["1", "2", "3"].every(id => demoScenarioState.records["2026-07"][id].invoiceStatus === "simulated") && demoScenarioState.records["2026-07"]["4"].invoiceStatus === "ready", "Juli moet als bijna afgeronde groene maandcontrole beginnen");
 assert(demoScenarioState.records["2026-06"]["1"].invoiceStatus === "simulated", "Juni moet als afgeronde historische verzendtest klaarstaan");
 assert(demoScenarioState.records["2026-06"]["1"].payrollStatus === "simulated", "Een afgeronde historische maand moet ook de salarisadministratieroute als getest bewaren");
 assert(demoScenarioState.announcements.some(item => item.status === "draft") && demoScenarioState.announcements.some(item => item.status === "withdrawn") && demoScenarioState.announcements.some(item => item.correctionOfId), "De demo moet mededelingen met concept, intrekking en interne versiehistorie vooraf vullen");
@@ -152,10 +153,60 @@ assert(dom.window.invoiceNumberFor(3, "2027-01") === "COA-2027-januari", "Brians
 assert(dom.window.invoiceNumberFor(4, "2027-01") === "Bel-Shawn-2027-januari", "Shawns factuurnummer moet bij een nieuw jaar automatisch 2027 gebruiken");
 assert(demoScenarioState.records["2026-08"]["3"].invoiceStatus === "ready", "Augustus moet een goedgekeurde urenstaat met factuur klaar bevatten");
 assert(demoScenarioState.records["2026-08"]["4"].timesheetStatus === "approved", "Augustus moet naast concept en correctie twee goedgekeurde urenstaten bevatten");
-assert(demoScenarioState.records["2026-07"]["4"].invoiceStatus === "simulated", "Shawns rustige juliverzending moet afgerond beginnen");
+assert(demoScenarioState.records["2026-07"]["4"].invoiceStatus === "ready", "Shawns rustige juliverzending moet als resterende maandcontrole klaarstaan");
+const julyBatchReadiness = dom.window.monthBatchReadiness("2026-07");
+assert(julyBatchReadiness.total === 4 && julyBatchReadiness.ready === 4 && julyBatchReadiness.blockers.length === 0 && julyBatchReadiness.pendingDelivery === 1 && julyBatchReadiness.controlled === 3 && julyBatchReadiness.state === "ready", "Juli moet exact 3 gecontroleerd en 1 resterende groene maandcontrole bevatten");
+assert(document.querySelector("#month-batch-card").dataset.state === "ready" && document.querySelector("#month-batch-ready-count").textContent === "1 klaar · 3 gecontroleerd" && document.querySelector("#test-month-delivery").textContent === "Ga verder · 1 resterend" && !document.querySelector("#test-month-delivery").disabled, "De julikaart en CTA moeten de resterende groene maandcontrole exact tonen");
+assert(document.querySelector("#invoice-status-blocked-count").textContent === "0" && document.querySelector("#invoice-status-ready-count").textContent === "1" && document.querySelector("#invoice-status-controlled-count").textContent === "3", "De factuurstatussen moeten actuele aantallen tonen en geen genummerde stappen suggereren");
+assert(!document.querySelector("#invoice-batch-count").hidden && document.querySelector("#invoice-batch-blocked-count").textContent === "1" && !document.querySelector("#invoice-batch-blocked-count").hidden && document.querySelector("#invoice-batch-ready-count").textContent === "1" && !document.querySelector("#invoice-batch-ready-count").hidden, "Facturen moet standaard één oranje en één groen maandbolletje tonen");
+assert(document.querySelector("#invoice-month-overview-title").textContent === "2 open maandcontroles over alle maanden" && document.querySelector("#invoice-month-overview-list").textContent.includes("Juli 2026") && document.querySelector("#invoice-month-overview-list").textContent.includes("1 resterend · 3 gecontroleerd") && document.querySelector("#invoice-month-overview-list").textContent.includes("Augustus 2026") && document.querySelector("#invoice-month-overview-list").textContent.includes("2 blokkades"), "Bij juli moet het overzicht beide open maandcontroles naast elkaar uitleggen");
+click('[data-invoice-overview-period="2026-08"]');
+assert(dom.window.currentPeriod().key === "2026-08" && document.querySelector("#invoice-period-title").textContent.includes("augustus 2026"), "Een maandregel in het overzicht moet direct naar die factuurmaand springen");
+choosePeriod("#period-month-picker", "#period-year-picker", "2026-07");
+assert(demoScenarioState.records["2026-07"]["3"].customerTimesheet.status === "missing" && julyBatchReadiness.state === "ready", "Een ontbrekende klanturenstaat mag de maandbatch volgens de huidige productregel niet blokkeren");
+
+choosePeriod("#period-month-picker", "#period-year-picker", "2026-08");
+const augustBatchReadiness = dom.window.monthBatchReadiness("2026-08");
+assert(augustBatchReadiness.total === 4 && augustBatchReadiness.ready === 2 && augustBatchReadiness.blockers.length === 2 && augustBatchReadiness.pendingDelivery === 2 && augustBatchReadiness.controlled === 0 && augustBatchReadiness.state === "blocked", "Augustus moet exact 2 van 4 gereed met twee blokkades beginnen");
+assert(JSON.stringify(augustBatchReadiness.blockers.map(blocker => [blocker.employee.name, blocker.statusLabel])) === JSON.stringify([["Marc de Roon", "Nog niet ingediend"], ["Stasjo van Bakel", "Correctie nodig"]]), "Marc en Stasjo moeten met hun eigen blokkadestatus worden getoond");
+assert(document.querySelector("#month-batch-ready-count").textContent === "2 van 4 gereed voor controle" && document.querySelector("#month-batch-status").textContent === "2 blokkades" && document.querySelector("#test-month-delivery").textContent === "Bekijk 2 blokkades" && !document.querySelector("#test-month-delivery").disabled, "De augustuskaart en CTA moeten de twee blokkades exact uitleggen");
+assert(document.querySelector("#invoice-status-blocked-count").textContent === "2" && document.querySelector("#invoice-status-ready-count").textContent === "2" && document.querySelector("#invoice-status-controlled-count").textContent === "0", "Augustus moet twee blokkades, twee gereed en nul gecontroleerd tonen");
+assert(document.querySelectorAll("#month-batch-blockers [data-month-batch-blocker]").length === 2 && document.querySelector("#month-batch-blockers").textContent.includes("Marc de Roon") && document.querySelector("#month-batch-blockers").textContent.includes("Stasjo van Bakel"), "Iedere blokkade moet een eigen zichtbare medewerkerregel krijgen");
+click("#test-month-delivery");
+assert(document.querySelector("#modal").hidden && document.activeElement === document.querySelector("#month-batch-blockers [data-month-blocker-action]"), "Bij meerdere blokkades moet de CTA zonder tussenmodal naar de directe blockeracties springen");
+click('[data-month-batch-blocker="1"] [data-month-blocker-action]');
+assert(!document.querySelector("#modal").hidden && document.querySelector("#modal-title").textContent.includes("Marc de Roon") && document.querySelector("#modal-label").textContent === "Alleen-lezen urenoverzicht", "Een medewerkerblokkade moet direct de juiste maandstatus openen");
+click("#modal-close");
+
+const marcAugustBatchRecord = dom.window.recordFor(1, "2026-08");
+const stasjoAugustBatchRecord = dom.window.recordFor(2, "2026-08");
+const marcAugustBatchSnapshot = { timesheetStatus: marcAugustBatchRecord.timesheetStatus, invoiceStatus: marcAugustBatchRecord.invoiceStatus, payrollStatus: marcAugustBatchRecord.payrollStatus };
+const stasjoAugustBatchSnapshot = { timesheetStatus: stasjoAugustBatchRecord.timesheetStatus, invoiceStatus: stasjoAugustBatchRecord.invoiceStatus, payrollStatus: stasjoAugustBatchRecord.payrollStatus };
+Object.assign(marcAugustBatchRecord, { timesheetStatus: "approved", invoiceStatus: "ready", payrollStatus: "ready" });
+dom.window.renderAll();
+assert(dom.window.monthBatchReadiness("2026-08").ready === 3 && dom.window.monthBatchReadiness("2026-08").blockers.length === 1 && document.querySelector("#month-batch-ready-count").textContent === "3 van 4 gereed voor controle" && document.querySelector("#test-month-delivery").textContent === "Bekijk 1 blokkade", "Na één oplossing moet de kaart direct naar één blokkade en enkelvoud wisselen");
+assert(document.querySelectorAll("#month-batch-blockers [data-month-batch-blocker]").length === 1 && document.querySelector('[data-month-batch-blocker="2"]'), "Na Marcs oplossing mag alleen Stasjo als blokkade overblijven");
+click("#test-month-delivery");
+assert(!document.querySelector("#modal").hidden && document.querySelector("#modal-title").textContent.includes("Stasjo van Bakel") && document.querySelector("#modal-label").textContent === "Alleen-lezen urenoverzicht", "Bij één medewerkerblokkade moet de hoofd-CTA direct de juiste status openen");
+click("#modal-close");
+Object.assign(stasjoAugustBatchRecord, { timesheetStatus: "submitted", invoiceStatus: "concept", payrollStatus: "concept" });
+dom.window.renderAll();
+click("#test-month-delivery");
+assert(!document.querySelector("#modal").hidden && document.querySelector("#modal-label").textContent === "Urencontrole" && document.querySelector("#modal-title").textContent.includes("Stasjo van Bakel") && document.querySelector("#modal-confirm").textContent === "Goedkeuren", "Bij één Backoffice-blokkade moet de hoofd-CTA direct de urencontrole openen");
+click("#modal-close");
+Object.assign(stasjoAugustBatchRecord, { timesheetStatus: "approved", invoiceStatus: "ready", payrollStatus: "ready" });
+dom.window.renderAll();
+const readyAugustBatch = dom.window.monthBatchReadiness("2026-08");
+assert(readyAugustBatch.ready === 4 && readyAugustBatch.blockers.length === 0 && readyAugustBatch.pendingDelivery === 4 && readyAugustBatch.state === "ready", "Met vier goedgekeurde registraties moet augustus volledig gereed voor maandcontrole zijn");
+assert(document.querySelector("#month-batch-ready-count").textContent === "4 klaar · 0 gecontroleerd" && document.querySelector("#month-batch-status").textContent === "Klaar om te starten" && document.querySelector("#test-month-delivery").textContent === "Start maandcontrole · 4" && !document.querySelector("#test-month-delivery").disabled && document.querySelector("#month-batch-blockers").hidden, "De gereedheidskaart moet zonder oude blockerregels naar de actieve maandcontrole wisselen");
+assert(document.querySelector("#invoice-batch-ready-count").textContent === "2" && !document.querySelector("#invoice-batch-ready-count").hidden && document.querySelector("#invoice-batch-blocked-count").hidden && document.querySelector("#invoice-batch-count").getAttribute("aria-label").includes("2 klaar voor controle"), "De Facturen-badge moet groen worden zodra beide maandbatches klaarstaan");
+Object.assign(marcAugustBatchRecord, marcAugustBatchSnapshot);
+Object.assign(stasjoAugustBatchRecord, stasjoAugustBatchSnapshot);
+dom.window.renderAll();
+choosePeriod("#period-month-picker", "#period-year-picker", "2026-07");
 const seededAdminTasks = dom.window.adminOpenTasks();
-assert(seededAdminTasks.filter(task => task.periodKey === "2026-07").length === 1 && seededAdminTasks.filter(task => task.periodKey === "2026-07" && !task.actionable).length === 1, "De rustige voorbeeldmaand juli moet precies één wachtende taak bevatten");
-assert(seededAdminTasks.filter(task => task.periodKey === "2026-08" && task.actionable).length === 4 && seededAdminTasks.filter(task => task.periodKey === "2026-08" && !task.actionable).length === 2, "De drukkere voorbeeldmaand augustus moet vier directe en twee wachtende taken bevatten");
+assert(seededAdminTasks.filter(task => task.periodKey === "2026-07").length === 2 && seededAdminTasks.filter(task => task.periodKey === "2026-07" && task.actionable).length === 1 && seededAdminTasks.filter(task => task.periodKey === "2026-07" && !task.actionable).length === 1, "De bijna afgeronde voorbeeldmaand juli moet één directe en één wachtende taak bevatten");
+assert(seededAdminTasks.filter(task => task.periodKey === "2026-08" && task.actionable).length === 3 && seededAdminTasks.filter(task => task.periodKey === "2026-08" && !task.actionable).length === 2, "De drukkere voorbeeldmaand augustus moet drie directe en twee wachtende taken bevatten");
 pressEnter("#login-employee");
 assert(document.querySelector("#timesheet-employee").textContent === "Shawn-Douglas Nahar", "Enter in de medewerkerkiezer moet met de gekozen medewerker inloggen");
 assert(document.querySelector('[data-view="approvals"]').hidden, "Ook een andere medewerker mag geen beheerfuncties zien");
@@ -178,7 +229,8 @@ const skippedCustomerState = JSON.parse(dom.window.localStorage.getItem("path-ur
 const skippedCustomerDocument = skippedCustomerState.records["2026-07"]["3"].customerTimesheet;
 assert(skippedCustomerDocument.status === "skipped" && skippedCustomerDocument.skippedBy === "Brian Hek" && skippedCustomerDocument.skippedAt && skippedCustomerDocument.skippedReason.includes("rechtstreeks naar Path Backoffice"), "Overslaan moet reden, medewerker en tijdstip blijvend opslaan");
 assert(document.querySelector("#employee-customer-timesheet-status").textContent === "Al rechtstreeks gemaild" && document.querySelector("#employee-customer-timesheet-skip").textContent === "Alsnog uploaden", "De medewerker moet de afgeronde registratie kunnen zien en terugdraaien");
-assert(!dom.window.openPeriodSummaries().find(item => item.periodKey === "2026-07"), "Een als rechtstreeks gemaild geregistreerde klanturenstaat moet de rustige maand volledig uit de open werkvoorraad laten verdwijnen");
+const julyAfterCustomerSkipTasks = dom.window.adminOpenTasks().filter(task => task.periodKey === "2026-07");
+assert(julyAfterCustomerSkipTasks.length === 1 && julyAfterCustomerSkipTasks[0].type === "invoice-delivery" && julyAfterCustomerSkipTasks[0].employee.name === "Shawn-Douglas Nahar", "Een als rechtstreeks gemaild geregistreerde klanturenstaat moet alleen die documenttaak weghalen; de resterende julifactuurcontrole blijft zichtbaar");
 dom.window.showCustomerTimesheetDetails(3, "2026-07", false);
 assert(document.querySelector("#modal-summary").textContent.includes("Brian Hek") && document.querySelector("#modal-summary").textContent.includes("rechtstreeks naar Path Backoffice") && document.querySelector("#modal-summary").textContent.includes("Geregistreerd op"), "Backoffice moet in de details zien wie de klanturenstaat heeft overgeslagen, wanneer en waarom");
 click("#modal-confirm");
@@ -407,18 +459,22 @@ assert(document.querySelector("#admin-task-summary").textContent.includes(dashbo
 const brianAugust = dom.window.recordFor(3, "2026-08");
 const shawnAugust = dom.window.recordFor(4, "2026-08");
 const brianJuly = dom.window.recordFor(3, "2026-07");
+const shawnJuly = dom.window.recordFor(4, "2026-07");
 const ownershipScenarioSnapshot = [brianAugust, shawnAugust].map(record => ({
   invoiceStatus: record.invoiceStatus,
   payrollStatus: record.payrollStatus,
   customerStatus: dom.window.customerTimesheetFor(record).status
 }));
 const brianJulyStatusSnapshot = brianJuly.timesheetStatus;
+const shawnJulyInvoiceSnapshot = { invoiceStatus: shawnJuly.invoiceStatus, payrollStatus: shawnJuly.payrollStatus };
 [brianAugust, shawnAugust].forEach(record => {
   record.invoiceStatus = "simulated";
   record.payrollStatus = "simulated";
   dom.window.customerTimesheetFor(record).status = "sent";
 });
 brianJuly.timesheetStatus = "approved";
+shawnJuly.invoiceStatus = "simulated";
+shawnJuly.payrollStatus = "simulated";
 choosePeriod("#period-month-picker", "#period-year-picker", "2026-08");
 dom.window.renderAll();
 const ownershipScenarioTasks = dom.window.adminOpenTasks();
@@ -438,6 +494,7 @@ assert(document.querySelectorAll("#admin-task-list [data-admin-task-row]").lengt
   dom.window.customerTimesheetFor(record).status = ownershipScenarioSnapshot[index].customerStatus;
 });
 brianJuly.timesheetStatus = brianJulyStatusSnapshot;
+Object.assign(shawnJuly, shawnJulyInvoiceSnapshot);
 choosePeriod("#period-month-picker", "#period-year-picker", "2037-12");
 dom.window.renderAll();
 click("#dashboard-next-action-button");
@@ -516,7 +573,7 @@ choosePeriod("#period-month-picker", "#period-year-picker", "2026-08");
 click('[data-view="invoices"]');
 assert(document.querySelector("#view-invoices").classList.contains("is-active"), "Facturen moet via de hoofdnavigatie bereikbaar blijven");
 assert(!document.querySelector("#view-payroll") && !document.querySelector("#open-payroll-from-invoices"), "Salarisadministratie mag geen apart scherm of vaste factuurknop meer hebben");
-assert(document.querySelector("#test-month-delivery").textContent.includes("2 openstaand"), "Bij open urenregistraties moet de maandknop direct het openstaande aantal tonen");
+assert(document.querySelector("#test-month-delivery").textContent === "Bekijk 2 blokkades" && document.querySelector("#month-batch-ready-count").textContent === "2 van 4 gereed voor controle", "Bij open urenregistraties moeten CTA en gereedheidskaart exact twee blokkades tonen");
 assert(document.querySelector("#invoice-rows").textContent.includes("Nog niet ingediend") && document.querySelector("#invoice-rows").textContent.includes("Correctie nodig"), "De factuurlijst moet de twee verschillende wachtstatussen duidelijk tonen");
 click("#help-launcher");
 document.querySelector("#help-input").value = "mede";
@@ -1031,7 +1088,9 @@ dom.window.persistState();
 dom.window.renderAll();
 assert(document.querySelector("#invoice-rows").textContent.includes("Verzending gecontroleerd"), "De verzendcontrolestatus moet duidelijk worden vastgelegd");
 assert(document.querySelector("#invoice-rows").textContent.includes("Mailvoorbeeld") && !document.querySelector("#invoice-rows").textContent.includes("Verzendcontrole bekijken"), "Ook na controle moet de korte, herkenbare actie Mailvoorbeeld blijven staan");
-assert(document.querySelector("#test-month-delivery").textContent.includes("Maandverzending controleren"), "Als alle uren zijn goedgekeurd moet de volledige maandcontrole beschikbaar zijn");
+assert(document.querySelector("#test-month-delivery").textContent === "Ga verder · 1 resterend", "Na drie individuele controles moet de maandcontrole exact één resterende verzending tonen");
+const mixedBatchBadge = document.querySelector("#invoice-batch-count");
+assert(document.querySelector("#invoice-batch-blocked-count").textContent === "1" && !document.querySelector("#invoice-batch-blocked-count").hidden && document.querySelector("#invoice-batch-ready-count").textContent === "1" && !document.querySelector("#invoice-batch-ready-count").hidden && mixedBatchBadge.getAttribute("aria-label").includes("1 geblokkeerd") && mixedBatchBadge.getAttribute("aria-label").includes("1 klaar voor controle"), "Bij een mix van een geblokkeerde en een klaarstaande maand moet Facturen een oranje en groen bolletje tonen: " + mixedBatchBadge.textContent + " / " + mixedBatchBadge.className + " / " + mixedBatchBadge.getAttribute("aria-label"));
 click("#test-month-delivery");
 assert(document.querySelector("#modal-title").textContent.includes("Maandverzending") && document.querySelector("#modal-title").textContent.includes("controleren"), "De ene knop moet vóór uitvoering een duidelijke maandcontrole tonen");
 assert(document.querySelector("#modal-confirm").textContent === "Controle afronden", "De maandactie moet als controle worden benoemd en niet als echte verzending");
@@ -1052,14 +1111,11 @@ click('[data-invoice-filter="all"]');
 assert(!document.querySelector("#view-payroll") && !document.querySelector("[data-simulate-payroll]"), "De salarisadministratie moet volledig opgaan in mailvoorbeeld, instellingen en maandcontrole");
 assert(document.querySelector("#view-invoices").classList.contains("is-active"), "De beheerder moet na een verzendcontrole op Facturen blijven");
 choosePeriod("#period-month-picker", "#period-year-picker", "2026-08");
-const openAugustCount = Number.parseInt(document.querySelector("#test-month-delivery").textContent, 10);
-assert(!document.querySelector("#test-month-delivery").disabled && openAugustCount >= 3 && document.querySelector("#test-month-delivery").textContent.includes("openstaand"), "Een onvolledige maand moet een aanklikbare waarschuwing met het openstaande aantal tonen");
+const openAugustCount = dom.window.monthBatchReadiness("2026-08").blockers.length;
+assert(!document.querySelector("#test-month-delivery").disabled && openAugustCount >= 3 && document.querySelector("#test-month-delivery").textContent === "Bekijk " + openAugustCount + " blokkades", "Een onvolledige maand moet een aanklikbare CTA met het actuele blokkade-aantal tonen");
 click("#test-month-delivery");
-assert(document.querySelector("#modal-title").textContent.includes(openAugustCount + " openstaande urenregistraties"), "De maandcontrole moet duidelijk melden hoeveel urenregistraties nog openstaan");
-assert(document.querySelector("#modal-message").textContent.includes("geblokkeerd"), "Een onvolledige maand mag niet als volledige verzendcontrole worden afgerond");
-assert(document.querySelector("#modal-confirm").textContent === "Openstaande uren bekijken", "De waarschuwing moet naar het openstaande urenoverzicht leiden");
-click("#modal-confirm");
-assert(document.querySelector("#view-dashboard").classList.contains("is-active"), "Openstaande uren bekijken moet naar het dashboard van de gekozen maand gaan");
+assert(document.querySelector("#modal").hidden && document.activeElement === document.querySelector("#month-batch-blockers [data-month-blocker-action]"), "Bij meerdere blokkades moet de CTA rechtstreeks naar de blockerregels gaan zonder extra tussenmodal");
+assert(document.querySelector("#view-invoices").classList.contains("is-active"), "Blokkades bekijken moet op het factuuroverzicht van dezelfde maand blijven");
 
 click('[data-view="settings"]');
 const invoiceHistoryBeforeRecipientDelete = JSON.stringify(JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final")).records);
@@ -1120,6 +1176,84 @@ const brianInvoiceText = document.querySelector("#modal-summary").textContent;
 assert(brianInvoiceText.includes("COA-2026-juli") && brianInvoiceText.includes("Itaq") && brianInvoiceText.includes("COA"), "Brians factuurnummer, ontvanger en project moeten exact zijn");
 assert(brianInvoiceText.includes("117") && brianInvoiceText.includes("€ 72.50") && brianInvoiceText.includes("€ 8,482.50") && brianInvoiceText.includes("€ 1,781.33") && brianInvoiceText.includes("€ 10,263.83"), "Brians uren, tarief en alle totalen moeten exact overeenkomen");
 click("#modal-confirm");
+
+function createQueueTestDom() {
+  const queueDom = new JSDOM(html, {
+    runScripts: "outside-only",
+    url: "https://queue.example.invalid/"
+  });
+  queueDom.window.scrollTo = () => {};
+  queueDom.window.URL.createObjectURL = () => "blob:queue-test";
+  queueDom.window.URL.revokeObjectURL = () => {};
+  queueDom.window.eval(script);
+  return queueDom;
+}
+
+function queueClick(queueDom, selector) {
+  const element = queueDom.window.document.querySelector(selector);
+  if (!element) throw new Error("Queue-klikdoel ontbreekt: " + selector);
+  element.dispatchEvent(new queueDom.window.MouseEvent("click", { bubbles: true }));
+}
+
+{
+  const queueDom = createQueueTestDom();
+  const queueDocument = queueDom.window.document;
+  const firstTask = queueDom.window.adminOpenTasks().find(task => task.type === "customer-review" && task.employee.name === "Shawn-Douglas Nahar");
+  assert(queueDom.window.openAdminTask(firstTask.id), "De Backoffice-werkmodus moet de eerste actie openen");
+  queueClick(queueDom, "#modal-confirm");
+  assert(queueDocument.querySelector("#modal-label").textContent === "Aparte brokerroute", "Na goedkeuren moet het vervolgdossier direct openen");
+  assert(queueDocument.querySelector("#modal-queue-progress").textContent.includes("Actie 2 van 4"), "Een vervolgdossier moet de plaats van de voltooide taak in de wachtrij overnemen");
+  assert(queueDocument.querySelector("#toast").textContent.includes("De klanturenstaat van Shawn-Douglas Nahar is goedgekeurd. Volgende Backoffice-actie geopend."), "Auto-doorgaan moet de volledige actiebevestiging behouden");
+  queueDom.window.close();
+}
+
+{
+  const queueDom = createQueueTestDom();
+  const queueDocument = queueDom.window.document;
+  const brian = queueDom.window.employeeById(3);
+  brian.customerTimesheetUseBrokerEmail = false;
+  brian.customerTimesheetBrokerEmail = "ongeldig-adres";
+  queueDom.window.customerTimesheetFor(queueDom.window.recordFor(3, "2026-08")).status = "approved";
+  queueDom.window.renderAll();
+  const brokerTask = queueDom.window.adminOpenTasks().find(task => task.type === "customer-broker" && Number(task.employee.id) === 3);
+  assert(queueDom.window.openAdminTask(brokerTask.id), "De navigatietest moet met een ongeldige brokerroute kunnen starten");
+  assert(queueDocument.querySelector("#modal-label").textContent === "Actie geblokkeerd", "Een ongeldige brokerroute moet als echte blocker-modal openen");
+  const blockedProgress = queueDocument.querySelector("#modal-queue-progress").textContent;
+  queueClick(queueDom, "#modal-queue-next");
+  assert(queueDocument.querySelector("#modal-label").textContent !== "Actie geblokkeerd", "Volgende moet voorbij een geblokkeerde taak kunnen bladeren");
+  queueClick(queueDom, "#modal-queue-previous");
+  assert(queueDocument.querySelector("#modal-label").textContent === "Actie geblokkeerd" && queueDocument.querySelector("#modal-queue-progress").textContent === blockedProgress, "Vorige moet veilig naar dezelfde geblokkeerde taak terugkeren");
+  queueDom.window.close();
+}
+
+{
+  const queueDom = createQueueTestDom();
+  const queueDocument = queueDom.window.document;
+  const shawn = queueDom.window.employeeById(4);
+  shawn.customerTimesheetBrokerEmail = "ongeldig-adres";
+  const firstTask = queueDom.window.adminOpenTasks().find(task => task.type === "customer-review" && task.employee.name === "Shawn-Douglas Nahar");
+  queueDom.window.openAdminTask(firstTask.id);
+  queueClick(queueDom, "#modal-confirm");
+  assert(queueDocument.querySelector("#modal-label").textContent === "Actie geblokkeerd" && queueDocument.querySelector("#modal-confirm").textContent === "Werkmodus sluiten", "Auto-doorgaan naar een ongeldige vervolgroute mag geen oude modalcallback achterlaten");
+  queueDom.window.close();
+}
+
+{
+  const queueDom = createQueueTestDom();
+  const queueDocument = queueDom.window.document;
+  const record = queueDom.window.recordFor(1, "2026-08");
+  record.timesheetStatus = "submitted";
+  record.invoiceStatus = "concept";
+  record.payrollStatus = "concept";
+  queueDom.window.renderAll();
+  const reviewTask = queueDom.window.adminOpenTasks().find(task => task.type === "hours-review" && task.employee.id === 1);
+  queueDom.window.openAdminTask(reviewTask.id);
+  queueClick(queueDom, "#modal-secondary");
+  assert(queueDocument.querySelector("#modal-queue").hidden && queueDocument.querySelector("#modal-secondary").textContent === "Terug naar controle", "De correctie-editor moet wachtrijnavigatie verbergen en een veilige terugactie tonen");
+  queueClick(queueDom, "#modal-secondary");
+  assert(!queueDocument.querySelector("#modal-queue").hidden && queueDocument.querySelector("#modal-label").textContent === "Urencontrole", "Terug naar controle moet dezelfde open urencontrole herstellen");
+  queueDom.window.close();
+}
 
 const legacyState = JSON.parse(JSON.stringify(resetState));
 legacyState.schemaVersion = 7;
@@ -1188,7 +1322,7 @@ const migrationPicker = migrationDom.window.document.querySelector("#login-admin
 migrationPicker.value = "joyce";
 migrationPicker.dispatchEvent(new migrationDom.window.Event("change", { bubbles: true }));
 const migratedState = JSON.parse(migrationDom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(migratedState.schemaVersion === 23, "Bestaande browsergegevens moeten ook in v0.9.17 veilig behouden blijven");
+assert(migratedState.schemaVersion === 23, "Bestaande browsergegevens moeten ook in v0.9.21 veilig behouden blijven");
 assert(migratedState.settings.mailRecipients.find(recipient => recipient.id === "payroll").name.includes("Salarisadministratie"), "Migratie moet EasySalary als duidelijke salarisadministratieroute benoemen");
 assert(migratedState.records["2026-07"]["4"].invoiceNumber === "Bel-Shawn-2026-juli", "Migratie moet ook bestaande factuurnummers omzetten naar de afgesproken koppeltekens");
 assert(migratedState.records["2026-07"]["4"].invoiceStatus === "ready", "Migratie moet de vooraf ingevulde Shawn-mailtest terugzetten naar Factuur klaar");
@@ -1215,4 +1349,4 @@ assert(Object.values(migratedState.records).flatMap(periodRecords => Object.valu
 assert(migratedState.employees.every(employee => employee.mailBody.includes("{uren}")), "Migratie moet de oude standaardtekst aanvullen met de daadwerkelijke uren");
 assert(migratedState.records["2026-07"]["1"].entries.flat().reduce((sum, value) => sum + value, 0) === 164, "Migratie moet bestaande uren volledig behouden");
 
-console.log("Path v0.9.17 volledige smoke test: geslaagd");
+console.log("Path v0.9.21 volledige smoke test: geslaagd");

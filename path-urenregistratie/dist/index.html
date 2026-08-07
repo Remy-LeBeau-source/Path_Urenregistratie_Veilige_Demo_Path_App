@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0D1B38">
   <title>Uren & Facturatie</title>
-  <link rel="stylesheet" crossorigin href="/assets/index-BAm53GiI.css">
+  <link rel="stylesheet" crossorigin href="/assets/index-CUudUiso.css">
 </head>
 <body>
   <section class="login-screen" id="login-screen" aria-labelledby="login-title">
@@ -79,6 +79,10 @@
         </button>
         <button class="nav-item role-admin-only" data-view="invoices">
           <span class="nav-marker"></span><span>Facturen</span>
+          <span class="nav-count-group invoice-batch-count" id="invoice-batch-count" aria-label="Geen open maandcontroles" hidden>
+            <span class="nav-count is-blocked" id="invoice-batch-blocked-count" hidden>0</span>
+            <span class="nav-count is-ready" id="invoice-batch-ready-count" hidden>0</span>
+          </span>
         </button>
         <button class="nav-item role-admin-only" data-view="announcements">
           <span class="nav-marker"></span><span>Mededelingen</span>
@@ -97,7 +101,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 0.9.17</span>
+      <span class="demo-badge">Versie 0.9.21</span>
       </div>
     </aside>
 
@@ -109,10 +113,10 @@
         </div>
         <div class="topbar-actions">
           <span class="safety-badge">E-mail uitgeschakeld</span>
-          <div class="period-control" id="global-period-control" aria-label="Periode kiezen">
+          <div class="period-control" id="global-period-control" aria-label="Alle maanden bekijken en detailmaand kiezen">
             <button id="period-prev" aria-label="Vorige maand">‹</button>
             <div class="period-picker-wrap">
-              <span class="period-picker-caption">Maand / jaar</span>
+              <span class="period-picker-caption">Alle maanden · kies maand</span>
               <span class="period-picker-fields">
                 <span class="month-picker">
                   <button class="month-picker-trigger" id="period-month-picker" type="button" value="07" data-month-picker-trigger="period-month-panel" aria-label="Kies maand" aria-expanded="false" aria-controls="period-month-panel">Juli</button>
@@ -204,7 +208,7 @@
           <div class="hero-task-math" aria-label="Controle van het totaal aan open acties">
             <span>Open werkvoorraad</span>
             <strong id="hero-task-total">7 open acties</strong>
-            <div><small>Per maand</small><b id="hero-task-months">Juli 1 + Augustus 6 = 7</b></div>
+            <div><small>Per maand</small><b id="hero-task-months">Juli 2 + Augustus 5 = 7</b></div>
             <div><small>Per eigenaar</small><b id="hero-task-owners">Backoffice 4 + medewerkers 3 = 7</b></div>
           </div>
         </div>
@@ -409,10 +413,29 @@
           <div><span class="section-label">Facturatie</span><h2 id="invoice-period-title">Facturen juli 2026</h2><p>Je ziet direct wat nog op urencontrole wacht, welke factuur klaar is en welke verzending al is gecontroleerd.</p></div>
           <div class="heading-actions"><button class="button button-primary" id="test-month-delivery">Maandverzending controleren</button></div>
         </div>
-        <div class="invoice-status-guide" aria-label="Uitleg factuurstatussen">
-          <div><span>1</span><p><strong>Nog niet klaar</strong><small>Wacht op de medewerker of keur ingediende uren goed.</small></p></div>
-          <div><span>2</span><p><strong>Factuur klaar</strong><small>Open het mailvoorbeeld en controleer factuur en bijlagen.</small></p></div>
-          <div><span>3</span><p><strong>Verzending gecontroleerd</strong><small>Alle gekozen routes zijn gecontroleerd; e-mailverzending staat uit.</small></p></div>
+        <section class="invoice-month-overview" id="invoice-month-overview" data-state="empty" aria-live="polite" hidden>
+          <div class="invoice-month-overview-copy">
+            <span class="section-label">Alle maanden</span>
+            <h3 id="invoice-month-overview-title">Geen open maandcontroles</h3>
+            <p id="invoice-month-overview-note">Alle maandcontroles zijn afgerond.</p>
+          </div>
+          <div class="invoice-month-overview-list" id="invoice-month-overview-list"></div>
+        </section>
+        <section class="month-batch-card" id="month-batch-card" data-state="ready" aria-live="polite">
+          <div class="month-batch-summary">
+            <span class="section-label">Maandcontrole</span>
+            <div class="month-batch-title-row"><h3 id="month-batch-ready-count">1 klaar · 3 gecontroleerd</h3><span class="status-pill status-ready" id="month-batch-status">Controle bezig</span></div>
+            <p id="month-batch-note">Alle uren zijn goedgekeurd. De maandverzending voor juli 2026 heeft nog één resterende controle; klanturenstaten blijven apart.</p>
+          </div>
+          <div class="month-batch-progress" id="month-batch-progress" role="progressbar" aria-label="3 van 4 verzendingen gecontroleerd" aria-valuemin="0" aria-valuemax="4" aria-valuenow="3">
+            <span id="month-batch-progress-bar" style="width:75%"></span><strong id="month-batch-progress-value">3/4 gecontroleerd</strong>
+          </div>
+          <div class="month-batch-blockers" id="month-batch-blockers" aria-label="Blokkades voor de maandverzending" hidden></div>
+        </section>
+        <div class="invoice-status-guide" aria-label="Actuele status van de maandverzending" aria-live="polite">
+          <div id="invoice-status-blocked"><span id="invoice-status-blocked-count">0</span><p><strong>Geblokkeerd</strong><small>Wacht op uren of een goedkeuring.</small></p></div>
+          <div id="invoice-status-ready"><span id="invoice-status-ready-count">1</span><p><strong>Klaar voor controle</strong><small>Factuur en routes kunnen nu worden gecontroleerd.</small></p></div>
+          <div id="invoice-status-controlled"><span id="invoice-status-controlled-count">3</span><p><strong>Gecontroleerd</strong><small>Controle afgerond; e-mailverzending staat uit.</small></p></div>
         </div>
         <section class="panel">
           <div class="invoice-toolbar">
@@ -630,6 +653,11 @@
       <h2 id="modal-title">Factuur verzenden?</h2>
       <p id="modal-message">Controleer deze actie voordat je verdergaat.</p>
       <div class="modal-summary" id="modal-summary"></div>
+      <section class="modal-queue" id="modal-queue" aria-label="Backoffice-werkvoorraad" hidden>
+        <button class="small-button" id="modal-queue-previous" type="button">← Vorige</button>
+        <div><strong id="modal-queue-progress">Actie 1 van 1 bij Backoffice</strong><small id="modal-queue-note">Vorige en volgende wijzigen niets.</small></div>
+        <button class="small-button" id="modal-queue-next" type="button">Volgende →</button>
+      </section>
       <div class="modal-actions">
         <button class="button button-ghost" id="modal-cancel">Annuleren</button>
         <button class="button button-ghost" id="modal-secondary" hidden>Terugsturen</button>
