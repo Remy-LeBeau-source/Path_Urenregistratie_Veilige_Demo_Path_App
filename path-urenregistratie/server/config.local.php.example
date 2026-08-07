@@ -1,0 +1,10 @@
+<?php
+
+// Example local config - copy this file to server/config.local.php
+// and fill in the real credentials only on your own machine/server.
+return [
+    'host' => '127.0.0.1',
+    'database' => 'path_urenregistratie',
+    'username' => 'your_database_user',
+    'password' => 'your_database_password',
+];

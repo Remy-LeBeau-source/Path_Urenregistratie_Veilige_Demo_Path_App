@@ -1,5 +1,9 @@
 const STORAGE_KEY = "path-uren-demo-v07-final";
 const DEMO_DOMAIN = "@example.invalid";
+const API_ENDPOINT = "/server/api.php";
+const API_STATE_PATH = API_ENDPOINT + "?action=state";
+const LOCAL_STORAGE_ENABLED = true;
+const API_ENABLED = true;
 const SUPPORT_EMAIL = "backoffice@pathconsultancy.nl";
 const DEFAULT_INVOICE_MAIL_BODY = "Middag,\n\nHierbij stuur ik de ureninformatie van {medewerker} over {maand} {jaar}.\n\nDaadwerkelijk gewerkte uren: {uren} uur.";
 const DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_SUBJECT = "Klanturenstaat {medewerker} – {maand} {jaar}";
@@ -817,6 +821,7 @@ function loadState() {
 }
 
 let state = loadState();
+if (API_ENABLED) loadStateFromServer();
 let modalAction = null;
 let modalSecondaryAction = null;
 let adminTaskWorkflow = null;
@@ -932,7 +937,48 @@ function persistState() {
   const copy = JSON.parse(JSON.stringify(state));
   copy.currentRole = null;
   copy.invoiceFilter = "all";
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(copy));
+  if (LOCAL_STORAGE_ENABLED) {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(copy));
+    } catch (e) {
+      console.warn("Failed to write state to localStorage", e);
+    }
+  }
+  if (API_ENABLED) {
+    try {
+      fetch(API_STATE_PATH, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ state: copy })
+      }).catch(err => console.warn("Failed saving state to API", err));
+    } catch (e) {
+      console.warn("Failed initiating state save to API", e);
+    }
+  }
+}
+
+function loadStateFromServer() {
+  if (!API_ENABLED) return;
+  try {
+    fetch(API_STATE_PATH, { method: "GET", headers: { "Accept": "application/json" } })
+      .then(resp => {
+        if (!resp.ok) throw new Error("no-state");
+        return resp.json();
+      })
+      .then(data => {
+        if (data && data.state) {
+          try {
+            state = Object.assign(freshState(), data.state);
+            renderAll();
+          } catch (e) {
+            console.warn("Failed to apply server state", e);
+          }
+        }
+      })
+      .catch(() => {});
+  } catch (e) {
+    console.warn("Failed to load state from API", e);
+  }
 }
 
 function currentPeriod() {
