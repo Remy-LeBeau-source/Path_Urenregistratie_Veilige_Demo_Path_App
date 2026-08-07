@@ -16,7 +16,7 @@ Dit is een levende checklist. Bevestigde punten worden uit **Nog te beslissen** 
 - Gio en Joyce zijn de beoogde beheerders.
 - `backoffice@pathconsultancy.nl` is het bevestigde hulpadres voor vragen die de ingebouwde hulp niet kan beantwoorden.
 - Iedere medewerker dient precies één gekozen maand in en ziet alleen de eigen uren.
-- Oudere onvoltooide maanden blijven op het dashboard staan totdat uren, correcties, goedkeuringen en alle gekozen verzendroutes zijn afgerond. Een maandactie verwerkt nooit meerdere maanden tegelijk.
+- Oudere onvoltooide maanden blijven op het dashboard staan totdat uren, correcties, klantdocumenten en alle gekozen verzendroutes zijn afgerond. Directe beheertaken staan over alle maanden in één lijst, wachten op medewerkers wordt apart geteld en iedere taak verwerkt altijd maar één medewerker en maand.
 - EasySalary krijgt per medewerker en maand standaard alleen de begeleidende tekst met het goedgekeurde urentotaal; de factuurbijlage staat voor deze route standaard uit.
 - Broker en iedere centraal aangemaakte ontvanger zijn gescheiden routes; CC/BCC wordt niet gebruikt om verschillende inhoud te combineren.
 - Boekhouder, EasySalary en extra ontvangers worden centraal beheerd en per medewerker aangevinkt.
@@ -76,6 +76,10 @@ Afwijkende brokerteksten hoeven alleen te worden aangeleverd wanneer een broker 
 ## Acceptatie vóór livegang
 
 - Eén volledige maand doorlopen met testaccounts voor beheerder en iedere medewerker.
+- Controleren dat **Mijn open taken** de juiste medewerker en maand per taak toont, **Start met oudste taak** de oudste directe actie opent en de algemene maandkiezer daarbij niet ongevraagd verandert.
+- Controleren dat **Nu afhandelen** alleen directe beheeracties telt en **Wacht op medewerker** concepten, correcties en ontbrekende documenten apart houdt.
+- Controleren dat **Open taken** het totale aantal over alle maanden toont, de maandsamenvatting per maand optelt en de teamstatus duidelijk alleen de geselecteerde maand en open uren betreft.
+- Controleren dat een 100%-cirkel als **Factuurproces** is gelabeld en een nog open klanturenstaat daarnaast zichtbaar blijft.
 - Terugsturen zonder correctietekst blokkeren; daarna controleren dat tekst, beheerder, datum en tijd zichtbaar en blijvend opgeslagen zijn.
 - Correctie als medewerker aanpassen, opnieuw indienen en vervolgens alsnog goedkeuren.
 - Controleren dat een medewerker nooit gegevens van een andere medewerker ziet.

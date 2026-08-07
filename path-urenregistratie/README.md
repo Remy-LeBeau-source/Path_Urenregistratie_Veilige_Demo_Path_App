@@ -1,6 +1,6 @@
 # Path Uren & Facturatie
 
-Lokale voorbereidingsversie v0.9.12 van een configureerbare uren- en facturatieapp. Path Consultancy B.V. is de volledig ingevulde voorbeeldorganisatie.
+Lokale voorbereidingsversie v0.9.15 van een configureerbare uren- en facturatieapp. Path Consultancy B.V. is de volledig ingevulde voorbeeldorganisatie.
 
 ## Wat deze versie laat zien
 
@@ -19,8 +19,17 @@ Lokale voorbereidingsversie v0.9.12 van een configureerbare uren- en facturatiea
 - Scheiding tussen contracturen en declarabele uren.
 - Meer of minder declarabele uren dan contracturen geeft alleen een controlebericht en blokkeert indienen nooit.
 - Uren indienen en door een beheerder laten goedkeuren.
-- De verse voorbeeldomgeving is rijk vooraf gevuld: juni heeft een afgeronde historische verzendcontrole, juli bevat drie direct te openen bevestigde conceptfacturen en één open urencontrole, en augustus bevat concepturen, een correctieverzoek met voorbeeldtekst, ingediende uren en een factuur die klaarstaat.
-- Het dashboard toont **Openstaande maanden** over alle perioden, oudste maand eerst. Een oudere maand blijft staan zolang uren, correcties, goedkeuringen of gekozen verzendroutes nog open zijn. Iedere actie selecteert eerst precies die maand; meerdere maanden worden nooit ongemerkt samen verwerkt.
+- De verse voorbeeldomgeving is doelgericht gevuld: juni is afgerond, juli heeft 1 wachtende taak en augustus 6 taken. Over beide open maanden zijn er precies **4 directe beheertaken** en **3 taken die op een medewerker wachten**.
+- Het beheerdersdashboard begint met **Alle open taken** over alle perioden. Iedere zichtbare regel telt precies één keer en heeft één eigenaar: **Actie bij Backoffice** of **Actie bij medewerker**. De filters tonen hetzelfde totaal en dezelfde verdeling.
+- De dashboardkaart **Open taken** toont eerst het volledige aantal over alle maanden. Daaronder staan het aantal bij Backoffice, het aantal bij medewerkers en de betrokken maanden; **3 totaal = 0 bij Backoffice + 3 bij medewerkers**.
+- De hoofdknop heet altijd **Bekijk alle open taken [totaal]**. Een tweede knop is bewust een deelverzameling en benoemt daarom de maand, taaksoort, eigenaar en het aantal, bijvoorbeeld **Augustus 2026 · 2 urentaken bij medewerkers**.
+- De standaarddemo start bewust met 7 taken over 2 maanden: 4 direct voor Backoffice en 3 wachtend op medewerkers. Juli laat 1 rustige achterstand zien; augustus laat met 6 taken een drukkere maand zien.
+- Iedere taak toont zelf medewerker, klant/broker en maand. Een urencontrole, klanturenstaatcontrole, brokercontrole of verzendcontrole opent rechtstreeks voor die periode; de algemene maandkiezer hoeft daarvoor niet te worden aangepast.
+- **Samenvatting per maand** blijft als tweede, compact overzicht beschikbaar. Iedere maand toont eerst zijn eigen taaktotaal en daarna de verdeling, in de standaarddemo **juli: 1 taak** en **augustus: 6 taken**. Een oudere maand blijft staan zolang uren, correcties, klantdocumenten of gekozen verzendroutes nog open zijn.
+- De gefilterde teamtitel zegt expliciet **Uren wachten op medewerker**, met de geselecteerde maand en het aantal medewerkers. Daardoor kan dit maandcijfer niet meer worden verward met het totale aantal open taken over meerdere maanden.
+- De voortgangscirkel heet expliciet **Procesmeter [maand] · [aantal] van 4 fasen** en vermeldt **Geen taakteller**. Een open klanturenstaat wordt ernaast genoemd, omdat het klantdocument een apart proces blijft.
+- De procesbalk benoemt de vier procesfasen als procesvoortgang en toont daarnaast het concrete taaktotaal van de geselecteerde maand, uitgesplitst naar Backoffice, medewerkers en klanturenstaten.
+- Ook in Facturen worden wachtstatussen onderscheiden als **Nog niet ingediend** en **Correctie nodig**, in plaats van één algemene status.
 - Iedere open urenkaart heeft direct de knop **Correctie vragen**. Een beheerder kan uren alleen met een verplichte eigen toelichting terugsturen; de medewerker ziet de reden bij de melding, op het dashboard en boven de urenstaat.
 - Correctieverzoeken bewaren beheerder, datum, tijd, tekst en het moment van opnieuw indienen in de lokale historie.
 - Uren worden altijd voor één geselecteerde maand ingediend.
@@ -30,7 +39,7 @@ Lokale voorbereidingsversie v0.9.12 van een configureerbare uren- en facturatiea
 - De officiële **klanturenstaat** is een apart proces met eigen periodekeuze, concept, indiening, controle, herinneringen en optionele brokerroute. De eerste e-mail loopt van medewerker naar Backoffice; na controle volgt een aparte e-mail van Backoffice naar de broker. Beide organisatiestandaarden zijn bewerkbaar en de medewerker kan zijn eigen bericht vóór indienen per maand aanpassen. PDF blijft ongewijzigd; JPG en PNG worden automatisch als één gestandaardiseerde PDF opgeslagen. De app maakt zelf geen klanturenstaat.
 - **Mijn overzicht** toont de klanturenstaat als een aparte maandtaak. Ook bij goedgekeurde uren blijft duidelijk zichtbaar dat het klantdocument nog ontbreekt, als concept klaarstaat of opnieuw moet worden geüpload.
 - Met **Al rechtstreeks gemaild** kan een medewerker de klanturenstaat afronden wanneer deze buiten de app naar Path Backoffice is gestuurd. Een verplichte reden, medewerker en tijdstip worden bewaard. Backoffice ziet deze gegevens in de maanddetails; de taak verdwijnt uit de open werkvoorraad maar blijft in de historie zichtbaar. **Alsnog uploaden** draait de registratie terug.
-- Het beheerdersdashboard heeft één **Werkvoorraad over alle maanden**. Urencontroles, klanturenstaten en verzendcontroles worden per maand gebundeld, oudste maand eerst. Iedere categorie heeft een directe knop die automatisch de juiste maand en lijst opent.
+- Het beheerdersdashboard heeft één taakgerichte **Werkvoorraad over alle maanden**. Urencontroles, klanturenstaten, brokercontroles en verzendcontroles staan als losse afhandelbare taken onder elkaar, oudste maand eerst. De gekozen detailmaand blijft ongewijzigd wanneer een taak rechtstreeks wordt geopend.
 - Op het accountscherm zijn de native browserdropdowns vervangen door eigen accountmenu’s. Een account kiezen opent direct de juiste beheerders- of medewerkersrol; de grote rolknoppen openen het reeds gekozen account.
 - Pas **Indienen bij Backoffice** maakt een in-app melding voor Backoffice. **Concept opslaan** en **Indienen bij Backoffice** worden direct actief zodra een geldig bestand is gekozen. Bij een goedgekeurde of al ingediende maand legt een zichtbare melding uit waarom de knoppen geblokkeerd zijn. Medewerker en Backoffice kunnen de opgeslagen PDF bekijken; na goedkeuring kan Backoffice onderwerp en begeleidende brokertekst nog aanpassen.
 - Goedgekeurde facturen klaarzetten en de verzendroutes controleren zonder e-mail te versturen.
@@ -60,6 +69,9 @@ Lokale voorbereidingsversie v0.9.12 van een configureerbare uren- en facturatiea
 - Profielmenu met lokale profielfoto, lichte modus, donkere modus en automatische systeemmodus.
 - Meldingenvenster met rolgebonden mededelingen, urenstatussen en een duidelijke lege toestand.
 - Configureerbare herinneringsplanning: standaard vrijdag 15:00 bij een onvolledige week, laatste werkdag 15:00 bij een niet-ingediende maand, eerste werkdag 09:00 voor achterstand en eerste werkdag 10:00 voor wachtende goedkeuring. Iedere regel en geplande herinneringen per medewerker kunnen worden uitgezet.
+- Alle herinneringskeuzes gebruiken eigen uitklapmenu's in plaats van native browserdropdowns. De instellingen zijn gegroepeerd als **Uren- en documentherinneringen** en tonen onderaan een leesbare samenvatting van iedere actieve regel. De lokale versie maakt alleen voorbeeldmeldingen; automatische uitvoering blijft zichtbaar een productiekoppeling.
+- Ook betalingstermijn, voorkeuren, mededelingdoelgroep, ontvangertype en klanturenstaatdeadline gebruiken dezelfde eigen keuzemenu's. De zichtbare app is daarmee niet meer afhankelijk van native browserdropdowns.
+- Instellingen heeft een compact inhoudsmenu voor **Organisatie, Facturatie, Mailroutes, Teksten, Herinneringen** en **Veiligheid**. Reeds genomen besluiten worden definitief benoemd; de factuur- en klanturenstaatroutes staan als afzonderlijke routes vermeld.
 - Een toekomstige lege maand toont geen waarschuwing of actieknop. Het voortgangsblok benoemt de vier stappen direct: **Uren → Controle → Facturen → Verzending**.
 - Ingebouwde hulpbot met vaste uitleg over alle functies. Een half zoekwoord toont eerst passende onderwerpkeuzes; bij een onbekende vraag vraagt de hulp eerst om één duidelijkere formulering en toont pas na een tweede mislukte poging een Gmail-concept, Outlook/standaard-mailapplink en kopieerbare mailtekst voor Path Backoffice. Het hulpgesprek blijft alleen tijdens de huidige sessie staan en kan met **Gesprek wissen** direct worden leeggemaakt.
 - Configureerbare branding en responsive mobiele navigatie; de voorbeeldomgeving gebruikt het Path-logo en de Path-kleuren.

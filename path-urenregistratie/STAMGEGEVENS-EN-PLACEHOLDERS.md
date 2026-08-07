@@ -1,4 +1,4 @@
-# Lokale voorbereiding en placeholders - versie 0.9.12
+# Lokale voorbereiding en placeholders - versie 0.9.14
 
 Deze versie bevat de aangeleverde medewerkers, klanten, brokers, tarieven en factuurgegevens. Alleen e-mailadressen zijn bewust vervangen door onbestelbare placeholders.
 
@@ -40,7 +40,9 @@ De klanturenstaat is het officiële bestand dat een medewerker van de klant ontv
 
 Op **Mijn overzicht** staat de klanturenstaat als afzonderlijke maandstatus, zodat goedgekeurde uren een ontbrekend klantdocument niet verhullen. Heeft de medewerker het document al buiten de app naar Path Backoffice gestuurd, dan kan diegene **Al rechtstreeks gemaild** kiezen. De reden is verplicht en wordt samen met naam en tijdstip opgeslagen. Backoffice kan dit in de details terugzien. De status geldt als afgehandeld voor de open werkvoorraad, maar blijft in de maandhistorie staan en kan via **Alsnog uploaden** worden teruggedraaid.
 
-Openstaande klanturenstaten blijven samen met urencontroles en verzendcontroles zichtbaar in de **Werkvoorraad over alle maanden** op het beheerdersdashboard. De oudste maand staat bovenaan. Een beheerder hoeft niet handmatig door maanden te bladeren: de actieknop kiest de juiste maand en opent meteen de betreffende lijst.
+Openstaande klanturenstaten blijven samen met urencontroles, brokercontroles en verzendcontroles zichtbaar in **Mijn open taken** op het beheerdersdashboard. **Nu afhandelen** bevat uitsluitend werk dat Backoffice direct kan uitvoeren; **Wacht op medewerker** telt concepten, correcties en ontbrekende documenten apart. Iedere taak toont de medewerker en maand en opent de juiste controle rechtstreeks, zonder de gekozen detailmaand te wijzigen. **Start met oudste taak** pakt de oudste directe actie. De compacte **Samenvatting per maand** blijft beschikbaar voor het totaalbeeld.
+
+Het dashboard gebruikt drie bewust verschillende tellingen. **Open taken** is het totaal over alle maanden. **Nu afhandelen** en **Wacht op medewerker** splitsen dat totaal uit. **Uren wachten op medewerker** telt alleen de medewerkers met concepturen of een correctie in de geselecteerde maand. De maandsamenvatting toont daarom ook per maand een expliciet taaktotaal. De voortgangscirkel meet alleen het vierstappen-factuurproces; open klanturenstaten worden er afzonderlijk naast vermeld.
 
 ## Lokale accountkeuze en toetsenbord
 
@@ -69,14 +71,16 @@ Op iedere open urenkaart staat direct **Correctie vragen**. Een beheerder kan in
 ## Vooraf klaargezette voorbeelden
 
 - Juni 2026: alle uren goedgekeurd en alle verzendcontroles afgerond.
-- Juli 2026: Marc, Stasjo en Shawn hebben een bevestigde conceptfactuur die direct kan worden bekeken en gedownload; Brians ingediende uren staan klaar om de goedkeuringsroute te demonstreren.
-- Augustus 2026: één concepturenstaat, één correctieverzoek met een concrete voorbeeldtoelichting, één goedgekeurde urenstaat met factuur klaar en één ingediende urenstaat die op controle wacht.
+- Juli 2026: precies 4 directe beheertaken — Brians uren controleren, Stasjo's klanturenstaat controleren en de verzendroutes van Marc en Shawn controleren. Daarnaast wacht 1 taak op een medewerker.
+- Augustus 2026: precies 6 directe beheertaken — Shawns uren controleren, drie klanturenstaten controleren, Brians brokerroute controleren en Brians verzending controleren. Daarnaast wachten 2 taken op medewerkers.
 - Klanturenstaten: ontbrekend, privéconcept, ingediend, opnieuw uploaden, goedgekeurd en brokerroute gecontroleerd zijn vooraf vertegenwoordigd. De vooringevulde bestandsnamen beginnen zichtbaar met `Voorbeeld_` en openen een echte neutrale voorbeeld-PDF; ze kunnen niet met echte klantdocumenten worden verward.
 - Mededelingen: een geplaatst algemeen bericht, een intern bewaarde eerdere versie, de nieuwste medewerkerstekst, een concept en een volledig ingetrokken voorbeeld staan vooraf klaar.
 - **Alle openstaande uren** combineert de controles uit verschillende maanden in één beheerderslijst; het maandfilter toont alleen de gekozen periode.
-- **Openstaande maanden** op het dashboard combineert concepturen, correcties, goedkeuringen en nog te controleren verzendroutes. De oudste maand staat bovenaan en een doorklik selecteert altijd eerst die maand.
+- **Mijn open taken** combineert alle direct afhandelbare controles over de maanden heen. **Wacht op medewerker** staat apart; de maandsamenvatting is alleen aanvullend overzicht.
 - Mijn uren bevat **Hele maand** en afzonderlijke weekfilters. Op mobiel opent één week, terwijl week- en maandtotalen zichtbaar blijven. Iedere wijziging wordt tussentijds opgeslagen en alleen de volledige maand wordt ingediend.
 - De herinneringsplanning is instelbaar. De standaard is vrijdag 15:00 voor een onvolledige week, laatste werkdag 15:00 voor maandafsluiting, eerste werkdag 09:00 voor achterstand en eerste werkdag 10:00 voor wachtende goedkeuring.
+- Dag, tijdstip en het moment van de laatste klanturenstaatherinnering worden gekozen via eigen uitklapmenu's; native browserdropdowns zijn voor dit blok niet zichtbaar. De samenvatting onder de regels wordt direct bijgewerkt. **Voorbeeldmelding maken** plant of verstuurt lokaal niets automatisch.
+- Dezelfde browseronafhankelijke keuzebediening wordt gebruikt voor betalingstermijn, voorkeuren, doelgroepen, ontvangertypen en klanturenstaatdeadlines. Het instellingenmenu springt rechtstreeks naar de zes hoofdonderdelen.
 
 Met **Voorbeeldgegevens herstellen** worden deze uitgangssituaties opnieuw geladen.
 

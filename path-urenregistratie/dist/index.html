@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0D1B38">
   <title>Uren & Facturatie</title>
-  <link rel="stylesheet" crossorigin href="/assets/index-C7VLe8fw.css">
+  <link rel="stylesheet" crossorigin href="/assets/index-COccL1Js.css">
 </head>
 <body>
   <section class="login-screen" id="login-screen" aria-labelledby="login-title">
@@ -97,7 +97,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 0.9.12</span>
+      <span class="demo-badge">Versie 0.9.15</span>
       </div>
     </aside>
 
@@ -198,13 +198,13 @@
             <h2 id="admin-dashboard-greeting">Goedemiddag, Gio</h2>
             <p id="admin-attention-note">Dit vraagt nu je aandacht: bekijk open urencontroles en rond daarna de maand af.</p>
             <div class="hero-actions">
-              <button class="button button-primary" id="open-work-queue" data-scroll-target="open-periods-panel">Open werkvoorraad</button>
-              <button class="button button-ghost" id="open-delivery-check" data-go="invoices">Controleer maandverzending</button>
+              <button class="button button-primary" id="open-work-queue" data-scroll-target="admin-task-panel">Open werkvoorraad</button>
+              <button class="button button-ghost" id="open-delivery-check">Bekijk taken van deze maand</button>
             </div>
           </div>
-          <div class="close-card" aria-label="Voortgang maandafsluiting">
+          <div class="close-card" aria-label="Procesvoortgang van de geselecteerde maand; dit is geen taakteller">
             <div class="progress-ring" id="close-progress-ring" style="--progress:75"><span id="close-progress-value">75%</span></div>
-            <div><strong id="close-progress-title">3 van 4 stappen voltooid</strong><small id="close-progress-note">Uren → Controle → Facturen → Verzending</small></div>
+            <div><strong id="close-progress-title">Procesmeter · 3 van 4 fasen</strong><small id="close-progress-note">Geen taakteller · klanturenstaten staan hier los van</small></div>
           </div>
         </div>
 
@@ -228,16 +228,25 @@
             <button class="metric-link" data-go="invoices">Open facturen</button>
           </article>
           <article class="metric-card attention">
-            <span class="metric-label">Open acties</span>
+            <span class="metric-label">Open taken</span>
             <strong id="metric-actions">2</strong>
             <span class="metric-note" id="metric-actions-note">Over alle maanden</span>
-            <button class="metric-link" data-scroll-target="open-periods-panel">Bekijk werkvoorraad</button>
+            <button class="metric-link" data-scroll-target="admin-task-panel">Bekijk werkvoorraad</button>
           </article>
         </div>
 
+        <section class="panel admin-task-panel" id="admin-task-panel">
+          <div class="panel-heading admin-task-heading">
+            <div><span class="section-label">Zonder maanden wisselen</span><h3>Alle open taken</h3><p id="admin-task-summary">Bekijk per taak of de actie bij Backoffice of bij een medewerker ligt.</p></div>
+            <button class="button button-primary" id="admin-next-task" type="button">Start eerste Backoffice-taak</button>
+          </div>
+          <div class="admin-task-filters" id="admin-task-filters" role="group" aria-label="Open taken filteren"></div>
+          <div class="admin-task-list" id="admin-task-list"></div>
+        </section>
+
         <section class="panel open-periods-panel" id="open-periods-panel">
-          <div class="panel-heading"><div><span class="section-label">Alles wat nog moet gebeuren</span><h3>Werkvoorraad over alle maanden</h3></div><span class="updated-label">Oudste maand eerst</span></div>
-          <p class="open-periods-intro">Urencontroles, ontbrekende klanturenstaten en verzendcontroles blijven hier samen zichtbaar. Kies direct de juiste actie; zelf maanden nalopen is niet nodig.</p>
+          <div class="panel-heading"><div><span class="section-label">Extra controle per periode</span><h3>Samenvatting per maand</h3></div><span class="updated-label">Alleen voor overzicht</span></div>
+          <p class="open-periods-intro">Hier zie je welke maanden nog niet volledig zijn afgerond. Gebruik hierboven Alle open taken om zonder handmatig wisselen van maand te zien bij wie iedere actie ligt.</p>
           <div class="open-periods-list" id="open-periods-list"></div>
         </section>
 
@@ -249,8 +258,8 @@
 
         <section class="panel workflow-panel">
           <div class="panel-heading">
-            <div><span class="section-label">Proces</span><h3 id="workflow-period-title">Vier stappen voor juli 2026</h3></div>
-            <span class="updated-label">Laatst bijgewerkt vandaag, 14:12</span>
+            <div><span class="section-label">Procesvoortgang · geen taaktelling</span><h3 id="workflow-period-title">Vier procesfasen voor juli 2026</h3></div>
+            <div class="workflow-heading-meta"><strong id="workflow-open-count">Deze maand: 1 open taak</strong><small id="workflow-open-breakdown">0 bij Backoffice · 1 bij medewerkers · waarvan 1 klanturenstaat</small><span class="updated-label">De taakverdeling staat ernaast</span></div>
           </div>
           <div class="workflow-track">
             <div class="workflow-step is-done" id="workflow-hours"><span>1</span><div><strong>Uren</strong><small id="workflow-hours-note">4 ingediend</small></div></div>
@@ -462,11 +471,19 @@
 
       <section class="view" id="view-settings" data-title="Instellingen">
         <div class="view-heading">
-          <div><span class="section-label">Beheer</span><h2>Bedrijf & verzending</h2><p>Je mag zelf ieder geldig e-mailadres invoeren. Deze versie bewaart alles alleen lokaal en e-mailverzending is uitgeschakeld. Druk op Enter om een kort invoerveld op te slaan.</p></div>
+          <div><span class="section-label">Beheer</span><h2>Instellingen</h2><p>Beheer organisatie, facturatie, mailroutes, standaardteksten, herinneringen en veiligheid. Deze lokale versie bewaart wijzigingen alleen in de browser en verstuurt geen e-mail.</p></div>
           <div class="heading-actions"><button class="button button-ghost" id="reset-demo">Voorbeeldgegevens herstellen</button><button class="button button-primary" id="save-settings">Wijzigingen opslaan</button></div>
         </div>
+        <nav class="settings-section-nav" aria-label="Onderdelen van instellingen">
+          <button type="button" data-scroll-target="settings-organization">Organisatie</button>
+          <button type="button" data-scroll-target="settings-invoicing">Facturatie</button>
+          <button type="button" data-scroll-target="settings-routing">Mailroutes</button>
+          <button type="button" data-scroll-target="settings-texts">Teksten</button>
+          <button type="button" data-scroll-target="settings-reminders">Herinneringen</button>
+          <button type="button" data-scroll-target="settings-safety">Veiligheid</button>
+        </nav>
         <div class="settings-grid">
-          <section class="panel settings-card full-width">
+          <section class="panel settings-card full-width" id="settings-organization">
             <div class="email-template-heading"><div><span class="section-label">Organisatie</span><h3>Eigen naam, ondersteuning en huisstijl</h3></div><span class="status-pill status-approved">Configureerbaar</span></div>
             <div class="form-grid organization-settings-grid">
               <label>Organisatienaam<input id="setting-organization-name"></label>
@@ -479,7 +496,7 @@
             </div>
             <p class="settings-warning">Path Consultancy is de eerste ingevulde organisatie. Een andere organisatie kan hier haar eigen naam, ondersteuning, logo en kleuren instellen.</p>
           </section>
-          <section class="panel settings-card">
+          <section class="panel settings-card" id="settings-invoicing">
             <h3>Facturerende onderneming</h3>
             <div class="form-grid">
               <label>Naam op PDF<input id="setting-company-name"></label>
@@ -490,22 +507,22 @@
               <label>Postcode, plaats<input id="setting-postal-city"></label>
               <label>GSM<input id="setting-phone"></label>
               <label>E-mail op factuur<input id="setting-invoice-email" type="email"></label>
-              <label>Betalingstermijn<select id="setting-payment-term"><option value="30">30 dagen</option><option value="14">14 dagen</option></select></label>
+              <label>Betalingstermijn<select id="setting-payment-term" aria-label="Betalingstermijn"><option value="30">30 dagen</option><option value="14">14 dagen</option></select></label>
             </div>
             <p class="settings-warning">De facturerende onderneming kan afwijken van de organisatienaam. Voor de Path-configuratie zijn deze gegevens overgenomen uit de aangeleverde facturen.</p>
           </section>
-          <section class="panel settings-card">
+          <section class="panel settings-card" id="settings-routing">
             <div class="email-template-heading"><h3>Mailroutering - veilig</h3><span class="status-pill status-warning">Niet verzendbaar</span></div>
             <div class="form-grid">
               <label>Afzender<input id="setting-sender" type="email"></label>
-              <label>Verzendmodus<select id="setting-send-mode" disabled><option>Controlemodus · e-mail uitgeschakeld</option></select></label>
+              <label>Verzendmodus<select id="setting-send-mode" aria-label="Verzendmodus" disabled><option>Controlemodus · e-mail uitgeschakeld</option></select></label>
             </div>
             <div class="recipient-settings-heading"><div><span class="section-label">Vaste ontvangers</span><h4>Boekhouding, salarisadministratie en overige routes</h4></div><button class="small-button" id="add-mail-recipient" type="button">Ontvanger toevoegen</button></div>
             <div class="mail-recipient-settings-list" id="mail-recipient-settings-list"></div>
             <p class="safe-domain-note">Standaard staan hier veilige voorbeeldadressen. Echte adressen zijn toegestaan, maar daadwerkelijke verzending is technisch uitgeschakeld.</p>
             <button class="text-button" id="connect-gmail">Waarom is Gmail uitgeschakeld?</button>
           </section>
-          <section class="panel settings-card full-width">
+          <section class="panel settings-card full-width" id="settings-texts">
             <div class="email-template-heading">
               <div><span class="section-label">Klanturenstaat</span><h3>Standaardonderwerpen en e-mailteksten</h3></div>
               <span class="status-pill status-approved">Zelf aanpasbaar</span>
@@ -528,45 +545,45 @@
           </section>
           <section class="panel settings-card full-width">
             <div class="email-template-heading">
-              <div><span class="section-label">Per medewerker</span><h3>Brokeradressen en voorbeeldmailteksten</h3></div>
-              <span class="status-pill status-warning">Proces samen of apart nog bevestigen</span>
+              <div><span class="section-label">Per medewerker</span><h3>Factuur- en brokerteksten</h3></div>
+              <span class="status-pill status-approved">Afzonderlijke routes</span>
             </div>
             <div class="template-list" id="mail-template-list"></div>
           </section>
-          <section class="panel settings-card full-width">
-            <div class="email-template-heading"><div><span class="section-label">Planning</span><h3>Urenherinneringen</h3></div><span class="status-pill status-warning">Automatische planning uitgeschakeld</span></div>
-            <p class="settings-warning">Dit zijn organisatiestandaarden. Per medewerker kan Geplande urenherinneringen worden uitgezet. Echte automatische uitvoering wordt later server-side ingepland.</p>
+          <section class="panel settings-card full-width" id="settings-reminders">
+            <div class="email-template-heading"><div><span class="section-label">Organisatieplanning</span><h3>Uren- en documentherinneringen</h3></div><span class="status-pill status-warning">Voorbereiding · niet automatisch</span></div>
+            <p class="settings-warning">Kies per situatie wanneer een herinnering klaar moet worden gezet. In deze lokale versie kun je alleen een voorbeeldmelding maken; automatische uitvoering wordt bij de serverkoppeling geactiveerd. Per medewerker kan de planning afzonderlijk worden uitgezet.</p>
             <div class="reminder-rules">
               <div class="reminder-rule">
                 <label class="check-row"><input id="setting-weekly-reminder-enabled" type="checkbox"><span><strong>Week nog niet compleet</strong><small>Alleen als de medewerker de huidige week nog niet heeft ingevuld</small></span></label>
-                <label>Dag<select id="setting-weekly-reminder-day"><option value="thursday">Donderdag</option><option value="friday">Vrijdag</option></select></label>
-                <label>Tijd<select id="setting-weekly-reminder-time"><option value="12:00">12:00</option><option value="15:00">15:00</option><option value="16:00">16:00</option></select></label>
+                <div class="reminder-choice-field"><span>Wanneer?</span><select id="setting-weekly-reminder-day"><option value="thursday">Donderdag</option><option value="friday">Vrijdag</option></select></div>
+                <div class="reminder-choice-field"><span>Tijdstip</span><select id="setting-weekly-reminder-time"><option value="12:00">12:00</option><option value="15:00">15:00</option><option value="16:00">16:00</option></select></div>
               </div>
               <div class="reminder-rule">
-                <label class="check-row"><input id="setting-month-end-reminder-enabled" type="checkbox"><span><strong>Maand nog niet ingediend</strong><small>Op de laatste werkdag van de maand</small></span></label>
-                <span class="reminder-fixed-moment">Laatste werkdag</span>
-                <label>Tijd<select id="setting-month-end-reminder-time"><option value="12:00">12:00</option><option value="15:00">15:00</option><option value="16:00">16:00</option></select></label>
+                <label class="check-row"><input id="setting-month-end-reminder-enabled" type="checkbox"><span><strong>Maand nog niet ingediend</strong><small>Alleen als de volledige maand nog niet is ingediend</small></span></label>
+                <span class="reminder-fixed-moment"><small>Wanneer?</small><strong>Laatste werkdag</strong></span>
+                <div class="reminder-choice-field"><span>Tijdstip</span><select id="setting-month-end-reminder-time"><option value="12:00">12:00</option><option value="15:00">15:00</option><option value="16:00">16:00</option></select></div>
               </div>
               <div class="reminder-rule">
                 <label class="check-row"><input id="setting-overdue-reminder-enabled" type="checkbox"><span><strong>Vorige maand staat nog open</strong><small>Voor medewerkers met een achterstallige maand</small></span></label>
-                <span class="reminder-fixed-moment">Eerste werkdag</span>
-                <label>Tijd<select id="setting-overdue-reminder-time"><option value="09:00">09:00</option><option value="12:00">12:00</option><option value="15:00">15:00</option></select></label>
+                <span class="reminder-fixed-moment"><small>Wanneer?</small><strong>Eerste werkdag</strong></span>
+                <div class="reminder-choice-field"><span>Tijdstip</span><select id="setting-overdue-reminder-time"><option value="09:00">09:00</option><option value="12:00">12:00</option><option value="15:00">15:00</option></select></div>
               </div>
               <div class="reminder-rule">
                 <label class="check-row"><input id="setting-approval-reminder-enabled" type="checkbox"><span><strong>Goedkeuring wacht op beheerder</strong><small>Alleen als ingediende uren nog niet zijn gecontroleerd</small></span></label>
-                <span class="reminder-fixed-moment">Eerste werkdag</span>
-                <label>Tijd<select id="setting-approval-reminder-time"><option value="09:00">09:00</option><option value="10:00">10:00</option><option value="12:00">12:00</option></select></label>
+                <span class="reminder-fixed-moment"><small>Wanneer?</small><strong>Eerste werkdag</strong></span>
+                <div class="reminder-choice-field"><span>Tijdstip</span><select id="setting-approval-reminder-time"><option value="09:00">09:00</option><option value="10:00">10:00</option><option value="12:00">12:00</option></select></div>
               </div>
               <div class="reminder-rule">
                 <label class="check-row"><input id="setting-customer-timesheet-reminder-enabled" type="checkbox"><span><strong>Klanturenstaat ontbreekt</strong><small>Eén werkdag voor de persoonlijke deadline, op de deadline en daarna nog één keer</small></span></label>
-                <label>Eerste herinnering<select id="setting-customer-timesheet-reminder-time"><option value="12:00">12:00</option><option value="15:00">15:00</option><option value="16:00">16:00</option></select></label>
-                <label>Te laat na<select id="setting-customer-timesheet-overdue-days"><option value="1">1 werkdag</option><option value="2">2 werkdagen</option><option value="3">3 werkdagen</option><option value="5">5 werkdagen</option></select></label>
+                <div class="reminder-choice-field"><span>Eerste herinnering</span><select id="setting-customer-timesheet-reminder-time"><option value="12:00">12:00</option><option value="15:00">15:00</option><option value="16:00">16:00</option></select></div>
+                <div class="reminder-choice-field"><span>Laatste herinnering</span><select id="setting-customer-timesheet-overdue-days"><option value="1">1 werkdag te laat</option><option value="2">2 werkdagen te laat</option><option value="3">3 werkdagen te laat</option><option value="5">5 werkdagen te laat</option></select></div>
               </div>
             </div>
-            <div class="reminder-schedule-footer"><p id="reminder-schedule-summary"></p><button class="small-button" type="button" id="test-reminder-schedule">Voorbeeldmelding maken</button></div>
+            <div class="reminder-schedule-footer"><div class="reminder-schedule-summary" id="reminder-schedule-summary"></div><button class="small-button" type="button" id="test-reminder-schedule">Voorbeeldmelding maken</button></div>
             <p class="safe-domain-note">Correctieverzoeken en goedkeuringen blijven directe statusmeldingen en wachten niet op deze planning.</p>
           </section>
-          <section class="panel settings-card full-width">
+          <section class="panel settings-card full-width" id="settings-safety">
             <h3>Veiligheidsregels</h3>
             <div class="toggle-grid">
               <label><input id="setting-approval-required" type="checkbox" checked><span></span><p><strong>Goedkeuring verplicht</strong><small>Nooit een verzendcontrole zonder urencontrole</small></p></label>
