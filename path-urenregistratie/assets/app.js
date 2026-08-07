@@ -6113,6 +6113,7 @@ document.querySelector("#help-form").addEventListener("submit", event => {
   answerHelpQuestion(question);
 });
 document.querySelector("#switch-role").addEventListener("click", logout);
+document.querySelector("#mobile-switch-role").addEventListener("click", logout);
 document.querySelector("#modal-close").addEventListener("click", closeModal);
 document.querySelector("#modal-cancel").addEventListener("click", closeModal);
 document.querySelector("#modal-secondary").addEventListener("click", () => modalSecondaryAction ? modalSecondaryAction() : closeModal());

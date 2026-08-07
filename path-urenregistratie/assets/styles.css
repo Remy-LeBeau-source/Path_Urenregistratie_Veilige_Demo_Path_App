@@ -229,6 +229,7 @@ select:focus-visible {
 }
 
 .topbar h1 { margin: 2px 0 0; font-family: "Roboto Slab", Georgia, serif; font-size: clamp(24px, 3vw, 31px); letter-spacing: -.02em; }
+.mobile-topbar-home { display: none; }
 .eyebrow, .section-label { margin: 0; color: var(--mint-dark); font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
 .topbar-actions { display: flex; align-items: center; gap: 12px; }
 .safety-badge { border: 1px solid #edcfa9; border-radius: 999px; background: var(--warning-bg); color: var(--warning); font-size: 9px; font-weight: 800; letter-spacing: .04em; padding: 7px 10px; text-transform: uppercase; white-space: nowrap; }
@@ -1270,7 +1271,7 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
   .help-suggestions [data-help-topic="contact"] { grid-column: 1; }
 }
 
-/* v0.9.23 · mobiele bediening: dezelfde functies, maar met duidelijke touch-layouts. */
+/* v0.9.24 · mobiele bediening: dezelfde functies, maar met duidelijke touch-layouts. */
 @media (max-width: 720px) {
   html, body { overflow-x: hidden; }
 
@@ -1286,6 +1287,57 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
     align-items: start;
     gap: 10px;
     padding: 13px 0 12px;
+  }
+
+  .mobile-topbar-home {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .mobile-brand-home,
+  .mobile-role-switch {
+    display: inline-flex;
+    min-height: 42px;
+    align-items: center;
+    border: 1px solid var(--line);
+    border-radius: 13px;
+    background: var(--surface);
+    color: var(--navy);
+    cursor: pointer;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 8px 11px;
+    box-shadow: 0 5px 18px rgba(13,27,56,.04);
+  }
+
+  .mobile-brand-home {
+    max-width: min(190px, 58vw);
+    gap: 9px;
+  }
+
+  .mobile-brand-home img {
+    width: 72px;
+    max-width: 35vw;
+    height: auto;
+    object-fit: contain;
+  }
+
+  .mobile-brand-home span {
+    white-space: nowrap;
+  }
+
+  .mobile-role-switch {
+    flex: 0 0 auto;
+    background: var(--green-light);
+    color: var(--teal);
+  }
+
+  .topbar-title {
+    min-width: 0;
   }
 
   .topbar h1 {
@@ -1697,6 +1749,10 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
 
 @media (max-width: 390px) {
   .main-content { padding-inline: 10px; }
+  .mobile-brand-home { max-width: 54vw; }
+  .mobile-brand-home img { width: 60px; }
+  .mobile-brand-home span { font-size: 10px; }
+  .mobile-role-switch { padding-inline: 9px; }
   .period-picker-fields { grid-template-columns: minmax(0,1fr) 66px; }
   .period-control > button { width: 38px; flex-basis: 38px; }
   .topbar-actions { grid-template-columns: minmax(0,1fr) auto auto; }
