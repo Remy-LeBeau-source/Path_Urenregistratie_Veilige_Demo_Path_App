@@ -2,6 +2,10 @@ const STORAGE_KEY = "path-uren-demo-v07-final";
 const DEMO_DOMAIN = "@example.invalid";
 const SUPPORT_EMAIL = "backoffice@pathconsultancy.nl";
 const DEFAULT_INVOICE_MAIL_BODY = "Middag,\n\nHierbij stuur ik de ureninformatie van {medewerker} over {maand} {jaar}.\n\nDaadwerkelijk gewerkte uren: {uren} uur.";
+const DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_SUBJECT = "Klanturenstaat {medewerker} – {maand} {jaar}";
+const DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_BODY = "Goedemiddag,\n\nHierbij stuur ik mijn door de klant verstrekte klanturenstaat over {maand} {jaar} ter controle.\n\nMet vriendelijke groet,\n\n{medewerker}";
+const DEFAULT_CUSTOMER_TIMESHEET_BROKER_SUBJECT = "Klanturenstaat {medewerker} – {maand} {jaar}";
+const DEFAULT_CUSTOMER_TIMESHEET_BROKER_BODY = "Goedemiddag,\n\nHierbij sturen wij de klanturenstaat van {medewerker} over {maand} {jaar}.\n\nMet vriendelijke groet,\n\n{afzender}\n{organisatie}";
 const PATH_LOGO_DATA_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKIAAAA2CAMAAABz27J8AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAABj1BMVEWy4dQ6n4cKrn5Gu5gSXWMuqoAYm3sTXWMNHDgQPE1LuoBLuoBIuIARqX8KrX4TXmMOIjxFvJtLuoAyrIAdo4AKrn5GvJtDupkQNklLuoA+soAVqH8KpHoqp4MKrn5LuoAKoHdKuoFKuoAKrX7+/v4Jrn7+/v7////////////////////////+/v5Gu5pFu5YMhG0OSVANHTj////////////+/v5Iu40MmXUMVVMOHDhFu5Y1rYAdo4ALZ1wOLEENPEf///8Ni3I5tJBEupk0r4sRRlQ9tZQQdWsPMUYOHDhFvJsuq4r///8Ra2cQO0wPf24OIjw4spETXWMRT1oRRVITXmMOHDgOHTgTXWMOHDgOHDgOHjkTXWMOGzgOHDgOHDhGvJtGu5tGu5tGu5pJuohGu5tGvJtGvJtGvJtGvJtGvJtGvJtFu5pGvJpGvJtGvJtGvJtGu5tGvJtGvJtGvJtGvJtGvJshooFKuYAKrX5FtoD///9Fu5oOIzwOHDgSVF0TYGQSXGIRTVgdkXmwq1CyAAAAeHRSTlMBCUMypvj5uEYef+j6/uuGMVjM/v7JYRcStv79/v72LY5333sU3UfTxJNVNGQmJOL++Ej1tKSC/f399v39/f3+/uX+/fv+/v7+/j4b/nP++v304NPWJuXsnfi6ZdHxSvqBNTylykdUavW43ZDvmIbr7q+0wdWfT3duXC0bAAAAAWJLR0QnLQ+oIwAAAAd0SU1FB+kLExUdG6cH7eEAAAaHSURBVGje7Zn7d9pGFsfvmLaJG6eJnESorVOyu1oGoVdaSTRtmrZKnb6It1ua124fu4AlBLYFBsdIE9lOlP7h/WEEQgJscJwe9py9P3BAZwZ9dB/fuTMC+L/9GYaWltBiE2beePOtc+cXGHD57QsrnnfxnUuXFzXGzOqKf8XzrhJyjc0uICC39O6K77/neZ73PiFr15ayC1cl717wff/Zdc/zvKuEEPLBtcWqm9yNC77v+/4Vz4vcSAj54FxucarkL39d8X3f9595kV0khBBC3vlbdkFivEoBh06MQk0IWVuIaA9i7Ee1Mhrq8WgjPmknPwDP8zw/nHoaFw5iPKyVpBsJIX+/wcXj8zhpBaF4/G1FjDEWAAAkjDEW5LkRFdUf2hXPm+BGcvPDj+LxxSBtmi4ed4O8FgSBAQBQCoIgCHR+fsSDjyc4MXbjrU8OPz0WMQiwOAeiVjwF4sFtCvmZl7A7hBBy6/Mvjo5OQgwK/OyIgXAaxIOD277vr3gpu0jWbn55dJREFA3djMBMoRR91aRZEPMl/AqIBwe3n715J213Pzk8SiMCIEmjKZhHIAoaTTA0AyKA9EqIB1+9v5ayWx8eHU1ABNmM0z7ixTTSSJQEQ5BENFQaWZS0IAh0UZQHWSJQJUJzI65fv0NSdvP54TGIkTNELQiCwJQBABWjHDAF2cAYGwj4gkZdrmk6GiLykl7ABaPIz4d4b1RmaCm/CL+OEM9PQDQSiCKAbGhxjZtBEBQQ8DguqSGihLVZ1CqN+E1SrQkha9+GYfgdRfz+REQZeH2szhHwhXFEbA6vzaaRZYp4P6nWhJC7YRiGLw+nIhZkAAB+Q4tUh0qKaZRKuhZD5YslLQiCQrGYH1UsTZtDIyniV1St10ac+I8wHLhxImKAJR7lI5wSiJRbBABUNIeIyYouRgGW8kWaFcLMiOvXR9Q6qpUwHLpxMmKg6Ub0zRRhY5CSsUhPQxR4AEBCPGQWxHupNpGQWy8oYvjDdMR4lS4B0kfyc+DSyYhYjvVyZsT162P9zbcRYfj88ERETeCj0h0sMrRKpiDqI48xM+L9sf5m6MQw/OEERA1LKLoWZ79+DKIw8i+zIq6PtYlRrVA3fjGlog3DMAyhRAWYIuYHQ4wzRrw31ibeDUfs68mI0vi1oRfRGXvxm0R7c/Vi0olhGH43AyLNxY3Er7NDvD/WJv4zQRi+/PFkROq3QcOT11KI+ishVlJd4tW1kVqJKub78fYqhUh1MYo0MkYa3bwWBIGZ51GqGaOIs6yA2Z9+T9uLlyl7MHIIJRcluu6mEKkUmpLM82KJLjnmRhENF/GCALKkpxG1jeIMfnx46dGLhA1asIE9fjJ6TFaMFmCc3snRxVozMY4bHlOGYbOjo43ExiCSLnOmHeHlc/8aDWsS8dN/n088Z3HaVoA3RpscHN+/NEAsJWbOhQjczw+mIf7yM5ccG3UCpfH48HG/WJBLcacr4wTisAET5kEEWL70aBLi4ycPx7YiBYwL+sQMQkXd1IJAMwUZ+FIBY0xxRMM0Tc0ACWNcEIYFwgvxkJns8pNf04jpGMfnH9NSHMl5ScrLyXMSACTLoiiPH5jwc56goN+ilIwQ/zMW40U4pqUpSREf/3f5LA7dqhkAJXOGkA8vPaKISaE5vSkVtQb1zTMNx+U3fn1+ODkJJ7vJYi0EqMZaCDLVrMWUATKsraCaAtlaGTUcO9tsLUHWZnLVLFdTMmw1mpWtZQGU6ilC89uDOZIQbW2r2zuc21Y7O0qzvdtyupzV6rU2bbVXZpxdZDm21XG6mWZbVbdZq7232VEtOovt7KJqZbV8mlPlOZKw2t5R6i2m/VRxHZtd31F2Opmtts02radtpdzb5CzHRt1Kzu0wSv2A5bqdfdtx6aya2671Vet1Vxjj7INSZZ19qHb6lsNAY7vKqO2ey/XbOehucpZjQ311ubvKAbPOQr2SVVSXzkI5td+sv3YRsB0bbLfhsGA5DcuxoeHUMmyj6TD9dgY1e5zlMKheUXZbCjRuN9AA0QbbzaJuRWVeO6Ky1+vvNXO9Vn2vUt11LGCdel3tP93eZ5xmXXUate2W7TpP2U6vXnE2GbXHlVste6/X32tywDqV8uvX0lq9uZWDh25zp4r6fQ6W3X7ObXZZxLnNG/tbNmrsWGW3z7HdLtN3rS0bgN1S6CxQVPfPeSUy8jn90qRZHNOyYLGNadW5BUdE5QV/N/+/bH8AzHkozyLYwM8AAAAldEVYdGRhdGU6Y3JlYXRlADIwMjMtMDYtMDFUMTE6NTU6MDcrMDA6MDAUEDBLAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDIzLTA2LTAxVDExOjU1OjA3KzAwOjAwZU2I9wAAAABJRU5ErkJggg==";
 const MONTH_NAMES = [
   "januari", "februari", "maart", "april", "mei", "juni",
@@ -121,8 +125,53 @@ function makeRecord(total, contractHours, timesheetStatus, invoiceStatus, invoic
     invoiceStatus,
     payrollStatus: invoiceStatus === "simulated" ? "simulated" : timesheetStatus === "approved" ? "ready" : "concept",
     invoiceNumber,
-    correctionHistory: []
+    correctionHistory: [],
+    customerTimesheet: blankCustomerTimesheet()
   };
+}
+
+function blankCustomerTimesheet(status) {
+  return {
+    status: status || "missing",
+    isExample: false,
+    fileName: "",
+    originalFileName: "",
+    fileData: "",
+    mimeType: "application/pdf",
+    uploadedAt: "",
+    uploadedBy: "",
+    reviewedAt: "",
+    reviewedBy: "",
+    reviewNote: "",
+    submissionSubject: "",
+    submissionBody: "",
+    brokerSubject: "",
+    brokerBody: "",
+    sentAt: "",
+    skippedReason: "",
+    skippedAt: "",
+    skippedBy: "",
+    reminderCount: 0,
+    lastReminderAt: ""
+  };
+}
+
+function seedCustomerTimesheet(record, status, fileName) {
+  const hasDocument = Boolean(status && status !== "missing");
+  const exampleFileName = hasDocument ? "Voorbeeld_" + (fileName || "Klanturenstaat.pdf") : "";
+  record.customerTimesheet = Object.assign(blankCustomerTimesheet(status), {
+    isExample: hasDocument,
+    fileName: exampleFileName,
+    originalFileName: exampleFileName,
+    fileData: hasDocument ? "voorbeeld-klanturenstaat.pdf" : "",
+    uploadedAt: hasDocument ? "6 augustus 2026 om 10:00" : "",
+    uploadedBy: hasDocument ? "Voorbeeldgegevens" : "",
+    reviewedAt: ["approved", "sent", "resubmit"].includes(status) ? "6 augustus 2026 om 11:00" : "",
+    reviewedBy: ["approved", "sent", "resubmit"].includes(status) ? "Joyce van der Steenhoven" : "",
+    reviewNote: status === "resubmit" ? "Upload de definitieve, door de klant bevestigde PDF." : "",
+    sentAt: status === "sent" ? "6 augustus 2026 om 12:00" : ""
+  });
+  return record;
 }
 
 function makeCorrectionRecord(total, contractHours, invoiceNumber, periodKey, message) {
@@ -300,13 +349,16 @@ function demoNotifications() {
 
 function freshState() {
   return {
-    schemaVersion: 20,
+    schemaVersion: 22,
     currentRole: null,
     currentAdminId: "gio",
     currentEmployeeId: 2,
     selectedPeriodKey: "2026-07",
     invoiceFilter: "all",
     approvalScope: "all",
+    dashboardTeamScope: "all",
+    hoursWeekScope: "all",
+    hoursWeekScopeTouched: false,
     employeeScope: "active",
     announcementArchiveFilter: "all",
     preferences: {
@@ -347,6 +399,23 @@ function freshState() {
         { id: "bookkeeper", category: "accounting", name: "Boekhouder", email: "boekhouder@example.invalid", active: true },
         { id: "payroll", category: "payroll", name: "Salarisadministratie (EasySalary)", email: "salaris@example.invalid", active: true }
       ],
+      weeklyReminderEnabled: true,
+      weeklyReminderDay: "friday",
+      weeklyReminderTime: "15:00",
+      monthEndReminderEnabled: true,
+      monthEndReminderTime: "15:00",
+      overdueReminderEnabled: true,
+      overdueReminderTime: "09:00",
+      approvalReminderEnabled: true,
+      approvalReminderTime: "10:00",
+      customerTimesheetReminderEnabled: true,
+      customerTimesheetReminderTime: "15:00",
+      customerTimesheetDeadlineTime: "10:00",
+      customerTimesheetOverdueWorkdays: 2,
+      customerTimesheetSubmissionSubject: DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_SUBJECT,
+      customerTimesheetSubmissionBody: DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_BODY,
+      customerTimesheetBrokerSubject: DEFAULT_CUSTOMER_TIMESHEET_BROKER_SUBJECT,
+      customerTimesheetBrokerBody: DEFAULT_CUSTOMER_TIMESHEET_BROKER_BODY,
       approvalRequired: true,
       lockInvoice: true,
       auditLog: true
@@ -379,7 +448,13 @@ function freshState() {
         brokerInvoiceAttachment: true,
         bookkeeperInvoiceAttachment: true,
         payrollInvoiceAttachment: false,
-        mailRecipientRoutes: defaultMailRecipientRoutes()
+        mailRecipientRoutes: defaultMailRecipientRoutes(),
+        customerTimesheetExpected: true,
+        customerTimesheetDueWorkday: 5,
+        customerTimesheetBrokerEnabled: true,
+        customerTimesheetUseBrokerEmail: true,
+        customerTimesheetBrokerEmail: "facturen-itaq@example.invalid",
+        invoiceWithoutCustomerTimesheetAllowed: true
       },
       {
         id: 2,
@@ -408,7 +483,13 @@ function freshState() {
         brokerInvoiceAttachment: true,
         bookkeeperInvoiceAttachment: true,
         payrollInvoiceAttachment: false,
-        mailRecipientRoutes: defaultMailRecipientRoutes()
+        mailRecipientRoutes: defaultMailRecipientRoutes(),
+        customerTimesheetExpected: true,
+        customerTimesheetDueWorkday: 7,
+        customerTimesheetBrokerEnabled: true,
+        customerTimesheetUseBrokerEmail: false,
+        customerTimesheetBrokerEmail: "urenstaten-itaq@example.invalid",
+        invoiceWithoutCustomerTimesheetAllowed: true
       },
       {
         id: 3,
@@ -437,7 +518,13 @@ function freshState() {
         brokerInvoiceAttachment: true,
         bookkeeperInvoiceAttachment: true,
         payrollInvoiceAttachment: false,
-        mailRecipientRoutes: defaultMailRecipientRoutes()
+        mailRecipientRoutes: defaultMailRecipientRoutes(),
+        customerTimesheetExpected: true,
+        customerTimesheetDueWorkday: 5,
+        customerTimesheetBrokerEnabled: true,
+        customerTimesheetUseBrokerEmail: true,
+        customerTimesheetBrokerEmail: "facturen-itaq@example.invalid",
+        invoiceWithoutCustomerTimesheetAllowed: true
       },
       {
         id: 4,
@@ -469,29 +556,35 @@ function freshState() {
         brokerInvoiceAttachment: true,
         bookkeeperInvoiceAttachment: true,
         payrollInvoiceAttachment: false,
-        mailRecipientRoutes: defaultMailRecipientRoutes()
+        mailRecipientRoutes: defaultMailRecipientRoutes(),
+        customerTimesheetExpected: true,
+        customerTimesheetDueWorkday: 10,
+        customerTimesheetBrokerEnabled: true,
+        customerTimesheetUseBrokerEmail: false,
+        customerTimesheetBrokerEmail: "urenstaten-circle8@example.invalid",
+        invoiceWithoutCustomerTimesheetAllowed: true
       }
     ],
     notifications: demoNotifications(),
     announcements: demoAnnouncements(),
     records: {
       "2026-06": {
-        "1": makeRecord(144, 144, "approved", "simulated", "IND-2026-juni", "2026-06"),
-        "2": makeRecord(144, 144, "approved", "simulated", "IND-StvB-2026-juni", "2026-06"),
-        "3": makeRecord(136, 144, "approved", "simulated", "COA-2026-juni", "2026-06"),
-        "4": makeRecord(144, 144, "approved", "simulated", "Bel-Shawn-2026-juni", "2026-06")
+        "1": seedCustomerTimesheet(makeRecord(144, 144, "approved", "simulated", "IND-2026-juni", "2026-06"), "sent", "Klanturenstaat_Marc_de_Roon_2026-06.pdf"),
+        "2": seedCustomerTimesheet(makeRecord(144, 144, "approved", "simulated", "IND-StvB-2026-juni", "2026-06"), "sent", "Klanturenstaat_Stasjo_van_Bakel_2026-06.pdf"),
+        "3": seedCustomerTimesheet(makeRecord(136, 144, "approved", "simulated", "COA-2026-juni", "2026-06"), "sent", "Klanturenstaat_Brian_Hek_2026-06.pdf"),
+        "4": seedCustomerTimesheet(makeRecord(144, 144, "approved", "simulated", "Bel-Shawn-2026-juni", "2026-06"), "sent", "Klanturenstaat_Shawn-Douglas_Nahar_2026-06.pdf")
       },
       "2026-07": {
-        "1": makeRecord(164, 164, "approved", "ready", "IND-2026-juli", "2026-07"),
-        "2": makeRecord(153, 153, "approved", "ready", "IND-StvB-2026-juli", "2026-07"),
-        "3": makeRecord(117, 117, "submitted", "concept", "COA-2026-juli", "2026-07"),
-        "4": makeRecord(144, 144, "approved", "ready", "Bel-Shawn-2026-juli", "2026-07")
+        "1": seedCustomerTimesheet(makeRecord(164, 164, "approved", "ready", "IND-2026-juli", "2026-07"), "approved", "Klanturenstaat_Marc_de_Roon_2026-07.pdf"),
+        "2": seedCustomerTimesheet(makeRecord(153, 153, "approved", "ready", "IND-StvB-2026-juli", "2026-07"), "received", "Klanturenstaat_Stasjo_van_Bakel_2026-07.pdf"),
+        "3": seedCustomerTimesheet(makeRecord(117, 117, "submitted", "concept", "COA-2026-juli", "2026-07"), "missing"),
+        "4": seedCustomerTimesheet(makeRecord(144, 144, "approved", "ready", "Bel-Shawn-2026-juli", "2026-07"), "approved", "Klanturenstaat_Shawn-Douglas_Nahar_2026-07.pdf")
       },
       "2026-08": {
-        "1": makeRecord(0, 151.2, "draft", "concept", "IND-2026-augustus", "2026-08"),
-        "2": makeCorrectionRecord(80, 151.2, "IND-StvB-2026-augustus", "2026-08", "Controleer 12 augustus: daar staat 8 uur, maar volgens de planning hoort dit 4 uur te zijn."),
-        "3": makeRecord(144, 151.2, "approved", "ready", "COA-2026-augustus", "2026-08"),
-        "4": makeRecord(144, 151.2, "submitted", "concept", "Bel-Shawn-2026-augustus", "2026-08")
+        "1": seedCustomerTimesheet(makeRecord(0, 151.2, "draft", "concept", "IND-2026-augustus", "2026-08"), "draft", "Klanturenstaat_Marc_de_Roon_2026-08.pdf"),
+        "2": seedCustomerTimesheet(makeCorrectionRecord(80, 151.2, "IND-StvB-2026-augustus", "2026-08", "Controleer 12 augustus: daar staat 8 uur, maar volgens de planning hoort dit 4 uur te zijn."), "resubmit", "Klanturenstaat_Stasjo_van_Bakel_2026-08.pdf"),
+        "3": seedCustomerTimesheet(makeRecord(144, 151.2, "approved", "ready", "COA-2026-augustus", "2026-08"), "approved", "Klanturenstaat_Brian_Hek_2026-08.pdf"),
+        "4": seedCustomerTimesheet(makeRecord(144, 151.2, "submitted", "concept", "Bel-Shawn-2026-augustus", "2026-08"), "missing")
       }
     }
   };
@@ -501,8 +594,10 @@ function loadState() {
   const fallback = freshState();
   try {
     const saved = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
-    if (!saved || ![7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].includes(saved.schemaVersion) || !parsePeriodKey(saved.selectedPeriodKey)) return fallback;
+    if (!saved || ![7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22].includes(saved.schemaVersion) || !parsePeriodKey(saved.selectedPeriodKey)) return fallback;
     const previousSchemaVersion = Number(saved.schemaVersion || 0);
+    saved.hoursWeekScope = typeof saved.hoursWeekScope === "string" ? saved.hoursWeekScope : "all";
+    saved.hoursWeekScopeTouched = saved.hoursWeekScopeTouched === true;
     const hadLightDefault = saved.preferences && saved.preferences.themeDefaultVersion === 1;
     saved.preferences = Object.assign({}, fallback.preferences, saved.preferences || {});
     if (!hadLightDefault) {
@@ -587,9 +682,19 @@ function loadState() {
       Object.values(periodRecords).forEach(record => {
         if (!record || typeof record !== "object") return;
         record.correctionHistory = Array.isArray(record.correctionHistory) ? record.correctionHistory : [];
+        record.customerTimesheet = Object.assign(blankCustomerTimesheet(), record.customerTimesheet || {});
+        if (record.customerTimesheet.uploadedBy === "Voorbeeldmedewerker") {
+          record.customerTimesheet.isExample = true;
+          if (record.customerTimesheet.fileName && !record.customerTimesheet.fileName.startsWith("Voorbeeld_")) {
+            record.customerTimesheet.fileName = "Voorbeeld_" + record.customerTimesheet.fileName;
+          }
+          record.customerTimesheet.originalFileName = record.customerTimesheet.fileName;
+          record.customerTimesheet.fileData = "voorbeeld-klanturenstaat.pdf";
+          record.customerTimesheet.uploadedBy = "Voorbeeldgegevens";
+        }
       });
     });
-    saved.schemaVersion = 20;
+    saved.schemaVersion = 22;
     saved.employees = Array.isArray(saved.employees) && saved.employees.length ? saved.employees : fallback.employees;
     saved.admins = saved.admins.map((admin, index) => Object.assign({
       id: "admin-" + (index + 1),
@@ -621,8 +726,15 @@ function loadState() {
         brokerInvoiceAttachment: true,
         bookkeeperInvoiceAttachment: true,
         payrollInvoiceAttachment: false,
-        mailRecipientRoutes: defaultMailRecipientRoutes()
+        mailRecipientRoutes: defaultMailRecipientRoutes(),
+        customerTimesheetExpected: true,
+        customerTimesheetDueWorkday: 5,
+        customerTimesheetBrokerEnabled: false,
+        customerTimesheetUseBrokerEmail: true,
+        customerTimesheetBrokerEmail: "",
+        invoiceWithoutCustomerTimesheetAllowed: true
       }, employee);
+      if (!String(normalized.customerTimesheetBrokerEmail || "").trim()) normalized.customerTimesheetBrokerEmail = normalized.brokerEmail || "";
       normalized.mailRecipientRoutes = Object.assign(defaultMailRecipientRoutes(), normalized.mailRecipientRoutes || {});
       normalized.mailRecipientRoutes.bookkeeper = Object.assign({ enabled: true, invoiceAttachment: normalized.bookkeeperInvoiceAttachment !== false }, normalized.mailRecipientRoutes.bookkeeper || {});
       normalized.mailRecipientRoutes.payroll = Object.assign({ enabled: true, invoiceAttachment: normalized.payrollInvoiceAttachment === true }, normalized.mailRecipientRoutes.payroll || {});
@@ -684,6 +796,7 @@ function loadState() {
     }
     saved.invoiceFilter = "all";
     if (!["all", "month"].includes(saved.approvalScope)) saved.approvalScope = "all";
+    if (!["all", "attention"].includes(saved.dashboardTeamScope)) saved.dashboardTeamScope = "all";
     if (!["active", "inactive", "all"].includes(saved.employeeScope)) saved.employeeScope = "active";
     if (!["all", "unread", "withdrawn"].includes(saved.announcementArchiveFilter)) saved.announcementArchiveFilter = "all";
     return saved;
@@ -712,7 +825,17 @@ const statusLabels = {
   submitted: ["Ingediend", "status-submitted"],
   concept: ["Nog niet klaar", "status-concept"],
   ready: ["Factuur klaar", "status-ready"],
-  simulated: ["Verzendtest afgerond", "status-sent"]
+  simulated: ["Verzending gecontroleerd", "status-sent"]
+};
+
+const customerTimesheetStatusLabels = {
+  missing: ["Nog niet ontvangen", "status-concept"],
+  draft: ["Concept · nog niet ingediend", "status-concept"],
+  received: ["Controle nodig", "status-submitted"],
+  approved: ["Goedgekeurd", "status-approved"],
+  resubmit: ["Opnieuw uploaden", "status-warning"],
+  skipped: ["Al rechtstreeks gemaild", "status-approved"],
+  sent: ["Naar broker gecontroleerd", "status-sent"]
 };
 
 const pageTitles = {
@@ -728,31 +851,33 @@ const pageTitles = {
 };
 
 const HELP_TOPICS = [
-  { id: "dashboard", roles: ["admin", "employee"], label: "Dashboard", terms: "dashboard overzicht home logo startpagina", answer: "Het Path-logo en de knop Dashboard brengen je altijd naar je eigen startscherm. Beheerders zien alle open urenacties; medewerkers zien alleen hun eigen maandstatus en historie.", view: "home" },
-  { id: "hours", roles: ["admin", "employee"], label: "Uren invullen", terms: "uren invullen dag week enter opslaan verder", answer: "Open Mijn uren, kies de juiste maand en vul de uren per werkdag in. Enter slaat tussentijds op en gaat naar het volgende veld. Enter dient de maand nooit automatisch in.", view: "timesheet" },
+  { id: "dashboard", roles: ["admin", "employee"], label: "Dashboard", terms: "dashboard overzicht home logo startpagina werkvoorraad alle maanden", answer: "Het Path-logo en de knop Dashboard brengen je altijd naar je eigen startscherm. Beheerders zien in de Werkvoorraad alle open urencontroles, klanturenstaten en verzendcontroles over alle maanden, met de oudste maand eerst. Medewerkers zien alleen hun eigen maandstatus en historie.", view: "home" },
+  { id: "hours", roles: ["admin", "employee"], label: "Uren invullen", terms: "uren invullen dag week filter enter opslaan verder", answer: "Open Mijn uren, kies de juiste maand en vul de uren per werkdag in. Kies Hele maand of één week; op een telefoon begint de app met één week. Wijzigingen worden automatisch opgeslagen en alleen de volledige maand kan worden ingediend.", view: "timesheet" },
   { id: "month", roles: ["admin", "employee"], label: "Maand kiezen", terms: "maand jaar periode vorige volgende kalender kiezen", answer: "Gebruik bovenaan de maand- en jaarkiezer of de pijlen. Je kunt rechtstreeks naar iedere maand en ieder jaar. Iedere maand wordt apart bewaard." },
   { id: "submit", roles: ["admin", "employee"], label: "Maand indienen", terms: "dien dient indien indienen versturen maand submit knop slechts een", answer: "De knop Uren indienen dient uitsluitend de geselecteerde maand in. Andere maanden blijven ongewijzigd. Na indienen ziet de beheerder een melding en verschijnt de maand bij Goedkeuringen.", view: "timesheet" },
   { id: "difference", roles: ["admin", "employee"], label: "Meer of minder uren", terms: "meer minder afwijking contracturen verschil blokkeren", answer: "Meer of minder uren dan de contracturen geeft alleen een controlebericht. Het blokkeert opslaan of indienen nooit." },
   { id: "absence", roles: ["admin", "employee"], label: "Verlof of ziekte", terms: "verlof vakantie ziek ziekte afwezig", answer: "Vul verlof en ziekte rechts bij de maandsamenvatting in. Ze blijven apart van declarabele klanturen. De salarisadministratieroute bevat in deze opzet alleen het goedgekeurde gewerkte urentotaal.", view: "timesheet" },
   { id: "status", roles: ["admin", "employee"], label: "Status uitleg", terms: "status nog invullen ingediend goedgekeurd correctie", answer: "Nog invullen betekent dat de medewerker werkt aan de maand. Ingediend wacht op controle. Correctie nodig betekent aanpassen en opnieuw indienen. Goedgekeurd betekent dat de urencontrole klaar is." },
   { id: "approvals", roles: ["admin"], label: "Goedkeuringen", terms: "keur keuren goed goedkeuren controle uren alle openstaande maand terugsturen afkeuren correctie reden toelichting", answer: "Goedkeuringen opent standaard alle openstaande maanden. Je kunt filteren op de gekozen maand, uren bekijken, met een verplichte toelichting terugsturen voor correctie of goedkeuren. De medewerker ziet de reden bij de melding en urenstaat. Na goedkeuring staat de factuur klaar.", view: "approvals" },
-  { id: "invoices", roles: ["admin"], label: "Facturen", terms: "factuur facturen klaar mailvoorbeeld ongefactureerd", answer: "Facturen toont per gekozen maand wat nog op uren wacht, wat klaarstaat en welke verzendtest is gedaan. De demo maakt alleen een veilig mailvoorbeeld en verstuurt niets.", view: "invoices" },
-  { id: "invoice-test", roles: ["admin"], label: "Verzendtest", terms: "verzendtest test mail e-mail bijlagen sturen boekhouder broker ontvanger", answer: "Eén actie maakt een afzonderlijk bericht voor iedere aangevinkte ontvanger. De tekst bevat medewerker, maand en daadwerkelijke goedgekeurde uren. Per medewerker stel je in wie mail krijgt en of de factuur als PDF wordt toegevoegd. Een urenstaat wordt niet bijgevoegd en BCC wordt niet gebruikt.", view: "invoices" },
-  { id: "invoice-filter", roles: ["admin"], label: "Factuurfilters", terms: "filter factuur nog niet klaar verzendtest afgerond alle", answer: "Gebruik boven de factuurlijst de filters Alle, Nog niet klaar, Factuur klaar en Verzendtest afgerond. De maandkiezer blijft bepalen welke maand je ziet.", view: "invoices" },
+  { id: "invoices", roles: ["admin"], label: "Facturen", terms: "factuur facturen klaar mailvoorbeeld ongefactureerd", answer: "Facturen toont per gekozen maand wat nog op uren wacht, wat klaarstaat en welke verzending al is gecontroleerd. E-mailverzending blijft uitgeschakeld totdat de productiekoppeling actief is.", view: "invoices" },
+  { id: "invoice-test", roles: ["admin"], label: "Verzending controleren", terms: "verzendcontrole controle mail e-mail bijlagen sturen boekhouder broker ontvanger openstaand blokkeren", answer: "De maandverzending kan pas worden gecontroleerd als iedere urenregistratie van die maand is goedgekeurd. Daarna controleert één actie per medewerker en per aangevinkte ontvanger een afzonderlijk factuurbericht. De officiële klanturenstaat heeft een eigen, optionele brokerroute en BCC wordt niet gebruikt.", view: "invoices" },
+  { id: "customer-timesheet", roles: ["admin", "employee"], label: "Klanturenstaat opslaan", terms: "klanturenstaat pdf jpg jpeg png foto afbeelding upload opslaan concept indienen overslaan al gemaild rechtstreeks reden broker deadline maand jaar herinnering officieel document mail bijlage download bestanden backoffice werkvoorraad alle maanden", answer: "Op Mijn overzicht zie je apart of de klanturenstaat nog openstaat. Download de officiële bijlage uit de klantmail eerst naar Downloads of Bestanden. PDF, JPG en PNG zijn toegestaan; een JPG of PNG wordt automatisch als PDF opgeslagen. Met Concept opslaan blijft het nog buiten de controle van Backoffice. Met Indienen bij Backoffice krijgt Backoffice een melding in de app. Heb je het document al rechtstreeks naar Backoffice gemaild, kies dan Al rechtstreeks gemaild en leg de reden vast. Backoffice ziet wie dit wanneer heeft geregistreerd; de taak verdwijnt uit de open werkvoorraad maar blijft zichtbaar bij de maanddetails.", view: "timesheet" },
+  { id: "invoice-filter", roles: ["admin"], label: "Factuurfilters", terms: "filter factuur nog niet klaar verzending gecontroleerd alle", answer: "Gebruik boven de factuurlijst de filters Alle, Nog niet klaar, Factuur klaar en Verzending gecontroleerd. De maandkiezer blijft bepalen welke maand je ziet.", view: "invoices" },
   { id: "easysalary", roles: ["admin"], label: "Salarisadministratie", terms: "easysalary salaris salarisadmin loon uren mail per medewerker excel csv een knop maandverzending", answer: "De ingestelde salarisadministratie loopt mee in dezelfde maandverzending, maar ontvangt een eigen bericht per medewerker. Standaard gaat alleen de tekst met naam, maand en goedgekeurde uren mee en geen factuur.", view: "invoices" },
-  { id: "announcements", roles: ["admin"], label: "Mededelingen sturen", terms: "mededeling bericht iedereen groep medewerkers mail e-mail correctie intrekken concept verbeteren algemeen update versie", answer: "Onder Mededelingen maak je een concept of stuur je een app-update naar alle actieve medewerkers, één klantgroep of zelf gekozen medewerkers. Bij een wijziging zien medewerkers uitsluitend de nieuwste tekst; de oudere versie blijft alleen intern voor beheerders controleerbaar. Intrekken vereist een reden. Aanvullende e-mailmeldingen worden per ontvanger en volgens de persoonlijke voorkeur behandeld.", view: "announcements" },
+  { id: "announcements", roles: ["admin"], label: "Mededelingen sturen", terms: "mededeling bericht iedereen groep medewerkers mail e-mail correctie intrekken verwijderen concept verbeteren algemeen update versie", answer: "Onder Mededelingen maak je een concept of plaats je een bericht voor alle actieve medewerkers, één klantgroep of gekozen medewerkers. Een ingetrokken bericht kan bij een fout nog worden bewerkt. Met Bij medewerkers verwijderen verdwijnen het origineel en de intrekkingsmelding uit hun bel en lijst; de interne beheerhistorie blijft bewaard.", view: "announcements" },
+  { id: "reminders", roles: ["admin"], label: "Urenherinneringen", terms: "herinnering reminder vrijdag donderdag tijd planning week maand achterstand goedkeuring", answer: "Onder Instellingen bepaal je zelf dag en tijd voor de weekherinnering en de tijden voor maandafsluiting, achterstand en goedkeuring. Standaard is de weekherinnering vrijdag 15:00. Per medewerker kan de geplande urenherinnering worden uitgezet. Automatische uitvoering wordt actief na aansluiting van de serverplanning.", view: "settings" },
   { id: "announcement-archive", roles: ["employee"], label: "Eerdere mededelingen", terms: "mededelingen archief eerdere gelezen ongelezen ingetrokken bericht terugvinden", answer: "Open Mededelingen in het menu. Daar staan jouw actuele berichten, ook als je ze via de bel al hebt gelezen. Wanneer een beheerder een tekst wijzigt, zie jij alleen de nieuwste versie en niet dat er een eerdere versie was.", view: "employee-announcements" },
-  { id: "employee-add", roles: ["admin"], label: "Medewerker toevoegen", terms: "medewerker persoon toevoegen uitnodigen nieuwe account", answer: "Open Medewerkers en kies Medewerker toevoegen. Vul account, contracturen en opdrachtgegevens in. In de demo wordt alles lokaal opgeslagen en wordt een uitnodiging alleen nagebootst.", view: "employees" },
+  { id: "employee-add", roles: ["admin"], label: "Medewerker toevoegen", terms: "medewerker persoon toevoegen uitnodigen nieuwe account", answer: "Open Medewerkers en kies Medewerker toevoegen. Vul account, contracturen en opdrachtgegevens in. De gegevens worden nu lokaal opgeslagen; uitnodigingen worden pas verstuurd na de account- en e-mailkoppeling.", view: "employees" },
   { id: "employee-edit", roles: ["admin"], label: "Medewerker aanpassen", terms: "medewerker wijzigen aanpassen broker tarief opdracht ontvanger easysalary boekhouder factuur bijlage", answer: "Open Medewerkers en kies Gegevens aanpassen. Je kunt account-, opdracht-, broker- en voorbeeldmailgegevens wijzigen. Daar vink je ook per medewerker aan welke vaste ontvangers mail krijgen en wie de factuur als PDF ontvangt. Vaste ontvangers maak je één keer aan onder Instellingen.", view: "employees" },
   { id: "employee-remove", roles: ["admin"], label: "Medewerker deactiveren", terms: "medewerker verwijderen weghalen deactiveren inactief historie", answer: "Medewerkers worden nooit hard verwijderd. Deactiveren stopt toegang en herinneringen, maar bewaart alle oude uren, goedkeuringen en facturen. Via het filter Inactief kun je iemand opnieuw activeren.", view: "employees" },
   { id: "admin", roles: ["admin"], label: "Beheerder beheren", terms: "beheerder toevoegen verwijderen deactiveren gio joyce toegang", answer: "Onder Medewerkers staat het beheerdersoverzicht. Je kunt een beheerder toevoegen of deactiveren. Jezelf en de laatste actieve beheerder kun je niet deactiveren, zodat de app bereikbaar blijft.", view: "employees" },
   { id: "privacy", roles: ["admin", "employee"], label: "Wie ziet wat?", terms: "privacy collega tarieven zien rol toegang medewerker beheerder", answer: "Een medewerker ziet uitsluitend het eigen dashboard, de eigen uren, meldingen en historie. Alleen beheerders zien collega’s, goedkeuringen, tarieven, facturen en instellingen." },
-  { id: "notifications", roles: ["admin", "employee"], label: "Meldingen", terms: "melding meldingen bel herinnering maandag goedgekeurd e-mail aan uit", answer: "De bel toont uren- en algemene meldingen voor jouw account. In Voorkeuren kun je aanvullende e-mailmeldingen aan- of uitzetten. Berichten in de app blijven zichtbaar. De demo simuleert e-mail en verstuurt niets." },
-  { id: "profile", roles: ["admin", "employee"], label: "Profiel en foto", terms: "profiel foto profielfoto naam e-mail account", answer: "Klik rechtsboven op je initialen en kies Mijn profiel. In de demo kun je lokaal een foto kiezen. In productie komen naam, zakelijk e-mailadres en standaardfoto uit Google Workspace." },
+  { id: "notifications", roles: ["admin", "employee"], label: "Meldingen", terms: "melding meldingen bel herinnering planning goedgekeurd e-mail aan uit", answer: "De bel telt urenstatussen, correcties, herinneringen en algemene mededelingen samen. Mijn mededelingen telt alleen algemene mededelingen. In Voorkeuren kun je aanvullende e-mailmeldingen aan- of uitzetten. E-mailverzending is nog uitgeschakeld." },
+  { id: "profile", roles: ["admin", "employee"], label: "Profiel en foto", terms: "profiel foto profielfoto naam e-mail account", answer: "Klik rechtsboven op je initialen en kies Mijn profiel. Je kunt nu lokaal een foto kiezen. Na de accountkoppeling komen naam, zakelijk e-mailadres en standaardfoto uit Google Workspace." },
   { id: "theme", roles: ["admin", "employee"], label: "Licht of donker", terms: "donker dark licht light automatisch thema uiterlijk voorkeur", answer: "Open rechtsboven Voorkeuren en kies Licht, Automatisch of Donker. Licht is standaard; Automatisch volgt de instelling van je computer of telefoon." },
-  { id: "settings", roles: ["admin"], label: "Instellingen", terms: "instellingen organisatie logo kleuren bedrijf iban kvk btw betalingstermijn mailroutering ontvanger toevoegen", answer: "Instellingen bevat de eigen organisatienaam, huisstijl, factuurgegevens, mailroutering, vaste ontvangers en veiligheidsregels. Ontvangers krijgen een type en een zelfgekozen naam; daarna vink je ze per medewerker aan. De demo bewaart dit alleen lokaal en heeft geen echte verzendkoppeling.", view: "settings" },
-  { id: "placeholders", roles: ["admin"], label: "E-mailadressen in de demo", terms: "placeholder example invalid echt e-mailadres veilig waarom", answer: "De standaardvoorbeelden gebruiken @example.invalid, maar je kunt zelf ieder geldig adres invoeren. Ook met een echt adres wordt niets verstuurd, omdat de demo geen e-mailkoppeling bevat." },
-  { id: "google", roles: ["admin", "employee"], label: "Google-login", terms: "google gmail workspace inloggen wachtwoord 2fa e-mail wijzigen", answer: "De demo gebruikt een rolkeuze. In productie logt iedereen in met Google Workspace. Wachtwoord, e-mailadres en tweestapsverificatie worden daarom niet in deze app beheerd." },
+  { id: "settings", roles: ["admin"], label: "Instellingen", terms: "instellingen organisatie logo kleuren bedrijf iban kvk btw betalingstermijn mailroutering ontvanger toevoegen", answer: "Instellingen bevat de eigen organisatienaam, huisstijl, factuurgegevens, mailroutering, vaste ontvangers en veiligheidsregels. Ontvangers krijgen een type en een zelfgekozen naam; daarna vink je ze per medewerker aan. De huidige versie bewaart dit lokaal en e-mailverzending staat uit.", view: "settings" },
+  { id: "placeholders", roles: ["admin"], label: "Voorbeeldadressen", terms: "placeholder example invalid echt e-mailadres veilig waarom", answer: "De standaardvoorbeelden gebruiken @example.invalid, maar je kunt zelf ieder geldig adres invoeren. Ook met een echt adres wordt niets verstuurd zolang de e-mailkoppeling uitgeschakeld is." },
+  { id: "google", roles: ["admin", "employee"], label: "Google-login", terms: "google gmail workspace inloggen wachtwoord 2fa e-mail wijzigen", answer: "De lokale accountkeuze wordt vervangen door Google Workspace-login. Wachtwoord, e-mailadres en tweestapsverificatie worden daarom niet in deze app beheerd." },
   { id: "contact", roles: ["admin", "employee"], label: "Contact opnemen", terms: "contact opnemen backoffice iemand spreken medewerker mail email e-mail gmail outlook mailapp bereiken", answer: "Je kunt Path Backoffice bereiken via backoffice@pathconsultancy.nl. Kies hieronder hoe je een vooraf ingevuld bericht wilt openen of kopiëren. Er wordt niets automatisch verzonden.", contact: true, contactQuestion: "Ik wil contact opnemen over de urenapp." },
   { id: "help", roles: ["admin", "employee"], label: "Uitleg hulpbot", terms: "hulp vraag antwoord chatbot bot werking onbekende vraag", answer: "Deze hulpbot geeft vaste antwoorden over de urenapp. Is er geen betrouwbaar antwoord, dan vraagt hij je eerst om de vraag één keer anders of concreter te formuleren. Alleen als ook die tweede poging onbekend blijft, verschijnen de contactmogelijkheden." },
   { id: "install", roles: ["admin", "employee"], label: "App installeren", terms: "installeren pwa telefoon desktop apple google store", answer: "Installeren komt zodra de productie-app op het Path-domein staat. Eerst wordt het een installeerbare webapp; plaatsing in de Apple- en Google-stores kan daarna." }
@@ -976,7 +1101,66 @@ function normalizeRecord(record, employee, periodKey) {
   if (record.invoiceStatus === "simulated") record.payrollStatus = "simulated";
   record.invoiceNumber = record.invoiceNumber || invoiceNumberFor(employee.id, period.key);
   record.correctionHistory = Array.isArray(record.correctionHistory) ? record.correctionHistory : [];
+  customerTimesheetFor(record);
   return record;
+}
+
+function customerTimesheetFor(record) {
+  if (!record.customerTimesheet || typeof record.customerTimesheet !== "object") record.customerTimesheet = {};
+  const defaults = blankCustomerTimesheet();
+  Object.keys(defaults).forEach(key => {
+    if (record.customerTimesheet[key] === undefined) record.customerTimesheet[key] = defaults[key];
+  });
+  return record.customerTimesheet;
+}
+
+function customerTimesheetStatusPill(documentRecord) {
+  const status = customerTimesheetStatusLabels[customerTimesheetFor(documentRecord).status] || customerTimesheetStatusLabels.missing;
+  return '<span class="status-pill ' + status[1] + '">' + status[0] + '</span>';
+}
+
+function safeFilePart(value) {
+  return String(value || "bestand").trim().replace(/[^a-z0-9]+/gi, "_").replace(/^_+|_+$/g, "") || "bestand";
+}
+
+function customerTimesheetFileName(employee, periodKey) {
+  return "Klanturenstaat_" + safeFilePart(employee.name) + "_" + periodKey + ".pdf";
+}
+
+function formatCustomerTimesheetTemplate(template, employee, periodKey) {
+  const period = periodFromKey(periodKey);
+  const values = {
+    medewerker: employee.name,
+    maand: period.month,
+    jaar: period.year,
+    backoffice: state.settings.supportName || "Path Backoffice",
+    afzender: state.settings.supportName || "Path Backoffice",
+    organisatie: state.settings.organizationName || "Path Consultancy"
+  };
+  return String(template || "").replace(/\{([a-z]+)\}/gi, (match, key) => values[key] === undefined ? match : values[key]);
+}
+
+function customerTimesheetSubmissionMail(employee, periodKey) {
+  const record = customerTimesheetFor(recordFor(employee.id, periodKey));
+  const defaultSubject = formatCustomerTimesheetTemplate(state.settings.customerTimesheetSubmissionSubject || DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_SUBJECT, employee, periodKey);
+  const defaultBody = formatCustomerTimesheetTemplate(state.settings.customerTimesheetSubmissionBody || DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_BODY, employee, periodKey);
+  return {
+    subject: record.submissionSubject || defaultSubject,
+    body: record.submissionBody || defaultBody
+  };
+}
+
+function customerTimesheetBrokerMail(employee, periodKey) {
+  return {
+    subject: formatCustomerTimesheetTemplate(state.settings.customerTimesheetBrokerSubject || DEFAULT_CUSTOMER_TIMESHEET_BROKER_SUBJECT, employee, periodKey),
+    body: formatCustomerTimesheetTemplate(state.settings.customerTimesheetBrokerBody || DEFAULT_CUSTOMER_TIMESHEET_BROKER_BODY, employee, periodKey)
+  };
+}
+
+function customerTimesheetBrokerEmail(employee) {
+  return employee.customerTimesheetUseBrokerEmail !== false
+    ? employee.brokerEmail
+    : employee.customerTimesheetBrokerEmail;
 }
 
 function ensurePeriodRecords(periodKey) {
@@ -1072,6 +1256,8 @@ function updateLoginAdminPreview() {
   if (!picker) return;
   const admin = adminById(picker.value) || currentAdmin();
   if (!admin) return;
+  document.querySelector("#login-admin-trigger").textContent = admin.name + " · beheerder";
+  document.querySelectorAll('[data-login-account-role="admin"]').forEach(button => button.classList.toggle("is-active", button.dataset.loginAccountId === String(admin.id)));
   applyAvatar(document.querySelector("#login-admin-avatar"), admin.name, admin.photo);
   document.querySelector("#login-admin-summary").textContent = admin.name + " · uren controleren, facturen en instellingen";
 }
@@ -1083,6 +1269,7 @@ function renderLoginAdminPicker() {
   if (!adminById(state.currentAdminId) || adminById(state.currentAdminId).active === false) state.currentAdminId = admins[0].id;
   picker.innerHTML = admins.map(admin => '<option value="' + escapeHtml(admin.id) + '">' + escapeHtml(admin.name) + " · beheerder</option>").join("");
   picker.value = String(state.currentAdminId);
+  document.querySelector("#login-admin-choices").innerHTML = admins.map(admin => '<button type="button" role="option" data-login-account-role="admin" data-login-account-id="' + escapeHtml(admin.id) + '"><strong>' + escapeHtml(admin.name) + '</strong><small>Beheerder · dashboard, controles en instellingen</small></button>').join("");
   updateLoginAdminPreview();
 }
 
@@ -1091,6 +1278,8 @@ function updateLoginEmployeePreview() {
   if (!picker) return;
   const employee = employeeById(picker.value) || currentEmployee();
   if (!employee) return;
+  document.querySelector("#login-employee-trigger").textContent = employee.name + " · " + employee.client;
+  document.querySelectorAll('[data-login-account-role="employee"]').forEach(button => button.classList.toggle("is-active", button.dataset.loginAccountId === String(employee.id)));
   document.querySelector("#login-employee-avatar").textContent = initials(employee.name);
   document.querySelector("#login-employee-summary").textContent = employee.name + " · eigen uren invullen en indienen";
 }
@@ -1104,7 +1293,23 @@ function renderLoginEmployeePicker() {
     .map(employee => '<option value="' + employee.id + '">' + escapeHtml(employee.name) + " · " + escapeHtml(employee.client) + "</option>")
     .join("");
   picker.value = String(state.currentEmployeeId);
+  document.querySelector("#login-employee-choices").innerHTML = employees.map(employee => '<button type="button" role="option" data-login-account-role="employee" data-login-account-id="' + employee.id + '"><strong>' + escapeHtml(employee.name) + '</strong><small>Medewerker · ' + escapeHtml(employee.client) + '</small></button>').join("");
   updateLoginEmployeePreview();
+}
+
+function closeLoginAccountPanels() {
+  document.querySelectorAll(".account-choice-panel").forEach(panel => { panel.hidden = true; });
+  document.querySelectorAll("[data-account-picker-trigger]").forEach(trigger => trigger.setAttribute("aria-expanded", "false"));
+}
+
+function toggleLoginAccountPanel(role) {
+  const trigger = document.querySelector('#login-' + role + '-trigger');
+  const panel = document.querySelector('#login-' + role + '-choices');
+  if (!trigger || !panel) return;
+  const willOpen = panel.hidden;
+  closeLoginAccountPanels();
+  panel.hidden = !willOpen;
+  trigger.setAttribute("aria-expanded", willOpen ? "true" : "false");
 }
 
 function profileForRole(role) {
@@ -1131,7 +1336,7 @@ function statusPill(status) {
 }
 
 function invoiceStatusInfo(record) {
-  if (record.invoiceStatus === "simulated") return ["Verzendtest afgerond", "status-sent"];
+  if (record.invoiceStatus === "simulated") return ["Verzending gecontroleerd", "status-sent"];
   if (record.invoiceStatus === "ready") return ["Factuur klaar", "status-ready"];
   if (record.timesheetStatus === "submitted") return ["Urencontrole nodig", "status-submitted"];
   return ["Wacht op medewerker", "status-concept"];
@@ -1167,16 +1372,72 @@ function formatTemplate(template, employee, invoiceNumber) {
   return String(template).replace(/\{([a-z]+)\}/gi, (match, key) => values[key] === undefined ? match : values[key]);
 }
 
+function periodKeyFromControls(monthSelector, yearSelector) {
+  const month = document.querySelector(monthSelector);
+  const year = document.querySelector(yearSelector);
+  if (!month || !year) return "";
+  const yearValue = String(year.value || "").trim();
+  const monthValue = String(month.value || "").trim();
+  if (!/^\d{4}$/.test(yearValue) || !/^(0[1-9]|1[0-2])$/.test(monthValue)) return "";
+  return yearValue + "-" + monthValue;
+}
+
+function syncPeriodControls(monthSelector, yearSelector, periodKey) {
+  const parsed = parsePeriodKey(periodKey);
+  const month = document.querySelector(monthSelector);
+  const year = document.querySelector(yearSelector);
+  if (!parsed || !month || !year) return;
+  const monthValue = String(parsed.monthIndex + 1).padStart(2, "0");
+  month.value = monthValue;
+  if (month.tagName === "BUTTON") {
+    month.textContent = MONTH_NAMES[parsed.monthIndex].charAt(0).toUpperCase() + MONTH_NAMES[parsed.monthIndex].slice(1);
+    document.querySelectorAll('[data-month-control="' + monthSelector + '"]').forEach(button => {
+      const active = button.dataset.periodMonth === monthValue;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+  }
+  year.value = String(parsed.year).padStart(4, "0");
+}
+
+function closeMonthChoicePanels(exceptId = "") {
+  document.querySelectorAll("[data-month-picker-trigger]").forEach(trigger => {
+    const panelId = trigger.dataset.monthPickerTrigger;
+    if (panelId === exceptId) return;
+    const panel = document.getElementById(panelId);
+    if (panel) panel.hidden = true;
+    trigger.setAttribute("aria-expanded", "false");
+  });
+}
+
+function toggleMonthChoicePanel(trigger) {
+  const panelId = trigger.dataset.monthPickerTrigger;
+  const panel = document.getElementById(panelId);
+  if (!panel) return;
+  const open = panel.hidden;
+  closeMonthChoicePanels(open ? panelId : "");
+  panel.hidden = !open;
+  trigger.setAttribute("aria-expanded", String(open));
+}
+
+function applyPeriodControls(monthSelector, yearSelector, customerTimesheet = false) {
+  const periodKey = periodKeyFromControls(monthSelector, yearSelector);
+  if (customerTimesheet) document.querySelector("#customer-timesheet-file").value = "";
+  if (!periodKey || !setPeriod(periodKey)) {
+    syncPeriodControls(monthSelector, yearSelector, currentPeriod().key);
+    toast(customerTimesheet ? "Kies eerst een geldige maand en een viercijferig jaar." : "Kies een geldige maand en een viercijferig jaar.");
+  }
+}
+
 function renderPeriodHeadings() {
   const period = currentPeriod();
   document.querySelector("#period-label").textContent = period.label;
   document.querySelector("#period-picker").value = period.key;
-  document.querySelector("#workflow-period-title").textContent = "Maandafsluiting " + period.month + " " + period.year;
-  document.querySelector("#dashboard-team-title").textContent = "Overzicht per medewerker · " + period.label;
+  syncPeriodControls("#period-month-picker", "#period-year-picker", period.key);
+  document.querySelector("#workflow-period-title").textContent = "Vier stappen voor " + period.month + " " + period.year;
   document.querySelector("#timesheet-period-title").textContent = period.label;
   document.querySelector("#invoice-period-title").textContent = "Facturen " + period.month + " " + period.year;
   document.querySelector("#employee-period-label").textContent = period.month + " " + period.year;
-  document.querySelector("#approval-month-filter").textContent = period.label;
 }
 
 function applyTheme() {
@@ -1216,6 +1477,54 @@ function renderProfileChrome() {
   document.querySelector("#profile-menu-role").textContent = profile.label;
 }
 
+function customerTimesheetNeedsEmployeeAction(status) {
+  return ["missing", "draft", "resubmit"].includes(status);
+}
+
+function renderEmployeeCustomerTimesheet(record, employee, period) {
+  const card = document.querySelector("#employee-customer-timesheet-card");
+  if (!card) return;
+  card.hidden = employee.customerTimesheetExpected === false;
+  if (card.hidden) return;
+  const documentRecord = customerTimesheetFor(record);
+  const status = customerTimesheetStatusLabels[documentRecord.status] || customerTimesheetStatusLabels.missing;
+  const needsAction = customerTimesheetNeedsEmployeeAction(documentRecord.status);
+  const openButton = document.querySelector("#employee-customer-timesheet-open");
+  const skipButton = document.querySelector("#employee-customer-timesheet-skip");
+  let title = "Klanturenstaat staat nog open";
+  let note = "Upload de officiële klanturenstaat of registreer dat je deze al rechtstreeks hebt gemaild.";
+  if (documentRecord.status === "draft") {
+    title = "Concept staat klaar, maar is nog niet ingediend";
+    note = "Dien het opgeslagen document in bij Backoffice of registreer dat je het al rechtstreeks hebt gemaild.";
+  } else if (documentRecord.status === "resubmit") {
+    title = "Nieuwe klanturenstaat nodig";
+    note = documentRecord.reviewNote || "Backoffice heeft gevraagd om het juiste of definitieve document opnieuw te uploaden.";
+  } else if (documentRecord.status === "received") {
+    title = "Klanturenstaat is ingediend";
+    note = "Backoffice heeft het document ontvangen en controleert het.";
+  } else if (documentRecord.status === "approved") {
+    title = "Klanturenstaat is goedgekeurd";
+    note = "Backoffice heeft het document gecontroleerd. Voor jou is deze stap afgerond.";
+  } else if (documentRecord.status === "sent") {
+    title = "Klanturenstaat is verwerkt";
+    note = "Backoffice heeft ook de brokerroute gecontroleerd.";
+  } else if (documentRecord.status === "skipped") {
+    title = "Als rechtstreeks gemaild geregistreerd";
+    note = (documentRecord.skippedReason || "De klanturenstaat is al rechtstreeks naar Path Backoffice gemaild.") + (documentRecord.skippedAt ? " · " + documentRecord.skippedAt : "");
+  }
+  document.querySelector("#employee-customer-timesheet-period").textContent = period.label;
+  document.querySelector("#employee-customer-timesheet-title").textContent = title;
+  document.querySelector("#employee-customer-timesheet-note").textContent = note;
+  const statusElement = document.querySelector("#employee-customer-timesheet-status");
+  statusElement.className = "status-pill " + status[1];
+  statusElement.textContent = status[0];
+  card.classList.toggle("is-open", needsAction);
+  card.classList.toggle("is-complete", !needsAction);
+  openButton.textContent = needsAction ? "Klanturenstaat openen" : "Details bekijken";
+  skipButton.hidden = !needsAction && documentRecord.status !== "skipped";
+  skipButton.textContent = documentRecord.status === "skipped" ? "Alsnog uploaden" : "Al rechtstreeks gemaild";
+}
+
 function renderEmployeeDashboard() {
   const employee = currentEmployee();
   const record = recordFor(employee.id);
@@ -1227,6 +1536,8 @@ function renderEmployeeDashboard() {
   const progress = record.contractHours > 0 ? Math.min(100, Math.round(accounted / record.contractHours * 100)) : 0;
   const firstName = employee.name.split(/\s+/)[0];
   const status = statusLabels[record.timesheetStatus] || statusLabels.draft;
+  const customerDocument = customerTimesheetFor(record);
+  const customerTimesheetOpen = employee.customerTimesheetExpected !== false && customerTimesheetNeedsEmployeeAction(customerDocument.status);
   let next = "Vul je uren in en dien alleen deze maand in.";
   let action = "Uren verder invullen";
   let note = "Nog niet ingediend";
@@ -1244,9 +1555,11 @@ function renderEmployeeDashboard() {
     note = "Wacht op controle";
   }
   if (record.timesheetStatus === "approved") {
-    next = "Je uren zijn goedgekeurd. Voor deze maand hoef je niets meer te doen.";
-    action = "Goedgekeurde uren bekijken";
-    note = "Afgerond";
+    next = customerTimesheetOpen
+      ? "Je uren zijn goedgekeurd, maar je klanturenstaat staat nog open."
+      : "Je uren zijn goedgekeurd. Voor deze maand hoef je niets meer te doen.";
+    action = customerTimesheetOpen ? "Klanturenstaat aanleveren" : "Goedgekeurde uren bekijken";
+    note = customerTimesheetOpen ? "Uren afgerond · klanturenstaat open" : "Afgerond";
   }
   document.querySelector("#employee-dashboard-greeting").textContent = greetingForNow() + ", " + firstName;
   document.querySelector("#employee-dashboard-next").textContent = next;
@@ -1269,6 +1582,8 @@ function renderEmployeeDashboard() {
     document.querySelector("#employee-dashboard-correction-meta").textContent = "Teruggestuurd door " + openCorrection.requestedBy + " · " + openCorrection.requestedAt;
   }
 
+  renderEmployeeCustomerTimesheet(record, employee, period);
+
   const history = Object.keys(state.records)
     .sort((left, right) => right.localeCompare(left))
     .filter(key => state.records[key] && state.records[key][String(employee.id)])
@@ -1285,56 +1600,60 @@ function renderEmployeeDashboard() {
 }
 
 function renderDashboardActions() {
-  const period = currentPeriod();
-  const allOpen = allOpenApprovals();
-  const selectedRows = activeEmployees().map(employee => ({ employee, record: recordFor(employee.id) }));
-  const missing = selectedRows.filter(item => ["draft", "correction"].includes(item.record.timesheetStatus));
-  const ready = selectedRows.filter(item => item.record.invoiceStatus === "ready");
+  const selectedRows = invoicePeriodRows();
   const pendingDelivery = selectedRows.filter(item => item.record.timesheetStatus === "approved" && (item.record.invoiceStatus !== "simulated" || item.record.payrollStatus !== "simulated"));
-  const actions = [];
-  if (allOpen.length) actions.push({ icon: "U", title: allOpen.length + " urenregistratie" + (allOpen.length === 1 ? "" : "s") + " controleren", note: "Openstaand over alle maanden", view: "approvals", label: "Controleren" });
-  if (missing.length) actions.push({ icon: "M", title: missing.length + " medewerker" + (missing.length === 1 ? "" : "s") + " nog niet klaar", note: period.label + " · herinnering kan worden getest", view: "employees", label: "Bekijken" });
-  if (ready.length) actions.push({ icon: "F", title: ready.length + " factu" + (ready.length === 1 ? "ur" : "ren") + " klaar", note: "Controleer het veilige mailvoorbeeld", view: "invoices", label: "Open facturen" });
+  const openMonthRows = selectedRows.filter(item => item.record.timesheetStatus !== "approved");
+  const hasMonthActivity = selectedRows.some(item => recordHasPeriodActivity(item.record));
+  const summaries = openPeriodSummaries();
+  const workCount = summaries.reduce((sum, item) => sum + item.counts.drafts + item.counts.corrections + item.counts.approvals + item.counts.deliveries + item.counts.customerDocuments, 0);
+  const workMonths = summaries.length;
   const admin = currentAdmin();
   document.querySelector("#admin-dashboard-greeting").textContent = greetingForNow() + ", " + (admin ? admin.name.split(/\s+/)[0] : "beheerder");
-  document.querySelector("#admin-attention-note").textContent = actions.length
-    ? "Dit vraagt nu je aandacht: er staan " + actions.length + " soorten acties klaar."
-    : "Er staat niets open: alle urenacties voor " + period.label + " zijn afgerond.";
+  document.querySelector("#admin-attention-note").textContent = workCount
+    ? "Er " + (workCount === 1 ? "staat 1 actie" : "staan " + workCount + " acties") + " klaar, verdeeld over " + workMonths + " maand" + (workMonths === 1 ? "" : "en") + "."
+    : "Er staat niets open: alle uren, klanturenstaten en verzendcontroles zijn afgerond.";
+  const workQueueAction = document.querySelector("#open-work-queue");
+  workQueueAction.hidden = workCount === 0;
+  workQueueAction.textContent = workCount === 1 ? "Open 1 actie" : "Open werkvoorraad · " + workCount;
   const deliveryAction = document.querySelector("#open-delivery-check");
-  deliveryAction.hidden = pendingDelivery.length === 0;
-  deliveryAction.textContent = "Maandverzending controleren · " + pendingDelivery.length;
-  document.querySelector("#dashboard-action-list").innerHTML = actions.map(action => '<div class="dashboard-action-item"><span class="dashboard-action-icon">' + action.icon + '</span><div><strong>' + escapeHtml(action.title) + '</strong><small>' + escapeHtml(action.note) + '</small></div><button class="small-button" data-dashboard-view="' + action.view + '">' + escapeHtml(action.label) + '</button></div>').join("") || '<div class="dashboard-action-empty">Er staat nu niets open. Kies een andere maand om die periode te bekijken.</div>';
+  deliveryAction.hidden = !hasMonthActivity || (openMonthRows.length === 0 && pendingDelivery.length === 0);
+  deliveryAction.textContent = openMonthRows.length
+    ? openMonthRows.length + " openstaand" + (openMonthRows.length === 1 ? "" : "e") + " · bekijken"
+      : "Maandverzending controleren · " + pendingDelivery.length;
+  document.querySelector("#metric-actions").textContent = workCount;
+  document.querySelector("#metric-actions-note").textContent = workCount ? "In " + workMonths + " maand" + (workMonths === 1 ? "" : "en") + " · oudste eerst" : "Geen acties nodig";
 }
 
 function recordHasPeriodActivity(record) {
-  return totalEntries(record.entries) > 0 || Number(record.leave || 0) > 0 || Number(record.sick || 0) > 0 || record.timesheetStatus !== "draft" || record.invoiceStatus !== "concept" || record.payrollStatus !== "concept" || correctionHistoryFor(record).length > 0;
+  return totalEntries(record.entries) > 0 || Number(record.leave || 0) > 0 || Number(record.sick || 0) > 0 || record.timesheetStatus !== "draft" || record.invoiceStatus !== "concept" || record.payrollStatus !== "concept" || correctionHistoryFor(record).length > 0 || customerTimesheetFor(record).status !== "missing";
 }
 
 function openPeriodSummaries() {
   const now = new Date();
   const currentMonthKey = makePeriodKey(now.getFullYear(), now.getMonth());
   return Object.keys(state.records)
-    .filter(key => parsePeriodKey(key))
+    .filter(key => parsePeriodKey(key) && key <= currentMonthKey)
     .sort((left, right) => left.localeCompare(right))
     .map(periodKey => {
-      const items = state.employees
-        .map(employee => ({ employee, record: recordFor(employee.id, periodKey) }))
-        .filter(item => recordHasPeriodActivity(item.record));
-      if (!items.length) return null;
+      const items = activeEmployees()
+        .filter(employee => !employee.startDate || employee.startDate.slice(0, 7) <= periodKey)
+        .map(employee => ({ employee, record: recordFor(employee.id, periodKey) }));
+      const periodHasActivity = periodKey === currentMonthKey || items.some(item => recordHasPeriodActivity(item.record));
+      if (!periodHasActivity) return null;
       const drafts = items.filter(item => item.record.timesheetStatus === "draft").length;
       const corrections = items.filter(item => item.record.timesheetStatus === "correction").length;
       const approvals = items.filter(item => item.record.timesheetStatus === "submitted").length;
       const deliveries = items.filter(item => item.record.timesheetStatus === "approved" && (item.record.invoiceStatus !== "simulated" || item.record.payrollStatus !== "simulated")).length;
-      if (drafts + corrections + approvals + deliveries === 0) return null;
+      const customerDocuments = items.filter(item => item.employee.customerTimesheetExpected !== false && (["missing", "draft", "received", "resubmit"].includes(customerTimesheetFor(item.record).status) || (customerTimesheetFor(item.record).status === "approved" && item.employee.customerTimesheetBrokerEnabled !== false))).length;
+      if (drafts + corrections + approvals + deliveries + customerDocuments === 0) return null;
       const parts = [];
-      if (drafts) parts.push(drafts + " " + (drafts === 1 ? "concepturenstaat" : "concepturenstaten"));
+      if (drafts) parts.push(drafts + " urenregistratie" + (drafts === 1 ? "" : "s") + " niet ingediend");
       if (corrections) parts.push(corrections + " " + (corrections === 1 ? "correctie" : "correcties"));
       if (approvals) parts.push(approvals + " " + (approvals === 1 ? "goedkeuring" : "goedkeuringen"));
       if (deliveries) parts.push(deliveries + " " + (deliveries === 1 ? "verzending" : "verzendingen"));
-      const view = approvals ? "approvals" : deliveries ? "invoices" : "employees";
-      const action = approvals ? "Uren controleren" : deliveries ? "Verzending controleren" : "Medewerkers bekijken";
+      if (customerDocuments) parts.push(customerDocuments + " klanturensta" + (customerDocuments === 1 ? "at" : "ten") + " open");
       const timing = periodKey < currentMonthKey ? "Eerdere maand · nog niet afgerond" : periodKey === currentMonthKey ? "Huidige maand" : "Geplande maand";
-      return { periodKey, period: periodFromKey(periodKey), isOverdue: periodKey < currentMonthKey, timing, parts, view, action };
+      return { periodKey, period: periodFromKey(periodKey), isOverdue: periodKey < currentMonthKey, timing, parts, counts: { drafts, corrections, approvals, deliveries, customerDocuments } };
     })
     .filter(Boolean);
 }
@@ -1344,13 +1663,18 @@ function renderOpenPeriods() {
   const panel = document.querySelector("#open-periods-panel");
   const list = document.querySelector("#open-periods-list");
   panel.hidden = summaries.length === 0;
-  list.innerHTML = summaries.map(item =>
-    '<div class="open-period-row' + (item.isOverdue ? " is-overdue" : "") + '" data-open-period-row="' + item.periodKey + '">' +
+  list.innerHTML = summaries.map(item => {
+    const buttons = [];
+    if (item.counts.approvals) buttons.push('<button class="small-button" data-open-period="' + item.periodKey + '" data-open-period-view="approvals" data-open-period-section="approvals">Uren controleren · ' + item.counts.approvals + '</button>');
+    if (item.counts.drafts + item.counts.corrections) buttons.push('<button class="small-button" data-open-period="' + item.periodKey + '" data-open-period-view="dashboard" data-open-period-section="team">Teamstatus · ' + (item.counts.drafts + item.counts.corrections) + '</button>');
+    if (item.counts.customerDocuments) buttons.push('<button class="small-button" data-open-period="' + item.periodKey + '" data-open-period-view="dashboard" data-open-period-section="customer-timesheets">Klanturenstaten · ' + item.counts.customerDocuments + '</button>');
+    if (item.counts.deliveries) buttons.push('<button class="small-button" data-open-period="' + item.periodKey + '" data-open-period-view="invoices" data-open-period-section="deliveries">Verzendingen · ' + item.counts.deliveries + '</button>');
+    return '<div class="open-period-row' + (item.isOverdue ? " is-overdue" : "") + '" data-open-period-row="' + item.periodKey + '">' +
       '<div class="open-period-month"><strong>' + escapeHtml(item.period.label) + '</strong><small>' + escapeHtml(item.timing) + '</small></div>' +
       '<div class="open-period-status"><strong>' + escapeHtml(item.parts.join(" · ")) + '</strong><small>Blijft zichtbaar totdat alle onderdelen zijn afgerond.</small></div>' +
-      '<button class="small-button" data-open-period="' + item.periodKey + '" data-open-period-view="' + item.view + '">' + escapeHtml(item.action) + '</button>' +
-    '</div>'
-  ).join("");
+      '<div class="open-period-actions">' + buttons.join("") + '</div>' +
+    '</div>';
+  }).join("");
 }
 
 function setWorkflowStep(id, visualState) {
@@ -1359,22 +1683,374 @@ function setWorkflowStep(id, visualState) {
   if (visualState) element.classList.add(visualState);
 }
 
+function renderCustomerTimesheetPanel() {
+  const panel = document.querySelector("#customer-timesheet-upload-panel");
+  if (!panel) return;
+  panel.hidden = state.currentRole !== "employee";
+  if (panel.hidden) return;
+  const employee = currentEmployee();
+  const period = currentPeriod();
+  const record = recordFor(employee.id, period.key);
+  const documentRecord = customerTimesheetFor(record);
+  const baseStatus = customerTimesheetStatusLabels[documentRecord.status] || customerTimesheetStatusLabels.missing;
+  const status = documentRecord.status === "received" ? ["Opgeslagen · wacht op controle", baseStatus[1]] : baseStatus;
+  const periodInput = document.querySelector("#customer-timesheet-period");
+  periodInput.value = period.key;
+  syncPeriodControls("#customer-timesheet-month", "#customer-timesheet-year", period.key);
+  document.querySelector("#customer-timesheet-status").className = "status-pill " + status[1];
+  document.querySelector("#customer-timesheet-status").textContent = status[0];
+  const mail = customerTimesheetSubmissionMail(employee, period.key);
+  document.querySelector("#customer-timesheet-mail-route").textContent = "Van " + employee.name + " aan " + (state.settings.supportName || "Path Backoffice") + " · " + (state.settings.supportEmail || SUPPORT_EMAIL);
+  document.querySelector("#customer-timesheet-subject").textContent = mail.subject;
+  document.querySelector("#customer-timesheet-body").textContent = mail.body;
+  const current = document.querySelector("#customer-timesheet-current");
+  current.innerHTML = documentRecord.status === "skipped"
+    ? '<div><div><strong>Als rechtstreeks gemaild geregistreerd</strong><small>' + escapeHtml(documentRecord.skippedReason || "De klanturenstaat is al rechtstreeks naar Path Backoffice gemaild.") + (documentRecord.skippedBy ? " · door " + escapeHtml(documentRecord.skippedBy) : "") + (documentRecord.skippedAt ? " · " + escapeHtml(documentRecord.skippedAt) : "") + '</small></div>' + customerTimesheetStatusPill(record) + '<button class="small-button" data-restore-customer-timesheet>Alsnog uploaden</button></div>'
+    : documentRecord.fileName
+      ? '<div><div><strong>' + escapeHtml(documentRecord.fileName) + '</strong><small>' + (documentRecord.isExample ? "Voorbeeldbestand · geen echt klantdocument" : "Opgeslagen " + escapeHtml(documentRecord.uploadedAt || "datum onbekend") + (/\.(jpe?g|png)$/i.test(documentRecord.originalFileName || "") ? " · " + escapeHtml(documentRecord.originalFileName) + " omgezet naar PDF" : "")) + (documentRecord.status === "received" ? " · Backoffice heeft een melding in de app" : "") + (documentRecord.reviewNote ? " · " + escapeHtml(documentRecord.reviewNote) : "") + '</small></div><span class="status-pill ' + status[1] + '">' + escapeHtml(status[0]) + '</span>' + (documentRecord.fileData ? '<button class="small-button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">PDF bekijken</button>' : '<span></span>') + '</div>'
+      : '<div><div><strong>Nog geen klanturenstaat voor ' + escapeHtml(period.label) + '</strong><small>De urenregistratie kan wel gewoon worden ingevuld en ingediend.</small></div>' + customerTimesheetStatusPill(record) + '<span></span></div>';
+  const locked = ["received", "approved", "sent", "skipped"].includes(documentRecord.status);
+  const saveButton = document.querySelector("#customer-timesheet-save-draft");
+  const submitButton = document.querySelector("#customer-timesheet-submit");
+  const skipButton = document.querySelector("#customer-timesheet-skip");
+  document.querySelector("#customer-timesheet-edit-mail").disabled = locked;
+  saveButton.textContent = ["draft", "resubmit"].includes(documentRecord.status) ? "Concept vervangen" : "Concept opslaan";
+  submitButton.textContent = documentRecord.status === "draft" ? "Concept indienen bij Backoffice" : "Indienen bij Backoffice";
+  skipButton.hidden = !customerTimesheetNeedsEmployeeAction(documentRecord.status) && documentRecord.status !== "skipped";
+  skipButton.textContent = documentRecord.status === "skipped" ? "Alsnog uploaden" : "Al rechtstreeks gemaild";
+  syncCustomerTimesheetUploadActions();
+}
+
+function syncCustomerTimesheetUploadActions() {
+  const employee = currentEmployee();
+  const periodKey = document.querySelector("#customer-timesheet-period").value || currentPeriod().key;
+  const documentRecord = customerTimesheetFor(recordFor(employee.id, periodKey));
+  const fileInput = document.querySelector("#customer-timesheet-file");
+  const file = fileInput.files && fileInput.files[0];
+  const sourceType = file ? customerTimesheetSourceType(file) : "";
+  const fileReady = Boolean(file && sourceType && file.size <= 2 * 1024 * 1024);
+  const existingDraft = documentRecord.status === "draft" && Boolean(documentRecord.fileName && documentRecord.fileData);
+  const locked = ["received", "approved", "sent", "skipped"].includes(documentRecord.status);
+  const saveButton = document.querySelector("#customer-timesheet-save-draft");
+  const submitButton = document.querySelector("#customer-timesheet-submit");
+  const help = document.querySelector("#customer-timesheet-action-help");
+  saveButton.disabled = locked || !fileReady;
+  submitButton.disabled = locked || (!fileReady && !existingDraft);
+  help.className = "customer-timesheet-action-help";
+  if (documentRecord.status === "approved") {
+    help.textContent = "Deze klanturenstaat is al goedgekeurd. Kies een andere maand om een nieuwe upload te testen.";
+    help.classList.add("is-warning");
+  } else if (documentRecord.status === "received") {
+    help.textContent = "Deze klanturenstaat is ingediend en wacht op controle door Backoffice.";
+    help.classList.add("is-warning");
+  } else if (documentRecord.status === "sent") {
+    help.textContent = "Deze klanturenstaat is al verwerkt via de brokerroute.";
+    help.classList.add("is-warning");
+  } else if (documentRecord.status === "skipped") {
+    help.textContent = "Deze klanturenstaat staat geregistreerd als al rechtstreeks gemaild. Kies Alsnog uploaden om deze registratie terug te draaien.";
+    help.classList.add("is-ready");
+  } else if (file && !sourceType) {
+    help.textContent = "Dit bestandstype is niet toegestaan. Kies een PDF, JPG of PNG.";
+    help.classList.add("is-warning");
+  } else if (file && file.size > 2 * 1024 * 1024) {
+    help.textContent = "Dit bestand is groter dan 2 MB. Kies een kleiner bestand.";
+    help.classList.add("is-warning");
+  } else if (fileReady) {
+    help.textContent = "Bestand gekozen. Je kunt het als concept opslaan of direct indienen bij Backoffice.";
+    help.classList.add("is-ready");
+  } else if (existingDraft) {
+    help.textContent = "Je concept staat klaar. Je kunt het nu indienen of een nieuw bestand kiezen om het te vervangen.";
+    help.classList.add("is-ready");
+  } else if (documentRecord.status === "resubmit") {
+    help.textContent = "Backoffice vraagt een nieuw document. Kies eerst de juiste PDF, JPG of PNG.";
+    help.classList.add("is-warning");
+  } else {
+    help.textContent = "Kies eerst een PDF, JPG of PNG. Daarna worden de knoppen actief.";
+  }
+}
+
+function renderCustomerTimesheetAdmin() {
+  const list = document.querySelector("#customer-timesheet-admin-list");
+  if (!list) return;
+  const period = currentPeriod();
+  document.querySelector("#customer-timesheet-admin-title").textContent = "Klanturenstaten · " + period.label;
+  const rows = activeEmployees().filter(employee => employee.customerTimesheetExpected !== false).map(employee => ({ employee, record: recordFor(employee.id, period.key) }));
+  list.innerHTML = rows.map(({ employee, record }) => {
+    const documentRecord = customerTimesheetFor(record);
+    let action = '<button class="small-button" data-customer-timesheet-details="' + employee.id + '" data-period-key="' + period.key + '">Details</button>';
+    if (documentRecord.status === "received") action = '<button class="small-button" data-review-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">Controleren</button>';
+    if (["missing", "draft", "resubmit"].includes(documentRecord.status)) action = '<button class="small-button" data-remind-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">Herinnering sturen</button>';
+    if (documentRecord.status === "approved" && employee.customerTimesheetBrokerEnabled !== false) action = '<button class="small-button" data-send-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">Brokerroute controleren</button>';
+    return '<article class="customer-timesheet-admin-row"><div><strong>' + escapeHtml(employee.name) + '</strong><small>' + escapeHtml(employee.broker) + ' · verwacht vóór werkdag ' + Number(employee.customerTimesheetDueWorkday || 5) + (employee.customerTimesheetBrokerEnabled === false ? " · geen brokerroute" : " · brokerroute: " + escapeHtml(customerTimesheetBrokerEmail(employee))) + '</small></div>' + customerTimesheetStatusPill(record) + '<div class="customer-timesheet-admin-row-actions">' + action + '</div></article>';
+  }).join("") || '<div class="dashboard-action-empty">Voor deze maand worden geen klanturenstaten verwacht.</div>';
+}
+
+function showCustomerTimesheetDetails(employeeId, periodKey, reviewMode) {
+  const employee = employeeById(employeeId);
+  const period = periodFromKey(periodKey);
+  const record = recordFor(employeeId, period.key);
+  const documentRecord = customerTimesheetFor(record);
+  const status = customerTimesheetStatusLabels[documentRecord.status] || customerTimesheetStatusLabels.missing;
+  const submissionMail = customerTimesheetSubmissionMail(employee, period.key);
+  const brokerMail = customerTimesheetBrokerMail(employee, period.key);
+  const route = employee.customerTimesheetBrokerEnabled === false
+    ? "Geen brokerverzending ingesteld"
+    : customerTimesheetBrokerEmail(employee) + " · alleen na goedkeuring";
+  const skippedSummary = documentRecord.status === "skipped"
+    ? '<div><span>Reden</span><strong>' + escapeHtml(documentRecord.skippedReason || "De klanturenstaat is al rechtstreeks naar Path Backoffice gemaild.") + '</strong></div><div><span>Geregistreerd door</span><strong>' + escapeHtml(documentRecord.skippedBy || employee.name) + '</strong></div><div><span>Geregistreerd op</span><strong>' + escapeHtml(documentRecord.skippedAt || "Datum onbekend") + '</strong></div>'
+    : '';
+  const submissionSummary = documentRecord.status === "skipped"
+    ? ''
+    : '<div class="customer-timesheet-submission-review"><span>Van ' + escapeHtml(employee.name) + ' aan ' + escapeHtml(state.settings.supportName || "Path Backoffice") + '</span><strong>' + escapeHtml(submissionMail.subject) + '</strong><pre>' + escapeHtml(submissionMail.body) + '</pre></div>';
+  const summary = '<div><span>Status</span><strong>' + escapeHtml(status[0]) + '</strong></div><div><span>Bestand</span><strong>' + escapeHtml(documentRecord.fileName || (documentRecord.status === "skipped" ? "Niet via de app ontvangen" : "Nog niet ontvangen")) + '</strong></div>' + skippedSummary + (documentRecord.fileData ? '<div><span>Document controleren</span><button class="small-button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">PDF bekijken</button></div>' : '') + submissionSummary + '<div><span>Deadline</span><strong>Werkdag ' + Number(employee.customerTimesheetDueWorkday || 5) + '</strong></div><div><span>Brokerroute na goedkeuring</span><strong>' + escapeHtml(route) + '</strong></div><div><span>Factuur zonder klanturenstaat</span><strong>' + (employee.invoiceWithoutCustomerTimesheetAllowed === false ? "Niet toegestaan" : "Toegestaan") + '</strong></div><div><span>Onderwerp naar broker</span><strong>' + escapeHtml(brokerMail.subject) + '</strong></div>';
+  if (reviewMode && documentRecord.status === "received") {
+    showModal({
+      label: "Klanturenstaat controleren",
+      title: employee.name + " · " + period.label,
+      message: "Controleer of dit de officiële PDF van de klant en de juiste periode is. Path maakt dit document niet zelf.",
+      summary,
+      confirm: "Goedkeuren",
+      secondary: "Opnieuw uploaden vragen",
+      action: () => {
+        documentRecord.status = "approved";
+        const timestamp = correctionTimestamp();
+        documentRecord.reviewedAt = timestamp.label;
+        documentRecord.reviewedBy = currentAdmin().name;
+        documentRecord.reviewNote = "";
+        addNotification({ audience: "employee", type: "customer-timesheet", employeeId: employee.id, title: "Klanturenstaat goedgekeurd", message: "Je klanturenstaat voor " + period.label + " is gecontroleerd.", periodKey: period.key, view: "timesheet" }, true);
+        persistState(); closeModal(); renderAll(); toast("De klanturenstaat van " + employee.name + " is goedgekeurd.");
+      },
+      secondaryAction: () => {
+        documentRecord.status = "resubmit";
+        documentRecord.reviewNote = "Upload de juiste of definitieve PDF van de klant.";
+        addNotification({ audience: "employee", type: "customer-timesheet", employeeId: employee.id, title: "Klanturenstaat opnieuw uploaden", message: "Upload voor " + period.label + " de juiste of definitieve PDF van de klant.", periodKey: period.key, view: "timesheet" }, true);
+        persistState(); closeModal(); renderAll(); toast("Er is in de app gevraagd om een nieuwe PDF. Er is niets gemaild.");
+      }
+    });
+    return;
+  }
+  showModal({ label: "Klanturenstaat", title: employee.name + " · " + period.label, message: "Dit is een apart klantdocument en geen door de app gemaakte urenstaat.", summary, confirm: "Sluiten", action: closeModal });
+}
+
+function remindCustomerTimesheet(employeeId, periodKey) {
+  const employee = employeeById(employeeId);
+  const record = recordFor(employeeId, periodKey);
+  const documentRecord = customerTimesheetFor(record);
+  const timestamp = correctionTimestamp();
+  documentRecord.reminderCount += 1;
+  documentRecord.lastReminderAt = timestamp.label;
+  addNotification({ audience: "employee", type: "customer-timesheet-reminder", employeeId: employee.id, title: "Klanturenstaat ontbreekt", message: "Upload de officiële PDF van de klant voor " + periodFromKey(periodKey).label + ". Deze upload staat los van je urenregistratie.", periodKey, view: "timesheet" }, true);
+  persistState(); renderAll(); toast("Herinnering in de app klaargezet voor " + employee.name + "; e-mailverzending is uitgeschakeld.");
+}
+
+function showSkipCustomerTimesheet() {
+  const employee = currentEmployee();
+  const period = currentPeriod();
+  const documentRecord = customerTimesheetFor(recordFor(employee.id, period.key));
+  if (!customerTimesheetNeedsEmployeeAction(documentRecord.status)) {
+    toast("Deze klanturenstaat kan niet meer als rechtstreeks gemaild worden geregistreerd.");
+    return;
+  }
+  const defaultReason = "De klanturenstaat is al rechtstreeks naar Path Backoffice gemaild.";
+  showModal({
+    label: "Klanturenstaat afronden",
+    title: employee.name + " · " + period.label,
+    message: "Gebruik dit alleen wanneer je de officiële klanturenstaat buiten de app rechtstreeks naar Backoffice hebt gemaild. Backoffice ziet deze registratie en de reden.",
+    summary: '<div class="modal-form full"><label class="full">Reden<textarea id="customer-timesheet-skip-reason" rows="4">' + escapeHtml(defaultReason) + '</textarea></label><p class="form-help full">De klanturenstaat verdwijnt uit de open werkvoorraad, maar blijft met deze reden in de maanddetails staan.</p></div>',
+    confirm: "Als al gemaild registreren",
+    secondary: "Annuleren",
+    action: () => {
+      const reasonInput = document.querySelector("#customer-timesheet-skip-reason");
+      const reason = reasonInput.value.trim();
+      if (!reason) {
+        reasonInput.classList.add("is-invalid");
+        toast("Vul een reden in.");
+        return;
+      }
+      const timestamp = correctionTimestamp();
+      documentRecord.status = "skipped";
+      documentRecord.skippedReason = reason;
+      documentRecord.skippedAt = timestamp.label;
+      documentRecord.skippedBy = employee.name;
+      documentRecord.reviewNote = "";
+      addNotification({ audience: "admin", type: "customer-timesheet-skipped", employeeId: employee.id, title: "Klanturenstaat al rechtstreeks gemaild", message: employee.name + " heeft voor " + period.label + " geregistreerd: " + reason, periodKey: period.key, view: "dashboard" }, true);
+      persistState(); closeModal(); renderAll(); toast("De klanturenstaat staat als rechtstreeks gemaild geregistreerd.");
+    },
+    secondaryAction: closeModal
+  });
+}
+
+function restoreSkippedCustomerTimesheet() {
+  const employee = currentEmployee();
+  const period = currentPeriod();
+  const documentRecord = customerTimesheetFor(recordFor(employee.id, period.key));
+  if (documentRecord.status !== "skipped") return;
+  documentRecord.status = documentRecord.fileName && documentRecord.fileData ? "draft" : "missing";
+  documentRecord.skippedReason = "";
+  documentRecord.skippedAt = "";
+  documentRecord.skippedBy = "";
+  persistState(); renderAll(); toast("De registratie is teruggedraaid. Je kunt de klanturenstaat nu uploaden.");
+}
+
+function showCustomerTimesheetSubmissionMailEditor() {
+  const employee = currentEmployee();
+  const period = currentPeriod();
+  const documentRecord = customerTimesheetFor(recordFor(employee.id, period.key));
+  if (["received", "approved", "sent", "skipped"].includes(documentRecord.status)) {
+    toast("Dit bericht is al ingediend en kan niet meer worden aangepast.");
+    return;
+  }
+  const mail = customerTimesheetSubmissionMail(employee, period.key);
+  showModal({
+    label: "Bericht aan Backoffice",
+    title: employee.name + " · " + period.label,
+    message: "Dit bericht hoort bij de klanturenstaat van deze maand. Onderwerp en tekst mogen vóór het indienen worden aangepast.",
+    summary: '<div><span>Aan</span><strong>' + escapeHtml(state.settings.supportName || "Path Backoffice") + ' · ' + escapeHtml(state.settings.supportEmail || SUPPORT_EMAIL) + '</strong></div><div class="modal-form full"><label class="full">Onderwerp<input id="customer-timesheet-submission-subject" value="' + escapeHtml(mail.subject) + '"></label><label class="full">Bericht<textarea id="customer-timesheet-submission-body" rows="8">' + escapeHtml(mail.body) + '</textarea></label></div>',
+    confirm: "Bericht opslaan",
+    secondary: "Standaard herstellen",
+    wide: true,
+    action: () => {
+      const subject = document.querySelector("#customer-timesheet-submission-subject").value.trim();
+      const body = document.querySelector("#customer-timesheet-submission-body").value.trim();
+      if (!subject || !body) {
+        toast("Vul een onderwerp en bericht in.");
+        return;
+      }
+      documentRecord.submissionSubject = subject;
+      documentRecord.submissionBody = body;
+      persistState(); closeModal(); renderAll(); toast("Het bericht aan Backoffice is opgeslagen.");
+    },
+    secondaryAction: () => {
+      documentRecord.submissionSubject = "";
+      documentRecord.submissionBody = "";
+      persistState(); closeModal(); renderAll(); toast("Het standaardbericht is hersteld.");
+    }
+  });
+}
+
+function showCustomerTimesheetBrokerCheck(employeeId, periodKey) {
+  const employee = employeeById(employeeId);
+  const record = recordFor(employeeId, periodKey);
+  const documentRecord = customerTimesheetFor(record);
+  if (documentRecord.status !== "approved" || employee.customerTimesheetBrokerEnabled === false) return;
+  const email = customerTimesheetBrokerEmail(employee);
+  const defaultMail = customerTimesheetBrokerMail(employee, periodKey);
+  const mail = {
+    subject: documentRecord.brokerSubject || defaultMail.subject,
+    body: documentRecord.brokerBody || defaultMail.body
+  };
+  if (!isValidEmail(email)) {
+    toast("Controleer eerst het e-mailadres voor de klanturenstaat bij deze medewerker.");
+    return;
+  }
+  showModal({
+    label: "Aparte brokerroute",
+    title: "Klanturenstaat voor " + employee.name + " controleren?",
+    message: "Controleer het adres, de officiële PDF en pas desgewenst het onderwerp of bericht aan. E-mailverzending is uitgeschakeld.",
+    summary: '<div><span>Aan</span><strong>' + escapeHtml(email) + '</strong></div><div><span>Bijlage</span><strong>' + escapeHtml(documentRecord.fileName) + '</strong></div><div class="modal-form full"><label class="full">Onderwerp<input id="customer-timesheet-broker-subject" value="' + escapeHtml(mail.subject) + '"></label><label class="full">Begeleidende tekst<textarea id="customer-timesheet-broker-body" rows="8">' + escapeHtml(mail.body) + '</textarea></label></div>',
+    confirm: "Controle afronden",
+    wide: true,
+    action: () => {
+      const subject = document.querySelector("#customer-timesheet-broker-subject").value.trim();
+      const body = document.querySelector("#customer-timesheet-broker-body").value.trim();
+      if (!subject || !body) {
+        toast("Vul een onderwerp en begeleidende tekst in.");
+        return;
+      }
+      documentRecord.brokerSubject = subject;
+      documentRecord.brokerBody = body;
+      documentRecord.status = "sent";
+      documentRecord.sentAt = correctionTimestamp().label;
+      persistState(); closeModal(); renderAll(); toast("Brokerroute gecontroleerd. Er is niets echt verzonden.");
+    }
+  });
+}
+
+function showAdminHoursDetail(employeeId, periodKey) {
+  const employee = employeeById(employeeId);
+  const period = periodFromKey(periodKey || currentPeriod().key);
+  const record = recordFor(employeeId, period.key);
+  const billable = totalEntries(record.entries);
+  const status = statusLabels[record.timesheetStatus] || statusLabels.draft;
+  const weekly = period.weekRows.map((week, index) => {
+    const total = (record.entries[index] || []).reduce((sum, value) => sum + (Number(value) || 0), 0);
+    return '<div><small>Week ' + week.number + '</small><strong>' + hoursFormat.format(total) + ' uur</strong></div>';
+  }).join("");
+  const correction = latestCorrection(record);
+  const correctionHtml = correction
+    ? '<div><small>Laatste correctieverzoek</small><strong>' + escapeHtml(correction.message) + '</strong></div><div><small>Aangevraagd door</small><strong>' + escapeHtml(correction.requestedBy + " · " + correction.requestedAt) + '</strong></div>'
+    : "";
+  showModal({
+    label: "Alleen-lezen urenoverzicht",
+    title: employee.name + " · " + period.label,
+    message: "Je bekijkt de vastgelegde uren als beheerder. In dit venster kun je niets wijzigen.",
+    summary: '<div class="admin-hours-detail"><div><small>Status</small><strong>' + escapeHtml(status[0]) + '</strong></div><div><small>Declarabele uren</small><strong>' + hoursFormat.format(billable) + ' uur</strong></div><div><small>Verlof</small><strong>' + hoursFormat.format(record.leave || 0) + ' uur</strong></div><div><small>Ziekte</small><strong>' + hoursFormat.format(record.sick || 0) + ' uur</strong></div><div><small>Contracturen</small><strong>' + hoursFormat.format(record.contractHours) + ' uur</strong></div>' + weekly + correctionHtml + '</div>',
+    confirm: "Sluiten",
+    action: closeModal,
+    secondary: record.timesheetStatus === "approved" && record.invoiceStatus !== "simulated" ? "Goedkeuring intrekken" : "",
+    secondaryAction: record.timesheetStatus === "approved" && record.invoiceStatus !== "simulated" ? () => showReopenApprovedHours(employee.id, period.key) : null
+  });
+}
+
+function showReopenApprovedHours(employeeId, periodKey) {
+  const employee = employeeById(employeeId);
+  const period = periodFromKey(periodKey);
+  const record = recordFor(employeeId, period.key);
+  if (record.timesheetStatus !== "approved") return;
+  if (record.invoiceStatus === "simulated") {
+    toast("Deze goedkeuring kan niet worden ingetrokken nadat de verzendcontrole is afgerond.");
+    return;
+  }
+  showModal({
+    label: "Goedkeuring intrekken",
+    title: employee.name + " · " + period.label + " vrijgeven?",
+    message: "De medewerker kan de maand daarna weer aanpassen en opnieuw indienen. De factuur wordt direct geblokkeerd.",
+    summary: '<div class="modal-form"><label class="full">Verplichte reden<textarea id="reopen-hours-reason" maxlength="1000" placeholder="Bijvoorbeeld: de klant heeft na goedkeuring een afwijking gemeld."></textarea></label></div>',
+    confirm: "Vrijgeven voor correctie",
+    action: () => {
+      const field = document.querySelector("#reopen-hours-reason");
+      const reason = field.value.trim();
+      if (!reason) { field.classList.add("is-invalid"); field.focus(); toast("Vul eerst de reden voor het intrekken van de goedkeuring in."); return; }
+      const timestamp = correctionTimestamp();
+      correctionHistoryFor(record).push({ id: correctionHistoryFor(record).length + 1, message: reason, requestedBy: currentAdmin().name, requestedAt: timestamp.label, requestedAtIso: timestamp.iso, resubmittedAt: null, resubmittedAtIso: null });
+      record.timesheetStatus = "correction";
+      record.invoiceStatus = "concept";
+      record.payrollStatus = "concept";
+      addNotification({ audience: "employee", type: "correction", employeeId: employee.id, title: "Goedgekeurde uren vrijgegeven", message: "De goedkeuring voor " + period.label + " is ingetrokken. Reden: " + reason, periodKey: period.key, view: "timesheet" }, true);
+      persistState(); closeModal(); renderAll(); toast("De goedkeuring is ingetrokken; de factuur is weer geblokkeerd.");
+    }
+  });
+  document.querySelector("#reopen-hours-reason").focus();
+}
+
 function renderDashboard() {
   const period = currentPeriod();
+  const now = new Date();
+  const currentMonthKey = makePeriodKey(now.getFullYear(), now.getMonth());
+  const isFuturePeriod = period.key > currentMonthKey;
   const rows = activeEmployees().map(employee => ({ employee, record: recordFor(employee.id) }));
-  document.querySelector("#dashboard-employee-rows").innerHTML = rows.map(item => {
+  const attentionRows = rows.filter(item => ["draft", "correction"].includes(item.record.timesheetStatus));
+  const displayedRows = state.dashboardTeamScope === "attention" ? attentionRows : rows;
+  document.querySelector("#dashboard-team-title").textContent = state.dashboardTeamScope === "attention"
+    ? "Teamstatus · " + period.label + " · " + attentionRows.length + " nog niet klaar"
+    : "Overzicht per medewerker · " + period.label;
+  document.querySelector("#dashboard-team-clear-filter").hidden = state.dashboardTeamScope !== "attention";
+  document.querySelector("#dashboard-employee-rows").innerHTML = displayedRows.map(item => {
     const employee = item.employee;
     const record = item.record;
     const total = totalEntries(record.entries);
+    const action = record.timesheetStatus === "submitted"
+      ? '<button class="text-button" data-review="' + employee.id + '" data-period-key="' + period.key + '">Controleren</button>'
+      : '<button class="text-button" data-admin-hours-detail="' + employee.id + '" data-period-key="' + period.key + '">Details bekijken</button>';
     return "<tr>" +
       '<td><div class="person-cell"><span class="mini-avatar">' + initials(employee.name) + "</span><span><strong>" + escapeHtml(employee.name) + "</strong><small>" + escapeHtml(employee.role) + "</small></span></div></td>" +
       "<td><strong>" + escapeHtml(employee.client) + "</strong><small>" + escapeHtml(employee.broker) + "</small></td>" +
       "<td><strong>" + hoursFormat.format(total) + "</strong><small>uur</small></td>" +
       "<td><strong>" + currency.format(total * employee.rate) + "</strong><small>exclusief btw</small></td>" +
       "<td>" + statusPill(record.timesheetStatus) + "</td>" +
-      '<td><button class="text-button" data-employee-detail="' + employee.id + '">Bekijken</button></td>' +
+      "<td>" + action + "</td>" +
       "</tr>";
-  }).join("");
+  }).join("") || '<tr><td colspan="6"><div class="dashboard-action-empty">Voor ' + escapeHtml(period.label) + ' hoeft niemand meer uren aan te vullen of te corrigeren.</div></td></tr>';
 
   const submitted = rows.filter(item => ["submitted", "approved"].includes(item.record.timesheetStatus)).length;
   const approved = rows.filter(item => item.record.timesheetStatus === "approved").length;
@@ -1386,13 +2062,21 @@ function renderDashboard() {
     .reduce((sum, item) => sum + totalEntries(item.record.entries) * item.employee.rate, 0);
 
   document.querySelector("#metric-submitted").innerHTML = submitted + " <small>/ " + rows.length + "</small>";
-  document.querySelector("#metric-submitted-note").textContent = submitted === rows.length
-    ? "Iedereen heeft " + period.label + " ingediend"
-    : (rows.length - submitted) + " nog niet ingediend voor " + period.label;
+  const submittedNote = document.querySelector("#metric-submitted-note");
+  submittedNote.textContent = isFuturePeriod
+    ? "Nog geen invoer verwacht voor " + period.label
+    : submitted === rows.length
+      ? "Iedereen heeft " + period.label + " ingediend"
+      : (rows.length - submitted) + " nog niet ingediend voor " + period.label;
+  submittedNote.classList.toggle("positive", !isFuturePeriod && submitted === rows.length);
   document.querySelector("#metric-approved").innerHTML = approved + " <small>/ " + rows.length + "</small>";
   document.querySelector("#metric-approved-note").textContent = open ? open + " wachten op controle voor " + period.label : "Geen openstaande controles voor " + period.label;
-  document.querySelector("#metric-approved-action").textContent = open ? "Open " + open + (open === 1 ? " controle" : " controles") : "Bekijk goedkeuringen";
-  document.querySelector("#metric-actions").textContent = open;
+  const allOpenCount = allOpenApprovals().length;
+  const approvedAction = document.querySelector("#metric-approved-action");
+  approvedAction.hidden = open === 0 && allOpenCount === 0;
+  approvedAction.textContent = open
+    ? "Open " + open + (open === 1 ? " controle" : " controles")
+    : "Bekijk alle openstaande · " + allOpenCount;
   document.querySelector("#metric-invoice-total").textContent = currency.format(invoiceTotal);
   document.querySelector("#approval-count").textContent = open;
   document.querySelector("#approval-count").hidden = open === 0;
@@ -1401,24 +2085,25 @@ function renderDashboard() {
   const progress = Math.round(completedPhases / 4 * 100);
   document.querySelector("#close-progress-ring").style.setProperty("--progress", progress);
   document.querySelector("#close-progress-value").textContent = progress + "%";
-  document.querySelector("#close-progress-title").textContent = completedPhases + " van 4 fasen compleet";
-  document.querySelector("#close-progress-note").textContent = simulated === rows.length ? "Alle verzendtests zijn gedaan" : "Demo; er wordt niets echt verstuurd";
+  document.querySelector("#close-progress-title").textContent = completedPhases + " van 4 stappen voltooid";
+  document.querySelector("#close-progress-note").textContent = "Uren → Controle → Facturen → Verzending";
 
   document.querySelector("#workflow-hours-note").textContent = submitted + " ingediend";
   document.querySelector("#workflow-approval-note").textContent = open + " open";
   document.querySelector("#workflow-invoices-note").textContent = ready + " facturen klaar";
-  document.querySelector("#workflow-send-note").textContent = simulated ? simulated + " verzendtests afgerond" : "Nog niet getest";
+  document.querySelector("#workflow-send-note").textContent = simulated ? simulated + " verzending" + (simulated === 1 ? "" : "en") + " gecontroleerd" : "Nog niet gecontroleerd";
   setWorkflowStep("#workflow-hours", submitted === rows.length ? "is-done" : submitted ? "is-current" : "");
   setWorkflowStep("#workflow-approval", approved === rows.length ? "is-done" : open ? "is-current" : "");
   setWorkflowStep("#workflow-invoices", ready + simulated === rows.length ? "is-done" : ready ? "is-current" : "");
   setWorkflowStep("#workflow-send", simulated === rows.length ? "is-done" : simulated ? "is-current" : "");
   renderDashboardActions();
   renderOpenPeriods();
+  renderCustomerTimesheetAdmin();
 }
 
 function allOpenApprovals() {
   return Object.keys(state.records)
-    .sort((left, right) => right.localeCompare(left))
+    .sort((left, right) => left.localeCompare(right))
     .flatMap(periodKey => {
       ensurePeriodRecords(periodKey);
       const period = periodFromKey(periodKey);
@@ -1435,11 +2120,21 @@ function allOpenApprovals() {
 function renderApprovals() {
   const allApprovals = allOpenApprovals();
   const period = currentPeriod();
-  const approvals = state.approvalScope === "month"
-    ? allApprovals.filter(item => item.periodKey === period.key)
-    : allApprovals;
+  const monthApprovals = allApprovals.filter(item => item.periodKey === period.key);
+  if (state.approvalScope === "month" && monthApprovals.length === 0) state.approvalScope = "all";
+  const approvals = state.approvalScope === "month" ? monthApprovals : allApprovals;
   const list = document.querySelector("#approval-list");
   const empty = document.querySelector("#approval-empty");
+  const monthCounts = allApprovals.reduce((result, item) => {
+    result.set(item.periodKey, (result.get(item.periodKey) || 0) + 1);
+    return result;
+  }, new Map());
+  document.querySelector("#approval-period-filters").innerHTML =
+    '<button class="' + (state.approvalScope === "all" ? "is-active" : "") + '" data-approval-scope="all">Alle openstaande · ' + allApprovals.length + "</button>" +
+    [...monthCounts.entries()].map(([periodKey, count]) => {
+      const selected = state.approvalScope === "month" && period.key === periodKey;
+      return '<button class="' + (selected ? "is-active" : "") + '" data-approval-filter-period="' + periodKey + '">' + escapeHtml(periodFromKey(periodKey).label) + " · " + count + "</button>";
+    }).join("");
   const groups = approvals.reduce((result, item) => {
     if (!result.has(item.periodKey)) result.set(item.periodKey, []);
     result.get(item.periodKey).push(item);
@@ -1459,34 +2154,47 @@ function renderApprovals() {
     }).join("");
     return '<section class="approval-period-group"><div class="approval-period-heading"><div><span class="section-label">Periode</span><h3>' + escapeHtml(period.label) + '</h3></div><span class="status-pill status-submitted">' + items.length + " open</span></div>" + cards + "</section>";
   }).join("");
-  document.querySelectorAll("[data-approval-scope]").forEach(button => {
-    button.classList.toggle("is-active", button.dataset.approvalScope === state.approvalScope);
-  });
   document.querySelector("#approval-period-title").textContent = state.approvalScope === "month"
     ? "Openstaande uren · " + period.label
-    : "Alle openstaande uren";
+    : "Alle openstaande uren · " + allApprovals.length;
   document.querySelector("#approval-scope-note").textContent = state.approvalScope === "month"
-    ? "Alleen de openstaande uren van " + period.month + " " + period.year + ". Kies 'Alle openstaande' voor het totaaloverzicht."
-    : "Een totaaloverzicht over alle maanden. Iedere open regel toont zelf bij welke periode hij hoort.";
-  document.querySelector("#approval-empty-title").textContent = state.approvalScope === "month"
-    ? "Geen openstaande uren in " + period.month
-    : "Alles is gecontroleerd";
-  document.querySelector("#approval-empty-text").textContent = state.approvalScope === "month"
-    ? "Voor " + period.label + " staat niets meer open. In andere maanden kunnen nog wel controles staan."
-    : "Er staan in geen enkele maand nog uren open.";
+    ? "Alleen " + period.label + " is geselecteerd. Kies 'Alle openstaande' om niets uit een andere maand te missen."
+    : allApprovals.length
+      ? "Je ziet alle maanden met uren die op controle wachten, oudste maand eerst."
+      : "Er wachten momenteel geen ingediende uren op controle.";
+  document.querySelector("#approval-empty-title").textContent = "Alles is gecontroleerd";
+  document.querySelector("#approval-empty-text").textContent = "Er staan in geen enkele maand nog ingediende uren open.";
+  document.querySelector("#approval-other-periods").innerHTML = "";
   empty.hidden = approvals.length > 0;
   document.querySelector("#approve-all").hidden = approvals.length === 0;
   document.querySelector("#approve-all").textContent = state.approvalScope === "month"
-    ? "Alles in " + period.month + " goedkeuren"
-    : "Alles goedkeuren";
+    ? approvals.length === 1
+      ? "1 urenstaat in " + period.month + " goedkeuren"
+      : "Alle " + approvals.length + " in " + period.month + " goedkeuren"
+    : "Alle " + approvals.length + " goedkeuren";
   document.querySelector("#approval-count").textContent = allApprovals.length;
   document.querySelector("#approval-count").hidden = allApprovals.length === 0;
 }
 
-function renderInvoices() {
-  const periodRows = state.employees
-    .map(employee => ({ employee, record: recordFor(employee.id) }))
+function employeeStartedByPeriodEnd(employee, periodKey) {
+  if (!employee.startDate || !/^\d{4}-\d{2}-\d{2}$/.test(employee.startDate)) return true;
+  const parsed = parsePeriodKey(periodKey);
+  if (!parsed) return true;
+  const lastDay = new Date(parsed.year, parsed.monthIndex + 1, 0).getDate();
+  const periodEnd = String(parsed.year).padStart(4, "0") + "-" + String(parsed.monthIndex + 1).padStart(2, "0") + "-" + String(lastDay).padStart(2, "0");
+  return employee.startDate <= periodEnd;
+}
+
+function invoicePeriodRows(periodKey) {
+  const key = periodKey || currentPeriod().key;
+  return state.employees
+    .filter(employee => employeeStartedByPeriodEnd(employee, key))
+    .map(employee => ({ employee, record: recordFor(employee.id, key) }))
     .filter(item => item.employee.active !== false || totalEntries(item.record.entries) > 0 || item.record.timesheetStatus !== "draft");
+}
+
+function renderInvoices() {
+  const periodRows = invoicePeriodRows();
   const rows = periodRows.filter(item => state.invoiceFilter === "all" || item.record.invoiceStatus === state.invoiceFilter);
   const tbody = document.querySelector("#invoice-rows");
   tbody.innerHTML = rows.map(item => {
@@ -1496,7 +2204,7 @@ function renderInvoices() {
     let action = '<span class="invoice-action-note">Nog geen factuur</span>';
     if (record.timesheetStatus === "submitted") action = '<button class="small-button" data-review="' + employee.id + '" data-period-key="' + currentPeriod().key + '">Uren goedkeuren</button>';
     if (record.invoiceStatus === "ready") action = '<button class="small-button" data-preview-invoice-pdf="' + employee.id + '">Factuur bekijken</button><button class="small-button send" data-simulate-invoice="' + employee.id + '">Mailvoorbeeld</button>';
-    if (record.invoiceStatus === "simulated") action = '<button class="small-button" data-preview-invoice-pdf="' + employee.id + '">Factuur bekijken</button><button class="small-button" data-view-invoice="' + employee.id + '">Mailtest bekijken</button>';
+    if (record.invoiceStatus === "simulated") action = '<button class="small-button" data-preview-invoice-pdf="' + employee.id + '">Factuur bekijken</button><button class="small-button" data-view-invoice="' + employee.id + '">Mailvoorbeeld</button>';
     return "<tr>" +
       "<td><strong>" + escapeHtml(record.invoiceNumber) + "</strong><small>" + escapeHtml(currentPeriod().label) + "</small></td>" +
       "<td><strong>" + escapeHtml(employee.name) + "</strong><small>" + escapeHtml(employee.client) + "</small></td>" +
@@ -1513,14 +2221,17 @@ function renderInvoices() {
   const payrollName = payrollRecipient.name || "Salarisadministratie";
   document.querySelector("#payroll-privacy-note").textContent = payrollName + " krijgt alleen de toegestane ureninformatie en standaard geen factuurgegevens.";
   const approved = periodRows.filter(item => item.record.timesheetStatus === "approved");
+  const openMonthRows = periodRows.filter(item => item.record.timesheetStatus !== "approved");
   const pendingMonthDelivery = approved.filter(item => item.record.invoiceStatus !== "simulated" || item.record.payrollStatus !== "simulated");
   const monthDelivery = document.querySelector("#test-month-delivery");
-  monthDelivery.disabled = approved.length === 0 || pendingMonthDelivery.length === 0;
-  monthDelivery.textContent = !approved.length
-    ? "Eerst uren goedkeuren"
-    : pendingMonthDelivery.length
-      ? "Maandverzending controleren · " + pendingMonthDelivery.length
-      : "Maandverzending veilig getest";
+  monthDelivery.disabled = openMonthRows.length === 0 && (approved.length === 0 || pendingMonthDelivery.length === 0);
+  monthDelivery.textContent = openMonthRows.length
+    ? openMonthRows.length + " openstaand" + (openMonthRows.length === 1 ? "" : "e") + " · bekijken"
+    : !approved.length
+      ? "Geen uren voor deze maand"
+      : pendingMonthDelivery.length
+        ? "Maandverzending controleren · " + pendingMonthDelivery.length
+        : "Maandverzending gecontroleerd";
 }
 
 function announcementCorrectionRootId(item, announcements) {
@@ -1591,6 +2302,7 @@ function announcementKind(item) {
 
 function announcementStatusMarkup(item) {
   if (item.status === "draft") return '<span class="status-pill status-concept">Concept</span>';
+  if (item.hiddenFromEmployees) return '<span class="status-pill status-concept">Alleen intern bewaard</span>';
   if (item.supersededById) return '<span class="status-pill status-concept">Intern vervangen door #' + item.supersededById + '</span>';
   if (announcementKind(item) === "withdrawal") return '<span class="status-pill status-warning">Intrekking van #' + item.withdrawalOfId + '</span>';
   if (item.status === "withdrawn") return '<span class="status-pill status-warning">Ingetrokken</span>';
@@ -1603,13 +2315,23 @@ function announcementEmailText(item) {
   if (!item.emailRequested) return "Alleen in-app · geen e-mail gekozen";
   const sent = Array.isArray(item.emailRecipientIds) ? item.emailRecipientIds.length : 0;
   const skipped = Math.max(0, item.recipientIds.length - sent);
-  return sent + " afzonderlijke e-mailmelding" + (sent === 1 ? "" : "en") + " gesimuleerd · " + skipped + " overgeslagen door voorkeur";
+  return sent + " afzonderlijke e-mailmelding" + (sent === 1 ? "" : "en") + " gekozen · " + skipped + " overgeslagen door voorkeur";
+}
+
+function announcementActivityTime(item) {
+  const timestamp = item.withdrawnAtIso || item.updatedAtIso || item.createdAtIso;
+  const parsed = Date.parse(timestamp || "");
+  return Number.isFinite(parsed) ? parsed : Number(item.id) || 0;
+}
+
+function sortAnnouncementsByActivity(items) {
+  return [...items].sort((left, right) => announcementActivityTime(right) - announcementActivityTime(left) || Number(right.id) - Number(left.id));
 }
 
 function renderAnnouncements() {
   const list = document.querySelector("#announcement-list");
   if (!list) return;
-  const announcements = [...state.announcements].sort((left, right) => Number(right.id) - Number(left.id));
+  const announcements = sortAnnouncementsByActivity(state.announcements);
   if (!announcements.length) {
     list.innerHTML = '<div class="dashboard-action-empty"><strong>Nog geen mededelingen.</strong><br>Maak een bericht voor iedereen, een klantgroep of gekozen medewerkers.</div>';
     return;
@@ -1618,16 +2340,20 @@ function renderAnnouncements() {
     const kind = announcementKind(item);
     const className = item.status === "draft" ? " is-draft" : item.status === "withdrawn" || kind === "withdrawal" || item.supersededById ? " is-withdrawn" : "";
     const withdrawalNote = item.status === "withdrawn"
-      ? '<div class="announcement-withdrawal-note"><strong>Ingetrokken door ' + escapeHtml(item.withdrawnBy || "beheerder") + '</strong>' + escapeHtml(item.withdrawalReason || "Geen reden vastgelegd.") + (item.withdrawnAt ? '<br><small>' + escapeHtml(item.withdrawnAt) + '</small>' : '') + '</div>'
+      ? '<div class="announcement-withdrawal-note"><strong>Ingetrokken door ' + escapeHtml(item.withdrawnBy || "beheerder") + '</strong>' + escapeHtml(item.withdrawalReason || "Geen reden vastgelegd.") + (item.withdrawnAt ? '<br><small>' + escapeHtml(item.withdrawnAt) + '</small>' : '') + (Array.isArray(item.withdrawnEditHistory) && item.withdrawnEditHistory.length ? '<br><small>Laatst bewerkt door ' + escapeHtml(item.withdrawnEditHistory.at(-1).editedBy) + ' · ' + escapeHtml(item.withdrawnEditHistory.at(-1).editedAt) + '</small>' : '') + '</div>'
       : "";
     let actions = "";
     if (item.status === "draft") {
       actions = '<button class="small-button" data-edit-announcement="' + item.id + '">Concept bewerken</button><button class="text-button" data-delete-announcement-draft="' + item.id + '">Concept verwijderen</button>';
     } else if (item.status === "sent" && kind !== "withdrawal" && !item.supersededById) {
       actions = '<button class="small-button" data-correct-announcement="' + item.id + '">Mededeling wijzigen</button><button class="text-button" data-withdraw-announcement="' + item.id + '">Mededeling intrekken</button>';
+    } else if (item.status === "withdrawn" && !item.hiddenFromEmployees) {
+      actions = '<button class="small-button" data-edit-withdrawn-announcement="' + item.id + '">Ingetrokken bericht bewerken</button><button class="text-button danger-text" data-hide-announcement="' + item.id + '">Bij medewerkers verwijderen</button>';
+    } else if (item.status === "withdrawn") {
+      actions = '<button class="small-button" data-edit-withdrawn-announcement="' + item.id + '">Interne tekst bewerken</button>';
     }
     return '<article class="announcement-item' + className + '">' +
-      '<div class="announcement-item-head"><div>' + announcementStatusMarkup(item) + '<h3>' + escapeHtml(item.title || "Naamloos concept") + '</h3></div><small>#' + item.id + ' · ' + escapeHtml(item.createdAt) + '</small></div>' +
+      '<div class="announcement-item-head"><div>' + announcementStatusMarkup(item) + '<h3>' + escapeHtml(item.title || "Naamloos concept") + '</h3></div><small>#' + item.id + ' · ' + escapeHtml(item.updatedAt || item.createdAt) + '</small></div>' +
       '<p>' + escapeHtml(item.message) + '</p>' +
       withdrawalNote +
       '<div class="announcement-meta"><span><strong>Ontvangers</strong>' + escapeHtml(item.audienceLabel || announcementAudienceLabel(item.recipientIds)) + ' · ' + item.recipientIds.length + (item.status === "draft" ? " geselecteerd" : " in-app") + '</span><span><strong>E-mail</strong>' + escapeHtml(announcementEmailText(item)) + '</span><span><strong>Afzender</strong>' + escapeHtml(item.createdBy) + '</span></div>' +
@@ -1653,8 +2379,10 @@ function renderEmployeeAnnouncementArchive() {
   }
   const employee = currentEmployee();
   let announcements = state.announcements
-    .filter(item => item.status !== "draft" && !item.supersededById && item.recipientIds.includes(employee.id))
-    .sort((left, right) => Number(right.id) - Number(left.id));
+    .filter(item => item.status !== "draft" && item.status !== "withdrawn" && !item.hiddenFromEmployees && !item.supersededById && item.recipientIds.includes(employee.id))
+  announcements = sortAnnouncementsByActivity(announcements);
+  const unreadAnnouncementCount = announcements.filter(item => isAnnouncementUnread(employee.id, item.id)).length;
+  document.querySelector("#announcement-unread-filter").textContent = "Ongelezen mededelingen · " + unreadAnnouncementCount;
   if (state.announcementArchiveFilter === "unread") announcements = announcements.filter(item => isAnnouncementUnread(employee.id, item.id));
   if (state.announcementArchiveFilter === "withdrawn") announcements = announcements.filter(item => item.status === "withdrawn" || announcementKind(item) === "withdrawal");
   document.querySelectorAll("[data-announcement-archive-filter]").forEach(button => button.classList.toggle("is-active", button.dataset.announcementArchiveFilter === state.announcementArchiveFilter));
@@ -1776,7 +2504,7 @@ function saveAnnouncementFromEditor(correctionOfId, draftId, asDraft) {
   if (asDraft) {
     toast("Concept lokaal opgeslagen; ontvangers hebben niets gekregen.");
   } else {
-    toast("Mededeling geplaatst voor " + recipientIds.length + " medewerker" + (recipientIds.length === 1 ? "" : "s") + "; " + announcement.emailRecipientIds.length + " aanvullende e-mail" + (announcement.emailRecipientIds.length === 1 ? "" : "s") + " veilig gesimuleerd.");
+    toast("Mededeling geplaatst voor " + recipientIds.length + " medewerker" + (recipientIds.length === 1 ? "" : "s") + "; " + announcement.emailRecipientIds.length + " aanvullende e-mailmelding" + (announcement.emailRecipientIds.length === 1 ? "" : "en") + " gekozen. E-mailverzending is uitgeschakeld.");
   }
 }
 
@@ -1802,7 +2530,7 @@ function showAnnouncementEditor(correctionOfId, draftId) {
     '<label class="full">Onderwerp<input id="announcement-title" maxlength="160" value="' + escapeHtml(editorTitle) + '" placeholder="Bijvoorbeeld: Update v0.7.9 is beschikbaar"></label>' +
     '<label class="full">Bericht<textarea id="announcement-message" maxlength="1500" placeholder="Bijvoorbeeld: Let op, vanaf nu kunnen we ook e-mailmeldingen sturen.">' + escapeHtml(editorMessage) + '</textarea></label>' +
     '<label class="check-row full"><input id="announcement-email" type="checkbox"' + (emailChecked ? " checked" : "") + '><span>Ontvangers ook afzonderlijk per e-mail laten weten dat er een nieuwe melding klaarstaat</span></label>' +
-    '<p class="full form-help">De mededeling verschijnt altijd in de app. Een medewerker kan aanvullende e-mailmeldingen onder Voorkeuren uitzetten. De demo verstuurt geen echte e-mail en gebruikt nooit CC of BCC.</p></div>';
+    '<p class="full form-help">De mededeling verschijnt altijd in de app. Een medewerker kan aanvullende e-mailmeldingen onder Voorkeuren uitzetten. E-mailverzending is nog uitgeschakeld en CC of BCC wordt nooit gebruikt.</p></div>';
   showModal({
     label: draft ? "Concept #" + draft.id : original ? "Mededeling wijzigen" : "Nieuwe mededeling",
     title: draft ? "Concept bewerken" : original ? "Nieuwe versie maken" : "Nieuwe mededeling plaatsen",
@@ -1839,6 +2567,104 @@ function showDeleteAnnouncementDraft(id) {
   });
 }
 
+function showHideAnnouncementFromEmployees(id) {
+  const original = announcementById(id);
+  if (!original || original.status !== "withdrawn" || original.hiddenFromEmployees) return;
+  const linkedNotice = state.announcements.find(item => Number(item.withdrawalOfId) === Number(original.id));
+  showModal({
+    label: "Medewerkersweergave opschonen",
+    title: "Mededeling bij medewerkers verwijderen?",
+    message: "Het oorspronkelijke bericht en de bijbehorende intrekkingsmelding verdwijnen uit de bel en mededelingenlijst van alle ontvangers. Beheerders houden beide uitsluitend intern voor controle.",
+    summary: "<div><span>Mededeling</span><strong>" + escapeHtml(original.title) + "</strong></div><div><span>Ontvangers</span><strong>" + original.recipientIds.length + " medewerker" + (original.recipientIds.length === 1 ? "" : "s") + "</strong></div><div><span>Interne historie</span><strong>Blijft bewaard</strong></div>",
+    confirm: "Bij medewerkers verwijderen",
+    action: () => {
+      const timestamp = correctionTimestamp();
+      [original, linkedNotice].filter(Boolean).forEach(item => {
+        item.hiddenFromEmployees = true;
+        item.hiddenFromEmployeesBy = currentAdmin().name;
+        item.hiddenFromEmployeesAt = timestamp.label;
+        item.hiddenFromEmployeesAtIso = timestamp.iso;
+        item.updatedAt = timestamp.label;
+        item.updatedAtIso = timestamp.iso;
+      });
+      const hiddenIds = new Set([original.id, linkedNotice && linkedNotice.id].filter(Boolean).map(Number));
+      state.notifications.filter(item => hiddenIds.has(Number(item.announcementId))).forEach(item => {
+        item.read = true;
+        item.hiddenFromEmployees = true;
+      });
+      persistState();
+      closeModal();
+      renderAll();
+      toast("De mededeling is bij medewerkers verwijderd en blijft alleen intern bewaard.");
+    }
+  });
+}
+
+function showEditWithdrawnAnnouncement(id) {
+  const original = announcementById(id);
+  if (!original || original.status !== "withdrawn") return;
+  const summary = '<div class="modal-form announcement-form">' +
+    '<label class="full">Onderwerp<input id="edit-withdrawn-title" maxlength="160" value="' + escapeHtml(original.title) + '"></label>' +
+    '<label class="full">Oorspronkelijke tekst<textarea id="edit-withdrawn-message" maxlength="1500">' + escapeHtml(original.message) + '</textarea></label>' +
+    '<label class="full">Reden van intrekken<textarea id="edit-withdrawn-reason" maxlength="750">' + escapeHtml(original.withdrawalReason || "") + '</textarea></label>' +
+    '<p class="full form-help">De wijziging wordt bij medewerkers direct bijgewerkt zolang het bericht daar nog zichtbaar is. Beheerder, datum en de vorige waarden blijven intern in de bewerkingshistorie bewaard.</p>' +
+  '</div>';
+  showModal({
+    label: "Ingetrokken mededeling #" + original.id,
+    title: original.hiddenFromEmployees ? "Interne tekst bewerken" : "Ingetrokken bericht bewerken",
+    message: original.hiddenFromEmployees
+      ? "Dit bericht is al uit de medewerkersweergave verwijderd. De wijziging is daarom alleen intern zichtbaar."
+      : "Pas een fout in het ingetrokken bericht of de intrekkingsreden aan. Er wordt geen nieuwe melding of e-mail verstuurd.",
+    summary,
+    confirm: "Wijzigingen opslaan",
+    wide: true,
+    action: () => {
+      const titleInput = document.querySelector("#edit-withdrawn-title");
+      const messageInput = document.querySelector("#edit-withdrawn-message");
+      const reasonInput = document.querySelector("#edit-withdrawn-reason");
+      [titleInput, messageInput, reasonInput].forEach(input => input.classList.remove("is-invalid"));
+      if (!titleInput.value.trim() || !messageInput.value.trim() || !reasonInput.value.trim()) {
+        if (!titleInput.value.trim()) titleInput.classList.add("is-invalid");
+        if (!messageInput.value.trim()) messageInput.classList.add("is-invalid");
+        if (!reasonInput.value.trim()) reasonInput.classList.add("is-invalid");
+        toast("Vul onderwerp, oorspronkelijke tekst en intrekkingsreden in.");
+        return;
+      }
+      const timestamp = correctionTimestamp();
+      original.withdrawnEditHistory = Array.isArray(original.withdrawnEditHistory) ? original.withdrawnEditHistory : [];
+      original.withdrawnEditHistory.push({
+        title: original.title,
+        message: original.message,
+        reason: original.withdrawalReason,
+        editedBy: currentAdmin().name,
+        editedAt: timestamp.label,
+        editedAtIso: timestamp.iso
+      });
+      original.title = titleInput.value.trim();
+      original.message = messageInput.value.trim();
+      original.withdrawalReason = reasonInput.value.trim();
+      original.updatedAt = timestamp.label;
+      original.updatedAtIso = timestamp.iso;
+      const linkedNotice = state.announcements.find(item => Number(item.withdrawalOfId) === Number(original.id));
+      if (linkedNotice) {
+        linkedNotice.title = "Mededeling ingetrokken";
+        linkedNotice.message = "Een eerdere mededeling is ingetrokken.\nReden: " + original.withdrawalReason;
+        linkedNotice.updatedAt = timestamp.label;
+        linkedNotice.updatedAtIso = timestamp.iso;
+        state.notifications.filter(item => Number(item.announcementId) === Number(linkedNotice.id)).forEach(item => {
+          item.title = linkedNotice.title;
+          item.message = linkedNotice.message;
+        });
+      }
+      persistState();
+      closeModal();
+      renderAll();
+      toast("Het ingetrokken bericht is bijgewerkt; de vorige tekst blijft intern bewaard.");
+    }
+  });
+  document.querySelector("#edit-withdrawn-title").focus();
+}
+
 function showAnnouncementWithdrawal(id) {
   const original = announcementById(id);
   if (!original || original.status !== "sent" || announcementKind(original) === "withdrawal") return;
@@ -1849,9 +2675,9 @@ function showAnnouncementWithdrawal(id) {
   showModal({
     label: "Mededeling #" + original.id,
     title: "Mededeling intrekken",
-    message: "Dezelfde ontvangers krijgen een nieuwe melding. Het oorspronkelijke bericht blijft zichtbaar als ingetrokken.",
+    message: "Dezelfde ontvangers krijgen één nieuwe intrekkingsmelding met de reden. De oorspronkelijke tekst verdwijnt direct uit hun bel en mededelingenlijst en blijft alleen intern voor beheerders bewaard.",
     summary,
-    confirm: "Intrekking klaarzetten",
+    confirm: "Intrekking plaatsen",
     wide: true,
     action: () => {
       const reasonInput = document.querySelector("#announcement-withdrawal-reason");
@@ -1868,6 +2694,8 @@ function showAnnouncementWithdrawal(id) {
       original.withdrawnBy = currentAdmin().name;
       original.withdrawnAt = timestamp.label;
       original.withdrawnAtIso = timestamp.iso;
+      original.updatedAt = timestamp.label;
+      original.updatedAtIso = timestamp.iso;
       state.notifications
         .filter(item => Number(item.announcementId) === Number(original.id))
         .forEach(item => {
@@ -1875,8 +2703,8 @@ function showAnnouncementWithdrawal(id) {
           item.withdrawn = true;
         });
       const notice = storeAnnouncement({
-        title: "Ingetrokken: " + original.title,
-        message: "Mededeling #" + original.id + " is ingetrokken.\nReden: " + reason,
+        title: "Mededeling ingetrokken",
+        message: "Een eerdere mededeling is ingetrokken.\nReden: " + reason,
         recipientIds: [...original.recipientIds],
         audienceLabel: "Zelfde ontvangers als bericht #" + original.id,
         emailRequested: document.querySelector("#announcement-withdrawal-email").checked,
@@ -1888,7 +2716,7 @@ function showAnnouncementWithdrawal(id) {
       persistState();
       closeModal();
       renderAll();
-      toast("Mededeling ingetrokken; het origineel en de reden blijven bewaard.");
+      toast("Mededeling ingetrokken; medewerkers zien alleen de nieuwe intrekkingsmelding en de interne historie blijft bewaard.");
     }
   });
   document.querySelector("#announcement-withdrawal-reason").focus();
@@ -1934,6 +2762,38 @@ function renderMailTemplates() {
   }).join("");
 }
 
+function mobileWeekScope(period) {
+  const mobile = typeof window.matchMedia === "function" && window.matchMedia("(max-width: 590px)").matches;
+  if (!mobile) return "all";
+  const now = new Date();
+  if (now.getFullYear() === period.year && now.getMonth() === period.monthIndex) {
+    const weekIndex = period.weekRows.findIndex(week => week.days.some(day => day && day.day === now.getDate()));
+    if (weekIndex >= 0) return "week-" + weekIndex;
+  }
+  return period.weekRows.length ? "week-0" : "all";
+}
+
+function normalizedHoursWeekScope(period) {
+  let scope = state.hoursWeekScope || "all";
+  if (!state.hoursWeekScopeTouched) scope = mobileWeekScope(period);
+  if (scope !== "all") {
+    const match = /^week-(\d+)$/.exec(scope);
+    if (!match || !period.weekRows[Number(match[1])]) scope = mobileWeekScope(period);
+  }
+  state.hoursWeekScope = scope;
+  return scope;
+}
+
+function renderHoursWeekFilter(period, scope) {
+  const buttons = [{ value: "all", label: "Hele maand" }].concat(period.weekRows.map((week, weekIndex) => ({
+    value: "week-" + weekIndex,
+    label: "Week " + week.number + (week.year === period.year ? "" : " · " + week.year)
+  })));
+  document.querySelector("#hours-week-filter").innerHTML = buttons.map(button =>
+    '<button type="button" class="' + (button.value === scope ? "is-active" : "") + '" data-hours-week-scope="' + button.value + '">' + escapeHtml(button.label) + '</button>'
+  ).join("");
+}
+
 function renderHoursGrid() {
   const employee = currentEmployee();
   const period = currentPeriod();
@@ -1953,14 +2813,17 @@ function renderHoursGrid() {
     document.querySelector("#timesheet-correction-message").textContent = correction.message;
     document.querySelector("#timesheet-correction-meta").textContent = "Teruggestuurd door " + correction.requestedBy + " · " + correction.requestedAt;
   }
+  const weekScope = normalizedHoursWeekScope(period);
+  renderHoursWeekFilter(period, weekScope);
   document.querySelector("#hours-grid").innerHTML = period.weekRows.map((week, weekIndex) => {
+    if (weekScope !== "all" && weekScope !== "week-" + weekIndex) return "";
     const cells = week.days.map((day, dayIndex) => {
       if (!day) return '<td class="outside-month"><span class="outside-month-mark" aria-hidden="true">—</span></td>';
       const value = record.entries[weekIndex][dayIndex];
       return '<td class="workday-cell"><label class="hours-day-entry"><span class="date-number">' + day.day + ' ' + escapeHtml(period.month.slice(0, 3)) + '</span><input class="hours-input" data-week-index="' + weekIndex + '" data-day-index="' + dayIndex + '" type="number" min="0" max="24" step="0.5" value="' + value + '" aria-label="' + escapeHtml(day.label) + '"></label></td>';
     }).join("");
     const yearNote = week.year === period.year ? "" : " · " + week.year;
-    return "<tr><td>Week " + week.number + yearNote + "</td>" + cells + '<td class="week-total">0,0</td></tr>';
+    return '<tr data-week-index="' + weekIndex + '"><td>Week ' + week.number + yearNote + "</td>" + cells + '<td class="week-total">0,0</td></tr>';
   }).join("");
   updateHoursTotal(false);
 }
@@ -1968,13 +2831,17 @@ function renderHoursGrid() {
 function updateHoursTotal(markDraft) {
   const employee = currentEmployee();
   const record = recordFor(employee.id);
-  document.querySelectorAll("#hours-grid tr").forEach((row, weekIndex) => {
+  let visibleTotal = 0;
+  document.querySelectorAll("#hours-grid tr").forEach(row => {
+    const weekIndex = Number(row.dataset.weekIndex);
     const values = Array(5).fill(0);
     row.querySelectorAll(".hours-input").forEach(input => {
       values[Number(input.dataset.dayIndex)] = Math.max(0, Number(input.value) || 0);
     });
     record.entries[weekIndex] = values;
-    row.querySelector(".week-total").textContent = hoursFormat.format(values.reduce((sum, value) => sum + value, 0));
+    const weekTotal = values.reduce((sum, value) => sum + value, 0);
+    visibleTotal += weekTotal;
+    row.querySelector(".week-total").textContent = hoursFormat.format(weekTotal);
   });
   const total = totalEntries(record.entries);
   record.leave = Math.max(0, Number(document.querySelector("#summary-leave").value) || 0);
@@ -1984,7 +2851,12 @@ function updateHoursTotal(markDraft) {
     record.invoiceStatus = "concept";
     record.payrollStatus = "concept";
     persistState();
+    document.querySelector("#hours-autosave-status").textContent = "Automatisch opgeslagen om " + new Intl.DateTimeFormat("nl-NL", { hour: "2-digit", minute: "2-digit" }).format(new Date());
   }
+  const weekMatch = /^week-(\d+)$/.exec(state.hoursWeekScope || "");
+  const selectedWeek = weekMatch ? currentPeriod().weekRows[Number(weekMatch[1])] : null;
+  document.querySelector("#hours-visible-total-label").textContent = selectedWeek ? "Week " + selectedWeek.number : "Hele maand";
+  document.querySelector("#hours-visible-total").textContent = hoursFormat.format(state.hoursWeekScope === "all" ? total : visibleTotal) + " uur";
   document.querySelector("#hours-total").textContent = hoursFormat.format(total);
   document.querySelector("#summary-billable").textContent = hoursFormat.format(total) + " uur";
   const difference = Math.round((total - record.contractHours) * 10) / 10;
@@ -2101,6 +2973,36 @@ function showDeleteMailRecipient(recipientId) {
   });
 }
 
+function reminderDayLabel(value) {
+  return value === "thursday" ? "donderdag" : "vrijdag";
+}
+
+function syncReminderControls() {
+  const pairs = [
+    ["#setting-weekly-reminder-enabled", "#setting-weekly-reminder-day"],
+    ["#setting-weekly-reminder-enabled", "#setting-weekly-reminder-time"],
+    ["#setting-month-end-reminder-enabled", "#setting-month-end-reminder-time"],
+    ["#setting-overdue-reminder-enabled", "#setting-overdue-reminder-time"],
+    ["#setting-approval-reminder-enabled", "#setting-approval-reminder-time"],
+    ["#setting-customer-timesheet-reminder-enabled", "#setting-customer-timesheet-reminder-time"],
+    ["#setting-customer-timesheet-reminder-enabled", "#setting-customer-timesheet-overdue-days"]
+  ];
+  pairs.forEach(([checkboxSelector, fieldSelector]) => {
+    document.querySelector(fieldSelector).disabled = !document.querySelector(checkboxSelector).checked;
+  });
+  renderReminderScheduleSummary();
+}
+
+function renderReminderScheduleSummary() {
+  const parts = [];
+  if (document.querySelector("#setting-weekly-reminder-enabled").checked) parts.push("week: " + reminderDayLabel(document.querySelector("#setting-weekly-reminder-day").value) + " " + document.querySelector("#setting-weekly-reminder-time").value);
+  if (document.querySelector("#setting-month-end-reminder-enabled").checked) parts.push("maandafsluiting: laatste werkdag " + document.querySelector("#setting-month-end-reminder-time").value);
+  if (document.querySelector("#setting-overdue-reminder-enabled").checked) parts.push("achterstand: eerste werkdag " + document.querySelector("#setting-overdue-reminder-time").value);
+  if (document.querySelector("#setting-approval-reminder-enabled").checked) parts.push("goedkeuring: eerste werkdag " + document.querySelector("#setting-approval-reminder-time").value);
+  if (document.querySelector("#setting-customer-timesheet-reminder-enabled").checked) parts.push("klanturenstaat: 1 werkdag vooraf " + document.querySelector("#setting-customer-timesheet-reminder-time").value + ", deadline 10:00 en na " + document.querySelector("#setting-customer-timesheet-overdue-days").value + " werkdagen");
+  document.querySelector("#reminder-schedule-summary").textContent = parts.length ? "Actieve planning · " + parts.join(" · ") : "Alle geplande herinneringen staan uit.";
+}
+
 function populateSettings() {
   const settings = state.settings;
   document.querySelector("#setting-organization-name").value = settings.organizationName;
@@ -2121,9 +3023,26 @@ function populateSettings() {
   document.querySelector("#setting-invoice-email").value = settings.invoiceEmail;
   document.querySelector("#setting-payment-term").value = settings.paymentTerm;
   document.querySelector("#setting-sender").value = settings.sender;
+  document.querySelector("#setting-weekly-reminder-enabled").checked = settings.weeklyReminderEnabled !== false;
+  document.querySelector("#setting-weekly-reminder-day").value = settings.weeklyReminderDay || "friday";
+  document.querySelector("#setting-weekly-reminder-time").value = settings.weeklyReminderTime || "15:00";
+  document.querySelector("#setting-month-end-reminder-enabled").checked = settings.monthEndReminderEnabled !== false;
+  document.querySelector("#setting-month-end-reminder-time").value = settings.monthEndReminderTime || "15:00";
+  document.querySelector("#setting-overdue-reminder-enabled").checked = settings.overdueReminderEnabled !== false;
+  document.querySelector("#setting-overdue-reminder-time").value = settings.overdueReminderTime || "09:00";
+  document.querySelector("#setting-approval-reminder-enabled").checked = settings.approvalReminderEnabled !== false;
+  document.querySelector("#setting-approval-reminder-time").value = settings.approvalReminderTime || "10:00";
+  document.querySelector("#setting-customer-timesheet-reminder-enabled").checked = settings.customerTimesheetReminderEnabled !== false;
+  document.querySelector("#setting-customer-timesheet-reminder-time").value = settings.customerTimesheetReminderTime || "15:00";
+  document.querySelector("#setting-customer-timesheet-overdue-days").value = String(settings.customerTimesheetOverdueWorkdays || 2);
+  document.querySelector("#setting-customer-timesheet-submission-subject").value = settings.customerTimesheetSubmissionSubject || DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_SUBJECT;
+  document.querySelector("#setting-customer-timesheet-submission-body").value = settings.customerTimesheetSubmissionBody || DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_BODY;
+  document.querySelector("#setting-customer-timesheet-broker-subject").value = settings.customerTimesheetBrokerSubject || DEFAULT_CUSTOMER_TIMESHEET_BROKER_SUBJECT;
+  document.querySelector("#setting-customer-timesheet-broker-body").value = settings.customerTimesheetBrokerBody || DEFAULT_CUSTOMER_TIMESHEET_BROKER_BODY;
   document.querySelector("#setting-approval-required").checked = settings.approvalRequired;
   document.querySelector("#setting-lock-invoice").checked = settings.lockInvoice;
   document.querySelector("#setting-audit-log").checked = settings.auditLog;
+  syncReminderControls();
   renderMailRecipientSettings();
 }
 
@@ -2154,6 +3073,22 @@ function saveSettings() {
     invoiceEmail: document.querySelector("#setting-invoice-email").value.trim(),
     paymentTerm: document.querySelector("#setting-payment-term").value,
     sender: document.querySelector("#setting-sender").value.trim(),
+    weeklyReminderEnabled: document.querySelector("#setting-weekly-reminder-enabled").checked,
+    weeklyReminderDay: document.querySelector("#setting-weekly-reminder-day").value,
+    weeklyReminderTime: document.querySelector("#setting-weekly-reminder-time").value,
+    monthEndReminderEnabled: document.querySelector("#setting-month-end-reminder-enabled").checked,
+    monthEndReminderTime: document.querySelector("#setting-month-end-reminder-time").value,
+    overdueReminderEnabled: document.querySelector("#setting-overdue-reminder-enabled").checked,
+    overdueReminderTime: document.querySelector("#setting-overdue-reminder-time").value,
+    approvalReminderEnabled: document.querySelector("#setting-approval-reminder-enabled").checked,
+    approvalReminderTime: document.querySelector("#setting-approval-reminder-time").value,
+    customerTimesheetReminderEnabled: document.querySelector("#setting-customer-timesheet-reminder-enabled").checked,
+    customerTimesheetReminderTime: document.querySelector("#setting-customer-timesheet-reminder-time").value,
+    customerTimesheetOverdueWorkdays: Number(document.querySelector("#setting-customer-timesheet-overdue-days").value) || 2,
+    customerTimesheetSubmissionSubject: document.querySelector("#setting-customer-timesheet-submission-subject").value.trim() || DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_SUBJECT,
+    customerTimesheetSubmissionBody: document.querySelector("#setting-customer-timesheet-submission-body").value.trim() || DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_BODY,
+    customerTimesheetBrokerSubject: document.querySelector("#setting-customer-timesheet-broker-subject").value.trim() || DEFAULT_CUSTOMER_TIMESHEET_BROKER_SUBJECT,
+    customerTimesheetBrokerBody: document.querySelector("#setting-customer-timesheet-broker-body").value.trim() || DEFAULT_CUSTOMER_TIMESHEET_BROKER_BODY,
     approvalRequired: document.querySelector("#setting-approval-required").checked,
     lockInvoice: document.querySelector("#setting-lock-invoice").checked,
     auditLog: document.querySelector("#setting-audit-log").checked
@@ -2170,10 +3105,12 @@ function nextNotificationId() {
 
 function addNotification(notification, force) {
   const audience = notification.audience;
+  const targetEmployee = audience === "employee" ? employeeById(notification.employeeId) : null;
   if (!force && audience === "admin" && !state.preferences.approvalNotifications && notification.type !== "invoice") return;
   if (!force && audience === "admin" && notification.type === "invoice" && !state.preferences.invoiceNotifications) return;
   if (!force && audience === "employee" && !state.preferences.statusNotifications && notification.type !== "reminder") return;
   if (!force && audience === "employee" && notification.type === "reminder" && !state.preferences.hourReminders) return;
+  if (!force && audience === "employee" && notification.type === "reminder" && targetEmployee && targetEmployee.notificationsEnabled === false) return;
   state.notifications.push(Object.assign({
     id: nextNotificationId(),
     employeeId: null,
@@ -2181,7 +3118,7 @@ function addNotification(notification, force) {
     message: "",
     periodKey: currentPeriod().key,
     view: audience === "admin" ? "dashboard" : "employee-dashboard",
-    emailRequested: audience === "employee" && employeeById(notification.employeeId) ? employeeById(notification.employeeId).emailNotificationsEnabled !== false : false,
+    emailRequested: audience === "employee" && targetEmployee ? targetEmployee.emailNotificationsEnabled !== false : false,
     read: false,
     createdAt: "Zojuist"
   }, notification));
@@ -2206,21 +3143,9 @@ function renderNotifications() {
   count.textContent = unread > 9 ? "9+" : String(unread);
   count.hidden = unread === 0;
   document.querySelector("#notification-title").textContent = unread
-    ? unread + " nieuwe melding" + (unread === 1 ? "" : "en")
-    : "Geen nieuwe meldingen";
-  list.innerHTML = visible.length ? visible.map(item => '<button class="notification-item is-unread" data-notification-id="' + item.id + '"><span class="notification-item-dot"></span><span><strong>' + escapeHtml(item.title) + '</strong><span>' + escapeHtml(item.message) + '</span><small>' + escapeHtml(item.createdAt) + '</small></span></button>').join("") : '<div class="notification-empty"><strong>Je hebt geen nieuwe meldingen.</strong><br>Een beheerder maakt algemene berichten onder Mededelingen.</div>';
-  const tests = state.currentRole === "admin"
-    ? [
-        ["submitted", "Uren ingediend"],
-        ["pending", "Controle blijft open"],
-        ["invoice", "Factuur klaar"]
-      ]
-    : [
-        ["reminder", "Urenherinnering"],
-        ["correction", "Correctie nodig"],
-        ["approved", "Uren goedgekeurd"]
-      ];
-  document.querySelector("#notification-test-buttons").innerHTML = tests.map(test => '<button data-test-notification="' + test[0] + '">' + test[1] + '</button>').join("");
+    ? unread + " ongelezen melding" + (unread === 1 ? "" : "en")
+    : "Geen ongelezen meldingen";
+  list.innerHTML = visible.length ? visible.map(item => '<button class="notification-item is-unread" data-notification-id="' + item.id + '"><span class="notification-item-dot"></span><span><strong>' + escapeHtml(item.title) + '</strong><span>' + escapeHtml(item.message) + '</span><small>' + escapeHtml(item.createdAt) + '</small></span></button>').join("") : '<div class="notification-empty"><strong>Je hebt geen ongelezen meldingen.</strong><br>Urenstatussen en algemene mededelingen verschijnen hier samen.</div>';
 }
 
 function createTestNotification(type) {
@@ -2237,7 +3162,7 @@ function createTestNotification(type) {
   const definition = definitions[type];
   if (!definition) return;
   addNotification(definition, true);
-  toast("Testmelding toegevoegd. Er is geen e-mail verstuurd.");
+  toast("Voorbeeldmelding lokaal toegevoegd; urenstatus en e-mail blijven ongewijzigd.");
 }
 
 function closeTopbarPopovers() {
@@ -2331,10 +3256,18 @@ function openHelp() {
   const profile = currentProfileData();
   document.querySelector("#help-greeting").textContent = "Waarmee kan ik helpen, " + profile.name.split(/\s+/)[0] + "?";
   if (!document.querySelector("#help-messages").children.length) {
-    addHelpMessage("Hallo " + profile.name.split(/\s+/)[0] + ". Zoek een antwoord of kies een onderwerp bij Veelgestelde vragen.", "bot");
+    addHelpMessage("Hallo " + profile.name.split(/\s+/)[0] + ". Zoek een antwoord of kies een onderwerp bij Veelgestelde vragen. Dit gesprek wordt alleen tijdens deze sessie bewaard.", "bot");
   }
   renderHelpSuggestions();
   document.querySelector("#help-input").focus();
+}
+
+function clearHelpConversation() {
+  const target = document.querySelector("#help-messages");
+  target.innerHTML = "";
+  unresolvedHelpQuestion = "";
+  const profile = currentProfileData();
+  addHelpMessage("Hallo " + profile.name.split(/\s+/)[0] + ". Zoek een antwoord of kies een onderwerp bij Veelgestelde vragen. Dit gesprek wordt alleen tijdens deze sessie bewaard.", "bot");
 }
 
 function closeHelp() {
@@ -2463,6 +3396,7 @@ function renderAll() {
   renderMailTemplates();
   renderMailRecipientSettings();
   renderHoursGrid();
+  renderCustomerTimesheetPanel();
   renderProfileChrome();
   renderNotifications();
   renderHelpSuggestions();
@@ -2471,10 +3405,12 @@ function renderAll() {
 
 function showView(view) {
   if (state.currentRole === "employee" && adminViews.has(view)) view = "employee-dashboard";
+  if (state.currentRole === "admin" && view === "timesheet") view = "dashboard";
   if (state.currentRole === "admin" && view === "employee-dashboard") view = "dashboard";
   if (state.currentRole === "admin" && view === "employee-announcements") view = "dashboard";
   const target = document.querySelector("#view-" + view);
   if (!target) return;
+  document.querySelector("#global-period-control").hidden = ["approvals", "announcements", "employee-announcements", "settings"].includes(view);
   document.querySelectorAll(".view").forEach(item => item.classList.toggle("is-active", item === target));
   document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("is-active", item.dataset.view === view));
   document.querySelector("#page-title").textContent = pageTitles[view];
@@ -2508,6 +3444,7 @@ function login(role) {
 function logout() {
   state.currentRole = null;
   unresolvedHelpQuestion = "";
+  closeLoginAccountPanels();
   delete document.body.dataset.role;
   document.querySelector("#app-shell").hidden = true;
   document.querySelector("#login-screen").hidden = false;
@@ -2645,6 +3582,9 @@ function invoiceSummary(employeeId) {
   const body = formatTemplate(employee.mailBody, employee, record.invoiceNumber);
   const total = totalEntries(record.entries);
   const routes = deliveryRoutesFor(employee);
+  const customerDocument = customerTimesheetFor(record);
+  const customerDocumentStatus = (customerTimesheetStatusLabels[customerDocument.status] || customerTimesheetStatusLabels.missing)[0];
+  const customerDocumentRoute = employee.customerTimesheetBrokerEnabled === false ? "Geen brokerroute" : customerTimesheetBrokerEmail(employee);
   const routeHtml = routes.map(route =>
     "<div><span>" + escapeHtml(route.name) + "</span><strong>" + escapeHtml(route.email) + " · " + (route.invoiceAttachment ? "factuur als PDF" : "geen bijlage") + "</strong></div>"
   ).join("");
@@ -2655,7 +3595,7 @@ function invoiceSummary(employeeId) {
     body,
     routes,
     html: "<div><span>Factuur</span><strong>" + escapeHtml(record.invoiceNumber) + "</strong></div>" + routeHtml +
-      "<div><span>Urenstaat</span><strong>Niet toegevoegd; daadwerkelijke uren staan in de tekst</strong></div>" +
+      "<div><span>Klanturenstaat</span><strong>" + escapeHtml(customerDocumentStatus) + " · " + escapeHtml(customerDocumentRoute) + "</strong></div>" +
       "<div><span>BCC</span><strong>Niet gebruikt</strong></div>" +
       "<div><span>Brokeronderwerp</span><strong>" + escapeHtml(subject) + "</strong></div>" +
       "<div><span>Totaal excl. btw</span><strong>" + currency.format(total * employee.rate) + "</strong></div>"
@@ -2941,7 +3881,13 @@ function showEmployeeEditor(employeeId) {
     brokerInvoiceAttachment: true,
     bookkeeperInvoiceAttachment: true,
     payrollInvoiceAttachment: false,
-    mailRecipientRoutes: defaultMailRecipientRoutes()
+    mailRecipientRoutes: defaultMailRecipientRoutes(),
+    customerTimesheetExpected: true,
+    customerTimesheetDueWorkday: 5,
+    customerTimesheetBrokerEnabled: false,
+    customerTimesheetUseBrokerEmail: true,
+    customerTimesheetBrokerEmail: "nieuw-adres@example.invalid",
+    invoiceWithoutCustomerTimesheetAllowed: true
   };
   const routeChoices = activeMailRecipients().map(recipient => {
     const preference = mailRecipientRouteFor(employee, recipient.id);
@@ -2981,14 +3927,21 @@ function showEmployeeEditor(employeeId) {
     '<label class="check-row"><input id="edit-new-recipient-enabled" type="checkbox" checked><span>Deze medewerker ontvangt via deze ontvanger mail</span></label>' +
     '<label class="check-row"><input id="edit-new-recipient-invoice" type="checkbox"><span>Factuur als PDF meesturen</span></label>' +
     '<p class="full form-help">De naam bepaal je zelf. De ontvanger wordt centraal bewaard en is daarna ook bij andere medewerkers beschikbaar.</p>' +
-    '<label class="check-row full"><input id="edit-notifications" type="checkbox"' + (employee.notificationsEnabled !== false ? " checked" : "") + '><span>Urenherinneringen en statusmeldingen activeren</span></label>' +
+    '<p class="full form-help">Klanturenstaat · officiële PDF van de klant</p>' +
+    '<label class="check-row full"><input id="edit-customer-timesheet-expected" type="checkbox"' + (employee.customerTimesheetExpected !== false ? " checked" : "") + '><span>Voor deze medewerker wordt iedere maand een klanturenstaat verwacht</span></label>' +
+    '<label>Verwacht vóór werkdag<select id="edit-customer-timesheet-due-day"><option value="3">3e werkdag</option><option value="5">5e werkdag</option><option value="7">7e werkdag</option><option value="10">10e werkdag</option></select></label>' +
+    '<label class="check-row"><input id="edit-customer-timesheet-broker-enabled" type="checkbox"' + (employee.customerTimesheetBrokerEnabled !== false ? " checked" : "") + '><span>Na controle apart naar broker klaarzetten</span></label>' +
+    '<label class="check-row full"><input id="edit-customer-timesheet-use-broker-email" type="checkbox"' + (employee.customerTimesheetUseBrokerEmail !== false ? " checked" : "") + '><span>Gebruik hetzelfde e-mailadres als de factuurroute van de broker</span></label>' +
+    '<label class="full">Afwijkend urenstaatadres<input id="edit-customer-timesheet-broker-email" type="email" value="' + escapeHtml(employee.customerTimesheetBrokerEmail || employee.brokerEmail) + '"><small>Alleen gebruikt als ‘hetzelfde e-mailadres’ uit staat</small></label>' +
+    '<label class="check-row full"><input id="edit-invoice-without-customer-timesheet" type="checkbox"' + (employee.invoiceWithoutCustomerTimesheetAllowed !== false ? " checked" : "") + '><span>Factuur mag worden gecontroleerd als de klanturenstaat later komt</span></label>' +
+    '<label class="check-row full"><input id="edit-notifications" type="checkbox"' + (employee.notificationsEnabled !== false ? " checked" : "") + '><span>Geplande urenherinneringen activeren</span></label>' +
     '<label class="check-row full"><input id="edit-email-notifications" type="checkbox"' + (employee.emailNotificationsEnabled !== false ? " checked" : "") + '><span>Aanvullende e-mailmeldingen activeren (in-app berichten blijven altijd zichtbaar)</span></label>' +
-    (!existing ? '<label class="check-row"><input id="edit-invite" type="checkbox" checked><span>Uitnodiging klaarzetten (demo verstuurt niets)</span></label><label class="check-row"><input id="edit-add-another" type="checkbox"><span>Hierna nog iemand toevoegen</span></label>' : "") +
+    (!existing ? '<label class="check-row"><input id="edit-invite" type="checkbox" checked><span>Uitnodiging voorbereiden (e-mail uitgeschakeld)</span></label><label class="check-row"><input id="edit-add-another" type="checkbox"><span>Hierna nog iemand toevoegen</span></label>' : "") +
     "</div>";
   showModal({
     label: existing ? "Medewerker aanpassen" : "Medewerker toevoegen",
     title: employee.name || "Nieuwe medewerker",
-    message: "Persoons-, contract- en opdrachtgegevens worden lokaal in deze browser bewaard. Je mag ieder geldig account- en brokeradres invullen; de demo verstuurt niets.",
+    message: "Persoons-, contract- en opdrachtgegevens worden lokaal in deze browser bewaard. Je mag ieder geldig account- en brokeradres invullen; e-mailverzending is uitgeschakeld.",
     summary,
     confirm: "Lokaal opslaan",
     wide: true,
@@ -2998,15 +3951,18 @@ function showEmployeeEditor(employeeId) {
       const nameInput = document.querySelector("#edit-name");
       const newRecipientNameInput = document.querySelector("#edit-new-recipient-name");
       const newRecipientEmailInput = document.querySelector("#edit-new-recipient-email");
+      const customerTimesheetEmailInput = document.querySelector("#edit-customer-timesheet-broker-email");
+      const customCustomerTimesheetEmailRequired = document.querySelector("#edit-customer-timesheet-broker-enabled").checked && !document.querySelector("#edit-customer-timesheet-use-broker-email").checked;
       const newRecipientRequested = Boolean(newRecipientNameInput.value.trim() || newRecipientEmailInput.value.trim());
-      [brokerEmailInput, accountEmailInput, nameInput, newRecipientNameInput, newRecipientEmailInput].forEach(input => input.classList.remove("is-invalid"));
-      if (!nameInput.value.trim() || !isValidEmail(brokerEmailInput.value) || !isValidEmail(accountEmailInput.value) || (newRecipientRequested && (!newRecipientNameInput.value.trim() || !isValidEmail(newRecipientEmailInput.value)))) {
+      [brokerEmailInput, accountEmailInput, nameInput, newRecipientNameInput, newRecipientEmailInput, customerTimesheetEmailInput].forEach(input => input.classList.remove("is-invalid"));
+      if (!nameInput.value.trim() || !isValidEmail(brokerEmailInput.value) || !isValidEmail(accountEmailInput.value) || (newRecipientRequested && (!newRecipientNameInput.value.trim() || !isValidEmail(newRecipientEmailInput.value))) || (customCustomerTimesheetEmailRequired && !isValidEmail(customerTimesheetEmailInput.value))) {
         if (!nameInput.value.trim()) nameInput.classList.add("is-invalid");
         if (!isValidEmail(brokerEmailInput.value)) brokerEmailInput.classList.add("is-invalid");
         if (!isValidEmail(accountEmailInput.value)) accountEmailInput.classList.add("is-invalid");
         if (newRecipientRequested && !newRecipientNameInput.value.trim()) newRecipientNameInput.classList.add("is-invalid");
         if (newRecipientRequested && !isValidEmail(newRecipientEmailInput.value)) newRecipientEmailInput.classList.add("is-invalid");
-        toast("Vul een naam en geldige account-, broker- en ontvangeradressen in.");
+        if (customCustomerTimesheetEmailRequired && !isValidEmail(customerTimesheetEmailInput.value)) customerTimesheetEmailInput.classList.add("is-invalid");
+        toast("Vul een naam en geldige account-, broker-, klanturenstaat- en ontvangeradressen in.");
         return;
       }
       const duplicateRecipient = newRecipientRequested && state.settings.mailRecipients.find(recipient => recipient.email.toLowerCase() === newRecipientEmailInput.value.trim().toLowerCase());
@@ -3060,7 +4016,13 @@ function showEmployeeEditor(employeeId) {
         brokerInvoiceAttachment: document.querySelector("#edit-broker-enabled").checked && document.querySelector("#edit-broker-invoice").checked,
         bookkeeperInvoiceAttachment: mailRecipientRoutes.bookkeeper ? mailRecipientRoutes.bookkeeper.invoiceAttachment === true : true,
         payrollInvoiceAttachment: mailRecipientRoutes.payroll ? mailRecipientRoutes.payroll.invoiceAttachment === true : false,
-        mailRecipientRoutes
+        mailRecipientRoutes,
+        customerTimesheetExpected: document.querySelector("#edit-customer-timesheet-expected").checked,
+        customerTimesheetDueWorkday: Number(document.querySelector("#edit-customer-timesheet-due-day").value) || 5,
+        customerTimesheetBrokerEnabled: document.querySelector("#edit-customer-timesheet-broker-enabled").checked,
+        customerTimesheetUseBrokerEmail: document.querySelector("#edit-customer-timesheet-use-broker-email").checked,
+        customerTimesheetBrokerEmail: customerTimesheetEmailInput.value.trim(),
+        invoiceWithoutCustomerTimesheetAllowed: document.querySelector("#edit-invoice-without-customer-timesheet").checked
       });
       if (existing) {
         state.employees[state.employees.findIndex(item => item.id === existing.id)] = updated;
@@ -3106,12 +4068,23 @@ function showEmployeeEditor(employeeId) {
     newRecipientInvoiceInput.disabled = !newRecipientEnabledInput.checked;
     if (!newRecipientEnabledInput.checked) newRecipientInvoiceInput.checked = false;
   });
+  const customerTimesheetBrokerEnabled = document.querySelector("#edit-customer-timesheet-broker-enabled");
+  const customerTimesheetUseBrokerEmail = document.querySelector("#edit-customer-timesheet-use-broker-email");
+  const customerTimesheetBrokerEmail = document.querySelector("#edit-customer-timesheet-broker-email");
+  const syncCustomerTimesheetRoute = () => {
+    customerTimesheetUseBrokerEmail.disabled = !customerTimesheetBrokerEnabled.checked;
+    customerTimesheetBrokerEmail.disabled = !customerTimesheetBrokerEnabled.checked || customerTimesheetUseBrokerEmail.checked;
+  };
+  customerTimesheetBrokerEnabled.addEventListener("change", syncCustomerTimesheetRoute);
+  customerTimesheetUseBrokerEmail.addEventListener("change", syncCustomerTimesheetRoute);
+  document.querySelector("#edit-customer-timesheet-due-day").value = String(employee.customerTimesheetDueWorkday || 5);
+  syncCustomerTimesheetRoute();
 }
 
 function showAdminEditor(adminId) {
   const existing = adminId ? adminById(adminId) : null;
   const admin = existing || { id: "admin-" + (state.admins.length + 1), name: "", email: "nieuwe-beheerder@example.invalid", active: true, emailNotificationsEnabled: true, photo: "" };
-  const summary = '<div class="modal-form"><label>Voor- en achternaam<input id="edit-admin-name" value="' + escapeHtml(admin.name) + '"></label><label>Zakelijk accountadres<input id="edit-admin-email" type="email" value="' + escapeHtml(admin.email) + '"></label><label class="check-row full"><input id="edit-admin-notifications" type="checkbox" checked><span>Meldingen over ingediende uren en facturen ontvangen</span></label><p class="full form-help">De demo bewaart het account lokaal en verstuurt geen uitnodiging. In productie krijgt deze persoon toegang via Google Workspace.</p></div>';
+  const summary = '<div class="modal-form"><label>Voor- en achternaam<input id="edit-admin-name" value="' + escapeHtml(admin.name) + '"></label><label>Zakelijk accountadres<input id="edit-admin-email" type="email" value="' + escapeHtml(admin.email) + '"></label><label class="check-row full"><input id="edit-admin-notifications" type="checkbox" checked><span>Meldingen over ingediende uren en facturen ontvangen</span></label><p class="full form-help">Het account wordt nu lokaal bewaard en er wordt geen uitnodiging verstuurd. Na de koppeling krijgt deze persoon toegang via Google Workspace.</p></div>';
   showModal({
     label: existing ? "Beheerder aanpassen" : "Beheerder toevoegen",
     title: admin.name || "Nieuwe beheerder",
@@ -3190,11 +4163,11 @@ function toggleAdminStatus(adminId) {
 function showProfileEditor() {
   const profile = currentProfileData();
   pendingProfilePhoto = profile.photo || "";
-  const summary = '<div class="profile-editor"><span class="profile-photo-preview" id="profile-photo-preview">' + escapeHtml(initials(profile.name)) + '</span><div class="profile-editor-copy"><strong>' + escapeHtml(profile.name) + '</strong><small>' + escapeHtml(profile.email) + '<br>' + escapeHtml(profile.label) + '</small><div class="profile-photo-control"><label>Profielfoto voor deze demo<input id="profile-photo-input" type="file" accept="image/png,image/jpeg,image/webp"></label><button class="small-button" type="button" id="remove-profile-photo">Foto verwijderen</button></div></div></div><div class="modal-form" style="margin-top:18px"><label>Naam<input value="' + escapeHtml(profile.name) + '" disabled></label><label>Zakelijk e-mailadres<input value="' + escapeHtml(profile.email) + '" disabled></label><p class="full form-help">Naam en e-mailadres worden in productie beheerd door Google Workspace. Een gekozen demofoto blijft alleen in deze browser.</p></div>';
+  const summary = '<div class="profile-editor"><span class="profile-photo-preview" id="profile-photo-preview">' + escapeHtml(initials(profile.name)) + '</span><div class="profile-editor-copy"><strong>' + escapeHtml(profile.name) + '</strong><small>' + escapeHtml(profile.email) + '<br>' + escapeHtml(profile.label) + '</small><div class="profile-photo-control"><label>Lokale profielfoto<input id="profile-photo-input" type="file" accept="image/png,image/jpeg,image/webp"></label><button class="small-button" type="button" id="remove-profile-photo">Foto verwijderen</button></div></div></div><div class="modal-form" style="margin-top:18px"><label>Naam<input value="' + escapeHtml(profile.name) + '" disabled></label><label>Zakelijk e-mailadres<input value="' + escapeHtml(profile.email) + '" disabled></label><p class="full form-help">Naam en e-mailadres worden na de koppeling beheerd door Google Workspace. Een gekozen profielfoto blijft voorlopig alleen in deze browser.</p></div>';
   showModal({
     label: "Mijn profiel",
     title: profile.name,
-    message: "Bekijk je accountgegevens en kies desgewenst een lokale demofoto.",
+    message: "Bekijk je accountgegevens en kies desgewenst een lokale profielfoto.",
     summary,
     confirm: "Profiel opslaan",
     wide: true,
@@ -3231,13 +4204,13 @@ function showProfileEditor() {
 
 function showPreferences() {
   const profile = currentProfileData();
-  const adminRows = state.currentRole === "admin" ? '<div class="preference-row"><span><strong>Ingediende uren</strong><small>Melding zodra uren ter controle klaarstaan</small></span><input id="pref-approvals" aria-label="Meldingen over ingediende uren" type="checkbox"' + (state.preferences.approvalNotifications ? " checked" : "") + '></div><div class="preference-row"><span><strong>Facturen klaar</strong><small>Melding na het goedkeuren van uren</small></span><input id="pref-invoices" aria-label="Meldingen over facturen" type="checkbox"' + (state.preferences.invoiceNotifications ? " checked" : "") + '></div>' : '<div class="preference-row"><span><strong>Urenherinneringen</strong><small>Maandag en rond de maandafsluiting</small></span><input id="pref-hours" aria-label="Urenherinneringen" type="checkbox"' + (state.preferences.hourReminders ? " checked" : "") + '></div><div class="preference-row"><span><strong>Statuswijzigingen</strong><small>Correctie nodig en goedkeuring</small></span><input id="pref-status" aria-label="Statusmeldingen" type="checkbox"' + (state.preferences.statusNotifications ? " checked" : "") + '></div>';
+  const adminRows = state.currentRole === "admin" ? '<div class="preference-row"><span><strong>Ingediende uren</strong><small>Melding zodra uren ter controle klaarstaan</small></span><input id="pref-approvals" aria-label="Meldingen over ingediende uren" type="checkbox"' + (state.preferences.approvalNotifications ? " checked" : "") + '></div><div class="preference-row"><span><strong>Facturen klaar</strong><small>Melding na het goedkeuren van uren</small></span><input id="pref-invoices" aria-label="Meldingen over facturen" type="checkbox"' + (state.preferences.invoiceNotifications ? " checked" : "") + '></div>' : '<div class="preference-row"><span><strong>Urenherinneringen</strong><small>Volgens de ingestelde week- en maandplanning</small></span><input id="pref-hours" aria-label="Urenherinneringen" type="checkbox"' + (state.preferences.hourReminders ? " checked" : "") + '></div><div class="preference-row"><span><strong>Statuswijzigingen</strong><small>Correctie nodig en goedkeuring</small></span><input id="pref-status" aria-label="Statusmeldingen" type="checkbox"' + (state.preferences.statusNotifications ? " checked" : "") + '></div>';
   const emailRow = '<div class="preference-row"><span><strong>Aanvullende e-mailmeldingen</strong><small>Uit: meldingen blijven wel in de app zichtbaar</small></span><input id="pref-email-notifications" aria-label="Aanvullende e-mailmeldingen" type="checkbox"' + (profile.source.emailNotificationsEnabled !== false ? " checked" : "") + '></div>';
   const summary = '<div class="preference-list"><div class="preference-row"><span><strong>Uiterlijk</strong><small>Licht is standaard; Automatisch volgt je apparaat</small></span><select id="pref-theme" aria-label="Uiterlijk"><option value="light">Licht</option><option value="system">Automatisch</option><option value="dark">Donker</option></select></div>' + adminRows + emailRow + '</div>';
   showModal({
     label: "Voorkeuren",
     title: "Uiterlijk en meldingen",
-    message: "Deze voorkeuren worden in de demo alleen in deze browser bewaard.",
+    message: "Deze voorkeuren worden voorlopig alleen in deze browser bewaard.",
     summary,
     confirm: "Voorkeuren opslaan",
     action: () => {
@@ -3274,6 +4247,34 @@ function downloadCsv(filename, rows) {
 }
 
 document.addEventListener("click", event => {
+  const loginAccountChoice = event.target.closest("[data-login-account-role]");
+  const loginAccountTrigger = event.target.closest("[data-account-picker-trigger]");
+  if (loginAccountChoice) {
+    const role = loginAccountChoice.dataset.loginAccountRole;
+    const picker = document.querySelector("#login-" + role);
+    picker.value = loginAccountChoice.dataset.loginAccountId;
+    picker.dispatchEvent(new Event("change", { bubbles: true }));
+    closeLoginAccountPanels();
+    login(role);
+  } else if (loginAccountTrigger) {
+    toggleLoginAccountPanel(loginAccountTrigger.dataset.accountPickerTrigger);
+  } else if (!event.target.closest(".login-account-picker")) {
+    closeLoginAccountPanels();
+  }
+
+  const monthChoice = event.target.closest("[data-period-month]");
+  const monthPickerTrigger = event.target.closest("[data-month-picker-trigger]");
+  if (monthChoice) {
+    const monthControl = document.querySelector(monthChoice.dataset.monthControl);
+    if (monthControl) monthControl.value = monthChoice.dataset.periodMonth;
+    closeMonthChoicePanels();
+    applyPeriodControls(monthChoice.dataset.monthControl, monthChoice.dataset.yearControl, monthChoice.dataset.monthControl === "#customer-timesheet-month");
+  } else if (monthPickerTrigger) {
+    toggleMonthChoicePanel(monthPickerTrigger);
+  } else if (!event.target.closest(".month-picker")) {
+    closeMonthChoicePanels();
+  }
+
   const notificationButton = event.target.closest("#notification-button");
   if (notificationButton) toggleTopbarPopover("notification-panel", "notification-button");
 
@@ -3316,26 +4317,109 @@ document.addEventListener("click", event => {
   if (home) {
     event.preventDefault();
     const profile = profileForRole(state.currentRole);
+    if (profile && profile.home === "dashboard") {
+      state.dashboardTeamScope = "all";
+      persistState();
+      renderDashboard();
+    }
     showView(profile ? profile.home : "dashboard");
   }
 
   const nav = event.target.closest("[data-view]");
-  if (nav) showView(nav.dataset.view);
+  if (nav) {
+    if (nav.dataset.view === "approvals") {
+      state.approvalScope = "all";
+      persistState();
+      renderApprovals();
+    }
+    if (nav.dataset.view === "dashboard") {
+      state.dashboardTeamScope = "all";
+      persistState();
+      renderDashboard();
+    }
+    showView(nav.dataset.view);
+  }
 
   const go = event.target.closest("[data-go]");
-  if (go) showView(go.dataset.go);
+  if (go) {
+    if (go.dataset.go === "approvals") {
+      state.approvalScope = "all";
+      persistState();
+      renderApprovals();
+    }
+    if (go.dataset.go === "dashboard") {
+      state.dashboardTeamScope = "all";
+      persistState();
+      renderDashboard();
+    }
+    showView(go.dataset.go);
+  }
 
   const dashboardView = event.target.closest("[data-dashboard-view]");
   if (dashboardView) showView(dashboardView.dataset.dashboardView);
 
+  const dashboardTeamFilter = event.target.closest("[data-dashboard-team-filter]");
+  if (dashboardTeamFilter) {
+    state.dashboardTeamScope = dashboardTeamFilter.dataset.dashboardTeamFilter;
+    persistState();
+    renderDashboard();
+    showView("dashboard");
+    const teamTitle = document.querySelector("#dashboard-team-title");
+    if (typeof teamTitle.scrollIntoView === "function") teamTitle.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  const adminHoursDetail = event.target.closest("[data-admin-hours-detail]");
+  if (adminHoursDetail) showAdminHoursDetail(Number(adminHoursDetail.dataset.adminHoursDetail), adminHoursDetail.dataset.periodKey || currentPeriod().key);
+
+  const customerTimesheetReview = event.target.closest("[data-review-customer-timesheet]");
+  if (customerTimesheetReview) showCustomerTimesheetDetails(Number(customerTimesheetReview.dataset.reviewCustomerTimesheet), customerTimesheetReview.dataset.periodKey, true);
+
+  const customerTimesheetDetails = event.target.closest("[data-customer-timesheet-details]");
+  if (customerTimesheetDetails) showCustomerTimesheetDetails(Number(customerTimesheetDetails.dataset.customerTimesheetDetails), customerTimesheetDetails.dataset.periodKey, false);
+
+  const customerTimesheetReminder = event.target.closest("[data-remind-customer-timesheet]");
+  if (customerTimesheetReminder) remindCustomerTimesheet(Number(customerTimesheetReminder.dataset.remindCustomerTimesheet), customerTimesheetReminder.dataset.periodKey);
+
+  const customerTimesheetRestore = event.target.closest("[data-restore-customer-timesheet]");
+  if (customerTimesheetRestore) restoreSkippedCustomerTimesheet();
+
+  const customerTimesheetSend = event.target.closest("[data-send-customer-timesheet]");
+  if (customerTimesheetSend) showCustomerTimesheetBrokerCheck(Number(customerTimesheetSend.dataset.sendCustomerTimesheet), customerTimesheetSend.dataset.periodKey);
+
+  const customerTimesheetView = event.target.closest("[data-view-customer-timesheet]");
+  if (customerTimesheetView) {
+    const record = recordFor(Number(customerTimesheetView.dataset.viewCustomerTimesheet), customerTimesheetView.dataset.periodKey);
+    const documentRecord = customerTimesheetFor(record);
+    if (documentRecord.fileData) {
+      const link = document.createElement("a");
+      link.href = documentRecord.fileData;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.click();
+    }
+  }
+
   const openPeriod = event.target.closest("[data-open-period]");
   if (openPeriod) {
     const targetView = openPeriod.dataset.openPeriodView || "dashboard";
+    const targetSection = openPeriod.dataset.openPeriodSection || "";
     if (targetView === "approvals") state.approvalScope = "month";
     setPeriod(openPeriod.dataset.openPeriod);
+    if (targetView === "dashboard") state.dashboardTeamScope = targetSection === "team" ? "attention" : "all";
     persistState();
     renderAll();
     showView(targetView);
+    const teamTitle = document.querySelector("#dashboard-team-title");
+    const sectionTarget = targetSection === "customer-timesheets" ? document.querySelector("#customer-timesheet-admin-panel") : teamTitle;
+    if (targetView === "dashboard" && sectionTarget && typeof sectionTarget.scrollIntoView === "function") sectionTarget.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  const hoursWeekScope = event.target.closest("[data-hours-week-scope]");
+  if (hoursWeekScope) {
+    state.hoursWeekScope = hoursWeekScope.dataset.hoursWeekScope;
+    state.hoursWeekScopeTouched = true;
+    persistState();
+    renderHoursGrid();
   }
 
   const scrollTarget = event.target.closest("[data-scroll-target]");
@@ -3369,6 +4453,24 @@ document.addEventListener("click", event => {
     state.approvalScope = approvalScope.dataset.approvalScope;
     persistState();
     renderApprovals();
+  }
+
+  const approvalPeriod = event.target.closest("[data-approval-filter-period]");
+  if (approvalPeriod) {
+    state.approvalScope = "month";
+    const changed = setPeriod(approvalPeriod.dataset.approvalFilterPeriod);
+    persistState();
+    if (!changed || currentPeriod().key === approvalPeriod.dataset.approvalFilterPeriod) renderApprovals();
+    showView("approvals");
+  }
+
+  const openApprovalPeriod = event.target.closest("[data-open-approval-period]");
+  if (openApprovalPeriod) {
+    state.approvalScope = "month";
+    setPeriod(openApprovalPeriod.dataset.openApprovalPeriod);
+    persistState();
+    renderAll();
+    showView("approvals");
   }
 
   const detail = event.target.closest("[data-employee-detail]");
@@ -3421,6 +4523,12 @@ document.addEventListener("click", event => {
   const deleteAnnouncementDraft = event.target.closest("[data-delete-announcement-draft]");
   if (deleteAnnouncementDraft) showDeleteAnnouncementDraft(Number(deleteAnnouncementDraft.dataset.deleteAnnouncementDraft));
 
+  const hideAnnouncement = event.target.closest("[data-hide-announcement]");
+  if (hideAnnouncement) showHideAnnouncementFromEmployees(Number(hideAnnouncement.dataset.hideAnnouncement));
+
+  const editWithdrawnAnnouncement = event.target.closest("[data-edit-withdrawn-announcement]");
+  if (editWithdrawnAnnouncement) showEditWithdrawnAnnouncement(Number(editWithdrawnAnnouncement.dataset.editWithdrawnAnnouncement));
+
   const withdrawAnnouncement = event.target.closest("[data-withdraw-announcement]");
   if (withdrawAnnouncement) showAnnouncementWithdrawal(Number(withdrawAnnouncement.dataset.withdrawAnnouncement));
 
@@ -3463,23 +4571,23 @@ document.addEventListener("click", event => {
     const info = invoiceSummary(Number(simulate.dataset.simulateInvoice));
     const safe = [state.settings.sender, ...info.routes.map(route => route.email)].every(isValidEmail);
     if (!safe) {
-      toast("Verzendtest geblokkeerd: minimaal één e-mailadres is ongeldig.");
+      toast("Verzendcontrole geblokkeerd: minimaal één e-mailadres is ongeldig.");
       return;
     }
     const routeText = info.routes.map(route => route.name + ": " + (route.invoiceAttachment ? "factuur als PDF" : "geen bijlage") + ".").join("\n");
     showModal({
-      label: "Veilige verzendtest",
-      title: info.record.invoiceNumber + " testen?",
-      message: "Begeleidende tekst voor ieder afzonderlijk bericht:\n\n" + info.body + "\n\n" + routeText + "\nUrenstaat: niet toegevoegd.\n\nEr wordt geen CC of BCC gebruikt. Deze test verstuurt geen e-mail.",
+      label: "Verzending controleren",
+      title: info.record.invoiceNumber + " controleren?",
+      message: "Begeleidende tekst voor ieder afzonderlijk bericht voor de factuur:\n\n" + info.body + "\n\n" + routeText + "\n\nDe officiële klanturenstaat heeft een eigen upload-, controle- en brokerroute en wordt niet stilzwijgend aan deze factuurberichten toegevoegd.\n\nEr wordt geen CC of BCC gebruikt. E-mailverzending is uitgeschakeld.",
       summary: info.html,
-      confirm: "Verzending testen",
+      confirm: "Controle afronden",
       action: () => {
         info.record.invoiceStatus = "simulated";
         info.record.payrollStatus = "simulated";
         persistState();
         closeModal();
         renderAll();
-        toast("Verzendtest voltooid. Er is niets verstuurd.");
+        toast("Verzending gecontroleerd. E-mailverzending is uitgeschakeld.");
       }
     });
   }
@@ -3493,9 +4601,9 @@ document.addEventListener("click", event => {
     let message = "De factuur kan worden gecontroleerd.";
     if (info.record.timesheetStatus === "draft") message = "De uren zijn nog niet ingediend. Daarom is deze factuur nog niet klaar.";
     if (info.record.timesheetStatus === "submitted") message = "De uren wachten op goedkeuring. Daarna wordt de factuur klaargezet.";
-    if (info.record.invoiceStatus === "simulated") message = "De verzendtest is uitgevoerd. Er is niets verstuurd.";
+    if (info.record.invoiceStatus === "simulated") message = "De verzending is gecontroleerd. Hieronder zie je het bewaarde mailvoorbeeld; e-mailverzending is uitgeschakeld.\n\n" + info.body;
     showModal({
-      label: "Demo-factuur",
+      label: "Mailvoorbeeld",
       title: info.record.invoiceNumber,
       message,
       summary: info.html,
@@ -3591,11 +4699,19 @@ document.querySelector("#submit-timesheet").addEventListener("click", () => {
 document.querySelector("#approve-all").addEventListener("click", () => {
   const open = allOpenApprovals().filter(item => state.approvalScope === "all" || item.periodKey === currentPeriod().key);
   const monthCount = new Set(open.map(item => item.periodKey)).size;
+  const scopedToMonth = state.approvalScope === "month";
+  const registrationLabel = open.length === 1 ? "urenregistratie" : "urenregistraties";
   showModal({
-    title: "Alle openstaande uren goedkeuren?",
-    message: "Dit geldt voor alle maanden die in het overzicht staan. De bijbehorende facturen worden per maand klaargezet.",
+    title: scopedToMonth
+      ? open.length === 1
+        ? "1 urenstaat in " + currentPeriod().label + " goedkeuren?"
+        : "Alle " + open.length + " in " + currentPeriod().label + " goedkeuren?"
+      : "Alle " + open.length + " openstaande " + registrationLabel + " goedkeuren?",
+    message: scopedToMonth
+      ? "Dit geldt alleen voor " + currentPeriod().label + ". De bijbehorende facturen worden voor die maand klaargezet."
+      : "Dit geldt voor alle maanden die nu in het overzicht staan. De bijbehorende facturen worden per maand klaargezet.",
     summary: "<div><span>Openstaande registraties</span><strong>" + open.length + "</strong></div><div><span>Maanden</span><strong>" + monthCount + "</strong></div><div><span>E-mail</span><strong>Uitgeschakeld</strong></div>",
-    confirm: "Alles goedkeuren",
+    confirm: open.length + " " + registrationLabel + " goedkeuren",
     action: () => {
       open.forEach(item => {
         item.record.timesheetStatus = "approved";
@@ -3618,8 +4734,28 @@ document.querySelectorAll("[data-invoice-filter]").forEach(button => button.addE
 }));
 
 document.querySelector("#test-month-delivery").addEventListener("click", () => {
-  const approved = state.employees
-    .map(employee => ({ employee, record: recordFor(employee.id) }))
+  const periodRows = invoicePeriodRows();
+  const openMonthRows = periodRows.filter(item => item.record.timesheetStatus !== "approved");
+  if (openMonthRows.length) {
+    const openSummary = openMonthRows.map(item => "<div><span>" + escapeHtml(item.employee.name) + "</span><strong>" + escapeHtml((statusLabels[item.record.timesheetStatus] || statusLabels.draft)[0]) + "</strong></div>").join("");
+    showModal({
+      label: "Maand nog niet volledig klaar",
+      title: openMonthRows.length + (openMonthRows.length === 1 ? " openstaande urenregistratie" : " openstaande urenregistraties"),
+      message: "De maandverzending is geblokkeerd zolang niet iedere urenregistratie van " + currentPeriod().label + " is goedgekeurd. Zo ontbreekt er nooit per ongeluk een medewerker in de maandcontrole.",
+      summary: openSummary + "<div><span>Maandverzending</span><strong>Geblokkeerd tot alles is goedgekeurd</strong></div>",
+      confirm: "Openstaande uren bekijken",
+      action: () => {
+        state.approvalScope = "month";
+        persistState();
+        closeModal();
+        renderAll();
+        showView("dashboard");
+        toast("Bekijk op het dashboard wie nog moet invullen, indienen of worden goedgekeurd.");
+      }
+    });
+    return;
+  }
+  const approved = periodRows
     .filter(item => item.record.timesheetStatus === "approved")
     .filter(item => item.record.invoiceStatus !== "simulated" || item.record.payrollStatus !== "simulated");
   if (!approved.length) {
@@ -3640,12 +4776,16 @@ document.querySelector("#test-month-delivery").addEventListener("click", () => {
     routeCounters.set(route.id, counter);
   });
   const routeSummary = [...routeCounters.values()].map(counter => "<div><span>" + escapeHtml(counter.name) + "</span><strong>" + counter.messages + " bericht" + (counter.messages === 1 ? "" : "en") + " · " + counter.invoices + " met factuur</strong></div>").join("");
+  const customerDocuments = periodRows.filter(item => item.employee.customerTimesheetExpected !== false).map(item => customerTimesheetFor(item.record));
+  const customerReady = customerDocuments.filter(item => item.status === "approved").length;
+  const customerMissing = customerDocuments.filter(item => ["missing", "draft", "resubmit"].includes(item.status)).length;
+  const customerReceived = customerDocuments.filter(item => item.status === "received").length;
   showModal({
     label: "Eén knop · gescheiden routes",
     title: "Maandverzending voor " + currentPeriod().label + " controleren?",
-    message: "Na één bevestiging maakt de demo per medewerker een afzonderlijk bericht voor iedere aangevinkte ontvanger, met naam, maand en daadwerkelijke goedgekeurde uren. De factuur gaat alleen mee waar Factuur meesturen is aangevinkt. Een urenstaat gaat nooit mee. Er wordt geen CC of BCC gebruikt en er gaat niets echt naar buiten.",
-    summary: routeSummary + "<div><span>Urenstaat</span><strong>Nooit toegevoegd; uren staan in de tekst</strong></div>",
-    confirm: "Verzendtest uitvoeren",
+    message: "Na één bevestiging controleert de app per medewerker een afzonderlijk factuurbericht voor iedere aangevinkte ontvanger, met naam, maand en daadwerkelijke goedgekeurde uren. De factuur gaat alleen mee waar Factuur meesturen is aangevinkt. Klanturenstaten blijven aparte, eerst te controleren PDF-routes. Er wordt geen CC of BCC gebruikt en e-mailverzending is uitgeschakeld.",
+    summary: routeSummary + "<div><span>Klanturenstaten</span><strong>" + customerReady + " klaar voor brokerroute · " + customerReceived + " te controleren · " + customerMissing + " ontbrekend/concept/opnieuw</strong></div>",
+    confirm: "Controle afronden",
     action: () => {
       approved.forEach(item => {
         item.record.invoiceStatus = "simulated";
@@ -3654,40 +4794,34 @@ document.querySelector("#test-month-delivery").addEventListener("click", () => {
       persistState();
       closeModal();
       renderAll();
-      toast("Maandverzending veilig getest: afzonderlijke berichten per ontvanger, niets verstuurd.");
+      toast("Maandverzending gecontroleerd: afzonderlijke berichten per ontvanger; e-mailverzending is uitgeschakeld.");
     }
   });
 });
 
 document.querySelector("#download-invoice-list").addEventListener("click", () => {
   const period = currentPeriod();
-  downloadCsv("Path_demo_factuuroverzicht_" + period.key + ".csv", [
-    ["Factuurnummer", "Medewerker", "Klant", "Broker", "Demo-adres", "Uren", "Bedrag excl. btw", "Status"],
+  downloadCsv("Path_factuuroverzicht_" + period.key + ".csv", [
+    ["Factuurnummer", "Medewerker", "Klant", "Broker", "E-mailadres", "Uren", "Bedrag excl. btw", "Status"],
     ...state.employees.map(employee => {
       const record = recordFor(employee.id);
       return [record.invoiceNumber, employee.name, employee.client, employee.broker, employee.brokerEmail, hoursFormat.format(totalEntries(record.entries)), (totalEntries(record.entries) * employee.rate).toFixed(2), invoiceStatusInfo(record)[0]];
     })
   ]);
-  toast("Het demo-factuuroverzicht is gedownload.");
+  toast("Het factuuroverzicht is gedownload.");
 });
 
 function setPeriod(periodKey) {
   const parsed = parsePeriodKey(periodKey);
   if (!parsed || parsed.year < 1 || parsed.year > 9999) return false;
   const next = makePeriodKey(parsed.year, parsed.monthIndex);
-  const approvalsVisible = document.querySelector("#view-approvals").classList.contains("is-active");
   if (next === state.selectedPeriodKey) {
-    if (approvalsVisible && state.approvalScope !== "month") {
-      state.approvalScope = "month";
-      persistState();
-      renderApprovals();
-    }
     return true;
   }
   state.selectedPeriodKey = next;
-  if (approvalsVisible) state.approvalScope = "month";
   ensurePeriodRecords(next);
   state.invoiceFilter = "all";
+  state.dashboardTeamScope = "all";
   document.querySelectorAll("[data-invoice-filter]").forEach(button => button.classList.toggle("is-active", button.dataset.invoiceFilter === "all"));
   persistState();
   renderAll();
@@ -3707,6 +4841,9 @@ document.querySelector("#period-picker").addEventListener("change", event => {
     toast("Kies een geldige maand en een viercijferig jaar.");
   }
 });
+document.querySelector("#period-year-picker").addEventListener("change", () => {
+  applyPeriodControls("#period-month-picker", "#period-year-picker");
+});
 document.querySelector("#login-employee").addEventListener("change", event => {
   state.currentEmployeeId = Number(event.target.value);
   updateLoginEmployeePreview();
@@ -3722,6 +4859,187 @@ document.querySelector("#add-admin").addEventListener("click", () => showAdminEd
 document.querySelector("#add-announcement").addEventListener("click", () => showAnnouncementEditor(null, null));
 document.querySelector("#add-mail-recipient").addEventListener("click", () => showMailRecipientEditor(null));
 document.querySelector("#save-settings").addEventListener("click", saveSettings);
+[
+  "#setting-weekly-reminder-enabled",
+  "#setting-weekly-reminder-day",
+  "#setting-weekly-reminder-time",
+  "#setting-month-end-reminder-enabled",
+  "#setting-month-end-reminder-time",
+  "#setting-overdue-reminder-enabled",
+  "#setting-overdue-reminder-time",
+  "#setting-approval-reminder-enabled",
+  "#setting-approval-reminder-time",
+  "#setting-customer-timesheet-reminder-enabled",
+  "#setting-customer-timesheet-reminder-time",
+  "#setting-customer-timesheet-overdue-days"
+].forEach(selector => document.querySelector(selector).addEventListener("change", syncReminderControls));
+
+document.querySelector("#customer-timesheet-period").addEventListener("change", event => {
+  if (!setPeriod(event.target.value)) {
+    event.target.value = currentPeriod().key;
+    syncPeriodControls("#customer-timesheet-month", "#customer-timesheet-year", currentPeriod().key);
+    toast("Kies eerst een geldige maand en een viercijferig jaar.");
+  }
+});
+document.querySelector("#customer-timesheet-year").addEventListener("change", () => {
+  applyPeriodControls("#customer-timesheet-month", "#customer-timesheet-year", true);
+});
+document.querySelector("#customer-timesheet-file").addEventListener("change", syncCustomerTimesheetUploadActions);
+
+function customerTimesheetUploadContext(requireFile) {
+  const employee = currentEmployee();
+  const periodKey = document.querySelector("#customer-timesheet-period").value;
+  const fileInput = document.querySelector("#customer-timesheet-file");
+  const file = fileInput.files && fileInput.files[0];
+  if (!parsePeriodKey(periodKey)) {
+    toast("Kies eerst de maand en het jaar van de klanturenstaat.");
+    return null;
+  }
+  if (requireFile && (!file || !customerTimesheetSourceType(file))) {
+    toast("Kies de officiële klanturenstaat als PDF-, JPG- of PNG-bestand.");
+    return null;
+  }
+  if (file && file.size > 2 * 1024 * 1024) {
+    toast("Deze lokale voorbereiding accepteert PDF-, JPG- en PNG-bestanden tot 2 MB.");
+    return null;
+  }
+  return { employee, periodKey, fileInput, file };
+}
+
+function customerTimesheetSourceType(file) {
+  const name = String(file && file.name || "").toLowerCase();
+  const type = String(file && file.type || "").toLowerCase();
+  if (type === "application/pdf" || name.endsWith(".pdf")) return "pdf";
+  if (type === "image/jpeg" || /\.jpe?g$/.test(name)) return "jpeg";
+  if (type === "image/png" || name.endsWith(".png")) return "png";
+  return "";
+}
+
+function customerTimesheetPdfData(sourceData, sourceType) {
+  if (sourceType === "pdf") return sourceData;
+  const jspdf = window.jspdf;
+  if (!jspdf || typeof jspdf.jsPDF !== "function") throw new Error("PDF-conversie is niet beschikbaar");
+  const doc = new jspdf.jsPDF({ unit: "mm", format: "a4", compress: true });
+  const properties = doc.getImageProperties(sourceData);
+  const pageWidth = 210;
+  const pageHeight = 297;
+  const margin = 10;
+  const maxWidth = pageWidth - margin * 2;
+  const maxHeight = pageHeight - margin * 2;
+  const scale = Math.min(maxWidth / properties.width, maxHeight / properties.height);
+  const width = properties.width * scale;
+  const height = properties.height * scale;
+  doc.addImage(sourceData, sourceType === "png" ? "PNG" : "JPEG", (pageWidth - width) / 2, (pageHeight - height) / 2, width, height, undefined, "FAST");
+  return doc.output("datauristring");
+}
+
+function notifyCustomerTimesheetSubmitted(employee, periodKey) {
+  addNotification({ audience: "admin", type: "customer-timesheet", employeeId: employee.id, title: "Klanturenstaat ingediend", message: employee.name + " heeft de officiële PDF voor " + periodFromKey(periodKey).label + " ingediend voor controle.", periodKey, view: "dashboard" }, true);
+}
+
+function storeCustomerTimesheetFile(targetStatus) {
+  const context = customerTimesheetUploadContext(true);
+  if (!context) return;
+  const { employee, periodKey, fileInput, file } = context;
+  const sourceType = customerTimesheetSourceType(file);
+  const reader = new FileReader();
+  reader.addEventListener("load", () => {
+    const documentRecord = customerTimesheetFor(recordFor(employee.id, periodKey));
+    if (["received", "approved", "sent", "skipped"].includes(documentRecord.status)) {
+      toast("Deze klanturenstaat is al ingediend. Wacht op Backoffice of neem contact op.");
+      return;
+    }
+    let storedData;
+    try {
+      storedData = customerTimesheetPdfData(String(reader.result || ""), sourceType);
+    } catch {
+      toast("De afbeelding kon niet als PDF worden opgeslagen. Kies een andere JPG, PNG of PDF.");
+      return;
+    }
+    documentRecord.status = targetStatus;
+    documentRecord.isExample = false;
+    documentRecord.fileName = customerTimesheetFileName(employee, periodKey);
+    documentRecord.originalFileName = file.name;
+    documentRecord.fileData = storedData;
+    documentRecord.mimeType = "application/pdf";
+    documentRecord.uploadedAt = correctionTimestamp().label;
+    documentRecord.uploadedBy = employee.name;
+    documentRecord.reviewedAt = "";
+    documentRecord.reviewedBy = "";
+    documentRecord.reviewNote = "";
+    documentRecord.sentAt = "";
+    documentRecord.skippedReason = "";
+    documentRecord.skippedAt = "";
+    documentRecord.skippedBy = "";
+    if (targetStatus === "received") {
+      const submissionMail = customerTimesheetSubmissionMail(employee, periodKey);
+      documentRecord.submissionSubject = submissionMail.subject;
+      documentRecord.submissionBody = submissionMail.body;
+      notifyCustomerTimesheetSubmitted(employee, periodKey);
+    }
+    persistState();
+    fileInput.value = "";
+    renderAll();
+    toast(targetStatus === "draft" ? "Concept opgeslagen. Backoffice heeft nog geen melding gekregen." : "De klanturenstaat is ingediend bij Backoffice. Er is nog niets naar de broker verstuurd.");
+  });
+  reader.addEventListener("error", () => toast("Het bestand kon niet worden gelezen. Probeer het opnieuw."));
+  reader.readAsDataURL(file);
+}
+
+document.querySelector("#customer-timesheet-save-draft").addEventListener("click", () => storeCustomerTimesheetFile("draft"));
+document.querySelector("#customer-timesheet-edit-mail").addEventListener("click", showCustomerTimesheetSubmissionMailEditor);
+document.querySelector("#employee-customer-timesheet-skip").addEventListener("click", () => {
+  const documentRecord = customerTimesheetFor(recordFor(currentEmployee().id, currentPeriod().key));
+  if (documentRecord.status === "skipped") restoreSkippedCustomerTimesheet();
+  else showSkipCustomerTimesheet();
+});
+document.querySelector("#customer-timesheet-skip").addEventListener("click", () => {
+  const documentRecord = customerTimesheetFor(recordFor(currentEmployee().id, currentPeriod().key));
+  if (documentRecord.status === "skipped") restoreSkippedCustomerTimesheet();
+  else showSkipCustomerTimesheet();
+});
+
+document.querySelector("#customer-timesheet-submit").addEventListener("click", () => {
+  const context = customerTimesheetUploadContext(false);
+  if (!context) return;
+  const { employee, periodKey, file } = context;
+  const documentRecord = customerTimesheetFor(recordFor(employee.id, periodKey));
+  if (["received", "approved", "sent", "skipped"].includes(documentRecord.status)) {
+    toast("Deze klanturenstaat is al ingediend. Wacht op Backoffice of neem contact op.");
+    return;
+  }
+  if (file) {
+    if (!customerTimesheetSourceType(file)) {
+      toast("Kies de officiële klanturenstaat als PDF-, JPG- of PNG-bestand.");
+      return;
+    }
+    storeCustomerTimesheetFile("received");
+    return;
+  }
+  if (documentRecord.status !== "draft" || !documentRecord.fileName) {
+    toast(documentRecord.status === "resubmit" ? "Kies eerst het nieuwe officiële bestand." : "Kies eerst een PDF, JPG of PNG of sla deze als concept op.");
+    return;
+  }
+  const submissionMail = customerTimesheetSubmissionMail(employee, periodKey);
+  documentRecord.submissionSubject = submissionMail.subject;
+  documentRecord.submissionBody = submissionMail.body;
+  documentRecord.status = "received";
+  notifyCustomerTimesheetSubmitted(employee, periodKey);
+  persistState();
+  renderAll();
+  toast("De klanturenstaat is ingediend bij Backoffice. Er is nog niets naar de broker verstuurd.");
+});
+document.querySelector("#test-reminder-schedule").addEventListener("click", () => {
+  const schedule = document.querySelector("#reminder-schedule-summary").textContent;
+  addNotification({
+    audience: "admin",
+    type: "reminder",
+    title: "Voorbeeld herinneringsplanning",
+    message: schedule,
+    view: "settings"
+  }, true);
+  toast("Voorbeeldmelding toegevoegd; er is niets gepland of verstuurd.");
+});
 document.querySelector("#setting-brand-logo").addEventListener("change", event => {
   const file = event.target.files && event.target.files[0];
   if (!file) return;
@@ -3746,10 +5064,10 @@ document.querySelector("#reset-brand-logo").addEventListener("click", () => {
 document.querySelectorAll(".summary-hours-input").forEach(input => input.addEventListener("input", () => updateHoursTotal(true)));
 
 document.querySelector("#reset-demo").addEventListener("click", () => showModal({
-  label: "Demo herstellen",
+  label: "Voorbeeldgegevens herstellen",
   title: "Alle lokale wijzigingen wissen?",
   message: "Hiermee worden alleen de wijzigingen in deze browser hersteld. Er zijn geen externe gegevens.",
-  confirm: "Demo herstellen",
+  confirm: "Voorbeeldgegevens herstellen",
   action: () => {
     const role = state.currentRole || "admin";
     state = freshState();
@@ -3760,15 +5078,15 @@ document.querySelector("#reset-demo").addEventListener("click", () => showModal(
     populateSettings();
     renderAll();
     showView(profileForRole(role).home);
-    toast("De veilige demo is hersteld.");
+    toast("De lokale voorbeeldgegevens zijn hersteld.");
   }
 }));
 
 document.querySelector("#connect-gmail").addEventListener("click", () => showModal({
-  label: "Veilige demo",
+  label: "Verzendkoppeling",
   title: "Gmail is bewust uitgeschakeld",
-  message: "Deze versie bevat geen Gmail-koppeling. Je mag ieder geldig e-mailadres invoeren, maar de app bewaart dit alleen lokaal en kan niets echt verzenden. Productieverzending bouwen we later als aparte, beveiligde stap.",
-  summary: "<div><span>Verzendmodus</span><strong>Alleen lokaal testen</strong></div><div><span>Echte verzending</span><strong>Technisch uitgeschakeld</strong></div>",
+  message: "Deze versie bevat nog geen Gmail-koppeling. Je mag ieder geldig e-mailadres invoeren, maar de app bewaart dit lokaal en e-mailverzending blijft technisch uitgeschakeld totdat de beveiligde koppeling actief is.",
+  summary: "<div><span>Verzendmodus</span><strong>Alleen controleren</strong></div><div><span>E-mailverzending</span><strong>Technisch uitgeschakeld</strong></div>",
   confirm: "Sluiten",
   action: closeModal
 }));
@@ -3782,6 +5100,10 @@ document.querySelector("#mark-notifications-read").addEventListener("click", () 
 });
 document.querySelector("#help-launcher").addEventListener("click", () => document.querySelector("#help-panel").hidden ? openHelp() : closeHelp());
 document.querySelector("#help-close").addEventListener("click", closeHelp);
+document.querySelector("#help-clear").addEventListener("click", () => {
+  clearHelpConversation();
+  toast("Het hulpgesprek is gewist.");
+});
 document.querySelector("#help-form").addEventListener("submit", event => {
   event.preventDefault();
   const input = document.querySelector("#help-input");
@@ -3798,11 +5120,13 @@ document.querySelector("#modal-confirm").addEventListener("click", () => modalAc
 document.querySelector("#modal").addEventListener("click", event => { if (event.target.id === "modal") closeModal(); });
 document.addEventListener("keydown", event => {
   if (event.key === "Escape") {
+    closeLoginAccountPanels();
     if (!document.querySelector("#modal").hidden) {
       closeModal();
       return;
     }
     closeTopbarPopovers();
+    closeMonthChoicePanels();
     closeHelp();
   }
   handleEnterSave(event);

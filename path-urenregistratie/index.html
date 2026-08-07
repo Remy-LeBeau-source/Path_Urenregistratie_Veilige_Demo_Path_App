@@ -14,34 +14,42 @@
         <img src="assets/path-logo.png" alt="Organisatielogo" data-brand-logo>
         <span data-app-name>Uren &amp; Facturatie</span>
       </div>
-      <span class="section-label">Veilige demo</span>
-      <h1 id="login-title">Hoe wil je de app bekijken?</h1>
-      <p>Kies een rol. In de productieversie logt iedereen in met een eigen beveiligd Google Workspace-account.</p>
+      <span class="section-label">Lokale voorbereiding</span>
+      <h1 id="login-title">Kies je account en rol</h1>
+      <p>Deze lokale versie gebruikt een accountkeuze. Na de Google Workspace-koppeling wordt de juiste rol automatisch geopend.</p>
       <div class="demo-account-grid">
         <div class="demo-employee-picker">
-          <label for="login-admin">Test als beheerder</label>
-          <select id="login-admin" aria-describedby="login-admin-help"></select>
-          <small id="login-admin-help">Kies Gio of Joyce en druk op Enter, of gebruik de knop Beheerder.</small>
+          <label for="login-admin-trigger">Beheeraccount</label>
+          <select id="login-admin" hidden aria-hidden="true" tabindex="-1"></select>
+          <div class="login-account-picker">
+            <button class="account-picker-trigger" id="login-admin-trigger" type="button" data-account-picker-trigger="admin" aria-expanded="false" aria-controls="login-admin-choices">Kies beheerder</button>
+            <div class="account-choice-panel" id="login-admin-choices" role="listbox" aria-label="Kies beheeraccount" hidden></div>
+          </div>
+          <small id="login-admin-help">Kies Gio of Joyce. Het beheerdersdashboard opent direct.</small>
         </div>
         <div class="demo-employee-picker">
-          <label for="login-employee">Test als medewerker</label>
-          <select id="login-employee" aria-describedby="login-employee-help"></select>
-          <small id="login-employee-help">Kies een actieve medewerker en druk op Enter, of gebruik de knop Medewerker.</small>
+          <label for="login-employee-trigger">Medewerkersaccount</label>
+          <select id="login-employee" hidden aria-hidden="true" tabindex="-1"></select>
+          <div class="login-account-picker">
+            <button class="account-picker-trigger" id="login-employee-trigger" type="button" data-account-picker-trigger="employee" aria-expanded="false" aria-controls="login-employee-choices">Kies medewerker</button>
+            <div class="account-choice-panel" id="login-employee-choices" role="listbox" aria-label="Kies medewerkersaccount" hidden></div>
+          </div>
+          <small id="login-employee-help">Kies een medewerker. Het eigen dashboard opent direct.</small>
         </div>
       </div>
       <div class="login-options">
         <button class="login-option" data-login-role="admin">
           <span class="login-avatar" id="login-admin-avatar">GM</span>
-          <span><strong>Beheerder</strong><small id="login-admin-summary">Gio Maatsen · uren controleren, facturen en instellingen</small></span>
+          <span><strong>Open als beheerder</strong><small id="login-admin-summary">Gio Maatsen · uren controleren, facturen en instellingen</small></span>
           <span class="login-arrow">→</span>
         </button>
         <button class="login-option" data-login-role="employee">
           <span class="login-avatar employee" id="login-employee-avatar">SV</span>
-          <span><strong>Medewerker</strong><small id="login-employee-summary">Stasjo van Bakel · eigen uren invullen en indienen</small></span>
+          <span><strong>Open als medewerker</strong><small id="login-employee-summary">Stasjo van Bakel · eigen uren invullen en indienen</small></span>
           <span class="login-arrow">→</span>
         </button>
       </div>
-      <p class="login-note">De standaardgegevens gebruiken veilige voorbeeldadressen. Je mag zelf echte gegevens invoeren; deze demo bewaart ze alleen lokaal en verstuurt niets.</p>
+      <p class="login-note">De standaardgegevens gebruiken veilige voorbeeldadressen. Je mag zelf echte gegevens invoeren; deze lokale versie bewaart ze alleen in deze browser en e-mailverzending is uitgeschakeld.</p>
     </div>
   </section>
 
@@ -59,7 +67,7 @@
         <button class="nav-item role-employee-only" data-view="employee-dashboard" hidden>
           <span class="nav-marker"></span><span>Dashboard</span>
         </button>
-        <button class="nav-item" data-view="timesheet">
+        <button class="nav-item role-employee-only" data-view="timesheet" hidden>
           <span class="nav-marker"></span><span>Mijn uren</span>
         </button>
         <button class="nav-item role-employee-only" data-view="employee-announcements" hidden>
@@ -89,7 +97,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-        <span class="demo-badge">Veilige demo v0.9.2</span>
+      <span class="demo-badge">Versie 0.9.12</span>
       </div>
     </aside>
 
@@ -100,25 +108,30 @@
           <h1 id="page-title">Urenoverzicht</h1>
         </div>
         <div class="topbar-actions">
-          <span class="safety-badge">Demo · e-mail uitgeschakeld</span>
-          <div class="period-control" aria-label="Periode kiezen">
+          <span class="safety-badge">E-mail uitgeschakeld</span>
+          <div class="period-control" id="global-period-control" aria-label="Periode kiezen">
             <button id="period-prev" aria-label="Vorige maand">‹</button>
-            <label class="period-picker-wrap">
+            <div class="period-picker-wrap">
               <span class="period-picker-caption">Maand / jaar</span>
-              <input id="period-picker" type="month" value="2026-07" aria-label="Kies maand en jaar" title="Kies direct een maand en jaar">
+              <span class="period-picker-fields">
+                <span class="month-picker">
+                  <button class="month-picker-trigger" id="period-month-picker" type="button" value="07" data-month-picker-trigger="period-month-panel" aria-label="Kies maand" aria-expanded="false" aria-controls="period-month-panel">Juli</button>
+                  <span class="month-choice-panel" id="period-month-panel" aria-label="Kies een maand" hidden>
+                    <button type="button" data-period-month="01" data-month-control="#period-month-picker" data-year-control="#period-year-picker">Januari</button><button type="button" data-period-month="02" data-month-control="#period-month-picker" data-year-control="#period-year-picker">Februari</button><button type="button" data-period-month="03" data-month-control="#period-month-picker" data-year-control="#period-year-picker">Maart</button><button type="button" data-period-month="04" data-month-control="#period-month-picker" data-year-control="#period-year-picker">April</button><button type="button" data-period-month="05" data-month-control="#period-month-picker" data-year-control="#period-year-picker">Mei</button><button type="button" data-period-month="06" data-month-control="#period-month-picker" data-year-control="#period-year-picker">Juni</button><button type="button" data-period-month="07" data-month-control="#period-month-picker" data-year-control="#period-year-picker">Juli</button><button type="button" data-period-month="08" data-month-control="#period-month-picker" data-year-control="#period-year-picker">Augustus</button><button type="button" data-period-month="09" data-month-control="#period-month-picker" data-year-control="#period-year-picker">September</button><button type="button" data-period-month="10" data-month-control="#period-month-picker" data-year-control="#period-year-picker">Oktober</button><button type="button" data-period-month="11" data-month-control="#period-month-picker" data-year-control="#period-year-picker">November</button><button type="button" data-period-month="12" data-month-control="#period-month-picker" data-year-control="#period-year-picker">December</button>
+                  </span>
+                </span>
+                <input id="period-year-picker" type="number" min="1000" max="9999" step="1" value="2026" inputmode="numeric" aria-label="Kies jaar">
+              </span>
+              <input id="period-picker" type="hidden" value="2026-07">
               <strong class="sr-only" id="period-label">Juli 2026</strong>
-            </label>
+            </div>
             <button id="period-next" aria-label="Volgende maand">›</button>
           </div>
           <div class="topbar-popover">
             <button class="notification-button" id="notification-button" aria-label="Meldingen" aria-expanded="false" aria-controls="notification-panel"><span class="bell-shape"></span><b id="notification-count" hidden>0</b></button>
             <section class="popover-panel notification-panel" id="notification-panel" aria-label="Meldingen" hidden>
-              <div class="popover-heading"><div><small>Meldingen</small><strong id="notification-title">Geen nieuwe meldingen</strong></div><button class="icon-button" id="mark-notifications-read" aria-label="Alles als gelezen markeren">✓</button></div>
+              <div class="popover-heading"><div><small>Alle urenstatussen en mededelingen</small><strong id="notification-title">Geen ongelezen meldingen</strong></div><button class="icon-button" id="mark-notifications-read" aria-label="Alles als gelezen markeren">✓</button></div>
               <div class="notification-list" id="notification-list"></div>
-              <div class="notification-test-actions">
-                <small>Testmeldingen</small>
-                <div id="notification-test-buttons"></div>
-              </div>
             </section>
           </div>
           <div class="topbar-popover">
@@ -128,7 +141,7 @@
               <button data-profile-action="profile">Mijn profiel</button>
               <button data-profile-action="preferences">Voorkeuren</button>
               <button data-profile-action="help">Hulp &amp; contact</button>
-              <button data-profile-action="switch">Andere demo-rol kiezen</button>
+              <button data-profile-action="switch">Ander account of rol</button>
               <button class="danger-menu-item" data-profile-action="logout">Uitloggen</button>
             </section>
           </div>
@@ -155,6 +168,17 @@
           <div><strong>Correctie gevraagd</strong><p id="employee-dashboard-correction-message"></p><small id="employee-dashboard-correction-meta"></small></div>
           <button class="button button-primary" data-go="timesheet">Correctie openen</button>
         </section>
+        <section class="employee-customer-timesheet-card" id="employee-customer-timesheet-card">
+          <div>
+            <span class="section-label">Klanturenstaat · <span id="employee-customer-timesheet-period">Juli 2026</span></span>
+            <div class="employee-customer-timesheet-heading"><h3 id="employee-customer-timesheet-title">Klanturenstaat staat nog open</h3><span class="status-pill status-concept" id="employee-customer-timesheet-status">Nog niet ontvangen</span></div>
+            <p id="employee-customer-timesheet-note">Upload de officiële klanturenstaat of registreer dat je deze al rechtstreeks hebt gemaild.</p>
+          </div>
+          <div class="employee-customer-timesheet-actions">
+            <button class="button button-primary" data-go="timesheet" id="employee-customer-timesheet-open">Klanturenstaat openen</button>
+            <button class="button button-ghost" id="employee-customer-timesheet-skip" type="button">Al rechtstreeks gemaild</button>
+          </div>
+        </section>
         <div class="metric-grid employee-metrics">
           <article class="metric-card"><span class="metric-label">Status</span><strong class="compact-metric" id="employee-dashboard-status">Ingediend</strong><span class="metric-note" id="employee-dashboard-status-note">Wacht op controle</span></article>
           <article class="metric-card"><span class="metric-label">Declarabel</span><strong id="employee-dashboard-billable">153,0</strong><span class="metric-note">uur in deze maand</span></article>
@@ -174,13 +198,13 @@
             <h2 id="admin-dashboard-greeting">Goedemiddag, Gio</h2>
             <p id="admin-attention-note">Dit vraagt nu je aandacht: bekijk open urencontroles en rond daarna de maand af.</p>
             <div class="hero-actions">
-              <button class="button button-primary" data-go="approvals">Open goedkeuringen</button>
+              <button class="button button-primary" id="open-work-queue" data-scroll-target="open-periods-panel">Open werkvoorraad</button>
               <button class="button button-ghost" id="open-delivery-check" data-go="invoices">Controleer maandverzending</button>
             </div>
           </div>
           <div class="close-card" aria-label="Voortgang maandafsluiting">
             <div class="progress-ring" id="close-progress-ring" style="--progress:75"><span id="close-progress-value">75%</span></div>
-            <div><strong id="close-progress-title">3 van 4 compleet</strong><small id="close-progress-note">Nog twee acties voor afsluiting</small></div>
+            <div><strong id="close-progress-title">3 van 4 stappen voltooid</strong><small id="close-progress-note">Uren → Controle → Facturen → Verzending</small></div>
           </div>
         </div>
 
@@ -204,27 +228,28 @@
             <button class="metric-link" data-go="invoices">Open facturen</button>
           </article>
           <article class="metric-card attention">
-            <span class="metric-label">Acties nodig</span>
+            <span class="metric-label">Open acties</span>
             <strong id="metric-actions">2</strong>
-            <span class="metric-note">Controleer voor verzending</span>
-            <button class="metric-link" data-scroll-target="dashboard-action-list">Bekijk acties</button>
+            <span class="metric-note" id="metric-actions-note">Over alle maanden</span>
+            <button class="metric-link" data-scroll-target="open-periods-panel">Bekijk werkvoorraad</button>
           </article>
         </div>
 
         <section class="panel open-periods-panel" id="open-periods-panel">
-          <div class="panel-heading"><div><span class="section-label">Achterstand & voortgang</span><h3>Openstaande maanden</h3></div><span class="updated-label">Oudste maand eerst</span></div>
-          <p class="open-periods-intro">Ook eerdere maanden blijven hier staan totdat de uren, correcties en gekozen verzendroutes volledig zijn afgerond.</p>
+          <div class="panel-heading"><div><span class="section-label">Alles wat nog moet gebeuren</span><h3>Werkvoorraad over alle maanden</h3></div><span class="updated-label">Oudste maand eerst</span></div>
+          <p class="open-periods-intro">Urencontroles, ontbrekende klanturenstaten en verzendcontroles blijven hier samen zichtbaar. Kies direct de juiste actie; zelf maanden nalopen is niet nodig.</p>
           <div class="open-periods-list" id="open-periods-list"></div>
         </section>
 
-        <section class="panel attention-list-panel">
-          <div class="panel-heading"><div><span class="section-label">Acties</span><h3>Wat moet ik nu doen?</h3></div><span class="updated-label">Alle maanden meegenomen</span></div>
-          <div class="dashboard-action-list" id="dashboard-action-list"></div>
+        <section class="panel customer-timesheet-admin-panel" id="customer-timesheet-admin-panel">
+          <div class="panel-heading"><div><span class="section-label">Documenten van de klant</span><h3 id="customer-timesheet-admin-title">Klanturenstaten · Juli 2026</h3></div><span class="updated-label">Staat los van uren indienen</span></div>
+          <p class="open-periods-intro">De medewerker uploadt hier alleen de officiële PDF van de klant. Path maakt zelf geen urenstaat.</p>
+          <div class="customer-timesheet-admin-list" id="customer-timesheet-admin-list"></div>
         </section>
 
         <section class="panel workflow-panel">
           <div class="panel-heading">
-            <div><span class="section-label">Proces</span><h3 id="workflow-period-title">Maandafsluiting juli 2026</h3></div>
+            <div><span class="section-label">Proces</span><h3 id="workflow-period-title">Vier stappen voor juli 2026</h3></div>
             <span class="updated-label">Laatst bijgewerkt vandaag, 14:12</span>
           </div>
           <div class="workflow-track">
@@ -234,14 +259,17 @@
             <div class="workflow-line"></div>
             <div class="workflow-step" id="workflow-invoices"><span>3</span><div><strong>Facturen</strong><small id="workflow-invoices-note">2 facturen klaar</small></div></div>
             <div class="workflow-line"></div>
-            <div class="workflow-step" id="workflow-send"><span>4</span><div><strong>Verzendtest</strong><small id="workflow-send-note">Nog niet getest</small></div></div>
+            <div class="workflow-step" id="workflow-send"><span>4</span><div><strong>Verzending controleren</strong><small id="workflow-send-note">Nog niet gecontroleerd</small></div></div>
           </div>
         </section>
 
         <section class="panel">
           <div class="panel-heading">
             <div><span class="section-label">Team</span><h3 id="dashboard-team-title">Overzicht per medewerker · Juli 2026</h3></div>
-            <button class="text-button" data-go="employees">Alle medewerkers</button>
+            <div class="heading-actions dashboard-team-actions">
+              <button class="text-button" id="dashboard-team-clear-filter" data-dashboard-team-filter="all" hidden>Toon volledig team</button>
+              <button class="text-button" data-go="employees">Medewerkers beheren</button>
+            </div>
           </div>
           <div class="table-wrap">
             <table class="data-table">
@@ -252,7 +280,7 @@
         </section>
       </section>
 
-      <section class="view" id="view-timesheet" data-title="Mijn uren">
+      <section class="view role-employee-only" id="view-timesheet" data-title="Mijn uren">
         <div class="view-heading">
           <div><span class="section-label">Urenregistratie</span><h2 id="timesheet-period-title">Juli 2026</h2><p>Vul alleen declarabele klanturen in. Iedere maand wordt apart lokaal bewaard.</p></div>
           <span class="status-pill status-concept" id="timesheet-status">Nog invullen</span>
@@ -270,11 +298,16 @@
               <div><small>Medewerker</small><strong id="timesheet-employee">Stasjo van Bakel</strong></div>
               <div><small>Projectcode</small><strong id="timesheet-project">IND-TST-2026</strong></div>
             </div>
+            <div class="hours-view-toolbar">
+              <div><strong>Invoerweergave</strong><small id="hours-autosave-status">Wijzigingen worden automatisch opgeslagen</small></div>
+              <div class="segmented-control hours-week-filter" id="hours-week-filter" role="group" aria-label="Uren per week of hele maand tonen"></div>
+              <div class="hours-visible-total"><span id="hours-visible-total-label">Hele maand</span><strong id="hours-visible-total">0,0 uur</strong></div>
+            </div>
             <div class="table-wrap">
               <table class="hours-table">
                 <thead><tr><th>Week</th><th>Ma</th><th>Di</th><th>Wo</th><th>Do</th><th>Vr</th><th>Totaal</th></tr></thead>
                 <tbody id="hours-grid"></tbody>
-                <tfoot><tr><th colspan="6">Totaal declarabel</th><th id="hours-total">0,0</th></tr></tfoot>
+                <tfoot><tr><th colspan="6">Maandtotaal declarabel</th><th id="hours-total">0,0</th></tr></tfoot>
               </table>
             </div>
             <div class="timesheet-actions">
@@ -295,34 +328,70 @@
             <div class="summary-note"><strong>Waarom gescheiden?</strong><p id="payroll-privacy-note">De salarisadministratie krijgt alleen de toegestane ureninformatie en standaard geen factuurgegevens.</p></div>
           </aside>
         </div>
+
+        <section class="panel customer-timesheet-upload-panel" id="customer-timesheet-upload-panel">
+          <div class="panel-heading">
+            <div><span class="section-label">Apart klantdocument</span><h3>Klanturenstaat uploaden</h3></div>
+            <span id="customer-timesheet-status" class="status-pill status-concept">Nog niet ontvangen</span>
+          </div>
+          <p>Upload het officiële document dat je van de klant hebt ontvangen. PDF blijft ongewijzigd; JPG en PNG worden automatisch als PDF opgeslagen. Dit document staat los van je dagelijkse ureninvoer en mag later binnenkomen.</p>
+          <ol class="customer-timesheet-flow" aria-label="Stappen voor de klanturenstaat">
+            <li><strong>1. Kies de periode</strong><span>Maand en jaar - ook een volgend jaar - worden automatisch in onderwerp, tekst en bestandsnaam gezet.</span></li>
+            <li><strong>2. Kies het officiële bestand</strong><span>Open de klantmail, sla de bijlage op in Downloads/Bestanden en kies hem hier. PDF, JPG en PNG zijn toegestaan.</span></li>
+            <li><strong>3. Bewaar of dien in</strong><span>Een concept blijft van jou. Pas na Indienen bij Backoffice krijgt Backoffice een melding in de app.</span></li>
+          </ol>
+          <div class="customer-timesheet-upload-grid">
+            <div class="customer-timesheet-period-control"><span class="customer-timesheet-field-label">Maand en jaar</span>
+              <span class="customer-timesheet-period-fields">
+                <span class="month-picker">
+                  <button class="month-picker-trigger" id="customer-timesheet-month" type="button" value="07" data-month-picker-trigger="customer-timesheet-month-panel" aria-label="Kies maand klanturenstaat" aria-expanded="false" aria-controls="customer-timesheet-month-panel">Juli</button>
+                  <span class="month-choice-panel customer-month-choice-panel" id="customer-timesheet-month-panel" aria-label="Kies een maand voor de klanturenstaat" hidden>
+                    <button type="button" data-period-month="01" data-month-control="#customer-timesheet-month" data-year-control="#customer-timesheet-year">Januari</button><button type="button" data-period-month="02" data-month-control="#customer-timesheet-month" data-year-control="#customer-timesheet-year">Februari</button><button type="button" data-period-month="03" data-month-control="#customer-timesheet-month" data-year-control="#customer-timesheet-year">Maart</button><button type="button" data-period-month="04" data-month-control="#customer-timesheet-month" data-year-control="#customer-timesheet-year">April</button><button type="button" data-period-month="05" data-month-control="#customer-timesheet-month" data-year-control="#customer-timesheet-year">Mei</button><button type="button" data-period-month="06" data-month-control="#customer-timesheet-month" data-year-control="#customer-timesheet-year">Juni</button><button type="button" data-period-month="07" data-month-control="#customer-timesheet-month" data-year-control="#customer-timesheet-year">Juli</button><button type="button" data-period-month="08" data-month-control="#customer-timesheet-month" data-year-control="#customer-timesheet-year">Augustus</button><button type="button" data-period-month="09" data-month-control="#customer-timesheet-month" data-year-control="#customer-timesheet-year">September</button><button type="button" data-period-month="10" data-month-control="#customer-timesheet-month" data-year-control="#customer-timesheet-year">Oktober</button><button type="button" data-period-month="11" data-month-control="#customer-timesheet-month" data-year-control="#customer-timesheet-year">November</button><button type="button" data-period-month="12" data-month-control="#customer-timesheet-month" data-year-control="#customer-timesheet-year">December</button>
+                  </span>
+                </span>
+                <input id="customer-timesheet-year" type="number" min="1000" max="9999" step="1" value="2026" inputmode="numeric" aria-label="Kies jaar klanturenstaat">
+              </span>
+              <input id="customer-timesheet-period" type="hidden" value="2026-07">
+            </div>
+            <label>Officieel bestand (PDF, JPG of PNG · maximaal 2 MB)<input id="customer-timesheet-file" type="file" accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png"></label>
+            <div class="customer-timesheet-upload-actions">
+              <button class="button button-ghost" id="customer-timesheet-skip" type="button">Al rechtstreeks gemaild</button>
+              <button class="button button-ghost" id="customer-timesheet-save-draft" type="button">Concept opslaan</button>
+              <button class="button button-primary" id="customer-timesheet-submit" type="button">Indienen bij Backoffice</button>
+            </div>
+            <small class="customer-timesheet-action-help" id="customer-timesheet-action-help" aria-live="polite"></small>
+          </div>
+          <div class="customer-timesheet-current" id="customer-timesheet-current"></div>
+          <div class="customer-timesheet-mail-preview">
+            <div class="customer-timesheet-mail-preview-heading"><div><span id="customer-timesheet-mail-route">Van medewerker aan Path Backoffice</span><strong id="customer-timesheet-subject"></strong></div><button class="small-button" id="customer-timesheet-edit-mail" type="button">Bericht aanpassen</button></div>
+            <pre id="customer-timesheet-body"></pre>
+          </div>
+        </section>
       </section>
 
       <section class="view" id="view-approvals" data-title="Goedkeuringen">
         <div class="view-heading">
           <div><span class="section-label">Controle</span><h2 id="approval-period-title">Alle openstaande uren</h2><p id="approval-scope-note">Een totaaloverzicht over alle maanden. Iedere open regel toont zelf bij welke periode hij hoort.</p></div>
           <div class="heading-actions approval-heading-actions">
-            <div class="segmented-control" role="group" aria-label="Goedkeuringen filteren">
-              <button class="is-active" data-approval-scope="all">Alle openstaande</button>
-              <button data-approval-scope="month" id="approval-month-filter">Juli 2026</button>
-            </div>
+            <div class="segmented-control approval-period-filters" id="approval-period-filters" role="group" aria-label="Goedkeuringen filteren"></div>
             <button class="button button-ghost" id="approve-all">Alles goedkeuren</button>
           </div>
         </div>
         <div class="approval-list" id="approval-list"></div>
         <div class="empty-state" id="approval-empty" hidden>
-          <span class="empty-check">✓</span><h3 id="approval-empty-title">Alles is gecontroleerd</h3><p id="approval-empty-text">Er staan in geen enkele maand nog uren open.</p>
+          <span class="empty-check">✓</span><h3 id="approval-empty-title">Alles is gecontroleerd</h3><p id="approval-empty-text">Er staan in geen enkele maand nog uren open.</p><div class="approval-empty-links" id="approval-other-periods"></div>
         </div>
       </section>
 
       <section class="view" id="view-invoices" data-title="Facturen">
         <div class="view-heading">
-          <div><span class="section-label">Facturatie</span><h2 id="invoice-period-title">Facturen juli 2026</h2><p>Je ziet direct wat nog op urencontrole wacht, welke factuur klaar is en welke verzendtest al is gedaan.</p></div>
+          <div><span class="section-label">Facturatie</span><h2 id="invoice-period-title">Facturen juli 2026</h2><p>Je ziet direct wat nog op urencontrole wacht, welke factuur klaar is en welke verzending al is gecontroleerd.</p></div>
           <div class="heading-actions"><button class="button button-primary" id="test-month-delivery">Maandverzending controleren</button></div>
         </div>
         <div class="invoice-status-guide" aria-label="Uitleg factuurstatussen">
           <div><span>1</span><p><strong>Nog niet klaar</strong><small>Wacht op de medewerker of keur ingediende uren goed.</small></p></div>
           <div><span>2</span><p><strong>Factuur klaar</strong><small>Open het mailvoorbeeld en controleer factuur en bijlagen.</small></p></div>
-          <div><span>3</span><p><strong>Verzendtest afgerond</strong><small>Alle gekozen routes zijn gecontroleerd; er is niets echt verstuurd.</small></p></div>
+          <div><span>3</span><p><strong>Verzending gecontroleerd</strong><small>Alle gekozen routes zijn gecontroleerd; e-mailverzending staat uit.</small></p></div>
         </div>
         <section class="panel">
           <div class="invoice-toolbar">
@@ -330,7 +399,7 @@
               <button class="is-active" data-invoice-filter="all">Alle</button>
               <button data-invoice-filter="concept">Nog niet klaar</button>
               <button data-invoice-filter="ready">Factuur klaar</button>
-              <button data-invoice-filter="simulated">Verzendtest afgerond</button>
+              <button data-invoice-filter="simulated">Verzending gecontroleerd</button>
             </div>
             <button class="text-button" id="download-invoice-list">Download overzicht</button>
           </div>
@@ -354,18 +423,18 @@
           <article><span>3</span><div><strong>Interne historie</strong><small>Beheerders houden versies controleerbaar; medewerkers zien alleen de nieuwste</small></div></article>
         </div>
         <section class="panel">
-          <div class="panel-heading"><div><span class="section-label">Concepten & verzendhistorie</span><h3>Mededelingen</h3></div><small>Demo: e-mail wordt uitsluitend gesimuleerd</small></div>
+          <div class="panel-heading"><div><span class="section-label">Concepten & verzendhistorie</span><h3>Mededelingen</h3></div><small>In-app actief · e-mail uitgeschakeld</small></div>
           <div class="announcement-list" id="announcement-list"></div>
         </section>
       </section>
 
       <section class="view" id="view-employee-announcements" data-title="Mijn mededelingen">
         <div class="view-heading">
-          <div><span class="section-label">Berichtenarchief</span><h2>Mijn mededelingen</h2><p>Bekijk jouw actuele mededelingen, ook nadat je ze via de bel als gelezen hebt gemarkeerd. Na een wijziging zie je alleen de nieuwste tekst.</p></div>
+          <div><span class="section-label">Berichtenarchief</span><h2>Mijn mededelingen</h2><p>Hier staan alleen algemene mededelingen. Urenstatussen, correcties en herinneringen staan in de bel en op je dashboard. Na een wijziging zie je alleen de nieuwste tekst; na intrekken verdwijnt het oorspronkelijke bericht.</p></div>
         </div>
         <div class="segmented-control announcement-archive-filter" role="group" aria-label="Mededelingen filteren">
           <button class="is-active" data-announcement-archive-filter="all">Alles</button>
-          <button data-announcement-archive-filter="unread">Ongelezen</button>
+          <button data-announcement-archive-filter="unread" id="announcement-unread-filter">Ongelezen mededelingen · 0</button>
           <button data-announcement-archive-filter="withdrawn">Ingetrokken</button>
         </div>
         <section class="panel">
@@ -393,8 +462,8 @@
 
       <section class="view" id="view-settings" data-title="Instellingen">
         <div class="view-heading">
-          <div><span class="section-label">Beheer</span><h2>Bedrijf & verzending</h2><p>Je mag zelf ieder geldig e-mailadres invoeren. De demoversie bewaart alles alleen lokaal en kan geen echte e-mail versturen. Druk op Enter om een kort invoerveld op te slaan.</p></div>
-          <div class="heading-actions"><button class="button button-ghost" id="reset-demo">Demo herstellen</button><button class="button button-primary" id="save-settings">Wijzigingen opslaan</button></div>
+          <div><span class="section-label">Beheer</span><h2>Bedrijf & verzending</h2><p>Je mag zelf ieder geldig e-mailadres invoeren. Deze versie bewaart alles alleen lokaal en e-mailverzending is uitgeschakeld. Druk op Enter om een kort invoerveld op te slaan.</p></div>
+          <div class="heading-actions"><button class="button button-ghost" id="reset-demo">Voorbeeldgegevens herstellen</button><button class="button button-primary" id="save-settings">Wijzigingen opslaan</button></div>
         </div>
         <div class="settings-grid">
           <section class="panel settings-card full-width">
@@ -429,12 +498,33 @@
             <div class="email-template-heading"><h3>Mailroutering - veilig</h3><span class="status-pill status-warning">Niet verzendbaar</span></div>
             <div class="form-grid">
               <label>Afzender<input id="setting-sender" type="email"></label>
-              <label>Verzendmodus<select id="setting-send-mode" disabled><option>Alleen verzending testen</option></select></label>
+              <label>Verzendmodus<select id="setting-send-mode" disabled><option>Controlemodus · e-mail uitgeschakeld</option></select></label>
             </div>
             <div class="recipient-settings-heading"><div><span class="section-label">Vaste ontvangers</span><h4>Boekhouding, salarisadministratie en overige routes</h4></div><button class="small-button" id="add-mail-recipient" type="button">Ontvanger toevoegen</button></div>
             <div class="mail-recipient-settings-list" id="mail-recipient-settings-list"></div>
             <p class="safe-domain-note">Standaard staan hier veilige voorbeeldadressen. Echte adressen zijn toegestaan, maar daadwerkelijke verzending is technisch uitgeschakeld.</p>
             <button class="text-button" id="connect-gmail">Waarom is Gmail uitgeschakeld?</button>
+          </section>
+          <section class="panel settings-card full-width">
+            <div class="email-template-heading">
+              <div><span class="section-label">Klanturenstaat</span><h3>Standaardonderwerpen en e-mailteksten</h3></div>
+              <span class="status-pill status-approved">Zelf aanpasbaar</span>
+            </div>
+            <p class="settings-template-intro">De eerste mail is van de medewerker aan Backoffice. De tweede mail is van Backoffice aan de broker. Een medewerker kan zijn eigen bericht vóór het indienen nog per maand aanpassen.</p>
+            <div class="customer-timesheet-template-grid">
+              <div class="customer-timesheet-template-card">
+                <div><span class="section-label">Medewerker → Backoffice</span><h4>Bericht bij indienen</h4></div>
+                <label>Standaardonderwerp<input id="setting-customer-timesheet-submission-subject"></label>
+                <label>Standaardtekst<textarea id="setting-customer-timesheet-submission-body" rows="8"></textarea></label>
+                <small>Beschikbaar: {medewerker}, {maand}, {jaar}, {backoffice}</small>
+              </div>
+              <div class="customer-timesheet-template-card">
+                <div><span class="section-label">Backoffice → broker</span><h4>Bericht na goedkeuring</h4></div>
+                <label>Standaardonderwerp<input id="setting-customer-timesheet-broker-subject"></label>
+                <label>Standaardtekst<textarea id="setting-customer-timesheet-broker-body" rows="8"></textarea></label>
+                <small>Beschikbaar: {medewerker}, {maand}, {jaar}, {afzender}, {organisatie}</small>
+              </div>
+            </div>
           </section>
           <section class="panel settings-card full-width">
             <div class="email-template-heading">
@@ -444,11 +534,44 @@
             <div class="template-list" id="mail-template-list"></div>
           </section>
           <section class="panel settings-card full-width">
+            <div class="email-template-heading"><div><span class="section-label">Planning</span><h3>Urenherinneringen</h3></div><span class="status-pill status-warning">Automatische planning uitgeschakeld</span></div>
+            <p class="settings-warning">Dit zijn organisatiestandaarden. Per medewerker kan Geplande urenherinneringen worden uitgezet. Echte automatische uitvoering wordt later server-side ingepland.</p>
+            <div class="reminder-rules">
+              <div class="reminder-rule">
+                <label class="check-row"><input id="setting-weekly-reminder-enabled" type="checkbox"><span><strong>Week nog niet compleet</strong><small>Alleen als de medewerker de huidige week nog niet heeft ingevuld</small></span></label>
+                <label>Dag<select id="setting-weekly-reminder-day"><option value="thursday">Donderdag</option><option value="friday">Vrijdag</option></select></label>
+                <label>Tijd<select id="setting-weekly-reminder-time"><option value="12:00">12:00</option><option value="15:00">15:00</option><option value="16:00">16:00</option></select></label>
+              </div>
+              <div class="reminder-rule">
+                <label class="check-row"><input id="setting-month-end-reminder-enabled" type="checkbox"><span><strong>Maand nog niet ingediend</strong><small>Op de laatste werkdag van de maand</small></span></label>
+                <span class="reminder-fixed-moment">Laatste werkdag</span>
+                <label>Tijd<select id="setting-month-end-reminder-time"><option value="12:00">12:00</option><option value="15:00">15:00</option><option value="16:00">16:00</option></select></label>
+              </div>
+              <div class="reminder-rule">
+                <label class="check-row"><input id="setting-overdue-reminder-enabled" type="checkbox"><span><strong>Vorige maand staat nog open</strong><small>Voor medewerkers met een achterstallige maand</small></span></label>
+                <span class="reminder-fixed-moment">Eerste werkdag</span>
+                <label>Tijd<select id="setting-overdue-reminder-time"><option value="09:00">09:00</option><option value="12:00">12:00</option><option value="15:00">15:00</option></select></label>
+              </div>
+              <div class="reminder-rule">
+                <label class="check-row"><input id="setting-approval-reminder-enabled" type="checkbox"><span><strong>Goedkeuring wacht op beheerder</strong><small>Alleen als ingediende uren nog niet zijn gecontroleerd</small></span></label>
+                <span class="reminder-fixed-moment">Eerste werkdag</span>
+                <label>Tijd<select id="setting-approval-reminder-time"><option value="09:00">09:00</option><option value="10:00">10:00</option><option value="12:00">12:00</option></select></label>
+              </div>
+              <div class="reminder-rule">
+                <label class="check-row"><input id="setting-customer-timesheet-reminder-enabled" type="checkbox"><span><strong>Klanturenstaat ontbreekt</strong><small>Eén werkdag voor de persoonlijke deadline, op de deadline en daarna nog één keer</small></span></label>
+                <label>Eerste herinnering<select id="setting-customer-timesheet-reminder-time"><option value="12:00">12:00</option><option value="15:00">15:00</option><option value="16:00">16:00</option></select></label>
+                <label>Te laat na<select id="setting-customer-timesheet-overdue-days"><option value="1">1 werkdag</option><option value="2">2 werkdagen</option><option value="3">3 werkdagen</option><option value="5">5 werkdagen</option></select></label>
+              </div>
+            </div>
+            <div class="reminder-schedule-footer"><p id="reminder-schedule-summary"></p><button class="small-button" type="button" id="test-reminder-schedule">Voorbeeldmelding maken</button></div>
+            <p class="safe-domain-note">Correctieverzoeken en goedkeuringen blijven directe statusmeldingen en wachten niet op deze planning.</p>
+          </section>
+          <section class="panel settings-card full-width">
             <h3>Veiligheidsregels</h3>
             <div class="toggle-grid">
-              <label><input id="setting-approval-required" type="checkbox" checked><span></span><p><strong>Goedkeuring verplicht</strong><small>Nooit een verzendtest zonder controle</small></p></label>
-              <label><input id="setting-lock-invoice" type="checkbox" checked><span></span><p><strong>Factuurnummer vastzetten</strong><small>Na de verzendtest niet meer wijzigbaar</small></p></label>
-              <label><input id="setting-audit-log" type="checkbox" checked><span></span><p><strong>Auditlog bijhouden</strong><small>Wie wijzigde of testte wat en wanneer</small></p></label>
+              <label><input id="setting-approval-required" type="checkbox" checked><span></span><p><strong>Goedkeuring verplicht</strong><small>Nooit een verzendcontrole zonder urencontrole</small></p></label>
+              <label><input id="setting-lock-invoice" type="checkbox" checked><span></span><p><strong>Factuurnummer vastzetten</strong><small>Na afgeronde verzendcontrole niet meer wijzigbaar</small></p></label>
+              <label><input id="setting-audit-log" type="checkbox" checked><span></span><p><strong>Auditlog bijhouden</strong><small>Wie wijzigde of controleerde wat en wanneer</small></p></label>
             </div>
           </section>
         </div>
@@ -458,7 +581,7 @@
 
   <button class="help-launcher" id="help-launcher" aria-label="Hulp en contact openen" aria-expanded="false" aria-controls="help-panel" hidden><span>?</span><strong>Hulp &amp; contact</strong></button>
   <section class="help-panel" id="help-panel" aria-label="Hulp bij de urenapp" hidden>
-    <header><div><small id="help-support-name">Ondersteuning</small><strong id="help-greeting">Waarmee kan ik helpen?</strong></div><button class="icon-button" id="help-close" aria-label="Hulp sluiten">×</button></header>
+    <header><div><small id="help-support-name">Ondersteuning</small><strong id="help-greeting">Waarmee kan ik helpen?</strong></div><div class="help-header-actions"><button class="help-clear" id="help-clear" type="button">Gesprek wissen</button><button class="icon-button" id="help-close" aria-label="Hulp sluiten">×</button></div></header>
     <form class="help-form" id="help-form">
       <label class="sr-only" for="help-input">Stel een vraag over de urenapp</label>
       <input id="help-input" autocomplete="off" placeholder="Vind je antwoord…">
@@ -476,7 +599,7 @@
       <button class="modal-close" id="modal-close" aria-label="Sluiten">×</button>
       <span class="section-label" id="modal-label">Controle</span>
       <h2 id="modal-title">Factuur verzenden?</h2>
-      <p id="modal-message">Deze actie wordt alleen lokaal in de veilige demo uitgevoerd.</p>
+      <p id="modal-message">Controleer deze actie voordat je verdergaat.</p>
       <div class="modal-summary" id="modal-summary"></div>
       <div class="modal-actions">
         <button class="button button-ghost" id="modal-cancel">Annuleren</button>

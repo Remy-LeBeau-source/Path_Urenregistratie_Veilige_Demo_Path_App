@@ -24,6 +24,9 @@ CREATE TABLE companies (
   country_code CHAR(2) NOT NULL DEFAULT 'NL',
   invoice_prefix VARCHAR(30) NOT NULL DEFAULT 'PATH',
   payment_term_days SMALLINT UNSIGNED NOT NULL DEFAULT 30,
+  customer_timesheet_reminder_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  customer_timesheet_reminder_time TIME NOT NULL DEFAULT '15:00:00',
+  customer_timesheet_overdue_workdays TINYINT UNSIGNED NOT NULL DEFAULT 2,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -122,6 +125,12 @@ CREATE TABLE assignments (
   broker_invoice_attachment BOOLEAN NOT NULL DEFAULT TRUE,
   bookkeeper_invoice_attachment BOOLEAN NOT NULL DEFAULT TRUE,
   payroll_invoice_attachment BOOLEAN NOT NULL DEFAULT FALSE,
+  customer_timesheet_expected BOOLEAN NOT NULL DEFAULT TRUE,
+  customer_timesheet_due_workday TINYINT UNSIGNED NOT NULL DEFAULT 5,
+  customer_timesheet_broker_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  customer_timesheet_use_broker_email BOOLEAN NOT NULL DEFAULT TRUE,
+  customer_timesheet_broker_email VARCHAR(190) NULL,
+  invoice_without_customer_timesheet_allowed BOOLEAN NOT NULL DEFAULT TRUE,
   active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -129,6 +138,7 @@ CREATE TABLE assignments (
   CONSTRAINT fk_assignments_employee FOREIGN KEY (employee_id) REFERENCES employees(id),
   CONSTRAINT fk_assignments_client FOREIGN KEY (client_id) REFERENCES counterparties(id),
   CONSTRAINT fk_assignments_broker FOREIGN KEY (broker_id) REFERENCES counterparties(id),
+  CONSTRAINT chk_customer_timesheet_due_workday CHECK (customer_timesheet_due_workday BETWEEN 1 AND 23),
   INDEX idx_assignments_active (employee_id, start_date, end_date, active)
 );
 
@@ -231,6 +241,35 @@ CREATE TABLE timesheet_corrections (
   INDEX idx_corrections_timesheet (timesheet_id, requested_at)
 );
 
+CREATE TABLE customer_timesheets (
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  period_id BIGINT UNSIGNED NOT NULL,
+  employee_id BIGINT UNSIGNED NOT NULL,
+  assignment_id BIGINT UNSIGNED NOT NULL,
+  status ENUM('missing', 'draft', 'received', 'approved', 'resubmit', 'sent_to_broker') NOT NULL DEFAULT 'missing',
+  storage_key VARCHAR(255) NULL,
+  original_file_name VARCHAR(255) NULL,
+  stored_file_name VARCHAR(255) NULL,
+  mime_type VARCHAR(100) NOT NULL DEFAULT 'application/pdf',
+  uploaded_at TIMESTAMP NULL,
+  uploaded_by BIGINT UNSIGNED NULL,
+  reviewed_at TIMESTAMP NULL,
+  reviewed_by BIGINT UNSIGNED NULL,
+  review_note TEXT NULL,
+  sent_to_broker_at TIMESTAMP NULL,
+  reminder_count SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  last_reminder_at TIMESTAMP NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_customer_timesheets_period FOREIGN KEY (period_id) REFERENCES periods(id),
+  CONSTRAINT fk_customer_timesheets_employee FOREIGN KEY (employee_id) REFERENCES employees(id),
+  CONSTRAINT fk_customer_timesheets_assignment FOREIGN KEY (assignment_id) REFERENCES assignments(id),
+  CONSTRAINT fk_customer_timesheets_uploader FOREIGN KEY (uploaded_by) REFERENCES users(id),
+  CONSTRAINT fk_customer_timesheets_reviewer FOREIGN KEY (reviewed_by) REFERENCES users(id),
+  CONSTRAINT uq_customer_timesheet UNIQUE (period_id, employee_id, assignment_id),
+  INDEX idx_customer_timesheets_status (period_id, status)
+);
+
 CREATE TABLE invoices (
   id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
   company_id BIGINT UNSIGNED NOT NULL,
@@ -303,13 +342,14 @@ CREATE TABLE email_deliveries (
   id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
   invoice_id BIGINT UNSIGNED NULL,
   timesheet_id BIGINT UNSIGNED NULL,
+  customer_timesheet_id BIGINT UNSIGNED NULL,
   announcement_id BIGINT UNSIGNED NULL,
-  channel ENUM('broker', 'accountant', 'payroll', 'reminder', 'announcement') NOT NULL,
+  channel ENUM('broker', 'accountant', 'payroll', 'reminder', 'customer_timesheet', 'announcement') NOT NULL,
   recipient_email VARCHAR(190) NOT NULL,
   cc_email VARCHAR(190) NULL,
   subject_snapshot VARCHAR(255) NOT NULL,
   body_snapshot TEXT NOT NULL,
-  attachment_policy ENUM('none', 'invoice', 'invoice_and_timesheet') NOT NULL DEFAULT 'none',
+  attachment_policy ENUM('none', 'invoice', 'customer_timesheet') NOT NULL DEFAULT 'none',
   gmail_message_id VARCHAR(255) NULL,
   status ENUM('queued', 'sent', 'failed') NOT NULL DEFAULT 'queued',
   attempt_count SMALLINT UNSIGNED NOT NULL DEFAULT 0,
@@ -319,6 +359,7 @@ CREATE TABLE email_deliveries (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_email_deliveries_invoice FOREIGN KEY (invoice_id) REFERENCES invoices(id),
   CONSTRAINT fk_email_deliveries_timesheet FOREIGN KEY (timesheet_id) REFERENCES timesheets(id),
+  CONSTRAINT fk_email_deliveries_customer_timesheet FOREIGN KEY (customer_timesheet_id) REFERENCES customer_timesheets(id),
   CONSTRAINT fk_email_deliveries_announcement FOREIGN KEY (announcement_id) REFERENCES announcements(id),
   INDEX idx_delivery_queue (status, created_at)
 );
@@ -329,7 +370,7 @@ CREATE TABLE notifications (
   user_id BIGINT UNSIGNED NOT NULL,
   period_id BIGINT UNSIGNED NULL,
   announcement_id BIGINT UNSIGNED NULL,
-  notification_type ENUM('timesheet_submitted', 'timesheet_reminder', 'correction_required', 'timesheet_approved', 'invoice_ready', 'announcement') NOT NULL,
+  notification_type ENUM('timesheet_submitted', 'timesheet_reminder', 'correction_required', 'timesheet_approved', 'invoice_ready', 'customer_timesheet_received', 'customer_timesheet_reminder', 'customer_timesheet_approved', 'customer_timesheet_resubmit', 'announcement') NOT NULL,
   title VARCHAR(160) NOT NULL,
   message VARCHAR(500) NOT NULL,
   target_route VARCHAR(100) NULL,
