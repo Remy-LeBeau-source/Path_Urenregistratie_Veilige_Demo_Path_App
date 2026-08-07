@@ -82,7 +82,7 @@ assert(/\.invoice-brand-references\s+strong\s*\{[^}]*color:\s*#fff/.test(styles)
 assert(document.querySelectorAll("select:not([hidden])").length === 0, "De vaste interface mag geen zichtbare native browserdropdowns meer bevatten");
 
 assert(document.querySelectorAll("#dashboard-employee-rows tr").length === 4, "Dashboard moet vier demo-medewerkers tonen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.16"), "Het zichtbare versienummer moet 0.9.16 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.17"), "Het zichtbare versienummer moet 0.9.17 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -114,7 +114,7 @@ const employeePicker = document.querySelector("#login-employee");
 employeePicker.value = "4";
 employeePicker.dispatchEvent(new Event("change", { bubbles: true }));
 const demoScenarioState = JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(demoScenarioState.schemaVersion === 23, "Versie 0.9.16 moet wijzigingen onder de juiste gegevensversie bewaren");
+assert(demoScenarioState.schemaVersion === 23, "Versie 0.9.17 moet wijzigingen onder de juiste gegevensversie bewaren");
 const freshOpenActions = dom.window.adminOpenTasks();
 const freshJulyActions = freshOpenActions.filter(task => task.periodKey === "2026-07");
 const freshAugustActions = freshOpenActions.filter(task => task.periodKey === "2026-08");
@@ -125,6 +125,10 @@ assert(freshBackofficeActions.length === 4 && freshEmployeeActions.length === 3,
 assert(new Set(freshOpenActions.map(task => task.periodKey + ":" + task.employee.id)).size === 5, "De zeven standaardacties moeten vijf medewerker-maanddossiers vormen");
 assert(document.querySelector("#hero-task-months").textContent === "Juli 1 + Augustus 6 = 7" && document.querySelector("#hero-task-owners").textContent === "Backoffice 4 + medewerkers 3 = 7", "De bovenkant moet beide standaardrekensommen direct tonen");
 assert(document.querySelector('[data-admin-task-month="2026-07"]')?.querySelectorAll("[data-admin-task-row]").length === 1 && document.querySelector('[data-admin-task-month="2026-08"]')?.querySelectorAll("[data-admin-task-row]").length === 6, "De zeven standaardacties moeten zichtbaar onder juli en augustus worden gegroepeerd");
+assert(document.querySelector('[data-admin-task-month-toggle="2026-07"]').getAttribute("aria-expanded") === "true" && document.querySelector('[data-admin-task-month-toggle="2026-08"]').getAttribute("aria-expanded") === "true", "De oudste achterstallige en huidige open maand moeten standaard openstaan");
+assert(document.querySelector("#dashboard-next-action-label").textContent === "Volgende actie · 1 van 4 bij Backoffice" && document.querySelector("#dashboard-next-action-title").textContent === "Klanturenstaat controleren", "De vaste prioriteitenkaart moet de eerste van vier concrete Backoffice-acties tonen");
+assert(document.querySelector("#dashboard-next-action-person").textContent === "Shawn-Douglas Nahar" && document.querySelector("#dashboard-next-action-period").textContent.includes("Augustus 2026") && document.querySelector("#dashboard-next-action-button"), "De volgende actie moet medewerker, maand en een directe startknop tonen");
+assert(document.querySelector("#metric-actions").textContent === "4" && document.querySelector("#metric-actions-note").textContent === "3 acties wachten op medewerkers" && document.querySelector("#metric-actions-link").textContent === "Bekijk alle 7 acties", "De vierde KPI moet directe Backoffice-acties tonen en naar alle zeven acties verwijzen");
 assert(demoScenarioState.settings.weeklyReminderDay === "friday" && demoScenarioState.settings.weeklyReminderTime === "15:00", "De standaard weekherinnering moet vrijdag om 15:00 zijn");
 assert(demoScenarioState.settings.monthEndReminderTime === "15:00" && demoScenarioState.settings.overdueReminderTime === "09:00" && demoScenarioState.settings.approvalReminderTime === "10:00", "De maand-, achterstands- en goedkeuringsherinneringen moeten veilige standaardmomenten hebben");
 assert(demoScenarioState.settings.customerTimesheetReminderEnabled && demoScenarioState.settings.customerTimesheetReminderTime === "15:00" && demoScenarioState.settings.customerTimesheetOverdueWorkdays === 2, "Klanturenstaten moeten een eigen instelbare herinneringsplanning hebben");
@@ -382,7 +386,7 @@ assert(document.querySelector("#admin-dashboard-greeting").textContent.includes(
 assert(document.querySelector("#period-label").textContent === "December 2037", "De beheerder moet dezelfde gekozen maand zien");
 assert(document.querySelector("#dashboard-team-title").textContent.includes("December 2037"), "De actieve maand moet ook boven het teamoverzicht op het dashboard staan");
 assert(document.querySelector("#workflow-period-title").textContent.includes("december 2037"), "Het dashboard moet de gekozen periode gebruiken");
-assert(!document.querySelector("#open-delivery-check").hidden && document.querySelector("#open-delivery-check").textContent.includes("Per maand"), "De globale maandverdeling moet zichtbaar blijven als de gekozen detailmaand leeg is");
+assert(!document.querySelector("#open-delivery-check"), "Een tweede dashboardknop naar dezelfde werkvoorraad moet niet meer bestaan");
 assert(!document.querySelector("#admin-task-panel").hidden && document.querySelector("#admin-task-panel").textContent.includes("Alle open acties per maand") && document.querySelector("#admin-task-panel").textContent.includes("Zonder maanden wisselen"), "De beheerder moet één actiegerichte werkvoorraad krijgen die niet door de gekozen maand wordt beperkt");
 const dashboardTasks = dom.window.adminOpenTasks();
 const dashboardActionableTasks = dashboardTasks.filter(task => task.actionable);
@@ -391,6 +395,8 @@ const dashboardTaskMonths = new Set(dashboardTasks.map(task => task.periodKey)).
 const dashboardTaskDossiers = new Set(dashboardTasks.map(task => task.periodKey + ":" + task.employee.id)).size;
 const dashboardJulyTasks = dashboardTasks.filter(task => task.periodKey === "2026-07");
 const dashboardAugustTasks = dashboardTasks.filter(task => task.periodKey === "2026-08");
+const dashboardJulyActionableTasks = dashboardJulyTasks.filter(task => task.actionable);
+const dashboardJulyWaitingTasks = dashboardJulyTasks.filter(task => !task.actionable);
 assert(document.querySelectorAll("#admin-task-list [data-admin-task-row]").length === dashboardTasks.length, "Alle open acties moet standaard iedere actie exact één keer tonen");
 assert(document.querySelectorAll("#admin-task-list [data-admin-task-month]").length === dashboardTaskMonths, "De werkvoorraad moet de open maanden als afzonderlijke blokken onder elkaar tonen");
 assert(document.querySelector('[data-admin-task-filter="all"]').textContent.includes(String(dashboardTasks.length)) && document.querySelector('[data-admin-task-filter="actionable"]').textContent.includes(String(dashboardActionableTasks.length)) && document.querySelector('[data-admin-task-filter="waiting"]').textContent.includes(String(dashboardWaitingTasks.length)), "Het totaal en de verdeling per eigenaar moeten apart worden geteld");
@@ -418,10 +424,12 @@ dom.window.renderAll();
 const ownershipScenarioTasks = dom.window.adminOpenTasks();
 assert(ownershipScenarioTasks.length === 3 && ownershipScenarioTasks.every(task => !task.actionable), "De regressiesituatie moet exact drie taken bij medewerkers bevatten");
 assert(document.querySelector("#admin-attention-note").textContent === "3 open acties in 3 dossiers over 2 maanden · 0 bij Backoffice · 3 bij medewerkers.", "Het hoofdtotaal moet exact gelijk zijn aan de verdeling per eigenaar");
-assert(document.querySelector("#metric-actions").textContent === "3" && document.querySelector("#metric-actions-note").textContent === "Juli 1 + Augustus 2 = 3", "De actiekaart moet dezelfde som per maand tonen");
+assert(document.querySelector("#metric-actions").textContent === "0" && document.querySelector("#metric-actions-note").textContent === "3 acties wachten op medewerkers", "De actiekaart moet duidelijk tonen dat Backoffice niets direct hoeft te doen");
+assert(document.querySelector("#metric-actions-link").textContent === "Bekijk alle 3 acties", "De KPI-link moet wel naar alle wachtende acties blijven verwijzen");
 assert(document.querySelector("#open-work-queue").textContent === "Bekijk alle 3 open acties", "De hoofdknop moet altijd naar het volledige actietotaal verwijzen");
-assert(document.querySelector("#open-delivery-check").textContent === "Per maand · Juli 1 + Augustus 2", "De tweede knop moet de volledige maandverdeling tonen en niet alleen de gekozen maand");
 assert(document.querySelector("#hero-task-months").textContent === "Juli 1 + Augustus 2 = 3" && document.querySelector("#hero-task-owners").textContent === "Backoffice 0 + medewerkers 3 = 3", "De bovenkant moet het totaal zowel per maand als per eigenaar bewijsbaar maken");
+assert(document.querySelector("#dashboard-next-action-label").textContent === "Voor jou is nu niets te doen" && document.querySelector("#dashboard-next-action-title").textContent.includes("Wacht op Brian Hek") && !document.querySelector("#dashboard-next-action-button"), "Zonder Backoffice-actie moet de vaste kaart de eerstvolgende medewerker tonen in plaats van een onbruikbare startknop");
+assert(document.querySelector("#dashboard-next-action-controls").textContent.includes("Herinner medewerker"), "Een wachtende klanturenstaat moet vanuit de prioriteitenkaart herinnerd kunnen worden");
 click("#open-work-queue");
 assert(document.querySelectorAll("#admin-task-list [data-admin-task-row]").length === 3 && document.querySelectorAll("#admin-task-list .status-pill").length === 3 && [...document.querySelectorAll("#admin-task-list .status-pill")].every(item => item.textContent === "Actie bij medewerker"), "Iedere taak moet één zichtbare regel met precies één eigenaar hebben");
 [brianAugust, shawnAugust].forEach((record, index) => {
@@ -432,7 +440,7 @@ assert(document.querySelectorAll("#admin-task-list [data-admin-task-row]").lengt
 brianJuly.timesheetStatus = brianJulyStatusSnapshot;
 choosePeriod("#period-month-picker", "#period-year-picker", "2037-12");
 dom.window.renderAll();
-click("#admin-next-task");
+click("#dashboard-next-action-button");
 assert(document.querySelector("#modal").hidden === false && document.querySelector("#modal-message").textContent.includes("De geselecteerde maand bovenaan hoeft hiervoor niet te worden gewijzigd"), "Start met oudste taak moet rechtstreeks de juiste controle openen zonder maandwissel");
 assert(document.querySelector("#period-label").textContent === "December 2037", "Een taak openen mag het gekozen maandoverzicht niet ongemerkt wijzigen");
 click("#modal-close");
@@ -446,8 +454,28 @@ assert(JSON.stringify(taskMonthKeys) === JSON.stringify(["2026-07", "2026-08"]),
 assert(document.querySelector('[data-admin-task-month="2026-07"]').textContent.includes("Juli 2026 · " + dashboardJulyTasks.length + " open acties") && document.querySelector('[data-admin-task-month="2026-07"]').textContent.includes("Brian Hek"), "Juli moet alle actuele acties van Brian zichtbaar bewijzen");
 assert(document.querySelector('[data-admin-task-month="2026-08"]').textContent.includes("Augustus 2026 · " + dashboardAugustTasks.length + " open acties"), "Augustus moet alle actuele acties in één maandblok tonen");
 assert(document.querySelector('[data-admin-task-month="2026-08"] .admin-task-owner-heading.is-actionable') && document.querySelector('[data-admin-task-month="2026-08"] .admin-task-owner-heading.is-waiting'), "Binnen augustus moeten Backoffice-acties en wachttaken apart onder elkaar staan");
+click('[data-admin-task-month-toggle="2026-07"]');
+assert(document.querySelector('[data-admin-task-month-toggle="2026-07"]').getAttribute("aria-expanded") === "false" && document.querySelector("#admin-task-month-body-2026-07").hidden, "Een maand moet met één klik volledig kunnen worden ingeklapt");
+assert(document.activeElement === document.querySelector('[data-admin-task-month-toggle="2026-07"]'), "Na inklappen moet toetsenbordfocus op dezelfde maandkop blijven staan");
+const collapsedJulyHeading = document.querySelector('[data-admin-task-month-toggle="2026-07"]').textContent;
+const collapsedJulyOwnerSummary = dashboardJulyActionableTasks.length + " bij Backoffice · " + dashboardJulyWaitingTasks.length + " bij " + (dashboardJulyWaitingTasks.length === 1 ? "medewerker" : "medewerkers");
+assert(collapsedJulyHeading.includes("Juli 2026 · " + dashboardJulyTasks.length + " open actie") && collapsedJulyHeading.includes(collapsedJulyOwnerSummary), "Een ingeklapte maandkop moet het aantal en de eigenaarverdeling blijven tonen: " + collapsedJulyHeading);
+assert(!document.querySelector('[data-admin-task-month-toggle="2026-07"]').hasAttribute("aria-label"), "De zichtbare maandtelling moet ook de volledige toegankelijke knopnaam blijven");
+click('[data-admin-task-month-toggle="2026-07"]');
+assert(document.querySelector('[data-admin-task-month-toggle="2026-07"]').getAttribute("aria-expanded") === "true" && !document.querySelector("#admin-task-month-body-2026-07").hidden, "Dezelfde maand moet zonder maandwissel weer kunnen worden uitgeklapt");
+assert(document.querySelectorAll("[data-admin-task-owner-toggle]").length === 0, "Eigenaargroepen mogen geen tweede inklapniveau toevoegen");
+const julySignatureRecord = dom.window.recordFor(1, "2026-07");
+const julySignatureInvoiceSnapshot = julySignatureRecord.invoiceStatus;
+click('[data-admin-task-month-toggle="2026-07"]');
+julySignatureRecord.invoiceStatus = "ready";
+dom.window.renderAll();
+assert(document.querySelector('[data-admin-task-month-toggle="2026-07"]').getAttribute("aria-expanded") === "true", "Een nieuw binnengekomen actie moet een oude ingeklapte maandkeuze doorbreken");
+julySignatureRecord.invoiceStatus = julySignatureInvoiceSnapshot;
+dom.window.renderAll();
+if (document.querySelector('[data-admin-task-month-toggle="2026-07"]').getAttribute("aria-expanded") === "false") click('[data-admin-task-month-toggle="2026-07"]');
 assert(!document.querySelector("#open-periods-panel"), "Een dubbel los maandoverzicht moet vervallen nu de werkvoorraad zelf per maand is gegroepeerd");
-assert(document.querySelector("#metric-actions").closest(".metric-card").textContent.includes("Open acties") && Number(document.querySelector("#metric-actions").textContent) === dashboardTasks.length && document.querySelector("#metric-actions-note").textContent === dom.window.adminTaskMonthEquation(dashboardTasks), "De actiekaart moet exact dezelfde maandoptelling als de werkvoorraad tonen");
+assert(document.querySelector("#metric-actions").closest(".metric-card").textContent.includes("Acties bij Backoffice") && Number(document.querySelector("#metric-actions").textContent) === dashboardActionableTasks.length && document.querySelector("#metric-actions-note").textContent.includes(String(dashboardWaitingTasks.length)), "De actiekaart moet directe Backoffice-acties en het aantal wachttaken apart tonen");
+assert(document.querySelector("#metric-actions-link").textContent.includes(String(dashboardTasks.length)), "De actiekaart moet met één link naar de volledige werkvoorraad verwijzen");
 choosePeriod("#period-month-picker", "#period-year-picker", "2026-08");
 const augustWorkflowTasks = dom.window.adminOpenTasks().filter(task => task.periodKey === "2026-08");
 assert(document.querySelector("#workflow-open-count").textContent.includes(augustWorkflowTasks.length + " open acties") && document.querySelector("#workflow-open-breakdown").textContent.includes("klanturensta"), "De procesbalk moet het actuele maandtotaal en de aparte klanturenstaten benoemen");
@@ -850,11 +878,10 @@ assert(document.querySelector("#modal").hidden, "Ctrl+Enter in een tekstvak moet
 choosePeriod("#period-month-picker", "#period-year-picker", "2026-07");
 assert(document.querySelector("#period-label").textContent === "Juli 2026", "Teruggaan naar juli moet via de kiezer werken");
 click('[data-view="dashboard"]');
-assert(!document.querySelector("#open-delivery-check").hidden, "Het dashboard moet de globale maandverdeling tonen zolang er acties openstaan");
 const currentDashboardTasks = dom.window.adminOpenTasks();
-assert(document.querySelector("#open-delivery-check").textContent === "Per maand · " + dom.window.adminTaskMonthEquation(currentDashboardTasks, false), "De dashboardactie moet alle open maanden en hun actuele aantallen tonen");
-click("#open-delivery-check");
-assert(document.querySelector("#view-dashboard").classList.contains("is-active") && document.querySelectorAll("#admin-task-list [data-admin-task-row]").length === currentDashboardTasks.length, "De maandverdeling moet naar de volledige gegroepeerde werkvoorraad gaan zonder een andere maand te kiezen");
+assert(document.querySelector("#open-work-queue").textContent.includes(String(currentDashboardTasks.length)) && !document.querySelector("#open-delivery-check"), "De hero moet nog maar één duidelijke ingang naar de volledige werkvoorraad hebben");
+click("#open-work-queue");
+assert(document.querySelector("#view-dashboard").classList.contains("is-active") && document.querySelectorAll("#admin-task-list [data-admin-task-row]").length === currentDashboardTasks.length, "De werkvoorraadknop moet alle acties tonen zonder een andere maand te kiezen");
 click('[data-view="approvals"]');
 
 assert(document.querySelector('[data-request-correction="3"][data-period-key="2026-07"]'), "Correctie vragen moet direct zichtbaar zijn op iedere open urenkaart");
@@ -1068,7 +1095,9 @@ assert(reopenedHoursState.records["2026-08"]["3"].correctionHistory.at(-1).messa
 choosePeriod("#period-month-picker", "#period-year-picker", "2026-09");
 click('[data-view="dashboard"]');
 assert(document.querySelector("#admin-attention-note").textContent.includes("bij Backoffice") && document.querySelector("#admin-attention-note").textContent.includes("bij medewerkers") && !document.querySelector("#admin-task-panel").hidden, "Een lege geselecteerde maand mag taken uit eerdere maanden niet verbergen en moet hun eigenaar tonen");
-assert(Number(document.querySelector("#metric-actions").textContent) > 0 && document.querySelector("#metric-actions-note").textContent.includes("="), "Het actietotaal moet onafhankelijk van de gekozen detailmaand de optelling over alle open maanden blijven tonen");
+const septemberGlobalTasks = dom.window.adminOpenTasks();
+assert(Number(document.querySelector("#metric-actions").textContent) === septemberGlobalTasks.filter(task => task.actionable).length && document.querySelector("#metric-actions-note").textContent.includes(String(septemberGlobalTasks.filter(task => !task.actionable).length)), "De Backoffice-KPI moet onafhankelijk van de gekozen detailmaand de globale eigenaarsverdeling blijven tonen");
+assert(document.querySelector("#dashboard-next-action-card") && document.querySelector("#dashboard-next-action-title").textContent.length > 0, "Ook bij een lege gekozen detailmaand moet altijd een concrete volgende actie of wachtstatus zichtbaar blijven");
 assert(document.querySelector('[data-admin-task-month="2026-07"]') && document.querySelector('[data-admin-task-month="2026-08"]'), "Een lege gekozen maand mag de echte open maandblokken niet verbergen");
 choosePeriod("#period-month-picker", "#period-year-picker", "2026-07");
 assert(document.querySelector("#period-label").textContent === "Juli 2026" && document.querySelector("#customer-timesheet-admin-title").textContent.includes("Juli 2026") && document.querySelector("#view-dashboard").classList.contains("is-active"), "De maandkiezer moet alleen de detailpanelen wijzigen; de globale werkvoorraad blijft staan");
@@ -1159,7 +1188,7 @@ const migrationPicker = migrationDom.window.document.querySelector("#login-admin
 migrationPicker.value = "joyce";
 migrationPicker.dispatchEvent(new migrationDom.window.Event("change", { bubbles: true }));
 const migratedState = JSON.parse(migrationDom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(migratedState.schemaVersion === 23, "Bestaande browsergegevens moeten ook in v0.9.16 veilig behouden blijven");
+assert(migratedState.schemaVersion === 23, "Bestaande browsergegevens moeten ook in v0.9.17 veilig behouden blijven");
 assert(migratedState.settings.mailRecipients.find(recipient => recipient.id === "payroll").name.includes("Salarisadministratie"), "Migratie moet EasySalary als duidelijke salarisadministratieroute benoemen");
 assert(migratedState.records["2026-07"]["4"].invoiceNumber === "Bel-Shawn-2026-juli", "Migratie moet ook bestaande factuurnummers omzetten naar de afgesproken koppeltekens");
 assert(migratedState.records["2026-07"]["4"].invoiceStatus === "ready", "Migratie moet de vooraf ingevulde Shawn-mailtest terugzetten naar Factuur klaar");
@@ -1186,4 +1215,4 @@ assert(Object.values(migratedState.records).flatMap(periodRecords => Object.valu
 assert(migratedState.employees.every(employee => employee.mailBody.includes("{uren}")), "Migratie moet de oude standaardtekst aanvullen met de daadwerkelijke uren");
 assert(migratedState.records["2026-07"]["1"].entries.flat().reduce((sum, value) => sum + value, 0) === 164, "Migratie moet bestaande uren volledig behouden");
 
-console.log("Path v0.9.16 volledige smoke test: geslaagd");
+console.log("Path v0.9.17 volledige smoke test: geslaagd");

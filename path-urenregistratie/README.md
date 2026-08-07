@@ -1,6 +1,6 @@
 # Path Uren & Facturatie
 
-Lokale voorbereidingsversie v0.9.16 van een configureerbare uren- en facturatieapp. Path Consultancy B.V. is de volledig ingevulde voorbeeldorganisatie.
+Lokale voorbereidingsversie v0.9.17 van een configureerbare uren- en facturatieapp. Path Consultancy B.V. is de volledig ingevulde voorbeeldorganisatie.
 
 ## Wat deze versie laat zien
 
@@ -21,8 +21,12 @@ Lokale voorbereidingsversie v0.9.16 van een configureerbare uren- en facturatiea
 - Uren indienen en door een beheerder laten goedkeuren.
 - De verse voorbeeldomgeving is doelgericht gevuld: juni is afgerond, juli heeft 1 open actie en augustus 6. Dat zijn **7 acties in 5 dossiers**, verdeeld als **4 bij Backoffice + 3 bij medewerkers = 7**.
 - Bovenaan bewijst het beheerdersdashboard hetzelfde totaal op twee manieren: **Juli 1 + Augustus 6 = 7** en **Backoffice 4 + medewerkers 3 = 7**. Daardoor is direct zichtbaar waar het totaal vandaan komt.
-- De hoofdknop heet **Bekijk alle 7 open acties**. De tweede knop toont de volledige maandverdeling en is geen deelverzameling van alleen de gekozen detailmaand.
-- **Alle open acties per maand** toont juli en augustus als afzonderlijke blokken onder elkaar, oudste maand eerst. Binnen iedere maand staan **Nu doen door Backoffice** en **Wacht op medewerkers** als aparte groepen.
+- Direct onder de hoofdsamenvatting staat één vaste kaart **Volgende actie**. Deze toont de eerstvolgende uitvoerbare Backoffice-actie met taak, medewerker, maand, klant/broker en knop **Start deze actie**. Na afronden schuift de volgende actie automatisch naar voren.
+- Als Backoffice niets direct hoeft te doen, verandert dezelfde kaart in **Voor jou is nu niets te doen** en toont hij de eerstvolgende medewerker waarop wordt gewacht, inclusief passende herinnerings- of statusknop. Als alles klaar is, blijft een compacte groene afrondmelding staan.
+- De vierde KPI toont **Acties bij Backoffice** en daaronder hoeveel acties op medewerkers wachten. De link verwijst naar het volledige totaal, bijvoorbeeld **Bekijk alle 7 acties**.
+- In de hoofdsamenvatting staat nog maar één rustige knop **Bekijk alle 7 open acties**. De dubbele knop naar dezelfde werkvoorraad en de knop in de kop van de takenlijst zijn verwijderd.
+- **Alle open acties per maand** toont juli en augustus als afzonderlijke blokken onder elkaar, oudste maand eerst. Een maand kan met één klik worden in- of uitgeklapt; het aantal acties en de eigenaarverdeling blijven altijd in de maandkop zichtbaar. De oudste achterstallige en de huidige open maand staan standaard open.
+- Binnen een geopende maand staan **Nu doen door Backoffice** en **Wacht op medewerkers** direct als aparte groepen. Deze groepen krijgen bewust geen tweede inklapniveau, zodat afhandelen niet onnodig meer klikken vraagt.
 - Iedere zichtbare regel is precies één actie met één eigenaar, één medewerker, één duidelijke omschrijving en één actieknop. Brian en Shawn mogen daardoor ieder twee verschillende acties in hetzelfde maanddossier hebben zonder dat dit als een verborgen dubbeltelling voelt.
 - De filters **Alle acties**, **Bij Backoffice** en **Bij medewerkers** gebruiken exact dezelfde zeven regels en telling.
 - Het eerdere losse paneel **Samenvatting per maand** is verwijderd; dezelfde informatie staat nu direct bij de echte taakregels en hoeft niet dubbel te worden gelezen.

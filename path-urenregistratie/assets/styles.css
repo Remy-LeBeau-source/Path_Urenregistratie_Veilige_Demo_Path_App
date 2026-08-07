@@ -292,6 +292,19 @@ select:focus-visible {
 .hero-task-math > div { display: grid; gap: 3px; border-top: 1px solid rgba(255,255,255,.1); padding-top: 10px; }
 .hero-task-math small { color: #9eb0c1; font-size: 9px; }
 .hero-task-math b { color: #fff; font-size: 11px; line-height: 1.4; }
+
+.dashboard-next-action-card { display: grid; grid-template-columns: minmax(0,1.4fr) minmax(260px,.6fr); gap: 28px; align-items: center; margin-bottom: 18px; border: 1px solid var(--line); border-left: 5px solid var(--mint-dark); border-radius: var(--radius); background: var(--surface); padding: 20px 24px; box-shadow: 0 8px 28px rgba(13,27,56,.05); }
+.dashboard-next-action-card.is-waiting { border-left-color: var(--warning); background: linear-gradient(135deg,var(--surface),var(--warning-bg)); }
+.dashboard-next-action-card.is-complete { border-left-color: var(--mint-dark); background: linear-gradient(135deg,var(--surface),var(--green-light)); }
+.dashboard-next-action-copy h3 { margin: 5px 0 7px; color: var(--navy); font-family: "Roboto Slab", Georgia, serif; font-size: 20px; }
+.dashboard-next-action-copy p { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; color: var(--ink); font-size: 11px; }
+.dashboard-next-action-copy p span::before { margin-right: 8px; color: var(--muted); content: "·"; }
+.dashboard-next-action-copy > small { display: block; margin-top: 7px; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.dashboard-next-action-side { display: grid; justify-items: end; gap: 4px; text-align: right; }
+.dashboard-next-action-side > strong { color: var(--navy); font-size: 11px; }
+.dashboard-next-action-side > small { color: var(--muted); font-size: 9px; }
+.dashboard-next-action-side > div { margin-top: 9px; }
+.dashboard-next-action-side .small-button { min-height: 42px; border-color: var(--warning); background: var(--surface); color: var(--navy); font-size: 11px; padding: 10px 17px; }
 .text-button { border: 0; background: transparent; color: var(--teal); cursor: pointer; font-size: 12px; font-weight: 800; padding: 7px; }
 .text-button:hover { color: var(--mint-dark); }
 .text-button.danger-text { color: var(--danger); }
@@ -616,6 +629,10 @@ select:focus-visible {
   .hero-card { margin-top: 20px; padding: 28px; }
   .workflow-track { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .workflow-heading-meta { justify-items: start; text-align: left; }
+  .dashboard-next-action-card { grid-template-columns: 1fr; gap: 16px; }
+  .dashboard-next-action-side { justify-items: start; text-align: left; }
+  .dashboard-next-action-side .button, .dashboard-next-action-side .small-button { width: 100%; }
+  .dashboard-next-action-side > div { width: 100%; }
   .workflow-line { display: none; }
   .workflow-step { min-width: 0; }
   .assignment-bar { grid-template-columns: 1fr 1fr; }
@@ -762,11 +779,17 @@ select:focus-visible {
 .admin-task-filters button.is-active { border-color: var(--mint-dark); background: var(--green-light); color: var(--mint-dark); }
 .admin-task-list { display: grid; }
 .admin-task-month + .admin-task-month { border-top: 10px solid var(--surface-muted); }
-.admin-task-month-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; border-bottom: 1px solid var(--line); background: var(--surface-muted); padding: 14px 24px; }
-.admin-task-month-heading span, .admin-task-month-heading strong, .admin-task-month-heading small { display: block; }
-.admin-task-month-heading span { color: var(--mint-dark); font-size: 8px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
-.admin-task-month-heading strong { margin-top: 3px; color: var(--navy); font-family: "Roboto Slab", Georgia, serif; font-size: 16px; }
+.admin-task-month-heading { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 18px; border: 0; border-bottom: 1px solid var(--line); background: var(--surface-muted); color: inherit; cursor: pointer; font: inherit; padding: 14px 24px; text-align: left; }
+.admin-task-month-heading:hover { background: color-mix(in srgb, var(--surface-muted) 78%, var(--green-light)); }
+.admin-task-month-heading:focus-visible { position: relative; z-index: 1; outline: 3px solid color-mix(in srgb, var(--mint-dark) 35%, transparent); outline-offset: -3px; }
+.admin-task-month-heading-copy, .admin-task-month-heading-copy > span, .admin-task-month-heading-copy > strong, .admin-task-month-heading small { display: block; }
+.admin-task-month-heading-copy > span { color: var(--mint-dark); font-size: 10px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.admin-task-month-heading-copy > strong { margin-top: 3px; color: var(--navy); font-family: "Roboto Slab", Georgia, serif; font-size: 16px; }
 .admin-task-month-heading small { color: var(--muted); font-size: 9px; font-weight: 700; text-align: right; }
+.admin-task-month-heading-side { display: flex; align-items: center; gap: 14px; color: inherit; letter-spacing: normal; text-transform: none; }
+.admin-task-month-heading-side small { font-size: 11px; }
+.admin-task-month-chevron { width: 9px; height: 9px; flex: 0 0 auto; border-right: 2px solid var(--navy); border-bottom: 2px solid var(--navy); transform: rotate(45deg); transition: transform .18s ease; }
+.admin-task-month-heading[aria-expanded="false"] .admin-task-month-chevron { transform: rotate(-45deg); }
 .admin-task-owner-heading { border-bottom: 1px solid var(--line); background: var(--surface); color: var(--muted); font-size: 9px; font-weight: 900; letter-spacing: .04em; padding: 10px 24px; text-transform: uppercase; }
 .admin-task-owner-heading.is-actionable { color: var(--mint-dark); }
 .admin-task-owner-heading.is-waiting { color: #a86b13; }
@@ -886,6 +909,7 @@ select:focus-visible {
   .admin-task-heading .button { width: 100%; }
   .admin-task-month-heading { align-items: flex-start; flex-direction: column; }
   .admin-task-month-heading small { text-align: left; }
+  .admin-task-month-heading-side { width: 100%; justify-content: space-between; }
   .admin-task-row { grid-template-columns: 1fr; gap: 9px; }
   .admin-task-action { justify-content: stretch; }
   .admin-task-action .small-button { width: 100%; }

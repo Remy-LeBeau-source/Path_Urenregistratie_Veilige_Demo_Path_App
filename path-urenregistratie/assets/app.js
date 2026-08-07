@@ -358,6 +358,7 @@ function freshState() {
     approvalScope: "all",
     dashboardTeamScope: "all",
     adminTaskFilter: "all",
+    adminTaskMonthState: {},
     hoursWeekScope: "all",
     hoursWeekScopeTouched: false,
     employeeScope: "active",
@@ -599,6 +600,12 @@ function loadState() {
     const previousSchemaVersion = Number(saved.schemaVersion || 0);
     saved.hoursWeekScope = typeof saved.hoursWeekScope === "string" ? saved.hoursWeekScope : "all";
     saved.hoursWeekScopeTouched = saved.hoursWeekScopeTouched === true;
+    saved.adminTaskMonthState = saved.adminTaskMonthState && typeof saved.adminTaskMonthState === "object" && !Array.isArray(saved.adminTaskMonthState)
+      ? Object.fromEntries(Object.entries(saved.adminTaskMonthState).filter(([stateKey, monthState]) => {
+        const [scope, periodKey] = stateKey.split(":");
+        return ["all", "actionable", "waiting"].includes(scope) && parsePeriodKey(periodKey) && monthState && typeof monthState.expanded === "boolean" && typeof monthState.signature === "string";
+      }))
+      : {};
     const hadLightDefault = saved.preferences && saved.preferences.themeDefaultVersion === 1;
     saved.preferences = Object.assign({}, fallback.preferences, saved.preferences || {});
     if (!hadLightDefault) {
@@ -1674,6 +1681,13 @@ function renderAdminTaskQueue() {
   const waiting = tasks.filter(task => !task.actionable);
   const filter = state.adminTaskFilter || "all";
   const filtered = filter === "all" ? tasks : filter === "waiting" ? waiting : actionable;
+  const filteredMonthGroups = groupAdminTasksByMonth(filtered);
+  const oldestOverdueMonth = filteredMonthGroups.find(group => group.tasks.some(task => task.isOverdue));
+  const currentOpenMonth = filteredMonthGroups.find(group => group.tasks.some(task => !task.isOverdue));
+  const defaultExpandedMonthKeys = new Set([
+    (oldestOverdueMonth || filteredMonthGroups[0] || {}).periodKey,
+    (currentOpenMonth || filteredMonthGroups[filteredMonthGroups.length - 1] || {}).periodKey
+  ].filter(Boolean));
   const taskMonths = new Set(tasks.map(task => task.periodKey)).size;
   const taskDossiers = new Set(tasks.map(task => task.periodKey + ":" + task.employee.id)).size;
   document.querySelector("#admin-task-summary").textContent = tasks.length
@@ -1684,17 +1698,13 @@ function renderAdminTaskQueue() {
     ["actionable", "Bij Backoffice", actionable.length],
     ["waiting", "Bij medewerkers", waiting.length]
   ].map(item => '<button class="' + (filter === item[0] ? "is-active" : "") + '" data-admin-task-filter="' + item[0] + '">' + item[1] + ' · ' + item[2] + '</button>').join("");
-  const nextButton = document.querySelector("#admin-next-task");
-  nextButton.hidden = actionable.length === 0;
-  nextButton.textContent = actionable.length === 1 ? "Open actie bij Backoffice" : "Start eerste Backoffice-actie · " + actionable.length;
-  nextButton.dataset.adminTaskId = actionable.length ? actionable[0].id : "";
   const renderTaskRow = task => '<article class="admin-task-row ' + (task.actionable ? "is-actionable" : "is-waiting") + '" data-admin-task-row="' + task.id + '">' +
       '<div class="admin-task-kind"><span>' + escapeHtml(task.category) + '</span><strong>' + escapeHtml(task.title) + '</strong></div>' +
       '<div class="admin-task-person"><strong>' + escapeHtml(task.employee.name) + '</strong><small>' + escapeHtml(task.employee.client + " · " + task.employee.broker) + '</small></div>' +
       '<div class="admin-task-note"><span class="status-pill ' + (task.actionable ? "status-submitted" : "status-concept") + '">' + (task.actionable ? "Actie bij Backoffice" : "Actie bij medewerker") + '</span><small>' + escapeHtml(task.note) + '</small></div>' +
       '<div class="admin-task-action">' + adminTaskAction(task) + '</div>' +
     '</article>';
-  document.querySelector("#admin-task-list").innerHTML = groupAdminTasksByMonth(filtered).map(group => {
+  document.querySelector("#admin-task-list").innerHTML = filteredMonthGroups.map(group => {
     const monthActionable = group.tasks.filter(task => task.actionable);
     const monthWaiting = group.tasks.filter(task => !task.actionable);
     const timing = group.tasks.some(task => task.isOverdue) ? "Eerdere maand · nog niet afgerond" : "Huidige maand";
@@ -1702,9 +1712,15 @@ function renderAdminTaskQueue() {
     const ownerGroups = [];
     if (monthActionable.length) ownerGroups.push('<div class="admin-task-owner-group"><div class="admin-task-owner-heading is-actionable">Nu doen door Backoffice · ' + monthActionable.length + '</div>' + monthActionable.map(renderTaskRow).join("") + '</div>');
     if (monthWaiting.length) ownerGroups.push('<div class="admin-task-owner-group"><div class="admin-task-owner-heading is-waiting">Wacht op medewerkers · ' + monthWaiting.length + '</div>' + monthWaiting.map(renderTaskRow).join("") + '</div>');
+    const monthStateKey = filter + ":" + group.periodKey;
+    const monthSignature = group.tasks.map(task => task.id).join("|");
+    const savedMonthState = state.adminTaskMonthState[monthStateKey];
+    const hasCurrentExpansionOverride = savedMonthState && savedMonthState.signature === monthSignature;
+    const isExpanded = hasCurrentExpansionOverride ? savedMonthState.expanded : defaultExpandedMonthKeys.has(group.periodKey);
+    const monthBodyId = "admin-task-month-body-" + group.periodKey;
     return '<section class="admin-task-month" data-admin-task-month="' + group.periodKey + '">' +
-      '<div class="admin-task-month-heading"><div><span>' + escapeHtml(timing) + '</span><strong>' + escapeHtml(group.period.label) + ' · ' + group.tasks.length + " open " + (group.tasks.length === 1 ? "actie" : "acties") + '</strong></div><small>' + escapeHtml(ownerSummary) + '</small></div>' +
-      ownerGroups.join("") +
+      '<button class="admin-task-month-heading" type="button" data-admin-task-month-toggle="' + group.periodKey + '" data-admin-task-month-signature="' + escapeHtml(monthSignature) + '" aria-expanded="' + String(isExpanded) + '" aria-controls="' + monthBodyId + '"><span class="admin-task-month-heading-copy"><span>' + escapeHtml(timing) + '</span><strong>' + escapeHtml(group.period.label) + ' · ' + group.tasks.length + " open " + (group.tasks.length === 1 ? "actie" : "acties") + '</strong></span><span class="admin-task-month-heading-side"><small>' + escapeHtml(ownerSummary) + '</small><span class="admin-task-month-chevron" aria-hidden="true"></span></span></button>' +
+      '<div class="admin-task-month-body" id="' + monthBodyId + '"' + (isExpanded ? "" : " hidden") + '>' + ownerGroups.join("") + '</div>' +
     '</section>';
   }).join("") || '<div class="dashboard-action-empty">' + (filter === "actionable" ? "Er ligt niets meer bij Backoffice." : filter === "waiting" ? "Er liggen geen acties bij medewerkers." : "Alle acties zijn afgerond.") + '</div>';
 }
@@ -1719,6 +1735,59 @@ function openAdminTask(taskId) {
   if (task.type === "customer-review") showCustomerTimesheetDetails(task.employee.id, task.periodKey, true);
   if (task.type === "customer-broker") showCustomerTimesheetBrokerCheck(task.employee.id, task.periodKey);
   if (task.type === "invoice-delivery") showInvoiceDeliveryCheck(task.employee.id, task.periodKey);
+}
+
+function renderDashboardNextAction(tasks) {
+  const card = document.querySelector("#dashboard-next-action-card");
+  if (!card) return;
+  const actionable = tasks.filter(task => task.actionable);
+  const waiting = tasks.filter(task => !task.actionable);
+  const nextAction = actionable[0] || waiting[0] || null;
+  const label = document.querySelector("#dashboard-next-action-label");
+  const title = document.querySelector("#dashboard-next-action-title");
+  const person = document.querySelector("#dashboard-next-action-person");
+  const period = document.querySelector("#dashboard-next-action-period");
+  const note = document.querySelector("#dashboard-next-action-note");
+  const queue = document.querySelector("#dashboard-next-action-queue");
+  const waitingNote = document.querySelector("#dashboard-next-action-waiting");
+  const controls = document.querySelector("#dashboard-next-action-controls");
+  card.classList.remove("is-actionable", "is-waiting", "is-complete");
+
+  if (actionable.length) {
+    card.classList.add("is-actionable");
+    label.textContent = "Volgende actie · 1 van " + actionable.length + " bij Backoffice";
+    title.textContent = nextAction.title;
+    person.textContent = nextAction.employee.name;
+    period.textContent = nextAction.period.label + " · " + nextAction.employee.client + " / " + nextAction.employee.broker;
+    note.textContent = nextAction.note;
+    queue.textContent = actionable.length === 1 ? "Dit is de laatste Backoffice-actie" : "Daarna nog " + (actionable.length - 1) + " bij Backoffice";
+    waitingNote.textContent = waiting.length ? waiting.length + " " + (waiting.length === 1 ? "actie wacht" : "acties wachten") + " op medewerkers" : "Er wacht niets op medewerkers";
+    controls.innerHTML = '<button class="button button-primary" id="dashboard-next-action-button" type="button" data-admin-task-id="' + nextAction.id + '">Start deze actie</button>';
+    return;
+  }
+
+  if (waiting.length) {
+    card.classList.add("is-waiting");
+    label.textContent = "Voor jou is nu niets te doen";
+    title.textContent = "Wacht op " + nextAction.employee.name + ": " + nextAction.title.toLowerCase();
+    person.textContent = nextAction.employee.name;
+    period.textContent = nextAction.period.label + " · " + nextAction.employee.client + " / " + nextAction.employee.broker;
+    note.textContent = nextAction.note;
+    queue.textContent = "Backoffice is voorlopig klaar";
+    waitingNote.textContent = waiting.length + " " + (waiting.length === 1 ? "actie wacht" : "acties wachten") + " op medewerkers";
+    controls.innerHTML = adminTaskAction(nextAction);
+    return;
+  }
+
+  card.classList.add("is-complete");
+  label.textContent = "Werkvoorraad afgerond";
+  title.textContent = "Er staat geen actie meer open";
+  person.textContent = "Backoffice";
+  period.textContent = currentPeriod().label;
+  note.textContent = "Alle uren, klanturenstaten en verzendcontroles zijn afgehandeld.";
+  queue.textContent = "0 bij Backoffice";
+  waitingNote.textContent = "0 bij medewerkers";
+  controls.innerHTML = "";
 }
 
 function renderDashboardActions() {
@@ -1741,18 +1810,15 @@ function renderDashboardActions() {
   workQueueAction.hidden = workCount === 0;
   workQueueAction.textContent = "Bekijk alle " + workCount + " open " + (workCount === 1 ? "actie" : "acties");
   workQueueAction.dataset.openWorkFilter = "all";
-  const deliveryAction = document.querySelector("#open-delivery-check");
-  delete deliveryAction.dataset.go;
-  delete deliveryAction.dataset.dashboardTeamFilter;
-  deliveryAction.hidden = workCount === 0;
-  deliveryAction.textContent = workCount ? "Per maand · " + adminTaskMonthEquation(tasks, false) : "Geen open acties";
   document.querySelector("#hero-task-total").textContent = workCount + " open " + (workCount === 1 ? "actie" : "acties");
   document.querySelector("#hero-task-months").textContent = workCount ? adminTaskMonthEquation(tasks) : "Alles afgerond";
   document.querySelector("#hero-task-owners").textContent = workCount ? "Backoffice " + actionableCount + " + medewerkers " + waitingCount + " = " + workCount : "Backoffice 0 + medewerkers 0 = 0";
-  document.querySelector("#metric-actions").textContent = workCount;
-  document.querySelector("#metric-actions-note").textContent = workCount ? adminTaskMonthEquation(tasks) : "Alles afgerond";
+  document.querySelector("#metric-actions").textContent = actionableCount;
+  document.querySelector("#metric-actions-note").textContent = waitingCount ? waitingCount + " " + (waitingCount === 1 ? "actie wacht" : "acties wachten") + " op medewerkers" : "Niets wacht op medewerkers";
+  document.querySelector("#metric-actions-link").textContent = workCount ? "Bekijk alle " + workCount + " acties" : "Alles afgerond";
   document.querySelector("#workflow-open-count").textContent = "Deze maand: " + selectedTasks.length + " open " + (selectedTasks.length === 1 ? "actie" : "acties");
   document.querySelector("#workflow-open-breakdown").textContent = selectedActionableCount + " bij Backoffice · " + selectedWaitingCount + " bij medewerkers · waarvan " + selectedCustomerCount + " klanturensta" + (selectedCustomerCount === 1 ? "at" : "ten");
+  renderDashboardNextAction(tasks);
 }
 
 function recordHasPeriodActivity(record) {
@@ -4775,7 +4841,24 @@ document.addEventListener("click", event => {
     renderAdminTaskQueue();
   }
 
-  const nextAdminTask = event.target.closest("#admin-next-task");
+  const adminTaskMonthToggle = event.target.closest("[data-admin-task-month-toggle]");
+  if (adminTaskMonthToggle) {
+    const periodKey = adminTaskMonthToggle.dataset.adminTaskMonthToggle;
+    if (parsePeriodKey(periodKey)) {
+      const nextExpanded = adminTaskMonthToggle.getAttribute("aria-expanded") !== "true";
+      const monthStateKey = (state.adminTaskFilter || "all") + ":" + periodKey;
+      state.adminTaskMonthState[monthStateKey] = {
+        expanded: nextExpanded,
+        signature: adminTaskMonthToggle.dataset.adminTaskMonthSignature || ""
+      };
+      persistState();
+      renderAdminTaskQueue();
+      const refreshedMonthToggle = document.querySelector('[data-admin-task-month-toggle="' + periodKey + '"]');
+      if (refreshedMonthToggle) refreshedMonthToggle.focus();
+    }
+  }
+
+  const nextAdminTask = event.target.closest("#dashboard-next-action-button");
   if (nextAdminTask) openAdminTask(nextAdminTask.dataset.adminTaskId);
 
   const adminTaskInvoice = event.target.closest("[data-admin-task-invoice]");

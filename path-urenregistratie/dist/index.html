@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0D1B38">
   <title>Uren & Facturatie</title>
-  <link rel="stylesheet" crossorigin href="/assets/index-BiOWLWh0.css">
+  <link rel="stylesheet" crossorigin href="/assets/index-BAm53GiI.css">
 </head>
 <body>
   <section class="login-screen" id="login-screen" aria-labelledby="login-title">
@@ -97,7 +97,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 0.9.16</span>
+      <span class="demo-badge">Versie 0.9.17</span>
       </div>
     </aside>
 
@@ -198,8 +198,7 @@
             <h2 id="admin-dashboard-greeting">Goedemiddag, Gio</h2>
             <p id="admin-attention-note">Dit vraagt nu je aandacht: bekijk open urencontroles en rond daarna de maand af.</p>
             <div class="hero-actions">
-              <button class="button button-primary" id="open-work-queue" data-scroll-target="admin-task-panel">Open werkvoorraad</button>
-              <button class="button button-ghost" id="open-delivery-check" data-scroll-target="admin-task-panel">Bekijk verdeling per maand</button>
+              <button class="button button-ghost" id="open-work-queue" data-scroll-target="admin-task-panel">Open werkvoorraad</button>
             </div>
           </div>
           <div class="hero-task-math" aria-label="Controle van het totaal aan open acties">
@@ -209,6 +208,20 @@
             <div><small>Per eigenaar</small><b id="hero-task-owners">Backoffice 4 + medewerkers 3 = 7</b></div>
           </div>
         </div>
+
+        <section class="dashboard-next-action-card is-actionable" id="dashboard-next-action-card" aria-live="polite">
+          <div class="dashboard-next-action-copy">
+            <span class="section-label" id="dashboard-next-action-label">Volgende actie voor Backoffice</span>
+            <h3 id="dashboard-next-action-title">Klanturenstaat controleren</h3>
+            <p><strong id="dashboard-next-action-person">Shawn-Douglas Nahar</strong><span id="dashboard-next-action-period">Augustus 2026</span></p>
+            <small id="dashboard-next-action-note">Het ontvangen document wacht op controle door Backoffice.</small>
+          </div>
+          <div class="dashboard-next-action-side">
+            <strong id="dashboard-next-action-queue">Daarna nog 3 bij Backoffice</strong>
+            <small id="dashboard-next-action-waiting">3 acties wachten op medewerkers</small>
+            <div id="dashboard-next-action-controls"><button class="button button-primary" id="dashboard-next-action-button" type="button">Start deze actie</button></div>
+          </div>
+        </section>
 
         <div class="metric-grid">
           <article class="metric-card">
@@ -230,17 +243,16 @@
             <button class="metric-link" data-go="invoices">Open facturen</button>
           </article>
           <article class="metric-card attention">
-            <span class="metric-label">Open acties</span>
+            <span class="metric-label">Acties bij Backoffice</span>
             <strong id="metric-actions">2</strong>
             <span class="metric-note" id="metric-actions-note">Over alle maanden</span>
-            <button class="metric-link" data-scroll-target="admin-task-panel">Bekijk werkvoorraad</button>
+            <button class="metric-link" id="metric-actions-link" data-scroll-target="admin-task-panel">Bekijk alle acties</button>
           </article>
         </div>
 
         <section class="panel admin-task-panel" id="admin-task-panel">
           <div class="panel-heading admin-task-heading">
             <div><span class="section-label">Zonder maanden wisselen</span><h3>Alle open acties per maand</h3><p id="admin-task-summary">Iedere regel is één actie en toont wie hem moet uitvoeren.</p></div>
-            <button class="button button-primary" id="admin-next-task" type="button">Start eerste Backoffice-actie</button>
           </div>
           <div class="admin-task-filters" id="admin-task-filters" role="group" aria-label="Open taken filteren"></div>
           <div class="admin-task-list" id="admin-task-list"></div>
