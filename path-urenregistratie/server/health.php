@@ -56,4 +56,39 @@ try {
     $result['checks']['database_connection'] = ['ok' => false, 'message' => 'DB connection failed'];
 }
 
+// check app_state table exists
+try {
+    $tbl = $pdo->prepare("SELECT COUNT(*) as cnt FROM information_schema.TABLES WHERE TABLE_SCHEMA = :db AND TABLE_NAME = 'app_state'");
+    $tbl->execute([':db' => $db['name']]);
+    $row = $tbl->fetch();
+    $result['checks']['app_state'] = ['ok' => ($row && $row['cnt'] > 0) ? true : false];
+} catch (Throwable $e) {
+    $result['checks']['app_state'] = ['ok' => false, 'message' => 'Could not verify app_state'];
+}
+
+// check schema_migrations exists
+try {
+    $tbl2 = $pdo->prepare("SELECT COUNT(*) as cnt FROM information_schema.TABLES WHERE TABLE_SCHEMA = :db AND TABLE_NAME = 'schema_migrations'");
+    $tbl2->execute([':db' => $db['name']]);
+    $row2 = $tbl2->fetch();
+    $result['checks']['schema_migrations'] = ['ok' => ($row2 && $row2['cnt'] > 0) ? true : false];
+} catch (Throwable $e) {
+    $result['checks']['schema_migrations'] = ['ok' => false, 'message' => 'Could not verify schema_migrations'];
+}
+
+// check core tables exist (sample)
+$coreTables = ['companies','users','employees','timesheets'];
+$coreStatus = [];
+foreach ($coreTables as $t) {
+    try {
+        $q = $pdo->prepare("SELECT COUNT(*) as cnt FROM information_schema.TABLES WHERE TABLE_SCHEMA = :db AND TABLE_NAME = :tbl");
+        $q->execute([':db' => $db['name'], ':tbl' => $t]);
+        $r = $q->fetch();
+        $coreStatus[$t] = ($r && $r['cnt'] > 0) ? true : false;
+    } catch (Throwable $e) {
+        $coreStatus[$t] = false;
+    }
+}
+$result['checks']['core_tables'] = $coreStatus;
+
 echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
