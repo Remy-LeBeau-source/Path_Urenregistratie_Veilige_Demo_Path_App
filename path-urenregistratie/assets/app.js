@@ -999,6 +999,52 @@ const readApiRuntime = {
 
 window.__PATH_READ_API = readApiDebug;
 
+const readApiSource = {
+  dashboard: "fallback",
+  invoices: "fallback",
+  overall: "fallback"
+};
+
+window.__PATH_READ_API_SOURCE = readApiSource;
+
+function setReadApiSource(section, source) {
+  readApiSource[section] = source;
+  readApiSource.overall = (readApiSource.dashboard === "api" || readApiSource.invoices === "api") ? "api" : "fallback";
+}
+
+function dashboardApiForPeriod(periodKey) {
+  const dashboard = readApiDebug.dashboard;
+  if (!dashboard || !Array.isArray(dashboard.per_maand)) return null;
+  const month = dashboard.per_maand.find(item => item && item.period_key === periodKey) || null;
+  const work = dashboard.open_werkvoorraad && typeof dashboard.open_werkvoorraad === "object"
+    ? dashboard.open_werkvoorraad
+    : null;
+  if (!month && !work) return null;
+  return { month, work };
+}
+
+function normalizeApiInvoiceStatus(status) {
+  const normalized = String(status || "").toLowerCase();
+  if (normalized === "ready") return "ready";
+  if (normalized === "concept") return "concept";
+  return "simulated";
+}
+
+function invoiceApiRowsForPeriod(periodKey) {
+  const dataset = readApiDebug.invoicesByPeriod[periodKey] || null;
+  if (!dataset || !Array.isArray(dataset.items)) return null;
+  return dataset.items.map(item => ({
+    invoiceNumber: String(item && item.invoice_number || ""),
+    employeeName: String(item && item.employee_name || "Onbekend"),
+    periodKey: String(item && item.period_key || periodKey),
+    status: normalizeApiInvoiceStatus(item && item.status),
+    statusRaw: String(item && item.status || ""),
+    subtotal: Number(item && item.subtotal || 0),
+    vatAmount: Number(item && item.vat_amount || 0),
+    total: Number(item && item.total || 0)
+  }));
+}
+
 function fetchReadApi(path) {
   if (!API_ENABLED) return Promise.resolve(null);
   try {
@@ -1031,6 +1077,8 @@ function refreshDashboardReadApi(force) {
       if (!data) return;
       readApiDebug.dashboard = data;
       console.log("[read-api] dashboard", data);
+      const dashboardViewActive = document.querySelector("#view-dashboard")?.classList.contains("is-active");
+      if (dashboardViewActive) renderDashboard();
     })
     .finally(() => {
       readApiRuntime.dashboardInFlight = false;
@@ -1055,6 +1103,8 @@ function refreshInvoicesReadApi(periodKey, force) {
       if (period) readApiDebug.invoicesByPeriod[period] = data;
       else readApiDebug.invoices = data;
       console.log(period ? "[read-api] invoices(" + period + ")" : "[read-api] invoices", data);
+      const invoicesViewActive = document.querySelector("#view-invoices")?.classList.contains("is-active");
+      if (invoicesViewActive && (!period || period === currentPeriod().key)) renderInvoices();
     })
     .finally(() => {
       readApiRuntime.invoicesInFlight = false;
@@ -2079,6 +2129,7 @@ function renderDashboardNextAction(tasks) {
 
 function renderDashboardActions() {
   const tasks = adminOpenTasks();
+  const dashboardApi = dashboardApiForPeriod(currentPeriod().key);
   const workCount = tasks.length;
   const actionableCount = tasks.filter(task => task.actionable).length;
   const waitingCount = workCount - actionableCount;
@@ -2097,12 +2148,18 @@ function renderDashboardActions() {
   workQueueAction.hidden = workCount === 0;
   workQueueAction.textContent = "Bekijk alle " + workCount + " open " + (workCount === 1 ? "actie" : "acties");
   workQueueAction.dataset.openWorkFilter = "all";
-  document.querySelector("#hero-task-total").textContent = workCount + " open " + (workCount === 1 ? "actie" : "acties");
+  const apiWorkCount = dashboardApi && dashboardApi.work ? Number(dashboardApi.work.totaal || 0) : null;
+  const apiActionable = dashboardApi && dashboardApi.work ? Number(dashboardApi.work.bij_backoffice || 0) : null;
+  const apiWaiting = dashboardApi && dashboardApi.work ? Number(dashboardApi.work.bij_medewerkers || 0) : null;
+  const displayWorkCount = apiWorkCount === null ? workCount : apiWorkCount;
+  const displayActionable = apiActionable === null ? actionableCount : apiActionable;
+  const displayWaiting = apiWaiting === null ? waitingCount : apiWaiting;
+  document.querySelector("#hero-task-total").textContent = displayWorkCount + " open " + (displayWorkCount === 1 ? "actie" : "acties");
   document.querySelector("#hero-task-months").textContent = workCount ? adminTaskMonthEquation(tasks) : "Alles afgerond";
-  document.querySelector("#hero-task-owners").textContent = workCount ? "Backoffice " + actionableCount + " + medewerkers " + waitingCount + " = " + workCount : "Backoffice 0 + medewerkers 0 = 0";
-  document.querySelector("#metric-actions").textContent = actionableCount;
-  document.querySelector("#metric-actions-note").textContent = waitingCount ? waitingCount + " " + (waitingCount === 1 ? "actie wacht" : "acties wachten") + " op medewerkers" : "Niets wacht op medewerkers";
-  document.querySelector("#metric-actions-link").textContent = workCount ? "Bekijk alle " + workCount + " acties" : "Alles afgerond";
+  document.querySelector("#hero-task-owners").textContent = displayWorkCount ? "Backoffice " + displayActionable + " + medewerkers " + displayWaiting + " = " + displayWorkCount : "Backoffice 0 + medewerkers 0 = 0";
+  document.querySelector("#metric-actions").textContent = displayActionable;
+  document.querySelector("#metric-actions-note").textContent = displayWaiting ? displayWaiting + " " + (displayWaiting === 1 ? "actie wacht" : "acties wachten") + " op medewerkers" : "Niets wacht op medewerkers";
+  document.querySelector("#metric-actions-link").textContent = displayWorkCount ? "Bekijk alle " + displayWorkCount + " acties" : "Alles afgerond";
   document.querySelector("#workflow-open-count").textContent = "Deze maand: " + selectedTasks.length + " open " + (selectedTasks.length === 1 ? "actie" : "acties");
   document.querySelector("#workflow-open-breakdown").textContent = selectedActionableCount + " bij Backoffice · " + selectedWaitingCount + " bij medewerkers · waarvan " + selectedCustomerCount + " klanturensta" + (selectedCustomerCount === 1 ? "at" : "ten");
   renderDashboardNextAction(tasks);
@@ -2543,6 +2600,7 @@ function showReopenApprovedHours(employeeId, periodKey) {
 function renderDashboard() {
   refreshDashboardReadApi(false);
   const period = currentPeriod();
+  const dashboardApi = dashboardApiForPeriod(period.key);
   const now = new Date();
   const currentMonthKey = makePeriodKey(now.getFullYear(), now.getMonth());
   const isFuturePeriod = period.key > currentMonthKey;
@@ -2570,24 +2628,31 @@ function renderDashboard() {
       "</tr>";
   }).join("") || '<tr><td colspan="6"><div class="dashboard-action-empty">Voor ' + escapeHtml(period.label) + ' hoeft niemand meer uren aan te vullen of te corrigeren.</div></td></tr>';
 
-  const submitted = rows.filter(item => ["submitted", "approved"].includes(item.record.timesheetStatus)).length;
-  const approved = rows.filter(item => item.record.timesheetStatus === "approved").length;
-  const open = rows.filter(item => item.record.timesheetStatus === "submitted").length;
+  const fallbackSubmitted = rows.filter(item => ["submitted", "approved"].includes(item.record.timesheetStatus)).length;
+  const fallbackApproved = rows.filter(item => item.record.timesheetStatus === "approved").length;
+  const fallbackOpen = rows.filter(item => item.record.timesheetStatus === "submitted").length;
+  const submitted = dashboardApi && dashboardApi.month
+    ? Number(dashboardApi.month.gecontroleerd || 0) + Number(dashboardApi.month.klaar_voor_controle || 0)
+    : fallbackSubmitted;
+  const approved = dashboardApi && dashboardApi.month ? Number(dashboardApi.month.gecontroleerd || 0) : fallbackApproved;
+  const open = dashboardApi && dashboardApi.month ? Number(dashboardApi.month.klaar_voor_controle || 0) : fallbackOpen;
+  const dashboardRowsTotal = dashboardApi && dashboardApi.month ? Math.max(0, Number(dashboardApi.month.medewerkers || rows.length)) : rows.length;
+  setReadApiSource("dashboard", dashboardApi ? "api" : "fallback");
   const ready = rows.filter(item => item.record.invoiceStatus === "ready").length;
   const simulated = rows.filter(item => item.record.invoiceStatus === "simulated").length;
   const invoiceTotal = rows
     .filter(item => ["ready", "simulated"].includes(item.record.invoiceStatus))
     .reduce((sum, item) => sum + totalEntries(item.record.entries) * item.employee.rate, 0);
 
-  document.querySelector("#metric-submitted").innerHTML = submitted + " <small>/ " + rows.length + "</small>";
+  document.querySelector("#metric-submitted").innerHTML = submitted + " <small>/ " + dashboardRowsTotal + "</small>";
   const submittedNote = document.querySelector("#metric-submitted-note");
   submittedNote.textContent = isFuturePeriod
     ? "Nog geen invoer verwacht voor " + period.label
-    : submitted === rows.length
+    : submitted === dashboardRowsTotal
       ? "Iedereen heeft " + period.label + " ingediend"
-      : (rows.length - submitted) + " nog niet ingediend voor " + period.label;
-  submittedNote.classList.toggle("positive", !isFuturePeriod && submitted === rows.length);
-  document.querySelector("#metric-approved").innerHTML = approved + " <small>/ " + rows.length + "</small>";
+      : (dashboardRowsTotal - submitted) + " nog niet ingediend voor " + period.label;
+  submittedNote.classList.toggle("positive", !isFuturePeriod && submitted === dashboardRowsTotal);
+  document.querySelector("#metric-approved").innerHTML = approved + " <small>/ " + dashboardRowsTotal + "</small>";
   document.querySelector("#metric-approved-note").textContent = open ? open + " wachten op controle voor " + period.label : "Geen openstaande controles voor " + period.label;
   const allOpenCount = allOpenApprovals().length;
   const approvedAction = document.querySelector("#metric-approved-action");
@@ -2599,7 +2664,7 @@ function renderDashboard() {
   document.querySelector("#approval-count").textContent = open;
   document.querySelector("#approval-count").hidden = open === 0;
 
-  const completedPhases = [submitted === rows.length, approved === rows.length, ready + simulated === rows.length, simulated === rows.length].filter(Boolean).length;
+  const completedPhases = [submitted === dashboardRowsTotal, approved === dashboardRowsTotal, ready + simulated === rows.length, simulated === rows.length].filter(Boolean).length;
   const progress = Math.round(completedPhases / 4 * 100);
   const openCustomerDocuments = isFuturePeriod ? 0 : rows.filter(item => item.employee.customerTimesheetExpected !== false && (["missing", "draft", "received", "resubmit"].includes(customerTimesheetFor(item.record).status) || (customerTimesheetFor(item.record).status === "approved" && item.employee.customerTimesheetBrokerEnabled !== false))).length;
   document.querySelector("#close-progress-ring").style.setProperty("--progress", progress);
@@ -2615,8 +2680,8 @@ function renderDashboard() {
   document.querySelector("#workflow-approval-note").textContent = open + " open";
   document.querySelector("#workflow-invoices-note").textContent = ready + " facturen klaar";
   document.querySelector("#workflow-send-note").textContent = simulated ? simulated + " verzending" + (simulated === 1 ? "" : "en") + " gecontroleerd" : "Nog niet gecontroleerd";
-  setWorkflowStep("#workflow-hours", submitted === rows.length ? "is-done" : submitted ? "is-current" : "");
-  setWorkflowStep("#workflow-approval", approved === rows.length ? "is-done" : open ? "is-current" : "");
+  setWorkflowStep("#workflow-hours", submitted === dashboardRowsTotal ? "is-done" : submitted ? "is-current" : "");
+  setWorkflowStep("#workflow-approval", approved === dashboardRowsTotal ? "is-done" : open ? "is-current" : "");
   setWorkflowStep("#workflow-invoices", ready + simulated === rows.length ? "is-done" : ready ? "is-current" : "");
   setWorkflowStep("#workflow-send", simulated === rows.length ? "is-done" : simulated ? "is-current" : "");
   renderDashboardActions();
@@ -2983,29 +3048,52 @@ function openMonthBatchBlocker(employeeId, periodKey) {
 }
 
 function renderInvoices() {
-  refreshInvoicesReadApi(currentPeriod().key, false);
+  const periodKey = currentPeriod().key;
+  refreshInvoicesReadApi(periodKey, false);
+  const apiRows = invoiceApiRowsForPeriod(periodKey);
+  setReadApiSource("invoices", apiRows ? "api" : "fallback");
   const periodRows = invoicePeriodRows();
   const rows = periodRows.filter(item => state.invoiceFilter === "all" || item.record.invoiceStatus === state.invoiceFilter);
   const tbody = document.querySelector("#invoice-rows");
-  tbody.innerHTML = rows.map(item => {
-    const employee = item.employee;
-    const record = item.record;
-    const total = totalEntries(record.entries);
-    let action = '<span class="invoice-action-note">Nog geen factuur</span>';
-    if (record.timesheetStatus === "submitted") action = '<button class="small-button" data-review="' + employee.id + '" data-period-key="' + currentPeriod().key + '">Uren goedkeuren</button>';
-    if (record.invoiceStatus === "ready") action = '<button class="small-button" data-preview-invoice-pdf="' + employee.id + '">Factuur bekijken</button><button class="small-button send" data-simulate-invoice="' + employee.id + '">Mailvoorbeeld</button>';
-    if (record.invoiceStatus === "simulated") action = '<button class="small-button" data-preview-invoice-pdf="' + employee.id + '">Factuur bekijken</button><button class="small-button" data-view-invoice="' + employee.id + '">Mailvoorbeeld</button>';
-    return "<tr>" +
-      "<td><strong>" + escapeHtml(record.invoiceNumber) + "</strong><small>" + escapeHtml(currentPeriod().label) + "</small></td>" +
-      "<td><strong>" + escapeHtml(employee.name) + "</strong><small>" + escapeHtml(employee.client) + "</small></td>" +
-      "<td><strong>" + escapeHtml(employee.broker) + "</strong><small>" + escapeHtml(employee.brokerEmail) + "</small></td>" +
-      "<td><strong>" + currency.format(total * employee.rate) + "</strong><small>" + hoursFormat.format(total) + " uur × " + currency.format(employee.rate) + "</small></td>" +
-      "<td>" + invoiceStatusPill(record) + "</td>" +
-      '<td><div class="invoice-action">' + action + "</div></td>" +
-      "</tr>";
-  }).join("");
-  if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:#6c7886">Geen facturen binnen dit filter.</td></tr>';
+  if (apiRows) {
+    const filteredApiRows = apiRows.filter(item => state.invoiceFilter === "all" || item.status === state.invoiceFilter);
+    tbody.innerHTML = filteredApiRows.map(item => {
+      const amountNote = item.subtotal > 0
+        ? "Subtotaal " + currency.format(item.subtotal) + " · btw " + currency.format(item.vatAmount)
+        : "Geen bedrag";
+      return "<tr>" +
+        "<td><strong>" + escapeHtml(item.invoiceNumber) + "</strong><small>" + escapeHtml(periodFromKey(item.periodKey).label) + "</small></td>" +
+        "<td><strong>" + escapeHtml(item.employeeName) + "</strong><small>" + escapeHtml(item.periodKey) + "</small></td>" +
+        "<td><strong>API</strong><small>Read-only</small></td>" +
+        "<td><strong>" + currency.format(item.total) + "</strong><small>" + escapeHtml(amountNote) + "</small></td>" +
+        "<td><span class=\"status-pill " + (item.status === "ready" ? "status-ready" : item.status === "concept" ? "status-concept" : "status-sent") + "\">" + escapeHtml(item.statusRaw || item.status) + "</span></td>" +
+        '<td><div class="invoice-action"><span class="invoice-action-note">Read-only API</span></div></td>' +
+        "</tr>";
+    }).join("");
+    if (!filteredApiRows.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:#6c7886">Geen facturen binnen dit filter.</td></tr>';
+    }
+  } else {
+    tbody.innerHTML = rows.map(item => {
+      const employee = item.employee;
+      const record = item.record;
+      const total = totalEntries(record.entries);
+      let action = '<span class="invoice-action-note">Nog geen factuur</span>';
+      if (record.timesheetStatus === "submitted") action = '<button class="small-button" data-review="' + employee.id + '" data-period-key="' + currentPeriod().key + '">Uren goedkeuren</button>';
+      if (record.invoiceStatus === "ready") action = '<button class="small-button" data-preview-invoice-pdf="' + employee.id + '">Factuur bekijken</button><button class="small-button send" data-simulate-invoice="' + employee.id + '">Mailvoorbeeld</button>';
+      if (record.invoiceStatus === "simulated") action = '<button class="small-button" data-preview-invoice-pdf="' + employee.id + '">Factuur bekijken</button><button class="small-button" data-view-invoice="' + employee.id + '">Mailvoorbeeld</button>';
+      return "<tr>" +
+        "<td><strong>" + escapeHtml(record.invoiceNumber) + "</strong><small>" + escapeHtml(currentPeriod().label) + "</small></td>" +
+        "<td><strong>" + escapeHtml(employee.name) + "</strong><small>" + escapeHtml(employee.client) + "</small></td>" +
+        "<td><strong>" + escapeHtml(employee.broker) + "</strong><small>" + escapeHtml(employee.brokerEmail) + "</small></td>" +
+        "<td><strong>" + currency.format(total * employee.rate) + "</strong><small>" + hoursFormat.format(total) + " uur × " + currency.format(employee.rate) + "</small></td>" +
+        "<td>" + invoiceStatusPill(record) + "</td>" +
+        '<td><div class="invoice-action">' + action + "</div></td>" +
+        "</tr>";
+    }).join("");
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:#6c7886">Geen facturen binnen dit filter.</td></tr>';
+    }
   }
   const payrollRecipient = mailRecipientById("payroll") || { name: "Salarisadministratie", email: state.settings.payroll || "", active: true };
   const payrollName = payrollRecipient.name || "Salarisadministratie";
