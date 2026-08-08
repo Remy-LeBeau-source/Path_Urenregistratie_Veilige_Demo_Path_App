@@ -1027,6 +1027,8 @@ const authRuntime = {
   localLoginHintsPromise: null
 };
 
+const AUTH_ALWAYS_SHOW_LOGIN_PICKER = true;
+
 const writeRuntime = {
   draftTimer: null,
   lastDraftSignature: "",
@@ -1215,7 +1217,8 @@ function applyAuthUiMode(mode) {
   }
 }
 
-function applyAuthUserToState(user) {
+function applyAuthUserToState(user, options = {}) {
+  const settings = Object.assign({ loginUser: true }, options);
   const role = normalizeAuthRole(String(user && user.role || ""));
   if (!role) return false;
 
@@ -1235,7 +1238,7 @@ function applyAuthUserToState(user) {
     if (employeeMatch) state.currentEmployeeId = Number(employeeMatch.id);
   }
 
-  login(role);
+  if (settings.loginUser) login(role);
   return true;
 }
 
@@ -1420,8 +1423,21 @@ function initializeAuthSession() {
           available: true,
           error: ""
         });
+
+        if (AUTH_ALWAYS_SHOW_LOGIN_PICKER) {
+          applyAuthUserToState(data.user, { loginUser: false });
+          return requestAuthLogout()
+            .catch(() => null)
+            .finally(() => {
+              setAuthDebug({ authenticated: false, role: "", user_id: null, mode: "auth", available: true, error: "session-cleared-on-load" });
+              logoutLocal();
+              const resolvedName = String((data.user && data.user.display_name) || (data.user && data.user.email) || "deze gebruiker");
+              setAuthLoginFeedback("Actieve sessie van " + resolvedName + " gevonden en gesloten. Kies hieronder een account.", false);
+            });
+        }
+
         setAuthLoginFeedback("", false);
-        applyAuthUserToState(data.user);
+        applyAuthUserToState(data.user, { loginUser: true });
       } else {
         setAuthDebug({ authenticated: false, role: "", user_id: null, mode: "auth", available: true, error: "not-authenticated" });
         logoutLocal();

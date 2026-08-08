@@ -4,10 +4,17 @@
 
 $ErrorActionPreference = "Stop"
 
+# In PowerShell 7+, do not convert native stderr text into PowerShell errors.
+if ($null -ne (Get-Variable -Name PSNativeCommandUseErrorActionPreference -ErrorAction SilentlyContinue)) {
+    $PSNativeCommandUseErrorActionPreference = $false
+}
+
 $ProjectDir = $PSScriptRoot
 $Port = 8000
 $Url = "http://localhost:$Port/"
 $PhpPathFile = Join-Path $ProjectDir "server\.php-path"
+$ServerLogDir = Join-Path $ProjectDir "server\logs"
+$ServerLogFile = Join-Path $ServerLogDir "php-server.log"
 
 function Step($text) {
     Write-Host ""
@@ -20,6 +27,24 @@ function Ok($text) {
 
 function Warn($text) {
     Write-Host "LET OP  $text" -ForegroundColor Yellow
+}
+
+function Get-PortListeners($port) {
+    return Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
+}
+
+function Get-ListenerProcesses($listeners) {
+    $ids = @($listeners | Select-Object -ExpandProperty OwningProcess -Unique)
+    $processes = @()
+    foreach ($id in $ids) {
+        if ($id -and $id -gt 0) {
+            $proc = Get-Process -Id $id -ErrorAction SilentlyContinue
+            if ($proc) {
+                $processes += $proc
+            }
+        }
+    }
+    return $processes
 }
 
 function Find-PhpExe {
@@ -147,12 +172,49 @@ return [
 }
 
 Step "Poort $Port controleren"
-$listener = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
+$listeners = Get-PortListeners -port $Port
 
-if ($listener) {
-    Ok "Er draait al iets op poort $Port. Ik open de app."
-    Start-Process $Url
-    exit 0
+if ($listeners) {
+    $listenerProcesses = Get-ListenerProcesses -listeners $listeners
+    if ($listenerProcesses.Count -eq 0) {
+        Warn "Poort $Port is bezet, maar procesinformatie kon niet worden gelezen."
+        Warn "Stop het proces op poort $Port en start dit script opnieuw voor live logs."
+        Start-Process $Url
+        exit 1
+    }
+
+    $names = ($listenerProcesses | ForEach-Object { "{0} (PID {1})" -f $_.ProcessName, $_.Id }) -join ", "
+    Warn "Poort $Port is al in gebruik door: $names"
+
+    $nonPhp = @($listenerProcesses | Where-Object { $_.ProcessName -notin @('php', 'php-cgi') })
+    if ($nonPhp.Count -gt 0) {
+        Warn "Ik laat dit proces staan en start geen tweede server."
+        Warn "Wil je live serverlogs zien? Stop eerst dit proces en start daarna opnieuw."
+        Start-Process $Url
+        exit 1
+    }
+
+    Warn "Bestaande PHP-server wordt gestopt zodat deze terminal opnieuw live logs kan tonen."
+    foreach ($proc in $listenerProcesses) {
+        try {
+            Stop-Process -Id $proc.Id -Force -ErrorAction Stop
+            Ok "Proces gestopt: $($proc.ProcessName) (PID $($proc.Id))"
+        } catch {
+            Warn "Kon proces niet stoppen: $($proc.ProcessName) (PID $($proc.Id))."
+            Warn "Fout: $($_.Exception.Message)"
+            Start-Process $Url
+            exit 1
+        }
+    }
+
+    $stopped = Wait-Process -Id ($listenerProcesses | Select-Object -ExpandProperty Id) -Timeout 5 -ErrorAction SilentlyContinue
+    $remaining = Get-PortListeners -port $Port
+    if ($remaining) {
+        Warn "Poort $Port blijft bezet na stopactie. Start handmatig opnieuw."
+        Start-Process $Url
+        exit 1
+    }
+    Ok "Poort $Port is vrijgemaakt"
 }
 
 Step "Browser openen"
@@ -165,6 +227,23 @@ Write-Host $Url -ForegroundColor Green
 Write-Host ""
 Write-Host "Laat dit venster open zolang je lokaal werkt." -ForegroundColor Yellow
 Write-Host "Sluiten/stoppen kan met Ctrl+C." -ForegroundColor Yellow
+Write-Host "Live logbestand: $ServerLogFile" -ForegroundColor Yellow
 Write-Host ""
 
-& $PhpExe -S "localhost:$Port" -t "$ProjectDir"
+if (!(Test-Path -LiteralPath $ServerLogDir)) {
+    New-Item -ItemType Directory -Path $ServerLogDir -Force | Out-Null
+}
+
+"" | Out-File -FilePath $ServerLogFile -Encoding ASCII -Append
+"========== SESSION START $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') on $Url ==========" | Out-File -FilePath $ServerLogFile -Encoding ASCII -Append
+
+$previousErrorActionPreference = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+
+try {
+    # Run via cmd so stderr is merged into stdout as plain text instead of PowerShell error records.
+    $phpServerCmd = '"' + $PhpExe + '" -S "localhost:' + $Port + '" -t "' + $ProjectDir + '" 2>&1'
+    cmd.exe /d /c $phpServerCmd | Tee-Object -FilePath $ServerLogFile -Append
+} finally {
+    $ErrorActionPreference = $previousErrorActionPreference
+}

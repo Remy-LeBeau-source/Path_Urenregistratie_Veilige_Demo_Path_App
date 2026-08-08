@@ -5,7 +5,7 @@ import { AuthApi } from './api/AuthApi';
 import { TimesheetApi } from './api/TimesheetApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
 
-const CANDIDATE_PERIODS = Array.from({ length: 24 }, (_, index) => {
+const CANDIDATE_PERIODS = Array.from({ length: 240 }, (_, index) => {
   const year = 2099 + Math.floor(index / 12);
   const month = (index % 12) + 1;
   return `${year}-${String(month).padStart(2, '0')}`;
@@ -35,7 +35,7 @@ async function findWritablePeriod(timesheetApi: TimesheetApi): Promise<string> {
     }
   }
 
-  throw new Error('No writable test period found in 24 candidate months.');
+  throw new Error('No writable test period found in 240 candidate months.');
 }
 
 test('login picker vult alleen lokaal demo-wachtwoord in wanneer hints beschikbaar zijn', async ({ page, request }) => {
