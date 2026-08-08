@@ -183,7 +183,7 @@ jobs:
             $adminHash = password_hash(getenv("PLAYWRIGHT_ADMIN_PASSWORD"), PASSWORD_DEFAULT);
             $employeeHash = password_hash(getenv("PLAYWRIGHT_EMPLOYEE_PASSWORD"), PASSWORD_DEFAULT);
             $q = $pdo->prepare("UPDATE users SET password_hash = :h WHERE email = :e AND role = :r");
-            $q->execute([":h" => $adminHash, ":e" => "admin@example.invalid", ":r" => "administrator"]);
+            $q->execute([":h" => $adminHash, ":e" => "gio@example.invalid", ":r" => "administrator"]);
             $q->execute([":h" => $employeeHash, ":e" => "stasjo@example.invalid", ":r" => "employee"]);
             echo "Updated CI login hashes.\n";
           '
@@ -197,6 +197,8 @@ jobs:
       - name: Run E2E tests
         env:
           PATH_APP_BASE_URL: http://127.0.0.1:8000
+          PLAYWRIGHT_ADMIN_EMAIL: gio@example.invalid
+          PLAYWRIGHT_EMPLOYEE_EMAIL: stasjo@example.invalid
         run: npm run test:e2e
 
       - name: Stop PHP server

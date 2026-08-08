@@ -15,7 +15,7 @@ export function createStageConfig(stage: PlaywrightStage): PlaywrightAppConfig {
   return {
     stage,
     baseUrl: readEnv(stage, 'PATH_APP_BASE_URL', 'http://localhost:8000'),
-    adminEmail: readEnv(stage, 'PLAYWRIGHT_ADMIN_EMAIL', 'admin@example.invalid'),
+    adminEmail: readEnv(stage, 'PLAYWRIGHT_ADMIN_EMAIL', 'gio@example.invalid'),
     employeeEmail: readEnv(stage, 'PLAYWRIGHT_EMPLOYEE_EMAIL', 'stasjo@example.invalid'),
     adminPassword: readEnv(stage, 'PLAYWRIGHT_ADMIN_PASSWORD', ''),
     employeePassword: readEnv(stage, 'PLAYWRIGHT_EMPLOYEE_PASSWORD', ''),
