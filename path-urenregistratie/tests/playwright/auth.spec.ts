@@ -3,7 +3,7 @@ import { AuthApi } from './api/AuthApi';
 import { appConfig } from './fixtures/appConfig';
 import { LoginPage } from './pages/LoginPage';
 
-test('admin login werkt en me klopt', async ({ page }) => {
+test('Admin logt in en auth/me geeft de juiste gebruiker terug', async ({ page }) => {
   const authApi = new AuthApi(page.context().request);
   const loginPage = new LoginPage(page);
 
@@ -16,7 +16,7 @@ test('admin login werkt en me klopt', async ({ page }) => {
   expect(meAfterLogin.body.user.email).toBe(appConfig.adminEmail);
 });
 
-test('employee login werkt en me klopt', async ({ page }) => {
+test('Medewerker logt in en auth/me geeft de juiste gebruiker terug', async ({ page }) => {
   const authApi = new AuthApi(page.context().request);
   const loginPage = new LoginPage(page);
 
@@ -29,7 +29,7 @@ test('employee login werkt en me klopt', async ({ page }) => {
   expect(meAfterLogin.body.user.email).toBe(appConfig.employeeEmail);
 });
 
-test('logout werkt en me klopt na logout', async ({ page }) => {
+test('Gebruiker logt uit en auth/me geeft authenticated false terug', async ({ page }) => {
   const authApi = new AuthApi(page.context().request);
   const loginPage = new LoginPage(page);
 

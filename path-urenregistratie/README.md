@@ -111,6 +111,91 @@ npm run build
 
 De productie-uitvoer wordt in `dist/` geplaatst.
 
+## Testen en Living Doc
+
+- Playwright regressie: `npm run test:e2e`
+- Playwright UI: `npm run test:e2e:ui`
+- Playwright HTML report: `npx playwright show-report`
+- Allure genereren: `npm run allure:generate`
+- Allure openen: `npm run allure:open` of `npm run allure:serve`
+- Live documentatiebundel maken: `npm run docs:bundle`
+- Alles in één stap (run + reports + bundel): `npm run docs:refresh`
+
+Living doc en mapping:
+
+- `LIVING-DOC.md`
+- `TEST-BDD-MAPPING.md`
+- `tests/playwright/features/*.feature`
+
+Voor delen met team of klanten:
+
+- Publiceer de map `live-doc-site/` op een statische host.
+- Open daarna `live-doc-site/index.html` als centrale ingang.
+
+Waar staat de pagina nu precies?
+
+- Na `npm run docs:bundle` staat de centrale pagina op `live-doc-site/index.html`.
+- De dynamische living doc pagina staat op `live-doc-site/living-doc.html`.
+- De dynamische mappingpagina staat op `live-doc-site/test-bdd-mapping.html`.
+- Vanuit die pagina open je direct:
+	- de living doc (`live-doc-site/LIVING-DOC.md`)
+	- het Playwright rapport (`live-doc-site/playwright-report/index.html`)
+	- het Allure rapport (`live-doc-site/allure-report/index.html`)
+
+Veel rood in terminal of UI?
+
+- `npm run test:e2e` doet nu eerst een precheck op:
+	- bereikbaarheid van `PATH_APP_BASE_URL` (standaard `http://localhost:8000`)
+	- aanwezigheid van `PLAYWRIGHT_ADMIN_PASSWORD` en `PLAYWRIGHT_EMPLOYEE_PASSWORD`
+- Als deze precheck faalt, stopt de run direct met een duidelijke foutmelding in plaats van tientallen rode testcases.
+- `npm run test:e2e` leest automatisch `.env.local` (als die bestaat), zodat je niet per terminalsessie handmatig `$env:` hoeft te zetten.
+- In de UI/rapporten kan oude rood nog zichtbaar zijn van eerdere runs. Gebruik voor een schone status:
+	1. `npm run test:e2e`
+	2. `npm run allure:generate`
+	3. `npm run docs:bundle`
+
+Eenmalige lokale e2e setup (aanrader):
+
+1. Maak `.env.local` in de projectroot met bijvoorbeeld:
+
+```dotenv
+PATH_APP_BASE_URL=http://localhost:8000
+PLAYWRIGHT_ADMIN_PASSWORD=LocalDemoAdmin2026
+PLAYWRIGHT_EMPLOYEE_PASSWORD=LocalDemoEmployee2026
+```
+
+2. Zorg dat de bijbehorende lokale test-hashes in je DB staan (zoals eerder ingesteld).
+
+Daarna kun je steeds simpel draaien met alleen `npm run test:e2e`.
+
+## CI/CD met GitHub
+
+Ja, dit is ingericht met GitHub Actions:
+
+- CI workflow: `.github/workflows/ci.yml`
+	- draait build, smoke check en e2e tests op push en pull request
+- Live docs + reports workflow: `.github/workflows/live-docs.yml`
+	- bouwt en publiceert de live documentatiepagina naar GitHub Pages op `main`
+	- na elke nieuwe `main` build wordt de pagina automatisch ververst
+- Stage promotion workflow: `.github/workflows/stage-promotion.yml`
+	- handmatige promotie van dezelfde ref naar `dev`, `tst1` of `tst2`
+	- draait build + smoke, en optioneel e2e tegen stage-URL
+
+Na push naar `main` kun je de gepubliceerde live documentatie-URL gebruiken als centrale testdocumentatie voor je team.
+
+### Stageflow (dev -> tst1 -> tst2) met voorlopig dezelfde URL
+
+Dit kan direct via GitHub Environments:
+
+1. Maak environments aan in GitHub: `dev`, `tst1`, `tst2`.
+2. Zet per environment deze variabelen/secrets:
+	 - Variable: `PATH_APP_BASE_URL`
+	 - Secrets: `PLAYWRIGHT_ADMIN_PASSWORD`, `PLAYWRIGHT_EMPLOYEE_PASSWORD`
+3. Voor nu mag `PATH_APP_BASE_URL` in alle drie hetzelfde zijn.
+4. Start daarna handmatig de workflow `Stage Promotion` en kies target stage + ref.
+
+Later kun je per stage een eigen URL invullen zonder codewijziging.
+
 ## Productiekoppelingen die later worden toegevoegd
 
 1. Google Workspace-inlog voor medewerkers en beheerders.

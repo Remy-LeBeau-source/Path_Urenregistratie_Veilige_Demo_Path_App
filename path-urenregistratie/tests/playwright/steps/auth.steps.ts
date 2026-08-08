@@ -18,4 +18,4 @@ When('de gebruiker uitlogt', () => undefined);
 Then('opent de backofficeomgeving van Path Uren & Facturatie', () => undefined);
 Then('opent alleen het eigen medewerkerdashboard', () => undefined);
 Then('verschijnt opnieuw het loginscherm', () => undefined);
-Then('geeft het me endpoint authenticated false terug', () => undefined);
+Then('geeft het auth me endpoint authenticated false terug', () => undefined);

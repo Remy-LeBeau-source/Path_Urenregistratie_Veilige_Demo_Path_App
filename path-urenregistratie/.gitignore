@@ -8,3 +8,4 @@ server/config.local.php
 server/.php-path
 playwright-report/
 test-results/
+live-doc-site/

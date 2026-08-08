@@ -16,7 +16,7 @@ Feature: Authenticatie in Path Uren & Facturatie
     When de gebruiker uitlogt
     Then verschijnt opnieuw het loginscherm
 
-  Scenario: Me endpoint geeft niet-ingelogd terug na logout
+  Scenario: Auth me endpoint geeft geen actieve sessie terug na logout
     Given een ingelogde Path gebruiker
     When de gebruiker uitlogt
-    Then geeft het me endpoint authenticated false terug
+    Then geeft het auth me endpoint authenticated false terug

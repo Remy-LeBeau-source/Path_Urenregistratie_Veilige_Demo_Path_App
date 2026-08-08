@@ -1,0 +1,147 @@
+name: Live Docs and Test Reports
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: path_urenregistratie
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup PHP with PDO MySQL
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Write CI config.local.php
+        run: |
+          cat > server/config.local.php <<'PHP'
+          <?php
+          return [
+              'environment' => 'development',
+              'app_origin' => 'http://127.0.0.1:8000',
+              'allow_demo_migrations' => true,
+              'host' => '127.0.0.1',
+              'database' => 'path_urenregistratie',
+              'username' => 'root',
+              'password' => 'root',
+              'port' => 3306,
+              'charset' => 'utf8mb4',
+          ];
+          PHP
+
+      - name: Start PHP server
+        run: |
+          php -S 127.0.0.1:8000 -t . > /tmp/php-server.log 2>&1 &
+          echo $! > /tmp/php-server.pid
+          sleep 2
+
+      - name: Run install + migrations
+        run: |
+          curl -fsS http://127.0.0.1:8000/server/install.php > /tmp/install.json
+          curl -fsS http://127.0.0.1:8000/server/migrate.php > /tmp/migrate.json
+          cat /tmp/install.json
+          cat /tmp/migrate.json
+
+      - name: Generate temporary test passwords
+        run: |
+          echo "PLAYWRIGHT_ADMIN_PASSWORD=$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)" >> $GITHUB_ENV
+          echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)" >> $GITHUB_ENV
+
+      - name: Set CI test password hashes in DB
+        run: |
+          php -r '
+            $cfg = require "server/config.local.php";
+            $dsn = "mysql:host={$cfg["host"]};port={$cfg["port"]};dbname={$cfg["database"]};charset={$cfg["charset"]}";
+            $pdo = new PDO($dsn, $cfg["username"], $cfg["password"], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+            $adminHash = password_hash(getenv("PLAYWRIGHT_ADMIN_PASSWORD"), PASSWORD_DEFAULT);
+            $employeeHash = password_hash(getenv("PLAYWRIGHT_EMPLOYEE_PASSWORD"), PASSWORD_DEFAULT);
+            $q = $pdo->prepare("UPDATE users SET password_hash = :h WHERE email = :e AND role = :r");
+            $q->execute([":h" => $adminHash, ":e" => "admin@example.invalid", ":r" => "administrator"]);
+            $q->execute([":h" => $employeeHash, ":e" => "stasjo@example.invalid", ":r" => "employee"]);
+            echo "Updated CI login hashes.\n";
+          '
+
+      - name: Run E2E tests
+        env:
+          PATH_APP_BASE_URL: http://127.0.0.1:8000
+        run: npm run test:e2e
+
+      - name: Build reports and live docs bundle
+        run: |
+          npm run allure:generate
+          npm run docs:bundle
+
+      - name: Upload Playwright report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+
+      - name: Upload Allure report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report/
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: live-doc-site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Stop PHP server
+        if: always()
+        run: |
+          if [ -f /tmp/php-server.pid ]; then
+            kill "$(cat /tmp/php-server.pid)" || true
+          fi

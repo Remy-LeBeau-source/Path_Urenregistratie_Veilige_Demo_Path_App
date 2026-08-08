@@ -1,0 +1,76 @@
+name: Stage Promotion
+
+on:
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: "Doelstage"
+        required: true
+        type: choice
+        options:
+          - dev
+          - tst1
+          - tst2
+      ref:
+        description: "Git ref (branch/tag/sha)"
+        required: true
+        default: "main"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stage-promotion-${{ inputs.stage }}
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: Promote to ${{ inputs.stage }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.stage }}
+
+    steps:
+      - name: Checkout selected ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Smoke check
+        run: npm run check
+
+      - name: Optional E2E against stage URL
+        env:
+          PATH_APP_BASE_URL: ${{ vars.PATH_APP_BASE_URL }}
+          PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
+          PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
+        run: |
+          if [ -z "${PATH_APP_BASE_URL:-}" ] || [ -z "${PLAYWRIGHT_ADMIN_PASSWORD:-}" ] || [ -z "${PLAYWRIGHT_EMPLOYEE_PASSWORD:-}" ]; then
+            echo "Skipping e2e: configure PATH_APP_BASE_URL var + PLAYWRIGHT_* secrets in environment '${{ inputs.stage }}'."
+            exit 0
+          fi
+
+          echo "Running e2e for stage '${{ inputs.stage }}' on ${PATH_APP_BASE_URL}"
+          npm run test:e2e
+
+      - name: Stage summary
+        run: |
+          echo "Stage promotion completed for '${{ inputs.stage }}'"
+          echo "Ref: ${{ inputs.ref }}"
