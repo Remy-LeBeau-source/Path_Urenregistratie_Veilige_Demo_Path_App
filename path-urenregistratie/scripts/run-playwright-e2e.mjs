@@ -6,6 +6,19 @@ import { config as loadDotEnv } from 'dotenv';
 if (existsSync('.env')) {
   loadDotEnv({ path: '.env' });
 }
+
+const stage = String(process.env.PLAYWRIGHT_STAGE || '').trim().toLowerCase();
+if (stage && !['dev', 'tst1', 'acc', 'prod'].includes(stage)) {
+  console.error('E2E precheck failed: PLAYWRIGHT_STAGE must be one of dev, tst1, acc, prod.');
+  process.exit(1);
+}
+if (stage) {
+  const stageEnvPath = `environments/${stage}.env`;
+  if (existsSync(stageEnvPath)) {
+    loadDotEnv({ path: stageEnvPath, override: true });
+  }
+}
+
 if (existsSync('.env.local')) {
   loadDotEnv({ path: '.env.local', override: true });
 }

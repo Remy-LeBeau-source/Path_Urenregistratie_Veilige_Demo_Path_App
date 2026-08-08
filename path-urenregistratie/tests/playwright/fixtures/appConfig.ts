@@ -1,6 +1,6 @@
-import { test1 } from '../env/test1';
+import { appRuntimeConfig } from '../config';
 
-export const appConfig = test1;
+export const appConfig = appRuntimeConfig;
 
 export function requirePassword(value: string, envName: string): string {
   if (!value) {
