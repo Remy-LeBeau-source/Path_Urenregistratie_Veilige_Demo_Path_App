@@ -110,6 +110,17 @@ Scenario's:
 - Administrator vraagt via de browser-UI een correctie aan
 - Medewerker dient na UI-correctie opnieuw in en administrator keurt goed
 
+### Customer timesheet API
+
+Feature: tests/playwright/features/customer-timesheets.feature
+
+Scenario's:
+- Medewerker uploadt klanturenstaat als concept
+- Medewerker dient klanturenstaat in en leest terug
+- Administrator keurt goed en vraagt daarna resubmit
+- Ongeldig bestandstype wordt geblokkeerd
+- Medewerker kan geen andere employee scope forceren
+
 ## Technische mapping
 
 Zie de volledige mapping in:

@@ -13,13 +13,13 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 ## Actuele stand
 
 - Datum: 2026-08-09
-- Main/HEAD: f4554cd
+- Main/HEAD: 1163590
 - Referentiecommit fase 8/9 backend: fc27723
 - Appversie: 0.9.30
 - Lokale check: geslaagd
-- Lokale e2e regressie: 30 geslaagd, 0 gefaald
+- Lokale e2e regressie: 32 geslaagd, 0 gefaald
 - GitHub pipeline-status: lokaal niet verifieerbaar zonder gh auth login
-- Laatste commit: docs(checklist): add full master checklist and stabilize auth readiness wait
+- Laatste commit: docs(checklist): sync master checklist with latest pushed head
 
 ---
 
@@ -396,27 +396,25 @@ Status Fase 9:
 - Opslagvelden in schema.
 - Upload-/reviewvelden in schema.
 - Demo-UI en schermconcept bestaan.
+- API endpoint customer-timesheets.php toegevoegd (GET/POST).
+- Beveiligde download via server/api/customer-timesheets.php?action=download toegevoegd.
+- Uploadvalidatie toegevoegd (PDF/JPG/PNG, max 2 MB, employee/company scope).
+- Statusacties toegevoegd: save_draft, submit(received), approve, request_resubmit, mark_sent, mark_sent_to_broker, mark_skipped, restore_missing.
+- Auditevents voor customer_timesheet acties toegevoegd.
+- Playwright API tests toegevoegd: CTS-API-001 en CTS-API-002.
 
 ### Nog bouwen
 
-- Uploadendpoint.
-- PDF upload.
-- JPG upload.
-- PNG upload.
+- JPG/PNG server-side omzetten naar PDF.
 - MIME-typecontrole.
 - Bestandsgroottecontrole.
 - Veilige bestandsnaam.
 - Unieke storage key.
 - Opslag buiten publiek toegankelijke webmap.
-- Downloadendpoint.
 - Employee mag alleen eigen bestand downloaden.
 - Administrator alleen binnen eigen organisatie.
 - Status missing.
-- Status received.
-- Status approved.
-- Status resubmit.
-- Status sent.
-- Status sent_to_broker.
+- End-to-end UI koppeling naar de nieuwe backendflow.
 - Al gemaild / overslaan-optie.
 - Virusscanstrategie.
 - Auditlog.
@@ -425,8 +423,8 @@ Status Fase 9:
 - Living Doc.
 
 Status Fase 10:
-- [~] schema en demo-opzet bestaan
-- [ ] echte upload/downloadflow nog open
+- [~] schema, API basis en regressietests bestaan
+- [~] echte UI-koppeling en productieafbouw nog open
 
 ---
 
@@ -693,7 +691,7 @@ Status Fase 15:
 - [x] Fase 7 - CI/CD-basis
 - [x] Fase 8 - uren concept opslaan en indienen
 - [~] Fase 9 - correctie/goedkeuring: backend + API-tests + docs + commit/push klaar; pipelinebevestiging nog open op deze machine
-- [~] Fase 10 - klanturenstaat: schema aanwezig, echte flow open
+- [~] Fase 10 - klanturenstaat: schema + API + API-tests aanwezig, UI-koppeling/productieafbouw open
 - [~] Fase 11 - factuur/PDF: demo/readbasis aanwezig, server-PDF open
 - [~] Fase 12 - e-mail: schema/routes aanwezig, echte queue open
 - [~] Fase 13 - bedrijfsdata: demo aanwezig, definitieve keuzes open
@@ -704,7 +702,7 @@ Status Fase 15:
 
 1. GitHub pipeline-status van recente main-commits bevestigen (na gh auth login).
 2. Fase 9 pipelinebewijs op [x] zetten zodra bevestigd.
-3. Start Fase 10 met echte klanturenstaat upload/download backend + tests.
+3. Fase 10 vervolg: UI koppelen aan nieuwe customer-timesheet API en server-side JPG/PNG -> PDF conversie toevoegen.
 
 ## Dagelijkse werkwijze (verplicht)
 
