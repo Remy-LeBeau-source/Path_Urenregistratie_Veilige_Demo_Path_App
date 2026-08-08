@@ -3,8 +3,10 @@ const DEMO_DOMAIN = "@example.invalid";
 const API_ENDPOINT = "/server/api.php";
 const API_STATE_PATH = API_ENDPOINT + "?action=state";
 const AUTH_ME_PATH = "/server/auth/me.php";
+const AUTH_CSRF_PATH = "/server/auth/csrf.php";
 const AUTH_LOGIN_PATH = "/server/auth/login.php";
 const AUTH_LOGOUT_PATH = "/server/auth/logout.php";
+const WRITE_TIMESHEET_PATH = "/server/api/timesheets.php";
 const LOCAL_STORAGE_ENABLED = true;
 const API_ENABLED = true;
 const READ_API_DASHBOARD_PATH = "/server/api/dashboard.php";
@@ -951,11 +953,11 @@ function persistState() {
   }
   if (API_ENABLED) {
     try {
-      fetch(API_STATE_PATH, {
+      requestAuthCsrf().then(token => fetch(API_STATE_PATH, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
         body: JSON.stringify({ state: copy })
-      }).catch(err => console.warn("Failed saving state to API", err));
+      }).catch(err => console.warn("Failed saving state to API", err)));
     } catch (e) {
       console.warn("Failed initiating state save to API", e);
     }
@@ -1017,7 +1019,17 @@ window.__PATH_READ_API_SOURCE = readApiSource;
 const authRuntime = {
   checked: false,
   available: false,
-  mode: "checking"
+  mode: "checking",
+  csrfToken: "",
+  csrfPromise: null
+};
+
+const writeRuntime = {
+  draftTimer: null,
+  lastDraftSignature: "",
+  pendingDraftSignature: "",
+  draftInFlight: false,
+  lastDraftErrorAt: 0
 };
 
 const authDebug = {
@@ -1071,6 +1083,9 @@ function setDemoLoginEnabled(enabled) {
   document.querySelectorAll("[data-login-role]").forEach(button => {
     button.disabled = !enabled;
   });
+}
+
+function setLoginAccountPickerEnabled(enabled) {
   document.querySelectorAll("[data-account-picker-trigger]").forEach(button => {
     button.disabled = !enabled;
   });
@@ -1085,21 +1100,63 @@ function setAuthLoginEnabled(enabled) {
   if (submit) submit.disabled = !enabled;
 }
 
+function selectedLoginAccount(role) {
+  if (role === "admin") {
+    const adminId = String(document.querySelector("#login-admin")?.value || state.currentAdminId || "");
+    return adminById(adminId) || null;
+  }
+  if (role === "employee") {
+    const employeeId = Number(document.querySelector("#login-employee")?.value || state.currentEmployeeId || 0);
+    return employeeById(employeeId) || null;
+  }
+  return null;
+}
+
+function prefillAuthCredentialsFromSelection(role, showFeedback = true) {
+  if (authRuntime.mode !== "auth") return;
+  const account = selectedLoginAccount(role);
+  if (!account) return;
+
+  const emailInput = document.querySelector("#auth-login-email");
+  const passwordInput = document.querySelector("#auth-login-password");
+  if (!emailInput || !passwordInput) return;
+
+  const email = String(account.email || "").trim();
+  emailInput.value = email;
+
+  const normalizedRole = role === "admin" ? "admin" : role === "employee" ? "employee" : "";
+  let suggestedPassword = "";
+  if (normalizedRole === "admin") suggestedPassword = "DemoTempAdmin!2026";
+  if (normalizedRole === "employee") suggestedPassword = "DemoTempEmployee!2026";
+  passwordInput.value = suggestedPassword;
+
+  if (showFeedback) {
+    if (suggestedPassword) {
+      setAuthLoginFeedback("Inloggegevens voorgeselecteerd voor " + account.name + ".", false);
+    } else {
+      setAuthLoginFeedback("E-mail voorgeselecteerd voor " + account.name + ". Vul nog het juiste wachtwoord in.", false);
+    }
+  }
+}
+
 function applyAuthUiMode(mode) {
   authRuntime.mode = mode;
   const authForm = document.querySelector("#auth-login-form");
   if (authForm) authForm.hidden = mode === "demo";
   if (mode === "auth") {
     setDemoLoginEnabled(false);
+    setLoginAccountPickerEnabled(true);
     setAuthLoginEnabled(true);
     setAuthModeIndicator("Auth-modus actief. Demo-rolknoppen zijn uitgeschakeld.", false);
   } else if (mode === "demo") {
     setDemoLoginEnabled(true);
+    setLoginAccountPickerEnabled(true);
     setAuthLoginEnabled(false);
     setAuthLoginFeedback("", false);
     setAuthModeIndicator("Lokale demo-modus actief: auth backend niet beschikbaar.", true);
   } else {
     setDemoLoginEnabled(false);
+    setLoginAccountPickerEnabled(false);
     setAuthLoginEnabled(false);
     setAuthModeIndicator("Controle van auth-sessie wordt uitgevoerd.", false);
   }
@@ -1138,27 +1195,165 @@ function requestAuthMe() {
         throw new Error("HTTP " + resp.status);
       }
       return resp.json();
+    })
+    .then(data => {
+      if (data && typeof data.csrf_token === "string" && data.csrf_token) {
+        authRuntime.csrfToken = data.csrf_token;
+      }
+      return data;
     });
 }
 
+function requestAuthCsrf() {
+  if (!API_ENABLED) return Promise.resolve("");
+  if (authRuntime.csrfToken) return Promise.resolve(authRuntime.csrfToken);
+  if (authRuntime.csrfPromise) return authRuntime.csrfPromise;
+
+  authRuntime.csrfPromise = fetch(AUTH_CSRF_PATH, { method: "GET", headers: { "Accept": "application/json" } })
+    .then(resp => {
+      if (!resp.ok) throw new Error("HTTP " + resp.status);
+      return resp.json();
+    })
+    .then(data => {
+      const token = String(data && data.csrf_token || "");
+      if (!token) throw new Error("csrf-token-missing");
+      authRuntime.csrfToken = token;
+      return token;
+    })
+    .finally(() => {
+      authRuntime.csrfPromise = null;
+    });
+
+  return authRuntime.csrfPromise;
+}
+
 function requestAuthLogin(email, password) {
-  return fetch(AUTH_LOGIN_PATH, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Accept": "application/json" },
-    body: JSON.stringify({ email, password })
-  }).then(resp => resp.json().then(data => ({ ok: resp.ok, data })));
+  function sendLoginWithToken(token) {
+    return fetch(AUTH_LOGIN_PATH, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify({ email, password })
+    }).then(resp => resp.json().then(data => ({ ok: resp.ok, data })));
+  }
+
+  return requestAuthCsrf()
+    .then(sendLoginWithToken)
+    .then(result => {
+      const message = String(result && result.data && result.data.message || "").toLowerCase();
+      const csrfError = message.includes("csrf") || message.includes("missing or invalid csrf token");
+      if (result && result.ok === false && csrfError) {
+        authRuntime.csrfToken = "";
+        return requestAuthCsrf().then(sendLoginWithToken);
+      }
+      return result;
+    });
 }
 
 function requestAuthLogout() {
-  return fetch(AUTH_LOGOUT_PATH, {
+  return requestAuthCsrf().then(token => fetch(AUTH_LOGOUT_PATH, {
     method: "POST",
-    headers: { "Accept": "application/json" }
-  }).then(resp => resp.json().catch(() => ({ ok: false })));
+    headers: { "Accept": "application/json", "X-CSRF-Token": token }
+  }).then(resp => resp.json().catch(() => ({ ok: false })))).finally(() => {
+    authRuntime.csrfToken = "";
+  });
+}
+
+function buildTimesheetWritePayload(action) {
+  const employee = currentEmployee();
+  const record = recordFor(employee.id);
+  const period = currentPeriod();
+  const dayEntries = [];
+
+  period.weekRows.forEach((week, weekIndex) => {
+    week.days.forEach((day, dayIndex) => {
+      if (!day) return;
+      const raw = Number(record.entries?.[weekIndex]?.[dayIndex] || 0);
+      const hours = Math.round(Math.max(0, raw) * 100) / 100;
+      if (hours <= 0) return;
+      dayEntries.push({
+        work_date: String(period.year).padStart(4, "0") + "-" + String(period.monthIndex + 1).padStart(2, "0") + "-" + String(day.day).padStart(2, "0"),
+        hours,
+        description: "Webapp daginvoer"
+      });
+    });
+  });
+
+  return {
+    action,
+    period: period.key,
+    employee_id: Number(employee.id),
+    contractual_hours: Number(record.contractHours) || 0,
+    billable_hours: Math.round(totalEntries(record.entries) * 100) / 100,
+    leave_hours: Number(record.leave) || 0,
+    sickness_hours: Number(record.sick) || 0,
+    day_entries: dayEntries
+  };
+}
+
+function writeTimesheetToApi(action) {
+  if (!API_ENABLED || authRuntime.mode !== "auth" || state.currentRole !== "employee") return Promise.resolve(null);
+  const payload = buildTimesheetWritePayload(action);
+
+  return requestAuthCsrf()
+    .then(token => fetch(WRITE_TIMESHEET_PATH, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify(payload)
+    }))
+    .then(resp => resp.json().catch(() => ({})).then(data => ({ ok: resp.ok, data })))
+    .then(result => {
+      if (!result.ok || !result.data || result.data.ok !== true) {
+        const message = String(result && result.data && result.data.message || "Opslaan op server mislukt.");
+        throw new Error(message);
+      }
+      return result.data;
+    });
+}
+
+function scheduleDraftTimesheetWrite() {
+  if (!API_ENABLED || authRuntime.mode !== "auth" || state.currentRole !== "employee") return;
+  const payload = buildTimesheetWritePayload("save_draft");
+  const signature = JSON.stringify(payload);
+  if (signature === writeRuntime.lastDraftSignature) return;
+
+  if (writeRuntime.draftInFlight) {
+    writeRuntime.pendingDraftSignature = signature;
+    return;
+  }
+
+  if (writeRuntime.draftTimer) window.clearTimeout(writeRuntime.draftTimer);
+  writeRuntime.draftTimer = window.setTimeout(() => {
+    writeRuntime.draftTimer = null;
+    writeRuntime.draftInFlight = true;
+    writeRuntime.pendingDraftSignature = "";
+    writeTimesheetToApi("save_draft").then(() => {
+      writeRuntime.lastDraftSignature = signature;
+      const autosaveStatus = document.querySelector("#hours-autosave-status");
+      if (autosaveStatus) autosaveStatus.textContent = "Gesynchroniseerd met server om " + new Intl.DateTimeFormat("nl-NL", { hour: "2-digit", minute: "2-digit" }).format(new Date());
+    }).catch(error => {
+      writeRuntime.lastDraftSignature = "";
+      const now = Date.now();
+      if (now - writeRuntime.lastDraftErrorAt > 4000) {
+        toast("Concept kon niet op de server worden opgeslagen. Controleer je sessie en probeer opnieuw.");
+        writeRuntime.lastDraftErrorAt = now;
+      }
+      const autosaveStatus = document.querySelector("#hours-autosave-status");
+      if (autosaveStatus) autosaveStatus.textContent = "Niet gesynchroniseerd met server.";
+      console.warn("Draft save via write API failed", error);
+    }).finally(() => {
+      writeRuntime.draftInFlight = false;
+      if (writeRuntime.pendingDraftSignature && writeRuntime.pendingDraftSignature !== writeRuntime.lastDraftSignature) {
+        scheduleDraftTimesheetWrite();
+      }
+    });
+  }, 700);
 }
 
 function initializeAuthSession() {
   applyAuthUiMode("checking");
-  return requestAuthMe()
+  return requestAuthCsrf()
+    .catch(() => null)
+    .then(() => requestAuthMe())
     .then(data => {
       authRuntime.checked = true;
       authRuntime.available = true;
@@ -4044,6 +4239,7 @@ function updateHoursTotal(markDraft) {
     record.invoiceStatus = "concept";
     record.payrollStatus = "concept";
     persistState();
+    scheduleDraftTimesheetWrite();
     document.querySelector("#hours-autosave-status").textContent = "Automatisch opgeslagen om " + new Intl.DateTimeFormat("nl-NL", { hour: "2-digit", minute: "2-digit" }).format(new Date());
   }
   const weekMatch = /^week-(\d+)$/.exec(state.hoursWeekScope || "");
@@ -5756,14 +5952,10 @@ document.addEventListener("click", event => {
     if (authRuntime.mode === "demo") {
       login(role);
     } else {
-      setAuthLoginFeedback("In auth-modus gebruik je e-mail en wachtwoord.", true);
+      prefillAuthCredentialsFromSelection(role);
     }
   } else if (loginAccountTrigger) {
-    if (authRuntime.mode === "demo") {
-      toggleLoginAccountPanel(loginAccountTrigger.dataset.accountPickerTrigger);
-    } else {
-      setAuthLoginFeedback("Demo-accountkeuze is alleen beschikbaar in lokale demo-modus.", true);
-    }
+    toggleLoginAccountPanel(loginAccountTrigger.dataset.accountPickerTrigger);
   } else if (!event.target.closest(".login-account-picker")) {
     closeLoginAccountPanels();
   }
@@ -6253,9 +6445,34 @@ function handleEnterSave(event) {
   }
 }
 
-document.querySelector("#submit-timesheet").addEventListener("click", () => {
+document.querySelector("#submit-timesheet").addEventListener("click", async () => {
   const employee = currentEmployee();
   const record = recordFor(employee.id);
+  const submitButton = document.querySelector("#submit-timesheet");
+
+  if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "employee") {
+    if (writeRuntime.draftTimer) {
+      window.clearTimeout(writeRuntime.draftTimer);
+      writeRuntime.draftTimer = null;
+    }
+    writeRuntime.pendingDraftSignature = "";
+
+    submitButton.disabled = true;
+    const originalText = submitButton.textContent;
+    submitButton.textContent = "Indienen...";
+    try {
+      await writeTimesheetToApi("submit");
+    } catch (error) {
+      submitButton.disabled = false;
+      submitButton.textContent = originalText;
+      const message = String(error && error.message || "Indienen bij server mislukt. Controleer je sessie en probeer opnieuw.");
+      toast(message);
+      return;
+    }
+    submitButton.disabled = false;
+    submitButton.textContent = originalText;
+  }
+
   const correction = activeCorrection(record);
   if (correction) {
     const resubmittedAt = correctionTimestamp();
@@ -6269,7 +6486,7 @@ document.querySelector("#submit-timesheet").addEventListener("click", () => {
   addNotification({ audience: "employee", type: "submitted", employeeId: employee.id, title: "Uren wachten op controle", message: "Je uren voor " + currentPeriod().label + " zijn ingediend.", periodKey: currentPeriod().key, view: "employee-dashboard" });
   persistState();
   renderAll();
-  toast("Uren zijn lokaal ingediend voor " + currentPeriod().label + ".");
+  toast("Uren zijn ingediend voor " + currentPeriod().label + ".");
 });
 
 document.querySelector("#approve-all").addEventListener("click", () => {
@@ -6418,11 +6635,13 @@ document.querySelector("#period-year-picker").addEventListener("change", () => {
 document.querySelector("#login-employee").addEventListener("change", event => {
   state.currentEmployeeId = Number(event.target.value);
   updateLoginEmployeePreview();
+  prefillAuthCredentialsFromSelection("employee", false);
   persistState();
 });
 document.querySelector("#login-admin").addEventListener("change", event => {
   state.currentAdminId = String(event.target.value);
   updateLoginAdminPreview();
+  prefillAuthCredentialsFromSelection("admin", false);
   persistState();
 });
 document.querySelector("#add-employee").addEventListener("click", () => showEmployeeEditor(null));
@@ -6764,11 +6983,20 @@ document.addEventListener("keydown", event => {
   handleEnterSave(event);
 });
 
+window.addEventListener("scroll", () => {
+  closeTopbarPopovers();
+  closeLoginAccountPanels();
+  closeMonthChoicePanels();
+  closeReminderChoicePanels();
+  closeStandardChoicePanels();
+}, { passive: true });
+
 initializeReminderChoiceMenus();
 initializeStandardChoiceMenus();
 populateSettings();
 renderAll();
 initializeAuthSession();
+prefillAuthCredentialsFromSelection("admin", false);
 
 // Read-only API bridge: purely additive diagnostics, local state remains leading fallback.
 refreshBootstrapReadApi(true);

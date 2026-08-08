@@ -1,4 +1,5 @@
 Feature: Authenticatie in Path Uren & Facturatie
+# Step definitions mapping: tests/playwright/steps/auth.steps.ts
 
   Scenario: Admin kan inloggen op Path Uren & Facturatie
     Gegeven de Path loginpagina beschikbaar is

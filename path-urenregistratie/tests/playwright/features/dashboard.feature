@@ -1,4 +1,5 @@
 Feature: Dashboard in Path Uren & Facturatie
+# Step definitions mapping: tests/playwright/steps/dashboard.steps.ts
 
   Scenario: Admin ziet open werkvoorraad
     Gegeven de administrator is ingelogd

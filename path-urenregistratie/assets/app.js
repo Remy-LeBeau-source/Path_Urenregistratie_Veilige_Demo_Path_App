@@ -6,6 +6,7 @@ const AUTH_ME_PATH = "/server/auth/me.php";
 const AUTH_CSRF_PATH = "/server/auth/csrf.php";
 const AUTH_LOGIN_PATH = "/server/auth/login.php";
 const AUTH_LOGOUT_PATH = "/server/auth/logout.php";
+const WRITE_TIMESHEET_PATH = "/server/api/timesheets.php";
 const LOCAL_STORAGE_ENABLED = true;
 const API_ENABLED = true;
 const READ_API_DASHBOARD_PATH = "/server/api/dashboard.php";
@@ -1023,6 +1024,14 @@ const authRuntime = {
   csrfPromise: null
 };
 
+const writeRuntime = {
+  draftTimer: null,
+  lastDraftSignature: "",
+  pendingDraftSignature: "",
+  draftInFlight: false,
+  lastDraftErrorAt: 0
+};
+
 const authDebug = {
   authenticated: false,
   role: "",
@@ -1247,6 +1256,97 @@ function requestAuthLogout() {
   }).then(resp => resp.json().catch(() => ({ ok: false })))).finally(() => {
     authRuntime.csrfToken = "";
   });
+}
+
+function buildTimesheetWritePayload(action) {
+  const employee = currentEmployee();
+  const record = recordFor(employee.id);
+  const period = currentPeriod();
+  const dayEntries = [];
+
+  period.weekRows.forEach((week, weekIndex) => {
+    week.days.forEach((day, dayIndex) => {
+      if (!day) return;
+      const raw = Number(record.entries?.[weekIndex]?.[dayIndex] || 0);
+      const hours = Math.round(Math.max(0, raw) * 100) / 100;
+      if (hours <= 0) return;
+      dayEntries.push({
+        work_date: String(period.year).padStart(4, "0") + "-" + String(period.monthIndex + 1).padStart(2, "0") + "-" + String(day.day).padStart(2, "0"),
+        hours,
+        description: "Webapp daginvoer"
+      });
+    });
+  });
+
+  return {
+    action,
+    period: period.key,
+    employee_id: Number(employee.id),
+    contractual_hours: Number(record.contractHours) || 0,
+    billable_hours: Math.round(totalEntries(record.entries) * 100) / 100,
+    leave_hours: Number(record.leave) || 0,
+    sickness_hours: Number(record.sick) || 0,
+    day_entries: dayEntries
+  };
+}
+
+function writeTimesheetToApi(action) {
+  if (!API_ENABLED || authRuntime.mode !== "auth" || state.currentRole !== "employee") return Promise.resolve(null);
+  const payload = buildTimesheetWritePayload(action);
+
+  return requestAuthCsrf()
+    .then(token => fetch(WRITE_TIMESHEET_PATH, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify(payload)
+    }))
+    .then(resp => resp.json().catch(() => ({})).then(data => ({ ok: resp.ok, data })))
+    .then(result => {
+      if (!result.ok || !result.data || result.data.ok !== true) {
+        const message = String(result && result.data && result.data.message || "Opslaan op server mislukt.");
+        throw new Error(message);
+      }
+      return result.data;
+    });
+}
+
+function scheduleDraftTimesheetWrite() {
+  if (!API_ENABLED || authRuntime.mode !== "auth" || state.currentRole !== "employee") return;
+  const payload = buildTimesheetWritePayload("save_draft");
+  const signature = JSON.stringify(payload);
+  if (signature === writeRuntime.lastDraftSignature) return;
+
+  if (writeRuntime.draftInFlight) {
+    writeRuntime.pendingDraftSignature = signature;
+    return;
+  }
+
+  if (writeRuntime.draftTimer) window.clearTimeout(writeRuntime.draftTimer);
+  writeRuntime.draftTimer = window.setTimeout(() => {
+    writeRuntime.draftTimer = null;
+    writeRuntime.draftInFlight = true;
+    writeRuntime.pendingDraftSignature = "";
+    writeTimesheetToApi("save_draft").then(() => {
+      writeRuntime.lastDraftSignature = signature;
+      const autosaveStatus = document.querySelector("#hours-autosave-status");
+      if (autosaveStatus) autosaveStatus.textContent = "Gesynchroniseerd met server om " + new Intl.DateTimeFormat("nl-NL", { hour: "2-digit", minute: "2-digit" }).format(new Date());
+    }).catch(error => {
+      writeRuntime.lastDraftSignature = "";
+      const now = Date.now();
+      if (now - writeRuntime.lastDraftErrorAt > 4000) {
+        toast("Concept kon niet op de server worden opgeslagen. Controleer je sessie en probeer opnieuw.");
+        writeRuntime.lastDraftErrorAt = now;
+      }
+      const autosaveStatus = document.querySelector("#hours-autosave-status");
+      if (autosaveStatus) autosaveStatus.textContent = "Niet gesynchroniseerd met server.";
+      console.warn("Draft save via write API failed", error);
+    }).finally(() => {
+      writeRuntime.draftInFlight = false;
+      if (writeRuntime.pendingDraftSignature && writeRuntime.pendingDraftSignature !== writeRuntime.lastDraftSignature) {
+        scheduleDraftTimesheetWrite();
+      }
+    });
+  }, 700);
 }
 
 function initializeAuthSession() {
@@ -4139,6 +4239,7 @@ function updateHoursTotal(markDraft) {
     record.invoiceStatus = "concept";
     record.payrollStatus = "concept";
     persistState();
+    scheduleDraftTimesheetWrite();
     document.querySelector("#hours-autosave-status").textContent = "Automatisch opgeslagen om " + new Intl.DateTimeFormat("nl-NL", { hour: "2-digit", minute: "2-digit" }).format(new Date());
   }
   const weekMatch = /^week-(\d+)$/.exec(state.hoursWeekScope || "");
@@ -6344,9 +6445,34 @@ function handleEnterSave(event) {
   }
 }
 
-document.querySelector("#submit-timesheet").addEventListener("click", () => {
+document.querySelector("#submit-timesheet").addEventListener("click", async () => {
   const employee = currentEmployee();
   const record = recordFor(employee.id);
+  const submitButton = document.querySelector("#submit-timesheet");
+
+  if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "employee") {
+    if (writeRuntime.draftTimer) {
+      window.clearTimeout(writeRuntime.draftTimer);
+      writeRuntime.draftTimer = null;
+    }
+    writeRuntime.pendingDraftSignature = "";
+
+    submitButton.disabled = true;
+    const originalText = submitButton.textContent;
+    submitButton.textContent = "Indienen...";
+    try {
+      await writeTimesheetToApi("submit");
+    } catch (error) {
+      submitButton.disabled = false;
+      submitButton.textContent = originalText;
+      const message = String(error && error.message || "Indienen bij server mislukt. Controleer je sessie en probeer opnieuw.");
+      toast(message);
+      return;
+    }
+    submitButton.disabled = false;
+    submitButton.textContent = originalText;
+  }
+
   const correction = activeCorrection(record);
   if (correction) {
     const resubmittedAt = correctionTimestamp();
@@ -6360,7 +6486,7 @@ document.querySelector("#submit-timesheet").addEventListener("click", () => {
   addNotification({ audience: "employee", type: "submitted", employeeId: employee.id, title: "Uren wachten op controle", message: "Je uren voor " + currentPeriod().label + " zijn ingediend.", periodKey: currentPeriod().key, view: "employee-dashboard" });
   persistState();
   renderAll();
-  toast("Uren zijn lokaal ingediend voor " + currentPeriod().label + ".");
+  toast("Uren zijn ingediend voor " + currentPeriod().label + ".");
 });
 
 document.querySelector("#approve-all").addEventListener("click", () => {

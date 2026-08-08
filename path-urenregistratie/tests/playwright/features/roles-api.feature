@@ -1,4 +1,5 @@
 Feature: Role enforcement op de read-only API van Path Uren & Facturatie
+# Step definitions mapping: tests/playwright/steps/roles-api.steps.ts
 
   Scenario: Zonder sessie geeft protected read-only API 401
     Gegeven er is geen actieve sessie

@@ -1,4 +1,5 @@
 Feature: Facturen in Path Uren & Facturatie
+# Step definitions mapping: tests/playwright/steps/invoices.steps.ts
 
   Scenario: Admin ziet facturen per periode
     Gegeven de administrator is ingelogd
