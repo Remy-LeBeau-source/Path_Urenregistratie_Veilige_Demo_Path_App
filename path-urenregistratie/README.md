@@ -168,6 +168,14 @@ PLAYWRIGHT_EMPLOYEE_PASSWORD=LocalDemoEmployee2026
 
 Daarna kun je steeds simpel draaien met alleen `npm run test:e2e`.
 
+Zichtbare stage env-bestanden (niet verborgen):
+
+- `environments/dev.env`
+- `environments/acc.env`
+- `environments/prod.env`
+
+Voor nu staan ze alle drie op dezelfde URL en placeholders, zoals gevraagd. Later kun je per omgeving eigen waarden invullen.
+
 ## CI/CD met GitHub
 
 Ja, dit is ingericht met GitHub Actions:
