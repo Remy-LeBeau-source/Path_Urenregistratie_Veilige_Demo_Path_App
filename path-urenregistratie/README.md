@@ -172,15 +172,15 @@ Daarna kun je steeds simpel draaien met alleen `npm run test:e2e`.
 
 Ja, dit is ingericht met GitHub Actions:
 
-- CI workflow: `.github/workflows/ci.yml`
+- CI workflow: `../.github/workflows/ci.yml`
 	- draait build, smoke check en e2e tests op push en pull request
-- Live docs + reports workflow: `.github/workflows/live-docs.yml`
+- Live docs + reports workflow: `../.github/workflows/live-docs.yml`
 	- bouwt en publiceert de live documentatiepagina naar GitHub Pages op `main`
 	- na elke nieuwe `main` build wordt de pagina automatisch ververst
-- Stage promotion workflow: `.github/workflows/stage-promotion.yml`
+- Stage promotion workflow: `../.github/workflows/stage-promotion.yml`
 	- handmatige promotie van dezelfde ref naar `dev`, `tst1` of `tst2`
 	- draait build + smoke, en optioneel e2e tegen stage-URL
-- Production promotion workflow: `.github/workflows/prod-promotion.yml`
+- Production promotion workflow: `../.github/workflows/prod-promotion.yml`
 	- handmatige promotie naar `prod`
 	- accepteert alleen `main`
 	- draait build + smoke en optioneel e2e tegen prod-URL
