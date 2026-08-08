@@ -1,7 +1,7 @@
-# GitHub PR-teamnotificatie (zonder SMTP)
+# GitHub commit-notificatie (zonder SMTP)
 
 Deze repo gebruikt nu GitHub-notificaties in plaats van SMTP-mail.
-Bij een nieuwe PR plaatst de workflow een comment met @mentions, zodat de 2 personen direct een GitHub-notificatie (en vaak e-mail via GitHub) krijgen.
+Bij elke push naar `main` of `master` plaatst de workflow een commit-comment met @mentions, zodat de 2 personen direct een GitHub-notificatie (en vaak e-mail via GitHub) krijgen.
 
 ## Waar staat de configuratie in de repo?
 
@@ -24,9 +24,9 @@ Voorbeeld:
 ## Testen
 
 1. Ga naar **Actions** in GitHub.
-2. Kies workflow **PR Team Notification**.
-3. Open een test-PR (of heropen een PR).
-4. Controleer de PR comments: je ziet een team-notificatie met @mentions.
+2. Kies workflow **Commit Team Notification**.
+3. Doe een test-push naar `main` of `master`.
+4. Open de laatste commit en controleer de commit-comments: je ziet een team-notificatie met @mentions.
 
 ## Belangrijk
 
