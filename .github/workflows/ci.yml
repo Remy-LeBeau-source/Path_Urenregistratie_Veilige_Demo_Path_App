@@ -95,10 +95,27 @@ jobs:
               if [ -f "$output" ]; then
                 echo "--- $label response body ---"
                 cat "$output"
+                {
+                  echo "## $label failure"
+                  echo
+                  echo "HTTP status: $http_code"
+                  echo
+                  echo '```json'
+                  cat "$output"
+                  echo '```'
+                } >> "$GITHUB_STEP_SUMMARY"
               fi
               if [ -f /tmp/php-server.log ]; then
                 echo "--- php-server.log tail ---"
                 tail -n 200 /tmp/php-server.log
+                {
+                  echo
+                  echo "### php-server.log tail"
+                  echo
+                  echo '```text'
+                  tail -n 200 /tmp/php-server.log
+                  echo '```'
+                } >> "$GITHUB_STEP_SUMMARY"
               fi
               sleep 1
             done
