@@ -5,7 +5,7 @@ Bij elke push naar `main` of `master` plaatst de workflow een comment met @menti
 
 ## Waar staat de configuratie in de repo?
 
-- Workflowbestand: [.github/workflows/commit-email-notify.yml](.github/workflows/commit-email-notify.yml)
+- Workflowbestand: [../.github/workflows/commit-email-notify.yml](../.github/workflows/commit-email-notify.yml)
 
 ## Waar vul je de config in op GitHub?
 
