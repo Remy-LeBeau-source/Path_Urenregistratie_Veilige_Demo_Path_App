@@ -107,6 +107,8 @@ Scenario's:
 - Medewerker dient na correctie opnieuw in
 - Administrator keurt ingediende uren goed
 - Stale expected_version geeft conflict
+- Administrator vraagt via de browser-UI een correctie aan
+- Medewerker dient na UI-correctie opnieuw in en administrator keurt goed
 
 ## Technische mapping
 

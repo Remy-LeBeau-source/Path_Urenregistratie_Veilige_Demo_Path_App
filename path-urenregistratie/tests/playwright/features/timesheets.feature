@@ -50,3 +50,13 @@ Feature: Urenregistratie lifecycle via API
     Given een ingediende urenstaat met bekende versie
     When request_correction of approve met verouderde expected_version wordt uitgevoerd
     Then krijgt de gebruiker een stale-version conflictresponse
+
+  Scenario: Administrator vraagt via de browser-UI een correctie aan
+    Given een medewerker heeft in de browser een ingediende urenstaat in de gekozen periode
+    When de administrator opent goedkeuringen en kiest Correctie vragen met een verplichte toelichting
+    Then ziet de medewerker in de urenweergave de status Correctie nodig met dezelfde toelichting
+
+  Scenario: Medewerker dient na UI-correctie opnieuw in en administrator keurt goed
+    Given een medewerker ziet in de browser een open correctieverzoek
+    When de medewerker past uren aan en dient opnieuw in waarna de administrator goedkeurt
+    Then ziet de medewerker in de browser de status Goedgekeurd voor dezelfde periode

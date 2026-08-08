@@ -17,6 +17,8 @@ Given('een ingediende urenstaat', () => undefined);
 Given('een ingediende urenstaat met bekende versie', () => undefined);
 Given('een urenstaat in correction met open correctieverzoek', () => undefined);
 Given('een ingediende urenstaat na herindiening met bekende versie', () => undefined);
+Given('een medewerker heeft in de browser een ingediende urenstaat in de gekozen periode', () => undefined);
+Given('een medewerker ziet in de browser een open correctieverzoek', () => undefined);
 
 When('de medewerker save_draft uitvoert met geldige daguren', () => undefined);
 When('de medewerker de urenstaat terugleest', () => undefined);
@@ -28,6 +30,8 @@ When('de administrator request_correction uitvoert met de juiste expected_versio
 When('de medewerker submit uitvoert met de juiste expected_version', () => undefined);
 When('de administrator approve uitvoert met de juiste expected_version', () => undefined);
 When('request_correction of approve met verouderde expected_version wordt uitgevoerd', () => undefined);
+When('de administrator opent goedkeuringen en kiest Correctie vragen met een verplichte toelichting', () => undefined);
+When('de medewerker past uren aan en dient opnieuw in waarna de administrator goedkeurt', () => undefined);
 
 Then('wordt de urenstaat als draft opgeslagen met een nieuwe versie', () => undefined);
 Then('ziet de medewerker draftstatus dagregels correctiehistorie en laatste audit-event', () => undefined);
@@ -39,3 +43,5 @@ Then('wordt de urenstaat correction met correctiebericht en audit-event', () => 
 Then('wordt de urenstaat opnieuw submitted en correctie als resubmitted gemarkeerd', () => undefined);
 Then('wordt de urenstaat approved met approved_at approved_by en audit-event', () => undefined);
 Then('krijgt de gebruiker een stale-version conflictresponse', () => undefined);
+Then('ziet de medewerker in de urenweergave de status Correctie nodig met dezelfde toelichting', () => undefined);
+Then('ziet de medewerker in de browser de status Goedgekeurd voor dezelfde periode', () => undefined);

@@ -6,7 +6,7 @@
 - [tests/playwright/features/dashboard.feature](tests/playwright/features/dashboard.feature) → [tests/playwright/steps/dashboard.steps.ts](tests/playwright/steps/dashboard.steps.ts) → [tests/playwright/dashboard.spec.ts](tests/playwright/dashboard.spec.ts)
 - [tests/playwright/features/invoices.feature](tests/playwright/features/invoices.feature) → [tests/playwright/steps/invoices.steps.ts](tests/playwright/steps/invoices.steps.ts) → [tests/playwright/invoices.spec.ts](tests/playwright/invoices.spec.ts)
 - [tests/playwright/features/roles-api.feature](tests/playwright/features/roles-api.feature) → [tests/playwright/steps/roles-api.steps.ts](tests/playwright/steps/roles-api.steps.ts) → [tests/playwright/roles-api.spec.ts](tests/playwright/roles-api.spec.ts)
-- [tests/playwright/features/timesheets.feature](tests/playwright/features/timesheets.feature) → [tests/playwright/steps/timesheets.steps.ts](tests/playwright/steps/timesheets.steps.ts) → [tests/playwright/timesheet-write.spec.ts](tests/playwright/timesheet-write.spec.ts), [tests/playwright/timesheet-review-flow.spec.ts](tests/playwright/timesheet-review-flow.spec.ts)
+- [tests/playwright/features/timesheets.feature](tests/playwright/features/timesheets.feature) → [tests/playwright/steps/timesheets.steps.ts](tests/playwright/steps/timesheets.steps.ts) → [tests/playwright/timesheet-write.spec.ts](tests/playwright/timesheet-write.spec.ts), [tests/playwright/timesheet-review-flow.spec.ts](tests/playwright/timesheet-review-flow.spec.ts), [tests/playwright/timesheet-review-ui.spec.ts](tests/playwright/timesheet-review-ui.spec.ts)
 
 ## Status van de testlaag
 
