@@ -281,14 +281,14 @@ jobs:
           PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
         run: |
           if [ -z "${PATH_APP_BASE_URL:-}" ] || [ -z "${PLAYWRIGHT_ADMIN_PASSWORD:-}" ] || [ -z "${PLAYWRIGHT_EMPLOYEE_PASSWORD:-}" ]; then
-                echo "Skipping stage e2e for test (missing environment vars/secrets)."
+            echo "Skipping stage e2e for test (missing environment vars/secrets)."
             exit 0
           fi
           npm run test:e2e
 
   acc:
-              name: Promote Acc
-              needs: test
+    name: Promote Acc
+    needs: test
     runs-on: ubuntu-latest
     environment: acc
     defaults:
