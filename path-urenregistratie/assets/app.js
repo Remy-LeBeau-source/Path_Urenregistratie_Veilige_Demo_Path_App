@@ -984,14 +984,17 @@ function loadStateFromServer() {
 }
 
 const readApiDebug = {
+  bootstrap: null,
   dashboard: null,
   invoices: null,
   invoicesByPeriod: {}
 };
 
 const readApiRuntime = {
+  bootstrapInFlight: false,
   dashboardInFlight: false,
   invoicesInFlight: false,
+  lastBootstrapAt: 0,
   lastDashboardAt: 0,
   lastInvoicesAt: 0,
   lastInvoicesByPeriod: {}
@@ -1000,6 +1003,7 @@ const readApiRuntime = {
 window.__PATH_READ_API = readApiDebug;
 
 const readApiSource = {
+  bootstrap: "fallback",
   dashboard: "fallback",
   invoices: "fallback",
   overall: "fallback"
@@ -1009,7 +1013,123 @@ window.__PATH_READ_API_SOURCE = readApiSource;
 
 function setReadApiSource(section, source) {
   readApiSource[section] = source;
-  readApiSource.overall = (readApiSource.dashboard === "api" || readApiSource.invoices === "api") ? "api" : "fallback";
+  readApiSource.overall = (readApiSource.bootstrap === "api" || readApiSource.dashboard === "api" || readApiSource.invoices === "api") ? "api" : "fallback";
+}
+
+function firstBootstrapCompany(data) {
+  if (!data || !Array.isArray(data.companies) || data.companies.length === 0) return null;
+  return data.companies[0] || null;
+}
+
+function mergeBootstrapIntoState(data) {
+  if (!data || data.ok !== true) return false;
+
+  const company = firstBootstrapCompany(data);
+  if (!company) return false;
+
+  // Settings/company fields: only overwrite fields that map 1-op-1.
+  state.settings.organizationName = String(company.trade_name || state.settings.organizationName || "");
+  state.settings.appName = String(company.app_name || state.settings.appName || "");
+  state.settings.supportName = String(company.support_name || state.settings.supportName || "");
+  state.settings.supportEmail = String(company.support_email || state.settings.supportEmail || "");
+  state.settings.companyName = String(company.legal_name || state.settings.companyName || "");
+  if (company.payment_term_days !== undefined && company.payment_term_days !== null) {
+    state.settings.paymentTerm = String(company.payment_term_days);
+  }
+
+  const users = Array.isArray(data.users) ? data.users : [];
+  const employees = Array.isArray(data.employees) ? data.employees : [];
+  const assignments = Array.isArray(data.assignments) ? data.assignments : [];
+  const recipients = Array.isArray(data.mail_recipients || data.mailRecipients) ? (data.mail_recipients || data.mailRecipients) : [];
+
+  const companyUsers = users.filter(user => Number(user.company_id) === Number(company.id));
+  const adminUsers = companyUsers.filter(user => String(user.role || "") === "administrator");
+  const usersById = new Map(companyUsers.map(user => [Number(user.id), user]));
+
+  // Admin/users: merge by email; keep local role-specific fields intact.
+  adminUsers.forEach(user => {
+    const email = String(user.email || "").trim().toLowerCase();
+    const existing = state.admins.find(admin => String(admin.email || "").trim().toLowerCase() === email);
+    if (existing) {
+      existing.name = String(user.display_name || existing.name || "");
+      existing.email = String(user.email || existing.email || "");
+      existing.active = Number(user.active || 0) === 1;
+    } else {
+      state.admins.push({
+        id: "db-" + String(user.id),
+        name: String(user.display_name || user.email || "Beheerder"),
+        email: String(user.email || ""),
+        active: Number(user.active || 0) === 1,
+        emailNotificationsEnabled: true,
+        photo: ""
+      });
+    }
+  });
+
+  // Employees: merge onto existing local model by full name or email to avoid breaking rich demo fields.
+  const employeeByDbId = new Map();
+  state.employees.forEach(localEmployee => {
+    const localName = String(localEmployee.name || "").trim().toLowerCase();
+    const localEmail = String(localEmployee.email || "").trim().toLowerCase();
+    const match = employees.find(dbEmployee => {
+      const dbName = String(dbEmployee.full_name || "").trim().toLowerCase();
+      const dbUser = usersById.get(Number(dbEmployee.user_id));
+      const dbEmail = String(dbUser && dbUser.email || "").trim().toLowerCase();
+      return (dbName && dbName === localName) || (dbEmail && dbEmail === localEmail);
+    });
+    if (!match) return;
+
+    employeeByDbId.set(Number(match.id), localEmployee);
+    localEmployee.name = String(match.full_name || localEmployee.name || "");
+    localEmployee.role = String(match.job_title || localEmployee.role || "");
+    localEmployee.active = Number(match.active || 0) === 1;
+    if (match.employment_start_date) localEmployee.startDate = String(match.employment_start_date);
+    if (match.weekly_contract_hours !== undefined && match.weekly_contract_hours !== null) {
+      localEmployee.weeklyHours = Number(match.weekly_contract_hours);
+    }
+    const linkedUser = usersById.get(Number(match.user_id));
+    if (linkedUser && linkedUser.email) localEmployee.email = String(linkedUser.email);
+  });
+
+  // Assignments: merge selected mapping-friendly fields onto existing employee profiles.
+  assignments.forEach(assignment => {
+    const localEmployee = employeeByDbId.get(Number(assignment.employee_id));
+    if (!localEmployee) return;
+    if (assignment.hourly_rate !== undefined && assignment.hourly_rate !== null) localEmployee.rate = Number(assignment.hourly_rate);
+    if (assignment.invoice_project_name) localEmployee.invoiceProject = String(assignment.invoice_project_name);
+    if (assignment.project_code) localEmployee.projectCode = String(assignment.project_code);
+    if (assignment.invoice_number_template) localEmployee.invoiceTemplate = String(assignment.invoice_number_template);
+    if (assignment.agreement_number) localEmployee.agreementNumber = String(assignment.agreement_number);
+    if (assignment.creditor_number) localEmployee.creditorNumber = String(assignment.creditor_number);
+    if (assignment.contractor_number) localEmployee.contractorNumber = String(assignment.contractor_number);
+    if (assignment.customer_timesheet_due_workday !== undefined && assignment.customer_timesheet_due_workday !== null) {
+      localEmployee.customerTimesheetDueWorkday = Number(assignment.customer_timesheet_due_workday);
+    }
+    if (assignment.customer_timesheet_broker_email) localEmployee.customerTimesheetBrokerEmail = String(assignment.customer_timesheet_broker_email);
+  });
+
+  // Mail recipients: merge by key/id where possible, add only missing recipients with safe defaults.
+  recipients.forEach(recipient => {
+    const key = String(recipient.recipient_key || recipient.id || "").trim();
+    if (!key) return;
+    const existing = (state.settings.mailRecipients || []).find(item => String(item.id) === key);
+    if (existing) {
+      existing.name = String(recipient.display_name || existing.name || "");
+      existing.email = String(recipient.email || existing.email || "");
+      existing.category = String(recipient.recipient_category || existing.category || "other");
+      existing.active = Number(recipient.active || 0) === 1;
+    } else {
+      state.settings.mailRecipients.push({
+        id: key,
+        category: String(recipient.recipient_category || "other"),
+        name: String(recipient.display_name || key),
+        email: String(recipient.email || ""),
+        active: Number(recipient.active || 0) === 1
+      });
+    }
+  });
+
+  return true;
 }
 
 function dashboardApiForPeriod(periodKey) {
@@ -1082,6 +1202,33 @@ function refreshDashboardReadApi(force) {
     })
     .finally(() => {
       readApiRuntime.dashboardInFlight = false;
+    });
+}
+
+function refreshBootstrapReadApi(force) {
+  const now = Date.now();
+  if (!force && (readApiRuntime.bootstrapInFlight || (now - readApiRuntime.lastBootstrapAt) < 30000)) return;
+  readApiRuntime.bootstrapInFlight = true;
+  fetchReadApi("/server/api/bootstrap.php")
+    .then(data => {
+      readApiRuntime.lastBootstrapAt = Date.now();
+      if (!data) {
+        setReadApiSource("bootstrap", "fallback");
+        return;
+      }
+      readApiDebug.bootstrap = data;
+      const merged = mergeBootstrapIntoState(data);
+      setReadApiSource("bootstrap", merged ? "api" : "fallback");
+      if (merged) {
+        console.log("[read-api] bootstrap", data);
+        renderAll();
+      }
+    })
+    .catch(() => {
+      setReadApiSource("bootstrap", "fallback");
+    })
+    .finally(() => {
+      readApiRuntime.bootstrapInFlight = false;
     });
 }
 
@@ -6359,6 +6506,7 @@ populateSettings();
 renderAll();
 
 // Read-only API bridge: purely additive diagnostics, local state remains leading fallback.
+refreshBootstrapReadApi(true);
 refreshDashboardReadApi(true);
 refreshInvoicesReadApi("", true);
 refreshInvoicesReadApi("2026-07", true);
