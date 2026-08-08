@@ -76,11 +76,16 @@ function Invoke-JsonEndpoint($path) {
         Write-Host "HTTP $($response.StatusCode) $url" -ForegroundColor Green
         return @{ ok = $true; status = $response.StatusCode; body = $response.Content }
     } catch {
-        Fail "Endpoint gaf fout: $url"
+        Warn "Endpoint gaf geen 2xx-status: $url"
         $body = $null
+        $status = 0
 
         if ($_.Exception.Response) {
             try {
+                $statusCode = $_.Exception.Response.StatusCode
+                if ($statusCode) {
+                    $status = [int]$statusCode
+                }
                 $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
                 $body = $reader.ReadToEnd()
                 Write-Host $body -ForegroundColor Yellow
@@ -91,8 +96,26 @@ function Invoke-JsonEndpoint($path) {
             Write-Host $_.Exception.Message -ForegroundColor Yellow
         }
 
-        return @{ ok = $false; status = 0; body = $body }
+        return @{ ok = $false; status = $status; body = $body }
     }
+}
+
+function Test-ProtectedReadApiAnonymous($result, $endpoint) {
+    if ($result.status -ne 401 -or [string]::IsNullOrWhiteSpace($result.body)) {
+        return $false
+    }
+
+    try {
+        $json = $result.body | ConvertFrom-Json
+        if ($json.error -eq 'not-authenticated') {
+            Ok "Protected endpoint blokkeert anonieme toegang zoals verwacht: $endpoint"
+            return $true
+        }
+    } catch {
+        return $false
+    }
+
+    return $false
 }
 
 function Get-DbConfigFromPhp($phpExe, $configPath) {
@@ -371,6 +394,13 @@ $endpoints = @(
     "/server/api.php?action=state"
 )
 
+$protectedReadApi = @(
+    "/server/api/bootstrap.php",
+    "/server/api/dashboard.php",
+    "/server/api/invoices.php",
+    "/server/api/invoices.php?period=2026-07"
+)
+
 foreach ($endpoint in $endpoints) {
     $result = Invoke-JsonEndpoint $endpoint
     if ($result.ok) {
@@ -389,6 +419,10 @@ foreach ($endpoint in $endpoints) {
             }
         } catch {
             Warn "Endpoint antwoord is geen JSON: $endpoint"
+        }
+    } elseif ($protectedReadApi -contains $endpoint) {
+        if (!(Test-ProtectedReadApiAnonymous $result $endpoint)) {
+            Fail "Protected endpoint gaf geen nette 401 JSON: $endpoint"
         }
     }
 }

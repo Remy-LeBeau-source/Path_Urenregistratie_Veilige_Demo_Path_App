@@ -5,7 +5,11 @@ declare(strict_types=1);
 require __DIR__ . '/common.php';
 
 api_require_get_only();
-$pdo = api_pdo();
+$pdo = api_auth_pdo();
+$currentUser = api_require_authenticated_read_user($pdo);
+$isEmployee = (string)$currentUser['role'] === 'employee';
+$employee = $isEmployee ? api_require_employee_context($pdo, $currentUser) : null;
+$companyId = (int)$currentUser['company_id'];
 
 $period = isset($_GET['period']) ? trim((string)$_GET['period']) : null;
 $year = null;
@@ -46,13 +50,23 @@ try {
         JOIN periods p ON p.id = t.period_id
     ";
 
+    $sql .= ' WHERE i.company_id = :company_id';
+
+    if ($isEmployee && $employee) {
+        $sql .= ' AND t.employee_id = :employee_id';
+    }
+
     if ($year !== null && $month !== null) {
-        $sql .= ' WHERE p.year = :year AND p.month = :month';
+        $sql .= ' AND p.year = :year AND p.month = :month';
     }
 
     $sql .= ' ORDER BY p.year DESC, p.month DESC, i.invoice_number DESC';
 
     $stmt = $pdo->prepare($sql);
+    $stmt->bindValue(':company_id', $companyId, PDO::PARAM_INT);
+    if ($isEmployee && $employee) {
+        $stmt->bindValue(':employee_id', (int)$employee['id'], PDO::PARAM_INT);
+    }
     if ($year !== null && $month !== null) {
         $stmt->bindValue(':year', $year, PDO::PARAM_INT);
         $stmt->bindValue(':month', $month, PDO::PARAM_INT);
@@ -80,6 +94,6 @@ try {
     api_send_json([
         'ok' => false,
         'error' => 'invoices-query-failed',
-        'message' => $e->getMessage(),
+        'message' => 'Could not load invoices data.',
     ], 500);
 }

@@ -5,9 +5,14 @@ declare(strict_types=1);
 require __DIR__ . '/common.php';
 
 api_require_get_only();
-$pdo = api_pdo();
+$pdo = api_auth_pdo();
+$currentUser = api_require_authenticated_read_user($pdo);
+$isEmployee = (string)$currentUser['role'] === 'employee';
+$employee = $isEmployee ? api_require_employee_context($pdo, $currentUser) : null;
 
 $companyId = isset($_GET['company_id']) && ctype_digit((string)$_GET['company_id']) ? (int)$_GET['company_id'] : null;
+api_forbidden_company_scope($companyId, $currentUser);
+$companyId = (int)$currentUser['company_id'];
 
 try {
     $periodSql = "
@@ -21,6 +26,10 @@ try {
         LEFT JOIN timesheets t ON t.period_id = p.id
     ";
 
+    if ($isEmployee && $employee) {
+        $periodSql .= ' AND t.employee_id = :employee_id';
+    }
+
     $workSql = "
         SELECT
             SUM(CASE WHEN t.status IN ('draft', 'submitted', 'correction', 'rejected') THEN 1 ELSE 0 END) AS totaal,
@@ -30,9 +39,11 @@ try {
         JOIN periods p ON p.id = t.period_id
     ";
 
-    if ($companyId !== null) {
-        $periodSql .= ' WHERE p.company_id = :company_id';
-        $workSql .= ' WHERE p.company_id = :company_id';
+    $periodSql .= ' WHERE p.company_id = :company_id';
+    $workSql .= ' WHERE p.company_id = :company_id';
+
+    if ($isEmployee && $employee) {
+        $workSql .= ' AND t.employee_id = :employee_id';
     }
 
     $periodSql .= ' GROUP BY p.year, p.month ORDER BY p.year, p.month';
@@ -40,9 +51,11 @@ try {
     $periodStmt = $pdo->prepare($periodSql);
     $workStmt = $pdo->prepare($workSql);
 
-    if ($companyId !== null) {
-        $periodStmt->bindValue(':company_id', $companyId, PDO::PARAM_INT);
-        $workStmt->bindValue(':company_id', $companyId, PDO::PARAM_INT);
+    $periodStmt->bindValue(':company_id', $companyId, PDO::PARAM_INT);
+    $workStmt->bindValue(':company_id', $companyId, PDO::PARAM_INT);
+    if ($isEmployee && $employee) {
+        $periodStmt->bindValue(':employee_id', (int)$employee['id'], PDO::PARAM_INT);
+        $workStmt->bindValue(':employee_id', (int)$employee['id'], PDO::PARAM_INT);
     }
 
     $periodStmt->execute();
@@ -73,6 +86,6 @@ try {
     api_send_json([
         'ok' => false,
         'error' => 'dashboard-query-failed',
-        'message' => $e->getMessage(),
+        'message' => 'Could not load dashboard data.',
     ], 500);
 }

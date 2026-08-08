@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/../auth/session.php';
+
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, OPTIONS');
@@ -101,5 +103,66 @@ function api_pdo(): PDO
             'error' => 'db-connection',
             'message' => $e->getMessage()
         ], 500);
+    }
+}
+
+function api_auth_pdo(): PDO
+{
+    static $pdo = null;
+    if ($pdo instanceof PDO) {
+        return $pdo;
+    }
+
+    $config = auth_load_raw_config();
+    auth_start_session_secure($config);
+    $pdo = auth_pdo($config);
+
+    return $pdo;
+}
+
+function api_require_authenticated_read_user(PDO $pdo): array
+{
+    $currentUser = auth_current_user($pdo);
+    auth_require_role(['administrator', 'employee'], $currentUser);
+
+    return $currentUser;
+}
+
+function api_require_employee_context(PDO $pdo, array $currentUser): array
+{
+    $stmt = $pdo->prepare(
+        'SELECT id, company_id, user_id, full_name, active FROM employees WHERE company_id = :company_id AND user_id = :user_id LIMIT 1'
+    );
+    $stmt->execute([
+        ':company_id' => (int)$currentUser['company_id'],
+        ':user_id' => (int)$currentUser['id'],
+    ]);
+
+    $employee = $stmt->fetch();
+    if (!$employee) {
+        api_send_json([
+            'ok' => false,
+            'error' => 'employee-profile-missing',
+            'message' => 'Employee account is not linked to an employee record.',
+        ], 403);
+    }
+
+    return [
+        'id' => (int)$employee['id'],
+        'company_id' => (int)$employee['company_id'],
+        'user_id' => (int)$employee['user_id'],
+        'full_name' => (string)$employee['full_name'],
+        'active' => (int)$employee['active'] === 1,
+    ];
+}
+
+function api_forbidden_company_scope(?int $requestedCompanyId, array $currentUser): void
+{
+    if ($requestedCompanyId !== null && $requestedCompanyId !== (int)$currentUser['company_id']) {
+        api_send_json([
+            'ok' => false,
+            'error' => 'forbidden-company-scope',
+            'message' => 'Requested company scope is not allowed for this session.',
+        ], 403);
     }
 }
