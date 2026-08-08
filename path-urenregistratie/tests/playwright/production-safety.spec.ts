@@ -38,7 +38,7 @@ async function findWritablePeriod(timesheetApi: TimesheetApi): Promise<string> {
   throw new Error('No writable test period found in 24 candidate months.');
 }
 
-test('login picker vult nooit wachtwoord automatisch in', async ({ page }) => {
+test('login picker vult lokaal demo-wachtwoord alleen op localhost in', async ({ page }) => {
   await page.goto(appConfig.baseUrl);
 
   const indicator = page.locator('#auth-mode-indicator');
@@ -54,8 +54,8 @@ test('login picker vult nooit wachtwoord automatisch in', async ({ page }) => {
   await firstAdmin.click();
 
   await expect(page.locator('#auth-login-email')).not.toHaveValue('');
-  await expect(page.locator('#auth-login-password')).toHaveValue('');
-  await expect(page.locator('#auth-login-feedback')).toContainText('E-mail voorgeselecteerd. Vul je wachtwoord in.');
+  await expect(page.locator('#auth-login-password')).toHaveValue(requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+  await expect(page.locator('#auth-login-feedback')).toContainText('E-mail en lokaal demo-wachtwoord voorgeselecteerd.');
 });
 
 test('frontend source bevat geen plaintext demo-credentials', async ({ request }) => {

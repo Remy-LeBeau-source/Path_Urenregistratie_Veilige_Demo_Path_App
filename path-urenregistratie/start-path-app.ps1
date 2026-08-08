@@ -152,7 +152,6 @@ $listener = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction Sil
 if ($listener) {
     Ok "Er draait al iets op poort $Port. Ik open de app."
     Start-Process $Url
-    pause
     exit 0
 }
 

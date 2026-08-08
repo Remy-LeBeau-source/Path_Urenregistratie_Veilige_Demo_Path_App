@@ -6,6 +6,7 @@ const AUTH_ME_PATH = "/server/auth/me.php";
 const AUTH_CSRF_PATH = "/server/auth/csrf.php";
 const AUTH_LOGIN_PATH = "/server/auth/login.php";
 const AUTH_LOGOUT_PATH = "/server/auth/logout.php";
+const AUTH_LOCAL_HINTS_PATH = "/server/auth/local-login-hints.php";
 const WRITE_TIMESHEET_PATH = "/server/api/timesheets.php";
 const LOCAL_STORAGE_ENABLED = true;
 const API_ENABLED = true;
@@ -1021,7 +1022,9 @@ const authRuntime = {
   available: false,
   mode: "checking",
   csrfToken: "",
-  csrfPromise: null
+  csrfPromise: null,
+  localLoginHints: null,
+  localLoginHintsPromise: null
 };
 
 const writeRuntime = {
@@ -1112,6 +1115,46 @@ function selectedLoginAccount(role) {
   return null;
 }
 
+function isLocalAuthHintsHost() {
+  const hostname = String(window.location.hostname || "").toLowerCase();
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1" || hostname === "[::1]";
+}
+
+function requestLocalLoginHints() {
+  if (!API_ENABLED || !isLocalAuthHintsHost()) return Promise.resolve(null);
+  if (authRuntime.localLoginHints) return Promise.resolve(authRuntime.localLoginHints);
+  if (authRuntime.localLoginHintsPromise) return authRuntime.localLoginHintsPromise;
+
+  authRuntime.localLoginHintsPromise = fetch(AUTH_LOCAL_HINTS_PATH, {
+    method: "GET",
+    headers: { "Accept": "application/json" }
+  })
+    .then(resp => {
+      if (resp.status === 404) return null;
+      if (!resp.ok) throw new Error("HTTP " + resp.status);
+      return resp.json();
+    })
+    .then(data => {
+      if (!data || data.ok !== true || data.enabled !== true) {
+        authRuntime.localLoginHints = null;
+        return null;
+      }
+
+      authRuntime.localLoginHints = {
+        adminPassword: String(data.adminPassword || ""),
+        employeePassword: String(data.employeePassword || "")
+      };
+
+      return authRuntime.localLoginHints;
+    })
+    .catch(() => null)
+    .finally(() => {
+      authRuntime.localLoginHintsPromise = null;
+    });
+
+  return authRuntime.localLoginHintsPromise;
+}
+
 function prefillAuthCredentialsFromSelection(role, showFeedback = true) {
   if (authRuntime.mode !== "auth") return;
   const account = selectedLoginAccount(role);
@@ -1123,13 +1166,30 @@ function prefillAuthCredentialsFromSelection(role, showFeedback = true) {
 
   const email = String(account.email || "").trim();
   emailInput.value = email;
-
-  // Never prefill passwords in the frontend.
   passwordInput.value = "";
 
-  if (showFeedback) {
-    setAuthLoginFeedback("E-mail voorgeselecteerd. Vul je wachtwoord in.", false);
-  }
+  requestLocalLoginHints().then(hints => {
+    const fallbackFeedback = "E-mail voorgeselecteerd. Vul je wachtwoord in.";
+    const currentEmail = String(emailInput.value || "").trim().toLowerCase();
+    if (currentEmail !== email.toLowerCase()) return;
+
+    const hintedPassword = role === "admin"
+      ? String(hints?.adminPassword || "").trim()
+      : String(hints?.employeePassword || "").trim();
+
+    if (!hintedPassword) {
+      if (showFeedback) setAuthLoginFeedback(fallbackFeedback, false);
+      return;
+    }
+
+    const currentPassword = String(passwordInput.value || "");
+    if (currentPassword !== "" && currentPassword !== hintedPassword) return;
+
+    passwordInput.value = hintedPassword;
+    if (showFeedback) {
+      setAuthLoginFeedback("E-mail en lokaal demo-wachtwoord voorgeselecteerd.", false);
+    }
+  });
 }
 
 function applyAuthUiMode(mode) {
