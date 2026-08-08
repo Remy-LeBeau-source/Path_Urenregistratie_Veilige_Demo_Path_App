@@ -1,4 +1,4 @@
-name: Release Pipeline (dev-tst1-tst2-prod)
+name: Release Pipeline (dev-tst1-prod)
 
 on:
   workflow_dispatch:
@@ -87,6 +87,14 @@ jobs:
 
       - name: Run install + migrations
         run: |
+          for i in {1..15}; do
+            if curl -fsS http://127.0.0.1:8000/server/health.php > /tmp/health.json; then
+              break
+            fi
+            echo "Waiting for PHP server... attempt $i"
+            sleep 1
+          done
+          cat /tmp/health.json
           curl -fsS http://127.0.0.1:8000/server/install.php > /tmp/install.json
           curl -fsS http://127.0.0.1:8000/server/migrate.php > /tmp/migrate.json
           cat /tmp/install.json
@@ -209,49 +217,9 @@ jobs:
           fi
           npm run test:e2e
 
-  tst2:
-    name: Promote tst2
-    needs: tst1
-    runs-on: ubuntu-latest
-    environment: tst2
-    defaults:
-      run:
-        working-directory: path-urenregistratie
-
-    steps:
-      - name: Checkout selected ref
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.ref }}
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: path-urenregistratie/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
-      - name: Optional stage E2E
-        env:
-          PATH_APP_BASE_URL: ${{ vars.PATH_APP_BASE_URL }}
-          PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
-          PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
-        run: |
-          if [ -z "${PATH_APP_BASE_URL:-}" ] || [ -z "${PLAYWRIGHT_ADMIN_PASSWORD:-}" ] || [ -z "${PLAYWRIGHT_EMPLOYEE_PASSWORD:-}" ]; then
-            echo "Skipping stage e2e for tst2 (missing environment vars/secrets)."
-            exit 0
-          fi
-          npm run test:e2e
-
   prod:
     name: Promote prod
-    needs: tst2
+    needs: tst1
     runs-on: ubuntu-latest
     environment: prod
     if: ${{ inputs.ref == 'main' || inputs.ref == 'refs/heads/main' }}
@@ -292,7 +260,7 @@ jobs:
 
   prod-main-ref-guard:
     name: Guard non-main for prod
-    needs: tst2
+    needs: tst1
     runs-on: ubuntu-latest
     if: ${{ !(inputs.ref == 'main' || inputs.ref == 'refs/heads/main') }}
 

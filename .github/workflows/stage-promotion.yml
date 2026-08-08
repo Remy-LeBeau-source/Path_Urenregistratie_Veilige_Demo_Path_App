@@ -10,7 +10,6 @@ on:
         options:
           - dev
           - tst1
-          - tst2
       ref:
         description: "Git ref (branch/tag/sha)"
         required: true
