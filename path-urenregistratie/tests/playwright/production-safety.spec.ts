@@ -38,7 +38,21 @@ async function findWritablePeriod(timesheetApi: TimesheetApi): Promise<string> {
   throw new Error('No writable test period found in 24 candidate months.');
 }
 
-test('login picker vult lokaal demo-wachtwoord alleen op localhost in', async ({ page }) => {
+test('login picker vult alleen lokaal demo-wachtwoord in wanneer hints beschikbaar zijn', async ({ page, request }) => {
+  let localHintsEnabled = false;
+  let hintedAdminPassword = '';
+
+  try {
+    const hintsResponse = await request.get('/server/auth/local-login-hints.php');
+    if (hintsResponse.ok()) {
+      const hintsBody = await hintsResponse.json();
+      localHintsEnabled = hintsBody.ok === true && hintsBody.enabled === true;
+      hintedAdminPassword = String(hintsBody.adminPassword || '');
+    }
+  } catch {
+    localHintsEnabled = false;
+  }
+
   await page.goto(appConfig.baseUrl);
 
   const indicator = page.locator('#auth-mode-indicator');
@@ -54,8 +68,14 @@ test('login picker vult lokaal demo-wachtwoord alleen op localhost in', async ({
   await firstAdmin.click();
 
   await expect(page.locator('#auth-login-email')).not.toHaveValue('');
-  await expect(page.locator('#auth-login-password')).toHaveValue(requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
-  await expect(page.locator('#auth-login-feedback')).toContainText('E-mail en lokaal demo-wachtwoord voorgeselecteerd.');
+
+  if (localHintsEnabled) {
+    await expect(page.locator('#auth-login-password')).toHaveValue(hintedAdminPassword || requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+    await expect(page.locator('#auth-login-feedback')).toContainText('E-mail en lokaal demo-wachtwoord voorgeselecteerd.');
+  } else {
+    await expect(page.locator('#auth-login-password')).toHaveValue('');
+    await expect(page.locator('#auth-login-feedback')).toContainText('E-mail voorgeselecteerd. Vul je wachtwoord in.');
+  }
 });
 
 test('frontend source bevat geen plaintext demo-credentials', async ({ request }) => {
