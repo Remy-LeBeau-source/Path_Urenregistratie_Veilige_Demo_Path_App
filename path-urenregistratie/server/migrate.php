@@ -26,6 +26,7 @@ function migration_plan(bool $allowDemoMigrations): array
         [
             'id' => '001_database_schema.sql',
             'path' => dirname(__DIR__) . '/database/schema.sql',
+            'legacy_ids' => ['001_core_schema.sql'],
         ],
         [
             'id' => '003_auth_schema.sql',
@@ -37,6 +38,7 @@ function migration_plan(bool $allowDemoMigrations): array
         $plan[] = [
             'id' => '002_database_seed.sql',
             'path' => dirname(__DIR__) . '/database/seed-demo-data.sql',
+            'legacy_ids' => ['002_demo_seed.sql'],
         ];
         $plan[] = [
             'id' => '004_demo_employee_auth_seed.sql',
@@ -59,6 +61,40 @@ function normalize_sql_script(string $sql): string
     return trim($sql);
 }
 
+function make_schema_script_idempotent(string $sql, string $scriptPath): string
+{
+    if (basename($scriptPath) !== 'schema.sql') {
+        return $sql;
+    }
+
+    $sql = preg_replace('/\bCREATE\s+TABLE\s+(?!IF\s+NOT\s+EXISTS\b)/i', 'CREATE TABLE IF NOT EXISTS ', $sql) ?? $sql;
+    return $sql;
+}
+
+function migration_exists(PDO $pdo, array $migrationIds): bool
+{
+    $ids = array_values(array_unique(array_filter(array_map('strval', $migrationIds))));
+    if ($ids === []) {
+        return false;
+    }
+
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    $stmt = $pdo->prepare("SELECT migration FROM schema_migrations WHERE migration IN ($placeholders) LIMIT 1");
+    $stmt->execute($ids);
+
+    return (bool)$stmt->fetchColumn();
+}
+
+function ensure_migration_id(PDO $pdo, string $migrationId): void
+{
+    if ($migrationId === '') {
+        return;
+    }
+
+    $ins = $pdo->prepare('INSERT IGNORE INTO schema_migrations (migration) VALUES (:m)');
+    $ins->execute([':m' => $migrationId]);
+}
+
 function execute_sql_script(PDO $pdo, string $scriptPath): void
 {
     $sql = @file_get_contents($scriptPath);
@@ -67,6 +103,7 @@ function execute_sql_script(PDO $pdo, string $scriptPath): void
     }
 
     $sql = normalize_sql_script($sql);
+    $sql = make_schema_script_idempotent($sql, $scriptPath);
     if ($sql === '') {
         return;
     }
@@ -80,7 +117,11 @@ function execute_sql_script(PDO $pdo, string $scriptPath): void
         try {
             $pdo->exec($part);
         } catch (Throwable $inner) {
-            throw new RuntimeException('Failed to execute migration statement.', 0, $inner);
+            $preview = preg_replace('/\s+/', ' ', trim($part)) ?? trim($part);
+            if (strlen($preview) > 240) {
+                $preview = substr($preview, 0, 240) . '...';
+            }
+            throw new RuntimeException('Failed migration SQL: ' . $inner->getMessage() . ' | statement: ' . $preview, 0, $inner);
         }
     }
 }
@@ -138,9 +179,13 @@ foreach ($migrations as $migration) {
     $migrationId = $migration['id'];
     $migrationPath = $migration['path'];
 
-    $stmt = $pdo->prepare('SELECT migration FROM schema_migrations WHERE migration = :m LIMIT 1');
-    $stmt->execute([':m' => $migrationId]);
-    if ($stmt->fetch()) {
+    $legacyIds = isset($migration['legacy_ids']) && is_array($migration['legacy_ids'])
+        ? $migration['legacy_ids']
+        : [];
+    $knownIds = array_merge([$migrationId], $legacyIds);
+
+    if (migration_exists($pdo, $knownIds)) {
+        ensure_migration_id($pdo, $migrationId);
         $skipped[] = $migrationId;
         continue;
     }
@@ -153,13 +198,17 @@ foreach ($migrations as $migration) {
 
     try {
         execute_sql_script($pdo, $migrationPath);
-        $ins = $pdo->prepare('INSERT INTO schema_migrations (migration) VALUES (:m)');
-        $ins->execute([':m' => $migrationId]);
+        ensure_migration_id($pdo, $migrationId);
         $executed[] = $migrationId;
     } catch (Throwable $e) {
         error_log('Migration failed for ' . $migrationId . ': ' . $e->getMessage());
         http_response_code(500);
-        echo json_encode(['ok' => false, 'message' => 'Migration failed', 'migration' => $migrationId]);
+        echo json_encode([
+            'ok' => false,
+            'message' => 'Migration failed',
+            'migration' => $migrationId,
+            'error' => $e->getMessage(),
+        ], JSON_UNESCAPED_SLASHES);
         exit;
     }
 }
