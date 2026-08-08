@@ -1,22 +1,22 @@
-Feature: Authenticatie in Path Uren & Facturatie
+Feature: Authenticatie en sessiebeheer in Path Uren & Facturatie
 # Step definitions mapping: tests/playwright/steps/auth.steps.ts
 
-  Scenario: Admin kan inloggen op Path Uren & Facturatie
+  Scenario: Administrator logt succesvol in en ziet backoffice
     Given de Path loginpagina beschikbaar is
-    When de administrator inlogt met geldige demo-credentials
-    Then opent de backofficeomgeving van Path Uren & Facturatie
+    When de administrator inlogt met geldige inloggegevens
+    Then ziet de administrator de backofficeomgeving van Path Uren & Facturatie
 
-  Scenario: Medewerker kan inloggen op Path Uren & Facturatie
+  Scenario: Medewerker logt succesvol in en ziet alleen eigen omgeving
     Given de Path loginpagina beschikbaar is
-    When de medewerker inlogt met geldige demo-credentials
-    Then opent alleen het eigen medewerkerdashboard
+    When de medewerker inlogt met geldige inloggegevens
+    Then ziet de medewerker alleen het eigen dashboard
 
-  Scenario: Gebruiker kan uitloggen
+  Scenario: Ingelogde gebruiker kan veilig uitloggen
     Given een ingelogde Path gebruiker
     When de gebruiker uitlogt
     Then verschijnt opnieuw het loginscherm
 
-  Scenario: Auth me endpoint geeft geen actieve sessie terug na logout
+  Scenario: Auth me endpoint meldt geen sessie na uitloggen
     Given een ingelogde Path gebruiker
     When de gebruiker uitlogt
-    Then geeft het auth me endpoint authenticated false terug
+    Then geeft het auth me endpoint authenticated false zonder actieve sessie terug

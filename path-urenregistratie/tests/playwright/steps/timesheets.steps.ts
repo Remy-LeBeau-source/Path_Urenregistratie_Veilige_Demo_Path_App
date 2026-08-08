@@ -29,10 +29,10 @@ When('de medewerker submit uitvoert met de juiste expected_version', () => undef
 When('de administrator approve uitvoert met de juiste expected_version', () => undefined);
 When('request_correction of approve met verouderde expected_version wordt uitgevoerd', () => undefined);
 
-Then('wordt de urenstaat als draft opgeslagen', () => undefined);
-Then('ziet de medewerker de opgeslagen draftstatus en laatste audit-event', () => undefined);
-Then('wordt de urenstaat submitted met submitted_at', () => undefined);
-Then('krijgt de medewerker een forbidden response', () => undefined);
+Then('wordt de urenstaat als draft opgeslagen met een nieuwe versie', () => undefined);
+Then('ziet de medewerker draftstatus dagregels correctiehistorie en laatste audit-event', () => undefined);
+Then('wordt de urenstaat submitted met submitted_at en hogere versie', () => undefined);
+Then('krijgt de medewerker een forbidden response met scope-fout', () => undefined);
 Then('is het laatste audit-event timesheet.submitted', () => undefined);
 Then('krijgt de medewerker een conflictresponse', () => undefined);
 Then('wordt de urenstaat correction met correctiebericht en audit-event', () => undefined);

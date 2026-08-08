@@ -12,7 +12,7 @@ Given('de medewerker is ingelogd', () => undefined);
 Given('de dashboardweergave van Path Uren & Facturatie', () => undefined);
 Given('een geldige Path login', () => undefined);
 
-Then('ziet de administrator de open werkvoorraad en backoffice-navigatie', () => undefined);
-Then('ziet de medewerker alleen het eigen dashboard en geen backoffice-overzicht', () => undefined);
+Then('ziet de administrator open werkvoorraad en backoffice-navigatie', () => undefined);
+Then('ziet de medewerker het eigen dashboard zonder backoffice-overzicht', () => undefined);
 Then('gebruikt het dashboard API-data wanneer beschikbaar en fallback-data wanneer nodig', () => undefined);
-Then('laadt het dashboard zonder console- of page-errors na login', () => undefined);
+Then('laadt het dashboard zonder console- of page-errors na inloggen', () => undefined);

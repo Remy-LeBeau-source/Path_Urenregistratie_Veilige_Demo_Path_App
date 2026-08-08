@@ -11,11 +11,11 @@ const Then = (_pattern: StepPattern, _handler: StepHandler) => undefined;
 Given('de Path loginpagina beschikbaar is', () => undefined);
 Given('een ingelogde Path gebruiker', () => undefined);
 
-When('de administrator inlogt met geldige demo-credentials', () => undefined);
-When('de medewerker inlogt met geldige demo-credentials', () => undefined);
+When('de administrator inlogt met geldige inloggegevens', () => undefined);
+When('de medewerker inlogt met geldige inloggegevens', () => undefined);
 When('de gebruiker uitlogt', () => undefined);
 
-Then('opent de backofficeomgeving van Path Uren & Facturatie', () => undefined);
-Then('opent alleen het eigen medewerkerdashboard', () => undefined);
+Then('ziet de administrator de backofficeomgeving van Path Uren & Facturatie', () => undefined);
+Then('ziet de medewerker alleen het eigen dashboard', () => undefined);
 Then('verschijnt opnieuw het loginscherm', () => undefined);
-Then('geeft het auth me endpoint authenticated false terug', () => undefined);
+Then('geeft het auth me endpoint authenticated false zonder actieve sessie terug', () => undefined);

@@ -15,7 +15,7 @@ Given('een geldige Path login', () => undefined);
 When('de administrator het facturenscherm opent', () => undefined);
 When('de administrator wisselt tussen juli 2026 en augustus 2026', () => undefined);
 
-Then('ziet de administrator facturen per geselecteerde periode', () => undefined);
+Then('ziet de administrator facturen voor de geselecteerde periode', () => undefined);
 Then('ziet de medewerker alleen eigen facturen en geen facturen van collega\'s', () => undefined);
 Then('past het facturenoverzicht zich aan op de gekozen periode', () => undefined);
-Then('laadt het facturenscherm zonder console- of page-errors na login', () => undefined);
+Then('laadt het facturenscherm zonder console- of page-errors na inloggen', () => undefined);

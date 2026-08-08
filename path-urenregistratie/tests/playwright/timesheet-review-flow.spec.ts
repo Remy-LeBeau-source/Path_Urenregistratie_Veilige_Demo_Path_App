@@ -106,9 +106,12 @@ test.describe('timesheet review flow api', () => {
     expect(correction.status).toBe(200);
     expect(correction.body.ok).toBe(true);
     expect(correction.body.timesheet.status).toBe('correction');
+    expect(String(correction.body.timesheet.review_note || '')).toContain('Controleer dag 2');
     expect(correction.body.audit_event).toBe('timesheet.correction_requested');
     expect(correction.body.latest_correction).toBeTruthy();
     expect(String(correction.body.latest_correction.correction_message)).toContain('Controleer dag 2');
+    expect(Array.isArray(correction.body.timesheet.correction_history)).toBe(true);
+    expect(correction.body.timesheet.correction_history.length).toBeGreaterThan(0);
 
     const correctionVersion = Number(correction.body.timesheet.version || 0);
 
@@ -178,6 +181,7 @@ test.describe('timesheet review flow api', () => {
     expect(approved.body.timesheet.status).toBe('approved');
     expect(approved.body.timesheet.approved_at).toBeTruthy();
     expect(approved.body.timesheet.approved_by).toBeTruthy();
+    expect(Number(approved.body.timesheet.version)).toBeGreaterThan(resubmittedVersion);
     expect(approved.body.audit_event).toBe('timesheet.approved');
 
     const readBack = await timesheetApi.read(period, employeeId);
@@ -185,9 +189,13 @@ test.describe('timesheet review flow api', () => {
     expect(readBack.body.ok).toBe(true);
     expect(readBack.body.found).toBe(true);
     expect(readBack.body.timesheet.status).toBe('approved');
+    expect(Array.isArray(readBack.body.timesheet.day_entries)).toBe(true);
+    expect(readBack.body.timesheet.day_entries.length).toBeGreaterThan(0);
     expect(Array.isArray(readBack.body.timesheet.correction_history)).toBe(true);
     expect(readBack.body.timesheet.correction_history.length).toBeGreaterThan(0);
-    expect(readBack.body.timesheet.correction_history[0].resubmitted_at).toBeTruthy();
+    const latestCorrection = readBack.body.timesheet.correction_history[readBack.body.timesheet.correction_history.length - 1];
+    expect(latestCorrection.resubmitted_at).toBeTruthy();
+    expect(readBack.body.last_audit?.event_type).toBe('timesheet.approved');
 
     await authApi.logout();
   });
