@@ -1,17 +1,30 @@
-// Deze step definitions zijn voorbereidende BDD-documentatie.
-// De uitvoerende tests staan nu in de .spec.ts bestanden.
-// Er is bewust nog geen Cucumber/BDD-runner toegevoegd.
-// Zie TEST-BDD-MAPPING.md voor de koppeling tussen feature scenario's en Playwright specs.
+// Navigation-only step definitions for F12 from .feature files.
+// Executable tests remain in tests/playwright/timesheet-write.spec.ts.
 
-export const timesheetsSteps = {
-  gegevenIngelogdeMedewerker: 'Login via AuthApi.login() met medewerker-credentials uit de testconfig.',
-  alsSaveDraft: 'Gebruik TimesheetApi.write({ action: save_draft, ... }) met geldige day_entries.',
-  danDraftOpgeslagen: 'Valideer HTTP 200, ok true, timesheet.status draft en audit_event timesheet.draft_saved.',
-  alsReadBack: 'Gebruik TimesheetApi.read(period) op dezelfde testperiode.',
-  danReadBackDraft: 'Valideer found true, timesheet.status draft en last_audit.event_type timesheet.draft_saved.',
-  alsSubmit: 'Gebruik TimesheetApi.write({ action: submit, ... }) op de draft urenstaat.',
-  danSubmitted: 'Valideer HTTP 200, timesheet.status submitted en submitted_at gevuld.',
-  danForbiddenAnderEmployee: 'Valideer HTTP 403 en error forbidden-employee-scope bij employee_id mismatch.',
-  danAuditSubmitted: 'Valideer na readback dat last_audit.event_type gelijk is aan timesheet.submitted.',
-  danConflictGesloten: 'Valideer HTTP 409 wanneer een ingediende of afgesloten urenstaat opnieuw wordt geschreven.',
-} as const;
+type StepPattern = string | RegExp;
+type StepHandler = (...args: unknown[]) => unknown;
+
+const Given = (_pattern: StepPattern, _handler: StepHandler) => undefined;
+const When = (_pattern: StepPattern, _handler: StepHandler) => undefined;
+const Then = (_pattern: StepPattern, _handler: StepHandler) => undefined;
+
+Given('een ingelogde medewerker met een schrijfbare testperiode', () => undefined);
+Given('een bestaande draft urenstaat in de testperiode', () => undefined);
+Given('een draft urenstaat van de ingelogde medewerker', () => undefined);
+Given('een ingelogde medewerker', () => undefined);
+Given('een medewerker dient een draft urenstaat in', () => undefined);
+Given('een ingediende urenstaat', () => undefined);
+
+When('de medewerker save_draft uitvoert met geldige daguren', () => undefined);
+When('de medewerker de urenstaat terugleest', () => undefined);
+When('de medewerker submit uitvoert', () => undefined);
+When('de medewerker een andere employee_id probeert te schrijven', () => undefined);
+When('de urenstaat opnieuw wordt uitgelezen', () => undefined);
+When('de medewerker opnieuw save_draft of submit probeert', () => undefined);
+
+Then('wordt de urenstaat als draft opgeslagen', () => undefined);
+Then('ziet de medewerker de opgeslagen draftstatus en laatste audit-event', () => undefined);
+Then('wordt de urenstaat submitted met submitted_at', () => undefined);
+Then('krijgt de medewerker een forbidden response', () => undefined);
+Then('is het laatste audit-event timesheet.submitted', () => undefined);
+Then('krijgt de medewerker een conflictresponse', () => undefined);

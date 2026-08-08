@@ -1,11 +1,17 @@
-// Deze step definitions zijn voorbereidende BDD-documentatie.
-// De uitvoerende tests staan nu in de .spec.ts bestanden.
-// Er is bewust nog geen Cucumber/BDD-runner toegevoegd.
-// Zie TEST-BDD-MAPPING.md voor de koppeling tussen feature scenario's en Playwright specs.
+// Navigation-only step definitions for F12 from .feature files.
+// Executable tests remain in tests/playwright/roles-api.spec.ts.
 
-export const rolesApiSteps = {
-  zonderSessie401: 'Gebruik native Playwright request-calls en verwacht 401 not-authenticated.',
-  adminVolledigeData: 'Gebruik AuthApi.login() en ReadApi.bootstrap/dashboard/invoices() voor admin.',
-  employeeEigenData: 'Valideer dat employee slechts eigen user/employee/assignment/invoices ziet.',
-  geenVolledigeMedewerkerlijst: 'Controleer dat employee geen brede users/employees/mail recipients terugkrijgt.',
-} as const;
+type StepPattern = string | RegExp;
+type StepHandler = (...args: unknown[]) => unknown;
+
+const Given = (_pattern: StepPattern, _handler: StepHandler) => undefined;
+const Then = (_pattern: StepPattern, _handler: StepHandler) => undefined;
+
+Given('er is geen actieve sessie', () => undefined);
+Given('de administrator is ingelogd', () => undefined);
+Given('de medewerker is ingelogd', () => undefined);
+
+Then('geven bootstrap, dashboard en invoices een nette 401 not-authenticated response', () => undefined);
+Then('kan de administrator bootstrap, dashboard en invoices volledig uitlezen', () => undefined);
+Then('ziet de medewerker alleen de eigen user-, employee-, assignment- en invoice-data', () => undefined);
+Then('krijgt de medewerker geen volledige medewerkerslijst of brede mail recipient data terug', () => undefined);

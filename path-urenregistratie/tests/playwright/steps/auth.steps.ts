@@ -1,12 +1,21 @@
-// Deze step definitions zijn voorbereidende BDD-documentatie.
-// De uitvoerende tests staan nu in de .spec.ts bestanden.
-// Er is bewust nog geen Cucumber/BDD-runner toegevoegd.
-// Zie TEST-BDD-MAPPING.md voor de koppeling tussen feature scenario's en Playwright specs.
+// Navigation-only step definitions for F12 from .feature files.
+// Executable tests remain in tests/playwright/auth.spec.ts.
 
-export const authSteps = {
-  gegevenPathLoginpagina: 'De Path loginpagina is beschikbaar via de native Playwright LoginPage.',
-  alsAdminInlogt: 'Gebruik LoginPage.loginAsAdmin() en valideer daarna de ingelogde sessie.',
-  alsMedewerkerInlogt: 'Gebruik LoginPage.loginAsEmployee() en valideer daarna het medewerkerdashboard.',
-  danUitgelogd: 'Gebruik LoginPage.logout() gevolgd door LoginPage.assertLoggedOut().',
-  danMeNietIngelogd: 'Controleer /server/auth/me.php via browsercontext na logout.',
-} as const;
+type StepPattern = string | RegExp;
+type StepHandler = (...args: unknown[]) => unknown;
+
+const Given = (_pattern: StepPattern, _handler: StepHandler) => undefined;
+const When = (_pattern: StepPattern, _handler: StepHandler) => undefined;
+const Then = (_pattern: StepPattern, _handler: StepHandler) => undefined;
+
+Given('de Path loginpagina beschikbaar is', () => undefined);
+Given('een ingelogde Path gebruiker', () => undefined);
+
+When('de administrator inlogt met geldige demo-credentials', () => undefined);
+When('de medewerker inlogt met geldige demo-credentials', () => undefined);
+When('de gebruiker uitlogt', () => undefined);
+
+Then('opent de backofficeomgeving van Path Uren & Facturatie', () => undefined);
+Then('opent alleen het eigen medewerkerdashboard', () => undefined);
+Then('verschijnt opnieuw het loginscherm', () => undefined);
+Then('geeft het me endpoint authenticated false terug', () => undefined);
