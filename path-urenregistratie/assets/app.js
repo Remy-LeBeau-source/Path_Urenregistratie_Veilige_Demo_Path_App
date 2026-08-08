@@ -4,6 +4,8 @@ const API_ENDPOINT = "/server/api.php";
 const API_STATE_PATH = API_ENDPOINT + "?action=state";
 const LOCAL_STORAGE_ENABLED = true;
 const API_ENABLED = true;
+const READ_API_DASHBOARD_PATH = "/server/api/dashboard.php";
+const READ_API_INVOICES_PATH = "/server/api/invoices.php";
 const SUPPORT_EMAIL = "backoffice@pathconsultancy.nl";
 const DEFAULT_INVOICE_MAIL_BODY = "Middag,\n\nHierbij stuur ik de ureninformatie van {medewerker} over {maand} {jaar}.\n\nDaadwerkelijk gewerkte uren: {uren} uur.";
 const DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_SUBJECT = "Klanturenstaat {medewerker} – {maand} {jaar}";
@@ -979,6 +981,84 @@ function loadStateFromServer() {
   } catch (e) {
     console.warn("Failed to load state from API", e);
   }
+}
+
+const readApiDebug = {
+  dashboard: null,
+  invoices: null,
+  invoicesByPeriod: {}
+};
+
+const readApiRuntime = {
+  dashboardInFlight: false,
+  invoicesInFlight: false,
+  lastDashboardAt: 0,
+  lastInvoicesAt: 0,
+  lastInvoicesByPeriod: {}
+};
+
+window.__PATH_READ_API = readApiDebug;
+
+function fetchReadApi(path) {
+  if (!API_ENABLED) return Promise.resolve(null);
+  try {
+    return fetch(path, { method: "GET", headers: { "Accept": "application/json" } })
+      .then(resp => {
+        if (!resp.ok) throw new Error("HTTP " + resp.status);
+        return resp.json();
+      })
+      .then(data => {
+        if (!data || data.ok !== true) return null;
+        return data;
+      })
+      .catch(error => {
+        console.warn("Read-only API request failed", path, error);
+        return null;
+      });
+  } catch (error) {
+    console.warn("Read-only API init failed", path, error);
+    return Promise.resolve(null);
+  }
+}
+
+function refreshDashboardReadApi(force) {
+  const now = Date.now();
+  if (!force && (readApiRuntime.dashboardInFlight || (now - readApiRuntime.lastDashboardAt) < 15000)) return;
+  readApiRuntime.dashboardInFlight = true;
+  fetchReadApi(READ_API_DASHBOARD_PATH)
+    .then(data => {
+      readApiRuntime.lastDashboardAt = Date.now();
+      if (!data) return;
+      readApiDebug.dashboard = data;
+      console.log("[read-api] dashboard", data);
+    })
+    .finally(() => {
+      readApiRuntime.dashboardInFlight = false;
+    });
+}
+
+function refreshInvoicesReadApi(periodKey, force) {
+  const period = parsePeriodKey(periodKey) ? periodKey : "";
+  const now = Date.now();
+  const lastAt = period ? Number(readApiRuntime.lastInvoicesByPeriod[period] || 0) : readApiRuntime.lastInvoicesAt;
+  if (!force && (readApiRuntime.invoicesInFlight || (now - lastAt) < 15000)) return;
+  readApiRuntime.invoicesInFlight = true;
+  const endpoint = period
+    ? READ_API_INVOICES_PATH + "?period=" + encodeURIComponent(period)
+    : READ_API_INVOICES_PATH;
+  fetchReadApi(endpoint)
+    .then(data => {
+      const fetchedAt = Date.now();
+      if (period) readApiRuntime.lastInvoicesByPeriod[period] = fetchedAt;
+      else readApiRuntime.lastInvoicesAt = fetchedAt;
+      if (!data) return;
+      if (period) readApiDebug.invoicesByPeriod[period] = data;
+      else readApiDebug.invoices = data;
+      console.log(period ? "[read-api] invoices(" + period + ")" : "[read-api] invoices", data);
+    })
+    .finally(() => {
+      readApiRuntime.invoicesInFlight = false;
+    });
 }
 
 function currentPeriod() {
@@ -2461,6 +2541,7 @@ function showReopenApprovedHours(employeeId, periodKey) {
 }
 
 function renderDashboard() {
+  refreshDashboardReadApi(false);
   const period = currentPeriod();
   const now = new Date();
   const currentMonthKey = makePeriodKey(now.getFullYear(), now.getMonth());
@@ -2902,6 +2983,7 @@ function openMonthBatchBlocker(employeeId, periodKey) {
 }
 
 function renderInvoices() {
+  refreshInvoicesReadApi(currentPeriod().key, false);
   const periodRows = invoicePeriodRows();
   const rows = periodRows.filter(item => state.invoiceFilter === "all" || item.record.invoiceStatus === state.invoiceFilter);
   const tbody = document.querySelector("#invoice-rows");
@@ -6187,3 +6269,8 @@ initializeReminderChoiceMenus();
 initializeStandardChoiceMenus();
 populateSettings();
 renderAll();
+
+// Read-only API bridge: purely additive diagnostics, local state remains leading fallback.
+refreshDashboardReadApi(true);
+refreshInvoicesReadApi("", true);
+refreshInvoicesReadApi("2026-07", true);
