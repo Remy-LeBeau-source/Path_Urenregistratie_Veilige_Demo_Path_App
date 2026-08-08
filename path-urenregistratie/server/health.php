@@ -91,6 +91,36 @@ foreach ($coreTables as $t) {
 }
 $result['checks']['core_tables'] = $coreStatus;
 
+// auth schema checks
+try {
+    $authTableStmt = $pdo->prepare("SELECT COUNT(*) as cnt FROM information_schema.TABLES WHERE TABLE_SCHEMA = :db AND TABLE_NAME = 'auth_login_audit'");
+    $authTableStmt->execute([':db' => $db['name']]);
+    $authTableRow = $authTableStmt->fetch();
+    $result['checks']['auth_login_audit_table'] = ['ok' => ($authTableRow && $authTableRow['cnt'] > 0) ? true : false];
+} catch (Throwable $e) {
+    $result['checks']['auth_login_audit_table'] = ['ok' => false, 'message' => 'Could not verify auth_login_audit table'];
+}
+
+try {
+    $authColumnStmt = $pdo->prepare("SELECT COUNT(*) as cnt FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = :db AND TABLE_NAME = 'users' AND COLUMN_NAME = 'password_hash'");
+    $authColumnStmt->execute([':db' => $db['name']]);
+    $authColumnRow = $authColumnStmt->fetch();
+    $result['checks']['users_password_hash_column'] = ['ok' => ($authColumnRow && $authColumnRow['cnt'] > 0) ? true : false];
+} catch (Throwable $e) {
+    $result['checks']['users_password_hash_column'] = ['ok' => false, 'message' => 'Could not verify users.password_hash'];
+}
+
+try {
+    $authUsersStmt = $pdo->query("SELECT COUNT(*) as cnt FROM users WHERE role IN ('administrator', 'employee') AND password_hash IS NOT NULL AND password_hash <> ''");
+    $authUsersRow = $authUsersStmt->fetch();
+    $result['checks']['auth_demo_users'] = [
+        'ok' => ($authUsersRow && (int)$authUsersRow['cnt'] > 0),
+        'count' => $authUsersRow ? (int)$authUsersRow['cnt'] : 0,
+    ];
+} catch (Throwable $e) {
+    $result['checks']['auth_demo_users'] = ['ok' => false, 'message' => 'Could not verify auth demo users'];
+}
+
 // demo seed counts: ensure demo seed added minimal data
 try {
     $demoCounts = [];
