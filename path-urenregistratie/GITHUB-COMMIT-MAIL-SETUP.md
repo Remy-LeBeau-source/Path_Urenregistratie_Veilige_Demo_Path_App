@@ -1,7 +1,7 @@
 # GitHub commit-notificatie (zonder SMTP)
 
 Deze repo gebruikt nu GitHub-notificaties in plaats van SMTP-mail.
-Bij elke push naar `main` of `master` plaatst de workflow een commit-comment met @mentions, zodat de 2 personen direct een GitHub-notificatie (en vaak e-mail via GitHub) krijgen.
+Bij elke push naar `main` of `master` plaatst de workflow een comment met @mentions in een vaste issue (`Commit Notifications`), zodat de 2 personen direct een GitHub-notificatie (en vaak e-mail via GitHub) krijgen.
 
 ## Waar staat de configuratie in de repo?
 
@@ -26,10 +26,11 @@ Voorbeeld:
 1. Ga naar **Actions** in GitHub.
 2. Kies workflow **Commit Team Notification**.
 3. Doe een test-push naar `main` of `master`.
-4. Open de laatste commit en controleer de commit-comments: je ziet een team-notificatie met @mentions.
+4. Open issue **Commit Notifications** en controleer de nieuwste comment met @mentions.
 
 ## Belangrijk
 
 - Voor @mentions zijn GitHub gebruikersnamen nodig, geen e-mailadressen.
 - De genoemde users moeten toegang hebben tot de repository.
 - SMTP-secrets zijn voor deze workflow niet meer nodig.
+- De eerste run maakt automatisch issue **Commit Notifications** aan als deze nog niet bestaat.

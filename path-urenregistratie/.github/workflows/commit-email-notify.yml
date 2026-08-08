@@ -8,7 +8,8 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  issues: write
 
 jobs:
   notify-team:
@@ -17,13 +18,14 @@ jobs:
     if: ${{ vars.NOTIFY_USER_1 != '' || vars.NOTIFY_USER_2 != '' }}
 
     steps:
-      - name: Comment and mention team members on commit
+      - name: Post team mention notification
         uses: actions/github-script@v7
         with:
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const commitSha = context.sha;
+            const notificationIssueTitle = 'Commit Notifications';
 
             const users = [process.env.NOTIFY_USER_1, process.env.NOTIFY_USER_2]
               .filter(Boolean)
@@ -48,10 +50,29 @@ jobs:
               `Link: ${context.payload.head_commit?.url || `${context.serverUrl}/${owner}/${repo}/commit/${commitSha}`}`
             ].join('\n');
 
-            await github.rest.repos.createCommitComment({
+            const issues = await github.rest.issues.listForRepo({
               owner,
               repo,
-              commit_sha: commitSha,
+              state: 'open',
+              per_page: 100
+            });
+
+            let issue = issues.data.find(item => !item.pull_request && item.title === notificationIssueTitle);
+
+            if (!issue) {
+              const created = await github.rest.issues.create({
+                owner,
+                repo,
+                title: notificationIssueTitle,
+                body: 'Automatisch aangemaakt door workflow. Deze issue verzamelt commit-notificaties met @mentions.'
+              });
+              issue = created.data;
+            }
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: issue.number,
               body
             });
         env:
