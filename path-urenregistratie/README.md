@@ -180,6 +180,10 @@ Ja, dit is ingericht met GitHub Actions:
 - Stage promotion workflow: `.github/workflows/stage-promotion.yml`
 	- handmatige promotie van dezelfde ref naar `dev`, `tst1` of `tst2`
 	- draait build + smoke, en optioneel e2e tegen stage-URL
+- Production promotion workflow: `.github/workflows/prod-promotion.yml`
+	- handmatige promotie naar `prod`
+	- accepteert alleen `main`
+	- draait build + smoke en optioneel e2e tegen prod-URL
 
 Na push naar `main` kun je de gepubliceerde live documentatie-URL gebruiken als centrale testdocumentatie voor je team.
 
@@ -195,6 +199,19 @@ Dit kan direct via GitHub Environments:
 4. Start daarna handmatig de workflow `Stage Promotion` en kies target stage + ref.
 
 Later kun je per stage een eigen URL invullen zonder codewijziging.
+
+### Productieflow (tst2 -> prod)
+
+1. Maak in GitHub ook environment `prod` aan.
+2. Zet in `prod`:
+	 - Variable: `PATH_APP_BASE_URL`
+	 - Secrets: `PLAYWRIGHT_ADMIN_PASSWORD`, `PLAYWRIGHT_EMPLOYEE_PASSWORD`
+3. Zet environment protection rules op `prod`:
+	 - Required reviewers (handmatige approval)
+	 - Eventueel wait timer
+4. Start workflow `Production Promotion` handmatig.
+
+Resultaat: gecontroleerde promotie vanaf `main` met expliciete goedkeuring voor productie.
 
 ## Productiekoppelingen die later worden toegevoegd
 

@@ -1,0 +1,75 @@
+name: Production Promotion
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref (must be main)"
+        required: true
+        default: "main"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-promotion
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: Promote to prod
+    runs-on: ubuntu-latest
+    environment: prod
+
+    steps:
+      - name: Enforce main ref only
+        run: |
+          if [ "${{ inputs.ref }}" != "main" ] && [ "${{ inputs.ref }}" != "refs/heads/main" ]; then
+            echo "Production promotion is restricted to main. Received: ${{ inputs.ref }}"
+            exit 1
+          fi
+
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Smoke check
+        run: npm run check
+
+      - name: Optional E2E against prod URL
+        env:
+          PATH_APP_BASE_URL: ${{ vars.PATH_APP_BASE_URL }}
+          PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
+          PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
+        run: |
+          if [ -z "${PATH_APP_BASE_URL:-}" ] || [ -z "${PLAYWRIGHT_ADMIN_PASSWORD:-}" ] || [ -z "${PLAYWRIGHT_EMPLOYEE_PASSWORD:-}" ]; then
+            echo "Skipping e2e: configure PATH_APP_BASE_URL var + PLAYWRIGHT_* secrets in environment 'prod'."
+            exit 0
+          fi
+
+          echo "Running e2e for prod on ${PATH_APP_BASE_URL}"
+          npm run test:e2e
+
+      - name: Production summary
+        run: |
+          echo "Production promotion checks completed from main."
+          echo "Configure environment protection rules in GitHub for manual approvals."
