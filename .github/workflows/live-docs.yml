@@ -91,8 +91,35 @@ jobs:
             sleep 1
           done
           cat /tmp/health.json
-          curl -fsS http://127.0.0.1:8000/server/install.php > /tmp/install.json
-          curl -fsS http://127.0.0.1:8000/server/migrate.php > /tmp/migrate.json
+
+          install_ok=0
+          for i in {1..20}; do
+            if curl -fsS http://127.0.0.1:8000/server/install.php > /tmp/install.json; then
+              install_ok=1
+              break
+            fi
+            echo "install.php not ready yet... attempt $i"
+            sleep 1
+          done
+          if [ "$install_ok" -ne 1 ]; then
+            echo "install.php failed after retries"
+            exit 1
+          fi
+
+          migrate_ok=0
+          for i in {1..20}; do
+            if curl -fsS http://127.0.0.1:8000/server/migrate.php > /tmp/migrate.json; then
+              migrate_ok=1
+              break
+            fi
+            echo "migrate.php not ready yet... attempt $i"
+            sleep 1
+          done
+          if [ "$migrate_ok" -ne 1 ]; then
+            echo "migrate.php failed after retries"
+            exit 1
+          fi
+
           cat /tmp/install.json
           cat /tmp/migrate.json
 
