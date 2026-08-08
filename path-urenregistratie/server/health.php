@@ -91,4 +91,20 @@ foreach ($coreTables as $t) {
 }
 $result['checks']['core_tables'] = $coreStatus;
 
+// demo seed counts: ensure demo seed added minimal data
+try {
+    $demoCounts = [];
+    $tablesToCheck = ['companies','users','employees','periods','timesheets','invoices'];
+    foreach ($tablesToCheck as $tbl) {
+        $q = $pdo->prepare("SELECT COUNT(*) as cnt FROM `" . $tbl . "` WHERE 1");
+        $q->execute();
+        $r = $q->fetch();
+        $demoCounts[$tbl] = isset($r['cnt']) ? (int)$r['cnt'] : 0;
+    }
+    $result['checks']['demo_counts'] = $demoCounts;
+    $result['checks']['demo_seed_present'] = ['ok' => ($demoCounts['companies']>0 && $demoCounts['users']>0 && $demoCounts['employees']>0 && $demoCounts['periods']>0 && $demoCounts['timesheets']>0 && $demoCounts['invoices']>0)];
+} catch (Throwable $e) {
+    $result['checks']['demo_seed_present'] = ['ok' => false, 'message' => 'Could not run demo seed counts'];
+}
+
 echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
