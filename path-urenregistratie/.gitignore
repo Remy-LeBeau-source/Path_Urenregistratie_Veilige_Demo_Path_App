@@ -6,6 +6,7 @@ allure-results/
 allure-report/
 server/config.local.php
 server/.php-path
+server/logs/
 playwright-report/
 test-results/
 live-doc-site/
