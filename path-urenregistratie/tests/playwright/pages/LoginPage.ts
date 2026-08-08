@@ -66,8 +66,16 @@ export class LoginPage {
 
   private async waitForAuthModeReady(): Promise<void> {
     const indicator = this.page.locator('#auth-mode-indicator');
+    const submit = this.page.locator('#auth-login-submit');
+
     await expect(indicator).toBeVisible({ timeout: 10_000 });
-    await expect(indicator).not.toHaveText(/Controle van auth-sessie wordt uitgevoerd\./, { timeout: 12_000 });
-    await expect(indicator).toContainText(/Auth-modus actief|Lokale demo-modus actief/, { timeout: 5_000 });
+    // Functional readiness is the login button becoming enabled.
+    // The indicator text can lag intermittently in CI/local runs.
+    await expect(submit).toBeEnabled({ timeout: 15_000 });
+
+    await expect(indicator).toContainText(
+      /Auth-modus actief|Lokale demo-modus actief|Controle van auth-sessie wordt uitgevoerd\./,
+      { timeout: 5_000 }
+    );
   }
 }

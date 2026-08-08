@@ -1,5 +1,10 @@
 # Productiechecklist Path Uren & Facturatie
 
+## Masterchecklist (technische voortgang)
+
+De technische masterchecklist met fase-statussen, regressiestatus en updateprotocol staat in `MASTERCHECKLIST.md`.
+Deze productiechecklist blijft de functionele/livegang-checklist.
+
 Dit is een levende checklist. Bevestigde punten worden uit **Nog te beslissen** gehaald, zodat Gio en Joyce niet steeds dezelfde vragen krijgen. Echte e-mailadressen blijven bewust buiten de lokale broncode.
 
 ## Al bevestigd of aangeleverd

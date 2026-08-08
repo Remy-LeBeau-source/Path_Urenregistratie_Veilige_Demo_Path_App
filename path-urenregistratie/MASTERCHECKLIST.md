@@ -1,0 +1,730 @@
+# Masterchecklist Path Uren & Facturatie
+
+Dit is vanaf nu de volledige masterchecklist en vaste technische bron van waarheid.
+Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, open of geblokkeerd is.
+
+## Betekenis van de statussen
+
+- [x] afgerond, getest en waar nodig gecommit/gepusht
+- [~] gedeeltelijk klaar of nog wachtend op definitief bewijs
+- [ ] nog open
+- [!] geblokkeerd of test mislukt
+
+## Actuele stand
+
+- Datum: 2026-08-09
+- Main/HEAD: bijwerken na iedere commit/push (zie git log -1)
+- Referentiecommit fase 8/9 backend: fc27723
+- Appversie: 0.9.30
+- Lokale check: geslaagd
+- Lokale e2e regressie: 30 geslaagd, 0 gefaald
+- GitHub pipeline-status: lokaal niet verifieerbaar zonder gh auth login
+
+---
+
+## Fase 1 - Lokale ontwikkelbasis
+
+- PHP 8.4 lokaal geinstalleerd.
+- MySQL lokaal geinstalleerd.
+- pdo_mysql actief.
+- Lokale database path_urenregistratie.
+- PHP kan verbinding maken met MySQL.
+- server/config.local.php voor lokale instellingen.
+- server/config.local.php staat buiten Git.
+- server/.php-path staat buiten Git.
+- Geen productiewachtwoorden in Git.
+- server/config.local.php.example met veilige placeholders.
+- Lokaal startscript:
+  - start-path-app.cmd
+  - start-path-app.ps1
+- API-controlescript:
+  - test-path-api.cmd
+  - test-path-api.ps1
+- Groot controlescript:
+  - check-after-big-change.cmd
+  - check-after-big-change.ps1
+- Automatische lokale databaseback-up bij grote controles.
+- Lokale PHP-server op poort 8000.
+- health.php, install.php en API kunnen lokaal worden gecontroleerd.
+
+Status Fase 1:
+- [x] afgerond
+
+---
+
+## Fase 2 - Database, schema en migraties
+
+- app_state als eerste werkende serveropslag.
+- Tabel schema_migrations.
+- Core databaseschema.
+- server/install.php.
+- server/health.php.
+- server/migrate.php.
+- Core migratie.
+- Demo-seed.
+- Auth-schema.
+- Demo-medewerker-authseed.
+- Veilige migratiehistorie.
+- Bestaande migraties worden niet opnieuw gewijzigd voor nieuwe features.
+- Nieuwe databasewijzigingen worden als nieuwe migration toegevoegd.
+- Demo-migraties kunnen apart worden beheerd.
+- Demo-migraties zijn standaard niet voor productie bedoeld.
+- Tabellen voor:
+  - bedrijven
+  - gebruikers
+  - medewerkers
+  - opdrachten
+  - perioden
+  - urenstaten
+  - dagregels
+  - correcties
+  - klanturenstaten
+  - facturen
+  - ontvangers
+  - e-mailleveringen
+  - mededelingen
+  - notificaties
+  - auditlog
+- Demo-inhoud voor juni, juli en augustus 2026.
+- Browseropslag is nog niet voor alle onderdelen volledig vervangen:
+  - read-data grotendeels uit database
+  - uren-writeflow uit database
+  - resterende factuur-, upload-, mail- en beheerschermen volledig transactioneel maken
+
+Status Fase 2:
+- [x] databasestructuur afgerond
+- [~] volledige afbouw van app_state/localStorage nog niet afgerond
+
+---
+
+## Fase 3 - Read-API en frontendlezing
+
+- server/api/common.php.
+- server/api/bootstrap.php.
+- server/api/dashboard.php.
+- server/api/invoices.php.
+- Frontend leest bootstrapgegevens via API.
+- Frontend leest dashboardgegevens via API.
+- Frontend leest facturen via API.
+- Periodefilter via API.
+- Medewerkers via API.
+- Opdrachten via API.
+- Stamgegevens via API.
+- Beschermde read-endpoints vereisen een sessie.
+- Zonder sessie geven endpoints 401 not-authenticated.
+- Administrator ziet organisatiebrede gegevens.
+- Medewerker ziet alleen eigen gegevens.
+- Medewerker krijgt geen volledige ontvangerslijst.
+- Medewerker krijgt geen volledige medewerkerslijst.
+- Employee- en company-scope in queries.
+- app_state blijft een gecontroleerde fallback, niet de primaire database in auth-modus.
+- Role enforcement eerder bewezen en gecommit als 23c07a0.
+
+Status Fase 3:
+- [x] afgerond
+
+---
+
+## Fase 4 - Authenticatie, sessies en rollen
+
+- server/auth/session.php.
+- server/auth/login.php.
+- server/auth/logout.php.
+- server/auth/me.php.
+- password_hash.
+- password_verify.
+- Veilige PHP-sessie.
+- Administratorrol.
+- Employeerol.
+- Admin-login via backend.
+- Medewerker-login via backend.
+- Frontend-loginformulier gekoppeld aan backend.
+- Frontend controleert bij app-start de sessie.
+- /auth/me.php geeft huidige gebruiker terug.
+- Logout vernietigt de sessie.
+- Na logout terug naar login.
+- Geen wachtwoorden in debugoutput.
+- Geen wachtwoorden in consolelogging.
+- Loginformulier vult geen wachtwoord automatisch in.
+- Demo-rolknoppen alleen als gecontroleerde fallback.
+- window.__PATH_AUTH_DEBUG bevat geen gevoelige waarden.
+- CI-adminaccount afgestemd op gio@example.invalid.
+- CI-employeeaccount afgestemd op stasjo@example.invalid.
+- Browserflow login -> dashboard -> facturen -> logout eerder getest zonder console/page errors.
+
+Status Fase 4:
+- [x] afgerond voor huidige authscope
+
+---
+
+## Fase 5 - CSRF, validatie en securitybasis
+
+- CSRF-token in sessie.
+- X-CSRF-Token header.
+- CSRF-endpoint.
+- CSRF op login.
+- CSRF op logout.
+- CSRF op state-write.
+- CSRF op timesheetwrites.
+- Veilige JSON-body parsing.
+- Validatie van verplichte velden.
+- E-mailvalidatie.
+- Maximale veldlengtes.
+- Enumvalidatie.
+- Numerieke validatie.
+- Nette 400, 401, 403, 405 en 409 responses.
+- Geen SQL-details in normale API-responses.
+- Geen stacktraces naar browser.
+- Production-safety Playwright-tests.
+- Geen plaintext demo-wachtwoorden in frontend.
+- Demo-migraties voor productie begrensd.
+- Productie-origin voorbereid via configuratie.
+- Nog open als aanvullende hardening:
+  - Expliciete sessie-time-out
+  - Sliding session expiration
+  - Login rate limiting
+  - Tijdelijke accountlock na meerdere foute pogingen
+  - Auditmelding bij herhaalde mislukte logins
+  - Productie-CORS definitief beperken tot https://uren.pathconsultancy.nl
+  - Content-Security-Policy voor productie
+  - HSTS na bevestigde HTTPS-productieconfig
+  - Centrale securitylogging
+  - Logrotatie
+  - Periodieke controle op kwetsbare dependencies
+
+Status Fase 5:
+- [x] noodzakelijke securitybasis afgerond
+- [ ] extra productiehardening open
+
+---
+
+## Fase 6 - Playwright, Allure, Living Documentation en agents
+
+- Playwright-only testopzet.
+- Geen Cypress in deze repository.
+- Geen Cucumber-runner.
+- Native Playwright-specs zijn leidend.
+- playwright.config.ts.
+- Page objects.
+- API helpers.
+- Fixtures.
+- Environment-/stageconfiguratie.
+- Dev-stage.
+- Test-stage.
+- Acceptatie-stage.
+- Productiestage.
+- Auth-tests.
+- Dashboardtests.
+- Factuurtests.
+- Rollen/API-tests.
+- Securitytests.
+- Production-safety tests.
+- Timesheet-write tests.
+- Timesheet-reviewflow test.
+- Herhaalbare toekomstige testperioden.
+- Allure reporter.
+- Allure-resultaten.
+- Allure-rapportgeneratie.
+- Playwright HTML-report.
+- Traces bij failures.
+- Screenshots bij failures.
+- Video bij failures.
+- Nederlandse .feature-bestanden als Living Documentation.
+- .steps.ts-bestanden als BDD-mapping/documentatie.
+- TEST-BDD-MAPPING.md.
+- LIVING-DOC.md.
+- PROJECT-CONTEXT.md.
+- Live Docs-bundel.
+- Planner-agent.
+- Builder-agent.
+- Test-agent.
+- Security-review-agent.
+- Release-agent.
+
+Status Fase 6:
+- [x] afgerond
+
+---
+
+## Fase 7 - CI/CD, release-pipeline en GitHub-documentatie
+
+- GitHub Actions-workflow.
+- Verse MySQL 8-database in CI.
+- PHP 8.4 in CI.
+- Node in CI.
+- Playwright Chromium in CI.
+- npm ci.
+- Build in pipeline.
+- Smoke-test in pipeline.
+- Migraties in pipeline.
+- Tijdelijke CI-wachtwoorden.
+- Tijdelijke password hashes in CI-database.
+- Playwright-regressie in pipeline.
+- Dev -> Test -> Acc -> Prod-opzet.
+- Stageconfiguratie.
+- Lokale fallbackstack zolang echte stage-URL's ontbreken.
+- Live Docs-publicatie.
+- Allure/Living Docs-koppeling.
+- Commitnotificatie geintegreerd in release-pipeline.
+- Ken/Gio-notificaties technisch aanwezig maar functioneel geen prioriteit.
+- Definitieve notificatieontvangers later bevestigen.
+- Echte aparte Dev/Test/Acc-hosts later invullen.
+- Branch protection op main.
+- Verplichte groene statuschecks voor merge.
+- Productieapproval instellen voor echte deploy.
+
+Status Fase 7:
+- [x] CI/CD-basis afgerond
+- [~] echte stage-hosting en productieapproval nog open
+
+---
+
+## Fase 8 - Uren concept opslaan en indienen
+
+- server/api/timesheets.php.
+- Uren als concept opslaan in echte database.
+- Concept teruglezen.
+- Uren indienen.
+- Periode veilig bepalen/aanmaken.
+- Medewerker schrijft alleen eigen uren.
+- Administrator blijft binnen eigen organisatie.
+- CSRF op writes.
+- Sessie op GET en POST.
+- employee_id-scope.
+- Periodeformaat YYYY-MM.
+- Kalenderdatumvalidatie.
+- Dagregel moet binnen gekozen maand liggen.
+- Daguren numeriek.
+- Daguren tussen 0 en 24.
+- Som dagregels moet overeenkomen met factureerbare uren.
+- Audit-event timesheet.draft_saved.
+- Audit-event timesheet.submitted.
+- Database-transactie.
+- Rollback bij fout.
+- submitted urenstaat vergrendeld.
+- approved urenstaat vergrendeld.
+- invoiced urenstaat vergrendeld.
+- TimesheetApi.ts.
+- timesheet-write.spec.ts.
+- timesheets.feature.
+- timesheets.steps.ts.
+- BDD-mapping.
+- Allure-opname.
+- Gecommit.
+- Gepusht.
+
+Status Fase 8:
+- [x] afgerond
+
+---
+
+## Fase 9 - Correctieverzoek, opnieuw indienen en goedkeuren
+
+Deze fase heette eerder Fase 8. Omdat de concept-/indienflow hierboven nu een eigen afgeronde fase is, staat de correctieflow hier apart.
+
+### Backend en database
+
+- Actie request_correction.
+- Alleen administrator mag correctie aanvragen.
+- Alleen overgang submitted -> correction.
+- Correctietoelichting verplicht.
+- Maximale lengte correctietoelichting.
+- review_note vullen.
+- Record in timesheet_corrections.
+- Audit-event timesheet.correction_requested.
+- Correctiestatus bewaren tijdens conceptopslaan.
+- Medewerker kan correctie opnieuw indienen.
+- Overgang correction -> submitted.
+- Open correctierecord krijgt resubmitted_at.
+- Audit-event timesheet.resubmitted.
+- Actie approve.
+- Alleen administrator mag goedkeuren.
+- Alleen overgang submitted -> approved.
+- approved_at.
+- approved_by.
+- Audit-event timesheet.approved.
+- Correctiehistorie teruggeven.
+- Dagregels teruggeven.
+- Uren en notities teruggeven.
+- Optimistic locking met expected_version.
+- Stale version geeft 409 stale-version.
+- Version wordt na succesvolle write verhoogd.
+- Frontend bewaart de serverversie voor volgende write.
+- Transacties en rollback.
+- Employee mag geen adminreviewactie uitvoeren.
+- Ongeldige statusovergangen geven 409.
+
+### Tests en documentatie
+
+- timesheet-review-flow.spec.ts.
+- Employee maakt concept.
+- Employee dient in.
+- Admin vraagt correctie.
+- Stale correctieverzoek wordt geweigerd.
+- Tweede ongeldige correctieovergang wordt geweigerd.
+- Employee kan zelf geen correctieverzoek uitvoeren.
+- Employee dient opnieuw in.
+- Admin keurt goed.
+- Stale goedkeuring wordt geweigerd.
+- Correctiehistorie wordt gecontroleerd.
+- resubmitted_at wordt gecontroleerd.
+- Living Doc bijgewerkt.
+- BDD-mapping bijgewerkt.
+- Gecommit.
+- Gepusht.
+- Browserflow testcase aanwezig: TS-REV-UI-001.
+
+### Nog niet volledig bewezen
+
+- [~] Frontend bewaart en verstuurt expected_version (blijft monitorpunt).
+- [~] Definitieve pipelinebevestiging op deze machine nog niet aantoonbaar zonder gh auth login.
+
+Status Fase 9:
+- [x] backend/API/test/documentatie gecommit en gepusht
+- [x] browser-UI-flow met Playwright bewezen
+- [~] pipelinebevestiging nog open op deze machine
+
+---
+
+## Fase 10 - Klanturenstaten en uploads
+
+### Technische basis
+
+- Databasetabel customer_timesheets.
+- Statusvelden in schema.
+- Opslagvelden in schema.
+- Upload-/reviewvelden in schema.
+- Demo-UI en schermconcept bestaan.
+
+### Nog bouwen
+
+- Uploadendpoint.
+- PDF upload.
+- JPG upload.
+- PNG upload.
+- MIME-typecontrole.
+- Bestandsgroottecontrole.
+- Veilige bestandsnaam.
+- Unieke storage key.
+- Opslag buiten publiek toegankelijke webmap.
+- Downloadendpoint.
+- Employee mag alleen eigen bestand downloaden.
+- Administrator alleen binnen eigen organisatie.
+- Status missing.
+- Status received.
+- Status approved.
+- Status resubmit.
+- Status sent.
+- Status sent_to_broker.
+- Al gemaild / overslaan-optie.
+- Virusscanstrategie.
+- Auditlog.
+- Playwright-tests.
+- Allure.
+- Living Doc.
+
+Status Fase 10:
+- [~] schema en demo-opzet bestaan
+- [ ] echte upload/downloadflow nog open
+
+---
+
+## Fase 11 - Facturen en server-side PDF
+
+### Al aanwezig
+
+- Facturentabel.
+- Factuur-read-API.
+- Factuuroverzicht in frontend.
+- Periodefilter.
+- Demo-factuurnummers.
+- Demo-bedragen.
+- Ontvangerkoppelingen in database.
+- Client-side/demo-PDFfunctionaliteit bestaat.
+
+### Nog bouwen
+
+- Definitieve factuurnummering bepalen.
+- Nummering transactioneel reserveren.
+- Uren uit goedgekeurde timesheet gebruiken.
+- Uurtarief uit opdracht gebruiken.
+- Subtotaal server-side berekenen.
+- Btw server-side berekenen.
+- Totaal server-side berekenen.
+- Server-side factuur-PDF.
+- Path/QSI-briefpapier.
+- PDF veilig bewaren.
+- pdf_storage_key.
+- PDF alleen geautoriseerd downloaden.
+- Factuur definitief vergrendelen.
+- locked_at.
+- Geen bedragen meer wijzigen na vergrendeling.
+- Credit-/correctiestrategie.
+- API-tests.
+- Playwright-tests.
+- PDF-inhoudscontrole.
+- Allure.
+- Living Doc.
+
+Status Fase 11:
+- [~] overzicht en databasestructuur bestaan
+- [ ] definitieve server-side factuur/PDF open
+
+---
+
+## Fase 12 - E-mailqueue van de webapp
+
+Let op: dit staat los van GitHub commitnotificaties.
+
+### Al aanwezig
+
+- Tabel email_deliveries.
+- Mailontvangers in database.
+- Assignment mail routes.
+- Brokerconcept.
+- Boekhouderconcept.
+- EasySalaryconcept.
+- Demo-/previewteksten.
+- Frontend bevat al delen van de mailworkflow.
+
+### Nog bouwen
+
+- Echte e-mailqueue-service.
+- Queue-item aanmaken.
+- Dry-runmodus.
+- Geen echte mail in demo/test.
+- Broker-mail.
+- Boekhouder-mail.
+- EasySalary-mail zonder factuur.
+- Juiste bijlagen per ontvanger.
+- Factuur-PDF als bijlage.
+- Klanturenstaat als bijlage waar nodig.
+- Mailtemplatevariabelen.
+- Onderwerpregels.
+- Retry na tijdelijke fout.
+- Maximaal aantal retries.
+- Foutstatus.
+- Auditlog.
+- Gmail/Google Workspace-config.
+- SMTP of Gmail API-keuze.
+- Playwright/API-tests.
+- Echte verzending als allerlaatste activeren.
+
+Status Fase 12:
+- [~] schema, routes en demo-opzet bestaan
+- [ ] echte queue en verzending open
+
+---
+
+## Fase 13 - Definitieve bedrijfsgegevens en accounts
+
+- Demo-instellingen voor Path/QSI aanwezig.
+- Definitief kiezen:
+  - QSI Consultancy B.V.
+  - Path Consultancy B.V.
+- Definitieve statutaire naam.
+- Definitief factuuradres.
+- KvK-nummer controleren.
+- Btw-nummer controleren.
+- IBAN controleren.
+- Betalingstermijn.
+- Definitieve factuurprefix.
+- Definitieve Circle8-route.
+- Circle8 factuuradres.
+- Circle8 e-mailadres of portaal.
+- Boekhoudernaam.
+- Boekhoudere-mailadres.
+- EasySalary-e-mailadres.
+- Definitieve brokerontvangers.
+- Definitieve mailteksten.
+- Definitieve herinneringsmomenten.
+- Productieaccount Gio.
+- Productieaccount Joyce.
+- Productieaccounts medewerkers.
+- Eerste wachtwoorden veilig uitgeven.
+- Verplichte wachtwoordwijziging bij eerste login.
+- Gebruikers deactiveren/verwijderenbeleid.
+- Google Workspace-koppeling.
+
+Status Fase 13:
+- [~] demogegevens aanwezig
+- [ ] definitieve bedrijfs- en accountgegevens open
+
+---
+
+## Fase 14 - TransIP productieomgeving
+
+Dit is de oorspronkelijke productielijst en blijft volledig onderdeel van de masterchecklist.
+
+### Al afgerond volgens jouw TransIP-informatie
+
+- Subsite uren.pathconsultancy.nl aangemaakt.
+- Subsite ingeschakeld.
+- MySQL-database pathco_Urenuru aangemaakt.
+- Databasehost gevonden.
+- Databasegebruiker aangemaakt.
+- Demo-app gebouwd.
+- Demo-app lokaal getest.
+
+### Nog door jou in TransIP controleren
+
+- Productiedatabasewachtwoord wijzigen/roteren.
+- Nieuw wachtwoord niet in chat plaatsen.
+- Nieuw wachtwoord niet in Git zetten.
+- PHP-versie op TransIP controleren.
+- PHP op 8.4 zetten/bevestigen.
+- Screenshot van PHP-instellingen bewaren.
+- SSL-certificaat controleren.
+- Geldig slotje op https://uren.pathconsultancy.nl.
+- Exact documentroot/sitepad controleren.
+- Controleren waar de subsitebestanden moeten staan.
+- Controleren of TransIP-back-ups de database meenemen.
+- Retentieperiode van TransIP-back-ups controleren.
+- Handmatige database-export voor livegang.
+
+### Productie-installatie nog uitvoeren
+
+- Productiebestanden uploaden.
+- Productie server/config.local.php handmatig maken.
+- environment = production.
+- allow_demo_migrations = false.
+- app_origin = https://uren.pathconsultancy.nl.
+- Productiedatabasehost invullen.
+- Productiedatabasenaam invullen.
+- Productiedatabasegebruiker invullen.
+- Productiedatabasewachtwoord lokaal op server invullen.
+- health.php op TransIP testen.
+- install.php uitvoeren indien nodig.
+- migrate.php uitvoeren.
+- Controleren dat demo-seeds niet draaien.
+- Productieaccounts aanmaken.
+- Productielogin testen.
+- Productie-smoketest.
+- Schrijfrechten upload-/PDF-map.
+- PHP uploadlimits controleren.
+- PHP sessioninstellingen controleren.
+- Cronmogelijkheden controleren voor e-mailqueue.
+- Foutlogging buiten publieke output configureren.
+
+Status Fase 14:
+- [x] subsite en databasebasis aanwezig
+- [ ] productieconfiguratie en deployment nog open
+
+---
+
+## Fase 15 - Acceptatie, mobiel, PWA en livegang
+
+### Lokaal al bewezen
+
+- Administrator kan lokaal inloggen.
+- Medewerker kan lokaal inloggen.
+- Rollen worden lokaal afgedwongen.
+- Medewerker ziet lokaal alleen eigen data.
+- Concepturen opslaan werkt.
+- Indienen werkt.
+- Correctieverzoek werkt op API-niveau.
+- Herindienen werkt op API-niveau.
+- Goedkeuren werkt op API-niveau.
+- Auditlog voor urenflow.
+- Optimistic locking op API-niveau.
+- Playwright-testarchitectuur.
+- Allure.
+- Living Documentation.
+- Smoke-tests.
+- Grote controlescripts.
+
+### Nog voor livegang
+
+- Volledige correctieflow in echte browser handmatig testen.
+- Volledige goedkeuringsflow in echte browser handmatig testen.
+- Productie-adminlogin.
+- Productie-medewerkerlogin.
+- Productieprivacytest.
+- Productie concept opslaan.
+- Productie indienen.
+- Productie correctie.
+- Productie herindienen.
+- Productie goedkeuren.
+- Klanturenstaat upload.
+- Klanturenstaat download.
+- Factuurbedragen controleren.
+- Btw controleren.
+- Factuurnummering controleren.
+- PDF controleren.
+- Broker-mail dry-run.
+- Boekhouder-mail dry-run.
+- EasySalary zonder factuur dry-run.
+- Echte mailroute afzonderlijk testen.
+- Back-up maken.
+- Database herstellen uit back-up.
+- Bestanden herstellen uit back-up.
+- Mobiele adminflow.
+- Mobiele medewerkerflow.
+- iPhone-/Safari-test.
+- Android-/Chrome-test.
+- Tablet-test.
+- PWA-manifest.
+- Service worker.
+- PWA-installatie.
+- Offline-/updategedrag bepalen.
+- Monitoring.
+- Health monitoring.
+- Securitylogging.
+- Logrotatie.
+- Go-live runbook.
+- Rollbackrunbook.
+- Echte automatische e-mail als allerlaatste activeren.
+
+Status Fase 15:
+- [~] veel lokaal getest
+- [ ] volledige productieacceptatie en livegang open
+
+---
+
+## Samenvatting huidige stand
+
+- [x] Fase 1 - lokale basis
+- [x] Fase 2 - databaseschema en migraties
+- [x] Fase 3 - read-API
+- [x] Fase 4 - auth en rollen
+- [x] Fase 5 - securitybasis
+- [x] Fase 6 - Playwright, Allure, Living Doc en agents
+- [x] Fase 7 - CI/CD-basis
+- [x] Fase 8 - uren concept opslaan en indienen
+- [~] Fase 9 - correctie/goedkeuring: backend + API-tests + docs + commit/push klaar; pipelinebevestiging nog open op deze machine
+- [~] Fase 10 - klanturenstaat: schema aanwezig, echte flow open
+- [~] Fase 11 - factuur/PDF: demo/readbasis aanwezig, server-PDF open
+- [~] Fase 12 - e-mail: schema/routes aanwezig, echte queue open
+- [~] Fase 13 - bedrijfsdata: demo aanwezig, definitieve keuzes open
+- [~] Fase 14 - TransIP: subsite/database aanwezig, deployment open
+- [~] Fase 15 - lokaal veel getest, productieacceptatie open
+
+## Directe volgende stap
+
+1. GitHub pipeline-status van recente main-commits bevestigen (na gh auth login).
+2. Fase 9 pipelinebewijs op [x] zetten zodra bevestigd.
+3. Start Fase 10 met echte klanturenstaat upload/download backend + tests.
+
+## Dagelijkse werkwijze (verplicht)
+
+1. Gebruik deze masterchecklist elke werkdag als enige technische voortgangslijst.
+2. Werk de checklist direct bij na elke commit en push.
+3. Vink af wat aantoonbaar klaar is en testbewijs heeft.
+4. Voeg nieuwe taken of nieuwe cases meteen toe onder de juiste fase.
+5. Markeer nieuwe problemen direct als [!] en zet ze na oplossing terug naar [x] of [~].
+
+## Rapportage na elke stap
+
+A. Wat voor de stap al af was
+B. Wat in deze stap is afgerond
+C. Wat gedeeltelijk klaar is
+D. Wat nog openstaat
+E. De volledige bijgewerkte masterchecklist
+F. Lokaal getest / gecommit / gepusht / pipeline-status
+
+## Bronnen
+
+- PRODUCTIE-CHECKLIST.md
+- LIVING-DOC.md
+- TEST-BDD-MAPPING.md
+- tests/playwright/*.spec.ts
