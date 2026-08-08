@@ -13,7 +13,7 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -25,8 +25,76 @@ env:
   TARGET_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.sha }}
 
 jobs:
+  notify-team:
+    name: Notify team on commit push
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' }}
+
+    steps:
+      - name: Post commit mention notification
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const commitSha = context.sha;
+            const actor = String(context.actor || '').trim().toLowerCase();
+
+            const fallbackUsers = ['giovannomaatsen-dev', 'kenrichlieveld'];
+            const configured = [process.env.NOTIFY_USER_1, process.env.NOTIFY_USER_2]
+              .filter(Boolean)
+              .map(u => String(u).trim().replace(/^@/, ''));
+
+            const excluded = String(process.env.NOTIFY_EXCLUDE_USERS || '')
+              .split(',')
+              .map(u => u.trim().replace(/^@/, '').toLowerCase())
+              .filter(Boolean);
+
+            const users = [...new Set((configured.length ? configured : fallbackUsers).filter(Boolean))]
+              .filter(u => {
+                const normalized = String(u).toLowerCase();
+                return normalized !== actor && !excluded.includes(normalized);
+              });
+
+            if (users.length === 0) {
+              core.info('Geen notify users beschikbaar.');
+              return;
+            }
+
+            const mentions = users.map(u => `@${u}`).join(' ');
+            const branch = String(context.ref || '').replace('refs/heads/', '');
+            const historyUrl = `${context.serverUrl}/${owner}/${repo}/commits/${branch}`;
+            const commitUrl = context.payload.head_commit?.url || `${context.serverUrl}/${owner}/${repo}/commit/${commitSha}`;
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+
+            const body = [
+              'Commit notificatie',
+              '',
+              mentions,
+              '',
+              `Branch: ${branch}`,
+              `Auteur: @${context.actor}`,
+              `Commit: ${commitSha}`,
+              `Commit link: ${commitUrl}`,
+              `Workflow run: ${runUrl}`,
+              `History: ${historyUrl}`
+            ].join('\n');
+
+            await github.rest.repos.createCommitComment({
+              owner,
+              repo,
+              commit_sha: commitSha,
+              body
+            });
+        env:
+          NOTIFY_USER_1: ${{ vars.NOTIFY_USER_1 }}
+          NOTIFY_USER_2: ${{ vars.NOTIFY_USER_2 }}
+          NOTIFY_EXCLUDE_USERS: ${{ vars.NOTIFY_EXCLUDE_USERS }}
+
   validate:
     name: Validate
+    needs: notify-team
+    if: ${{ always() && (needs.notify-team.result == 'success' || needs.notify-team.result == 'skipped') }}
     runs-on: ubuntu-latest
     defaults:
       run:

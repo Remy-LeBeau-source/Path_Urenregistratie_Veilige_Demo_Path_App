@@ -1,11 +1,12 @@
 # GitHub commit-notificatie (met tags op commits)
 
-Deze repo gebruikt een GitHub Actions workflow die automatisch draait op commit-pushes naar `main` en `master`.
+Deze repo gebruikt de release-pipeline voor automatische commit-notificaties op pushes naar `main`.
 De workflow plaatst een commit-comment met @mentions voor 2 users en bevat een directe link naar de branch history.
 
 ## Waar staat de configuratie?
 
-- Workflowbestand: [../.github/workflows/commit-email-notify.yml](../.github/workflows/commit-email-notify.yml)
+- Workflowbestand: [../.github/workflows/release-pipeline.yml](../.github/workflows/release-pipeline.yml)
+- Handmatige fallback-workflow: [../.github/workflows/commit-email-notify.yml](../.github/workflows/commit-email-notify.yml)
 
 ## Welke users krijgen de tag?
 
@@ -29,9 +30,10 @@ Standaardgedrag:
 
 ## Gedrag
 
-1. Automatisch bij pushes naar `main`/`master` en optioneel ook handmatig via `workflow_dispatch`.
+1. Automatisch binnen de release-pipeline bij pushes naar `main` en optioneel handmatig via de aparte fallback-workflow.
 2. Geen PR-only meldingen.
 3. De user die de push doet wordt automatisch niet getagd.
 4. Notificatie bevat:
 	- commit link
+	- workflow run link
 	- directe link naar commit history van die branch
