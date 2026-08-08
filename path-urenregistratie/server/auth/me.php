@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/session.php';
+require __DIR__ . '/../security/csrf.php';
 
 auth_require_method('GET');
 
@@ -16,6 +17,7 @@ if (!$current) {
         'ok' => true,
         'authenticated' => false,
         'user' => null,
+        'csrf_token' => security_csrf_token(),
     ]);
 }
 
@@ -26,6 +28,7 @@ auth_log_event($pdo, (int)$current['company_id'], (int)$current['id'], (string)$
 auth_send_json([
     'ok' => true,
     'authenticated' => true,
+    'csrf_token' => security_csrf_token(),
     'user' => [
         'id' => (int)$current['id'],
         'company_id' => (int)$current['company_id'],

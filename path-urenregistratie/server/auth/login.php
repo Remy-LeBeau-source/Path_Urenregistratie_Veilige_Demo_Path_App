@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 require __DIR__ . '/session.php';
+require __DIR__ . '/../security/csrf.php';
+require __DIR__ . '/../security/validation.php';
 
 auth_require_method('POST');
 
@@ -10,17 +12,10 @@ $config = auth_load_raw_config();
 auth_start_session_secure($config);
 $pdo = auth_pdo($config);
 
-$input = json_decode((string)file_get_contents('php://input'), true);
-$email = is_array($input) ? trim((string)($input['email'] ?? '')) : '';
-$password = is_array($input) ? (string)($input['password'] ?? '') : '';
-
-if ($email === '' || $password === '') {
-    auth_send_json([
-        'ok' => false,
-        'error' => 'invalid-payload',
-        'message' => 'Email and password are required.',
-    ], 400);
-}
+$input = security_read_json_body();
+security_require_csrf_token();
+$email = security_require_email_field($input, 'email');
+$password = security_require_string_field($input, 'password', 'Email and password are required.', 1024);
 
 $stmt = $pdo->prepare(
     'SELECT id, company_id, email, display_name, role, active, password_hash FROM users WHERE email = :email LIMIT 1'
@@ -73,6 +68,7 @@ auth_log_event($pdo, (int)$user['company_id'], (int)$user['id'], (string)$user['
 
 auth_send_json([
     'ok' => true,
+    'csrf_token' => security_csrf_token(),
     'user' => [
         'id' => (int)$user['id'],
         'company_id' => (int)$user['company_id'],

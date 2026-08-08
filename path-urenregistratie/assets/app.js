@@ -3,6 +3,7 @@ const DEMO_DOMAIN = "@example.invalid";
 const API_ENDPOINT = "/server/api.php";
 const API_STATE_PATH = API_ENDPOINT + "?action=state";
 const AUTH_ME_PATH = "/server/auth/me.php";
+const AUTH_CSRF_PATH = "/server/auth/csrf.php";
 const AUTH_LOGIN_PATH = "/server/auth/login.php";
 const AUTH_LOGOUT_PATH = "/server/auth/logout.php";
 const LOCAL_STORAGE_ENABLED = true;
@@ -951,11 +952,11 @@ function persistState() {
   }
   if (API_ENABLED) {
     try {
-      fetch(API_STATE_PATH, {
+      requestAuthCsrf().then(token => fetch(API_STATE_PATH, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
         body: JSON.stringify({ state: copy })
-      }).catch(err => console.warn("Failed saving state to API", err));
+      }).catch(err => console.warn("Failed saving state to API", err)));
     } catch (e) {
       console.warn("Failed initiating state save to API", e);
     }
@@ -1017,7 +1018,9 @@ window.__PATH_READ_API_SOURCE = readApiSource;
 const authRuntime = {
   checked: false,
   available: false,
-  mode: "checking"
+  mode: "checking",
+  csrfToken: "",
+  csrfPromise: null
 };
 
 const authDebug = {
@@ -1138,27 +1141,60 @@ function requestAuthMe() {
         throw new Error("HTTP " + resp.status);
       }
       return resp.json();
+    })
+    .then(data => {
+      if (data && typeof data.csrf_token === "string" && data.csrf_token) {
+        authRuntime.csrfToken = data.csrf_token;
+      }
+      return data;
     });
 }
 
+function requestAuthCsrf() {
+  if (!API_ENABLED) return Promise.resolve("");
+  if (authRuntime.csrfToken) return Promise.resolve(authRuntime.csrfToken);
+  if (authRuntime.csrfPromise) return authRuntime.csrfPromise;
+
+  authRuntime.csrfPromise = fetch(AUTH_CSRF_PATH, { method: "GET", headers: { "Accept": "application/json" } })
+    .then(resp => {
+      if (!resp.ok) throw new Error("HTTP " + resp.status);
+      return resp.json();
+    })
+    .then(data => {
+      const token = String(data && data.csrf_token || "");
+      if (!token) throw new Error("csrf-token-missing");
+      authRuntime.csrfToken = token;
+      return token;
+    })
+    .finally(() => {
+      authRuntime.csrfPromise = null;
+    });
+
+  return authRuntime.csrfPromise;
+}
+
 function requestAuthLogin(email, password) {
-  return fetch(AUTH_LOGIN_PATH, {
+  return requestAuthCsrf().then(token => fetch(AUTH_LOGIN_PATH, {
     method: "POST",
-    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token },
     body: JSON.stringify({ email, password })
-  }).then(resp => resp.json().then(data => ({ ok: resp.ok, data })));
+  }).then(resp => resp.json().then(data => ({ ok: resp.ok, data }))));
 }
 
 function requestAuthLogout() {
-  return fetch(AUTH_LOGOUT_PATH, {
+  return requestAuthCsrf().then(token => fetch(AUTH_LOGOUT_PATH, {
     method: "POST",
-    headers: { "Accept": "application/json" }
-  }).then(resp => resp.json().catch(() => ({ ok: false })));
+    headers: { "Accept": "application/json", "X-CSRF-Token": token }
+  }).then(resp => resp.json().catch(() => ({ ok: false })))).finally(() => {
+    authRuntime.csrfToken = "";
+  });
 }
 
 function initializeAuthSession() {
   applyAuthUiMode("checking");
-  return requestAuthMe()
+  return requestAuthCsrf()
+    .catch(() => null)
+    .then(() => requestAuthMe())
     .then(data => {
       authRuntime.checked = true;
       authRuntime.available = true;

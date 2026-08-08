@@ -6,7 +6,11 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Headers: Content-Type, X-CSRF-Token');
+
+require __DIR__ . '/auth/session.php';
+require __DIR__ . '/security/csrf.php';
+require __DIR__ . '/security/validation.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
@@ -77,19 +81,17 @@ if ($action === 'state') {
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $input = file_get_contents('php://input');
-        $data = json_decode($input, true);
-        if (!is_array($data) || !array_key_exists('state', $data)) {
-            http_response_code(400);
-            echo json_encode(['error' => 'invalid-payload']);
-            exit;
+        auth_start_session_secure($config);
+        security_require_csrf_token();
+        $data = security_read_json_body();
+        if (!array_key_exists('state', $data)) {
+            auth_send_json(['ok' => false, 'error' => 'invalid-payload', 'message' => 'State payload is required.'], 400);
         }
         $stateJson = json_encode($data['state'], JSON_UNESCAPED_UNICODE);
         $pdo->exec('CREATE TABLE IF NOT EXISTS app_state (id INT PRIMARY KEY, state LONGTEXT, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)');
         $stmt = $pdo->prepare('INSERT INTO app_state (id, state) VALUES (1, :state) ON DUPLICATE KEY UPDATE state = :state, updated_at = CURRENT_TIMESTAMP');
         $stmt->execute([':state' => $stateJson]);
-        echo json_encode(['ok' => true]);
-        exit;
+        auth_send_json(['ok' => true]);
     }
 }
 

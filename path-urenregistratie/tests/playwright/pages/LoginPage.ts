@@ -6,6 +6,7 @@ export class LoginPage {
 
   async open(): Promise<void> {
     await this.page.goto(appConfig.baseUrl);
+    await expect(this.page.locator('#auth-mode-indicator')).toContainText(/Auth-modus actief|Lokale demo-modus actief/);
   }
 
   async loginAsAdmin(): Promise<void> {
@@ -36,9 +37,10 @@ export class LoginPage {
 
   private async login(email: string, password: string): Promise<void> {
     await expect(this.page.locator('#login-screen')).toBeVisible();
+    await expect(this.page.locator('#auth-login-submit')).toBeEnabled();
     await this.page.locator('#auth-login-email').fill(email);
     await this.page.locator('#auth-login-password').fill(password);
     await this.page.locator('#auth-login-submit').click();
-    await expect(this.page.locator('#app-shell')).toBeVisible();
+    await expect(this.page.locator('#app-shell')).toBeVisible({ timeout: 10_000 });
   }
 }
