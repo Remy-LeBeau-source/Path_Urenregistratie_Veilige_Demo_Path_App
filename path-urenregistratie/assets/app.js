@@ -1074,6 +1074,9 @@ function setDemoLoginEnabled(enabled) {
   document.querySelectorAll("[data-login-role]").forEach(button => {
     button.disabled = !enabled;
   });
+}
+
+function setLoginAccountPickerEnabled(enabled) {
   document.querySelectorAll("[data-account-picker-trigger]").forEach(button => {
     button.disabled = !enabled;
   });
@@ -1088,21 +1091,63 @@ function setAuthLoginEnabled(enabled) {
   if (submit) submit.disabled = !enabled;
 }
 
+function selectedLoginAccount(role) {
+  if (role === "admin") {
+    const adminId = String(document.querySelector("#login-admin")?.value || state.currentAdminId || "");
+    return adminById(adminId) || null;
+  }
+  if (role === "employee") {
+    const employeeId = Number(document.querySelector("#login-employee")?.value || state.currentEmployeeId || 0);
+    return employeeById(employeeId) || null;
+  }
+  return null;
+}
+
+function prefillAuthCredentialsFromSelection(role, showFeedback = true) {
+  if (authRuntime.mode !== "auth") return;
+  const account = selectedLoginAccount(role);
+  if (!account) return;
+
+  const emailInput = document.querySelector("#auth-login-email");
+  const passwordInput = document.querySelector("#auth-login-password");
+  if (!emailInput || !passwordInput) return;
+
+  const email = String(account.email || "").trim();
+  emailInput.value = email;
+
+  const normalizedRole = role === "admin" ? "admin" : role === "employee" ? "employee" : "";
+  let suggestedPassword = "";
+  if (normalizedRole === "admin") suggestedPassword = "DemoTempAdmin!2026";
+  if (normalizedRole === "employee") suggestedPassword = "DemoTempEmployee!2026";
+  passwordInput.value = suggestedPassword;
+
+  if (showFeedback) {
+    if (suggestedPassword) {
+      setAuthLoginFeedback("Inloggegevens voorgeselecteerd voor " + account.name + ".", false);
+    } else {
+      setAuthLoginFeedback("E-mail voorgeselecteerd voor " + account.name + ". Vul nog het juiste wachtwoord in.", false);
+    }
+  }
+}
+
 function applyAuthUiMode(mode) {
   authRuntime.mode = mode;
   const authForm = document.querySelector("#auth-login-form");
   if (authForm) authForm.hidden = mode === "demo";
   if (mode === "auth") {
     setDemoLoginEnabled(false);
+    setLoginAccountPickerEnabled(true);
     setAuthLoginEnabled(true);
     setAuthModeIndicator("Auth-modus actief. Demo-rolknoppen zijn uitgeschakeld.", false);
   } else if (mode === "demo") {
     setDemoLoginEnabled(true);
+    setLoginAccountPickerEnabled(true);
     setAuthLoginEnabled(false);
     setAuthLoginFeedback("", false);
     setAuthModeIndicator("Lokale demo-modus actief: auth backend niet beschikbaar.", true);
   } else {
     setDemoLoginEnabled(false);
+    setLoginAccountPickerEnabled(false);
     setAuthLoginEnabled(false);
     setAuthModeIndicator("Controle van auth-sessie wordt uitgevoerd.", false);
   }
@@ -1174,11 +1219,25 @@ function requestAuthCsrf() {
 }
 
 function requestAuthLogin(email, password) {
-  return requestAuthCsrf().then(token => fetch(AUTH_LOGIN_PATH, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token },
-    body: JSON.stringify({ email, password })
-  }).then(resp => resp.json().then(data => ({ ok: resp.ok, data }))));
+  function sendLoginWithToken(token) {
+    return fetch(AUTH_LOGIN_PATH, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify({ email, password })
+    }).then(resp => resp.json().then(data => ({ ok: resp.ok, data })));
+  }
+
+  return requestAuthCsrf()
+    .then(sendLoginWithToken)
+    .then(result => {
+      const message = String(result && result.data && result.data.message || "").toLowerCase();
+      const csrfError = message.includes("csrf") || message.includes("missing or invalid csrf token");
+      if (result && result.ok === false && csrfError) {
+        authRuntime.csrfToken = "";
+        return requestAuthCsrf().then(sendLoginWithToken);
+      }
+      return result;
+    });
 }
 
 function requestAuthLogout() {
@@ -5792,14 +5851,10 @@ document.addEventListener("click", event => {
     if (authRuntime.mode === "demo") {
       login(role);
     } else {
-      setAuthLoginFeedback("In auth-modus gebruik je e-mail en wachtwoord.", true);
+      prefillAuthCredentialsFromSelection(role);
     }
   } else if (loginAccountTrigger) {
-    if (authRuntime.mode === "demo") {
-      toggleLoginAccountPanel(loginAccountTrigger.dataset.accountPickerTrigger);
-    } else {
-      setAuthLoginFeedback("Demo-accountkeuze is alleen beschikbaar in lokale demo-modus.", true);
-    }
+    toggleLoginAccountPanel(loginAccountTrigger.dataset.accountPickerTrigger);
   } else if (!event.target.closest(".login-account-picker")) {
     closeLoginAccountPanels();
   }
@@ -6454,11 +6509,13 @@ document.querySelector("#period-year-picker").addEventListener("change", () => {
 document.querySelector("#login-employee").addEventListener("change", event => {
   state.currentEmployeeId = Number(event.target.value);
   updateLoginEmployeePreview();
+  prefillAuthCredentialsFromSelection("employee", false);
   persistState();
 });
 document.querySelector("#login-admin").addEventListener("change", event => {
   state.currentAdminId = String(event.target.value);
   updateLoginAdminPreview();
+  prefillAuthCredentialsFromSelection("admin", false);
   persistState();
 });
 document.querySelector("#add-employee").addEventListener("click", () => showEmployeeEditor(null));
@@ -6800,11 +6857,20 @@ document.addEventListener("keydown", event => {
   handleEnterSave(event);
 });
 
+window.addEventListener("scroll", () => {
+  closeTopbarPopovers();
+  closeLoginAccountPanels();
+  closeMonthChoicePanels();
+  closeReminderChoicePanels();
+  closeStandardChoicePanels();
+}, { passive: true });
+
 initializeReminderChoiceMenus();
 initializeStandardChoiceMenus();
 populateSettings();
 renderAll();
 initializeAuthSession();
+prefillAuthCredentialsFromSelection("admin", false);
 
 // Read-only API bridge: purely additive diagnostics, local state remains leading fallback.
 refreshBootstrapReadApi(true);
