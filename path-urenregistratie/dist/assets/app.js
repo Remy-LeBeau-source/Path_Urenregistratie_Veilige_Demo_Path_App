@@ -1124,18 +1124,11 @@ function prefillAuthCredentialsFromSelection(role, showFeedback = true) {
   const email = String(account.email || "").trim();
   emailInput.value = email;
 
-  const normalizedRole = role === "admin" ? "admin" : role === "employee" ? "employee" : "";
-  let suggestedPassword = "";
-  if (normalizedRole === "admin") suggestedPassword = "DemoTempAdmin!2026";
-  if (normalizedRole === "employee") suggestedPassword = "DemoTempEmployee!2026";
-  passwordInput.value = suggestedPassword;
+  // Never prefill passwords in the frontend.
+  passwordInput.value = "";
 
   if (showFeedback) {
-    if (suggestedPassword) {
-      setAuthLoginFeedback("Inloggegevens voorgeselecteerd voor " + account.name + ".", false);
-    } else {
-      setAuthLoginFeedback("E-mail voorgeselecteerd voor " + account.name + ". Vul nog het juiste wachtwoord in.", false);
-    }
+    setAuthLoginFeedback("E-mail voorgeselecteerd. Vul je wachtwoord in.", false);
   }
 }
 

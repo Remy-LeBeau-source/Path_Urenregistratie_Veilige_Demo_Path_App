@@ -2,6 +2,24 @@
 declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
 
+function migrate_environment(array $config): string
+{
+    $raw = $config['environment'] ?? ($config['app']['environment'] ?? 'production');
+    $environment = strtolower(trim((string)$raw));
+    return $environment !== '' ? $environment : 'production';
+}
+
+function migrate_allow_demo_migrations(array $config): bool
+{
+    if (array_key_exists('allow_demo_migrations', $config)) {
+        return (bool)$config['allow_demo_migrations'];
+    }
+    if (isset($config['app']) && is_array($config['app']) && array_key_exists('allow_demo_migrations', $config['app'])) {
+        return (bool)$config['app']['allow_demo_migrations'];
+    }
+    return false;
+}
+
 $localConfigPath = __DIR__ . '/config.local.php';
 if (!file_exists($localConfigPath)) {
     http_response_code(500);
@@ -30,6 +48,9 @@ if (!$db || !isset($db['host']) || !isset($db['name'])) {
     exit;
 }
 
+$environment = migrate_environment($config);
+$allowDemoMigrations = migrate_allow_demo_migrations($config) && $environment !== 'production';
+
 try {
     $dsn = sprintf('mysql:host=%s;port=%d;dbname=%s;charset=%s', $db['host'], $db['port'] ?? 3306, $db['name'], $db['charset'] ?? 'utf8mb4');
     $pdo = new PDO($dsn, $db['user'] ?? '', $db['password'] ?? '', [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
@@ -51,12 +72,19 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS schema_migrations (id INT AUTO_INCREMENT 
 
 $executed = [];
 $skipped = [];
+$demoSkipped = [];
 
 foreach ($migrations as $mig) {
     $stmt = $pdo->prepare('SELECT migration FROM schema_migrations WHERE migration = :m LIMIT 1');
     $stmt->execute([':m' => $mig]);
     if ($stmt->fetch()) {
         $skipped[] = $mig;
+        continue;
+    }
+
+    $isDemoMigration = stripos($mig, '_demo_') !== false;
+    if ($isDemoMigration && !$allowDemoMigrations) {
+        $demoSkipped[] = $mig;
         continue;
     }
 
@@ -69,17 +97,23 @@ foreach ($migrations as $mig) {
             try {
                 $pdo->exec($part);
             } catch (Throwable $inner) {
-                throw new Exception('Failed part: ' . (strlen($part) > 200 ? substr($part,0,200) . '...' : $part) . ' | Error: ' . $inner->getMessage());
+                throw new Exception('Failed to execute migration statement.', 0, $inner);
             }
         }
         $ins = $pdo->prepare('INSERT INTO schema_migrations (migration) VALUES (:m)');
         $ins->execute([':m' => $mig]);
         $executed[] = $mig;
     } catch (Throwable $e) {
+        error_log('Migration failed for ' . $mig . ': ' . $e->getMessage());
         http_response_code(500);
-        echo json_encode(['ok' => false, 'message' => 'Migration failed', 'migration' => $mig, 'error' => $e->getMessage()]);
+        echo json_encode(['ok' => false, 'message' => 'Migration failed', 'migration' => $mig]);
         exit;
     }
 }
 
-echo json_encode(['ok' => true, 'executed' => $executed, 'skipped' => $skipped], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+echo json_encode([
+    'ok' => true,
+    'executed' => $executed,
+    'skipped' => $skipped,
+    'demo_skipped' => $demoSkipped,
+], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);

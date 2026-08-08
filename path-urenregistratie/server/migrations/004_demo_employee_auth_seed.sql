@@ -1,5 +1,5 @@
 -- Demo-only auth seed for local role tests.
--- Uses an existing bcrypt hash for the temporary DemoTempEmployee!2026 credential.
+-- Uses an existing bcrypt hash for a local tijdelijke demo-credential.
 -- Do not use this pattern for production identities or real passwords.
 
 UPDATE users

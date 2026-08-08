@@ -3,13 +3,86 @@
 declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, X-CSRF-Token');
+
+$authCorsConfig = auth_try_load_raw_config();
+auth_apply_cors_headers($authCorsConfig, 'GET, POST, OPTIONS', 'Content-Type, X-CSRF-Token');
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
     http_response_code(204);
     exit;
+}
+
+function auth_try_load_raw_config(): ?array
+{
+    $localConfigPath = dirname(__DIR__) . '/config.local.php';
+    if (!file_exists($localConfigPath)) {
+        return null;
+    }
+
+    $config = include $localConfigPath;
+    if (!is_array($config)) {
+        return null;
+    }
+
+    return $config;
+}
+
+function auth_environment_from_config(array $config): string
+{
+    $raw = $config['environment'] ?? ($config['app']['environment'] ?? 'production');
+    $environment = strtolower(trim((string)$raw));
+    return $environment !== '' ? $environment : 'production';
+}
+
+function auth_app_origin_from_config(array $config): string
+{
+    $origin = trim((string)($config['app_origin'] ?? ($config['app']['app_origin'] ?? '')));
+    if ($origin === '') {
+        $baseUrl = trim((string)($config['app']['base_url'] ?? ''));
+        if ($baseUrl !== '') {
+            $parts = parse_url($baseUrl);
+            if (is_array($parts) && isset($parts['scheme'], $parts['host'])) {
+                $origin = $parts['scheme'] . '://' . $parts['host'];
+                if (isset($parts['port'])) {
+                    $origin .= ':' . (int)$parts['port'];
+                }
+            }
+        }
+    }
+
+    return rtrim($origin, '/');
+}
+
+function auth_allowed_cors_origins(?array $config): array
+{
+    $cfg = is_array($config) ? $config : [];
+    $environment = auth_environment_from_config($cfg);
+    $appOrigin = auth_app_origin_from_config($cfg);
+
+    $origins = [];
+    if (in_array($environment, ['local', 'test', 'development', 'dev', 'demo'], true)) {
+        $origins[] = 'http://localhost:8000';
+        $origins[] = 'http://127.0.0.1:8000';
+    }
+    if ($appOrigin !== '') {
+        $origins[] = $appOrigin;
+    }
+
+    return array_values(array_unique($origins));
+}
+
+function auth_apply_cors_headers(?array $config, string $methods, string $headers): void
+{
+    $origin = trim((string)($_SERVER['HTTP_ORIGIN'] ?? ''));
+    $allowedOrigins = auth_allowed_cors_origins($config);
+    if ($origin !== '' && in_array($origin, $allowedOrigins, true)) {
+        header('Access-Control-Allow-Origin: ' . $origin);
+        header('Access-Control-Allow-Credentials: true');
+        header('Vary: Origin');
+    }
+
+    header('Access-Control-Allow-Methods: ' . $methods);
+    header('Access-Control-Allow-Headers: ' . $headers);
 }
 
 function auth_send_json(array $payload, int $statusCode = 200): void
@@ -32,21 +105,12 @@ function auth_require_method(string $method): void
 
 function auth_load_raw_config(): array
 {
-    $localConfigPath = dirname(__DIR__) . '/config.local.php';
-    if (!file_exists($localConfigPath)) {
+    $config = auth_try_load_raw_config();
+    if ($config === null) {
         auth_send_json([
             'ok' => false,
             'error' => 'missing-config-local',
             'message' => 'Missing server/config.local.php. Copy server/config.example.php to server/config.local.php and fill in credentials.',
-        ], 500);
-    }
-
-    $config = include $localConfigPath;
-    if (!is_array($config)) {
-        auth_send_json([
-            'ok' => false,
-            'error' => 'invalid-config',
-            'message' => 'server/config.local.php must return an array.',
         ], 500);
     }
 

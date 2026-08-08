@@ -3,8 +3,13 @@
 // Example local config - copy this file to server/config.local.php
 // and fill in the real credentials only on your own machine/server.
 return [
+    'environment' => 'production',
+    'app_origin' => 'https://your-app.example',
+    'allow_demo_migrations' => false,
     'host' => '127.0.0.1',
     'database' => 'path_urenregistratie',
     'username' => 'your_database_user',
     'password' => 'your_database_password',
+    'port' => 3306,
+    'charset' => 'utf8mb4',
 ];

@@ -3,12 +3,10 @@
 declare(strict_types=1);
 
 // Minimal API for storing/loading app state to MySQL
-header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, X-CSRF-Token');
-
 require __DIR__ . '/auth/session.php';
+
+header('Content-Type: application/json; charset=utf-8');
+auth_apply_cors_headers(auth_try_load_raw_config(), 'GET, POST, OPTIONS', 'Content-Type, X-CSRF-Token');
 require __DIR__ . '/security/csrf.php';
 require __DIR__ . '/security/validation.php';
 

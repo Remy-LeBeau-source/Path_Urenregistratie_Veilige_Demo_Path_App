@@ -3,9 +3,13 @@
 declare(strict_types=1);
 
 return [
+    'environment' => 'production',
+    'app_origin' => 'https://your-app.example',
+    'allow_demo_migrations' => false,
     'app' => [
-        'environment' => 'demo',
+        'environment' => 'production',
         'base_url' => 'https://uren.example.invalid',
+        'app_origin' => 'https://your-app.example',
         'timezone' => 'Europe/Amsterdam',
     ],
     'database' => [

@@ -1,7 +1,7 @@
 -- Ensure all seeded demo users have temporary auth hashes for local login.
 -- Demo credentials only:
---   administrators -> DemoTempAdmin!2026
---   employees      -> DemoTempEmployee!2026
+--   administrators -> PLAYWRIGHT_ADMIN_PASSWORD
+--   employees      -> PLAYWRIGHT_EMPLOYEE_PASSWORD
 -- Never use demo credentials in production.
 
 UPDATE users

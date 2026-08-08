@@ -18,6 +18,9 @@ Voorbeeld (`server/config.local.php`):
 ```
 <?php
 return [
+   'environment' => 'production',
+   'app_origin' => 'https://your-site',
+   'allow_demo_migrations' => false,
   'host' => '127.0.0.1',
   'database' => 'your_database_name',
   'username' => 'your_db_user',
@@ -38,10 +41,18 @@ return [
    - Dit zorgt dat de `app_state` tabel bestaat.
    - De installer toont geen wachtwoord of gevoelige data.
 
-5) Open de app
+5) Run migraties veilig
+   - Open in browser of via curl:
+     `https://your-site/server/migrate.php`
+   - In productie blijft `allow_demo_migrations` op `false`.
+   - Demo-migraties (bestandsnaam met `_demo_`) worden dan standaard overgeslagen.
+   - Zet `allow_demo_migrations` alleen lokaal bewust op `true` voor demo- of testdoeleinden.
+   - Voer demo-accounts of demo-seeds nooit op productie uit.
+
+6) Open de app
    - Navigeer naar `https://your-site/` en controleer functionaliteit.
 
-6) Extra productietips
+7) Extra productietips
    - Zorg voor een geldig SSL-certificaat (TransIP levert meestal automatisch LetsEncrypt).
    - Beheer back-ups en controleer of de database wordt meegenomen.
    - Verander het DB-wachtwoord en update `server/config.local.php` wanneer nodig.

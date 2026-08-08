@@ -6,14 +6,14 @@
 - Zorg dat `server/config.local.php` lokaal bestaat.
 - Voer eerst `http://localhost:8000/server/migrate.php` uit zodat de tijdelijke demo-hashes aanwezig zijn.
 - Tijdelijke demo-accounts voor deze role-tests:
-  - Admin: `admin@example.invalid` / `DemoTempAdmin!2026`
-  - Employee: `stasjo@example.invalid` / `DemoTempEmployee!2026`
+  - Admin: `admin@example.invalid` / `PLAYWRIGHT_ADMIN_PASSWORD`
+  - Employee: `stasjo@example.invalid` / `PLAYWRIGHT_EMPLOYEE_PASSWORD`
 
 ## 1) Admin login
 
 ```powershell
 $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
-$body = @{ email = 'admin@example.invalid'; password = 'DemoTempAdmin!2026' } | ConvertTo-Json
+$body = @{ email = 'admin@example.invalid'; password = $env:PLAYWRIGHT_ADMIN_PASSWORD } | ConvertTo-Json
 Invoke-RestMethod -Uri 'http://localhost:8000/server/auth/login.php' -Method Post -ContentType 'application/json' -Body $body -WebSession $session
 ```
 
@@ -33,7 +33,7 @@ Verwacht: alle responses geven `ok: true` en bevatten volledige admin-data voor 
 
 ```powershell
 $employeeSession = New-Object Microsoft.PowerShell.Commands.WebRequestSession
-$employeeBody = @{ email = 'stasjo@example.invalid'; password = 'DemoTempEmployee!2026' } | ConvertTo-Json
+$employeeBody = @{ email = 'stasjo@example.invalid'; password = $env:PLAYWRIGHT_EMPLOYEE_PASSWORD } | ConvertTo-Json
 Invoke-RestMethod -Uri 'http://localhost:8000/server/auth/login.php' -Method Post -ContentType 'application/json' -Body $employeeBody -WebSession $employeeSession
 ```
 
