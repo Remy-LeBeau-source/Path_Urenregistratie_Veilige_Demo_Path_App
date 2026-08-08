@@ -55,6 +55,7 @@ function normalize_sql_script(string $sql): string
 {
     $sql = preg_replace('/^\s*CREATE DATABASE\b.*?;\s*/ims', '', $sql) ?? $sql;
     $sql = preg_replace('/^\s*USE\s+[^;]+;\s*/ims', '', $sql) ?? $sql;
+    $sql = preg_replace('/\bTRUNCATE\s+TABLE\s+(`?[a-zA-Z0-9_]+`?)\s*;/i', 'DELETE FROM $1;', $sql) ?? $sql;
     return trim($sql);
 }
 
