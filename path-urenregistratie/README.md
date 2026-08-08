@@ -176,6 +176,12 @@ Zichtbare stage env-bestanden (niet verborgen):
 
 Voor nu staan ze alle drie op dezelfde URL en placeholders, zoals gevraagd. Later kun je per omgeving eigen waarden invullen.
 
+Overzicht zodat het niet verwarrend is:
+
+- `.env.example` is je algemene template voor lokaal draaien.
+- `environments/*.env` zijn zichtbare templates per stage (`dev`, `acc`, `prod`).
+- Alle templates bevatten nu ook extra velden voor alle demo-users uit `database/seed-demo-data.sql` met bijbehorende wachtwoordvelden.
+
 ## CI/CD met GitHub
 
 Ja, dit is ingericht met GitHub Actions:
