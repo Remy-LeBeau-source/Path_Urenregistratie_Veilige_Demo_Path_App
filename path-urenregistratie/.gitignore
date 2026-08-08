@@ -1,2 +1,10 @@
 
 backups/
+node_modules/
+.env.local
+allure-results/
+allure-report/
+server/config.local.php
+server/.php-path
+playwright-report/
+test-results/
