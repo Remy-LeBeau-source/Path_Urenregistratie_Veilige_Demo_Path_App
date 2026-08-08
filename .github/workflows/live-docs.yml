@@ -2,9 +2,6 @@ name: Live Docs and Test Reports
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
 
 permissions:
   contents: read
