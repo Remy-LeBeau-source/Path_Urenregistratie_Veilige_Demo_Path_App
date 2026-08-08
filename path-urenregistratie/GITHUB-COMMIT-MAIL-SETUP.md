@@ -20,6 +20,12 @@ Optioneel kun je dit overschrijven via repo variables:
 2. Voeg toe:
 	- `NOTIFY_USER_1`
 	- `NOTIFY_USER_2`
+	- `NOTIFY_EXCLUDE_USERS` (optioneel, komma-gescheiden usernames zonder @)
+
+Standaardgedrag:
+
+- De user die de push doet wordt automatisch niet getagd.
+- Users in `NOTIFY_EXCLUDE_USERS` worden ook niet getagd.
 
 ## Gedrag
 

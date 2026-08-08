@@ -22,12 +22,23 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const commitSha = context.sha;
+            const actor = String(context.actor || '').trim().toLowerCase();
 
             const fallbackUsers = ['giovannomaatsen-dev', 'kenrichlieveld'];
             const configured = [process.env.NOTIFY_USER_1, process.env.NOTIFY_USER_2]
               .filter(Boolean)
               .map(u => String(u).trim().replace(/^@/, ''));
-            const users = [...new Set((configured.length ? configured : fallbackUsers).filter(Boolean))];
+
+            const excluded = String(process.env.NOTIFY_EXCLUDE_USERS || '')
+              .split(',')
+              .map(u => u.trim().replace(/^@/, '').toLowerCase())
+              .filter(Boolean);
+
+            const users = [...new Set((configured.length ? configured : fallbackUsers).filter(Boolean))]
+              .filter(u => {
+                const normalized = String(u).toLowerCase();
+                return normalized !== actor && !excluded.includes(normalized);
+              });
 
             if (users.length === 0) {
               core.info('Geen notify users beschikbaar.');
@@ -60,3 +71,4 @@ jobs:
         env:
           NOTIFY_USER_1: ${{ vars.NOTIFY_USER_1 }}
           NOTIFY_USER_2: ${{ vars.NOTIFY_USER_2 }}
+          NOTIFY_EXCLUDE_USERS: ${{ vars.NOTIFY_EXCLUDE_USERS }}
