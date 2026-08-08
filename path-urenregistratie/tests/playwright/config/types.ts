@@ -1,4 +1,4 @@
-export type PlaywrightStage = 'dev' | 'tst1' | 'acc' | 'prod';
+export type PlaywrightStage = 'dev' | 'test' | 'acc' | 'prod';
 
 export type PlaywrightAppConfig = {
   stage: PlaywrightStage;

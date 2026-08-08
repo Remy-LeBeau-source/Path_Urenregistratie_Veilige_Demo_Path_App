@@ -171,7 +171,7 @@ Daarna kun je steeds simpel draaien met alleen `npm run test:e2e`.
 Zichtbare stage env-bestanden (niet verborgen):
 
 - `environments/dev.env`
-- `environments/tst1.env`
+- `environments/test.env`
 - `environments/acc.env`
 - `environments/prod.env`
 
@@ -180,21 +180,21 @@ Voor nu staan ze alle vier op dezelfde URL en placeholders, zoals gevraagd. Late
 Overzicht zodat het niet verwarrend is:
 
 - `.env.example` is je algemene template voor lokaal draaien.
-- `environments/*.env` zijn zichtbare templates per stage (`dev`, `tst1`, `acc`, `prod`).
+- `environments/*.env` zijn zichtbare templates per stage (`dev`, `test`, `acc`, `prod`).
 - Alle templates bevatten nu ook extra velden voor alle demo-users uit `database/seed-demo-data.sql` met bijbehorende wachtwoordvelden.
-- `tests/playwright/config/*.ts` bevat de TypeScript testconfig per stage (`dev.ts`, `tst1.ts`, `acc.ts`, `prod.ts`) en kiest actief via `PLAYWRIGHT_STAGE`.
+- `tests/playwright/config/*.ts` bevat de TypeScript testconfig per stage (`dev.ts`, `test.ts`, `acc.ts`, `prod.ts`) en kiest actief via `PLAYWRIGHT_STAGE`.
 
 Voorbeelden:
 
 - `PLAYWRIGHT_STAGE=dev npm run test:e2e`
-- `PLAYWRIGHT_STAGE=tst1 npm run test:e2e`
+- `PLAYWRIGHT_STAGE=test npm run test:e2e`
 - `PLAYWRIGHT_STAGE=acc npm run test:e2e`
 - `PLAYWRIGHT_STAGE=prod npm run test:e2e`
 
 Of nog simpeler via npm-scripts:
 
 - `npm run test:e2e:dev`
-- `npm run test:e2e:tst1`
+- `npm run test:e2e:test`
 - `npm run test:e2e:acc`
 - `npm run test:e2e:prod`
 
@@ -208,23 +208,23 @@ Ja, dit is ingericht met GitHub Actions:
 	- bouwt en publiceert de live documentatiepagina naar GitHub Pages op `main`
 	- na elke nieuwe `main` build wordt de pagina automatisch ververst
 - Stage promotion workflow: `../.github/workflows/stage-promotion.yml`
-	- handmatige promotie van dezelfde ref naar `dev`, `tst1` of `acc`
+	- handmatige promotie van dezelfde ref naar `dev`, `test` of `acc`
 	- draait build + smoke, en optioneel e2e tegen stage-URL
 - Production promotion workflow: `../.github/workflows/prod-promotion.yml`
 	- handmatige promotie naar `prod`
 	- accepteert alleen `main`
 	- draait build + smoke en optioneel e2e tegen prod-URL
 - Orchestrator workflow: `../.github/workflows/release-pipeline.yml`
-	- één pipeline-run met zichtbare keten: `validate -> dev -> tst1 -> acc -> prod`
+	- één pipeline-run met zichtbare keten: `validate -> dev -> test -> acc -> prod`
 	- gebruikt GitHub Environments voor approvals per stage
 
 Na push naar `main` kun je de gepubliceerde live documentatie-URL gebruiken als centrale testdocumentatie voor je team.
 
-### Stageflow (dev -> tst1 -> acc) met voorlopig dezelfde URL
+### Stageflow (dev -> test -> acc) met voorlopig dezelfde URL
 
 Dit kan direct via GitHub Environments:
 
-1. Maak environments aan in GitHub: `dev`, `tst1`, `acc`.
+1. Maak environments aan in GitHub: `dev`, `test`, `acc`.
 2. Zet per environment deze variabelen/secrets:
 	 - Variable: `PATH_APP_BASE_URL`
 	 - Secrets: `PLAYWRIGHT_ADMIN_PASSWORD`, `PLAYWRIGHT_EMPLOYEE_PASSWORD`
@@ -248,13 +248,13 @@ Resultaat: gecontroleerde promotie vanaf `main` met expliciete goedkeuring voor 
 
 ### Eén visuele pipeline in GitHub Actions
 
-Wil je alles in één scherm zoals in GitLab/Jenkins, start dan workflow `Release Pipeline (dev-tst1-acc-prod)`.
+Wil je alles in één scherm zoals in GitLab/Jenkins, start dan workflow `Release Pipeline (Dev-Test-Acc-Prod)`.
 
 Die laat in één run alle fasen zien:
 
 1. `validate`
 2. `dev`
-3. `tst1`
+3. `test`
 4. `acc`
 5. `prod`
 

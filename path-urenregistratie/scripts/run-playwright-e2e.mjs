@@ -8,8 +8,8 @@ if (existsSync('.env')) {
 }
 
 const stage = String(process.env.PLAYWRIGHT_STAGE || '').trim().toLowerCase();
-if (stage && !['dev', 'tst1', 'acc', 'prod'].includes(stage)) {
-  console.error('E2E precheck failed: PLAYWRIGHT_STAGE must be one of dev, tst1, acc, prod.');
+if (stage && !['dev', 'test', 'acc', 'prod'].includes(stage)) {
+  console.error('E2E precheck failed: PLAYWRIGHT_STAGE must be one of dev, test, acc, prod.');
   process.exit(1);
 }
 if (stage) {

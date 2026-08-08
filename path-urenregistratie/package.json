@@ -8,7 +8,7 @@
     "check": "node --check assets/app.js && node scripts/smoke-test.mjs",
     "test:e2e": "node scripts/run-playwright-e2e.mjs",
     "test:e2e:dev": "set PLAYWRIGHT_STAGE=dev&& node scripts/run-playwright-e2e.mjs",
-    "test:e2e:tst1": "set PLAYWRIGHT_STAGE=tst1&& node scripts/run-playwright-e2e.mjs",
+    "test:e2e:test": "set PLAYWRIGHT_STAGE=test&& node scripts/run-playwright-e2e.mjs",
     "test:e2e:acc": "set PLAYWRIGHT_STAGE=acc&& node scripts/run-playwright-e2e.mjs",
     "test:e2e:prod": "set PLAYWRIGHT_STAGE=prod&& node scripts/run-playwright-e2e.mjs",
     "test:e2e:headed": "node scripts/run-playwright-e2e.mjs --headed",

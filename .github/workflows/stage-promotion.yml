@@ -1,4 +1,4 @@
-name: Stage Promotion
+name: Stage Promotion (Dev-Test-Acc)
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
         type: choice
         options:
           - dev
-          - tst1
+          - test
           - acc
       ref:
         description: "Git ref (branch/tag/sha)"
