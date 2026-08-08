@@ -1,35 +1,30 @@
-# GitHub commit-notificatie (native, zonder tags)
+# GitHub commit-notificatie (met tags op commits)
 
-Deze repo gebruikt nu alleen native GitHub notificaties.
-Er worden geen @mentions en geen workflow-comments meer geplaatst.
+Deze repo gebruikt een GitHub Actions workflow die alleen op commit-pushes draait (`main` en `master`).
+De workflow plaatst een commit-comment met @mentions voor 2 users en bevat een directe link naar de branch history.
 
-## Doel
+## Waar staat de configuratie?
 
-- Alleen de 2 gewenste users krijgen push/commit meldingen.
-- Geen extra tag-meldingen.
+- Workflowbestand: [../.github/workflows/commit-email-notify.yml](../.github/workflows/commit-email-notify.yml)
 
-## Instellen voor de 2 users
+## Welke users krijgen de tag?
 
-1. Open de repository op GitHub.
-2. Klik op **Watch** (rechtsboven).
-3. Kies **Custom**.
-4. Zet **Pushes** aan.
-5. Sla op.
+Standaard:
 
-## Instellen voor users die geen melding moeten krijgen
+- `giovannomaatsen-dev`
+- `kenrichlieveld`
 
-1. Open dezelfde repository.
-2. Klik op **Watch**.
-3. Kies **Not watching**.
+Optioneel kun je dit overschrijven via repo variables:
 
-## E-mail ontvangst
+1. **Settings** -> **Secrets and variables** -> **Actions** -> **Variables**
+2. Voeg toe:
+	- `NOTIFY_USER_1`
+	- `NOTIFY_USER_2`
 
-Of er e-mail binnenkomt, hangt af van de persoonlijke GitHub notificatie-instellingen van die user:
+## Gedrag
 
-1. **Settings** -> **Notifications**
-2. E-mailnotificaties aanzetten voor watching notificaties.
-
-## Belangrijk
-
-- Er is geen Actions-workflow nodig voor deze route.
-- Er zijn geen secrets of variables nodig voor deze route.
+1. Alleen bij pushes naar `main`/`master`.
+2. Geen PR-only meldingen.
+3. Notificatie bevat:
+	- commit link
+	- directe link naar commit history van die branch

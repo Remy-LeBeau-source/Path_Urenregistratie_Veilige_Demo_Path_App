@@ -1,0 +1,62 @@
+name: Commit Team Notification
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  notify-team:
+    name: Notify team on commit push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Post commit mention notification
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const commitSha = context.sha;
+
+            const fallbackUsers = ['giovannomaatsen-dev', 'kenrichlieveld'];
+            const configured = [process.env.NOTIFY_USER_1, process.env.NOTIFY_USER_2]
+              .filter(Boolean)
+              .map(u => String(u).trim().replace(/^@/, ''));
+            const users = [...new Set((configured.length ? configured : fallbackUsers).filter(Boolean))];
+
+            if (users.length === 0) {
+              core.info('Geen notify users beschikbaar.');
+              return;
+            }
+
+            const mentions = users.map(u => `@${u}`).join(' ');
+            const branch = String(context.ref || '').replace('refs/heads/', '');
+            const historyUrl = `${context.serverUrl}/${owner}/${repo}/commits/${branch}`;
+            const commitUrl = context.payload.head_commit?.url || `${context.serverUrl}/${owner}/${repo}/commit/${commitSha}`;
+
+            const body = [
+              'Commit notificatie',
+              '',
+              mentions,
+              '',
+              `Branch: ${branch}`,
+              `Auteur: @${context.actor}`,
+              `Commit: ${commitSha}`,
+              `Commit link: ${commitUrl}`,
+              `History: ${historyUrl}`
+            ].join('\n');
+
+            await github.rest.repos.createCommitComment({
+              owner,
+              repo,
+              commit_sha: commitSha,
+              body
+            });
+        env:
+          NOTIFY_USER_1: ${{ vars.NOTIFY_USER_1 }}
+          NOTIFY_USER_2: ${{ vars.NOTIFY_USER_2 }}
