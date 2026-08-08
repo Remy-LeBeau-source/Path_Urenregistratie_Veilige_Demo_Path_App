@@ -294,9 +294,6 @@ jobs:
     name: Publish Live Docs
     needs: test
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     defaults:
       run:
         working-directory: path-urenregistratie
@@ -399,15 +396,30 @@ jobs:
           npm run allure:generate
           npm run docs:bundle
 
+      - name: Upload live docs bundle artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-doc-site-bundle
+          path: path-urenregistratie/live-doc-site/
+
+      - name: Pages deploy disabled notice
+        if: ${{ vars.ENABLE_GH_PAGES != 'true' }}
+        run: |
+          echo "Skipping GitHub Pages deploy (set repo variable ENABLE_GH_PAGES=true to enable)."
+
       - name: Configure GitHub Pages
+        if: ${{ vars.ENABLE_GH_PAGES == 'true' }}
         uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
+        if: ${{ vars.ENABLE_GH_PAGES == 'true' }}
         uses: actions/upload-pages-artifact@v3
         with:
           path: path-urenregistratie/live-doc-site
 
       - name: Deploy to GitHub Pages
+        if: ${{ vars.ENABLE_GH_PAGES == 'true' }}
         id: deployment
         uses: actions/deploy-pages@v4
 
@@ -420,9 +432,7 @@ jobs:
 
   acc:
     name: Promote Acc
-    needs:
-      - test
-      - live-docs
+    needs: test
     runs-on: ubuntu-latest
     environment: acc
     defaults:
