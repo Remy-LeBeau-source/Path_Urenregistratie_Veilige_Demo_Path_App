@@ -21,6 +21,9 @@ jobs:
     name: Promote to prod
     runs-on: ubuntu-latest
     environment: prod
+    defaults:
+      run:
+        working-directory: path-urenregistratie
 
     steps:
       - name: Enforce main ref only
@@ -38,8 +41,9 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
+          cache-dependency-path: path-urenregistratie/package-lock.json
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2

@@ -29,6 +29,9 @@ jobs:
     name: Promote to ${{ inputs.stage }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.stage }}
+    defaults:
+      run:
+        working-directory: path-urenregistratie
 
     steps:
       - name: Checkout selected ref
@@ -39,8 +42,9 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
+          cache-dependency-path: path-urenregistratie/package-lock.json
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2

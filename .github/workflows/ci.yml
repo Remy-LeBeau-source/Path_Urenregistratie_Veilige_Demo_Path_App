@@ -12,6 +12,9 @@ permissions:
 jobs:
   validate-and-test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: path-urenregistratie
     services:
       mysql:
         image: mysql:8.0
@@ -33,8 +36,9 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
+          cache-dependency-path: path-urenregistratie/package-lock.json
 
       - name: Setup PHP with PDO MySQL
         uses: shivammathur/setup-php@v2
@@ -113,7 +117,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ci-playwright-report
-          path: playwright-report/
+          path: path-urenregistratie/playwright-report/
 
       - name: Stop PHP server
         if: always()
