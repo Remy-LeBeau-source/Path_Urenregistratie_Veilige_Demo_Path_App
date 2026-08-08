@@ -184,6 +184,9 @@ Ja, dit is ingericht met GitHub Actions:
 	- handmatige promotie naar `prod`
 	- accepteert alleen `main`
 	- draait build + smoke en optioneel e2e tegen prod-URL
+- Orchestrator workflow: `../.github/workflows/release-pipeline.yml`
+	- één pipeline-run met zichtbare keten: `validate -> dev -> tst1 -> tst2 -> prod`
+	- gebruikt GitHub Environments voor approvals per stage
 
 Na push naar `main` kun je de gepubliceerde live documentatie-URL gebruiken als centrale testdocumentatie voor je team.
 
@@ -212,6 +215,20 @@ Later kun je per stage een eigen URL invullen zonder codewijziging.
 4. Start workflow `Production Promotion` handmatig.
 
 Resultaat: gecontroleerde promotie vanaf `main` met expliciete goedkeuring voor productie.
+
+### Eén visuele pipeline in GitHub Actions
+
+Wil je alles in één scherm zoals in GitLab/Jenkins, start dan workflow `Release Pipeline (dev-tst1-tst2-prod)`.
+
+Die laat in één run alle fasen zien:
+
+1. `validate`
+2. `dev`
+3. `tst1`
+4. `tst2`
+5. `prod`
+
+Als `ref` niet `main` is, wordt `prod` automatisch overgeslagen met een duidelijke guard-melding.
 
 ## Productiekoppelingen die later worden toegevoegd
 
