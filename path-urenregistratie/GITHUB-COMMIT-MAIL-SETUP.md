@@ -1,36 +1,35 @@
-# GitHub commit-notificatie (zonder SMTP)
+# GitHub commit-notificatie (native, zonder tags)
 
-Deze repo gebruikt nu GitHub-notificaties in plaats van SMTP-mail.
-Bij elke push naar `main` of `master` plaatst de workflow een comment met @mentions in een vaste issue (`Commit Notifications`), zodat de 2 personen direct een GitHub-notificatie (en vaak e-mail via GitHub) krijgen.
+Deze repo gebruikt nu alleen native GitHub notificaties.
+Er worden geen @mentions en geen workflow-comments meer geplaatst.
 
-## Waar staat de configuratie in de repo?
+## Doel
 
-- Workflowbestand: [../.github/workflows/commit-email-notify.yml](../.github/workflows/commit-email-notify.yml)
+- Alleen de 2 gewenste users krijgen push/commit meldingen.
+- Geen extra tag-meldingen.
 
-## Waar vul je de config in op GitHub?
+## Instellen voor de 2 users
 
 1. Open de repository op GitHub.
-2. Ga naar **Settings**.
-3. Ga naar **Secrets and variables** -> **Actions** -> **Variables**.
-4. Voeg deze repository variables toe:
-   - `NOTIFY_USER_1` = GitHub username van persoon 1 (zonder @)
-   - `NOTIFY_USER_2` = GitHub username van persoon 2 (zonder @)
+2. Klik op **Watch** (rechtsboven).
+3. Kies **Custom**.
+4. Zet **Pushes** aan.
+5. Sla op.
 
-Voorbeeld:
+## Instellen voor users die geen melding moeten krijgen
 
-- `NOTIFY_USER_1 = giovannomaatsen`
-- `NOTIFY_USER_2 = kenrichlieveld`
+1. Open dezelfde repository.
+2. Klik op **Watch**.
+3. Kies **Not watching**.
 
-## Testen
+## E-mail ontvangst
 
-1. Ga naar **Actions** in GitHub.
-2. Kies workflow **Commit Team Notification**.
-3. Doe een test-push naar `main` of `master`.
-4. Open issue **Commit Notifications** en controleer de nieuwste comment met @mentions.
+Of er e-mail binnenkomt, hangt af van de persoonlijke GitHub notificatie-instellingen van die user:
+
+1. **Settings** -> **Notifications**
+2. E-mailnotificaties aanzetten voor watching notificaties.
 
 ## Belangrijk
 
-- Voor @mentions zijn GitHub gebruikersnamen nodig, geen e-mailadressen.
-- De genoemde users moeten toegang hebben tot de repository.
-- SMTP-secrets zijn voor deze workflow niet meer nodig.
-- De eerste run maakt automatisch issue **Commit Notifications** aan als deze nog niet bestaat.
+- Er is geen Actions-workflow nodig voor deze route.
+- Er zijn geen secrets of variables nodig voor deze route.
