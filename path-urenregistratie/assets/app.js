@@ -8,6 +8,7 @@ const AUTH_LOGIN_PATH = "/server/auth/login.php";
 const AUTH_LOGOUT_PATH = "/server/auth/logout.php";
 const AUTH_LOCAL_HINTS_PATH = "/server/auth/local-login-hints.php";
 const WRITE_TIMESHEET_PATH = "/server/api/timesheets.php";
+const WRITE_CUSTOMER_TIMESHEET_PATH = "/server/api/customer-timesheets.php";
 const LOCAL_STORAGE_ENABLED = true;
 const API_ENABLED = true;
 const READ_API_DASHBOARD_PATH = "/server/api/dashboard.php";
@@ -861,7 +862,8 @@ const customerTimesheetStatusLabels = {
   approved: ["Goedgekeurd", "status-approved"],
   resubmit: ["Opnieuw uploaden", "status-warning"],
   skipped: ["Al rechtstreeks gemaild", "status-approved"],
-  sent: ["Naar broker gecontroleerd", "status-sent"]
+  sent: ["Naar broker gecontroleerd", "status-sent"],
+  sent_to_broker: ["Naar broker gecontroleerd", "status-sent"]
 };
 
 const pageTitles = {
@@ -1375,6 +1377,83 @@ function writeTimesheetToApi(action) {
       if (Number.isFinite(version) && version > 0) {
         record.serverVersion = version;
       }
+      return result.data;
+    });
+}
+
+function isCustomerTimesheetApiMode() {
+  return API_ENABLED && authRuntime.mode === "auth";
+}
+
+function applyCustomerTimesheetApiRecord(employeeId, periodKey, data) {
+  const row = data && data.customer_timesheet;
+  if (!row) return null;
+
+  const record = recordFor(Number(employeeId), periodKey);
+  const documentRecord = customerTimesheetFor(record);
+  const assignmentId = Number(data && data.assignment_id || row.assignment_id || 0);
+  const downloadUrl = String(row.download_url || "").trim();
+
+  documentRecord.status = String(row.status || documentRecord.status || "missing");
+  documentRecord.isExample = false;
+  documentRecord.fileName = String(row.original_file_name || row.stored_file_name || "");
+  documentRecord.originalFileName = String(row.original_file_name || "");
+  documentRecord.fileData = downloadUrl || (String(row.storage_key || "").trim()
+    ? WRITE_CUSTOMER_TIMESHEET_PATH + "?action=download&period=" + encodeURIComponent(periodKey) + "&employee_id=" + encodeURIComponent(String(employeeId)) + (assignmentId > 0 ? "&assignment_id=" + encodeURIComponent(String(assignmentId)) : "")
+    : "");
+  documentRecord.mimeType = String(row.mime_type || "application/pdf");
+  documentRecord.uploadedAt = String(row.uploaded_at || "");
+  documentRecord.uploadedBy = row.uploaded_by ? "Gebruiker #" + String(row.uploaded_by) : "";
+  documentRecord.reviewedAt = String(row.reviewed_at || "");
+  documentRecord.reviewedBy = row.reviewed_by ? "Gebruiker #" + String(row.reviewed_by) : "";
+  documentRecord.reviewNote = String(row.review_note || "");
+  documentRecord.sentAt = String(row.sent_to_broker_at || "");
+
+  if (documentRecord.status !== "skipped") {
+    documentRecord.skippedReason = "";
+    documentRecord.skippedAt = "";
+    documentRecord.skippedBy = "";
+  }
+
+  return documentRecord;
+}
+
+function writeCustomerTimesheetToApi(action, options = {}) {
+  const employeeId = Number(options.employeeId || currentEmployee().id);
+  const periodKey = String(options.periodKey || currentPeriod().key);
+  const assignmentId = Number(options.assignmentId || 0);
+  const reviewNote = String(options.reviewNote || "").trim();
+  const file = options.file || null;
+
+  return requestAuthCsrf()
+    .then(token => {
+      const formData = new FormData();
+      formData.append("action", action);
+      formData.append("period", periodKey);
+      formData.append("employee_id", String(employeeId));
+      if (assignmentId > 0) {
+        formData.append("assignment_id", String(assignmentId));
+      }
+      if (reviewNote) {
+        formData.append("review_note", reviewNote);
+      }
+      if (file) {
+        formData.append("file", file, file.name || "klanturenstaat");
+      }
+
+      return fetch(WRITE_CUSTOMER_TIMESHEET_PATH, {
+        method: "POST",
+        headers: { "Accept": "application/json", "X-CSRF-Token": token },
+        body: formData
+      });
+    })
+    .then(resp => resp.json().catch(() => ({})).then(data => ({ ok: resp.ok, data })))
+    .then(result => {
+      if (!result.ok || !result.data || result.data.ok !== true) {
+        const message = String(result && result.data && result.data.message || "Klanturenstaatactie op server mislukt.");
+        throw new Error(message);
+      }
+      applyCustomerTimesheetApiRecord(employeeId, periodKey, result.data);
       return result.data;
     });
 }
@@ -2300,7 +2379,7 @@ function renderEmployeeCustomerTimesheet(record, employee, period) {
   } else if (documentRecord.status === "approved") {
     title = "Klanturenstaat is goedgekeurd";
     note = "Backoffice heeft het document gecontroleerd. Voor jou is deze stap afgerond.";
-  } else if (documentRecord.status === "sent") {
+  } else if (["sent", "sent_to_broker"].includes(documentRecord.status)) {
     title = "Klanturenstaat is verwerkt";
     note = "Backoffice heeft ook de brokerroute gecontroleerd.";
   } else if (documentRecord.status === "skipped") {
@@ -2857,7 +2936,7 @@ function renderCustomerTimesheetPanel() {
     : documentRecord.fileName
       ? '<div><div><strong>' + escapeHtml(documentRecord.fileName) + '</strong><small>' + (documentRecord.isExample ? "Voorbeeldbestand · geen echt klantdocument" : "Opgeslagen " + escapeHtml(documentRecord.uploadedAt || "datum onbekend") + (/\.(jpe?g|png)$/i.test(documentRecord.originalFileName || "") ? " · " + escapeHtml(documentRecord.originalFileName) + " omgezet naar PDF" : "")) + (documentRecord.status === "received" ? " · Backoffice heeft een melding in de app" : "") + (documentRecord.reviewNote ? " · " + escapeHtml(documentRecord.reviewNote) : "") + '</small></div><span class="status-pill ' + status[1] + '">' + escapeHtml(status[0]) + '</span>' + (documentRecord.fileData ? '<button class="small-button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">PDF bekijken</button>' : '<span></span>') + '</div>'
       : '<div><div><strong>Nog geen klanturenstaat voor ' + escapeHtml(period.label) + '</strong><small>De urenregistratie kan wel gewoon worden ingevuld en ingediend.</small></div>' + customerTimesheetStatusPill(record) + '<span></span></div>';
-  const locked = ["received", "approved", "sent", "skipped"].includes(documentRecord.status);
+  const locked = ["received", "approved", "sent", "sent_to_broker", "skipped"].includes(documentRecord.status);
   const saveButton = document.querySelector("#customer-timesheet-save-draft");
   const submitButton = document.querySelector("#customer-timesheet-submit");
   const skipButton = document.querySelector("#customer-timesheet-skip");
@@ -2878,7 +2957,7 @@ function syncCustomerTimesheetUploadActions() {
   const sourceType = file ? customerTimesheetSourceType(file) : "";
   const fileReady = Boolean(file && sourceType && file.size <= 2 * 1024 * 1024);
   const existingDraft = documentRecord.status === "draft" && Boolean(documentRecord.fileName && documentRecord.fileData);
-  const locked = ["received", "approved", "sent", "skipped"].includes(documentRecord.status);
+  const locked = ["received", "approved", "sent", "sent_to_broker", "skipped"].includes(documentRecord.status);
   const saveButton = document.querySelector("#customer-timesheet-save-draft");
   const submitButton = document.querySelector("#customer-timesheet-submit");
   const help = document.querySelector("#customer-timesheet-action-help");
@@ -2891,7 +2970,7 @@ function syncCustomerTimesheetUploadActions() {
   } else if (documentRecord.status === "received") {
     help.textContent = "Deze klanturenstaat is ingediend en wacht op controle door Backoffice.";
     help.classList.add("is-warning");
-  } else if (documentRecord.status === "sent") {
+  } else if (["sent", "sent_to_broker"].includes(documentRecord.status)) {
     help.textContent = "Deze klanturenstaat is al verwerkt via de brokerroute.";
     help.classList.add("is-warning");
   } else if (documentRecord.status === "skipped") {
@@ -2961,6 +3040,22 @@ function showCustomerTimesheetDetails(employeeId, periodKey, reviewMode, adminTa
       secondary: "Opnieuw uploaden vragen",
       adminTaskId,
       action: () => {
+        if (isCustomerTimesheetApiMode()) {
+          writeCustomerTimesheetToApi("approve", {
+            employeeId: employee.id,
+            periodKey: period.key
+          }).then(() => {
+            const toastMessage = "De klanturenstaat van " + employee.name + " is goedgekeurd.";
+            if (adminTaskId) {
+              finishAdminTaskAndContinue(adminTaskId, () => {}, toastMessage);
+              return;
+            }
+            persistState(); closeModal(); renderAll(); toast(toastMessage);
+          }).catch(error => {
+            toast(String(error && error.message || "Goedkeuren op server mislukt."));
+          });
+          return;
+        }
         const mutate = () => {
           documentRecord.status = "approved";
           const timestamp = correctionTimestamp();
@@ -2978,6 +3073,23 @@ function showCustomerTimesheetDetails(employeeId, periodKey, reviewMode, adminTa
         persistState(); closeModal(); renderAll(); toast(toastMessage);
       },
       secondaryAction: () => {
+        if (isCustomerTimesheetApiMode()) {
+          writeCustomerTimesheetToApi("request_resubmit", {
+            employeeId: employee.id,
+            periodKey: period.key,
+            reviewNote: "Upload de juiste of definitieve PDF van de klant."
+          }).then(() => {
+            const toastMessage = "Er is in de app gevraagd om een nieuwe PDF. Er is niets gemaild.";
+            if (adminTaskId) {
+              finishAdminTaskAndContinue(adminTaskId, () => {}, toastMessage);
+              return;
+            }
+            persistState(); closeModal(); renderAll(); toast(toastMessage);
+          }).catch(error => {
+            toast(String(error && error.message || "Resubmit-verzoek op server mislukt."));
+          });
+          return;
+        }
         const mutate = () => {
           documentRecord.status = "resubmit";
           documentRecord.reviewNote = "Upload de juiste of definitieve PDF van de klant.";
@@ -3034,6 +3146,18 @@ function showSkipCustomerTimesheet() {
         toast("Vul een reden in.");
         return;
       }
+      if (isCustomerTimesheetApiMode()) {
+        writeCustomerTimesheetToApi("mark_skipped", {
+          employeeId: employee.id,
+          periodKey: period.key,
+          reviewNote: reason
+        }).then(() => {
+          persistState(); closeModal(); renderAll(); toast("De klanturenstaat staat als rechtstreeks gemaild geregistreerd.");
+        }).catch(error => {
+          toast(String(error && error.message || "Registreren als rechtstreeks gemaild mislukt op server."));
+        });
+        return;
+      }
       const timestamp = correctionTimestamp();
       documentRecord.status = "skipped";
       documentRecord.skippedReason = reason;
@@ -3052,6 +3176,19 @@ function restoreSkippedCustomerTimesheet() {
   const period = currentPeriod();
   const documentRecord = customerTimesheetFor(recordFor(employee.id, period.key));
   if (documentRecord.status !== "skipped") return;
+
+  if (isCustomerTimesheetApiMode()) {
+    writeCustomerTimesheetToApi("restore_missing", {
+      employeeId: employee.id,
+      periodKey: period.key
+    }).then(() => {
+      persistState(); renderAll(); toast("De registratie is teruggedraaid. Je kunt de klanturenstaat nu uploaden.");
+    }).catch(error => {
+      toast(String(error && error.message || "Herstellen naar missing mislukt op server."));
+    });
+    return;
+  }
+
   documentRecord.status = documentRecord.fileName && documentRecord.fileData ? "draft" : "missing";
   documentRecord.skippedReason = "";
   documentRecord.skippedAt = "";
@@ -3063,7 +3200,7 @@ function showCustomerTimesheetSubmissionMailEditor() {
   const employee = currentEmployee();
   const period = currentPeriod();
   const documentRecord = customerTimesheetFor(recordFor(employee.id, period.key));
-  if (["received", "approved", "sent", "skipped"].includes(documentRecord.status)) {
+  if (["received", "approved", "sent", "sent_to_broker", "skipped"].includes(documentRecord.status)) {
     toast("Dit bericht is al ingediend en kan niet meer worden aangepast.");
     return;
   }
@@ -3126,6 +3263,22 @@ function showCustomerTimesheetBrokerCheck(employeeId, periodKey, adminTaskId = "
       const body = document.querySelector("#customer-timesheet-broker-body").value.trim();
       if (!subject || !body) {
         toast("Vul een onderwerp en begeleidende tekst in.");
+        return;
+      }
+      if (isCustomerTimesheetApiMode()) {
+        writeCustomerTimesheetToApi("mark_sent", {
+          employeeId: employee.id,
+          periodKey
+        }).then(() => {
+          const toastMessage = "Brokerroute gecontroleerd. Er is niets echt verzonden.";
+          if (adminTaskId) {
+            finishAdminTaskAndContinue(adminTaskId, () => {}, toastMessage);
+            return;
+          }
+          persistState(); closeModal(); renderAll(); toast(toastMessage);
+        }).catch(error => {
+          toast(String(error && error.message || "Brokerroute-status opslaan op server mislukt."));
+        });
         return;
       }
       const mutate = () => {
@@ -6818,14 +6971,32 @@ function storeCustomerTimesheetFile(targetStatus) {
   const context = customerTimesheetUploadContext(true);
   if (!context) return;
   const { employee, periodKey, fileInput, file } = context;
+  const documentRecord = customerTimesheetFor(recordFor(employee.id, periodKey));
+  if (["received", "approved", "sent", "sent_to_broker", "skipped"].includes(documentRecord.status)) {
+    toast("Deze klanturenstaat is al ingediend. Wacht op Backoffice of neem contact op.");
+    return;
+  }
+
+  if (isCustomerTimesheetApiMode()) {
+    const action = targetStatus === "received" ? "submit" : "save_draft";
+    writeCustomerTimesheetToApi(action, {
+      employeeId: employee.id,
+      periodKey,
+      file
+    }).then(() => {
+      fileInput.value = "";
+      persistState();
+      renderAll();
+      toast(targetStatus === "draft" ? "Concept opgeslagen. Backoffice heeft nog geen melding gekregen." : "De klanturenstaat is ingediend bij Backoffice. Er is nog niets naar de broker verstuurd.");
+    }).catch(error => {
+      toast(String(error && error.message || "Klanturenstaat op server opslaan mislukt."));
+    });
+    return;
+  }
+
   const sourceType = customerTimesheetSourceType(file);
   const reader = new FileReader();
   reader.addEventListener("load", () => {
-    const documentRecord = customerTimesheetFor(recordFor(employee.id, periodKey));
-    if (["received", "approved", "sent", "skipped"].includes(documentRecord.status)) {
-      toast("Deze klanturenstaat is al ingediend. Wacht op Backoffice of neem contact op.");
-      return;
-    }
     let storedData;
     try {
       storedData = customerTimesheetPdfData(String(reader.result || ""), sourceType);
@@ -6881,7 +7052,7 @@ document.querySelector("#customer-timesheet-submit").addEventListener("click", (
   if (!context) return;
   const { employee, periodKey, file } = context;
   const documentRecord = customerTimesheetFor(recordFor(employee.id, periodKey));
-  if (["received", "approved", "sent", "skipped"].includes(documentRecord.status)) {
+  if (["received", "approved", "sent", "sent_to_broker", "skipped"].includes(documentRecord.status)) {
     toast("Deze klanturenstaat is al ingediend. Wacht op Backoffice of neem contact op.");
     return;
   }
@@ -6897,6 +7068,21 @@ document.querySelector("#customer-timesheet-submit").addEventListener("click", (
     toast(documentRecord.status === "resubmit" ? "Kies eerst het nieuwe officiële bestand." : "Kies eerst een PDF, JPG of PNG of sla deze als concept op.");
     return;
   }
+
+  if (isCustomerTimesheetApiMode()) {
+    writeCustomerTimesheetToApi("submit", {
+      employeeId: employee.id,
+      periodKey
+    }).then(() => {
+      persistState();
+      renderAll();
+      toast("De klanturenstaat is ingediend bij Backoffice. Er is nog niets naar de broker verstuurd.");
+    }).catch(error => {
+      toast(String(error && error.message || "Indienen bij server mislukt."));
+    });
+    return;
+  }
+
   const submissionMail = customerTimesheetSubmissionMail(employee, periodKey);
   documentRecord.submissionSubject = submissionMail.subject;
   documentRecord.submissionBody = submissionMail.body;
