@@ -123,9 +123,37 @@ WHERE c.legal_name = 'Demo BV' AND NOT EXISTS (SELECT 1 FROM timesheets t WHERE 
 ORDER BY e.id
 LIMIT 2;
 
+-- ensure mail recipients exist before creating invoices
+INSERT INTO mail_recipients (company_id, recipient_key, display_name, email, active, created_at)
+SELECT c.id, 'bookkeeper', 'Boekhouding', 'boekhouding@example.invalid', 1, NOW()
+FROM companies c
+WHERE c.legal_name = 'Demo BV' AND NOT EXISTS (SELECT 1 FROM mail_recipients m WHERE m.company_id = c.id AND m.recipient_key = 'bookkeeper');
+
+-- assignment mail routes (ensure recipients exist)
+INSERT INTO assignment_mail_routes (assignment_id, mail_recipient_id, enabled, include_invoice_pdf)
+SELECT a.id, mr.id, 1, 1
+FROM assignments a
+JOIN companies c ON c.id = a.company_id
+JOIN mail_recipients mr ON mr.company_id = c.id
+WHERE c.legal_name = 'Demo BV' AND mr.recipient_key = 'bookkeeper' AND NOT EXISTS (SELECT 1 FROM assignment_mail_routes am WHERE am.assignment_id = a.id AND am.mail_recipient_id = mr.id)
+LIMIT 5;
+
 -- invoices for approved timesheets
-INSERT INTO invoices (company_id, timesheet_id, invoice_number, invoice_date, due_date, recipient_id, total, status, created_at)
-SELECT c.id, t.id, CONCAT('INV-', LPAD(t.id,6,'0')), CURDATE(), DATE_ADD(CURDATE(), INTERVAL COALESCE(c.payment_term_days,30) DAY), (SELECT mr.id FROM mail_recipients mr WHERE mr.company_id = c.id AND mr.`key` = 'bookkeeper' LIMIT 1), (t.billable_hours * 50.00), 'sent', NOW()
+INSERT INTO invoices (company_id, timesheet_id, invoice_number, invoice_date, due_date, recipient_id, subtotal, vat_percentage, vat_amount, total, status, created_by, created_at)
+SELECT
+	c.id,
+	t.id,
+	CONCAT('INV-', LPAD(t.id,6,'0')),
+	CURDATE(),
+	DATE_ADD(CURDATE(), INTERVAL COALESCE(c.payment_term_days,30) DAY),
+	(SELECT cp.id FROM counterparties cp WHERE cp.company_id = c.id AND cp.type = 'client' LIMIT 1),
+	(t.billable_hours * 50.00) as subtotal,
+	21.00 as vat_percentage,
+	(t.billable_hours * 50.00) * 0.21 as vat_amount,
+	(t.billable_hours * 50.00) * 1.21 as total,
+	'sent',
+	(SELECT u.id FROM users u WHERE u.company_id = c.id AND u.email = 'backoffice1@example.invalid' LIMIT 1),
+	NOW()
 FROM companies c
 JOIN timesheets t ON t.period_id IN (SELECT id FROM periods WHERE company_id = c.id) AND t.status = 'approved'
 WHERE c.legal_name = 'Demo BV' AND NOT EXISTS (SELECT 1 FROM invoices i WHERE i.timesheet_id = t.id)
@@ -147,38 +175,30 @@ WHERE c.legal_name = 'Demo BV' AND mr.recipient_key = 'bookkeeper' AND NOT EXIST
 LIMIT 5;
 
 -- announcements and recipients
-INSERT INTO announcements (company_id, title, message, status, created_by, created_at)
-SELECT c.id, 'Welkom Demo', 'Dit is een veilige demo-aankondiging.', 'published', 'admin', NOW()
+INSERT INTO announcements (company_id, title, message, status, created_by, audience_label, email_requested, created_at)
+SELECT c.id, 'Welkom Demo', 'Dit is een veilige demo-aankondiging.', 'sent', (SELECT u.id FROM users u WHERE u.company_id = c.id AND u.email = 'admin@example.invalid' LIMIT 1), 'all', 0, NOW()
 FROM companies c
 WHERE c.legal_name = 'Demo BV' AND NOT EXISTS (SELECT 1 FROM announcements an WHERE an.company_id = c.id AND an.title = 'Welkom Demo');
 
-INSERT INTO announcement_recipients (announcement_id, employee_id)
-SELECT an.id, e.id
-FROM announcements an
-JOIN companies c ON c.id = an.company_id
-JOIN employees e ON e.company_id = c.id
-WHERE c.legal_name = 'Demo BV' AND an.title = 'Welkom Demo' AND NOT EXISTS (SELECT 1 FROM announcement_recipients ar WHERE ar.announcement_id = an.id AND ar.employee_id = e.id)
-LIMIT 10;
 
--- notifications: 4 backoffice (no employee_id), 3 employee
-INSERT INTO notifications (company_id, employee_id, title, message, `view`, `read`, created_at)
-SELECT c.id, NULL, 'Backoffice taak', 'Controleer facturen', 'inbox', 0, NOW()
+INSERT INTO notifications (company_id, user_id, notification_type, title, message, target_route, created_at)
+SELECT c.id, (SELECT u.id FROM users u WHERE u.company_id = c.id AND u.email = 'backoffice1@example.invalid' LIMIT 1), 'timesheet_reminder', 'Backoffice taak', 'Controleer facturen', '/inbox', NOW()
 FROM companies c
-WHERE c.legal_name = 'Demo BV' AND (SELECT COUNT(*) FROM notifications n WHERE n.company_id = c.id AND n.title = 'Backoffice taak') < 4
+WHERE c.legal_name = 'Demo BV' AND (SELECT COUNT(*) FROM notifications n WHERE n.company_id = c.id AND n.notification_type = 'timesheet_reminder') < 4
 LIMIT 4;
 
-INSERT INTO notifications (company_id, employee_id, title, message, `view`, `read`, created_at)
-SELECT c.id, e.id, 'Medewerker taak', 'Bekijk uren', 'inbox', 0, NOW()
+INSERT INTO notifications (company_id, user_id, notification_type, title, message, target_route, created_at)
+SELECT c.id, COALESCE(e.user_id, (SELECT u.id FROM users u WHERE u.company_id = c.id LIMIT 1)), 'timesheet_submitted', 'Medewerker taak', 'Bekijk uren', '/timesheets', NOW()
 FROM companies c
 JOIN employees e ON e.company_id = c.id
-WHERE c.legal_name = 'Demo BV' AND (SELECT COUNT(*) FROM notifications n WHERE n.company_id = c.id AND n.title = 'Medewerker taak') < 3
+WHERE c.legal_name = 'Demo BV' AND (SELECT COUNT(*) FROM notifications n WHERE n.company_id = c.id AND n.notification_type = 'timesheet_submitted') < 3
 LIMIT 3;
 
 -- audit_log marker
-INSERT INTO audit_log (company_id, entity, entity_id, action, data, created_at)
-SELECT c.id, 'seed', 0, 'demo_seed_applied', JSON_OBJECT('applied_at', NOW()), NOW()
+INSERT INTO audit_log (company_id, actor_user_id, event_type, entity_type, entity_id, event_data, created_at)
+SELECT c.id, (SELECT u.id FROM users u WHERE u.company_id = c.id AND u.email = 'admin@example.invalid' LIMIT 1), 'demo_seed', 'seed', '0', JSON_OBJECT('applied_at', NOW()), NOW()
 FROM companies c
-WHERE c.legal_name = 'Demo BV' AND NOT EXISTS (SELECT 1 FROM audit_log al WHERE al.company_id = c.id AND al.action = 'demo_seed_applied');
+WHERE c.legal_name = 'Demo BV' AND NOT EXISTS (SELECT 1 FROM audit_log al WHERE al.company_id = c.id AND al.event_type = 'demo_seed');
 
 COMMIT;
 

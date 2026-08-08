@@ -66,14 +66,18 @@ foreach ($migrations as $mig) {
     try {
         foreach ($parts as $part) {
             if ($part === '') continue;
-            $pdo->exec($part);
+            try {
+                $pdo->exec($part);
+            } catch (Throwable $inner) {
+                throw new Exception('Failed part: ' . (strlen($part) > 200 ? substr($part,0,200) . '...' : $part) . ' | Error: ' . $inner->getMessage());
+            }
         }
         $ins = $pdo->prepare('INSERT INTO schema_migrations (migration) VALUES (:m)');
         $ins->execute([':m' => $mig]);
         $executed[] = $mig;
     } catch (Throwable $e) {
         http_response_code(500);
-        echo json_encode(['ok' => false, 'message' => 'Migration failed', 'migration' => $mig]);
+        echo json_encode(['ok' => false, 'message' => 'Migration failed', 'migration' => $mig, 'error' => $e->getMessage()]);
         exit;
     }
 }
