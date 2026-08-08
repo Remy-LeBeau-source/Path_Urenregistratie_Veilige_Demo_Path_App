@@ -2,6 +2,9 @@ const STORAGE_KEY = "path-uren-demo-v07-final";
 const DEMO_DOMAIN = "@example.invalid";
 const API_ENDPOINT = "/server/api.php";
 const API_STATE_PATH = API_ENDPOINT + "?action=state";
+const AUTH_ME_PATH = "/server/auth/me.php";
+const AUTH_LOGIN_PATH = "/server/auth/login.php";
+const AUTH_LOGOUT_PATH = "/server/auth/logout.php";
 const LOCAL_STORAGE_ENABLED = true;
 const API_ENABLED = true;
 const READ_API_DASHBOARD_PATH = "/server/api/dashboard.php";
@@ -1010,6 +1013,180 @@ const readApiSource = {
 };
 
 window.__PATH_READ_API_SOURCE = readApiSource;
+
+const authRuntime = {
+  checked: false,
+  available: false,
+  mode: "checking"
+};
+
+const authDebug = {
+  authenticated: false,
+  role: "",
+  user_id: null,
+  mode: "checking",
+  available: false,
+  error: ""
+};
+
+window.__PATH_AUTH_DEBUG = authDebug;
+
+function normalizeAuthRole(role) {
+  if (role === "administrator") return "admin";
+  if (role === "employee") return "employee";
+  return "";
+}
+
+function setAuthDebug(details) {
+  authDebug.authenticated = Boolean(details && details.authenticated);
+  authDebug.role = String(details && details.role || "");
+  authDebug.user_id = details && details.user_id !== undefined && details.user_id !== null ? Number(details.user_id) : null;
+  authDebug.mode = String(details && details.mode || authRuntime.mode || "checking");
+  authDebug.available = Boolean(details && details.available);
+  authDebug.error = String(details && details.error || "");
+}
+
+function setAuthModeIndicator(text, isError) {
+  const element = document.querySelector("#auth-mode-indicator");
+  if (!element) return;
+  element.textContent = text;
+  element.style.color = isError ? "#9b1c1c" : "";
+}
+
+function setAuthLoginFeedback(message, isError) {
+  const element = document.querySelector("#auth-login-feedback");
+  if (!element) return;
+  if (!message) {
+    element.hidden = true;
+    element.textContent = "";
+    element.style.color = "";
+    return;
+  }
+  element.hidden = false;
+  element.textContent = message;
+  element.style.color = isError ? "#9b1c1c" : "";
+}
+
+function setDemoLoginEnabled(enabled) {
+  document.querySelectorAll("[data-login-role]").forEach(button => {
+    button.disabled = !enabled;
+  });
+  document.querySelectorAll("[data-account-picker-trigger]").forEach(button => {
+    button.disabled = !enabled;
+  });
+}
+
+function setAuthLoginEnabled(enabled) {
+  const email = document.querySelector("#auth-login-email");
+  const password = document.querySelector("#auth-login-password");
+  const submit = document.querySelector("#auth-login-submit");
+  if (email) email.disabled = !enabled;
+  if (password) password.disabled = !enabled;
+  if (submit) submit.disabled = !enabled;
+}
+
+function applyAuthUiMode(mode) {
+  authRuntime.mode = mode;
+  const authForm = document.querySelector("#auth-login-form");
+  if (authForm) authForm.hidden = mode === "demo";
+  if (mode === "auth") {
+    setDemoLoginEnabled(false);
+    setAuthLoginEnabled(true);
+    setAuthModeIndicator("Auth-modus actief. Demo-rolknoppen zijn uitgeschakeld.", false);
+  } else if (mode === "demo") {
+    setDemoLoginEnabled(true);
+    setAuthLoginEnabled(false);
+    setAuthLoginFeedback("", false);
+    setAuthModeIndicator("Lokale demo-modus actief: auth backend niet beschikbaar.", true);
+  } else {
+    setDemoLoginEnabled(false);
+    setAuthLoginEnabled(false);
+    setAuthModeIndicator("Controle van auth-sessie wordt uitgevoerd.", false);
+  }
+}
+
+function applyAuthUserToState(user) {
+  const role = normalizeAuthRole(String(user && user.role || ""));
+  if (!role) return false;
+
+  if (role === "admin") {
+    const adminMatch = state.admins.find(admin =>
+      String(admin.email || "").toLowerCase() === String(user.email || "").toLowerCase()
+      || String(admin.name || "").toLowerCase() === String(user.display_name || "").toLowerCase()
+    );
+    if (adminMatch) state.currentAdminId = String(adminMatch.id);
+  }
+
+  if (role === "employee") {
+    const employeeMatch = state.employees.find(employee =>
+      String(employee.email || "").toLowerCase() === String(user.email || "").toLowerCase()
+      || String(employee.name || "").toLowerCase() === String(user.display_name || "").toLowerCase()
+    );
+    if (employeeMatch) state.currentEmployeeId = Number(employeeMatch.id);
+  }
+
+  login(role);
+  return true;
+}
+
+function requestAuthMe() {
+  if (!API_ENABLED) return Promise.resolve(null);
+  return fetch(AUTH_ME_PATH, { method: "GET", headers: { "Accept": "application/json" } })
+    .then(resp => {
+      if (!resp.ok) {
+        if (resp.status === 401) return { ok: false, authenticated: false };
+        throw new Error("HTTP " + resp.status);
+      }
+      return resp.json();
+    });
+}
+
+function requestAuthLogin(email, password) {
+  return fetch(AUTH_LOGIN_PATH, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    body: JSON.stringify({ email, password })
+  }).then(resp => resp.json().then(data => ({ ok: resp.ok, data })));
+}
+
+function requestAuthLogout() {
+  return fetch(AUTH_LOGOUT_PATH, {
+    method: "POST",
+    headers: { "Accept": "application/json" }
+  }).then(resp => resp.json().catch(() => ({ ok: false })));
+}
+
+function initializeAuthSession() {
+  applyAuthUiMode("checking");
+  return requestAuthMe()
+    .then(data => {
+      authRuntime.checked = true;
+      authRuntime.available = true;
+      applyAuthUiMode("auth");
+      if (data && data.ok === true && data.authenticated === true && data.user) {
+        setAuthDebug({
+          authenticated: true,
+          role: normalizeAuthRole(data.user.role),
+          user_id: data.user.id,
+          mode: "auth",
+          available: true,
+          error: ""
+        });
+        setAuthLoginFeedback("", false);
+        applyAuthUserToState(data.user);
+      } else {
+        setAuthDebug({ authenticated: false, role: "", user_id: null, mode: "auth", available: true, error: "not-authenticated" });
+        logoutLocal();
+      }
+    })
+    .catch(() => {
+      authRuntime.checked = true;
+      authRuntime.available = false;
+      applyAuthUiMode("demo");
+      setAuthDebug({ authenticated: false, role: "", user_id: null, mode: "demo", available: false, error: "auth-unavailable" });
+      logoutLocal();
+    });
+}
 
 function setReadApiSource(section, source) {
   readApiSource[section] = source;
@@ -4634,7 +4811,7 @@ function login(role) {
   showView(profile.home);
 }
 
-function logout() {
+function logoutLocal() {
   state.currentRole = null;
   unresolvedHelpQuestion = "";
   closeLoginAccountPanels();
@@ -4650,6 +4827,21 @@ function logout() {
   renderLoginAdminPicker();
   renderLoginEmployeePicker();
   window.location.hash = "";
+}
+
+function logout() {
+  setAuthLoginFeedback("", false);
+  if (!authRuntime.available || authRuntime.mode !== "auth") {
+    logoutLocal();
+    return;
+  }
+
+  requestAuthLogout()
+    .catch(() => null)
+    .finally(() => {
+      setAuthDebug({ authenticated: false, role: "", user_id: null, mode: "auth", available: true, error: "" });
+      logoutLocal();
+    });
 }
 
 function toast(message) {
@@ -5561,9 +5753,17 @@ document.addEventListener("click", event => {
     picker.value = loginAccountChoice.dataset.loginAccountId;
     picker.dispatchEvent(new Event("change", { bubbles: true }));
     closeLoginAccountPanels();
-    login(role);
+    if (authRuntime.mode === "demo") {
+      login(role);
+    } else {
+      setAuthLoginFeedback("In auth-modus gebruik je e-mail en wachtwoord.", true);
+    }
   } else if (loginAccountTrigger) {
-    toggleLoginAccountPanel(loginAccountTrigger.dataset.accountPickerTrigger);
+    if (authRuntime.mode === "demo") {
+      toggleLoginAccountPanel(loginAccountTrigger.dataset.accountPickerTrigger);
+    } else {
+      setAuthLoginFeedback("Demo-accountkeuze is alleen beschikbaar in lokale demo-modus.", true);
+    }
   } else if (!event.target.closest(".login-account-picker")) {
     closeLoginAccountPanels();
   }
@@ -5650,7 +5850,13 @@ document.addEventListener("click", event => {
   if (testNotification) createTestNotification(testNotification.dataset.testNotification);
 
   const loginChoice = event.target.closest("[data-login-role]");
-  if (loginChoice) login(loginChoice.dataset.loginRole);
+  if (loginChoice) {
+    if (authRuntime.mode === "demo") {
+      login(loginChoice.dataset.loginRole);
+    } else {
+      setAuthLoginFeedback("Gebruik de inlogvelden met e-mail en wachtwoord.", true);
+    }
+  }
 
   const home = event.target.closest("[data-home]");
   if (home) {
@@ -5990,6 +6196,7 @@ function handleEnterSave(event) {
   if (!target || typeof target.matches !== "function") return;
 
   if (target.id === "login-admin") {
+    if (authRuntime.mode !== "demo") return;
     event.preventDefault();
     state.currentAdminId = String(target.value);
     updateLoginAdminPreview();
@@ -5999,6 +6206,7 @@ function handleEnterSave(event) {
   }
 
   if (target.id === "login-employee") {
+    if (authRuntime.mode !== "demo") return;
     event.preventDefault();
     state.currentEmployeeId = Number(target.value);
     updateLoginEmployeePreview();
@@ -6475,6 +6683,62 @@ document.querySelector("#help-form").addEventListener("submit", event => {
   input.value = "";
   answerHelpQuestion(question);
 });
+document.querySelector("#auth-login-form")?.addEventListener("submit", event => {
+  event.preventDefault();
+  if (authRuntime.mode !== "auth") {
+    setAuthLoginFeedback("Auth backend is niet beschikbaar. Lokale demo-modus is actief.", true);
+    return;
+  }
+
+  const emailInput = document.querySelector("#auth-login-email");
+  const passwordInput = document.querySelector("#auth-login-password");
+  const email = String(emailInput?.value || "").trim();
+  const password = String(passwordInput?.value || "");
+
+  if (!email || !password) {
+    setAuthLoginFeedback("Vul e-mail en wachtwoord in.", true);
+    return;
+  }
+
+  setAuthLoginEnabled(false);
+  setAuthLoginFeedback("Inloggen...", false);
+
+  requestAuthLogin(email, password)
+    .then(result => {
+      if (!result || !result.ok || !result.data || result.data.ok !== true || !result.data.user) {
+        const message = String(result && result.data && result.data.message || "Inloggen mislukt.");
+        setAuthDebug({ authenticated: false, role: "", user_id: null, mode: "auth", available: true, error: "login-failed" });
+        setAuthLoginFeedback(message, true);
+        if (passwordInput) passwordInput.value = "";
+        return;
+      }
+
+      const frontendRole = normalizeAuthRole(result.data.user.role);
+      setAuthDebug({
+        authenticated: true,
+        role: frontendRole,
+        user_id: result.data.user.id,
+        mode: "auth",
+        available: true,
+        error: ""
+      });
+      setAuthLoginFeedback("", false);
+      if (passwordInput) passwordInput.value = "";
+
+      if (!applyAuthUserToState(result.data.user)) {
+        setAuthLoginFeedback("Deze gebruiker heeft geen ondersteunde rol in deze fase.", true);
+        logoutLocal();
+      }
+    })
+    .catch(() => {
+      setAuthDebug({ authenticated: false, role: "", user_id: null, mode: "auth", available: true, error: "login-request-failed" });
+      setAuthLoginFeedback("Inloggen niet gelukt. Controleer je verbinding en probeer opnieuw.", true);
+      if (passwordInput) passwordInput.value = "";
+    })
+    .finally(() => {
+      setAuthLoginEnabled(true);
+    });
+});
 document.querySelector("#switch-role").addEventListener("click", logout);
 document.querySelector("#mobile-switch-role").addEventListener("click", logout);
 document.querySelector("#modal-close").addEventListener("click", closeModal);
@@ -6504,6 +6768,7 @@ initializeReminderChoiceMenus();
 initializeStandardChoiceMenus();
 populateSettings();
 renderAll();
+initializeAuthSession();
 
 // Read-only API bridge: purely additive diagnostics, local state remains leading fallback.
 refreshBootstrapReadApi(true);

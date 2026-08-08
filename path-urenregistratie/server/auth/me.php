@@ -13,10 +13,10 @@ $pdo = auth_pdo($config);
 $current = auth_current_user($pdo);
 if (!$current) {
     auth_send_json([
-        'ok' => false,
-        'error' => 'not-authenticated',
-        'message' => 'No active session.',
-    ], 401);
+        'ok' => true,
+        'authenticated' => false,
+        'user' => null,
+    ]);
 }
 
 auth_require_role(['administrator', 'employee'], $current);

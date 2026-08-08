@@ -64,4 +64,4 @@ Verwacht: `ok: true`.
 Invoke-RestMethod -Uri 'http://localhost:8000/server/auth/me.php' -Method Get -WebSession $session
 ```
 
-Verwacht: `401` met `not-authenticated`.
+Verwacht: `ok: true`, `authenticated: false`, `user: null`.

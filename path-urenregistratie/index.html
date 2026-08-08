@@ -49,6 +49,15 @@
           <span class="login-arrow">→</span>
         </button>
       </div>
+      <form id="auth-login-form" aria-label="Inloggen met e-mail en wachtwoord">
+        <label for="auth-login-email">E-mail</label>
+        <input id="auth-login-email" name="email" type="email" autocomplete="username" inputmode="email" placeholder="admin@example.invalid" required>
+        <label for="auth-login-password">Wachtwoord</label>
+        <input id="auth-login-password" name="password" type="password" autocomplete="current-password" placeholder="Wachtwoord" required>
+        <button class="button button-primary" id="auth-login-submit" type="submit">Inloggen</button>
+        <p id="auth-login-feedback" hidden></p>
+      </form>
+      <p class="login-note" id="auth-mode-indicator">Controle van auth-sessie wordt uitgevoerd.</p>
       <p class="login-note">De standaardgegevens gebruiken veilige voorbeeldadressen. Je mag zelf echte gegevens invoeren; deze lokale versie bewaart ze alleen in deze browser en e-mailverzending is uitgeschakeld.</p>
     </div>
   </section>
