@@ -13,7 +13,7 @@ Wat deze databasebestanden wel doen:
 
 ## Welke database
 
-Dit schema is MySQL/MariaDB-syntax:
+Dit schema is MySQL/MariaDB-syntax: 123
 
 - `CREATE DATABASE`
 - `BIGINT UNSIGNED`
