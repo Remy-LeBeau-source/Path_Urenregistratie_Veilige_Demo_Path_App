@@ -178,23 +178,23 @@ Ja, dit is ingericht met GitHub Actions:
 	- bouwt en publiceert de live documentatiepagina naar GitHub Pages op `main`
 	- na elke nieuwe `main` build wordt de pagina automatisch ververst
 - Stage promotion workflow: `../.github/workflows/stage-promotion.yml`
-	- handmatige promotie van dezelfde ref naar `dev` of `tst1`
+	- handmatige promotie van dezelfde ref naar `dev` of `acc`
 	- draait build + smoke, en optioneel e2e tegen stage-URL
 - Production promotion workflow: `../.github/workflows/prod-promotion.yml`
 	- handmatige promotie naar `prod`
 	- accepteert alleen `main`
 	- draait build + smoke en optioneel e2e tegen prod-URL
 - Orchestrator workflow: `../.github/workflows/release-pipeline.yml`
-	- één pipeline-run met zichtbare keten: `validate -> dev -> tst1 -> prod`
+	- één pipeline-run met zichtbare keten: `validate -> dev -> acc -> prod`
 	- gebruikt GitHub Environments voor approvals per stage
 
 Na push naar `main` kun je de gepubliceerde live documentatie-URL gebruiken als centrale testdocumentatie voor je team.
 
-### Stageflow (dev -> tst1) met voorlopig dezelfde URL
+### Stageflow (dev -> acc) met voorlopig dezelfde URL
 
 Dit kan direct via GitHub Environments:
 
-1. Maak environments aan in GitHub: `dev`, `tst1`.
+1. Maak environments aan in GitHub: `dev`, `acc`.
 2. Zet per environment deze variabelen/secrets:
 	 - Variable: `PATH_APP_BASE_URL`
 	 - Secrets: `PLAYWRIGHT_ADMIN_PASSWORD`, `PLAYWRIGHT_EMPLOYEE_PASSWORD`
@@ -203,7 +203,7 @@ Dit kan direct via GitHub Environments:
 
 Later kun je per stage een eigen URL invullen zonder codewijziging.
 
-### Productieflow (tst1 -> prod)
+### Productieflow (acc -> prod)
 
 1. Maak in GitHub ook environment `prod` aan.
 2. Zet in `prod`:
@@ -218,13 +218,13 @@ Resultaat: gecontroleerde promotie vanaf `main` met expliciete goedkeuring voor 
 
 ### Eén visuele pipeline in GitHub Actions
 
-Wil je alles in één scherm zoals in GitLab/Jenkins, start dan workflow `Release Pipeline (dev-tst1-prod)`.
+Wil je alles in één scherm zoals in GitLab/Jenkins, start dan workflow `Release Pipeline (dev-acc-prod)`.
 
 Die laat in één run alle fasen zien:
 
 1. `validate`
 2. `dev`
-3. `tst1`
+3. `acc`
 4. `prod`
 
 Als `ref` niet `main` is, wordt `prod` automatisch overgeslagen met een duidelijke guard-melding.

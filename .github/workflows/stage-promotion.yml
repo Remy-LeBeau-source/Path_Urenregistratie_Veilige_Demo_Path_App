@@ -9,7 +9,7 @@ on:
         type: choice
         options:
           - dev
-          - tst1
+          - acc
       ref:
         description: "Git ref (branch/tag/sha)"
         required: true

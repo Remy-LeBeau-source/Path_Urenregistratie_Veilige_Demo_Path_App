@@ -1,4 +1,4 @@
-name: Release Pipeline (dev-tst1-prod)
+name: Release Pipeline (dev-acc-prod)
 
 on:
   workflow_dispatch:
@@ -204,11 +204,11 @@ jobs:
           fi
           npm run test:e2e
 
-  tst1:
-    name: Promote tst1
+  acc:
+    name: Promote acc
     needs: dev
     runs-on: ubuntu-latest
-    environment: tst1
+    environment: acc
     defaults:
       run:
         working-directory: path-urenregistratie
@@ -239,14 +239,14 @@ jobs:
           PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
         run: |
           if [ -z "${PATH_APP_BASE_URL:-}" ] || [ -z "${PLAYWRIGHT_ADMIN_PASSWORD:-}" ] || [ -z "${PLAYWRIGHT_EMPLOYEE_PASSWORD:-}" ]; then
-            echo "Skipping stage e2e for tst1 (missing environment vars/secrets)."
+                echo "Skipping stage e2e for acc (missing environment vars/secrets)."
             exit 0
           fi
           npm run test:e2e
 
   prod:
     name: Promote prod
-    needs: tst1
+              needs: acc
     runs-on: ubuntu-latest
     environment: prod
     if: ${{ inputs.ref == 'main' || inputs.ref == 'refs/heads/main' }}
@@ -287,7 +287,7 @@ jobs:
 
   prod-main-ref-guard:
     name: Guard non-main for prod
-    needs: tst1
+    needs: acc
     runs-on: ubuntu-latest
     if: ${{ !(inputs.ref == 'main' || inputs.ref == 'refs/heads/main') }}
 
