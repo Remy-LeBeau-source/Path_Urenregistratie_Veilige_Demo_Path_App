@@ -217,6 +217,7 @@ Ja, dit is ingericht met GitHub Actions:
 - Orchestrator workflow: `../.github/workflows/release-pipeline.yml`
 	- één pipeline-run met zichtbare keten: `validate -> dev -> test -> acc -> prod`
 	- gebruikt GitHub Environments voor approvals per stage
+	- draait per stage volledige regressie; zolang stage-URL/secrets nog ontbreken valt de pipeline terug op dezelfde lokale CI-stack
 
 Na push naar `main` kun je de gepubliceerde live documentatie-URL gebruiken als centrale testdocumentatie voor je team.
 
@@ -229,7 +230,8 @@ Dit kan direct via GitHub Environments:
 	 - Variable: `PATH_APP_BASE_URL`
 	 - Secrets: `PLAYWRIGHT_ADMIN_PASSWORD`, `PLAYWRIGHT_EMPLOYEE_PASSWORD`
 3. Voor nu mag `PATH_APP_BASE_URL` in alle drie hetzelfde zijn.
-4. Start daarna handmatig de workflow `Stage Promotion` en kies target stage + ref.
+4. Zolang je deze waarden nog niet hebt ingevuld, gebruikt de release-pipeline automatisch dezelfde lokale fallback-regressie voor iedere stage.
+5. Start daarna handmatig de workflow `Stage Promotion` en kies target stage + ref.
 
 Later kun je per stage een eigen URL invullen zonder codewijziging.
 

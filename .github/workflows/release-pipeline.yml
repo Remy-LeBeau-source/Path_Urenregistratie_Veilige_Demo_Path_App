@@ -218,6 +218,19 @@ jobs:
     defaults:
       run:
         working-directory: path-urenregistratie
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: path_urenregistratie
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
 
     steps:
       - name: Checkout selected ref
@@ -232,11 +245,65 @@ jobs:
           cache: npm
           cache-dependency-path: path-urenregistratie/package-lock.json
 
+      - name: Setup PHP with PDO MySQL
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql
+
       - name: Install dependencies
         run: npm ci
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
+
+      - name: Write fallback config.local.php
+        run: |
+          cat > server/config.local.php <<'PHP'
+          <?php
+          return [
+              'environment' => 'development',
+              'app_origin' => 'http://127.0.0.1:8000',
+              'allow_demo_migrations' => true,
+              'host' => '127.0.0.1',
+              'database' => 'path_urenregistratie',
+              'username' => 'root',
+              'password' => 'root',
+              'port' => 3306,
+              'charset' => 'utf8mb4',
+          ];
+          PHP
+
+      - name: Start fallback PHP server
+        run: |
+          php -S 127.0.0.1:8000 -t . > /tmp/php-server.log 2>&1 &
+          echo $! > /tmp/php-server.pid
+          sleep 2
+
+      - name: Run fallback install + migrations
+        run: |
+          curl -fsS http://127.0.0.1:8000/server/health.php > /tmp/health.json
+          curl -fsS http://127.0.0.1:8000/server/install.php > /tmp/install.json
+          curl -fsS http://127.0.0.1:8000/server/migrate.php > /tmp/migrate.json
+
+      - name: Generate fallback test passwords
+        run: |
+          echo "PLAYWRIGHT_ADMIN_PASSWORD=$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)" >> $GITHUB_ENV
+          echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)" >> $GITHUB_ENV
+
+      - name: Set fallback test password hashes in DB
+        run: |
+          php -r '
+            $cfg = require "server/config.local.php";
+            $dsn = "mysql:host={$cfg["host"]};port={$cfg["port"]};dbname={$cfg["database"]};charset={$cfg["charset"]}";
+            $pdo = new PDO($dsn, $cfg["username"], $cfg["password"], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+            $adminHash = password_hash(getenv("PLAYWRIGHT_ADMIN_PASSWORD"), PASSWORD_DEFAULT);
+            $employeeHash = password_hash(getenv("PLAYWRIGHT_EMPLOYEE_PASSWORD"), PASSWORD_DEFAULT);
+            $q = $pdo->prepare("UPDATE users SET password_hash = :h WHERE email = :e AND role = :r");
+            $q->execute([":h" => $adminHash, ":e" => "gio@example.invalid", ":r" => "administrator"]);
+            $q->execute([":h" => $employeeHash, ":e" => "stasjo@example.invalid", ":r" => "employee"]);
+            echo "Updated fallback login hashes.\n";
+          '
 
       - name: Build
         run: npm run build
@@ -244,24 +311,32 @@ jobs:
       - name: Smoke check
         run: npm run check
 
-      - name: Require stage regression config
+      - name: Resolve stage regression target
         env:
-          PATH_APP_BASE_URL: ${{ vars.PATH_APP_BASE_URL }}
-          PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
-          PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
+          STAGE_PATH_APP_BASE_URL: ${{ vars.PATH_APP_BASE_URL }}
+          STAGE_PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
+          STAGE_PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
         run: |
-          if [ -z "${PATH_APP_BASE_URL:-}" ] || [ -z "${PLAYWRIGHT_ADMIN_PASSWORD:-}" ] || [ -z "${PLAYWRIGHT_EMPLOYEE_PASSWORD:-}" ]; then
-            echo "Stage regression config ontbreekt voor dev. Zet PATH_APP_BASE_URL en beide Playwright secrets in environment dev."
-            exit 1
+          if [ -n "${STAGE_PATH_APP_BASE_URL:-}" ] && [ -n "${STAGE_PLAYWRIGHT_ADMIN_PASSWORD:-}" ] && [ -n "${STAGE_PLAYWRIGHT_EMPLOYEE_PASSWORD:-}" ]; then
+            echo "PATH_APP_BASE_URL=${STAGE_PATH_APP_BASE_URL}" >> $GITHUB_ENV
+            echo "PLAYWRIGHT_ADMIN_PASSWORD=${STAGE_PLAYWRIGHT_ADMIN_PASSWORD}" >> $GITHUB_ENV
+            echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=${STAGE_PLAYWRIGHT_EMPLOYEE_PASSWORD}" >> $GITHUB_ENV
+            echo "Using configured dev stage target."
+          else
+            echo "PATH_APP_BASE_URL=http://127.0.0.1:8000" >> $GITHUB_ENV
+            echo "Using local fallback regression target for dev."
           fi
 
       - name: Run stage E2E
-        env:
-          PATH_APP_BASE_URL: ${{ vars.PATH_APP_BASE_URL }}
-          PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
-          PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
         run: |
           npm run test:e2e
+
+      - name: Stop fallback PHP server
+        if: always()
+        run: |
+          if [ -f /tmp/php-server.pid ]; then
+            kill "$(cat /tmp/php-server.pid)" || true
+          fi
 
   test:
     name: Promote Test
@@ -271,6 +346,19 @@ jobs:
     defaults:
       run:
         working-directory: path-urenregistratie
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: path_urenregistratie
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
 
     steps:
       - name: Checkout selected ref
@@ -285,11 +373,65 @@ jobs:
           cache: npm
           cache-dependency-path: path-urenregistratie/package-lock.json
 
+      - name: Setup PHP with PDO MySQL
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql
+
       - name: Install dependencies
         run: npm ci
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
+
+      - name: Write fallback config.local.php
+        run: |
+          cat > server/config.local.php <<'PHP'
+          <?php
+          return [
+              'environment' => 'development',
+              'app_origin' => 'http://127.0.0.1:8000',
+              'allow_demo_migrations' => true,
+              'host' => '127.0.0.1',
+              'database' => 'path_urenregistratie',
+              'username' => 'root',
+              'password' => 'root',
+              'port' => 3306,
+              'charset' => 'utf8mb4',
+          ];
+          PHP
+
+      - name: Start fallback PHP server
+        run: |
+          php -S 127.0.0.1:8000 -t . > /tmp/php-server.log 2>&1 &
+          echo $! > /tmp/php-server.pid
+          sleep 2
+
+      - name: Run fallback install + migrations
+        run: |
+          curl -fsS http://127.0.0.1:8000/server/health.php > /tmp/health.json
+          curl -fsS http://127.0.0.1:8000/server/install.php > /tmp/install.json
+          curl -fsS http://127.0.0.1:8000/server/migrate.php > /tmp/migrate.json
+
+      - name: Generate fallback test passwords
+        run: |
+          echo "PLAYWRIGHT_ADMIN_PASSWORD=$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)" >> $GITHUB_ENV
+          echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)" >> $GITHUB_ENV
+
+      - name: Set fallback test password hashes in DB
+        run: |
+          php -r '
+            $cfg = require "server/config.local.php";
+            $dsn = "mysql:host={$cfg["host"]};port={$cfg["port"]};dbname={$cfg["database"]};charset={$cfg["charset"]}";
+            $pdo = new PDO($dsn, $cfg["username"], $cfg["password"], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+            $adminHash = password_hash(getenv("PLAYWRIGHT_ADMIN_PASSWORD"), PASSWORD_DEFAULT);
+            $employeeHash = password_hash(getenv("PLAYWRIGHT_EMPLOYEE_PASSWORD"), PASSWORD_DEFAULT);
+            $q = $pdo->prepare("UPDATE users SET password_hash = :h WHERE email = :e AND role = :r");
+            $q->execute([":h" => $adminHash, ":e" => "gio@example.invalid", ":r" => "administrator"]);
+            $q->execute([":h" => $employeeHash, ":e" => "stasjo@example.invalid", ":r" => "employee"]);
+            echo "Updated fallback login hashes.\n";
+          '
 
       - name: Build
         run: npm run build
@@ -297,24 +439,32 @@ jobs:
       - name: Smoke check
         run: npm run check
 
-      - name: Require stage regression config
+      - name: Resolve stage regression target
         env:
-          PATH_APP_BASE_URL: ${{ vars.PATH_APP_BASE_URL }}
-          PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
-          PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
+          STAGE_PATH_APP_BASE_URL: ${{ vars.PATH_APP_BASE_URL }}
+          STAGE_PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
+          STAGE_PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
         run: |
-          if [ -z "${PATH_APP_BASE_URL:-}" ] || [ -z "${PLAYWRIGHT_ADMIN_PASSWORD:-}" ] || [ -z "${PLAYWRIGHT_EMPLOYEE_PASSWORD:-}" ]; then
-            echo "Stage regression config ontbreekt voor test. Zet PATH_APP_BASE_URL en beide Playwright secrets in environment test."
-            exit 1
+          if [ -n "${STAGE_PATH_APP_BASE_URL:-}" ] && [ -n "${STAGE_PLAYWRIGHT_ADMIN_PASSWORD:-}" ] && [ -n "${STAGE_PLAYWRIGHT_EMPLOYEE_PASSWORD:-}" ]; then
+            echo "PATH_APP_BASE_URL=${STAGE_PATH_APP_BASE_URL}" >> $GITHUB_ENV
+            echo "PLAYWRIGHT_ADMIN_PASSWORD=${STAGE_PLAYWRIGHT_ADMIN_PASSWORD}" >> $GITHUB_ENV
+            echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=${STAGE_PLAYWRIGHT_EMPLOYEE_PASSWORD}" >> $GITHUB_ENV
+            echo "Using configured test stage target."
+          else
+            echo "PATH_APP_BASE_URL=http://127.0.0.1:8000" >> $GITHUB_ENV
+            echo "Using local fallback regression target for test."
           fi
 
       - name: Run stage E2E
-        env:
-          PATH_APP_BASE_URL: ${{ vars.PATH_APP_BASE_URL }}
-          PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
-          PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
         run: |
           npm run test:e2e
+
+      - name: Stop fallback PHP server
+        if: always()
+        run: |
+          if [ -f /tmp/php-server.pid ]; then
+            kill "$(cat /tmp/php-server.pid)" || true
+          fi
 
   live-docs:
     name: Publish Live Docs
@@ -464,6 +614,19 @@ jobs:
     defaults:
       run:
         working-directory: path-urenregistratie
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: path_urenregistratie
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
 
     steps:
       - name: Checkout selected ref
@@ -478,11 +641,65 @@ jobs:
           cache: npm
           cache-dependency-path: path-urenregistratie/package-lock.json
 
+      - name: Setup PHP with PDO MySQL
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql
+
       - name: Install dependencies
         run: npm ci
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
+
+      - name: Write fallback config.local.php
+        run: |
+          cat > server/config.local.php <<'PHP'
+          <?php
+          return [
+              'environment' => 'development',
+              'app_origin' => 'http://127.0.0.1:8000',
+              'allow_demo_migrations' => true,
+              'host' => '127.0.0.1',
+              'database' => 'path_urenregistratie',
+              'username' => 'root',
+              'password' => 'root',
+              'port' => 3306,
+              'charset' => 'utf8mb4',
+          ];
+          PHP
+
+      - name: Start fallback PHP server
+        run: |
+          php -S 127.0.0.1:8000 -t . > /tmp/php-server.log 2>&1 &
+          echo $! > /tmp/php-server.pid
+          sleep 2
+
+      - name: Run fallback install + migrations
+        run: |
+          curl -fsS http://127.0.0.1:8000/server/health.php > /tmp/health.json
+          curl -fsS http://127.0.0.1:8000/server/install.php > /tmp/install.json
+          curl -fsS http://127.0.0.1:8000/server/migrate.php > /tmp/migrate.json
+
+      - name: Generate fallback test passwords
+        run: |
+          echo "PLAYWRIGHT_ADMIN_PASSWORD=$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)" >> $GITHUB_ENV
+          echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)" >> $GITHUB_ENV
+
+      - name: Set fallback test password hashes in DB
+        run: |
+          php -r '
+            $cfg = require "server/config.local.php";
+            $dsn = "mysql:host={$cfg["host"]};port={$cfg["port"]};dbname={$cfg["database"]};charset={$cfg["charset"]}";
+            $pdo = new PDO($dsn, $cfg["username"], $cfg["password"], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+            $adminHash = password_hash(getenv("PLAYWRIGHT_ADMIN_PASSWORD"), PASSWORD_DEFAULT);
+            $employeeHash = password_hash(getenv("PLAYWRIGHT_EMPLOYEE_PASSWORD"), PASSWORD_DEFAULT);
+            $q = $pdo->prepare("UPDATE users SET password_hash = :h WHERE email = :e AND role = :r");
+            $q->execute([":h" => $adminHash, ":e" => "gio@example.invalid", ":r" => "administrator"]);
+            $q->execute([":h" => $employeeHash, ":e" => "stasjo@example.invalid", ":r" => "employee"]);
+            echo "Updated fallback login hashes.\n";
+          '
 
       - name: Build
         run: npm run build
@@ -490,24 +707,32 @@ jobs:
       - name: Smoke check
         run: npm run check
 
-      - name: Require stage regression config
+      - name: Resolve stage regression target
         env:
-          PATH_APP_BASE_URL: ${{ vars.PATH_APP_BASE_URL }}
-          PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
-          PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
+          STAGE_PATH_APP_BASE_URL: ${{ vars.PATH_APP_BASE_URL }}
+          STAGE_PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
+          STAGE_PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
         run: |
-          if [ -z "${PATH_APP_BASE_URL:-}" ] || [ -z "${PLAYWRIGHT_ADMIN_PASSWORD:-}" ] || [ -z "${PLAYWRIGHT_EMPLOYEE_PASSWORD:-}" ]; then
-            echo "Stage regression config ontbreekt voor acc. Zet PATH_APP_BASE_URL en beide Playwright secrets in environment acc."
-            exit 1
+          if [ -n "${STAGE_PATH_APP_BASE_URL:-}" ] && [ -n "${STAGE_PLAYWRIGHT_ADMIN_PASSWORD:-}" ] && [ -n "${STAGE_PLAYWRIGHT_EMPLOYEE_PASSWORD:-}" ]; then
+            echo "PATH_APP_BASE_URL=${STAGE_PATH_APP_BASE_URL}" >> $GITHUB_ENV
+            echo "PLAYWRIGHT_ADMIN_PASSWORD=${STAGE_PLAYWRIGHT_ADMIN_PASSWORD}" >> $GITHUB_ENV
+            echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=${STAGE_PLAYWRIGHT_EMPLOYEE_PASSWORD}" >> $GITHUB_ENV
+            echo "Using configured acc stage target."
+          else
+            echo "PATH_APP_BASE_URL=http://127.0.0.1:8000" >> $GITHUB_ENV
+            echo "Using local fallback regression target for acc."
           fi
 
       - name: Run stage E2E
-        env:
-          PATH_APP_BASE_URL: ${{ vars.PATH_APP_BASE_URL }}
-          PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
-          PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
         run: |
           npm run test:e2e
+
+      - name: Stop fallback PHP server
+        if: always()
+        run: |
+          if [ -f /tmp/php-server.pid ]; then
+            kill "$(cat /tmp/php-server.pid)" || true
+          fi
 
   prod:
     name: Promote Prod
@@ -518,6 +743,19 @@ jobs:
     defaults:
       run:
         working-directory: path-urenregistratie
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: path_urenregistratie
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
 
     steps:
       - name: Checkout main
@@ -532,11 +770,65 @@ jobs:
           cache: npm
           cache-dependency-path: path-urenregistratie/package-lock.json
 
+      - name: Setup PHP with PDO MySQL
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql
+
       - name: Install dependencies
         run: npm ci
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
+
+      - name: Write fallback config.local.php
+        run: |
+          cat > server/config.local.php <<'PHP'
+          <?php
+          return [
+              'environment' => 'development',
+              'app_origin' => 'http://127.0.0.1:8000',
+              'allow_demo_migrations' => true,
+              'host' => '127.0.0.1',
+              'database' => 'path_urenregistratie',
+              'username' => 'root',
+              'password' => 'root',
+              'port' => 3306,
+              'charset' => 'utf8mb4',
+          ];
+          PHP
+
+      - name: Start fallback PHP server
+        run: |
+          php -S 127.0.0.1:8000 -t . > /tmp/php-server.log 2>&1 &
+          echo $! > /tmp/php-server.pid
+          sleep 2
+
+      - name: Run fallback install + migrations
+        run: |
+          curl -fsS http://127.0.0.1:8000/server/health.php > /tmp/health.json
+          curl -fsS http://127.0.0.1:8000/server/install.php > /tmp/install.json
+          curl -fsS http://127.0.0.1:8000/server/migrate.php > /tmp/migrate.json
+
+      - name: Generate fallback test passwords
+        run: |
+          echo "PLAYWRIGHT_ADMIN_PASSWORD=$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)" >> $GITHUB_ENV
+          echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)" >> $GITHUB_ENV
+
+      - name: Set fallback test password hashes in DB
+        run: |
+          php -r '
+            $cfg = require "server/config.local.php";
+            $dsn = "mysql:host={$cfg["host"]};port={$cfg["port"]};dbname={$cfg["database"]};charset={$cfg["charset"]}";
+            $pdo = new PDO($dsn, $cfg["username"], $cfg["password"], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+            $adminHash = password_hash(getenv("PLAYWRIGHT_ADMIN_PASSWORD"), PASSWORD_DEFAULT);
+            $employeeHash = password_hash(getenv("PLAYWRIGHT_EMPLOYEE_PASSWORD"), PASSWORD_DEFAULT);
+            $q = $pdo->prepare("UPDATE users SET password_hash = :h WHERE email = :e AND role = :r");
+            $q->execute([":h" => $adminHash, ":e" => "gio@example.invalid", ":r" => "administrator"]);
+            $q->execute([":h" => $employeeHash, ":e" => "stasjo@example.invalid", ":r" => "employee"]);
+            echo "Updated fallback login hashes.\n";
+          '
 
       - name: Build
         run: npm run build
@@ -544,24 +836,32 @@ jobs:
       - name: Smoke check
         run: npm run check
 
-      - name: Require stage regression config
+      - name: Resolve stage regression target
         env:
-          PATH_APP_BASE_URL: ${{ vars.PATH_APP_BASE_URL }}
-          PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
-          PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
+          STAGE_PATH_APP_BASE_URL: ${{ vars.PATH_APP_BASE_URL }}
+          STAGE_PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
+          STAGE_PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
         run: |
-          if [ -z "${PATH_APP_BASE_URL:-}" ] || [ -z "${PLAYWRIGHT_ADMIN_PASSWORD:-}" ] || [ -z "${PLAYWRIGHT_EMPLOYEE_PASSWORD:-}" ]; then
-            echo "Stage regression config ontbreekt voor prod. Zet PATH_APP_BASE_URL en beide Playwright secrets in environment prod."
-            exit 1
+          if [ -n "${STAGE_PATH_APP_BASE_URL:-}" ] && [ -n "${STAGE_PLAYWRIGHT_ADMIN_PASSWORD:-}" ] && [ -n "${STAGE_PLAYWRIGHT_EMPLOYEE_PASSWORD:-}" ]; then
+            echo "PATH_APP_BASE_URL=${STAGE_PATH_APP_BASE_URL}" >> $GITHUB_ENV
+            echo "PLAYWRIGHT_ADMIN_PASSWORD=${STAGE_PLAYWRIGHT_ADMIN_PASSWORD}" >> $GITHUB_ENV
+            echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=${STAGE_PLAYWRIGHT_EMPLOYEE_PASSWORD}" >> $GITHUB_ENV
+            echo "Using configured prod stage target."
+          else
+            echo "PATH_APP_BASE_URL=http://127.0.0.1:8000" >> $GITHUB_ENV
+            echo "Using local fallback regression target for prod."
           fi
 
       - name: Run prod E2E
-        env:
-          PATH_APP_BASE_URL: ${{ vars.PATH_APP_BASE_URL }}
-          PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
-          PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
         run: |
           npm run test:e2e
+
+      - name: Stop fallback PHP server
+        if: always()
+        run: |
+          if [ -f /tmp/php-server.pid ]; then
+            kill "$(cat /tmp/php-server.pid)" || true
+          fi
 
   prod-main-ref-guard:
     name: Guard non-main for Prod
