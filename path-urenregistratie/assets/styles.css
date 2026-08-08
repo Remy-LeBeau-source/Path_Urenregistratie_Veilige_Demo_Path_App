@@ -1271,7 +1271,7 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
   .help-suggestions [data-help-topic="contact"] { grid-column: 1; }
 }
 
-/* v0.9.26 · mobiele bediening: dezelfde functies, maar met duidelijke touch-layouts. */
+/* v0.9.27 · mobiele bediening: dezelfde functies, maar met duidelijke touch-layouts. */
 @media (max-width: 720px) {
   html, body { overflow-x: hidden; }
 

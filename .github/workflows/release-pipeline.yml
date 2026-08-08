@@ -235,19 +235,32 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
       - name: Build
         run: npm run build
 
-      - name: Optional stage E2E
+      - name: Smoke check
+        run: npm run check
+
+      - name: Require stage regression config
         env:
           PATH_APP_BASE_URL: ${{ vars.PATH_APP_BASE_URL }}
           PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
           PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
         run: |
           if [ -z "${PATH_APP_BASE_URL:-}" ] || [ -z "${PLAYWRIGHT_ADMIN_PASSWORD:-}" ] || [ -z "${PLAYWRIGHT_EMPLOYEE_PASSWORD:-}" ]; then
-            echo "Skipping stage e2e for dev (missing environment vars/secrets)."
-            exit 0
+            echo "Stage regression config ontbreekt voor dev. Zet PATH_APP_BASE_URL en beide Playwright secrets in environment dev."
+            exit 1
           fi
+
+      - name: Run stage E2E
+        env:
+          PATH_APP_BASE_URL: ${{ vars.PATH_APP_BASE_URL }}
+          PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
+          PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
+        run: |
           npm run test:e2e
 
   test:
@@ -275,19 +288,32 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
       - name: Build
         run: npm run build
 
-      - name: Optional stage E2E
+      - name: Smoke check
+        run: npm run check
+
+      - name: Require stage regression config
         env:
           PATH_APP_BASE_URL: ${{ vars.PATH_APP_BASE_URL }}
           PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
           PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
         run: |
           if [ -z "${PATH_APP_BASE_URL:-}" ] || [ -z "${PLAYWRIGHT_ADMIN_PASSWORD:-}" ] || [ -z "${PLAYWRIGHT_EMPLOYEE_PASSWORD:-}" ]; then
-            echo "Skipping stage e2e for test (missing environment vars/secrets)."
-            exit 0
+            echo "Stage regression config ontbreekt voor test. Zet PATH_APP_BASE_URL en beide Playwright secrets in environment test."
+            exit 1
           fi
+
+      - name: Run stage E2E
+        env:
+          PATH_APP_BASE_URL: ${{ vars.PATH_APP_BASE_URL }}
+          PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
+          PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
+        run: |
           npm run test:e2e
 
   live-docs:
@@ -455,19 +481,32 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
       - name: Build
         run: npm run build
 
-      - name: Optional stage E2E
+      - name: Smoke check
+        run: npm run check
+
+      - name: Require stage regression config
         env:
           PATH_APP_BASE_URL: ${{ vars.PATH_APP_BASE_URL }}
           PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
           PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
         run: |
           if [ -z "${PATH_APP_BASE_URL:-}" ] || [ -z "${PLAYWRIGHT_ADMIN_PASSWORD:-}" ] || [ -z "${PLAYWRIGHT_EMPLOYEE_PASSWORD:-}" ]; then
-            echo "Skipping stage e2e for acc (missing environment vars/secrets)."
-            exit 0
+            echo "Stage regression config ontbreekt voor acc. Zet PATH_APP_BASE_URL en beide Playwright secrets in environment acc."
+            exit 1
           fi
+
+      - name: Run stage E2E
+        env:
+          PATH_APP_BASE_URL: ${{ vars.PATH_APP_BASE_URL }}
+          PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
+          PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
+        run: |
           npm run test:e2e
 
   prod:
@@ -496,19 +535,32 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
       - name: Build
         run: npm run build
 
-      - name: Optional prod E2E
+      - name: Smoke check
+        run: npm run check
+
+      - name: Require stage regression config
         env:
           PATH_APP_BASE_URL: ${{ vars.PATH_APP_BASE_URL }}
           PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
           PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
         run: |
           if [ -z "${PATH_APP_BASE_URL:-}" ] || [ -z "${PLAYWRIGHT_ADMIN_PASSWORD:-}" ] || [ -z "${PLAYWRIGHT_EMPLOYEE_PASSWORD:-}" ]; then
-            echo "Skipping prod e2e (missing environment vars/secrets)."
-            exit 0
+            echo "Stage regression config ontbreekt voor prod. Zet PATH_APP_BASE_URL en beide Playwright secrets in environment prod."
+            exit 1
           fi
+
+      - name: Run prod E2E
+        env:
+          PATH_APP_BASE_URL: ${{ vars.PATH_APP_BASE_URL }}
+          PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
+          PLAYWRIGHT_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
+        run: |
           npm run test:e2e
 
   prod-main-ref-guard:

@@ -209,11 +209,11 @@ Ja, dit is ingericht met GitHub Actions:
 	- na elke nieuwe `main` build wordt de pagina automatisch ververst
 - Stage promotion workflow: `../.github/workflows/stage-promotion.yml`
 	- handmatige promotie van dezelfde ref naar `dev`, `test` of `acc`
-	- draait build + smoke, en optioneel e2e tegen stage-URL
+	- draait build + smoke, en verplichte e2e tegen stage-URL
 - Production promotion workflow: `../.github/workflows/prod-promotion.yml`
 	- handmatige promotie naar `prod`
 	- accepteert alleen `main`
-	- draait build + smoke en optioneel e2e tegen prod-URL
+	- draait build + smoke en verplichte e2e tegen prod-URL
 - Orchestrator workflow: `../.github/workflows/release-pipeline.yml`
 	- één pipeline-run met zichtbare keten: `validate -> dev -> test -> acc -> prod`
 	- gebruikt GitHub Environments voor approvals per stage
