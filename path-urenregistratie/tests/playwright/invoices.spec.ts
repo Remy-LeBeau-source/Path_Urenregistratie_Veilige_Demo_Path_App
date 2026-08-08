@@ -13,47 +13,68 @@ async function readInvoicesInBrowser(page: import('@playwright/test').Page) {
   });
 }
 
-test('admin facturen zichtbaar en console errors 0', async ({ page }) => {
+test('[INV-001] admin facturen zichtbaar en console errors 0', async ({ page }) => {
   const consoleErrors = captureConsoleErrors(page);
   const loginPage = new LoginPage(page);
   const invoicesPage = new InvoicesPage(page);
 
-  await loginPage.open();
-  await loginPage.loginAsAdmin();
-  clearConsoleErrors(consoleErrors);
-  await invoicesPage.open();
-  await invoicesPage.assertRowsVisible();
+  await test.step('Given de administrator is ingelogd', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    clearConsoleErrors(consoleErrors);
+  });
 
-  expect(consoleErrors).toEqual([]);
+  await test.step('When de administrator het facturenscherm opent', async () => {
+    await invoicesPage.open();
+  });
+
+  await test.step('Then facturen per periode zijn zichtbaar zonder consolefouten', async () => {
+    await invoicesPage.assertRowsVisible();
+    expect(consoleErrors).toEqual([]);
+  });
 });
 
-test('employee facturen zichtbaar maar beperkt en console errors 0', async ({ page }) => {
+test('[INV-002] employee facturen zichtbaar maar beperkt en console errors 0', async ({ page }) => {
   const consoleErrors = captureConsoleErrors(page);
   const loginPage = new LoginPage(page);
 
-  await loginPage.open();
-  await loginPage.loginAsEmployee();
-  clearConsoleErrors(consoleErrors);
+  await test.step('Given de medewerker is ingelogd', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    clearConsoleErrors(consoleErrors);
+  });
 
-  const invoices = await readInvoicesInBrowser(page);
-  expect(Array.isArray(invoices.items)).toBe(true);
-  expect(invoices.items.length).toBeGreaterThan(0);
-  for (const item of invoices.items) {
-    expect(item.employee_name).toBe('Stasjo van Bakel');
-  }
+  await test.step('When de medewerker factuurdata opvraagt', async () => {
+    const invoices = await readInvoicesInBrowser(page);
+    expect(Array.isArray(invoices.items)).toBe(true);
+    expect(invoices.items.length).toBeGreaterThan(0);
+    for (const item of invoices.items) {
+      expect(item.employee_name).toBe('Stasjo van Bakel');
+    }
+  });
 
-  expect(consoleErrors).toEqual([]);
+  await test.step('Then alleen eigen facturen zijn zichtbaar zonder consolefouten', async () => {
+    expect(consoleErrors).toEqual([]);
+  });
 });
 
-test('periodefilter juli en augustus werkt', async ({ page }) => {
+test('[INV-003] periodefilter juli en augustus werkt', async ({ page }) => {
   const loginPage = new LoginPage(page);
   const invoicesPage = new InvoicesPage(page);
 
-  await loginPage.open();
-  await loginPage.loginAsAdmin();
-  await invoicesPage.open();
-  await invoicesPage.selectPeriod('2026-07');
-  await invoicesPage.assertRowsVisible();
-  await invoicesPage.selectPeriod('2026-08');
-  await invoicesPage.assertRowsVisible();
+  await test.step('Given de administrator is ingelogd en op het facturenscherm staat', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await invoicesPage.open();
+  });
+
+  await test.step('When de administrator wisselt tussen juli en augustus 2026', async () => {
+    await invoicesPage.selectPeriod('2026-07');
+    await invoicesPage.assertRowsVisible();
+    await invoicesPage.selectPeriod('2026-08');
+  });
+
+  await test.step('Then het factuuroverzicht ververst voor de gekozen periode', async () => {
+    await invoicesPage.assertRowsVisible();
+  });
 });

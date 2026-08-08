@@ -27,7 +27,7 @@ async function fillFirstTwoHours(page: Page, first: string, second: string) {
   await inputs.nth(1).fill(second);
 }
 
-test('browserflow: admin vraagt correctie, medewerker dient opnieuw in, admin keurt goed', async ({ page }) => {
+test('[TS-REV-UI-001] browserflow: admin vraagt correctie, medewerker dient opnieuw in, admin keurt goed', async ({ page }) => {
   const loginPage = new LoginPage(page);
   let writeVersion = 100;
 

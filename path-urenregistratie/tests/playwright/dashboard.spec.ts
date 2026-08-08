@@ -3,28 +3,42 @@ import { captureConsoleErrors, clearConsoleErrors } from './fixtures/consoleErro
 import { DashboardPage } from './pages/DashboardPage';
 import { LoginPage } from './pages/LoginPage';
 
-test('admin dashboard opent zonder console errors', async ({ page }) => {
+test('[DASH-001] admin dashboard opent zonder console errors', async ({ page }) => {
   const consoleErrors = captureConsoleErrors(page);
   const loginPage = new LoginPage(page);
   const dashboardPage = new DashboardPage(page);
 
-  await loginPage.open();
-  await loginPage.loginAsAdmin();
-  clearConsoleErrors(consoleErrors);
-  await dashboardPage.assertAdminDashboardVisible();
+  await test.step('Given de administrator is ingelogd', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    clearConsoleErrors(consoleErrors);
+  });
 
-  expect(consoleErrors).toEqual([]);
+  await test.step('When de administrator het dashboard opent', async () => {
+    await dashboardPage.assertAdminDashboardVisible();
+  });
+
+  await test.step('Then het dashboard toont admin-overzicht zonder consolefouten', async () => {
+    expect(consoleErrors).toEqual([]);
+  });
 });
 
-test('employee dashboard opent zonder console errors', async ({ page }) => {
+test('[DASH-002] employee dashboard opent zonder console errors', async ({ page }) => {
   const consoleErrors = captureConsoleErrors(page);
   const loginPage = new LoginPage(page);
   const dashboardPage = new DashboardPage(page);
 
-  await loginPage.open();
-  await loginPage.loginAsEmployee();
-  clearConsoleErrors(consoleErrors);
-  await dashboardPage.assertEmployeeDashboardVisible();
+  await test.step('Given de medewerker is ingelogd', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    clearConsoleErrors(consoleErrors);
+  });
 
-  expect(consoleErrors).toEqual([]);
+  await test.step('When de medewerker het dashboard opent', async () => {
+    await dashboardPage.assertEmployeeDashboardVisible();
+  });
+
+  await test.step('Then alleen medewerkersinformatie wordt getoond zonder consolefouten', async () => {
+    expect(consoleErrors).toEqual([]);
+  });
 });

@@ -37,7 +37,7 @@ async function findWritablePeriod(timesheetApi: TimesheetApi): Promise<string> {
 }
 
 test.describe('timesheet review flow api', () => {
-  test('admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking', async ({ request }) => {
+  test('[TS-REV-API-001] admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking', async ({ request }) => {
     const authApi = new AuthApi(request);
     const timesheetApi = new TimesheetApi(request);
 

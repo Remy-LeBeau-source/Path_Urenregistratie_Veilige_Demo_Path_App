@@ -2,6 +2,12 @@
 
 ## Mapping van feature files naar stepdefinitions en native Playwright specs
 
+## Case ID-conventie
+
+- Ieder uitvoerbaar Playwright testgeval krijgt een unieke ID in de titel, bijvoorbeeld `[AUTH-001]` of `[TS-REV-UI-001]`.
+- Feature-scenario's dragen dezelfde ID-prefix zodat documentatie en testreport direct aan elkaar te koppelen zijn.
+- Meerdere feature-scenario's mogen bewust dezelfde ID delen wanneer ze samen door een enkel uitvoerbaar testgeval worden afgedekt.
+
 - [tests/playwright/features/auth.feature](tests/playwright/features/auth.feature) → [tests/playwright/steps/auth.steps.ts](tests/playwright/steps/auth.steps.ts) → [tests/playwright/auth.spec.ts](tests/playwright/auth.spec.ts)
 - [tests/playwright/features/dashboard.feature](tests/playwright/features/dashboard.feature) → [tests/playwright/steps/dashboard.steps.ts](tests/playwright/steps/dashboard.steps.ts) → [tests/playwright/dashboard.spec.ts](tests/playwright/dashboard.spec.ts)
 - [tests/playwright/features/invoices.feature](tests/playwright/features/invoices.feature) → [tests/playwright/steps/invoices.steps.ts](tests/playwright/steps/invoices.steps.ts) → [tests/playwright/invoices.spec.ts](tests/playwright/invoices.spec.ts)

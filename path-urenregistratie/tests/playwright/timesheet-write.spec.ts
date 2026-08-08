@@ -37,7 +37,7 @@ async function findWritablePeriod(timesheetApi: TimesheetApi): Promise<string> {
 }
 
 test.describe('timesheet write api', () => {
-  test('employee save draft, read back, submit, audit en gesloten status guard', async ({ request }) => {
+  test('[TS-API-001] employee save draft, read back, submit, audit en gesloten status guard', async ({ request }) => {
     const authApi = new AuthApi(request);
     const timesheetApi = new TimesheetApi(request);
 
@@ -131,86 +131,104 @@ test.describe('timesheet write api', () => {
     await authApi.logout();
   });
 
-  test('employee mag geen andere medewerker schrijven', async ({ request }) => {
+  test('[TS-API-002] employee mag geen andere medewerker schrijven', async ({ request }) => {
     const authApi = new AuthApi(request);
     const timesheetApi = new TimesheetApi(request);
 
-    const login = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
-    expect(login.user.role).toBe('employee');
-
-    const forbidden = await timesheetApi.write({
-      action: 'save_draft',
-      period: '2099-11',
-      employeeId: 1,
-      contractualHours: 160,
-      billableHours: 8,
-      dayEntries: buildDayEntries('2099-11', 4, 4),
+    await test.step('Given een ingelogde medewerker', async () => {
+      const login = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      expect(login.user.role).toBe('employee');
     });
 
-    expect(forbidden.status).toBe(403);
-    expect(forbidden.body.ok).toBe(false);
-    expect(forbidden.body.error).toBe('forbidden-employee-scope');
+    await test.step('When de medewerker een andere employee_id probeert te schrijven', async () => {
+      const forbidden = await timesheetApi.write({
+        action: 'save_draft',
+        period: '2099-11',
+        employeeId: 1,
+        contractualHours: 160,
+        billableHours: 8,
+        dayEntries: buildDayEntries('2099-11', 4, 4),
+      });
+
+      expect(forbidden.status).toBe(403);
+      expect(forbidden.body.ok).toBe(false);
+      expect(forbidden.body.error).toBe('forbidden-employee-scope');
+    });
 
     await authApi.logout();
   });
 
-  test('write zonder csrf geeft 403', async ({ request }) => {
+  test('[TS-API-003] write zonder csrf geeft 403', async ({ request }) => {
     const authApi = new AuthApi(request);
     const timesheetApi = new TimesheetApi(request);
 
-    const login = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
-    expect(login.user.role).toBe('employee');
-
-    const noCsrf = await timesheetApi.writeWithoutCsrf({
-      action: 'save_draft',
-      period: '2099-10',
-      contractualHours: 160,
-      billableHours: 8,
-      dayEntries: buildDayEntries('2099-10', 4, 4),
+    await test.step('Given een ingelogde medewerker', async () => {
+      const login = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      expect(login.user.role).toBe('employee');
     });
 
-    expect(noCsrf.status).toBe(403);
-    expect(noCsrf.body.ok).toBe(false);
+    await test.step('When de write zonder CSRF-token wordt verstuurd', async () => {
+      const noCsrf = await timesheetApi.writeWithoutCsrf({
+        action: 'save_draft',
+        period: '2099-10',
+        contractualHours: 160,
+        billableHours: 8,
+        dayEntries: buildDayEntries('2099-10', 4, 4),
+      });
+
+      expect(noCsrf.status).toBe(403);
+      expect(noCsrf.body.ok).toBe(false);
+    });
 
     await authApi.logout();
   });
 
-  test('write zonder sessie geeft 401', async ({ request }) => {
+  test('[TS-API-004] write zonder sessie geeft 401', async ({ request }) => {
     const timesheetApi = new TimesheetApi(request);
 
-    const noSession = await timesheetApi.writeWithoutSession({
-      action: 'save_draft',
-      period: '2099-09',
-      contractualHours: 160,
-      billableHours: 8,
-      dayEntries: buildDayEntries('2099-09', 4, 4),
+    await test.step('Given er is geen actieve sessie', async () => {
+      // Deze helper gebruikt een geïsoleerde request-context zonder login.
     });
 
-    expect(noSession.status).toBe(401);
-    expect(noSession.body.ok).toBe(false);
-    expect(noSession.body.error).toBe('not-authenticated');
+    await test.step('When een write zonder sessie wordt verstuurd', async () => {
+      const noSession = await timesheetApi.writeWithoutSession({
+        action: 'save_draft',
+        period: '2099-09',
+        contractualHours: 160,
+        billableHours: 8,
+        dayEntries: buildDayEntries('2099-09', 4, 4),
+      });
+
+      expect(noSession.status).toBe(401);
+      expect(noSession.body.ok).toBe(false);
+      expect(noSession.body.error).toBe('not-authenticated');
+    });
   });
 
-  test('ongeldige payload geeft 400', async ({ request }) => {
+  test('[TS-API-005] ongeldige payload geeft 400', async ({ request }) => {
     const authApi = new AuthApi(request);
     const timesheetApi = new TimesheetApi(request);
 
-    const login = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
-    expect(login.user.role).toBe('employee');
-
-    const invalidPayload = await timesheetApi.write({
-      action: 'save_draft',
-      period: '2099-08',
-      contractualHours: 160,
-      billableHours: 8,
-      dayEntries: [
-        { workDate: '2099-08-01', hours: 30 },
-      ],
+    await test.step('Given een ingelogde medewerker', async () => {
+      const login = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      expect(login.user.role).toBe('employee');
     });
 
-    expect(invalidPayload.status).toBe(400);
-    expect(invalidPayload.body.ok).toBe(false);
-    expect(invalidPayload.body.error).toBe('invalid-payload');
+    await test.step('When de medewerker een ongeldige payload verstuurt', async () => {
+      const invalidPayload = await timesheetApi.write({
+        action: 'save_draft',
+        period: '2099-08',
+        contractualHours: 160,
+        billableHours: 8,
+        dayEntries: [
+          { workDate: '2099-08-01', hours: 30 },
+        ],
+      });
+
+      expect(invalidPayload.status).toBe(400);
+      expect(invalidPayload.body.ok).toBe(false);
+      expect(invalidPayload.body.error).toBe('invalid-payload');
+    });
 
     await authApi.logout();
   });

@@ -38,7 +38,7 @@ async function findWritablePeriod(timesheetApi: TimesheetApi): Promise<string> {
   throw new Error('No writable test period found in 240 candidate months.');
 }
 
-test('login picker vult alleen lokaal demo-wachtwoord in wanneer hints beschikbaar zijn', async ({ page, request }) => {
+test('[SAFE-001] login picker vult alleen lokaal demo-wachtwoord in wanneer hints beschikbaar zijn', async ({ page, request }) => {
   let localHintsEnabled = false;
   let hintedAdminPassword = '';
 
@@ -78,7 +78,7 @@ test('login picker vult alleen lokaal demo-wachtwoord in wanneer hints beschikba
   }
 });
 
-test('frontend source bevat geen plaintext demo-credentials', async ({ request }) => {
+test('[SAFE-002] frontend source bevat geen plaintext demo-credentials', async ({ request }) => {
   const response = await request.get('/assets/app.js');
   expect(response.ok()).toBeTruthy();
   const source = await response.text();
@@ -87,7 +87,7 @@ test('frontend source bevat geen plaintext demo-credentials', async ({ request }
   expect(source).not.toContain('DemoTempEmployee!2026');
 });
 
-test('writes zonder csrf blijven geblokkeerd', async ({ request }) => {
+test('[SAFE-003] writes zonder csrf blijven geblokkeerd', async ({ request }) => {
   const authApi = new AuthApi(request);
   const timesheetApi = new TimesheetApi(request);
 
@@ -105,7 +105,7 @@ test('writes zonder csrf blijven geblokkeerd', async ({ request }) => {
   expect(noCsrf.body.ok).toBe(false);
 });
 
-test('timesheet writeflow blijft werkend (draft + submit)', async ({ request }) => {
+test('[SAFE-004] timesheet writeflow blijft werkend (draft + submit)', async ({ request }) => {
   const authApi = new AuthApi(request);
   const timesheetApi = new TimesheetApi(request);
 
@@ -144,7 +144,7 @@ test('timesheet writeflow blijft werkend (draft + submit)', async ({ request }) 
   expect(submit.body.timesheet.status).toBe('submitted');
 });
 
-test('productieconfig zet demo-migraties standaard uit', async () => {
+test('[SAFE-005] productieconfig zet demo-migraties standaard uit', async () => {
   const configExamplePath = join(process.cwd(), 'server', 'config.example.php');
   const configLocalExamplePath = join(process.cwd(), 'server', 'config.local.php.example');
 
