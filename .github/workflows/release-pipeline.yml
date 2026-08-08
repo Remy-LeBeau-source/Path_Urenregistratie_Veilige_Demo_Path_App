@@ -140,6 +140,18 @@ jobs:
           cat /tmp/install.json
           cat /tmp/migrate.json
 
+      - name: Upload install diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-validate-install-diagnostics
+          path: |
+            /tmp/health.json
+            /tmp/install.json
+            /tmp/migrate.json
+            /tmp/php-server.log
+          if-no-files-found: warn
+
       - name: Generate temporary test passwords
         run: |
           echo "PLAYWRIGHT_ADMIN_PASSWORD=$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)" >> $GITHUB_ENV
