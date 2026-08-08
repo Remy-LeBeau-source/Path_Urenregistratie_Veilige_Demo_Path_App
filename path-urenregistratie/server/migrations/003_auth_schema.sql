@@ -13,7 +13,7 @@ SET @has_password_hash := (
 SET @add_password_hash_sql := IF(
   @has_password_hash = 0,
   'ALTER TABLE users ADD COLUMN password_hash VARCHAR(255) NULL AFTER email',
-  'SELECT 1'
+  'DO 1'
 );
 
 PREPARE add_password_hash_stmt FROM @add_password_hash_sql;
@@ -31,7 +31,7 @@ SET @has_last_login_at := (
 SET @add_last_login_sql := IF(
   @has_last_login_at = 0,
   'ALTER TABLE users ADD COLUMN last_login_at TIMESTAMP NULL AFTER deactivated_by',
-  'SELECT 1'
+  'DO 1'
 );
 
 PREPARE add_last_login_stmt FROM @add_last_login_sql;

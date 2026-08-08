@@ -159,7 +159,11 @@ $allowDemoMigrations = migrate_allow_demo_migrations($config) && $environment !=
 
 try {
     $dsn = sprintf('mysql:host=%s;port=%d;dbname=%s;charset=%s', $db['host'], $db['port'] ?? 3306, $db['name'], $db['charset'] ?? 'utf8mb4');
-    $pdo = new PDO($dsn, $db['user'] ?? '', $db['password'] ?? '', [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
+    $pdo = new PDO($dsn, $db['user'] ?? '', $db['password'] ?? '', [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
+    ]);
 } catch (Throwable $e) {
     http_response_code(500);
     echo json_encode(['ok' => false, 'message' => 'DB connection failed']);

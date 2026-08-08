@@ -124,17 +124,17 @@ INSERT INTO timesheets (
   (12, 3, 4, 4, 151.20, 144.00, 0.00, 0.00, 'approved', '2026-08-31 16:10:00', '2026-09-01 10:05:00', 1, NULL);
 
 INSERT INTO time_entries (timesheet_id, work_date, entry_type, hours, description) VALUES
-  (1, '2026-06-30', 'billable', 144.00, 'Demo maandtotaal'),
-  (2, '2026-06-30', 'billable', 144.00, 'Demo maandtotaal'),
-  (3, '2026-06-30', 'billable', 136.00, 'Demo maandtotaal'),
-  (4, '2026-06-30', 'billable', 144.00, 'Demo maandtotaal'),
-  (5, '2026-07-31', 'billable', 164.00, 'Demo maandtotaal'),
-  (6, '2026-07-31', 'billable', 153.00, 'Demo maandtotaal'),
-  (7, '2026-07-31', 'billable', 117.00, 'Demo maandtotaal'),
-  (8, '2026-07-31', 'billable', 144.00, 'Demo maandtotaal'),
-  (10, '2026-08-12', 'billable', 80.00, 'Demo maandtotaal met correctieverzoek'),
-  (11, '2026-08-31', 'billable', 144.00, 'Demo maandtotaal'),
-  (12, '2026-08-31', 'billable', 144.00, 'Demo maandtotaal');
+  (1, '2026-06-30', 'billable', 8.00, 'Demo dagentry'),
+  (2, '2026-06-30', 'billable', 8.00, 'Demo dagentry'),
+  (3, '2026-06-30', 'billable', 8.00, 'Demo dagentry'),
+  (4, '2026-06-30', 'billable', 8.00, 'Demo dagentry'),
+  (5, '2026-07-31', 'billable', 8.00, 'Demo dagentry'),
+  (6, '2026-07-31', 'billable', 8.00, 'Demo dagentry'),
+  (7, '2026-07-31', 'billable', 8.00, 'Demo dagentry'),
+  (8, '2026-07-31', 'billable', 8.00, 'Demo dagentry'),
+  (10, '2026-08-12', 'billable', 4.00, 'Demo dagentry met correctieverzoek'),
+  (11, '2026-08-31', 'billable', 8.00, 'Demo dagentry'),
+  (12, '2026-08-31', 'billable', 8.00, 'Demo dagentry');
 
 INSERT INTO timesheet_corrections (id, timesheet_id, requested_by, correction_message, requested_at) VALUES
   (1, 10, 1, 'Controleer 12 augustus: daar staat 8 uur, maar volgens de planning hoort dit 4 uur te zijn.', '2026-08-05 10:15:00');
@@ -191,7 +191,7 @@ INSERT INTO notifications (
 ) VALUES
   (1, 1, 1, 3, 'correction_required', 'Correctie nodig', 'Stasjo moet augustus nog aanpassen.', 'approvals', NULL, '2026-08-05 10:15:00'),
   (2, 1, 1, 3, 'timesheet_submitted', 'Uren ingediend', 'Shawn-Douglas heeft augustus 2026 ingediend.', 'approvals', NULL, '2026-08-07 09:18:00'),
-  (3, 1, 1, 2, 'invoice_ready', 'Maandcontrole juli bijna klaar', 'Juli 2026 heeft nog één resterende verzendcontrole; augustus toont de open blokkades.', 'invoices', NULL, '2026-08-07 09:25:00'),
+  (3, 1, 1, 2, 'invoice_ready', 'Maandcontrole juli bijna klaar', 'Juli 2026 heeft nog één resterende verzendcontrole, augustus toont de open blokkades.', 'invoices', NULL, '2026-08-07 09:25:00'),
   (4, 1, 4, 3, 'correction_required', 'Correctie gevraagd', 'Controleer 12 augustus en dien de maand daarna opnieuw in.', 'timesheet', NULL, '2026-08-05 10:15:00'),
   (5, 1, 6, 3, 'timesheet_submitted', 'Uren wachten op controle', 'Je uren voor augustus 2026 zijn ingediend.', 'employee-dashboard', NULL, '2026-08-07 09:18:00');
 
