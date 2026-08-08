@@ -126,9 +126,12 @@ test('timesheet writeflow blijft werkend (draft + submit)', async ({ request }) 
   expect(draft.body.ok).toBe(true);
   expect(draft.body.timesheet.status).toBe('draft');
 
+  const draftVersion = Number(draft.body?.timesheet?.version || 0);
+
   const submit = await timesheetApi.write({
     action: 'submit',
     period,
+    expectedVersion: draftVersion,
     contractualHours: 160,
     billableHours: 12,
     leaveHours: 0,

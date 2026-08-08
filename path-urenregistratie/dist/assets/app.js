@@ -137,6 +137,7 @@ function makeRecord(total, contractHours, timesheetStatus, invoiceStatus, invoic
     invoiceStatus,
     payrollStatus: invoiceStatus === "simulated" ? "simulated" : timesheetStatus === "approved" ? "ready" : "concept",
     invoiceNumber,
+    serverVersion: null,
     correctionHistory: [],
     customerTimesheet: blankCustomerTimesheet()
   };
@@ -1027,6 +1028,8 @@ const authRuntime = {
   localLoginHintsPromise: null
 };
 
+const AUTH_ALWAYS_SHOW_LOGIN_PICKER = true;
+
 const writeRuntime = {
   draftTimer: null,
   lastDraftSignature: "",
@@ -1215,7 +1218,8 @@ function applyAuthUiMode(mode) {
   }
 }
 
-function applyAuthUserToState(user) {
+function applyAuthUserToState(user, options = {}) {
+  const settings = Object.assign({ loginUser: true }, options);
   const role = normalizeAuthRole(String(user && user.role || ""));
   if (!role) return false;
 
@@ -1235,7 +1239,7 @@ function applyAuthUserToState(user) {
     if (employeeMatch) state.currentEmployeeId = Number(employeeMatch.id);
   }
 
-  login(role);
+  if (settings.loginUser) login(role);
   return true;
 }
 
@@ -1331,7 +1335,7 @@ function buildTimesheetWritePayload(action) {
     });
   });
 
-  return {
+  const payload = {
     action,
     period: period.key,
     employee_id: Number(employee.id),
@@ -1341,6 +1345,12 @@ function buildTimesheetWritePayload(action) {
     sickness_hours: Number(record.sick) || 0,
     day_entries: dayEntries
   };
+
+  if (Number.isFinite(Number(record.serverVersion)) && Number(record.serverVersion) > 0) {
+    payload.expected_version = Number(record.serverVersion);
+  }
+
+  return payload;
 }
 
 function writeTimesheetToApi(action) {
@@ -1358,6 +1368,12 @@ function writeTimesheetToApi(action) {
       if (!result.ok || !result.data || result.data.ok !== true) {
         const message = String(result && result.data && result.data.message || "Opslaan op server mislukt.");
         throw new Error(message);
+      }
+      const employee = currentEmployee();
+      const record = recordFor(employee.id);
+      const version = Number(result.data && result.data.timesheet && result.data.timesheet.version);
+      if (Number.isFinite(version) && version > 0) {
+        record.serverVersion = version;
       }
       return result.data;
     });
@@ -1420,8 +1436,21 @@ function initializeAuthSession() {
           available: true,
           error: ""
         });
+
+        if (AUTH_ALWAYS_SHOW_LOGIN_PICKER) {
+          applyAuthUserToState(data.user, { loginUser: false });
+          return requestAuthLogout()
+            .catch(() => null)
+            .finally(() => {
+              setAuthDebug({ authenticated: false, role: "", user_id: null, mode: "auth", available: true, error: "session-cleared-on-load" });
+              logoutLocal();
+              const resolvedName = String((data.user && data.user.display_name) || (data.user && data.user.email) || "deze gebruiker");
+              setAuthLoginFeedback("Actieve sessie van " + resolvedName + " gevonden en gesloten. Kies hieronder een account.", false);
+            });
+        }
+
         setAuthLoginFeedback("", false);
-        applyAuthUserToState(data.user);
+        applyAuthUserToState(data.user, { loginUser: true });
       } else {
         setAuthDebug({ authenticated: false, role: "", user_id: null, mode: "auth", available: true, error: "not-authenticated" });
         logoutLocal();
@@ -1858,6 +1887,11 @@ function normalizeRecord(record, employee, periodKey) {
   record.timesheetStatus = record.timesheetStatus || "draft";
   record.invoiceStatus = record.invoiceStatus || "concept";
   record.payrollStatus = record.payrollStatus || (record.timesheetStatus === "approved" ? "ready" : "concept");
+  if (!Number.isFinite(Number(record.serverVersion)) || Number(record.serverVersion) <= 0) {
+    record.serverVersion = null;
+  } else {
+    record.serverVersion = Number(record.serverVersion);
+  }
   if (record.invoiceStatus === "simulated") record.payrollStatus = "simulated";
   record.invoiceNumber = record.invoiceNumber || invoiceNumberFor(employee.id, period.key);
   record.correctionHistory = Array.isArray(record.correctionHistory) ? record.correctionHistory : [];

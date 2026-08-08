@@ -62,6 +62,7 @@ test.describe('timesheet write api', () => {
       expect(draftWrite.status).toBe(200);
       expect(draftWrite.body.ok).toBe(true);
       expect(draftWrite.body.timesheet.status).toBe('draft');
+      expect(Number(draftWrite.body.timesheet.version)).toBeGreaterThan(0);
       expect(draftWrite.body.audit_event).toBe('timesheet.draft_saved');
     });
 
@@ -71,13 +72,20 @@ test.describe('timesheet write api', () => {
       expect(readBackDraft.body.ok).toBe(true);
       expect(readBackDraft.body.found).toBe(true);
       expect(readBackDraft.body.timesheet.status).toBe('draft');
+      expect(Array.isArray(readBackDraft.body.timesheet.day_entries)).toBe(true);
+      expect(readBackDraft.body.timesheet.day_entries).toHaveLength(2);
+      expect(Array.isArray(readBackDraft.body.timesheet.correction_history)).toBe(true);
       expect(readBackDraft.body.last_audit.event_type).toBe('timesheet.draft_saved');
     });
 
     await test.step('submit werkt met audit event', async () => {
+      const beforeSubmit = await timesheetApi.read(period);
+      const currentVersion = Number(beforeSubmit.body?.timesheet?.version || 0);
+
       const submitWrite = await timesheetApi.write({
         action: 'submit',
         period,
+        expectedVersion: currentVersion,
         contractualHours: 160,
         billableHours: 14,
         leaveHours: 0,
@@ -89,6 +97,7 @@ test.describe('timesheet write api', () => {
       expect(submitWrite.body.ok).toBe(true);
       expect(submitWrite.body.timesheet.status).toBe('submitted');
       expect(submitWrite.body.timesheet.submitted_at).toBeTruthy();
+      expect(Number(submitWrite.body.timesheet.version)).toBeGreaterThan(currentVersion);
       expect(submitWrite.body.audit_event).toBe('timesheet.submitted');
 
       const readBackSubmitted = await timesheetApi.read(period);
@@ -100,9 +109,13 @@ test.describe('timesheet write api', () => {
     });
 
     await test.step('gesloten status kan niet opnieuw worden gewijzigd', async () => {
+      const submitted = await timesheetApi.read(period);
+      const submittedVersion = Number(submitted.body?.timesheet?.version || 0);
+
       const lockedWrite = await timesheetApi.write({
         action: 'save_draft',
         period,
+        expectedVersion: submittedVersion,
         contractualHours: 160,
         billableHours: 10,
         leaveHours: 0,

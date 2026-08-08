@@ -103,6 +103,10 @@ Scenario's:
 - Medewerker kan geen uren van een ander wijzigen
 - Indienen schrijft een audit-event
 - Afgesloten urenstaat kan niet opnieuw worden gewijzigd
+- Administrator vraagt correctie met optimistic locking
+- Medewerker dient na correctie opnieuw in
+- Administrator keurt ingediende uren goed
+- Stale expected_version geeft conflict
 
 ## Technische mapping
 

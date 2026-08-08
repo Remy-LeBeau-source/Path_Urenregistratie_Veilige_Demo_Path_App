@@ -1,7 +1,7 @@
 import { expect, request as playwrightRequest, type APIRequestContext } from '@playwright/test';
 import { appConfig } from '../fixtures/appConfig';
 
-type WriteAction = 'save_draft' | 'submit';
+type WriteAction = 'save_draft' | 'submit' | 'request_correction' | 'approve';
 
 type DayEntry = {
   workDate: string;
@@ -13,6 +13,8 @@ type WritePayload = {
   action: WriteAction;
   period: string;
   employeeId?: number;
+  expectedVersion?: number;
+  correctionMessage?: string;
   contractualHours: number;
   billableHours: number;
   leaveHours?: number;
@@ -20,14 +22,24 @@ type WritePayload = {
   dayEntries: DayEntry[];
 };
 
+type ReviewPayload = {
+  action: 'request_correction' | 'approve';
+  period: string;
+  employeeId: number;
+  expectedVersion: number;
+  correctionMessage?: string;
+};
+
 export class TimesheetApi {
   constructor(private readonly request: APIRequestContext) {}
 
   private toServerPayload(payload: WritePayload) {
-    return {
+    const base = {
       action: payload.action,
       period: payload.period,
       employee_id: payload.employeeId,
+      expected_version: payload.expectedVersion,
+      correction_message: payload.correctionMessage,
       contractual_hours: payload.contractualHours,
       billable_hours: payload.billableHours,
       leave_hours: payload.leaveHours ?? 0,
@@ -37,6 +49,28 @@ export class TimesheetApi {
         hours: entry.hours,
         description: entry.description ?? 'Playwright testinvoer',
       })),
+    };
+
+    if (payload.action === 'request_correction' || payload.action === 'approve') {
+      return {
+        action: payload.action,
+        period: payload.period,
+        employee_id: payload.employeeId,
+        expected_version: payload.expectedVersion,
+        correction_message: payload.correctionMessage,
+      };
+    }
+
+    return base;
+  }
+
+  private toReviewServerPayload(payload: ReviewPayload) {
+    return {
+      action: payload.action,
+      period: payload.period,
+      employee_id: payload.employeeId,
+      expected_version: payload.expectedVersion,
+      correction_message: payload.correctionMessage,
     };
   }
 
@@ -96,5 +130,31 @@ export class TimesheetApi {
       status: response.status(),
       body: await response.json(),
     };
+  }
+
+  async requestCorrection(payload: ReviewPayload) {
+    const csrfResponse = await this.request.get('/server/auth/csrf.php');
+    expect(csrfResponse.ok()).toBeTruthy();
+    const csrfBody = await csrfResponse.json();
+    expect(csrfBody.csrf_token).toBeTruthy();
+
+    const response = await this.request.post('/server/api/timesheets.php', {
+      headers: { 'X-CSRF-Token': csrfBody.csrf_token as string },
+      data: this.toReviewServerPayload(payload),
+    });
+
+    return {
+      status: response.status(),
+      body: await response.json(),
+    };
+  }
+
+  async approve(payload: Omit<ReviewPayload, 'action'>) {
+    return this.requestCorrection({
+      action: 'approve',
+      period: payload.period,
+      employeeId: payload.employeeId,
+      expectedVersion: payload.expectedVersion,
+    });
   }
 }

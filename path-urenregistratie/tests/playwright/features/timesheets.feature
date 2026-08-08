@@ -30,3 +30,23 @@ Feature: Uren schrijven en indienen via API
     Given een ingediende urenstaat
     When de medewerker opnieuw save_draft of submit probeert
     Then krijgt de medewerker een conflictresponse
+
+  Scenario: Administrator vraagt correctie met optimistic locking
+    Given een ingediende urenstaat met bekende versie
+    When de administrator request_correction uitvoert met de juiste expected_version
+    Then wordt de urenstaat correction met correctiebericht en audit-event
+
+  Scenario: Medewerker dient na correctie opnieuw in
+    Given een urenstaat in correction met open correctieverzoek
+    When de medewerker submit uitvoert met de juiste expected_version
+    Then wordt de urenstaat opnieuw submitted en correctie als resubmitted gemarkeerd
+
+  Scenario: Administrator keurt ingediende uren goed
+    Given een ingediende urenstaat na herindiening met bekende versie
+    When de administrator approve uitvoert met de juiste expected_version
+    Then wordt de urenstaat approved met approved_at approved_by en audit-event
+
+  Scenario: Stale expected_version geeft conflict
+    Given een ingediende urenstaat met bekende versie
+    When request_correction of approve met verouderde expected_version wordt uitgevoerd
+    Then krijgt de gebruiker een stale-version conflictresponse

@@ -137,6 +137,7 @@ function makeRecord(total, contractHours, timesheetStatus, invoiceStatus, invoic
     invoiceStatus,
     payrollStatus: invoiceStatus === "simulated" ? "simulated" : timesheetStatus === "approved" ? "ready" : "concept",
     invoiceNumber,
+    serverVersion: null,
     correctionHistory: [],
     customerTimesheet: blankCustomerTimesheet()
   };
@@ -1334,7 +1335,7 @@ function buildTimesheetWritePayload(action) {
     });
   });
 
-  return {
+  const payload = {
     action,
     period: period.key,
     employee_id: Number(employee.id),
@@ -1344,6 +1345,12 @@ function buildTimesheetWritePayload(action) {
     sickness_hours: Number(record.sick) || 0,
     day_entries: dayEntries
   };
+
+  if (Number.isFinite(Number(record.serverVersion)) && Number(record.serverVersion) > 0) {
+    payload.expected_version = Number(record.serverVersion);
+  }
+
+  return payload;
 }
 
 function writeTimesheetToApi(action) {
@@ -1361,6 +1368,12 @@ function writeTimesheetToApi(action) {
       if (!result.ok || !result.data || result.data.ok !== true) {
         const message = String(result && result.data && result.data.message || "Opslaan op server mislukt.");
         throw new Error(message);
+      }
+      const employee = currentEmployee();
+      const record = recordFor(employee.id);
+      const version = Number(result.data && result.data.timesheet && result.data.timesheet.version);
+      if (Number.isFinite(version) && version > 0) {
+        record.serverVersion = version;
       }
       return result.data;
     });
@@ -1874,6 +1887,11 @@ function normalizeRecord(record, employee, periodKey) {
   record.timesheetStatus = record.timesheetStatus || "draft";
   record.invoiceStatus = record.invoiceStatus || "concept";
   record.payrollStatus = record.payrollStatus || (record.timesheetStatus === "approved" ? "ready" : "concept");
+  if (!Number.isFinite(Number(record.serverVersion)) || Number(record.serverVersion) <= 0) {
+    record.serverVersion = null;
+  } else {
+    record.serverVersion = Number(record.serverVersion);
+  }
   if (record.invoiceStatus === "simulated") record.payrollStatus = "simulated";
   record.invoiceNumber = record.invoiceNumber || invoiceNumberFor(employee.id, period.key);
   record.correctionHistory = Array.isArray(record.correctionHistory) ? record.correctionHistory : [];
