@@ -83,6 +83,38 @@ jobs:
 
       - name: Run install + migrations
         run: |
+          fetch_endpoint() {
+            local url="$1"
+            local output="$2"
+            local label="$3"
+            local max_attempts="$4"
+            local ok=0
+
+            for i in $(seq 1 "$max_attempts"); do
+              http_code=$(curl -sS -o "$output" -w "%{http_code}" "$url" || true)
+              if [ "$http_code" = "200" ]; then
+                ok=1
+                break
+              fi
+
+              echo "$label attempt $i failed with HTTP $http_code"
+              if [ -f "$output" ]; then
+                echo "--- $label response body ---"
+                cat "$output"
+              fi
+              if [ -f /tmp/php-server.log ]; then
+                echo "--- php-server.log tail ---"
+                tail -n 200 /tmp/php-server.log
+              fi
+              sleep 1
+            done
+
+            if [ "$ok" -ne 1 ]; then
+              echo "$label failed after retries"
+              exit 1
+            fi
+          }
+
           for i in {1..15}; do
             if curl -fsS http://127.0.0.1:8000/server/health.php > /tmp/health.json; then
               break
@@ -92,33 +124,8 @@ jobs:
           done
           cat /tmp/health.json
 
-          install_ok=0
-          for i in {1..20}; do
-            if curl -fsS http://127.0.0.1:8000/server/install.php > /tmp/install.json; then
-              install_ok=1
-              break
-            fi
-            echo "install.php not ready yet... attempt $i"
-            sleep 1
-          done
-          if [ "$install_ok" -ne 1 ]; then
-            echo "install.php failed after retries"
-            exit 1
-          fi
-
-          migrate_ok=0
-          for i in {1..20}; do
-            if curl -fsS http://127.0.0.1:8000/server/migrate.php > /tmp/migrate.json; then
-              migrate_ok=1
-              break
-            fi
-            echo "migrate.php not ready yet... attempt $i"
-            sleep 1
-          done
-          if [ "$migrate_ok" -ne 1 ]; then
-            echo "migrate.php failed after retries"
-            exit 1
-          fi
+          fetch_endpoint "http://127.0.0.1:8000/server/install.php" "/tmp/install.json" "install.php" 20
+          fetch_endpoint "http://127.0.0.1:8000/server/migrate.php" "/tmp/migrate.json" "migrate.php" 20
 
           cat /tmp/install.json
           cat /tmp/migrate.json
