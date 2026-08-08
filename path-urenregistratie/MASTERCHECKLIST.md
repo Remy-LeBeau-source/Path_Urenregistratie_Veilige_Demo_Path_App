@@ -13,12 +13,13 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 ## Actuele stand
 
 - Datum: 2026-08-09
-- Main/HEAD: bijwerken na iedere commit/push (zie git log -1)
+- Main/HEAD: f4554cd
 - Referentiecommit fase 8/9 backend: fc27723
 - Appversie: 0.9.30
 - Lokale check: geslaagd
 - Lokale e2e regressie: 30 geslaagd, 0 gefaald
 - GitHub pipeline-status: lokaal niet verifieerbaar zonder gh auth login
+- Laatste commit: docs(checklist): add full master checklist and stabilize auth readiness wait
 
 ---
 
