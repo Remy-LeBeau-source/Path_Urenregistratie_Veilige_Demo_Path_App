@@ -4,6 +4,16 @@ Options -Indexes
   Require all denied
 </FilesMatch>
 
+# Block direct HTTP access to install/migrate/db_inspect — run these from CLI only.
+<FilesMatch "^(install|migrate|db_inspect)\.php$">
+  Require all denied
+</FilesMatch>
+
+# Block log files from being served.
+<FilesMatch "\.log$">
+  Require all denied
+</FilesMatch>
+
 <IfModule mod_headers.c>
   Header always set X-Content-Type-Options "nosniff"
   Header always set X-Frame-Options "DENY"

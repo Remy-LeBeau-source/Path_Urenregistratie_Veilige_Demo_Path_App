@@ -17,8 +17,26 @@ security_require_csrf_token();
 $email = security_require_email_field($input, 'email');
 $password = security_require_string_field($input, 'password', 'Email and password are required.', 1024);
 
+// Rate-limit: max 5 failed attempts per email in 15 minutes.
+try {
+    $rlStmt = $pdo->prepare(
+        "SELECT COUNT(*) FROM auth_login_audit
+         WHERE email = :email AND status = 'failed' AND created_at >= DATE_SUB(NOW(), INTERVAL 15 MINUTE)"
+    );
+    $rlStmt->execute([':email' => $email]);
+    if ((int)$rlStmt->fetchColumn() >= 5) {
+        auth_send_json([
+            'ok' => false,
+            'error' => 'too-many-attempts',
+            'message' => 'Too many failed login attempts. Please wait 15 minutes before trying again.',
+        ], 429);
+    }
+} catch (Throwable $rlErr) {
+    // Rate limit check must never block login on DB error.
+}
+
 $stmt = $pdo->prepare(
-    'SELECT id, company_id, email, display_name, role, active, password_hash FROM users WHERE email = :email LIMIT 1'
+    'SELECT id, company_id, email, display_name, role, active, password_hash, force_password_change FROM users WHERE email = :email LIMIT 1'
 );
 $stmt->execute([':email' => $email]);
 $user = $stmt->fetch();
@@ -75,5 +93,6 @@ auth_send_json([
         'email' => (string)$user['email'],
         'display_name' => (string)$user['display_name'],
         'role' => $role,
+        'force_password_change' => (bool)($user['force_password_change'] ?? false),
     ],
 ]);

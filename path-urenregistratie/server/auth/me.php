@@ -23,6 +23,12 @@ if (!$current) {
 
 auth_require_role(['administrator', 'employee'], $current);
 
+// Load force_password_change flag directly; not in session to always reflect DB state.
+$fpStmt = $pdo->prepare('SELECT force_password_change FROM users WHERE id = :id LIMIT 1');
+$fpStmt->execute([':id' => (int)$current['id']]);
+$fpRow = $fpStmt->fetch();
+$forcePasswordChange = $fpRow ? (bool)$fpRow['force_password_change'] : false;
+
 auth_log_event($pdo, (int)$current['company_id'], (int)$current['id'], (string)$current['email'], 'me', 'success');
 
 auth_send_json([
@@ -35,5 +41,6 @@ auth_send_json([
         'email' => (string)$current['email'],
         'display_name' => (string)$current['display_name'],
         'role' => (string)$current['role'],
+        'force_password_change' => $forcePasswordChange,
     ],
 ]);

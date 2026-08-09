@@ -36,6 +36,10 @@ function migration_plan(bool $allowDemoMigrations): array
             'id' => '006_email_queue_dry_run.sql',
             'path' => __DIR__ . '/migrations/006_email_queue_dry_run.sql',
         ],
+        [
+            'id' => '007_password_reset.sql',
+            'path' => __DIR__ . '/migrations/007_password_reset.sql',
+        ],
     ];
 
     if ($allowDemoMigrations) {
