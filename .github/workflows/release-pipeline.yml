@@ -155,11 +155,23 @@ jobs:
           ];
           PHP
 
+      - name: Generate temporary test passwords
+        run: |
+          ADMIN_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)"
+          EMPLOYEE_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)"
+          echo "::add-mask::$ADMIN_PASSWORD"
+          echo "::add-mask::$EMPLOYEE_PASSWORD"
+          echo "PLAYWRIGHT_ADMIN_PASSWORD=$ADMIN_PASSWORD" >> "$GITHUB_ENV"
+          echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=$EMPLOYEE_PASSWORD" >> "$GITHUB_ENV"
+
       - name: Start PHP server
         run: |
           php -S 127.0.0.1:8000 -t . > /tmp/php-server.log 2>&1 &
           echo $! > /tmp/php-server.pid
           sleep 2
+
+      - name: Verify local login hints
+        run: node scripts/verify-local-login-hints.mjs
 
       - name: Run install + migrations
         run: |
@@ -238,15 +250,6 @@ jobs:
             /tmp/migrate.json
             /tmp/php-server.log
           if-no-files-found: warn
-
-      - name: Generate temporary test passwords
-        run: |
-          ADMIN_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)"
-          EMPLOYEE_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)"
-          echo "::add-mask::$ADMIN_PASSWORD"
-          echo "::add-mask::$EMPLOYEE_PASSWORD"
-          echo "PLAYWRIGHT_ADMIN_PASSWORD=$ADMIN_PASSWORD" >> "$GITHUB_ENV"
-          echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=$EMPLOYEE_PASSWORD" >> "$GITHUB_ENV"
 
       - name: Set CI test password hashes in DB
         run: |
@@ -347,18 +350,6 @@ jobs:
           ];
           PHP
 
-      - name: Start fallback PHP server
-        run: |
-          php -S 127.0.0.1:8000 -t . > /tmp/php-server.log 2>&1 &
-          echo $! > /tmp/php-server.pid
-          sleep 2
-
-      - name: Run fallback install + migrations
-        run: |
-          curl -fsS http://127.0.0.1:8000/server/health.php > /tmp/health.json
-          curl -fsS http://127.0.0.1:8000/server/install.php > /tmp/install.json
-          curl -fsS http://127.0.0.1:8000/server/migrate.php > /tmp/migrate.json
-
       - name: Generate fallback test passwords
         run: |
           ADMIN_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)"
@@ -367,6 +358,21 @@ jobs:
           echo "::add-mask::$EMPLOYEE_PASSWORD"
           echo "PLAYWRIGHT_ADMIN_PASSWORD=$ADMIN_PASSWORD" >> "$GITHUB_ENV"
           echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=$EMPLOYEE_PASSWORD" >> "$GITHUB_ENV"
+
+      - name: Start fallback PHP server
+        run: |
+          php -S 127.0.0.1:8000 -t . > /tmp/php-server.log 2>&1 &
+          echo $! > /tmp/php-server.pid
+          sleep 2
+
+      - name: Verify local login hints
+        run: node scripts/verify-local-login-hints.mjs
+
+      - name: Run fallback install + migrations
+        run: |
+          curl -fsS http://127.0.0.1:8000/server/health.php > /tmp/health.json
+          curl -fsS http://127.0.0.1:8000/server/install.php > /tmp/install.json
+          curl -fsS http://127.0.0.1:8000/server/migrate.php > /tmp/migrate.json
 
       - name: Set fallback test password hashes in DB
         run: |
@@ -479,18 +485,6 @@ jobs:
           ];
           PHP
 
-      - name: Start fallback PHP server
-        run: |
-          php -S 127.0.0.1:8000 -t . > /tmp/php-server.log 2>&1 &
-          echo $! > /tmp/php-server.pid
-          sleep 2
-
-      - name: Run fallback install + migrations
-        run: |
-          curl -fsS http://127.0.0.1:8000/server/health.php > /tmp/health.json
-          curl -fsS http://127.0.0.1:8000/server/install.php > /tmp/install.json
-          curl -fsS http://127.0.0.1:8000/server/migrate.php > /tmp/migrate.json
-
       - name: Generate fallback test passwords
         run: |
           ADMIN_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)"
@@ -499,6 +493,21 @@ jobs:
           echo "::add-mask::$EMPLOYEE_PASSWORD"
           echo "PLAYWRIGHT_ADMIN_PASSWORD=$ADMIN_PASSWORD" >> "$GITHUB_ENV"
           echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=$EMPLOYEE_PASSWORD" >> "$GITHUB_ENV"
+
+      - name: Start fallback PHP server
+        run: |
+          php -S 127.0.0.1:8000 -t . > /tmp/php-server.log 2>&1 &
+          echo $! > /tmp/php-server.pid
+          sleep 2
+
+      - name: Verify local login hints
+        run: node scripts/verify-local-login-hints.mjs
+
+      - name: Run fallback install + migrations
+        run: |
+          curl -fsS http://127.0.0.1:8000/server/health.php > /tmp/health.json
+          curl -fsS http://127.0.0.1:8000/server/install.php > /tmp/install.json
+          curl -fsS http://127.0.0.1:8000/server/migrate.php > /tmp/migrate.json
 
       - name: Set fallback test password hashes in DB
         run: |
@@ -610,18 +619,6 @@ jobs:
           ];
           PHP
 
-      - name: Start PHP server
-        run: |
-          php -S 127.0.0.1:8000 -t . > /tmp/php-server.log 2>&1 &
-          echo $! > /tmp/php-server.pid
-          sleep 2
-
-      - name: Run install + migrations
-        run: |
-          curl -fsS http://127.0.0.1:8000/server/health.php > /tmp/health.json
-          curl -fsS http://127.0.0.1:8000/server/install.php > /tmp/install.json
-          curl -fsS http://127.0.0.1:8000/server/migrate.php > /tmp/migrate.json
-
       - name: Generate temporary test passwords
         run: |
           ADMIN_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)"
@@ -630,6 +627,21 @@ jobs:
           echo "::add-mask::$EMPLOYEE_PASSWORD"
           echo "PLAYWRIGHT_ADMIN_PASSWORD=$ADMIN_PASSWORD" >> "$GITHUB_ENV"
           echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=$EMPLOYEE_PASSWORD" >> "$GITHUB_ENV"
+
+      - name: Start PHP server
+        run: |
+          php -S 127.0.0.1:8000 -t . > /tmp/php-server.log 2>&1 &
+          echo $! > /tmp/php-server.pid
+          sleep 2
+
+      - name: Verify local login hints
+        run: node scripts/verify-local-login-hints.mjs
+
+      - name: Run install + migrations
+        run: |
+          curl -fsS http://127.0.0.1:8000/server/health.php > /tmp/health.json
+          curl -fsS http://127.0.0.1:8000/server/install.php > /tmp/install.json
+          curl -fsS http://127.0.0.1:8000/server/migrate.php > /tmp/migrate.json
 
       - name: Set CI test password hashes in DB
         run: |
@@ -756,18 +768,6 @@ jobs:
           ];
           PHP
 
-      - name: Start fallback PHP server
-        run: |
-          php -S 127.0.0.1:8000 -t . > /tmp/php-server.log 2>&1 &
-          echo $! > /tmp/php-server.pid
-          sleep 2
-
-      - name: Run fallback install + migrations
-        run: |
-          curl -fsS http://127.0.0.1:8000/server/health.php > /tmp/health.json
-          curl -fsS http://127.0.0.1:8000/server/install.php > /tmp/install.json
-          curl -fsS http://127.0.0.1:8000/server/migrate.php > /tmp/migrate.json
-
       - name: Generate fallback test passwords
         run: |
           ADMIN_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)"
@@ -776,6 +776,21 @@ jobs:
           echo "::add-mask::$EMPLOYEE_PASSWORD"
           echo "PLAYWRIGHT_ADMIN_PASSWORD=$ADMIN_PASSWORD" >> "$GITHUB_ENV"
           echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=$EMPLOYEE_PASSWORD" >> "$GITHUB_ENV"
+
+      - name: Start fallback PHP server
+        run: |
+          php -S 127.0.0.1:8000 -t . > /tmp/php-server.log 2>&1 &
+          echo $! > /tmp/php-server.pid
+          sleep 2
+
+      - name: Verify local login hints
+        run: node scripts/verify-local-login-hints.mjs
+
+      - name: Run fallback install + migrations
+        run: |
+          curl -fsS http://127.0.0.1:8000/server/health.php > /tmp/health.json
+          curl -fsS http://127.0.0.1:8000/server/install.php > /tmp/install.json
+          curl -fsS http://127.0.0.1:8000/server/migrate.php > /tmp/migrate.json
 
       - name: Set fallback test password hashes in DB
         run: |
@@ -889,18 +904,6 @@ jobs:
           ];
           PHP
 
-      - name: Start fallback PHP server
-        run: |
-          php -S 127.0.0.1:8000 -t . > /tmp/php-server.log 2>&1 &
-          echo $! > /tmp/php-server.pid
-          sleep 2
-
-      - name: Run fallback install + migrations
-        run: |
-          curl -fsS http://127.0.0.1:8000/server/health.php > /tmp/health.json
-          curl -fsS http://127.0.0.1:8000/server/install.php > /tmp/install.json
-          curl -fsS http://127.0.0.1:8000/server/migrate.php > /tmp/migrate.json
-
       - name: Generate fallback test passwords
         run: |
           ADMIN_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)"
@@ -909,6 +912,21 @@ jobs:
           echo "::add-mask::$EMPLOYEE_PASSWORD"
           echo "PLAYWRIGHT_ADMIN_PASSWORD=$ADMIN_PASSWORD" >> "$GITHUB_ENV"
           echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=$EMPLOYEE_PASSWORD" >> "$GITHUB_ENV"
+
+      - name: Start fallback PHP server
+        run: |
+          php -S 127.0.0.1:8000 -t . > /tmp/php-server.log 2>&1 &
+          echo $! > /tmp/php-server.pid
+          sleep 2
+
+      - name: Verify local login hints
+        run: node scripts/verify-local-login-hints.mjs
+
+      - name: Run fallback install + migrations
+        run: |
+          curl -fsS http://127.0.0.1:8000/server/health.php > /tmp/health.json
+          curl -fsS http://127.0.0.1:8000/server/install.php > /tmp/install.json
+          curl -fsS http://127.0.0.1:8000/server/migrate.php > /tmp/migrate.json
 
       - name: Set fallback test password hashes in DB
         run: |

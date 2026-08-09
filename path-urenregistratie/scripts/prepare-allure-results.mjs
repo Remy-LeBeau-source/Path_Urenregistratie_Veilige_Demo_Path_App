@@ -15,7 +15,7 @@ const categories = [
   {
     name: 'Security regressie',
     matchedStatuses: ['broken', 'failed'],
-    traceRegex: '.*\[(SEC|SAFE|PWD|ROLE)-.*',
+    traceRegex: '.*\\[(SEC|SAFE|PWD|ROLE)-.*',
   },
   {
     name: 'Product regressie',
