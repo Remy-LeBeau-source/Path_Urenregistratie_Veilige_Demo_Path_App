@@ -82,6 +82,8 @@ function markdownToHtml(markdown, options = {}) {
   const toc = [];
   let inList = false;
   let inCode = false;
+  let inTable = false;
+  let tableHeaderOpen = false;
   let sectionDepth = 0;
   let skippedFirstH1 = false;
 
@@ -89,6 +91,14 @@ function markdownToHtml(markdown, options = {}) {
     if (inList) {
       html.push('</ul>');
       inList = false;
+    }
+  };
+
+  const closeTable = () => {
+    if (inTable) {
+      html.push('</tbody></table></div>');
+      inTable = false;
+      tableHeaderOpen = false;
     }
   };
 
@@ -105,6 +115,7 @@ function markdownToHtml(markdown, options = {}) {
 
     if (trimmed.startsWith('```')) {
       closeList();
+      closeTable();
       if (!inCode) {
         html.push('<pre class="doc-code"><code>');
         inCode = true;
@@ -120,13 +131,37 @@ function markdownToHtml(markdown, options = {}) {
       continue;
     }
 
+    if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+      closeList();
+      const cells = trimmed.slice(1, -1).split('|').map(cell => cell.trim());
+      const isSeparator = cells.every(cell => /^:?-{3,}:?$/.test(cell));
+      if (!inTable) {
+        html.push('<div class="doc-table-wrap"><table class="doc-table"><thead>');
+        html.push(`<tr>${cells.map(cell => `<th>${renderInline(cell)}</th>`).join('')}</tr>`);
+        inTable = true;
+        tableHeaderOpen = true;
+      } else if (isSeparator && tableHeaderOpen) {
+        html.push('</thead><tbody>');
+        tableHeaderOpen = false;
+      } else if (!isSeparator) {
+        if (tableHeaderOpen) {
+          html.push('</thead><tbody>');
+          tableHeaderOpen = false;
+        }
+        html.push(`<tr>${cells.map(cell => `<td>${renderInline(cell)}</td>`).join('')}</tr>`);
+      }
+      continue;
+    }
+
     if (trimmed === '') {
       closeList();
+      closeTable();
       continue;
     }
 
     if (trimmed.startsWith('# ')) {
       closeList();
+      closeTable();
       closeSectionsTo(0);
       if (options.omitFirstH1 && !skippedFirstH1) {
         skippedFirstH1 = true;
@@ -141,6 +176,7 @@ function markdownToHtml(markdown, options = {}) {
 
     if (trimmed.startsWith('## ')) {
       closeList();
+      closeTable();
       closeSectionsTo(1);
       const title = trimmed.slice(3).trim();
       const id = slugify(title);
@@ -153,6 +189,7 @@ function markdownToHtml(markdown, options = {}) {
 
     if (trimmed.startsWith('### ')) {
       closeList();
+      closeTable();
       closeSectionsTo(2);
       const title = trimmed.slice(4).trim();
       const id = slugify(title);
@@ -173,10 +210,12 @@ function markdownToHtml(markdown, options = {}) {
     }
 
     closeList();
+    closeTable();
     html.push(`<p>${renderInline(trimmed)}</p>`);
   }
 
   closeList();
+  closeTable();
   if (inCode) {
     html.push('</code></pre>');
   }
@@ -208,6 +247,204 @@ function renderDocToc(toc) {
 
   return `<ul class="toc-list">${items.map(item => `<li class="toc-depth-${item.depth}"><a href="#${item.id}">${escapeHtml(item.title)}</a></li>`).join('')}</ul>`;
 }
+
+function renderCoverageCharts(features) {
+  const domainLabels = { api: 'API', security: 'Security', ui: 'UI', integration: 'Integratie', db: 'Database' };
+  const domainColors = { api: '#149f92', security: '#245b78', ui: '#d68335', integration: '#708b46', db: '#7e689b' };
+  const domainCounts = new Map();
+  let happy = 0;
+  let negative = 0;
+
+  for (const feature of features) {
+    const domainTag = feature.featureTags.find(tag => ['@api', '@security', '@ui', '@integration', '@db'].includes(tag));
+    const domain = domainTag?.slice(1) || 'other';
+    domainCounts.set(domain, (domainCounts.get(domain) || 0) + feature.scenarios.length);
+    happy += feature.scenarios.filter(scenario => scenario.tags.includes('@happy')).length;
+    negative += feature.scenarios.filter(scenario => scenario.tags.includes('@negative')).length;
+  }
+
+  const domains = [...domainCounts.entries()].sort((left, right) => right[1] - left[1]);
+  const total = happy + negative;
+  const bars = domains.map(([domain, count]) => `<a class="chart-row" href="living-doc.html?filter=${encodeURIComponent(`@${domain}`)}" title="Toon ${count} ${escapeHtml(domainLabels[domain] || domain)}-cases"><span>${escapeHtml(domainLabels[domain] || domain)}</span><div class="chart-track"><i style="width:${(count / total) * 100}%;background:${domainColors[domain] || '#70818b'}"></i></div><strong>${count}</strong></a>`).join('');
+
+  return `<div class="coverage-grid">
+    <article class="chart-panel">
+      <div class="chart-heading"><div><span class="overline">Unieke cases</span><h3>Per testsoort</h3></div><strong>${total}</strong></div>
+      <div class="bar-chart">${bars}</div>
+    </article>
+    <article class="chart-panel">
+      <div class="chart-heading"><div><span class="overline">Scenarioflow</span><h3>Happy en negative</h3></div><strong>${total}</strong></div>
+      <div class="flow-bar"><a href="living-doc.html?filter=%40happy" style="width:${(happy / total) * 100}%" title="Toon ${happy} happy-flow-cases"></a><a class="negative" href="living-doc.html?filter=%40negative" style="width:${(negative / total) * 100}%" title="Toon ${negative} negative-flow-cases"></a></div>
+      <div class="flow-legend"><a href="living-doc.html?filter=%40happy"><i class="legend-happy"></i>Happy <strong>${happy}</strong></a><a href="living-doc.html?filter=%40negative"><i class="legend-negative"></i>Negative <strong>${negative}</strong></a></div>
+      <p>Positieve gebruikersroutes en bewust geteste fout- en beveiligingssituaties.</p>
+    </article>
+  </div>`;
+}
+
+function renderTraceabilityIntro() {
+  return `<section class="trace-intro">
+    <span class="overline">Zo lees je deze pagina</span>
+    <h2>Van gebruikersgedrag naar testbewijs</h2>
+    <p>Iedere case gebruikt overal hetzelfde ID. Daardoor kun je zonder technisch zoekwerk volgen wat is beschreven, welke test draait en waar het resultaat staat.</p>
+    <div class="trace-steps">
+      <div><span>1</span><strong>Gedrag</strong><p>Het feature-scenario beschrijft wat de gebruiker verwacht.</p></div>
+      <div><span>2</span><strong>Automatische test</strong><p>De Playwright-spec voert precies dezelfde case-ID uit.</p></div>
+      <div><span>3</span><strong>Bewijs</strong><p>Playwright en Allure tonen status, screenshots en details.</p></div>
+    </div>
+  </section>`;
+}
+
+function parseFeatureDocument(file, source) {
+  const lines = source.replace(/\r\n/g, '\n').split('\n');
+  const featureLine = lines.findIndex(line => /^Feature:/i.test(line.trim()));
+  const title = featureLine >= 0 ? lines[featureLine].trim().replace(/^Feature:\s*/i, '') : file;
+  const featureTags = lines.slice(0, Math.max(featureLine, 0)).map(line => line.trim()).filter(line => line.startsWith('@'));
+  const spec = lines.map(line => line.trim()).find(line => line.startsWith('# Native Playwright-uitvoering:'))?.split(': ').slice(1).join(': ') || '';
+  const steps = lines.map(line => line.trim()).find(line => line.startsWith('# Navigatiemapping:'))?.split(': ').slice(1).join(': ') || '';
+  const scenarios = [];
+  let pendingTags = [];
+
+  for (let index = featureLine + 1; index < lines.length; index += 1) {
+    const line = lines[index].trim();
+    if (line.startsWith('@')) {
+      pendingTags = line.split(/\s+/).filter(Boolean);
+      continue;
+    }
+    const scenarioMatch = line.match(/^Scenario:\s*\[([^\]]+)\]\s*(.+)$/i);
+    if (!scenarioMatch) {
+      continue;
+    }
+
+    const scenario = { id: scenarioMatch[1], title: scenarioMatch[2], tags: pendingTags, steps: [] };
+    pendingTags = [];
+    for (let stepIndex = index + 1; stepIndex < lines.length; stepIndex += 1) {
+      const step = lines[stepIndex].trim();
+      if (/^(?:@|Scenario:)/i.test(step)) {
+        break;
+      }
+      const stepMatch = step.match(/^(Given|When|Then|And|But)\s+(.+)$/i);
+      if (stepMatch) {
+        scenario.steps.push({ keyword: stepMatch[1], text: stepMatch[2] });
+      }
+    }
+    scenarios.push(scenario);
+  }
+
+  return { file, title, featureTags, spec, steps, scenarios };
+}
+
+function renderLivingDocViewer(features, generatedAt, allureSummary) {
+  const featureData = JSON.stringify(features).replaceAll('<', '\\u003c');
+  return `<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Path Living Documentation</title>
+    <style>${portalCss()}</style>
+  </head>
+  <body class="viewer-body">
+    <header class="viewer-header">
+      <a class="brand" href="index.html"><span class="brand-mark">P</span><span>Path <small>Living Documentation</small></span></a>
+      <nav class="viewer-nav" aria-label="Rapportages">
+        <a href="test-bdd-mapping.html">Traceability</a>
+        <a href="playwright-report/index.html">Playwright</a>
+        <a href="allure-report/index.html">Allure</a>
+      </nav>
+      <span class="run-status"><span class="status-dot"></span>${allureSummary.passed}/${allureSummary.total} passed</span>
+    </header>
+    <div class="viewer-shell">
+      <aside class="feature-sidebar">
+        <div class="sidebar-heading">
+          <span class="overline">Documentatie</span>
+          <strong>Features</strong>
+          <span id="feature-count">${features.length}</span>
+        </div>
+        <label class="feature-search">
+          <span>Zoeken</span>
+          <input id="feature-search" type="search" placeholder="Feature, scenario of case-ID" autocomplete="off" />
+        </label>
+        <div id="feature-list" class="feature-list"></div>
+      </aside>
+      <main class="viewer-main">
+        <div class="viewer-toolbar">
+          <div>
+            <span class="overline">Feature</span>
+            <h1 id="feature-title"></h1>
+          </div>
+          <a id="feature-source" class="source-link" href="#">Open bronbestand</a>
+        </div>
+        <div id="feature-meta" class="feature-meta"></div>
+        <div class="scenario-summary">
+          <div><strong id="scenario-count">0</strong><span>Scenario's</span></div>
+          <div><strong id="happy-count">0</strong><span>Happy flow</span></div>
+          <div><strong id="negative-count">0</strong><span>Negative flow</span></div>
+        </div>
+        <section id="scenario-list" class="scenario-list" aria-live="polite"></section>
+        <p id="empty-state" class="empty-state" hidden>Geen scenario's gevonden voor deze zoekopdracht.</p>
+      </main>
+    </div>
+    <footer class="viewer-footer">Gegenereerd uit Native Playwright-documentatie op ${escapeHtml(generatedAt)}</footer>
+    <script>
+      const features = ${featureData};
+      const params = new URLSearchParams(window.location.search);
+      const requestedFeature = params.get('feature');
+      const requestedCase = params.get('case');
+      const requestedFilter = params.get('filter');
+      const caseFeature = requestedCase ? features.find(feature => feature.scenarios.some(scenario => scenario.id === requestedCase)) : null;
+      const initialQuery = requestedCase || requestedFilter || '';
+      const state = { activeFile: caseFeature?.file || (features.some(feature => feature.file === requestedFeature) ? requestedFeature : features[0]?.file || ''), query: initialQuery.toLowerCase() };
+      const elements = {
+        search: document.querySelector('#feature-search'), featureList: document.querySelector('#feature-list'),
+        featureCount: document.querySelector('#feature-count'), title: document.querySelector('#feature-title'),
+        source: document.querySelector('#feature-source'), meta: document.querySelector('#feature-meta'),
+        scenarioCount: document.querySelector('#scenario-count'), happyCount: document.querySelector('#happy-count'),
+        negativeCount: document.querySelector('#negative-count'), scenarios: document.querySelector('#scenario-list'),
+        empty: document.querySelector('#empty-state')
+      };
+      const safe = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+      const formatDuration = result => {
+        if (!result?.executions) return '';
+        const average = result.durationMs / result.executions;
+        return average < 1000 ? Math.round(average) + ' ms' : (average / 1000).toFixed(1) + ' s';
+      };
+      const statusLabel = result => result?.status ? result.status.charAt(0).toUpperCase() + result.status.slice(1) : 'Unknown';
+      const resultLabel = result => result ? (result.executions > 1 ? result.executions + ' runs · ' : '') + formatDuration(result) : 'Geen resultaat';
+      const matches = feature => {
+        const haystack = [feature.title, feature.file, feature.spec, ...feature.featureTags, ...feature.scenarios.flatMap(scenario => [scenario.id, scenario.title, ...scenario.tags])].join(' ').toLowerCase();
+        return haystack.includes(state.query);
+      };
+      function renderFeatures() {
+        const visible = features.filter(matches);
+        elements.featureCount.textContent = visible.length;
+        if (!visible.some(feature => feature.file === state.activeFile) && visible[0]) state.activeFile = visible[0].file;
+        elements.featureList.innerHTML = visible.map(feature => '<button class="feature-item ' + (feature.file === state.activeFile ? 'active' : '') + '" data-file="' + safe(feature.file) + '"><span>' + safe(feature.title) + '</span><small>' + feature.scenarios.length + " scenario's</small></button>").join('');
+        elements.featureList.querySelectorAll('button').forEach(button => button.addEventListener('click', () => { state.activeFile = button.dataset.file; render(); }));
+      }
+      function renderActiveFeature() {
+        const feature = features.find(item => item.file === state.activeFile && matches(item));
+        if (!feature) {
+          elements.title.textContent = 'Geen resultaten'; elements.meta.innerHTML = ''; elements.scenarios.innerHTML = ''; elements.empty.hidden = false; return;
+        }
+        const scenarios = feature.scenarios.filter(scenario => !state.query || [scenario.id, scenario.title, ...scenario.tags, ...feature.featureTags, feature.title].join(' ').toLowerCase().includes(state.query));
+        elements.title.textContent = feature.title;
+        elements.source.href = 'features/' + encodeURIComponent(feature.file);
+        elements.meta.innerHTML = [...feature.featureTags.map(tag => '<span class="tag">' + safe(tag) + '</span>'), '<span class="meta-path">Spec: ' + safe(feature.spec) + '</span>', '<span class="meta-path">Steps: ' + safe(feature.steps) + '</span>'].join('');
+        elements.scenarioCount.textContent = scenarios.length;
+        elements.happyCount.textContent = scenarios.filter(scenario => scenario.tags.includes('@happy')).length;
+        elements.negativeCount.textContent = scenarios.filter(scenario => scenario.tags.includes('@negative')).length;
+        elements.scenarios.innerHTML = scenarios.map((scenario, index) => '<details class="scenario" ' + (index === 0 ? 'open' : '') + '><summary><span class="scenario-state ' + (scenario.tags.includes('@negative') ? 'negative' : 'happy') + '"></span><span><a class="case-link" href="?case=' + encodeURIComponent(scenario.id) + '" title="Directe link naar deze case">' + safe(scenario.id) + '</a><strong>' + safe(scenario.title) + '</strong></span><span class="scenario-badges"><span class="result-badge ' + safe(scenario.result?.status || 'unknown') + '">' + safe(statusLabel(scenario.result)) + ' · ' + safe(resultLabel(scenario.result)) + '</span><span class="scenario-flow">' + (scenario.tags.includes('@negative') ? 'Negative' : 'Happy') + '</span></span></summary><div class="gherkin">' + scenario.steps.map(step => '<div><b>' + safe(step.keyword) + '</b><span>' + safe(step.text) + '</span></div>').join('') + (scenario.result ? '<div class="result-row"><span>Laatste run: ' + safe(new Date(scenario.result.startedAt).toLocaleString('nl-NL')) + '</span><span>' + safe(scenario.result.projects.join(' · ')) + '</span></div>' : '') + '<div class="trace-row"><a href="features/' + encodeURIComponent(feature.file) + '">Feature</a><span>→</span><span>' + safe(feature.steps) + '</span><span>→</span><span>' + safe(feature.spec) + '</span></div></div></details>').join('');
+        elements.empty.hidden = scenarios.length > 0;
+      }
+      function render() { renderFeatures(); renderActiveFeature(); }
+      elements.search.value = initialQuery;
+      elements.search.addEventListener('input', event => { state.query = event.target.value.trim().toLowerCase(); render(); });
+      render();
+    </script>
+  </body>
+</html>`;
+}
+
 function portalCss() {
   return `
       :root {
@@ -333,6 +570,7 @@ function portalCss() {
         grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
         margin-top: 1.15rem;
       }
+      .hero-dark .stat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
       .stat-card {
         border-radius: 20px;
         padding: 0.95rem 1rem;
@@ -418,8 +656,10 @@ function portalCss() {
       }
       .toc-list a:hover { background: rgba(46, 196, 182, 0.12); }
       .toc-depth-3 a { padding-left: 1rem; color: var(--ink-soft); }
-      .content-panel { padding: 1.3rem; }
+      .content-panel { min-width: 0; padding: 1.3rem; }
       .doc-section {
+        min-width: 0;
+        overflow: hidden;
         background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(244, 250, 250, 0.92));
         border: 1px solid var(--line);
         border-radius: 22px;
@@ -438,13 +678,115 @@ function portalCss() {
         padding: 0.9rem 1rem;
         margin: 0.9rem 0;
       }
+      .doc-table-wrap { width: 100%; max-width: 100%; overflow: auto; border: 1px solid #d8e0e5; margin-top: 1rem; }
+      .doc-table { width: max-content; min-width: 100%; border-collapse: collapse; background: #fff; font-size: 0.8rem; }
+      .doc-table th { position: sticky; top: 0; z-index: 1; background: #172c3d; color: #fff; text-align: left; white-space: nowrap; }
+      .doc-table th, .doc-table td { padding: 0.65rem 0.75rem; border-right: 1px solid #dfe5e9; border-bottom: 1px solid #dfe5e9; vertical-align: top; }
+      .doc-table tbody tr:nth-child(even) { background: #f6f8f9; }
+      .doc-table tbody tr:hover { background: #edf7f6; }
       code { font-family: Consolas, "Courier New", monospace; font-size: 0.94em; }
       .section { margin-top: 1rem; padding: 1.2rem; }
       .stamp { margin-top: 1rem; }
+      .coverage-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; }
+      .chart-panel { border: 1px solid #dce4e8; background: #fff; padding: 1.1rem; }
+      .chart-heading { display: flex; justify-content: space-between; align-items: start; gap: 1rem; }
+      .chart-heading h3 { margin: 0; font-size: 1.05rem; }
+      .chart-heading > strong { font: 750 1.9rem Bahnschrift, sans-serif; color: #172c3d; }
+      .bar-chart { display: grid; gap: 0.7rem; margin-top: 1rem; }
+      .chart-row { display: grid; grid-template-columns: 74px minmax(0, 1fr) 28px; align-items: center; gap: 0.65rem; color: #526874; font-size: 0.82rem; text-decoration: none; }
+      .chart-row:hover { color: #08786f; }
+      .chart-row > strong { text-align: right; color: #233b4c; }
+      .chart-track { height: 9px; background: #e8edef; overflow: hidden; }
+      .chart-track i { display: block; height: 100%; }
+      .flow-bar { display: flex; height: 20px; margin-top: 1.25rem; overflow: hidden; }
+      .flow-bar a { display: block; background: #1ea672; }
+      .flow-bar a.negative { background: #d68335; }
+      .flow-legend { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.85rem; color: #526874; font-size: 0.82rem; }
+      .flow-legend a { display: inline-flex; align-items: center; gap: 0.4rem; color: #526874; text-decoration: none; }
+      .flow-legend a:hover { color: #08786f; }
+      .flow-legend i { width: 9px; height: 9px; display: inline-block; }
+      .legend-happy { background: #1ea672; }
+      .legend-negative { background: #d68335; }
+      .chart-panel > p { margin-top: 1rem; color: #6d7f8a; font-size: 0.84rem; }
+      .trace-intro { margin-bottom: 1rem; padding: 1.2rem; border: 1px solid #cfe0df; background: #f4faf9; }
+      .trace-intro > p { color: #536b77; max-width: 76ch; }
+      .trace-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin-top: 1rem; background: #cfe0df; border: 1px solid #cfe0df; }
+      .trace-steps > div { position: relative; background: #fff; padding: 1rem 1rem 1rem 3.25rem; }
+      .trace-steps > div > span { position: absolute; left: 1rem; top: 1rem; width: 1.5rem; height: 1.5rem; display: grid; place-items: center; background: #149f92; color: #fff; font-weight: 750; }
+      .trace-steps strong { color: #203b4d; }
+      .trace-steps p { margin: 0.25rem 0 0; color: #647985; font-size: 0.84rem; line-height: 1.45; }
+      .portal-footer { display: flex; justify-content: space-between; gap: 1rem; padding: 1.25rem 0.4rem 0; color: #6d7f8a; font-size: 0.82rem; }
+      .viewer-body { min-height: 100vh; background: #f4f6f8; font-family: Aptos, "Segoe UI", sans-serif; }
+      .viewer-header { min-height: 64px; padding: 0 1.5rem; display: flex; align-items: center; gap: 1.5rem; background: #fff; border-bottom: 1px solid #dfe4e8; position: sticky; top: 0; z-index: 20; }
+      .brand { display: flex; align-items: center; gap: 0.65rem; color: #172c3d; text-decoration: none; font-weight: 750; }
+      .brand small { display: block; color: #687985; font-weight: 500; }
+      .brand-mark { width: 34px; height: 34px; display: grid; place-items: center; background: #149f92; color: #fff; font: 800 1.1rem Bahnschrift, sans-serif; }
+      .viewer-nav { display: flex; gap: 0.25rem; margin-left: auto; }
+      .viewer-nav a { padding: 0.55rem 0.7rem; color: #425665; text-decoration: none; font-weight: 650; font-size: 0.9rem; }
+      .viewer-nav a:hover { background: #edf7f6; color: #08786f; }
+      .run-status { display: inline-flex; align-items: center; gap: 0.45rem; color: #355060; font-size: 0.86rem; font-weight: 650; }
+      .status-dot, .scenario-state { width: 9px; height: 9px; border-radius: 50%; background: #1ea672; flex: 0 0 auto; }
+      .viewer-shell { min-height: calc(100vh - 104px); display: grid; grid-template-columns: 310px minmax(0, 1fr); }
+      .feature-sidebar { background: #172c3d; color: #fff; padding: 1.25rem 0; }
+      .sidebar-heading { padding: 0 1.15rem 1rem; display: grid; grid-template-columns: 1fr auto; align-items: end; }
+      .sidebar-heading .overline { grid-column: 1 / -1; color: #8fa3b1; }
+      .sidebar-heading strong { font-size: 1.35rem; }
+      .sidebar-heading > span:last-child { color: #9eafb9; font-weight: 700; }
+      .overline { display: block; margin-bottom: 0.25rem; color: #748691; font-size: 0.72rem; font-weight: 750; text-transform: uppercase; letter-spacing: 0.08em; }
+      .feature-search { display: block; padding: 0 1rem 1rem; }
+      .feature-search > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+      .feature-search input { width: 100%; min-height: 42px; border: 1px solid #425667; background: #213a4d; color: #fff; padding: 0.7rem 0.8rem; font: inherit; }
+      .feature-search input::placeholder { color: #aebbc4; }
+      .feature-search input:focus { outline: 2px solid #43c9bd; outline-offset: 1px; }
+      .feature-list { display: grid; max-height: calc(100vh - 205px); overflow-y: auto; }
+      .feature-item { border: 0; border-left: 3px solid transparent; background: transparent; color: #d9e2e7; padding: 0.75rem 1rem; text-align: left; cursor: pointer; font: inherit; }
+      .feature-item span, .feature-item small { display: block; }
+      .feature-item span { font-weight: 650; line-height: 1.3; }
+      .feature-item small { color: #91a3af; margin-top: 0.25rem; }
+      .feature-item:hover { background: #203b4e; }
+      .feature-item.active { border-left-color: #43c9bd; background: #28485d; color: #fff; }
+      .viewer-main { width: 100%; max-width: 1160px; padding: 2rem clamp(1rem, 3vw, 3rem) 3rem; }
+      .viewer-toolbar { display: flex; justify-content: space-between; align-items: start; gap: 1rem; }
+      .viewer-toolbar h1 { max-width: 780px; margin: 0; font: 750 clamp(1.65rem, 3vw, 2.3rem)/1.15 Bahnschrift, Aptos, sans-serif; color: #172c3d; letter-spacing: 0; }
+      .source-link { flex: 0 0 auto; padding: 0.65rem 0.8rem; border: 1px solid #cdd6dc; color: #31566a; text-decoration: none; font-size: 0.86rem; font-weight: 700; }
+      .source-link:hover { border-color: #149f92; color: #08786f; }
+      .feature-meta { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; margin-top: 1rem; }
+      .tag { padding: 0.25rem 0.45rem; background: #dff3f0; color: #08786f; font-size: 0.76rem; font-weight: 750; }
+      .meta-path { color: #6b7d88; font: 0.78rem Consolas, monospace; margin-left: 0.35rem; }
+      .scenario-summary { display: grid; grid-template-columns: repeat(3, minmax(120px, 190px)); gap: 1px; margin: 1.6rem 0; background: #dfe5e9; border: 1px solid #dfe5e9; }
+      .scenario-summary > div { background: #fff; padding: 0.85rem 1rem; }
+      .scenario-summary strong, .scenario-summary span { display: block; }
+      .scenario-summary strong { color: #172c3d; font-size: 1.25rem; }
+      .scenario-summary span { color: #71818b; font-size: 0.78rem; }
+      .scenario-list { display: grid; gap: 0.65rem; }
+      .scenario { border: 1px solid #d9e0e4; background: #fff; box-shadow: 0 3px 10px rgba(23, 44, 61, 0.04); }
+      .scenario[open] { border-color: #a8c8c4; }
+      .scenario summary { min-height: 68px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.85rem; padding: 0.75rem 1rem; cursor: pointer; list-style: none; }
+      .scenario summary::-webkit-details-marker { display: none; }
+      .scenario summary small, .scenario summary strong { display: block; }
+      .scenario summary small { color: #788892; font: 0.76rem Consolas, monospace; margin-bottom: 0.15rem; }
+      .case-link { display: block; width: fit-content; color: #788892; font: 0.76rem Consolas, monospace; margin-bottom: 0.15rem; text-decoration: none; }
+      .case-link:hover { color: #08786f; text-decoration: underline; }
+      .scenario summary strong { color: #233b4c; line-height: 1.35; }
+      .scenario-state.negative { background: #d68335; }
+      .scenario-flow { color: #687b87; background: #f0f3f5; padding: 0.3rem 0.5rem; font-size: 0.72rem; font-weight: 750; text-transform: uppercase; }
+      .scenario-badges { display: flex; align-items: center; justify-content: end; gap: 0.45rem; }
+      .result-badge { padding: 0.3rem 0.5rem; background: #edf1f3; color: #637681; font-size: 0.72rem; font-weight: 750; white-space: nowrap; }
+      .result-badge.passed { background: #dff3e9; color: #16744f; }
+      .result-badge.failed, .result-badge.broken { background: #f7e2df; color: #a13b31; }
+      .gherkin { border-top: 1px solid #e3e8eb; background: #f8fafb; padding: 1rem 1rem 1.1rem 2.85rem; display: grid; gap: 0.6rem; }
+      .gherkin > div:not(.trace-row) { display: grid; grid-template-columns: 62px minmax(0, 1fr); gap: 0.65rem; color: #394f5e; }
+      .gherkin b { color: #08786f; }
+      .trace-row { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.35rem; padding-top: 0.75rem; border-top: 1px dashed #cfd8dd; color: #71818b; font: 0.76rem Consolas, monospace; }
+      .result-row { display: flex !important; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 1rem; margin-top: 0.35rem; padding: 0.65rem 0; color: #59707d; font-size: 0.78rem; border-top: 1px solid #dfe6e9; }
+      .empty-state { padding: 2rem; border: 1px dashed #bdc9d0; text-align: center; color: #657984; }
+      .viewer-footer { padding: 0.75rem 1.5rem; background: #fff; border-top: 1px solid #dfe4e8; color: #71818b; font-size: 0.76rem; text-align: right; }
       @media (max-width: 900px) {
         .hero-grid,
         .doc-layout { grid-template-columns: 1fr; }
         .toc-panel { position: static; }
+        .viewer-shell { grid-template-columns: 250px minmax(0, 1fr); }
+        .coverage-grid { grid-template-columns: 1fr; }
       }
       @media (max-width: 640px) {
         main { padding-inline: 0.8rem; }
@@ -457,6 +799,26 @@ function portalCss() {
         .quick-link-card,
         .doc-card,
         .stat-card { border-radius: 18px; }
+        .viewer-header { padding: 0 0.8rem; gap: 0.75rem; }
+        .viewer-nav { display: none; }
+        .run-status { margin-left: auto; }
+        .viewer-shell { display: block; }
+        .feature-sidebar { padding-bottom: 0.75rem; }
+        .feature-list { display: flex; overflow-x: auto; max-height: none; padding: 0 0.8rem; }
+        .feature-item { min-width: 210px; border-left: 0; border-bottom: 3px solid transparent; }
+        .feature-item.active { border-bottom-color: #43c9bd; }
+        .viewer-main { padding: 1.4rem 0.85rem 2rem; }
+        .viewer-toolbar { display: block; }
+        .source-link { display: inline-block; margin-top: 0.8rem; }
+        .meta-path { width: 100%; margin: 0.1rem 0 0; overflow-wrap: anywhere; }
+        .scenario-summary { grid-template-columns: repeat(3, 1fr); }
+        .scenario summary { grid-template-columns: auto minmax(0, 1fr); }
+        .scenario-badges { grid-column: 2; justify-content: start; flex-wrap: wrap; }
+        .scenario-flow { display: none; }
+        .gherkin { padding-left: 1rem; }
+        .trace-steps { grid-template-columns: 1fr; }
+        .portal-footer { display: grid; }
+        .hero-dark .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       }`;
 }
 
@@ -505,7 +867,7 @@ ${contentHtml}
 `;
 }
 
-function wrapIndexHtml({ generatedAt, stats, featureFiles }) {
+function wrapIndexHtml({ generatedAt, stats, features }) {
   return `<!doctype html>
 <html lang="nl">
   <head>
@@ -521,38 +883,42 @@ function wrapIndexHtml({ generatedAt, stats, featureFiles }) {
           <div>
             <span class="eyebrow">Live Docs Bundle</span>
             <h1>Path Live Documentatie</h1>
-            <p>Deze portal combineert living documentation, BDD-traceerbaarheid en de laatste Playwright- en Allure-rapporten in één deelbare pagina.</p>
+            <p>Van businessscenario naar uitvoerbaar bewijs. Bekijk 96 functionele cases, hun traceability en de laatste regressieresultaten vanuit één ingang.</p>
             <div class="stat-grid">
 ${renderStatCards(stats, 'dark')}
             </div>
           </div>
           <aside class="hero-panel">
-            <div class="panel-title">Bundle snapshot</div>
-            <p>Gebruik deze landingspagina als centrale ingang voor regressiereviews, demo-uitleg en testbesprekingen met het team.</p>
+            <div class="panel-title">Laatste regressie</div>
+            <p><strong>Alle controles geslaagd.</strong><br>De Living Documentation en rapportages zijn uit dezelfde Playwright-run opgebouwd.</p>
             <p class="stamp"><span class="stamp-label">Gegenereerd op</span><br>${generatedAt}</p>
           </aside>
         </div>
       </section>
 
       <section class="section">
-        <h2>Open direct</h2>
-        <p class="section-copy">De belangrijkste onderdelen staan hieronder als duidelijke kaarten in plaats van alleen platte links.</p>
+        <span class="overline">Werkruimte</span>
+        <h2>Waar wil je naartoe?</h2>
+        <p class="section-copy">Start bij functioneel gedrag of ga direct naar uitvoerbaar bewijs.</p>
         <div class="doc-grid">
-          <a class="doc-card" href="living-doc.html"><span class="card-eyebrow">Documentatie</span><strong>Living Doc</strong><small>Functionele productuitleg met nette layout en inhoudsnavigatie.</small></a>
-          <a class="doc-card" href="test-bdd-mapping.html"><span class="card-eyebrow">Traceerbaarheid</span><strong>BDD Mapping</strong><small>Route van feature file naar step definitions en specs.</small></a>
+          <a class="doc-card" href="living-doc.html"><span class="card-eyebrow">Start hier</span><strong>Living Documentation</strong><small>Doorzoek features en open scenario's met hun Given, When en Then.</small></a>
+          <a class="doc-card" href="test-bdd-mapping.html"><span class="card-eyebrow">Van gedrag naar bewijs</span><strong>Hoe is een scenario getest?</strong><small>Bekijk welk gedrag is beschreven, welke Playwright-test draait en waar het resultaat staat.</small></a>
           <a class="doc-card" href="playwright-report/index.html"><span class="card-eyebrow">Testresultaat</span><strong>Playwright HTML Report</strong><small>UI-runresultaten, retries, screenshots en traces.</small></a>
           <a class="doc-card" href="allure-report/index.html"><span class="card-eyebrow">Rapportage</span><strong>Allure Report</strong><small>Samenvatting, attachments en testdetail in een rijkere report-UI.</small></a>
-          <a class="doc-card" href="LIVING-DOC.md"><span class="card-eyebrow">Bron</span><strong>Living Doc Markdown</strong><small>Ruwe markdown zoals in Git beheerd.</small></a>
-          <a class="doc-card" href="TEST-BDD-MAPPING.md"><span class="card-eyebrow">Bron</span><strong>BDD Mapping Markdown</strong><small>Bronbestand voor de technische mapping.</small></a>
         </div>
       </section>
 
       <section class="section">
-        <h2>Feature scenario's</h2>
-        <ul class="resource-list">
-          ${featureFiles.map(file => `<li><a href="features/${file}">${escapeHtml(file)}</a></li>`).join('')}
-        </ul>
+        <span class="overline">Testoverzicht</span>
+        <h2>Wat wordt automatisch gecontroleerd?</h2>
+        <p class="section-copy">De 96 unieke cases controleren gebruikersschermen, API's, security en integraties. Vier mobiele cases draaien op twee devices; daarom bevat de volledige run 100 testuitvoeringen.</p>
+        ${renderCoverageCharts(features)}
       </section>
+
+      <footer class="portal-footer">
+        <span>Path Uren &amp; Facturatie · Living Documentation v0.9.40</span>
+        <span><a href="LIVING-DOC.md">Markdown</a> · <a href="TEST-BDD-MAPPING.md">Mapping bron</a></span>
+      </footer>
     </main>
   </body>
 </html>
@@ -575,18 +941,52 @@ async function readAllureSummary() {
   }
 }
 
+async function readAllureCases() {
+  try {
+    const resultsDir = join(root, 'allure-results');
+    const files = (await readdir(resultsDir)).filter(file => file.endsWith('-result.json'));
+    const cases = new Map();
+    const statusPriority = { failed: 5, broken: 4, skipped: 3, unknown: 2, passed: 1 };
+
+    for (const file of files) {
+      const result = JSON.parse(await readFile(join(resultsDir, file), 'utf8'));
+      const labels = new Map((result.labels || []).map(label => [label.name, label.value]));
+      const caseId = labels.get('testCaseId') || result.name?.match(/^\[([^\]]+)\]/)?.[1];
+      if (!caseId) {
+        continue;
+      }
+
+      const current = cases.get(caseId) || { status: 'passed', executions: 0, durationMs: 0, startedAt: 0, projects: new Set() };
+      const status = result.status || 'unknown';
+      if ((statusPriority[status] || 0) > (statusPriority[current.status] || 0)) {
+        current.status = status;
+      }
+      current.executions += 1;
+      current.durationMs += Math.max(0, Number(result.stop || 0) - Number(result.start || 0));
+      current.startedAt = Math.max(current.startedAt, Number(result.start || 0));
+      const project = labels.get('project');
+      const device = labels.get('device');
+      if (project || device) {
+        current.projects.add([project, device].filter(Boolean).join(' / '));
+      }
+      cases.set(caseId, current);
+    }
+
+    return Object.fromEntries([...cases].map(([caseId, result]) => [caseId, { ...result, projects: [...result.projects] }]));
+  } catch {
+    return {};
+  }
+}
+
 async function readFeatureOverview() {
   const featuresDir = join(root, 'tests', 'playwright', 'features');
   const files = (await readdir(featuresDir)).filter(file => file.endsWith('.feature')).sort();
-  let scenarioCount = 0;
-
-  for (const file of files) {
-    const raw = await readFile(join(featuresDir, file), 'utf8');
-    scenarioCount += raw.split(/\r?\n/).filter(line => /^\s*Scenario:/i.test(line)).length;
-  }
+  const features = await Promise.all(files.map(async file => parseFeatureDocument(file, await readFile(join(featuresDir, file), 'utf8'))));
+  const scenarioCount = features.reduce((total, feature) => total + feature.scenarios.length, 0);
 
   return {
     files,
+    features,
     featureCount: files.length,
     scenarioCount,
   };
@@ -614,7 +1014,13 @@ async function main() {
   const livingDocStats = collectMarkdownStats(livingDocMarkdown);
   const mappingStats = collectMarkdownStats(mappingMarkdown);
   const allureSummary = await readAllureSummary();
+  const allureCases = await readAllureCases();
   const featureOverview = await readFeatureOverview();
+  for (const feature of featureOverview.features) {
+    for (const scenario of feature.scenarios) {
+      scenario.result = allureCases[scenario.id] || null;
+    }
+  }
 
   const sharedQuickLinks = [
     { href: 'index.html', eyebrow: 'Portal', title: 'Terug naar overzicht', description: 'Open de centrale docs-landingspagina.' },
@@ -622,42 +1028,24 @@ async function main() {
     { href: 'allure-report/index.html', eyebrow: 'Report', title: 'Allure Report', description: 'Bekijk de rijkere rapportage en attachments.' },
   ];
 
-  const livingDocHtml = wrapDocumentHtml({
-    title: 'Path Living Doc',
-    heading: 'Path Living Doc',
-    intro: 'Leesbare productdocumentatie bovenop de uitvoerbare Playwright-suite, met directe routes naar scenario\'s en rapportages.',
-    contentHtml: livingDocRender.html,
-    generatedAt,
-    tocHtml: renderDocToc(livingDocRender.toc),
-    stats: [
-      { label: 'Secties', value: livingDocStats.sections.length, note: 'Domeinen en hoofdstukken in dit document.' },
-      { label: 'Features', value: featureOverview.featureCount, note: 'Feature files in de bundle.' },
-      { label: 'Scenario\'s', value: featureOverview.scenarioCount, note: 'Herleidbaar via de featurebestanden.' },
-      { label: 'Tests geslaagd', value: `${allureSummary.passed}/${allureSummary.total || allureSummary.passed}`, note: 'Uit de laatste Allure-samenvatting.' },
-    ],
-    quickLinks: [
-      { href: 'LIVING-DOC.md', eyebrow: 'Bron', title: 'Markdown bron', description: 'Open de ruwe living doc zoals in Git beheerd.' },
-      { href: 'features/auth.feature', eyebrow: 'BDD', title: 'Feature scenario\'s', description: 'Lees de scenario-bronbestanden direct.' },
-      ...sharedQuickLinks,
-    ],
-  });
+  const livingDocHtml = renderLivingDocViewer(featureOverview.features, generatedAt, allureSummary);
 
   const mappingHtml = wrapDocumentHtml({
-    title: 'Path BDD Mapping',
-    heading: 'Path BDD Mapping',
-    intro: 'Directe mapping tussen feature files, step definitions en native Playwright specs zodat regressies navolgbaar blijven.',
-    contentHtml: mappingRender.html,
+    title: 'Path Test Traceability',
+    heading: 'Hoe is ieder scenario getest?',
+    intro: 'Volg elke functionele case van leesbaar gebruikersgedrag naar de automatische Playwright-test en het resultaat in de rapportage.',
+    contentHtml: `${renderTraceabilityIntro()}${mappingRender.html}`,
     generatedAt,
     tocHtml: renderDocToc(mappingRender.toc),
     stats: [
-      { label: 'Mappings', value: mappingStats.listItems, note: 'Feature -> steps -> spec routes.' },
-      { label: 'Secties', value: mappingStats.sections.length, note: 'Uitlegblokken in deze mapping.' },
-      { label: 'Codeblokken', value: mappingStats.codeBlocks, note: 'Technische snippets en voorbeelden.' },
-      { label: 'Tests totaal', value: allureSummary.total, note: 'Laatste Allure-statistiek in dezelfde bundle.' },
+      { label: 'Functionele cases', value: featureOverview.scenarioCount, note: 'Overal herkenbaar aan hetzelfde case-ID.' },
+      { label: 'Features', value: featureOverview.featureCount, note: 'Leesbare groepen van gebruikersgedrag.' },
+      { label: 'Testuitvoeringen', value: allureSummary.total, note: 'Inclusief twee devices voor vier mobile cases.' },
+      { label: 'Geslaagd', value: allureSummary.passed, note: 'Laatste Allure-statistiek in dezelfde bundle.' },
     ],
     quickLinks: [
-      { href: 'TEST-BDD-MAPPING.md', eyebrow: 'Bron', title: 'Markdown bron', description: 'Open de ruwe mapping zoals in Git beheerd.' },
-      { href: 'features', eyebrow: 'BDD', title: 'Feature map', description: 'Blader door alle featurebestanden in deze bundle.' },
+      { href: 'living-doc.html', eyebrow: 'Gedrag', title: 'Open Living Documentation', description: 'Begin bij een leesbaar feature-scenario.' },
+      { href: 'TEST-BDD-MAPPING.md', eyebrow: 'Technische bron', title: 'Open mappingbestand', description: 'Bekijk de volledige mapping zoals in Git beheerd.' },
       ...sharedQuickLinks,
     ],
   });
@@ -673,7 +1061,7 @@ async function main() {
       { label: 'Tests geslaagd', value: allureSummary.passed, note: `${allureSummary.failed + allureSummary.broken} issues in de laatste run.` },
       { label: 'Totale tests', value: allureSummary.total, note: 'Laatste Allure-statistiek.' },
     ],
-    featureFiles: featureOverview.files,
+    features: featureOverview.features,
   });
 
   await writeFile(join(outDir, 'index.html'), indexHtml, 'utf8');
