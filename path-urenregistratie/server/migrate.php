@@ -32,6 +32,10 @@ function migration_plan(bool $allowDemoMigrations): array
             'id' => '003_auth_schema.sql',
             'path' => __DIR__ . '/migrations/003_auth_schema.sql',
         ],
+        [
+            'id' => '006_email_queue_dry_run.sql',
+            'path' => __DIR__ . '/migrations/006_email_queue_dry_run.sql',
+        ],
     ];
 
     if ($allowDemoMigrations) {

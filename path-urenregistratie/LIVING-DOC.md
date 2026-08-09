@@ -149,6 +149,26 @@ Scenario's:
 - [CTS-API-N-007] Medewerker kan geen admin-reviewacties uitvoeren
 - [CTS-API-N-009] Download zonder actieve sessie wordt geweigerd
 
+### E-mailqueue API (Fase 12)
+
+Spec: tests/playwright/email-queue.spec.ts
+
+Scenario's:
+- [EQ-H-001] Factuurlock maakt queue-items aan met dry_run=true
+- [EQ-H-002] Broker-channel heeft attachment_policy invoice
+- [EQ-H-003] EasySalary-channel heeft attachment_policy none
+- [EQ-H-004] action=enqueue voor gelockte factuur maakt nieuwe items aan
+- [EQ-H-005] action=list response bevat verplichte velden
+- [EQ-N-006] Anonieme gebruiker krijgt 401 op list
+- [EQ-N-007] Medewerker krijgt 403 op list
+- [EQ-N-008] action=enqueue zonder invoice_id geeft 400
+- [EQ-N-009] action=enqueue niet-bestaande factuur geeft 404
+- [EQ-N-010] action=enqueue niet-gelockte factuur geeft 409
+- [EQ-N-011] action=retry op queued item geeft 409
+- [EQ-N-012] Ongeldige status-filter geeft 400
+- [EQ-N-013] Anonieme enqueue geeft 401
+- [EQ-N-014] Unknown action geeft 400
+
 ## Technische mapping
 
 Zie de volledige mapping in:

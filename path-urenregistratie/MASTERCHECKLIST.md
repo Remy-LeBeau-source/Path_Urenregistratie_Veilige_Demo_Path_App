@@ -15,7 +15,7 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 - Datum: 2026-08-09
 - Main/HEAD: c9e00ca
 - Referentiecommit fase 8/9 backend: fc27723
-- Appversie: 0.9.31
+- Appversie: 0.9.33
 - Lokale check: geslaagd
 - Lokale e2e regressie: 37 geslaagd, 0 gefaald
 - GitHub pipeline-status: lokaal niet verifieerbaar zonder gh auth login
@@ -562,6 +562,14 @@ Status Fase 12:
 - Verplichte wachtwoordwijziging bij eerste login.
 - Gebruikers deactiveren/verwijderenbeleid.
 - Google Workspace-koppeling.
+- Wachtwoord-vergeten/resetflow.
+- Account blokkeren bij uitdiensttreding zonder historische uren te verwijderen.
+- Eerste tijdelijke wachtwoord veilig uitgeven.
+- Verplichte wachtwoordwijziging bij eerste login.
+- Tweefactorauthenticatie voor beheerders beoordelen (sterk aanbevolen).
+- Bepalen wie productiebeheerder is naast Gio.
+- Privacy- en bewaartermijnen vastleggen voor uren, uploads, facturen en auditlogs.
+- Vastleggen wie gegevens mag exporteren, corrigeren en archiveren.
 
 Status Fase 13:
 - [~] demogegevens aanwezig
@@ -622,6 +630,19 @@ Dit is de oorspronkelijke productielijst en blijft volledig onderdeel van de mas
 - PHP sessioninstellingen controleren.
 - Cronmogelijkheden controleren voor e-mailqueue.
 - Foutlogging buiten publieke output configureren.
+- `install.php` na installatie uitschakelen of alleen voor beheerders bereikbaar maken.
+- `migrate.php` niet vrij publiek bereikbaar laten.
+- `health.php` in productie geen databasehost of technische details laten tonen.
+- PHP `display_errors` uitzetten in productie; fouten alleen naar serverlogs.
+- Logs buiten de publiek bereikbare webmap bewaren + logrotatie instellen.
+- Demo-accounts en demo-seeds volledig uitschakelen in productie.
+- Alle lokale/testwachtwoorden vóór livegang vervangen.
+- Uploads en PDF's buiten de publieke webroot bewaren.
+- Bestandsrechten zo beperkt mogelijk instellen.
+- Cronjob of worker voor de e-mailqueue instellen.
+- Maximale uploadgrootte en toegestane bestandstypen instellen.
+- Databaseverbinding met zo weinig mogelijk rechten configureren.
+- Back-upretentie en opslaglocatie controleren.
 
 Status Fase 14:
 - [x] subsite en databasebasis aanwezig
@@ -691,10 +712,81 @@ Status Fase 14:
 - Go-live runbook.
 - Rollbackrunbook.
 - Echte automatische e-mail als allerlaatste activeren.
+- Volledig schone productie-installatie vanaf nul uitvoeren.
+- Controleren dat er geen demo-gebruikers, demo-mails of toekomsttestperioden aanwezig zijn.
+- Één volledige maandflow doorlopen: invoer → indienen → correctie → herindienen → goedkeuren → factuur definitief → mails dry-run.
+- Dubbelklikken en dubbele requests testen.
+- Gelijktijdig gebruik door twee beheerders testen.
+- December → januari en jaarwisseling testen.
+- Grote uploads en foutieve bestanden testen.
+- Basiscontrole op toetsenbordbediening en leesbaarheid.
+- Dependency/securityscan uitvoeren.
+- Rollback naar vorige release daadwerkelijk oefenen.
+- Release-tag aanmaken van de productieversie.
+- Acceptatie laten bevestigen door Gio, Joyce en één medewerker.
+- Pas daarna echte mail activeren.
 
 Status Fase 15:
 - [~] veel lokaal getest
 - [ ] volledige productieacceptatie en livegang open
+
+---
+
+## Fase 16 - Beheer na livegang
+
+- Eerste week dagelijks errorlogs controleren.
+- Mailqueue dagelijks controleren.
+- Mislukte mails opnieuw aanbieden.
+- Backupstatus controleren.
+- Uptime/health controleren.
+- Eerste echte maandflow volgen en narekenen.
+- Eerste echte correctie/goedkeuring volgen.
+- Eerste echte factuur controleren.
+- Eerste echte broker-mail controleren.
+- Eerste EasySalary-route controleren.
+- Kleine productiebugs oplossen.
+- Vastleggen wie verantwoordelijk is voor mislukte mails.
+- Waarschuwing instellen als mailqueue blijft hangen.
+- Waarschuwing instellen wanneer health.php faalt.
+- Vastleggen hoe medewerkers productieproblemen melden.
+- Incidentlog bijhouden.
+- Maandelijkse dependency-updates plannen.
+- Elk kwartaal een hersteltest van de back-up uitvoeren.
+- Database- en opslaggroei controleren.
+- Verlopen/inactieve accounts periodiek controleren.
+- Auditlogs periodiek controleren.
+- Daarna normaal beheerregime.
+
+Status Fase 16:
+- [ ] nog niet gestart — pas relevant na livegang
+
+---
+
+## Harde blokkades vóór livegang
+
+Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
+
+- [ ] Geen demo-accounts of demo-wachtwoorden in productie
+- [ ] install.php en migrate.php beschermd of uitgeschakeld
+- [ ] health.php lekt geen technische gegevens
+- [ ] Productiewachtwoorden geroteerd
+- [ ] Back-up én herstel succesvol getest
+- [ ] Employee ziet uitsluitend eigen data
+- [ ] Definitieve factuur is immutable
+- [ ] E-mail blijft dry-run tot afzonderlijke goedkeuring
+- [ ] Rollbackprocedure getest
+- [ ] Volledige productieflow geaccepteerd
+
+---
+
+## Na eerste livegang (mag wachten)
+
+- [ ] Volledige PWA/offlinefunctionaliteit
+- [ ] Uitgebreid monitoringdashboard
+- [ ] Geavanceerde performance-/loadtests
+- [ ] Uitgebreide rapportage-export
+- [ ] Automatische archivering
+- [ ] Extra beheerdersdashboard voor auditlogs
 
 ---
 
@@ -711,10 +803,11 @@ Status Fase 15:
 - [~] Fase 9 - correctie/goedkeuring: backend + API-tests + docs + commit/push klaar; pipelinebevestiging nog open op deze machine
 - [~] Fase 10 - klanturenstaat: schema + API + UI-koppeling + regressie afgerond; productiehardening open
 - [~] Fase 11 - factuur/PDF: read-API + server-side berekening + extra tests aanwezig; server-side PDF en lock/write-flow open
-- [~] Fase 12 - e-mail: schema/routes aanwezig, echte queue open
-- [~] Fase 13 - bedrijfsdata: demo aanwezig, definitieve keuzes open
-- [~] Fase 14 - TransIP: subsite/database aanwezig, deployment open
+- [~] Fase 12 - e-mail: queue-service + dry-run + assignment-routes + tests afgerond; echte dispatch open
+- [~] Fase 13 - bedrijfsdata: demo aanwezig, definitieve keuzes + privacybeslissingen open
+- [~] Fase 14 - TransIP: subsite/database aanwezig, hardening + deployment open
 - [~] Fase 15 - lokaal veel getest, productieacceptatie open
+- [ ] Fase 16 - beheer na livegang: nog niet gestart
 
 ## Directe volgende stap
 

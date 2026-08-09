@@ -1695,6 +1695,7 @@ function invoiceApiRowsForPeriod(periodKey) {
   const dataset = readApiDebug.invoicesByPeriod[periodKey] || null;
   if (!dataset || !Array.isArray(dataset.items)) return null;
   return dataset.items.map(item => ({
+    id: Number(item && item.id || 0),
     invoiceNumber: String(item && item.invoice_number || ""),
     employeeName: String(item && item.employee_name || "Onbekend"),
     periodKey: String(item && item.period_key || periodKey),
@@ -5537,6 +5538,13 @@ function invoiceSummary(employeeId, periodKey) {
   };
 }
 
+function serverInvoiceIdFor(employeeId, periodKey) {
+  const rows = invoiceApiRowsForPeriod(periodKey) || [];
+  const employee = employeeById(employeeId);
+  const match = rows.find(r => r.employeeName === employee.name || r.invoiceNumber === (recordFor(employee.id, periodKey) || {}).invoiceNumber);
+  return match ? match.id : 0;
+}
+
 function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
   const key = periodKey || currentPeriod().key;
   const period = periodFromKey(key);
@@ -5571,16 +5579,30 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
         info.record.invoiceStatus = "simulated";
         info.record.payrollStatus = "simulated";
       };
-      const toastMessage = "Verzending voor " + info.employee.name + " · " + period.label + " is gecontroleerd. Er is niets verstuurd.";
+      const baseMsg = "Verzending voor " + info.employee.name + " · " + period.label + " klaargezet";
       if (adminTaskId) {
-        finishAdminTaskAndContinue(adminTaskId, mutate, toastMessage);
-        return;
+        finishAdminTaskAndContinue(adminTaskId, mutate, baseMsg + " (dry-run).");
+      } else {
+        mutate();
+        persistState();
+        closeModal();
+        renderAll();
       }
-      mutate();
-      persistState();
-      closeModal();
-      renderAll();
-      toast(toastMessage);
+      const invId = serverInvoiceIdFor(employeeId, key);
+      if (invId > 0 && API_ENABLED) {
+        requestAuthCsrf().then(token =>
+          fetch("/server/api/email-queue.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
+            body: JSON.stringify({ action: "enqueue", invoice_id: invId })
+          }).then(r => r.json()).then(data => {
+            const n = data && data.count || 0;
+            toast(baseMsg + " (dry-run): " + n + (n === 1 ? " bericht" : " berichten") + " klaargezet.");
+          }).catch(() => toast(baseMsg + ". Koppeling met mailqueue tijdelijk niet bereikbaar."))
+        ).catch(() => toast(baseMsg + " (dry-run)."));
+      } else {
+        toast(baseMsg + " (dry-run).");
+      }
     }
   });
   return true;

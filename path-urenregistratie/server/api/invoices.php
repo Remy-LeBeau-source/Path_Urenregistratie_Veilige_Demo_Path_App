@@ -5,6 +5,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/../auth/session.php';
 require_once __DIR__ . '/../security/csrf.php';
 require_once __DIR__ . '/../security/validation.php';
+require_once __DIR__ . '/../mail/queue.php';
+require_once __DIR__ . '/../mail/config.php';
 
 header('Content-Type: application/json; charset=utf-8');
 auth_apply_cors_headers(auth_try_load_raw_config(), 'GET, POST, OPTIONS', 'Content-Type, X-CSRF-Token');
@@ -268,7 +270,7 @@ function invoices_read(PDO $pdo, array $currentUser, array $periodFilter): void
     ]);
 }
 
-function invoices_lock(PDO $pdo, array $currentUser, array $payload): void
+function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $config = []): void
 {
     if ((string)$currentUser['role'] !== 'administrator') {
         auth_send_json([
@@ -548,6 +550,15 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload): void
 
         $pdo->commit();
 
+        // Queue e-mail deliveries after commit; dry_run=true until dispatch is activated.
+        try {
+            $mailDryRun = mail_is_dry_run($config);
+            mail_enqueue_for_invoice($pdo, $invoiceId, $companyId, (int)$currentUser['id'], $mailDryRun);
+        } catch (Throwable $queueError) {
+            // Queue failure must never break the lock response.
+            error_log('mail_enqueue_for_invoice failed: ' . $queueError->getMessage());
+        }
+
         auth_send_json([
             'ok' => true,
             'action' => 'lock',
@@ -605,7 +616,7 @@ $payload = security_read_json_body();
 $action = security_require_enum_field($payload, 'action', ['lock'], 'Invalid invoice action.');
 
 if ($action === 'lock') {
-    invoices_lock($pdo, $currentUser, $payload);
+    invoices_lock($pdo, $currentUser, $payload, $config);
 }
 
 auth_send_json([
