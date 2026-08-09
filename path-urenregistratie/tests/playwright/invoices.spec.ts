@@ -78,3 +78,42 @@ test('[INV-H-002] periodefilter juli en augustus werkt', async ({ page }) => {
     await invoicesPage.assertRowsVisible();
   });
 });
+
+test('[INV-H-003] server berekent bedrag uit uren en uurtarief voor open facturen', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  let target: {
+    locked: boolean;
+    billable_hours: number;
+    hourly_rate: number;
+    subtotal: number;
+    vat_amount: number;
+    total: number;
+  } | null = null;
+
+  await test.step('Given de administrator is ingelogd', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+  });
+
+  await test.step('When factuurdata voor augustus 2026 wordt opgevraagd', async () => {
+    const invoices = await page.evaluate(async () => {
+      const response = await fetch('/server/api/invoices.php?period=2026-08', {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+      });
+      return response.json();
+    });
+
+    target = invoices.items.find((item: { invoice_number?: string }) => item.invoice_number === 'COA-2026-augustus') || null;
+  });
+
+  await test.step('Then het bedrag komt uit server-side berekening in plaats van alleen statische demo-output', async () => {
+    expect(target).toBeTruthy();
+    expect(target?.locked).toBe(false);
+    expect(target?.billable_hours).toBe(144);
+    expect(target?.hourly_rate).toBe(72.5);
+    expect(target?.subtotal).toBe(10440);
+    expect(target?.vat_amount).toBe(2192.4);
+    expect(target?.total).toBe(12632.4);
+  });
+});

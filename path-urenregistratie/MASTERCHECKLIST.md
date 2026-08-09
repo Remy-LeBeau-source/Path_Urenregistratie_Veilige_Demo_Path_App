@@ -424,6 +424,13 @@ Status Fase 9:
 
 ### Recent afgerond in deze fase
 
+- Invoice read-API berekent voor open facturen server-side subtotal, btw en totaal op basis van billable_hours en hourly_rate.
+- Vergrendelde facturen blijven in read-output op opgeslagen bedragen zodat lock-gedrag behouden blijft.
+- Extra regressietest toegevoegd: INV-H-003 voor server-side bedragvalidatie.
+- Security tests geharmoniseerd naar Given/When/Then-stapstijl voor consistente rapportleesbaarheid.
+
+### Recent afgerond in deze fase
+
 - End-to-end UI koppeling naar de backendflow is werkend in auth-mode.
 - Statusacties mark_skipped en restore_missing zijn functioneel getest.
 - Extra statuspad sent_to_broker is ondersteund in frontend/backendflow.
@@ -477,6 +484,7 @@ Status Fase 10:
 
 Status Fase 11:
 - [~] overzicht en databasestructuur bestaan
+- [~] server-side berekening voor open facturen staat in de read-API
 - [ ] definitieve server-side factuur/PDF open
 
 ---

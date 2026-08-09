@@ -41,13 +41,19 @@ try {
             e.full_name AS employee_name,
             CONCAT(p.year, '-', LPAD(p.month, 2, '0')) AS period_key,
             i.status,
+            i.locked_at,
             i.subtotal,
+            i.vat_percentage,
             i.vat_amount,
-            i.total
+            i.total,
+            t.billable_hours,
+            t.status AS timesheet_status,
+            a.hourly_rate
         FROM invoices i
         JOIN timesheets t ON t.id = i.timesheet_id
         JOIN employees e ON e.id = t.employee_id
         JOIN periods p ON p.id = t.period_id
+        JOIN assignments a ON a.id = t.assignment_id
     ";
 
     $sql .= ' WHERE i.company_id = :company_id';
@@ -79,14 +85,32 @@ try {
         'ok' => true,
         'period_filter' => $period,
         'items' => array_map(static function (array $row): array {
+            $isLocked = $row['locked_at'] !== null;
+            $billableHours = (float)$row['billable_hours'];
+            $hourlyRate = (float)$row['hourly_rate'];
+            $vatPercentage = (float)$row['vat_percentage'];
+
+            $calculatedSubtotal = round($billableHours * $hourlyRate, 2);
+            $calculatedVatAmount = round($calculatedSubtotal * ($vatPercentage / 100), 2);
+            $calculatedTotal = round($calculatedSubtotal + $calculatedVatAmount, 2);
+
+            $subtotal = $isLocked ? (float)$row['subtotal'] : $calculatedSubtotal;
+            $vatAmount = $isLocked ? (float)$row['vat_amount'] : $calculatedVatAmount;
+            $total = $isLocked ? (float)$row['total'] : $calculatedTotal;
+
             return [
                 'invoice_number' => (string)$row['invoice_number'],
                 'employee_name' => (string)$row['employee_name'],
                 'period_key' => (string)$row['period_key'],
                 'status' => (string)$row['status'],
-                'subtotal' => (float)$row['subtotal'],
-                'vat_amount' => (float)$row['vat_amount'],
-                'total' => (float)$row['total'],
+                'timesheet_status' => (string)$row['timesheet_status'],
+                'hourly_rate' => $hourlyRate,
+                'billable_hours' => $billableHours,
+                'vat_percentage' => $vatPercentage,
+                'locked' => $isLocked,
+                'subtotal' => $subtotal,
+                'vat_amount' => $vatAmount,
+                'total' => $total,
             ];
         }, $rows),
     ]);

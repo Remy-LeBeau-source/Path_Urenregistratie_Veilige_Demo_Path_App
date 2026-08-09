@@ -53,7 +53,7 @@ Iedere nieuwe run kan dezelfde map opnieuw opbouwen en publiceren.
 ## Laatste regressiestatus
 
 - Laatste volledige run: `npm run check` en `npm run test:e2e`
-- Resultaat: 35/35 geslaagd
+- Resultaat: 36/36 geslaagd
 - Datum: 2026-08-09
 
 ## Scope en scenario-overzicht
@@ -85,6 +85,7 @@ Feature: tests/playwright/features/invoices.feature
 Scenario's:
 - [INV-H-001] Administrator ziet facturen per gekozen periode
 - [INV-H-002] Periodefilter wisselt correct tussen juli en augustus 2026
+- [INV-H-003] Open facturen gebruiken server-side berekende bedragen
 - [INV-N-001] Medewerker ziet alleen eigen facturen en geen collega-data
 - [INV-N-002] Facturenscherm laadt zonder console of page errors
 
