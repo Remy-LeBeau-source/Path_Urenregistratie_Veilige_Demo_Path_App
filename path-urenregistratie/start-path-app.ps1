@@ -2,6 +2,11 @@
 # Werkt ook als php.exe niet in PATH staat.
 # Start de lokale app op http://localhost:8000/
 
+param(
+    [ValidateSet("desktop", "mobile")]
+    [string]$Mode = "desktop"
+)
+
 $ErrorActionPreference = "Stop"
 
 # In PowerShell 7+, do not convert native stderr text into PowerShell errors.
@@ -27,6 +32,29 @@ function Ok($text) {
 
 function Warn($text) {
     Write-Host "LET OP  $text" -ForegroundColor Yellow
+}
+
+function Open-AppBrowser($url, $mode) {
+    if ($mode -ne "mobile") {
+        Start-Process $url
+        return
+    }
+
+    $browser = @(
+        "$env:ProgramFiles(x86)\Microsoft\Edge\Application\msedge.exe",
+        "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe",
+        "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
+        "$env:ProgramFiles(x86)\Google\Chrome\Application\chrome.exe"
+    ) | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+
+    if (!$browser) {
+        Warn "Geen Edge of Chrome gevonden; de standaardbrowser wordt geopend."
+        Start-Process $url
+        return
+    }
+
+    Start-Process -FilePath $browser -ArgumentList @("--new-window", "--window-size=430,932", $url)
+    Ok "Mobiele preview geopend op 430 x 932 pixels"
 }
 
 function Get-PortListeners($port) {
@@ -179,7 +207,7 @@ if ($listeners) {
     if ($listenerProcesses.Count -eq 0) {
         Warn "Poort $Port is bezet, maar procesinformatie kon niet worden gelezen."
         Warn "Stop het proces op poort $Port en start dit script opnieuw voor live logs."
-        Start-Process $Url
+        Open-AppBrowser -url $Url -mode $Mode
         exit 1
     }
 
@@ -190,7 +218,7 @@ if ($listeners) {
     if ($nonPhp.Count -gt 0) {
         Warn "Ik laat dit proces staan en start geen tweede server."
         Warn "Wil je live serverlogs zien? Stop eerst dit proces en start daarna opnieuw."
-        Start-Process $Url
+        Open-AppBrowser -url $Url -mode $Mode
         exit 1
     }
 
@@ -202,7 +230,7 @@ if ($listeners) {
         } catch {
             Warn "Kon proces niet stoppen: $($proc.ProcessName) (PID $($proc.Id))."
             Warn "Fout: $($_.Exception.Message)"
-            Start-Process $Url
+            Open-AppBrowser -url $Url -mode $Mode
             exit 1
         }
     }
@@ -211,14 +239,14 @@ if ($listeners) {
     $remaining = Get-PortListeners -port $Port
     if ($remaining) {
         Warn "Poort $Port blijft bezet na stopactie. Start handmatig opnieuw."
-        Start-Process $Url
+        Open-AppBrowser -url $Url -mode $Mode
         exit 1
     }
     Ok "Poort $Port is vrijgemaakt"
 }
 
 Step "Browser openen"
-Start-Process $Url
+Open-AppBrowser -url $Url -mode $Mode
 
 Step "PHP-server starten"
 Write-Host ""

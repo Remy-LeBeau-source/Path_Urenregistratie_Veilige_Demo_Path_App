@@ -72,8 +72,8 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 funct
 
 - [DASH-H-001] admin dashboard opent zonder console errors
 - [DASH-H-002] employee dashboard opent zonder console errors
-- [DASH-N-007] gecachete oude open-acties teller wordt niet als actuele teller getoond
-- [DASH-N-008] voorbeeldgegevens herstellen overschrijft in auth-modus de DB teller niet
+- [DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad niet
+- [DASH-N-008] voorbeeldgegevens herstellen houdt alle werkvoorraadtellers gelijk
 
 ### E-mailqueue en afleverbeleid
 

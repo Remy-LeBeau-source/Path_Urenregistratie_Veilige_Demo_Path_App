@@ -148,10 +148,10 @@ test('[DASH-H-002] employee dashboard opent zonder console errors', async ({ pag
   });
 });
 
-test('[DASH-N-007] gecachete oude open-acties teller wordt niet als actuele teller getoond', async ({ page }) => {
+test('[DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad niet', async ({ page }) => {
   const loginPage = new LoginPage(page);
 
-  await test.step('Given een oude serverstate met 132 open acties en vertraagde dashboard API', async () => {
+  await test.step('Given een oude serverstate en een afwijkend API-totaal van 205', async () => {
     await page.route('**/server/api.php?action=state*', async route => {
       if (route.request().method() !== 'GET') {
         await route.continue();
@@ -186,9 +186,9 @@ test('[DASH-N-007] gecachete oude open-acties teller wordt niet als actuele tell
             }
           ],
           open_werkvoorraad: {
-            totaal: 7,
-            bij_backoffice: 4,
-            bij_medewerkers: 3
+            totaal: 205,
+            bij_backoffice: 203,
+            bij_medewerkers: 2
           }
         })
       });
@@ -201,15 +201,18 @@ test('[DASH-N-007] gecachete oude open-acties teller wordt niet als actuele tell
     releaseDashboardApi?.();
   });
 
-  await test.step('Then na laden staat exact de serverwaarde als eindstatus zonder refresh', async () => {
+  await test.step('Then alle zichtbare totalen blijven gelijk aan de zeven concrete taakregels', async () => {
     await expect(page.locator('#hero-task-total')).toHaveText('7 open acties', { timeout: 15_000 });
     await expect(page.locator('#hero-task-owners')).toHaveText('Backoffice 4 + medewerkers 3 = 7');
     await expect(page.locator('#metric-actions')).toHaveText('4');
+    await expect(page.locator('#open-work-queue')).toHaveText('Bekijk alle 7 open acties');
+    await expect(page.locator('#admin-task-list [data-admin-task-row]')).toHaveCount(7);
+    await expect(page.locator('#view-dashboard')).not.toContainText('205');
     await expect(page.locator('#hero-task-total')).not.toContainText('132');
   });
 });
 
-test('[DASH-N-008] voorbeeldgegevens herstellen overschrijft in auth-modus de DB teller niet', async ({ page }) => {
+test('[DASH-N-008] voorbeeldgegevens herstellen houdt alle werkvoorraadtellers gelijk', async ({ page }) => {
   const loginPage = new LoginPage(page);
 
   await test.step('Given auth-modus met oude fallback-state en serverwerkvoorraad van 7', async () => {
@@ -259,7 +262,7 @@ test('[DASH-N-008] voorbeeldgegevens herstellen overschrijft in auth-modus de DB
     await page.locator('#modal-confirm').click();
   });
 
-  await test.step('Then blijft de serverwaarde leidend en verschijnt geen oude 132 teller', async () => {
+  await test.step('Then blijven de concrete taakregels leidend en verschijnt geen oude teller', async () => {
     await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
     await expect(page.locator('#hero-task-total')).toHaveText('7 open acties', { timeout: 15_000 });
     await expect(page.locator('#hero-task-total')).not.toContainText('132');

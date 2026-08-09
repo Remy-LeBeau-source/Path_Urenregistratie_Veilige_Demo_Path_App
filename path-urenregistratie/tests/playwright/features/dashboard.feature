@@ -20,13 +20,13 @@ Feature: Dashboardweergave in Path Uren & Facturatie
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
 
   @negative
-  Scenario: [DASH-N-007] gecachete oude open-acties teller wordt niet als actuele teller getoond
+  Scenario: [DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad niet
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
 
   @negative
-  Scenario: [DASH-N-008] voorbeeldgegevens herstellen overschrijft in auth-modus de DB teller niet
+  Scenario: [DASH-N-008] voorbeeldgegevens herstellen houdt alle werkvoorraadtellers gelijk
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd

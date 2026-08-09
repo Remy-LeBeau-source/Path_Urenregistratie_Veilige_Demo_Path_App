@@ -30,36 +30,18 @@ try {
         $periodSql .= ' AND t.employee_id = :employee_id';
     }
 
-    $workSql = "
-        SELECT
-            SUM(CASE WHEN t.status IN ('draft', 'submitted', 'correction', 'rejected') THEN 1 ELSE 0 END) AS totaal,
-            SUM(CASE WHEN t.status = 'submitted' THEN 1 ELSE 0 END) AS bij_backoffice,
-            SUM(CASE WHEN t.status IN ('draft', 'correction', 'rejected') THEN 1 ELSE 0 END) AS bij_medewerkers
-        FROM timesheets t
-        JOIN periods p ON p.id = t.period_id
-    ";
-
     $periodSql .= ' WHERE p.company_id = :company_id';
-    $workSql .= ' WHERE p.company_id = :company_id';
-
-    if ($isEmployee && $employee) {
-        $workSql .= ' AND t.employee_id = :employee_id';
-    }
 
     $periodSql .= ' GROUP BY p.year, p.month ORDER BY p.year, p.month';
 
     $periodStmt = $pdo->prepare($periodSql);
-    $workStmt = $pdo->prepare($workSql);
 
     $periodStmt->bindValue(':company_id', $companyId, PDO::PARAM_INT);
-    $workStmt->bindValue(':company_id', $companyId, PDO::PARAM_INT);
     if ($isEmployee && $employee) {
         $periodStmt->bindValue(':employee_id', (int)$employee['id'], PDO::PARAM_INT);
-        $workStmt->bindValue(':employee_id', (int)$employee['id'], PDO::PARAM_INT);
     }
 
     $periodStmt->execute();
-    $workStmt->execute();
 
     $perMaand = array_map(static function (array $row): array {
         return [
@@ -71,16 +53,9 @@ try {
         ];
     }, $periodStmt->fetchAll());
 
-    $werk = $workStmt->fetch() ?: ['totaal' => 0, 'bij_backoffice' => 0, 'bij_medewerkers' => 0];
-
     api_send_json([
         'ok' => true,
         'per_maand' => $perMaand,
-        'open_werkvoorraad' => [
-            'totaal' => (int)$werk['totaal'],
-            'bij_backoffice' => (int)$werk['bij_backoffice'],
-            'bij_medewerkers' => (int)$werk['bij_medewerkers'],
-        ],
     ]);
 } catch (Throwable $e) {
     api_send_json([

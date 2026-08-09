@@ -13,15 +13,16 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 ## Actuele stand
 
 - Datum: 2026-08-09
-- Main/HEAD: 17431b5
+- Main/HEAD: 345c6ef
 - Referentiecommit fase 8/9 backend: fc27723
 - Appversie: 0.9.41
 - Lokale check: geslaagd
 - Lokale e2e regressie: 121 tests (113 niet-mobile Chromium + 4 Pixel 7 Chromium + 4 iPhone 13 WebKit)
 - Functionele regressiecatalogus: 117 unieke cases met 117 feature- en 117 steps-mappings
-- Releasehardening v0.9.41: lokaal aanwezig, nog niet gecommit of gepusht
-- GitHub pipeline-status: lokaal niet verifieerbaar zonder gh auth login
-- Laatste commit: feat(docs): add interactive Living Documentation viewer
+- Releasehardening v0.9.41: gecommit en gepusht naar main
+- GitHub pipeline-status: run #62 volledig geslaagd; Validate, Test, Live Docs en Prod groen; Dev en Acc bewust overgeslagen
+- Laatste commit: fix(ci): [Fase 15] initialize test credentials before PHP startup v0.9.41
+- Lokaal vervolgwerk Fase 15: mobiele previewstart, consistente dashboardwerkvoorraad, gerichte UI-polish en herhaalbare e-mailqueuefixture volledig gevalideerd; nog niet gecommit
 
 ---
 
@@ -650,6 +651,9 @@ Status Fase 14:
 - Grote controlescripts.
 - Volledige correctie/herindiening/goedkeuring in desktopbrowser en mobiele emulatie.
 - Pixel 7 Chromium- en iPhone 13 WebKit-projecten met responsive layout-, touch-, modal- en overflowcontroles.
+- Alle zichtbare dashboardtellers gebruiken dezelfde concrete werkvoorraad; een afwijkend API-aggregaat kan hero, KPI, CTA en taakregels niet meer laten verschillen.
+- `start-path-app.cmd mobile` ondersteunt een smalle lokale browserpreview en gebruikt dezelfde gecontroleerde PHP-startflow.
+- Dashboardhiërarchie is compacter en rustiger gemaakt met beter leesbare ondersteunende tekst.
 
 ### Nog voor livegang
 
@@ -706,6 +710,9 @@ Status Fase 14:
 
 Status Fase 15:
 - [x] desktop- en mobiele emulatieregressie lokaal ingericht en bewezen
+- [x] v0.9.41 releasepipeline #62 inclusief Test, Living Docs en Prod geslaagd
+- [x] dashboardwerkvoorraad en mobiele previewstart lokaal hersteld en gericht getest
+- [x] volledige vervolgmatrix lokaal opnieuw groen: 121/121 uitvoeringen
 - [~] fase als geheel gedeeltelijk: fysieke toestellen, productieacceptatie, PWA en livegang open
 
 ---
@@ -781,13 +788,13 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
 - [x] Fase 6 - Playwright, Allure, Living Doc en agents
 - [~] Fase 7 - CI/CD-basis klaar; echte stages en productieapproval open
 - [x] Fase 8 - uren concept opslaan en indienen
-- [~] Fase 9 - correctie/goedkeuring desktop en mobiel bewezen; pipelinebevestiging open op deze machine
+- [~] Fase 9 - correctie/goedkeuring desktop, mobiel en pipeline bewezen; productieacceptatie open
 - [~] Fase 10 - klanturenstaat: schema + API + UI-koppeling + regressie afgerond; productiehardening open
 - [~] Fase 11 - factuur lock/write en serverberekening bewezen; server-side PDF/opslag/download open
 - [~] Fase 12 - e-mail: queue-service + dry-run + assignment-routes + tests afgerond; echte dispatch open
 - [~] Fase 13 - bedrijfsdata: gebruikersbeheer-API, wachtwoord-reset, rate-limiting, force_password_change afgerond; definitieve bedrijfsgegevens + accounts open
 - [~] Fase 14 - TransIP: hardening (install/migrate/health guards, .htaccess) afgerond; deployment + productie-config open
-- [~] Fase 15 - lokaal 121 tests over niet-mobile Chromium/Pixel/iPhone; autofill-, periode- en mobile-regressie bewezen; fysieke toestellen en productieacceptatie open
+- [~] Fase 15 - lokaal 121 tests en pipeline #62 groen; autofill-, periode-, teller- en mobile-regressie bewezen; fysieke toestellen, PWA en productieacceptatie open
 - [~] Fase 16 - audit-API-basis klaar; operationeel post-live beheer nog niet gestart
 
 Telling fasestatussen:
@@ -797,9 +804,10 @@ Telling fasestatussen:
 
 ## Directe volgende stap
 
-1. GitHub pipeline-status van recente main-commits bevestigen (na gh auth login).
-2. Fase 11 vervolg: server-side factuur-PDF met beveiligde opslag/download bouwen.
-3. Fase 13/14: definitieve bedrijfsdata en TransIP-productieconfiguratie bevestigen.
+1. Lopende Fase-15 dashboard/mobile-previewslice volledig valideren en daarna afzonderlijk committen/pushen.
+2. Fase 15 vervolgen met fysieke iPhone-, Android- en tablettests en productieacceptatie.
+3. Fase 11 vervolgen met server-side factuur-PDF en beveiligde opslag/download.
+4. Fase 13/14: definitieve bedrijfsdata en TransIP-productieconfiguratie bevestigen.
 
 ## Dagelijkse werkwijze (verplicht)
 
