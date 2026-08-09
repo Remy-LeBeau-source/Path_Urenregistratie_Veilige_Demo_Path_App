@@ -13,13 +13,14 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 ## Actuele stand
 
 - Datum: 2026-08-09
-- Main/HEAD: c9e00ca
+- Main/HEAD: 98220af
 - Referentiecommit fase 8/9 backend: fc27723
-- Appversie: 0.9.39
+- Appversie: 0.9.40
 - Lokale check: geslaagd
-- Lokale e2e regressie: 37 geslaagd, 0 gefaald
+- Lokale e2e regressie: 100 tests (92 desktop Chromium + 4 Pixel 7 Chromium + 4 iPhone 13 WebKit)
+- Mobile/stale-state slice: lokaal aanwezig, nog niet gecommit of gepusht
 - GitHub pipeline-status: lokaal niet verifieerbaar zonder gh auth login
-- Laatste commit: docs(tags): simplify feature tags across BDD files
+- Laatste commit: feat(notifications): notificaties API, 4 tests, 90 total tests v0.9.39
 
 ---
 
@@ -183,8 +184,6 @@ Status Fase 4:
 - Nog open als aanvullende hardening:
   - Expliciete sessie-time-out
   - Sliding session expiration
-  - Login rate limiting
-  - Tijdelijke accountlock na meerdere foute pogingen
   - Auditmelding bij herhaalde mislukte logins
   - Productie-CORS definitief beperken tot https://uren.pathconsultancy.nl
   - Content-Security-Policy voor productie
@@ -241,6 +240,9 @@ Status Fase 5:
 - Test-agent.
 - Security-review-agent.
 - Release-agent.
+- Gescheiden Playwright-projecten voor desktop Chromium, Pixel 7 Chromium en iPhone 13 WebKit.
+- Mobile UI-spec draait alleen op de twee mobiele projecten; desktop- en API-specs worden niet verdrievoudigd.
+- Mobiele regressie dekt login, navigatie, dashboard, uren, correctie/herindiening, goedkeuring, factuurkaartweergave, upload, notificaties, touch, modal en overflow.
 
 Status Fase 6:
 - [x] afgerond
@@ -275,8 +277,8 @@ Status Fase 6:
 - Productieapproval instellen voor echte deploy.
 
 Status Fase 7:
-- [x] CI/CD-basis afgerond
-- [~] echte stage-hosting en productieapproval nog open
+- [x] CI/CD-basis lokaal en in repository afgerond
+- [~] fase als geheel gedeeltelijk: echte stage-hosting en productieapproval nog open
 
 ---
 
@@ -383,6 +385,7 @@ Deze fase heette eerder Fase 8. Omdat de concept-/indienflow hierboven nu een ei
 Status Fase 9:
 - [x] backend/API/test/documentatie gecommit en gepusht
 - [x] browser-UI-flow met Playwright bewezen
+- [x] correctie/herindiening/goedkeuring ook op Pixel 7 Chromium en iPhone 13 WebKit bewezen
 - [~] pipelinebevestiging nog open op deze machine
 
 ---
@@ -403,30 +406,19 @@ Status Fase 9:
 - Auditevents voor customer_timesheet acties toegevoegd.
 - Playwright API tests toegevoegd: CTS-API-001 en CTS-API-002.
 
-### Nog bouwen
+### Nog bouwen of productieharden
 
 - JPG/PNG server-side omzetten naar PDF.
-- MIME-typecontrole.
-- Bestandsgroottecontrole.
-- Veilige bestandsnaam.
-- Unieke storage key.
 - Opslag buiten publiek toegankelijke webmap.
-- Employee mag alleen eigen bestand downloaden.
-- Administrator alleen binnen eigen organisatie.
-- Status missing.
-- End-to-end UI koppeling naar de nieuwe backendflow.
-- Al gemaild / overslaan-optie.
 - Virusscanstrategie.
-- Auditlog.
-- Playwright-tests.
-- Allure.
-- Living Doc.
 
 ### Recent afgerond in deze fase
 
 - End-to-end UI koppeling naar de backendflow is werkend in auth-mode.
 - Statusacties mark_skipped en restore_missing zijn functioneel getest.
 - Extra statuspad sent_to_broker is ondersteund in frontend/backendflow.
+- MIME-type, bestandsgrootte, veilige bestandsnaam en unieke storage key worden server-side gevalideerd/opgebouwd.
+- Employee- en administratorscope, status missing, auditlog en beveiligde download zijn aanwezig.
 - Playwright regressie voor customer-timesheets is uitgebreid met happy en negative scenario's.
 - Allure en live-doc bundel zijn opnieuw opgebouwd en visueel geverifieerd.
 - Living Doc en BDD mapping zijn bijgewerkt met H/N-id conventie en actuele scenario-overzichten.
@@ -453,39 +445,27 @@ Status Fase 10:
 
 ### Nog bouwen
 
-- Definitieve factuurnummering bepalen.
-- Nummering transactioneel reserveren.
-- Uren uit goedgekeurde timesheet gebruiken.
-- Uurtarief uit opdracht gebruiken.
-- Subtotaal server-side berekenen.
-- Btw server-side berekenen.
-- Totaal server-side berekenen.
 - Server-side factuur-PDF.
 - Path/QSI-briefpapier.
 - PDF veilig bewaren.
 - pdf_storage_key.
 - PDF alleen geautoriseerd downloaden.
-- Factuur definitief vergrendelen.
-- locked_at.
-- Geen bedragen meer wijzigen na vergrendeling.
 - Credit-/correctiestrategie.
-- API-tests.
-- Playwright-tests.
 - PDF-inhoudscontrole.
-- Allure.
-- Living Doc.
 
 ### Recent afgerond in deze fase
 
 - Invoice read-API berekent voor open facturen server-side subtotal, btw en totaal op basis van billable_hours en hourly_rate.
 - Vergrendelde facturen blijven in read-output op opgeslagen bedragen zodat lock-gedrag behouden blijft.
+- De write/lock-flow gebruikt goedgekeurde uren en opdrachtuurtarief, reserveert het factuurnummer transactioneel en vult locked_at.
+- Een vergrendelde factuur is immutable; dubbele en gelijktijdige lockrequests hebben regressiedekking.
 - Extra regressietests toegevoegd: INV-H-003 en INV-N-003 voor berekening en periodevalidatie.
+- Invoice-lock API/Playwright-regressies INV-H-004 en INV-N-008 t/m INV-N-012 zijn aanwezig.
 - Security tests geharmoniseerd naar Given/When/Then-stapstijl voor consistente rapportleesbaarheid.
 
 Status Fase 11:
-- [~] overzicht en databasestructuur bestaan
-- [~] server-side berekening voor open facturen staat in de read-API
-- [ ] definitieve server-side factuur/PDF open
+- [x] overzicht, server-side berekening en transactionele lock/write-flow met immutable bedragen bestaan
+- [~] fase als geheel gedeeltelijk: definitieve server-side PDF, beveiligde PDF-opslag/download en correctiestrategie open
 
 ---
 
@@ -503,39 +483,36 @@ Let op: dit staat los van GitHub commitnotificaties.
 - EasySalaryconcept.
 - Demo-/previewteksten.
 - Frontend bevat al delen van de mailworkflow.
+- Queue-service en API voor lijst/enqueue/retry.
+- Assignment-routes en kanaalspecifieke templates.
+- Dry-runmodus is standaard en maakt geen echte verzending.
+- Broker krijgt factuurbeleid; EasySalary-route heeft geen factuurbijlage.
+- Veertien happy/negative Playwright API-tests.
 
 ### Nog bouwen
 
-- Echte e-mailqueue-service.
-- Queue-item aanmaken.
-- Dry-runmodus.
-- Geen echte mail in demo/test.
-- Broker-mail.
-- Boekhouder-mail.
-- EasySalary-mail zonder factuur.
-- Juiste bijlagen per ontvanger.
 - Factuur-PDF als bijlage.
 - Klanturenstaat als bijlage waar nodig.
-- Mailtemplatevariabelen.
-- Onderwerpregels.
 - Retry na tijdelijke fout.
 - Maximaal aantal retries.
 - Foutstatus.
-- Auditlog.
 - Gmail/Google Workspace-config.
 - SMTP of Gmail API-keuze.
-- Playwright/API-tests.
 - Echte verzending als allerlaatste activeren.
 
 Status Fase 12:
-- [~] schema, routes en demo-opzet bestaan
-- [ ] echte queue en verzending open
+- [x] dry-runqueue, routes, templates, frontendkoppeling en regressietests bestaan
+- [~] fase als geheel gedeeltelijk: echte transportconfiguratie, bijlagen/retry-afbouw en verzending open
 
 ---
 
 ## Fase 13 - Definitieve bedrijfsgegevens en accounts
 
 - Demo-instellingen voor Path/QSI aanwezig.
+- Password-reset API en wachtwoord-vergeten frontend bestaan.
+- Login rate-limiting en force_password_change flow bestaan.
+- Gebruikersbeheer-API kan gebruikers lezen, deactiveren, heractiveren en wachtwoordwijziging afdwingen.
+- Role- en companyscope, CSRF en audit-events zijn door regressietests afgedekt.
 - Definitief kiezen:
   - QSI Consultancy B.V.
   - Path Consultancy B.V.
@@ -559,21 +536,17 @@ Status Fase 12:
 - Productieaccount Joyce.
 - Productieaccounts medewerkers.
 - Eerste wachtwoorden veilig uitgeven.
-- Verplichte wachtwoordwijziging bij eerste login.
 - Gebruikers deactiveren/verwijderenbeleid.
 - Google Workspace-koppeling.
-- Wachtwoord-vergeten/resetflow.
-- Account blokkeren bij uitdiensttreding zonder historische uren te verwijderen.
 - Eerste tijdelijke wachtwoord veilig uitgeven.
-- Verplichte wachtwoordwijziging bij eerste login.
 - Tweefactorauthenticatie voor beheerders beoordelen (sterk aanbevolen).
 - Bepalen wie productiebeheerder is naast Gio.
 - Privacy- en bewaartermijnen vastleggen voor uren, uploads, facturen en auditlogs.
 - Vastleggen wie gegevens mag exporteren, corrigeren en archiveren.
 
 Status Fase 13:
-- [~] demogegevens aanwezig
-- [ ] definitieve bedrijfs- en accountgegevens open
+- [x] auth-hardening, resetflow en gebruikersbeheer technisch aanwezig en getest
+- [~] fase als geheel gedeeltelijk: definitieve bedrijfsgegevens, productieaccounts, Google Workspace en beleid open
 
 ---
 
@@ -590,6 +563,9 @@ Dit is de oorspronkelijke productielijst en blijft volledig onderdeel van de mas
 - Databasegebruiker aangemaakt.
 - Demo-app gebouwd.
 - Demo-app lokaal getest.
+- Productieguards voor install.php, migrate.php en health.php.
+- server/.htaccess hardening en veilige config.example.php defaults.
+- Production-safety regressietests voor de guards.
 
 ### Nog door jou in TransIP controleren
 
@@ -630,9 +606,6 @@ Dit is de oorspronkelijke productielijst en blijft volledig onderdeel van de mas
 - PHP sessioninstellingen controleren.
 - Cronmogelijkheden controleren voor e-mailqueue.
 - Foutlogging buiten publieke output configureren.
-- `install.php` na installatie uitschakelen of alleen voor beheerders bereikbaar maken.
-- `migrate.php` niet vrij publiek bereikbaar laten.
-- `health.php` in productie geen databasehost of technische details laten tonen.
 - PHP `display_errors` uitzetten in productie; fouten alleen naar serverlogs.
 - Logs buiten de publiek bereikbare webmap bewaren + logrotatie instellen.
 - Demo-accounts en demo-seeds volledig uitschakelen in productie.
@@ -645,8 +618,8 @@ Dit is de oorspronkelijke productielijst en blijft volledig onderdeel van de mas
 - Back-upretentie en opslaglocatie controleren.
 
 Status Fase 14:
-- [x] subsite en databasebasis aanwezig
-- [ ] productieconfiguratie en deployment nog open
+- [x] subsite/databasebasis en applicatiehardening aanwezig
+- [~] fase als geheel gedeeltelijk: TransIP-productieconfiguratie, deployment en operationele controles open
 
 ---
 
@@ -670,11 +643,12 @@ Status Fase 14:
 - Living Documentation.
 - Smoke-tests.
 - Grote controlescripts.
+- Volledige correctie/herindiening/goedkeuring in desktopbrowser en mobiele emulatie.
+- Pixel 7 Chromium- en iPhone 13 WebKit-projecten met responsive layout-, touch-, modal- en overflowcontroles.
 
 ### Nog voor livegang
 
-- Volledige correctieflow in echte browser handmatig testen.
-- Volledige goedkeuringsflow in echte browser handmatig testen.
+- Volledige correctie- en goedkeuringsflow handmatig op productie testen.
 - Productie-adminlogin.
 - Productie-medewerkerlogin.
 - Productieprivacytest.
@@ -696,10 +670,9 @@ Status Fase 14:
 - Back-up maken.
 - Database herstellen uit back-up.
 - Bestanden herstellen uit back-up.
-- Mobiele adminflow.
-- Mobiele medewerkerflow.
-- iPhone-/Safari-test.
-- Android-/Chrome-test.
+- Mobiele admin- en medewerkerflow op fysieke toestellen.
+- Fysieke iPhone-/Safari-test.
+- Fysieke Android-/Chrome-test.
 - Tablet-test.
 - PWA-manifest.
 - Service worker.
@@ -727,13 +700,15 @@ Status Fase 14:
 - Pas daarna echte mail activeren.
 
 Status Fase 15:
-- [~] veel lokaal getest
-- [ ] volledige productieacceptatie en livegang open
+- [x] desktop- en mobiele emulatieregressie lokaal ingericht en bewezen
+- [~] fase als geheel gedeeltelijk: fysieke toestellen, productieacceptatie, PWA en livegang open
 
 ---
 
 ## Fase 16 - Beheer na livegang
 
+- Auditlog-API voor beheerders met entity/event filters en secret-redactie.
+- Zes API-regressies voor toegang, filters en gevoelige data.
 - Eerste week dagelijks errorlogs controleren.
 - Mailqueue dagelijks controleren.
 - Mislukte mails opnieuw aanbieden.
@@ -758,7 +733,8 @@ Status Fase 15:
 - Daarna normaal beheerregime.
 
 Status Fase 16:
-- [ ] nog niet gestart — pas relevant na livegang
+- [x] technische audit-API-basis aanwezig en getest
+- [~] fase als geheel gedeeltelijk: operationeel post-live beheer start pas na livegang
 
 ---
 
@@ -793,27 +769,32 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
 ## Samenvatting huidige stand
 
 - [x] Fase 1 - lokale basis
-- [x] Fase 2 - databaseschema en migraties
+- [~] Fase 2 - databaseschema/migraties klaar; volledige afbouw app_state/localStorage open
 - [x] Fase 3 - read-API
 - [x] Fase 4 - auth en rollen
 - [x] Fase 5 - securitybasis
 - [x] Fase 6 - Playwright, Allure, Living Doc en agents
-- [x] Fase 7 - CI/CD-basis
+- [~] Fase 7 - CI/CD-basis klaar; echte stages en productieapproval open
 - [x] Fase 8 - uren concept opslaan en indienen
-- [~] Fase 9 - correctie/goedkeuring: backend + API-tests + docs + commit/push klaar; pipelinebevestiging nog open op deze machine
+- [~] Fase 9 - correctie/goedkeuring desktop en mobiel bewezen; pipelinebevestiging open op deze machine
 - [~] Fase 10 - klanturenstaat: schema + API + UI-koppeling + regressie afgerond; productiehardening open
-- [~] Fase 11 - factuur/PDF: read-API + server-side berekening + extra tests aanwezig; server-side PDF en lock/write-flow open
-- [x] Fase 12 - e-mail: queue-service + dry-run + assignment-routes + tests afgerond; echte dispatch open
-- [x] Fase 13 - bedrijfsdata: gebruikersbeheer-API, wachtwoord-reset, rate-limiting, force_password_change afgerond; definitieve bedrijfsgegevens + accounts open
+- [~] Fase 11 - factuur lock/write en serverberekening bewezen; server-side PDF/opslag/download open
+- [~] Fase 12 - e-mail: queue-service + dry-run + assignment-routes + tests afgerond; echte dispatch open
+- [~] Fase 13 - bedrijfsdata: gebruikersbeheer-API, wachtwoord-reset, rate-limiting, force_password_change afgerond; definitieve bedrijfsgegevens + accounts open
 - [~] Fase 14 - TransIP: hardening (install/migrate/health guards, .htaccess) afgerond; deployment + productie-config open
-- [~] Fase 15 - lokaal 80+ tests groen; productieacceptatie open
-- [ ] Fase 16 - beheer na livegang: nog niet gestart
+- [~] Fase 15 - lokaal 100 tests over desktop/Pixel/iPhone; fysieke toestellen en productieacceptatie open
+- [~] Fase 16 - audit-API-basis klaar; operationeel post-live beheer nog niet gestart
+
+Telling fasestatussen:
+- [x] 6 fasen volledig bewezen voor hun afgebakende scope: 1, 3, 4, 5, 6 en 8.
+- [~] 10 fasen gedeeltelijk: 2, 7 en 9 t/m 16.
+- [ ] 0 fasen volledig ongestart; open werk staat onder de gedeeltelijke fasen.
 
 ## Directe volgende stap
 
 1. GitHub pipeline-status van recente main-commits bevestigen (na gh auth login).
-2. Fase 9 pipelinebewijs op [x] zetten zodra bevestigd.
-3. Fase 11 vervolg: factuur write/lock-flow bouwen (transactionele nummerreservering, locked_at, immutable bedragen na lock).
+2. Fase 11 vervolg: server-side factuur-PDF met beveiligde opslag/download bouwen.
+3. Fase 13/14: definitieve bedrijfsdata en TransIP-productieconfiguratie bevestigen.
 
 ## Dagelijkse werkwijze (verplicht)
 

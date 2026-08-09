@@ -1,6 +1,6 @@
 # Path Uren & Facturatie
 
-Lokale voorbereidingsversie v0.9.21 van een configureerbare uren- en facturatieapp. Path Consultancy B.V. is de volledig ingevulde voorbeeldorganisatie.
+Lokale voorbereidingsversie v0.9.40 van een configureerbare uren- en facturatieapp. Path Consultancy B.V. is de volledig ingevulde voorbeeldorganisatie.
 
 ## Wat deze versie laat zien
 
@@ -124,11 +124,20 @@ De productie-uitvoer wordt in `dist/` geplaatst.
 	- `set PLAYWRIGHT_GROUP=negative&& npm run test:e2e`
 	- `set PLAYWRIGHT_GROUP=phase11&& npm run test:e2e`
 - Playwright UI: `npm run test:e2e:ui`
+- Alle desktop- en mobiele UI-tests headed: `npm run test:e2e:ui-all:headed`
+- Mobiele Playwright-projecten (device emulation):
+	- `npm run test:e2e:mobile`
+	- `npm run test:e2e:mobile:headed`
+	- `npm run test:e2e:mobile:ui`
+	- `npm run test:e2e:group:ui-desktop`
+	- `npm run test:e2e:group:ui-mobile`
 - Playwright HTML report: `npx playwright show-report`
 - Allure genereren: `npm run allure:generate`
 - Allure openen: `npm run allure:open` of `npm run allure:serve`
 - Live documentatiebundel maken: `npm run docs:bundle`
 - Alles in één stap (run + reports + bundel): `npm run docs:refresh`
+
+Mobiele projecten gebruiken Playwright device emulation (viewport + user-agent + touch-profiel) en zijn geen fysieke iPhone/Android-test. Voor livegang blijven echte toesteltests nodig.
 
 Living doc en mapping:
 

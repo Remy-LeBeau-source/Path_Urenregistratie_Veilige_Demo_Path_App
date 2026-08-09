@@ -1695,6 +1695,7 @@ function invoiceApiRowsForPeriod(periodKey) {
   const dataset = readApiDebug.invoicesByPeriod[periodKey] || null;
   if (!dataset || !Array.isArray(dataset.items)) return null;
   return dataset.items.map(item => ({
+    id: Number(item && item.id || 0),
     invoiceNumber: String(item && item.invoice_number || ""),
     employeeName: String(item && item.employee_name || "Onbekend"),
     periodKey: String(item && item.period_key || periodKey),
@@ -2860,6 +2861,9 @@ function renderDashboardNextAction(tasks) {
 function renderDashboardActions() {
   const tasks = adminOpenTasks();
   const dashboardApi = dashboardApiForPeriod(currentPeriod().key);
+  const authMode = API_ENABLED && authRuntime.mode === "auth";
+  const apiWorkReady = Boolean(dashboardApi && dashboardApi.work && Number.isFinite(Number(dashboardApi.work.totaal)));
+  const apiWorkLoading = authMode && !apiWorkReady;
   const workCount = tasks.length;
   const actionableCount = tasks.filter(task => task.actionable).length;
   const waitingCount = workCount - actionableCount;
@@ -2871,12 +2875,17 @@ function renderDashboardActions() {
   const selectedCustomerCount = selectedTasks.filter(task => task.category === "Klanturenstaat").length;
   const admin = currentAdmin();
   document.querySelector("#admin-dashboard-greeting").textContent = greetingForNow() + ", " + (admin ? admin.name.split(/\s+/)[0] : "beheerder");
-  document.querySelector("#admin-attention-note").textContent = workCount
+  document.querySelector("#admin-attention-note").textContent = apiWorkLoading
+    ? "Werkvoorraad wordt geladen vanuit de server."
+    : workCount
     ? workCount + " open " + (workCount === 1 ? "actie" : "acties") + " in " + workDossiers + " " + (workDossiers === 1 ? "dossier" : "dossiers") + " over " + workMonths + " " + (workMonths === 1 ? "maand" : "maanden") + " · " + actionableCount + " bij Backoffice · " + waitingCount + " bij medewerkers."
     : "Er staat niets open: alle uren, klanturenstaten en verzendcontroles zijn afgerond.";
   const workQueueAction = document.querySelector("#open-work-queue");
-  workQueueAction.hidden = workCount === 0;
-  workQueueAction.textContent = "Bekijk alle " + workCount + " open " + (workCount === 1 ? "actie" : "acties");
+  workQueueAction.hidden = apiWorkLoading ? false : workCount === 0;
+  workQueueAction.disabled = apiWorkLoading;
+  workQueueAction.textContent = apiWorkLoading
+    ? "Werkvoorraad laden..."
+    : "Bekijk alle " + workCount + " open " + (workCount === 1 ? "actie" : "acties");
   workQueueAction.dataset.openWorkFilter = "all";
   const apiWorkCount = dashboardApi && dashboardApi.work ? Number(dashboardApi.work.totaal || 0) : null;
   const apiActionable = dashboardApi && dashboardApi.work ? Number(dashboardApi.work.bij_backoffice || 0) : null;
@@ -2884,12 +2893,21 @@ function renderDashboardActions() {
   const displayWorkCount = apiWorkCount === null ? workCount : apiWorkCount;
   const displayActionable = apiActionable === null ? actionableCount : apiActionable;
   const displayWaiting = apiWaiting === null ? waitingCount : apiWaiting;
-  document.querySelector("#hero-task-total").textContent = displayWorkCount + " open " + (displayWorkCount === 1 ? "actie" : "acties");
-  document.querySelector("#hero-task-months").textContent = workCount ? adminTaskMonthEquation(tasks) : "Alles afgerond";
-  document.querySelector("#hero-task-owners").textContent = displayWorkCount ? "Backoffice " + displayActionable + " + medewerkers " + displayWaiting + " = " + displayWorkCount : "Backoffice 0 + medewerkers 0 = 0";
-  document.querySelector("#metric-actions").textContent = displayActionable;
-  document.querySelector("#metric-actions-note").textContent = displayWaiting ? displayWaiting + " " + (displayWaiting === 1 ? "actie wacht" : "acties wachten") + " op medewerkers" : "Niets wacht op medewerkers";
-  document.querySelector("#metric-actions-link").textContent = displayWorkCount ? "Bekijk alle " + displayWorkCount + " acties" : "Alles afgerond";
+  if (apiWorkLoading) {
+    document.querySelector("#hero-task-total").textContent = "Werkvoorraad laden...";
+    document.querySelector("#hero-task-months").textContent = "Servergegevens worden geladen";
+    document.querySelector("#hero-task-owners").textContent = "Backoffice - + medewerkers - = -";
+    document.querySelector("#metric-actions").textContent = "-";
+    document.querySelector("#metric-actions-note").textContent = "Open acties worden geladen";
+    document.querySelector("#metric-actions-link").textContent = "Laden...";
+  } else {
+    document.querySelector("#hero-task-total").textContent = displayWorkCount + " open " + (displayWorkCount === 1 ? "actie" : "acties");
+    document.querySelector("#hero-task-months").textContent = workCount ? adminTaskMonthEquation(tasks) : "Alles afgerond";
+    document.querySelector("#hero-task-owners").textContent = displayWorkCount ? "Backoffice " + displayActionable + " + medewerkers " + displayWaiting + " = " + displayWorkCount : "Backoffice 0 + medewerkers 0 = 0";
+    document.querySelector("#metric-actions").textContent = displayActionable;
+    document.querySelector("#metric-actions-note").textContent = displayWaiting ? displayWaiting + " " + (displayWaiting === 1 ? "actie wacht" : "acties wachten") + " op medewerkers" : "Niets wacht op medewerkers";
+    document.querySelector("#metric-actions-link").textContent = displayWorkCount ? "Bekijk alle " + displayWorkCount + " acties" : "Alles afgerond";
+  }
   document.querySelector("#workflow-open-count").textContent = "Deze maand: " + selectedTasks.length + " open " + (selectedTasks.length === 1 ? "actie" : "acties");
   document.querySelector("#workflow-open-breakdown").textContent = selectedActionableCount + " bij Backoffice · " + selectedWaitingCount + " bij medewerkers · waarvan " + selectedCustomerCount + " klanturensta" + (selectedCustomerCount === 1 ? "at" : "ten");
   renderDashboardNextAction(tasks);
@@ -5537,6 +5555,13 @@ function invoiceSummary(employeeId, periodKey) {
   };
 }
 
+function serverInvoiceIdFor(employeeId, periodKey) {
+  const rows = invoiceApiRowsForPeriod(periodKey) || [];
+  const employee = employeeById(employeeId);
+  const match = rows.find(r => r.employeeName === employee.name || r.invoiceNumber === (recordFor(employee.id, periodKey) || {}).invoiceNumber);
+  return match ? match.id : 0;
+}
+
 function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
   const key = periodKey || currentPeriod().key;
   const period = periodFromKey(key);
@@ -5571,16 +5596,30 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
         info.record.invoiceStatus = "simulated";
         info.record.payrollStatus = "simulated";
       };
-      const toastMessage = "Verzending voor " + info.employee.name + " · " + period.label + " is gecontroleerd. Er is niets verstuurd.";
+      const baseMsg = "Verzending voor " + info.employee.name + " · " + period.label + " klaargezet";
       if (adminTaskId) {
-        finishAdminTaskAndContinue(adminTaskId, mutate, toastMessage);
-        return;
+        finishAdminTaskAndContinue(adminTaskId, mutate, baseMsg + " (dry-run).");
+      } else {
+        mutate();
+        persistState();
+        closeModal();
+        renderAll();
       }
-      mutate();
-      persistState();
-      closeModal();
-      renderAll();
-      toast(toastMessage);
+      const invId = serverInvoiceIdFor(employeeId, key);
+      if (invId > 0 && API_ENABLED) {
+        requestAuthCsrf().then(token =>
+          fetch("/server/api/email-queue.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
+            body: JSON.stringify({ action: "enqueue", invoice_id: invId })
+          }).then(r => r.json()).then(data => {
+            const n = data && data.count || 0;
+            toast(baseMsg + " (dry-run): " + n + (n === 1 ? " bericht" : " berichten") + " klaargezet.");
+          }).catch(() => toast(baseMsg + ". Koppeling met mailqueue tijdelijk niet bereikbaar."))
+        ).catch(() => toast(baseMsg + " (dry-run)."));
+      } else {
+        toast(baseMsg + " (dry-run).");
+      }
     }
   });
   return true;
@@ -7271,6 +7310,10 @@ document.querySelector("#auth-login-form")?.addEventListener("submit", event => 
         setAuthLoginFeedback("Deze gebruiker heeft geen ondersteunde rol in deze fase.", true);
         logoutLocal();
       }
+      // Notify if admin has forced a password change for this account.
+      if (result.data.user && result.data.user.force_password_change) {
+        toast("Je wachtwoord moet worden gewijzigd. Gebruik 'Wachtwoord vergeten?' om een nieuw wachtwoord in te stellen.");
+      }
     })
     .catch(() => {
       setAuthDebug({ authenticated: false, role: "", user_id: null, mode: "auth", available: true, error: "login-request-failed" });
@@ -7280,6 +7323,45 @@ document.querySelector("#auth-login-form")?.addEventListener("submit", event => 
     .finally(() => {
       setAuthLoginEnabled(true);
     });
+});
+document.querySelector("#auth-forgot-password")?.addEventListener("click", () => {
+  document.querySelector("#auth-login-form").hidden = true;
+  document.querySelector("#auth-forgot-password").hidden = true;
+  document.querySelector("#auth-reset-form").hidden = false;
+  const resetEmail = document.querySelector("#auth-reset-email");
+  const loginEmail = document.querySelector("#auth-login-email");
+  if (resetEmail && loginEmail) resetEmail.value = loginEmail.value;
+});
+document.querySelector("#auth-reset-cancel")?.addEventListener("click", () => {
+  document.querySelector("#auth-reset-form").hidden = true;
+  document.querySelector("#auth-login-form").hidden = false;
+  document.querySelector("#auth-forgot-password").hidden = false;
+  const fb = document.querySelector("#auth-reset-feedback");
+  if (fb) { fb.hidden = true; fb.textContent = ""; }
+});
+document.querySelector("#auth-reset-submit")?.addEventListener("click", () => {
+  const emailInput = document.querySelector("#auth-reset-email");
+  const feedback = document.querySelector("#auth-reset-feedback");
+  const email = String(emailInput?.value || "").trim();
+  if (!email) { if (feedback) { feedback.textContent = "Vul een e-mailadres in."; feedback.hidden = false; } return; }
+  if (feedback) { feedback.textContent = "Verzoek wordt verstuurd..."; feedback.hidden = false; }
+  requestAuthCsrf().then(token =>
+    fetch("/server/auth/request-reset.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify({ email })
+    }).then(r => r.json()).then(data => {
+      if (feedback) {
+        if (data.ok) {
+          feedback.textContent = data.dry_run
+            ? "Resetverzoek verstuurd (dry-run). Vraag de beheerder om het token."
+            : "Resetverzoek verstuurd. Controleer je e-mail.";
+        } else {
+          feedback.textContent = "Resetverzoek mislukt. Probeer opnieuw.";
+        }
+      }
+    }).catch(() => { if (feedback) feedback.textContent = "Verbindingsfout. Probeer opnieuw."; })
+  );
 });
 document.querySelector("#switch-role").addEventListener("click", logout);
 document.querySelector("#mobile-switch-role").addEventListener("click", logout);

@@ -2861,6 +2861,9 @@ function renderDashboardNextAction(tasks) {
 function renderDashboardActions() {
   const tasks = adminOpenTasks();
   const dashboardApi = dashboardApiForPeriod(currentPeriod().key);
+  const authMode = API_ENABLED && authRuntime.mode === "auth";
+  const apiWorkReady = Boolean(dashboardApi && dashboardApi.work && Number.isFinite(Number(dashboardApi.work.totaal)));
+  const apiWorkLoading = authMode && !apiWorkReady;
   const workCount = tasks.length;
   const actionableCount = tasks.filter(task => task.actionable).length;
   const waitingCount = workCount - actionableCount;
@@ -2872,12 +2875,17 @@ function renderDashboardActions() {
   const selectedCustomerCount = selectedTasks.filter(task => task.category === "Klanturenstaat").length;
   const admin = currentAdmin();
   document.querySelector("#admin-dashboard-greeting").textContent = greetingForNow() + ", " + (admin ? admin.name.split(/\s+/)[0] : "beheerder");
-  document.querySelector("#admin-attention-note").textContent = workCount
+  document.querySelector("#admin-attention-note").textContent = apiWorkLoading
+    ? "Werkvoorraad wordt geladen vanuit de server."
+    : workCount
     ? workCount + " open " + (workCount === 1 ? "actie" : "acties") + " in " + workDossiers + " " + (workDossiers === 1 ? "dossier" : "dossiers") + " over " + workMonths + " " + (workMonths === 1 ? "maand" : "maanden") + " · " + actionableCount + " bij Backoffice · " + waitingCount + " bij medewerkers."
     : "Er staat niets open: alle uren, klanturenstaten en verzendcontroles zijn afgerond.";
   const workQueueAction = document.querySelector("#open-work-queue");
-  workQueueAction.hidden = workCount === 0;
-  workQueueAction.textContent = "Bekijk alle " + workCount + " open " + (workCount === 1 ? "actie" : "acties");
+  workQueueAction.hidden = apiWorkLoading ? false : workCount === 0;
+  workQueueAction.disabled = apiWorkLoading;
+  workQueueAction.textContent = apiWorkLoading
+    ? "Werkvoorraad laden..."
+    : "Bekijk alle " + workCount + " open " + (workCount === 1 ? "actie" : "acties");
   workQueueAction.dataset.openWorkFilter = "all";
   const apiWorkCount = dashboardApi && dashboardApi.work ? Number(dashboardApi.work.totaal || 0) : null;
   const apiActionable = dashboardApi && dashboardApi.work ? Number(dashboardApi.work.bij_backoffice || 0) : null;
@@ -2885,12 +2893,21 @@ function renderDashboardActions() {
   const displayWorkCount = apiWorkCount === null ? workCount : apiWorkCount;
   const displayActionable = apiActionable === null ? actionableCount : apiActionable;
   const displayWaiting = apiWaiting === null ? waitingCount : apiWaiting;
-  document.querySelector("#hero-task-total").textContent = displayWorkCount + " open " + (displayWorkCount === 1 ? "actie" : "acties");
-  document.querySelector("#hero-task-months").textContent = workCount ? adminTaskMonthEquation(tasks) : "Alles afgerond";
-  document.querySelector("#hero-task-owners").textContent = displayWorkCount ? "Backoffice " + displayActionable + " + medewerkers " + displayWaiting + " = " + displayWorkCount : "Backoffice 0 + medewerkers 0 = 0";
-  document.querySelector("#metric-actions").textContent = displayActionable;
-  document.querySelector("#metric-actions-note").textContent = displayWaiting ? displayWaiting + " " + (displayWaiting === 1 ? "actie wacht" : "acties wachten") + " op medewerkers" : "Niets wacht op medewerkers";
-  document.querySelector("#metric-actions-link").textContent = displayWorkCount ? "Bekijk alle " + displayWorkCount + " acties" : "Alles afgerond";
+  if (apiWorkLoading) {
+    document.querySelector("#hero-task-total").textContent = "Werkvoorraad laden...";
+    document.querySelector("#hero-task-months").textContent = "Servergegevens worden geladen";
+    document.querySelector("#hero-task-owners").textContent = "Backoffice - + medewerkers - = -";
+    document.querySelector("#metric-actions").textContent = "-";
+    document.querySelector("#metric-actions-note").textContent = "Open acties worden geladen";
+    document.querySelector("#metric-actions-link").textContent = "Laden...";
+  } else {
+    document.querySelector("#hero-task-total").textContent = displayWorkCount + " open " + (displayWorkCount === 1 ? "actie" : "acties");
+    document.querySelector("#hero-task-months").textContent = workCount ? adminTaskMonthEquation(tasks) : "Alles afgerond";
+    document.querySelector("#hero-task-owners").textContent = displayWorkCount ? "Backoffice " + displayActionable + " + medewerkers " + displayWaiting + " = " + displayWorkCount : "Backoffice 0 + medewerkers 0 = 0";
+    document.querySelector("#metric-actions").textContent = displayActionable;
+    document.querySelector("#metric-actions-note").textContent = displayWaiting ? displayWaiting + " " + (displayWaiting === 1 ? "actie wacht" : "acties wachten") + " op medewerkers" : "Niets wacht op medewerkers";
+    document.querySelector("#metric-actions-link").textContent = displayWorkCount ? "Bekijk alle " + displayWorkCount + " acties" : "Alles afgerond";
+  }
   document.querySelector("#workflow-open-count").textContent = "Deze maand: " + selectedTasks.length + " open " + (selectedTasks.length === 1 ? "actie" : "acties");
   document.querySelector("#workflow-open-breakdown").textContent = selectedActionableCount + " bij Backoffice · " + selectedWaitingCount + " bij medewerkers · waarvan " + selectedCustomerCount + " klanturensta" + (selectedCustomerCount === 1 ? "at" : "ten");
   renderDashboardNextAction(tasks);

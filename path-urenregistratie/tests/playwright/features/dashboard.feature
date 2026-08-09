@@ -9,6 +9,8 @@ Feature: Dashboardweergave in Path Uren & Facturatie
 # [DASH-N-004] Dashboard laadt zonder console/page errors.
 # [DASH-H-005] Dashboard toont consistente kernsamenvatting na login.
 # [DASH-N-006] Medewerker ziet geen administratoracties op dashboard.
+# [DASH-N-007] Gecachete oude open-acties teller wordt niet als actuele teller getoond.
+# [DASH-N-008] Voorbeeldgegevens herstellen overschrijft in auth-modus de DB teller niet.
 
   # Happy flows
 
@@ -38,4 +40,14 @@ Feature: Dashboardweergave in Path Uren & Facturatie
   Scenario: [DASH-N-006] Medewerker ziet geen administratoracties op dashboard
     Given de medewerker is ingelogd met employee-rol
     Then ontbreken administratorgerichte controle-acties op het dashboard zodat least-privilege ook in UI zichtbaar blijft
+
+  Scenario: [DASH-N-007] Oude open-acties teller wordt tijdens startup niet als actuele waarde getoond
+    Given een oude gecachete teller en een vertraagde dashboard-API
+    When de dashboard-API klaar is met laden
+    Then toont het dashboard direct de serverwaarde zonder stale eindstatus
+
+  Scenario: [DASH-N-008] Voorbeeldgegevens herstellen houdt in auth-modus de DB teller leidend
+    Given de gebruiker werkt in auth-modus met serverwerkvoorraad
+    When de gebruiker voorbeeldgegevens herstelt
+    Then blijft de serverwaarde leidend en wordt geen oude lokale teller getoond
 

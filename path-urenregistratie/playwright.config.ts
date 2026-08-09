@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { defineConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/playwright',
@@ -18,5 +18,28 @@ export default defineConfig({
     ['list'],
     ['html', { outputFolder: 'playwright-report', open: 'never' }],
     ['allure-playwright', { outputFolder: 'allure-results', detail: false }],
+  ],
+  projects: [
+    {
+      name: 'desktop-chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+      },
+      testIgnore: ['**/mobile-ui.spec.ts'],
+    },
+    {
+      name: 'mobile-chrome',
+      use: {
+        ...devices['Pixel 7'],
+      },
+      testMatch: ['**/mobile-ui.spec.ts'],
+    },
+    {
+      name: 'mobile-safari',
+      use: {
+        ...devices['iPhone 13'],
+      },
+      testMatch: ['**/mobile-ui.spec.ts'],
+    },
   ],
 });

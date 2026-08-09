@@ -69,6 +69,9 @@ const groupToGrep = {
   'customer-timesheets': '\\[CTS-API-',
   api: '\\[(AUTH|SEC|ROLE|TS-API|TS-REV-API|CTS-API)-',
   ui: '\\[(DASH|INV|TS-REV-UI)-',
+  'ui-desktop': '\\[(DASH|INV|TS-REV-UI)-',
+  'ui-mobile': '\\[MOB-',
+  mobile: '\\[MOB-',
   happy: '-H-',
   negative: '-N-',
   phase10: '\\[CTS-API-',
@@ -96,7 +99,7 @@ if (groupRaw !== '' && !hasExplicitGrep(runtimeArgs)) {
 
   if (groups.length > 0) {
     const regex = groups.map((group) => groupToGrep[group]).join('|');
-    runtimeArgs.push('--grep', regex);
+    runtimeArgs.push('--grep', `"${regex}"`);
     console.log(`E2E group filter active (PLAYWRIGHT_GROUP=${groupRaw}): ${regex}`);
   }
 }

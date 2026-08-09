@@ -56,7 +56,15 @@
         <input id="auth-login-password" name="password" type="password" autocomplete="current-password" placeholder="Wachtwoord" required>
         <button class="button button-primary" id="auth-login-submit" type="submit">Inloggen</button>
         <p id="auth-login-feedback" hidden></p>
+        <button class="button button-ghost" id="auth-forgot-password" type="button">Wachtwoord vergeten?</button>
       </form>
+      <div id="auth-reset-form" hidden>
+        <p>Vul je e-mailadres in om een resetlink te ontvangen.</p>
+        <input id="auth-reset-email" type="email" autocomplete="username" placeholder="E-mailadres">
+        <button class="button button-primary" id="auth-reset-submit" type="button">Verstuur resetverzoek</button>
+        <button class="button button-ghost" id="auth-reset-cancel" type="button">Terug naar inloggen</button>
+        <p id="auth-reset-feedback" hidden></p>
+      </div>
       <p class="login-note" id="auth-mode-indicator">Controle van auth-sessie wordt uitgevoerd.</p>
       <p class="login-note">De standaardgegevens gebruiken veilige voorbeeldadressen. Je mag zelf echte gegevens invoeren; deze lokale versie bewaart ze alleen in deze browser en e-mailverzending is uitgeschakeld.</p>
     </div>
@@ -110,7 +118,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 0.9.30</span>
+      <span class="demo-badge">Versie 0.9.40</span>
       </div>
     </aside>
 

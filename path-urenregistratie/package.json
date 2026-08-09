@@ -1,6 +1,6 @@
 {
   "name": "path-urenregistratie",
-  "version": "0.9.39",
+  "version": "0.9.40",
   "private": true,
   "scripts": {
     "dev": "vite",
@@ -20,7 +20,13 @@
     "test:e2e:group:customer": "set PLAYWRIGHT_GROUP=customer&& node scripts/run-playwright-e2e.mjs",
     "test:e2e:group:api": "set PLAYWRIGHT_GROUP=api&& node scripts/run-playwright-e2e.mjs",
     "test:e2e:group:ui": "set PLAYWRIGHT_GROUP=ui&& node scripts/run-playwright-e2e.mjs",
+    "test:e2e:group:ui-desktop": "set PLAYWRIGHT_GROUP=ui-desktop&& node scripts/run-playwright-e2e.mjs --project=desktop-chromium",
+    "test:e2e:group:ui-mobile": "set PLAYWRIGHT_GROUP=ui-mobile&& node scripts/run-playwright-e2e.mjs --project=mobile-chrome --project=mobile-safari",
+    "test:e2e:mobile": "node scripts/run-playwright-e2e.mjs --project=mobile-chrome --project=mobile-safari",
+    "test:e2e:mobile:headed": "node scripts/run-playwright-e2e.mjs --project=mobile-chrome --project=mobile-safari --headed",
+    "test:e2e:mobile:ui": "node scripts/run-playwright-e2e.mjs --project=mobile-chrome --project=mobile-safari --ui",
     "test:e2e:headed": "node scripts/run-playwright-e2e.mjs --headed",
+    "test:e2e:ui-all:headed": "set PLAYWRIGHT_GROUP=ui-desktop,ui-mobile&& node scripts/run-playwright-e2e.mjs --headed",
     "test:e2e:ui": "node scripts/run-playwright-e2e.mjs --ui",
     "allure:generate": "allure generate allure-results --clean -o allure-report",
     "allure:open": "allure open allure-report",
