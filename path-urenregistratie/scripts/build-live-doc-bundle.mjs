@@ -883,7 +883,7 @@ function wrapIndexHtml({ generatedAt, stats, features }) {
           <div>
             <span class="eyebrow">Live Docs Bundle</span>
             <h1>Path Live Documentatie</h1>
-            <p>Van businessscenario naar uitvoerbaar bewijs. Bekijk 96 functionele cases, hun traceability en de laatste regressieresultaten vanuit één ingang.</p>
+            <p>Van businessscenario naar uitvoerbaar bewijs. Bekijk 117 functionele cases, hun traceability en de laatste regressieresultaten vanuit één ingang.</p>
             <div class="stat-grid">
 ${renderStatCards(stats, 'dark')}
             </div>
@@ -911,12 +911,12 @@ ${renderStatCards(stats, 'dark')}
       <section class="section">
         <span class="overline">Testoverzicht</span>
         <h2>Wat wordt automatisch gecontroleerd?</h2>
-        <p class="section-copy">De 96 unieke cases controleren gebruikersschermen, API's, security en integraties. Vier mobiele cases draaien op twee devices; daarom bevat de volledige run 100 testuitvoeringen.</p>
+        <p class="section-copy">De 117 unieke cases controleren gebruikersschermen, API's, security en integraties. Vier mobiele cases draaien op twee devices; daarom bevat de volledige run 121 testuitvoeringen.</p>
         ${renderCoverageCharts(features)}
       </section>
 
       <footer class="portal-footer">
-        <span>Path Uren &amp; Facturatie · Living Documentation v0.9.40</span>
+        <span>Path Uren &amp; Facturatie · Living Documentation v0.9.41</span>
         <span><a href="LIVING-DOC.md">Markdown</a> · <a href="TEST-BDD-MAPPING.md">Mapping bron</a></span>
       </footer>
     </main>

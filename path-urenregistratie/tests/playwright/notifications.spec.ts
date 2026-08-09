@@ -86,4 +86,60 @@ test.describe('notifications api', () => {
     await authApi.logout();
     await ctx.dispose();
   });
+
+  test('[NOT-H-005] notificatielimiet wordt op minimaal een begrensd', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+
+    const res = await ctx.get('/server/api/notifications.php?limit=0');
+    const body = await res.json();
+    expect(res.status()).toBe(200);
+    expect(body.count).toBeLessThanOrEqual(1);
+    expect(body.items).toHaveLength(body.count);
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
+
+  test('[NOT-H-006] unread-filter retourneert uitsluitend ongelezen meldingen', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+
+    const res = await ctx.get('/server/api/notifications.php?unread=1');
+    const body = await res.json();
+    expect(res.status()).toBe(200);
+    expect(body.items.every((item: { read: boolean }) => item.read === false)).toBe(true);
+    expect(body.unread_count).toBe(body.count);
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
+
+  test('[NOT-N-007] mark_read zonder notification_id geeft 400', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+
+    const res = await postNotif(ctx, { action: 'mark_read' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('missing-notification-id');
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
+
+  test('[NOT-H-008] mark_read voor onbekende melding wijzigt nul records', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+
+    const res = await postNotif(ctx, { action: 'mark_read', notification_id: 2147483647 });
+    expect(res.status).toBe(200);
+    expect(res.body.updated).toBe(0);
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
 });

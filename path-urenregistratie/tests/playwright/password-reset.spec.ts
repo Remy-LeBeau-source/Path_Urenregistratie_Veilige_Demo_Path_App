@@ -179,4 +179,21 @@ test.describe('password reset api', () => {
 
     await ctx.dispose();
   });
+
+  test('[PWD-N-008] request-reset weigert GET', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const response = await ctx.get('/server/auth/request-reset.php');
+    const body = await response.json();
+    expect(response.status()).toBe(405);
+    expect(body.error).toBe('method-not-allowed');
+    await ctx.dispose();
+  });
+
+  test('[PWD-N-009] request-reset met leeg e-mailadres geeft 400', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const response = await postAuth(ctx, '/server/auth/request-reset.php', { email: '' });
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('invalid-payload');
+    await ctx.dispose();
+  });
 });

@@ -1514,6 +1514,7 @@ function initializeAuthSession() {
       authRuntime.checked = true;
       authRuntime.available = true;
       applyAuthUiMode("auth");
+      prefillAuthCredentialsFromSelection("admin", false);
       if (data && data.ok === true && data.authenticated === true && data.user) {
         setAuthDebug({
           authenticated: true,

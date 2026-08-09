@@ -19,4 +19,8 @@ export const caseMappings = [
   { caseId: 'AUD-H-004', spec: 'audit-log.spec.ts' },
   { caseId: 'AUD-N-005', spec: 'audit-log.spec.ts' },
   { caseId: 'AUD-N-006', spec: 'audit-log.spec.ts' },
+  { caseId: 'AUD-H-007', spec: 'audit-log.spec.ts' },
+  { caseId: 'AUD-H-008', spec: 'audit-log.spec.ts' },
+  { caseId: 'AUD-H-009', spec: 'audit-log.spec.ts' },
+  { caseId: 'AUD-N-010', spec: 'audit-log.spec.ts' },
 ] as const;

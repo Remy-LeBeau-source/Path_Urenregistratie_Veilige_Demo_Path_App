@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { AuthApi } from './api/AuthApi';
-import { appConfig } from './fixtures/appConfig';
+import { appConfig, requirePassword } from './fixtures/appConfig';
 import { LoginPage } from './pages/LoginPage';
 
 test('[AUTH-H-001] Admin logt in en auth/me geeft de juiste gebruiker terug', async ({ page }) => {
@@ -63,4 +63,54 @@ test('[AUTH-H-003] Gebruiker logt uit en auth/me geeft authenticated false terug
     expect(meAfterLogout.body.authenticated).toBe(false);
     expect(meAfterLogout.body.user).toBeNull();
   });
+});
+
+test('[AUTH-H-004] Lokale beheeraccount wordt automatisch ingevuld en opent na een klik', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given de lokale Path loginpagina beschikbaar is', async () => {
+    await loginPage.open();
+  });
+
+  await test.step('Then de gekozen beheeraccount automatisch is ingevuld', async () => {
+    await expect(page.locator('#auth-login-email')).toHaveValue(/^[^@]+@example\.invalid$/);
+    await expect(page.locator('#auth-login-password')).toHaveValue(
+      requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'),
+    );
+  });
+
+  await test.step('When de gebruiker eenmaal op Inloggen klikt', async () => {
+    await page.locator('#auth-login-submit').click();
+  });
+
+  await test.step('Then het beheerdersdashboard opent', async () => {
+    await expect(page.locator('#app-shell')).toBeVisible();
+  });
+});
+
+test('[AUTH-N-005] onbekend account geeft dezelfde generieke loginfout', async ({ request }) => {
+  const csrfResponse = await request.get('/server/auth/csrf.php');
+  const csrf = await csrfResponse.json();
+  const response = await request.post('/server/auth/login.php', {
+    headers: { 'X-CSRF-Token': csrf.csrf_token },
+    data: { email: `unknown-${Date.now()}@example.invalid`, password: 'OnjuistWachtwoord!2026' },
+  });
+  const body = await response.json();
+
+  expect(response.status()).toBe(401);
+  expect(body.error).toBe('invalid-credentials');
+  expect(body.message).toBe('Invalid email or password.');
+});
+
+test('[AUTH-N-006] ongeldig e-mailformaat wordt als invalid-payload geweigerd', async ({ request }) => {
+  const csrfResponse = await request.get('/server/auth/csrf.php');
+  const csrf = await csrfResponse.json();
+  const response = await request.post('/server/auth/login.php', {
+    headers: { 'X-CSRF-Token': csrf.csrf_token },
+    data: { email: 'geen-geldig-emailadres', password: 'OnjuistWachtwoord!2026' },
+  });
+  const body = await response.json();
+
+  expect(response.status()).toBe(400);
+  expect(body.error).toBe('invalid-payload');
 });

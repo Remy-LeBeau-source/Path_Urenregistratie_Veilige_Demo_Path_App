@@ -1,17 +1,17 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 96 functionele cases leesbaar zonder een tweede testrunner toe te voegen.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 117 functionele cases leesbaar zonder een tweede testrunner toe te voegen.
 
 ## Actuele regressiestatus
 
-- Functionele cases: 96 unieke case-ID's
-- Uitvoeringen: 100
-- Niet-mobile projectuitvoeringen: 92
+- Functionele cases: 117 unieke case-ID's
+- Uitvoeringen: 121
+- Niet-mobile projectuitvoeringen: 113
 - Mobile functionele cases: 4
 - Pixel 7 / Chromium-uitvoeringen: 4
 - iPhone 13 / WebKit-uitvoeringen: 4
 
-De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 96 functionele cases in totaal 100 resultaten op: 92 + (4 x 2) = 100.
+De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 functionele cases in totaal 121 resultaten op: 113 + (4 x 2) = 121.
 
 ## Documentatieketen
 
@@ -26,7 +26,7 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 96 functi
 
 - Feature: `tests/playwright/features/audit-log.feature`
 - Spec: `tests/playwright/audit-log.spec.ts`
-- Cases: 6
+- Cases: 10
 
 - [AUD-H-001] admin kan auditlog ophalen
 - [AUD-H-002] auditlog filtert op entity_type
@@ -34,16 +34,23 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 96 functi
 - [AUD-H-004] auditlog bevat geen wachtwoorden of tokens in event_data
 - [AUD-N-005] anonieme gebruiker krijgt 401 op auditlog
 - [AUD-N-006] medewerker mag auditlog niet lezen
+- [AUD-H-007] auditlog combineert entity- en eventfilter
+- [AUD-H-008] auditlog begrenst een nullimiet op een record
+- [AUD-H-009] auditlog begrenst een hoge limiet op tweehonderd records
+- [AUD-N-010] auditlog weigert POST
 
 ### Authenticatie en sessiebeheer
 
 - Feature: `tests/playwright/features/auth.feature`
 - Spec: `tests/playwright/auth.spec.ts`
-- Cases: 3
+- Cases: 6
 
 - [AUTH-H-001] Admin logt in en auth/me geeft de juiste gebruiker terug
 - [AUTH-H-002] Medewerker logt in en auth/me geeft de juiste gebruiker terug
 - [AUTH-H-003] Gebruiker logt uit en auth/me geeft authenticated false terug
+- [AUTH-H-004] Lokale beheeraccount wordt automatisch ingevuld en opent na een klik
+- [AUTH-N-005] onbekend account geeft dezelfde generieke loginfout
+- [AUTH-N-006] ongeldig e-mailformaat wordt als invalid-payload geweigerd
 
 ### Klanturenstaten via API
 
@@ -129,18 +136,22 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 96 functi
 
 - Feature: `tests/playwright/features/notifications.feature`
 - Spec: `tests/playwright/notifications.spec.ts`
-- Cases: 4
+- Cases: 8
 
 - [NOT-H-001] ingelogde gebruiker kan notificaties ophalen
 - [NOT-H-002] mark_all_read werkt zonder fouten
 - [NOT-N-003] anonieme gebruiker krijgt 401 op notificaties
 - [NOT-N-004] unknown action geeft 400
+- [NOT-H-005] notificatielimiet wordt op minimaal een begrensd
+- [NOT-H-006] unread-filter retourneert uitsluitend ongelezen meldingen
+- [NOT-N-007] mark_read zonder notification_id geeft 400
+- [NOT-H-008] mark_read voor onbekende melding wijzigt nul records
 
 ### Wachtwoordherstel en rate limiting
 
 - Feature: `tests/playwright/features/password-reset.feature`
 - Spec: `tests/playwright/password-reset.spec.ts`
-- Cases: 7
+- Cases: 9
 
 - [PWD-H-001] request-reset retourneert token in demo-modus
 - [PWD-H-002] onbekend e-mailadres retourneert ook ok=true (geen email-enumeration)
@@ -149,12 +160,14 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 96 functi
 - [PWD-N-005] reset-password met te kort wachtwoord geeft 400
 - [PWD-N-006] hergebruik van al-gebruikt token geeft 409
 - [PWD-N-007] login wordt geblokkeerd na 5 mislukte pogingen (rate-limit)
+- [PWD-N-008] request-reset weigert GET
+- [PWD-N-009] request-reset met leeg e-mailadres geeft 400
 
 ### Periodebeheer via API
 
 - Feature: `tests/playwright/features/period-management.feature`
 - Spec: `tests/playwright/period-management.spec.ts`
-- Cases: 6
+- Cases: 10
 
 - [PER-H-001] admin kan periodes ophalen met overzicht
 - [PER-H-002] admin kan periode sluiten en heropenen
@@ -162,6 +175,10 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 96 functi
 - [PER-N-004] medewerker mag geen periodes beheren
 - [PER-N-005] dubbel sluiten van periode geeft 409
 - [PER-N-006] heropenen van open periode geeft 409
+- [PER-N-007] driecijferig jaar geeft 400
+- [PER-N-008] vijfcijferig jaar geeft 400
+- [PER-N-009] ongeldige maand geeft 400
+- [PER-N-010] onbekende periodeactie geeft 400
 
 ### Productieveiligheid
 
@@ -192,7 +209,7 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 96 functi
 
 - Feature: `tests/playwright/features/security.feature`
 - Spec: `tests/playwright/security.spec.ts`
-- Cases: 7
+- Cases: 11
 
 - [SEC-H-001] csrf token endpoint werkt
 - [SEC-H-002] login met csrf werkt
@@ -201,6 +218,10 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 96 functi
 - [SEC-N-002] logout zonder csrf faalt netjes
 - [SEC-N-003] invalid login payload geeft nette error
 - [SEC-N-004] zonder sessie protected API blijft 401
+- [SEC-H-004] csrf-token blijft stabiel binnen dezelfde sessie
+- [SEC-N-005] csrf-endpoint weigert POST
+- [SEC-N-006] login-endpoint weigert GET
+- [SEC-N-007] logout-endpoint weigert GET
 
 ### Correctie en goedkeuring met optimistic locking
 

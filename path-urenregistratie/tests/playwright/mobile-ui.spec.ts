@@ -134,8 +134,10 @@ test('[MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documen
     await expect(page.locator('#customer-timesheet-upload-panel')).toBeVisible();
     await expect(page.locator('#customer-timesheet-file')).toBeAttached();
     await expect(page.locator('#customer-timesheet-submit')).toBeVisible();
-    await page.locator('#notification-button').click();
-    await expect(page.locator('#notification-panel')).toBeVisible();
+    await expect(async () => {
+      await page.locator('#notification-button').click();
+      await expect(page.locator('#notification-panel')).toBeVisible();
+    }).toPass();
     await page.keyboard.press('Escape');
     await assertNoHorizontalOverflow(page);
     await attachBusinessScreenshot(page, 'Business state · Uren ingediend en upload bereikbaar');

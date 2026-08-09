@@ -72,9 +72,25 @@ function Invoke-JsonEndpoint($path) {
     $url = "$BaseUrl$path"
 
     try {
-        $response = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 15
-        Write-Host "HTTP $($response.StatusCode) $url" -ForegroundColor Green
-        return @{ ok = $true; status = $response.StatusCode; body = $response.Content }
+        $requestParams = @{
+            Uri = $url
+            UseBasicParsing = $true
+            TimeoutSec = 15
+        }
+        if ((Get-Command Invoke-WebRequest).Parameters.ContainsKey('SkipHttpErrorCheck')) {
+            $requestParams.SkipHttpErrorCheck = $true
+        }
+
+        $response = Invoke-WebRequest @requestParams
+        $status = [int]$response.StatusCode
+        if ($status -ge 200 -and $status -lt 300) {
+            Write-Host "HTTP $status $url" -ForegroundColor Green
+            return @{ ok = $true; status = $status; body = $response.Content }
+        }
+
+        Warn "Endpoint gaf geen 2xx-status: $url"
+        Write-Host $response.Content -ForegroundColor Yellow
+        return @{ ok = $false; status = $status; body = $response.Content }
     } catch {
         Warn "Endpoint gaf geen 2xx-status: $url"
         $body = $null
@@ -82,11 +98,12 @@ function Invoke-JsonEndpoint($path) {
 
         if ($_.Exception.Response) {
             try {
-                $statusCode = $_.Exception.Response.StatusCode
+                $response = $_.Exception.Response
+                $statusCode = $response.StatusCode
                 if ($statusCode) {
                     $status = [int]$statusCode
                 }
-                $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
+                $reader = New-Object System.IO.StreamReader($response.GetResponseStream())
                 $body = $reader.ReadToEnd()
                 Write-Host $body -ForegroundColor Yellow
             } catch {

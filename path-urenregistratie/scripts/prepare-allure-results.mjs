@@ -32,7 +32,7 @@ mkdirSync(outputFolder, { recursive: true });
 writeFileSync(`${outputFolder}/categories.json`, JSON.stringify(categories, null, 2));
 writeFileSync(`${outputFolder}/environment.properties`, [
   'application=Path Urenregistratie',
-  `version=${process.env.npm_package_version || '0.9.40'}`,
+  `version=${process.env.npm_package_version || '0.9.41'}`,
   `stage=${process.env.PLAYWRIGHT_STAGE || 'local'}`,
   'reporting=Playwright + Allure',
 ].join('\n') + '\n');

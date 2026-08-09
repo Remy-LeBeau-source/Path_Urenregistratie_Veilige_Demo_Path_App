@@ -16,4 +16,7 @@ export const caseMappings = [
   { caseId: 'AUTH-H-001', spec: 'auth.spec.ts' },
   { caseId: 'AUTH-H-002', spec: 'auth.spec.ts' },
   { caseId: 'AUTH-H-003', spec: 'auth.spec.ts' },
+  { caseId: 'AUTH-H-004', spec: 'auth.spec.ts' },
+  { caseId: 'AUTH-N-005', spec: 'auth.spec.ts' },
+  { caseId: 'AUTH-N-006', spec: 'auth.spec.ts' },
 ] as const;

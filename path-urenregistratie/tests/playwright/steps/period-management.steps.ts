@@ -19,4 +19,8 @@ export const caseMappings = [
   { caseId: 'PER-N-004', spec: 'period-management.spec.ts' },
   { caseId: 'PER-N-005', spec: 'period-management.spec.ts' },
   { caseId: 'PER-N-006', spec: 'period-management.spec.ts' },
+  { caseId: 'PER-N-007', spec: 'period-management.spec.ts' },
+  { caseId: 'PER-N-008', spec: 'period-management.spec.ts' },
+  { caseId: 'PER-N-009', spec: 'period-management.spec.ts' },
+  { caseId: 'PER-N-010', spec: 'period-management.spec.ts' },
 ] as const;

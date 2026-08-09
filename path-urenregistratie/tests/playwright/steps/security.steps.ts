@@ -20,4 +20,8 @@ export const caseMappings = [
   { caseId: 'SEC-N-002', spec: 'security.spec.ts' },
   { caseId: 'SEC-N-003', spec: 'security.spec.ts' },
   { caseId: 'SEC-N-004', spec: 'security.spec.ts' },
+  { caseId: 'SEC-H-004', spec: 'security.spec.ts' },
+  { caseId: 'SEC-N-005', spec: 'security.spec.ts' },
+  { caseId: 'SEC-N-006', spec: 'security.spec.ts' },
+  { caseId: 'SEC-N-007', spec: 'security.spec.ts' },
 ] as const;

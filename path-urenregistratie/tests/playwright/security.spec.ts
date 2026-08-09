@@ -133,3 +133,35 @@ test('[SEC-N-004] zonder sessie protected API blijft 401', async ({ request }) =
     }
   });
 });
+
+test('[SEC-H-004] csrf-token blijft stabiel binnen dezelfde sessie', async ({ request }) => {
+  const first = await request.get('/server/auth/csrf.php');
+  const second = await request.get('/server/auth/csrf.php');
+  const firstBody = await first.json();
+  const secondBody = await second.json();
+
+  expect(first.status()).toBe(200);
+  expect(second.status()).toBe(200);
+  expect(secondBody.csrf_token).toBe(firstBody.csrf_token);
+});
+
+test('[SEC-N-005] csrf-endpoint weigert POST', async ({ request }) => {
+  const response = await request.post('/server/auth/csrf.php');
+  const body = await response.json();
+  expect(response.status()).toBe(405);
+  expect(body.error).toBe('method-not-allowed');
+});
+
+test('[SEC-N-006] login-endpoint weigert GET', async ({ request }) => {
+  const response = await request.get('/server/auth/login.php');
+  const body = await response.json();
+  expect(response.status()).toBe(405);
+  expect(body.error).toBe('method-not-allowed');
+});
+
+test('[SEC-N-007] logout-endpoint weigert GET', async ({ request }) => {
+  const response = await request.get('/server/auth/logout.php');
+  const body = await response.json();
+  expect(response.status()).toBe(405);
+  expect(body.error).toBe('method-not-allowed');
+});

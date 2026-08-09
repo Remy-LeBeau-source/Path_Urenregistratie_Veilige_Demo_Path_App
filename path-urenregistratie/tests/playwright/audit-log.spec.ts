@@ -118,4 +118,62 @@ test.describe('audit log api', () => {
     await authApi.logout();
     await ctx.dispose();
   });
+
+  test('[AUD-H-007] auditlog combineert entity- en eventfilter', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const seedResponse = await ctx.get('/server/api/audit-log.php?limit=1');
+    const seedBody = await seedResponse.json();
+    expect(seedBody.count).toBe(1);
+    const seed = seedBody.items[0] as { entity_type: string; event_type: string };
+    const query = new URLSearchParams({ entity_type: seed.entity_type, event_type: seed.event_type });
+    const response = await ctx.get(`/server/api/audit-log.php?${query}`);
+    const body = await response.json();
+    expect(response.status()).toBe(200);
+    expect(body.count).toBeGreaterThan(0);
+    expect(body.items.every((item: { entity_type: string; event_type: string }) =>
+      item.entity_type === seed.entity_type && item.event_type === seed.event_type)).toBe(true);
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
+
+  test('[AUD-H-008] auditlog begrenst een nullimiet op een record', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const response = await ctx.get('/server/api/audit-log.php?limit=0');
+    const body = await response.json();
+    expect(response.status()).toBe(200);
+    expect(body.count).toBeLessThanOrEqual(1);
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
+
+  test('[AUD-H-009] auditlog begrenst een hoge limiet op tweehonderd records', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const response = await ctx.get('/server/api/audit-log.php?limit=9999');
+    const body = await response.json();
+    expect(response.status()).toBe(200);
+    expect(body.count).toBeLessThanOrEqual(200);
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
+
+  test('[AUD-N-010] auditlog weigert POST', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const response = await ctx.post('/server/api/audit-log.php');
+    const body = await response.json();
+    expect(response.status()).toBe(405);
+    expect(body.error).toBe('method-not-allowed');
+    await ctx.dispose();
+  });
 });

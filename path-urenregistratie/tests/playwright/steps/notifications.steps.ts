@@ -17,4 +17,8 @@ export const caseMappings = [
   { caseId: 'NOT-H-002', spec: 'notifications.spec.ts' },
   { caseId: 'NOT-N-003', spec: 'notifications.spec.ts' },
   { caseId: 'NOT-N-004', spec: 'notifications.spec.ts' },
+  { caseId: 'NOT-H-005', spec: 'notifications.spec.ts' },
+  { caseId: 'NOT-H-006', spec: 'notifications.spec.ts' },
+  { caseId: 'NOT-N-007', spec: 'notifications.spec.ts' },
+  { caseId: 'NOT-H-008', spec: 'notifications.spec.ts' },
 ] as const;

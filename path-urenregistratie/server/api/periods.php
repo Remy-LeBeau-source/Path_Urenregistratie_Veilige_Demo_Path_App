@@ -89,6 +89,10 @@ if (!preg_match('/^(\d{4})-(\d{2})$/', $periodKey, $m)) {
 }
 $year  = (int)$m[1];
 $month = (int)$m[2];
+if ($year < 1000 || $year > 9999 || $month < 1 || $month > 12) {
+    auth_send_json(['ok' => false, 'error' => 'invalid-period',
+        'message' => 'period_key must contain a supported year and month'], 400);
+}
 
 // Load or auto-create the period for this company.
 $stmt = $pdo->prepare(
@@ -139,6 +143,7 @@ if ($action === 'close') {
         'ok'           => true,
         'action'       => 'close',
         'period_key'   => $periodKey,
+        'status'       => 'closed',
         'open_timesheets_at_close' => $openCount,
     ]);
 }
@@ -163,7 +168,7 @@ if ($action === 'reopen') {
         ':data'  => json_encode(['period_key' => $periodKey]),
     ]);
 
-    auth_send_json(['ok' => true, 'action' => 'reopen', 'period_key' => $periodKey]);
+    auth_send_json(['ok' => true, 'action' => 'reopen', 'period_key' => $periodKey, 'status' => 'open']);
 }
 
 auth_send_json(['ok' => false, 'error' => 'unknown-action',

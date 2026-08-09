@@ -13,14 +13,15 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 ## Actuele stand
 
 - Datum: 2026-08-09
-- Main/HEAD: 98220af
+- Main/HEAD: 17431b5
 - Referentiecommit fase 8/9 backend: fc27723
-- Appversie: 0.9.40
+- Appversie: 0.9.41
 - Lokale check: geslaagd
-- Lokale e2e regressie: 100 tests (92 desktop Chromium + 4 Pixel 7 Chromium + 4 iPhone 13 WebKit)
-- Mobile/stale-state slice: lokaal aanwezig, nog niet gecommit of gepusht
+- Lokale e2e regressie: 121 tests (113 niet-mobile Chromium + 4 Pixel 7 Chromium + 4 iPhone 13 WebKit)
+- Functionele regressiecatalogus: 117 unieke cases met 117 feature- en 117 steps-mappings
+- Releasehardening v0.9.41: lokaal aanwezig, nog niet gecommit of gepusht
 - GitHub pipeline-status: lokaal niet verifieerbaar zonder gh auth login
-- Laatste commit: feat(notifications): notificaties API, 4 tests, 90 total tests v0.9.39
+- Laatste commit: feat(docs): add interactive Living Documentation viewer
 
 ---
 
@@ -147,7 +148,7 @@ Status Fase 3:
 - Na logout terug naar login.
 - Geen wachtwoorden in debugoutput.
 - Geen wachtwoorden in consolelogging.
-- Loginformulier vult geen wachtwoord automatisch in.
+- Loginformulier vult alleen op localhost via de afgeschermde loopback-hints een lokaal demo-wachtwoord in; productie krijgt deze hints niet.
 - Demo-rolknoppen alleen als gecontroleerde fallback.
 - window.__PATH_AUTH_DEBUG bevat geen gevoelige waarden.
 - CI-adminaccount afgestemd op gio@example.invalid.
@@ -243,6 +244,10 @@ Status Fase 5:
 - Gescheiden Playwright-projecten voor desktop Chromium, Pixel 7 Chromium en iPhone 13 WebKit.
 - Mobile UI-spec draait alleen op de twee mobiele projecten; desktop- en API-specs worden niet verdrievoudigd.
 - Mobiele regressie dekt login, navigatie, dashboard, uren, correctie/herindiening, goedkeuring, factuurkaartweergave, upload, notificaties, touch, modal en overflow.
+- AUTH-H-004 borgt dat de lokale beheeraccount na asynchrone auth-initialisatie automatisch wordt ingevuld en met één klik opent.
+- Periodebeheer valideert het bestaande viercijferige UI-bereik 1000–9999 en maand 1–12 voordat gegevens worden opgeslagen.
+- PER-H-002 normaliseert zijn eigen testperiode en controleert expliciete close/reopen-statusresponses, onafhankelijk van vervuilde globale periodedata.
+- Living Documentation bevat 117 unieke cases, 121 uitvoeringen en volledige 117/117/117 traceability.
 
 Status Fase 6:
 - [x] afgerond
@@ -782,7 +787,7 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
 - [~] Fase 12 - e-mail: queue-service + dry-run + assignment-routes + tests afgerond; echte dispatch open
 - [~] Fase 13 - bedrijfsdata: gebruikersbeheer-API, wachtwoord-reset, rate-limiting, force_password_change afgerond; definitieve bedrijfsgegevens + accounts open
 - [~] Fase 14 - TransIP: hardening (install/migrate/health guards, .htaccess) afgerond; deployment + productie-config open
-- [~] Fase 15 - lokaal 100 tests over desktop/Pixel/iPhone; fysieke toestellen en productieacceptatie open
+- [~] Fase 15 - lokaal 121 tests over niet-mobile Chromium/Pixel/iPhone; autofill-, periode- en mobile-regressie bewezen; fysieke toestellen en productieacceptatie open
 - [~] Fase 16 - audit-API-basis klaar; operationeel post-live beheer nog niet gestart
 
 Telling fasestatussen:

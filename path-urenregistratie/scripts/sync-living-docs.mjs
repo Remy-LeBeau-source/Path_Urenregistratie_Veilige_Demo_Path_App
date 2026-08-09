@@ -114,8 +114,8 @@ const inventory = definitions.flatMap((definition) => {
 });
 
 const uniqueIds = new Set(inventory.map((testCase) => testCase.id));
-if (inventory.length !== 96 || uniqueIds.size !== 96) {
-  throw new Error(`Verwacht 96 unieke cases, gevonden ${inventory.length}/${uniqueIds.size}.`);
+if (inventory.length !== 117 || uniqueIds.size !== 117) {
+  throw new Error(`Verwacht 117 unieke cases, gevonden ${inventory.length}/${uniqueIds.size}.`);
 }
 
 mkdirSync(featuresDir, { recursive: true });
@@ -164,9 +164,9 @@ ${mappingRows}
 
 ## Totalen
 
-- Functionele cases: 96
-- Playwright-uitvoeringen: 100
-- Niet-mobile uitvoeringen: 92
+- Functionele cases: 117
+- Playwright-uitvoeringen: 121
+- Niet-mobile uitvoeringen: 113
 - Mobile functionele cases: 4
 - Pixel 7 / Chromium: 4 uitvoeringen
 - iPhone 13 / WebKit: 4 uitvoeringen
@@ -180,18 +180,18 @@ const domainSections = definitions.map((definition) => {
 
 const livingDoc = `# Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 96 functionele cases leesbaar zonder een tweede testrunner toe te voegen.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 117 functionele cases leesbaar zonder een tweede testrunner toe te voegen.
 
 ## Actuele regressiestatus
 
-- Functionele cases: 96 unieke case-ID's
-- Uitvoeringen: 100
-- Niet-mobile projectuitvoeringen: 92
+- Functionele cases: 117 unieke case-ID's
+- Uitvoeringen: 121
+- Niet-mobile projectuitvoeringen: 113
 - Mobile functionele cases: 4
 - Pixel 7 / Chromium-uitvoeringen: 4
 - iPhone 13 / WebKit-uitvoeringen: 4
 
-De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 96 functionele cases in totaal 100 resultaten op: 92 + (4 x 2) = 100.
+De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 functionele cases in totaal 121 resultaten op: 113 + (4 x 2) = 121.
 
 ## Documentatieketen
 

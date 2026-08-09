@@ -23,9 +23,16 @@
 | AUD-H-004 | api | audit-log.feature | auditlog bevat geen wachtwoorden of tokens in event_data | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | auditlog bevat geen wachtwoorden of tokens in event_data | Happy | 16 | Actueel |
 | AUD-N-005 | api | audit-log.feature | anonieme gebruiker krijgt 401 op auditlog | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | anonieme gebruiker krijgt 401 op auditlog | Negative | 16 | Actueel |
 | AUD-N-006 | api | audit-log.feature | medewerker mag auditlog niet lezen | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | medewerker mag auditlog niet lezen | Negative | 16 | Actueel |
+| AUD-H-007 | api | audit-log.feature | auditlog combineert entity- en eventfilter | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | auditlog combineert entity- en eventfilter | Happy | 16 | Actueel |
+| AUD-H-008 | api | audit-log.feature | auditlog begrenst een nullimiet op een record | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | auditlog begrenst een nullimiet op een record | Happy | 16 | Actueel |
+| AUD-H-009 | api | audit-log.feature | auditlog begrenst een hoge limiet op tweehonderd records | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | auditlog begrenst een hoge limiet op tweehonderd records | Happy | 16 | Actueel |
+| AUD-N-010 | api | audit-log.feature | auditlog weigert POST | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | auditlog weigert POST | Negative | 16 | Actueel |
 | AUTH-H-001 | ui | auth.feature | Admin logt in en auth/me geeft de juiste gebruiker terug | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Happy | 4 | Actueel |
 | AUTH-H-002 | ui | auth.feature | Medewerker logt in en auth/me geeft de juiste gebruiker terug | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Happy | 4 | Actueel |
 | AUTH-H-003 | ui | auth.feature | Gebruiker logt uit en auth/me geeft authenticated false terug | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Happy | 4 | Actueel |
+| AUTH-H-004 | ui | auth.feature | Lokale beheeraccount wordt automatisch ingevuld en opent na een klik | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Happy | 4 | Actueel |
+| AUTH-N-005 | ui | auth.feature | onbekend account geeft dezelfde generieke loginfout | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Negative | 4 | Actueel |
+| AUTH-N-006 | ui | auth.feature | ongeldig e-mailformaat wordt als invalid-payload geweigerd | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Negative | 4 | Actueel |
 | CTS-API-H-001 | api | customer-timesheets.feature | employee uploadt klanturenstaat, dient in en downloadt; admin kan goedkeuren en resubmit vragen | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Happy | 10 | Actueel |
 | CTS-API-N-006 | api | customer-timesheets.feature | employee kan geen klanturenstaat voor andere medewerker wijzigen | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Negative | 10 | Actueel |
 | CTS-API-N-007 | api | customer-timesheets.feature | employee kan geen admin reviewactie uitvoeren op klanturenstaat | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Negative | 10 | Actueel |
@@ -68,6 +75,10 @@
 | NOT-H-002 | api | notifications.feature | mark_all_read werkt zonder fouten | notifications.steps.ts | notifications.spec.ts | API | Notificaties | mark_all_read werkt zonder fouten | Happy | 15 | Actueel |
 | NOT-N-003 | api | notifications.feature | anonieme gebruiker krijgt 401 op notificaties | notifications.steps.ts | notifications.spec.ts | API | Notificaties | anonieme gebruiker krijgt 401 op notificaties | Negative | 15 | Actueel |
 | NOT-N-004 | api | notifications.feature | unknown action geeft 400 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | unknown action geeft 400 | Negative | 15 | Actueel |
+| NOT-H-005 | api | notifications.feature | notificatielimiet wordt op minimaal een begrensd | notifications.steps.ts | notifications.spec.ts | API | Notificaties | notificatielimiet wordt op minimaal een begrensd | Happy | 15 | Actueel |
+| NOT-H-006 | api | notifications.feature | unread-filter retourneert uitsluitend ongelezen meldingen | notifications.steps.ts | notifications.spec.ts | API | Notificaties | unread-filter retourneert uitsluitend ongelezen meldingen | Happy | 15 | Actueel |
+| NOT-N-007 | api | notifications.feature | mark_read zonder notification_id geeft 400 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | mark_read zonder notification_id geeft 400 | Negative | 15 | Actueel |
+| NOT-H-008 | api | notifications.feature | mark_read voor onbekende melding wijzigt nul records | notifications.steps.ts | notifications.spec.ts | API | Notificaties | mark_read voor onbekende melding wijzigt nul records | Happy | 15 | Actueel |
 | PWD-H-001 | security | password-reset.feature | request-reset retourneert token in demo-modus | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
 | PWD-H-002 | security | password-reset.feature | onbekend e-mailadres retourneert ook ok=true (geen email-enumeration) | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
 | PWD-H-003 | security | password-reset.feature | me.php bevat force_password_change veld | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
@@ -75,12 +86,18 @@
 | PWD-N-005 | security | password-reset.feature | reset-password met te kort wachtwoord geeft 400 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
 | PWD-N-006 | security | password-reset.feature | hergebruik van al-gebruikt token geeft 409 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
 | PWD-N-007 | security | password-reset.feature | login wordt geblokkeerd na 5 mislukte pogingen (rate-limit) | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
+| PWD-N-008 | security | password-reset.feature | request-reset weigert GET | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
+| PWD-N-009 | security | password-reset.feature | request-reset met leeg e-mailadres geeft 400 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
 | PER-H-001 | api | period-management.feature | admin kan periodes ophalen met overzicht | period-management.steps.ts | period-management.spec.ts | API | Periodebeheer | admin kan periodes ophalen met overzicht | Happy | 15 | Actueel |
 | PER-H-002 | api | period-management.feature | admin kan periode sluiten en heropenen | period-management.steps.ts | period-management.spec.ts | API | Periodebeheer | admin kan periode sluiten en heropenen | Happy | 15 | Actueel |
 | PER-N-003 | api | period-management.feature | anonieme gebruiker krijgt 401 op periods | period-management.steps.ts | period-management.spec.ts | API | Periodebeheer | anonieme gebruiker krijgt 401 op periods | Negative | 15 | Actueel |
 | PER-N-004 | api | period-management.feature | medewerker mag geen periodes beheren | period-management.steps.ts | period-management.spec.ts | API | Periodebeheer | medewerker mag geen periodes beheren | Negative | 15 | Actueel |
 | PER-N-005 | api | period-management.feature | dubbel sluiten van periode geeft 409 | period-management.steps.ts | period-management.spec.ts | API | Periodebeheer | dubbel sluiten van periode geeft 409 | Negative | 15 | Actueel |
 | PER-N-006 | api | period-management.feature | heropenen van open periode geeft 409 | period-management.steps.ts | period-management.spec.ts | API | Periodebeheer | heropenen van open periode geeft 409 | Negative | 15 | Actueel |
+| PER-N-007 | api | period-management.feature | driecijferig jaar geeft 400 | period-management.steps.ts | period-management.spec.ts | API | Periodebeheer | driecijferig jaar geeft 400 | Negative | 15 | Actueel |
+| PER-N-008 | api | period-management.feature | vijfcijferig jaar geeft 400 | period-management.steps.ts | period-management.spec.ts | API | Periodebeheer | vijfcijferig jaar geeft 400 | Negative | 15 | Actueel |
+| PER-N-009 | api | period-management.feature | ongeldige maand geeft 400 | period-management.steps.ts | period-management.spec.ts | API | Periodebeheer | ongeldige maand geeft 400 | Negative | 15 | Actueel |
+| PER-N-010 | api | period-management.feature | onbekende periodeactie geeft 400 | period-management.steps.ts | period-management.spec.ts | API | Periodebeheer | onbekende periodeactie geeft 400 | Negative | 15 | Actueel |
 | SAFE-H-001 | security | production-safety.feature | login picker vult alleen lokaal demo-wachtwoord in wanneer hints beschikbaar zijn | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | login picker vult alleen lokaal demo-wachtwoord in wanneer hints beschikbaar zijn | Happy | 14 | Actueel |
 | SAFE-N-001 | security | production-safety.feature | frontend source bevat geen plaintext demo-credentials | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | frontend source bevat geen plaintext demo-credentials | Negative | 14 | Actueel |
 | SAFE-N-002 | security | production-safety.feature | writes zonder csrf blijven geblokkeerd | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | writes zonder csrf blijven geblokkeerd | Negative | 14 | Actueel |
@@ -99,6 +116,10 @@
 | SEC-N-002 | security | security.feature | logout zonder csrf faalt netjes | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 5 | Actueel |
 | SEC-N-003 | security | security.feature | invalid login payload geeft nette error | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 5 | Actueel |
 | SEC-N-004 | security | security.feature | zonder sessie protected API blijft 401 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 5 | Actueel |
+| SEC-H-004 | security | security.feature | csrf-token blijft stabiel binnen dezelfde sessie | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
+| SEC-N-005 | security | security.feature | csrf-endpoint weigert POST | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 5 | Actueel |
+| SEC-N-006 | security | security.feature | login-endpoint weigert GET | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 5 | Actueel |
+| SEC-N-007 | security | security.feature | logout-endpoint weigert GET | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 5 | Actueel |
 | TS-REV-API-H-005 | integration | timesheets-review-integration.feature | admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
 | TS-REV-UI-H-008 | ui | timesheets-review-ui.feature | browserflow: admin vraagt correctie, medewerker dient opnieuw in, admin keurt goed | timesheets-review-ui.steps.ts | timesheet-review-ui.spec.ts | UI Desktop | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
 | TS-API-H-001 | api | timesheets-api.feature | employee save draft, read back, submit, audit en gesloten status guard | timesheets-api.steps.ts | timesheet-write.spec.ts | API | Urenregistratie | Uren registreren en indienen | Happy | 8 | Actueel |
@@ -116,9 +137,9 @@
 
 ## Totalen
 
-- Functionele cases: 96
-- Playwright-uitvoeringen: 100
-- Niet-mobile uitvoeringen: 92
+- Functionele cases: 117
+- Playwright-uitvoeringen: 121
+- Niet-mobile uitvoeringen: 113
 - Mobile functionele cases: 4
 - Pixel 7 / Chromium: 4 uitvoeringen
 - iPhone 13 / WebKit: 4 uitvoeringen

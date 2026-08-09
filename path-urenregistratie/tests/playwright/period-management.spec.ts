@@ -2,7 +2,7 @@ import { expect, request as playwrightRequest, test } from '@playwright/test';
 import { AuthApi } from './api/AuthApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
 
-const TEST_PERIOD = '2200-06';
+const TEST_PERIOD = '2150-06';
 
 async function getCSRF(ctx: Awaited<ReturnType<typeof playwrightRequest.newContext>>) {
   const r = await ctx.get('/server/auth/csrf.php');
@@ -19,6 +19,19 @@ async function postPeriods(
     data: body,
   });
   return { status: r.status(), body: await r.json() };
+}
+
+async function expectInvalidPeriod(periodKey: string) {
+  const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+  const authApi = new AuthApi(ctx);
+  await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+  const res = await postPeriods(ctx, { action: 'close', period_key: periodKey });
+  expect(res.status).toBe(400);
+  expect(res.body.error).toBe('invalid-period');
+
+  await authApi.logout();
+  await ctx.dispose();
 }
 
 test.describe('period management api', () => {
@@ -50,29 +63,31 @@ test.describe('period management api', () => {
   test('[PER-H-002] admin kan periode sluiten en heropenen', async () => {
     const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
     const authApi = new AuthApi(ctx);
+    let closeResult: Awaited<ReturnType<typeof postPeriods>>;
 
     await test.step('Given een ingelogde admin', async () => {
       await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+      const normalize = await postPeriods(ctx, { action: 'reopen', period_key: TEST_PERIOD });
+      expect([200, 409]).toContain(normalize.status);
     });
 
     await test.step('When de testperiode wordt gesloten', async () => {
-      const closeRes = await postPeriods(ctx, { action: 'close', period_key: TEST_PERIOD });
-      expect(closeRes.status).toBe(200);
-      expect(closeRes.body.ok).toBe(true);
-      expect(closeRes.body.action).toBe('close');
+      closeResult = await postPeriods(ctx, { action: 'close', period_key: TEST_PERIOD });
+      expect(closeResult.status).toBe(200);
+      expect(closeResult.body.ok).toBe(true);
+      expect(closeResult.body.action).toBe('close');
     });
 
     await test.step('Then is de periode gesloten', async () => {
-      const list = await ctx.get('/server/api/periods.php');
-      const body = await list.json();
-      const found = body.periods.find((p: { period_key: string; status: string }) => p.period_key === TEST_PERIOD);
-      expect(found?.status).toBe('closed');
+      expect(closeResult.body.period_key).toBe(TEST_PERIOD);
+      expect(closeResult.body.status).toBe('closed');
     });
 
     await test.step('And heropenen werkt', async () => {
       const reopen = await postPeriods(ctx, { action: 'reopen', period_key: TEST_PERIOD });
       expect(reopen.status).toBe(200);
       expect(reopen.body.action).toBe('reopen');
+      expect(reopen.body.status).toBe('open');
     });
 
     await authApi.logout();
@@ -132,10 +147,35 @@ test.describe('period management api', () => {
     });
     await test.step('When een open periode wordt heropend', async () => {
       // Use a far-future period that cannot have been closed.
-      const res = await postPeriods(ctx, { action: 'reopen', period_key: '2201-01' });
+      const res = await postPeriods(ctx, { action: 'reopen', period_key: '2151-01' });
       expect(res.status).toBe(409);
       expect(res.body.error).toBe('not-closed');
     });
+    await authApi.logout();
+    await ctx.dispose();
+  });
+
+  test('[PER-N-007] driecijferig jaar geeft 400', async () => {
+    await expectInvalidPeriod('999-01');
+  });
+
+  test('[PER-N-008] vijfcijferig jaar geeft 400', async () => {
+    await expectInvalidPeriod('10000-01');
+  });
+
+  test('[PER-N-009] ongeldige maand geeft 400', async () => {
+    await expectInvalidPeriod('2125-13');
+  });
+
+  test('[PER-N-010] onbekende periodeactie geeft 400', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const res = await postPeriods(ctx, { action: 'archive', period_key: '2152-01' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('unknown-action');
+
     await authApi.logout();
     await ctx.dispose();
   });

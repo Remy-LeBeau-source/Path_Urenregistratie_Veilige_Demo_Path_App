@@ -20,4 +20,6 @@ export const caseMappings = [
   { caseId: 'PWD-N-005', spec: 'password-reset.spec.ts' },
   { caseId: 'PWD-N-006', spec: 'password-reset.spec.ts' },
   { caseId: 'PWD-N-007', spec: 'password-reset.spec.ts' },
+  { caseId: 'PWD-N-008', spec: 'password-reset.spec.ts' },
+  { caseId: 'PWD-N-009', spec: 'password-reset.spec.ts' },
 ] as const;
