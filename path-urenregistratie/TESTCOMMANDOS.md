@@ -111,11 +111,11 @@ De projectnamen staan voor Desktop Chrome, Pixel 7 met Chromium en iPhone 13 met
 
 ## Directe Playwright-debugcommando's
 
-Directe `npx playwright`-commando's omzeilen de projectprecheck en Allure-opruiming. Zorg vooraf dat de app draait en de vereiste omgevingsvariabelen geladen zijn.
+Directe `npx playwright`-commando's laden `.env`, de gekozen stage en `.env.local` via `playwright.config.ts`. Ze omzeilen wel de controle of de app bereikbaar is en de voorbereiding van Allure. Zorg daarom vooraf dat de app draait. Gebruik voor normale regressies bij voorkeur de `npm run test:e2e:*`-commando's.
 
 | Commando | Doel |
 | --- | --- |
-| `npx playwright test --ui` | UI Mode direct openen. |
+| `npx playwright test --ui` | UI Mode direct openen met de lokale testconfiguratie. |
 | `npx playwright test --headed` | Tests met zichtbare browser draaien. |
 | `npx playwright test --debug` | Playwright Inspector openen. |
 | `npx playwright test --list` | Gevonden tests tonen zonder uitvoering. |

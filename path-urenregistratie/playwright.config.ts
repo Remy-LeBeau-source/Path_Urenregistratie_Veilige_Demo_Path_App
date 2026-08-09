@@ -1,5 +1,22 @@
-import 'dotenv/config';
+import { existsSync } from 'node:fs';
+import { config as loadDotEnv } from 'dotenv';
 import { defineConfig, devices } from '@playwright/test';
+
+if (existsSync('.env')) {
+  loadDotEnv({ path: '.env' });
+}
+
+const stage = String(process.env.PLAYWRIGHT_STAGE || '').trim().toLowerCase();
+if (stage && ['dev', 'test', 'acc', 'prod'].includes(stage)) {
+  const stageEnvPath = `environments/${stage}.env`;
+  if (existsSync(stageEnvPath)) {
+    loadDotEnv({ path: stageEnvPath, override: true });
+  }
+}
+
+if (existsSync('.env.local')) {
+  loadDotEnv({ path: '.env.local', override: true });
+}
 
 export default defineConfig({
   testDir: './tests/playwright',
