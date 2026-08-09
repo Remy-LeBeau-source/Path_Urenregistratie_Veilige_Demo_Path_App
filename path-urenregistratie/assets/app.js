@@ -950,14 +950,55 @@ function persistState() {
   const copy = JSON.parse(JSON.stringify(state));
   copy.currentRole = null;
   copy.invoiceFilter = "all";
+
   if (LOCAL_STORAGE_ENABLED) {
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(copy));
+      if (API_ENABLED && authRuntime.mode === "auth") {
+        // In auth-mode only persist UI state; business data is authoritative on server
+        const uiState = {
+          schemaVersion: state.schemaVersion,
+          currentRole: null,
+          currentEmployeeId: state.currentEmployeeId,
+          currentAdminId: state.currentAdminId,
+          selectedPeriodKey: state.selectedPeriodKey,
+          preferences: state.preferences,
+          invoiceFilter: "all",
+          approvalScope: state.approvalScope,
+          employeeScope: state.employeeScope,
+          dashboardTeamScope: state.dashboardTeamScope,
+          announcementArchiveFilter: state.announcementArchiveFilter,
+          hoursWeekScope: state.hoursWeekScope,
+          hoursWeekScopeTouched: state.hoursWeekScopeTouched,
+          invoiceDetailCollapsed: state.invoiceDetailCollapsed,
+          adminTaskFilter: state.adminTaskFilter,
+          adminTaskMonthState: state.adminTaskMonthState,
+          settings: {
+            brandPrimary: state.settings.brandPrimary,
+            brandAccent: state.settings.brandAccent,
+            brandLogo: state.settings.brandLogo,
+            weeklyReminderEnabled: state.settings.weeklyReminderEnabled,
+            weeklyReminderDay: state.settings.weeklyReminderDay,
+            weeklyReminderTime: state.settings.weeklyReminderTime,
+            monthEndReminderEnabled: state.settings.monthEndReminderEnabled,
+            monthEndReminderTime: state.settings.monthEndReminderTime,
+            overdueReminderEnabled: state.settings.overdueReminderEnabled,
+            overdueReminderTime: state.settings.overdueReminderTime,
+            approvalReminderEnabled: state.settings.approvalReminderEnabled,
+            approvalReminderTime: state.settings.approvalReminderTime,
+            customerTimesheetReminderEnabled: state.settings.customerTimesheetReminderEnabled,
+            customerTimesheetReminderTime: state.settings.customerTimesheetReminderTime,
+            customerTimesheetOverdueWorkdays: state.settings.customerTimesheetOverdueWorkdays
+          }
+        };
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(uiState));
+      } else {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(copy));
+      }
     } catch (e) {
       console.warn("Failed to write state to localStorage", e);
     }
   }
-  if (API_ENABLED) {
+  if (API_ENABLED && authRuntime.mode !== "auth") {
     try {
       requestAuthCsrf().then(token => fetch(API_STATE_PATH, {
         method: "POST",
@@ -1938,9 +1979,11 @@ function mergeBootstrapIntoState(data) {
       existing.name = String(user.display_name || existing.name || "");
       existing.email = String(user.email || existing.email || "");
       existing.active = Number(user.active || 0) === 1;
+      existing.dbUserId = Number(user.id);
     } else {
       state.admins.push({
         id: "db-" + String(user.id),
+        dbUserId: Number(user.id),
         name: String(user.display_name || user.email || "Beheerder"),
         email: String(user.email || ""),
         active: Number(user.active || 0) === 1,
@@ -1967,6 +2010,7 @@ function mergeBootstrapIntoState(data) {
     localEmployee.name = String(match.full_name || localEmployee.name || "");
     localEmployee.role = String(match.job_title || localEmployee.role || "");
     localEmployee.active = Number(match.active || 0) === 1;
+    localEmployee.dbUserId = match.user_id ? Number(match.user_id) : null;
     if (match.employment_start_date) localEmployee.startDate = String(match.employment_start_date);
     if (match.weekly_contract_hours !== undefined && match.weekly_contract_hours !== null) {
       localEmployee.weeklyHours = Number(match.weekly_contract_hours);
@@ -6765,6 +6809,23 @@ function showAdminEditor(adminId) {
   });
 }
 
+function writeUserStatusToApi(dbUserId, action) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin")) return Promise.resolve(null);
+  return requestAuthCsrf()
+    .then(token => fetch("/server/api/users.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify({ action, user_id: dbUserId })
+    }))
+    .then(resp => resp.json().catch(() => ({})).then(data => ({ ok: resp.ok, data })))
+    .then(result => {
+      if (!result.ok || !result.data || result.data.ok !== true) {
+        throw new Error(String(result && result.data && result.data.message || "Gebruikersstatus wijzigen op server mislukt."));
+      }
+      return result.data;
+    });
+}
+
 function toggleEmployeeStatus(employeeId) {
   const employee = employeeById(employeeId);
   const active = employee.active !== false;
@@ -6775,6 +6836,20 @@ function toggleEmployeeStatus(employeeId) {
     summary: "<div><span>Historie</span><strong>Blijft bewaard</strong></div><div><span>Facturen</span><strong>Blijven bewaard</strong></div><div><span>Toegang</span><strong>" + (active ? "Wordt gestopt" : "Wordt hersteld") + "</strong></div>",
     confirm: active ? "Deactiveren" : "Opnieuw activeren",
     action: () => {
+      if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
+        const dbUserId = Number(employee.dbUserId || 0);
+        if (dbUserId <= 0) {
+          toast("Medewerker heeft geen gekoppeld serveraccount; wijziging alleen lokaal.");
+          employee.active = !active;
+          persistState(); closeModal(); renderAll();
+          return;
+        }
+        writeUserStatusToApi(dbUserId, active ? "deactivate" : "reactivate")
+          .then(() => refreshBootstrapReadApi(true))
+          .then(() => { closeModal(); renderAll(); toast(employee.name + (active ? " is gedeactiveerd; de historie is bewaard." : " is opnieuw actief.")); })
+          .catch(error => toast(String(error && error.message || "Status wijzigen op server mislukt.")));
+        return;
+      }
       employee.active = !active;
       persistState();
       closeModal();
@@ -6803,6 +6878,20 @@ function toggleAdminStatus(adminId) {
     summary: "<div><span>Historie</span><strong>Blijft bewaard</strong></div><div><span>Beheerderstoegang</span><strong>" + (active ? "Wordt gestopt" : "Wordt hersteld") + "</strong></div>",
     confirm: active ? "Deactiveren" : "Activeren",
     action: () => {
+      if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
+        const dbUserId = Number(admin.dbUserId || 0);
+        if (dbUserId <= 0) {
+          toast("Beheerder heeft geen gekoppeld serveraccount; wijziging alleen lokaal.");
+          admin.active = !active;
+          persistState(); closeModal(); renderAll();
+          return;
+        }
+        writeUserStatusToApi(dbUserId, active ? "deactivate" : "reactivate")
+          .then(() => refreshBootstrapReadApi(true))
+          .then(() => { closeModal(); renderAll(); toast(admin.name + (active ? " is gedeactiveerd." : " is opnieuw actief.")); })
+          .catch(error => toast(String(error && error.message || "Status wijzigen op server mislukt.")));
+        return;
+      }
       admin.active = !active;
       persistState();
       closeModal();

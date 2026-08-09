@@ -48,10 +48,12 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 ### Uitvoeringsbundels (afhankelijkheid-gedreven)
 
 - [x] Slice B: factuurstatus + verzendstatus server-led (Fase 2 + 11 + 12)
-- [-] Slice C: notifications + announcements server-led (Fase 2 + 12)
-- [-] Slice D: users + settings server-led (Fase 2 + 13)
-- [-] Slice E: persistState/localStorage beperken tot UI/demo/fallback (afronding Fase 2)
+- [x] Slice C: notifications + announcements server-led (Fase 2 + 12)
+- [x] Slice D: users + settings server-led (Fase 2 + 13) — toggleEmployee/Admin server-led; dbUserId bewaard via bootstrap; persistState auth-mode slanker
+- [x] Slice E: persistState/localStorage beperken tot UI/demo/fallback (afronding Fase 2) — auth-mode sloeg geen business-data meer op
 - [x] Slice C deelstap afgerond: auth-mode notificatiepaneel en markeren-als-gelezen lopen server-led via server/api/notifications.php (read, mark_read, mark_all_read en mark_announcement_read).
+- [x] Slice C volledig: announcements API aangemaakt (send/withdraw/hide/draft); admin write-flow server-led; employee read via notifications.
+- [x] Slice D+E volledig: toggleEmployee/Admin server-led via users.php; dbUserId opgeslagen via bootstrap-merge; persistState in auth-mode beperkt tot UI-state (rol, periode, filters, branding, reminders); business-data (employees/admins/records/notifications/announcements) niet meer lokaal gepersisteert in auth-mode.
 
 Voor iedere slice geldt verplicht:
 - [-] Extra controle op afgeleide dubbeling: invoiceStatus, payrollStatus, email_deliveries, verzonden/sent-flags, dashboard/KPI-afleidingen en batch-acties.
@@ -136,6 +138,8 @@ Status Fase 1:
 - [x] Correctie/goedkeuring UI-migratie afgerond voor auth-mode: request_correction, resubmit en approve lopen via server/api/timesheets.php met serverversie als bron.
 - [x] Slice B afgerond in auth-mode: factuurstatus en verzendstatus worden server-led gesynchroniseerd via server/api/invoices.php en server/api/email-queue.php; dashboard-, KPI- en batchstatus volgen dezelfde serverbron.
 - [x] Auth-mode verzendacties zetten geen lokale businessstatus meer vooruit; eerst server enqueue/sync, daarna UI-update op basis van serverresponse.
+- [x] Slice C volledig: auth-mode mededelingen read/write server-led; notifications lees/markeer server-led.
+- [x] Slice D+E volledig: users deactivate/reactivate auth-mode server-led; persistState auth-mode beperkt tot UI/branding/reminders; employees/admins/records/notifications/announcements niet meer lokaal gepersisteert in auth-mode.
 - [-] Browseropslag is nog niet voor alle onderdelen volledig vervangen:
   - read-data grotendeels uit database
   - uren-writeflow uit database
@@ -143,7 +147,9 @@ Status Fase 1:
 
 Status Fase 2:
 - [x] databasestructuur afgerond
-- [-] volledige afbouw van app_state/localStorage nog niet afgerond
+- [x] alle businesskritische write-flows in auth-mode server-led (timesheets, invoices, email-queue, notifications, announcements, users status)
+- [x] persistState/localStorage in auth-mode beperkt tot UI-state; server is de enige autoritatieve bron voor businessdata
+- [-] settings/company-data-writes en employee/admin create/edit nog lokaal (server leest ze al via bootstrap)
 
 ---
 
