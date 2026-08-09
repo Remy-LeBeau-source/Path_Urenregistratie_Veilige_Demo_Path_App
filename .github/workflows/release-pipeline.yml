@@ -136,7 +136,7 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium webkit
 
       - name: Write CI config.local.php
         run: |
@@ -241,8 +241,12 @@ jobs:
 
       - name: Generate temporary test passwords
         run: |
-          echo "PLAYWRIGHT_ADMIN_PASSWORD=$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)" >> $GITHUB_ENV
-          echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)" >> $GITHUB_ENV
+          ADMIN_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)"
+          EMPLOYEE_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)"
+          echo "::add-mask::$ADMIN_PASSWORD"
+          echo "::add-mask::$EMPLOYEE_PASSWORD"
+          echo "PLAYWRIGHT_ADMIN_PASSWORD=$ADMIN_PASSWORD" >> "$GITHUB_ENV"
+          echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=$EMPLOYEE_PASSWORD" >> "$GITHUB_ENV"
 
       - name: Set CI test password hashes in DB
         run: |
@@ -323,7 +327,7 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium webkit
 
       - name: Write fallback config.local.php
         run: |
@@ -356,8 +360,12 @@ jobs:
 
       - name: Generate fallback test passwords
         run: |
-          echo "PLAYWRIGHT_ADMIN_PASSWORD=$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)" >> $GITHUB_ENV
-          echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)" >> $GITHUB_ENV
+          ADMIN_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)"
+          EMPLOYEE_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)"
+          echo "::add-mask::$ADMIN_PASSWORD"
+          echo "::add-mask::$EMPLOYEE_PASSWORD"
+          echo "PLAYWRIGHT_ADMIN_PASSWORD=$ADMIN_PASSWORD" >> "$GITHUB_ENV"
+          echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=$EMPLOYEE_PASSWORD" >> "$GITHUB_ENV"
 
       - name: Set fallback test password hashes in DB
         run: |
@@ -451,7 +459,7 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium webkit
 
       - name: Write fallback config.local.php
         run: |
@@ -484,8 +492,12 @@ jobs:
 
       - name: Generate fallback test passwords
         run: |
-          echo "PLAYWRIGHT_ADMIN_PASSWORD=$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)" >> $GITHUB_ENV
-          echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)" >> $GITHUB_ENV
+          ADMIN_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)"
+          EMPLOYEE_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)"
+          echo "::add-mask::$ADMIN_PASSWORD"
+          echo "::add-mask::$EMPLOYEE_PASSWORD"
+          echo "PLAYWRIGHT_ADMIN_PASSWORD=$ADMIN_PASSWORD" >> "$GITHUB_ENV"
+          echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=$EMPLOYEE_PASSWORD" >> "$GITHUB_ENV"
 
       - name: Set fallback test password hashes in DB
         run: |
@@ -578,7 +590,7 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium webkit
 
       - name: Write CI config.local.php
         run: |
@@ -611,8 +623,12 @@ jobs:
 
       - name: Generate temporary test passwords
         run: |
-          echo "PLAYWRIGHT_ADMIN_PASSWORD=$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)" >> $GITHUB_ENV
-          echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)" >> $GITHUB_ENV
+          ADMIN_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)"
+          EMPLOYEE_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)"
+          echo "::add-mask::$ADMIN_PASSWORD"
+          echo "::add-mask::$EMPLOYEE_PASSWORD"
+          echo "PLAYWRIGHT_ADMIN_PASSWORD=$ADMIN_PASSWORD" >> "$GITHUB_ENV"
+          echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=$EMPLOYEE_PASSWORD" >> "$GITHUB_ENV"
 
       - name: Set CI test password hashes in DB
         run: |
@@ -719,7 +735,7 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium webkit
 
       - name: Write fallback config.local.php
         run: |
@@ -752,8 +768,12 @@ jobs:
 
       - name: Generate fallback test passwords
         run: |
-          echo "PLAYWRIGHT_ADMIN_PASSWORD=$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)" >> $GITHUB_ENV
-          echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)" >> $GITHUB_ENV
+          ADMIN_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)"
+          EMPLOYEE_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)"
+          echo "::add-mask::$ADMIN_PASSWORD"
+          echo "::add-mask::$EMPLOYEE_PASSWORD"
+          echo "PLAYWRIGHT_ADMIN_PASSWORD=$ADMIN_PASSWORD" >> "$GITHUB_ENV"
+          echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=$EMPLOYEE_PASSWORD" >> "$GITHUB_ENV"
 
       - name: Set fallback test password hashes in DB
         run: |
@@ -848,7 +868,7 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium webkit
 
       - name: Write fallback config.local.php
         run: |
@@ -881,8 +901,12 @@ jobs:
 
       - name: Generate fallback test passwords
         run: |
-          echo "PLAYWRIGHT_ADMIN_PASSWORD=$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)" >> $GITHUB_ENV
-          echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)" >> $GITHUB_ENV
+          ADMIN_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)"
+          EMPLOYEE_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/\n' | head -c 24)"
+          echo "::add-mask::$ADMIN_PASSWORD"
+          echo "::add-mask::$EMPLOYEE_PASSWORD"
+          echo "PLAYWRIGHT_ADMIN_PASSWORD=$ADMIN_PASSWORD" >> "$GITHUB_ENV"
+          echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=$EMPLOYEE_PASSWORD" >> "$GITHUB_ENV"
 
       - name: Set fallback test password hashes in DB
         run: |
