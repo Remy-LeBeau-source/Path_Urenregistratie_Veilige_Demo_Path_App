@@ -422,9 +422,19 @@ Status Fase 9:
 - Allure.
 - Living Doc.
 
+### Recent afgerond in deze fase
+
+- End-to-end UI koppeling naar de backendflow is werkend in auth-mode.
+- Statusacties mark_skipped en restore_missing zijn functioneel getest.
+- Extra statuspad sent_to_broker is ondersteund in frontend/backendflow.
+- Playwright regressie voor customer-timesheets is uitgebreid met happy en negative scenario's.
+- Allure en live-doc bundel zijn opnieuw opgebouwd en visueel geverifieerd.
+- Living Doc en BDD mapping zijn bijgewerkt met H/N-id conventie en actuele scenario-overzichten.
+
 Status Fase 10:
-- [~] schema, API basis en regressietests bestaan
-- [~] echte UI-koppeling en productieafbouw nog open
+- [x] schema, API basis, UI-koppeling en regressietests bestaan
+- [x] Playwright, Allure en Living Doc dekken de customer-timesheet flow af
+- [~] productieafbouw/hardening nog open (o.a. storage-hardening, virusscanstrategie, uploadconversie)
 
 ---
 
