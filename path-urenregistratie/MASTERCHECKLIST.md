@@ -12,17 +12,17 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 ## Actuele stand
 
 - [x] Datum: 2026-08-09
-- [x] Main/HEAD: b822cea
+- [x] Main/HEAD: 1956450
 - [x] Referentiecommit fase 8/9 backend: fc27723
 - [x] Appversie: 0.9.41
 - [x] Lokale check: geslaagd
 - [x] Lokale e2e regressie: 121 tests (113 niet-mobile Chromium + 4 Pixel 7 Chromium + 4 iPhone 13 WebKit)
 - [x] Functionele regressiecatalogus: 117 unieke cases met 117 feature- en 117 steps-mappings
 - [x] Releasehardening v0.9.41: gecommit en gepusht naar main
-- [x] GitHub pipeline-status: run #66 volledig geslaagd voor HEAD b822cea; Validate, Test, Live Docs en Prod groen; Dev en Acc bewust overgeslagen
-- [x] Laatste commit: b822cea — Update Playwright safety and timesheet test commands documentation
-- [x] Recente slice afgerond en gepusht: Playwright-docs/testcommando's, production-safety- en timesheet-write-regressies, lokale check en volledige E2E-regressie (121/121) bevestigd
-- [x] Lokaal vervolgwerk Fase 15: mobiele previewstart, consistente dashboardwerkvoorraad, gerichte UI-polish en herhaalbare e-mailqueuefixture volledig gevalideerd; gecommit (08b4132) en opgevolgd door latere commits t/m b822cea
+- [x] GitHub pipeline-status: run #67 volledig geslaagd voor HEAD 1956450; Validate, Test, Live Docs en Prod groen; Dev en Acc bewust overgeslagen
+- [x] Laatste commit: 1956450 — refactor(state): [Fase 2] make timesheet review flow server-led v0.9.41
+- [x] Recente slice afgerond en gepusht: correctie/goedkeuring auth-mode server-led via timesheets API, expected_version bewezen, reload server-led, lokale regressie 121/121 en pipeline #67 groen
+- [x] Lokaal vervolgwerk Fase 15: mobiele previewstart, consistente dashboardwerkvoorraad, gerichte UI-polish en herhaalbare e-mailqueuefixture volledig gevalideerd; gecommit (08b4132) en opgevolgd door latere commits t/m 1956450
 
 ### Kort overzicht: waar we nu staan
 
@@ -43,6 +43,20 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 - [-] Stap 8: Fase 14 - TransIP/productieconfig zodra we daar bewust aan beginnen.
 - [-] Stap 9: Fase 15 - productieacceptatie/livegang.
 - [-] Stap 10: Fase 16 - post-live beheer.
+
+### Uitvoeringsbundels (afhankelijkheid-gedreven)
+
+- [-] Slice B: factuurstatus + verzendstatus server-led (Fase 2 + 11 + 12)
+- [-] Slice C: notifications + announcements server-led (Fase 2 + 12)
+- [-] Slice D: users + settings server-led (Fase 2 + 13)
+- [-] Slice E: persistState/localStorage beperken tot UI/demo/fallback (afronding Fase 2)
+
+Voor iedere slice geldt verplicht:
+- [-] Extra controle op afgeleide dubbeling: invoiceStatus, payrollStatus, email_deliveries, verzonden/sent-flags, dashboard/KPI-afleidingen en batch-acties.
+- [-] In auth-mode blijft per businessstatus precies een autoritatieve serverbron over.
+- [-] Na succesvolle server-write synchroniseert frontend state direct met serverresponse.
+- [-] Na write blijft reload opnieuw server-led lezen.
+- [-] Frontend voorspelt of vooruitzet geen lokale businessstatus voordat de serverwrite bevestigd is.
 
 ### Fase blokkades / later doen
 
