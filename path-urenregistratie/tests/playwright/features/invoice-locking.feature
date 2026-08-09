@@ -1,37 +1,43 @@
 @regressie
-@api
-@fase:10
-Feature: Klanturenstaten via API in Path Uren & Facturatie
+@integration
+@fase:11
+Feature: Definitieve facturen en locking in Path Uren & Facturatie
 
-  # Native Playwright-uitvoering: tests/playwright/customer-timesheet-api.spec.ts
-  # Navigatiemapping: tests/playwright/steps/customer-timesheets.steps.ts
-
-  @happy
-  Scenario: [CTS-API-H-001] employee uploadt klanturenstaat, dient in en downloadt; admin kan goedkeuren en resubmit vragen
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
-
-  @negative
-  Scenario: [CTS-API-N-006] employee kan geen klanturenstaat voor andere medewerker wijzigen
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
-
-  @negative
-  Scenario: [CTS-API-N-007] employee kan geen admin reviewactie uitvoeren op klanturenstaat
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+  # Native Playwright-uitvoering: tests/playwright/invoice-lock.spec.ts
+  # Navigatiemapping: tests/playwright/steps/invoice-locking.steps.ts
 
   @happy
-  Scenario: [CTS-API-H-004] employee kan mark_skipped registreren en restore_missing terugdraaien
+  Scenario: [INV-H-004] admin lockt approved timesheet naar definitieve immutable factuur
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
 
   @negative
-  Scenario: [CTS-API-N-005] employee krijgt 400 bij ongeldig bestandstype
+  Scenario: [INV-N-008] anonieme gebruiker kan factuur niet locken
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
+  @negative
+  Scenario: [INV-N-009] medewerker mag factuur niet finaliseren
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
+  @negative
+  Scenario: [INV-N-010] niet-goedgekeurde urenstaat kan niet worden gelockt
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
+  @negative
+  Scenario: [INV-N-011] tweede lock-oproep op dezelfde factuur wordt geblokkeerd
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
+  @negative
+  Scenario: [INV-N-012] gelijktijdige lock-requests leveren exact één winnaar
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd

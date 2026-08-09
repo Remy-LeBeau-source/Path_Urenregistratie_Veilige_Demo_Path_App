@@ -31,8 +31,9 @@
     "allure:generate": "allure generate allure-results --clean -o allure-report",
     "allure:open": "allure open allure-report",
     "allure:serve": "allure serve allure-results",
+    "docs:sync": "node scripts/sync-living-docs.mjs",
     "docs:bundle": "node scripts/build-live-doc-bundle.mjs",
-    "docs:refresh": "npm run test:e2e && npm run allure:generate && npm run docs:bundle"
+    "docs:refresh": "npm run docs:sync && npm run test:e2e && npm run allure:generate && npm run docs:bundle"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0",

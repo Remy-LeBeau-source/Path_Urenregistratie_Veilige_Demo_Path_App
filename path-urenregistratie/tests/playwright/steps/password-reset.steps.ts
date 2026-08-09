@@ -1,4 +1,4 @@
-// Navigation-only mapping for mobile.feature.
+// Navigation-only mapping for password-reset.feature.
 // Native Playwright remains the executable source of truth; no Cucumber runner is used.
 
 type StepPattern = string | RegExp;
@@ -13,8 +13,11 @@ When('de beschreven businessflow wordt uitgevoerd', () => undefined);
 Then('wordt het verwachte resultaat aantoonbaar gevalideerd', () => undefined);
 
 export const caseMappings = [
-  { caseId: 'MOB-H-001', spec: 'mobile-ui.spec.ts' },
-  { caseId: 'MOB-H-002', spec: 'mobile-ui.spec.ts' },
-  { caseId: 'MOB-H-003', spec: 'mobile-ui.spec.ts' },
-  { caseId: 'MOB-N-004', spec: 'mobile-ui.spec.ts' },
+  { caseId: 'PWD-H-001', spec: 'password-reset.spec.ts' },
+  { caseId: 'PWD-H-002', spec: 'password-reset.spec.ts' },
+  { caseId: 'PWD-H-003', spec: 'password-reset.spec.ts' },
+  { caseId: 'PWD-N-004', spec: 'password-reset.spec.ts' },
+  { caseId: 'PWD-N-005', spec: 'password-reset.spec.ts' },
+  { caseId: 'PWD-N-006', spec: 'password-reset.spec.ts' },
+  { caseId: 'PWD-N-007', spec: 'password-reset.spec.ts' },
 ] as const;

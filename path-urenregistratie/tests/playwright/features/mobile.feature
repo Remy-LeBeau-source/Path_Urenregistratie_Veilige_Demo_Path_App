@@ -4,37 +4,29 @@
 @fase:15
 Feature: Mobiele gebruikerservaring in Path Uren & Facturatie
 
-  # Native Playwright-uitvoering:
-  # tests/playwright/mobile-ui.spec.ts
-  #
-  # Deviceprojecten:
-  # Pixel 7 / Chromium
-  # iPhone 13 / WebKit
-
-  Gebruikers van Path Uren & Facturatie willen de belangrijkste functies
-  ook op mobiel kunnen gebruiken, zodat de applicatie bruikbaar blijft
-  op telefoonformaat.
+  # Native Playwright-uitvoering: tests/playwright/mobile-ui.spec.ts
+  # Navigatiemapping: tests/playwright/steps/mobile.steps.ts
 
   @happy
-  Scenario: [MOB-H-001] Mobiele login, navigatie en dashboard blijven bereikbaar
-    Given de mobiele loginpagina is volledig zichtbaar
-    When een administrator inlogt en de mobiele navigatie gebruikt
-    Then blijven dashboard, Home en rolwissel zonder overflow bereikbaar
+  Scenario: [MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikbaar
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
 
   @happy
-  Scenario: [MOB-H-002] Medewerker dient mobiel uren in en bereikt upload en notificaties
-    Given een medewerker een mobiele schrijfbare maand heeft
-    When de medewerker uren opslaat en indient
-    Then blijven klanturenstaat-upload en notificaties bereikbaar
+  Scenario: [MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documentupload bereiken
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
 
   @happy
-  Scenario: [MOB-H-003] Mobiele correctie, herindiening en goedkeuring werken
-    Given een medewerker mobiel uren heeft ingediend
-    When een administrator correctie vraagt en de medewerker opnieuw indient
-    Then kan de administrator de herindiening mobiel goedkeuren
+  Scenario: [MOB-H-003] mobiele correctie herindiening en administratieve goedkeuring zijn bereikbaar
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
 
   @negative
-  Scenario: [MOB-N-004] Facturen, touch controls en modals blijven binnen de viewport
-    Given een administrator het mobiele factuuroverzicht opent
-    When factuurkaarten en een bevestigingsmodal worden weergegeven
-    Then blijven kaartinhoud, touch controls en bevestiging binnen de viewport
+  Scenario: [MOB-N-004] mobiele facturen touch targets en modals blijven binnen viewport
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd

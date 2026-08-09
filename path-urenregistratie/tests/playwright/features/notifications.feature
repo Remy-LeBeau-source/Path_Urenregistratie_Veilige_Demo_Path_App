@@ -1,32 +1,31 @@
 @regressie
-@ui
-@desktop
+@api
 @fase:15
-Feature: Dashboardweergave in Path Uren & Facturatie
+Feature: Notificaties via API in Path Uren & Facturatie
 
-  # Native Playwright-uitvoering: tests/playwright/dashboard.spec.ts
-  # Navigatiemapping: tests/playwright/steps/dashboard.steps.ts
+  # Native Playwright-uitvoering: tests/playwright/notifications.spec.ts
+  # Navigatiemapping: tests/playwright/steps/notifications.steps.ts
 
   @happy
-  Scenario: [DASH-H-001] admin dashboard opent zonder console errors
+  Scenario: [NOT-H-001] ingelogde gebruiker kan notificaties ophalen
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
 
   @happy
-  Scenario: [DASH-H-002] employee dashboard opent zonder console errors
+  Scenario: [NOT-H-002] mark_all_read werkt zonder fouten
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
 
   @negative
-  Scenario: [DASH-N-007] gecachete oude open-acties teller wordt niet als actuele teller getoond
+  Scenario: [NOT-N-003] anonieme gebruiker krijgt 401 op notificaties
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
 
   @negative
-  Scenario: [DASH-N-008] voorbeeldgegevens herstellen overschrijft in auth-modus de DB teller niet
+  Scenario: [NOT-N-004] unknown action geeft 400
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd

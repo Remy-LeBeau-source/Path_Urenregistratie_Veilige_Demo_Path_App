@@ -38,15 +38,25 @@ const MOBILE_SUITES: Record<string, string> = {
   'MOB-N-004': 'Facturen & Responsive',
 };
 
-const LIVING_DOCS: Record<string, string> = {
-  auth: 'tests/playwright/features/auth.feature',
-  authorization: 'tests/playwright/features/roles-api.feature',
-  'customer-timesheets': 'tests/playwright/features/customer-timesheets.feature',
-  dashboard: 'tests/playwright/features/dashboard.feature',
-  invoices: 'tests/playwright/features/invoices.feature',
-  mobile: 'tests/playwright/features/mobile.feature',
-  review: 'tests/playwright/features/timesheets.feature',
-  timesheets: 'tests/playwright/features/timesheets.feature',
+const LIVING_DOCS_BY_SPEC: Record<string, string> = {
+  'audit-log.spec.ts': 'tests/playwright/features/audit-log.feature',
+  'auth.spec.ts': 'tests/playwright/features/auth.feature',
+  'customer-timesheet-api.spec.ts': 'tests/playwright/features/customer-timesheets.feature',
+  'dashboard.spec.ts': 'tests/playwright/features/dashboard.feature',
+  'email-queue.spec.ts': 'tests/playwright/features/email-queue.feature',
+  'invoice-lock.spec.ts': 'tests/playwright/features/invoice-locking.feature',
+  'invoices.spec.ts': 'tests/playwright/features/invoices-ui.feature',
+  'mobile-ui.spec.ts': 'tests/playwright/features/mobile.feature',
+  'notifications.spec.ts': 'tests/playwright/features/notifications.feature',
+  'password-reset.spec.ts': 'tests/playwright/features/password-reset.feature',
+  'period-management.spec.ts': 'tests/playwright/features/period-management.feature',
+  'production-safety.spec.ts': 'tests/playwright/features/production-safety.feature',
+  'roles-api.spec.ts': 'tests/playwright/features/roles-api.feature',
+  'security.spec.ts': 'tests/playwright/features/security.feature',
+  'timesheet-review-flow.spec.ts': 'tests/playwright/features/timesheets-review-integration.feature',
+  'timesheet-review-ui.spec.ts': 'tests/playwright/features/timesheets-review-ui.feature',
+  'timesheet-write.spec.ts': 'tests/playwright/features/timesheets-api.feature',
+  'user-management.spec.ts': 'tests/playwright/features/user-management.feature',
 };
 
 function annotation(name: string, description: string) {
@@ -99,7 +109,7 @@ export default class FunctionalAllureReporter {
       annotation('domain', classification.domain),
       annotation('result', flow),
       annotation('phase', `fase-${classification.phase}`),
-      annotation('livingDoc', LIVING_DOCS[classification.domain] || 'TEST-BDD-MAPPING.md'),
+      annotation('livingDoc', LIVING_DOCS_BY_SPEC[fileName] || 'TEST-BDD-MAPPING.md'),
       ...tags.map((tag) => annotation('tag', tag)),
     );
   }

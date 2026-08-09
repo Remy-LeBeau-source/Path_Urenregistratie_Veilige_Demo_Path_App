@@ -1,37 +1,43 @@
 @regressie
 @api
-@fase:10
-Feature: Klanturenstaten via API in Path Uren & Facturatie
+@fase:16
+Feature: Auditlog en traceerbaarheid in Path Uren & Facturatie
 
-  # Native Playwright-uitvoering: tests/playwright/customer-timesheet-api.spec.ts
-  # Navigatiemapping: tests/playwright/steps/customer-timesheets.steps.ts
+  # Native Playwright-uitvoering: tests/playwright/audit-log.spec.ts
+  # Navigatiemapping: tests/playwright/steps/audit-log.steps.ts
 
   @happy
-  Scenario: [CTS-API-H-001] employee uploadt klanturenstaat, dient in en downloadt; admin kan goedkeuren en resubmit vragen
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
-
-  @negative
-  Scenario: [CTS-API-N-006] employee kan geen klanturenstaat voor andere medewerker wijzigen
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
-
-  @negative
-  Scenario: [CTS-API-N-007] employee kan geen admin reviewactie uitvoeren op klanturenstaat
+  Scenario: [AUD-H-001] admin kan auditlog ophalen
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
 
   @happy
-  Scenario: [CTS-API-H-004] employee kan mark_skipped registreren en restore_missing terugdraaien
+  Scenario: [AUD-H-002] auditlog filtert op entity_type
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
+  @happy
+  Scenario: [AUD-H-003] auditlog filtert op event_type
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
+  @happy
+  Scenario: [AUD-H-004] auditlog bevat geen wachtwoorden of tokens in event_data
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
 
   @negative
-  Scenario: [CTS-API-N-005] employee krijgt 400 bij ongeldig bestandstype
+  Scenario: [AUD-N-005] anonieme gebruiker krijgt 401 op auditlog
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
+  @negative
+  Scenario: [AUD-N-006] medewerker mag auditlog niet lezen
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd

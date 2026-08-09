@@ -1,37 +1,38 @@
 @regressie
-@api
-@fase:10
-Feature: Klanturenstaten via API in Path Uren & Facturatie
+@ui
+@desktop
+@fase:11
+Feature: Factuurweergave in de desktop-UI in Path Uren & Facturatie
 
-  # Native Playwright-uitvoering: tests/playwright/customer-timesheet-api.spec.ts
-  # Navigatiemapping: tests/playwright/steps/customer-timesheets.steps.ts
+  # Native Playwright-uitvoering: tests/playwright/invoices.spec.ts
+  # Navigatiemapping: tests/playwright/steps/invoices-ui.steps.ts
 
   @happy
-  Scenario: [CTS-API-H-001] employee uploadt klanturenstaat, dient in en downloadt; admin kan goedkeuren en resubmit vragen
+  Scenario: [INV-H-001] admin facturen zichtbaar en console errors 0
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
 
   @negative
-  Scenario: [CTS-API-N-006] employee kan geen klanturenstaat voor andere medewerker wijzigen
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
-
-  @negative
-  Scenario: [CTS-API-N-007] employee kan geen admin reviewactie uitvoeren op klanturenstaat
+  Scenario: [INV-N-005] employee facturen zichtbaar maar beperkt en console errors 0
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
 
   @happy
-  Scenario: [CTS-API-H-004] employee kan mark_skipped registreren en restore_missing terugdraaien
+  Scenario: [INV-H-002] periodefilter juli en augustus werkt
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
+  @happy
+  Scenario: [INV-H-003] server berekent bedrag uit uren en uurtarief voor open facturen
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
 
   @negative
-  Scenario: [CTS-API-N-005] employee krijgt 400 bij ongeldig bestandstype
+  Scenario: [INV-N-007] ongeldige periodefilter geeft nette 400-fout
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd

@@ -1,37 +1,43 @@
 @regressie
 @api
-@fase:10
-Feature: Klanturenstaten via API in Path Uren & Facturatie
+@fase:15
+Feature: Periodebeheer via API in Path Uren & Facturatie
 
-  # Native Playwright-uitvoering: tests/playwright/customer-timesheet-api.spec.ts
-  # Navigatiemapping: tests/playwright/steps/customer-timesheets.steps.ts
+  # Native Playwright-uitvoering: tests/playwright/period-management.spec.ts
+  # Navigatiemapping: tests/playwright/steps/period-management.steps.ts
 
   @happy
-  Scenario: [CTS-API-H-001] employee uploadt klanturenstaat, dient in en downloadt; admin kan goedkeuren en resubmit vragen
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
-
-  @negative
-  Scenario: [CTS-API-N-006] employee kan geen klanturenstaat voor andere medewerker wijzigen
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
-
-  @negative
-  Scenario: [CTS-API-N-007] employee kan geen admin reviewactie uitvoeren op klanturenstaat
+  Scenario: [PER-H-001] admin kan periodes ophalen met overzicht
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
 
   @happy
-  Scenario: [CTS-API-H-004] employee kan mark_skipped registreren en restore_missing terugdraaien
+  Scenario: [PER-H-002] admin kan periode sluiten en heropenen
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
 
   @negative
-  Scenario: [CTS-API-N-005] employee krijgt 400 bij ongeldig bestandstype
+  Scenario: [PER-N-003] anonieme gebruiker krijgt 401 op periods
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
+  @negative
+  Scenario: [PER-N-004] medewerker mag geen periodes beheren
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
+  @negative
+  Scenario: [PER-N-005] dubbel sluiten van periode geeft 409
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
+  @negative
+  Scenario: [PER-N-006] heropenen van open periode geeft 409
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd

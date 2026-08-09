@@ -1,18 +1,20 @@
-// Navigation-only step definitions for F12 from .feature files.
-// Executable tests remain in tests/playwright/dashboard.spec.ts.
+// Navigation-only mapping for dashboard.feature.
+// Native Playwright remains the executable source of truth; no Cucumber runner is used.
 
 type StepPattern = string | RegExp;
 type StepHandler = (...args: unknown[]) => unknown;
 
 const Given = (_pattern: StepPattern, _handler: StepHandler) => undefined;
+const When = (_pattern: StepPattern, _handler: StepHandler) => undefined;
 const Then = (_pattern: StepPattern, _handler: StepHandler) => undefined;
 
-Given('de administrator is ingelogd', () => undefined);
-Given('de medewerker is ingelogd', () => undefined);
-Given('de dashboardweergave van Path Uren & Facturatie', () => undefined);
-Given('een geldige Path login', () => undefined);
+Given('de uitvoerbare Playwright-case is voorbereid', () => undefined);
+When('de beschreven businessflow wordt uitgevoerd', () => undefined);
+Then('wordt het verwachte resultaat aantoonbaar gevalideerd', () => undefined);
 
-Then('ziet de administrator open werkvoorraad en backoffice-navigatie', () => undefined);
-Then('ziet de medewerker het eigen dashboard zonder backoffice-overzicht', () => undefined);
-Then('gebruikt het dashboard API-data wanneer beschikbaar en fallback-data wanneer nodig', () => undefined);
-Then('laadt het dashboard zonder console- of page-errors na inloggen', () => undefined);
+export const caseMappings = [
+  { caseId: 'DASH-H-001', spec: 'dashboard.spec.ts' },
+  { caseId: 'DASH-H-002', spec: 'dashboard.spec.ts' },
+  { caseId: 'DASH-N-007', spec: 'dashboard.spec.ts' },
+  { caseId: 'DASH-N-008', spec: 'dashboard.spec.ts' },
+] as const;
