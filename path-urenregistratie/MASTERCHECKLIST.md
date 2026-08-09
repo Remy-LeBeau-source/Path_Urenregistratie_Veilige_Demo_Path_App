@@ -15,7 +15,7 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 - Datum: 2026-08-09
 - Main/HEAD: c9e00ca
 - Referentiecommit fase 8/9 backend: fc27723
-- Appversie: 0.9.38
+- Appversie: 0.9.39
 - Lokale check: geslaagd
 - Lokale e2e regressie: 37 geslaagd, 0 gefaald
 - GitHub pipeline-status: lokaal niet verifieerbaar zonder gh auth login
