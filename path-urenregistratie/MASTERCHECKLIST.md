@@ -13,13 +13,13 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 ## Actuele stand
 
 - Datum: 2026-08-09
-- Main/HEAD: 1163590
+- Main/HEAD: c9e00ca
 - Referentiecommit fase 8/9 backend: fc27723
 - Appversie: 0.9.30
 - Lokale check: geslaagd
-- Lokale e2e regressie: 32 geslaagd, 0 gefaald
+- Lokale e2e regressie: 37 geslaagd, 0 gefaald
 - GitHub pipeline-status: lokaal niet verifieerbaar zonder gh auth login
-- Laatste commit: docs(checklist): sync master checklist with latest pushed head
+- Laatste commit: docs(tags): simplify feature tags across BDD files
 
 ---
 
@@ -424,13 +424,6 @@ Status Fase 9:
 
 ### Recent afgerond in deze fase
 
-- Invoice read-API berekent voor open facturen server-side subtotal, btw en totaal op basis van billable_hours en hourly_rate.
-- Vergrendelde facturen blijven in read-output op opgeslagen bedragen zodat lock-gedrag behouden blijft.
-- Extra regressietest toegevoegd: INV-H-003 voor server-side bedragvalidatie.
-- Security tests geharmoniseerd naar Given/When/Then-stapstijl voor consistente rapportleesbaarheid.
-
-### Recent afgerond in deze fase
-
 - End-to-end UI koppeling naar de backendflow is werkend in auth-mode.
 - Statusacties mark_skipped en restore_missing zijn functioneel getest.
 - Extra statuspad sent_to_broker is ondersteund in frontend/backendflow.
@@ -481,6 +474,13 @@ Status Fase 10:
 - PDF-inhoudscontrole.
 - Allure.
 - Living Doc.
+
+### Recent afgerond in deze fase
+
+- Invoice read-API berekent voor open facturen server-side subtotal, btw en totaal op basis van billable_hours en hourly_rate.
+- Vergrendelde facturen blijven in read-output op opgeslagen bedragen zodat lock-gedrag behouden blijft.
+- Extra regressietests toegevoegd: INV-H-003 en INV-N-003 voor berekening en periodevalidatie.
+- Security tests geharmoniseerd naar Given/When/Then-stapstijl voor consistente rapportleesbaarheid.
 
 Status Fase 11:
 - [~] overzicht en databasestructuur bestaan
@@ -709,8 +709,8 @@ Status Fase 15:
 - [x] Fase 7 - CI/CD-basis
 - [x] Fase 8 - uren concept opslaan en indienen
 - [~] Fase 9 - correctie/goedkeuring: backend + API-tests + docs + commit/push klaar; pipelinebevestiging nog open op deze machine
-- [~] Fase 10 - klanturenstaat: schema + API + API-tests aanwezig, UI-koppeling/productieafbouw open
-- [~] Fase 11 - factuur/PDF: demo/readbasis aanwezig, server-PDF open
+- [~] Fase 10 - klanturenstaat: schema + API + UI-koppeling + regressie afgerond; productiehardening open
+- [~] Fase 11 - factuur/PDF: read-API + server-side berekening + extra tests aanwezig; server-side PDF en lock/write-flow open
 - [~] Fase 12 - e-mail: schema/routes aanwezig, echte queue open
 - [~] Fase 13 - bedrijfsdata: demo aanwezig, definitieve keuzes open
 - [~] Fase 14 - TransIP: subsite/database aanwezig, deployment open
@@ -720,7 +720,7 @@ Status Fase 15:
 
 1. GitHub pipeline-status van recente main-commits bevestigen (na gh auth login).
 2. Fase 9 pipelinebewijs op [x] zetten zodra bevestigd.
-3. Fase 10 vervolg: UI koppelen aan nieuwe customer-timesheet API en server-side JPG/PNG -> PDF conversie toevoegen.
+3. Fase 11 vervolg: factuur write/lock-flow bouwen (transactionele nummerreservering, locked_at, immutable bedragen na lock).
 
 ## Dagelijkse werkwijze (verplicht)
 
