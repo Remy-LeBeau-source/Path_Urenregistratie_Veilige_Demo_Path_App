@@ -54,6 +54,14 @@ try {
 
 console.log(`E2E precheck ok: ${baseUrl} reachable and required env vars are set.`);
 
+const allurePrepare = spawnSync(process.execPath, ['scripts/prepare-allure-results.mjs'], {
+  stdio: 'inherit',
+  env: process.env,
+});
+if (allurePrepare.status !== 0) {
+  process.exit(allurePrepare.status ?? 1);
+}
+
 const rawArgs = process.argv.slice(2);
 const extraArgs = rawArgs[0] === '--' ? rawArgs.slice(1) : rawArgs;
 const groupRaw = String(process.env.PLAYWRIGHT_GROUP || '').trim().toLowerCase();

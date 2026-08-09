@@ -1,4 +1,5 @@
 import type { APIRequestContext } from '@playwright/test';
+import { attachApiExchange } from '../reporting/apiAttachments';
 
 type CustomerTimesheetWriteAction =
   | 'save_draft'
@@ -39,15 +40,20 @@ export class CustomerTimesheetApi {
     return token;
   }
 
-  async read(period: string, employeeId?: number, assignmentId?: number) {
+  async read(period: string, employeeId?: number, assignmentId?: number, options: { attach?: boolean } = {}) {
     const params = new URLSearchParams({ period });
     if (employeeId) params.set('employee_id', String(employeeId));
     if (assignmentId) params.set('assignment_id', String(assignmentId));
 
-    const response = await this.request.get('/server/api/customer-timesheets.php?' + params.toString());
+    const endpoint = '/server/api/customer-timesheets.php?' + params.toString();
+    const response = await this.request.get(endpoint);
+    const body = await response.json();
+    if (options.attach !== false) {
+      await attachApiExchange({ method: 'GET', endpoint, responseStatus: response.status(), responseBody: body });
+    }
     return {
       status: response.status(),
-      body: await response.json(),
+      body,
     };
   }
 
@@ -56,11 +62,14 @@ export class CustomerTimesheetApi {
     if (employeeId) params.set('employee_id', String(employeeId));
     if (assignmentId) params.set('assignment_id', String(assignmentId));
 
-    const response = await this.request.get('/server/api/customer-timesheets.php?' + params.toString());
+    const endpoint = '/server/api/customer-timesheets.php?' + params.toString();
+    const response = await this.request.get(endpoint);
+    const body = await response.body();
+    await attachApiExchange({ method: 'GET', endpoint, responseStatus: response.status(), responseBody: body });
     return {
       status: response.status(),
       contentType: response.headers()['content-type'] || '',
-      body: await response.body(),
+      body,
     };
   }
 
@@ -75,8 +84,10 @@ export class CustomerTimesheetApi {
     if (payload.assignmentId !== undefined) base.assignment_id = String(payload.assignmentId);
     if (payload.reviewNote !== undefined) base.review_note = payload.reviewNote;
 
+    const endpoint = '/server/api/customer-timesheets.php';
+    const requestBody = payload.file ? { ...base, file: payload.file } : base;
     const response = payload.file
-      ? await this.request.post('/server/api/customer-timesheets.php', {
+      ? await this.request.post(endpoint, {
           headers: { 'X-CSRF-Token': csrfToken },
           multipart: {
             ...base,
@@ -87,7 +98,7 @@ export class CustomerTimesheetApi {
             },
           },
         })
-      : await this.request.post('/server/api/customer-timesheets.php', {
+      : await this.request.post(endpoint, {
           headers: { 'X-CSRF-Token': csrfToken },
           form: base,
         });
@@ -103,6 +114,7 @@ export class CustomerTimesheetApi {
         message: bodyText.slice(0, 600),
       };
     }
+    await attachApiExchange({ method: 'POST', endpoint, requestBody, responseStatus: response.status(), responseBody: body });
 
     return {
       status: response.status(),

@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { captureConsoleErrors, clearConsoleErrors } from './fixtures/consoleErrors';
 import { LoginPage } from './pages/LoginPage';
+import { attachBusinessScreenshot } from './reporting/uiAttachments';
 
 const MOBILE_PERIOD = '2126-01';
 const CORRECTION_MESSAGE = 'Controleer dag 2: dit moet 4 uur zijn.';
@@ -97,6 +98,7 @@ test('[MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikba
     await expect(page.locator('#mobile-switch-role')).toBeVisible();
     await page.locator('.mobile-brand-home').click();
     await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
+    await attachBusinessScreenshot(page, 'Business state · Mobile dashboard');
     expect(errors).toEqual([]);
   });
 });
@@ -136,6 +138,7 @@ test('[MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documen
     await expect(page.locator('#notification-panel')).toBeVisible();
     await page.keyboard.press('Escape');
     await assertNoHorizontalOverflow(page);
+    await attachBusinessScreenshot(page, 'Business state · Uren ingediend en upload bereikbaar');
     expect(errors).toEqual([]);
   });
 });
@@ -198,6 +201,7 @@ test('[MOB-H-003] mobiele correctie herindiening en administratieve goedkeuring 
     await card.locator('[data-approve]').click();
     await expect(card).toHaveCount(0);
     await assertNoHorizontalOverflow(page);
+    await attachBusinessScreenshot(page, 'Business state · Mobile goedkeuring afgerond');
     expect(errors).toEqual([]);
   });
 });
@@ -252,6 +256,7 @@ test('[MOB-N-004] mobiele facturen touch targets en modals blijven binnen viewpo
     await page.locator('#modal-close').click();
     await expect(page.locator('.mobile-brand-home')).toBeVisible();
     await expect(page.locator('#mobile-switch-role')).toBeVisible();
+    await attachBusinessScreenshot(page, 'Business state · Mobile facturen en modal');
     expect(errors).toEqual([]);
   });
 });

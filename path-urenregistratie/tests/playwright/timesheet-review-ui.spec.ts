@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { LoginPage } from './pages/LoginPage';
+import { attachBusinessScreenshot } from './reporting/uiAttachments';
 
 const PERIOD_KEY = '2125-01';
 const CORRECTION_MESSAGE = 'Controleer dag 2: dit moet 4 uur zijn.';
@@ -154,6 +155,7 @@ test('[TS-REV-UI-H-008] browserflow: admin vraagt correctie, medewerker dient op
     await openView(page, 'timesheet');
     await setPeriod(page, PERIOD_KEY);
     await expect(page.locator('#timesheet-status')).toHaveText('Goedgekeurd');
+    await attachBusinessScreenshot(page, 'Business state · Timesheet goedgekeurd');
   });
 });
 

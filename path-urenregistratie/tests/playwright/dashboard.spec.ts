@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { captureConsoleErrors, clearConsoleErrors } from './fixtures/consoleErrors';
 import { DashboardPage } from './pages/DashboardPage';
 import { LoginPage } from './pages/LoginPage';
+import { attachBusinessScreenshot } from './reporting/uiAttachments';
 
 type MutableRecord = {
   entries: number[][];
@@ -123,6 +124,7 @@ test('[DASH-H-001] admin dashboard opent zonder console errors', async ({ page }
 
   await test.step('Then het dashboard toont admin-overzicht zonder consolefouten', async () => {
     expect(consoleErrors).toEqual([]);
+    await attachBusinessScreenshot(page, 'Business state · Admin dashboard');
   });
 });
 

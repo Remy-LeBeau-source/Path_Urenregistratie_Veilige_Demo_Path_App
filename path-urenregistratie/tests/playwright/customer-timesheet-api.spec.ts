@@ -11,7 +11,7 @@ const CANDIDATE_PERIODS = Array.from({ length: 240 }, (_, index) => {
 
 async function findWritablePeriod(api: CustomerTimesheetApi): Promise<string> {
   for (const period of CANDIDATE_PERIODS) {
-    const read = await api.read(period);
+    const read = await api.read(period, undefined, undefined, { attach: false });
     if (read.status !== 200 || !read.body?.ok) {
       continue;
     }

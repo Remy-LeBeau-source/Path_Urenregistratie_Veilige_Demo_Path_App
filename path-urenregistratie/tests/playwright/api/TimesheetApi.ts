@@ -1,5 +1,6 @@
 import { request as playwrightRequest, type APIRequestContext } from '@playwright/test';
 import { appConfig } from '../fixtures/appConfig';
+import { attachApiExchange } from '../reporting/apiAttachments';
 
 type WriteAction = 'save_draft' | 'submit' | 'request_correction' | 'approve';
 
@@ -85,25 +86,33 @@ export class TimesheetApi {
       throw new Error(`[TimesheetApi] CSRF token ontbreekt voor write(${payload.action}).`);
     }
 
-    const response = await this.request.post('/server/api/timesheets.php', {
+    const endpoint = '/server/api/timesheets.php';
+    const requestBody = this.toServerPayload(payload);
+    const response = await this.request.post(endpoint, {
       headers: { 'X-CSRF-Token': csrfToken },
-      data: this.toServerPayload(payload),
+      data: requestBody,
     });
+    const body = await response.json();
+    await attachApiExchange({ method: 'POST', endpoint, requestBody, responseStatus: response.status(), responseBody: body });
 
     return {
       status: response.status(),
-      body: await response.json(),
+      body,
     };
   }
 
   async writeWithoutCsrf(payload: WritePayload) {
-    const response = await this.request.post('/server/api/timesheets.php', {
-      data: this.toServerPayload(payload),
+    const endpoint = '/server/api/timesheets.php';
+    const requestBody = this.toServerPayload(payload);
+    const response = await this.request.post(endpoint, {
+      data: requestBody,
     });
+    const body = await response.json();
+    await attachApiExchange({ method: 'POST', endpoint, requestBody, responseStatus: response.status(), responseBody: body });
 
     return {
       status: response.status(),
-      body: await response.json(),
+      body,
     };
   }
 
@@ -120,26 +129,35 @@ export class TimesheetApi {
         throw new Error('[TimesheetApi] CSRF token ontbreekt in anonieme context.');
       }
 
-      const response = await isolated.post('/server/api/timesheets.php', {
+      const endpoint = '/server/api/timesheets.php';
+      const requestBody = this.toServerPayload(payload);
+      const response = await isolated.post(endpoint, {
         headers: { 'X-CSRF-Token': csrfToken },
-        data: this.toServerPayload(payload),
+        data: requestBody,
       });
+      const body = await response.json();
+      await attachApiExchange({ method: 'POST', endpoint, requestBody, responseStatus: response.status(), responseBody: body });
 
       return {
         status: response.status(),
-        body: await response.json(),
+        body,
       };
     } finally {
       await isolated.dispose();
     }
   }
 
-  async read(period: string, employeeId?: number) {
+  async read(period: string, employeeId?: number, options: { attach?: boolean } = {}) {
     const suffix = employeeId ? `?period=${encodeURIComponent(period)}&employee_id=${employeeId}` : `?period=${encodeURIComponent(period)}`;
-    const response = await this.request.get(`/server/api/timesheets.php${suffix}`);
+    const endpoint = `/server/api/timesheets.php${suffix}`;
+    const response = await this.request.get(endpoint);
+    const body = await response.json();
+    if (options.attach !== false) {
+      await attachApiExchange({ method: 'GET', endpoint, responseStatus: response.status(), responseBody: body });
+    }
     return {
       status: response.status(),
-      body: await response.json(),
+      body,
     };
   }
 
@@ -154,14 +172,18 @@ export class TimesheetApi {
       throw new Error(`[TimesheetApi] CSRF token ontbreekt voor ${payload.action}.`);
     }
 
-    const response = await this.request.post('/server/api/timesheets.php', {
+    const endpoint = '/server/api/timesheets.php';
+    const requestBody = this.toReviewServerPayload(payload);
+    const response = await this.request.post(endpoint, {
       headers: { 'X-CSRF-Token': csrfToken },
-      data: this.toReviewServerPayload(payload),
+      data: requestBody,
     });
+    const body = await response.json();
+    await attachApiExchange({ method: 'POST', endpoint, requestBody, responseStatus: response.status(), responseBody: body });
 
     return {
       status: response.status(),
-      body: await response.json(),
+      body,
     };
   }
 

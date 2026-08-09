@@ -27,7 +27,7 @@ function buildDayEntries(period: string, first: number, second: number) {
 
 async function findWritablePeriod(timesheetApi: TimesheetApi): Promise<string> {
   for (const period of candidatePeriods()) {
-    const read = await timesheetApi.read(period);
+    const read = await timesheetApi.read(period, undefined, { attach: false });
     if (read.status !== 200 || !read.body?.ok) {
       continue;
     }

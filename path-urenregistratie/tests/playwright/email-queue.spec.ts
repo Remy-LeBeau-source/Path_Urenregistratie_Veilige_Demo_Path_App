@@ -17,7 +17,7 @@ const CANDIDATE_PERIODS = Array.from({ length: 240 }, (_, i) => {
 
 async function findWritablePeriod(timesheetApi: TimesheetApi): Promise<string> {
   for (const period of CANDIDATE_PERIODS) {
-    const read = await timesheetApi.read(period);
+    const read = await timesheetApi.read(period, undefined, { attach: false });
     if (read.status !== 200 || !read.body?.ok) continue;
     if (!read.body.found) return period;
     const s = String(read.body.timesheet?.status || '');
