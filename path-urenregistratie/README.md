@@ -113,6 +113,7 @@ De productie-uitvoer wordt in `dist/` geplaatst.
 
 ## Testen en Living Doc
 
+- Volledig commando-overzicht: [`TESTCOMMANDOS.md`](TESTCOMMANDOS.md)
 - Playwright regressie: `npm run test:e2e`
 - Playwright per groep (voorbeelden):
 	- `npm run test:e2e:group:auth`
