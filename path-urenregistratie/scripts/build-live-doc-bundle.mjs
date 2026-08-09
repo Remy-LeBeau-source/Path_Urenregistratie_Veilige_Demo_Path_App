@@ -414,11 +414,27 @@ function renderLivingDocViewer(features, generatedAt, allureSummary) {
         const haystack = [feature.title, feature.file, feature.spec, ...feature.featureTags, ...feature.scenarios.flatMap(scenario => [scenario.id, scenario.title, ...scenario.tags])].join(' ').toLowerCase();
         return haystack.includes(state.query);
       };
+      const suiteOrder = ['api', 'security', 'ui-desktop', 'ui-mobile', 'integration'];
+      const suiteLabel = { api: 'API', security: 'Security', 'ui-desktop': 'UI Desktop', 'ui-mobile': 'UI Mobile', integration: 'DB / Integratie' };
+      const suiteKey = feature => {
+        if (feature.featureTags.includes('@ui')) return feature.file.includes('mobile') ? 'ui-mobile' : 'ui-desktop';
+        if (feature.featureTags.includes('@api')) return 'api';
+        if (feature.featureTags.includes('@security')) return 'security';
+        return 'integration';
+      };
       function renderFeatures() {
         const visible = features.filter(matches);
         elements.featureCount.textContent = visible.length;
         if (!visible.some(feature => feature.file === state.activeFile) && visible[0]) state.activeFile = visible[0].file;
-        elements.featureList.innerHTML = visible.map(feature => '<button class="feature-item ' + (feature.file === state.activeFile ? 'active' : '') + '" data-file="' + safe(feature.file) + '"><span>' + safe(feature.title) + '</span><small>' + feature.scenarios.length + " scenario's</small></button>").join('');
+        const grouped = new Map(suiteOrder.map(key => [key, []]));
+        visible.forEach(feature => { const key = suiteKey(feature); if (grouped.has(key)) grouped.get(key).push(feature); else grouped.get('integration').push(feature); });
+        const isSearching = state.query.length > 0;
+        elements.featureList.innerHTML = [...grouped.entries()].filter(([, items]) => items.length > 0).map(([key, items]) => {
+          const open = isSearching || items.some(feature => feature.file === state.activeFile);
+          const count = items.reduce((sum, feature) => sum + feature.scenarios.length, 0);
+          const featureButtons = items.map(feature => '<button class="feature-item ' + (feature.file === state.activeFile ? 'active' : '') + '" data-file="' + safe(feature.file) + '"><span>' + safe(feature.title) + '</span><small>' + feature.scenarios.length + " scenario's</small></button>").join('');
+          return '<details class="suite-group" ' + (open ? 'open' : '') + '><summary class="suite-heading"><span>' + safe(suiteLabel[key] || key) + '</span><strong>' + count + '</strong></summary>' + featureButtons + '</details>';
+        }).join('');
         elements.featureList.querySelectorAll('button').forEach(button => button.addEventListener('click', () => { state.activeFile = button.dataset.file; render(); }));
       }
       function renderActiveFeature() {
@@ -738,7 +754,14 @@ function portalCss() {
       .feature-search input { width: 100%; min-height: 42px; border: 1px solid #425667; background: #213a4d; color: #fff; padding: 0.7rem 0.8rem; font: inherit; }
       .feature-search input::placeholder { color: #aebbc4; }
       .feature-search input:focus { outline: 2px solid #43c9bd; outline-offset: 1px; }
-      .feature-list { display: grid; max-height: calc(100vh - 205px); overflow-y: auto; }
+      .feature-list { display: block; max-height: calc(100vh - 205px); overflow-y: auto; }
+      .suite-group { border: 0; }
+      .suite-group > .feature-item { padding-left: 1.4rem; }
+      .suite-heading { display: flex; justify-content: space-between; align-items: center; padding: 0.55rem 1rem 0.55rem 1rem; background: #10263a; color: #8ab4c2; font-size: 0.72rem; font-weight: 750; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; list-style: none; user-select: none; border-top: 1px solid #1d3648; }
+      .suite-heading::-webkit-details-marker { display: none; }
+      .suite-heading strong { color: #b8cfd8; font-size: 0.85rem; font-weight: 750; }
+      .suite-group[open] .suite-heading { color: #6de8dc; border-left: 3px solid #43c9bd; padding-left: calc(1rem - 3px); }
+      .suite-group[open] .suite-heading strong { color: #43c9bd; }
       .feature-item { border: 0; border-left: 3px solid transparent; background: transparent; color: #d9e2e7; padding: 0.75rem 1rem; text-align: left; cursor: pointer; font: inherit; }
       .feature-item span, .feature-item small { display: block; }
       .feature-item span { font-weight: 650; line-height: 1.3; }
@@ -804,9 +827,12 @@ function portalCss() {
         .run-status { margin-left: auto; }
         .viewer-shell { display: block; }
         .feature-sidebar { padding-bottom: 0.75rem; }
-        .feature-list { display: flex; overflow-x: auto; max-height: none; padding: 0 0.8rem; }
-        .feature-item { min-width: 210px; border-left: 0; border-bottom: 3px solid transparent; }
-        .feature-item.active { border-bottom-color: #43c9bd; }
+        .feature-list { display: block; overflow-x: auto; max-height: none; padding: 0; }
+        .suite-group { display: flex; align-items: center; overflow-x: auto; }
+        .suite-heading { flex: 0 0 auto; padding: 0.6rem 0.7rem; border-top: 0; border-bottom: 3px solid transparent; min-width: 90px; flex-direction: column; align-items: start; gap: 0.15rem; }
+        .suite-group[open] .suite-heading { border-left: 0; border-bottom-color: #43c9bd; padding-left: 0.7rem; }
+        .suite-group > .feature-item { flex: 0 0 auto; min-width: 210px; border-left: 0; border-bottom: 3px solid transparent; padding-left: 1rem; }
+        .feature-item.active { border-bottom-color: #43c9bd; border-left-color: transparent; }
         .viewer-main { padding: 1.4rem 0.85rem 2rem; }
         .viewer-toolbar { display: block; }
         .source-link { display: inline-block; margin-top: 0.8rem; }
