@@ -1005,11 +1005,13 @@ const readApiRuntime = {
   dashboardInFlight: false,
   invoicesInFlight: false,
   customerTimesheetsInFlight: {},
+  timesheetsInFlight: {},
   lastBootstrapAt: 0,
   lastDashboardAt: 0,
   lastInvoicesAt: 0,
   lastInvoicesByPeriod: {},
-  lastCustomerTimesheetsByPeriod: {}
+  lastCustomerTimesheetsByPeriod: {},
+  lastTimesheetsByKey: {}
 };
 
 window.__PATH_READ_API = readApiDebug;
@@ -1359,6 +1361,152 @@ function buildTimesheetWritePayload(action) {
   return payload;
 }
 
+function timesheetHistoryLabel(value) {
+  if (!value) return "";
+  const date = new Date(String(value));
+  if (Number.isNaN(date.getTime())) return String(value);
+  try {
+    return new Intl.DateTimeFormat("nl-NL", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Europe/Amsterdam"
+    }).format(date);
+  } catch {
+    return String(value);
+  }
+}
+
+function mapTimesheetCorrectionHistory(corrections) {
+  if (!Array.isArray(corrections)) return [];
+  return corrections.map((item, index) => ({
+    id: Number(item && item.id) || index + 1,
+    message: String(item && item.correction_message || ""),
+    requestedBy: String(item && item.requested_by_name || "Beheerder"),
+    requestedByUserId: Number(item && item.requested_by) || null,
+    requestedAt: timesheetHistoryLabel(item && item.requested_at),
+    requestedAtIso: item && item.requested_at ? String(item.requested_at) : null,
+    resubmittedAt: item && item.resubmitted_at ? timesheetHistoryLabel(item.resubmitted_at) : null,
+    resubmittedAtIso: item && item.resubmitted_at ? String(item.resubmitted_at) : null
+  }));
+}
+
+function applyTimesheetApiPayload(employeeId, periodKey, timesheet) {
+  if (!timesheet || typeof timesheet !== "object") return null;
+  const key = parsePeriodKey(periodKey) ? periodKey : currentPeriod().key;
+  const employee = employeeById(Number(employeeId));
+  if (!employee) return null;
+
+  const record = recordFor(Number(employeeId), key);
+  const period = periodFromKey(key);
+  const nextEntries = emptyEntries(period.key);
+  const dayEntryMap = new Map();
+
+  if (Array.isArray(timesheet.day_entries)) {
+    timesheet.day_entries.forEach(entry => {
+      if (!entry || !entry.work_date) return;
+      dayEntryMap.set(String(entry.work_date), Math.max(0, Number(entry.hours) || 0));
+    });
+  }
+
+  period.weekRows.forEach((week, weekIndex) => {
+    week.days.forEach((day, dayIndex) => {
+      if (!day) return;
+      const dateKey = String(period.year).padStart(4, "0") + "-" + String(period.monthIndex + 1).padStart(2, "0") + "-" + String(day.day).padStart(2, "0");
+      nextEntries[weekIndex][dayIndex] = Number(dayEntryMap.get(dateKey) || 0);
+    });
+  });
+
+  record.entries = nextEntries;
+  if (timesheet.contractual_hours !== undefined) record.contractHours = Number(timesheet.contractual_hours) || 0;
+  if (timesheet.leave_hours !== undefined) record.leave = Number(timesheet.leave_hours) || 0;
+  if (timesheet.sickness_hours !== undefined) record.sick = Number(timesheet.sickness_hours) || 0;
+
+  record.timesheetStatus = String(timesheet.status || record.timesheetStatus || "draft");
+  record.reviewNote = String(timesheet.review_note || "");
+  record.approvedAt = timesheet.approved_at ? String(timesheet.approved_at) : null;
+  record.approvedBy = Number(timesheet.approved_by) || null;
+  record.correctionHistory = mapTimesheetCorrectionHistory(timesheet.correction_history);
+
+  const version = Number(timesheet.version || 0);
+  record.serverVersion = Number.isFinite(version) && version > 0 ? version : null;
+
+  if (record.timesheetStatus === "approved") {
+    if (record.invoiceStatus !== "simulated") record.invoiceStatus = "ready";
+    if (record.payrollStatus !== "simulated") record.payrollStatus = "ready";
+  } else {
+    if (record.invoiceStatus !== "simulated") record.invoiceStatus = "concept";
+    if (record.payrollStatus !== "simulated") record.payrollStatus = "concept";
+  }
+
+  normalizeRecord(record, employee, key);
+  return record;
+}
+
+function writeTimesheetReviewToApi(action, options = {}) {
+  if (!API_ENABLED || authRuntime.mode !== "auth" || state.currentRole !== "admin") return Promise.resolve(null);
+
+  const employeeId = Number(options.employeeId || 0);
+  const periodKey = String(options.periodKey || currentPeriod().key);
+  const expectedVersion = Number(options.expectedVersion || 0);
+  const correctionMessage = String(options.correctionMessage || "").trim();
+
+  if (!employeeId || !parsePeriodKey(periodKey) || expectedVersion <= 0) {
+    return Promise.reject(new Error("Timesheet review mist employee, periode of serverversie."));
+  }
+
+  const payload = {
+    action,
+    period: periodKey,
+    employee_id: employeeId,
+    expected_version: expectedVersion
+  };
+
+  if (action === "request_correction") payload.correction_message = correctionMessage;
+
+  return requestAuthCsrf()
+    .then(token => fetch(WRITE_TIMESHEET_PATH, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify(payload)
+    }))
+    .then(resp => resp.json().catch(() => ({})).then(data => ({ ok: resp.ok, data })))
+    .then(result => {
+      if (!result.ok || !result.data || result.data.ok !== true) {
+        const message = String(result && result.data && result.data.message || "Reviewactie op server mislukt.");
+        throw new Error(message);
+      }
+      applyTimesheetApiPayload(employeeId, periodKey, result.data.timesheet);
+      return result.data;
+    });
+}
+
+function refreshTimesheetReadApi(periodKey, employeeId, force = false) {
+  if (!API_ENABLED || authRuntime.mode !== "auth") return Promise.resolve(null);
+  const period = parsePeriodKey(periodKey) ? periodKey : "";
+  const employee = Number(employeeId || 0);
+  if (!period || employee <= 0) return Promise.resolve(null);
+
+  const key = period + ":" + employee;
+  const now = Date.now();
+  const lastAt = Number(readApiRuntime.lastTimesheetsByKey[key] || 0);
+  if (!force && (readApiRuntime.timesheetsInFlight[key] || (now - lastAt) < 15000)) return Promise.resolve(null);
+
+  readApiRuntime.timesheetsInFlight[key] = true;
+  const endpoint = WRITE_TIMESHEET_PATH + "?period=" + encodeURIComponent(period) + "&employee_id=" + encodeURIComponent(String(employee));
+  return fetchReadApi(endpoint)
+    .then(data => {
+      readApiRuntime.lastTimesheetsByKey[key] = Date.now();
+      if (!data || data.found !== true || !data.timesheet) return null;
+      return applyTimesheetApiPayload(employee, period, data.timesheet);
+    })
+    .finally(() => {
+      readApiRuntime.timesheetsInFlight[key] = false;
+    });
+}
+
 function writeTimesheetToApi(action) {
   if (!API_ENABLED || authRuntime.mode !== "auth" || state.currentRole !== "employee") return Promise.resolve(null);
   const payload = buildTimesheetWritePayload(action);
@@ -1376,11 +1524,8 @@ function writeTimesheetToApi(action) {
         throw new Error(message);
       }
       const employee = currentEmployee();
-      const record = recordFor(employee.id);
-      const version = Number(result.data && result.data.timesheet && result.data.timesheet.version);
-      if (Number.isFinite(version) && version > 0) {
-        record.serverVersion = version;
-      }
+      const periodKey = String(payload.period || currentPeriod().key);
+      applyTimesheetApiPayload(employee.id, periodKey, result.data && result.data.timesheet);
       return result.data;
     });
 }
@@ -4468,6 +4613,13 @@ function renderHoursWeekFilter(period, scope) {
 function renderHoursGrid() {
   const employee = currentEmployee();
   const period = currentPeriod();
+  refreshTimesheetReadApi(period.key, employee.id, false).then(record => {
+    if (!record) return;
+    const activePeriod = currentPeriod();
+    const activeEmployee = currentEmployee();
+    if (activePeriod.key !== period.key || Number(activeEmployee.id) !== Number(employee.id)) return;
+    renderHoursGrid();
+  }).catch(() => {});
   const record = recordFor(employee.id);
   document.querySelector("#timesheet-assignment").textContent = employee.client + " · " + employee.role;
   document.querySelector("#timesheet-employee").textContent = employee.name;
@@ -5415,6 +5567,32 @@ function approveEmployeeState(id, periodKey) {
 
 function approveEmployee(id, periodKey) {
   const key = periodKey || currentPeriod().key;
+  const record = recordFor(id, key);
+  if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
+    const version = Number(record.serverVersion || 0);
+    if (version <= 0) {
+      refreshTimesheetReadApi(key, id, true).then(() => approveEmployee(id, key)).catch(() => {
+        toast("Kan niet goedkeuren zonder actuele serverversie. Ververs en probeer opnieuw.");
+      });
+      return;
+    }
+
+    writeTimesheetReviewToApi("approve", {
+      employeeId: id,
+      periodKey: key,
+      expectedVersion: version
+    }).then(() => {
+      addNotification({ audience: "employee", type: "approved", employeeId: Number(id), title: "Uren goedgekeurd", message: "Je uren voor " + periodFromKey(key).label + " zijn goedgekeurd.", periodKey: key, view: "employee-dashboard" });
+      addNotification({ audience: "admin", type: "invoice", employeeId: Number(id), title: "Factuur klaar", message: "De factuur voor " + employeeById(id).name + " staat klaar.", periodKey: key, view: "invoices" });
+      persistState();
+      renderAll();
+      toast(employeeById(id).name + " is goedgekeurd voor " + periodFromKey(key).label + "; de factuur staat klaar.");
+    }).catch(error => {
+      toast(String(error && error.message || "Goedkeuren bij server mislukt."));
+    });
+    return;
+  }
+
   approveEmployeeState(id, key);
   persistState();
   renderAll();
@@ -5490,6 +5668,45 @@ function returnEmployeeForCorrection(id, periodKey, reason, adminTaskId = "") {
     addNotification({ audience: "employee", type: "correction", employeeId: Number(id), title: "Correctie nodig", message: requestedBy + " vraagt je om " + periodFromKey(key).label + " aan te passen. Reden: " + message, periodKey: key, view: "timesheet" });
   };
   const toastMessage = "De uren van " + employee.name + " zijn met toelichting teruggestuurd. Er is niets gemaild.";
+
+  if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
+    const recordVersion = Number(record.serverVersion || 0);
+    const runApiCorrection = (expectedVersion) => writeTimesheetReviewToApi("request_correction", {
+      employeeId: id,
+      periodKey: key,
+      expectedVersion,
+      correctionMessage: message
+    }).then(() => {
+      addNotification({ audience: "employee", type: "correction", employeeId: Number(id), title: "Correctie nodig", message: (currentAdmin() ? currentAdmin().name : "Beheerder") + " vraagt je om " + periodFromKey(key).label + " aan te passen. Reden: " + message, periodKey: key, view: "timesheet" });
+      if (adminTaskId) {
+        finishAdminTaskAndContinue(adminTaskId, () => {}, toastMessage);
+        return;
+      }
+      persistState();
+      closeModal();
+      renderAll();
+      toast(toastMessage);
+    });
+
+    if (recordVersion <= 0) {
+      refreshTimesheetReadApi(key, id, true)
+        .then(freshRecord => {
+          const expected = Number((freshRecord && freshRecord.serverVersion) || 0);
+          if (expected <= 0) throw new Error("Kan geen actuele serverversie bepalen voor correctie.");
+          return runApiCorrection(expected);
+        })
+        .catch(error => {
+          toast(String(error && error.message || "Correctieverzoek bij server mislukt."));
+        });
+      return;
+    }
+
+    runApiCorrection(recordVersion).catch(error => {
+      toast(String(error && error.message || "Correctieverzoek bij server mislukt."));
+    });
+    return;
+  }
+
   if (adminTaskId) {
     finishAdminTaskAndContinue(adminTaskId, mutate, toastMessage);
     return;
@@ -6754,7 +6971,8 @@ document.querySelector("#submit-timesheet").addEventListener("click", async () =
   const record = recordFor(employee.id);
   const submitButton = document.querySelector("#submit-timesheet");
 
-  if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "employee") {
+  const serverSubmit = API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "employee";
+  if (serverSubmit) {
     if (writeRuntime.draftTimer) {
       window.clearTimeout(writeRuntime.draftTimer);
       writeRuntime.draftTimer = null;
@@ -6777,15 +6995,17 @@ document.querySelector("#submit-timesheet").addEventListener("click", async () =
     submitButton.textContent = originalText;
   }
 
-  const correction = activeCorrection(record);
-  if (correction) {
-    const resubmittedAt = correctionTimestamp();
-    correction.resubmittedAt = resubmittedAt.label;
-    correction.resubmittedAtIso = resubmittedAt.iso;
+  if (!serverSubmit) {
+    const correction = activeCorrection(record);
+    if (correction) {
+      const resubmittedAt = correctionTimestamp();
+      correction.resubmittedAt = resubmittedAt.label;
+      correction.resubmittedAtIso = resubmittedAt.iso;
+    }
+    record.timesheetStatus = "submitted";
+    record.invoiceStatus = "concept";
+    record.payrollStatus = "concept";
   }
-  record.timesheetStatus = "submitted";
-  record.invoiceStatus = "concept";
-  record.payrollStatus = "concept";
   addNotification({ audience: "admin", type: "submitted", employeeId: employee.id, title: "Uren ingediend", message: employee.name + " heeft " + currentPeriod().label + " ingediend.", periodKey: currentPeriod().key, view: "approvals" });
   addNotification({ audience: "employee", type: "submitted", employeeId: employee.id, title: "Uren wachten op controle", message: "Je uren voor " + currentPeriod().label + " zijn ingediend.", periodKey: currentPeriod().key, view: "employee-dashboard" });
   persistState();

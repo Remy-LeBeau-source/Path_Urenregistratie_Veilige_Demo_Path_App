@@ -31,24 +31,103 @@ async function fillFirstTwoHours(page: Page, first: string, second: string) {
 test('[TS-REV-UI-H-008] browserflow: admin vraagt correctie, medewerker dient opnieuw in, admin keurt goed', async ({ page }) => {
   const loginPage = new LoginPage(page);
   let writeVersion = 100;
+  let mockStatus: 'draft' | 'submitted' | 'correction' | 'approved' = 'draft';
+  let mockReviewNote = '';
+  let mockApprovedAt: string | null = null;
+  let mockApprovedBy: number | null = null;
+  const mockCorrectionHistory: Array<{
+    id: number;
+    requested_by: number;
+    requested_by_name: string;
+    correction_message: string;
+    requested_at: string;
+    resubmitted_at: string | null;
+  }> = [];
 
   await page.route('**/server/api/timesheets.php', async (route) => {
     const request = route.request();
-    if (request.method() !== 'POST') {
+    const method = request.method().toUpperCase();
+    if (method === 'GET') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ok: true,
+          found: true,
+          period: PERIOD_KEY,
+          employee_id: 2,
+          timesheet: {
+            id: 9000,
+            status: mockStatus,
+            contractual_hours: 160,
+            billable_hours: mockStatus === 'draft' ? 0 : 12,
+            leave_hours: 0,
+            sickness_hours: 0,
+            employee_note: null,
+            review_note: mockReviewNote || null,
+            day_entries: [
+              { work_date: `${PERIOD_KEY}-01`, hours: 8, description: 'Reviewflow dag 1' },
+              { work_date: `${PERIOD_KEY}-02`, hours: 8, description: 'Reviewflow dag 2' },
+            ],
+            submitted_at: mockStatus === 'submitted' || mockStatus === 'approved' ? new Date().toISOString() : null,
+            approved_at: mockApprovedAt,
+            approved_by: mockApprovedBy,
+            version: writeVersion,
+            latest_correction: mockCorrectionHistory.at(-1) || null,
+            correction_history: mockCorrectionHistory,
+          },
+        }),
+      });
+      return;
+    }
+
+    if (method !== 'POST') {
       await route.continue();
       return;
     }
 
     let action = 'save_draft';
+    let correctionMessage = '';
     try {
-      const payload = request.postDataJSON() as { action?: string };
+      const payload = request.postDataJSON() as { action?: string; correction_message?: string };
       action = String(payload?.action || 'save_draft');
+      correctionMessage = String(payload?.correction_message || '');
     } catch {
       action = 'save_draft';
     }
 
+    const previousStatus = mockStatus;
     writeVersion += 1;
-    const status = action === 'submit' ? 'submitted' : 'draft';
+    if (action === 'submit') {
+      if (previousStatus === 'correction' && mockCorrectionHistory.length) {
+        mockCorrectionHistory[mockCorrectionHistory.length - 1].resubmitted_at = new Date().toISOString();
+      }
+      mockStatus = 'submitted';
+      mockApprovedAt = null;
+      mockApprovedBy = null;
+    } else if (action === 'request_correction') {
+      mockStatus = 'correction';
+      mockReviewNote = correctionMessage;
+      mockApprovedAt = null;
+      mockApprovedBy = null;
+      mockCorrectionHistory.push({
+        id: mockCorrectionHistory.length + 1,
+        requested_by: 100,
+        requested_by_name: 'Beheerder',
+        correction_message: correctionMessage || CORRECTION_MESSAGE,
+        requested_at: new Date().toISOString(),
+        resubmitted_at: null,
+      });
+    } else if (action === 'approve') {
+      mockStatus = 'approved';
+      mockApprovedAt = new Date().toISOString();
+      mockApprovedBy = 100;
+    } else {
+      mockStatus = previousStatus === 'correction' ? 'correction' : 'draft';
+      mockApprovedAt = null;
+      mockApprovedBy = null;
+    }
+
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -58,11 +137,33 @@ test('[TS-REV-UI-H-008] browserflow: admin vraagt correctie, medewerker dient op
         employee_id: 2,
         timesheet: {
           id: 9000,
-          status,
-          submitted_at: action === 'submit' ? new Date().toISOString() : null,
+          status: mockStatus,
+          contractual_hours: 160,
+          billable_hours: mockStatus === 'approved' ? 12 : 12,
+          leave_hours: 0,
+          sickness_hours: 0,
+          employee_note: null,
+          review_note: mockReviewNote || null,
+          day_entries: [
+            { work_date: `${PERIOD_KEY}-01`, hours: 8, description: 'Reviewflow dag 1' },
+            { work_date: `${PERIOD_KEY}-02`, hours: 8, description: 'Reviewflow dag 2' },
+          ],
+          submitted_at: mockStatus === 'submitted' || mockStatus === 'approved' ? new Date().toISOString() : null,
+          approved_at: mockApprovedAt,
+          approved_by: mockApprovedBy,
           version: writeVersion,
+          latest_correction: mockCorrectionHistory.at(-1) || null,
+          correction_history: mockCorrectionHistory,
         },
-        audit_event: action === 'submit' ? 'timesheet.submitted' : 'timesheet.draft_saved',
+        audit_event: action === 'approve'
+          ? 'timesheet.approved'
+          : action === 'request_correction'
+            ? 'timesheet.correction_requested'
+            : action === 'submit' && previousStatus === 'correction'
+              ? 'timesheet.resubmitted'
+              : action === 'submit'
+                ? 'timesheet.submitted'
+                : 'timesheet.draft_saved',
       }),
     });
   });
