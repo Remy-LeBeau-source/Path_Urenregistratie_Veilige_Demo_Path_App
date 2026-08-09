@@ -81,7 +81,7 @@ function assert(condition, message) {
 const ids = [...document.querySelectorAll("[id]")].map(element => element.id);
 assert(new Set(ids).size === ids.length, "Ieder element-id moet uniek zijn");
 assert(styles.includes("@media (max-width: 590px)"), "Er moet een mobiele layout voor smalle telefoons bestaan");
-assert(styles.includes("v0.9.37 · mobiele bediening") && styles.includes("@media (max-width: 720px)"), "Versie 0.9.37 moet een expliciete mobiele touch-layout hebben");
+assert(styles.includes("v0.9.38 · mobiele bediening") && styles.includes("@media (max-width: 720px)"), "Versie 0.9.38 moet een expliciete mobiele touch-layout hebben");
 assert(document.querySelector(".mobile-brand-home [data-brand-logo]") && document.querySelector(".mobile-brand-home [data-brand-logo]").tagName === "IMG", "Mobiel moet het Path-logo als zichtbare Home-knop tonen");
 assert(document.querySelector("#mobile-switch-role")?.textContent.includes("Rol kiezen"), "Mobiel moet een directe knop Rol kiezen hebben zodat verversen niet nodig is");
 assert(/@media\s*\(max-width:\s*720px\)[\s\S]*\.invoice-table\s+thead\s*\{\s*display:\s*none/.test(styles), "De factuurtabel moet op mobiel als kaartweergave tonen in plaats van als brede tabel");
@@ -93,7 +93,7 @@ assert(/\.invoice-brand-references\s+strong\s*\{[^}]*color:\s*#fff/.test(styles)
 assert(document.querySelectorAll("select:not([hidden])").length === 0, "De vaste interface mag geen zichtbare native browserdropdowns meer bevatten");
 
 assert(document.querySelectorAll("#dashboard-employee-rows tr").length === 4, "Dashboard moet vier demo-medewerkers tonen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.37"), "Het zichtbare versienummer moet 0.9.37 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.38"), "Het zichtbare versienummer moet 0.9.38 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -126,7 +126,7 @@ const employeePicker = document.querySelector("#login-employee");
 employeePicker.value = "4";
 employeePicker.dispatchEvent(new Event("change", { bubbles: true }));
 const demoScenarioState = JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(demoScenarioState.schemaVersion === 23, "Versie 0.9.37 moet wijzigingen onder de juiste gegevensversie bewaren");
+assert(demoScenarioState.schemaVersion === 23, "Versie 0.9.38 moet wijzigingen onder de juiste gegevensversie bewaren");
 const freshOpenActions = dom.window.adminOpenTasks();
 const freshJulyActions = freshOpenActions.filter(task => task.periodKey === "2026-07");
 const freshAugustActions = freshOpenActions.filter(task => task.periodKey === "2026-08");
@@ -1347,7 +1347,7 @@ const migrationPicker = migrationDom.window.document.querySelector("#login-admin
 migrationPicker.value = "joyce";
 migrationPicker.dispatchEvent(new migrationDom.window.Event("change", { bubbles: true }));
 const migratedState = JSON.parse(migrationDom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(migratedState.schemaVersion === 23, "Bestaande browsergegevens moeten ook in v0.9.37 veilig behouden blijven");
+assert(migratedState.schemaVersion === 23, "Bestaande browsergegevens moeten ook in v0.9.38 veilig behouden blijven");
 assert(migratedState.settings.mailRecipients.find(recipient => recipient.id === "payroll").name.includes("Salarisadministratie"), "Migratie moet EasySalary als duidelijke salarisadministratieroute benoemen");
 assert(migratedState.records["2026-07"]["4"].invoiceNumber === "Bel-Shawn-2026-juli", "Migratie moet ook bestaande factuurnummers omzetten naar de afgesproken koppeltekens");
 assert(migratedState.records["2026-07"]["4"].invoiceStatus === "ready", "Migratie moet de vooraf ingevulde Shawn-mailtest terugzetten naar Factuur klaar");
@@ -1384,4 +1384,4 @@ assert(migrateSrc.includes("'production'") && migrateSrc.includes("403") && migr
 assert(healthSrc.includes("'production'") && (healthSrc.includes("ob_clean") || healthSrc.includes("['ok'")), "health.php moet technische details onderdrukken in productiemodus");
 assert(configExSrc.includes("'enabled' => false") && configExSrc.includes("'transport' => 'dry_run'"), "config.example.php moet mail standaard uitgeschakeld hebben met transport dry_run");
 
-console.log("Path v0.9.37 volledige smoke test: geslaagd");
+console.log("Path v0.9.38 volledige smoke test: geslaagd");
