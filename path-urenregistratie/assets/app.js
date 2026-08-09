@@ -996,17 +996,20 @@ const readApiDebug = {
   bootstrap: null,
   dashboard: null,
   invoices: null,
-  invoicesByPeriod: {}
+  invoicesByPeriod: {},
+  customerTimesheetsByPeriod: {}
 };
 
 const readApiRuntime = {
   bootstrapInFlight: false,
   dashboardInFlight: false,
   invoicesInFlight: false,
+  customerTimesheetsInFlight: {},
   lastBootstrapAt: 0,
   lastDashboardAt: 0,
   lastInvoicesAt: 0,
-  lastInvoicesByPeriod: {}
+  lastInvoicesByPeriod: {},
+  lastCustomerTimesheetsByPeriod: {}
 };
 
 window.__PATH_READ_API = readApiDebug;
@@ -1015,6 +1018,7 @@ const readApiSource = {
   bootstrap: "fallback",
   dashboard: "fallback",
   invoices: "fallback",
+  customerTimesheets: "fallback",
   overall: "fallback"
 };
 
@@ -1385,6 +1389,10 @@ function isCustomerTimesheetApiMode() {
   return API_ENABLED && authRuntime.mode === "auth";
 }
 
+function isCustomerTimesheetAdminApiMode() {
+  return isCustomerTimesheetApiMode() && state.currentRole === "admin";
+}
+
 function applyCustomerTimesheetApiRecord(employeeId, periodKey, data) {
   const row = data && data.customer_timesheet;
   if (!row) return null;
@@ -1546,7 +1554,7 @@ function initializeAuthSession() {
 
 function setReadApiSource(section, source) {
   readApiSource[section] = source;
-  readApiSource.overall = (readApiSource.bootstrap === "api" || readApiSource.dashboard === "api" || readApiSource.invoices === "api") ? "api" : "fallback";
+  readApiSource.overall = (readApiSource.bootstrap === "api" || readApiSource.dashboard === "api" || readApiSource.invoices === "api" || readApiSource.customerTimesheets === "api") ? "api" : "fallback";
 }
 
 function firstBootstrapCompany(data) {
@@ -1788,6 +1796,43 @@ function refreshInvoicesReadApi(periodKey, force) {
     })
     .finally(() => {
       readApiRuntime.invoicesInFlight = false;
+    });
+}
+
+function refreshCustomerTimesheetReadApi(periodKey, employeeId, force = false) {
+  if (!isCustomerTimesheetAdminApiMode()) return;
+  const period = parsePeriodKey(periodKey) ? periodKey : "";
+  const employee = Number(employeeId || 0);
+  if (!period || !Number.isFinite(employee) || employee <= 0) return;
+
+  const key = period + ":" + employee;
+  const now = Date.now();
+  const lastAt = Number(readApiRuntime.lastCustomerTimesheetsByPeriod[key] || 0);
+  if (!force && (readApiRuntime.customerTimesheetsInFlight[key] || (now - lastAt) < 15000)) return;
+
+  readApiRuntime.customerTimesheetsInFlight[key] = true;
+  const endpoint = WRITE_CUSTOMER_TIMESHEET_PATH + "?period=" + encodeURIComponent(period) + "&employee_id=" + encodeURIComponent(String(employee));
+
+  fetchReadApi(endpoint)
+    .then(data => {
+      readApiRuntime.lastCustomerTimesheetsByPeriod[key] = Date.now();
+      if (!data || data.found !== true || !data.customer_timesheet) {
+        setReadApiSource("customerTimesheets", "fallback");
+        return;
+      }
+
+      if (!readApiDebug.customerTimesheetsByPeriod[period]) readApiDebug.customerTimesheetsByPeriod[period] = {};
+      readApiDebug.customerTimesheetsByPeriod[period][String(employee)] = data;
+      applyCustomerTimesheetApiRecord(employee, period, data);
+      setReadApiSource("customerTimesheets", "api");
+
+      const dashboardViewActive = document.querySelector("#view-dashboard")?.classList.contains("is-active");
+      if (dashboardViewActive && period === currentPeriod().key) {
+        renderCustomerTimesheetAdmin();
+      }
+    })
+    .finally(() => {
+      readApiRuntime.customerTimesheetsInFlight[key] = false;
     });
 }
 
@@ -3002,6 +3047,11 @@ function renderCustomerTimesheetAdmin() {
   const period = currentPeriod();
   document.querySelector("#customer-timesheet-admin-title").textContent = "Klanturenstaten · " + period.label;
   const rows = activeEmployees().filter(employee => employee.customerTimesheetExpected !== false).map(employee => ({ employee, record: recordFor(employee.id, period.key) }));
+
+  if (isCustomerTimesheetAdminApiMode()) {
+    rows.forEach(item => refreshCustomerTimesheetReadApi(period.key, item.employee.id));
+  }
+
   list.innerHTML = rows.map(({ employee, record }) => {
     const documentRecord = customerTimesheetFor(record);
     let action = '<button class="small-button" data-customer-timesheet-details="' + employee.id + '" data-period-key="' + period.key + '">Details</button>';

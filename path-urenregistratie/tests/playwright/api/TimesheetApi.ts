@@ -1,4 +1,4 @@
-import { expect, request as playwrightRequest, type APIRequestContext } from '@playwright/test';
+import { request as playwrightRequest, type APIRequestContext } from '@playwright/test';
 import { appConfig } from '../fixtures/appConfig';
 
 type WriteAction = 'save_draft' | 'submit' | 'request_correction' | 'approve';
@@ -76,12 +76,17 @@ export class TimesheetApi {
 
   async write(payload: WritePayload) {
     const csrfResponse = await this.request.get('/server/auth/csrf.php');
-    expect(csrfResponse.ok()).toBeTruthy();
+    if (!csrfResponse.ok()) {
+      throw new Error(`[TimesheetApi] CSRF token ophalen mislukt (HTTP ${csrfResponse.status()}) voor write(${payload.action}).`);
+    }
     const csrfBody = await csrfResponse.json();
-    expect(csrfBody.csrf_token).toBeTruthy();
+    const csrfToken = String(csrfBody && csrfBody.csrf_token || '').trim();
+    if (!csrfToken) {
+      throw new Error(`[TimesheetApi] CSRF token ontbreekt voor write(${payload.action}).`);
+    }
 
     const response = await this.request.post('/server/api/timesheets.php', {
-      headers: { 'X-CSRF-Token': csrfBody.csrf_token as string },
+      headers: { 'X-CSRF-Token': csrfToken },
       data: this.toServerPayload(payload),
     });
 
@@ -106,11 +111,17 @@ export class TimesheetApi {
     const isolated = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
     try {
       const csrfResponse = await isolated.get('/server/auth/csrf.php');
-      expect(csrfResponse.ok()).toBeTruthy();
+      if (!csrfResponse.ok()) {
+        throw new Error(`[TimesheetApi] CSRF token ophalen zonder sessie mislukt (HTTP ${csrfResponse.status()}).`);
+      }
       const csrfBody = await csrfResponse.json();
+      const csrfToken = String(csrfBody && csrfBody.csrf_token || '').trim();
+      if (!csrfToken) {
+        throw new Error('[TimesheetApi] CSRF token ontbreekt in anonieme context.');
+      }
 
       const response = await isolated.post('/server/api/timesheets.php', {
-        headers: { 'X-CSRF-Token': csrfBody.csrf_token as string },
+        headers: { 'X-CSRF-Token': csrfToken },
         data: this.toServerPayload(payload),
       });
 
@@ -134,12 +145,17 @@ export class TimesheetApi {
 
   async requestCorrection(payload: ReviewPayload) {
     const csrfResponse = await this.request.get('/server/auth/csrf.php');
-    expect(csrfResponse.ok()).toBeTruthy();
+    if (!csrfResponse.ok()) {
+      throw new Error(`[TimesheetApi] CSRF token ophalen mislukt (HTTP ${csrfResponse.status()}) voor ${payload.action}.`);
+    }
     const csrfBody = await csrfResponse.json();
-    expect(csrfBody.csrf_token).toBeTruthy();
+    const csrfToken = String(csrfBody && csrfBody.csrf_token || '').trim();
+    if (!csrfToken) {
+      throw new Error(`[TimesheetApi] CSRF token ontbreekt voor ${payload.action}.`);
+    }
 
     const response = await this.request.post('/server/api/timesheets.php', {
-      headers: { 'X-CSRF-Token': csrfBody.csrf_token as string },
+      headers: { 'X-CSRF-Token': csrfToken },
       data: this.toReviewServerPayload(payload),
     });
 

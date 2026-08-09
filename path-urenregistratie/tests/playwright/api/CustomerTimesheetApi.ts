@@ -1,4 +1,4 @@
-import { expect, type APIRequestContext } from '@playwright/test';
+import type { APIRequestContext } from '@playwright/test';
 
 type CustomerTimesheetWriteAction =
   | 'save_draft'
@@ -28,10 +28,15 @@ export class CustomerTimesheetApi {
 
   async csrfToken() {
     const response = await this.request.get('/server/auth/csrf.php');
-    expect(response.ok()).toBeTruthy();
+    if (!response.ok()) {
+      throw new Error(`[CustomerTimesheetApi] CSRF token ophalen mislukt (HTTP ${response.status()}).`);
+    }
     const body = await response.json();
-    expect(body.csrf_token).toBeTruthy();
-    return body.csrf_token as string;
+    const token = String(body && body.csrf_token || '').trim();
+    if (!token) {
+      throw new Error('[CustomerTimesheetApi] CSRF endpoint gaf geen token terug.');
+    }
+    return token;
   }
 
   async read(period: string, employeeId?: number, assignmentId?: number) {

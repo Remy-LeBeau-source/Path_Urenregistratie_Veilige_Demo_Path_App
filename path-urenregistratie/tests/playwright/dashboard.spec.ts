@@ -3,7 +3,7 @@ import { captureConsoleErrors, clearConsoleErrors } from './fixtures/consoleErro
 import { DashboardPage } from './pages/DashboardPage';
 import { LoginPage } from './pages/LoginPage';
 
-test('[DASH-001] admin dashboard opent zonder console errors', async ({ page }) => {
+test('[DASH-H-001] admin dashboard opent zonder console errors', async ({ page }) => {
   const consoleErrors = captureConsoleErrors(page);
   const loginPage = new LoginPage(page);
   const dashboardPage = new DashboardPage(page);
@@ -23,7 +23,7 @@ test('[DASH-001] admin dashboard opent zonder console errors', async ({ page }) 
   });
 });
 
-test('[DASH-002] employee dashboard opent zonder console errors', async ({ page }) => {
+test('[DASH-H-002] employee dashboard opent zonder console errors', async ({ page }) => {
   const consoleErrors = captureConsoleErrors(page);
   const loginPage = new LoginPage(page);
   const dashboardPage = new DashboardPage(page);

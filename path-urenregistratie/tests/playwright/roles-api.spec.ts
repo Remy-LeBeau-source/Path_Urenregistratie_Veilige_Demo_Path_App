@@ -3,7 +3,7 @@ import { AuthApi } from './api/AuthApi';
 import { ReadApi } from './api/ReadApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
 
-test('[ROLE-001] zonder sessie geeft protected API 401', async ({ request }) => {
+test('[ROLE-N-001] zonder sessie geeft protected API 401', async ({ request }) => {
   await test.step('Given er is geen actieve sessie', async () => {
     // Geen login: request-context is anoniem.
   });
@@ -22,7 +22,7 @@ test('[ROLE-001] zonder sessie geeft protected API 401', async ({ request }) => 
   });
 });
 
-test('[ROLE-002] admin ziet volledige data', async ({ request }) => {
+test('[ROLE-H-001] admin ziet volledige data', async ({ request }) => {
   const authApi = new AuthApi(request);
   const readApi = new ReadApi(request);
 
@@ -49,10 +49,12 @@ test('[ROLE-002] admin ziet volledige data', async ({ request }) => {
     expect(invoices.items.length).toBeGreaterThan(0);
   });
 
-  await authApi.logout();
+  await test.step('And de sessie wordt afgesloten zodat volgende scenario\'s schoon starten', async () => {
+    await authApi.logout();
+  });
 });
 
-test('[ROLE-003] employee ziet alleen eigen data', async ({ request }) => {
+test('[ROLE-H-002] employee ziet alleen eigen data', async ({ request }) => {
   const authApi = new AuthApi(request);
   const readApi = new ReadApi(request);
 
@@ -78,5 +80,7 @@ test('[ROLE-003] employee ziet alleen eigen data', async ({ request }) => {
     }
   });
 
-  await authApi.logout();
+  await test.step('And de sessie wordt afgesloten zodat volgende scenario\'s schoon starten', async () => {
+    await authApi.logout();
+  });
 });

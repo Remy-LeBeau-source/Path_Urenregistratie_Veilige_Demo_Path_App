@@ -1,14 +1,19 @@
-import { expect, type APIRequestContext } from '@playwright/test';
+import type { APIRequestContext } from '@playwright/test';
 
 export class AuthApi {
   constructor(private readonly request: APIRequestContext) {}
 
   async csrfToken() {
     const response = await this.request.get('/server/auth/csrf.php');
-    expect(response.ok()).toBeTruthy();
+    if (!response.ok()) {
+      throw new Error(`[AuthApi] CSRF token ophalen mislukt (HTTP ${response.status()}). Nodig voor write/logout calls.`);
+    }
     const body = await response.json();
-    expect(body.csrf_token).toBeTruthy();
-    return body.csrf_token as string;
+    const token = String(body && body.csrf_token || '').trim();
+    if (!token) {
+      throw new Error('[AuthApi] CSRF endpoint gaf geen csrf_token terug.');
+    }
+    return token;
   }
 
   async login(email: string, password: string) {
@@ -17,8 +22,12 @@ export class AuthApi {
       headers: { 'X-CSRF-Token': csrfToken },
       data: { email, password },
     });
-    expect(response.ok()).toBeTruthy();
-    return response.json();
+    const body = await response.json();
+    if (!response.ok()) {
+      const message = String(body && body.message || body && body.error || 'onbekende loginfout');
+      throw new Error(`[AuthApi] Login mislukt voor ${email} (HTTP ${response.status()}): ${message}`);
+    }
+    return body;
   }
 
   async me() {
@@ -34,7 +43,11 @@ export class AuthApi {
     const response = await this.request.post('/server/auth/logout.php', {
       headers: { 'X-CSRF-Token': csrfToken },
     });
-    expect(response.ok()).toBeTruthy();
-    return response.json();
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok()) {
+      const message = String(body && body.message || body && body.error || 'onbekende logoutfout');
+      throw new Error(`[AuthApi] Logout mislukt (HTTP ${response.status()}): ${message}`);
+    }
+    return body;
   }
 }

@@ -3,7 +3,7 @@ import { AuthApi } from './api/AuthApi';
 import { appConfig } from './fixtures/appConfig';
 import { LoginPage } from './pages/LoginPage';
 
-test('[AUTH-001] Admin logt in en auth/me geeft de juiste gebruiker terug', async ({ page }) => {
+test('[AUTH-H-001] Admin logt in en auth/me geeft de juiste gebruiker terug', async ({ page }) => {
   const authApi = new AuthApi(page.context().request);
   const loginPage = new LoginPage(page);
 
@@ -23,7 +23,7 @@ test('[AUTH-001] Admin logt in en auth/me geeft de juiste gebruiker terug', asyn
   });
 });
 
-test('[AUTH-002] Medewerker logt in en auth/me geeft de juiste gebruiker terug', async ({ page }) => {
+test('[AUTH-H-002] Medewerker logt in en auth/me geeft de juiste gebruiker terug', async ({ page }) => {
   const authApi = new AuthApi(page.context().request);
   const loginPage = new LoginPage(page);
 
@@ -43,7 +43,7 @@ test('[AUTH-002] Medewerker logt in en auth/me geeft de juiste gebruiker terug',
   });
 });
 
-test('[AUTH-003] Gebruiker logt uit en auth/me geeft authenticated false terug', async ({ page }) => {
+test('[AUTH-H-003] Gebruiker logt uit en auth/me geeft authenticated false terug', async ({ page }) => {
   const authApi = new AuthApi(page.context().request);
   const loginPage = new LoginPage(page);
 

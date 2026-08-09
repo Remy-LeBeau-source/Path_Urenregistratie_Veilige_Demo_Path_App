@@ -37,7 +37,7 @@ async function findWritablePeriod(timesheetApi: TimesheetApi): Promise<string> {
 }
 
 test.describe('timesheet review flow api', () => {
-  test('[TS-REV-API-001] admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking', async ({ request }) => {
+  test('[TS-REV-API-H-001] admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking', async ({ request }) => {
     const authApi = new AuthApi(request);
     const timesheetApi = new TimesheetApi(request);
 
@@ -80,7 +80,9 @@ test.describe('timesheet review flow api', () => {
     const employeeId = Number(submittedRead.body?.employee_id || 0);
     expect(employeeId).toBeGreaterThan(0);
 
-    await authApi.logout();
+    await test.step('And cleanup: wissel naar administrator-context voor reviewstappen', async () => {
+      await authApi.logout();
+    });
 
     const adminLogin = await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
     expect(adminLogin.user.role).toBe('administrator');
@@ -126,7 +128,9 @@ test.describe('timesheet review flow api', () => {
     expect(invalidSecondCorrection.body.ok).toBe(false);
     expect(invalidSecondCorrection.body.error).toBe('invalid-timesheet-transition');
 
-    await authApi.logout();
+    await test.step('And cleanup: wissel terug naar medewerker-context voor herindiening', async () => {
+      await authApi.logout();
+    });
 
     await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
 
@@ -158,7 +162,9 @@ test.describe('timesheet review flow api', () => {
 
     const resubmittedVersion = Number(resubmitted.body.timesheet.version || 0);
 
-    await authApi.logout();
+    await test.step('And cleanup: wissel opnieuw naar administrator-context voor goedkeuring', async () => {
+      await authApi.logout();
+    });
 
     await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
 
@@ -197,6 +203,8 @@ test.describe('timesheet review flow api', () => {
     expect(latestCorrection.resubmitted_at).toBeTruthy();
     expect(readBack.body.last_audit?.event_type).toBe('timesheet.approved');
 
-    await authApi.logout();
+    await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {
+      await authApi.logout();
+    });
   });
 });

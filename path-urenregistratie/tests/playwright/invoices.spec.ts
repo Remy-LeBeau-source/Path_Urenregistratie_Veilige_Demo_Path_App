@@ -13,7 +13,7 @@ async function readInvoicesInBrowser(page: import('@playwright/test').Page) {
   });
 }
 
-test('[INV-001] admin facturen zichtbaar en console errors 0', async ({ page }) => {
+test('[INV-H-001] admin facturen zichtbaar en console errors 0', async ({ page }) => {
   const consoleErrors = captureConsoleErrors(page);
   const loginPage = new LoginPage(page);
   const invoicesPage = new InvoicesPage(page);
@@ -34,7 +34,7 @@ test('[INV-001] admin facturen zichtbaar en console errors 0', async ({ page }) 
   });
 });
 
-test('[INV-002] employee facturen zichtbaar maar beperkt en console errors 0', async ({ page }) => {
+test('[INV-N-001] employee facturen zichtbaar maar beperkt en console errors 0', async ({ page }) => {
   const consoleErrors = captureConsoleErrors(page);
   const loginPage = new LoginPage(page);
 
@@ -58,7 +58,7 @@ test('[INV-002] employee facturen zichtbaar maar beperkt en console errors 0', a
   });
 });
 
-test('[INV-003] periodefilter juli en augustus werkt', async ({ page }) => {
+test('[INV-H-002] periodefilter juli en augustus werkt', async ({ page }) => {
   const loginPage = new LoginPage(page);
   const invoicesPage = new InvoicesPage(page);
 

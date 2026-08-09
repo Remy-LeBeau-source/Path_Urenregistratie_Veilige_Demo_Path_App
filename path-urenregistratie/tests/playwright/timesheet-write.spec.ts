@@ -37,18 +37,18 @@ async function findWritablePeriod(timesheetApi: TimesheetApi): Promise<string> {
 }
 
 test.describe('timesheet write api', () => {
-  test('[TS-API-001] employee save draft, read back, submit, audit en gesloten status guard', async ({ request }) => {
+  test('[TS-API-H-001] employee save draft, read back, submit, audit en gesloten status guard', async ({ request }) => {
     const authApi = new AuthApi(request);
     const timesheetApi = new TimesheetApi(request);
 
-    await test.step('login employee', async () => {
+    await test.step('Given de medewerker is ingelogd', async () => {
       const login = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
       expect(login.user.role).toBe('employee');
     });
 
-    const period = await test.step('kies herhaalbare testperiode', async () => findWritablePeriod(timesheetApi));
+    const period = await test.step('When een herhaalbare schrijfbare testperiode is geselecteerd', async () => findWritablePeriod(timesheetApi));
 
-    await test.step('save_draft werkt', async () => {
+    await test.step('Then save_draft werkt en zet status op draft', async () => {
       const draftWrite = await timesheetApi.write({
         action: 'save_draft',
         period,
@@ -66,7 +66,7 @@ test.describe('timesheet write api', () => {
       expect(draftWrite.body.audit_event).toBe('timesheet.draft_saved');
     });
 
-    await test.step('read back draft werkt', async () => {
+    await test.step('Then read back van draft bevat dagregels en auditdata', async () => {
       const readBackDraft = await timesheetApi.read(period);
       expect(readBackDraft.status).toBe(200);
       expect(readBackDraft.body.ok).toBe(true);
@@ -78,7 +78,7 @@ test.describe('timesheet write api', () => {
       expect(readBackDraft.body.last_audit.event_type).toBe('timesheet.draft_saved');
     });
 
-    await test.step('submit werkt met audit event', async () => {
+    await test.step('When submit wordt uitgevoerd met expected_version', async () => {
       const beforeSubmit = await timesheetApi.read(period);
       const currentVersion = Number(beforeSubmit.body?.timesheet?.version || 0);
 
@@ -108,7 +108,7 @@ test.describe('timesheet write api', () => {
       expect(readBackSubmitted.body.last_audit.event_type).toBe('timesheet.submitted');
     });
 
-    await test.step('gesloten status kan niet opnieuw worden gewijzigd', async () => {
+    await test.step('Then een gesloten status kan niet opnieuw als draft worden opgeslagen', async () => {
       const submitted = await timesheetApi.read(period);
       const submittedVersion = Number(submitted.body?.timesheet?.version || 0);
 
@@ -128,10 +128,12 @@ test.describe('timesheet write api', () => {
       expect(lockedWrite.body.error).toBe('timesheet-already-submitted');
     });
 
-    await authApi.logout();
+    await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {
+      await authApi.logout();
+    });
   });
 
-  test('[TS-API-002] employee mag geen andere medewerker schrijven', async ({ request }) => {
+  test('[TS-API-N-001] employee mag geen andere medewerker schrijven', async ({ request }) => {
     const authApi = new AuthApi(request);
     const timesheetApi = new TimesheetApi(request);
 
@@ -155,10 +157,12 @@ test.describe('timesheet write api', () => {
       expect(forbidden.body.error).toBe('forbidden-employee-scope');
     });
 
-    await authApi.logout();
+    await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {
+      await authApi.logout();
+    });
   });
 
-  test('[TS-API-003] write zonder csrf geeft 403', async ({ request }) => {
+  test('[TS-API-N-002] write zonder csrf geeft 403', async ({ request }) => {
     const authApi = new AuthApi(request);
     const timesheetApi = new TimesheetApi(request);
 
@@ -180,10 +184,12 @@ test.describe('timesheet write api', () => {
       expect(noCsrf.body.ok).toBe(false);
     });
 
-    await authApi.logout();
+    await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {
+      await authApi.logout();
+    });
   });
 
-  test('[TS-API-004] write zonder sessie geeft 401', async ({ request }) => {
+  test('[TS-API-N-003] write zonder sessie geeft 401', async ({ request }) => {
     const timesheetApi = new TimesheetApi(request);
 
     await test.step('Given er is geen actieve sessie', async () => {
@@ -205,7 +211,7 @@ test.describe('timesheet write api', () => {
     });
   });
 
-  test('[TS-API-005] ongeldige payload geeft 400', async ({ request }) => {
+  test('[TS-API-N-004] ongeldige payload geeft 400', async ({ request }) => {
     const authApi = new AuthApi(request);
     const timesheetApi = new TimesheetApi(request);
 
@@ -230,6 +236,8 @@ test.describe('timesheet write api', () => {
       expect(invalidPayload.body.error).toBe('invalid-payload');
     });
 
-    await authApi.logout();
+    await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {
+      await authApi.logout();
+    });
   });
 });
