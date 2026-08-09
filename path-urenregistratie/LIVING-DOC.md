@@ -195,6 +195,18 @@ Scenario's:
 - [USR-N-006] Admin kan zichzelf niet deactiveren
 - [USR-N-007] Dubbel deactiveren geeft 409
 
+### Auditlog API (Fase 16)
+
+Spec: tests/playwright/audit-log.spec.ts
+
+Scenario's:
+- [AUD-H-001] Admin kan auditlog ophalen
+- [AUD-H-002] Auditlog filtert op entity_type
+- [AUD-H-003] Auditlog filtert op event_type
+- [AUD-H-004] Auditlog bevat geen wachtwoorden of tokens in event_data
+- [AUD-N-005] Anonieme gebruiker krijgt 401 op auditlog
+- [AUD-N-006] Medewerker mag auditlog niet lezen
+
 ## Technische mapping
 
 Zie de volledige mapping in:

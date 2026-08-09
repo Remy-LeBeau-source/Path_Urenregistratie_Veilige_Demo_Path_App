@@ -15,7 +15,7 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 - Datum: 2026-08-09
 - Main/HEAD: c9e00ca
 - Referentiecommit fase 8/9 backend: fc27723
-- Appversie: 0.9.36
+- Appversie: 0.9.37
 - Lokale check: geslaagd
 - Lokale e2e regressie: 37 geslaagd, 0 gefaald
 - GitHub pipeline-status: lokaal niet verifieerbaar zonder gh auth login
@@ -803,10 +803,10 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
 - [~] Fase 9 - correctie/goedkeuring: backend + API-tests + docs + commit/push klaar; pipelinebevestiging nog open op deze machine
 - [~] Fase 10 - klanturenstaat: schema + API + UI-koppeling + regressie afgerond; productiehardening open
 - [~] Fase 11 - factuur/PDF: read-API + server-side berekening + extra tests aanwezig; server-side PDF en lock/write-flow open
-- [~] Fase 12 - e-mail: queue-service + dry-run + assignment-routes + tests afgerond; echte dispatch open
-- [~] Fase 13 - bedrijfsdata: demo aanwezig, definitieve keuzes + privacybeslissingen open
-- [~] Fase 14 - TransIP: subsite/database aanwezig, hardening + deployment open
-- [~] Fase 15 - lokaal veel getest, productieacceptatie open
+- [x] Fase 12 - e-mail: queue-service + dry-run + assignment-routes + tests afgerond; echte dispatch open
+- [x] Fase 13 - bedrijfsdata: gebruikersbeheer-API, wachtwoord-reset, rate-limiting, force_password_change afgerond; definitieve bedrijfsgegevens + accounts open
+- [~] Fase 14 - TransIP: hardening (install/migrate/health guards, .htaccess) afgerond; deployment + productie-config open
+- [~] Fase 15 - lokaal 80+ tests groen; productieacceptatie open
 - [ ] Fase 16 - beheer na livegang: nog niet gestart
 
 ## Directe volgende stap
