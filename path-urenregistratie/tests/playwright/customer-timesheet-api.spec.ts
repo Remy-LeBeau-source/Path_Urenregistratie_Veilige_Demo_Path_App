@@ -126,7 +126,7 @@ test.describe('customer timesheet api', () => {
     });
   });
 
-  test('[CTS-API-N-002] employee kan geen klanturenstaat voor andere medewerker wijzigen', async ({ request }) => {
+  test('[CTS-API-N-006] employee kan geen klanturenstaat voor andere medewerker wijzigen', async ({ request }) => {
     const authApi = new AuthApi(request);
     const customerApi = new CustomerTimesheetApi(request);
 
@@ -158,7 +158,7 @@ test.describe('customer timesheet api', () => {
     });
   });
 
-  test('[CTS-API-N-003] employee kan geen admin reviewactie uitvoeren op klanturenstaat', async ({ request }) => {
+  test('[CTS-API-N-007] employee kan geen admin reviewactie uitvoeren op klanturenstaat', async ({ request }) => {
     const authApi = new AuthApi(request);
     const customerApi = new CustomerTimesheetApi(request);
 
@@ -272,7 +272,7 @@ test.describe('customer timesheet api', () => {
     });
   });
 
-  test('[CTS-API-N-001] employee krijgt 400 bij ongeldig bestandstype', async ({ request }) => {
+  test('[CTS-API-N-005] employee krijgt 400 bij ongeldig bestandstype', async ({ request }) => {
     const authApi = new AuthApi(request);
     const customerApi = new CustomerTimesheetApi(request);
 
@@ -305,3 +305,4 @@ test.describe('customer timesheet api', () => {
     });
   });
 });
+

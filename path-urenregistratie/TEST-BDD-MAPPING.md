@@ -4,13 +4,15 @@
 
 ## Case ID-conventie
 
-- Ieder uitvoerbaar Playwright testgeval krijgt een unieke ID in de titel met duidelijke flowmarkering, bijvoorbeeld `[AUTH-H-001]`, `[INV-N-002]` of `[TS-REV-UI-H-002]`.
+- Ieder uitvoerbaar Playwright testgeval krijgt een unieke ID in de titel met duidelijke flowmarkering, bijvoorbeeld `[AUTH-H-001]`, `[INV-N-006]` of `[TS-REV-UI-H-009]`.
 - `-H-` staat voor happy flow en `-N-` staat voor negative flow.
 - Feature-scenario's dragen dezelfde ID zodat documentatie en testreport direct 1-op-1 te koppelen zijn.
+- Nummering loopt per prefix oplopend bij nieuwe cases (bijv. `INV-H-004` na `INV-H-003` en `INV-N-008` na `INV-N-007`).
+- Gebruik geen hergebruik of herschikking van bestaande IDs; verwijderde cases laten desnoods een gat achter om historische traceerbaarheid te behouden.
 
 - [tests/playwright/features/auth.feature](tests/playwright/features/auth.feature) → [tests/playwright/steps/auth.steps.ts](tests/playwright/steps/auth.steps.ts) → [tests/playwright/auth.spec.ts](tests/playwright/auth.spec.ts)
 - [tests/playwright/features/dashboard.feature](tests/playwright/features/dashboard.feature) → [tests/playwright/steps/dashboard.steps.ts](tests/playwright/steps/dashboard.steps.ts) → [tests/playwright/dashboard.spec.ts](tests/playwright/dashboard.spec.ts)
-- [tests/playwright/features/invoices.feature](tests/playwright/features/invoices.feature) → [tests/playwright/steps/invoices.steps.ts](tests/playwright/steps/invoices.steps.ts) → [tests/playwright/invoices.spec.ts](tests/playwright/invoices.spec.ts)
+- [tests/playwright/features/invoices.feature](tests/playwright/features/invoices.feature) → [tests/playwright/steps/invoices.steps.ts](tests/playwright/steps/invoices.steps.ts) → [tests/playwright/invoices.spec.ts](tests/playwright/invoices.spec.ts), [tests/playwright/invoice-lock.spec.ts](tests/playwright/invoice-lock.spec.ts)
 - [tests/playwright/features/roles-api.feature](tests/playwright/features/roles-api.feature) → [tests/playwright/steps/roles-api.steps.ts](tests/playwright/steps/roles-api.steps.ts) → [tests/playwright/roles-api.spec.ts](tests/playwright/roles-api.spec.ts)
 - [tests/playwright/features/timesheets.feature](tests/playwright/features/timesheets.feature) → [tests/playwright/steps/timesheets.steps.ts](tests/playwright/steps/timesheets.steps.ts) → [tests/playwright/timesheet-write.spec.ts](tests/playwright/timesheet-write.spec.ts), [tests/playwright/timesheet-review-flow.spec.ts](tests/playwright/timesheet-review-flow.spec.ts), [tests/playwright/timesheet-review-ui.spec.ts](tests/playwright/timesheet-review-ui.spec.ts)
 - [tests/playwright/features/customer-timesheets.feature](tests/playwright/features/customer-timesheets.feature) → [tests/playwright/steps/customer-timesheets.steps.ts](tests/playwright/steps/customer-timesheets.steps.ts) → [tests/playwright/customer-timesheet-api.spec.ts](tests/playwright/customer-timesheet-api.spec.ts)
@@ -26,3 +28,4 @@ Een echte BDD-runner kan later bewust worden toegevoegd als die extra laag nodig
 ## Geen Cypress
 
 Dit project gebruikt geen Cypress. Er is geen `cypress/` map, geen Cypress-config en geen Cypress-runner onderdeel van deze setup.
+

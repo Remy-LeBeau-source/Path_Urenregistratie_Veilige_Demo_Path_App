@@ -27,7 +27,7 @@ async function fillFirstTwoHours(page: Page, first: string, second: string) {
   await inputs.nth(1).fill(second);
 }
 
-test('[TS-REV-UI-H-001] browserflow: admin vraagt correctie, medewerker dient opnieuw in, admin keurt goed', async ({ page }) => {
+test('[TS-REV-UI-H-008] browserflow: admin vraagt correctie, medewerker dient opnieuw in, admin keurt goed', async ({ page }) => {
   const loginPage = new LoginPage(page);
   let writeVersion = 100;
 
@@ -144,3 +144,4 @@ test('[TS-REV-UI-H-001] browserflow: admin vraagt correctie, medewerker dient op
   await setPeriod(page, PERIOD_KEY);
   await expect(page.locator('#timesheet-status')).toHaveText('Goedgekeurd');
 });
+

@@ -3,7 +3,7 @@ import { AuthApi } from './api/AuthApi';
 import { ReadApi } from './api/ReadApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
 
-test('[ROLE-N-001] zonder sessie geeft protected API 401', async ({ request }) => {
+test('[ROLE-N-003] zonder sessie geeft protected API 401', async ({ request }) => {
   await test.step('Given er is geen actieve sessie', async () => {
     // Geen login: request-context is anoniem.
   });
@@ -84,3 +84,4 @@ test('[ROLE-H-002] employee ziet alleen eigen data', async ({ request }) => {
     await authApi.logout();
   });
 });
+

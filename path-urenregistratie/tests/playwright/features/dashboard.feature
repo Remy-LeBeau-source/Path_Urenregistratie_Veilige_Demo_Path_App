@@ -5,8 +5,8 @@ Feature: Dashboardweergave in Path Uren & Facturatie
 # Hash-overzicht testcase-doel:
 # [DASH-H-001] Administrator ziet backoffice werkvoorraad.
 # [DASH-H-002] Medewerker ziet alleen eigen dashboardscope.
-# [DASH-N-001] Dashboard blijft bruikbaar met API/fallbackgedrag.
-# [DASH-N-002] Dashboard laadt zonder console/page errors.
+# [DASH-N-003] Dashboard blijft bruikbaar met API/fallbackgedrag.
+# [DASH-N-004] Dashboard laadt zonder console/page errors.
 
   # Happy flows
 
@@ -20,10 +20,11 @@ Feature: Dashboardweergave in Path Uren & Facturatie
 
   # Negative flows
 
-  Scenario: [DASH-N-001] Dashboard gebruikt API-data met veilige fallback
+  Scenario: [DASH-N-003] Dashboard gebruikt API-data met veilige fallback
     Given de dashboardweergave van Path Uren & Facturatie met read-only databronnen
     Then gebruikt het dashboard API-data wanneer beschikbaar en fallback-data wanneer nodig zodat de pagina bruikbaar blijft bij storingen
 
-  Scenario: [DASH-N-002] Dashboard laadt zonder console of page errors
+  Scenario: [DASH-N-004] Dashboard laadt zonder console of page errors
     Given een geldige Path login in auth-modus
     Then laadt het dashboard zonder console- of page-errors na inloggen zodat frontendstabiliteit aantoonbaar is
+

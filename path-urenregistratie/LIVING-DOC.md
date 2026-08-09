@@ -66,7 +66,7 @@ Scenario's:
 - [AUTH-H-001] Administrator logt succesvol in en ziet backoffice
 - [AUTH-H-002] Medewerker logt succesvol in en ziet alleen eigen omgeving
 - [AUTH-H-003] Ingelogde gebruiker kan veilig uitloggen
-- [AUTH-N-001] Auth me endpoint meldt geen sessie na uitloggen
+- [AUTH-N-004] Auth me endpoint meldt geen sessie na uitloggen
 
 ### Dashboard
 
@@ -75,8 +75,8 @@ Feature: tests/playwright/features/dashboard.feature
 Scenario's:
 - [DASH-H-001] Administrator ziet open werkvoorraad en beheeropties
 - [DASH-H-002] Medewerker ziet alleen eigen dashboardinformatie
-- [DASH-N-001] Dashboard gebruikt API-data met veilige fallback
-- [DASH-N-002] Dashboard laadt zonder console of page errors
+- [DASH-N-003] Dashboard gebruikt API-data met veilige fallback
+- [DASH-N-004] Dashboard laadt zonder console of page errors
 
 ### Invoices
 
@@ -86,9 +86,15 @@ Scenario's:
 - [INV-H-001] Administrator ziet facturen per gekozen periode
 - [INV-H-002] Periodefilter wisselt correct tussen juli en augustus 2026
 - [INV-H-003] Open facturen gebruiken server-side berekende bedragen
-- [INV-N-001] Medewerker ziet alleen eigen facturen en geen collega-data
-- [INV-N-002] Facturenscherm laadt zonder console of page errors
-- [INV-N-003] Ongeldige periodefilter wordt afgewezen met een duidelijke 400-validatiefout
+- [INV-H-004] Administrator lockt approved urenstaat naar definitieve immutable factuur
+- [INV-N-005] Medewerker ziet alleen eigen facturen en geen collega-data
+- [INV-N-006] Facturenscherm laadt zonder console of page errors
+- [INV-N-007] Ongeldige periodefilter wordt afgewezen met een duidelijke 400-validatiefout
+- [INV-N-008] Anonieme gebruiker kan factuur niet locken
+- [INV-N-009] Medewerker mag factuur niet finaliseren
+- [INV-N-010] Niet-goedgekeurde urenstaat kan niet worden gelockt
+- [INV-N-011] Tweede lock-oproep op dezelfde factuur wordt geblokkeerd
+- [INV-N-012] Gelijktijdige lock-requests leveren exact een winnaar
 
 ### Roles API
 
@@ -97,8 +103,8 @@ Feature: tests/playwright/features/roles-api.feature
 Scenario's:
 - [ROLE-H-001] Administrator heeft volledige read-only inzage
 - [ROLE-H-002] Medewerker ziet alleen eigen afgebakende gegevens
-- [ROLE-N-001] Protected read-only endpoints blokkeren anonieme toegang
-- [ROLE-N-002] Medewerker krijgt geen brede medewerkers- of mailingdata
+- [ROLE-N-003] Protected read-only endpoints blokkeren anonieme toegang
+- [ROLE-N-004] Medewerker krijgt geen brede medewerkers- of mailingdata
 
 ### Timesheet write API
 
@@ -109,14 +115,14 @@ Scenario's:
 - [TS-API-H-002] Medewerker leest volledige conceptinhoud terug
 - [TS-API-H-003] Medewerker dient eigen uren in met versieverhoging
 - [TS-API-H-004] Indienen schrijft audit-event voor traceerbaarheid
-- [TS-REV-API-H-001] Administrator vraagt correctie aan met optimistic locking
-- [TS-REV-API-H-002] Medewerker dient na correctieverzoek opnieuw in
-- [TS-REV-API-H-003] Administrator keurt heringediende uren goed met version check
-- [TS-REV-UI-H-001] Administrator vraagt via de browser-UI een correctie aan
-- [TS-REV-UI-H-002] Medewerker dient na UI-correctie opnieuw in en administrator keurt goed
-- [TS-API-N-001] Medewerker kan geen uren van een andere medewerker aanpassen
-- [TS-API-N-002] Ingediende urenstaat kan niet opnieuw als concept worden opgeslagen
-- [TS-REV-API-N-001] Verouderde expected_version wordt geblokkeerd
+- [TS-REV-API-H-005] Administrator vraagt correctie aan met optimistic locking
+- [TS-REV-API-H-006] Medewerker dient na correctieverzoek opnieuw in
+- [TS-REV-API-H-007] Administrator keurt heringediende uren goed met version check
+- [TS-REV-UI-H-008] Administrator vraagt via de browser-UI een correctie aan
+- [TS-REV-UI-H-009] Medewerker dient na UI-correctie opnieuw in en administrator keurt goed
+- [TS-API-N-010] Medewerker kan geen uren van een andere medewerker aanpassen
+- [TS-API-N-011] Ingediende urenstaat kan niet opnieuw als concept worden opgeslagen
+- [TS-REV-API-N-012] Verouderde expected_version wordt geblokkeerd
 
 ### Customer timesheet API
 
@@ -127,9 +133,9 @@ Scenario's:
 - [CTS-API-H-002] Medewerker dient klanturenstaat in en leest terug
 - [CTS-API-H-003] Administrator keurt goed en vraagt daarna resubmit
 - [CTS-API-H-004] Medewerker markeert als rechtstreeks gemaild en herstelt daarna naar missing
-- [CTS-API-N-001] Ongeldig bestandstype wordt geblokkeerd
-- [CTS-API-N-002] Medewerker kan geen andere employee scope forceren
-- [CTS-API-N-003] Medewerker kan geen admin-reviewacties uitvoeren
+- [CTS-API-N-005] Ongeldig bestandstype wordt geblokkeerd
+- [CTS-API-N-006] Medewerker kan geen andere employee scope forceren
+- [CTS-API-N-007] Medewerker kan geen admin-reviewacties uitvoeren
 
 ## Technische mapping
 
@@ -143,7 +149,8 @@ Bij iedere functionele wijziging:
 1. Update eerst de native Playwright spec.
 2. Werk daarna de bijbehorende feature scenario's bij.
 3. Werk vervolgens TEST-BDD-MAPPING.md bij als paden veranderen.
-4. Draai minimaal:
+4. Houd case-IDs per domein/prefix oplopend (`...-001`, `...-002`, `...-003`, ...) en hergebruik bestaande IDs niet.
+5. Draai minimaal:
    - npm run test:e2e
    - npm run check
 
@@ -154,3 +161,4 @@ Bij iedere functionele wijziging:
 - Geen vervanging van de Playwright testresultaten.
 
 Deze living doc is een leeslaag bovenop native Playwright.
+

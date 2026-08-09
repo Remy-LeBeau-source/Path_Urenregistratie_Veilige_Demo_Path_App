@@ -2,67 +2,212 @@
 
 declare(strict_types=1);
 
-require __DIR__ . '/common.php';
+require_once __DIR__ . '/../auth/session.php';
+require_once __DIR__ . '/../security/csrf.php';
+require_once __DIR__ . '/../security/validation.php';
 
-api_require_get_only();
-$pdo = api_auth_pdo();
-$currentUser = api_require_authenticated_read_user($pdo);
-$isEmployee = (string)$currentUser['role'] === 'employee';
-$employee = $isEmployee ? api_require_employee_context($pdo, $currentUser) : null;
-$companyId = (int)$currentUser['company_id'];
+header('Content-Type: application/json; charset=utf-8');
+auth_apply_cors_headers(auth_try_load_raw_config(), 'GET, POST, OPTIONS', 'Content-Type, X-CSRF-Token');
 
-$period = isset($_GET['period']) ? trim((string)$_GET['period']) : null;
-$year = null;
-$month = null;
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}
 
-if ($period !== null && $period !== '') {
-    if (!preg_match('/^(\\d{4})-(\\d{2})$/', $period, $matches)) {
-        api_send_json([
+$config = auth_load_raw_config();
+auth_start_session_secure($config);
+$pdo = auth_pdo($config);
+$currentUser = auth_current_user($pdo);
+auth_require_role(['administrator', 'employee'], $currentUser);
+
+function invoices_month_name(int $month): string
+{
+    $names = [
+        1 => 'januari',
+        2 => 'februari',
+        3 => 'maart',
+        4 => 'april',
+        5 => 'mei',
+        6 => 'juni',
+        7 => 'juli',
+        8 => 'augustus',
+        9 => 'september',
+        10 => 'oktober',
+        11 => 'november',
+        12 => 'december',
+    ];
+
+    return $names[$month] ?? sprintf('%02d', $month);
+}
+
+function invoices_apply_template(string $template, int $year, int $month): string
+{
+    $resolved = str_replace(
+        ['{jaar}', '{maand}', '{month}', '{year}'],
+        [(string)$year, invoices_month_name($month), sprintf('%02d', $month), (string)$year],
+        $template
+    );
+
+    $resolved = trim($resolved);
+    if ($resolved === '') {
+        return sprintf('INV-%d-%s', $year, invoices_month_name($month));
+    }
+
+    return $resolved;
+}
+
+function invoices_parse_period(?string $period): array
+{
+    $raw = trim((string)$period);
+    if ($raw === '') {
+        return [
+            'has_filter' => false,
+            'period' => null,
+            'year' => null,
+            'month' => null,
+        ];
+    }
+
+    if (!preg_match('/^(\d{4})-(\d{2})$/', $raw, $matches)) {
+        auth_send_json([
             'ok' => false,
             'error' => 'invalid-period',
-            'message' => "period must match YYYY-MM, e.g. 2026-07"
+            'message' => 'period must match YYYY-MM, e.g. 2026-07',
         ], 400);
     }
+
     $year = (int)$matches[1];
     $month = (int)$matches[2];
     if ($month < 1 || $month > 12) {
-        api_send_json([
+        auth_send_json([
             'ok' => false,
             'error' => 'invalid-period',
-            'message' => "period month must be between 01 and 12"
+            'message' => 'period month must be between 01 and 12',
         ], 400);
     }
+
+    return [
+        'has_filter' => true,
+        'period' => $raw,
+        'year' => $year,
+        'month' => $month,
+    ];
 }
 
-try {
-    $sql = "
+function invoices_employee_context(PDO $pdo, array $currentUser): array
+{
+    $stmt = $pdo->prepare(
+        'SELECT id, company_id, user_id, full_name, active
+         FROM employees
+         WHERE company_id = :company_id AND user_id = :user_id
+         LIMIT 1'
+    );
+    $stmt->execute([
+        ':company_id' => (int)$currentUser['company_id'],
+        ':user_id' => (int)$currentUser['id'],
+    ]);
+    $employee = $stmt->fetch();
+
+    if (!$employee) {
+        auth_send_json([
+            'ok' => false,
+            'error' => 'employee-profile-missing',
+            'message' => 'Employee account is not linked to an employee record.',
+        ], 403);
+    }
+
+    return [
+        'id' => (int)$employee['id'],
+        'company_id' => (int)$employee['company_id'],
+        'full_name' => (string)$employee['full_name'],
+    ];
+}
+
+function invoices_allocate_number(PDO $pdo, int $companyId, string $template, int $year, int $month): string
+{
+    $base = invoices_apply_template($template, $year, $month);
+    $stmt = $pdo->prepare(
+        'SELECT invoice_number
+         FROM invoices
+         WHERE company_id = :company_id AND invoice_number LIKE :prefix
+         FOR UPDATE'
+    );
+    $stmt->execute([
+        ':company_id' => $companyId,
+        ':prefix' => $base . '%',
+    ]);
+
+    $existing = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    if (!$existing) {
+        return $base;
+    }
+
+    $maxSuffix = 1;
+    $pattern = '/^' . preg_quote($base, '/') . '(?:-(\d+))?$/';
+
+    foreach ($existing as $value) {
+        $number = (string)$value;
+        if (!preg_match($pattern, $number, $matches)) {
+            continue;
+        }
+
+        if (!isset($matches[1]) || $matches[1] === '') {
+            $maxSuffix = max($maxSuffix, 1);
+            continue;
+        }
+
+        $candidateSuffix = (int)$matches[1];
+        if ($candidateSuffix > $maxSuffix) {
+            $maxSuffix = $candidateSuffix;
+        }
+    }
+
+    return $base . '-' . (string)($maxSuffix + 1);
+}
+
+function invoices_round_money(float $value): float
+{
+    return round($value, 2);
+}
+
+function invoices_read(PDO $pdo, array $currentUser, array $periodFilter): void
+{
+    $isEmployee = (string)$currentUser['role'] === 'employee';
+    $employee = $isEmployee ? invoices_employee_context($pdo, $currentUser) : null;
+    $companyId = (int)$currentUser['company_id'];
+
+    $sql = '
         SELECT
+            i.id,
+            i.timesheet_id,
             i.invoice_number,
-            e.full_name AS employee_name,
-            CONCAT(p.year, '-', LPAD(p.month, 2, '0')) AS period_key,
+            i.invoice_date,
+            i.due_date,
             i.status,
             i.locked_at,
+            i.recipient_id,
             i.subtotal,
             i.vat_percentage,
             i.vat_amount,
             i.total,
-            t.billable_hours,
+            e.full_name AS employee_name,
             t.status AS timesheet_status,
-            a.hourly_rate
+            t.billable_hours,
+            a.hourly_rate,
+            CONCAT(p.year, "-", LPAD(p.month, 2, "0")) AS period_key
         FROM invoices i
         JOIN timesheets t ON t.id = i.timesheet_id
         JOIN employees e ON e.id = t.employee_id
-        JOIN periods p ON p.id = t.period_id
         JOIN assignments a ON a.id = t.assignment_id
-    ";
-
-    $sql .= ' WHERE i.company_id = :company_id';
+        JOIN periods p ON p.id = t.period_id
+        WHERE i.company_id = :company_id
+    ';
 
     if ($isEmployee && $employee) {
         $sql .= ' AND t.employee_id = :employee_id';
     }
 
-    if ($year !== null && $month !== null) {
+    if ((bool)$periodFilter['has_filter']) {
         $sql .= ' AND p.year = :year AND p.month = :month';
     }
 
@@ -73,51 +218,398 @@ try {
     if ($isEmployee && $employee) {
         $stmt->bindValue(':employee_id', (int)$employee['id'], PDO::PARAM_INT);
     }
-    if ($year !== null && $month !== null) {
-        $stmt->bindValue(':year', $year, PDO::PARAM_INT);
-        $stmt->bindValue(':month', $month, PDO::PARAM_INT);
+    if ((bool)$periodFilter['has_filter']) {
+        $stmt->bindValue(':year', (int)$periodFilter['year'], PDO::PARAM_INT);
+        $stmt->bindValue(':month', (int)$periodFilter['month'], PDO::PARAM_INT);
     }
-
     $stmt->execute();
     $rows = $stmt->fetchAll();
 
-    api_send_json([
+    $items = array_map(static function (array $row): array {
+        $isLocked = $row['locked_at'] !== null;
+        $billableHours = (float)$row['billable_hours'];
+        $hourlyRate = (float)$row['hourly_rate'];
+        $vatPercentage = (float)$row['vat_percentage'];
+
+        $calculatedSubtotal = invoices_round_money($billableHours * $hourlyRate);
+        $calculatedVatAmount = invoices_round_money($calculatedSubtotal * ($vatPercentage / 100));
+        $calculatedTotal = invoices_round_money($calculatedSubtotal + $calculatedVatAmount);
+
+        $subtotal = $isLocked ? (float)$row['subtotal'] : $calculatedSubtotal;
+        $vatAmount = $isLocked ? (float)$row['vat_amount'] : $calculatedVatAmount;
+        $total = $isLocked ? (float)$row['total'] : $calculatedTotal;
+
+        return [
+            'id' => (int)$row['id'],
+            'timesheet_id' => (int)$row['timesheet_id'],
+            'invoice_number' => (string)$row['invoice_number'],
+            'invoice_date' => (string)$row['invoice_date'],
+            'due_date' => (string)$row['due_date'],
+            'employee_name' => (string)$row['employee_name'],
+            'period_key' => (string)$row['period_key'],
+            'status' => (string)$row['status'],
+            'timesheet_status' => (string)$row['timesheet_status'],
+            'recipient_id' => (int)$row['recipient_id'],
+            'hourly_rate' => $hourlyRate,
+            'billable_hours' => $billableHours,
+            'vat_percentage' => $vatPercentage,
+            'locked' => $isLocked,
+            'locked_at' => $row['locked_at'] !== null ? (string)$row['locked_at'] : null,
+            'subtotal' => $subtotal,
+            'vat_amount' => $vatAmount,
+            'total' => $total,
+        ];
+    }, $rows);
+
+    auth_send_json([
         'ok' => true,
-        'period_filter' => $period,
-        'items' => array_map(static function (array $row): array {
-            $isLocked = $row['locked_at'] !== null;
-            $billableHours = (float)$row['billable_hours'];
-            $hourlyRate = (float)$row['hourly_rate'];
-            $vatPercentage = (float)$row['vat_percentage'];
-
-            $calculatedSubtotal = round($billableHours * $hourlyRate, 2);
-            $calculatedVatAmount = round($calculatedSubtotal * ($vatPercentage / 100), 2);
-            $calculatedTotal = round($calculatedSubtotal + $calculatedVatAmount, 2);
-
-            $subtotal = $isLocked ? (float)$row['subtotal'] : $calculatedSubtotal;
-            $vatAmount = $isLocked ? (float)$row['vat_amount'] : $calculatedVatAmount;
-            $total = $isLocked ? (float)$row['total'] : $calculatedTotal;
-
-            return [
-                'invoice_number' => (string)$row['invoice_number'],
-                'employee_name' => (string)$row['employee_name'],
-                'period_key' => (string)$row['period_key'],
-                'status' => (string)$row['status'],
-                'timesheet_status' => (string)$row['timesheet_status'],
-                'hourly_rate' => $hourlyRate,
-                'billable_hours' => $billableHours,
-                'vat_percentage' => $vatPercentage,
-                'locked' => $isLocked,
-                'subtotal' => $subtotal,
-                'vat_amount' => $vatAmount,
-                'total' => $total,
-            ];
-        }, $rows),
+        'period_filter' => $periodFilter['period'],
+        'items' => $items,
     ]);
-} catch (Throwable $e) {
-    api_send_json([
-        'ok' => false,
-        'error' => 'invoices-query-failed',
-        'message' => 'Could not load invoices data.',
-    ], 500);
 }
+
+function invoices_lock(PDO $pdo, array $currentUser, array $payload): void
+{
+    if ((string)$currentUser['role'] !== 'administrator') {
+        auth_send_json([
+            'ok' => false,
+            'error' => 'forbidden-action',
+            'message' => 'Only administrator can lock invoices.',
+        ], 403);
+    }
+
+    $timesheetIdRaw = $payload['timesheet_id'] ?? null;
+    if (!(is_int($timesheetIdRaw) && $timesheetIdRaw > 0) && !(is_string($timesheetIdRaw) && ctype_digit($timesheetIdRaw) && (int)$timesheetIdRaw > 0)) {
+        auth_send_json([
+            'ok' => false,
+            'error' => 'invalid-payload',
+            'message' => 'timesheet_id must be a positive integer.',
+        ], 400);
+    }
+
+    $timesheetId = (int)$timesheetIdRaw;
+    $companyId = (int)$currentUser['company_id'];
+
+    $pdo->beginTransaction();
+
+    try {
+        $stmt = $pdo->prepare(
+            'SELECT
+                t.id AS timesheet_id,
+                t.employee_id,
+                t.assignment_id,
+                t.status AS timesheet_status,
+                t.billable_hours,
+                p.id AS period_id,
+                p.company_id,
+                p.year,
+                p.month,
+                a.hourly_rate,
+                a.vat_percentage,
+                a.invoice_number_template,
+                a.client_id,
+                a.broker_id,
+                c.payment_term_days,
+                i.id AS invoice_id,
+                i.invoice_number,
+                i.status AS invoice_status,
+                i.locked_at,
+                i.recipient_id,
+                i.subtotal,
+                i.vat_amount,
+                i.total,
+                i.vat_percentage AS invoice_vat_percentage
+             FROM timesheets t
+             JOIN periods p ON p.id = t.period_id
+             JOIN assignments a ON a.id = t.assignment_id
+             JOIN companies c ON c.id = p.company_id
+             LEFT JOIN invoices i ON i.timesheet_id = t.id
+             WHERE t.id = :timesheet_id AND p.company_id = :company_id
+             FOR UPDATE'
+        );
+        $stmt->execute([
+            ':timesheet_id' => $timesheetId,
+            ':company_id' => $companyId,
+        ]);
+        $row = $stmt->fetch();
+
+        if (!$row) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            auth_send_json([
+                'ok' => false,
+                'error' => 'timesheet-not-found',
+                'message' => 'Timesheet was not found in your company scope.',
+            ], 404);
+        }
+
+        if ($row['invoice_id'] !== null && $row['locked_at'] !== null) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            auth_send_json([
+                'ok' => false,
+                'error' => 'invoice-already-locked',
+                'message' => 'Invoice is already finalized and immutable.',
+            ], 409);
+        }
+
+        if ($row['invoice_id'] !== null && in_array((string)$row['invoice_status'], ['sent', 'paid', 'cancelled'], true)) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            auth_send_json([
+                'ok' => false,
+                'error' => 'invalid-invoice-state',
+                'message' => 'Invoice state does not allow re-finalization.',
+            ], 409);
+        }
+
+        if ((string)$row['timesheet_status'] !== 'approved') {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            auth_send_json([
+                'ok' => false,
+                'error' => 'timesheet-not-approved',
+                'message' => 'Only approved timesheets can be finalized into invoices.',
+            ], 409);
+        }
+
+        $billableHours = (float)$row['billable_hours'];
+        $hourlyRate = (float)$row['hourly_rate'];
+        $vatPercentage = (float)$row['vat_percentage'];
+
+        $subtotal = invoices_round_money($billableHours * $hourlyRate);
+        $vatAmount = invoices_round_money($subtotal * ($vatPercentage / 100));
+        $total = invoices_round_money($subtotal + $vatAmount);
+
+        $invoiceDate = (new DateTimeImmutable('now'))->format('Y-m-d');
+        $paymentTermDays = max(1, (int)$row['payment_term_days']);
+        $dueDate = (new DateTimeImmutable($invoiceDate))->modify('+' . $paymentTermDays . ' days')->format('Y-m-d');
+
+        $recipientId = 0;
+        if ($row['invoice_id'] !== null && $row['recipient_id'] !== null) {
+            $recipientId = (int)$row['recipient_id'];
+        }
+        if ($recipientId <= 0) {
+            $recipientId = (int)($row['client_id'] ?? 0);
+        }
+        if ($recipientId <= 0) {
+            $recipientId = (int)($row['broker_id'] ?? 0);
+        }
+        if ($recipientId <= 0) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            auth_send_json([
+                'ok' => false,
+                'error' => 'recipient-not-found',
+                'message' => 'Could not determine invoice recipient for this assignment.',
+            ], 409);
+        }
+
+        $invoiceNumber = trim((string)($row['invoice_number'] ?? ''));
+        if ($invoiceNumber === '') {
+            $template = trim((string)($row['invoice_number_template'] ?? ''));
+            if ($template === '') {
+                $template = 'INV-{jaar}-{maand}';
+            }
+            $invoiceNumber = invoices_allocate_number(
+                $pdo,
+                $companyId,
+                $template,
+                (int)$row['year'],
+                (int)$row['month']
+            );
+        }
+
+        if ($row['invoice_id'] === null) {
+            $insert = $pdo->prepare(
+                'INSERT INTO invoices
+                 (company_id, timesheet_id, invoice_number, invoice_date, due_date, recipient_id,
+                  subtotal, vat_percentage, vat_amount, total, status, locked_at, created_by)
+                 VALUES
+                 (:company_id, :timesheet_id, :invoice_number, :invoice_date, :due_date, :recipient_id,
+                  :subtotal, :vat_percentage, :vat_amount, :total, :status, CURRENT_TIMESTAMP, :created_by)'
+            );
+            $insert->execute([
+                ':company_id' => $companyId,
+                ':timesheet_id' => $timesheetId,
+                ':invoice_number' => $invoiceNumber,
+                ':invoice_date' => $invoiceDate,
+                ':due_date' => $dueDate,
+                ':recipient_id' => $recipientId,
+                ':subtotal' => $subtotal,
+                ':vat_percentage' => $vatPercentage,
+                ':vat_amount' => $vatAmount,
+                ':total' => $total,
+                ':status' => 'ready',
+                ':created_by' => (int)$currentUser['id'],
+            ]);
+            $invoiceId = (int)$pdo->lastInsertId();
+        } else {
+            $invoiceId = (int)$row['invoice_id'];
+            $update = $pdo->prepare(
+                'UPDATE invoices
+                 SET invoice_number = :invoice_number,
+                     invoice_date = :invoice_date,
+                     due_date = :due_date,
+                     recipient_id = :recipient_id,
+                     subtotal = :subtotal,
+                     vat_percentage = :vat_percentage,
+                     vat_amount = :vat_amount,
+                     total = :total,
+                     status = :status,
+                     locked_at = CURRENT_TIMESTAMP
+                 WHERE id = :id AND locked_at IS NULL'
+            );
+            $update->execute([
+                ':invoice_number' => $invoiceNumber,
+                ':invoice_date' => $invoiceDate,
+                ':due_date' => $dueDate,
+                ':recipient_id' => $recipientId,
+                ':subtotal' => $subtotal,
+                ':vat_percentage' => $vatPercentage,
+                ':vat_amount' => $vatAmount,
+                ':total' => $total,
+                ':status' => 'ready',
+                ':id' => $invoiceId,
+            ]);
+
+            if ($update->rowCount() === 0) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                auth_send_json([
+                    'ok' => false,
+                    'error' => 'invoice-already-locked',
+                    'message' => 'Invoice is already finalized and immutable.',
+                ], 409);
+            }
+        }
+
+        $timesheetUpdate = $pdo->prepare(
+            'UPDATE timesheets
+             SET status = :status, version = version + 1
+             WHERE id = :id AND status = :expected_status'
+        );
+        $timesheetUpdate->execute([
+            ':status' => 'invoiced',
+            ':id' => $timesheetId,
+            ':expected_status' => 'approved',
+        ]);
+
+        if ($timesheetUpdate->rowCount() === 0) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            auth_send_json([
+                'ok' => false,
+                'error' => 'timesheet-state-conflict',
+                'message' => 'Timesheet changed before invoice could be finalized.',
+            ], 409);
+        }
+
+        $eventData = json_encode([
+            'timesheet_id' => $timesheetId,
+            'invoice_id' => $invoiceId,
+            'invoice_number' => $invoiceNumber,
+            'subtotal' => $subtotal,
+            'vat_percentage' => $vatPercentage,
+            'vat_amount' => $vatAmount,
+            'total' => $total,
+            'source' => 'webapp',
+        ], JSON_UNESCAPED_UNICODE);
+
+        $audit = $pdo->prepare(
+            'INSERT INTO audit_log (company_id, actor_user_id, event_type, entity_type, entity_id, event_data)
+             VALUES (:company_id, :actor_user_id, :event_type, :entity_type, :entity_id, :event_data)'
+        );
+        $audit->execute([
+            ':company_id' => $companyId,
+            ':actor_user_id' => (int)$currentUser['id'],
+            ':event_type' => 'invoice.locked',
+            ':entity_type' => 'invoice',
+            ':entity_id' => (string)$invoiceId,
+            ':event_data' => $eventData,
+        ]);
+
+        $fresh = $pdo->prepare(
+            'SELECT id, timesheet_id, invoice_number, invoice_date, due_date, recipient_id,
+                    subtotal, vat_percentage, vat_amount, total, status, locked_at
+             FROM invoices
+             WHERE id = :id
+             LIMIT 1'
+        );
+        $fresh->execute([':id' => $invoiceId]);
+        $invoice = $fresh->fetch();
+
+        $pdo->commit();
+
+        auth_send_json([
+            'ok' => true,
+            'action' => 'lock',
+            'audit_event' => 'invoice.locked',
+            'invoice' => [
+                'id' => (int)$invoice['id'],
+                'timesheet_id' => (int)$invoice['timesheet_id'],
+                'invoice_number' => (string)$invoice['invoice_number'],
+                'invoice_date' => (string)$invoice['invoice_date'],
+                'due_date' => (string)$invoice['due_date'],
+                'recipient_id' => (int)$invoice['recipient_id'],
+                'status' => (string)$invoice['status'],
+                'locked_at' => (string)$invoice['locked_at'],
+                'subtotal' => (float)$invoice['subtotal'],
+                'vat_percentage' => (float)$invoice['vat_percentage'],
+                'vat_amount' => (float)$invoice['vat_amount'],
+                'total' => (float)$invoice['total'],
+            ],
+            'timesheet' => [
+                'id' => $timesheetId,
+                'status' => 'invoiced',
+                'billable_hours' => $billableHours,
+            ],
+        ]);
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+
+        auth_send_json([
+            'ok' => false,
+            'error' => 'invoice-lock-failed',
+            'message' => 'Could not finalize invoice.',
+        ], 500);
+    }
+}
+
+$method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+
+if ($method === 'GET') {
+    $periodFilter = invoices_parse_period(isset($_GET['period']) ? (string)$_GET['period'] : null);
+    invoices_read($pdo, $currentUser, $periodFilter);
+}
+
+if ($method !== 'POST') {
+    auth_send_json([
+        'ok' => false,
+        'error' => 'method-not-allowed',
+        'message' => 'Only GET and POST are allowed on this endpoint.',
+    ], 405);
+}
+
+security_require_csrf_token();
+$payload = security_read_json_body();
+$action = security_require_enum_field($payload, 'action', ['lock'], 'Invalid invoice action.');
+
+if ($action === 'lock') {
+    invoices_lock($pdo, $currentUser, $payload);
+}
+
+auth_send_json([
+    'ok' => false,
+    'error' => 'unsupported-action',
+    'message' => 'Unsupported invoice action.',
+], 400);

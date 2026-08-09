@@ -34,7 +34,7 @@ test('[INV-H-001] admin facturen zichtbaar en console errors 0', async ({ page }
   });
 });
 
-test('[INV-N-001] employee facturen zichtbaar maar beperkt en console errors 0', async ({ page }) => {
+test('[INV-N-005] employee facturen zichtbaar maar beperkt en console errors 0', async ({ page }) => {
   const consoleErrors = captureConsoleErrors(page);
   const loginPage = new LoginPage(page);
 
@@ -118,7 +118,7 @@ test('[INV-H-003] server berekent bedrag uit uren en uurtarief voor open facture
   });
 });
 
-test('[INV-N-003] ongeldige periodefilter geeft nette 400-fout', async ({ page }) => {
+test('[INV-N-007] ongeldige periodefilter geeft nette 400-fout', async ({ page }) => {
   const loginPage = new LoginPage(page);
   let status = 0;
   let body: { ok?: boolean; error?: string; message?: string } | null = null;
@@ -149,3 +149,4 @@ test('[INV-N-003] ongeldige periodefilter geeft nette 400-fout', async ({ page }
     expect(String(body?.message || '')).toContain('between 01 and 12');
   });
 });
+

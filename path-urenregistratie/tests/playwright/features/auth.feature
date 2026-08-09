@@ -6,7 +6,7 @@ Feature: Authenticatie en sessiebeheer in Path Uren & Facturatie
 # [AUTH-H-001] Administrator kan inloggen en krijgt backoffice-context.
 # [AUTH-H-002] Medewerker kan inloggen met correcte rolscope.
 # [AUTH-H-003] Uitloggen sluit de sessie en brengt gebruiker terug naar login.
-# [AUTH-N-001] Na logout bevestigt auth/me dat er geen actieve sessie meer is.
+# [AUTH-N-004] Na logout bevestigt auth/me dat er geen actieve sessie meer is.
 
   # Happy flows
 
@@ -27,7 +27,8 @@ Feature: Authenticatie en sessiebeheer in Path Uren & Facturatie
 
   # Negative flows
 
-  Scenario: [AUTH-N-001] Auth me endpoint meldt geen sessie na uitloggen
+  Scenario: [AUTH-N-004] Auth me endpoint meldt geen sessie na uitloggen
     Given een ingelogde Path gebruiker met een actieve sessie
     When de gebruiker uitlogt
     Then geeft het auth me endpoint authenticated false zonder actieve sessie terug zodat vervolgcalls niet geautoriseerd zijn
+

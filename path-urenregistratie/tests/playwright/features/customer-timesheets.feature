@@ -7,9 +7,9 @@ Feature: Klanturenstaat lifecycle via API
 # [CTS-API-H-002] Submit maakt document received en downloadbaar.
 # [CTS-API-H-003] Admin kan approve en daarna resubmit aanvragen.
 # [CTS-API-H-004] Medewerker kan mark_skipped registreren en restore_missing terugzetten.
-# [CTS-API-N-001] Ongeldig bestandstype wordt afgewezen.
-# [CTS-API-N-002] Schrijven met andere employee_id wordt geblokkeerd.
-# [CTS-API-N-003] Medewerker mag geen admin reviewactie uitvoeren.
+# [CTS-API-N-005] Ongeldig bestandstype wordt afgewezen.
+# [CTS-API-N-006] Schrijven met andere employee_id wordt geblokkeerd.
+# [CTS-API-N-007] Medewerker mag geen admin reviewactie uitvoeren.
 
   # Happy flows
 
@@ -35,17 +35,18 @@ Feature: Klanturenstaat lifecycle via API
 
   # Negative flows
 
-  Scenario: [CTS-API-N-001] Ongeldig bestandstype wordt geblokkeerd
+  Scenario: [CTS-API-N-005] Ongeldig bestandstype wordt geblokkeerd
     Given een medewerker met een open klanturenstaatperiode
     When de medewerker een tekstbestand probeert te uploaden
     Then krijgt de medewerker invalid-upload met status 400 zodat alleen veilige bestandssoorten doorgaan
 
-  Scenario: [CTS-API-N-002] Medewerker kan geen andere employee scope forceren
+  Scenario: [CTS-API-N-006] Medewerker kan geen andere employee scope forceren
     Given een ingelogde medewerker
     When de medewerker save_draft uitvoert met een andere employee_id
     Then krijgt de medewerker een forbidden-employee-scope response zodat rol- en tenantgrenzen intact blijven
 
-  Scenario: [CTS-API-N-003] Medewerker kan geen admin-reviewacties uitvoeren
+  Scenario: [CTS-API-N-007] Medewerker kan geen admin-reviewacties uitvoeren
     Given een ingelogde medewerker met een ingediende klanturenstaat
     When de medewerker approve of request_resubmit probeert uit te voeren
     Then krijgt de medewerker forbidden-action zodat reviewbesluiten alleen bij administrators liggen
+

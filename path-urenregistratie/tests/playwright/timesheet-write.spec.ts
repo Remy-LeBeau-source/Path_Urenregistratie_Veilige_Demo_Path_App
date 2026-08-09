@@ -133,7 +133,7 @@ test.describe('timesheet write api', () => {
     });
   });
 
-  test('[TS-API-N-001] employee mag geen andere medewerker schrijven', async ({ request }) => {
+  test('[TS-API-N-010] employee mag geen andere medewerker schrijven', async ({ request }) => {
     const authApi = new AuthApi(request);
     const timesheetApi = new TimesheetApi(request);
 
@@ -162,7 +162,7 @@ test.describe('timesheet write api', () => {
     });
   });
 
-  test('[TS-API-N-002] write zonder csrf geeft 403', async ({ request }) => {
+  test('[TS-API-N-011] write zonder csrf geeft 403', async ({ request }) => {
     const authApi = new AuthApi(request);
     const timesheetApi = new TimesheetApi(request);
 
@@ -241,3 +241,4 @@ test.describe('timesheet write api', () => {
     });
   });
 });
+
