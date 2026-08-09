@@ -285,6 +285,7 @@ jobs:
   dev:
     name: Promote Dev
     needs: validate
+    if: ${{ false }}
     runs-on: ubuntu-latest
     environment: dev
     defaults:
@@ -416,7 +417,7 @@ jobs:
 
   test:
     name: Promote Test
-    needs: dev
+    needs: validate
     runs-on: ubuntu-latest
     environment: test
     defaults:
@@ -693,6 +694,7 @@ jobs:
   acc:
     name: Promote Acc
     needs: test
+    if: ${{ false }}
     runs-on: ubuntu-latest
     environment: acc
     defaults:
@@ -824,7 +826,7 @@ jobs:
 
   prod:
     name: Promote Prod
-    needs: acc
+    needs: test
     runs-on: ubuntu-latest
     environment: prod
     if: ${{ github.event_name == 'push' || inputs.ref == 'main' || inputs.ref == 'refs/heads/main' }}
@@ -957,7 +959,7 @@ jobs:
 
   prod-main-ref-guard:
     name: Guard non-main for Prod
-    needs: acc
+    needs: test
     runs-on: ubuntu-latest
     if: ${{ github.event_name != 'push' && !(inputs.ref == 'main' || inputs.ref == 'refs/heads/main') }}
 
