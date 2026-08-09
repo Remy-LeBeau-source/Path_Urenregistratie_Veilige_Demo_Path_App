@@ -132,6 +132,8 @@ Status Fase 1:
   - auditlog
 - [x] Demo-inhoud voor juni, juli en augustus 2026.
 - [x] Correctie/goedkeuring UI-migratie afgerond voor auth-mode: request_correction, resubmit en approve lopen via server/api/timesheets.php met serverversie als bron.
+- [x] Slice B afgerond in auth-mode: factuurstatus en verzendstatus worden server-led gesynchroniseerd via server/api/invoices.php en server/api/email-queue.php; dashboard-, KPI- en batchstatus volgen dezelfde serverbron.
+- [x] Auth-mode verzendacties zetten geen lokale businessstatus meer vooruit; eerst server enqueue/sync, daarna UI-update op basis van serverresponse.
 - [-] Browseropslag is nog niet voor alle onderdelen volledig vervangen:
   - read-data grotendeels uit database
   - uren-writeflow uit database
@@ -513,6 +515,7 @@ Status Fase 10:
 - [x] Extra regressietests toegevoegd: INV-H-003 en INV-N-003 voor berekening en periodevalidatie.
 - [x] Invoice-lock API/Playwright-regressies INV-H-004 en INV-N-008 t/m INV-N-012 zijn aanwezig.
 - [x] Security tests geharmoniseerd naar Given/When/Then-stapstijl voor consistente rapportleesbaarheid.
+- [x] Auth-mode factuurstatus in UI wordt na serverwrites en reload opnieuw uit invoices read-API gesynchroniseerd; dubbele lokale autoriteit is verwijderd.
 
 Status Fase 11:
 - [x] overzicht, server-side berekening en transactionele lock/write-flow met immutable bedragen bestaan
@@ -539,6 +542,7 @@ Let op: dit staat los van GitHub commitnotificaties.
 - [x] Dry-runmodus is standaard en maakt geen echte verzending.
 - [x] Broker krijgt factuurbeleid; EasySalary-route heeft geen factuurbijlage.
 - [x] Veertien happy/negative Playwright API-tests.
+- [x] Auth-mode verzendstatus in UI wordt afgeleid uit email_deliveries via email-queue read-API; geen lokale voorspelling vóór serverbevestiging.
 
 ### Nog bouwen
 

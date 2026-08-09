@@ -997,6 +997,7 @@ const readApiDebug = {
   dashboard: null,
   invoices: null,
   invoicesByPeriod: {},
+  emailQueue: null,
   customerTimesheetsByPeriod: {}
 };
 
@@ -1004,11 +1005,13 @@ const readApiRuntime = {
   bootstrapInFlight: false,
   dashboardInFlight: false,
   invoicesInFlight: false,
+  emailQueueInFlight: false,
   customerTimesheetsInFlight: {},
   timesheetsInFlight: {},
   lastBootstrapAt: 0,
   lastDashboardAt: 0,
   lastInvoicesAt: 0,
+  lastEmailQueueAt: 0,
   lastInvoicesByPeriod: {},
   lastCustomerTimesheetsByPeriod: {},
   lastTimesheetsByKey: {}
@@ -1020,6 +1023,7 @@ const readApiSource = {
   bootstrap: "fallback",
   dashboard: "fallback",
   invoices: "fallback",
+  emailQueue: "fallback",
   customerTimesheets: "fallback",
   overall: "fallback"
 };
@@ -1700,7 +1704,7 @@ function initializeAuthSession() {
 
 function setReadApiSource(section, source) {
   readApiSource[section] = source;
-  readApiSource.overall = (readApiSource.bootstrap === "api" || readApiSource.dashboard === "api" || readApiSource.invoices === "api" || readApiSource.customerTimesheets === "api") ? "api" : "fallback";
+  readApiSource.overall = (readApiSource.bootstrap === "api" || readApiSource.dashboard === "api" || readApiSource.invoices === "api" || readApiSource.emailQueue === "api" || readApiSource.customerTimesheets === "api") ? "api" : "fallback";
 }
 
 function firstBootstrapCompany(data) {
@@ -1850,6 +1854,71 @@ function invoiceApiRowsForPeriod(periodKey) {
   }));
 }
 
+function emailQueueItemsByInvoiceId(periodKey) {
+  const rows = invoiceApiRowsForPeriod(periodKey) || [];
+  const invoiceIds = new Set(rows.map(row => Number(row.id || 0)).filter(id => id > 0));
+  const queueItems = Array.isArray(readApiDebug.emailQueue && readApiDebug.emailQueue.items)
+    ? readApiDebug.emailQueue.items
+    : [];
+  const byInvoice = new Map();
+  queueItems.forEach(item => {
+    const invoiceId = Number(item && item.invoice_id || 0);
+    if (invoiceId <= 0 || !invoiceIds.has(invoiceId)) return;
+    const status = String(item && item.status || "").toLowerCase();
+    if (!status) return;
+    if (!byInvoice.has(invoiceId)) byInvoice.set(invoiceId, []);
+    byInvoice.get(invoiceId).push({
+      status,
+      channel: String(item && item.channel || "")
+    });
+  });
+  return byInvoice;
+}
+
+function syncInvoiceStatusesFromApi(periodKey) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin")) return false;
+  const key = parsePeriodKey(periodKey) ? periodKey : "";
+  if (!key) return false;
+
+  const rows = invoiceApiRowsForPeriod(key);
+  if (!rows || !rows.length) return false;
+
+  const deliveriesByInvoice = emailQueueItemsByInvoiceId(key);
+  let changed = false;
+
+  state.employees
+    .filter(employee => employeeStartedByPeriodEnd(employee, key))
+    .forEach(employee => {
+      const record = recordFor(employee.id, key);
+      const row = rows.find(item => item.invoiceNumber === record.invoiceNumber)
+        || rows.find(item => item.employeeName === employee.name);
+      if (!row) return;
+
+      const deliveries = deliveriesByInvoice.get(Number(row.id)) || [];
+      const hasDeliveryProof = deliveries.some(item => ["queued", "sent", "failed"].includes(item.status));
+      const nextInvoiceStatus = hasDeliveryProof ? "simulated" : row.status;
+      const nextPayrollStatus = hasDeliveryProof
+        ? "simulated"
+        : (nextInvoiceStatus === "ready" ? "ready" : "concept");
+
+      if (record.invoiceNumber !== row.invoiceNumber && row.invoiceNumber) {
+        record.invoiceNumber = row.invoiceNumber;
+        changed = true;
+      }
+      if (record.invoiceStatus !== nextInvoiceStatus) {
+        record.invoiceStatus = nextInvoiceStatus;
+        changed = true;
+      }
+      if (record.payrollStatus !== nextPayrollStatus) {
+        record.payrollStatus = nextPayrollStatus;
+        changed = true;
+      }
+      normalizeRecord(record, employee, key);
+    });
+
+  return changed;
+}
+
 function fetchReadApi(path) {
   if (!API_ENABLED) return Promise.resolve(null);
   try {
@@ -1921,12 +1990,12 @@ function refreshInvoicesReadApi(periodKey, force) {
   const period = parsePeriodKey(periodKey) ? periodKey : "";
   const now = Date.now();
   const lastAt = period ? Number(readApiRuntime.lastInvoicesByPeriod[period] || 0) : readApiRuntime.lastInvoicesAt;
-  if (!force && (readApiRuntime.invoicesInFlight || (now - lastAt) < 15000)) return;
+  if (!force && (readApiRuntime.invoicesInFlight || (now - lastAt) < 15000)) return Promise.resolve(null);
   readApiRuntime.invoicesInFlight = true;
   const endpoint = period
     ? READ_API_INVOICES_PATH + "?period=" + encodeURIComponent(period)
     : READ_API_INVOICES_PATH;
-  fetchReadApi(endpoint)
+  return fetchReadApi(endpoint)
     .then(data => {
       const fetchedAt = Date.now();
       if (period) readApiRuntime.lastInvoicesByPeriod[period] = fetchedAt;
@@ -1934,12 +2003,39 @@ function refreshInvoicesReadApi(periodKey, force) {
       if (!data) return;
       if (period) readApiDebug.invoicesByPeriod[period] = data;
       else readApiDebug.invoices = data;
+      if (period) syncInvoiceStatusesFromApi(period);
       console.log(period ? "[read-api] invoices(" + period + ")" : "[read-api] invoices", data);
       const invoicesViewActive = document.querySelector("#view-invoices")?.classList.contains("is-active");
       if (invoicesViewActive && (!period || period === currentPeriod().key)) renderInvoices();
     })
     .finally(() => {
       readApiRuntime.invoicesInFlight = false;
+    });
+}
+
+function refreshEmailQueueReadApi(force = false) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin")) return Promise.resolve(null);
+  const now = Date.now();
+  if (!force && (readApiRuntime.emailQueueInFlight || (now - readApiRuntime.lastEmailQueueAt) < 15000)) return Promise.resolve(null);
+  readApiRuntime.emailQueueInFlight = true;
+
+  return fetchReadApi("/server/api/email-queue.php?limit=100")
+    .then(data => {
+      readApiRuntime.lastEmailQueueAt = Date.now();
+      if (!data) {
+        setReadApiSource("emailQueue", "fallback");
+        return null;
+      }
+      readApiDebug.emailQueue = data;
+      setReadApiSource("emailQueue", "api");
+      const changed = syncInvoiceStatusesFromApi(currentPeriod().key);
+      if (changed && (document.querySelector("#view-invoices")?.classList.contains("is-active") || document.querySelector("#view-dashboard")?.classList.contains("is-active"))) {
+        renderAll();
+      }
+      return data;
+    })
+    .finally(() => {
+      readApiRuntime.emailQueueInFlight = false;
     });
 }
 
@@ -3547,6 +3643,9 @@ function showReopenApprovedHours(employeeId, periodKey) {
 function renderDashboard() {
   refreshDashboardReadApi(false);
   const period = currentPeriod();
+  refreshInvoicesReadApi(period.key, false);
+  refreshEmailQueueReadApi(false);
+  syncInvoiceStatusesFromApi(period.key);
   const dashboardApi = dashboardApiForPeriod(period.key);
   const now = new Date();
   const currentMonthKey = makePeriodKey(now.getFullYear(), now.getMonth());
@@ -3997,6 +4096,8 @@ function openMonthBatchBlocker(employeeId, periodKey) {
 function renderInvoices() {
   const periodKey = currentPeriod().key;
   refreshInvoicesReadApi(periodKey, false);
+  refreshEmailQueueReadApi(false);
+  syncInvoiceStatusesFromApi(periodKey);
   const apiRows = invoiceApiRowsForPeriod(periodKey);
   setReadApiSource("invoices", apiRows ? "api" : "fallback");
   const periodRows = invoicePeriodRows();
@@ -5582,11 +5683,17 @@ function approveEmployee(id, periodKey) {
       periodKey: key,
       expectedVersion: version
     }).then(() => {
-      addNotification({ audience: "employee", type: "approved", employeeId: Number(id), title: "Uren goedgekeurd", message: "Je uren voor " + periodFromKey(key).label + " zijn goedgekeurd.", periodKey: key, view: "employee-dashboard" });
-      addNotification({ audience: "admin", type: "invoice", employeeId: Number(id), title: "Factuur klaar", message: "De factuur voor " + employeeById(id).name + " staat klaar.", periodKey: key, view: "invoices" });
-      persistState();
-      renderAll();
-      toast(employeeById(id).name + " is goedgekeurd voor " + periodFromKey(key).label + "; de factuur staat klaar.");
+      return Promise.all([
+        refreshInvoicesReadApi(key, true),
+        refreshEmailQueueReadApi(true)
+      ]).catch(() => null).then(() => {
+        syncInvoiceStatusesFromApi(key);
+        addNotification({ audience: "employee", type: "approved", employeeId: Number(id), title: "Uren goedgekeurd", message: "Je uren voor " + periodFromKey(key).label + " zijn goedgekeurd.", periodKey: key, view: "employee-dashboard" });
+        addNotification({ audience: "admin", type: "invoice", employeeId: Number(id), title: "Factuur klaar", message: "De factuur voor " + employeeById(id).name + " staat klaar.", periodKey: key, view: "invoices" });
+        persistState();
+        renderAll();
+        toast(employeeById(id).name + " is goedgekeurd voor " + periodFromKey(key).label + "; de factuur staat klaar.");
+      });
     }).catch(error => {
       toast(String(error && error.message || "Goedkeuren bij server mislukt."));
     });
@@ -5677,15 +5784,21 @@ function returnEmployeeForCorrection(id, periodKey, reason, adminTaskId = "") {
       expectedVersion,
       correctionMessage: message
     }).then(() => {
-      addNotification({ audience: "employee", type: "correction", employeeId: Number(id), title: "Correctie nodig", message: (currentAdmin() ? currentAdmin().name : "Beheerder") + " vraagt je om " + periodFromKey(key).label + " aan te passen. Reden: " + message, periodKey: key, view: "timesheet" });
-      if (adminTaskId) {
-        finishAdminTaskAndContinue(adminTaskId, () => {}, toastMessage);
-        return;
-      }
-      persistState();
-      closeModal();
-      renderAll();
-      toast(toastMessage);
+      return Promise.all([
+        refreshInvoicesReadApi(key, true),
+        refreshEmailQueueReadApi(true)
+      ]).catch(() => null).then(() => {
+        syncInvoiceStatusesFromApi(key);
+        addNotification({ audience: "employee", type: "correction", employeeId: Number(id), title: "Correctie nodig", message: (currentAdmin() ? currentAdmin().name : "Beheerder") + " vraagt je om " + periodFromKey(key).label + " aan te passen. Reden: " + message, periodKey: key, view: "timesheet" });
+        if (adminTaskId) {
+          finishAdminTaskAndContinue(adminTaskId, () => {}, toastMessage);
+          return;
+        }
+        persistState();
+        closeModal();
+        renderAll();
+        toast(toastMessage);
+      });
     });
 
     if (recordVersion <= 0) {
@@ -5754,6 +5867,26 @@ function serverInvoiceIdFor(employeeId, periodKey) {
   return match ? match.id : 0;
 }
 
+function enqueueInvoiceDeliveryToApi(invoiceId) {
+  const id = Number(invoiceId || 0);
+  if (id <= 0) return Promise.reject(new Error("Geen serverfactuur gevonden voor deze verzending."));
+
+  return requestAuthCsrf()
+    .then(token => fetch("/server/api/email-queue.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify({ action: "enqueue", invoice_id: id })
+    }))
+    .then(resp => resp.json().catch(() => ({})).then(data => ({ ok: resp.ok, data })))
+    .then(result => {
+      if (!result.ok || !result.data || result.data.ok !== true) {
+        const message = String(result && result.data && result.data.message || "Queueactie bij server mislukt.");
+        throw new Error(message);
+      }
+      return Number(result.data.count || 0);
+    });
+}
+
 function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
   const key = periodKey || currentPeriod().key;
   const period = periodFromKey(key);
@@ -5784,11 +5917,36 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
     confirm: "Controle afronden",
     adminTaskId,
     action: () => {
+      const baseMsg = "Verzending voor " + info.employee.name + " · " + period.label + " klaargezet";
+      const invId = serverInvoiceIdFor(employeeId, key);
+      const serverDelivery = API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin";
+
+      if (serverDelivery) {
+        enqueueInvoiceDeliveryToApi(invId)
+          .then(count => Promise.all([
+            refreshEmailQueueReadApi(true),
+            refreshInvoicesReadApi(key, true)
+          ]).catch(() => null).then(() => {
+            syncInvoiceStatusesFromApi(key);
+            if (adminTaskId) {
+              finishAdminTaskAndContinue(adminTaskId, () => {}, baseMsg + " (dry-run): " + count + (count === 1 ? " bericht" : " berichten") + " klaargezet.");
+              return;
+            }
+            closeModal();
+            persistState();
+            renderAll();
+            toast(baseMsg + " (dry-run): " + count + (count === 1 ? " bericht" : " berichten") + " klaargezet.");
+          }))
+          .catch(error => {
+            toast(String(error && error.message || (baseMsg + ". Koppeling met mailqueue tijdelijk niet bereikbaar.")));
+          });
+        return;
+      }
+
       const mutate = () => {
         info.record.invoiceStatus = "simulated";
         info.record.payrollStatus = "simulated";
       };
-      const baseMsg = "Verzending voor " + info.employee.name + " · " + period.label + " klaargezet";
       if (adminTaskId) {
         finishAdminTaskAndContinue(adminTaskId, mutate, baseMsg + " (dry-run).");
       } else {
@@ -5797,21 +5955,7 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
         closeModal();
         renderAll();
       }
-      const invId = serverInvoiceIdFor(employeeId, key);
-      if (invId > 0 && API_ENABLED) {
-        requestAuthCsrf().then(token =>
-          fetch("/server/api/email-queue.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
-            body: JSON.stringify({ action: "enqueue", invoice_id: invId })
-          }).then(r => r.json()).then(data => {
-            const n = data && data.count || 0;
-            toast(baseMsg + " (dry-run): " + n + (n === 1 ? " bericht" : " berichten") + " klaargezet.");
-          }).catch(() => toast(baseMsg + ". Koppeling met mailqueue tijdelijk niet bereikbaar."))
-        ).catch(() => toast(baseMsg + " (dry-run)."));
-      } else {
-        toast(baseMsg + " (dry-run).");
-      }
+      toast(baseMsg + " (dry-run).");
     }
   });
   return true;
@@ -7052,6 +7196,7 @@ document.querySelectorAll("[data-invoice-filter]").forEach(button => button.addE
 
 function handleMonthDelivery() {
   const readiness = monthBatchReadiness(currentPeriod().key);
+  const periodKey = currentPeriod().key;
   const periodRows = readiness.rows;
   if (readiness.state === "blocked") {
     if (readiness.blockers.length === 1) {
@@ -7096,6 +7241,32 @@ function handleMonthDelivery() {
     summary: routeSummary + "<div><span>Klanturenstaten</span><strong>" + customerReady + " klaar voor brokerroute · " + customerReceived + " te controleren · " + customerMissing + " ontbrekend/concept/opnieuw</strong></div>",
     confirm: "Controle afronden",
     action: () => {
+      const serverDelivery = API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin";
+      if (serverDelivery) {
+        const invoiceIds = approved.map(item => serverInvoiceIdFor(item.employee.id, periodKey)).filter(id => id > 0);
+        if (invoiceIds.length !== approved.length) {
+          toast("Niet alle serverfacturen zijn beschikbaar. Open Facturen opnieuw en probeer daarna nogmaals.");
+          return;
+        }
+
+        Promise.all(invoiceIds.map(id => enqueueInvoiceDeliveryToApi(id)))
+          .then(counts => Promise.all([
+            refreshEmailQueueReadApi(true),
+            refreshInvoicesReadApi(periodKey, true)
+          ]).catch(() => null).then(() => {
+            syncInvoiceStatusesFromApi(periodKey);
+            persistState();
+            closeModal();
+            renderAll();
+            const totalMessages = counts.reduce((sum, value) => sum + Number(value || 0), 0);
+            toast("Maandverzending gecontroleerd (dry-run): " + totalMessages + " berichten klaargezet via serverqueue.");
+          }))
+          .catch(error => {
+            toast(String(error && error.message || "Koppeling met mailqueue tijdelijk niet bereikbaar."));
+          });
+        return;
+      }
+
       approved.forEach(item => {
         item.record.invoiceStatus = "simulated";
         item.record.payrollStatus = "simulated";
