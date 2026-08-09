@@ -42,120 +42,153 @@ test('[SAFE-H-001] login picker vult alleen lokaal demo-wachtwoord in wanneer hi
   let localHintsEnabled = false;
   let hintedAdminPassword = '';
 
-  try {
-    const hintsResponse = await request.get('/server/auth/local-login-hints.php');
-    if (hintsResponse.ok()) {
-      const hintsBody = await hintsResponse.json();
-      localHintsEnabled = hintsBody.ok === true && hintsBody.enabled === true;
-      hintedAdminPassword = String(hintsBody.adminPassword || '');
+  await test.step('Given de lokale login-hints worden gecontroleerd', async () => {
+    try {
+      const hintsResponse = await request.get('/server/auth/local-login-hints.php');
+      if (hintsResponse.ok()) {
+        const hintsBody = await hintsResponse.json();
+        localHintsEnabled = hintsBody.ok === true && hintsBody.enabled === true;
+        hintedAdminPassword = String(hintsBody.adminPassword || '');
+      }
+    } catch {
+      localHintsEnabled = false;
     }
-  } catch {
-    localHintsEnabled = false;
-  }
+  });
 
-  await page.goto(appConfig.baseUrl);
+  await test.step('When de gebruiker de admin-loginkeuze opent', async () => {
+    await page.goto(appConfig.baseUrl);
 
-  const indicator = page.locator('#auth-mode-indicator');
-  await expect(indicator).toBeVisible({ timeout: 10_000 });
-  await expect(indicator).not.toHaveText(/Controle van auth-sessie wordt uitgevoerd\./, { timeout: 12_000 });
+    const indicator = page.locator('#auth-mode-indicator');
+    await expect(indicator).toBeVisible({ timeout: 10_000 });
+    await expect(indicator).not.toHaveText(/Controle van auth-sessie wordt uitgevoerd\./, { timeout: 12_000 });
 
-  const adminTrigger = page.locator('#login-admin-trigger');
-  await expect(adminTrigger).toBeEnabled();
-  await adminTrigger.click();
+    const adminTrigger = page.locator('#login-admin-trigger');
+    await expect(adminTrigger).toBeEnabled();
+    await adminTrigger.click();
 
-  const firstAdmin = page.locator('#login-admin-choices button').first();
-  await expect(firstAdmin).toBeVisible();
-  await firstAdmin.click();
+    const firstAdmin = page.locator('#login-admin-choices button').first();
+    await expect(firstAdmin).toBeVisible();
+    await firstAdmin.click();
+  });
 
-  await expect(page.locator('#auth-login-email')).not.toHaveValue('');
+  await test.step('Then wordt alleen in lokale hintmodus een demo-wachtwoord voorgeselecteerd', async () => {
+    await expect(page.locator('#auth-login-email')).not.toHaveValue('');
 
-  if (localHintsEnabled) {
-    await expect(page.locator('#auth-login-password')).toHaveValue(hintedAdminPassword || requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
-    await expect(page.locator('#auth-login-feedback')).toContainText('E-mail en lokaal demo-wachtwoord voorgeselecteerd.');
-  } else {
-    await expect(page.locator('#auth-login-password')).toHaveValue('');
-    await expect(page.locator('#auth-login-feedback')).toContainText('E-mail voorgeselecteerd. Vul je wachtwoord in.');
-  }
+    if (localHintsEnabled) {
+      await expect(page.locator('#auth-login-password')).toHaveValue(hintedAdminPassword || requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+      await expect(page.locator('#auth-login-feedback')).toContainText('E-mail en lokaal demo-wachtwoord voorgeselecteerd.');
+    } else {
+      await expect(page.locator('#auth-login-password')).toHaveValue('');
+      await expect(page.locator('#auth-login-feedback')).toContainText('E-mail voorgeselecteerd. Vul je wachtwoord in.');
+    }
+  });
 });
 
 test('[SAFE-N-001] frontend source bevat geen plaintext demo-credentials', async ({ request }) => {
-  const response = await request.get('/assets/app.js');
-  expect(response.ok()).toBeTruthy();
-  const source = await response.text();
+  let source = '';
 
-  expect(source).not.toContain('DemoTempAdmin!2026');
-  expect(source).not.toContain('DemoTempEmployee!2026');
+  await test.step('Given de frontend source wordt opgehaald', async () => {
+    const response = await request.get('/assets/app.js');
+    expect(response.ok()).toBeTruthy();
+    source = await response.text();
+  });
+
+  await test.step('Then bevat de frontend geen plaintext demo-credentials', async () => {
+    expect(source).not.toContain('DemoTempAdmin!2026');
+    expect(source).not.toContain('DemoTempEmployee!2026');
+  });
 });
 
 test('[SAFE-N-002] writes zonder csrf blijven geblokkeerd', async ({ request }) => {
   const authApi = new AuthApi(request);
   const timesheetApi = new TimesheetApi(request);
 
-  await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
-
-  const noCsrf = await timesheetApi.writeWithoutCsrf({
-    action: 'save_draft',
-    period: '2099-07',
-    contractualHours: 160,
-    billableHours: 8,
-    dayEntries: buildDayEntries('2099-07', 4, 4),
+  await test.step('Given een ingelogde medewerker', async () => {
+    await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
   });
 
-  expect(noCsrf.status).toBe(403);
-  expect(noCsrf.body.ok).toBe(false);
+  await test.step('When een write-call zonder csrf-header wordt verstuurd', async () => {
+    const noCsrf = await timesheetApi.writeWithoutCsrf({
+      action: 'save_draft',
+      period: '2099-07',
+      contractualHours: 160,
+      billableHours: 8,
+      dayEntries: buildDayEntries('2099-07', 4, 4),
+    });
+
+    expect(noCsrf.status).toBe(403);
+    expect(noCsrf.body.ok).toBe(false);
+  });
 });
 
 test('[SAFE-H-002] timesheet writeflow blijft werkend (draft + submit)', async ({ request }) => {
   const authApi = new AuthApi(request);
   const timesheetApi = new TimesheetApi(request);
 
-  await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
-  const period = await findWritablePeriod(timesheetApi);
+  let period = '';
+  let draftVersion = 0;
 
-  const draft = await timesheetApi.write({
-    action: 'save_draft',
-    period,
-    contractualHours: 160,
-    billableHours: 12,
-    leaveHours: 0,
-    sicknessHours: 0,
-    dayEntries: buildDayEntries(period, 8, 4),
+  await test.step('Given een ingelogde medewerker met schrijfbare periode', async () => {
+    await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+    period = await findWritablePeriod(timesheetApi);
+    expect(period).toMatch(/^\d{4}-\d{2}$/);
   });
 
-  expect(draft.status).toBe(200);
-  expect(draft.body.ok).toBe(true);
-  expect(draft.body.timesheet.status).toBe('draft');
+  await test.step('When de medewerker save_draft uitvoert', async () => {
+    const draft = await timesheetApi.write({
+      action: 'save_draft',
+      period,
+      contractualHours: 160,
+      billableHours: 12,
+      leaveHours: 0,
+      sicknessHours: 0,
+      dayEntries: buildDayEntries(period, 8, 4),
+    });
 
-  const draftVersion = Number(draft.body?.timesheet?.version || 0);
-
-  const submit = await timesheetApi.write({
-    action: 'submit',
-    period,
-    expectedVersion: draftVersion,
-    contractualHours: 160,
-    billableHours: 12,
-    leaveHours: 0,
-    sicknessHours: 0,
-    dayEntries: buildDayEntries(period, 8, 4),
+    expect(draft.status).toBe(200);
+    expect(draft.body.ok).toBe(true);
+    expect(draft.body.timesheet.status).toBe('draft');
+    draftVersion = Number(draft.body?.timesheet?.version || 0);
+    expect(draftVersion).toBeGreaterThan(0);
   });
 
-  expect(submit.status).toBe(200);
-  expect(submit.body.ok).toBe(true);
-  expect(submit.body.timesheet.status).toBe('submitted');
+  await test.step('Then submit met expected_version blijft werkend', async () => {
+    const submit = await timesheetApi.write({
+      action: 'submit',
+      period,
+      expectedVersion: draftVersion,
+      contractualHours: 160,
+      billableHours: 12,
+      leaveHours: 0,
+      sicknessHours: 0,
+      dayEntries: buildDayEntries(period, 8, 4),
+    });
+
+    expect(submit.status).toBe(200);
+    expect(submit.body.ok).toBe(true);
+    expect(submit.body.timesheet.status).toBe('submitted');
+  });
 });
 
 test('[SAFE-N-003] productieconfig zet demo-migraties standaard uit', async () => {
   const configExamplePath = join(process.cwd(), 'server', 'config.example.php');
   const configLocalExamplePath = join(process.cwd(), 'server', 'config.local.php.example');
 
-  const configExample = await readFile(configExamplePath, 'utf8');
-  const configLocalExample = await readFile(configLocalExamplePath, 'utf8');
+  let configExample = '';
+  let configLocalExample = '';
 
-  expect(configExample).toMatch(/'environment'\s*=>\s*'production'/);
-  expect(configExample).toMatch(/'allow_demo_migrations'\s*=>\s*false/);
-  expect(configExample).toMatch(/'app_origin'\s*=>\s*'https:\/\//);
+  await test.step('Given de productieconfig-templatebestanden worden ingelezen', async () => {
+    configExample = await readFile(configExamplePath, 'utf8');
+    configLocalExample = await readFile(configLocalExamplePath, 'utf8');
+  });
 
-  expect(configLocalExample).toMatch(/'environment'\s*=>\s*'production'/);
-  expect(configLocalExample).toMatch(/'allow_demo_migrations'\s*=>\s*false/);
-  expect(configLocalExample).toMatch(/'app_origin'\s*=>\s*'https:\/\//);
+  await test.step('Then staan demo-migraties standaard uit in productieconfig', async () => {
+    expect(configExample).toMatch(/'environment'\s*=>\s*'production'/);
+    expect(configExample).toMatch(/'allow_demo_migrations'\s*=>\s*false/);
+    expect(configExample).toMatch(/'app_origin'\s*=>\s*'https:\/\//);
+
+    expect(configLocalExample).toMatch(/'environment'\s*=>\s*'production'/);
+    expect(configLocalExample).toMatch(/'allow_demo_migrations'\s*=>\s*false/);
+    expect(configLocalExample).toMatch(/'app_origin'\s*=>\s*'https:\/\//);
+  });
 });

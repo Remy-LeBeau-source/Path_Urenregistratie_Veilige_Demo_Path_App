@@ -6,6 +6,11 @@ export class LoginPage {
 
   async open(): Promise<void> {
     await this.page.goto(appConfig.baseUrl);
+    // Wait for the auth-state check to resolve before asserting button state.
+    await this.page.waitForResponse(
+      r => r.url().includes('/server/auth/me.php') || r.url().includes('/server/api.php'),
+      { timeout: 20_000 }
+    ).catch(() => undefined); // ignore if already resolved before this point
     await this.waitForAuthModeReady();
   }
 

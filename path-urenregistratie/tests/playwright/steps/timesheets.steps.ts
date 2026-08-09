@@ -19,6 +19,7 @@ Given('een urenstaat in correction met open correctieverzoek', () => undefined);
 Given('een ingediende urenstaat na herindiening met bekende versie', () => undefined);
 Given('een medewerker heeft in de browser een ingediende urenstaat in de gekozen periode', () => undefined);
 Given('een medewerker ziet in de browser een open correctieverzoek', () => undefined);
+Given('een medewerker heeft na correctieverzoek succesvol opnieuw ingediend en de administrator heeft daarna goedgekeurd', () => undefined);
 
 When('de medewerker save_draft uitvoert met geldige daguren', () => undefined);
 When('de medewerker de urenstaat terugleest', () => undefined);
@@ -32,6 +33,7 @@ When('de administrator approve uitvoert met de juiste expected_version', () => u
 When('request_correction of approve met verouderde expected_version wordt uitgevoerd', () => undefined);
 When('de administrator opent goedkeuringen en kiest Correctie vragen met een verplichte toelichting', () => undefined);
 When('de medewerker past uren aan en dient opnieuw in waarna de administrator goedkeurt', () => undefined);
+When('een medewerkeractie zoals save_draft of submit zonder sessie wordt verstuurd', () => undefined);
 
 Then('wordt de urenstaat als draft opgeslagen met een nieuwe versie', () => undefined);
 Then('ziet de medewerker draftstatus dagregels correctiehistorie en laatste audit-event', () => undefined);
@@ -45,3 +47,5 @@ Then('wordt de urenstaat approved met approved_at approved_by en audit-event', (
 Then('krijgt de gebruiker een stale-version conflictresponse', () => undefined);
 Then('ziet de medewerker in de urenweergave de status Correctie nodig met dezelfde toelichting', () => undefined);
 Then('ziet de medewerker in de browser de status Goedgekeurd voor dezelfde periode', () => undefined);
+Then('bevat de correctiehistorie een resubmitted_at tijdstip zodat de herstelcyclus volledig traceerbaar blijft', () => undefined);
+Then('antwoordt de API met not-authenticated en status 401 zodat protected writes niet anoniem uitvoerbaar zijn', () => undefined);

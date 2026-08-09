@@ -15,6 +15,8 @@ Feature: Factuurweergave in Path Uren & Facturatie
 # [INV-N-010] Niet-goedgekeurde urenstaat kan niet worden gefinaliseerd.
 # [INV-N-011] Tweede lock-oproep op zelfde factuur wordt geblokkeerd.
 # [INV-N-012] Gelijktijdige lock-oproepen leveren exact een winnaar.
+# [INV-H-013] Lock-actie levert audit-event en statusinvoicing op.
+# [INV-N-014] Lock-aanvraag met ongeldige timesheet_id wordt geweigerd.
 
   # Happy flows
 
@@ -37,6 +39,11 @@ Feature: Factuurweergave in Path Uren & Facturatie
     Given een medewerker heeft uren ingediend en een administrator heeft deze goedgekeurd
     When de administrator de factuur lockt via de API met action lock
     Then worden factuurnummer bedragen en locked_at server-side vastgezet en wordt de urenstaat invoiced
+
+  Scenario: [INV-H-013] Lock-actie registreert audit-event voor traceerbaarheid
+    Given een administrator finaliseert een approved urenstaat via action lock
+    When de lock-respons wordt gecontroleerd
+    Then bevat de respons audit_event invoice.locked en de urenstaatstatus invoiced zodat audittrace en statusovergang aantoonbaar samenkomen
 
   # Negative flows
 
@@ -76,4 +83,9 @@ Feature: Factuurweergave in Path Uren & Facturatie
   Scenario: [INV-N-012] Gelijktijdige lock-aanvragen concurreren veilig
     Given twee administrator-sessies roepen action lock tegelijk aan op dezelfde approved urenstaat
     Then slaagt exact een aanvraag met status 200 en krijgt de andere status 409
+
+  Scenario: [INV-N-014] Lock-aanvraag met ongeldige timesheet_id wordt geweigerd
+    Given een administrator is ingelogd met toegang tot invoices API
+    When de administrator action lock aanroept met een ongeldige of ontbrekende timesheet_id
+    Then antwoordt de API met invalid-payload en status 400 zodat invoervalidatie voorspelbaar blijft
 

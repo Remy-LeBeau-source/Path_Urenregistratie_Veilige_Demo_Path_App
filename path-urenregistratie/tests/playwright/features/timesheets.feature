@@ -15,6 +15,8 @@ Feature: Urenregistratie lifecycle via API
 # [TS-API-N-010] Schrijven voor andere medewerker wordt geblokkeerd.
 # [TS-API-N-011] Gesloten status kan niet terug naar draft.
 # [TS-REV-API-N-012] Verouderde expected_version geeft conflict.
+# [TS-REV-API-H-013] Read-back toont resubmitted correctiehistorie na herstelcyclus.
+# [TS-API-N-014] Schrijven zonder actieve sessie wordt geweigerd met 401.
 
   # Happy flows
 
@@ -63,6 +65,11 @@ Feature: Urenregistratie lifecycle via API
     When de medewerker past uren aan en dient opnieuw in waarna de administrator goedkeurt
     Then ziet de medewerker in de browser de status Goedgekeurd voor dezelfde periode zodat end-to-end UI-flow bevestigd is
 
+  Scenario: [TS-REV-API-H-013] Read-back toont resubmitted correctiehistorie
+    Given een medewerker heeft na correctieverzoek succesvol opnieuw ingediend en de administrator heeft daarna goedgekeurd
+    When de urenstaat opnieuw wordt uitgelezen via de API
+    Then bevat de correctiehistorie een resubmitted_at tijdstip zodat de herstelcyclus volledig traceerbaar blijft
+
   # Negative flows
 
   Scenario: [TS-API-N-010] Medewerker kan geen uren van een andere medewerker aanpassen
@@ -79,4 +86,9 @@ Feature: Urenregistratie lifecycle via API
     Given een ingediende urenstaat met bekende versie
     When request_correction of approve met verouderde expected_version wordt uitgevoerd
     Then krijgt de gebruiker een stale-version conflictresponse zodat concurrency-fouten veilig worden afgewezen
+
+  Scenario: [TS-API-N-014] Write-call zonder actieve sessie wordt geweigerd
+    Given er is geen actieve sessie voor de timesheet write API
+    When een medewerkeractie zoals save_draft of submit zonder sessie wordt verstuurd
+    Then antwoordt de API met not-authenticated en status 401 zodat protected writes niet anoniem uitvoerbaar zijn
 

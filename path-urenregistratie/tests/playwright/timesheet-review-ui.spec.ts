@@ -66,82 +66,94 @@ test('[TS-REV-UI-H-008] browserflow: admin vraagt correctie, medewerker dient op
     });
   });
 
-  await loginPage.open();
-  await loginPage.loginAsEmployee();
-  await openView(page, 'timesheet');
-  await setPeriod(page, PERIOD_KEY);
+  let employeeName = '';
 
-  const employeeName = (await page.locator('#timesheet-employee').textContent() || '').trim();
-  expect(employeeName.length).toBeGreaterThan(0);
+  await test.step('Given de medewerker een urenstaat indient in de browser', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await openView(page, 'timesheet');
+    await setPeriod(page, PERIOD_KEY);
 
-  await fillFirstTwoHours(page, '8', '8');
-  await page.locator('#submit-timesheet').click();
-  await expect(page.locator('#timesheet-status')).toHaveText('Ingediend');
+    employeeName = (await page.locator('#timesheet-employee').textContent() || '').trim();
+    expect(employeeName.length).toBeGreaterThan(0);
 
-  await loginPage.logout();
-  await loginPage.assertLoggedOut();
+    await fillFirstTwoHours(page, '8', '8');
+    await page.locator('#submit-timesheet').click();
+    await expect(page.locator('#timesheet-status')).toHaveText('Ingediend');
+  });
 
-  await loginPage.loginAsAdmin();
-  await openView(page, 'approvals');
-  await setPeriod(page, PERIOD_KEY);
+  await test.step('When de administrator een correctieverzoek plaatst', async () => {
+    await loginPage.logout();
+    await loginPage.assertLoggedOut();
 
-  const approvalCard = page
-    .locator(`article.approval-card[data-approval-period="${PERIOD_KEY}"]`)
-    .filter({ hasText: employeeName })
-    .first();
+    await loginPage.loginAsAdmin();
+    await openView(page, 'approvals');
+    await setPeriod(page, PERIOD_KEY);
 
-  await expect(approvalCard).toBeVisible();
-  await approvalCard.locator('[data-request-correction]').click();
+    const approvalCard = page
+      .locator(`article.approval-card[data-approval-period="${PERIOD_KEY}"]`)
+      .filter({ hasText: employeeName })
+      .first();
 
-  await expect(page.locator('#modal')).toBeVisible();
-  await page.locator('#correction-reason').fill(CORRECTION_MESSAGE);
-  await page.locator('#modal-confirm').click();
+    await expect(approvalCard).toBeVisible();
+    await approvalCard.locator('[data-request-correction]').click();
 
-  await expect(
-    page.locator(`article.approval-card[data-approval-period="${PERIOD_KEY}"]`).filter({ hasText: employeeName })
-  ).toHaveCount(0);
+    await expect(page.locator('#modal')).toBeVisible();
+    await page.locator('#correction-reason').fill(CORRECTION_MESSAGE);
+    await page.locator('#modal-confirm').click();
 
-  await loginPage.logout();
-  await loginPage.assertLoggedOut();
+    await expect(
+      page.locator(`article.approval-card[data-approval-period="${PERIOD_KEY}"]`).filter({ hasText: employeeName })
+    ).toHaveCount(0);
+  });
 
-  await loginPage.loginAsEmployee();
-  await openView(page, 'timesheet');
-  await setPeriod(page, PERIOD_KEY);
+  await test.step('Then ziet de medewerker het correctieverzoek en dient opnieuw in', async () => {
+    await loginPage.logout();
+    await loginPage.assertLoggedOut();
 
-  await expect(page.locator('#timesheet-status')).toHaveText('Correctie nodig');
-  await expect(page.locator('#timesheet-correction-banner')).toBeVisible();
-  await expect(page.locator('#timesheet-correction-message')).toContainText('Controleer dag 2');
+    await loginPage.loginAsEmployee();
+    await openView(page, 'timesheet');
+    await setPeriod(page, PERIOD_KEY);
 
-  await fillFirstTwoHours(page, '8', '4');
-  await page.locator('#submit-timesheet').click();
-  await expect(page.locator('#timesheet-status')).toHaveText('Ingediend');
-  await expect(page.locator('#timesheet-correction-banner')).toBeHidden();
+    await expect(page.locator('#timesheet-status')).toHaveText('Correctie nodig');
+    await expect(page.locator('#timesheet-correction-banner')).toBeVisible();
+    await expect(page.locator('#timesheet-correction-message')).toContainText('Controleer dag 2');
 
-  await loginPage.logout();
-  await loginPage.assertLoggedOut();
+    await fillFirstTwoHours(page, '8', '4');
+    await page.locator('#submit-timesheet').click();
+    await expect(page.locator('#timesheet-status')).toHaveText('Ingediend');
+    await expect(page.locator('#timesheet-correction-banner')).toBeHidden();
+  });
 
-  await loginPage.loginAsAdmin();
-  await openView(page, 'approvals');
-  await setPeriod(page, PERIOD_KEY);
+  await test.step('And de administrator keurt de herindiening goed', async () => {
+    await loginPage.logout();
+    await loginPage.assertLoggedOut();
 
-  const approvalCardAfterResubmit = page
-    .locator(`article.approval-card[data-approval-period="${PERIOD_KEY}"]`)
-    .filter({ hasText: employeeName })
-    .first();
+    await loginPage.loginAsAdmin();
+    await openView(page, 'approvals');
+    await setPeriod(page, PERIOD_KEY);
 
-  await expect(approvalCardAfterResubmit).toBeVisible();
-  await approvalCardAfterResubmit.locator('[data-approve]').click();
+    const approvalCardAfterResubmit = page
+      .locator(`article.approval-card[data-approval-period="${PERIOD_KEY}"]`)
+      .filter({ hasText: employeeName })
+      .first();
 
-  await expect(
-    page.locator(`article.approval-card[data-approval-period="${PERIOD_KEY}"]`).filter({ hasText: employeeName })
-  ).toHaveCount(0);
+    await expect(approvalCardAfterResubmit).toBeVisible();
+    await approvalCardAfterResubmit.locator('[data-approve]').click();
 
-  await loginPage.logout();
-  await loginPage.assertLoggedOut();
+    await expect(
+      page.locator(`article.approval-card[data-approval-period="${PERIOD_KEY}"]`).filter({ hasText: employeeName })
+    ).toHaveCount(0);
+  });
 
-  await loginPage.loginAsEmployee();
-  await openView(page, 'timesheet');
-  await setPeriod(page, PERIOD_KEY);
-  await expect(page.locator('#timesheet-status')).toHaveText('Goedgekeurd');
+  await test.step('Then ziet de medewerker de eindstatus Goedgekeurd', async () => {
+    await loginPage.logout();
+    await loginPage.assertLoggedOut();
+
+    await loginPage.loginAsEmployee();
+    await openView(page, 'timesheet');
+    await setPeriod(page, PERIOD_KEY);
+    await expect(page.locator('#timesheet-status')).toHaveText('Goedgekeurd');
+  });
 });
 

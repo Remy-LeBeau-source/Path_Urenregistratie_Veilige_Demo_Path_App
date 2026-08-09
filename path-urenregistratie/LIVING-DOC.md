@@ -53,7 +53,7 @@ Iedere nieuwe run kan dezelfde map opnieuw opbouwen en publiceren.
 ## Laatste regressiestatus
 
 - Laatste volledige run: `npm run check` en `npm run test:e2e`
-- Resultaat: 37/37 geslaagd
+- Resultaat: 43/43 geslaagd
 - Datum: 2026-08-09
 
 ## Scope en scenario-overzicht
@@ -67,6 +67,8 @@ Scenario's:
 - [AUTH-H-002] Medewerker logt succesvol in en ziet alleen eigen omgeving
 - [AUTH-H-003] Ingelogde gebruiker kan veilig uitloggen
 - [AUTH-N-004] Auth me endpoint meldt geen sessie na uitloggen
+- [AUTH-H-005] Auth me bevestigt direct de actieve sessie na login
+- [AUTH-N-006] Ongeldige inloggegevens maken geen actieve sessie
 
 ### Dashboard
 
@@ -77,6 +79,8 @@ Scenario's:
 - [DASH-H-002] Medewerker ziet alleen eigen dashboardinformatie
 - [DASH-N-003] Dashboard gebruikt API-data met veilige fallback
 - [DASH-N-004] Dashboard laadt zonder console of page errors
+- [DASH-H-005] Dashboard toont consistente kernsamenvatting na login
+- [DASH-N-006] Medewerker ziet geen administratoracties op dashboard
 
 ### Invoices
 
@@ -87,6 +91,7 @@ Scenario's:
 - [INV-H-002] Periodefilter wisselt correct tussen juli en augustus 2026
 - [INV-H-003] Open facturen gebruiken server-side berekende bedragen
 - [INV-H-004] Administrator lockt approved urenstaat naar definitieve immutable factuur
+- [INV-H-013] Lock-actie registreert audit-event voor traceerbaarheid
 - [INV-N-005] Medewerker ziet alleen eigen facturen en geen collega-data
 - [INV-N-006] Facturenscherm laadt zonder console of page errors
 - [INV-N-007] Ongeldige periodefilter wordt afgewezen met een duidelijke 400-validatiefout
@@ -95,6 +100,7 @@ Scenario's:
 - [INV-N-010] Niet-goedgekeurde urenstaat kan niet worden gelockt
 - [INV-N-011] Tweede lock-oproep op dezelfde factuur wordt geblokkeerd
 - [INV-N-012] Gelijktijdige lock-requests leveren exact een winnaar
+- [INV-N-014] Lock-aanvraag met ongeldige timesheet_id wordt geweigerd
 
 ### Roles API
 
@@ -103,8 +109,10 @@ Feature: tests/playwright/features/roles-api.feature
 Scenario's:
 - [ROLE-H-001] Administrator heeft volledige read-only inzage
 - [ROLE-H-002] Medewerker ziet alleen eigen afgebakende gegevens
+- [ROLE-H-005] Administrator ziet mail recipient routes binnen de eigen organisatie
 - [ROLE-N-003] Protected read-only endpoints blokkeren anonieme toegang
 - [ROLE-N-004] Medewerker krijgt geen brede medewerkers- of mailingdata
+- [ROLE-N-006] Employee ziet geen organisatiebrede mail recipient routes
 
 ### Timesheet write API
 
@@ -120,9 +128,11 @@ Scenario's:
 - [TS-REV-API-H-007] Administrator keurt heringediende uren goed met version check
 - [TS-REV-UI-H-008] Administrator vraagt via de browser-UI een correctie aan
 - [TS-REV-UI-H-009] Medewerker dient na UI-correctie opnieuw in en administrator keurt goed
+- [TS-REV-API-H-013] Read-back toont resubmitted correctiehistorie
 - [TS-API-N-010] Medewerker kan geen uren van een andere medewerker aanpassen
 - [TS-API-N-011] Ingediende urenstaat kan niet opnieuw als concept worden opgeslagen
 - [TS-REV-API-N-012] Verouderde expected_version wordt geblokkeerd
+- [TS-API-N-014] Write-call zonder actieve sessie wordt geweigerd
 
 ### Customer timesheet API
 
@@ -133,9 +143,11 @@ Scenario's:
 - [CTS-API-H-002] Medewerker dient klanturenstaat in en leest terug
 - [CTS-API-H-003] Administrator keurt goed en vraagt daarna resubmit
 - [CTS-API-H-004] Medewerker markeert als rechtstreeks gemaild en herstelt daarna naar missing
+- [CTS-API-H-008] Ingediende klanturenstaat blijft downloadbaar
 - [CTS-API-N-005] Ongeldig bestandstype wordt geblokkeerd
 - [CTS-API-N-006] Medewerker kan geen andere employee scope forceren
 - [CTS-API-N-007] Medewerker kan geen admin-reviewacties uitvoeren
+- [CTS-API-N-009] Download zonder actieve sessie wordt geweigerd
 
 ## Technische mapping
 

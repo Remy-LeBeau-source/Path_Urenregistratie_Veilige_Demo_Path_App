@@ -10,6 +10,8 @@ Feature: Klanturenstaat lifecycle via API
 # [CTS-API-N-005] Ongeldig bestandstype wordt afgewezen.
 # [CTS-API-N-006] Schrijven met andere employee_id wordt geblokkeerd.
 # [CTS-API-N-007] Medewerker mag geen admin reviewactie uitvoeren.
+# [CTS-API-H-008] Download van ingediende klanturenstaat blijft beschikbaar.
+# [CTS-API-N-009] Download zonder sessie wordt geweigerd met 401.
 
   # Happy flows
 
@@ -33,6 +35,11 @@ Feature: Klanturenstaat lifecycle via API
     When de medewerker mark_skipped uitvoert met een reden en daarna restore_missing uitvoert
     Then staat de klanturenstaat weer op missing zodat opnieuw uploaden mogelijk is
 
+  Scenario: [CTS-API-H-008] Ingediende klanturenstaat blijft downloadbaar
+    Given een ingediende klanturenstaat met opgeslagen bestandsmetadata
+    When de gebruiker de downloadactie opvraagt binnen geldige scope
+    Then levert de API het bestand met correcte headers zodat hergebruik en controle mogelijk blijven
+
   # Negative flows
 
   Scenario: [CTS-API-N-005] Ongeldig bestandstype wordt geblokkeerd
@@ -49,4 +56,9 @@ Feature: Klanturenstaat lifecycle via API
     Given een ingelogde medewerker met een ingediende klanturenstaat
     When de medewerker approve of request_resubmit probeert uit te voeren
     Then krijgt de medewerker forbidden-action zodat reviewbesluiten alleen bij administrators liggen
+
+  Scenario: [CTS-API-N-009] Download zonder actieve sessie wordt geweigerd
+    Given er is geen actieve sessie voor customer-timesheet download
+    When een downloadrequest voor een klanturenstaatbestand wordt gedaan
+    Then antwoordt de API met not-authenticated en status 401 zodat bestanden niet anoniem toegankelijk zijn
 
