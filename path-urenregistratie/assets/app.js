@@ -7293,6 +7293,10 @@ document.querySelector("#auth-login-form")?.addEventListener("submit", event => 
         setAuthLoginFeedback("Deze gebruiker heeft geen ondersteunde rol in deze fase.", true);
         logoutLocal();
       }
+      // Notify if admin has forced a password change for this account.
+      if (result.data.user && result.data.user.force_password_change) {
+        toast("Je wachtwoord moet worden gewijzigd. Gebruik 'Wachtwoord vergeten?' om een nieuw wachtwoord in te stellen.");
+      }
     })
     .catch(() => {
       setAuthDebug({ authenticated: false, role: "", user_id: null, mode: "auth", available: true, error: "login-request-failed" });
@@ -7302,6 +7306,45 @@ document.querySelector("#auth-login-form")?.addEventListener("submit", event => 
     .finally(() => {
       setAuthLoginEnabled(true);
     });
+});
+document.querySelector("#auth-forgot-password")?.addEventListener("click", () => {
+  document.querySelector("#auth-login-form").hidden = true;
+  document.querySelector("#auth-forgot-password").hidden = true;
+  document.querySelector("#auth-reset-form").hidden = false;
+  const resetEmail = document.querySelector("#auth-reset-email");
+  const loginEmail = document.querySelector("#auth-login-email");
+  if (resetEmail && loginEmail) resetEmail.value = loginEmail.value;
+});
+document.querySelector("#auth-reset-cancel")?.addEventListener("click", () => {
+  document.querySelector("#auth-reset-form").hidden = true;
+  document.querySelector("#auth-login-form").hidden = false;
+  document.querySelector("#auth-forgot-password").hidden = false;
+  const fb = document.querySelector("#auth-reset-feedback");
+  if (fb) { fb.hidden = true; fb.textContent = ""; }
+});
+document.querySelector("#auth-reset-submit")?.addEventListener("click", () => {
+  const emailInput = document.querySelector("#auth-reset-email");
+  const feedback = document.querySelector("#auth-reset-feedback");
+  const email = String(emailInput?.value || "").trim();
+  if (!email) { if (feedback) { feedback.textContent = "Vul een e-mailadres in."; feedback.hidden = false; } return; }
+  if (feedback) { feedback.textContent = "Verzoek wordt verstuurd..."; feedback.hidden = false; }
+  requestAuthCsrf().then(token =>
+    fetch("/server/auth/request-reset.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify({ email })
+    }).then(r => r.json()).then(data => {
+      if (feedback) {
+        if (data.ok) {
+          feedback.textContent = data.dry_run
+            ? "Resetverzoek verstuurd (dry-run). Vraag de beheerder om het token."
+            : "Resetverzoek verstuurd. Controleer je e-mail.";
+        } else {
+          feedback.textContent = "Resetverzoek mislukt. Probeer opnieuw.";
+        }
+      }
+    }).catch(() => { if (feedback) feedback.textContent = "Verbindingsfout. Probeer opnieuw."; })
+  );
 });
 document.querySelector("#switch-role").addEventListener("click", logout);
 document.querySelector("#mobile-switch-role").addEventListener("click", logout);

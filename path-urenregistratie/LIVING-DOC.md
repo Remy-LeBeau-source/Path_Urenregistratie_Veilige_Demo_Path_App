@@ -169,6 +169,32 @@ Scenario's:
 - [EQ-N-013] Anonieme enqueue geeft 401
 - [EQ-N-014] Unknown action geeft 400
 
+### Wachtwoord-reset API (Fase 13)
+
+Spec: tests/playwright/password-reset.spec.ts
+
+Scenario's:
+- [PWD-H-001] request-reset retourneert token in demo-modus
+- [PWD-H-002] Onbekend e-mailadres retourneert ook ok=true (geen email-enumeration)
+- [PWD-H-003] me.php bevat force_password_change veld
+- [PWD-N-004] reset-password met ongeldig token geeft 400
+- [PWD-N-005] reset-password met te kort wachtwoord geeft 400
+- [PWD-N-006] Hergebruik van al-gebruikt token geeft 409
+- [PWD-N-007] Login wordt geblokkeerd na 5 mislukte pogingen (rate-limit)
+
+### Gebruikersbeheer API (Fase 13)
+
+Spec: tests/playwright/user-management.spec.ts
+
+Scenario's:
+- [USR-H-001] Admin ziet alle gebruikers van het bedrijf
+- [USR-H-002] Admin kan medewerker deactiveren en heractiveren
+- [USR-H-003] Admin kan force_password_change instellen
+- [USR-N-004] Anonieme gebruiker krijgt 401 op user-list
+- [USR-N-005] Medewerker mag geen gebruikersbeheer uitvoeren
+- [USR-N-006] Admin kan zichzelf niet deactiveren
+- [USR-N-007] Dubbel deactiveren geeft 409
+
 ## Technische mapping
 
 Zie de volledige mapping in:
