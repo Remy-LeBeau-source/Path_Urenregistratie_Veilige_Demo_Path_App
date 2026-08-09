@@ -4,9 +4,9 @@
 
 ## Case ID-conventie
 
-- Ieder uitvoerbaar Playwright testgeval krijgt een unieke ID in de titel, bijvoorbeeld `[AUTH-001]` of `[TS-REV-UI-001]`.
-- Feature-scenario's dragen dezelfde ID-prefix zodat documentatie en testreport direct aan elkaar te koppelen zijn.
-- Meerdere feature-scenario's mogen bewust dezelfde ID delen wanneer ze samen door een enkel uitvoerbaar testgeval worden afgedekt.
+- Ieder uitvoerbaar Playwright testgeval krijgt een unieke ID in de titel met duidelijke flowmarkering, bijvoorbeeld `[AUTH-H-001]`, `[INV-N-002]` of `[TS-REV-UI-H-002]`.
+- `-H-` staat voor happy flow en `-N-` staat voor negative flow.
+- Feature-scenario's dragen dezelfde ID zodat documentatie en testreport direct 1-op-1 te koppelen zijn.
 
 - [tests/playwright/features/auth.feature](tests/playwright/features/auth.feature) → [tests/playwright/steps/auth.steps.ts](tests/playwright/steps/auth.steps.ts) → [tests/playwright/auth.spec.ts](tests/playwright/auth.spec.ts)
 - [tests/playwright/features/dashboard.feature](tests/playwright/features/dashboard.feature) → [tests/playwright/steps/dashboard.steps.ts](tests/playwright/steps/dashboard.steps.ts) → [tests/playwright/dashboard.spec.ts](tests/playwright/dashboard.spec.ts)

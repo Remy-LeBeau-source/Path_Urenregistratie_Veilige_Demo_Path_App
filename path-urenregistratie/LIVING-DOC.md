@@ -50,6 +50,12 @@ Publiceer die map op een statische host (bijvoorbeeld GitHub Pages, Azure Static
 
 Iedere nieuwe run kan dezelfde map opnieuw opbouwen en publiceren.
 
+## Laatste regressiestatus
+
+- Laatste volledige run: `npm run check` en `npm run test:e2e`
+- Resultaat: 35/35 geslaagd
+- Datum: 2026-08-09
+
 ## Scope en scenario-overzicht
 
 ### Auth
@@ -57,69 +63,71 @@ Iedere nieuwe run kan dezelfde map opnieuw opbouwen en publiceren.
 Feature: tests/playwright/features/auth.feature
 
 Scenario's:
-- Admin kan inloggen op Path Uren & Facturatie
-- Medewerker kan inloggen op Path Uren & Facturatie
-- Gebruiker kan uitloggen
-- Auth me endpoint geeft geen actieve sessie terug na logout
+- [AUTH-H-001] Administrator logt succesvol in en ziet backoffice
+- [AUTH-H-002] Medewerker logt succesvol in en ziet alleen eigen omgeving
+- [AUTH-H-003] Ingelogde gebruiker kan veilig uitloggen
+- [AUTH-N-001] Auth me endpoint meldt geen sessie na uitloggen
 
 ### Dashboard
 
 Feature: tests/playwright/features/dashboard.feature
 
 Scenario's:
-- Admin ziet open werkvoorraad
-- Medewerker ziet eigen dashboard
-- Dashboard gebruikt API-data met fallback
-- Dashboard laadt zonder console errors
+- [DASH-H-001] Administrator ziet open werkvoorraad en beheeropties
+- [DASH-H-002] Medewerker ziet alleen eigen dashboardinformatie
+- [DASH-N-001] Dashboard gebruikt API-data met veilige fallback
+- [DASH-N-002] Dashboard laadt zonder console of page errors
 
 ### Invoices
 
 Feature: tests/playwright/features/invoices.feature
 
 Scenario's:
-- Admin ziet facturen per periode
-- Medewerker ziet alleen eigen facturen
-- Periodefilter juli en augustus werkt
-- Facturen laden zonder console errors
+- [INV-H-001] Administrator ziet facturen per gekozen periode
+- [INV-H-002] Periodefilter wisselt correct tussen juli en augustus 2026
+- [INV-N-001] Medewerker ziet alleen eigen facturen en geen collega-data
+- [INV-N-002] Facturenscherm laadt zonder console of page errors
 
 ### Roles API
 
 Feature: tests/playwright/features/roles-api.feature
 
 Scenario's:
-- Zonder sessie geeft protected read-only API 401
-- Admin ziet bootstrap dashboard invoices
-- Employee ziet alleen eigen user employee assignment invoices
-- Employee ziet geen volledige medewerkerlijst
+- [ROLE-H-001] Administrator heeft volledige read-only inzage
+- [ROLE-H-002] Medewerker ziet alleen eigen afgebakende gegevens
+- [ROLE-N-001] Protected read-only endpoints blokkeren anonieme toegang
+- [ROLE-N-002] Medewerker krijgt geen brede medewerkers- of mailingdata
 
 ### Timesheet write API
 
 Feature: tests/playwright/features/timesheets.feature
 
 Scenario's:
-- Medewerker slaat uren als concept op
-- Medewerker leest opgeslagen concepturen terug
-- Medewerker dient eigen uren in
-- Medewerker kan geen uren van een ander wijzigen
-- Indienen schrijft een audit-event
-- Afgesloten urenstaat kan niet opnieuw worden gewijzigd
-- Administrator vraagt correctie met optimistic locking
-- Medewerker dient na correctie opnieuw in
-- Administrator keurt ingediende uren goed
-- Stale expected_version geeft conflict
-- Administrator vraagt via de browser-UI een correctie aan
-- Medewerker dient na UI-correctie opnieuw in en administrator keurt goed
+- [TS-API-H-001] Medewerker slaat concepturen op met versiebeheer
+- [TS-API-H-002] Medewerker leest volledige conceptinhoud terug
+- [TS-API-H-003] Medewerker dient eigen uren in met versieverhoging
+- [TS-API-H-004] Indienen schrijft audit-event voor traceerbaarheid
+- [TS-REV-API-H-001] Administrator vraagt correctie aan met optimistic locking
+- [TS-REV-API-H-002] Medewerker dient na correctieverzoek opnieuw in
+- [TS-REV-API-H-003] Administrator keurt heringediende uren goed met version check
+- [TS-REV-UI-H-001] Administrator vraagt via de browser-UI een correctie aan
+- [TS-REV-UI-H-002] Medewerker dient na UI-correctie opnieuw in en administrator keurt goed
+- [TS-API-N-001] Medewerker kan geen uren van een andere medewerker aanpassen
+- [TS-API-N-002] Ingediende urenstaat kan niet opnieuw als concept worden opgeslagen
+- [TS-REV-API-N-001] Verouderde expected_version wordt geblokkeerd
 
 ### Customer timesheet API
 
 Feature: tests/playwright/features/customer-timesheets.feature
 
 Scenario's:
-- Medewerker uploadt klanturenstaat als concept
-- Medewerker dient klanturenstaat in en leest terug
-- Administrator keurt goed en vraagt daarna resubmit
-- Ongeldig bestandstype wordt geblokkeerd
-- Medewerker kan geen andere employee scope forceren
+- [CTS-API-H-001] Medewerker uploadt klanturenstaat als concept
+- [CTS-API-H-002] Medewerker dient klanturenstaat in en leest terug
+- [CTS-API-H-003] Administrator keurt goed en vraagt daarna resubmit
+- [CTS-API-H-004] Medewerker markeert als rechtstreeks gemaild en herstelt daarna naar missing
+- [CTS-API-N-001] Ongeldig bestandstype wordt geblokkeerd
+- [CTS-API-N-002] Medewerker kan geen andere employee scope forceren
+- [CTS-API-N-003] Medewerker kan geen admin-reviewacties uitvoeren
 
 ## Technische mapping
 
