@@ -1,4 +1,4 @@
-@domain-timesheets @layer-api @layer-ui @phase9 @priority-high
+@timesheets @api @ui @phase9
 Feature: Urenregistratie lifecycle via API
 # Step definitions mapping: tests/playwright/steps/timesheets.steps.ts
 # Dit featurebestand dekt uren write-flow, review-flow en optimistic-locking gedrag.

@@ -138,7 +138,7 @@ Living doc en mapping:
 
 Feature tags en groepsrun:
 
-- Iedere feature file heeft bovenaan groepstags, bijvoorbeeld `@group-invoices` of `@group-timesheets`.
+- Iedere feature file heeft bovenaan korte tags, bijvoorbeeld `@invoices`, `@timesheets`, `@api`, `@ui`, `@phase10`.
 - De runner accepteert `PLAYWRIGHT_GROUP` (eventueel komma-gescheiden), bijvoorbeeld:
 	- `set PLAYWRIGHT_GROUP=invoices&& npm run test:e2e`
 	- `set PLAYWRIGHT_GROUP=api,security&& npm run test:e2e`

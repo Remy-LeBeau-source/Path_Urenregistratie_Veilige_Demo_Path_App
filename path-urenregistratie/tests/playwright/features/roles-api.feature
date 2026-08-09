@@ -1,4 +1,4 @@
-@domain-roles @layer-api @phase-core @priority-high
+@roles @api
 Feature: Role enforcement op read-only API endpoints
 # Step definitions mapping: tests/playwright/steps/roles-api.steps.ts
 # Dit featurebestand controleert API-autorisatie en gegevensscope per rol.

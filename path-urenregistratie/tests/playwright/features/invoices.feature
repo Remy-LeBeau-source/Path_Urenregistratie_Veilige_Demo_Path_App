@@ -1,4 +1,4 @@
-@domain-invoices @layer-api @layer-ui @phase11 @priority-high
+@invoices @api @ui @phase11
 Feature: Factuurweergave in Path Uren & Facturatie
 # Step definitions mapping: tests/playwright/steps/invoices.steps.ts
 # Dit featurebestand valideert factuurinzage, periodefiltering en rolafbakening.
