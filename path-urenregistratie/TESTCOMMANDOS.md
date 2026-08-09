@@ -24,6 +24,7 @@ npm run allure:open
 - `npm run test:e2e:ui` opent Playwright UI Mode om zelf tests te selecteren en uit te voeren.
 
 Laat het terminalvenster van `start-path-app.cmd` open zolang de app of tests draaien.
+Voer muterende volledige suites niet meerdere keren achter elkaar uit op dezelfde demo-database zonder de serverdata opnieuw te seeden. Factuur-, review- en mobiele flows wijzigen bewust persistente testdata.
 
 ## App, controle en build
 
@@ -144,6 +145,8 @@ De uitvoerbare waarheid staat in `tests/playwright/*.spec.ts`. De `.feature`-bes
 
 ## Stages
 
+Deze scripts zijn gereserveerd voor afzonderlijk ingerichte stageomgevingen:
+
 ```powershell
 npm run test:e2e:dev
 npm run test:e2e:test
@@ -151,4 +154,4 @@ npm run test:e2e:acc
 npm run test:e2e:prod
 ```
 
-Deze commando's gebruiken de bijbehorende stageconfiguratie. Gebruik ze alleen wanneer de stage-URL en credentials correct zijn ingesteld.
+Gebruik ze alleen wanneer iedere stage een eigen URL, credentials en schone testdatabase heeft. De meegeleverde `environments/*.env`-bestanden zijn placeholders die allemaal naar `http://localhost:8000` wijzen. Vier stage-runs achter elkaar op die ene lokale database zijn daarom geen geldige regressiecontrole en laten latere runs falen op al gewijzigde dossiers. Gebruik lokaal `npm run test:e2e`.

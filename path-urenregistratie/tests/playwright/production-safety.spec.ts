@@ -5,11 +5,19 @@ import { AuthApi } from './api/AuthApi';
 import { TimesheetApi } from './api/TimesheetApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
 
-const CANDIDATE_PERIODS = Array.from({ length: 240 }, (_, index) => {
-  const year = 2099 + Math.floor(index / 12);
-  const month = (index % 12) + 1;
-  return `${year}-${String(month).padStart(2, '0')}`;
-});
+const PERIOD_RANGE_START_YEAR = 3000;
+const PERIOD_RANGE_MONTHS = 7000 * 12;
+
+function candidatePeriods(): string[] {
+  const startIndex = Date.now() % PERIOD_RANGE_MONTHS;
+
+  return Array.from({ length: 240 }, (_, offset) => {
+    const index = (startIndex + offset) % PERIOD_RANGE_MONTHS;
+    const year = PERIOD_RANGE_START_YEAR + Math.floor(index / 12);
+    const month = (index % 12) + 1;
+    return `${year}-${String(month).padStart(2, '0')}`;
+  });
+}
 
 function buildDayEntries(period: string, first: number, second: number) {
   return [
@@ -19,7 +27,7 @@ function buildDayEntries(period: string, first: number, second: number) {
 }
 
 async function findWritablePeriod(timesheetApi: TimesheetApi): Promise<string> {
-  for (const period of CANDIDATE_PERIODS) {
+  for (const period of candidatePeriods()) {
     const read = await timesheetApi.read(period, undefined, { attach: false });
     if (read.status !== 200 || !read.body?.ok) {
       continue;
