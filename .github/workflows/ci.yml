@@ -179,6 +179,15 @@ jobs:
       - name: Smoke check
         run: npm run check
 
+      - name: Run DB CRUD smoke
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASSWORD: root
+          DB_NAME: path_urenregistratie
+        run: npm run test:db:crud
+
       - name: Run E2E tests
         env:
           PATH_APP_BASE_URL: http://127.0.0.1:8000

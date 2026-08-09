@@ -29,6 +29,7 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 
 - [x] Kernbouw en functionele basis zijn aanwezig en lokaal gevalideerd.
 - [x] Regresietesten zijn lokaal groen.
+- [x] DB/infrastructuursmoke aanwezig: DB-H-001 via `npm run test:db:crud` en CI uitgevoerd.
 - [-] We werken vanaf nu strikt van boven naar beneden op open punten in de checklist.
 - [-] Fases worden alleen overgeslagen als een punt aantoonbaar geblokkeerd is.
 

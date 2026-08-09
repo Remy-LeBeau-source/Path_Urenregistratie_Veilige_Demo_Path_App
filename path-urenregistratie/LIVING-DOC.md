@@ -144,7 +144,7 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 funct
 - Doel: expliciet valideren van `INSERT`, `SELECT`, `UPDATE` en `DELETE` in de lokale MySQL-omgeving zonder demo-data te wijzigen
 - Cases: 1
 
-- [DB-H-001] CRUD-smoke SQL draait zonder fouten en retourneert de verwachte resultaten voor insert/select/update/delete
+- [DB-H-001] CRUD-smoke SQL draait zonder fouten en retourneert de verwachte resultaten voor insert/select/update/delete; uitgevoerd via `npm run test:db:crud` en CI
 
 - [NOT-H-001] ingelogde gebruiker kan notificaties ophalen
 - [NOT-H-002] mark_all_read werkt zonder fouten
