@@ -202,6 +202,13 @@ function auth_start_session_secure(array $config): void
     ]);
 
     session_start();
+
+    // Check inactivity timeout BEFORE updating timestamp; then slide the window forward.
+    if (isset($_SESSION['_last_active']) && (time() - (int)$_SESSION['_last_active']) > ($lifetimeMinutes * 60)) {
+        auth_clear_session();
+        return;
+    }
+    $_SESSION['_last_active'] = time();
 }
 
 function auth_client_ip(): string
