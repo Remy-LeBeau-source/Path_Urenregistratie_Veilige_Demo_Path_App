@@ -50,6 +50,7 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 - [-] Slice C: notifications + announcements server-led (Fase 2 + 12)
 - [-] Slice D: users + settings server-led (Fase 2 + 13)
 - [-] Slice E: persistState/localStorage beperken tot UI/demo/fallback (afronding Fase 2)
+- [x] Slice C deelstap afgerond: auth-mode notificatiepaneel en markeren-als-gelezen lopen server-led via server/api/notifications.php (read, mark_read, mark_all_read en mark_announcement_read).
 
 Voor iedere slice geldt verplicht:
 - [-] Extra controle op afgeleide dubbeling: invoiceStatus, payrollStatus, email_deliveries, verzonden/sent-flags, dashboard/KPI-afleidingen en batch-acties.
@@ -543,6 +544,7 @@ Let op: dit staat los van GitHub commitnotificaties.
 - [x] Broker krijgt factuurbeleid; EasySalary-route heeft geen factuurbijlage.
 - [x] Veertien happy/negative Playwright API-tests.
 - [x] Auth-mode verzendstatus in UI wordt afgeleid uit email_deliveries via email-queue read-API; geen lokale voorspelling vóór serverbevestiging.
+- [x] Auth-mode notificaties gebruiken server/api/notifications.php als lees- en read-statusbron; klikken op melding, alles-lezen en mededeling-lezen schrijven eerst serverstatus en verversen daarna server-led.
 
 ### Nog bouwen
 

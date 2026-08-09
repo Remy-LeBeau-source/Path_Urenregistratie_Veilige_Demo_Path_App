@@ -13,6 +13,7 @@ const LOCAL_STORAGE_ENABLED = true;
 const API_ENABLED = true;
 const READ_API_DASHBOARD_PATH = "/server/api/dashboard.php";
 const READ_API_INVOICES_PATH = "/server/api/invoices.php";
+const READ_API_NOTIFICATIONS_PATH = "/server/api/notifications.php";
 const SUPPORT_EMAIL = "backoffice@pathconsultancy.nl";
 const DEFAULT_INVOICE_MAIL_BODY = "Middag,\n\nHierbij stuur ik de ureninformatie van {medewerker} over {maand} {jaar}.\n\nDaadwerkelijk gewerkte uren: {uren} uur.";
 const DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_SUBJECT = "Klanturenstaat {medewerker} – {maand} {jaar}";
@@ -998,6 +999,7 @@ const readApiDebug = {
   invoices: null,
   invoicesByPeriod: {},
   emailQueue: null,
+  notifications: null,
   customerTimesheetsByPeriod: {}
 };
 
@@ -1006,12 +1008,14 @@ const readApiRuntime = {
   dashboardInFlight: false,
   invoicesInFlight: false,
   emailQueueInFlight: false,
+  notificationsInFlight: false,
   customerTimesheetsInFlight: {},
   timesheetsInFlight: {},
   lastBootstrapAt: 0,
   lastDashboardAt: 0,
   lastInvoicesAt: 0,
   lastEmailQueueAt: 0,
+  lastNotificationsAt: 0,
   lastInvoicesByPeriod: {},
   lastCustomerTimesheetsByPeriod: {},
   lastTimesheetsByKey: {}
@@ -1024,6 +1028,7 @@ const readApiSource = {
   dashboard: "fallback",
   invoices: "fallback",
   emailQueue: "fallback",
+  notifications: "fallback",
   customerTimesheets: "fallback",
   overall: "fallback"
 };
@@ -1704,7 +1709,111 @@ function initializeAuthSession() {
 
 function setReadApiSource(section, source) {
   readApiSource[section] = source;
-  readApiSource.overall = (readApiSource.bootstrap === "api" || readApiSource.dashboard === "api" || readApiSource.invoices === "api" || readApiSource.emailQueue === "api" || readApiSource.customerTimesheets === "api") ? "api" : "fallback";
+  readApiSource.overall = (readApiSource.bootstrap === "api" || readApiSource.dashboard === "api" || readApiSource.invoices === "api" || readApiSource.emailQueue === "api" || readApiSource.notifications === "api" || readApiSource.customerTimesheets === "api") ? "api" : "fallback";
+}
+
+function notificationTypeToLegacy(type) {
+  const raw = String(type || "").toLowerCase();
+  if (raw === "timesheet_submitted") return "submitted";
+  if (raw === "timesheet_reminder") return "reminder";
+  if (raw === "correction_required") return "correction";
+  if (raw === "timesheet_approved") return "approved";
+  if (raw === "invoice_ready") return "invoice";
+  if (raw === "customer_timesheet_received") return "customer-timesheet";
+  if (raw === "customer_timesheet_reminder") return "customer-timesheet-reminder";
+  if (raw === "customer_timesheet_approved") return "customer-timesheet";
+  if (raw === "customer_timesheet_resubmit") return "customer-timesheet";
+  if (raw === "announcement") return "announcement";
+  return raw || "notification";
+}
+
+function notificationTargetView(route) {
+  const normalized = String(route || "").toLowerCase();
+  if (!normalized) return state.currentRole === "employee" ? "employee-dashboard" : "dashboard";
+  if (normalized === "employee-announcements") return "employee-announcements";
+  return normalized;
+}
+
+function applyNotificationsApiPayload(data) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && data && Array.isArray(data.items))) return false;
+  const role = String(state.currentRole || "");
+  const employee = role === "employee" ? currentEmployee() : null;
+  state.notifications = data.items.map(item => ({
+    id: Number(item && item.id || 0),
+    audience: role === "admin" ? "admin" : "employee",
+    type: notificationTypeToLegacy(item && item.notification_type),
+    notificationType: String(item && item.notification_type || ""),
+    employeeId: employee ? Number(employee.id) : null,
+    title: String(item && item.title || "Nieuwe melding"),
+    message: String(item && item.message || ""),
+    periodKey: parsePeriodKey(String(item && item.period_key || "")) ? String(item.period_key) : "",
+    view: notificationTargetView(item && item.target_route),
+    announcementId: Number(item && item.announcement_id || 0) || null,
+    emailRequested: false,
+    read: Boolean(item && item.read),
+    createdAt: String(item && item.created_at || "")
+  })).filter(item => item.id > 0);
+  return true;
+}
+
+function postNotificationsApi(payload) {
+  if (!(API_ENABLED && authRuntime.mode === "auth")) return Promise.resolve(null);
+  return requestAuthCsrf()
+    .then(token => fetch(READ_API_NOTIFICATIONS_PATH, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify(payload || {})
+    }))
+    .then(resp => resp.json().catch(() => ({})).then(data => ({ ok: resp.ok, data })))
+    .then(result => {
+      if (!result.ok || !result.data || result.data.ok !== true) {
+        throw new Error(String(result && result.data && result.data.message || "Notificatieactie op server mislukt."));
+      }
+      return result.data;
+    });
+}
+
+function markNotificationReadApi(notificationId) {
+  const id = Number(notificationId || 0);
+  if (!(API_ENABLED && authRuntime.mode === "auth") || id <= 0) return Promise.resolve(null);
+  return postNotificationsApi({ action: "mark_read", notification_id: id });
+}
+
+function markAllNotificationsReadApi() {
+  if (!(API_ENABLED && authRuntime.mode === "auth")) return Promise.resolve(null);
+  return postNotificationsApi({ action: "mark_all_read" });
+}
+
+function markAnnouncementReadApi(announcementId) {
+  const id = Number(announcementId || 0);
+  if (!(API_ENABLED && authRuntime.mode === "auth") || id <= 0) return Promise.resolve(null);
+  return postNotificationsApi({ action: "mark_announcement_read", announcement_id: id });
+}
+
+function refreshNotificationsReadApi(force = false) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && state.currentRole)) return Promise.resolve(null);
+  const now = Date.now();
+  if (!force && (readApiRuntime.notificationsInFlight || (now - readApiRuntime.lastNotificationsAt) < 8000)) return Promise.resolve(null);
+  readApiRuntime.notificationsInFlight = true;
+  return fetchReadApi(READ_API_NOTIFICATIONS_PATH + "?limit=50")
+    .then(data => {
+      readApiRuntime.lastNotificationsAt = Date.now();
+      if (!data) {
+        setReadApiSource("notifications", "fallback");
+        return null;
+      }
+      readApiDebug.notifications = data;
+      const applied = applyNotificationsApiPayload(data);
+      setReadApiSource("notifications", applied ? "api" : "fallback");
+      if (applied) {
+        renderNotifications();
+        renderEmployeeAnnouncementArchive();
+      }
+      return data;
+    })
+    .finally(() => {
+      readApiRuntime.notificationsInFlight = false;
+    });
 }
 
 function firstBootstrapCompany(data) {
@@ -4294,6 +4403,30 @@ function renderEmployeeAnnouncementArchive() {
     list.innerHTML = "";
     return;
   }
+
+  if (API_ENABLED && authRuntime.mode === "auth") {
+    let announcements = employeeAnnouncementItemsFromNotifications();
+    const unreadAnnouncementCount = announcements.filter(item => !item.read).length;
+    document.querySelector("#announcement-unread-filter").textContent = "Ongelezen mededelingen · " + unreadAnnouncementCount;
+    if (state.announcementArchiveFilter === "unread") announcements = announcements.filter(item => !item.read);
+    if (state.announcementArchiveFilter === "withdrawn") announcements = [];
+    document.querySelectorAll("[data-announcement-archive-filter]").forEach(button => button.classList.toggle("is-active", button.dataset.announcementArchiveFilter === state.announcementArchiveFilter));
+    if (!announcements.length) {
+      list.innerHTML = '<div class="dashboard-action-empty"><strong>Geen mededelingen binnen dit filter.</strong><br>Nieuwe berichten verschijnen ook via de bel.</div>';
+      return;
+    }
+
+    list.innerHTML = announcements.map(item => {
+      const unread = !item.read;
+      return '<article class="employee-announcement-card' + (unread ? " is-unread" : "") + '">' +
+        '<header><div><span class="status-pill ' + (unread ? 'status-warning' : 'status-approved') + '">' + (unread ? 'Ongelezen' : 'Gelezen') + '</span><h3>' + escapeHtml(item.title) + '</h3></div><small>' + escapeHtml(item.createdAt) + '</small></header>' +
+        '<p>' + escapeHtml(item.message) + '</p>' +
+        '<footer><span>Van ' + escapeHtml(item.createdBy) + ' · ' + (unread ? 'Ongelezen' : 'Gelezen') + '</span>' + (unread ? '<button class="small-button" data-read-announcement="' + item.id + '">Markeer als gelezen</button>' : '') + '</footer>' +
+      '</article>';
+    }).join("");
+    return;
+  }
+
   const employee = currentEmployee();
   let announcements = state.announcements
     .filter(item => item.status !== "draft" && item.status !== "withdrawn" && !item.hiddenFromEmployees && !item.supersededById && item.recipientIds.includes(employee.id))
@@ -5200,6 +5333,10 @@ function nextNotificationId() {
 }
 
 function addNotification(notification, force) {
+  if (API_ENABLED && authRuntime.mode === "auth") {
+    refreshNotificationsReadApi(true).catch(() => null);
+    return;
+  }
   const audience = notification.audience;
   const targetEmployee = audience === "employee" ? employeeById(notification.employeeId) : null;
   if (!force && audience === "admin" && !state.preferences.approvalNotifications && notification.type !== "invoice") return;
@@ -5224,6 +5361,11 @@ function addNotification(notification, force) {
 
 function notificationsForCurrentProfile() {
   if (!state.currentRole) return [];
+  if (API_ENABLED && authRuntime.mode === "auth") {
+    return state.notifications
+      .slice()
+      .sort((left, right) => Number(right.id) - Number(left.id));
+  }
   return state.notifications
     .filter(item => state.currentRole === "admin" ? item.audience === "admin" : item.audience === "employee" && Number(item.employeeId) === currentEmployee().id)
     .sort((left, right) => Number(right.id) - Number(left.id));
@@ -5242,6 +5384,21 @@ function renderNotifications() {
     ? unread + " ongelezen melding" + (unread === 1 ? "" : "en")
     : "Geen ongelezen meldingen";
   list.innerHTML = visible.length ? visible.map(item => '<button class="notification-item is-unread" data-notification-id="' + item.id + '"><span class="notification-item-dot"></span><span><strong>' + escapeHtml(item.title) + '</strong><span>' + escapeHtml(item.message) + '</span><small>' + escapeHtml(item.createdAt) + '</small></span></button>').join("") : '<div class="notification-empty"><strong>Je hebt geen ongelezen meldingen.</strong><br>Urenstatussen en algemene mededelingen verschijnen hier samen.</div>';
+}
+
+function employeeAnnouncementItemsFromNotifications() {
+  return notificationsForCurrentProfile()
+    .filter(item => String(item.notificationType || "").toLowerCase() === "announcement" || item.type === "announcement")
+    .map(item => ({
+      id: Number(item.announcementId || item.id),
+      title: String(item.title || "Mededeling"),
+      message: String(item.message || ""),
+      createdBy: "Beheerder",
+      createdAt: String(item.createdAt || ""),
+      updatedAt: String(item.createdAt || ""),
+      status: "sent",
+      read: Boolean(item.read)
+    }));
 }
 
 function createTestNotification(type) {
@@ -6692,14 +6849,25 @@ document.addEventListener("click", event => {
   if (notificationItem) {
     const item = state.notifications.find(notification => Number(notification.id) === Number(notificationItem.dataset.notificationId));
     if (item) {
-      item.read = true;
-      if (item.periodKey) setPeriod(item.periodKey);
-      const targetView = state.currentRole === "employee" && item.announcementId ? "employee-announcements" : item.view;
-      showView(targetView || profileForRole(state.currentRole).home);
-      persistState();
-      renderNotifications();
-      renderEmployeeAnnouncementArchive();
-      closeTopbarPopovers();
+      const continueNavigation = () => {
+        if (item.periodKey) setPeriod(item.periodKey);
+        const targetView = state.currentRole === "employee" && item.announcementId ? "employee-announcements" : item.view;
+        showView(targetView || profileForRole(state.currentRole).home);
+        closeTopbarPopovers();
+      };
+
+      if (API_ENABLED && authRuntime.mode === "auth") {
+        markNotificationReadApi(item.id)
+          .then(() => refreshNotificationsReadApi(true))
+          .catch(() => null)
+          .finally(continueNavigation);
+      } else {
+        item.read = true;
+        persistState();
+        renderNotifications();
+        renderEmployeeAnnouncementArchive();
+        continueNavigation();
+      }
     }
   }
 
@@ -7007,11 +7175,19 @@ document.addEventListener("click", event => {
 
   const readAnnouncement = event.target.closest("[data-read-announcement]");
   if (readAnnouncement && state.currentRole === "employee") {
-    announcementNotificationsFor(currentEmployee().id, Number(readAnnouncement.dataset.readAnnouncement)).forEach(item => { item.read = true; });
-    persistState();
-    renderNotifications();
-    renderEmployeeAnnouncementArchive();
-    toast("Mededeling als gelezen gemarkeerd.");
+    const announcementId = Number(readAnnouncement.dataset.readAnnouncement || 0);
+    if (API_ENABLED && authRuntime.mode === "auth") {
+      markAnnouncementReadApi(announcementId)
+        .then(() => refreshNotificationsReadApi(true))
+        .then(() => toast("Mededeling als gelezen gemarkeerd."))
+        .catch(() => toast("Markeren als gelezen op server mislukt."));
+    } else {
+      announcementNotificationsFor(currentEmployee().id, announcementId).forEach(item => { item.read = true; });
+      persistState();
+      renderNotifications();
+      renderEmployeeAnnouncementArchive();
+      toast("Mededeling als gelezen gemarkeerd.");
+    }
   }
 
   const review = event.target.closest("[data-review]");
@@ -7610,6 +7786,13 @@ document.querySelector("#connect-gmail").addEventListener("click", () => showMod
 }));
 
 document.querySelector("#mark-notifications-read").addEventListener("click", () => {
+  if (API_ENABLED && authRuntime.mode === "auth") {
+    markAllNotificationsReadApi()
+      .then(() => refreshNotificationsReadApi(true))
+      .then(() => toast("Alle meldingen zijn als gelezen gemarkeerd."))
+      .catch(() => toast("Markeren als gelezen op server mislukt."));
+    return;
+  }
   notificationsForCurrentProfile().forEach(item => { item.read = true; });
   persistState();
   renderNotifications();
@@ -7675,6 +7858,8 @@ document.querySelector("#auth-login-form")?.addEventListener("submit", event => 
       if (!applyAuthUserToState(result.data.user)) {
         setAuthLoginFeedback("Deze gebruiker heeft geen ondersteunde rol in deze fase.", true);
         logoutLocal();
+      } else {
+        refreshNotificationsReadApi(true).catch(() => null);
       }
       // Notify if admin has forced a password change for this account.
       if (result.data.user && result.data.user.force_password_change) {
@@ -7774,3 +7959,4 @@ refreshBootstrapReadApi(true);
 refreshDashboardReadApi(true);
 refreshInvoicesReadApi("", true);
 refreshInvoicesReadApi("2026-07", true);
+refreshNotificationsReadApi(true);

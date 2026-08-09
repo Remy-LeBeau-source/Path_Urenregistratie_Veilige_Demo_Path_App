@@ -30,15 +30,25 @@ if ($method === 'GET') {
     $limit = min(50, max(1, (int)($_GET['limit'] ?? 20)));
     $unreadOnly = isset($_GET['unread']) && $_GET['unread'] === '1';
 
-    $sql = '
-        SELECT id, notification_type, title, message, target_route, read_at, created_at
-        FROM notifications
-        WHERE company_id = :company_id AND user_id = :user_id
-    ';
+    $sql = "
+        SELECT n.id,
+               n.period_id,
+               n.announcement_id,
+               n.notification_type,
+               n.title,
+               n.message,
+               n.target_route,
+               n.read_at,
+               n.created_at,
+               CONCAT(p.year, '-', LPAD(p.month, 2, '0')) AS period_key
+        FROM notifications n
+        LEFT JOIN periods p ON p.id = n.period_id
+        WHERE n.company_id = :company_id AND n.user_id = :user_id
+    ";
     if ($unreadOnly) {
-        $sql .= ' AND read_at IS NULL';
+        $sql .= ' AND n.read_at IS NULL';
     }
-    $sql .= ' ORDER BY read_at IS NULL DESC, created_at DESC LIMIT ' . $limit;
+    $sql .= ' ORDER BY n.read_at IS NULL DESC, n.created_at DESC LIMIT ' . $limit;
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute([':company_id' => $companyId, ':user_id' => $userId]);
@@ -46,6 +56,9 @@ if ($method === 'GET') {
     $items = array_map(static function (array $r): array {
         return [
             'id'                => (int)$r['id'],
+            'period_id'         => $r['period_id'] !== null ? (int)$r['period_id'] : null,
+            'period_key'        => $r['period_key'] !== null ? (string)$r['period_key'] : null,
+            'announcement_id'   => $r['announcement_id'] !== null ? (int)$r['announcement_id'] : null,
             'notification_type' => (string)$r['notification_type'],
             'title'             => (string)$r['title'],
             'message'           => (string)$r['message'],
@@ -108,5 +121,25 @@ if ($action === 'mark_all_read') {
     auth_send_json(['ok' => true, 'action' => 'mark_all_read', 'updated' => $upd->rowCount()]);
 }
 
+if ($action === 'mark_announcement_read') {
+    $announcementRaw = $payload['announcement_id'] ?? null;
+    if (!is_numeric($announcementRaw) || (int)$announcementRaw <= 0) {
+        auth_send_json(['ok' => false, 'error' => 'missing-announcement-id'], 400);
+    }
+    $announcementId = (int)$announcementRaw;
+
+    $upd = $pdo->prepare(
+        'UPDATE notifications SET read_at = CURRENT_TIMESTAMP
+         WHERE user_id = :uid AND company_id = :cid AND announcement_id = :announcement_id AND read_at IS NULL'
+    );
+    $upd->execute([
+        ':uid' => $userId,
+        ':cid' => $companyId,
+        ':announcement_id' => $announcementId,
+    ]);
+
+    auth_send_json(['ok' => true, 'action' => 'mark_announcement_read', 'updated' => $upd->rowCount()]);
+}
+
 auth_send_json(['ok' => false, 'error' => 'unknown-action',
-    'message' => 'action must be one of: mark_read, mark_all_read'], 400);
+    'message' => 'action must be one of: mark_read, mark_all_read, mark_announcement_read'], 400);
