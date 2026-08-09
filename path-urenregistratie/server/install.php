@@ -13,6 +13,15 @@ if (!file_exists($localConfigPath)) {
 
 $config = include $localConfigPath;
 $db = null;
+
+// Block HTTP access in production — run from CLI or remove the guard to allow.
+$installEnv = strtolower(trim((string)($config['environment'] ?? $config['app']['environment'] ?? 'production')));
+if ($installEnv === 'production' && PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    echo json_encode(['ok' => false, 'message' => 'Installation endpoint is disabled in production.']);
+    exit;
+}
+
 if (isset($config['database']) && is_array($config['database'])) {
     $db = $config['database'];
 } elseif (isset($config['host']) && (isset($config['database']) || isset($config['name']))) {

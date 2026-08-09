@@ -192,3 +192,42 @@ test('[SAFE-N-003] productieconfig zet demo-migraties standaard uit', async () =
     expect(configLocalExample).toMatch(/'app_origin'\s*=>\s*'https:\/\//);
   });
 });
+
+test('[SAFE-H-003] health.php bevat productieguard die technische details onderdrukt', async () => {
+  await test.step('Given de health.php broncode wordt gelezen', async () => {});
+
+  await test.step('Then bevat health.php een productieguard die host en databasenaam wegfiltert', async () => {
+    const src = await readFile(join(process.cwd(), 'server', 'health.php'), 'utf8');
+    expect(src).toContain("'production'");
+    expect(src).toContain('ok');
+    // Guard must suppress host/db details in production mode.
+    expect(src).toMatch(/production.*ob_clean|production.*\[\s*'ok'/s);
+  });
+});
+
+test('[SAFE-N-004] install.php en migrate.php bevatten productieguards', async () => {
+  await test.step('Given install.php en migrate.php worden gelezen', async () => {});
+
+  await test.step('Then bevatten beide bestanden een HTTP-blokkering voor productieomgeving', async () => {
+    const install = await readFile(join(process.cwd(), 'server', 'install.php'), 'utf8');
+    const migrate = await readFile(join(process.cwd(), 'server', 'migrate.php'), 'utf8');
+
+    expect(install).toContain("'production'");
+    expect(install).toContain('403');
+    expect(install).toContain('PHP_SAPI');
+
+    expect(migrate).toContain("'production'");
+    expect(migrate).toContain('403');
+    expect(migrate).toContain('PHP_SAPI');
+  });
+});
+
+test('[SAFE-H-004] config.example.php bevat mail.enabled=false als standaard', async () => {
+  await test.step('Given config.example.php wordt gelezen', async () => {});
+
+  await test.step('Then staat mail.enabled standaard op false', async () => {
+    const src = await readFile(join(process.cwd(), 'server', 'config.example.php'), 'utf8');
+    expect(src).toMatch(/'enabled'\s*=>\s*false/);
+    expect(src).toMatch(/'transport'\s*=>\s*'dry_run'/);
+  });
+});

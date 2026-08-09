@@ -161,6 +161,13 @@ if (!$db || !isset($db['host']) || !isset($db['name'])) {
 $environment = migrate_environment($config);
 $allowDemoMigrations = migrate_allow_demo_migrations($config) && $environment !== 'production';
 
+// Block HTTP access in production — migrations must be run from CLI.
+if ($environment === 'production' && PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    echo json_encode(['ok' => false, 'message' => 'Migration endpoint is disabled for HTTP access in production. Run from CLI: php server/migrate.php']);
+    exit;
+}
+
 try {
     $dsn = sprintf('mysql:host=%s;port=%d;dbname=%s;charset=%s', $db['host'], $db['port'] ?? 3306, $db['name'], $db['charset'] ?? 'utf8mb4');
     $pdo = new PDO($dsn, $db['user'] ?? '', $db['password'] ?? '', [

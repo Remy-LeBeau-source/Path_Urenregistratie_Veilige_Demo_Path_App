@@ -32,4 +32,10 @@ return [
         'require_https' => true,
         'allowed_google_domain' => 'example.invalid',
     ],
+    // Mail: keep mail.enabled = false until SPF/DKIM/DMARC is verified and dispatch is activated.
+    'mail' => [
+        'enabled' => false,
+        'transport' => 'dry_run', // options: dry_run | gmail | smtp
+        'max_attempts' => 3,
+    ],
 ];

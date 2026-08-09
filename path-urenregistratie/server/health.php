@@ -137,4 +137,15 @@ try {
     $result['checks']['demo_seed_present'] = ['ok' => false, 'message' => 'Could not run demo seed counts'];
 }
 
+// In production: suppress all technical details; return only ok/not-ok.
+$healthEnv = strtolower(trim((string)($config['environment'] ?? $config['app']['environment'] ?? 'production')));
+if ($healthEnv === 'production') {
+    $allOk = true;
+    array_walk_recursive($result['checks'], static function ($v, $k) use (&$allOk) {
+        if ($k === 'ok' && $v === false) $allOk = false;
+    });
+    echo json_encode(['ok' => $allOk], JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
 echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
