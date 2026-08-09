@@ -14,6 +14,7 @@ const API_ENABLED = true;
 const READ_API_DASHBOARD_PATH = "/server/api/dashboard.php";
 const READ_API_INVOICES_PATH = "/server/api/invoices.php";
 const READ_API_NOTIFICATIONS_PATH = "/server/api/notifications.php";
+const READ_API_ANNOUNCEMENTS_PATH = "/server/api/announcements.php";
 const SUPPORT_EMAIL = "backoffice@pathconsultancy.nl";
 const DEFAULT_INVOICE_MAIL_BODY = "Middag,\n\nHierbij stuur ik de ureninformatie van {medewerker} over {maand} {jaar}.\n\nDaadwerkelijk gewerkte uren: {uren} uur.";
 const DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_SUBJECT = "Klanturenstaat {medewerker} – {maand} {jaar}";
@@ -1000,6 +1001,7 @@ const readApiDebug = {
   invoicesByPeriod: {},
   emailQueue: null,
   notifications: null,
+  announcements: null,
   customerTimesheetsByPeriod: {}
 };
 
@@ -1009,6 +1011,7 @@ const readApiRuntime = {
   invoicesInFlight: false,
   emailQueueInFlight: false,
   notificationsInFlight: false,
+  announcementsInFlight: false,
   customerTimesheetsInFlight: {},
   timesheetsInFlight: {},
   lastBootstrapAt: 0,
@@ -1016,6 +1019,7 @@ const readApiRuntime = {
   lastInvoicesAt: 0,
   lastEmailQueueAt: 0,
   lastNotificationsAt: 0,
+  lastAnnouncementsAt: 0,
   lastInvoicesByPeriod: {},
   lastCustomerTimesheetsByPeriod: {},
   lastTimesheetsByKey: {}
@@ -1029,6 +1033,7 @@ const readApiSource = {
   invoices: "fallback",
   emailQueue: "fallback",
   notifications: "fallback",
+  announcements: "fallback",
   customerTimesheets: "fallback",
   overall: "fallback"
 };
@@ -1709,7 +1714,7 @@ function initializeAuthSession() {
 
 function setReadApiSource(section, source) {
   readApiSource[section] = source;
-  readApiSource.overall = (readApiSource.bootstrap === "api" || readApiSource.dashboard === "api" || readApiSource.invoices === "api" || readApiSource.emailQueue === "api" || readApiSource.notifications === "api" || readApiSource.customerTimesheets === "api") ? "api" : "fallback";
+  readApiSource.overall = (readApiSource.bootstrap === "api" || readApiSource.dashboard === "api" || readApiSource.invoices === "api" || readApiSource.emailQueue === "api" || readApiSource.notifications === "api" || readApiSource.announcements === "api" || readApiSource.customerTimesheets === "api") ? "api" : "fallback";
 }
 
 function notificationTypeToLegacy(type) {
@@ -1813,6 +1818,85 @@ function refreshNotificationsReadApi(force = false) {
     })
     .finally(() => {
       readApiRuntime.notificationsInFlight = false;
+    });
+}
+
+function applyAnnouncementsApiPayload(data) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && data && Array.isArray(data.items))) return false;
+  const isAdmin = state.currentRole === "admin";
+  state.announcements = data.items.map(item => {
+    const base = {
+      id: Number(item.id || 0),
+      kind: String(item.kind || "standard"),
+      status: String(item.status || "sent"),
+      title: String(item.title || ""),
+      message: String(item.message || ""),
+      createdBy: String(item.created_by || "Beheerder"),
+      createdAt: String(item.created_at || ""),
+      createdAtIso: String(item.created_at || ""),
+      updatedAt: String(item.updated_at || item.created_at || ""),
+      updatedAtIso: String(item.updated_at || item.created_at || ""),
+      withdrawalOfId: item.withdrawal_of_id ? Number(item.withdrawal_of_id) : null,
+      correctionOfId: item.correction_of_id ? Number(item.correction_of_id) : null,
+      supersededById: item.superseded_by_id ? Number(item.superseded_by_id) : null,
+      withdrawalReason: item.withdrawal_reason || null,
+      withdrawnAt: item.withdrawn_at ? String(item.withdrawn_at) : null
+    };
+    if (isAdmin) {
+      Object.assign(base, {
+        audienceLabel: String(item.audience_label || ""),
+        emailRequested: Boolean(item.email_requested),
+        emailRecipientIds: [],
+        recipientIds: Array.isArray(item.recipient_user_ids) ? item.recipient_user_ids.map(Number) : [],
+        audienceValue: "fixed"
+      });
+    }
+    return base;
+  }).filter(item => item.id > 0);
+  if (isAdmin) applyAnnouncementSupersession(state);
+  return true;
+}
+
+function writeAnnouncementToApi(action, payload) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin")) return Promise.resolve(null);
+  return requestAuthCsrf()
+    .then(token => fetch(READ_API_ANNOUNCEMENTS_PATH, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify(Object.assign({ action }, payload || {}))
+    }))
+    .then(resp => resp.json().catch(() => ({})).then(data => ({ ok: resp.ok, data })))
+    .then(result => {
+      if (!result.ok || !result.data || result.data.ok !== true) {
+        throw new Error(String(result && result.data && result.data.message || "Mededelingactie op server mislukt."));
+      }
+      return result.data;
+    });
+}
+
+function refreshAnnouncementsReadApi(force = false) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && state.currentRole)) return Promise.resolve(null);
+  const now = Date.now();
+  if (!force && (readApiRuntime.announcementsInFlight || (now - readApiRuntime.lastAnnouncementsAt) < 10000)) return Promise.resolve(null);
+  readApiRuntime.announcementsInFlight = true;
+  return fetchReadApi(READ_API_ANNOUNCEMENTS_PATH + "?limit=100")
+    .then(data => {
+      readApiRuntime.lastAnnouncementsAt = Date.now();
+      if (!data) {
+        setReadApiSource("announcements", "fallback");
+        return null;
+      }
+      readApiDebug.announcements = data;
+      const applied = applyAnnouncementsApiPayload(data);
+      setReadApiSource("announcements", applied ? "api" : "fallback");
+      if (applied) {
+        renderAnnouncements();
+        renderEmployeeAnnouncementArchive();
+      }
+      return data;
+    })
+    .finally(() => {
+      readApiRuntime.announcementsInFlight = false;
     });
 }
 
@@ -4538,13 +4622,39 @@ function saveAnnouncementFromEditor(correctionOfId, draftId, asDraft) {
     return;
   }
   const audience = document.querySelector("#announcement-audience");
+  const emailRequested = document.querySelector("#announcement-email").checked;
+  const audienceValue = audience ? audience.value : "fixed";
+
+  if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
+    const original = correctionOfId ? announcementById(correctionOfId) : null;
+    writeAnnouncementToApi(asDraft ? "save_draft" : "send", {
+      title,
+      message,
+      recipient_user_ids: recipientIds,
+      audience_label: original ? ("Zelfde ontvangers als bericht #" + correctionOfId) : (audienceValue + ":" + recipientIds.length),
+      email_requested: emailRequested,
+      correction_of_id: correctionOfId || null
+    })
+      .then(() => Promise.all([refreshAnnouncementsReadApi(true), refreshNotificationsReadApi(true)]).catch(() => null))
+      .then(() => {
+        persistState();
+        closeModal();
+        renderAll();
+        toast(asDraft
+          ? "Concept opgeslagen."
+          : "Mededeling geplaatst voor " + recipientIds.length + " medewerker" + (recipientIds.length === 1 ? "" : "s") + ". E-mailverzending is uitgeschakeld.");
+      })
+      .catch(error => toast(String(error && error.message || "Mededeling opslaan op server mislukt.")));
+    return;
+  }
+
   const announcement = storeAnnouncement({
     title,
     message,
     recipientIds,
-    emailRequested: document.querySelector("#announcement-email").checked,
+    emailRequested,
     correctionOfId: correctionOfId || null,
-    audienceValue: audience ? audience.value : "fixed",
+    audienceValue,
     draftId: draftId || null,
     status: asDraft ? "draft" : "sent"
   });
@@ -4608,6 +4718,13 @@ function showDeleteAnnouncementDraft(id) {
     message: "Het concept is nooit verzonden. Er zijn geen ontvangers of e-mails om terug te draaien.",
     confirm: "Concept verwijderen",
     action: () => {
+      if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
+        writeAnnouncementToApi("delete_draft", { announcement_id: Number(draft.id) })
+          .then(() => refreshAnnouncementsReadApi(true))
+          .then(() => { closeModal(); renderAnnouncements(); toast("Concept verwijderd."); })
+          .catch(error => toast(String(error && error.message || "Concept verwijderen op server mislukt.")));
+        return;
+      }
       state.announcements = state.announcements.filter(item => Number(item.id) !== Number(draft.id));
       persistState();
       closeModal();
@@ -4628,6 +4745,13 @@ function showHideAnnouncementFromEmployees(id) {
     summary: "<div><span>Mededeling</span><strong>" + escapeHtml(original.title) + "</strong></div><div><span>Ontvangers</span><strong>" + original.recipientIds.length + " medewerker" + (original.recipientIds.length === 1 ? "" : "s") + "</strong></div><div><span>Interne historie</span><strong>Blijft bewaard</strong></div>",
     confirm: "Bij medewerkers verwijderen",
     action: () => {
+      if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
+        writeAnnouncementToApi("hide", { announcement_id: Number(original.id) })
+          .then(() => Promise.all([refreshAnnouncementsReadApi(true), refreshNotificationsReadApi(true)]).catch(() => null))
+          .then(() => { closeModal(); renderAll(); toast("De mededeling is bij medewerkers verwijderd en blijft alleen intern bewaard."); })
+          .catch(error => toast(String(error && error.message || "Verbergen op server mislukt.")));
+        return;
+      }
       const timestamp = correctionTimestamp();
       [original, linkedNotice].filter(Boolean).forEach(item => {
         item.hiddenFromEmployees = true;
@@ -4738,6 +4862,18 @@ function showAnnouncementWithdrawal(id) {
         toast("Vul een reden voor het intrekken in.");
         return;
       }
+
+      if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
+        writeAnnouncementToApi("withdraw", {
+          announcement_id: Number(original.id),
+          withdrawal_reason: reason
+        })
+          .then(() => Promise.all([refreshAnnouncementsReadApi(true), refreshNotificationsReadApi(true)]).catch(() => null))
+          .then(() => { closeModal(); renderAll(); toast("Mededeling ingetrokken; medewerkers zien alleen de nieuwe intrekkingsmelding en de interne historie blijft bewaard."); })
+          .catch(error => toast(String(error && error.message || "Intrekken op server mislukt.")));
+        return;
+      }
+
       const timestamp = correctionTimestamp();
       original.status = "withdrawn";
       original.withdrawalReason = reason;
@@ -7960,3 +8096,4 @@ refreshDashboardReadApi(true);
 refreshInvoicesReadApi("", true);
 refreshInvoicesReadApi("2026-07", true);
 refreshNotificationsReadApi(true);
+refreshAnnouncementsReadApi(true);
