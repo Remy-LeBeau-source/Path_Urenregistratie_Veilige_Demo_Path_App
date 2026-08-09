@@ -53,7 +53,7 @@ Iedere nieuwe run kan dezelfde map opnieuw opbouwen en publiceren.
 ## Laatste regressiestatus
 
 - Laatste volledige run: `npm run check` en `npm run test:e2e`
-- Resultaat: 36/36 geslaagd
+- Resultaat: 37/37 geslaagd
 - Datum: 2026-08-09
 
 ## Scope en scenario-overzicht
@@ -88,6 +88,7 @@ Scenario's:
 - [INV-H-003] Open facturen gebruiken server-side berekende bedragen
 - [INV-N-001] Medewerker ziet alleen eigen facturen en geen collega-data
 - [INV-N-002] Facturenscherm laadt zonder console of page errors
+- [INV-N-003] Ongeldige periodefilter wordt afgewezen met een duidelijke 400-validatiefout
 
 ### Roles API
 

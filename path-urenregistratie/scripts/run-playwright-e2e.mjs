@@ -56,9 +56,54 @@ console.log(`E2E precheck ok: ${baseUrl} reachable and required env vars are set
 
 const rawArgs = process.argv.slice(2);
 const extraArgs = rawArgs[0] === '--' ? rawArgs.slice(1) : rawArgs;
+const groupRaw = String(process.env.PLAYWRIGHT_GROUP || '').trim().toLowerCase();
+
+const groupToGrep = {
+  auth: '\\[AUTH-',
+  security: '\\[(SEC|SAFE)-',
+  dashboard: '\\[DASH-',
+  invoices: '\\[INV-',
+  roles: '\\[ROLE-',
+  timesheets: '\\[(TS-API|TS-REV)-',
+  customer: '\\[CTS-API-',
+  'customer-timesheets': '\\[CTS-API-',
+  api: '\\[(AUTH|SEC|ROLE|TS-API|TS-REV-API|CTS-API)-',
+  ui: '\\[(DASH|INV|TS-REV-UI)-',
+  happy: '-H-',
+  negative: '-N-',
+  phase10: '\\[CTS-API-',
+  phase11: '\\[INV-',
+};
+
+function hasExplicitGrep(args) {
+  return args.some((arg, index) => arg === '--grep' || arg === '-g' || (arg.startsWith('--grep=') && index >= 0));
+}
+
+const runtimeArgs = [...extraArgs];
+
+if (groupRaw !== '' && !hasExplicitGrep(runtimeArgs)) {
+  const groups = groupRaw
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  const unknown = groups.filter((group) => !groupToGrep[group]);
+  if (unknown.length > 0) {
+    console.error(`E2E precheck failed: unknown PLAYWRIGHT_GROUP value(s): ${unknown.join(', ')}`);
+    console.error(`Allowed values: ${Object.keys(groupToGrep).join(', ')}`);
+    process.exit(1);
+  }
+
+  if (groups.length > 0) {
+    const regex = groups.map((group) => groupToGrep[group]).join('|');
+    runtimeArgs.push('--grep', regex);
+    console.log(`E2E group filter active (PLAYWRIGHT_GROUP=${groupRaw}): ${regex}`);
+  }
+}
+
 const result = spawnSync(
   'npx',
-  ['playwright', 'test', ...extraArgs],
+  ['playwright', 'test', ...runtimeArgs],
   {
     stdio: 'inherit',
     env: process.env,

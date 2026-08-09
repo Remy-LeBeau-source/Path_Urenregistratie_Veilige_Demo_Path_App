@@ -1,3 +1,4 @@
+@domain-invoices @layer-api @layer-ui @phase11 @priority-high
 Feature: Factuurweergave in Path Uren & Facturatie
 # Step definitions mapping: tests/playwright/steps/invoices.steps.ts
 # Dit featurebestand valideert factuurinzage, periodefiltering en rolafbakening.
@@ -7,6 +8,7 @@ Feature: Factuurweergave in Path Uren & Facturatie
 # [INV-H-003] Open facturen rekenen server-side vanuit uren x uurtarief.
 # [INV-N-001] Medewerker ziet geen facturen van collega's.
 # [INV-N-002] Facturenscherm produceert geen console/page errors.
+# [INV-N-003] Ongeldige periodefilter geeft een duidelijke validatiefout.
 
   # Happy flows
 
@@ -34,3 +36,8 @@ Feature: Factuurweergave in Path Uren & Facturatie
   Scenario: [INV-N-002] Facturenscherm laadt zonder console of page errors
     Given een geldige Path login in auth-modus
     Then laadt het facturenscherm zonder console- of page-errors na inloggen zodat frontendkwaliteit aantoonbaar is
+
+  Scenario: [INV-N-003] Ongeldige periodefilter wordt afgewezen met validatiefout
+    Given de administrator is ingelogd met toegang tot de factuur-API
+    When de administrator een ongeldige periode zoals 2026-13 opvraagt
+    Then geeft de API invalid-period met status 400 terug zodat filtervalidatie expliciet en voorspelbaar blijft

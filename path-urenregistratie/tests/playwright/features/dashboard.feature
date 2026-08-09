@@ -1,3 +1,4 @@
+@domain-dashboard @layer-ui @phase-core @priority-medium
 Feature: Dashboardweergave in Path Uren & Facturatie
 # Step definitions mapping: tests/playwright/steps/dashboard.steps.ts
 # Dit featurebestand controleert rolafhankelijke dashboardweergave en stabiliteit.

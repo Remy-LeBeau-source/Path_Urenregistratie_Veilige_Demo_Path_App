@@ -114,6 +114,15 @@ De productie-uitvoer wordt in `dist/` geplaatst.
 ## Testen en Living Doc
 
 - Playwright regressie: `npm run test:e2e`
+- Playwright per groep (voorbeelden):
+	- `npm run test:e2e:group:auth`
+	- `npm run test:e2e:group:invoices`
+	- `npm run test:e2e:group:timesheets`
+	- `npm run test:e2e:group:api`
+	- `npm run test:e2e:group:ui`
+	- `set PLAYWRIGHT_GROUP=happy&& npm run test:e2e`
+	- `set PLAYWRIGHT_GROUP=negative&& npm run test:e2e`
+	- `set PLAYWRIGHT_GROUP=phase11&& npm run test:e2e`
 - Playwright UI: `npm run test:e2e:ui`
 - Playwright HTML report: `npx playwright show-report`
 - Allure genereren: `npm run allure:generate`
@@ -126,6 +135,15 @@ Living doc en mapping:
 - `LIVING-DOC.md`
 - `TEST-BDD-MAPPING.md`
 - `tests/playwright/features/*.feature`
+
+Feature tags en groepsrun:
+
+- Iedere feature file heeft bovenaan groepstags, bijvoorbeeld `@group-invoices` of `@group-timesheets`.
+- De runner accepteert `PLAYWRIGHT_GROUP` (eventueel komma-gescheiden), bijvoorbeeld:
+	- `set PLAYWRIGHT_GROUP=invoices&& npm run test:e2e`
+	- `set PLAYWRIGHT_GROUP=api,security&& npm run test:e2e`
+- Beschikbare groepen: `auth`, `security`, `dashboard`, `invoices`, `roles`, `timesheets`, `customer`, `customer-timesheets`, `api`, `ui`, `happy`, `negative`, `phase10`, `phase11`.
+- Onder water zet de runner dit om naar een Playwright `--grep` filter op case-ID's.
 
 Voor delen met team of klanten:
 

@@ -1,3 +1,4 @@
+@domain-customer-timesheets @layer-api @phase10 @priority-high
 Feature: Klanturenstaat lifecycle via API
 # Step definitions mapping: tests/playwright/steps/customer-timesheets.steps.ts
 # Dit featurebestand dekt upload, reviewstatussen en foutafhandeling voor klanturenstaten.

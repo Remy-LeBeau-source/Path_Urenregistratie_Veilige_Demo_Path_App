@@ -1,3 +1,4 @@
+@domain-auth @layer-api @phase-core @priority-high
 Feature: Authenticatie en sessiebeheer in Path Uren & Facturatie
 # Step definitions mapping: tests/playwright/steps/auth.steps.ts
 # Dit featurebestand dekt login, logout en sessievalidatie via auth/me.

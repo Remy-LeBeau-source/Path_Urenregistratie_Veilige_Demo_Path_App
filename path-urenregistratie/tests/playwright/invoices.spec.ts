@@ -117,3 +117,35 @@ test('[INV-H-003] server berekent bedrag uit uren en uurtarief voor open facture
     expect(target?.total).toBe(12632.4);
   });
 });
+
+test('[INV-N-003] ongeldige periodefilter geeft nette 400-fout', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  let status = 0;
+  let body: { ok?: boolean; error?: string; message?: string } | null = null;
+
+  await test.step('Given de administrator is ingelogd', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+  });
+
+  await test.step('When een ongeldige periodefilter wordt opgevraagd', async () => {
+    const response = await page.evaluate(async () => {
+      const result = await fetch('/server/api/invoices.php?period=2026-13', {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+      });
+      const json = await result.json();
+      return { status: result.status, body: json };
+    });
+
+    status = Number(response.status || 0);
+    body = response.body || null;
+  });
+
+  await test.step('Then geeft de API invalid-period met status 400 terug', async () => {
+    expect(status).toBe(400);
+    expect(body?.ok).toBe(false);
+    expect(body?.error).toBe('invalid-period');
+    expect(String(body?.message || '')).toContain('between 01 and 12');
+  });
+});
