@@ -1,6 +1,8 @@
 import { expect, test, type APIResponse } from '@playwright/test';
 import { AuthApi } from './api/AuthApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 test('[SEC-H-001] csrf token endpoint werkt', async ({ request }) => {
   let response: APIResponse | null = null;
@@ -164,4 +166,42 @@ test('[SEC-N-007] logout-endpoint weigert GET', async ({ request }) => {
   const body = await response.json();
   expect(response.status()).toBe(405);
   expect(body.error).toBe('method-not-allowed');
+});
+
+test('[SEC-H-005] sessiecode bevat expliciete timeout-check en sliding expiration', async () => {
+  const src = await readFile(join(process.cwd(), 'server', 'auth', 'session.php'), 'utf8');
+  expect(src).toContain("_last_active");
+  expect(src).toMatch(/time\(\)\s*-\s*\(int\)\$_SESSION\['_last_active'\]/);
+  expect(src).toMatch(/\$_SESSION\['_last_active'\]\s*=\s*time\(\)/);
+});
+
+test('[SEC-H-006] herhaalde mislukte loginpogingen maken security-audit event', async ({ request }) => {
+  const csrf = await request.get('/server/auth/csrf.php');
+  const csrfBody = await csrf.json();
+
+  for (let i = 0; i < 3; i += 1) {
+    const failed = await request.post('/server/auth/login.php', {
+      headers: { 'X-CSRF-Token': csrfBody.csrf_token },
+      data: {
+        email: appConfig.adminEmail,
+        password: 'definitely-wrong-password',
+      },
+    });
+    expect([401, 429]).toContain(failed.status());
+  }
+
+  const authApi = new AuthApi(request);
+  await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+  const eventsResponse = await request.get('/server/api/audit-log.php?event_type=auth.failed_login_threshold&limit=20');
+  expect(eventsResponse.status()).toBe(200);
+  const eventsBody = await eventsResponse.json();
+  expect(eventsBody.ok).toBe(true);
+  expect(Number(eventsBody.count)).toBeGreaterThan(0);
+});
+
+test('[SEC-H-007] config voorbeeld bevat voorbereide CSP/CORS/HSTS flags', async () => {
+  const src = await readFile(join(process.cwd(), 'server', 'config.example.php'), 'utf8');
+  expect(src).toContain("'cors_allowed_origins'");
+  expect(src).toContain("'content_security_policy'");
+  expect(src).toContain("'hsts_enabled' => false");
 });

@@ -12,7 +12,7 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 ## Actuele stand
 
 - [x] Datum: 2026-08-10
-- [x] Main/HEAD: 148e9b9
+- [x] Main/HEAD: fdf48fc
 - [x] Referentiecommit fase 8/9 backend: fc27723
 - [x] Appversie: 0.9.41
 - [x] Lokale check: geslaagd
@@ -20,8 +20,8 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 - [x] Functionele regressiecatalogus: 117 unieke Playwright-cases, 121 Playwright-uitvoeringen, 1 directe SQL/DB-case DB-H-001, 118 unieke executable cases totaal
 - [x] Releasehardening v0.9.41: gecommit en gepusht naar main
 - [x] GitHub pipeline-status: recente lokale en DB-onderdelen zijn geverifieerd; DB-isolatie is lokaal volledig bewezen met een volledige regressierun
-- [x] Laatste commit: 148e9b9 — fix(test): isolate Playwright DB and self-manage PHP test server
-- [x] Recente relevante commits: 148e9b9, d48e08c, b4c5ad0, d137ce4, a4aa195, bd025af, 5a238b8, edd066a
+- [x] Laatste commit: fdf48fc — docs(project): mark Playwright DB isolation fully validated
+- [x] Recente relevante commits: fdf48fc, 148e9b9, d48e08c, b4c5ad0, d137ce4, a4aa195, bd025af, 5a238b8
 - [x] DB-H-001: SQL/DB-smoke groen via `node scripts/run-db-crud-smoke.mjs`
 - [x] Lokale automatische Playwright-testdatabase aanwezig: `path_urenregistratie_test`
 - [x] DB-isolatie-onderdeel toegevoegd: bootstrap-script voor aparte lokale Playwright-testdatabase aanwezig

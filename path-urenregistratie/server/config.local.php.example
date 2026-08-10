@@ -12,4 +12,16 @@ return [
     'password' => 'your_database_password',
     'port' => 3306,
     'charset' => 'utf8mb4',
+    'security' => [
+        'session_cookie_name' => 'path_session',
+        'session_lifetime_minutes' => 480,
+        'require_https' => true,
+        'allowed_google_domain' => 'example.invalid',
+        'cors_allowed_origins' => [],
+        'content_security_policy' => '',
+        'hsts_enabled' => false,
+        'hsts_max_age' => 31536000,
+        'hsts_include_subdomains' => true,
+        'hsts_preload' => false,
+    ],
 ];

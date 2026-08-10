@@ -31,6 +31,15 @@ return [
         'session_lifetime_minutes' => 480,
         'require_https' => true,
         'allowed_google_domain' => 'example.invalid',
+        // Optional strict CORS allow-list (comma string or array). Keep empty for local/dev defaults.
+        'cors_allowed_origins' => [],
+        // Optional CSP string for production hardening. Leave empty until policy is validated end-to-end.
+        'content_security_policy' => '',
+        // HSTS is prepared but intentionally disabled until HTTPS production rollout is confirmed.
+        'hsts_enabled' => false,
+        'hsts_max_age' => 31536000,
+        'hsts_include_subdomains' => true,
+        'hsts_preload' => false,
     ],
     // Mail: keep mail.enabled = false until SPF/DKIM/DMARC is verified and dispatch is activated.
     'mail' => [

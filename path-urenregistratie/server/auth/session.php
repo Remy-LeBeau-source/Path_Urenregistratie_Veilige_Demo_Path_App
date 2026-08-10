@@ -58,6 +58,7 @@ function auth_allowed_cors_origins(?array $config): array
     $cfg = is_array($config) ? $config : [];
     $environment = auth_environment_from_config($cfg);
     $appOrigin = auth_app_origin_from_config($cfg);
+    $security = isset($cfg['security']) && is_array($cfg['security']) ? $cfg['security'] : [];
 
     $origins = [];
     if (in_array($environment, ['local', 'test', 'development', 'dev', 'demo'], true)) {
@@ -68,7 +69,56 @@ function auth_allowed_cors_origins(?array $config): array
         $origins[] = $appOrigin;
     }
 
+    $configuredOrigins = $security['cors_allowed_origins'] ?? [];
+    if (is_string($configuredOrigins) && trim($configuredOrigins) !== '') {
+        $configuredOrigins = array_map('trim', explode(',', $configuredOrigins));
+    }
+    if (is_array($configuredOrigins)) {
+        foreach ($configuredOrigins as $configuredOrigin) {
+            $value = rtrim(trim((string)$configuredOrigin), '/');
+            if ($value !== '') {
+                $origins[] = $value;
+            }
+        }
+    }
+
     return array_values(array_unique($origins));
+}
+
+function auth_apply_security_headers(?array $config): void
+{
+    $cfg = is_array($config) ? $config : [];
+    $security = isset($cfg['security']) && is_array($cfg['security']) ? $cfg['security'] : [];
+
+    header('X-Content-Type-Options: nosniff');
+    header('X-Frame-Options: SAMEORIGIN');
+    header('Referrer-Policy: no-referrer');
+    header('Permissions-Policy: geolocation=(), camera=(), microphone=()');
+
+    $csp = trim((string)($security['content_security_policy'] ?? ''));
+    if ($csp !== '') {
+        header('Content-Security-Policy: ' . $csp);
+    }
+
+    $hstsEnabled = (bool)($security['hsts_enabled'] ?? false);
+    if ($hstsEnabled) {
+        $isHttps = (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off');
+        if ($isHttps) {
+            $maxAge = max(300, (int)($security['hsts_max_age'] ?? 31536000));
+            $includeSubdomains = (bool)($security['hsts_include_subdomains'] ?? true);
+            $preload = (bool)($security['hsts_preload'] ?? false);
+
+            $value = 'max-age=' . $maxAge;
+            if ($includeSubdomains) {
+                $value .= '; includeSubDomains';
+            }
+            if ($preload) {
+                $value .= '; preload';
+            }
+
+            header('Strict-Transport-Security: ' . $value);
+        }
+    }
 }
 
 function auth_apply_cors_headers(?array $config, string $methods, string $headers): void
@@ -83,6 +133,7 @@ function auth_apply_cors_headers(?array $config, string $methods, string $header
 
     header('Access-Control-Allow-Methods: ' . $methods);
     header('Access-Control-Allow-Headers: ' . $headers);
+    auth_apply_security_headers($config);
 }
 
 function auth_send_json(array $payload, int $statusCode = 200): void

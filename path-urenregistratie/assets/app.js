@@ -1965,11 +1965,39 @@ function mergeBootstrapIntoState(data) {
   const users = Array.isArray(data.users) ? data.users : [];
   const employees = Array.isArray(data.employees) ? data.employees : [];
   const assignments = Array.isArray(data.assignments) ? data.assignments : [];
+  const counterparties = Array.isArray(data.counterparties) ? data.counterparties : [];
+  const assignmentMailRoutes = Array.isArray(data.assignment_mail_routes) ? data.assignment_mail_routes : [];
   const recipients = Array.isArray(data.mail_recipients || data.mailRecipients) ? (data.mail_recipients || data.mailRecipients) : [];
+
+  state.settings.brandPrimary = normalizedBrandColor(String(company.brand_primary || state.settings.brandPrimary || "#0d1b38"), "#0d1b38");
+  state.settings.brandAccent = normalizedBrandColor(String(company.brand_accent || state.settings.brandAccent || "#3abd9d"), "#3abd9d");
+  state.settings.kvk = String(company.chamber_of_commerce_number || state.settings.kvk || "");
+  state.settings.vat = String(company.vat_number || state.settings.vat || "");
+  state.settings.iban = String(company.iban || state.settings.iban || "");
+  state.settings.address = String(company.address_line || state.settings.address || "");
+  state.settings.postalCity = [company.postal_code, company.city].filter(Boolean).join(" ").trim() || state.settings.postalCity;
+  if (company.customer_timesheet_reminder_enabled !== undefined && company.customer_timesheet_reminder_enabled !== null) {
+    state.settings.customerTimesheetReminderEnabled = Number(company.customer_timesheet_reminder_enabled) === 1;
+  }
+  if (company.customer_timesheet_reminder_time) {
+    state.settings.customerTimesheetReminderTime = String(company.customer_timesheet_reminder_time).slice(0, 5);
+  }
+  if (company.customer_timesheet_overdue_workdays !== undefined && company.customer_timesheet_overdue_workdays !== null) {
+    state.settings.customerTimesheetOverdueWorkdays = Number(company.customer_timesheet_overdue_workdays) || state.settings.customerTimesheetOverdueWorkdays;
+  }
 
   const companyUsers = users.filter(user => Number(user.company_id) === Number(company.id));
   const adminUsers = companyUsers.filter(user => String(user.role || "") === "administrator");
   const usersById = new Map(companyUsers.map(user => [Number(user.id), user]));
+  const employeesByDbId = new Map(employees.map(employee => [Number(employee.id), employee]));
+  const counterpartiesById = new Map(counterparties.map(counterparty => [Number(counterparty.id), counterparty]));
+  const routesByAssignment = new Map();
+  assignmentMailRoutes.forEach(route => {
+    const assignmentId = Number(route.assignment_id || 0);
+    if (!assignmentId) return;
+    if (!routesByAssignment.has(assignmentId)) routesByAssignment.set(assignmentId, []);
+    routesByAssignment.get(assignmentId).push(route);
+  });
 
   // Admin/users: merge by email; keep local role-specific fields intact.
   adminUsers.forEach(user => {
@@ -1995,6 +2023,7 @@ function mergeBootstrapIntoState(data) {
 
   // Employees: merge onto existing local model by full name or email to avoid breaking rich demo fields.
   const employeeByDbId = new Map();
+  const matchedDbEmployeeIds = new Set();
   state.employees.forEach(localEmployee => {
     const localName = String(localEmployee.name || "").trim().toLowerCase();
     const localEmail = String(localEmployee.email || "").trim().toLowerCase();
@@ -2007,9 +2036,11 @@ function mergeBootstrapIntoState(data) {
     if (!match) return;
 
     employeeByDbId.set(Number(match.id), localEmployee);
+  matchedDbEmployeeIds.add(Number(match.id));
     localEmployee.name = String(match.full_name || localEmployee.name || "");
     localEmployee.role = String(match.job_title || localEmployee.role || "");
     localEmployee.active = Number(match.active || 0) === 1;
+  localEmployee.dbEmployeeId = Number(match.id);
     localEmployee.dbUserId = match.user_id ? Number(match.user_id) : null;
     if (match.employment_start_date) localEmployee.startDate = String(match.employment_start_date);
     if (match.weekly_contract_hours !== undefined && match.weekly_contract_hours !== null) {
@@ -2019,10 +2050,60 @@ function mergeBootstrapIntoState(data) {
     if (linkedUser && linkedUser.email) localEmployee.email = String(linkedUser.email);
   });
 
+  employees.forEach(dbEmployee => {
+    const dbId = Number(dbEmployee.id || 0);
+    if (!dbId || matchedDbEmployeeIds.has(dbId)) return;
+
+    const linkedUser = usersById.get(Number(dbEmployee.user_id));
+    const newEmployee = {
+      id: dbId,
+      dbEmployeeId: dbId,
+      dbUserId: dbEmployee.user_id ? Number(dbEmployee.user_id) : null,
+      name: String(dbEmployee.full_name || linkedUser && linkedUser.display_name || "Nieuwe medewerker"),
+      email: String(linkedUser && linkedUser.email || "nieuwe-medewerker@example.invalid"),
+      active: Number(dbEmployee.active || 0) === 1,
+      startDate: String(dbEmployee.employment_start_date || ""),
+      notificationsEnabled: true,
+      emailNotificationsEnabled: true,
+      invitationPending: false,
+      photo: "",
+      role: String(dbEmployee.job_title || ""),
+      client: "",
+      broker: "",
+      brokerEmail: "",
+      invoiceRecipientName: "",
+      brokerInvoiceAddress: "",
+      invoiceProject: "",
+      brokerMailEnabled: true,
+      rate: 0,
+      contract: "",
+      weeklyHours: Number(dbEmployee.weekly_contract_hours || 0),
+      projectCode: "",
+      invoiceTemplate: "{klant}-{jaar}-{maand}",
+      mailSubject: "Factuur {factuurnummer} - {medewerker} - {maand} {jaar}",
+      mailBody: DEFAULT_INVOICE_MAIL_BODY,
+      brokerInvoiceAttachment: true,
+      bookkeeperInvoiceAttachment: true,
+      payrollInvoiceAttachment: false,
+      mailRecipientRoutes: defaultMailRecipientRoutes(),
+      customerTimesheetExpected: true,
+      customerTimesheetDueWorkday: 5,
+      customerTimesheetBrokerEnabled: false,
+      customerTimesheetUseBrokerEmail: true,
+      customerTimesheetBrokerEmail: "",
+      invoiceWithoutCustomerTimesheetAllowed: true
+    };
+
+    state.employees.push(newEmployee);
+    employeeByDbId.set(dbId, newEmployee);
+    matchedDbEmployeeIds.add(dbId);
+  });
+
   // Assignments: merge selected mapping-friendly fields onto existing employee profiles.
   assignments.forEach(assignment => {
     const localEmployee = employeeByDbId.get(Number(assignment.employee_id));
     if (!localEmployee) return;
+    localEmployee.dbAssignmentId = Number(assignment.id || 0);
     if (assignment.hourly_rate !== undefined && assignment.hourly_rate !== null) localEmployee.rate = Number(assignment.hourly_rate);
     if (assignment.invoice_project_name) localEmployee.invoiceProject = String(assignment.invoice_project_name);
     if (assignment.project_code) localEmployee.projectCode = String(assignment.project_code);
@@ -2034,6 +2115,35 @@ function mergeBootstrapIntoState(data) {
       localEmployee.customerTimesheetDueWorkday = Number(assignment.customer_timesheet_due_workday);
     }
     if (assignment.customer_timesheet_broker_email) localEmployee.customerTimesheetBrokerEmail = String(assignment.customer_timesheet_broker_email);
+
+    const client = counterpartiesById.get(Number(assignment.client_id || 0));
+    const broker = counterpartiesById.get(Number(assignment.broker_id || 0));
+    if (client) {
+      localEmployee.client = String(client.trade_name || client.legal_name || localEmployee.client || "");
+    }
+    if (broker) {
+      localEmployee.broker = String(broker.trade_name || broker.legal_name || localEmployee.broker || "");
+      localEmployee.brokerEmail = String(broker.invoice_email || localEmployee.brokerEmail || "");
+      const brokerAddress = [broker.invoice_address_line, [broker.invoice_postal_code, broker.invoice_city].filter(Boolean).join(" ").trim()]
+        .filter(Boolean)
+        .join("\n");
+      if (brokerAddress) {
+        localEmployee.brokerInvoiceAddress = brokerAddress;
+      }
+    }
+
+    const routes = routesByAssignment.get(Number(assignment.id || 0)) || [];
+    if (!localEmployee.mailRecipientRoutes || typeof localEmployee.mailRecipientRoutes !== "object") {
+      localEmployee.mailRecipientRoutes = defaultMailRecipientRoutes();
+    }
+    routes.forEach(route => {
+      const key = String(route.recipient_key || route.mail_recipient_id || "").trim();
+      if (!key) return;
+      localEmployee.mailRecipientRoutes[key] = {
+        enabled: Number(route.enabled || 0) === 1,
+        invoiceAttachment: Number(route.include_invoice_pdf || 0) === 1
+      };
+    });
   });
 
   // Mail recipients: merge by key/id where possible, add only missing recipients with safe defaults.
@@ -2055,6 +2165,21 @@ function mergeBootstrapIntoState(data) {
         active: Number(recipient.active || 0) === 1
       });
     }
+  });
+
+  Object.keys(state.records).forEach(periodKey => {
+    state.employees.forEach(employee => {
+      if (!state.records[periodKey][String(employee.id)]) {
+        state.records[periodKey][String(employee.id)] = makeRecord(
+          0,
+          defaultContractHours(employee, periodKey),
+          "draft",
+          "concept",
+          invoiceNumberFor(employee.id, periodKey),
+          periodKey
+        );
+      }
+    });
   });
 
   return true;
@@ -5464,7 +5589,7 @@ function saveSettings() {
     toast("Niet opgeslagen: vul bij ieder e-mailveld een geldig adres in.");
     return;
   }
-  state.settings = Object.assign({}, state.settings, {
+  const nextSettings = Object.assign({}, state.settings, {
     organizationName: document.querySelector("#setting-organization-name").value.trim() || "Organisatie",
     appName: document.querySelector("#setting-app-name").value.trim() || "Uren & Facturatie",
     supportName: document.querySelector("#setting-support-name").value.trim() || "Ondersteuning",
@@ -5502,6 +5627,24 @@ function saveSettings() {
     lockInvoice: document.querySelector("#setting-lock-invoice").checked,
     auditLog: document.querySelector("#setting-audit-log").checked
   });
+
+  if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
+    writeSettingsToApi(nextSettings)
+      .then(() => refreshBootstrapReadApi(true))
+      .then(() => {
+        state.settings = Object.assign({}, state.settings, nextSettings);
+        syncLegacyRecipientSettings();
+        persistState();
+        renderAll();
+        toast("Instellingen zijn op de server opgeslagen.");
+      })
+      .catch(error => {
+        toast(String(error && error.message || "Instellingen opslaan op server mislukt."));
+      });
+    return;
+  }
+
+  state.settings = nextSettings;
   syncLegacyRecipientSettings();
   persistState();
   renderAll();
@@ -6673,10 +6816,11 @@ function showEmployeeEditor(employeeId) {
         const invoiceInput = [...document.querySelectorAll("[data-mail-recipient-invoice]")].find(item => item.dataset.mailRecipientInvoice === id);
         mailRecipientRoutes[id] = { enabled: input.checked, invoiceAttachment: input.checked && Boolean(invoiceInput && invoiceInput.checked) };
       });
+      const effectiveMailRecipients = (state.settings.mailRecipients || []).map(item => Object.assign({}, item));
       if (newRecipientRequested) {
         const newRecipientId = nextMailRecipientId();
         const newRecipientEnabled = document.querySelector("#edit-new-recipient-enabled").checked;
-        state.settings.mailRecipients.push({
+        effectiveMailRecipients.push({
           id: newRecipientId,
           category: document.querySelector("#edit-new-recipient-category").value,
           name: newRecipientNameInput.value.trim(),
@@ -6687,9 +6831,10 @@ function showEmployeeEditor(employeeId) {
           enabled: newRecipientEnabled,
           invoiceAttachment: newRecipientEnabled && document.querySelector("#edit-new-recipient-invoice").checked
         };
-        syncLegacyRecipientSettings();
       }
       const updated = Object.assign({}, employee, {
+        dbUserId: Number(employee.dbUserId || 0) || null,
+        dbEmployeeId: Number(employee.dbEmployeeId || 0) || null,
         name: nameInput.value.trim(),
         email: accountEmailInput.value.trim(),
         startDate: document.querySelector("#edit-start-date").value,
@@ -6720,6 +6865,35 @@ function showEmployeeEditor(employeeId) {
         customerTimesheetBrokerEmail: customerTimesheetEmailInput.value.trim(),
         invoiceWithoutCustomerTimesheetAllowed: document.querySelector("#edit-invoice-without-customer-timesheet").checked
       });
+
+      if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
+        const addAnother = !existing && document.querySelector("#edit-add-another").checked;
+        writeStaffToApi("upsert_employee", {
+          employee: updated,
+          mailRecipients: effectiveMailRecipients
+        })
+          .then(() => {
+            if (newRecipientRequested) {
+              state.settings.mailRecipients = effectiveMailRecipients;
+              syncLegacyRecipientSettings();
+            }
+            return refreshBootstrapReadApi(true);
+          })
+          .then(() => {
+            closeModal();
+            renderAll();
+            populateSettings();
+            toast("Medewerker op de server opgeslagen.");
+            if (addAnother) showEmployeeEditor(null);
+          })
+          .catch(error => toast(String(error && error.message || "Medewerker opslaan op server mislukt.")));
+        return;
+      }
+
+      if (newRecipientRequested) {
+        state.settings.mailRecipients = effectiveMailRecipients;
+      }
+
       if (existing) {
         state.employees[state.employees.findIndex(item => item.id === existing.id)] = updated;
       } else {
@@ -6741,6 +6915,7 @@ function showEmployeeEditor(employeeId) {
       closeModal();
       renderAll();
       populateSettings();
+      if (newRecipientRequested) syncLegacyRecipientSettings();
       toast("Medewerker en eigen urenaccount zijn lokaal opgeslagen. Er is niets gemaild.");
       if (addAnother) showEmployeeEditor(null);
     }
@@ -6799,6 +6974,27 @@ function showAdminEditor(adminId) {
         return;
       }
       const updated = Object.assign({}, admin, { name: name.value.trim(), email: email.value.trim(), active: admin.active !== false, emailNotificationsEnabled: document.querySelector("#edit-admin-notifications").checked });
+
+      if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
+        writeStaffToApi("upsert_admin", {
+          admin: {
+            dbUserId: Number(admin.dbUserId || 0),
+            name: updated.name,
+            email: updated.email,
+            active: updated.active,
+            emailNotificationsEnabled: updated.emailNotificationsEnabled
+          }
+        })
+          .then(() => refreshBootstrapReadApi(true))
+          .then(() => {
+            closeModal();
+            renderAll();
+            toast("Beheerder op de server opgeslagen.");
+          })
+          .catch(error => toast(String(error && error.message || "Beheerder opslaan op server mislukt.")));
+        return;
+      }
+
       if (existing) state.admins[state.admins.findIndex(item => item.id === existing.id)] = updated;
       else state.admins.push(updated);
       persistState();
@@ -6807,6 +7003,43 @@ function showAdminEditor(adminId) {
       toast("Beheerder lokaal opgeslagen. Er is geen uitnodiging verstuurd.");
     }
   });
+}
+
+function writeStaffToApi(action, payload) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin")) return Promise.resolve(null);
+  return requestAuthCsrf()
+    .then(token => fetch("/server/api/staff.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify(Object.assign({ action }, payload || {}))
+    }))
+    .then(resp => resp.json().catch(() => ({})).then(data => ({ ok: resp.ok, data })))
+    .then(result => {
+      if (!result.ok || !result.data || result.data.ok !== true) {
+        throw new Error(String(result && result.data && result.data.message || "Opslaan op server mislukt."));
+      }
+      return result.data;
+    });
+}
+
+function writeSettingsToApi(nextSettings) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin")) return Promise.resolve(null);
+  return requestAuthCsrf()
+    .then(token => fetch("/server/api/settings.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify({
+        settings: nextSettings,
+        mailRecipients: state.settings.mailRecipients
+      })
+    }))
+    .then(resp => resp.json().catch(() => ({})).then(data => ({ ok: resp.ok, data })))
+    .then(result => {
+      if (!result.ok || !result.data || result.data.ok !== true) {
+        throw new Error(String(result && result.data && result.data.message || "Instellingen opslaan op server mislukt."));
+      }
+      return result.data;
+    });
 }
 
 function writeUserStatusToApi(dbUserId, action) {

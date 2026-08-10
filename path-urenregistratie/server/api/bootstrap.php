@@ -57,6 +57,31 @@ try {
     $assignmentsStmt->execute($assignmentsParams);
     $assignments = $assignmentsStmt->fetchAll();
 
+    $counterpartiesStmt = $pdo->prepare(
+        'SELECT id, company_id, type, legal_name, trade_name, invoice_address_line, invoice_postal_code, invoice_city, invoice_email, active
+         FROM counterparties
+         WHERE company_id = :company_id
+         ORDER BY id'
+    );
+    $counterpartiesStmt->execute([':company_id' => $companyId]);
+    $counterparties = $counterpartiesStmt->fetchAll();
+
+    $assignmentMailRoutesStmt = $pdo->prepare(
+        'SELECT
+            amr.assignment_id,
+            amr.mail_recipient_id,
+            amr.enabled,
+            amr.include_invoice_pdf,
+            mr.recipient_key,
+            mr.display_name
+         FROM assignment_mail_routes amr
+         JOIN mail_recipients mr ON mr.id = amr.mail_recipient_id
+         WHERE mr.company_id = :company_id
+         ORDER BY amr.assignment_id, amr.mail_recipient_id'
+    );
+    $assignmentMailRoutesStmt->execute([':company_id' => $companyId]);
+    $assignmentMailRoutes = $assignmentMailRoutesStmt->fetchAll();
+
     $mailRecipients = [];
     if (!$isEmployee) {
         $mailRecipientsStmt = $pdo->prepare(
@@ -73,6 +98,8 @@ try {
         'employees' => $employees,
         'periods' => $periods,
         'assignments' => $assignments,
+        'counterparties' => $counterparties,
+        'assignment_mail_routes' => $assignmentMailRoutes,
         'mail_recipients' => $mailRecipients,
         'mailRecipients' => $mailRecipients,
     ]);

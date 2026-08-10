@@ -234,6 +234,7 @@ function mail_enqueue_for_invoice(
     );
     $routeStmt->execute([':assignment_id' => (int)$inv['assignment_id'], ':company_id' => $companyId]);
     $routes = $routeStmt->fetchAll();
+    $hasPayrollChannel = false;
 
     foreach ($routes as $route) {
         $category = (string)$route['recipient_category'];
@@ -243,6 +244,7 @@ function mail_enqueue_for_invoice(
             // EasySalary NEVER receives invoice attachment.
             $channel       = 'payroll';
             $attachPolicy  = 'none';
+            $hasPayrollChannel = true;
         } elseif ($category === 'accounting') {
             // Bookkeeper: follow route config, but respect assignment flag.
             $channel       = 'accountant';
@@ -273,6 +275,46 @@ function mail_enqueue_for_invoice(
             $dryRun ? 'email.dry_run' : 'email.queued', $id,
             ['channel' => $channel, 'invoice_number' => $inv['invoice_number']]);
         $created[] = ['id' => $id, 'channel' => $channel, 'attachment_policy' => $attachPolicy, 'dry_run' => $dryRun];
+    }
+
+    // Keep payroll delivery deterministic even when route data was mutated by prior writes.
+    if (!$hasPayrollChannel) {
+        $fallbackPayrollStmt = $pdo->prepare(
+            'SELECT invoice_email
+             FROM counterparties
+             WHERE company_id = :company_id AND type = :type AND active = 1 AND invoice_email IS NOT NULL AND invoice_email <> ""
+             ORDER BY id ASC
+             LIMIT 1'
+        );
+        $fallbackPayrollStmt->execute([':company_id' => $companyId, ':type' => 'payroll']);
+        $fallbackPayrollEmail = (string)($fallbackPayrollStmt->fetchColumn() ?: '');
+
+        if ($fallbackPayrollEmail !== '') {
+            $tpl = MAIL_CHANNEL_TEMPLATES['payroll'];
+            mail_assert_vars($tpl['subject'], $vars, 'payroll.subject');
+            mail_assert_vars($tpl['body'], $vars, 'payroll.body');
+
+            $id = mail_insert_delivery(
+                $pdo,
+                $invoiceId,
+                'payroll',
+                $fallbackPayrollEmail,
+                null,
+                mail_render($tpl['subject'], $vars),
+                mail_render($tpl['body'], $vars),
+                'none',
+                $dryRun
+            );
+            mail_audit(
+                $pdo,
+                $companyId,
+                $actorUserId,
+                $dryRun ? 'email.dry_run' : 'email.queued',
+                $id,
+                ['channel' => 'payroll', 'invoice_number' => $inv['invoice_number'], 'fallback' => true]
+            );
+            $created[] = ['id' => $id, 'channel' => 'payroll', 'attachment_policy' => 'none', 'dry_run' => $dryRun];
+        }
     }
 
     return $created;

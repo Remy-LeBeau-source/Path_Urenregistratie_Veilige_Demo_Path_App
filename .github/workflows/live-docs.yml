@@ -179,6 +179,9 @@ jobs:
             echo "Updated CI login hashes.\n";
           '
 
+      - name: Dependency security audit (runtime)
+        run: npm run security:deps
+
       - name: Run E2E tests
         env:
           PATH_APP_BASE_URL: http://127.0.0.1:8000

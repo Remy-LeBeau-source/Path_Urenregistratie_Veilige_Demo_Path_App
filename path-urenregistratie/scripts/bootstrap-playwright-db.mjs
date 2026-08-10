@@ -115,7 +115,12 @@ function dedupeNonEmpty(values) {
 }
 
 const connection = await mysql.createConnection(config);
+const requestedStage = String(process.env.PLAYWRIGHT_STAGE || '').trim().toLowerCase();
+const isTestDatabase = databaseName.endsWith('_test') || requestedStage === 'test';
 try {
+  if (isTestDatabase) {
+    await connection.query(`DROP DATABASE IF EXISTS \`${databaseName}\``);
+  }
   await connection.query(`CREATE DATABASE IF NOT EXISTS \`${databaseName}\``);
   console.log(`Prepared isolated Playwright database: ${databaseName}`);
 } finally {
@@ -149,7 +154,6 @@ if (migration.status !== 0) {
   process.exit(migration.status ?? 1);
 }
 
-const isTestDatabase = databaseName.endsWith('_test') || String(process.env.PLAYWRIGHT_STAGE || '').trim().toLowerCase() === 'test';
 if (isTestDatabase) {
   const effectiveStage = String(process.env.PLAYWRIGHT_STAGE || '').trim().toLowerCase() || 'test';
   const adminPassword = stageScopedValue(effectiveStage, 'PLAYWRIGHT_ADMIN_PASSWORD');

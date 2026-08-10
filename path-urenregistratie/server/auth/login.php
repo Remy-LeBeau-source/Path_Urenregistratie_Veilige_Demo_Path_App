@@ -12,6 +12,59 @@ $config = auth_load_raw_config();
 auth_start_session_secure($config);
 $pdo = auth_pdo($config);
 
+function auth_maybe_log_failed_login_alert(PDO $pdo, ?int $companyId, string $email): void
+{
+    if ($companyId === null || $companyId <= 0 || $email === '') {
+        return;
+    }
+
+    try {
+        $countStmt = $pdo->prepare(
+            "SELECT COUNT(*) FROM auth_login_audit
+             WHERE email = :email AND status = 'failed' AND created_at >= DATE_SUB(NOW(), INTERVAL 15 MINUTE)"
+        );
+        $countStmt->execute([':email' => $email]);
+        $failedCount = (int)$countStmt->fetchColumn();
+        if ($failedCount < 3) {
+            return;
+        }
+
+        $recentStmt = $pdo->prepare(
+            "SELECT COUNT(*) FROM audit_log
+             WHERE company_id = :company_id
+               AND event_type = 'auth.failed_login_threshold'
+               AND entity_type = 'security'
+               AND entity_id = :entity_id
+               AND created_at >= DATE_SUB(NOW(), INTERVAL 15 MINUTE)"
+        );
+        $recentStmt->execute([
+            ':company_id' => $companyId,
+            ':entity_id' => $email,
+        ]);
+        if ((int)$recentStmt->fetchColumn() > 0) {
+            return;
+        }
+
+        $insertStmt = $pdo->prepare(
+            'INSERT INTO audit_log (company_id, actor_user_id, event_type, entity_type, entity_id, event_data)
+             VALUES (:company_id, NULL, :event_type, :entity_type, :entity_id, :event_data)'
+        );
+        $insertStmt->execute([
+            ':company_id' => $companyId,
+            ':event_type' => 'auth.failed_login_threshold',
+            ':entity_type' => 'security',
+            ':entity_id' => $email,
+            ':event_data' => json_encode([
+                'email' => $email,
+                'failed_count' => $failedCount,
+                'window_minutes' => 15,
+            ], JSON_UNESCAPED_UNICODE),
+        ]);
+    } catch (Throwable $e) {
+        // Alert logging must never block login.
+    }
+}
+
 $input = security_read_json_body();
 security_require_csrf_token();
 $email = security_require_email_field($input, 'email');
@@ -43,6 +96,7 @@ $user = $stmt->fetch();
 
 if (!$user || (int)$user['active'] !== 1 || empty($user['password_hash']) || !password_verify($password, (string)$user['password_hash'])) {
     auth_log_event($pdo, isset($user['company_id']) ? (int)$user['company_id'] : null, isset($user['id']) ? (int)$user['id'] : null, $email, 'login', 'failed', 'invalid-credentials');
+    auth_maybe_log_failed_login_alert($pdo, isset($user['company_id']) ? (int)$user['company_id'] : null, $email);
     auth_send_json([
         'ok' => false,
         'error' => 'invalid-credentials',

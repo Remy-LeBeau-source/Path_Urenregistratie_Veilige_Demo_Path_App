@@ -57,6 +57,9 @@ jobs:
       - name: Build frontend
         run: npm run build
 
+      - name: Dependency security audit (runtime)
+        run: npm run security:deps
+
       - name: Smoke check
         run: npm run check
 
