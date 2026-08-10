@@ -1,31 +1,38 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 117 functionele cases leesbaar zonder een tweede testrunner toe te voegen.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 117 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Functionele cases: 117 unieke case-ID's
+- Playwright executable cases: 117 unieke case-ID's
+- SQL/DB executable cases: 1 unieke case-ID
+- Totaal executable cases: 118 unieke case-ID's
+- Playwright features: 18
+- Database features: 1
+- Playwright steps mappings: 18
+- Database steps mappings: 1
 - Uitvoeringen: 121
 - Niet-mobile projectuitvoeringen: 113
 - Mobile functionele cases: 4
 - Pixel 7 / Chromium-uitvoeringen: 4
 - iPhone 13 / WebKit-uitvoeringen: 4
 
-De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 functionele cases in totaal 121 resultaten op: 113 + (4 x 2) = 121.
+De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 Playwright-functionele cases in totaal 121 resultaten op: 113 + (4 x 2) = 121.
 
 ## Documentatieketen
 
 1. `.feature`: businessleesbaar gedrag en compacte KRPI-tags.
 2. `.steps.ts`: expliciete case-ID naar spec-mapping; geen uitvoerbare Cucumber-code.
 3. `.spec.ts`: uitvoerbare Playwright-test.
-4. Allure: functionele Suites en Behaviors, met project/device als metadata.
+4. SQL/DB smoke: `database/queries/crud-smoke.sql` en `scripts/run-db-crud-smoke.mjs` voor directe infrastructuurvalidatie.
+5. Allure: functionele Suites en Behaviors, met project/device als metadata.
 
 ## Dekking
 
 ### Auditlog en traceerbaarheid
 
 - Feature: `tests/playwright/features/audit-log.feature`
-- Spec: `tests/playwright/audit-log.spec.ts`
+- Source: `tests/playwright/audit-log.spec.ts`
 - Cases: 10
 
 - [AUD-H-001] admin kan auditlog ophalen
@@ -42,7 +49,7 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 funct
 ### Authenticatie en sessiebeheer
 
 - Feature: `tests/playwright/features/auth.feature`
-- Spec: `tests/playwright/auth.spec.ts`
+- Source: `tests/playwright/auth.spec.ts`
 - Cases: 6
 
 - [AUTH-H-001] Admin logt in en auth/me geeft de juiste gebruiker terug
@@ -55,7 +62,7 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 funct
 ### Klanturenstaten via API
 
 - Feature: `tests/playwright/features/customer-timesheets.feature`
-- Spec: `tests/playwright/customer-timesheet-api.spec.ts`
+- Source: `tests/playwright/customer-timesheet-api.spec.ts`
 - Cases: 5
 
 - [CTS-API-H-001] employee uploadt klanturenstaat, dient in en downloadt; admin kan goedkeuren en resubmit vragen
@@ -67,7 +74,7 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 funct
 ### Dashboardweergave
 
 - Feature: `tests/playwright/features/dashboard.feature`
-- Spec: `tests/playwright/dashboard.spec.ts`
+- Source: `tests/playwright/dashboard.spec.ts`
 - Cases: 4
 
 - [DASH-H-001] admin dashboard opent zonder console errors
@@ -78,7 +85,7 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 funct
 ### E-mailqueue en afleverbeleid
 
 - Feature: `tests/playwright/features/email-queue.feature`
-- Spec: `tests/playwright/email-queue.spec.ts`
+- Source: `tests/playwright/email-queue.spec.ts`
 - Cases: 14
 
 - [EQ-H-001] factuurlock maakt queue-items aan met dry_run=true
@@ -99,7 +106,7 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 funct
 ### Definitieve facturen en locking
 
 - Feature: `tests/playwright/features/invoice-locking.feature`
-- Spec: `tests/playwright/invoice-lock.spec.ts`
+- Source: `tests/playwright/invoice-lock.spec.ts`
 - Cases: 6
 
 - [INV-H-004] admin lockt approved timesheet naar definitieve immutable factuur
@@ -112,7 +119,7 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 funct
 ### Factuurweergave in de desktop-UI
 
 - Feature: `tests/playwright/features/invoices-ui.feature`
-- Spec: `tests/playwright/invoices.spec.ts`
+- Source: `tests/playwright/invoices.spec.ts`
 - Cases: 5
 
 - [INV-H-001] admin facturen zichtbaar en console errors 0
@@ -124,7 +131,7 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 funct
 ### Mobiele gebruikerservaring
 
 - Feature: `tests/playwright/features/mobile.feature`
-- Spec: `tests/playwright/mobile-ui.spec.ts`
+- Source: `tests/playwright/mobile-ui.spec.ts`
 - Cases: 4
 
 - [MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikbaar
@@ -135,16 +142,8 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 funct
 ### Notificaties via API
 
 - Feature: `tests/playwright/features/notifications.feature`
-- Spec: `tests/playwright/notifications.spec.ts`
+- Source: `tests/playwright/notifications.spec.ts`
 - Cases: 8
-
-### Database en infrastructuursmoke
-
-- Bron: `database/queries/crud-smoke.sql`
-- Doel: expliciet valideren van `INSERT`, `SELECT`, `UPDATE` en `DELETE` in de lokale MySQL-omgeving zonder demo-data te wijzigen
-- Cases: 1
-
-- [DB-H-001] CRUD-smoke SQL draait zonder fouten en retourneert de verwachte resultaten voor insert/select/update/delete; uitgevoerd via `npm run test:db:crud` en CI
 
 - [NOT-H-001] ingelogde gebruiker kan notificaties ophalen
 - [NOT-H-002] mark_all_read werkt zonder fouten
@@ -158,7 +157,7 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 funct
 ### Wachtwoordherstel en rate limiting
 
 - Feature: `tests/playwright/features/password-reset.feature`
-- Spec: `tests/playwright/password-reset.spec.ts`
+- Source: `tests/playwright/password-reset.spec.ts`
 - Cases: 9
 
 - [PWD-H-001] request-reset retourneert token in demo-modus
@@ -174,7 +173,7 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 funct
 ### Periodebeheer via API
 
 - Feature: `tests/playwright/features/period-management.feature`
-- Spec: `tests/playwright/period-management.spec.ts`
+- Source: `tests/playwright/period-management.spec.ts`
 - Cases: 10
 
 - [PER-H-001] admin kan periodes ophalen met overzicht
@@ -191,7 +190,7 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 funct
 ### Productieveiligheid
 
 - Feature: `tests/playwright/features/production-safety.feature`
-- Spec: `tests/playwright/production-safety.spec.ts`
+- Source: `tests/playwright/production-safety.spec.ts`
 - Cases: 8
 
 - [SAFE-H-001] login picker vult alleen lokaal demo-wachtwoord in wanneer hints beschikbaar zijn
@@ -206,7 +205,7 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 funct
 ### Rollen en gegevensscope
 
 - Feature: `tests/playwright/features/roles-api.feature`
-- Spec: `tests/playwright/roles-api.spec.ts`
+- Source: `tests/playwright/roles-api.spec.ts`
 - Cases: 3
 
 - [ROLE-N-003] zonder sessie geeft protected API 401
@@ -216,7 +215,7 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 funct
 ### CSRF en authenticatiebeveiliging
 
 - Feature: `tests/playwright/features/security.feature`
-- Spec: `tests/playwright/security.spec.ts`
+- Source: `tests/playwright/security.spec.ts`
 - Cases: 11
 
 - [SEC-H-001] csrf token endpoint werkt
@@ -234,7 +233,7 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 funct
 ### Correctie en goedkeuring met optimistic locking
 
 - Feature: `tests/playwright/features/timesheets-review-integration.feature`
-- Spec: `tests/playwright/timesheet-review-flow.spec.ts`
+- Source: `tests/playwright/timesheet-review-flow.spec.ts`
 - Cases: 1
 
 - [TS-REV-API-H-005] admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking
@@ -242,7 +241,7 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 funct
 ### Correctie en goedkeuring in de desktop-UI
 
 - Feature: `tests/playwright/features/timesheets-review-ui.feature`
-- Spec: `tests/playwright/timesheet-review-ui.spec.ts`
+- Source: `tests/playwright/timesheet-review-ui.spec.ts`
 - Cases: 1
 
 - [TS-REV-UI-H-008] browserflow: admin vraagt correctie, medewerker dient opnieuw in, admin keurt goed
@@ -250,7 +249,7 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 funct
 ### Urenregistratie via API
 
 - Feature: `tests/playwright/features/timesheets-api.feature`
-- Spec: `tests/playwright/timesheet-write.spec.ts`
+- Source: `tests/playwright/timesheet-write.spec.ts`
 - Cases: 5
 
 - [TS-API-H-001] employee save draft, read back, submit, audit en gesloten status guard
@@ -262,7 +261,7 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 funct
 ### Gebruikersbeheer via API
 
 - Feature: `tests/playwright/features/user-management.feature`
-- Spec: `tests/playwright/user-management.spec.ts`
+- Source: `tests/playwright/user-management.spec.ts`
 - Cases: 7
 
 - [USR-H-001] admin ziet alle gebruikers van het bedrijf
@@ -273,9 +272,17 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 funct
 - [USR-N-006] admin kan zichzelf niet deactiveren
 - [USR-N-007] dubbel deactiveren geeft 409
 
+### Database-integriteit en CRUD-smoke
+
+- Feature: `tests/playwright/features/database-integrity.feature`
+- Source: `database/queries/crud-smoke.sql + scripts/run-db-crud-smoke.mjs`
+- Cases: 1
+
+- [DB-H-001] CRUD smoke test werkt in een geïsoleerde tijdelijke tabel
+
 ## Rapportage
 
-- Suites: UI Desktop, UI Mobile, API, Security en DB / Integratie.
+- Suites: UI Desktop, UI Mobile, API, Security, DB / SQL en DB / Integratie.
 - Epic: Path Uren & Facturatie.
 - SubSuite: Happy of Negative.
 - API request/response-attachments worden centraal geredigeerd.
@@ -284,6 +291,7 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 funct
 ## Bijwerken
 
 1. Wijzig of voeg eerst de native Playwright-case met unieke ID toe.
-2. Draai `node scripts/sync-living-docs.mjs`.
-3. Controleer de feature/steps/spec/Allure mapping.
-4. Draai `npm run test:e2e`, `npm run allure:generate` en `npm run check`.
+2. Voeg voor directe SQL/DB-validatie een case toe via de database-definitie in de sync-script.
+3. Draai `node scripts/sync-living-docs.mjs`.
+4. Controleer de feature/steps/spec/Allure mapping.
+5. Draai `npm run test:e2e`, `npm run allure:generate` en `npm run check`.

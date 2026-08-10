@@ -15,7 +15,7 @@
 
 ## Volledige traceability matrix
 
-| Case ID | Type | Feature file | Scenario | Steps mapping | Playwright spec | Allure parentSuite | Allure Feature | Allure Story | Flow | Fase | Status |
+| Case ID | Type | Feature file | Scenario | Steps mapping | Source | Allure parentSuite | Allure Feature | Allure Story | Flow | Fase | Status |
 |---|---|---|---|---|---|---|---|---|---|---:|---|
 | AUD-H-001 | api | audit-log.feature | admin kan auditlog ophalen | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | admin kan auditlog ophalen | Happy | 16 | Actueel |
 | AUD-H-002 | api | audit-log.feature | auditlog filtert op entity_type | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | auditlog filtert op entity_type | Happy | 16 | Actueel |
@@ -134,12 +134,14 @@
 | USR-N-005 | api | user-management.feature | medewerker mag geen gebruikersbeheer uitvoeren | user-management.steps.ts | user-management.spec.ts | API | Gebruikersbeheer | medewerker mag geen gebruikersbeheer uitvoeren | Negative | 13 | Actueel |
 | USR-N-006 | api | user-management.feature | admin kan zichzelf niet deactiveren | user-management.steps.ts | user-management.spec.ts | API | Gebruikersbeheer | admin kan zichzelf niet deactiveren | Negative | 13 | Actueel |
 | USR-N-007 | api | user-management.feature | dubbel deactiveren geeft 409 | user-management.steps.ts | user-management.spec.ts | API | Gebruikersbeheer | dubbel deactiveren geeft 409 | Negative | 13 | Actueel |
+| DB-H-001 | db | database-integrity.feature | CRUD smoke test werkt in een geïsoleerde tijdelijke tabel | database.steps.ts | database/queries/crud-smoke.sql + scripts/run-db-crud-smoke.mjs | DB / SQL | Database & Infrastructure | Database CRUD smoke | Happy | 16 | Actueel |
 
 ## Totalen
 
-- Functionele cases: 117
-- Playwright-uitvoeringen: 121
-- Niet-mobile uitvoeringen: 113
-- Mobile functionele cases: 4
-- Pixel 7 / Chromium: 4 uitvoeringen
-- iPhone 13 / WebKit: 4 uitvoeringen
+- Playwright executable cases: 117
+- SQL/DB executable cases: 1
+- Totaal unieke executable cases: 118
+- Playwright features: 18
+- Database features: 1
+- Playwright steps mappings: 18
+- Database steps mappings: 1
