@@ -52,7 +52,7 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 ### Nieuwe werklijst (van boven naar beneden)
 
 - [x] Stap 1: Fase 2 - afwikkelen van de nog open lokale/overige write-flowstatus en bevestigen welke onderdelen nog werkelijk lokaal/open zijn.
-- [-] Stap 2: Fase 5 - alleen niet-productie-afhankelijke securityhardening, inclusief expliciete sessie-time-out en sliding session expiration zodra die aantoonbaar getest zijn.
+- [x] Stap 2: Fase 5 - niet-productie-afhankelijke securityhardening bevestigd; expliciete sessie-time-out en sliding session expiration zijn aantoonbaar getest.
 - [-] Stap 3: Fase 7 - alleen niet-geblokkeerde CI/CD-afwerking.
 - [-] Stap 4: Fase 10 - resterende lokale productiehardening uploads.
 - [-] Stap 5: Fase 11 - server-side factuur-PDF en veilige opslag/download.
@@ -258,10 +258,10 @@ Status Fase 4:
 - [x] Geen plaintext demo-wachtwoorden in frontend.
 - [x] Demo-migraties voor productie begrensd.
 - [x] Productie-origin voorbereid via configuratie.
+- [x] Expliciete sessie-time-out aantoonbaar getest (SEC-H-005).
+- [x] Sliding session expiration aantoonbaar getest (SEC-H-005).
+- [x] Auditmelding bij herhaalde mislukte loginpogingen aantoonbaar getest (SEC-H-006).
 - [-] Nog open als aanvullende hardening:
-  - Expliciete sessie-time-out
-  - Sliding session expiration
-  - Auditmelding bij herhaalde mislukte logins
   - Productie-CORS definitief beperken tot https://uren.pathconsultancy.nl
   - Content-Security-Policy voor productie
   - HSTS na bevestigde HTTPS-productieconfig
@@ -271,7 +271,7 @@ Status Fase 4:
 
 Status Fase 5:
 - [x] noodzakelijke securitybasis afgerond
-- [-] extra productiehardening open; expliciete sessie-time-out en sliding session expiration zijn nu groen bevestigd in SEC-H-005 binnen de volledige regressie (127/127)
+- [-] extra productiehardening open; sessie-time-out/sliding expiration (SEC-H-005) en failed-login-auditmelding (SEC-H-006) zijn groen bevestigd binnen de volledige regressie (127/127)
 
 ---
 
