@@ -12,31 +12,47 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 ## Actuele stand
 
 - [x] Datum: 2026-08-10
-- [x] Main/HEAD: 387ea63
+- [x] Main/HEAD: d48e08c
 - [x] Referentiecommit fase 8/9 backend: fc27723
 - [x] Appversie: 0.9.41
 - [x] Lokale check: geslaagd
-- [x] Lokale e2e regressie: 121 tests (113 niet-mobile Chromium + 4 Pixel 7 Chromium + 4 iPhone 13 WebKit)
-- [x] Functionele regressiecatalogus: 117 unieke cases met 117 feature- en 117 steps-mappings
+- [x] Lokale e2e regressie: laatste volledige run na DB-isolatie is nog niet opnieuw volledig groen bewezen; eerdere baseline was 121/121 op eerdere state
+- [x] Functionele regressiecatalogus: 117 unieke Playwright-cases, 121 Playwright-uitvoeringen, 1 directe SQL/DB-case DB-H-001, 118 unieke executable cases totaal
 - [x] Releasehardening v0.9.41: gecommit en gepusht naar main
-- [x] GitHub pipeline-status: run #68 gestart voor f05ccff; Validate+Test+Live Docs+Prod verwacht groen na afronding
-- [x] Laatste commit: 387ea63 — feat(living-doc): add suite grouping to sidebar matching Allure suites
-- [x] Recente commits gepusht: Slice B (a3d66cc), Slice C notifications (f05ccff), Living Doc suite-sidebar (387ea63)
-- [x] Slice B afgerond: invoice/verzendstatus auth-mode server-led; lokale regressie 121/121 en pipeline groen
+- [x] GitHub pipeline-status: recente lokale en DB-onderdelen zijn geverifieerd; volledige regressie na DB-isolatie is momenteel nog open/onderzoek
+- [x] Laatste commit: d48e08c — test(db): add isolated Playwright DB bootstrap and DB integrity regression
+- [x] Recente relevante commits: d48e08c, b4c5ad0, d137ce4, a4aa195, bd025af, 5a238b8, edd066a, 4002c84
+- [x] DB-H-001: SQL/DB-smoke groen via `node scripts/run-db-crud-smoke.mjs`
+- [x] Lokale automatische Playwright-testdatabase aanwezig: `path_urenregistratie_test`
+- [x] DB-isolatie-onderdeel toegevoegd: bootstrap-script voor aparte lokale Playwright-testdatabase aanwezig
+- [x] Slice B afgerond: invoice/verzendstatus auth-mode server-led; lokale regressie 121/121 was eerder bewezen op de voorafgaande state
 - [x] Slice C deelstap afgerond: notifications auth-mode server-led via notifications.php (read, mark_read, mark_all_read, mark_announcement_read)
 
 ### Kort overzicht: waar we nu staan
 
 - [x] Kernbouw en functionele basis zijn aanwezig en lokaal gevalideerd.
-- [x] Regresietesten zijn lokaal groen.
-- [x] DB/infrastructuursmoke aanwezig: DB-H-001 via `npm run test:db:crud` en CI uitgevoerd.
+- [-] De meest recente volledige Playwright-regressie na DB-isolatie is nog niet opnieuw volledig groen bewezen.
+- [x] DB/infrastructuursmoke aanwezig: DB-H-001 via `node scripts/run-db-crud-smoke.mjs` groen.
+- [x] Lokale automatische Playwright-testdatabase aanwezig: `path_urenregistratie_test` via bootstrap.
+- [x] De checklist is nu bijgewerkt naar de actuele repo- en teststatus; de fase-indeling is intact gebleven.
 - [-] We werken vanaf nu strikt van boven naar beneden op open punten in de checklist.
 - [-] Fases worden alleen overgeslagen als een punt aantoonbaar geblokkeerd is.
 
+### Samenvatting huidige stand
+
+- [x] De app is functioneel op basis van de bestaande lokale backend/frontend-flow en de recente DB-onderdelen.
+- [x] De DB-H-001 smoke is groen.
+- [x] De aparte lokale Playwright-testdatabase is ingebouwd.
+- [-] De volledige regressie na de DB-isolatie-aanpassing is nog niet opnieuw volledig groen bewezen; dit is nu expliciet open/onderzoek.
+
+### Directe volgende stap
+
+- [-] Volledige Playwright-regressie na DB-isolatie opnieuw draaien en de resterende fouten exact lokaliseren voordat de checklist als volledig groen wordt gepresenteerd.
+
 ### Nieuwe werklijst (van boven naar beneden)
 
-- [-] Stap 1: Fase 2 - resterende app_state/localStorage-afbouw.
-- [-] Stap 2: Fase 5 - alleen niet-productie-afhankelijke securityhardening.
+- [-] Stap 1: Fase 2 - afwikkelen van de nog open lokale/overige write-flowstatus en bevestigen welke onderdelen nog werkelijk lokaal/open zijn.
+- [-] Stap 2: Fase 5 - alleen niet-productie-afhankelijke securityhardening, inclusief expliciete sessie-time-out en sliding session expiration zodra die aantoonbaar getest zijn.
 - [-] Stap 3: Fase 7 - alleen niet-geblokkeerde CI/CD-afwerking.
 - [-] Stap 4: Fase 10 - resterende lokale productiehardening uploads.
 - [-] Stap 5: Fase 11 - server-side factuur-PDF en veilige opslag/download.
@@ -55,6 +71,8 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 - [x] Slice C deelstap afgerond: auth-mode notificatiepaneel en markeren-als-gelezen lopen server-led via server/api/notifications.php (read, mark_read, mark_all_read en mark_announcement_read).
 - [x] Slice C volledig: announcements API aangemaakt (send/withdraw/hide/draft); admin write-flow server-led; employee read via notifications.
 - [x] Slice D+E volledig: toggleEmployee/Admin server-led via users.php; dbUserId opgeslagen via bootstrap-merge; persistState in auth-mode beperkt tot UI-state (rol, periode, filters, branding, reminders); business-data (employees/admins/records/notifications/announcements) niet meer lokaal gepersisteert in auth-mode.
+- [x] DB-isolatie en test-DB-scheiding: aparte lokale Playwright-testdatabase `path_urenregistratie_test` is ingericht en via bootstrap beschikbaar; dev/demo DB blijft `path_urenregistratie`.
+- [-] Volledige bewijscheck dat de volledige regressie de dev/demo DB onaangeroerd laat, blijft open zolang de nieuwe volledige regressie na DB-isolatie niet opnieuw groen is bewezen.
 
 Voor iedere slice geldt verplicht:
 - [-] Extra controle op afgeleide dubbeling: invoiceStatus, payrollStatus, email_deliveries, verzonden/sent-flags, dashboard/KPI-afleidingen en batch-acties.
@@ -141,6 +159,10 @@ Status Fase 1:
 - [x] Auth-mode verzendacties zetten geen lokale businessstatus meer vooruit; eerst server enqueue/sync, daarna UI-update op basis van serverresponse.
 - [x] Slice C volledig: auth-mode mededelingen read/write server-led; notifications lees/markeer server-led.
 - [x] Slice D+E volledig: users deactivate/reactivate auth-mode server-led; persistState auth-mode beperkt tot UI/branding/reminders; employees/admins/records/notifications/announcements niet meer lokaal gepersisteert in auth-mode.
+- [x] Lokale dev/demo database = `path_urenregistratie`.
+- [x] Lokale automatische testdatabase = `path_urenregistratie_test`.
+- [x] DB-H-001 via SQL/Node-runner beschikbaar en groen.
+- [x] database-integrity.feature + database.steps.ts aanwezig als Living Documentation/mapping; er is geen database-integrity.spec.ts.
 - [-] Browseropslag is nog niet voor alle onderdelen volledig vervangen:
   - read-data grotendeels uit database
   - uren-writeflow uit database
@@ -150,7 +172,7 @@ Status Fase 2:
 - [x] databasestructuur afgerond
 - [x] alle businesskritische write-flows in auth-mode server-led (timesheets, invoices, email-queue, notifications, announcements, users status)
 - [x] persistState/localStorage in auth-mode beperkt tot UI-state; server is de enige autoritatieve bron voor businessdata
-- [-] settings/company-data-writes en employee/admin create/edit nog lokaal (server leest ze al via bootstrap)
+- [-] settings/company-data-writes en employee/admin create/edit zijn nog niet volledig bewezen als volledig server-led in de huidige lokale state; deze punten moeten opnieuw worden beoordeeld voordat Fase 2 als volledig dicht kan worden beschouwd
 
 ---
 
@@ -249,11 +271,17 @@ Status Fase 4:
 
 Status Fase 5:
 - [x] noodzakelijke securitybasis afgerond
-- [-] extra productiehardening open
+- [-] extra productiehardening open, inclusief expliciete sessie-time-out en sliding session expiration; deze zijn in code aanwezig maar nog niet apart als afgerond en groen bevestigd in de lokale regressie
 
 ---
 
 ## Fase 6 - Playwright, Allure, Living Documentation en agents
+
+- [x] Lokale dev/demo database = `path_urenregistratie`.
+- [x] Lokale automatische testdatabase = `path_urenregistratie_test`.
+- [x] DB-H-001 via SQL/Node-runner aanwezig en groen.
+- [x] database-integrity.feature + database.steps.ts aanwezig als Living Documentation/mapping.
+- [x] Geen database-integrity.spec.ts; de executable source of truth is de native Playwright-suite plus de DB-smoke runner.
 
 - [x] Playwright-only testopzet.
 - [x] Geen Cypress in deze repository.
@@ -301,7 +329,8 @@ Status Fase 5:
 - [x] AUTH-H-004 borgt dat de lokale beheeraccount na asynchrone auth-initialisatie automatisch wordt ingevuld en met één klik opent.
 - [x] Periodebeheer valideert het bestaande viercijferige UI-bereik 1000–9999 en maand 1–12 voordat gegevens worden opgeslagen.
 - [x] PER-H-002 normaliseert zijn eigen testperiode en controleert expliciete close/reopen-statusresponses, onafhankelijk van vervuilde globale periodedata.
-- [x] Living Documentation bevat 117 unieke cases, 121 uitvoeringen en volledige 117/117/117 traceability.
+- [x] Living Documentation bevat 117 unieke cases, 121 uitvoeringen, 1 directe SQL/DB-case DB-H-001 en 118 unieke executable cases totaal.
+- [-] De actuele volledige regressie na DB-isolatie is nog niet opnieuw volledig groen bewezen; eerdere 121/121 was een historische baseline op de voorafgaande state.
 - [x] Recente slice afgerond: production-safety- en timesheet-write-specs bijgewerkt, TESTCOMMANDOS.md afgestemd op de actuele scripts en de lokale Playwright-regressie groen.
 - [x] Living Doc viewer uitgebreid met suite-groepering in sidebar (API/Security/UI Desktop/UI Mobile/DB/Integratie) identiek aan Allure-stijl; commit 387ea63.
 
