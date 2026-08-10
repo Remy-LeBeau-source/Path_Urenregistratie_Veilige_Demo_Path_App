@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import mysql from 'mysql2/promise';
 import { config as loadDotEnv } from 'dotenv';
 
@@ -13,7 +14,7 @@ if (stage && ['dev', 'test', 'acc', 'prod'].includes(stage)) {
 }
 for (const envFile of envFiles) {
   if (fs.existsSync(envFile)) {
-    loadDotEnv({ path: envFile, override: envFile.endsWith('.env.local') || envFile.includes('environments') });
+    loadDotEnv({ path: envFile, override: false });
   }
 }
 
@@ -61,6 +62,58 @@ try {
   // fall back to env-based defaults
 }
 
+function resolvePhpPath() {
+  const phpPathFile = path.join(root, 'server', '.php-path');
+  if (fs.existsSync(phpPathFile)) {
+    const phpPath = fs.readFileSync(phpPathFile, 'utf8').trim();
+    if (phpPath) {
+      return phpPath;
+    }
+  }
+  return process.platform === 'win32' ? 'php.exe' : 'php';
+}
+
+function hashPasswordWithPhp(phpBinary, plainPassword) {
+  const hashResult = spawnSync(
+    phpBinary,
+    ['-r', 'echo password_hash($argv[1], PASSWORD_DEFAULT);', plainPassword],
+    { encoding: 'utf8' },
+  );
+
+  if (hashResult.status !== 0) {
+    throw new Error('Could not generate password hash via PHP runtime.');
+  }
+
+  const hash = String(hashResult.stdout || '').trim();
+  if (!hash) {
+    throw new Error('Generated password hash was empty.');
+  }
+
+  return hash;
+}
+
+function stageScopedValue(stageName, key, fallback = '') {
+  const normalizedStage = String(stageName || '').trim().toLowerCase();
+  const stageKey = normalizedStage ? `${normalizedStage.toUpperCase()}_${key}` : '';
+  if (stageKey) {
+    const scoped = String(process.env[stageKey] || '').trim();
+    if (scoped) {
+      return scoped;
+    }
+  }
+
+  const shared = String(process.env[key] || '').trim();
+  if (shared) {
+    return shared;
+  }
+
+  return fallback;
+}
+
+function dedupeNonEmpty(values) {
+  return Array.from(new Set(values.map((value) => String(value || '').trim()).filter(Boolean)));
+}
+
 const connection = await mysql.createConnection(config);
 try {
   await connection.query(`CREATE DATABASE IF NOT EXISTS \`${databaseName}\``);
@@ -68,3 +121,89 @@ try {
 } finally {
   await connection.end();
 }
+
+const phpPath = resolvePhpPath();
+const migrationEnv = {
+  ...process.env,
+  PATH_APP_DB_HOST: config.host,
+  PATH_APP_DB_PORT: String(config.port),
+  PATH_APP_DB_NAME: databaseName,
+  PATH_APP_DB_USER: config.user,
+  PATH_APP_DB_PASSWORD: config.password,
+  PATH_APP_ENVIRONMENT: 'test',
+  PATH_APP_ALLOW_DEMO_MIGRATIONS: '1',
+  PLAYWRIGHT_STAGE: 'test',
+  PLAYWRIGHT_ALLOW_DEMO_MIGRATIONS: '1',
+  PLAYWRIGHT_DB_HOST: config.host,
+  PLAYWRIGHT_DB_PORT: String(config.port),
+  PLAYWRIGHT_DB_NAME: databaseName,
+  PLAYWRIGHT_DB_USER: config.user,
+  PLAYWRIGHT_DB_PASSWORD: config.password,
+};
+const migration = spawnSync(phpPath, ['server/migrate.php'], {
+  cwd: root,
+  stdio: 'inherit',
+  env: migrationEnv,
+});
+if (migration.status !== 0) {
+  process.exit(migration.status ?? 1);
+}
+
+const isTestDatabase = databaseName.endsWith('_test') || String(process.env.PLAYWRIGHT_STAGE || '').trim().toLowerCase() === 'test';
+if (isTestDatabase) {
+  const effectiveStage = String(process.env.PLAYWRIGHT_STAGE || '').trim().toLowerCase() || 'test';
+  const adminPassword = stageScopedValue(effectiveStage, 'PLAYWRIGHT_ADMIN_PASSWORD');
+  const employeePassword = stageScopedValue(effectiveStage, 'PLAYWRIGHT_EMPLOYEE_PASSWORD');
+  const adminEmails = dedupeNonEmpty([
+    stageScopedValue(effectiveStage, 'PLAYWRIGHT_ADMIN_EMAIL', 'gio@example.invalid'),
+    'gio@example.invalid',
+    'joyce@example.invalid',
+    'admin@example.invalid',
+  ]);
+  const employeeEmails = dedupeNonEmpty([
+    stageScopedValue(effectiveStage, 'PLAYWRIGHT_EMPLOYEE_EMAIL', 'stasjo@example.invalid'),
+    'marc@example.invalid',
+    'stasjo@example.invalid',
+    'brian@example.invalid',
+    'shawn@example.invalid',
+    'employee.demo@example.invalid',
+  ]);
+  const adminHash = adminPassword ? hashPasswordWithPhp(phpPath, adminPassword) : '';
+  const employeeHash = employeePassword ? hashPasswordWithPhp(phpPath, employeePassword) : '';
+
+  const postMigrationConnection = await mysql.createConnection({
+    ...config,
+    database: databaseName,
+  });
+
+  try {
+    // Keep local demo credentials reproducible across runs and remove lockout side effects from prior failures.
+    if (adminHash) {
+      const placeholders = adminEmails.map(() => '?').join(', ');
+      await postMigrationConnection.query(
+        `UPDATE users
+         SET password_hash = ?
+         WHERE email IN (${placeholders})
+           AND role = 'administrator'`,
+        [adminHash, ...adminEmails],
+      );
+    }
+
+    if (employeeHash) {
+      const placeholders = employeeEmails.map(() => '?').join(', ');
+      await postMigrationConnection.query(
+        `UPDATE users
+         SET password_hash = ?
+         WHERE email IN (${placeholders})
+           AND role = 'employee'`,
+        [employeeHash, ...employeeEmails],
+      );
+    }
+
+    await postMigrationConnection.query('DELETE FROM auth_login_audit');
+  } finally {
+    await postMigrationConnection.end();
+  }
+}
+
+console.log(`Migrated isolated Playwright database: ${databaseName}`);

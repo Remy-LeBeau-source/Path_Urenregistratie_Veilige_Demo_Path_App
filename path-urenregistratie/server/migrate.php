@@ -2,8 +2,29 @@
 declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
 
+function migrate_env_value(array $keys): ?string
+{
+    foreach ($keys as $key) {
+        $value = getenv($key);
+        if ($value === false) {
+            continue;
+        }
+        $value = trim((string)$value);
+        if ($value !== '') {
+            return $value;
+        }
+    }
+    return null;
+}
+
 function migrate_environment(array $config): string
 {
+    $envValue = migrate_env_value(['PATH_APP_ENVIRONMENT', 'PLAYWRIGHT_STAGE', 'PLAYWRIGHT_ENVIRONMENT', 'DB_ENVIRONMENT', 'APP_ENV']);
+    if ($envValue !== null) {
+        $environment = strtolower(trim($envValue));
+        return $environment !== '' ? $environment : 'production';
+    }
+
     $raw = $config['environment'] ?? ($config['app']['environment'] ?? 'production');
     $environment = strtolower(trim((string)$raw));
     return $environment !== '' ? $environment : 'production';
@@ -17,6 +38,13 @@ function migrate_allow_demo_migrations(array $config): bool
     if (isset($config['app']) && is_array($config['app']) && array_key_exists('allow_demo_migrations', $config['app'])) {
         return (bool)$config['app']['allow_demo_migrations'];
     }
+
+    $envValue = migrate_env_value(['PATH_APP_ALLOW_DEMO_MIGRATIONS', 'PLAYWRIGHT_ALLOW_DEMO_MIGRATIONS', 'DB_ALLOW_DEMO_MIGRATIONS']);
+    if ($envValue !== null) {
+        $normalized = strtolower(trim($envValue));
+        return in_array($normalized, ['1', 'true', 'yes', 'on'], true);
+    }
+
     return false;
 }
 
@@ -154,6 +182,29 @@ if (isset($config['database']) && is_array($config['database'])) {
         'password' => $config['password'] ?? '',
         'charset' => $config['charset'] ?? 'utf8mb4',
     ];
+}
+
+if ($db !== null) {
+    $envHost = migrate_env_value(['PATH_APP_DB_HOST', 'PLAYWRIGHT_DB_HOST', 'DB_HOST']);
+    if ($envHost !== null) {
+        $db['host'] = $envHost;
+    }
+    $envPort = migrate_env_value(['PATH_APP_DB_PORT', 'PLAYWRIGHT_DB_PORT', 'DB_PORT']);
+    if ($envPort !== null) {
+        $db['port'] = (int)$envPort;
+    }
+    $envName = migrate_env_value(['PATH_APP_DB_NAME', 'PLAYWRIGHT_DB_NAME', 'DB_NAME']);
+    if ($envName !== null) {
+        $db['name'] = $envName;
+    }
+    $envUser = migrate_env_value(['PATH_APP_DB_USER', 'PLAYWRIGHT_DB_USER', 'DB_USER']);
+    if ($envUser !== null) {
+        $db['user'] = $envUser;
+    }
+    $envPassword = migrate_env_value(['PATH_APP_DB_PASSWORD', 'PLAYWRIGHT_DB_PASSWORD', 'DB_PASSWORD']);
+    if ($envPassword !== null) {
+        $db['password'] = $envPassword;
+    }
 }
 
 if (!$db || !isset($db['host']) || !isset($db['name'])) {

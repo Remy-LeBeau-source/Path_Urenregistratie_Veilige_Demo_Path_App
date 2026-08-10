@@ -1,137 +1,252 @@
-import { existsSync } from 'node:fs';
-import { spawnSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
+import { spawn, spawnSync } from 'node:child_process';
+import path from 'node:path';
 import { config as loadDotEnv } from 'dotenv';
 
-// Load tracked defaults first, then local overrides.
-if (existsSync('.env')) {
-  loadDotEnv({ path: '.env' });
+function resolvePhpPath() {
+  const phpPathFile = path.join(process.cwd(), 'server', '.php-path');
+  if (existsSync(phpPathFile)) {
+    const phpPath = readFileSync(phpPathFile, 'utf8').trim();
+    if (phpPath) {
+      return phpPath;
+    }
+  }
+  return process.platform === 'win32' ? 'php.exe' : 'php';
 }
 
-const stage = String(process.env.PLAYWRIGHT_STAGE || '').trim().toLowerCase();
-if (stage && !['dev', 'test', 'acc', 'prod'].includes(stage)) {
-  console.error('E2E precheck failed: PLAYWRIGHT_STAGE must be one of dev, test, acc, prod.');
-  process.exit(1);
-}
-if (stage) {
-  const stageEnvPath = `environments/${stage}.env`;
-  if (existsSync(stageEnvPath)) {
-    loadDotEnv({ path: stageEnvPath, override: true });
+function loadEnvFiles() {
+  const root = process.cwd();
+  const envFiles = [path.join(root, '.env'), path.join(root, '.env.local')];
+  const stage = String(process.env.PLAYWRIGHT_STAGE || '').trim().toLowerCase();
+  if (stage && ['dev', 'test', 'acc', 'prod'].includes(stage)) {
+    envFiles.push(path.join(root, 'environments', `${stage}.env`));
+  } else if (!process.env.PATH_APP_DB_NAME && !process.env.PLAYWRIGHT_DB_NAME && !process.env.DB_NAME) {
+    envFiles.push(path.join(root, 'environments', 'test.env'));
+  }
+  for (const envFile of envFiles) {
+    if (existsSync(envFile)) {
+      loadDotEnv({ path: envFile, override: false });
+    }
   }
 }
 
-if (existsSync('.env.local')) {
-  loadDotEnv({ path: '.env.local', override: true });
+function resolveDatabaseName(env) {
+  return String(env.PATH_APP_DB_NAME || env.PLAYWRIGHT_DB_NAME || env.DB_NAME || '').trim();
 }
 
-const requiredEnvVars = [
-  'PLAYWRIGHT_ADMIN_PASSWORD',
-  'PLAYWRIGHT_EMPLOYEE_PASSWORD',
-];
-
-const missing = requiredEnvVars.filter((name) => !String(process.env[name] || '').trim());
-
-if (missing.length > 0) {
-  console.error('E2E precheck failed: missing required environment variables.');
-  for (const name of missing) {
-    console.error(`- ${name}`);
+async function waitForHealth(baseUrl, timeoutMs = 60_000) {
+  const startedAt = Date.now();
+  let lastError = 'startup-not-yet-ready';
+  while (Date.now() - startedAt < timeoutMs) {
+    try {
+      const response = await fetch(new URL('/server/health.php', baseUrl).toString(), { method: 'GET' });
+      if (response.ok) {
+        return response;
+      }
+      lastError = `HTTP ${response.status}`;
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : String(error);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
   }
-  console.error('Set these in your shell or in .env.local before running npm run test:e2e.');
-  process.exit(1);
+  throw new Error(`Timed out waiting for PHP health endpoint at ${baseUrl}; last error: ${lastError}`);
 }
 
-const baseUrl = String(process.env.PATH_APP_BASE_URL || 'http://localhost:8000').trim();
+async function main() {
+  loadEnvFiles();
 
-try {
-  const response = await fetch(baseUrl, { method: 'GET' });
-  if (!response.ok) {
-    console.error(`E2E precheck failed: ${baseUrl} returned HTTP ${response.status}.`);
-    process.exit(1);
-  }
-} catch {
-  console.error(`E2E precheck failed: cannot reach ${baseUrl}. Start the local server first.`);
-  process.exit(1);
-}
-
-console.log(`E2E precheck ok: ${baseUrl} reachable and required env vars are set.`);
-
-const bootstrapDb = spawnSync(process.execPath, ['scripts/bootstrap-playwright-db.mjs'], {
-  stdio: 'inherit',
-  env: process.env,
-});
-if (bootstrapDb.status !== 0) {
-  process.exit(bootstrapDb.status ?? 1);
-}
-
-const allurePrepare = spawnSync(process.execPath, ['scripts/prepare-allure-results.mjs'], {
-  stdio: 'inherit',
-  env: process.env,
-});
-if (allurePrepare.status !== 0) {
-  process.exit(allurePrepare.status ?? 1);
-}
-
-const rawArgs = process.argv.slice(2);
-const extraArgs = rawArgs[0] === '--' ? rawArgs.slice(1) : rawArgs;
-const groupRaw = String(process.env.PLAYWRIGHT_GROUP || '').trim().toLowerCase();
-
-const groupToGrep = {
-  auth: '\\[AUTH-',
-  security: '\\[(SEC|SAFE)-',
-  dashboard: '\\[DASH-',
-  invoices: '\\[INV-',
-  roles: '\\[ROLE-',
-  timesheets: '\\[(TS-API|TS-REV)-',
-  customer: '\\[CTS-API-',
-  'customer-timesheets': '\\[CTS-API-',
-  api: '\\[(AUTH|SEC|ROLE|TS-API|TS-REV-API|CTS-API)-',
-  ui: '\\[(DASH|INV|TS-REV-UI)-',
-  'ui-desktop': '\\[(DASH|INV|TS-REV-UI)-',
-  'ui-mobile': '\\[MOB-',
-  mobile: '\\[MOB-',
-  happy: '-H-',
-  negative: '-N-',
-  phase10: '\\[CTS-API-',
-  phase11: '\\[INV-',
-};
-
-function hasExplicitGrep(args) {
-  return args.some((arg, index) => arg === '--grep' || arg === '-g' || (arg.startsWith('--grep=') && index >= 0));
-}
-
-const runtimeArgs = [...extraArgs];
-
-if (groupRaw !== '' && !hasExplicitGrep(runtimeArgs)) {
-  const groups = groupRaw
-    .split(',')
-    .map((part) => part.trim())
-    .filter(Boolean);
-
-  const unknown = groups.filter((group) => !groupToGrep[group]);
-  if (unknown.length > 0) {
-    console.error(`E2E precheck failed: unknown PLAYWRIGHT_GROUP value(s): ${unknown.join(', ')}`);
-    console.error(`Allowed values: ${Object.keys(groupToGrep).join(', ')}`);
-    process.exit(1);
+  const stage = String(process.env.PLAYWRIGHT_STAGE || '').trim().toLowerCase();
+  const effectiveStage = stage || 'dev';
+  if (stage && !['dev', 'test', 'acc', 'prod'].includes(stage)) {
+    throw new Error('E2E precheck failed: PLAYWRIGHT_STAGE must be one of dev, test, acc, prod.');
   }
 
-  if (groups.length > 0) {
-    const regex = groups.map((group) => groupToGrep[group]).join('|');
-    runtimeArgs.push('--grep', `"${regex}"`);
-    console.log(`E2E group filter active (PLAYWRIGHT_GROUP=${groupRaw}): ${regex}`);
+  const requiredEnvVars = ['PLAYWRIGHT_ADMIN_PASSWORD', 'PLAYWRIGHT_EMPLOYEE_PASSWORD'];
+  const missing = requiredEnvVars.filter((name) => !String(process.env[name] || '').trim());
+  if (missing.length > 0) {
+    throw new Error(`E2E precheck failed: missing required environment variables.\n- ${missing.join('\n- ')}`);
   }
-}
 
-const result = spawnSync(
-  'npx',
-  ['playwright', 'test', ...runtimeArgs],
-  {
+  const resolvedDatabaseName = resolveDatabaseName(process.env);
+  if (!process.env.CI && effectiveStage !== 'prod' && resolvedDatabaseName && !resolvedDatabaseName.endsWith('_test')) {
+    throw new Error(`E2E precheck failed: local Playwright runs require a test database name ending in _test, got ${resolvedDatabaseName}.`);
+  }
+
+  const baseUrl = String(process.env.PATH_APP_BASE_URL || 'http://localhost:8000').trim();
+  const phpPath = resolvePhpPath();
+  const serverAddress = '127.0.0.1:8000';
+
+  console.log(`E2E precheck ok: ${baseUrl} will be served by a runner-managed PHP server using DB ${resolvedDatabaseName || '(default)'}.`);
+
+  const bootstrapEnv = {
+    ...process.env,
+    PLAYWRIGHT_STAGE: effectiveStage,
+    PATH_APP_ENVIRONMENT: 'test',
+    PATH_APP_ALLOW_DEMO_MIGRATIONS: '1',
+    PLAYWRIGHT_ALLOW_DEMO_MIGRATIONS: '1',
+  };
+
+  const bootstrapDb = spawnSync(process.execPath, ['scripts/bootstrap-playwright-db.mjs'], {
     stdio: 'inherit',
-    env: process.env,
-    shell: process.platform === 'win32',
-  },
-);
+    env: bootstrapEnv,
+  });
+  if (bootstrapDb.status !== 0) {
+    throw new Error(`Database bootstrap failed with exit code ${bootstrapDb.status ?? 1}.`);
+  }
 
-if (typeof result.status === 'number') {
-  process.exit(result.status);
+  const allurePrepare = spawnSync(process.execPath, ['scripts/prepare-allure-results.mjs'], {
+    stdio: 'inherit',
+    env: bootstrapEnv,
+  });
+  if (allurePrepare.status !== 0) {
+    throw new Error(`Allure prep failed with exit code ${allurePrepare.status ?? 1}.`);
+  }
+
+  const serverEnv = {
+    ...process.env,
+    PATH_APP_ENVIRONMENT: 'test',
+    PLAYWRIGHT_STAGE: effectiveStage,
+    PATH_APP_ALLOW_DEMO_MIGRATIONS: '1',
+    PLAYWRIGHT_ALLOW_DEMO_MIGRATIONS: '1',
+  };
+
+  const testRuntimeEnv = {
+    ...process.env,
+    PATH_APP_ENVIRONMENT: 'test',
+    PLAYWRIGHT_STAGE: effectiveStage,
+    PATH_APP_ALLOW_DEMO_MIGRATIONS: '1',
+    PLAYWRIGHT_ALLOW_DEMO_MIGRATIONS: '1',
+  };
+
+  if (effectiveStage !== 'prod') {
+    const stagePrefix = effectiveStage.toUpperCase();
+    const stageAdminEmailKey = `${stagePrefix}_PLAYWRIGHT_ADMIN_EMAIL`;
+    const stageEmployeeEmailKey = `${stagePrefix}_PLAYWRIGHT_EMPLOYEE_EMAIL`;
+    const stageAdminPasswordKey = `${stagePrefix}_PLAYWRIGHT_ADMIN_PASSWORD`;
+    const stageEmployeePasswordKey = `${stagePrefix}_PLAYWRIGHT_EMPLOYEE_PASSWORD`;
+
+    const adminPassword = String(process.env.PLAYWRIGHT_ADMIN_PASSWORD || '').trim();
+    const employeePassword = String(process.env.PLAYWRIGHT_EMPLOYEE_PASSWORD || '').trim();
+
+    bootstrapEnv.PLAYWRIGHT_ADMIN_EMAIL = 'gio@example.invalid';
+    bootstrapEnv.PLAYWRIGHT_EMPLOYEE_EMAIL = 'stasjo@example.invalid';
+    bootstrapEnv[stageAdminEmailKey] = 'gio@example.invalid';
+    bootstrapEnv[stageEmployeeEmailKey] = 'stasjo@example.invalid';
+    if (adminPassword) {
+      bootstrapEnv[stageAdminPasswordKey] = adminPassword;
+    }
+    if (employeePassword) {
+      bootstrapEnv[stageEmployeePasswordKey] = employeePassword;
+    }
+
+    testRuntimeEnv.PLAYWRIGHT_ADMIN_EMAIL = 'gio@example.invalid';
+    testRuntimeEnv.PLAYWRIGHT_EMPLOYEE_EMAIL = 'stasjo@example.invalid';
+    testRuntimeEnv[stageAdminEmailKey] = 'gio@example.invalid';
+    testRuntimeEnv[stageEmployeeEmailKey] = 'stasjo@example.invalid';
+    if (adminPassword) {
+      testRuntimeEnv[stageAdminPasswordKey] = adminPassword;
+    }
+    if (employeePassword) {
+      testRuntimeEnv[stageEmployeePasswordKey] = employeePassword;
+    }
+  }
+
+  if (effectiveStage === 'test') {
+    if (!String(testRuntimeEnv.TEST_PLAYWRIGHT_ADMIN_EMAIL || '').trim()) {
+      testRuntimeEnv.TEST_PLAYWRIGHT_ADMIN_EMAIL = 'gio@example.invalid';
+    }
+    if (!String(testRuntimeEnv.TEST_PLAYWRIGHT_EMPLOYEE_EMAIL || '').trim()) {
+      testRuntimeEnv.TEST_PLAYWRIGHT_EMPLOYEE_EMAIL = 'stasjo@example.invalid';
+    }
+    if (!String(testRuntimeEnv.TEST_PLAYWRIGHT_ADMIN_PASSWORD || '').trim() && String(testRuntimeEnv.PLAYWRIGHT_ADMIN_PASSWORD || '').trim()) {
+      testRuntimeEnv.TEST_PLAYWRIGHT_ADMIN_PASSWORD = String(testRuntimeEnv.PLAYWRIGHT_ADMIN_PASSWORD);
+    }
+    if (!String(testRuntimeEnv.TEST_PLAYWRIGHT_EMPLOYEE_PASSWORD || '').trim() && String(testRuntimeEnv.PLAYWRIGHT_EMPLOYEE_PASSWORD || '').trim()) {
+      testRuntimeEnv.TEST_PLAYWRIGHT_EMPLOYEE_PASSWORD = String(testRuntimeEnv.PLAYWRIGHT_EMPLOYEE_PASSWORD);
+    }
+  }
+
+  const serverProcess = spawn(phpPath, ['-S', serverAddress, '-t', '.'], {
+    cwd: process.cwd(),
+    stdio: 'inherit',
+    env: serverEnv,
+  });
+
+  try {
+    const healthResponse = await waitForHealth(baseUrl);
+    const healthBody = await healthResponse.text();
+    console.log(`PHP server ready at ${baseUrl} with health payload: ${healthBody.replace(/\s+/g, ' ').slice(0, 220)}`);
+
+    const rawArgs = process.argv.slice(2);
+    const extraArgs = rawArgs[0] === '--' ? rawArgs.slice(1) : rawArgs;
+    const groupRaw = String(process.env.PLAYWRIGHT_GROUP || '').trim().toLowerCase();
+
+    const groupToGrep = {
+      auth: '\\[AUTH-',
+      security: '\\[(SEC|SAFE)-',
+      dashboard: '\\[DASH-',
+      invoices: '\\[INV-',
+      roles: '\\[ROLE-',
+      timesheets: '\\[(TS-API|TS-REV)-',
+      customer: '\\[CTS-API-',
+      'customer-timesheets': '\\[CTS-API-',
+      api: '\\[(AUTH|SEC|ROLE|TS-API|TS-REV-API|CTS-API)-',
+      ui: '\\[(DASH|INV|TS-REV-UI)-',
+      'ui-desktop': '\\[(DASH|INV|TS-REV-UI)-',
+      'ui-mobile': '\\[MOB-',
+      mobile: '\\[MOB-',
+      happy: '-H-',
+      negative: '-N-',
+      phase10: '\\[CTS-API-',
+      phase11: '\\[INV-',
+    };
+
+    function hasExplicitGrep(args) {
+      return args.some((arg, index) => arg === '--grep' || arg === '-g' || (arg.startsWith('--grep=') && index >= 0));
+    }
+
+    const runtimeArgs = [...extraArgs];
+
+    if (groupRaw !== '' && !hasExplicitGrep(runtimeArgs)) {
+      const groups = groupRaw
+        .split(',')
+        .map((part) => part.trim())
+        .filter(Boolean);
+
+      const unknown = groups.filter((group) => !groupToGrep[group]);
+      if (unknown.length > 0) {
+        throw new Error(`E2E precheck failed: unknown PLAYWRIGHT_GROUP value(s): ${unknown.join(', ')}. Allowed values: ${Object.keys(groupToGrep).join(', ')}`);
+      }
+
+      if (groups.length > 0) {
+        const regex = groups.map((group) => groupToGrep[group]).join('|');
+        const grepArg = process.platform === 'win32' ? `"${regex}"` : regex;
+        runtimeArgs.push('--grep', grepArg);
+        console.log(`E2E group filter active (PLAYWRIGHT_GROUP=${groupRaw}): ${regex}`);
+      }
+    }
+
+    const result = spawnSync('npx', ['playwright', 'test', ...runtimeArgs], {
+      stdio: 'inherit',
+      env: testRuntimeEnv,
+      shell: process.platform === 'win32',
+    });
+
+    if (typeof result.status === 'number') {
+      process.exitCode = result.status;
+      return;
+    }
+
+    process.exitCode = 1;
+  } finally {
+    if (serverProcess.exitCode === null) {
+      serverProcess.kill();
+      await new Promise((resolve) => serverProcess.once('exit', resolve));
+    }
+  }
 }
 
-process.exit(1);
+main().catch((error) => {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exitCode = 1;
+});
