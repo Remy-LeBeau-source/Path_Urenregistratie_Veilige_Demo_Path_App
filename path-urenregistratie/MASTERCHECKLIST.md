@@ -12,26 +12,26 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 ## Actuele stand
 
 - [x] Datum: 2026-08-10
-- [x] Main/HEAD: fdf48fc
+- [x] Main/HEAD: de26360
 - [x] Referentiecommit fase 8/9 backend: fc27723
 - [x] Appversie: 0.9.41
 - [x] Lokale check: geslaagd
-- [x] Lokale e2e regressie: volledige run na DB-isolatie opnieuw bewezen met 121/121 groen (0 failed, 0 skipped, 0 interrupted); dev/demo DB bleef onaangeroerd (delta 0 op periods, timesheets, time_entries, email_deliveries en audit_log)
-- [x] Functionele regressiecatalogus: 117 unieke Playwright-cases, 121 Playwright-uitvoeringen, 1 directe SQL/DB-case DB-H-001, 118 unieke executable cases totaal
+- [x] Lokale e2e regressie: volledige run na DB-isolatie opnieuw bewezen met 127/127 groen (0 failed, 0 skipped, 0 interrupted); dev/demo DB bleef onaangeroerd (delta 0 op periods, timesheets, time_entries, email_deliveries en audit_log)
+- [x] Functionele regressiecatalogus: 123 unieke Playwright-cases, 127 Playwright-uitvoeringen, 1 directe SQL/DB-case DB-H-001, 124 unieke executable cases totaal
 - [x] Releasehardening v0.9.41: gecommit en gepusht naar main
 - [x] GitHub pipeline-status: recente lokale en DB-onderdelen zijn geverifieerd; DB-isolatie is lokaal volledig bewezen met een volledige regressierun
-- [x] Laatste commit: fdf48fc — docs(project): mark Playwright DB isolation fully validated
-- [x] Recente relevante commits: fdf48fc, 148e9b9, d48e08c, b4c5ad0, d137ce4, a4aa195, bd025af, 5a238b8
+- [x] Laatste commit: de26360 — fix: stabilize e2e flows and payroll queue fallback
+- [x] Recente relevante commits: de26360, fdf48fc, 148e9b9, d48e08c, b4c5ad0, d137ce4, a4aa195, bd025af
 - [x] DB-H-001: SQL/DB-smoke groen via `node scripts/run-db-crud-smoke.mjs`
 - [x] Lokale automatische Playwright-testdatabase aanwezig: `path_urenregistratie_test`
 - [x] DB-isolatie-onderdeel toegevoegd: bootstrap-script voor aparte lokale Playwright-testdatabase aanwezig
-- [x] Slice B afgerond: invoice/verzendstatus auth-mode server-led; lokale regressie 121/121 was eerder bewezen op de voorafgaande state
+- [x] Slice B afgerond: invoice/verzendstatus auth-mode server-led; lokale regressie 127/127 is opnieuw bewezen op de huidige state
 - [x] Slice C deelstap afgerond: notifications auth-mode server-led via notifications.php (read, mark_read, mark_all_read, mark_announcement_read)
 
 ### Kort overzicht: waar we nu staan
 
 - [x] Kernbouw en functionele basis zijn aanwezig en lokaal gevalideerd.
-- [x] De meest recente volledige Playwright-regressie na DB-isolatie is opnieuw volledig groen bewezen (121/121).
+- [x] De meest recente volledige Playwright-regressie na DB-isolatie is opnieuw volledig groen bewezen (127/127).
 - [x] DB/infrastructuursmoke aanwezig: DB-H-001 via `node scripts/run-db-crud-smoke.mjs` groen.
 - [x] Lokale automatische Playwright-testdatabase aanwezig: `path_urenregistratie_test` via bootstrap.
 - [x] De checklist is nu bijgewerkt naar de actuele repo- en teststatus; de fase-indeling is intact gebleven.
@@ -47,11 +47,11 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 
 ### Directe volgende stap
 
-- [x] Volledige Playwright-regressie na DB-isolatie opnieuw gedraaid en bewezen: 121/121 groen met dev/demo DB delta 0.
+- [x] Volledige Playwright-regressie na DB-isolatie opnieuw gedraaid en bewezen: 127/127 groen met dev/demo DB delta 0.
 
 ### Nieuwe werklijst (van boven naar beneden)
 
-- [-] Stap 1: Fase 2 - afwikkelen van de nog open lokale/overige write-flowstatus en bevestigen welke onderdelen nog werkelijk lokaal/open zijn.
+- [x] Stap 1: Fase 2 - afwikkelen van de nog open lokale/overige write-flowstatus en bevestigen welke onderdelen nog werkelijk lokaal/open zijn.
 - [-] Stap 2: Fase 5 - alleen niet-productie-afhankelijke securityhardening, inclusief expliciete sessie-time-out en sliding session expiration zodra die aantoonbaar getest zijn.
 - [-] Stap 3: Fase 7 - alleen niet-geblokkeerde CI/CD-afwerking.
 - [-] Stap 4: Fase 10 - resterende lokale productiehardening uploads.
@@ -72,7 +72,7 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 - [x] Slice C volledig: announcements API aangemaakt (send/withdraw/hide/draft); admin write-flow server-led; employee read via notifications.
 - [x] Slice D+E volledig: toggleEmployee/Admin server-led via users.php; dbUserId opgeslagen via bootstrap-merge; persistState in auth-mode beperkt tot UI-state (rol, periode, filters, branding, reminders); business-data (employees/admins/records/notifications/announcements) niet meer lokaal gepersisteert in auth-mode.
 - [x] DB-isolatie en test-DB-scheiding: aparte lokale Playwright-testdatabase `path_urenregistratie_test` is ingericht en via bootstrap beschikbaar; dev/demo DB blijft `path_urenregistratie`.
-- [x] Volledige bewijscheck dat de volledige regressie de dev/demo DB onaangeroerd laat, is bewezen: volledige run 121/121 groen en dev/demo DB delta 0.
+- [x] Volledige bewijscheck dat de volledige regressie de dev/demo DB onaangeroerd laat, is bewezen: volledige run 127/127 groen en dev/demo DB delta 0.
 
 Voor iedere slice geldt verplicht:
 - [-] Extra controle op afgeleide dubbeling: invoiceStatus, payrollStatus, email_deliveries, verzonden/sent-flags, dashboard/KPI-afleidingen en batch-acties.
@@ -172,7 +172,7 @@ Status Fase 2:
 - [x] databasestructuur afgerond
 - [x] alle businesskritische write-flows in auth-mode server-led (timesheets, invoices, email-queue, notifications, announcements, users status)
 - [x] persistState/localStorage in auth-mode beperkt tot UI-state; server is de enige autoritatieve bron voor businessdata
-- [-] settings/company-data-writes en employee/admin create/edit zijn nog niet volledig bewezen als volledig server-led in de huidige lokale state; deze punten moeten opnieuw worden beoordeeld voordat Fase 2 als volledig dicht kan worden beschouwd
+- [x] settings/company-data-writes en employee/admin create/edit zijn server-led bewezen met ADM-WR-H-001 t/m ADM-WR-H-003 en opgenomen in de volledige regressie (127/127 groen)
 
 ---
 
@@ -271,7 +271,7 @@ Status Fase 4:
 
 Status Fase 5:
 - [x] noodzakelijke securitybasis afgerond
-- [-] extra productiehardening open, inclusief expliciete sessie-time-out en sliding session expiration; deze zijn in code aanwezig maar nog niet apart als afgerond en groen bevestigd in de lokale regressie
+- [-] extra productiehardening open; expliciete sessie-time-out en sliding session expiration zijn nu groen bevestigd in SEC-H-005 binnen de volledige regressie (127/127)
 
 ---
 
@@ -329,8 +329,8 @@ Status Fase 5:
 - [x] AUTH-H-004 borgt dat de lokale beheeraccount na asynchrone auth-initialisatie automatisch wordt ingevuld en met één klik opent.
 - [x] Periodebeheer valideert het bestaande viercijferige UI-bereik 1000–9999 en maand 1–12 voordat gegevens worden opgeslagen.
 - [x] PER-H-002 normaliseert zijn eigen testperiode en controleert expliciete close/reopen-statusresponses, onafhankelijk van vervuilde globale periodedata.
-- [x] Living Documentation bevat 117 unieke cases, 121 uitvoeringen, 1 directe SQL/DB-case DB-H-001 en 118 unieke executable cases totaal.
-- [x] De actuele volledige regressie na DB-isolatie is opnieuw volledig groen bewezen: 121/121 met dev/demo DB delta 0.
+- [x] Living Documentation bevat 123 unieke cases, 127 uitvoeringen, 1 directe SQL/DB-case DB-H-001 en 124 unieke executable cases totaal.
+- [x] De actuele volledige regressie na DB-isolatie is opnieuw volledig groen bewezen: 127/127 met dev/demo DB delta 0.
 - [x] Recente slice afgerond: production-safety- en timesheet-write-specs bijgewerkt, TESTCOMMANDOS.md afgestemd op de actuele scripts en de lokale Playwright-regressie groen.
 - [x] Living Doc viewer uitgebreid met suite-groepering in sidebar (API/Security/UI Desktop/UI Mobile/DB/Integratie) identiek aan Allure-stijl; commit 387ea63.
 
@@ -805,7 +805,7 @@ Status Fase 15:
 - [x] desktop- en mobiele emulatieregressie lokaal ingericht en bewezen
 - [x] v0.9.41 releasepipeline #62 inclusief Test, Living Docs en Prod geslaagd
 - [x] dashboardwerkvoorraad en mobiele previewstart lokaal hersteld en gericht getest
-- [x] volledige vervolgmatrix lokaal opnieuw groen: 121/121 uitvoeringen
+- [x] volledige vervolgmatrix lokaal opnieuw groen: 127/127 uitvoeringen
 - [-] fase als geheel gedeeltelijk: fysieke toestellen, productieacceptatie, PWA en livegang open
 
 ---
