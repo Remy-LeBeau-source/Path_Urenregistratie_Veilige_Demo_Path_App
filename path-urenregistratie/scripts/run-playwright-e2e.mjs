@@ -54,6 +54,14 @@ try {
 
 console.log(`E2E precheck ok: ${baseUrl} reachable and required env vars are set.`);
 
+const bootstrapDb = spawnSync(process.execPath, ['scripts/bootstrap-playwright-db.mjs'], {
+  stdio: 'inherit',
+  env: process.env,
+});
+if (bootstrapDb.status !== 0) {
+  process.exit(bootstrapDb.status ?? 1);
+}
+
 const allurePrepare = spawnSync(process.execPath, ['scripts/prepare-allure-results.mjs'], {
   stdio: 'inherit',
   env: process.env,

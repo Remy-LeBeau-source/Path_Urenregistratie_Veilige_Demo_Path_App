@@ -117,10 +117,61 @@ function auth_load_raw_config(): array
     return $config;
 }
 
+function auth_env_value(array $keys): ?string
+{
+    foreach ($keys as $key) {
+        $value = getenv($key);
+        if ($value !== false && trim((string)$value) !== '') {
+            return trim((string)$value);
+        }
+    }
+
+    $dotenvPaths = [
+        dirname(__DIR__) . '/.env.local',
+        dirname(__DIR__) . '/.env',
+    ];
+    $stage = strtolower(trim((string)getenv('PLAYWRIGHT_STAGE')));
+    if ($stage !== '' && in_array($stage, ['dev', 'test', 'acc', 'prod'], true)) {
+        $dotenvPaths[] = dirname(__DIR__) . '/environments/' . $stage . '.env';
+    }
+
+    foreach ($dotenvPaths as $path) {
+        if (!is_file($path)) {
+            continue;
+        }
+
+        $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if ($lines === false) {
+            continue;
+        }
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '' || str_starts_with($line, '#')) {
+                continue;
+            }
+
+            $parts = explode('=', $line, 2);
+            if (count($parts) !== 2) {
+                continue;
+            }
+
+            $name = trim($parts[0]);
+            $value = trim($parts[1], "\"'");
+            if (in_array($name, $keys, true) && $value !== '') {
+                return $value;
+            }
+        }
+    }
+
+    return null;
+}
+
 function auth_db_from_config(array $config): array
 {
+    $db = [];
     if (isset($config['database']) && is_array($config['database']) && isset($config['database']['host'])) {
-        return [
+        $db = [
             'host' => (string)($config['database']['host'] ?? ''),
             'port' => (int)($config['database']['port'] ?? 3306),
             'name' => (string)($config['database']['name'] ?? ''),
@@ -128,16 +179,25 @@ function auth_db_from_config(array $config): array
             'password' => (string)($config['database']['password'] ?? ''),
             'charset' => (string)($config['database']['charset'] ?? 'utf8mb4'),
         ];
+    } else {
+        $db = [
+            'host' => (string)($config['host'] ?? ''),
+            'port' => (int)($config['port'] ?? 3306),
+            'name' => (string)($config['database'] ?? ($config['name'] ?? '')),
+            'user' => (string)($config['username'] ?? ($config['user'] ?? '')),
+            'password' => (string)($config['password'] ?? ''),
+            'charset' => (string)($config['charset'] ?? 'utf8mb4'),
+        ];
     }
 
-    return [
-        'host' => (string)($config['host'] ?? ''),
-        'port' => (int)($config['port'] ?? 3306),
-        'name' => (string)($config['database'] ?? ($config['name'] ?? '')),
-        'user' => (string)($config['username'] ?? ($config['user'] ?? '')),
-        'password' => (string)($config['password'] ?? ''),
-        'charset' => (string)($config['charset'] ?? 'utf8mb4'),
-    ];
+    $db['host'] = auth_env_value(['PATH_APP_DB_HOST', 'PLAYWRIGHT_DB_HOST', 'DB_HOST']) ?? $db['host'];
+    $db['port'] = (int)(auth_env_value(['PATH_APP_DB_PORT', 'PLAYWRIGHT_DB_PORT', 'DB_PORT']) ?? (string)$db['port']);
+    $db['name'] = auth_env_value(['PATH_APP_DB_NAME', 'PLAYWRIGHT_DB_NAME', 'DB_NAME']) ?? $db['name'];
+    $db['user'] = auth_env_value(['PATH_APP_DB_USER', 'PLAYWRIGHT_DB_USER', 'DB_USER']) ?? $db['user'];
+    $db['password'] = auth_env_value(['PATH_APP_DB_PASSWORD', 'PLAYWRIGHT_DB_PASSWORD', 'DB_PASSWORD']) ?? $db['password'];
+    $db['charset'] = auth_env_value(['PATH_APP_DB_CHARSET', 'PLAYWRIGHT_DB_CHARSET', 'DB_CHARSET']) ?? $db['charset'];
+
+    return $db;
 }
 
 function auth_pdo(array $config): PDO

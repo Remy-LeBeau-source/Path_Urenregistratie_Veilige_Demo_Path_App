@@ -7,6 +7,7 @@
     "build": "vite build",
     "check": "node --check assets/app.js && node scripts/smoke-test.mjs",
     "test:db:crud": "node scripts/run-db-crud-smoke.mjs",
+    "test:db:bootstrap": "node scripts/bootstrap-playwright-db.mjs",
     "test:e2e": "node scripts/run-playwright-e2e.mjs",
     "test:e2e:dev": "set PLAYWRIGHT_STAGE=dev&& node scripts/run-playwright-e2e.mjs",
     "test:e2e:test": "set PLAYWRIGHT_STAGE=test&& node scripts/run-playwright-e2e.mjs",

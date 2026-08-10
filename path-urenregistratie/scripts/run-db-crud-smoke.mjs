@@ -1,20 +1,43 @@
 import fs from 'fs';
 import path from 'path';
 import mysql from 'mysql2/promise';
+import { config as loadDotEnv } from 'dotenv';
 
 const root = process.cwd();
 const sqlPath = path.join(root, 'database', 'queries', 'crud-smoke.sql');
 const sql = fs.readFileSync(sqlPath, 'utf8');
 
+function loadEnvFiles() {
+  const envFiles = [path.join(root, '.env'), path.join(root, '.env.local')];
+  const stage = String(process.env.PLAYWRIGHT_STAGE || '').trim().toLowerCase();
+  if (stage && ['dev', 'test', 'acc', 'prod'].includes(stage)) {
+    envFiles.push(path.join(root, 'environments', `${stage}.env`));
+  } else if (!process.env.PATH_APP_DB_NAME && !process.env.PLAYWRIGHT_DB_NAME && !process.env.DB_NAME) {
+    envFiles.push(path.join(root, 'environments', 'test.env'));
+  }
+
+  for (const envFile of envFiles) {
+    if (fs.existsSync(envFile)) {
+      loadDotEnv({ path: envFile, override: envFile.endsWith('.env.local') || envFile.includes('environments') });
+    }
+  }
+}
+
+loadEnvFiles();
+
 let config = {
-  host: process.env.DB_HOST || '127.0.0.1',
-  port: Number(process.env.DB_PORT || 3306),
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || 'root',
-  database: process.env.DB_NAME || 'path_urenregistratie',
+  host: process.env.PATH_APP_DB_HOST || process.env.PLAYWRIGHT_DB_HOST || process.env.DB_HOST || '127.0.0.1',
+  port: Number(process.env.PATH_APP_DB_PORT || process.env.PLAYWRIGHT_DB_PORT || process.env.DB_PORT || 3306),
+  user: process.env.PATH_APP_DB_USER || process.env.PLAYWRIGHT_DB_USER || process.env.DB_USER || 'root',
+  password: process.env.PATH_APP_DB_PASSWORD || process.env.PLAYWRIGHT_DB_PASSWORD || process.env.DB_PASSWORD || 'root',
+  database: process.env.PATH_APP_DB_NAME || process.env.PLAYWRIGHT_DB_NAME || process.env.DB_NAME || 'path_urenregistratie',
   charset: 'utf8mb4',
   multipleStatements: true,
 };
+
+if (process.env.CI && !process.env.PATH_APP_DB_NAME && !process.env.PLAYWRIGHT_DB_NAME && !process.env.DB_NAME) {
+  config.database = 'path_urenregistratie';
+}
 
 try {
   const localConfigPath = path.join(root, 'server', 'config.local.php');
@@ -24,10 +47,18 @@ try {
     const dbMatch = localConfigContent.match(/'database'\s*=>\s*'([^']+)'/);
     const userMatch = localConfigContent.match(/'username'\s*=>\s*'([^']+)'/);
     const passMatch = localConfigContent.match(/'password'\s*=>\s*'([^']+)'/);
-    if (match) config.host = match[1];
-    if (dbMatch) config.database = dbMatch[1];
-    if (userMatch) config.user = userMatch[1];
-    if (passMatch) config.password = passMatch[1];
+    if (match && !process.env.PATH_APP_DB_HOST && !process.env.PLAYWRIGHT_DB_HOST && !process.env.DB_HOST) {
+      config.host = match[1];
+    }
+    if (dbMatch && !process.env.PATH_APP_DB_NAME && !process.env.PLAYWRIGHT_DB_NAME && !process.env.DB_NAME) {
+      config.database = dbMatch[1];
+    }
+    if (userMatch && !process.env.PATH_APP_DB_USER && !process.env.PLAYWRIGHT_DB_USER && !process.env.DB_USER) {
+      config.user = userMatch[1];
+    }
+    if (passMatch && !process.env.PATH_APP_DB_PASSWORD && !process.env.PLAYWRIGHT_DB_PASSWORD && !process.env.DB_PASSWORD) {
+      config.password = passMatch[1];
+    }
   }
 } catch {
   // fall back to env-based defaults
