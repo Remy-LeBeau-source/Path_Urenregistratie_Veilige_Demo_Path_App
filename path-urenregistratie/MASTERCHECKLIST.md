@@ -12,16 +12,16 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 ## Actuele stand
 
 - [x] Datum: 2026-08-10
-- [x] Main/HEAD: d48e08c
+- [x] Main/HEAD: 148e9b9
 - [x] Referentiecommit fase 8/9 backend: fc27723
 - [x] Appversie: 0.9.41
 - [x] Lokale check: geslaagd
-- [x] Lokale e2e regressie: laatste volledige run na DB-isolatie is nog niet opnieuw volledig groen bewezen; eerdere baseline was 121/121 op eerdere state
+- [x] Lokale e2e regressie: volledige run na DB-isolatie opnieuw bewezen met 121/121 groen (0 failed, 0 skipped, 0 interrupted); dev/demo DB bleef onaangeroerd (delta 0 op periods, timesheets, time_entries, email_deliveries en audit_log)
 - [x] Functionele regressiecatalogus: 117 unieke Playwright-cases, 121 Playwright-uitvoeringen, 1 directe SQL/DB-case DB-H-001, 118 unieke executable cases totaal
 - [x] Releasehardening v0.9.41: gecommit en gepusht naar main
-- [x] GitHub pipeline-status: recente lokale en DB-onderdelen zijn geverifieerd; volledige regressie na DB-isolatie is momenteel nog open/onderzoek
-- [x] Laatste commit: d48e08c — test(db): add isolated Playwright DB bootstrap and DB integrity regression
-- [x] Recente relevante commits: d48e08c, b4c5ad0, d137ce4, a4aa195, bd025af, 5a238b8, edd066a, 4002c84
+- [x] GitHub pipeline-status: recente lokale en DB-onderdelen zijn geverifieerd; DB-isolatie is lokaal volledig bewezen met een volledige regressierun
+- [x] Laatste commit: 148e9b9 — fix(test): isolate Playwright DB and self-manage PHP test server
+- [x] Recente relevante commits: 148e9b9, d48e08c, b4c5ad0, d137ce4, a4aa195, bd025af, 5a238b8, edd066a
 - [x] DB-H-001: SQL/DB-smoke groen via `node scripts/run-db-crud-smoke.mjs`
 - [x] Lokale automatische Playwright-testdatabase aanwezig: `path_urenregistratie_test`
 - [x] DB-isolatie-onderdeel toegevoegd: bootstrap-script voor aparte lokale Playwright-testdatabase aanwezig
@@ -31,7 +31,7 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 ### Kort overzicht: waar we nu staan
 
 - [x] Kernbouw en functionele basis zijn aanwezig en lokaal gevalideerd.
-- [-] De meest recente volledige Playwright-regressie na DB-isolatie is nog niet opnieuw volledig groen bewezen.
+- [x] De meest recente volledige Playwright-regressie na DB-isolatie is opnieuw volledig groen bewezen (121/121).
 - [x] DB/infrastructuursmoke aanwezig: DB-H-001 via `node scripts/run-db-crud-smoke.mjs` groen.
 - [x] Lokale automatische Playwright-testdatabase aanwezig: `path_urenregistratie_test` via bootstrap.
 - [x] De checklist is nu bijgewerkt naar de actuele repo- en teststatus; de fase-indeling is intact gebleven.
@@ -43,11 +43,11 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 - [x] De app is functioneel op basis van de bestaande lokale backend/frontend-flow en de recente DB-onderdelen.
 - [x] De DB-H-001 smoke is groen.
 - [x] De aparte lokale Playwright-testdatabase is ingebouwd.
-- [-] De volledige regressie na de DB-isolatie-aanpassing is nog niet opnieuw volledig groen bewezen; dit is nu expliciet open/onderzoek.
+- [x] De volledige regressie na de DB-isolatie-aanpassing is opnieuw volledig groen bewezen; dit onderdeel is afgerond.
 
 ### Directe volgende stap
 
-- [-] Volledige Playwright-regressie na DB-isolatie opnieuw draaien en de resterende fouten exact lokaliseren voordat de checklist als volledig groen wordt gepresenteerd.
+- [x] Volledige Playwright-regressie na DB-isolatie opnieuw gedraaid en bewezen: 121/121 groen met dev/demo DB delta 0.
 
 ### Nieuwe werklijst (van boven naar beneden)
 
@@ -72,7 +72,7 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 - [x] Slice C volledig: announcements API aangemaakt (send/withdraw/hide/draft); admin write-flow server-led; employee read via notifications.
 - [x] Slice D+E volledig: toggleEmployee/Admin server-led via users.php; dbUserId opgeslagen via bootstrap-merge; persistState in auth-mode beperkt tot UI-state (rol, periode, filters, branding, reminders); business-data (employees/admins/records/notifications/announcements) niet meer lokaal gepersisteert in auth-mode.
 - [x] DB-isolatie en test-DB-scheiding: aparte lokale Playwright-testdatabase `path_urenregistratie_test` is ingericht en via bootstrap beschikbaar; dev/demo DB blijft `path_urenregistratie`.
-- [-] Volledige bewijscheck dat de volledige regressie de dev/demo DB onaangeroerd laat, blijft open zolang de nieuwe volledige regressie na DB-isolatie niet opnieuw groen is bewezen.
+- [x] Volledige bewijscheck dat de volledige regressie de dev/demo DB onaangeroerd laat, is bewezen: volledige run 121/121 groen en dev/demo DB delta 0.
 
 Voor iedere slice geldt verplicht:
 - [-] Extra controle op afgeleide dubbeling: invoiceStatus, payrollStatus, email_deliveries, verzonden/sent-flags, dashboard/KPI-afleidingen en batch-acties.
@@ -330,7 +330,7 @@ Status Fase 5:
 - [x] Periodebeheer valideert het bestaande viercijferige UI-bereik 1000–9999 en maand 1–12 voordat gegevens worden opgeslagen.
 - [x] PER-H-002 normaliseert zijn eigen testperiode en controleert expliciete close/reopen-statusresponses, onafhankelijk van vervuilde globale periodedata.
 - [x] Living Documentation bevat 117 unieke cases, 121 uitvoeringen, 1 directe SQL/DB-case DB-H-001 en 118 unieke executable cases totaal.
-- [-] De actuele volledige regressie na DB-isolatie is nog niet opnieuw volledig groen bewezen; eerdere 121/121 was een historische baseline op de voorafgaande state.
+- [x] De actuele volledige regressie na DB-isolatie is opnieuw volledig groen bewezen: 121/121 met dev/demo DB delta 0.
 - [x] Recente slice afgerond: production-safety- en timesheet-write-specs bijgewerkt, TESTCOMMANDOS.md afgestemd op de actuele scripts en de lokale Playwright-regressie groen.
 - [x] Living Doc viewer uitgebreid met suite-groepering in sidebar (API/Security/UI Desktop/UI Mobile/DB/Integratie) identiek aan Allure-stijl; commit 387ea63.
 
