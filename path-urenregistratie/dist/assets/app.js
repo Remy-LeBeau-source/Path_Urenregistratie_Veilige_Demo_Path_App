@@ -393,7 +393,7 @@ function freshState() {
     currentRole: null,
     currentAdminId: "gio",
     currentEmployeeId: 2,
-    selectedPeriodKey: "2026-07",
+    selectedPeriodKey: currentCalendarPeriodKey(),
     invoiceFilter: "all",
     invoiceDetailCollapsed: true,
     approvalScope: "all",
@@ -618,7 +618,7 @@ function freshState() {
         "4": seedCustomerTimesheet(makeRecord(160, 160, "approved", "simulated", "Bel-Shawn-2026-mei", "2026-05"), "sent", "Klanturenstaat_Shawn-Douglas_Nahar_2026-05.pdf")
       },
       "2026-06": {
-        "1": seedCustomerTimesheet(makeRecord(144, 144, "approved", "ready", "IND-2026-juni", "2026-06"), "sent", "Klanturenstaat_Marc_de_Roon_2026-06.pdf"),
+        "1": seedCustomerTimesheet(makeRecord(144, 144, "approved", "simulated", "IND-2026-juni", "2026-06"), "received", "Klanturenstaat_Marc_de_Roon_2026-06.pdf"),
         "2": seedCustomerTimesheet(makeRecord(0, 144, "draft", "concept", "IND-StvB-2026-juni", "2026-06"), "sent", "Klanturenstaat_Stasjo_van_Bakel_2026-06.pdf"),
         "3": seedCustomerTimesheet(makeRecord(136, 144, "approved", "simulated", "COA-2026-juni", "2026-06"), "missing"),
         "4": seedCustomerTimesheet(makeRecord(144, 144, "approved", "simulated", "Bel-Shawn-2026-juni", "2026-06"), "missing")
@@ -2444,7 +2444,7 @@ function normalizeApiInvoiceStatus(status) {
 }
 
 function invoiceApiRowsForPeriod(periodKey) {
-  const dataset = readApiDebug.invoicesByPeriod[periodKey] || null;
+  const dataset = readApiDebug.invoicesByPeriod[periodKey] || readApiDebug.invoices || null;
   if (!dataset || !Array.isArray(dataset.items)) return null;
   return dataset.items.map(item => ({
     id: Number(item && item.id || 0),
@@ -2456,7 +2456,7 @@ function invoiceApiRowsForPeriod(periodKey) {
     subtotal: Number(item && item.subtotal || 0),
     vatAmount: Number(item && item.vat_amount || 0),
     total: Number(item && item.total || 0)
-  }));
+  })).filter(item => item.periodKey === periodKey);
 }
 
 function emailQueueItemsByInvoiceId(periodKey) {
@@ -2611,7 +2611,12 @@ function refreshInvoicesReadApi(periodKey, force) {
       if (!data) return;
       if (period) readApiDebug.invoicesByPeriod[period] = data;
       else readApiDebug.invoices = data;
-      if (period) syncInvoiceStatusesFromApi(period);
+      if (period) {
+        syncInvoiceStatusesFromApi(period);
+      } else {
+        const periodKeys = [...new Set((data.items || []).map(item => String(item && item.period_key || "")).filter(parsePeriodKey))];
+        periodKeys.forEach(syncInvoiceStatusesFromApi);
+      }
       console.log(period ? "[read-api] invoices(" + period + ")" : "[read-api] invoices", data);
       const invoicesViewActive = document.querySelector("#view-invoices")?.classList.contains("is-active");
       if (invoicesViewActive && (!period || period === currentPeriod().key)) renderInvoices();
@@ -2636,7 +2641,12 @@ function refreshEmailQueueReadApi(force = false) {
       }
       readApiDebug.emailQueue = data;
       setReadApiSource("emailQueue", "api");
-      const changed = syncInvoiceStatusesFromApi(currentPeriod().key);
+      const cachedPeriodKeys = [...new Set([
+        currentPeriod().key,
+        ...Object.keys(readApiDebug.invoicesByPeriod || {}),
+        ...((readApiDebug.invoices && readApiDebug.invoices.items) || []).map(item => String(item && item.period_key || ""))
+      ].filter(parsePeriodKey))];
+      const changed = cachedPeriodKeys.some(syncInvoiceStatusesFromApi);
       if (changed && (document.querySelector("#view-invoices")?.classList.contains("is-active") || document.querySelector("#view-dashboard")?.classList.contains("is-active"))) {
         renderAll();
       }
@@ -3829,6 +3839,7 @@ function renderEmployeesNavBadge(waitingCount) {
   const count = Math.max(0, Number(waitingCount || 0));
   badge.textContent = String(count);
   badge.hidden = count === 0;
+  badge.classList.toggle("is-blocked", count > 0);
   if (count > 0) badge.setAttribute("aria-label", count + " open actie" + (count === 1 ? "" : "s") + " bij medewerkers");
   else badge.removeAttribute("aria-label");
 }
@@ -4615,11 +4626,11 @@ function invoicePeriodRows(periodKey) {
 function monthBatchReadiness(periodKey) {
   const key = periodKey || currentPeriod().key;
   const rows = invoicePeriodRows(key);
-  const readyRows = rows.filter(item => item.record.timesheetStatus === "approved");
-  const pendingRows = readyRows.filter(item => item.record.invoiceStatus !== "simulated" || item.record.payrollStatus !== "simulated");
-  const controlledRows = readyRows.filter(item => item.record.invoiceStatus === "simulated" && item.record.payrollStatus === "simulated");
+  const controlledRows = rows.filter(item => item.record.invoiceStatus === "simulated" && item.record.payrollStatus === "simulated");
+  const pendingRows = rows.filter(item => !controlledRows.includes(item) && (item.record.invoiceStatus === "ready" || item.record.timesheetStatus === "approved"));
+  const readyRows = controlledRows.concat(pendingRows);
   const blockers = rows
-    .filter(item => item.record.timesheetStatus !== "approved")
+    .filter(item => !controlledRows.includes(item) && !pendingRows.includes(item) && item.record.timesheetStatus !== "approved")
     .map(item => {
       const status = statusLabels[item.record.timesheetStatus] || statusLabels.draft;
       const actionable = item.record.timesheetStatus === "submitted";
@@ -4636,9 +4647,10 @@ function monthBatchReadiness(periodKey) {
         actionLabel: actionable ? "Uren controleren" : "Status bekijken"
       };
     });
+  const backofficeBlockers = blockers.filter(item => item.record.timesheetStatus === "submitted");
   const batchState = rows.length === 0
     ? "empty"
-    : blockers.length
+    : backofficeBlockers.length
       ? "blocked"
       : pendingRows.length
         ? "ready"
@@ -6637,9 +6649,26 @@ function approveEmployee(id, periodKey) {
       toast("Alleen ingediende uren kunnen worden goedgekeurd.");
       return;
     }
+    const btn = document.querySelector('[data-approve="' + id + '"][data-period-key="' + key + '"]');
+    if (btn && btn.disabled) return;
+    if (btn) { btn.disabled = true; btn.textContent = "Bezig\u2026"; }
+    const restoreBtn = () => { if (btn) { btn.disabled = false; btn.textContent = "Goedkeuren"; } };
     const version = Number(record.serverVersion || 0);
     if (version <= 0) {
-      refreshTimesheetReadApi(key, id, true).then(() => approveEmployee(id, key)).catch(() => {
+      refreshTimesheetReadApi(key, id, true).then(() => {
+        const freshVersion = Number(recordFor(id, key).serverVersion || 0);
+        if (freshVersion <= 0) {
+          // Timesheet not in DB (demo-only data): fall back to local state approval.
+          restoreBtn();
+          approveEmployeeState(id, key);
+          persistState();
+          renderAll();
+          toast(employeeById(id).name + " is goedgekeurd voor " + periodFromKey(key).label + "; de factuur staat klaar.");
+          return;
+        }
+        approveEmployee(id, key);
+      }).catch(() => {
+        restoreBtn();
         toast("Kan niet goedkeuren zonder actuele serverversie. Ververs en probeer opnieuw.");
       });
       return;
@@ -6669,6 +6698,7 @@ function approveEmployee(id, periodKey) {
         toast(employeeById(id).name + " is goedgekeurd voor " + periodFromKey(key).label + "; de factuur staat klaar.");
       });
     }).catch(error => {
+      restoreBtn();
       const message = String(error && error.message || "Goedkeuren bij server mislukt.");
       if (/only submitted timesheets can be approved/i.test(message)) {
         refreshTimesheetReadApi(key, id, true)
@@ -8912,7 +8942,7 @@ document.querySelector("#auth-reset-submit")?.addEventListener("click", () => {
       if (feedback) {
         if (data.ok) {
           feedback.textContent = data.dry_run
-            ? "Resetverzoek verstuurd (dry-run). Vraag de beheerder om het token."
+            ? "Resetverzoek verstuurd (dry-run). Token: " + (data.token || "(zie server)") + " · Geldig tot: " + (data.expires_at || "onbekend")
             : "Resetverzoek verstuurd. Controleer je e-mail.";
         } else {
           feedback.textContent = "Resetverzoek mislukt. Probeer opnieuw.";

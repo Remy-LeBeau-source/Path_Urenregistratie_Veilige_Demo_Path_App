@@ -271,6 +271,13 @@ jobs:
       - name: Smoke check
         run: npm run check
 
+      - name: Stop CI PHP server before Playwright
+        run: |
+          if [ -f /tmp/php-server.pid ]; then
+            kill "$(cat /tmp/php-server.pid)" || true
+            rm -f /tmp/php-server.pid
+          fi
+
       - name: Run E2E tests
         env:
           PATH_APP_BASE_URL: http://127.0.0.1:8000
@@ -410,6 +417,13 @@ jobs:
             echo "Using local fallback regression target for dev."
           fi
 
+      - name: Stop fallback PHP server before Playwright
+        run: |
+          if [ -f /tmp/php-server.pid ]; then
+            kill "$(cat /tmp/php-server.pid)" || true
+            rm -f /tmp/php-server.pid
+          fi
+
       - name: Run stage E2E
         run: |
           npm run test:e2e
@@ -545,6 +559,13 @@ jobs:
             echo "Using local fallback regression target for test."
           fi
 
+      - name: Stop fallback PHP server before Playwright
+        run: |
+          if [ -f /tmp/php-server.pid ]; then
+            kill "$(cat /tmp/php-server.pid)" || true
+            rm -f /tmp/php-server.pid
+          fi
+
       - name: Run stage E2E
         run: |
           npm run test:e2e
@@ -656,6 +677,13 @@ jobs:
             $q->execute([":h" => $employeeHash, ":e" => "stasjo@example.invalid", ":r" => "employee"]);
             echo "Updated CI login hashes.\n";
           '
+
+      - name: Stop CI PHP server before Playwright
+        run: |
+          if [ -f /tmp/php-server.pid ]; then
+            kill "$(cat /tmp/php-server.pid)" || true
+            rm -f /tmp/php-server.pid
+          fi
 
       - name: Run E2E tests for docs
         env:
@@ -828,6 +856,13 @@ jobs:
             echo "Using local fallback regression target for acc."
           fi
 
+      - name: Stop fallback PHP server before Playwright
+        run: |
+          if [ -f /tmp/php-server.pid ]; then
+            kill "$(cat /tmp/php-server.pid)" || true
+            rm -f /tmp/php-server.pid
+          fi
+
       - name: Run stage E2E
         run: |
           npm run test:e2e
@@ -962,6 +997,13 @@ jobs:
           else
             echo "PATH_APP_BASE_URL=http://127.0.0.1:8000" >> $GITHUB_ENV
             echo "Using local fallback regression target for prod."
+          fi
+
+      - name: Stop fallback PHP server before Playwright
+        run: |
+          if [ -f /tmp/php-server.pid ]; then
+            kill "$(cat /tmp/php-server.pid)" || true
+            rm -f /tmp/php-server.pid
           fi
 
       - name: Run prod E2E
