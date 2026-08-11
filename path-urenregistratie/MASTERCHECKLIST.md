@@ -11,6 +11,15 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 
 ## Actuele stand
 
+- [x] Datum: 2026-08-12
+- [x] Appversie: 0.9.44
+- [x] GitHub Actions pipeline-run #91 (commit 998716b, main) volledig groen: Notify team on
+  commit push, Validate, Promote Dev, Promote Test, Promote Acc, Promote Prod, Publish Live
+  Docs en Guard non-main for Prod — alle stappen completed successfully. Enige annotaties zijn
+  5 informatieve Node.js 20->24 deprecation-warnings van GitHub zelf, geen projectfout.
+- [x] Fase 7 niet-geblokkeerd CI/CD-werk hiermee bewezen end-to-end werkend; resterende open
+  punten in Fase 7 blijven extern-afhankelijk (branch protection, echte stage-hosts,
+  productieapproval, definitieve notificatieontvangers).
 - [x] Datum: 2026-08-11
 - [x] Appversie: 0.9.44
 - [x] Lokale check: geslaagd (`npm run check`)
@@ -66,7 +75,9 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 
 - [x] Stap 1: Fase 2 - afwikkelen van de nog open lokale/overige write-flowstatus en bevestigen welke onderdelen nog werkelijk lokaal/open zijn.
 - [x] Stap 2: Fase 5 - niet-productie-afhankelijke securityhardening bevestigd; expliciete sessie-time-out en sliding session expiration zijn aantoonbaar getest.
-- [-] Stap 3: Fase 7 - alleen niet-geblokkeerde CI/CD-afwerking.
+- [x] Stap 3: Fase 7 - alleen niet-geblokkeerde CI/CD-afwerking; volledige pipeline end-to-end
+  groen bewezen op run #91 (2026-08-12). Resterend binnen Fase 7 is extern-afhankelijk (branch
+  protection, echte hosts, productieapproval, notificatieontvangers) — zie Fase blokkades.
 - [-] Stap 4: Fase 10 - resterende lokale productiehardening uploads.
 - [-] Stap 5: Fase 11 - server-side factuur-PDF en veilige opslag/download.
 - [-] Stap 6: Fase 12 - dry-run/bijlagen/retry technisch afronden; echte Gmail-verzending nog niet activeren.
@@ -385,7 +396,10 @@ Status Fase 6:
 
 Status Fase 7:
 - [x] CI/CD-basis lokaal en in repository afgerond
-- [-] fase als geheel gedeeltelijk: notificatieontvangers, echte stage-hosting, branch protection/checks en productieapproval nog open
+- [x] Volledige pipeline (Validate -> Promote Dev -> Promote Test -> Promote Acc -> Promote Prod ->
+  Publish Live Docs -> Guard non-main for Prod) end-to-end groen bewezen op run #91 (2026-08-12,
+  commit 998716b).
+- [-] fase als geheel gedeeltelijk: notificatieontvangers, echte stage-hosting, branch protection/checks en productieapproval nog open (extern afhankelijk, zie Fase blokkades)
 
 ---
 
