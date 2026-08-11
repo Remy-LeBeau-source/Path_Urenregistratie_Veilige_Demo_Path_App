@@ -12,6 +12,7 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 ## Actuele stand
 
 - [x] Datum: 2026-08-12
+- [x] Reorganisatie: alle openstaande punten die je buiten VS Code moet doen (TransIP-paneel, GitHub-website-instellingen, Google Workspace, fysieke toestellen, bedrijfsgegevens/administratie, menselijke acceptatie) zijn verzameld en verplaatst naar Fase 16 als laatste, verzamelende fase. De oorspronkelijke fasen (5, 7, 9, 10, 11, 12, 13, 14, 15) bevatten nu alleen nog wat in VS Code zelf (code/terminal/Playwright/git) haalbaar is.
 - [x] Appversie: 0.9.44
 - [x] GitHub Actions pipeline-run #91 (commit 998716b, main) volledig groen: Notify team on
   commit push, Validate, Promote Dev, Promote Test, Promote Acc, Promote Prod, Publish Live
@@ -289,17 +290,12 @@ Status Fase 4:
 - [x] Expliciete sessie-time-out aantoonbaar getest (SEC-H-005).
 - [x] Sliding session expiration aantoonbaar getest (SEC-H-005).
 - [x] Auditmelding bij herhaalde mislukte loginpogingen aantoonbaar getest (SEC-H-006).
-- [-] Nog open als aanvullende hardening:
-  - Productie-CORS definitief beperken tot https://uren.pathconsultancy.nl
-  - Content-Security-Policy voor productie
-  - HSTS na bevestigde HTTPS-productieconfig
-  - Centrale securitylogging
-  - Logrotatie
-  - Periodieke controle op kwetsbare dependencies
+- [x] Periodieke controle op kwetsbare dependencies kan lokaal via `npm run security:deps` / `npm run security:deps:full`.
+- [-] Verplaatst naar de laatste fase (buiten VS Code, echt productiedomein nodig): productie-CORS/CSP/HSTS finaliseren, centrale securitylogging en logrotatie op de productieserver. Zie Fase 16.
 
 Status Fase 5:
 - [x] noodzakelijke securitybasis afgerond
-- [-] extra productiehardening open; sessie-time-out/sliding expiration (SEC-H-005) en failed-login-auditmelding (SEC-H-006) zijn groen bevestigd binnen de volledige regressie (127/127)
+- [-] extra productiehardening die het echte productiedomein/de TransIP-server vereist, is verplaatst naar Fase 16; sessie-time-out/sliding expiration (SEC-H-005) en failed-login-auditmelding (SEC-H-006) zijn groen bevestigd binnen de volledige regressie (127/127)
 
 ---
 
@@ -387,12 +383,7 @@ Status Fase 6:
 - [x] Live Docs-publicatie.
 - [x] Allure/Living Docs-koppeling.
 - [x] Commitnotificatie geintegreerd in release-pipeline.
-- [-] Ken/Gio-notificaties technisch aanwezig maar functioneel geen prioriteit.
-- [-] Definitieve notificatieontvangers later bevestigen.
-- [-] Echte aparte Dev/Test/Acc-hosts later invullen.
-- [-] Branch protection op main.
-- [-] Verplichte groene statuschecks voor merge.
-- [-] Productieapproval instellen voor echte deploy.
+- [-] Verplaatst naar de laatste fase (buiten VS Code, via GitHub-website en overleg): Ken/Gio-notificaties/definitieve notificatieontvangers, echte aparte Dev/Test/Acc-hosts, branch protection op main, verplichte groene statuschecks voor merge, productieapproval voor echte deploy. Zie Fase 16.
 
 Status Fase 7:
 - [x] CI/CD-basis lokaal en in repository afgerond
@@ -509,7 +500,7 @@ Status Fase 9:
 - [x] correctie/herindiening/goedkeuring ook op Pixel 7 Chromium en iPhone 13 WebKit bewezen
 - [x] correctie/goedkeuring UI in auth-mode gebruikt server/api/timesheets.php als bron voor status, review_note, correction_history, approved_at, approved_by en version
 - [x] pipelinebevestiging bewezen
-- [-] productieacceptatie blijft open
+- [-] Verplaatst naar de laatste fase (buiten VS Code): productieacceptatie van de correctie/goedkeuringsflow. Zie Fase 16.
 
 ---
 
@@ -531,9 +522,8 @@ Status Fase 9:
 
 ### Nog bouwen of productieharden
 
-- [-] JPG/PNG server-side omzetten naar PDF.
-- [-] Opslag buiten publiek toegankelijke webmap.
-- [-] Virusscanstrategie.
+- [-] JPG/PNG server-side omzetten naar PDF (code, in VS Code haalbaar).
+- [-] Verplaatst naar de laatste fase (buiten VS Code): opslag buiten de publiek toegankelijke webmap op de productieserver, en de virusscanstrategie (productkeuze/externe dienst). Zie Fase 16.
 
 ### Recent afgerond in deze fase
 
@@ -568,13 +558,11 @@ Status Fase 10:
 
 ### Nog bouwen
 
-- [-] Server-side factuur-PDF.
-- [-] Path/QSI-briefpapier.
-- [-] PDF veilig bewaren.
-- [-] pdf_storage_key.
-- [-] PDF alleen geautoriseerd downloaden.
-- [-] Credit-/correctiestrategie.
-- [-] PDF-inhoudscontrole.
+- [-] Server-side factuur-PDF (code).
+- [-] pdf_storage_key (code).
+- [-] PDF alleen geautoriseerd downloaden (code).
+- [-] PDF-inhoudscontrole (code).
+- [-] Verplaatst naar de laatste fase (buiten VS Code): definitief Path/QSI-briefpapier (brandingkeuze), PDF veilig bewaren op de productieserver, en de credit-/correctiestrategie (bedrijfsbeleid). Zie Fase 16.
 
 ### Recent afgerond in deze fase
 
@@ -617,15 +605,12 @@ Let op: dit staat los van GitHub commitnotificaties.
 
 ### Nog bouwen
 
-- [-] Factuur-PDF als bijlage.
-- [-] Klanturenstaat als bijlage waar nodig.
-- [-] Retry na tijdelijke fout.
-- [-] Maximaal aantal retries.
-- [-] Foutstatus.
-- [-] Gmail/Google Workspace-config wordt als late-stage productie-/operational concern behandeld.
-- [-] SMTP of Gmail API-keuze wordt pas in de late release-/livegangfase definitief gemaakt.
-- [-] Echte verzending wordt als allerlaatste activeren, na acceptatie en alleen na goedkeuring.
-- [-] Deze mail- en transporttaken vallen dus niet in de kernbouwfase, maar in de late release-/livegangfase.
+- [-] Factuur-PDF als bijlage (code).
+- [-] Klanturenstaat als bijlage waar nodig (code).
+- [-] Retry na tijdelijke fout (code).
+- [-] Maximaal aantal retries (code).
+- [-] Foutstatus (code).
+- [-] Verplaatst naar de laatste fase (buiten VS Code): Gmail/Google Workspace-config, keuze SMTP vs. Gmail API, en het activeren van echte verzending (pas na acceptatie en expliciete goedkeuring). Zie Fase 16.
 
 Status Fase 12:
 - [x] dry-runqueue, routes, templates, frontendkoppeling en regressietests bestaan
@@ -640,40 +625,11 @@ Status Fase 12:
 - [x] Login rate-limiting en force_password_change flow bestaan.
 - [x] Gebruikersbeheer-API kan gebruikers lezen, deactiveren, heractiveren en wachtwoordwijziging afdwingen.
 - [x] Role- en companyscope, CSRF en audit-events zijn door regressietests afgedekt.
-- [-] Definitief kiezen:
-  - QSI Consultancy B.V.
-  - Path Consultancy B.V.
-- [-] Definitieve statutaire naam.
-- [-] Definitief factuuradres.
-- [-] KvK-nummer controleren.
-- [-] Btw-nummer controleren.
-- [-] IBAN controleren.
-- [-] Betalingstermijn.
-- [-] Definitieve factuurprefix.
-- [-] Definitieve Circle8-route.
-- [-] Circle8 factuuradres.
-- [-] Circle8 e-mailadres of portaal.
-- [-] Boekhoudernaam.
-- [-] Boekhoudere-mailadres.
-- [-] EasySalary-e-mailadres.
-- [-] Definitieve brokerontvangers.
-- [-] Definitieve mailteksten.
-- [-] Definitieve herinneringsmomenten.
-- [-] Productieaccount Gio.
-- [-] Productieaccount Joyce.
-- [-] Productieaccounts medewerkers.
-- [-] Eerste wachtwoorden veilig uitgeven.
-- [-] Gebruikers deactiveren/verwijderenbeleid.
-- [-] Google Workspace-koppeling.
-- [-] Eerste tijdelijke wachtwoord veilig uitgeven.
-- [-] Tweefactorauthenticatie voor beheerders beoordelen (sterk aanbevolen).
-- [-] Bepalen wie productiebeheerder is naast Gio.
-- [-] Privacy- en bewaartermijnen vastleggen voor uren, uploads, facturen en auditlogs.
-- [-] Vastleggen wie gegevens mag exporteren, corrigeren en archiveren.
+- [-] Verplaatst naar de laatste fase (buiten VS Code, bedrijfsbeslissingen/administratie): definitieve bedrijfsnaam (QSI/Path), statutaire naam, factuuradres, KvK/btw/IBAN, betalingstermijn, factuurprefix, Circle8-route/adres/e-mailadres, boekhoudernaam/e-mailadres, EasySalary-e-mailadres, definitieve brokerontvangers/mailteksten/herinneringsmomenten, productieaccounts (Gio, Joyce, medewerkers), veilige uitgifte eerste wachtwoorden, gebruikersbeleid, Google Workspace-koppeling, 2FA-beoordeling, productiebeheerder naast Gio, privacy-/bewaartermijnenbeleid en exportbeleid. Zie Fase 16 voor de volledige lijst.
 
 Status Fase 13:
 - [x] auth-hardening, resetflow en gebruikersbeheer technisch aanwezig en getest
-- [-] fase als geheel gedeeltelijk: definitieve bedrijfsgegevens, productieaccounts, Google Workspace en beleid open
+- [-] fase als geheel: alle resterende punten zijn bedrijfsbeslissingen/administratie buiten VS Code, verplaatst naar Fase 16
 
 ---
 
@@ -694,62 +650,13 @@ Dit is de oorspronkelijke productielijst en blijft volledig onderdeel van de mas
 - [x] server/.htaccess hardening en veilige config.example.php defaults.
 - [x] Production-safety regressietests voor de guards.
 
-### Nog door jou in TransIP controleren
+### Nog door jou in TransIP controleren, en productie-installatie
 
-- [-] Productiedatabasewachtwoord wijzigen/roteren.
-- [-] Nieuw wachtwoord niet in chat plaatsen.
-- [-] Nieuw wachtwoord niet in Git zetten.
-- [-] PHP-versie op TransIP controleren.
-- [-] PHP op 8.4 zetten/bevestigen.
-- [-] Screenshot van PHP-instellingen bewaren.
-- [-] SSL-certificaat controleren.
-- [-] Geldig slotje op https://uren.pathconsultancy.nl.
-- [-] Exact documentroot/sitepad controleren.
-- [-] Controleren waar de subsitebestanden moeten staan.
-- [-] Controleren of TransIP-back-ups de database meenemen.
-- [-] Retentieperiode van TransIP-back-ups controleren.
-- [-] Handmatige database-export voor livegang.
-
-### Productie-installatie nog uitvoeren
-
-Deze punten worden in de masterchecklist als late-stage release-/operational items behandeld: TransIP-deployment, productieconfiguratie, productieaccounts en operationele controles komen pas in de livegang-/beheerfase aan bod, nadat de appfunctionaliteit lokaal en in acceptatie is bevestigd.
-
-- [-] Productiebestanden uploaden.
-- [-] TransIP-productieconfiguratie, SSL, documentroot, deploy en productieaccounts worden daarom naar de late release-/livegangfase verschoven.
-- [-] Productie server/config.local.php handmatig maken.
-- [-] environment = production.
-- [-] allow_demo_migrations = false.
-- [-] app_origin = https://uren.pathconsultancy.nl.
-- [-] Productiedatabasehost invullen.
-- [-] Productiedatabasenaam invullen.
-- [-] Productiedatabasegebruiker invullen.
-- [-] Productiedatabasewachtwoord lokaal op server invullen.
-- [-] health.php op TransIP testen.
-- [-] install.php uitvoeren indien nodig.
-- [-] migrate.php uitvoeren.
-- [-] Controleren dat demo-seeds niet draaien.
-- [-] Productieaccounts aanmaken.
-- [-] Productielogin testen.
-- [-] Productie-smoketest.
-- [-] Schrijfrechten upload-/PDF-map.
-- [-] PHP uploadlimits controleren.
-- [-] PHP sessioninstellingen controleren.
-- [-] Cronmogelijkheden controleren voor e-mailqueue.
-- [-] Foutlogging buiten publieke output configureren.
-- [-] PHP `display_errors` uitzetten in productie; fouten alleen naar serverlogs.
-- [-] Logs buiten de publiek bereikbare webmap bewaren + logrotatie instellen.
-- [-] Demo-accounts en demo-seeds volledig uitschakelen in productie.
-- [-] Alle lokale/testwachtwoorden vóór livegang vervangen.
-- [-] Uploads en PDF's buiten de publieke webroot bewaren.
-- [-] Bestandsrechten zo beperkt mogelijk instellen.
-- [-] Cronjob of worker voor de e-mailqueue instellen.
-- [-] Maximale uploadgrootte en toegestane bestandstypen instellen.
-- [-] Databaseverbinding met zo weinig mogelijk rechten configureren.
-- [-] Back-upretentie en opslaglocatie controleren.
+- [-] Verplaatst naar de laatste fase (buiten VS Code, TransIP-controlepaneel/SSH/hostingpaneel): wachtwoordrotatie, PHP-versie/SSL-controle, documentroot/sitepad, back-upbeleid en -retentie, handmatige database-export, volledige productie-installatie (config.local.php, environment=production, databasegegevens, health/install/migrate op TransIP, productieaccounts, schrijfrechten, PHP-uploadlimits/sessie-instellingen, cron voor e-mailqueue, foutlogging/logrotatie, demo-uitschakeling, wachtwoordvervanging, bestandsrechten, databaserechten). Zie Fase 16 voor de volledige lijst.
 
 Status Fase 14:
 - [x] subsite/databasebasis en applicatiehardening aanwezig
-- [-] fase als geheel gedeeltelijk: TransIP-productieconfiguratie, deployment en operationele controles open
+- [-] fase als geheel: TransIP-productieconfiguratie, deployment en operationele controles zijn verplaatst naar Fase 16 (buiten VS Code)
 
 ---
 
@@ -779,100 +686,136 @@ Status Fase 14:
 - [x] `start-path-app.cmd mobile` ondersteunt een smalle lokale browserpreview en gebruikt dezelfde gecontroleerde PHP-startflow.
 - [x] Dashboardhiërarchie is compacter en rustiger gemaakt met beter leesbare ondersteunende tekst.
 
-### Nog voor livegang
+### Nog voor livegang - lokaal/VS Code haalbaar
 
-- [-] Volledige correctie- en goedkeuringsflow handmatig op productie testen.
-- [-] Productie-adminlogin.
-- [-] Productie-medewerkerlogin.
-- [-] Productieprivacytest.
-- [-] Productie concept opslaan.
-- [-] Productie indienen.
-- [-] Productie correctie.
-- [-] Productie herindienen.
-- [-] Productie goedkeuren.
-- [-] Klanturenstaat upload.
-- [-] Klanturenstaat download.
-- [-] Factuurbedragen controleren.
-- [-] Btw controleren.
-- [-] Factuurnummering controleren.
-- [-] PDF controleren.
-- [-] Broker-mail dry-run.
-- [-] Boekhouder-mail dry-run.
-- [-] EasySalary zonder factuur dry-run.
-- [-] Echte mailroute afzonderlijk testen.
-- [-] Back-up maken.
-- [-] Database herstellen uit back-up.
-- [-] Bestanden herstellen uit back-up.
-- [-] Mobiele admin- en medewerkerflow op fysieke toestellen.
-- [-] Fysieke iPhone-/Safari-test.
-- [-] Fysieke Android-/Chrome-test.
-- [-] Tablet-test.
+- [-] Dubbelklikken en dubbele requests testen (Playwright).
+- [-] Gelijktijdig gebruik door twee beheerders testen (Playwright).
+- [-] December → januari en jaarwisseling testen (Playwright met gesimuleerde periodes).
+- [-] Grote uploads en foutieve bestanden testen (Playwright).
+- [-] Basiscontrole op toetsenbordbediening en leesbaarheid (lokaal in browser).
+- [-] Dependency/securityscan uitvoeren (`npm run security:deps` / `security:deps:full`).
 - [-] PWA-manifest.
 - [-] Service worker.
-- [-] PWA-installatie.
-- [-] Offline-/updategedrag bepalen.
-- [-] Monitoring.
-- [-] Health monitoring.
-- [-] Securitylogging.
-- [-] Logrotatie.
-- [-] Go-live runbook.
-- [-] Rollbackrunbook.
-- [-] Echte automatische e-mail als allerlaatste activeren.
-- [-] Volledig schone productie-installatie vanaf nul uitvoeren.
-- [-] Controleren dat er geen demo-gebruikers, demo-mails of toekomsttestperioden aanwezig zijn.
-- [-] Één volledige maandflow doorlopen: invoer → indienen → correctie → herindienen → goedkeuren → factuur definitief → mails dry-run.
-- [-] Dubbelklikken en dubbele requests testen.
-- [-] Gelijktijdig gebruik door twee beheerders testen.
-- [-] December → januari en jaarwisseling testen.
-- [-] Grote uploads en foutieve bestanden testen.
-- [-] Basiscontrole op toetsenbordbediening en leesbaarheid.
-- [-] Dependency/securityscan uitvoeren.
-- [-] Rollback naar vorige release daadwerkelijk oefenen.
-- [-] Release-tag aanmaken van de productieversie.
-- [-] Acceptatie laten bevestigen door Gio, Joyce en één medewerker.
-- [-] Pas daarna echte mail activeren.
+
+### Verplaatst naar de laatste fase (buiten VS Code)
+
+- [-] Alle productie-praktijktests (adminlogin, medewerkerlogin, privacy, concept/indienen/correctie/herindienen/goedkeuren, klanturenstaat upload/download, factuurbedragen/btw/nummering/PDF-controle, broker-/boekhouder-/EasySalary dry-run, echte mailroute), back-up maken en herstellen, fysieke toestellen (iPhone/Android/tablet), PWA-installatie/offline-gedrag, monitoring/health/securitylogging/logrotatie, go-live/rollback-runbook (inclusief daadwerkelijk oefenen), volledig schone productie-installatie, controle op afwezigheid van demo-data, één volledige maandflow op productie, release-tag van de productieversie, en de acceptatie door Gio, Joyce en één medewerker met pas daarna echte mail activeren. Zie Fase 16 voor de volledige lijst.
 
 Status Fase 15:
 - [x] desktop- en mobiele emulatieregressie lokaal ingericht en bewezen
 - [x] v0.9.41 releasepipeline #62 inclusief Test, Living Docs en Prod geslaagd
 - [x] dashboardwerkvoorraad en mobiele previewstart lokaal hersteld en gericht getest
 - [x] volledige vervolgmatrix lokaal opnieuw groen: 127/127 uitvoeringen
-- [-] fase als geheel gedeeltelijk: fysieke toestellen, productieacceptatie, PWA en livegang open
+- [-] resterend lokaal/VS-Code-werk staat hierboven; alles wat productieomgeving/fysieke toestellen/menselijke acceptatie vereist is verplaatst naar Fase 16
 
 ---
 
-## Fase 16 - Beheer na livegang
+## Fase 16 - Laatste fase: alles wat buiten VS Code moet gebeuren (verzameld) + beheer na livegang
+
+Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor je een browser naar een extern paneel (TransIP, GitHub-website, Google Workspace), een fysiek toestel, of een gesprek/administratieve actie nodig hebt. Alles wat in VS Code zelf (code, terminal, Playwright, git) gedaan kan worden, is in de eigen fase blijven staan.
 
 - [x] Auditlog-API voor beheerders met entity/event filters en secret-redactie.
 - [x] Zes API-regressies voor toegang, filters en gevoelige data.
-- [-] TransIP-hosting, SSL, documentroot, backupretentie en productieaccounts opvolgen als late release-/operationalisatie.
-- [-] Gmail/Google Workspace-mailroute, mailboxacceptatie en productie-transportstatus opvolgen als late release-/operationalisatie.
+
+### A. Eenmalig, vóór livegang (buiten VS Code)
+
+**Uit Fase 5 - productiehardening op het echte domein:**
+- [-] Productie-CORS beperken tot https://uren.pathconsultancy.nl.
+- [-] Content-Security-Policy voor productie.
+- [-] HSTS na bevestigde HTTPS-productieconfig.
+- [-] Centrale securitylogging koppelen.
+- [-] Logrotatie instellen.
+
+**Uit Fase 7 - GitHub-website en overleg:**
+- [-] Ken/Gio-notificaties en definitieve notificatieontvangers bevestigen.
+- [-] Echte aparte Dev/Test/Acc-hosts invullen.
+- [-] Branch protection op main instellen.
+- [-] Verplichte groene statuschecks voor merge instellen.
+- [-] Productieapproval instellen voor echte deploy.
+
+**Uit Fase 9:**
+- [-] Productieacceptatie van de correctie/goedkeuringsflow.
+
+**Uit Fase 10:**
+- [-] Opslag buiten de publiek toegankelijke webmap op de productieserver.
+- [-] Virusscanstrategie bepalen (productkeuze/externe dienst).
+
+**Uit Fase 11:**
+- [-] Definitief Path/QSI-briefpapier (brandingkeuze).
+- [-] PDF veilig bewaren op de productieserver.
+- [-] Credit-/correctiestrategie (bedrijfsbeleid).
+
+**Uit Fase 12 - Gmail/Google Workspace:**
+- [-] Gmail/Google Workspace-config.
+- [-] Keuze SMTP vs. Gmail API.
+- [-] Echte verzending activeren (pas na acceptatie en expliciete goedkeuring).
+
+**Uit Fase 13 - definitieve bedrijfsgegevens en accounts:**
+- [-] Definitief kiezen: QSI Consultancy B.V. of Path Consultancy B.V.
+- [-] Definitieve statutaire naam, factuuradres, KvK-nummer, btw-nummer, IBAN, betalingstermijn, factuurprefix.
+- [-] Definitieve Circle8-route, factuuradres en e-mailadres/portaal.
+- [-] Boekhoudernaam en -e-mailadres.
+- [-] EasySalary-e-mailadres.
+- [-] Definitieve brokerontvangers, mailteksten en herinneringsmomenten.
+- [-] Productieaccounts voor Gio, Joyce en medewerkers; eerste wachtwoorden veilig uitgeven.
+- [-] Gebruikers deactiveren/verwijderenbeleid vastleggen.
+- [-] Google Workspace-koppeling.
+- [-] Tweefactorauthenticatie voor beheerders beoordelen (sterk aanbevolen).
+- [-] Bepalen wie productiebeheerder is naast Gio.
+- [-] Privacy- en bewaartermijnen vastleggen voor uren, uploads, facturen en auditlogs.
+- [-] Vastleggen wie gegevens mag exporteren, corrigeren en archiveren.
+
+**Uit Fase 14 - TransIP-controlepaneel/SSH:**
+- [-] Productiedatabasewachtwoord wijzigen/roteren (niet in chat of Git plaatsen).
+- [-] PHP-versie op TransIP controleren/bevestigen op 8.4; screenshot bewaren.
+- [-] SSL-certificaat controleren (geldig slotje op https://uren.pathconsultancy.nl).
+- [-] Exact documentroot/sitepad controleren.
+- [-] TransIP-back-ups controleren (database inbegrepen, retentieperiode).
+- [-] Handmatige database-export voor livegang.
+- [-] Productiebestanden uploaden.
+- [-] Productie server/config.local.php handmatig maken (environment=production, allow_demo_migrations=false, app_origin, databasegegevens).
+- [-] health.php/install.php/migrate.php op TransIP uitvoeren; demo-seeds uitschakelen bevestigen.
+- [-] Productieaccounts aanmaken; productielogin en productie-smoketest.
+- [-] Schrijfrechten upload-/PDF-map; PHP-uploadlimits en sessie-instellingen controleren.
+- [-] Cronmogelijkheden voor de e-mailqueue controleren/instellen.
+- [-] Foutlogging buiten publieke output; `display_errors` uit in productie; logs buiten webroot + logrotatie.
+- [-] Alle lokale/testwachtwoorden vóór livegang vervangen.
+- [-] Uploads/PDF's buiten de publieke webroot; bestandsrechten zo beperkt mogelijk.
+- [-] Databaseverbinding met zo weinig mogelijk rechten configureren.
+- [-] Back-upretentie en opslaglocatie controleren.
+
+**Uit Fase 15 - productie-praktijktests en acceptatie:**
+- [-] Volledige correctie/goedkeuringsflow en alle overige flows (concept, indienen, correctie, herindienen, goedkeuren, klanturenstaat upload/download) handmatig op productie testen.
+- [-] Productieprivacytest; productie-adminlogin en -medewerkerlogin.
+- [-] Factuurbedragen, btw, factuurnummering en PDF controleren op productie.
+- [-] Broker-, boekhouder- en EasySalary-mail dry-run; echte mailroute afzonderlijk testen.
+- [-] Back-up maken en database/bestanden herstellen uit back-up.
+- [-] Mobiele admin-/medewerkerflow op fysieke iPhone, Android en tablet.
+- [-] PWA-installatie en offline-/updategedrag bepalen op een echt toestel.
+- [-] Monitoring, health monitoring, securitylogging en logrotatie inrichten.
+- [-] Go-live runbook en rollbackrunbook schrijven én daadwerkelijk oefenen.
+- [-] Volledig schone productie-installatie vanaf nul uitvoeren.
+- [-] Controleren dat er geen demo-gebruikers/demo-mails/toekomsttestperioden aanwezig zijn.
+- [-] Eén volledige maandflow op productie doorlopen (invoer → indienen → correctie → herindienen → goedkeuren → factuur definitief → mails dry-run).
+- [-] Release-tag aanmaken van de productieversie.
+- [-] Acceptatie laten bevestigen door Gio, Joyce en één medewerker; pas daarna echte mail activeren.
+
+### B. Doorlopend beheer na livegang
+
 - [-] Eerste week dagelijks errorlogs controleren.
-- [-] Mailqueue dagelijks controleren.
-- [-] Mislukte mails opnieuw aanbieden.
-- [-] Backupstatus controleren.
-- [-] Uptime/health controleren.
-- [-] Eerste echte maandflow volgen en narekenen.
-- [-] Eerste echte correctie/goedkeuring volgen.
-- [-] Eerste echte factuur controleren.
-- [-] Eerste echte broker-mail controleren.
-- [-] Eerste EasySalary-route controleren.
+- [-] Mailqueue dagelijks controleren; mislukte mails opnieuw aanbieden.
+- [-] Backupstatus en uptime/health controleren.
+- [-] Eerste echte maandflow, correctie/goedkeuring, factuur, broker-mail en EasySalary-route volgen en narekenen.
 - [-] Kleine productiebugs oplossen.
-- [-] Vastleggen wie verantwoordelijk is voor mislukte mails.
-- [-] Waarschuwing instellen als mailqueue blijft hangen.
-- [-] Waarschuwing instellen wanneer health.php faalt.
-- [-] Vastleggen hoe medewerkers productieproblemen melden.
-- [-] Incidentlog bijhouden.
-- [-] Maandelijkse dependency-updates plannen.
-- [-] Elk kwartaal een hersteltest van de back-up uitvoeren.
-- [-] Database- en opslaggroei controleren.
-- [-] Verlopen/inactieve accounts periodiek controleren.
-- [-] Auditlogs periodiek controleren.
+- [-] Vastleggen wie verantwoordelijk is voor mislukte mails; waarschuwingen instellen (mailqueue vast, health.php faalt).
+- [-] Vastleggen hoe medewerkers productieproblemen melden; incidentlog bijhouden.
+- [-] Maandelijkse dependency-updates plannen; elk kwartaal een hersteltest van de back-up.
+- [-] Database-/opslaggroei, verlopen/inactieve accounts en auditlogs periodiek controleren.
 - [-] Daarna normaal beheerregime.
 
 Status Fase 16:
 - [x] technische audit-API-basis aanwezig en getest
-- [-] fase als geheel gedeeltelijk: operationeel post-live beheer start pas na livegang
+- [-] fase als geheel: dit is nu de volledige verzameling van alle buiten-VS-Code-taken uit de rest van de checklist (deel A) plus doorlopend post-live beheer (deel B); niets hiervan is gestart
 
 ---
 
@@ -914,14 +857,14 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
 - [x] Fase 6 - Playwright, Allure, Living Doc en agents
 - [-] Fase 7 - CI/CD-basis klaar; echte stages en productieapproval open
 - [x] Fase 8 - uren concept opslaan en indienen
-- [-] Fase 9 - correctie/goedkeuring desktop en mobiel bewezen; pipeline bevestigd; productieacceptatie open
-- [-] Fase 10 - klanturenstaat: schema + API + UI-koppeling + regressie afgerond; productiehardening open
-- [-] Fase 11 - factuur lock/write en serverberekening bewezen; server-side PDF/opslag/download open
-- [-] Fase 12 - e-mail: queue-service + dry-run + assignment-routes + tests afgerond; echte dispatch open
-- [-] Fase 13 - bedrijfsdata: gebruikersbeheer-API, wachtwoord-reset, rate-limiting, force_password_change afgerond; definitieve bedrijfsgegevens + accounts open
-- [-] Fase 14 - TransIP: hardening (install/migrate/health guards, .htaccess) afgerond; deployment + productie-config open
-- [-] Fase 15 - lokaal 121 tests en pipeline #62 groen; autofill-, periode-, teller- en mobile-regressie bewezen; fysieke toestellen, PWA en productieacceptatie open
-- [-] Fase 16 - audit-API-basis klaar; operationeel post-live beheer nog niet gestart
+- [-] Fase 9 - correctie/goedkeuring desktop en mobiel bewezen; pipeline bevestigd; productieacceptatie verplaatst naar Fase 16
+- [-] Fase 10 - klanturenstaat: schema + API + UI-koppeling + regressie afgerond; JPG/PNG-conversie nog in VS Code te bouwen; opslagplek/virusscanstrategie verplaatst naar Fase 16
+- [-] Fase 11 - factuur lock/write en serverberekening bewezen; server-side PDF/opslag-key/download-autorisatie nog in VS Code te bouwen; briefpapier/opslaglocatie/creditbeleid verplaatst naar Fase 16
+- [-] Fase 12 - e-mail: queue-service + dry-run + assignment-routes + tests afgerond; Gmail/Google Workspace-config en echte verzending verplaatst naar Fase 16
+- [-] Fase 13 - bedrijfsdata: gebruikersbeheer-API, wachtwoord-reset, rate-limiting, force_password_change afgerond; alle definitieve bedrijfsgegevens/accounts verplaatst naar Fase 16
+- [-] Fase 14 - TransIP: hardening (install/migrate/health guards, .htaccess) afgerond; deployment + productie-config volledig verplaatst naar Fase 16
+- [-] Fase 15 - lokaal 121 tests en pipeline #62 groen; autofill-, periode-, teller- en mobile-regressie bewezen; VS-Code-haalbare tests (dubbelklik, jaarwisseling, uploads, PWA-manifest/service worker) blijven hier open; productiepraktijktests/fysieke toestellen/acceptatie verplaatst naar Fase 16
+- [-] Fase 16 - audit-API-basis klaar; nu het volledige verzamelpunt voor alle buiten-VS-Code-taken uit fase 5/7/9/10/11/12/13/14/15 plus doorlopend post-live beheer; nog niet gestart
 
 Telling fasestatussen:
 - [x] 6 fasen volledig bewezen voor hun afgebakende scope: 1, 3, 4, 5, 6 en 8.
