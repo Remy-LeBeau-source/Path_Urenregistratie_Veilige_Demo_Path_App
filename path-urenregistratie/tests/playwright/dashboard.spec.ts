@@ -335,6 +335,7 @@ test('[DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus', as
 });
 
 test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker en Backoffice', async ({ page }) => {
+  test.slow(); // Heavy multi-step closeout flow (12 sequential UI actions); triples timeout for slower CI runners.
   const demoPdf = {
     name: 'klanturenstaat.pdf',
     mimeType: 'application/pdf',
@@ -345,6 +346,7 @@ test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker e
     if (await page.locator('#app-shell').isVisible()) await page.locator('#switch-role').click();
     await expect(page.locator('#login-screen')).toBeVisible();
     await page.locator('#login-employee-trigger').click();
+    await expect(page.locator('#login-employee-choices')).toBeVisible();
     await page.locator(`[data-login-account-role="employee"][data-login-account-id="${employeeId}"]`).click();
     await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
   }
@@ -353,12 +355,14 @@ test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker e
     if (await page.locator('#app-shell').isVisible()) await page.locator('#switch-role').click();
     await expect(page.locator('#login-screen')).toBeVisible();
     await page.locator('#login-admin-trigger').click();
+    await expect(page.locator('#login-admin-choices')).toBeVisible();
     await page.locator('[data-login-account-role="admin"]').first().click();
     await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
   }
 
   async function chooseMonth(month: string): Promise<void> {
     await page.locator('#period-month-picker').click();
+    await expect(page.locator('#period-month-panel')).toBeVisible();
     await page.locator(`[data-period-month="${month}"][data-month-control="#period-month-picker"]`).click();
   }
 

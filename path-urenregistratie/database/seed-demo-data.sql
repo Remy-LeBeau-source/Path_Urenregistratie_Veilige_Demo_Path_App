@@ -190,7 +190,7 @@ INSERT INTO invoices (
   (13, 1, 13, 'IND-2026-augustus', '2026-09-01', '2026-10-01', 10, 0.00, 21.00, 0.00, 0.00, 'concept', NULL, NULL, NULL, 1),
   (14, 1, 14, 'IND-StvB-2026-augustus', '2026-09-01', '2026-10-01', 10, 6400.00, 21.00, 1344.00, 7744.00, 'concept', NULL, NULL, NULL, 1),
   (15, 1, 15, 'COA-2026-augustus', '2026-09-01', '2026-10-01', 10, 10440.00, 21.00, 2192.40, 12632.40, 'ready', 'invoices/COA-2026-augustus.pdf', NULL, NULL, 1),
-  (16, 1, 16, 'Bel-Shawn-2026-augustus', '2026-09-01', '2026-10-01', 11, 12312.00, 21.00, 2585.52, 14897.52, 'ready', 'invoices/Bel-Shawn-2026-augustus.pdf', NULL, NULL, 1);
+  (16, 1, 16, 'Bel-Shawn-2026-augustus', '2026-09-01', '2026-10-01', 11, 12312.00, 21.00, 2585.52, 14897.52, 'sent', 'invoices/Bel-Shawn-2026-augustus.pdf', '2026-09-01 10:00:00', '2026-09-01 10:10:00', 1);
 
 INSERT INTO announcements (
   id, company_id, created_by, kind, status, title, message,
