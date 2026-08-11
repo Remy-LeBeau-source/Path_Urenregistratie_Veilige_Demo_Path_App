@@ -400,6 +400,7 @@ test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker e
     await page.locator('button[data-view="timesheet"]').click();
     await page.locator('#customer-timesheet-file').setInputFiles(demoPdf);
     await page.locator('#customer-timesheet-submit').click();
+    await expect(page.locator('#toast')).toContainText('ingediend bij Backoffice');
 
     await chooseMonth('08');
     await page.locator('button[data-view="timesheet"]').click();
@@ -411,6 +412,7 @@ test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker e
     await page.locator('button[data-view="timesheet"]').click();
     await page.locator('#customer-timesheet-file').setInputFiles(demoPdf);
     await page.locator('#customer-timesheet-submit').click();
+    await expect(page.locator('#toast')).toContainText('ingediend bij Backoffice');
 
     await chooseMonth('07');
     await page.locator('button[data-view="timesheet"]').click();
