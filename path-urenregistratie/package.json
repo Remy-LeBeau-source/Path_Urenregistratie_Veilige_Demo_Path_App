@@ -1,11 +1,13 @@
 {
   "name": "path-urenregistratie",
-  "version": "0.9.41",
+  "version": "0.9.43",
   "private": true,
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "check": "node --check assets/app.js && node scripts/smoke-test.mjs",
+    "test:closeout": "node scripts/closeout-to-zero-check.mjs",
+    "test:gui-smoke": "node scripts/run-playwright-e2e.mjs --grep DASH-N-010",
     "security:deps": "npm audit --omit=dev --audit-level=high",
     "security:deps:full": "npm audit --audit-level=moderate",
     "ci:local": "npm run build && npm run check && npm run test:db:crud && npm run security:deps",

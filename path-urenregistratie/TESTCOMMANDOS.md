@@ -1,6 +1,6 @@
 # Test- en ontwikkelcommando's
 
-Praktisch overzicht voor Path Uren & Facturatie v0.9.41. Voer deze commando's uit vanuit de map `path-urenregistratie` in PowerShell.
+Praktisch overzicht voor Path Uren & Facturatie v0.9.42. Voer deze commando's uit vanuit de map `path-urenregistratie` in PowerShell.
 
 ## Meest gebruikt
 
@@ -9,6 +9,8 @@ Praktisch overzicht voor Path Uren & Facturatie v0.9.41. Voer deze commando's ui
 .\start-path-app.cmd mobile
 
 npm run check
+npm run test:closeout
+npm run test:gui-smoke
 npm run test:e2e
 npm run test:e2e:ui
 npm run test:e2e:mobile
@@ -22,9 +24,12 @@ npm run allure:open
 - `.\start-path-app.cmd mobile` start dezelfde app en opent een Edge- of Chrome-preview van 430 x 932 pixels.
 - `npm run test:e2e` draait de volledige regressie via de projectrunner: 117 unieke cases en 121 uitvoeringen.
 - `npm run test:e2e:ui` opent Playwright UI Mode om zelf tests te selecteren en uit te voeren.
+- `npm run test:closeout` bevat de vaste DEMO-CLOSEOUT-TO-ZERO check: eerst alles naar 0 open taken in de test, daarna direct terug naar startsituatie met alle open taken.
+- `npm run test:gui-smoke` draait de gerichte browsercontrole voor zichtbaar gedrag: Herstel, F5, opnieuw inloggen en de blijvende teller van 3 open acties voor Stasjo.
 
 Laat het terminalvenster van `start-path-app.cmd` open zolang de app of tests draaien.
 Voer muterende volledige suites niet meerdere keren achter elkaar uit op dezelfde demo-database zonder de serverdata opnieuw te seeden. Factuur-, review- en mobiele flows wijzigen bewust persistente testdata.
+Verplichte routine voor iedere handmatige controleronde: draai eerst `npm run test:closeout` en `npm run test:gui-smoke`, en ga pas daarna zelf klikken/testen.
 
 ## App, controle en build
 
@@ -45,6 +50,7 @@ Voer muterende volledige suites niet meerdere keren achter elkaar uit op dezelfd
 | `npm run test:e2e` | Alle 121 ingestelde uitvoeringen draaien. |
 | `npm run test:e2e:headed` | Volledige run met zichtbare browsers. |
 | `npm run test:e2e:ui` | Playwright UI Mode openen. |
+| `npm run test:gui-smoke` | Gerichte browserregressie voor Herstel → F5 → lokale teller. |
 | `npm run test:e2e:ui-all:headed` | Desktop- en mobiele UI-groepen headed draaien. |
 | `npm run test:e2e:mobile` | Vier mobiele cases op Pixel 7 en iPhone 13 draaien: acht uitvoeringen. |
 | `npm run test:e2e:mobile:headed` | Mobiele tests met zichtbare browsers draaien. |

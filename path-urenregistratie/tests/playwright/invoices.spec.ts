@@ -118,6 +118,62 @@ test('[INV-H-003] server berekent bedrag uit uren en uurtarief voor open facture
   });
 });
 
+test('[INV-H-006] admin kan het gekozen maanddetail inklappen en weer uitklappen', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  const invoicesPage = new InvoicesPage(page);
+
+  await test.step('Given de administrator is ingelogd en op facturen staat', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await invoicesPage.open();
+  });
+
+  await test.step('When de gekozen maanddetails worden verborgen en opnieuw getoond', async () => {
+    const toggle = page.locator('#invoice-detail-toggle');
+    await expect(toggle).toHaveText('Toon gekozen maand');
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await toggle.click();
+    await expect(toggle).toHaveText('Verberg gekozen maand');
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.locator('#month-batch-card')).toBeVisible();
+    await toggle.click();
+    await expect(toggle).toHaveText('Toon gekozen maand');
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(page.locator('#month-batch-card')).toBeHidden();
+  });
+
+  await test.step('Then blijven het overzicht en de gekozen maand netjes gescheiden zichtbaar', async () => {
+    await expect(page.locator('#invoice-month-overview')).toBeVisible();
+    await expect(page.locator('#month-batch-card')).toBeHidden();
+    await expect(page.locator('#invoice-detail-toggle')).toHaveText('Toon gekozen maand');
+  });
+});
+
+test('[INV-H-007] factuurnavigatie onderscheidt geblokkeerde en controleklare maanden met oranje en groen', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given de administrator is ingelogd met de vaste demo-baseline', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+  });
+
+  await test.step('Then toont Facturen één oranje blokkadebadge en één groene controlebadge', async () => {
+    const badgeGroup = page.locator('#invoice-batch-count');
+    const blockedBadge = page.locator('#invoice-batch-blocked-count');
+    const readyBadge = page.locator('#invoice-batch-ready-count');
+
+    await expect(badgeGroup).toBeVisible();
+    await expect(badgeGroup).toHaveAttribute('aria-label', '2 open maandcontroles: 1 geblokkeerd, 1 klaar voor controle');
+    await expect(blockedBadge).toBeVisible();
+    await expect(blockedBadge).toHaveText('1');
+    await expect(readyBadge).toBeVisible();
+    await expect(readyBadge).toHaveText('1');
+    await expect(blockedBadge).toHaveCSS('background-color', 'rgb(187, 118, 35)');
+    await expect(readyBadge).toHaveCSS('background-color', 'rgb(58, 189, 157)');
+    await expect(page.locator('#employees-count')).toHaveCSS('background-color', 'rgb(187, 118, 35)');
+  });
+});
+
 test('[INV-N-007] ongeldige periodefilter geeft nette 400-fout', async ({ page }) => {
   const loginPage = new LoginPage(page);
   let status = 0;

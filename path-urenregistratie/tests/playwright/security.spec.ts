@@ -178,12 +178,13 @@ test('[SEC-H-005] sessiecode bevat expliciete timeout-check en sliding expiratio
 test('[SEC-H-006] herhaalde mislukte loginpogingen maken security-audit event', async ({ request }) => {
   const csrf = await request.get('/server/auth/csrf.php');
   const csrfBody = await csrf.json();
+  const thresholdAccount = 'joyce@example.invalid';
 
   for (let i = 0; i < 3; i += 1) {
     const failed = await request.post('/server/auth/login.php', {
       headers: { 'X-CSRF-Token': csrfBody.csrf_token },
       data: {
-        email: appConfig.adminEmail,
+        email: thresholdAccount,
         password: 'definitely-wrong-password',
       },
     });

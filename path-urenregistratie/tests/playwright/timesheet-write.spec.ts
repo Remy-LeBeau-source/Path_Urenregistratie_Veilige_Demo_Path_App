@@ -45,7 +45,7 @@ async function findWritablePeriod(timesheetApi: TimesheetApi): Promise<string> {
 }
 
 test.describe('timesheet write api', () => {
-  test('[TS-API-H-001] employee save draft, read back, submit, audit en gesloten status guard', async ({ request }) => {
+  test('[TS-API-H-001] employee save draft, read back, submit, bewerkt en dient opnieuw in', async ({ request }) => {
     const authApi = new AuthApi(request);
     const timesheetApi = new TimesheetApi(request);
 
@@ -116,11 +116,11 @@ test.describe('timesheet write api', () => {
       expect(readBackSubmitted.body.last_audit.event_type).toBe('timesheet.submitted');
     });
 
-    await test.step('Then een gesloten status kan niet opnieuw als draft worden opgeslagen', async () => {
+    await test.step('Then een ingediende urenstaat kan worden bewerkt en opnieuw ingediend', async () => {
       const submitted = await timesheetApi.read(period);
       const submittedVersion = Number(submitted.body?.timesheet?.version || 0);
 
-      const lockedWrite = await timesheetApi.write({
+      const editWrite = await timesheetApi.write({
         action: 'save_draft',
         period,
         expectedVersion: submittedVersion,
@@ -131,9 +131,24 @@ test.describe('timesheet write api', () => {
         dayEntries: buildDayEntries(period, 5, 5),
       });
 
-      expect(lockedWrite.status).toBe(409);
-      expect(lockedWrite.body.ok).toBe(false);
-      expect(lockedWrite.body.error).toBe('timesheet-already-submitted');
+      expect(editWrite.status).toBe(200);
+      expect(editWrite.body.ok).toBe(true);
+      expect(editWrite.body.timesheet.status).toBe('draft');
+
+      const resubmitWrite = await timesheetApi.write({
+        action: 'submit',
+        period,
+        expectedVersion: Number(editWrite.body.timesheet.version),
+        contractualHours: 160,
+        billableHours: 10,
+        leaveHours: 0,
+        sicknessHours: 0,
+        dayEntries: buildDayEntries(period, 5, 5),
+      });
+
+      expect(resubmitWrite.status).toBe(200);
+      expect(resubmitWrite.body.ok).toBe(true);
+      expect(resubmitWrite.body.timesheet.status).toBe('submitted');
     });
 
     await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {

@@ -14,10 +14,11 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 - [x] Datum: 2026-08-10
 - [x] Main/HEAD: de26360
 - [x] Referentiecommit fase 8/9 backend: fc27723
-- [x] Appversie: 0.9.41
+- [x] Appversie: 0.9.42
 - [x] Lokale check: geslaagd
 - [x] Lokale e2e regressie: volledige run na DB-isolatie opnieuw bewezen met 127/127 groen (0 failed, 0 skipped, 0 interrupted); dev/demo DB bleef onaangeroerd (delta 0 op periods, timesheets, time_entries, email_deliveries en audit_log)
-- [x] Functionele regressiecatalogus: 123 unieke Playwright-cases, 127 Playwright-uitvoeringen, 1 directe SQL/DB-case DB-H-001, 124 unieke executable cases totaal
+- [x] Functionele regressiecatalogus: 125 unieke Playwright-cases, 129 Playwright-uitvoeringen, 1 directe SQL/DB-case DB-H-001, 126 unieke executable cases totaal
+- [x] Nieuwe regressiecases DASH-H-005 en INV-H-006 zijn individueel groen gevalideerd en toegevoegd aan de Living Documentation-mapping
 - [x] Releasehardening v0.9.41: gecommit en gepusht naar main
 - [x] GitHub pipeline-status: recente lokale en DB-onderdelen zijn geverifieerd; DB-isolatie is lokaal volledig bewezen met een volledige regressierun
 - [x] Laatste commit: de26360 — fix: stabilize e2e flows and payroll queue fallback
@@ -80,6 +81,9 @@ Voor iedere slice geldt verplicht:
 - [-] Na succesvolle server-write synchroniseert frontend state direct met serverresponse.
 - [-] Na write blijft reload opnieuw server-led lezen.
 - [-] Frontend voorspelt of vooruitzet geen lokale businessstatus voordat de serverwrite bevestigd is.
+- [x] Verplichte pre-check voor iedere review/demo: eerst `npm run test:closeout` (DEMO-CLOSEOUT-TO-ZERO), daarna pas handmatig beoordelen.
+- [x] F5/herstel-guard actief: F5 behoudt de lokale werkstaat; alleen Herstel zet de baseline terug. Na Herstel blijft die lokale baseline ook na F5 leidend en worden business-readbacks niet toegepast.
+- [x] Verplichte GUI-smoke voor zichtbaar gedrag: `npm run test:gui-smoke` controleert Herstel, F5, opnieuw inloggen en Stasjo's zichtbare 3 open acties zonder business-readbacks. Nieuwe zichtbare bevindingen worden aan deze GUI-smoke toegevoegd.
 
 ### Fase blokkades / later doen
 

@@ -32,7 +32,7 @@ $pdo->prepare('UPDATE password_reset_tokens SET used_at = CURRENT_TIMESTAMP WHER
 // Generate cryptographically secure token; store only its SHA-256 hash.
 $rawToken   = bin2hex(random_bytes(32));
 $tokenHash  = hash('sha256', $rawToken);
-$expiresAt  = (new DateTimeImmutable('+2 hours'))->format('Y-m-d H:i:s');
+$expiresAt  = (new DateTimeImmutable('+2 hours', new DateTimeZone('UTC')))->format('Y-m-d H:i:s');
 
 $pdo->prepare(
     'INSERT INTO password_reset_tokens (user_id, token_hash, expires_at) VALUES (:uid, :hash, :exp)'

@@ -643,36 +643,25 @@ try {
             ], 409);
         }
 
-        if ($action === 'save_draft' && $existingStatus === 'submitted') {
-            if ($pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
-            auth_send_json([
-                'ok' => false,
-                'error' => 'timesheet-already-submitted',
-                'message' => 'Submitted timesheets require a correction flow before changes.',
-            ], 409);
-        }
-
-        if ($action === 'save_draft' && !in_array($existingStatus, ['draft', 'correction'], true)) {
+        if ($action === 'save_draft' && !in_array($existingStatus, ['draft', 'submitted', 'correction'], true)) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
             }
             auth_send_json([
                 'ok' => false,
                 'error' => 'invalid-timesheet-state',
-                'message' => 'Only draft or correction timesheets can be changed in this flow.',
+                'message' => 'Alleen concept-, ingediende of correctie-urenstaten kunnen in deze flow worden aangepast.',
             ], 409);
         }
 
-        if ($action === 'submit' && !in_array($existingStatus, ['draft', 'correction'], true)) {
+        if ($action === 'submit' && !in_array($existingStatus, ['draft', 'submitted', 'correction'], true)) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
             }
             auth_send_json([
                 'ok' => false,
                 'error' => 'invalid-timesheet-transition',
-                'message' => 'Only draft or correction timesheets can be submitted.',
+                'message' => 'Deze urenstaat kan niet opnieuw worden ingediend omdat hij al is goedgekeurd of vergrendeld.',
             ], 409);
         }
 

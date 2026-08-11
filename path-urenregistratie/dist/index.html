@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0D1B38">
   <title>Uren & Facturatie</title>
-  <link rel="stylesheet" crossorigin href="/assets/index-BYTxYXPp.css">
+  <link rel="stylesheet" crossorigin href="/assets/index-DJWHIT6x.css">
 </head>
 <body>
   <section class="login-screen" id="login-screen" aria-labelledby="login-title">
@@ -83,6 +83,7 @@
         </button>
         <button class="nav-item role-employee-only" data-view="employee-dashboard" hidden>
           <span class="nav-marker"></span><span>Dashboard</span>
+          <span class="nav-count" id="employee-dashboard-count" hidden>0</span>
         </button>
         <button class="nav-item role-employee-only" data-view="timesheet" hidden>
           <span class="nav-marker"></span><span>Mijn uren</span>
@@ -106,6 +107,7 @@
         </button>
         <button class="nav-item role-admin-only" data-view="employees">
           <span class="nav-marker"></span><span>Medewerkers</span>
+          <span class="nav-count" id="employees-count" hidden>0</span>
         </button>
         <button class="nav-item role-admin-only" data-view="settings">
           <span class="nav-marker"></span><span>Instellingen</span>
@@ -118,7 +120,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 0.9.41</span>
+      <span class="demo-badge">Versie 0.9.43</span>
       </div>
     </aside>
 
@@ -134,9 +136,11 @@
         <div class="topbar-title">
           <p class="eyebrow" id="organization-name">Path Consultancy</p>
           <h1 id="page-title">Urenoverzicht</h1>
+          <span class="demo-badge mobile-version-badge">Versie 0.9.43</span>
         </div>
         <div class="topbar-actions">
           <span class="safety-badge">E-mail uitgeschakeld</span>
+          <button class="topbar-quick-reset" id="quick-reset-demo" type="button">Herstel</button>
           <div class="period-control" id="global-period-control" aria-label="Maanddetail openen">
             <button id="period-prev" aria-label="Vorige maand">‹</button>
             <div class="period-picker-wrap">
@@ -184,13 +188,17 @@
             <p id="employee-dashboard-next">Bekijk wat je voor deze maand nog moet doen.</p>
             <button class="button button-primary" id="employee-dashboard-action" data-go="timesheet">Uren verder invullen</button>
           </div>
-          <div class="employee-month-progress">
-            <small id="employee-dashboard-period">Juli 2026</small>
-            <strong id="employee-dashboard-hours">153,0 uur</strong>
-            <span id="employee-dashboard-contract">van 153,0 contracturen</span>
-            <div class="linear-progress"><span id="employee-dashboard-progress" style="width:100%"></span></div>
+          <div class="hero-task-math" aria-label="Controle van het totaal aan open acties voor medewerker">
+            <span>Wat wacht op jou</span>
+            <strong id="employee-open-task-total">0 open acties</strong>
+            <div><small>Per maand</small><b id="employee-open-task-months">Alles afgerond</b></div>
+            <div><small>Per type</small><b id="employee-open-task-owners">Urenregistraties 0 + klanturenstaten 0 = 0</b></div>
           </div>
         </div>
+        <section class="panel employee-open-overview" id="employee-open-overview" hidden>
+          <div class="panel-heading"><div><span class="section-label">Jouw acties</span><h3>Wat wacht nog op jou</h3></div><small id="employee-open-overview-count">0 open maanden</small></div>
+          <div class="employee-open-overview-list" id="employee-open-overview-list"></div>
+        </section>
         <section class="correction-banner dashboard-correction" id="employee-dashboard-correction" hidden>
           <span class="correction-banner-icon">!</span>
           <div><strong>Correctie gevraagd</strong><p id="employee-dashboard-correction-message"></p><small id="employee-dashboard-correction-meta"></small></div>
@@ -208,6 +216,7 @@
           </div>
         </section>
         <div class="metric-grid employee-metrics">
+          <article class="metric-card"><span class="metric-label">Deze maand</span><strong id="employee-dashboard-hours">153,0</strong><span class="metric-note" id="employee-dashboard-contract">van 153,0 contracturen</span><div class="linear-progress"><span id="employee-dashboard-progress" style="width:100%"></span></div><small id="employee-dashboard-period">Juli 2026</small></article>
           <article class="metric-card"><span class="metric-label">Status</span><strong class="compact-metric" id="employee-dashboard-status">Ingediend</strong><span class="metric-note" id="employee-dashboard-status-note">Wacht op controle</span></article>
           <article class="metric-card"><span class="metric-label">Declarabel</span><strong id="employee-dashboard-billable">153,0</strong><span class="metric-note">uur in deze maand</span></article>
           <article class="metric-card"><span class="metric-label">Verlof en ziekte</span><strong id="employee-dashboard-absence">0,0</strong><span class="metric-note">uur verantwoord</span></article>
@@ -361,8 +370,7 @@
             </div>
             <div class="timesheet-actions">
               <p><strong id="hours-target-message">Declarabele uren worden met contracturen vergeleken.</strong><small id="hours-target-help">Dit is alleen een controlebericht en blokkeert indienen nooit.</small></p>
-              <button class="button button-primary" id="submit-timesheet">Uren indienen</button>
-            </div>
+              <button class="button button-primary" id="submit-timesheet">Uren indienen</button>              <p class="timesheet-submit-note" id="submit-timesheet-note" hidden></p>            </div>
           </section>
 
           <aside class="panel summary-card">

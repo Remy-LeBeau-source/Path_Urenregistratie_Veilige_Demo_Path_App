@@ -41,7 +41,7 @@ if (!$row) {
 if ($row['used_at'] !== null) {
     auth_send_json(['ok' => false, 'error' => 'token-already-used', 'message' => 'This reset token has already been used.'], 409);
 }
-if (new DateTimeImmutable() > new DateTimeImmutable((string)$row['expires_at'])) {
+if (new DateTimeImmutable('now', new DateTimeZone('UTC')) > new DateTimeImmutable((string)$row['expires_at'], new DateTimeZone('UTC'))) {
     auth_send_json(['ok' => false, 'error' => 'token-expired', 'message' => 'Reset token has expired. Request a new one.'], 409);
 }
 if ((int)$row['active'] !== 1) {

@@ -3,7 +3,7 @@ import { captureConsoleErrors, clearConsoleErrors } from './fixtures/consoleErro
 import { LoginPage } from './pages/LoginPage';
 import { attachBusinessScreenshot } from './reporting/uiAttachments';
 
-const MOBILE_PERIOD = '2126-01';
+const MOBILE_PERIOD = '2026-01';
 const CORRECTION_MESSAGE = 'Controleer dag 2: dit moet 4 uur zijn.';
 
 async function isolateFrontendState(page: Page): Promise<void> {
@@ -31,7 +31,7 @@ async function mockTimesheetWrites(page: Page): Promise<void> {
     resubmitted_at: string | null;
   }> = [];
 
-  await page.route('**/server/api/timesheets.php', async route => {
+  await page.route('**/server/api/timesheets.php**', async route => {
     const method = route.request().method().toUpperCase();
 
     if (method === 'GET') {
@@ -152,12 +152,12 @@ async function mockTimesheetWrites(page: Page): Promise<void> {
 }
 
 async function setPeriod(page: Page, periodKey: string): Promise<void> {
-  await page.evaluate(nextPeriod => {
-    const control = document.querySelector('#period-picker') as HTMLInputElement | null;
-    if (!control) throw new Error('Period control ontbreekt.');
-    control.value = nextPeriod;
-    control.dispatchEvent(new Event('change', { bubbles: true }));
+  const changed = await page.evaluate(nextPeriod => {
+    const periodSetter = (window as typeof window & { setPeriod?: (value: string) => boolean }).setPeriod;
+    if (typeof periodSetter !== 'function') throw new Error('Appfunctie setPeriod ontbreekt.');
+    return periodSetter(nextPeriod);
   }, periodKey);
+  expect(changed).toBe(true);
   await expect(page.locator('#period-picker')).toHaveValue(periodKey);
 }
 
@@ -306,8 +306,14 @@ test('[MOB-H-003] mobiele correctie herindiening en administratieve goedkeuring 
     await setPeriod(page, MOBILE_PERIOD);
     const card = page.locator(`article.approval-card[data-approval-period="${MOBILE_PERIOD}"]`).filter({ hasText: employeeName }).first();
     await expect(card).toBeVisible();
+    const approveResponse = page.waitForResponse(response => {
+      if (!response.url().includes('/server/api/timesheets.php') || response.request().method() !== 'POST') return false;
+      const payload = response.request().postDataJSON() as { action?: string };
+      return payload.action === 'approve';
+    });
     await card.locator('[data-approve]').click();
-    await expect(card).toHaveCount(0);
+    expect((await approveResponse).ok()).toBe(true);
+    await expect(card).toHaveCount(0, { timeout: 15_000 });
     await assertNoHorizontalOverflow(page);
     await attachBusinessScreenshot(page, 'Business state · Mobile goedkeuring afgerond');
     expect(errors).toEqual([]);

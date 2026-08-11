@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { spawn, spawnSync } from 'node:child_process';
+import { createServer } from 'node:net';
 import path from 'node:path';
 import { config as loadDotEnv } from 'dotenv';
 
@@ -52,6 +53,20 @@ async function waitForHealth(baseUrl, timeoutMs = 60_000) {
   throw new Error(`Timed out waiting for PHP health endpoint at ${baseUrl}; last error: ${lastError}`);
 }
 
+async function assertServerPortAvailable(baseUrl) {
+  const target = new URL(baseUrl);
+  const port = Number(target.port || (target.protocol === 'https:' ? 443 : 80));
+  const host = target.hostname === 'localhost' ? '127.0.0.1' : target.hostname;
+
+  await new Promise((resolve, reject) => {
+    const probe = createServer();
+    probe.once('error', error => {
+      reject(new Error(`E2E precheck failed: ${host}:${port} is already in use. Stop the existing server before running Playwright. (${error.code || error.message})`));
+    });
+    probe.listen(port, host, () => probe.close(resolve));
+  });
+}
+
 async function main() {
   loadEnvFiles();
 
@@ -75,6 +90,8 @@ async function main() {
   const baseUrl = String(process.env.PATH_APP_BASE_URL || 'http://localhost:8000').trim();
   const phpPath = resolvePhpPath();
   const serverAddress = '127.0.0.1:8000';
+
+  await assertServerPortAvailable(baseUrl);
 
   console.log(`E2E precheck ok: ${baseUrl} will be served by a runner-managed PHP server using DB ${resolvedDatabaseName || '(default)'}.`);
 

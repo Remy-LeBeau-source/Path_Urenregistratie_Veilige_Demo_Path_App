@@ -7,7 +7,7 @@ Feature: Urenregistratie via API in Path Uren & Facturatie
   # Navigatiemapping: tests/playwright/steps/timesheets-api.steps.ts
 
   @happy
-  Scenario: [TS-API-H-001] employee save draft, read back, submit, audit en gesloten status guard
+  Scenario: [TS-API-H-001] employee save draft, read back, submit, bewerkt en dient opnieuw in
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd

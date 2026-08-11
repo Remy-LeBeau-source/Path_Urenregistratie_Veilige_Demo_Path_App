@@ -1,4 +1,5 @@
 const STORAGE_KEY = "path-uren-demo-v07-final";
+const LOCAL_RESET_GUARD_KEY = STORAGE_KEY + ":local-reset-authoritative";
 const DEMO_DOMAIN = "@example.invalid";
 const API_ENDPOINT = "/server/api.php";
 const API_STATE_PATH = API_ENDPOINT + "?action=state";
@@ -11,8 +12,17 @@ const WRITE_TIMESHEET_PATH = "/server/api/timesheets.php";
 const WRITE_CUSTOMER_TIMESHEET_PATH = "/server/api/customer-timesheets.php";
 const LOCAL_STORAGE_ENABLED = true;
 const API_ENABLED = true;
+function isLocalResetAuthoritative() {
+  try {
+    return LOCAL_STORAGE_ENABLED && window.localStorage.getItem(LOCAL_RESET_GUARD_KEY) === "1";
+  } catch (error) {
+    return false;
+  }
+}
 const READ_API_DASHBOARD_PATH = "/server/api/dashboard.php";
 const READ_API_INVOICES_PATH = "/server/api/invoices.php";
+const READ_API_NOTIFICATIONS_PATH = "/server/api/notifications.php";
+const READ_API_ANNOUNCEMENTS_PATH = "/server/api/announcements.php";
 const SUPPORT_EMAIL = "backoffice@pathconsultancy.nl";
 const DEFAULT_INVOICE_MAIL_BODY = "Middag,\n\nHierbij stuur ik de ureninformatie van {medewerker} over {maand} {jaar}.\n\nDaadwerkelijk gewerkte uren: {uren} uur.";
 const DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_SUBJECT = "Klanturenstaat {medewerker} – {maand} {jaar}";
@@ -107,6 +117,22 @@ function shiftPeriodKey(key, delta) {
   const monthIndex = ((absoluteMonth % 12) + 12) % 12;
   if (year < 1 || year > 9999) return key;
   return makePeriodKey(year, monthIndex);
+}
+
+function currentCalendarPeriodKey() {
+  const now = new Date();
+  try {
+    const parts = new Intl.DateTimeFormat("nl-NL", {
+      timeZone: "Europe/Amsterdam",
+      year: "numeric",
+      month: "2-digit"
+    }).formatToParts(now);
+    const year = Number(parts.find(part => part.type === "year")?.value || now.getFullYear());
+    const month = Number(parts.find(part => part.type === "month")?.value || (now.getMonth() + 1));
+    return makePeriodKey(year, Math.max(0, Math.min(11, month - 1)));
+  } catch {
+    return makePeriodKey(now.getFullYear(), now.getMonth());
+  }
 }
 
 function emptyEntries(periodKey) {
@@ -363,7 +389,7 @@ function demoNotifications() {
 
 function freshState() {
   return {
-    schemaVersion: 23,
+    schemaVersion: 25,
     currentRole: null,
     currentAdminId: "gio",
     currentEmployeeId: 2,
@@ -585,23 +611,29 @@ function freshState() {
     notifications: demoNotifications(),
     announcements: demoAnnouncements(),
     records: {
+      "2026-05": {
+        "1": seedCustomerTimesheet(makeRecord(152, 152, "approved", "simulated", "IND-2026-mei", "2026-05"), "sent", "Klanturenstaat_Marc_de_Roon_2026-05.pdf"),
+        "2": seedCustomerTimesheet(makeRecord(144, 144, "approved", "simulated", "IND-StvB-2026-mei", "2026-05"), "sent", "Klanturenstaat_Stasjo_van_Bakel_2026-05.pdf"),
+        "3": seedCustomerTimesheet(makeRecord(128, 144, "approved", "simulated", "COA-2026-mei", "2026-05"), "sent", "Klanturenstaat_Brian_Hek_2026-05.pdf"),
+        "4": seedCustomerTimesheet(makeRecord(160, 160, "approved", "simulated", "Bel-Shawn-2026-mei", "2026-05"), "sent", "Klanturenstaat_Shawn-Douglas_Nahar_2026-05.pdf")
+      },
       "2026-06": {
-        "1": seedCustomerTimesheet(makeRecord(144, 144, "approved", "simulated", "IND-2026-juni", "2026-06"), "sent", "Klanturenstaat_Marc_de_Roon_2026-06.pdf"),
-        "2": seedCustomerTimesheet(makeRecord(144, 144, "approved", "simulated", "IND-StvB-2026-juni", "2026-06"), "sent", "Klanturenstaat_Stasjo_van_Bakel_2026-06.pdf"),
-        "3": seedCustomerTimesheet(makeRecord(136, 144, "approved", "simulated", "COA-2026-juni", "2026-06"), "sent", "Klanturenstaat_Brian_Hek_2026-06.pdf"),
-        "4": seedCustomerTimesheet(makeRecord(144, 144, "approved", "simulated", "Bel-Shawn-2026-juni", "2026-06"), "sent", "Klanturenstaat_Shawn-Douglas_Nahar_2026-06.pdf")
+        "1": seedCustomerTimesheet(makeRecord(144, 144, "approved", "ready", "IND-2026-juni", "2026-06"), "sent", "Klanturenstaat_Marc_de_Roon_2026-06.pdf"),
+        "2": seedCustomerTimesheet(makeRecord(0, 144, "draft", "concept", "IND-StvB-2026-juni", "2026-06"), "sent", "Klanturenstaat_Stasjo_van_Bakel_2026-06.pdf"),
+        "3": seedCustomerTimesheet(makeRecord(136, 144, "approved", "simulated", "COA-2026-juni", "2026-06"), "missing"),
+        "4": seedCustomerTimesheet(makeRecord(144, 144, "approved", "simulated", "Bel-Shawn-2026-juni", "2026-06"), "missing")
       },
       "2026-07": {
-        "1": seedCustomerTimesheet(makeRecord(164, 164, "approved", "simulated", "IND-2026-juli", "2026-07"), "sent", "Klanturenstaat_Marc_de_Roon_2026-07.pdf"),
-        "2": seedCustomerTimesheet(makeRecord(153, 153, "approved", "simulated", "IND-StvB-2026-juli", "2026-07"), "sent", "Klanturenstaat_Stasjo_van_Bakel_2026-07.pdf"),
-        "3": seedCustomerTimesheet(makeRecord(117, 117, "approved", "simulated", "COA-2026-juli", "2026-07"), "missing"),
+        "1": seedCustomerTimesheet(makeRecord(164, 164, "approved", "ready", "IND-2026-juli", "2026-07"), "received", "Klanturenstaat_Marc_de_Roon_2026-07.pdf"),
+        "2": seedCustomerTimesheet(makeRecord(153, 153, "approved", "simulated", "IND-StvB-2026-juli", "2026-07"), "resubmit", "Klanturenstaat_Stasjo_van_Bakel_2026-07.pdf"),
+        "3": seedCustomerTimesheet(makeCorrectionRecord(117, 117, "COA-2026-juli", "2026-07", "Controleer 22 juli: de uren moeten worden afgestemd met de klantregistratie."), "sent", "Klanturenstaat_Brian_Hek_2026-07.pdf"),
         "4": seedCustomerTimesheet(makeRecord(144, 144, "approved", "ready", "Bel-Shawn-2026-juli", "2026-07"), "sent", "Klanturenstaat_Shawn-Douglas_Nahar_2026-07.pdf")
       },
       "2026-08": {
-        "1": seedCustomerTimesheet(makeRecord(0, 151.2, "draft", "concept", "IND-2026-augustus", "2026-08"), "sent", "Klanturenstaat_Marc_de_Roon_2026-08.pdf"),
+        "1": seedCustomerTimesheet(makeRecord(140, 151.2, "submitted", "concept", "IND-2026-augustus", "2026-08"), "received", "Klanturenstaat_Marc_de_Roon_2026-08.pdf"),
         "2": seedCustomerTimesheet(makeCorrectionRecord(80, 151.2, "IND-StvB-2026-augustus", "2026-08", "Controleer 12 augustus: daar staat 8 uur, maar volgens de planning hoort dit 4 uur te zijn."), "sent", "Klanturenstaat_Stasjo_van_Bakel_2026-08.pdf"),
-        "3": seedCustomerTimesheet(makeRecord(144, 151.2, "approved", "ready", "COA-2026-augustus", "2026-08"), "sent", "Klanturenstaat_Brian_Hek_2026-08.pdf"),
-        "4": seedCustomerTimesheet(makeRecord(144, 151.2, "approved", "ready", "Bel-Shawn-2026-augustus", "2026-08"), "received", "Klanturenstaat_Shawn-Douglas_Nahar_2026-08.pdf")
+        "3": seedCustomerTimesheet(makeRecord(144, 151.2, "submitted", "concept", "COA-2026-augustus", "2026-08"), "sent", "Klanturenstaat_Brian_Hek_2026-08.pdf"),
+        "4": seedCustomerTimesheet(makeRecord(144, 151.2, "approved", "simulated", "Bel-Shawn-2026-augustus", "2026-08"), "sent", "Klanturenstaat_Shawn-Douglas_Nahar_2026-08.pdf")
       }
     }
   };
@@ -611,7 +643,7 @@ function loadState() {
   const fallback = freshState();
   try {
     const saved = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
-    if (!saved || ![7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23].includes(saved.schemaVersion) || !parsePeriodKey(saved.selectedPeriodKey)) return fallback;
+    if (!saved || ![7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25].includes(saved.schemaVersion) || !parsePeriodKey(saved.selectedPeriodKey)) return fallback;
     const previousSchemaVersion = Number(saved.schemaVersion || 0);
     saved.hoursWeekScope = typeof saved.hoursWeekScope === "string" ? saved.hoursWeekScope : "all";
     saved.hoursWeekScopeTouched = saved.hoursWeekScopeTouched === true;
@@ -718,7 +750,7 @@ function loadState() {
         }
       });
     });
-    saved.schemaVersion = 23;
+    saved.schemaVersion = 25;
     saved.employees = Array.isArray(saved.employees) && saved.employees.length ? saved.employees : fallback.employees;
     saved.admins = saved.admins.map((admin, index) => Object.assign({
       id: "admin-" + (index + 1),
@@ -811,6 +843,67 @@ function loadState() {
         record.payrollStatus = "ready";
       });
     }
+    // Normalize older local demo states so the invoice badge keeps mixed blocked+ready demo months.
+    if (saved.records && saved.records["2026-06"] && saved.records["2026-06"]["3"]) {
+      const juneBrian = saved.records["2026-06"]["3"];
+      const juneBrianCustomer = customerTimesheetFor(juneBrian);
+      if (juneBrian.timesheetStatus === "draft" && juneBrian.invoiceStatus === "concept" && juneBrianCustomer.status === "sent") {
+        juneBrian.timesheetStatus = "approved";
+        juneBrian.invoiceStatus = "simulated";
+        juneBrian.payrollStatus = "simulated";
+        juneBrianCustomer.status = "missing";
+        juneBrianCustomer.reviewNote = "";
+      }
+    }
+    // Keep F5 behavior while ensuring legacy demo states still show open approvals in August.
+    if (previousSchemaVersion < 24 && saved.records && saved.records["2026-08"]) {
+      const august = saved.records["2026-08"];
+      const augOne = august["1"];
+      const augTwo = august["2"];
+      const augThree = august["3"];
+      const augFour = august["4"];
+      const hasLegacyPattern =
+        augOne && augTwo && augThree && augFour &&
+        augOne.timesheetStatus === "draft" &&
+        augTwo.timesheetStatus === "correction" &&
+        augThree.timesheetStatus === "draft" &&
+        augFour.timesheetStatus === "approved";
+      if (hasLegacyPattern) {
+        augOne.timesheetStatus = "submitted";
+        augOne.invoiceStatus = "concept";
+        augOne.payrollStatus = "concept";
+        const augOneCustomer = customerTimesheetFor(augOne);
+        if (augOneCustomer.status === "draft" || augOneCustomer.status === "missing") augOneCustomer.status = "received";
+        augThree.timesheetStatus = "submitted";
+        augThree.invoiceStatus = "concept";
+        augThree.payrollStatus = "concept";
+      }
+    }
+    if (previousSchemaVersion < 25 && saved.records && saved.records["2026-06"] && saved.records["2026-07"] && saved.records["2026-08"]) {
+      const juneStasjo = saved.records["2026-06"]["2"];
+      const julyStasjo = saved.records["2026-07"]["2"];
+      const augustStasjo = saved.records["2026-08"]["2"];
+      if (juneStasjo && julyStasjo && augustStasjo) {
+        const juneCustomer = customerTimesheetFor(juneStasjo);
+        const julyCustomer = customerTimesheetFor(julyStasjo);
+        const augustCustomer = customerTimesheetFor(augustStasjo);
+        const matchesLegacyDemoPattern =
+          juneStasjo.timesheetStatus === "approved" &&
+          julyStasjo.timesheetStatus === "approved" &&
+          augustStasjo.timesheetStatus === "correction" &&
+          juneCustomer.status === "sent" &&
+          julyCustomer.status === "approved" &&
+          augustCustomer.status === "sent";
+        if (matchesLegacyDemoPattern) {
+          juneStasjo.timesheetStatus = "draft";
+          juneStasjo.invoiceStatus = "concept";
+          juneStasjo.payrollStatus = "concept";
+          juneStasjo.entries = emptyEntries("2026-06");
+          julyCustomer.status = "resubmit";
+          julyCustomer.reviewNote = "Upload de definitieve, door de klant bevestigde PDF.";
+        }
+      }
+    }
     saved.currentRole = null;
     if (!saved.admins.some(admin => String(admin.id) === String(saved.currentAdminId) && admin.active !== false)) {
       saved.currentAdminId = String((saved.admins.find(admin => admin.active !== false) || saved.admins[0]).id);
@@ -824,14 +917,64 @@ function loadState() {
     if (!["actionable", "waiting", "all"].includes(saved.adminTaskFilter)) saved.adminTaskFilter = "all";
     if (!["active", "inactive", "all"].includes(saved.employeeScope)) saved.employeeScope = "active";
     if (!["all", "unread", "withdrawn"].includes(saved.announcementArchiveFilter)) saved.announcementArchiveFilter = "all";
-    return saved;
+    return ensureSeedDataIntegrity(saved, fallback, "local-state");
   } catch {
     return fallback;
   }
 }
 
+function hasRequiredSeedData(candidate) {
+  if (!candidate || typeof candidate !== "object") return false;
+  if (!Array.isArray(candidate.employees) || candidate.employees.length === 0) return false;
+  if (!Array.isArray(candidate.admins) || candidate.admins.length === 0) return false;
+  if (!candidate.records || typeof candidate.records !== "object") return false;
+
+  const periodKeys = Object.keys(candidate.records).filter(parsePeriodKey);
+  if (!periodKeys.length) return false;
+
+  const hasRecordRows = periodKeys.some(periodKey => {
+    const periodRecords = candidate.records[periodKey];
+    return periodRecords && typeof periodRecords === "object" && Object.keys(periodRecords).length > 0;
+  });
+
+  return hasRecordRows;
+}
+
+function ensureSeedDataIntegrity(candidateState, fallbackState, sourceLabel) {
+  const fallback = fallbackState || freshState();
+  const candidate = candidateState && typeof candidateState === "object"
+    ? JSON.parse(JSON.stringify(candidateState))
+    : {};
+
+  if (hasRequiredSeedData(candidate)) return candidate;
+
+  console.warn("State guard activated: baseline demo data restored for", sourceLabel);
+  const restored = JSON.parse(JSON.stringify(fallback));
+
+  // Preserve harmless UI preferences/filters while restoring required business baseline.
+  restored.currentRole = candidate.currentRole || restored.currentRole;
+  restored.currentAdminId = candidate.currentAdminId || restored.currentAdminId;
+  restored.currentEmployeeId = Number(candidate.currentEmployeeId || restored.currentEmployeeId);
+  restored.selectedPeriodKey = parsePeriodKey(candidate.selectedPeriodKey) ? candidate.selectedPeriodKey : restored.selectedPeriodKey;
+  restored.preferences = Object.assign({}, restored.preferences, candidate.preferences || {});
+  restored.invoiceFilter = "all";
+  restored.approvalScope = ["all", "month"].includes(candidate.approvalScope) ? candidate.approvalScope : restored.approvalScope;
+  restored.dashboardTeamScope = ["all", "attention"].includes(candidate.dashboardTeamScope) ? candidate.dashboardTeamScope : restored.dashboardTeamScope;
+  restored.adminTaskFilter = ["actionable", "waiting", "all"].includes(candidate.adminTaskFilter) ? candidate.adminTaskFilter : restored.adminTaskFilter;
+  restored.employeeScope = ["active", "inactive", "all"].includes(candidate.employeeScope) ? candidate.employeeScope : restored.employeeScope;
+  restored.announcementArchiveFilter = ["all", "unread", "withdrawn"].includes(candidate.announcementArchiveFilter) ? candidate.announcementArchiveFilter : restored.announcementArchiveFilter;
+  restored.hoursWeekScope = typeof candidate.hoursWeekScope === "string" ? candidate.hoursWeekScope : restored.hoursWeekScope;
+  restored.hoursWeekScopeTouched = candidate.hoursWeekScopeTouched === true;
+  restored.invoiceDetailCollapsed = candidate.invoiceDetailCollapsed === true;
+  restored.adminTaskMonthState = candidate.adminTaskMonthState && typeof candidate.adminTaskMonthState === "object" && !Array.isArray(candidate.adminTaskMonthState)
+    ? candidate.adminTaskMonthState
+    : restored.adminTaskMonthState;
+  restored.settings = Object.assign({}, restored.settings, candidate.settings || {});
+
+  return restored;
+}
+
 let state = loadState();
-if (API_ENABLED) loadStateFromServer();
 let modalAction = null;
 let modalSecondaryAction = null;
 let adminTaskWorkflow = null;
@@ -948,14 +1091,55 @@ function persistState() {
   const copy = JSON.parse(JSON.stringify(state));
   copy.currentRole = null;
   copy.invoiceFilter = "all";
+
   if (LOCAL_STORAGE_ENABLED) {
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(copy));
+      if (API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative()) {
+        // In auth-mode only persist UI state; business data is authoritative on server
+        const uiState = {
+          schemaVersion: state.schemaVersion,
+          currentRole: null,
+          currentEmployeeId: state.currentEmployeeId,
+          currentAdminId: state.currentAdminId,
+          selectedPeriodKey: state.selectedPeriodKey,
+          preferences: state.preferences,
+          invoiceFilter: "all",
+          approvalScope: state.approvalScope,
+          employeeScope: state.employeeScope,
+          dashboardTeamScope: state.dashboardTeamScope,
+          announcementArchiveFilter: state.announcementArchiveFilter,
+          hoursWeekScope: state.hoursWeekScope,
+          hoursWeekScopeTouched: state.hoursWeekScopeTouched,
+          invoiceDetailCollapsed: state.invoiceDetailCollapsed,
+          adminTaskFilter: state.adminTaskFilter,
+          adminTaskMonthState: state.adminTaskMonthState,
+          settings: {
+            brandPrimary: state.settings.brandPrimary,
+            brandAccent: state.settings.brandAccent,
+            brandLogo: state.settings.brandLogo,
+            weeklyReminderEnabled: state.settings.weeklyReminderEnabled,
+            weeklyReminderDay: state.settings.weeklyReminderDay,
+            weeklyReminderTime: state.settings.weeklyReminderTime,
+            monthEndReminderEnabled: state.settings.monthEndReminderEnabled,
+            monthEndReminderTime: state.settings.monthEndReminderTime,
+            overdueReminderEnabled: state.settings.overdueReminderEnabled,
+            overdueReminderTime: state.settings.overdueReminderTime,
+            approvalReminderEnabled: state.settings.approvalReminderEnabled,
+            approvalReminderTime: state.settings.approvalReminderTime,
+            customerTimesheetReminderEnabled: state.settings.customerTimesheetReminderEnabled,
+            customerTimesheetReminderTime: state.settings.customerTimesheetReminderTime,
+            customerTimesheetOverdueWorkdays: state.settings.customerTimesheetOverdueWorkdays
+          }
+        };
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(uiState));
+      } else {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(copy));
+      }
     } catch (e) {
       console.warn("Failed to write state to localStorage", e);
     }
   }
-  if (API_ENABLED) {
+  if (API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative()) {
     try {
       requestAuthCsrf().then(token => fetch(API_STATE_PATH, {
         method: "POST",
@@ -969,7 +1153,7 @@ function persistState() {
 }
 
 function loadStateFromServer() {
-  if (!API_ENABLED) return;
+  if (!API_ENABLED || isLocalResetAuthoritative()) return;
   try {
     fetch(API_STATE_PATH, { method: "GET", headers: { "Accept": "application/json" } })
       .then(resp => {
@@ -979,7 +1163,9 @@ function loadStateFromServer() {
       .then(data => {
         if (data && data.state) {
           try {
-            state = Object.assign(freshState(), data.state);
+            const merged = Object.assign(freshState(), data.state);
+            const fallback = freshState();
+            state = ensureSeedDataIntegrity(merged, fallback, "server-state");
             renderAll();
           } catch (e) {
             console.warn("Failed to apply server state", e);
@@ -997,6 +1183,9 @@ const readApiDebug = {
   dashboard: null,
   invoices: null,
   invoicesByPeriod: {},
+  emailQueue: null,
+  notifications: null,
+  announcements: null,
   customerTimesheetsByPeriod: {}
 };
 
@@ -1004,12 +1193,23 @@ const readApiRuntime = {
   bootstrapInFlight: false,
   dashboardInFlight: false,
   invoicesInFlight: false,
+  emailQueueInFlight: false,
+  notificationsInFlight: false,
+  announcementsInFlight: false,
   customerTimesheetsInFlight: {},
+  timesheetsInFlight: {},
   lastBootstrapAt: 0,
   lastDashboardAt: 0,
   lastInvoicesAt: 0,
+  lastEmailQueueAt: 0,
+  lastNotificationsAt: 0,
+  lastAnnouncementsAt: 0,
   lastInvoicesByPeriod: {},
-  lastCustomerTimesheetsByPeriod: {}
+  lastCustomerTimesheetsByPeriod: {},
+  lastTimesheetsByKey: {},
+  employeeOpenTasksSyncInFlight: false,
+  lastEmployeeOpenTasksSyncAt: 0,
+  employeeOpenTasksHydrated: false
 };
 
 window.__PATH_READ_API = readApiDebug;
@@ -1018,6 +1218,9 @@ const readApiSource = {
   bootstrap: "fallback",
   dashboard: "fallback",
   invoices: "fallback",
+  emailQueue: "fallback",
+  notifications: "fallback",
+  announcements: "fallback",
   customerTimesheets: "fallback",
   overall: "fallback"
 };
@@ -1201,15 +1404,56 @@ function prefillAuthCredentialsFromSelection(role, showFeedback = true) {
   });
 }
 
+function triggerLoginChoice(role) {
+  if (authRuntime.mode === "demo") {
+    login(role);
+    return;
+  }
+
+  if (authRuntime.mode !== "auth") {
+    setAuthLoginFeedback("Inloggen is nog niet klaar. Wacht even en probeer opnieuw.", true);
+    return;
+  }
+
+  const account = selectedLoginAccount(role);
+  const form = document.querySelector("#auth-login-form");
+  const emailInput = document.querySelector("#auth-login-email");
+  const passwordInput = document.querySelector("#auth-login-password");
+  if (!account || !form || !emailInput || !passwordInput) {
+    setAuthLoginFeedback("Kies eerst een account om in te loggen.", true);
+    return;
+  }
+
+  const email = String(account.email || "").trim();
+  emailInput.value = email;
+  passwordInput.value = "";
+
+  requestLocalLoginHints().then(hints => {
+    const hintedPassword = role === "admin"
+      ? String(hints?.adminPassword || "").trim()
+      : String(hints?.employeePassword || "").trim();
+
+    if (hintedPassword) {
+      passwordInput.value = hintedPassword;
+      setAuthLoginFeedback("E-mail en lokaal demo-wachtwoord voorgeselecteerd. Inloggen wordt gestart.", false);
+      form.requestSubmit();
+      return;
+    }
+
+    setAuthLoginFeedback("E-mail voorgeselecteerd. Vul je wachtwoord in om door te gaan.", false);
+    passwordInput.focus();
+  });
+}
+
 function applyAuthUiMode(mode) {
   authRuntime.mode = mode;
   const authForm = document.querySelector("#auth-login-form");
   if (authForm) authForm.hidden = mode === "demo";
   if (mode === "auth") {
-    setDemoLoginEnabled(false);
+    setDemoLoginEnabled(true);
     setLoginAccountPickerEnabled(true);
     setAuthLoginEnabled(true);
-    setAuthModeIndicator("Auth-modus actief. Demo-rolknoppen zijn uitgeschakeld.", false);
+    setAuthModeIndicator("Auth-modus actief. Snelle accountkeuze en inloggen met e-mail/wachtwoord zijn beschikbaar.", false);
   } else if (mode === "demo") {
     setDemoLoginEnabled(true);
     setLoginAccountPickerEnabled(true);
@@ -1359,6 +1603,182 @@ function buildTimesheetWritePayload(action) {
   return payload;
 }
 
+function timesheetHistoryLabel(value) {
+  if (!value) return "";
+  const date = new Date(String(value));
+  if (Number.isNaN(date.getTime())) return String(value);
+  try {
+    return new Intl.DateTimeFormat("nl-NL", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Europe/Amsterdam"
+    }).format(date);
+  } catch {
+    return String(value);
+  }
+}
+
+function mapTimesheetCorrectionHistory(corrections) {
+  if (!Array.isArray(corrections)) return [];
+  return corrections.map((item, index) => ({
+    id: Number(item && item.id) || index + 1,
+    message: String(item && item.correction_message || ""),
+    requestedBy: String(item && item.requested_by_name || "Beheerder"),
+    requestedByUserId: Number(item && item.requested_by) || null,
+    requestedAt: timesheetHistoryLabel(item && item.requested_at),
+    requestedAtIso: item && item.requested_at ? String(item.requested_at) : null,
+    resubmittedAt: item && item.resubmitted_at ? timesheetHistoryLabel(item.resubmitted_at) : null,
+    resubmittedAtIso: item && item.resubmitted_at ? String(item.resubmitted_at) : null
+  }));
+}
+
+function applyTimesheetApiPayload(employeeId, periodKey, timesheet) {
+  if (!timesheet || typeof timesheet !== "object") return null;
+  const key = parsePeriodKey(periodKey) ? periodKey : currentPeriod().key;
+  const employee = employeeById(Number(employeeId));
+  if (!employee) return null;
+
+  const record = recordFor(Number(employeeId), key);
+  const period = periodFromKey(key);
+  const nextEntries = emptyEntries(period.key);
+  const dayEntryMap = new Map();
+
+  if (Array.isArray(timesheet.day_entries)) {
+    timesheet.day_entries.forEach(entry => {
+      if (!entry || !entry.work_date) return;
+      dayEntryMap.set(String(entry.work_date), Math.max(0, Number(entry.hours) || 0));
+    });
+  }
+
+  period.weekRows.forEach((week, weekIndex) => {
+    week.days.forEach((day, dayIndex) => {
+      if (!day) return;
+      const dateKey = String(period.year).padStart(4, "0") + "-" + String(period.monthIndex + 1).padStart(2, "0") + "-" + String(day.day).padStart(2, "0");
+      nextEntries[weekIndex][dayIndex] = Number(dayEntryMap.get(dateKey) || 0);
+    });
+  });
+
+  record.entries = nextEntries;
+  if (timesheet.contractual_hours !== undefined) record.contractHours = Number(timesheet.contractual_hours) || 0;
+  if (timesheet.leave_hours !== undefined) record.leave = Number(timesheet.leave_hours) || 0;
+  if (timesheet.sickness_hours !== undefined) record.sick = Number(timesheet.sickness_hours) || 0;
+
+  record.timesheetStatus = String(timesheet.status || record.timesheetStatus || "draft");
+  record.reviewNote = String(timesheet.review_note || "");
+  record.approvedAt = timesheet.approved_at ? String(timesheet.approved_at) : null;
+  record.approvedBy = Number(timesheet.approved_by) || null;
+  record.correctionHistory = mapTimesheetCorrectionHistory(timesheet.correction_history);
+
+  const version = Number(timesheet.version || 0);
+  record.serverVersion = Number.isFinite(version) && version > 0 ? version : null;
+
+  if (record.timesheetStatus === "approved") {
+    if (record.invoiceStatus !== "simulated") record.invoiceStatus = "ready";
+    if (record.payrollStatus !== "simulated") record.payrollStatus = "ready";
+  } else {
+    if (record.invoiceStatus !== "simulated") record.invoiceStatus = "concept";
+    if (record.payrollStatus !== "simulated") record.payrollStatus = "concept";
+  }
+
+  normalizeRecord(record, employee, key);
+  return record;
+}
+
+function writeTimesheetReviewToApi(action, options = {}) {
+  if (!API_ENABLED || authRuntime.mode !== "auth" || state.currentRole !== "admin") return Promise.resolve(null);
+
+  const employeeId = Number(options.employeeId || 0);
+  const periodKey = String(options.periodKey || currentPeriod().key);
+  const expectedVersion = Number(options.expectedVersion || 0);
+  const correctionMessage = String(options.correctionMessage || "").trim();
+
+  if (!employeeId || !parsePeriodKey(periodKey) || expectedVersion <= 0) {
+    return Promise.reject(new Error("Timesheet review mist employee, periode of serverversie."));
+  }
+
+  const payload = {
+    action,
+    period: periodKey,
+    employee_id: employeeId,
+    expected_version: expectedVersion
+  };
+
+  if (action === "request_correction") payload.correction_message = correctionMessage;
+
+  return requestAuthCsrf()
+    .then(token => fetch(WRITE_TIMESHEET_PATH, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify(payload)
+    }))
+    .then(resp => resp.json().catch(() => ({})).then(data => ({ ok: resp.ok, data })))
+    .then(result => {
+      if (!result.ok || !result.data || result.data.ok !== true) {
+        const message = String(result && result.data && result.data.message || "Reviewactie op server mislukt.");
+        throw new Error(message);
+      }
+      applyTimesheetApiPayload(employeeId, periodKey, result.data.timesheet);
+      return result.data;
+    });
+}
+
+function refreshTimesheetReadApi(periodKey, employeeId, force = false) {
+  if (!API_ENABLED || authRuntime.mode !== "auth") return Promise.resolve(null);
+  const period = parsePeriodKey(periodKey) ? periodKey : "";
+  const employee = Number(employeeId || 0);
+  if (!period || employee <= 0) return Promise.resolve(null);
+
+  const key = period + ":" + employee;
+  const now = Date.now();
+  const lastAt = Number(readApiRuntime.lastTimesheetsByKey[key] || 0);
+  if (!force && (readApiRuntime.timesheetsInFlight[key] || (now - lastAt) < 15000)) return Promise.resolve(null);
+
+  readApiRuntime.timesheetsInFlight[key] = true;
+  const endpoint = WRITE_TIMESHEET_PATH + "?period=" + encodeURIComponent(period) + "&employee_id=" + encodeURIComponent(String(employee));
+  return fetchReadApi(endpoint)
+    .then(data => {
+      readApiRuntime.lastTimesheetsByKey[key] = Date.now();
+      if (!data || data.found !== true || !data.timesheet) return null;
+      return applyTimesheetApiPayload(employee, period, data.timesheet);
+    })
+    .finally(() => {
+      readApiRuntime.timesheetsInFlight[key] = false;
+    });
+}
+
+function refreshEmployeeOpenTasksReadApi(force = false) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "employee")) return Promise.resolve(false);
+  const employee = currentEmployee();
+  if (!employee) return Promise.resolve(false);
+
+  const now = Date.now();
+  if (!force && (readApiRuntime.employeeOpenTasksSyncInFlight || (now - readApiRuntime.lastEmployeeOpenTasksSyncAt) < 10000)) {
+    return Promise.resolve(false);
+  }
+
+  const selectedPeriodKey = currentPeriod().key;
+  const periodKeys = parsePeriodKey(selectedPeriodKey) ? [selectedPeriodKey] : [];
+  if (!periodKeys.length) return Promise.resolve(false);
+
+  readApiRuntime.employeeOpenTasksSyncInFlight = true;
+  let changed = false;
+  return periodKeys.reduce((chain, periodKey) => chain.then(() =>
+    refreshTimesheetReadApi(periodKey, employee.id, force)
+      .then(record => {
+        if (record) changed = true;
+      })
+      .catch(() => null)
+  ), Promise.resolve())
+    .then(() => changed)
+    .finally(() => {
+      readApiRuntime.employeeOpenTasksSyncInFlight = false;
+      readApiRuntime.lastEmployeeOpenTasksSyncAt = Date.now();
+    });
+}
+
 function writeTimesheetToApi(action) {
   if (!API_ENABLED || authRuntime.mode !== "auth" || state.currentRole !== "employee") return Promise.resolve(null);
   const payload = buildTimesheetWritePayload(action);
@@ -1372,21 +1792,32 @@ function writeTimesheetToApi(action) {
     .then(resp => resp.json().catch(() => ({})).then(data => ({ ok: resp.ok, data })))
     .then(result => {
       if (!result.ok || !result.data || result.data.ok !== true) {
-        const message = String(result && result.data && result.data.message || "Opslaan op server mislukt.");
-        throw new Error(message);
+        const raw = result && result.data && result.data.message;
+        const normalizedRaw = String(raw || "").toLowerCase();
+        const invalidTransition = result && result.data && result.data.error === "invalid-timesheet-transition";
+        const lockedByApprovalOrInvoice = /approved or invoiced timesheets cannot be changed/.test(normalizedRaw);
+        if (invalidTransition) {
+          throw new Error("Deze urenstaat is al ingediend. Alleen concepten en correcties kunnen worden ingediend.");
+        }
+        if (lockedByApprovalOrInvoice) {
+          const employee = currentEmployee();
+          const periodKey = String(payload.period || currentPeriod().key);
+          return refreshTimesheetReadApi(periodKey, employee.id, true).catch(() => null).then(() => {
+            renderHoursGrid();
+            throw new Error("Deze maand is al goedgekeurd of gefactureerd en kan niet meer worden aangepast.");
+          });
+        }
+        throw new Error(String(raw || "Opslaan op server mislukt."));
       }
       const employee = currentEmployee();
-      const record = recordFor(employee.id);
-      const version = Number(result.data && result.data.timesheet && result.data.timesheet.version);
-      if (Number.isFinite(version) && version > 0) {
-        record.serverVersion = version;
-      }
+      const periodKey = String(payload.period || currentPeriod().key);
+      applyTimesheetApiPayload(employee.id, periodKey, result.data && result.data.timesheet);
       return result.data;
     });
 }
 
 function isCustomerTimesheetApiMode() {
-  return API_ENABLED && authRuntime.mode === "auth";
+  return API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative();
 }
 
 function isCustomerTimesheetAdminApiMode() {
@@ -1489,12 +1920,13 @@ function scheduleDraftTimesheetWrite() {
     }).catch(error => {
       writeRuntime.lastDraftSignature = "";
       const now = Date.now();
+      const message = String(error && error.message || "");
       if (now - writeRuntime.lastDraftErrorAt > 4000) {
-        toast("Concept kon niet op de server worden opgeslagen. Controleer je sessie en probeer opnieuw.");
+        toast(message || "Concept kon niet op de server worden opgeslagen. Controleer je sessie en probeer opnieuw.");
         writeRuntime.lastDraftErrorAt = now;
       }
       const autosaveStatus = document.querySelector("#hours-autosave-status");
-      if (autosaveStatus) autosaveStatus.textContent = "Niet gesynchroniseerd met server.";
+      if (autosaveStatus) autosaveStatus.textContent = message ? "Niet gesynchroniseerd: " + message : "Niet gesynchroniseerd met server.";
       console.warn("Draft save via write API failed", error);
     }).finally(() => {
       writeRuntime.draftInFlight = false;
@@ -1514,6 +1946,7 @@ function initializeAuthSession() {
       authRuntime.checked = true;
       authRuntime.available = true;
       applyAuthUiMode("auth");
+      triggerReadApiWarmup();
       prefillAuthCredentialsFromSelection("admin", false);
       if (data && data.ok === true && data.authenticated === true && data.user) {
         setAuthDebug({
@@ -1553,9 +1986,202 @@ function initializeAuthSession() {
     });
 }
 
+function triggerReadApiWarmup() {
+  if (!(API_ENABLED && authRuntime.mode === "auth") || isLocalResetAuthoritative()) return;
+  refreshBootstrapReadApi(true);
+  refreshDashboardReadApi(true);
+  refreshInvoicesReadApi("", true);
+  refreshInvoicesReadApi("2026-07", true);
+  refreshNotificationsReadApi(true);
+  refreshAnnouncementsReadApi(true);
+}
+
 function setReadApiSource(section, source) {
   readApiSource[section] = source;
-  readApiSource.overall = (readApiSource.bootstrap === "api" || readApiSource.dashboard === "api" || readApiSource.invoices === "api" || readApiSource.customerTimesheets === "api") ? "api" : "fallback";
+  readApiSource.overall = (readApiSource.bootstrap === "api" || readApiSource.dashboard === "api" || readApiSource.invoices === "api" || readApiSource.emailQueue === "api" || readApiSource.notifications === "api" || readApiSource.announcements === "api" || readApiSource.customerTimesheets === "api") ? "api" : "fallback";
+}
+
+function notificationTypeToLegacy(type) {
+  const raw = String(type || "").toLowerCase();
+  if (raw === "timesheet_submitted") return "submitted";
+  if (raw === "timesheet_reminder") return "reminder";
+  if (raw === "correction_required") return "correction";
+  if (raw === "timesheet_approved") return "approved";
+  if (raw === "invoice_ready") return "invoice";
+  if (raw === "customer_timesheet_received") return "customer-timesheet";
+  if (raw === "customer_timesheet_reminder") return "customer-timesheet-reminder";
+  if (raw === "customer_timesheet_approved") return "customer-timesheet";
+  if (raw === "customer_timesheet_resubmit") return "customer-timesheet";
+  if (raw === "announcement") return "announcement";
+  return raw || "notification";
+}
+
+function notificationTargetView(route) {
+  const normalized = String(route || "").toLowerCase();
+  if (!normalized) return state.currentRole === "employee" ? "employee-dashboard" : "dashboard";
+  if (normalized === "employee-announcements") return "employee-announcements";
+  return normalized;
+}
+
+function applyNotificationsApiPayload(data) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && data && Array.isArray(data.items))) return false;
+  const role = String(state.currentRole || "");
+  const employee = role === "employee" ? currentEmployee() : null;
+  state.notifications = data.items.map(item => ({
+    id: Number(item && item.id || 0),
+    audience: role === "admin" ? "admin" : "employee",
+    type: notificationTypeToLegacy(item && item.notification_type),
+    notificationType: String(item && item.notification_type || ""),
+    employeeId: employee ? Number(employee.id) : null,
+    title: String(item && item.title || "Nieuwe melding"),
+    message: String(item && item.message || ""),
+    periodKey: parsePeriodKey(String(item && item.period_key || "")) ? String(item.period_key) : "",
+    view: notificationTargetView(item && item.target_route),
+    announcementId: Number(item && item.announcement_id || 0) || null,
+    emailRequested: false,
+    read: Boolean(item && item.read),
+    createdAt: String(item && item.created_at || "")
+  })).filter(item => item.id > 0);
+  return true;
+}
+
+function postNotificationsApi(payload) {
+  if (!(API_ENABLED && authRuntime.mode === "auth")) return Promise.resolve(null);
+  return requestAuthCsrf()
+    .then(token => fetch(READ_API_NOTIFICATIONS_PATH, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify(payload || {})
+    }))
+    .then(resp => resp.json().catch(() => ({})).then(data => ({ ok: resp.ok, data })))
+    .then(result => {
+      if (!result.ok || !result.data || result.data.ok !== true) {
+        throw new Error(String(result && result.data && result.data.message || "Notificatieactie op server mislukt."));
+      }
+      return result.data;
+    });
+}
+
+function markNotificationReadApi(notificationId) {
+  const id = Number(notificationId || 0);
+  if (!(API_ENABLED && authRuntime.mode === "auth") || id <= 0) return Promise.resolve(null);
+  return postNotificationsApi({ action: "mark_read", notification_id: id });
+}
+
+function markAllNotificationsReadApi() {
+  if (!(API_ENABLED && authRuntime.mode === "auth")) return Promise.resolve(null);
+  return postNotificationsApi({ action: "mark_all_read" });
+}
+
+function markAnnouncementReadApi(announcementId) {
+  const id = Number(announcementId || 0);
+  if (!(API_ENABLED && authRuntime.mode === "auth") || id <= 0) return Promise.resolve(null);
+  return postNotificationsApi({ action: "mark_announcement_read", announcement_id: id });
+}
+
+function refreshNotificationsReadApi(force = false) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && state.currentRole)) return Promise.resolve(null);
+  const now = Date.now();
+  if (!force && (readApiRuntime.notificationsInFlight || (now - readApiRuntime.lastNotificationsAt) < 8000)) return Promise.resolve(null);
+  readApiRuntime.notificationsInFlight = true;
+  return fetchReadApi(READ_API_NOTIFICATIONS_PATH + "?limit=50")
+    .then(data => {
+      readApiRuntime.lastNotificationsAt = Date.now();
+      if (!data) {
+        setReadApiSource("notifications", "fallback");
+        return null;
+      }
+      readApiDebug.notifications = data;
+      const applied = applyNotificationsApiPayload(data);
+      setReadApiSource("notifications", applied ? "api" : "fallback");
+      if (applied) {
+        renderNotifications();
+        renderEmployeeAnnouncementArchive();
+      }
+      return data;
+    })
+    .finally(() => {
+      readApiRuntime.notificationsInFlight = false;
+    });
+}
+
+function applyAnnouncementsApiPayload(data) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && data && Array.isArray(data.items))) return false;
+  const isAdmin = state.currentRole === "admin";
+  state.announcements = data.items.map(item => {
+    const base = {
+      id: Number(item.id || 0),
+      kind: String(item.kind || "standard"),
+      status: String(item.status || "sent"),
+      title: String(item.title || ""),
+      message: String(item.message || ""),
+      createdBy: String(item.created_by || "Beheerder"),
+      createdAt: String(item.created_at || ""),
+      createdAtIso: String(item.created_at || ""),
+      updatedAt: String(item.updated_at || item.created_at || ""),
+      updatedAtIso: String(item.updated_at || item.created_at || ""),
+      withdrawalOfId: item.withdrawal_of_id ? Number(item.withdrawal_of_id) : null,
+      correctionOfId: item.correction_of_id ? Number(item.correction_of_id) : null,
+      supersededById: item.superseded_by_id ? Number(item.superseded_by_id) : null,
+      withdrawalReason: item.withdrawal_reason || null,
+      withdrawnAt: item.withdrawn_at ? String(item.withdrawn_at) : null
+    };
+    if (isAdmin) {
+      Object.assign(base, {
+        audienceLabel: String(item.audience_label || ""),
+        emailRequested: Boolean(item.email_requested),
+        emailRecipientIds: [],
+        recipientIds: Array.isArray(item.recipient_user_ids) ? item.recipient_user_ids.map(Number) : [],
+        audienceValue: "fixed"
+      });
+    }
+    return base;
+  }).filter(item => item.id > 0);
+  if (isAdmin) applyAnnouncementSupersession(state);
+  return true;
+}
+
+function writeAnnouncementToApi(action, payload) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin")) return Promise.resolve(null);
+  return requestAuthCsrf()
+    .then(token => fetch(READ_API_ANNOUNCEMENTS_PATH, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify(Object.assign({ action }, payload || {}))
+    }))
+    .then(resp => resp.json().catch(() => ({})).then(data => ({ ok: resp.ok, data })))
+    .then(result => {
+      if (!result.ok || !result.data || result.data.ok !== true) {
+        throw new Error(String(result && result.data && result.data.message || "Mededelingactie op server mislukt."));
+      }
+      return result.data;
+    });
+}
+
+function refreshAnnouncementsReadApi(force = false) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && state.currentRole)) return Promise.resolve(null);
+  const now = Date.now();
+  if (!force && (readApiRuntime.announcementsInFlight || (now - readApiRuntime.lastAnnouncementsAt) < 10000)) return Promise.resolve(null);
+  readApiRuntime.announcementsInFlight = true;
+  return fetchReadApi(READ_API_ANNOUNCEMENTS_PATH + "?limit=100")
+    .then(data => {
+      readApiRuntime.lastAnnouncementsAt = Date.now();
+      if (!data) {
+        setReadApiSource("announcements", "fallback");
+        return null;
+      }
+      readApiDebug.announcements = data;
+      const applied = applyAnnouncementsApiPayload(data);
+      setReadApiSource("announcements", applied ? "api" : "fallback");
+      if (applied) {
+        renderAnnouncements();
+        renderEmployeeAnnouncementArchive();
+      }
+      return data;
+    })
+    .finally(() => {
+      readApiRuntime.announcementsInFlight = false;
+    });
 }
 
 function firstBootstrapCompany(data) {
@@ -1582,11 +2208,39 @@ function mergeBootstrapIntoState(data) {
   const users = Array.isArray(data.users) ? data.users : [];
   const employees = Array.isArray(data.employees) ? data.employees : [];
   const assignments = Array.isArray(data.assignments) ? data.assignments : [];
+  const counterparties = Array.isArray(data.counterparties) ? data.counterparties : [];
+  const assignmentMailRoutes = Array.isArray(data.assignment_mail_routes) ? data.assignment_mail_routes : [];
   const recipients = Array.isArray(data.mail_recipients || data.mailRecipients) ? (data.mail_recipients || data.mailRecipients) : [];
+
+  state.settings.brandPrimary = normalizedBrandColor(String(company.brand_primary || state.settings.brandPrimary || "#0d1b38"), "#0d1b38");
+  state.settings.brandAccent = normalizedBrandColor(String(company.brand_accent || state.settings.brandAccent || "#3abd9d"), "#3abd9d");
+  state.settings.kvk = String(company.chamber_of_commerce_number || state.settings.kvk || "");
+  state.settings.vat = String(company.vat_number || state.settings.vat || "");
+  state.settings.iban = String(company.iban || state.settings.iban || "");
+  state.settings.address = String(company.address_line || state.settings.address || "");
+  state.settings.postalCity = [company.postal_code, company.city].filter(Boolean).join(" ").trim() || state.settings.postalCity;
+  if (company.customer_timesheet_reminder_enabled !== undefined && company.customer_timesheet_reminder_enabled !== null) {
+    state.settings.customerTimesheetReminderEnabled = Number(company.customer_timesheet_reminder_enabled) === 1;
+  }
+  if (company.customer_timesheet_reminder_time) {
+    state.settings.customerTimesheetReminderTime = String(company.customer_timesheet_reminder_time).slice(0, 5);
+  }
+  if (company.customer_timesheet_overdue_workdays !== undefined && company.customer_timesheet_overdue_workdays !== null) {
+    state.settings.customerTimesheetOverdueWorkdays = Number(company.customer_timesheet_overdue_workdays) || state.settings.customerTimesheetOverdueWorkdays;
+  }
 
   const companyUsers = users.filter(user => Number(user.company_id) === Number(company.id));
   const adminUsers = companyUsers.filter(user => String(user.role || "") === "administrator");
   const usersById = new Map(companyUsers.map(user => [Number(user.id), user]));
+  const employeesByDbId = new Map(employees.map(employee => [Number(employee.id), employee]));
+  const counterpartiesById = new Map(counterparties.map(counterparty => [Number(counterparty.id), counterparty]));
+  const routesByAssignment = new Map();
+  assignmentMailRoutes.forEach(route => {
+    const assignmentId = Number(route.assignment_id || 0);
+    if (!assignmentId) return;
+    if (!routesByAssignment.has(assignmentId)) routesByAssignment.set(assignmentId, []);
+    routesByAssignment.get(assignmentId).push(route);
+  });
 
   // Admin/users: merge by email; keep local role-specific fields intact.
   adminUsers.forEach(user => {
@@ -1596,9 +2250,11 @@ function mergeBootstrapIntoState(data) {
       existing.name = String(user.display_name || existing.name || "");
       existing.email = String(user.email || existing.email || "");
       existing.active = Number(user.active || 0) === 1;
+      existing.dbUserId = Number(user.id);
     } else {
       state.admins.push({
         id: "db-" + String(user.id),
+        dbUserId: Number(user.id),
         name: String(user.display_name || user.email || "Beheerder"),
         email: String(user.email || ""),
         active: Number(user.active || 0) === 1,
@@ -1610,6 +2266,7 @@ function mergeBootstrapIntoState(data) {
 
   // Employees: merge onto existing local model by full name or email to avoid breaking rich demo fields.
   const employeeByDbId = new Map();
+  const matchedDbEmployeeIds = new Set();
   state.employees.forEach(localEmployee => {
     const localName = String(localEmployee.name || "").trim().toLowerCase();
     const localEmail = String(localEmployee.email || "").trim().toLowerCase();
@@ -1622,9 +2279,12 @@ function mergeBootstrapIntoState(data) {
     if (!match) return;
 
     employeeByDbId.set(Number(match.id), localEmployee);
+  matchedDbEmployeeIds.add(Number(match.id));
     localEmployee.name = String(match.full_name || localEmployee.name || "");
     localEmployee.role = String(match.job_title || localEmployee.role || "");
     localEmployee.active = Number(match.active || 0) === 1;
+  localEmployee.dbEmployeeId = Number(match.id);
+    localEmployee.dbUserId = match.user_id ? Number(match.user_id) : null;
     if (match.employment_start_date) localEmployee.startDate = String(match.employment_start_date);
     if (match.weekly_contract_hours !== undefined && match.weekly_contract_hours !== null) {
       localEmployee.weeklyHours = Number(match.weekly_contract_hours);
@@ -1633,10 +2293,60 @@ function mergeBootstrapIntoState(data) {
     if (linkedUser && linkedUser.email) localEmployee.email = String(linkedUser.email);
   });
 
+  employees.forEach(dbEmployee => {
+    const dbId = Number(dbEmployee.id || 0);
+    if (!dbId || matchedDbEmployeeIds.has(dbId)) return;
+
+    const linkedUser = usersById.get(Number(dbEmployee.user_id));
+    const newEmployee = {
+      id: dbId,
+      dbEmployeeId: dbId,
+      dbUserId: dbEmployee.user_id ? Number(dbEmployee.user_id) : null,
+      name: String(dbEmployee.full_name || linkedUser && linkedUser.display_name || "Nieuwe medewerker"),
+      email: String(linkedUser && linkedUser.email || "nieuwe-medewerker@example.invalid"),
+      active: Number(dbEmployee.active || 0) === 1,
+      startDate: String(dbEmployee.employment_start_date || ""),
+      notificationsEnabled: true,
+      emailNotificationsEnabled: true,
+      invitationPending: false,
+      photo: "",
+      role: String(dbEmployee.job_title || ""),
+      client: "",
+      broker: "",
+      brokerEmail: "",
+      invoiceRecipientName: "",
+      brokerInvoiceAddress: "",
+      invoiceProject: "",
+      brokerMailEnabled: true,
+      rate: 0,
+      contract: "",
+      weeklyHours: Number(dbEmployee.weekly_contract_hours || 0),
+      projectCode: "",
+      invoiceTemplate: "{klant}-{jaar}-{maand}",
+      mailSubject: "Factuur {factuurnummer} - {medewerker} - {maand} {jaar}",
+      mailBody: DEFAULT_INVOICE_MAIL_BODY,
+      brokerInvoiceAttachment: true,
+      bookkeeperInvoiceAttachment: true,
+      payrollInvoiceAttachment: false,
+      mailRecipientRoutes: defaultMailRecipientRoutes(),
+      customerTimesheetExpected: true,
+      customerTimesheetDueWorkday: 5,
+      customerTimesheetBrokerEnabled: false,
+      customerTimesheetUseBrokerEmail: true,
+      customerTimesheetBrokerEmail: "",
+      invoiceWithoutCustomerTimesheetAllowed: true
+    };
+
+    state.employees.push(newEmployee);
+    employeeByDbId.set(dbId, newEmployee);
+    matchedDbEmployeeIds.add(dbId);
+  });
+
   // Assignments: merge selected mapping-friendly fields onto existing employee profiles.
   assignments.forEach(assignment => {
     const localEmployee = employeeByDbId.get(Number(assignment.employee_id));
     if (!localEmployee) return;
+    localEmployee.dbAssignmentId = Number(assignment.id || 0);
     if (assignment.hourly_rate !== undefined && assignment.hourly_rate !== null) localEmployee.rate = Number(assignment.hourly_rate);
     if (assignment.invoice_project_name) localEmployee.invoiceProject = String(assignment.invoice_project_name);
     if (assignment.project_code) localEmployee.projectCode = String(assignment.project_code);
@@ -1648,6 +2358,35 @@ function mergeBootstrapIntoState(data) {
       localEmployee.customerTimesheetDueWorkday = Number(assignment.customer_timesheet_due_workday);
     }
     if (assignment.customer_timesheet_broker_email) localEmployee.customerTimesheetBrokerEmail = String(assignment.customer_timesheet_broker_email);
+
+    const client = counterpartiesById.get(Number(assignment.client_id || 0));
+    const broker = counterpartiesById.get(Number(assignment.broker_id || 0));
+    if (client) {
+      localEmployee.client = String(client.trade_name || client.legal_name || localEmployee.client || "");
+    }
+    if (broker) {
+      localEmployee.broker = String(broker.trade_name || broker.legal_name || localEmployee.broker || "");
+      localEmployee.brokerEmail = String(broker.invoice_email || localEmployee.brokerEmail || "");
+      const brokerAddress = [broker.invoice_address_line, [broker.invoice_postal_code, broker.invoice_city].filter(Boolean).join(" ").trim()]
+        .filter(Boolean)
+        .join("\n");
+      if (brokerAddress) {
+        localEmployee.brokerInvoiceAddress = brokerAddress;
+      }
+    }
+
+    const routes = routesByAssignment.get(Number(assignment.id || 0)) || [];
+    if (!localEmployee.mailRecipientRoutes || typeof localEmployee.mailRecipientRoutes !== "object") {
+      localEmployee.mailRecipientRoutes = defaultMailRecipientRoutes();
+    }
+    routes.forEach(route => {
+      const key = String(route.recipient_key || route.mail_recipient_id || "").trim();
+      if (!key) return;
+      localEmployee.mailRecipientRoutes[key] = {
+        enabled: Number(route.enabled || 0) === 1,
+        invoiceAttachment: Number(route.include_invoice_pdf || 0) === 1
+      };
+    });
   });
 
   // Mail recipients: merge by key/id where possible, add only missing recipients with safe defaults.
@@ -1669,6 +2408,21 @@ function mergeBootstrapIntoState(data) {
         active: Number(recipient.active || 0) === 1
       });
     }
+  });
+
+  Object.keys(state.records).forEach(periodKey => {
+    state.employees.forEach(employee => {
+      if (!state.records[periodKey][String(employee.id)]) {
+        state.records[periodKey][String(employee.id)] = makeRecord(
+          0,
+          defaultContractHours(employee, periodKey),
+          "draft",
+          "concept",
+          invoiceNumberFor(employee.id, periodKey),
+          periodKey
+        );
+      }
+    });
   });
 
   return true;
@@ -1705,8 +2459,73 @@ function invoiceApiRowsForPeriod(periodKey) {
   }));
 }
 
+function emailQueueItemsByInvoiceId(periodKey) {
+  const rows = invoiceApiRowsForPeriod(periodKey) || [];
+  const invoiceIds = new Set(rows.map(row => Number(row.id || 0)).filter(id => id > 0));
+  const queueItems = Array.isArray(readApiDebug.emailQueue && readApiDebug.emailQueue.items)
+    ? readApiDebug.emailQueue.items
+    : [];
+  const byInvoice = new Map();
+  queueItems.forEach(item => {
+    const invoiceId = Number(item && item.invoice_id || 0);
+    if (invoiceId <= 0 || !invoiceIds.has(invoiceId)) return;
+    const status = String(item && item.status || "").toLowerCase();
+    if (!status) return;
+    if (!byInvoice.has(invoiceId)) byInvoice.set(invoiceId, []);
+    byInvoice.get(invoiceId).push({
+      status,
+      channel: String(item && item.channel || "")
+    });
+  });
+  return byInvoice;
+}
+
+function syncInvoiceStatusesFromApi(periodKey) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin")) return false;
+  const key = parsePeriodKey(periodKey) ? periodKey : "";
+  if (!key) return false;
+
+  const rows = invoiceApiRowsForPeriod(key);
+  if (!rows || !rows.length) return false;
+
+  const deliveriesByInvoice = emailQueueItemsByInvoiceId(key);
+  let changed = false;
+
+  state.employees
+    .filter(employee => employeeStartedByPeriodEnd(employee, key))
+    .forEach(employee => {
+      const record = recordFor(employee.id, key);
+      const row = rows.find(item => item.invoiceNumber === record.invoiceNumber)
+        || rows.find(item => item.employeeName === employee.name);
+      if (!row) return;
+
+      const deliveries = deliveriesByInvoice.get(Number(row.id)) || [];
+      const hasDeliveryProof = deliveries.some(item => ["queued", "sent", "failed"].includes(item.status));
+      const nextInvoiceStatus = hasDeliveryProof ? "simulated" : row.status;
+      const nextPayrollStatus = hasDeliveryProof
+        ? "simulated"
+        : (nextInvoiceStatus === "ready" ? "ready" : "concept");
+
+      if (record.invoiceNumber !== row.invoiceNumber && row.invoiceNumber) {
+        record.invoiceNumber = row.invoiceNumber;
+        changed = true;
+      }
+      if (record.invoiceStatus !== nextInvoiceStatus) {
+        record.invoiceStatus = nextInvoiceStatus;
+        changed = true;
+      }
+      if (record.payrollStatus !== nextPayrollStatus) {
+        record.payrollStatus = nextPayrollStatus;
+        changed = true;
+      }
+      normalizeRecord(record, employee, key);
+    });
+
+  return changed;
+}
+
 function fetchReadApi(path) {
-  if (!API_ENABLED) return Promise.resolve(null);
+  if (!API_ENABLED || isLocalResetAuthoritative()) return Promise.resolve(null);
   try {
     return fetch(path, { method: "GET", headers: { "Accept": "application/json" } })
       .then(resp => {
@@ -1728,6 +2547,7 @@ function fetchReadApi(path) {
 }
 
 function refreshDashboardReadApi(force) {
+  if (!(API_ENABLED && authRuntime.mode === "auth")) return;
   const now = Date.now();
   if (!force && (readApiRuntime.dashboardInFlight || (now - readApiRuntime.lastDashboardAt) < 15000)) return;
   readApiRuntime.dashboardInFlight = true;
@@ -1746,6 +2566,7 @@ function refreshDashboardReadApi(force) {
 }
 
 function refreshBootstrapReadApi(force) {
+  if (!(API_ENABLED && authRuntime.mode === "auth")) return;
   const now = Date.now();
   if (!force && (readApiRuntime.bootstrapInFlight || (now - readApiRuntime.lastBootstrapAt) < 30000)) return;
   readApiRuntime.bootstrapInFlight = true;
@@ -1773,15 +2594,16 @@ function refreshBootstrapReadApi(force) {
 }
 
 function refreshInvoicesReadApi(periodKey, force) {
+  if (!(API_ENABLED && authRuntime.mode === "auth")) return Promise.resolve(null);
   const period = parsePeriodKey(periodKey) ? periodKey : "";
   const now = Date.now();
   const lastAt = period ? Number(readApiRuntime.lastInvoicesByPeriod[period] || 0) : readApiRuntime.lastInvoicesAt;
-  if (!force && (readApiRuntime.invoicesInFlight || (now - lastAt) < 15000)) return;
+  if (!force && (readApiRuntime.invoicesInFlight || (now - lastAt) < 15000)) return Promise.resolve(null);
   readApiRuntime.invoicesInFlight = true;
   const endpoint = period
     ? READ_API_INVOICES_PATH + "?period=" + encodeURIComponent(period)
     : READ_API_INVOICES_PATH;
-  fetchReadApi(endpoint)
+  return fetchReadApi(endpoint)
     .then(data => {
       const fetchedAt = Date.now();
       if (period) readApiRuntime.lastInvoicesByPeriod[period] = fetchedAt;
@@ -1789,12 +2611,39 @@ function refreshInvoicesReadApi(periodKey, force) {
       if (!data) return;
       if (period) readApiDebug.invoicesByPeriod[period] = data;
       else readApiDebug.invoices = data;
+      if (period) syncInvoiceStatusesFromApi(period);
       console.log(period ? "[read-api] invoices(" + period + ")" : "[read-api] invoices", data);
       const invoicesViewActive = document.querySelector("#view-invoices")?.classList.contains("is-active");
       if (invoicesViewActive && (!period || period === currentPeriod().key)) renderInvoices();
     })
     .finally(() => {
       readApiRuntime.invoicesInFlight = false;
+    });
+}
+
+function refreshEmailQueueReadApi(force = false) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin")) return Promise.resolve(null);
+  const now = Date.now();
+  if (!force && (readApiRuntime.emailQueueInFlight || (now - readApiRuntime.lastEmailQueueAt) < 15000)) return Promise.resolve(null);
+  readApiRuntime.emailQueueInFlight = true;
+
+  return fetchReadApi("/server/api/email-queue.php?limit=100")
+    .then(data => {
+      readApiRuntime.lastEmailQueueAt = Date.now();
+      if (!data) {
+        setReadApiSource("emailQueue", "fallback");
+        return null;
+      }
+      readApiDebug.emailQueue = data;
+      setReadApiSource("emailQueue", "api");
+      const changed = syncInvoiceStatusesFromApi(currentPeriod().key);
+      if (changed && (document.querySelector("#view-invoices")?.classList.contains("is-active") || document.querySelector("#view-dashboard")?.classList.contains("is-active"))) {
+        renderAll();
+      }
+      return data;
+    })
+    .finally(() => {
+      readApiRuntime.emailQueueInFlight = false;
     });
 }
 
@@ -2445,6 +3294,31 @@ function renderEmployeeCustomerTimesheet(record, employee, period) {
 
 function renderEmployeeDashboard() {
   const employee = currentEmployee();
+  const employeeId = Number(employee.id);
+  const selectedPeriodAtRender = currentPeriod().key;
+  const needsInitialHydration = API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "employee" && !readApiRuntime.employeeOpenTasksHydrated;
+  if (needsInitialHydration && !readApiRuntime.employeeOpenTasksSyncInFlight) {
+    refreshEmployeeOpenTasksReadApi(true)
+      .then(() => {
+        readApiRuntime.employeeOpenTasksHydrated = true;
+      })
+      .catch(() => {
+        readApiRuntime.employeeOpenTasksHydrated = true;
+      })
+      .finally(() => {
+        const stillEmployeeView = document.querySelector("#view-employee-dashboard")?.classList.contains("is-active");
+        const stillSameEmployee = Number(currentEmployee().id) === employeeId;
+        const stillSamePeriod = currentPeriod().key === selectedPeriodAtRender;
+        if (stillEmployeeView && stillSameEmployee && stillSamePeriod) renderEmployeeDashboard();
+      });
+  }
+  refreshEmployeeOpenTasksReadApi(false).then(changed => {
+    if (!changed) return;
+    const stillEmployeeView = document.querySelector("#view-employee-dashboard")?.classList.contains("is-active");
+    const stillSameEmployee = Number(currentEmployee().id) === employeeId;
+    const stillSamePeriod = currentPeriod().key === selectedPeriodAtRender;
+    if (stillEmployeeView && stillSameEmployee && stillSamePeriod) renderEmployeeDashboard();
+  }).catch(() => null);
   const record = recordFor(employee.id);
   const period = currentPeriod();
   const total = totalEntries(record.entries);
@@ -2479,6 +3353,18 @@ function renderEmployeeDashboard() {
     action = customerTimesheetOpen ? "Klanturenstaat aanleveren" : "Goedgekeurde uren bekijken";
     note = customerTimesheetOpen ? "Uren afgerond · klanturenstaat open" : "Afgerond";
   }
+  const openMonthSummaries = employeeOpenMonthSummaries(employee.id, period.key);
+  const employeeOpenActions = openMonthSummaries.flatMap(item => item.actions);
+  const openHoursCount = employeeOpenActions.filter(item => item.type === "hours").length;
+  const openCustomerCount = employeeOpenActions.filter(item => item.type === "customer").length;
+  const dashboardBadge = document.querySelector("#employee-dashboard-count");
+  if (dashboardBadge) {
+    const openCount = employeeOpenActions.length;
+    dashboardBadge.textContent = String(openCount);
+    dashboardBadge.hidden = openCount === 0;
+    if (openCount > 0) dashboardBadge.setAttribute("aria-label", openCount + " open actie" + (openCount === 1 ? "" : "s") + " op je dashboard");
+    else dashboardBadge.removeAttribute("aria-label");
+  }
   document.querySelector("#employee-dashboard-greeting").textContent = greetingForNow() + ", " + firstName;
   document.querySelector("#employee-dashboard-next").textContent = next;
   document.querySelector("#employee-dashboard-action").textContent = action;
@@ -2486,6 +3372,9 @@ function renderEmployeeDashboard() {
   document.querySelector("#employee-dashboard-hours").textContent = hoursFormat.format(accounted) + " uur";
   document.querySelector("#employee-dashboard-contract").textContent = "van " + hoursFormat.format(record.contractHours) + " contracturen";
   document.querySelector("#employee-dashboard-progress").style.width = progress + "%";
+  document.querySelector("#employee-open-task-total").textContent = employeeOpenActions.length + " open " + (employeeOpenActions.length === 1 ? "actie" : "acties");
+  document.querySelector("#employee-open-task-months").textContent = employeeOpenActions.length ? employeeOpenMonthEquation(openMonthSummaries) : "Alles afgerond";
+  document.querySelector("#employee-open-task-owners").textContent = "Urenregistraties " + openHoursCount + " + klanturenstaten " + openCustomerCount + " = " + employeeOpenActions.length;
   document.querySelector("#employee-dashboard-status").textContent = status[0];
   document.querySelector("#employee-dashboard-status-note").textContent = note;
   document.querySelector("#employee-dashboard-billable").textContent = hoursFormat.format(total);
@@ -2501,6 +3390,25 @@ function renderEmployeeDashboard() {
   }
 
   renderEmployeeCustomerTimesheet(record, employee, period);
+
+  const openOverview = document.querySelector('#employee-open-overview');
+  const openOverviewCount = document.querySelector('#employee-open-overview-count');
+  const openOverviewList = document.querySelector('#employee-open-overview-list');
+  if (openOverview && openOverviewCount && openOverviewList) {
+    openOverview.hidden = openMonthSummaries.length === 0;
+    openOverviewCount.textContent = openMonthSummaries.length + ' open maand' + (openMonthSummaries.length === 1 ? '' : 'en');
+    openOverviewList.innerHTML = openMonthSummaries.map(item => {
+      const monthBodyId = 'employee-open-month-body-' + item.periodKey;
+      const actionCount = item.actions.length;
+      return '<section class="employee-open-month' + (item.current ? ' is-current' : '') + '" data-employee-open-month="' + item.periodKey + '">' +
+        '<button class="employee-open-month-heading" type="button" data-employee-open-month-toggle="' + item.periodKey + '" aria-expanded="false" aria-controls="' + monthBodyId + '">' +
+          '<span class="employee-open-month-heading-copy"><strong>' + escapeHtml(item.period.label) + ' · ' + actionCount + ' open ' + (actionCount === 1 ? 'actie' : 'acties') + '</strong><small>' + escapeHtml(item.notes) + '</small></span>' +
+          '<span class="employee-open-month-heading-side"><span class="status-pill ' + item.tone + '">' + escapeHtml(item.label) + '</span><span class="employee-open-month-chevron" aria-hidden="true"></span></span>' +
+        '</button>' +
+        '<div class="employee-open-month-body" id="' + monthBodyId + '" hidden><div class="employee-open-month-body-copy"><div class="employee-open-month-tags">' + item.actions.map(action => '<span class="employee-open-tag ' + action.tone + '">' + escapeHtml(action.label) + '</span>').join('') + '</div><button class="small-button" type="button" data-employee-open-month-open="' + item.periodKey + '">Open maand</button></div></div>' +
+      '</section>';
+    }).join('');
+  }
 
   const history = Object.keys(state.records)
     .sort((left, right) => right.localeCompare(left))
@@ -2553,6 +3461,70 @@ function adminOpenTasks() {
   return tasks.sort((left, right) => left.periodKey.localeCompare(right.periodKey) || Number(right.actionable) - Number(left.actionable) || left.priority - right.priority || left.employee.name.localeCompare(right.employee.name));
 }
 
+function employeeOpenTasks(employeeId) {
+  return adminOpenTasks().filter(task => Number(task.employee.id) === Number(employeeId));
+}
+
+function employeeOpenMonthSummaries(employeeId, currentPeriodKey) {
+  const employee = employeeById(employeeId);
+  if (!employee) return [];
+
+  return Object.keys(state.records)
+    .filter(key => parsePeriodKey(key))
+    .sort()
+    .map(key => {
+      const historyRecord = recordFor(employee.id, key);
+      if (!recordHasPeriodActivity(historyRecord)) return null;
+      const customerRecord = customerTimesheetFor(historyRecord);
+      const actions = [];
+
+      if (historyRecord.timesheetStatus === 'draft') {
+        actions.push({ type: 'hours', label: 'Uren indienen', tone: 'status-concept' });
+      } else if (historyRecord.timesheetStatus === 'correction') {
+        actions.push({ type: 'hours', label: 'Correctie indienen', tone: 'status-warning' });
+      }
+
+      if (employee.customerTimesheetExpected !== false) {
+        if (customerRecord.status === 'missing' || customerRecord.status === 'draft') {
+          actions.push({ type: 'customer', label: 'Klanturenstaat uploaden', tone: 'status-concept' });
+        } else if (customerRecord.status === 'resubmit') {
+          actions.push({ type: 'customer', label: 'Klanturenstaat opnieuw uploaden', tone: 'status-warning' });
+        }
+      }
+
+      if (!actions.length) return null;
+
+      const hourAction = actions.find(action => action.type === 'hours');
+      const customerAction = actions.find(action => action.type === 'customer');
+      const notes = [];
+      if (hourAction) notes.push(hourAction.label);
+      if (customerAction) notes.push(customerAction.label);
+
+      let label = actions.length === 1 ? actions[0].label : actions.length + ' acties voor jou';
+      let tone = actions.some(action => action.tone === 'status-warning') ? 'status-warning' : 'status-concept';
+
+      return {
+        periodKey: key,
+        period: periodFromKey(key),
+        label,
+        tone,
+        notes: notes.join(' · '),
+        current: key === currentPeriodKey,
+        actions,
+      };
+    })
+    .filter(Boolean);
+}
+
+function employeeOpenMonthEquation(openMonthSummaries) {
+  if (!openMonthSummaries.length) return 'Alles afgerond';
+  const equation = openMonthSummaries
+    .map(item => item.period.label.split(' ')[0] + ' ' + item.actions.length)
+    .join(' + ');
+  const total = openMonthSummaries.reduce((sum, item) => sum + item.actions.length, 0);
+  return equation + ' = ' + total;
+}
+
 function adminTaskAction(task) {
   if (task.type === "hours-review") return '<button class="small-button" data-review="' + task.employee.id + '" data-period-key="' + task.periodKey + '">Uren controleren</button>';
   if (task.type === "customer-review") return '<button class="small-button" data-review-customer-timesheet="' + task.employee.id + '" data-period-key="' + task.periodKey + '">Document controleren</button>';
@@ -2590,12 +3562,7 @@ function renderAdminTaskQueue() {
   const filter = state.adminTaskFilter || "all";
   const filtered = filter === "all" ? tasks : filter === "waiting" ? waiting : actionable;
   const filteredMonthGroups = groupAdminTasksByMonth(filtered);
-  const oldestOverdueMonth = filteredMonthGroups.find(group => group.tasks.some(task => task.isOverdue));
-  const currentOpenMonth = filteredMonthGroups.find(group => group.tasks.some(task => !task.isOverdue));
-  const defaultExpandedMonthKeys = new Set([
-    (oldestOverdueMonth || filteredMonthGroups[0] || {}).periodKey,
-    (currentOpenMonth || filteredMonthGroups[filteredMonthGroups.length - 1] || {}).periodKey
-  ].filter(Boolean));
+  const defaultExpandedMonthKeys = new Set();
   const taskMonths = new Set(tasks.map(task => task.periodKey)).size;
   const taskDossiers = new Set(tasks.map(task => task.periodKey + ":" + task.employee.id)).size;
   document.querySelector("#admin-task-summary").textContent = tasks.length
@@ -2856,11 +3823,22 @@ function renderDashboardNextAction(tasks) {
   controls.innerHTML = "";
 }
 
+function renderEmployeesNavBadge(waitingCount) {
+  const badge = document.querySelector("#employees-count");
+  if (!badge) return;
+  const count = Math.max(0, Number(waitingCount || 0));
+  badge.textContent = String(count);
+  badge.hidden = count === 0;
+  if (count > 0) badge.setAttribute("aria-label", count + " open actie" + (count === 1 ? "" : "s") + " bij medewerkers");
+  else badge.removeAttribute("aria-label");
+}
+
 function renderDashboardActions() {
   const tasks = adminOpenTasks();
   const workCount = tasks.length;
   const actionableCount = tasks.filter(task => task.actionable).length;
   const waitingCount = workCount - actionableCount;
+  renderEmployeesNavBadge(waitingCount);
   const workMonths = new Set(tasks.map(task => task.periodKey)).size;
   const workDossiers = new Set(tasks.map(task => task.periodKey + ":" + task.employee.id)).size;
   const selectedTasks = tasks.filter(task => task.periodKey === currentPeriod().key);
@@ -2892,9 +3870,36 @@ function recordHasPeriodActivity(record) {
   return totalEntries(record.entries) > 0 || Number(record.leave || 0) > 0 || Number(record.sick || 0) > 0 || record.timesheetStatus !== "draft" || record.invoiceStatus !== "concept" || record.payrollStatus !== "concept" || correctionHistoryFor(record).length > 0 || customerTimesheetFor(record).status !== "missing";
 }
 
+function latestActivePeriodKeyForRole(role = state.currentRole) {
+  const roleKey = role || state.currentRole || "employee";
+  const currentMonthKey = currentCalendarPeriodKey();
+  let keys = Object.keys(state.records || {}).filter(key => parsePeriodKey(key));
+  if (roleKey === "employee") {
+    const employee = currentEmployee();
+    if (!employee) return state.selectedPeriodKey;
+    keys = keys.filter(key => key <= currentMonthKey && recordHasPeriodActivity(recordFor(employee.id, key)));
+  } else {
+    keys = keys.filter(key => activeEmployees().some(employee => recordHasPeriodActivity(recordFor(employee.id, key))));
+  }
+  return keys.sort((left, right) => right.localeCompare(left))[0] || state.selectedPeriodKey;
+}
+
+function resetHomeDashboardState(role = state.currentRole) {
+  const homeRole = role || state.currentRole;
+  const defaultPeriodKey = latestActivePeriodKeyForRole(homeRole);
+  if (defaultPeriodKey && parsePeriodKey(defaultPeriodKey) && defaultPeriodKey !== state.selectedPeriodKey) {
+    state.selectedPeriodKey = defaultPeriodKey;
+    ensurePeriodRecords(defaultPeriodKey);
+  }
+  state.invoiceFilter = "all";
+  state.dashboardTeamScope = "all";
+  state.adminTaskFilter = "all";
+  persistState();
+  renderPeriodHeadings();
+}
+
 function openPeriodSummaries() {
-  const now = new Date();
-  const currentMonthKey = makePeriodKey(now.getFullYear(), now.getMonth());
+  const currentMonthKey = currentCalendarPeriodKey();
   return Object.keys(state.records)
     .filter(key => parsePeriodKey(key) && key <= currentMonthKey)
     .sort((left, right) => left.localeCompare(right))
@@ -3095,7 +4100,9 @@ function showCustomerTimesheetDetails(employeeId, periodKey, reviewMode, adminTa
             }
             persistState(); closeModal(); renderAll(); toast(toastMessage);
           }).catch(error => {
-            toast(String(error && error.message || "Goedkeuren op server mislukt."));
+            refreshCustomerTimesheetReadApi(period.key, employee.id, true);
+            toast("De status is ondertussen gewijzigd. De actuele klanturenstaat wordt opnieuw geladen.");
+            console.warn("Klanturenstaat goedkeuren mislukt", error);
           });
           return;
         }
@@ -3129,7 +4136,9 @@ function showCustomerTimesheetDetails(employeeId, periodKey, reviewMode, adminTa
             }
             persistState(); closeModal(); renderAll(); toast(toastMessage);
           }).catch(error => {
-            toast(String(error && error.message || "Resubmit-verzoek op server mislukt."));
+            refreshCustomerTimesheetReadApi(period.key, employee.id, true);
+            toast("De status is ondertussen gewijzigd. De actuele klanturenstaat wordt opnieuw geladen.");
+            console.warn("Opnieuw uploaden vragen mislukt", error);
           });
           return;
         }
@@ -3180,7 +4189,6 @@ function showSkipCustomerTimesheet() {
     message: "Gebruik dit alleen wanneer je de officiële klanturenstaat buiten de app rechtstreeks naar Backoffice hebt gemaild. Backoffice ziet deze registratie en de reden.",
     summary: '<div class="modal-form full"><label class="full">Reden<textarea id="customer-timesheet-skip-reason" rows="4">' + escapeHtml(defaultReason) + '</textarea></label><p class="form-help full">De klanturenstaat verdwijnt uit de open werkvoorraad, maar blijft met deze reden in de maanddetails staan.</p></div>',
     confirm: "Als al gemaild registreren",
-    secondary: "Annuleren",
     action: () => {
       const reasonInput = document.querySelector("#customer-timesheet-skip-reason");
       const reason = reasonInput.value.trim();
@@ -3209,8 +4217,7 @@ function showSkipCustomerTimesheet() {
       documentRecord.reviewNote = "";
       addNotification({ audience: "admin", type: "customer-timesheet-skipped", employeeId: employee.id, title: "Klanturenstaat al rechtstreeks gemaild", message: employee.name + " heeft voor " + period.label + " geregistreerd: " + reason, periodKey: period.key, view: "dashboard" }, true);
       persistState(); closeModal(); renderAll(); toast("De klanturenstaat staat als rechtstreeks gemaild geregistreerd.");
-    },
-    secondaryAction: closeModal
+    }
   });
 }
 
@@ -3402,6 +4409,9 @@ function showReopenApprovedHours(employeeId, periodKey) {
 function renderDashboard() {
   refreshDashboardReadApi(false);
   const period = currentPeriod();
+  refreshInvoicesReadApi(period.key, false);
+  refreshEmailQueueReadApi(false);
+  syncInvoiceStatusesFromApi(period.key);
   const dashboardApi = dashboardApiForPeriod(period.key);
   const now = new Date();
   const currentMonthKey = makePeriodKey(now.getFullYear(), now.getMonth());
@@ -3463,8 +4473,7 @@ function renderDashboard() {
     ? "Open " + open + (open === 1 ? " controle" : " controles")
     : "Bekijk alle openstaande · " + allOpenCount;
   document.querySelector("#metric-invoice-total").textContent = currency.format(invoiceTotal);
-  document.querySelector("#approval-count").textContent = open;
-  document.querySelector("#approval-count").hidden = open === 0;
+  renderApprovalNavBadge(allOpenCount);
 
   const completedPhases = [submitted === dashboardRowsTotal, approved === dashboardRowsTotal, ready + simulated === rows.length, simulated === rows.length].filter(Boolean).length;
   const progress = Math.round(completedPhases / 4 * 100);
@@ -3490,6 +4499,26 @@ function renderDashboard() {
   renderAdminTaskQueue();
   renderOpenPeriods();
   renderCustomerTimesheetAdmin();
+}
+
+function renderApprovalNavBadge(openFromSelectedPeriod) {
+  const badge = document.querySelector("#approval-count");
+  if (!badge) return;
+  const explicitOpen = Number(openFromSelectedPeriod);
+  const dashboardOpenTotal = API_ENABLED && authRuntime.mode === "auth" && readApiDebug.dashboard && Array.isArray(readApiDebug.dashboard.per_maand)
+    ? readApiDebug.dashboard.per_maand.reduce((sum, item) => sum + Math.max(0, Number(item && item.klaar_voor_controle || 0)), 0)
+    : null;
+  const openApprovals = Number(allOpenApprovals().length || 0);
+  const open = Number.isFinite(explicitOpen)
+    ? Math.max(0, explicitOpen)
+    : Number.isFinite(dashboardOpenTotal)
+    ? Math.max(0, Number(dashboardOpenTotal || 0))
+    : (openApprovals > 0 ? openApprovals : Number(openFromSelectedPeriod || 0));
+  badge.textContent = String(open);
+  badge.hidden = open === 0;
+  if (open > 0) badge.setAttribute("aria-label", open + " open urencontrole" + (open === 1 ? "" : "s"));
+  else badge.removeAttribute("aria-label");
+  badge.removeAttribute("title");
 }
 
 function allOpenApprovals() {
@@ -3563,8 +4592,7 @@ function renderApprovals() {
       ? "1 urenstaat in " + period.month + " goedkeuren"
       : "Alle " + approvals.length + " in " + period.month + " goedkeuren"
     : "Alle " + approvals.length + " goedkeuren";
-  document.querySelector("#approval-count").textContent = allApprovals.length;
-  document.querySelector("#approval-count").hidden = allApprovals.length === 0;
+  renderApprovalNavBadge(allApprovals.length);
 }
 
 function employeeStartedByPeriodEnd(employee, periodKey) {
@@ -3852,6 +4880,8 @@ function openMonthBatchBlocker(employeeId, periodKey) {
 function renderInvoices() {
   const periodKey = currentPeriod().key;
   refreshInvoicesReadApi(periodKey, false);
+  refreshEmailQueueReadApi(false);
+  syncInvoiceStatusesFromApi(periodKey);
   const apiRows = invoiceApiRowsForPeriod(periodKey);
   setReadApiSource("invoices", apiRows ? "api" : "fallback");
   const periodRows = invoicePeriodRows();
@@ -4048,6 +5078,30 @@ function renderEmployeeAnnouncementArchive() {
     list.innerHTML = "";
     return;
   }
+
+  if (API_ENABLED && authRuntime.mode === "auth") {
+    let announcements = employeeAnnouncementItemsFromNotifications();
+    const unreadAnnouncementCount = announcements.filter(item => !item.read).length;
+    document.querySelector("#announcement-unread-filter").textContent = "Ongelezen mededelingen · " + unreadAnnouncementCount;
+    if (state.announcementArchiveFilter === "unread") announcements = announcements.filter(item => !item.read);
+    if (state.announcementArchiveFilter === "withdrawn") announcements = [];
+    document.querySelectorAll("[data-announcement-archive-filter]").forEach(button => button.classList.toggle("is-active", button.dataset.announcementArchiveFilter === state.announcementArchiveFilter));
+    if (!announcements.length) {
+      list.innerHTML = '<div class="dashboard-action-empty"><strong>Geen mededelingen binnen dit filter.</strong><br>Nieuwe berichten verschijnen ook via de bel.</div>';
+      return;
+    }
+
+    list.innerHTML = announcements.map(item => {
+      const unread = !item.read;
+      return '<article class="employee-announcement-card' + (unread ? " is-unread" : "") + '">' +
+        '<header><div><span class="status-pill ' + (unread ? 'status-warning' : 'status-approved') + '">' + (unread ? 'Ongelezen' : 'Gelezen') + '</span><h3>' + escapeHtml(item.title) + '</h3></div><small>' + escapeHtml(item.createdAt) + '</small></header>' +
+        '<p>' + escapeHtml(item.message) + '</p>' +
+        '<footer><span>Van ' + escapeHtml(item.createdBy) + ' · ' + (unread ? 'Ongelezen' : 'Gelezen') + '</span>' + (unread ? '<button class="small-button" data-read-announcement="' + item.id + '">Markeer als gelezen</button>' : '') + '</footer>' +
+      '</article>';
+    }).join("");
+    return;
+  }
+
   const employee = currentEmployee();
   let announcements = state.announcements
     .filter(item => item.status !== "draft" && item.status !== "withdrawn" && !item.hiddenFromEmployees && !item.supersededById && item.recipientIds.includes(employee.id))
@@ -4159,13 +5213,39 @@ function saveAnnouncementFromEditor(correctionOfId, draftId, asDraft) {
     return;
   }
   const audience = document.querySelector("#announcement-audience");
+  const emailRequested = document.querySelector("#announcement-email").checked;
+  const audienceValue = audience ? audience.value : "fixed";
+
+  if (API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative() && state.currentRole === "admin") {
+    const original = correctionOfId ? announcementById(correctionOfId) : null;
+    writeAnnouncementToApi(asDraft ? "save_draft" : "send", {
+      title,
+      message,
+      recipient_user_ids: recipientIds,
+      audience_label: original ? ("Zelfde ontvangers als bericht #" + correctionOfId) : (audienceValue + ":" + recipientIds.length),
+      email_requested: emailRequested,
+      correction_of_id: correctionOfId || null
+    })
+      .then(() => Promise.all([refreshAnnouncementsReadApi(true), refreshNotificationsReadApi(true)]).catch(() => null))
+      .then(() => {
+        persistState();
+        closeModal();
+        renderAll();
+        toast(asDraft
+          ? "Concept opgeslagen."
+          : "Mededeling geplaatst voor " + recipientIds.length + " medewerker" + (recipientIds.length === 1 ? "" : "s") + ". E-mailverzending is uitgeschakeld.");
+      })
+      .catch(error => toast(String(error && error.message || "Mededeling opslaan op server mislukt.")));
+    return;
+  }
+
   const announcement = storeAnnouncement({
     title,
     message,
     recipientIds,
-    emailRequested: document.querySelector("#announcement-email").checked,
+    emailRequested,
     correctionOfId: correctionOfId || null,
-    audienceValue: audience ? audience.value : "fixed",
+    audienceValue,
     draftId: draftId || null,
     status: asDraft ? "draft" : "sent"
   });
@@ -4229,6 +5309,13 @@ function showDeleteAnnouncementDraft(id) {
     message: "Het concept is nooit verzonden. Er zijn geen ontvangers of e-mails om terug te draaien.",
     confirm: "Concept verwijderen",
     action: () => {
+      if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
+        writeAnnouncementToApi("delete_draft", { announcement_id: Number(draft.id) })
+          .then(() => refreshAnnouncementsReadApi(true))
+          .then(() => { closeModal(); renderAnnouncements(); toast("Concept verwijderd."); })
+          .catch(error => toast(String(error && error.message || "Concept verwijderen op server mislukt.")));
+        return;
+      }
       state.announcements = state.announcements.filter(item => Number(item.id) !== Number(draft.id));
       persistState();
       closeModal();
@@ -4249,6 +5336,13 @@ function showHideAnnouncementFromEmployees(id) {
     summary: "<div><span>Mededeling</span><strong>" + escapeHtml(original.title) + "</strong></div><div><span>Ontvangers</span><strong>" + original.recipientIds.length + " medewerker" + (original.recipientIds.length === 1 ? "" : "s") + "</strong></div><div><span>Interne historie</span><strong>Blijft bewaard</strong></div>",
     confirm: "Bij medewerkers verwijderen",
     action: () => {
+      if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
+        writeAnnouncementToApi("hide", { announcement_id: Number(original.id) })
+          .then(() => Promise.all([refreshAnnouncementsReadApi(true), refreshNotificationsReadApi(true)]).catch(() => null))
+          .then(() => { closeModal(); renderAll(); toast("De mededeling is bij medewerkers verwijderd en blijft alleen intern bewaard."); })
+          .catch(error => toast(String(error && error.message || "Verbergen op server mislukt.")));
+        return;
+      }
       const timestamp = correctionTimestamp();
       [original, linkedNotice].filter(Boolean).forEach(item => {
         item.hiddenFromEmployees = true;
@@ -4359,6 +5453,18 @@ function showAnnouncementWithdrawal(id) {
         toast("Vul een reden voor het intrekken in.");
         return;
       }
+
+      if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
+        writeAnnouncementToApi("withdraw", {
+          announcement_id: Number(original.id),
+          withdrawal_reason: reason
+        })
+          .then(() => Promise.all([refreshAnnouncementsReadApi(true), refreshNotificationsReadApi(true)]).catch(() => null))
+          .then(() => { closeModal(); renderAll(); toast("Mededeling ingetrokken; medewerkers zien alleen de nieuwe intrekkingsmelding en de interne historie blijft bewaard."); })
+          .catch(error => toast(String(error && error.message || "Intrekken op server mislukt.")));
+        return;
+      }
+
       const timestamp = correctionTimestamp();
       original.status = "withdrawn";
       original.withdrawalReason = reason;
@@ -4468,6 +5574,18 @@ function renderHoursWeekFilter(period, scope) {
 function renderHoursGrid() {
   const employee = currentEmployee();
   const period = currentPeriod();
+  const timesheetViewActive = document.querySelector("#view-timesheet")?.classList.contains("is-active");
+  if (timesheetViewActive) {
+    refreshTimesheetReadApi(period.key, employee.id, false).then(record => {
+      if (!record) return;
+      const activePeriod = currentPeriod();
+      const activeEmployee = currentEmployee();
+      const stillOnTimesheet = document.querySelector("#view-timesheet")?.classList.contains("is-active");
+      if (!stillOnTimesheet) return;
+      if (activePeriod.key !== period.key || Number(activeEmployee.id) !== Number(employee.id)) return;
+      renderHoursGrid();
+    }).catch(() => {});
+  }
   const record = recordFor(employee.id);
   document.querySelector("#timesheet-assignment").textContent = employee.client + " · " + employee.role;
   document.querySelector("#timesheet-employee").textContent = employee.name;
@@ -4477,6 +5595,9 @@ function renderHoursGrid() {
   document.querySelector("#summary-contract").textContent = hoursFormat.format(record.contractHours) + " uur";
   document.querySelector("#summary-leave").value = Number(record.leave) || 0;
   document.querySelector("#summary-sick").value = Number(record.sick) || 0;
+  const editable = isTimesheetEditableForEmployee(record);
+  document.querySelector("#summary-leave").disabled = !editable;
+  document.querySelector("#summary-sick").disabled = !editable;
   const correction = activeCorrection(record);
   const correctionBanner = document.querySelector("#timesheet-correction-banner");
   correctionBanner.hidden = !correction;
@@ -4490,8 +5611,9 @@ function renderHoursGrid() {
     if (weekScope !== "all" && weekScope !== "week-" + weekIndex) return "";
     const cells = week.days.map((day, dayIndex) => {
       if (!day) return '<td class="outside-month"><span class="outside-month-mark" aria-hidden="true">—</span></td>';
-      const value = record.entries[weekIndex][dayIndex];
-      return '<td class="workday-cell"><label class="hours-day-entry"><span class="date-number">' + day.day + ' ' + escapeHtml(period.month.slice(0, 3)) + '</span><input class="hours-input" data-week-index="' + weekIndex + '" data-day-index="' + dayIndex + '" type="number" min="0" max="24" step="0.5" value="' + value + '" aria-label="' + escapeHtml(day.label) + '"></label></td>';
+      const value = Number(record.entries[weekIndex][dayIndex] || 0);
+      const displayValue = value > 0 ? String(value) : "";
+      return '<td class="workday-cell"><label class="hours-day-entry"><span class="date-number">' + day.day + ' ' + escapeHtml(period.month.slice(0, 3)) + '</span><input class="hours-input" data-week-index="' + weekIndex + '" data-day-index="' + dayIndex + '" type="number" min="0" max="24" step="0.5" value="' + displayValue + '" placeholder="0" aria-label="' + escapeHtml(day.label) + '"' + (editable ? "" : " disabled") + '></label></td>';
     }).join("");
     const yearNote = week.year === period.year ? "" : " · " + week.year;
     return '<tr data-week-index="' + weekIndex + '"><td>Week ' + week.number + yearNote + "</td>" + cells + '<td class="week-total">0,0</td></tr>';
@@ -4499,9 +5621,56 @@ function renderHoursGrid() {
   updateHoursTotal(false);
 }
 
+function isTimesheetEditableForEmployee(record) {
+  const normalizedStatus = String(record && record.timesheetStatus || "draft");
+  if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "employee") {
+    return normalizedStatus === "draft" || normalizedStatus === "correction";
+  }
+  return normalizedStatus !== "approved";
+}
+
+function updateTimesheetSubmitUi(record) {
+  const normalizedStatus = record && record.timesheetStatus ? String(record.timesheetStatus) : "draft";
+  const submit = document.querySelector("#submit-timesheet");
+  const canSubmit = normalizedStatus === "draft" || normalizedStatus === "submitted" || normalizedStatus === "correction";
+  const hasAnyInput = totalEntries(record.entries) > 0 || Number(record.leave || 0) > 0 || Number(record.sick || 0) > 0;
+  const showSubmit = canSubmit;
+  if (submit) {
+    submit.hidden = !showSubmit;
+    submit.disabled = !showSubmit;
+    submit.textContent = normalizedStatus === "draft"
+      ? "Uren " + currentPeriod().month + " indienen"
+      : "Uren " + currentPeriod().month + " opnieuw indienen";
+  }
+  const submitNote = document.querySelector("#submit-timesheet-note");
+  if (submitNote) {
+    submitNote.hidden = showSubmit;
+    submitNote.textContent = normalizedStatus === "submitted"
+      ? "Je uren zijn al ingediend en wachten op controle."
+      : normalizedStatus === "approved"
+        ? "Je uren zijn goedgekeurd. Indienen is niet meer nodig."
+        : canSubmit && !hasAnyInput
+          ? "Je kunt ook met 0 uren indienen als dat klopt voor deze maand."
+        : "";
+  }
+  const statusEl = document.querySelector("#timesheet-status");
+  if (statusEl) {
+    const status = statusLabels[normalizedStatus] || statusLabels.draft;
+    statusEl.className = "status-pill " + status[1];
+    statusEl.textContent = status[0];
+  }
+  return normalizedStatus;
+}
+
 function updateHoursTotal(markDraft) {
   const employee = currentEmployee();
   const record = recordFor(employee.id);
+  if (markDraft && !isTimesheetEditableForEmployee(record)) {
+    const autosaveStatus = document.querySelector("#hours-autosave-status");
+    if (autosaveStatus) autosaveStatus.textContent = "Deze maand is vergrendeld en alleen-lezen.";
+    renderHoursGrid();
+    return;
+  }
   let visibleTotal = 0;
   document.querySelectorAll("#hours-grid tr").forEach(row => {
     const weekIndex = Number(row.dataset.weekIndex);
@@ -4536,16 +5705,11 @@ function updateHoursTotal(markDraft) {
   if (difference < 0) comparison = hoursFormat.format(Math.abs(difference)) + " uur minder dan de contracturen.";
   if (difference > 0) comparison = hoursFormat.format(difference) + " uur meer dan de contracturen.";
   document.querySelector("#hours-target-message").textContent = comparison;
-  document.querySelector("#hours-target-help").textContent = "Dit blokkeert indienen nooit. Alleen " + currentPeriod().label + " wordt ingediend. Enter slaat tussentijds op en gaat verder.";
-  const submit = document.querySelector("#submit-timesheet");
-  submit.disabled = false;
-  submit.textContent = record.timesheetStatus === "submitted"
-    ? "Uren " + currentPeriod().month + " opnieuw indienen"
-    : "Uren " + currentPeriod().month + " indienen";
+  document.querySelector("#hours-target-help").textContent = isTimesheetEditableForEmployee(record)
+    ? "Dit blokkeert indienen nooit. Alleen " + currentPeriod().label + " wordt ingediend. Enter slaat tussentijds op en gaat verder."
+    : "Deze maand is vergrendeld (ingediend, goedgekeurd of gefactureerd) en kan niet meer worden aangepast.";
+  updateTimesheetSubmitUi(record);
   if (markDraft) {
-    const status = statusLabels[record.timesheetStatus] || statusLabels.draft;
-    document.querySelector("#timesheet-status").className = "status-pill " + status[1];
-    document.querySelector("#timesheet-status").textContent = status[0];
     renderDashboard();
     renderApprovals();
     renderInvoices();
@@ -4898,7 +6062,7 @@ function saveSettings() {
     toast("Niet opgeslagen: vul bij ieder e-mailveld een geldig adres in.");
     return;
   }
-  state.settings = Object.assign({}, state.settings, {
+  const nextSettings = Object.assign({}, state.settings, {
     organizationName: document.querySelector("#setting-organization-name").value.trim() || "Organisatie",
     appName: document.querySelector("#setting-app-name").value.trim() || "Uren & Facturatie",
     supportName: document.querySelector("#setting-support-name").value.trim() || "Ondersteuning",
@@ -4936,6 +6100,24 @@ function saveSettings() {
     lockInvoice: document.querySelector("#setting-lock-invoice").checked,
     auditLog: document.querySelector("#setting-audit-log").checked
   });
+
+  if (API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative() && state.currentRole === "admin") {
+    writeSettingsToApi(nextSettings)
+      .then(() => refreshBootstrapReadApi(true))
+      .then(() => {
+        state.settings = Object.assign({}, state.settings, nextSettings);
+        syncLegacyRecipientSettings();
+        persistState();
+        renderAll();
+        toast("Instellingen zijn op de server opgeslagen.");
+      })
+      .catch(error => {
+        toast(String(error && error.message || "Instellingen opslaan op server mislukt."));
+      });
+    return;
+  }
+
+  state.settings = nextSettings;
   syncLegacyRecipientSettings();
   persistState();
   renderAll();
@@ -4947,6 +6129,10 @@ function nextNotificationId() {
 }
 
 function addNotification(notification, force) {
+  if (API_ENABLED && authRuntime.mode === "auth") {
+    refreshNotificationsReadApi(true).catch(() => null);
+    return;
+  }
   const audience = notification.audience;
   const targetEmployee = audience === "employee" ? employeeById(notification.employeeId) : null;
   if (!force && audience === "admin" && !state.preferences.approvalNotifications && notification.type !== "invoice") return;
@@ -4971,6 +6157,11 @@ function addNotification(notification, force) {
 
 function notificationsForCurrentProfile() {
   if (!state.currentRole) return [];
+  if (API_ENABLED && authRuntime.mode === "auth") {
+    return state.notifications
+      .slice()
+      .sort((left, right) => Number(right.id) - Number(left.id));
+  }
   return state.notifications
     .filter(item => state.currentRole === "admin" ? item.audience === "admin" : item.audience === "employee" && Number(item.employeeId) === currentEmployee().id)
     .sort((left, right) => Number(right.id) - Number(left.id));
@@ -4989,6 +6180,21 @@ function renderNotifications() {
     ? unread + " ongelezen melding" + (unread === 1 ? "" : "en")
     : "Geen ongelezen meldingen";
   list.innerHTML = visible.length ? visible.map(item => '<button class="notification-item is-unread" data-notification-id="' + item.id + '"><span class="notification-item-dot"></span><span><strong>' + escapeHtml(item.title) + '</strong><span>' + escapeHtml(item.message) + '</span><small>' + escapeHtml(item.createdAt) + '</small></span></button>').join("") : '<div class="notification-empty"><strong>Je hebt geen ongelezen meldingen.</strong><br>Urenstatussen en algemene mededelingen verschijnen hier samen.</div>';
+}
+
+function employeeAnnouncementItemsFromNotifications() {
+  return notificationsForCurrentProfile()
+    .filter(item => String(item.notificationType || "").toLowerCase() === "announcement" || item.type === "announcement")
+    .map(item => ({
+      id: Number(item.announcementId || item.id),
+      title: String(item.title || "Mededeling"),
+      message: String(item.message || ""),
+      createdBy: "Beheerder",
+      createdAt: String(item.createdAt || ""),
+      updatedAt: String(item.createdAt || ""),
+      status: "sent",
+      read: Boolean(item.read)
+    }));
 }
 
 function createTestNotification(type) {
@@ -5251,6 +6457,8 @@ function showView(view, options = {}) {
   if (state.currentRole === "admin" && view === "timesheet") view = "dashboard";
   if (state.currentRole === "admin" && view === "employee-dashboard") view = "dashboard";
   if (state.currentRole === "admin" && view === "employee-announcements") view = "dashboard";
+  if (view === "dashboard") renderDashboard();
+  if (view === "employee-dashboard") renderEmployeeDashboard();
   const target = document.querySelector("#view-" + view);
   if (!target) return;
   const wasInvoicesActive = document.querySelector("#view-invoices")?.classList.contains("is-active");
@@ -5275,6 +6483,12 @@ function login(role) {
   if (role === "employee") {
     const selectedEmployee = Number(document.querySelector("#login-employee").value);
     if (employeeById(selectedEmployee)) state.currentEmployeeId = selectedEmployee;
+    const currentMonthKey = currentCalendarPeriodKey();
+    if (parsePeriodKey(currentMonthKey)) {
+      state.selectedPeriodKey = currentMonthKey;
+      ensurePeriodRecords(currentMonthKey);
+    }
+    readApiRuntime.employeeOpenTasksHydrated = !(API_ENABLED && authRuntime.mode === "auth");
   }
   const profile = profileForRole(role);
   if (!profile) return;
@@ -5292,6 +6506,7 @@ function login(role) {
 
 function logoutLocal() {
   state.currentRole = null;
+  readApiRuntime.employeeOpenTasksHydrated = false;
   unresolvedHelpQuestion = "";
   closeLoginAccountPanels();
   delete document.body.dataset.role;
@@ -5415,6 +6630,58 @@ function approveEmployeeState(id, periodKey) {
 
 function approveEmployee(id, periodKey) {
   const key = periodKey || currentPeriod().key;
+  const record = recordFor(id, key);
+  if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
+    if (record.timesheetStatus !== "submitted") {
+      renderAll();
+      toast("Alleen ingediende uren kunnen worden goedgekeurd.");
+      return;
+    }
+    const version = Number(record.serverVersion || 0);
+    if (version <= 0) {
+      refreshTimesheetReadApi(key, id, true).then(() => approveEmployee(id, key)).catch(() => {
+        toast("Kan niet goedkeuren zonder actuele serverversie. Ververs en probeer opnieuw.");
+      });
+      return;
+    }
+
+    writeTimesheetReviewToApi("approve", {
+      employeeId: id,
+      periodKey: key,
+      expectedVersion: version
+    }).then(() => {
+      return Promise.all([
+        refreshTimesheetReadApi(key, id, true),
+        refreshInvoicesReadApi(key, true),
+        refreshEmailQueueReadApi(true)
+      ]).catch(() => null).then(() => {
+        const refreshed = recordFor(id, key);
+        if (refreshed.timesheetStatus !== "approved") {
+          refreshed.timesheetStatus = "approved";
+          if (refreshed.invoiceStatus !== "simulated") refreshed.invoiceStatus = "ready";
+          if (refreshed.payrollStatus !== "simulated") refreshed.payrollStatus = "ready";
+        }
+        syncInvoiceStatusesFromApi(key);
+        addNotification({ audience: "employee", type: "approved", employeeId: Number(id), title: "Uren goedgekeurd", message: "Je uren voor " + periodFromKey(key).label + " zijn goedgekeurd.", periodKey: key, view: "employee-dashboard" });
+        addNotification({ audience: "admin", type: "invoice", employeeId: Number(id), title: "Factuur klaar", message: "De factuur voor " + employeeById(id).name + " staat klaar.", periodKey: key, view: "invoices" });
+        persistState();
+        renderAll();
+        toast(employeeById(id).name + " is goedgekeurd voor " + periodFromKey(key).label + "; de factuur staat klaar.");
+      });
+    }).catch(error => {
+      const message = String(error && error.message || "Goedkeuren bij server mislukt.");
+      if (/only submitted timesheets can be approved/i.test(message)) {
+        refreshTimesheetReadApi(key, id, true)
+          .then(() => { renderAll(); })
+          .catch(() => null);
+        toast("Deze uren zijn op server niet (meer) ingediend en daarom niet goed te keuren.");
+        return;
+      }
+      toast(message);
+    });
+    return;
+  }
+
   approveEmployeeState(id, key);
   persistState();
   renderAll();
@@ -5490,6 +6757,51 @@ function returnEmployeeForCorrection(id, periodKey, reason, adminTaskId = "") {
     addNotification({ audience: "employee", type: "correction", employeeId: Number(id), title: "Correctie nodig", message: requestedBy + " vraagt je om " + periodFromKey(key).label + " aan te passen. Reden: " + message, periodKey: key, view: "timesheet" });
   };
   const toastMessage = "De uren van " + employee.name + " zijn met toelichting teruggestuurd. Er is niets gemaild.";
+
+  if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
+    const recordVersion = Number(record.serverVersion || 0);
+    const runApiCorrection = (expectedVersion) => writeTimesheetReviewToApi("request_correction", {
+      employeeId: id,
+      periodKey: key,
+      expectedVersion,
+      correctionMessage: message
+    }).then(() => {
+      return Promise.all([
+        refreshInvoicesReadApi(key, true),
+        refreshEmailQueueReadApi(true)
+      ]).catch(() => null).then(() => {
+        syncInvoiceStatusesFromApi(key);
+        addNotification({ audience: "employee", type: "correction", employeeId: Number(id), title: "Correctie nodig", message: (currentAdmin() ? currentAdmin().name : "Beheerder") + " vraagt je om " + periodFromKey(key).label + " aan te passen. Reden: " + message, periodKey: key, view: "timesheet" });
+        if (adminTaskId) {
+          finishAdminTaskAndContinue(adminTaskId, () => {}, toastMessage);
+          return;
+        }
+        persistState();
+        closeModal();
+        renderAll();
+        toast(toastMessage);
+      });
+    });
+
+    if (recordVersion <= 0) {
+      refreshTimesheetReadApi(key, id, true)
+        .then(freshRecord => {
+          const expected = Number((freshRecord && freshRecord.serverVersion) || 0);
+          if (expected <= 0) throw new Error("Kan geen actuele serverversie bepalen voor correctie.");
+          return runApiCorrection(expected);
+        })
+        .catch(error => {
+          toast(String(error && error.message || "Correctieverzoek bij server mislukt."));
+        });
+      return;
+    }
+
+    runApiCorrection(recordVersion).catch(error => {
+      toast(String(error && error.message || "Correctieverzoek bij server mislukt."));
+    });
+    return;
+  }
+
   if (adminTaskId) {
     finishAdminTaskAndContinue(adminTaskId, mutate, toastMessage);
     return;
@@ -5537,6 +6849,26 @@ function serverInvoiceIdFor(employeeId, periodKey) {
   return match ? match.id : 0;
 }
 
+function enqueueInvoiceDeliveryToApi(invoiceId) {
+  const id = Number(invoiceId || 0);
+  if (id <= 0) return Promise.reject(new Error("Geen serverfactuur gevonden voor deze verzending."));
+
+  return requestAuthCsrf()
+    .then(token => fetch("/server/api/email-queue.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify({ action: "enqueue", invoice_id: id })
+    }))
+    .then(resp => resp.json().catch(() => ({})).then(data => ({ ok: resp.ok, data })))
+    .then(result => {
+      if (!result.ok || !result.data || result.data.ok !== true) {
+        const message = String(result && result.data && result.data.message || "Queueactie bij server mislukt.");
+        throw new Error(message);
+      }
+      return Number(result.data.count || 0);
+    });
+}
+
 function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
   const key = periodKey || currentPeriod().key;
   const period = periodFromKey(key);
@@ -5567,34 +6899,54 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
     confirm: "Controle afronden",
     adminTaskId,
     action: () => {
-      const mutate = () => {
-        info.record.invoiceStatus = "simulated";
-        info.record.payrollStatus = "simulated";
-      };
       const baseMsg = "Verzending voor " + info.employee.name + " · " + period.label + " klaargezet";
-      if (adminTaskId) {
-        finishAdminTaskAndContinue(adminTaskId, mutate, baseMsg + " (dry-run).");
-      } else {
-        mutate();
-        persistState();
-        closeModal();
-        renderAll();
-      }
       const invId = serverInvoiceIdFor(employeeId, key);
-      if (invId > 0 && API_ENABLED) {
-        requestAuthCsrf().then(token =>
-          fetch("/server/api/email-queue.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
-            body: JSON.stringify({ action: "enqueue", invoice_id: invId })
-          }).then(r => r.json()).then(data => {
-            const n = data && data.count || 0;
-            toast(baseMsg + " (dry-run): " + n + (n === 1 ? " bericht" : " berichten") + " klaargezet.");
-          }).catch(() => toast(baseMsg + ". Koppeling met mailqueue tijdelijk niet bereikbaar."))
-        ).catch(() => toast(baseMsg + " (dry-run)."));
-      } else {
-        toast(baseMsg + " (dry-run).");
+      const serverDelivery = API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative() && state.currentRole === "admin";
+      const finishLocalDryRun = (messageSuffix = "") => {
+        const mutate = () => {
+          info.record.invoiceStatus = "simulated";
+          info.record.payrollStatus = "simulated";
+        };
+        const finalMessage = baseMsg + " (dry-run)" + (messageSuffix ? " " + messageSuffix : "") + ".";
+        if (adminTaskId) {
+          finishAdminTaskAndContinue(adminTaskId, mutate, finalMessage);
+        } else {
+          mutate();
+          persistState();
+          closeModal();
+          renderAll();
+        }
+        toast(finalMessage);
+      };
+
+      if (serverDelivery && invId > 0) {
+        enqueueInvoiceDeliveryToApi(invId)
+          .then(count => Promise.all([
+            refreshEmailQueueReadApi(true),
+            refreshInvoicesReadApi(key, true)
+          ]).catch(() => null).then(() => {
+            syncInvoiceStatusesFromApi(key);
+            if (adminTaskId) {
+              finishAdminTaskAndContinue(adminTaskId, () => {}, baseMsg + " (dry-run): " + count + (count === 1 ? " bericht" : " berichten") + " klaargezet.");
+              return;
+            }
+            closeModal();
+            persistState();
+            renderAll();
+            toast(baseMsg + " (dry-run): " + count + (count === 1 ? " bericht" : " berichten") + " klaargezet.");
+          }))
+          .catch(error => {
+            toast(String(error && error.message || (baseMsg + ". Koppeling met mailqueue tijdelijk niet bereikbaar.")));
+          });
+        return;
       }
+
+      if (serverDelivery && invId <= 0) {
+        finishLocalDryRun("serverfactuur nog niet beschikbaar, lokaal afgerond");
+        return;
+      }
+
+      finishLocalDryRun();
     }
   });
   return true;
@@ -5975,10 +7327,11 @@ function showEmployeeEditor(employeeId) {
         const invoiceInput = [...document.querySelectorAll("[data-mail-recipient-invoice]")].find(item => item.dataset.mailRecipientInvoice === id);
         mailRecipientRoutes[id] = { enabled: input.checked, invoiceAttachment: input.checked && Boolean(invoiceInput && invoiceInput.checked) };
       });
+      const effectiveMailRecipients = (state.settings.mailRecipients || []).map(item => Object.assign({}, item));
       if (newRecipientRequested) {
         const newRecipientId = nextMailRecipientId();
         const newRecipientEnabled = document.querySelector("#edit-new-recipient-enabled").checked;
-        state.settings.mailRecipients.push({
+        effectiveMailRecipients.push({
           id: newRecipientId,
           category: document.querySelector("#edit-new-recipient-category").value,
           name: newRecipientNameInput.value.trim(),
@@ -5989,9 +7342,10 @@ function showEmployeeEditor(employeeId) {
           enabled: newRecipientEnabled,
           invoiceAttachment: newRecipientEnabled && document.querySelector("#edit-new-recipient-invoice").checked
         };
-        syncLegacyRecipientSettings();
       }
       const updated = Object.assign({}, employee, {
+        dbUserId: Number(employee.dbUserId || 0) || null,
+        dbEmployeeId: Number(employee.dbEmployeeId || 0) || null,
         name: nameInput.value.trim(),
         email: accountEmailInput.value.trim(),
         startDate: document.querySelector("#edit-start-date").value,
@@ -6022,6 +7376,35 @@ function showEmployeeEditor(employeeId) {
         customerTimesheetBrokerEmail: customerTimesheetEmailInput.value.trim(),
         invoiceWithoutCustomerTimesheetAllowed: document.querySelector("#edit-invoice-without-customer-timesheet").checked
       });
+
+      if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
+        const addAnother = !existing && document.querySelector("#edit-add-another").checked;
+        writeStaffToApi("upsert_employee", {
+          employee: updated,
+          mailRecipients: effectiveMailRecipients
+        })
+          .then(() => {
+            if (newRecipientRequested) {
+              state.settings.mailRecipients = effectiveMailRecipients;
+              syncLegacyRecipientSettings();
+            }
+            return refreshBootstrapReadApi(true);
+          })
+          .then(() => {
+            closeModal();
+            renderAll();
+            populateSettings();
+            toast("Medewerker op de server opgeslagen.");
+            if (addAnother) showEmployeeEditor(null);
+          })
+          .catch(error => toast(String(error && error.message || "Medewerker opslaan op server mislukt.")));
+        return;
+      }
+
+      if (newRecipientRequested) {
+        state.settings.mailRecipients = effectiveMailRecipients;
+      }
+
       if (existing) {
         state.employees[state.employees.findIndex(item => item.id === existing.id)] = updated;
       } else {
@@ -6043,6 +7426,7 @@ function showEmployeeEditor(employeeId) {
       closeModal();
       renderAll();
       populateSettings();
+      if (newRecipientRequested) syncLegacyRecipientSettings();
       toast("Medewerker en eigen urenaccount zijn lokaal opgeslagen. Er is niets gemaild.");
       if (addAnother) showEmployeeEditor(null);
     }
@@ -6101,6 +7485,27 @@ function showAdminEditor(adminId) {
         return;
       }
       const updated = Object.assign({}, admin, { name: name.value.trim(), email: email.value.trim(), active: admin.active !== false, emailNotificationsEnabled: document.querySelector("#edit-admin-notifications").checked });
+
+      if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
+        writeStaffToApi("upsert_admin", {
+          admin: {
+            dbUserId: Number(admin.dbUserId || 0),
+            name: updated.name,
+            email: updated.email,
+            active: updated.active,
+            emailNotificationsEnabled: updated.emailNotificationsEnabled
+          }
+        })
+          .then(() => refreshBootstrapReadApi(true))
+          .then(() => {
+            closeModal();
+            renderAll();
+            toast("Beheerder op de server opgeslagen.");
+          })
+          .catch(error => toast(String(error && error.message || "Beheerder opslaan op server mislukt.")));
+        return;
+      }
+
       if (existing) state.admins[state.admins.findIndex(item => item.id === existing.id)] = updated;
       else state.admins.push(updated);
       persistState();
@@ -6109,6 +7514,60 @@ function showAdminEditor(adminId) {
       toast("Beheerder lokaal opgeslagen. Er is geen uitnodiging verstuurd.");
     }
   });
+}
+
+function writeStaffToApi(action, payload) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin")) return Promise.resolve(null);
+  return requestAuthCsrf()
+    .then(token => fetch("/server/api/staff.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify(Object.assign({ action }, payload || {}))
+    }))
+    .then(resp => resp.json().catch(() => ({})).then(data => ({ ok: resp.ok, data })))
+    .then(result => {
+      if (!result.ok || !result.data || result.data.ok !== true) {
+        throw new Error(String(result && result.data && result.data.message || "Opslaan op server mislukt."));
+      }
+      return result.data;
+    });
+}
+
+function writeSettingsToApi(nextSettings) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin")) return Promise.resolve(null);
+  return requestAuthCsrf()
+    .then(token => fetch("/server/api/settings.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify({
+        settings: nextSettings,
+        mailRecipients: state.settings.mailRecipients
+      })
+    }))
+    .then(resp => resp.json().catch(() => ({})).then(data => ({ ok: resp.ok, data })))
+    .then(result => {
+      if (!result.ok || !result.data || result.data.ok !== true) {
+        throw new Error(String(result && result.data && result.data.message || "Instellingen opslaan op server mislukt."));
+      }
+      return result.data;
+    });
+}
+
+function writeUserStatusToApi(dbUserId, action) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin")) return Promise.resolve(null);
+  return requestAuthCsrf()
+    .then(token => fetch("/server/api/users.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify({ action, user_id: dbUserId })
+    }))
+    .then(resp => resp.json().catch(() => ({})).then(data => ({ ok: resp.ok, data })))
+    .then(result => {
+      if (!result.ok || !result.data || result.data.ok !== true) {
+        throw new Error(String(result && result.data && result.data.message || "Gebruikersstatus wijzigen op server mislukt."));
+      }
+      return result.data;
+    });
 }
 
 function toggleEmployeeStatus(employeeId) {
@@ -6121,6 +7580,20 @@ function toggleEmployeeStatus(employeeId) {
     summary: "<div><span>Historie</span><strong>Blijft bewaard</strong></div><div><span>Facturen</span><strong>Blijven bewaard</strong></div><div><span>Toegang</span><strong>" + (active ? "Wordt gestopt" : "Wordt hersteld") + "</strong></div>",
     confirm: active ? "Deactiveren" : "Opnieuw activeren",
     action: () => {
+      if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
+        const dbUserId = Number(employee.dbUserId || 0);
+        if (dbUserId <= 0) {
+          toast("Medewerker heeft geen gekoppeld serveraccount; wijziging alleen lokaal.");
+          employee.active = !active;
+          persistState(); closeModal(); renderAll();
+          return;
+        }
+        writeUserStatusToApi(dbUserId, active ? "deactivate" : "reactivate")
+          .then(() => refreshBootstrapReadApi(true))
+          .then(() => { closeModal(); renderAll(); toast(employee.name + (active ? " is gedeactiveerd; de historie is bewaard." : " is opnieuw actief.")); })
+          .catch(error => toast(String(error && error.message || "Status wijzigen op server mislukt.")));
+        return;
+      }
       employee.active = !active;
       persistState();
       closeModal();
@@ -6149,6 +7622,20 @@ function toggleAdminStatus(adminId) {
     summary: "<div><span>Historie</span><strong>Blijft bewaard</strong></div><div><span>Beheerderstoegang</span><strong>" + (active ? "Wordt gestopt" : "Wordt hersteld") + "</strong></div>",
     confirm: active ? "Deactiveren" : "Activeren",
     action: () => {
+      if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
+        const dbUserId = Number(admin.dbUserId || 0);
+        if (dbUserId <= 0) {
+          toast("Beheerder heeft geen gekoppeld serveraccount; wijziging alleen lokaal.");
+          admin.active = !active;
+          persistState(); closeModal(); renderAll();
+          return;
+        }
+        writeUserStatusToApi(dbUserId, active ? "deactivate" : "reactivate")
+          .then(() => refreshBootstrapReadApi(true))
+          .then(() => { closeModal(); renderAll(); toast(admin.name + (active ? " is gedeactiveerd." : " is opnieuw actief.")); })
+          .catch(error => toast(String(error && error.message || "Status wijzigen op server mislukt.")));
+        return;
+      }
       admin.active = !active;
       persistState();
       closeModal();
@@ -6331,14 +7818,25 @@ document.addEventListener("click", event => {
   if (notificationItem) {
     const item = state.notifications.find(notification => Number(notification.id) === Number(notificationItem.dataset.notificationId));
     if (item) {
-      item.read = true;
-      if (item.periodKey) setPeriod(item.periodKey);
-      const targetView = state.currentRole === "employee" && item.announcementId ? "employee-announcements" : item.view;
-      showView(targetView || profileForRole(state.currentRole).home);
-      persistState();
-      renderNotifications();
-      renderEmployeeAnnouncementArchive();
-      closeTopbarPopovers();
+      const continueNavigation = () => {
+        if (item.periodKey) setPeriod(item.periodKey);
+        const targetView = state.currentRole === "employee" && item.announcementId ? "employee-announcements" : item.view;
+        showView(targetView || profileForRole(state.currentRole).home);
+        closeTopbarPopovers();
+      };
+
+      if (API_ENABLED && authRuntime.mode === "auth") {
+        markNotificationReadApi(item.id)
+          .then(() => refreshNotificationsReadApi(true))
+          .catch(() => null)
+          .finally(continueNavigation);
+      } else {
+        item.read = true;
+        persistState();
+        renderNotifications();
+        renderEmployeeAnnouncementArchive();
+        continueNavigation();
+      }
     }
   }
 
@@ -6347,21 +7845,19 @@ document.addEventListener("click", event => {
 
   const loginChoice = event.target.closest("[data-login-role]");
   if (loginChoice) {
-    if (authRuntime.mode === "demo") {
-      login(loginChoice.dataset.loginRole);
-    } else {
-      setAuthLoginFeedback("Gebruik de inlogvelden met e-mail en wachtwoord.", true);
-    }
+    triggerLoginChoice(loginChoice.dataset.loginRole);
   }
 
   const home = event.target.closest("[data-home]");
   if (home) {
     event.preventDefault();
     const profile = profileForRole(state.currentRole);
+    resetHomeDashboardState(state.currentRole);
     if (profile && profile.home === "dashboard") {
-      state.dashboardTeamScope = "all";
-      persistState();
       renderDashboard();
+    }
+    if (profile && profile.home === "employee-dashboard") {
+      renderEmployeeDashboard();
     }
     showView(profile ? profile.home : "dashboard");
   }
@@ -6373,10 +7869,14 @@ document.addEventListener("click", event => {
       persistState();
       renderApprovals();
     }
+    if (["dashboard", "employee-dashboard"].includes(nav.dataset.view)) {
+      resetHomeDashboardState(state.currentRole);
+    }
     if (nav.dataset.view === "dashboard") {
-      state.dashboardTeamScope = "all";
-      persistState();
       renderDashboard();
+    }
+    if (nav.dataset.view === "employee-dashboard") {
+      renderEmployeeDashboard();
     }
     showView(nav.dataset.view);
   }
@@ -6388,10 +7888,14 @@ document.addEventListener("click", event => {
       persistState();
       renderApprovals();
     }
+    if (["dashboard", "employee-dashboard"].includes(go.dataset.go)) {
+      resetHomeDashboardState(state.currentRole);
+    }
     if (go.dataset.go === "dashboard") {
-      state.dashboardTeamScope = "all";
-      persistState();
       renderDashboard();
+    }
+    if (go.dataset.go === "employee-dashboard") {
+      renderEmployeeDashboard();
     }
     showView(go.dataset.go);
   }
@@ -6509,6 +8013,25 @@ document.addEventListener("click", event => {
       link.rel = "noopener noreferrer";
       link.click();
     }
+  }
+
+  const employeeOpenMonthToggle = event.target.closest("[data-employee-open-month-toggle]");
+  if (employeeOpenMonthToggle) {
+    const periodKey = employeeOpenMonthToggle.dataset.employeeOpenMonthToggle;
+    const bodyId = employeeOpenMonthToggle.getAttribute("aria-controls") || "";
+    const body = bodyId ? document.getElementById(bodyId) : null;
+    if (!parsePeriodKey(periodKey) || !body) return;
+    const expanded = employeeOpenMonthToggle.getAttribute("aria-expanded") === "true";
+    employeeOpenMonthToggle.setAttribute("aria-expanded", expanded ? "false" : "true");
+    body.hidden = expanded;
+    return;
+  }
+
+  const employeeOpenMonthOpen = event.target.closest("[data-employee-open-month-open]");
+  if (employeeOpenMonthOpen) {
+    setPeriod(employeeOpenMonthOpen.dataset.employeeOpenMonthOpen);
+    showView("timesheet");
+    return;
   }
 
   const openPeriod = event.target.closest("[data-open-period]");
@@ -6646,11 +8169,19 @@ document.addEventListener("click", event => {
 
   const readAnnouncement = event.target.closest("[data-read-announcement]");
   if (readAnnouncement && state.currentRole === "employee") {
-    announcementNotificationsFor(currentEmployee().id, Number(readAnnouncement.dataset.readAnnouncement)).forEach(item => { item.read = true; });
-    persistState();
-    renderNotifications();
-    renderEmployeeAnnouncementArchive();
-    toast("Mededeling als gelezen gemarkeerd.");
+    const announcementId = Number(readAnnouncement.dataset.readAnnouncement || 0);
+    if (API_ENABLED && authRuntime.mode === "auth") {
+      markAnnouncementReadApi(announcementId)
+        .then(() => refreshNotificationsReadApi(true))
+        .then(() => toast("Mededeling als gelezen gemarkeerd."))
+        .catch(() => toast("Markeren als gelezen op server mislukt."));
+    } else {
+      announcementNotificationsFor(currentEmployee().id, announcementId).forEach(item => { item.read = true; });
+      persistState();
+      renderNotifications();
+      renderEmployeeAnnouncementArchive();
+      toast("Mededeling als gelezen gemarkeerd.");
+    }
   }
 
   const review = event.target.closest("[data-review]");
@@ -6754,7 +8285,8 @@ document.querySelector("#submit-timesheet").addEventListener("click", async () =
   const record = recordFor(employee.id);
   const submitButton = document.querySelector("#submit-timesheet");
 
-  if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "employee") {
+  const serverSubmit = API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative() && state.currentRole === "employee";
+  if (serverSubmit) {
     if (writeRuntime.draftTimer) {
       window.clearTimeout(writeRuntime.draftTimer);
       writeRuntime.draftTimer = null;
@@ -6777,15 +8309,17 @@ document.querySelector("#submit-timesheet").addEventListener("click", async () =
     submitButton.textContent = originalText;
   }
 
-  const correction = activeCorrection(record);
-  if (correction) {
-    const resubmittedAt = correctionTimestamp();
-    correction.resubmittedAt = resubmittedAt.label;
-    correction.resubmittedAtIso = resubmittedAt.iso;
+  if (!serverSubmit) {
+    const correction = activeCorrection(record);
+    if (correction) {
+      const resubmittedAt = correctionTimestamp();
+      correction.resubmittedAt = resubmittedAt.label;
+      correction.resubmittedAtIso = resubmittedAt.iso;
+    }
+    record.timesheetStatus = "submitted";
+    record.invoiceStatus = "concept";
+    record.payrollStatus = "concept";
   }
-  record.timesheetStatus = "submitted";
-  record.invoiceStatus = "concept";
-  record.payrollStatus = "concept";
   addNotification({ audience: "admin", type: "submitted", employeeId: employee.id, title: "Uren ingediend", message: employee.name + " heeft " + currentPeriod().label + " ingediend.", periodKey: currentPeriod().key, view: "approvals" });
   addNotification({ audience: "employee", type: "submitted", employeeId: employee.id, title: "Uren wachten op controle", message: "Je uren voor " + currentPeriod().label + " zijn ingediend.", periodKey: currentPeriod().key, view: "employee-dashboard" });
   persistState();
@@ -6832,6 +8366,7 @@ document.querySelectorAll("[data-invoice-filter]").forEach(button => button.addE
 
 function handleMonthDelivery() {
   const readiness = monthBatchReadiness(currentPeriod().key);
+  const periodKey = currentPeriod().key;
   const periodRows = readiness.rows;
   if (readiness.state === "blocked") {
     if (readiness.blockers.length === 1) {
@@ -6876,6 +8411,32 @@ function handleMonthDelivery() {
     summary: routeSummary + "<div><span>Klanturenstaten</span><strong>" + customerReady + " klaar voor brokerroute · " + customerReceived + " te controleren · " + customerMissing + " ontbrekend/concept/opnieuw</strong></div>",
     confirm: "Controle afronden",
     action: () => {
+      const serverDelivery = API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative() && state.currentRole === "admin";
+      if (serverDelivery) {
+        const invoiceIds = approved.map(item => serverInvoiceIdFor(item.employee.id, periodKey)).filter(id => id > 0);
+        if (invoiceIds.length !== approved.length) {
+          toast("Niet alle serverfacturen zijn beschikbaar. Open Facturen opnieuw en probeer daarna nogmaals.");
+          return;
+        }
+
+        Promise.all(invoiceIds.map(id => enqueueInvoiceDeliveryToApi(id)))
+          .then(counts => Promise.all([
+            refreshEmailQueueReadApi(true),
+            refreshInvoicesReadApi(periodKey, true)
+          ]).catch(() => null).then(() => {
+            syncInvoiceStatusesFromApi(periodKey);
+            persistState();
+            closeModal();
+            renderAll();
+            const totalMessages = counts.reduce((sum, value) => sum + Number(value || 0), 0);
+            toast("Maandverzending gecontroleerd (dry-run): " + totalMessages + " berichten klaargezet via serverqueue.");
+          }))
+          .catch(error => {
+            toast(String(error && error.message || "Koppeling met mailqueue tijdelijk niet bereikbaar."));
+          });
+        return;
+      }
+
       approved.forEach(item => {
         item.record.invoiceStatus = "simulated";
         item.record.payrollStatus = "simulated";
@@ -6906,6 +8467,13 @@ function setPeriod(periodKey) {
   const parsed = parsePeriodKey(periodKey);
   if (!parsed || parsed.year < 1 || parsed.year > 9999) return false;
   const next = makePeriodKey(parsed.year, parsed.monthIndex);
+  if (state.currentRole === "employee") {
+    const maxEmployeePeriodKey = currentCalendarPeriodKey();
+    if (next > maxEmployeePeriodKey) {
+      toast("Medewerkers kunnen geen toekomstige maand openen. Beschikbaar tot en met " + periodFromKey(maxEmployeePeriodKey).label + ".");
+      return false;
+    }
+  }
   if (next === state.selectedPeriodKey) {
     return true;
   }
@@ -6917,7 +8485,7 @@ function setPeriod(periodKey) {
   document.querySelectorAll("[data-invoice-filter]").forEach(button => button.classList.toggle("is-active", button.dataset.invoiceFilter === "all"));
   persistState();
   renderAll();
-  toast("Periode gewijzigd naar " + currentPeriod().label + " voor beide rollen.");
+  toast("Periode gewijzigd naar " + currentPeriod().label + ".");
   return true;
 }
 
@@ -7190,24 +8758,30 @@ document.querySelector("#reset-brand-logo").addEventListener("click", () => {
 });
 document.querySelectorAll(".summary-hours-input").forEach(input => input.addEventListener("input", () => updateHoursTotal(true)));
 
-document.querySelector("#reset-demo").addEventListener("click", () => showModal({
-  label: "Voorbeeldgegevens herstellen",
-  title: "Alle lokale wijzigingen wissen?",
-  message: "Hiermee worden alleen de wijzigingen in deze browser hersteld. Er zijn geen externe gegevens.",
-  confirm: "Voorbeeldgegevens herstellen",
-  action: () => {
-    const role = state.currentRole || "admin";
-    state = freshState();
-    state.currentRole = role;
-    window.localStorage.removeItem(STORAGE_KEY);
-    persistState();
-    closeModal();
-    populateSettings();
-    renderAll();
-    showView(profileForRole(role).home);
-    toast("De lokale voorbeeldgegevens zijn hersteld.");
-  }
-}));
+function openResetDemoModal() {
+  showModal({
+    label: "Voorbeeldgegevens herstellen",
+    title: "Alle lokale wijzigingen wissen?",
+    message: "Hiermee worden alleen de wijzigingen in deze browser hersteld. Er zijn geen externe gegevens.",
+    confirm: "Voorbeeldgegevens herstellen",
+    action: () => {
+      const role = state.currentRole || "admin";
+      state = freshState();
+      state.currentRole = role;
+      window.localStorage.removeItem(STORAGE_KEY);
+      window.localStorage.setItem(LOCAL_RESET_GUARD_KEY, "1");
+      persistState();
+      closeModal();
+      populateSettings();
+      renderAll();
+      showView(profileForRole(role).home);
+      toast("De lokale voorbeeldgegevens zijn hersteld.");
+    }
+  });
+}
+
+document.querySelector("#reset-demo")?.addEventListener("click", openResetDemoModal);
+document.querySelector("#quick-reset-demo")?.addEventListener("click", openResetDemoModal);
 
 document.querySelector("#connect-gmail").addEventListener("click", () => showModal({
   label: "Verzendkoppeling",
@@ -7219,6 +8793,13 @@ document.querySelector("#connect-gmail").addEventListener("click", () => showMod
 }));
 
 document.querySelector("#mark-notifications-read").addEventListener("click", () => {
+  if (API_ENABLED && authRuntime.mode === "auth") {
+    markAllNotificationsReadApi()
+      .then(() => refreshNotificationsReadApi(true))
+      .then(() => toast("Alle meldingen zijn als gelezen gemarkeerd."))
+      .catch(() => toast("Markeren als gelezen op server mislukt."));
+    return;
+  }
   notificationsForCurrentProfile().forEach(item => { item.read = true; });
   persistState();
   renderNotifications();
@@ -7284,6 +8865,8 @@ document.querySelector("#auth-login-form")?.addEventListener("submit", event => 
       if (!applyAuthUserToState(result.data.user)) {
         setAuthLoginFeedback("Deze gebruiker heeft geen ondersteunde rol in deze fase.", true);
         logoutLocal();
+      } else {
+        refreshNotificationsReadApi(true).catch(() => null);
       }
       // Notify if admin has forced a password change for this account.
       if (result.data.user && result.data.user.force_password_change) {
@@ -7377,9 +8960,3 @@ populateSettings();
 renderAll();
 initializeAuthSession();
 prefillAuthCredentialsFromSelection("admin", false);
-
-// Read-only API bridge: purely additive diagnostics, local state remains leading fallback.
-refreshBootstrapReadApi(true);
-refreshDashboardReadApi(true);
-refreshInvoicesReadApi("", true);
-refreshInvoicesReadApi("2026-07", true);

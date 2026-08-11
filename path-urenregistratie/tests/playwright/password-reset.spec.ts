@@ -48,11 +48,16 @@ test.describe('password reset api', () => {
       expect(resetRes.body.ok).toBe(true);
 
       // Restore original password so other tests keep working.
-      const restoreToken = (await postAuth(ctx, '/server/auth/request-reset.php', { email: appConfig.adminEmail })).body.token as string;
-      await postAuth(ctx, '/server/auth/reset-password.php', {
-        token: restoreToken,
+      const restoreTokenRes = await postAuth(ctx, '/server/auth/request-reset.php', { email: appConfig.adminEmail });
+      expect(restoreTokenRes.status).toBe(200);
+      expect(restoreTokenRes.body.ok).toBe(true);
+      expect(typeof restoreTokenRes.body.token).toBe('string');
+      const restoreRes = await postAuth(ctx, '/server/auth/reset-password.php', {
+        token: restoreTokenRes.body.token as string,
         new_password: requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'),
       });
+      expect(restoreRes.status).toBe(200);
+      expect(restoreRes.body.ok).toBe(true);
     });
 
     await ctx.dispose();

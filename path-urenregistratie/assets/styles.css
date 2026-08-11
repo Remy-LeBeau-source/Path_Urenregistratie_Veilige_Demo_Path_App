@@ -233,6 +233,8 @@ select:focus-visible {
 .eyebrow, .section-label { margin: 0; color: var(--mint-dark); font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
 .topbar-actions { display: flex; align-items: center; gap: 12px; }
 .safety-badge { border: 1px solid #edcfa9; border-radius: 999px; background: var(--warning-bg); color: var(--warning); font-size: 9px; font-weight: 800; letter-spacing: .04em; padding: 7px 10px; text-transform: uppercase; white-space: nowrap; }
+.topbar-quick-reset { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); cursor: pointer; font-size: 10px; font-weight: 700; letter-spacing: .04em; padding: 7px 12px; text-transform: uppercase; }
+.topbar-quick-reset:hover { border-color: var(--mint); color: var(--mint-dark); }
 
 .period-control { display: flex; min-height: 48px; align-items: center; gap: 3px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: 0 5px 18px rgba(13,27,56,.04); padding: 0 4px; }
 .period-control button { width: 34px; height: 34px; border: 0; border-radius: 9px; background: transparent; cursor: pointer; font-size: 22px; line-height: 1; }
@@ -252,6 +254,14 @@ select:focus-visible {
 .period-control .month-choice-panel button, .customer-timesheet-upload-grid .month-choice-panel button { width: auto; height: auto; min-height: 34px; border: 1px solid transparent; border-radius: 8px; background: var(--surface-muted); color: var(--ink); padding: 7px 8px; cursor: pointer; font: inherit; font-size: 10px; font-weight: 700; line-height: 1.2; }
 .period-control .month-choice-panel button:hover, .customer-timesheet-upload-grid .month-choice-panel button:hover { border-color: var(--mint); background: var(--green-light); }
 .period-control .month-choice-panel button.is-active, .customer-timesheet-upload-grid .month-choice-panel button.is-active { border-color: var(--mint-dark); background: var(--mint); color: var(--navy); }
+html[data-theme="dark"] .period-control .month-picker-trigger,
+html[data-theme="dark"] .customer-timesheet-upload-grid .month-picker-trigger { color: var(--ink); background: #0c1723; }
+html[data-theme="dark"] .month-picker-trigger::after { color: var(--muted); }
+html[data-theme="dark"] .month-choice-panel { background: #0c1723; }
+html[data-theme="dark"] .period-control .month-choice-panel button,
+html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel button { background: #132131; color: var(--ink); }
+html[data-theme="dark"] .period-control .month-choice-panel button:hover,
+html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel button:hover { background: #183148; }
 .notification-button { position: relative; width: 42px; height: 42px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); cursor: pointer; }
 .notification-button span { position: absolute; inset: 11px 12px 12px; border: 2px solid var(--navy); border-top-left-radius: 10px; border-top-right-radius: 10px; border-bottom: 0; }
 .notification-button::after { position: absolute; top: 8px; right: 8px; width: 7px; height: 7px; border: 2px solid #fff; border-radius: 50%; background: var(--mint); content: ""; }
@@ -688,6 +698,7 @@ select:focus-visible {
   .eyebrow { display: none; }
   .notification-button { display: none; }
   .safety-badge { display: none; }
+  .topbar-quick-reset { display: none; }
   .hero-card { margin-top: 20px; padding: 28px; }
   .workflow-track { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .workflow-heading-meta { justify-items: start; text-align: left; }
@@ -835,12 +846,34 @@ select:focus-visible {
 .employee-customer-timesheet-card p { margin: 7px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
 .employee-customer-timesheet-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .employee-metrics .compact-metric { font-size: 20px; }
+.employee-open-overview { margin: 0 0 22px; overflow: hidden; border-radius: 22px; background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(244,249,247,.98)); box-shadow: 0 16px 34px rgba(13,27,56,.06); }
+.employee-open-overview .panel-heading { align-items: flex-start; }
+.employee-open-overview-list { display: grid; gap: 12px; padding: 0 24px 24px; }
+.employee-open-month { border: 1px solid #dbe6e2; border-radius: 18px; background: linear-gradient(135deg, #fff, #fbfefd); overflow: hidden; }
+.employee-open-month.is-current { border-color: var(--mint-dark); box-shadow: 0 0 0 2px rgba(37,150,124,.08), 0 12px 24px rgba(13,27,56,.08); }
+.employee-open-month-heading { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 14px; border: 0; background: transparent; color: inherit; cursor: pointer; font: inherit; padding: 15px 16px; text-align: left; transition: background .16s ease; }
+.employee-open-month-heading:hover { background: #f4faf8; }
+.employee-open-month-heading-copy { min-width: 0; }
+.employee-open-month-heading-copy strong, .employee-open-month-heading-copy small { display: block; }
+.employee-open-month-heading-copy strong { color: var(--navy); font-size: 14px; }
+.employee-open-month-heading-copy small { margin-top: 4px; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.employee-open-month-heading-side { display: flex; align-items: center; gap: 10px; }
+.employee-open-month-chevron { width: 9px; height: 9px; flex: 0 0 auto; border-right: 2px solid var(--navy); border-bottom: 2px solid var(--navy); transform: rotate(-45deg); transition: transform .18s ease; }
+.employee-open-month-heading[aria-expanded="true"] .employee-open-month-chevron { transform: rotate(45deg); }
+.employee-open-month-body { border-top: 1px solid #e4ece8; background: #fbfefd; padding: 12px 16px 14px; }
+.employee-open-month-body-copy { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.employee-open-month-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 11px; }
+.employee-open-tag { display: inline-flex; align-items: center; border-radius: 999px; font-size: 10px; font-weight: 800; line-height: 1; padding: 7px 10px; }
+.employee-open-tag.status-concept { background: #eef6f3; color: var(--mint-dark); }
+.employee-open-tag.status-warning { background: #fff1dc; color: #9a6006; }
+.employee-open-month-heading .status-pill { min-width: 138px; justify-content: center; }
 .employee-history { display: grid; }
 .employee-history-row { display: grid; grid-template-columns: 1fr .8fr .8fr auto; gap: 18px; align-items: center; border-top: 1px solid var(--line); padding: 15px 24px; }
 .employee-history-row strong, .employee-history-row small { display: block; }
 .employee-history-row strong { font-size: 11px; }
 .employee-history-row small { margin-top: 3px; color: var(--muted); font-size: 9px; }
 
+.timesheet-submit-note { margin: 0; color: var(--muted); font-size: 11px; font-style: italic; }
 .admin-task-panel { margin-bottom: 18px; overflow: hidden; }
 .admin-task-heading { align-items: flex-start; }
 .admin-task-heading h3 { margin-bottom: 4px; }
@@ -988,6 +1021,8 @@ select:focus-visible {
   .employee-customer-timesheet-card { grid-template-columns: 1fr; }
   .employee-customer-timesheet-actions { display: grid; grid-template-columns: 1fr; justify-content: stretch; }
   .employee-customer-timesheet-actions .button { width: 100%; }
+  .employee-open-month-body-copy { flex-direction: column; align-items: stretch; }
+  .employee-open-month-body-copy .small-button { width: 100%; }
   .customer-timesheet-template-grid { grid-template-columns: 1fr; }
   .customer-timesheet-flow { grid-template-columns: 1fr; }
   .customer-timesheet-upload-grid { grid-template-columns: 1fr; }
@@ -1269,7 +1304,7 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
   .help-suggestions [data-help-topic="contact"] { grid-column: 1; }
 }
 
-/* v0.9.41 · mobiele bediening: dezelfde functies, maar met duidelijke touch-layouts. */
+/* v0.9.43 · mobiele bediening: dezelfde functies, maar met duidelijke touch-layouts. */
 @media (max-width: 720px) {
   html, body { overflow-x: hidden; }
 
@@ -1336,6 +1371,11 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
 
   .topbar-title {
     min-width: 0;
+  }
+
+  .mobile-version-badge {
+    display: inline-flex;
+    margin-top: 4px;
   }
 
   .topbar h1 {

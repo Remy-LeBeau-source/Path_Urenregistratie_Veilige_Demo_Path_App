@@ -33,7 +33,7 @@ function customer_timesheet_parse_period_key(string $periodKey): array
         customer_timesheet_json([
             'ok' => false,
             'error' => 'invalid-payload',
-            'message' => 'period must be in YYYY-MM format.',
+            'message' => 'De periode moet de notatie JJJJ-MM hebben.',
         ], 400);
     }
 
@@ -96,7 +96,7 @@ function customer_timesheet_employee_from_payload(PDO $pdo, array $currentUser, 
             customer_timesheet_json([
                 'ok' => false,
                 'error' => 'employee-profile-missing',
-                'message' => 'Employee account is not linked to an employee record.',
+                'message' => 'Dit medewerkersaccount is niet gekoppeld aan een medewerkersrecord.',
             ], 403);
         }
 
@@ -104,7 +104,7 @@ function customer_timesheet_employee_from_payload(PDO $pdo, array $currentUser, 
             customer_timesheet_json([
                 'ok' => false,
                 'error' => 'forbidden-employee-scope',
-                'message' => 'Employee can only access own customer timesheet.',
+                'message' => 'Een medewerker kan alleen de eigen klanturenstaat openen.',
             ], 403);
         }
 
@@ -119,7 +119,7 @@ function customer_timesheet_employee_from_payload(PDO $pdo, array $currentUser, 
         customer_timesheet_json([
             'ok' => false,
             'error' => 'invalid-payload',
-            'message' => 'employee_id is required for administrator actions.',
+            'message' => 'Voor een beheeractie is een medewerker vereist.',
         ], 400);
     }
 
@@ -134,7 +134,7 @@ function customer_timesheet_employee_from_payload(PDO $pdo, array $currentUser, 
         customer_timesheet_json([
             'ok' => false,
             'error' => 'employee-not-found',
-            'message' => 'Employee was not found in your company scope.',
+            'message' => 'De medewerker is niet gevonden binnen jouw bedrijfsomgeving.',
         ], 404);
     }
 
@@ -162,7 +162,7 @@ function customer_timesheet_assignment_id(PDO $pdo, int $companyId, int $employe
         customer_timesheet_json([
             'ok' => false,
             'error' => 'assignment-not-found',
-            'message' => 'Requested assignment was not found in scope.',
+            'message' => 'De gevraagde plaatsing is niet gevonden binnen jouw bedrijfsomgeving.',
         ], 404);
     }
 
@@ -177,7 +177,7 @@ function customer_timesheet_assignment_id(PDO $pdo, int $companyId, int $employe
         customer_timesheet_json([
             'ok' => false,
             'error' => 'assignment-not-found',
-            'message' => 'No assignment found for this employee.',
+            'message' => 'Voor deze medewerker is geen plaatsing gevonden.',
         ], 409);
     }
 
@@ -256,7 +256,7 @@ function customer_timesheet_mkdir_for(string $absolutePath): void
             customer_timesheet_json([
                 'ok' => false,
                 'error' => 'storage-failed',
-                'message' => 'Could not create storage folder for customer timesheets.',
+                'message' => 'De opslagmap voor klanturenstaten kon niet worden aangemaakt.',
             ], 500);
         }
     }
@@ -268,7 +268,7 @@ function customer_timesheet_detect_upload(array $file): array
         customer_timesheet_json([
             'ok' => false,
             'error' => 'invalid-upload',
-            'message' => 'File upload failed.',
+            'message' => 'Het uploaden van het bestand is mislukt.',
         ], 400);
     }
 
@@ -277,7 +277,7 @@ function customer_timesheet_detect_upload(array $file): array
         customer_timesheet_json([
             'ok' => false,
             'error' => 'invalid-upload',
-            'message' => 'File must be larger than 0 and at most 2 MB.',
+            'message' => 'Het bestand moet groter zijn dan 0 en maximaal 2 MB groot zijn.',
         ], 400);
     }
 
@@ -286,7 +286,7 @@ function customer_timesheet_detect_upload(array $file): array
         customer_timesheet_json([
             'ok' => false,
             'error' => 'invalid-upload',
-            'message' => 'Uploaded file is missing temporary storage.',
+            'message' => 'Voor het geuploade bestand ontbreekt tijdelijke opslag.',
         ], 400);
     }
 
@@ -331,7 +331,7 @@ function customer_timesheet_detect_upload(array $file): array
         customer_timesheet_json([
             'ok' => false,
             'error' => 'invalid-upload',
-            'message' => 'Only PDF, JPG and PNG are allowed.',
+            'message' => 'Alleen PDF, JPG en PNG zijn toegestaan.',
         ], 400);
     }
 
@@ -356,7 +356,7 @@ function customer_timesheet_store_upload(array $upload, int $companyId, int $emp
         customer_timesheet_json([
             'ok' => false,
             'error' => 'storage-failed',
-            'message' => 'Could not store uploaded customer timesheet.',
+            'message' => 'De geuploade klanturenstaat kon niet worden opgeslagen.',
         ], 500);
     }
 
@@ -459,7 +459,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
             customer_timesheet_json([
                 'ok' => false,
                 'error' => 'customer-timesheet-not-found',
-                'message' => 'No customer timesheet exists for this period and employee.',
+                'message' => 'Voor deze periode en medewerker bestaat geen klanturenstaat.',
             ], 404);
         }
 
@@ -468,7 +468,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
             customer_timesheet_json([
                 'ok' => false,
                 'error' => 'customer-timesheet-file-missing',
-                'message' => 'No file is attached to this customer timesheet.',
+                'message' => 'Aan deze klanturenstaat is geen bestand gekoppeld.',
             ], 404);
         }
 
@@ -477,7 +477,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
             customer_timesheet_json([
                 'ok' => false,
                 'error' => 'customer-timesheet-file-missing',
-                'message' => 'Stored file could not be found on server.',
+                'message' => 'Het opgeslagen bestand is niet gevonden op de server.',
             ], 404);
         }
 
@@ -516,7 +516,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
     customer_timesheet_json([
         'ok' => false,
         'error' => 'method-not-allowed',
-        'message' => 'Only GET and POST are allowed on this endpoint.',
+        'message' => 'Alleen GET en POST zijn toegestaan voor dit endpoint.',
     ], 405);
 }
 
@@ -543,7 +543,7 @@ if (in_array($action, ['approve', 'request_resubmit', 'mark_sent', 'mark_sent_to
     customer_timesheet_json([
         'ok' => false,
         'error' => 'forbidden-action',
-        'message' => 'Only administrator can perform this action.',
+        'message' => 'Alleen een beheerder kan deze actie uitvoeren.',
     ], 403);
 }
 
@@ -580,7 +580,7 @@ try {
                 customer_timesheet_json([
                     'ok' => false,
                     'error' => 'customer-timesheet-locked',
-                    'message' => 'Approved or sent customer timesheets cannot be replaced in this state.',
+                    'message' => 'Een goedgekeurde of verzonden klanturenstaat kan in deze status niet worden vervangen.',
                 ], 409);
             }
         }
@@ -592,7 +592,7 @@ try {
             customer_timesheet_json([
                 'ok' => false,
                 'error' => 'invalid-upload',
-                'message' => 'file is required for first upload.',
+                'message' => 'Voor de eerste upload is een bestand vereist.',
             ], 400);
         }
 
@@ -674,7 +674,7 @@ try {
                 customer_timesheet_json([
                     'ok' => false,
                     'error' => 'invalid-customer-timesheet-transition',
-                    'message' => 'Only received customer timesheets can be approved.',
+                    'message' => 'Alleen een ingediende klanturenstaat kan worden goedgekeurd.',
                 ], 409);
             }
 
@@ -701,7 +701,7 @@ try {
                 customer_timesheet_json([
                     'ok' => false,
                     'error' => 'invalid-customer-timesheet-transition',
-                    'message' => 'Only received or approved customer timesheets can be moved to resubmit.',
+                    'message' => 'Alleen een ingediende of goedgekeurde klanturenstaat kan opnieuw worden opgevraagd.',
                 ], 409);
             }
 
@@ -730,7 +730,7 @@ try {
                 customer_timesheet_json([
                     'ok' => false,
                     'error' => 'invalid-customer-timesheet-transition',
-                    'message' => 'Only approved customer timesheets can be marked sent.',
+                    'message' => 'Alleen een goedgekeurde klanturenstaat kan als verzonden worden gemarkeerd.',
                 ], 409);
             }
 
@@ -749,7 +749,7 @@ try {
                 customer_timesheet_json([
                     'ok' => false,
                     'error' => 'invalid-customer-timesheet-transition',
-                    'message' => 'Only approved or sent customer timesheets can be marked sent_to_broker.',
+                    'message' => 'Alleen een goedgekeurde of verzonden klanturenstaat kan naar de brokerroute worden gezet.',
                 ], 409);
             }
 
@@ -773,7 +773,7 @@ try {
                 customer_timesheet_json([
                     'ok' => false,
                     'error' => 'forbidden-action',
-                    'message' => 'Only employee can mark skipped.',
+                    'message' => 'Alleen een medewerker kan een klanturenstaat als rechtstreeks gemaild registreren.',
                 ], 403);
             }
 
@@ -801,7 +801,7 @@ try {
                 customer_timesheet_json([
                     'ok' => false,
                     'error' => 'forbidden-action',
-                    'message' => 'Only employee can restore missing status.',
+                    'message' => 'Alleen een medewerker kan de status terugzetten naar ontbrekend.',
                 ], 403);
             }
 
@@ -812,7 +812,7 @@ try {
                 customer_timesheet_json([
                     'ok' => false,
                     'error' => 'invalid-customer-timesheet-transition',
-                    'message' => 'Only skipped customer timesheets can be restored to missing.',
+                    'message' => 'Alleen een als rechtstreeks gemaild geregistreerde klanturenstaat kan worden teruggezet naar ontbrekend.',
                 ], 409);
             }
 

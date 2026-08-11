@@ -108,6 +108,17 @@ test.describe('customer timesheet api', () => {
       expect(approve.body.ok).toBe(true);
       expect(approve.body.customer_timesheet.status).toBe('approved');
 
+      const approveAgain = await customerApi.write({
+        action: 'approve',
+        period,
+        employeeId,
+        assignmentId,
+      });
+      expect(approveAgain.status).toBe(409);
+      expect(approveAgain.body.ok).toBe(false);
+      expect(approveAgain.body.error).toBe('invalid-customer-timesheet-transition');
+      expect(approveAgain.body.message).toBe('Alleen een ingediende klanturenstaat kan worden goedgekeurd.');
+
       const resubmit = await customerApi.write({
         action: 'request_resubmit',
         period,

@@ -102,78 +102,95 @@ INSERT INTO assignment_mail_routes (assignment_id, mail_recipient_id, enabled, i
   (4, 1, TRUE, TRUE), (4, 2, TRUE, FALSE);
 
 INSERT INTO periods (id, company_id, year, month, status, closed_at, closed_by) VALUES
-  (1, 1, 2026, 6, 'closed', '2026-07-03 16:00:00', 1),
-  (2, 1, 2026, 7, 'review', NULL, NULL),
-  (3, 1, 2026, 8, 'open', NULL, NULL);
+  (1, 1, 2026, 5, 'closed', '2026-06-03 16:00:00', 1),
+  (2, 1, 2026, 6, 'closed', '2026-07-03 16:00:00', 1),
+  (3, 1, 2026, 7, 'review', NULL, NULL),
+  (4, 1, 2026, 8, 'open', NULL, NULL);
 
 INSERT INTO timesheets (
   id, period_id, employee_id, assignment_id, contractual_hours, billable_hours,
   leave_hours, sickness_hours, status, submitted_at, approved_at, approved_by, review_note
 ) VALUES
-  (1, 1, 1, 1, 144.00, 144.00, 0.00, 0.00, 'approved', '2026-06-30 16:00:00', '2026-07-01 10:00:00', 1, NULL),
-  (2, 1, 2, 2, 144.00, 144.00, 0.00, 0.00, 'approved', '2026-06-30 16:05:00', '2026-07-01 10:02:00', 1, NULL),
-  (3, 1, 3, 3, 144.00, 136.00, 0.00, 0.00, 'approved', '2026-06-30 16:10:00', '2026-07-01 10:04:00', 1, NULL),
-  (4, 1, 4, 4, 144.00, 144.00, 0.00, 0.00, 'approved', '2026-06-30 16:15:00', '2026-07-01 10:06:00', 1, NULL),
-  (5, 2, 1, 1, 164.00, 164.00, 0.00, 0.00, 'approved', '2026-07-31 16:00:00', '2026-08-03 10:00:00', 1, NULL),
-  (6, 2, 2, 2, 153.00, 153.00, 0.00, 0.00, 'approved', '2026-07-31 16:05:00', '2026-08-03 10:02:00', 1, NULL),
-  (7, 2, 3, 3, 117.00, 117.00, 0.00, 0.00, 'approved', '2026-07-31 16:10:00', '2026-08-03 10:04:00', 1, NULL),
-  (8, 2, 4, 4, 144.00, 144.00, 0.00, 0.00, 'approved', '2026-07-31 16:15:00', '2026-08-03 10:06:00', 1, NULL),
-  (9, 3, 1, 1, 151.20, 0.00, 0.00, 0.00, 'draft', NULL, NULL, NULL, NULL),
-  (10, 3, 2, 2, 151.20, 80.00, 0.00, 0.00, 'correction', '2026-08-05 09:30:00', NULL, NULL, 'Controleer 12 augustus: daar staat 8 uur, maar volgens de planning hoort dit 4 uur te zijn.'),
-  (11, 3, 3, 3, 151.20, 144.00, 0.00, 0.00, 'approved', '2026-08-31 16:00:00', '2026-09-01 10:00:00', 1, NULL),
-  (12, 3, 4, 4, 151.20, 144.00, 0.00, 0.00, 'approved', '2026-08-31 16:10:00', '2026-09-01 10:05:00', 1, NULL);
+  (1, 1, 1, 1, 152.00, 152.00, 0.00, 0.00, 'approved', '2026-05-31 16:00:00', '2026-06-01 10:00:00', 1, NULL),
+  (2, 1, 2, 2, 144.00, 144.00, 0.00, 0.00, 'approved', '2026-05-31 16:05:00', '2026-06-01 10:02:00', 1, NULL),
+  (3, 1, 3, 3, 144.00, 128.00, 0.00, 0.00, 'approved', '2026-05-31 16:10:00', '2026-06-01 10:04:00', 1, NULL),
+  (4, 1, 4, 4, 160.00, 160.00, 0.00, 0.00, 'approved', '2026-05-31 16:15:00', '2026-06-01 10:06:00', 1, NULL),
+  (5, 2, 1, 1, 144.00, 144.00, 0.00, 0.00, 'approved', '2026-06-30 16:00:00', '2026-07-01 10:00:00', 1, NULL),
+  (6, 2, 2, 2, 144.00, 0.00, 0.00, 0.00, 'draft', NULL, NULL, NULL, NULL),
+  (7, 2, 3, 3, 144.00, 136.00, 0.00, 0.00, 'approved', '2026-06-30 16:10:00', '2026-07-01 10:04:00', 1, NULL),
+  (8, 2, 4, 4, 144.00, 144.00, 0.00, 0.00, 'approved', '2026-06-30 16:15:00', '2026-07-01 10:06:00', 1, NULL),
+  (9, 3, 1, 1, 164.00, 164.00, 0.00, 0.00, 'approved', '2026-07-31 16:00:00', '2026-08-03 10:00:00', 1, NULL),
+  (10, 3, 2, 2, 153.00, 153.00, 0.00, 0.00, 'approved', '2026-07-31 16:05:00', '2026-08-03 10:02:00', 1, NULL),
+  (11, 3, 3, 3, 117.00, 117.00, 0.00, 0.00, 'approved', '2026-07-31 16:10:00', '2026-08-03 10:04:00', 1, NULL),
+  (12, 3, 4, 4, 144.00, 144.00, 0.00, 0.00, 'approved', '2026-07-31 16:15:00', '2026-08-03 10:06:00', 1, NULL),
+  (13, 4, 1, 1, 151.20, 0.00, 0.00, 0.00, 'draft', NULL, NULL, NULL, NULL),
+  (14, 4, 2, 2, 151.20, 80.00, 0.00, 0.00, 'correction', '2026-08-05 09:30:00', NULL, NULL, 'Controleer 12 augustus: daar staat 8 uur, maar volgens de planning hoort dit 4 uur te zijn.'),
+  (15, 4, 3, 3, 151.20, 144.00, 0.00, 0.00, 'approved', '2026-08-31 16:00:00', '2026-09-01 10:00:00', 1, NULL),
+  (16, 4, 4, 4, 151.20, 144.00, 0.00, 0.00, 'approved', '2026-08-31 16:10:00', '2026-09-01 10:05:00', 1, NULL);
 
 INSERT INTO time_entries (timesheet_id, work_date, entry_type, hours, description) VALUES
-  (1, '2026-06-30', 'billable', 8.00, 'Demo dagentry'),
-  (2, '2026-06-30', 'billable', 8.00, 'Demo dagentry'),
-  (3, '2026-06-30', 'billable', 8.00, 'Demo dagentry'),
-  (4, '2026-06-30', 'billable', 8.00, 'Demo dagentry'),
-  (5, '2026-07-31', 'billable', 8.00, 'Demo dagentry'),
-  (6, '2026-07-31', 'billable', 8.00, 'Demo dagentry'),
-  (7, '2026-07-31', 'billable', 8.00, 'Demo dagentry'),
-  (8, '2026-07-31', 'billable', 8.00, 'Demo dagentry'),
-  (10, '2026-08-12', 'billable', 4.00, 'Demo dagentry met correctieverzoek'),
-  (11, '2026-08-31', 'billable', 8.00, 'Demo dagentry'),
-  (12, '2026-08-31', 'billable', 8.00, 'Demo dagentry');
+  (1, '2026-05-29', 'billable', 8.00, 'Demo dagentry'),
+  (2, '2026-05-29', 'billable', 8.00, 'Demo dagentry'),
+  (3, '2026-05-29', 'billable', 8.00, 'Demo dagentry'),
+  (4, '2026-05-29', 'billable', 8.00, 'Demo dagentry'),
+  (5, '2026-06-30', 'billable', 8.00, 'Demo dagentry'),
+  (6, '2026-06-30', 'billable', 8.00, 'Demo dagentry'),
+  (7, '2026-06-30', 'billable', 8.00, 'Demo dagentry'),
+  (8, '2026-06-30', 'billable', 8.00, 'Demo dagentry'),
+  (9, '2026-07-31', 'billable', 8.00, 'Demo dagentry'),
+  (10, '2026-07-31', 'billable', 8.00, 'Demo dagentry'),
+  (11, '2026-07-31', 'billable', 8.00, 'Demo dagentry'),
+  (12, '2026-07-31', 'billable', 8.00, 'Demo dagentry'),
+  (14, '2026-08-12', 'billable', 4.00, 'Demo dagentry met correctieverzoek'),
+  (15, '2026-08-31', 'billable', 8.00, 'Demo dagentry'),
+  (16, '2026-08-31', 'billable', 8.00, 'Demo dagentry');
 
 INSERT INTO timesheet_corrections (id, timesheet_id, requested_by, correction_message, requested_at) VALUES
-  (1, 10, 1, 'Controleer 12 augustus: daar staat 8 uur, maar volgens de planning hoort dit 4 uur te zijn.', '2026-08-05 10:15:00');
+  (1, 14, 1, 'Controleer 12 augustus: daar staat 8 uur, maar volgens de planning hoort dit 4 uur te zijn.', '2026-08-05 10:15:00');
 
 INSERT INTO customer_timesheets (
   id, period_id, employee_id, assignment_id, status, storage_key,
   original_file_name, stored_file_name, mime_type, uploaded_at, uploaded_by,
   reviewed_at, reviewed_by, sent_to_broker_at, reminder_count, last_reminder_at
 ) VALUES
-  (1, 1, 1, 1, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Marc_de_Roon_2026-06.pdf', 'Klanturenstaat_Marc_de_Roon_2026-06.pdf', 'application/pdf', '2026-07-01 08:30:00', 3, '2026-07-01 09:00:00', 1, '2026-07-01 10:00:00', 0, NULL),
-  (2, 1, 2, 2, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Stasjo_van_Bakel_2026-06.pdf', 'Klanturenstaat_Stasjo_van_Bakel_2026-06.pdf', 'application/pdf', '2026-07-01 08:35:00', 4, '2026-07-01 09:05:00', 1, '2026-07-01 10:05:00', 0, NULL),
-  (3, 1, 3, 3, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Brian_Hek_2026-06.pdf', 'Klanturenstaat_Brian_Hek_2026-06.pdf', 'application/pdf', '2026-07-01 08:40:00', 5, '2026-07-01 09:10:00', 1, '2026-07-01 10:10:00', 0, NULL),
-  (4, 1, 4, 4, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Shawn-Douglas_Nahar_2026-06.pdf', 'Klanturenstaat_Shawn-Douglas_Nahar_2026-06.pdf', 'application/pdf', '2026-07-01 08:45:00', 6, '2026-07-01 09:15:00', 1, '2026-07-01 10:15:00', 0, NULL),
-  (5, 2, 1, 1, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Marc_de_Roon_2026-07.pdf', 'Klanturenstaat_Marc_de_Roon_2026-07.pdf', 'application/pdf', '2026-08-03 08:30:00', 3, '2026-08-03 09:00:00', 1, '2026-08-03 10:00:00', 0, NULL),
-  (6, 2, 2, 2, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Stasjo_van_Bakel_2026-07.pdf', 'Klanturenstaat_Stasjo_van_Bakel_2026-07.pdf', 'application/pdf', '2026-08-03 08:35:00', 4, '2026-08-03 09:05:00', 1, '2026-08-03 10:05:00', 0, NULL),
-  (7, 2, 3, 3, 'missing', NULL, NULL, NULL, 'application/pdf', NULL, NULL, NULL, NULL, NULL, 1, '2026-08-06 15:00:00'),
-  (8, 2, 4, 4, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Shawn-Douglas_Nahar_2026-07.pdf', 'Klanturenstaat_Shawn-Douglas_Nahar_2026-07.pdf', 'application/pdf', '2026-08-03 08:45:00', 6, '2026-08-03 09:15:00', 1, '2026-08-03 10:15:00', 0, NULL),
-  (9, 3, 1, 1, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Marc_de_Roon_2026-08.pdf', 'Klanturenstaat_Marc_de_Roon_2026-08.pdf', 'application/pdf', '2026-09-01 08:30:00', 3, '2026-09-01 09:00:00', 1, '2026-09-01 10:00:00', 0, NULL),
-  (10, 3, 2, 2, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Stasjo_van_Bakel_2026-08.pdf', 'Klanturenstaat_Stasjo_van_Bakel_2026-08.pdf', 'application/pdf', '2026-09-01 08:35:00', 4, '2026-09-01 09:05:00', 1, '2026-09-01 10:05:00', 0, NULL),
-  (11, 3, 3, 3, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Brian_Hek_2026-08.pdf', 'Klanturenstaat_Brian_Hek_2026-08.pdf', 'application/pdf', '2026-09-01 08:40:00', 5, '2026-09-01 09:10:00', 1, '2026-09-01 10:10:00', 0, NULL),
-  (12, 3, 4, 4, 'received', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Shawn-Douglas_Nahar_2026-08.pdf', 'Klanturenstaat_Shawn-Douglas_Nahar_2026-08.pdf', 'application/pdf', '2026-09-01 08:45:00', 6, NULL, NULL, NULL, 0, NULL);
+  (1, 1, 1, 1, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Marc_de_Roon_2026-05.pdf', 'Klanturenstaat_Marc_de_Roon_2026-05.pdf', 'application/pdf', '2026-06-01 08:30:00', 3, '2026-06-01 09:00:00', 1, '2026-06-01 10:00:00', 0, NULL),
+  (2, 1, 2, 2, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Stasjo_van_Bakel_2026-05.pdf', 'Klanturenstaat_Stasjo_van_Bakel_2026-05.pdf', 'application/pdf', '2026-06-01 08:35:00', 4, '2026-06-01 09:05:00', 1, '2026-06-01 10:05:00', 0, NULL),
+  (3, 1, 3, 3, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Brian_Hek_2026-05.pdf', 'Klanturenstaat_Brian_Hek_2026-05.pdf', 'application/pdf', '2026-06-01 08:40:00', 5, '2026-06-01 09:10:00', 1, '2026-06-01 10:10:00', 0, NULL),
+  (4, 1, 4, 4, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Shawn-Douglas_Nahar_2026-05.pdf', 'Klanturenstaat_Shawn-Douglas_Nahar_2026-05.pdf', 'application/pdf', '2026-06-01 08:45:00', 6, '2026-06-01 09:15:00', 1, '2026-06-01 10:15:00', 0, NULL),
+  (5, 2, 1, 1, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Marc_de_Roon_2026-06.pdf', 'Klanturenstaat_Marc_de_Roon_2026-06.pdf', 'application/pdf', '2026-07-01 08:30:00', 3, '2026-07-01 09:00:00', 1, '2026-07-01 10:00:00', 0, NULL),
+  (6, 2, 2, 2, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Stasjo_van_Bakel_2026-06.pdf', 'Klanturenstaat_Stasjo_van_Bakel_2026-06.pdf', 'application/pdf', '2026-07-01 08:35:00', 4, '2026-07-01 09:05:00', 1, '2026-07-01 10:05:00', 0, NULL),
+  (7, 2, 3, 3, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Brian_Hek_2026-06.pdf', 'Klanturenstaat_Brian_Hek_2026-06.pdf', 'application/pdf', '2026-07-01 08:40:00', 5, '2026-07-01 09:10:00', 1, '2026-07-01 10:10:00', 0, NULL),
+  (8, 2, 4, 4, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Shawn-Douglas_Nahar_2026-06.pdf', 'Klanturenstaat_Shawn-Douglas_Nahar_2026-06.pdf', 'application/pdf', '2026-07-01 08:45:00', 6, '2026-07-01 09:15:00', 1, '2026-07-01 10:15:00', 0, NULL),
+  (9, 3, 1, 1, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Marc_de_Roon_2026-07.pdf', 'Klanturenstaat_Marc_de_Roon_2026-07.pdf', 'application/pdf', '2026-08-03 08:30:00', 3, '2026-08-03 09:00:00', 1, '2026-08-03 10:00:00', 0, NULL),
+  (10, 3, 2, 2, 'resubmit', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Stasjo_van_Bakel_2026-07.pdf', 'Klanturenstaat_Stasjo_van_Bakel_2026-07.pdf', 'application/pdf', '2026-08-03 08:35:00', 4, '2026-08-03 09:05:00', 1, NULL, 0, NULL),
+  (11, 3, 3, 3, 'missing', NULL, NULL, NULL, 'application/pdf', NULL, NULL, NULL, NULL, NULL, 1, '2026-08-06 15:00:00'),
+  (12, 3, 4, 4, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Shawn-Douglas_Nahar_2026-07.pdf', 'Klanturenstaat_Shawn-Douglas_Nahar_2026-07.pdf', 'application/pdf', '2026-08-03 08:45:00', 6, '2026-08-03 09:15:00', 1, '2026-08-03 10:15:00', 0, NULL),
+  (13, 4, 1, 1, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Marc_de_Roon_2026-08.pdf', 'Klanturenstaat_Marc_de_Roon_2026-08.pdf', 'application/pdf', '2026-09-01 08:30:00', 3, '2026-09-01 09:00:00', 1, '2026-09-01 10:00:00', 0, NULL),
+  (14, 4, 2, 2, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Stasjo_van_Bakel_2026-08.pdf', 'Klanturenstaat_Stasjo_van_Bakel_2026-08.pdf', 'application/pdf', '2026-09-01 08:35:00', 4, '2026-09-01 09:05:00', 1, '2026-09-01 10:05:00', 0, NULL),
+  (15, 4, 3, 3, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Brian_Hek_2026-08.pdf', 'Klanturenstaat_Brian_Hek_2026-08.pdf', 'application/pdf', '2026-09-01 08:40:00', 5, '2026-09-01 09:10:00', 1, '2026-09-01 10:10:00', 0, NULL),
+  (16, 4, 4, 4, 'received', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Shawn-Douglas_Nahar_2026-08.pdf', 'Klanturenstaat_Shawn-Douglas_Nahar_2026-08.pdf', 'application/pdf', '2026-09-01 08:45:00', 6, NULL, NULL, NULL, 0, NULL);
 
 INSERT INTO invoices (
   id, company_id, timesheet_id, invoice_number, invoice_date, due_date,
   recipient_id, subtotal, vat_percentage, vat_amount, total, status,
   pdf_storage_key, locked_at, sent_at, created_by
 ) VALUES
-  (1, 1, 1, 'IND-2026-juni', '2026-07-01', '2026-07-31', 10, 12240.00, 21.00, 2570.40, 14810.40, 'sent', 'invoices/IND-2026-juni.pdf', '2026-07-01 10:00:00', '2026-07-01 10:10:00', 1),
-  (2, 1, 2, 'IND-StvB-2026-juni', '2026-07-01', '2026-07-31', 10, 11520.00, 21.00, 2419.20, 13939.20, 'sent', 'invoices/IND-StvB-2026-juni.pdf', '2026-07-01 10:05:00', '2026-07-01 10:15:00', 1),
-  (3, 1, 3, 'COA-2026-juni', '2026-07-01', '2026-07-31', 10, 9860.00, 21.00, 2070.60, 11930.60, 'sent', 'invoices/COA-2026-juni.pdf', '2026-07-01 10:10:00', '2026-07-01 10:20:00', 1),
-  (4, 1, 4, 'Bel-Shawn-2026-juni', '2026-07-01', '2026-07-31', 11, 12312.00, 21.00, 2585.52, 14897.52, 'sent', 'invoices/Bel-Shawn-2026-juni.pdf', '2026-07-01 10:15:00', '2026-07-01 10:25:00', 1),
-  (5, 1, 5, 'IND-2026-juli', '2026-08-01', '2026-08-31', 10, 13940.00, 21.00, 2927.40, 16867.40, 'sent', 'invoices/IND-2026-juli.pdf', '2026-08-03 10:00:00', '2026-08-03 10:10:00', 1),
-  (6, 1, 6, 'IND-StvB-2026-juli', '2026-08-01', '2026-08-31', 10, 12240.00, 21.00, 2570.40, 14810.40, 'sent', 'invoices/IND-StvB-2026-juli.pdf', '2026-08-03 10:05:00', '2026-08-03 10:15:00', 1),
-  (7, 1, 7, 'COA-2026-juli', '2026-08-01', '2026-08-31', 10, 8482.50, 21.00, 1781.33, 10263.83, 'sent', 'invoices/COA-2026-juli.pdf', '2026-08-03 10:10:00', '2026-08-03 10:20:00', 1),
-  (8, 1, 8, 'Bel-Shawn-2026-juli', '2026-08-01', '2026-08-31', 11, 12312.00, 21.00, 2585.52, 14897.52, 'ready', 'invoices/Bel-Shawn-2026-juli.pdf', NULL, NULL, 1),
-  (9, 1, 9, 'IND-2026-augustus', '2026-09-01', '2026-10-01', 10, 0.00, 21.00, 0.00, 0.00, 'concept', NULL, NULL, NULL, 1),
-  (10, 1, 10, 'IND-StvB-2026-augustus', '2026-09-01', '2026-10-01', 10, 6400.00, 21.00, 1344.00, 7744.00, 'concept', NULL, NULL, NULL, 1),
-  (11, 1, 11, 'COA-2026-augustus', '2026-09-01', '2026-10-01', 10, 10440.00, 21.00, 2192.40, 12632.40, 'ready', 'invoices/COA-2026-augustus.pdf', NULL, NULL, 1),
-  (12, 1, 12, 'Bel-Shawn-2026-augustus', '2026-09-01', '2026-10-01', 11, 12312.00, 21.00, 2585.52, 14897.52, 'ready', 'invoices/Bel-Shawn-2026-augustus.pdf', NULL, NULL, 1);
+  (1, 1, 1, 'IND-2026-mei', '2026-06-01', '2026-07-01', 10, 12920.00, 21.00, 2713.20, 15633.20, 'sent', 'invoices/IND-2026-mei.pdf', '2026-06-01 10:00:00', '2026-06-01 10:10:00', 1),
+  (2, 1, 2, 'IND-StvB-2026-mei', '2026-06-01', '2026-07-01', 10, 11520.00, 21.00, 2419.20, 13939.20, 'sent', 'invoices/IND-StvB-2026-mei.pdf', '2026-06-01 10:05:00', '2026-06-01 10:15:00', 1),
+  (3, 1, 3, 'COA-2026-mei', '2026-06-01', '2026-07-01', 10, 9280.00, 21.00, 1948.80, 11228.80, 'sent', 'invoices/COA-2026-mei.pdf', '2026-06-01 10:10:00', '2026-06-01 10:20:00', 1),
+  (4, 1, 4, 'Bel-Shawn-2026-mei', '2026-06-01', '2026-07-01', 11, 13680.00, 21.00, 2872.80, 16552.80, 'sent', 'invoices/Bel-Shawn-2026-mei.pdf', '2026-06-01 10:15:00', '2026-06-01 10:25:00', 1),
+  (5, 1, 5, 'IND-2026-juni', '2026-07-01', '2026-07-31', 10, 12240.00, 21.00, 2570.40, 14810.40, 'sent', 'invoices/IND-2026-juni.pdf', '2026-07-01 10:00:00', '2026-07-01 10:10:00', 1),
+  (6, 1, 6, 'IND-StvB-2026-juni', '2026-07-01', '2026-07-31', 10, 11520.00, 21.00, 2419.20, 13939.20, 'sent', 'invoices/IND-StvB-2026-juni.pdf', '2026-07-01 10:05:00', '2026-07-01 10:15:00', 1),
+  (7, 1, 7, 'COA-2026-juni', '2026-07-01', '2026-07-31', 10, 9860.00, 21.00, 2070.60, 11930.60, 'sent', 'invoices/COA-2026-juni.pdf', '2026-07-01 10:10:00', '2026-07-01 10:20:00', 1),
+  (8, 1, 8, 'Bel-Shawn-2026-juni', '2026-07-01', '2026-07-31', 11, 12312.00, 21.00, 2585.52, 14897.52, 'sent', 'invoices/Bel-Shawn-2026-juni.pdf', '2026-07-01 10:15:00', '2026-07-01 10:25:00', 1),
+  (9, 1, 9, 'IND-2026-juli', '2026-08-01', '2026-08-31', 10, 13940.00, 21.00, 2927.40, 16867.40, 'sent', 'invoices/IND-2026-juli.pdf', '2026-08-03 10:00:00', '2026-08-03 10:10:00', 1),
+  (10, 1, 10, 'IND-StvB-2026-juli', '2026-08-01', '2026-08-31', 10, 12240.00, 21.00, 2570.40, 14810.40, 'sent', 'invoices/IND-StvB-2026-juli.pdf', '2026-08-03 10:05:00', '2026-08-03 10:15:00', 1),
+  (11, 1, 11, 'COA-2026-juli', '2026-08-01', '2026-08-31', 10, 8482.50, 21.00, 1781.33, 10263.83, 'sent', 'invoices/COA-2026-juli.pdf', '2026-08-03 10:10:00', '2026-08-03 10:20:00', 1),
+  (12, 1, 12, 'Bel-Shawn-2026-juli', '2026-08-01', '2026-08-31', 11, 12312.00, 21.00, 2585.52, 14897.52, 'ready', 'invoices/Bel-Shawn-2026-juli.pdf', NULL, NULL, 1),
+  (13, 1, 13, 'IND-2026-augustus', '2026-09-01', '2026-10-01', 10, 0.00, 21.00, 0.00, 0.00, 'concept', NULL, NULL, NULL, 1),
+  (14, 1, 14, 'IND-StvB-2026-augustus', '2026-09-01', '2026-10-01', 10, 6400.00, 21.00, 1344.00, 7744.00, 'concept', NULL, NULL, NULL, 1),
+  (15, 1, 15, 'COA-2026-augustus', '2026-09-01', '2026-10-01', 10, 10440.00, 21.00, 2192.40, 12632.40, 'ready', 'invoices/COA-2026-augustus.pdf', NULL, NULL, 1),
+  (16, 1, 16, 'Bel-Shawn-2026-augustus', '2026-09-01', '2026-10-01', 11, 12312.00, 21.00, 2585.52, 14897.52, 'ready', 'invoices/Bel-Shawn-2026-augustus.pdf', NULL, NULL, 1);
 
 INSERT INTO announcements (
   id, company_id, created_by, kind, status, title, message,

@@ -31,6 +31,18 @@ Feature: Factuurweergave in de desktop-UI in Path Uren & Facturatie
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
 
+  @happy
+  Scenario: [INV-H-006] admin kan het gekozen maanddetail inklappen en weer uitklappen
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
+  @happy
+  Scenario: [INV-H-007] navigatie onderscheidt medewerkerwachtwerk en factuurmaanden met oranje en groen
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
   @negative
   Scenario: [INV-N-007] ongeldige periodefilter geeft nette 400-fout
     Given de uitvoerbare Playwright-case is voorbereid

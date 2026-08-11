@@ -84,7 +84,20 @@ function migration_plan(bool $allowDemoMigrations): array
             'id' => '005_demo_auth_hashes_for_existing_seed_users.sql',
             'path' => __DIR__ . '/migrations/005_demo_auth_hashes_for_existing_seed_users.sql',
         ];
+        $plan[] = [
+            'id' => '008_demo_seed_baseline_alignment.sql',
+            'path' => __DIR__ . '/migrations/008_demo_seed_baseline_alignment.sql',
+        ];
+        $plan[] = [
+            'id' => '009_demo_seed_august_correction_alignment.sql',
+            'path' => __DIR__ . '/migrations/009_demo_seed_august_correction_alignment.sql',
+        ];
     }
+
+    $plan[] = [
+        'id' => '010_add_timesheet_version.sql',
+        'path' => __DIR__ . '/migrations/010_add_timesheet_version.sql',
+    ];
 
     return $plan;
 }
@@ -271,7 +284,15 @@ foreach ($migrations as $migration) {
         ensure_migration_id($pdo, $migrationId);
         $executed[] = $migrationId;
     } catch (Throwable $e) {
-        error_log('Migration failed for ' . $migrationId . ': ' . $e->getMessage());
+        $msg = $e->getMessage();
+        // 1060 = duplicate column name: column already exists, migration can be skipped safely.
+        $isDuplicateColumn = strpos($msg, 'SQLSTATE[42S21]') !== false || strpos($msg, '1060') !== false;
+        if ($isDuplicateColumn) {
+            ensure_migration_id($pdo, $migrationId);
+            $executed[] = $migrationId;
+            continue;
+        }
+        error_log('Migration failed for ' . $migrationId . ': ' . $msg);
         http_response_code(500);
         echo json_encode([
             'ok' => false,

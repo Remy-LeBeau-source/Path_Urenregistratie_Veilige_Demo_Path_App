@@ -1,4 +1,4 @@
-// Navigation-only mapping for invoices-ui.feature.
+// Navigation-only mapping for admin-writes.feature.
 // Native Playwright remains the executable source of truth; no Cucumber runner is used.
 
 type StepPattern = string | RegExp;
@@ -13,11 +13,7 @@ When('de beschreven businessflow wordt uitgevoerd', () => undefined);
 Then('wordt het verwachte resultaat aantoonbaar gevalideerd', () => undefined);
 
 export const caseMappings = [
-  { caseId: 'INV-H-001', spec: 'invoices.spec.ts' },
-  { caseId: 'INV-N-005', spec: 'invoices.spec.ts' },
-  { caseId: 'INV-H-002', spec: 'invoices.spec.ts' },
-  { caseId: 'INV-H-003', spec: 'invoices.spec.ts' },
-  { caseId: 'INV-H-006', spec: 'invoices.spec.ts' },
-  { caseId: 'INV-H-007', spec: 'invoices.spec.ts' },
-  { caseId: 'INV-N-007', spec: 'invoices.spec.ts' },
+  { caseId: 'ADM-WR-H-001', spec: 'admin-writes.spec.ts' },
+  { caseId: 'ADM-WR-H-002', spec: 'admin-writes.spec.ts' },
+  { caseId: 'ADM-WR-H-003', spec: 'admin-writes.spec.ts' },
 ] as const;
