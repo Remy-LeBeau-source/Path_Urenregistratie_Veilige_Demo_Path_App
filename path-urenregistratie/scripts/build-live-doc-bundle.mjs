@@ -942,7 +942,7 @@ ${renderStatCards(stats, 'dark')}
       </section>
 
       <footer class="portal-footer">
-        <span>Path Uren &amp; Facturatie · Living Documentation v0.9.43</span>
+        <span>Path Uren &amp; Facturatie · Living Documentation v0.9.44</span>
         <span><a href="LIVING-DOC.md">Markdown</a> · <a href="TEST-BDD-MAPPING.md">Mapping bron</a></span>
       </footer>
     </main>

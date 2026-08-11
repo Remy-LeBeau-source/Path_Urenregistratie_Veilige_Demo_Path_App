@@ -335,7 +335,9 @@ test('[DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus', as
 });
 
 test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker en Backoffice', async ({ page }) => {
-  test.slow(); // Heavy multi-step closeout flow (12 sequential UI actions); triples timeout for slower CI runners.
+  // Heavy multi-step closeout flow (12 sequential UI actions + a file upload); test.slow()'s 3x multiplier of the
+  // 30s default (90s) was observed to be exceeded on slower CI runners, so set an explicit, larger budget instead.
+  test.setTimeout(240_000);
   const demoPdf = {
     name: 'klanturenstaat.pdf',
     mimeType: 'application/pdf',
@@ -346,8 +348,11 @@ test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker e
     if (await page.locator('#app-shell').isVisible()) await page.locator('#switch-role').click();
     await expect(page.locator('#login-screen')).toBeVisible();
     await page.locator('#login-employee-trigger').click();
-    await expect(page.locator('#login-employee-choices')).toBeVisible();
-    await page.locator(`[data-login-account-role="employee"][data-login-account-id="${employeeId}"]`).click();
+    const choices = page.locator('#login-employee-choices');
+    await expect(choices).toBeVisible();
+    const choice = choices.locator(`[data-login-account-role="employee"][data-login-account-id="${employeeId}"]`);
+    await expect(choice).toBeVisible();
+    await choice.click();
     await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
   }
 
@@ -355,15 +360,21 @@ test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker e
     if (await page.locator('#app-shell').isVisible()) await page.locator('#switch-role').click();
     await expect(page.locator('#login-screen')).toBeVisible();
     await page.locator('#login-admin-trigger').click();
-    await expect(page.locator('#login-admin-choices')).toBeVisible();
-    await page.locator('[data-login-account-role="admin"]').first().click();
+    const choices = page.locator('#login-admin-choices');
+    await expect(choices).toBeVisible();
+    const choice = choices.locator('[data-login-account-role="admin"]').first();
+    await expect(choice).toBeVisible();
+    await choice.click();
     await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
   }
 
   async function chooseMonth(month: string): Promise<void> {
     await page.locator('#period-month-picker').click();
-    await expect(page.locator('#period-month-panel')).toBeVisible();
-    await page.locator(`[data-period-month="${month}"][data-month-control="#period-month-picker"]`).click();
+    const panel = page.locator('#period-month-panel');
+    await expect(panel).toBeVisible();
+    const picker = panel.locator(`[data-period-month="${month}"][data-month-control="#period-month-picker"]`);
+    await expect(picker).toBeVisible();
+    await picker.click();
   }
 
   await page.route('**/server/auth/**', async route => {

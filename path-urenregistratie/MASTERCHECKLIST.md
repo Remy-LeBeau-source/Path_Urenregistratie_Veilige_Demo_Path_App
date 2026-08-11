@@ -11,6 +11,18 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 
 ## Actuele stand
 
+- [x] Datum: 2026-08-11
+- [x] Appversie: 0.9.44
+- [x] Lokale check: geslaagd (`npm run check`)
+- [x] Volledige lokale Playwright-regressie: 139/139 groen
+- [x] Root cause van de bekende reset-state afwijking (DASH-N-008: 13 i.p.v. 12 open acties na
+  Herstel) gevonden en gefixt: `syncInvoiceStatusesFromApi()` en `refreshBootstrapReadApi()`
+  checkten `isLocalResetAuthoritative()` niet en gebruikten stale `readApiDebug`/`readApiRuntime`
+  read-API caches na een reset. Fix: guards toegevoegd + nieuwe `resetReadApiCaches()` die alle
+  read-API caches leegt bij Herstel. DASH-N-008 en DASH-N-010 zijn lokaal opnieuw groen bewezen.
+- [x] DASH-H-008 CI-timing fix: `test.slow()` (90s) verruild voor expliciete `test.setTimeout(240_000)`
+  en `reducedMotion: 'reduce'` toegevoegd aan playwright.config.ts om animatie-gedreven
+  stability-vertragingen in de hele suite te verwijderen.
 - [x] Datum: 2026-08-10
 - [x] Main/HEAD: de26360
 - [x] Referentiecommit fase 8/9 backend: fc27723
@@ -84,6 +96,7 @@ Voor iedere slice geldt verplicht:
 - [x] Verplichte pre-check voor iedere review/demo: eerst `npm run test:closeout` (DEMO-CLOSEOUT-TO-ZERO), daarna pas handmatig beoordelen.
 - [x] F5/herstel-guard actief: F5 behoudt de lokale werkstaat; alleen Herstel zet de baseline terug. Na Herstel blijft die lokale baseline ook na F5 leidend en worden business-readbacks niet toegepast.
 - [x] Verplichte GUI-smoke voor zichtbaar gedrag: `npm run test:gui-smoke` controleert Herstel, F5, opnieuw inloggen en Stasjo's zichtbare 3 open acties zonder business-readbacks. Nieuwe zichtbare bevindingen worden aan deze GUI-smoke toegevoegd.
+- [x] Reset-authoritative caching-les (v0.9.44): elke functie die state muteert op basis van server-/read-API-data moet `isLocalResetAuthoritative()` checken, en Herstel moet ALLE module-level read-API caches legen (niet alleen de `state`-variabele) om te voorkomen dat stale serverdata na Herstel terugsijpelt.
 
 ### Fase blokkades / later doen
 

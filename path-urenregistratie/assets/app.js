@@ -923,6 +923,38 @@ function loadState() {
   }
 }
 
+function resetReadApiCaches() {
+  readApiDebug.bootstrap = null;
+  readApiDebug.dashboard = null;
+  readApiDebug.invoices = null;
+  readApiDebug.invoicesByPeriod = {};
+  readApiDebug.emailQueue = null;
+  readApiDebug.notifications = null;
+  readApiDebug.announcements = null;
+  readApiDebug.customerTimesheetsByPeriod = {};
+
+  readApiRuntime.bootstrapInFlight = false;
+  readApiRuntime.dashboardInFlight = false;
+  readApiRuntime.invoicesInFlight = false;
+  readApiRuntime.emailQueueInFlight = false;
+  readApiRuntime.notificationsInFlight = false;
+  readApiRuntime.announcementsInFlight = false;
+  readApiRuntime.customerTimesheetsInFlight = {};
+  readApiRuntime.timesheetsInFlight = {};
+  readApiRuntime.lastBootstrapAt = 0;
+  readApiRuntime.lastDashboardAt = 0;
+  readApiRuntime.lastInvoicesAt = 0;
+  readApiRuntime.lastEmailQueueAt = 0;
+  readApiRuntime.lastNotificationsAt = 0;
+  readApiRuntime.lastAnnouncementsAt = 0;
+  readApiRuntime.lastInvoicesByPeriod = {};
+  readApiRuntime.lastCustomerTimesheetsByPeriod = {};
+  readApiRuntime.lastTimesheetsByKey = {};
+  readApiRuntime.employeeOpenTasksSyncInFlight = false;
+  readApiRuntime.lastEmployeeOpenTasksSyncAt = 0;
+  readApiRuntime.employeeOpenTasksHydrated = false;
+}
+
 function hasRequiredSeedData(candidate) {
   if (!candidate || typeof candidate !== "object") return false;
   if (!Array.isArray(candidate.employees) || candidate.employees.length === 0) return false;
@@ -2482,6 +2514,9 @@ function emailQueueItemsByInvoiceId(periodKey) {
 
 function syncInvoiceStatusesFromApi(periodKey) {
   if (!(API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin")) return false;
+  // A local reset must stay authoritative: cached read-API rows from before the reset must never
+  // overwrite the freshly-reset local invoice/payroll status.
+  if (isLocalResetAuthoritative()) return false;
   const key = parsePeriodKey(periodKey) ? periodKey : "";
   if (!key) return false;
 
@@ -2567,13 +2602,16 @@ function refreshDashboardReadApi(force) {
 
 function refreshBootstrapReadApi(force) {
   if (!(API_ENABLED && authRuntime.mode === "auth")) return;
+  // A local reset must stay authoritative: never let a (possibly in-flight/delayed) bootstrap merge
+  // re-inject server employees/records once the operator has reset to the local demo baseline.
+  if (isLocalResetAuthoritative()) return;
   const now = Date.now();
   if (!force && (readApiRuntime.bootstrapInFlight || (now - readApiRuntime.lastBootstrapAt) < 30000)) return;
   readApiRuntime.bootstrapInFlight = true;
   fetchReadApi("/server/api/bootstrap.php")
     .then(data => {
       readApiRuntime.lastBootstrapAt = Date.now();
-      if (!data) {
+      if (!data || isLocalResetAuthoritative()) {
         setReadApiSource("bootstrap", "fallback");
         return;
       }
@@ -8800,6 +8838,7 @@ function openResetDemoModal() {
       state.currentRole = role;
       window.localStorage.removeItem(STORAGE_KEY);
       window.localStorage.setItem(LOCAL_RESET_GUARD_KEY, "1");
+      resetReadApiCaches();
       persistState();
       closeModal();
       populateSettings();
@@ -8978,8 +9017,9 @@ document.addEventListener("keydown", event => {
 
 window.addEventListener("scroll", () => {
   closeTopbarPopovers();
-  closeLoginAccountPanels();
-  closeMonthChoicePanels();
+  // Account and month pickers stay anchored to their controls while scrolling.
+  // Closing them here races with browsers that scroll an option into view before
+  // dispatching its click, leaving the option hidden during actionability checks.
   closeReminderChoicePanels();
   closeStandardChoicePanels();
 }, { passive: true });

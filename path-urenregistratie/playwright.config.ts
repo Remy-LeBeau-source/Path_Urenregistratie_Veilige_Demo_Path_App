@@ -30,6 +30,9 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    // App CSS zeroes out transitions/animations under prefers-reduced-motion; enabling it here removes
+    // animation-driven visibility/stability delays (view switches, dropdown panels) from every test.
+    reducedMotion: 'reduce',
   },
   reporter: [
     ['list'],
