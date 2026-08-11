@@ -79,13 +79,13 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 - [x] Stap 3: Fase 7 - alleen niet-geblokkeerde CI/CD-afwerking; volledige pipeline end-to-end
   groen bewezen op run #91 (2026-08-12). Resterend binnen Fase 7 is extern-afhankelijk (branch
   protection, echte hosts, productieapproval, notificatieontvangers) — zie Fase blokkades.
-- [-] Stap 4: Fase 10 - resterende lokale productiehardening uploads.
-- [-] Stap 5: Fase 11 - server-side factuur-PDF en veilige opslag/download.
-- [-] Stap 6: Fase 12 - dry-run/bijlagen/retry technisch afronden; echte Gmail-verzending nog niet activeren.
-- [-] Stap 7: Fase 13 - definitieve bedrijfsgegevens/accounts zodra beschikbaar.
-- [-] Stap 8: Fase 14 - TransIP/productieconfig zodra we daar bewust aan beginnen.
-- [-] Stap 9: Fase 15 - productieacceptatie/livegang.
-- [-] Stap 10: Fase 16 - post-live beheer.
+- [-] Stap 4: Fase 10 - JPG/PNG server-side omzetten naar PDF (rest van Fase 10 verplaatst naar Fase 16).
+- [-] Stap 5: Fase 11 - server-side factuur-PDF, pdf_storage_key, geautoriseerd downloaden, PDF-inhoudscontrole (rest verplaatst naar Fase 16).
+- [-] Stap 6: Fase 12 - factuur-PDF/klanturenstaat als bijlage, retry/max-retries/foutstatus technisch afronden (Gmail-activatie verplaatst naar Fase 16).
+- [x] Stap 7: Fase 13 - volledig verplaatst naar Fase 16 (alles resterend is bedrijfsbeslissing/administratie, niets meer in VS Code te doen).
+- [x] Stap 8: Fase 14 - volledig verplaatst naar Fase 16 (alles resterend is TransIP-paneel/SSH, niets meer in VS Code te doen).
+- [-] Stap 9: Fase 15 - lokaal/VS Code haalbaar: dubbelklik/dubbele requests, twee-beheerders, jaarwisseling en grote-upload Playwright-tests, dependency-scan, PWA-manifest/service worker (rest verplaatst naar Fase 16).
+- [-] Stap 10: Fase 16 - laatste fase: alle buiten-VS-Code taken (deel A) + post-live beheer (deel B).
 
 ### Uitvoeringsbundels (afhankelijkheid-gedreven)
 
@@ -853,36 +853,34 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
 - [-] Fase 2 - databaseschema/migraties klaar; volledige afbouw app_state/localStorage open
 - [x] Fase 3 - read-API
 - [x] Fase 4 - auth en rollen
-- [x] Fase 5 - securitybasis
+- [x] Fase 5 - securitybasis afgerond; resterende productiehardening (CORS/CSP/HSTS/logging op echt domein) verplaatst naar Fase 16
 - [x] Fase 6 - Playwright, Allure, Living Doc en agents
-- [-] Fase 7 - CI/CD-basis klaar; echte stages en productieapproval open
+- [x] Fase 7 - CI/CD-basis + volledige pipeline end-to-end groen bewezen (run #91); resterend (branch protection, echte hosts, productieapproval, notificatieontvangers) verplaatst naar Fase 16
 - [x] Fase 8 - uren concept opslaan en indienen
-- [-] Fase 9 - correctie/goedkeuring desktop en mobiel bewezen; pipeline bevestigd; productieacceptatie verplaatst naar Fase 16
+- [x] Fase 9 - correctie/goedkeuring desktop en mobiel bewezen; pipeline bevestigd; productieacceptatie volledig verplaatst naar Fase 16
 - [-] Fase 10 - klanturenstaat: schema + API + UI-koppeling + regressie afgerond; JPG/PNG-conversie nog in VS Code te bouwen; opslagplek/virusscanstrategie verplaatst naar Fase 16
 - [-] Fase 11 - factuur lock/write en serverberekening bewezen; server-side PDF/opslag-key/download-autorisatie nog in VS Code te bouwen; briefpapier/opslaglocatie/creditbeleid verplaatst naar Fase 16
 - [-] Fase 12 - e-mail: queue-service + dry-run + assignment-routes + tests afgerond; Gmail/Google Workspace-config en echte verzending verplaatst naar Fase 16
-- [-] Fase 13 - bedrijfsdata: gebruikersbeheer-API, wachtwoord-reset, rate-limiting, force_password_change afgerond; alle definitieve bedrijfsgegevens/accounts verplaatst naar Fase 16
-- [-] Fase 14 - TransIP: hardening (install/migrate/health guards, .htaccess) afgerond; deployment + productie-config volledig verplaatst naar Fase 16
+- [x] Fase 13 - bedrijfsdata: gebruikersbeheer-API, wachtwoord-reset, rate-limiting, force_password_change afgerond; alle definitieve bedrijfsgegevens/accounts volledig verplaatst naar Fase 16
+- [x] Fase 14 - TransIP: hardening (install/migrate/health guards, .htaccess) afgerond; deployment + productie-config volledig verplaatst naar Fase 16
 - [-] Fase 15 - lokaal 121 tests en pipeline #62 groen; autofill-, periode-, teller- en mobile-regressie bewezen; VS-Code-haalbare tests (dubbelklik, jaarwisseling, uploads, PWA-manifest/service worker) blijven hier open; productiepraktijktests/fysieke toestellen/acceptatie verplaatst naar Fase 16
 - [-] Fase 16 - audit-API-basis klaar; nu het volledige verzamelpunt voor alle buiten-VS-Code-taken uit fase 5/7/9/10/11/12/13/14/15 plus doorlopend post-live beheer; nog niet gestart
 
 Telling fasestatussen:
-- [x] 6 fasen volledig bewezen voor hun afgebakende scope: 1, 3, 4, 5, 6 en 8.
-- [-] 10 fasen gedeeltelijk: 2, 7 en 9 t/m 16.
-- [x] 0 fasen volledig ongestart; open werk staat onder de gedeeltelijke fasen.
+- [x] 10 fasen volledig bewezen of volledig verplaatst voor hun VS-Code-scope: 1, 3, 4, 5, 6, 7, 8, 9, 13 en 14 (9, 13 en 14 volledig verplaatst naar Fase 16; 5 en 7 zijn functioneel afgerond, rest is productieomgeving-afhankelijk).
+- [-] 5 fasen hebben nog echt VS-Code-werk open: 2, 10, 11, 12 en 15.
+- [x] 1 fase is de laatste, verzamelende fase: 16 (alle buiten-VS-Code-taken + post-live beheer).
 
 ## Directe volgende stap
 
 1. Fase 2 - resterende app_state/localStorage-afbouw.
-2. Fase 5 - alleen niet-productie-afhankelijke securityhardening.
-3. Fase 7 - alleen niet-geblokkeerde CI/CD-afwerking.
-4. Fase 10 - resterende lokale productiehardening uploads.
-5. Fase 11 - server-side factuur-PDF en veilige opslag/download.
-6. Fase 12 - dry-run/bijlagen/retry technisch afronden; echte Gmail-verzending nog niet activeren.
-7. Fase 13 - definitieve bedrijfsgegevens/accounts zodra beschikbaar.
-8. Fase 14 - TransIP/productieconfig zodra we daar bewust aan beginnen.
-9. Fase 15 - productieacceptatie/livegang.
-10. Fase 16 - post-live beheer.
+2. Fase 10 - JPG/PNG server-side omzetten naar PDF.
+3. Fase 11 - server-side factuur-PDF, pdf_storage_key, geautoriseerd downloaden, PDF-inhoudscontrole.
+4. Fase 12 - factuur-PDF/klanturenstaat als bijlage, retry/max-retries/foutstatus technisch afronden.
+5. Fase 15 - lokaal/VS Code haalbare tests (dubbelklik, twee-beheerders, jaarwisseling, grote uploads), dependency-scan, PWA-manifest/service worker.
+6. Fase 16 - laatste fase: alle buiten-VS-Code taken (deel A, per herkomstfase) + doorlopend post-live beheer (deel B).
+
+Fase 5, 7, 9, 13 en 14 hebben geen VS-Code-werk meer open: 5 en 7 zijn functioneel afgerond (rest is productieomgeving-afhankelijk), 9/13/14 zijn volledig verplaatst naar Fase 16.
 
 ## Dagelijkse werkwijze (verplicht)
 
