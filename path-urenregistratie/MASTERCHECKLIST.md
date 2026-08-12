@@ -89,8 +89,8 @@ Post-live beheer
 
 ## Actuele stand
 
-- [x] Datum: 2026-08-12 (technische eindsprint Fase 10/11/12/15)
-- [x] Appversie: 0.9.45
+- [x] Datum: 2026-08-12 (technische eindsprint Fase 10/11/12/15 + Safari/dashboard bugfixes)
+- [x] Appversie: 0.9.46
 - [x] Technische eindsprint afgerond: Fase 10 (JPG/PNG server-side naar PDF via GD + hand-rolled
   PDF-writer `server/lib/simple_pdf.php`), Fase 11 (server-side factuur-PDF, `pdf_storage_key`
   gevuld na lock, geautoriseerde download-endpoint met company-/employee-scope, PDF-inhoudscontrole
@@ -111,27 +111,22 @@ Post-live beheer
   repo-memory): de PHP GD-extensie stond lokaal standaard uit (`;extension=gd` in php.ini) en moest
   worden ingeschakeld; en een stale achtergrond-PHP-proces (van vóór de GD-fix) op poort 8000
   veroorzaakte verwarrende "onmogelijke" testresultaten totdat het werd gestopt.
-- [x] HEAD: e25730a (`docs: finalize release checklist and live status sync`)
+- [x] HEAD: 9e6d8d7 (`docs: add Copilot-Codex collaboration protocol to handoff file`) — v0.9.46 zit op cb0c7da
 - [x] Reorganisatie: alle openstaande punten die je buiten VS Code moet doen (TransIP-paneel, GitHub-website-instellingen, Google Workspace, fysieke toestellen, bedrijfsgegevens/administratie, menselijke acceptatie) zijn verzameld en verplaatst naar Fase 16 als laatste, verzamelende fase. De oorspronkelijke fasen (5, 7, 9, 10, 11, 12, 13, 14, 15) bevatten nu alleen nog wat in VS Code zelf (code/terminal/Playwright/git) haalbaar is.
-- [x] Appversie: 0.9.45
-- [x] GitHub Actions pipeline-run #91 (commit 998716b, main) volledig groen: Notify team on
-  commit push, Validate, Promote Dev, Promote Test, Promote Acc, Promote Prod, Publish Live
-  Docs en Guard non-main for Prod — alle stappen completed successfully. Enige annotaties zijn
-  5 informatieve Node.js 20->24 deprecation-warnings van GitHub zelf, geen projectfout.
-- [x] Fase 7 niet-geblokkeerd CI/CD-werk hiermee bewezen end-to-end werkend; resterende open
-  punten in Fase 7 blijven extern-afhankelijk (branch protection, echte stage-hosts,
-  productieapproval, definitieve notificatieontvangers).
-- [x] Historisch (2026-08-11): Appversie 0.9.44; lokale check groen; volledige lokale Playwright-regressie 139/139 groen.
-- [x] Historisch (2026-08-11): root cause van de bekende reset-state afwijking (DASH-N-008: 13 i.p.v. 12 open acties na Herstel) gevonden en gefixt ... DASH-N-008 en DASH-N-010 zijn lokaal opnieuw groen bewezen.
-- [x] Historisch (2026-08-11): DASH-H-008 CI-timing fix ... stability-vertragingen in de hele suite te verwijderen.
-- [x] Historisch (2026-08-10): Main/HEAD: de26360.
-- [x] Historisch (2026-08-10): Lokale e2e regressie: volledige run na DB-isolatie opnieuw bewezen met 127/127 groen (0 failed, 0 skipped, 0 interrupted); dev/demo DB bleef onaangeroerd (delta 0 op periods, timesheets, time_entries, email_deliveries en audit_log).
-- [x] Historisch (2026-08-10): Functionele regressiecatalogus: 125 unieke Playwright-cases, 129 Playwright-uitvoeringen, 1 directe SQL/DB-case DB-H-001, 126 unieke executable cases totaal.
-- [x] Historisch (2026-08-10): Nieuwe regressiecases DASH-H-005 en INV-H-006 zijn individueel groen gevalideerd en toegevoegd aan de Living Documentation-mapping.
-- [x] Historisch (2026-08-10): Releasehardening v0.9.41: gecommit en gepusht naar main.
-- [x] Historisch (2026-08-10): GitHub pipeline-status: recente lokale en DB-onderdelen zijn geverifieerd; DB-isolatie is lokaal volledig bewezen met een volledige regressierun.
-- [x] Historisch (2026-08-10): Laatste commit: de26360 — fix: stabilize e2e flows and payroll queue fallback.
-- [x] Historisch (2026-08-10): Recente relevante commits: de26360, fdf48fc, 148e9b9, d48e08c, b4c5ad0, d137ce4, a4aa195, bd025af.
+- [x] Appversie: 0.9.46
+- [x] GitHub Actions pipeline-run #91 (commit 998716b) volledig groen — historisch bewijs.
+- [x] GitHub Actions pipeline-run #99 (commit 821b175, main) volledig groen: alle stappen
+  (Validate, Promote Dev/Test/Acc/Prod, Publish Live Docs) completed successfully.
+- [-] GitHub Actions pipeline-run #100 (commit 2bcec96 / 9e6d8d7, main) — nog in uitvoering
+  of net afgerond; status te bevestigen vóór definitieve Fase-2 afsluiting.
+- [x] MOB-H-003 (Safari correctie/goedkeuring flakiness) structureel opgelost in v0.9.46:
+  root cause was async logout-race (authSessionUser niet gewist in mock) + LoginPage.open()
+  responsewacht te laat geregistreerd; 10/10 Safari groen bewezen na fix.
+- [x] DASH-N-008 (dashboardtellers na reset) structureel opgelost in v0.9.46: deterministische
+  post-reset-baseline, bewezen stabiel na 138-test muterende reeks.
+- [x] Historisch geconsolideerd: v0.9.41 (releasehardening, DB-isolatie, DB-H-001, Slice B/C/D/E
+  server-led, 127/127→139/139 groen), v0.9.44 (DASH-N-008 reset-fix, 139/139 groen),
+  v0.9.45 (technische eindsprint Fase 10/11/12/15, 146/146 groen, pipeline #91 groen).
 - [x] DB-H-001: SQL/DB-smoke groen via `node scripts/run-db-crud-smoke.mjs`
 - [x] Lokale automatische Playwright-testdatabase aanwezig: `path_urenregistratie_test`
 - [x] DB-isolatie-onderdeel toegevoegd: bootstrap-script voor aparte lokale Playwright-testdatabase aanwezig
@@ -141,7 +136,7 @@ Post-live beheer
 ### Kort overzicht: waar we nu staan
 
 - [x] Kernbouw en functionele basis zijn aanwezig en lokaal gevalideerd.
-- [x] De meest recente volledige Playwright-regressie is opnieuw volledig groen bewezen: 146/146, 0 failed, 0 skipped, 0 interrupted.
+- [x] De meest recente volledige Playwright-regressie is opnieuw volledig groen bewezen: 146/146, 0 failed, 0 skipped, 0 interrupted (bewezen op v0.9.46, inclusief MOB-H-003 Safari 10/10).
 - [x] DB/infrastructuursmoke aanwezig: DB-H-001 via `node scripts/run-db-crud-smoke.mjs` groen.
 - [x] Lokale automatische Playwright-testdatabase aanwezig: `path_urenregistratie_test` via bootstrap.
 - [x] De checklist is nu bijgewerkt naar de actuele repo- en teststatus; de fase-indeling is intact gebleven.
@@ -474,9 +469,9 @@ Status Fase 6:
 
 Status Fase 7:
 - [x] CI/CD-basis lokaal en in repository afgerond
-- [x] Volledige pipeline (Validate -> Promote Dev -> Promote Test -> Promote Acc -> Promote Prod ->
-  Publish Live Docs -> Guard non-main for Prod) end-to-end groen bewezen op run #91 (2026-08-12,
-  commit 998716b).
+- [x] Volledige pipeline end-to-end groen bewezen op run #91 (998716b) en run #99 (821b175,
+  2026-08-12); alle stappen Validate→Prod→Live Docs completed successfully.
+- [-] Pipeline #100 nog in uitvoering/te bevestigen — zie Actuele stand.
 - [-] fase als geheel gedeeltelijk: notificatieontvangers, echte stage-hosting, branch protection/checks en productieapproval nog open (extern afhankelijk, zie Fase blokkades)
 
 ---
@@ -953,7 +948,9 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
 - [x] Fase 12 - e-mail: queue-service + dry-run + assignment-routes + tests afgerond; retry/max-retries/foutstatus geverifieerd aanwezig; factuur-PDF-bijlage nu structureel mogelijk; Gmail/Google Workspace-config en echte verzending verplaatst naar Fase 16
 - [x] Fase 13 - bedrijfsdata: gebruikersbeheer-API, wachtwoord-reset, rate-limiting, force_password_change afgerond; alle definitieve bedrijfsgegevens/accounts volledig verplaatst naar Fase 16
 - [x] Fase 14 - TransIP: hardening (install/migrate/health guards, .htaccess) afgerond; deployment + productie-config volledig verplaatst naar Fase 16
-- [x] Fase 15 - lokaal 146/146 tests groen, 0 failed, 0 skipped, 0 interrupted, met GUI smoke en `npm run check` groen; autofill-, periode-, teller- en mobile-regressie bewezen; concurrency/jaarwisseling/uploads/accessibility/PWA-manifest+service worker gebouwd en getest; productiepraktijktests/fysieke toestellen/acceptatie verplaatst naar Fase 16
+- [x] Fase 15 - lokaal 146/146 tests groen (inclusief MOB-H-003 Safari 10/10 en DASH-N-008
+  na volledige muterende reeks), GUI smoke en `npm run check` groen; concurrency/jaarwisseling/
+  uploads/accessibility/PWA gebouwd en getest; productiepraktijktests/acceptatie → Fase 16
 - [-] Fase 16 - audit-API-basis klaar; nu het volledige verzamelpunt voor alle buiten-VS-Code-taken uit fase 5/7/9/10/11/12/13/14/15 plus doorlopend post-live beheer; nog niet gestart
 
 Telling fasestatussen:
