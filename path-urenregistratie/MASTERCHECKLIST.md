@@ -111,14 +111,14 @@ Post-live beheer
   repo-memory): de PHP GD-extensie stond lokaal standaard uit (`;extension=gd` in php.ini) en moest
   worden ingeschakeld; en een stale achtergrond-PHP-proces (van vóór de GD-fix) op poort 8000
   veroorzaakte verwarrende "onmogelijke" testresultaten totdat het werd gestopt.
-- [x] HEAD: 9e6d8d7 (`docs: add Copilot-Codex collaboration protocol to handoff file`) — v0.9.46 zit op cb0c7da
+- [x] HEAD: 9f40f1b (`test(ui): isolate period key + correct TS-REV-UI-H-009 submit-button assertion`) — v0.9.46 op cb0c7da
 - [x] Reorganisatie: alle openstaande punten die je buiten VS Code moet doen (TransIP-paneel, GitHub-website-instellingen, Google Workspace, fysieke toestellen, bedrijfsgegevens/administratie, menselijke acceptatie) zijn verzameld en verplaatst naar Fase 16 als laatste, verzamelende fase. De oorspronkelijke fasen (5, 7, 9, 10, 11, 12, 13, 14, 15) bevatten nu alleen nog wat in VS Code zelf (code/terminal/Playwright/git) haalbaar is.
 - [x] Appversie: 0.9.46
 - [x] GitHub Actions pipeline-run #91 (commit 998716b) volledig groen — historisch bewijs.
 - [x] GitHub Actions pipeline-run #99 (commit 821b175, main) volledig groen: alle stappen
   (Validate, Promote Dev/Test/Acc/Prod, Publish Live Docs) completed successfully.
-- [-] GitHub Actions pipeline-run #100 (commit 2bcec96 / 9e6d8d7, main) — nog in uitvoering
-  of net afgerond; status te bevestigen vóór definitieve Fase-2 afsluiting.
+- [-] GitHub Actions pipeline-run #100–#101 (commits 375cfc3 / 9f40f1b, main) — status te bevestigen
+  vóór definitieve Fase-2 afsluiting. Pipeline #100 liep op 2bcec96/9e6d8d7.
 - [x] MOB-H-003 (Safari correctie/goedkeuring flakiness) structureel opgelost in v0.9.46:
   root cause was async logout-race (authSessionUser niet gewist in mock) + LoginPage.open()
   responsewacht te laat geregistreerd; 10/10 Safari groen bewezen na fix.
