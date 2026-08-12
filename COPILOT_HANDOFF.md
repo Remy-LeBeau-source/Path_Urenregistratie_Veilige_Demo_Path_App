@@ -2,6 +2,16 @@
 
 Dit bestand is de gedeelde brug tussen GitHub Copilot en Codex. Chatvensters zijn niet onderling zichtbaar, maar beide assistenten kunnen dit bestand in de werkmap lezen.
 
+## Samenwerking Copilot ↔ Codex
+
+Copilot en Codex kunnen niet rechtstreeks communiceren. Werkwijze:
+1. Als Copilot vastloopt of hulp nodig heeft, schrijft hij een **VRAAG AAN CODEX** onderaan dit bestand.
+2. De gebruiker plakt die vraag in de Codex-chat.
+3. Codex schrijft het antwoord terug als **ANTWOORD VAN CODEX** in dit bestand.
+4. Copilot leest het antwoord bij de volgende taakstart.
+
+Codex doet hetzelfde in omgekeerde richting.
+
 ## Instructie voor GitHub Copilot
 
 Werk dit document na iedere betekenisvolle stap bij met:
