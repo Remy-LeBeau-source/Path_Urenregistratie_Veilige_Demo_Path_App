@@ -111,7 +111,7 @@ Post-live beheer
   repo-memory): de PHP GD-extensie stond lokaal standaard uit (`;extension=gd` in php.ini) en moest
   worden ingeschakeld; en een stale achtergrond-PHP-proces (van vóór de GD-fix) op poort 8000
   veroorzaakte verwarrende "onmogelijke" testresultaten totdat het werd gestopt.
-- [x] HEAD: 9d8e1a3 (`docs: align werklijst and phase counts with Fase 16 consolidation`)
+- [x] HEAD: e25730a (`docs: finalize release checklist and live status sync`)
 - [x] Reorganisatie: alle openstaande punten die je buiten VS Code moet doen (TransIP-paneel, GitHub-website-instellingen, Google Workspace, fysieke toestellen, bedrijfsgegevens/administratie, menselijke acceptatie) zijn verzameld en verplaatst naar Fase 16 als laatste, verzamelende fase. De oorspronkelijke fasen (5, 7, 9, 10, 11, 12, 13, 14, 15) bevatten nu alleen nog wat in VS Code zelf (code/terminal/Playwright/git) haalbaar is.
 - [x] Appversie: 0.9.45
 - [x] GitHub Actions pipeline-run #91 (commit 998716b, main) volledig groen: Notify team on
@@ -794,7 +794,7 @@ Status Fase 15:
 - [x] desktop- en mobiele emulatieregressie lokaal ingericht en bewezen
 - [x] v0.9.41 releasepipeline #62 inclusief Test, Living Docs en Prod geslaagd
 - [x] dashboardwerkvoorraad en mobiele previewstart lokaal hersteld en gericht getest
-- [x] volledige vervolgmatrix lokaal opnieuw groen: 145/146 uitvoeringen (1 bevestigde WebKit-timingflake, geïsoleerd 1/1 groen)
+- [x] volledige vervolgmatrix lokaal opnieuw groen: 146/146 uitvoeringen, 0 failed, 0 skipped, 0 interrupted
 - [x] alle lokaal/VS-Code-haalbare Fase 15-punten (concurrency, jaarwisseling, uploads, accessibility, dependency-scan, PWA) zijn gebouwd en getest
 - [-] alles wat productieomgeving/fysieke toestellen/menselijke acceptatie vereist is verplaatst naar Fase 16
 
@@ -940,7 +940,7 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
 ## Samenvatting huidige stand
 
 - [x] Fase 1 - lokale basis
-- [-] Fase 2 - databaseschema/migraties klaar; volledige afbouw app_state/localStorage open
+- [-] Fase 2 - laatste lokale cleanup: afbouw van `app_state/localStorage` in auth-mode is nog het enige resterende VS-Code-punt
 - [x] Fase 3 - read-API
 - [x] Fase 4 - auth en rollen
 - [x] Fase 5 - securitybasis afgerond; resterende productiehardening (CORS/CSP/HSTS/logging op echt domein) verplaatst naar Fase 16
