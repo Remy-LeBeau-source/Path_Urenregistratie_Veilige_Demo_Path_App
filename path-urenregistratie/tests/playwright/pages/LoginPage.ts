@@ -60,7 +60,7 @@ export class LoginPage {
       }
 
       return null;
-    }, { timeout: 12_000 });
+    }, undefined, { timeout: 12_000 });
 
     const result = await outcome.jsonValue() as { type: 'success' | 'error'; message: string };
     if (result.type === 'error') {

@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 return [
     'environment' => 'production',
-    'app_origin' => 'https://your-app.example',
+    'app_origin' => 'https://uren.pathconsultancy.nl',
     'allow_demo_migrations' => false,
     'app' => [
         'environment' => 'production',
-        'base_url' => 'https://uren.example.invalid',
-        'app_origin' => 'https://your-app.example',
+        'base_url' => 'https://uren.pathconsultancy.nl',
+        'app_origin' => 'https://uren.pathconsultancy.nl',
         'timezone' => 'Europe/Amsterdam',
     ],
     'database' => [
@@ -20,31 +20,48 @@ return [
         'password' => 'replace_me',
         'charset' => 'utf8mb4',
     ],
-    'google' => [
-        'client_id' => 'replace_me',
-        'client_secret' => 'replace_me',
-        'redirect_uri' => 'https://uren.example.invalid/auth/google/callback',
-        'sender_email' => 'backoffice@example.invalid',
-    ],
     'security' => [
         'session_cookie_name' => 'path_session',
         'session_lifetime_minutes' => 480,
         'require_https' => true,
-        'allowed_google_domain' => 'example.invalid',
-        // Optional strict CORS allow-list (comma string or array). Keep empty for local/dev defaults.
-        'cors_allowed_origins' => [],
-        // Optional CSP string for production hardening. Leave empty until policy is validated end-to-end.
-        'content_security_policy' => '',
+        'allowed_google_domain' => 'pathconsultancy.nl',
+        'cors_allowed_origins' => ['https://uren.pathconsultancy.nl'],
+        'content_security_policy' => "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; object-src 'none'; img-src 'self' data: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self' blob:",
         // HSTS is prepared but intentionally disabled until HTTPS production rollout is confirmed.
         'hsts_enabled' => false,
         'hsts_max_age' => 31536000,
         'hsts_include_subdomains' => true,
         'hsts_preload' => false,
     ],
+    // Every path below must resolve outside the public document root.
+    'storage' => [
+        'private_root' => dirname(__DIR__) . '/../path-private',
+        'backup_dir' => dirname(__DIR__) . '/../path-private/backups',
+        'log_dir' => dirname(__DIR__) . '/../path-private/logs',
+    ],
+    'logging' => [
+        'enabled' => true,
+        'display_errors' => false,
+        'error_log' => dirname(__DIR__) . '/../path-private/logs/php-error.log',
+        'retention_days' => 30,
+        'rotate_max_bytes' => 10 * 1024 * 1024,
+    ],
     // Mail: keep mail.enabled = false until SPF/DKIM/DMARC is verified and dispatch is activated.
+    // transport options: dry_run | smtp_relay
+    // smtp_relay uses Google Workspace SMTP Relay (smtp-relay.gmail.com:587, STARTTLS, IP-based auth).
+    // No username or password: authentication is handled by the registered outgoing TransIP IP.
     'mail' => [
-        'enabled' => false,
-        'transport' => 'dry_run', // options: dry_run | gmail | smtp
+        'enabled' => false,              // set to true to enable real SMTP dispatch
+        'transport' => 'smtp_relay',
+        'smtp_relay' => [
+            'host'       => 'smtp-relay.gmail.com',
+            'port'       => 587,
+            'encryption' => 'starttls',   // always; required by Google
+            'timeout'    => 30,
+            'from_email' => 'backoffice@pathconsultancy.nl',
+            'from_name'  => 'Path Consultancy B.V.',
+            // No username / no password — IP-based relay only.
+        ],
         'max_attempts' => 3,
     ],
 ];

@@ -5,12 +5,12 @@
 De technische masterchecklist met fase-statussen, regressiestatus en updateprotocol staat in `MASTERCHECKLIST.md`.
 Deze productiechecklist blijft de functionele/livegang-checklist.
 
-Dit is een levende checklist. Bevestigde punten worden uit **Nog te beslissen** gehaald, zodat Gio en Joyce niet steeds dezelfde vragen krijgen. Echte e-mailadressen blijven bewust buiten de lokale broncode.
+Dit is een levende checklist. Bevestigde punten worden uit **Nog te beslissen** gehaald, zodat Gio en Joyce niet steeds dezelfde vragen krijgen. Secrets blijven buiten de broncode; de expliciet bevestigde acceptatie-ontvangers staan wel in de offline preflight.
 
 ## Al bevestigd of aangeleverd
 
 - KvK-nummer, btw-nummer, IBAN, adres en betalingstermijn zijn uit de aangeleverde facturen overgenomen.
-- De ontvangen facturen gebruiken QSI Consultancy; daarom blijft QSI de huidige standaard totdat Path expliciet besluit nieuwe facturen op naam van Path Consultancy B.V. te zetten.
+- De facturerende onderneming voor productie is bevestigd als **Path Consultancy B.V.**; QSI is geen open keuze meer.
 - Het factuuradres van ItaQ is uit meerdere aangeleverde facturen bevestigd als **Laan van ZuidHoorn 165, 2289 DD Rijswijk** en is exact zo in de app ingevuld.
 - Het factuuradres van Circle8 is uit Shawns factuur bevestigd als **Plettenburg-West, Fultonbaan 6, 3439 NE Nieuwegein** en is exact zo in de app ingevuld.
 - De lokale voorbeeldomgeving gebruikt veilige `@example.invalid`-adressen. Beheerders mogen zelf echte adressen lokaal invoeren; daadwerkelijke verzending blijft technisch uitgeschakeld.
@@ -31,7 +31,7 @@ Dit is een levende checklist. Bevestigde punten worden uit **Nog te beslissen** 
 - Een klanturenstaat kan eerst als privéconcept worden opgeslagen. Pas **Indienen bij Backoffice** maakt een in-app melding voor Backoffice.
 - Medewerker en Backoffice kunnen de opgeslagen PDF bekijken. Na goedkeuring kan Backoffice onderwerp en begeleidende tekst van de aparte brokerroute nog aanpassen.
 - Per medewerker zijn klanturenstaatdeadline, standaard of afwijkend brokeradres, brokerroute en **factuur mag zonder klanturenstaat** instelbaar.
-- Een klanturenstaat gaat pas na Backoffice-controle via een apart bericht naar de broker; hij wordt nooit stilzwijgend aan boekhouder of salarisadministratie toegevoegd.
+- Een klanturenstaat gaat pas na Backoffice-controle naar de broker. De bevestigde eerste productiebundel bevat voor de broker factuur + goedgekeurde klanturenstaat; boekhouder krijgt alleen de factuur en salarisadministratie krijgt geen bijlage.
 - De standaard begeleidende tekst begint met `Middag,` en bevat `{medewerker}`, `{maand}` en `{uren}`.
 - De beheerder start de maandverzending met één knop; alle aangevinkte ontvangers blijven intern gescheiden berichten.
 - De maandverzending wordt geblokkeerd zolang minimaal één relevante urenregistratie van die maand niet is goedgekeurd. Een ontbrekende klanturenstaat blokkeert alleen wanneer dit per medewerker expliciet is ingesteld.
@@ -50,11 +50,10 @@ Dit is een levende checklist. Bevestigde punten worden uit **Nog te beslissen** 
 
 ## Alleen nog nodig van Path voor productie
 
-1. Eén keuze: blijven nieuwe facturen op naam van QSI Consultancy staan, of wordt dit Path Consultancy B.V.? Zonder nieuw besluit blijft de app QSI gebruiken zoals de ontvangen facturen.
-2. De officiële Circle8-aanleverinstructie: alleen nog bevestigen of verzending via e-mail of een portaal loopt. Het factuuradres zelf is al uit Shawns factuur bevestigd.
-3. Naam en e-mailadres van de boekhouder.
-4. De zakelijke Google Workspace-adressen voor Gio, Joyce en iedere medewerker. Deze kunnen ook later tijdens het aanmaken van de accounts worden ingevuld.
-5. Het definitieve EasySalary-ontvangstadres en een bevestiging van EasySalary dat de afgesproken tekstmail met naam, maand en goedgekeurde uren voldoende is.
+1. De officiële Circle8-aanleverinstructie: bevestigen of verzending via e-mail of een portaal loopt. Het factuuradres zelf is al bevestigd.
+2. De zakelijke adressen voor Gio, Joyce en iedere overige medewerker.
+3. De tweede productiebeheerder, 2FA-keuze, bewaartermijnen, back-upretentie, monitoring-eigenaar en virusscanstrategie.
+4. Bevestiging dat de aangeleverde Path-bedrijfsgegevens op de eerste definitieve PDF visueel correct staan.
 
 De herinneringsmomenten zijn geen blokkerende productiebeslissing meer: een beheerder kan ze zelf onder **Instellingen** wijzigen en per medewerker uitschakelen. Voor automatische uitvoering is nog wel een server-side planner of cronjob nodig.
 
@@ -69,14 +68,13 @@ Afwijkende brokerteksten hoeven alleen te worden aangeleverd wanneer een broker 
 - Cronjob instellen voor herinneringen, exports en de verzendwachtrij.
 - Controleren of de back-ups ook de nieuwe database en applicatiebestanden omvatten.
 
-## Google Workspace
+## Google Workspace SMTP Relay
 
-- Google Cloud-project op naam van Path aanmaken.
-- Gmail API en Google-login activeren.
-- Productie-afzender en echte ontvangers alleen in de beveiligde serverconfiguratie zetten.
-- Alleen de minimaal benodigde verzendtoestemming geven.
-- Callbackadres `https://uren.pathconsultancy.nl/auth/google/callback` registreren.
-- Eerst met interne Path-accounts testen; automatische externe verzending blijft uitgeschakeld.
+- Relay: `smtp-relay.gmail.com:587`, STARTTLS verplicht, IP-gebaseerd via het publieke TransIP-IP.
+- SMTP-authenticatie uit; geen username/password in de applicatie.
+- Alleen geregistreerde domeinafzenders; From `backoffice@pathconsultancy.nl`.
+- SPF, DKIM en DMARC extern controleren voordat echte mail wordt geactiveerd.
+- Eerst de offline preflight en Bundel 3 uitvoeren; `mail.enabled` blijft tot expliciete toestemming `false`.
 
 ## Acceptatie vóór livegang
 
@@ -95,7 +93,7 @@ Afwijkende brokerteksten hoeven alleen te worden aangeleverd wanneer een broker 
 - Een centrale ontvanger aanmaken, bij één medewerker aanvinken en controleren dat andere medewerkers hem niet automatisch krijgen.
 - Een gebruikte extra ontvanger verwijderen en controleren dat alleen de routeringskeuzes verdwijnen en uren/facturen behouden blijven.
 - Per medewerker testen dat de factuurbijlage voor broker en iedere centrale ontvanger afzonderlijk aan- en uitgezet kan worden.
-- Controleren dat factuurmailroutes nooit automatisch een klanturenstaat krijgen; alleen de apart geconfigureerde brokerroute mag de gecontroleerde PDF ontvangen.
+- Controleren dat alleen de broker de goedgekeurde klanturenstaat ontvangt en dat de eerste brokerbundel exact factuur + klanturenstaat bevat; boekhouder en salarisadministratie mogen die PDF niet krijgen.
 - Een officiële klanturenstaat als PDF, JPG en PNG toevoegen met expliciete maand/jaar-keuze; controleren dat JPG/PNG als PDF worden opgeslagen en dat onderwerp, tekst en bestandsnaam ook bij januari 2027 correct zijn.
 - Concept opslaan en controleren dat Backoffice nog geen melding krijgt; daarna indienen en controleren dat de in-app melding, PDF-weergave, controle, opnieuw-uploaden, herinnering en afwijkende brokerroute werken.
 - Bij de brokercontrole onderwerp en begeleidende tekst aanpassen en controleren dat deze wijziging wordt bewaard.

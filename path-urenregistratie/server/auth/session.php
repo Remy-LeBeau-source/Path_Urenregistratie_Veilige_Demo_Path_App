@@ -29,6 +29,13 @@ function auth_try_load_raw_config(): ?array
 
 function auth_environment_from_config(array $config): string
 {
+    foreach (['PATH_APP_ENVIRONMENT', 'PLAYWRIGHT_ENVIRONMENT', 'APP_ENV', 'PLAYWRIGHT_STAGE'] as $key) {
+        $override = getenv($key);
+        if ($override !== false && trim((string)$override) !== '') {
+            $environment = strtolower(trim((string)$override));
+            return $environment !== '' ? $environment : 'production';
+        }
+    }
     $raw = $config['environment'] ?? ($config['app']['environment'] ?? 'production');
     $environment = strtolower(trim((string)$raw));
     return $environment !== '' ? $environment : 'production';
@@ -134,6 +141,60 @@ function auth_apply_cors_headers(?array $config, string $methods, string $header
     header('Access-Control-Allow-Methods: ' . $methods);
     header('Access-Control-Allow-Headers: ' . $headers);
     auth_apply_security_headers($config);
+}
+
+function auth_normalize_filesystem_path(string $path): string
+{
+    $value = str_replace('\\', '/', $path);
+    $prefix = str_starts_with($value, '/') ? '/' : '';
+    if (preg_match('/^[A-Za-z]:/', $value, $match)) {
+        $prefix = strtoupper($match[0]) . '/';
+        $value = substr($value, 2);
+    }
+    $segments = [];
+    foreach (explode('/', $value) as $segment) {
+        if ($segment === '' || $segment === '.') {
+            continue;
+        }
+        if ($segment === '..') {
+            array_pop($segments);
+            continue;
+        }
+        $segments[] = $segment;
+    }
+    return $prefix . implode('/', $segments);
+}
+
+/** Configure PHP error logging without exposing errors in production responses. */
+function auth_configure_runtime_logging(array $config): void
+{
+    $logging = isset($config['logging']) && is_array($config['logging']) ? $config['logging'] : [];
+    $production = auth_environment_from_config($config) === 'production';
+    $enabled = ($logging['enabled'] ?? $production) === true;
+
+    ini_set('display_errors', ($logging['display_errors'] ?? false) === true && !$production ? '1' : '0');
+    ini_set('log_errors', $enabled ? '1' : '0');
+    if (!$enabled) {
+        return;
+    }
+
+    $path = trim((string)($logging['error_log'] ?? ''));
+    if ($path === '') {
+        $path = dirname(__DIR__, 2) . '/../path-private/logs/php-error.log';
+    }
+    $publicRoot = auth_normalize_filesystem_path((string)(realpath(dirname(__DIR__, 2)) ?: dirname(__DIR__, 2)));
+    $normalizedPath = auth_normalize_filesystem_path($path);
+    if (str_starts_with($normalizedPath . '/', rtrim($publicRoot, '/') . '/')) {
+        // Never direct production logs into the public application tree.
+        return;
+    }
+    $directory = dirname($path);
+    if (!is_dir($directory)) {
+        @mkdir($directory, 0750, true);
+    }
+    if (is_dir($directory) && is_writable($directory)) {
+        ini_set('error_log', $path);
+    }
 }
 
 function auth_send_json(array $payload, int $statusCode = 200): void
@@ -280,6 +341,7 @@ function auth_pdo(array $config): PDO
 
 function auth_start_session_secure(array $config): void
 {
+    auth_configure_runtime_logging($config);
     if (session_status() === PHP_SESSION_ACTIVE) {
         return;
     }

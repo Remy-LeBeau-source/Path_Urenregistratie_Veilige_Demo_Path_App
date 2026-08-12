@@ -233,9 +233,38 @@ test('[SAFE-N-004] install.php en migrate.php bevatten productieguards', async (
 test('[SAFE-H-004] config.example.php bevat mail.enabled=false als standaard', async () => {
   await test.step('Given config.example.php wordt gelezen', async () => {});
 
-  await test.step('Then staat mail.enabled standaard op false', async () => {
+  await test.step('Then staat mail.enabled standaard op false en is SMTP relay voorbereid zonder activering', async () => {
     const src = await readFile(join(process.cwd(), 'server', 'config.example.php'), 'utf8');
     expect(src).toMatch(/'enabled'\s*=>\s*false/);
-    expect(src).toMatch(/'transport'\s*=>\s*'dry_run'/);
+    expect(src).toMatch(/'transport'\s*=>\s*'smtp_relay'/);
+    expect(src).toMatch(/'host'\s*=>\s*'smtp-relay\.gmail\.com'/);
+    expect(src).toMatch(/'port'\s*=>\s*587/);
+    expect(src).toMatch(/'encryption'\s*=>\s*'starttls'/);
+  });
+});
+
+test('[SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed', async () => {
+  await test.step('Given de transport-, dispatch- en productiepreflightbron wordt gelezen', async () => {});
+
+  await test.step('Then zijn TLS, dry-run, private storage, HSTS en niet-mutatieve checks afgedwongen', async () => {
+    const root = process.cwd();
+    const smtp = await readFile(join(root, 'server', 'mail', 'smtp.php'), 'utf8');
+    const dispatch = await readFile(join(root, 'server', 'mail', 'dispatch.php'), 'utf8');
+    const preflight = await readFile(join(root, 'server', 'scripts', 'production-preflight.php'), 'utf8');
+    const requestReset = await readFile(join(root, 'server', 'auth', 'request-reset.php'), 'utf8');
+    const provisionAccount = await readFile(join(root, 'server', 'scripts', 'provision-account.php'), 'utf8');
+    const config = await readFile(join(root, 'server', 'config.example.php'), 'utf8');
+
+    expect(smtp).toContain('STREAM_CRYPTO_METHOD_TLS_CLIENT');
+    expect(smtp).toContain("'verify_peer_name' => true");
+    expect(smtp).not.toContain('AUTH LOGIN');
+    expect(dispatch).toContain('dry_run = 0');
+    expect(dispatch).toContain('status = "processing"');
+    expect(dispatch).toContain('invoice_and_customer_timesheet');
+    expect(preflight).toContain("'writes_performed' => false");
+    expect(requestReset).toContain("$environment !== 'production'");
+    expect(provisionAccount).toContain('Passwords in command arguments are forbidden');
+    expect(config).toMatch(/'hsts_enabled'\s*=>\s*false/);
+    expect(config).toContain('../path-private');
   });
 });

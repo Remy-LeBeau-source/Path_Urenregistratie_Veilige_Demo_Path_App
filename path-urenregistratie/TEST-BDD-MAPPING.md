@@ -58,7 +58,7 @@
 | DASH-H-006 | ui | dashboard.feature | vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie | Happy | 15 | Actueel |
 | DASH-H-007 | ui | dashboard.feature | dashboardknop behoudt de geldige maand en medewerkeroverzichten | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | dashboardknop behoudt de geldige maand en medewerkeroverzichten | Happy | 15 | Actueel |
 | EQ-H-001 | api | email-queue.feature | factuurlock maakt queue-items aan met dry_run=true | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | factuurlock maakt queue-items aan met dry_run=true | Happy | 12 | Actueel |
-| EQ-H-002 | api | email-queue.feature | broker-channel heeft attachment_policy invoice | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | broker-channel heeft attachment_policy invoice | Happy | 12 | Actueel |
+| EQ-H-002 | api | email-queue.feature | broker-channel bundelt factuur en klanturenstaat | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | broker-channel bundelt factuur en klanturenstaat | Happy | 12 | Actueel |
 | EQ-H-003 | api | email-queue.feature | EasySalary-channel heeft attachment_policy none | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | EasySalary-channel heeft attachment_policy none | Happy | 12 | Actueel |
 | EQ-H-004 | api | email-queue.feature | action=enqueue voor gelockte factuur maakt nieuwe items aan | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | action=enqueue voor gelockte factuur maakt nieuwe items aan | Happy | 12 | Actueel |
 | EQ-H-005 | api | email-queue.feature | action=list response bevat verplichte velden | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | action=list response bevat verplichte velden | Happy | 12 | Actueel |
@@ -100,6 +100,7 @@
 | PWD-H-001 | security | password-reset.feature | request-reset retourneert token in demo-modus | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
 | PWD-H-002 | security | password-reset.feature | onbekend e-mailadres retourneert ook ok=true (geen email-enumeration) | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
 | PWD-H-003 | security | password-reset.feature | me.php bevat force_password_change veld | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
+| PWD-H-004 | security | password-reset.feature | ingelogde gebruiker kan het eigen wachtwoord veilig wijzigen | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
 | PWD-N-004 | security | password-reset.feature | reset-password met ongeldig token geeft 400 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
 | PWD-N-005 | security | password-reset.feature | reset-password met te kort wachtwoord geeft 400 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
 | PWD-N-006 | security | password-reset.feature | hergebruik van al-gebruikt token geeft 409 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
@@ -124,6 +125,7 @@
 | SAFE-H-003 | security | production-safety.feature | health.php bevat productieguard die technische details onderdrukt | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | health.php bevat productieguard die technische details onderdrukt | Happy | 14 | Actueel |
 | SAFE-N-004 | security | production-safety.feature | install.php en migrate.php bevatten productieguards | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | install.php en migrate.php bevatten productieguards | Negative | 14 | Actueel |
 | SAFE-H-004 | security | production-safety.feature | config.example.php bevat mail.enabled=false als standaard | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | config.example.php bevat mail.enabled=false als standaard | Happy | 14 | Actueel |
+| SAFE-H-005 | security | production-safety.feature | SMTP-dispatch en operationele scripts blijven fail-closed | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | SMTP-dispatch en operationele scripts blijven fail-closed | Happy | 14 | Actueel |
 | ROLE-N-003 | security | roles-api.feature | zonder sessie geeft protected API 401 | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | zonder sessie geeft protected API 401 | Negative | 4 | Actueel |
 | ROLE-H-001 | security | roles-api.feature | admin ziet volledige data | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | admin ziet volledige data | Happy | 4 | Actueel |
 | ROLE-H-002 | security | roles-api.feature | employee ziet alleen eigen data | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | employee ziet alleen eigen data | Happy | 4 | Actueel |
@@ -163,9 +165,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 142
+- Playwright executable cases: 144
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 143
+- Totaal unieke executable cases: 145
 - Playwright features: 20
 - Database features: 1
 - Playwright steps mappings: 20

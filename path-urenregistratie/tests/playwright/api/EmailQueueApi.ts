@@ -2,7 +2,7 @@ import { type APIRequestContext } from '@playwright/test';
 import { appConfig } from '../fixtures/appConfig';
 import { attachApiExchange } from '../reporting/apiAttachments';
 
-type ListParams = { status?: 'queued' | 'sent' | 'failed'; limit?: number };
+type ListParams = { status?: 'queued' | 'processing' | 'sent' | 'failed'; limit?: number };
 
 export class EmailQueueApi {
   constructor(private readonly request: APIRequestContext) {}

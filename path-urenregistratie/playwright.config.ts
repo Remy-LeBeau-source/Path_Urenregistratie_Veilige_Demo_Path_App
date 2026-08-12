@@ -10,12 +10,13 @@ const stage = String(process.env.PLAYWRIGHT_STAGE || '').trim().toLowerCase();
 if (stage && ['dev', 'test', 'acc', 'prod'].includes(stage)) {
   const stageEnvPath = `environments/${stage}.env`;
   if (existsSync(stageEnvPath)) {
-    loadDotEnv({ path: stageEnvPath, override: true });
+    loadDotEnv({ path: stageEnvPath, override: false });
   }
 }
 
 if (existsSync('.env.local')) {
-  loadDotEnv({ path: '.env.local', override: true });
+  // Explicit runner/CI variables must win over developer-local defaults.
+  loadDotEnv({ path: '.env.local', override: false });
 }
 
 export default defineConfig({

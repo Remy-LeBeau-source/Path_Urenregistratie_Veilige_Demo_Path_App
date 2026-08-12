@@ -7775,6 +7775,48 @@ function showProfileEditor() {
   });
 }
 
+function showPasswordEditor() {
+  if (!API_ENABLED || authRuntime.mode !== "auth") {
+    toast("Wachtwoord wijzigen is alleen beschikbaar voor een ingelogd serveraccount.");
+    return;
+  }
+  const summary = '<div class="modal-form"><label>Huidig wachtwoord<input id="change-current-password" type="password" autocomplete="current-password"></label><label>Nieuw wachtwoord<input id="change-new-password" type="password" autocomplete="new-password" minlength="12"></label><label>Herhaal nieuw wachtwoord<input id="change-confirm-password" type="password" autocomplete="new-password" minlength="12"></label><p class="full form-help">Gebruik minimaal 12 tekens. Het nieuwe wachtwoord mag niet gelijk zijn aan het huidige.</p></div>';
+  showModal({
+    label: "Accountbeveiliging",
+    title: "Wachtwoord wijzigen",
+    message: "Wijzig je wachtwoord via de beveiligde serversessie.",
+    summary,
+    confirm: "Wachtwoord opslaan",
+    action: () => {
+      const currentPassword = String(document.querySelector("#change-current-password")?.value || "");
+      const newPassword = String(document.querySelector("#change-new-password")?.value || "");
+      const confirmation = String(document.querySelector("#change-confirm-password")?.value || "");
+      if (newPassword.length < 12 || newPassword !== confirmation || !currentPassword) {
+        toast("Controleer het huidige wachtwoord en voer tweemaal hetzelfde nieuwe wachtwoord van minimaal 12 tekens in.");
+        return;
+      }
+      document.querySelector("#modal-confirm").disabled = true;
+      requestAuthCsrf()
+        .then(token => fetch("/server/auth/change-password.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
+          body: JSON.stringify({ current_password: currentPassword, new_password: newPassword })
+        }))
+        .then(async response => ({ ok: response.ok, data: await response.json() }))
+        .then(result => {
+          if (!result.ok || !result.data.ok) throw new Error(result.data.error || "password-change-failed");
+          closeModal();
+          toast("Je wachtwoord is gewijzigd.");
+        })
+        .catch(error => {
+          document.querySelector("#modal-confirm").disabled = false;
+          toast(String(error && error.message || "Wachtwoord wijzigen is mislukt."));
+        });
+    }
+  });
+  document.querySelector("#change-current-password")?.focus();
+}
+
 function showPreferences() {
   const profile = currentProfileData();
   const adminRows = state.currentRole === "admin" ? '<div class="preference-row"><span><strong>Ingediende uren</strong><small>Melding zodra uren ter controle klaarstaan</small></span><input id="pref-approvals" aria-label="Meldingen over ingediende uren" type="checkbox"' + (state.preferences.approvalNotifications ? " checked" : "") + '></div><div class="preference-row"><span><strong>Facturen klaar</strong><small>Melding na het goedkeuren van uren</small></span><input id="pref-invoices" aria-label="Meldingen over facturen" type="checkbox"' + (state.preferences.invoiceNotifications ? " checked" : "") + '></div>' : '<div class="preference-row"><span><strong>Urenherinneringen</strong><small>Volgens de ingestelde week- en maandplanning</small></span><input id="pref-hours" aria-label="Urenherinneringen" type="checkbox"' + (state.preferences.hourReminders ? " checked" : "") + '></div><div class="preference-row"><span><strong>Statuswijzigingen</strong><small>Correctie nodig en goedkeuring</small></span><input id="pref-status" aria-label="Statusmeldingen" type="checkbox"' + (state.preferences.statusNotifications ? " checked" : "") + '></div>';
@@ -7897,6 +7939,7 @@ document.addEventListener("click", event => {
   if (profileAction) {
     closeTopbarPopovers();
     if (profileAction.dataset.profileAction === "profile") showProfileEditor();
+    if (profileAction.dataset.profileAction === "password") showPasswordEditor();
     if (profileAction.dataset.profileAction === "preferences") showPreferences();
     if (profileAction.dataset.profileAction === "help") openHelp();
     if (["switch", "logout"].includes(profileAction.dataset.profileAction)) logout();
@@ -9006,9 +9049,13 @@ document.querySelector("#auth-reset-submit")?.addEventListener("click", () => {
     }).then(r => r.json()).then(data => {
       if (feedback) {
         if (data.ok) {
-          feedback.textContent = data.dry_run
-            ? "Resetverzoek verstuurd (dry-run). Token: " + (data.token || "(zie server)") + " · Geldig tot: " + (data.expires_at || "onbekend")
-            : "Resetverzoek verstuurd. Controleer je e-mail.";
+          if (data.dry_run) {
+            feedback.textContent = "Resetverzoek verstuurd (dry-run). Token: " + (data.token || "(zie server)") + " · Geldig tot: " + (data.expires_at || "onbekend");
+          } else if (data.delivery_available) {
+            feedback.textContent = "Resetverzoek verstuurd. Controleer je e-mail.";
+          } else {
+            feedback.textContent = "Neem contact op met Backoffice om je toegang veilig te herstellen.";
+          }
         } else {
           feedback.textContent = "Resetverzoek mislukt. Probeer opnieuw.";
         }

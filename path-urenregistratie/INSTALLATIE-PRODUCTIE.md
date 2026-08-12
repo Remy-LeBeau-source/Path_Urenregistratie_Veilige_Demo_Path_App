@@ -1,71 +1,51 @@
-# Installatie (productie) — korte handleiding voor TransIP
+# Installatie productie — TransIP
 
-Doel: veilige, eenmalige productie-installatie voor de minimale backend (PHP 8.4 + MySQL).
+De volledige beheer-, cron-, backup-, go-live- en rollbackprocedure staat in
+`OPERATIONS-RUNBOOK.md`. Deze korte handleiding is alleen de installatiesamenvatting.
 
-Belangrijk
-- Gebruik PHP 8.4 op de hostingomgeving.
-- Maak `server/config.local.php` handmatig op de server; plaats NOOIT wachtwoorden in Git.
+## Vereisten
 
-Stappen (door hostingbeheerder of dev):
+- PHP 8.4 met `pdo_mysql`, `openssl`, `fileinfo` en `gd`.
+- MySQL-database en aparte applicatiegebruiker met minimale rechten.
+- Geldig SSL-certificaat voor `https://uren.pathconsultancy.nl`.
+- Een private sibling-map buiten de documentroot voor PDF's, logs en back-ups.
+- SSH/CLI-toegang. `server/install.php` en `server/migrate.php` zijn via HTTP geblokkeerd.
 
-1) Zorg dat PHP 8.4 actief is en dat `pdo_mysql` is ingeschakeld.
-   - In TransIP: **Geavanceerd → PHP-instellingen** → kies PHP 8.4.
-   - Controleer met `php -v` en `php -m | grep -i pdo`.
+## Installatie
 
-2) Maak `server/config.local.php` in de `server/` map (voorbeeld hieronder). Dit bestand moet niet in Git.
+1. Deploy de releasebestanden naar de bevestigde documentroot.
+2. Maak buiten de documentroot `path-private/{invoices,customer-timesheets,backups,logs}` met
+   beperkte rechten (`0750`, bestanden waar mogelijk `0640`).
+3. Maak op de server `server/config.local.php` op basis van `server/config.local.php.example`.
+   Dit bestand staat in `.gitignore` en mag nooit worden gecommit.
+4. Vul de echte databasegegevens uitsluitend op de server in en behoud:
+   - `environment=production`;
+   - `allow_demo_migrations=false`;
+   - exacte origin/CORS `https://uren.pathconsultancy.nl`;
+   - CSP actief voorbereid;
+   - HSTS nog `false`;
+   - errorlog buiten de webroot en `display_errors=false`;
+   - SMTP Relay voorbereid zonder credentials en `mail.enabled=false`.
+5. Voer via CLI uit:
 
-Voorbeeld (`server/config.local.php`):
-```
-<?php
-return [
-   'environment' => 'production',
-   'app_origin' => 'https://your-site',
-   'allow_demo_migrations' => false,
-  'host' => '127.0.0.1',
-  'database' => 'your_database_name',
-  'username' => 'your_db_user',
-  'password' => 'your_db_password',
-  'port' => 3306,
-  'charset' => 'utf8mb4',
-];
-```
-
-3) Test health endpoint
-   - Open in browser of via curl:
-     `https://your-site/server/health.php`
-   - Zorg dat de JSON teruggeeft dat `pdo_mysql`, `config.local.php` en `database_connection` ok zijn.
-
-4) Run de installer éénmalig
-   - Open in browser of via curl:
-     `https://your-site/server/install.php`
-   - Dit zorgt dat de `app_state` tabel bestaat.
-   - De installer toont geen wachtwoord of gevoelige data.
-
-5) Run migraties veilig
-   - Open in browser of via curl:
-     `https://your-site/server/migrate.php`
-   - In productie blijft `allow_demo_migrations` op `false`.
-   - Demo-migraties (bestandsnaam met `_demo_`) worden dan standaard overgeslagen.
-   - Zet `allow_demo_migrations` alleen lokaal bewust op `true` voor demo- of testdoeleinden.
-   - Voer demo-accounts of demo-seeds nooit op productie uit.
-
-6) Open de app
-   - Navigeer naar `https://your-site/` en controleer functionaliteit.
-
-7) Extra productietips
-   - Zorg voor een geldig SSL-certificaat (TransIP levert meestal automatisch LetsEncrypt).
-   - Beheer back-ups en controleer of de database wordt meegenomen.
-   - Verander het DB-wachtwoord en update `server/config.local.php` wanneer nodig.
-
-Commands (lokale controle / debugging):
-```
-php -l server/api.php
-php -l server/health.php
-php -l server/install.php
-git status --short
-git ls-files --others --exclude-standard | grep server/config.local.php || true
+```bash
+cd <APP>/path-urenregistratie
+php server/scripts/production-preflight.php --config=server/config.local.php
+php server/install.php
+php server/migrate.php
+php server/scripts/production-preflight.php --config=server/config.local.php --live
 ```
 
-Veiligheid
-- Plaats nooit `server/config.local.php` in Git.
-- De endpoints hierboven tonen geen wachtwoorden.
+6. Controleer `https://uren.pathconsultancy.nl/server/health.php`. In productie retourneert dit alleen
+   een globale `ok`-status en geen host-/databasenaam.
+7. Provision de eerste beheerder via `server/scripts/provision-account.php`; geef nooit een wachtwoord
+   als command-line argument. Laat de gebruiker het wachtwoord direct via het profielmenu wijzigen.
+8. Draai `npm run check` in de releasecheckout en voer Bundel 3 uit met echte mail nog uitgeschakeld.
+
+## Niet doen
+
+- Geen installatie/migratie via browser of curl.
+- Geen demo-seed of `.invalid`-accounts in productie.
+- Geen secrets in Git, shell-history, screenshots of logs.
+- Geen restore over productie zonder expliciete toestemming en een verse back-up.
+- Geen `mail.enabled=true`, echte SMTP-proef, HSTS of go-live zonder de afzonderlijke acceptatiegate.

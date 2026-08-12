@@ -21,4 +21,5 @@ export const caseMappings = [
   { caseId: 'SAFE-H-003', spec: 'production-safety.spec.ts' },
   { caseId: 'SAFE-N-004', spec: 'production-safety.spec.ts' },
   { caseId: 'SAFE-H-004', spec: 'production-safety.spec.ts' },
+  { caseId: 'SAFE-H-005', spec: 'production-safety.spec.ts' },
 ] as const;

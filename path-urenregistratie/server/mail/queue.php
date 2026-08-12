@@ -10,26 +10,26 @@ require_once __DIR__ . '/config.php';
 
 const MAIL_CHANNEL_TEMPLATES = [
     'broker' => [
-        'subject' => 'Factuur {factuurnummer} \u2013 {periode}',
+        'subject' => 'Factuur {factuurnummer} – {periode}',
         'body' =>
             "Geachte relatie,\n\n"
             . "Bijgevoegd ontvangt u factuur {factuurnummer} voor de periode {periode}.\n\n"
             . "Medewerker: {medewerker}\nUren: {uren}\n"
-            . "Subtotaal: \u20ac {subtotaal}\nBtw: \u20ac {btw}\nTotaal: \u20ac {bedrag}\n\n"
+            . "Subtotaal: € {subtotaal}\nBtw: € {btw}\nTotaal: € {bedrag}\n\n"
             . "Met vriendelijke groet,\n{bedrijf}",
     ],
     'accountant' => [
-        'subject' => 'Factuureadministratie {factuurnummer} \u2013 {periode}',
+        'subject' => 'Factuuradministratie {factuurnummer} – {periode}',
         'body' =>
             "Ter informatie: factuur {factuurnummer} voor de periode {periode} is definitief gemaakt.\n"
             . "Medewerker: {medewerker}\n"
-            . "Subtotaal: \u20ac {subtotaal}\nBtw: \u20ac {btw}\nTotaal: \u20ac {bedrag}",
+            . "Subtotaal: € {subtotaal}\nBtw: € {btw}\nTotaal: € {bedrag}",
     ],
     'payroll' => [
-        'subject' => 'Ureninformatie {medewerker} \u2013 {periode}',
+        'subject' => 'Ureninformatie {medewerker} – {periode}',
         'body' =>
             "Salarisverwerking:\nMedewerker: {medewerker}\nPeriode: {periode}\n"
-            . "Goedgekeurde uren: {uren}\n\nFactuur {factuurnummer} is gereed bij {bedrijf}.",
+            . "Goedgekeurde uren: {uren}",
     ],
 ];
 
@@ -104,6 +104,14 @@ function mail_insert_delivery(
     string $attachmentPolicy,
     bool   $dryRun
 ): int {
+    $ccEmail = $ccEmail !== null && trim($ccEmail) !== '' ? trim($ccEmail) : null;
+    $recipientEmail = trim($recipientEmail);
+    if (!filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
+        throw new \RuntimeException('invalid-recipient-email');
+    }
+    if ($ccEmail !== null && !filter_var($ccEmail, FILTER_VALIDATE_EMAIL)) {
+        throw new \RuntimeException('invalid-cc-email');
+    }
     $stmt = $pdo->prepare(
         'INSERT INTO email_deliveries
          (invoice_id, channel, recipient_email, cc_email, subject_snapshot, body_snapshot,
@@ -205,7 +213,11 @@ function mail_enqueue_for_invoice(
             mail_assert_vars($tpl['subject'], $vars, 'broker.subject');
             mail_assert_vars($tpl['body'], $vars, 'broker.body');
 
-            $attachPolicy = (bool)$inv['broker_invoice_attachment'] ? 'invoice' : 'none';
+            // The confirmed production bundle sends the finalized invoice and the separately
+            // approved customer timesheet to the broker. Dispatch refuses incomplete bundles.
+            $attachPolicy = (bool)$inv['broker_invoice_attachment']
+                ? 'invoice_and_customer_timesheet'
+                : 'customer_timesheet';
             $id = mail_insert_delivery(
                 $pdo, $invoiceId, 'broker',
                 (string)$broker['invoice_email'],

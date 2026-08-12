@@ -98,6 +98,10 @@ function migration_plan(bool $allowDemoMigrations): array
         'id' => '010_add_timesheet_version.sql',
         'path' => __DIR__ . '/migrations/010_add_timesheet_version.sql',
     ];
+    $plan[] = [
+        'id' => '011_mail_bundle_attachment_policy.sql',
+        'path' => __DIR__ . '/migrations/011_mail_bundle_attachment_policy.sql',
+    ];
 
     return $plan;
 }

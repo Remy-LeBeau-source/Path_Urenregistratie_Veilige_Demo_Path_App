@@ -31,10 +31,10 @@ $dryRun       = mail_is_dry_run($config);
 // ---------------------------------------------------------------------------
 if ($method === 'GET') {
     $statusFilter    = isset($_GET['status']) ? trim((string)$_GET['status']) : null;
-    $allowedStatuses = ['queued', 'sent', 'failed'];
+    $allowedStatuses = ['queued', 'processing', 'sent', 'failed'];
     if ($statusFilter !== null && !in_array($statusFilter, $allowedStatuses, true)) {
         auth_send_json(['ok' => false, 'error' => 'invalid-status',
-            'message' => 'status must be one of: queued, sent, failed'], 400);
+            'message' => 'status must be one of: queued, processing, sent, failed'], 400);
     }
 
     $limit = min(100, max(1, (int)($_GET['limit'] ?? 50)));

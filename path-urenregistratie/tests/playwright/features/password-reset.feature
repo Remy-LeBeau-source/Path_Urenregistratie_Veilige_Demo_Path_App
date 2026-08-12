@@ -24,6 +24,12 @@ Feature: Wachtwoordherstel en rate limiting in Path Uren & Facturatie
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
 
+  @happy
+  Scenario: [PWD-H-004] ingelogde gebruiker kan het eigen wachtwoord veilig wijzigen
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
   @negative
   Scenario: [PWD-N-004] reset-password met ongeldig token geeft 400
     Given de uitvoerbare Playwright-case is voorbereid

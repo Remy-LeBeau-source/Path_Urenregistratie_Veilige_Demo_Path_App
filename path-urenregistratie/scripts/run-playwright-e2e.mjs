@@ -35,6 +35,16 @@ function resolveDatabaseName(env) {
   return String(env.PATH_APP_DB_NAME || env.PLAYWRIGHT_DB_NAME || env.DB_NAME || '').trim();
 }
 
+function normalizeLocalBaseUrl(value) {
+  const url = new URL(String(value || 'http://127.0.0.1:8000').trim());
+  // The managed PHP server binds IPv4. Keeping `localhost` lets browsers prefer
+  // ::1 and accidentally talk to a stale, unrelated IPv6 PHP process.
+  if (url.hostname === 'localhost') {
+    url.hostname = '127.0.0.1';
+  }
+  return url.toString().replace(/\/$/, '');
+}
+
 async function waitForHealth(baseUrl, timeoutMs = 60_000) {
   const startedAt = Date.now();
   let lastError = 'startup-not-yet-ready';
@@ -87,7 +97,7 @@ async function main() {
     throw new Error(`E2E precheck failed: local Playwright runs require a test database name ending in _test, got ${resolvedDatabaseName}.`);
   }
 
-  const baseUrl = String(process.env.PATH_APP_BASE_URL || 'http://localhost:8000').trim();
+  const baseUrl = normalizeLocalBaseUrl(process.env.PATH_APP_BASE_URL);
   const phpPath = resolvePhpPath();
   const serverAddress = '127.0.0.1:8000';
 
@@ -125,6 +135,7 @@ async function main() {
     PLAYWRIGHT_STAGE: effectiveStage,
     PATH_APP_ALLOW_DEMO_MIGRATIONS: '1',
     PLAYWRIGHT_ALLOW_DEMO_MIGRATIONS: '1',
+    PATH_APP_BASE_URL: baseUrl,
   };
 
   const testRuntimeEnv = {
@@ -133,6 +144,7 @@ async function main() {
     PLAYWRIGHT_STAGE: effectiveStage,
     PATH_APP_ALLOW_DEMO_MIGRATIONS: '1',
     PLAYWRIGHT_ALLOW_DEMO_MIGRATIONS: '1',
+    PATH_APP_BASE_URL: baseUrl,
   };
 
   if (effectiveStage !== 'prod') {

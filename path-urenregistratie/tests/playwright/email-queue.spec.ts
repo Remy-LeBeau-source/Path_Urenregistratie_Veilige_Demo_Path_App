@@ -103,7 +103,7 @@ test.describe('email queue api', () => {
     await test.step('And cleanup', async () => { await authApi.logout(); await ctx.dispose(); });
   });
 
-  test('[EQ-H-002] broker-channel heeft attachment_policy invoice', async () => {
+  test('[EQ-H-002] broker-channel bundelt factuur en klanturenstaat', async () => {
     const { ctx, authApi, queueApi, invoiceId } = await createLockedInvoice();
 
     await test.step('Given een gelockte factuur met broker_invoice_attachment=true', async () => {});
@@ -115,9 +115,9 @@ test.describe('email queue api', () => {
         .filter(i => (i.invoice_id as number) === invoiceId && i.channel === 'broker');
     });
 
-    await test.step('Then heeft de broker-channel attachment_policy=invoice', async () => {
+    await test.step('Then heeft de broker-channel attachment_policy=invoice_and_customer_timesheet', async () => {
       expect(brokerItems.length).toBeGreaterThan(0);
-      expect(brokerItems.every(i => i.attachment_policy === 'invoice')).toBe(true);
+      expect(brokerItems.every(i => i.attachment_policy === 'invoice_and_customer_timesheet')).toBe(true);
     });
 
     await test.step('And cleanup', async () => { await authApi.logout(); await ctx.dispose(); });

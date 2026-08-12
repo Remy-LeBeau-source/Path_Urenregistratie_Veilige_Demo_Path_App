@@ -99,6 +99,48 @@ test.describe('password reset api', () => {
     await ctx.dispose();
   });
 
+  test('[PWD-H-004] ingelogde gebruiker kan het eigen wachtwoord veilig wijzigen', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    const originalPassword = requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD');
+    const temporaryPassword = 'Tijdelijk-Anders!2026';
+    let changed = false;
+
+    try {
+      await test.step('Given een ingelogde beheerder', async () => {
+        await authApi.login(appConfig.adminEmail, originalPassword);
+      });
+
+      await test.step('When het huidige en een sterk nieuw wachtwoord worden verstuurd', async () => {
+        const result = await postAuth(ctx, '/server/auth/change-password.php', {
+          current_password: originalPassword,
+          new_password: temporaryPassword,
+        });
+        expect(result.status).toBe(200);
+        expect(result.body.ok).toBe(true);
+        changed = true;
+      });
+
+      await test.step('Then kan het wachtwoord via dezelfde beveiligde flow worden teruggezet', async () => {
+        const restore = await postAuth(ctx, '/server/auth/change-password.php', {
+          current_password: temporaryPassword,
+          new_password: originalPassword,
+        });
+        expect(restore.status).toBe(200);
+        expect(restore.body.ok).toBe(true);
+        changed = false;
+      });
+    } finally {
+      if (changed) {
+        await postAuth(ctx, '/server/auth/change-password.php', {
+          current_password: temporaryPassword,
+          new_password: originalPassword,
+        });
+      }
+      await ctx.dispose();
+    }
+  });
+
   test('[PWD-N-004] reset-password met ongeldig token geeft 400', async () => {
     const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
 

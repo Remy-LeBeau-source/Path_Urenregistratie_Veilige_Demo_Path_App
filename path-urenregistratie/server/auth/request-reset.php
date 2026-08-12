@@ -41,13 +41,18 @@ $pdo->prepare(
 // Audit without logging the token itself.
 auth_log_event($pdo, (int)$user['company_id'], (int)$user['id'], $email, 'login', 'success', 'password-reset-requested');
 
-// dry_run = true unless mail is explicitly enabled in config.
-// Token is returned in response only in dry-run so tests/demo can proceed without a real mailer.
-$isDryRun = !(bool)($config['mail']['enabled'] ?? false);
+// Raw reset tokens are test conveniences and must never leave a production server.
+$environment = auth_environment_from_config($config);
+$isDryRun = $environment !== 'production' && !(bool)($config['mail']['enabled'] ?? false);
 
 // In demo/dev: return token so tests can proceed without a real mailer.
 // In production: remove 'token' from response and queue the email instead.
-$response = ['ok' => true, 'dry_run' => $isDryRun, 'expires_at' => $expiresAt];
+$response = [
+    'ok' => true,
+    'dry_run' => $isDryRun,
+    'delivery_available' => false,
+    'expires_at' => $expiresAt,
+];
 if ($isDryRun) {
     $response['token'] = $rawToken;
 }

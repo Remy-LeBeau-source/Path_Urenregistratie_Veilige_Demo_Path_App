@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 142 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 144 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 142 unieke case-ID's
+- Playwright executable cases: 144 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 143 unieke case-ID's
+- Totaal executable cases: 145 unieke case-ID's
 - Playwright features: 20
 - Database features: 1
 - Playwright steps mappings: 20
 - Database steps mappings: 1
-- Uitvoeringen: 146
-- Niet-mobile projectuitvoeringen: 138
+- Uitvoeringen: 148
+- Niet-mobile projectuitvoeringen: 140
 - Mobile functionele cases: 4
 - Pixel 7 / Chromium-uitvoeringen: 4
 - iPhone 13 / WebKit-uitvoeringen: 4
 
-De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 142 Playwright-functionele cases in totaal 146 resultaten op: 138 + (4 x 2) = 146.
+De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 144 Playwright-functionele cases in totaal 148 resultaten op: 140 + (4 x 2) = 148.
 
 ## Documentatieketen
 
@@ -118,7 +118,7 @@ De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 142 Playwrig
 - Cases: 14
 
 - [EQ-H-001] factuurlock maakt queue-items aan met dry_run=true
-- [EQ-H-002] broker-channel heeft attachment_policy invoice
+- [EQ-H-002] broker-channel bundelt factuur en klanturenstaat
 - [EQ-H-003] EasySalary-channel heeft attachment_policy none
 - [EQ-H-004] action=enqueue voor gelockte factuur maakt nieuwe items aan
 - [EQ-H-005] action=list response bevat verplichte velden
@@ -190,11 +190,12 @@ De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 142 Playwrig
 
 - Feature: `tests/playwright/features/password-reset.feature`
 - Source: `tests/playwright/password-reset.spec.ts`
-- Cases: 9
+- Cases: 10
 
 - [PWD-H-001] request-reset retourneert token in demo-modus
 - [PWD-H-002] onbekend e-mailadres retourneert ook ok=true (geen email-enumeration)
 - [PWD-H-003] me.php bevat force_password_change veld
+- [PWD-H-004] ingelogde gebruiker kan het eigen wachtwoord veilig wijzigen
 - [PWD-N-004] reset-password met ongeldig token geeft 400
 - [PWD-N-005] reset-password met te kort wachtwoord geeft 400
 - [PWD-N-006] hergebruik van al-gebruikt token geeft 409
@@ -223,7 +224,7 @@ De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 142 Playwrig
 
 - Feature: `tests/playwright/features/production-safety.feature`
 - Source: `tests/playwright/production-safety.spec.ts`
-- Cases: 8
+- Cases: 9
 
 - [SAFE-H-001] login picker vult alleen lokaal demo-wachtwoord in wanneer hints beschikbaar zijn
 - [SAFE-N-001] frontend source bevat geen plaintext demo-credentials
@@ -233,6 +234,7 @@ De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 142 Playwrig
 - [SAFE-H-003] health.php bevat productieguard die technische details onderdrukt
 - [SAFE-N-004] install.php en migrate.php bevatten productieguards
 - [SAFE-H-004] config.example.php bevat mail.enabled=false als standaard
+- [SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed
 
 ### Rollen en gegevensscope
 

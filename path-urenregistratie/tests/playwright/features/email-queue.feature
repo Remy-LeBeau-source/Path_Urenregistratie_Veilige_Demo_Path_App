@@ -13,7 +13,7 @@ Feature: E-mailqueue en afleverbeleid in Path Uren & Facturatie
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
 
   @happy
-  Scenario: [EQ-H-002] broker-channel heeft attachment_policy invoice
+  Scenario: [EQ-H-002] broker-channel bundelt factuur en klanturenstaat
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd

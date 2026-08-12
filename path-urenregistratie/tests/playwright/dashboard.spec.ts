@@ -204,16 +204,30 @@ test('[DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad ni
   });
 
   await test.step('Then alle zichtbare totalen blijven gelijk aan de concrete taakregels', async () => {
-    await expect.poll(async () => page.locator('#admin-task-list [data-admin-task-row]').count()).toBeGreaterThan(0);
-    const concreteTotal = await page.locator('#admin-task-list [data-admin-task-row]').count();
-    const backofficeTotal = await page.locator('#admin-task-list [data-admin-task-row].is-actionable').count();
-    const employeeTotal = concreteTotal - backofficeTotal;
-    await expect(page.locator('#hero-task-total')).toHaveText(`${concreteTotal} open acties`);
-    await expect(page.locator('#hero-task-owners')).toHaveText(`Backoffice ${backofficeTotal} + medewerkers ${employeeTotal} = ${concreteTotal}`);
-    await expect(page.locator('#metric-actions')).toHaveText(String(backofficeTotal));
-    await expect(page.locator('#open-work-queue')).toHaveText(`Bekijk alle ${concreteTotal} open acties`);
-    await expect(page.locator('#view-dashboard')).not.toContainText('205');
-    await expect(page.locator('#hero-task-total')).not.toContainText('132');
+    await expect.poll(async () => page.evaluate(() => {
+      const rows = Array.from(document.querySelectorAll('#admin-task-list [data-admin-task-row]'));
+      const total = rows.length;
+      const backoffice = rows.filter(row => row.classList.contains('is-actionable')).length;
+      const employees = total - backoffice;
+      const text = (selector: string) => document.querySelector(selector)?.textContent?.trim() || '';
+
+      return {
+        hasRows: total > 0,
+        totalMatches: text('#hero-task-total') === `${total} open acties`,
+        ownersMatch: text('#hero-task-owners') === `Backoffice ${backoffice} + medewerkers ${employees} = ${total}`,
+        metricMatches: text('#metric-actions') === String(backoffice),
+        queueMatches: text('#open-work-queue') === `Bekijk alle ${total} open acties`,
+        staleTotalsAbsent: !['#hero-task-total', '#hero-task-owners', '#metric-actions']
+          .some(selector => /(?:132|205)/.test(text(selector)))
+      };
+    })).toEqual({
+      hasRows: true,
+      totalMatches: true,
+      ownersMatch: true,
+      metricMatches: true,
+      queueMatches: true,
+      staleTotalsAbsent: true
+    });
   });
 });
 

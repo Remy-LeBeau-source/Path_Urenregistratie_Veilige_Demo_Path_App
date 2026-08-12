@@ -1,4 +1,4 @@
 
 .vscode/
-path-private/customer-timesheets/
-path-private/invoices/
+# Runtime-only private storage: generated documents, logs and backups never belong in Git.
+path-private/

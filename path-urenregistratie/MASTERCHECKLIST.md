@@ -32,7 +32,7 @@ staan onder de genummerde fases verderop in dit document.
 | Fase 13 — Bedrijfsgegevens | ✅ VS Code-scope klaar | Definitieve gegevens/accounts → Fase 16 |
 | Fase 14 — TransIP | ✅ VS Code-scope klaar | Deployment/config → Fase 16 |
 | Fase 15 — Release-hardening | ✅ VS Code-scope klaar | Concurrency, jaarwisseling, uploads, accessibility en PWA-manifest/service worker gebouwd en getest |
-| **Fase 16 — Operationeel/live** | ⏳ Als allerlaatste | TransIP, Gmail, echte accounts, devices, acceptatie, go-live |
+| **Fase 16 — Operationeel/live** | 🛠️ Bundel 1 technisch voorbereid | Tooling/runbooks lokaal; TransIP, externe acceptatie, echte mail en go-live blijven gated |
 
 ### Technische eindsprint (in VS Code afgerond deze sessie)
 
@@ -89,7 +89,7 @@ Post-live beheer
 
 ## Actuele stand
 
-- [x] Datum: 2026-08-12 (technische eindsprint Fase 10/11/12/15 + Safari/dashboard bugfixes)
+- [x] Datum: 2026-08-12 (Fase-16 Bundel 1 technisch en lokaal afgerond; externe activatie blijft gated)
 - [x] Appversie: 0.9.46
 - [x] Technische eindsprint afgerond: Fase 10 (JPG/PNG server-side naar PDF via GD + hand-rolled
   PDF-writer `server/lib/simple_pdf.php`), Fase 11 (server-side factuur-PDF, `pdf_storage_key`
@@ -98,15 +98,12 @@ Post-live beheer
   getest; PDF-bijlage nu structureel beschikbaar dankzij Fase 11), Fase 15 (gelijktijdige
   approve-requests door twee beheerders, jaarwisseling december→januari, te grote upload-afwijzing,
   basis toetsenbord-/labelcontrole, PWA-manifest + defensieve service worker).
-- [x] Nieuwe/uitgebreide Playwright-cases: CTS-API-H-005, CTS-API-N-008, INV-N-013 (+ uitgebreide
-  INV-H-004), TS-REV-API-H-006, TS-REV-API-H-007, A11Y-H-001, A11Y-H-002 — 142 Playwright + 1 DB =
-  143 unieke cases, 146 uitvoeringen (138 niet-mobiel + 4 mobiele cases x 2 devices).
-- [x] Volledige lokale Playwright-regressie: 146/146 groen, 0 failed, 0 skipped, 0 interrupted.
-  `npm run test:gui-smoke` en `npm run check` zijn apart groen bevestigd.
-- [x] Living Documentation-telling is nu dynamisch berekend in `scripts/sync-living-docs.mjs`
-  (geen hardcoded aantallen meer in LIVING-DOC.md/TEST-BDD-MAPPING.md) — voorkomt toekomstige
-  telling-drift zoals eerder gesignaleerd. De actuele telling is 142 Playwright-cases, 1 DB-case en
-  143 unieke executable cases met 146 uitvoeringen.
+- [x] Nieuwe/uitgebreide Fase-16-cases: PWD-H-004 en SAFE-H-005 — 144 Playwright + 1 DB =
+  145 unieke cases, 148 uitvoeringen (140 niet-mobiel + 4 mobiele cases x 2 devices).
+- [x] Volledige lokale Playwright-regressie: 148/148 groen, 0 failed, 0 skipped, 0 interrupted.
+  `npm run ci:local`, de 39 gerichte auth/mail/securitytests en DASH-N-007 zijn apart groen bevestigd.
+- [x] Living Documentation-telling wordt uit de uitvoerbare specs berekend en met een expliciete
+  inventarisguard bewaakt. Actueel: 144 Playwright-cases, 1 DB-case, 145 unieke cases en 148 uitvoeringen.
 - [x] Root cause/fix gevonden voor twee omgevingsvalkuilen tijdens dit werk (vastgelegd in
   repo-memory): de PHP GD-extensie stond lokaal standaard uit (`;extension=gd` in php.ini) en moest
   worden ingeschakeld; en een stale achtergrond-PHP-proces (van vóór de GD-fix) op poort 8000
@@ -119,12 +116,9 @@ Post-live beheer
 - [x] GitHub Actions pipeline-run #99 (commit 821b175, main) volledig groen: alle stappen
   (Validate, Promote Dev/Test/Acc/Prod, Publish Live Docs) completed successfully.
 - [x] GitHub Actions pipeline-run #100–#104 (commits 375cfc3–b8d8cd1, main) — groen bevestigd.
-- [x] Laatste lokale validatie: `npm run check` is opnieuw groen (2026-08-12), inclusief de
-  productie-safety guard die `server/config.example.php` standaard op `mail.enabled = false`
-  eist; de recente maildefault-fix is hiermee bewezen.
 - [x] MOB-H-003 (Safari correctie/goedkeuring flakiness) structureel opgelost in v0.9.46:
-  root cause was async logout-race (authSessionUser niet gewist in mock) + LoginPage.open()
-  responsewacht te laat geregistreerd; 10/10 Safari groen bewezen na fix.
+  de te laat geregistreerde 20s-responsewait is verwijderd, logout wacht op de zichtbare postconditie
+  en de runner normaliseert `localhost` naar zijn beheerde IPv4-server; volledig groen bewezen.
 - [x] DASH-N-008 (dashboardtellers na reset) structureel opgelost in v0.9.46: deterministische
   post-reset-baseline, bewezen stabiel na 138-test muterende reeks.
 - [x] Historisch geconsolideerd: v0.9.41 (releasehardening, DB-isolatie, DB-H-001, Slice B/C/D/E
@@ -152,11 +146,13 @@ Post-live beheer
 - [x] De DB-H-001 smoke is groen.
 - [x] De aparte lokale Playwright-testdatabase is ingebouwd.
 - [x] De volledige regressie na de DB-isolatie-aanpassing is opnieuw volledig groen bewezen; dit onderdeel is afgerond.
+- [x] Productieveiligheidscheck voor SMTP-voorbereiding is opnieuw groen: `mail.enabled` staat standaard op `false`; `transport` is `smtp_relay` met STARTTLS-relay en zonder echte activering; de locale check en smoke zijn groen.
+- [x] De logout-regressie is opgelost: de Playwright-helper gebruikt de echte zichtbare uitlogknop en wacht daarna expliciet op de login-shell, waardoor het gebruikerspad zelf getest blijft.
+- [x] Lokale eindgate opnieuw bewezen: `npx playwright test tests/playwright/auth.spec.ts --reporter=line` => `6 passed (17.9s)` en `npm run check` => `Path v0.9.46 volledige smoke test: geslaagd`.
 
 ### Directe volgende stap
 
 - [x] Volledige eindvalidatie opnieuw gedraaid en bewezen: 146/146 groen, 0 failed, 0 skipped, 0 interrupted, met dev/demo DB delta 0.
-- [x] Laatste statusupdate: lokale smoke-/safety-check is opnieuw groen na maildefault-correctie; checklist blijft op actuele status.
 
 ### Nieuwe werklijst (van boven naar beneden)
 
@@ -811,11 +807,11 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
 ### A. Eenmalig, vóór livegang (buiten VS Code)
 
 **Uit Fase 5 - productiehardening op het echte domein:**
-- [-] Productie-CORS beperken tot https://uren.pathconsultancy.nl.
-- [-] Content-Security-Policy voor productie.
-- [-] HSTS na bevestigde HTTPS-productieconfig.
-- [-] Centrale securitylogging koppelen.
-- [-] Logrotatie instellen.
+- [x] Productie-CORS technisch beperkt tot `https://uren.pathconsultancy.nl`; externe domeincontrole blijft open.
+- [x] Content-Security-Policy technisch voorbereid en door preflight bewaakt.
+- [x] HSTS veilig voorbereid maar bewust uitgeschakeld; activering blijft open tot HTTPS is bewezen.
+- [x] PHP-errorlogging buiten publieke output technisch voorbereid.
+- [x] Niet-mutatieve logrotatiecheck en uitvoerscript gebouwd; croninstallatie blijft extern open.
 
 **Uit Fase 7 - GitHub-website en overleg:**
 - [-] Ken/Gio-notificaties en definitieve notificatieontvangers bevestigen.
@@ -828,26 +824,26 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
 - [-] Productieacceptatie van de correctie/goedkeuringsflow.
 
 **Uit Fase 10:**
-- [-] Opslag buiten de publiek toegankelijke webmap op de productieserver.
+- [x] Private storagepaden en containmentchecks buiten de webroot gebouwd; echt TransIP-pad/rechten blijven extern te bewijzen.
 - [-] Virusscanstrategie bepalen (productkeuze/externe dienst).
 
 **Uit Fase 11:**
-- [-] Definitief Path/QSI-briefpapier (brandingkeuze).
-- [-] PDF veilig bewaren op de productieserver.
+- [x] Facturerende onderneming bevestigd als Path Consultancy B.V.; visuele controle van eerste productie-PDF blijft open.
+- [x] Factuur- en klanturenstaatopslag technisch buiten de webroot gekoppeld; productiepad/rechten blijven extern te bewijzen.
 - [-] Credit-/correctiestrategie (bedrijfsbeleid).
 
 **Uit Fase 12 - Gmail/Google Workspace:**
-- [-] Gmail/Google Workspace-config.
-- [-] Keuze SMTP vs. Gmail API.
+- [x] Applicatieconfig voor Google Workspace SMTP Relay technisch voorbereid zonder credentials.
+- [x] Transportkeuze bevestigd: IP-gebaseerde SMTP Relay op poort 587 met verplichte STARTTLS.
 - [-] Echte verzending activeren (pas na acceptatie en expliciete goedkeuring).
 
 **Uit Fase 13 - definitieve bedrijfsgegevens en accounts:**
-- [-] Definitief kiezen: QSI Consultancy B.V. of Path Consultancy B.V.
+- [x] Facturerende onderneming bevestigd: Path Consultancy B.V.
 - [-] Definitieve statutaire naam, factuuradres, KvK-nummer, btw-nummer, IBAN, betalingstermijn, factuurprefix.
 - [-] Definitieve Circle8-route, factuuradres en e-mailadres/portaal.
-- [-] Boekhoudernaam en -e-mailadres.
-- [-] EasySalary-e-mailadres.
-- [-] Definitieve brokerontvangers, mailteksten en herinneringsmomenten.
+- [x] Boekhouderroute bevestigd voor `giovanno.maatsen@pathconsultancy.nl` (factuur, 1 bijlage).
+- [x] Salarisroute bevestigd voor `gambitizanagi@gmail.com` (naam/maand/uren, 0 bijlagen).
+- [x] Eerste brokerroute bevestigd voor `rana.ramjanam@pathconsultancy.nl` (factuur + klanturenstaat).
 - [-] Productieaccounts voor Gio, Joyce en medewerkers; eerste wachtwoorden veilig uitgeven.
 - [-] Gebruikers deactiveren/verwijderenbeleid vastleggen.
 - [-] Google Workspace-koppeling.
@@ -884,7 +880,7 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
 - [-] Mobiele admin-/medewerkerflow op fysieke iPhone, Android en tablet.
 - [-] PWA-installatie en offline-/updategedrag bepalen op een echt toestel.
 - [-] Monitoring, health monitoring, securitylogging en logrotatie inrichten.
-- [-] Go-live runbook en rollbackrunbook schrijven én daadwerkelijk oefenen.
+- [x] Go-live- en rollbackrunbook geschreven in `OPERATIONS-RUNBOOK.md`; daadwerkelijk oefenen blijft extern open.
 - [-] Volledig schone productie-installatie vanaf nul uitvoeren.
 - [-] Controleren dat er geen demo-gebruikers/demo-mails/toekomsttestperioden aanwezig zijn.
 - [-] Eén volledige maandflow op productie doorlopen (invoer → indienen → correctie → herindienen → goedkeuren → factuur definitief → mails dry-run).
@@ -906,7 +902,8 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
 
 Status Fase 16:
 - [x] technische audit-API-basis aanwezig en getest
-- [-] fase als geheel: dit is nu de volledige verzameling van alle buiten-VS-Code-taken uit de rest van de checklist (deel A) plus doorlopend post-live beheer (deel B); niets hiervan is gestart
+- [x] Bundel-1-tooling voorbereid: SMTP/STARTTLS, offline mailpreflight, private storage, logging/rotatie, queuecron, back-up/restore, productiepreflight, accountprovisioning en runbooks
+- [-] fase als geheel: Bundel 1 is lokaal met 148/148 regressies bewezen; pipelinebewijs en alle externe Bundel-2/Bundel-3-handelingen blijven afzonderlijke gates; geen echte mail en geen go-live uitgevoerd
 
 ---
 
@@ -942,7 +939,7 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
 
 - [x] Fase 1 - lokale basis
 - [x] Fase 2 - database/server-led state: alle businesskritische writes server-led, localStorage
-  beperkt tot UI-state, alle cross-cutting bewijspunten afgedaan door Slices B/C/D/E; 146/146 groen.
+  beperkt tot UI-state, alle cross-cutting bewijspunten afgedaan door Slices B/C/D/E; 148/148 groen.
 - [x] Fase 3 - read-API
 - [x] Fase 4 - auth en rollen
 - [x] Fase 5 - securitybasis afgerond; resterende productiehardening (CORS/CSP/HSTS/logging op echt domein) verplaatst naar Fase 16
@@ -955,10 +952,10 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
 - [x] Fase 12 - e-mail: queue-service + dry-run + assignment-routes + tests afgerond; retry/max-retries/foutstatus geverifieerd aanwezig; factuur-PDF-bijlage nu structureel mogelijk; Gmail/Google Workspace-config en echte verzending verplaatst naar Fase 16
 - [x] Fase 13 - bedrijfsdata: gebruikersbeheer-API, wachtwoord-reset, rate-limiting, force_password_change afgerond; alle definitieve bedrijfsgegevens/accounts volledig verplaatst naar Fase 16
 - [x] Fase 14 - TransIP: hardening (install/migrate/health guards, .htaccess) afgerond; deployment + productie-config volledig verplaatst naar Fase 16
-- [x] Fase 15 - lokaal 146/146 tests groen (inclusief MOB-H-003 Safari 10/10 en DASH-N-008
+- [x] Fase 15 - lokaal 148/148 tests groen (inclusief MOB-H-003 en DASH-N-008
   na volledige muterende reeks), GUI smoke en `npm run check` groen; concurrency/jaarwisseling/
   uploads/accessibility/PWA gebouwd en getest; productiepraktijktests/acceptatie → Fase 16
-- [-] Fase 16 - audit-API-basis klaar; nu het volledige verzamelpunt voor alle buiten-VS-Code-taken uit fase 5/7/9/10/11/12/13/14/15 plus doorlopend post-live beheer; nog niet gestart
+- [-] Fase 16 - Bundel 1 technisch voorbereid en lokaal groen; Bundel 2 (TransIP/Google/configuratie) en Bundel 3 (productieacceptatie) blijven extern open
 
 Telling fasestatussen:
 - [x] **15 fasen volledig bewezen of volledig verplaatst voor hun VS-Code-scope: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 en 15.**
@@ -966,10 +963,10 @@ Telling fasestatussen:
 
 ## Directe volgende stap
 
-**Fase 1 t/m 15 volledig klaar (VS Code-scope).** Volgende en laatste fase: Fase 16.
+**Fase 1 t/m 15 volledig klaar; Fase-16 Bundel 1 lokaal afgerond.** Externe activatie blijft bewust uit.
 
-1. Bevestig pipeline #104 groen — dan is deze checklist-afsluiting gecommit.
-2. Fase 16 - laatste fase: alle buiten-VS-Code taken (deel A, per herkomstfase) + doorlopend post-live beheer (deel B).
+1. Bevestig de Release Pipeline voor de nieuwe Bundel-1-commit groen.
+2. Voer daarna de geconsolideerde Bundel-2-lijst uit en pas vervolgens Bundel 3 toe.
 
 ## Dagelijkse werkwijze (verplicht)
 

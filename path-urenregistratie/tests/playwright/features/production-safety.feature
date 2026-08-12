@@ -53,3 +53,9 @@ Feature: Productieveiligheid in Path Uren & Facturatie
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
+  @happy
+  Scenario: [SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd

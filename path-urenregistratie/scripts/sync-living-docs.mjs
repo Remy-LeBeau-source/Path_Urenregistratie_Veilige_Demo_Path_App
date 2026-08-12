@@ -164,8 +164,8 @@ const inventory = definitions.flatMap((definition) => {
 const uniqueIds = new Set(inventory.map((testCase) => testCase.id));
 const playwrightCount = inventory.filter((testCase) => testCase.kind === 'playwright').length;
 const dbCount = inventory.filter((testCase) => testCase.kind === 'db').length;
-if (playwrightCount !== 142 || dbCount !== 1 || inventory.length !== 143 || uniqueIds.size !== 143) {
-  throw new Error(`Verwacht 142 Playwright-cases + 1 DB-case = 143 unieke cases, gevonden ${playwrightCount}/${dbCount}/${inventory.length}/${uniqueIds.size}.`);
+if (playwrightCount !== 144 || dbCount !== 1 || inventory.length !== 145 || uniqueIds.size !== 145) {
+  throw new Error(`Verwacht 144 Playwright-cases + 1 DB-case = 145 unieke cases, gevonden ${playwrightCount}/${dbCount}/${inventory.length}/${uniqueIds.size}.`);
 }
 
 mkdirSync(featuresDir, { recursive: true });
