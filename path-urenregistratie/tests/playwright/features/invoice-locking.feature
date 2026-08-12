@@ -8,42 +8,62 @@ Feature: Definitieve facturen en locking in Path Uren & Facturatie
 
   @happy
   Scenario: [INV-H-004] admin lockt approved timesheet naar definitieve immutable factuur
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Concurrency + toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 20
+    Given een medewerker een urenstaat heeft ingediend in een herhaalbare testperiode
+    And een administrator die urenstaat goedkeurt
+    When de administrator de factuur finaliseert met lock-actie
+    Then worden nummer bedragen en locked_at server-side vastgelegd en blijft client-manipulatie zonder effect
+    And de administrator kan de server-side gegenereerde factuur-PDF downloaden
+    And cleanup de administrator-sessie wordt afgesloten
 
   @negative
   Scenario: [INV-N-008] anonieme gebruiker kan factuur niet locken
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given er is geen actieve sessie
+    When een lock-actie zonder sessie wordt verstuurd
+    Then wordt met Playwright-assertions bevestigd dat anonieme gebruiker kan factuur niet locken
 
   @negative
   Scenario: [INV-N-009] medewerker mag factuur niet finaliseren
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given de medewerker is ingelogd
+    When de medewerker een lock-actie verstuurt
+    And cleanup de sessie wordt afgesloten
+    Then wordt met Playwright-assertions bevestigd dat medewerker mag factuur niet finaliseren
 
   @negative
   Scenario: [INV-N-010] niet-goedgekeurde urenstaat kan niet worden gelockt
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given een ingediende maar niet-goedgekeurde urenstaat
+    When de administrator de factuur probeert te finaliseren
+    And cleanup de administrator-sessie wordt afgesloten
+    Then wordt met Playwright-assertions bevestigd dat niet-goedgekeurde urenstaat kan niet worden gelockt
 
   @negative
   Scenario: [INV-N-011] tweede lock-oproep op dezelfde factuur wordt geblokkeerd
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Concurrency + toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given een administrator met een approved urenstaat
+    When de eerste lock-oproep succesvol is
+    Then wordt een tweede lock-oproep geweigerd en ontstaat geen duplicaat
+    And cleanup de administrator-sessie wordt afgesloten
 
   @negative
   Scenario: [INV-N-012] gelijktijdige lock-requests leveren exact één winnaar
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Concurrency + toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 1
+    Given definitieve facturen en locking is voorbereid
+    When de flow voor INV-N-012 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat gelijktijdige lock-requests leveren exact één winnaar
 
   @negative
   Scenario: [INV-N-013] anonieme gebruiker kan factuur-PDF niet downloaden
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given een administrator een factuur heeft gefinaliseerd
+    When een anonieme gebruiker de factuur-PDF probeert te downloaden
+    Then wordt met Playwright-assertions bevestigd dat anonieme gebruiker kan factuur-PDF niet downloaden

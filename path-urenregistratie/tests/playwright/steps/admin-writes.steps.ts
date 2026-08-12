@@ -8,12 +8,8 @@ const Given = (_pattern: StepPattern, _handler: StepHandler) => undefined;
 const When = (_pattern: StepPattern, _handler: StepHandler) => undefined;
 const Then = (_pattern: StepPattern, _handler: StepHandler) => undefined;
 
-Given('de uitvoerbare Playwright-case is voorbereid', () => undefined);
-When('de beschreven businessflow wordt uitgevoerd', () => undefined);
-Then('wordt het verwachte resultaat aantoonbaar gevalideerd', () => undefined);
-
 export const caseMappings = [
-  { caseId: 'ADM-WR-H-001', spec: 'admin-writes.spec.ts' },
-  { caseId: 'ADM-WR-H-002', spec: 'admin-writes.spec.ts' },
-  { caseId: 'ADM-WR-H-003', spec: 'admin-writes.spec.ts' },
+  { caseId: 'ADM-WR-H-001', spec: 'admin-writes.spec.ts', assertionCount: 6, acceptanceCriteria: ["Then wordt met Playwright-assertions bevestigd dat admin kan company/settings server-led opslaan"] },
+  { caseId: 'ADM-WR-H-002', spec: 'admin-writes.spec.ts', assertionCount: 8, acceptanceCriteria: ["Then wordt met Playwright-assertions bevestigd dat admin kan beheerder server-led aanmaken en wijzigen"] },
+  { caseId: 'ADM-WR-H-003', spec: 'admin-writes.spec.ts', assertionCount: 8, acceptanceCriteria: ["Then wordt met Playwright-assertions bevestigd dat admin kan medewerker server-led aanmaken en bootstrap ziet deze terug"] },
 ] as const;

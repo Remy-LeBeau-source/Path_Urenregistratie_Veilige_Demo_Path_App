@@ -76,6 +76,11 @@ test('[INV-H-002] periodefilter juli en augustus werkt', async ({ page }) => {
 
   await test.step('Then het factuuroverzicht ververst voor de gekozen periode', async () => {
     await invoicesPage.assertRowsVisible();
+    await expect(page.locator('#month-batch-label')).toContainText('Augustus 2026');
+    await expect(page.locator('#invoice-rows tr')).not.toHaveCount(0);
+    const activeMonth = page.locator('[data-invoice-overview-period="2026-08"]');
+    await expect(activeMonth).toHaveAttribute('aria-pressed', 'true');
+    await expect(activeMonth).toHaveClass(/is-current/);
   });
 });
 

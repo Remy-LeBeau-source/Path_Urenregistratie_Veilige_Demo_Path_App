@@ -1488,20 +1488,32 @@ function triggerLoginChoice(role) {
 }
 
 function applyAuthUiMode(mode) {
+  const localToolsAllowed = localAccountToolsAllowed();
+  if (mode === "demo" && !localToolsAllowed) mode = "unavailable";
   authRuntime.mode = mode;
   const authForm = document.querySelector("#auth-login-form");
   if (authForm) authForm.hidden = mode === "demo";
+  applyLoginPresentation(localToolsAllowed);
   if (mode === "auth") {
-    setDemoLoginEnabled(true);
-    setLoginAccountPickerEnabled(true);
+    setDemoLoginEnabled(localToolsAllowed);
+    setLoginAccountPickerEnabled(localToolsAllowed);
     setAuthLoginEnabled(true);
-    setAuthModeIndicator("Auth-modus actief. Snelle accountkeuze en inloggen met e-mail/wachtwoord zijn beschikbaar.", false);
+    setAuthModeIndicator(localToolsAllowed
+      ? "Auth-modus actief. Snelle accountkeuze en inloggen met e-mail/wachtwoord zijn beschikbaar."
+      : "Beveiligde inlogmodus actief. Log in met je zakelijke e-mailadres en wachtwoord.", false);
   } else if (mode === "demo") {
     setDemoLoginEnabled(true);
     setLoginAccountPickerEnabled(true);
     setAuthLoginEnabled(false);
     setAuthLoginFeedback("", false);
     setAuthModeIndicator("Lokale demo-modus actief: auth backend niet beschikbaar.", true);
+  } else if (mode === "unavailable") {
+    if (authForm) authForm.hidden = false;
+    setDemoLoginEnabled(false);
+    setLoginAccountPickerEnabled(false);
+    setAuthLoginEnabled(false);
+    setAuthLoginFeedback("De beveiligde inlogservice is tijdelijk niet bereikbaar. Probeer het later opnieuw.", true);
+    setAuthModeIndicator("Inloggen tijdelijk niet beschikbaar.", true);
   } else {
     setDemoLoginEnabled(false);
     setLoginAccountPickerEnabled(false);
@@ -3424,8 +3436,14 @@ function renderEmployeeDashboard() {
   }
   const openMonthSummaries = employeeOpenMonthSummaries(employee.id, period.key);
   const employeeOpenActions = openMonthSummaries.flatMap(item => item.actions);
+  const nextOpenMonth = openMonthSummaries[0] || null;
+  const nextOpenAction = nextOpenMonth?.actions[0] || null;
   const openHoursCount = employeeOpenActions.filter(item => item.type === "hours").length;
   const openCustomerCount = employeeOpenActions.filter(item => item.type === "customer").length;
+  if (nextOpenMonth && nextOpenAction) {
+    next = nextOpenAction.description + " voor " + nextOpenMonth.period.label + ".";
+    action = nextOpenAction.button;
+  }
   const dashboardBadge = document.querySelector("#employee-dashboard-count");
   if (dashboardBadge) {
     const openCount = employeeOpenActions.length;
@@ -3436,7 +3454,22 @@ function renderEmployeeDashboard() {
   }
   document.querySelector("#employee-dashboard-greeting").textContent = greetingForNow() + ", " + firstName;
   document.querySelector("#employee-dashboard-next").textContent = next;
-  document.querySelector("#employee-dashboard-action").textContent = action;
+  document.querySelector("#employee-dashboard-next-label").textContent = nextOpenAction ? "Volgende actie" : "Deze maand";
+  document.querySelector("#employee-dashboard-next-meta").textContent = nextOpenMonth
+    ? nextOpenMonth.period.label + " · actie 1 van " + employeeOpenActions.length
+    : period.label + " · alles afgerond";
+  const dashboardAction = document.querySelector("#employee-dashboard-action");
+  dashboardAction.textContent = action;
+  if (nextOpenMonth && nextOpenAction) {
+    dashboardAction.dataset.employeeActionPeriod = nextOpenMonth.periodKey;
+    dashboardAction.dataset.employeeActionType = nextOpenAction.type;
+  } else {
+    delete dashboardAction.dataset.employeeActionPeriod;
+    delete dashboardAction.dataset.employeeActionType;
+  }
+  const allActionsButton = document.querySelector("#employee-dashboard-all-actions");
+  allActionsButton.hidden = employeeOpenActions.length === 0;
+  allActionsButton.textContent = "Bekijk alle " + employeeOpenActions.length + " open " + (employeeOpenActions.length === 1 ? "actie" : "acties");
   document.querySelector("#employee-dashboard-period").textContent = period.label;
   document.querySelector("#employee-dashboard-hours").textContent = hoursFormat.format(accounted) + " uur";
   document.querySelector("#employee-dashboard-contract").textContent = "van " + hoursFormat.format(record.contractHours) + " contracturen";
@@ -3466,15 +3499,24 @@ function renderEmployeeDashboard() {
   if (openOverview && openOverviewCount && openOverviewList) {
     openOverview.hidden = openMonthSummaries.length === 0;
     openOverviewCount.textContent = openMonthSummaries.length + ' open maand' + (openMonthSummaries.length === 1 ? '' : 'en');
-    openOverviewList.innerHTML = openMonthSummaries.map(item => {
+    const openOverviewNote = document.querySelector('#employee-open-overview-note');
+    if (openOverviewNote && nextOpenMonth && nextOpenAction) {
+      openOverviewNote.textContent = 'Begin met ' + nextOpenAction.label.toLowerCase() + ' voor ' + nextOpenMonth.period.label + '.';
+    }
+    openOverviewList.innerHTML = openMonthSummaries.map((item, index) => {
       const monthBodyId = 'employee-open-month-body-' + item.periodKey;
       const actionCount = item.actions.length;
+      const expanded = index === 0;
       return '<section class="employee-open-month' + (item.current ? ' is-current' : '') + '" data-employee-open-month="' + item.periodKey + '">' +
-        '<button class="employee-open-month-heading" type="button" data-employee-open-month-toggle="' + item.periodKey + '" aria-expanded="false" aria-controls="' + monthBodyId + '">' +
+        '<button class="employee-open-month-heading" type="button" data-employee-open-month-toggle="' + item.periodKey + '" aria-expanded="' + (expanded ? 'true' : 'false') + '" aria-controls="' + monthBodyId + '">' +
           '<span class="employee-open-month-heading-copy"><strong>' + escapeHtml(item.period.label) + ' · ' + actionCount + ' open ' + (actionCount === 1 ? 'actie' : 'acties') + '</strong><small>' + escapeHtml(item.notes) + '</small></span>' +
           '<span class="employee-open-month-heading-side"><span class="status-pill ' + item.tone + '">' + escapeHtml(item.label) + '</span><span class="employee-open-month-chevron" aria-hidden="true"></span></span>' +
         '</button>' +
-        '<div class="employee-open-month-body" id="' + monthBodyId + '" hidden><div class="employee-open-month-body-copy"><div class="employee-open-month-tags">' + item.actions.map(action => '<span class="employee-open-tag ' + action.tone + '">' + escapeHtml(action.label) + '</span>').join('') + '</div><button class="small-button" type="button" data-employee-open-month-open="' + item.periodKey + '">Open maand</button></div></div>' +
+        '<div class="employee-open-month-body" id="' + monthBodyId + '"' + (expanded ? '' : ' hidden') + '><div class="employee-open-action-list">' + item.actions.map(action =>
+          '<div class="employee-open-action-row" data-employee-action-row="' + action.type + '">' +
+            '<div class="employee-open-action-copy"><span>' + escapeHtml(action.category) + '</span><strong>' + escapeHtml(action.label) + '</strong><small>' + escapeHtml(action.description) + '</small></div>' +
+            '<button class="small-button" type="button" data-employee-open-action="' + action.type + '" data-period-key="' + item.periodKey + '">' + escapeHtml(action.button) + '</button>' +
+          '</div>').join('') + '</div></div>' +
       '</section>';
     }).join('');
   }
@@ -3483,15 +3525,19 @@ function renderEmployeeDashboard() {
     .sort((left, right) => right.localeCompare(left))
     .filter(key => state.records[key] && state.records[key][String(employee.id)])
     .slice(0, 6);
-  document.querySelector("#employee-history").innerHTML = history.map(key => {
+  const historyRows = history.map(key => {
     const historyRecord = recordFor(employee.id, key);
     const historyTotal = totalEntries(historyRecord.entries) + Number(historyRecord.leave || 0) + Number(historyRecord.sick || 0);
     const correction = latestCorrection(historyRecord);
     const historyNote = correction
-      ? "Correctie door " + correction.requestedBy + " · " + correction.requestedAt + ": " + correction.message
+      ? "Correctie door " + correction.requestedBy + " · " + correction.requestedAt
       : "Eigen urenregistratie";
-    return '<div class="employee-history-row"><div><strong>' + escapeHtml(periodFromKey(key).label) + '</strong><small>' + escapeHtml(historyNote) + '</small></div><div><strong>' + hoursFormat.format(historyTotal) + ' uur</strong><small>totaal verantwoord</small></div><div>' + statusPill(historyRecord.timesheetStatus) + '</div><button class="small-button" data-history-period="' + key + '">Bekijken</button></div>';
-  }).join("") || '<div class="dashboard-action-empty">Er zijn nog geen eerdere maanden.</div>';
+    const currentLabel = key === currentCalendarPeriodKey() ? '<span class="employee-history-current">Huidige maand</span>' : '';
+    return '<div class="employee-history-row"><div><strong>' + escapeHtml(periodFromKey(key).label) + currentLabel + '</strong><small>' + escapeHtml(historyNote) + '</small></div><div><strong>' + hoursFormat.format(historyTotal) + ' uur</strong><small>totaal verantwoord</small></div><div>' + statusPill(historyRecord.timesheetStatus) + '</div><button class="small-button" data-history-period="' + key + '">Open maand</button></div>';
+  }).join("");
+  document.querySelector("#employee-history").innerHTML = historyRows
+    ? '<div class="employee-history-head" aria-hidden="true"><span>Maand</span><span>Uren</span><span>Status</span><span>Actie</span></div>' + historyRows
+    : '<div class="dashboard-action-empty">Er zijn nog geen maanden beschikbaar.</div>';
 }
 
 function adminOpenTasks() {
@@ -3548,16 +3594,16 @@ function employeeOpenMonthSummaries(employeeId, currentPeriodKey) {
       const actions = [];
 
       if (historyRecord.timesheetStatus === 'draft') {
-        actions.push({ type: 'hours', label: 'Uren indienen', tone: 'status-concept' });
+        actions.push({ type: 'hours', category: 'Urenregistratie', label: 'Uren indienen', description: 'Controleer je uren en dien deze maand in.', button: 'Open uren', tone: 'status-concept' });
       } else if (historyRecord.timesheetStatus === 'correction') {
-        actions.push({ type: 'hours', label: 'Correctie indienen', tone: 'status-warning' });
+        actions.push({ type: 'hours', category: 'Urenregistratie', label: 'Correctie indienen', description: activeCorrection(historyRecord)?.message || 'Pas je uren aan en dien deze maand opnieuw in.', button: 'Open correctie', tone: 'status-warning' });
       }
 
       if (employee.customerTimesheetExpected !== false) {
         if (customerRecord.status === 'missing' || customerRecord.status === 'draft') {
-          actions.push({ type: 'customer', label: 'Klanturenstaat uploaden', tone: 'status-concept' });
+          actions.push({ type: 'customer', category: 'Document van de klant', label: 'Klanturenstaat uploaden', description: customerRecord.status === 'draft' ? 'Dien het opgeslagen document in bij Backoffice.' : 'Lever de officiële klanturenstaat aan bij Backoffice.', button: 'Open document', tone: 'status-concept' });
         } else if (customerRecord.status === 'resubmit') {
-          actions.push({ type: 'customer', label: 'Klanturenstaat opnieuw uploaden', tone: 'status-warning' });
+          actions.push({ type: 'customer', category: 'Document van de klant', label: 'Klanturenstaat opnieuw uploaden', description: customerRecord.reviewNote || 'Upload het juiste of definitieve document opnieuw.', button: 'Open verzoek', tone: 'status-warning' });
         }
       }
 
@@ -6977,6 +7023,26 @@ function updateInvoiceIdentityPreview() {
   }
 }
 
+function localAccountToolsAllowed(hostname = window.location.hostname) {
+  const normalized = String(hostname || "").trim().toLowerCase().replace(/^\[|\]$/g, "");
+  return normalized === "localhost" || normalized === "127.0.0.1" || normalized === "::1" || normalized.endsWith(".localhost");
+}
+
+function applyLoginPresentation(localToolsAllowed) {
+  const tools = document.querySelector("#local-account-login-tools");
+  const localNote = document.querySelector("#local-login-note");
+  const environmentLabel = document.querySelector("#login-environment-label");
+  const title = document.querySelector("#login-title");
+  const intro = document.querySelector("#login-intro");
+  if (tools) tools.hidden = !localToolsAllowed;
+  if (localNote) localNote.hidden = !localToolsAllowed;
+  if (environmentLabel) environmentLabel.textContent = localToolsAllowed ? "Lokale voorbereiding" : "Beveiligde omgeving";
+  if (title) title.textContent = localToolsAllowed ? "Kies je account en rol" : "Inloggen";
+  if (intro) intro.textContent = localToolsAllowed
+    ? "Deze lokale versie gebruikt een accountkeuze. Na de Google Workspace-koppeling wordt de juiste rol automatisch geopend."
+    : "Log in met je zakelijke e-mailadres. Je rol en toegangsrechten worden na het inloggen automatisch toegepast.";
+}
+
 function invoiceSummary(employeeId, periodKey) {
   const employee = employeeById(employeeId);
   const key = periodKey || currentPeriod().key;
@@ -8112,6 +8178,9 @@ document.addEventListener("click", event => {
 
   const go = event.target.closest("[data-go]");
   if (go) {
+    if (go.dataset.employeeActionPeriod) {
+      setPeriod(go.dataset.employeeActionPeriod);
+    }
     if (go.dataset.go === "approvals") {
       state.approvalScope = "all";
       persistState();
@@ -8127,6 +8196,10 @@ document.addEventListener("click", event => {
       renderEmployeeDashboard();
     }
     showView(go.dataset.go);
+    if (go.dataset.employeeActionType === "customer") {
+      const customerPanel = document.querySelector("#customer-timesheet-upload-panel");
+      if (customerPanel && typeof customerPanel.scrollIntoView === "function") customerPanel.scrollIntoView({ behavior: smoothScrollBehavior(), block: "start" });
+    }
   }
 
   const dashboardView = event.target.closest("[data-dashboard-view]");
@@ -8265,6 +8338,17 @@ document.addEventListener("click", event => {
   if (employeeOpenMonthOpen) {
     setPeriod(employeeOpenMonthOpen.dataset.employeeOpenMonthOpen);
     showView("timesheet");
+    return;
+  }
+
+  const employeeOpenAction = event.target.closest("[data-employee-open-action]");
+  if (employeeOpenAction) {
+    setPeriod(employeeOpenAction.dataset.periodKey);
+    showView("timesheet");
+    if (employeeOpenAction.dataset.employeeOpenAction === "customer") {
+      const customerPanel = document.querySelector("#customer-timesheet-upload-panel");
+      if (customerPanel && typeof customerPanel.scrollIntoView === "function") customerPanel.scrollIntoView({ behavior: smoothScrollBehavior(), block: "start" });
+    }
     return;
   }
 

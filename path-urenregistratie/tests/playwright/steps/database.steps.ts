@@ -13,5 +13,5 @@ When('het SQL-script wordt uitgevoerd via de DB smoke runner', () => undefined);
 Then('wordt het verwachte cleanup-result bevestigd', () => undefined);
 
 export const caseMappings = [
-  { caseId: 'DB-H-001', source: 'crud-smoke.sql', runner: 'run-db-crud-smoke.mjs' },
+  { caseId: 'DB-H-001', source: 'crud-smoke.sql', runner: 'run-db-crud-smoke.mjs', assertionCount: 3, technique: 'CRUD-keten, toestandsovergang en data-integriteit' },
 ] as const;

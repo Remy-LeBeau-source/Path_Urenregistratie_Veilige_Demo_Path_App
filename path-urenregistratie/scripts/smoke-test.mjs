@@ -8,7 +8,7 @@ const script = await readFile(new URL("assets/app.js", root), "utf8");
 const styles = await readFile(new URL("assets/styles.css", root), "utf8");
 const dom = new JSDOM(html, {
   runScripts: "outside-only",
-  url: "https://uren.example.invalid/"
+  url: "http://localhost:8000/"
 });
 
 dom.window.scrollTo = () => {};
@@ -19,6 +19,11 @@ dom.window.eval(script);
 if (typeof dom.window.applyAuthUiMode === "function") {
   dom.window.applyAuthUiMode("demo");
 }
+
+assert(dom.window.localAccountToolsAllowed("localhost") && dom.window.localAccountToolsAllowed("127.0.0.1") && !dom.window.localAccountToolsAllowed("uren.pathconsultancy.nl"), "Snelle accountkeuze mag alleen op loopbackhosts beschikbaar zijn");
+dom.window.applyLoginPresentation(false);
+assert(dom.window.document.querySelector("#local-account-login-tools").hidden && dom.window.document.querySelector("#local-login-note").hidden && dom.window.document.querySelector("#login-title").textContent === "Inloggen" && dom.window.document.querySelector("#login-environment-label").textContent === "Beveiligde omgeving", "De productiepresentatie mag geen lokale accountkeuze of demotekst tonen");
+dom.window.applyLoginPresentation(true);
 
 const pdfDownloads = [];
 dom.window.jspdf = {
@@ -276,7 +281,24 @@ assert(document.querySelector("#employee-dashboard-greeting").textContent.includ
 // Brian juni: approved uren + ontbrekende klanturenstaat — ideale periode voor de skip-test
 choosePeriod("#period-month-picker", "#period-year-picker", "2026-06");
 dom.window.renderAll();
-assert(document.querySelector("#employee-dashboard-next").textContent.includes("klanturenstaat staat nog open") && document.querySelector("#employee-dashboard-status-note").textContent.includes("klanturenstaat open"), "Goedgekeurde uren mogen een ontbrekende klanturenstaat niet meer als volledig afgerond tonen");
+assert(document.querySelector("#employee-dashboard-next").textContent.includes("officiële klanturenstaat") && document.querySelector("#employee-dashboard-status-note").textContent.includes("klanturenstaat open"), "Goedgekeurde uren mogen een ontbrekende klanturenstaat niet meer als volledig afgerond tonen");
+const brianOpenSummaries = dom.window.employeeOpenMonthSummaries(3, "2026-06");
+const brianOpenActions = brianOpenSummaries.flatMap(item => item.actions);
+assert(brianOpenActions.length > 0 && document.querySelectorAll("#employee-open-overview-list [data-employee-action-row]").length === brianOpenActions.length, "Het medewerkersdashboard moet iedere open taak als concrete actieregel tonen");
+assert(!document.querySelector("#employee-dashboard-all-actions").hidden && document.querySelector("#employee-dashboard-all-actions").textContent.includes(String(brianOpenActions.length)), "De medewerker moet vanuit de hero alle eigen open acties kunnen openen");
+assert(document.querySelector('#employee-open-overview-list [data-employee-open-month-toggle]').getAttribute('aria-expanded') === 'true' && !document.querySelector('#employee-open-overview-list .employee-open-month-body').hidden, "De eerstvolgende open maand moet direct uitgeklapt zichtbaar zijn");
+assert(document.querySelector("#employee-dashboard-action").dataset.employeeActionPeriod === brianOpenSummaries[0].periodKey && document.querySelector("#employee-dashboard-action").dataset.employeeActionType === brianOpenSummaries[0].actions[0].type, "De hoofdactie moet naar de eerstvolgende concrete taak en maand wijzen");
+const brianJuneDecisionRecord = dom.window.recordFor(3, "2026-06");
+const brianJuneDecisionSnapshot = JSON.parse(JSON.stringify(brianJuneDecisionRecord));
+brianJuneDecisionRecord.timesheetStatus = "correction";
+brianJuneDecisionRecord.correctionHistory = [{ requestedBy: "Gio Maatsen", requestedAt: "13 augustus 2026, 10:00", message: "Controleer maandag.", resubmittedAt: "" }];
+brianJuneDecisionRecord.customerTimesheet.status = "resubmit";
+brianJuneDecisionRecord.customerTimesheet.reviewNote = "Upload de definitieve versie.";
+dom.window.renderAll();
+const brianDecisionActions = dom.window.employeeOpenMonthSummaries(3, "2026-06").find(item => item.periodKey === "2026-06").actions;
+assert(brianDecisionActions.length === 2 && brianDecisionActions[0].type === "hours" && brianDecisionActions[1].type === "customer", "De beslisregel moet een urencorrectie vóór een documentherindiening prioriteren");
+Object.assign(brianJuneDecisionRecord, brianJuneDecisionSnapshot);
+dom.window.renderAll();
 assert(document.querySelector("#employee-customer-timesheet-title").textContent.includes("staat nog open") && document.querySelector("#employee-customer-timesheet-status").textContent === "Nog niet ontvangen", "Mijn overzicht moet de klanturenstaat als een afzonderlijke open taak tonen");
 click("#employee-customer-timesheet-skip");
 assert(document.querySelector("#customer-timesheet-skip-reason").value === "De klanturenstaat is al rechtstreeks naar Path Backoffice gemaild.", "De optie Al rechtstreeks gemaild moet een duidelijke standaardreden invullen");
@@ -1529,6 +1551,8 @@ const provisionAccountSrc = readFileSync_(new URL("../server/scripts/provision-a
 const changePasswordSrc = readFileSync_(new URL("../server/auth/change-password.php", import.meta.url), "utf8");
 const rootHtaccessSrc = readFileSync_(new URL("../.htaccess", import.meta.url), "utf8");
 const playwrightRunnerSrc = readFileSync_(new URL("./run-playwright-e2e.mjs", import.meta.url), "utf8");
+const playwrightDbBootstrapSrc = readFileSync_(new URL("./bootstrap-playwright-db.mjs", import.meta.url), "utf8");
+const dbCrudSmokeSrc = readFileSync_(new URL("./run-db-crud-smoke.mjs", import.meta.url), "utf8");
 const playwrightConfigSrc = readFileSync_(new URL("../playwright.config.ts", import.meta.url), "utf8");
 assert(installSrc.includes("'production'") && installSrc.includes("403") && installSrc.includes("PHP_SAPI"), "install.php moet een productieguard bevatten die HTTP-toegang blokkeert");
 assert(migrateSrc.includes("'production'") && migrateSrc.includes("403") && migrateSrc.includes("PHP_SAPI"), "migrate.php moet een productieguard bevatten die HTTP-toegang blokkeert");
@@ -1546,6 +1570,8 @@ assert(backupSrc.includes("--single-transaction") && restoreSrc.includes("RESTOR
 assert(provisionAccountSrc.includes("Passwords in command arguments are forbidden") && changePasswordSrc.includes("current_password") && changePasswordSrc.includes("force_password_change = 0"), "Productieaccounts moeten zonder wachtwoordargument en met een eigen wijzigingsflow worden beheerd");
 assert(rootHtaccessSrc.includes("Content-Security-Policy") && rootHtaccessSrc.includes("RewriteCond %{HTTPS} !=on") && /^\s*# Header always set Strict-Transport-Security/m.test(rootHtaccessSrc), "De publieke app moet HTTPS/CSP afdwingen terwijl HSTS voorbereid maar uitgeschakeld blijft");
 assert(playwrightRunnerSrc.includes("url.hostname === 'localhost'") && playwrightRunnerSrc.includes("url.hostname = '127.0.0.1'") && playwrightRunnerSrc.includes("PATH_APP_BASE_URL: baseUrl"), "De Playwright-runner moet browsers en de beheerde PHP-server op dezelfde IPv4-origin houden");
+assert(playwrightDbBootstrapSrc.includes("namedTestDatabase") && playwrightDbBootstrapSrc.includes("isolatedCiDatabase") && playwrightDbBootstrapSrc.includes("Refusing destructive Playwright database bootstrap"), "De Playwright DB-bootstrap mag uitsluitend een herkenbare test- of geïsoleerde CI-database opnieuw opbouwen");
+assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("isolatedCiDatabase") && dbCrudSmokeSrc.includes("DB CRUD smoke is not allowed"), "De DB CRUD-smoke moet fail-closed buiten een test- of geïsoleerde CI-database");
 assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Playwright stage- en lokale env-bestanden mogen expliciete runner/CI-variabelen niet overschrijven");
 
 console.log("Path v0.9.47 volledige smoke test: geslaagd");

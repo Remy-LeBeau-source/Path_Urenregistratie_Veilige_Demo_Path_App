@@ -117,6 +117,7 @@ select:focus-visible {
 .login-avatar.employee { background: var(--mint); color: var(--navy); }
 .login-arrow { color: var(--mint-dark); font-size: 22px; }
 .login-panel .login-note { border-radius: 12px; background: var(--green-light); color: var(--teal); font-size: 11px; padding: 12px 14px; }
+.login-panel .login-note[hidden] { display: none; }
 
 .sidebar {
   position: fixed;
@@ -862,7 +863,13 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 
 .employee-hero { display: grid; grid-template-columns: minmax(0,1.25fr) minmax(270px,.75fr); gap: 34px; align-items: center; margin: 30px 0 18px; border-radius: 24px; background: linear-gradient(135deg, #0d1b38, #174b55); color: #fff; padding: 36px 40px; box-shadow: 0 18px 45px rgba(13,27,56,.14); }
 .employee-hero h2 { margin: 9px 0 8px; color: #fff; font-family: "Roboto Slab", Georgia, serif; font-size: clamp(28px,4vw,40px); }
-.employee-hero p { margin: 0 0 22px; color: #b9c7d4; font-size: 13px; }
+.employee-hero p { margin: 6px 0 4px; color: #fff; font-size: 14px; font-weight: 700; line-height: 1.5; }
+.employee-next-action-label { display: block; margin-top: 22px; color: var(--mint); font-size: 9px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.employee-next-action-meta { display: block; margin-bottom: 17px; color: #b9c7d4; font-size: 10px; }
+.employee-hero-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+.employee-all-actions-button { border-color: rgba(255,255,255,.32); background: rgba(255,255,255,.08); color: #fff; }
+.employee-all-actions-button:hover { background: rgba(255,255,255,.15); }
+.employee-all-actions-button[hidden] { display: none; }
 .employee-month-progress { border: 1px solid rgba(255,255,255,.13); border-radius: 17px; background: rgba(255,255,255,.07); padding: 21px; }
 .employee-month-progress small, .employee-month-progress strong, .employee-month-progress span { display: block; }
 .employee-month-progress small { color: #9eb0c1; font-size: 10px; }
@@ -878,7 +885,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .employee-customer-timesheet-card p { margin: 7px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
 .employee-customer-timesheet-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .employee-metrics .compact-metric { font-size: 20px; }
-.employee-open-overview { margin: 0 0 22px; overflow: hidden; border-radius: 22px; background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(244,249,247,.98)); box-shadow: 0 16px 34px rgba(13,27,56,.06); }
+.employee-open-overview { scroll-margin-top: 110px; margin: 0 0 22px; overflow: hidden; border-radius: 22px; background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(244,249,247,.98)); box-shadow: 0 16px 34px rgba(13,27,56,.06); }
 .employee-open-overview .panel-heading { align-items: flex-start; }
 .employee-open-overview-list { display: grid; gap: 12px; padding: 0 24px 24px; }
 .employee-open-month { border: 1px solid #dbe6e2; border-radius: 18px; background: linear-gradient(135deg, #fff, #fbfefd); overflow: hidden; }
@@ -892,18 +899,22 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .employee-open-month-heading-side { display: flex; align-items: center; gap: 10px; }
 .employee-open-month-chevron { width: 9px; height: 9px; flex: 0 0 auto; border-right: 2px solid var(--navy); border-bottom: 2px solid var(--navy); transform: rotate(-45deg); transition: transform .18s ease; }
 .employee-open-month-heading[aria-expanded="true"] .employee-open-month-chevron { transform: rotate(45deg); }
-.employee-open-month-body { border-top: 1px solid #e4ece8; background: #fbfefd; padding: 12px 16px 14px; }
-.employee-open-month-body-copy { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.employee-open-month-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 11px; }
-.employee-open-tag { display: inline-flex; align-items: center; border-radius: 999px; font-size: 10px; font-weight: 800; line-height: 1; padding: 7px 10px; }
-.employee-open-tag.status-concept { background: #eef6f3; color: var(--mint-dark); }
-.employee-open-tag.status-warning { background: #fff1dc; color: #9a6006; }
+.employee-open-month-body { border-top: 1px solid #e4ece8; background: #fbfefd; }
+.employee-open-action-list { display: grid; }
+.employee-open-action-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 18px; align-items: center; padding: 14px 16px; }
+.employee-open-action-row + .employee-open-action-row { border-top: 1px solid #e4ece8; }
+.employee-open-action-copy span, .employee-open-action-copy strong, .employee-open-action-copy small { display: block; }
+.employee-open-action-copy span { color: var(--mint-dark); font-size: 8px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.employee-open-action-copy strong { margin-top: 4px; color: var(--navy); font-size: 12px; }
+.employee-open-action-copy small { margin-top: 3px; color: var(--muted); font-size: 10px; line-height: 1.5; }
 .employee-open-month-heading .status-pill { min-width: 138px; justify-content: center; }
 .employee-history { display: grid; }
+.employee-history-head { display: grid; grid-template-columns: 1fr .8fr .8fr auto; gap: 18px; align-items: center; border-top: 1px solid var(--line); background: var(--surface-muted); color: var(--muted); font-size: 8px; font-weight: 900; letter-spacing: .08em; padding: 10px 24px; text-transform: uppercase; }
 .employee-history-row { display: grid; grid-template-columns: 1fr .8fr .8fr auto; gap: 18px; align-items: center; border-top: 1px solid var(--line); padding: 15px 24px; }
 .employee-history-row strong, .employee-history-row small { display: block; }
 .employee-history-row strong { font-size: 11px; }
 .employee-history-row small { margin-top: 3px; color: var(--muted); font-size: 9px; }
+.employee-history-current { display: inline-flex; margin-left: 8px; border-radius: 999px; background: var(--green-light); color: var(--mint-dark); font-size: 8px; font-weight: 900; padding: 4px 7px; vertical-align: middle; }
 
 .timesheet-submit-note { margin: 0; color: var(--muted); font-size: 11px; font-style: italic; }
 .admin-task-panel { margin-bottom: 18px; overflow: hidden; }
@@ -1317,6 +1328,7 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
   .profile-menu-button { width: 38px; height: 38px; }
   .topbar-actions { gap: 6px; }
   .employee-history-row { grid-template-columns: 1fr 1fr; }
+  .employee-history-head { display: none; }
   .administrator-row { grid-template-columns: 1fr auto; }
   .mail-recipient-setting, .mail-route-choice { grid-template-columns: 1fr auto; }
   .invoice-preview-head, .invoice-preview-parties, .invoice-preview-totals, .invoice-source-columns { grid-template-columns: 1fr; }
@@ -1336,6 +1348,9 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
   .notification-button { width: 38px; height: 38px; }
   .profile-menu-button { width: 38px; height: 38px; }
   .employee-hero { border-radius: 18px; padding: 26px 20px; }
+  .employee-open-action-row { grid-template-columns: 1fr; }
+  .employee-open-action-row .small-button { width: 100%; }
+  .employee-hero-actions .button { width: 100%; }
   .employee-history-row { grid-template-columns: 1fr; }
   .admin-task-month-heading, .admin-task-owner-heading, .admin-task-row { padding-inline: 18px; }
   .correction-banner.dashboard-correction { grid-template-columns: auto 1fr; }

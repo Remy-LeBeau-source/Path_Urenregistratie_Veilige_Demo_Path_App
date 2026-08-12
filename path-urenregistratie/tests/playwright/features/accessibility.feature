@@ -9,12 +9,16 @@ Feature: Basistoegankelijkheid en toetsenbordbediening in Path Uren & Facturatie
 
   @happy
   Scenario: [A11Y-H-001] loginformulier is volledig met het toetsenbord bruikbaar en correct gelabeld
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Toegankelijkheidsinspectie + toetsenbord-use-case
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given de loginpagina is geopend
+    Then hebben e-mail, wachtwoord en inlogknop een programmatisch gekoppeld label
+    When er met Tab door het formulier wordt genavigeerd
 
   @happy
   Scenario: [A11Y-H-002] admin-dashboard hoofdnavigatie is toetsenbordbereikbaar met herkenbare namen
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Toegankelijkheidsinspectie + toetsenbord-use-case
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given de administrator is ingelogd
+    Then heeft elke hoofdnavigatieknop een herkenbare, unieke naam
+    When de eerste hoofdnavigatieknop via het toetsenbord wordt bediend

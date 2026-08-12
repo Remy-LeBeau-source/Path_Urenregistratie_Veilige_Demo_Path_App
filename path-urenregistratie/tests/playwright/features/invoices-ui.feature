@@ -9,42 +9,56 @@ Feature: Factuurweergave in de desktop-UI in Path Uren & Facturatie
 
   @happy
   Scenario: [INV-H-001] admin facturen zichtbaar en console errors 0
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 1
+    Given de administrator is ingelogd
+    When de administrator het facturenscherm opent
+    Then facturen per periode zijn zichtbaar zonder consolefouten
 
   @negative
   Scenario: [INV-N-005] employee facturen zichtbaar maar beperkt en console errors 0
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given de medewerker is ingelogd
+    When de medewerker factuurdata opvraagt
+    Then alleen eigen facturen zijn zichtbaar zonder consolefouten
 
   @happy
   Scenario: [INV-H-002] periodefilter juli en augustus werkt
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Equivalentieklassen
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given de administrator is ingelogd en op het facturenscherm staat
+    When de administrator wisselt tussen juli en augustus 2026
+    Then het factuuroverzicht ververst voor de gekozen periode
 
   @happy
   Scenario: [INV-H-003] server berekent bedrag uit uren en uurtarief voor open facturen
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given de administrator is ingelogd
+    When factuurdata voor augustus 2026 wordt opgevraagd
+    Then het bedrag komt uit server-side berekening in plaats van alleen statische demo-output
 
   @happy
   Scenario: [INV-H-006] admin kan het gekozen maanddetail inklappen en weer uitklappen
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 11
+    Given de administrator is ingelogd en op facturen staat
+    When de gekozen maanddetails worden verborgen en opnieuw getoond
+    Then blijven het overzicht en de gekozen maand netjes gescheiden zichtbaar
 
   @happy
   Scenario: [INV-H-007] factuurnavigatie onderscheidt geblokkeerde en controleklare maanden met oranje en groen
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 10
+    Given de administrator is ingelogd met de vaste demo-baseline
+    When de flow voor INV-H-007 wordt uitgevoerd
+    Then toont Facturen één oranje blokkadebadge en één groene controlebadge
 
   @negative
   Scenario: [INV-N-007] ongeldige periodefilter geeft nette 400-fout
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given de administrator is ingelogd
+    When een ongeldige periodefilter wordt opgevraagd
+    Then geeft de API invalid-period met status 400 terug

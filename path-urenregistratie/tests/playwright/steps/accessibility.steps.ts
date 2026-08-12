@@ -8,11 +8,7 @@ const Given = (_pattern: StepPattern, _handler: StepHandler) => undefined;
 const When = (_pattern: StepPattern, _handler: StepHandler) => undefined;
 const Then = (_pattern: StepPattern, _handler: StepHandler) => undefined;
 
-Given('de uitvoerbare Playwright-case is voorbereid', () => undefined);
-When('de beschreven businessflow wordt uitgevoerd', () => undefined);
-Then('wordt het verwachte resultaat aantoonbaar gevalideerd', () => undefined);
-
 export const caseMappings = [
-  { caseId: 'A11Y-H-001', spec: 'accessibility.spec.ts' },
-  { caseId: 'A11Y-H-002', spec: 'accessibility.spec.ts' },
+  { caseId: 'A11Y-H-001', spec: 'accessibility.spec.ts', assertionCount: 6, acceptanceCriteria: ["Then hebben e-mail, wachtwoord en inlogknop een programmatisch gekoppeld label"] },
+  { caseId: 'A11Y-H-002', spec: 'accessibility.spec.ts', assertionCount: 4, acceptanceCriteria: ["Then heeft elke hoofdnavigatieknop een herkenbare, unieke naam"] },
 ] as const;

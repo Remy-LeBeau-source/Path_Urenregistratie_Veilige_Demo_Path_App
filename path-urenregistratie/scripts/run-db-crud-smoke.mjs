@@ -64,9 +64,22 @@ try {
   // fall back to env-based defaults
 }
 
-const productionContext = process.env.NODE_ENV === 'production' || process.env.PLAYWRIGHT_STAGE === 'prod';
-if (productionContext) {
-  throw new Error('DB CRUD smoke is not allowed to run in production contexts.');
+const environmentSignals = [process.env.PATH_APP_ENVIRONMENT, process.env.APP_ENV, process.env.NODE_ENV]
+  .map((value) => String(value || '').trim().toLowerCase())
+  .filter(Boolean);
+const requestedStage = String(process.env.PLAYWRIGHT_STAGE || '').trim().toLowerCase();
+const loopbackHosts = new Set(['127.0.0.1', 'localhost', '::1']);
+const namedTestDatabase = /_test$/i.test(config.database);
+const isolatedCiDatabase = Boolean(process.env.CI)
+  && environmentSignals.includes('test')
+  && loopbackHosts.has(String(config.host || '').trim().toLowerCase())
+  && config.database === 'path_urenregistratie';
+const productionContext = environmentSignals.includes('production') || requestedStage === 'prod';
+if (productionContext || (!namedTestDatabase && !isolatedCiDatabase)) {
+  throw new Error(
+    `DB CRUD smoke is not allowed for ${config.database || '(empty database name)'}. `
+    + 'Use a database ending in _test, or the isolated loopback CI database.',
+  );
 }
 
 const connection = await mysql.createConnection(config);

@@ -8,48 +8,64 @@ Feature: Notificaties via API in Path Uren & Facturatie
 
   @happy
   Scenario: [NOT-H-001] ingelogde gebruiker kan notificaties ophalen
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given een ingelogde medewerker
+    When notificaties worden opgehaald
+    Then wordt met Playwright-assertions bevestigd dat ingelogde gebruiker kan notificaties ophalen
 
   @happy
   Scenario: [NOT-H-002] mark_all_read werkt zonder fouten
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given een ingelogde admin
+    When mark_all_read wordt aangeroepen
+    Then wordt met Playwright-assertions bevestigd dat mark_all_read werkt zonder fouten
 
   @negative
   Scenario: [NOT-N-003] anonieme gebruiker krijgt 401 op notificaties
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 1
+    Given notificaties via API is voorbereid
+    When notificaties.php zonder sessie wordt aangeroepen
+    Then wordt met Playwright-assertions bevestigd dat anonieme gebruiker krijgt 401 op notificaties
 
   @negative
   Scenario: [NOT-N-004] unknown action geeft 400
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given een ingelogde medewerker
+    When een onbekende action wordt verstuurd
+    Then wordt met Playwright-assertions bevestigd dat unknown action geeft 400
 
   @happy
   Scenario: [NOT-H-005] notificatielimiet wordt op minimaal een begrensd
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Grenswaardenanalyse
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given notificaties via API is voorbereid
+    When de flow voor NOT-H-005 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat notificatielimiet wordt op minimaal een begrensd
 
   @happy
   Scenario: [NOT-H-006] unread-filter retourneert uitsluitend ongelezen meldingen
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given notificaties via API is voorbereid
+    When de flow voor NOT-H-006 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat unread-filter retourneert uitsluitend ongelezen meldingen
 
   @negative
   Scenario: [NOT-N-007] mark_read zonder notification_id geeft 400
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given notificaties via API is voorbereid
+    When de flow voor NOT-N-007 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat mark_read zonder notification_id geeft 400
 
   @happy
   Scenario: [NOT-H-008] mark_read voor onbekende melding wijzigt nul records
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Grenswaardenanalyse
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given notificaties via API is voorbereid
+    When de flow voor NOT-H-008 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat mark_read voor onbekende melding wijzigt nul records

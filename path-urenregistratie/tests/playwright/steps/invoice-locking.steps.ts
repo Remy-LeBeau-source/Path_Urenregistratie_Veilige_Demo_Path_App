@@ -8,16 +8,12 @@ const Given = (_pattern: StepPattern, _handler: StepHandler) => undefined;
 const When = (_pattern: StepPattern, _handler: StepHandler) => undefined;
 const Then = (_pattern: StepPattern, _handler: StepHandler) => undefined;
 
-Given('de uitvoerbare Playwright-case is voorbereid', () => undefined);
-When('de beschreven businessflow wordt uitgevoerd', () => undefined);
-Then('wordt het verwachte resultaat aantoonbaar gevalideerd', () => undefined);
-
 export const caseMappings = [
-  { caseId: 'INV-H-004', spec: 'invoice-lock.spec.ts' },
-  { caseId: 'INV-N-008', spec: 'invoice-lock.spec.ts' },
-  { caseId: 'INV-N-009', spec: 'invoice-lock.spec.ts' },
-  { caseId: 'INV-N-010', spec: 'invoice-lock.spec.ts' },
-  { caseId: 'INV-N-011', spec: 'invoice-lock.spec.ts' },
-  { caseId: 'INV-N-012', spec: 'invoice-lock.spec.ts' },
-  { caseId: 'INV-N-013', spec: 'invoice-lock.spec.ts' },
+  { caseId: 'INV-H-004', spec: 'invoice-lock.spec.ts', assertionCount: 20, acceptanceCriteria: ["And een administrator die urenstaat goedkeurt","Then worden nummer bedragen en locked_at server-side vastgelegd en blijft client-manipulatie zonder effect","And de administrator kan de server-side gegenereerde factuur-PDF downloaden","And cleanup de administrator-sessie wordt afgesloten"] },
+  { caseId: 'INV-N-008', spec: 'invoice-lock.spec.ts', assertionCount: 3, acceptanceCriteria: ["Then wordt met Playwright-assertions bevestigd dat anonieme gebruiker kan factuur niet locken"] },
+  { caseId: 'INV-N-009', spec: 'invoice-lock.spec.ts', assertionCount: 3, acceptanceCriteria: ["And cleanup de sessie wordt afgesloten","Then wordt met Playwright-assertions bevestigd dat medewerker mag factuur niet finaliseren"] },
+  { caseId: 'INV-N-010', spec: 'invoice-lock.spec.ts', assertionCount: 3, acceptanceCriteria: ["And cleanup de administrator-sessie wordt afgesloten","Then wordt met Playwright-assertions bevestigd dat niet-goedgekeurde urenstaat kan niet worden gelockt"] },
+  { caseId: 'INV-N-011', spec: 'invoice-lock.spec.ts', assertionCount: 5, acceptanceCriteria: ["Then wordt een tweede lock-oproep geweigerd en ontstaat geen duplicaat","And cleanup de administrator-sessie wordt afgesloten"] },
+  { caseId: 'INV-N-012', spec: 'invoice-lock.spec.ts', assertionCount: 1, acceptanceCriteria: ["Then wordt met Playwright-assertions bevestigd dat gelijktijdige lock-requests leveren exact één winnaar"] },
+  { caseId: 'INV-N-013', spec: 'invoice-lock.spec.ts', assertionCount: 2, acceptanceCriteria: ["Then wordt met Playwright-assertions bevestigd dat anonieme gebruiker kan factuur-PDF niet downloaden"] },
 ] as const;

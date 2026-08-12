@@ -717,9 +717,145 @@ test('[DASH-H-005] medewerker ziet open maanden compact en kan direct naar de ju
     await expect(page.locator('#employee-open-task-owners')).not.toContainText('Backoffice');
     const openMonthItems = page.locator('#employee-open-overview-list [data-employee-open-month]');
     await expect.poll(async () => openMonthItems.count()).toBeGreaterThan(0);
-    await openMonthItems.first().locator('[data-employee-open-month-toggle]').click();
-    await openMonthItems.first().locator('[data-employee-open-month-open]').click();
+    const firstMonth = openMonthItems.first();
+    const firstToggle = firstMonth.locator('[data-employee-open-month-toggle]');
+    if (await firstToggle.getAttribute('aria-expanded') !== 'true') await firstToggle.click();
+    await firstMonth.locator('[data-employee-open-action]').first().click();
     await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+  });
+});
+
+test('[DASH-H-014] medewerker krijgt de eerstvolgende concrete actie met juiste maand en taakroute', async ({ page }) => {
+  const errors = captureConsoleErrors(page);
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given een medewerker met meerdere open acties over verschillende maanden', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    clearConsoleErrors(errors);
+    await expect(page.locator('#employee-open-overview')).toBeVisible();
+    await expect(page.locator('#employee-open-task-total')).not.toHaveText('0 open acties');
+  });
+
+  let firstPeriod = '';
+  let firstPeriodLabel = '';
+  let firstActionType = '';
+
+  await test.step('When het dashboard de werkvoorraad prioriteert', async () => {
+    const openMonths = page.locator('#employee-open-overview-list [data-employee-open-month]');
+    await expect.poll(async () => openMonths.count()).toBeGreaterThan(0);
+    const firstMonth = openMonths.first();
+    firstPeriod = (await firstMonth.getAttribute('data-employee-open-month')) || '';
+    firstPeriodLabel = ((await firstMonth.locator('.employee-open-month-heading-copy strong').textContent()) || '').split(' · ')[0];
+    const firstToggle = firstMonth.locator('[data-employee-open-month-toggle]');
+    await expect(firstToggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(firstMonth.locator('.employee-open-month-body')).toBeVisible();
+
+    const allActionRows = page.locator('#employee-open-overview-list [data-employee-action-row]');
+    const totalText = (await page.locator('#employee-open-task-total').textContent()) || '0';
+    const total = Number(totalText.match(/\d+/)?.[0] || 0);
+    await expect(allActionRows).toHaveCount(total);
+    await expect(page.locator('#employee-dashboard-all-actions')).toHaveText(`Bekijk alle ${total} open ${total === 1 ? 'actie' : 'acties'}`);
+    await page.locator('#employee-dashboard-all-actions').click();
+    await expect(page.locator('#employee-open-overview')).toBeInViewport();
+    await expect(page.locator('#employee-open-overview .panel-heading h3')).toBeVisible();
+    expect(await page.locator('#employee-open-overview').evaluate(element => element.getBoundingClientRect().top)).toBeGreaterThanOrEqual(80);
+    await expect(page.locator('#employee-history .employee-history-head')).toContainText('Maand');
+    await expect(page.locator('#employee-history [data-history-period]').first()).toHaveText('Open maand');
+
+    const firstAction = firstMonth.locator('[data-employee-open-action]').first();
+    firstActionType = (await firstAction.getAttribute('data-employee-open-action')) || '';
+    await expect(page.locator('#employee-dashboard-next-label')).toHaveText('Volgende actie');
+    await expect(page.locator('#employee-dashboard-next-meta')).toContainText(firstPeriodLabel);
+    await expect(page.locator('#employee-dashboard-action')).toHaveAttribute('data-employee-action-period', firstPeriod);
+    await expect(page.locator('#employee-dashboard-action')).toHaveAttribute('data-employee-action-type', firstActionType);
+    await attachBusinessScreenshot(page, 'GUI smoke · Slim medewerkerdashboard');
+  });
+
+  await test.step('Then opent de hoofdactie exact de geprioriteerde maand en juiste taakroute', async () => {
+    await page.locator('#employee-dashboard-action').click();
+    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+    await expect(page.locator('#timesheet-period-title')).toHaveText(firstPeriodLabel);
+    if (firstActionType === 'customer') await expect(page.locator('#customer-timesheet-upload-panel')).toBeVisible();
+    else await expect(page.locator('#hours-grid')).toBeVisible();
+    await attachBusinessScreenshot(page, 'GUI smoke · Medewerker opent eerstvolgende actie');
+    expect(errors).toEqual([]);
+  });
+});
+
+test('[DASH-N-015] medewerkerprioriteit kiest correctie boven document en toont niets als alles klaar is', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await page.route('**/server/api/timesheets.php**', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ ok: false }) }));
+  await page.route('**/server/api/customer-timesheets.php**', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ ok: false }) }));
+
+  await test.step('Given alleen augustus zowel een urencorrectie als documentherindiening vraagt', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.evaluate(() => {
+      const runtime = window as typeof window & {
+        currentEmployee: () => { id: number };
+        recordFor: (employeeId: number, periodKey: string) => MutableRecord;
+        persistState: () => void;
+        renderAll: () => void;
+      };
+      const employeeId = runtime.currentEmployee().id;
+      ['2026-06', '2026-07', '2026-08'].forEach(periodKey => {
+        const record = runtime.recordFor(employeeId, periodKey);
+        record.timesheetStatus = 'submitted';
+        record.customerTimesheet.status = 'received';
+        record.correctionHistory = [];
+      });
+      const august = runtime.recordFor(employeeId, '2026-08');
+      august.timesheetStatus = 'correction';
+      august.customerTimesheet.status = 'resubmit';
+      august.customerTimesheet.reviewNote = 'Upload de definitieve ondertekende versie.';
+      august.correctionHistory = [{
+        requestedBy: 'Gio Maatsen',
+        requestedAt: '13 augustus 2026, 10:00',
+        message: 'Controleer de uren op maandag.',
+        resubmittedAt: ''
+      }];
+      runtime.persistState();
+      runtime.renderAll();
+    });
+  });
+
+  await test.step('Then staat de urencorrectie vóór het document en kloppen de totalen', async () => {
+    await expect(page.locator('#employee-open-task-total')).toHaveText('2 open acties');
+    await expect(page.locator('#employee-dashboard-action')).toHaveAttribute('data-employee-action-period', '2026-08');
+    await expect(page.locator('#employee-dashboard-action')).toHaveAttribute('data-employee-action-type', 'hours');
+    const rows = page.locator('[data-employee-open-month="2026-08"] [data-employee-action-row]');
+    await expect(rows).toHaveCount(2);
+    await expect(rows.nth(0)).toHaveAttribute('data-employee-action-row', 'hours');
+    await expect(rows.nth(0)).toContainText('Correctie indienen');
+    await expect(rows.nth(1)).toHaveAttribute('data-employee-action-row', 'customer');
+    await expect(rows.nth(1)).toContainText('Upload de definitieve ondertekende versie.');
+  });
+
+  await test.step('And bij een volledig afgeronde werkvoorraad verdwijnen taaklijst en prioriteitsdata', async () => {
+    await page.evaluate(() => {
+      const runtime = window as typeof window & {
+        currentEmployee: () => { id: number };
+        recordFor: (employeeId: number, periodKey: string) => MutableRecord;
+        persistState: () => void;
+        renderAll: () => void;
+      };
+      const employeeId = runtime.currentEmployee().id;
+      ['2026-06', '2026-07', '2026-08'].forEach(periodKey => {
+        const record = runtime.recordFor(employeeId, periodKey);
+        record.timesheetStatus = 'approved';
+        record.customerTimesheet.status = 'approved';
+        record.correctionHistory = [];
+      });
+      runtime.persistState();
+      runtime.renderAll();
+    });
+    await expect(page.locator('#employee-open-task-total')).toHaveText('0 open acties');
+    await expect(page.locator('#employee-open-overview')).toBeHidden();
+    await expect(page.locator('#employee-dashboard-all-actions')).toBeHidden();
+    await expect(page.locator('#employee-dashboard-next-label')).toHaveText('Deze maand');
+    await expect(page.locator('#employee-dashboard-action')).not.toHaveAttribute('data-employee-action-period', /.+/);
+    await expect(page.locator('#employee-dashboard-action')).not.toHaveAttribute('data-employee-action-type', /.+/);
   });
 });
 

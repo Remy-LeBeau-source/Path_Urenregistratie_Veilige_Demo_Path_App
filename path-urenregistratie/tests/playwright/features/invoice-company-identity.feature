@@ -8,30 +8,40 @@ Feature: Facturerende ondernemingsidentiteit in Path Uren & Facturatie
 
   @happy
   Scenario: [INV-ID-H-001] handelsnaam en juridische naam staan samen op de factuurpreview
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given facturerende ondernemingsidentiteit is voorbereid
+    When de flow voor INV-ID-H-001 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat handelsnaam en juridische naam staan samen op de factuurpreview
 
   @happy
   Scenario: [INV-ID-H-002] alleen juridische naam is als factuurweergave te kiezen
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Equivalentieklassen
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given facturerende ondernemingsidentiteit is voorbereid
+    When de flow voor INV-ID-H-002 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat alleen juridische naam is als factuurweergave te kiezen
 
   @happy
   Scenario: [INV-ID-H-003] factuuridentiteit wordt door settings API opgeslagen en via bootstrap herladen
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given facturerende ondernemingsidentiteit is voorbereid
+    When de flow voor INV-ID-H-003 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat factuuridentiteit wordt door settings API opgeslagen en via bootstrap herladen
 
   @negative
   Scenario: [INV-ID-N-004] settings API weigert een onbekende factuurweergave
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given facturerende ondernemingsidentiteit is voorbereid
+    When de flow voor INV-ID-N-004 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat settings API weigert een onbekende factuurweergave
 
   @happy
   Scenario: [INV-ID-H-005] instellingen tonen verkoopklare bedrijfsidentiteit en beveiligde verzendmodus
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given facturerende ondernemingsidentiteit is voorbereid
+    When de flow voor INV-ID-H-005 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat instellingen tonen verkoopklare bedrijfsidentiteit en beveiligde verzendmodus

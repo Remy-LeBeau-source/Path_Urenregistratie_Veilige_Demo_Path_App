@@ -114,9 +114,27 @@ function dedupeNonEmpty(values) {
   return Array.from(new Set(values.map((value) => String(value || '').trim()).filter(Boolean)));
 }
 
-const connection = await mysql.createConnection(config);
 const requestedStage = String(process.env.PLAYWRIGHT_STAGE || '').trim().toLowerCase();
-const isTestDatabase = databaseName.endsWith('_test') || requestedStage === 'test';
+const environmentSignals = [process.env.PATH_APP_ENVIRONMENT, process.env.APP_ENV, process.env.NODE_ENV]
+  .map((value) => String(value || '').trim().toLowerCase())
+  .filter(Boolean);
+const loopbackHosts = new Set(['127.0.0.1', 'localhost', '::1']);
+const namedTestDatabase = /_test$/i.test(databaseName);
+const isolatedCiDatabase = Boolean(process.env.CI)
+  && environmentSignals.includes('test')
+  && loopbackHosts.has(String(config.host || '').trim().toLowerCase())
+  && databaseName === 'path_urenregistratie';
+const productionContext = requestedStage === 'prod' || environmentSignals.includes('production');
+
+if (productionContext || (!namedTestDatabase && !isolatedCiDatabase)) {
+  throw new Error(
+    `Refusing destructive Playwright database bootstrap for ${databaseName || '(empty database name)'}. `
+    + 'Use a database ending in _test, or the isolated loopback CI database.',
+  );
+}
+
+const connection = await mysql.createConnection(config);
+const isTestDatabase = true;
 try {
   if (isTestDatabase) {
     await connection.query(`DROP DATABASE IF EXISTS \`${databaseName}\``);

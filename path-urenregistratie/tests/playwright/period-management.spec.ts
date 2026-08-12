@@ -27,11 +27,9 @@ async function expectInvalidPeriod(periodKey: string) {
   await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
 
   const res = await postPeriods(ctx, { action: 'close', period_key: periodKey });
-  expect(res.status).toBe(400);
-  expect(res.body.error).toBe('invalid-period');
-
   await authApi.logout();
   await ctx.dispose();
+  return res;
 }
 
 test.describe('period management api', () => {
@@ -156,15 +154,21 @@ test.describe('period management api', () => {
   });
 
   test('[PER-N-007] driecijferig jaar geeft 400', async () => {
-    await expectInvalidPeriod('999-01');
+    const result = await expectInvalidPeriod('999-01');
+    expect(result.status).toBe(400);
+    expect(result.body.error).toBe('invalid-period');
   });
 
   test('[PER-N-008] vijfcijferig jaar geeft 400', async () => {
-    await expectInvalidPeriod('10000-01');
+    const result = await expectInvalidPeriod('10000-01');
+    expect(result.status).toBe(400);
+    expect(result.body.error).toBe('invalid-period');
   });
 
   test('[PER-N-009] ongeldige maand geeft 400', async () => {
-    await expectInvalidPeriod('2125-13');
+    const result = await expectInvalidPeriod('2125-13');
+    expect(result.status).toBe(400);
+    expect(result.body.error).toBe('invalid-period');
   });
 
   test('[PER-N-010] onbekende periodeactie geeft 400', async () => {

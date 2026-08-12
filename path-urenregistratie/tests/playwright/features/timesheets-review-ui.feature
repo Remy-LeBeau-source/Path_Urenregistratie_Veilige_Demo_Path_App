@@ -9,24 +9,34 @@ Feature: Correctie en goedkeuring in de desktop-UI in Path Uren & Facturatie
 
   @happy
   Scenario: [TS-REV-UI-H-008] browserflow: admin vraagt correctie, medewerker dient opnieuw in, admin keurt goed
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 13
+    Given de medewerker een urenstaat indient in de browser
+    When de administrator een correctieverzoek plaatst
+    Then ziet de medewerker het correctieverzoek en dient opnieuw in
+    And de administrator keurt de herindiening goed
+    Then ziet de medewerker de eindstatus Goedgekeurd
 
   @happy
   Scenario: [TS-REV-UI-H-009] medewerker kan een ingediende urenstaat opnieuw indienen
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given medewerker opent een ingediende urenstaat
+    When de flow voor TS-REV-UI-H-009 wordt uitgevoerd
+    Then kan de medewerker opnieuw indienen zonder blokkerende statusmelding
 
   @happy
   Scenario: [TS-REV-UI-H-010] submitknop is verborgen bij goedgekeurde urenstaat
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given medewerker opent een goedgekeurde urenstaat
+    When de flow voor TS-REV-UI-H-010 wordt uitgevoerd
+    Then is de indienknop verborgen en staat er een statusmelding
 
   @negative
   Scenario: [TS-REV-UI-N-011] localhost kan demo-uren zonder serverversie voor correctie terugsturen
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given de ingelogde localhostomgeving een lokaal demo-record zonder serverversie toont
+    When Backoffice Marc met een concrete toelichting terugstuurt
+    Then wordt de lokale status bijgewerkt zonder ongeldige serverwrite

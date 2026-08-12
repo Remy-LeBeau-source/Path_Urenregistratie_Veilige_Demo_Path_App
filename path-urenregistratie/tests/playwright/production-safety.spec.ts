@@ -243,6 +243,69 @@ test('[SAFE-H-004] config.example.php bevat mail.enabled=false als standaard', a
   });
 });
 
+test('[SAFE-N-005] live login verbergt lokale accountkeuze en valt gesloten uit zonder authservice', async ({ page }) => {
+  await test.step('Given de loginpagina als productiepresentatie wordt opgebouwd', async () => {
+    await page.goto(appConfig.baseUrl);
+    await expect(page.locator('#auth-login-submit')).toBeEnabled({ timeout: 15_000 });
+    expect(await page.evaluate(() => {
+      const runtime = window as typeof window & { localAccountToolsAllowed: (hostname: string) => boolean };
+      return runtime.localAccountToolsAllowed('uren.pathconsultancy.nl');
+    })).toBe(false);
+    await page.evaluate(() => {
+      const runtime = window as typeof window & { applyLoginPresentation: (allowed: boolean) => void };
+      runtime.applyLoginPresentation(false);
+    });
+  });
+
+  await test.step('Then zijn demoaccounts en lokale uitleg niet zichtbaar', async () => {
+    await expect(page.locator('#local-account-login-tools')).toBeHidden();
+    await expect(page.locator('#local-login-note')).toBeHidden();
+    await expect(page.locator('#login-environment-label')).toHaveText('Beveiligde omgeving');
+    await expect(page.locator('#login-title')).toHaveText('Inloggen');
+    await expect(page.locator('#login-intro')).toContainText('zakelijke e-mailadres');
+    await expect(page.locator('#auth-login-form')).toBeVisible();
+  });
+
+  await test.step('And zonder authservice blijft productie fail-closed', async () => {
+    await page.evaluate(() => {
+      const runtime = window as typeof window & { applyAuthUiMode: (mode: string) => void; applyLoginPresentation: (allowed: boolean) => void };
+      runtime.applyAuthUiMode('unavailable');
+      runtime.applyLoginPresentation(false);
+    });
+    await expect(page.locator('#auth-login-submit')).toBeDisabled();
+    await expect(page.locator('#auth-login-feedback')).toContainText('tijdelijk niet bereikbaar');
+    await expect(page.locator('#local-account-login-tools')).toBeHidden();
+  });
+});
+
+test('[SAFE-N-006] destructieve DB-testsetup weigert productie en niet-testdatabases', async () => {
+  await test.step('Given de Playwright-bootstrap en directe DB-smoke worden gecontroleerd', async () => {});
+
+  await test.step('Then vereist de bootstrap een herkenbare testdatabase of geïsoleerde lokale CI-database', async () => {
+    const source = await readFile(join(process.cwd(), 'scripts', 'bootstrap-playwright-db.mjs'), 'utf8');
+    expect(source).toContain('namedTestDatabase');
+    expect(source).toContain('isolatedCiDatabase');
+    expect(source).toContain('productionContext');
+    expect(source).toContain('Refusing destructive Playwright database bootstrap');
+    expect(source).toContain("databaseName === 'path_urenregistratie'");
+    expect(source).toContain("environmentSignals.includes('test')");
+    expect(source).toContain("environmentSignals.includes('production')");
+  });
+
+  await test.step('And gebruikt de CRUD-smoke dezelfde fail-closed scheiding', async () => {
+    const source = await readFile(join(process.cwd(), 'scripts', 'run-db-crud-smoke.mjs'), 'utf8');
+    const ciWorkflow = await readFile(join(process.cwd(), '..', '.github', 'workflows', 'ci.yml'), 'utf8');
+    expect(source).toContain('namedTestDatabase');
+    expect(source).toContain('isolatedCiDatabase');
+    expect(source).toContain('productionContext');
+    expect(source).toContain('DB CRUD smoke is not allowed');
+    expect(source).toContain("config.database === 'path_urenregistratie'");
+    expect(source).toContain("environmentSignals.includes('test')");
+    expect(source).toContain("environmentSignals.includes('production')");
+    expect(ciWorkflow).toMatch(/Run DB CRUD smoke[\s\S]*PATH_APP_ENVIRONMENT:\s*test[\s\S]*PLAYWRIGHT_STAGE:\s*test/);
+  });
+});
+
 test('[SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed', async () => {
   await test.step('Given de transport-, dispatch- en productiepreflightbron wordt gelezen', async () => {});
 

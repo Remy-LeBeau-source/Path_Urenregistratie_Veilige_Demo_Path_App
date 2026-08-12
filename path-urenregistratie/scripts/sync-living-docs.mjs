@@ -33,17 +33,49 @@ const definitions = [
 
 function extractCases(definition) {
   if (definition.kind === 'db') {
-    return [{ id: 'DB-H-001', title: 'CRUD smoke test werkt in een geïsoleerde tijdelijke tabel' }];
+    return [{ id: 'DB-H-001', title: 'CRUD smoke test werkt in een geïsoleerde tijdelijke tabel', assertionCount: 3, testSteps: [
+      'Given de database CRUD smoke is voorbereid',
+      'When het SQL-script wordt uitgevoerd via de DB smoke runner',
+      'Then wordt het verwachte cleanup-result bevestigd',
+    ] }];
   }
 
   const source = readFileSync(path.join(playwrightDir, definition.spec), 'utf8');
-  const cases = [];
   const pattern = /test\(\s*(['"])\[([^\]]+)\]\s*([^'"\r\n]+)\1\s*,/g;
-  for (const match of source.matchAll(pattern)) {
-    cases.push({ id: match[2], title: match[3].trim() });
-  }
+  const matches = [...source.matchAll(pattern)];
+  const cases = matches.map((match, index) => {
+    const block = source.slice(match.index, matches[index + 1]?.index ?? source.length);
+    const testSteps = [...block.matchAll(/test\.step\(\s*(['"])([^'"\r\n]+)\1\s*,/g)].map(step => step[2].trim());
+    const assertionCount = (block.match(/\b(?:expect|expectApiError)\s*\(/g) || []).length;
+    return { id: match[2], title: match[3].trim(), assertionCount, testSteps };
+  });
   if (cases.length === 0) throw new Error(`Geen cases gevonden in ${definition.spec}.`);
   return cases;
+}
+
+function sentenceCase(text) {
+  const value = String(text || '').trim();
+  return value ? value[0].toLowerCase() + value.slice(1) : value;
+}
+
+function scenarioSteps(definition, testCase) {
+  const explicit = testCase.testSteps
+    .map(step => step.match(/^(Given|When|Then|And)\s+(.+)$/i))
+    .filter(Boolean)
+    .map(match => `${match[1][0].toUpperCase()}${match[1].slice(1).toLowerCase()} ${match[2]}`);
+
+  const hasGiven = explicit.some(step => step.startsWith('Given '));
+  const hasWhen = explicit.some(step => step.startsWith('When '));
+  const hasThen = explicit.some(step => step.startsWith('Then '));
+  const result = [...explicit];
+  if (!hasGiven) result.unshift(`Given ${sentenceCase(definition.name)} is voorbereid`);
+  if (!hasWhen) {
+    const givenCount = result.findIndex(step => !step.startsWith('Given ') && !step.startsWith('And '));
+    const insertAt = givenCount < 0 ? result.length : givenCount;
+    result.splice(insertAt, 0, `When de flow voor ${testCase.id} wordt uitgevoerd`);
+  }
+  if (!hasThen) result.push(`Then wordt met Playwright-assertions bevestigd dat ${sentenceCase(testCase.title)}`);
+  return result;
 }
 
 function storyFor(definition, testCase) {
@@ -69,6 +101,20 @@ function suiteFor(definition, testCase) {
   return mobileSuites[testCase.id] || definition.suite;
 }
 
+function techniqueFor(definition, testCase) {
+  const text = `${testCase.id} ${testCase.title}`.toLowerCase();
+  if (definition.spec === 'accessibility.spec.ts') return 'Toegankelijkheidsinspectie + toetsenbord-use-case';
+  if (definition.spec === 'mobile-ui.spec.ts') return 'Responsive viewport + end-to-end use-case';
+  if (/gelijktijd|optimistic|tweede lock|immutable/.test(text)) return 'Concurrency + toestandsovergang';
+  if (/limiet|minimaal|hoog|driecijferig|vijfcijferig|ongeldige maand|te groot|te kort|nul/.test(text)) return 'Grenswaardenanalyse';
+  if (/rol|admin|medewerker|anoniem|eigen|andere medewerker|403|401|toegang|scope/.test(text)) return 'Beslissingstabel rollen en autorisatie';
+  if (/status|correctie|indien|goedkeur|sluit|heropen|deactiv|heractiv|reset|restore|lock|retry|mark_read|mark_all_read/.test(text)) return 'Toestandsovergang';
+  if (/ongeldig|unknown|zonder|ontbre|niet-bestaande|weigert|fout|fail-closed|plaintext/.test(text) || testCase.id.includes('-N-')) return 'Negatieve equivalentieklasse + error guessing';
+  if (/filter|bestandstype|jpg|pdf|attachment|weergave|periode/.test(text)) return 'Equivalentieklassen';
+  if (/f5|herstel|ververst|wisselt|behoudt/.test(text)) return 'Herstelbaarheid + toestandsovergang';
+  return definition.tags.includes('ui') ? 'End-to-end use-case + visuele contractasserties' : 'API-contract + equivalentieklasse';
+}
+
 function featureContent(definition, cases) {
   if (definition.kind === 'db') {
     return [
@@ -80,6 +126,8 @@ function featureContent(definition, cases) {
       '',
       '  @happy',
       `  Scenario: [${cases[0].id}] ${cases[0].title}`,
+      '    # Testtechniek: CRUD-keten, toestandsovergang en data-integriteit',
+      '    # Aantoonbare SQL-assertions in deze case: 3',
       '    Given de database CRUD smoke is voorbereid',
       '    When het SQL-script wordt uitgevoerd via de DB smoke runner',
       '    Then wordt het verwachte cleanup-result bevestigd',
@@ -89,12 +137,13 @@ function featureContent(definition, cases) {
 
   const scenarios = cases.map((testCase) => {
     const flowTag = testCase.id.includes('-N-') ? 'negative' : 'happy';
+    const steps = scenarioSteps(definition, testCase);
     return [
       `  @${flowTag}`,
       `  Scenario: [${testCase.id}] ${testCase.title}`,
-      '    Given de uitvoerbare Playwright-case is voorbereid',
-      '    When de beschreven businessflow wordt uitgevoerd',
-      '    Then wordt het verwachte resultaat aantoonbaar gevalideerd',
+      `    # Testtechniek: ${testCase.technique}`,
+      `    # Aantoonbare Playwright-assertions in deze case: ${testCase.assertionCount}`,
+      ...steps.map(step => `    ${step}`),
     ].join('\n');
   }).join('\n\n');
 
@@ -128,13 +177,16 @@ function stepsContent(definition, cases) {
       "Then('wordt het verwachte cleanup-result bevestigd', () => undefined);",
       '',
       'export const caseMappings = [',
-      "  { caseId: 'DB-H-001', source: 'crud-smoke.sql', runner: 'run-db-crud-smoke.mjs' },",
+      "  { caseId: 'DB-H-001', source: 'crud-smoke.sql', runner: 'run-db-crud-smoke.mjs', assertionCount: 3, technique: 'CRUD-keten, toestandsovergang en data-integriteit' },",
       '] as const;',
       '',
     ].join('\n');
   }
 
-  const mappings = cases.map((testCase) => `  { caseId: '${testCase.id}', spec: '${definition.spec}' },`).join('\n');
+  const mappings = cases.map((testCase) => {
+    const criteria = scenarioSteps(definition, testCase).filter(step => step.startsWith('Then ') || step.startsWith('And '));
+    return `  { caseId: '${testCase.id}', spec: '${definition.spec}', assertionCount: ${testCase.assertionCount}, acceptanceCriteria: ${JSON.stringify(criteria)} },`;
+  }).join('\n');
   return [
     `// Navigation-only mapping for ${definition.feature}.`,
     '// Native Playwright remains the executable source of truth; no Cucumber runner is used.',
@@ -146,10 +198,6 @@ function stepsContent(definition, cases) {
     'const When = (_pattern: StepPattern, _handler: StepHandler) => undefined;',
     'const Then = (_pattern: StepPattern, _handler: StepHandler) => undefined;',
     '',
-    "Given('de uitvoerbare Playwright-case is voorbereid', () => undefined);",
-    "When('de beschreven businessflow wordt uitgevoerd', () => undefined);",
-    "Then('wordt het verwachte resultaat aantoonbaar gevalideerd', () => undefined);",
-    '',
     'export const caseMappings = [',
     mappings,
     '] as const;',
@@ -159,14 +207,18 @@ function stepsContent(definition, cases) {
 
 const inventory = definitions.flatMap((definition) => {
   const cases = extractCases(definition);
-  return cases.map((testCase) => ({ ...testCase, ...definition, suite: suiteFor(definition, testCase), story: storyFor(definition, testCase) }));
+  return cases.map((testCase) => ({ ...testCase, ...definition, suite: suiteFor(definition, testCase), story: storyFor(definition, testCase), technique: techniqueFor(definition, testCase) }));
 });
 
 const uniqueIds = new Set(inventory.map((testCase) => testCase.id));
 const playwrightCount = inventory.filter((testCase) => testCase.kind === 'playwright').length;
 const dbCount = inventory.filter((testCase) => testCase.kind === 'db').length;
-if (playwrightCount !== 152 || dbCount !== 1 || inventory.length !== 153 || uniqueIds.size !== 153) {
-  throw new Error(`Verwacht 152 Playwright-cases + 1 DB-case = 153 unieke cases, gevonden ${playwrightCount}/${dbCount}/${inventory.length}/${uniqueIds.size}.`);
+if (playwrightCount !== 156 || dbCount !== 1 || inventory.length !== 157 || uniqueIds.size !== 157) {
+  throw new Error(`Verwacht 156 Playwright-cases + 1 DB-case = 157 unieke cases, gevonden ${playwrightCount}/${dbCount}/${inventory.length}/${uniqueIds.size}.`);
+}
+const casesWithoutAssertions = inventory.filter((testCase) => Number(testCase.assertionCount) < 1);
+if (casesWithoutAssertions.length) {
+  throw new Error(`Iedere executable case moet minimaal één aantoonbare assertion hebben. Zonder assertion: ${casesWithoutAssertions.map(testCase => testCase.id).join(', ')}.`);
 }
 
 mkdirSync(featuresDir, { recursive: true });
@@ -190,7 +242,7 @@ for (const definition of definitions) {
 const mappingRows = inventory.map((testCase) => {
   const flow = testCase.id.includes('-N-') ? 'Negative' : 'Happy';
   const source = testCase.kind === 'db' ? `${testCase.source} + ${testCase.runner}` : testCase.spec;
-  return `| ${testCase.id} | ${testCase.kind === 'db' ? 'db' : testCase.tags[1]} | ${testCase.feature} | ${testCase.title} | ${testCase.steps} | ${source} | ${testCase.parentSuite} | ${testCase.allureFeature} | ${testCase.story} | ${flow} | ${testCase.phase} | Actueel |`;
+  return `| ${testCase.id} | ${testCase.kind === 'db' ? 'db' : testCase.tags[1]} | ${testCase.feature} | ${testCase.title} | ${testCase.technique} | ${testCase.assertionCount} | ${testCase.steps} | ${source} | ${testCase.parentSuite} | ${testCase.allureFeature} | ${testCase.story} | ${flow} | ${testCase.phase} | Actueel |`;
 }).join('\n');
 
 const playwrightFeatureCount = definitions.filter((definition) => definition.kind === 'playwright').length;
@@ -216,8 +268,8 @@ const mapping = `# TEST BDD Mapping
 
 ## Volledige traceability matrix
 
-| Case ID | Type | Feature file | Scenario | Steps mapping | Source | Allure parentSuite | Allure Feature | Allure Story | Flow | Fase | Status |
-|---|---|---|---|---|---|---|---|---|---|---:|---|
+| Case ID | Type | Feature file | Scenario | Testtechniek | Assertions | Steps mapping | Source | Allure parentSuite | Allure Feature | Allure Story | Flow | Fase | Status |
+|---|---|---|---|---|---:|---|---|---|---|---|---|---:|---|
 ${mappingRows}
 
 ## Totalen
@@ -237,7 +289,7 @@ const domainSections = definitions.map((definition) => {
   const sourceLabel = definition.kind === 'db'
     ? `${definition.source} + ${definition.runner}`
     : `tests/playwright/${definition.spec}`;
-  return `### ${definition.name}\n\n- Feature: \`tests/playwright/features/${definition.feature}\`\n- Source: \`${sourceLabel}\`\n- Cases: ${cases.length}\n\n${cases.map((testCase) => `- [${testCase.id}] ${testCase.title}`).join('\n')}`;
+  return `### ${definition.name}\n\n- Feature: \`tests/playwright/features/${definition.feature}\`\n- Source: \`${sourceLabel}\`\n- Cases: ${cases.length}\n\n${cases.map((testCase) => `- [${testCase.id}] ${testCase.title} — Techniek: ${testCase.technique || 'CRUD-keten, toestandsovergang en data-integriteit'} · Assertions: ${testCase.assertionCount || 3}`).join('\n')}`;
 }).join('\n\n');
 
 const livingDoc = `# Living Doc - Path Uren & Facturatie

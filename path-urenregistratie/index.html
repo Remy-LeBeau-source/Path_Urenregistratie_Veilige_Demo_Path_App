@@ -15,10 +15,11 @@
         <img src="assets/path-logo.png" alt="Organisatielogo" data-brand-logo>
         <span data-app-name>Uren &amp; Facturatie</span>
       </div>
-      <span class="section-label">Lokale voorbereiding</span>
+      <span class="section-label" id="login-environment-label">Lokale voorbereiding</span>
       <h1 id="login-title">Kies je account en rol</h1>
-      <p>Deze lokale versie gebruikt een accountkeuze. Na de Google Workspace-koppeling wordt de juiste rol automatisch geopend.</p>
-      <div class="demo-account-grid">
+      <p id="login-intro">Deze lokale versie gebruikt een accountkeuze. Na de Google Workspace-koppeling wordt de juiste rol automatisch geopend.</p>
+      <div id="local-account-login-tools">
+        <div class="demo-account-grid">
         <div class="demo-employee-picker">
           <label for="login-admin-trigger">Beheeraccount</label>
           <select id="login-admin" hidden aria-hidden="true" tabindex="-1"></select>
@@ -37,8 +38,8 @@
           </div>
           <small id="login-employee-help">Kies een medewerker. Het eigen dashboard opent direct.</small>
         </div>
-      </div>
-      <div class="login-options">
+        </div>
+        <div class="login-options">
         <button class="login-option" data-login-role="admin">
           <span class="login-avatar" id="login-admin-avatar">GM</span>
           <span><strong>Open als beheerder</strong><small id="login-admin-summary">Gio Maatsen · uren controleren, facturen en instellingen</small></span>
@@ -49,6 +50,7 @@
           <span><strong>Open als medewerker</strong><small id="login-employee-summary">Stasjo van Bakel · eigen uren invullen en indienen</small></span>
           <span class="login-arrow">→</span>
         </button>
+        </div>
       </div>
       <form id="auth-login-form" aria-label="Inloggen met e-mail en wachtwoord">
         <label for="auth-login-email">E-mail</label>
@@ -67,7 +69,7 @@
         <p id="auth-reset-feedback" hidden></p>
       </div>
       <p class="login-note" id="auth-mode-indicator">Controle van auth-sessie wordt uitgevoerd.</p>
-      <p class="login-note">De standaardgegevens gebruiken veilige voorbeeldadressen. Je mag zelf echte gegevens invoeren; deze lokale versie bewaart ze alleen in deze browser en e-mailverzending is uitgeschakeld.</p>
+      <p class="login-note" id="local-login-note">De standaardgegevens gebruiken veilige voorbeeldadressen. Je mag zelf echte gegevens invoeren; deze lokale versie bewaart ze alleen in deze browser en e-mailverzending is uitgeschakeld.</p>
     </div>
   </section>
 
@@ -188,20 +190,25 @@
       <section class="view role-employee-only" id="view-employee-dashboard" data-title="Mijn overzicht">
         <div class="employee-hero">
           <div>
-            <span class="section-label">Mijn uren</span>
+            <span class="section-label">Mijn werkvoorraad</span>
             <h2 id="employee-dashboard-greeting">Goedemiddag</h2>
-            <p id="employee-dashboard-next">Bekijk wat je voor deze maand nog moet doen.</p>
-            <button class="button button-primary" id="employee-dashboard-action" data-go="timesheet">Uren verder invullen</button>
+            <span class="employee-next-action-label" id="employee-dashboard-next-label">Volgende actie</span>
+            <p id="employee-dashboard-next">Bekijk wat je als eerste moet afronden.</p>
+            <small class="employee-next-action-meta" id="employee-dashboard-next-meta">Huidige maand</small>
+            <div class="employee-hero-actions">
+              <button class="button button-primary" id="employee-dashboard-action" data-go="timesheet">Uren verder invullen</button>
+              <button class="button button-ghost employee-all-actions-button" id="employee-dashboard-all-actions" type="button" data-scroll-target="employee-open-overview">Bekijk alle open acties</button>
+            </div>
           </div>
           <div class="hero-task-math" aria-label="Controle van het totaal aan open acties voor medewerker">
-            <span>Wat wacht op jou</span>
+            <span>Mijn open acties</span>
             <strong id="employee-open-task-total">0 open acties</strong>
             <div><small>Per maand</small><b id="employee-open-task-months">Alles afgerond</b></div>
             <div><small>Per type</small><b id="employee-open-task-owners">Urenregistraties 0 + klanturenstaten 0 = 0</b></div>
           </div>
         </div>
         <section class="panel employee-open-overview" id="employee-open-overview" hidden>
-          <div class="panel-heading"><div><span class="section-label">Jouw acties</span><h3>Wat wacht nog op jou</h3></div><small id="employee-open-overview-count">0 open maanden</small></div>
+          <div class="panel-heading"><div><span class="section-label">Jouw acties</span><h3>Open acties per maand</h3><p id="employee-open-overview-note">De eerstvolgende maand staat voor je open.</p></div><small id="employee-open-overview-count">0 open maanden</small></div>
           <div class="employee-open-overview-list" id="employee-open-overview-list"></div>
         </section>
         <section class="correction-banner dashboard-correction" id="employee-dashboard-correction" hidden>
@@ -228,7 +235,7 @@
           <article class="metric-card"><span class="metric-label">Verschil</span><strong id="employee-dashboard-difference">0,0</strong><span class="metric-note">blokkeert indienen niet</span></article>
         </div>
         <section class="panel">
-          <div class="panel-heading"><div><span class="section-label">Historie</span><h3>Mijn eerdere maanden</h3></div><button class="text-button" data-go="timesheet">Naar Mijn uren</button></div>
+          <div class="panel-heading"><div><span class="section-label">Historie</span><h3>Mijn maanden</h3><p>Huidige en eerdere urenstaten met hun laatste status.</p></div><button class="text-button" data-go="timesheet">Naar Mijn uren</button></div>
           <div class="employee-history" id="employee-history"></div>
         </section>
       </section>
