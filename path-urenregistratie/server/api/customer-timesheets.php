@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../auth/session.php';
 require_once __DIR__ . '/../security/csrf.php';
 require_once __DIR__ . '/../security/validation.php';
+require_once __DIR__ . '/../lib/simple_pdf.php';
 
 header('Content-Type: application/json; charset=utf-8');
 auth_apply_cors_headers(auth_try_load_raw_config(), 'GET, POST, OPTIONS', 'Content-Type, X-CSRF-Token');
@@ -344,15 +345,74 @@ function customer_timesheet_detect_upload(array $file): array
     ];
 }
 
+function customer_timesheet_convert_image_to_pdf_bytes(string $tmpPath, string $mimeType): ?string
+{
+    if (!is_uploaded_file($tmpPath)) {
+        return null;
+    }
+
+    $image = null;
+    if ($mimeType === 'image/jpeg' && function_exists('imagecreatefromjpeg')) {
+        $image = @imagecreatefromjpeg($tmpPath);
+    } elseif ($mimeType === 'image/png' && function_exists('imagecreatefrompng')) {
+        $image = @imagecreatefrompng($tmpPath);
+    }
+
+    if (!($image instanceof \GdImage)) {
+        return null;
+    }
+
+    // Flatten any transparency onto white before re-encoding as a normalized JPEG.
+    $width = imagesx($image);
+    $height = imagesy($image);
+    $flattened = imagecreatetruecolor($width, $height);
+    imagefill($flattened, 0, 0, (int)imagecolorallocate($flattened, 255, 255, 255));
+    imagecopy($flattened, $image, 0, 0, 0, 0, $width, $height);
+    imagedestroy($image);
+
+    ob_start();
+    imagejpeg($flattened, null, 90);
+    $jpegBytes = (string)ob_get_clean();
+    imagedestroy($flattened);
+
+    if ($jpegBytes === '') {
+        return null;
+    }
+
+    $pdfBytes = simple_pdf_from_jpeg($jpegBytes, $width, $height);
+    return simple_pdf_looks_valid($pdfBytes) ? $pdfBytes : null;
+}
+
 function customer_timesheet_store_upload(array $upload, int $companyId, int $employeeId, string $periodKey): array
 {
+    $mimeType = $upload['mime_type'];
+    $extension = $upload['extension'];
+    $pdfBytes = null;
+
+    // JPG/PNG uploads are converted server-side to PDF so every stored klanturenstaat is a PDF.
+    if ($mimeType === 'image/jpeg' || $mimeType === 'image/png') {
+        $pdfBytes = customer_timesheet_convert_image_to_pdf_bytes($upload['tmp_name'], $mimeType);
+        if ($pdfBytes !== null) {
+            $mimeType = 'application/pdf';
+            $extension = 'pdf';
+        }
+    }
+
     $root = customer_timesheet_storage_root();
-    $relative = customer_timesheet_relative_path($companyId, $employeeId, $periodKey, $upload['extension']);
+    $relative = customer_timesheet_relative_path($companyId, $employeeId, $periodKey, $extension);
     $absolute = rtrim($root, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
 
     customer_timesheet_mkdir_for($absolute);
 
-    if (!move_uploaded_file($upload['tmp_name'], $absolute)) {
+    if ($pdfBytes !== null) {
+        if (file_put_contents($absolute, $pdfBytes) === false) {
+            customer_timesheet_json([
+                'ok' => false,
+                'error' => 'storage-failed',
+                'message' => 'De geuploade klanturenstaat kon niet worden opgeslagen.',
+            ], 500);
+        }
+    } elseif (!move_uploaded_file($upload['tmp_name'], $absolute)) {
         customer_timesheet_json([
             'ok' => false,
             'error' => 'storage-failed',
@@ -364,7 +424,7 @@ function customer_timesheet_store_upload(array $upload, int $companyId, int $emp
         'storage_key' => $relative,
         'stored_file_name' => basename($absolute),
         'original_file_name' => $upload['original_name'],
-        'mime_type' => $upload['mime_type'],
+        'mime_type' => $mimeType,
         'absolute_path' => $absolute,
     ];
 }

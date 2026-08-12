@@ -17,6 +17,11 @@
 
 | Case ID | Type | Feature file | Scenario | Steps mapping | Source | Allure parentSuite | Allure Feature | Allure Story | Flow | Fase | Status |
 |---|---|---|---|---|---|---|---|---|---|---:|---|
+| A11Y-H-001 | ui | accessibility.feature | loginformulier is volledig met het toetsenbord bruikbaar en correct gelabeld | accessibility.steps.ts | accessibility.spec.ts | UI Desktop | Accessibility | loginformulier is volledig met het toetsenbord bruikbaar en correct gelabeld | Happy | 15 | Actueel |
+| A11Y-H-002 | ui | accessibility.feature | admin-dashboard hoofdnavigatie is toetsenbordbereikbaar met herkenbare namen | accessibility.steps.ts | accessibility.spec.ts | UI Desktop | Accessibility | admin-dashboard hoofdnavigatie is toetsenbordbereikbaar met herkenbare namen | Happy | 15 | Actueel |
+| ADM-WR-H-001 | api | admin-writes.feature | admin kan company/settings server-led opslaan | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | admin kan company/settings server-led opslaan | Happy | 2 | Actueel |
+| ADM-WR-H-002 | api | admin-writes.feature | admin kan beheerder server-led aanmaken en wijzigen | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | admin kan beheerder server-led aanmaken en wijzigen | Happy | 2 | Actueel |
+| ADM-WR-H-003 | api | admin-writes.feature | admin kan medewerker server-led aanmaken en bootstrap ziet deze terug | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | admin kan medewerker server-led aanmaken en bootstrap ziet deze terug | Happy | 2 | Actueel |
 | AUD-H-001 | api | audit-log.feature | admin kan auditlog ophalen | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | admin kan auditlog ophalen | Happy | 16 | Actueel |
 | AUD-H-002 | api | audit-log.feature | auditlog filtert op entity_type | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | auditlog filtert op entity_type | Happy | 16 | Actueel |
 | AUD-H-003 | api | audit-log.feature | auditlog filtert op event_type | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | auditlog filtert op event_type | Happy | 16 | Actueel |
@@ -38,10 +43,20 @@
 | CTS-API-N-007 | api | customer-timesheets.feature | employee kan geen admin reviewactie uitvoeren op klanturenstaat | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Negative | 10 | Actueel |
 | CTS-API-H-004 | api | customer-timesheets.feature | employee kan mark_skipped registreren en restore_missing terugdraaien | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Happy | 10 | Actueel |
 | CTS-API-N-005 | api | customer-timesheets.feature | employee krijgt 400 bij ongeldig bestandstype | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Negative | 10 | Actueel |
+| CTS-API-H-005 | api | customer-timesheets.feature | JPG-upload wordt server-side automatisch als PDF opgeslagen | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Happy | 10 | Actueel |
+| CTS-API-N-008 | api | customer-timesheets.feature | employee krijgt 400 bij een te grote klanturenstaat-upload | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Negative | 10 | Actueel |
 | DASH-H-001 | ui | dashboard.feature | admin dashboard opent zonder console errors | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | admin dashboard opent zonder console errors | Happy | 15 | Actueel |
 | DASH-H-002 | ui | dashboard.feature | employee dashboard opent zonder console errors | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | employee dashboard opent zonder console errors | Happy | 15 | Actueel |
 | DASH-N-007 | ui | dashboard.feature | afwijkend API-totaal overschrijft de concrete werkvoorraad niet | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | afwijkend API-totaal overschrijft de concrete werkvoorraad niet | Negative | 15 | Actueel |
 | DASH-N-008 | ui | dashboard.feature | voorbeeldgegevens herstellen houdt alle werkvoorraadtellers gelijk | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | voorbeeldgegevens herstellen houdt alle werkvoorraadtellers gelijk | Negative | 15 | Actueel |
+| DASH-N-010 | ui | dashboard.feature | herstel blijft na F5 leidend boven een oude serverstatus | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | herstel blijft na F5 leidend boven een oude serverstatus | Negative | 15 | Actueel |
+| DASH-H-008 | ui | dashboard.feature | GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker en Backoffice | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker en Backoffice | Happy | 15 | Actueel |
+| DASH-N-009 | ui | dashboard.feature | medewerker teller blijft stabiel bij aug-juli-aug en dashboard triggert geen verborgen timesheet-read | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | medewerker teller blijft stabiel bij aug-juli-aug en dashboard triggert geen verborgen timesheet-read | Negative | 15 | Actueel |
+| DASH-H-003 | ui | dashboard.feature | medewerkerdashboard ververst meteen na ureninvoer en themakiezer blijft leesbaar | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | medewerkerdashboard ververst meteen na ureninvoer en themakiezer blijft leesbaar | Happy | 15 | Actueel |
+| DASH-H-004 | ui | dashboard.feature | terugkeren naar medewerkerdashboard ververst de uren en behoudt maandlabels bij themawissel | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | terugkeren naar medewerkerdashboard ververst de uren en behoudt maandlabels bij themawissel | Happy | 15 | Actueel |
+| DASH-H-005 | ui | dashboard.feature | medewerker ziet open maanden compact en kan direct naar de juiste maand springen | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | medewerker ziet open maanden compact en kan direct naar de juiste maand springen | Happy | 15 | Actueel |
+| DASH-H-006 | ui | dashboard.feature | vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie | Happy | 15 | Actueel |
+| DASH-H-007 | ui | dashboard.feature | dashboardknop behoudt de geldige maand en medewerkeroverzichten | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | dashboardknop behoudt de geldige maand en medewerkeroverzichten | Happy | 15 | Actueel |
 | EQ-H-001 | api | email-queue.feature | factuurlock maakt queue-items aan met dry_run=true | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | factuurlock maakt queue-items aan met dry_run=true | Happy | 12 | Actueel |
 | EQ-H-002 | api | email-queue.feature | broker-channel heeft attachment_policy invoice | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | broker-channel heeft attachment_policy invoice | Happy | 12 | Actueel |
 | EQ-H-003 | api | email-queue.feature | EasySalary-channel heeft attachment_policy none | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | EasySalary-channel heeft attachment_policy none | Happy | 12 | Actueel |
@@ -62,10 +77,13 @@
 | INV-N-010 | integration | invoice-locking.feature | niet-goedgekeurde urenstaat kan niet worden gelockt | invoice-locking.steps.ts | invoice-lock.spec.ts | DB / Integratie | Facturatie | Factuur definitief maken | Negative | 11 | Actueel |
 | INV-N-011 | integration | invoice-locking.feature | tweede lock-oproep op dezelfde factuur wordt geblokkeerd | invoice-locking.steps.ts | invoice-lock.spec.ts | DB / Integratie | Facturatie | Factuur definitief maken | Negative | 11 | Actueel |
 | INV-N-012 | integration | invoice-locking.feature | gelijktijdige lock-requests leveren exact één winnaar | invoice-locking.steps.ts | invoice-lock.spec.ts | DB / Integratie | Facturatie | Factuur definitief maken | Negative | 11 | Actueel |
+| INV-N-013 | integration | invoice-locking.feature | anonieme gebruiker kan factuur-PDF niet downloaden | invoice-locking.steps.ts | invoice-lock.spec.ts | DB / Integratie | Facturatie | anonieme gebruiker kan factuur-PDF niet downloaden | Negative | 11 | Actueel |
 | INV-H-001 | ui | invoices-ui.feature | admin facturen zichtbaar en console errors 0 | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | admin facturen zichtbaar en console errors 0 | Happy | 11 | Actueel |
 | INV-N-005 | ui | invoices-ui.feature | employee facturen zichtbaar maar beperkt en console errors 0 | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | employee facturen zichtbaar maar beperkt en console errors 0 | Negative | 11 | Actueel |
 | INV-H-002 | ui | invoices-ui.feature | periodefilter juli en augustus werkt | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | periodefilter juli en augustus werkt | Happy | 11 | Actueel |
 | INV-H-003 | ui | invoices-ui.feature | server berekent bedrag uit uren en uurtarief voor open facturen | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | server berekent bedrag uit uren en uurtarief voor open facturen | Happy | 11 | Actueel |
+| INV-H-006 | ui | invoices-ui.feature | admin kan het gekozen maanddetail inklappen en weer uitklappen | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | admin kan het gekozen maanddetail inklappen en weer uitklappen | Happy | 11 | Actueel |
+| INV-H-007 | ui | invoices-ui.feature | factuurnavigatie onderscheidt geblokkeerde en controleklare maanden met oranje en groen | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | factuurnavigatie onderscheidt geblokkeerde en controleklare maanden met oranje en groen | Happy | 11 | Actueel |
 | INV-N-007 | ui | invoices-ui.feature | ongeldige periodefilter geeft nette 400-fout | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | ongeldige periodefilter geeft nette 400-fout | Negative | 11 | Actueel |
 | MOB-H-001 | ui | mobile.feature | mobiele login navigatie en dashboard blijven volledig bereikbaar | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | Veilige toegang en sessies | Happy | 15 | Actueel |
 | MOB-H-002 | ui | mobile.feature | mobiele medewerker kan concepturen opslaan indienen en documentupload bereiken | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | Uren registreren en indienen | Happy | 15 | Actueel |
@@ -120,9 +138,16 @@
 | SEC-N-005 | security | security.feature | csrf-endpoint weigert POST | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 5 | Actueel |
 | SEC-N-006 | security | security.feature | login-endpoint weigert GET | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 5 | Actueel |
 | SEC-N-007 | security | security.feature | logout-endpoint weigert GET | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 5 | Actueel |
+| SEC-H-005 | security | security.feature | sessiecode bevat expliciete timeout-check en sliding expiration | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
+| SEC-H-006 | security | security.feature | herhaalde mislukte loginpogingen maken security-audit event | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
+| SEC-H-007 | security | security.feature | config voorbeeld bevat voorbereide CSP/CORS/HSTS flags | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
 | TS-REV-API-H-005 | integration | timesheets-review-integration.feature | admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
+| TS-REV-API-H-006 | integration | timesheets-review-integration.feature | gelijktijdige approve-requests door twee beheerders leveren exact één winnaar | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
+| TS-REV-API-H-007 | integration | timesheets-review-integration.feature | jaarwisseling december naar januari verwerkt urenstaten correct over de jaargrens | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
 | TS-REV-UI-H-008 | ui | timesheets-review-ui.feature | browserflow: admin vraagt correctie, medewerker dient opnieuw in, admin keurt goed | timesheets-review-ui.steps.ts | timesheet-review-ui.spec.ts | UI Desktop | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
-| TS-API-H-001 | api | timesheets-api.feature | employee save draft, read back, submit, audit en gesloten status guard | timesheets-api.steps.ts | timesheet-write.spec.ts | API | Urenregistratie | Uren registreren en indienen | Happy | 8 | Actueel |
+| TS-REV-UI-H-009 | ui | timesheets-review-ui.feature | medewerker kan een ingediende urenstaat opnieuw indienen | timesheets-review-ui.steps.ts | timesheet-review-ui.spec.ts | UI Desktop | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
+| TS-REV-UI-H-010 | ui | timesheets-review-ui.feature | submitknop is verborgen bij goedgekeurde urenstaat | timesheets-review-ui.steps.ts | timesheet-review-ui.spec.ts | UI Desktop | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
+| TS-API-H-001 | api | timesheets-api.feature | employee save draft, read back, submit, bewerkt en dient opnieuw in | timesheets-api.steps.ts | timesheet-write.spec.ts | API | Urenregistratie | Uren registreren en indienen | Happy | 8 | Actueel |
 | TS-API-N-010 | api | timesheets-api.feature | employee mag geen andere medewerker schrijven | timesheets-api.steps.ts | timesheet-write.spec.ts | API | Urenregistratie | Uren registreren en indienen | Negative | 8 | Actueel |
 | TS-API-N-011 | api | timesheets-api.feature | write zonder csrf geeft 403 | timesheets-api.steps.ts | timesheet-write.spec.ts | API | Urenregistratie | Uren registreren en indienen | Negative | 8 | Actueel |
 | TS-API-N-003 | api | timesheets-api.feature | write zonder sessie geeft 401 | timesheets-api.steps.ts | timesheet-write.spec.ts | API | Urenregistratie | Uren registreren en indienen | Negative | 8 | Actueel |
@@ -138,10 +163,10 @@
 
 ## Totalen
 
-- Playwright executable cases: 117
+- Playwright executable cases: 142
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 118
-- Playwright features: 18
+- Totaal unieke executable cases: 143
+- Playwright features: 20
 - Database features: 1
-- Playwright steps mappings: 18
+- Playwright steps mappings: 20
 - Database steps mappings: 1

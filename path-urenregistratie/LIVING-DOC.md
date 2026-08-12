@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 117 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 142 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 117 unieke case-ID's
-- SQL/DB executable cases: 1 unieke case-ID
-- Totaal executable cases: 118 unieke case-ID's
-- Playwright features: 18
+- Playwright executable cases: 142 unieke case-ID's
+- SQL/DB executable cases: 1 unieke case-ID('s)
+- Totaal executable cases: 143 unieke case-ID's
+- Playwright features: 20
 - Database features: 1
-- Playwright steps mappings: 18
+- Playwright steps mappings: 20
 - Database steps mappings: 1
-- Uitvoeringen: 121
-- Niet-mobile projectuitvoeringen: 113
+- Uitvoeringen: 146
+- Niet-mobile projectuitvoeringen: 138
 - Mobile functionele cases: 4
 - Pixel 7 / Chromium-uitvoeringen: 4
 - iPhone 13 / WebKit-uitvoeringen: 4
 
-De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 Playwright-functionele cases in totaal 121 resultaten op: 113 + (4 x 2) = 121.
+De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 142 Playwright-functionele cases in totaal 146 resultaten op: 138 + (4 x 2) = 146.
 
 ## Documentatieketen
 
@@ -28,6 +28,25 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 Playw
 5. Allure: functionele Suites en Behaviors, met project/device als metadata.
 
 ## Dekking
+
+### Basistoegankelijkheid en toetsenbordbediening
+
+- Feature: `tests/playwright/features/accessibility.feature`
+- Source: `tests/playwright/accessibility.spec.ts`
+- Cases: 2
+
+- [A11Y-H-001] loginformulier is volledig met het toetsenbord bruikbaar en correct gelabeld
+- [A11Y-H-002] admin-dashboard hoofdnavigatie is toetsenbordbereikbaar met herkenbare namen
+
+### Server-led beheer- en instellingenwrites
+
+- Feature: `tests/playwright/features/admin-writes.feature`
+- Source: `tests/playwright/admin-writes.spec.ts`
+- Cases: 3
+
+- [ADM-WR-H-001] admin kan company/settings server-led opslaan
+- [ADM-WR-H-002] admin kan beheerder server-led aanmaken en wijzigen
+- [ADM-WR-H-003] admin kan medewerker server-led aanmaken en bootstrap ziet deze terug
 
 ### Auditlog en traceerbaarheid
 
@@ -63,24 +82,34 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 Playw
 
 - Feature: `tests/playwright/features/customer-timesheets.feature`
 - Source: `tests/playwright/customer-timesheet-api.spec.ts`
-- Cases: 5
+- Cases: 7
 
 - [CTS-API-H-001] employee uploadt klanturenstaat, dient in en downloadt; admin kan goedkeuren en resubmit vragen
 - [CTS-API-N-006] employee kan geen klanturenstaat voor andere medewerker wijzigen
 - [CTS-API-N-007] employee kan geen admin reviewactie uitvoeren op klanturenstaat
 - [CTS-API-H-004] employee kan mark_skipped registreren en restore_missing terugdraaien
 - [CTS-API-N-005] employee krijgt 400 bij ongeldig bestandstype
+- [CTS-API-H-005] JPG-upload wordt server-side automatisch als PDF opgeslagen
+- [CTS-API-N-008] employee krijgt 400 bij een te grote klanturenstaat-upload
 
 ### Dashboardweergave
 
 - Feature: `tests/playwright/features/dashboard.feature`
 - Source: `tests/playwright/dashboard.spec.ts`
-- Cases: 4
+- Cases: 12
 
 - [DASH-H-001] admin dashboard opent zonder console errors
 - [DASH-H-002] employee dashboard opent zonder console errors
 - [DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad niet
 - [DASH-N-008] voorbeeldgegevens herstellen houdt alle werkvoorraadtellers gelijk
+- [DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus
+- [DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker en Backoffice
+- [DASH-N-009] medewerker teller blijft stabiel bij aug-juli-aug en dashboard triggert geen verborgen timesheet-read
+- [DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakiezer blijft leesbaar
+- [DASH-H-004] terugkeren naar medewerkerdashboard ververst de uren en behoudt maandlabels bij themawissel
+- [DASH-H-005] medewerker ziet open maanden compact en kan direct naar de juiste maand springen
+- [DASH-H-006] vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie
+- [DASH-H-007] dashboardknop behoudt de geldige maand en medewerkeroverzichten
 
 ### E-mailqueue en afleverbeleid
 
@@ -107,7 +136,7 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 Playw
 
 - Feature: `tests/playwright/features/invoice-locking.feature`
 - Source: `tests/playwright/invoice-lock.spec.ts`
-- Cases: 6
+- Cases: 7
 
 - [INV-H-004] admin lockt approved timesheet naar definitieve immutable factuur
 - [INV-N-008] anonieme gebruiker kan factuur niet locken
@@ -115,17 +144,20 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 Playw
 - [INV-N-010] niet-goedgekeurde urenstaat kan niet worden gelockt
 - [INV-N-011] tweede lock-oproep op dezelfde factuur wordt geblokkeerd
 - [INV-N-012] gelijktijdige lock-requests leveren exact één winnaar
+- [INV-N-013] anonieme gebruiker kan factuur-PDF niet downloaden
 
 ### Factuurweergave in de desktop-UI
 
 - Feature: `tests/playwright/features/invoices-ui.feature`
 - Source: `tests/playwright/invoices.spec.ts`
-- Cases: 5
+- Cases: 7
 
 - [INV-H-001] admin facturen zichtbaar en console errors 0
 - [INV-N-005] employee facturen zichtbaar maar beperkt en console errors 0
 - [INV-H-002] periodefilter juli en augustus werkt
 - [INV-H-003] server berekent bedrag uit uren en uurtarief voor open facturen
+- [INV-H-006] admin kan het gekozen maanddetail inklappen en weer uitklappen
+- [INV-H-007] factuurnavigatie onderscheidt geblokkeerde en controleklare maanden met oranje en groen
 - [INV-N-007] ongeldige periodefilter geeft nette 400-fout
 
 ### Mobiele gebruikerservaring
@@ -216,7 +248,7 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 Playw
 
 - Feature: `tests/playwright/features/security.feature`
 - Source: `tests/playwright/security.spec.ts`
-- Cases: 11
+- Cases: 14
 
 - [SEC-H-001] csrf token endpoint werkt
 - [SEC-H-002] login met csrf werkt
@@ -229,22 +261,29 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 Playw
 - [SEC-N-005] csrf-endpoint weigert POST
 - [SEC-N-006] login-endpoint weigert GET
 - [SEC-N-007] logout-endpoint weigert GET
+- [SEC-H-005] sessiecode bevat expliciete timeout-check en sliding expiration
+- [SEC-H-006] herhaalde mislukte loginpogingen maken security-audit event
+- [SEC-H-007] config voorbeeld bevat voorbereide CSP/CORS/HSTS flags
 
 ### Correctie en goedkeuring met optimistic locking
 
 - Feature: `tests/playwright/features/timesheets-review-integration.feature`
 - Source: `tests/playwright/timesheet-review-flow.spec.ts`
-- Cases: 1
+- Cases: 3
 
 - [TS-REV-API-H-005] admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking
+- [TS-REV-API-H-006] gelijktijdige approve-requests door twee beheerders leveren exact één winnaar
+- [TS-REV-API-H-007] jaarwisseling december naar januari verwerkt urenstaten correct over de jaargrens
 
 ### Correctie en goedkeuring in de desktop-UI
 
 - Feature: `tests/playwright/features/timesheets-review-ui.feature`
 - Source: `tests/playwright/timesheet-review-ui.spec.ts`
-- Cases: 1
+- Cases: 3
 
 - [TS-REV-UI-H-008] browserflow: admin vraagt correctie, medewerker dient opnieuw in, admin keurt goed
+- [TS-REV-UI-H-009] medewerker kan een ingediende urenstaat opnieuw indienen
+- [TS-REV-UI-H-010] submitknop is verborgen bij goedgekeurde urenstaat
 
 ### Urenregistratie via API
 
@@ -252,7 +291,7 @@ De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 Playw
 - Source: `tests/playwright/timesheet-write.spec.ts`
 - Cases: 5
 
-- [TS-API-H-001] employee save draft, read back, submit, audit en gesloten status guard
+- [TS-API-H-001] employee save draft, read back, submit, bewerkt en dient opnieuw in
 - [TS-API-N-010] employee mag geen andere medewerker schrijven
 - [TS-API-N-011] write zonder csrf geeft 403
 - [TS-API-N-003] write zonder sessie geeft 401

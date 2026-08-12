@@ -19,6 +19,36 @@ Feature: Dashboardweergave in Path Uren & Facturatie
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
 
+  @negative
+  Scenario: [DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad niet
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
+  @negative
+  Scenario: [DASH-N-008] voorbeeldgegevens herstellen houdt alle werkvoorraadtellers gelijk
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
+  @negative
+  Scenario: [DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
+  @happy
+  Scenario: [DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker en Backoffice
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
+  @negative
+  Scenario: [DASH-N-009] medewerker teller blijft stabiel bij aug-juli-aug en dashboard triggert geen verborgen timesheet-read
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
   @happy
   Scenario: [DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakiezer blijft leesbaar
     Given de uitvoerbare Playwright-case is voorbereid
@@ -44,31 +74,7 @@ Feature: Dashboardweergave in Path Uren & Facturatie
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
 
   @happy
-  Scenario: [DASH-H-007] dashboardknop herstelt de standaardmaand en medewerkeroverzichten
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
-
-  @negative
-  Scenario: [DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad niet
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
-
-  @negative
-  Scenario: [DASH-N-008] voorbeeldgegevens herstellen houdt alle werkvoorraadtellers gelijk
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
-
-  @negative
-  Scenario: [DASH-N-009] medewerker teller blijft stabiel bij aug-juli-aug en dashboard triggert geen verborgen timesheet-read
-    Given de uitvoerbare Playwright-case is voorbereid
-    When de beschreven businessflow wordt uitgevoerd
-    Then wordt het verwachte resultaat aantoonbaar gevalideerd
-
-  @negative
-  Scenario: [DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus
+  Scenario: [DASH-H-007] dashboardknop behoudt de geldige maand en medewerkeroverzichten
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd

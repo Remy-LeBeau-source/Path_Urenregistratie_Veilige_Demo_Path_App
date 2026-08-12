@@ -24,6 +24,18 @@ export class InvoiceApi {
     };
   }
 
+  async downloadPdf(invoiceId: number) {
+    const endpoint = `/server/api/invoices.php?action=download&invoice_id=${encodeURIComponent(String(invoiceId))}`;
+    const response = await this.request.get(endpoint);
+    const body = await response.body();
+    await attachApiExchange({ method: 'GET', endpoint, responseStatus: response.status(), responseBody: body });
+    return {
+      status: response.status(),
+      contentType: response.headers()['content-type'] || '',
+      body,
+    };
+  }
+
   async lock(payload: LockPayload) {
     const csrfResponse = await this.request.get('/server/auth/csrf.php');
     if (!csrfResponse.ok()) {

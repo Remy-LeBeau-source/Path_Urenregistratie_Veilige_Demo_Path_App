@@ -1,8 +1,7 @@
 @regressie
 @api
-@admin
-@fase:17
-Feature: Admin write-endpoints in Path Uren & Facturatie
+@fase:2
+Feature: Server-led beheer- en instellingenwrites in Path Uren & Facturatie
 
   # Native Playwright-uitvoering: tests/playwright/admin-writes.spec.ts
   # Navigatiemapping: tests/playwright/steps/admin-writes.steps.ts

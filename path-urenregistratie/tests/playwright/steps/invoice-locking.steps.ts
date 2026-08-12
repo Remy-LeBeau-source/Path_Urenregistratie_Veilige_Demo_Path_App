@@ -19,4 +19,5 @@ export const caseMappings = [
   { caseId: 'INV-N-010', spec: 'invoice-lock.spec.ts' },
   { caseId: 'INV-N-011', spec: 'invoice-lock.spec.ts' },
   { caseId: 'INV-N-012', spec: 'invoice-lock.spec.ts' },
+  { caseId: 'INV-N-013', spec: 'invoice-lock.spec.ts' },
 ] as const;

@@ -315,5 +315,92 @@ test.describe('customer timesheet api', () => {
       await authApi.logout();
     });
   });
+
+  test('[CTS-API-H-005] JPG-upload wordt server-side automatisch als PDF opgeslagen', async ({ request }) => {
+    const authApi = new AuthApi(request);
+    const customerApi = new CustomerTimesheetApi(request);
+
+    // Minimal valid 4x4 JPEG, generated locally via PHP GD to guarantee a real, decodable image.
+    const tinyJpegBase64 =
+      '/9j/4AAQSkZJRgABAQEAYABgAAD//gA7Q1JFQVRPUjogZ2QtanBlZyB2MS4wICh1c2luZyBJSkcgSlBFRyB2ODApLCBxdWFsaXR5ID0gODUK/9sAQwAFAwQEBAMFBAQEBQUFBgcMCAcHBwcPCwsJDBEPEhIRDxERExYcFxMUGhURERghGBodHR8fHxMXIiQiHiQcHh8e/9sAQwEFBQUHBgcOCAgOHhQRFB4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4e/8AAEQgABAAEAwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A5WiiivmT9wP/2Q==';
+    const tinyJpegBuffer = Buffer.from(tinyJpegBase64, 'base64');
+
+    let period = '';
+
+    await test.step('Given de medewerker is ingelogd', async () => {
+      const employeeLogin = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      expect(employeeLogin.user.role).toBe('employee');
+      period = await findWritablePeriod(customerApi);
+    });
+
+    await test.step('When de medewerker een JPG uploadt als concept-klanturenstaat', async () => {
+      const draft = await customerApi.write({
+        action: 'save_draft',
+        period,
+        file: {
+          name: 'klanturenstaat-foto.jpg',
+          mimeType: 'image/jpeg',
+          buffer: tinyJpegBuffer,
+        },
+      });
+
+      expect(draft.status).toBe(200);
+      expect(draft.body.ok).toBe(true);
+      expect(draft.body.customer_timesheet.status).toBe('draft');
+    });
+
+    await test.step('Then is het opgeslagen document een geldig PDF, geen JPG', async () => {
+      const readBack = await customerApi.read(period);
+      expect(readBack.status).toBe(200);
+      expect(readBack.body.customer_timesheet.mime_type).toBe('application/pdf');
+
+      const download = await customerApi.download(period);
+      expect(download.status).toBe(200);
+      expect(download.contentType).toContain('application/pdf');
+      expect(download.body.subarray(0, 5).toString('latin1')).toBe('%PDF-');
+    });
+
+    await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {
+      await authApi.logout();
+    });
+  });
+
+  test('[CTS-API-N-008] employee krijgt 400 bij een te grote klanturenstaat-upload', async ({ request }) => {
+    const authApi = new AuthApi(request);
+    const customerApi = new CustomerTimesheetApi(request);
+
+    let period = '';
+
+    await test.step('Given de medewerker is ingelogd', async () => {
+      const employeeLogin = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      expect(employeeLogin.user.role).toBe('employee');
+      period = await findWritablePeriod(customerApi);
+    });
+
+    await test.step('When de medewerker een PDF van ruim boven de 2 MB-limiet uploadt', async () => {
+      const oversizedBuffer = Buffer.concat([
+        Buffer.from('%PDF-1.4\n% oversized test file\n', 'utf8'),
+        Buffer.alloc(3 * 1024 * 1024, 0x41), // 3 MB of filler bytes, well over the 2 MB server-side limit
+      ]);
+
+      const oversizedUpload = await customerApi.write({
+        action: 'save_draft',
+        period,
+        file: {
+          name: 'te-groot-bestand.pdf',
+          mimeType: 'application/pdf',
+          buffer: oversizedBuffer,
+        },
+      });
+
+      expect(oversizedUpload.status).toBe(400);
+      expect(oversizedUpload.body.ok).toBe(false);
+      expect(oversizedUpload.body.error).toBe('invalid-upload');
+    });
+
+    await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {
+      await authApi.logout();
+    });
+  });
 });
 

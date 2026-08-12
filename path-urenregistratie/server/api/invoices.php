@@ -7,6 +7,7 @@ require_once __DIR__ . '/../security/csrf.php';
 require_once __DIR__ . '/../security/validation.php';
 require_once __DIR__ . '/../mail/queue.php';
 require_once __DIR__ . '/../mail/config.php';
+require_once __DIR__ . '/../lib/simple_pdf.php';
 
 header('Content-Type: application/json; charset=utf-8');
 auth_apply_cors_headers(auth_try_load_raw_config(), 'GET, POST, OPTIONS', 'Content-Type, X-CSRF-Token');
@@ -170,6 +171,169 @@ function invoices_allocate_number(PDO $pdo, int $companyId, string $template, in
 function invoices_round_money(float $value): float
 {
     return round($value, 2);
+}
+
+function invoices_pdf_storage_root(): string
+{
+    return dirname(__DIR__, 2) . '/../path-private/invoices';
+}
+
+function invoices_pdf_relative_path(int $companyId, int $invoiceId): string
+{
+    $token = bin2hex(random_bytes(8));
+    return (string)$companyId . '/' . (string)$invoiceId . '_' . $token . '.pdf';
+}
+
+function invoices_pdf_absolute_from_key(string $storageKey): string
+{
+    $root = rtrim(invoices_pdf_storage_root(), '/\\');
+    return $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, ltrim($storageKey, '/\\'));
+}
+
+/**
+ * Generate a server-side invoice PDF and persist it, filling pdf_storage_key.
+ * Never throws: PDF generation failure must not break the invoice lock flow.
+ */
+function invoices_generate_and_store_pdf(PDO $pdo, int $invoiceId, int $companyId): bool
+{
+    try {
+        $stmt = $pdo->prepare(
+            'SELECT i.invoice_number, i.invoice_date, i.due_date, i.subtotal, i.vat_percentage, i.vat_amount, i.total,
+                    e.full_name AS employee_name, t.billable_hours,
+                    CONCAT(p.year, "-", LPAD(p.month, 2, "0")) AS period_key,
+                    c.trade_name AS company_name, c.address_line, c.postal_code, c.city, c.vat_number, c.iban
+             FROM invoices i
+             JOIN timesheets t ON t.id = i.timesheet_id
+             JOIN employees e ON e.id = t.employee_id
+             JOIN periods p ON p.id = t.period_id
+             JOIN companies c ON c.id = i.company_id
+             WHERE i.id = :id AND i.company_id = :company_id
+             LIMIT 1'
+        );
+        $stmt->execute([':id' => $invoiceId, ':company_id' => $companyId]);
+        $row = $stmt->fetch();
+        if (!$row) {
+            return false;
+        }
+
+        $vatPercentageLabel = rtrim(rtrim(number_format((float)$row['vat_percentage'], 2, ',', '.'), '0'), ',');
+        $hoursLabel = rtrim(rtrim(number_format((float)$row['billable_hours'], 2, ',', '.'), '0'), ',');
+        $addressLine = trim(
+            trim((string)$row['address_line']) . ' '
+            . trim((string)$row['postal_code']) . ' '
+            . trim((string)$row['city'])
+        );
+
+        $lines = [
+            ['text' => (string)$row['company_name'], 'size' => 14],
+            ['text' => $addressLine, 'size' => 9],
+            ' ',
+            ['text' => 'Factuur ' . (string)$row['invoice_number'], 'size' => 13],
+            'Factuurdatum: ' . (string)$row['invoice_date'],
+            'Vervaldatum: ' . (string)$row['due_date'],
+            ' ',
+            'Medewerker: ' . (string)$row['employee_name'],
+            'Periode: ' . (string)$row['period_key'],
+            'Gewerkte uren: ' . $hoursLabel,
+            ' ',
+            'Subtotaal: EUR ' . number_format((float)$row['subtotal'], 2, ',', '.'),
+            'Btw (' . $vatPercentageLabel . '%): EUR ' . number_format((float)$row['vat_amount'], 2, ',', '.'),
+            ['text' => 'Totaal: EUR ' . number_format((float)$row['total'], 2, ',', '.'), 'size' => 12],
+        ];
+
+        $pdfBytes = simple_pdf_text_document($lines);
+        if (!simple_pdf_looks_valid($pdfBytes)) {
+            return false;
+        }
+
+        $relative = invoices_pdf_relative_path($companyId, $invoiceId);
+        $absolute = invoices_pdf_absolute_from_key($relative);
+        $dir = dirname($absolute);
+        if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
+            return false;
+        }
+
+        if (file_put_contents($absolute, $pdfBytes) === false) {
+            return false;
+        }
+
+        $update = $pdo->prepare('UPDATE invoices SET pdf_storage_key = :key WHERE id = :id');
+        $update->execute([':key' => $relative, ':id' => $invoiceId]);
+        return true;
+    } catch (Throwable $e) {
+        error_log('invoices_generate_and_store_pdf failed: ' . $e->getMessage());
+        return false;
+    }
+}
+
+/** Secure, scoped invoice PDF download: session required, company-scoped, employee limited to own invoices. */
+function invoices_download_pdf(PDO $pdo, array $currentUser, array $query): void
+{
+    $invoiceIdRaw = $query['invoice_id'] ?? null;
+    if (!(is_string($invoiceIdRaw) && ctype_digit($invoiceIdRaw) && (int)$invoiceIdRaw > 0)) {
+        auth_send_json([
+            'ok' => false,
+            'error' => 'invalid-payload',
+            'message' => 'invoice_id must be a positive integer.',
+        ], 400);
+    }
+
+    $invoiceId = (int)$invoiceIdRaw;
+    $companyId = (int)$currentUser['company_id'];
+    $isEmployee = (string)$currentUser['role'] === 'employee';
+
+    $sql = 'SELECT i.id, i.pdf_storage_key, i.invoice_number, t.employee_id
+            FROM invoices i
+            JOIN timesheets t ON t.id = i.timesheet_id
+            WHERE i.id = :id AND i.company_id = :company_id
+            LIMIT 1';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([':id' => $invoiceId, ':company_id' => $companyId]);
+    $row = $stmt->fetch();
+
+    if (!$row) {
+        auth_send_json([
+            'ok' => false,
+            'error' => 'invoice-not-found',
+            'message' => 'Invoice was not found in your company scope.',
+        ], 404);
+    }
+
+    if ($isEmployee) {
+        $employee = invoices_employee_context($pdo, $currentUser);
+        if ((int)$row['employee_id'] !== (int)$employee['id']) {
+            auth_send_json([
+                'ok' => false,
+                'error' => 'forbidden-action',
+                'message' => 'Employees may only download their own invoices.',
+            ], 403);
+        }
+    }
+
+    $storageKey = trim((string)($row['pdf_storage_key'] ?? ''));
+    if ($storageKey === '') {
+        auth_send_json([
+            'ok' => false,
+            'error' => 'invoice-pdf-missing',
+            'message' => 'For this invoice no PDF has been generated yet.',
+        ], 404);
+    }
+
+    $absolutePath = invoices_pdf_absolute_from_key($storageKey);
+    if (!is_file($absolutePath)) {
+        auth_send_json([
+            'ok' => false,
+            'error' => 'invoice-pdf-missing',
+            'message' => 'The stored PDF file was not found on the server.',
+        ], 404);
+    }
+
+    $downloadName = 'Factuur-' . preg_replace('/[^A-Za-z0-9_-]/', '_', (string)$row['invoice_number']) . '.pdf';
+    header('Content-Type: application/pdf');
+    header('Content-Length: ' . (string)filesize($absolutePath));
+    header('Content-Disposition: attachment; filename="' . $downloadName . '"');
+    readfile($absolutePath);
+    exit;
 }
 
 function invoices_read(PDO $pdo, array $currentUser, array $periodFilter): void
@@ -559,6 +723,9 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
             error_log('mail_enqueue_for_invoice failed: ' . $queueError->getMessage());
         }
 
+        // Generate the server-side invoice PDF after commit; never breaks the lock response on failure.
+        invoices_generate_and_store_pdf($pdo, $invoiceId, $companyId);
+
         auth_send_json([
             'ok' => true,
             'action' => 'lock',
@@ -599,6 +766,10 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
 $method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
 
 if ($method === 'GET') {
+    if ((string)($_GET['action'] ?? '') === 'download') {
+        invoices_download_pdf($pdo, $currentUser, $_GET);
+    }
+
     $periodFilter = invoices_parse_period(isset($_GET['period']) ? (string)$_GET['period'] : null);
     invoices_read($pdo, $currentUser, $periodFilter);
 }

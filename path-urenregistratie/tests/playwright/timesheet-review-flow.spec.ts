@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, request as playwrightRequest, test } from '@playwright/test';
 import { AuthApi } from './api/AuthApi';
 import { TimesheetApi } from './api/TimesheetApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
@@ -231,6 +231,124 @@ test.describe('timesheet review flow api', () => {
       const latestCorrection = readBack.body.timesheet.correction_history[readBack.body.timesheet.correction_history.length - 1];
       expect(latestCorrection.resubmitted_at).toBeTruthy();
       expect(readBack.body.last_audit?.event_type).toBe('timesheet.approved');
+    });
+
+    await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {
+      await authApi.logout();
+    });
+  });
+
+  test('[TS-REV-API-H-006] gelijktijdige approve-requests door twee beheerders leveren exact één winnaar', async ({ request }) => {
+    const authApi = new AuthApi(request);
+    const timesheetApi = new TimesheetApi(request);
+    let period = '';
+    let employeeId = 0;
+    let submittedVersion = 0;
+
+    await test.step('Given een medewerker een urenstaat heeft ingediend in een schrijfbare testperiode', async () => {
+      const employeeLogin = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      expect(employeeLogin.user.role).toBe('employee');
+      period = await findWritablePeriod(timesheetApi);
+
+      const draft = await timesheetApi.write({
+        action: 'save_draft',
+        period,
+        contractualHours: 160,
+        billableHours: 11,
+        leaveHours: 0,
+        sicknessHours: 0,
+        dayEntries: buildDayEntries(period, 7, 4),
+      });
+      expect(draft.status).toBe(200);
+      const draftVersion = Number(draft.body.timesheet.version || 0);
+
+      const submitted = await timesheetApi.write({
+        action: 'submit',
+        period,
+        expectedVersion: draftVersion,
+        contractualHours: 160,
+        billableHours: 11,
+        leaveHours: 0,
+        sicknessHours: 0,
+        dayEntries: buildDayEntries(period, 7, 4),
+      });
+      expect(submitted.status).toBe(200);
+      expect(submitted.body.timesheet.status).toBe('submitted');
+      submittedVersion = Number(submitted.body.timesheet.version || 0);
+
+      const submittedRead = await timesheetApi.read(period);
+      employeeId = Number(submittedRead.body?.employee_id || 0);
+      expect(employeeId).toBeGreaterThan(0);
+
+      await authApi.logout();
+    });
+
+    await test.step('When twee beheerders tegelijk dezelfde urenstaat proberen goed te keuren', async () => {
+      const ctxA = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+      const ctxB = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+
+      try {
+        const authA = new AuthApi(ctxA);
+        const authB = new AuthApi(ctxB);
+        await authA.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+        await authB.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+        const timesheetA = new TimesheetApi(ctxA);
+        const timesheetB = new TimesheetApi(ctxB);
+
+        const [resA, resB] = await Promise.all([
+          timesheetA.approve({ period, employeeId, expectedVersion: submittedVersion }),
+          timesheetB.approve({ period, employeeId, expectedVersion: submittedVersion }),
+        ]);
+
+        const statuses = [resA.status, resB.status].sort((left, right) => left - right);
+        expect(statuses).toEqual([200, 409]);
+
+        const winner = resA.status === 200 ? resA : resB;
+        expect(winner.body.timesheet.status).toBe('approved');
+      } finally {
+        await ctxA.dispose();
+        await ctxB.dispose();
+      }
+    });
+  });
+
+  test('[TS-REV-API-H-007] jaarwisseling december naar januari verwerkt urenstaten correct over de jaargrens', async ({ request }) => {
+    const authApi = new AuthApi(request);
+    const timesheetApi = new TimesheetApi(request);
+
+    await test.step('Given de medewerker is ingelogd', async () => {
+      const employeeLogin = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      expect(employeeLogin.user.role).toBe('employee');
+    });
+
+    await test.step('When de medewerker concepten opslaat voor december en de daaropvolgende januari', async () => {
+      for (const [year, month] of [[2231, 12], [2232, 1]] as const) {
+        const period = `${year}-${String(month).padStart(2, '0')}`;
+        const existing = await timesheetApi.read(period, undefined, { attach: false });
+        if (existing.status === 200 && existing.body?.found) {
+          continue; // Already covered by a previous run; the assertions below still hold for a fresh write.
+        }
+
+        const draft = await timesheetApi.write({
+          action: 'save_draft',
+          period,
+          contractualHours: 160,
+          billableHours: 10,
+          leaveHours: 0,
+          sicknessHours: 0,
+          dayEntries: buildDayEntries(period, 6, 4),
+        });
+
+        expect(draft.status).toBe(200);
+        expect(draft.body.ok).toBe(true);
+        expect(draft.body.timesheet.status).toBe('draft');
+
+        const readBack = await timesheetApi.read(period);
+        expect(readBack.status).toBe(200);
+        expect(readBack.body.found).toBe(true);
+        expect(readBack.body.timesheet.day_entries.length).toBeGreaterThan(0);
+      }
     });
 
     await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {

@@ -41,3 +41,9 @@ Feature: Definitieve facturen en locking in Path Uren & Facturatie
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
+  @negative
+  Scenario: [INV-N-013] anonieme gebruiker kan factuur-PDF niet downloaden
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd

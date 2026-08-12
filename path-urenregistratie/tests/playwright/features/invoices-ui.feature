@@ -38,7 +38,7 @@ Feature: Factuurweergave in de desktop-UI in Path Uren & Facturatie
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
 
   @happy
-  Scenario: [INV-H-007] navigatie onderscheidt medewerkerwachtwerk en factuurmaanden met oranje en groen
+  Scenario: [INV-H-007] factuurnavigatie onderscheidt geblokkeerde en controleklare maanden met oranje en groen
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd

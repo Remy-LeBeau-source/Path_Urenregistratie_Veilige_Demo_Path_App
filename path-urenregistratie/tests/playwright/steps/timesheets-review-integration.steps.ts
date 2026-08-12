@@ -14,4 +14,6 @@ Then('wordt het verwachte resultaat aantoonbaar gevalideerd', () => undefined);
 
 export const caseMappings = [
   { caseId: 'TS-REV-API-H-005', spec: 'timesheet-review-flow.spec.ts' },
+  { caseId: 'TS-REV-API-H-006', spec: 'timesheet-review-flow.spec.ts' },
+  { caseId: 'TS-REV-API-H-007', spec: 'timesheet-review-flow.spec.ts' },
 ] as const;

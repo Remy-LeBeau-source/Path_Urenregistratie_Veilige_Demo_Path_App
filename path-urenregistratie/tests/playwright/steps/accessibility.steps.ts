@@ -1,4 +1,4 @@
-// Navigation-only mapping for admin-writes.feature.
+// Navigation-only mapping for accessibility.feature.
 // Native Playwright remains the executable source of truth; no Cucumber runner is used.
 
 type StepPattern = string | RegExp;
@@ -13,7 +13,6 @@ When('de beschreven businessflow wordt uitgevoerd', () => undefined);
 Then('wordt het verwachte resultaat aantoonbaar gevalideerd', () => undefined);
 
 export const caseMappings = [
-  { caseId: 'ADM-WR-H-001', spec: 'admin-writes.spec.ts' },
-  { caseId: 'ADM-WR-H-002', spec: 'admin-writes.spec.ts' },
-  { caseId: 'ADM-WR-H-003', spec: 'admin-writes.spec.ts' },
+  { caseId: 'A11Y-H-001', spec: 'accessibility.spec.ts' },
+  { caseId: 'A11Y-H-002', spec: 'accessibility.spec.ts' },
 ] as const;

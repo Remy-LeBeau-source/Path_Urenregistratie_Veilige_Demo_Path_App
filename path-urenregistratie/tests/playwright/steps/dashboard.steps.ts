@@ -15,13 +15,14 @@ Then('wordt het verwachte resultaat aantoonbaar gevalideerd', () => undefined);
 export const caseMappings = [
   { caseId: 'DASH-H-001', spec: 'dashboard.spec.ts' },
   { caseId: 'DASH-H-002', spec: 'dashboard.spec.ts' },
+  { caseId: 'DASH-N-007', spec: 'dashboard.spec.ts' },
+  { caseId: 'DASH-N-008', spec: 'dashboard.spec.ts' },
+  { caseId: 'DASH-N-010', spec: 'dashboard.spec.ts' },
+  { caseId: 'DASH-H-008', spec: 'dashboard.spec.ts' },
+  { caseId: 'DASH-N-009', spec: 'dashboard.spec.ts' },
   { caseId: 'DASH-H-003', spec: 'dashboard.spec.ts' },
   { caseId: 'DASH-H-004', spec: 'dashboard.spec.ts' },
   { caseId: 'DASH-H-005', spec: 'dashboard.spec.ts' },
   { caseId: 'DASH-H-006', spec: 'dashboard.spec.ts' },
   { caseId: 'DASH-H-007', spec: 'dashboard.spec.ts' },
-  { caseId: 'DASH-N-007', spec: 'dashboard.spec.ts' },
-  { caseId: 'DASH-N-008', spec: 'dashboard.spec.ts' },
-  { caseId: 'DASH-N-009', spec: 'dashboard.spec.ts' },
-  { caseId: 'DASH-N-010', spec: 'dashboard.spec.ts' },
 ] as const;

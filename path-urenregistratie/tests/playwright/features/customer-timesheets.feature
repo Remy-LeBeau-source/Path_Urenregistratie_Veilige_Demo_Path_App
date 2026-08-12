@@ -35,3 +35,15 @@ Feature: Klanturenstaten via API in Path Uren & Facturatie
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
+  @happy
+  Scenario: [CTS-API-H-005] JPG-upload wordt server-side automatisch als PDF opgeslagen
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
+  @negative
+  Scenario: [CTS-API-N-008] employee krijgt 400 bij een te grote klanturenstaat-upload
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd

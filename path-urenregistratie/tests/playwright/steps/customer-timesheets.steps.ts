@@ -18,4 +18,6 @@ export const caseMappings = [
   { caseId: 'CTS-API-N-007', spec: 'customer-timesheet-api.spec.ts' },
   { caseId: 'CTS-API-H-004', spec: 'customer-timesheet-api.spec.ts' },
   { caseId: 'CTS-API-N-005', spec: 'customer-timesheet-api.spec.ts' },
+  { caseId: 'CTS-API-H-005', spec: 'customer-timesheet-api.spec.ts' },
+  { caseId: 'CTS-API-N-008', spec: 'customer-timesheet-api.spec.ts' },
 ] as const;

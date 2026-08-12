@@ -7,6 +7,8 @@ const featuresDir = path.join(playwrightDir, 'features');
 const stepsDir = path.join(playwrightDir, 'steps');
 
 const definitions = [
+  { kind: 'playwright', spec: 'accessibility.spec.ts', feature: 'accessibility.feature', steps: 'accessibility.steps.ts', name: 'Basistoegankelijkheid en toetsenbordbediening', tags: ['regressie', 'ui', 'desktop', 'fase:15'], parentSuite: 'UI Desktop', suite: 'Accessibility', allureFeature: 'Accessibility', phase: 15 },
+  { kind: 'playwright', spec: 'admin-writes.spec.ts', feature: 'admin-writes.feature', steps: 'admin-writes.steps.ts', name: 'Server-led beheer- en instellingenwrites', tags: ['regressie', 'api', 'fase:2'], parentSuite: 'API', suite: 'Admin Writes', allureFeature: 'Beheer & Instellingen', phase: 2 },
   { kind: 'playwright', spec: 'audit-log.spec.ts', feature: 'audit-log.feature', steps: 'audit-log.steps.ts', name: 'Auditlog en traceerbaarheid', tags: ['regressie', 'api', 'fase:16'], parentSuite: 'API', suite: 'Audit Log', allureFeature: 'Audit & Security', phase: 16 },
   { kind: 'playwright', spec: 'auth.spec.ts', feature: 'auth.feature', steps: 'auth.steps.ts', name: 'Authenticatie en sessiebeheer', tags: ['regressie', 'ui', 'desktop', 'fase:4'], parentSuite: 'UI Desktop', suite: 'Login', allureFeature: 'Authenticatie', phase: 4 },
   { kind: 'playwright', spec: 'customer-timesheet-api.spec.ts', feature: 'customer-timesheets.feature', steps: 'customer-timesheets.steps.ts', name: 'Klanturenstaten via API', tags: ['regressie', 'api', 'fase:10'], parentSuite: 'API', suite: 'Customer Timesheets', allureFeature: 'Klanturenstaten', phase: 10 },
@@ -162,8 +164,8 @@ const inventory = definitions.flatMap((definition) => {
 const uniqueIds = new Set(inventory.map((testCase) => testCase.id));
 const playwrightCount = inventory.filter((testCase) => testCase.kind === 'playwright').length;
 const dbCount = inventory.filter((testCase) => testCase.kind === 'db').length;
-if (playwrightCount !== 117 || dbCount !== 1 || inventory.length !== 118 || uniqueIds.size !== 118) {
-  throw new Error(`Verwacht 117 Playwright-cases + 1 DB-case = 118 unieke cases, gevonden ${playwrightCount}/${dbCount}/${inventory.length}/${uniqueIds.size}.`);
+if (playwrightCount !== 142 || dbCount !== 1 || inventory.length !== 143 || uniqueIds.size !== 143) {
+  throw new Error(`Verwacht 142 Playwright-cases + 1 DB-case = 143 unieke cases, gevonden ${playwrightCount}/${dbCount}/${inventory.length}/${uniqueIds.size}.`);
 }
 
 mkdirSync(featuresDir, { recursive: true });
@@ -190,6 +192,12 @@ const mappingRows = inventory.map((testCase) => {
   return `| ${testCase.id} | ${testCase.kind === 'db' ? 'db' : testCase.tags[1]} | ${testCase.feature} | ${testCase.title} | ${testCase.steps} | ${source} | ${testCase.parentSuite} | ${testCase.allureFeature} | ${testCase.story} | ${flow} | ${testCase.phase} | Actueel |`;
 }).join('\n');
 
+const playwrightFeatureCount = definitions.filter((definition) => definition.kind === 'playwright').length;
+const dbFeatureCount = definitions.filter((definition) => definition.kind === 'db').length;
+const mobileCaseCount = inventory.filter((testCase) => testCase.kind === 'playwright' && testCase.tags.includes('mobile')).length;
+const nonMobileExecutionCount = playwrightCount - mobileCaseCount;
+const totalExecutionCount = nonMobileExecutionCount + (mobileCaseCount * 2);
+
 const mapping = `# TEST BDD Mapping
 
 ## Architectuur
@@ -213,13 +221,13 @@ ${mappingRows}
 
 ## Totalen
 
-- Playwright executable cases: 117
-- SQL/DB executable cases: 1
-- Totaal unieke executable cases: 118
-- Playwright features: 18
-- Database features: 1
-- Playwright steps mappings: 18
-- Database steps mappings: 1
+- Playwright executable cases: ${playwrightCount}
+- SQL/DB executable cases: ${dbCount}
+- Totaal unieke executable cases: ${inventory.length}
+- Playwright features: ${playwrightFeatureCount}
+- Database features: ${dbFeatureCount}
+- Playwright steps mappings: ${playwrightFeatureCount}
+- Database steps mappings: ${dbFeatureCount}
 `;
 writeFileSync(path.join(root, 'TEST-BDD-MAPPING.md'), mapping);
 
@@ -233,24 +241,24 @@ const domainSections = definitions.map((definition) => {
 
 const livingDoc = `# Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 117 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde ${playwrightCount} Playwright-cases leesbaar en voegt ${dbCount} directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 117 unieke case-ID's
-- SQL/DB executable cases: 1 unieke case-ID
-- Totaal executable cases: 118 unieke case-ID's
-- Playwright features: 18
-- Database features: 1
-- Playwright steps mappings: 18
-- Database steps mappings: 1
-- Uitvoeringen: 121
-- Niet-mobile projectuitvoeringen: 113
-- Mobile functionele cases: 4
-- Pixel 7 / Chromium-uitvoeringen: 4
-- iPhone 13 / WebKit-uitvoeringen: 4
+- Playwright executable cases: ${playwrightCount} unieke case-ID's
+- SQL/DB executable cases: ${dbCount} unieke case-ID('s)
+- Totaal executable cases: ${inventory.length} unieke case-ID's
+- Playwright features: ${playwrightFeatureCount}
+- Database features: ${dbFeatureCount}
+- Playwright steps mappings: ${playwrightFeatureCount}
+- Database steps mappings: ${dbFeatureCount}
+- Uitvoeringen: ${totalExecutionCount}
+- Niet-mobile projectuitvoeringen: ${nonMobileExecutionCount}
+- Mobile functionele cases: ${mobileCaseCount}
+- Pixel 7 / Chromium-uitvoeringen: ${mobileCaseCount}
+- iPhone 13 / WebKit-uitvoeringen: ${mobileCaseCount}
 
-De vier Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 117 Playwright-functionele cases in totaal 121 resultaten op: 113 + (4 x 2) = 121.
+De ${mobileCaseCount} Mobile-cases worden op twee devices uitgevoerd. Daarom leveren ${playwrightCount} Playwright-functionele cases in totaal ${totalExecutionCount} resultaten op: ${nonMobileExecutionCount} + (${mobileCaseCount} x 2) = ${totalExecutionCount}.
 
 ## Documentatieketen
 

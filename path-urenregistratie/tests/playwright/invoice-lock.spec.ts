@@ -182,6 +182,17 @@ test('[INV-H-004] admin lockt approved timesheet naar definitieve immutable fact
     expect(Number(item.total)).not.toBe(1);
   });
 
+  await test.step('And de administrator kan de server-side gegenereerde factuur-PDF downloaden', async () => {
+    const invoiceId = Number(lockResponse!.body.invoice.id);
+    expect(invoiceId).toBeGreaterThan(0);
+
+    const download = await invoiceApi.downloadPdf(invoiceId);
+    expect(download.status).toBe(200);
+    expect(download.contentType).toContain('application/pdf');
+    expect(download.body.subarray(0, 5).toString('latin1')).toBe('%PDF-');
+    expect(download.body.subarray(-16).toString('latin1')).toContain('%%EOF');
+  });
+
   await test.step('And cleanup de administrator-sessie wordt afgesloten', async () => {
     await authApi.logout();
   });
@@ -302,5 +313,33 @@ test('[INV-N-012] gelijktijdige lock-requests leveren exact één winnaar', asyn
     await ctxA.dispose();
     await ctxB.dispose();
   }
+});
+
+test('[INV-N-013] anonieme gebruiker kan factuur-PDF niet downloaden', async ({ request }) => {
+  const invoiceApi = new InvoiceApi(request);
+  const authApi = new AuthApi(request);
+
+  const invoiceId = await test.step('Given een administrator een factuur heeft gefinaliseerd', async () => {
+    const submitted = await createSubmittedTimesheet(request, 7);
+    const approved = await approveTimesheet(request, submitted);
+
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+    const lockResponse = await invoiceApi.lock({ action: 'lock', timesheetId: approved.timesheetId });
+    expect(lockResponse.status).toBe(200);
+    await authApi.logout();
+
+    return Number(lockResponse.body.invoice.id);
+  });
+
+  await test.step('When een anonieme gebruiker de factuur-PDF probeert te downloaden', async () => {
+    const isolated = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    try {
+      const anonymousInvoiceApi = new InvoiceApi(isolated);
+      const response = await anonymousInvoiceApi.downloadPdf(invoiceId);
+      expect(response.status).toBe(401);
+    } finally {
+      await isolated.dispose();
+    }
+  });
 });
 

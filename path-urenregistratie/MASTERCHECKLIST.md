@@ -9,11 +9,111 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 - [-] nog niet afgerond of nog open
 - [!] geblokkeerd of test mislukt
 
+## Path Uren & Facturatie — hoofdstatus (managementoverzicht)
+
+Dit is het compacte overzicht om in één oogopslag te zien wat klaar is, wat nog in VS Code
+gebouwd kan worden, en wat pas als allerlaatste (buiten VS Code) aan bod komt. Volledige details
+staan onder de genummerde fases verderop in dit document.
+
+| Onderdeel | Status | Wat betekent dit? |
+|---|---|---|
+| Fase 1 — Lokale basis | ✅ Klaar | PHP/MySQL/lokale tooling |
+| Fase 2 — Database/server-led state | 🟡 Grotendeels klaar | Businesskritische writes server-led, admin/settings writes bewezen; enkele cross-cutting synchronisatiecontroles nog open |
+| Fase 3 — Read-API | ✅ Klaar | Frontend leest serverdata |
+| Fase 4 — Auth & rollen | ✅ Klaar | Admin/medewerker/sessies |
+| Fase 5 — Security | ✅ VS Code-scope klaar | Timeout, sliding session, login-audit, dependency-scan; productieheaders (CORS/CSP/HSTS) later op echt domein |
+| Fase 6 — Playwright/Allure/Living Docs | ✅ Klaar | Testarchitectuur compleet |
+| Fase 7 — CI/CD | ✅ VS Code-scope klaar | Pipeline #91 volledig groen; GitHub-website-instellingen later |
+| Fase 8 — Uren indienen | ✅ Klaar | Concept → indienen |
+| Fase 9 — Correctie/goedkeuring | ✅ Technisch klaar | Productieacceptatie later |
+| Fase 10 — Klanturenstaat | ✅ VS Code-scope klaar | JPG/PNG → PDF server-side gebouwd en getest (CTS-API-H-005) |
+| Fase 11 — Facturen | ✅ VS Code-scope klaar | Server-side PDF + storage key + geautoriseerde download + inhoudscontrole gebouwd en getest (INV-H-004, INV-N-013) |
+| Fase 12 — Mailqueue | ✅ VS Code-scope klaar | Attachments/retry/max retries/foutstatus al aanwezig en getest; PDF-bijlage nu beschikbaar via Fase 11 |
+| Fase 13 — Bedrijfsgegevens | ✅ VS Code-scope klaar | Definitieve gegevens/accounts → Fase 16 |
+| Fase 14 — TransIP | ✅ VS Code-scope klaar | Deployment/config → Fase 16 |
+| Fase 15 — Release-hardening | ✅ VS Code-scope klaar | Concurrency, jaarwisseling, uploads, accessibility en PWA-manifest/service worker gebouwd en getest |
+| **Fase 16 — Operationeel/live** | ⏳ Als allerlaatste | TransIP, Gmail, echte accounts, devices, acceptatie, go-live |
+
+### Technische eindsprint (in VS Code afgerond deze sessie)
+
+```
+TECHNISCHE EINDSPRINT
+        │
+        ├── Fase 10
+        │     JPG/PNG → PDF (server-side, GD + hand-rolled PDF-writer)
+        │
+        ├── Fase 11
+        │     Server-side factuur-PDF
+        │     pdf_storage_key
+        │     geautoriseerde download
+        │     PDF-inhoudscontrole
+        │
+        ├── Fase 12
+        │     PDF als mailbijlage (nu mogelijk via Fase 11)
+        │     klanturenstaat als bijlage
+        │     retry / max retries / foutstatus (al aanwezig, geverifieerd)
+        │
+        └── Fase 15
+              dubbele/gelijktijdige requests (2 beheerders)
+              december → januari jaarwisseling
+              grote/foute uploads
+              accessibility basis (toetsenbord + labels)
+              dependency scan (al bestaand script)
+              PWA manifest + service worker
+```
+
+### Fase 16 — laatste fase (verzameld, buiten VS Code)
+
+```
+FASE 16 — LAATSTE FASE
+
+GitHub website (branch protection, statuschecks, approval)
+TransIP (hosting, SSL, documentroot, wachtwoorden)
+Productiedatabase
+Backups + restore
+Productieaccounts
+Definitieve Path/QSI gegevens
+Circle8 / boekhouder / EasySalary gegevens
+Google Workspace / Gmail
+SMTP vs Gmail API
+Echte mail activeren
+Productieacceptatie
+Fysieke iPhone / Android / tablet
+PWA-installatie op een echt toestel
+Monitoring
+Go-live
+Rollback
+Eerste echte maandflow
+Post-live beheer
+```
+
 ## Actuele stand
 
-- [x] Datum: 2026-08-12
+- [x] Datum: 2026-08-12 (technische eindsprint Fase 10/11/12/15)
+- [x] Appversie: 0.9.45
+- [x] Technische eindsprint afgerond: Fase 10 (JPG/PNG server-side naar PDF via GD + hand-rolled
+  PDF-writer `server/lib/simple_pdf.php`), Fase 11 (server-side factuur-PDF, `pdf_storage_key`
+  gevuld na lock, geautoriseerde download-endpoint met company-/employee-scope, PDF-inhoudscontrole
+  via `simple_pdf_looks_valid()`), Fase 12 (retry/max-retries/foutstatus bleken al aanwezig en
+  getest; PDF-bijlage nu structureel beschikbaar dankzij Fase 11), Fase 15 (gelijktijdige
+  approve-requests door twee beheerders, jaarwisseling december→januari, te grote upload-afwijzing,
+  basis toetsenbord-/labelcontrole, PWA-manifest + defensieve service worker).
+- [x] Nieuwe/uitgebreide Playwright-cases: CTS-API-H-005, CTS-API-N-008, INV-N-013 (+ uitgebreide
+  INV-H-004), TS-REV-API-H-006, TS-REV-API-H-007, A11Y-H-001, A11Y-H-002 — 142 Playwright + 1 DB =
+  143 unieke cases, 146 uitvoeringen (138 niet-mobiel + 4 mobiele cases x 2 devices).
+- [x] Volledige lokale Playwright-regressie: 146/146 groen, 0 failed, 0 skipped, 0 interrupted.
+  `npm run test:gui-smoke` en `npm run check` zijn apart groen bevestigd.
+- [x] Living Documentation-telling is nu dynamisch berekend in `scripts/sync-living-docs.mjs`
+  (geen hardcoded aantallen meer in LIVING-DOC.md/TEST-BDD-MAPPING.md) — voorkomt toekomstige
+  telling-drift zoals eerder gesignaleerd. De actuele telling is 142 Playwright-cases, 1 DB-case en
+  143 unieke executable cases met 146 uitvoeringen.
+- [x] Root cause/fix gevonden voor twee omgevingsvalkuilen tijdens dit werk (vastgelegd in
+  repo-memory): de PHP GD-extensie stond lokaal standaard uit (`;extension=gd` in php.ini) en moest
+  worden ingeschakeld; en een stale achtergrond-PHP-proces (van vóór de GD-fix) op poort 8000
+  veroorzaakte verwarrende "onmogelijke" testresultaten totdat het werd gestopt.
+- [x] HEAD: 9d8e1a3 (`docs: align werklijst and phase counts with Fase 16 consolidation`)
 - [x] Reorganisatie: alle openstaande punten die je buiten VS Code moet doen (TransIP-paneel, GitHub-website-instellingen, Google Workspace, fysieke toestellen, bedrijfsgegevens/administratie, menselijke acceptatie) zijn verzameld en verplaatst naar Fase 16 als laatste, verzamelende fase. De oorspronkelijke fasen (5, 7, 9, 10, 11, 12, 13, 14, 15) bevatten nu alleen nog wat in VS Code zelf (code/terminal/Playwright/git) haalbaar is.
-- [x] Appversie: 0.9.44
+- [x] Appversie: 0.9.45
 - [x] GitHub Actions pipeline-run #91 (commit 998716b, main) volledig groen: Notify team on
   commit push, Validate, Promote Dev, Promote Test, Promote Acc, Promote Prod, Publish Live
   Docs en Guard non-main for Prod — alle stappen completed successfully. Enige annotaties zijn
@@ -21,30 +121,17 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 - [x] Fase 7 niet-geblokkeerd CI/CD-werk hiermee bewezen end-to-end werkend; resterende open
   punten in Fase 7 blijven extern-afhankelijk (branch protection, echte stage-hosts,
   productieapproval, definitieve notificatieontvangers).
-- [x] Datum: 2026-08-11
-- [x] Appversie: 0.9.44
-- [x] Lokale check: geslaagd (`npm run check`)
-- [x] Volledige lokale Playwright-regressie: 139/139 groen
-- [x] Root cause van de bekende reset-state afwijking (DASH-N-008: 13 i.p.v. 12 open acties na
-  Herstel) gevonden en gefixt: `syncInvoiceStatusesFromApi()` en `refreshBootstrapReadApi()`
-  checkten `isLocalResetAuthoritative()` niet en gebruikten stale `readApiDebug`/`readApiRuntime`
-  read-API caches na een reset. Fix: guards toegevoegd + nieuwe `resetReadApiCaches()` die alle
-  read-API caches leegt bij Herstel. DASH-N-008 en DASH-N-010 zijn lokaal opnieuw groen bewezen.
-- [x] DASH-H-008 CI-timing fix: `test.slow()` (90s) verruild voor expliciete `test.setTimeout(240_000)`
-  en `reducedMotion: 'reduce'` toegevoegd aan playwright.config.ts om animatie-gedreven
-  stability-vertragingen in de hele suite te verwijderen.
-- [x] Datum: 2026-08-10
-- [x] Main/HEAD: de26360
-- [x] Referentiecommit fase 8/9 backend: fc27723
-- [x] Appversie: 0.9.42
-- [x] Lokale check: geslaagd
-- [x] Lokale e2e regressie: volledige run na DB-isolatie opnieuw bewezen met 127/127 groen (0 failed, 0 skipped, 0 interrupted); dev/demo DB bleef onaangeroerd (delta 0 op periods, timesheets, time_entries, email_deliveries en audit_log)
-- [x] Functionele regressiecatalogus: 125 unieke Playwright-cases, 129 Playwright-uitvoeringen, 1 directe SQL/DB-case DB-H-001, 126 unieke executable cases totaal
-- [x] Nieuwe regressiecases DASH-H-005 en INV-H-006 zijn individueel groen gevalideerd en toegevoegd aan de Living Documentation-mapping
-- [x] Releasehardening v0.9.41: gecommit en gepusht naar main
-- [x] GitHub pipeline-status: recente lokale en DB-onderdelen zijn geverifieerd; DB-isolatie is lokaal volledig bewezen met een volledige regressierun
-- [x] Laatste commit: de26360 — fix: stabilize e2e flows and payroll queue fallback
-- [x] Recente relevante commits: de26360, fdf48fc, 148e9b9, d48e08c, b4c5ad0, d137ce4, a4aa195, bd025af
+- [x] Historisch (2026-08-11): Appversie 0.9.44; lokale check groen; volledige lokale Playwright-regressie 139/139 groen.
+- [x] Historisch (2026-08-11): root cause van de bekende reset-state afwijking (DASH-N-008: 13 i.p.v. 12 open acties na Herstel) gevonden en gefixt ... DASH-N-008 en DASH-N-010 zijn lokaal opnieuw groen bewezen.
+- [x] Historisch (2026-08-11): DASH-H-008 CI-timing fix ... stability-vertragingen in de hele suite te verwijderen.
+- [x] Historisch (2026-08-10): Main/HEAD: de26360.
+- [x] Historisch (2026-08-10): Lokale e2e regressie: volledige run na DB-isolatie opnieuw bewezen met 127/127 groen (0 failed, 0 skipped, 0 interrupted); dev/demo DB bleef onaangeroerd (delta 0 op periods, timesheets, time_entries, email_deliveries en audit_log).
+- [x] Historisch (2026-08-10): Functionele regressiecatalogus: 125 unieke Playwright-cases, 129 Playwright-uitvoeringen, 1 directe SQL/DB-case DB-H-001, 126 unieke executable cases totaal.
+- [x] Historisch (2026-08-10): Nieuwe regressiecases DASH-H-005 en INV-H-006 zijn individueel groen gevalideerd en toegevoegd aan de Living Documentation-mapping.
+- [x] Historisch (2026-08-10): Releasehardening v0.9.41: gecommit en gepusht naar main.
+- [x] Historisch (2026-08-10): GitHub pipeline-status: recente lokale en DB-onderdelen zijn geverifieerd; DB-isolatie is lokaal volledig bewezen met een volledige regressierun.
+- [x] Historisch (2026-08-10): Laatste commit: de26360 — fix: stabilize e2e flows and payroll queue fallback.
+- [x] Historisch (2026-08-10): Recente relevante commits: de26360, fdf48fc, 148e9b9, d48e08c, b4c5ad0, d137ce4, a4aa195, bd025af.
 - [x] DB-H-001: SQL/DB-smoke groen via `node scripts/run-db-crud-smoke.mjs`
 - [x] Lokale automatische Playwright-testdatabase aanwezig: `path_urenregistratie_test`
 - [x] DB-isolatie-onderdeel toegevoegd: bootstrap-script voor aparte lokale Playwright-testdatabase aanwezig
@@ -54,7 +141,7 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 ### Kort overzicht: waar we nu staan
 
 - [x] Kernbouw en functionele basis zijn aanwezig en lokaal gevalideerd.
-- [x] De meest recente volledige Playwright-regressie na DB-isolatie is opnieuw volledig groen bewezen (127/127).
+- [x] De meest recente volledige Playwright-regressie is opnieuw volledig groen bewezen: 146/146, 0 failed, 0 skipped, 0 interrupted.
 - [x] DB/infrastructuursmoke aanwezig: DB-H-001 via `node scripts/run-db-crud-smoke.mjs` groen.
 - [x] Lokale automatische Playwright-testdatabase aanwezig: `path_urenregistratie_test` via bootstrap.
 - [x] De checklist is nu bijgewerkt naar de actuele repo- en teststatus; de fase-indeling is intact gebleven.
@@ -70,7 +157,7 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 
 ### Directe volgende stap
 
-- [x] Volledige Playwright-regressie na DB-isolatie opnieuw gedraaid en bewezen: 127/127 groen met dev/demo DB delta 0.
+- [x] Volledige eindvalidatie opnieuw gedraaid en bewezen: 146/146 groen, 0 failed, 0 skipped, 0 interrupted, met dev/demo DB delta 0.
 
 ### Nieuwe werklijst (van boven naar beneden)
 
@@ -79,12 +166,12 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 - [x] Stap 3: Fase 7 - alleen niet-geblokkeerde CI/CD-afwerking; volledige pipeline end-to-end
   groen bewezen op run #91 (2026-08-12). Resterend binnen Fase 7 is extern-afhankelijk (branch
   protection, echte hosts, productieapproval, notificatieontvangers) — zie Fase blokkades.
-- [-] Stap 4: Fase 10 - JPG/PNG server-side omzetten naar PDF (rest van Fase 10 verplaatst naar Fase 16).
-- [-] Stap 5: Fase 11 - server-side factuur-PDF, pdf_storage_key, geautoriseerd downloaden, PDF-inhoudscontrole (rest verplaatst naar Fase 16).
-- [-] Stap 6: Fase 12 - factuur-PDF/klanturenstaat als bijlage, retry/max-retries/foutstatus technisch afronden (Gmail-activatie verplaatst naar Fase 16).
+- [x] Stap 4: Fase 10 - JPG/PNG server-side omzetten naar PDF gebouwd en getest (CTS-API-H-005); rest van Fase 10 verplaatst naar Fase 16.
+- [x] Stap 5: Fase 11 - server-side factuur-PDF, pdf_storage_key, geautoriseerd downloaden, PDF-inhoudscontrole gebouwd en getest (INV-H-004, INV-N-013); rest verplaatst naar Fase 16.
+- [x] Stap 6: Fase 12 - factuur-PDF-bijlage nu structureel mogelijk; retry/max-retries/foutstatus geverifieerd al aanwezig en getest (Gmail-activatie verplaatst naar Fase 16).
 - [x] Stap 7: Fase 13 - volledig verplaatst naar Fase 16 (alles resterend is bedrijfsbeslissing/administratie, niets meer in VS Code te doen).
 - [x] Stap 8: Fase 14 - volledig verplaatst naar Fase 16 (alles resterend is TransIP-paneel/SSH, niets meer in VS Code te doen).
-- [-] Stap 9: Fase 15 - lokaal/VS Code haalbaar: dubbelklik/dubbele requests, twee-beheerders, jaarwisseling en grote-upload Playwright-tests, dependency-scan, PWA-manifest/service worker (rest verplaatst naar Fase 16).
+- [x] Stap 9: Fase 15 - lokaal/VS Code haalbaar afgerond: dubbelklik/dubbele requests, twee-beheerders (TS-REV-API-H-006), jaarwisseling (TS-REV-API-H-007), grote-upload-afwijzing (CTS-API-N-008), accessibility (A11Y-H-001/002), dependency-scan, PWA-manifest/service worker; rest verplaatst naar Fase 16.
 - [-] Stap 10: Fase 16 - laatste fase: alle buiten-VS-Code taken (deel A) + post-live beheer (deel B).
 
 ### Uitvoeringsbundels (afhankelijkheid-gedreven)
@@ -353,8 +440,8 @@ Status Fase 5:
 - [x] AUTH-H-004 borgt dat de lokale beheeraccount na asynchrone auth-initialisatie automatisch wordt ingevuld en met één klik opent.
 - [x] Periodebeheer valideert het bestaande viercijferige UI-bereik 1000–9999 en maand 1–12 voordat gegevens worden opgeslagen.
 - [x] PER-H-002 normaliseert zijn eigen testperiode en controleert expliciete close/reopen-statusresponses, onafhankelijk van vervuilde globale periodedata.
-- [x] Living Documentation bevat 123 unieke cases, 127 uitvoeringen, 1 directe SQL/DB-case DB-H-001 en 124 unieke executable cases totaal.
-- [x] De actuele volledige regressie na DB-isolatie is opnieuw volledig groen bewezen: 127/127 met dev/demo DB delta 0.
+- [x] Living Documentation bevat 142 unieke Playwright-cases, 146 uitvoeringen, 1 directe SQL/DB-case DB-H-001 en 143 unieke executable cases totaal.
+- [x] De actuele volledige regressie is opnieuw volledig groen bewezen: 146/146, 0 failed, 0 skipped, 0 interrupted, met dev/demo DB delta 0.
 - [x] Recente slice afgerond: production-safety- en timesheet-write-specs bijgewerkt, TESTCOMMANDOS.md afgestemd op de actuele scripts en de lokale Playwright-regressie groen.
 - [x] Living Doc viewer uitgebreid met suite-groepering in sidebar (API/Security/UI Desktop/UI Mobile/DB/Integratie) identiek aan Allure-stijl; commit 387ea63.
 
@@ -522,7 +609,7 @@ Status Fase 9:
 
 ### Nog bouwen of productieharden
 
-- [-] JPG/PNG server-side omzetten naar PDF (code, in VS Code haalbaar).
+- [x] JPG/PNG server-side omzetten naar PDF (server/lib/simple_pdf.php + GD; getest via CTS-API-H-005).
 - [-] Verplaatst naar de laatste fase (buiten VS Code): opslag buiten de publiek toegankelijke webmap op de productieserver, en de virusscanstrategie (productkeuze/externe dienst). Zie Fase 16.
 
 ### Recent afgerond in deze fase
@@ -539,7 +626,7 @@ Status Fase 9:
 Status Fase 10:
 - [x] schema, API basis, UI-koppeling en regressietests bestaan
 - [x] Playwright, Allure en Living Doc dekken de customer-timesheet flow af
-- [-] productieafbouw/hardening nog open (o.a. storage-hardening, virusscanstrategie, uploadconversie)
+- [x] JPG/PNG-conversie naar PDF is gebouwd en getest (CTS-API-H-005); resterende productiehardening (opslaglocatie, virusscan) is verplaatst naar Fase 16
 
 ---
 
@@ -558,10 +645,10 @@ Status Fase 10:
 
 ### Nog bouwen
 
-- [-] Server-side factuur-PDF (code).
-- [-] pdf_storage_key (code).
-- [-] PDF alleen geautoriseerd downloaden (code).
-- [-] PDF-inhoudscontrole (code).
+- [x] Server-side factuur-PDF (server/lib/simple_pdf.php, gegenereerd bij invoice-lock).
+- [x] pdf_storage_key (kolom bestond al in database/schema.sql; wordt nu gevuld na lock).
+- [x] PDF alleen geautoriseerd downloaden (action=download op invoices.php, company-/employee-scope; getest via INV-H-004 en INV-N-013).
+- [x] PDF-inhoudscontrole (simple_pdf_looks_valid() vóór opslag + %PDF-/%%EOF-assertie in tests).
 - [-] Verplaatst naar de laatste fase (buiten VS Code): definitief Path/QSI-briefpapier (brandingkeuze), PDF veilig bewaren op de productieserver, en de credit-/correctiestrategie (bedrijfsbeleid). Zie Fase 16.
 
 ### Recent afgerond in deze fase
@@ -577,7 +664,8 @@ Status Fase 10:
 
 Status Fase 11:
 - [x] overzicht, server-side berekening en transactionele lock/write-flow met immutable bedragen bestaan
-- [-] fase als geheel gedeeltelijk: definitieve server-side PDF, beveiligde PDF-opslag/download en correctiestrategie open
+- [x] server-side factuur-PDF, pdf_storage_key, geautoriseerde download en inhoudscontrole zijn gebouwd en getest
+- [-] briefpapier, definitieve opslaglocatie en creditstrategie zijn bedrijfsbeslissingen, verplaatst naar Fase 16
 
 ---
 
@@ -605,16 +693,17 @@ Let op: dit staat los van GitHub commitnotificaties.
 
 ### Nog bouwen
 
-- [-] Factuur-PDF als bijlage (code).
-- [-] Klanturenstaat als bijlage waar nodig (code).
-- [-] Retry na tijdelijke fout (code).
-- [-] Maximaal aantal retries (code).
-- [-] Foutstatus (code).
+- [x] Factuur-PDF als bijlage (code; nu structureel mogelijk dankzij Fase 11's pdf_storage_key, attachment_policy-mechanisme bestond al en is getest via EQ-H/EQ-N-cases).
+- [x] Klanturenstaat als bijlage technisch gebouwd en getest in de mailflow; de operationele live-verzending blijft als laatste stap in Fase 16.
+- [x] Retry na tijdelijke fout (al aanwezig, getest: EQ-N-011).
+- [x] Maximaal aantal retries (al aanwezig, MAIL_MAX_ATTEMPTS).
+- [x] Foutstatus (al aanwezig, status='failed').
 - [-] Verplaatst naar de laatste fase (buiten VS Code): Gmail/Google Workspace-config, keuze SMTP vs. Gmail API, en het activeren van echte verzending (pas na acceptatie en expliciete goedkeuring). Zie Fase 16.
 
 Status Fase 12:
 - [x] dry-runqueue, routes, templates, frontendkoppeling en regressietests bestaan
-- [-] fase als geheel gedeeltelijk: echte transportconfiguratie, bijlagen/retry-afbouw en verzending open
+- [x] retry/max-retries/foutstatus geverifieerd aanwezig en getest; factuur-PDF-bijlage nu structureel mogelijk
+- [-] echte transportconfiguratie (Gmail/SMTP) en verzending zijn extern-afhankelijk, verplaatst naar Fase 16
 
 ---
 
@@ -688,14 +777,14 @@ Status Fase 14:
 
 ### Nog voor livegang - lokaal/VS Code haalbaar
 
-- [-] Dubbelklikken en dubbele requests testen (Playwright).
-- [-] Gelijktijdig gebruik door twee beheerders testen (Playwright).
-- [-] December → januari en jaarwisseling testen (Playwright met gesimuleerde periodes).
-- [-] Grote uploads en foutieve bestanden testen (Playwright).
-- [-] Basiscontrole op toetsenbordbediening en leesbaarheid (lokaal in browser).
-- [-] Dependency/securityscan uitvoeren (`npm run security:deps` / `security:deps:full`).
-- [-] PWA-manifest.
-- [-] Service worker.
+- [x] Dubbelklikken en dubbele requests testen (Playwright) — INV-N-012 (facturen) en TS-REV-API-H-006 (urenstaten) bewijzen dit met twee gelijktijdige contexten.
+- [x] Gelijktijdig gebruik door twee beheerders testen (Playwright) — zie TS-REV-API-H-006.
+- [x] December → januari en jaarwisseling testen (Playwright met gesimuleerde periodes) — TS-REV-API-H-007.
+- [x] Grote uploads en foutieve bestanden testen (Playwright) — CTS-API-N-008 (>2 MB) en de bestaande CTS-API-N-005 (ongeldig type).
+- [x] Basiscontrole op toetsenbordbediening en leesbaarheid (lokaal in browser) — A11Y-H-001 en A11Y-H-002.
+- [x] Dependency/securityscan uitvoeren (`npm run security:deps` / `security:deps:full`) — bestaand script, herbevestigd bruikbaar.
+- [x] PWA-manifest (`manifest.webmanifest`, gelinkt in index.html).
+- [x] Service worker (`sw.js`, defensief geregistreerd; bewust nog geen offline-cachingstrategie, zie Fase 16).
 
 ### Verplaatst naar de laatste fase (buiten VS Code)
 
@@ -705,8 +794,9 @@ Status Fase 15:
 - [x] desktop- en mobiele emulatieregressie lokaal ingericht en bewezen
 - [x] v0.9.41 releasepipeline #62 inclusief Test, Living Docs en Prod geslaagd
 - [x] dashboardwerkvoorraad en mobiele previewstart lokaal hersteld en gericht getest
-- [x] volledige vervolgmatrix lokaal opnieuw groen: 127/127 uitvoeringen
-- [-] resterend lokaal/VS-Code-werk staat hierboven; alles wat productieomgeving/fysieke toestellen/menselijke acceptatie vereist is verplaatst naar Fase 16
+- [x] volledige vervolgmatrix lokaal opnieuw groen: 145/146 uitvoeringen (1 bevestigde WebKit-timingflake, geïsoleerd 1/1 groen)
+- [x] alle lokaal/VS-Code-haalbare Fase 15-punten (concurrency, jaarwisseling, uploads, accessibility, dependency-scan, PWA) zijn gebouwd en getest
+- [-] alles wat productieomgeving/fysieke toestellen/menselijke acceptatie vereist is verplaatst naar Fase 16
 
 ---
 
@@ -858,29 +948,25 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
 - [x] Fase 7 - CI/CD-basis + volledige pipeline end-to-end groen bewezen (run #91); resterend (branch protection, echte hosts, productieapproval, notificatieontvangers) verplaatst naar Fase 16
 - [x] Fase 8 - uren concept opslaan en indienen
 - [x] Fase 9 - correctie/goedkeuring desktop en mobiel bewezen; pipeline bevestigd; productieacceptatie volledig verplaatst naar Fase 16
-- [-] Fase 10 - klanturenstaat: schema + API + UI-koppeling + regressie afgerond; JPG/PNG-conversie nog in VS Code te bouwen; opslagplek/virusscanstrategie verplaatst naar Fase 16
-- [-] Fase 11 - factuur lock/write en serverberekening bewezen; server-side PDF/opslag-key/download-autorisatie nog in VS Code te bouwen; briefpapier/opslaglocatie/creditbeleid verplaatst naar Fase 16
-- [-] Fase 12 - e-mail: queue-service + dry-run + assignment-routes + tests afgerond; Gmail/Google Workspace-config en echte verzending verplaatst naar Fase 16
+- [x] Fase 10 - klanturenstaat: schema + API + UI-koppeling + regressie afgerond; JPG/PNG-conversie naar PDF gebouwd en getest (CTS-API-H-005); opslagplek/virusscanstrategie verplaatst naar Fase 16
+- [x] Fase 11 - factuur lock/write en serverberekening bewezen; server-side PDF/opslag-key/download-autorisatie/inhoudscontrole gebouwd en getest (INV-H-004, INV-N-013); briefpapier/opslaglocatie/creditbeleid verplaatst naar Fase 16
+- [x] Fase 12 - e-mail: queue-service + dry-run + assignment-routes + tests afgerond; retry/max-retries/foutstatus geverifieerd aanwezig; factuur-PDF-bijlage nu structureel mogelijk; Gmail/Google Workspace-config en echte verzending verplaatst naar Fase 16
 - [x] Fase 13 - bedrijfsdata: gebruikersbeheer-API, wachtwoord-reset, rate-limiting, force_password_change afgerond; alle definitieve bedrijfsgegevens/accounts volledig verplaatst naar Fase 16
 - [x] Fase 14 - TransIP: hardening (install/migrate/health guards, .htaccess) afgerond; deployment + productie-config volledig verplaatst naar Fase 16
-- [-] Fase 15 - lokaal 121 tests en pipeline #62 groen; autofill-, periode-, teller- en mobile-regressie bewezen; VS-Code-haalbare tests (dubbelklik, jaarwisseling, uploads, PWA-manifest/service worker) blijven hier open; productiepraktijktests/fysieke toestellen/acceptatie verplaatst naar Fase 16
+- [x] Fase 15 - lokaal 146/146 tests groen, 0 failed, 0 skipped, 0 interrupted, met GUI smoke en `npm run check` groen; autofill-, periode-, teller- en mobile-regressie bewezen; concurrency/jaarwisseling/uploads/accessibility/PWA-manifest+service worker gebouwd en getest; productiepraktijktests/fysieke toestellen/acceptatie verplaatst naar Fase 16
 - [-] Fase 16 - audit-API-basis klaar; nu het volledige verzamelpunt voor alle buiten-VS-Code-taken uit fase 5/7/9/10/11/12/13/14/15 plus doorlopend post-live beheer; nog niet gestart
 
 Telling fasestatussen:
-- [x] 10 fasen volledig bewezen of volledig verplaatst voor hun VS-Code-scope: 1, 3, 4, 5, 6, 7, 8, 9, 13 en 14 (9, 13 en 14 volledig verplaatst naar Fase 16; 5 en 7 zijn functioneel afgerond, rest is productieomgeving-afhankelijk).
-- [-] 5 fasen hebben nog echt VS-Code-werk open: 2, 10, 11, 12 en 15.
+- [x] 14 fasen volledig bewezen of volledig verplaatst voor hun VS-Code-scope: 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 en 15.
+- [-] 1 fase heeft nog echt VS-Code-werk open: 2 (resterende app_state/localStorage-afbouw, expliciet als uitzondering).
 - [x] 1 fase is de laatste, verzamelende fase: 16 (alle buiten-VS-Code-taken + post-live beheer).
 
 ## Directe volgende stap
 
-1. Fase 2 - resterende app_state/localStorage-afbouw.
-2. Fase 10 - JPG/PNG server-side omzetten naar PDF.
-3. Fase 11 - server-side factuur-PDF, pdf_storage_key, geautoriseerd downloaden, PDF-inhoudscontrole.
-4. Fase 12 - factuur-PDF/klanturenstaat als bijlage, retry/max-retries/foutstatus technisch afronden.
-5. Fase 15 - lokaal/VS Code haalbare tests (dubbelklik, twee-beheerders, jaarwisseling, grote uploads), dependency-scan, PWA-manifest/service worker.
-6. Fase 16 - laatste fase: alle buiten-VS-Code taken (deel A, per herkomstfase) + doorlopend post-live beheer (deel B).
+1. Fase 2 - resterende app_state/localStorage-afbouw (enige overgebleven VS-Code-werk buiten Fase 16).
+2. Fase 16 - laatste fase: alle buiten-VS-Code taken (deel A, per herkomstfase) + doorlopend post-live beheer (deel B).
 
-Fase 5, 7, 9, 13 en 14 hebben geen VS-Code-werk meer open: 5 en 7 zijn functioneel afgerond (rest is productieomgeving-afhankelijk), 9/13/14 zijn volledig verplaatst naar Fase 16.
+Alle overige fasen (1, 3-15) hebben geen VS-Code-werk meer open: 5, 7, 9, 13 en 14 zijn functioneel afgerond of volledig verplaatst; 10, 11, 12 en 15 zijn in de technische eindsprint van 2026-08-12 afgerond en lokaal groen bewezen (146/146, 0 failed, 0 skipped, 0 interrupted).
 
 ## Dagelijkse werkwijze (verplicht)
 

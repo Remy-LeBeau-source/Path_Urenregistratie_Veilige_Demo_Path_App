@@ -11,3 +11,15 @@ Feature: Correctie en goedkeuring met optimistic locking in Path Uren & Facturat
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
+  @happy
+  Scenario: [TS-REV-API-H-006] gelijktijdige approve-requests door twee beheerders leveren exact één winnaar
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
+  @happy
+  Scenario: [TS-REV-API-H-007] jaarwisseling december naar januari verwerkt urenstaten correct over de jaargrens
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd
