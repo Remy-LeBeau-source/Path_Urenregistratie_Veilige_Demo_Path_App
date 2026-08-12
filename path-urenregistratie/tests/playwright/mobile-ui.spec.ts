@@ -7,11 +7,175 @@ const MOBILE_PERIOD = '2026-01';
 const CORRECTION_MESSAGE = 'Controleer dag 2: dit moet 4 uur zijn.';
 
 async function isolateFrontendState(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch {
+      // Ignore storage restrictions in the browser sandbox.
+    }
+  });
+
   await page.route('**/server/api.php?action=state*', async route => {
     if (route.request().method() === 'GET') {
       await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, state: null }) });
       return;
     }
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true }) });
+  });
+
+  let authSessionUser: { id: number; company_id: number; email: string; display_name: string; role: 'employee' | 'administrator'; force_password_change: boolean } | null = null;
+
+  await page.route('**/server/auth/csrf.php*', async route => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, csrf_token: 'mobile-test-csrf-token' }) });
+  });
+
+  await page.route('**/server/auth/me.php*', async route => {
+    if (!authSessionUser) {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, authenticated: false, csrf_token: 'mobile-test-csrf-token', user: null }) });
+      return;
+    }
+
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, authenticated: true, csrf_token: 'mobile-test-csrf-token', user: authSessionUser }) });
+  });
+
+  await page.route('**/server/auth/login.php*', async route => {
+    const payload = route.request().postDataJSON() as { email?: string; password?: string } | null;
+    const email = String(payload?.email || '').trim().toLowerCase();
+    const password = String(payload?.password || '');
+
+    const admin = { id: 1, company_id: 1, email: 'gio@example.invalid', display_name: 'Gio Maatsen', role: 'administrator' as const, force_password_change: false };
+    const employee = { id: 2, company_id: 1, email: 'stasjo@example.invalid', display_name: 'Stasjo van Bakel', role: 'employee' as const, force_password_change: false };
+
+    const userMap: Record<string, typeof admin> = {
+      'gio@example.invalid': admin,
+      'stasjo@example.invalid': employee,
+    };
+
+    const user = userMap[email] || null;
+    if (!user || !password) {
+      await route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ ok: false, error: 'invalid-credentials', message: 'Invalid email or password.' }) });
+      return;
+    }
+
+    authSessionUser = user;
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, csrf_token: 'mobile-test-csrf-token', user }) });
+  });
+
+  await page.route('**/server/auth/logout.php*', async route => {
+    authSessionUser = null;
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true }) });
+  });
+
+  const bootstrapPayload = {
+    ok: true,
+    companies: [{
+      id: 1,
+      trade_name: 'Path Consultancy',
+      legal_name: 'Path Consultancy',
+      app_name: 'Uren & Facturatie',
+      support_name: 'Path Backoffice',
+      support_email: 'backoffice@pathconsultancy.nl',
+      payment_term_days: 30,
+      brand_primary: '#0d1b38',
+      brand_accent: '#3abd9d',
+      chamber_of_commerce_number: '89320018',
+      vat_number: 'NL001622017B32',
+      iban: 'NL95INGB0006947972',
+      address_line: 'Du Perronstraat 12',
+      postal_code: '3067 HN',
+      city: 'Rotterdam',
+      customer_timesheet_reminder_enabled: 1,
+      customer_timesheet_reminder_time: '15:00',
+      customer_timesheet_overdue_workdays: 2,
+    }],
+    users: [
+      { id: 1, company_id: 1, email: 'gio@example.invalid', display_name: 'Gio Maatsen', role: 'administrator', active: 1 },
+      { id: 2, company_id: 1, email: 'stasjo@example.invalid', display_name: 'Stasjo van Bakel', role: 'employee', active: 1 },
+      { id: 3, company_id: 1, email: 'joyce@example.invalid', display_name: 'Joyce van der Steenhoven', role: 'administrator', active: 1 },
+    ],
+    employees: [
+      { id: 2, user_id: 2, full_name: 'Stasjo van Bakel', job_title: 'Test Engineer', active: 1, employment_start_date: '2026-01-01', weekly_contract_hours: 36 },
+    ],
+    assignments: [],
+    counterparties: [],
+    assignment_mail_routes: [],
+    mail_recipients: [],
+  };
+
+  await page.route('**/server/api/bootstrap.php*', async route => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(bootstrapPayload) });
+  });
+
+  await page.route('**/server/api/dashboard.php*', async route => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, per_maand: [] }) });
+  });
+
+  await page.route('**/server/api/invoices.php*', async route => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items: [] }) });
+  });
+
+  await page.route('**/server/api/notifications.php*', async route => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items: [] }) });
+  });
+
+  await page.route('**/server/api/announcements.php*', async route => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items: [] }) });
+  });
+
+  await page.route('**/server/api/**', async route => {
+    const url = route.request().url();
+
+    if (url.includes('/server/api/dashboard.php')) {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, periods: [], items: [] }) });
+      return;
+    }
+
+    if (url.includes('/server/api/invoices.php')) {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items: [] }) });
+      return;
+    }
+
+    if (url.includes('/server/api/notifications.php')) {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items: [] }) });
+      return;
+    }
+
+    if (url.includes('/server/api/announcements.php')) {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items: [] }) });
+      return;
+    }
+
+    if (url.includes('/server/api/email-queue.php')) {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items: [] }) });
+      return;
+    }
+
+    if (url.includes('/server/api/staff.php')) {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, employees: bootstrapPayload.employees }) });
+      return;
+    }
+
+    if (url.includes('/server/api/settings.php')) {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, settings: {} }) });
+      return;
+    }
+
+    if (url.includes('/server/api/users.php')) {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, users: bootstrapPayload.users }) });
+      return;
+    }
+
+    if (url.includes('/server/api/customer-timesheets.php')) {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items: [] }) });
+      return;
+    }
+
+    if (url.includes('/server/api/timesheets.php')) {
+      await route.continue();
+      return;
+    }
+
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true }) });
   });
 }
@@ -165,6 +329,14 @@ async function openView(page: Page, view: string): Promise<void> {
   await page.locator(`button[data-view="${view}"]:visible`).first().click();
 }
 
+async function waitForEditableTimesheetInputs(page: Page, timeout = 20_000): Promise<void> {
+  await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/, { timeout });
+  await expect(page.locator('#hours-grid')).toBeVisible({ timeout });
+  const inputs = page.locator('#hours-grid .hours-input:not([disabled]):visible');
+  await expect.poll(async () => await inputs.count(), { timeout }).toBeGreaterThan(0);
+  await expect(inputs.first()).toBeVisible({ timeout });
+}
+
 async function assertNoHorizontalOverflow(page: Page): Promise<void> {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
 }
@@ -224,8 +396,9 @@ test('[MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documen
   });
 
   await test.step('When uren als concept worden gewijzigd en daarna ingediend', async () => {
-    const firstInput = page.locator('#hours-grid .hours-input:not([disabled])').first();
-    await expect(firstInput).toBeVisible();
+    await waitForEditableTimesheetInputs(page);
+    const firstInput = page.locator('#hours-grid .hours-input:not([disabled]):visible').first();
+    await expect(firstInput).toBeVisible({ timeout: 10_000 });
     const draftResponse = page.waitForResponse(response => response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
     await firstInput.fill('8');
     await firstInput.press('Enter');
@@ -264,8 +437,10 @@ test('[MOB-H-003] mobiele correctie herindiening en administratieve goedkeuring 
     clearConsoleErrors(errors);
     await openView(page, 'timesheet');
     await setPeriod(page, MOBILE_PERIOD);
+    await waitForEditableTimesheetInputs(page);
     employeeName = (await page.locator('#timesheet-employee').textContent() || '').trim();
-    const inputs = page.locator('#hours-grid .hours-input:not([disabled])');
+    const inputs = page.locator('#hours-grid .hours-input:not([disabled]):visible');
+    await expect(inputs).toHaveCount(2, { timeout: 10_000 });
     await inputs.nth(0).fill('8');
     await inputs.nth(1).fill('8');
     await page.locator('#submit-timesheet').click();
@@ -290,10 +465,12 @@ test('[MOB-H-003] mobiele correctie herindiening en administratieve goedkeuring 
     await loginPage.loginAsEmployee();
     await openView(page, 'timesheet');
     await setPeriod(page, MOBILE_PERIOD);
+    await waitForEditableTimesheetInputs(page);
     await expect(page.locator('#timesheet-status')).toHaveText('Correctie nodig');
     await expect(page.locator('#timesheet-correction-banner')).toBeVisible();
     await expect(page.locator('#timesheet-correction-message')).toContainText('Controleer dag 2');
-    const inputs = page.locator('#hours-grid .hours-input:not([disabled])');
+    const inputs = page.locator('#hours-grid .hours-input:not([disabled]):visible');
+    await expect(inputs).toHaveCount(2, { timeout: 10_000 });
     await inputs.nth(1).fill('4');
     await page.locator('#submit-timesheet').click();
     await expect(page.locator('#timesheet-status')).toHaveText('Ingediend');

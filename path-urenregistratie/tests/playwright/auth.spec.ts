@@ -53,7 +53,12 @@ test('[AUTH-H-003] Gebruiker logt uit en auth/me geeft authenticated false terug
   });
 
   await test.step('When de gebruiker uitlogt', async () => {
+    await page.route('**/server/auth/logout.php*', async route => {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      await route.continue();
+    });
     await loginPage.logout();
+    expect(await page.locator('#login-screen').isVisible()).toBe(true);
     await loginPage.assertLoggedOut();
   });
 

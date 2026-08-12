@@ -293,7 +293,9 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
 
 .button { min-height: 42px; border: 1px solid transparent; border-radius: 11px; cursor: pointer; font-size: 13px; font-weight: 700; padding: 10px 17px; transition: transform .16s ease, box-shadow .16s ease, background .16s ease; }
-.button:hover { transform: translateY(-1px); }
+@media (hover: hover) and (pointer: fine) {
+  .button:hover { transform: translateY(-1px); }
+}
 .button:disabled { cursor: not-allowed; filter: grayscale(.25); opacity: .48; transform: none; }
 .button-primary { background: var(--mint); color: var(--navy); box-shadow: 0 8px 18px rgba(58,189,157,.2); }
 .button-primary:hover { background: #48caa9; box-shadow: 0 11px 23px rgba(58,189,157,.25); }

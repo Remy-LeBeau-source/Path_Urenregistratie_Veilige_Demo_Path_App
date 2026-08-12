@@ -6,11 +6,6 @@ export class LoginPage {
 
   async open(): Promise<void> {
     await this.page.goto(appConfig.baseUrl);
-    // Wait for the auth-state check to resolve before asserting button state.
-    await this.page.waitForResponse(
-      r => r.url().includes('/server/auth/me.php') || r.url().includes('/server/api.php'),
-      { timeout: 20_000 }
-    ).catch(() => undefined); // ignore if already resolved before this point
     await this.waitForAuthModeReady();
   }
 
@@ -33,6 +28,10 @@ export class LoginPage {
     } else {
       throw new Error('Geen zichtbare logout/switch-role knop gevonden.');
     }
+    // The app's logout() is async (requestAuthLogout → .finally → logoutLocal).
+    // Wait explicitly for the login screen to appear before returning.
+    await expect(this.page.locator('#login-screen')).toBeVisible({ timeout: 15_000 });
+    await expect(this.page.locator('#auth-login-submit')).toBeVisible({ timeout: 15_000 });
   }
 
   async assertLoggedOut(): Promise<void> {

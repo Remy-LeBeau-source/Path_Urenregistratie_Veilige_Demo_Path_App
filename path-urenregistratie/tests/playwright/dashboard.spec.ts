@@ -164,13 +164,15 @@ test('[DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad ni
       });
     });
 
-    let releaseDashboardApi: (() => void) | null = null;
-    const dashboardGate = new Promise<void>(resolve => {
-      releaseDashboardApi = resolve;
-    });
+    let dashboardGateOpen = false;
+    const waitForDashboardGate = async () => {
+      while (!dashboardGateOpen) {
+        await new Promise(resolve => setTimeout(resolve, 20));
+      }
+    };
 
     await page.route('**/server/api/dashboard.php*', async route => {
-      await dashboardGate;
+      await waitForDashboardGate();
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -198,7 +200,7 @@ test('[DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad ni
     await loginPage.loginAsAdmin();
 
     await expect(page.locator('#hero-task-total')).not.toContainText('132');
-    releaseDashboardApi?.();
+    dashboardGateOpen = true;
   });
 
   await test.step('Then alle zichtbare totalen blijven gelijk aan de concrete taakregels', async () => {
@@ -217,6 +219,7 @@ test('[DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad ni
 
 test('[DASH-N-008] voorbeeldgegevens herstellen houdt alle werkvoorraadtellers gelijk', async ({ page }) => {
   const loginPage = new LoginPage(page);
+  const heroTaskTotal = page.locator('#hero-task-total');
 
   await test.step('Given auth-modus met oude fallback-state en afwijkende serverwerkvoorraad', async () => {
     await page.route('**/server/api.php?action=state*', async route => {
@@ -256,7 +259,12 @@ test('[DASH-N-008] voorbeeldgegevens herstellen houdt alle werkvoorraadtellers g
 
     await loginPage.open();
     await loginPage.loginAsAdmin();
-    await expect(page.locator('#hero-task-total')).toHaveText('12 open acties', { timeout: 15_000 });
+    // Before reset, the counter reflects real (unmocked) server-side demo state, which
+    // shifts as other suite tests submit/approve/correct timesheets before this one runs.
+    // We only assert here that the mocked/stale totals below (132, 7) never leak through.
+    await expect(heroTaskTotal).not.toHaveText('', { timeout: 15_000 });
+    await expect(heroTaskTotal).not.toContainText('132');
+    await expect(heroTaskTotal).not.toHaveText('7 open acties');
   });
 
   await test.step('When voorbeeldgegevens worden hersteld', async () => {
@@ -267,8 +275,12 @@ test('[DASH-N-008] voorbeeldgegevens herstellen houdt alle werkvoorraadtellers g
 
   await test.step('Then blijven de concrete taakregels leidend en verschijnt geen oude teller', async () => {
     await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
-    await expect(page.locator('#hero-task-total')).toHaveText('12 open acties', { timeout: 15_000 });
-    await expect(page.locator('#hero-task-total')).not.toContainText('132');
+    // After reset, isLocalResetAuthoritative() intentionally blocks re-syncing server/API
+    // state (that's the fixed v0.9.44 behavior guarding against stale-state leakage), so the
+    // counter must fall back to the static local demo baseline — a fixed, code-defined value,
+    // not something derived from shared/mutable DB state left behind by other suite tests.
+    await expect(heroTaskTotal).toHaveText('12 open acties', { timeout: 15_000 });
+    await expect(heroTaskTotal).not.toContainText('132');
   });
 });
 
