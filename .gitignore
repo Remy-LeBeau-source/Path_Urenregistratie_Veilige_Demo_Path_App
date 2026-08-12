@@ -2,7 +2,7 @@
 .vscode/
 # Runtime-only private storage: generated documents, logs and backups never belong in Git.
 path-private/
-# ERD.svg and ERD.jpg are maintained diagrams; PNG/Mermaid exports are temporary previews.
+# ERD.svg/JPG and ERD-detail.svg/JPG are maintained; PNG/Mermaid exports are temporary previews.
 path-urenregistratie/database/ERD*.png
 path-urenregistratie/database/ERD-preview*.jpg
 path-urenregistratie/database/ERD*.mmd

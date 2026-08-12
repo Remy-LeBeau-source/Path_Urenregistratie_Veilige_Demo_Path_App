@@ -1,12 +1,19 @@
 # Database ERD — Path Uren & Facturatie
 
-De definitieve ERD is als schaalbare vector beschikbaar in [ERD.svg](ERD.svg).
-Voor eenvoudig delen en invoegen is er ook een hoge-resolutie [ERD.jpg](ERD.jpg).
-Het diagram is rechtstreeks gebaseerd op het actuele `schema.sql` en toont alle 19 tabellen en
-alle 263 kolommen. Per veld zijn `PK`, `FK`, `PK/FK` en `UQ` zichtbaar; de verbindingslijnen tonen
-alle 49 foreign-keyrelaties tussen de functionele domeinen.
+## Overzicht
 
-![Database ERD van Path Uren & Facturatie](ERD.svg)
+De aanbevolen ERD is beschikbaar als schaalbare [ERD.svg](ERD.svg) en als hoge-resolutie
+[ERD.jpg](ERD.jpg). Deze rustige hoofdversie toont alle 19 tabellen en alle 76 sleutelvelden.
+Per veld zijn `PK`, `FK`, `PK/FK` en `UQ` zichtbaar. Achter ieder foreign-keyveld staat direct de
+doeltabel en doelkolom, zodat alle 49 relaties leesbaar blijven zonder lange kruisende lijnen.
+
+![Overzichtelijke database-ERD van Path Uren & Facturatie](ERD.svg)
+
+## Volledig technisch detail
+
+De volledige versie is beschikbaar als [ERD-detail.svg](ERD-detail.svg) en
+[ERD-detail.jpg](ERD-detail.jpg). Deze bevat alle 263 kolommen, datatypes, nullability en de 49
+fysieke foreign-keyverbindingen uit `schema.sql`.
 
 ## Domeinen
 
@@ -18,5 +25,5 @@ alle 49 foreign-keyrelaties tussen de functionele domeinen.
 | Routes en documenten | `mail_recipients`, `assignment_mail_routes`, `customer_timesheets` |
 | Facturatie en communicatie | `invoices`, `announcements`, `announcement_recipients`, `notifications`, `email_deliveries` |
 
-Bij een schemawijziging moeten `schema.sql`, de bijbehorende migration en `ERD.svg` samen worden
-bijgewerkt.
+Bij een schemawijziging moeten `schema.sql`, de bijbehorende migration en beide ERD-versies samen
+worden bijgewerkt.
