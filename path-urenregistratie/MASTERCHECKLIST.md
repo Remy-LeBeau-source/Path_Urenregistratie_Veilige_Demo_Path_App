@@ -119,6 +119,9 @@ Post-live beheer
 - [x] GitHub Actions pipeline-run #99 (commit 821b175, main) volledig groen: alle stappen
   (Validate, Promote Dev/Test/Acc/Prod, Publish Live Docs) completed successfully.
 - [x] GitHub Actions pipeline-run #100–#104 (commits 375cfc3–b8d8cd1, main) — groen bevestigd.
+- [x] Laatste lokale validatie: `npm run check` is opnieuw groen (2026-08-12), inclusief de
+  productie-safety guard die `server/config.example.php` standaard op `mail.enabled = false`
+  eist; de recente maildefault-fix is hiermee bewezen.
 - [x] MOB-H-003 (Safari correctie/goedkeuring flakiness) structureel opgelost in v0.9.46:
   root cause was async logout-race (authSessionUser niet gewist in mock) + LoginPage.open()
   responsewacht te laat geregistreerd; 10/10 Safari groen bewezen na fix.
@@ -153,6 +156,7 @@ Post-live beheer
 ### Directe volgende stap
 
 - [x] Volledige eindvalidatie opnieuw gedraaid en bewezen: 146/146 groen, 0 failed, 0 skipped, 0 interrupted, met dev/demo DB delta 0.
+- [x] Laatste statusupdate: lokale smoke-/safety-check is opnieuw groen na maildefault-correctie; checklist blijft op actuele status.
 
 ### Nieuwe werklijst (van boven naar beneden)
 
