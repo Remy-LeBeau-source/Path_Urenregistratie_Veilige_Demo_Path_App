@@ -1,8 +1,10 @@
 # Database ERD — Path Uren & Facturatie
 
 De definitieve ERD is als schaalbare vector beschikbaar in [ERD.svg](ERD.svg).
-Het diagram is gebaseerd op het actuele `schema.sql` en toont alle 19 tabellen, hun belangrijkste
-primaire en foreign keys en de relaties tussen de functionele domeinen.
+Voor eenvoudig delen en invoegen is er ook een hoge-resolutie [ERD.jpg](ERD.jpg).
+Het diagram is rechtstreeks gebaseerd op het actuele `schema.sql` en toont alle 19 tabellen en
+alle 263 kolommen. Per veld zijn `PK`, `FK`, `PK/FK` en `UQ` zichtbaar; de verbindingslijnen tonen
+alle 49 foreign-keyrelaties tussen de functionele domeinen.
 
 ![Database ERD van Path Uren & Facturatie](ERD.svg)
 
