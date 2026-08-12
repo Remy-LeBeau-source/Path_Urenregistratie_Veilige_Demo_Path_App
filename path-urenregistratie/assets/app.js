@@ -8854,8 +8854,13 @@ function openResetDemoModal() {
     confirm: "Voorbeeldgegevens herstellen",
     action: () => {
       const role = state.currentRole || "admin";
-      state = freshState();
-      state.currentRole = role;
+      const resetState = freshState();
+      resetState.currentRole = role;
+      resetState.currentAdminId = "gio";
+      resetState.currentEmployeeId = 2;
+      resetState.selectedPeriodKey = currentCalendarPeriodKey();
+      resetState.invoiceFilter = "all";
+      state = resetState;
       window.localStorage.removeItem(STORAGE_KEY);
       window.localStorage.setItem(LOCAL_RESET_GUARD_KEY, "1");
       resetReadApiCaches();
