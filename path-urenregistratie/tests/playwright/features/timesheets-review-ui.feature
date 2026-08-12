@@ -14,7 +14,7 @@ Feature: Correctie en goedkeuring in de desktop-UI in Path Uren & Facturatie
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
 
   @happy
-  Scenario: [TS-REV-UI-H-009] submitknop is verborgen bij ingediende urenstaat
+  Scenario: [TS-REV-UI-H-009] medewerker kan een ingediende urenstaat opnieuw indienen
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd

@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { LoginPage } from './pages/LoginPage';
 import { attachBusinessScreenshot } from './reporting/uiAttachments';
 
-const PERIOD_KEY = '2125-01';
+const PERIOD_KEY = '2026-01';
 const CORRECTION_MESSAGE = 'Controleer dag 2: dit moet 4 uur zijn.';
 
 async function openView(page: Page, view: 'timesheet' | 'approvals') {
@@ -44,7 +44,7 @@ test('[TS-REV-UI-H-008] browserflow: admin vraagt correctie, medewerker dient op
     resubmitted_at: string | null;
   }> = [];
 
-  await page.route('**/server/api/timesheets.php', async (route) => {
+  await page.route('**/server/api/timesheets.php**', async (route) => {
     const request = route.request();
     const method = request.method().toUpperCase();
     if (method === 'GET') {
@@ -260,10 +260,10 @@ test('[TS-REV-UI-H-008] browserflow: admin vraagt correctie, medewerker dient op
   });
 });
 
-test('[TS-REV-UI-H-009] submitknop is verborgen bij ingediende urenstaat', async ({ page }) => {
+test('[TS-REV-UI-H-009] medewerker kan een ingediende urenstaat opnieuw indienen', async ({ page }) => {
   const loginPage = new LoginPage(page);
 
-  await page.route('**/server/api/timesheets.php', async (route) => {
+  await page.route('**/server/api/timesheets.php**', async (route) => {
     if (route.request().method().toUpperCase() !== 'GET') { await route.continue(); return; }
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
       ok: true, found: true, period: PERIOD_KEY, employee_id: 2,
@@ -279,19 +279,20 @@ test('[TS-REV-UI-H-009] submitknop is verborgen bij ingediende urenstaat', async
     await loginPage.loginAsEmployee();
     await openView(page, 'timesheet');
     await setPeriod(page, PERIOD_KEY);
+    await expect(page.locator('#timesheet-status')).toHaveText('Ingediend');
   });
 
-  await test.step('Then is de indienknop verborgen en staat er een statusmelding', async () => {
-    await expect(page.locator('#submit-timesheet')).toBeHidden();
-    await expect(page.locator('#submit-timesheet-note')).toBeVisible();
-    await expect(page.locator('#submit-timesheet-note')).toContainText('al ingediend');
+  await test.step('Then kan de medewerker opnieuw indienen zonder blokkerende statusmelding', async () => {
+    await expect(page.locator('#submit-timesheet')).toBeVisible();
+    await expect(page.locator('#submit-timesheet')).toContainText('opnieuw indienen');
+    await expect(page.locator('#submit-timesheet-note')).toBeHidden();
   });
 });
 
 test('[TS-REV-UI-H-010] submitknop is verborgen bij goedgekeurde urenstaat', async ({ page }) => {
   const loginPage = new LoginPage(page);
 
-  await page.route('**/server/api/timesheets.php', async (route) => {
+  await page.route('**/server/api/timesheets.php**', async (route) => {
     if (route.request().method().toUpperCase() !== 'GET') { await route.continue(); return; }
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
       ok: true, found: true, period: PERIOD_KEY, employee_id: 2,
