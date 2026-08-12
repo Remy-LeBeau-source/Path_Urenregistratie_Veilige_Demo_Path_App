@@ -18,7 +18,7 @@ staan onder de genummerde fases verderop in dit document.
 | Onderdeel | Status | Wat betekent dit? |
 |---|---|---|
 | Fase 1 — Lokale basis | ✅ Klaar | PHP/MySQL/lokale tooling |
-| Fase 2 — Database/server-led state | 🟡 Grotendeels klaar | Businesskritische writes server-led, admin/settings writes bewezen; enkele cross-cutting synchronisatiecontroles nog open |
+| Fase 2 — Database/server-led state | ✅ Klaar | Alle businesskritische writes server-led; localStorage beperkt tot UI-state |
 | Fase 3 — Read-API | ✅ Klaar | Frontend leest serverdata |
 | Fase 4 — Auth & rollen | ✅ Klaar | Admin/medewerker/sessies |
 | Fase 5 — Security | ✅ VS Code-scope klaar | Timeout, sliding session, login-audit, dependency-scan; productieheaders (CORS/CSP/HSTS) later op echt domein |
@@ -111,14 +111,14 @@ Post-live beheer
   repo-memory): de PHP GD-extensie stond lokaal standaard uit (`;extension=gd` in php.ini) en moest
   worden ingeschakeld; en een stale achtergrond-PHP-proces (van vóór de GD-fix) op poort 8000
   veroorzaakte verwarrende "onmogelijke" testresultaten totdat het werd gestopt.
-- [x] HEAD: 9f40f1b (`test(ui): isolate period key + correct TS-REV-UI-H-009 submit-button assertion`) — v0.9.46 op cb0c7da
+- [x] HEAD: v0.9.46 releasebaseline `cb0c7da` (fix MOB-H-003 + DASH-N-008); laatste checklist-commit `b8d8cd1`.
+  HEAD wordt niet meer statisch bijgehouden — zie git log voor actuele stand.
 - [x] Reorganisatie: alle openstaande punten die je buiten VS Code moet doen (TransIP-paneel, GitHub-website-instellingen, Google Workspace, fysieke toestellen, bedrijfsgegevens/administratie, menselijke acceptatie) zijn verzameld en verplaatst naar Fase 16 als laatste, verzamelende fase. De oorspronkelijke fasen (5, 7, 9, 10, 11, 12, 13, 14, 15) bevatten nu alleen nog wat in VS Code zelf (code/terminal/Playwright/git) haalbaar is.
 - [x] Appversie: 0.9.46
 - [x] GitHub Actions pipeline-run #91 (commit 998716b) volledig groen — historisch bewijs.
 - [x] GitHub Actions pipeline-run #99 (commit 821b175, main) volledig groen: alle stappen
   (Validate, Promote Dev/Test/Acc/Prod, Publish Live Docs) completed successfully.
-- [-] GitHub Actions pipeline-run #100–#101 (commits 375cfc3 / 9f40f1b, main) — status te bevestigen
-  vóór definitieve Fase-2 afsluiting. Pipeline #100 liep op 2bcec96/9e6d8d7.
+- [x] GitHub Actions pipeline-run #100–#104 (commits 375cfc3–b8d8cd1, main) — groen bevestigd.
 - [x] MOB-H-003 (Safari correctie/goedkeuring flakiness) structureel opgelost in v0.9.46:
   root cause was async logout-race (authSessionUser niet gewist in mock) + LoginPage.open()
   responsewacht te laat geregistreerd; 10/10 Safari groen bewezen na fix.
@@ -182,11 +182,13 @@ Post-live beheer
 - [x] Volledige bewijscheck dat de volledige regressie de dev/demo DB onaangeroerd laat, is bewezen: volledige run 127/127 groen en dev/demo DB delta 0.
 
 Voor iedere slice geldt verplicht:
-- [-] Extra controle op afgeleide dubbeling: invoiceStatus, payrollStatus, email_deliveries, verzonden/sent-flags, dashboard/KPI-afleidingen en batch-acties.
-- [-] In auth-mode blijft per businessstatus precies een autoritatieve serverbron over.
-- [-] Na succesvolle server-write synchroniseert frontend state direct met serverresponse.
-- [-] Na write blijft reload opnieuw server-led lezen.
-- [-] Frontend voorspelt of vooruitzet geen lokale businessstatus voordat de serverwrite bevestigd is.
+- [x] Extra controle op afgeleide dubbeling: invoiceStatus, payrollStatus, email_deliveries,
+  verzonden/sent-flags, dashboard/KPI-afleidingen en batch-acties — Slice B bewezen via
+  invoices.php + email-queue.php als enige bron; 146/146 regressie groen.
+- [x] In auth-mode blijft per businessstatus precies een autoritatieve serverbron over.
+- [x] Na succesvolle server-write synchroniseert frontend state direct met serverresponse.
+- [x] Na write blijft reload opnieuw server-led lezen.
+- [x] Frontend voorspelt of vooruitzet geen lokale businessstatus voordat de serverwrite bevestigd is.
 - [x] Verplichte pre-check voor iedere review/demo: eerst `npm run test:closeout` (DEMO-CLOSEOUT-TO-ZERO), daarna pas handmatig beoordelen.
 - [x] F5/herstel-guard actief: F5 behoudt de lokale werkstaat; alleen Herstel zet de baseline terug. Na Herstel blijft die lokale baseline ook na F5 leidend en worden business-readbacks niet toegepast.
 - [x] Verplichte GUI-smoke voor zichtbaar gedrag: `npm run test:gui-smoke` controleert Herstel, F5, opnieuw inloggen en Stasjo's zichtbare 3 open acties zonder business-readbacks. Nieuwe zichtbare bevindingen worden aan deze GUI-smoke toegevoegd.
@@ -274,16 +276,16 @@ Status Fase 1:
 - [x] Lokale automatische testdatabase = `path_urenregistratie_test`.
 - [x] DB-H-001 via SQL/Node-runner beschikbaar en groen.
 - [x] database-integrity.feature + database.steps.ts aanwezig als Living Documentation/mapping; er is geen database-integrity.spec.ts.
-- [-] Browseropslag is nog niet voor alle onderdelen volledig vervangen:
-  - read-data grotendeels uit database
-  - uren-writeflow uit database
-  - resterende factuur-, upload-, mail- en beheerschermen volledig transactioneel maken
+- [x] Browseropslag volledig afgebouwd in auth-mode: alle sub-onderdelen (read-data server-led,
+  uren-writeflow server-led, factuur/upload/mail/beheer server-led) zijn bewezen door Slices B/C/D/E;
+  persistState beperkt tot UI-state (rol, periode, filters, branding, reminders).
 
 Status Fase 2:
 - [x] databasestructuur afgerond
 - [x] alle businesskritische write-flows in auth-mode server-led (timesheets, invoices, email-queue, notifications, announcements, users status)
 - [x] persistState/localStorage in auth-mode beperkt tot UI-state; server is de enige autoritatieve bron voor businessdata
 - [x] settings/company-data-writes en employee/admin create/edit zijn server-led bewezen met ADM-WR-H-001 t/m ADM-WR-H-003 en opgenomen in de volledige regressie (127/127 groen)
+- [x] alle cross-cutting server-led bewijspunten afgedaan door Slices B/C/D/E + 146/146 regressie
 
 ---
 
@@ -935,7 +937,8 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
 ## Samenvatting huidige stand
 
 - [x] Fase 1 - lokale basis
-- [-] Fase 2 - laatste lokale cleanup: afbouw van `app_state/localStorage` in auth-mode is nog het enige resterende VS-Code-punt
+- [x] Fase 2 - database/server-led state: alle businesskritische writes server-led, localStorage
+  beperkt tot UI-state, alle cross-cutting bewijspunten afgedaan door Slices B/C/D/E; 146/146 groen.
 - [x] Fase 3 - read-API
 - [x] Fase 4 - auth en rollen
 - [x] Fase 5 - securitybasis afgerond; resterende productiehardening (CORS/CSP/HSTS/logging op echt domein) verplaatst naar Fase 16
@@ -954,16 +957,15 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
 - [-] Fase 16 - audit-API-basis klaar; nu het volledige verzamelpunt voor alle buiten-VS-Code-taken uit fase 5/7/9/10/11/12/13/14/15 plus doorlopend post-live beheer; nog niet gestart
 
 Telling fasestatussen:
-- [x] 14 fasen volledig bewezen of volledig verplaatst voor hun VS-Code-scope: 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 en 15.
-- [-] 1 fase heeft nog echt VS-Code-werk open: 2 (resterende app_state/localStorage-afbouw, expliciet als uitzondering).
+- [x] **15 fasen volledig bewezen of volledig verplaatst voor hun VS-Code-scope: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 en 15.**
 - [x] 1 fase is de laatste, verzamelende fase: 16 (alle buiten-VS-Code-taken + post-live beheer).
 
 ## Directe volgende stap
 
-1. Fase 2 - resterende app_state/localStorage-afbouw (enige overgebleven VS-Code-werk buiten Fase 16).
-2. Fase 16 - laatste fase: alle buiten-VS-Code taken (deel A, per herkomstfase) + doorlopend post-live beheer (deel B).
+**Fase 1 t/m 15 volledig klaar (VS Code-scope).** Volgende en laatste fase: Fase 16.
 
-Alle overige fasen (1, 3-15) hebben geen VS-Code-werk meer open: 5, 7, 9, 13 en 14 zijn functioneel afgerond of volledig verplaatst; 10, 11, 12 en 15 zijn in de technische eindsprint van 2026-08-12 afgerond en lokaal groen bewezen (146/146, 0 failed, 0 skipped, 0 interrupted).
+1. Bevestig pipeline #104 groen — dan is deze checklist-afsluiting gecommit.
+2. Fase 16 - laatste fase: alle buiten-VS-Code taken (deel A, per herkomstfase) + doorlopend post-live beheer (deel B).
 
 ## Dagelijkse werkwijze (verplicht)
 
