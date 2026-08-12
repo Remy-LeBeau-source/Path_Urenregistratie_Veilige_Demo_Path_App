@@ -1,0 +1,1062 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="3000" height="1900" viewBox="0 0 3000 1900" role="img" aria-labelledby="title description">
+  <title id="title">Database ERD — Path Uren &amp; Facturatie</title>
+  <desc id="description">Entity relationship diagram van de 19 tabellen in het productieschema.</desc>
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#27313b" flood-opacity="0.13"/></filter>
+    <marker id="one" viewBox="0 0 12 16" refX="1" refY="8" markerWidth="12" markerHeight="16" orient="auto-start-reverse"><path d="M 2 2 V 14 M 6 2 V 14" fill="none" stroke="#3d4752" stroke-width="1.5"/></marker>
+    <marker id="many" viewBox="0 0 16 18" refX="15" refY="9" markerWidth="16" markerHeight="18" orient="auto"><path d="M 2 9 L 14 2 M 2 9 L 14 9 M 2 9 L 14 16" fill="none" stroke="#3d4752" stroke-width="1.5"/></marker>
+    <style>
+      .card{fill:#fff}.card-outline,.row-line{stroke:#3d4752;stroke-width:1.25}.row-line{opacity:.55}.table-title{font:700 19px Arial,sans-serif;fill:#3d4752}.field{font:14px Arial,sans-serif;fill:#26313c}.type{font:11px Arial,sans-serif;fill:#7a8490;letter-spacing:.35px}.key{font:700 10px Arial,sans-serif;fill:#3d4752;letter-spacing:.35px}.relation{fill:none;stroke:#3d4752;stroke-width:1.35;opacity:.56}.section{font:700 13px Arial,sans-serif;fill:#9a6056;letter-spacing:2.2px}.subtitle{font:16px Arial,sans-serif;fill:#6f7a85}.legend{font:13px Arial,sans-serif;fill:#4d5863}
+    </style>
+  </defs>
+  <rect width="3000" height="1900" fill="#fbfcfd"/>
+  <text x="70" y="75" font-family="Arial,sans-serif" font-size="34" font-weight="700" fill="#3d4752">Database ERD</text>
+  <text x="70" y="105" class="subtitle">Path Uren &amp; Facturatie · schema.sql · 19 tabellen</text>
+  <g transform="translate(2470 55)"><rect width="455" height="68" rx="8" fill="#fff" stroke="#d8dde2"/><rect x="18" y="17" width="52" height="30" fill="#e6e6e6" stroke="#3d4752"/><text x="44" y="37" text-anchor="middle" class="key">PK</text><text x="83" y="37" class="legend">primaire sleutel</text><path d="M 235 33 H 285" class="relation" marker-start="url(#one)" marker-end="url(#many)"/><text x="300" y="37" class="legend">één-op-veel</text></g>
+  <text x="100" y="355" class="section">IDENTITEIT &amp; BEHEER</text>
+  <text x="530" y="355" class="section">MENSEN &amp; OPDRACHTEN</text>
+  <text x="960" y="425" class="section">UREN &amp; PERIODEN</text>
+  <text x="1390" y="385" class="section">ROUTES &amp; DOCUMENTEN</text>
+  <text x="1820" y="365" class="section">FACTURATIE &amp; COMMUNICATIE</text>
+  <text x="2250" y="345" class="section">ONTVANGERS &amp; AFLEVERING</text>
+  <g id="relationships"><path d="M 1320 225 H 869 V 520 H 460" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 1320 225 H 1091 V 520 H 890" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 1320 225 H 1098 V 910 H 890" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 1500 345 V 407.5 H 1140 V 470" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 1500 345 V 394.5 H 1570 V 430" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 1500 345 V 611.5 H 1140 V 850" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 1500 345 V 788.5 H 2000 V 1190" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 1680 225 H 1729 V 530 H 1820" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 1680 225 H 1951 V 895.5 H 2250" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 1320 225 H 883 V 1200 H 460" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 280 640 V 700 H 280 V 760" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 280 640 V 867 H 280 V 1080" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 280 640 V 1124 H 1140 V 1580" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 460 520 H 1376 V 479 H 2250" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 460 520 H 1334 V 895.5 H 2250" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 890 520 H 911 V 605.5 H 960" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 710 640 V 918 H 1140 V 1210" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 890 520 H 1140 V 1295.5 H 1390" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 890 910 H 932 V 605.5 H 960" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 890 910 H 1369 V 1325.5 H 1820" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 1140 741 V 996.5 H 1140 V 1210" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 1140 741 V 929.5 H 1570 V 1160" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 1320 605.5 H 1341 V 869 H 1390" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 1570 639 V 702.5 H 1570 V 780" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 1140 1090 V 1150 H 1140 V 1210" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 1320 970 H 1362 V 1295.5 H 1390" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 1320 970 H 1799 V 895.5 H 2250" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 960 1345.5 H 946 V 1664.5 H 890" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 1140 1481 V 1509.5 H 1140 V 1580" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 1320 1345.5 H 1556 V 1325.5 H 1820" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 1320 1345.5 H 1778 V 1325.5 H 2250" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 1750 1295.5 H 2000 V 1325.5 H 2250" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 2180 1325.5 H 2222 V 1325.5 H 2250" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 2180 530 H 2229 V 479 H 2250" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 2180 530 H 2236 V 895.5 H 2250" class="relation" marker-start="url(#one)" marker-end="url(#many)"/>
+<path d="M 2000 650 V 899 H 2430 V 1190" class="relation" marker-start="url(#one)" marker-end="url(#many)"/></g>
+  <g id="entities"><g id="table-companies" filter="url(#shadow)">
+    <rect x="1320" y="105" width="360" height="240" rx="7" fill="#fff" class="card"/>
+    <path d="M 1327 105 H 1673 Q 1680 105 1680 112 V 151 H 1320 V 112 Q 1320 105 1327 105 Z" fill="#f7bcae"/>
+    <text x="1338" y="135" class="table-title">companies</text>
+    <g>
+      <rect x="1321" y="151" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1399" y="151" width="280" height="31" fill="#ffffff"/>
+      <line x1="1320" y1="151" x2="1680" y2="151" class="row-line"/>
+      <text x="1359" y="172" text-anchor="middle" class="key">PK</text>
+      <text x="1413" y="172" class="field">id</text>
+      <text x="1666" y="172" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="1321" y="182" width="78" height="31" fill="#ffffff"/>
+      <rect x="1399" y="182" width="280" height="31" fill="#ffffff"/>
+      <line x1="1320" y1="182" x2="1680" y2="182" class="row-line"/>
+      <text x="1359" y="203" text-anchor="middle" class="key"></text>
+      <text x="1413" y="203" class="field">slug</text>
+      <text x="1666" y="203" text-anchor="end" class="type">VARCHAR</text>
+    </g>
+<g>
+      <rect x="1321" y="213" width="78" height="31" fill="#ffffff"/>
+      <rect x="1399" y="213" width="280" height="31" fill="#ffffff"/>
+      <line x1="1320" y1="213" x2="1680" y2="213" class="row-line"/>
+      <text x="1359" y="234" text-anchor="middle" class="key"></text>
+      <text x="1413" y="234" class="field">legal_name</text>
+      <text x="1666" y="234" text-anchor="end" class="type">VARCHAR</text>
+    </g>
+<g>
+      <rect x="1321" y="244" width="78" height="31" fill="#ffffff"/>
+      <rect x="1399" y="244" width="280" height="31" fill="#ffffff"/>
+      <line x1="1320" y1="244" x2="1680" y2="244" class="row-line"/>
+      <text x="1359" y="265" text-anchor="middle" class="key"></text>
+      <text x="1413" y="265" class="field">trade_name</text>
+      <text x="1666" y="265" text-anchor="end" class="type">VARCHAR</text>
+    </g>
+<g>
+      <rect x="1321" y="275" width="78" height="31" fill="#ffffff"/>
+      <rect x="1399" y="275" width="280" height="31" fill="#ffffff"/>
+      <line x1="1320" y1="275" x2="1680" y2="275" class="row-line"/>
+      <text x="1359" y="296" text-anchor="middle" class="key"></text>
+      <text x="1413" y="296" class="field">invoice_prefix</text>
+      <text x="1666" y="296" text-anchor="end" class="type">VARCHAR</text>
+    </g>
+<g>
+      <rect x="1321" y="306" width="78" height="31" fill="#ffffff"/>
+      <rect x="1399" y="306" width="280" height="31" fill="#ffffff"/>
+      <line x1="1320" y1="306" x2="1680" y2="306" class="row-line"/>
+      <text x="1359" y="327" text-anchor="middle" class="key"></text>
+      <text x="1413" y="327" class="field">payment_term_days</text>
+      <text x="1666" y="327" text-anchor="end" class="type">SMALLINT</text>
+    </g>
+    <rect x="1320" y="105" width="360" height="240" rx="7" fill="none" class="card-outline"/>
+  </g>
+<g id="table-users" filter="url(#shadow)">
+    <rect x="100" y="400" width="360" height="240" rx="7" fill="#fff" class="card"/>
+    <path d="M 107 400 H 453 Q 460 400 460 407 V 446 H 100 V 407 Q 100 400 107 400 Z" fill="#f7bcae"/>
+    <text x="118" y="430" class="table-title">users</text>
+    <g>
+      <rect x="101" y="446" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="179" y="446" width="280" height="31" fill="#ffffff"/>
+      <line x1="100" y1="446" x2="460" y2="446" class="row-line"/>
+      <text x="139" y="467" text-anchor="middle" class="key">PK</text>
+      <text x="193" y="467" class="field">id</text>
+      <text x="446" y="467" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="101" y="477" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="179" y="477" width="280" height="31" fill="#ffffff"/>
+      <line x1="100" y1="477" x2="460" y2="477" class="row-line"/>
+      <text x="139" y="498" text-anchor="middle" class="key">FK</text>
+      <text x="193" y="498" class="field">company_id</text>
+      <text x="446" y="498" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="101" y="508" width="78" height="31" fill="#ffffff"/>
+      <rect x="179" y="508" width="280" height="31" fill="#ffffff"/>
+      <line x1="100" y1="508" x2="460" y2="508" class="row-line"/>
+      <text x="139" y="529" text-anchor="middle" class="key"></text>
+      <text x="193" y="529" class="field">email</text>
+      <text x="446" y="529" text-anchor="end" class="type">VARCHAR</text>
+    </g>
+<g>
+      <rect x="101" y="539" width="78" height="31" fill="#ffffff"/>
+      <rect x="179" y="539" width="280" height="31" fill="#ffffff"/>
+      <line x1="100" y1="539" x2="460" y2="539" class="row-line"/>
+      <text x="139" y="560" text-anchor="middle" class="key"></text>
+      <text x="193" y="560" class="field">display_name</text>
+      <text x="446" y="560" text-anchor="end" class="type">VARCHAR</text>
+    </g>
+<g>
+      <rect x="101" y="570" width="78" height="31" fill="#ffffff"/>
+      <rect x="179" y="570" width="280" height="31" fill="#ffffff"/>
+      <line x1="100" y1="570" x2="460" y2="570" class="row-line"/>
+      <text x="139" y="591" text-anchor="middle" class="key"></text>
+      <text x="193" y="591" class="field">role</text>
+      <text x="446" y="591" text-anchor="end" class="type">ENUM</text>
+    </g>
+<g>
+      <rect x="101" y="601" width="78" height="31" fill="#ffffff"/>
+      <rect x="179" y="601" width="280" height="31" fill="#ffffff"/>
+      <line x1="100" y1="601" x2="460" y2="601" class="row-line"/>
+      <text x="139" y="622" text-anchor="middle" class="key"></text>
+      <text x="193" y="622" class="field">active</text>
+      <text x="446" y="622" text-anchor="end" class="type">BOOLEAN</text>
+    </g>
+    <rect x="100" y="400" width="360" height="240" rx="7" fill="none" class="card-outline"/>
+  </g>
+<g id="table-user_preferences" filter="url(#shadow)">
+    <rect x="100" y="760" width="360" height="178" rx="7" fill="#fff" class="card"/>
+    <path d="M 107 760 H 453 Q 460 760 460 767 V 806 H 100 V 767 Q 100 760 107 760 Z" fill="#f7bcae"/>
+    <text x="118" y="790" class="table-title">user_preferences</text>
+    <g>
+      <rect x="101" y="806" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="179" y="806" width="280" height="31" fill="#ffffff"/>
+      <line x1="100" y1="806" x2="460" y2="806" class="row-line"/>
+      <text x="139" y="827" text-anchor="middle" class="key">PK/FK</text>
+      <text x="193" y="827" class="field">user_id</text>
+      <text x="446" y="827" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="101" y="837" width="78" height="31" fill="#ffffff"/>
+      <rect x="179" y="837" width="280" height="31" fill="#ffffff"/>
+      <line x1="100" y1="837" x2="460" y2="837" class="row-line"/>
+      <text x="139" y="858" text-anchor="middle" class="key"></text>
+      <text x="193" y="858" class="field">theme</text>
+      <text x="446" y="858" text-anchor="end" class="type">ENUM</text>
+    </g>
+<g>
+      <rect x="101" y="868" width="78" height="31" fill="#ffffff"/>
+      <rect x="179" y="868" width="280" height="31" fill="#ffffff"/>
+      <line x1="100" y1="868" x2="460" y2="868" class="row-line"/>
+      <text x="139" y="889" text-anchor="middle" class="key"></text>
+      <text x="193" y="889" class="field">email_notifications</text>
+      <text x="446" y="889" text-anchor="end" class="type">BOOLEAN</text>
+    </g>
+<g>
+      <rect x="101" y="899" width="78" height="31" fill="#ffffff"/>
+      <rect x="179" y="899" width="280" height="31" fill="#ffffff"/>
+      <line x1="100" y1="899" x2="460" y2="899" class="row-line"/>
+      <text x="139" y="920" text-anchor="middle" class="key"></text>
+      <text x="193" y="920" class="field">approval_notifications</text>
+      <text x="446" y="920" text-anchor="end" class="type">BOOLEAN</text>
+    </g>
+    <rect x="100" y="760" width="360" height="178" rx="7" fill="none" class="card-outline"/>
+  </g>
+<g id="table-audit_log" filter="url(#shadow)">
+    <rect x="100" y="1080" width="360" height="240" rx="7" fill="#fff" class="card"/>
+    <path d="M 107 1080 H 453 Q 460 1080 460 1087 V 1126 H 100 V 1087 Q 100 1080 107 1080 Z" fill="#f7bcae"/>
+    <text x="118" y="1110" class="table-title">audit_log</text>
+    <g>
+      <rect x="101" y="1126" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="179" y="1126" width="280" height="31" fill="#ffffff"/>
+      <line x1="100" y1="1126" x2="460" y2="1126" class="row-line"/>
+      <text x="139" y="1147" text-anchor="middle" class="key">PK</text>
+      <text x="193" y="1147" class="field">id</text>
+      <text x="446" y="1147" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="101" y="1157" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="179" y="1157" width="280" height="31" fill="#ffffff"/>
+      <line x1="100" y1="1157" x2="460" y2="1157" class="row-line"/>
+      <text x="139" y="1178" text-anchor="middle" class="key">FK</text>
+      <text x="193" y="1178" class="field">company_id</text>
+      <text x="446" y="1178" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="101" y="1188" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="179" y="1188" width="280" height="31" fill="#ffffff"/>
+      <line x1="100" y1="1188" x2="460" y2="1188" class="row-line"/>
+      <text x="139" y="1209" text-anchor="middle" class="key">FK</text>
+      <text x="193" y="1209" class="field">actor_user_id</text>
+      <text x="446" y="1209" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="101" y="1219" width="78" height="31" fill="#ffffff"/>
+      <rect x="179" y="1219" width="280" height="31" fill="#ffffff"/>
+      <line x1="100" y1="1219" x2="460" y2="1219" class="row-line"/>
+      <text x="139" y="1240" text-anchor="middle" class="key"></text>
+      <text x="193" y="1240" class="field">event_type</text>
+      <text x="446" y="1240" text-anchor="end" class="type">VARCHAR</text>
+    </g>
+<g>
+      <rect x="101" y="1250" width="78" height="31" fill="#ffffff"/>
+      <rect x="179" y="1250" width="280" height="31" fill="#ffffff"/>
+      <line x1="100" y1="1250" x2="460" y2="1250" class="row-line"/>
+      <text x="139" y="1271" text-anchor="middle" class="key"></text>
+      <text x="193" y="1271" class="field">entity_type</text>
+      <text x="446" y="1271" text-anchor="end" class="type">VARCHAR</text>
+    </g>
+<g>
+      <rect x="101" y="1281" width="78" height="31" fill="#ffffff"/>
+      <rect x="179" y="1281" width="280" height="31" fill="#ffffff"/>
+      <line x1="100" y1="1281" x2="460" y2="1281" class="row-line"/>
+      <text x="139" y="1302" text-anchor="middle" class="key"></text>
+      <text x="193" y="1302" class="field">entity_id</text>
+      <text x="446" y="1302" text-anchor="end" class="type">VARCHAR</text>
+    </g>
+    <rect x="100" y="1080" width="360" height="240" rx="7" fill="none" class="card-outline"/>
+  </g>
+<g id="table-employees" filter="url(#shadow)">
+    <rect x="530" y="400" width="360" height="240" rx="7" fill="#fff" class="card"/>
+    <path d="M 537 400 H 883 Q 890 400 890 407 V 446 H 530 V 407 Q 530 400 537 400 Z" fill="#f7bcae"/>
+    <text x="548" y="430" class="table-title">employees</text>
+    <g>
+      <rect x="531" y="446" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="609" y="446" width="280" height="31" fill="#ffffff"/>
+      <line x1="530" y1="446" x2="890" y2="446" class="row-line"/>
+      <text x="569" y="467" text-anchor="middle" class="key">PK</text>
+      <text x="623" y="467" class="field">id</text>
+      <text x="876" y="467" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="531" y="477" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="609" y="477" width="280" height="31" fill="#ffffff"/>
+      <line x1="530" y1="477" x2="890" y2="477" class="row-line"/>
+      <text x="569" y="498" text-anchor="middle" class="key">FK</text>
+      <text x="623" y="498" class="field">company_id</text>
+      <text x="876" y="498" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="531" y="508" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="609" y="508" width="280" height="31" fill="#ffffff"/>
+      <line x1="530" y1="508" x2="890" y2="508" class="row-line"/>
+      <text x="569" y="529" text-anchor="middle" class="key">FK</text>
+      <text x="623" y="529" class="field">user_id</text>
+      <text x="876" y="529" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="531" y="539" width="78" height="31" fill="#ffffff"/>
+      <rect x="609" y="539" width="280" height="31" fill="#ffffff"/>
+      <line x1="530" y1="539" x2="890" y2="539" class="row-line"/>
+      <text x="569" y="560" text-anchor="middle" class="key"></text>
+      <text x="623" y="560" class="field">full_name</text>
+      <text x="876" y="560" text-anchor="end" class="type">VARCHAR</text>
+    </g>
+<g>
+      <rect x="531" y="570" width="78" height="31" fill="#ffffff"/>
+      <rect x="609" y="570" width="280" height="31" fill="#ffffff"/>
+      <line x1="530" y1="570" x2="890" y2="570" class="row-line"/>
+      <text x="569" y="591" text-anchor="middle" class="key"></text>
+      <text x="623" y="591" class="field">weekly_contract_hours</text>
+      <text x="876" y="591" text-anchor="end" class="type">DECIMAL</text>
+    </g>
+<g>
+      <rect x="531" y="601" width="78" height="31" fill="#ffffff"/>
+      <rect x="609" y="601" width="280" height="31" fill="#ffffff"/>
+      <line x1="530" y1="601" x2="890" y2="601" class="row-line"/>
+      <text x="569" y="622" text-anchor="middle" class="key"></text>
+      <text x="623" y="622" class="field">active</text>
+      <text x="876" y="622" text-anchor="end" class="type">BOOLEAN</text>
+    </g>
+    <rect x="530" y="400" width="360" height="240" rx="7" fill="none" class="card-outline"/>
+  </g>
+<g id="table-counterparties" filter="url(#shadow)">
+    <rect x="530" y="790" width="360" height="240" rx="7" fill="#fff" class="card"/>
+    <path d="M 537 790 H 883 Q 890 790 890 797 V 836 H 530 V 797 Q 530 790 537 790 Z" fill="#f7bcae"/>
+    <text x="548" y="820" class="table-title">counterparties</text>
+    <g>
+      <rect x="531" y="836" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="609" y="836" width="280" height="31" fill="#ffffff"/>
+      <line x1="530" y1="836" x2="890" y2="836" class="row-line"/>
+      <text x="569" y="857" text-anchor="middle" class="key">PK</text>
+      <text x="623" y="857" class="field">id</text>
+      <text x="876" y="857" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="531" y="867" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="609" y="867" width="280" height="31" fill="#ffffff"/>
+      <line x1="530" y1="867" x2="890" y2="867" class="row-line"/>
+      <text x="569" y="888" text-anchor="middle" class="key">FK</text>
+      <text x="623" y="888" class="field">company_id</text>
+      <text x="876" y="888" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="531" y="898" width="78" height="31" fill="#ffffff"/>
+      <rect x="609" y="898" width="280" height="31" fill="#ffffff"/>
+      <line x1="530" y1="898" x2="890" y2="898" class="row-line"/>
+      <text x="569" y="919" text-anchor="middle" class="key"></text>
+      <text x="623" y="919" class="field">type</text>
+      <text x="876" y="919" text-anchor="end" class="type">ENUM</text>
+    </g>
+<g>
+      <rect x="531" y="929" width="78" height="31" fill="#ffffff"/>
+      <rect x="609" y="929" width="280" height="31" fill="#ffffff"/>
+      <line x1="530" y1="929" x2="890" y2="929" class="row-line"/>
+      <text x="569" y="950" text-anchor="middle" class="key"></text>
+      <text x="623" y="950" class="field">legal_name</text>
+      <text x="876" y="950" text-anchor="end" class="type">VARCHAR</text>
+    </g>
+<g>
+      <rect x="531" y="960" width="78" height="31" fill="#ffffff"/>
+      <rect x="609" y="960" width="280" height="31" fill="#ffffff"/>
+      <line x1="530" y1="960" x2="890" y2="960" class="row-line"/>
+      <text x="569" y="981" text-anchor="middle" class="key"></text>
+      <text x="623" y="981" class="field">invoice_email</text>
+      <text x="876" y="981" text-anchor="end" class="type">VARCHAR</text>
+    </g>
+<g>
+      <rect x="531" y="991" width="78" height="31" fill="#ffffff"/>
+      <rect x="609" y="991" width="280" height="31" fill="#ffffff"/>
+      <line x1="530" y1="991" x2="890" y2="991" class="row-line"/>
+      <text x="569" y="1012" text-anchor="middle" class="key"></text>
+      <text x="623" y="1012" class="field">active</text>
+      <text x="876" y="1012" text-anchor="end" class="type">BOOLEAN</text>
+    </g>
+    <rect x="530" y="790" width="360" height="240" rx="7" fill="none" class="card-outline"/>
+  </g>
+<g id="table-assignments" filter="url(#shadow)">
+    <rect x="960" y="470" width="360" height="271" rx="7" fill="#fff" class="card"/>
+    <path d="M 967 470 H 1313 Q 1320 470 1320 477 V 516 H 960 V 477 Q 960 470 967 470 Z" fill="#f7bcae"/>
+    <text x="978" y="500" class="table-title">assignments</text>
+    <g>
+      <rect x="961" y="516" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1039" y="516" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="516" x2="1320" y2="516" class="row-line"/>
+      <text x="999" y="537" text-anchor="middle" class="key">PK</text>
+      <text x="1053" y="537" class="field">id</text>
+      <text x="1306" y="537" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="961" y="547" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1039" y="547" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="547" x2="1320" y2="547" class="row-line"/>
+      <text x="999" y="568" text-anchor="middle" class="key">FK</text>
+      <text x="1053" y="568" class="field">company_id</text>
+      <text x="1306" y="568" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="961" y="578" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1039" y="578" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="578" x2="1320" y2="578" class="row-line"/>
+      <text x="999" y="599" text-anchor="middle" class="key">FK</text>
+      <text x="1053" y="599" class="field">employee_id</text>
+      <text x="1306" y="599" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="961" y="609" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1039" y="609" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="609" x2="1320" y2="609" class="row-line"/>
+      <text x="999" y="630" text-anchor="middle" class="key">FK</text>
+      <text x="1053" y="630" class="field">client_id</text>
+      <text x="1306" y="630" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="961" y="640" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1039" y="640" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="640" x2="1320" y2="640" class="row-line"/>
+      <text x="999" y="661" text-anchor="middle" class="key">FK</text>
+      <text x="1053" y="661" class="field">broker_id</text>
+      <text x="1306" y="661" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="961" y="671" width="78" height="31" fill="#ffffff"/>
+      <rect x="1039" y="671" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="671" x2="1320" y2="671" class="row-line"/>
+      <text x="999" y="692" text-anchor="middle" class="key"></text>
+      <text x="1053" y="692" class="field">hourly_rate</text>
+      <text x="1306" y="692" text-anchor="end" class="type">DECIMAL</text>
+    </g>
+<g>
+      <rect x="961" y="702" width="78" height="31" fill="#ffffff"/>
+      <rect x="1039" y="702" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="702" x2="1320" y2="702" class="row-line"/>
+      <text x="999" y="723" text-anchor="middle" class="key"></text>
+      <text x="1053" y="723" class="field">vat_percentage</text>
+      <text x="1306" y="723" text-anchor="end" class="type">DECIMAL</text>
+    </g>
+    <rect x="960" y="470" width="360" height="271" rx="7" fill="none" class="card-outline"/>
+  </g>
+<g id="table-periods" filter="url(#shadow)">
+    <rect x="960" y="850" width="360" height="240" rx="7" fill="#fff" class="card"/>
+    <path d="M 967 850 H 1313 Q 1320 850 1320 857 V 896 H 960 V 857 Q 960 850 967 850 Z" fill="#f7bcae"/>
+    <text x="978" y="880" class="table-title">periods</text>
+    <g>
+      <rect x="961" y="896" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1039" y="896" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="896" x2="1320" y2="896" class="row-line"/>
+      <text x="999" y="917" text-anchor="middle" class="key">PK</text>
+      <text x="1053" y="917" class="field">id</text>
+      <text x="1306" y="917" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="961" y="927" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1039" y="927" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="927" x2="1320" y2="927" class="row-line"/>
+      <text x="999" y="948" text-anchor="middle" class="key">FK</text>
+      <text x="1053" y="948" class="field">company_id</text>
+      <text x="1306" y="948" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="961" y="958" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1039" y="958" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="958" x2="1320" y2="958" class="row-line"/>
+      <text x="999" y="979" text-anchor="middle" class="key">FK</text>
+      <text x="1053" y="979" class="field">closed_by</text>
+      <text x="1306" y="979" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="961" y="989" width="78" height="31" fill="#ffffff"/>
+      <rect x="1039" y="989" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="989" x2="1320" y2="989" class="row-line"/>
+      <text x="999" y="1010" text-anchor="middle" class="key"></text>
+      <text x="1053" y="1010" class="field">year</text>
+      <text x="1306" y="1010" text-anchor="end" class="type">SMALLINT</text>
+    </g>
+<g>
+      <rect x="961" y="1020" width="78" height="31" fill="#ffffff"/>
+      <rect x="1039" y="1020" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="1020" x2="1320" y2="1020" class="row-line"/>
+      <text x="999" y="1041" text-anchor="middle" class="key"></text>
+      <text x="1053" y="1041" class="field">month</text>
+      <text x="1306" y="1041" text-anchor="end" class="type">TINYINT</text>
+    </g>
+<g>
+      <rect x="961" y="1051" width="78" height="31" fill="#ffffff"/>
+      <rect x="1039" y="1051" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="1051" x2="1320" y2="1051" class="row-line"/>
+      <text x="999" y="1072" text-anchor="middle" class="key"></text>
+      <text x="1053" y="1072" class="field">status</text>
+      <text x="1306" y="1072" text-anchor="end" class="type">ENUM</text>
+    </g>
+    <rect x="960" y="850" width="360" height="240" rx="7" fill="none" class="card-outline"/>
+  </g>
+<g id="table-timesheets" filter="url(#shadow)">
+    <rect x="960" y="1210" width="360" height="271" rx="7" fill="#fff" class="card"/>
+    <path d="M 967 1210 H 1313 Q 1320 1210 1320 1217 V 1256 H 960 V 1217 Q 960 1210 967 1210 Z" fill="#f7bcae"/>
+    <text x="978" y="1240" class="table-title">timesheets</text>
+    <g>
+      <rect x="961" y="1256" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1039" y="1256" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="1256" x2="1320" y2="1256" class="row-line"/>
+      <text x="999" y="1277" text-anchor="middle" class="key">PK</text>
+      <text x="1053" y="1277" class="field">id</text>
+      <text x="1306" y="1277" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="961" y="1287" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1039" y="1287" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="1287" x2="1320" y2="1287" class="row-line"/>
+      <text x="999" y="1308" text-anchor="middle" class="key">FK</text>
+      <text x="1053" y="1308" class="field">period_id</text>
+      <text x="1306" y="1308" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="961" y="1318" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1039" y="1318" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="1318" x2="1320" y2="1318" class="row-line"/>
+      <text x="999" y="1339" text-anchor="middle" class="key">FK</text>
+      <text x="1053" y="1339" class="field">employee_id</text>
+      <text x="1306" y="1339" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="961" y="1349" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1039" y="1349" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="1349" x2="1320" y2="1349" class="row-line"/>
+      <text x="999" y="1370" text-anchor="middle" class="key">FK</text>
+      <text x="1053" y="1370" class="field">assignment_id</text>
+      <text x="1306" y="1370" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="961" y="1380" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1039" y="1380" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="1380" x2="1320" y2="1380" class="row-line"/>
+      <text x="999" y="1401" text-anchor="middle" class="key">FK</text>
+      <text x="1053" y="1401" class="field">approved_by</text>
+      <text x="1306" y="1401" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="961" y="1411" width="78" height="31" fill="#ffffff"/>
+      <rect x="1039" y="1411" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="1411" x2="1320" y2="1411" class="row-line"/>
+      <text x="999" y="1432" text-anchor="middle" class="key"></text>
+      <text x="1053" y="1432" class="field">billable_hours</text>
+      <text x="1306" y="1432" text-anchor="end" class="type">DECIMAL</text>
+    </g>
+<g>
+      <rect x="961" y="1442" width="78" height="31" fill="#ffffff"/>
+      <rect x="1039" y="1442" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="1442" x2="1320" y2="1442" class="row-line"/>
+      <text x="999" y="1463" text-anchor="middle" class="key"></text>
+      <text x="1053" y="1463" class="field">status / version</text>
+      <text x="1306" y="1463" text-anchor="end" class="type">ENUM / INT</text>
+    </g>
+    <rect x="960" y="1210" width="360" height="271" rx="7" fill="none" class="card-outline"/>
+  </g>
+<g id="table-time_entries" filter="url(#shadow)">
+    <rect x="530" y="1560" width="360" height="209" rx="7" fill="#fff" class="card"/>
+    <path d="M 537 1560 H 883 Q 890 1560 890 1567 V 1606 H 530 V 1567 Q 530 1560 537 1560 Z" fill="#f7bcae"/>
+    <text x="548" y="1590" class="table-title">time_entries</text>
+    <g>
+      <rect x="531" y="1606" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="609" y="1606" width="280" height="31" fill="#ffffff"/>
+      <line x1="530" y1="1606" x2="890" y2="1606" class="row-line"/>
+      <text x="569" y="1627" text-anchor="middle" class="key">PK</text>
+      <text x="623" y="1627" class="field">id</text>
+      <text x="876" y="1627" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="531" y="1637" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="609" y="1637" width="280" height="31" fill="#ffffff"/>
+      <line x1="530" y1="1637" x2="890" y2="1637" class="row-line"/>
+      <text x="569" y="1658" text-anchor="middle" class="key">FK</text>
+      <text x="623" y="1658" class="field">timesheet_id</text>
+      <text x="876" y="1658" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="531" y="1668" width="78" height="31" fill="#ffffff"/>
+      <rect x="609" y="1668" width="280" height="31" fill="#ffffff"/>
+      <line x1="530" y1="1668" x2="890" y2="1668" class="row-line"/>
+      <text x="569" y="1689" text-anchor="middle" class="key"></text>
+      <text x="623" y="1689" class="field">work_date</text>
+      <text x="876" y="1689" text-anchor="end" class="type">DATE</text>
+    </g>
+<g>
+      <rect x="531" y="1699" width="78" height="31" fill="#ffffff"/>
+      <rect x="609" y="1699" width="280" height="31" fill="#ffffff"/>
+      <line x1="530" y1="1699" x2="890" y2="1699" class="row-line"/>
+      <text x="569" y="1720" text-anchor="middle" class="key"></text>
+      <text x="623" y="1720" class="field">hours</text>
+      <text x="876" y="1720" text-anchor="end" class="type">DECIMAL</text>
+    </g>
+<g>
+      <rect x="531" y="1730" width="78" height="31" fill="#ffffff"/>
+      <rect x="609" y="1730" width="280" height="31" fill="#ffffff"/>
+      <line x1="530" y1="1730" x2="890" y2="1730" class="row-line"/>
+      <text x="569" y="1751" text-anchor="middle" class="key"></text>
+      <text x="623" y="1751" class="field">entry_type</text>
+      <text x="876" y="1751" text-anchor="end" class="type">ENUM</text>
+    </g>
+    <rect x="530" y="1560" width="360" height="209" rx="7" fill="none" class="card-outline"/>
+  </g>
+<g id="table-timesheet_corrections" filter="url(#shadow)">
+    <rect x="960" y="1580" width="360" height="209" rx="7" fill="#fff" class="card"/>
+    <path d="M 967 1580 H 1313 Q 1320 1580 1320 1587 V 1626 H 960 V 1587 Q 960 1580 967 1580 Z" fill="#f7bcae"/>
+    <text x="978" y="1610" class="table-title">timesheet_corrections</text>
+    <g>
+      <rect x="961" y="1626" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1039" y="1626" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="1626" x2="1320" y2="1626" class="row-line"/>
+      <text x="999" y="1647" text-anchor="middle" class="key">PK</text>
+      <text x="1053" y="1647" class="field">id</text>
+      <text x="1306" y="1647" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="961" y="1657" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1039" y="1657" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="1657" x2="1320" y2="1657" class="row-line"/>
+      <text x="999" y="1678" text-anchor="middle" class="key">FK</text>
+      <text x="1053" y="1678" class="field">timesheet_id</text>
+      <text x="1306" y="1678" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="961" y="1688" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1039" y="1688" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="1688" x2="1320" y2="1688" class="row-line"/>
+      <text x="999" y="1709" text-anchor="middle" class="key">FK</text>
+      <text x="1053" y="1709" class="field">requested_by</text>
+      <text x="1306" y="1709" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="961" y="1719" width="78" height="31" fill="#ffffff"/>
+      <rect x="1039" y="1719" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="1719" x2="1320" y2="1719" class="row-line"/>
+      <text x="999" y="1740" text-anchor="middle" class="key"></text>
+      <text x="1053" y="1740" class="field">correction_message</text>
+      <text x="1306" y="1740" text-anchor="end" class="type">TEXT</text>
+    </g>
+<g>
+      <rect x="961" y="1750" width="78" height="31" fill="#ffffff"/>
+      <rect x="1039" y="1750" width="280" height="31" fill="#ffffff"/>
+      <line x1="960" y1="1750" x2="1320" y2="1750" class="row-line"/>
+      <text x="999" y="1771" text-anchor="middle" class="key"></text>
+      <text x="1053" y="1771" class="field">resubmitted_at</text>
+      <text x="1306" y="1771" text-anchor="end" class="type">TIMESTAMP</text>
+    </g>
+    <rect x="960" y="1580" width="360" height="209" rx="7" fill="none" class="card-outline"/>
+  </g>
+<g id="table-mail_recipients" filter="url(#shadow)">
+    <rect x="1390" y="430" width="360" height="209" rx="7" fill="#fff" class="card"/>
+    <path d="M 1397 430 H 1743 Q 1750 430 1750 437 V 476 H 1390 V 437 Q 1390 430 1397 430 Z" fill="#f7bcae"/>
+    <text x="1408" y="460" class="table-title">mail_recipients</text>
+    <g>
+      <rect x="1391" y="476" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1469" y="476" width="280" height="31" fill="#ffffff"/>
+      <line x1="1390" y1="476" x2="1750" y2="476" class="row-line"/>
+      <text x="1429" y="497" text-anchor="middle" class="key">PK</text>
+      <text x="1483" y="497" class="field">id</text>
+      <text x="1736" y="497" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="1391" y="507" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1469" y="507" width="280" height="31" fill="#ffffff"/>
+      <line x1="1390" y1="507" x2="1750" y2="507" class="row-line"/>
+      <text x="1429" y="528" text-anchor="middle" class="key">FK</text>
+      <text x="1483" y="528" class="field">company_id</text>
+      <text x="1736" y="528" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="1391" y="538" width="78" height="31" fill="#ffffff"/>
+      <rect x="1469" y="538" width="280" height="31" fill="#ffffff"/>
+      <line x1="1390" y1="538" x2="1750" y2="538" class="row-line"/>
+      <text x="1429" y="559" text-anchor="middle" class="key"></text>
+      <text x="1483" y="559" class="field">recipient_key</text>
+      <text x="1736" y="559" text-anchor="end" class="type">VARCHAR</text>
+    </g>
+<g>
+      <rect x="1391" y="569" width="78" height="31" fill="#ffffff"/>
+      <rect x="1469" y="569" width="280" height="31" fill="#ffffff"/>
+      <line x1="1390" y1="569" x2="1750" y2="569" class="row-line"/>
+      <text x="1429" y="590" text-anchor="middle" class="key"></text>
+      <text x="1483" y="590" class="field">email</text>
+      <text x="1736" y="590" text-anchor="end" class="type">VARCHAR</text>
+    </g>
+<g>
+      <rect x="1391" y="600" width="78" height="31" fill="#ffffff"/>
+      <rect x="1469" y="600" width="280" height="31" fill="#ffffff"/>
+      <line x1="1390" y1="600" x2="1750" y2="600" class="row-line"/>
+      <text x="1429" y="621" text-anchor="middle" class="key"></text>
+      <text x="1483" y="621" class="field">active</text>
+      <text x="1736" y="621" text-anchor="end" class="type">BOOLEAN</text>
+    </g>
+    <rect x="1390" y="430" width="360" height="209" rx="7" fill="none" class="card-outline"/>
+  </g>
+<g id="table-assignment_mail_routes" filter="url(#shadow)">
+    <rect x="1390" y="780" width="360" height="178" rx="7" fill="#fff" class="card"/>
+    <path d="M 1397 780 H 1743 Q 1750 780 1750 787 V 826 H 1390 V 787 Q 1390 780 1397 780 Z" fill="#f7bcae"/>
+    <text x="1408" y="810" class="table-title">assignment_mail_routes</text>
+    <g>
+      <rect x="1391" y="826" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1469" y="826" width="280" height="31" fill="#ffffff"/>
+      <line x1="1390" y1="826" x2="1750" y2="826" class="row-line"/>
+      <text x="1429" y="847" text-anchor="middle" class="key">PK/FK</text>
+      <text x="1483" y="847" class="field">assignment_id</text>
+      <text x="1736" y="847" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="1391" y="857" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1469" y="857" width="280" height="31" fill="#ffffff"/>
+      <line x1="1390" y1="857" x2="1750" y2="857" class="row-line"/>
+      <text x="1429" y="878" text-anchor="middle" class="key">PK/FK</text>
+      <text x="1483" y="878" class="field">mail_recipient_id</text>
+      <text x="1736" y="878" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="1391" y="888" width="78" height="31" fill="#ffffff"/>
+      <rect x="1469" y="888" width="280" height="31" fill="#ffffff"/>
+      <line x1="1390" y1="888" x2="1750" y2="888" class="row-line"/>
+      <text x="1429" y="909" text-anchor="middle" class="key"></text>
+      <text x="1483" y="909" class="field">enabled</text>
+      <text x="1736" y="909" text-anchor="end" class="type">BOOLEAN</text>
+    </g>
+<g>
+      <rect x="1391" y="919" width="78" height="31" fill="#ffffff"/>
+      <rect x="1469" y="919" width="280" height="31" fill="#ffffff"/>
+      <line x1="1390" y1="919" x2="1750" y2="919" class="row-line"/>
+      <text x="1429" y="940" text-anchor="middle" class="key"></text>
+      <text x="1483" y="940" class="field">include_invoice_pdf</text>
+      <text x="1736" y="940" text-anchor="end" class="type">BOOLEAN</text>
+    </g>
+    <rect x="1390" y="780" width="360" height="178" rx="7" fill="none" class="card-outline"/>
+  </g>
+<g id="table-customer_timesheets" filter="url(#shadow)">
+    <rect x="1390" y="1160" width="360" height="271" rx="7" fill="#fff" class="card"/>
+    <path d="M 1397 1160 H 1743 Q 1750 1160 1750 1167 V 1206 H 1390 V 1167 Q 1390 1160 1397 1160 Z" fill="#f7bcae"/>
+    <text x="1408" y="1190" class="table-title">customer_timesheets</text>
+    <g>
+      <rect x="1391" y="1206" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1469" y="1206" width="280" height="31" fill="#ffffff"/>
+      <line x1="1390" y1="1206" x2="1750" y2="1206" class="row-line"/>
+      <text x="1429" y="1227" text-anchor="middle" class="key">PK</text>
+      <text x="1483" y="1227" class="field">id</text>
+      <text x="1736" y="1227" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="1391" y="1237" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1469" y="1237" width="280" height="31" fill="#ffffff"/>
+      <line x1="1390" y1="1237" x2="1750" y2="1237" class="row-line"/>
+      <text x="1429" y="1258" text-anchor="middle" class="key">FK</text>
+      <text x="1483" y="1258" class="field">period_id</text>
+      <text x="1736" y="1258" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="1391" y="1268" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1469" y="1268" width="280" height="31" fill="#ffffff"/>
+      <line x1="1390" y1="1268" x2="1750" y2="1268" class="row-line"/>
+      <text x="1429" y="1289" text-anchor="middle" class="key">FK</text>
+      <text x="1483" y="1289" class="field">employee_id</text>
+      <text x="1736" y="1289" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="1391" y="1299" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1469" y="1299" width="280" height="31" fill="#ffffff"/>
+      <line x1="1390" y1="1299" x2="1750" y2="1299" class="row-line"/>
+      <text x="1429" y="1320" text-anchor="middle" class="key">FK</text>
+      <text x="1483" y="1320" class="field">assignment_id</text>
+      <text x="1736" y="1320" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="1391" y="1330" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1469" y="1330" width="280" height="31" fill="#ffffff"/>
+      <line x1="1390" y1="1330" x2="1750" y2="1330" class="row-line"/>
+      <text x="1429" y="1351" text-anchor="middle" class="key">FK</text>
+      <text x="1483" y="1351" class="field">uploaded_by / reviewed_by</text>
+      <text x="1736" y="1351" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="1391" y="1361" width="78" height="31" fill="#ffffff"/>
+      <rect x="1469" y="1361" width="280" height="31" fill="#ffffff"/>
+      <line x1="1390" y1="1361" x2="1750" y2="1361" class="row-line"/>
+      <text x="1429" y="1382" text-anchor="middle" class="key"></text>
+      <text x="1483" y="1382" class="field">status</text>
+      <text x="1736" y="1382" text-anchor="end" class="type">ENUM</text>
+    </g>
+<g>
+      <rect x="1391" y="1392" width="78" height="31" fill="#ffffff"/>
+      <rect x="1469" y="1392" width="280" height="31" fill="#ffffff"/>
+      <line x1="1390" y1="1392" x2="1750" y2="1392" class="row-line"/>
+      <text x="1429" y="1413" text-anchor="middle" class="key"></text>
+      <text x="1483" y="1413" class="field">storage_key</text>
+      <text x="1736" y="1413" text-anchor="end" class="type">VARCHAR</text>
+    </g>
+    <rect x="1390" y="1160" width="360" height="271" rx="7" fill="none" class="card-outline"/>
+  </g>
+<g id="table-invoices" filter="url(#shadow)">
+    <rect x="1820" y="1190" width="360" height="271" rx="7" fill="#fff" class="card"/>
+    <path d="M 1827 1190 H 2173 Q 2180 1190 2180 1197 V 1236 H 1820 V 1197 Q 1820 1190 1827 1190 Z" fill="#f7bcae"/>
+    <text x="1838" y="1220" class="table-title">invoices</text>
+    <g>
+      <rect x="1821" y="1236" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1899" y="1236" width="280" height="31" fill="#ffffff"/>
+      <line x1="1820" y1="1236" x2="2180" y2="1236" class="row-line"/>
+      <text x="1859" y="1257" text-anchor="middle" class="key">PK</text>
+      <text x="1913" y="1257" class="field">id</text>
+      <text x="2166" y="1257" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="1821" y="1267" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1899" y="1267" width="280" height="31" fill="#ffffff"/>
+      <line x1="1820" y1="1267" x2="2180" y2="1267" class="row-line"/>
+      <text x="1859" y="1288" text-anchor="middle" class="key">FK</text>
+      <text x="1913" y="1288" class="field">company_id</text>
+      <text x="2166" y="1288" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="1821" y="1298" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1899" y="1298" width="280" height="31" fill="#ffffff"/>
+      <line x1="1820" y1="1298" x2="2180" y2="1298" class="row-line"/>
+      <text x="1859" y="1319" text-anchor="middle" class="key">FK</text>
+      <text x="1913" y="1319" class="field">timesheet_id</text>
+      <text x="2166" y="1319" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="1821" y="1329" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1899" y="1329" width="280" height="31" fill="#ffffff"/>
+      <line x1="1820" y1="1329" x2="2180" y2="1329" class="row-line"/>
+      <text x="1859" y="1350" text-anchor="middle" class="key">FK</text>
+      <text x="1913" y="1350" class="field">recipient_id</text>
+      <text x="2166" y="1350" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="1821" y="1360" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1899" y="1360" width="280" height="31" fill="#ffffff"/>
+      <line x1="1820" y1="1360" x2="2180" y2="1360" class="row-line"/>
+      <text x="1859" y="1381" text-anchor="middle" class="key">FK</text>
+      <text x="1913" y="1381" class="field">created_by</text>
+      <text x="2166" y="1381" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="1821" y="1391" width="78" height="31" fill="#ffffff"/>
+      <rect x="1899" y="1391" width="280" height="31" fill="#ffffff"/>
+      <line x1="1820" y1="1391" x2="2180" y2="1391" class="row-line"/>
+      <text x="1859" y="1412" text-anchor="middle" class="key"></text>
+      <text x="1913" y="1412" class="field">invoice_number</text>
+      <text x="2166" y="1412" text-anchor="end" class="type">VARCHAR</text>
+    </g>
+<g>
+      <rect x="1821" y="1422" width="78" height="31" fill="#ffffff"/>
+      <rect x="1899" y="1422" width="280" height="31" fill="#ffffff"/>
+      <line x1="1820" y1="1422" x2="2180" y2="1422" class="row-line"/>
+      <text x="1859" y="1443" text-anchor="middle" class="key"></text>
+      <text x="1913" y="1443" class="field">total / status</text>
+      <text x="2166" y="1443" text-anchor="end" class="type">DECIMAL / ENUM</text>
+    </g>
+    <rect x="1820" y="1190" width="360" height="271" rx="7" fill="none" class="card-outline"/>
+  </g>
+<g id="table-announcements" filter="url(#shadow)">
+    <rect x="1820" y="410" width="360" height="240" rx="7" fill="#fff" class="card"/>
+    <path d="M 1827 410 H 2173 Q 2180 410 2180 417 V 456 H 1820 V 417 Q 1820 410 1827 410 Z" fill="#f7bcae"/>
+    <text x="1838" y="440" class="table-title">announcements</text>
+    <g>
+      <rect x="1821" y="456" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1899" y="456" width="280" height="31" fill="#ffffff"/>
+      <line x1="1820" y1="456" x2="2180" y2="456" class="row-line"/>
+      <text x="1859" y="477" text-anchor="middle" class="key">PK</text>
+      <text x="1913" y="477" class="field">id</text>
+      <text x="2166" y="477" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="1821" y="487" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1899" y="487" width="280" height="31" fill="#ffffff"/>
+      <line x1="1820" y1="487" x2="2180" y2="487" class="row-line"/>
+      <text x="1859" y="508" text-anchor="middle" class="key">FK</text>
+      <text x="1913" y="508" class="field">company_id</text>
+      <text x="2166" y="508" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="1821" y="518" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1899" y="518" width="280" height="31" fill="#ffffff"/>
+      <line x1="1820" y1="518" x2="2180" y2="518" class="row-line"/>
+      <text x="1859" y="539" text-anchor="middle" class="key">FK</text>
+      <text x="1913" y="539" class="field">created_by</text>
+      <text x="2166" y="539" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="1821" y="549" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="1899" y="549" width="280" height="31" fill="#ffffff"/>
+      <line x1="1820" y1="549" x2="2180" y2="549" class="row-line"/>
+      <text x="1859" y="570" text-anchor="middle" class="key">FK</text>
+      <text x="1913" y="570" class="field">correction / superseded</text>
+      <text x="2166" y="570" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="1821" y="580" width="78" height="31" fill="#ffffff"/>
+      <rect x="1899" y="580" width="280" height="31" fill="#ffffff"/>
+      <line x1="1820" y1="580" x2="2180" y2="580" class="row-line"/>
+      <text x="1859" y="601" text-anchor="middle" class="key"></text>
+      <text x="1913" y="601" class="field">kind / status</text>
+      <text x="2166" y="601" text-anchor="end" class="type">ENUM</text>
+    </g>
+<g>
+      <rect x="1821" y="611" width="78" height="31" fill="#ffffff"/>
+      <rect x="1899" y="611" width="280" height="31" fill="#ffffff"/>
+      <line x1="1820" y1="611" x2="2180" y2="611" class="row-line"/>
+      <text x="1859" y="632" text-anchor="middle" class="key"></text>
+      <text x="1913" y="632" class="field">title</text>
+      <text x="2166" y="632" text-anchor="end" class="type">VARCHAR</text>
+    </g>
+    <rect x="1820" y="410" width="360" height="240" rx="7" fill="none" class="card-outline"/>
+  </g>
+<g id="table-announcement_recipients" filter="url(#shadow)">
+    <rect x="2250" y="390" width="360" height="178" rx="7" fill="#fff" class="card"/>
+    <path d="M 2257 390 H 2603 Q 2610 390 2610 397 V 436 H 2250 V 397 Q 2250 390 2257 390 Z" fill="#f7bcae"/>
+    <text x="2268" y="420" class="table-title">announcement_recipients</text>
+    <g>
+      <rect x="2251" y="436" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="2329" y="436" width="280" height="31" fill="#ffffff"/>
+      <line x1="2250" y1="436" x2="2610" y2="436" class="row-line"/>
+      <text x="2289" y="457" text-anchor="middle" class="key">PK/FK</text>
+      <text x="2343" y="457" class="field">announcement_id</text>
+      <text x="2596" y="457" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="2251" y="467" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="2329" y="467" width="280" height="31" fill="#ffffff"/>
+      <line x1="2250" y1="467" x2="2610" y2="467" class="row-line"/>
+      <text x="2289" y="488" text-anchor="middle" class="key">PK/FK</text>
+      <text x="2343" y="488" class="field">user_id</text>
+      <text x="2596" y="488" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="2251" y="498" width="78" height="31" fill="#ffffff"/>
+      <rect x="2329" y="498" width="280" height="31" fill="#ffffff"/>
+      <line x1="2250" y1="498" x2="2610" y2="498" class="row-line"/>
+      <text x="2289" y="519" text-anchor="middle" class="key"></text>
+      <text x="2343" y="519" class="field">email_requested</text>
+      <text x="2596" y="519" text-anchor="end" class="type">BOOLEAN</text>
+    </g>
+<g>
+      <rect x="2251" y="529" width="78" height="31" fill="#ffffff"/>
+      <rect x="2329" y="529" width="280" height="31" fill="#ffffff"/>
+      <line x1="2250" y1="529" x2="2610" y2="529" class="row-line"/>
+      <text x="2289" y="550" text-anchor="middle" class="key"></text>
+      <text x="2343" y="550" class="field">read_at</text>
+      <text x="2596" y="550" text-anchor="end" class="type">TIMESTAMP</text>
+    </g>
+    <rect x="2250" y="390" width="360" height="178" rx="7" fill="none" class="card-outline"/>
+  </g>
+<g id="table-notifications" filter="url(#shadow)">
+    <rect x="2250" y="760" width="360" height="271" rx="7" fill="#fff" class="card"/>
+    <path d="M 2257 760 H 2603 Q 2610 760 2610 767 V 806 H 2250 V 767 Q 2250 760 2257 760 Z" fill="#f7bcae"/>
+    <text x="2268" y="790" class="table-title">notifications</text>
+    <g>
+      <rect x="2251" y="806" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="2329" y="806" width="280" height="31" fill="#ffffff"/>
+      <line x1="2250" y1="806" x2="2610" y2="806" class="row-line"/>
+      <text x="2289" y="827" text-anchor="middle" class="key">PK</text>
+      <text x="2343" y="827" class="field">id</text>
+      <text x="2596" y="827" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="2251" y="837" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="2329" y="837" width="280" height="31" fill="#ffffff"/>
+      <line x1="2250" y1="837" x2="2610" y2="837" class="row-line"/>
+      <text x="2289" y="858" text-anchor="middle" class="key">FK</text>
+      <text x="2343" y="858" class="field">company_id</text>
+      <text x="2596" y="858" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="2251" y="868" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="2329" y="868" width="280" height="31" fill="#ffffff"/>
+      <line x1="2250" y1="868" x2="2610" y2="868" class="row-line"/>
+      <text x="2289" y="889" text-anchor="middle" class="key">FK</text>
+      <text x="2343" y="889" class="field">user_id</text>
+      <text x="2596" y="889" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="2251" y="899" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="2329" y="899" width="280" height="31" fill="#ffffff"/>
+      <line x1="2250" y1="899" x2="2610" y2="899" class="row-line"/>
+      <text x="2289" y="920" text-anchor="middle" class="key">FK</text>
+      <text x="2343" y="920" class="field">period_id</text>
+      <text x="2596" y="920" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="2251" y="930" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="2329" y="930" width="280" height="31" fill="#ffffff"/>
+      <line x1="2250" y1="930" x2="2610" y2="930" class="row-line"/>
+      <text x="2289" y="951" text-anchor="middle" class="key">FK</text>
+      <text x="2343" y="951" class="field">announcement_id</text>
+      <text x="2596" y="951" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="2251" y="961" width="78" height="31" fill="#ffffff"/>
+      <rect x="2329" y="961" width="280" height="31" fill="#ffffff"/>
+      <line x1="2250" y1="961" x2="2610" y2="961" class="row-line"/>
+      <text x="2289" y="982" text-anchor="middle" class="key"></text>
+      <text x="2343" y="982" class="field">notification_type</text>
+      <text x="2596" y="982" text-anchor="end" class="type">ENUM</text>
+    </g>
+<g>
+      <rect x="2251" y="992" width="78" height="31" fill="#ffffff"/>
+      <rect x="2329" y="992" width="280" height="31" fill="#ffffff"/>
+      <line x1="2250" y1="992" x2="2610" y2="992" class="row-line"/>
+      <text x="2289" y="1013" text-anchor="middle" class="key"></text>
+      <text x="2343" y="1013" class="field">read_at</text>
+      <text x="2596" y="1013" text-anchor="end" class="type">TIMESTAMP</text>
+    </g>
+    <rect x="2250" y="760" width="360" height="271" rx="7" fill="none" class="card-outline"/>
+  </g>
+<g id="table-email_deliveries" filter="url(#shadow)">
+    <rect x="2250" y="1190" width="360" height="271" rx="7" fill="#fff" class="card"/>
+    <path d="M 2257 1190 H 2603 Q 2610 1190 2610 1197 V 1236 H 2250 V 1197 Q 2250 1190 2257 1190 Z" fill="#f7bcae"/>
+    <text x="2268" y="1220" class="table-title">email_deliveries</text>
+    <g>
+      <rect x="2251" y="1236" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="2329" y="1236" width="280" height="31" fill="#ffffff"/>
+      <line x1="2250" y1="1236" x2="2610" y2="1236" class="row-line"/>
+      <text x="2289" y="1257" text-anchor="middle" class="key">PK</text>
+      <text x="2343" y="1257" class="field">id</text>
+      <text x="2596" y="1257" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="2251" y="1267" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="2329" y="1267" width="280" height="31" fill="#ffffff"/>
+      <line x1="2250" y1="1267" x2="2610" y2="1267" class="row-line"/>
+      <text x="2289" y="1288" text-anchor="middle" class="key">FK</text>
+      <text x="2343" y="1288" class="field">invoice_id</text>
+      <text x="2596" y="1288" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="2251" y="1298" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="2329" y="1298" width="280" height="31" fill="#ffffff"/>
+      <line x1="2250" y1="1298" x2="2610" y2="1298" class="row-line"/>
+      <text x="2289" y="1319" text-anchor="middle" class="key">FK</text>
+      <text x="2343" y="1319" class="field">timesheet_id</text>
+      <text x="2596" y="1319" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="2251" y="1329" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="2329" y="1329" width="280" height="31" fill="#ffffff"/>
+      <line x1="2250" y1="1329" x2="2610" y2="1329" class="row-line"/>
+      <text x="2289" y="1350" text-anchor="middle" class="key">FK</text>
+      <text x="2343" y="1350" class="field">customer_timesheet_id</text>
+      <text x="2596" y="1350" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="2251" y="1360" width="78" height="31" fill="#e6e6e6"/>
+      <rect x="2329" y="1360" width="280" height="31" fill="#ffffff"/>
+      <line x1="2250" y1="1360" x2="2610" y2="1360" class="row-line"/>
+      <text x="2289" y="1381" text-anchor="middle" class="key">FK</text>
+      <text x="2343" y="1381" class="field">announcement_id</text>
+      <text x="2596" y="1381" text-anchor="end" class="type">BIGINT</text>
+    </g>
+<g>
+      <rect x="2251" y="1391" width="78" height="31" fill="#ffffff"/>
+      <rect x="2329" y="1391" width="280" height="31" fill="#ffffff"/>
+      <line x1="2250" y1="1391" x2="2610" y2="1391" class="row-line"/>
+      <text x="2289" y="1412" text-anchor="middle" class="key"></text>
+      <text x="2343" y="1412" class="field">channel / status</text>
+      <text x="2596" y="1412" text-anchor="end" class="type">ENUM</text>
+    </g>
+<g>
+      <rect x="2251" y="1422" width="78" height="31" fill="#ffffff"/>
+      <rect x="2329" y="1422" width="280" height="31" fill="#ffffff"/>
+      <line x1="2250" y1="1422" x2="2610" y2="1422" class="row-line"/>
+      <text x="2289" y="1443" text-anchor="middle" class="key"></text>
+      <text x="2343" y="1443" class="field">dry_run</text>
+      <text x="2596" y="1443" text-anchor="end" class="type">BOOLEAN</text>
+    </g>
+    <rect x="2250" y="1190" width="360" height="271" rx="7" fill="none" class="card-outline"/>
+  </g></g>
+  <text x="70" y="1850" class="subtitle">PK = primaire sleutel · FK = foreign key · crow’s foot = nul of meer gerelateerde records</text>
+</svg>
