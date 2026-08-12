@@ -155,6 +155,11 @@ test('[INV-H-007] factuurnavigatie onderscheidt geblokkeerde en controleklare ma
   await test.step('Given de administrator is ingelogd met de vaste demo-baseline', async () => {
     await loginPage.open();
     await loginPage.loginAsAdmin();
+    // Earlier write scenarios intentionally mutate the shared suite database. Reset through
+    // the UI so this baseline test stays authoritative over historic server invoice rows.
+    await page.locator('#quick-reset-demo').click();
+    await page.locator('#modal-confirm').click();
+    await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
   });
 
   await test.step('Then toont Facturen één oranje blokkadebadge en één groene controlebadge', async () => {
