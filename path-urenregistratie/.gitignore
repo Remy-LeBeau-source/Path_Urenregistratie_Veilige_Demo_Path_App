@@ -9,4 +9,5 @@ server/.php-path
 server/logs/
 playwright-report/
 test-results/
+test-results-*/
 live-doc-site/
