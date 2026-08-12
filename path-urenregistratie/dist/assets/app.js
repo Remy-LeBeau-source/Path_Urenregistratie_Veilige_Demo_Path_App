@@ -1262,6 +1262,7 @@ window.__PATH_READ_API_SOURCE = readApiSource;
 const authRuntime = {
   checked: false,
   available: false,
+  authenticated: false,
   mode: "checking",
   csrfToken: "",
   csrfPromise: null,
@@ -1297,7 +1298,9 @@ function normalizeAuthRole(role) {
 }
 
 function setAuthDebug(details) {
-  authDebug.authenticated = Boolean(details && details.authenticated);
+  const nextAuthenticated = Boolean(details && details.authenticated);
+  authRuntime.authenticated = nextAuthenticated;
+  authDebug.authenticated = nextAuthenticated;
   authDebug.role = String(details && details.role || "");
   authDebug.user_id = details && details.user_id !== undefined && details.user_id !== null ? Number(details.user_id) : null;
   authDebug.mode = String(details && details.mode || authRuntime.mode || "checking");
@@ -2019,7 +2022,8 @@ function initializeAuthSession() {
 }
 
 function triggerReadApiWarmup() {
-  if (!(API_ENABLED && authRuntime.mode === "auth") || isLocalResetAuthoritative()) return;
+  if (!(API_ENABLED && authRuntime.mode === "auth" && authRuntime.authenticated)) return;
+  if (isLocalResetAuthoritative()) return;
   refreshBootstrapReadApi(true);
   refreshDashboardReadApi(true);
   refreshInvoicesReadApi("", true);
@@ -2561,6 +2565,7 @@ function syncInvoiceStatusesFromApi(periodKey) {
 
 function fetchReadApi(path) {
   if (!API_ENABLED || isLocalResetAuthoritative()) return Promise.resolve(null);
+  if (authRuntime.mode === "auth" && !authRuntime.authenticated) return Promise.resolve(null);
   try {
     return fetch(path, { method: "GET", headers: { "Accept": "application/json" } })
       .then(resp => {
@@ -2725,6 +2730,10 @@ function refreshCustomerTimesheetReadApi(periodKey, employeeId, force = false) {
       const dashboardViewActive = document.querySelector("#view-dashboard")?.classList.contains("is-active");
       if (dashboardViewActive && period === currentPeriod().key) {
         renderCustomerTimesheetAdmin();
+        // Customer-timesheet status feeds admin task totals (hero counter, task queue,
+        // nav badges); without this they go stale until an unrelated full re-render happens.
+        renderDashboardActions();
+        renderAdminTaskQueue();
       }
     })
     .finally(() => {
@@ -6502,6 +6511,14 @@ function renderAll() {
   applyTheme();
 }
 
+function prefersReducedMotion() {
+  return Boolean(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+}
+
+function smoothScrollBehavior() {
+  return prefersReducedMotion() ? "auto" : "smooth";
+}
+
 function showView(view, options = {}) {
   if (state.currentRole === "employee" && adminViews.has(view)) view = "employee-dashboard";
   if (state.currentRole === "admin" && view === "timesheet") view = "dashboard";
@@ -6522,7 +6539,7 @@ function showView(view, options = {}) {
   document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("is-active", item.dataset.view === view));
   document.querySelector("#page-title").textContent = pageTitles[view];
   window.location.hash = view;
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo({ top: 0, behavior: smoothScrollBehavior() });
 }
 
 function login(role) {
@@ -6556,6 +6573,7 @@ function login(role) {
 
 function logoutLocal() {
   state.currentRole = null;
+  authRuntime.authenticated = false;
   readApiRuntime.employeeOpenTasksHydrated = false;
   unresolvedHelpQuestion = "";
   closeLoginAccountPanels();
@@ -6625,7 +6643,9 @@ function showModal(options) {
 }
 
 function closeModal() {
-  document.querySelector("#modal").hidden = true;
+  const modal = document.querySelector("#modal");
+  if (modal.contains(document.activeElement)) document.activeElement.blur();
+  modal.hidden = true;
   document.querySelector(".modal").classList.remove("is-wide");
   document.querySelector("#modal-secondary").hidden = true;
   document.querySelector("#modal-confirm").disabled = false;
@@ -8049,7 +8069,7 @@ document.addEventListener("click", event => {
     renderDashboard();
     showView("dashboard");
     const teamTitle = document.querySelector("#dashboard-team-title");
-    if (typeof teamTitle.scrollIntoView === "function") teamTitle.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (typeof teamTitle.scrollIntoView === "function") teamTitle.scrollIntoView({ behavior: smoothScrollBehavior(), block: "start" });
   }
 
   const adminHoursDetail = event.target.closest("[data-admin-hours-detail]");
@@ -8114,7 +8134,7 @@ document.addEventListener("click", event => {
     showView(targetView);
     const teamTitle = document.querySelector("#dashboard-team-title");
     const sectionTarget = targetSection === "customer-timesheets" ? document.querySelector("#customer-timesheet-admin-panel") : teamTitle;
-    if (targetView === "dashboard" && sectionTarget && typeof sectionTarget.scrollIntoView === "function") sectionTarget.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (targetView === "dashboard" && sectionTarget && typeof sectionTarget.scrollIntoView === "function") sectionTarget.scrollIntoView({ behavior: smoothScrollBehavior(), block: "start" });
   }
 
   const hoursWeekScope = event.target.closest("[data-hours-week-scope]");
@@ -8128,7 +8148,7 @@ document.addEventListener("click", event => {
   const scrollTarget = event.target.closest("[data-scroll-target]");
   if (scrollTarget) {
     const target = document.getElementById(scrollTarget.dataset.scrollTarget);
-    if (target && typeof target.scrollIntoView === "function") target.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (target && typeof target.scrollIntoView === "function") target.scrollIntoView({ behavior: smoothScrollBehavior(), block: "start" });
   }
 
   const historyPeriod = event.target.closest("[data-history-period]");
@@ -8444,7 +8464,7 @@ function handleMonthDelivery() {
     }
     const firstBlockerAction = document.querySelector("#month-batch-blockers [data-month-blocker-action]");
     const blockerPanel = document.querySelector("#month-batch-card");
-    if (blockerPanel && typeof blockerPanel.scrollIntoView === "function") blockerPanel.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (blockerPanel && typeof blockerPanel.scrollIntoView === "function") blockerPanel.scrollIntoView({ behavior: smoothScrollBehavior(), block: "center" });
     if (firstBlockerAction) firstBlockerAction.focus();
     toast("Bekijk de " + readiness.blockers.length + " blokkades en open per medewerker direct de juiste status.");
     return;
@@ -8931,6 +8951,7 @@ document.querySelector("#auth-login-form")?.addEventListener("submit", event => 
       setAuthLoginFeedback("", false);
       if (passwordInput) passwordInput.value = "";
 
+      triggerReadApiWarmup();
       if (!applyAuthUserToState(result.data.user)) {
         setAuthLoginFeedback("Deze gebruiker heeft geen ondersteunde rol in deze fase.", true);
         logoutLocal();

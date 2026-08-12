@@ -5633,12 +5633,8 @@ function renderHoursWeekFilter(period, scope) {
 function renderHoursGrid() {
   const employee = currentEmployee();
   const period = currentPeriod();
-  const timesheetView = document.querySelector("#view-timesheet");
-  const timesheetViewActive = timesheetView?.classList.contains("is-active");
-  const activeElement = document.activeElement;
-  const focusedInput = activeElement && typeof activeElement.matches === "function" && activeElement.matches("#hours-grid .hours-input");
-  const isEditingTimesheet = !!(activeElement && typeof activeElement.closest === "function" && activeElement.closest("#view-timesheet"));
-  if (timesheetViewActive && !isEditingTimesheet) {
+  const timesheetViewActive = document.querySelector("#view-timesheet")?.classList.contains("is-active");
+  if (timesheetViewActive) {
     refreshTimesheetReadApi(period.key, employee.id, false).then(record => {
       if (!record) return;
       const activePeriod = currentPeriod();
@@ -5646,9 +5642,6 @@ function renderHoursGrid() {
       const stillOnTimesheet = document.querySelector("#view-timesheet")?.classList.contains("is-active");
       if (!stillOnTimesheet) return;
       if (activePeriod.key !== period.key || Number(activeEmployee.id) !== Number(employee.id)) return;
-      const currentActive = document.activeElement;
-      const currentEditing = !!(currentActive && typeof currentActive.closest === "function" && currentActive.closest("#view-timesheet"));
-      if (currentEditing) return;
       renderHoursGrid();
     }).catch(() => {});
   }

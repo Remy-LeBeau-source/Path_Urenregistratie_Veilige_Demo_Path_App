@@ -6,6 +6,15 @@ import { attachBusinessScreenshot } from './reporting/uiAttachments';
 const MOBILE_PERIOD = '2026-01';
 const CORRECTION_MESSAGE = 'Controleer dag 2: dit moet 4 uur zijn.';
 
+type MockAuthUser = {
+  id: number;
+  company_id: number;
+  email: string;
+  display_name: string;
+  role: 'employee' | 'administrator';
+  force_password_change: boolean;
+};
+
 async function isolateFrontendState(page: Page): Promise<void> {
   await page.addInitScript(() => {
     try {
@@ -24,7 +33,7 @@ async function isolateFrontendState(page: Page): Promise<void> {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true }) });
   });
 
-  let authSessionUser: { id: number; company_id: number; email: string; display_name: string; role: 'employee' | 'administrator'; force_password_change: boolean } | null = null;
+  let authSessionUser: MockAuthUser | null = null;
 
   await page.route('**/server/auth/csrf.php*', async route => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, csrf_token: 'mobile-test-csrf-token' }) });
@@ -44,10 +53,10 @@ async function isolateFrontendState(page: Page): Promise<void> {
     const email = String(payload?.email || '').trim().toLowerCase();
     const password = String(payload?.password || '');
 
-    const admin = { id: 1, company_id: 1, email: 'gio@example.invalid', display_name: 'Gio Maatsen', role: 'administrator' as const, force_password_change: false };
-    const employee = { id: 2, company_id: 1, email: 'stasjo@example.invalid', display_name: 'Stasjo van Bakel', role: 'employee' as const, force_password_change: false };
+    const admin: MockAuthUser = { id: 1, company_id: 1, email: 'gio@example.invalid', display_name: 'Gio Maatsen', role: 'administrator', force_password_change: false };
+    const employee: MockAuthUser = { id: 2, company_id: 1, email: 'stasjo@example.invalid', display_name: 'Stasjo van Bakel', role: 'employee', force_password_change: false };
 
-    const userMap: Record<string, typeof admin> = {
+    const userMap: Record<string, MockAuthUser> = {
       'gio@example.invalid': admin,
       'stasjo@example.invalid': employee,
     };
@@ -123,60 +132,24 @@ async function isolateFrontendState(page: Page): Promise<void> {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items: [] }) });
   });
 
-  await page.route('**/server/api/**', async route => {
-    const url = route.request().url();
+  await page.route('**/server/api/email-queue.php*', async route => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items: [] }) });
+  });
 
-    if (url.includes('/server/api/dashboard.php')) {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, periods: [], items: [] }) });
-      return;
-    }
+  await page.route('**/server/api/staff.php*', async route => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, employees: bootstrapPayload.employees }) });
+  });
 
-    if (url.includes('/server/api/invoices.php')) {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items: [] }) });
-      return;
-    }
+  await page.route('**/server/api/settings.php*', async route => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, settings: {} }) });
+  });
 
-    if (url.includes('/server/api/notifications.php')) {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items: [] }) });
-      return;
-    }
+  await page.route('**/server/api/users.php*', async route => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, users: bootstrapPayload.users }) });
+  });
 
-    if (url.includes('/server/api/announcements.php')) {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items: [] }) });
-      return;
-    }
-
-    if (url.includes('/server/api/email-queue.php')) {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items: [] }) });
-      return;
-    }
-
-    if (url.includes('/server/api/staff.php')) {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, employees: bootstrapPayload.employees }) });
-      return;
-    }
-
-    if (url.includes('/server/api/settings.php')) {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, settings: {} }) });
-      return;
-    }
-
-    if (url.includes('/server/api/users.php')) {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, users: bootstrapPayload.users }) });
-      return;
-    }
-
-    if (url.includes('/server/api/customer-timesheets.php')) {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items: [] }) });
-      return;
-    }
-
-    if (url.includes('/server/api/timesheets.php')) {
-      await route.continue();
-      return;
-    }
-
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true }) });
+  await page.route('**/server/api/customer-timesheets.php*', async route => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items: [] }) });
   });
 }
 

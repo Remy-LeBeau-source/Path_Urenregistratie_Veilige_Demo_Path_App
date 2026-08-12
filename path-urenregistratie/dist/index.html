@@ -4,8 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0D1B38">
+  <link rel="manifest" href="/assets/manifest-v-Kx2Cfm.webmanifest">
   <title>Uren & Facturatie</title>
-  <link rel="stylesheet" crossorigin href="/assets/index-CR6PMv4y.css">
+  <link rel="stylesheet" crossorigin href="/assets/index-DzvaDwOn.css">
 </head>
 <body>
   <section class="login-screen" id="login-screen" aria-labelledby="login-title">
@@ -120,7 +121,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 0.9.44</span>
+      <span class="demo-badge">Versie 0.9.46</span>
       </div>
     </aside>
 
@@ -136,7 +137,7 @@
         <div class="topbar-title">
           <p class="eyebrow" id="organization-name">Path Consultancy</p>
           <h1 id="page-title">Urenoverzicht</h1>
-          <span class="demo-badge mobile-version-badge">Versie 0.9.44</span>
+          <span class="demo-badge mobile-version-badge">Versie 0.9.46</span>
         </div>
         <div class="topbar-actions">
           <span class="safety-badge">E-mail uitgeschakeld</span>
@@ -705,5 +706,13 @@
   <script  defer src="assets/jspdf.umd.min.js"></script>
   <script  defer src="assets/invoice-fonts.js"></script>
   <script  defer src="assets/app.js"></script>
+  <script>
+    // Defensive: registration failure/unsupported browsers must never affect the app itself.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      });
+    }
+  </script>
 </body>
 </html>
