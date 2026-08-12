@@ -23,16 +23,16 @@ TRUNCATE TABLE companies;
 SET FOREIGN_KEY_CHECKS = 1;
 
 INSERT INTO companies (
-  id, slug, legal_name, trade_name, app_name, support_name, support_email,
+  id, slug, legal_name, trade_name, invoice_name_display, app_name, support_name, support_email,
   brand_primary, brand_accent, chamber_of_commerce_number, vat_number, iban,
-  address_line, postal_code, city, country_code, invoice_prefix, payment_term_days,
+  address_line, postal_code, city, invoice_phone, invoice_email, country_code, invoice_prefix, payment_term_days,
   customer_timesheet_reminder_enabled, customer_timesheet_reminder_time,
   customer_timesheet_overdue_workdays
 ) VALUES (
-  1, 'path-consultancy', 'QSI Consultancy', 'Path Consultancy', 'Uren & Facturatie',
+  1, 'path-consultancy', 'QSI Consultancy B.V.', 'Path Consultancy', 'trade_and_legal', 'Uren & Facturatie',
   'Path Backoffice', 'backoffice@pathconsultancy.nl',
   '#0d1b38', '#3abd9d', '89320018', 'NL001622017B32', 'NL95INGB0006947972',
-  'Du Perronstraat 12', '3067 HN', 'Rotterdam', 'NL', 'QSI', 30,
+  'Du Perronstraat 12', '3067 HN', 'Rotterdam', '06 21 46 91 72', 'info@pathconsultancy.nl', 'NL', 'QSI', 30,
   TRUE, '15:00:00', 2
 );
 
@@ -161,7 +161,7 @@ INSERT INTO customer_timesheets (
   (6, 2, 2, 2, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Stasjo_van_Bakel_2026-06.pdf', 'Klanturenstaat_Stasjo_van_Bakel_2026-06.pdf', 'application/pdf', '2026-07-01 08:35:00', 4, '2026-07-01 09:05:00', 1, '2026-07-01 10:05:00', 0, NULL),
   (7, 2, 3, 3, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Brian_Hek_2026-06.pdf', 'Klanturenstaat_Brian_Hek_2026-06.pdf', 'application/pdf', '2026-07-01 08:40:00', 5, '2026-07-01 09:10:00', 1, '2026-07-01 10:10:00', 0, NULL),
   (8, 2, 4, 4, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Shawn-Douglas_Nahar_2026-06.pdf', 'Klanturenstaat_Shawn-Douglas_Nahar_2026-06.pdf', 'application/pdf', '2026-07-01 08:45:00', 6, '2026-07-01 09:15:00', 1, '2026-07-01 10:15:00', 0, NULL),
-  (9, 3, 1, 1, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Marc_de_Roon_2026-07.pdf', 'Klanturenstaat_Marc_de_Roon_2026-07.pdf', 'application/pdf', '2026-08-03 08:30:00', 3, '2026-08-03 09:00:00', 1, '2026-08-03 10:00:00', 0, NULL),
+  (9, 3, 1, 1, 'approved', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Marc_de_Roon_2026-07.pdf', 'Klanturenstaat_Marc_de_Roon_2026-07.pdf', 'application/pdf', '2026-08-03 08:30:00', 3, '2026-08-03 09:00:00', 1, NULL, 0, NULL),
   (10, 3, 2, 2, 'resubmit', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Stasjo_van_Bakel_2026-07.pdf', 'Klanturenstaat_Stasjo_van_Bakel_2026-07.pdf', 'application/pdf', '2026-08-03 08:35:00', 4, '2026-08-03 09:05:00', 1, NULL, 0, NULL),
   (11, 3, 3, 3, 'missing', NULL, NULL, NULL, 'application/pdf', NULL, NULL, NULL, NULL, NULL, 1, '2026-08-06 15:00:00'),
   (12, 3, 4, 4, 'sent', 'voorbeeld-klanturenstaat.pdf', 'Klanturenstaat_Shawn-Douglas_Nahar_2026-07.pdf', 'Klanturenstaat_Shawn-Douglas_Nahar_2026-07.pdf', 'application/pdf', '2026-08-03 08:45:00', 6, '2026-08-03 09:15:00', 1, '2026-08-03 10:15:00', 0, NULL),

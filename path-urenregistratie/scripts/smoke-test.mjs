@@ -93,7 +93,11 @@ assert(/\.invoice-brand-references\s+strong\s*\{[^}]*color:\s*#fff/.test(styles)
 assert(document.querySelectorAll("select:not([hidden])").length === 0, "De vaste interface mag geen zichtbare native browserdropdowns meer bevatten");
 
 assert(document.querySelectorAll("#dashboard-employee-rows tr").length === 4, "Dashboard moet vier demo-medewerkers tonen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.46"), "Het zichtbare versienummer moet 0.9.46 zijn");
+assert(document.querySelector("#dashboard-team-title").textContent === "Teamstatus · Augustus 2026" && document.querySelector("#dashboard-team-summary").textContent === "4 medewerkers · 2 te controleren · 1 wacht op medewerker", "Het teamoverzicht moet maand, controles en wachttaken compact samenvatten");
+assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
+assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
+assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.47"), "Het zichtbare versienummer moet 0.9.47 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -139,17 +143,29 @@ const employeePicker = document.querySelector("#login-employee");
 employeePicker.value = "1";
 employeePicker.dispatchEvent(new Event("change", { bubbles: true }));
 const demoScenarioState = JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(demoScenarioState.schemaVersion === 25, "Versie 0.9.46 moet wijzigingen onder de juiste gegevensversie bewaren");
+assert(demoScenarioState.schemaVersion === 26, "Versie 0.9.47 moet wijzigingen onder de juiste gegevensversie bewaren");
+assert(demoScenarioState.settings.companyName === "QSI Consultancy B.V." && demoScenarioState.settings.invoiceNameDisplay === "trade_and_legal", "De standaardfactuuridentiteit moet Path als handelsnaam aan QSI Consultancy B.V. koppelen");
 const freshOpenActions = dom.window.adminOpenTasks();
 const freshJuneActions = freshOpenActions.filter(task => task.periodKey === "2026-06");
 const freshJulyActions = freshOpenActions.filter(task => task.periodKey === "2026-07");
 const freshAugustActions = freshOpenActions.filter(task => task.periodKey === "2026-08");
 const freshBackofficeActions = freshOpenActions.filter(task => task.actionable);
 const freshEmployeeActions = freshOpenActions.filter(task => !task.actionable);
+const freshTaskTypes = [...new Set(freshOpenActions.map(task => task.type))].sort();
 assert(freshOpenActions.length === 12 && freshJuneActions.length === 3 && freshJulyActions.length === 5 && freshAugustActions.length === 4, "De standaarddemo moet exact Juni 3 + Juli 5 + Augustus 4 = 12 open acties bevatten");
 assert(freshBackofficeActions.length === 7 && freshEmployeeActions.length === 5, "De standaarddemo moet exact Backoffice 7 + medewerkers 5 = 12 tonen");
+assert(JSON.stringify(freshTaskTypes) === JSON.stringify(["customer-broker", "customer-review", "customer-waiting", "hours-correction", "hours-draft", "hours-review", "invoice-delivery"]), "De compacte GUI-baseline moet alle zeven mogelijke open taaktypen afdekken");
 assert(new Set(freshOpenActions.map(task => task.periodKey + ":" + task.employee.id)).size === 10, "De twaalf standaardacties moeten tien medewerker-maanddossiers vormen");
-assert(document.querySelector("#hero-task-months").textContent === "Juni 3 + Juli 5 + Augustus 4 = 12" && document.querySelector("#hero-task-owners").textContent === "Backoffice 7 + medewerkers 5 = 12", "De bovenkant moet beide standaardrekensommen direct tonen");
+assert(document.querySelector("#hero-task-months").textContent === "Juni 3 + Juli 5 + Augustus 4 = 12" && document.querySelector("#hero-task-owners").textContent === "Backoffice 7 + wacht op medewerkers 5 = 12", "De bovenkant moet beide standaardrekensommen direct tonen");
+assert(document.querySelector("#hero-backoffice-count").textContent === "7" && document.querySelector("#hero-employee-count").textContent === "5", "De dashboardkop moet Backoffice-acties en wachttaken als afzonderlijke visuele aantallen tonen");
+assert(document.querySelector("#dashboard-backoffice-count").textContent === "7" && document.querySelector("#dashboard-employee-count").textContent === "5" && document.querySelector("#dashboard-work-count").getAttribute("aria-label") === "12 open acties: 7 bij Backoffice, 5 wacht op medewerkers", "Dashboard moet links dezelfde werkvoorraad als twee toegankelijke eigenaarbolletjes tonen");
+click("#hero-backoffice-filter");
+assert(document.querySelector("#admin-task-title").textContent === "Acties bij Backoffice per maand" && document.querySelector('[data-admin-task-filter="actionable"]').classList.contains("is-active") && document.querySelectorAll("#admin-task-list [data-admin-task-row]").length === 7 && document.querySelectorAll("#admin-task-list .admin-task-month-body:not([hidden]) [data-admin-task-row]").length === 7 && !document.querySelector("#admin-task-list .admin-task-row.is-waiting"), "Het oranje dashboardbolletje moet herkenbaar alle zeven Backoffice-acties zichtbaar openen");
+click("#hero-employee-filter");
+assert(document.querySelector("#admin-task-title").textContent === "Wacht op medewerkers per maand" && document.querySelector('[data-admin-task-filter="waiting"]').classList.contains("is-active") && document.querySelectorAll("#admin-task-list [data-admin-task-row]").length === 5 && document.querySelectorAll("#admin-task-list .admin-task-month-body:not([hidden]) [data-admin-task-row]").length === 5 && !document.querySelector("#admin-task-list .admin-task-row.is-actionable"), "Het groene dashboardbolletje moet herkenbaar alle vijf wachttaken bij medewerkers zichtbaar openen");
+click("#open-work-queue");
+assert(document.querySelector('[data-admin-task-filter="all"]').classList.contains("is-active") && document.querySelectorAll("#admin-task-list [data-admin-task-row]").length === 12, "De algemene werkvoorraadknop moet daarna alle twaalf acties herstellen");
+assert(!document.querySelector("#employees-count") && document.querySelector("#team-active-account-count").textContent === "6" && document.querySelector("#team-employees-overview").textContent.includes("4 medewerkers") && document.querySelector("#team-admins-overview").textContent.includes("2 beheerders"), "Het menu mag geen misleidende medewerkerbadge tonen; Teambeheer moet medewerkers en beheerders samen samenvatten");
 assert(document.querySelector('[data-admin-task-month="2026-07"]')?.querySelectorAll("[data-admin-task-row]").length === 5 && document.querySelector('[data-admin-task-month="2026-08"]')?.querySelectorAll("[data-admin-task-row]").length === 4, "De twaalf standaardacties moeten zichtbaar onder juni, juli en augustus worden gegroepeerd");
 assert(document.querySelector('[data-admin-task-month-toggle="2026-07"]').getAttribute("aria-expanded") === "false" && document.querySelector('[data-admin-task-month-toggle="2026-08"]').getAttribute("aria-expanded") === "false", "Open maanden moeten standaard ingeklapt starten zodat je bewust per maand openklapt");
 assert(document.querySelector("#dashboard-next-action-label").textContent === "Volgende actie \u00B7 1 van 7 bij Backoffice" && document.querySelector("#dashboard-next-action-title").textContent === "Klanturenstaat controleren", "De vaste prioriteitenkaart moet de eerste van zeven concrete Backoffice-acties tonen");
@@ -158,7 +174,7 @@ assert(document.querySelector("#metric-actions").textContent === "7" && document
 assert(demoScenarioState.settings.weeklyReminderDay === "friday" && demoScenarioState.settings.weeklyReminderTime === "15:00", "De standaard weekherinnering moet vrijdag om 15:00 zijn");
 assert(demoScenarioState.settings.monthEndReminderTime === "15:00" && demoScenarioState.settings.overdueReminderTime === "09:00" && demoScenarioState.settings.approvalReminderTime === "10:00", "De maand-, achterstands- en goedkeuringsherinneringen moeten veilige standaardmomenten hebben");
 assert(demoScenarioState.settings.customerTimesheetReminderEnabled && demoScenarioState.settings.customerTimesheetReminderTime === "15:00" && demoScenarioState.settings.customerTimesheetOverdueWorkdays === 2, "Klanturenstaten moeten een eigen instelbare herinneringsplanning hebben");
-assert(demoScenarioState.records["2026-07"]["2"].customerTimesheet.status === "resubmit" && demoScenarioState.records["2026-07"]["3"].customerTimesheet.status === "sent", "Juli kent een medewerker die opnieuw moet insturen en een al ingediende klanturenstaat");
+assert(demoScenarioState.records["2026-07"]["1"].customerTimesheet.status === "approved" && demoScenarioState.records["2026-07"]["2"].customerTimesheet.status === "resubmit" && demoScenarioState.records["2026-07"]["3"].customerTimesheet.status === "sent", "Juli kent een brokercontrole, een medewerker die opnieuw moet insturen en een al verzonden klanturenstaat");
 assert(demoScenarioState.records["2026-07"]["2"].customerTimesheet.isExample && demoScenarioState.records["2026-07"]["2"].customerTimesheet.fileName.startsWith("Voorbeeld_") && demoScenarioState.records["2026-07"]["2"].customerTimesheet.fileData.endsWith("voorbeeld-klanturenstaat.pdf"), "Vooringevulde documenten moeten herkenbaar en als echt downloadbaar voorbeeldbestand gekoppeld zijn");
 assert(demoScenarioState.employees.find(employee => employee.id === 2).customerTimesheetBrokerEmail === "urenstaten-itaq@example.invalid", "Een klanturenstaat moet een afwijkend brokeradres kunnen gebruiken");
 assert(demoScenarioState.records["2026-07"]["2"].invoiceStatus === "simulated" && demoScenarioState.records["2026-07"]["1"].invoiceStatus === "ready" && demoScenarioState.records["2026-07"]["1"].invoiceStatus === "ready" && demoScenarioState.records["2026-07"]["3"].invoiceStatus === "concept", "Juli heeft twee klaarstaande facturen (Marc en Shawn), één afgeronde (Stasjo) en één geblokkeerde (Brian)");
@@ -500,7 +516,7 @@ const dashboardJulyWaitingTasks = dashboardJulyTasks.filter(task => !task.action
 assert(document.querySelectorAll("#admin-task-list [data-admin-task-row]").length === dashboardTasks.length, "Alle open acties moet standaard iedere actie exact één keer tonen");
 assert(document.querySelectorAll("#admin-task-list [data-admin-task-month]").length === dashboardTaskMonths, "De werkvoorraad moet de open maanden als afzonderlijke blokken onder elkaar tonen");
 assert(document.querySelector('[data-admin-task-filter="all"]').textContent.includes(String(dashboardTasks.length)) && document.querySelector('[data-admin-task-filter="actionable"]').textContent.includes(String(dashboardActionableTasks.length)) && document.querySelector('[data-admin-task-filter="waiting"]').textContent.includes(String(dashboardWaitingTasks.length)), "Het totaal en de verdeling per eigenaar moeten apart worden geteld");
-assert(document.querySelector("#admin-task-summary").textContent.includes(dashboardTasks.length + " open acties in " + dashboardTaskDossiers + " dossiers") && document.querySelector("#admin-task-summary").textContent.includes("Backoffice " + dashboardActionableTasks.length + " + medewerkers " + dashboardWaitingTasks.length + " = " + dashboardTasks.length) && document.querySelector("#admin-task-summary").textContent.includes("Iedere regel hieronder is één actie"), "De werkvoorraad moet het totaal één-op-één bewijzen per dossier en eigenaar");
+assert(document.querySelector("#admin-task-summary").textContent.includes(dashboardTasks.length + " open acties in " + dashboardTaskDossiers + " dossiers") && document.querySelector("#admin-task-summary").textContent.includes("Backoffice kan " + dashboardActionableTasks.length + " oppakken; " + dashboardWaitingTasks.length + " wachten op medewerkers") && document.querySelector("#admin-task-summary").textContent.includes("Iedere regel hieronder is één actie"), "De werkvoorraad moet het totaal één-op-één bewijzen per dossier en eigenaar");
 
 // Exacte regressiesituatie: drie open taken, alle drie bij medewerkers,
 // één in juni (Brian klanturenstaat), één in juli (Stasjo klanturenstaat), één in augustus (Stasjo correctie).
@@ -550,11 +566,11 @@ dom.window.renderAll();
 const ownershipScenarioTasks = dom.window.adminOpenTasks();
 const stasjoAug = dom.window.recordFor(2, "2026-08");
 assert(ownershipScenarioTasks.length === 3 && ownershipScenarioTasks.every(task => !task.actionable), "De regressiesituatie moet exact drie taken bij medewerkers bevatten");
-assert(document.querySelector("#admin-attention-note").textContent === "3 open acties in 3 dossiers over 3 maanden \u00b7 0 bij Backoffice \u00b7 3 bij medewerkers.", "Het hoofdtotaal moet exact gelijk zijn aan de verdeling per eigenaar");
+assert(document.querySelector("#admin-attention-note").textContent === "3 open acties in 3 dossiers over 3 maanden." && document.querySelector("#hero-backoffice-count").textContent === "0" && document.querySelector("#hero-employee-count").textContent === "3", "Het hoofdtotaal moet exact gelijk zijn aan de visuele verdeling per eigenaar");
 assert(document.querySelector("#metric-actions").textContent === "0" && document.querySelector("#metric-actions-note").textContent === "3 acties wachten op medewerkers", "De actiekaart moet duidelijk tonen dat Backoffice niets direct hoeft te doen");
 assert(document.querySelector("#metric-actions-link").textContent === "Bekijk alle 3 acties", "De KPI-link moet wel naar alle wachtende acties blijven verwijzen");
 assert(document.querySelector("#open-work-queue").textContent === "Bekijk alle 3 open acties", "De hoofdknop moet altijd naar het volledige actietotaal verwijzen");
-assert(document.querySelector("#hero-task-months").textContent === "Juni 1 + Juli 1 + Augustus 1 = 3" && document.querySelector("#hero-task-owners").textContent === "Backoffice 0 + medewerkers 3 = 3", "De bovenkant moet het totaal zowel per maand als per eigenaar bewijsbaar maken");
+assert(document.querySelector("#hero-task-months").textContent === "Juni 1 + Juli 1 + Augustus 1 = 3" && document.querySelector("#hero-task-owners").textContent === "Backoffice 0 + wacht op medewerkers 3 = 3", "De bovenkant moet het totaal zowel per maand als per eigenaar bewijsbaar maken");
 assert(document.querySelector("#dashboard-next-action-label").textContent === "Voor jou is nu niets te doen" && document.querySelector("#dashboard-next-action-title").textContent.includes("Wacht op Brian Hek") && !document.querySelector("#dashboard-next-action-button"), "Zonder Backoffice-actie moet de vaste kaart de eerstvolgende medewerker tonen in plaats van een onbruikbare startknop");
 assert(document.querySelector("#dashboard-next-action-controls").textContent.includes("Herinner medewerker"), "Een wachtende klanturenstaat moet vanuit de prioriteitenkaart herinnerd kunnen worden");
 click("#open-work-queue");
@@ -953,7 +969,16 @@ document.querySelector("#setting-support-name").value = "Path Backoffice";
 document.querySelector("#setting-support-email").value = "backoffice@pathconsultancy.nl";
 document.querySelector("#setting-brand-primary").value = "#0d1b38";
 document.querySelector("#setting-brand-accent").value = "#3abd9d";
+document.querySelector("#setting-company-name").value = "QSI Consultancy B.V.";
+document.querySelector("#setting-invoice-name-display").value = "trade_and_legal";
+click("#setting-invoice-name-display-trigger");
+dom.window.dispatchEvent(new Event("scroll"));
+assert(!document.querySelector("#setting-invoice-name-display-choices").hidden, "Een browser-scroll naar een factuurweergave-optie mag het geopende keuzemenu niet sluiten");
+click('[data-standard-choice-target="setting-invoice-name-display"][data-standard-choice-value="trade_and_legal"]');
 click("#save-settings");
+const invoiceIdentitySettingsState = JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final"));
+assert(invoiceIdentitySettingsState.settings.organizationName === "Path Consultancy" && invoiceIdentitySettingsState.settings.companyName === "QSI Consultancy B.V.", "Handelsnaam en juridische onderneming moeten afzonderlijk worden opgeslagen");
+assert(invoiceIdentitySettingsState.settings.invoiceNameDisplay === "trade_and_legal", "De aanbevolen gecombineerde factuurweergave moet worden opgeslagen");
 assert(!document.querySelector('[data-delete-mail-recipient="bookkeeper"]') && !document.querySelector('[data-delete-mail-recipient="payroll"]'), "De vaste systeemrollen mogen niet per ongeluk definitief worden verwijderd");
 click("#add-mail-recipient");
 assert(document.querySelector("#edit-mail-recipient-name"), "Een beheerder moet zelf een vaste ontvanger kunnen toevoegen");
@@ -1129,6 +1154,7 @@ assert(document.querySelector("#modal-summary").textContent.includes("CONCEPT - 
 assert(document.querySelector("#modal-summary").querySelector(".invoice-brand-logo img"), "Het Path-logo moet op ieder factuurvoorbeeld staan");
 assert(document.querySelector("#modal-summary").textContent.includes("Factuurnummer:"), "Factuurnummer en nummer moeten als één duidelijke regel zichtbaar zijn");
 assert(document.querySelector("#modal-summary").textContent.includes("KvK") && document.querySelector("#modal-summary").textContent.includes("BTW") && document.querySelector("#modal-summary").textContent.includes("IBAN"), "Het factuurvoorbeeld moet de bedrijfsgegevens tonen");
+assert(document.querySelector("#modal-summary").textContent.includes("Path Consultancy") && document.querySelector("#modal-summary").textContent.includes("Handelsnaam van QSI Consultancy B.V."), "Het factuurvoorbeeld moet handelsnaam en juridische onderneming samen tonen");
 assert(document.querySelector("#modal-summary").textContent.includes("Laan van ZuidHoorn 165") && document.querySelector("#modal-summary").textContent.includes("2289 DD Rijswijk"), "Het ItaQ-factuuradres moet exact uit de bronfactuur komen");
 assert(document.querySelector("#modal-summary").textContent.includes("2289 DD Rijswijk"), "De postcode en plaats van de ontvanger moeten volledig zichtbaar blijven");
 assert(document.querySelector("#modal-summary").textContent.includes("2026"), "De factuurdatum moet het correcte jaar bevatten");
@@ -1247,7 +1273,7 @@ if (document.querySelector("#reopen-hours-reason")) {
 
 choosePeriod("#period-month-picker", "#period-year-picker", "2026-09");
 click('[data-view="dashboard"]');
-assert(document.querySelector("#admin-attention-note").textContent.includes("bij Backoffice") && document.querySelector("#admin-attention-note").textContent.includes("bij medewerkers") && !document.querySelector("#admin-task-panel").hidden, "Een lege geselecteerde maand mag taken uit eerdere maanden niet verbergen en moet hun eigenaar tonen");
+assert(document.querySelector("#admin-attention-note").textContent.includes("open") && document.querySelector("#hero-owner-badges").hidden === false && !document.querySelector("#admin-task-panel").hidden, "Een lege geselecteerde maand mag taken uit eerdere maanden niet verbergen en moet hun eigenaar tonen");
 const septemberGlobalTasks = dom.window.adminOpenTasks();
 assert(Number(document.querySelector("#metric-actions").textContent) === septemberGlobalTasks.filter(task => task.actionable).length && document.querySelector("#metric-actions-note").textContent.includes(String(septemberGlobalTasks.filter(task => !task.actionable).length)), "De Backoffice-KPI moet onafhankelijk van de gekozen detailmaand de globale eigenaarsverdeling blijven tonen");
 assert(document.querySelector("#dashboard-next-action-card") && document.querySelector("#dashboard-next-action-title").textContent.length > 0, "Ook bij een lege gekozen detailmaand moet altijd een concrete volgende actie of wachtstatus zichtbaar blijven");
@@ -1458,7 +1484,8 @@ const migrationPicker = migrationDom.window.document.querySelector("#login-admin
 migrationPicker.value = "joyce";
 migrationPicker.dispatchEvent(new migrationDom.window.Event("change", { bubbles: true }));
 const migratedState = JSON.parse(migrationDom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(migratedState.schemaVersion === 25, "Bestaande browsergegevens moeten ook in v0.9.46 veilig behouden blijven");
+assert(migratedState.schemaVersion === 26, "Bestaande browsergegevens moeten ook in v0.9.47 veilig behouden blijven");
+assert(migratedState.settings.companyName === "QSI Consultancy B.V." && migratedState.settings.invoiceNameDisplay === "trade_and_legal", "Migratie moet QSI als B.V. en de gecombineerde factuurweergave veilig aanvullen");
 assert(migratedState.settings.mailRecipients.find(recipient => recipient.id === "payroll").name.includes("Salarisadministratie"), "Migratie moet EasySalary als duidelijke salarisadministratieroute benoemen");
 assert(migratedState.records["2026-07"]["4"].invoiceNumber === "Bel-Shawn-2026-juli", "Migratie moet ook bestaande factuurnummers omzetten naar de afgesproken koppeltekens");
 assert(migratedState.records["2026-07"]["4"].invoiceStatus === "ready", "Migratie moet de vooraf ingevulde Shawn-mailtest terugzetten naar Factuur klaar");
@@ -1494,6 +1521,7 @@ const smtpSrc = readFileSync_(new URL("../server/mail/smtp.php", import.meta.url
 const dispatchSrc = readFileSync_(new URL("../server/mail/dispatch.php", import.meta.url), "utf8");
 const mailPreflightSrc = readFileSync_(new URL("../server/scripts/mail-preflight.php", import.meta.url), "utf8");
 const productionPreflightSrc = readFileSync_(new URL("../server/scripts/production-preflight.php", import.meta.url), "utf8");
+const invoiceIdentityMigrationSrc = readFileSync_(new URL("../server/migrations/012_invoice_company_identity.sql", import.meta.url), "utf8");
 const backupSrc = readFileSync_(new URL("../server/scripts/database-backup.php", import.meta.url), "utf8");
 const restoreSrc = readFileSync_(new URL("../server/scripts/database-restore.php", import.meta.url), "utf8");
 const rotateLogsSrc = readFileSync_(new URL("../server/scripts/rotate-logs.php", import.meta.url), "utf8");
@@ -1513,10 +1541,11 @@ assert(smtpSrc.includes("STREAM_CRYPTO_METHOD_TLS_CLIENT") && smtpSrc.includes("
 assert(dispatchSrc.includes('status = \"processing\"') && dispatchSrc.includes("dry_run = 0") && dispatchSrc.includes("invoice_and_customer_timesheet"), "Maildispatch moet atomisch claimen, dry-runs blokkeren en de volledige brokerbundel eisen");
 assert(mailPreflightSrc.includes("network_connections' => 0") && mailPreflightSrc.includes("payroll_zero_attachments"), "Mailpreflight moet offline de drie bijlagecontracten controleren");
 assert(productionPreflightSrc.includes("writes_performed' => false") && productionPreflightSrc.includes("hsts_prepared_but_disabled"), "Productiepreflight moet niet-mutatief de securityconfig controleren");
+assert(invoiceIdentityMigrationSrc.includes("invoice_name_display") && invoiceIdentityMigrationSrc.includes("invoice_phone") && invoiceIdentityMigrationSrc.includes("invoice_email"), "De factuuridentiteit moet via een expliciete databasemigratie worden opgeslagen");
 assert(backupSrc.includes("--single-transaction") && restoreSrc.includes("RESTORE_") && rotateLogsSrc.includes("retention_days"), "Backup, herstelbevestiging en logretentie moeten operationeel voorbereid zijn");
 assert(provisionAccountSrc.includes("Passwords in command arguments are forbidden") && changePasswordSrc.includes("current_password") && changePasswordSrc.includes("force_password_change = 0"), "Productieaccounts moeten zonder wachtwoordargument en met een eigen wijzigingsflow worden beheerd");
 assert(rootHtaccessSrc.includes("Content-Security-Policy") && rootHtaccessSrc.includes("RewriteCond %{HTTPS} !=on") && /^\s*# Header always set Strict-Transport-Security/m.test(rootHtaccessSrc), "De publieke app moet HTTPS/CSP afdwingen terwijl HSTS voorbereid maar uitgeschakeld blijft");
 assert(playwrightRunnerSrc.includes("url.hostname === 'localhost'") && playwrightRunnerSrc.includes("url.hostname = '127.0.0.1'") && playwrightRunnerSrc.includes("PATH_APP_BASE_URL: baseUrl"), "De Playwright-runner moet browsers en de beheerde PHP-server op dezelfde IPv4-origin houden");
 assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Playwright stage- en lokale env-bestanden mogen expliciete runner/CI-variabelen niet overschrijven");
 
-console.log("Path v0.9.46 volledige smoke test: geslaagd");
+console.log("Path v0.9.47 volledige smoke test: geslaagd");

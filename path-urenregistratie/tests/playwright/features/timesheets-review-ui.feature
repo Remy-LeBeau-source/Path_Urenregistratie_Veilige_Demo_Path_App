@@ -24,3 +24,9 @@ Feature: Correctie en goedkeuring in de desktop-UI in Path Uren & Facturatie
     Given de uitvoerbare Playwright-case is voorbereid
     When de beschreven businessflow wordt uitgevoerd
     Then wordt het verwachte resultaat aantoonbaar gevalideerd
+
+  @negative
+  Scenario: [TS-REV-UI-N-011] localhost kan demo-uren zonder serverversie voor correctie terugsturen
+    Given de uitvoerbare Playwright-case is voorbereid
+    When de beschreven businessflow wordt uitgevoerd
+    Then wordt het verwachte resultaat aantoonbaar gevalideerd

@@ -30,7 +30,7 @@ try {
         'subtotal' => '11.520,00',
         'vat' => '2.419,20',
         'total' => '13.939,20',
-        'company' => 'Path Consultancy B.V.',
+        'company' => 'Path Consultancy — handelsnaam van QSI Consultancy B.V.',
     ];
     $vars = [
         'medewerker' => $scenario['employee_name'],

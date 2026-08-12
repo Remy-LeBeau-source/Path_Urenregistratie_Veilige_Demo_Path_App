@@ -59,7 +59,7 @@ return [
             'encryption' => 'starttls',   // always; required by Google
             'timeout'    => 30,
             'from_email' => 'backoffice@pathconsultancy.nl',
-            'from_name'  => 'Path Consultancy B.V.',
+            'from_name'  => 'Path Consultancy',
             // No username / no password — IP-based relay only.
         ],
         'max_attempts' => 3,

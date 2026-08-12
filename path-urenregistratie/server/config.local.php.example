@@ -47,7 +47,7 @@ return [
             'encryption' => 'starttls',
             'timeout' => 30,
             'from_email' => 'backoffice@pathconsultancy.nl',
-            'from_name' => 'Path Consultancy B.V.',
+            'from_name' => 'Path Consultancy',
         ],
         'max_attempts' => 3,
     ],

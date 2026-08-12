@@ -80,12 +80,25 @@ function settings_color(string $value, string $fallback): string
     return $fallback;
 }
 
+function settings_postal_city(mixed $value): array
+{
+    $combined = settings_string($value, 140);
+    if (preg_match('/^([1-9][0-9]{3})\s*([a-zA-Z]{2})\s+(.+)$/u', $combined, $matches) === 1) {
+        return [
+            'postal_code' => $matches[1] . ' ' . strtoupper($matches[2]),
+            'city' => trim($matches[3]),
+        ];
+    }
+    return ['postal_code' => null, 'city' => $combined !== '' ? $combined : null];
+}
+
 try {
     $pdo->beginTransaction();
 
     $updateCompany = $pdo->prepare(
         'UPDATE companies
          SET trade_name = :trade_name,
+             invoice_name_display = :invoice_name_display,
              app_name = :app_name,
              support_name = :support_name,
              support_email = :support_email,
@@ -98,6 +111,8 @@ try {
              address_line = :address_line,
              postal_code = :postal_code,
              city = :city,
+             invoice_phone = :invoice_phone,
+             invoice_email = :invoice_email,
              payment_term_days = :payment_term_days,
              customer_timesheet_reminder_enabled = :customer_timesheet_reminder_enabled,
              customer_timesheet_reminder_time = :customer_timesheet_reminder_time,
@@ -113,6 +128,15 @@ try {
     $brandAccent = settings_color(settings_string($settings['brandAccent'] ?? '#3abd9d', 7), '#3abd9d');
 
     $legalName = settings_string($settings['companyName'] ?? '', 160);
+    $invoiceNameDisplay = settings_string($settings['invoiceNameDisplay'] ?? 'trade_and_legal', 32);
+    if (!in_array($invoiceNameDisplay, ['trade_and_legal', 'legal_only'], true)) {
+        auth_send_json([
+            'ok' => false,
+            'error' => 'invalid-payload',
+            'message' => 'invoiceNameDisplay is invalid.',
+        ], 400);
+    }
+    $postalCity = settings_postal_city($settings['postalCity'] ?? '');
     $kvk = settings_string($settings['kvk'] ?? '', 32);
     if ($kvk === '') {
         $kvk = 'onbekend';
@@ -130,6 +154,7 @@ try {
 
     $updateCompany->execute([
         ':trade_name' => $tradeName !== '' ? $tradeName : 'Organisatie',
+        ':invoice_name_display' => $invoiceNameDisplay,
         ':app_name' => $appName !== '' ? $appName : 'Uren & Facturatie',
         ':support_name' => $supportName !== '' ? $supportName : null,
         ':support_email' => $supportEmail,
@@ -140,8 +165,10 @@ try {
         ':vat_number' => settings_string($settings['vat'] ?? '', 32) ?: null,
         ':iban' => settings_string($settings['iban'] ?? '', 64) ?: null,
         ':address_line' => settings_string($settings['address'] ?? '', 180) ?: null,
-        ':postal_code' => settings_string($settings['postalCity'] ?? '', 16) ?: null,
-        ':city' => settings_string($settings['postalCity'] ?? '', 100) ?: null,
+        ':postal_code' => $postalCity['postal_code'],
+        ':city' => $postalCity['city'],
+        ':invoice_phone' => settings_string($settings['phone'] ?? '', 40) ?: null,
+        ':invoice_email' => settings_email_or_null($settings['invoiceEmail'] ?? null),
         ':payment_term_days' => $paymentTerm,
         ':customer_timesheet_reminder_enabled' => settings_bool($settings['customerTimesheetReminderEnabled'] ?? true, true) ? 1 : 0,
         ':customer_timesheet_reminder_time' => $reminderTime . ':00',
@@ -249,6 +276,8 @@ try {
         ':entity_id' => (string)$companyId,
         ':event_data' => json_encode([
             'trade_name' => $tradeName,
+            'legal_name' => $legalName,
+            'invoice_name_display' => $invoiceNameDisplay,
             'app_name' => $appName,
             'support_email' => $supportEmail,
             'payment_term_days' => $paymentTerm,

@@ -13,7 +13,7 @@ $companyId = (int)$currentUser['company_id'];
 
 try {
     $companiesStmt = $pdo->prepare(
-        'SELECT id, slug, legal_name, trade_name, app_name, support_name, support_email, country_code, invoice_prefix, payment_term_days, customer_timesheet_reminder_enabled, customer_timesheet_reminder_time, customer_timesheet_overdue_workdays, created_at, updated_at FROM companies WHERE id = :company_id ORDER BY id'
+        'SELECT id, slug, legal_name, trade_name, invoice_name_display, app_name, support_name, support_email, brand_primary, brand_accent, chamber_of_commerce_number, vat_number, iban, address_line, postal_code, city, invoice_phone, invoice_email, country_code, invoice_prefix, payment_term_days, customer_timesheet_reminder_enabled, customer_timesheet_reminder_time, customer_timesheet_overdue_workdays, created_at, updated_at FROM companies WHERE id = :company_id ORDER BY id'
     );
     $companiesStmt->execute([':company_id' => $companyId]);
     $companies = $companiesStmt->fetchAll();

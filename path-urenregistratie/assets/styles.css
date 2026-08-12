@@ -197,6 +197,8 @@ select:focus-visible {
 .nav-count-group .nav-count { margin-left: 0; }
 .nav-count.is-blocked { background: var(--warning); }
 .nav-count.is-ready { background: var(--mint); }
+.nav-count.is-backoffice { background: var(--warning); }
+.nav-count.is-employee { background: var(--mint); }
 
 .sidebar-footer { display: grid; gap: 16px; }
 .workspace-user { display: flex; align-items: center; gap: 10px; }
@@ -346,10 +348,12 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .metric-note.positive { color: var(--mint-dark); }
 
 .panel { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: 0 8px 28px rgba(13,27,56,.035); }
+#admin-task-panel { scroll-margin-top: 104px; }
 .workflow-panel { margin-bottom: 18px; padding: 24px; }
 .panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px 24px 17px; }
 .workflow-panel .panel-heading { padding: 0 0 24px; }
-.workflow-progress-card { display: flex; width: fit-content; align-items: center; gap: 14px; margin: -7px 0 22px; border: 1px solid var(--line); border-radius: 15px; background: var(--surface-muted); color: var(--navy); padding: 12px 15px; }
+.workflow-overview { display: grid; grid-template-columns: minmax(230px,.38fr) minmax(0,1fr); gap: 24px; align-items: center; border: 1px solid var(--line); border-radius: 16px; background: var(--surface-muted); padding: 18px; }
+.workflow-progress-card { display: flex; width: 100%; align-items: center; gap: 14px; margin: 0; border-right: 1px solid var(--line); color: var(--navy); padding: 2px 20px 2px 0; }
 .workflow-progress-card .progress-ring { --size: 54px; background: conic-gradient(var(--mint-dark) calc(var(--progress) * 1%), #dfe8e5 0); }
 .workflow-progress-card .progress-ring::before { width: 41px; height: 41px; background: var(--surface); }
 .workflow-progress-card strong, .workflow-progress-card small { display: block; }
@@ -396,6 +400,19 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .approval-period-filters { max-width: min(650px, 62vw); flex-wrap: wrap; justify-content: flex-end; }
 .approval-period-filters button { white-space: nowrap; }
 .dashboard-team-actions { align-items: center; }
+.dashboard-team-panel .panel-heading { align-items: flex-end; padding-bottom: 14px; }
+.dashboard-team-panel .panel-heading p { margin: 6px 0 0; color: var(--muted); font-size: 10px; }
+.dashboard-team-table-wrap { padding: 0 16px 16px; }
+.dashboard-team-table { border-collapse: separate; border-spacing: 0 8px; }
+.dashboard-team-table th { border: 0; padding-block: 8px; }
+.dashboard-team-table td { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--surface-muted); padding-block: 15px; }
+.dashboard-team-table td:first-child { border-left: 1px solid var(--line); border-radius: 12px 0 0 12px; }
+.dashboard-team-table td:last-child { border-right: 1px solid var(--line); border-radius: 0 12px 12px 0; text-align: right; }
+.dashboard-team-table .person-cell strong { color: var(--navy); font-size: 12px; }
+.dashboard-team-table .dashboard-team-row.status-submitted td { border-color: #cbdcf0; background: #f7faff; }
+.dashboard-team-table .dashboard-team-row.status-correction td,
+.dashboard-team-table .dashboard-team-row.status-draft td { border-color: #edc58f; background: #fffaf4; }
+.dashboard-team-action { min-width: 116px; }
 
 .correction-banner { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 14px; align-items: start; margin: 0 0 18px; border: 1px solid #edc58f; border-radius: 16px; background: var(--warning-bg); color: var(--ink); padding: 17px 19px; }
 .correction-banner.dashboard-correction { grid-template-columns: auto minmax(0,1fr) auto; align-items: center; }
@@ -609,6 +626,17 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .customer-timesheet-template-card > small { color: var(--muted); font-size: 9px; line-height: 1.5; }
 .form-grid input.is-invalid, .modal-form input.is-invalid, .modal-form textarea.is-invalid { border-color: var(--danger); background: #fff7f7; box-shadow: 0 0 0 3px rgba(163,75,75,.09); }
 .settings-warning { margin: 15px 0 0; border-radius: 11px; background: var(--warning-bg); color: var(--warning); font-size: 10px; line-height: 1.5; padding: 11px 13px; }
+.invoice-identity-preview { display: grid; gap: 3px; border: 1px solid rgba(58,189,157,.34); border-radius: 12px; background: var(--green-light); padding: 13px 15px; }
+.invoice-identity-preview span { color: var(--teal); font-size: 9px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.invoice-identity-preview strong { color: var(--ink); font-family: "Roboto Slab", Georgia, serif; font-size: 17px; }
+.invoice-identity-preview small { color: var(--muted); font-size: 10px; }
+.hero-owner-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 13px; }
+.hero-owner-badge { display: inline-flex; align-items: center; gap: 5px; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; font: inherit; font-size: 10px; font-weight: 800; padding: 7px 11px; cursor: pointer; transition: border-color .18s ease, transform .18s ease; }
+.hero-owner-badge b { font-size: 12px; }
+.hero-owner-badge.is-backoffice { background: rgba(187,118,35,.2); color: #ffe0ab; }
+.hero-owner-badge.is-employee { background: rgba(58,189,157,.16); color: #bff5e8; }
+.hero-owner-badge:hover { border-color: rgba(255,255,255,.55); transform: translateY(-1px); }
+.hero-owner-badge:focus-visible { outline: 3px solid rgba(255,255,255,.55); outline-offset: 2px; }
 .safe-domain-note { margin: 15px 0 5px; border-radius: 11px; background: var(--green-light); color: var(--teal); font-size: 10px; line-height: 1.5; padding: 11px 13px; }
 .email-template-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
 .email-preview { margin-top: 18px; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: #fbfcfc; }
@@ -694,6 +722,8 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .nav-item { min-width: 0; min-height: 54px; flex-direction: column; justify-content: center; gap: 5px; padding: 3px; text-align: center; }
   .nav-item span:nth-child(2) { overflow: hidden; width: 100%; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
   .nav-count { position: absolute; top: 3px; right: 8px; }
+  .nav-count-group { position: absolute; top: 3px; right: 4px; gap: 2px; }
+  .nav-count-group .nav-count { position: static; padding: 1px 5px; }
   .nav-marker { width: 7px; height: 7px; }
   .main-content { margin-left: 0; padding: 0 18px 95px; }
   .topbar { min-height: 82px; }
@@ -926,6 +956,16 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 
 .summary-hours-input { width: 72px; height: 32px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); font-weight: 800; text-align: right; padding: 0 8px; }
 .employee-scope-filter { width: fit-content; margin: 0 0 16px; }
+.team-account-overview { display: grid; grid-template-columns: minmax(220px,.8fr) minmax(360px,1.2fr); gap: 24px; align-items: center; margin-bottom: 16px; padding: 20px 24px; }
+.team-account-overview-copy h3 { margin: 4px 0 2px; }
+.team-account-overview-copy small, .team-account-group small { color: var(--muted); font-size: 9px; }
+.team-account-groups { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.team-account-group { display: flex; align-items: center; gap: 13px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-muted); padding: 12px 14px; }
+.team-account-group strong, .team-account-group small { display: block; }
+.team-account-group strong { font-size: 11px; }
+.team-account-avatars { display: flex; min-width: 48px; padding-left: 8px; }
+.team-account-avatar { display: grid; place-items: center; width: 30px; height: 30px; margin-left: -8px; border: 2px solid var(--surface); border-radius: 50%; background: var(--green-light); color: var(--teal); font-size: 8px; font-weight: 900; }
+.team-account-avatar.admins { background: var(--navy); color: #fff; }
 .employee-card.is-inactive { opacity: .72; }
 .employee-card-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 13px; }
 .administrators-panel { margin-top: 22px; }
@@ -1005,7 +1045,15 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .customer-timesheet-mail-preview span { color: var(--muted); font-size: 9px; text-transform: uppercase; }
 .customer-timesheet-mail-preview strong { margin-top: 4px; }
 .customer-timesheet-mail-preview pre { margin: 0; white-space: pre-wrap; color: var(--ink); font: inherit; line-height: 1.65; }
-.customer-timesheet-admin-list { display: grid; gap: 10px; }
+.customer-timesheet-admin-panel .panel-heading p { margin: 6px 0 0; color: var(--muted); font-size: 10px; }
+.customer-timesheet-admin-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; padding: 16px 20px 20px; }
+.customer-timesheet-admin-row { display: grid; grid-template-columns: 1fr; gap: 13px; align-items: stretch; min-width: 0; padding: 16px; }
+.customer-timesheet-admin-person strong { color: var(--navy); font-size: 13px; }
+.customer-timesheet-admin-meta { display: grid; grid-template-columns: minmax(90px,.35fr) minmax(0,1fr); gap: 8px; }
+.customer-timesheet-admin-meta > span { min-width: 0; border-radius: 9px; background: var(--surface); padding: 9px 10px; }
+.customer-timesheet-admin-meta small { margin: 0 0 4px; font-size: 8px; letter-spacing: .05em; text-transform: uppercase; }
+.customer-timesheet-admin-meta strong { overflow-wrap: anywhere; font-size: 10px; }
+.customer-timesheet-admin-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .customer-timesheet-admin-row-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 .admin-hours-detail { display: grid; gap: 8px; }
 .admin-hours-detail > div { display: flex; justify-content: space-between; gap: 20px; }
@@ -1019,7 +1067,8 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .admin-task-row { grid-template-columns: 1fr; gap: 9px; }
   .admin-task-action { justify-content: stretch; }
   .admin-task-action .small-button { width: 100%; }
-  .workflow-progress-card { width: 100%; }
+  .workflow-overview { grid-template-columns: 1fr; gap: 16px; }
+  .workflow-progress-card { width: 100%; border-right: 0; border-bottom: 1px solid var(--line); padding: 0 0 16px; }
   .employee-customer-timesheet-card { grid-template-columns: 1fr; }
   .employee-customer-timesheet-actions { display: grid; grid-template-columns: 1fr; justify-content: stretch; }
   .employee-customer-timesheet-actions .button { width: 100%; }
@@ -1031,10 +1080,27 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .customer-timesheet-upload-grid .button { width: 100%; }
   .customer-timesheet-period-fields { grid-template-columns: minmax(0,1fr) 92px; }
   .customer-timesheet-upload-actions { display: grid; grid-template-columns: 1fr; }
-  .customer-timesheet-current > div, .customer-timesheet-admin-row { grid-template-columns: 1fr; }
+  .customer-timesheet-current > div { grid-template-columns: 1fr; }
+  .customer-timesheet-admin-list { grid-template-columns: 1fr; padding: 12px; }
+  .customer-timesheet-admin-row { grid-template-columns: 1fr; }
   .customer-timesheet-admin-row-actions { justify-content: flex-start; }
   .customer-timesheet-mail-preview-heading { align-items: stretch; flex-direction: column; }
   .customer-timesheet-mail-preview-heading .small-button { width: 100%; }
+}
+
+@media (max-width: 700px) {
+  .dashboard-team-panel .panel-heading { align-items: flex-start; }
+  .dashboard-team-table-wrap { padding: 0 12px 12px; overflow: visible; }
+  .dashboard-team-table thead { display: none; }
+  .dashboard-team-table, .dashboard-team-table tbody { display: block; width: 100%; }
+  .dashboard-team-table tr { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0; margin: 0 0 10px; border: 1px solid var(--line); border-radius: 13px; overflow: hidden; }
+  .dashboard-team-table td { display: block; min-width: 0; border: 0; border-top: 1px solid var(--line); border-radius: 0; padding: 12px; white-space: normal; }
+  .dashboard-team-table td::before { display: block; margin-bottom: 5px; color: var(--muted); content: attr(data-label); font-size: 8px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+  .dashboard-team-table td:first-child { grid-column: 1/-1; border: 0; border-radius: 0; }
+  .dashboard-team-table td:last-child { grid-column: 1/-1; border: 0; border-top: 1px solid var(--line); border-radius: 0; text-align: left; }
+  .dashboard-team-table .dashboard-team-action { width: 100%; min-height: 40px; }
+  .customer-timesheet-admin-footer { align-items: stretch; flex-direction: column; }
+  .customer-timesheet-admin-row-actions, .customer-timesheet-admin-row-actions .small-button { width: 100%; }
 }
 .modal-form label.route-toggle { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 700; }
 .modal-form .route-toggle input { display: inline-block; width: 18px; height: 18px; margin: 0; padding: 0; accent-color: var(--mint-dark); }
@@ -1084,6 +1150,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .invoice-brand-label { color: var(--muted); font-size: 8px; font-weight: 900; letter-spacing: .045em; text-transform: uppercase; }
 .invoice-brand-party h4 { margin: 13px 0 9px; color: var(--navy); font-size: 19px; }
 .invoice-brand-party p { margin: 0; font-size: 11px; line-height: 1.7; }
+.invoice-brand-party .invoice-brand-identity { margin: -4px 0 8px; color: var(--teal); font-size: 9px; font-weight: 800; }
 .invoice-brand-party dl { display: grid; grid-template-columns: auto 1fr auto 1fr; gap: 7px 12px; margin: 16px 0 0; border-top: 1px solid var(--line); padding-top: 13px; font-size: 10px; }
 .invoice-brand-party.recipient dl { grid-template-columns: auto 1fr; border-color: #c6e9e0; }
 .invoice-brand-party dt { color: var(--muted); font-size: 8px; font-weight: 900; text-transform: uppercase; }
@@ -1277,6 +1344,7 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
   .open-period-actions { justify-content: stretch; }
   .open-period-row .small-button { width: 100%; }
   .administrator-row { grid-template-columns: 1fr; }
+  .team-account-overview, .team-account-groups { grid-template-columns: 1fr; }
   .mail-recipient-setting, .mail-route-choice { grid-template-columns: 1fr; }
   .recipient-settings-heading { align-items: flex-start; flex-direction: column; }
   .invoice-document-preview { padding: 18px; }

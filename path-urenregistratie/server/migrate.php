@@ -102,6 +102,10 @@ function migration_plan(bool $allowDemoMigrations): array
         'id' => '011_mail_bundle_attachment_policy.sql',
         'path' => __DIR__ . '/migrations/011_mail_bundle_attachment_policy.sql',
     ];
+    $plan[] = [
+        'id' => '012_invoice_company_identity.sql',
+        'path' => __DIR__ . '/migrations/012_invoice_company_identity.sql',
+    ];
 
     return $plan;
 }

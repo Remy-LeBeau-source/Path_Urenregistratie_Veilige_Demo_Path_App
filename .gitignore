@@ -6,3 +6,9 @@ path-private/
 path-urenregistratie/database/ERD*.png
 path-urenregistratie/database/ERD-preview*.jpg
 path-urenregistratie/database/ERD*.mmd
+# Local render/runtime and automated-test artifacts.
+tmp/
+path-urenregistratie/test-results*/
+path-urenregistratie/playwright-report/
+path-urenregistratie/allure-results/
+path-urenregistratie/allure-report/

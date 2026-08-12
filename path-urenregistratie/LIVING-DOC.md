@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 144 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 152 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 144 unieke case-ID's
+- Playwright executable cases: 152 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 145 unieke case-ID's
-- Playwright features: 20
+- Totaal executable cases: 153 unieke case-ID's
+- Playwright features: 21
 - Database features: 1
-- Playwright steps mappings: 20
+- Playwright steps mappings: 21
 - Database steps mappings: 1
-- Uitvoeringen: 148
-- Niet-mobile projectuitvoeringen: 140
+- Uitvoeringen: 156
+- Niet-mobile projectuitvoeringen: 148
 - Mobile functionele cases: 4
 - Pixel 7 / Chromium-uitvoeringen: 4
 - iPhone 13 / WebKit-uitvoeringen: 4
 
-De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 144 Playwright-functionele cases in totaal 148 resultaten op: 140 + (4 x 2) = 148.
+De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 152 Playwright-functionele cases in totaal 156 resultaten op: 148 + (4 x 2) = 156.
 
 ## Documentatieketen
 
@@ -96,7 +96,7 @@ De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 144 Playwrig
 
 - Feature: `tests/playwright/features/dashboard.feature`
 - Source: `tests/playwright/dashboard.spec.ts`
-- Cases: 12
+- Cases: 14
 
 - [DASH-H-001] admin dashboard opent zonder console errors
 - [DASH-H-002] employee dashboard opent zonder console errors
@@ -105,6 +105,8 @@ De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 144 Playwrig
 - [DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus
 - [DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker en Backoffice
 - [DASH-N-009] medewerker teller blijft stabiel bij aug-juli-aug en dashboard triggert geen verborgen timesheet-read
+- [DASH-H-012] GUI-smoke scheidt werkacties van medewerkers- en beheerdersaccounts
+- [DASH-H-013] dashboardmodules tonen compacte documenten, procesfasen en teamacties
 - [DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakiezer blijft leesbaar
 - [DASH-H-004] terugkeren naar medewerkerdashboard ververst de uren en behoudt maandlabels bij themawissel
 - [DASH-H-005] medewerker ziet open maanden compact en kan direct naar de juiste maand springen
@@ -145,6 +147,18 @@ De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 144 Playwrig
 - [INV-N-011] tweede lock-oproep op dezelfde factuur wordt geblokkeerd
 - [INV-N-012] gelijktijdige lock-requests leveren exact één winnaar
 - [INV-N-013] anonieme gebruiker kan factuur-PDF niet downloaden
+
+### Facturerende ondernemingsidentiteit
+
+- Feature: `tests/playwright/features/invoice-company-identity.feature`
+- Source: `tests/playwright/invoice-company-identity.spec.ts`
+- Cases: 5
+
+- [INV-ID-H-001] handelsnaam en juridische naam staan samen op de factuurpreview
+- [INV-ID-H-002] alleen juridische naam is als factuurweergave te kiezen
+- [INV-ID-H-003] factuuridentiteit wordt door settings API opgeslagen en via bootstrap herladen
+- [INV-ID-N-004] settings API weigert een onbekende factuurweergave
+- [INV-ID-H-005] instellingen tonen verkoopklare bedrijfsidentiteit en beveiligde verzendmodus
 
 ### Factuurweergave in de desktop-UI
 
@@ -281,11 +295,12 @@ De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 144 Playwrig
 
 - Feature: `tests/playwright/features/timesheets-review-ui.feature`
 - Source: `tests/playwright/timesheet-review-ui.spec.ts`
-- Cases: 3
+- Cases: 4
 
 - [TS-REV-UI-H-008] browserflow: admin vraagt correctie, medewerker dient opnieuw in, admin keurt goed
 - [TS-REV-UI-H-009] medewerker kan een ingediende urenstaat opnieuw indienen
 - [TS-REV-UI-H-010] submitknop is verborgen bij goedgekeurde urenstaat
+- [TS-REV-UI-N-011] localhost kan demo-uren zonder serverversie voor correctie terugsturen
 
 ### Urenregistratie via API
 

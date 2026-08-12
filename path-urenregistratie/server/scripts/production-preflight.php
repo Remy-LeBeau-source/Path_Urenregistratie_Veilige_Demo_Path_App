@@ -28,6 +28,7 @@ try {
 
     $requiredFiles = [
         dirname(__DIR__) . '/migrations/011_mail_bundle_attachment_policy.sql',
+        dirname(__DIR__) . '/migrations/012_invoice_company_identity.sql',
         __DIR__ . '/mail-dispatch.php',
         __DIR__ . '/database-backup.php',
         __DIR__ . '/database-restore.php',
@@ -71,11 +72,14 @@ try {
             "SELECT COUNT(*) FROM users WHERE active = 1 AND (email LIKE '%.invalid' OR email = '')"
         )->fetchColumn();
         $company = $pdo->query(
-            'SELECT trade_name FROM companies ORDER BY id ASC LIMIT 1'
-        )->fetchColumn();
+            'SELECT trade_name, legal_name, invoice_name_display FROM companies ORDER BY id ASC LIMIT 1'
+        )->fetch();
         $checks['live_database_connection'] = true;
         $checks['active_accounts_have_real_email'] = $invalidUsers === 0;
-        $checks['invoicing_company_exact'] = $company === 'Path Consultancy B.V.';
+        $checks['invoicing_company_exact'] = is_array($company)
+            && ($company['trade_name'] ?? '') === 'Path Consultancy'
+            && ($company['legal_name'] ?? '') === 'QSI Consultancy B.V.'
+            && ($company['invoice_name_display'] ?? '') === 'trade_and_legal';
         $liveReport = [
             'database' => $db['name'],
             'invalid_active_account_count' => $invalidUsers,

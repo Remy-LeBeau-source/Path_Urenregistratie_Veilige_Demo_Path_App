@@ -175,7 +175,7 @@ test('[INV-H-007] factuurnavigatie onderscheidt geblokkeerde en controleklare ma
     await expect(readyBadge).toHaveText('1');
     await expect(blockedBadge).toHaveCSS('background-color', 'rgb(187, 118, 35)');
     await expect(readyBadge).toHaveCSS('background-color', 'rgb(58, 189, 157)');
-    await expect(page.locator('#employees-count')).toHaveCSS('background-color', 'rgb(187, 118, 35)');
+    await expect(page.locator('#employees-count')).toHaveCount(0);
   });
 });
 

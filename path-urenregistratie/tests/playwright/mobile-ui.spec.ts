@@ -340,6 +340,15 @@ test('[MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikba
     await expect(page.locator('#view-dashboard .metric-card').first()).toBeVisible();
     await expect(page.locator('#hero-task-total')).toBeVisible();
     await expect(page.locator('#admin-task-summary')).toBeVisible();
+    await page.locator('#hero-backoffice-filter').click();
+    await expect(page.locator('#admin-task-title')).toHaveText('Acties bij Backoffice per maand');
+    await expect(page.locator('#admin-task-list [data-admin-task-row]:visible')).toHaveCount(7);
+    await page.locator('#hero-employee-filter').click();
+    await expect(page.locator('#admin-task-title')).toHaveText('Wacht op medewerkers per maand');
+    await expect(page.locator('#admin-task-list [data-admin-task-row]:visible')).toHaveCount(5);
+    await expect(page.locator('#customer-timesheet-admin-list .customer-timesheet-admin-row')).toHaveCount(4);
+    await expect(page.locator('.workflow-overview .workflow-step')).toHaveCount(4);
+    await expect(page.locator('#dashboard-employee-rows .dashboard-team-action')).toHaveCount(4);
     await assertNoHorizontalOverflow(page);
   });
 

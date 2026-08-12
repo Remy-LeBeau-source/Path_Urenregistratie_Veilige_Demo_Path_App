@@ -201,7 +201,9 @@ function invoices_generate_and_store_pdf(PDO $pdo, int $invoiceId, int $companyI
             'SELECT i.invoice_number, i.invoice_date, i.due_date, i.subtotal, i.vat_percentage, i.vat_amount, i.total,
                     e.full_name AS employee_name, t.billable_hours,
                     CONCAT(p.year, "-", LPAD(p.month, 2, "0")) AS period_key,
-                    c.trade_name AS company_name, c.address_line, c.postal_code, c.city, c.vat_number, c.iban
+                    c.trade_name, c.legal_name, c.invoice_name_display,
+                    c.address_line, c.postal_code, c.city, c.invoice_phone, c.invoice_email,
+                    c.chamber_of_commerce_number, c.vat_number, c.iban
              FROM invoices i
              JOIN timesheets t ON t.id = i.timesheet_id
              JOIN employees e ON e.id = t.employee_id
@@ -224,9 +226,20 @@ function invoices_generate_and_store_pdf(PDO $pdo, int $invoiceId, int $companyI
             . trim((string)$row['city'])
         );
 
+        $tradeName = trim((string)$row['trade_name']);
+        $legalName = trim((string)$row['legal_name']);
+        $combinedIdentity = (string)$row['invoice_name_display'] !== 'legal_only'
+            && $tradeName !== ''
+            && $legalName !== ''
+            && strcasecmp($tradeName, $legalName) !== 0;
+        $companyHeading = $combinedIdentity ? $tradeName : ($legalName !== '' ? $legalName : $tradeName);
         $lines = [
-            ['text' => (string)$row['company_name'], 'size' => 14],
+            ['text' => $companyHeading, 'size' => 14],
+            ...($combinedIdentity ? [['text' => 'Handelsnaam van ' . $legalName, 'size' => 9]] : []),
             ['text' => $addressLine, 'size' => 9],
+            'KvK: ' . trim((string)$row['chamber_of_commerce_number']) . ' | Btw: ' . trim((string)$row['vat_number']),
+            'IBAN: ' . trim((string)$row['iban']),
+            trim((string)$row['invoice_phone']) . ' | ' . trim((string)$row['invoice_email']),
             ' ',
             ['text' => 'Factuur ' . (string)$row['invoice_number'], 'size' => 13],
             'Factuurdatum: ' . (string)$row['invoice_date'],

@@ -214,7 +214,8 @@ test('[DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad ni
       return {
         hasRows: total > 0,
         totalMatches: text('#hero-task-total') === `${total} open acties`,
-        ownersMatch: text('#hero-task-owners') === `Backoffice ${backoffice} + medewerkers ${employees} = ${total}`,
+        ownersMatch: text('#hero-task-owners') === `Backoffice ${backoffice} + wacht op medewerkers ${employees} = ${total}`,
+        ownerBadgesMatch: text('#hero-backoffice-count') === String(backoffice) && text('#hero-employee-count') === String(employees),
         metricMatches: text('#metric-actions') === String(backoffice),
         queueMatches: text('#open-work-queue') === `Bekijk alle ${total} open acties`,
         staleTotalsAbsent: !['#hero-task-total', '#hero-task-owners', '#metric-actions']
@@ -224,6 +225,7 @@ test('[DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad ni
       hasRows: true,
       totalMatches: true,
       ownersMatch: true,
+      ownerBadgesMatch: true,
       metricMatches: true,
       queueMatches: true,
       staleTotalsAbsent: true
@@ -346,11 +348,11 @@ test('[DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus', as
     await loginPage.loginAsAdmin();
     await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
 
-    const julyTasks = page.locator('#admin-task-month-body-2026-07');
-    if (await julyTasks.isHidden()) {
-      await page.locator('[data-admin-task-month-toggle="2026-07"]').click();
+    const juneTasks = page.locator('#admin-task-month-body-2026-06');
+    if (await juneTasks.isHidden()) {
+      await page.locator('[data-admin-task-month-toggle="2026-06"]').click();
     }
-    await page.locator('[data-review-customer-timesheet="1"][data-period-key="2026-07"]').click();
+    await juneTasks.locator('[data-review-customer-timesheet="1"][data-period-key="2026-06"]').click();
     await expect(page.locator('#modal-title')).toContainText('Marc de Roon');
     await page.locator('#modal-confirm').click();
 
@@ -413,7 +415,7 @@ test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker e
     await page.locator('#quick-reset-demo').click();
     await page.locator('#modal-confirm').click();
     await expect(page.locator('#hero-task-total')).toHaveText('12 open acties');
-    await expect(page.locator('#admin-task-summary')).toContainText('Backoffice 7 + medewerkers 5 = 12');
+    await expect(page.locator('#admin-task-summary')).toContainText('Backoffice kan 7 oppakken; 5 wachten op medewerkers');
     await expect(page.locator('#admin-task-list [data-admin-task-row]')).toHaveCount(12);
     console.log('GUI-CLOSEOUT baseline: 12 open acties; Backoffice 7; medewerkers 5; Stasjo 3 medewerkeracties; Brian 2 medewerkeracties plus 1 Backoffice-controle; Shawn 1 open dossieractie.');
 
@@ -531,6 +533,105 @@ test('[DASH-N-009] medewerker teller blijft stabiel bij aug-juli-aug en dashboar
 
   await test.step('Then blijft de teller gelijk en zijn er geen verborgen timesheet-reads', async () => {
     expect(timesheetReadHits).toBe(0);
+  });
+});
+
+test('[DASH-H-012] GUI-smoke scheidt werkacties van medewerkers- en beheerdersaccounts', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given de vaste GUI-baseline met twaalf open acties en zes actieve accounts', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await page.locator('#quick-reset-demo').click();
+    await page.locator('#modal-confirm').click();
+    await expect(page.locator('#hero-task-total')).toHaveText('12 open acties');
+  });
+
+  await test.step('Then toont het dashboard zeven Backoffice-acties en vijf wachttaken zonder medewerkerbadge in het menu', async () => {
+    await expect(page.locator('#hero-backoffice-count')).toHaveText('7');
+    await expect(page.locator('#hero-employee-count')).toHaveText('5');
+    await expect(page.locator('#dashboard-backoffice-count')).toHaveText('7');
+    await expect(page.locator('#dashboard-employee-count')).toHaveText('5');
+    await expect(page.locator('#dashboard-work-count')).toHaveAttribute('aria-label', '12 open acties: 7 bij Backoffice, 5 wacht op medewerkers');
+    await expect(page.locator('#employees-count')).toHaveCount(0);
+    const taskTypes = await page.evaluate(() => [...new Set(window.adminOpenTasks().map(task => task.type))].sort());
+    expect(taskTypes).toEqual([
+      'customer-broker',
+      'customer-review',
+      'customer-waiting',
+      'hours-correction',
+      'hours-draft',
+      'hours-review',
+      'invoice-delivery'
+    ]);
+    await page.locator('#hero-backoffice-filter').click();
+    await expect(page.locator('[data-admin-task-filter="actionable"]')).toHaveClass(/is-active/);
+    await expect(page.locator('#admin-task-list [data-admin-task-row]')).toHaveCount(7);
+    await expect(page.locator('#admin-task-list [data-admin-task-row]:visible')).toHaveCount(7);
+    await page.locator('#hero-employee-filter').click();
+    await expect(page.locator('[data-admin-task-filter="waiting"]')).toHaveClass(/is-active/);
+    await expect(page.locator('#admin-task-list [data-admin-task-row]')).toHaveCount(5);
+    await expect(page.locator('#admin-task-list [data-admin-task-row]:visible')).toHaveCount(5);
+  });
+
+  await test.step('And Teambeheer toont vier medewerkers en twee beheerders als zes actieve accounts', async () => {
+    await page.locator('button[data-view="employees"]').click();
+    await expect(page.locator('#view-employees h2')).toHaveText('Teambeheer');
+    await expect(page.locator('#team-active-account-count')).toHaveText('6');
+    await expect(page.locator('#team-employees-overview')).toContainText('4 medewerkers');
+    await expect(page.locator('#team-admins-overview')).toContainText('2 beheerders');
+    await expect(page.locator('.team-account-avatar.employees')).toHaveCount(4);
+    await expect(page.locator('.team-account-avatar.admins')).toHaveCount(2);
+    await attachBusinessScreenshot(page, 'GUI smoke · Acties en teamaccounts apart');
+  });
+
+  await test.step('And Dashboard opent bovenaan terwijl eigenaarbolletjes gericht naar hun werkvoorraad springen', async () => {
+    await page.locator('button[data-view="dashboard"]').click();
+    await expect(page.locator('.hero-card')).toBeInViewport();
+    await page.locator('#hero-backoffice-filter').click();
+    await expect(page.locator('#admin-task-panel')).toBeInViewport();
+    await expect(page.locator('#admin-task-title')).toHaveText('Acties bij Backoffice per maand');
+    await expect(page.locator('#admin-task-summary')).toContainText('7 acties die Backoffice nu kan oppakken');
+    await expect(page.locator('#admin-task-list [data-admin-task-row]')).toHaveCount(7);
+    await expect(page.locator('#admin-task-list [data-admin-task-row]:visible')).toHaveCount(7);
+    await expect(page.locator('#admin-task-list .admin-task-row.is-waiting')).toHaveCount(0);
+    await expect(page.locator('[data-admin-task-filter="all"]')).toHaveText('Alle acties · 12');
+    await expect(page.locator('[data-admin-task-filter="actionable"]')).toHaveText('Bij Backoffice · 7');
+    await expect(page.locator('[data-admin-task-filter="waiting"]')).toHaveText('Bij medewerkers · 5');
+  });
+});
+
+test('[DASH-H-013] dashboardmodules tonen compacte documenten, procesfasen en teamacties', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given Backoffice de vaste augustusbaseline opent', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await page.locator('#quick-reset-demo').click();
+    await page.locator('#modal-confirm').click();
+  });
+
+  await test.step('Then toont klanturenstaten een verkoopklaar kaartenoverzicht', async () => {
+    await expect(page.locator('#customer-timesheet-admin-summary')).toHaveText('4 verwacht · 1 te controleren · 0 wacht op medewerkers');
+    await expect(page.locator('#customer-timesheet-admin-list .customer-timesheet-admin-row')).toHaveCount(4);
+    await expect(page.locator('#customer-timesheet-admin-list .customer-timesheet-admin-meta')).toHaveCount(4);
+    await expect(page.locator('#customer-timesheet-admin-list')).toContainText('Deadline');
+    await expect(page.locator('#customer-timesheet-admin-list')).toContainText('Brokerroute');
+    await page.locator('#customer-timesheet-admin-panel').scrollIntoViewIfNeeded();
+    await attachBusinessScreenshot(page, 'GUI smoke · Klanturenstaten als compacte kaarten');
+  });
+
+  await test.step('And proces en team tonen zonder lege tussenruimte duidelijke kerninformatie en acties', async () => {
+    await expect(page.locator('.workflow-overview')).toBeVisible();
+    await expect(page.locator('.workflow-overview .workflow-step')).toHaveCount(4);
+    await expect(page.locator('#dashboard-team-title')).toHaveText('Teamstatus · Augustus 2026');
+    await expect(page.locator('#dashboard-team-summary')).toHaveText('4 medewerkers · 2 te controleren · 1 wacht op medewerker');
+    await expect(page.locator('#dashboard-employee-rows .dashboard-team-action')).toHaveCount(4);
+    await expect(page.locator('#dashboard-employee-rows .dashboard-team-action.send')).toHaveCount(2);
+    await page.locator('.workflow-overview').scrollIntoViewIfNeeded();
+    await attachBusinessScreenshot(page, 'GUI smoke · Procesfasen als compact overzicht');
+    await page.locator('.dashboard-team-panel').scrollIntoViewIfNeeded();
+    await attachBusinessScreenshot(page, 'GUI smoke · Teamstatus met vervolgacties');
   });
 });
 

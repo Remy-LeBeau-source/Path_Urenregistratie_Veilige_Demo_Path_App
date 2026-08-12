@@ -389,7 +389,7 @@ function demoNotifications() {
 
 function freshState() {
   return {
-    schemaVersion: 25,
+    schemaVersion: 26,
     currentRole: null,
     currentAdminId: "gio",
     currentEmployeeId: 2,
@@ -424,7 +424,8 @@ function freshState() {
       brandPrimary: "#0d1b38",
       brandAccent: "#3abd9d",
       brandLogo: "",
-      companyName: "QSI Consultancy",
+      companyName: "QSI Consultancy B.V.",
+      invoiceNameDisplay: "trade_and_legal",
       kvk: "89320018",
       vat: "NL001622017B32",
       iban: "NL95INGB0006947972",
@@ -624,7 +625,7 @@ function freshState() {
         "4": seedCustomerTimesheet(makeRecord(144, 144, "approved", "simulated", "Bel-Shawn-2026-juni", "2026-06"), "missing")
       },
       "2026-07": {
-        "1": seedCustomerTimesheet(makeRecord(164, 164, "approved", "ready", "IND-2026-juli", "2026-07"), "received", "Klanturenstaat_Marc_de_Roon_2026-07.pdf"),
+        "1": seedCustomerTimesheet(makeRecord(164, 164, "approved", "ready", "IND-2026-juli", "2026-07"), "approved", "Klanturenstaat_Marc_de_Roon_2026-07.pdf"),
         "2": seedCustomerTimesheet(makeRecord(153, 153, "approved", "simulated", "IND-StvB-2026-juli", "2026-07"), "resubmit", "Klanturenstaat_Stasjo_van_Bakel_2026-07.pdf"),
         "3": seedCustomerTimesheet(makeCorrectionRecord(117, 117, "COA-2026-juli", "2026-07", "Controleer 22 juli: de uren moeten worden afgestemd met de klantregistratie."), "sent", "Klanturenstaat_Brian_Hek_2026-07.pdf"),
         "4": seedCustomerTimesheet(makeRecord(144, 144, "approved", "ready", "Bel-Shawn-2026-juli", "2026-07"), "sent", "Klanturenstaat_Shawn-Douglas_Nahar_2026-07.pdf")
@@ -643,7 +644,7 @@ function loadState() {
   const fallback = freshState();
   try {
     const saved = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
-    if (!saved || ![7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25].includes(saved.schemaVersion) || !parsePeriodKey(saved.selectedPeriodKey)) return fallback;
+    if (!saved || ![7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26].includes(saved.schemaVersion) || !parsePeriodKey(saved.selectedPeriodKey)) return fallback;
     const previousSchemaVersion = Number(saved.schemaVersion || 0);
     saved.hoursWeekScope = typeof saved.hoursWeekScope === "string" ? saved.hoursWeekScope : "all";
     saved.hoursWeekScopeTouched = saved.hoursWeekScopeTouched === true;
@@ -662,6 +663,12 @@ function loadState() {
     }
     const previousSettings = saved.settings || {};
     saved.settings = Object.assign({}, fallback.settings, previousSettings);
+    saved.settings.invoiceNameDisplay = ["trade_and_legal", "legal_only"].includes(saved.settings.invoiceNameDisplay)
+      ? saved.settings.invoiceNameDisplay
+      : "trade_and_legal";
+    if (previousSchemaVersion < 26 && String(saved.settings.companyName || "").trim() === "QSI Consultancy") {
+      saved.settings.companyName = "QSI Consultancy B.V.";
+    }
     if (!Object.prototype.hasOwnProperty.call(previousSettings, "postalCity") && String(saved.settings.address || "").includes(",")) {
       const addressParts = String(saved.settings.address).split(",");
       saved.settings.address = addressParts.shift().trim();
@@ -750,7 +757,7 @@ function loadState() {
         }
       });
     });
-    saved.schemaVersion = 25;
+    saved.schemaVersion = 26;
     saved.employees = Array.isArray(saved.employees) && saved.employees.length ? saved.employees : fallback.employees;
     saved.admins = saved.admins.map((admin, index) => Object.assign({
       id: "admin-" + (index + 1),
@@ -2237,6 +2244,9 @@ function mergeBootstrapIntoState(data) {
   state.settings.supportName = String(company.support_name || state.settings.supportName || "");
   state.settings.supportEmail = String(company.support_email || state.settings.supportEmail || "");
   state.settings.companyName = String(company.legal_name || state.settings.companyName || "");
+  state.settings.invoiceNameDisplay = ["trade_and_legal", "legal_only"].includes(String(company.invoice_name_display || ""))
+    ? String(company.invoice_name_display)
+    : state.settings.invoiceNameDisplay;
   if (company.payment_term_days !== undefined && company.payment_term_days !== null) {
     state.settings.paymentTerm = String(company.payment_term_days);
   }
@@ -2255,6 +2265,8 @@ function mergeBootstrapIntoState(data) {
   state.settings.iban = String(company.iban || state.settings.iban || "");
   state.settings.address = String(company.address_line || state.settings.address || "");
   state.settings.postalCity = [company.postal_code, company.city].filter(Boolean).join(" ").trim() || state.settings.postalCity;
+  state.settings.phone = String(company.invoice_phone || state.settings.phone || "");
+  state.settings.invoiceEmail = String(company.invoice_email || state.settings.invoiceEmail || "");
   if (company.customer_timesheet_reminder_enabled !== undefined && company.customer_timesheet_reminder_enabled !== null) {
     state.settings.customerTimesheetReminderEnabled = Number(company.customer_timesheet_reminder_enabled) === 1;
   }
@@ -3622,9 +3634,15 @@ function renderAdminTaskQueue() {
   const defaultExpandedMonthKeys = new Set();
   const taskMonths = new Set(tasks.map(task => task.periodKey)).size;
   const taskDossiers = new Set(tasks.map(task => task.periodKey + ":" + task.employee.id)).size;
-  document.querySelector("#admin-task-summary").textContent = tasks.length
-    ? tasks.length + " open " + (tasks.length === 1 ? "actie" : "acties") + " in " + taskDossiers + " " + (taskDossiers === 1 ? "dossier" : "dossiers") + ": " + adminTaskMonthEquation(tasks) + ". Backoffice " + actionable.length + " + medewerkers " + waiting.length + " = " + tasks.length + ". Iedere regel hieronder is één actie."
-    : "Alles is afgehandeld.";
+  const taskTitle = document.querySelector("#admin-task-title");
+  if (taskTitle) taskTitle.textContent = filter === "actionable" ? "Acties bij Backoffice per maand" : filter === "waiting" ? "Wacht op medewerkers per maand" : "Alle open acties per maand";
+  document.querySelector("#admin-task-summary").textContent = !tasks.length
+    ? "Alles is afgehandeld."
+    : filter === "actionable"
+      ? actionable.length + " acties die Backoffice nu kan oppakken, verdeeld over " + filteredMonthGroups.length + " " + (filteredMonthGroups.length === 1 ? "maand" : "maanden") + "."
+      : filter === "waiting"
+        ? waiting.length + " acties waarvoor medewerkers eerst iets moeten indienen of corrigeren, verdeeld over " + filteredMonthGroups.length + " " + (filteredMonthGroups.length === 1 ? "maand" : "maanden") + "."
+        : tasks.length + " open " + (tasks.length === 1 ? "actie" : "acties") + " in " + taskDossiers + " " + (taskDossiers === 1 ? "dossier" : "dossiers") + ": " + adminTaskMonthEquation(tasks) + ". Backoffice kan " + actionable.length + " oppakken; " + waiting.length + " " + (waiting.length === 1 ? "wacht" : "wachten") + " op medewerkers. Iedere regel hieronder is één actie.";
   document.querySelector("#admin-task-filters").innerHTML = [
     ["all", "Alle acties", tasks.length],
     ["actionable", "Bij Backoffice", actionable.length],
@@ -3640,7 +3658,11 @@ function renderAdminTaskQueue() {
     const monthActionable = group.tasks.filter(task => task.actionable);
     const monthWaiting = group.tasks.filter(task => !task.actionable);
     const timing = group.tasks.some(task => task.isOverdue) ? "Eerdere maand · nog niet afgerond" : "Huidige maand";
-    const ownerSummary = monthActionable.length + " bij Backoffice · " + monthWaiting.length + " bij " + (monthWaiting.length === 1 ? "medewerker" : "medewerkers");
+    const ownerSummary = filter === "actionable"
+      ? monthActionable.length + " bij Backoffice"
+      : filter === "waiting"
+        ? monthWaiting.length + " bij " + (monthWaiting.length === 1 ? "medewerker" : "medewerkers")
+        : monthActionable.length + " bij Backoffice · " + monthWaiting.length + " bij " + (monthWaiting.length === 1 ? "medewerker" : "medewerkers");
     const ownerGroups = [];
     if (monthActionable.length) ownerGroups.push('<div class="admin-task-owner-group"><div class="admin-task-owner-heading is-actionable">Nu doen door Backoffice · ' + monthActionable.length + '</div>' + monthActionable.map(renderTaskRow).join("") + '</div>');
     if (monthWaiting.length) ownerGroups.push('<div class="admin-task-owner-group"><div class="admin-task-owner-heading is-waiting">Wacht op medewerkers · ' + monthWaiting.length + '</div>' + monthWaiting.map(renderTaskRow).join("") + '</div>');
@@ -3648,7 +3670,7 @@ function renderAdminTaskQueue() {
     const monthSignature = group.tasks.map(task => task.id).join("|");
     const savedMonthState = state.adminTaskMonthState[monthStateKey];
     const hasCurrentExpansionOverride = savedMonthState && savedMonthState.signature === monthSignature;
-    const isExpanded = hasCurrentExpansionOverride ? savedMonthState.expanded : defaultExpandedMonthKeys.has(group.periodKey);
+    const isExpanded = hasCurrentExpansionOverride ? savedMonthState.expanded : (filter !== "all" || defaultExpandedMonthKeys.has(group.periodKey));
     const monthBodyId = "admin-task-month-body-" + group.periodKey;
     return '<section class="admin-task-month" data-admin-task-month="' + group.periodKey + '">' +
       '<button class="admin-task-month-heading" type="button" data-admin-task-month-toggle="' + group.periodKey + '" data-admin-task-month-signature="' + escapeHtml(monthSignature) + '" aria-expanded="' + String(isExpanded) + '" aria-controls="' + monthBodyId + '"><span class="admin-task-month-heading-copy"><span>' + escapeHtml(timing) + '</span><strong>' + escapeHtml(group.period.label) + ' · ' + group.tasks.length + " open " + (group.tasks.length === 1 ? "actie" : "acties") + '</strong></span><span class="admin-task-month-heading-side"><small>' + escapeHtml(ownerSummary) + '</small><span class="admin-task-month-chevron" aria-hidden="true"></span></span></button>' +
@@ -3880,23 +3902,11 @@ function renderDashboardNextAction(tasks) {
   controls.innerHTML = "";
 }
 
-function renderEmployeesNavBadge(waitingCount) {
-  const badge = document.querySelector("#employees-count");
-  if (!badge) return;
-  const count = Math.max(0, Number(waitingCount || 0));
-  badge.textContent = String(count);
-  badge.hidden = count === 0;
-  badge.classList.toggle("is-blocked", count > 0);
-  if (count > 0) badge.setAttribute("aria-label", count + " open actie" + (count === 1 ? "" : "s") + " bij medewerkers");
-  else badge.removeAttribute("aria-label");
-}
-
 function renderDashboardActions() {
   const tasks = adminOpenTasks();
   const workCount = tasks.length;
   const actionableCount = tasks.filter(task => task.actionable).length;
   const waitingCount = workCount - actionableCount;
-  renderEmployeesNavBadge(waitingCount);
   const workMonths = new Set(tasks.map(task => task.periodKey)).size;
   const workDossiers = new Set(tasks.map(task => task.periodKey + ":" + task.employee.id)).size;
   const selectedTasks = tasks.filter(task => task.periodKey === currentPeriod().key);
@@ -3906,8 +3916,24 @@ function renderDashboardActions() {
   const admin = currentAdmin();
   document.querySelector("#admin-dashboard-greeting").textContent = greetingForNow() + ", " + (admin ? admin.name.split(/\s+/)[0] : "beheerder");
   document.querySelector("#admin-attention-note").textContent = workCount
-    ? workCount + " open " + (workCount === 1 ? "actie" : "acties") + " in " + workDossiers + " " + (workDossiers === 1 ? "dossier" : "dossiers") + " over " + workMonths + " " + (workMonths === 1 ? "maand" : "maanden") + " · " + actionableCount + " bij Backoffice · " + waitingCount + " bij medewerkers."
+    ? workCount + " open " + (workCount === 1 ? "actie" : "acties") + " in " + workDossiers + " " + (workDossiers === 1 ? "dossier" : "dossiers") + " over " + workMonths + " " + (workMonths === 1 ? "maand" : "maanden") + "."
     : "Er staat niets open: alle uren, klanturenstaten en verzendcontroles zijn afgerond.";
+  document.querySelector("#hero-backoffice-count").textContent = String(actionableCount);
+  document.querySelector("#hero-employee-count").textContent = String(waitingCount);
+  document.querySelector("#hero-owner-badges").hidden = workCount === 0;
+  const dashboardWorkBadge = document.querySelector("#dashboard-work-count");
+  const dashboardBackofficeBadge = document.querySelector("#dashboard-backoffice-count");
+  const dashboardEmployeeBadge = document.querySelector("#dashboard-employee-count");
+  dashboardWorkBadge.hidden = workCount === 0;
+  dashboardBackofficeBadge.hidden = actionableCount === 0;
+  dashboardEmployeeBadge.hidden = waitingCount === 0;
+  dashboardBackofficeBadge.textContent = String(actionableCount);
+  dashboardEmployeeBadge.textContent = String(waitingCount);
+  const dashboardBadgeLabel = workCount === 0
+    ? "Geen open acties"
+    : workCount + " open acties: " + actionableCount + " bij Backoffice, " + waitingCount + " wacht op medewerkers";
+  dashboardWorkBadge.setAttribute("aria-label", dashboardBadgeLabel);
+  dashboardWorkBadge.title = dashboardBadgeLabel;
   const workQueueAction = document.querySelector("#open-work-queue");
   workQueueAction.hidden = workCount === 0;
   workQueueAction.disabled = false;
@@ -3915,12 +3941,12 @@ function renderDashboardActions() {
   workQueueAction.dataset.openWorkFilter = "all";
   document.querySelector("#hero-task-total").textContent = workCount + " open " + (workCount === 1 ? "actie" : "acties");
   document.querySelector("#hero-task-months").textContent = workCount ? adminTaskMonthEquation(tasks) : "Alles afgerond";
-  document.querySelector("#hero-task-owners").textContent = workCount ? "Backoffice " + actionableCount + " + medewerkers " + waitingCount + " = " + workCount : "Backoffice 0 + medewerkers 0 = 0";
+  document.querySelector("#hero-task-owners").textContent = workCount ? "Backoffice " + actionableCount + " + wacht op medewerkers " + waitingCount + " = " + workCount : "Backoffice 0 + wacht op medewerkers 0 = 0";
   document.querySelector("#metric-actions").textContent = actionableCount;
   document.querySelector("#metric-actions-note").textContent = waitingCount ? waitingCount + " " + (waitingCount === 1 ? "actie wacht" : "acties wachten") + " op medewerkers" : "Niets wacht op medewerkers";
   document.querySelector("#metric-actions-link").textContent = workCount ? "Bekijk alle " + workCount + " acties" : "Alles afgerond";
   document.querySelector("#workflow-open-count").textContent = "Deze maand: " + selectedTasks.length + " open " + (selectedTasks.length === 1 ? "actie" : "acties");
-  document.querySelector("#workflow-open-breakdown").textContent = selectedActionableCount + " bij Backoffice · " + selectedWaitingCount + " bij medewerkers · waarvan " + selectedCustomerCount + " klanturensta" + (selectedCustomerCount === 1 ? "at" : "ten");
+  document.querySelector("#workflow-open-breakdown").textContent = selectedActionableCount + " bij Backoffice · " + selectedWaitingCount + " wacht op medewerkers · waarvan " + selectedCustomerCount + " klanturensta" + (selectedCustomerCount === 1 ? "at" : "ten");
   renderDashboardNextAction(tasks);
 }
 
@@ -4103,6 +4129,9 @@ function renderCustomerTimesheetAdmin() {
   const period = currentPeriod();
   document.querySelector("#customer-timesheet-admin-title").textContent = "Klanturenstaten · " + period.label;
   const rows = activeEmployees().filter(employee => employee.customerTimesheetExpected !== false).map(employee => ({ employee, record: recordFor(employee.id, period.key) }));
+  const reviewCount = rows.filter(item => customerTimesheetFor(item.record).status === "received").length;
+  const employeeCount = rows.filter(item => ["missing", "draft", "resubmit"].includes(customerTimesheetFor(item.record).status)).length;
+  document.querySelector("#customer-timesheet-admin-summary").textContent = rows.length + " verwacht · " + reviewCount + " te controleren · " + employeeCount + " wacht op medewerker" + (employeeCount === 1 ? "" : "s");
 
   if (isCustomerTimesheetAdminApiMode()) {
     rows.forEach(item => refreshCustomerTimesheetReadApi(period.key, item.employee.id));
@@ -4114,7 +4143,8 @@ function renderCustomerTimesheetAdmin() {
     if (documentRecord.status === "received") action = '<button class="small-button" data-review-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">Controleren</button>';
     if (["missing", "draft", "resubmit"].includes(documentRecord.status)) action = '<button class="small-button" data-remind-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">Herinnering sturen</button>';
     if (documentRecord.status === "approved" && employee.customerTimesheetBrokerEnabled !== false) action = '<button class="small-button" data-send-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">Brokerroute controleren</button>';
-    return '<article class="customer-timesheet-admin-row"><div><strong>' + escapeHtml(employee.name) + '</strong><small>' + escapeHtml(employee.broker) + ' · verwacht vóór werkdag ' + Number(employee.customerTimesheetDueWorkday || 5) + (employee.customerTimesheetBrokerEnabled === false ? " · geen brokerroute" : " · brokerroute: " + escapeHtml(customerTimesheetBrokerEmail(employee))) + '</small></div>' + customerTimesheetStatusPill(record) + '<div class="customer-timesheet-admin-row-actions">' + action + '</div></article>';
+    const route = employee.customerTimesheetBrokerEnabled === false ? "Geen brokerroute" : customerTimesheetBrokerEmail(employee);
+    return '<article class="customer-timesheet-admin-row"><div class="customer-timesheet-admin-person"><strong>' + escapeHtml(employee.name) + '</strong><small>' + escapeHtml(employee.broker) + '</small></div><div class="customer-timesheet-admin-meta"><span><small>Deadline</small><strong>Werkdag ' + Number(employee.customerTimesheetDueWorkday || 5) + '</strong></span><span><small>Brokerroute</small><strong>' + escapeHtml(route) + '</strong></span></div><div class="customer-timesheet-admin-footer">' + customerTimesheetStatusPill(record) + '<div class="customer-timesheet-admin-row-actions">' + action + '</div></div></article>';
   }).join("") || '<div class="dashboard-action-empty">Voor deze maand worden geen klanturenstaten verwacht.</div>';
 }
 
@@ -4477,24 +4507,28 @@ function renderDashboard() {
   const rows = activeEmployees().map(employee => ({ employee, record: recordFor(employee.id) }));
   const attentionRows = rows.filter(item => ["draft", "correction"].includes(item.record.timesheetStatus));
   const displayedRows = state.dashboardTeamScope === "attention" ? attentionRows : rows;
+  const submittedRows = rows.filter(item => item.record.timesheetStatus === "submitted");
   document.querySelector("#dashboard-team-title").textContent = state.dashboardTeamScope === "attention"
-    ? "Uren wachten op medewerker · " + period.label + " · " + attentionRows.length + " " + (attentionRows.length === 1 ? "medewerker" : "medewerkers")
-    : "Overzicht per medewerker · " + period.label;
+    ? "Wacht op medewerker · " + period.label
+    : "Teamstatus · " + period.label;
+  document.querySelector("#dashboard-team-summary").textContent = state.dashboardTeamScope === "attention"
+    ? attentionRows.length + " " + (attentionRows.length === 1 ? "medewerker moet" : "medewerkers moeten") + " uren aanvullen of corrigeren"
+    : rows.length + " medewerkers · " + submittedRows.length + " te controleren · " + attentionRows.length + " " + (attentionRows.length === 1 ? "wacht op medewerker" : "wachten op medewerkers");
   document.querySelector("#dashboard-team-clear-filter").hidden = state.dashboardTeamScope !== "attention";
   document.querySelector("#dashboard-employee-rows").innerHTML = displayedRows.map(item => {
     const employee = item.employee;
     const record = item.record;
     const total = totalEntries(record.entries);
     const action = record.timesheetStatus === "submitted"
-      ? '<button class="text-button" data-review="' + employee.id + '" data-period-key="' + period.key + '">Controleren</button>'
-      : '<button class="text-button" data-admin-hours-detail="' + employee.id + '" data-period-key="' + period.key + '">Details bekijken</button>';
-    return "<tr>" +
-      '<td><div class="person-cell"><span class="mini-avatar">' + initials(employee.name) + "</span><span><strong>" + escapeHtml(employee.name) + "</strong><small>" + escapeHtml(employee.role) + "</small></span></div></td>" +
-      "<td><strong>" + escapeHtml(employee.client) + "</strong><small>" + escapeHtml(employee.broker) + "</small></td>" +
-      "<td><strong>" + hoursFormat.format(total) + "</strong><small>uur</small></td>" +
-      "<td><strong>" + currency.format(total * employee.rate) + "</strong><small>exclusief btw</small></td>" +
-      "<td>" + statusPill(record.timesheetStatus) + "</td>" +
-      "<td>" + action + "</td>" +
+      ? '<button class="small-button send dashboard-team-action" data-review="' + employee.id + '" data-period-key="' + period.key + '">Uren controleren</button>'
+      : '<button class="small-button dashboard-team-action" data-admin-hours-detail="' + employee.id + '" data-period-key="' + period.key + '">Details openen</button>';
+    return '<tr class="dashboard-team-row status-' + escapeHtml(record.timesheetStatus) + '">' +
+      '<td data-label="Medewerker"><div class="person-cell"><span class="mini-avatar">' + initials(employee.name) + "</span><span><strong>" + escapeHtml(employee.name) + "</strong><small>" + escapeHtml(employee.role) + "</small></span></div></td>" +
+      '<td data-label="Klant / opdracht"><strong>' + escapeHtml(employee.client) + "</strong><small>" + escapeHtml(employee.broker) + "</small></td>" +
+      '<td data-label="Geregistreerd"><strong>' + hoursFormat.format(total) + "</strong><small>uur</small></td>" +
+      '<td data-label="Omzetindicatie"><strong>' + currency.format(total * employee.rate) + "</strong><small>exclusief btw</small></td>" +
+      '<td data-label="Urenstatus">' + statusPill(record.timesheetStatus) + "</td>" +
+      '<td data-label="Vervolgactie">' + action + "</td>" +
       "</tr>";
   }).join("") || '<tr><td colspan="6"><div class="dashboard-action-empty">Voor ' + escapeHtml(period.label) + ' hoeft niemand meer uren aan te vullen of te corrigeren.</div></td></tr>';
 
@@ -5570,7 +5604,25 @@ function renderEmployees() {
       "</article>";
   }).join("") || '<div class="dashboard-action-empty">Geen medewerkers binnen dit filter.</div>';
   document.querySelectorAll("[data-employee-scope]").forEach(button => button.classList.toggle("is-active", button.dataset.employeeScope === state.employeeScope));
+  renderTeamAccountOverview();
   renderAdministrators();
+}
+
+function renderTeamAccountOverview() {
+  const employees = activeEmployees();
+  const admins = activeAdmins();
+  const total = employees.length + admins.length;
+  const totalElement = document.querySelector("#team-active-account-count");
+  const groups = document.querySelector("#team-account-groups");
+  if (totalElement) totalElement.textContent = String(total);
+  if (!groups) return;
+  const groupMarkup = (kind, label, people, totalCount) => {
+    const inactiveCount = Math.max(0, totalCount - people.length);
+    const avatars = people.map(person => '<span class="team-account-avatar ' + kind + '" title="' + escapeHtml(person.name) + '" aria-label="' + escapeHtml(person.name) + '">' + initials(person.name) + '</span>').join("");
+    return '<article class="team-account-group" id="team-' + kind + '-overview"><div class="team-account-avatars" aria-label="Actieve ' + escapeHtml(label.toLowerCase()) + '">' + avatars + '</div><div><strong>' + people.length + ' ' + escapeHtml(label.toLowerCase()) + '</strong><small>' + (inactiveCount ? inactiveCount + ' inactief' : 'Alle accounts actief') + '</small></div></article>';
+  };
+  groups.innerHTML = groupMarkup("employees", employees.length === 1 ? "Medewerker" : "Medewerkers", employees, state.employees.length) +
+    groupMarkup("admins", admins.length === 1 ? "Beheerder" : "Beheerders", admins, state.admins.length);
 }
 
 function renderAdministrators() {
@@ -6079,6 +6131,7 @@ function populateSettings() {
   pendingBrandLogo = String(settings.brandLogo || "");
   document.querySelector("#setting-brand-logo-preview").src = pendingBrandLogo || PATH_LOGO_DATA_URL;
   document.querySelector("#setting-company-name").value = settings.companyName;
+  document.querySelector("#setting-invoice-name-display").value = settings.invoiceNameDisplay || "trade_and_legal";
   document.querySelector("#setting-kvk").value = settings.kvk;
   document.querySelector("#setting-vat").value = settings.vat;
   document.querySelector("#setting-iban").value = settings.iban;
@@ -6107,6 +6160,7 @@ function populateSettings() {
   document.querySelector("#setting-approval-required").checked = settings.approvalRequired;
   document.querySelector("#setting-lock-invoice").checked = settings.lockInvoice;
   document.querySelector("#setting-audit-log").checked = settings.auditLog;
+  updateInvoiceIdentityPreview();
   syncReminderControls();
   renderMailRecipientSettings();
   syncAllStandardChoiceMenus();
@@ -6130,6 +6184,7 @@ function saveSettings() {
     brandAccent: normalizedBrandColor(document.querySelector("#setting-brand-accent").value, "#3abd9d"),
     brandLogo: pendingBrandLogo,
     companyName: document.querySelector("#setting-company-name").value.trim(),
+    invoiceNameDisplay: document.querySelector("#setting-invoice-name-display").value,
     kvk: document.querySelector("#setting-kvk").value.trim(),
     vat: document.querySelector("#setting-vat").value.trim(),
     iban: document.querySelector("#setting-iban").value.trim(),
@@ -6845,6 +6900,17 @@ function returnEmployeeForCorrection(id, periodKey, reason, adminTaskId = "") {
     addNotification({ audience: "employee", type: "correction", employeeId: Number(id), title: "Correctie nodig", message: requestedBy + " vraagt je om " + periodFromKey(key).label + " aan te passen. Reden: " + message, periodKey: key, view: "timesheet" });
   };
   const toastMessage = "De uren van " + employee.name + " zijn met toelichting teruggestuurd. Er is niets gemaild.";
+  const finishLocalCorrection = () => {
+    if (adminTaskId) {
+      finishAdminTaskAndContinue(adminTaskId, mutate, toastMessage);
+      return;
+    }
+    mutate();
+    persistState();
+    closeModal();
+    renderAll();
+    toast(toastMessage);
+  };
 
   if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
     const recordVersion = Number(record.serverVersion || 0);
@@ -6875,6 +6941,10 @@ function returnEmployeeForCorrection(id, periodKey, reason, adminTaskId = "") {
       refreshTimesheetReadApi(key, id, true)
         .then(freshRecord => {
           const expected = Number((freshRecord && freshRecord.serverVersion) || 0);
+          if (expected <= 0 && (isLocalAuthHintsHost() || isLocalResetAuthoritative())) {
+            finishLocalCorrection();
+            return null;
+          }
           if (expected <= 0) throw new Error("Kan geen actuele serverversie bepalen voor correctie.");
           return runApiCorrection(expected);
         })
@@ -6890,15 +6960,21 @@ function returnEmployeeForCorrection(id, periodKey, reason, adminTaskId = "") {
     return;
   }
 
-  if (adminTaskId) {
-    finishAdminTaskAndContinue(adminTaskId, mutate, toastMessage);
-    return;
+  finishLocalCorrection();
+}
+
+function updateInvoiceIdentityPreview() {
+  const tradeName = document.querySelector("#setting-organization-name")?.value.trim() || "Handelsnaam";
+  const legalName = document.querySelector("#setting-company-name")?.value.trim() || "Juridische bedrijfsnaam";
+  const displayMode = document.querySelector("#setting-invoice-name-display")?.value || "trade_and_legal";
+  const heading = document.querySelector("#setting-invoice-identity-heading");
+  const subline = document.querySelector("#setting-invoice-identity-subline");
+  const combined = displayMode !== "legal_only" && tradeName.toLowerCase() !== legalName.toLowerCase();
+  if (heading) heading.textContent = combined ? tradeName : legalName;
+  if (subline) {
+    subline.textContent = combined ? "Handelsnaam van " + legalName : "Juridische naam op factuur";
+    subline.hidden = false;
   }
-  mutate();
-  persistState();
-  closeModal();
-  renderAll();
-  toast(toastMessage);
 }
 
 function invoiceSummary(employeeId, periodKey) {
@@ -7108,6 +7184,7 @@ function invoiceField(label, value) {
 
 function invoicePreviewMarkup(data) {
   const employee = data.employee;
+  const identity = invoiceCompanyIdentity();
   const references = invoiceReferenceRows(employee);
   const referencesHtml = references.length
     ? '<section class="invoice-brand-references">' + references.map(([label, value]) => '<div><span>' + escapeHtml(label) + ':</span><strong>' + escapeHtml(value) + '</strong></div>').join("") + '</section>'
@@ -7117,7 +7194,8 @@ function invoicePreviewMarkup(data) {
     '<header class="invoice-brand-header"><div class="invoice-brand-logo"><img src="' + brandLogoUrl() + '" alt="' + escapeHtml(state.settings.organizationName) + '"><span>' + escapeHtml(state.settings.appName) + '</span></div>' +
       '<div class="invoice-brand-title"><h3>FACTUUR</h3><div class="invoice-brand-number-line"><span>Factuurnummer:</span><strong>' + escapeHtml(data.record.invoiceNumber) + '</strong></div><small>Factuurdatum ' + escapeHtml(data.invoiceDate) + ' &nbsp;|&nbsp; Betreft ' + escapeHtml(data.period.month) + '</small><span>CONCEPT - NIET VERZONDEN</span></div></header>' +
     '<div class="invoice-brand-accent"></div>' +
-    '<section class="invoice-brand-parties"><div class="invoice-brand-party sender"><span class="invoice-brand-label">Facturerende onderneming</span><h4>' + escapeHtml(state.settings.companyName) + '</h4>' +
+    '<section class="invoice-brand-parties"><div class="invoice-brand-party sender"><span class="invoice-brand-label">Facturerende onderneming</span><h4>' + escapeHtml(identity.heading) + '</h4>' +
+      (identity.subline ? '<p class="invoice-brand-identity">' + escapeHtml(identity.subline) + '</p>' : '') +
       '<p>' + escapeHtml(state.settings.address) + '<br>' + escapeHtml(state.settings.postalCity) + '</p>' +
       '<dl><dt>KvK</dt><dd>' + escapeHtml(state.settings.kvk) + '</dd><dt>BTW</dt><dd>' + escapeHtml(state.settings.vat) + '</dd><dt>IBAN</dt><dd>' + escapeHtml(state.settings.iban) + '</dd></dl>' +
       '<p class="invoice-brand-contact">' + escapeHtml(state.settings.phone) + ' &nbsp;|&nbsp; ' + escapeHtml(state.settings.invoiceEmail) + '</p></div>' +
@@ -7129,9 +7207,24 @@ function invoicePreviewMarkup(data) {
     '<table class="invoice-preview-table"><thead><tr><th>Omschrijving</th><th>Uren</th><th>Tarief</th><th>Totaal</th></tr></thead><tbody><tr><td>Maand ' + escapeHtml(data.period.month) + '</td><td>' + invoiceHours(data.hours) + '</td><td>' + invoiceMoney(employee.rate) + '</td><td>' + invoiceMoney(data.subtotal) + '</td></tr></tbody></table>' +
     '<div class="invoice-brand-totals"><span>Totaal exclusief</span><strong>' + invoiceMoney(data.subtotal) + '</strong><span>BTW ' + data.vatRate + ' %</span><strong>' + invoiceMoney(data.vatAmount) + '</strong><span class="invoice-preview-total">Totaal inclusief</span><strong class="invoice-preview-total">' + invoiceMoney(data.total) + '</strong></div>' +
     '<div class="invoice-brand-payment"><span class="invoice-brand-label">Betalingsinformatie</span><p>U wordt vriendelijk verzocht uw betaling binnen ' + escapeHtml(String(state.settings.paymentTerm)) + ' dagen van de factuurdatum over te maken op rekening: <strong>' + escapeHtml(state.settings.iban) + '</strong> onder vermelding van factuurnummer: <strong>' + escapeHtml(data.record.invoiceNumber) + '</strong></p></div>' +
-    '<div class="invoice-brand-closing"><p>Met vriendelijke groet,</p><strong>' + escapeHtml(state.settings.companyName) + '</strong></div>' +
-    '<footer class="invoice-brand-footer"><span>' + escapeHtml(state.settings.organizationName) + ' &nbsp;|&nbsp; Facturerende onderneming: ' + escapeHtml(state.settings.companyName) + '</span><strong>CONCEPTVOORBEELD</strong></footer>' +
+    '<div class="invoice-brand-closing"><p>Met vriendelijke groet,</p><strong>' + escapeHtml(identity.heading) + '</strong></div>' +
+    '<footer class="invoice-brand-footer"><span>' + escapeHtml(identity.footer) + '</span><strong>CONCEPTVOORBEELD</strong></footer>' +
   '</article>';
+}
+
+function invoiceCompanyIdentity() {
+  const tradeName = String(state.settings.organizationName || "").trim();
+  const legalName = String(state.settings.companyName || "").trim();
+  const combined = state.settings.invoiceNameDisplay !== "legal_only" && tradeName && legalName && tradeName.toLowerCase() !== legalName.toLowerCase();
+  if (combined) {
+    return {
+      heading: tradeName,
+      subline: "Handelsnaam van " + legalName,
+      footer: tradeName + " · handelsnaam van " + legalName
+    };
+  }
+  const heading = legalName || tradeName || "Facturerende onderneming";
+  return { heading, subline: "", footer: heading };
 }
 
 function safeFilename(value) {
@@ -7140,6 +7233,7 @@ function safeFilename(value) {
 
 function downloadInvoicePdf(employeeId) {
   const data = invoiceData(employeeId);
+  const identity = invoiceCompanyIdentity();
   const jspdf = window.jspdf;
   if (!jspdf || typeof jspdf.jsPDF !== "function") {
     toast("PDF kon niet worden gemaakt. Vernieuw de pagina en probeer opnieuw.");
@@ -7193,18 +7287,22 @@ function downloadInvoicePdf(employeeId) {
   roundedBox(14, 55, 88, 58, background, line);
   roundedBox(107, 55, 89, 58, mintLight);
   drawLabel("Facturerende onderneming", 20, 63);
-  drawText(state.settings.companyName, 20, 70.5, 11, navy, "bold");
-  drawText(state.settings.address, 20, 77);
-  drawText(state.settings.postalCity, 20, 82.5);
+  drawText(identity.heading, 20, 70.5, 11, navy, "bold");
+  if (identity.subline) drawText(identity.subline, 20, 76, 7.2, [22, 93, 100], "bold");
+  const senderAddressY = identity.subline ? 82 : 77;
+  const senderLineY = identity.subline ? 92 : 88;
+  const senderMetaY = senderLineY + 6;
+  drawText(state.settings.address, 20, senderAddressY);
+  drawText(state.settings.postalCity, 20, senderAddressY + 5.5);
   doc.setDrawColor(...line);
-  doc.line(20, 88, 96, 88);
-  drawLabel("KvK", 20, 94);
-  drawText(state.settings.kvk, 36, 94);
-  drawLabel("BTW", 59, 94);
-  drawText(state.settings.vat, 72, 94);
-  drawLabel("IBAN", 20, 100);
-  drawText(state.settings.iban, 36, 100, 8.5, ink, "bold");
-  drawText(state.settings.phone + "  |  " + state.settings.invoiceEmail, 20, 107, 7.5, [22, 93, 100]);
+  doc.line(20, senderLineY, 96, senderLineY);
+  drawLabel("KvK", 20, senderMetaY);
+  drawText(state.settings.kvk, 36, senderMetaY);
+  drawLabel("BTW", 59, senderMetaY);
+  drawText(state.settings.vat, 72, senderMetaY);
+  drawLabel("IBAN", 20, senderMetaY + 6);
+  drawText(state.settings.iban, 36, senderMetaY + 6, 8.5, ink, "bold");
+  drawText(state.settings.phone + "  |  " + state.settings.invoiceEmail, 20, senderMetaY + 13, 7.5, [22, 93, 100]);
 
   drawLabel("Factuur aan", 113, 63);
   drawText(invoiceRecipientName(data.employee), 113, 70.5, 11, navy, "bold");
@@ -7261,11 +7359,11 @@ function downloadInvoicePdf(employeeId) {
   drawText("U wordt vriendelijk verzocht uw betaling binnen " + state.settings.paymentTerm + " dagen van de factuurdatum over te maken op rekening:", 20, paymentY + 13, 7.4, [22, 93, 100]);
   drawText(state.settings.iban + " onder vermelding van factuurnummer: " + data.record.invoiceNumber, 20, paymentY + 18, 7.4, [22, 93, 100]);
   drawText("Met vriendelijke groet,", 14, paymentY + 31, 8, ink);
-  drawText(state.settings.companyName, 14, paymentY + 38, 9, navy, "bold");
+  drawText(identity.heading, 14, paymentY + 38, 9, navy, "bold");
 
   doc.setFillColor(...navy);
   doc.rect(0, 282, 210, 15, "F");
-  drawText(state.settings.organizationName + "  |  Facturerende onderneming: " + state.settings.companyName, 14, 291, 6.2, [221, 233, 230]);
+  drawText(identity.footer, 14, 291, 6.2, [221, 233, 230]);
   drawText("CONCEPTVOORBEELD", 196, 291, 6.2, mint, "bold", { align: "right" });
   const filename = "Conceptfactuur_" + safeFilename(data.record.invoiceNumber) + "_" + safeFilename(data.employee.name) + ".pdf";
   doc.save(filename);
@@ -8034,9 +8132,14 @@ document.addEventListener("click", event => {
   const dashboardView = event.target.closest("[data-dashboard-view]");
   if (dashboardView) showView(dashboardView.dataset.dashboardView);
 
-  const openWorkQueue = event.target.closest("#open-work-queue");
+  const openWorkQueue = event.target.closest("[data-open-work-filter]");
   if (openWorkQueue) {
     state.adminTaskFilter = openWorkQueue.dataset.openWorkFilter || "all";
+    if (state.adminTaskFilter !== "all") {
+      Object.keys(state.adminTaskMonthState || {}).forEach(key => {
+        if (key.startsWith(state.adminTaskFilter + ":")) delete state.adminTaskMonthState[key];
+      });
+    }
     persistState();
     renderAdminTaskQueue();
   }
@@ -8887,6 +8990,11 @@ document.querySelector("#reset-brand-logo").addEventListener("click", () => {
   document.querySelector("#setting-brand-logo-preview").src = PATH_LOGO_DATA_URL;
   toast("Het standaardlogo staat klaar. Kies Wijzigingen opslaan om dit te bewaren.");
 });
+["#setting-organization-name", "#setting-company-name", "#setting-invoice-name-display"].forEach(selector => {
+  const control = document.querySelector(selector);
+  control?.addEventListener("input", updateInvoiceIdentityPreview);
+  control?.addEventListener("change", updateInvoiceIdentityPreview);
+});
 document.querySelectorAll(".summary-hours-input").forEach(input => input.addEventListener("input", () => updateHoursTotal(true)));
 
 function openResetDemoModal() {
@@ -8921,10 +9029,10 @@ document.querySelector("#reset-demo")?.addEventListener("click", openResetDemoMo
 document.querySelector("#quick-reset-demo")?.addEventListener("click", openResetDemoModal);
 
 document.querySelector("#connect-gmail").addEventListener("click", () => showModal({
-  label: "Verzendkoppeling",
-  title: "Gmail is bewust uitgeschakeld",
-  message: "Deze versie bevat nog geen Gmail-koppeling. Je mag ieder geldig e-mailadres invoeren, maar de app bewaart dit lokaal en e-mailverzending blijft technisch uitgeschakeld totdat de beveiligde koppeling actief is.",
-  summary: "<div><span>Verzendmodus</span><strong>Alleen controleren</strong></div><div><span>E-mailverzending</span><strong>Technisch uitgeschakeld</strong></div>",
+  label: "Verzendbeveiliging",
+  title: "E-mail staat onder gecontroleerde vrijgave",
+  message: "Ontvangers, onderwerpen en bijlagen kunnen vooraf worden gecontroleerd. Echte verzending loopt uitsluitend via het beveiligde SMTP Relay en wordt buiten dit scherm geactiveerd na een geslaagde productiepreflight.",
+  summary: "<div><span>Huidige modus</span><strong>Controleren zonder verzenden</strong></div><div><span>Transport</span><strong>SMTP Relay · afzonderlijk beveiligd</strong></div>",
   confirm: "Sluiten",
   action: closeModal
 }));
@@ -9090,11 +9198,9 @@ document.addEventListener("keydown", event => {
 
 window.addEventListener("scroll", () => {
   closeTopbarPopovers();
-  // Account and month pickers stay anchored to their controls while scrolling.
-  // Closing them here races with browsers that scroll an option into view before
-  // dispatching its click, leaving the option hidden during actionability checks.
-  closeReminderChoicePanels();
-  closeStandardChoicePanels();
+  // Choice panels stay anchored to their controls while scrolling. Closing them
+  // here races with browsers that scroll an option into view before dispatching
+  // its click, leaving the option hidden during actionability checks.
 }, { passive: true });
 
 initializeReminderChoiceMenus();

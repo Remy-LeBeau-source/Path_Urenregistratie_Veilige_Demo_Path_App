@@ -20,6 +20,8 @@ export const caseMappings = [
   { caseId: 'DASH-N-010', spec: 'dashboard.spec.ts' },
   { caseId: 'DASH-H-008', spec: 'dashboard.spec.ts' },
   { caseId: 'DASH-N-009', spec: 'dashboard.spec.ts' },
+  { caseId: 'DASH-H-012', spec: 'dashboard.spec.ts' },
+  { caseId: 'DASH-H-013', spec: 'dashboard.spec.ts' },
   { caseId: 'DASH-H-003', spec: 'dashboard.spec.ts' },
   { caseId: 'DASH-H-004', spec: 'dashboard.spec.ts' },
   { caseId: 'DASH-H-005', spec: 'dashboard.spec.ts' },

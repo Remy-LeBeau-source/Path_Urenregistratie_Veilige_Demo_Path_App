@@ -317,3 +317,49 @@ test('[TS-REV-UI-H-010] submitknop is verborgen bij goedgekeurde urenstaat', asy
   });
 });
 
+test('[TS-REV-UI-N-011] localhost kan demo-uren zonder serverversie voor correctie terugsturen', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  let reviewWrites = 0;
+
+  await page.route('**/server/api/timesheets.php**', async (route) => {
+    if (route.request().method().toUpperCase() === 'GET') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true, found: false, period: '2026-08', employee_id: 1 }),
+      });
+      return;
+    }
+    reviewWrites += 1;
+    await route.fulfill({
+      status: 409,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: false, message: 'Demo-record mag niet naar de server worden geschreven.' }),
+    });
+  });
+
+  await test.step('Given de ingelogde localhostomgeving een lokaal demo-record zonder serverversie toont', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await page.locator('#quick-reset-demo').click();
+    await page.locator('#modal-confirm').click();
+    await openView(page, 'approvals');
+  });
+
+  await test.step('When Backoffice Marc met een concrete toelichting terugstuurt', async () => {
+    const approvalCard = page
+      .locator('article.approval-card[data-approval-period="2026-08"]')
+      .filter({ hasText: 'Marc de Roon' });
+    await expect(approvalCard).toBeVisible();
+    await approvalCard.locator('[data-request-correction]').click();
+    await page.locator('#correction-reason').fill('Controleer 14 juli: daar staat 8 uur in plaats van 4 uur.');
+    await page.locator('#modal-confirm').click();
+  });
+
+  await test.step('Then wordt de lokale status bijgewerkt zonder ongeldige serverwrite', async () => {
+    await expect(page.locator('#toast')).toContainText('met toelichting teruggestuurd');
+    await expect(page.locator('article.approval-card[data-approval-period="2026-08"]').filter({ hasText: 'Marc de Roon' })).toHaveCount(0);
+    expect(reviewWrites).toBe(0);
+  });
+});
+

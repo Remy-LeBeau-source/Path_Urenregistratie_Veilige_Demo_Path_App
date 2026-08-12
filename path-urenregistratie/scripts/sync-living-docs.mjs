@@ -15,6 +15,7 @@ const definitions = [
   { kind: 'playwright', spec: 'dashboard.spec.ts', feature: 'dashboard.feature', steps: 'dashboard.steps.ts', name: 'Dashboardweergave', tags: ['regressie', 'ui', 'desktop', 'fase:15'], parentSuite: 'UI Desktop', suite: 'Dashboard', allureFeature: 'Dashboard', phase: 15 },
   { kind: 'playwright', spec: 'email-queue.spec.ts', feature: 'email-queue.feature', steps: 'email-queue.steps.ts', name: 'E-mailqueue en afleverbeleid', tags: ['regressie', 'api', 'fase:12'], parentSuite: 'API', suite: 'Email Queue', allureFeature: 'E-mailverwerking', phase: 12 },
   { kind: 'playwright', spec: 'invoice-lock.spec.ts', feature: 'invoice-locking.feature', steps: 'invoice-locking.steps.ts', name: 'Definitieve facturen en locking', tags: ['regressie', 'integration', 'fase:11'], parentSuite: 'DB / Integratie', suite: 'Invoice Locking', allureFeature: 'Facturatie', phase: 11 },
+  { kind: 'playwright', spec: 'invoice-company-identity.spec.ts', feature: 'invoice-company-identity.feature', steps: 'invoice-company-identity.steps.ts', name: 'Facturerende ondernemingsidentiteit', tags: ['regressie', 'integration', 'fase:11'], parentSuite: 'DB / Integratie', suite: 'Invoice Identity', allureFeature: 'Facturatie', phase: 11 },
   { kind: 'playwright', spec: 'invoices.spec.ts', feature: 'invoices-ui.feature', steps: 'invoices-ui.steps.ts', name: 'Factuurweergave in de desktop-UI', tags: ['regressie', 'ui', 'desktop', 'fase:11'], parentSuite: 'UI Desktop', suite: 'Facturen', allureFeature: 'Facturatie', phase: 11 },
   { kind: 'playwright', spec: 'mobile-ui.spec.ts', feature: 'mobile.feature', steps: 'mobile.steps.ts', name: 'Mobiele gebruikerservaring', tags: ['regressie', 'ui', 'mobile', 'fase:15'], parentSuite: 'UI Mobile', suite: 'Mobile Experience', allureFeature: 'Mobile Experience', phase: 15 },
   { kind: 'playwright', spec: 'notifications.spec.ts', feature: 'notifications.feature', steps: 'notifications.steps.ts', name: 'Notificaties via API', tags: ['regressie', 'api', 'fase:15'], parentSuite: 'API', suite: 'Notifications', allureFeature: 'Notificaties', phase: 15 },
@@ -164,8 +165,8 @@ const inventory = definitions.flatMap((definition) => {
 const uniqueIds = new Set(inventory.map((testCase) => testCase.id));
 const playwrightCount = inventory.filter((testCase) => testCase.kind === 'playwright').length;
 const dbCount = inventory.filter((testCase) => testCase.kind === 'db').length;
-if (playwrightCount !== 144 || dbCount !== 1 || inventory.length !== 145 || uniqueIds.size !== 145) {
-  throw new Error(`Verwacht 144 Playwright-cases + 1 DB-case = 145 unieke cases, gevonden ${playwrightCount}/${dbCount}/${inventory.length}/${uniqueIds.size}.`);
+if (playwrightCount !== 152 || dbCount !== 1 || inventory.length !== 153 || uniqueIds.size !== 153) {
+  throw new Error(`Verwacht 152 Playwright-cases + 1 DB-case = 153 unieke cases, gevonden ${playwrightCount}/${dbCount}/${inventory.length}/${uniqueIds.size}.`);
 }
 
 mkdirSync(featuresDir, { recursive: true });

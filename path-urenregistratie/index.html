@@ -81,6 +81,10 @@
       <nav class="nav-list">
         <button class="nav-item is-active role-admin-only" data-view="dashboard">
           <span class="nav-marker"></span><span>Dashboard</span>
+          <span class="nav-count-group dashboard-work-count" id="dashboard-work-count" aria-label="Geen open acties" hidden>
+            <span class="nav-count is-backoffice" id="dashboard-backoffice-count" hidden>0</span>
+            <span class="nav-count is-employee" id="dashboard-employee-count" hidden>0</span>
+          </span>
         </button>
         <button class="nav-item role-employee-only" data-view="employee-dashboard" hidden>
           <span class="nav-marker"></span><span>Dashboard</span>
@@ -108,7 +112,6 @@
         </button>
         <button class="nav-item role-admin-only" data-view="employees">
           <span class="nav-marker"></span><span>Medewerkers</span>
-          <span class="nav-count" id="employees-count" hidden>0</span>
         </button>
         <button class="nav-item role-admin-only" data-view="settings">
           <span class="nav-marker"></span><span>Instellingen</span>
@@ -121,7 +124,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 0.9.46</span>
+      <span class="demo-badge">Versie 0.9.47</span>
       </div>
     </aside>
 
@@ -137,7 +140,7 @@
         <div class="topbar-title">
           <p class="eyebrow" id="organization-name">Path Consultancy</p>
           <h1 id="page-title">Urenoverzicht</h1>
-          <span class="demo-badge mobile-version-badge">Versie 0.9.46</span>
+          <span class="demo-badge mobile-version-badge">Versie 0.9.47</span>
         </div>
         <div class="topbar-actions">
           <span class="safety-badge">E-mail uitgeschakeld</span>
@@ -236,6 +239,10 @@
             <span class="section-label">Maandafsluiting</span>
             <h2 id="admin-dashboard-greeting">Goedemiddag, Gio</h2>
             <p id="admin-attention-note">Dit vraagt nu je aandacht: bekijk open urencontroles en rond daarna de maand af.</p>
+            <div class="hero-owner-badges" id="hero-owner-badges" aria-label="Verdeling open acties">
+              <button class="hero-owner-badge is-backoffice" id="hero-backoffice-filter" type="button" data-open-work-filter="actionable" data-scroll-target="admin-task-panel"><b id="hero-backoffice-count">0</b> bij Backoffice</button>
+              <button class="hero-owner-badge is-employee" id="hero-employee-filter" type="button" data-open-work-filter="waiting" data-scroll-target="admin-task-panel"><b id="hero-employee-count">0</b> wachten op medewerkers</button>
+            </div>
             <div class="hero-actions">
               <button class="button button-ghost" id="open-work-queue" data-scroll-target="admin-task-panel">Open werkvoorraad</button>
             </div>
@@ -244,7 +251,7 @@
             <span>Open werkvoorraad</span>
             <strong id="hero-task-total">7 open acties</strong>
             <div><small>Per maand</small><b id="hero-task-months">Juli 2 + Augustus 5 = 7</b></div>
-            <div><small>Per eigenaar</small><b id="hero-task-owners">Backoffice 4 + medewerkers 3 = 7</b></div>
+            <div><small>Per eigenaar</small><b id="hero-task-owners">Backoffice 4 + wacht op medewerkers 3 = 7</b></div>
           </div>
         </div>
 
@@ -291,49 +298,51 @@
 
         <section class="panel admin-task-panel" id="admin-task-panel">
           <div class="panel-heading admin-task-heading">
-            <div><span class="section-label">Zonder maanden wisselen</span><h3>Alle open acties per maand</h3><p id="admin-task-summary">Iedere regel is één actie en toont wie hem moet uitvoeren.</p></div>
+            <div><span class="section-label">Zonder maanden wisselen</span><h3 id="admin-task-title">Alle open acties per maand</h3><p id="admin-task-summary">Iedere regel is één actie en toont wie hem moet uitvoeren.</p></div>
           </div>
           <div class="admin-task-filters" id="admin-task-filters" role="group" aria-label="Open taken filteren"></div>
           <div class="admin-task-list" id="admin-task-list"></div>
         </section>
 
         <section class="panel customer-timesheet-admin-panel" id="customer-timesheet-admin-panel">
-          <div class="panel-heading"><div><span class="section-label">Documenten van de klant</span><h3 id="customer-timesheet-admin-title">Klanturenstaten · Juli 2026</h3></div><span class="updated-label">Staat los van uren indienen</span></div>
-          <p class="open-periods-intro">De medewerker uploadt hier alleen de officiële PDF van de klant. Path maakt zelf geen urenstaat.</p>
+          <div class="panel-heading"><div><span class="section-label">Documenten van de klant</span><h3 id="customer-timesheet-admin-title">Klanturenstaten · Juli 2026</h3><p id="customer-timesheet-admin-summary">4 verwacht · actuele documentstatus per medewerker</p></div><span class="updated-label">Staat los van uren indienen</span></div>
+          <p class="open-periods-intro">De medewerker uploadt hier alleen de officiële PDF van de klant. De organisatie maakt zelf geen klanturenstaat.</p>
           <div class="customer-timesheet-admin-list" id="customer-timesheet-admin-list"></div>
         </section>
 
         <section class="panel workflow-panel">
           <div class="panel-heading">
             <div><span class="section-label">Procesvoortgang · geen taaktelling</span><h3 id="workflow-period-title">Vier procesfasen voor juli 2026</h3></div>
-            <div class="workflow-heading-meta"><strong id="workflow-open-count">Deze maand: 1 open taak</strong><small id="workflow-open-breakdown">0 bij Backoffice · 1 bij medewerkers · waarvan 1 klanturenstaat</small><span class="updated-label">De taakverdeling staat ernaast</span></div>
+            <div class="workflow-heading-meta"><strong id="workflow-open-count">Deze maand: 1 open taak</strong><small id="workflow-open-breakdown">0 bij Backoffice · 1 wacht op medewerkers · waarvan 1 klanturenstaat</small><span class="updated-label">De taakverdeling staat ernaast</span></div>
           </div>
-          <div class="workflow-progress-card" aria-label="Procesvoortgang van de geselecteerde maand; dit is geen taakteller">
-            <div class="progress-ring" id="close-progress-ring" style="--progress:75"><span id="close-progress-value">75%</span></div>
-            <div><strong id="close-progress-title">Procesmeter · 3 van 4 fasen</strong><small id="close-progress-note">Geen taakteller · klanturenstaten staan hier los van</small></div>
-          </div>
-          <div class="workflow-track">
-            <div class="workflow-step is-done" id="workflow-hours"><span>1</span><div><strong>Uren</strong><small id="workflow-hours-note">4 ingediend</small></div></div>
-            <div class="workflow-line is-done"></div>
-            <div class="workflow-step is-current" id="workflow-approval"><span>2</span><div><strong>Controle</strong><small id="workflow-approval-note">2 open</small></div></div>
-            <div class="workflow-line"></div>
-            <div class="workflow-step" id="workflow-invoices"><span>3</span><div><strong>Facturen</strong><small id="workflow-invoices-note">2 facturen klaar</small></div></div>
-            <div class="workflow-line"></div>
-            <div class="workflow-step" id="workflow-send"><span>4</span><div><strong>Verzending controleren</strong><small id="workflow-send-note">Nog niet gecontroleerd</small></div></div>
+          <div class="workflow-overview">
+            <div class="workflow-progress-card" aria-label="Procesvoortgang van de geselecteerde maand; dit is geen taakteller">
+              <div class="progress-ring" id="close-progress-ring" style="--progress:75"><span id="close-progress-value">75%</span></div>
+              <div><strong id="close-progress-title">Procesmeter · 3 van 4 fasen</strong><small id="close-progress-note">Geen taakteller · klanturenstaten staan hier los van</small></div>
+            </div>
+            <div class="workflow-track">
+              <div class="workflow-step is-done" id="workflow-hours"><span>1</span><div><strong>Uren</strong><small id="workflow-hours-note">4 ingediend</small></div></div>
+              <div class="workflow-line is-done"></div>
+              <div class="workflow-step is-current" id="workflow-approval"><span>2</span><div><strong>Controle</strong><small id="workflow-approval-note">2 open</small></div></div>
+              <div class="workflow-line"></div>
+              <div class="workflow-step" id="workflow-invoices"><span>3</span><div><strong>Facturen</strong><small id="workflow-invoices-note">2 facturen klaar</small></div></div>
+              <div class="workflow-line"></div>
+              <div class="workflow-step" id="workflow-send"><span>4</span><div><strong>Verzending controleren</strong><small id="workflow-send-note">Nog niet gecontroleerd</small></div></div>
+            </div>
           </div>
         </section>
 
-        <section class="panel">
+        <section class="panel dashboard-team-panel">
           <div class="panel-heading">
-            <div><span class="section-label">Team</span><h3 id="dashboard-team-title">Overzicht per medewerker · Juli 2026</h3></div>
+            <div><span class="section-label">Team</span><h3 id="dashboard-team-title">Teamstatus · Juli 2026</h3><p id="dashboard-team-summary">4 medewerkers · actuele urenstatus en omzetindicatie</p></div>
             <div class="heading-actions dashboard-team-actions">
               <button class="text-button" id="dashboard-team-clear-filter" data-dashboard-team-filter="all" hidden>Toon volledig team</button>
               <button class="text-button" data-go="employees">Medewerkers beheren</button>
             </div>
           </div>
-          <div class="table-wrap">
-            <table class="data-table">
-              <thead><tr><th>Medewerker</th><th>Opdracht</th><th>Uren</th><th>Bedrag</th><th>Status</th><th></th></tr></thead>
+          <div class="table-wrap dashboard-team-table-wrap">
+            <table class="data-table dashboard-team-table">
+              <thead><tr><th>Medewerker</th><th>Klant / opdracht</th><th>Geregistreerd</th><th>Omzetindicatie</th><th>Urenstatus</th><th>Vervolgactie</th></tr></thead>
               <tbody id="dashboard-employee-rows"></tbody>
             </table>
           </div>
@@ -526,9 +535,13 @@
 
       <section class="view" id="view-employees" data-title="Medewerkers">
         <div class="view-heading">
-          <div><span class="section-label">Team</span><h2>Medewerkers & opdrachten</h2><p>De getoonde statussen horen bij <strong id="employee-period-label">juli 2026</strong>. Tarief- en routeringsgegevens gelden voor alle maanden.</p></div>
+          <div><span class="section-label">Organisatie</span><h2>Teambeheer</h2><p>Beheer medewerkers, toegang, inzet en opdracht- en routeringsgegevens. De getoonde werkstatussen horen bij <strong id="employee-period-label">juli 2026</strong>.</p></div>
           <div class="heading-actions"><button class="button button-ghost" id="add-admin">Beheerder toevoegen</button><button class="button button-primary" id="add-employee">Medewerker toevoegen</button></div>
         </div>
+        <section class="panel team-account-overview" aria-labelledby="team-account-overview-title">
+          <div class="team-account-overview-copy"><span class="section-label">Team in één oogopslag</span><h3 id="team-account-overview-title"><span id="team-active-account-count">0</span> actieve accounts</h3><small>Medewerkers en beheerders zijn apart herkenbaar.</small></div>
+          <div class="team-account-groups" id="team-account-groups"></div>
+        </section>
         <div class="segmented-control employee-scope-filter" role="group" aria-label="Medewerkers filteren">
           <button class="is-active" data-employee-scope="active">Actief</button>
           <button data-employee-scope="inactive">Inactief</button>
@@ -543,7 +556,7 @@
 
       <section class="view" id="view-settings" data-title="Instellingen">
         <div class="view-heading">
-          <div><span class="section-label">Beheer</span><h2>Instellingen</h2><p>Beheer organisatie, facturatie, mailroutes, standaardteksten, herinneringen en veiligheid. Deze lokale versie bewaart wijzigingen alleen in de browser en verstuurt geen e-mail.</p></div>
+          <div><span class="section-label">Beheer</span><h2>Instellingen</h2><p>Beheer de huisstijl, factuuridentiteit, mailroutes, standaardteksten, herinneringen en veiligheidsregels. De actuele verzendstatus staat altijd bij E-mail &amp; ontvangers.</p></div>
           <div class="heading-actions"><button class="button button-ghost" id="reset-demo">Voorbeeldgegevens herstellen</button><button class="button button-primary" id="save-settings">Wijzigingen opslaan</button></div>
         </div>
         <nav class="settings-section-nav" aria-label="Onderdelen van instellingen">
@@ -556,9 +569,8 @@
         </nav>
         <div class="settings-grid">
           <section class="panel settings-card full-width" id="settings-organization">
-            <div class="email-template-heading"><div><span class="section-label">Organisatie</span><h3>Eigen naam, ondersteuning en huisstijl</h3></div><span class="status-pill status-approved">Configureerbaar</span></div>
+            <div class="email-template-heading"><div><span class="section-label">Organisatie</span><h3>Ondersteuning en huisstijl</h3></div><span class="status-pill status-approved">Configureerbaar</span></div>
             <div class="form-grid organization-settings-grid">
-              <label>Organisatienaam<input id="setting-organization-name"></label>
               <label>Naam van de app<input id="setting-app-name"></label>
               <label>Naam ondersteuning<input id="setting-support-name"></label>
               <label>E-mail ondersteuning<input id="setting-support-email" type="email"></label>
@@ -566,33 +578,36 @@
               <label>Accentkleur<input id="setting-brand-accent" type="color"></label>
               <label class="full brand-logo-setting">Eigen logo (PNG, maximaal 700 KB)<input id="setting-brand-logo" type="file" accept="image/png"><span class="brand-logo-preview"><img id="setting-brand-logo-preview" src="assets/path-logo.png" alt="Voorbeeld organisatielogo"><button class="small-button" type="button" id="reset-brand-logo">Standaardlogo gebruiken</button></span></label>
             </div>
-            <p class="settings-warning">Path Consultancy is de eerste ingevulde organisatie. Een andere organisatie kan hier haar eigen naam, ondersteuning, logo en kleuren instellen.</p>
+            <p class="settings-warning">Een organisatie kan hier haar eigen appnaam, ondersteuning, logo en kleuren instellen.</p>
           </section>
           <section class="panel settings-card" id="settings-invoicing">
-            <h3>Facturerende onderneming</h3>
+            <div class="email-template-heading"><div><span class="section-label">Facturatie</span><h3>Bedrijfsidentiteit op facturen</h3></div><span class="status-pill status-approved">Juridisch herkenbaar</span></div>
             <div class="form-grid">
-              <label>Naam op PDF<input id="setting-company-name"></label>
+              <label>Handelsnaam / merk<input id="setting-organization-name" autocomplete="organization"></label>
+              <label>Juridische bedrijfsnaam<input id="setting-company-name" autocomplete="organization"></label>
+              <label>Naamweergave<select id="setting-invoice-name-display" aria-label="Weergave bedrijfsnaam op factuur"><option value="trade_and_legal">Handelsnaam prominent + juridische naam (aanbevolen)</option><option value="legal_only">Alleen juridische bedrijfsnaam</option></select></label>
               <label>KvK-nummer<input id="setting-kvk"></label>
               <label>BTW-nummer<input id="setting-vat"></label>
               <label>IBAN<input id="setting-iban"></label>
               <label>Adres<input id="setting-address"></label>
               <label>Postcode, plaats<input id="setting-postal-city"></label>
-              <label>GSM<input id="setting-phone"></label>
-              <label>E-mail op factuur<input id="setting-invoice-email" type="email"></label>
+              <label>Telefoonnummer<input id="setting-phone" type="tel"></label>
+              <label>Factuur-e-mailadres<input id="setting-invoice-email" type="email"></label>
               <label>Betalingstermijn<select id="setting-payment-term" aria-label="Betalingstermijn"><option value="30">30 dagen</option><option value="14">14 dagen</option></select></label>
+              <div class="invoice-identity-preview full" aria-live="polite"><span>Voorbeeld op de factuur</span><strong id="setting-invoice-identity-heading">Path Consultancy</strong><small id="setting-invoice-identity-subline">Handelsnaam van QSI Consultancy B.V.</small></div>
             </div>
-            <p class="settings-warning">De facturerende onderneming kan afwijken van de organisatienaam. Voor de Path-configuratie zijn deze gegevens overgenomen uit de aangeleverde facturen.</p>
+            <p class="settings-warning">Vul bijvoorbeeld Path Consultancy als handelsnaam en QSI Consultancy B.V. als juridische onderneming in. Standaard verschijnen beide namen op de factuur; KvK, btw en IBAN horen bij de juridische onderneming.</p>
           </section>
           <section class="panel settings-card" id="settings-routing">
-            <div class="email-template-heading"><h3>Mailroutering - veilig</h3><span class="status-pill status-warning">Niet verzendbaar</span></div>
+            <div class="email-template-heading"><div><span class="section-label">Communicatie</span><h3>E-mail &amp; ontvangers</h3></div><span class="status-pill status-warning">Controlemodus actief</span></div>
             <div class="form-grid">
-              <label>Afzender<input id="setting-sender" type="email"></label>
-              <label>Verzendmodus<select id="setting-send-mode" aria-label="Verzendmodus" disabled><option>Controlemodus · e-mail uitgeschakeld</option></select></label>
+              <label>Afzenderadres<input id="setting-sender" type="email"></label>
+              <label>Verzendmodus<select id="setting-send-mode" aria-label="Verzendmodus" disabled><option>Voorbereid · echte verzending uit</option></select></label>
             </div>
             <div class="recipient-settings-heading"><div><span class="section-label">Vaste ontvangers</span><h4>Boekhouding, salarisadministratie en overige routes</h4></div><button class="small-button" id="add-mail-recipient" type="button">Ontvanger toevoegen</button></div>
             <div class="mail-recipient-settings-list" id="mail-recipient-settings-list"></div>
-            <p class="safe-domain-note">Standaard staan hier veilige voorbeeldadressen. Echte adressen zijn toegestaan, maar daadwerkelijke verzending is technisch uitgeschakeld.</p>
-            <button class="text-button" id="connect-gmail">Waarom is Gmail uitgeschakeld?</button>
+            <p class="safe-domain-note">Ontvangers en bijlagen kunnen veilig worden gecontroleerd. Echte verzending wordt uitsluitend via het afzonderlijk beveiligde SMTP Relay geactiveerd.</p>
+            <button class="text-button" id="connect-gmail">Bekijk verzendbeveiliging</button>
           </section>
           <section class="panel settings-card full-width" id="settings-texts">
             <div class="email-template-heading">
@@ -624,7 +639,7 @@
           </section>
           <section class="panel settings-card full-width" id="settings-reminders">
             <div class="email-template-heading"><div><span class="section-label">Organisatieplanning</span><h3>Uren- en documentherinneringen</h3></div><span class="status-pill status-warning">Voorbereiding · niet automatisch</span></div>
-            <p class="settings-warning">Kies per situatie wanneer een herinnering klaar moet worden gezet. In deze lokale versie kun je alleen een voorbeeldmelding maken; automatische uitvoering wordt bij de serverkoppeling geactiveerd. Per medewerker kan de planning afzonderlijk worden uitgezet.</p>
+            <p class="settings-warning">Kies per situatie wanneer een herinnering klaar moet worden gezet. Met Voorbeeldmelding maken controleer je de inhoud zonder iets te verzenden. Automatische uitvoering wordt pas na activering van de serverplanning gebruikt en kan per medewerker worden uitgezet.</p>
             <div class="reminder-rules">
               <div class="reminder-rule">
                 <label class="check-row"><input id="setting-weekly-reminder-enabled" type="checkbox"><span><strong>Week nog niet compleet</strong><small>Alleen als de medewerker de huidige week nog niet heeft ingevuld</small></span></label>

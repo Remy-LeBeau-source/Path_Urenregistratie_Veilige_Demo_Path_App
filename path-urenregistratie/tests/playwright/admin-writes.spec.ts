@@ -47,11 +47,14 @@ test.describe('admin write endpoints', () => {
         brandPrimary: '#0d1b38',
         brandAccent: '#3abd9d',
         companyName: company.legal_name,
+        invoiceNameDisplay: company.invoice_name_display || 'trade_and_legal',
         kvk: company.chamber_of_commerce_number || '12345678',
         vat: company.vat_number || 'NL123456789B01',
         iban: company.iban || 'NL00BANK0123456789',
         address: company.address_line || 'Voorbeeldstraat 1',
         postalCity: [company.postal_code || '1234 AB', company.city || 'Rotterdam'].join(' '),
+        phone: company.invoice_phone || '06 21 46 91 72',
+        invoiceEmail: company.invoice_email || 'info@pathconsultancy.nl',
         paymentTerm: Number(company.payment_term_days || 30),
         customerTimesheetReminderEnabled: true,
         customerTimesheetReminderTime: '15:00',
@@ -69,6 +72,7 @@ test.describe('admin write endpoints', () => {
     const afterBody = await after.json();
     const afterCompany = afterBody.companies[0];
     expect(afterCompany.trade_name).toBe(`Path Test ${uniqueSuffix}`);
+    expect(afterCompany.invoice_name_display).toBe(company.invoice_name_display || 'trade_and_legal');
 
     await authApi.logout();
     await ctx.dispose();
