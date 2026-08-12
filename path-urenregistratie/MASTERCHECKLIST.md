@@ -23,7 +23,7 @@ staan onder de genummerde fases verderop in dit document.
 | Fase 4 — Auth & rollen | ✅ Klaar | Admin/medewerker/sessies |
 | Fase 5 — Security | ✅ VS Code-scope klaar | Timeout, sliding session, login-audit, dependency-scan; productieheaders (CORS/CSP/HSTS) later op echt domein |
 | Fase 6 — Playwright/Allure/Living Docs | ✅ Klaar | Testarchitectuur compleet |
-| Fase 7 — CI/CD | ✅ VS Code-scope klaar | Pipeline #91 volledig groen; GitHub-website-instellingen later |
+| Fase 7 — CI/CD | ✅ VS Code-scope klaar | Release Pipeline #31649794848 volledig groen; GitHub-beveiligingsinstellingen later |
 | Fase 8 — Uren indienen | ✅ Klaar | Concept → indienen |
 | Fase 9 — Correctie/goedkeuring | ✅ Technisch klaar | Productieacceptatie later |
 | Fase 10 — Klanturenstaat | ✅ VS Code-scope klaar | JPG/PNG → PDF server-side gebouwd en getest (CTS-API-H-005) |
@@ -89,8 +89,8 @@ Post-live beheer
 
 ## Actuele stand
 
-- [x] Datum: 2026-08-12 (Fase-16 Bundel 1 technisch en lokaal afgerond; externe activatie blijft gated)
-- [x] Appversie: 0.9.46
+- [x] Datum: 2026-08-13 (Fase-16 Bundel 1 technisch, lokaal en in CI afgerond; externe activatie blijft gated)
+- [x] Appversie: 0.9.47
 - [x] Technische eindsprint afgerond: Fase 10 (JPG/PNG server-side naar PDF via GD + hand-rolled
   PDF-writer `server/lib/simple_pdf.php`), Fase 11 (server-side factuur-PDF, `pdf_storage_key`
   gevuld na lock, geautoriseerde download-endpoint met company-/employee-scope, PDF-inhoudscontrole
@@ -98,12 +98,13 @@ Post-live beheer
   getest; PDF-bijlage nu structureel beschikbaar dankzij Fase 11), Fase 15 (gelijktijdige
   approve-requests door twee beheerders, jaarwisseling december→januari, te grote upload-afwijzing,
   basis toetsenbord-/labelcontrole, PWA-manifest + defensieve service worker).
-- [x] Nieuwe/uitgebreide Fase-16-cases: PWD-H-004 en SAFE-H-005 — 144 Playwright + 1 DB =
-  145 unieke cases, 148 uitvoeringen (140 niet-mobiel + 4 mobiele cases x 2 devices).
-- [x] Volledige lokale Playwright-regressie: 148/148 groen, 0 failed, 0 skipped, 0 interrupted.
+- [x] Actuele testinventaris: 157 Playwright + 1 DB = 158 unieke cases en 161 browseruitvoeringen
+  (153 niet-mobiel + 4 mobiele cases x 2 devices).
+- [x] Volledige lokale Playwright-regressie: 161/161 groen, inclusief SAFE-N-007 als
+  fail-closed productieconfiguratiecase.
   `npm run ci:local`, de 39 gerichte auth/mail/securitytests en DASH-N-007 zijn apart groen bevestigd.
 - [x] Living Documentation-telling wordt uit de uitvoerbare specs berekend en met een expliciete
-  inventarisguard bewaakt. Actueel: 144 Playwright-cases, 1 DB-case, 145 unieke cases en 148 uitvoeringen.
+  inventarisguard bewaakt. Actueel: 157 Playwright-cases, 1 DB-case, 158 unieke cases en 161 uitvoeringen.
 - [x] Root cause/fix gevonden voor twee omgevingsvalkuilen tijdens dit werk (vastgelegd in
   repo-memory): de PHP GD-extensie stond lokaal standaard uit (`;extension=gd` in php.ini) en moest
   worden ingeschakeld; en een stale achtergrond-PHP-proces (van vóór de GD-fix) op poort 8000
@@ -111,7 +112,8 @@ Post-live beheer
 - [x] HEAD: v0.9.46 releasebaseline `cb0c7da` (fix MOB-H-003 + DASH-N-008); laatste checklist-commit `b8d8cd1`.
   HEAD wordt niet meer statisch bijgehouden — zie git log voor actuele stand.
 - [x] Reorganisatie: alle openstaande punten die je buiten VS Code moet doen (TransIP-paneel, GitHub-website-instellingen, Google Workspace, fysieke toestellen, bedrijfsgegevens/administratie, menselijke acceptatie) zijn verzameld en verplaatst naar Fase 16 als laatste, verzamelende fase. De oorspronkelijke fasen (5, 7, 9, 10, 11, 12, 13, 14, 15) bevatten nu alleen nog wat in VS Code zelf (code/terminal/Playwright/git) haalbaar is.
-- [x] Appversie: 0.9.46
+- [x] Releasebewijs: commit `23b14fa26e0ab840a189e8ab4d7a890a5c65cec9` staat op `main`;
+  Release Pipeline #31649794848 is volledig groen (Validate, Test, Live Docs en Prod-regressie).
 - [x] GitHub Actions pipeline-run #91 (commit 998716b) volledig groen — historisch bewijs.
 - [x] GitHub Actions pipeline-run #99 (commit 821b175, main) volledig groen: alle stappen
   (Validate, Promote Dev/Test/Acc/Prod, Publish Live Docs) completed successfully.
@@ -828,7 +830,7 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
 - [-] Virusscanstrategie bepalen (productkeuze/externe dienst).
 
 **Uit Fase 11:**
-- [x] Facturerende onderneming bevestigd als Path Consultancy B.V.; visuele controle van eerste productie-PDF blijft open.
+- [x] Facturerende identiteit bevestigd als Path Consultancy, handelsnaam van QSI Consultancy B.V.; visuele controle van eerste productie-PDF blijft open.
 - [x] Factuur- en klanturenstaatopslag technisch buiten de webroot gekoppeld; productiepad/rechten blijven extern te bewijzen.
 - [-] Credit-/correctiestrategie (bedrijfsbeleid).
 
@@ -838,7 +840,7 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
 - [-] Echte verzending activeren (pas na acceptatie en expliciete goedkeuring).
 
 **Uit Fase 13 - definitieve bedrijfsgegevens en accounts:**
-- [x] Facturerende onderneming bevestigd: Path Consultancy B.V.
+- [x] Facturerende identiteit bevestigd: Path Consultancy, handelsnaam van QSI Consultancy B.V.
 - [-] Definitieve statutaire naam, factuuradres, KvK-nummer, btw-nummer, IBAN, betalingstermijn, factuurprefix.
 - [-] Definitieve Circle8-route, factuuradres en e-mailadres/portaal.
 - [x] Boekhouderroute bevestigd voor `giovanno.maatsen@pathconsultancy.nl` (factuur, 1 bijlage).
@@ -853,14 +855,16 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
 - [-] Vastleggen wie gegevens mag exporteren, corrigeren en archiveren.
 
 **Uit Fase 14 - TransIP-controlepaneel/SSH:**
-- [-] Productiedatabasewachtwoord wijzigen/roteren (niet in chat of Git plaatsen).
-- [-] PHP-versie op TransIP controleren/bevestigen op 8.4; screenshot bewaren.
-- [-] SSL-certificaat controleren (geldig slotje op https://uren.pathconsultancy.nl).
-- [-] Exact documentroot/sitepad controleren.
+- [x] Productiedatabasewachtwoord door eigenaar geroteerd zonder het in chat of Git te plaatsen; verbinding wordt door de interactieve configurator nog gevalideerd.
+- [x] PHP-versie op TransIP read-only bevestigd: 8.4.24.
+- [x] HTTPS/SSL op `https://uren.pathconsultancy.nl` bereikbaar en TransIP Let's Encrypt ingeschakeld; HSTS blijft bewust uit tot observatie na cutover.
+- [x] Exacte documentroot via controlepaneel en SSH bevestigd: `/data/sites/web/pathconsultancynl/subsites/uren.pathconsultancy.nl`.
+- [x] SSH-keytoegang bevestigd voor `pathconsultancynl@pathco.ssh.transip.me`.
+- [x] Private productiemappen bestaan onder `/data/sites/web/pathconsultancynl/private/path-urenregistratie`.
 - [-] TransIP-back-ups controleren (database inbegrepen, retentieperiode).
 - [-] Handmatige database-export voor livegang.
 - [-] Productiebestanden uploaden.
-- [-] Productie server/config.local.php handmatig maken (environment=production, allow_demo_migrations=false, app_origin, databasegegevens).
+- [-] Productie `server/config.local.php` via de interactieve fail-closed configurator maken; script is gebouwd, DB-secret moet nog rechtstreeks in de SSH-terminal worden ingevoerd.
 - [-] health.php/install.php/migrate.php op TransIP uitvoeren; demo-seeds uitschakelen bevestigen.
 - [-] Productieaccounts aanmaken; productielogin en productie-smoketest.
 - [-] Schrijfrechten upload-/PDF-map; PHP-uploadlimits en sessie-instellingen controleren.
@@ -902,8 +906,10 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
 
 Status Fase 16:
 - [x] technische audit-API-basis aanwezig en getest
-- [x] Bundel-1-tooling voorbereid: SMTP/STARTTLS, offline mailpreflight, private storage, logging/rotatie, queuecron, back-up/restore, productiepreflight, accountprovisioning en runbooks
-- [-] fase als geheel: Bundel 1 is lokaal met 148/148 regressies bewezen; pipelinebewijs en alle externe Bundel-2/Bundel-3-handelingen blijven afzonderlijke gates; geen echte mail en geen go-live uitgevoerd
+- [x] Bundel-1-tooling voorbereid: SMTP/STARTTLS, offline mailpreflight, private storage, logging/rotatie, queuecron, back-up/restore, productiepreflight, interactieve productieconfiguratie, accountprovisioning en runbooks
+- [x] Release Pipeline #31649794848 voor basiscommit `23b14fa` volledig groen; actuele lokale
+  regressie 161/161 groen inclusief SAFE-N-007.
+- [-] fase als geheel: Bundel 2 is read-only geaudit; live serveert nog de TransIP-placeholder en mist `server/config.local.php`. DB-secret-invoer, gecontroleerde cutover en alle Bundel-3-handelingen blijven afzonderlijke gates; geen echte mail en geen go-live uitgevoerd.
 
 ---
 
@@ -952,7 +958,7 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
 - [x] Fase 12 - e-mail: queue-service + dry-run + assignment-routes + tests afgerond; retry/max-retries/foutstatus geverifieerd aanwezig; factuur-PDF-bijlage nu structureel mogelijk; Gmail/Google Workspace-config en echte verzending verplaatst naar Fase 16
 - [x] Fase 13 - bedrijfsdata: gebruikersbeheer-API, wachtwoord-reset, rate-limiting, force_password_change afgerond; alle definitieve bedrijfsgegevens/accounts volledig verplaatst naar Fase 16
 - [x] Fase 14 - TransIP: hardening (install/migrate/health guards, .htaccess) afgerond; deployment + productie-config volledig verplaatst naar Fase 16
-- [x] Fase 15 - lokaal 148/148 tests groen (inclusief MOB-H-003 en DASH-N-008
+- [x] Fase 15 - lokaal 161/161 browseruitvoeringen groen (inclusief MOB-H-003 en DASH-N-008
   na volledige muterende reeks), GUI smoke en `npm run check` groen; concurrency/jaarwisseling/
   uploads/accessibility/PWA gebouwd en getest; productiepraktijktests/acceptatie → Fase 16
 - [-] Fase 16 - Bundel 1 technisch voorbereid en lokaal groen; Bundel 2 (TransIP/Google/configuratie) en Bundel 3 (productieacceptatie) blijven extern open
@@ -965,8 +971,10 @@ Telling fasestatussen:
 
 **Fase 1 t/m 15 volledig klaar; Fase-16 Bundel 1 lokaal afgerond.** Externe activatie blijft bewust uit.
 
-1. Bevestig de Release Pipeline voor de nieuwe Bundel-1-commit groen.
-2. Voer daarna de geconsolideerde Bundel-2-lijst uit en pas vervolgens Bundel 3 toe.
+1. Publiceer de actuele release eerst als niet-actieve stagingbundel met SHA-256; schakel de live root nog niet om.
+2. Start daarna via SSH de interactieve productieconfigurator en typ het DB-wachtwoord uitsluitend daar in.
+3. Draai de statische en live read-only productiepreflight. Pas na groen bewijs volgt een afzonderlijk goedgekeurde cutover.
+4. Voer vervolgens Bundel 3 uit met `mail.enabled=false`; echte SMTP-verzending blijft een aparte toestemming.
 
 ## Dagelijkse werkwijze (verplicht)
 

@@ -10,7 +10,7 @@ Dit is een levende checklist. Bevestigde punten worden uit **Nog te beslissen** 
 ## Al bevestigd of aangeleverd
 
 - KvK-nummer, btw-nummer, IBAN, adres en betalingstermijn zijn uit de aangeleverde facturen overgenomen.
-- De facturerende onderneming voor productie is bevestigd als **Path Consultancy B.V.**; QSI is geen open keuze meer.
+- De facturerende identiteit is bevestigd als **Path Consultancy — handelsnaam van QSI Consultancy B.V.**; de beheerder kiest alleen of handelsnaam + juridische naam of uitsluitend de juridische naam op de PDF staat.
 - Het factuuradres van ItaQ is uit meerdere aangeleverde facturen bevestigd als **Laan van ZuidHoorn 165, 2289 DD Rijswijk** en is exact zo in de app ingevuld.
 - Het factuuradres van Circle8 is uit Shawns factuur bevestigd als **Plettenburg-West, Fultonbaan 6, 3439 NE Nieuwegein** en is exact zo in de app ingevuld.
 - De lokale voorbeeldomgeving gebruikt veilige `@example.invalid`-adressen. Beheerders mogen zelf echte adressen lokaal invoeren; daadwerkelijke verzending blijft technisch uitgeschakeld.

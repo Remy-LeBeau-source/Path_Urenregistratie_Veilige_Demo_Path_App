@@ -33,6 +33,7 @@ try {
         __DIR__ . '/database-backup.php',
         __DIR__ . '/database-restore.php',
         __DIR__ . '/rotate-logs.php',
+        __DIR__ . '/configure-production.php',
         __DIR__ . '/provision-account.php',
         dirname(__DIR__) . '/auth/change-password.php',
         dirname(__DIR__, 2) . '/.htaccess',
@@ -75,6 +76,12 @@ try {
             'SELECT trade_name, legal_name, invoice_name_display FROM companies ORDER BY id ASC LIMIT 1'
         )->fetch();
         $checks['live_database_connection'] = true;
+        $checks['private_storage_exists'] = is_dir($privateRoot);
+        $checks['private_storage_writable'] = is_writable($privateRoot);
+        $checks['private_storage_buckets_ready'] = count(array_filter(
+            ['/invoices', '/customer-timesheets', '/backups', '/logs'],
+            static fn(string $suffix): bool => is_dir($privateRoot . $suffix) && is_writable($privateRoot . $suffix)
+        )) === 4;
         $checks['active_accounts_have_real_email'] = $invalidUsers === 0;
         $checks['invoicing_company_exact'] = is_array($company)
             && ($company['trade_name'] ?? '') === 'Path Consultancy'

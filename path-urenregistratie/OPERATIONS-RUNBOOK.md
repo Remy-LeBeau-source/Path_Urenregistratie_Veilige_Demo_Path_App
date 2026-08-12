@@ -31,8 +31,17 @@ moet kunnen schrijven, de webserver mag directory listings nooit publiceren.
 
 ## 3. Configuratie en installatie
 
-1. Kopieer `server/config.local.php.example` naar `server/config.local.php` op de server.
-2. Vul via een beveiligde sessie de echte databasegegevens in.
+1. Gebruik op de productieserver de interactieve configurator. Het databasewachtwoord wordt verborgen
+   gelezen, eerst met een read-only `SELECT 1` gevalideerd en nooit als argument of uitvoer verwerkt:
+
+```bash
+php server/scripts/configure-production.php --execute --confirm=CONFIGURE_PRODUCTION \
+  --host=pathco-urenuru.db.transip.me --database=pathco_Urenuru --user=pathco_WroKoUru \
+  --private-root=/data/sites/web/pathconsultancynl/private/path-urenregistratie
+```
+
+2. Controleer dat `server/config.local.php` met rechten `0600` is geplaatst. Gebruik `--replace` alleen
+   na een beschermde back-up wanneer een bestaande productieconfig bewust wordt vervangen.
 3. Behoud exact:
    - origin/base URL: `https://uren.pathconsultancy.nl`;
    - CORS: alleen `https://uren.pathconsultancy.nl`;
@@ -52,8 +61,9 @@ php server/migrate.php
 php server/scripts/production-preflight.php --config=server/config.local.php --live
 ```
 
-De live-preflight leest alleen. Hij moet onder meer bevestigen dat er geen actieve `.invalid`-accounts
-zijn en dat de facturerende onderneming `Path Consultancy B.V.` is.
+De live-preflight leest alleen. Hij moet onder meer bevestigen dat alle private opslagbuckets bestaan en
+schrijfbaar zijn, dat er geen actieve `.invalid`-accounts zijn en dat de facturerende identiteit
+`Path Consultancy — handelsnaam van QSI Consultancy B.V.` is.
 
 ## 4. Productieaccounts
 
@@ -165,7 +175,7 @@ rechtstreeks over productie zonder expliciete toestemming en een verse pre-resto
 - Google Admin: IP-relay voor het TransIP-IP, alleen domeinafzenders, SMTP-auth uit, TLS verplicht;
   daarna SPF, DKIM en DMARC controleren.
 - GitHub: branch protection, verplichte groene checks, productie-environment approval en ontvangers.
-- Bedrijf/administratie: KvK, btw, IBAN, adres, betalingstermijn en prefix van Path Consultancy B.V.
+- Bedrijf/administratie: KvK, btw, IBAN, adres, betalingstermijn en prefix van QSI Consultancy B.V., handelend onder de naam Path Consultancy,
   definitief visueel controleren; Circle8 e-mail/portaalroute en credit-/correctiebeleid bevestigen.
 - Accounts: zakelijke adressen van Gio, Joyce en alle medewerkers, tweede productiebeheerder, veilige
   uitgifteprocedure, 2FA-keuze en deactiverings-/bewaarbeleid bevestigen.
@@ -179,7 +189,7 @@ rechtstreeks over productie zonder expliciete toestemming en een verse pre-resto
 - Start met verse back-up en `mail.enabled=false`.
 - Gebruik Stasjo van Bakel, juli 2026, exact 144 goedgekeurde uren.
 - Doorloop medewerker → indienen → correctie → herindienen → goedkeuren.
-- Upload/controleer officiële klanturenstaat; maak en lock factuur vanuit Path Consultancy B.V.
+- Upload/controleer officiële klanturenstaat; maak en lock factuur vanuit Path Consultancy als handelsnaam van QSI Consultancy B.V.
 - Controleer bedragen, btw, nummer, briefpapier, bestandsnamen en private downloads.
 - Controleer offline/preflight exact de drie ontvangers en 2/1/0 bijlagen.
 - Voer privacy-, sessie-, mobiel- en rollback-oefening uit.

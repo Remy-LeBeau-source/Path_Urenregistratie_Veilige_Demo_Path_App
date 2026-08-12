@@ -1548,6 +1548,7 @@ const backupSrc = readFileSync_(new URL("../server/scripts/database-backup.php",
 const restoreSrc = readFileSync_(new URL("../server/scripts/database-restore.php", import.meta.url), "utf8");
 const rotateLogsSrc = readFileSync_(new URL("../server/scripts/rotate-logs.php", import.meta.url), "utf8");
 const provisionAccountSrc = readFileSync_(new URL("../server/scripts/provision-account.php", import.meta.url), "utf8");
+const configureProductionSrc = readFileSync_(new URL("../server/scripts/configure-production.php", import.meta.url), "utf8");
 const changePasswordSrc = readFileSync_(new URL("../server/auth/change-password.php", import.meta.url), "utf8");
 const rootHtaccessSrc = readFileSync_(new URL("../.htaccess", import.meta.url), "utf8");
 const playwrightRunnerSrc = readFileSync_(new URL("./run-playwright-e2e.mjs", import.meta.url), "utf8");
@@ -1568,6 +1569,7 @@ assert(productionPreflightSrc.includes("writes_performed' => false") && producti
 assert(invoiceIdentityMigrationSrc.includes("invoice_name_display") && invoiceIdentityMigrationSrc.includes("invoice_phone") && invoiceIdentityMigrationSrc.includes("invoice_email"), "De factuuridentiteit moet via een expliciete databasemigratie worden opgeslagen");
 assert(backupSrc.includes("--single-transaction") && restoreSrc.includes("RESTORE_") && rotateLogsSrc.includes("retention_days"), "Backup, herstelbevestiging en logretentie moeten operationeel voorbereid zijn");
 assert(provisionAccountSrc.includes("Passwords in command arguments are forbidden") && changePasswordSrc.includes("current_password") && changePasswordSrc.includes("force_password_change = 0"), "Productieaccounts moeten zonder wachtwoordargument en met een eigen wijzigingsflow worden beheerd");
+assert(configureProductionSrc.includes("Database passwords in command arguments are forbidden") && configureProductionSrc.includes("SELECT 1") && configureProductionSrc.includes("chmod($configPath, 0600)"), "Productieconfiguratie moet secrets interactief verwerken, read-only valideren en met 0600 installeren");
 assert(rootHtaccessSrc.includes("Content-Security-Policy") && rootHtaccessSrc.includes("RewriteCond %{HTTPS} !=on") && /^\s*# Header always set Strict-Transport-Security/m.test(rootHtaccessSrc), "De publieke app moet HTTPS/CSP afdwingen terwijl HSTS voorbereid maar uitgeschakeld blijft");
 assert(playwrightRunnerSrc.includes("url.hostname === 'localhost'") && playwrightRunnerSrc.includes("url.hostname = '127.0.0.1'") && playwrightRunnerSrc.includes("PATH_APP_BASE_URL: baseUrl"), "De Playwright-runner moet browsers en de beheerde PHP-server op dezelfde IPv4-origin houden");
 assert(playwrightDbBootstrapSrc.includes("namedTestDatabase") && playwrightDbBootstrapSrc.includes("isolatedCiDatabase") && playwrightDbBootstrapSrc.includes("Refusing destructive Playwright database bootstrap"), "De Playwright DB-bootstrap mag uitsluitend een herkenbare test- of geïsoleerde CI-database opnieuw opbouwen");

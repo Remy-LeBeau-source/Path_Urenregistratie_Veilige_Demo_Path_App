@@ -16,9 +16,18 @@ De volledige beheer-, cron-, backup-, go-live- en rollbackprocedure staat in
 1. Deploy de releasebestanden naar de bevestigde documentroot.
 2. Maak buiten de documentroot `path-private/{invoices,customer-timesheets,backups,logs}` met
    beperkte rechten (`0750`, bestanden waar mogelijk `0640`).
-3. Maak op de server `server/config.local.php` op basis van `server/config.local.php.example`.
-   Dit bestand staat in `.gitignore` en mag nooit worden gecommit.
-4. Vul de echte databasegegevens uitsluitend op de server in en behoud:
+3. Maak de productieconfig uitsluitend interactief op de server; typ het databasewachtwoord daar
+   verborgen in en plaats het nooit in chat, Git of command-line-argumenten:
+
+```bash
+php server/scripts/configure-production.php --execute --confirm=CONFIGURE_PRODUCTION \
+  --host=pathco-urenuru.db.transip.me --database=pathco_Urenuru --user=pathco_WroKoUru \
+  --private-root=/data/sites/web/pathconsultancynl/private/path-urenregistratie
+```
+
+   De configurator controleert eerst read-only de DB-verbinding en installeert daarna
+   `server/config.local.php` atomisch met rechten `0600` en `mail.enabled=false`.
+4. Controleer in de aangemaakte config zonder het wachtwoord te tonen:
    - `environment=production`;
    - `allow_demo_migrations=false`;
    - exacte origin/CORS `https://uren.pathconsultancy.nl`;

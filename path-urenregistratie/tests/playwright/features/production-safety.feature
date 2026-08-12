@@ -88,10 +88,19 @@ Feature: Productieveiligheid in Path Uren & Facturatie
     Then vereist de bootstrap een herkenbare testdatabase of geïsoleerde lokale CI-database
     And gebruikt de CRUD-smoke dezelfde fail-closed scheiding
 
+  @negative
+  Scenario: [SAFE-N-007] productieconfigurator verwerkt DB-secret uitsluitend interactief en fail-closed
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 14
+    Given de CLI-only productieconfigurator wordt gelezen
+    When de flow voor SAFE-N-007 wordt uitgevoerd
+    Then vereist configuratie expliciete uitvoering, bevestiging en verborgen invoer
+    And valideert hij DB en private storage vóór een atomische 0600-write met mail uit
+
   @happy
   Scenario: [SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 11
+    # Aantoonbare Playwright-assertions in deze case: 12
     Given de transport-, dispatch- en productiepreflightbron wordt gelezen
     When de flow voor SAFE-H-005 wordt uitgevoerd
     Then zijn TLS, dry-run, private storage, HSTS en niet-mutatieve checks afgedwongen

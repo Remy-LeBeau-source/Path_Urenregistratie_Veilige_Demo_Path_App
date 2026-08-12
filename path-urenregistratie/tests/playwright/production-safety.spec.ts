@@ -306,6 +306,33 @@ test('[SAFE-N-006] destructieve DB-testsetup weigert productie en niet-testdatab
   });
 });
 
+test('[SAFE-N-007] productieconfigurator verwerkt DB-secret uitsluitend interactief en fail-closed', async () => {
+  await test.step('Given de CLI-only productieconfigurator wordt gelezen', async () => {});
+
+  await test.step('Then vereist configuratie expliciete uitvoering, bevestiging en verborgen invoer', async () => {
+    const source = await readFile(join(process.cwd(), 'server', 'scripts', 'configure-production.php'), 'utf8');
+    const cliBootstrap = await readFile(join(process.cwd(), 'server', 'scripts', 'cli-bootstrap.php'), 'utf8');
+    expect(source).toContain("require_once __DIR__ . '/cli-bootstrap.php'");
+    expect(cliBootstrap).toContain("PHP_SAPI !== 'cli'");
+    expect(source).toContain("stream_isatty(STDIN)");
+    expect(source).toContain("shell_exec('stty -echo')");
+    expect(source).toContain("($options['execute'] ?? false) !== true");
+    expect(source).toContain("($options['confirm'] ?? '') !== 'CONFIGURE_PRODUCTION'");
+    expect(source).toContain("isset($options['password'])");
+  });
+
+  await test.step('And valideert hij DB en private storage vóór een atomische 0600-write met mail uit', async () => {
+    const source = await readFile(join(process.cwd(), 'server', 'scripts', 'configure-production.php'), 'utf8');
+    expect(source).toContain("$pdo->query('SELECT 1')");
+    expect(source).toContain('ops_is_outside_webroot($privateRoot)');
+    expect(source).toContain("['', '/invoices', '/customer-timesheets', '/backups', '/logs']");
+    expect(source).toContain("'enabled' => false");
+    expect(source).toContain('rename($temporaryPath, $configPath)');
+    expect(source).toContain('chmod($configPath, 0600)');
+    expect(source).not.toMatch(/password_in_arguments_supported'\s*=>\s*true/);
+  });
+});
+
 test('[SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed', async () => {
   await test.step('Given de transport-, dispatch- en productiepreflightbron wordt gelezen', async () => {});
 
@@ -316,6 +343,7 @@ test('[SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed', a
     const preflight = await readFile(join(root, 'server', 'scripts', 'production-preflight.php'), 'utf8');
     const requestReset = await readFile(join(root, 'server', 'auth', 'request-reset.php'), 'utf8');
     const provisionAccount = await readFile(join(root, 'server', 'scripts', 'provision-account.php'), 'utf8');
+    const configureProduction = await readFile(join(root, 'server', 'scripts', 'configure-production.php'), 'utf8');
     const config = await readFile(join(root, 'server', 'config.example.php'), 'utf8');
 
     expect(smtp).toContain('STREAM_CRYPTO_METHOD_TLS_CLIENT');
@@ -327,6 +355,7 @@ test('[SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed', a
     expect(preflight).toContain("'writes_performed' => false");
     expect(requestReset).toContain("$environment !== 'production'");
     expect(provisionAccount).toContain('Passwords in command arguments are forbidden');
+    expect(configureProduction).toContain('Database passwords in command arguments are forbidden');
     expect(config).toMatch(/'hsts_enabled'\s*=>\s*false/);
     expect(config).toContain('../path-private');
   });
