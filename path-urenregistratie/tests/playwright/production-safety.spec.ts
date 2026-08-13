@@ -406,11 +406,13 @@ test('[SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed', a
     expect(dispatch).toContain('status = "processing"');
     expect(dispatch).toContain('invoice_and_customer_timesheet');
     expect(preflight).toContain("'writes_performed' => false");
-    expect(resetService).toContain("auth_environment_from_config($config) === 'production'");
+    expect(resetService).toContain('mail_real_delivery_allowed_for_environment($config)');
+    expect(resetService).toContain('mail_validate_delivery_recipients($config, $email)');
     expect(resetService).toContain("'/index.html#reset-password='");
     expect(resetService).toContain("'delivery_available' => auth_password_reset_delivery_available($config)");
     expect(resetService).toContain('AUTH_PASSWORD_RESET_MAX_REQUESTS = 3');
     expect(dispatch).toContain('[beveiligingslink verwijderd na verzending]');
+    expect(dispatch).toContain('mail_validate_delivery_recipients');
     expect(provisionAccount).toContain('Passwords in command arguments are forbidden');
     expect(provisionAccount).toContain('force_password_change = 1');
     expect(provisionAccount).toContain(':password_hash, 1)');
@@ -422,6 +424,34 @@ test('[SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed', a
     expect(configureProduction).toContain('Database passwords in command arguments are forbidden');
     expect(config).toMatch(/'hsts_enabled'\s*=>\s*false/);
     expect(config).toContain('../path-private');
+  });
+});
+
+test('[SAFE-H-010] echte TEST-mail vereist opt-in en een ontvangers-whitelist', async () => {
+  await test.step('Given het uitvoerbare TEST-mailbeleid wordt gecontroleerd', async () => {});
+
+  let result: { ok?: boolean; writes_performed?: boolean; network_connections?: number; checks?: Record<string, boolean> } = {};
+  await test.step('When de productie-, test- en developmentconfiguraties worden doorgerekend', async () => {
+    const execution = await execFileAsync('php', ['server/scripts/mail-environment-policy-check.php'], {
+      cwd: process.cwd(),
+      windowsHide: true,
+    });
+    result = JSON.parse(execution.stdout);
+  });
+
+  await test.step('Then blijft TEST gesloten zonder whitelist en kan alleen de toegestane ontvanger door', async () => {
+    expect(result.ok).toBe(true);
+    expect(result.writes_performed).toBe(false);
+    expect(result.network_connections).toBe(0);
+    expect(result.checks?.production_enabled_without_allowlist).toBe(true);
+    expect(result.checks?.test_without_guard_is_blocked).toBe(true);
+    expect(result.checks?.guarded_test_is_enabled).toBe(true);
+    expect(result.checks?.allowlisted_recipient_is_allowed).toBe(true);
+    expect(result.checks?.other_recipient_is_blocked).toBe(true);
+    expect(result.checks?.cc_outside_allowlist_is_blocked).toBe(true);
+    expect(result.checks?.development_remains_blocked).toBe(true);
+    expect(result.checks?.guarded_test_reset_uses_real_delivery).toBe(true);
+    expect(result.checks?.closed_test_reset_returns_local_token).toBe(true);
   });
 });
 

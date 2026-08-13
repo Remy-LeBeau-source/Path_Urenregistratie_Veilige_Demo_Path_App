@@ -10,23 +10,22 @@ const AUTH_PASSWORD_RESET_WINDOW_MINUTES = 15;
 
 function auth_password_reset_delivery_available(array $config): bool
 {
-    return auth_environment_from_config($config) === 'production'
-        && auth_app_origin_from_config($config) !== ''
-        && mail_is_smtp_relay_enabled($config)
+    return preg_match('#^https://#i', auth_app_origin_from_config($config)) === 1
+        && mail_real_delivery_allowed_for_environment($config)
         && mail_validate_relay_config($config) === [];
 }
 
 function auth_password_reset_public_response(array $config, ?string $demoToken = null, ?string $expiresAt = null): array
 {
-    $production = auth_environment_from_config($config) === 'production';
+    $realDelivery = auth_password_reset_delivery_available($config);
     $response = [
         'ok' => true,
-        'dry_run' => !$production,
+        'dry_run' => !$realDelivery,
         // In production this value describes the configured service, not whether
         // the supplied address exists. That prevents account enumeration.
         'delivery_available' => auth_password_reset_delivery_available($config),
     ];
-    if (!$production && $demoToken !== null) {
+    if (!$realDelivery && $demoToken !== null) {
         $response['token'] = $demoToken;
         $response['expires_at'] = $expiresAt;
     }
@@ -37,7 +36,7 @@ function auth_password_reset_url(array $config, string $rawToken): string
 {
     $origin = auth_app_origin_from_config($config);
     if (!preg_match('#^https://#i', $origin)) {
-        throw new RuntimeException('Production reset links require an HTTPS app origin.');
+        throw new RuntimeException('Password reset links require an HTTPS app origin.');
     }
     // A fragment is never sent in the HTTP request and therefore stays out of
     // access logs. The client removes it from browser history before use.
@@ -50,6 +49,10 @@ function auth_enqueue_password_reset(PDO $pdo, array $user, array $config, strin
     $email = trim((string)$user['email']);
     if ($userId <= 0 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         throw new RuntimeException('Invalid password-reset recipient.');
+    }
+    $recipientErrors = mail_validate_delivery_recipients($config, $email);
+    if ($recipientErrors !== []) {
+        throw new RuntimeException('Password-reset recipient is not allowed in this environment.');
     }
     $displayName = trim((string)($user['display_name'] ?? '')) ?: 'gebruiker';
     $link = auth_password_reset_url($config, $rawToken);
@@ -80,7 +83,8 @@ function auth_enqueue_password_reset(PDO $pdo, array $user, array $config, strin
 function auth_create_password_reset(PDO $pdo, array $user, array $config): ?array
 {
     $userId = (int)$user['id'];
-    if (auth_environment_from_config($config) === 'production') {
+    $realDelivery = auth_password_reset_delivery_available($config);
+    if ($realDelivery) {
         $throttle = $pdo->prepare(
             'SELECT COUNT(*) FROM password_reset_tokens
              WHERE user_id = :uid AND created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 15 MINUTE)'
@@ -95,7 +99,6 @@ function auth_create_password_reset(PDO $pdo, array $user, array $config): ?arra
     $tokenHash = hash('sha256', $rawToken);
     $expiresAt = (new DateTimeImmutable('+' . AUTH_PASSWORD_RESET_TTL_HOURS . ' hours', new DateTimeZone('UTC')))
         ->format('Y-m-d H:i:s');
-    $production = auth_environment_from_config($config) === 'production';
     $deliveryId = null;
 
     $ownsTransaction = !$pdo->inTransaction();
@@ -109,10 +112,7 @@ function auth_create_password_reset(PDO $pdo, array $user, array $config): ?arra
             'INSERT INTO password_reset_tokens (user_id, token_hash, expires_at) VALUES (:uid, :hash, :exp)'
         )->execute([':uid' => $userId, ':hash' => $tokenHash, ':exp' => $expiresAt]);
 
-        if ($production) {
-            if (!auth_password_reset_delivery_available($config)) {
-                throw new RuntimeException('Password-reset delivery is not configured.');
-            }
+        if ($realDelivery) {
             $deliveryId = auth_enqueue_password_reset($pdo, $user, $config, $rawToken);
         }
         if ($ownsTransaction) {

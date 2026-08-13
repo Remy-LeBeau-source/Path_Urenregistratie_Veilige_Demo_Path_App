@@ -40,6 +40,8 @@ return [
     ],
     'mail' => [
         'enabled' => false,
+        'test_delivery_enabled' => false,
+        'allowed_recipients' => [],
         'transport' => 'smtp_relay',
         'smtp_relay' => [
             'host' => 'smtp-relay.gmail.com',

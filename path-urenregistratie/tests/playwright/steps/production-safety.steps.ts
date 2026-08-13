@@ -58,6 +58,9 @@ And("valideert hij DB en private storage vóór een atomische 0600-write met mai
 Given("de transport-, dispatch- en productiepreflightbron wordt gelezen");
 When("de flow voor SAFE-H-005 wordt uitgevoerd");
 Then("zijn TLS, dry-run, private storage, HSTS en niet-mutatieve checks afgedwongen");
+Given("het uitvoerbare TEST-mailbeleid wordt gecontroleerd");
+When("de productie-, test- en developmentconfiguraties worden doorgerekend");
+Then("blijft TEST gesloten zonder whitelist en kan alleen de toegestane ontvanger door");
 Given("de CLI-only productiebedrijfs-bootstrap wordt gelezen");
 When("de flow voor SAFE-H-006 wordt uitgevoerd");
 Then("vereist de bootstrap productie, expliciete bevestiging en geldige bedrijfsgegevens");
