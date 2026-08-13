@@ -16,6 +16,10 @@ De bestanden worden automatisch bijgewerkt met:
 npm run docs:sync
 ```
 
+Dit is de legacy-navigatielaag voor de nog niet gemigreerde native tests. Nieuwe uitvoerbare
+BDD-cases staan onder `tests/bdd`; daar bevatten de stepdefinitions wel de echte acties en
+`expect(...)`-assertions. Zie `tests/bdd/README.md` voor het eenvoudige toevoegproces.
+
 Open voor dezelfde F12-koppeling op iedere werkplek het bestand `Path-Urenregistratie.code-workspace` in VS Code. Hiervoor is lokaal de extensie `alexkrechik.cucumberautocomplete` nodig.
 
 Voeg nieuwe testcases toe in het bijbehorende `.spec.ts`-bestand met een case-ID, duidelijke `test.step(...)`-namen en `expect(...)`-assertions. Daarna maakt `docs:sync` de featuretekst en de eenvoudige stepregels automatisch aan. Dit werkt lokaal en gebruikt geen AI.

@@ -22,7 +22,7 @@ staan onder de genummerde fases verderop in dit document.
 | Fase 3 — Read-API | ✅ Klaar | Frontend leest serverdata |
 | Fase 4 — Auth & rollen | ✅ VS Code-scope klaar | Admin/medewerker/sessies, persistente loginblokkade en eenmalige wachtwoordlinks |
 | Fase 5 — Security | ✅ VS Code-scope klaar | Timeout, sliding session, login-audit, dependency-scan; productieheaders (CORS/CSP/HSTS) later op echt domein |
-| Fase 6 — Playwright/Allure/Living Docs | ✅ Klaar | Testarchitectuur compleet |
+| Fase 6 — Playwright/BDD/Allure/Living Docs | 🛠️ Migratie met pariteit | 168 native cases blijven actief; uitvoerbare BDD-engine en eerste pariteitscase zijn groen |
 | Fase 7 — CI/CD | ✅ VS Code-scope klaar | Release Pipeline #31654859682 volledig groen; alle gebruikte Actions op Node 24; GitHub-beveiligingsinstellingen later |
 | Fase 8 — Uren indienen | ✅ Klaar | Concept → indienen |
 | Fase 9 — Correctie/goedkeuring | ✅ Technisch klaar | Productieacceptatie later |
@@ -107,6 +107,11 @@ Post-live beheer
   zijn op dezelfde werkboom apart groen bevestigd.
 - [x] Living Documentation-telling wordt uit de uitvoerbare specs berekend en met een expliciete
   inventarisguard bewaakt. Actueel: 167 Playwright-cases, 1 DB-case, 168 unieke cases en 171 uitvoeringen.
+- [x] Uitvoerbare BDD-engine toegevoegd met `playwright-bdd`: `.feature` genereert een native
+  Playwright-spec, onbekende stappen falen tijdens generatie en de eerste browsertest
+  `BDD-AUTH-H-001` is groen met pariteit naar `AUTH-H-009`.
+- [-] BDD-migratie van de overige businessflows blijft incrementeel: alle 168 native cases blijven
+  actief totdat iedere vervangende feature dezelfde acties en assertions aantoonbaar afdekt.
 - [x] Accountonboarding is technisch voorbereid: nieuwe beheerders en medewerkers krijgen in productie
   een persoonlijke, twee uur geldige eenmalige link via de mailqueue; het ruwe token staat niet in
   HTTP-accesslogs, wordt na verzending/verlopen geschoond en wordt nooit als productiewachtwoord in Git gezet.
@@ -114,9 +119,11 @@ Post-live beheer
   autoritatieve blokkade en resterende tijd blijft afdwingen.
 - [x] Medewerkercorrectie voor een al goedgekeurde maand is server-led heropenbaar zolang nog geen
   definitieve factuur bestaat; dashboardnavigatie ververst ook een verborgen grid voor dezelfde periode.
-- [-] Productie-URL `https://uren.pathconsultancy.nl/` toont nog v0.9.44. Een push bewijst de release
-  in CI, maar activeert TransIP niet automatisch; productieconfiguratie, schone database/accounts,
-  expliciete `GO_LIVE_<korte_sha>`-toestemming en gecontroleerde cutover blijven open.
+- [-] Read-only productiecontrole op 2026-08-13: `https://uren.pathconsultancy.nl/index.html` geeft
+  HTTP 200 maar toont nog v0.9.44; publieke `server/health.php` geeft HTTP 200 met
+  `config.local.php: ok=false (Missing server/config.local.php)`. De v0.9.50-config staat alleen in
+  de private stagingrelease. Een push activeert TransIP niet automatisch; bedrijfsbootstrap,
+  productieaccounts, expliciete `GO_LIVE_<korte_sha>`-toestemming en gecontroleerde cutover blijven open.
 - [x] Root cause/fix gevonden voor twee omgevingsvalkuilen tijdens dit werk (vastgelegd in
   repo-memory): de PHP GD-extensie stond lokaal standaard uit (`;extension=gd` in php.ini) en moest
   worden ingeschakeld; en een stale achtergrond-PHP-proces (van vóór de GD-fix) op poort 8000
@@ -906,8 +913,10 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
   afwezigheid van de TransIP-placeholder, juiste versie, headers, health, login en hash-routing.
 - [x] Productie `server/config.local.php` via de interactieve fail-closed configurator gemaakt;
   databaseverbinding, private storage, securityconfig en uitgeschakelde echte mail zijn groen.
-- [-] Productiemigraties 012 en 013 zijn op TransIP uitgevoerd en bestaande migraties zijn idempotent
-  overgeslagen; demo-migraties staan uit. Bedrijfsprofiel/bootstrap en publieke health-smoke volgen na de v0.9.50-pipeline.
+- [x] Productiemigraties 012 en 013 zijn op TransIP uitgevoerd; bestaande migraties zijn idempotent
+  overgeslagen en demo-migraties staan uit.
+- [-] Bedrijfsprofiel/bootstrap uitvoeren en daarna de live read-only preflight opnieuw groen maken;
+  de laatste preflight meldde `invoicing_company_exact=false`.
 - [-] Productieaccounts aanmaken; productielogin en productie-smoketest.
 - [x] Schrijfrechten upload-/PDF-mappen bewezen (mode `700`); PHP `upload_max_filesize=2M`
   en `post_max_size=8M` sluiten aan op de applicatiegrens van maximaal 2 MB; de app forceert
@@ -956,9 +965,10 @@ Status Fase 16:
   pipeline-regressie omvatten 161 browseruitvoeringen inclusief SAFE-N-007.
 - [x] Bundel 2 voorbereiding: actuele checksum-release staat veilig in private TransIP-staging;
   PHP/PDO, opslagrechten, uploadlimieten, cronbeschikbaarheid en SMTP STARTTLS zijn bewezen.
-- [-] fase als geheel: live serveert nog de TransIP-placeholder en mist `server/config.local.php`.
-  DB-secret-invoer, live preflight, back-up, gecontroleerde cutover en alle Bundel-3-handelingen
-  blijven afzonderlijke gates; geen SMTP-transactie, echte mail of go-live uitgevoerd.
+- [-] fase als geheel: live serveert nog de oude app v0.9.44 en de publieke health meldt een
+  ontbrekende `server/config.local.php`; de nieuwe productieconfig bestaat alleen in private staging.
+  Bedrijfsbootstrap, live preflight, productieaccounts, gecontroleerde cutover en alle
+  Bundel-3-handelingen blijven afzonderlijke gates; geen SMTP-transactie, echte mail of go-live uitgevoerd.
 
 ---
 

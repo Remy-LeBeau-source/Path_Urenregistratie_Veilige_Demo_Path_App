@@ -10,5 +10,7 @@ path-urenregistratie/database/ERD*.mmd
 tmp/
 path-urenregistratie/test-results*/
 path-urenregistratie/playwright-report/
+path-urenregistratie/playwright-report-bdd/
 path-urenregistratie/allure-results/
 path-urenregistratie/allure-report/
+path-urenregistratie/.features-gen/
