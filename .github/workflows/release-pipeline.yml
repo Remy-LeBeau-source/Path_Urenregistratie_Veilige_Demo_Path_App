@@ -241,7 +241,7 @@ jobs:
 
       - name: Upload install diagnostics
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-validate-install-diagnostics
           path: |
@@ -699,7 +699,7 @@ jobs:
 
       - name: Upload live docs bundle artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: live-doc-site-bundle
           path: path-urenregistratie/live-doc-site/
@@ -711,18 +711,18 @@ jobs:
 
       - name: Configure GitHub Pages
         if: ${{ vars.ENABLE_GH_PAGES == 'true' }}
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload Pages artifact
         if: ${{ vars.ENABLE_GH_PAGES == 'true' }}
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: path-urenregistratie/live-doc-site
 
       - name: Deploy to GitHub Pages
         if: ${{ vars.ENABLE_GH_PAGES == 'true' }}
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
       - name: Stop PHP server
         if: always()

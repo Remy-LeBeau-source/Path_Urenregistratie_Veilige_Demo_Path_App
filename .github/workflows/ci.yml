@@ -140,7 +140,7 @@ jobs:
 
       - name: Upload install diagnostics
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ci-install-diagnostics
           path: |
@@ -200,7 +200,7 @@ jobs:
 
       - name: Upload Playwright report artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ci-playwright-report
           path: path-urenregistratie/playwright-report/
