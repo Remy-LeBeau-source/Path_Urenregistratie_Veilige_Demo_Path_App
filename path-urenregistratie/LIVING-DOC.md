@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 171 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 172 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 171 unieke case-ID's
+- Playwright executable cases: 172 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 172 unieke case-ID's
+- Totaal executable cases: 173 unieke case-ID's
 - Playwright features: 21
 - Database features: 1
 - Playwright steps mappings: 21
 - Database steps mappings: 1
-- Uitvoeringen: 175
-- Niet-mobile projectuitvoeringen: 167
+- Uitvoeringen: 176
+- Niet-mobile projectuitvoeringen: 168
 - Mobile functionele cases: 4
 - Pixel 7 / Chromium-uitvoeringen: 4
 - iPhone 13 / WebKit-uitvoeringen: 4
 
-De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 171 Playwright-functionele cases in totaal 175 resultaten op: 167 + (4 x 2) = 175.
+De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 172 Playwright-functionele cases in totaal 176 resultaten op: 168 + (4 x 2) = 176.
 
 ## Documentatieketen
 
@@ -250,7 +250,7 @@ De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 171 Playwrig
 
 - Feature: `tests/playwright/features/production-safety.feature`
 - Source: `tests/playwright/production-safety.spec.ts`
-- Cases: 15
+- Cases: 16
 
 - [SAFE-H-001] login picker vult alleen lokaal demo-wachtwoord in wanneer hints beschikbaar zijn — Techniek: API-contract + equivalentieklasse · Assertions: 9
 - [SAFE-N-001] frontend source bevat geen plaintext demo-credentials — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 3
@@ -265,7 +265,8 @@ De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 171 Playwrig
 - [SAFE-N-005] live login verbergt lokale accountkeuze en valt gesloten uit zonder authservice — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 11
 - [SAFE-N-006] destructieve DB-testsetup weigert productie en niet-testdatabases — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 15
 - [SAFE-N-007] productieconfigurator verwerkt DB-secret uitsluitend interactief en fail-closed — Techniek: Toestandsovergang · Assertions: 14
-- [SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 23
+- [SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 25
+- [SAFE-H-010] echte TEST-mail vereist opt-in en een ontvangers-whitelist — Techniek: API-contract + equivalentieklasse · Assertions: 12
 - [SAFE-H-006] eerste productieorganisatie wordt gevalideerd en zonder overschrijven ingericht — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 18
 
 ### Rollen, rechten en gegevensafscherming

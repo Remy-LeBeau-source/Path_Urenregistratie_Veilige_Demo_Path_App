@@ -123,12 +123,23 @@ function mail_dispatch_delivery(PDO $pdo, array $delivery, array $config): strin
     if (!mail_is_smtp_relay_enabled($config)) {
         throw new RuntimeException('Real SMTP dispatch is disabled.');
     }
+    if (!mail_real_delivery_allowed_for_environment($config)) {
+        throw new RuntimeException('Real SMTP dispatch is not allowed for this environment.');
+    }
     if ((bool)($delivery['dry_run'] ?? true)) {
         throw new RuntimeException('Dry-run deliveries can never be dispatched.');
     }
     $errors = mail_validate_relay_config($config);
     if ($errors !== []) {
         throw new RuntimeException('Invalid SMTP relay configuration: ' . implode('; ', $errors));
+    }
+    $recipientErrors = mail_validate_delivery_recipients(
+        $config,
+        (string)($delivery['recipient_email'] ?? ''),
+        !empty($delivery['cc_email']) ? (string)$delivery['cc_email'] : null
+    );
+    if ($recipientErrors !== []) {
+        throw new RuntimeException('SMTP recipient policy rejected delivery: ' . implode('; ', $recipientErrors));
     }
 
     // Claim the row before opening SMTP so parallel cron processes cannot send it twice.
@@ -195,7 +206,7 @@ function mail_dispatch_delivery(PDO $pdo, array $delivery, array $config): strin
 /** @return array{sent:int,failed:int,skipped:int} */
 function mail_dispatch_queued(PDO $pdo, int $companyId, array $config, int $limit = 50): array
 {
-    if (!mail_is_smtp_relay_enabled($config)) {
+    if (!mail_real_delivery_allowed_for_environment($config)) {
         return ['sent' => 0, 'failed' => 0, 'skipped' => 0];
     }
 

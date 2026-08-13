@@ -150,7 +150,8 @@
 | SAFE-N-005 | security | production-safety.feature | live login verbergt lokale accountkeuze en valt gesloten uit zonder authservice | Negatieve equivalentieklasse + error guessing | 11 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | live login verbergt lokale accountkeuze en valt gesloten uit zonder authservice | Negative | 14 | Actueel |
 | SAFE-N-006 | security | production-safety.feature | destructieve DB-testsetup weigert productie en niet-testdatabases | Negatieve equivalentieklasse + error guessing | 15 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | destructieve DB-testsetup weigert productie en niet-testdatabases | Negative | 14 | Actueel |
 | SAFE-N-007 | security | production-safety.feature | productieconfigurator verwerkt DB-secret uitsluitend interactief en fail-closed | Toestandsovergang | 14 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | productieconfigurator verwerkt DB-secret uitsluitend interactief en fail-closed | Negative | 14 | Actueel |
-| SAFE-H-005 | security | production-safety.feature | SMTP-dispatch en operationele scripts blijven fail-closed | Negatieve equivalentieklasse + error guessing | 23 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | SMTP-dispatch en operationele scripts blijven fail-closed | Happy | 14 | Actueel |
+| SAFE-H-005 | security | production-safety.feature | SMTP-dispatch en operationele scripts blijven fail-closed | Negatieve equivalentieklasse + error guessing | 25 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | SMTP-dispatch en operationele scripts blijven fail-closed | Happy | 14 | Actueel |
+| SAFE-H-010 | security | production-safety.feature | echte TEST-mail vereist opt-in en een ontvangers-whitelist | API-contract + equivalentieklasse | 12 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | echte TEST-mail vereist opt-in en een ontvangers-whitelist | Happy | 14 | Actueel |
 | SAFE-H-006 | security | production-safety.feature | eerste productieorganisatie wordt gevalideerd en zonder overschrijven ingericht | Negatieve equivalentieklasse + error guessing | 18 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | eerste productieorganisatie wordt gevalideerd en zonder overschrijven ingericht | Happy | 14 | Actueel |
 | ROLE-N-003 | security | roles-api.feature | zonder sessie geeft protected API 401 | Beslissingstabel rollen en autorisatie | 2 | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | zonder sessie geeft protected API 401 | Negative | 4 | Actueel |
 | ROLE-H-001 | security | roles-api.feature | admin ziet volledige data | Beslissingstabel rollen en autorisatie | 7 | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | admin ziet volledige data | Happy | 4 | Actueel |
@@ -193,9 +194,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 171
+- Playwright executable cases: 172
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 172
+- Totaal unieke executable cases: 173
 - Playwright features: 21
 - Database features: 1
 - Playwright steps mappings: 21

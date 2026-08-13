@@ -52,6 +52,10 @@ return [
     // No username or password: authentication is handled by the registered outgoing TransIP IP.
     'mail' => [
         'enabled' => false,              // set to true to enable real SMTP dispatch
+        // TEST may send only when this switch is true and every recipient is
+        // listed below. Production does not require an allowlist.
+        'test_delivery_enabled' => false,
+        'allowed_recipients' => [],
         'transport' => 'smtp_relay',
         'smtp_relay' => [
             'host'       => 'smtp-relay.gmail.com',

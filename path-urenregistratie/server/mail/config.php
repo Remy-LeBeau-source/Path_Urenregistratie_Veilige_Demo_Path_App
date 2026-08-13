@@ -29,6 +29,69 @@ function mail_is_smtp_relay_enabled(array $config): bool
         && strtolower(trim((string)($mail['transport'] ?? ''))) === 'smtp_relay';
 }
 
+function mail_environment(array $config): string
+{
+    return strtolower(trim((string)($config['environment'] ?? ($config['app']['environment'] ?? 'production'))));
+}
+
+/** @return list<string> */
+function mail_allowed_recipients(array $config): array
+{
+    $mail = isset($config['mail']) && is_array($config['mail']) ? $config['mail'] : [];
+    $configured = isset($mail['allowed_recipients']) && is_array($mail['allowed_recipients'])
+        ? $mail['allowed_recipients']
+        : [];
+    $normalized = [];
+    foreach ($configured as $recipient) {
+        $email = strtolower(trim((string)$recipient));
+        if ($email !== '' && !in_array($email, $normalized, true)) {
+            $normalized[] = $email;
+        }
+    }
+    return $normalized;
+}
+
+/**
+ * Production may deliver when SMTP is enabled. TEST additionally requires an
+ * explicit opt-in and a non-empty recipient allowlist. Every other environment
+ * remains fail-closed even if mail.enabled is accidentally changed.
+ */
+function mail_real_delivery_allowed_for_environment(array $config): bool
+{
+    if (!mail_is_smtp_relay_enabled($config)) {
+        return false;
+    }
+    $environment = mail_environment($config);
+    if ($environment === 'production') {
+        return true;
+    }
+    $mail = isset($config['mail']) && is_array($config['mail']) ? $config['mail'] : [];
+    return $environment === 'test'
+        && ($mail['test_delivery_enabled'] ?? false) === true
+        && mail_allowed_recipients($config) !== [];
+}
+
+function mail_recipient_is_allowed(array $config, string $email): bool
+{
+    if (mail_environment($config) === 'production') {
+        return true;
+    }
+    return in_array(strtolower(trim($email)), mail_allowed_recipients($config), true);
+}
+
+/** @return list<string> */
+function mail_validate_delivery_recipients(array $config, string $recipient, ?string $cc = null): array
+{
+    $errors = [];
+    if (!mail_recipient_is_allowed($config, $recipient)) {
+        $errors[] = 'recipient is not present in mail.allowed_recipients';
+    }
+    if ($cc !== null && trim($cc) !== '' && !mail_recipient_is_allowed($config, $cc)) {
+        $errors[] = 'cc recipient is not present in mail.allowed_recipients';
+    }
+    return $errors;
+}
+
 /** Validate the non-secret SMTP relay contract without opening a network connection. */
 function mail_validate_relay_config(array $config): array
 {
@@ -54,6 +117,21 @@ function mail_validate_relay_config(array $config): array
     foreach (['username', 'password'] as $credentialKey) {
         if (array_key_exists($credentialKey, $relay) && trim((string)$relay[$credentialKey]) !== '') {
             $errors[] = 'SMTP credentials are forbidden for IP-based relay: ' . $credentialKey;
+        }
+    }
+
+    foreach (mail_allowed_recipients($config) as $recipient) {
+        if (!filter_var($recipient, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'mail.allowed_recipients contains an invalid address';
+        }
+    }
+    if (($mail['enabled'] ?? false) === true && mail_environment($config) !== 'production') {
+        if (mail_environment($config) !== 'test') {
+            $errors[] = 'real mail delivery is allowed only in production or explicitly guarded TEST';
+        } elseif (($mail['test_delivery_enabled'] ?? false) !== true) {
+            $errors[] = 'mail.test_delivery_enabled must be true for TEST delivery';
+        } elseif (mail_allowed_recipients($config) === []) {
+            $errors[] = 'mail.allowed_recipients must contain at least one address for TEST delivery';
         }
     }
 
