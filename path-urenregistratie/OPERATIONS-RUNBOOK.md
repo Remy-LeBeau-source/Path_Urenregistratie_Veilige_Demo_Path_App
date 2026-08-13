@@ -145,16 +145,27 @@ rechtstreeks over productie zonder expliciete toestemming en een verse pre-resto
 ## 7. Go-livevolgorde
 
 1. Nieuwe release-SHA en volledig groene GitHub-pipeline vastleggen.
+   `Promote Prod` is hierbij een regressie-/approvalgate en wijzigt de TransIP-documentroot niet
+   automatisch. Controleer dat de pipeline-`headSha` exact gelijk is aan de stagingrelease.
 2. Verse database- én private-bestandenback-up maken.
-3. Releasebestanden deployen; `config.local.php` en `path-private` behouden.
-4. Migraties via CLI uitvoeren.
-5. Statische en live productiepreflight groen maken.
-6. HTTPS, headers, login, rollen en privacy handmatig controleren; HSTS blijft nog uit.
-7. Bundel 3 met Stasjo/juli 2026/144 uur volledig in dry-run doorlopen.
-8. Factuurgegevens en beide PDF's visueel laten accepteren.
-9. Fysieke iPhone, Android en tablet testen.
-10. Alleen na ondertekende acceptatie mail activeren en één gecontroleerde echte proef verzenden.
-11. Pas na succesvolle HTTPS-observatieperiode HSTS afzonderlijk activeren.
+3. Vraag afzonderlijk en expliciet akkoord voor `GO_LIVE_<korte_sha>`.
+4. Activeer uitsluitend die checksum-gecontroleerde stagingrelease in
+   `/data/sites/web/pathconsultancynl/subsites/uren.pathconsultancy.nl`; behoud
+   `server/config.local.php` en alle private opslag buiten de documentroot. Bewaar de vorige
+   documentroot als direct terugzetbare rollbackrelease.
+5. Controleer direct dat `https://uren.pathconsultancy.nl/index.html#` HTTP 200 geeft en niet meer
+   de TransIP-placeholder toont. Het fragment `#` is client-side; servervalidatie gebeurt op
+   `/index.html` en de browserflow valideert vervolgens de hash-routing.
+6. Migraties via CLI uitvoeren wanneer de live preflight aangeeft dat dit nodig is; demo-seeds
+   blijven uitgeschakeld.
+7. Statische en live productiepreflight opnieuw groen maken.
+8. HTTPS, headers, health zonder technische datalekken, login, rollen en privacy handmatig
+   controleren; HSTS blijft nog uit.
+9. Bundel 3 met Stasjo/juli 2026/144 uur volledig in dry-run doorlopen.
+10. Factuurgegevens en beide PDF's visueel laten accepteren.
+11. Fysieke iPhone, Android en tablet testen.
+12. Alleen na ondertekende acceptatie mail activeren en één gecontroleerde echte proef verzenden.
+13. Pas na succesvolle HTTPS-observatieperiode HSTS afzonderlijk activeren.
 
 ## 8. Rollback
 
