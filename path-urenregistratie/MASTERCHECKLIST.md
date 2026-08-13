@@ -98,13 +98,13 @@ Post-live beheer
   getest; PDF-bijlage nu structureel beschikbaar dankzij Fase 11), Fase 15 (gelijktijdige
   approve-requests door twee beheerders, jaarwisseling december→januari, te grote upload-afwijzing,
   basis toetsenbord-/labelcontrole, PWA-manifest + defensieve service worker).
-- [x] Actuele testinventaris: 160 Playwright + 1 DB = 161 unieke cases en 164 browseruitvoeringen
-  (156 niet-mobiel + 4 mobiele cases x 2 devices).
+- [x] Actuele testinventaris: 161 Playwright + 1 DB = 162 unieke cases en 165 browseruitvoeringen
+  (157 niet-mobiel + 4 mobiele cases x 2 devices).
 - [x] Volledige lokale Playwright-regressie: 164/164 groen, inclusief SAFE-N-007 als
   fail-closed productieconfiguratiecase en DASH-N-016 voor dezelfde-periode-correctienavigatie.
   `npm run ci:local`, de 39 gerichte auth/mail/securitytests en DASH-N-007 zijn apart groen bevestigd.
 - [x] Living Documentation-telling wordt uit de uitvoerbare specs berekend en met een expliciete
-  inventarisguard bewaakt. Actueel: 160 Playwright-cases, 1 DB-case, 161 unieke cases en 164 uitvoeringen.
+  inventarisguard bewaakt. Actueel: 161 Playwright-cases, 1 DB-case, 162 unieke cases en 165 uitvoeringen.
 - [x] Medewerkercorrectie voor een al goedgekeurde maand is server-led heropenbaar zolang nog geen
   definitieve factuur bestaat; dashboardnavigatie ververst ook een verborgen grid voor dezelfde periode.
 - [-] Productie-URL `https://uren.pathconsultancy.nl/` toont nog v0.9.44. Een push bewijst de release

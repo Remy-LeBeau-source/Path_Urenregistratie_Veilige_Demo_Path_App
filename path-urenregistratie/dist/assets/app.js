@@ -1277,6 +1277,8 @@ const authRuntime = {
   localLoginHintsPromise: null
 };
 
+let authLoginCountdownTimer = null;
+
 const AUTH_ALWAYS_SHOW_LOGIN_PICKER = true;
 
 const writeRuntime = {
@@ -1334,6 +1336,31 @@ function setAuthLoginFeedback(message, isError) {
   element.hidden = false;
   element.textContent = message;
   element.style.color = isError ? "#9b1c1c" : "";
+}
+
+function clearAuthLoginCountdown() {
+  if (authLoginCountdownTimer !== null) {
+    window.clearInterval(authLoginCountdownTimer);
+    authLoginCountdownTimer = null;
+  }
+}
+
+function setAuthLoginCountdown(seconds) {
+  clearAuthLoginCountdown();
+  const deadline = Date.now() + Math.max(1, Number(seconds) || 1) * 1000;
+  const render = () => {
+    const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+    if (remaining <= 0) {
+      clearAuthLoginCountdown();
+      setAuthLoginFeedback("Je kunt nu opnieuw proberen in te loggen.", false);
+      return;
+    }
+    const minutes = Math.floor(remaining / 60);
+    const remainder = String(remaining % 60).padStart(2, "0");
+    setAuthLoginFeedback("Te veel mislukte inlogpogingen. Probeer opnieuw over " + minutes + ":" + remainder + ".", true);
+  };
+  render();
+  authLoginCountdownTimer = window.setInterval(render, 1000);
 }
 
 function setDemoLoginEnabled(enabled) {
@@ -9165,6 +9192,7 @@ document.querySelector("#auth-login-form")?.addEventListener("submit", event => 
   }
 
   setAuthLoginEnabled(false);
+  clearAuthLoginCountdown();
   setAuthLoginFeedback("Inloggen...", false);
 
   requestAuthLogin(email, password)
@@ -9172,7 +9200,11 @@ document.querySelector("#auth-login-form")?.addEventListener("submit", event => 
       if (!result || !result.ok || !result.data || result.data.ok !== true || !result.data.user) {
         const message = String(result && result.data && result.data.message || "Inloggen mislukt.");
         setAuthDebug({ authenticated: false, role: "", user_id: null, mode: "auth", available: true, error: "login-failed" });
-        setAuthLoginFeedback(message, true);
+        if (result && result.data && result.data.error === "too-many-attempts") {
+          setAuthLoginCountdown(result.data.retry_after_seconds);
+        } else {
+          setAuthLoginFeedback(message, true);
+        }
         if (passwordInput) passwordInput.value = "";
         return;
       }
@@ -9187,6 +9219,7 @@ document.querySelector("#auth-login-form")?.addEventListener("submit", event => 
         error: ""
       });
       setAuthLoginFeedback("", false);
+      clearAuthLoginCountdown();
       if (passwordInput) passwordInput.value = "";
 
       triggerReadApiWarmup();

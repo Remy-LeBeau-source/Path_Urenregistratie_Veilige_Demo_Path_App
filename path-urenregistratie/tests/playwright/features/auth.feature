@@ -55,3 +55,11 @@ Feature: Inloggen, uitloggen en sessiebeheer
     Given inloggen, uitloggen en sessiebeheer is voorbereid
     When de flow voor AUTH-N-006 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat ongeldig e-mailformaat wordt als invalid-payload geweigerd
+
+  @negative
+  Scenario: [AUTH-N-007] vijf mislukte logins tonen een servergestuurde aftelling
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given vijf mislukte pogingen voor hetzelfde account zijn geregistreerd
+    When opnieuw via het loginformulier wordt geprobeerd
+    Then toont de UI de resterende blokkeertijd en blijft het formulier bruikbaar voor een ander account

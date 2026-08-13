@@ -73,15 +73,24 @@ $password = security_require_string_field($input, 'password', 'Email and passwor
 // Rate-limit: max 5 failed attempts per email in 15 minutes.
 try {
     $rlStmt = $pdo->prepare(
-        "SELECT COUNT(*) FROM auth_login_audit
+        "SELECT COUNT(*) AS failed_count,
+                COALESCE(
+                    GREATEST(1, TIMESTAMPDIFF(SECOND, NOW(), DATE_ADD(MIN(created_at), INTERVAL 15 MINUTE))),
+                    900
+                ) AS retry_after_seconds
+         FROM auth_login_audit
          WHERE email = :email AND status = 'failed' AND created_at >= DATE_SUB(NOW(), INTERVAL 15 MINUTE)"
     );
     $rlStmt->execute([':email' => $email]);
-    if ((int)$rlStmt->fetchColumn() >= 5) {
+    $rateLimit = $rlStmt->fetch() ?: [];
+    if ((int)($rateLimit['failed_count'] ?? 0) >= 5) {
+        $retryAfterSeconds = max(1, min(900, (int)($rateLimit['retry_after_seconds'] ?? 900)));
+        header('Retry-After: ' . $retryAfterSeconds);
         auth_send_json([
             'ok' => false,
             'error' => 'too-many-attempts',
             'message' => 'Te veel mislukte inlogpogingen. Probeer het over 15 minuten opnieuw.',
+            'retry_after_seconds' => $retryAfterSeconds,
         ], 429);
     }
 } catch (Throwable $rlErr) {

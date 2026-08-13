@@ -119,3 +119,35 @@ test('[AUTH-N-006] ongeldig e-mailformaat wordt als invalid-payload geweigerd', 
   expect(response.status()).toBe(400);
   expect(body.error).toBe('invalid-payload');
 });
+
+test('[AUTH-N-007] vijf mislukte logins tonen een servergestuurde aftelling', async ({ page }) => {
+  const email = `blocked-${Date.now()}@example.invalid`;
+  const api = page.context().request;
+
+  await test.step('Given vijf mislukte pogingen voor hetzelfde account zijn geregistreerd', async () => {
+    await page.goto(appConfig.baseUrl);
+    const csrfResponse = await api.get('/server/auth/csrf.php');
+    const csrf = await csrfResponse.json();
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const failed = await api.post('/server/auth/login.php', {
+        headers: { 'X-CSRF-Token': csrf.csrf_token },
+        data: { email, password: 'OnjuistWachtwoord!2026' },
+      });
+      expect(failed.status()).toBe(401);
+    }
+  });
+
+  await test.step('When opnieuw via het loginformulier wordt geprobeerd', async () => {
+    await page.locator('#auth-login-email').fill(email);
+    await page.locator('#auth-login-password').fill('OnjuistWachtwoord!2026');
+    await page.locator('#auth-login-submit').click();
+  });
+
+  await test.step('Then toont de UI de resterende blokkeertijd en blijft het formulier bruikbaar voor een ander account', async () => {
+    await expect(page.locator('#auth-login-feedback')).toHaveText(
+      /Te veel mislukte inlogpogingen\. Probeer opnieuw over 1[345]:[0-5]\d\./,
+    );
+    await expect(page.locator('#auth-login-feedback')).toHaveAttribute('aria-live', 'polite');
+    await expect(page.locator('#auth-login-submit')).toBeEnabled();
+  });
+});

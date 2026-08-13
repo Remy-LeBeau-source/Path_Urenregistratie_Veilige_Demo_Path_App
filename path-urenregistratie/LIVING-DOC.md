@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 160 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 161 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 160 unieke case-ID's
+- Playwright executable cases: 161 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 161 unieke case-ID's
+- Totaal executable cases: 162 unieke case-ID's
 - Playwright features: 21
 - Database features: 1
 - Playwright steps mappings: 21
 - Database steps mappings: 1
-- Uitvoeringen: 164
-- Niet-mobile projectuitvoeringen: 156
+- Uitvoeringen: 165
+- Niet-mobile projectuitvoeringen: 157
 - Mobile functionele cases: 4
 - Pixel 7 / Chromium-uitvoeringen: 4
 - iPhone 13 / WebKit-uitvoeringen: 4
 
-De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 160 Playwright-functionele cases in totaal 164 resultaten op: 156 + (4 x 2) = 164.
+De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 161 Playwright-functionele cases in totaal 165 resultaten op: 157 + (4 x 2) = 165.
 
 ## Documentatieketen
 
@@ -69,7 +69,7 @@ De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 160 Playwrig
 
 - Feature: `tests/playwright/features/auth.feature`
 - Source: `tests/playwright/auth.spec.ts`
-- Cases: 6
+- Cases: 7
 
 - [AUTH-H-001] Admin logt in en auth/me geeft de juiste gebruiker terug — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
 - [AUTH-H-002] Medewerker logt in en auth/me geeft de juiste gebruiker terug — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
@@ -77,6 +77,7 @@ De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 160 Playwrig
 - [AUTH-H-004] Lokale beheeraccount wordt automatisch ingevuld en opent na een klik — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
 - [AUTH-N-005] onbekend account geeft dezelfde generieke loginfout — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 3
 - [AUTH-N-006] ongeldig e-mailformaat wordt als invalid-payload geweigerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
+- [AUTH-N-007] vijf mislukte logins tonen een servergestuurde aftelling — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
 
 ### Klanturenstaten en documentverwerking
 

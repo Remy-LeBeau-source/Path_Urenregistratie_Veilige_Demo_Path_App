@@ -58,7 +58,7 @@
         <label for="auth-login-password">Wachtwoord</label>
         <input id="auth-login-password" name="password" type="password" autocomplete="current-password" placeholder="Wachtwoord" required>
         <button class="button button-primary" id="auth-login-submit" type="submit">Inloggen</button>
-        <p id="auth-login-feedback" hidden></p>
+        <p id="auth-login-feedback" role="status" aria-live="polite" hidden></p>
         <button class="button button-ghost" id="auth-forgot-password" type="button">Wachtwoord vergeten?</button>
       </form>
       <div id="auth-reset-form" hidden>

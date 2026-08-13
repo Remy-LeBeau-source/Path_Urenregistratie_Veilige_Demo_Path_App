@@ -213,8 +213,8 @@ const inventory = definitions.flatMap((definition) => {
 const uniqueIds = new Set(inventory.map((testCase) => testCase.id));
 const playwrightCount = inventory.filter((testCase) => testCase.kind === 'playwright').length;
 const dbCount = inventory.filter((testCase) => testCase.kind === 'db').length;
-if (playwrightCount !== 160 || dbCount !== 1 || inventory.length !== 161 || uniqueIds.size !== 161) {
-  throw new Error(`Verwacht 160 Playwright-cases + 1 DB-case = 161 unieke cases, gevonden ${playwrightCount}/${dbCount}/${inventory.length}/${uniqueIds.size}.`);
+if (playwrightCount !== 161 || dbCount !== 1 || inventory.length !== 162 || uniqueIds.size !== 162) {
+  throw new Error(`Verwacht 161 Playwright-cases + 1 DB-case = 162 unieke cases, gevonden ${playwrightCount}/${dbCount}/${inventory.length}/${uniqueIds.size}.`);
 }
 const casesWithoutAssertions = inventory.filter((testCase) => Number(testCase.assertionCount) < 1);
 if (casesWithoutAssertions.length) {
