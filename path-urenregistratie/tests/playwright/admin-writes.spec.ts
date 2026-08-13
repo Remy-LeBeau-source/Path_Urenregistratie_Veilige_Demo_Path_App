@@ -1,6 +1,7 @@
 import { expect, request as playwrightRequest, test } from '@playwright/test';
 import { AuthApi } from './api/AuthApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
+import { LoginPage } from './pages/LoginPage';
 
 async function getCSRF(ctx: Awaited<ReturnType<typeof playwrightRequest.newContext>>) {
   const r = await ctx.get('/server/auth/csrf.php');
@@ -100,6 +101,7 @@ test.describe('admin write endpoints', () => {
     expect(create.body.ok).toBe(true);
     expect(Number(create.body.user_id)).toBeGreaterThan(0);
     expect(create.body.invitation_queued).toBe(false);
+    expect(create.body.invitation_pending).toBe(true);
 
     const userId = Number(create.body.user_id);
 
@@ -116,6 +118,7 @@ test.describe('admin write endpoints', () => {
     expect(update.status, JSON.stringify(update.body)).toBe(200);
     expect(update.body.ok).toBe(true);
     expect(update.body.invitation_queued).toBe(false);
+    expect(update.body.invitation_pending).toBe(true);
 
     const bootstrap = await ctx.get('/server/api/bootstrap.php');
     const bootstrapBody = await bootstrap.json();
@@ -145,6 +148,7 @@ test.describe('admin write endpoints', () => {
 
     const write = await postJson(ctx, '/server/api/staff.php', {
       action: 'upsert_employee',
+      sendInvitation: false,
       employee: {
         name: employeeName,
         email: employeeEmail,
@@ -181,6 +185,7 @@ test.describe('admin write endpoints', () => {
     expect(write.body.ok).toBe(true);
     expect(Number(write.body.employee_id)).toBeGreaterThan(0);
     expect(write.body.invitation_queued).toBe(false);
+    expect(write.body.invitation_pending).toBe(true);
 
     const bootstrapAfter = await ctx.get('/server/api/bootstrap.php');
     const afterBody = await bootstrapAfter.json();
@@ -190,14 +195,70 @@ test.describe('admin write endpoints', () => {
     expect(foundEmployee).toBeDefined();
     expect(foundEmployee?.full_name).toBe(employeeName);
 
-    const foundUser = (afterBody.users as Array<{ id: number; email: string; role: string }>).find(
+    const foundUser = (afterBody.users as Array<{ id: number; email: string; role: string; password_ready: number }>).find(
       user => user.id === Number(write.body.user_id)
     );
     expect(foundUser).toBeDefined();
     expect(foundUser?.email).toBe(employeeEmail);
     expect(foundUser?.role).toBe('employee');
+    expect(Number(foundUser?.password_ready)).toBe(0);
 
     await authApi.logout();
     await ctx.dispose();
+  });
+
+  test('[ADM-WR-H-004] admin slaat medewerker zonder SMTP veilig op met toegang in afwachting', async ({ page }) => {
+    let submittedPayload: Record<string, unknown> | null = null;
+
+    await page.route('**/server/api/bootstrap.php', async route => {
+      const response = await route.fetch();
+      const body = await response.json();
+      body.capabilities = { password_reset_delivery: false };
+      await route.fulfill({ response, json: body });
+    });
+    await page.route('**/server/api/staff.php', async route => {
+      submittedPayload = route.request().postDataJSON() as Record<string, unknown>;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ok: true,
+          user_id: 91001,
+          employee_id: 92001,
+          assignment_id: 93001,
+          invitation_queued: false,
+          invitation_pending: true,
+        }),
+      });
+    });
+
+    const loginPage = new LoginPage(page);
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await page.locator('[data-view="employees"]').click();
+    await page.locator('#add-employee').click();
+
+    await expect(page.locator('#modal-confirm')).toHaveText('Medewerker opslaan');
+    await expect(page.locator('#edit-invite')).toBeDisabled();
+    await expect(page.locator('#edit-invite')).not.toBeChecked();
+    await expect(page.locator('#modal-summary')).toContainText('Uitnodiging volgt zodra e-mail is ingeschakeld');
+
+    const suffix = Date.now().toString().slice(-7);
+    await page.locator('#edit-name').fill(`Productie Medewerker ${suffix}`);
+    await page.locator('#edit-account-email').fill(`productie-medewerker-${suffix}@example.invalid`);
+    await page.locator('#edit-role').fill('Consultant');
+    await page.locator('#edit-client').fill('Productieklant');
+    await page.locator('#edit-project').fill(`PROD-${suffix}`);
+    await page.locator('#edit-broker').fill('Productiebroker');
+    await page.locator('#edit-broker-email').fill('broker@example.invalid');
+    await page.locator('#modal-confirm').click();
+
+    await expect.poll(() => submittedPayload).not.toBeNull();
+    expect(submittedPayload?.action).toBe('upsert_employee');
+    expect(submittedPayload?.sendInvitation).toBe(false);
+    await expect(page.locator('#modal')).toBeHidden();
+    await expect(page.locator('#toast')).toContainText('Medewerker opgeslagen zonder toegang');
+
+    await loginPage.logout();
   });
 });

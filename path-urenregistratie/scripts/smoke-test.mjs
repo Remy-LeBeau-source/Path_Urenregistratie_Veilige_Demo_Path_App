@@ -103,7 +103,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.51"), "Het zichtbare versienummer moet 0.9.51 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.52"), "Het zichtbare versienummer moet 0.9.52 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -149,7 +149,7 @@ const employeePicker = document.querySelector("#login-employee");
 employeePicker.value = "1";
 employeePicker.dispatchEvent(new Event("change", { bubbles: true }));
 const demoScenarioState = JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(demoScenarioState.schemaVersion === 26, "Versie 0.9.51 moet wijzigingen onder de juiste gegevensversie bewaren");
+assert(demoScenarioState.schemaVersion === 26, "Versie 0.9.52 moet wijzigingen onder de juiste gegevensversie bewaren");
 assert(demoScenarioState.settings.companyName === "QSI Consultancy B.V." && demoScenarioState.settings.invoiceNameDisplay === "trade_and_legal", "De standaardfactuuridentiteit moet Path als handelsnaam aan QSI Consultancy B.V. koppelen");
 const freshOpenActions = dom.window.adminOpenTasks();
 const freshJuneActions = freshOpenActions.filter(task => task.periodKey === "2026-06");
@@ -876,6 +876,7 @@ click("#modal-confirm");
 
 click("#add-employee");
 assert(document.querySelector("#edit-name"), "Medewerker toevoegen moet een volledig formulier openen");
+assert(document.querySelector("#modal-confirm").textContent === "Lokaal opslaan", "De lokale demo moet helder aangeven dat een medewerker alleen lokaal wordt opgeslagen");
 document.querySelector("#edit-name").value = "Nieuwe Testmedewerker";
 document.querySelector("#edit-account-email").value = "kenrich.lieveld@pathconsultancy.nl";
 document.querySelector("#edit-role").value = "Tester";
@@ -1507,7 +1508,7 @@ const migrationPicker = migrationDom.window.document.querySelector("#login-admin
 migrationPicker.value = "joyce";
 migrationPicker.dispatchEvent(new migrationDom.window.Event("change", { bubbles: true }));
 const migratedState = JSON.parse(migrationDom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(migratedState.schemaVersion === 26, "Bestaande browsergegevens moeten ook in v0.9.51 veilig behouden blijven");
+assert(migratedState.schemaVersion === 26, "Bestaande browsergegevens moeten ook in v0.9.52 veilig behouden blijven");
 assert(migratedState.settings.companyName === "QSI Consultancy B.V." && migratedState.settings.invoiceNameDisplay === "trade_and_legal", "Migratie moet QSI als B.V. en de gecombineerde factuurweergave veilig aanvullen");
 assert(migratedState.settings.mailRecipients.find(recipient => recipient.id === "payroll").name.includes("Salarisadministratie"), "Migratie moet EasySalary als duidelijke salarisadministratieroute benoemen");
 assert(migratedState.records["2026-07"]["4"].invoiceNumber === "Bel-Shawn-2026-juli", "Migratie moet ook bestaande factuurnummers omzetten naar de afgesproken koppeltekens");
@@ -1555,6 +1556,8 @@ const rotateLogsSrc = readFileSync_(new URL("../server/scripts/rotate-logs.php",
 const provisionAccountSrc = readFileSync_(new URL("../server/scripts/provision-account.php", import.meta.url), "utf8");
 const provisionCompanySrc = readFileSync_(new URL("../server/scripts/provision-company.php", import.meta.url), "utf8");
 const configureProductionSrc = readFileSync_(new URL("../server/scripts/configure-production.php", import.meta.url), "utf8");
+const staffApiSrc = readFileSync_(new URL("../server/api/staff.php", import.meta.url), "utf8");
+const bootstrapApiSrc = readFileSync_(new URL("../server/api/bootstrap.php", import.meta.url), "utf8");
 const changePasswordSrc = readFileSync_(new URL("../server/auth/change-password.php", import.meta.url), "utf8");
 const rootHtaccessSrc = readFileSync_(new URL("../.htaccess", import.meta.url), "utf8");
 const serverHtaccessSrc = readFileSync_(new URL("../server/.htaccess", import.meta.url), "utf8");
@@ -1583,6 +1586,8 @@ assert(backupSrc.includes("--single-transaction") && restoreSrc.includes("RESTOR
 assert(provisionAccountSrc.includes("Passwords in command arguments are forbidden") && provisionAccountSrc.includes("force_password_change = 1") && provisionAccountSrc.includes(":password_hash, 1)") && provisionAccountSrc.includes("auth_create_password_reset") && changePasswordSrc.includes("current_password") && changePasswordSrc.includes("force_password_change = 0"), "Productieaccounts moeten zonder wachtwoordargument, met persoonlijke uitnodiging, verplichte eerste wijziging en een eigen wijzigingsflow worden beheerd");
 assert(provisionCompanySrc.includes("PROVISION_COMPANY") && provisionCompanySrc.includes("provision_company_validate") && provisionCompanySrc.includes("Refusing to overwrite an existing company with different data.") && provisionCompanySrc.includes("company.production_provisioned") && !/example\.invalid|Demo BV/.test(provisionCompanySrc), "De eerste productieorganisatie moet expliciet, gevalideerd, auditbaar en zonder demo- of overschrijfpad worden ingericht");
 assert(configureProductionSrc.includes("Database passwords in command arguments are forbidden") && configureProductionSrc.includes("SELECT 1") && configureProductionSrc.includes("chmod($configPath, 0600)"), "Productieconfiguratie moet secrets interactief verwerken, read-only valideren en met 0600 installeren");
+assert(staffApiSrc.includes("$sendInvitation = staff_bool($payload['sendInvitation'] ?? false, false)") && staffApiSrc.includes("'invitation_pending' => $invitationPending") && staffApiSrc.includes("invitation-delivery-unavailable"), "Medewerkers moeten zonder SMTP veilig opgeslagen kunnen worden en uitnodigingen moeten expliciet en capability-gestuurd zijn");
+assert(bootstrapApiSrc.includes("password_reset_delivery") && bootstrapApiSrc.includes("password_ready"), "De beheer-GUI moet uitnodigingsbeschikbaarheid en accountgereedheid uit de serverbootstrap ontvangen");
 assert(rootHtaccessSrc.includes("Content-Security-Policy") && rootHtaccessSrc.includes("RewriteCond %{HTTPS} !=on") && /^\s*# Header always set Strict-Transport-Security/m.test(rootHtaccessSrc), "De publieke app moet HTTPS/CSP afdwingen terwijl HSTS voorbereid maar uitgeschakeld blijft");
 assert(playwrightRunnerSrc.includes("url.hostname === 'localhost'") && playwrightRunnerSrc.includes("url.hostname = '127.0.0.1'") && playwrightRunnerSrc.includes("PATH_APP_BASE_URL: baseUrl"), "De Playwright-runner moet browsers en de beheerde PHP-server op dezelfde IPv4-origin houden");
 assert(playwrightDbBootstrapSrc.includes("namedTestDatabase") && playwrightDbBootstrapSrc.includes("isolatedCiDatabase") && playwrightDbBootstrapSrc.includes("Refusing destructive Playwright database bootstrap"), "De Playwright DB-bootstrap mag uitsluitend een herkenbare test- of geïsoleerde CI-database opnieuw opbouwen");
@@ -1590,4 +1595,4 @@ assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("
 assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Playwright stage- en lokale env-bestanden mogen expliciete runner/CI-variabelen niet overschrijven");
 
 dom.window.close();
-console.log("Path v0.9.51 volledige smoke test: geslaagd");
+console.log("Path v0.9.52 volledige smoke test: geslaagd");

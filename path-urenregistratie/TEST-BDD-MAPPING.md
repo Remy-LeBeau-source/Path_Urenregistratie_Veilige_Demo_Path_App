@@ -21,8 +21,9 @@
 | A11Y-H-001 | ui | accessibility.feature | loginformulier is volledig met het toetsenbord bruikbaar en correct gelabeld | Toegankelijkheidsinspectie + toetsenbord-use-case | 6 | accessibility.steps.ts | accessibility.spec.ts | UI Desktop | Accessibility | loginformulier is volledig met het toetsenbord bruikbaar en correct gelabeld | Happy | 15 | Actueel |
 | A11Y-H-002 | ui | accessibility.feature | admin-dashboard hoofdnavigatie is toetsenbordbereikbaar met herkenbare namen | Toegankelijkheidsinspectie + toetsenbord-use-case | 4 | accessibility.steps.ts | accessibility.spec.ts | UI Desktop | Accessibility | admin-dashboard hoofdnavigatie is toetsenbordbereikbaar met herkenbare namen | Happy | 15 | Actueel |
 | ADM-WR-H-001 | api | admin-writes.feature | admin kan company/settings server-led opslaan | Beslissingstabel rollen en autorisatie | 6 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | admin kan company/settings server-led opslaan | Happy | 2 | Actueel |
-| ADM-WR-H-002 | api | admin-writes.feature | admin kan beheerder server-led aanmaken en wijzigen | Beslissingstabel rollen en autorisatie | 10 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | admin kan beheerder server-led aanmaken en wijzigen | Happy | 2 | Actueel |
-| ADM-WR-H-003 | api | admin-writes.feature | admin kan medewerker server-led aanmaken en bootstrap ziet deze terug | Beslissingstabel rollen en autorisatie | 9 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | admin kan medewerker server-led aanmaken en bootstrap ziet deze terug | Happy | 2 | Actueel |
+| ADM-WR-H-002 | api | admin-writes.feature | admin kan beheerder server-led aanmaken en wijzigen | Beslissingstabel rollen en autorisatie | 12 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | admin kan beheerder server-led aanmaken en wijzigen | Happy | 2 | Actueel |
+| ADM-WR-H-003 | api | admin-writes.feature | admin kan medewerker server-led aanmaken en bootstrap ziet deze terug | Beslissingstabel rollen en autorisatie | 11 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | admin kan medewerker server-led aanmaken en bootstrap ziet deze terug | Happy | 2 | Actueel |
+| ADM-WR-H-004 | api | admin-writes.feature | admin slaat medewerker zonder SMTP veilig op met toegang in afwachting | Beslissingstabel rollen en autorisatie | 8 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | admin slaat medewerker zonder SMTP veilig op met toegang in afwachting | Happy | 2 | Actueel |
 | AUD-H-001 | api | audit-log.feature | admin kan auditlog ophalen | Beslissingstabel rollen en autorisatie | 7 | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | admin kan auditlog ophalen | Happy | 16 | Actueel |
 | AUD-H-002 | api | audit-log.feature | auditlog filtert op entity_type | Equivalentieklassen | 3 | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | auditlog filtert op entity_type | Happy | 16 | Actueel |
 | AUD-H-003 | api | audit-log.feature | auditlog filtert op event_type | Equivalentieklassen | 3 | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | auditlog filtert op event_type | Happy | 16 | Actueel |
@@ -191,9 +192,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 169
+- Playwright executable cases: 170
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 170
+- Totaal unieke executable cases: 171
 - Playwright features: 21
 - Database features: 1
 - Playwright steps mappings: 21

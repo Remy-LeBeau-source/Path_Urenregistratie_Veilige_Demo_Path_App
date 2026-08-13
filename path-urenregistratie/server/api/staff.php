@@ -276,6 +276,18 @@ if ($action === 'upsert_admin') {
     $email = staff_email($admin['email'] ?? '');
     $active = staff_bool($admin['active'] ?? true, true) ? 1 : 0;
     $dbUserId = (int)($admin['dbUserId'] ?? 0);
+    $sendInvitation = staff_bool($payload['sendInvitation'] ?? false, false);
+    if (
+        $sendInvitation
+        && auth_environment_from_config($config) === 'production'
+        && !auth_password_reset_delivery_available($config)
+    ) {
+        auth_send_json([
+            'ok' => false,
+            'error' => 'invitation-delivery-unavailable',
+            'message' => 'De beheerder kan wel worden opgeslagen, maar e-mailuitnodigingen zijn nog niet ingeschakeld.',
+        ], 409);
+    }
 
     $createdUser = false;
     $invitationQueued = false;
@@ -338,15 +350,29 @@ if ($action === 'upsert_admin') {
             ':event_data' => json_encode(['email' => $email, 'display_name' => $name, 'active' => $active === 1], JSON_UNESCAPED_UNICODE),
         ]);
 
-        if ($createdUser && $active === 1) {
+        if ($sendInvitation && $active === 1) {
             $reset = auth_create_password_reset($pdo, [
                 'id' => $dbUserId, 'email' => $email, 'display_name' => $name,
             ], $config);
+            if ($reset === null) {
+                throw new RuntimeException('Er is recent al een uitnodiging gemaakt. Probeer het later opnieuw.');
+            }
             $invitationQueued = (int)($reset['delivery_id'] ?? 0) > 0;
         }
 
+        $passwordReadyStmt = $pdo->prepare(
+            "SELECT CASE WHEN password_hash IS NOT NULL AND password_hash <> '' THEN 1 ELSE 0 END FROM users WHERE id = :id"
+        );
+        $passwordReadyStmt->execute([':id' => $dbUserId]);
+        $invitationPending = (int)$passwordReadyStmt->fetchColumn() !== 1;
+
         $pdo->commit();
-        auth_send_json(['ok' => true, 'user_id' => $dbUserId, 'invitation_queued' => $invitationQueued]);
+        auth_send_json([
+            'ok' => true,
+            'user_id' => $dbUserId,
+            'invitation_queued' => $invitationQueued,
+            'invitation_pending' => $invitationPending,
+        ]);
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
@@ -392,6 +418,18 @@ if ($action === 'upsert_employee') {
     $mailRecipients = is_array($payload['mailRecipients'] ?? null) ? $payload['mailRecipients'] : [];
     $hasMailRoutesPayload = array_key_exists('mailRecipientRoutes', $employee) && is_array($employee['mailRecipientRoutes']);
     $mailRoutes = $hasMailRoutesPayload ? $employee['mailRecipientRoutes'] : [];
+    $sendInvitation = staff_bool($payload['sendInvitation'] ?? false, false);
+    if (
+        $sendInvitation
+        && auth_environment_from_config($config) === 'production'
+        && !auth_password_reset_delivery_available($config)
+    ) {
+        auth_send_json([
+            'ok' => false,
+            'error' => 'invitation-delivery-unavailable',
+            'message' => 'De medewerker kan wel worden opgeslagen, maar e-mailuitnodigingen zijn nog niet ingeschakeld.',
+        ], 409);
+    }
 
     $createdUser = false;
     $invitationQueued = false;
@@ -667,12 +705,21 @@ if ($action === 'upsert_employee') {
             ], JSON_UNESCAPED_UNICODE),
         ]);
 
-        if ($createdUser && staff_bool($employee['active'] ?? true, true)) {
+        if ($sendInvitation && staff_bool($employee['active'] ?? true, true)) {
             $reset = auth_create_password_reset($pdo, [
                 'id' => $employeeDbUserId, 'email' => $email, 'display_name' => $name,
             ], $config);
+            if ($reset === null) {
+                throw new RuntimeException('Er is recent al een uitnodiging gemaakt. Probeer het later opnieuw.');
+            }
             $invitationQueued = (int)($reset['delivery_id'] ?? 0) > 0;
         }
+
+        $passwordReadyStmt = $pdo->prepare(
+            "SELECT CASE WHEN password_hash IS NOT NULL AND password_hash <> '' THEN 1 ELSE 0 END FROM users WHERE id = :id"
+        );
+        $passwordReadyStmt->execute([':id' => $employeeDbUserId]);
+        $invitationPending = (int)$passwordReadyStmt->fetchColumn() !== 1;
 
         $pdo->commit();
         auth_send_json([
@@ -681,6 +728,7 @@ if ($action === 'upsert_employee') {
             'employee_id' => $employeeDbId,
             'assignment_id' => $assignmentId,
             'invitation_queued' => $invitationQueued,
+            'invitation_pending' => $invitationPending,
         ]);
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) {
