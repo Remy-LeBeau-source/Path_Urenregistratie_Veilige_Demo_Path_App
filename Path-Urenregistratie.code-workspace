@@ -1,0 +1,15 @@
+{
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        "cucumberautocomplete.steps": [
+            "path-urenregistratie/tests/playwright/steps/*.steps.ts"
+        ],
+        "cucumberautocomplete.syncfeatures": "path-urenregistratie/tests/playwright/features/*.feature",
+        "cucumberautocomplete.strictGherkinCompletion": false,
+        "cucumberautocomplete.strictGherkinValidation": false
+    }
+}
