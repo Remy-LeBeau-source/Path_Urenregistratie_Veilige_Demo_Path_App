@@ -103,6 +103,7 @@ test.describe('user management api', () => {
       const res = await postUsers(ctx, { action: 'force_password_change', user_id: employee!.id });
       expect(res.status).toBe(200);
       expect(res.body.ok).toBe(true);
+      expect(res.body.invitation_queued).toBe(false);
 
       // Reset it via reset-password flow so next tests aren't affected.
       const csrf = await getCSRF(ctx);

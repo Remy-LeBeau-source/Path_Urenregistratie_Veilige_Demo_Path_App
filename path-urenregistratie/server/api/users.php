@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../auth/session.php';
 require_once __DIR__ . '/../security/csrf.php';
 require_once __DIR__ . '/../security/validation.php';
+require_once __DIR__ . '/../auth/password-reset-service.php';
 
 header('Content-Type: application/json; charset=utf-8');
 auth_apply_cors_headers(auth_try_load_raw_config(), 'GET, POST, OPTIONS', 'Content-Type, X-CSRF-Token');
@@ -135,19 +136,38 @@ if ($action === 'reactivate') {
 }
 
 if ($action === 'force_password_change') {
-    $pdo->prepare('UPDATE users SET force_password_change = 1 WHERE id = :id')
-        ->execute([':id' => $targetId]);
+    try {
+        $pdo->beginTransaction();
+        $pdo->prepare('UPDATE users SET force_password_change = 1 WHERE id = :id')
+            ->execute([':id' => $targetId]);
+        $reset = auth_create_password_reset($pdo, $target, $config);
+        if (auth_environment_from_config($config) === 'production'
+            && (!$reset || (int)($reset['delivery_id'] ?? 0) <= 0)) {
+            throw new RuntimeException('Password invitation could not be queued.');
+        }
 
-    $pdo->prepare('INSERT INTO audit_log (company_id, actor_user_id, event_type, entity_type, entity_id, event_data)
-                   VALUES (:cid, :actor, :evt, :etype, :eid, :data)')
-        ->execute([
-            ':cid'   => $companyId, ':actor' => $actorId,
-            ':evt'   => 'user.force_password_change', ':etype' => 'user',
-            ':eid'   => (string)$targetId,
-            ':data'  => json_encode(['email' => $target['email']]),
-        ]);
+        $pdo->prepare('INSERT INTO audit_log (company_id, actor_user_id, event_type, entity_type, entity_id, event_data)
+                       VALUES (:cid, :actor, :evt, :etype, :eid, :data)')
+            ->execute([
+                ':cid'   => $companyId, ':actor' => $actorId,
+                ':evt'   => 'user.force_password_change', ':etype' => 'user',
+                ':eid'   => (string)$targetId,
+                ':data'  => json_encode(['email' => $target['email']]),
+            ]);
+        $pdo->commit();
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        auth_send_json(['ok' => false, 'error' => 'password-invitation-failed'], 503);
+    }
 
-    auth_send_json(['ok' => true, 'action' => 'force_password_change', 'user_id' => $targetId]);
+    auth_send_json([
+        'ok' => true,
+        'action' => 'force_password_change',
+        'user_id' => $targetId,
+        'invitation_queued' => (int)($reset['delivery_id'] ?? 0) > 0,
+    ]);
 }
 
 auth_send_json(['ok' => false, 'error' => 'unknown-action',

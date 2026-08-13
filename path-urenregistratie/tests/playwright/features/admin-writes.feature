@@ -17,7 +17,7 @@ Feature: Beheer- en instellingenwijzigingen via API
   @happy
   Scenario: [ADM-WR-H-002] admin kan beheerder server-led aanmaken en wijzigen
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 8
+    # Aantoonbare Playwright-assertions in deze case: 10
     Given beheer- en instellingenwijzigingen via API is voorbereid
     When de flow voor ADM-WR-H-002 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat admin kan beheerder server-led aanmaken en wijzigen
@@ -25,7 +25,7 @@ Feature: Beheer- en instellingenwijzigingen via API
   @happy
   Scenario: [ADM-WR-H-003] admin kan medewerker server-led aanmaken en bootstrap ziet deze terug
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 8
+    # Aantoonbare Playwright-assertions in deze case: 9
     Given beheer- en instellingenwijzigingen via API is voorbereid
     When de flow voor ADM-WR-H-003 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat admin kan medewerker server-led aanmaken en bootstrap ziet deze terug

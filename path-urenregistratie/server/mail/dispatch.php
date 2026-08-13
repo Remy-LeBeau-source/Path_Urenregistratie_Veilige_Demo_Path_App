@@ -160,7 +160,9 @@ function mail_dispatch_delivery(PDO $pdo, array $delivery, array $config): strin
 
         $pdo->prepare(
             'UPDATE email_deliveries
-             SET status = "sent", sent_at = NOW(), last_error = NULL
+             SET status = "sent", sent_at = NOW(), last_error = NULL,
+                 body_snapshot = CASE WHEN channel = "password_reset"
+                    THEN "[beveiligingslink verwijderd na verzending]" ELSE body_snapshot END
              WHERE id = :id AND status = "processing" AND dry_run = 0'
         )->execute([':id' => $deliveryId]);
         return 'sent';
@@ -176,9 +178,12 @@ function mail_dispatch_delivery(PDO $pdo, array $delivery, array $config): strin
         $pdo->prepare(
             'UPDATE email_deliveries
              SET status = :status, attempt_count = :attempts, last_error = :error
+                 , body_snapshot = CASE WHEN channel = "password_reset" AND :scrub_secret = 1
+                    THEN "[beveiligingslink verwijderd na mislukte aflevering]" ELSE body_snapshot END
              WHERE id = :id AND dry_run = 0'
         )->execute([
             ':status' => $status,
+            ':scrub_secret' => $status === 'failed' ? 1 : 0,
             ':attempts' => $attempt,
             ':error' => substr($error->getMessage(), 0, 500),
             ':id' => $deliveryId,
@@ -195,12 +200,25 @@ function mail_dispatch_queued(PDO $pdo, int $companyId, array $config, int $limi
     }
 
     $limit = max(1, min(100, $limit));
+    // Never send an expired password-reset link. Scrub the secret as soon as
+    // its two-hour validity window has passed.
+    $stale = $pdo->prepare(
+        'UPDATE email_deliveries ed
+         JOIN users u ON u.id = ed.user_id
+         SET ed.status = "failed", ed.last_error = "password-reset-link-expired",
+             ed.body_snapshot = "[verlopen beveiligingslink verwijderd]"
+         WHERE ed.channel = "password_reset" AND ed.status = "queued" AND ed.dry_run = 0
+           AND u.company_id = :company_id
+           AND ed.created_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 HOUR)'
+    );
+    $stale->execute([':company_id' => $companyId]);
     $stmt = $pdo->prepare(
         'SELECT ed.*
          FROM email_deliveries ed
-         JOIN invoices i ON i.id = ed.invoice_id
+         LEFT JOIN invoices i ON i.id = ed.invoice_id
+         LEFT JOIN users u ON u.id = ed.user_id
          WHERE ed.status = "queued" AND ed.dry_run = 0
-           AND i.company_id = :company_id
+           AND COALESCE(i.company_id, u.company_id) = :company_id
            AND ed.attempt_count < :max_attempts
          ORDER BY ed.created_at ASC
          LIMIT ' . $limit

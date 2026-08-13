@@ -63,3 +63,11 @@ Feature: Inloggen, uitloggen en sessiebeheer
     Given vijf mislukte pogingen voor hetzelfde account zijn geregistreerd
     When opnieuw via het loginformulier wordt geprobeerd
     Then toont de UI de resterende blokkeertijd en blijft het formulier bruikbaar voor een ander account
+
+  @negative
+  Scenario: [AUTH-N-008] de inlogblokkade en aftelling blijven zichtbaar na herladen
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given het account door vijf mislukte pogingen is geblokkeerd
+    When de pagina met F5 wordt herladen
+    Then blijft de aflopende blokkade zichtbaar en blijft de server leidend

@@ -99,6 +99,7 @@ test.describe('admin write endpoints', () => {
     expect(create.status, JSON.stringify(create.body)).toBe(200);
     expect(create.body.ok).toBe(true);
     expect(Number(create.body.user_id)).toBeGreaterThan(0);
+    expect(create.body.invitation_queued).toBe(false);
 
     const userId = Number(create.body.user_id);
 
@@ -114,6 +115,7 @@ test.describe('admin write endpoints', () => {
 
     expect(update.status, JSON.stringify(update.body)).toBe(200);
     expect(update.body.ok).toBe(true);
+    expect(update.body.invitation_queued).toBe(false);
 
     const bootstrap = await ctx.get('/server/api/bootstrap.php');
     const bootstrapBody = await bootstrap.json();
@@ -178,6 +180,7 @@ test.describe('admin write endpoints', () => {
     expect(write.status, JSON.stringify(write.body)).toBe(200);
     expect(write.body.ok).toBe(true);
     expect(Number(write.body.employee_id)).toBeGreaterThan(0);
+    expect(write.body.invitation_queued).toBe(false);
 
     const bootstrapAfter = await ctx.get('/server/api/bootstrap.php');
     const afterBody = await bootstrapAfter.json();

@@ -1,7 +1,7 @@
 -- Demo-only auth seed for local role tests.
--- Uses an existing bcrypt hash for a local tijdelijke demo-credential.
+-- The seeded demo users are intentionally mapped to the LocalDemo* credentials used by the app and Playwright.
 -- Do not use this pattern for production identities or real passwords.
 
 UPDATE users
-SET password_hash = '$2y$12$9l0stK0LLDLF6EpPc7z9eOfLLvfQwpsKEbjDJdF8dzPH54CEIMxkS'
+SET password_hash = '$2y$12$nhN1FeuN5BltOb9eRgpasOaL6AvXHJZ4.DAPETtSJ3x/ixdtmdxDy'
 WHERE email = 'stasjo@example.invalid';

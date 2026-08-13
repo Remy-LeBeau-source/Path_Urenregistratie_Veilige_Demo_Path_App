@@ -20,7 +20,7 @@ staan onder de genummerde fases verderop in dit document.
 | Fase 1 — Lokale basis | ✅ Klaar | PHP/MySQL/lokale tooling |
 | Fase 2 — Database/server-led state | ✅ Klaar | Alle businesskritische writes server-led; localStorage beperkt tot UI-state |
 | Fase 3 — Read-API | ✅ Klaar | Frontend leest serverdata |
-| Fase 4 — Auth & rollen | ✅ Klaar | Admin/medewerker/sessies |
+| Fase 4 — Auth & rollen | ✅ VS Code-scope klaar | Admin/medewerker/sessies, persistente loginblokkade en eenmalige wachtwoordlinks |
 | Fase 5 — Security | ✅ VS Code-scope klaar | Timeout, sliding session, login-audit, dependency-scan; productieheaders (CORS/CSP/HSTS) later op echt domein |
 | Fase 6 — Playwright/Allure/Living Docs | ✅ Klaar | Testarchitectuur compleet |
 | Fase 7 — CI/CD | ✅ VS Code-scope klaar | Release Pipeline #31654859682 volledig groen; alle gebruikte Actions op Node 24; GitHub-beveiligingsinstellingen later |
@@ -28,7 +28,7 @@ staan onder de genummerde fases verderop in dit document.
 | Fase 9 — Correctie/goedkeuring | ✅ Technisch klaar | Productieacceptatie later |
 | Fase 10 — Klanturenstaat | ✅ VS Code-scope klaar | JPG/PNG → PDF server-side gebouwd en getest (CTS-API-H-005) |
 | Fase 11 — Facturen | ✅ VS Code-scope klaar | Server-side PDF + storage key + geautoriseerde download + inhoudscontrole gebouwd en getest (INV-H-004, INV-N-013) |
-| Fase 12 — Mailqueue | ✅ VS Code-scope klaar | Attachments/retry/max retries/foutstatus al aanwezig en getest; PDF-bijlage nu beschikbaar via Fase 11 |
+| Fase 12 — Mailqueue | ✅ VS Code-scope klaar | Factuurmail en beveiligde accountuitnodigingen via dezelfde fail-closed queue; echte SMTP blijft gated |
 | Fase 13 — Bedrijfsgegevens | ✅ VS Code-scope klaar | Definitieve gegevens/accounts → Fase 16 |
 | Fase 14 — TransIP | ✅ VS Code-scope klaar | Deployment/config → Fase 16 |
 | Fase 15 — Release-hardening | ✅ VS Code-scope klaar | Concurrency, jaarwisseling, uploads, accessibility en PWA-manifest/service worker gebouwd en getest |
@@ -98,13 +98,20 @@ Post-live beheer
   getest; PDF-bijlage nu structureel beschikbaar dankzij Fase 11), Fase 15 (gelijktijdige
   approve-requests door twee beheerders, jaarwisseling december→januari, te grote upload-afwijzing,
   basis toetsenbord-/labelcontrole, PWA-manifest + defensieve service worker).
-- [x] Actuele testinventaris: 161 Playwright + 1 DB = 162 unieke cases en 165 browseruitvoeringen
-  (157 niet-mobiel + 4 mobiele cases x 2 devices).
-- [x] Volledige lokale Playwright-regressie: 164/164 groen, inclusief SAFE-N-007 als
-  fail-closed productieconfiguratiecase en DASH-N-016 voor dezelfde-periode-correctienavigatie.
-  `npm run ci:local`, de 39 gerichte auth/mail/securitytests en DASH-N-007 zijn apart groen bevestigd.
+- [x] Actuele testinventaris: 165 Playwright + 1 DB = 166 unieke cases en 169 browseruitvoeringen
+  (161 niet-mobiel + 4 mobiele cases x 2 devices).
+- [x] Volledige lokale Playwright-regressie: 169/169 groen. Dit omvat de correctieheropening,
+  servergestuurde loginblokkade na F5, eenmalige wachtwoordlink in de GUI, tokenhergebruik,
+  grenswaarden van twaalf tekens en fail-closed productie-/mailconfiguratie.
+  `npm run check`, `npm run test:db:crud`, `npm run security:deps` en `npm run test:gui-smoke`
+  zijn op dezelfde werkboom apart groen bevestigd.
 - [x] Living Documentation-telling wordt uit de uitvoerbare specs berekend en met een expliciete
-  inventarisguard bewaakt. Actueel: 161 Playwright-cases, 1 DB-case, 162 unieke cases en 165 uitvoeringen.
+  inventarisguard bewaakt. Actueel: 165 Playwright-cases, 1 DB-case, 166 unieke cases en 169 uitvoeringen.
+- [x] Accountonboarding is technisch voorbereid: nieuwe beheerders en medewerkers krijgen in productie
+  een persoonlijke, twee uur geldige eenmalige link via de mailqueue; het ruwe token staat niet in
+  HTTP-accesslogs, wordt na verzending/verlopen geschoond en wordt nooit als productiewachtwoord in Git gezet.
+- [x] De 15-minuten-loginblokkade blijft na F5 zichtbaar in de browser, terwijl de server de
+  autoritatieve blokkade en resterende tijd blijft afdwingen.
 - [x] Medewerkercorrectie voor een al goedgekeurde maand is server-led heropenbaar zolang nog geen
   definitieve factuur bestaat; dashboardnavigatie ververst ook een verborgen grid voor dezelfde periode.
 - [-] Productie-URL `https://uren.pathconsultancy.nl/` toont nog v0.9.44. Een push bewijst de release
@@ -145,7 +152,7 @@ Post-live beheer
 
 - [x] Kernbouw en functionele basis zijn aanwezig en lokaal gevalideerd.
 - [x] De meest recente volledige Playwright-regressie is opnieuw volledig groen bewezen:
-  164/164 browseruitvoeringen, inclusief correctieheropening en de fail-closed productieconfiguratorcase.
+  169/169 browseruitvoeringen, inclusief correctieheropening, accountuitnodiging en persistente loginblokkade.
 - [x] DB/infrastructuursmoke aanwezig: DB-H-001 via `node scripts/run-db-crud-smoke.mjs` groen.
 - [x] Lokale automatische Playwright-testdatabase aanwezig: `path_urenregistratie_test` via bootstrap.
 - [x] De checklist is nu bijgewerkt naar de actuele repo- en teststatus; de fase-indeling is intact gebleven.
@@ -164,8 +171,10 @@ Post-live beheer
 
 ### Directe volgende stap
 
-- [x] Volledige eindvalidatie opnieuw gedraaid en bewezen: 161/161 browseruitvoeringen groen;
-  geïsoleerde testdatabase en volledige releasepipeline bevestigd.
+- [-] De lokaal groene accountonboarding-release committen/pushen en de nieuwe Release Pipeline volledig
+  groen volgen. Daarna exact die SHA privé op TransIP klaarzetten; live blijft v0.9.44 totdat
+  productieconfig, migratie 013, backup/rollback, echte accountadressen en expliciete
+  `GO_LIVE_<korte_sha>`-toestemming zijn bevestigd.
 
 ### Nieuwe werklijst (van boven naar beneden)
 

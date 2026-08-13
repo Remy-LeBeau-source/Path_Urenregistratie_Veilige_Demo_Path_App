@@ -151,3 +151,43 @@ test('[AUTH-N-007] vijf mislukte logins tonen een servergestuurde aftelling', as
     await expect(page.locator('#auth-login-submit')).toBeEnabled();
   });
 });
+
+test('[AUTH-N-008] de inlogblokkade en aftelling blijven zichtbaar na herladen', async ({ page }) => {
+  const email = `blocked-refresh-${Date.now()}@example.invalid`;
+  const api = page.context().request;
+
+  await test.step('Given het account door vijf mislukte pogingen is geblokkeerd', async () => {
+    await page.goto(appConfig.baseUrl);
+    const csrfResponse = await api.get('/server/auth/csrf.php');
+    const csrf = await csrfResponse.json();
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const failed = await api.post('/server/auth/login.php', {
+        headers: { 'X-CSRF-Token': csrf.csrf_token },
+        data: { email, password: 'OnjuistWachtwoord!2026' },
+      });
+      expect(failed.status()).toBe(401);
+    }
+    await page.locator('#auth-login-email').fill(email);
+    await page.locator('#auth-login-password').fill('OnjuistWachtwoord!2026');
+    await page.locator('#auth-login-submit').click();
+    await expect(page.locator('#auth-login-feedback')).toContainText('Probeer opnieuw over');
+  });
+
+  await test.step('When de pagina met F5 wordt herladen', async () => {
+    await page.reload();
+  });
+
+  await test.step('Then blijft de aflopende blokkade zichtbaar en blijft de server leidend', async () => {
+    await expect(page.locator('#auth-login-feedback')).toHaveText(
+      /Te veel mislukte inlogpogingen\. Probeer opnieuw over 1[345]:[0-5]\d\./,
+    );
+    const persisted = await page.evaluate(() => JSON.parse(localStorage.getItem('path-auth-login-block-v1') || 'null'));
+    expect(persisted.email).toBe(email);
+    expect(Number(persisted.deadline)).toBeGreaterThan(Date.now());
+    await page.locator('#auth-login-email').fill(email);
+    await page.locator('#auth-login-password').fill('OnjuistWachtwoord!2026');
+    const responsePromise = page.waitForResponse(response => response.url().includes('/server/auth/login.php'));
+    await page.locator('#auth-login-submit').click();
+    expect((await responsePromise).status()).toBe(429);
+  });
+});

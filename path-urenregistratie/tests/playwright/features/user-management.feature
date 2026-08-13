@@ -26,7 +26,7 @@ Feature: Gebruikers en medewerkers beheren
   @happy
   Scenario: [USR-H-003] admin kan force_password_change instellen
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 2
+    # Aantoonbare Playwright-assertions in deze case: 3
     Given een ingelogde admin
     When force_password_change wordt ingesteld voor een medewerker
     Then wordt met Playwright-assertions bevestigd dat admin kan force_password_change instellen

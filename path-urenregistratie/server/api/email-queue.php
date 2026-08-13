@@ -41,13 +41,14 @@ if ($method === 'GET') {
 
     $sql = '
         SELECT
-            ed.id, ed.invoice_id, ed.channel, ed.recipient_email, ed.cc_email,
+            ed.id, ed.user_id, ed.invoice_id, ed.channel, ed.recipient_email, ed.cc_email,
             ed.subject_snapshot, ed.attachment_policy, ed.status,
             ed.attempt_count, ed.dry_run, ed.last_error, ed.sent_at, ed.created_at,
             i.invoice_number
         FROM email_deliveries ed
         LEFT JOIN invoices i ON i.id = ed.invoice_id
-        WHERE i.company_id = :company_id
+        LEFT JOIN users u ON u.id = ed.user_id
+        WHERE COALESCE(i.company_id, u.company_id) = :company_id
     ';
     $params = [':company_id' => $companyId];
 
@@ -64,6 +65,7 @@ if ($method === 'GET') {
     $items = array_map(static function (array $r): array {
         return [
             'id'               => (int)$r['id'],
+            'user_id'          => $r['user_id'] !== null ? (int)$r['user_id'] : null,
             'invoice_id'       => $r['invoice_id'] !== null ? (int)$r['invoice_id'] : null,
             'invoice_number'   => $r['invoice_number'] !== null ? (string)$r['invoice_number'] : null,
             'channel'          => (string)$r['channel'],
@@ -149,6 +151,7 @@ if ($action === 'retry') {
             'forbidden'            => [403, 'Delivery belongs to another company.'],
             'not-failed'           => [409, 'Only failed deliveries can be retried.'],
             'max-attempts-reached' => [409, 'Maximum retry attempts reached for this delivery.'],
+            'reset-reissue-required' => [409, 'Request a new password link instead of retrying an expired security message.'],
         ];
         [$status, $msg] = $map[$code] ?? [500, $code];
         auth_send_json(['ok' => false, 'error' => $code, 'message' => $msg], $status);

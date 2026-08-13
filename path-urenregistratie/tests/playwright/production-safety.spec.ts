@@ -355,6 +355,7 @@ test('[SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed', a
     const dispatch = await readFile(join(root, 'server', 'mail', 'dispatch.php'), 'utf8');
     const preflight = await readFile(join(root, 'server', 'scripts', 'production-preflight.php'), 'utf8');
     const requestReset = await readFile(join(root, 'server', 'auth', 'request-reset.php'), 'utf8');
+    const resetService = await readFile(join(root, 'server', 'auth', 'password-reset-service.php'), 'utf8');
     const provisionAccount = await readFile(join(root, 'server', 'scripts', 'provision-account.php'), 'utf8');
     const configureProduction = await readFile(join(root, 'server', 'scripts', 'configure-production.php'), 'utf8');
     const config = await readFile(join(root, 'server', 'config.example.php'), 'utf8');
@@ -366,10 +367,19 @@ test('[SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed', a
     expect(dispatch).toContain('status = "processing"');
     expect(dispatch).toContain('invoice_and_customer_timesheet');
     expect(preflight).toContain("'writes_performed' => false");
-    expect(requestReset).toContain("$environment !== 'production'");
+    expect(resetService).toContain("auth_environment_from_config($config) === 'production'");
+    expect(resetService).toContain("'/index.html#reset-password='");
+    expect(resetService).toContain("'delivery_available' => auth_password_reset_delivery_available($config)");
+    expect(resetService).toContain('AUTH_PASSWORD_RESET_MAX_REQUESTS = 3');
+    expect(dispatch).toContain('[beveiligingslink verwijderd na verzending]');
     expect(provisionAccount).toContain('Passwords in command arguments are forbidden');
     expect(provisionAccount).toContain('force_password_change = 1');
     expect(provisionAccount).toContain(':password_hash, 1)');
+    expect(provisionAccount).toContain('auth_create_password_reset');
+    expect(provisionAccount).toContain("'invite_queued' => $inviteQueued");
+    expect(provisionAccount).toContain('SMTP relay must be enabled and valid');
+    expect(requestReset).toContain('auth_password_reset_public_response');
+    expect(requestReset).not.toContain("$response['token']");
     expect(configureProduction).toContain('Database passwords in command arguments are forbidden');
     expect(config).toMatch(/'hsts_enabled'\s*=>\s*false/);
     expect(config).toContain('../path-private');

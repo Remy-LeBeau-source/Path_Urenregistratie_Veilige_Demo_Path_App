@@ -38,6 +38,30 @@ Feature: Wachtwoordherstel en misbruikbeveiliging
     When het huidige en een sterk nieuw wachtwoord worden verstuurd
     Then kan het wachtwoord via dezelfde beveiligde flow worden teruggezet
 
+  @happy
+  Scenario: [PWD-H-005] medewerker stelt via een eenmalige e-maillink zelf een wachtwoord in
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given een resetlink voor een actieve medewerker is aangemaakt
+    When de medewerker de link opent en tweemaal hetzelfde sterke wachtwoord invult
+    Then is het wachtwoord gewijzigd en kan dezelfde link niet opnieuw worden gebruikt
+
+  @negative
+  Scenario: [PWD-N-010] twee verschillende wachtwoorden worden in de GUI niet verstuurd
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given een syntactisch geldige eenmalige resetlink is geopend
+    When twee verschillende sterke wachtwoorden worden ingevuld
+    Then blijft de gebruiker op het formulier met een duidelijke validatiemelding
+
+  @negative
+  Scenario: [PWD-N-011] elf tekens ligt onder de wachtwoordgrens van twaalf
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given wachtwoordherstel en misbruikbeveiliging is voorbereid
+    When de flow voor PWD-N-011 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat elf tekens ligt onder de wachtwoordgrens van twaalf
+
   @negative
   Scenario: [PWD-N-004] reset-password met ongeldig token geeft 400
     # Testtechniek: Toestandsovergang
@@ -47,12 +71,12 @@ Feature: Wachtwoordherstel en misbruikbeveiliging
     Then wordt met Playwright-assertions bevestigd dat reset-password met ongeldig token geeft 400
 
   @negative
-  Scenario: [PWD-N-005] reset-password met te kort wachtwoord geeft 400
-    # Testtechniek: Grenswaardenanalyse
+  Scenario: [PWD-N-005] reset-password onder twaalf tekens geeft 400
+    # Testtechniek: Toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 2
     Given een geldig reset-token
-    When reset-password wordt aangeroepen met wachtwoord korter dan 8 tekens
-    Then wordt met Playwright-assertions bevestigd dat reset-password met te kort wachtwoord geeft 400
+    When reset-password wordt aangeroepen met een wachtwoord onder twaalf tekens
+    Then wordt met Playwright-assertions bevestigd dat reset-password onder twaalf tekens geeft 400
 
   @negative
   Scenario: [PWD-N-006] hergebruik van al-gebruikt token geeft 409

@@ -106,6 +106,10 @@ function migration_plan(bool $allowDemoMigrations): array
         'id' => '012_invoice_company_identity.sql',
         'path' => __DIR__ . '/migrations/012_invoice_company_identity.sql',
     ];
+    $plan[] = [
+        'id' => '013_password_reset_delivery.sql',
+        'path' => __DIR__ . '/migrations/013_password_reset_delivery.sql',
+    ];
 
     return $plan;
 }

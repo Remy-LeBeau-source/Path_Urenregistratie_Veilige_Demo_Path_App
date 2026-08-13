@@ -29,6 +29,7 @@ try {
     $requiredFiles = [
         dirname(__DIR__) . '/migrations/011_mail_bundle_attachment_policy.sql',
         dirname(__DIR__) . '/migrations/012_invoice_company_identity.sql',
+        dirname(__DIR__) . '/migrations/013_password_reset_delivery.sql',
         __DIR__ . '/mail-dispatch.php',
         __DIR__ . '/database-backup.php',
         __DIR__ . '/database-restore.php',

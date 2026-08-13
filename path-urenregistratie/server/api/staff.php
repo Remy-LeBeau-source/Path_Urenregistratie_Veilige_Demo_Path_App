@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../auth/session.php';
 require_once __DIR__ . '/../security/csrf.php';
 require_once __DIR__ . '/../security/validation.php';
+require_once __DIR__ . '/../auth/password-reset-service.php';
 
 header('Content-Type: application/json; charset=utf-8');
 auth_apply_cors_headers(auth_try_load_raw_config(), 'POST, OPTIONS', 'Content-Type, X-CSRF-Token');
@@ -276,6 +277,8 @@ if ($action === 'upsert_admin') {
     $active = staff_bool($admin['active'] ?? true, true) ? 1 : 0;
     $dbUserId = (int)($admin['dbUserId'] ?? 0);
 
+    $createdUser = false;
+    $invitationQueued = false;
     try {
         $pdo->beginTransaction();
 
@@ -307,9 +310,10 @@ if ($action === 'upsert_admin') {
                 throw new RuntimeException('Admin user was not found in company scope.');
             }
         } else {
+            $createdUser = true;
             $insert = $pdo->prepare(
-                'INSERT INTO users (company_id, email, display_name, role, active)
-                 VALUES (:company_id, :email, :display_name, :role, :active)'
+                'INSERT INTO users (company_id, email, display_name, role, active, force_password_change)
+                 VALUES (:company_id, :email, :display_name, :role, :active, 1)'
             );
             $insert->execute([
                 ':company_id' => $companyId,
@@ -334,8 +338,15 @@ if ($action === 'upsert_admin') {
             ':event_data' => json_encode(['email' => $email, 'display_name' => $name, 'active' => $active === 1], JSON_UNESCAPED_UNICODE),
         ]);
 
+        if ($createdUser && $active === 1) {
+            $reset = auth_create_password_reset($pdo, [
+                'id' => $dbUserId, 'email' => $email, 'display_name' => $name,
+            ], $config);
+            $invitationQueued = (int)($reset['delivery_id'] ?? 0) > 0;
+        }
+
         $pdo->commit();
-        auth_send_json(['ok' => true, 'user_id' => $dbUserId]);
+        auth_send_json(['ok' => true, 'user_id' => $dbUserId, 'invitation_queued' => $invitationQueued]);
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
@@ -382,6 +393,8 @@ if ($action === 'upsert_employee') {
     $hasMailRoutesPayload = array_key_exists('mailRecipientRoutes', $employee) && is_array($employee['mailRecipientRoutes']);
     $mailRoutes = $hasMailRoutesPayload ? $employee['mailRecipientRoutes'] : [];
 
+    $createdUser = false;
+    $invitationQueued = false;
     try {
         $pdo->beginTransaction();
 
@@ -415,9 +428,10 @@ if ($action === 'upsert_employee') {
                 throw new RuntimeException('Employee user was not found in company scope.');
             }
         } else {
+            $createdUser = true;
             $insertUser = $pdo->prepare(
-                'INSERT INTO users (company_id, email, display_name, role, active)
-                 VALUES (:company_id, :email, :display_name, :role, :active)'
+                'INSERT INTO users (company_id, email, display_name, role, active, force_password_change)
+                 VALUES (:company_id, :email, :display_name, :role, :active, 1)'
             );
             $insertUser->execute([
                 ':company_id' => $companyId,
@@ -653,12 +667,20 @@ if ($action === 'upsert_employee') {
             ], JSON_UNESCAPED_UNICODE),
         ]);
 
+        if ($createdUser && staff_bool($employee['active'] ?? true, true)) {
+            $reset = auth_create_password_reset($pdo, [
+                'id' => $employeeDbUserId, 'email' => $email, 'display_name' => $name,
+            ], $config);
+            $invitationQueued = (int)($reset['delivery_id'] ?? 0) > 0;
+        }
+
         $pdo->commit();
         auth_send_json([
             'ok' => true,
             'user_id' => $employeeDbUserId,
             'employee_id' => $employeeDbId,
             'assignment_id' => $assignmentId,
+            'invitation_queued' => $invitationQueued,
         ]);
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) {

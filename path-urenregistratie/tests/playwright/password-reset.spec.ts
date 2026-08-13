@@ -141,6 +141,82 @@ test.describe('password reset api', () => {
     }
   });
 
+  test('[PWD-H-005] medewerker stelt via een eenmalige e-maillink zelf een wachtwoord in', async ({ page }) => {
+    const ctx = page.context().request;
+    const originalPassword = requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD');
+    const temporaryPassword = 'NieuweToegang!2026';
+    let changed = false;
+
+    try {
+      let token = '';
+      await test.step('Given een resetlink voor een actieve medewerker is aangemaakt', async () => {
+        const tokenRes = await postAuth(ctx, '/server/auth/request-reset.php', { email: appConfig.employeeEmail });
+        expect(tokenRes.status).toBe(200);
+        expect(tokenRes.body.ok).toBe(true);
+        expect(tokenRes.body.token).toMatch(/^[a-f0-9]{64}$/);
+        token = tokenRes.body.token as string;
+      });
+
+      await test.step('When de medewerker de link opent en tweemaal hetzelfde sterke wachtwoord invult', async () => {
+        await page.goto(`${appConfig.baseUrl}/index.html#reset-password=${token}`);
+        await expect(page).not.toHaveURL(/reset-password=/);
+        await expect(page.locator('#auth-reset-complete-form')).toBeVisible();
+        await page.locator('#auth-reset-new-password').fill(temporaryPassword);
+        await page.locator('#auth-reset-confirm-password').fill(temporaryPassword);
+        await page.locator('#auth-reset-complete-submit').click();
+      });
+
+      await test.step('Then is het wachtwoord gewijzigd en kan dezelfde link niet opnieuw worden gebruikt', async () => {
+        await expect(page.locator('#auth-reset-complete-feedback')).toHaveText('Je wachtwoord is ingesteld. Je kunt nu inloggen.');
+        changed = true;
+        const reused = await postAuth(ctx, '/server/auth/reset-password.php', { token, new_password: temporaryPassword });
+        expect(reused.status).toBe(409);
+        expect(reused.body.error).toBe('token-already-used');
+      });
+    } finally {
+      if (changed) {
+        const restoreToken = await postAuth(ctx, '/server/auth/request-reset.php', { email: appConfig.employeeEmail });
+        if (typeof restoreToken.body.token === 'string') {
+          await postAuth(ctx, '/server/auth/reset-password.php', {
+            token: restoreToken.body.token,
+            new_password: originalPassword,
+          });
+        }
+      }
+    }
+  });
+
+  test('[PWD-N-010] twee verschillende wachtwoorden worden in de GUI niet verstuurd', async ({ page }) => {
+    await test.step('Given een syntactisch geldige eenmalige resetlink is geopend', async () => {
+      await page.goto(`${appConfig.baseUrl}/index.html#reset-password=${'a'.repeat(64)}`);
+      await expect(page.locator('#auth-reset-complete-form')).toBeVisible();
+    });
+
+    await test.step('When twee verschillende sterke wachtwoorden worden ingevuld', async () => {
+      await page.locator('#auth-reset-new-password').fill('SterkWachtwoord!1');
+      await page.locator('#auth-reset-confirm-password').fill('SterkWachtwoord!2');
+      await page.locator('#auth-reset-complete-submit').click();
+    });
+
+    await test.step('Then blijft de gebruiker op het formulier met een duidelijke validatiemelding', async () => {
+      await expect(page.locator('#auth-reset-complete-feedback')).toHaveText('De wachtwoorden zijn niet gelijk.');
+      await expect(page.locator('#auth-reset-complete-form')).toBeVisible();
+      await expect(page.locator('#auth-reset-complete-submit')).toBeEnabled();
+    });
+  });
+
+  test('[PWD-N-011] elf tekens ligt onder de wachtwoordgrens van twaalf', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const tokenRes = await postAuth(ctx, '/server/auth/request-reset.php', { email: appConfig.adminEmail });
+    const response = await postAuth(ctx, '/server/auth/reset-password.php', {
+      token: tokenRes.body.token as string,
+      new_password: '12345678901',
+    });
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('password-too-short');
+    await ctx.dispose();
+  });
+
   test('[PWD-N-004] reset-password met ongeldig token geeft 400', async () => {
     const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
 
@@ -156,12 +232,12 @@ test.describe('password reset api', () => {
     await ctx.dispose();
   });
 
-  test('[PWD-N-005] reset-password met te kort wachtwoord geeft 400', async () => {
+  test('[PWD-N-005] reset-password onder twaalf tekens geeft 400', async () => {
     const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
 
     await test.step('Given een geldig reset-token', async () => {});
 
-    await test.step('When reset-password wordt aangeroepen met wachtwoord korter dan 8 tekens', async () => {
+    await test.step('When reset-password wordt aangeroepen met een wachtwoord onder twaalf tekens', async () => {
       const tokenRes = await postAuth(ctx, '/server/auth/request-reset.php', { email: appConfig.adminEmail });
       const token = tokenRes.body.token as string;
 

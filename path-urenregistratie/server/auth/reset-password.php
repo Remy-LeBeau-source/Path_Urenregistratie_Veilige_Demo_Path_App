@@ -18,9 +18,9 @@ security_require_csrf_token();
 $rawToken    = security_require_string_field($input, 'token', 'token is required', 256);
 $newPassword = security_require_string_field($input, 'new_password', 'new_password is required', 1024);
 
-if (strlen($newPassword) < 8) {
+if (strlen($newPassword) < 12) {
     auth_send_json(['ok' => false, 'error' => 'password-too-short',
-        'message' => 'Password must be at least 8 characters.'], 400);
+        'message' => 'Password must be at least 12 characters.'], 400);
 }
 
 $tokenHash = hash('sha256', $rawToken);

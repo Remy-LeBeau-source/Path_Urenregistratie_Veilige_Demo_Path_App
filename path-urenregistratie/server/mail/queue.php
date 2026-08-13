@@ -343,9 +343,11 @@ function mail_enqueue_for_invoice(
 function mail_retry_delivery(PDO $pdo, int $deliveryId, int $companyId, int $actorUserId): array
 {
     $stmt = $pdo->prepare(
-        'SELECT ed.id, ed.status, ed.attempt_count, ed.channel, ed.dry_run, i.company_id AS invoice_company_id
+        'SELECT ed.id, ed.status, ed.attempt_count, ed.channel, ed.dry_run,
+                COALESCE(i.company_id, u.company_id) AS delivery_company_id
          FROM email_deliveries ed
          LEFT JOIN invoices i ON i.id = ed.invoice_id
+         LEFT JOIN users u ON u.id = ed.user_id
          WHERE ed.id = :id'
     );
     $stmt->execute([':id' => $deliveryId]);
@@ -354,8 +356,11 @@ function mail_retry_delivery(PDO $pdo, int $deliveryId, int $companyId, int $act
     if (!$delivery) {
         throw new \RuntimeException('delivery-not-found');
     }
-    if ((int)$delivery['invoice_company_id'] !== $companyId) {
+    if ((int)$delivery['delivery_company_id'] !== $companyId) {
         throw new \RuntimeException('forbidden');
+    }
+    if ((string)$delivery['channel'] === 'password_reset') {
+        throw new \RuntimeException('reset-reissue-required');
     }
     if ((string)$delivery['status'] !== 'failed') {
         throw new \RuntimeException('not-failed');

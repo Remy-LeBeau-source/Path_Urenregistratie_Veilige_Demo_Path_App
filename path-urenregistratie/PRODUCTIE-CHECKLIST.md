@@ -19,6 +19,9 @@ Dit is een levende checklist. Bevestigde punten worden uit **Nog te beslissen** 
 - Path heeft de factuurnummering bevestigd: de nummers gebruiken koppeltekens zonder spaties, per medewerker blijft het vaste patroon gelijk en bij een nieuwe periode veranderen automatisch alleen maand en jaar. In januari 2027 wordt bijvoorbeeld `Bel-Shawn-2027-januari` gebruikt.
 - Voor Shawn/Circle8 zijn overeenkomstnummer, crediteurennummer, nummer opdrachtuitvoerder en het bestaande factuurnummervoorbeeld ingevoerd.
 - Gio en Joyce zijn de beoogde beheerders.
+- Nieuwe beheerders en medewerkers ontvangen in productie een persoonlijke eenmalige link om zelf een
+  wachtwoord van minimaal twaalf tekens in te stellen. Tijdelijke of productie-wachtwoorden worden niet
+  in Git, tests of de applicatiebron opgeslagen.
 - `backoffice@pathconsultancy.nl` is het bevestigde hulpadres voor vragen die de ingebouwde hulp niet kan beantwoorden.
 - Iedere medewerker dient precies één gekozen maand in en ziet alleen de eigen uren.
 - Oudere onvoltooide maanden blijven op het dashboard staan totdat uren, correcties, klantdocumenten en alle gekozen verzendroutes zijn afgerond. Directe beheertaken staan over alle maanden in één lijst, wachten op medewerkers wordt apart geteld en iedere taak verwerkt altijd maar één medewerker en maand.
@@ -75,6 +78,8 @@ Afwijkende brokerteksten hoeven alleen te worden aangeleverd wanneer een broker 
 - Alleen geregistreerde domeinafzenders; From `backoffice@pathconsultancy.nl`.
 - SPF, DKIM en DMARC extern controleren voordat echte mail wordt geactiveerd.
 - Eerst de offline preflight en Bundel 3 uitvoeren; `mail.enabled` blijft tot expliciete toestemming `false`.
+- Accountuitnodigingen en wachtwoordherstel gebruiken dezelfde gecontroleerde mailqueue. Zonder geldige,
+  expliciet ingeschakelde relay wordt in productie geen accountwijziging met een onverzendbare uitnodiging opgeslagen.
 
 ## Acceptatie vóór livegang
 

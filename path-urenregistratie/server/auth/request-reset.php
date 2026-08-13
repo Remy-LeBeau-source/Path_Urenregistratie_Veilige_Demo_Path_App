@@ -5,6 +5,7 @@ declare(strict_types=1);
 require __DIR__ . '/session.php';
 require __DIR__ . '/../security/csrf.php';
 require __DIR__ . '/../security/validation.php';
+require __DIR__ . '/password-reset-service.php';
 
 auth_require_method('POST');
 
@@ -17,44 +18,31 @@ security_require_csrf_token();
 $email = security_require_email_field($input, 'email');
 
 // Always return ok=true to prevent email enumeration.
-$stmt = $pdo->prepare('SELECT id, company_id, active FROM users WHERE email = :email LIMIT 1');
+$stmt = $pdo->prepare('SELECT id, company_id, email, display_name, role, active FROM users WHERE email = :email LIMIT 1');
 $stmt->execute([':email' => $email]);
 $user = $stmt->fetch();
 
 if (!$user || (int)$user['active'] !== 1) {
-    auth_send_json(['ok' => true, 'dry_run' => true]);
+    auth_send_json(auth_password_reset_public_response($config));
 }
 
-// Revoke any existing unused tokens for this user.
-$pdo->prepare('UPDATE password_reset_tokens SET used_at = CURRENT_TIMESTAMP WHERE user_id = :uid AND used_at IS NULL')
-    ->execute([':uid' => (int)$user['id']]);
-
-// Generate cryptographically secure token; store only its SHA-256 hash.
-$rawToken   = bin2hex(random_bytes(32));
-$tokenHash  = hash('sha256', $rawToken);
-$expiresAt  = (new DateTimeImmutable('+2 hours', new DateTimeZone('UTC')))->format('Y-m-d H:i:s');
-
-$pdo->prepare(
-    'INSERT INTO password_reset_tokens (user_id, token_hash, expires_at) VALUES (:uid, :hash, :exp)'
-)->execute([':uid' => (int)$user['id'], ':hash' => $tokenHash, ':exp' => $expiresAt]);
+$reset = null;
+try {
+    // In production, do not create a token unless it can be queued atomically.
+    if (auth_environment_from_config($config) !== 'production' || auth_password_reset_delivery_available($config)) {
+        $reset = auth_create_password_reset($pdo, $user, $config);
+    }
+} catch (Throwable $error) {
+    error_log('Password-reset request could not be queued: ' . $error->getMessage());
+}
 
 // Audit without logging the token itself.
 auth_log_event($pdo, (int)$user['company_id'], (int)$user['id'], $email, 'login', 'success', 'password-reset-requested');
 
-// Raw reset tokens are test conveniences and must never leave a production server.
-$environment = auth_environment_from_config($config);
-$isDryRun = $environment !== 'production' && !(bool)($config['mail']['enabled'] ?? false);
-
-// In demo/dev: return token so tests can proceed without a real mailer.
-// In production: remove 'token' from response and queue the email instead.
-$response = [
-    'ok' => true,
-    'dry_run' => $isDryRun,
-    'delivery_available' => false,
-    'expires_at' => $expiresAt,
-];
-if ($isDryRun) {
-    $response['token'] = $rawToken;
-}
-
-auth_send_json($response);
+// Raw tokens are a local/test convenience only. Production always returns the
+// same generic service-level response for known and unknown addresses.
+auth_send_json(auth_password_reset_public_response(
+    $config,
+    $reset['token'] ?? null,
+    $reset['expires_at'] ?? null
+));

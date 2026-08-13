@@ -1544,6 +1544,9 @@ const dispatchSrc = readFileSync_(new URL("../server/mail/dispatch.php", import.
 const mailPreflightSrc = readFileSync_(new URL("../server/scripts/mail-preflight.php", import.meta.url), "utf8");
 const productionPreflightSrc = readFileSync_(new URL("../server/scripts/production-preflight.php", import.meta.url), "utf8");
 const invoiceIdentityMigrationSrc = readFileSync_(new URL("../server/migrations/012_invoice_company_identity.sql", import.meta.url), "utf8");
+const passwordResetMigrationSrc = readFileSync_(new URL("../server/migrations/013_password_reset_delivery.sql", import.meta.url), "utf8");
+const passwordResetServiceSrc = readFileSync_(new URL("../server/auth/password-reset-service.php", import.meta.url), "utf8");
+const requestResetSrc = readFileSync_(new URL("../server/auth/request-reset.php", import.meta.url), "utf8");
 const backupSrc = readFileSync_(new URL("../server/scripts/database-backup.php", import.meta.url), "utf8");
 const restoreSrc = readFileSync_(new URL("../server/scripts/database-restore.php", import.meta.url), "utf8");
 const rotateLogsSrc = readFileSync_(new URL("../server/scripts/rotate-logs.php", import.meta.url), "utf8");
@@ -1567,8 +1570,11 @@ assert(dispatchSrc.includes('status = \"processing\"') && dispatchSrc.includes("
 assert(mailPreflightSrc.includes("network_connections' => 0") && mailPreflightSrc.includes("payroll_zero_attachments"), "Mailpreflight moet offline de drie bijlagecontracten controleren");
 assert(productionPreflightSrc.includes("writes_performed' => false") && productionPreflightSrc.includes("hsts_prepared_but_disabled"), "Productiepreflight moet niet-mutatief de securityconfig controleren");
 assert(invoiceIdentityMigrationSrc.includes("invoice_name_display") && invoiceIdentityMigrationSrc.includes("invoice_phone") && invoiceIdentityMigrationSrc.includes("invoice_email"), "De factuuridentiteit moet via een expliciete databasemigratie worden opgeslagen");
+assert(passwordResetMigrationSrc.includes("password_reset") && passwordResetMigrationSrc.includes("fk_email_deliveries_user"), "Beveiligingsmails moeten zonder factuurkoppeling aan de juiste organisatiegebruiker hangen");
+assert(passwordResetServiceSrc.includes("#reset-password=") && passwordResetServiceSrc.includes("AUTH_PASSWORD_RESET_MAX_REQUESTS = 3") && requestResetSrc.includes("auth_password_reset_public_response"), "Resetlinks moeten logveilig, eenmalig voorbereid, begrensd en enumeration-safe zijn");
+assert(dispatchSrc.includes("password-reset-link-expired") && dispatchSrc.includes("beveiligingslink verwijderd na verzending"), "Verlopen of verzonden resetlinks moeten uit de mailqueue worden gewist");
 assert(backupSrc.includes("--single-transaction") && restoreSrc.includes("RESTORE_") && rotateLogsSrc.includes("retention_days"), "Backup, herstelbevestiging en logretentie moeten operationeel voorbereid zijn");
-assert(provisionAccountSrc.includes("Passwords in command arguments are forbidden") && provisionAccountSrc.includes("force_password_change = 1") && provisionAccountSrc.includes(":password_hash, 1)") && changePasswordSrc.includes("current_password") && changePasswordSrc.includes("force_password_change = 0"), "Productieaccounts moeten zonder wachtwoordargument, met verplichte eerste wijziging en met een eigen wijzigingsflow worden beheerd");
+assert(provisionAccountSrc.includes("Passwords in command arguments are forbidden") && provisionAccountSrc.includes("force_password_change = 1") && provisionAccountSrc.includes(":password_hash, 1)") && provisionAccountSrc.includes("auth_create_password_reset") && changePasswordSrc.includes("current_password") && changePasswordSrc.includes("force_password_change = 0"), "Productieaccounts moeten zonder wachtwoordargument, met persoonlijke uitnodiging, verplichte eerste wijziging en een eigen wijzigingsflow worden beheerd");
 assert(configureProductionSrc.includes("Database passwords in command arguments are forbidden") && configureProductionSrc.includes("SELECT 1") && configureProductionSrc.includes("chmod($configPath, 0600)"), "Productieconfiguratie moet secrets interactief verwerken, read-only valideren en met 0600 installeren");
 assert(rootHtaccessSrc.includes("Content-Security-Policy") && rootHtaccessSrc.includes("RewriteCond %{HTTPS} !=on") && /^\s*# Header always set Strict-Transport-Security/m.test(rootHtaccessSrc), "De publieke app moet HTTPS/CSP afdwingen terwijl HSTS voorbereid maar uitgeschakeld blijft");
 assert(playwrightRunnerSrc.includes("url.hostname === 'localhost'") && playwrightRunnerSrc.includes("url.hostname = '127.0.0.1'") && playwrightRunnerSrc.includes("PATH_APP_BASE_URL: baseUrl"), "De Playwright-runner moet browsers en de beheerde PHP-server op dezelfde IPv4-origin houden");
@@ -1576,4 +1582,5 @@ assert(playwrightDbBootstrapSrc.includes("namedTestDatabase") && playwrightDbBoo
 assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("isolatedCiDatabase") && dbCrudSmokeSrc.includes("DB CRUD smoke is not allowed"), "De DB CRUD-smoke moet fail-closed buiten een test- of geïsoleerde CI-database");
 assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Playwright stage- en lokale env-bestanden mogen expliciete runner/CI-variabelen niet overschrijven");
 
+dom.window.close();
 console.log("Path v0.9.48 volledige smoke test: geslaagd");

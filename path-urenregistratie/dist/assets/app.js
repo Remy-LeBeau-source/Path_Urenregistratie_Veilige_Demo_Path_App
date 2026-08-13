@@ -1278,6 +1278,8 @@ const authRuntime = {
 };
 
 let authLoginCountdownTimer = null;
+const AUTH_LOGIN_BLOCK_STORAGE_KEY = "path-auth-login-block-v1";
+let pendingPasswordResetToken = "";
 
 const AUTH_ALWAYS_SHOW_LOGIN_PICKER = true;
 
@@ -1338,20 +1340,28 @@ function setAuthLoginFeedback(message, isError) {
   element.style.color = isError ? "#9b1c1c" : "";
 }
 
-function clearAuthLoginCountdown() {
+function clearAuthLoginCountdown(forgetStoredDeadline = true) {
   if (authLoginCountdownTimer !== null) {
     window.clearInterval(authLoginCountdownTimer);
     authLoginCountdownTimer = null;
   }
+  if (forgetStoredDeadline) {
+    try { window.localStorage.removeItem(AUTH_LOGIN_BLOCK_STORAGE_KEY); } catch (_error) { /* storage can be unavailable */ }
+  }
 }
 
-function setAuthLoginCountdown(seconds) {
-  clearAuthLoginCountdown();
-  const deadline = Date.now() + Math.max(1, Number(seconds) || 1) * 1000;
+function setAuthLoginCountdown(seconds, email = "", storedDeadline = 0) {
+  clearAuthLoginCountdown(false);
+  const deadline = storedDeadline > Date.now()
+    ? storedDeadline
+    : Date.now() + Math.max(1, Number(seconds) || 1) * 1000;
+  try {
+    window.localStorage.setItem(AUTH_LOGIN_BLOCK_STORAGE_KEY, JSON.stringify({ deadline, email: String(email || "").toLowerCase() }));
+  } catch (_error) { /* server-side enforcement remains authoritative */ }
   const render = () => {
     const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
     if (remaining <= 0) {
-      clearAuthLoginCountdown();
+      clearAuthLoginCountdown(true);
       setAuthLoginFeedback("Je kunt nu opnieuw proberen in te loggen.", false);
       return;
     }
@@ -1361,6 +1371,41 @@ function setAuthLoginCountdown(seconds) {
   };
   render();
   authLoginCountdownTimer = window.setInterval(render, 1000);
+}
+
+function restoreAuthLoginCountdown() {
+  try {
+    const saved = JSON.parse(window.localStorage.getItem(AUTH_LOGIN_BLOCK_STORAGE_KEY) || "null");
+    const deadline = Number(saved && saved.deadline || 0);
+    if (deadline > Date.now()) {
+      setAuthLoginCountdown(0, String(saved.email || ""), deadline);
+    } else if (saved) {
+      window.localStorage.removeItem(AUTH_LOGIN_BLOCK_STORAGE_KEY);
+    }
+  } catch (_error) {
+    try { window.localStorage.removeItem(AUTH_LOGIN_BLOCK_STORAGE_KEY); } catch (_ignored) { /* no-op */ }
+  }
+}
+
+function showPasswordResetForm() {
+  document.querySelector("#local-account-login-tools").hidden = true;
+  document.querySelector("#auth-login-form").hidden = true;
+  document.querySelector("#auth-forgot-password").hidden = true;
+  document.querySelector("#auth-reset-form").hidden = true;
+  document.querySelector("#auth-reset-complete-form").hidden = false;
+  document.querySelector("#auth-reset-new-password")?.focus();
+}
+
+function consumePasswordResetFragment() {
+  const prefix = "#reset-password=";
+  if (!window.location.hash.startsWith(prefix)) return false;
+  const token = window.location.hash.slice(prefix.length);
+  // Remove the secret from history/address bar before rendering or calling APIs.
+  window.history.replaceState(null, "", window.location.pathname + window.location.search);
+  if (!/^[a-f0-9]{64}$/i.test(token)) return false;
+  pendingPasswordResetToken = token;
+  showPasswordResetForm();
+  return true;
 }
 
 function setDemoLoginEnabled(enabled) {
@@ -9192,7 +9237,7 @@ document.querySelector("#auth-login-form")?.addEventListener("submit", event => 
   }
 
   setAuthLoginEnabled(false);
-  clearAuthLoginCountdown();
+  clearAuthLoginCountdown(false);
   setAuthLoginFeedback("Inloggen...", false);
 
   requestAuthLogin(email, password)
@@ -9201,7 +9246,7 @@ document.querySelector("#auth-login-form")?.addEventListener("submit", event => 
         const message = String(result && result.data && result.data.message || "Inloggen mislukt.");
         setAuthDebug({ authenticated: false, role: "", user_id: null, mode: "auth", available: true, error: "login-failed" });
         if (result && result.data && result.data.error === "too-many-attempts") {
-          setAuthLoginCountdown(result.data.retry_after_seconds);
+          setAuthLoginCountdown(result.data.retry_after_seconds, email);
         } else {
           setAuthLoginFeedback(message, true);
         }
@@ -9286,6 +9331,57 @@ document.querySelector("#auth-reset-submit")?.addEventListener("click", () => {
     }).catch(() => { if (feedback) feedback.textContent = "Verbindingsfout. Probeer opnieuw."; })
   );
 });
+document.querySelector("#auth-reset-complete-form")?.addEventListener("submit", event => {
+  event.preventDefault();
+  const password = String(document.querySelector("#auth-reset-new-password")?.value || "");
+  const confirmation = String(document.querySelector("#auth-reset-confirm-password")?.value || "");
+  const feedback = document.querySelector("#auth-reset-complete-feedback");
+  const showFeedback = (message, isError = true) => {
+    if (!feedback) return;
+    feedback.hidden = false;
+    feedback.textContent = message;
+    feedback.style.color = isError ? "#9b1c1c" : "";
+  };
+  if (password.length < 12) {
+    showFeedback("Gebruik minimaal 12 tekens.");
+    return;
+  }
+  if (password !== confirmation) {
+    showFeedback("De wachtwoorden zijn niet gelijk.");
+    return;
+  }
+  if (!pendingPasswordResetToken) {
+    showFeedback("Deze resetlink is ongeldig. Vraag een nieuwe link aan.");
+    return;
+  }
+  showFeedback("Wachtwoord wordt ingesteld...", false);
+  requestAuthCsrf().then(token => fetch("/server/auth/reset-password.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
+    body: JSON.stringify({ token: pendingPasswordResetToken, new_password: password })
+  })).then(async response => ({ ok: response.ok, data: await response.json() }))
+    .then(result => {
+      if (!result.ok || result.data.ok !== true) throw new Error(String(result.data.error || "reset-failed"));
+      pendingPasswordResetToken = "";
+      document.querySelector("#auth-reset-new-password").value = "";
+      document.querySelector("#auth-reset-confirm-password").value = "";
+      showFeedback("Je wachtwoord is ingesteld. Je kunt nu inloggen.", false);
+      document.querySelector("#auth-reset-complete-submit").disabled = true;
+      window.setTimeout(() => {
+        document.querySelector("#auth-reset-complete-form").hidden = true;
+        document.querySelector("#auth-login-form").hidden = false;
+        document.querySelector("#auth-forgot-password").hidden = false;
+        document.querySelector("#auth-login-email")?.focus();
+      }, 900);
+    })
+    .catch(error => {
+      const code = String(error && error.message || "");
+      const message = code === "token-already-used" ? "Deze link is al gebruikt. Vraag een nieuwe link aan."
+        : code === "token-expired" ? "Deze link is verlopen. Vraag een nieuwe link aan."
+        : "De link is ongeldig of verlopen. Vraag een nieuwe link aan.";
+      showFeedback(message);
+    });
+});
 document.querySelector("#switch-role").addEventListener("click", logout);
 document.querySelector("#mobile-switch-role").addEventListener("click", logout);
 document.querySelector("#modal-close").addEventListener("click", closeModal);
@@ -9322,5 +9418,9 @@ initializeReminderChoiceMenus();
 initializeStandardChoiceMenus();
 populateSettings();
 renderAll();
-initializeAuthSession();
+const passwordResetLinkActive = consumePasswordResetFragment();
+initializeAuthSession().finally(() => {
+  if (passwordResetLinkActive) showPasswordResetForm();
+  restoreAuthLoginCountdown();
+});
 prefillAuthCredentialsFromSelection("admin", false);

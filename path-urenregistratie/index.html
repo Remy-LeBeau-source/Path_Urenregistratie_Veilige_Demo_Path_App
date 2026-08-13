@@ -68,6 +68,16 @@
         <button class="button button-ghost" id="auth-reset-cancel" type="button">Terug naar inloggen</button>
         <p id="auth-reset-feedback" hidden></p>
       </div>
+      <form id="auth-reset-complete-form" aria-label="Nieuw wachtwoord instellen" hidden>
+        <h2>Stel je wachtwoord in</h2>
+        <p>Deze persoonlijke link kan één keer worden gebruikt.</p>
+        <label for="auth-reset-new-password">Nieuw wachtwoord</label>
+        <input id="auth-reset-new-password" name="new_password" type="password" autocomplete="new-password" minlength="12" required>
+        <label for="auth-reset-confirm-password">Herhaal nieuw wachtwoord</label>
+        <input id="auth-reset-confirm-password" name="confirm_password" type="password" autocomplete="new-password" minlength="12" required>
+        <button class="button button-primary" id="auth-reset-complete-submit" type="submit">Wachtwoord instellen</button>
+        <p id="auth-reset-complete-feedback" role="status" aria-live="polite" hidden></p>
+      </form>
       <p class="login-note" id="auth-mode-indicator">Controle van auth-sessie wordt uitgevoerd.</p>
       <p class="login-note" id="local-login-note">De standaardgegevens gebruiken veilige voorbeeldadressen. Je mag zelf echte gegevens invoeren; deze lokale versie bewaart ze alleen in deze browser en e-mailverzending is uitgeschakeld.</p>
     </div>

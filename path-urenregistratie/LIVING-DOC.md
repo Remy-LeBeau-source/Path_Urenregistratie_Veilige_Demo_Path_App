@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 161 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 165 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 161 unieke case-ID's
+- Playwright executable cases: 165 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 162 unieke case-ID's
+- Totaal executable cases: 166 unieke case-ID's
 - Playwright features: 21
 - Database features: 1
 - Playwright steps mappings: 21
 - Database steps mappings: 1
-- Uitvoeringen: 165
-- Niet-mobile projectuitvoeringen: 157
+- Uitvoeringen: 169
+- Niet-mobile projectuitvoeringen: 161
 - Mobile functionele cases: 4
 - Pixel 7 / Chromium-uitvoeringen: 4
 - iPhone 13 / WebKit-uitvoeringen: 4
 
-De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 161 Playwright-functionele cases in totaal 165 resultaten op: 157 + (4 x 2) = 165.
+De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 165 Playwright-functionele cases in totaal 169 resultaten op: 161 + (4 x 2) = 169.
 
 ## Documentatieketen
 
@@ -45,8 +45,8 @@ De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 161 Playwrig
 - Cases: 3
 
 - [ADM-WR-H-001] admin kan company/settings server-led opslaan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
-- [ADM-WR-H-002] admin kan beheerder server-led aanmaken en wijzigen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
-- [ADM-WR-H-003] admin kan medewerker server-led aanmaken en bootstrap ziet deze terug — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
+- [ADM-WR-H-002] admin kan beheerder server-led aanmaken en wijzigen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 10
+- [ADM-WR-H-003] admin kan medewerker server-led aanmaken en bootstrap ziet deze terug — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 9
 
 ### Auditlog en traceerbaarheid
 
@@ -69,7 +69,7 @@ De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 161 Playwrig
 
 - Feature: `tests/playwright/features/auth.feature`
 - Source: `tests/playwright/auth.spec.ts`
-- Cases: 7
+- Cases: 8
 
 - [AUTH-H-001] Admin logt in en auth/me geeft de juiste gebruiker terug — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
 - [AUTH-H-002] Medewerker logt in en auth/me geeft de juiste gebruiker terug — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
@@ -78,6 +78,7 @@ De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 161 Playwrig
 - [AUTH-N-005] onbekend account geeft dezelfde generieke loginfout — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 3
 - [AUTH-N-006] ongeldig e-mailformaat wordt als invalid-payload geweigerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
 - [AUTH-N-007] vijf mislukte logins tonen een servergestuurde aftelling — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
+- [AUTH-N-008] de inlogblokkade en aftelling blijven zichtbaar na herladen — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 
 ### Klanturenstaten en documentverwerking
 
@@ -209,14 +210,17 @@ De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 161 Playwrig
 
 - Feature: `tests/playwright/features/password-reset.feature`
 - Source: `tests/playwright/password-reset.spec.ts`
-- Cases: 10
+- Cases: 13
 
 - [PWD-H-001] request-reset retourneert token in demo-modus — Techniek: Toestandsovergang · Assertions: 12
 - [PWD-H-002] onbekend e-mailadres retourneert ook ok=true (geen email-enumeration) — Techniek: API-contract + equivalentieklasse · Assertions: 3
 - [PWD-H-003] me.php bevat force_password_change veld — Techniek: API-contract + equivalentieklasse · Assertions: 3
 - [PWD-H-004] ingelogde gebruiker kan het eigen wachtwoord veilig wijzigen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
+- [PWD-H-005] medewerker stelt via een eenmalige e-maillink zelf een wachtwoord in — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
+- [PWD-N-010] twee verschillende wachtwoorden worden in de GUI niet verstuurd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
+- [PWD-N-011] elf tekens ligt onder de wachtwoordgrens van twaalf — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
 - [PWD-N-004] reset-password met ongeldig token geeft 400 — Techniek: Toestandsovergang · Assertions: 2
-- [PWD-N-005] reset-password met te kort wachtwoord geeft 400 — Techniek: Grenswaardenanalyse · Assertions: 2
+- [PWD-N-005] reset-password onder twaalf tekens geeft 400 — Techniek: Toestandsovergang · Assertions: 2
 - [PWD-N-006] hergebruik van al-gebruikt token geeft 409 — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 3
 - [PWD-N-007] login wordt geblokkeerd na 5 mislukte pogingen (rate-limit) — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
 - [PWD-N-008] request-reset weigert GET — Techniek: Toestandsovergang · Assertions: 2
@@ -256,7 +260,7 @@ De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 161 Playwrig
 - [SAFE-N-005] live login verbergt lokale accountkeuze en valt gesloten uit zonder authservice — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 11
 - [SAFE-N-006] destructieve DB-testsetup weigert productie en niet-testdatabases — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 15
 - [SAFE-N-007] productieconfigurator verwerkt DB-secret uitsluitend interactief en fail-closed — Techniek: Toestandsovergang · Assertions: 14
-- [SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 14
+- [SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 23
 
 ### Rollen, rechten en gegevensafscherming
 
@@ -331,7 +335,7 @@ De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 161 Playwrig
 
 - [USR-H-001] admin ziet alle gebruikers van het bedrijf — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [USR-H-002] admin kan medewerker deactiveren en heractiveren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
-- [USR-H-003] admin kan force_password_change instellen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2
+- [USR-H-003] admin kan force_password_change instellen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
 - [USR-N-004] anonieme gebruiker krijgt 401 op user-list — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [USR-N-005] medewerker mag geen gebruikersbeheer uitvoeren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [USR-N-006] admin kan zichzelf niet deactiveren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2
