@@ -90,7 +90,7 @@ Post-live beheer
 ## Actuele stand
 
 - [x] Datum: 2026-08-13 (Fase-16 Bundel 1 technisch, lokaal en in CI afgerond; externe activatie blijft gated)
-- [x] Appversie: 0.9.50
+- [x] Appversie: 0.9.51
 - [x] Technische eindsprint afgerond: Fase 10 (JPG/PNG server-side naar PDF via GD + hand-rolled
   PDF-writer `server/lib/simple_pdf.php`), Fase 11 (server-side factuur-PDF, `pdf_storage_key`
   gevuld na lock, geautoriseerde download-endpoint met company-/employee-scope, PDF-inhoudscontrole
@@ -98,15 +98,15 @@ Post-live beheer
   getest; PDF-bijlage nu structureel beschikbaar dankzij Fase 11), Fase 15 (gelijktijdige
   approve-requests door twee beheerders, jaarwisseling december→januari, te grote upload-afwijzing,
   basis toetsenbord-/labelcontrole, PWA-manifest + defensieve service worker).
-- [x] Actuele testinventaris: 168 Playwright + 1 DB = 169 unieke cases en 172 browseruitvoeringen
-  (164 niet-mobiel + 4 mobiele cases x 2 devices).
-- [x] Volledige lokale Playwright-regressie: 172/172 groen. Dit omvat de correctieheropening,
+- [x] Actuele testinventaris: 169 Playwright + 1 DB = 170 unieke cases en 173 browseruitvoeringen
+  (165 niet-mobiel + 4 mobiele cases x 2 devices).
+- [x] Volledige lokale Playwright-regressie: 173/173 groen. Dit omvat de correctieheropening,
   servergestuurde loginblokkade na F5, eenmalige wachtwoordlink in de GUI, tokenhergebruik,
   grenswaarden van twaalf tekens en fail-closed productie-/mailconfiguratie.
   `npm run check`, `npm run test:db:crud`, `npm run security:deps` en `npm run test:gui-smoke`
   zijn op dezelfde werkboom apart groen bevestigd.
 - [x] Living Documentation-telling wordt uit de uitvoerbare specs berekend en met een expliciete
-  inventarisguard bewaakt. Actueel: 168 Playwright-cases, 1 DB-case, 169 unieke cases en 172 uitvoeringen.
+  inventarisguard bewaakt. Actueel: 169 Playwright-cases, 1 DB-case, 170 unieke cases en 173 uitvoeringen.
 - [x] `server/config.local.php` wordt nu ook expliciet door `server/.htaccess` geblokkeerd;
   SAFE-N-008, de smokecheck en de volledige regressie bewaken deze fail-closed productiegrens.
 - [x] Uitvoerbare BDD-engine toegevoegd met `playwright-bdd`: `.feature` genereert een native
@@ -122,10 +122,14 @@ Post-live beheer
 - [x] Medewerkercorrectie voor een al goedgekeurde maand is server-led heropenbaar zolang nog geen
   definitieve factuur bestaat; dashboardnavigatie ververst ook een verborgen grid voor dezelfde periode.
 - [-] Read-only productiecontrole op 2026-08-13: `https://uren.pathconsultancy.nl/index.html` geeft
-  HTTP 200 maar toont nog v0.9.44. De v0.9.50-config, bedrijfsidentiteit en twee beheeraccounts
+  HTTP 200 maar toont nog v0.9.44. De v0.9.51-config, bedrijfsidentiteit en twee beheeraccounts
   staan veilig in de private stagingrelease/productiedatabase en de live read-only preflight is groen.
   De config-afschermingshotfix moet nog via een volledig groene pipeline opnieuw worden gestaged;
   daarna blijven expliciete `GO_LIVE_<korte_sha>`-toestemming en gecontroleerde cutover vereist.
+- [x] Eerste gecontroleerde cutover van `97065e9` heeft het rollbackpad succesvol bewezen: v0.9.50
+  gaf correcte headers en afscherming, maar health meldde veilig `ok=false` omdat een schone
+  productiedatabase zonder demadata onterecht als fout gold. v0.9.44 is direct teruggezet zonder
+  dataverlies. SAFE-H-009 borgt in v0.9.51 dat alleen demo-/testomgevingen demodata vereisen.
 - [x] Root cause/fix gevonden voor twee omgevingsvalkuilen tijdens dit werk (vastgelegd in
   repo-memory): de PHP GD-extensie stond lokaal standaard uit (`;extension=gd` in php.ini) en moest
   worden ingeschakeld; en een stale achtergrond-PHP-proces (van vóór de GD-fix) op poort 8000
@@ -913,8 +917,9 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
   en remote geverifieerd met SHA-256
   `813040f36879edaa00602f177cba9e55fdbfae63a74131bf54201db4f446e05a`;
   de publieke documentroot is niet gewijzigd.
-- [x] Release Pipeline voor v0.9.50-commit `9954c5b3678e1b326dbc2be62a3dd2b5e433b896` volledig groen;
-  exact die release is checksum-gecontroleerd in private TransIP-staging geplaatst.
+- [x] Release Pipeline voor v0.9.50-maincommit `97065e9a776fa2cb43da584fbbeee4a8449a683e` volledig groen;
+  exact die release is checksum-gecontroleerd in private TransIP-staging geplaatst en de rollback
+  naar v0.9.44 is tijdens de eerste live-smoke succesvol bewezen.
 - [-] De config-afschermingshotfix volledig groen door de Release Pipeline laten gaan en exact die
   nieuwe `headSha` opnieuw checksum-gecontroleerd stagen; `Promote Prod` is geen automatische deploy.
 - [-] Na expliciete `GO_LIVE_<korte_sha>`-toestemming de bewezen stagingrelease gecontroleerd naar
@@ -971,13 +976,13 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
 Status Fase 16:
 - [x] technische audit-API-basis aanwezig en getest
 - [x] Bundel-1-tooling voorbereid: SMTP/STARTTLS, offline mailpreflight, private storage, logging/rotatie, queuecron, back-up/restore, productiepreflight, interactieve productieconfiguratie, accountprovisioning en runbooks
-- [x] Release Pipeline voor v0.9.50-commit `9954c5b3678e1b326dbc2be62a3dd2b5e433b896` volledig groen;
-  actuele lokale regressie na SAFE-N-008 omvat 172/172 browseruitvoeringen.
+- [x] Release Pipeline voor v0.9.50-maincommit `97065e9a776fa2cb43da584fbbeee4a8449a683e` volledig groen;
+  actuele lokale v0.9.51-regressie na SAFE-H-009 omvat 173/173 browseruitvoeringen.
 - [x] Bundel 2 voorbereiding: checksum-release staat veilig in private TransIP-staging; PHP/PDO,
   opslagrechten, uploadlimieten, cronbeschikbaarheid, SMTP STARTTLS, bedrijfsprofiel, twee
   beheeraccounts, databaseback-up en live read-only preflight zijn bewezen.
-- [-] fase als geheel: live serveert nog veilig v0.9.44. Eerst moet de config-afschermingshotfix via
-  GitHub volledig groen en als exacte nieuwe SHA privé op TransIP staan. Daarna volgen expliciete
+- [-] fase als geheel: live serveert na bewezen rollback veilig v0.9.44. Eerst moet v0.9.51 met de
+  productie-healthfix via GitHub volledig groen en als exacte nieuwe SHA privé op TransIP staan. Daarna volgen expliciete
   `GO_LIVE_<korte_sha>`, gecontroleerde cutover en live-smoke; geen SMTP-transactie of echte mail uitgevoerd.
 
 ---
