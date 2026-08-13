@@ -81,7 +81,7 @@ try {
         auth_send_json([
             'ok' => false,
             'error' => 'too-many-attempts',
-            'message' => 'Too many failed login attempts. Please wait 15 minutes before trying again.',
+            'message' => 'Te veel mislukte inlogpogingen. Probeer het over 15 minuten opnieuw.',
         ], 429);
     }
 } catch (Throwable $rlErr) {
@@ -100,7 +100,7 @@ if (!$user || (int)$user['active'] !== 1 || empty($user['password_hash']) || !pa
     auth_send_json([
         'ok' => false,
         'error' => 'invalid-credentials',
-        'message' => 'Invalid email or password.',
+        'message' => 'E-mailadres of wachtwoord is onjuist.',
     ], 401);
 }
 

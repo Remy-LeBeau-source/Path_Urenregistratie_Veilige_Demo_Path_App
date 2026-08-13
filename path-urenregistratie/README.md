@@ -5,7 +5,7 @@ Lokale voorbereidingsversie v0.9.48 van een configureerbare uren- en facturatiea
 ## Wat deze versie laat zien
 
 - Eigen dashboard voor beheerders én medewerkers, met tijdsafhankelijke begroeting en de gekozen maand duidelijk in beeld.
-- Duidelijke lokale accountkeuze tussen beheerder en alle vier medewerkers. Er staat bewust geen standaardwachtwoord in de app; dit scherm wordt bij productie volledig vervangen door Google Workspace-login.
+- Duidelijke lokale accountkeuze tussen beheerder en alle vier medewerkers. Er staat bewust geen standaardwachtwoord in de app; productie gebruikt persoonlijke accounts met e-mail en wachtwoord. Google Workspace SSO staat nog op de roadmap.
 - Iedere gekozen medewerker ziet uitsluitend de eigen uren; beheerfuncties blijven verborgen.
 - Echte aangeleverde namen, klanten, brokers, tarieven en factuurgegevens uit de vier bronfacturen; de standaard-e-mailadressen zijn placeholders op `@example.invalid`, maar beheerders mogen zelf ieder geldig adres invoeren.
 - Afzonderlijke brokerroutering en begeleidende tekst per medewerker.

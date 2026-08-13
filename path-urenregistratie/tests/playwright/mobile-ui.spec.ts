@@ -63,7 +63,7 @@ async function isolateFrontendState(page: Page): Promise<void> {
 
     const user = userMap[email] || null;
     if (!user || !password) {
-      await route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ ok: false, error: 'invalid-credentials', message: 'Invalid email or password.' }) });
+      await route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ ok: false, error: 'invalid-credentials', message: 'E-mailadres of wachtwoord is onjuist.' }) });
       return;
     }
 

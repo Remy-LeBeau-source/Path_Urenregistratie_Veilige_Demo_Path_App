@@ -100,7 +100,7 @@ Feature: Veilige productieconfiguratie en deployment
   @happy
   Scenario: [SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 12
+    # Aantoonbare Playwright-assertions in deze case: 14
     Given de transport-, dispatch- en productiepreflightbron wordt gelezen
     When de flow voor SAFE-H-005 wordt uitgevoerd
     Then zijn TLS, dry-run, private storage, HSTS en niet-mutatieve checks afgedwongen

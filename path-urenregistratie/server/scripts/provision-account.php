@@ -86,7 +86,7 @@ try {
         if ($userId > 0) {
             $statement = $pdo->prepare(
                 'UPDATE users SET company_id = :company_id, display_name = :name, role = :role,
-                 password_hash = :password_hash, force_password_change = 0, active = 1,
+                 password_hash = :password_hash, force_password_change = 1, active = 1,
                  deactivated_at = NULL, deactivated_by = NULL WHERE id = :id'
             );
             $statement->execute([
@@ -97,7 +97,7 @@ try {
         } else {
             $statement = $pdo->prepare(
                 'INSERT INTO users (company_id, email, display_name, role, active, password_hash, force_password_change)
-                 VALUES (:company_id, :email, :name, :role, 1, :password_hash, 0)'
+                 VALUES (:company_id, :email, :name, :role, 1, :password_hash, 1)'
             );
             $statement->execute([
                 ':company_id' => $companyId, ':email' => $email, ':name' => $name,

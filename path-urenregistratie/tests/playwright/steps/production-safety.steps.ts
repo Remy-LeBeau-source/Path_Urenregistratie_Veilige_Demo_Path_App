@@ -20,5 +20,5 @@ export const caseMappings = [
   { caseId: 'SAFE-N-005', spec: 'production-safety.spec.ts', assertionCount: 11, acceptanceCriteria: ["Then zijn demoaccounts en lokale uitleg niet zichtbaar","And zonder authservice blijft productie fail-closed"] },
   { caseId: 'SAFE-N-006', spec: 'production-safety.spec.ts', assertionCount: 15, acceptanceCriteria: ["Then vereist de bootstrap een herkenbare testdatabase of geïsoleerde lokale CI-database","And gebruikt de CRUD-smoke dezelfde fail-closed scheiding"] },
   { caseId: 'SAFE-N-007', spec: 'production-safety.spec.ts', assertionCount: 14, acceptanceCriteria: ["Then vereist configuratie expliciete uitvoering, bevestiging en verborgen invoer","And valideert hij DB en private storage vóór een atomische 0600-write met mail uit"] },
-  { caseId: 'SAFE-H-005', spec: 'production-safety.spec.ts', assertionCount: 12, acceptanceCriteria: ["Then zijn TLS, dry-run, private storage, HSTS en niet-mutatieve checks afgedwongen"] },
+  { caseId: 'SAFE-H-005', spec: 'production-safety.spec.ts', assertionCount: 14, acceptanceCriteria: ["Then zijn TLS, dry-run, private storage, HSTS en niet-mutatieve checks afgedwongen"] },
 ] as const;

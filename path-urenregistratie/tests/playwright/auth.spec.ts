@@ -104,7 +104,7 @@ test('[AUTH-N-005] onbekend account geeft dezelfde generieke loginfout', async (
 
   expect(response.status()).toBe(401);
   expect(body.error).toBe('invalid-credentials');
-  expect(body.message).toBe('Invalid email or password.');
+  expect(body.message).toBe('E-mailadres of wachtwoord is onjuist.');
 });
 
 test('[AUTH-N-006] ongeldig e-mailformaat wordt als invalid-payload geweigerd', async ({ request }) => {

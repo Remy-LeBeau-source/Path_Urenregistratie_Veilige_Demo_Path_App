@@ -368,6 +368,8 @@ test('[SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed', a
     expect(preflight).toContain("'writes_performed' => false");
     expect(requestReset).toContain("$environment !== 'production'");
     expect(provisionAccount).toContain('Passwords in command arguments are forbidden');
+    expect(provisionAccount).toContain('force_password_change = 1');
+    expect(provisionAccount).toContain(':password_hash, 1)');
     expect(configureProduction).toContain('Database passwords in command arguments are forbidden');
     expect(config).toMatch(/'hsts_enabled'\s*=>\s*false/);
     expect(config).toContain('../path-private');
