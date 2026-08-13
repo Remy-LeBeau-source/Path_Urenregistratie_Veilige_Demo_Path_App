@@ -40,3 +40,12 @@ Feature: Mobiele gebruikerservaring
     When de flow voor MOB-N-004 wordt uitgevoerd
     Then de brede factuurtabel als mobiele kaartweergave rendert
     And touch controls en bevestigingsmodal binnen viewport blijven
+
+  @happy
+  Scenario: [MOB-H-005] mobiele verzendadministratie blijft leesbaar en toont geen geheime inhoud
+    # Testtechniek: Responsive viewport + end-to-end use-case
+    # Aantoonbare Playwright-assertions in deze case: 11
+    Given een beheerder de mobiele Instellingen opent
+    When de flow voor MOB-H-005 wordt uitgevoerd
+    Then de verzendregistratie als leesbare kaart binnen het scherm staat
+    And geheime inhoud verborgen blijft en Vernieuwen een touchdoel is

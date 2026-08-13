@@ -27,3 +27,7 @@ Given("een administrator in het mobiele factuuroverzicht");
 When("de flow voor MOB-N-004 wordt uitgevoerd");
 Then("de brede factuurtabel als mobiele kaartweergave rendert");
 And("touch controls en bevestigingsmodal binnen viewport blijven");
+Given("een beheerder de mobiele Instellingen opent");
+When("de flow voor MOB-H-005 wordt uitgevoerd");
+Then("de verzendregistratie als leesbare kaart binnen het scherm staat");
+And("geheime inhoud verborgen blijft en Vernieuwen een touchdoel is");

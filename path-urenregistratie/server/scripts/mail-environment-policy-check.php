@@ -26,7 +26,7 @@ function policy_config(string $environment, bool $enabled, bool $testEnabled, ar
     ];
 }
 
-$allowedAddress = 'gch.lieveld@live.nl';
+$allowedAddress = 'info@pathconsultancy.nl';
 $production = policy_config('production', true, false, []);
 $testClosed = policy_config('test', true, false, []);
 $testGuarded = policy_config('test', true, true, [$allowedAddress]);

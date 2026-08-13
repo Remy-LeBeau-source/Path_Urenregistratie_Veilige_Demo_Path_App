@@ -45,11 +45,20 @@ Feature: E-mailqueue, ontvangers en afleverbeleid
   @happy
   Scenario: [EQ-H-005] action=list response bevat verplichte velden
     # Testtechniek: API-contract + equivalentieklasse
-    # Aantoonbare Playwright-assertions in deze case: 14
+    # Aantoonbare Playwright-assertions in deze case: 15
     Given een admin is ingelogd
     When de queue wordt uitgelezen
     And cleanup
     Then wordt met Playwright-assertions bevestigd dat action=list response bevat verplichte velden
+
+  @happy
+  Scenario: [EQ-H-015] Backoffice ziet veilige verzendhistorie zonder berichtinhoud
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 10
+    Given een beheerder is beveiligd ingelogd
+    When de beheerder het verzendoverzicht in Instellingen opent
+    Then zijn ontvanger, onderwerp, status, tijd en bijlagen zichtbaar zonder geheime inhoud
+    And Vernieuwen haalt de actuele serverregistraties opnieuw op
 
   @negative
   Scenario: [EQ-N-006] anonieme gebruiker krijgt 401 op list

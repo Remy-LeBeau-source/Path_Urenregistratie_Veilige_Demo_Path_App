@@ -89,8 +89,8 @@ Post-live beheer
 
 ## Actuele stand
 
-- [x] Datum: 2026-08-13 (Fase-16 Bundel 1 technisch, lokaal en in CI afgerond; externe activatie blijft gated)
-- [x] Appversie: 0.9.54
+- [x] Datum: 2026-08-14 (SMTP Relay en externe bezorging bewezen; v0.9.55-verzendadministratie in lokale validatie)
+- [-] Appversie: 0.9.55 in ontwikkeling; v0.9.53 staat op productie
 - [x] Technische eindsprint afgerond: Fase 10 (JPG/PNG server-side naar PDF via GD + hand-rolled
   PDF-writer `server/lib/simple_pdf.php`), Fase 11 (server-side factuur-PDF, `pdf_storage_key`
   gevuld na lock, geautoriseerde download-endpoint met company-/employee-scope, PDF-inhoudscontrole
@@ -98,8 +98,11 @@ Post-live beheer
   getest; PDF-bijlage nu structureel beschikbaar dankzij Fase 11), Fase 15 (gelijktijdige
   approve-requests door twee beheerders, jaarwisseling december→januari, te grote upload-afwijzing,
   basis toetsenbord-/labelcontrole, PWA-manifest + defensieve service worker).
-- [x] Actuele testinventaris: 172 Playwright + 1 DB = 173 unieke cases en 176 browseruitvoeringen
-  (168 niet-mobiel + 4 mobiele cases x 2 devices).
+- [x] Actuele testinventaris: 174 Playwright + 1 DB = 175 unieke cases en 179 browseruitvoeringen
+  (169 niet-mobiel + 5 mobiele cases x 2 devices).
+- [x] Volledige lokale Playwright-regressie voor v0.9.55: 179/179 groen, inclusief de privacyveilige
+  Backoffice-verzendadministratie op desktop en mobiel. `npm run check`, `npm run test:db:crud`,
+  `npm run security:deps`, de uitgebreide GUI-smoke en de releasebuild zijn eveneens groen.
 - [x] Volledige lokale Playwright-regressie voor v0.9.54: 176/176 groen. De eerdere v0.9.53-regressie was 175/175 groen en omvatte
   server-authoritatieve productieaccounts en formulierfocus, medewerker-onboarding zonder SMTP, de correctieheropening,
   servergestuurde loginblokkade na F5, eenmalige wachtwoordlink in de GUI, tokenhergebruik,
@@ -107,7 +110,7 @@ Post-live beheer
   `npm run check`, `npm run test:db:crud`, `npm run security:deps` en `npm run test:gui-smoke`
   zijn op dezelfde werkboom apart groen bevestigd.
 - [x] Living Documentation-telling wordt uit de uitvoerbare specs berekend en met een expliciete
-  inventarisguard bewaakt. Actueel: 172 Playwright-cases, 1 DB-case, 173 unieke cases en 176 uitvoeringen.
+  inventarisguard bewaakt. Actueel: 174 Playwright-cases, 1 DB-case, 175 unieke cases en 179 uitvoeringen.
 - [x] `server/config.local.php` wordt nu ook expliciet door `server/.htaccess` geblokkeerd;
   SAFE-N-008, de smokecheck en de volledige regressie bewaken deze fail-closed productiegrens.
 - [x] Uitvoerbare BDD-engine toegevoegd met `playwright-bdd`: `.feature` genereert een native
@@ -136,6 +139,9 @@ Post-live beheer
   aparte TEST-database, expliciete opt-in en een ontvangers-whitelist; de beleidscheck en gerichte
   Playwright-regressie en volledige 176/176 regressie zijn groen. De persistente TEST-host en volledige
   uitnodigingsflow volgen nog.
+- [x] v0.9.55 maakt de bestaande serverqueue als privacybewuste verzendadministratie zichtbaar voor
+  Backoffice: ontvanger, onderwerp, kanaal, bijlagebeleid, status en tijdstip, maar nooit berichttekst
+  of wachtwoordlink. EQ-H-015, MOB-H-005, GUI-smoke en de volledige 179/179 regressie zijn groen.
 - [x] Eerste gecontroleerde cutover van `97065e9` heeft het rollbackpad succesvol bewezen: v0.9.50
   gaf correcte headers en afscherming, maar health meldde veilig `ok=false` omdat een schone
   productiedatabase zonder demadata onterecht als fout gold. v0.9.44 is direct teruggezet zonder
@@ -991,9 +997,12 @@ Status Fase 16:
 - [x] Bundel 2 voorbereiding: checksum-release staat veilig in private TransIP-staging; PHP/PDO,
   opslagrechten, uploadlimieten, cronbeschikbaarheid, SMTP STARTTLS, bedrijfsprofiel, twee
   beheeraccounts, databaseback-up en live read-only preflight zijn bewezen.
-- [-] fase als geheel: v0.9.53 staat veilig live. v0.9.54 met afgeschermde TEST-mailmodus
-  doorloopt lokale regressie en daarna de pipeline. Er is nog geen
-  SMTP-transactie of echte mail uitgevoerd.
+- [-] fase als geheel: v0.9.53 staat veilig live. v0.9.54 met afgeschermde TEST-mailmodus is
+  volledig groen op `main`; v0.9.55 met Backoffice-verzendadministratie wordt gevalideerd.
+  Google SMTP Relay accepteert het uitgaande TransIP-IP `85.10.158.7`, STARTTLS en afzenders binnen
+  `pathconsultancy.nl`. Eén gecontroleerde mail van `backoffice@pathconsultancy.nl` naar het vooraf
+  toegestane testadres is extern ontvangen. De acceptatiebatch gebruikt voortaan uitsluitend
+  `info@pathconsultancy.nl`; productiemail blijft uit.
 
 ---
 
