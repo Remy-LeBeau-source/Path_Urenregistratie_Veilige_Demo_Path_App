@@ -90,7 +90,7 @@ Post-live beheer
 ## Actuele stand
 
 - [x] Datum: 2026-08-13 (Fase-16 Bundel 1 technisch, lokaal en in CI afgerond; externe activatie blijft gated)
-- [x] Appversie: 0.9.52
+- [x] Appversie: 0.9.53
 - [x] Technische eindsprint afgerond: Fase 10 (JPG/PNG server-side naar PDF via GD + hand-rolled
   PDF-writer `server/lib/simple_pdf.php`), Fase 11 (server-side factuur-PDF, `pdf_storage_key`
   gevuld na lock, geautoriseerde download-endpoint met company-/employee-scope, PDF-inhoudscontrole
@@ -98,16 +98,16 @@ Post-live beheer
   getest; PDF-bijlage nu structureel beschikbaar dankzij Fase 11), Fase 15 (gelijktijdige
   approve-requests door twee beheerders, jaarwisseling december→januari, te grote upload-afwijzing,
   basis toetsenbord-/labelcontrole, PWA-manifest + defensieve service worker).
-- [x] Actuele testinventaris: 170 Playwright + 1 DB = 171 unieke cases en 174 browseruitvoeringen
-  (166 niet-mobiel + 4 mobiele cases x 2 devices).
-- [x] Volledige lokale Playwright-regressie voor v0.9.52: 174/174 groen. Dit omvat de nieuwe
-  medewerker-onboarding zonder SMTP, de correctieheropening,
+- [x] Actuele testinventaris: 171 Playwright + 1 DB = 172 unieke cases en 175 browseruitvoeringen
+  (167 niet-mobiel + 4 mobiele cases x 2 devices).
+- [x] Volledige lokale Playwright-regressie voor v0.9.53: 175/175 groen. Dit omvat de nieuwe
+  server-authoritatieve productieaccounts en formulierfocus, medewerker-onboarding zonder SMTP, de correctieheropening,
   servergestuurde loginblokkade na F5, eenmalige wachtwoordlink in de GUI, tokenhergebruik,
   grenswaarden van twaalf tekens en fail-closed productie-/mailconfiguratie.
   `npm run check`, `npm run test:db:crud`, `npm run security:deps` en `npm run test:gui-smoke`
   zijn op dezelfde werkboom apart groen bevestigd.
 - [x] Living Documentation-telling wordt uit de uitvoerbare specs berekend en met een expliciete
-  inventarisguard bewaakt. Actueel: 170 Playwright-cases, 1 DB-case, 171 unieke cases en 174 uitvoeringen.
+  inventarisguard bewaakt. Actueel: 171 Playwright-cases, 1 DB-case, 172 unieke cases en 175 uitvoeringen.
 - [x] `server/config.local.php` wordt nu ook expliciet door `server/.htaccess` geblokkeerd;
   SAFE-N-008, de smokecheck en de volledige regressie bewaken deze fail-closed productiegrens.
 - [x] Uitvoerbare BDD-engine toegevoegd met `playwright-bdd`: `.feature` genereert een native
@@ -122,12 +122,16 @@ Post-live beheer
   autoritatieve blokkade en resterende tijd blijft afdwingen.
 - [x] Medewerkercorrectie voor een al goedgekeurde maand is server-led heropenbaar zolang nog geen
   definitieve factuur bestaat; dashboardnavigatie ververst ook een verborgen grid voor dezelfde periode.
-- [x] Productiecontrole op 2026-08-13: `https://uren.pathconsultancy.nl/index.html` serveert v0.9.51.
+- [x] Productiecontrole op 2026-08-13: `https://uren.pathconsultancy.nl/index.html` serveert v0.9.52.
   Health, HTTPS-redirect, CSP, gevoelige-padblokkades, database, bedrijfsidentiteit en twee
-  beheeraccounts zijn na de gecontroleerde cutover groen bevestigd; v0.9.44 blijft als rollback bewaard.
-- [-] v0.9.52 herstelt accountonboarding zonder actieve SMTP-relay: een beheerder kan medewerker en
+  beheeraccounts zijn na de gecontroleerde cutover groen bevestigd; v0.9.51 blijft als rollback bewaard.
+- [x] v0.9.52 herstelt accountonboarding zonder actieve SMTP-relay: een beheerder kan medewerker en
   opdracht veilig opslaan met `Toegang in afwachting`; uitnodigen blijft een aparte expliciete actie.
-  Deze hotfix moet nog volledig groen door CI en daarna met een nieuwe `GO_LIVE_<korte_sha>` worden uitgerold.
+  De hotfix is volledig groen door CI gegaan en gecontroleerd naar productie uitgerold.
+- [-] v0.9.53 maakt productie-accountdata volledig server-authoritatief, verwijdert demoherstel van de
+  productiehost en opent lange medewerker-/beheerformulieren bovenaan. ADM-WR-H-005, de uitgebreide
+  GUI-smoke, `npm run check`, database-CRUD, dependency-security en de volledige 175/175-regressie zijn
+  lokaal groen; pipeline en automatische gecontroleerde cutover volgen nog.
 - [x] Eerste gecontroleerde cutover van `97065e9` heeft het rollbackpad succesvol bewezen: v0.9.50
   gaf correcte headers en afscherming, maar health meldde veilig `ok=false` omdat een schone
   productiedatabase zonder demadata onterecht als fout gold. v0.9.44 is direct teruggezet zonder
@@ -978,14 +982,14 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
 Status Fase 16:
 - [x] technische audit-API-basis aanwezig en getest
 - [x] Bundel-1-tooling voorbereid: SMTP/STARTTLS, offline mailpreflight, private storage, logging/rotatie, queuecron, back-up/restore, productiepreflight, interactieve productieconfiguratie, accountprovisioning en runbooks
-- [x] Release Pipeline voor v0.9.51-maincommit `36683afe5a3d4fbd9768db4eb994855b82cea7a5` volledig groen;
-  v0.9.51 staat live en de live-smoke en productiepreflight zijn groen.
+- [x] Release Pipeline voor v0.9.52-maincommit `22013f5d591c2cb10e91a188fe76f40a92df5b45` volledig groen;
+  v0.9.52 staat live en de live-smoke en productiepreflight zijn groen.
 - [x] Bundel 2 voorbereiding: checksum-release staat veilig in private TransIP-staging; PHP/PDO,
   opslagrechten, uploadlimieten, cronbeschikbaarheid, SMTP STARTTLS, bedrijfsprofiel, twee
   beheeraccounts, databaseback-up en live read-only preflight zijn bewezen.
-- [-] fase als geheel: v0.9.51 staat veilig live. v0.9.52 met onboardingstatus `Toegang in afwachting`
-  doorloopt nog regressie, pipeline en een nieuwe gecontroleerde cutover. Er is nog geen SMTP-transactie
-  of echte mail uitgevoerd.
+- [-] fase als geheel: v0.9.52 staat veilig live. v0.9.53 met server-authoritatieve productieaccounts
+  is lokaal volledig groen en doorloopt nog pipeline en automatische gecontroleerde cutover. Er is nog geen
+  SMTP-transactie of echte mail uitgevoerd.
 
 ---
 

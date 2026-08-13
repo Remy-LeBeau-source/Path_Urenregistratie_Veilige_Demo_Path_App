@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 170 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 171 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 170 unieke case-ID's
+- Playwright executable cases: 171 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 171 unieke case-ID's
+- Totaal executable cases: 172 unieke case-ID's
 - Playwright features: 21
 - Database features: 1
 - Playwright steps mappings: 21
 - Database steps mappings: 1
-- Uitvoeringen: 174
-- Niet-mobile projectuitvoeringen: 166
+- Uitvoeringen: 175
+- Niet-mobile projectuitvoeringen: 167
 - Mobile functionele cases: 4
 - Pixel 7 / Chromium-uitvoeringen: 4
 - iPhone 13 / WebKit-uitvoeringen: 4
 
-De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 170 Playwright-functionele cases in totaal 174 resultaten op: 166 + (4 x 2) = 174.
+De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 171 Playwright-functionele cases in totaal 175 resultaten op: 167 + (4 x 2) = 175.
 
 ## Documentatieketen
 
@@ -42,12 +42,13 @@ De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 170 Playwrig
 
 - Feature: `tests/playwright/features/admin-writes.feature`
 - Source: `tests/playwright/admin-writes.spec.ts`
-- Cases: 4
+- Cases: 5
 
 - [ADM-WR-H-001] admin kan company/settings server-led opslaan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 - [ADM-WR-H-002] admin kan beheerder server-led aanmaken en wijzigen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
 - [ADM-WR-H-003] admin kan medewerker server-led aanmaken en bootstrap ziet deze terug — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
 - [ADM-WR-H-004] admin slaat medewerker zonder SMTP veilig op met toegang in afwachting — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
+- [ADM-WR-H-005] productie toont uitsluitend serveraccounts en opent medewerkerformulier bovenaan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
 
 ### Auditlog en traceerbaarheid
 
