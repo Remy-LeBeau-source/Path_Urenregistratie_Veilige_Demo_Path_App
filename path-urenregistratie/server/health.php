@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
 
+require_once __DIR__ . '/lib/health_policy.php';
+
 $result = [
     'php_version' => PHP_VERSION,
     'checks' => [],
@@ -24,6 +26,7 @@ $result['checks']['config.local.php'] = ['ok' => true];
 
 // load config but never reveal credentials
 $config = include $localConfigPath;
+$healthEnv = path_health_environment($config);
 $db = null;
 if (isset($config['database']) && is_array($config['database'])) {
     $db = $config['database'];
@@ -121,30 +124,28 @@ try {
     $result['checks']['auth_demo_users'] = ['ok' => false, 'message' => 'Could not verify auth demo users'];
 }
 
-// demo seed counts: ensure demo seed added minimal data
-try {
-    $demoCounts = [];
-    $tablesToCheck = ['companies','users','employees','periods','timesheets','invoices'];
-    foreach ($tablesToCheck as $tbl) {
-        $q = $pdo->prepare("SELECT COUNT(*) as cnt FROM `" . $tbl . "` WHERE 1");
-        $q->execute();
-        $r = $q->fetch();
-        $demoCounts[$tbl] = isset($r['cnt']) ? (int)$r['cnt'] : 0;
+// Demo environments verify their seed. A clean production database is valid and must not
+// become unhealthy merely because no employees, periods, timesheets or invoices exist yet.
+if (path_health_requires_demo_seed($healthEnv)) {
+    try {
+        $demoCounts = [];
+        $tablesToCheck = ['companies','users','employees','periods','timesheets','invoices'];
+        foreach ($tablesToCheck as $tbl) {
+            $q = $pdo->prepare("SELECT COUNT(*) as cnt FROM `" . $tbl . "` WHERE 1");
+            $q->execute();
+            $r = $q->fetch();
+            $demoCounts[$tbl] = isset($r['cnt']) ? (int)$r['cnt'] : 0;
+        }
+        $result['checks']['demo_counts'] = $demoCounts;
+        $result['checks']['demo_seed_present'] = ['ok' => ($demoCounts['companies']>0 && $demoCounts['users']>0 && $demoCounts['employees']>0 && $demoCounts['periods']>0 && $demoCounts['timesheets']>0 && $demoCounts['invoices']>0)];
+    } catch (Throwable $e) {
+        $result['checks']['demo_seed_present'] = ['ok' => false, 'message' => 'Could not run demo seed counts'];
     }
-    $result['checks']['demo_counts'] = $demoCounts;
-    $result['checks']['demo_seed_present'] = ['ok' => ($demoCounts['companies']>0 && $demoCounts['users']>0 && $demoCounts['employees']>0 && $demoCounts['periods']>0 && $demoCounts['timesheets']>0 && $demoCounts['invoices']>0)];
-} catch (Throwable $e) {
-    $result['checks']['demo_seed_present'] = ['ok' => false, 'message' => 'Could not run demo seed counts'];
 }
 
 // In production: suppress all technical details; return only ok/not-ok.
-$healthEnv = strtolower(trim((string)($config['environment'] ?? $config['app']['environment'] ?? 'production')));
 if ($healthEnv === 'production') {
-    $allOk = true;
-    array_walk_recursive($result['checks'], static function ($v, $k) use (&$allOk) {
-        if ($k === 'ok' && $v === false) $allOk = false;
-    });
-    echo json_encode(['ok' => $allOk], JSON_UNESCAPED_SLASHES);
+    echo json_encode(['ok' => path_health_checks_are_ok($result['checks'])], JSON_UNESCAPED_SLASHES);
     exit;
 }
 

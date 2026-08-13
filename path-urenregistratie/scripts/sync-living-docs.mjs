@@ -105,6 +105,7 @@ function techniqueFor(definition, testCase) {
   const text = `${testCase.id} ${testCase.title}`.toLowerCase();
   if (definition.spec === 'accessibility.spec.ts') return 'Toegankelijkheidsinspectie + toetsenbord-use-case';
   if (definition.spec === 'mobile-ui.spec.ts') return 'Responsive viewport + end-to-end use-case';
+  if (testCase.id === 'SAFE-H-009') return 'Equivalentieklassen + toestandsovergang';
   if (/gelijktijd|optimistic|tweede lock|immutable/.test(text)) return 'Concurrency + toestandsovergang';
   if (/limiet|minimaal|hoog|driecijferig|vijfcijferig|ongeldige maand|te groot|te kort|nul/.test(text)) return 'Grenswaardenanalyse';
   if (/rol|admin|medewerker|anoniem|eigen|andere medewerker|403|401|toegang|scope/.test(text)) return 'Beslissingstabel rollen en autorisatie';
@@ -214,8 +215,8 @@ const inventory = definitions.flatMap((definition) => {
 const uniqueIds = new Set(inventory.map((testCase) => testCase.id));
 const playwrightCount = inventory.filter((testCase) => testCase.kind === 'playwright').length;
 const dbCount = inventory.filter((testCase) => testCase.kind === 'db').length;
-if (playwrightCount !== 168 || dbCount !== 1 || inventory.length !== 169 || uniqueIds.size !== 169) {
-  throw new Error(`Verwacht 168 Playwright-cases + 1 DB-case = 169 unieke cases, gevonden ${playwrightCount}/${dbCount}/${inventory.length}/${uniqueIds.size}.`);
+if (playwrightCount !== 169 || dbCount !== 1 || inventory.length !== 170 || uniqueIds.size !== 170) {
+  throw new Error(`Verwacht 169 Playwright-cases + 1 DB-case = 170 unieke cases, gevonden ${playwrightCount}/${dbCount}/${inventory.length}/${uniqueIds.size}.`);
 }
 const casesWithoutAssertions = inventory.filter((testCase) => Number(testCase.assertionCount) < 1);
 if (casesWithoutAssertions.length) {

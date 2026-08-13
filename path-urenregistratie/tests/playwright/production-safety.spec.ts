@@ -1,12 +1,15 @@
 import { expect, test } from '@playwright/test';
+import { execFile } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { promisify } from 'node:util';
 import { AuthApi } from './api/AuthApi';
 import { TimesheetApi } from './api/TimesheetApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
 
 const PERIOD_RANGE_START_YEAR = 3000;
 const PERIOD_RANGE_MONTHS = 7000 * 12;
+const execFileAsync = promisify(execFile);
 
 function candidatePeriods(): string[] {
   const startIndex = Date.now() % PERIOD_RANGE_MONTHS;
@@ -223,6 +226,32 @@ test('[SAFE-H-003] health.php bevat productieguard die technische details onderd
     expect(src).toContain('ok');
     // Guard must suppress host/db details in production mode.
     expect(src).toMatch(/production.*ob_clean|production.*\[\s*'ok'/s);
+  });
+});
+
+test('[SAFE-H-009] productie-health accepteert een schone database zonder demodata', async () => {
+  await test.step('Given het healthbeleid voor productie en test wordt uitgevoerd', async () => {});
+
+  await test.step('Then vereist alleen de testomgeving demodata en blijven echte fouten zichtbaar', async () => {
+    const policyPath = join(process.cwd(), 'server', 'lib', 'health_policy.php');
+    const { stdout } = await execFileAsync('php', [
+      '-r',
+      '$p=require $argv[1]; echo json_encode(['
+        + '"production_requires_demo"=>path_health_requires_demo_seed("production"),'
+        + '"test_requires_demo"=>path_health_requires_demo_seed("test"),'
+        + '"clean_checks_ok"=>path_health_checks_are_ok([["ok"=>true],["count"=>0]]),'
+        + '"failed_checks_ok"=>path_health_checks_are_ok([["ok"=>true],["ok"=>false]])]);',
+      policyPath,
+    ]);
+    const result = JSON.parse(stdout) as Record<string, boolean>;
+
+    expect(result.production_requires_demo).toBe(false);
+    expect(result.test_requires_demo).toBe(true);
+    expect(result.clean_checks_ok).toBe(true);
+    expect(result.failed_checks_ok).toBe(false);
+
+    const healthSource = await readFile(join(process.cwd(), 'server', 'health.php'), 'utf8');
+    expect(healthSource).toContain('if (path_health_requires_demo_seed($healthEnv))');
   });
 });
 

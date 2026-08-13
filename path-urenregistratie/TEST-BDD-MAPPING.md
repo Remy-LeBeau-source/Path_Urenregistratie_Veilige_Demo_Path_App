@@ -141,6 +141,7 @@
 | SAFE-H-002 | security | production-safety.feature | timesheet writeflow blijft werkend (draft + submit) | API-contract + equivalentieklasse | 8 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | timesheet writeflow blijft werkend (draft + submit) | Happy | 14 | Actueel |
 | SAFE-N-003 | security | production-safety.feature | productieconfig zet demo-migraties standaard uit | Negatieve equivalentieklasse + error guessing | 9 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | productieconfig zet demo-migraties standaard uit | Negative | 14 | Actueel |
 | SAFE-H-003 | security | production-safety.feature | health.php bevat productieguard die technische details onderdrukt | API-contract + equivalentieklasse | 3 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | health.php bevat productieguard die technische details onderdrukt | Happy | 14 | Actueel |
+| SAFE-H-009 | security | production-safety.feature | productie-health accepteert een schone database zonder demodata | Equivalentieklassen + toestandsovergang | 5 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | productie-health accepteert een schone database zonder demodata | Happy | 14 | Actueel |
 | SAFE-N-004 | security | production-safety.feature | install.php en migrate.php bevatten productieguards | Negatieve equivalentieklasse + error guessing | 6 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | install.php en migrate.php bevatten productieguards | Negative | 14 | Actueel |
 | SAFE-N-008 | security | production-safety.feature | lokale productieconfig is via HTTP expliciet geblokkeerd | Negatieve equivalentieklasse + error guessing | 2 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | lokale productieconfig is via HTTP expliciet geblokkeerd | Negative | 14 | Actueel |
 | SAFE-H-004 | security | production-safety.feature | config.example.php bevat mail.enabled=false als standaard | API-contract + equivalentieklasse | 5 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | config.example.php bevat mail.enabled=false als standaard | Happy | 14 | Actueel |
@@ -190,9 +191,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 168
+- Playwright executable cases: 169
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 169
+- Totaal unieke executable cases: 170
 - Playwright features: 21
 - Database features: 1
 - Playwright steps mappings: 21

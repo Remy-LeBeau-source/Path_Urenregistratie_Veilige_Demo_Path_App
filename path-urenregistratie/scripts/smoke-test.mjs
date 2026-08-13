@@ -103,7 +103,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.50"), "Het zichtbare versienummer moet 0.9.50 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.51"), "Het zichtbare versienummer moet 0.9.51 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -149,7 +149,7 @@ const employeePicker = document.querySelector("#login-employee");
 employeePicker.value = "1";
 employeePicker.dispatchEvent(new Event("change", { bubbles: true }));
 const demoScenarioState = JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(demoScenarioState.schemaVersion === 26, "Versie 0.9.50 moet wijzigingen onder de juiste gegevensversie bewaren");
+assert(demoScenarioState.schemaVersion === 26, "Versie 0.9.51 moet wijzigingen onder de juiste gegevensversie bewaren");
 assert(demoScenarioState.settings.companyName === "QSI Consultancy B.V." && demoScenarioState.settings.invoiceNameDisplay === "trade_and_legal", "De standaardfactuuridentiteit moet Path als handelsnaam aan QSI Consultancy B.V. koppelen");
 const freshOpenActions = dom.window.adminOpenTasks();
 const freshJuneActions = freshOpenActions.filter(task => task.periodKey === "2026-06");
@@ -1507,7 +1507,7 @@ const migrationPicker = migrationDom.window.document.querySelector("#login-admin
 migrationPicker.value = "joyce";
 migrationPicker.dispatchEvent(new migrationDom.window.Event("change", { bubbles: true }));
 const migratedState = JSON.parse(migrationDom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(migratedState.schemaVersion === 26, "Bestaande browsergegevens moeten ook in v0.9.50 veilig behouden blijven");
+assert(migratedState.schemaVersion === 26, "Bestaande browsergegevens moeten ook in v0.9.51 veilig behouden blijven");
 assert(migratedState.settings.companyName === "QSI Consultancy B.V." && migratedState.settings.invoiceNameDisplay === "trade_and_legal", "Migratie moet QSI als B.V. en de gecombineerde factuurweergave veilig aanvullen");
 assert(migratedState.settings.mailRecipients.find(recipient => recipient.id === "payroll").name.includes("Salarisadministratie"), "Migratie moet EasySalary als duidelijke salarisadministratieroute benoemen");
 assert(migratedState.records["2026-07"]["4"].invoiceNumber === "Bel-Shawn-2026-juli", "Migratie moet ook bestaande factuurnummers omzetten naar de afgesproken koppeltekens");
@@ -1539,6 +1539,7 @@ assert(migratedState.records["2026-07"]["4"].entries.flat().reduce((sum, value) 
 const installSrc  = readFileSync_(new URL("../server/install.php", import.meta.url), "utf8");
 const migrateSrc  = readFileSync_(new URL("../server/migrate.php", import.meta.url), "utf8");
 const healthSrc   = readFileSync_(new URL("../server/health.php", import.meta.url), "utf8");
+const healthPolicySrc = readFileSync_(new URL("../server/lib/health_policy.php", import.meta.url), "utf8");
 const configExSrc = readFileSync_(new URL("../server/config.example.php", import.meta.url), "utf8");
 const smtpSrc = readFileSync_(new URL("../server/mail/smtp.php", import.meta.url), "utf8");
 const dispatchSrc = readFileSync_(new URL("../server/mail/dispatch.php", import.meta.url), "utf8");
@@ -1564,6 +1565,7 @@ const playwrightConfigSrc = readFileSync_(new URL("../playwright.config.ts", imp
 assert(installSrc.includes("'production'") && installSrc.includes("403") && installSrc.includes("PHP_SAPI"), "install.php moet een productieguard bevatten die HTTP-toegang blokkeert");
 assert(migrateSrc.includes("'production'") && migrateSrc.includes("403") && migrateSrc.includes("PHP_SAPI"), "migrate.php moet een productieguard bevatten die HTTP-toegang blokkeert");
 assert(healthSrc.includes("'production'") && (healthSrc.includes("ob_clean") || healthSrc.includes("['ok'")), "health.php moet technische details onderdrukken in productiemodus");
+assert(healthSrc.includes("path_health_requires_demo_seed($healthEnv)") && healthPolicySrc.includes("!== 'production'"), "Productie-health mag een schone database zonder demo-seed niet afkeuren");
 assert(serverHtaccessSrc.includes('config(?:\\.local|\\.example)?\\.php') && serverHtaccessSrc.includes('Require all denied'), "server/.htaccess moet config.local.php en alle overige configvarianten expliciet blokkeren");
 assert(/'mail'\s*=>\s*\[[\s\S]*?'enabled'\s*=>\s*false/.test(configExSrc), "config.example.php moet mail standaard uitgeschakeld hebben (mail.enabled = false)");
 assert(configExSrc.includes("'host'       => 'smtp-relay.gmail.com'") && configExSrc.includes("'port'       => 587") && configExSrc.includes("'encryption' => 'starttls'"), "Productieconfig moet de bevestigde Google SMTP Relay zonder geheimen voorbereiden");
@@ -1588,4 +1590,4 @@ assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("
 assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Playwright stage- en lokale env-bestanden mogen expliciete runner/CI-variabelen niet overschrijven");
 
 dom.window.close();
-console.log("Path v0.9.50 volledige smoke test: geslaagd");
+console.log("Path v0.9.51 volledige smoke test: geslaagd");
