@@ -1274,7 +1274,8 @@ const authRuntime = {
   csrfToken: "",
   csrfPromise: null,
   localLoginHints: null,
-  localLoginHintsPromise: null
+  localLoginHintsPromise: null,
+  passwordResetDeliveryAvailable: false
 };
 
 let authLoginCountdownTimer = null;
@@ -2322,6 +2323,8 @@ function mergeBootstrapIntoState(data) {
   const company = firstBootstrapCompany(data);
   if (!company) return false;
 
+  authRuntime.passwordResetDeliveryAvailable = Boolean(data.capabilities && data.capabilities.password_reset_delivery);
+
   // Settings/company fields: only overwrite fields that map 1-op-1.
   state.settings.organizationName = String(company.trade_name || state.settings.organizationName || "");
   state.settings.appName = String(company.app_name || state.settings.appName || "");
@@ -2423,6 +2426,7 @@ function mergeBootstrapIntoState(data) {
     }
     const linkedUser = usersById.get(Number(match.user_id));
     if (linkedUser && linkedUser.email) localEmployee.email = String(linkedUser.email);
+    if (linkedUser) localEmployee.invitationPending = Number(linkedUser.password_ready || 0) !== 1;
   });
 
   employees.forEach(dbEmployee => {
@@ -2440,7 +2444,7 @@ function mergeBootstrapIntoState(data) {
       startDate: String(dbEmployee.employment_start_date || ""),
       notificationsEnabled: true,
       emailNotificationsEnabled: true,
-      invitationPending: false,
+      invitationPending: linkedUser ? Number(linkedUser.password_ready || 0) !== 1 : true,
       photo: "",
       role: String(dbEmployee.job_title || ""),
       client: "",
@@ -5710,7 +5714,7 @@ function renderEmployees() {
     const record = recordFor(employee.id);
     const active = employee.active !== false;
     return '<article class="employee-card' + (active ? "" : " is-inactive") + '">' +
-      '<div class="employee-card-head"><div class="employee-identity"><span class="mini-avatar">' + initials(employee.name) + "</span><span><strong>" + escapeHtml(employee.name) + "</strong><small>" + escapeHtml(employee.role) + " · " + escapeHtml(employee.email || "geen accountadres") + "</small></span></div>" + (active ? statusPill(record.timesheetStatus) : '<span class="status-pill status-concept">Inactief</span>') + "</div>" +
+      '<div class="employee-card-head"><div class="employee-identity"><span class="mini-avatar">' + initials(employee.name) + "</span><span><strong>" + escapeHtml(employee.name) + "</strong><small>" + escapeHtml(employee.role) + " · " + escapeHtml(employee.email || "geen accountadres") + (employee.invitationPending ? " · Toegang in afwachting" : "") + "</small></span></div>" + (active ? statusPill(record.timesheetStatus) : '<span class="status-pill status-concept">Inactief</span>') + "</div>" +
       '<div class="employee-details"><div><small>Klant</small><strong>' + escapeHtml(employee.client) + "</strong></div><div><small>Uren per week</small><strong>" + hoursFormat.format(weeklyHoursFor(employee)) + " uur</strong></div><div><small>Broker</small><strong>" + escapeHtml(employee.broker) + "</strong></div></div>" +
       '<div class="employee-card-actions"><button class="text-button" data-edit-routing="' + employee.id + '">Gegevens aanpassen</button><button class="small-button" data-toggle-employee="' + employee.id + '">' + (active ? "Deactiveren" : "Opnieuw activeren") + "</button></div>" +
       "</article>";
@@ -7561,6 +7565,13 @@ function showEmployeeEditor(employeeId) {
     customerTimesheetBrokerEmail: "nieuw-adres@example.invalid",
     invoiceWithoutCustomerTimesheetAllowed: true
   };
+  const serverAccountMode = API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin";
+  const invitationDeliveryAvailable = authRuntime.passwordResetDeliveryAvailable === true;
+  const invitationControl = !existing || employee.invitationPending === true
+    ? (serverAccountMode
+      ? '<label class="check-row"><input id="edit-invite" type="checkbox"' + (invitationDeliveryAvailable && !existing ? " checked" : "") + (invitationDeliveryAvailable ? "" : " disabled") + '><span>' + (invitationDeliveryAvailable ? (existing ? "Nieuwe persoonlijke uitnodiging versturen" : "Persoonlijke uitnodiging per e-mail versturen") : "Uitnodiging volgt zodra e-mail is ingeschakeld") + '</span></label>'
+      : (!existing ? '<label class="check-row"><input id="edit-invite" type="checkbox" checked><span>Uitnodiging voorbereiden (e-mail uitgeschakeld)</span></label>' : ""))
+    : "";
   const routeChoices = activeMailRecipients().map(recipient => {
     const preference = mailRecipientRouteFor(employee, recipient.id);
     const enabled = preference.enabled !== false;
@@ -7608,14 +7619,19 @@ function showEmployeeEditor(employeeId) {
     '<label class="check-row full"><input id="edit-invoice-without-customer-timesheet" type="checkbox"' + (employee.invoiceWithoutCustomerTimesheetAllowed !== false ? " checked" : "") + '><span>Factuur mag worden gecontroleerd als de klanturenstaat later komt</span></label>' +
     '<label class="check-row full"><input id="edit-notifications" type="checkbox"' + (employee.notificationsEnabled !== false ? " checked" : "") + '><span>Geplande urenherinneringen activeren</span></label>' +
     '<label class="check-row full"><input id="edit-email-notifications" type="checkbox"' + (employee.emailNotificationsEnabled !== false ? " checked" : "") + '><span>Aanvullende e-mailmeldingen activeren (in-app berichten blijven altijd zichtbaar)</span></label>' +
-    (!existing ? '<label class="check-row"><input id="edit-invite" type="checkbox" checked><span>Uitnodiging voorbereiden (e-mail uitgeschakeld)</span></label><label class="check-row"><input id="edit-add-another" type="checkbox"><span>Hierna nog iemand toevoegen</span></label>' : "") +
+    invitationControl +
+    (!existing ? '<label class="check-row"><input id="edit-add-another" type="checkbox"><span>Hierna nog iemand toevoegen</span></label>' : "") +
     "</div>";
   showModal({
     label: existing ? "Medewerker aanpassen" : "Medewerker toevoegen",
     title: employee.name || "Nieuwe medewerker",
-    message: "Persoons-, contract- en opdrachtgegevens worden lokaal in deze browser bewaard. Je mag ieder geldig account- en brokeradres invullen; e-mailverzending is uitgeschakeld.",
+    message: serverAccountMode
+      ? (invitationDeliveryAvailable
+        ? "De medewerker wordt veilig opgeslagen. Je kunt direct een persoonlijke uitnodiging laten klaarzetten."
+        : "De medewerker wordt veilig opgeslagen zonder toegang. De persoonlijke uitnodiging kan volgen zodra e-mail is ingeschakeld.")
+      : "Persoons-, contract- en opdrachtgegevens worden lokaal in deze browser bewaard. Je mag ieder geldig account- en brokeradres invullen; e-mailverzending is uitgeschakeld.",
     summary,
-    confirm: "Lokaal opslaan",
+    confirm: serverAccountMode ? "Medewerker opslaan" : "Lokaal opslaan",
     wide: true,
     action: () => {
       const brokerEmailInput = document.querySelector("#edit-broker-email");
@@ -7701,11 +7717,15 @@ function showEmployeeEditor(employeeId) {
 
       if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
         const addAnother = !existing && document.querySelector("#edit-add-another").checked;
+        const inviteInput = document.querySelector("#edit-invite");
+        let writeResult = null;
         writeStaffToApi("upsert_employee", {
           employee: updated,
-          mailRecipients: effectiveMailRecipients
+          mailRecipients: effectiveMailRecipients,
+          sendInvitation: Boolean(inviteInput && inviteInput.checked)
         })
-          .then(() => {
+          .then(result => {
+            writeResult = result;
             if (newRecipientRequested) {
               state.settings.mailRecipients = effectiveMailRecipients;
               syncLegacyRecipientSettings();
@@ -7716,7 +7736,13 @@ function showEmployeeEditor(employeeId) {
             closeModal();
             renderAll();
             populateSettings();
-            toast("Medewerker op de server opgeslagen.");
+            if (writeResult && writeResult.invitation_queued) {
+              toast("Medewerker opgeslagen en persoonlijke uitnodiging klaargezet.");
+            } else if (writeResult && writeResult.invitation_pending) {
+              toast("Medewerker opgeslagen zonder toegang. Verstuur de uitnodiging zodra e-mail is ingeschakeld.");
+            } else {
+              toast("Medewerker op de server opgeslagen.");
+            }
             if (addAnother) showEmployeeEditor(null);
           })
           .catch(error => toast(String(error && error.message || "Medewerker opslaan op server mislukt.")));
@@ -7788,7 +7814,11 @@ function showEmployeeEditor(employeeId) {
 function showAdminEditor(adminId) {
   const existing = adminId ? adminById(adminId) : null;
   const admin = existing || { id: "admin-" + (state.admins.length + 1), name: "", email: "nieuwe-beheerder@example.invalid", active: true, emailNotificationsEnabled: true, photo: "" };
-  const summary = '<div class="modal-form"><label>Voor- en achternaam<input id="edit-admin-name" value="' + escapeHtml(admin.name) + '"></label><label>Zakelijk accountadres<input id="edit-admin-email" type="email" value="' + escapeHtml(admin.email) + '"></label><label class="check-row full"><input id="edit-admin-notifications" type="checkbox" checked><span>Meldingen over ingediende uren en facturen ontvangen</span></label><p class="full form-help">Het account wordt lokaal bewaard en er wordt nog geen uitnodiging verstuurd. Productieaccounts worden veilig door een beheerder ingericht.</p></div>';
+  const serverAccountMode = API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin";
+  const invitationDeliveryAvailable = authRuntime.passwordResetDeliveryAvailable === true;
+  const summary = '<div class="modal-form"><label>Voor- en achternaam<input id="edit-admin-name" value="' + escapeHtml(admin.name) + '"></label><label>Zakelijk accountadres<input id="edit-admin-email" type="email" value="' + escapeHtml(admin.email) + '"></label><label class="check-row full"><input id="edit-admin-notifications" type="checkbox" checked><span>Meldingen over ingediende uren en facturen ontvangen</span></label>' +
+    (!existing && serverAccountMode ? '<label class="check-row full"><input id="edit-admin-invite" type="checkbox"' + (invitationDeliveryAvailable ? " checked" : " disabled") + '><span>' + (invitationDeliveryAvailable ? "Persoonlijke uitnodiging per e-mail versturen" : "Uitnodiging volgt zodra e-mail is ingeschakeld") + '</span></label>' : "") +
+    '<p class="full form-help">' + (serverAccountMode ? "Het beheeraccount wordt veilig op de server opgeslagen. Zonder uitnodiging blijft de toegang in afwachting." : "Het account wordt lokaal bewaard en er wordt nog geen uitnodiging verstuurd. Productieaccounts worden veilig door een beheerder ingericht.") + '</p></div>';
   showModal({
     label: existing ? "Beheerder aanpassen" : "Beheerder toevoegen",
     title: admin.name || "Nieuwe beheerder",
@@ -7810,6 +7840,7 @@ function showAdminEditor(adminId) {
 
       if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
         writeStaffToApi("upsert_admin", {
+          sendInvitation: Boolean(document.querySelector("#edit-admin-invite") && document.querySelector("#edit-admin-invite").checked),
           admin: {
             dbUserId: Number(admin.dbUserId || 0),
             name: updated.name,
@@ -7818,6 +7849,10 @@ function showAdminEditor(adminId) {
             emailNotificationsEnabled: updated.emailNotificationsEnabled
           }
         })
+          .then(result => {
+            updated.invitationPending = Boolean(result && result.invitation_pending);
+            return result;
+          })
           .then(() => refreshBootstrapReadApi(true))
           .then(() => {
             closeModal();

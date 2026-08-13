@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/common.php';
+require_once __DIR__ . '/../auth/password-reset-service.php';
 
 api_require_get_only();
 $pdo = api_auth_pdo();
@@ -18,7 +19,10 @@ try {
     $companiesStmt->execute([':company_id' => $companyId]);
     $companies = $companiesStmt->fetchAll();
 
-    $usersSql = 'SELECT id, company_id, email, display_name, role, active, deactivated_at, last_login_at, created_at, updated_at FROM users WHERE company_id = :company_id';
+    $usersSql = "SELECT id, company_id, email, display_name, role, active,
+                        CASE WHEN password_hash IS NOT NULL AND password_hash <> '' THEN 1 ELSE 0 END AS password_ready,
+                        deactivated_at, last_login_at, created_at, updated_at
+                 FROM users WHERE company_id = :company_id";
     $usersParams = [':company_id' => $companyId];
     if ($isEmployee) {
         $usersSql .= ' AND id = :user_id';
@@ -102,6 +106,9 @@ try {
         'assignment_mail_routes' => $assignmentMailRoutes,
         'mail_recipients' => $mailRecipients,
         'mailRecipients' => $mailRecipients,
+        'capabilities' => [
+            'password_reset_delivery' => auth_password_reset_delivery_available(auth_load_raw_config()),
+        ],
     ]);
 } catch (Throwable $e) {
     api_send_json([

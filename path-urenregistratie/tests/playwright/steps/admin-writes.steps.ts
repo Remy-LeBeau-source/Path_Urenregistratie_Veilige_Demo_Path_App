@@ -20,3 +20,5 @@ When("de flow voor ADM-WR-H-002 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat admin kan beheerder server-led aanmaken en wijzigen");
 When("de flow voor ADM-WR-H-003 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat admin kan medewerker server-led aanmaken en bootstrap ziet deze terug");
+When("de flow voor ADM-WR-H-004 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat admin slaat medewerker zonder SMTP veilig op met toegang in afwachting");
