@@ -90,7 +90,7 @@ Post-live beheer
 ## Actuele stand
 
 - [x] Datum: 2026-08-13 (Fase-16 Bundel 1 technisch, lokaal en in CI afgerond; externe activatie blijft gated)
-- [x] Appversie: 0.9.47
+- [x] Appversie: 0.9.48
 - [x] Technische eindsprint afgerond: Fase 10 (JPG/PNG server-side naar PDF via GD + hand-rolled
   PDF-writer `server/lib/simple_pdf.php`), Fase 11 (server-side factuur-PDF, `pdf_storage_key`
   gevuld na lock, geautoriseerde download-endpoint met company-/employee-scope, PDF-inhoudscontrole
