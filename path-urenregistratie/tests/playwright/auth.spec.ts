@@ -191,3 +191,33 @@ test('[AUTH-N-008] de inlogblokkade en aftelling blijven zichtbaar na herladen',
     expect((await responsePromise).status()).toBe(429);
   });
 });
+
+test('[AUTH-H-009] lokale login benoemt de veilige testomgeving en productnaam', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given de lokale Path loginpagina beschikbaar is', async () => {
+    await loginPage.open();
+    await expect(page.locator('#login-environment-label')).toBeVisible();
+  });
+
+  await test.step('Then heet het omgevingsveld Veilige testomgeving', async () => {
+    await expect(page.locator('#login-environment-label')).toHaveText('Veilige testomgeving');
+    await expect(page.locator('#local-account-login-tools')).toBeVisible();
+  });
+
+  await test.step('And heet de lokale titel Welkom bij Uren & Facturatie', async () => {
+    await expect(page.locator('#login-title')).toHaveText('Welkom bij Uren & Facturatie');
+  });
+
+  await test.step('When dezelfde login als productiepresentatie wordt getoond', async () => {
+    await page.evaluate(() => {
+      const runtime = window as typeof window & { applyLoginPresentation: (allowed: boolean) => void };
+      runtime.applyLoginPresentation(false);
+    });
+  });
+
+  await test.step('Then heten omgeving en titel Beveiligde omgeving en Inloggen', async () => {
+    await expect(page.locator('#login-environment-label')).toHaveText('Beveiligde omgeving');
+    await expect(page.locator('#login-title')).toHaveText('Inloggen');
+  });
+});

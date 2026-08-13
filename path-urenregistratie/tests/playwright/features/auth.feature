@@ -71,3 +71,13 @@ Feature: Inloggen, uitloggen en sessiebeheer
     Given het account door vijf mislukte pogingen is geblokkeerd
     When de pagina met F5 wordt herladen
     Then blijft de aflopende blokkade zichtbaar en blijft de server leidend
+
+  @happy
+  Scenario: [AUTH-H-009] lokale login benoemt de veilige testomgeving en productnaam
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given de lokale Path loginpagina beschikbaar is
+    Then heet het omgevingsveld Veilige testomgeving
+    And heet de lokale titel Welkom bij Uren & Facturatie
+    When dezelfde login als productiepresentatie wordt getoond
+    Then heten omgeving en titel Beveiligde omgeving en Inloggen

@@ -7106,8 +7106,8 @@ function applyLoginPresentation(localToolsAllowed) {
   const intro = document.querySelector("#login-intro");
   if (tools) tools.hidden = !localToolsAllowed;
   if (localNote) localNote.hidden = !localToolsAllowed;
-  if (environmentLabel) environmentLabel.textContent = localToolsAllowed ? "Lokale voorbereiding" : "Beveiligde omgeving";
-  if (title) title.textContent = localToolsAllowed ? "Kies je account en rol" : "Inloggen";
+  if (environmentLabel) environmentLabel.textContent = localToolsAllowed ? "Veilige testomgeving" : "Beveiligde omgeving";
+  if (title) title.textContent = localToolsAllowed ? "Welkom bij Uren & Facturatie" : "Inloggen";
   if (intro) intro.textContent = localToolsAllowed
     ? "Deze lokale testomgeving gebruikt persoonlijke testaccounts. Productie gebruikt persoonlijke accounts met e-mail en wachtwoord."
     : "Log in met je zakelijke e-mailadres. Je rol en toegangsrechten worden na het inloggen automatisch toegepast.";

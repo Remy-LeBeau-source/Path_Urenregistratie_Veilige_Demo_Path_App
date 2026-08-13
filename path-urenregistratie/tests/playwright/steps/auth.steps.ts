@@ -17,4 +17,5 @@ export const caseMappings = [
   { caseId: 'AUTH-N-006', spec: 'auth.spec.ts', assertionCount: 2, acceptanceCriteria: ["Then wordt met Playwright-assertions bevestigd dat ongeldig e-mailformaat wordt als invalid-payload geweigerd"] },
   { caseId: 'AUTH-N-007', spec: 'auth.spec.ts', assertionCount: 4, acceptanceCriteria: ["Then toont de UI de resterende blokkeertijd en blijft het formulier bruikbaar voor een ander account"] },
   { caseId: 'AUTH-N-008', spec: 'auth.spec.ts', assertionCount: 6, acceptanceCriteria: ["Then blijft de aflopende blokkade zichtbaar en blijft de server leidend"] },
+  { caseId: 'AUTH-H-009', spec: 'auth.spec.ts', assertionCount: 6, acceptanceCriteria: ["Then heet het omgevingsveld Veilige testomgeving","And heet de lokale titel Welkom bij Uren & Facturatie","Then heten omgeving en titel Beveiligde omgeving en Inloggen"] },
 ] as const;

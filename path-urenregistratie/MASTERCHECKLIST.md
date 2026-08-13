@@ -90,7 +90,7 @@ Post-live beheer
 ## Actuele stand
 
 - [x] Datum: 2026-08-13 (Fase-16 Bundel 1 technisch, lokaal en in CI afgerond; externe activatie blijft gated)
-- [x] Appversie: 0.9.49
+- [x] Appversie: 0.9.50
 - [x] Technische eindsprint afgerond: Fase 10 (JPG/PNG server-side naar PDF via GD + hand-rolled
   PDF-writer `server/lib/simple_pdf.php`), Fase 11 (server-side factuur-PDF, `pdf_storage_key`
   gevuld na lock, geautoriseerde download-endpoint met company-/employee-scope, PDF-inhoudscontrole
@@ -98,15 +98,15 @@ Post-live beheer
   getest; PDF-bijlage nu structureel beschikbaar dankzij Fase 11), Fase 15 (gelijktijdige
   approve-requests door twee beheerders, jaarwisseling december→januari, te grote upload-afwijzing,
   basis toetsenbord-/labelcontrole, PWA-manifest + defensieve service worker).
-- [x] Actuele testinventaris: 166 Playwright + 1 DB = 167 unieke cases en 170 browseruitvoeringen
-  (162 niet-mobiel + 4 mobiele cases x 2 devices).
-- [x] Volledige lokale Playwright-regressie: 170/170 groen. Dit omvat de correctieheropening,
+- [x] Actuele testinventaris: 167 Playwright + 1 DB = 168 unieke cases en 171 browseruitvoeringen
+  (163 niet-mobiel + 4 mobiele cases x 2 devices).
+- [x] Volledige lokale Playwright-regressie: 171/171 groen. Dit omvat de correctieheropening,
   servergestuurde loginblokkade na F5, eenmalige wachtwoordlink in de GUI, tokenhergebruik,
   grenswaarden van twaalf tekens en fail-closed productie-/mailconfiguratie.
   `npm run check`, `npm run test:db:crud`, `npm run security:deps` en `npm run test:gui-smoke`
   zijn op dezelfde werkboom apart groen bevestigd.
 - [x] Living Documentation-telling wordt uit de uitvoerbare specs berekend en met een expliciete
-  inventarisguard bewaakt. Actueel: 166 Playwright-cases, 1 DB-case, 167 unieke cases en 170 uitvoeringen.
+  inventarisguard bewaakt. Actueel: 167 Playwright-cases, 1 DB-case, 168 unieke cases en 171 uitvoeringen.
 - [x] Accountonboarding is technisch voorbereid: nieuwe beheerders en medewerkers krijgen in productie
   een persoonlijke, twee uur geldige eenmalige link via de mailqueue; het ruwe token staat niet in
   HTTP-accesslogs, wordt na verzending/verlopen geschoond en wordt nooit als productiewachtwoord in Git gezet.
@@ -907,7 +907,7 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
 - [x] Productie `server/config.local.php` via de interactieve fail-closed configurator gemaakt;
   databaseverbinding, private storage, securityconfig en uitgeschakelde echte mail zijn groen.
 - [-] Productiemigraties 012 en 013 zijn op TransIP uitgevoerd en bestaande migraties zijn idempotent
-  overgeslagen; demo-migraties staan uit. Bedrijfsprofiel/bootstrap en publieke health-smoke volgen na de v0.9.49-pipeline.
+  overgeslagen; demo-migraties staan uit. Bedrijfsprofiel/bootstrap en publieke health-smoke volgen na de v0.9.50-pipeline.
 - [-] Productieaccounts aanmaken; productielogin en productie-smoketest.
 - [x] Schrijfrechten upload-/PDF-mappen bewezen (mode `700`); PHP `upload_max_filesize=2M`
   en `post_max_size=8M` sluiten aan op de applicatiegrens van maximaal 2 MB; de app forceert

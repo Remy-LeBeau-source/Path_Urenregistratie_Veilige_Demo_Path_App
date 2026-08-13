@@ -40,6 +40,7 @@
 | AUTH-N-006 | ui | auth.feature | ongeldig e-mailformaat wordt als invalid-payload geweigerd | Negatieve equivalentieklasse + error guessing | 2 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Negative | 4 | Actueel |
 | AUTH-N-007 | ui | auth.feature | vijf mislukte logins tonen een servergestuurde aftelling | Negatieve equivalentieklasse + error guessing | 4 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Negative | 4 | Actueel |
 | AUTH-N-008 | ui | auth.feature | de inlogblokkade en aftelling blijven zichtbaar na herladen | Negatieve equivalentieklasse + error guessing | 6 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Negative | 4 | Actueel |
+| AUTH-H-009 | ui | auth.feature | lokale login benoemt de veilige testomgeving en productnaam | End-to-end use-case + visuele contractasserties | 6 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Happy | 4 | Actueel |
 | CTS-API-H-001 | api | customer-timesheets.feature | employee uploadt klanturenstaat, dient in en downloadt; admin kan goedkeuren en resubmit vragen | Beslissingstabel rollen en autorisatie | 28 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Happy | 10 | Actueel |
 | CTS-API-N-006 | api | customer-timesheets.feature | employee kan geen klanturenstaat voor andere medewerker wijzigen | Beslissingstabel rollen en autorisatie | 4 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Negative | 10 | Actueel |
 | CTS-API-N-007 | api | customer-timesheets.feature | employee kan geen admin reviewactie uitvoeren op klanturenstaat | Beslissingstabel rollen en autorisatie | 12 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Negative | 10 | Actueel |
@@ -187,9 +188,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 166
+- Playwright executable cases: 167
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 167
+- Totaal unieke executable cases: 168
 - Playwright features: 21
 - Database features: 1
 - Playwright steps mappings: 21
