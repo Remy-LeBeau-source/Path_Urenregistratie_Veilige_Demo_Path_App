@@ -1275,7 +1275,8 @@ const authRuntime = {
   csrfPromise: null,
   localLoginHints: null,
   localLoginHintsPromise: null,
-  passwordResetDeliveryAvailable: false
+  passwordResetDeliveryAvailable: false,
+  serverStateInitialized: false
 };
 
 let authLoginCountdownTimer = null;
@@ -2344,6 +2345,21 @@ function mergeBootstrapIntoState(data) {
   const counterparties = Array.isArray(data.counterparties) ? data.counterparties : [];
   const assignmentMailRoutes = Array.isArray(data.assignment_mail_routes) ? data.assignment_mail_routes : [];
   const recipients = Array.isArray(data.mail_recipients || data.mailRecipients) ? (data.mail_recipients || data.mailRecipients) : [];
+  const serverAccountsAreAuthoritative = authRuntime.mode === "auth" && !localAccountToolsAllowed();
+
+  if (serverAccountsAreAuthoritative) {
+    // Production must never mix browser demo identities with authenticated server data.
+    state.admins = [];
+    state.employees = [];
+    state.settings.mailRecipients = [];
+    if (!authRuntime.serverStateInitialized) {
+      state.records = {};
+      state.notifications = [];
+      state.announcements = [];
+      state.adminTaskMonthState = {};
+      authRuntime.serverStateInitialized = true;
+    }
+  }
 
   state.settings.brandPrimary = normalizedBrandColor(String(company.brand_primary || state.settings.brandPrimary || "#0d1b38"), "#0d1b38");
   state.settings.brandAccent = normalizedBrandColor(String(company.brand_accent || state.settings.brandAccent || "#3abd9d"), "#3abd9d");
@@ -2394,7 +2410,8 @@ function mergeBootstrapIntoState(data) {
         email: String(user.email || ""),
         active: Number(user.active || 0) === 1,
         emailNotificationsEnabled: true,
-        photo: ""
+        photo: "",
+        invitationPending: Number(user.password_ready || 0) !== 1
       });
     }
   });
@@ -2477,6 +2494,16 @@ function mergeBootstrapIntoState(data) {
     employeeByDbId.set(dbId, newEmployee);
     matchedDbEmployeeIds.add(dbId);
   });
+
+  if (serverAccountsAreAuthoritative) {
+    const authenticatedUserId = Number(authDebug.user_id || 0);
+    const authenticatedAdmin = state.admins.find(admin => Number(admin.dbUserId || 0) === authenticatedUserId);
+    const authenticatedEmployee = state.employees.find(employee => Number(employee.dbUserId || 0) === authenticatedUserId);
+    const selectedAdmin = authenticatedAdmin || state.admins.find(admin => admin.active !== false) || state.admins[0];
+    const selectedEmployee = authenticatedEmployee || state.employees.find(employee => employee.active !== false) || state.employees[0];
+    state.currentAdminId = selectedAdmin ? String(selectedAdmin.id) : "";
+    state.currentEmployeeId = selectedEmployee ? Number(selectedEmployee.id) : 0;
+  }
 
   // Assignments: merge selected mapping-friendly fields onto existing employee profiles.
   assignments.forEach(assignment => {
@@ -3210,7 +3237,22 @@ function updateLoginEmployeePreview() {
 function renderLoginEmployeePicker() {
   const picker = document.querySelector("#login-employee");
   const employees = activeEmployees();
-  if (!picker || !employees.length) return;
+  if (!picker) return;
+  if (!employees.length) {
+    picker.innerHTML = "";
+    const choices = document.querySelector("#login-employee-choices");
+    const trigger = document.querySelector("#login-employee-trigger");
+    const summary = document.querySelector("#login-employee-summary");
+    if (choices) choices.innerHTML = "";
+    if (trigger) {
+      trigger.textContent = "Nog geen medewerkers";
+      trigger.disabled = true;
+    }
+    if (summary) summary.textContent = "Een beheerder maakt eerst je persoonlijke account aan.";
+    return;
+  }
+  const trigger = document.querySelector("#login-employee-trigger");
+  if (trigger) trigger.disabled = false;
   if (!employeeById(state.currentEmployeeId) || employeeById(state.currentEmployeeId).active === false) state.currentEmployeeId = employees[0].id;
   picker.innerHTML = employees
     .map(employee => '<option value="' + employee.id + '">' + escapeHtml(employee.name) + " · " + escapeHtml(employee.client) + "</option>")
@@ -5748,7 +5790,9 @@ function renderAdministrators() {
     const isCurrent = current && admin.id === current.id;
     const active = admin.active !== false;
     const disabled = isCurrent || (active && activeCount <= 1);
-    const reason = isCurrent ? "Huidig account" : (active ? "Actieve beheerder" : "Geen toegang");
+    const reason = admin.invitationPending
+      ? "Toegang in afwachting"
+      : (isCurrent ? "Huidig account" : (active ? "Actieve beheerder" : "Geen toegang"));
     return '<div class="administrator-row"><div class="administrator-person"><span class="mini-avatar">' + initials(admin.name) + '</span><span><strong>' + escapeHtml(admin.name) + '</strong><small>' + escapeHtml(admin.email) + " · " + reason + '</small></span></div><span class="status-pill ' + (active ? "status-approved" : "status-concept") + '">' + (active ? "Actief" : "Inactief") + '</span><div><button class="small-button" data-edit-admin="' + escapeHtml(admin.id) + '">Aanpassen</button> <button class="small-button" data-toggle-admin="' + escapeHtml(admin.id) + '"' + (disabled ? " disabled" : "") + '>' + (active ? "Deactiveren" : "Activeren") + '</button></div></div>';
   }).join("");
 }
@@ -6666,16 +6710,19 @@ function renderAll() {
   renderLoginEmployeePicker();
   renderPeriodHeadings();
   renderDashboard();
-  renderEmployeeDashboard();
+  const hasEmployees = state.employees.length > 0;
+  if (hasEmployees) renderEmployeeDashboard();
   renderApprovals();
   renderInvoices();
   renderAnnouncements();
-  renderEmployeeAnnouncementArchive();
+  if (hasEmployees) renderEmployeeAnnouncementArchive();
   renderEmployees();
   renderMailTemplates();
   renderMailRecipientSettings();
-  renderHoursGrid();
-  renderCustomerTimesheetPanel();
+  if (hasEmployees) {
+    renderHoursGrid();
+    renderCustomerTimesheetPanel();
+  }
   renderProfileChrome();
   renderNotifications();
   renderHelpSuggestions();
@@ -6790,7 +6837,7 @@ function toast(message) {
 }
 
 function showModal(options) {
-  const settings = Object.assign({ label: "Controle", title: "", message: "", summary: "", confirm: "Bevestigen", action: null, secondary: "", secondaryAction: null, wide: false, adminTaskId: "", taskNavigation: true }, options);
+  const settings = Object.assign({ label: "Controle", title: "", message: "", summary: "", confirm: "Bevestigen", action: null, secondary: "", secondaryAction: null, wide: false, adminTaskId: "", taskNavigation: true, initialFocus: "" }, options);
   document.querySelector("#modal-label").textContent = settings.label;
   document.querySelector("#modal-title").textContent = settings.title;
   document.querySelector("#modal-message").textContent = settings.message;
@@ -6801,7 +6848,8 @@ function showModal(options) {
   document.querySelector("#modal-confirm").disabled = false;
   document.querySelector("#modal-secondary").textContent = settings.secondary || "Terugsturen";
   document.querySelector("#modal-secondary").hidden = !settings.secondary;
-  document.querySelector(".modal").classList.toggle("is-wide", settings.wide);
+  const dialog = document.querySelector(".modal");
+  dialog.classList.toggle("is-wide", settings.wide);
   modalAction = settings.action;
   modalSecondaryAction = settings.secondaryAction;
   document.querySelector("#modal").hidden = false;
@@ -6814,7 +6862,10 @@ function showModal(options) {
   } else {
     taskNavigation.hidden = true;
   }
-  document.querySelector("#modal-confirm").focus();
+  dialog.scrollTop = 0;
+  const initialFocus = settings.initialFocus ? dialog.querySelector(settings.initialFocus) : null;
+  (initialFocus || document.querySelector("#modal-confirm")).focus({ preventScroll: true });
+  dialog.scrollTop = 0;
 }
 
 function closeModal() {
@@ -7108,8 +7159,15 @@ function applyLoginPresentation(localToolsAllowed) {
   const environmentLabel = document.querySelector("#login-environment-label");
   const title = document.querySelector("#login-title");
   const intro = document.querySelector("#login-intro");
+  const quickReset = document.querySelector("#quick-reset-demo");
+  const settingsReset = document.querySelector("#reset-demo");
   if (tools) tools.hidden = !localToolsAllowed;
   if (localNote) localNote.hidden = !localToolsAllowed;
+  if (quickReset) quickReset.hidden = !localToolsAllowed;
+  if (settingsReset) settingsReset.hidden = !localToolsAllowed;
+  if (!localToolsAllowed) {
+    try { window.localStorage.removeItem(LOCAL_RESET_GUARD_KEY); } catch (_error) { /* production remains server-authoritative */ }
+  }
   if (environmentLabel) environmentLabel.textContent = localToolsAllowed ? "Veilige testomgeving" : "Beveiligde omgeving";
   if (title) title.textContent = localToolsAllowed ? "Welkom bij Uren & Facturatie" : "Inloggen";
   if (intro) intro.textContent = localToolsAllowed
@@ -7529,10 +7587,11 @@ function showInvoiceDocumentPreview(employeeId) {
 function showEmployeeEditor(employeeId) {
   const existing = employeeId ? employeeById(employeeId) : null;
   const nextId = state.employees.reduce((max, employee) => Math.max(max, employee.id), 0) + 1;
+  const serverAccountMode = API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin";
   const employee = existing || {
     id: nextId,
     name: "",
-    email: "nieuwe-medewerker@example.invalid",
+    email: serverAccountMode ? "" : "nieuwe-medewerker@example.invalid",
     active: true,
     startDate: "2026-08-01",
     notificationsEnabled: true,
@@ -7542,7 +7601,7 @@ function showEmployeeEditor(employeeId) {
     role: "",
     client: "",
     broker: "",
-    brokerEmail: "nieuw-adres@example.invalid",
+    brokerEmail: serverAccountMode ? "" : "nieuw-adres@example.invalid",
     invoiceRecipientName: "",
     brokerInvoiceAddress: "",
     invoiceProject: "",
@@ -7562,10 +7621,9 @@ function showEmployeeEditor(employeeId) {
     customerTimesheetDueWorkday: 5,
     customerTimesheetBrokerEnabled: false,
     customerTimesheetUseBrokerEmail: true,
-    customerTimesheetBrokerEmail: "nieuw-adres@example.invalid",
+    customerTimesheetBrokerEmail: serverAccountMode ? "" : "nieuw-adres@example.invalid",
     invoiceWithoutCustomerTimesheetAllowed: true
   };
-  const serverAccountMode = API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin";
   const invitationDeliveryAvailable = authRuntime.passwordResetDeliveryAvailable === true;
   const invitationControl = !existing || employee.invitationPending === true
     ? (serverAccountMode
@@ -7584,7 +7642,7 @@ function showEmployeeEditor(employeeId) {
   const summary = '<div class="modal-form">' +
     '<p class="full form-help">Account en contract</p>' +
     '<label>Voor- en achternaam<input id="edit-name" value="' + escapeHtml(employee.name) + '"></label>' +
-    '<label>Zakelijk accountadres<input id="edit-account-email" type="email" value="' + escapeHtml(employee.email || "nieuwe-medewerker@example.invalid") + '"></label>' +
+    '<label>Zakelijk accountadres<input id="edit-account-email" type="email" value="' + escapeHtml(employee.email || (serverAccountMode ? "" : "nieuwe-medewerker@example.invalid")) + '"></label>' +
     '<label>Functie<input id="edit-role" value="' + escapeHtml(employee.role) + '"></label>' +
     '<label>Startdatum<input id="edit-start-date" type="date" value="' + escapeHtml(employee.startDate || "2026-08-01") + '"></label>' +
     '<label>Contract<input id="edit-contract" value="' + escapeHtml(employee.contract) + '"></label>' +
@@ -7633,6 +7691,7 @@ function showEmployeeEditor(employeeId) {
     summary,
     confirm: serverAccountMode ? "Medewerker opslaan" : "Lokaal opslaan",
     wide: true,
+    initialFocus: "#edit-name",
     action: () => {
       const brokerEmailInput = document.querySelector("#edit-broker-email");
       const accountEmailInput = document.querySelector("#edit-account-email");
@@ -7813,8 +7872,8 @@ function showEmployeeEditor(employeeId) {
 
 function showAdminEditor(adminId) {
   const existing = adminId ? adminById(adminId) : null;
-  const admin = existing || { id: "admin-" + (state.admins.length + 1), name: "", email: "nieuwe-beheerder@example.invalid", active: true, emailNotificationsEnabled: true, photo: "" };
   const serverAccountMode = API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin";
+  const admin = existing || { id: "admin-" + (state.admins.length + 1), name: "", email: serverAccountMode ? "" : "nieuwe-beheerder@example.invalid", active: true, emailNotificationsEnabled: true, photo: "" };
   const invitationDeliveryAvailable = authRuntime.passwordResetDeliveryAvailable === true;
   const summary = '<div class="modal-form"><label>Voor- en achternaam<input id="edit-admin-name" value="' + escapeHtml(admin.name) + '"></label><label>Zakelijk accountadres<input id="edit-admin-email" type="email" value="' + escapeHtml(admin.email) + '"></label><label class="check-row full"><input id="edit-admin-notifications" type="checkbox" checked><span>Meldingen over ingediende uren en facturen ontvangen</span></label>' +
     (!existing && serverAccountMode ? '<label class="check-row full"><input id="edit-admin-invite" type="checkbox"' + (invitationDeliveryAvailable ? " checked" : " disabled") + '><span>' + (invitationDeliveryAvailable ? "Persoonlijke uitnodiging per e-mail versturen" : "Uitnodiging volgt zodra e-mail is ingeschakeld") + '</span></label>' : "") +
@@ -7826,6 +7885,7 @@ function showAdminEditor(adminId) {
     summary,
     confirm: "Beheerder opslaan",
     wide: true,
+    initialFocus: "#edit-admin-name",
     action: () => {
       const name = document.querySelector("#edit-admin-name");
       const email = document.querySelector("#edit-admin-email");

@@ -37,3 +37,11 @@ Feature: Beheer- en instellingenwijzigingen via API
     Given beheer- en instellingenwijzigingen via API is voorbereid
     When de flow voor ADM-WR-H-004 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat admin slaat medewerker zonder SMTP veilig op met toegang in afwachting
+
+  @happy
+  Scenario: [ADM-WR-H-005] productie toont uitsluitend serveraccounts en opent medewerkerformulier bovenaan
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 13
+    Given beheer- en instellingenwijzigingen via API is voorbereid
+    When de flow voor ADM-WR-H-005 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat productie toont uitsluitend serveraccounts en opent medewerkerformulier bovenaan

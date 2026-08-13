@@ -261,4 +261,52 @@ test.describe('admin write endpoints', () => {
 
     await loginPage.logout();
   });
+
+  test('[ADM-WR-H-005] productie toont uitsluitend serveraccounts en opent medewerkerformulier bovenaan', async ({ page }) => {
+    await page.route('**/server/api/bootstrap.php', async route => {
+      const response = await route.fetch();
+      const body = await response.json();
+      const administrator = (body.users as Array<Record<string, unknown>>).find(user => user.role === 'administrator');
+      body.users = administrator ? [administrator] : [];
+      body.employees = [];
+      body.assignments = [];
+      body.counterparties = [];
+      body.assignment_mail_routes = [];
+      body.mail_recipients = [];
+      body.capabilities = { password_reset_delivery: false };
+      await route.fulfill({ response, json: body });
+    });
+
+    const loginPage = new LoginPage(page);
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect.poll(() => page.evaluate(() => window.__PATH_READ_API_SOURCE.bootstrap)).toBe('api');
+
+    await page.evaluate(() => {
+      window.localAccountToolsAllowed = () => false;
+      window.applyLoginPresentation(false);
+      window.refreshBootstrapReadApi(true);
+    });
+
+    await expect(page.locator('#employee-grid .employee-card')).toHaveCount(0);
+    await expect(page.locator('#employee-grid')).toContainText('Geen medewerkers binnen dit filter');
+    await expect(page.locator('#team-active-account-count')).toHaveText('1');
+    await expect(page.locator('#administrator-list .administrator-row')).toHaveCount(1);
+    await expect(page.locator('#view-employees')).not.toContainText('Marc de Roon');
+    await expect(page.locator('#view-employees')).not.toContainText('Stasjo van Bakel');
+    await expect(page.locator('#quick-reset-demo')).toBeHidden();
+    await expect(page.locator('#reset-demo')).toBeHidden();
+
+    await page.locator('[data-view="employees"]').click();
+    await page.locator('#add-employee').click();
+    await expect(page.locator('#edit-name')).toBeFocused();
+    await expect(page.locator('#edit-account-email')).toHaveValue('');
+    await expect(page.locator('#edit-broker-email')).toHaveValue('');
+    await expect(page.locator('#edit-customer-timesheet-broker-email')).toHaveValue('');
+    await expect.poll(() => page.locator('.modal').evaluate(element => element.scrollTop)).toBe(0);
+    await expect(page.locator('#modal-summary')).toContainText('Uitnodiging volgt zodra e-mail is ingeschakeld');
+
+    await page.locator('#modal-close').click();
+    await loginPage.logout();
+  });
 });
