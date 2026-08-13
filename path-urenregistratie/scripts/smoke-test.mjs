@@ -1556,6 +1556,7 @@ const provisionCompanySrc = readFileSync_(new URL("../server/scripts/provision-c
 const configureProductionSrc = readFileSync_(new URL("../server/scripts/configure-production.php", import.meta.url), "utf8");
 const changePasswordSrc = readFileSync_(new URL("../server/auth/change-password.php", import.meta.url), "utf8");
 const rootHtaccessSrc = readFileSync_(new URL("../.htaccess", import.meta.url), "utf8");
+const serverHtaccessSrc = readFileSync_(new URL("../server/.htaccess", import.meta.url), "utf8");
 const playwrightRunnerSrc = readFileSync_(new URL("./run-playwright-e2e.mjs", import.meta.url), "utf8");
 const playwrightDbBootstrapSrc = readFileSync_(new URL("./bootstrap-playwright-db.mjs", import.meta.url), "utf8");
 const dbCrudSmokeSrc = readFileSync_(new URL("./run-db-crud-smoke.mjs", import.meta.url), "utf8");
@@ -1563,6 +1564,7 @@ const playwrightConfigSrc = readFileSync_(new URL("../playwright.config.ts", imp
 assert(installSrc.includes("'production'") && installSrc.includes("403") && installSrc.includes("PHP_SAPI"), "install.php moet een productieguard bevatten die HTTP-toegang blokkeert");
 assert(migrateSrc.includes("'production'") && migrateSrc.includes("403") && migrateSrc.includes("PHP_SAPI"), "migrate.php moet een productieguard bevatten die HTTP-toegang blokkeert");
 assert(healthSrc.includes("'production'") && (healthSrc.includes("ob_clean") || healthSrc.includes("['ok'")), "health.php moet technische details onderdrukken in productiemodus");
+assert(serverHtaccessSrc.includes('config(?:\\.local|\\.example)?\\.php') && serverHtaccessSrc.includes('Require all denied'), "server/.htaccess moet config.local.php en alle overige configvarianten expliciet blokkeren");
 assert(/'mail'\s*=>\s*\[[\s\S]*?'enabled'\s*=>\s*false/.test(configExSrc), "config.example.php moet mail standaard uitgeschakeld hebben (mail.enabled = false)");
 assert(configExSrc.includes("'host'       => 'smtp-relay.gmail.com'") && configExSrc.includes("'port'       => 587") && configExSrc.includes("'encryption' => 'starttls'"), "Productieconfig moet de bevestigde Google SMTP Relay zonder geheimen voorbereiden");
 assert(configExSrc.includes("'hsts_enabled' => false") && configExSrc.includes("https://uren.pathconsultancy.nl"), "HSTS moet voorbereid maar uit blijven bij de exacte productie-origin");
