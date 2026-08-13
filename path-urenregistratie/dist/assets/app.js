@@ -2811,6 +2811,7 @@ function refreshEmailQueueReadApi(force = false) {
       }
       readApiDebug.emailQueue = data;
       setReadApiSource("emailQueue", "api");
+      renderMailDeliveryHistory();
       const cachedPeriodKeys = [...new Set([
         currentPeriod().key,
         ...Object.keys(readApiDebug.invoicesByPeriod || {}),
@@ -6000,6 +6001,93 @@ function renderMailRecipientSettings() {
   ).join("") : '<div class="dashboard-action-empty"><strong>Nog geen vaste ontvangers.</strong><br>Voeg bijvoorbeeld boekhouding of een salarisadministratie toe.</div>';
 }
 
+function mailDeliveryChannelLabel(channel) {
+  const labels = {
+    broker: "Broker",
+    accountant: "Boekhouding",
+    payroll: "Salarisadministratie",
+    password_reset: "Accountuitnodiging / wachtwoordherstel",
+    customer_timesheet: "Klanturenstaat"
+  };
+  return labels[String(channel || "").toLowerCase()] || String(channel || "E-mail");
+}
+
+function mailDeliveryAttachmentLabel(policy) {
+  const labels = {
+    none: "Geen bijlagen",
+    invoice: "Factuur als PDF",
+    customer_timesheet: "Klanturenstaat als PDF",
+    invoice_and_customer_timesheet: "Factuur + klanturenstaat"
+  };
+  return labels[String(policy || "none").toLowerCase()] || "Bijlagebeleid gecontroleerd";
+}
+
+function mailDeliveryStatusMeta(item) {
+  if (item && item.dry_run === true) return { label: "Controlevoorbeeld", tone: "status-concept" };
+  const status = String(item && item.status || "queued").toLowerCase();
+  if (status === "sent") return { label: "Verzonden", tone: "status-approved" };
+  if (status === "processing") return { label: "Wordt verzonden", tone: "status-submitted" };
+  if (status === "failed") return { label: "Mislukt", tone: "status-warning" };
+  return { label: "Klaargezet", tone: "status-ready" };
+}
+
+function mailDeliveryTimestampLabel(value) {
+  if (!value) return "Nog niet verzonden";
+  const raw = String(value).trim();
+  const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(raw) ? raw.replace(" ", "T") + "Z" : raw;
+  const date = new Date(normalized);
+  if (Number.isNaN(date.getTime())) return raw;
+  try {
+    return new Intl.DateTimeFormat("nl-NL", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Europe/Amsterdam"
+    }).format(date);
+  } catch {
+    return raw;
+  }
+}
+
+function renderMailDeliveryHistory() {
+  if (typeof document === "undefined") return;
+  const list = document.querySelector("#mail-delivery-history-list");
+  const summary = document.querySelector("#mail-delivery-history-summary");
+  if (!list || !summary) return;
+
+  const data = readApiDebug.emailQueue;
+  const items = Array.isArray(data && data.items) ? data.items.slice(0, 12) : [];
+  if (!data) {
+    summary.textContent = authRuntime.mode === "auth"
+      ? "De beveiligde verzendadministratie wordt geladen."
+      : "Verzendhistorie is beschikbaar na beveiligd inloggen op de serveromgeving.";
+    list.innerHTML = '<div class="dashboard-action-empty"><strong>Nog geen servergegevens geladen.</strong><br>Er worden lokaal geen e-mails verzonden.</div>';
+    return;
+  }
+
+  const sent = items.filter(item => item && item.status === "sent" && item.dry_run !== true).length;
+  const pending = items.filter(item => item && ["queued", "processing"].includes(String(item.status)) && item.dry_run !== true).length;
+  const failed = items.filter(item => item && item.status === "failed" && item.dry_run !== true).length;
+  summary.textContent = items.length
+    ? "Laatste " + items.length + " registraties · " + sent + " verzonden · " + pending + " in behandeling · " + failed + " mislukt."
+    : "Er zijn nog geen e-mails vanuit de applicatie geregistreerd.";
+
+  list.innerHTML = items.length ? items.map(item => {
+    const status = mailDeliveryStatusMeta(item);
+    const eventTime = item && item.status === "sent" ? item.sent_at : item.created_at;
+    const timePrefix = item && item.status === "sent" ? "Verzonden" : "Aangemaakt";
+    const invoice = item && item.invoice_number ? " · Factuur " + escapeHtml(item.invoice_number) : "";
+    const attempts = Math.max(0, Number(item && item.attempt_count || 0));
+    return '<article class="mail-delivery-history-item" data-mail-delivery-status="' + escapeHtml(String(item && item.status || "queued")) + '">' +
+      '<div class="mail-delivery-history-main"><strong>' + escapeHtml(String(item && item.subject_snapshot || "E-mail zonder onderwerp")) + '</strong><small>Aan ' + escapeHtml(String(item && item.recipient_email || "Onbekende ontvanger")) + invoice + '</small></div>' +
+      '<div class="mail-delivery-history-meta"><span>' + escapeHtml(mailDeliveryChannelLabel(item && item.channel)) + '</span><span>' + escapeHtml(mailDeliveryAttachmentLabel(item && item.attachment_policy)) + '</span></div>' +
+      '<div class="mail-delivery-history-state"><span class="status-pill ' + status.tone + '">' + status.label + '</span><small>' + timePrefix + ' · ' + escapeHtml(mailDeliveryTimestampLabel(eventTime)) + (attempts > 1 ? " · " + attempts + " pogingen" : "") + '</small></div>' +
+    '</article>';
+  }).join("") : '<div class="dashboard-action-empty"><strong>Nog geen applicatiemails.</strong><br>Na de eerste queue- of verzendactie verschijnt hier het resultaat.</div>';
+}
+
 function nextMailRecipientId() {
   let index = 1;
   while (mailRecipientById("recipient-" + index)) index += 1;
@@ -6719,6 +6807,7 @@ function renderAll() {
   renderEmployees();
   renderMailTemplates();
   renderMailRecipientSettings();
+  renderMailDeliveryHistory();
   if (hasEmployees) {
     renderHoursGrid();
     renderCustomerTimesheetPanel();
@@ -6744,6 +6833,10 @@ function showView(view, options = {}) {
   if (state.currentRole === "admin" && view === "employee-announcements") view = "dashboard";
   if (view === "dashboard") renderDashboard();
   if (view === "employee-dashboard") renderEmployeeDashboard();
+  if (view === "settings") {
+    renderMailDeliveryHistory();
+    refreshEmailQueueReadApi(false).then(renderMailDeliveryHistory).catch(() => renderMailDeliveryHistory());
+  }
   const target = document.querySelector("#view-" + view);
   if (!target) return;
   const wasInvoicesActive = document.querySelector("#view-invoices")?.classList.contains("is-active");
@@ -9285,6 +9378,18 @@ document.querySelector("#connect-gmail").addEventListener("click", () => showMod
   confirm: "Sluiten",
   action: closeModal
 }));
+document.querySelector("#refresh-mail-delivery-history")?.addEventListener("click", event => {
+  const button = event.currentTarget;
+  button.disabled = true;
+  button.textContent = "Vernieuwen…";
+  refreshEmailQueueReadApi(true)
+    .then(() => renderMailDeliveryHistory())
+    .catch(() => toast("Verzendadministratie kon niet worden vernieuwd."))
+    .finally(() => {
+      button.disabled = false;
+      button.textContent = "Vernieuwen";
+    });
+});
 
 document.querySelector("#mark-notifications-read").addEventListener("click", () => {
   if (API_ENABLED && authRuntime.mode === "auth") {

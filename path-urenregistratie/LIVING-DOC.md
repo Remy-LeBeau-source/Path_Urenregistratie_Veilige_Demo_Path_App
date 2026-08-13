@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 172 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 174 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 172 unieke case-ID's
+- Playwright executable cases: 174 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 173 unieke case-ID's
+- Totaal executable cases: 175 unieke case-ID's
 - Playwright features: 21
 - Database features: 1
 - Playwright steps mappings: 21
 - Database steps mappings: 1
-- Uitvoeringen: 176
-- Niet-mobile projectuitvoeringen: 168
-- Mobile functionele cases: 4
-- Pixel 7 / Chromium-uitvoeringen: 4
-- iPhone 13 / WebKit-uitvoeringen: 4
+- Uitvoeringen: 179
+- Niet-mobile projectuitvoeringen: 169
+- Mobile functionele cases: 5
+- Pixel 7 / Chromium-uitvoeringen: 5
+- iPhone 13 / WebKit-uitvoeringen: 5
 
-De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 172 Playwright-functionele cases in totaal 176 resultaten op: 168 + (4 x 2) = 176.
+De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 174 Playwright-functionele cases in totaal 179 resultaten op: 169 + (5 x 2) = 179.
 
 ## Documentatieketen
 
@@ -125,13 +125,14 @@ De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 172 Playwrig
 
 - Feature: `tests/playwright/features/email-queue.feature`
 - Source: `tests/playwright/email-queue.spec.ts`
-- Cases: 14
+- Cases: 15
 
 - [EQ-H-001] factuurlock maakt queue-items aan met dry_run=true — Techniek: Toestandsovergang · Assertions: 5
 - [EQ-H-002] broker-channel bundelt factuur en klanturenstaat — Techniek: API-contract + equivalentieklasse · Assertions: 2
 - [EQ-H-003] EasySalary-channel heeft attachment_policy none — Techniek: Equivalentieklassen · Assertions: 2
 - [EQ-H-004] action=enqueue voor gelockte factuur maakt nieuwe items aan — Techniek: Toestandsovergang · Assertions: 6
-- [EQ-H-005] action=list response bevat verplichte velden — Techniek: API-contract + equivalentieklasse · Assertions: 14
+- [EQ-H-005] action=list response bevat verplichte velden — Techniek: API-contract + equivalentieklasse · Assertions: 15
+- [EQ-H-015] Backoffice ziet veilige verzendhistorie zonder berichtinhoud — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 10
 - [EQ-N-006] anonieme gebruiker krijgt 401 op list — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2
 - [EQ-N-007] medewerker krijgt 403 op list — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [EQ-N-008] action=enqueue zonder invoice_id geeft 400 — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
@@ -187,12 +188,13 @@ De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 172 Playwrig
 
 - Feature: `tests/playwright/features/mobile.feature`
 - Source: `tests/playwright/mobile-ui.spec.ts`
-- Cases: 4
+- Cases: 5
 
 - [MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikbaar — Techniek: Responsive viewport + end-to-end use-case · Assertions: 22
 - [MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documentupload bereiken — Techniek: Responsive viewport + end-to-end use-case · Assertions: 14
 - [MOB-H-003] mobiele correctie herindiening en administratieve goedkeuring zijn bereikbaar — Techniek: Responsive viewport + end-to-end use-case · Assertions: 13
 - [MOB-N-004] mobiele facturen touch targets en modals blijven binnen viewport — Techniek: Responsive viewport + end-to-end use-case · Assertions: 13
+- [MOB-H-005] mobiele verzendadministratie blijft leesbaar en toont geen geheime inhoud — Techniek: Responsive viewport + end-to-end use-case · Assertions: 11
 
 ### Meldingen en notificaties
 

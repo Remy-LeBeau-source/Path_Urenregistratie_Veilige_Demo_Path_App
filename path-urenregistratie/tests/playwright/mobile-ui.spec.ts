@@ -541,3 +541,66 @@ test('[MOB-N-004] mobiele facturen touch targets en modals blijven binnen viewpo
     expect(errors).toEqual([]);
   });
 });
+
+test('[MOB-H-005] mobiele verzendadministratie blijft leesbaar en toont geen geheime inhoud', async ({ page }) => {
+  const errors = captureConsoleErrors(page);
+  const loginPage = new LoginPage(page);
+  await isolateFrontendState(page);
+
+  await page.route('**/server/api/email-queue.php*', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        items: [{
+          id: 955,
+          invoice_id: 7,
+          invoice_number: 'PATH-2026-007',
+          channel: 'broker',
+          recipient_email: 'info@pathconsultancy.nl',
+          subject_snapshot: 'Factuur PATH-2026-007 – juli 2026',
+          attachment_policy: 'invoice_and_customer_timesheet',
+          status: 'sent',
+          attempt_count: 1,
+          dry_run: false,
+          sent_at: '2026-08-14 00:45:00',
+          created_at: '2026-08-14 00:44:00',
+          body_snapshot: 'GEHEIME-INHOUD-MAG-NIET-ZICHTBAAR-ZIJN',
+        }],
+      }),
+    });
+  });
+
+  await test.step('Given een beheerder de mobiele Instellingen opent', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    clearConsoleErrors(errors);
+    await openView(page, 'settings');
+    await expect(page.locator('#mail-delivery-history-title')).toHaveText('Recente e-mails');
+  });
+
+  await test.step('Then de verzendregistratie als leesbare kaart binnen het scherm staat', async () => {
+    const history = page.locator('#mail-delivery-history-list');
+    const item = history.locator('.mail-delivery-history-item');
+    await expect(item).toHaveCount(1);
+    await expect(history).toContainText('info@pathconsultancy.nl');
+    await expect(history).toContainText('Factuur + klanturenstaat');
+    await expect(history).toContainText('Verzonden');
+    expect(await item.evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(1);
+    await assertNoHorizontalOverflow(page);
+  });
+
+  await test.step('And geheime inhoud verborgen blijft en Vernieuwen een touchdoel is', async () => {
+    const history = page.locator('#mail-delivery-history-list');
+    const refresh = page.locator('#refresh-mail-delivery-history');
+    await expect(history).not.toContainText('GEHEIME-INHOUD-MAG-NIET-ZICHTBAAR-ZIJN');
+    await refresh.scrollIntoViewIfNeeded();
+    const box = await refresh.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.height).toBeGreaterThanOrEqual(44);
+    await refresh.click();
+    await expect(refresh).toBeEnabled();
+    expect(errors).toEqual([]);
+  });
+});

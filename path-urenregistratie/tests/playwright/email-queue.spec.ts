@@ -4,6 +4,7 @@ import { EmailQueueApi } from './api/EmailQueueApi';
 import { InvoiceApi } from './api/InvoiceApi';
 import { TimesheetApi } from './api/TimesheetApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
+import { LoginPage } from './pages/LoginPage';
 
 // ---------------------------------------------------------------------------
 // Shared helpers
@@ -192,10 +193,93 @@ test.describe('email queue api', () => {
         expect(typeof item.attempt_count).toBe('number');
         expect(typeof item.dry_run).toBe('boolean');
         expect(typeof item.created_at).toBe('string');
+        expect(item).not.toHaveProperty('body_snapshot');
       }
     });
 
     await test.step('And cleanup', async () => { await authApi.logout(); await ctx.dispose(); });
+  });
+
+  test('[EQ-H-015] Backoffice ziet veilige verzendhistorie zonder berichtinhoud', async ({ page }) => {
+    let queueRequests = 0;
+    await page.route('**/server/api/email-queue.php*', async route => {
+      queueRequests += 1;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ok: true,
+          dry_run: false,
+          count: 2,
+          items: [
+            {
+              id: 902,
+              user_id: null,
+              invoice_id: 71,
+              invoice_number: 'PATH-2026-007',
+              channel: 'broker',
+              recipient_email: 'info@pathconsultancy.nl',
+              cc_email: null,
+              subject_snapshot: 'Factuur PATH-2026-007 – juli 2026',
+              attachment_policy: 'invoice_and_customer_timesheet',
+              status: 'sent',
+              attempt_count: 1,
+              dry_run: false,
+              sent_at: '2026-08-14 00:45:00',
+              created_at: '2026-08-14 00:44:00',
+              body_snapshot: 'MAG-NOOIT-IN-DE-UI-VERSCHIJNEN'
+            },
+            {
+              id: 901,
+              user_id: 7,
+              invoice_id: null,
+              invoice_number: null,
+              channel: 'password_reset',
+              recipient_email: 'info@pathconsultancy.nl',
+              cc_email: null,
+              subject_snapshot: 'Stel je wachtwoord in voor Uren & Facturatie',
+              attachment_policy: 'none',
+              status: 'queued',
+              attempt_count: 0,
+              dry_run: false,
+              sent_at: null,
+              created_at: '2026-08-14 00:43:00',
+              body_snapshot: 'https://example.invalid/#reset-password=GEHEIM'
+            }
+          ]
+        })
+      });
+    });
+
+    const login = new LoginPage(page);
+    await test.step('Given een beheerder is beveiligd ingelogd', async () => {
+      await login.open();
+      await login.loginAsAdmin();
+    });
+
+    await test.step('When de beheerder het verzendoverzicht in Instellingen opent', async () => {
+      await page.locator('button[data-view="settings"]').click();
+      await expect(page.locator('#mail-delivery-history-title')).toHaveText('Recente e-mails');
+    });
+
+    await test.step('Then zijn ontvanger, onderwerp, status, tijd en bijlagen zichtbaar zonder geheime inhoud', async () => {
+      const history = page.locator('#mail-delivery-history-list');
+      await expect(history.locator('.mail-delivery-history-item')).toHaveCount(2);
+      await expect(history).toContainText('info@pathconsultancy.nl');
+      await expect(history).toContainText('Factuur PATH-2026-007 – juli 2026');
+      await expect(history).toContainText('Factuur + klanturenstaat');
+      await expect(history).toContainText('Verzonden');
+      await expect(history).toContainText('Klaargezet');
+      await expect(history).not.toContainText('MAG-NOOIT-IN-DE-UI-VERSCHIJNEN');
+      await expect(history).not.toContainText('reset-password=GEHEIM');
+    });
+
+    await test.step('And Vernieuwen haalt de actuele serverregistraties opnieuw op', async () => {
+      const before = queueRequests;
+      await page.locator('#refresh-mail-delivery-history').click();
+      await expect.poll(() => queueRequests).toBeGreaterThan(before);
+      await expect(page.locator('#refresh-mail-delivery-history')).toBeEnabled();
+    });
   });
 
   // --------------------------------------------------------------------------

@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1B38">
   <link rel="manifest" href="manifest.webmanifest">
   <title>Uren & Facturatie</title>
-  <link rel="stylesheet" href="assets/styles.css?v=0.9.54">
+  <link rel="stylesheet" href="assets/styles.css?v=0.9.55">
 </head>
 <body>
   <section class="login-screen" id="login-screen" aria-labelledby="login-title">
@@ -136,7 +136,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 0.9.54</span>
+      <span class="demo-badge">Versie 0.9.55</span>
       </div>
     </aside>
 
@@ -152,7 +152,7 @@
         <div class="topbar-title">
           <p class="eyebrow" id="organization-name">Path Consultancy</p>
           <h1 id="page-title">Urenoverzicht</h1>
-          <span class="demo-badge mobile-version-badge">Versie 0.9.54</span>
+          <span class="demo-badge mobile-version-badge">Versie 0.9.55</span>
         </div>
         <div class="topbar-actions">
           <span class="safety-badge">E-mail uitgeschakeld</span>
@@ -625,6 +625,17 @@
             <div class="mail-recipient-settings-list" id="mail-recipient-settings-list"></div>
             <p class="safe-domain-note">Ontvangers en bijlagen kunnen veilig worden gecontroleerd. Echte verzending wordt uitsluitend via het afzonderlijk beveiligde SMTP Relay geactiveerd.</p>
             <button class="text-button" id="connect-gmail">Bekijk verzendbeveiliging</button>
+            <div class="mail-delivery-history" aria-labelledby="mail-delivery-history-title">
+              <div class="recipient-settings-heading">
+                <div><span class="section-label">Verzendadministratie</span><h4 id="mail-delivery-history-title">Recente e-mails</h4></div>
+                <button class="small-button" id="refresh-mail-delivery-history" type="button">Vernieuwen</button>
+              </div>
+              <p class="settings-template-intro" id="mail-delivery-history-summary">De applicatie toont hier per bericht de ontvanger, het onderwerp, de status en het verzendmoment.</p>
+              <div class="mail-delivery-history-list" id="mail-delivery-history-list" aria-live="polite">
+                <div class="dashboard-action-empty"><strong>Nog geen servergegevens geladen.</strong><br>Open dit onderdeel na beveiligd inloggen opnieuw.</div>
+              </div>
+              <p class="safe-domain-note">Wachtwoordlinks en volledige berichtinhoud worden hier nooit getoond. Voor technische aflevering blijft het Google e-maillogboek beschikbaar.</p>
+            </div>
           </section>
           <section class="panel settings-card full-width" id="settings-texts">
             <div class="email-template-heading">
@@ -738,7 +749,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script vite-ignore defer src="assets/jspdf.umd.min.js"></script>
   <script vite-ignore defer src="assets/invoice-fonts.js"></script>
-  <script vite-ignore defer src="assets/app.js?v=0.9.54"></script>
+  <script vite-ignore defer src="assets/app.js?v=0.9.55"></script>
   <script>
     // Defensive: registration failure/unsupported browsers must never affect the app itself.
     if ('serviceWorker' in navigator) {

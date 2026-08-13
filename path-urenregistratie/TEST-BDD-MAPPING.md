@@ -72,7 +72,8 @@
 | EQ-H-002 | api | email-queue.feature | broker-channel bundelt factuur en klanturenstaat | API-contract + equivalentieklasse | 2 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | broker-channel bundelt factuur en klanturenstaat | Happy | 12 | Actueel |
 | EQ-H-003 | api | email-queue.feature | EasySalary-channel heeft attachment_policy none | Equivalentieklassen | 2 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | EasySalary-channel heeft attachment_policy none | Happy | 12 | Actueel |
 | EQ-H-004 | api | email-queue.feature | action=enqueue voor gelockte factuur maakt nieuwe items aan | Toestandsovergang | 6 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | action=enqueue voor gelockte factuur maakt nieuwe items aan | Happy | 12 | Actueel |
-| EQ-H-005 | api | email-queue.feature | action=list response bevat verplichte velden | API-contract + equivalentieklasse | 14 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | action=list response bevat verplichte velden | Happy | 12 | Actueel |
+| EQ-H-005 | api | email-queue.feature | action=list response bevat verplichte velden | API-contract + equivalentieklasse | 15 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | action=list response bevat verplichte velden | Happy | 12 | Actueel |
+| EQ-H-015 | api | email-queue.feature | Backoffice ziet veilige verzendhistorie zonder berichtinhoud | Negatieve equivalentieklasse + error guessing | 10 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | Backoffice ziet veilige verzendhistorie zonder berichtinhoud | Happy | 12 | Actueel |
 | EQ-N-006 | api | email-queue.feature | anonieme gebruiker krijgt 401 op list | Beslissingstabel rollen en autorisatie | 2 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | anonieme gebruiker krijgt 401 op list | Negative | 12 | Actueel |
 | EQ-N-007 | api | email-queue.feature | medewerker krijgt 403 op list | Beslissingstabel rollen en autorisatie | 1 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | medewerker krijgt 403 op list | Negative | 12 | Actueel |
 | EQ-N-008 | api | email-queue.feature | action=enqueue zonder invoice_id geeft 400 | Negatieve equivalentieklasse + error guessing | 2 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | action=enqueue zonder invoice_id geeft 400 | Negative | 12 | Actueel |
@@ -106,6 +107,7 @@
 | MOB-H-002 | ui | mobile.feature | mobiele medewerker kan concepturen opslaan indienen en documentupload bereiken | Responsive viewport + end-to-end use-case | 14 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | Uren registreren en indienen | Happy | 15 | Actueel |
 | MOB-H-003 | ui | mobile.feature | mobiele correctie herindiening en administratieve goedkeuring zijn bereikbaar | Responsive viewport + end-to-end use-case | 13 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | Correctie en goedkeuring | Happy | 15 | Actueel |
 | MOB-N-004 | ui | mobile.feature | mobiele facturen touch targets en modals blijven binnen viewport | Responsive viewport + end-to-end use-case | 13 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | mobiele facturen touch targets en modals blijven binnen viewport | Negative | 15 | Actueel |
+| MOB-H-005 | ui | mobile.feature | mobiele verzendadministratie blijft leesbaar en toont geen geheime inhoud | Responsive viewport + end-to-end use-case | 11 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | mobiele verzendadministratie blijft leesbaar en toont geen geheime inhoud | Happy | 15 | Actueel |
 | NOT-H-001 | api | notifications.feature | ingelogde gebruiker kan notificaties ophalen | API-contract + equivalentieklasse | 5 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | ingelogde gebruiker kan notificaties ophalen | Happy | 15 | Actueel |
 | NOT-H-002 | api | notifications.feature | mark_all_read werkt zonder fouten | Toestandsovergang | 4 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | mark_all_read werkt zonder fouten | Happy | 15 | Actueel |
 | NOT-N-003 | api | notifications.feature | anonieme gebruiker krijgt 401 op notificaties | Beslissingstabel rollen en autorisatie | 1 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | anonieme gebruiker krijgt 401 op notificaties | Negative | 15 | Actueel |
@@ -194,9 +196,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 172
+- Playwright executable cases: 174
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 173
+- Totaal unieke executable cases: 175
 - Playwright features: 21
 - Database features: 1
 - Playwright steps mappings: 21
