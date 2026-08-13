@@ -104,3 +104,12 @@ Feature: Veilige productieconfiguratie en deployment
     Given de transport-, dispatch- en productiepreflightbron wordt gelezen
     When de flow voor SAFE-H-005 wordt uitgevoerd
     Then zijn TLS, dry-run, private storage, HSTS en niet-mutatieve checks afgedwongen
+
+  @happy
+  Scenario: [SAFE-H-006] eerste productieorganisatie wordt gevalideerd en zonder overschrijven ingericht
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 18
+    Given de CLI-only productiebedrijfs-bootstrap wordt gelezen
+    When de flow voor SAFE-H-006 wordt uitgevoerd
+    Then vereist de bootstrap productie, expliciete bevestiging en geldige bedrijfsgegevens
+    And maakt hij alleen een lege database aan, logt de handeling en overschrijft nooit afwijkende data

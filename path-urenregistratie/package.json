@@ -1,13 +1,13 @@
 {
   "name": "path-urenregistratie",
-  "version": "0.9.48",
+  "version": "0.9.49",
   "private": true,
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "check": "node --check assets/app.js && node scripts/smoke-test.mjs && npm run test:design && npm run test:ops",
     "test:design": "node scripts/test-design-audit.mjs",
-    "test:ops": "php server/scripts/production-preflight.php --config=server/config.example.php && php server/scripts/mail-preflight.php --config=server/config.example.php && php server/scripts/database-backup.php --config=server/config.example.php && php server/scripts/database-restore.php --config=server/config.example.php --file=database/schema.sql && php server/scripts/rotate-logs.php --config=server/config.example.php && php server/scripts/configure-production.php && php server/scripts/provision-account.php --config=server/config.example.php",
+    "test:ops": "php server/scripts/production-preflight.php --config=server/config.example.php && php server/scripts/mail-preflight.php --config=server/config.example.php && php server/scripts/database-backup.php --config=server/config.example.php && php server/scripts/database-restore.php --config=server/config.example.php --file=database/schema.sql && php server/scripts/rotate-logs.php --config=server/config.example.php && php server/scripts/configure-production.php && php server/scripts/provision-company.php --config=server/config.example.php && php server/scripts/provision-account.php --config=server/config.example.php",
     "prod:configure": "php server/scripts/configure-production.php",
     "test:closeout": "node scripts/closeout-to-zero-check.mjs",
     "test:gui-smoke": "node scripts/run-playwright-e2e.mjs --grep DASH-N-010 && node scripts/run-playwright-e2e.mjs --grep TS-REV-UI-H-008 && node scripts/run-playwright-e2e.mjs --grep DASH-N-016",

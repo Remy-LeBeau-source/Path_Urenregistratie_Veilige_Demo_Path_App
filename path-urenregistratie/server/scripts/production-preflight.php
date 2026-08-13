@@ -35,6 +35,7 @@ try {
         __DIR__ . '/database-restore.php',
         __DIR__ . '/rotate-logs.php',
         __DIR__ . '/configure-production.php',
+        __DIR__ . '/provision-company.php',
         __DIR__ . '/provision-account.php',
         dirname(__DIR__) . '/auth/change-password.php',
         dirname(__DIR__, 2) . '/.htaccess',

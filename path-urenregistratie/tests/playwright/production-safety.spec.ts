@@ -385,3 +385,35 @@ test('[SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed', a
     expect(config).toContain('../path-private');
   });
 });
+
+test('[SAFE-H-006] eerste productieorganisatie wordt gevalideerd en zonder overschrijven ingericht', async () => {
+  let source = '';
+
+  await test.step('Given de CLI-only productiebedrijfs-bootstrap wordt gelezen', async () => {
+    source = await readFile(join(process.cwd(), 'server', 'scripts', 'provision-company.php'), 'utf8');
+    expect(source).toContain("require_once __DIR__ . '/cli-bootstrap.php'");
+    expect(source).not.toMatch(/example\.invalid|demo-bv|Demo BV/);
+  });
+
+  await test.step('Then vereist de bootstrap productie, expliciete bevestiging en geldige bedrijfsgegevens', async () => {
+    expect(source).toContain("($options['execute'] ?? false) !== true");
+    expect(source).toContain("($options['confirm'] ?? '') !== 'PROVISION_COMPANY'");
+    expect(source).toContain("$environment !== 'production'");
+    expect(source).toContain("($config['allow_demo_migrations'] ?? true) !== false");
+    expect(source).toContain("$profile === 'path-consultancy'");
+    expect(source).toContain("$profile === 'custom'");
+    expect(source).toContain("/^\\d{8}$/");
+    expect(source).toContain("/^NL\\d{9}B\\d{2}$/");
+    expect(source).toContain("/^NL\\d{2}[A-Z]{4}\\d{10}$/");
+  });
+
+  await test.step('And maakt hij alleen een lege database aan, logt de handeling en overschrijft nooit afwijkende data', async () => {
+    expect(source).toContain('$pdo->beginTransaction()');
+    expect(source).toContain('FROM companies ORDER BY id FOR UPDATE');
+    expect(source).toContain('Refusing to provision: multiple companies already exist.');
+    expect(source).toContain('Refusing to overwrite an existing company with different data.');
+    expect(source).toContain("'action' => 'unchanged'");
+    expect(source).toContain('company.production_provisioned');
+    expect(source).toContain('$pdo->rollBack()');
+  });
+});

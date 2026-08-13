@@ -90,7 +90,7 @@ Post-live beheer
 ## Actuele stand
 
 - [x] Datum: 2026-08-13 (Fase-16 Bundel 1 technisch, lokaal en in CI afgerond; externe activatie blijft gated)
-- [x] Appversie: 0.9.48
+- [x] Appversie: 0.9.49
 - [x] Technische eindsprint afgerond: Fase 10 (JPG/PNG server-side naar PDF via GD + hand-rolled
   PDF-writer `server/lib/simple_pdf.php`), Fase 11 (server-side factuur-PDF, `pdf_storage_key`
   gevuld na lock, geautoriseerde download-endpoint met company-/employee-scope, PDF-inhoudscontrole
@@ -98,15 +98,15 @@ Post-live beheer
   getest; PDF-bijlage nu structureel beschikbaar dankzij Fase 11), Fase 15 (gelijktijdige
   approve-requests door twee beheerders, jaarwisseling december→januari, te grote upload-afwijzing,
   basis toetsenbord-/labelcontrole, PWA-manifest + defensieve service worker).
-- [x] Actuele testinventaris: 165 Playwright + 1 DB = 166 unieke cases en 169 browseruitvoeringen
-  (161 niet-mobiel + 4 mobiele cases x 2 devices).
-- [x] Volledige lokale Playwright-regressie: 169/169 groen. Dit omvat de correctieheropening,
+- [x] Actuele testinventaris: 166 Playwright + 1 DB = 167 unieke cases en 170 browseruitvoeringen
+  (162 niet-mobiel + 4 mobiele cases x 2 devices).
+- [x] Volledige lokale Playwright-regressie: 170/170 groen. Dit omvat de correctieheropening,
   servergestuurde loginblokkade na F5, eenmalige wachtwoordlink in de GUI, tokenhergebruik,
   grenswaarden van twaalf tekens en fail-closed productie-/mailconfiguratie.
   `npm run check`, `npm run test:db:crud`, `npm run security:deps` en `npm run test:gui-smoke`
   zijn op dezelfde werkboom apart groen bevestigd.
 - [x] Living Documentation-telling wordt uit de uitvoerbare specs berekend en met een expliciete
-  inventarisguard bewaakt. Actueel: 165 Playwright-cases, 1 DB-case, 166 unieke cases en 169 uitvoeringen.
+  inventarisguard bewaakt. Actueel: 166 Playwright-cases, 1 DB-case, 167 unieke cases en 170 uitvoeringen.
 - [x] Accountonboarding is technisch voorbereid: nieuwe beheerders en medewerkers krijgen in productie
   een persoonlijke, twee uur geldige eenmalige link via de mailqueue; het ruwe token staat niet in
   HTTP-accesslogs, wordt na verzending/verlopen geschoond en wordt nooit als productiewachtwoord in Git gezet.
@@ -867,7 +867,8 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
 
 **Uit Fase 13 - definitieve bedrijfsgegevens en accounts:**
 - [x] Facturerende identiteit bevestigd: Path Consultancy, handelsnaam van QSI Consultancy B.V.
-- [-] Definitieve statutaire naam, factuuradres, KvK-nummer, btw-nummer, IBAN, betalingstermijn, factuurprefix.
+- [x] Definitieve statutaire naam, handelsnaam, factuuradres, KvK-nummer, btw-nummer, IBAN,
+  betalingstermijn en factuurprefix vastgelegd in het gevalideerde `path-consultancy`-productieprofiel.
 - [-] Definitieve Circle8-route, factuuradres en e-mailadres/portaal.
 - [x] Boekhouderroute bevestigd voor `giovanno.maatsen@pathconsultancy.nl` (factuur, 1 bijlage).
 - [x] Salarisroute bevestigd voor `gambitizanagi@gmail.com` (naam/maand/uren, 0 bijlagen).
@@ -881,14 +882,17 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
 - [-] Vastleggen wie gegevens mag exporteren, corrigeren en archiveren.
 
 **Uit Fase 14 - TransIP-controlepaneel/SSH:**
-- [x] Productiedatabasewachtwoord door eigenaar geroteerd zonder het in chat of Git te plaatsen; verbinding wordt door de interactieve configurator nog gevalideerd.
+- [x] Productiedatabasewachtwoord door eigenaar geroteerd zonder het in chat of Git te plaatsen;
+  de interactieve configurator heeft de verbinding read-only gevalideerd en `config.local.php` met mode `0600` geïnstalleerd.
 - [x] PHP-versie op TransIP read-only bevestigd: 8.4.24.
 - [x] HTTPS/SSL op `https://uren.pathconsultancy.nl` bereikbaar en TransIP Let's Encrypt ingeschakeld; HSTS blijft bewust uit tot observatie na cutover.
 - [x] Exacte documentroot via controlepaneel en SSH bevestigd: `/data/sites/web/pathconsultancynl/subsites/uren.pathconsultancy.nl`.
 - [x] SSH-keytoegang bevestigd voor `pathconsultancynl@pathco.ssh.transip.me`.
 - [x] Private productiemappen bestaan onder `/data/sites/web/pathconsultancynl/private/path-urenregistratie`.
 - [-] TransIP-back-ups controleren (database inbegrepen, retentieperiode).
-- [-] Handmatige database-export voor livegang.
+- [x] Handmatige database-export vóór productiemigratie gemaakt buiten de webroot:
+  `path-db-20260813-131718.sql` (40.769 bytes), met SHA-256
+  `b98f214e27ecec808e426426e407d8d8cfe40190c4d08c61bb3aabb1507c4286`.
 - [x] Stagingprocedure bewezen met release `9fad9592e3d3`: als niet-actieve private bundel
   geüpload, uitgepakt
   en remote geverifieerd met SHA-256
@@ -900,8 +904,10 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
   de documentroot activeren en de vorige documentroot als rollbackrelease bewaren.
 - [-] Direct na cutover `https://uren.pathconsultancy.nl/index.html#` controleren op HTTP 200,
   afwezigheid van de TransIP-placeholder, juiste versie, headers, health, login en hash-routing.
-- [-] Productie `server/config.local.php` via de interactieve fail-closed configurator maken; script is gebouwd, DB-secret moet nog rechtstreeks in de SSH-terminal worden ingevoerd.
-- [-] health.php/install.php/migrate.php op TransIP uitvoeren; demo-seeds uitschakelen bevestigen.
+- [x] Productie `server/config.local.php` via de interactieve fail-closed configurator gemaakt;
+  databaseverbinding, private storage, securityconfig en uitgeschakelde echte mail zijn groen.
+- [-] Productiemigraties 012 en 013 zijn op TransIP uitgevoerd en bestaande migraties zijn idempotent
+  overgeslagen; demo-migraties staan uit. Bedrijfsprofiel/bootstrap en publieke health-smoke volgen na de v0.9.49-pipeline.
 - [-] Productieaccounts aanmaken; productielogin en productie-smoketest.
 - [x] Schrijfrechten upload-/PDF-mappen bewezen (mode `700`); PHP `upload_max_filesize=2M`
   en `post_max_size=8M` sluiten aan op de applicatiegrens van maximaal 2 MB; de app forceert
