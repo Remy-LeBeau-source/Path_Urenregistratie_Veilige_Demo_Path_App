@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "check": "node --check assets/app.js && node scripts/smoke-test.mjs && npm run test:design && npm run test:ops",
+    "check": "node --check assets/app.js && node scripts/smoke-test.mjs && npm run test:design && npm run test:bdd:design && npm run test:db:config && npm run test:ops",
     "test:design": "node scripts/test-design-audit.mjs",
     "test:ops": "php server/scripts/production-preflight.php --config=server/config.example.php && php server/scripts/mail-preflight.php --config=server/config.example.php && php server/scripts/database-backup.php --config=server/config.example.php && php server/scripts/database-restore.php --config=server/config.example.php --file=database/schema.sql && php server/scripts/rotate-logs.php --config=server/config.example.php && php server/scripts/configure-production.php && php server/scripts/provision-company.php --config=server/config.example.php && php server/scripts/provision-account.php --config=server/config.example.php",
     "prod:configure": "php server/scripts/configure-production.php",
@@ -15,6 +15,7 @@
     "security:deps:full": "npm audit --audit-level=moderate",
     "ci:local": "npm run build && npm run check && npm run test:db:crud && npm run security:deps",
     "test:db:crud": "node scripts/run-db-crud-smoke.mjs",
+    "test:db:config": "node scripts/db-env-precedence-check.mjs",
     "test:db:bootstrap": "node scripts/bootstrap-playwright-db.mjs",
     "test:e2e": "node scripts/run-playwright-e2e.mjs",
     "test:e2e:dev": "set PLAYWRIGHT_STAGE=dev&& node scripts/run-playwright-e2e.mjs",
@@ -38,6 +39,9 @@
     "test:e2e:headed": "node scripts/run-playwright-e2e.mjs --headed",
     "test:e2e:ui-all:headed": "set PLAYWRIGHT_GROUP=ui-desktop,ui-mobile&& node scripts/run-playwright-e2e.mjs --headed",
     "test:e2e:ui": "node scripts/run-playwright-e2e.mjs --ui",
+    "bdd:generate": "bddgen -c playwright.bdd.config.ts",
+    "test:bdd:design": "npm run bdd:generate && node scripts/bdd-design-audit.mjs",
+    "test:bdd": "npm run bdd:generate && node scripts/run-playwright-e2e.mjs --config=playwright.bdd.config.ts --project=bdd-chromium",
     "allure:generate": "allure generate allure-results --clean -o allure-report",
     "allure:open": "allure open allure-report",
     "allure:serve": "allure serve allure-results",
@@ -53,6 +57,7 @@
     "jsdom": "^26.1.0",
     "jspdf": "^4.2.1",
     "mysql2": "^3.23.2",
+    "playwright-bdd": "^9.2.0",
     "vite": "^7.1.1"
   }
 }

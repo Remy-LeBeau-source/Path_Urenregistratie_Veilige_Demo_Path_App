@@ -8,6 +8,9 @@ const sqlPath = path.join(root, 'database', 'queries', 'crud-smoke.sql');
 const sql = fs.readFileSync(sqlPath, 'utf8');
 
 function loadEnvFiles() {
+  // Shell/CI values are explicit operator input and must not be overwritten by
+  // checked-in stage defaults while loading optional local configuration.
+  const explicitEnvironment = { ...process.env };
   const envFiles = [path.join(root, '.env'), path.join(root, '.env.local')];
   const stage = String(process.env.PLAYWRIGHT_STAGE || '').trim().toLowerCase();
   if (stage && ['dev', 'test', 'acc', 'prod'].includes(stage)) {
@@ -19,6 +22,25 @@ function loadEnvFiles() {
   for (const envFile of envFiles) {
     if (fs.existsSync(envFile)) {
       loadDotEnv({ path: envFile, override: envFile.endsWith('.env.local') || envFile.includes('environments') });
+    }
+  }
+
+  for (const [key, value] of Object.entries(explicitEnvironment)) {
+    if (value !== undefined) process.env[key] = value;
+  }
+
+  const databaseSettingGroups = [
+    ['PATH_APP_DB_HOST', 'PLAYWRIGHT_DB_HOST', 'DB_HOST'],
+    ['PATH_APP_DB_PORT', 'PLAYWRIGHT_DB_PORT', 'DB_PORT'],
+    ['PATH_APP_DB_USER', 'PLAYWRIGHT_DB_USER', 'DB_USER'],
+    ['PATH_APP_DB_PASSWORD', 'PLAYWRIGHT_DB_PASSWORD', 'DB_PASSWORD'],
+    ['PATH_APP_DB_NAME', 'PLAYWRIGHT_DB_NAME', 'DB_NAME'],
+  ];
+  for (const aliases of databaseSettingGroups) {
+    const hasExplicitValue = aliases.some((key) => explicitEnvironment[key] !== undefined);
+    if (!hasExplicitValue) continue;
+    for (const key of aliases) {
+      if (explicitEnvironment[key] === undefined) delete process.env[key];
     }
   }
 }
@@ -62,6 +84,16 @@ try {
   }
 } catch {
   // fall back to env-based defaults
+}
+
+if (process.env.DB_CRUD_CONFIG_CHECK_ONLY === '1') {
+  console.log(JSON.stringify({
+    host: config.host,
+    port: config.port,
+    user: config.user,
+    database: config.database,
+  }));
+  process.exit(0);
 }
 
 const environmentSignals = [process.env.PATH_APP_ENVIRONMENT, process.env.APP_ENV, process.env.NODE_ENV]

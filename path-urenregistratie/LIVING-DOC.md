@@ -22,7 +22,7 @@ De 4 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 167 Playwrig
 ## Documentatieketen
 
 1. `.feature`: businessleesbaar gedrag en compacte KRPI-tags.
-2. `.steps.ts`: expliciete case-ID naar spec-mapping; geen uitvoerbare Cucumber-code.
+2. `.steps.ts`: eenvoudige F12-navigatie naar de leesbare stapzin; geen dubbele testcode.
 3. `.spec.ts`: uitvoerbare Playwright-test.
 4. SQL/DB smoke: `database/queries/crud-smoke.sql` en `scripts/run-db-crud-smoke.mjs` voor directe infrastructuurvalidatie.
 5. Allure: functionele Suites en Behaviors, met project/device als metadata.

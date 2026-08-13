@@ -4,7 +4,8 @@
 
 - Native Playwright specs zijn de uitvoerbare bron van waarheid.
 - `.feature`-bestanden zijn Living Documentation.
-- `.steps.ts`-bestanden zijn navigatie- en case-ID-mapping zonder Cucumber-runner.
+- `.steps.ts`-bestanden zijn een eenvoudige F12-navigatie-index zonder Cucumber-runner.
+- Case-ID, bron, assertionaantal en testtechniek blijven centraal bewaard in deze traceability matrix.
 - Case-ID staat in de scenarionaam en is gelijk aan Playwright en Allure `testCaseId`.
 
 ## Compacte tagconventie

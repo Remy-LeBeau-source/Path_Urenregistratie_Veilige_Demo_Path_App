@@ -193,6 +193,18 @@ jobs:
       - name: Dependency security audit (runtime)
         run: npm run security:deps
 
+      - name: Stop setup PHP server before managed E2E runners
+        run: |
+          if [ -f /tmp/php-server.pid ]; then
+            kill "$(cat /tmp/php-server.pid)" || true
+            rm -f /tmp/php-server.pid
+          fi
+
+      - name: Run executable BDD pilot
+        env:
+          PATH_APP_BASE_URL: http://127.0.0.1:8000
+        run: npm run test:bdd
+
       - name: Run E2E tests
         env:
           PATH_APP_BASE_URL: http://127.0.0.1:8000
