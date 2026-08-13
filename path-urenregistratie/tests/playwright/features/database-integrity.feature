@@ -1,7 +1,7 @@
 @regressie
 @db
 @fase:16
-Feature: Database-integriteit en CRUD-smoke in Path Uren & Facturatie
+Feature: Database-integriteit en CRUD-controle
 
   # SQL-bron: database/queries/crud-smoke.sql
   # Runner: scripts/run-db-crud-smoke.mjs

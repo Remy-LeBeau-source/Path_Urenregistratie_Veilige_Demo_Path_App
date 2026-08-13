@@ -765,15 +765,38 @@ try {
                 $eventType = 'timesheet.draft_saved';
             }
         } elseif ($action === 'request_correction') {
-            if ($existingStatus !== 'submitted') {
+            if (!in_array($existingStatus, ['submitted', 'approved'], true)) {
                 if ($pdo->inTransaction()) {
                     $pdo->rollBack();
                 }
                 auth_send_json([
                     'ok' => false,
                     'error' => 'invalid-timesheet-transition',
-                    'message' => 'Only submitted timesheets can be moved to correction.',
+                    'message' => 'Only submitted or approved timesheets can be moved to correction.',
                 ], 409);
+            }
+
+            if ($existingStatus === 'approved') {
+                $invoice = $pdo->prepare(
+                    'SELECT id, status, locked_at
+                     FROM invoices
+                     WHERE timesheet_id = :timesheet_id
+                     ORDER BY id DESC
+                     LIMIT 1
+                     FOR UPDATE'
+                );
+                $invoice->execute([':timesheet_id' => $timesheetId]);
+                $existingInvoice = $invoice->fetch();
+                if ($existingInvoice) {
+                    if ($pdo->inTransaction()) {
+                        $pdo->rollBack();
+                    }
+                    auth_send_json([
+                        'ok' => false,
+                        'error' => 'timesheet-invoiced',
+                        'message' => 'Approved timesheet cannot be reopened after an invoice has been created.',
+                    ], 409);
+                }
             }
 
             $update = $pdo->prepare(
@@ -813,7 +836,9 @@ try {
                 ':correction_message' => $correctionMessage,
             ]);
 
-            $eventType = 'timesheet.correction_requested';
+            $eventType = $existingStatus === 'approved'
+                ? 'timesheet.approval_reopened'
+                : 'timesheet.correction_requested';
         } elseif ($action === 'approve') {
             if ($existingStatus !== 'submitted') {
                 if ($pdo->inTransaction()) {

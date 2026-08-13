@@ -859,6 +859,115 @@ test('[DASH-N-015] medewerkerprioriteit kiest correctie boven document en toont 
   });
 });
 
+test('[DASH-N-016] correctieactie ververst een verborgen rooster uit een eerdere maand', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await page.route('**/server/api/timesheets.php**', async route => {
+    const request = route.request();
+    if (request.method().toUpperCase() !== 'GET') {
+      await route.continue();
+      return;
+    }
+    const url = new URL(request.url());
+    const period = url.searchParams.get('period') || '2026-08';
+    const correction = period === '2026-08';
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        found: true,
+        period,
+        employee_id: 2,
+        timesheet: {
+          id: correction ? 1602 : 1601,
+          status: correction ? 'correction' : 'approved',
+          contractual_hours: correction ? 151.2 : 153,
+          billable_hours: correction ? 80 : 153,
+          leave_hours: 0,
+          sickness_hours: 0,
+          employee_note: null,
+          review_note: correction ? 'Controleer 12 augustus en dien opnieuw in.' : null,
+          day_entries: [{ work_date: `${period}-12`, hours: correction ? 8 : 7, description: 'Regressiedag' }],
+          submitted_at: '2026-08-05T09:30:00Z',
+          approved_at: correction ? null : '2026-08-03T10:02:00Z',
+          approved_by: correction ? null : 1,
+          version: 4,
+          latest_correction: correction ? {
+            id: 1,
+            correction_message: 'Controleer 12 augustus en dien opnieuw in.',
+            requested_by: 1,
+            requested_by_name: 'Gio Maatsen',
+            requested_at: '2026-08-05T10:15:00Z',
+            resubmitted_at: null,
+          } : null,
+          correction_history: correction ? [{
+            id: 1,
+            correction_message: 'Controleer 12 augustus en dien opnieuw in.',
+            requested_by: 1,
+            requested_by_name: 'Gio Maatsen',
+            requested_at: '2026-08-05T10:15:00Z',
+            resubmitted_at: null,
+          }] : [],
+        },
+      }),
+    });
+  });
+
+  await test.step('Given juli als goedgekeurde verborgen urenstaat is achtergebleven', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.evaluate(() => {
+      const runtime = window as typeof window & {
+        currentEmployee: () => { id: number };
+        recordFor: (employeeId: number, periodKey: string) => MutableRecord;
+        persistState: () => void;
+        renderAll: () => void;
+      };
+      const employeeId = runtime.currentEmployee().id;
+      ['2026-05', '2026-06', '2026-07'].forEach(periodKey => {
+        const record = runtime.recordFor(employeeId, periodKey);
+        record.timesheetStatus = 'approved';
+        record.customerTimesheet.status = 'sent';
+        record.correctionHistory = [];
+      });
+      const august = runtime.recordFor(employeeId, '2026-08');
+      august.timesheetStatus = 'correction';
+      august.customerTimesheet.status = 'sent';
+      august.correctionHistory = [{
+        requestedBy: 'Gio Maatsen',
+        requestedAt: '5 augustus 2026 om 10:15',
+        message: 'Controleer 12 augustus en dien opnieuw in.',
+        resubmittedAt: null,
+      }];
+      runtime.persistState();
+      runtime.renderAll();
+    });
+    await page.locator('button[data-view="timesheet"]').click();
+    await page.locator('#period-month-picker').click();
+    await page.locator('#period-month-panel [data-period-month="07"][data-month-control="#period-month-picker"]').click();
+    await expect(page.locator('#timesheet-period-title')).toHaveText('Juli 2026');
+    await expect(page.locator('#timesheet-status')).toHaveText('Goedgekeurd');
+  });
+
+  await test.step('When het dashboard augustus prioriteert en Open correctie wordt gekozen', async () => {
+    await page.locator('button[data-view="employee-dashboard"]').click();
+    await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
+    await expect(page.locator('#employee-dashboard-action')).toHaveAttribute('data-employee-action-period', '2026-08');
+    await expect(page.locator('#employee-dashboard-action')).toContainText('Open correctie');
+    await page.locator('#employee-dashboard-action').click();
+  });
+
+  await test.step('Then toont Mijn uren augustus als bewerkbare correctie met herindienknop', async () => {
+    await expect(page.locator('#timesheet-period-title')).toHaveText('Augustus 2026');
+    await expect(page.locator('#timesheet-status')).toHaveText('Correctie nodig');
+    await expect(page.locator('#timesheet-correction-banner')).toBeVisible();
+    await expect(page.locator('#hours-grid .hours-input:not([disabled])').first()).toBeVisible();
+    await expect(page.locator('#submit-timesheet')).toBeVisible();
+    await expect(page.locator('#submit-timesheet')).toContainText('opnieuw indienen');
+  });
+});
+
 test('[DASH-H-006] vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie', async ({ page }) => {
   const loginPage = new LoginPage(page);
   let openOverviewVisible = false;

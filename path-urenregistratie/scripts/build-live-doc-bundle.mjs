@@ -335,6 +335,9 @@ function parseFeatureDocument(file, source) {
 
 function renderLivingDocViewer(features, generatedAt, allureSummary) {
   const featureData = JSON.stringify(features).replaceAll('<', '\\u003c');
+  const scenarioTotal = features.reduce((sum, feature) => sum + feature.scenarios.length, 0);
+  const happyTotal = features.reduce((sum, feature) => sum + feature.scenarios.filter(scenario => scenario.tags.includes('@happy')).length, 0);
+  const negativeTotal = scenarioTotal - happyTotal;
   return `<!doctype html>
 <html lang="nl">
   <head>
@@ -347,6 +350,7 @@ function renderLivingDocViewer(features, generatedAt, allureSummary) {
     <header class="viewer-header">
       <a class="brand" href="index.html"><span class="brand-mark">P</span><span>Path <small>Living Documentation</small></span></a>
       <nav class="viewer-nav" aria-label="Rapportages">
+        <a href="index.html">Overzicht</a>
         <a href="test-bdd-mapping.html">Traceability</a>
         <a href="playwright-report/index.html">Playwright</a>
         <a href="allure-report/index.html">Allure</a>
@@ -364,24 +368,39 @@ function renderLivingDocViewer(features, generatedAt, allureSummary) {
           <span>Zoeken</span>
           <input id="feature-search" type="search" placeholder="Feature, scenario of case-ID" autocomplete="off" />
         </label>
+        <button id="feature-overview-link" class="feature-item overview-item active" type="button"><span>Testoverzicht</span><small>${scenarioTotal} uitvoerbare cases</small></button>
         <div id="feature-list" class="feature-list"></div>
       </aside>
       <main class="viewer-main">
-        <div class="viewer-toolbar">
-          <div>
-            <span class="overline">Feature</span>
-            <h1 id="feature-title"></h1>
+        <section id="feature-overview" class="viewer-overview">
+          <span class="overline">Living Documentation</span>
+          <h1>Testoverzicht</h1>
+          <p>Start bij het totaalbeeld en zoom daarna in op een domein, feature of case-ID.</p>
+          <div class="scenario-summary overview-summary">
+            <div><strong>${scenarioTotal}</strong><span>Uitvoerbare cases</span></div>
+            <div><strong>${happyTotal}</strong><span>Happy flow</span></div>
+            <div><strong>${negativeTotal}</strong><span>Negative flow</span></div>
+            <div><strong>${allureSummary.passed}/${allureSummary.total}</strong><span>Laatste regressie</span></div>
           </div>
-          <a id="feature-source" class="source-link" href="#">Open bronbestand</a>
-        </div>
-        <div id="feature-meta" class="feature-meta"></div>
-        <div class="scenario-summary">
-          <div><strong id="scenario-count">0</strong><span>Scenario's</span></div>
-          <div><strong id="happy-count">0</strong><span>Happy flow</span></div>
-          <div><strong id="negative-count">0</strong><span>Negative flow</span></div>
-        </div>
-        <section id="scenario-list" class="scenario-list" aria-live="polite"></section>
-        <p id="empty-state" class="empty-state" hidden>Geen scenario's gevonden voor deze zoekopdracht.</p>
+          <div class="overview-guidance"><strong>Zo werkt dit overzicht</strong><p>Kies links een feature voor businessgedrag, gebruik zoeken voor een case-ID en open daarna Playwright of Allure voor screenshots, traces en uitvoeringsbewijs.</p></div>
+        </section>
+        <section id="feature-detail" hidden>
+          <div class="viewer-toolbar">
+            <div>
+              <span class="overline">Feature</span>
+              <h1 id="feature-title"></h1>
+            </div>
+            <a id="feature-source" class="source-link" href="#">Open bronbestand</a>
+          </div>
+          <div id="feature-meta" class="feature-meta"></div>
+          <div class="scenario-summary">
+            <div><strong id="scenario-count">0</strong><span>Scenario's</span></div>
+            <div><strong id="happy-count">0</strong><span>Happy flow</span></div>
+            <div><strong id="negative-count">0</strong><span>Negative flow</span></div>
+          </div>
+          <section id="scenario-list" class="scenario-list" aria-live="polite"></section>
+          <p id="empty-state" class="empty-state" hidden>Geen scenario's gevonden voor deze zoekopdracht.</p>
+        </section>
       </main>
     </div>
     <footer class="viewer-footer">Gegenereerd uit Native Playwright-documentatie op ${escapeHtml(generatedAt)}</footer>
@@ -393,9 +412,11 @@ function renderLivingDocViewer(features, generatedAt, allureSummary) {
       const requestedFilter = params.get('filter');
       const caseFeature = requestedCase ? features.find(feature => feature.scenarios.some(scenario => scenario.id === requestedCase)) : null;
       const initialQuery = requestedCase || requestedFilter || '';
-      const state = { activeFile: caseFeature?.file || (features.some(feature => feature.file === requestedFeature) ? requestedFeature : features[0]?.file || ''), query: initialQuery.toLowerCase() };
+      const state = { activeFile: caseFeature?.file || (features.some(feature => feature.file === requestedFeature) ? requestedFeature : ''), query: initialQuery.toLowerCase() };
       const elements = {
         search: document.querySelector('#feature-search'), featureList: document.querySelector('#feature-list'),
+        overviewLink: document.querySelector('#feature-overview-link'), overview: document.querySelector('#feature-overview'),
+        detail: document.querySelector('#feature-detail'),
         featureCount: document.querySelector('#feature-count'), title: document.querySelector('#feature-title'),
         source: document.querySelector('#feature-source'), meta: document.querySelector('#feature-meta'),
         scenarioCount: document.querySelector('#scenario-count'), happyCount: document.querySelector('#happy-count'),
@@ -425,7 +446,8 @@ function renderLivingDocViewer(features, generatedAt, allureSummary) {
       function renderFeatures() {
         const visible = features.filter(matches);
         elements.featureCount.textContent = visible.length;
-        if (!visible.some(feature => feature.file === state.activeFile) && visible[0]) state.activeFile = visible[0].file;
+        if (state.query && !visible.some(feature => feature.file === state.activeFile) && visible[0]) state.activeFile = visible[0].file;
+        elements.overviewLink.classList.toggle('active', !state.activeFile && !state.query);
         const grouped = new Map(suiteOrder.map(key => [key, []]));
         visible.forEach(feature => { const key = suiteKey(feature); if (grouped.has(key)) grouped.get(key).push(feature); else grouped.get('integration').push(feature); });
         const isSearching = state.query.length > 0;
@@ -438,6 +460,14 @@ function renderLivingDocViewer(features, generatedAt, allureSummary) {
         elements.featureList.querySelectorAll('button').forEach(button => button.addEventListener('click', () => { state.activeFile = button.dataset.file; render(); }));
       }
       function renderActiveFeature() {
+        if (!state.activeFile && !state.query) {
+          elements.overview.hidden = false;
+          elements.detail.hidden = true;
+          elements.empty.hidden = true;
+          return;
+        }
+        elements.overview.hidden = true;
+        elements.detail.hidden = false;
         const feature = features.find(item => item.file === state.activeFile && matches(item));
         if (!feature) {
           elements.title.textContent = 'Geen resultaten'; elements.meta.innerHTML = ''; elements.scenarios.innerHTML = ''; elements.empty.hidden = false; return;
@@ -455,6 +485,7 @@ function renderLivingDocViewer(features, generatedAt, allureSummary) {
       function render() { renderFeatures(); renderActiveFeature(); }
       elements.search.value = initialQuery;
       elements.search.addEventListener('input', event => { state.query = event.target.value.trim().toLowerCase(); render(); });
+      elements.overviewLink.addEventListener('click', () => { state.activeFile = ''; state.query = ''; elements.search.value = ''; render(); });
       render();
     </script>
   </body>
@@ -744,6 +775,12 @@ function portalCss() {
       .status-dot, .scenario-state { width: 9px; height: 9px; border-radius: 50%; background: #1ea672; flex: 0 0 auto; }
       .viewer-shell { min-height: calc(100vh - 104px); display: grid; grid-template-columns: 310px minmax(0, 1fr); }
       .feature-sidebar { background: #172c3d; color: #fff; padding: 1.25rem 0; }
+      .overview-item { width: 100%; border-top: 1px solid #31495a; border-bottom: 1px solid #31495a; margin-bottom: 0.4rem; }
+      .viewer-overview { max-width: 980px; }
+      .viewer-overview > p { color: #5b7183; font-size: 1.05rem; }
+      .overview-summary { grid-template-columns: repeat(4, minmax(130px, 1fr)); }
+      .overview-guidance { margin-top: 1rem; padding: 1.2rem; border-left: 4px solid #2ec4b6; background: #eef8f6; color: #294656; }
+      .overview-guidance p { margin-bottom: 0; }
       .sidebar-heading { padding: 0 1.15rem 1rem; display: grid; grid-template-columns: 1fr auto; align-items: end; }
       .sidebar-heading .overline { grid-column: 1 / -1; color: #8fa3b1; }
       .sidebar-heading strong { font-size: 1.35rem; }
@@ -894,6 +931,7 @@ ${contentHtml}
 }
 
 function wrapIndexHtml({ generatedAt, stats, features }) {
+  const scenarioCount = features.reduce((sum, feature) => sum + feature.scenarios.length, 0);
   return `<!doctype html>
 <html lang="nl">
   <head>
@@ -909,7 +947,7 @@ function wrapIndexHtml({ generatedAt, stats, features }) {
           <div>
             <span class="eyebrow">Live Docs Bundle</span>
             <h1>Path Live Documentatie</h1>
-            <p>Van businessscenario naar uitvoerbaar bewijs. Bekijk 117 functionele cases, hun traceability en de laatste regressieresultaten vanuit één ingang.</p>
+            <p>Van businessscenario naar uitvoerbaar bewijs. Bekijk ${scenarioCount} functionele cases, hun traceability en de laatste regressieresultaten vanuit één ingang.</p>
             <div class="stat-grid">
 ${renderStatCards(stats, 'dark')}
             </div>
@@ -937,7 +975,7 @@ ${renderStatCards(stats, 'dark')}
       <section class="section">
         <span class="overline">Testoverzicht</span>
         <h2>Wat wordt automatisch gecontroleerd?</h2>
-        <p class="section-copy">De 117 unieke cases controleren gebruikersschermen, API's, security en integraties. Vier mobiele cases draaien op twee devices; daarom bevat de volledige run 121 testuitvoeringen.</p>
+        <p class="section-copy">De ${scenarioCount} unieke cases controleren gebruikersschermen, API's, security, databases en integraties. De actuele aantallen testuitvoeringen en resultaten staan hierboven en worden bij iedere bundel opnieuw berekend.</p>
         ${renderCoverageCharts(features)}
       </section>
 

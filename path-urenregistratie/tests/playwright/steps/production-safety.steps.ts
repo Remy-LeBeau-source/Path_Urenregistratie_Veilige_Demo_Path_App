@@ -13,7 +13,7 @@ export const caseMappings = [
   { caseId: 'SAFE-N-001', spec: 'production-safety.spec.ts', assertionCount: 3, acceptanceCriteria: ["Then bevat de frontend geen plaintext demo-credentials"] },
   { caseId: 'SAFE-N-002', spec: 'production-safety.spec.ts', assertionCount: 2, acceptanceCriteria: ["Then wordt met Playwright-assertions bevestigd dat writes zonder csrf blijven geblokkeerd"] },
   { caseId: 'SAFE-H-002', spec: 'production-safety.spec.ts', assertionCount: 8, acceptanceCriteria: ["Then submit met expected_version blijft werkend"] },
-  { caseId: 'SAFE-N-003', spec: 'production-safety.spec.ts', assertionCount: 6, acceptanceCriteria: ["Then staan demo-migraties standaard uit in productieconfig"] },
+  { caseId: 'SAFE-N-003', spec: 'production-safety.spec.ts', assertionCount: 9, acceptanceCriteria: ["Then staan demo-migraties standaard uit in productieconfig"] },
   { caseId: 'SAFE-H-003', spec: 'production-safety.spec.ts', assertionCount: 3, acceptanceCriteria: ["Then bevat health.php een productieguard die host en databasenaam wegfiltert"] },
   { caseId: 'SAFE-N-004', spec: 'production-safety.spec.ts', assertionCount: 6, acceptanceCriteria: ["Then bevatten beide bestanden een HTTP-blokkering voor productieomgeving"] },
   { caseId: 'SAFE-H-004', spec: 'production-safety.spec.ts', assertionCount: 5, acceptanceCriteria: ["Then staat mail.enabled standaard op false en is SMTP relay voorbereid zonder activering"] },

@@ -23,6 +23,7 @@ export const caseMappings = [
   { caseId: 'DASH-H-005', spec: 'dashboard.spec.ts', assertionCount: 7, acceptanceCriteria: ["Then is er een compacte open-maandenkaart zichtbaar met een directe maandknop"] },
   { caseId: 'DASH-H-014', spec: 'dashboard.spec.ts', assertionCount: 20, acceptanceCriteria: ["Then opent de hoofdactie exact de geprioriteerde maand en juiste taakroute"] },
   { caseId: 'DASH-N-015', spec: 'dashboard.spec.ts', assertionCount: 14, acceptanceCriteria: ["Then staat de urencorrectie vóór het document en kloppen de totalen","And bij een volledig afgeronde werkvoorraad verdwijnen taaklijst en prioriteitsdata"] },
+  { caseId: 'DASH-N-016', spec: 'dashboard.spec.ts', assertionCount: 11, acceptanceCriteria: ["Then toont Mijn uren augustus als bewerkbare correctie met herindienknop"] },
   { caseId: 'DASH-H-006', spec: 'dashboard.spec.ts', assertionCount: 7, acceptanceCriteria: ["Then verschijnt september niet als open medewerkermaand"] },
   { caseId: 'DASH-H-007', spec: 'dashboard.spec.ts', assertionCount: 4, acceptanceCriteria: ["Then staat de periode op augustus en toont het overzicht geen toekomstige maanden"] },
 ] as const;

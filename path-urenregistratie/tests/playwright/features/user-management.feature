@@ -1,7 +1,7 @@
 @regressie
 @api
 @fase:13
-Feature: Gebruikersbeheer via API in Path Uren & Facturatie
+Feature: Gebruikers en medewerkers beheren
 
   # Native Playwright-uitvoering: tests/playwright/user-management.spec.ts
   # Navigatiemapping: tests/playwright/steps/user-management.steps.ts

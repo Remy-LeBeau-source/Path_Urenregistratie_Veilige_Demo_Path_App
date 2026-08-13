@@ -1,6 +1,6 @@
--- Auth schema uitbreiding (veilige demo)
--- Tijdelijke demo-loginaccounts, vervang in productie met echte IAM/SSO
--- NOOIT plaintext wachtwoorden of productie-wachtwoorden committen in Git
+-- Auth schema uitbreiding voor alle omgevingen.
+-- Deze core-migratie wijzigt uitsluitend het schema. Demo-accounts en
+-- tijdelijke hashes horen alleen in de expliciete demo-migraties 004/005.
 
 SET @has_password_hash := (
   SELECT COUNT(*)
@@ -54,22 +54,3 @@ CREATE TABLE IF NOT EXISTS auth_login_audit (
   INDEX idx_auth_login_audit_user_created (user_id, created_at),
   INDEX idx_auth_login_audit_company_created (company_id, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Zorg dat bestaande demo-admin een tijdelijke hash krijgt.
-UPDATE users u
-SET u.password_hash = '$2y$12$qVvbQn6GLOj5EDXAmIext.Y5us9ejel4LxvWst/BQOUMyJpjpPaQ2'
-WHERE u.email = 'admin@example.invalid' AND (u.password_hash IS NULL OR u.password_hash = '');
-
--- Voeg een veilige tijdelijke demo-medewerker toe voor loginflow tests.
-INSERT INTO users (company_id, email, password_hash, display_name, role, active, created_at)
-SELECT c.id, 'employee.demo@example.invalid', '$2y$12$VexlAU0ANf/srY4uy5FhYeAYFNnaEswmf6yrts.SUwfa2P1G5hYxi', 'Demo Medewerker', 'employee', 1, NOW()
-FROM companies c
-WHERE c.legal_name = 'Demo BV'
-  AND NOT EXISTS (
-    SELECT 1 FROM users u WHERE u.company_id = c.id AND u.email = 'employee.demo@example.invalid'
-  );
-
--- Houd de tijdelijke demo-medewerker hash bijgewerkt als deze al bestond zonder wachtwoord.
-UPDATE users u
-SET u.password_hash = '$2y$12$VexlAU0ANf/srY4uy5FhYeAYFNnaEswmf6yrts.SUwfa2P1G5hYxi'
-WHERE u.email = 'employee.demo@example.invalid' AND (u.password_hash IS NULL OR u.password_hash = '');

@@ -1,7 +1,7 @@
 @regressie
 @api
 @fase:12
-Feature: E-mailqueue en afleverbeleid in Path Uren & Facturatie
+Feature: E-mailqueue, ontvangers en afleverbeleid
 
   # Native Playwright-uitvoering: tests/playwright/email-queue.spec.ts
   # Navigatiemapping: tests/playwright/steps/email-queue.steps.ts

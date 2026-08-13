@@ -1,7 +1,7 @@
 @regressie
 @security
 @fase:5
-Feature: CSRF en authenticatiebeveiliging in Path Uren & Facturatie
+Feature: Authenticatie- en API-beveiliging
 
   # Native Playwright-uitvoering: tests/playwright/security.spec.ts
   # Navigatiemapping: tests/playwright/steps/security.steps.ts
@@ -66,7 +66,7 @@ Feature: CSRF en authenticatiebeveiliging in Path Uren & Facturatie
   Scenario: [SEC-H-004] csrf-token blijft stabiel binnen dezelfde sessie
     # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 3
-    Given cSRF en authenticatiebeveiliging is voorbereid
+    Given authenticatie- en API-beveiliging is voorbereid
     When de flow voor SEC-H-004 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat csrf-token blijft stabiel binnen dezelfde sessie
 
@@ -74,7 +74,7 @@ Feature: CSRF en authenticatiebeveiliging in Path Uren & Facturatie
   Scenario: [SEC-N-005] csrf-endpoint weigert POST
     # Testtechniek: Negatieve equivalentieklasse + error guessing
     # Aantoonbare Playwright-assertions in deze case: 2
-    Given cSRF en authenticatiebeveiliging is voorbereid
+    Given authenticatie- en API-beveiliging is voorbereid
     When de flow voor SEC-N-005 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat csrf-endpoint weigert POST
 
@@ -82,7 +82,7 @@ Feature: CSRF en authenticatiebeveiliging in Path Uren & Facturatie
   Scenario: [SEC-N-006] login-endpoint weigert GET
     # Testtechniek: Negatieve equivalentieklasse + error guessing
     # Aantoonbare Playwright-assertions in deze case: 2
-    Given cSRF en authenticatiebeveiliging is voorbereid
+    Given authenticatie- en API-beveiliging is voorbereid
     When de flow voor SEC-N-006 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat login-endpoint weigert GET
 
@@ -90,7 +90,7 @@ Feature: CSRF en authenticatiebeveiliging in Path Uren & Facturatie
   Scenario: [SEC-N-007] logout-endpoint weigert GET
     # Testtechniek: Negatieve equivalentieklasse + error guessing
     # Aantoonbare Playwright-assertions in deze case: 2
-    Given cSRF en authenticatiebeveiliging is voorbereid
+    Given authenticatie- en API-beveiliging is voorbereid
     When de flow voor SEC-N-007 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat logout-endpoint weigert GET
 
@@ -98,7 +98,7 @@ Feature: CSRF en authenticatiebeveiliging in Path Uren & Facturatie
   Scenario: [SEC-H-005] sessiecode bevat expliciete timeout-check en sliding expiration
     # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 3
-    Given cSRF en authenticatiebeveiliging is voorbereid
+    Given authenticatie- en API-beveiliging is voorbereid
     When de flow voor SEC-H-005 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat sessiecode bevat expliciete timeout-check en sliding expiration
 
@@ -106,7 +106,7 @@ Feature: CSRF en authenticatiebeveiliging in Path Uren & Facturatie
   Scenario: [SEC-H-006] herhaalde mislukte loginpogingen maken security-audit event
     # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 4
-    Given cSRF en authenticatiebeveiliging is voorbereid
+    Given authenticatie- en API-beveiliging is voorbereid
     When de flow voor SEC-H-006 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat herhaalde mislukte loginpogingen maken security-audit event
 
@@ -114,6 +114,6 @@ Feature: CSRF en authenticatiebeveiliging in Path Uren & Facturatie
   Scenario: [SEC-H-007] config voorbeeld bevat voorbereide CSP/CORS/HSTS flags
     # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 3
-    Given cSRF en authenticatiebeveiliging is voorbereid
+    Given authenticatie- en API-beveiliging is voorbereid
     When de flow voor SEC-H-007 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat config voorbeeld bevat voorbereide CSP/CORS/HSTS flags

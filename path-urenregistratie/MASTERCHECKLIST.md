@@ -98,13 +98,18 @@ Post-live beheer
   getest; PDF-bijlage nu structureel beschikbaar dankzij Fase 11), Fase 15 (gelijktijdige
   approve-requests door twee beheerders, jaarwisseling december→januari, te grote upload-afwijzing,
   basis toetsenbord-/labelcontrole, PWA-manifest + defensieve service worker).
-- [x] Actuele testinventaris: 157 Playwright + 1 DB = 158 unieke cases en 161 browseruitvoeringen
-  (153 niet-mobiel + 4 mobiele cases x 2 devices).
-- [x] Volledige lokale Playwright-regressie: 161/161 groen, inclusief SAFE-N-007 als
-  fail-closed productieconfiguratiecase.
+- [x] Actuele testinventaris: 160 Playwright + 1 DB = 161 unieke cases en 164 browseruitvoeringen
+  (156 niet-mobiel + 4 mobiele cases x 2 devices).
+- [x] Volledige lokale Playwright-regressie: 164/164 groen, inclusief SAFE-N-007 als
+  fail-closed productieconfiguratiecase en DASH-N-016 voor dezelfde-periode-correctienavigatie.
   `npm run ci:local`, de 39 gerichte auth/mail/securitytests en DASH-N-007 zijn apart groen bevestigd.
 - [x] Living Documentation-telling wordt uit de uitvoerbare specs berekend en met een expliciete
-  inventarisguard bewaakt. Actueel: 157 Playwright-cases, 1 DB-case, 158 unieke cases en 161 uitvoeringen.
+  inventarisguard bewaakt. Actueel: 160 Playwright-cases, 1 DB-case, 161 unieke cases en 164 uitvoeringen.
+- [x] Medewerkercorrectie voor een al goedgekeurde maand is server-led heropenbaar zolang nog geen
+  definitieve factuur bestaat; dashboardnavigatie ververst ook een verborgen grid voor dezelfde periode.
+- [-] Productie-URL `https://uren.pathconsultancy.nl/` toont nog v0.9.44. Een push bewijst de release
+  in CI, maar activeert TransIP niet automatisch; productieconfiguratie, schone database/accounts,
+  expliciete `GO_LIVE_<korte_sha>`-toestemming en gecontroleerde cutover blijven open.
 - [x] Root cause/fix gevonden voor twee omgevingsvalkuilen tijdens dit werk (vastgelegd in
   repo-memory): de PHP GD-extensie stond lokaal standaard uit (`;extension=gd` in php.ini) en moest
   worden ingeschakeld; en een stale achtergrond-PHP-proces (van vóór de GD-fix) op poort 8000
@@ -140,7 +145,7 @@ Post-live beheer
 
 - [x] Kernbouw en functionele basis zijn aanwezig en lokaal gevalideerd.
 - [x] De meest recente volledige Playwright-regressie is opnieuw volledig groen bewezen:
-  161/161 browseruitvoeringen, inclusief de fail-closed productieconfiguratorcase.
+  164/164 browseruitvoeringen, inclusief correctieheropening en de fail-closed productieconfiguratorcase.
 - [x] DB/infrastructuursmoke aanwezig: DB-H-001 via `node scripts/run-db-crud-smoke.mjs` groen.
 - [x] Lokale automatische Playwright-testdatabase aanwezig: `path_urenregistratie_test` via bootstrap.
 - [x] De checklist is nu bijgewerkt naar de actuele repo- en teststatus; de fase-indeling is intact gebleven.

@@ -2,7 +2,7 @@
 @ui
 @desktop
 @fase:4
-Feature: Authenticatie en sessiebeheer in Path Uren & Facturatie
+Feature: Inloggen, uitloggen en sessiebeheer
 
   # Native Playwright-uitvoering: tests/playwright/auth.spec.ts
   # Navigatiemapping: tests/playwright/steps/auth.steps.ts
@@ -44,7 +44,7 @@ Feature: Authenticatie en sessiebeheer in Path Uren & Facturatie
   Scenario: [AUTH-N-005] onbekend account geeft dezelfde generieke loginfout
     # Testtechniek: Negatieve equivalentieklasse + error guessing
     # Aantoonbare Playwright-assertions in deze case: 3
-    Given authenticatie en sessiebeheer is voorbereid
+    Given inloggen, uitloggen en sessiebeheer is voorbereid
     When de flow voor AUTH-N-005 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat onbekend account geeft dezelfde generieke loginfout
 
@@ -52,6 +52,6 @@ Feature: Authenticatie en sessiebeheer in Path Uren & Facturatie
   Scenario: [AUTH-N-006] ongeldig e-mailformaat wordt als invalid-payload geweigerd
     # Testtechniek: Negatieve equivalentieklasse + error guessing
     # Aantoonbare Playwright-assertions in deze case: 2
-    Given authenticatie en sessiebeheer is voorbereid
+    Given inloggen, uitloggen en sessiebeheer is voorbereid
     When de flow voor AUTH-N-006 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat ongeldig e-mailformaat wordt als invalid-payload geweigerd

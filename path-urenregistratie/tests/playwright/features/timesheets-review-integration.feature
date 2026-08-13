@@ -1,7 +1,7 @@
 @regressie
 @integration
 @fase:9
-Feature: Correctie en goedkeuring met optimistic locking in Path Uren & Facturatie
+Feature: Correcties en goedkeuringen via API
 
   # Native Playwright-uitvoering: tests/playwright/timesheet-review-flow.spec.ts
   # Navigatiemapping: tests/playwright/steps/timesheets-review-integration.steps.ts
@@ -9,7 +9,7 @@ Feature: Correctie en goedkeuring met optimistic locking in Path Uren & Facturat
   @happy
   Scenario: [TS-REV-API-H-005] admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking
     # Testtechniek: Concurrency + toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 58
+    # Aantoonbare Playwright-assertions in deze case: 65
     Given de medewerker is ingelogd en heeft een schrijfbare testperiode
     When de medewerker een concept opslaat en daarna indient
     And de reviewcontext wisselt naar administrator
@@ -23,6 +23,7 @@ Feature: Correctie en goedkeuring met optimistic locking in Path Uren & Facturat
     Then een verouderde approve-aanvraag wordt geblokkeerd met stale-version
     When de administrator met juiste versie goedkeurt
     Then read-back toont approved status met volledige audit- en correctiehistorie
+    And een goedkeuring zonder factuur server-side kan worden heropend voor correctie
     And cleanup: sessie sluiten voor testisolatie
 
   @happy

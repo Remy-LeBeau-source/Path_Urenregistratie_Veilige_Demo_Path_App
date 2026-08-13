@@ -2,7 +2,7 @@
 @ui
 @desktop
 @fase:15
-Feature: Basistoegankelijkheid en toetsenbordbediening in Path Uren & Facturatie
+Feature: Toegankelijkheid en toetsenbordbediening
 
   # Native Playwright-uitvoering: tests/playwright/accessibility.spec.ts
   # Navigatiemapping: tests/playwright/steps/accessibility.steps.ts

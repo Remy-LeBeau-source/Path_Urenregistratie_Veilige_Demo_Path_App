@@ -4528,13 +4528,7 @@ function showReopenApprovedHours(employeeId, periodKey) {
       const field = document.querySelector("#reopen-hours-reason");
       const reason = field.value.trim();
       if (!reason) { field.classList.add("is-invalid"); field.focus(); toast("Vul eerst de reden voor het intrekken van de goedkeuring in."); return; }
-      const timestamp = correctionTimestamp();
-      correctionHistoryFor(record).push({ id: correctionHistoryFor(record).length + 1, message: reason, requestedBy: currentAdmin().name, requestedAt: timestamp.label, requestedAtIso: timestamp.iso, resubmittedAt: null, resubmittedAtIso: null });
-      record.timesheetStatus = "correction";
-      record.invoiceStatus = "concept";
-      record.payrollStatus = "concept";
-      addNotification({ audience: "employee", type: "correction", employeeId: employee.id, title: "Goedgekeurde uren vrijgegeven", message: "De goedkeuring voor " + period.label + " is ingetrokken. Reden: " + reason, periodKey: period.key, view: "timesheet" }, true);
-      persistState(); closeModal(); renderAll(); toast("De goedkeuring is ingetrokken; de factuur is weer geblokkeerd.");
+      returnEmployeeForCorrection(employee.id, period.key, reason);
     }
   });
   document.querySelector("#reopen-hours-reason").focus();
@@ -6639,6 +6633,10 @@ function showView(view, options = {}) {
   document.querySelectorAll(".view").forEach(item => item.classList.toggle("is-active", item === target));
   document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("is-active", item.dataset.view === view));
   document.querySelector("#page-title").textContent = pageTitles[view];
+  // A dashboard can select another action month while the hidden hours grid still
+  // contains the previously opened month. Always render after the timesheet view
+  // becomes active so an equal-period navigation cannot expose stale locked input.
+  if (view === "timesheet") renderHoursGrid();
   window.location.hash = view;
   window.scrollTo({ top: 0, behavior: smoothScrollBehavior() });
 }

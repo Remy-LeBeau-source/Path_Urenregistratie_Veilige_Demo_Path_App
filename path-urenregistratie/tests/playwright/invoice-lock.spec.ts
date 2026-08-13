@@ -198,6 +198,49 @@ test('[INV-H-004] admin lockt approved timesheet naar definitieve immutable fact
   });
 });
 
+test('[INV-N-015] definitief gefactureerde uren kunnen niet voor correctie worden heropend', async ({ request }) => {
+  const authApi = new AuthApi(request);
+  const invoiceApi = new InvoiceApi(request);
+  const timesheetApi = new TimesheetApi(request);
+
+  const submitted = await test.step('Given een medewerker een urenstaat indient in een geïsoleerde testperiode', async () => {
+    return createSubmittedTimesheet(request, 10);
+  });
+
+  const approved = await test.step('And Backoffice de uren goedkeurt en de factuur definitief maakt', async () => {
+    const result = await approveTimesheet(request, submitted);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+    const locked = await invoiceApi.lock({ action: 'lock', timesheetId: result.timesheetId });
+    expect(locked.status).toBe(200);
+    expect(locked.body.timesheet.status).toBe('invoiced');
+    return result;
+  });
+
+  await test.step('When Backoffice de gefactureerde maand alsnog voor correctie probeert te openen', async () => {
+    const invoiced = await timesheetApi.read(approved.period, approved.employeeId);
+    expect(invoiced.status).toBe(200);
+    expect(invoiced.body.timesheet.status).toBe('invoiced');
+
+    const blocked = await timesheetApi.requestCorrection({
+      action: 'request_correction',
+      period: approved.period,
+      employeeId: approved.employeeId,
+      expectedVersion: Number(invoiced.body.timesheet.version),
+      correctionMessage: 'Dit verzoek moet na facturatie worden geweigerd.',
+    });
+    expect(blocked.status).toBe(409);
+    expect(blocked.body.ok).toBe(false);
+    expect(blocked.body.error).toBe('invalid-timesheet-transition');
+  });
+
+  await test.step('Then de definitieve factuur en urenstatus onveranderd blijven', async () => {
+    const readBack = await timesheetApi.read(approved.period, approved.employeeId);
+    expect(readBack.status).toBe(200);
+    expect(readBack.body.timesheet.status).toBe('invoiced');
+    await authApi.logout();
+  });
+});
+
 test('[INV-N-008] anonieme gebruiker kan factuur niet locken', async ({ request }) => {
   const invoiceApi = new InvoiceApi(request);
 

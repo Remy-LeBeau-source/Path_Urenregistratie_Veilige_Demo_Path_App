@@ -1,7 +1,7 @@
 @regressie
 @api
 @fase:10
-Feature: Klanturenstaten via API in Path Uren & Facturatie
+Feature: Klanturenstaten en documentverwerking
 
   # Native Playwright-uitvoering: tests/playwright/customer-timesheet-api.spec.ts
   # Navigatiemapping: tests/playwright/steps/customer-timesheets.steps.ts

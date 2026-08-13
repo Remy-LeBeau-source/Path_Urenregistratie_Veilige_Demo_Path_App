@@ -181,13 +181,22 @@ test('[SAFE-H-002] timesheet writeflow blijft werkend (draft + submit)', async (
 test('[SAFE-N-003] productieconfig zet demo-migraties standaard uit', async () => {
   const configExamplePath = join(process.cwd(), 'server', 'config.example.php');
   const configLocalExamplePath = join(process.cwd(), 'server', 'config.local.php.example');
+  const coreAuthMigrationPath = join(process.cwd(), 'server', 'migrations', '003_auth_schema.sql');
+  const demoAuthMigrationPaths = [
+    join(process.cwd(), 'server', 'migrations', '004_demo_employee_auth_seed.sql'),
+    join(process.cwd(), 'server', 'migrations', '005_demo_auth_hashes_for_existing_seed_users.sql'),
+  ];
 
   let configExample = '';
   let configLocalExample = '';
+  let coreAuthMigration = '';
+  let demoAuthMigrations = '';
 
   await test.step('Given de productieconfig-templatebestanden worden ingelezen', async () => {
     configExample = await readFile(configExamplePath, 'utf8');
     configLocalExample = await readFile(configLocalExamplePath, 'utf8');
+    coreAuthMigration = await readFile(coreAuthMigrationPath, 'utf8');
+    demoAuthMigrations = (await Promise.all(demoAuthMigrationPaths.map(path => readFile(path, 'utf8')))).join('\n');
   });
 
   await test.step('Then staan demo-migraties standaard uit in productieconfig', async () => {
@@ -198,6 +207,10 @@ test('[SAFE-N-003] productieconfig zet demo-migraties standaard uit', async () =
     expect(configLocalExample).toMatch(/'environment'\s*=>\s*'production'/);
     expect(configLocalExample).toMatch(/'allow_demo_migrations'\s*=>\s*false/);
     expect(configLocalExample).toMatch(/'app_origin'\s*=>\s*'https:\/\//);
+
+    expect(coreAuthMigration).not.toMatch(/admin@example\.invalid|employee\.demo@example\.invalid/);
+    expect(coreAuthMigration).not.toMatch(/\b(?:INSERT|UPDATE)\s+(?:INTO\s+)?users\b/i);
+    expect(demoAuthMigrations).toMatch(/employee\.demo@example\.invalid/);
   });
 });
 

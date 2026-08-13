@@ -1,7 +1,7 @@
 @regressie
 @api
 @fase:16
-Feature: Auditlog en traceerbaarheid in Path Uren & Facturatie
+Feature: Auditlog en traceerbaarheid
 
   # Native Playwright-uitvoering: tests/playwright/audit-log.spec.ts
   # Navigatiemapping: tests/playwright/steps/audit-log.steps.ts

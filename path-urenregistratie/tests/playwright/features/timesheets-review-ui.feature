@@ -2,20 +2,22 @@
 @ui
 @desktop
 @fase:9
-Feature: Correctie en goedkeuring in de desktop-UI in Path Uren & Facturatie
+Feature: Correcties en goedkeuringen in de desktop-UI
 
   # Native Playwright-uitvoering: tests/playwright/timesheet-review-ui.spec.ts
   # Navigatiemapping: tests/playwright/steps/timesheets-review-ui.steps.ts
 
   @happy
-  Scenario: [TS-REV-UI-H-008] browserflow: admin vraagt correctie, medewerker dient opnieuw in, admin keurt goed
-    # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 13
+  Scenario: [TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en heropening blijven servergestuurd
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 27
     Given de medewerker een urenstaat indient in de browser
     When de administrator een correctieverzoek plaatst
     Then ziet de medewerker het correctieverzoek en dient opnieuw in
     And de administrator keurt de herindiening goed
     Then ziet de medewerker de eindstatus Goedgekeurd
+    When de administrator de goedkeuring met reden intrekt
+    Then opent de medewerker de dashboardcorrectie en kan opnieuw indienen
 
   @happy
   Scenario: [TS-REV-UI-H-009] medewerker kan een ingediende urenstaat opnieuw indienen
@@ -40,3 +42,11 @@ Feature: Correctie en goedkeuring in de desktop-UI in Path Uren & Facturatie
     Given de ingelogde localhostomgeving een lokaal demo-record zonder serverversie toont
     When Backoffice Marc met een concrete toelichting terugstuurt
     Then wordt de lokale status bijgewerkt zonder ongeldige serverwrite
+
+  @negative
+  Scenario: [TS-REV-UI-N-012] gefactureerde goedkeuring blijft bij serverweigering vergrendeld
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given Backoffice een goedgekeurde maand met definitieve factuur bekijkt
+    When de server heropenen wegens facturatie weigert
+    Then blijft de maand goedgekeurd en krijgt Backoffice een duidelijke blokkade

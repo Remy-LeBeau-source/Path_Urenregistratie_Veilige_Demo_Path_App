@@ -2,7 +2,7 @@
 @ui
 @desktop
 @fase:15
-Feature: Dashboardweergave in Path Uren & Facturatie
+Feature: Dashboard en open werkvoorraad
 
   # Native Playwright-uitvoering: tests/playwright/dashboard.spec.ts
   # Navigatiemapping: tests/playwright/steps/dashboard.steps.ts
@@ -125,6 +125,14 @@ Feature: Dashboardweergave in Path Uren & Facturatie
     When de flow voor DASH-N-015 wordt uitgevoerd
     Then staat de urencorrectie vóór het document en kloppen de totalen
     And bij een volledig afgeronde werkvoorraad verdwijnen taaklijst en prioriteitsdata
+
+  @negative
+  Scenario: [DASH-N-016] correctieactie ververst een verborgen rooster uit een eerdere maand
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 11
+    Given juli als goedgekeurde verborgen urenstaat is achtergebleven
+    When het dashboard augustus prioriteert en Open correctie wordt gekozen
+    Then toont Mijn uren augustus als bewerkbare correctie met herindienknop
 
   @happy
   Scenario: [DASH-H-006] vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie

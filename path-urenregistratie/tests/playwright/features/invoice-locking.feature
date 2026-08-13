@@ -1,7 +1,7 @@
 @regressie
 @integration
 @fase:11
-Feature: Definitieve facturen en locking in Path Uren & Facturatie
+Feature: Facturen definitief maken en vergrendelen
 
   # Native Playwright-uitvoering: tests/playwright/invoice-lock.spec.ts
   # Navigatiemapping: tests/playwright/steps/invoice-locking.steps.ts
@@ -16,6 +16,15 @@ Feature: Definitieve facturen en locking in Path Uren & Facturatie
     Then worden nummer bedragen en locked_at server-side vastgelegd en blijft client-manipulatie zonder effect
     And de administrator kan de server-side gegenereerde factuur-PDF downloaden
     And cleanup de administrator-sessie wordt afgesloten
+
+  @negative
+  Scenario: [INV-N-015] definitief gefactureerde uren kunnen niet voor correctie worden heropend
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given een medewerker een urenstaat indient in een geïsoleerde testperiode
+    And Backoffice de uren goedkeurt en de factuur definitief maakt
+    When Backoffice de gefactureerde maand alsnog voor correctie probeert te openen
+    Then de definitieve factuur en urenstatus onveranderd blijven
 
   @negative
   Scenario: [INV-N-008] anonieme gebruiker kan factuur niet locken
@@ -56,7 +65,7 @@ Feature: Definitieve facturen en locking in Path Uren & Facturatie
   Scenario: [INV-N-012] gelijktijdige lock-requests leveren exact één winnaar
     # Testtechniek: Concurrency + toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 1
-    Given definitieve facturen en locking is voorbereid
+    Given facturen definitief maken en vergrendelen is voorbereid
     When de flow voor INV-N-012 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat gelijktijdige lock-requests leveren exact één winnaar
 

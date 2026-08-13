@@ -2,7 +2,7 @@
 @ui
 @mobile
 @fase:15
-Feature: Mobiele gebruikerservaring in Path Uren & Facturatie
+Feature: Mobiele gebruikerservaring
 
   # Native Playwright-uitvoering: tests/playwright/mobile-ui.spec.ts
   # Navigatiemapping: tests/playwright/steps/mobile.steps.ts

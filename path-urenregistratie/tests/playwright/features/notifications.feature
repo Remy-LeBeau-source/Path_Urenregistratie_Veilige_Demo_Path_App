@@ -1,7 +1,7 @@
 @regressie
 @api
 @fase:15
-Feature: Notificaties via API in Path Uren & Facturatie
+Feature: Meldingen en notificaties
 
   # Native Playwright-uitvoering: tests/playwright/notifications.spec.ts
   # Navigatiemapping: tests/playwright/steps/notifications.steps.ts
@@ -26,7 +26,7 @@ Feature: Notificaties via API in Path Uren & Facturatie
   Scenario: [NOT-N-003] anonieme gebruiker krijgt 401 op notificaties
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 1
-    Given notificaties via API is voorbereid
+    Given meldingen en notificaties is voorbereid
     When notificaties.php zonder sessie wordt aangeroepen
     Then wordt met Playwright-assertions bevestigd dat anonieme gebruiker krijgt 401 op notificaties
 
@@ -42,7 +42,7 @@ Feature: Notificaties via API in Path Uren & Facturatie
   Scenario: [NOT-H-005] notificatielimiet wordt op minimaal een begrensd
     # Testtechniek: Grenswaardenanalyse
     # Aantoonbare Playwright-assertions in deze case: 3
-    Given notificaties via API is voorbereid
+    Given meldingen en notificaties is voorbereid
     When de flow voor NOT-H-005 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat notificatielimiet wordt op minimaal een begrensd
 
@@ -50,7 +50,7 @@ Feature: Notificaties via API in Path Uren & Facturatie
   Scenario: [NOT-H-006] unread-filter retourneert uitsluitend ongelezen meldingen
     # Testtechniek: Toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 3
-    Given notificaties via API is voorbereid
+    Given meldingen en notificaties is voorbereid
     When de flow voor NOT-H-006 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat unread-filter retourneert uitsluitend ongelezen meldingen
 
@@ -58,7 +58,7 @@ Feature: Notificaties via API in Path Uren & Facturatie
   Scenario: [NOT-N-007] mark_read zonder notification_id geeft 400
     # Testtechniek: Toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 2
-    Given notificaties via API is voorbereid
+    Given meldingen en notificaties is voorbereid
     When de flow voor NOT-N-007 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat mark_read zonder notification_id geeft 400
 
@@ -66,6 +66,6 @@ Feature: Notificaties via API in Path Uren & Facturatie
   Scenario: [NOT-H-008] mark_read voor onbekende melding wijzigt nul records
     # Testtechniek: Grenswaardenanalyse
     # Aantoonbare Playwright-assertions in deze case: 2
-    Given notificaties via API is voorbereid
+    Given meldingen en notificaties is voorbereid
     When de flow voor NOT-H-008 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat mark_read voor onbekende melding wijzigt nul records

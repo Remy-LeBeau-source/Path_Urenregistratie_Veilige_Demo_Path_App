@@ -1,7 +1,7 @@
 @regressie
 @security
 @fase:13
-Feature: Wachtwoordherstel en rate limiting in Path Uren & Facturatie
+Feature: Wachtwoordherstel en misbruikbeveiliging
 
   # Native Playwright-uitvoering: tests/playwright/password-reset.spec.ts
   # Navigatiemapping: tests/playwright/steps/password-reset.steps.ts
@@ -42,7 +42,7 @@ Feature: Wachtwoordherstel en rate limiting in Path Uren & Facturatie
   Scenario: [PWD-N-004] reset-password met ongeldig token geeft 400
     # Testtechniek: Toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 2
-    Given wachtwoordherstel en rate limiting is voorbereid
+    Given wachtwoordherstel en misbruikbeveiliging is voorbereid
     When reset-password wordt aangeroepen met neptoken
     Then wordt met Playwright-assertions bevestigd dat reset-password met ongeldig token geeft 400
 
@@ -74,7 +74,7 @@ Feature: Wachtwoordherstel en rate limiting in Path Uren & Facturatie
   Scenario: [PWD-N-008] request-reset weigert GET
     # Testtechniek: Toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 2
-    Given wachtwoordherstel en rate limiting is voorbereid
+    Given wachtwoordherstel en misbruikbeveiliging is voorbereid
     When de flow voor PWD-N-008 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat request-reset weigert GET
 
@@ -82,6 +82,6 @@ Feature: Wachtwoordherstel en rate limiting in Path Uren & Facturatie
   Scenario: [PWD-N-009] request-reset met leeg e-mailadres geeft 400
     # Testtechniek: Toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 2
-    Given wachtwoordherstel en rate limiting is voorbereid
+    Given wachtwoordherstel en misbruikbeveiliging is voorbereid
     When de flow voor PWD-N-009 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat request-reset met leeg e-mailadres geeft 400

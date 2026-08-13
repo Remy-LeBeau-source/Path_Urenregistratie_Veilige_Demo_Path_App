@@ -1,7 +1,7 @@
 @regressie
 @security
 @fase:14
-Feature: Productieveiligheid in Path Uren & Facturatie
+Feature: Veilige productieconfiguratie en deployment
 
   # Native Playwright-uitvoering: tests/playwright/production-safety.spec.ts
   # Navigatiemapping: tests/playwright/steps/production-safety.steps.ts
@@ -41,7 +41,7 @@ Feature: Productieveiligheid in Path Uren & Facturatie
   @negative
   Scenario: [SAFE-N-003] productieconfig zet demo-migraties standaard uit
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 6
+    # Aantoonbare Playwright-assertions in deze case: 9
     Given de productieconfig-templatebestanden worden ingelezen
     When de flow voor SAFE-N-003 wordt uitgevoerd
     Then staan demo-migraties standaard uit in productieconfig

@@ -1,7 +1,7 @@
 @regressie
 @security
 @fase:4
-Feature: Rollen en gegevensscope in Path Uren & Facturatie
+Feature: Rollen, rechten en gegevensafscherming
 
   # Native Playwright-uitvoering: tests/playwright/roles-api.spec.ts
   # Navigatiemapping: tests/playwright/steps/roles-api.steps.ts

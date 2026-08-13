@@ -45,6 +45,7 @@ test.describe('timesheet review flow api', () => {
     let submittedVersion = 0;
     let correctionVersion = 0;
     let resubmittedVersion = 0;
+    let approvedVersion = 0;
 
     await test.step('Given de medewerker is ingelogd en heeft een schrijfbare testperiode', async () => {
       const employeeLogin = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
@@ -216,6 +217,7 @@ test.describe('timesheet review flow api', () => {
       expect(approved.body.timesheet.approved_by).toBeTruthy();
       expect(Number(approved.body.timesheet.version)).toBeGreaterThan(resubmittedVersion);
       expect(approved.body.audit_event).toBe('timesheet.approved');
+      approvedVersion = Number(approved.body.timesheet.version);
     });
 
     await test.step('Then read-back toont approved status met volledige audit- en correctiehistorie', async () => {
@@ -231,6 +233,23 @@ test.describe('timesheet review flow api', () => {
       const latestCorrection = readBack.body.timesheet.correction_history[readBack.body.timesheet.correction_history.length - 1];
       expect(latestCorrection.resubmitted_at).toBeTruthy();
       expect(readBack.body.last_audit?.event_type).toBe('timesheet.approved');
+    });
+
+    await test.step('And een goedkeuring zonder factuur server-side kan worden heropend voor correctie', async () => {
+      const reopened = await timesheetApi.requestCorrection({
+        action: 'request_correction',
+        period,
+        employeeId,
+        expectedVersion: approvedVersion,
+        correctionMessage: 'De klant meldt na goedkeuring een afwijking.',
+      });
+      expect(reopened.status).toBe(200);
+      expect(reopened.body.ok).toBe(true);
+      expect(reopened.body.timesheet.status).toBe('correction');
+      expect(reopened.body.timesheet.approved_at).toBeNull();
+      expect(reopened.body.timesheet.approved_by).toBeNull();
+      expect(reopened.body.audit_event).toBe('timesheet.approval_reopened');
+      expect(Number(reopened.body.timesheet.version)).toBeGreaterThan(approvedVersion);
     });
 
     await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {

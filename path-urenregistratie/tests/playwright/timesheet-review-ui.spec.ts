@@ -5,7 +5,7 @@ import { attachBusinessScreenshot } from './reporting/uiAttachments';
 const PERIOD_KEY = '2026-01';
 const CORRECTION_MESSAGE = 'Controleer dag 2: dit moet 4 uur zijn.';
 
-async function openView(page: Page, view: 'timesheet' | 'approvals') {
+async function openView(page: Page, view: 'dashboard' | 'timesheet' | 'approvals') {
   await page.locator(`button[data-view="${view}"]:visible`).first().click();
 }
 
@@ -28,7 +28,7 @@ async function fillFirstTwoHours(page: Page, first: string, second: string) {
   await inputs.nth(1).fill(second);
 }
 
-test('[TS-REV-UI-H-008] browserflow: admin vraagt correctie, medewerker dient opnieuw in, admin keurt goed', async ({ page }) => {
+test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en heropening blijven servergestuurd', async ({ page }) => {
   const loginPage = new LoginPage(page);
   let writeVersion = 100;
   let mockStatus: 'draft' | 'submitted' | 'correction' | 'approved' = 'draft';
@@ -258,6 +258,53 @@ test('[TS-REV-UI-H-008] browserflow: admin vraagt correctie, medewerker dient op
     await expect(page.locator('#timesheet-status')).toHaveText('Goedgekeurd');
     await attachBusinessScreenshot(page, 'Business state · Timesheet goedgekeurd');
   });
+
+  await test.step('When de administrator de goedkeuring met reden intrekt', async () => {
+    await loginPage.logout();
+    await loginPage.assertLoggedOut();
+
+    await loginPage.loginAsAdmin();
+    await openView(page, 'dashboard');
+    await setPeriod(page, PERIOD_KEY);
+
+    const employeeRow = page.locator('#dashboard-employee-rows tr').filter({ hasText: employeeName }).first();
+    await expect(employeeRow).toBeVisible();
+    await employeeRow.locator('[data-admin-hours-detail]').click();
+    await expect(page.locator('#modal-secondary')).toHaveText('Goedkeuring intrekken');
+    await page.locator('#modal-secondary').click();
+    await page.locator('#reopen-hours-reason').fill('De klant meldt na goedkeuring een afwijking op dag 2.');
+
+    const reopenResponse = page.waitForResponse((response) =>
+      response.url().includes('/server/api/timesheets.php') &&
+      response.request().method() === 'POST'
+    );
+    await page.locator('#modal-confirm').click();
+    expect((await reopenResponse).status()).toBe(200);
+    await expect(page.locator('#modal')).toBeHidden();
+  });
+
+  await test.step('Then opent de medewerker de dashboardcorrectie en kan opnieuw indienen', async () => {
+    await loginPage.logout();
+    await loginPage.assertLoggedOut();
+
+    await loginPage.loginAsEmployee();
+    const correctionAction = page.locator('#employee-dashboard-action');
+    await expect(correctionAction).toContainText('Open correctie');
+    await expect(correctionAction).toHaveAttribute('data-employee-action-period', PERIOD_KEY);
+    await correctionAction.click();
+
+    await expect(page.locator('#timesheet-status')).toHaveText('Correctie nodig');
+    await expect(page.locator('#timesheet-correction-banner')).toBeVisible();
+    await expect(page.locator('#timesheet-correction-message')).toContainText('na goedkeuring');
+    await expect(page.locator('#hours-grid .hours-input:not([disabled])').first()).toBeVisible();
+    await expect(page.locator('#submit-timesheet')).toBeVisible();
+    await expect(page.locator('#submit-timesheet')).toContainText('opnieuw indienen');
+
+    await fillFirstTwoHours(page, '8', '3');
+    await page.locator('#submit-timesheet').click();
+    await expect(page.locator('#timesheet-status')).toHaveText('Ingediend');
+    await expect(page.locator('#timesheet-correction-banner')).toBeHidden();
+  });
 });
 
 test('[TS-REV-UI-H-009] medewerker kan een ingediende urenstaat opnieuw indienen', async ({ page }) => {
@@ -360,6 +407,77 @@ test('[TS-REV-UI-N-011] localhost kan demo-uren zonder serverversie voor correct
     await expect(page.locator('#toast')).toContainText('met toelichting teruggestuurd');
     await expect(page.locator('article.approval-card[data-approval-period="2026-08"]').filter({ hasText: 'Marc de Roon' })).toHaveCount(0);
     expect(reviewWrites).toBe(0);
+  });
+});
+
+test('[TS-REV-UI-N-012] gefactureerde goedkeuring blijft bij serverweigering vergrendeld', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  const approvedPeriod = '2026-07';
+  let correctionWrites = 0;
+
+  await page.route('**/server/api/timesheets.php**', async (route) => {
+    const request = route.request();
+    if (request.method().toUpperCase() === 'GET') {
+      const url = new URL(request.url());
+      const employeeId = Number(url.searchParams.get('employee_id') || 4);
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
+        ok: true,
+        found: true,
+        period: approvedPeriod,
+        employee_id: employeeId,
+        timesheet: {
+          id: 9012,
+          status: 'approved',
+          contractual_hours: 144,
+          billable_hours: 144,
+          leave_hours: 0,
+          sickness_hours: 0,
+          employee_note: null,
+          review_note: null,
+          day_entries: [{ work_date: `${approvedPeriod}-03`, hours: 8, description: 'Vergrendelde dag' }],
+          submitted_at: new Date().toISOString(),
+          approved_at: new Date().toISOString(),
+          approved_by: 100,
+          version: 12,
+          latest_correction: null,
+          correction_history: [],
+        },
+      }) });
+      return;
+    }
+
+    correctionWrites += 1;
+    await route.fulfill({ status: 409, contentType: 'application/json', body: JSON.stringify({
+      ok: false,
+      error: 'timesheet-invoiced',
+      message: 'Approved timesheet cannot be reopened after an invoice has been created.',
+    }) });
+  });
+
+  await test.step('Given Backoffice een goedgekeurde maand met definitieve factuur bekijkt', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await openView(page, 'dashboard');
+    await setPeriod(page, approvedPeriod);
+
+    const approvedRow = page.locator('#dashboard-employee-rows tr').filter({ hasText: 'Shawn-Douglas Nahar' });
+    await expect(approvedRow).toBeVisible();
+    await approvedRow.locator('[data-admin-hours-detail]').click();
+    await expect(page.locator('#modal-secondary')).toHaveText('Goedkeuring intrekken');
+  });
+
+  await test.step('When de server heropenen wegens facturatie weigert', async () => {
+    await page.locator('#modal-secondary').click();
+    await page.locator('#reopen-hours-reason').fill('De klant meldt een afwijking na facturatie.');
+    await page.locator('#modal-confirm').click();
+  });
+
+  await test.step('Then blijft de maand goedgekeurd en krijgt Backoffice een duidelijke blokkade', async () => {
+    await expect(page.locator('#modal')).toBeVisible();
+    await expect(page.locator('#toast')).toContainText('cannot be reopened after an invoice');
+    expect(correctionWrites).toBe(1);
+    await page.locator('#modal-cancel').click();
+    await expect(page.locator('#dashboard-employee-rows tr').filter({ hasText: 'Shawn-Douglas Nahar' })).toContainText('Goedgekeurd');
   });
 });
 
