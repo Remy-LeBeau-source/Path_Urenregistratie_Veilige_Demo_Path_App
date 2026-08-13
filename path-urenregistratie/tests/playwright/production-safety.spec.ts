@@ -243,6 +243,16 @@ test('[SAFE-N-004] install.php en migrate.php bevatten productieguards', async (
   });
 });
 
+test('[SAFE-N-008] lokale productieconfig is via HTTP expliciet geblokkeerd', async () => {
+  await test.step('Given de Apache-beveiliging voor de servermap wordt gelezen', async () => {});
+
+  await test.step('Then zijn alle configvarianten inclusief config.local.php fail-closed geblokkeerd', async () => {
+    const src = await readFile(join(process.cwd(), 'server', '.htaccess'), 'utf8');
+    expect(src).toContain('<FilesMatch "^config(?:\\.local|\\.example)?\\.php$">');
+    expect(src).toContain('Require all denied');
+  });
+});
+
 test('[SAFE-H-004] config.example.php bevat mail.enabled=false als standaard', async () => {
   await test.step('Given config.example.php wordt gelezen', async () => {});
 

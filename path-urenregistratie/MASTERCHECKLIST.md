@@ -98,15 +98,17 @@ Post-live beheer
   getest; PDF-bijlage nu structureel beschikbaar dankzij Fase 11), Fase 15 (gelijktijdige
   approve-requests door twee beheerders, jaarwisseling december→januari, te grote upload-afwijzing,
   basis toetsenbord-/labelcontrole, PWA-manifest + defensieve service worker).
-- [x] Actuele testinventaris: 167 Playwright + 1 DB = 168 unieke cases en 171 browseruitvoeringen
-  (163 niet-mobiel + 4 mobiele cases x 2 devices).
-- [x] Volledige lokale Playwright-regressie: 171/171 groen. Dit omvat de correctieheropening,
+- [x] Actuele testinventaris: 168 Playwright + 1 DB = 169 unieke cases en 172 browseruitvoeringen
+  (164 niet-mobiel + 4 mobiele cases x 2 devices).
+- [x] Volledige lokale Playwright-regressie: 172/172 groen. Dit omvat de correctieheropening,
   servergestuurde loginblokkade na F5, eenmalige wachtwoordlink in de GUI, tokenhergebruik,
   grenswaarden van twaalf tekens en fail-closed productie-/mailconfiguratie.
   `npm run check`, `npm run test:db:crud`, `npm run security:deps` en `npm run test:gui-smoke`
   zijn op dezelfde werkboom apart groen bevestigd.
 - [x] Living Documentation-telling wordt uit de uitvoerbare specs berekend en met een expliciete
-  inventarisguard bewaakt. Actueel: 167 Playwright-cases, 1 DB-case, 168 unieke cases en 171 uitvoeringen.
+  inventarisguard bewaakt. Actueel: 168 Playwright-cases, 1 DB-case, 169 unieke cases en 172 uitvoeringen.
+- [x] `server/config.local.php` wordt nu ook expliciet door `server/.htaccess` geblokkeerd;
+  SAFE-N-008, de smokecheck en de volledige regressie bewaken deze fail-closed productiegrens.
 - [x] Uitvoerbare BDD-engine toegevoegd met `playwright-bdd`: `.feature` genereert een native
   Playwright-spec, onbekende stappen falen tijdens generatie en de eerste browsertest
   `BDD-AUTH-H-001` is groen met pariteit naar `AUTH-H-009`.
@@ -120,10 +122,10 @@ Post-live beheer
 - [x] Medewerkercorrectie voor een al goedgekeurde maand is server-led heropenbaar zolang nog geen
   definitieve factuur bestaat; dashboardnavigatie ververst ook een verborgen grid voor dezelfde periode.
 - [-] Read-only productiecontrole op 2026-08-13: `https://uren.pathconsultancy.nl/index.html` geeft
-  HTTP 200 maar toont nog v0.9.44; publieke `server/health.php` geeft HTTP 200 met
-  `config.local.php: ok=false (Missing server/config.local.php)`. De v0.9.50-config staat alleen in
-  de private stagingrelease. Een push activeert TransIP niet automatisch; bedrijfsbootstrap,
-  productieaccounts, expliciete `GO_LIVE_<korte_sha>`-toestemming en gecontroleerde cutover blijven open.
+  HTTP 200 maar toont nog v0.9.44. De v0.9.50-config, bedrijfsidentiteit en twee beheeraccounts
+  staan veilig in de private stagingrelease/productiedatabase en de live read-only preflight is groen.
+  De config-afschermingshotfix moet nog via een volledig groene pipeline opnieuw worden gestaged;
+  daarna blijven expliciete `GO_LIVE_<korte_sha>`-toestemming en gecontroleerde cutover vereist.
 - [x] Root cause/fix gevonden voor twee omgevingsvalkuilen tijdens dit werk (vastgelegd in
   repo-memory): de PHP GD-extensie stond lokaal standaard uit (`;extension=gd` in php.ini) en moest
   worden ingeschakeld; en een stale achtergrond-PHP-proces (van vóór de GD-fix) op poort 8000
@@ -880,7 +882,10 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
 - [x] Boekhouderroute bevestigd voor `giovanno.maatsen@pathconsultancy.nl` (factuur, 1 bijlage).
 - [x] Salarisroute bevestigd voor `gambitizanagi@gmail.com` (naam/maand/uren, 0 bijlagen).
 - [x] Eerste brokerroute bevestigd voor `rana.ramjanam@pathconsultancy.nl` (factuur + klanturenstaat).
-- [-] Productieaccounts voor Gio, Joyce en medewerkers; eerste wachtwoorden veilig uitgeven.
+- [x] Eerste twee productiebeheerders aangemaakt met persoonlijke tijdelijke wachtwoorden en verplichte
+  wachtwoordwijziging: `info@pathconsultancy.nl` (Path Backoffice) en
+  `kenrich.lieveld@pathconsultancy.nl` (Kenrich Lieveld). Wachtwoorden staan niet in Git of documentatie.
+- [-] Persoonlijke medewerkeraccounts en eventuele aanvullende beheerders veilig uitnodigen.
 - [-] Gebruikers deactiveren/verwijderenbeleid vastleggen.
 - [-] Google Workspace-koppeling.
 - [-] Tweefactorauthenticatie voor beheerders beoordelen (sterk aanbevolen).
@@ -900,13 +905,18 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
 - [x] Handmatige database-export vóór productiemigratie gemaakt buiten de webroot:
   `path-db-20260813-131718.sql` (40.769 bytes), met SHA-256
   `b98f214e27ecec808e426426e407d8d8cfe40190c4d08c61bb3aabb1507c4286`.
+- [x] Definitieve pre-cutoverdatabase-export na bedrijfsprofiel en beheeraccounts gemaakt buiten de
+  webroot: `path-db-20260813-173031.sql` (42.831 bytes), SHA-256
+  `e876ab5d857b580b20a274fa71081676a6a9d3fb2c6cc706071119ba90875edc`.
 - [x] Stagingprocedure bewezen met release `9fad9592e3d3`: als niet-actieve private bundel
   geüpload, uitgepakt
   en remote geverifieerd met SHA-256
   `813040f36879edaa00602f177cba9e55fdbfae63a74131bf54201db4f446e05a`;
   de publieke documentroot is niet gewijzigd.
-- [-] Na een volledig groene pipeline-`Promote Prod` controleren dat `headSha` exact gelijk is aan
-  de stagingrelease; `Promote Prod` is regressiebewijs en nog geen automatische TransIP-deploy.
+- [x] Release Pipeline voor v0.9.50-commit `9954c5b3678e1b326dbc2be62a3dd2b5e433b896` volledig groen;
+  exact die release is checksum-gecontroleerd in private TransIP-staging geplaatst.
+- [-] De config-afschermingshotfix volledig groen door de Release Pipeline laten gaan en exact die
+  nieuwe `headSha` opnieuw checksum-gecontroleerd stagen; `Promote Prod` is geen automatische deploy.
 - [-] Na expliciete `GO_LIVE_<korte_sha>`-toestemming de bewezen stagingrelease gecontroleerd naar
   de documentroot activeren en de vorige documentroot als rollbackrelease bewaren.
 - [-] Direct na cutover `https://uren.pathconsultancy.nl/index.html#` controleren op HTTP 200,
@@ -915,9 +925,9 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
   databaseverbinding, private storage, securityconfig en uitgeschakelde echte mail zijn groen.
 - [x] Productiemigraties 012 en 013 zijn op TransIP uitgevoerd; bestaande migraties zijn idempotent
   overgeslagen en demo-migraties staan uit.
-- [-] Bedrijfsprofiel/bootstrap uitvoeren en daarna de live read-only preflight opnieuw groen maken;
-  de laatste preflight meldde `invoicing_company_exact=false`.
-- [-] Productieaccounts aanmaken; productielogin en productie-smoketest.
+- [x] Bedrijfsprofiel/bootstrap uitgevoerd: Path Consultancy als handelsnaam van QSI Consultancy B.V.;
+  de live read-only productiepreflight is daarna volledig groen.
+- [-] Productielogin en productie-smoketest uitvoeren na de expliciet goedgekeurde cutover.
 - [x] Schrijfrechten upload-/PDF-mappen bewezen (mode `700`); PHP `upload_max_filesize=2M`
   en `post_max_size=8M` sluiten aan op de applicatiegrens van maximaal 2 MB; de app forceert
   zelf Secure/HttpOnly/SameSite=Lax voor productiesessies.
@@ -961,14 +971,14 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
 Status Fase 16:
 - [x] technische audit-API-basis aanwezig en getest
 - [x] Bundel-1-tooling voorbereid: SMTP/STARTTLS, offline mailpreflight, private storage, logging/rotatie, queuecron, back-up/restore, productiepreflight, interactieve productieconfiguratie, accountprovisioning en runbooks
-- [x] Release Pipeline #31654859682 voor commit `9fad959` volledig groen; actuele lokale en
-  pipeline-regressie omvatten 161 browseruitvoeringen inclusief SAFE-N-007.
-- [x] Bundel 2 voorbereiding: actuele checksum-release staat veilig in private TransIP-staging;
-  PHP/PDO, opslagrechten, uploadlimieten, cronbeschikbaarheid en SMTP STARTTLS zijn bewezen.
-- [-] fase als geheel: live serveert nog de oude app v0.9.44 en de publieke health meldt een
-  ontbrekende `server/config.local.php`; de nieuwe productieconfig bestaat alleen in private staging.
-  Bedrijfsbootstrap, live preflight, productieaccounts, gecontroleerde cutover en alle
-  Bundel-3-handelingen blijven afzonderlijke gates; geen SMTP-transactie, echte mail of go-live uitgevoerd.
+- [x] Release Pipeline voor v0.9.50-commit `9954c5b3678e1b326dbc2be62a3dd2b5e433b896` volledig groen;
+  actuele lokale regressie na SAFE-N-008 omvat 172/172 browseruitvoeringen.
+- [x] Bundel 2 voorbereiding: checksum-release staat veilig in private TransIP-staging; PHP/PDO,
+  opslagrechten, uploadlimieten, cronbeschikbaarheid, SMTP STARTTLS, bedrijfsprofiel, twee
+  beheeraccounts, databaseback-up en live read-only preflight zijn bewezen.
+- [-] fase als geheel: live serveert nog veilig v0.9.44. Eerst moet de config-afschermingshotfix via
+  GitHub volledig groen en als exacte nieuwe SHA privé op TransIP staan. Daarna volgen expliciete
+  `GO_LIVE_<korte_sha>`, gecontroleerde cutover en live-smoke; geen SMTP-transactie of echte mail uitgevoerd.
 
 ---
 

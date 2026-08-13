@@ -62,6 +62,14 @@ Feature: Veilige productieconfiguratie en deployment
     When de flow voor SAFE-N-004 wordt uitgevoerd
     Then bevatten beide bestanden een HTTP-blokkering voor productieomgeving
 
+  @negative
+  Scenario: [SAFE-N-008] lokale productieconfig is via HTTP expliciet geblokkeerd
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given de Apache-beveiliging voor de servermap wordt gelezen
+    When de flow voor SAFE-N-008 wordt uitgevoerd
+    Then zijn alle configvarianten inclusief config.local.php fail-closed geblokkeerd
+
   @happy
   Scenario: [SAFE-H-004] config.example.php bevat mail.enabled=false als standaard
     # Testtechniek: API-contract + equivalentieklasse
