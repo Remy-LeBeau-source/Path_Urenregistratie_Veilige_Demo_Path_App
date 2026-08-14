@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 188 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 189 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 188 unieke case-ID's
+- Playwright executable cases: 189 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 189 unieke case-ID's
+- Totaal executable cases: 190 unieke case-ID's
 - Playwright features: 21
 - Database features: 1
 - Playwright steps mappings: 21
 - Database steps mappings: 1
-- Uitvoeringen: 193
-- Niet-mobile projectuitvoeringen: 183
+- Uitvoeringen: 194
+- Niet-mobile projectuitvoeringen: 184
 - Mobile functionele cases: 5
 - Pixel 7 / Chromium-uitvoeringen: 5
 - iPhone 13 / WebKit-uitvoeringen: 5
 
-De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 188 Playwright-functionele cases in totaal 193 resultaten op: 183 + (5 x 2) = 193.
+De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 189 Playwright-functionele cases in totaal 194 resultaten op: 184 + (5 x 2) = 194.
 
 ## Documentatieketen
 
@@ -47,13 +47,13 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 188 Playwrig
 - [ADM-WR-H-001] admin kan company/settings server-led opslaan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 - [ADM-WR-H-002] admin kan beheerder server-led aanmaken en wijzigen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
 - [ADM-WR-H-003] admin kan medewerker server-led aanmaken en bootstrap ziet deze terug — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
-- [ADM-WR-N-001] dubbel accountadres wordt voor medewerker en beheerder vriendelijk geweigerd — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
-- [ADM-WR-N-002] dubbel accountadres blijft uit de lijsten en toont een veilige GUI-melding — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 10
+- [ADM-WR-N-001] dubbel accountadres geeft veilige metadata van het bestaande bedrijfsaccount — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 8
+- [ADM-WR-N-002] dubbel accountadres opent het bestaande account zonder duplicaat — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 12
 - [ADM-WR-H-004] admin slaat medewerker zonder SMTP veilig op met toegang in afwachting — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [ADM-WR-H-005] productie toont uitsluitend serveraccounts en opent medewerkerformulier bovenaan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
 - [ADM-WR-H-006] deactiveren verplaatst medewerker direct en leeg account kan worden verwijderd — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
 - [ADM-WR-H-007] serverwrite na Herstel verschijnt direct in Teambeheer — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 5
-- [ADM-WR-H-008] bestaande beheerder en medewerker worden na Herstel direct terug in Teambeheer getoond — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
+- [ADM-WR-H-008] bestaande beheerder en medewerker worden na Herstel direct terug in Teambeheer getoond — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
 
 ### Auditlog en traceerbaarheid
 
@@ -130,7 +130,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 188 Playwrig
 
 - Feature: `tests/playwright/features/mail-delivery.feature`
 - Source: `tests/playwright/email-queue.spec.ts`
-- Cases: 20
+- Cases: 21
 
 - [EQ-H-001] factuurlock maakt queue-items aan met dry_run=true — Techniek: Toestandsovergang · Assertions: 5
 - [EQ-H-002] broker-channel bundelt factuur en klanturenstaat — Techniek: API-contract + equivalentieklasse · Assertions: 2
@@ -140,6 +140,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 188 Playwrig
 - [EQ-H-015] Backoffice ziet veilige verzendhistorie zonder berichtinhoud — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 16
 - [EQ-H-016] Backoffice verstuurt vanuit de acceptatieconsole precies één gekozen scenario — Techniek: API-contract + equivalentieklasse · Assertions: 12
 - [EQ-N-017] niet-vrijgegeven acceptatieconsole toont vijf herkenbare maar geblokkeerde acties — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 9
+- [EQ-N-019] gesloten acceptatievenster toont waarom geen mail kan worden verstuurd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [EQ-N-018] afgewezen acceptatiemail blijft nooit achter voor automatische herverzending — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [EQ-N-006] anonieme gebruiker krijgt 401 op list — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2
 - [EQ-N-007] medewerker krijgt 403 op list — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1

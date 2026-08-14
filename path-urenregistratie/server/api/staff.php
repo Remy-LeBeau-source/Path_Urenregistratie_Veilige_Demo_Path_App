@@ -66,28 +66,54 @@ function staff_role_from_payload(string $raw): string
     return in_array($raw, ['employee', 'administrator'], true) ? $raw : 'employee';
 }
 
-function staff_email_is_in_use(PDO $pdo, string $email, int $excludeUserId = 0): bool
+function staff_find_email_conflict(PDO $pdo, string $email, int $excludeUserId = 0): ?array
 {
     $stmt = $pdo->prepare(
-        'SELECT id FROM users
-         WHERE LOWER(email) = LOWER(:email)
-           AND id <> :exclude_user_id
+        'SELECT u.id, u.company_id, u.display_name, u.role, u.active, e.id AS employee_id
+         FROM users u
+         LEFT JOIN employees e ON e.user_id = u.id AND e.company_id = u.company_id
+         WHERE LOWER(u.email) = LOWER(:email)
+           AND u.id <> :exclude_user_id
          LIMIT 1'
     );
     $stmt->execute([
         ':email' => $email,
         ':exclude_user_id' => $excludeUserId,
     ]);
-    return $stmt->fetchColumn() !== false;
+    $row = $stmt->fetch();
+    return is_array($row) ? $row : null;
 }
 
-function staff_send_email_conflict(): never
+function staff_send_email_conflict(?array $existing = null, int $companyId = 0): never
 {
-    auth_send_json([
+    $response = [
         'ok' => false,
         'error' => 'email-already-in-use',
         'message' => 'Dit e-mailadres is al in gebruik. Kies een ander e-mailadres of pas het bestaande account aan.',
-    ], 409);
+    ];
+
+    // Only reveal account details inside the administrator's own company. The
+    // database keeps e-mail globally unique, but a conflict in another tenant
+    // must remain indistinguishable from any other duplicate.
+    if ($existing !== null && (int)$existing['company_id'] === $companyId) {
+        $role = (string)$existing['role'];
+        $active = (bool)$existing['active'];
+        $response['existing_account'] = [
+            'user_id' => (int)$existing['id'],
+            'employee_id' => isset($existing['employee_id']) ? (int)$existing['employee_id'] : null,
+            'display_name' => (string)$existing['display_name'],
+            'role' => $role,
+            'active' => $active,
+        ];
+        $response['message'] = sprintf(
+            'Dit e-mailadres hoort al bij %s (%s %s). Het bestaande account is voor je geopend.',
+            (string)$existing['display_name'],
+            $active ? 'actieve' : 'inactieve',
+            $role === 'administrator' ? 'beheerder' : 'medewerker'
+        );
+    }
+
+    auth_send_json($response, 409);
 }
 
 function staff_upsert_mail_recipients(PDO $pdo, int $companyId, array $items): array
@@ -300,8 +326,9 @@ if ($action === 'upsert_admin') {
     $email = staff_email($admin['email'] ?? '');
     $active = staff_bool($admin['active'] ?? true, true) ? 1 : 0;
     $dbUserId = (int)($admin['dbUserId'] ?? 0);
-    if (staff_email_is_in_use($pdo, $email, $dbUserId)) {
-        staff_send_email_conflict();
+    $emailConflict = staff_find_email_conflict($pdo, $email, $dbUserId);
+    if ($emailConflict !== null) {
+        staff_send_email_conflict($emailConflict, $companyId);
     }
     $sendInvitation = staff_bool($payload['sendInvitation'] ?? false, false);
     if (
@@ -405,7 +432,7 @@ if ($action === 'upsert_admin') {
             $pdo->rollBack();
         }
         if ($e instanceof PDOException && (string)$e->getCode() === '23000') {
-            staff_send_email_conflict();
+            staff_send_email_conflict(staff_find_email_conflict($pdo, $email, $dbUserId), $companyId);
         }
         $message = $e instanceof RuntimeException
             ? $e->getMessage()
@@ -444,8 +471,9 @@ if ($action === 'upsert_employee') {
 
     $employeeDbUserId = (int)($employee['dbUserId'] ?? 0);
     $employeeDbId = (int)($employee['dbEmployeeId'] ?? 0);
-    if (staff_email_is_in_use($pdo, $email, $employeeDbUserId)) {
-        staff_send_email_conflict();
+    $emailConflict = staff_find_email_conflict($pdo, $email, $employeeDbUserId);
+    if ($emailConflict !== null) {
+        staff_send_email_conflict($emailConflict, $companyId);
     }
     $clientName = staff_string($employee['client'] ?? '', 180);
     $brokerName = staff_string($employee['broker'] ?? '', 180);
@@ -771,7 +799,7 @@ if ($action === 'upsert_employee') {
             $pdo->rollBack();
         }
         if ($e instanceof PDOException && (string)$e->getCode() === '23000') {
-            staff_send_email_conflict();
+            staff_send_email_conflict(staff_find_email_conflict($pdo, $email, $employeeDbUserId), $companyId);
         }
         $message = $e instanceof RuntimeException
             ? $e->getMessage()

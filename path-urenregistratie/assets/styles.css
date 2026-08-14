@@ -982,6 +982,11 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .administrators-panel { margin-top: 22px; }
 .administrator-list { display: grid; }
 .administrator-row { display: grid; grid-template-columns: 1fr auto auto; gap: 15px; align-items: center; border-top: 1px solid var(--line); padding: 14px 24px; }
+.account-conflict-focus {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 7px rgba(66, 196, 164, 0.18);
+}
 .administrator-person { display: flex; align-items: center; gap: 11px; }
 .administrator-person strong, .administrator-person small { display: block; }
 .administrator-person strong { font-size: 11px; }

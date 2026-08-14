@@ -77,6 +77,14 @@ Feature: Mailroutering en aflevering
     Then wordt met Playwright-assertions bevestigd dat niet-vrijgegeven acceptatieconsole toont vijf herkenbare maar geblokkeerde acties
 
   @negative
+  Scenario: [EQ-N-019] gesloten acceptatievenster toont waarom geen mail kan worden verstuurd
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given mailroutering en aflevering is voorbereid
+    When de flow voor EQ-N-019 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat gesloten acceptatievenster toont waarom geen mail kan worden verstuurd
+
+  @negative
   Scenario: [EQ-N-018] afgewezen acceptatiemail blijft nooit achter voor automatische herverzending
     # Testtechniek: Negatieve equivalentieklasse + error guessing
     # Aantoonbare Playwright-assertions in deze case: 6

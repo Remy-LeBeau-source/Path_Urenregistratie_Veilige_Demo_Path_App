@@ -207,7 +207,7 @@ test.describe('admin write endpoints', () => {
     await ctx.dispose();
   });
 
-  test('[ADM-WR-N-001] dubbel accountadres wordt voor medewerker en beheerder vriendelijk geweigerd', async () => {
+  test('[ADM-WR-N-001] dubbel accountadres geeft veilige metadata van het bestaande bedrijfsaccount', async () => {
     const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
     const authApi = new AuthApi(ctx);
     await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
@@ -229,7 +229,12 @@ test.describe('admin write endpoints', () => {
       expect(result.status).toBe(409);
       expect(result.body.ok).toBe(false);
       expect(result.body.error).toBe('email-already-in-use');
-      expect(result.body.message).toBe('Dit e-mailadres is al in gebruik. Kies een ander e-mailadres of pas het bestaande account aan.');
+      expect(result.body.message).toContain('hoort al bij');
+      expect(result.body.existing_account).toMatchObject({
+        role: 'administrator',
+        active: true,
+      });
+      expect(Number(result.body.existing_account?.user_id)).toBeGreaterThan(0);
       expect(JSON.stringify(result.body)).not.toContain('SQLSTATE');
       expect(JSON.stringify(result.body)).not.toContain('users.email');
     }
@@ -238,7 +243,7 @@ test.describe('admin write endpoints', () => {
     await ctx.dispose();
   });
 
-  test('[ADM-WR-N-002] dubbel accountadres blijft uit de lijsten en toont een veilige GUI-melding', async ({ page }) => {
+  test('[ADM-WR-N-002] dubbel accountadres opent het bestaande account zonder duplicaat', async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.open();
     await loginPage.loginAsAdmin();
@@ -254,25 +259,25 @@ test.describe('admin write endpoints', () => {
     await page.locator('#edit-admin-name').fill('Dubbele beheerder');
     await page.locator('#edit-admin-email').fill(duplicateEmail);
     await page.locator('#modal-confirm').click();
-    await expect(page.locator('#toast')).toContainText('Dit e-mailadres is al in gebruik');
-    await expect(page.locator('#modal')).toBeVisible();
+    await expect(page.locator('#toast')).toContainText('hoort al bij');
+    await expect(page.locator('#modal')).toBeHidden();
     await expect(adminRows).toHaveCount(adminCountBefore);
+    await expect(adminRows.filter({ hasText: appConfig.adminEmail })).toHaveClass(/account-conflict-focus/);
     await expect(page.locator('body')).not.toContainText('SQLSTATE');
     await expect(page.locator('body')).not.toContainText('users.email');
-    await page.locator('#modal-close').click();
 
     await page.locator('#add-employee').click();
     await page.locator('#edit-name').fill('Dubbele medewerker');
     await page.locator('#edit-account-email').fill(duplicateEmail);
     await page.locator('#edit-broker-email').fill('broker@example.invalid');
     await page.locator('#modal-confirm').click();
-    await expect(page.locator('#toast')).toContainText('Dit e-mailadres is al in gebruik');
-    await expect(page.locator('#modal')).toBeVisible();
+    await expect(page.locator('#toast')).toContainText('hoort al bij');
+    await expect(page.locator('#modal')).toBeHidden();
     await expect(employeeCards).toHaveCount(employeeCountBefore);
+    await expect(adminRows.filter({ hasText: appConfig.adminEmail })).toHaveClass(/account-conflict-focus/);
     await expect(page.locator('body')).not.toContainText('SQLSTATE');
     await expect(page.locator('body')).not.toContainText('users.email');
 
-    await page.locator('#modal-close').click();
     await loginPage.logout();
   });
 
@@ -545,7 +550,7 @@ test.describe('admin write endpoints', () => {
       });
       body.users.push({
         id: 99102, company_id: companyId, email: existingEmployeeEmail, display_name: existingEmployeeName,
-        role: 'employee', active: 1, password_ready: 0,
+        role: 'employee', active: 0, password_ready: 0,
       });
       body.employees.push({
         id: 99103, company_id: companyId, user_id: 99102, employee_number: 'REG-99103',
@@ -556,13 +561,20 @@ test.describe('admin write endpoints', () => {
       await route.fulfill({ response, json: body });
     });
     await page.route('**/server/api/staff.php', async route => {
+      const payload = route.request().postDataJSON() as { action?: string };
+      const employeeConflict = payload.action === 'upsert_employee';
       await route.fulfill({
         status: 409,
         contentType: 'application/json',
         body: JSON.stringify({
           ok: false,
           error: 'email-already-in-use',
-          message: 'Dit e-mailadres is al in gebruik. Kies een ander e-mailadres of pas het bestaande account aan.',
+          message: employeeConflict
+            ? `Dit e-mailadres hoort al bij ${existingEmployeeName} (inactieve medewerker). Het bestaande account is voor je geopend.`
+            : `Dit e-mailadres hoort al bij ${existingAdminName} (actieve beheerder). Het bestaande account is voor je geopend.`,
+          existing_account: employeeConflict
+            ? { user_id: 99102, employee_id: 99103, display_name: existingEmployeeName, role: 'employee', active: false }
+            : { user_id: 99101, employee_id: null, display_name: existingAdminName, role: 'administrator', active: true },
         }),
       });
     });
@@ -583,27 +595,25 @@ test.describe('admin write endpoints', () => {
     await page.locator('#edit-broker-email').fill('broker@example.invalid');
     await page.locator('#modal-confirm').click();
 
-    await expect(page.locator('#toast')).toContainText('Dit e-mailadres is al in gebruik');
-    await expect(page.locator('#modal')).toBeVisible();
+    await expect(page.locator('#toast')).toContainText(`hoort al bij ${existingEmployeeName}`);
+    await expect(page.locator('#modal')).toBeHidden();
+    await expect(page.locator('[data-employee-scope="inactive"]')).toHaveClass(/is-active/);
     await expect(page.locator('#employee-grid')).toContainText(existingEmployeeName);
     await expect(page.locator('#employee-grid')).toContainText(existingEmployeeEmail);
-    await expect(page.locator('#employee-grid .employee-card').filter({ hasText: existingEmployeeEmail })).toHaveCount(1);
+    await expect(page.locator('#employee-grid .employee-card').filter({ hasText: existingEmployeeEmail })).toHaveClass(/account-conflict-focus/);
     await expect(page.locator('#administrator-list')).toContainText(existingAdminName);
     await expect(page.locator('#administrator-list')).toContainText(existingAdminEmail);
     await expect.poll(() => page.evaluate(() => localStorage.getItem('path-uren-demo-v07-final:local-reset-authoritative'))).toBeNull();
-
-    await page.locator('#modal-close').click();
 
     await page.locator('#add-admin').click();
     await page.locator('#edit-admin-name').fill(existingAdminName);
     await page.locator('#edit-admin-email').fill(existingAdminEmail);
     await page.locator('#modal-confirm').click();
 
-    await expect(page.locator('#toast')).toContainText('Dit e-mailadres is al in gebruik');
-    await expect(page.locator('#modal')).toBeVisible();
-    await expect(page.locator('#administrator-list .administrator-row').filter({ hasText: existingAdminEmail })).toHaveCount(1);
+    await expect(page.locator('#toast')).toContainText(`hoort al bij ${existingAdminName}`);
+    await expect(page.locator('#modal')).toBeHidden();
+    await expect(page.locator('#administrator-list .administrator-row').filter({ hasText: existingAdminEmail })).toHaveClass(/account-conflict-focus/);
 
-    await page.locator('#modal-close').click();
     await loginPage.logout();
   });
 });

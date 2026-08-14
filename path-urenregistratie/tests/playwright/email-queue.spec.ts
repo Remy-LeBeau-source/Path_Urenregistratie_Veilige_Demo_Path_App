@@ -400,6 +400,55 @@ test.describe('email queue api', () => {
     await expect(consolePanel).not.toContainText('Alles versturen');
   });
 
+  test('[EQ-N-019] gesloten acceptatievenster toont waarom geen mail kan worden verstuurd', async ({ page }) => {
+    const scenarios = [
+      ['broker_bundle', 'Broker: factuur + klanturenstaat', 2],
+      ['accountant_invoice', 'Boekhouder: factuur', 1],
+      ['payroll_hours', 'Salarisadministratie: alleen ureninformatie', 0],
+      ['password_reset', 'Wachtwoord vergeten: eenmalige link', 0],
+      ['account_invitation', 'Eerste uitnodiging: wachtwoord aanmaken', 0],
+    ].map(([key, label, attachmentCount]) => ({
+      key,
+      label,
+      recipient: '',
+      attachment_count: attachmentCount,
+      ready: false,
+      issues: ['Ontvanger ontbreekt of is ongeldig.'],
+    }));
+    await page.route('**/server/api/mail-acceptance.php', route => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        enabled: false,
+        ready: false,
+        issues: [
+          'De acceptatieconsole staat uit in de serverconfiguratie.',
+          'Echte SMTP-verzending is niet vrijgegeven voor deze omgeving.',
+        ],
+        scenarios,
+      }),
+    }));
+    await page.route('**/server/api/email-queue.php*', route => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, dry_run: false, count: 0, items: [] }),
+    }));
+
+    const login = new LoginPage(page);
+    await login.open();
+    await login.loginAsAdmin();
+    await page.locator('button[data-view="settings"]').click();
+
+    const consolePanel = page.locator('#mail-acceptance-console');
+    await expect(page.locator('#mail-acceptance-status')).toHaveText('Geblokkeerd');
+    await expect(page.locator('#mail-acceptance-summary')).toContainText('acceptatieconsole staat uit');
+    await expect(consolePanel.locator('[data-mail-acceptance-scenario]')).toHaveCount(5);
+    await expect(consolePanel.locator('[data-mail-acceptance-scenario]:enabled')).toHaveCount(0);
+    await expect(consolePanel.locator('[data-mail-acceptance-scenario]')).toHaveText(Array(5).fill('Mailvenster gesloten'));
+    await expect(consolePanel).not.toContainText('Controleer & verstuur 1');
+  });
+
   test('[EQ-N-018] afgewezen acceptatiemail blijft nooit achter voor automatische herverzending', async () => {
     let policy: { ok?: boolean; network_connections?: number; writes_performed?: boolean; checks?: Record<string, boolean> } = {};
 

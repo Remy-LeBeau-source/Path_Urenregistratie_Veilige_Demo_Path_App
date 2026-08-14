@@ -31,20 +31,20 @@ Feature: Organisatie-instellingen beheren
     Then wordt met Playwright-assertions bevestigd dat admin kan medewerker server-led aanmaken en bootstrap ziet deze terug
 
   @negative
-  Scenario: [ADM-WR-N-001] dubbel accountadres wordt voor medewerker en beheerder vriendelijk geweigerd
-    # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 6
+  Scenario: [ADM-WR-N-001] dubbel accountadres geeft veilige metadata van het bestaande bedrijfsaccount
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 8
     Given organisatie-instellingen beheren is voorbereid
     When de flow voor ADM-WR-N-001 wordt uitgevoerd
-    Then wordt met Playwright-assertions bevestigd dat dubbel accountadres wordt voor medewerker en beheerder vriendelijk geweigerd
+    Then wordt met Playwright-assertions bevestigd dat dubbel accountadres geeft veilige metadata van het bestaande bedrijfsaccount
 
   @negative
-  Scenario: [ADM-WR-N-002] dubbel accountadres blijft uit de lijsten en toont een veilige GUI-melding
+  Scenario: [ADM-WR-N-002] dubbel accountadres opent het bestaande account zonder duplicaat
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 10
+    # Aantoonbare Playwright-assertions in deze case: 12
     Given organisatie-instellingen beheren is voorbereid
     When de flow voor ADM-WR-N-002 wordt uitgevoerd
-    Then wordt met Playwright-assertions bevestigd dat dubbel accountadres blijft uit de lijsten en toont een veilige GUI-melding
+    Then wordt met Playwright-assertions bevestigd dat dubbel accountadres opent het bestaande account zonder duplicaat
 
   @happy
   Scenario: [ADM-WR-H-004] admin slaat medewerker zonder SMTP veilig op met toegang in afwachting
@@ -82,7 +82,7 @@ Feature: Organisatie-instellingen beheren
   @happy
   Scenario: [ADM-WR-H-008] bestaande beheerder en medewerker worden na Herstel direct terug in Teambeheer getoond
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 12
+    # Aantoonbare Playwright-assertions in deze case: 13
     Given organisatie-instellingen beheren is voorbereid
     When de flow voor ADM-WR-H-008 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat bestaande beheerder en medewerker worden na Herstel direct terug in Teambeheer getoond

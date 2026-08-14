@@ -99,7 +99,7 @@ Post-live beheer
   getest; PDF-bijlage nu structureel beschikbaar dankzij Fase 11), Fase 15 (gelijktijdige
   approve-requests door twee beheerders, jaarwisseling december→januari, te grote upload-afwijzing,
   basis toetsenbord-/labelcontrole, PWA-manifest + defensieve service worker).
-- [x] Actuele testinventaris: 188 Playwright + 1 DB = 189 unieke cases en 193 browseruitvoeringen
+- [x] Actuele testinventaris: 189 Playwright + 1 DB = 190 unieke cases en 194 browseruitvoeringen
   (183 niet-mobiel + 5 mobiele cases x 2 devices).
 - [x] Volledige lokale Playwright-regressie voor v0.9.55: 179/179 groen, inclusief de privacyveilige
   Backoffice-verzendadministratie op desktop en mobiel. `npm run check`, `npm run test:db:crud`,
@@ -114,7 +114,7 @@ Post-live beheer
   `npm run check`, `npm run test:db:crud`, `npm run security:deps` en `npm run test:gui-smoke`
   zijn op dezelfde werkboom apart groen bevestigd.
 - [x] Living Documentation-telling wordt uit de uitvoerbare specs berekend en met een expliciete
-  inventarisguard bewaakt. Actueel: 188 Playwright-cases, 1 DB-case, 189 unieke cases en 193 uitvoeringen.
+  inventarisguard bewaakt. Actueel: 189 Playwright-cases, 1 DB-case, 190 unieke cases en 194 uitvoeringen.
 - [x] `server/config.local.php` wordt nu ook expliciet door `server/.htaccess` geblokkeerd;
   SAFE-N-008, de smokecheck en de volledige regressie bewaken deze fail-closed productiegrens.
 - [x] Uitvoerbare BDD-engine toegevoegd met `playwright-bdd`: `.feature` genereert een native
@@ -170,6 +170,15 @@ Post-live beheer
   automatische rollback. De volledige lokale 193/193 regressie en Release Pipeline `31766313202` zijn
   groen. De job `Deploy Prod to TransIP` bewees de externe uitrol van exact `21cdfb1954d526...` en
   sloot af met `Live smoke passed`.
+- [x] v0.9.58 is lokaal volledig geverifieerd. Een dubbel e-mailadres geeft binnen het
+  eigen bedrijf veilig naam, rol en actief/inactief-status terug; Teambeheer sluit het invoerformulier,
+  opent het bestaande account onder het juiste filter en markeert de herstelactie. Buiten het eigen
+  bedrijf blijven accountdetails afgeschermd. De gesloten acceptatieconsole toont op alle vijf acties
+  voortaan expliciet `Mailvenster gesloten` in plaats van een schijnbaar bruikbare verzendknop.
+  Gerichte regressies ADM-WR-N-001, ADM-WR-N-002, ADM-WR-H-008 en EQ-N-019 zijn groen. De volledige
+  regressie is 194/194 groen, MOB-H-003 is aanvullend 10/10 groen op mobile-Safari en GUI-smoke,
+  `npm run check`, DB-CRUD en dependency-audit zijn groen. Commit, pipeline en automatische
+  productie-uitrol volgen nog.
 - [x] Mislukte acceptatiemails blijven nooit voor een latere cron achter: één knop is exact één
   SMTP-poging; bij afwijzing eindigt de levering direct definitief als `failed`. Normale productiemail
   behoudt de begrensde retry. SMTP-fouten bewaren voortaan de veilige relayreactie voor diagnose.
@@ -1015,6 +1024,11 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
   Drie afwijzingen tijdens Google-configuratiepropagatie zijn definitief afgesloten; er staat niets
   meer in de queue. Herhaal iedere mail afzonderlijk wanneer de eigenaar online is en sluit daarna
   `mail.enabled` en `acceptance_test.enabled` opnieuw direct.
+- [-] Productieaccount `gch.lieveld@live.nl` bestaat al als gedeactiveerde medewerker `Gio Ma12`
+  (user-id 7); daarom is een tweede beheeraccount met hetzelfde adres terecht geweigerd. Na v0.9.58
+  leidt de GUI direct naar dit bestaande inactieve account. Beslis daar bewust tussen opnieuw
+  activeren, het adres wijzigen of — alleen zonder historie — definitief verwijderen voordat het
+  adres voor een andere rol wordt gebruikt.
 - [-] Back-up maken en database/bestanden herstellen uit back-up.
 - [-] Mobiele admin-/medewerkerflow op fysieke iPhone, Android en tablet.
 - [-] PWA-installatie en offline-/updategedrag bepalen op een echt toestel.

@@ -5802,7 +5802,7 @@ function renderEmployees() {
   document.querySelector("#employee-grid").innerHTML = employees.map(employee => {
     const record = recordFor(employee.id);
     const active = employee.active !== false;
-    return '<article class="employee-card' + (active ? "" : " is-inactive") + '">' +
+    return '<article class="employee-card' + (active ? "" : " is-inactive") + '" data-employee-account-id="' + escapeHtml(employee.id) + '">' +
       '<div class="employee-card-head"><div class="employee-identity"><span class="mini-avatar">' + initials(employee.name) + "</span><span><strong>" + escapeHtml(employee.name) + "</strong><small>" + escapeHtml(employee.role) + " · " + escapeHtml(employee.email || "geen accountadres") + (employee.invitationPending ? " · Toegang in afwachting" : "") + "</small></span></div>" + (active ? statusPill(record.timesheetStatus) : '<span class="status-pill status-concept">Inactief</span>') + "</div>" +
       '<div class="employee-details"><div><small>Klant</small><strong>' + escapeHtml(employee.client) + "</strong></div><div><small>Uren per week</small><strong>" + hoursFormat.format(weeklyHoursFor(employee)) + " uur</strong></div><div><small>Broker</small><strong>" + escapeHtml(employee.broker) + "</strong></div></div>" +
       '<div class="employee-card-actions"><button class="text-button" data-edit-routing="' + employee.id + '">Gegevens aanpassen</button><button class="small-button" data-toggle-employee="' + employee.id + '">' + (active ? "Deactiveren" : "Opnieuw activeren") + "</button>" + (!active && API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin" ? '<button class="text-button danger-text" data-delete-employee="' + employee.id + '">Definitief verwijderen</button>' : "") + "</div>" +
@@ -5840,7 +5840,7 @@ function renderAdministrators() {
     const reason = admin.invitationPending
       ? "Toegang in afwachting"
       : (isCurrent ? "Huidig account" : (active ? "Actieve beheerder" : "Geen toegang"));
-    return '<div class="administrator-row"><div class="administrator-person"><span class="mini-avatar">' + initials(admin.name) + '</span><span><strong>' + escapeHtml(admin.name) + '</strong><small>' + escapeHtml(admin.email) + " · " + reason + '</small></span></div><span class="status-pill ' + (active ? "status-approved" : "status-concept") + '">' + (active ? "Actief" : "Inactief") + '</span><div><button class="small-button" data-edit-admin="' + escapeHtml(admin.id) + '">Aanpassen</button> <button class="small-button" data-toggle-admin="' + escapeHtml(admin.id) + '"' + (disabled ? " disabled" : "") + '>' + (active ? "Deactiveren" : "Activeren") + '</button></div></div>';
+    return '<div class="administrator-row" data-admin-account-id="' + escapeHtml(admin.dbUserId || admin.id) + '"><div class="administrator-person"><span class="mini-avatar">' + initials(admin.name) + '</span><span><strong>' + escapeHtml(admin.name) + '</strong><small>' + escapeHtml(admin.email) + " · " + reason + '</small></span></div><span class="status-pill ' + (active ? "status-approved" : "status-concept") + '">' + (active ? "Actief" : "Inactief") + '</span><div><button class="small-button" data-edit-admin="' + escapeHtml(admin.id) + '">Aanpassen</button> <button class="small-button" data-toggle-admin="' + escapeHtml(admin.id) + '"' + (disabled ? " disabled" : "") + '>' + (active ? "Deactiveren" : "Activeren") + '</button></div></div>';
   }).join("");
 }
 
@@ -6129,9 +6129,10 @@ function renderMailAcceptanceConsole() {
     const scenarioIssues = Array.isArray(item && item.issues) ? item.issues.filter(Boolean) : [];
     const ready = item && item.ready === true;
     const details = scenarioIssues.length ? scenarioIssues.join(" ") : mailAcceptanceAttachmentText(item && item.attachment_count);
+    const actionLabel = ready ? "Controleer &amp; verstuur 1" : (data.enabled === true ? "Niet beschikbaar" : "Mailvenster gesloten");
     return '<article class="mail-acceptance-scenario" data-mail-acceptance-key="' + escapeHtml(String(item && item.key || "")) + '">' +
       '<div class="mail-acceptance-copy"><strong>' + escapeHtml(String(item && item.label || "Acceptatiescenario")) + '</strong><small>Aan ' + escapeHtml(String(item && item.recipient || "Niet ingesteld")) + ' · ' + escapeHtml(details) + '</small></div>' +
-      '<button class="small-button" type="button" data-mail-acceptance-scenario="' + escapeHtml(String(item && item.key || "")) + '"' + (ready ? "" : " disabled") + '>Controleer &amp; verstuur 1</button>' +
+      '<button class="small-button" type="button" data-mail-acceptance-scenario="' + escapeHtml(String(item && item.key || "")) + '"' + (ready ? "" : " disabled") + '>' + actionLabel + '</button>' +
     '</article>';
   }).join("") : '<div class="dashboard-action-empty"><strong>Geen scenario’s geconfigureerd.</strong><br>Er kan niets worden verzonden.</div>';
 }
@@ -8061,7 +8062,7 @@ function showEmployeeEditor(employeeId) {
             }
             if (addAnother) showEmployeeEditor(null);
           })
-          .catch(error => toast(String(error && error.message || "Medewerker opslaan op server mislukt.")));
+          .catch(error => handleStaffWriteError(error, "Medewerker opslaan op server mislukt."));
         return;
       }
 
@@ -8177,7 +8178,7 @@ function showAdminEditor(adminId) {
             renderAll();
             toast("Beheerder op de server opgeslagen.");
           })
-          .catch(error => toast(String(error && error.message || "Beheerder opslaan op server mislukt.")));
+          .catch(error => handleStaffWriteError(error, "Beheerder opslaan op server mislukt."));
         return;
       }
 
@@ -8205,15 +8206,69 @@ function writeStaffToApi(action, payload) {
         const message = String(result && result.data && result.data.message || "Opslaan op server mislukt.");
         if (result && result.data && result.data.error === "email-already-in-use" && isLocalResetAuthoritative()) {
           releaseLocalResetAuthorityAfterServerWrite();
-          return refreshBootstrapReadApi(true).then(() => {
-            renderAll();
-            throw new Error(message);
-          });
         }
-        throw new Error(message);
+        const error = new Error(message);
+        error.code = String(result && result.data && result.data.error || "staff-write-failed");
+        error.details = result && result.data || {};
+        throw error;
       }
       return result.data;
     });
+}
+
+function revealExistingStaffAccount(existing, message) {
+  const role = String(existing && existing.role || "");
+  const userId = Number(existing && existing.user_id || 0);
+  const employeeId = Number(existing && existing.employee_id || 0);
+  const active = existing && existing.active === true;
+
+  closeModal();
+  if (role === "employee") {
+    state.employeeScope = active ? "active" : "inactive";
+  }
+  renderAll();
+  showView("employees");
+
+  window.requestAnimationFrame(() => {
+    let target = null;
+    if (role === "employee") {
+      const employee = state.employees.find(item =>
+        Number(item.dbUserId || 0) === userId || Number(item.dbEmployeeId || item.id || 0) === employeeId
+      );
+      if (employee) target = document.querySelector('[data-employee-account-id="' + CSS.escape(String(employee.id)) + '"]');
+    } else if (role === "administrator") {
+      target = document.querySelector('[data-admin-account-id="' + CSS.escape(String(userId)) + '"]');
+    }
+    if (!target) return;
+    target.classList.add("account-conflict-focus");
+    target.scrollIntoView({ behavior: smoothScrollBehavior(), block: "center" });
+    const action = target.querySelector("[data-edit-routing], [data-edit-admin], [data-toggle-employee], [data-toggle-admin]");
+    if (action) action.focus({ preventScroll: true });
+    window.setTimeout(() => target.classList.remove("account-conflict-focus"), 5000);
+  });
+
+  toast(message);
+}
+
+function handleStaffWriteError(error, fallbackMessage) {
+  const message = String(error && error.message || fallbackMessage);
+  if (error && error.code === "email-already-in-use" && error.details && error.details.existing_account) {
+    const existing = error.details.existing_account;
+    const userId = Number(existing.user_id || 0);
+    const employeeId = Number(existing.employee_id || 0);
+    const alreadyLoaded = String(existing.role || "") === "administrator"
+      ? state.admins.some(item => Number(item.dbUserId || 0) === userId)
+      : state.employees.some(item => Number(item.dbUserId || 0) === userId || Number(item.dbEmployeeId || item.id || 0) === employeeId);
+    if (alreadyLoaded) {
+      revealExistingStaffAccount(existing, message);
+      return null;
+    }
+    return refreshBootstrapReadApi(true)
+      .catch(() => null)
+      .then(() => revealExistingStaffAccount(existing, message));
+  }
+  toast(message);
+  return null;
 }
 
 function writeSettingsToApi(nextSettings) {

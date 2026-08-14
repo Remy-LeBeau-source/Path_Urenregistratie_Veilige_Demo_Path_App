@@ -21,9 +21,9 @@ Then("wordt met Playwright-assertions bevestigd dat admin kan beheerder server-l
 When("de flow voor ADM-WR-H-003 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat admin kan medewerker server-led aanmaken en bootstrap ziet deze terug");
 When("de flow voor ADM-WR-N-001 wordt uitgevoerd");
-Then("wordt met Playwright-assertions bevestigd dat dubbel accountadres wordt voor medewerker en beheerder vriendelijk geweigerd");
+Then("wordt met Playwright-assertions bevestigd dat dubbel accountadres geeft veilige metadata van het bestaande bedrijfsaccount");
 When("de flow voor ADM-WR-N-002 wordt uitgevoerd");
-Then("wordt met Playwright-assertions bevestigd dat dubbel accountadres blijft uit de lijsten en toont een veilige GUI-melding");
+Then("wordt met Playwright-assertions bevestigd dat dubbel accountadres opent het bestaande account zonder duplicaat");
 When("de flow voor ADM-WR-H-004 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat admin slaat medewerker zonder SMTP veilig op met toegang in afwachting");
 When("de flow voor ADM-WR-H-005 wordt uitgevoerd");
