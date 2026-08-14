@@ -60,7 +60,7 @@ php -r '
   $acceptance = is_array($mail["acceptance_test"] ?? null) ? $mail["acceptance_test"] : [];
   $allowed = mail_allowed_recipients($config);
   sort($allowed);
-  $expected = ["giovanno.maatsen@pathconsultancy.nl", "kenrich.lieveld@pathconsultancy.nl"];
+  $expected = ["giovanno.maatsen@pathconsultancy.nl"];
   sort($expected);
   $closed = ($mail["enabled"] ?? null) === false
       && ($mail["test_delivery_enabled"] ?? null) === false
@@ -72,7 +72,7 @@ php -r '
       && $allowed === $expected
       && ($acceptance["business_recipient"] ?? "") === "giovanno.maatsen@pathconsultancy.nl"
       && ($acceptance["password_reset_recipient"] ?? "") === "giovanno.maatsen@pathconsultancy.nl"
-      && ($acceptance["invitation_recipient"] ?? "") === "kenrich.lieveld@pathconsultancy.nl"
+      && ($acceptance["invitation_recipient"] ?? "") === "giovanno.maatsen@pathconsultancy.nl"
       && ($mail["test_redirect_all"] ?? false) === true
       && ($mail["test_sink_recipient"] ?? "") === "giovanno.maatsen@pathconsultancy.nl"
       && mail_real_delivery_allowed_for_environment($config)

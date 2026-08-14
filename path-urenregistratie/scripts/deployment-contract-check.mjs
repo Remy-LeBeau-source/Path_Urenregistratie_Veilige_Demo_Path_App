@@ -76,6 +76,21 @@ for (const required of [
 assert.match(workflow, /Verify public TEST account logins[\s\S]*test-public-auth-smoke\.mjs/, 'TEST deployment must verify both public login roles');
 assert.match(workflow, /TEST_PUBLIC_ADMIN_PASSWORD:\s*\$\{\{ secrets\.PLAYWRIGHT_ADMIN_PASSWORD \}\}/, 'Public TEST admin password must come from a protected environment secret');
 assert.match(workflow, /TEST_PUBLIC_EMPLOYEE_PASSWORD:\s*\$\{\{ secrets\.PLAYWRIGHT_EMPLOYEE_PASSWORD \}\}/, 'Public TEST employee password must come from a protected environment secret');
+assert.match(
+  testRemote,
+  /\$expected = \["giovanno\.maatsen@pathconsultancy\.nl"\];/,
+  'Guarded TEST delivery must use exactly one sink recipient',
+);
+assert.doesNotMatch(
+  testRemote,
+  /\$expected = \["giovanno\.maatsen@pathconsultancy\.nl", "kenrich\.lieveld@pathconsultancy\.nl"\];/,
+  'TEST account identities must not broaden the mail delivery allowlist',
+);
+assert.match(
+  testRemote,
+  /\(\$acceptance\["invitation_recipient"\] \?\? ""\) === "giovanno\.maatsen@pathconsultancy\.nl"/,
+  'TEST invitations must be redirected to the guarded sink recipient',
+);
 const publicAuthSmoke = await readFile(join(root, 'scripts', 'test-public-auth-smoke.mjs'), 'utf8');
 assert.doesNotMatch(publicAuthSmoke, /LocalDemo(?:Admin|Employee)2026/, 'Public TEST login smoke may not hardcode passwords');
 assert.doesNotMatch(testCombined, /pathco_Urenuru|uren\.pathconsultancy\.nl(?![\w-])/, 'TEST deploy must never target PROD identifiers');
