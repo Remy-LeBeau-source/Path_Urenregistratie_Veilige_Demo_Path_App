@@ -10,7 +10,7 @@ Feature: Mobiele gebruikerservaring
   @happy
   Scenario: [MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikbaar
     # Testtechniek: Responsive viewport + end-to-end use-case
-    # Aantoonbare Playwright-assertions in deze case: 22
+    # Aantoonbare Playwright-assertions in deze case: 29
     Given de mobiele loginpagina
     When een administrator inlogt en door de mobiele navigatie gaat
     Then Home en rolwissel blijven bereikbaar zonder console- of page-errors
@@ -44,8 +44,9 @@ Feature: Mobiele gebruikerservaring
   @happy
   Scenario: [MOB-H-005] mobiele verzendadministratie blijft leesbaar en toont geen geheime inhoud
     # Testtechniek: Responsive viewport + end-to-end use-case
-    # Aantoonbare Playwright-assertions in deze case: 11
+    # Aantoonbare Playwright-assertions in deze case: 15
     Given een beheerder de mobiele Instellingen opent
     When de flow voor MOB-H-005 wordt uitgevoerd
     Then de verzendregistratie als leesbare kaart binnen het scherm staat
     And geheime inhoud verborgen blijft en Vernieuwen een touchdoel is
+    And de losse mailacceptatieactie binnen het scherm blijft met een volwaardig touchdoel

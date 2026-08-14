@@ -210,7 +210,7 @@ test.describe('email queue api', () => {
         body: JSON.stringify({
           ok: true,
           dry_run: false,
-          count: 2,
+          count: 15,
           items: [
             {
               id: 902,
@@ -225,6 +225,7 @@ test.describe('email queue api', () => {
               status: 'sent',
               attempt_count: 1,
               dry_run: false,
+              acceptance_test: true,
               sent_at: '2026-08-14 00:45:00',
               created_at: '2026-08-14 00:44:00',
               body_snapshot: 'MAG-NOOIT-IN-DE-UI-VERSCHIJNEN'
@@ -245,7 +246,25 @@ test.describe('email queue api', () => {
               sent_at: null,
               created_at: '2026-08-14 00:43:00',
               body_snapshot: 'https://example.invalid/#reset-password=GEHEIM'
-            }
+            },
+            ...Array.from({ length: 13 }, (_, index) => ({
+              id: 880 - index,
+              user_id: null,
+              invoice_id: null,
+              invoice_number: null,
+              channel: 'accountant',
+              recipient_email: 'info@pathconsultancy.nl',
+              cc_email: null,
+              subject_snapshot: `Historische mail ${index + 1}`,
+              attachment_policy: 'invoice',
+              status: 'sent',
+              attempt_count: 1,
+              dry_run: false,
+              acceptance_test: false,
+              sent_at: `2026-08-13 23:${String(59 - index).padStart(2, '0')}:00`,
+              created_at: `2026-08-13 23:${String(58 - index).padStart(2, '0')}:00`,
+              body_snapshot: `VERBORGEN-BERICHTINHOUD-${index + 1}`,
+            }))
           ]
         })
       });
@@ -264,14 +283,20 @@ test.describe('email queue api', () => {
 
     await test.step('Then zijn ontvanger, onderwerp, status, tijd en bijlagen zichtbaar zonder geheime inhoud', async () => {
       const history = page.locator('#mail-delivery-history-list');
-      await expect(history.locator('.mail-delivery-history-item')).toHaveCount(2);
+      await expect(history.locator('.mail-delivery-history-item')).toHaveCount(12);
+      await expect(page.locator('#mail-delivery-history-summary')).toContainText('Laatste 12 registraties');
       await expect(history).toContainText('info@pathconsultancy.nl');
       await expect(history).toContainText('Factuur PATH-2026-007 – juli 2026');
       await expect(history).toContainText('Factuur + klanturenstaat');
+      await expect(history).toContainText('Acceptatietest');
+      await expect(history.locator('[data-mail-acceptance-test="true"]')).toHaveCount(1);
       await expect(history).toContainText('Verzonden');
       await expect(history).toContainText('Klaargezet');
       await expect(history).not.toContainText('MAG-NOOIT-IN-DE-UI-VERSCHIJNEN');
       await expect(history).not.toContainText('reset-password=GEHEIM');
+      await expect(history).toContainText('Historische mail 10');
+      await expect(history).not.toContainText('Historische mail 11');
+      await expect(history).not.toContainText('VERBORGEN-BERICHTINHOUD');
     });
 
     await test.step('And Vernieuwen haalt de actuele serverregistraties opnieuw op', async () => {
@@ -280,6 +305,96 @@ test.describe('email queue api', () => {
       await expect.poll(() => queueRequests).toBeGreaterThan(before);
       await expect(page.locator('#refresh-mail-delivery-history')).toBeEnabled();
     });
+  });
+
+  test('[EQ-H-016] Backoffice verstuurt vanuit de acceptatieconsole precies één gekozen scenario', async ({ page }) => {
+    const scenarios = [
+      { key: 'broker_bundle', label: 'Broker: factuur + klanturenstaat', recipient: 'info@pathconsultancy.nl', attachment_count: 2, ready: true, issues: [] },
+      { key: 'accountant_invoice', label: 'Boekhouder: factuur', recipient: 'info@pathconsultancy.nl', attachment_count: 1, ready: true, issues: [] },
+      { key: 'payroll_hours', label: 'Salarisadministratie: alleen ureninformatie', recipient: 'info@pathconsultancy.nl', attachment_count: 0, ready: true, issues: [] },
+      { key: 'password_reset', label: 'Wachtwoord vergeten: eenmalige link', recipient: 'info@pathconsultancy.nl', attachment_count: 0, ready: true, issues: [] },
+      { key: 'account_invitation', label: 'Eerste uitnodiging: wachtwoord aanmaken', recipient: 'gch.lieveld@live.nl', attachment_count: 0, ready: true, issues: [] },
+    ];
+    const posted: Array<Record<string, unknown>> = [];
+
+    await page.route('**/server/api/mail-acceptance.php', async route => {
+      if (route.request().method() === 'POST') {
+        posted.push(route.request().postDataJSON() as Record<string, unknown>);
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ ok: true, result: { scenario: 'broker_bundle', recipient: 'info@pathconsultancy.nl', attachment_count: 2, outcome: 'sent' } }),
+        });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true, enabled: true, ready: true, issues: [], scenarios }),
+      });
+    });
+    await page.route('**/server/api/email-queue.php*', route => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, dry_run: false, count: 0, items: [] }),
+    }));
+
+    const login = new LoginPage(page);
+    await test.step('Given de vijf losse mailacceptatiescenario’s zijn vrijgegeven voor vaste testontvangers', async () => {
+      await login.open();
+      await login.loginAsAdmin();
+      await page.locator('button[data-view="settings"]').click();
+      await expect(page.locator('#mail-acceptance-status')).toHaveText('Klaar voor test');
+      await expect(page.locator('.mail-acceptance-scenario')).toHaveCount(5);
+      await expect(page.locator('[data-mail-acceptance-scenario]')).toHaveCount(5);
+      await expect(page.locator('#mail-acceptance-console')).not.toContainText('Alles versturen');
+    });
+
+    await test.step('When de beheerder alleen de brokerbundel kiest en ontvanger en twee bijlagen bevestigt', async () => {
+      await page.locator('[data-mail-acceptance-scenario="broker_bundle"]').click();
+      await expect(page.locator('#modal-title')).toContainText('Broker: factuur + klanturenstaat');
+      await expect(page.locator('#modal-summary')).toContainText('info@pathconsultancy.nl');
+      await expect(page.locator('#modal-summary')).toContainText('2 gecontroleerde PDF-bijlagen');
+      await expect(page.locator('#modal-summary')).toContainText('ACCEPTATIETEST · NIET BOEKEN');
+      await expect(page.locator('#modal-confirm')).toHaveText('1 acceptatiemail versturen');
+      await page.locator('#modal-confirm').click();
+    });
+
+    await test.step('Then bevat de write exact één scenario met expliciete bevestiging en geen bulkopdracht', async () => {
+      await expect.poll(() => posted.length).toBe(1);
+      expect(posted[0]).toEqual({ scenario: 'broker_bundle', confirm: 'SEND_ONE_ACCEPTANCE_MAIL' });
+      await expect(page.locator('#modal')).toBeHidden();
+      await expect(page.locator('#toast')).toContainText('Precies één acceptatiemail');
+    });
+  });
+
+  test('[EQ-N-017] niet-vrijgegeven acceptatieconsole toont vijf herkenbare maar geblokkeerde acties', async ({ page }) => {
+    await page.route('**/server/api/mail-acceptance.php', route => route.fulfill({
+      status: 503,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: false, error: 'acceptance-test-disabled' }),
+    }));
+    await page.route('**/server/api/email-queue.php*', route => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, dry_run: false, count: 0, items: [] }),
+    }));
+
+    const login = new LoginPage(page);
+    await login.open();
+    await login.loginAsAdmin();
+    await page.locator('button[data-view="settings"]').click();
+
+    const consolePanel = page.locator('#mail-acceptance-console');
+    await expect(page.locator('#mail-acceptance-status')).toHaveText('Niet geladen');
+    await expect(consolePanel.locator('.mail-acceptance-scenario')).toHaveCount(5);
+    await expect(consolePanel.locator('[data-mail-acceptance-scenario]')).toHaveCount(5);
+    await expect(consolePanel.locator('[data-mail-acceptance-scenario]:enabled')).toHaveCount(0);
+    await expect(consolePanel.locator('[data-mail-acceptance-scenario]')).toHaveText(Array(5).fill('Niet beschikbaar'));
+    await expect(consolePanel).toContainText('Broker: factuur + klanturenstaat');
+    await expect(consolePanel).toContainText('Eerste uitnodiging: wachtwoord aanmaken');
+    await expect(consolePanel).toContainText('Ontvanger nog niet veilig ingesteld');
+    await expect(consolePanel).not.toContainText('Alles versturen');
   });
 
   // --------------------------------------------------------------------------
@@ -457,6 +572,45 @@ test.describe('email queue api', () => {
       expect(res.status()).toBe(400);
       expect((await res.json()).error).toBe('unknown-action');
     });
+    await authApi.logout();
+    await ctx.dispose();
+  });
+
+  test('[EQ-N-015] acceptatieconsole blijft standaard uit en weigert POST zonder expliciete bevestiging', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    await test.step('Given de standaard testconfiguratie geen echte acceptatieverzending vrijgeeft', async () => {
+      const status = await ctx.get(`${appConfig.baseUrl}/server/api/mail-acceptance.php`);
+      expect(status.status()).toBe(200);
+      const body = await status.json();
+      expect(body.ok).toBe(true);
+      expect(body.enabled).toBe(false);
+      expect(body.ready).toBe(false);
+      expect(body.scenarios).toHaveLength(5);
+    });
+
+    await test.step('When een scenario zonder de exacte bevestiging wordt aangeboden', async () => {
+      const token = await authApi.csrfToken();
+      const response = await ctx.post(`${appConfig.baseUrl}/server/api/mail-acceptance.php`, {
+        headers: { 'X-CSRF-Token': token },
+        data: { scenario: 'broker_bundle' },
+      });
+      expect(response.status()).toBe(409);
+      expect((await response.json()).error).toBe('explicit-confirmation-required');
+    });
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
+
+  test('[EQ-N-016] medewerker krijgt geen toegang tot de mailacceptatieconsole', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+    const response = await ctx.get(`${appConfig.baseUrl}/server/api/mail-acceptance.php`);
+    expect(response.status()).toBe(403);
     await authApi.logout();
     await ctx.dispose();
   });

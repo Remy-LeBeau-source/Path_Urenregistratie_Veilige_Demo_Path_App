@@ -136,6 +136,20 @@ async function isolateFrontendState(page: Page): Promise<void> {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items: [] }) });
   });
 
+  await page.route('**/server/api/mail-acceptance.php', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        enabled: false,
+        ready: false,
+        issues: ['De acceptatieconsole staat uit in de testfixture.'],
+        scenarios: [],
+      }),
+    });
+  });
+
   await page.route('**/server/api/staff.php*', async route => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, employees: bootstrapPayload.employees }) });
   });
@@ -334,6 +348,11 @@ test('[MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikba
     clearConsoleErrors(errors);
     await expect(page.locator('.mobile-brand-home')).toBeVisible();
     await expect(page.locator('#mobile-switch-role')).toBeVisible();
+    await expect(page.locator('.mobile-version-badge')).toBeVisible();
+    await expect(page.locator('.mobile-version-badge')).toHaveText(/Versie 0\.9\.\d+/);
+    await expect(page.locator('#quick-reset-demo')).toBeVisible();
+    const resetBox = await page.locator('#quick-reset-demo').boundingBox();
+    expect(resetBox?.height || 0).toBeGreaterThanOrEqual(42);
     await expect(page.locator('button[data-view="dashboard"]:visible')).toBeVisible();
     await page.locator('.mobile-brand-home').click();
     await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
@@ -358,6 +377,11 @@ test('[MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikba
     await expect(page.locator('#mobile-switch-role')).toBeVisible();
     await page.locator('.mobile-brand-home').click();
     await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
+    await page.locator('#quick-reset-demo').click();
+    await expect(page.locator('#modal-title')).toHaveText('Alle lokale wijzigingen wissen?');
+    await expect(page.locator('#modal-confirm')).toHaveText('Voorbeeldgegevens herstellen');
+    await page.locator('#modal-cancel').click();
+    await expect(page.locator('#modal')).toBeHidden();
     await attachBusinessScreenshot(page, 'Business state · Mobile dashboard');
     expect(errors).toEqual([]);
   });
@@ -571,6 +595,24 @@ test('[MOB-H-005] mobiele verzendadministratie blijft leesbaar en toont geen geh
       }),
     });
   });
+  await page.route('**/server/api/mail-acceptance.php', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      ok: true,
+      enabled: true,
+      ready: true,
+      issues: [],
+      scenarios: [{
+        key: 'broker_bundle',
+        label: 'Broker: factuur + klanturenstaat',
+        recipient: 'info@pathconsultancy.nl',
+        attachment_count: 2,
+        ready: true,
+        issues: [],
+      }],
+    }),
+  }));
 
   await test.step('Given een beheerder de mobiele Instellingen opent', async () => {
     await loginPage.open();
@@ -602,5 +644,17 @@ test('[MOB-H-005] mobiele verzendadministratie blijft leesbaar en toont geen geh
     await refresh.click();
     await expect(refresh).toBeEnabled();
     expect(errors).toEqual([]);
+  });
+
+  await test.step('And de losse mailacceptatieactie binnen het scherm blijft met een volwaardig touchdoel', async () => {
+    const consolePanel = page.locator('#mail-acceptance-console');
+    const action = page.locator('[data-mail-acceptance-scenario="broker_bundle"]');
+    await expect(consolePanel).toContainText('info@pathconsultancy.nl');
+    await expect(consolePanel).toContainText('2 gecontroleerde PDF-bijlagen');
+    await action.scrollIntoViewIfNeeded();
+    const box = await action.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.height).toBeGreaterThanOrEqual(44);
+    await assertNoHorizontalOverflow(page);
   });
 });

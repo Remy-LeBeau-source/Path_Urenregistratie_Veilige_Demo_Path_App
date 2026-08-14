@@ -1,7 +1,7 @@
 @regressie
 @integration
 @fase:9
-Feature: Correcties en goedkeuringen via API
+Feature: Correctie- en goedkeuringsproces
 
   # Native Playwright-uitvoering: tests/playwright/timesheet-review-flow.spec.ts
   # Navigatiemapping: tests/playwright/steps/timesheets-review-integration.steps.ts

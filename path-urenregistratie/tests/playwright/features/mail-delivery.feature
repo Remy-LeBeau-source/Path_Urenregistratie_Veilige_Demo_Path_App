@@ -1,7 +1,7 @@
 @regressie
 @api
 @fase:12
-Feature: E-mailqueue, ontvangers en afleverbeleid
+Feature: Mailroutering en aflevering
 
   # Native Playwright-uitvoering: tests/playwright/email-queue.spec.ts
   # Navigatiemapping: tests/playwright/steps/email-queue.steps.ts
@@ -54,11 +54,27 @@ Feature: E-mailqueue, ontvangers en afleverbeleid
   @happy
   Scenario: [EQ-H-015] Backoffice ziet veilige verzendhistorie zonder berichtinhoud
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 10
+    # Aantoonbare Playwright-assertions in deze case: 16
     Given een beheerder is beveiligd ingelogd
     When de beheerder het verzendoverzicht in Instellingen opent
     Then zijn ontvanger, onderwerp, status, tijd en bijlagen zichtbaar zonder geheime inhoud
     And Vernieuwen haalt de actuele serverregistraties opnieuw op
+
+  @happy
+  Scenario: [EQ-H-016] Backoffice verstuurt vanuit de acceptatieconsole precies één gekozen scenario
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 12
+    Given de vijf losse mailacceptatiescenario’s zijn vrijgegeven voor vaste testontvangers
+    When de beheerder alleen de brokerbundel kiest en ontvanger en twee bijlagen bevestigt
+    Then bevat de write exact één scenario met expliciete bevestiging en geen bulkopdracht
+
+  @negative
+  Scenario: [EQ-N-017] niet-vrijgegeven acceptatieconsole toont vijf herkenbare maar geblokkeerde acties
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given mailroutering en aflevering is voorbereid
+    When de flow voor EQ-N-017 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat niet-vrijgegeven acceptatieconsole toont vijf herkenbare maar geblokkeerde acties
 
   @negative
   Scenario: [EQ-N-006] anonieme gebruiker krijgt 401 op list
@@ -133,3 +149,19 @@ Feature: E-mailqueue, ontvangers en afleverbeleid
     Given een ingelogde admin
     When een onbekende action wordt verstuurd
     Then wordt met Playwright-assertions bevestigd dat unknown action geeft 400
+
+  @negative
+  Scenario: [EQ-N-015] acceptatieconsole blijft standaard uit en weigert POST zonder expliciete bevestiging
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given de standaard testconfiguratie geen echte acceptatieverzending vrijgeeft
+    When een scenario zonder de exacte bevestiging wordt aangeboden
+    Then wordt met Playwright-assertions bevestigd dat acceptatieconsole blijft standaard uit en weigert POST zonder expliciete bevestiging
+
+  @negative
+  Scenario: [EQ-N-016] medewerker krijgt geen toegang tot de mailacceptatieconsole
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 1
+    Given mailroutering en aflevering is voorbereid
+    When de flow voor EQ-N-016 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat medewerker krijgt geen toegang tot de mailacceptatieconsole

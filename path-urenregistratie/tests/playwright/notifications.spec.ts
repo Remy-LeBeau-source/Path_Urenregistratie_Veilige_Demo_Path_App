@@ -1,6 +1,7 @@
 import { expect, request as playwrightRequest, test } from '@playwright/test';
 import { AuthApi } from './api/AuthApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
+import { LoginPage } from './pages/LoginPage';
 
 async function getCSRF(ctx: Awaited<ReturnType<typeof playwrightRequest.newContext>>) {
   const r = await ctx.get('/server/auth/csrf.php');
@@ -57,6 +58,12 @@ test.describe('notifications api', () => {
       expect(res.body.ok).toBe(true);
       expect(res.body.action).toBe('mark_all_read');
       expect(typeof res.body.updated).toBe('number');
+      const unread = await ctx.get('/server/api/notifications.php?unread=1');
+      const unreadBody = await unread.json();
+      expect(unread.status()).toBe(200);
+      expect(unreadBody.count).toBe(0);
+      expect(unreadBody.unread_count).toBe(0);
+      expect(unreadBody.items).toEqual([]);
     });
 
     await authApi.logout();
@@ -141,5 +148,66 @@ test.describe('notifications api', () => {
 
     await authApi.logout();
     await ctx.dispose();
+  });
+
+  test('[NOT-H-009] alles gelezen wist teller en een oudere response kan deze niet herstellen', async ({ page }) => {
+    let markedAllRead = false;
+    let holdNextGet = false;
+    let staleCaptured = false;
+    let releaseStale: (() => void) | undefined;
+    const staleGate = new Promise<void>(resolve => { releaseStale = resolve; });
+    const items = (read: boolean) => Array.from({ length: 15 }, (_, index) => ({
+      id: 7000 + index,
+      period_id: null,
+      period_key: null,
+      announcement_id: null,
+      notification_type: 'timesheet_submitted',
+      title: `Testmelding ${index + 1}`,
+      message: 'Openstaande testmelding',
+      target_route: 'approvals',
+      read,
+      read_at: read ? '2026-08-14 09:00:00' : null,
+      created_at: '2026-08-14 08:00:00',
+    }));
+
+    await page.route('**/server/api/notifications.php*', async route => {
+      if (route.request().method() === 'POST') {
+        const payload = route.request().postDataJSON() as { action?: string };
+        markedAllRead = payload.action === 'mark_all_read';
+        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, action: payload.action, updated: 15 }) });
+        return;
+      }
+      if (holdNextGet) {
+        holdNextGet = false;
+        staleCaptured = true;
+        await staleGate;
+        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, count: 15, unread_count: 15, items: items(false) }) });
+        return;
+      }
+      const bodyItems = items(markedAllRead);
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, count: 15, unread_count: markedAllRead ? 0 : 15, items: bodyItems }) });
+    });
+
+    const loginPage = new LoginPage(page);
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect(page.locator('#notification-count')).toHaveText('15');
+    await page.locator('#notification-button').click();
+    await expect(page.locator('#notification-title')).toHaveText('15 ongelezen meldingen');
+
+    holdNextGet = true;
+    await page.evaluate(() => { void window.refreshNotificationsReadApi(true); });
+    await expect.poll(() => staleCaptured).toBe(true);
+    await page.locator('#mark-notifications-read').click();
+    await expect(page.locator('#notification-title')).toHaveText('Geen ongelezen meldingen');
+    await expect(page.locator('#notification-count')).toBeHidden();
+    await expect(page.locator('#notification-list')).toContainText('Je hebt geen ongelezen meldingen');
+
+    releaseStale?.();
+    await page.waitForTimeout(150);
+    await expect(page.locator('#notification-title')).toHaveText('Geen ongelezen meldingen');
+    await expect(page.locator('#notification-count')).toBeHidden();
+
+    await loginPage.logout();
   });
 });

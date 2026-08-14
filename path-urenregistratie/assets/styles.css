@@ -1026,6 +1026,14 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .mail-recipient-setting.is-inactive { opacity: .62; }
 .mail-recipient-setting strong, .mail-route-choice strong { display: block; }
 .mail-recipient-setting small, .mail-route-choice small { display: block; margin-top: 3px; color: var(--muted); }
+.mail-acceptance-console { margin-top: 22px; padding: 16px; border: 1px solid rgba(200,125,16,.32); border-radius: 14px; background: var(--surface-muted); }
+.mail-acceptance-scenarios { display: grid; gap: 9px; }
+.mail-acceptance-scenario { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 14px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.mail-acceptance-copy { min-width: 0; }
+.mail-acceptance-copy strong, .mail-acceptance-copy small { display: block; }
+.mail-acceptance-copy small { margin-top: 4px; color: var(--muted); font-size: 10px; line-height: 1.45; overflow-wrap: anywhere; }
+.mail-acceptance-label { display: inline-block !important; width: fit-content; margin: 0 0 3px; padding: 2px 7px; border-radius: 999px; background: #fff0dc; color: #9a5a00 !important; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+html[data-theme="dark"] .mail-acceptance-label { background: #4b3520; color: #ffd59b !important; }
 .mail-delivery-history { margin-top: 24px; padding-top: 2px; border-top: 1px solid var(--line); }
 .mail-delivery-history-list { display: grid; gap: 9px; }
 .mail-delivery-history-item { display: grid; grid-template-columns: minmax(0,1.25fr) minmax(180px,.8fr) auto; align-items: center; gap: 14px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-muted); }
@@ -1037,6 +1045,9 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .mail-delivery-history-state small { color: var(--muted); font-size: 9px; white-space: nowrap; }
 
 @media (max-width: 760px) {
+  .mail-acceptance-console { padding: 13px; }
+  .mail-acceptance-scenario { grid-template-columns: 1fr; align-items: start; }
+  .mail-acceptance-scenario .small-button { width: 100%; min-height: 44px; }
   .mail-delivery-history-item { grid-template-columns: 1fr; align-items: start; }
   .mail-delivery-history-state { justify-items: start; text-align: left; }
   #refresh-mail-delivery-history { min-height: 44px; }
@@ -1476,6 +1487,7 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
   .mobile-version-badge {
     display: inline-flex;
     margin-top: 4px;
+    color: var(--muted);
   }
 
   .topbar h1 {
@@ -1492,6 +1504,15 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
     grid-template-columns: minmax(0,1fr) auto auto;
     gap: 8px;
     align-items: center;
+  }
+
+  .topbar-quick-reset:not([hidden]) {
+    display: inline-flex;
+    min-height: 42px;
+    align-items: center;
+    justify-content: center;
+    justify-self: start;
+    padding-inline: 14px;
   }
 
   .period-control {

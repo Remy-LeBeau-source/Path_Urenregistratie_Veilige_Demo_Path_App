@@ -56,6 +56,14 @@ return [
         // listed below. Production does not require an allowlist.
         'test_delivery_enabled' => false,
         'allowed_recipients' => [],
+        // Acceptance mail is a separate, fail-closed admin console. Enabling it
+        // still requires mail.enabled plus an exact allowed_recipients match.
+        'acceptance_test' => [
+            'enabled' => false,
+            'business_recipient' => '',
+            'password_reset_recipient' => '',
+            'invitation_recipient' => '',
+        ],
         'transport' => 'smtp_relay',
         'smtp_relay' => [
             'host'       => 'smtp-relay.gmail.com',

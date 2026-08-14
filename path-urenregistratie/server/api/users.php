@@ -54,7 +54,7 @@ if ($method === 'GET') {
 }
 
 // ---------------------------------------------------------------------------
-// POST – action=deactivate|reactivate|force_password_change
+// POST – action=deactivate|reactivate|delete|force_password_change
 // ---------------------------------------------------------------------------
 if ($method !== 'POST') {
     auth_send_json(['ok' => false, 'error' => 'method-not-allowed'], 405);
@@ -135,6 +135,123 @@ if ($action === 'reactivate') {
     auth_send_json(['ok' => true, 'action' => 'reactivate', 'user_id' => $targetId]);
 }
 
+if ($action === 'delete') {
+    if ((string)$target['role'] !== 'employee') {
+        auth_send_json([
+            'ok' => false,
+            'error' => 'delete-employee-only',
+            'message' => 'Alleen een inactief medewerkersaccount kan via Teambeheer definitief worden verwijderd.',
+        ], 409);
+    }
+    if ((bool)$target['active']) {
+        auth_send_json([
+            'ok' => false,
+            'error' => 'delete-requires-inactive',
+            'message' => 'Deactiveer de medewerker voordat je het account definitief verwijdert.',
+        ], 409);
+    }
+
+    $employeeStmt = $pdo->prepare(
+        'SELECT id FROM employees WHERE user_id = :user_id AND company_id = :company_id'
+    );
+    $employeeStmt->execute([':user_id' => $targetId, ':company_id' => $companyId]);
+    $employeeIds = array_map('intval', $employeeStmt->fetchAll(PDO::FETCH_COLUMN));
+
+    $blockers = [];
+    $countReference = static function (PDO $pdo, string $sql, array $params): int {
+        $statement = $pdo->prepare($sql);
+        $statement->execute($params);
+        return (int)$statement->fetchColumn();
+    };
+
+    foreach ($employeeIds as $employeeId) {
+        if ($countReference($pdo, 'SELECT COUNT(*) FROM timesheets WHERE employee_id = :id', [':id' => $employeeId]) > 0) {
+            $blockers[] = 'urenstaten';
+        }
+        if ($countReference($pdo, 'SELECT COUNT(*) FROM customer_timesheets WHERE employee_id = :id', [':id' => $employeeId]) > 0) {
+            $blockers[] = 'klanturenstaten';
+        }
+    }
+
+    $userReferenceChecks = [
+        'goedkeuringen' => 'SELECT COUNT(*) FROM timesheets WHERE approved_by = :id',
+        'correcties' => 'SELECT COUNT(*) FROM timesheet_corrections WHERE requested_by = :id',
+        'documentcontroles' => 'SELECT COUNT(*) FROM customer_timesheets WHERE :id IN (uploaded_by, reviewed_by)',
+        'facturen' => 'SELECT COUNT(*) FROM invoices WHERE created_by = :id',
+        'mededelingen' => 'SELECT COUNT(*) FROM announcements WHERE :id IN (created_by, withdrawn_by)',
+        'mededelingontvangsten' => 'SELECT COUNT(*) FROM announcement_recipients WHERE user_id = :id',
+        'e-mailhistorie' => 'SELECT COUNT(*) FROM email_deliveries WHERE user_id = :id',
+        'meldingen' => 'SELECT COUNT(*) FROM notifications WHERE user_id = :id',
+        'afgesloten perioden' => 'SELECT COUNT(*) FROM periods WHERE closed_by = :id',
+        'auditactiviteiten' => 'SELECT COUNT(*) FROM audit_log WHERE actor_user_id = :id',
+        'loginhistorie' => 'SELECT COUNT(*) FROM auth_login_audit WHERE user_id = :id',
+        'deactivatiehistorie' => 'SELECT COUNT(*) FROM users WHERE deactivated_by = :id',
+    ];
+    foreach ($userReferenceChecks as $label => $sql) {
+        if ($countReference($pdo, $sql, [':id' => $targetId]) > 0) {
+            $blockers[] = $label;
+        }
+    }
+
+    $blockers = array_values(array_unique($blockers));
+    if ($blockers !== []) {
+        auth_send_json([
+            'ok' => false,
+            'error' => 'delete-history-preserved',
+            'message' => 'Definitief verwijderen is geblokkeerd omdat zakelijke of beveiligingshistorie bestaat. Laat dit account inactief.',
+            'blockers' => $blockers,
+        ], 409);
+    }
+
+    try {
+        $pdo->beginTransaction();
+        foreach ($employeeIds as $employeeId) {
+            $assignmentStmt = $pdo->prepare('SELECT id FROM assignments WHERE employee_id = :employee_id');
+            $assignmentStmt->execute([':employee_id' => $employeeId]);
+            $assignmentIds = array_map('intval', $assignmentStmt->fetchAll(PDO::FETCH_COLUMN));
+            foreach ($assignmentIds as $assignmentId) {
+                $pdo->prepare('DELETE FROM assignment_mail_routes WHERE assignment_id = :id')
+                    ->execute([':id' => $assignmentId]);
+            }
+            $pdo->prepare('DELETE FROM assignments WHERE employee_id = :employee_id')
+                ->execute([':employee_id' => $employeeId]);
+            $pdo->prepare('DELETE FROM employees WHERE id = :employee_id AND company_id = :company_id')
+                ->execute([':employee_id' => $employeeId, ':company_id' => $companyId]);
+        }
+        $pdo->prepare('DELETE FROM password_reset_tokens WHERE user_id = :id')->execute([':id' => $targetId]);
+        $pdo->prepare('DELETE FROM user_preferences WHERE user_id = :id')->execute([':id' => $targetId]);
+        $pdo->prepare('DELETE FROM users WHERE id = :id AND company_id = :company_id')
+            ->execute([':id' => $targetId, ':company_id' => $companyId]);
+        $pdo->prepare(
+            'INSERT INTO audit_log (company_id, actor_user_id, event_type, entity_type, entity_id, event_data)
+             VALUES (:cid, :actor, :evt, :etype, :eid, :data)'
+        )->execute([
+            ':cid' => $companyId,
+            ':actor' => $actorId,
+            ':evt' => 'user.deleted_without_history',
+            ':etype' => 'user',
+            ':eid' => (string)$targetId,
+            ':data' => json_encode([
+                'email' => $target['email'],
+                'display_name' => $target['display_name'],
+                'role' => $target['role'],
+            ], JSON_UNESCAPED_UNICODE),
+        ]);
+        $pdo->commit();
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        auth_send_json([
+            'ok' => false,
+            'error' => 'delete-failed',
+            'message' => 'Definitief verwijderen is niet uitgevoerd; er zijn geen gedeeltelijke wijzigingen bewaard.',
+        ], 500);
+    }
+
+    auth_send_json(['ok' => true, 'action' => 'delete', 'user_id' => $targetId]);
+}
+
 if ($action === 'force_password_change') {
     try {
         $pdo->beginTransaction();
@@ -171,4 +288,4 @@ if ($action === 'force_password_change') {
 }
 
 auth_send_json(['ok' => false, 'error' => 'unknown-action',
-    'message' => 'action must be one of: deactivate, reactivate, force_password_change'], 400);
+    'message' => 'action must be one of: deactivate, reactivate, delete, force_password_change'], 400);

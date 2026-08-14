@@ -66,6 +66,30 @@ function staff_role_from_payload(string $raw): string
     return in_array($raw, ['employee', 'administrator'], true) ? $raw : 'employee';
 }
 
+function staff_email_is_in_use(PDO $pdo, string $email, int $excludeUserId = 0): bool
+{
+    $stmt = $pdo->prepare(
+        'SELECT id FROM users
+         WHERE LOWER(email) = LOWER(:email)
+           AND id <> :exclude_user_id
+         LIMIT 1'
+    );
+    $stmt->execute([
+        ':email' => $email,
+        ':exclude_user_id' => $excludeUserId,
+    ]);
+    return $stmt->fetchColumn() !== false;
+}
+
+function staff_send_email_conflict(): never
+{
+    auth_send_json([
+        'ok' => false,
+        'error' => 'email-already-in-use',
+        'message' => 'Dit e-mailadres is al in gebruik. Kies een ander e-mailadres of pas het bestaande account aan.',
+    ], 409);
+}
+
 function staff_upsert_mail_recipients(PDO $pdo, int $companyId, array $items): array
 {
     if (!is_array($items) || $items === []) {
@@ -276,6 +300,9 @@ if ($action === 'upsert_admin') {
     $email = staff_email($admin['email'] ?? '');
     $active = staff_bool($admin['active'] ?? true, true) ? 1 : 0;
     $dbUserId = (int)($admin['dbUserId'] ?? 0);
+    if (staff_email_is_in_use($pdo, $email, $dbUserId)) {
+        staff_send_email_conflict();
+    }
     $sendInvitation = staff_bool($payload['sendInvitation'] ?? false, false);
     if (
         $sendInvitation
@@ -377,7 +404,13 @@ if ($action === 'upsert_admin') {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
         }
-        auth_send_json(['ok' => false, 'error' => 'upsert-admin-failed', 'message' => $e->getMessage()], 500);
+        if ($e instanceof PDOException && (string)$e->getCode() === '23000') {
+            staff_send_email_conflict();
+        }
+        $message = $e instanceof RuntimeException
+            ? $e->getMessage()
+            : 'De beheerder kon niet worden opgeslagen. Probeer het opnieuw.';
+        auth_send_json(['ok' => false, 'error' => 'upsert-admin-failed', 'message' => $message], 500);
     }
 }
 
@@ -411,6 +444,9 @@ if ($action === 'upsert_employee') {
 
     $employeeDbUserId = (int)($employee['dbUserId'] ?? 0);
     $employeeDbId = (int)($employee['dbEmployeeId'] ?? 0);
+    if (staff_email_is_in_use($pdo, $email, $employeeDbUserId)) {
+        staff_send_email_conflict();
+    }
     $clientName = staff_string($employee['client'] ?? '', 180);
     $brokerName = staff_string($employee['broker'] ?? '', 180);
     $brokerEmail = staff_string($employee['brokerEmail'] ?? '', 190);
@@ -734,7 +770,13 @@ if ($action === 'upsert_employee') {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
         }
-        auth_send_json(['ok' => false, 'error' => 'upsert-employee-failed', 'message' => $e->getMessage()], 500);
+        if ($e instanceof PDOException && (string)$e->getCode() === '23000') {
+            staff_send_email_conflict();
+        }
+        $message = $e instanceof RuntimeException
+            ? $e->getMessage()
+            : 'De medewerker kon niet worden opgeslagen. Probeer het opnieuw.';
+        auth_send_json(['ok' => false, 'error' => 'upsert-employee-failed', 'message' => $message], 500);
     }
 }
 

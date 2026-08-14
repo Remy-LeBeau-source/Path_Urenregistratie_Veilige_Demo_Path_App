@@ -191,4 +191,103 @@ test.describe('user management api', () => {
     await authApi.logout();
     await ctx.dispose();
   });
+
+  test('[USR-H-008] inactieve medewerker zonder historie kan definitief worden verwijderd', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const unique = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    const email = `delete-empty-${unique}@example.invalid`;
+    let userId = 0;
+    let employeeId = 0;
+
+    await test.step('Given een nieuwe medewerker zonder uren- of documenthistorie', async () => {
+      const token = await getCSRF(ctx);
+      const response = await ctx.post('/server/api/staff.php', {
+        headers: { 'X-CSRF-Token': token },
+        data: {
+          action: 'upsert_employee',
+          sendInvitation: false,
+          employee: {
+            name: `Verwijderbare Medewerker ${unique}`,
+            email,
+            role: 'Testmedewerker',
+            startDate: '2026-08-01',
+            active: true,
+            weeklyHours: 0,
+            rate: 0,
+            client: `Tijdelijke klant ${unique}`,
+            broker: `Tijdelijke broker ${unique}`,
+          },
+          mailRecipients: [],
+        },
+      });
+      const body = await response.json();
+      expect(response.status(), JSON.stringify(body)).toBe(200);
+      userId = Number(body.user_id);
+      employeeId = Number(body.employee_id);
+      expect(userId).toBeGreaterThan(0);
+      expect(employeeId).toBeGreaterThan(0);
+    });
+
+    await test.step('When de admin het account deactiveert en daarna definitief verwijdert', async () => {
+      const deactivate = await postUsers(ctx, { action: 'deactivate', user_id: userId });
+      expect(deactivate.status).toBe(200);
+      const remove = await postUsers(ctx, { action: 'delete', user_id: userId });
+      expect(remove.status, JSON.stringify(remove.body)).toBe(200);
+      expect(remove.body).toMatchObject({ ok: true, action: 'delete', user_id: userId });
+    });
+
+    await test.step('Then zijn account, medewerkersprofiel en lege opdracht niet meer aanwezig', async () => {
+      const usersResponse = await ctx.get('/server/api/users.php');
+      const users = ((await usersResponse.json()).users || []) as Array<{ id: number }>;
+      expect(users.some(user => user.id === userId)).toBe(false);
+
+      const bootstrapResponse = await ctx.get('/server/api/bootstrap.php');
+      const bootstrap = await bootstrapResponse.json();
+      expect((bootstrap.employees as Array<{ id: number }>).some(employee => employee.id === employeeId)).toBe(false);
+      expect((bootstrap.assignments as Array<{ employee_id: number }>).some(assignment => assignment.employee_id === employeeId)).toBe(false);
+    });
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
+
+  test('[USR-N-009] medewerker met zakelijke historie kan niet definitief worden verwijderd', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const list = await ctx.get('/server/api/users.php');
+    const users = (await list.json()).users as Array<{ id: number; email: string; role: string; active: boolean }>;
+    const employee = users.find(user => user.role === 'employee' && user.email === appConfig.employeeEmail);
+    expect(employee).toBeDefined();
+
+    try {
+      await test.step('Given een medewerker met bestaande urenhistorie inactief is', async () => {
+        if (employee?.active) {
+          const deactivate = await postUsers(ctx, { action: 'deactivate', user_id: employee.id });
+          expect(deactivate.status).toBe(200);
+        }
+      });
+
+      await test.step('When de admin definitief verwijderen probeert', async () => {
+        const remove = await postUsers(ctx, { action: 'delete', user_id: employee!.id });
+        expect(remove.status).toBe(409);
+        expect(remove.body.error).toBe('delete-history-preserved');
+        expect(remove.body.blockers).toEqual(expect.arrayContaining(['urenstaten']));
+      });
+
+      await test.step('Then blijft het account inactief en blijft de historie bewaard', async () => {
+        const after = await ctx.get('/server/api/users.php');
+        const afterUsers = (await after.json()).users as Array<{ id: number; active: boolean }>;
+        expect(afterUsers.find(user => user.id === employee!.id)?.active).toBe(false);
+      });
+    } finally {
+      await postUsers(ctx, { action: 'reactivate', user_id: employee!.id });
+      await authApi.logout();
+      await ctx.dispose();
+    }
+  });
 });

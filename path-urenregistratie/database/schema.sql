@@ -354,6 +354,8 @@ CREATE TABLE email_deliveries (
   subject_snapshot VARCHAR(255) NOT NULL,
   body_snapshot TEXT NOT NULL,
   attachment_policy ENUM('none', 'invoice', 'customer_timesheet', 'invoice_and_customer_timesheet') NOT NULL DEFAULT 'none',
+  dry_run TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
+  acceptance_test TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
   gmail_message_id VARCHAR(255) NULL,
   status ENUM('queued', 'processing', 'sent', 'failed') NOT NULL DEFAULT 'queued',
   attempt_count SMALLINT UNSIGNED NOT NULL DEFAULT 0,

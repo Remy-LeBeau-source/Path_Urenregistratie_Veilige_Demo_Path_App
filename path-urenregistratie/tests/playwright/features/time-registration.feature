@@ -1,7 +1,7 @@
 @regressie
 @api
 @fase:8
-Feature: Urenregistratie via API
+Feature: Urenregistratie verwerken
 
   # Native Playwright-uitvoering: tests/playwright/timesheet-write.spec.ts
   # Navigatiemapping: tests/playwright/steps/timesheets-api.steps.ts

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/smtp.php';
+require_once __DIR__ . '/../lib/simple_pdf.php';
 
 function mail_private_storage_root(array $config): string
 {
@@ -51,12 +52,58 @@ function mail_expected_attachment_count(string $policy): int
 }
 
 /** @return list<array{filename:string,mime:string,data:string}> */
+function mail_acceptance_test_attachments(string $policy): array
+{
+    $expected = mail_expected_attachment_count($policy);
+    if ($expected === 0) {
+        return [];
+    }
+    $pdf = simple_pdf_text_document([
+        ['text' => 'ACCEPTATIETEST - NIET BOEKEN OF VERWERKEN', 'size' => 16],
+        '',
+        'Path Consultancy - Uren & Facturatie',
+        'Medewerker: Stasjo van Bakel',
+        'Periode: juli 2026',
+        'Goedgekeurde uren: 144,00',
+        'Factuurnummer: PATH-2026-007',
+        '',
+        'Dit document bevat uitsluitend vaste acceptatietestgegevens.',
+    ]);
+    if (!simple_pdf_looks_valid($pdf)) {
+        throw new RuntimeException('Acceptance test PDF could not be generated.');
+    }
+    $attachments = [];
+    if (in_array($policy, ['invoice', 'invoice_and_customer_timesheet'], true)) {
+        $attachments[] = [
+            'filename' => 'ACCEPTATIETEST-NIET-BOEKEN-Factuur-PATH-2026-007.pdf',
+            'mime' => 'application/pdf',
+            'data' => base64_encode($pdf),
+        ];
+    }
+    if (in_array($policy, ['customer_timesheet', 'invoice_and_customer_timesheet'], true)) {
+        $attachments[] = [
+            'filename' => 'ACCEPTATIETEST-NIET-BOEKEN-Klanturenstaat-Stasjo-2026-07.pdf',
+            'mime' => 'application/pdf',
+            'data' => base64_encode($pdf),
+        ];
+    }
+    if (count($attachments) !== $expected) {
+        throw new RuntimeException('Acceptance test mail bundle is incomplete; dispatch blocked.');
+    }
+    return $attachments;
+}
+
+/** @return list<array{filename:string,mime:string,data:string}> */
 function mail_resolve_attachments(PDO $pdo, array $delivery, array $config): array
 {
     $policy = (string)($delivery['attachment_policy'] ?? 'none');
     $expected = mail_expected_attachment_count($policy);
     if ($expected === 0) {
         return [];
+    }
+
+    if ((bool)($delivery['acceptance_test'] ?? false)) {
+        return mail_acceptance_test_attachments($policy);
     }
 
     $invoiceId = (int)($delivery['invoice_id'] ?? 0);

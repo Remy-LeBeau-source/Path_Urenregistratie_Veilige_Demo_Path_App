@@ -207,6 +207,75 @@ test.describe('admin write endpoints', () => {
     await ctx.dispose();
   });
 
+  test('[ADM-WR-N-001] dubbel accountadres wordt voor medewerker en beheerder vriendelijk geweigerd', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const duplicateEmail = appConfig.adminEmail.toUpperCase();
+    const employeeWrite = await postJson(ctx, '/server/api/staff.php', {
+      action: 'upsert_employee',
+      sendInvitation: false,
+      employee: { name: 'Dubbele medewerker', email: duplicateEmail },
+      mailRecipients: [],
+    });
+    const adminWrite = await postJson(ctx, '/server/api/staff.php', {
+      action: 'upsert_admin',
+      sendInvitation: false,
+      admin: { name: 'Dubbele beheerder', email: duplicateEmail, active: true },
+    });
+
+    for (const result of [employeeWrite, adminWrite]) {
+      expect(result.status).toBe(409);
+      expect(result.body.ok).toBe(false);
+      expect(result.body.error).toBe('email-already-in-use');
+      expect(result.body.message).toBe('Dit e-mailadres is al in gebruik. Kies een ander e-mailadres of pas het bestaande account aan.');
+      expect(JSON.stringify(result.body)).not.toContain('SQLSTATE');
+      expect(JSON.stringify(result.body)).not.toContain('users.email');
+    }
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
+
+  test('[ADM-WR-N-002] dubbel accountadres blijft uit de lijsten en toont een veilige GUI-melding', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await page.locator('[data-view="employees"]').click();
+
+    const adminRows = page.locator('#administrator-list .administrator-row');
+    const employeeCards = page.locator('#employee-grid .employee-card');
+    const adminCountBefore = await adminRows.count();
+    const employeeCountBefore = await employeeCards.count();
+    const duplicateEmail = appConfig.adminEmail.toUpperCase();
+
+    await page.locator('#add-admin').click();
+    await page.locator('#edit-admin-name').fill('Dubbele beheerder');
+    await page.locator('#edit-admin-email').fill(duplicateEmail);
+    await page.locator('#modal-confirm').click();
+    await expect(page.locator('#toast')).toContainText('Dit e-mailadres is al in gebruik');
+    await expect(page.locator('#modal')).toBeVisible();
+    await expect(adminRows).toHaveCount(adminCountBefore);
+    await expect(page.locator('body')).not.toContainText('SQLSTATE');
+    await expect(page.locator('body')).not.toContainText('users.email');
+    await page.locator('#modal-close').click();
+
+    await page.locator('#add-employee').click();
+    await page.locator('#edit-name').fill('Dubbele medewerker');
+    await page.locator('#edit-account-email').fill(duplicateEmail);
+    await page.locator('#edit-broker-email').fill('broker@example.invalid');
+    await page.locator('#modal-confirm').click();
+    await expect(page.locator('#toast')).toContainText('Dit e-mailadres is al in gebruik');
+    await expect(page.locator('#modal')).toBeVisible();
+    await expect(employeeCards).toHaveCount(employeeCountBefore);
+    await expect(page.locator('body')).not.toContainText('SQLSTATE');
+    await expect(page.locator('body')).not.toContainText('users.email');
+
+    await page.locator('#modal-close').click();
+    await loginPage.logout();
+  });
+
   test('[ADM-WR-H-004] admin slaat medewerker zonder SMTP veilig op met toegang in afwachting', async ({ page }) => {
     let submittedPayload: Record<string, unknown> | null = null;
 
@@ -305,6 +374,234 @@ test.describe('admin write endpoints', () => {
     await expect(page.locator('#edit-customer-timesheet-broker-email')).toHaveValue('');
     await expect.poll(() => page.locator('.modal').evaluate(element => element.scrollTop)).toBe(0);
     await expect(page.locator('#modal-summary')).toContainText('Uitnodiging volgt zodra e-mail is ingeschakeld');
+
+    await page.locator('#modal-close').click();
+    await loginPage.logout();
+  });
+
+  test('[ADM-WR-H-006] deactiveren verplaatst medewerker direct en leeg account kan worden verwijderd', async ({ page }) => {
+    let userActive = true;
+    let userDeleted = false;
+    let employeeName = '';
+
+    await page.route('**/server/api/bootstrap.php', async route => {
+      const response = await route.fetch();
+      const body = await response.json();
+      const users = body.users as Array<Record<string, unknown>>;
+      const employees = body.employees as Array<Record<string, unknown>>;
+      const administrator = users.find(user => user.role === 'administrator');
+      const employeeUser = users.find(user => user.role === 'employee');
+      const employee = employees.find(item => Number(item.user_id) === Number(employeeUser?.id));
+      employeeName = String(employee?.full_name || 'Testmedewerker');
+
+      body.users = [administrator, ...(!userDeleted && employeeUser ? [{ ...employeeUser, active: userActive ? 1 : 0 }] : [])].filter(Boolean);
+      body.employees = !userDeleted && employee ? [{ ...employee, active: 1 }] : [];
+      body.assignments = !userDeleted && employee
+        ? (body.assignments as Array<Record<string, unknown>>).filter(item => Number(item.employee_id) === Number(employee.id))
+        : [];
+      body.capabilities = { password_reset_delivery: false };
+      await route.fulfill({ response, json: body });
+    });
+    await page.route('**/server/api/users.php', async route => {
+      if (route.request().method() !== 'POST') {
+        await route.continue();
+        return;
+      }
+      const payload = route.request().postDataJSON() as { action?: string; user_id?: number };
+      if (payload.action === 'deactivate') userActive = false;
+      if (payload.action === 'delete') userDeleted = true;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true, action: payload.action, user_id: payload.user_id }),
+      });
+    });
+
+    const loginPage = new LoginPage(page);
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await page.evaluate(async () => {
+      window.localAccountToolsAllowed = () => false;
+      window.applyLoginPresentation(false);
+      await window.refreshBootstrapReadApi(true);
+    });
+    await page.locator('[data-view="employees"]').click();
+
+    await test.step('Given de server een actief gebruikersaccount en actief medewerkersprofiel teruggeeft', async () => {
+      await expect(page.locator('#employee-grid .employee-card')).toHaveCount(1);
+      await expect(page.locator('#employee-grid')).toContainText(employeeName);
+      await expect(page.locator('[data-toggle-employee]')).toHaveText('Deactiveren');
+    });
+
+    await test.step('When de beheerder de medewerker deactiveert', async () => {
+      await page.locator('[data-toggle-employee]').click();
+      await expect(page.locator('#modal-confirm')).toHaveText('Deactiveren');
+      await page.locator('#modal-confirm').click();
+    });
+
+    await test.step('Then verdwijnt de medewerker uit Actief en staat deze onder Inactief', async () => {
+      await expect(page.locator('#modal')).toBeHidden();
+      await expect(page.locator('#employee-grid .employee-card')).toHaveCount(0);
+      await page.locator('[data-employee-scope="inactive"]').click();
+      await expect(page.locator('#employee-grid .employee-card')).toHaveCount(1);
+      await expect(page.locator('[data-toggle-employee]')).toHaveText('Opnieuw activeren');
+      await expect(page.locator('[data-delete-employee]')).toHaveText('Definitief verwijderen');
+    });
+
+    await test.step('And definitief verwijderen haalt het lege account uit Teambeheer', async () => {
+      await page.locator('[data-delete-employee]').click();
+      await expect(page.locator('#modal-confirm')).toHaveText('Definitief verwijderen');
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#modal')).toBeHidden();
+      await expect(page.locator('#employee-grid .employee-card')).toHaveCount(0);
+      await expect(page.locator('#employee-grid')).toContainText('Geen medewerkers binnen dit filter');
+    });
+
+    await loginPage.logout();
+  });
+
+  test('[ADM-WR-H-007] serverwrite na Herstel verschijnt direct in Teambeheer', async ({ page }) => {
+    let adminSaved = false;
+    let employeeSaved = false;
+
+    await page.route('**/server/api/bootstrap.php', async route => {
+      const response = await route.fetch();
+      const body = await response.json();
+      const companyId = Number(body.companies?.[0]?.id || 1);
+      if (adminSaved) {
+        body.users.push({
+          id: 99001, company_id: companyId, email: 'nieuw-admin@example.invalid', display_name: 'Nieuwe beheerder',
+          role: 'administrator', active: 1, password_ready: 0,
+        });
+      }
+      if (employeeSaved) {
+        body.users.push({
+          id: 99002, company_id: companyId, email: 'nieuw-employee@example.invalid', display_name: 'Nieuwe medewerker',
+          role: 'employee', active: 1, password_ready: 0,
+        });
+        body.employees.push({
+          id: 99003, company_id: companyId, user_id: 99002, full_name: 'Nieuwe medewerker',
+          job_title: 'Consultant', weekly_contract_hours: 36, employment_start_date: '2026-08-01', active: 1,
+        });
+      }
+      body.capabilities = { password_reset_delivery: false };
+      await route.fulfill({ response, json: body });
+    });
+    await page.route('**/server/api/staff.php', async route => {
+      const payload = route.request().postDataJSON() as { action?: string };
+      if (payload.action === 'upsert_admin') adminSaved = true;
+      if (payload.action === 'upsert_employee') employeeSaved = true;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(payload.action === 'upsert_admin'
+          ? { ok: true, user_id: 99001, invitation_queued: false, invitation_pending: true }
+          : { ok: true, user_id: 99002, employee_id: 99003, assignment_id: 99004, invitation_queued: false, invitation_pending: true }),
+      });
+    });
+
+    const loginPage = new LoginPage(page);
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await page.locator('#quick-reset-demo').click();
+    await page.locator('#modal-confirm').click();
+    await expect.poll(() => page.evaluate(() => localStorage.getItem('path-uren-demo-v07-final:local-reset-authoritative'))).toBe('1');
+    await page.locator('[data-view="employees"]').click();
+
+    await page.locator('#add-admin').click();
+    await page.locator('#edit-admin-name').fill('Nieuwe beheerder');
+    await page.locator('#edit-admin-email').fill('nieuw-admin@example.invalid');
+    await page.locator('#modal-confirm').click();
+    await expect(page.locator('#modal')).toBeHidden();
+    await expect(page.locator('#administrator-list')).toContainText('Nieuwe beheerder');
+    await expect.poll(() => page.evaluate(() => localStorage.getItem('path-uren-demo-v07-final:local-reset-authoritative'))).toBeNull();
+
+    await page.locator('#add-employee').click();
+    await page.locator('#edit-name').fill('Nieuwe medewerker');
+    await page.locator('#edit-account-email').fill('nieuw-employee@example.invalid');
+    await page.locator('#edit-role').fill('Consultant');
+    await page.locator('#edit-broker-email').fill('broker@example.invalid');
+    await page.locator('#modal-confirm').click();
+    await expect(page.locator('#modal')).toBeHidden();
+    await expect(page.locator('#employee-grid')).toContainText('Nieuwe medewerker');
+    await expect(page.locator('#employee-grid')).toContainText('nieuw-employee@example.invalid');
+
+    await loginPage.logout();
+  });
+
+  test('[ADM-WR-H-008] bestaande beheerder en medewerker worden na Herstel direct terug in Teambeheer getoond', async ({ page }) => {
+    const existingAdminEmail = 'bestaande-beheerder@example.invalid';
+    const existingAdminName = 'Bestaande beheerder';
+    const existingEmployeeEmail = 'bestaande-medewerker@example.invalid';
+    const existingEmployeeName = 'Bestaande medewerker';
+
+    await page.route('**/server/api/bootstrap.php', async route => {
+      const response = await route.fetch();
+      const body = await response.json();
+      const companyId = Number(body.companies?.[0]?.id || 1);
+      body.users.push({
+        id: 99101, company_id: companyId, email: existingAdminEmail, display_name: existingAdminName,
+        role: 'administrator', active: 1, password_ready: 0,
+      });
+      body.users.push({
+        id: 99102, company_id: companyId, email: existingEmployeeEmail, display_name: existingEmployeeName,
+        role: 'employee', active: 1, password_ready: 0,
+      });
+      body.employees.push({
+        id: 99103, company_id: companyId, user_id: 99102, employee_number: 'REG-99103',
+        full_name: existingEmployeeName, job_title: 'Consultant', employment_type: 'employee',
+        weekly_contract_hours: 36, employment_start_date: '2026-08-01', active: 1,
+      });
+      body.capabilities = { password_reset_delivery: false };
+      await route.fulfill({ response, json: body });
+    });
+    await page.route('**/server/api/staff.php', async route => {
+      await route.fulfill({
+        status: 409,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ok: false,
+          error: 'email-already-in-use',
+          message: 'Dit e-mailadres is al in gebruik. Kies een ander e-mailadres of pas het bestaande account aan.',
+        }),
+      });
+    });
+
+    const loginPage = new LoginPage(page);
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await page.locator('#quick-reset-demo').click();
+    await page.locator('#modal-confirm').click();
+    await expect.poll(() => page.evaluate(() => localStorage.getItem('path-uren-demo-v07-final:local-reset-authoritative'))).toBe('1');
+    await page.locator('[data-view="employees"]').click();
+    await expect(page.locator('#administrator-list')).not.toContainText(existingAdminName);
+    await expect(page.locator('#employee-grid')).not.toContainText(existingEmployeeName);
+
+    await page.locator('#add-employee').click();
+    await page.locator('#edit-name').fill(existingEmployeeName);
+    await page.locator('#edit-account-email').fill(existingEmployeeEmail);
+    await page.locator('#edit-broker-email').fill('broker@example.invalid');
+    await page.locator('#modal-confirm').click();
+
+    await expect(page.locator('#toast')).toContainText('Dit e-mailadres is al in gebruik');
+    await expect(page.locator('#modal')).toBeVisible();
+    await expect(page.locator('#employee-grid')).toContainText(existingEmployeeName);
+    await expect(page.locator('#employee-grid')).toContainText(existingEmployeeEmail);
+    await expect(page.locator('#employee-grid .employee-card').filter({ hasText: existingEmployeeEmail })).toHaveCount(1);
+    await expect(page.locator('#administrator-list')).toContainText(existingAdminName);
+    await expect(page.locator('#administrator-list')).toContainText(existingAdminEmail);
+    await expect.poll(() => page.evaluate(() => localStorage.getItem('path-uren-demo-v07-final:local-reset-authoritative'))).toBeNull();
+
+    await page.locator('#modal-close').click();
+
+    await page.locator('#add-admin').click();
+    await page.locator('#edit-admin-name').fill(existingAdminName);
+    await page.locator('#edit-admin-email').fill(existingAdminEmail);
+    await page.locator('#modal-confirm').click();
+
+    await expect(page.locator('#toast')).toContainText('Dit e-mailadres is al in gebruik');
+    await expect(page.locator('#modal')).toBeVisible();
+    await expect(page.locator('#administrator-list .administrator-row').filter({ hasText: existingAdminEmail })).toHaveCount(1);
 
     await page.locator('#modal-close').click();
     await loginPage.logout();

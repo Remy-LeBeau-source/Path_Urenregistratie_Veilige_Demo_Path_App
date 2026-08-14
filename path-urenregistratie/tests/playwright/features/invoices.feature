@@ -2,7 +2,7 @@
 @ui
 @desktop
 @fase:11
-Feature: Facturen in de desktop-UI
+Feature: Facturen bekijken en beheren
 
   # Native Playwright-uitvoering: tests/playwright/invoices.spec.ts
   # Navigatiemapping: tests/playwright/steps/invoices-ui.steps.ts
