@@ -64,7 +64,7 @@ wait_for_test_vhost() {
   marker_path="$live_root/$marker_name"
   printf '%s' "$nonce" > "$marker_path"
   chmod 644 "$marker_path"
-  for attempt in $(seq 1 30); do
+  for ((attempt = 1; attempt <= 30; attempt++)); do
     response="$(curl -fsS "$test_origin/$marker_name" 2>/dev/null || true)"
     if [[ "$response" == "$nonce" ]]; then
       rm -f -- "$marker_path"
