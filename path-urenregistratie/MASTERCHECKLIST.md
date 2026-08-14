@@ -23,7 +23,7 @@ staan onder de genummerde fases verderop in dit document.
 | Fase 4 — Auth & rollen | ✅ VS Code-scope klaar | Admin/medewerker/sessies, persistente loginblokkade en eenmalige wachtwoordlinks |
 | Fase 5 — Security | ✅ VS Code-scope klaar | Timeout, sliding session, login-audit, dependency-scan; productieheaders (CORS/CSP/HSTS) later op echt domein |
 | Fase 6 — Playwright/BDD/Allure/Living Docs | 🛠️ Migratie met pariteit | 168 native cases blijven actief; uitvoerbare BDD-engine en eerste pariteitscase zijn groen |
-| Fase 7 — CI/CD | ✅ Klaar | Release Pipeline #31766313202 volledig groen; automatische fail-closed TransIP-uitrol bewezen; alle gebruikte Actions op Node 24 |
+| Fase 7 — CI/CD | 🛠️ TEST-uitbreiding | PROD-uitrol bewezen; v0.9.59 voegt een strikt gescheiden automatische TEST-uitrol toe |
 | Fase 8 — Uren indienen | ✅ Klaar | Concept → indienen |
 | Fase 9 — Correctie/goedkeuring | ✅ Technisch klaar | Productieacceptatie later |
 | Fase 10 — Klanturenstaat | ✅ VS Code-scope klaar | JPG/PNG → PDF server-side gebouwd en getest (CTS-API-H-005) |
@@ -32,7 +32,7 @@ staan onder de genummerde fases verderop in dit document.
 | Fase 13 — Bedrijfsgegevens | ✅ VS Code-scope klaar | Definitieve gegevens/accounts → Fase 16 |
 | Fase 14 — TransIP | ✅ VS Code-scope klaar | Deployment/config → Fase 16 |
 | Fase 15 — Release-hardening | ✅ VS Code-scope klaar | Concurrency, jaarwisseling, uploads, accessibility en PWA-manifest/service worker gebouwd en getest |
-| **Fase 16 — Operationeel/live** | 🛠️ Productie live; acceptatie open | v0.9.57 automatisch uitgerold; echte mail staat weer uit; menselijke productieacceptatie en beheerpunten blijven open |
+| **Fase 16 — Operationeel/live** | 🛠️ Productie live; TEST-cutover gereedzetten | v0.9.58 staat op PROD; aparte TEST-host, database en gesloten private configuratie bestaan; automatische TEST-uitrol volgt met v0.9.59 |
 
 ### Technische eindsprint (in VS Code afgerond deze sessie)
 
@@ -89,9 +89,26 @@ Post-live beheer
 
 ## Actuele stand
 
-- [x] Datum: 2026-08-14 (v0.9.57 staat automatisch en gecontroleerd op productie)
-- [x] Appversie: v0.9.57 staat live; de actuele main-SHA wordt bij iedere uitrol exact in
+- [x] Datum: 2026-08-14 (v0.9.58 staat automatisch en gecontroleerd op productie)
+- [x] Appversie: v0.9.58 (`1b86604765e48ffcf50b73083fb2e53506daa6e0`) staat live; de actuele main-SHA wordt bij iedere uitrol exact in
   `.release-sha` vastgelegd en door pipeline en live-smoke gecontroleerd
+- [x] TransIP-subsite `https://uren-test.pathconsultancy.nl` bestaat afzonderlijk van PROD met
+  HTTPS, HTTP/2 en geforceerde HTTPS; documentroot:
+  `/data/sites/web/pathconsultancynl/subsites/uren-test.pathconsultancy.nl`.
+- [x] Aparte TEST-database en lees/schrijfgebruiker bestaan: host
+  `pathco-urentest.db.transip.me`, database `pathco_Urentest`, gebruiker
+  `pathco_UrenTestUser`. Het wachtwoord staat uitsluitend in TransIP/private configuratie.
+- [x] De private TEST-configuratie is op 2026-08-14 interactief geïnstalleerd onder
+  `/data/sites/web/pathconsultancynl/private/path-uren-test/config.local.php`; databaseverbinding
+  is bewezen, map/config hebben rechten 0700/0600 en mail plus acceptatievenster staan dicht.
+- [-] v0.9.59 TEST-cutover: automatische `Deploy Test to TransIP`-job volledig groen bewijzen en
+  daarna de publieke versie-, asset-, health- en read-only database-smoke bevestigen.
+- [x] De tijdelijke mailacceptatie-workaround is in v0.9.59 uit PROD verwijderd: de console
+  is daar niet zichtbaar en de serverendpoint antwoordt in productie fail-closed met 404.
+  Localhost en de aparte TEST-omgeving behouden de vijf expliciet bevestigde acceptatieflows.
+- [x] TEST-deploycontract is strikt gescheiden van PROD: eigen origin, database, cookie,
+  private opslag, deployhistorie en documentroot; mail, test-delivery en acceptatievenster
+  staan standaard uit en een open venster blokkeert iedere deployment.
 - [x] Technische eindsprint afgerond: Fase 10 (JPG/PNG server-side naar PDF via GD + hand-rolled
   PDF-writer `server/lib/simple_pdf.php`), Fase 11 (server-side factuur-PDF, `pdf_storage_key`
   gevuld na lock, geautoriseerde download-endpoint met company-/employee-scope, PDF-inhoudscontrole
@@ -101,6 +118,9 @@ Post-live beheer
   basis toetsenbord-/labelcontrole, PWA-manifest + defensieve service worker).
 - [x] Actuele testinventaris: 189 Playwright + 1 DB = 190 unieke cases en 194 browseruitvoeringen
   (183 niet-mobiel + 5 mobiele cases x 2 devices).
+- [x] Volledige lokale Playwright-regressie voor v0.9.59: 194/194 groen. De uitgebreide
+  GUI-smoke, `npm run check`, DB-CRUD, dependency-audit en deploycontractchecks zijn eveneens groen;
+  INV-H-007 is na één niet-reproduceerbare loginvertraging aanvullend 10/10 groen bewezen.
 - [x] Volledige lokale Playwright-regressie voor v0.9.55: 179/179 groen, inclusief de privacyveilige
   Backoffice-verzendadministratie op desktop en mobiel. `npm run check`, `npm run test:db:crud`,
   `npm run security:deps`, de uitgebreide GUI-smoke en de releasebuild zijn eveneens groen.
@@ -177,8 +197,8 @@ Post-live beheer
   voortaan expliciet `Mailvenster gesloten` in plaats van een schijnbaar bruikbare verzendknop.
   Gerichte regressies ADM-WR-N-001, ADM-WR-N-002, ADM-WR-H-008 en EQ-N-019 zijn groen. De volledige
   regressie is 194/194 groen, MOB-H-003 is aanvullend 10/10 groen op mobile-Safari en GUI-smoke,
-  `npm run check`, DB-CRUD en dependency-audit zijn groen. Commit, pipeline en automatische
-  productie-uitrol volgen nog.
+  `npm run check`, DB-CRUD en dependency-audit zijn groen. Commit `1b866047` en Release Pipeline
+  `31782141745` zijn groen en de automatische productie-uitrol is afgerond.
 - [x] Mislukte acceptatiemails blijven nooit voor een latere cron achter: één knop is exact één
   SMTP-poging; bij afwijzing eindigt de levering direct definitief als `failed`. Normale productiemail
   behoudt de begrensde retry. SMTP-fouten bewaren voortaan de veilige relayreactie voor diagnose.
@@ -1133,13 +1153,14 @@ Telling fasestatussen:
 
 ## Directe volgende stap
 
-**Fase 1 t/m 15 volledig klaar; v0.9.57 staat veilig en automatisch uitgerold op productie.** Echte
-mail en de acceptatieconsole staan weer uit; de queue is leeg.
+**Fase 1 t/m 15 volledig klaar; v0.9.58 staat veilig en automatisch uitgerold op productie.** De
+aparte TEST-host, database en gesloten private configuratie zijn gereed; v0.9.59 is lokaal volledig groen.
 
-1. Herhaal wanneer de eigenaar online is de vijf acceptatiemails één voor één; controleer ontvanger,
-   onderwerp, tekst, links en alle PDF-bijlagen en sluit de mailwindow daarna opnieuw.
-2. Richt zodra `uren-test.pathconsultancy.nl` beschikbaar is een aparte TEST-configuratie en database in;
-   productie blijft vrij van testdata en automatische browsertests.
+1. Commit en push v0.9.59; bewijs de eerste automatische TEST-cutover en publieke TEST-smoke in de
+   Release Pipeline. De PROD-acceptatieconsole blijft daarbij afwezig.
+2. Open daarna uitsluitend op TEST tijdelijk het beveiligde mailvenster met TEST-guard en vaste
+   allowlist. Verstuur de vijf acceptatiemails één voor één, controleer ontvanger, onderwerp, tekst,
+   links en PDF-bijlagen, en sluit het mailvenster direct weer.
 3. Rond daarna de open productiepraktijktests, fysieke mobiele acceptatie, cron/monitoring,
    back-uprestore-oefening, 2FA-/sessiebeleid en eerste volledige maandflow af.
 

@@ -371,7 +371,7 @@ test.describe('email queue api', () => {
     });
   });
 
-  test('[EQ-N-017] niet-vrijgegeven acceptatieconsole toont vijf herkenbare maar geblokkeerde acties', async ({ page }) => {
+  test('[EQ-N-017] niet-beschikbare acceptatieconsole blijft volledig uit beeld', async ({ page }) => {
     await page.route('**/server/api/mail-acceptance.php', route => route.fulfill({
       status: 503,
       contentType: 'application/json',
@@ -389,15 +389,10 @@ test.describe('email queue api', () => {
     await page.locator('button[data-view="settings"]').click();
 
     const consolePanel = page.locator('#mail-acceptance-console');
-    await expect(page.locator('#mail-acceptance-status')).toHaveText('Niet geladen');
-    await expect(consolePanel.locator('.mail-acceptance-scenario')).toHaveCount(5);
-    await expect(consolePanel.locator('[data-mail-acceptance-scenario]')).toHaveCount(5);
+    await expect(consolePanel).toBeHidden();
     await expect(consolePanel.locator('[data-mail-acceptance-scenario]:enabled')).toHaveCount(0);
-    await expect(consolePanel.locator('[data-mail-acceptance-scenario]')).toHaveText(Array(5).fill('Niet beschikbaar'));
-    await expect(consolePanel).toContainText('Broker: factuur + klanturenstaat');
-    await expect(consolePanel).toContainText('Eerste uitnodiging: wachtwoord aanmaken');
-    await expect(consolePanel).toContainText('Ontvanger nog niet veilig ingesteld');
-    await expect(consolePanel).not.toContainText('Alles versturen');
+    await expect(consolePanel.getByText('Broker: factuur + klanturenstaat')).toBeHidden();
+    await expect(consolePanel.getByText('Eerste uitnodiging: wachtwoord aanmaken')).toBeHidden();
   });
 
   test('[EQ-N-019] gesloten acceptatievenster toont waarom geen mail kan worden verstuurd', async ({ page }) => {

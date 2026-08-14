@@ -69,12 +69,12 @@ Feature: Mailroutering en aflevering
     Then bevat de write exact één scenario met expliciete bevestiging en geen bulkopdracht
 
   @negative
-  Scenario: [EQ-N-017] niet-vrijgegeven acceptatieconsole toont vijf herkenbare maar geblokkeerde acties
+  Scenario: [EQ-N-017] niet-beschikbare acceptatieconsole blijft volledig uit beeld
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 9
+    # Aantoonbare Playwright-assertions in deze case: 4
     Given mailroutering en aflevering is voorbereid
     When de flow voor EQ-N-017 wordt uitgevoerd
-    Then wordt met Playwright-assertions bevestigd dat niet-vrijgegeven acceptatieconsole toont vijf herkenbare maar geblokkeerde acties
+    Then wordt met Playwright-assertions bevestigd dat niet-beschikbare acceptatieconsole blijft volledig uit beeld
 
   @negative
   Scenario: [EQ-N-019] gesloten acceptatievenster toont waarom geen mail kan worden verstuurd

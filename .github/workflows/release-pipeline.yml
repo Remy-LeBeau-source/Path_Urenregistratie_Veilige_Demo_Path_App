@@ -577,6 +577,62 @@ jobs:
             kill "$(cat /tmp/php-server.pid)" || true
           fi
 
+  deploy-test:
+    name: Deploy Test to TransIP
+    needs: test
+    runs-on: ubuntu-latest
+    environment: test
+    permissions:
+      contents: read
+    if: >-
+      ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main')
+          || (github.event_name == 'workflow_dispatch'
+              && (inputs.ref == 'main' || inputs.ref == 'refs/heads/main')) }}
+
+    steps:
+      - name: Checkout exact main release
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TARGET_REF }}
+          fetch-depth: 0
+
+      - name: Verify exact TEST release identity
+        shell: bash
+        run: |
+          SOURCE_SHA="$(git rev-parse HEAD)"
+          if [[ "${GITHUB_EVENT_NAME}" == "push" && "$SOURCE_SHA" != "$GITHUB_SHA" ]]; then
+            echo "Checked-out TEST release does not match the triggering commit." >&2
+            exit 1
+          fi
+          echo "DEPLOY_SOURCE_SHA=$SOURCE_SHA" >> "$GITHUB_ENV"
+
+      - name: Install pinned TransIP SSH identity
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.TRANSIP_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.TRANSIP_SSH_KNOWN_HOSTS }}
+        run: |
+          test -n "$SSH_PRIVATE_KEY"
+          test -n "$SSH_KNOWN_HOSTS"
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/path_uren_test_transip_ed25519"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/path_uren_test_transip_ed25519" "$HOME/.ssh/known_hosts"
+          ssh-keygen -y -f "$HOME/.ssh/path_uren_test_transip_ed25519" > /dev/null
+
+      - name: Deploy TEST, migrate and run public live smoke
+        shell: bash
+        env:
+          TRANSIP_SSH_HOST: ${{ vars.TRANSIP_SSH_HOST }}
+          TRANSIP_SSH_USER: ${{ vars.TRANSIP_SSH_USER }}
+          TRANSIP_TEST_DEPLOYMENTS_ROOT: /data/sites/web/pathconsultancynl/private/path-uren-test-deployments
+          TRANSIP_TEST_PRIVATE_ROOT: /data/sites/web/pathconsultancynl/private/path-uren-test
+          TRANSIP_TEST_LIVE_ROOT: /data/sites/web/pathconsultancynl/subsites/uren-test.pathconsultancy.nl
+          TEST_ORIGIN: https://uren-test.pathconsultancy.nl
+        run: |
+          export TRANSIP_SSH_KEY_PATH="$HOME/.ssh/path_uren_test_transip_ed25519"
+          bash path-urenregistratie/scripts/deploy-test-transip.sh
+
   live-docs:
     name: Publish Live Docs
     needs: test
@@ -876,7 +932,7 @@ jobs:
 
   prod:
     name: Promote Prod
-    needs: test
+    needs: [test, deploy-test]
     runs-on: ubuntu-latest
     environment: prod
     if: ${{ github.event_name == 'push' || inputs.ref == 'main' || inputs.ref == 'refs/heads/main' }}

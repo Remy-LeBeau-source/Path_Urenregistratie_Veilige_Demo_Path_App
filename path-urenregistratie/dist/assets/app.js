@@ -6103,6 +6103,7 @@ function renderMailAcceptanceConsole() {
   const data = readApiDebug.mailAcceptance;
   const scenarios = Array.isArray(data && data.scenarios) ? data.scenarios : [];
   if (!data) {
+    container.hidden = true;
     status.className = "status-pill status-warning";
     status.textContent = "Niet geladen";
     summary.textContent = authRuntime.mode === "auth"
@@ -6116,6 +6117,8 @@ function renderMailAcceptanceConsole() {
     ).join("");
     return;
   }
+
+  container.hidden = false;
 
   const readyCount = scenarios.filter(item => item && item.ready === true).length;
   status.className = "status-pill " + (data.ready === true ? "status-approved" : "status-warning");

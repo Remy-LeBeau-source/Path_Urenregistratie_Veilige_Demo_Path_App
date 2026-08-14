@@ -7,6 +7,9 @@ const workflow = await readFile(join(root, '..', '.github', 'workflows', 'releas
 const runner = await readFile(join(root, 'scripts', 'deploy-production-transip.sh'), 'utf8');
 const remote = await readFile(join(root, 'scripts', 'deploy-production-remote.sh'), 'utf8');
 const combined = `${runner}\n${remote}`;
+const testRunner = await readFile(join(root, 'scripts', 'deploy-test-transip.sh'), 'utf8');
+const testRemote = await readFile(join(root, 'scripts', 'deploy-test-remote.sh'), 'utf8');
+const testCombined = `${testRunner}\n${testRemote}`;
 
 assert.match(workflow, /deploy-prod:\s*[\s\S]*needs:\s*\[prod, live-docs\]/, 'PROD deployment must wait for regression and Living Docs');
 assert.match(workflow, /environment:\s*prod/, 'PROD deployment must use the protected prod environment');
@@ -35,4 +38,27 @@ assert.doesNotMatch(combined, /BEGIN (?:OPENSSH|RSA|EC) PRIVATE KEY/, 'Private k
 assert.doesNotMatch(combined, /DB_PASSWORD\s*=|password\s*=\s*['"][^'"]+['"]/, 'Database passwords may never be embedded');
 assert.doesNotMatch(remote, /rm\s+-rf/, 'The remote deploy must never recursively delete production paths');
 
-console.log('Automatische PROD-deploy contractcheck: geslaagd');
+assert.match(workflow, /deploy-test:\s*[\s\S]*needs:\s*test/, 'TEST deployment must wait for TEST regression');
+assert.match(workflow, /deploy-test:\s*[\s\S]*environment:\s*test/, 'TEST deployment must use the test environment');
+assert.match(workflow, /prod:\s*[\s\S]*needs:\s*\[test, deploy-test\]/, 'PROD promotion must wait for public TEST deployment');
+for (const required of [
+  '/data/sites/web/pathconsultancynl/private/path-uren-test-deployments',
+  '/data/sites/web/pathconsultancynl/private/path-uren-test',
+  '/data/sites/web/pathconsultancynl/subsites/uren-test.pathconsultancy.nl',
+  'https://uren-test.pathconsultancy.nl',
+  'StrictHostKeyChecking=yes',
+  'sha256sum',
+  'database-backup.php',
+  'server/migrate.php',
+  'test-preflight.php --config=server/config.local.php --live',
+  'TEST mail or acceptance window is still enabled',
+  'rollback_on_error',
+  'server/health.php',
+]) {
+  assert.ok(testCombined.includes(required), `Missing TEST deployment safeguard: ${required}`);
+}
+assert.doesNotMatch(testCombined, /pathco_Urenuru|uren\.pathconsultancy\.nl(?![\w-])/, 'TEST deploy must never target PROD identifiers');
+assert.doesNotMatch(testCombined, /BEGIN (?:OPENSSH|RSA|EC) PRIVATE KEY/, 'TEST private keys may never be embedded');
+assert.doesNotMatch(testRemote, /rm\s+-rf/, 'The remote TEST deploy must never recursively delete TEST paths');
+
+console.log('Automatische TEST- en PROD-deploy contractcheck: geslaagd');

@@ -15,6 +15,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
 }
 
 $config = auth_load_raw_config();
+if (!mail_acceptance_available_for_environment($config)) {
+    auth_send_json([
+        'ok' => false,
+        'error' => 'not-found',
+        'message' => 'Deze acceptatiefunctie is niet beschikbaar in productie.',
+    ], 404);
+}
 auth_start_session_secure($config);
 $pdo = auth_pdo($config);
 $currentUser = auth_current_user($pdo);

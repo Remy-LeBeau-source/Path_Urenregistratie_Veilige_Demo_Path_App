@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../mail/acceptance.php';
 
+$environmentKeys = ['PATH_APP_ENVIRONMENT', 'PLAYWRIGHT_ENVIRONMENT', 'APP_ENV', 'PLAYWRIGHT_STAGE'];
+foreach ($environmentKeys as $key) {
+    putenv($key);
+    unset($_ENV[$key], $_SERVER[$key]);
+}
+
 $config = require __DIR__ . '/../config.example.php';
 $config['mail']['allowed_recipients'] = ['info@pathconsultancy.nl', 'gch.lieveld@live.nl'];
 $config['mail']['acceptance_test'] = [
@@ -22,6 +28,9 @@ $expected = [
     'account_invitation' => 0,
 ];
 $checks = [
+    'production_console_unavailable' => false,
+    'test_console_available' => false,
+    'test_runtime_override_available' => false,
     'exactly_five_scenarios' => count($definitions) === 5,
     'no_bulk_scenario' => !isset($definitions['bulk']) && !isset($definitions['send_all']),
     'fixed_business_recipient' => true,
@@ -32,6 +41,18 @@ $checks = [
     'normal_delivery_keeps_bounded_retry' => false,
     'smtp_failure_keeps_safe_response_detail' => false,
 ];
+$checks['production_console_unavailable'] = mail_acceptance_available_for_environment([
+    'environment' => 'production',
+]) === false;
+$checks['test_console_available'] = mail_acceptance_available_for_environment([
+    'environment' => 'test',
+]) === true;
+putenv('PATH_APP_ENVIRONMENT=test');
+$checks['test_runtime_override_available'] = mail_acceptance_available_for_environment([
+    'environment' => 'production',
+]) === true;
+putenv('PATH_APP_ENVIRONMENT');
+unset($_ENV['PATH_APP_ENVIRONMENT'], $_SERVER['PATH_APP_ENVIRONMENT']);
 
 $acceptanceFailure = mail_failed_delivery_retry_state(['acceptance_test' => true], 1);
 $normalFirstFailure = mail_failed_delivery_retry_state(['acceptance_test' => false], 1);

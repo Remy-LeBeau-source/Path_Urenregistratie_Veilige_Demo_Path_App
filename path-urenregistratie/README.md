@@ -1,6 +1,6 @@
 # Path Uren & Facturatie
 
-Lokale voorbereidingsversie v0.9.58 van een configureerbare uren- en facturatieapp. Path Consultancy is de handelsnaam; QSI Consultancy B.V. is de juridische onderneming in de volledig ingevulde voorbeeldorganisatie.
+Versie v0.9.59 van een configureerbare uren- en facturatieapp. Path Consultancy is de handelsnaam; QSI Consultancy B.V. is de juridische onderneming in de volledig ingevulde voorbeeldorganisatie.
 
 ## Wat deze versie laat zien
 
@@ -110,6 +110,19 @@ npm run build
 ```
 
 De productie-uitvoer wordt in `dist/` geplaatst.
+
+## Omgevingen en automatische uitrol
+
+- Lokaal: `http://127.0.0.1:8000` met een lokale testdatabase.
+- TEST: `https://uren-test.pathconsultancy.nl` met uitsluitend `pathco_Urentest` en private
+  opslag onder `/data/sites/web/pathconsultancynl/private/path-uren-test`.
+- PROD: `https://uren.pathconsultancy.nl` met uitsluitend de productiedatabase en productieopslag.
+
+Na de lokale regressie deployt de releasepipeline `main` eerst fail-closed naar TEST en voert daar
+een publieke versie-, asset-, health- en read-only database-smoke uit. Alleen een groene TEST-uitrol
+kan door naar de PROD-promotie. De mailacceptatieconsole bestaat niet op PROD; gecontroleerde
+acceptatiemails worden uitsluitend lokaal of in TEST voorbereid en vereisen daar een aparte,
+tijdelijke server-opt-in en ontvangersallowlist.
 
 ## Testen en Living Doc
 

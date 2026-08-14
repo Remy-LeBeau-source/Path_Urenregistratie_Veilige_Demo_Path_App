@@ -37,7 +37,7 @@ When("de beheerder alleen de brokerbundel kiest en ontvanger en twee bijlagen be
 Then("bevat de write exact één scenario met expliciete bevestiging en geen bulkopdracht");
 Given("mailroutering en aflevering is voorbereid");
 When("de flow voor EQ-N-017 wordt uitgevoerd");
-Then("wordt met Playwright-assertions bevestigd dat niet-vrijgegeven acceptatieconsole toont vijf herkenbare maar geblokkeerde acties");
+Then("wordt met Playwright-assertions bevestigd dat niet-beschikbare acceptatieconsole blijft volledig uit beeld");
 When("de flow voor EQ-N-019 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat gesloten acceptatievenster toont waarom geen mail kan worden verstuurd");
 Given("het fail-closed retrybeleid voor acceptatiemail wordt uitgevoerd");

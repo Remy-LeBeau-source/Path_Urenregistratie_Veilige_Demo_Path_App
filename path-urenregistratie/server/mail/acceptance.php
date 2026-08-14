@@ -7,6 +7,18 @@ require_once __DIR__ . '/queue.php';
 require_once __DIR__ . '/dispatch.php';
 require_once __DIR__ . '/../auth/password-reset-service.php';
 
+function mail_acceptance_available_for_environment(array $config): bool
+{
+    foreach (['PATH_APP_ENVIRONMENT', 'PLAYWRIGHT_ENVIRONMENT', 'APP_ENV', 'PLAYWRIGHT_STAGE'] as $key) {
+        $override = getenv($key);
+        if ($override !== false && trim((string)$override) !== '') {
+            return strtolower(trim((string)$override)) !== 'production';
+        }
+    }
+    $environment = strtolower(trim((string)($config['environment'] ?? ($config['app']['environment'] ?? 'production'))));
+    return $environment !== 'production';
+}
+
 /** @return array<string,mixed> */
 function mail_acceptance_settings(array $config): array
 {
