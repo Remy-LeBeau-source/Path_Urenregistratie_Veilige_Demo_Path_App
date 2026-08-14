@@ -1460,8 +1460,8 @@ function selectedLoginAccount(role) {
   return null;
 }
 
-function isLocalAuthHintsHost() {
-  const hostname = String(window.location.hostname || "").toLowerCase();
+function isLocalAuthHintsHost(hostname = window.location.hostname) {
+  hostname = String(hostname || "").toLowerCase();
   return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1" || hostname === "[::1]";
 }
 
@@ -1579,17 +1579,17 @@ function triggerLoginChoice(role) {
 }
 
 function applyAuthUiMode(mode) {
-  const localToolsAllowed = localAccountToolsAllowed();
-  if (mode === "demo" && !localToolsAllowed) mode = "unavailable";
+  const accountToolsAllowed = testAccountToolsAllowed();
+  if (mode === "demo" && !accountToolsAllowed) mode = "unavailable";
   authRuntime.mode = mode;
   const authForm = document.querySelector("#auth-login-form");
   if (authForm) authForm.hidden = mode === "demo";
-  applyLoginPresentation(localToolsAllowed);
+  applyLoginPresentation(accountToolsAllowed);
   if (mode === "auth") {
-    setDemoLoginEnabled(localToolsAllowed);
-    setLoginAccountPickerEnabled(localToolsAllowed);
+    setDemoLoginEnabled(accountToolsAllowed);
+    setLoginAccountPickerEnabled(accountToolsAllowed);
     setAuthLoginEnabled(true);
-    setAuthModeIndicator(localToolsAllowed
+    setAuthModeIndicator(accountToolsAllowed
       ? "Auth-modus actief. Snelle accountkeuze en inloggen met e-mail/wachtwoord zijn beschikbaar."
       : "Beveiligde inlogmodus actief. Log in met je zakelijke e-mailadres en wachtwoord.", false);
   } else if (mode === "demo") {
@@ -7413,7 +7413,12 @@ function localAccountToolsAllowed(hostname = window.location.hostname) {
   return normalized === "localhost" || normalized === "127.0.0.1" || normalized === "::1" || normalized.endsWith(".localhost");
 }
 
-function applyLoginPresentation(localToolsAllowed) {
+function testAccountToolsAllowed(hostname = window.location.hostname) {
+  const normalized = String(hostname || "").trim().toLowerCase().replace(/^\[|\]$/g, "");
+  return localAccountToolsAllowed(normalized) || normalized === "uren-test.pathconsultancy.nl";
+}
+
+function applyLoginPresentation(accountToolsAllowed, resetToolsAllowed = localAccountToolsAllowed()) {
   const tools = document.querySelector("#local-account-login-tools");
   const localNote = document.querySelector("#local-login-note");
   const environmentLabel = document.querySelector("#login-environment-label");
@@ -7421,17 +7426,17 @@ function applyLoginPresentation(localToolsAllowed) {
   const intro = document.querySelector("#login-intro");
   const quickReset = document.querySelector("#quick-reset-demo");
   const settingsReset = document.querySelector("#reset-demo");
-  if (tools) tools.hidden = !localToolsAllowed;
-  if (localNote) localNote.hidden = !localToolsAllowed;
-  if (quickReset) quickReset.hidden = !localToolsAllowed;
-  if (settingsReset) settingsReset.hidden = !localToolsAllowed;
-  if (!localToolsAllowed) {
+  if (tools) tools.hidden = !accountToolsAllowed;
+  if (localNote) localNote.hidden = !accountToolsAllowed;
+  if (quickReset) quickReset.hidden = !resetToolsAllowed;
+  if (settingsReset) settingsReset.hidden = !resetToolsAllowed;
+  if (!resetToolsAllowed) {
     try { window.localStorage.removeItem(LOCAL_RESET_GUARD_KEY); } catch (_error) { /* production remains server-authoritative */ }
   }
-  if (environmentLabel) environmentLabel.textContent = localToolsAllowed ? "Veilige testomgeving" : "Beveiligde omgeving";
-  if (title) title.textContent = localToolsAllowed ? "Welkom bij Uren & Facturatie" : "Inloggen";
-  if (intro) intro.textContent = localToolsAllowed
-    ? "Deze lokale testomgeving gebruikt persoonlijke testaccounts. Productie gebruikt persoonlijke accounts met e-mail en wachtwoord."
+  if (environmentLabel) environmentLabel.textContent = accountToolsAllowed ? "Veilige testomgeving" : "Beveiligde omgeving";
+  if (title) title.textContent = accountToolsAllowed ? "Welkom bij Uren & Facturatie" : "Inloggen";
+  if (intro) intro.textContent = accountToolsAllowed
+    ? "Deze testomgeving gebruikt persoonlijke testaccounts. Productie gebruikt persoonlijke accounts met e-mail en wachtwoord."
     : "Log in met je zakelijke e-mailadres. Je rol en toegangsrechten worden na het inloggen automatisch toegepast.";
 }
 

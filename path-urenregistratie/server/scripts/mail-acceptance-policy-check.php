@@ -11,12 +11,12 @@ foreach ($environmentKeys as $key) {
 }
 
 $config = require __DIR__ . '/../config.example.php';
-$config['mail']['allowed_recipients'] = ['info@pathconsultancy.nl', 'gch.lieveld@live.nl'];
+$config['mail']['allowed_recipients'] = ['giovanno.maatsen@pathconsultancy.nl', 'kenrich.lieveld@pathconsultancy.nl'];
 $config['mail']['acceptance_test'] = [
     'enabled' => true,
-    'business_recipient' => 'info@pathconsultancy.nl',
-    'password_reset_recipient' => 'info@pathconsultancy.nl',
-    'invitation_recipient' => 'gch.lieveld@live.nl',
+    'business_recipient' => 'giovanno.maatsen@pathconsultancy.nl',
+    'password_reset_recipient' => 'giovanno.maatsen@pathconsultancy.nl',
+    'invitation_recipient' => 'kenrich.lieveld@pathconsultancy.nl',
 ];
 
 $definitions = mail_acceptance_scenario_definitions($config);
@@ -85,10 +85,10 @@ foreach ($expected as $key => $attachmentCount) {
     }
     if ($key === 'account_invitation') {
         $checks['fixed_invitation_recipient'] = $checks['fixed_invitation_recipient']
-            && ($scenario['recipient'] ?? '') === 'gch.lieveld@live.nl';
+            && ($scenario['recipient'] ?? '') === 'kenrich.lieveld@pathconsultancy.nl';
     } else {
         $checks['fixed_business_recipient'] = $checks['fixed_business_recipient']
-            && ($scenario['recipient'] ?? '') === 'info@pathconsultancy.nl';
+            && ($scenario['recipient'] ?? '') === 'giovanno.maatsen@pathconsultancy.nl';
     }
     $attachments = mail_acceptance_test_attachments((string)$scenario['attachment_policy']);
     if (count($attachments) !== $attachmentCount) {

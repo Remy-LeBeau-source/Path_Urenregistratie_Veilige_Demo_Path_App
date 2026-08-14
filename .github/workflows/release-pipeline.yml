@@ -633,6 +633,13 @@ jobs:
           export TRANSIP_SSH_KEY_PATH="$HOME/.ssh/path_uren_test_transip_ed25519"
           bash path-urenregistratie/scripts/deploy-test-transip.sh
 
+      - name: Verify public TEST account logins
+        env:
+          TEST_PUBLIC_BASE_URL: https://uren-test.pathconsultancy.nl
+          TEST_PUBLIC_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
+          TEST_PUBLIC_EMPLOYEE_PASSWORD: ${{ secrets.PLAYWRIGHT_EMPLOYEE_PASSWORD }}
+        run: node path-urenregistratie/scripts/test-public-auth-smoke.mjs
+
   live-docs:
     name: Publish Live Docs
     needs: test

@@ -14,6 +14,14 @@ Feature: Veilige productieconfiguratie en deployment
     When de gebruiker de admin-loginkeuze opent
     Then wordt alleen in lokale hintmodus een demo-wachtwoord voorgeselecteerd
 
+  @happy
+  Scenario: [SAFE-H-012] TEST toont accountkeuze zonder lokale reset of wachtwoordhint
+    # Testtechniek: Equivalentieklassen + beslissingstabel
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given lokale, TEST- en PROD-hosts als aparte equivalentieklassen worden beoordeeld
+    When de exacte TEST-presentatie zonder lokale resetrechten wordt getoond
+    Then blijven accountkeuze en TEST-label zichtbaar maar resetknoppen en hints gesloten
+
   @negative
   Scenario: [SAFE-N-001] frontend source bevat geen plaintext demo-credentials
     # Testtechniek: Negatieve equivalentieklasse + error guessing
@@ -125,10 +133,19 @@ Feature: Veilige productieconfiguratie en deployment
   @happy
   Scenario: [SAFE-H-010] echte TEST-mail vereist opt-in en een ontvangers-whitelist
     # Testtechniek: API-contract + equivalentieklasse
-    # Aantoonbare Playwright-assertions in deze case: 12
+    # Aantoonbare Playwright-assertions in deze case: 16
     Given het uitvoerbare TEST-mailbeleid wordt gecontroleerd
     When de productie-, test- en developmentconfiguraties worden doorgerekend
     Then blijft TEST gesloten zonder whitelist en kan alleen de toegestane ontvanger door
+
+  @happy
+  Scenario: [SAFE-H-013] TEST-mailsandbox opent alleen atomisch voor twee vaste ontvangers
+    # Testtechniek: Beslissingstabel + foutinjectie + toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 18
+    Given exact twee vaste TEST-ontvangers en bijbehorende accounts zijn gedefinieerd
+    When de TEST-mailsandboxconfigurator zonder uitvoerbevestiging wordt gestart
+    Then blijft de check niet-mutatief en toont hij exact de twee toegestane ontvangers en TEST-accounts
+    And zijn bevestiging, accounttransactie, backup, atomische write en deployguard aantoonbaar afgedwongen
 
   @happy
   Scenario: [SAFE-H-006] eerste productieorganisatie wordt gevalideerd en zonder overschrijven ingericht

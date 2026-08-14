@@ -36,9 +36,30 @@ try {
         __DIR__ . '/database-restore.php',
         __DIR__ . '/rotate-logs.php',
         __DIR__ . '/configure-test.php',
+        __DIR__ . '/configure-test-mail-sandbox.php',
         dirname(__DIR__) . '/auth/change-password.php',
         dirname(__DIR__, 2) . '/.htaccess',
     ];
+
+    $normalizedAllowedRecipients = mail_allowed_recipients($config);
+    sort($normalizedAllowedRecipients);
+    $expectedSandboxRecipients = [
+        'giovanno.maatsen@pathconsultancy.nl',
+        'kenrich.lieveld@pathconsultancy.nl',
+    ];
+    sort($expectedSandboxRecipients);
+    $mailClosed = ($mail['enabled'] ?? null) === false
+        && ($mail['test_delivery_enabled'] ?? null) === false
+        && ($acceptance['enabled'] ?? null) === false
+        && $allowedRecipients === [];
+    $mailGuarded = ($mail['enabled'] ?? null) === true
+        && ($mail['test_delivery_enabled'] ?? null) === true
+        && ($acceptance['enabled'] ?? null) === true
+        && $normalizedAllowedRecipients === $expectedSandboxRecipients
+        && ($acceptance['business_recipient'] ?? '') === 'giovanno.maatsen@pathconsultancy.nl'
+        && ($acceptance['password_reset_recipient'] ?? '') === 'giovanno.maatsen@pathconsultancy.nl'
+        && ($acceptance['invitation_recipient'] ?? '') === 'kenrich.lieveld@pathconsultancy.nl'
+        && mail_real_delivery_allowed_for_environment($config);
 
     $checks = [
         'environment_test' => ($config['environment'] ?? ($config['app']['environment'] ?? '')) === 'test',
@@ -54,10 +75,7 @@ try {
         'server_logging_enabled' => ($logging['enabled'] ?? false) === true,
         'display_errors_disabled' => ($logging['display_errors'] ?? true) === false,
         'smtp_relay_contract_valid' => mail_validate_relay_config($config) === [],
-        'mail_closed_by_default' => ($mail['enabled'] ?? null) === false
-            && ($mail['test_delivery_enabled'] ?? null) === false
-            && ($acceptance['enabled'] ?? null) === false
-            && $allowedRecipients === [],
+        'mail_fail_closed_or_exactly_guarded' => $mailClosed || $mailGuarded,
         'required_operational_files_present' => count(array_filter($requiredFiles, 'is_file')) === count($requiredFiles),
     ];
 
@@ -78,7 +96,7 @@ try {
         $pdo = ops_pdo($config);
         $seedUsers = (int)$pdo->query("SELECT COUNT(*) FROM users WHERE email LIKE '%.invalid'")->fetchColumn();
         $company = $pdo->query(
-            'SELECT trade_name, legal_name, invoice_name_display FROM companies ORDER BY id ASC LIMIT 1'
+            'SELECT id, trade_name, legal_name, invoice_name_display FROM companies ORDER BY id ASC LIMIT 1'
         )->fetch();
         $checks['live_database_connection'] = true;
         $checks['demo_accounts_present'] = $seedUsers >= 2;
@@ -91,10 +109,27 @@ try {
         $checks['test_company_seeded'] = is_array($company)
             && ($company['trade_name'] ?? '') === 'Path Consultancy'
             && ($company['legal_name'] ?? '') === 'QSI Consultancy B.V.';
+        $acceptanceAccountCount = 0;
+        if ($mailGuarded) {
+            $accountStatement = $pdo->prepare(
+                'SELECT COUNT(*) FROM users
+                 WHERE company_id = :company_id AND active = 1
+                   AND LOWER(email) IN (:business_email, :invitation_email)'
+            );
+            $accountStatement->execute([
+                ':company_id' => (int)($company['id'] ?? 1),
+                ':business_email' => 'giovanno.maatsen@pathconsultancy.nl',
+                ':invitation_email' => 'kenrich.lieveld@pathconsultancy.nl',
+            ]);
+            $acceptanceAccountCount = (int)$accountStatement->fetchColumn();
+        }
+        $checks['guarded_mail_accounts_active'] = !$mailGuarded || $acceptanceAccountCount === 2;
         $liveReport = [
             'database' => $db['name'],
             'demo_account_count' => $seedUsers,
             'invoicing_company' => $company,
+            'mail_mode' => $mailGuarded ? 'guarded_test_sandbox' : 'closed',
+            'acceptance_account_count' => $acceptanceAccountCount,
         ];
     }
 

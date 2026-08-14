@@ -51,7 +51,8 @@ for (const required of [
   'database-backup.php',
   'server/migrate.php',
   'test-preflight.php --config=server/config.local.php --live',
-  'TEST mail or acceptance window is still enabled',
+  'TEST mail is neither closed nor protected by the exact sandbox allowlist',
+  'test_mail_window=guarded',
   'wait_for_test_vhost',
   'TEST vhost does not yet serve its configured document root',
   'rollback_on_error',
@@ -65,6 +66,11 @@ for (const required of [
 ]) {
   assert.ok(testCombined.includes(required), `Missing TEST deployment safeguard: ${required}`);
 }
+assert.match(workflow, /Verify public TEST account logins[\s\S]*test-public-auth-smoke\.mjs/, 'TEST deployment must verify both public login roles');
+assert.match(workflow, /TEST_PUBLIC_ADMIN_PASSWORD:\s*\$\{\{ secrets\.PLAYWRIGHT_ADMIN_PASSWORD \}\}/, 'Public TEST admin password must come from a protected environment secret');
+assert.match(workflow, /TEST_PUBLIC_EMPLOYEE_PASSWORD:\s*\$\{\{ secrets\.PLAYWRIGHT_EMPLOYEE_PASSWORD \}\}/, 'Public TEST employee password must come from a protected environment secret');
+const publicAuthSmoke = await readFile(join(root, 'scripts', 'test-public-auth-smoke.mjs'), 'utf8');
+assert.doesNotMatch(publicAuthSmoke, /LocalDemo(?:Admin|Employee)2026/, 'Public TEST login smoke may not hardcode passwords');
 assert.doesNotMatch(testCombined, /pathco_Urenuru|uren\.pathconsultancy\.nl(?![\w-])/, 'TEST deploy must never target PROD identifiers');
 assert.doesNotMatch(testCombined, /BEGIN (?:OPENSSH|RSA|EC) PRIVATE KEY/, 'TEST private keys may never be embedded');
 assert.doesNotMatch(testRemote, /\bseq\b/, 'TEST deploy must use Bash built-ins available on the TransIP shell');

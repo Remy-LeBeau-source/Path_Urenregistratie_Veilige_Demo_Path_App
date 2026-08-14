@@ -48,13 +48,31 @@ cd "$app_root"
 php server/scripts/test-preflight.php --config=server/config.local.php
 php -r '
   require $argv[1] . "/server/scripts/cli-bootstrap.php";
+  require $argv[1] . "/server/mail/config.php";
   $config = require $argv[1] . "/server/config.local.php";
   $mail = is_array($config["mail"] ?? null) ? $config["mail"] : [];
   $acceptance = is_array($mail["acceptance_test"] ?? null) ? $mail["acceptance_test"] : [];
-  if (($mail["enabled"] ?? false) === true || ($mail["test_delivery_enabled"] ?? false) === true || ($acceptance["enabled"] ?? false) === true) {
-      fwrite(STDERR, "TEST mail or acceptance window is still enabled.\n"); exit(1);
+  $allowed = mail_allowed_recipients($config);
+  sort($allowed);
+  $expected = ["giovanno.maatsen@pathconsultancy.nl", "kenrich.lieveld@pathconsultancy.nl"];
+  sort($expected);
+  $closed = ($mail["enabled"] ?? null) === false
+      && ($mail["test_delivery_enabled"] ?? null) === false
+      && ($acceptance["enabled"] ?? null) === false
+      && $allowed === [];
+  $guarded = ($mail["enabled"] ?? null) === true
+      && ($mail["test_delivery_enabled"] ?? null) === true
+      && ($acceptance["enabled"] ?? null) === true
+      && $allowed === $expected
+      && ($acceptance["business_recipient"] ?? "") === "giovanno.maatsen@pathconsultancy.nl"
+      && ($acceptance["password_reset_recipient"] ?? "") === "giovanno.maatsen@pathconsultancy.nl"
+      && ($acceptance["invitation_recipient"] ?? "") === "kenrich.lieveld@pathconsultancy.nl"
+      && mail_real_delivery_allowed_for_environment($config)
+      && mail_validate_relay_config($config) === [];
+  if (!$closed && !$guarded) {
+      fwrite(STDERR, "TEST mail is neither closed nor protected by the exact sandbox allowlist.\n"); exit(1);
   }
-  echo "test_mail_window=closed\n";
+  echo $guarded ? "test_mail_window=guarded\n" : "test_mail_window=closed\n";
 ' "$app_root"
 
 wait_for_test_vhost() {

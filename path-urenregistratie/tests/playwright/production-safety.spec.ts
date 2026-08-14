@@ -95,6 +95,51 @@ test('[SAFE-H-001] login picker vult alleen lokaal demo-wachtwoord in wanneer hi
   });
 });
 
+test('[SAFE-H-012] TEST toont accountkeuze zonder lokale reset of wachtwoordhint', async ({ page }) => {
+  await test.step('Given lokale, TEST- en PROD-hosts als aparte equivalentieklassen worden beoordeeld', async () => {
+    await page.goto(appConfig.baseUrl);
+    const permissions = await page.evaluate(() => {
+      const runtime = window as typeof window & {
+        localAccountToolsAllowed: (hostname: string) => boolean;
+        testAccountToolsAllowed: (hostname: string) => boolean;
+        isLocalAuthHintsHost: (hostname: string) => boolean;
+      };
+      return {
+        localReset: runtime.localAccountToolsAllowed('localhost'),
+        testReset: runtime.localAccountToolsAllowed('uren-test.pathconsultancy.nl'),
+        testPicker: runtime.testAccountToolsAllowed('uren-test.pathconsultancy.nl'),
+        prodPicker: runtime.testAccountToolsAllowed('uren.pathconsultancy.nl'),
+        testHints: runtime.isLocalAuthHintsHost('uren-test.pathconsultancy.nl'),
+      };
+    });
+    expect(permissions).toEqual({
+      localReset: true,
+      testReset: false,
+      testPicker: true,
+      prodPicker: false,
+      testHints: false,
+    });
+  });
+
+  await test.step('When de exacte TEST-presentatie zonder lokale resetrechten wordt getoond', async () => {
+    await page.evaluate(() => {
+      const runtime = window as typeof window & {
+        applyLoginPresentation: (accounts: boolean, reset: boolean) => void;
+      };
+      runtime.applyLoginPresentation(true, false);
+    });
+  });
+
+  await test.step('Then blijven accountkeuze en TEST-label zichtbaar maar resetknoppen en hints gesloten', async () => {
+    await expect(page.locator('#local-account-login-tools')).toBeVisible();
+    await expect(page.locator('#login-environment-label')).toHaveText('Veilige testomgeving');
+    await expect(page.locator('#login-title')).toHaveText('Welkom bij Uren & Facturatie');
+    await expect(page.locator('#login-intro')).toContainText('Deze testomgeving');
+    await expect(page.locator('#quick-reset-demo')).toBeHidden();
+    await expect(page.locator('#reset-demo')).toBeHidden();
+  });
+});
+
 test('[SAFE-N-001] frontend source bevat geen plaintext demo-credentials', async ({ request }) => {
   let source = '';
 
@@ -459,6 +504,52 @@ test('[SAFE-H-010] echte TEST-mail vereist opt-in en een ontvangers-whitelist', 
     expect(result.checks?.development_remains_blocked).toBe(true);
     expect(result.checks?.guarded_test_reset_uses_real_delivery).toBe(true);
     expect(result.checks?.closed_test_reset_returns_local_token).toBe(true);
+  });
+});
+
+test('[SAFE-H-013] TEST-mailsandbox opent alleen atomisch voor twee vaste ontvangers', async () => {
+  let result: { ok?: boolean; mode?: string; writes_performed?: boolean; allowed_recipients?: string[]; test_accounts?: string[] } = {};
+  const expectedRecipients = [
+    'giovanno.maatsen@pathconsultancy.nl',
+    'kenrich.lieveld@pathconsultancy.nl',
+  ];
+
+  await test.step('Given exact twee vaste TEST-ontvangers en bijbehorende accounts zijn gedefinieerd', async () => {
+    expect(expectedRecipients).toHaveLength(2);
+  });
+
+  await test.step('When de TEST-mailsandboxconfigurator zonder uitvoerbevestiging wordt gestart', async () => {
+    const execution = await execFileAsync('php', ['server/scripts/configure-test-mail-sandbox.php'], {
+      cwd: process.cwd(),
+      windowsHide: true,
+    });
+    result = JSON.parse(execution.stdout);
+  });
+
+  await test.step('Then blijft de check niet-mutatief en toont hij exact de twee toegestane ontvangers en TEST-accounts', async () => {
+    expect(result.ok).toBe(true);
+    expect(result.mode).toBe('check');
+    expect(result.writes_performed).toBe(false);
+    expect(result.allowed_recipients).toEqual(expectedRecipients);
+    expect(result.test_accounts).toEqual(result.allowed_recipients);
+  });
+
+  await test.step('And zijn bevestiging, accounttransactie, backup, atomische write en deployguard aantoonbaar afgedwongen', async () => {
+    const configurator = await readFile(join(process.cwd(), 'server', 'scripts', 'configure-test-mail-sandbox.php'), 'utf8');
+    const preflight = await readFile(join(process.cwd(), 'server', 'scripts', 'test-preflight.php'), 'utf8');
+    const deploy = await readFile(join(process.cwd(), 'scripts', 'deploy-test-remote.sh'), 'utf8');
+    expect(configurator).toContain('ENABLE_TEST_MAIL_SANDBOX');
+    expect(configurator).toContain('/data/sites/web/pathconsultancynl/private/path-uren-test/config.local.php');
+    expect(configurator).toContain("copy($configPath, $backupPath)");
+    expect(configurator).toContain("rename($temporaryPath, $configPath)");
+    expect(configurator).toContain("$config['mail']['test_delivery_enabled'] = true");
+    expect(configurator).toContain('$pdo->beginTransaction()');
+    expect(configurator).toContain('password_hash(bin2hex(random_bytes(32)), PASSWORD_DEFAULT)');
+    expect(configurator).toContain('$pdo->rollBack()');
+    expect(preflight).toContain('mail_fail_closed_or_exactly_guarded');
+    expect(preflight).toContain('guarded_mail_accounts_active');
+    expect(deploy).toContain('TEST mail is neither closed nor protected by the exact sandbox allowlist');
+    expect(deploy).toContain('test_mail_window=guarded');
   });
 });
 
