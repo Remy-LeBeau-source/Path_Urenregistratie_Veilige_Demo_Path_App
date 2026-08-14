@@ -23,7 +23,7 @@ staan onder de genummerde fases verderop in dit document.
 | Fase 4 — Auth & rollen | ✅ VS Code-scope klaar | Admin/medewerker/sessies, persistente loginblokkade en eenmalige wachtwoordlinks |
 | Fase 5 — Security | ✅ VS Code-scope klaar | Timeout, sliding session, login-audit, dependency-scan; productieheaders (CORS/CSP/HSTS) later op echt domein |
 | Fase 6 — Playwright/BDD/Allure/Living Docs | 🛠️ Migratie met pariteit | 168 native cases blijven actief; uitvoerbare BDD-engine en eerste pariteitscase zijn groen |
-| Fase 7 — CI/CD | ✅ VS Code-scope klaar | Release Pipeline #31654859682 volledig groen; alle gebruikte Actions op Node 24; GitHub-beveiligingsinstellingen later |
+| Fase 7 — CI/CD | ✅ Klaar | Release Pipeline #31766313202 volledig groen; automatische fail-closed TransIP-uitrol bewezen; alle gebruikte Actions op Node 24 |
 | Fase 8 — Uren indienen | ✅ Klaar | Concept → indienen |
 | Fase 9 — Correctie/goedkeuring | ✅ Technisch klaar | Productieacceptatie later |
 | Fase 10 — Klanturenstaat | ✅ VS Code-scope klaar | JPG/PNG → PDF server-side gebouwd en getest (CTS-API-H-005) |
@@ -32,7 +32,7 @@ staan onder de genummerde fases verderop in dit document.
 | Fase 13 — Bedrijfsgegevens | ✅ VS Code-scope klaar | Definitieve gegevens/accounts → Fase 16 |
 | Fase 14 — TransIP | ✅ VS Code-scope klaar | Deployment/config → Fase 16 |
 | Fase 15 — Release-hardening | ✅ VS Code-scope klaar | Concurrency, jaarwisseling, uploads, accessibility en PWA-manifest/service worker gebouwd en getest |
-| **Fase 16 — Operationeel/live** | 🛠️ Bundel 1 technisch voorbereid | Tooling/runbooks lokaal; TransIP, externe acceptatie, echte mail en go-live blijven gated |
+| **Fase 16 — Operationeel/live** | 🛠️ Productie live; acceptatie open | v0.9.57 automatisch uitgerold; echte mail staat weer uit; menselijke productieacceptatie en beheerpunten blijven open |
 
 ### Technische eindsprint (in VS Code afgerond deze sessie)
 
@@ -89,8 +89,8 @@ Post-live beheer
 
 ## Actuele stand
 
-- [x] Datum: 2026-08-14 (v0.9.56 staat gecontroleerd op productie; v0.9.57 automatiseert de fail-closed uitrol)
-- [-] Appversie: v0.9.56 staat op productie; v0.9.57 is lokaal volledig groen en wacht op CI/automatische uitrol
+- [x] Datum: 2026-08-14 (v0.9.57 staat automatisch en gecontroleerd op productie)
+- [x] Appversie: v0.9.57 uit main-SHA `21cdfb1954d526c5ff41f84a772c09293b8f18a4` staat live
 - [x] Technische eindsprint afgerond: Fase 10 (JPG/PNG server-side naar PDF via GD + hand-rolled
   PDF-writer `server/lib/simple_pdf.php`), Fase 11 (server-side factuur-PDF, `pdf_storage_key`
   gevuld na lock, geautoriseerde download-endpoint met company-/employee-scope, PDF-inhoudscontrole
@@ -129,9 +129,9 @@ Post-live beheer
 - [x] Medewerkercorrectie voor een al goedgekeurde maand is server-led heropenbaar zolang nog geen
   definitieve factuur bestaat; dashboardnavigatie ververst ook een verborgen grid voor dezelfde periode.
 - [x] Productiecontrole op 2026-08-14: `https://uren.pathconsultancy.nl/index.html` serveert exact
-  v0.9.56 uit commit `257ca35d1e7e45bc467bcf68a568a6f2b73883c5`. Releasechecksum, HTTPS,
-  health, gevoelige-padblokkades, database, bedrijfsidentiteit, private opslag en live preflight zijn groen.
-  v0.9.53 is als directe rollback bewaard.
+  v0.9.57 uit main-SHA `21cdfb1954d526c5ff41f84a772c09293b8f18a4`. Release Pipeline
+  `31766313202`, HTTPS, health, assets, database, bedrijfsidentiteit, private opslag en live preflight
+  zijn groen. v0.9.56 is als directe rollback bewaard.
 - [x] v0.9.52 herstelt accountonboarding zonder actieve SMTP-relay: een beheerder kan medewerker en
   opdracht veilig opslaan met `Toegang in afwachting`; uitnodigen blijft een aparte expliciete actie.
   De hotfix is volledig groen door CI gegaan en gecontroleerd naar productie uitgerold.
@@ -163,11 +163,12 @@ Post-live beheer
   de webroot als `path-db-20260814-022748.sql` (94.261 bytes), SHA-256
   `0ef7f3b8e879e06cd75fef7cebb1959173a737329e92988e74a1df5bee8b9f01`; migratie 014 en de
   volledige live read-only productiepreflight zijn groen.
-- [-] v0.9.57 voegt automatische PROD-uitrol na volledig groene `prod`- en Living Docs-jobs toe.
+- [x] v0.9.57 voegt automatische PROD-uitrol na volledig groene `prod`- en Living Docs-jobs toe.
   Het contract vereist exact de trigger-SHA, gepinde SSH-hostkey, checksum en bytecontrole, gesloten
   mailwindow, lege queue, verse DB-back-up, migraties, live preflight, atomaire cutover, live-smoke en
-  automatische rollback. De volledige lokale 193/193 regressie is groen; de eerste echte main-pipeline
-  moet de externe uitrol nog bewijzen.
+  automatische rollback. De volledige lokale 193/193 regressie en Release Pipeline `31766313202` zijn
+  groen. De job `Deploy Prod to TransIP` bewees de externe uitrol van exact `21cdfb1954d526...` en
+  sloot af met `Live smoke passed`.
 - [x] Mislukte acceptatiemails blijven nooit voor een latere cron achter: één knop is exact één
   SMTP-poging; bij afwijzing eindigt de levering direct definitief als `failed`. Normale productiemail
   behoudt de begrensde retry. SMTP-fouten bewaren voortaan de veilige relayreactie voor diagnose.
@@ -976,8 +977,15 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
   v0.9.53 als rollback onder `rollback-v0.9.53-pre-257ca35` bewaard.
 - [x] Direct na cutover `https://uren.pathconsultancy.nl/index.html#` gecontroleerd op HTTP 200,
   juiste versie/assets, health, login, hash-routing en volledig groene live preflight.
-- [-] Vanaf v0.9.57 dezelfde uitrol automatisch als laatste main-pipelinejob uitvoeren. Deploy blijft
-  fail-closed bij niet-main, onjuiste SHA/checksum, open mailwindow, niet-lege queue of mislukte live-smoke.
+- [x] Vanaf v0.9.57 wordt dezelfde uitrol automatisch als laatste main-pipelinejob uitgevoerd. De eerste
+  echte run `31766313202` is volledig groen en heeft exact main-SHA `21cdfb1954d526...` uitgerold.
+  Deploy blijft fail-closed bij niet-main, onjuiste SHA/checksum, open mailwindow, niet-lege queue of
+  mislukte live-smoke.
+- [x] Automatische pre-cutoverback-up gemaakt buiten de webroot als
+  `path-db-20260814-033906.sql` (98.995 bytes), SHA-256
+  `0384db3f244645c6ac97da4dc4399954ccb9c6a9052b162440a7538ab38293be`.
+- [x] Automatische rollback voor deze uitrol staat onder
+  `rollback-v0.9.56-pre-21cdfb1954d5-31766313202-1-20260814-033906`.
 - [x] Productie `server/config.local.php` via de interactieve fail-closed configurator gemaakt;
   databaseverbinding, private storage, securityconfig en uitgeschakelde echte mail zijn groen.
 - [x] Productiemigraties 012 en 013 zijn op TransIP uitgevoerd; bestaande migraties zijn idempotent
@@ -1040,7 +1048,7 @@ Status Fase 16:
 - [x] Bundel 2 voorbereiding: checksum-release staat veilig in private TransIP-staging; PHP/PDO,
   opslagrechten, uploadlimieten, cronbeschikbaarheid, SMTP STARTTLS, bedrijfsprofiel, twee
   beheeraccounts, databaseback-up en live read-only preflight zijn bewezen.
-- [-] fase als geheel: v0.9.56 staat veilig live. v0.9.54 met afgeschermde TEST-mailmodus,
+- [-] fase als geheel: v0.9.57 staat veilig live. v0.9.54 met afgeschermde TEST-mailmodus,
   v0.9.55 met Backoffice-verzendadministratie en v0.9.56 met de acceptatieconsole zijn groen op `main`.
   Google SMTP Relay accepteert het uitgaande TransIP-IP `85.10.158.7`, STARTTLS en afzenders binnen
   `pathconsultancy.nl`. Eén gecontroleerde mail van `backoffice@pathconsultancy.nl` naar het vooraf
@@ -1048,7 +1056,8 @@ Status Fase 16:
   businessmails en wachtwoordreset op `info@pathconsultancy.nl` en de eerste uitnodiging op
   `gch.lieveld@live.nl`. De tijdelijke acceptatiewindow is na de proef aantoonbaar gesloten:
   `mail.enabled=false`, `acceptance_test.enabled=false`, queue 0 en het testaccount weer inactief.
-  v0.9.57 automatiseert daarna de veilige main→TransIP-uitrol; de vijf ontvangen mails blijven open bewijs.
+  v0.9.57 automatiseert de veilige main→TransIP-uitrol; de eerste volledige automatische uitrol en
+  live-smoke zijn groen. De vijf ontvangen acceptatiemails blijven open bewijs.
 
 ---
 
@@ -1100,8 +1109,8 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
 - [x] Fase 15 - lokaal 161/161 browseruitvoeringen groen (inclusief MOB-H-003 en DASH-N-008
   na volledige muterende reeks), GUI smoke en `npm run check` groen; concurrency/jaarwisseling/
   uploads/accessibility/PWA gebouwd en getest; productiepraktijktests/acceptatie → Fase 16
-- [-] Fase 16 - Bundel 1 en de gecontroleerde v0.9.56-productiecutover zijn afgerond; automatische
-  uitrol v0.9.57 en Bundel 3 (volledige productieacceptatie) blijven nog te bewijzen
+- [-] Fase 16 - Bundel 1, de gecontroleerde productiecutover en de automatische v0.9.57-uitrol zijn
+  afgerond; Bundel 3 (volledige menselijke productieacceptatie en beheerinrichting) blijft open
 
 Telling fasestatussen:
 - [x] **15 fasen volledig bewezen of volledig verplaatst voor hun VS-Code-scope: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 en 15.**
@@ -1109,20 +1118,14 @@ Telling fasestatussen:
 
 ## Directe volgende stap
 
-**Fase 1 t/m 15 volledig klaar; v0.9.56 staat veilig op productie.** Echte mail staat weer uit.
+**Fase 1 t/m 15 volledig klaar; v0.9.57 staat veilig en automatisch uitgerold op productie.** Echte
+mail en de acceptatieconsole staan weer uit; de queue is leeg.
 
-1. Maak v0.9.57 lokaal volledig groen: deploycontract, mailbeleid, smoke, DB-CRUD, dependencycheck,
-   GUI-smoke en alle 193 Playwright-browseruitvoeringen.
-2. Push via een branch en laat PR-controles groen worden; merge daarna naar `main`.
-3. Bewijs dat de nieuwe `deploy-prod`-job exact de volledig groene main-SHA checksum-gecontroleerd
-   naar TransIP uitrolt, vooraf een back-up maakt en de live-smoke uitvoert.
-4. Controleer aansluitend `https://uren.pathconsultancy.nl/index.html#` op v0.9.57, health,
-   login, rollen en volledig groene live preflight.
-5. Herhaal wanneer de eigenaar online is de vijf acceptatiemails één voor één; controleer ontvanger,
+1. Herhaal wanneer de eigenaar online is de vijf acceptatiemails één voor één; controleer ontvanger,
    onderwerp, tekst, links en alle PDF-bijlagen en sluit de mailwindow daarna opnieuw.
-6. Richt zodra `uren-test.pathconsultancy.nl` beschikbaar is een aparte TEST-configuratie en database in;
+2. Richt zodra `uren-test.pathconsultancy.nl` beschikbaar is een aparte TEST-configuratie en database in;
    productie blijft vrij van testdata en automatische browsertests.
-7. Rond daarna de open productiepraktijktests, fysieke mobiele acceptatie, cron/monitoring,
+3. Rond daarna de open productiepraktijktests, fysieke mobiele acceptatie, cron/monitoring,
    back-uprestore-oefening, 2FA-/sessiebeleid en eerste volledige maandflow af.
 
 ## Dagelijkse werkwijze (verplicht)
