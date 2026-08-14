@@ -57,6 +57,8 @@ for (const required of [
   'rollback_on_error',
   '[[ -d "$root/server" ]] || return 0',
   'TEST OPcache refresh unavailable; continuing to public smoke',
+  'move_directory_contents "$live_root" "$rollback_root"',
+  'move_directory_contents "$app_root" "$live_root"',
   'server/health.php',
 ]) {
   assert.ok(testCombined.includes(required), `Missing TEST deployment safeguard: ${required}`);
@@ -64,6 +66,7 @@ for (const required of [
 assert.doesNotMatch(testCombined, /pathco_Urenuru|uren\.pathconsultancy\.nl(?![\w-])/, 'TEST deploy must never target PROD identifiers');
 assert.doesNotMatch(testCombined, /BEGIN (?:OPENSSH|RSA|EC) PRIVATE KEY/, 'TEST private keys may never be embedded');
 assert.doesNotMatch(testRemote, /\bseq\b/, 'TEST deploy must use Bash built-ins available on the TransIP shell');
+assert.doesNotMatch(testRemote, /mv "\$live_root" "\$rollback_root"/, 'TEST document-root inode must remain stable during cutover');
 assert.doesNotMatch(testRemote, /rm\s+-rf/, 'The remote TEST deploy must never recursively delete TEST paths');
 
 console.log('Automatische TEST- en PROD-deploy contractcheck: geslaagd');
