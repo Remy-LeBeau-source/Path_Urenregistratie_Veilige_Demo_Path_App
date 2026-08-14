@@ -137,3 +137,12 @@ Feature: Veilige productieconfiguratie en deployment
     When de flow voor SAFE-H-006 wordt uitgevoerd
     Then vereist de bootstrap productie, expliciete bevestiging en geldige bedrijfsgegevens
     And maakt hij alleen een lege database aan, logt de handeling en overschrijft nooit afwijkende data
+
+  @happy
+  Scenario: [SAFE-H-011] groene main-pipeline rolt exact dezelfde release veilig uit naar productie
+    # Testtechniek: Toestandsovergang + foutinjectie + beslissingstabel
+    # Aantoonbare Playwright-assertions in deze case: 20
+    Given het automatische TransIP-deploycontract wordt ingelezen
+    When validatie, TEST, PROD-regressie en Living Docs groen zijn
+    Then wordt alleen main met checksum, backup, migratie en live-smoke uitgerold
+    And blijft mail gesloten en wordt bij een fout automatisch teruggerold

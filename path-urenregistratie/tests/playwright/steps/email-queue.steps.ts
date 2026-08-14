@@ -38,6 +38,9 @@ Then("bevat de write exact één scenario met expliciete bevestiging en geen bul
 Given("mailroutering en aflevering is voorbereid");
 When("de flow voor EQ-N-017 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat niet-vrijgegeven acceptatieconsole toont vijf herkenbare maar geblokkeerde acties");
+Given("het fail-closed retrybeleid voor acceptatiemail wordt uitgevoerd");
+When("de flow voor EQ-N-018 wordt uitgevoerd");
+Then("is een acceptatiefout single-shot en behoudt gewone mail begrensde retries");
 Given("geen sessie");
 When("GET email-queue zonder sessie");
 Then("wordt met Playwright-assertions bevestigd dat anonieme gebruiker krijgt 401 op list");

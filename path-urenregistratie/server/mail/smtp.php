@@ -69,7 +69,11 @@ function smtp_expect(array $acceptedCodes, string $response, string $context): v
     $code = substr($response, 0, 3);
     if (!in_array($code, $acceptedCodes, true)) {
         // SMTP replies can contain recipient/server details but never application secrets.
-        throw new RuntimeException('SMTP ' . $context . ' rejected with code ' . ($code ?: 'unknown') . '.');
+        $detail = preg_replace('/\s+/', ' ', trim($response)) ?: 'no response detail';
+        throw new RuntimeException(
+            'SMTP ' . $context . ' rejected with code ' . ($code ?: 'unknown')
+            . ': ' . substr($detail, 0, 300)
+        );
     }
 }
 

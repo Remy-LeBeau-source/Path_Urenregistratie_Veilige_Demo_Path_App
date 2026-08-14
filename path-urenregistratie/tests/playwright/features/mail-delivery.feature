@@ -77,6 +77,14 @@ Feature: Mailroutering en aflevering
     Then wordt met Playwright-assertions bevestigd dat niet-vrijgegeven acceptatieconsole toont vijf herkenbare maar geblokkeerde acties
 
   @negative
+  Scenario: [EQ-N-018] afgewezen acceptatiemail blijft nooit achter voor automatische herverzending
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given het fail-closed retrybeleid voor acceptatiemail wordt uitgevoerd
+    When de flow voor EQ-N-018 wordt uitgevoerd
+    Then is een acceptatiefout single-shot en behoudt gewone mail begrensde retries
+
+  @negative
   Scenario: [EQ-N-006] anonieme gebruiker krijgt 401 op list
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 2

@@ -81,6 +81,7 @@
 | EQ-H-015 | api | mail-delivery.feature | Backoffice ziet veilige verzendhistorie zonder berichtinhoud | Negatieve equivalentieklasse + error guessing | 16 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | Backoffice ziet veilige verzendhistorie zonder berichtinhoud | Happy | 12 | Actueel |
 | EQ-H-016 | api | mail-delivery.feature | Backoffice verstuurt vanuit de acceptatieconsole precies één gekozen scenario | API-contract + equivalentieklasse | 12 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | Backoffice verstuurt vanuit de acceptatieconsole precies één gekozen scenario | Happy | 12 | Actueel |
 | EQ-N-017 | api | mail-delivery.feature | niet-vrijgegeven acceptatieconsole toont vijf herkenbare maar geblokkeerde acties | Negatieve equivalentieklasse + error guessing | 9 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | niet-vrijgegeven acceptatieconsole toont vijf herkenbare maar geblokkeerde acties | Negative | 12 | Actueel |
+| EQ-N-018 | api | mail-delivery.feature | afgewezen acceptatiemail blijft nooit achter voor automatische herverzending | Negatieve equivalentieklasse + error guessing | 6 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | afgewezen acceptatiemail blijft nooit achter voor automatische herverzending | Negative | 12 | Actueel |
 | EQ-N-006 | api | mail-delivery.feature | anonieme gebruiker krijgt 401 op list | Beslissingstabel rollen en autorisatie | 2 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | anonieme gebruiker krijgt 401 op list | Negative | 12 | Actueel |
 | EQ-N-007 | api | mail-delivery.feature | medewerker krijgt 403 op list | Beslissingstabel rollen en autorisatie | 1 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | medewerker krijgt 403 op list | Negative | 12 | Actueel |
 | EQ-N-008 | api | mail-delivery.feature | action=enqueue zonder invoice_id geeft 400 | Negatieve equivalentieklasse + error guessing | 2 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | action=enqueue zonder invoice_id geeft 400 | Negative | 12 | Actueel |
@@ -165,6 +166,7 @@
 | SAFE-H-005 | security | production-safety.feature | SMTP-dispatch en operationele scripts blijven fail-closed | Negatieve equivalentieklasse + error guessing | 25 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | SMTP-dispatch en operationele scripts blijven fail-closed | Happy | 14 | Actueel |
 | SAFE-H-010 | security | production-safety.feature | echte TEST-mail vereist opt-in en een ontvangers-whitelist | API-contract + equivalentieklasse | 12 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | echte TEST-mail vereist opt-in en een ontvangers-whitelist | Happy | 14 | Actueel |
 | SAFE-H-006 | security | production-safety.feature | eerste productieorganisatie wordt gevalideerd en zonder overschrijven ingericht | Negatieve equivalentieklasse + error guessing | 18 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | eerste productieorganisatie wordt gevalideerd en zonder overschrijven ingericht | Happy | 14 | Actueel |
+| SAFE-H-011 | security | production-safety.feature | groene main-pipeline rolt exact dezelfde release veilig uit naar productie | Toestandsovergang + foutinjectie + beslissingstabel | 20 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | groene main-pipeline rolt exact dezelfde release veilig uit naar productie | Happy | 14 | Actueel |
 | ROLE-N-003 | security | roles-authorization.feature | zonder sessie geeft protected API 401 | Beslissingstabel rollen en autorisatie | 2 | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | zonder sessie geeft protected API 401 | Negative | 4 | Actueel |
 | ROLE-H-001 | security | roles-authorization.feature | admin ziet volledige data | Beslissingstabel rollen en autorisatie | 7 | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | admin ziet volledige data | Happy | 4 | Actueel |
 | ROLE-H-002 | security | roles-authorization.feature | employee ziet alleen eigen data | Beslissingstabel rollen en autorisatie | 8 | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | employee ziet alleen eigen data | Happy | 4 | Actueel |
@@ -208,9 +210,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 186
+- Playwright executable cases: 188
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 187
+- Totaal unieke executable cases: 189
 - Playwright features: 21
 - Database features: 1
 - Playwright steps mappings: 21

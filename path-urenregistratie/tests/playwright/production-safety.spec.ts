@@ -486,3 +486,44 @@ test('[SAFE-H-006] eerste productieorganisatie wordt gevalideerd en zonder overs
     expect(source).toContain('$pdo->rollBack()');
   });
 });
+
+test('[SAFE-H-011] groene main-pipeline rolt exact dezelfde release veilig uit naar productie', async () => {
+  let workflow = '';
+  let runner = '';
+  let remote = '';
+
+  await test.step('Given het automatische TransIP-deploycontract wordt ingelezen', async () => {
+    workflow = await readFile(join(process.cwd(), '..', '.github', 'workflows', 'release-pipeline.yml'), 'utf8');
+    runner = await readFile(join(process.cwd(), 'scripts', 'deploy-production-transip.sh'), 'utf8');
+    remote = await readFile(join(process.cwd(), 'scripts', 'deploy-production-remote.sh'), 'utf8');
+    expect(workflow).toContain('deploy-prod:');
+    expect(runner).toContain('StrictHostKeyChecking=yes');
+    expect(remote).toContain('rollback_on_error');
+  });
+
+  await test.step('When validatie, TEST, PROD-regressie en Living Docs groen zijn', async () => {
+    expect(workflow).toMatch(/deploy-prod:\s*[\s\S]*needs:\s*\[prod, live-docs\]/);
+    expect(workflow).toContain("github.ref == 'refs/heads/main'");
+    expect(workflow).toContain('needs.prod.result == \'success\'');
+    expect(workflow).toContain('needs.live-docs.result == \'success\'');
+  });
+
+  await test.step('Then wordt alleen main met checksum, backup, migratie en live-smoke uitgerold', async () => {
+    expect(runner).toContain('sha256sum');
+    expect(remote).toContain('database-backup.php');
+    expect(remote).toContain('server/migrate.php');
+    expect(remote).toContain('production-preflight.php --config=server/config.local.php --live');
+    expect(remote).toContain('server/health.php');
+    expect(workflow).toContain('secrets.TRANSIP_SSH_PRIVATE_KEY');
+  });
+
+  await test.step('And blijft mail gesloten en wordt bij een fout automatisch teruggerold', async () => {
+    expect(remote).toContain('Production mail or acceptance window is still enabled.');
+    expect(remote).toContain('Pending production mail prevents deployment');
+    expect(remote).toContain('mv "$rollback_root" "$live_root"');
+    expect(remote).toContain('opcache_reset');
+    expect(remote).toContain('rm -f -- "$helper_path"');
+    expect(remote).toContain('curl_status');
+    expect(remote).not.toContain('rm -rf');
+  });
+});

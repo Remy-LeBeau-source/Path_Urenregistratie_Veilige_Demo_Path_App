@@ -28,7 +28,33 @@ $checks = [
     'fixed_invitation_recipient' => true,
     'attachment_counts_exact' => true,
     'pdfs_valid_and_marked' => true,
+    'acceptance_failure_is_single_shot' => false,
+    'normal_delivery_keeps_bounded_retry' => false,
+    'smtp_failure_keeps_safe_response_detail' => false,
 ];
+
+$acceptanceFailure = mail_failed_delivery_retry_state(['acceptance_test' => true], 1);
+$normalFirstFailure = mail_failed_delivery_retry_state(['acceptance_test' => false], 1);
+$normalFinalFailure = mail_failed_delivery_retry_state(['acceptance_test' => false], MAIL_MAX_ATTEMPTS);
+$checks['acceptance_failure_is_single_shot'] = $acceptanceFailure === [
+    'status' => 'failed',
+    'attempt_count' => MAIL_MAX_ATTEMPTS,
+];
+$checks['normal_delivery_keeps_bounded_retry'] = $normalFirstFailure === [
+    'status' => 'queued',
+    'attempt_count' => 1,
+] && $normalFinalFailure === [
+    'status' => 'failed',
+    'attempt_count' => MAIL_MAX_ATTEMPTS,
+];
+try {
+    smtp_expect(['250'], "550 5.7.1 Sender rejected by relay\r\n", 'MAIL FROM');
+} catch (RuntimeException $error) {
+    $checks['smtp_failure_keeps_safe_response_detail'] = str_contains(
+        $error->getMessage(),
+        '550 5.7.1 Sender rejected by relay'
+    );
+}
 
 foreach ($expected as $key => $attachmentCount) {
     $scenario = $definitions[$key] ?? null;
