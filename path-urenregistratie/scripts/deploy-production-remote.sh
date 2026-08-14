@@ -104,26 +104,31 @@ failed_root="$private_deployments_root/failed-${deployment_id}-${timestamp}"
 [[ ! -e "$rollback_root" && ! -e "$failed_root" ]] || { echo 'Rollback target collision.' >&2; exit 1; }
 
 cutover_started=0
+move_directory_contents() {
+  local source="$1" target="$2"
+  [[ -d "$source" && -d "$target" ]] || return 1
+  find "$source" -mindepth 1 -maxdepth 1 -exec mv -- {} "$target/" \;
+}
+
+mkdir -m 700 "$rollback_root" "$failed_root"
+
 rollback_on_error() {
   local code="$?"
   trap - EXIT HUP INT TERM
   if [[ "$code" -ne 0 && "$cutover_started" -eq 1 ]]; then
     echo 'Live smoke failed; restoring previous production release.' >&2
-    if [[ -d "$live_root" && ! -e "$failed_root" ]]; then
-      mv "$live_root" "$failed_root"
-    fi
-    if [[ -d "$rollback_root" && ! -e "$live_root" ]]; then
-      mv "$rollback_root" "$live_root"
-      refresh_opcache "$live_root" || true
-    fi
+    set +e
+    move_directory_contents "$live_root" "$failed_root"
+    move_directory_contents "$rollback_root" "$live_root"
+    refresh_opcache "$live_root" || true
   fi
   exit "$code"
 }
 trap rollback_on_error EXIT HUP INT TERM
 
-mv "$live_root" "$rollback_root"
 cutover_started=1
-mv "$app_root" "$live_root"
+move_directory_contents "$live_root" "$rollback_root"
+move_directory_contents "$app_root" "$live_root"
 chmod 600 "$live_root/server/config.local.php"
 printf '%s\n' "$source_sha" > "$live_root/.release-sha"
 refresh_opcache "$live_root" || echo 'PROD OPcache refresh unavailable; continuing to authoritative public smoke.' >&2
@@ -135,10 +140,18 @@ grep -Fq "Versie $version" "$index_snapshot"
 curl -fsS "$production_origin/assets/app.js?v=$version" -o /dev/null
 curl -fsS "$production_origin/assets/styles.css?v=$version" -o /dev/null
 curl -fsS "$production_origin/server/health.php" -o "$health_snapshot"
-grep -Fq '"ok":true' "$health_snapshot"
+php -r '
+  $payload = json_decode(file_get_contents($argv[1]), true);
+  if (!is_array($payload) || ($payload["ok"] ?? false) !== true) {
+      fwrite(STDERR, "Production public health response is invalid or unhealthy.\n");
+      exit(1);
+  }
+  echo "Production public health check passed.\n";
+' "$health_snapshot"
 cd "$live_root"
 php server/scripts/production-preflight.php --config=server/config.local.php --live
 
 cutover_started=0
 trap - EXIT HUP INT TERM
+rmdir "$failed_root"
 printf 'Live smoke passed: version=%s sha=%s rollback=%s\n' "$version" "$source_sha" "$rollback_root"

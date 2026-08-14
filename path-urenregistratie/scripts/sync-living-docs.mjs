@@ -11,6 +11,7 @@ const definitions = [
   { kind: 'playwright', spec: 'admin-writes.spec.ts', feature: 'organization-settings.feature', steps: 'admin-writes.steps.ts', name: 'Organisatie-instellingen beheren', tags: ['regressie', 'api', 'fase:2'], parentSuite: 'API', suite: 'Admin Writes', allureFeature: 'Beheer & Instellingen', phase: 2 },
   { kind: 'playwright', spec: 'audit-log.spec.ts', feature: 'audit-log.feature', steps: 'audit-log.steps.ts', name: 'Auditlog en traceerbaarheid', tags: ['regressie', 'api', 'fase:16'], parentSuite: 'API', suite: 'Audit Log', allureFeature: 'Audit & Security', phase: 16 },
   { kind: 'playwright', spec: 'auth.spec.ts', feature: 'auth.feature', steps: 'auth.steps.ts', name: 'Inloggen, uitloggen en sessiebeheer', tags: ['regressie', 'ui', 'desktop', 'fase:4'], parentSuite: 'UI Desktop', suite: 'Login', allureFeature: 'Authenticatie', phase: 4 },
+  { kind: 'playwright', spec: 'business-workflows-e2e.spec.ts', feature: 'end-to-end-workflows.feature', steps: 'end-to-end-workflows.steps.ts', name: 'Bedrijfsketens van medewerker tot Backoffice', tags: ['regressie', 'integration', 'ui', 'desktop', 'fase:16'], parentSuite: 'DB / Integratie', suite: 'End-to-end Workflows', allureFeature: 'Bedrijfsketens', phase: 16 },
   { kind: 'playwright', spec: 'customer-timesheet-api.spec.ts', feature: 'customer-timesheets.feature', steps: 'customer-timesheets.steps.ts', name: 'Klanturenstaten en documentverwerking', tags: ['regressie', 'api', 'fase:10'], parentSuite: 'API', suite: 'Customer Timesheets', allureFeature: 'Klanturenstaten', phase: 10 },
   { kind: 'playwright', spec: 'dashboard.spec.ts', feature: 'dashboard.feature', steps: 'dashboard.steps.ts', name: 'Dashboard en open werkvoorraad', tags: ['regressie', 'ui', 'desktop', 'fase:15'], parentSuite: 'UI Desktop', suite: 'Dashboard', allureFeature: 'Dashboard', phase: 15 },
   { kind: 'playwright', spec: 'email-queue.spec.ts', feature: 'mail-delivery.feature', steps: 'email-queue.steps.ts', name: 'Mailroutering en aflevering', tags: ['regressie', 'api', 'fase:12'], parentSuite: 'API', suite: 'Email Queue', allureFeature: 'E-mailverwerking', phase: 12 },
@@ -217,8 +218,8 @@ const inventory = definitions.flatMap((definition) => {
 const uniqueIds = new Set(inventory.map((testCase) => testCase.id));
 const playwrightCount = inventory.filter((testCase) => testCase.kind === 'playwright').length;
 const dbCount = inventory.filter((testCase) => testCase.kind === 'db').length;
-if (playwrightCount !== 195 || dbCount !== 1 || inventory.length !== 196 || uniqueIds.size !== 196) {
-  throw new Error(`Verwacht 195 Playwright-cases + 1 DB-case = 196 unieke cases, gevonden ${playwrightCount}/${dbCount}/${inventory.length}/${uniqueIds.size}.`);
+if (playwrightCount !== 203 || dbCount !== 1 || inventory.length !== 204 || uniqueIds.size !== 204) {
+  throw new Error(`Verwacht 203 Playwright-cases + 1 DB-case = 204 unieke cases, gevonden ${playwrightCount}/${dbCount}/${inventory.length}/${uniqueIds.size}.`);
 }
 const casesWithoutAssertions = inventory.filter((testCase) => Number(testCase.assertionCount) < 1);
 if (casesWithoutAssertions.length) {

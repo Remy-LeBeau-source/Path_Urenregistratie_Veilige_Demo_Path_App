@@ -29,6 +29,7 @@ async function fillFirstTwoHours(page: Page, first: string, second: string) {
 }
 
 test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en heropening blijven servergestuurd', async ({ page }) => {
+  test.setTimeout(90_000);
   const loginPage = new LoginPage(page);
   let writeVersion = 100;
   let mockStatus: 'draft' | 'submitted' | 'correction' | 'approved' = 'draft';
@@ -48,6 +49,23 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
     const request = route.request();
     const method = request.method().toUpperCase();
     if (method === 'GET') {
+      const url = new URL(request.url());
+      const requestedEmployee = Number(url.searchParams.get('employee_id') || 0);
+      const requestedPeriod = String(url.searchParams.get('period') || '');
+      if (requestedEmployee !== 2 || requestedPeriod !== PERIOD_KEY) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            ok: true,
+            found: false,
+            period: requestedPeriod,
+            employee_id: requestedEmployee,
+            timesheet: null,
+          }),
+        });
+        return;
+      }
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -180,7 +198,31 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
     expect(employeeName.length).toBeGreaterThan(0);
 
     await fillFirstTwoHours(page, '8', '8');
+    const submitWrite = page.waitForRequest((request) =>
+      request.url().includes('/server/api/timesheets.php') &&
+      request.method() === 'POST' &&
+      String((request.postDataJSON() as { action?: string } | null)?.action || '') === 'submit'
+    );
     await page.locator('#submit-timesheet').click();
+    await submitWrite;
+    expect(mockStatus).toBe('submitted');
+    await expect.poll(() => page.evaluate(() => {
+      const runtime = window as typeof window & {
+        currentEmployee: () => { id: number };
+        recordFor: (employeeId: number) => { timesheetStatus: string };
+      };
+      return runtime.recordFor(runtime.currentEmployee().id).timesheetStatus;
+    })).toBe('submitted');
+    const renderDiagnostic = await page.evaluate(() => {
+      const runtime = window as typeof window & { renderAll: () => void };
+      try {
+        runtime.renderAll();
+        return { error: '', status: document.querySelector('#timesheet-status')?.textContent || '' };
+      } catch (error) {
+        return { error: String(error instanceof Error ? error.stack || error.message : error), status: '' };
+      }
+    });
+    expect(renderDiagnostic.error).toBe('');
     await expect(page.locator('#timesheet-status')).toHaveText('Ingediend');
   });
 
@@ -307,7 +349,7 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
   });
 });
 
-test('[TS-REV-UI-H-009] medewerker kan een ingediende urenstaat opnieuw indienen', async ({ page }) => {
+test('[TS-REV-UI-H-009] ingediende urenstaat blijft vergrendeld tot Backoffice een correctie vraagt', async ({ page }) => {
   const loginPage = new LoginPage(page);
 
   await page.route('**/server/api/timesheets.php**', async (route) => {
@@ -329,10 +371,11 @@ test('[TS-REV-UI-H-009] medewerker kan een ingediende urenstaat opnieuw indienen
     await expect(page.locator('#timesheet-status')).toHaveText('Ingediend');
   });
 
-  await test.step('Then kan de medewerker opnieuw indienen zonder blokkerende statusmelding', async () => {
-    await expect(page.locator('#submit-timesheet')).toBeVisible();
-    await expect(page.locator('#submit-timesheet')).toContainText('opnieuw indienen');
-    await expect(page.locator('#submit-timesheet-note')).toBeHidden();
+  await test.step('Then zijn invoer en indienactie vergrendeld en wacht de medewerker op Backoffice', async () => {
+    await expect(page.locator('#hours-grid .hours-input:not([disabled])')).toHaveCount(0);
+    await expect(page.locator('#submit-timesheet')).toBeHidden();
+    await expect(page.locator('#submit-timesheet-note')).toBeVisible();
+    await expect(page.locator('#submit-timesheet-note')).toContainText('wachten op controle');
   });
 });
 

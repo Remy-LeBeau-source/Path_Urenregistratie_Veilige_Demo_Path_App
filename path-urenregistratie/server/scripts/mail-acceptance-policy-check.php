@@ -11,12 +11,12 @@ foreach ($environmentKeys as $key) {
 }
 
 $config = require __DIR__ . '/../config.example.php';
-$config['mail']['allowed_recipients'] = ['giovanno.maatsen@pathconsultancy.nl', 'kenrich.lieveld@pathconsultancy.nl'];
+$config['mail']['allowed_recipients'] = ['giovanno.maatsen@pathconsultancy.nl'];
 $config['mail']['acceptance_test'] = [
     'enabled' => true,
     'business_recipient' => 'giovanno.maatsen@pathconsultancy.nl',
     'password_reset_recipient' => 'giovanno.maatsen@pathconsultancy.nl',
-    'invitation_recipient' => 'kenrich.lieveld@pathconsultancy.nl',
+    'invitation_recipient' => 'giovanno.maatsen@pathconsultancy.nl',
 ];
 
 $definitions = mail_acceptance_scenario_definitions($config);
@@ -41,7 +41,10 @@ $checks = [
     'normal_delivery_keeps_bounded_retry' => false,
     'smtp_failure_keeps_safe_response_detail' => false,
     'ordinary_test_mail_redirects_to_sink' => false,
+    'ordinary_password_reset_redirects_to_sink' => false,
+    'staff_invitation_uses_fixed_recipient' => false,
     'acceptance_invitation_keeps_fixed_recipient' => false,
+    'production_invitation_keeps_account_recipient' => false,
     'production_never_redirects' => false,
 ];
 $checks['production_console_unavailable'] = mail_acceptance_available_for_environment([
@@ -75,10 +78,36 @@ $checks['test_security_scenarios_repeatable'] = mail_acceptance_repeatable_secur
     && !mail_acceptance_repeatable_security_flow(array_replace($repeatableTestConfig, ['environment' => 'production']))
     && !mail_acceptance_repeatable_security_flow(array_replace($repeatableTestConfig, ['app_origin' => 'https://uren.pathconsultancy.nl']));
 $invitation = mail_effective_delivery($redirectConfig, [
-    'recipient_email' => 'kenrich.lieveld@pathconsultancy.nl',
+    'channel' => 'password_reset',
+    'recipient_email' => 'giovanno.maatsen@pathconsultancy.nl',
     'subject_snapshot' => 'Uitnodiging',
     'body_snapshot' => 'Testinhoud',
     'acceptance_test' => true,
+]);
+$ordinaryResetAccount = 'nieuwe.medewerker@example.invalid';
+$ordinaryResetQueueRecipient = auth_password_reset_queue_recipient(
+    $redirectConfig,
+    $ordinaryResetAccount,
+    'password_reset'
+);
+$ordinaryReset = mail_effective_delivery($redirectConfig, [
+    'channel' => 'password_reset',
+    'recipient_email' => $ordinaryResetQueueRecipient,
+    'subject_snapshot' => 'Wachtwoord instellen',
+    'body_snapshot' => 'Testinhoud',
+    'acceptance_test' => false,
+]);
+$staffInvitationRecipient = auth_password_reset_queue_recipient(
+    $redirectConfig,
+    $ordinaryResetAccount,
+    'invitation'
+);
+$staffInvitation = mail_effective_delivery($redirectConfig, [
+    'channel' => 'password_reset',
+    'recipient_email' => $staffInvitationRecipient,
+    'subject_snapshot' => 'Uitnodiging',
+    'body_snapshot' => 'Testinhoud',
+    'acceptance_test' => false,
 ]);
 $productionConfig = $redirectConfig;
 $productionConfig['environment'] = 'production';
@@ -91,8 +120,19 @@ $checks['ordinary_test_mail_redirects_to_sink'] = $ordinary['recipient'] === 'gi
     && $ordinary['cc'] === null && $ordinary['redirected'] === true
     && str_contains($ordinary['subject'], '[TEST voor facturen-broker@example.invalid]')
     && str_contains($ordinary['body'], 'Oorspronkelijke ontvanger: facturen-broker@example.invalid');
-$checks['acceptance_invitation_keeps_fixed_recipient'] = $invitation['recipient'] === 'kenrich.lieveld@pathconsultancy.nl'
+$checks['ordinary_password_reset_redirects_to_sink'] = $ordinaryResetQueueRecipient === $ordinaryResetAccount
+    && $ordinaryReset['recipient'] === 'giovanno.maatsen@pathconsultancy.nl'
+    && $ordinaryReset['redirected'] === true;
+$checks['staff_invitation_uses_fixed_recipient'] = $staffInvitationRecipient === 'giovanno.maatsen@pathconsultancy.nl'
+    && $staffInvitation['recipient'] === 'giovanno.maatsen@pathconsultancy.nl'
+    && $staffInvitation['redirected'] === false;
+$checks['acceptance_invitation_keeps_fixed_recipient'] = $invitation['recipient'] === 'giovanno.maatsen@pathconsultancy.nl'
     && $invitation['redirected'] === false;
+$checks['production_invitation_keeps_account_recipient'] = auth_password_reset_queue_recipient(
+    $productionConfig,
+    'echte.gebruiker@pathconsultancy.nl',
+    'invitation'
+) === 'echte.gebruiker@pathconsultancy.nl';
 $checks['production_never_redirects'] = $production['recipient'] === 'broker@example.com'
     && $production['redirected'] === false;
 
@@ -127,7 +167,7 @@ foreach ($expected as $key => $attachmentCount) {
     }
     if ($key === 'account_invitation') {
         $checks['fixed_invitation_recipient'] = $checks['fixed_invitation_recipient']
-            && ($scenario['recipient'] ?? '') === 'kenrich.lieveld@pathconsultancy.nl';
+            && ($scenario['recipient'] ?? '') === 'giovanno.maatsen@pathconsultancy.nl';
     } else {
         $checks['fixed_business_recipient'] = $checks['fixed_business_recipient']
             && ($scenario['recipient'] ?? '') === 'giovanno.maatsen@pathconsultancy.nl';

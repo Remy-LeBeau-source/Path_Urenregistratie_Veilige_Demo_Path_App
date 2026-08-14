@@ -28,6 +28,57 @@ Verwijder eerdere relevante bevindingen niet. Noteer geen wachtwoorden, tokens o
 
 ## Actuele overdracht
 
+### 2026-08-14 · Codex — actuele bron voor hervatten
+
+- Doel: de uren-, document-, factuur-, account- en mailketens als één samenhangend product
+  stabiliseren. Een wijziging is pas klaar wanneer productcode, Functioneel Ontwerp, Technisch
+  Ontwerp, featurecase, uitvoerbare Playwright-assertions en releasebewijs met elkaar kloppen.
+- Functionele bron: `path-urenregistratie/FUNCTIONEEL-ONTWERP.md`.
+- Technische bron: `path-urenregistratie/TECHNISCH-ONTWERP.md`.
+- Voortgang en externe acceptatie: `path-urenregistratie/MASTERCHECKLIST.md`.
+- Uitvoerbare specificaties: `path-urenregistratie/tests/playwright/*.spec.ts`; de bestanden onder
+  `tests/playwright/features` en `tests/playwright/steps` worden met `npm run docs:sync` daarvan
+  afgeleid. Maak geen tweede feature-/stepboom aan.
+- Kritieke invarianten:
+  1. globale werkvoorraad verandert niet door maandnavigatie;
+  2. `alle = Backoffice + medewerkers = som per maand`;
+  3. iedere geslaagde medewerkeractie levert zonder F5 de juiste Backoffice-vervolgtaak op;
+  4. ingediende, goedgekeurde en gefactureerde uren zijn vergrendeld; alleen `draft` en
+     `correction` zijn bewerkbaar;
+  5. rolwissel in LOCAL/TEST vult account en testcredentials direct opnieuw;
+  6. herstel is alleen voor beheerders in LOCAL/TEST;
+  7. TEST-mail wordt uitsluitend naar de geconfigureerde TEST-sink herschreven; PROD wordt nooit
+     door TEST-acceptatiecode geopend;
+  8. accounts met historie worden gedeactiveerd, niet hard verwijderd; een schoon inactief account
+     mag wel definitief weg en de laatste actieve beheerder nooit.
+- Reeds bewezen gerichte regressies in de huidige werkboom:
+  - expliciete E2E-specificatie: `tests/playwright/features/end-to-end-workflows.feature`, met
+    uitvoerbare bron `tests/playwright/business-workflows-e2e.spec.ts`;
+  - `E2E-H-001..006`: herstel/maandinvariant, rolwissel zonder F5, correctieherindiening met
+    taakoverdracht medewerker → Backoffice, goedkeuring → factuur, klanturenstaat → brokerroute en
+    eenmalige wachtwoordreset met geblokkeerd tokenhergebruik, 6/6 groen;
+  - `TS-REV-UI-H-008`: volledige browserketen indienen → correctie → herindienen → goedkeuren →
+    heropenen → opnieuw indienen, 1/1 groen;
+  - `TS-REV-UI-H-009`: ingediende uren zijn vergrendeld, 1/1 groen;
+  - `DASH-H-012`: herstel levert de lokale basis 12 totaal / 7 Backoffice / 5 medewerker, groen.
+- Belangrijke diagnose: een geslaagde timesheetwrite kon wel de interne status bijwerken maar de DOM
+  niet renderen doordat een onvolledige serveraankondiging zonder `recipientIds` `renderAll()` liet
+  afbreken. De frontend normaliseert dat veld nu. Tijdens submit worden autosave en verouderde GET-
+  responses bovendien tegengehouden.
+- De Living Doc-inventaris bevat na uitbreiding van de E2E-feature 203 Playwright-cases en 1 DB-case
+  (204 unieke uitvoerbare cases). De gegenereerde feature- en navigatiebestanden worden niet handmatig
+  als tweede testimplementatie onderhouden.
+- Lokale eindgate v0.9.64: `npm run check`, de uitgebreide GUI-smoke met alle zes centrale
+  E2E-ketens en de volledige desktop/mobile/API-regressie zijn groen. Volgende stap is de bewuste
+  commit/push en het volgen van TEST- en PROD-pipelines.
+- Veilige hervatcommando's vanuit `path-urenregistratie`:
+  - `npm run check`
+  - `npm run test:gui-smoke`
+  - `npm run test:e2e`
+  - `npm run docs:sync`
+- Extern open: daadwerkelijke Google SMTP-bezorging op de aparte TEST-host en menselijke controle van
+  mailinhoud/bijlagen. Noteer nooit wachtwoorden, tokens, private keys of databasecredentials hier.
+
 ### 2026-08-12 15:48 · Copilot
 
 - Taak: laatste auth-regressie in de logout-flow oplossen en de lokale eindgate opnieuw bewijzen zonder commit/push/go-live.

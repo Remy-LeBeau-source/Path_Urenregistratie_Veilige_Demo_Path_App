@@ -68,9 +68,9 @@ Then("zijn TLS, dry-run, private storage, HSTS en niet-mutatieve checks afgedwon
 Given("het uitvoerbare TEST-mailbeleid wordt gecontroleerd");
 When("de productie-, test- en developmentconfiguraties worden doorgerekend");
 Then("blijft TEST gesloten zonder whitelist en kan alleen de toegestane ontvanger door");
-Given("exact twee vaste TEST-ontvangers en bijbehorende accounts zijn gedefinieerd");
+Given("één vaste TEST-mailsink en twee bijbehorende accounts zijn gedefinieerd");
 When("de TEST-mailsandboxconfigurator zonder uitvoerbevestiging wordt gestart");
-Then("blijft de check niet-mutatief en toont hij exact de twee toegestane ontvangers en TEST-accounts");
+Then("blijft de check niet-mutatief en scheidt hij de mailsink van de TEST-accounts");
 And("zijn bevestiging, accounttransactie, backup, atomische write en deployguard aantoonbaar afgedwongen");
 Given("de CLI-only productiebedrijfs-bootstrap wordt gelezen");
 When("de flow voor SAFE-H-006 wordt uitgevoerd");

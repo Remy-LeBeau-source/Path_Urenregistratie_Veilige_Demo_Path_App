@@ -31,6 +31,8 @@ for (const required of [
   'PROD OPcache refresh unavailable; continuing to authoritative public smoke',
   'rm -f -- "$helper_path"',
   'curl_status',
+  'Production public health response is invalid or unhealthy',
+  'Production public health check passed',
   'server/health.php',
 ]) {
   assert.ok(combined.includes(required), `Missing deployment safeguard: ${required}`);
@@ -39,6 +41,9 @@ for (const required of [
 assert.doesNotMatch(combined, /BEGIN (?:OPENSSH|RSA|EC) PRIVATE KEY/, 'Private keys may never be embedded');
 assert.doesNotMatch(combined, /DB_PASSWORD\s*=|password\s*=\s*['"][^'"]+['"]/, 'Database passwords may never be embedded');
 assert.doesNotMatch(remote, /rm\s+-rf/, 'The remote deploy must never recursively delete production paths');
+assert.match(remote, /move_directory_contents "\$live_root" "\$rollback_root"/, 'PROD document-root contents must move into rollback');
+assert.match(remote, /move_directory_contents "\$app_root" "\$live_root"/, 'PROD release contents must move into the stable document root');
+assert.doesNotMatch(remote, /mv "\$live_root" "\$rollback_root"/, 'PROD document-root inode must remain stable during cutover');
 
 assert.match(workflow, /deploy-test:\s*[\s\S]*needs:\s*test/, 'TEST deployment must wait for TEST regression');
 assert.match(workflow, /deploy-test:\s*[\s\S]*environment:\s*test/, 'TEST deployment must use the test environment');

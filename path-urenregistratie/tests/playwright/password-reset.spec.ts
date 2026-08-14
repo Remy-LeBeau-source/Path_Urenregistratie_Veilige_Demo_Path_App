@@ -217,6 +217,9 @@ test.describe('password reset api', () => {
       expect(result.checks?.acceptance_failure_is_single_shot).toBe(true);
       expect(result.checks?.fixed_invitation_recipient).toBe(true);
       expect(result.checks?.ordinary_test_mail_redirects_to_sink).toBe(true);
+      expect(result.checks?.ordinary_password_reset_redirects_to_sink).toBe(true);
+      expect(result.checks?.staff_invitation_uses_fixed_recipient).toBe(true);
+      expect(result.checks?.production_invitation_keeps_account_recipient).toBe(true);
       expect(result.checks?.production_never_redirects).toBe(true);
     });
 
@@ -225,6 +228,8 @@ test.describe('password reset api', () => {
       expect(source).toContain("$origin === 'https://uren-test.pathconsultancy.nl'");
       expect(source).toContain("$scenario['recipient']");
       expect(source).toContain('DELETE FROM password_reset_tokens WHERE user_id = :id');
+      const staffSource = await readFile(join(process.cwd(), 'server', 'api', 'staff.php'), 'utf8');
+      expect(staffSource.match(/\$config, 'invitation'\)/g)).toHaveLength(2);
     });
   });
 

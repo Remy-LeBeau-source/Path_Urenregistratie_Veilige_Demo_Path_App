@@ -408,6 +408,7 @@ function freshState() {
     approvalScope: "all",
     dashboardTeamScope: "all",
     adminTaskFilter: "all",
+    adminTaskPanelExpanded: false,
     adminTaskMonthState: {},
     hoursWeekScope: "all",
     hoursWeekScopeTouched: false,
@@ -658,6 +659,7 @@ function loadState() {
     saved.hoursWeekScope = typeof saved.hoursWeekScope === "string" ? saved.hoursWeekScope : "all";
     saved.hoursWeekScopeTouched = saved.hoursWeekScopeTouched === true;
     saved.invoiceDetailCollapsed = saved.invoiceDetailCollapsed === true;
+    saved.adminTaskPanelExpanded = saved.adminTaskPanelExpanded === true;
     saved.adminTaskMonthState = saved.adminTaskMonthState && typeof saved.adminTaskMonthState === "object" && !Array.isArray(saved.adminTaskMonthState)
       ? Object.fromEntries(Object.entries(saved.adminTaskMonthState).filter(([stateKey, monthState]) => {
         const [scope, periodKey] = stateKey.split(":");
@@ -1018,6 +1020,7 @@ function ensureSeedDataIntegrity(candidateState, fallbackState, sourceLabel) {
   restored.hoursWeekScope = typeof candidate.hoursWeekScope === "string" ? candidate.hoursWeekScope : restored.hoursWeekScope;
   restored.hoursWeekScopeTouched = candidate.hoursWeekScopeTouched === true;
   restored.invoiceDetailCollapsed = candidate.invoiceDetailCollapsed === true;
+  restored.adminTaskPanelExpanded = candidate.adminTaskPanelExpanded === true;
   restored.adminTaskMonthState = candidate.adminTaskMonthState && typeof candidate.adminTaskMonthState === "object" && !Array.isArray(candidate.adminTaskMonthState)
     ? candidate.adminTaskMonthState
     : restored.adminTaskMonthState;
@@ -1165,6 +1168,7 @@ function persistState() {
           hoursWeekScopeTouched: state.hoursWeekScopeTouched,
           invoiceDetailCollapsed: state.invoiceDetailCollapsed,
           adminTaskFilter: state.adminTaskFilter,
+          adminTaskPanelExpanded: state.adminTaskPanelExpanded,
           adminTaskMonthState: state.adminTaskMonthState,
           settings: {
             brandPrimary: state.settings.brandPrimary,
@@ -1254,6 +1258,7 @@ const readApiRuntime = {
   announcementsInFlight: false,
   customerTimesheetsInFlight: {},
   timesheetsInFlight: {},
+  timesheetMutationEpochByKey: {},
   lastBootstrapAt: 0,
   lastDashboardAt: 0,
   lastInvoicesAt: 0,
@@ -1266,7 +1271,10 @@ const readApiRuntime = {
   lastTimesheetsByKey: {},
   employeeOpenTasksSyncInFlight: false,
   lastEmployeeOpenTasksSyncAt: 0,
-  employeeOpenTasksHydrated: false
+  employeeOpenTasksHydrated: false,
+  adminWorkflowInFlight: false,
+  lastAdminWorkflowAt: 0,
+  adminWorkflowPeriodKeys: []
 };
 
 window.__PATH_READ_API = readApiDebug;
@@ -1309,6 +1317,8 @@ const writeRuntime = {
   lastDraftSignature: "",
   pendingDraftSignature: "",
   draftInFlight: false,
+  draftPromise: null,
+  submitInFlight: false,
   lastDraftErrorAt: 0
 };
 
@@ -1847,6 +1857,9 @@ function writeTimesheetReviewToApi(action, options = {}) {
     return Promise.reject(new Error("Timesheet review mist employee, periode of serverversie."));
   }
 
+  const mutationKey = periodKey + ":" + employeeId;
+  readApiRuntime.timesheetMutationEpochByKey[mutationKey] = Number(readApiRuntime.timesheetMutationEpochByKey[mutationKey] || 0) + 1;
+
   const payload = {
     action,
     period: periodKey,
@@ -1868,6 +1881,8 @@ function writeTimesheetReviewToApi(action, options = {}) {
         const message = String(result && result.data && result.data.message || "Reviewactie op server mislukt.");
         throw new Error(message);
       }
+      readApiRuntime.timesheetMutationEpochByKey[mutationKey] = Number(readApiRuntime.timesheetMutationEpochByKey[mutationKey] || 0) + 1;
+      readApiRuntime.lastTimesheetsByKey[mutationKey] = Date.now();
       applyTimesheetApiPayload(employeeId, periodKey, result.data.timesheet);
       return result.data;
     });
@@ -1880,6 +1895,7 @@ function refreshTimesheetReadApi(periodKey, employeeId, force = false) {
   if (!period || employee <= 0) return Promise.resolve(null);
 
   const key = period + ":" + employee;
+  const mutationEpoch = Number(readApiRuntime.timesheetMutationEpochByKey[key] || 0);
   const now = Date.now();
   const lastAt = Number(readApiRuntime.lastTimesheetsByKey[key] || 0);
   if (!force && (readApiRuntime.timesheetsInFlight[key] || (now - lastAt) < 15000)) return Promise.resolve(null);
@@ -1889,6 +1905,10 @@ function refreshTimesheetReadApi(periodKey, employeeId, force = false) {
   return fetchReadApi(endpoint)
     .then(data => {
       readApiRuntime.lastTimesheetsByKey[key] = Date.now();
+      // A reset can become authoritative while this request is in flight.
+      // Never let an older server response overwrite the restored baseline.
+      if (isLocalResetAuthoritative()) return null;
+      if (Number(readApiRuntime.timesheetMutationEpochByKey[key] || 0) !== mutationEpoch) return null;
       if (!data || data.found !== true || !data.timesheet) return null;
       return applyTimesheetApiPayload(employee, period, data.timesheet);
     })
@@ -1930,6 +1950,8 @@ function refreshEmployeeOpenTasksReadApi(force = false) {
 function writeTimesheetToApi(action) {
   if (!API_ENABLED || authRuntime.mode !== "auth" || state.currentRole !== "employee") return Promise.resolve(null);
   const payload = buildTimesheetWritePayload(action);
+  const mutationKey = String(payload.period) + ":" + Number(payload.employee_id);
+  readApiRuntime.timesheetMutationEpochByKey[mutationKey] = Number(readApiRuntime.timesheetMutationEpochByKey[mutationKey] || 0) + 1;
 
   return requestAuthCsrf()
     .then(token => fetch(WRITE_TIMESHEET_PATH, {
@@ -1959,6 +1981,8 @@ function writeTimesheetToApi(action) {
       }
       const employee = currentEmployee();
       const periodKey = String(payload.period || currentPeriod().key);
+      readApiRuntime.timesheetMutationEpochByKey[mutationKey] = Number(readApiRuntime.timesheetMutationEpochByKey[mutationKey] || 0) + 1;
+      readApiRuntime.lastTimesheetsByKey[mutationKey] = Date.now();
       applyTimesheetApiPayload(employee.id, periodKey, result.data && result.data.timesheet);
       return result.data;
     });
@@ -2047,6 +2071,7 @@ function writeCustomerTimesheetToApi(action, options = {}) {
 
 function scheduleDraftTimesheetWrite() {
   if (!API_ENABLED || authRuntime.mode !== "auth" || state.currentRole !== "employee") return;
+  if (writeRuntime.submitInFlight) return;
   const payload = buildTimesheetWritePayload("save_draft");
   const signature = JSON.stringify(payload);
   if (signature === writeRuntime.lastDraftSignature) return;
@@ -2061,7 +2086,7 @@ function scheduleDraftTimesheetWrite() {
     writeRuntime.draftTimer = null;
     writeRuntime.draftInFlight = true;
     writeRuntime.pendingDraftSignature = "";
-    writeTimesheetToApi("save_draft").then(() => {
+    writeRuntime.draftPromise = writeTimesheetToApi("save_draft").then(() => {
       writeRuntime.lastDraftSignature = signature;
       const autosaveStatus = document.querySelector("#hours-autosave-status");
       if (autosaveStatus) autosaveStatus.textContent = "Gesynchroniseerd met server om " + new Intl.DateTimeFormat("nl-NL", { hour: "2-digit", minute: "2-digit" }).format(new Date());
@@ -2078,7 +2103,8 @@ function scheduleDraftTimesheetWrite() {
       console.warn("Draft save via write API failed", error);
     }).finally(() => {
       writeRuntime.draftInFlight = false;
-      if (writeRuntime.pendingDraftSignature && writeRuntime.pendingDraftSignature !== writeRuntime.lastDraftSignature) {
+      writeRuntime.draftPromise = null;
+      if (!writeRuntime.submitInFlight && writeRuntime.pendingDraftSignature && writeRuntime.pendingDraftSignature !== writeRuntime.lastDraftSignature) {
         scheduleDraftTimesheetWrite();
       }
     });
@@ -2137,7 +2163,7 @@ function initializeAuthSession() {
 function triggerReadApiWarmup() {
   if (!(API_ENABLED && authRuntime.mode === "auth" && authRuntime.authenticated)) return;
   if (isLocalResetAuthoritative()) return;
-  refreshBootstrapReadApi(true);
+  refreshBootstrapReadApi(true).then(() => refreshAdminWorkflowReadApi(true));
   refreshDashboardReadApi(true);
   refreshInvoicesReadApi("", true);
   refreshInvoicesReadApi("2026-07", true);
@@ -2367,7 +2393,15 @@ function mergeBootstrapIntoState(data) {
   const counterparties = Array.isArray(data.counterparties) ? data.counterparties : [];
   const assignmentMailRoutes = Array.isArray(data.assignment_mail_routes) ? data.assignment_mail_routes : [];
   const recipients = Array.isArray(data.mail_recipients || data.mailRecipients) ? (data.mail_recipients || data.mailRecipients) : [];
-  const serverAccountsAreAuthoritative = authRuntime.mode === "auth" && !localAccountToolsAllowed();
+  readApiRuntime.adminWorkflowPeriodKeys = (Array.isArray(data.periods) ? data.periods : [])
+    .map(period => String(period && period.period_key || ""))
+    .filter(periodKey => parsePeriodKey(periodKey))
+    .filter((periodKey, index, all) => all.indexOf(periodKey) === index)
+    .sort((left, right) => left.localeCompare(right));
+  // Production is server-authoritative. The dedicated TEST host deliberately keeps
+  // the complete demo catalogue, so switching roles never requires an F5 after a
+  // role-scoped employee bootstrap response.
+  const serverAccountsAreAuthoritative = authRuntime.mode === "auth" && !testAccountToolsAllowed();
 
   if (serverAccountsAreAuthoritative) {
     // Production must never mix browser demo identities with authenticated server data.
@@ -2796,6 +2830,47 @@ function refreshBootstrapReadApi(force) {
     });
 }
 
+// Backoffice totals cover every relevant month, not only the month currently
+// visible in the UI. Hydrate the full server workflow after bootstrap so a
+// month switch can never create or remove unrelated work from the counters.
+function refreshAdminWorkflowReadApi(force = false) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && authRuntime.authenticated && state.currentRole === "admin")) {
+    return Promise.resolve(false);
+  }
+  if (isLocalResetAuthoritative()) return Promise.resolve(false);
+
+  const now = Date.now();
+  if (!force && (readApiRuntime.adminWorkflowInFlight || (now - readApiRuntime.lastAdminWorkflowAt) < 15000)) {
+    return Promise.resolve(false);
+  }
+
+  const periodKeys = readApiRuntime.adminWorkflowPeriodKeys.filter(periodKey => parsePeriodKey(periodKey));
+  const employees = activeEmployees();
+  if (!periodKeys.length || !employees.length) return Promise.resolve(false);
+
+  readApiRuntime.adminWorkflowInFlight = true;
+  const reads = [];
+  periodKeys.forEach(periodKey => {
+    employees
+      .filter(employee => !employee.startDate || employee.startDate.slice(0, 7) <= periodKey)
+      .forEach(employee => {
+        reads.push(refreshTimesheetReadApi(periodKey, employee.id, force));
+        reads.push(refreshCustomerTimesheetReadApi(periodKey, employee.id, force));
+      });
+  });
+
+  return Promise.allSettled(reads)
+    .then(() => refreshInvoicesReadApi("", true))
+    .then(() => {
+      readApiRuntime.lastAdminWorkflowAt = Date.now();
+      renderAll();
+      return true;
+    })
+    .finally(() => {
+      readApiRuntime.adminWorkflowInFlight = false;
+    });
+}
+
 function refreshInvoicesReadApi(periodKey, force) {
   if (!(API_ENABLED && authRuntime.mode === "auth")) return Promise.resolve(null);
   const period = parsePeriodKey(periodKey) ? periodKey : "";
@@ -2881,22 +2956,23 @@ function refreshMailAcceptanceReadApi(force = false) {
 }
 
 function refreshCustomerTimesheetReadApi(periodKey, employeeId, force = false) {
-  if (!isCustomerTimesheetAdminApiMode()) return;
+  if (!isCustomerTimesheetAdminApiMode()) return Promise.resolve(null);
   const period = parsePeriodKey(periodKey) ? periodKey : "";
   const employee = Number(employeeId || 0);
-  if (!period || !Number.isFinite(employee) || employee <= 0) return;
+  if (!period || !Number.isFinite(employee) || employee <= 0) return Promise.resolve(null);
 
   const key = period + ":" + employee;
   const now = Date.now();
   const lastAt = Number(readApiRuntime.lastCustomerTimesheetsByPeriod[key] || 0);
-  if (!force && (readApiRuntime.customerTimesheetsInFlight[key] || (now - lastAt) < 15000)) return;
+  if (!force && (readApiRuntime.customerTimesheetsInFlight[key] || (now - lastAt) < 15000)) return Promise.resolve(null);
 
   readApiRuntime.customerTimesheetsInFlight[key] = true;
   const endpoint = WRITE_CUSTOMER_TIMESHEET_PATH + "?period=" + encodeURIComponent(period) + "&employee_id=" + encodeURIComponent(String(employee));
 
-  fetchReadApi(endpoint)
+  return fetchReadApi(endpoint)
     .then(data => {
       readApiRuntime.lastCustomerTimesheetsByPeriod[key] = Date.now();
+      if (isLocalResetAuthoritative()) return null;
       if (!data || data.found !== true || !data.customer_timesheet) {
         setReadApiSource("customerTimesheets", "fallback");
         return;
@@ -2915,6 +2991,7 @@ function refreshCustomerTimesheetReadApi(periodKey, employeeId, force = false) {
         renderDashboardActions();
         renderAdminTaskQueue();
       }
+      return data;
     })
     .finally(() => {
       readApiRuntime.customerTimesheetsInFlight[key] = false;
@@ -3846,6 +3923,14 @@ function renderAdminTaskQueue() {
   const actionable = tasks.filter(task => task.actionable);
   const waiting = tasks.filter(task => !task.actionable);
   const filter = state.adminTaskFilter || "all";
+  const content = document.querySelector("#admin-task-content");
+  const toggle = document.querySelector("#admin-task-panel-toggle");
+  const expanded = state.adminTaskPanelExpanded === true;
+  if (content) content.hidden = !expanded;
+  if (toggle) {
+    toggle.setAttribute("aria-expanded", String(expanded));
+    toggle.textContent = expanded ? "Overzicht inklappen" : "Overzicht openen";
+  }
   const filtered = filter === "all" ? tasks : filter === "waiting" ? waiting : actionable;
   const filteredMonthGroups = groupAdminTasksByMonth(filtered);
   const defaultExpandedMonthKeys = new Set();
@@ -5291,9 +5376,10 @@ function announcementById(id) {
 }
 
 function announcementAudienceLabel(recipientIds) {
-  const names = recipientIds.map(id => employeeById(id)).filter(Boolean);
+  const normalizedRecipientIds = Array.isArray(recipientIds) ? recipientIds : [];
+  const names = normalizedRecipientIds.map(id => employeeById(id)).filter(Boolean);
   const active = activeEmployees();
-  if (names.length === active.length && active.every(employee => recipientIds.includes(employee.id))) return "Alle actieve medewerkers";
+  if (names.length === active.length && active.every(employee => normalizedRecipientIds.includes(employee.id))) return "Alle actieve medewerkers";
   const clients = [...new Set(names.map(employee => employee.client).filter(Boolean))];
   if (clients.length === 1 && names.every(employee => employee.client === clients[0])) return "Klantgroep " + clients[0];
   return names.length + " gekozen medewerker" + (names.length === 1 ? "" : "s");
@@ -5319,7 +5405,8 @@ function announcementEmailText(item) {
   if (item.status === "draft") return "Concept · nog niets klaargezet";
   if (!item.emailRequested) return "Alleen in-app · geen e-mail gekozen";
   const sent = Array.isArray(item.emailRecipientIds) ? item.emailRecipientIds.length : 0;
-  const skipped = Math.max(0, item.recipientIds.length - sent);
+  const recipientIds = Array.isArray(item.recipientIds) ? item.recipientIds : [];
+  const skipped = Math.max(0, recipientIds.length - sent);
   return sent + " afzonderlijke e-mailmelding" + (sent === 1 ? "" : "en") + " gekozen · " + skipped + " overgeslagen door voorkeur";
 }
 
@@ -5342,6 +5429,7 @@ function renderAnnouncements() {
     return;
   }
   list.innerHTML = announcements.map(item => {
+    const recipientIds = Array.isArray(item.recipientIds) ? item.recipientIds : [];
     const kind = announcementKind(item);
     const className = item.status === "draft" ? " is-draft" : item.status === "withdrawn" || kind === "withdrawal" || item.supersededById ? " is-withdrawn" : "";
     const withdrawalNote = item.status === "withdrawn"
@@ -5361,7 +5449,7 @@ function renderAnnouncements() {
       '<div class="announcement-item-head"><div>' + announcementStatusMarkup(item) + '<h3>' + escapeHtml(item.title || "Naamloos concept") + '</h3></div><small>#' + item.id + ' · ' + escapeHtml(item.updatedAt || item.createdAt) + '</small></div>' +
       '<p>' + escapeHtml(item.message) + '</p>' +
       withdrawalNote +
-      '<div class="announcement-meta"><span><strong>Ontvangers</strong>' + escapeHtml(item.audienceLabel || announcementAudienceLabel(item.recipientIds)) + ' · ' + item.recipientIds.length + (item.status === "draft" ? " geselecteerd" : " in-app") + '</span><span><strong>E-mail</strong>' + escapeHtml(announcementEmailText(item)) + '</span><span><strong>Afzender</strong>' + escapeHtml(item.createdBy) + '</span></div>' +
+      '<div class="announcement-meta"><span><strong>Ontvangers</strong>' + escapeHtml(item.audienceLabel || announcementAudienceLabel(recipientIds)) + ' · ' + recipientIds.length + (item.status === "draft" ? " geselecteerd" : " in-app") + '</span><span><strong>E-mail</strong>' + escapeHtml(announcementEmailText(item)) + '</span><span><strong>Afzender</strong>' + escapeHtml(item.createdBy) + '</span></div>' +
       (actions ? '<div class="announcement-actions">' + actions + '</div>' : '') +
       '</article>';
   }).join("");
@@ -5846,7 +5934,10 @@ function renderAdministrators() {
     const reason = admin.invitationPending
       ? "Toegang in afwachting"
       : (isCurrent ? "Huidig account" : (active ? "Actieve beheerder" : "Geen toegang"));
-    return '<div class="administrator-row" data-admin-account-id="' + escapeHtml(admin.dbUserId || admin.id) + '"><div class="administrator-person"><span class="mini-avatar">' + initials(admin.name) + '</span><span><strong>' + escapeHtml(admin.name) + '</strong><small>' + escapeHtml(admin.email) + " · " + reason + '</small></span></div><span class="status-pill ' + (active ? "status-approved" : "status-concept") + '">' + (active ? "Actief" : "Inactief") + '</span><div><button class="small-button" data-edit-admin="' + escapeHtml(admin.id) + '">Aanpassen</button> <button class="small-button" data-toggle-admin="' + escapeHtml(admin.id) + '"' + (disabled ? " disabled" : "") + '>' + (active ? "Deactiveren" : "Activeren") + '</button></div></div>';
+    const deleteAction = !active && API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin"
+      ? ' <button class="text-button danger-text" data-delete-admin="' + escapeHtml(admin.id) + '">Definitief verwijderen</button>'
+      : "";
+    return '<div class="administrator-row" data-admin-account-id="' + escapeHtml(admin.dbUserId || admin.id) + '"><div class="administrator-person"><span class="mini-avatar">' + initials(admin.name) + '</span><span><strong>' + escapeHtml(admin.name) + '</strong><small>' + escapeHtml(admin.email) + " · " + reason + '</small></span></div><span class="status-pill ' + (active ? "status-approved" : "status-concept") + '">' + (active ? "Actief" : "Inactief") + '</span><div><button class="small-button" data-edit-admin="' + escapeHtml(admin.id) + '">Aanpassen</button> <button class="small-button" data-toggle-admin="' + escapeHtml(admin.id) + '"' + (disabled ? " disabled" : "") + '>' + (active ? "Deactiveren" : "Activeren") + '</button>' + deleteAction + '</div></div>';
   }).join("");
 }
 
@@ -5956,7 +6047,9 @@ function isTimesheetEditableForEmployee(record) {
 function updateTimesheetSubmitUi(record) {
   const normalizedStatus = record && record.timesheetStatus ? String(record.timesheetStatus) : "draft";
   const submit = document.querySelector("#submit-timesheet");
-  const canSubmit = normalizedStatus === "draft" || normalizedStatus === "submitted" || normalizedStatus === "correction";
+  // A submitted month belongs to Backoffice and must stay read-only until an
+  // explicit correction request returns ownership to the employee.
+  const canSubmit = normalizedStatus === "draft" || normalizedStatus === "correction";
   const hasAnyInput = totalEntries(record.entries) > 0 || Number(record.leave || 0) > 0 || Number(record.sick || 0) > 0;
   const showSubmit = canSubmit;
   if (submit) {
@@ -6984,6 +7077,8 @@ function renderAll() {
     renderCustomerTimesheetPanel();
   }
   renderProfileChrome();
+  syncEnvironmentChrome();
+  syncResetControlVisibility(localAccountToolsAllowed());
   renderNotifications();
   renderHelpSuggestions();
   applyTheme();
@@ -7430,13 +7525,9 @@ function applyLoginPresentation(accountToolsAllowed, resetToolsAllowed = localAc
   const environmentLabel = document.querySelector("#login-environment-label");
   const title = document.querySelector("#login-title");
   const intro = document.querySelector("#login-intro");
-  const quickReset = document.querySelector("#quick-reset-demo");
-  const settingsReset = document.querySelector("#reset-demo");
   if (tools) tools.hidden = !accountToolsAllowed;
   if (localNote) localNote.hidden = !accountToolsAllowed;
-  const sharedTestResetAllowed = window.location.hostname.toLowerCase() === "uren-test.pathconsultancy.nl";
-  if (quickReset) quickReset.hidden = !(resetToolsAllowed || sharedTestResetAllowed);
-  if (settingsReset) settingsReset.hidden = !(resetToolsAllowed || sharedTestResetAllowed);
+  syncResetControlVisibility(resetToolsAllowed);
   if (!resetToolsAllowed) {
     try { window.localStorage.removeItem(LOCAL_RESET_GUARD_KEY); } catch (_error) { /* production remains server-authoritative */ }
   }
@@ -7445,6 +7536,26 @@ function applyLoginPresentation(accountToolsAllowed, resetToolsAllowed = localAc
   if (intro) intro.textContent = accountToolsAllowed
     ? "Deze testomgeving gebruikt persoonlijke testaccounts. Productie gebruikt persoonlijke accounts met e-mail en wachtwoord."
     : "Log in met je zakelijke e-mailadres. Je rol en toegangsrechten worden na het inloggen automatisch toegepast.";
+}
+
+function syncResetControlVisibility(resetToolsAllowed = localAccountToolsAllowed()) {
+  const quickReset = document.querySelector("#quick-reset-demo");
+  const settingsReset = document.querySelector("#reset-demo");
+  const sharedTestResetAllowed = window.location.hostname.toLowerCase() === "uren-test.pathconsultancy.nl";
+  const adminAllowed = !state.currentRole || state.currentRole === "admin";
+  if (quickReset) quickReset.hidden = !(adminAllowed && (resetToolsAllowed || sharedTestResetAllowed));
+  if (settingsReset) settingsReset.hidden = !(state.currentRole === "admin" && (resetToolsAllowed || sharedTestResetAllowed));
+}
+
+function syncEnvironmentChrome(hostname = window.location.hostname) {
+  const badge = document.querySelector("#environment-badge");
+  if (!badge) return;
+  const normalized = String(hostname || "").trim().toLowerCase();
+  const isTest = normalized === "uren-test.pathconsultancy.nl";
+  const isLocal = localAccountToolsAllowed(normalized);
+  badge.hidden = !(isTest || isLocal);
+  badge.textContent = isTest ? "TESTOMGEVING" : (isLocal ? "LOKAAL" : "");
+  badge.classList.toggle("is-local", isLocal && !isTest);
 }
 
 function invoiceSummary(employeeId, periodKey) {
@@ -8430,6 +8541,39 @@ function deleteInactiveEmployee(employeeId) {
   });
 }
 
+function deleteInactiveAdmin(adminId) {
+  const admin = adminById(adminId);
+  if (!admin || admin.active !== false) {
+    toast("Deactiveer de beheerder eerst.");
+    return;
+  }
+  const dbUserId = Number(admin.dbUserId || 0);
+  if (dbUserId <= 0) {
+    toast("Dit account heeft geen gekoppeld serveraccount en kan hier niet definitief worden verwijderd.");
+    return;
+  }
+  showModal({
+    label: "Beheerder definitief verwijderen",
+    title: admin.name + " definitief verwijderen?",
+    message: "Dit kan uitsluitend wanneer nog geen zakelijke of beveiligingshistorie aan dit account hangt. De server bewaart een beheerder zodra audit-, e-mail- of loginhistorie bestaat.",
+    summary: "<div><span>Voorwaarde</span><strong>Account is inactief</strong></div><div><span>Historie aanwezig</span><strong>Verwijderen wordt geblokkeerd</strong></div><div><span>Zonder historie</span><strong>Leeg account wordt verwijderd</strong></div>",
+    confirm: "Definitief verwijderen",
+    action: () => {
+      writeUserStatusToApi(dbUserId, "delete")
+        .then(() => {
+          state.admins = state.admins.filter(item => String(item.id) !== String(adminId));
+          return refreshBootstrapReadApi(true);
+        })
+        .then(() => {
+          closeModal();
+          renderAll();
+          toast(admin.name + " is definitief verwijderd omdat er geen historie bestond.");
+        })
+        .catch(error => toast(String(error && error.message || "Definitief verwijderen is geblokkeerd.")));
+    }
+  });
+}
+
 function toggleAdminStatus(adminId) {
   const admin = adminById(adminId);
   const current = currentAdmin();
@@ -8781,6 +8925,7 @@ document.addEventListener("click", event => {
   const openWorkQueue = event.target.closest("[data-open-work-filter]");
   if (openWorkQueue) {
     state.adminTaskFilter = openWorkQueue.dataset.openWorkFilter || "all";
+    state.adminTaskPanelExpanded = true;
     if (state.adminTaskFilter !== "all") {
       Object.keys(state.adminTaskMonthState || {}).forEach(key => {
         if (key.startsWith(state.adminTaskFilter + ":")) delete state.adminTaskMonthState[key];
@@ -8788,6 +8933,14 @@ document.addEventListener("click", event => {
     }
     persistState();
     renderAdminTaskQueue();
+  }
+
+  const adminTaskPanelToggle = event.target.closest("#admin-task-panel-toggle");
+  if (adminTaskPanelToggle) {
+    state.adminTaskPanelExpanded = !state.adminTaskPanelExpanded;
+    persistState();
+    renderAdminTaskQueue();
+    document.querySelector("#admin-task-panel-toggle")?.focus();
   }
 
   const adminTaskFilter = event.target.closest("[data-admin-task-filter]");
@@ -9020,6 +9173,9 @@ document.addEventListener("click", event => {
   const deleteEmployee = event.target.closest("[data-delete-employee]");
   if (deleteEmployee) deleteInactiveEmployee(Number(deleteEmployee.dataset.deleteEmployee));
 
+  const deleteAdmin = event.target.closest("[data-delete-admin]");
+  if (deleteAdmin) deleteInactiveAdmin(deleteAdmin.dataset.deleteAdmin);
+
   const mailAcceptanceScenario = event.target.closest("[data-mail-acceptance-scenario]");
   if (mailAcceptanceScenario && !mailAcceptanceScenario.disabled) {
     showMailAcceptanceConfirmation(mailAcceptanceScenario.dataset.mailAcceptanceScenario);
@@ -9186,11 +9342,26 @@ document.querySelector("#submit-timesheet").addEventListener("click", async () =
 
   const serverSubmit = API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative() && state.currentRole === "employee";
   if (serverSubmit) {
+    writeRuntime.submitInFlight = true;
     if (writeRuntime.draftTimer) {
       window.clearTimeout(writeRuntime.draftTimer);
       writeRuntime.draftTimer = null;
     }
     writeRuntime.pendingDraftSignature = "";
+
+    // A debounced conceptwrite may already have left the browser when the
+    // employee clicks Submit. Serialize both writes so that the older draft
+    // can never arrive after the submit and move the workflow back to draft.
+    if (writeRuntime.draftPromise) {
+      await writeRuntime.draftPromise.catch(() => null);
+      writeRuntime.pendingDraftSignature = "";
+      // The completed draft may have scheduled the latest pending edit in its
+      // finally-handler. Submit already contains that latest form state.
+      if (writeRuntime.draftTimer) {
+        window.clearTimeout(writeRuntime.draftTimer);
+        writeRuntime.draftTimer = null;
+      }
+    }
 
     submitButton.disabled = true;
     const originalText = submitButton.textContent;
@@ -9198,12 +9369,14 @@ document.querySelector("#submit-timesheet").addEventListener("click", async () =
     try {
       await writeTimesheetToApi("submit");
     } catch (error) {
+      writeRuntime.submitInFlight = false;
       submitButton.disabled = false;
       submitButton.textContent = originalText;
       const message = String(error && error.message || "Indienen bij server mislukt. Controleer je sessie en probeer opnieuw.");
       toast(message);
       return;
     }
+    writeRuntime.submitInFlight = false;
     submitButton.disabled = false;
     submitButton.textContent = originalText;
   }
@@ -9835,11 +10008,11 @@ document.querySelector("#auth-login-form")?.addEventListener("submit", event => 
       clearAuthLoginCountdown();
       if (passwordInput) passwordInput.value = "";
 
-      triggerReadApiWarmup();
       if (!applyAuthUserToState(result.data.user)) {
         setAuthLoginFeedback("Deze gebruiker heeft geen ondersteunde rol in deze fase.", true);
         logoutLocal();
       } else {
+        triggerReadApiWarmup();
         refreshNotificationsReadApi(true).catch(() => null);
       }
       // Notify if admin has forced a password change for this account.

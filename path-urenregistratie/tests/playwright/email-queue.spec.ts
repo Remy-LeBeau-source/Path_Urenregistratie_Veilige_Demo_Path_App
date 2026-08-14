@@ -475,6 +475,8 @@ test.describe('email queue api', () => {
     await test.step('Given een goedgekeurde maar nog niet definitieve serverfactuur als Backoffice-taak klaarstaat', async () => {
       await login.open();
       await login.loginAsAdmin();
+      await page.locator('#hero-backoffice-filter').click();
+      await expect(page.locator('[data-admin-task-filter="actionable"]')).toHaveClass(/is-active/);
       const task = page.locator('[data-admin-task-invoice="4"][data-period-key="2026-08"]');
       if (await task.isHidden()) {
         const monthToggle = page.locator('[data-admin-task-month-toggle="2026-08"]');

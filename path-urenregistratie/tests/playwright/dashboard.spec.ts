@@ -301,6 +301,7 @@ test('[DASH-N-008] voorbeeldgegevens herstellen houdt alle werkvoorraadtellers g
 });
 
 test('[DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus', async ({ page }) => {
+  test.setTimeout(60_000);
   const loginPage = new LoginPage(page);
   let businessReadHitsAfterReset = 0;
   let resetCompleted = false;
@@ -310,15 +311,20 @@ test('[DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus', as
     await route.continue();
   });
 
-  await test.step('Given Stasjo is ingelogd in de voorbeeldomgeving', async () => {
+  await test.step('Given Backoffice de voorbeeldomgeving herstelt en daarna naar Stasjo wisselt', async () => {
     await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect(page.locator('#quick-reset-demo')).toBeVisible();
+    await page.locator('#quick-reset-demo').click();
+    await page.locator('#modal-confirm').click();
+    await expect(page.locator('#hero-task-total')).toHaveText('12 open acties');
+    await loginPage.logout();
     await loginPage.loginAsEmployee();
     await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
   });
 
-  await test.step('When Stasjo Herstel kiest en daarna een open urenactie indient', async () => {
-    await page.locator('#quick-reset-demo').click();
-    await page.locator('#modal-confirm').click();
+  await test.step('When Stasjo daarna een open urenactie indient', async () => {
+    await expect(page.locator('#quick-reset-demo')).toBeHidden();
     await expect(page.locator('#employee-open-task-total')).toHaveText('3 open acties');
     await page.locator('#period-next').click();
     await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
@@ -347,6 +353,8 @@ test('[DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus', as
     await expect(page.locator('#login-screen')).toBeVisible();
     await loginPage.loginAsAdmin();
     await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
+    await page.locator('#hero-backoffice-filter').click();
+    await expect(page.locator('[data-admin-task-filter="actionable"]')).toHaveClass(/is-active/);
 
     const juneTasks = page.locator('#admin-task-month-body-2026-06');
     if (await juneTasks.isHidden()) {
@@ -643,7 +651,12 @@ test('[DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakie
   await test.step('Given een medewerker die een urenstaat vult en het thema wisselt', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
-    await page.locator('html').evaluate((html) => html.setAttribute('data-theme', 'dark'));
+    await page.locator('#profile-menu-button').click();
+    await page.locator('[data-profile-action="preferences"]').click();
+    await page.locator('#pref-theme-trigger').click();
+    await page.locator('[data-standard-choice-target="pref-theme"][data-standard-choice-value="dark"]').click();
+    await page.locator('#modal-confirm').click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     await page.locator('button[data-view="timesheet"]').click();
   });
 
@@ -662,8 +675,23 @@ test('[DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakie
   await test.step('Then blijven de maandnamen zichtbaar in donkere modus', async () => {
     await page.locator('#period-month-picker').click();
     await expect(page.locator('#period-month-panel')).toBeVisible();
-    await expect(page.locator('#period-month-panel button').first()).toBeVisible();
-    await expect(page.locator('#period-month-panel button').first()).toHaveCSS('color', 'rgb(231, 238, 244)');
+    const firstMonth = page.locator('#period-month-panel button').first();
+    await expect(firstMonth).toBeVisible();
+    const contrastRatio = await firstMonth.evaluate((button) => {
+      const parseRgb = (value: string) => (value.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+      const luminance = (rgb: number[]) => {
+        const channels = rgb.map((value) => {
+          const channel = value / 255;
+          return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+        });
+        return (0.2126 * channels[0]) + (0.7152 * channels[1]) + (0.0722 * channels[2]);
+      };
+      const style = getComputedStyle(button);
+      const foreground = luminance(parseRgb(style.color));
+      const background = luminance(parseRgb(style.backgroundColor));
+      return (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05);
+    });
+    expect(contrastRatio).toBeGreaterThanOrEqual(4.5);
   });
 });
 
@@ -675,7 +703,12 @@ test('[DASH-H-004] terugkeren naar medewerkerdashboard ververst de uren en behou
   await test.step('Given een medewerker op donker thema die vanuit dashboard naar uren gaat', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
-    await page.locator('html').evaluate((html) => html.setAttribute('data-theme', 'dark'));
+    await page.locator('#profile-menu-button').click();
+    await page.locator('[data-profile-action="preferences"]').click();
+    await page.locator('#pref-theme-trigger').click();
+    await page.locator('[data-standard-choice-target="pref-theme"][data-standard-choice-value="dark"]').click();
+    await page.locator('#modal-confirm').click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     await page.locator('button[data-view="employee-dashboard"]').click();
     await page.locator('#employee-dashboard-action').click();
   });
@@ -1017,5 +1050,63 @@ test('[DASH-H-007] dashboardknop behoudt de geldige maand en medewerkeroverzicht
     await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
     await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
     await expect(page.locator('#employee-open-overview-list')).not.toContainText('September 2026');
+  });
+});
+
+test('[DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  let workflowReads = 0;
+
+  page.on('response', response => {
+    if (response.request().method() !== 'GET') return;
+    if (/\/server\/api\/(?:timesheets|customer-timesheets)\.php\?/.test(response.url())) workflowReads += 1;
+  });
+
+  await test.step('Given Backoffice met de volledige serverwerkvoorraad is ingelogd', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
+    await expect.poll(() => workflowReads, { timeout: 20_000 }).toBeGreaterThanOrEqual(24);
+    await expect.poll(() => page.evaluate(() => window.adminOpenTasks().length), { timeout: 10_000 }).toBeGreaterThan(0);
+    await expect(page.locator('#admin-task-content')).toBeHidden();
+  });
+
+  const snapshot = async () => page.evaluate(() => {
+    const tasks = window.adminOpenTasks();
+    return {
+      ids: tasks.map(task => task.id).sort(),
+      total: tasks.length,
+      actionable: tasks.filter(task => task.actionable).length,
+      waiting: tasks.filter(task => !task.actionable).length,
+      months: [...new Set(tasks.map(task => task.periodKey))].sort(),
+    };
+  });
+
+  const baseline = await snapshot();
+
+  await test.step('When Backoffice augustus-juli-augustus doorloopt', async () => {
+    await page.locator('#period-prev').click();
+    await expect(page.locator('#period-label')).toHaveText('Juli 2026');
+    await page.locator('#period-next').click();
+    await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
+  });
+
+  await test.step('Then blijven globale aantallen, eigenaren en taakidentiteiten gelijk', async () => {
+    await expect.poll(snapshot).toEqual(baseline);
+    expect(baseline.total).toBe(baseline.actionable + baseline.waiting);
+    await expect(page.locator('#hero-task-total')).toHaveText(`${baseline.total} open acties`);
+    await expect(page.locator('#hero-backoffice-count')).toHaveText(String(baseline.actionable));
+    await expect(page.locator('#hero-employee-count')).toHaveText(String(baseline.waiting));
+  });
+
+  await test.step('And eigenaarfilters openen alleen hun concrete taakregels', async () => {
+    await page.locator('[data-open-work-filter="actionable"]').first().click();
+    await expect(page.locator('#admin-task-content')).toBeVisible();
+    await expect(page.locator('#admin-task-list [data-admin-task-row]')).toHaveCount(baseline.actionable);
+    await expect(page.locator('#admin-task-list .admin-task-row.is-waiting')).toHaveCount(0);
+
+    await page.locator('[data-admin-task-filter="waiting"]').click();
+    await expect(page.locator('#admin-task-list [data-admin-task-row]')).toHaveCount(baseline.waiting);
+    await expect(page.locator('#admin-task-list .admin-task-row.is-actionable')).toHaveCount(0);
   });
 });

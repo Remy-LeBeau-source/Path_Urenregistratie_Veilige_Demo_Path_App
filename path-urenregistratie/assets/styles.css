@@ -208,6 +208,9 @@ select:focus-visible {
 .workspace-user strong { font-size: 13px; }
 .workspace-user small { margin-top: 2px; color: #91a4b6; font-size: 11px; }
 .demo-badge { width: fit-content; border: 1px solid rgba(255,255,255,.13); border-radius: 999px; color: #9eb0c1; font-size: 10px; letter-spacing: .07em; padding: 5px 9px; text-transform: uppercase; }
+.topbar-context { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
+.environment-badge { display: inline-flex; width: fit-content; align-items: center; border: 1px solid #e6b66a; border-radius: 999px; background: #fff4df; color: #8b5200; font-size: 9px; font-weight: 900; letter-spacing: .08em; padding: 5px 9px; text-transform: uppercase; }
+.environment-badge.is-local { border-color: #8fd9c7; background: var(--green-light); color: var(--mint-dark); }
 .switch-role { width: fit-content; border: 0; border-bottom: 1px solid rgba(255,255,255,.23); background: transparent; color: #b9c7d3; cursor: pointer; font-size: 11px; padding: 0 0 3px; }
 .switch-role:hover { color: #fff; }
 
@@ -921,6 +924,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .admin-task-heading { align-items: flex-start; }
 .admin-task-heading h3 { margin-bottom: 4px; }
 .admin-task-heading p { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.admin-task-heading > .small-button { flex: 0 0 auto; }
 .admin-task-filters { display: flex; flex-wrap: wrap; gap: 7px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--surface-muted); padding: 11px 24px; }
 .admin-task-filters button { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); cursor: pointer; font-size: 9px; font-weight: 800; padding: 8px 11px; }
 .admin-task-filters button.is-active { border-color: var(--mint-dark); background: var(--green-light); color: var(--mint-dark); }

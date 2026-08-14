@@ -147,12 +147,12 @@ Feature: Veilige productieconfiguratie en deployment
     Then blijft TEST gesloten zonder whitelist en kan alleen de toegestane ontvanger door
 
   @happy
-  Scenario: [SAFE-H-013] TEST-mailsandbox opent alleen atomisch voor twee vaste ontvangers
+  Scenario: [SAFE-H-013] TEST-mailsandbox opent atomisch voor één vaste mailsink en twee TEST-accounts
     # Testtechniek: API-contract + equivalentieklasse
-    # Aantoonbare Playwright-assertions in deze case: 25
-    Given exact twee vaste TEST-ontvangers en bijbehorende accounts zijn gedefinieerd
+    # Aantoonbare Playwright-assertions in deze case: 26
+    Given één vaste TEST-mailsink en twee bijbehorende accounts zijn gedefinieerd
     When de TEST-mailsandboxconfigurator zonder uitvoerbevestiging wordt gestart
-    Then blijft de check niet-mutatief en toont hij exact de twee toegestane ontvangers en TEST-accounts
+    Then blijft de check niet-mutatief en scheidt hij de mailsink van de TEST-accounts
     And zijn bevestiging, accounttransactie, backup, atomische write en deployguard aantoonbaar afgedwongen
 
   @happy
@@ -167,7 +167,7 @@ Feature: Veilige productieconfiguratie en deployment
   @happy
   Scenario: [SAFE-H-011] groene main-pipeline rolt exact dezelfde release veilig uit naar productie
     # Testtechniek: Toestandsovergang + foutinjectie + beslissingstabel
-    # Aantoonbare Playwright-assertions in deze case: 22
+    # Aantoonbare Playwright-assertions in deze case: 23
     Given het automatische TransIP-deploycontract wordt ingelezen
     When validatie, TEST, PROD-regressie en Living Docs groen zijn
     Then wordt alleen main met checksum, backup, migratie en live-smoke uitgerold
