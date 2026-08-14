@@ -59,6 +59,8 @@ for (const required of [
   'TEST OPcache refresh unavailable; continuing to public smoke',
   'move_directory_contents "$live_root" "$rollback_root"',
   'move_directory_contents "$app_root" "$live_root"',
+  'path_health_checks_are_ok($payload["checks"])',
+  'TEST public health checks passed',
   'server/health.php',
 ]) {
   assert.ok(testCombined.includes(required), `Missing TEST deployment safeguard: ${required}`);

@@ -253,6 +253,13 @@ test('[SAFE-H-009] productie-health accepteert een schone database zonder demoda
     const healthSource = await readFile(join(process.cwd(), 'server', 'health.php'), 'utf8');
     expect(healthSource).toContain('if (path_health_requires_demo_seed($healthEnv))');
   });
+
+  await test.step('And maakt de migratie de state-afhankelijkheid gereed vóór de eerste healthcheck', async () => {
+    const migrateSource = await readFile(join(process.cwd(), 'server', 'migrate.php'), 'utf8');
+    const migrationSource = await readFile(join(process.cwd(), 'server', 'migrations', '015_runtime_state_health.sql'), 'utf8');
+    expect(migrateSource).toContain('015_runtime_state_health.sql');
+    expect(migrationSource).toContain('CREATE TABLE IF NOT EXISTS `app_state`');
+  });
 });
 
 test('[SAFE-N-004] install.php en migrate.php bevatten productieguards', async () => {

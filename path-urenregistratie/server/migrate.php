@@ -114,6 +114,10 @@ function migration_plan(bool $allowDemoMigrations): array
         'id' => '014_mail_acceptance_test.sql',
         'path' => __DIR__ . '/migrations/014_mail_acceptance_test.sql',
     ];
+    $plan[] = [
+        'id' => '015_runtime_state_health.sql',
+        'path' => __DIR__ . '/migrations/015_runtime_state_health.sql',
+    ];
 
     return $plan;
 }

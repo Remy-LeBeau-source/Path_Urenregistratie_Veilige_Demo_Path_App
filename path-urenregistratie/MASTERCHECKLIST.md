@@ -23,7 +23,7 @@ staan onder de genummerde fases verderop in dit document.
 | Fase 4 — Auth & rollen | ✅ VS Code-scope klaar | Admin/medewerker/sessies, persistente loginblokkade en eenmalige wachtwoordlinks |
 | Fase 5 — Security | ✅ VS Code-scope klaar | Timeout, sliding session, login-audit, dependency-scan; productieheaders (CORS/CSP/HSTS) later op echt domein |
 | Fase 6 — Playwright/BDD/Allure/Living Docs | 🛠️ Migratie met pariteit | 168 native cases blijven actief; uitvoerbare BDD-engine en eerste pariteitscase zijn groen |
-| Fase 7 — CI/CD | 🛠️ TEST-uitbreiding | PROD-uitrol bewezen; v0.9.59 voegt een strikt gescheiden automatische TEST-uitrol toe |
+| Fase 7 — CI/CD | 🛠️ TEST-uitbreiding | PROD-uitrol bewezen; v0.9.60 rondt de strikt gescheiden automatische TEST-uitrol af |
 | Fase 8 — Uren indienen | ✅ Klaar | Concept → indienen |
 | Fase 9 — Correctie/goedkeuring | ✅ Technisch klaar | Productieacceptatie later |
 | Fase 10 — Klanturenstaat | ✅ VS Code-scope klaar | JPG/PNG → PDF server-side gebouwd en getest (CTS-API-H-005) |
@@ -32,7 +32,7 @@ staan onder de genummerde fases verderop in dit document.
 | Fase 13 — Bedrijfsgegevens | ✅ VS Code-scope klaar | Definitieve gegevens/accounts → Fase 16 |
 | Fase 14 — TransIP | ✅ VS Code-scope klaar | Deployment/config → Fase 16 |
 | Fase 15 — Release-hardening | ✅ VS Code-scope klaar | Concurrency, jaarwisseling, uploads, accessibility en PWA-manifest/service worker gebouwd en getest |
-| **Fase 16 — Operationeel/live** | 🛠️ Productie live; TEST-cutover gereedzetten | v0.9.58 staat op PROD; aparte TEST-host, database en gesloten private configuratie bestaan; automatische TEST-uitrol volgt met v0.9.59 |
+| **Fase 16 — Operationeel/live** | 🛠️ Productie live; TEST-cutover bewijzen | v0.9.58 staat op PROD; aparte TEST-host, database en gesloten private configuratie bestaan; automatische TEST-uitrol wordt met v0.9.60 bewezen |
 
 ### Technische eindsprint (in VS Code afgerond deze sessie)
 
@@ -101,7 +101,7 @@ Post-live beheer
 - [x] De private TEST-configuratie is op 2026-08-14 interactief geïnstalleerd onder
   `/data/sites/web/pathconsultancynl/private/path-uren-test/config.local.php`; databaseverbinding
   is bewezen, map/config hebben rechten 0700/0600 en mail plus acceptatievenster staan dicht.
-- [-] v0.9.59 TEST-cutover: automatische `Deploy Test to TransIP`-job volledig groen bewijzen en
+- [-] v0.9.60 TEST-cutover: automatische `Deploy Test to TransIP`-job volledig groen bewijzen en
   daarna de publieke versie-, asset-, health- en read-only database-smoke bevestigen.
 - [x] De tijdelijke mailacceptatie-workaround is in v0.9.59 uit PROD verwijderd: de console
   is daar niet zichtbaar en de serverendpoint antwoordt in productie fail-closed met 404.
@@ -1154,9 +1154,9 @@ Telling fasestatussen:
 ## Directe volgende stap
 
 **Fase 1 t/m 15 volledig klaar; v0.9.58 staat veilig en automatisch uitgerold op productie.** De
-aparte TEST-host, database en gesloten private configuratie zijn gereed; v0.9.59 is lokaal volledig groen.
+aparte TEST-host, database en gesloten private configuratie zijn gereed; v0.9.60 herstelt de eerste publieke TEST-cutover.
 
-1. Commit en push v0.9.59; bewijs de eerste automatische TEST-cutover en publieke TEST-smoke in de
+1. Commit en push v0.9.60; bewijs de eerste automatische TEST-cutover en publieke TEST-smoke in de
    Release Pipeline. De PROD-acceptatieconsole blijft daarbij afwezig.
 2. Open daarna uitsluitend op TEST tijdelijk het beveiligde mailvenster met TEST-guard en vaste
    allowlist. Verstuur de vijf acceptatiemails één voor één, controleer ontvanger, onderwerp, tekst,

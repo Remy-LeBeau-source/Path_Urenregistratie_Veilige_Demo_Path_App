@@ -34,6 +34,7 @@ Then("bevat health.php een productieguard die host en databasenaam wegfiltert");
 Given("het healthbeleid voor productie en test wordt uitgevoerd");
 When("de flow voor SAFE-H-009 wordt uitgevoerd");
 Then("vereist alleen de testomgeving demodata en blijven echte fouten zichtbaar");
+Then("maakt de migratie de state-afhankelijkheid gereed vóór de eerste healthcheck");
 Given("install.php en migrate.php worden gelezen");
 When("de flow voor SAFE-N-004 wordt uitgevoerd");
 Then("bevatten beide bestanden een HTTP-blokkering voor productieomgeving");

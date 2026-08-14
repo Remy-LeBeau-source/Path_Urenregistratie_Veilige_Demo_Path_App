@@ -147,7 +147,15 @@ grep -Fq "Versie $version" "$index_snapshot"
 curl -fsS "$test_origin/assets/app.js?v=$version" -o /dev/null
 curl -fsS "$test_origin/assets/styles.css?v=$version" -o /dev/null
 curl -fsS "$test_origin/server/health.php" -o "$health_snapshot"
-grep -Fq '"ok":true' "$health_snapshot"
+php -r '
+  require $argv[1];
+  $payload = json_decode((string)file_get_contents($argv[2]), true);
+  if (!is_array($payload) || !is_array($payload["checks"] ?? null) || !path_health_checks_are_ok($payload["checks"])) {
+      fwrite(STDERR, "TEST public health response contains a failed check.\n");
+      exit(1);
+  }
+  echo "TEST public health checks passed.\n";
+' "$live_root/server/lib/health_policy.php" "$health_snapshot"
 cd "$live_root"
 php server/scripts/test-preflight.php --config=server/config.local.php --live
 

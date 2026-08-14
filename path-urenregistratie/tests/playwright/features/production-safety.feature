@@ -57,10 +57,11 @@ Feature: Veilige productieconfiguratie en deployment
   @happy
   Scenario: [SAFE-H-009] productie-health accepteert een schone database zonder demodata
     # Testtechniek: Equivalentieklassen + toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 5
+    # Aantoonbare Playwright-assertions in deze case: 7
     Given het healthbeleid voor productie en test wordt uitgevoerd
     When de flow voor SAFE-H-009 wordt uitgevoerd
     Then vereist alleen de testomgeving demodata en blijven echte fouten zichtbaar
+    And maakt de migratie de state-afhankelijkheid gereed vóór de eerste healthcheck
 
   @negative
   Scenario: [SAFE-N-004] install.php en migrate.php bevatten productieguards
