@@ -53,6 +53,8 @@ try {
     $config['mail']['enabled'] = true;
     $config['mail']['test_delivery_enabled'] = true;
     $config['mail']['allowed_recipients'] = [$businessRecipient, $invitationRecipient];
+    $config['mail']['test_redirect_all'] = true;
+    $config['mail']['test_sink_recipient'] = $businessRecipient;
     $config['mail']['acceptance_test'] = [
         'enabled' => true,
         'business_recipient' => $businessRecipient,
@@ -130,6 +132,7 @@ try {
         'mail_enabled' => true,
         'test_delivery_enabled' => true,
         'allowed_recipients' => [$businessRecipient, $invitationRecipient],
+        'test_sink_recipient' => $businessRecipient,
         'test_accounts' => array_column($acceptanceAccounts, 'email'),
         'backup_path' => $backupPath,
         'message' => 'Guarded TEST mail sandbox enabled. No message was sent.',

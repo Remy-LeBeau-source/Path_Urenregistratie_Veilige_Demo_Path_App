@@ -23,7 +23,7 @@ staan onder de genummerde fases verderop in dit document.
 | Fase 4 — Auth & rollen | ✅ VS Code-scope klaar | Admin/medewerker/sessies, persistente loginblokkade en eenmalige wachtwoordlinks |
 | Fase 5 — Security | ✅ VS Code-scope klaar | Timeout, sliding session, login-audit, dependency-scan; productieheaders (CORS/CSP/HSTS) later op echt domein |
 | Fase 6 — Playwright/BDD/Allure/Living Docs | 🛠️ Migratie met pariteit | 168 native cases blijven actief; uitvoerbare BDD-engine en eerste pariteitscase zijn groen |
-| Fase 7 — CI/CD | 🛠️ TEST-uitbreiding | Automatische PROD- en TEST-uitrol bewezen; v0.9.61 voegt publieke login-smoke toe |
+| Fase 7 — CI/CD | 🛠️ TEST-uitbreiding | Automatische PROD- en TEST-uitrol bewezen; v0.9.61 publieke login-smoke groen, v0.9.62 gedeelde reset in validatie |
 | Fase 8 — Uren indienen | ✅ Klaar | Concept → indienen |
 | Fase 9 — Correctie/goedkeuring | ✅ Technisch klaar | Productieacceptatie later |
 | Fase 10 — Klanturenstaat | ✅ VS Code-scope klaar | JPG/PNG → PDF server-side gebouwd en getest (CTS-API-H-005) |
@@ -32,7 +32,7 @@ staan onder de genummerde fases verderop in dit document.
 | Fase 13 — Bedrijfsgegevens | ✅ VS Code-scope klaar | Definitieve gegevens/accounts → Fase 16 |
 | Fase 14 — TransIP | ✅ VS Code-scope klaar | Deployment/config → Fase 16 |
 | Fase 15 — Release-hardening | ✅ VS Code-scope klaar | Concurrency, jaarwisseling, uploads, accessibility en PWA-manifest/service worker gebouwd en getest |
-| **Fase 16 — Operationeel/live** | 🛠️ Productie en TEST live; mailacceptatie open | v0.9.60 staat op PROD en TEST; v0.9.61 opent alleen op TEST de exact geallowliste mailacceptatie |
+| **Fase 16 — Operationeel/live** | 🛠️ Productie en TEST live; SMTP extern geblokkeerd | v0.9.61 staat op PROD en TEST; Google Relay moet uitgaand IP 85.10.158.107 nog toestaan |
 
 ### Technische eindsprint (in VS Code afgerond deze sessie)
 
@@ -89,8 +89,8 @@ Post-live beheer
 
 ## Actuele stand
 
-- [x] Datum: 2026-08-14 (v0.9.60 staat automatisch en gecontroleerd op productie én TEST)
-- [x] Appversie: v0.9.60 (`658a05bcf7606e5768400468d8e5c0d018831548`) staat live; de actuele main-SHA wordt bij iedere uitrol exact in
+- [x] Datum: 2026-08-14 (v0.9.61 staat automatisch en gecontroleerd op productie én TEST)
+- [x] Appversie: v0.9.61 (`82afba1c3c2e9508cff08aecea1e37e5f531ff2e`) staat live; de actuele main-SHA wordt bij iedere uitrol exact in
   `.release-sha` vastgelegd en door pipeline en live-smoke gecontroleerd
 - [x] TransIP-subsite `https://uren-test.pathconsultancy.nl` bestaat afzonderlijk van PROD met
   HTTPS, HTTP/2 en geforceerde HTTPS; documentroot:
@@ -103,11 +103,21 @@ Post-live beheer
   is bewezen en map/config hebben rechten 0700/0600.
 - [x] v0.9.60 TEST-cutover is volledig bewezen in Release Pipeline-run `31799300297`: publieke
   versie, assets, health, migraties, demoaccounts, private opslag en read-only database-smoke zijn groen.
-- [-] v0.9.61 TEST-bediening: dezelfde accountkeuze als localhost tonen zonder lokale resetknoppen
-  of wachtwoordhints; beide rollen na deployment publiek inloggen met beschermde environment-secrets.
-- [-] v0.9.61 TEST-mailsandbox: uitsluitend de vijf afzonderlijk bevestigde acceptatieflows openen
+- [x] v0.9.61 TEST-bediening: dezelfde accountkeuze als localhost tonen; beide rollen worden na
+  deployment publiek ingelogd met beschermde environment-secrets. Bewezen in run `31803329714`.
+- [x] v0.9.61 TEST-mailsandbox: uitsluitend de vijf afzonderlijk bevestigde acceptatieflows openen
   voor `giovanno.maatsen@pathconsultancy.nl` en `kenrich.lieveld@pathconsultancy.nl`; configuratie,
   twee actieve TEST-accounts, backup en write worden atomisch ingericht. PROD blijft fail-closed.
+- [-] v0.9.62 releasekandidaat: TEST-login vult het gekozen testwachtwoord automatisch in; een
+  beheerder kan de gedeelde TEST-database met expliciete bevestiging terugzetten naar exact 12 open
+  acties (Juni 3 + Juli 5 + Augustus 4; Backoffice 7 + medewerkers 5), 4 medewerkers en 8 accounts.
+- [-] v0.9.62 mailisolatie: gewone TEST-mail wordt met oorspronkelijke ontvanger in onderwerp/body
+  omgeleid naar `giovanno.maatsen@pathconsultancy.nl`; de aparte uitnodigingscase blijft naar
+  `kenrich.lieveld@pathconsultancy.nl`. Wachtwoordherstel en uitnodiging zijn in de acceptatieconsole
+  herhaalbaar, terwijl de normale 3-per-15-minuten-begrenzing intact blijft.
+- [!] Google SMTP Relay weigert verzending nog met `550 Invalid credentials for relay [85.10.158.107]`.
+  Voeg exact `85.10.158.107` toe aan de Google Workspace SMTP-relay-IP-allowlist. Er is nog geen
+  acceptatiemail succesvol verzonden; dit is een externe configuratieblokkade, geen groene mailtest.
 - [x] De tijdelijke mailacceptatie-workaround is in v0.9.59 uit PROD verwijderd: de console
   is daar niet zichtbaar en de serverendpoint antwoordt in productie fail-closed met 404.
   Localhost en de aparte TEST-omgeving behouden de vijf expliciet bevestigde acceptatieflows.
@@ -126,6 +136,10 @@ Post-live beheer
 - [x] Volledige lokale v0.9.61-regressie: 196/196 groen. Ook `npm run check`, DB-CRUD,
   dependency-audit, SAFE-H-012/013 en de live read-only TEST-preflight met exact twee actieve
   acceptatieaccounts zijn groen.
+- [x] Volledige lokale v0.9.62-regressie: 196/196 groen. Ook releasebuild, `npm run check`,
+  DB-CRUD, uitvoerbare BDD, dependency-audit en SAFE-H-001/012/013 zijn groen. De vaste reset-
+  baseline van 12 acties en de herhaalbare beveiligingsmailcases zijn door expliciete contracts
+  bewaakt. Commit, pipeline en publieke TEST-reset volgen nog.
 - [x] Volledige lokale Playwright-regressie voor v0.9.59: 194/194 groen. De uitgebreide
   GUI-smoke, `npm run check`, DB-CRUD, dependency-audit en deploycontractchecks zijn eveneens groen;
   INV-H-007 is na één niet-reproduceerbare loginvertraging aanvullend 10/10 groen bewezen.
@@ -1161,13 +1175,14 @@ Telling fasestatussen:
 
 ## Directe volgende stap
 
-**Fase 1 t/m 15 volledig klaar; v0.9.60 staat veilig en automatisch op productie en TEST.** De
-aparte TEST-host, database, private opslag en publieke healthcheck zijn bewezen in run `31799300297`.
+**Fase 1 t/m 15 volledig klaar; v0.9.61 staat veilig en automatisch op productie en TEST.** De
+aparte TEST-host, database, private opslag, publieke login-smoke en mailsandbox zijn bewezen in
+run `31803329714`.
 
-1. Rond v0.9.61 af: accountkeuze op de exacte TEST-host, publieke login-smoke voor beheerder en
-   medewerker en de atomisch geconfigureerde TEST-mailsandbox. De PROD-acceptatieconsole blijft afwezig.
-2. Verstuur op TEST de vijf acceptatiemails één voor één en controleer ontvanger, onderwerp, tekst,
-   eenmalige links en PDF-bijlagen. Er is geen bulkverzending en iedere actie vraagt bevestiging.
+1. Rond v0.9.62 af: gedeelde TEST-reset met vaste 12-actiebaseline, autofill, TEST-brede veilige
+   ontvangeromleiding en herhaalbare eenmalige beveiligingslinks lokaal volledig groen maken en uitrollen.
+2. Voeg `85.10.158.107` toe aan Google Workspace SMTP Relay. Verstuur daarna op TEST de vijf
+   acceptatiemails één voor één en controleer ontvanger, onderwerp, tekst, linkgebruik en PDF-bijlagen.
 3. Rond daarna de open productiepraktijktests, fysieke mobiele acceptatie, cron/monitoring,
    back-uprestore-oefening, 2FA-/sessiebeleid en eerste volledige maandflow af.
 

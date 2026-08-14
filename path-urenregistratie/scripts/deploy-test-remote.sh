@@ -45,6 +45,12 @@ actual_version="$(php -r '$p=json_decode(file_get_contents($argv[1]), true); ech
 cp "$canonical_config" "$app_root/server/config.local.php"
 chmod 600 "$app_root/server/config.local.php"
 cd "$app_root"
+php server/scripts/configure-test-mail-sandbox.php \
+  --config="$canonical_config" \
+  --execute \
+  --confirm=ENABLE_TEST_MAIL_SANDBOX
+cp "$canonical_config" server/config.local.php
+chmod 600 server/config.local.php
 php server/scripts/test-preflight.php --config=server/config.local.php
 php -r '
   require $argv[1] . "/server/scripts/cli-bootstrap.php";
@@ -67,6 +73,8 @@ php -r '
       && ($acceptance["business_recipient"] ?? "") === "giovanno.maatsen@pathconsultancy.nl"
       && ($acceptance["password_reset_recipient"] ?? "") === "giovanno.maatsen@pathconsultancy.nl"
       && ($acceptance["invitation_recipient"] ?? "") === "kenrich.lieveld@pathconsultancy.nl"
+      && ($mail["test_redirect_all"] ?? false) === true
+      && ($mail["test_sink_recipient"] ?? "") === "giovanno.maatsen@pathconsultancy.nl"
       && mail_real_delivery_allowed_for_environment($config)
       && mail_validate_relay_config($config) === [];
   if (!$closed && !$guarded) {

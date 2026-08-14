@@ -37,6 +37,8 @@ try {
         __DIR__ . '/rotate-logs.php',
         __DIR__ . '/configure-test.php',
         __DIR__ . '/configure-test-mail-sandbox.php',
+        dirname(__DIR__) . '/api/test-reset.php',
+        dirname(__DIR__) . '/lib/test-reset.php',
         dirname(__DIR__) . '/auth/change-password.php',
         dirname(__DIR__, 2) . '/.htaccess',
     ];
@@ -59,6 +61,8 @@ try {
         && ($acceptance['business_recipient'] ?? '') === 'giovanno.maatsen@pathconsultancy.nl'
         && ($acceptance['password_reset_recipient'] ?? '') === 'giovanno.maatsen@pathconsultancy.nl'
         && ($acceptance['invitation_recipient'] ?? '') === 'kenrich.lieveld@pathconsultancy.nl'
+        && ($mail['test_redirect_all'] ?? false) === true
+        && ($mail['test_sink_recipient'] ?? '') === 'giovanno.maatsen@pathconsultancy.nl'
         && mail_real_delivery_allowed_for_environment($config);
 
     $checks = [

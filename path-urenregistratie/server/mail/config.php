@@ -79,6 +79,41 @@ function mail_recipient_is_allowed(array $config, string $email): bool
     return in_array(strtolower(trim($email)), mail_allowed_recipients($config), true);
 }
 
+function mail_test_sink_recipient(array $config): ?string
+{
+    if (mail_environment($config) !== 'test') {
+        return null;
+    }
+    $mail = isset($config['mail']) && is_array($config['mail']) ? $config['mail'] : [];
+    $recipient = strtolower(trim((string)($mail['test_sink_recipient'] ?? '')));
+    if (($mail['test_redirect_all'] ?? false) !== true || !filter_var($recipient, FILTER_VALIDATE_EMAIL)) {
+        return null;
+    }
+    return mail_recipient_is_allowed($config, $recipient) ? $recipient : null;
+}
+
+/** @return array{recipient:string,cc:?string,subject:string,body:string,redirected:bool} */
+function mail_effective_delivery(array $config, array $delivery): array
+{
+    $recipient = trim((string)($delivery['recipient_email'] ?? ''));
+    $cc = !empty($delivery['cc_email']) ? trim((string)$delivery['cc_email']) : null;
+    $subject = (string)($delivery['subject_snapshot'] ?? '');
+    $body = (string)($delivery['body_snapshot'] ?? '');
+    $sink = (bool)($delivery['acceptance_test'] ?? false) ? null : mail_test_sink_recipient($config);
+    if ($sink === null) {
+        return compact('recipient', 'cc', 'subject', 'body') + ['redirected' => false];
+    }
+
+    return [
+        'recipient' => $sink,
+        'cc' => null,
+        'subject' => '[TEST voor ' . $recipient . '] ' . $subject,
+        'body' => "TESTOMLEIDING — niet doorsturen of boeken.\nOorspronkelijke ontvanger: " . $recipient
+            . ($cc ? "\nOorspronkelijke CC: " . $cc : '') . "\n\n" . $body,
+        'redirected' => true,
+    ];
+}
+
 /** @return list<string> */
 function mail_validate_delivery_recipients(array $config, string $recipient, ?string $cc = null): array
 {
@@ -124,6 +159,10 @@ function mail_validate_relay_config(array $config): array
         if (!filter_var($recipient, FILTER_VALIDATE_EMAIL)) {
             $errors[] = 'mail.allowed_recipients contains an invalid address';
         }
+    }
+    if (($mail['test_redirect_all'] ?? false) === true && mail_environment($config) === 'test'
+        && mail_test_sink_recipient($config) === null) {
+        $errors[] = 'mail.test_sink_recipient must be a valid allowed TEST recipient when redirection is enabled';
     }
     if (($mail['enabled'] ?? false) === true && mail_environment($config) !== 'production') {
         if (mail_environment($config) !== 'test') {

@@ -87,7 +87,7 @@ test('[SAFE-H-001] login picker vult alleen lokaal demo-wachtwoord in wanneer hi
 
     if (localHintsEnabled) {
       await expect(page.locator('#auth-login-password')).toHaveValue(hintedAdminPassword || requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
-      await expect(page.locator('#auth-login-feedback')).toContainText('E-mail en lokaal demo-wachtwoord voorgeselecteerd.');
+      await expect(page.locator('#auth-login-feedback')).toContainText('E-mail en testwachtwoord voorgeselecteerd.');
     } else {
       await expect(page.locator('#auth-login-password')).toHaveValue('');
       await expect(page.locator('#auth-login-feedback')).toContainText('E-mail voorgeselecteerd. Vul je wachtwoord in.');
@@ -95,7 +95,7 @@ test('[SAFE-H-001] login picker vult alleen lokaal demo-wachtwoord in wanneer hi
   });
 });
 
-test('[SAFE-H-012] TEST toont accountkeuze zonder lokale reset of wachtwoordhint', async ({ page }) => {
+test('[SAFE-H-012] TEST toont accountkeuze met autofill en een afgeschermde gedeelde reset', async ({ page }) => {
   await test.step('Given lokale, TEST- en PROD-hosts als aparte equivalentieklassen worden beoordeeld', async () => {
     await page.goto(appConfig.baseUrl);
     const permissions = await page.evaluate(() => {
@@ -117,7 +117,7 @@ test('[SAFE-H-012] TEST toont accountkeuze zonder lokale reset of wachtwoordhint
       testReset: false,
       testPicker: true,
       prodPicker: false,
-      testHints: false,
+      testHints: true,
     });
   });
 
@@ -130,13 +130,33 @@ test('[SAFE-H-012] TEST toont accountkeuze zonder lokale reset of wachtwoordhint
     });
   });
 
-  await test.step('Then blijven accountkeuze en TEST-label zichtbaar maar resetknoppen en hints gesloten', async () => {
+  await test.step('Then blijven TEST-bediening en presentatie zichtbaar zonder PROD-rechten te verruimen', async () => {
     await expect(page.locator('#local-account-login-tools')).toBeVisible();
     await expect(page.locator('#login-environment-label')).toHaveText('Veilige testomgeving');
     await expect(page.locator('#login-title')).toHaveText('Welkom bij Uren & Facturatie');
     await expect(page.locator('#login-intro')).toContainText('Deze testomgeving');
     await expect(page.locator('#quick-reset-demo')).toBeHidden();
     await expect(page.locator('#reset-demo')).toBeHidden();
+    const appSource = await readFile(join(process.cwd(), 'assets', 'app.js'), 'utf8');
+    const hintsSource = await readFile(join(process.cwd(), 'server', 'auth', 'local-login-hints.php'), 'utf8');
+    const resetApi = await readFile(join(process.cwd(), 'server', 'api', 'test-reset.php'), 'utf8');
+    expect(appSource).toContain('uren-test.pathconsultancy.nl');
+    expect(appSource).toContain('RESET_SHARED_TEST_BASELINE');
+    expect(hintsSource).toContain("auth_environment_from_config($config) === 'test'");
+    expect(hintsSource).toContain("auth_app_origin_from_config($config) === 'https://uren-test.pathconsultancy.nl'");
+    expect(resetApi).toContain("auth_require_role(['administrator']");
+    expect(resetApi).toContain('security_require_csrf_token()');
+    expect(resetApi).toContain('RESET_SHARED_TEST_BASELINE');
+    const resetPolicyExecution = await execFileAsync('php', ['server/scripts/test-reset-policy-check.php'], {
+      cwd: process.cwd(),
+      windowsHide: true,
+    });
+    const resetPolicy = JSON.parse(resetPolicyExecution.stdout);
+    expect(resetPolicy.ok).toBe(true);
+    expect(resetPolicy.writes_performed).toBe(false);
+    expect(resetPolicy.checks?.exact_test_host_allowed).toBe(true);
+    expect(resetPolicy.checks?.production_blocked).toBe(true);
+    expect(resetPolicy.checks?.twelve_action_baseline_contract).toBe(true);
   });
 });
 
@@ -543,6 +563,8 @@ test('[SAFE-H-013] TEST-mailsandbox opent alleen atomisch voor twee vaste ontvan
     expect(configurator).toContain("copy($configPath, $backupPath)");
     expect(configurator).toContain("rename($temporaryPath, $configPath)");
     expect(configurator).toContain("$config['mail']['test_delivery_enabled'] = true");
+    expect(configurator).toContain("$config['mail']['test_redirect_all'] = true");
+    expect(configurator).toContain("$config['mail']['test_sink_recipient'] = $businessRecipient");
     expect(configurator).toContain('$pdo->beginTransaction()');
     expect(configurator).toContain('password_hash(bin2hex(random_bytes(32)), PASSWORD_DEFAULT)');
     expect(configurator).toContain('$pdo->rollBack()');
@@ -550,6 +572,14 @@ test('[SAFE-H-013] TEST-mailsandbox opent alleen atomisch voor twee vaste ontvan
     expect(preflight).toContain('guarded_mail_accounts_active');
     expect(deploy).toContain('TEST mail is neither closed nor protected by the exact sandbox allowlist');
     expect(deploy).toContain('test_mail_window=guarded');
+    const mailConfig = await readFile(join(process.cwd(), 'server', 'mail', 'config.php'), 'utf8');
+    const dispatch = await readFile(join(process.cwd(), 'server', 'mail', 'dispatch.php'), 'utf8');
+    const acceptance = await readFile(join(process.cwd(), 'server', 'mail', 'acceptance.php'), 'utf8');
+    expect(mailConfig).toContain('function mail_effective_delivery');
+    expect(mailConfig).toContain('[TEST voor ');
+    expect(dispatch).toContain("$effective['recipient']");
+    expect(acceptance).toContain('function mail_acceptance_repeatable_security_flow');
+    expect(acceptance).toContain('DELETE FROM password_reset_tokens WHERE user_id = :id');
   });
 });
 

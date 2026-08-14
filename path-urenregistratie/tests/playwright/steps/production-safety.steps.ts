@@ -18,7 +18,7 @@ When("de gebruiker de admin-loginkeuze opent");
 Then("wordt alleen in lokale hintmodus een demo-wachtwoord voorgeselecteerd");
 Given("lokale, TEST- en PROD-hosts als aparte equivalentieklassen worden beoordeeld");
 When("de exacte TEST-presentatie zonder lokale resetrechten wordt getoond");
-Then("blijven accountkeuze en TEST-label zichtbaar maar resetknoppen en hints gesloten");
+Then("blijven TEST-bediening en presentatie zichtbaar zonder PROD-rechten te verruimen");
 Given("de frontend source wordt opgehaald");
 When("de flow voor SAFE-N-001 wordt uitgevoerd");
 Then("bevat de frontend geen plaintext demo-credentials");
@@ -68,7 +68,7 @@ Then("blijft TEST gesloten zonder whitelist en kan alleen de toegestane ontvange
 Given("exact twee vaste TEST-ontvangers en bijbehorende accounts zijn gedefinieerd");
 When("de TEST-mailsandboxconfigurator zonder uitvoerbevestiging wordt gestart");
 Then("blijft de check niet-mutatief en toont hij exact de twee toegestane ontvangers en TEST-accounts");
-Then("zijn bevestiging, accounttransactie, backup, atomische write en deployguard aantoonbaar afgedwongen");
+Then("zijn atomische deployguard en herhaalbare TEST-resetlinks aantoonbaar afgedwongen");
 Given("de CLI-only productiebedrijfs-bootstrap wordt gelezen");
 When("de flow voor SAFE-H-006 wordt uitgevoerd");
 Then("vereist de bootstrap productie, expliciete bevestiging en geldige bedrijfsgegevens");

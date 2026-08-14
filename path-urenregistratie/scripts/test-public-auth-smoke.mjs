@@ -23,6 +23,18 @@ function sessionCookie(response) {
   return String(values[0] || '').split(';', 1)[0];
 }
 
+const hintsResponse = await fetch(`${baseUrl}/server/auth/local-login-hints.php`, {
+  headers: { Accept: 'application/json' },
+  redirect: 'error',
+});
+assert.equal(hintsResponse.status, 200, 'Public TEST login hints are unavailable');
+const hints = await hintsResponse.json();
+assert.equal(hints.ok, true, 'Public TEST login hints did not confirm success');
+assert.equal(hints.enabled, true, 'Public TEST automatic login fill is disabled');
+assert.equal(hints.adminPassword, accounts[0].password, 'Public TEST admin autofill differs from the protected credential');
+assert.equal(hints.employeePassword, accounts[1].password, 'Public TEST employee autofill differs from the protected credential');
+console.log('Public TEST automatic login fill verified');
+
 for (const account of accounts) {
   assert.ok(account.password.length >= 12, `Missing protected TEST password for ${account.role}`);
 
@@ -51,5 +63,26 @@ for (const account of accounts) {
   assert.equal(login.ok, true, `Public TEST login did not confirm success for ${account.role}`);
   assert.equal(login.user?.role, account.role, `Public TEST returned the wrong role for ${account.role}`);
   console.log(`Public TEST login verified: ${account.role}`);
-}
 
+  if (account.role === 'administrator') {
+    const authenticatedCookie = sessionCookie(loginResponse) || cookie;
+    const resetResponse = await fetch(`${baseUrl}/server/api/test-reset.php`, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrf.csrf_token,
+        Cookie: authenticatedCookie,
+      },
+      body: JSON.stringify({ confirm: 'RESET_SHARED_TEST_BASELINE' }),
+      redirect: 'error',
+    });
+    const reset = await resetResponse.json();
+    assert.equal(resetResponse.status, 200, 'Public TEST baseline reset failed');
+    assert.equal(reset.ok, true, 'Public TEST baseline reset did not confirm success');
+    assert.equal(reset.reset?.users, 8, 'Public TEST reset must restore six demo and two acceptance accounts');
+    assert.equal(reset.reset?.employees, 4, 'Public TEST reset must restore four demo employees');
+    assert.equal(reset.reset?.open_actions, 12, 'Public TEST reset must restore the twelve-action baseline');
+    console.log('Public TEST shared baseline reset verified');
+  }
+}

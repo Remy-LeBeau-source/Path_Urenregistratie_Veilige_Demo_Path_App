@@ -40,6 +40,9 @@ $checks = [
     'acceptance_failure_is_single_shot' => false,
     'normal_delivery_keeps_bounded_retry' => false,
     'smtp_failure_keeps_safe_response_detail' => false,
+    'ordinary_test_mail_redirects_to_sink' => false,
+    'acceptance_invitation_keeps_fixed_recipient' => false,
+    'production_never_redirects' => false,
 ];
 $checks['production_console_unavailable'] = mail_acceptance_available_for_environment([
     'environment' => 'production',
@@ -53,6 +56,45 @@ $checks['test_runtime_override_available'] = mail_acceptance_available_for_envir
 ]) === true;
 putenv('PATH_APP_ENVIRONMENT');
 unset($_ENV['PATH_APP_ENVIRONMENT'], $_SERVER['PATH_APP_ENVIRONMENT']);
+
+$redirectConfig = $config;
+$redirectConfig['environment'] = 'test';
+$redirectConfig['mail']['test_redirect_all'] = true;
+$redirectConfig['mail']['test_sink_recipient'] = 'giovanno.maatsen@pathconsultancy.nl';
+$ordinary = mail_effective_delivery($redirectConfig, [
+    'recipient_email' => 'facturen-broker@example.invalid',
+    'cc_email' => 'cc@example.invalid',
+    'subject_snapshot' => 'Factuur 2026-001',
+    'body_snapshot' => 'Testinhoud',
+    'acceptance_test' => false,
+]);
+$repeatableTestConfig = $config;
+$repeatableTestConfig['environment'] = 'test';
+$repeatableTestConfig['app_origin'] = 'https://uren-test.pathconsultancy.nl';
+$checks['test_security_scenarios_repeatable'] = mail_acceptance_repeatable_security_flow($repeatableTestConfig)
+    && !mail_acceptance_repeatable_security_flow(array_replace($repeatableTestConfig, ['environment' => 'production']))
+    && !mail_acceptance_repeatable_security_flow(array_replace($repeatableTestConfig, ['app_origin' => 'https://uren.pathconsultancy.nl']));
+$invitation = mail_effective_delivery($redirectConfig, [
+    'recipient_email' => 'kenrich.lieveld@pathconsultancy.nl',
+    'subject_snapshot' => 'Uitnodiging',
+    'body_snapshot' => 'Testinhoud',
+    'acceptance_test' => true,
+]);
+$productionConfig = $redirectConfig;
+$productionConfig['environment'] = 'production';
+$production = mail_effective_delivery($productionConfig, [
+    'recipient_email' => 'broker@example.com',
+    'subject_snapshot' => 'Factuur',
+    'body_snapshot' => 'Productie',
+]);
+$checks['ordinary_test_mail_redirects_to_sink'] = $ordinary['recipient'] === 'giovanno.maatsen@pathconsultancy.nl'
+    && $ordinary['cc'] === null && $ordinary['redirected'] === true
+    && str_contains($ordinary['subject'], '[TEST voor facturen-broker@example.invalid]')
+    && str_contains($ordinary['body'], 'Oorspronkelijke ontvanger: facturen-broker@example.invalid');
+$checks['acceptance_invitation_keeps_fixed_recipient'] = $invitation['recipient'] === 'kenrich.lieveld@pathconsultancy.nl'
+    && $invitation['redirected'] === false;
+$checks['production_never_redirects'] = $production['recipient'] === 'broker@example.com'
+    && $production['redirected'] === false;
 
 $acceptanceFailure = mail_failed_delivery_retry_state(['acceptance_test' => true], 1);
 $normalFirstFailure = mail_failed_delivery_retry_state(['acceptance_test' => false], 1);

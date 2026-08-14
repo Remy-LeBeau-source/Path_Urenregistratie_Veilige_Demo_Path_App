@@ -19,6 +19,23 @@ function local_login_hints_is_loopback_client(): bool
     return in_array($remote, ['127.0.0.1', '::1'], true);
 }
 
+function local_login_hints_is_guarded_test_host(): bool
+{
+    $host = strtolower((string)($_SERVER['HTTP_HOST'] ?? ''));
+    $host = preg_replace('/:\d+$/', '', $host) ?? '';
+    if ($host !== 'uren-test.pathconsultancy.nl') {
+        return false;
+    }
+
+    $config = auth_try_load_raw_config();
+    if (!is_array($config)) {
+        return false;
+    }
+    return auth_environment_from_config($config) === 'test'
+        && auth_app_origin_from_config($config) === 'https://uren-test.pathconsultancy.nl'
+        && ($config['allow_demo_migrations'] ?? false) === true;
+}
+
 function local_login_hints_load_env_map(): array
 {
     $envMap = [];
@@ -69,13 +86,21 @@ function local_login_hints_load_env_map(): array
     return $envMap;
 }
 
-if (!local_login_hints_is_loopback_host() || !local_login_hints_is_loopback_client()) {
+if ((!local_login_hints_is_loopback_host() || !local_login_hints_is_loopback_client())
+    && !local_login_hints_is_guarded_test_host()) {
     auth_send_json(['ok' => false, 'error' => 'not-found'], 404);
 }
 
 $envMap = local_login_hints_load_env_map();
-$adminPassword = trim((string)($envMap['PLAYWRIGHT_ADMIN_PASSWORD'] ?? getenv('PLAYWRIGHT_ADMIN_PASSWORD') ?? ''));
-$employeePassword = trim((string)($envMap['PLAYWRIGHT_EMPLOYEE_PASSWORD'] ?? getenv('PLAYWRIGHT_EMPLOYEE_PASSWORD') ?? ''));
+$guardedTest = local_login_hints_is_guarded_test_host();
+$adminPassword = $guardedTest
+    ? 'LocalDemoAdmin2026'
+    : trim((string)($envMap['PLAYWRIGHT_ADMIN_PASSWORD'] ?? getenv('PLAYWRIGHT_ADMIN_PASSWORD') ?? ''));
+$employeePassword = $guardedTest
+    ? 'LocalDemoEmployee2026'
+    : trim((string)($envMap['PLAYWRIGHT_EMPLOYEE_PASSWORD'] ?? getenv('PLAYWRIGHT_EMPLOYEE_PASSWORD') ?? ''));
+
+header('Cache-Control: no-store, private');
 
 auth_send_json([
     'ok' => true,

@@ -192,11 +192,8 @@ function mail_dispatch_delivery(PDO $pdo, array $delivery, array $config): strin
     if ($errors !== []) {
         throw new RuntimeException('Invalid SMTP relay configuration: ' . implode('; ', $errors));
     }
-    $recipientErrors = mail_validate_delivery_recipients(
-        $config,
-        (string)($delivery['recipient_email'] ?? ''),
-        !empty($delivery['cc_email']) ? (string)$delivery['cc_email'] : null
-    );
+    $effective = mail_effective_delivery($config, $delivery);
+    $recipientErrors = mail_validate_delivery_recipients($config, $effective['recipient'], $effective['cc']);
     if ($recipientErrors !== []) {
         throw new RuntimeException('SMTP recipient policy rejected delivery: ' . implode('; ', $recipientErrors));
     }
@@ -218,10 +215,10 @@ function mail_dispatch_delivery(PDO $pdo, array $delivery, array $config): strin
         $attachments = mail_resolve_attachments($pdo, $delivery, $config);
         smtp_relay_send(
             $relay,
-            (string)$delivery['recipient_email'],
-            !empty($delivery['cc_email']) ? (string)$delivery['cc_email'] : null,
-            (string)$delivery['subject_snapshot'],
-            (string)$delivery['body_snapshot'],
+            $effective['recipient'],
+            $effective['cc'],
+            $effective['subject'],
+            $effective['body'],
             (string)$relay['from_email'],
             (string)($relay['from_name'] ?? 'Path Consultancy'),
             $attachments

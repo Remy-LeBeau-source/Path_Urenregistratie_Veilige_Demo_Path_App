@@ -15,12 +15,12 @@ Feature: Veilige productieconfiguratie en deployment
     Then wordt alleen in lokale hintmodus een demo-wachtwoord voorgeselecteerd
 
   @happy
-  Scenario: [SAFE-H-012] TEST toont accountkeuze zonder lokale reset of wachtwoordhint
-    # Testtechniek: Equivalentieklassen + beslissingstabel
-    # Aantoonbare Playwright-assertions in deze case: 7
+  Scenario: [SAFE-H-012] TEST toont accountkeuze met autofill en een afgeschermde gedeelde reset
+    # Testtechniek: Equivalentieklassen + beslissingstabel + toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 19
     Given lokale, TEST- en PROD-hosts als aparte equivalentieklassen worden beoordeeld
     When de exacte TEST-presentatie zonder lokale resetrechten wordt getoond
-    Then blijven accountkeuze en TEST-label zichtbaar maar resetknoppen en hints gesloten
+    Then blijven TEST-bediening en presentatie zichtbaar zonder PROD-rechten te verruimen
 
   @negative
   Scenario: [SAFE-N-001] frontend source bevat geen plaintext demo-credentials
@@ -141,11 +141,11 @@ Feature: Veilige productieconfiguratie en deployment
   @happy
   Scenario: [SAFE-H-013] TEST-mailsandbox opent alleen atomisch voor twee vaste ontvangers
     # Testtechniek: Beslissingstabel + foutinjectie + toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 18
+    # Aantoonbare Playwright-assertions in deze case: 20
     Given exact twee vaste TEST-ontvangers en bijbehorende accounts zijn gedefinieerd
     When de TEST-mailsandboxconfigurator zonder uitvoerbevestiging wordt gestart
     Then blijft de check niet-mutatief en toont hij exact de twee toegestane ontvangers en TEST-accounts
-    And zijn bevestiging, accounttransactie, backup, atomische write en deployguard aantoonbaar afgedwongen
+    And zijn atomische deployguard en herhaalbare TEST-resetlinks aantoonbaar afgedwongen
 
   @happy
   Scenario: [SAFE-H-006] eerste productieorganisatie wordt gevalideerd en zonder overschrijven ingericht

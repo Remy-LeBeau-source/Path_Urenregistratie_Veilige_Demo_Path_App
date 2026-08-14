@@ -28,6 +28,14 @@ function mail_acceptance_settings(array $config): array
         : [];
 }
 
+function mail_acceptance_repeatable_security_flow(array $config): bool
+{
+    $origin = rtrim((string)($config['app_origin'] ?? ($config['app']['app_origin'] ?? '')), '/');
+    return mail_environment($config) === 'test'
+        && $origin === 'https://uren-test.pathconsultancy.nl'
+        && (mail_acceptance_settings($config)['enabled'] ?? false) === true;
+}
+
 /** @return array<string,array<string,mixed>> */
 function mail_acceptance_scenario_definitions(array $config): array
 {
@@ -231,6 +239,13 @@ function mail_acceptance_send(
         if ($scenario['kind'] === 'invitation') {
             $pdo->prepare('UPDATE users SET force_password_change = 1 WHERE id = :id AND company_id = :company_id')
                 ->execute([':id' => (int)$user['id'], ':company_id' => $companyId]);
+        }
+        // These two dedicated accounts exist only for the guarded TEST console.
+        // Clearing their earlier TEST tokens keeps both buttons repeatable without
+        // weakening the normal 3-per-15-minutes password-reset throttle.
+        if (mail_acceptance_repeatable_security_flow($config)) {
+            $pdo->prepare('DELETE FROM password_reset_tokens WHERE user_id = :id')
+                ->execute([':id' => (int)$user['id']]);
         }
         $reset = auth_create_password_reset($pdo, $user, $config);
         if ($reset === null || (int)($reset['delivery_id'] ?? 0) <= 0) {

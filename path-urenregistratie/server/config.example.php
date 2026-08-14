@@ -56,6 +56,10 @@ return [
         // listed below. Production does not require an allowlist.
         'test_delivery_enabled' => false,
         'allowed_recipients' => [],
+        // Guarded TEST may redirect every ordinary application message to one
+        // allowlisted sink. Production ignores these keys.
+        'test_redirect_all' => false,
+        'test_sink_recipient' => '',
         // Acceptance mail is a separate, fail-closed admin console. Enabling it
         // still requires mail.enabled plus an exact allowed_recipients match.
         'acceptance_test' => [

@@ -8,6 +8,7 @@ const AUTH_CSRF_PATH = "/server/auth/csrf.php";
 const AUTH_LOGIN_PATH = "/server/auth/login.php";
 const AUTH_LOGOUT_PATH = "/server/auth/logout.php";
 const AUTH_LOCAL_HINTS_PATH = "/server/auth/local-login-hints.php";
+const TEST_RESET_API_PATH = "/server/api/test-reset.php";
 const WRITE_TIMESHEET_PATH = "/server/api/timesheets.php";
 const WRITE_CUSTOMER_TIMESHEET_PATH = "/server/api/customer-timesheets.php";
 const LOCAL_STORAGE_ENABLED = true;
@@ -1461,8 +1462,9 @@ function selectedLoginAccount(role) {
 }
 
 function isLocalAuthHintsHost(hostname = window.location.hostname) {
-  hostname = String(hostname || "").toLowerCase();
-  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1" || hostname === "[::1]";
+  hostname = String(hostname || "").trim().toLowerCase().replace(/^\[|\]$/g, "");
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1"
+    || hostname.endsWith(".localhost") || hostname === "uren-test.pathconsultancy.nl";
 }
 
 function requestLocalLoginHints() {
@@ -1532,7 +1534,7 @@ function prefillAuthCredentialsFromSelection(role, showFeedback = true) {
 
     passwordInput.value = hintedPassword;
     if (showFeedback) {
-      setAuthLoginFeedback("E-mail en lokaal demo-wachtwoord voorgeselecteerd.", false);
+      setAuthLoginFeedback("E-mail en testwachtwoord voorgeselecteerd.", false);
     }
   });
 }
@@ -1568,7 +1570,7 @@ function triggerLoginChoice(role) {
 
     if (hintedPassword) {
       passwordInput.value = hintedPassword;
-      setAuthLoginFeedback("E-mail en lokaal demo-wachtwoord voorgeselecteerd. Inloggen wordt gestart.", false);
+      setAuthLoginFeedback("E-mail en testwachtwoord voorgeselecteerd. Inloggen wordt gestart.", false);
       form.requestSubmit();
       return;
     }
@@ -7428,8 +7430,9 @@ function applyLoginPresentation(accountToolsAllowed, resetToolsAllowed = localAc
   const settingsReset = document.querySelector("#reset-demo");
   if (tools) tools.hidden = !accountToolsAllowed;
   if (localNote) localNote.hidden = !accountToolsAllowed;
-  if (quickReset) quickReset.hidden = !resetToolsAllowed;
-  if (settingsReset) settingsReset.hidden = !resetToolsAllowed;
+  const sharedTestResetAllowed = window.location.hostname.toLowerCase() === "uren-test.pathconsultancy.nl";
+  if (quickReset) quickReset.hidden = !(resetToolsAllowed || sharedTestResetAllowed);
+  if (settingsReset) settingsReset.hidden = !(resetToolsAllowed || sharedTestResetAllowed);
   if (!resetToolsAllowed) {
     try { window.localStorage.removeItem(LOCAL_RESET_GUARD_KEY); } catch (_error) { /* production remains server-authoritative */ }
   }
@@ -9623,6 +9626,19 @@ document.querySelector("#reset-brand-logo").addEventListener("click", () => {
 document.querySelectorAll(".summary-hours-input").forEach(input => input.addEventListener("input", () => updateHoursTotal(true)));
 
 function openResetDemoModal() {
+  if (window.location.hostname.toLowerCase() === "uren-test.pathconsultancy.nl" && authRuntime.mode === "auth") {
+    showModal({
+      label: "TEST-gegevens herstellen",
+      title: "Gedeelde TEST-gegevens herstellen?",
+      message: "Hiermee wordt uitsluitend de aparte TEST-database teruggezet naar de vaste demonstratiestand. Alle TEST-gebruikers zien daarna opnieuw de basisdata en open acties.",
+      summary: "<div><span>Omgeving</span><strong>uren-test.pathconsultancy.nl</strong></div><div><span>Gevolg</span><strong>TEST-mutaties en TEST-mailhistorie worden gewist</strong></div><div><span>Productie</span><strong>Wordt nooit aangepast</strong></div>",
+      confirm: "TEST-gegevens herstellen",
+      taskNavigation: false,
+      action: resetSharedTestEnvironment
+    });
+    return;
+  }
+
   showModal({
     label: "Voorbeeldgegevens herstellen",
     title: "Alle lokale wijzigingen wissen?",
@@ -9648,6 +9664,34 @@ function openResetDemoModal() {
       toast("De lokale voorbeeldgegevens zijn hersteld.");
     }
   });
+}
+
+function resetSharedTestEnvironment() {
+  const confirmButton = document.querySelector("#modal-confirm");
+  confirmButton.disabled = true;
+  confirmButton.textContent = "TEST wordt hersteld…";
+  return requestAuthCsrf()
+    .then(token => fetch(TEST_RESET_API_PATH, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify({ confirm: "RESET_SHARED_TEST_BASELINE" })
+    }))
+    .then(response => response.json().catch(() => ({})).then(data => ({ ok: response.ok, data })))
+    .then(result => {
+      if (!result.ok || result.data?.ok !== true) {
+        throw new Error(String(result.data?.message || "De TEST-gegevens konden niet worden hersteld."));
+      }
+      closeModal();
+      window.localStorage.removeItem(STORAGE_KEY);
+      resetReadApiCaches();
+      toast("De gedeelde TEST-gegevens zijn hersteld. De pagina wordt opnieuw geladen.");
+      window.setTimeout(() => window.location.reload(), 500);
+    })
+    .catch(error => {
+      confirmButton.disabled = false;
+      confirmButton.textContent = "Opnieuw proberen";
+      toast(String(error?.message || "De TEST-gegevens konden niet worden hersteld."));
+    });
 }
 
 document.querySelector("#reset-demo")?.addEventListener("click", openResetDemoModal);
