@@ -160,6 +160,36 @@ test('[SAFE-H-012] TEST toont accountkeuze met autofill en een afgeschermde gede
   });
 });
 
+test('[SAFE-H-014] gedeelde TEST-reset herstelt alleen de exacte veilige 12-actiebaseline', async () => {
+  let result: { ok?: boolean; writes_performed?: boolean; checks?: Record<string, boolean> } = {};
+
+  await test.step('Given TEST, PROD, verkeerde host en ontbrekend demorecht als beslissingstabel zijn gedefinieerd', async () => {
+    const execution = await execFileAsync('php', ['server/scripts/test-reset-policy-check.php'], {
+      cwd: process.cwd(),
+      windowsHide: true,
+    });
+    result = JSON.parse(execution.stdout);
+    expect(result.ok).toBe(true);
+    expect(result.writes_performed).toBe(false);
+  });
+
+  await test.step('When alle toegestane en verboden resetovergangen niet-mutatief worden doorgerekend', async () => {
+    expect(result.checks?.exact_test_host_allowed).toBe(true);
+    expect(result.checks?.production_blocked).toBe(true);
+    expect(result.checks?.spoofed_test_host_on_production_blocked).toBe(true);
+    expect(result.checks?.wrong_host_on_test_blocked).toBe(true);
+    expect(result.checks?.missing_demo_permission_blocked).toBe(true);
+  });
+
+  await test.step('Then seed, accounts, auditrelatie en exact twaalf open acties herstelbaar blijven', async () => {
+    expect(result.checks?.baseline_contains_demo_seed).toBe(true);
+    expect(result.checks?.acceptance_accounts_restored).toBe(true);
+    expect(result.checks?.twelve_action_baseline_contract).toBe(true);
+    expect(result.checks?.reset_audit_avoids_stale_actor_fk).toBe(true);
+    expect(result.checks?.foreign_keys_restored).toBe(true);
+  });
+});
+
 test('[SAFE-N-001] frontend source bevat geen plaintext demo-credentials', async ({ request }) => {
   let source = '';
 

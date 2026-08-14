@@ -16,11 +16,19 @@ Feature: Veilige productieconfiguratie en deployment
 
   @happy
   Scenario: [SAFE-H-012] TEST toont accountkeuze met autofill en een afgeschermde gedeelde reset
-    # Testtechniek: Equivalentieklassen + beslissingstabel + toestandsovergang
+    # Testtechniek: Beslissingstabel + equivalentieklassen + toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 19
     Given lokale, TEST- en PROD-hosts als aparte equivalentieklassen worden beoordeeld
     When de exacte TEST-presentatie zonder lokale resetrechten wordt getoond
     Then blijven TEST-bediening en presentatie zichtbaar zonder PROD-rechten te verruimen
+
+  @happy
+  Scenario: [SAFE-H-014] gedeelde TEST-reset herstelt alleen de exacte veilige 12-actiebaseline
+    # Testtechniek: Beslissingstabel + equivalentieklassen + toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 12
+    Given TEST, PROD, verkeerde host en ontbrekend demorecht als beslissingstabel zijn gedefinieerd
+    When alle toegestane en verboden resetovergangen niet-mutatief worden doorgerekend
+    Then seed, accounts, auditrelatie en exact twaalf open acties herstelbaar blijven
 
   @negative
   Scenario: [SAFE-N-001] frontend source bevat geen plaintext demo-credentials
@@ -133,19 +141,19 @@ Feature: Veilige productieconfiguratie en deployment
   @happy
   Scenario: [SAFE-H-010] echte TEST-mail vereist opt-in en een ontvangers-whitelist
     # Testtechniek: API-contract + equivalentieklasse
-    # Aantoonbare Playwright-assertions in deze case: 16
+    # Aantoonbare Playwright-assertions in deze case: 12
     Given het uitvoerbare TEST-mailbeleid wordt gecontroleerd
     When de productie-, test- en developmentconfiguraties worden doorgerekend
     Then blijft TEST gesloten zonder whitelist en kan alleen de toegestane ontvanger door
 
   @happy
   Scenario: [SAFE-H-013] TEST-mailsandbox opent alleen atomisch voor twee vaste ontvangers
-    # Testtechniek: Beslissingstabel + foutinjectie + toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 20
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 25
     Given exact twee vaste TEST-ontvangers en bijbehorende accounts zijn gedefinieerd
     When de TEST-mailsandboxconfigurator zonder uitvoerbevestiging wordt gestart
     Then blijft de check niet-mutatief en toont hij exact de twee toegestane ontvangers en TEST-accounts
-    And zijn atomische deployguard en herhaalbare TEST-resetlinks aantoonbaar afgedwongen
+    And zijn bevestiging, accounttransactie, backup, atomische write en deployguard aantoonbaar afgedwongen
 
   @happy
   Scenario: [SAFE-H-006] eerste productieorganisatie wordt gevalideerd en zonder overschrijven ingericht

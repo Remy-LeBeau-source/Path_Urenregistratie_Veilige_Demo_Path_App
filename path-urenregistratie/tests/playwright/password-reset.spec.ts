@@ -1,6 +1,12 @@
 import { expect, request as playwrightRequest, test } from '@playwright/test';
+import { execFile } from 'node:child_process';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { promisify } from 'node:util';
 import { AuthApi } from './api/AuthApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
+
+const execFileAsync = promisify(execFile);
 
 async function getCSRF(ctx: Awaited<ReturnType<typeof playwrightRequest.newContext>>) {
   const r = await ctx.get('/server/auth/csrf.php');
@@ -184,6 +190,42 @@ test.describe('password reset api', () => {
         }
       }
     }
+  });
+
+  test('[PWD-H-006] TEST-links zijn herhaalbaar zonder normale misbruikbegrenzing te verzwakken', async () => {
+    let result: {
+      ok?: boolean;
+      writes_performed?: boolean;
+      network_connections?: number;
+      checks?: Record<string, boolean>;
+    } = {};
+
+    await test.step('Given gewone en speciale TEST-beveiligingsmails als aparte equivalentieklassen gelden', async () => {
+      const execution = await execFileAsync('php', ['server/scripts/mail-acceptance-policy-check.php'], {
+        cwd: process.cwd(),
+        windowsHide: true,
+      });
+      result = JSON.parse(execution.stdout);
+      expect(result.ok).toBe(true);
+      expect(result.writes_performed).toBe(false);
+      expect(result.network_connections).toBe(0);
+    });
+
+    await test.step('When herhaling, foutafhandeling en omgevingsscheiding volgens de beslissingstabel worden doorgerekend', async () => {
+      expect(result.checks?.test_security_scenarios_repeatable).toBe(true);
+      expect(result.checks?.normal_delivery_keeps_bounded_retry).toBe(true);
+      expect(result.checks?.acceptance_failure_is_single_shot).toBe(true);
+      expect(result.checks?.fixed_invitation_recipient).toBe(true);
+      expect(result.checks?.ordinary_test_mail_redirects_to_sink).toBe(true);
+      expect(result.checks?.production_never_redirects).toBe(true);
+    });
+
+    await test.step('Then alleen de twee vaste TEST-accounts een nieuwe linkcyclus mogen starten', async () => {
+      const source = await readFile(join(process.cwd(), 'server', 'mail', 'acceptance.php'), 'utf8');
+      expect(source).toContain("$origin === 'https://uren-test.pathconsultancy.nl'");
+      expect(source).toContain("$scenario['recipient']");
+      expect(source).toContain('DELETE FROM password_reset_tokens WHERE user_id = :id');
+    });
   });
 
   test('[PWD-N-010] twee verschillende wachtwoorden worden in de GUI niet verstuurd', async ({ page }) => {

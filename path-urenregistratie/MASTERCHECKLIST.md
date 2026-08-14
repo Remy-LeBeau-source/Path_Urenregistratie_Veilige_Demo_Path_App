@@ -136,10 +136,11 @@ Post-live beheer
 - [x] Volledige lokale v0.9.61-regressie: 196/196 groen. Ook `npm run check`, DB-CRUD,
   dependency-audit, SAFE-H-012/013 en de live read-only TEST-preflight met exact twee actieve
   acceptatieaccounts zijn groen.
-- [x] Volledige lokale v0.9.62-regressie: 196/196 groen. Ook releasebuild, `npm run check`,
-  DB-CRUD, uitvoerbare BDD, dependency-audit en SAFE-H-001/012/013 zijn groen. De vaste reset-
-  baseline van 12 acties en de herhaalbare beveiligingsmailcases zijn door expliciete contracts
-  bewaakt. Commit, pipeline en publieke TEST-reset volgen nog.
+- [x] Volledige lokale v0.9.62-regressie: 198/198 groen. Ook releasebuild, `npm run check`,
+  DB-CRUD, uitvoerbare BDD, dependency-audit en SAFE-H-001/012/013/014 plus PWD-H-006 zijn groen.
+  De vaste resetbaseline van 12 acties en herhaalbare TEST-wachtwoord-/uitnodigingslinks zijn met
+  beslissingstabellen, equivalentieklassen en toestandsovergangen bewaakt. De eerste v0.9.62-commit
+  staat op `main`; de aanvullende testcommit wordt door dezelfde releasepipeline bewaakt.
 - [x] Volledige lokale Playwright-regressie voor v0.9.59: 194/194 groen. De uitgebreide
   GUI-smoke, `npm run check`, DB-CRUD, dependency-audit en deploycontractchecks zijn eveneens groen;
   INV-H-007 is na één niet-reproduceerbare loginvertraging aanvullend 10/10 groen bewezen.
@@ -156,7 +157,8 @@ Post-live beheer
   `npm run check`, `npm run test:db:crud`, `npm run security:deps` en `npm run test:gui-smoke`
   zijn op dezelfde werkboom apart groen bevestigd.
 - [x] Living Documentation-telling wordt uit de uitvoerbare specs berekend en met een expliciete
-  inventarisguard bewaakt. Actueel: 191 Playwright-cases, 1 DB-case, 192 unieke cases en 196 uitvoeringen.
+  inventarisguard bewaakt. Actueel: 193 Playwright-cases, 1 DB-case, 194 unieke cases en 198 uitvoeringen
+  (188 niet-mobiele cases + 5 mobiele cases op zowel Chrome als Safari).
 - [x] `server/config.local.php` wordt nu ook expliciet door `server/.htaccess` geblokkeerd;
   SAFE-N-008, de smokecheck en de volledige regressie bewaken deze fail-closed productiegrens.
 - [x] Uitvoerbare BDD-engine toegevoegd met `playwright-bdd`: `.feature` genereert een native

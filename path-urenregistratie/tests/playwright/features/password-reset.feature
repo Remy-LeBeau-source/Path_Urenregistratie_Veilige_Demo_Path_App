@@ -46,6 +46,14 @@ Feature: Wachtwoordherstel en misbruikbeveiliging
     When de medewerker de link opent en tweemaal hetzelfde sterke wachtwoord invult
     Then is het wachtwoord gewijzigd en kan dezelfde link niet opnieuw worden gebruikt
 
+  @happy
+  Scenario: [PWD-H-006] TEST-links zijn herhaalbaar zonder normale misbruikbegrenzing te verzwakken
+    # Testtechniek: Beslissingstabel + equivalentieklassen + toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 12
+    Given gewone en speciale TEST-beveiligingsmails als aparte equivalentieklassen gelden
+    When herhaling, foutafhandeling en omgevingsscheiding volgens de beslissingstabel worden doorgerekend
+    Then alleen de twee vaste TEST-accounts een nieuwe linkcyclus mogen starten
+
   @negative
   Scenario: [PWD-N-010] twee verschillende wachtwoorden worden in de GUI niet verstuurd
     # Testtechniek: Negatieve equivalentieklasse + error guessing

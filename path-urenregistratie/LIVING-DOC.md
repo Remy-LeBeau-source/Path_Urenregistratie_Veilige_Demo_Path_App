@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 189 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 193 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 189 unieke case-ID's
+- Playwright executable cases: 193 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 190 unieke case-ID's
+- Totaal executable cases: 194 unieke case-ID's
 - Playwright features: 21
 - Database features: 1
 - Playwright steps mappings: 21
 - Database steps mappings: 1
-- Uitvoeringen: 194
-- Niet-mobile projectuitvoeringen: 184
+- Uitvoeringen: 198
+- Niet-mobile projectuitvoeringen: 188
 - Mobile functionele cases: 5
 - Pixel 7 / Chromium-uitvoeringen: 5
 - iPhone 13 / WebKit-uitvoeringen: 5
 
-De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 189 Playwright-functionele cases in totaal 194 resultaten op: 184 + (5 x 2) = 194.
+De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 193 Playwright-functionele cases in totaal 198 resultaten op: 188 + (5 x 2) = 198.
 
 ## Documentatieketen
 
@@ -227,13 +227,14 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 189 Playwrig
 
 - Feature: `tests/playwright/features/password-reset.feature`
 - Source: `tests/playwright/password-reset.spec.ts`
-- Cases: 13
+- Cases: 14
 
 - [PWD-H-001] request-reset retourneert token in demo-modus — Techniek: Toestandsovergang · Assertions: 12
 - [PWD-H-002] onbekend e-mailadres retourneert ook ok=true (geen email-enumeration) — Techniek: API-contract + equivalentieklasse · Assertions: 3
 - [PWD-H-003] me.php bevat force_password_change veld — Techniek: API-contract + equivalentieklasse · Assertions: 3
 - [PWD-H-004] ingelogde gebruiker kan het eigen wachtwoord veilig wijzigen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [PWD-H-005] medewerker stelt via een eenmalige e-maillink zelf een wachtwoord in — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
+- [PWD-H-006] TEST-links zijn herhaalbaar zonder normale misbruikbegrenzing te verzwakken — Techniek: Beslissingstabel + equivalentieklassen + toestandsovergang · Assertions: 12
 - [PWD-N-010] twee verschillende wachtwoorden worden in de GUI niet verstuurd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
 - [PWD-N-011] elf tekens ligt onder de wachtwoordgrens van twaalf — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
 - [PWD-N-004] reset-password met ongeldig token geeft 400 — Techniek: Toestandsovergang · Assertions: 2
@@ -264,15 +265,17 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 189 Playwrig
 
 - Feature: `tests/playwright/features/production-safety.feature`
 - Source: `tests/playwright/production-safety.spec.ts`
-- Cases: 17
+- Cases: 20
 
 - [SAFE-H-001] login picker vult alleen lokaal demo-wachtwoord in wanneer hints beschikbaar zijn — Techniek: API-contract + equivalentieklasse · Assertions: 9
+- [SAFE-H-012] TEST toont accountkeuze met autofill en een afgeschermde gedeelde reset — Techniek: Beslissingstabel + equivalentieklassen + toestandsovergang · Assertions: 19
+- [SAFE-H-014] gedeelde TEST-reset herstelt alleen de exacte veilige 12-actiebaseline — Techniek: Beslissingstabel + equivalentieklassen + toestandsovergang · Assertions: 12
 - [SAFE-N-001] frontend source bevat geen plaintext demo-credentials — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 3
 - [SAFE-N-002] writes zonder csrf blijven geblokkeerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
 - [SAFE-H-002] timesheet writeflow blijft werkend (draft + submit) — Techniek: API-contract + equivalentieklasse · Assertions: 8
 - [SAFE-N-003] productieconfig zet demo-migraties standaard uit — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 9
 - [SAFE-H-003] health.php bevat productieguard die technische details onderdrukt — Techniek: API-contract + equivalentieklasse · Assertions: 3
-- [SAFE-H-009] productie-health accepteert een schone database zonder demodata — Techniek: Equivalentieklassen + toestandsovergang · Assertions: 5
+- [SAFE-H-009] productie-health accepteert een schone database zonder demodata — Techniek: Equivalentieklassen + toestandsovergang · Assertions: 7
 - [SAFE-N-004] install.php en migrate.php bevatten productieguards — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [SAFE-N-008] lokale productieconfig is via HTTP expliciet geblokkeerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
 - [SAFE-H-004] config.example.php bevat mail.enabled=false als standaard — Techniek: API-contract + equivalentieklasse · Assertions: 5
@@ -281,6 +284,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 189 Playwrig
 - [SAFE-N-007] productieconfigurator verwerkt DB-secret uitsluitend interactief en fail-closed — Techniek: Toestandsovergang · Assertions: 14
 - [SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 25
 - [SAFE-H-010] echte TEST-mail vereist opt-in en een ontvangers-whitelist — Techniek: API-contract + equivalentieklasse · Assertions: 12
+- [SAFE-H-013] TEST-mailsandbox opent alleen atomisch voor twee vaste ontvangers — Techniek: API-contract + equivalentieklasse · Assertions: 25
 - [SAFE-H-006] eerste productieorganisatie wordt gevalideerd en zonder overschrijven ingericht — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 18
 - [SAFE-H-011] groene main-pipeline rolt exact dezelfde release veilig uit naar productie — Techniek: Toestandsovergang + foutinjectie + beslissingstabel · Assertions: 20
 

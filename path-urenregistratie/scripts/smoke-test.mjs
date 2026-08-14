@@ -1552,6 +1552,10 @@ const invoiceIdentityMigrationSrc = readFileSync_(new URL("../server/migrations/
 const passwordResetMigrationSrc = readFileSync_(new URL("../server/migrations/013_password_reset_delivery.sql", import.meta.url), "utf8");
 const passwordResetServiceSrc = readFileSync_(new URL("../server/auth/password-reset-service.php", import.meta.url), "utf8");
 const requestResetSrc = readFileSync_(new URL("../server/auth/request-reset.php", import.meta.url), "utf8");
+const mailAcceptanceSrc = readFileSync_(new URL("../server/mail/acceptance.php", import.meta.url), "utf8");
+const mailAcceptancePolicySrc = readFileSync_(new URL("../server/scripts/mail-acceptance-policy-check.php", import.meta.url), "utf8");
+const testResetApiSrc = readFileSync_(new URL("../server/api/test-reset.php", import.meta.url), "utf8");
+const testResetPolicySrc = readFileSync_(new URL("../server/scripts/test-reset-policy-check.php", import.meta.url), "utf8");
 const backupSrc = readFileSync_(new URL("../server/scripts/database-backup.php", import.meta.url), "utf8");
 const restoreSrc = readFileSync_(new URL("../server/scripts/database-restore.php", import.meta.url), "utf8");
 const rotateLogsSrc = readFileSync_(new URL("../server/scripts/rotate-logs.php", import.meta.url), "utf8");
@@ -1583,6 +1587,9 @@ assert(productionPreflightSrc.includes("writes_performed' => false") && producti
 assert(invoiceIdentityMigrationSrc.includes("invoice_name_display") && invoiceIdentityMigrationSrc.includes("invoice_phone") && invoiceIdentityMigrationSrc.includes("invoice_email"), "De factuuridentiteit moet via een expliciete databasemigratie worden opgeslagen");
 assert(passwordResetMigrationSrc.includes("password_reset") && passwordResetMigrationSrc.includes("fk_email_deliveries_user"), "Beveiligingsmails moeten zonder factuurkoppeling aan de juiste organisatiegebruiker hangen");
 assert(passwordResetServiceSrc.includes("#reset-password=") && passwordResetServiceSrc.includes("AUTH_PASSWORD_RESET_MAX_REQUESTS = 3") && requestResetSrc.includes("auth_password_reset_public_response"), "Resetlinks moeten logveilig, eenmalig voorbereid, begrensd en enumeration-safe zijn");
+assert(mailAcceptanceSrc.includes("$origin === 'https://uren-test.pathconsultancy.nl'") && mailAcceptanceSrc.includes("DELETE FROM password_reset_tokens WHERE user_id = :id") && mailAcceptancePolicySrc.includes("test_security_scenarios_repeatable"), "Alleen de twee speciale acceptatielinks mogen op de exacte TEST-origin herhaalbaar zijn");
+assert(testResetApiSrc.includes("auth_require_role(['administrator']") && testResetApiSrc.includes("security_require_csrf_token()") && testResetApiSrc.includes("RESET_SHARED_TEST_BASELINE"), "De gedeelde TEST-reset moet beheerrol, CSRF en expliciete bevestiging eisen");
+assert(testResetPolicySrc.includes("spoofed_test_host_on_production_blocked") && testResetPolicySrc.includes("missing_demo_permission_blocked") && testResetPolicySrc.includes("'open_actions' => 12"), "De TEST-resetbeslissingstabel moet PROD, hostspoofing en een afwijkende baseline blokkeren");
 assert(dispatchSrc.includes("password-reset-link-expired") && dispatchSrc.includes("beveiligingslink verwijderd na verzending"), "Verlopen of verzonden resetlinks moeten uit de mailqueue worden gewist");
 assert(backupSrc.includes("--single-transaction") && restoreSrc.includes("RESTORE_") && rotateLogsSrc.includes("retention_days"), "Backup, herstelbevestiging en logretentie moeten operationeel voorbereid zijn");
 assert(provisionAccountSrc.includes("Passwords in command arguments are forbidden") && provisionAccountSrc.includes("force_password_change = 1") && provisionAccountSrc.includes(":password_hash, 1)") && provisionAccountSrc.includes("auth_create_password_reset") && changePasswordSrc.includes("current_password") && changePasswordSrc.includes("force_password_change = 0"), "Productieaccounts moeten zonder wachtwoordargument, met persoonlijke uitnodiging, verplichte eerste wijziging en een eigen wijzigingsflow worden beheerd");
