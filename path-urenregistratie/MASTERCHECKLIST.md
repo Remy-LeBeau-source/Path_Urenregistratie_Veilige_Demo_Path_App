@@ -90,7 +90,8 @@ Post-live beheer
 ## Actuele stand
 
 - [x] Datum: 2026-08-14 (v0.9.57 staat automatisch en gecontroleerd op productie)
-- [x] Appversie: v0.9.57 uit main-SHA `21cdfb1954d526c5ff41f84a772c09293b8f18a4` staat live
+- [x] Appversie: v0.9.57 staat live; de actuele main-SHA wordt bij iedere uitrol exact in
+  `.release-sha` vastgelegd en door pipeline en live-smoke gecontroleerd
 - [x] Technische eindsprint afgerond: Fase 10 (JPG/PNG server-side naar PDF via GD + hand-rolled
   PDF-writer `server/lib/simple_pdf.php`), Fase 11 (server-side factuur-PDF, `pdf_storage_key`
   gevuld na lock, geautoriseerde download-endpoint met company-/employee-scope, PDF-inhoudscontrole
@@ -128,10 +129,10 @@ Post-live beheer
   autoritatieve blokkade en resterende tijd blijft afdwingen.
 - [x] Medewerkercorrectie voor een al goedgekeurde maand is server-led heropenbaar zolang nog geen
   definitieve factuur bestaat; dashboardnavigatie ververst ook een verborgen grid voor dezelfde periode.
-- [x] Productiecontrole op 2026-08-14: `https://uren.pathconsultancy.nl/index.html` serveert exact
-  v0.9.57 uit main-SHA `21cdfb1954d526c5ff41f84a772c09293b8f18a4`. Release Pipeline
-  `31766313202`, HTTPS, health, assets, database, bedrijfsidentiteit, private opslag en live preflight
-  zijn groen. v0.9.56 is als directe rollback bewaard.
+- [x] Productiecontrole op 2026-08-14: `https://uren.pathconsultancy.nl/index.html` serveert v0.9.57.
+  De eerste automatische uitrol is bewezen door Release Pipeline `31766313202`; iedere volgende groene
+  main-run controleert opnieuw de exacte SHA, HTTPS, health, assets, database, bedrijfsidentiteit,
+  private opslag en live preflight en bewaart de vorige release automatisch als directe rollback.
 - [x] v0.9.52 herstelt accountonboarding zonder actieve SMTP-relay: een beheerder kan medewerker en
   opdracht veilig opslaan met `Toegang in afwachting`; uitnodigen blijft een aparte expliciete actie.
   De hotfix is volledig groen door CI gegaan en gecontroleerd naar productie uitgerold.
