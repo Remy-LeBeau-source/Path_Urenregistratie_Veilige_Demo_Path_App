@@ -22,8 +22,8 @@ staan onder de genummerde fases verderop in dit document.
 | Fase 3 — Read-API | ✅ Klaar | Frontend leest serverdata |
 | Fase 4 — Auth & rollen | ✅ VS Code-scope klaar | Admin/medewerker/sessies, persistente loginblokkade en eenmalige wachtwoordlinks |
 | Fase 5 — Security | ✅ VS Code-scope klaar | Timeout, sliding session, login-audit, dependency-scan; productieheaders (CORS/CSP/HSTS) later op echt domein |
-| Fase 6 — Playwright/BDD/Allure/Living Docs | 🛠️ Migratie met pariteit | 168 native cases blijven actief; uitvoerbare BDD-engine en eerste pariteitscase zijn groen |
-| Fase 7 — CI/CD | 🛠️ TEST-uitbreiding | Automatische PROD- en TEST-uitrol bewezen; v0.9.61 publieke login-smoke groen, v0.9.62 gedeelde reset in validatie |
+| Fase 6 — Playwright/BDD/Allure/Living Docs | ✅ Pariteit bewaakt | 195 native Playwright-cases + 1 DB-case; features, stappenindex en living docs worden uit de uitvoerbare specs gegenereerd |
+| Fase 7 — CI/CD | 🛠️ Releasevalidatie | Automatische PROD- en TEST-uitrol bewezen; v0.9.63 wordt pas na lokale smoke en volledige regressie vrijgegeven |
 | Fase 8 — Uren indienen | ✅ Klaar | Concept → indienen |
 | Fase 9 — Correctie/goedkeuring | ✅ Technisch klaar | Productieacceptatie later |
 | Fase 10 — Klanturenstaat | ✅ VS Code-scope klaar | JPG/PNG → PDF server-side gebouwd en getest (CTS-API-H-005) |
@@ -115,6 +115,12 @@ Post-live beheer
   omgeleid naar `giovanno.maatsen@pathconsultancy.nl`; de aparte uitnodigingscase blijft naar
   `kenrich.lieveld@pathconsultancy.nl`. Wachtwoordherstel en uitnodiging zijn in de acceptatieconsole
   herhaalbaar, terwijl de normale 3-per-15-minuten-begrenzing intact blijft.
+- [x] v0.9.63 releasekandidaat: rolwissel vult credentials direct zonder F5; verzendcontrole
+  finaliseert een serverfactuur vóór queueing, houdt de vervolgtaak open zolang geen mailroute is
+  klaargezet en sluit die pas na aantoonbare queue-opbouw. Alle modals zijn binnen de viewport
+  scrollbaar. Gerichte auth/mail/factuurlock-regressie: 40/40 groen; wachtwoordreset-race: 10/10
+  groen; officiële GUI-smoke, volledige Playwright-regressie 200/200, DB-CRUD en dependency-audit
+  zijn lokaal groen. De succesbevestiging na wachtwoordinstelling blijft vier seconden leesbaar.
 - [!] Google SMTP Relay weigert verzending nog met `550 Invalid credentials for relay [85.10.158.107]`.
   Voeg exact `85.10.158.107` toe aan de Google Workspace SMTP-relay-IP-allowlist. Er is nog geen
   acceptatiemail succesvol verzonden; dit is een externe configuratieblokkade, geen groene mailtest.
@@ -157,8 +163,8 @@ Post-live beheer
   `npm run check`, `npm run test:db:crud`, `npm run security:deps` en `npm run test:gui-smoke`
   zijn op dezelfde werkboom apart groen bevestigd.
 - [x] Living Documentation-telling wordt uit de uitvoerbare specs berekend en met een expliciete
-  inventarisguard bewaakt. Actueel: 193 Playwright-cases, 1 DB-case, 194 unieke cases en 198 uitvoeringen
-  (188 niet-mobiele cases + 5 mobiele cases op zowel Chrome als Safari).
+  inventarisguard bewaakt. Actueel: 195 Playwright-cases, 1 DB-case, 196 unieke cases en 200 uitvoeringen
+  (190 niet-mobiele cases + 5 mobiele cases op zowel Chrome als Safari).
 - [x] `server/config.local.php` wordt nu ook expliciet door `server/.htaccess` geblokkeerd;
   SAFE-N-008, de smokecheck en de volledige regressie bewaken deze fail-closed productiegrens.
 - [x] Uitvoerbare BDD-engine toegevoegd met `playwright-bdd`: `.feature` genereert een native
@@ -1177,12 +1183,13 @@ Telling fasestatussen:
 
 ## Directe volgende stap
 
-**Fase 1 t/m 15 volledig klaar; v0.9.61 staat veilig en automatisch op productie en TEST.** De
+**Fase 1 t/m 15 zijn functioneel ingericht; v0.9.63 is lokaal volledig groen en gereed voor de
+releasepipeline.** De
 aparte TEST-host, database, private opslag, publieke login-smoke en mailsandbox zijn bewezen in
 run `31803329714`.
 
-1. Rond v0.9.62 af: gedeelde TEST-reset met vaste 12-actiebaseline, autofill, TEST-brede veilige
-   ontvangeromleiding en herhaalbare eenmalige beveiligingslinks lokaal volledig groen maken en uitrollen.
+1. Commit en push v0.9.63 en laat dezelfde release exact door de volledige pipeline, TEST-uitrol en
+   automatische PROD-uitrol bewaken.
 2. Voeg `85.10.158.107` toe aan Google Workspace SMTP Relay. Verstuur daarna op TEST de vijf
    acceptatiemails één voor één en controleer ontvanger, onderwerp, tekst, linkgebruik en PDF-bijlagen.
 3. Rond daarna de open productiepraktijktests, fysieke mobiele acceptatie, cron/monitoring,

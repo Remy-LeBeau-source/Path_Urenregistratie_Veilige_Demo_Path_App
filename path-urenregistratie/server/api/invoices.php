@@ -728,9 +728,10 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
         $pdo->commit();
 
         // Queue e-mail deliveries after commit; dry_run=true until dispatch is activated.
+        $queuedDeliveries = [];
         try {
             $mailDryRun = mail_is_dry_run($config);
-            mail_enqueue_for_invoice($pdo, $invoiceId, $companyId, (int)$currentUser['id'], $mailDryRun);
+            $queuedDeliveries = mail_enqueue_for_invoice($pdo, $invoiceId, $companyId, (int)$currentUser['id'], $mailDryRun);
         } catch (Throwable $queueError) {
             // Queue failure must never break the lock response.
             error_log('mail_enqueue_for_invoice failed: ' . $queueError->getMessage());
@@ -743,6 +744,7 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
             'ok' => true,
             'action' => 'lock',
             'audit_event' => 'invoice.locked',
+            'queued_count' => count($queuedDeliveries),
             'invoice' => [
                 'id' => (int)$invoice['id'],
                 'timesheet_id' => (int)$invoice['timesheet_id'],

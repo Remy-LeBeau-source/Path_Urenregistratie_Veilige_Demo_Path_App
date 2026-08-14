@@ -87,7 +87,9 @@ $invalidated = function_exists('opcache_invalidate')
 $reset = function_exists('opcache_reset') ? opcache_reset() : false;
 echo json_encode(['ok' => true, 'invalidated' => $invalidated, 'reset' => $reset]);
 PHP
-  chmod 600 "$helper_path"
+  # The web worker must be able to read this single-use helper. The random
+  # filename is removed immediately after the request.
+  chmod 644 "$helper_path"
   curl_status=0
   response="$(curl -fsS "$production_origin/server/$helper_name")" || curl_status="$?"
   rm -f -- "$helper_path"
@@ -124,7 +126,7 @@ cutover_started=1
 mv "$app_root" "$live_root"
 chmod 600 "$live_root/server/config.local.php"
 printf '%s\n' "$source_sha" > "$live_root/.release-sha"
-refresh_opcache "$live_root"
+refresh_opcache "$live_root" || echo 'PROD OPcache refresh unavailable; continuing to authoritative public smoke.' >&2
 
 index_snapshot="$release_root/live-index.html"
 health_snapshot="$release_root/live-health.json"

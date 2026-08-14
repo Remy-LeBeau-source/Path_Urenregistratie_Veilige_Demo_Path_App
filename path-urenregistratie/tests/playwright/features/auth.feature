@@ -56,6 +56,16 @@ Feature: Inloggen, uitloggen en sessiebeheer
     When de flow voor AUTH-N-006 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat ongeldig e-mailformaat wordt als invalid-payload geweigerd
 
+  @happy
+  Scenario: [AUTH-H-010] andere rol kiezen vult zonder herladen direct het juiste testaccount in
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 10
+    Given de testlogin gereed is zonder pagina-herlaad
+    When een andere medewerker via de zichtbare rolkeuze wordt gekozen
+    Then staan e-mail en medewerkerswachtwoord direct klaar zonder F5
+    When daarna een beheerder via de zichtbare rolkeuze wordt gekozen
+    Then wisselen e-mail en wachtwoord meteen naar het beheeraccount
+
   @negative
   Scenario: [AUTH-N-007] vijf mislukte logins tonen een servergestuurde aftelling
     # Testtechniek: Negatieve equivalentieklasse + error guessing

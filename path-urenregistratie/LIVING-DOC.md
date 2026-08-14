@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 193 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 195 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 193 unieke case-ID's
+- Playwright executable cases: 195 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 194 unieke case-ID's
+- Totaal executable cases: 196 unieke case-ID's
 - Playwright features: 21
 - Database features: 1
 - Playwright steps mappings: 21
 - Database steps mappings: 1
-- Uitvoeringen: 198
-- Niet-mobile projectuitvoeringen: 188
+- Uitvoeringen: 200
+- Niet-mobile projectuitvoeringen: 190
 - Mobile functionele cases: 5
 - Pixel 7 / Chromium-uitvoeringen: 5
 - iPhone 13 / WebKit-uitvoeringen: 5
 
-De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 193 Playwright-functionele cases in totaal 198 resultaten op: 188 + (5 x 2) = 198.
+De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 195 Playwright-functionele cases in totaal 200 resultaten op: 190 + (5 x 2) = 200.
 
 ## Documentatieketen
 
@@ -76,7 +76,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 193 Playwrig
 
 - Feature: `tests/playwright/features/auth.feature`
 - Source: `tests/playwright/auth.spec.ts`
-- Cases: 9
+- Cases: 10
 
 - [AUTH-H-001] Admin logt in en auth/me geeft de juiste gebruiker terug — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
 - [AUTH-H-002] Medewerker logt in en auth/me geeft de juiste gebruiker terug — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
@@ -84,6 +84,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 193 Playwrig
 - [AUTH-H-004] Lokale beheeraccount wordt automatisch ingevuld en opent na een klik — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
 - [AUTH-N-005] onbekend account geeft dezelfde generieke loginfout — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 3
 - [AUTH-N-006] ongeldig e-mailformaat wordt als invalid-payload geweigerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
+- [AUTH-H-010] andere rol kiezen vult zonder herladen direct het juiste testaccount in — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 10
 - [AUTH-N-007] vijf mislukte logins tonen een servergestuurde aftelling — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
 - [AUTH-N-008] de inlogblokkade en aftelling blijven zichtbaar na herladen — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [AUTH-H-009] lokale login benoemt de veilige testomgeving en productnaam — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
@@ -130,7 +131,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 193 Playwrig
 
 - Feature: `tests/playwright/features/mail-delivery.feature`
 - Source: `tests/playwright/email-queue.spec.ts`
-- Cases: 21
+- Cases: 22
 
 - [EQ-H-001] factuurlock maakt queue-items aan met dry_run=true — Techniek: Toestandsovergang · Assertions: 5
 - [EQ-H-002] broker-channel bundelt factuur en klanturenstaat — Techniek: API-contract + equivalentieklasse · Assertions: 2
@@ -140,6 +141,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 193 Playwrig
 - [EQ-H-015] Backoffice ziet veilige verzendhistorie zonder berichtinhoud — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 16
 - [EQ-H-016] Backoffice verstuurt vanuit de acceptatieconsole precies één gekozen scenario — Techniek: API-contract + equivalentieklasse · Assertions: 12
 - [EQ-N-017] niet-beschikbare acceptatieconsole blijft volledig uit beeld — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
+- [EQ-H-020] Backoffice finaliseert een serverfactuur vóór de mailqueue en sluit de vervolgtaak — Techniek: Toestandsovergang · Assertions: 7
 - [EQ-N-019] gesloten acceptatievenster toont waarom geen mail kan worden verstuurd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [EQ-N-018] afgewezen acceptatiemail blijft nooit achter voor automatische herverzending — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [EQ-N-006] anonieme gebruiker krijgt 401 op list — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2
@@ -160,7 +162,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 193 Playwrig
 - Source: `tests/playwright/invoice-lock.spec.ts`
 - Cases: 8
 
-- [INV-H-004] admin lockt approved timesheet naar definitieve immutable factuur — Techniek: Concurrency + toestandsovergang · Assertions: 20
+- [INV-H-004] admin lockt approved timesheet naar definitieve immutable factuur — Techniek: Concurrency + toestandsovergang · Assertions: 21
 - [INV-N-015] definitief gefactureerde uren kunnen niet voor correctie worden heropend — Techniek: Toestandsovergang · Assertions: 9
 - [INV-N-008] anonieme gebruiker kan factuur niet locken — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
 - [INV-N-009] medewerker mag factuur niet finaliseren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
@@ -286,7 +288,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 193 Playwrig
 - [SAFE-H-010] echte TEST-mail vereist opt-in en een ontvangers-whitelist — Techniek: API-contract + equivalentieklasse · Assertions: 12
 - [SAFE-H-013] TEST-mailsandbox opent alleen atomisch voor twee vaste ontvangers — Techniek: API-contract + equivalentieklasse · Assertions: 25
 - [SAFE-H-006] eerste productieorganisatie wordt gevalideerd en zonder overschrijven ingericht — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 18
-- [SAFE-H-011] groene main-pipeline rolt exact dezelfde release veilig uit naar productie — Techniek: Toestandsovergang + foutinjectie + beslissingstabel · Assertions: 20
+- [SAFE-H-011] groene main-pipeline rolt exact dezelfde release veilig uit naar productie — Techniek: Toestandsovergang + foutinjectie + beslissingstabel · Assertions: 22
 
 ### Rollen, rechten en gegevensafscherming
 

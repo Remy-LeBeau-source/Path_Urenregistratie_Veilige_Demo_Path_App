@@ -38,6 +38,9 @@ Then("bevat de write exact één scenario met expliciete bevestiging en geen bul
 Given("mailroutering en aflevering is voorbereid");
 When("de flow voor EQ-N-017 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat niet-beschikbare acceptatieconsole blijft volledig uit beeld");
+Given("een goedgekeurde maar nog niet definitieve serverfactuur als Backoffice-taak klaarstaat");
+When("Backoffice de verzending één keer afrondt");
+Then("wordt eerst gelockt, niet te vroeg gequeued en verdwijnt de afgeronde vervolgtaak");
 When("de flow voor EQ-N-019 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat gesloten acceptatievenster toont waarom geen mail kan worden verstuurd");
 Given("het fail-closed retrybeleid voor acceptatiemail wordt uitgevoerd");

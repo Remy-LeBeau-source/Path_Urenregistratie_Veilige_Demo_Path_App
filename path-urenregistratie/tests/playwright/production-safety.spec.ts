@@ -680,6 +680,8 @@ test('[SAFE-H-011] groene main-pipeline rolt exact dezelfde release veilig uit n
     expect(remote).toContain('Pending production mail prevents deployment');
     expect(remote).toContain('mv "$rollback_root" "$live_root"');
     expect(remote).toContain('opcache_reset');
+    expect(remote).toContain('chmod 644 "$helper_path"');
+    expect(remote).toContain('PROD OPcache refresh unavailable; continuing to authoritative public smoke');
     expect(remote).toContain('rm -f -- "$helper_path"');
     expect(remote).toContain('curl_status');
     expect(remote).not.toContain('rm -rf');

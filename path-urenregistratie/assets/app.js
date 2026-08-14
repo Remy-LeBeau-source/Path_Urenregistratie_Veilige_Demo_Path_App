@@ -1044,6 +1044,7 @@ const statusLabels = {
   draft: ["Nog invullen", "status-concept"],
   correction: ["Correctie nodig", "status-warning"],
   approved: ["Goedgekeurd", "status-approved"],
+  invoiced: ["Gefactureerd", "status-sent"],
   submitted: ["Ingediend", "status-submitted"],
   concept: ["Nog niet klaar", "status-concept"],
   ready: ["Factuur klaar", "status-ready"],
@@ -1822,7 +1823,7 @@ function applyTimesheetApiPayload(employeeId, periodKey, timesheet) {
   const version = Number(timesheet.version || 0);
   record.serverVersion = Number.isFinite(version) && version > 0 ? version : null;
 
-  if (record.timesheetStatus === "approved") {
+  if (["approved", "invoiced"].includes(record.timesheetStatus)) {
     if (record.invoiceStatus !== "simulated") record.invoiceStatus = "ready";
     if (record.payrollStatus !== "simulated") record.payrollStatus = "ready";
   } else {
@@ -2640,6 +2641,7 @@ function invoiceApiRowsForPeriod(periodKey) {
   if (!dataset || !Array.isArray(dataset.items)) return null;
   return dataset.items.map(item => ({
     id: Number(item && item.id || 0),
+    timesheetId: Number(item && item.timesheet_id || 0),
     invoiceNumber: String(item && item.invoice_number || ""),
     employeeName: String(item && item.employee_name || "Onbekend"),
     periodKey: String(item && item.period_key || periodKey),
@@ -2647,7 +2649,9 @@ function invoiceApiRowsForPeriod(periodKey) {
     statusRaw: String(item && item.status || ""),
     subtotal: Number(item && item.subtotal || 0),
     vatAmount: Number(item && item.vat_amount || 0),
-    total: Number(item && item.total || 0)
+    total: Number(item && item.total || 0),
+    locked: Boolean(item && item.locked),
+    lockedAt: String(item && item.locked_at || "")
   })).filter(item => item.periodKey === periodKey);
 }
 
@@ -3735,7 +3739,7 @@ function adminOpenTasks() {
             tasks.push(Object.assign({}, base, { id: "customer-waiting-" + periodKey + "-" + employee.id, type: "customer-waiting", category: "Klanturenstaat", actionable: false, priority: 4, title: documentStatus, note: documentRecord.status === "resubmit" ? "De medewerker moet een nieuw document uploaden." : "De officiële klanturenstaat is nog niet bij Backoffice ingediend." }));
           }
         }
-        if (record.timesheetStatus === "approved" && (record.invoiceStatus !== "simulated" || record.payrollStatus !== "simulated")) {
+        if (["approved", "invoiced"].includes(record.timesheetStatus) && (record.invoiceStatus !== "simulated" || record.payrollStatus !== "simulated")) {
           tasks.push(Object.assign({}, base, { id: "invoice-delivery-" + periodKey + "-" + employee.id, type: "invoice-delivery", category: "Factuur", actionable: true, priority: 4, title: "Verzending controleren", note: "De afzonderlijke factuur- en salarisroutes staan klaar voor controle." }));
         }
       });
@@ -4915,10 +4919,10 @@ function monthBatchReadiness(periodKey) {
   const key = periodKey || currentPeriod().key;
   const rows = invoicePeriodRows(key);
   const controlledRows = rows.filter(item => item.record.invoiceStatus === "simulated" && item.record.payrollStatus === "simulated");
-  const pendingRows = rows.filter(item => !controlledRows.includes(item) && (item.record.invoiceStatus === "ready" || item.record.timesheetStatus === "approved"));
+  const pendingRows = rows.filter(item => !controlledRows.includes(item) && (item.record.invoiceStatus === "ready" || ["approved", "invoiced"].includes(item.record.timesheetStatus)));
   const readyRows = controlledRows.concat(pendingRows);
   const blockers = rows
-    .filter(item => !controlledRows.includes(item) && !pendingRows.includes(item) && item.record.timesheetStatus !== "approved")
+    .filter(item => !controlledRows.includes(item) && !pendingRows.includes(item) && !["approved", "invoiced"].includes(item.record.timesheetStatus))
     .map(item => {
       const status = statusLabels[item.record.timesheetStatus] || statusLabels.draft;
       const actionable = item.record.timesheetStatus === "submitted";
@@ -7472,11 +7476,11 @@ function invoiceSummary(employeeId, periodKey) {
   };
 }
 
-function serverInvoiceIdFor(employeeId, periodKey) {
+function serverInvoiceFor(employeeId, periodKey) {
   const rows = invoiceApiRowsForPeriod(periodKey) || [];
   const employee = employeeById(employeeId);
-  const match = rows.find(r => r.employeeName === employee.name || r.invoiceNumber === (recordFor(employee.id, periodKey) || {}).invoiceNumber);
-  return match ? match.id : 0;
+  if (!employee) return null;
+  return rows.find(r => r.employeeName === employee.name || r.invoiceNumber === (recordFor(employee.id, periodKey) || {}).invoiceNumber) || null;
 }
 
 function enqueueInvoiceDeliveryToApi(invoiceId) {
@@ -7503,7 +7507,7 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
   const key = periodKey || currentPeriod().key;
   const period = periodFromKey(key);
   const info = invoiceSummary(employeeId, key);
-  if (info.record.timesheetStatus !== "approved" || (info.record.invoiceStatus === "simulated" && info.record.payrollStatus === "simulated")) {
+  if (!["approved", "invoiced"].includes(info.record.timesheetStatus) || (info.record.invoiceStatus === "simulated" && info.record.payrollStatus === "simulated")) {
     toast("Deze verzending staat niet meer als beheeractie open.");
     renderAll();
     return false;
@@ -7530,7 +7534,8 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
     adminTaskId,
     action: () => {
       const baseMsg = "Verzending voor " + info.employee.name + " · " + period.label + " klaargezet";
-      const invId = serverInvoiceIdFor(employeeId, key);
+      const serverInvoice = serverInvoiceFor(employeeId, key);
+      const invId = Number(serverInvoice && serverInvoice.id || 0);
       const serverDelivery = API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative() && state.currentRole === "admin";
       const finishLocalDryRun = (messageSuffix = "") => {
         const mutate = () => {
@@ -7550,7 +7555,7 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
       };
 
       if (serverDelivery && invId > 0) {
-        enqueueInvoiceDeliveryToApi(invId)
+        finalizeInvoiceAndQueueToApi(serverInvoice)
           .then(count => Promise.all([
             refreshEmailQueueReadApi(true),
             refreshInvoicesReadApi(key, true)
@@ -8227,6 +8232,40 @@ function writeStaffToApi(action, payload) {
     });
 }
 
+function finalizeInvoiceAndQueueToApi(invoiceRow) {
+  const invoiceId = Number(invoiceRow && invoiceRow.id || 0);
+  const timesheetId = Number(invoiceRow && invoiceRow.timesheetId || 0);
+  if (invoiceId <= 0 || timesheetId <= 0) {
+    return Promise.reject(new Error("Geen complete serverfactuur gevonden voor deze verzending."));
+  }
+  const requireQueuedDelivery = count => {
+    const queuedCount = Number(count || 0);
+    if (queuedCount <= 0) throw new Error("Er zijn geen mailroutes klaargezet. De beheeractie blijft open.");
+    return queuedCount;
+  };
+  if (invoiceRow.locked) return enqueueInvoiceDeliveryToApi(invoiceId).then(requireQueuedDelivery);
+
+  return requestAuthCsrf()
+    .then(token => fetch("/server/api/invoices.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify({ action: "lock", timesheet_id: timesheetId })
+    }))
+    .then(resp => resp.json().catch(() => ({})).then(data => ({ ok: resp.ok, data })))
+    .then(result => {
+      if (result.ok && result.data && result.data.ok === true) {
+        const queuedCount = Number(result.data.queued_count || 0);
+        return queuedCount > 0
+          ? queuedCount
+          : enqueueInvoiceDeliveryToApi(invoiceId).then(requireQueuedDelivery);
+      }
+      if (result.data && result.data.error === "invoice-already-locked") {
+        return enqueueInvoiceDeliveryToApi(invoiceId).then(requireQueuedDelivery);
+      }
+      throw new Error(String(result.data && result.data.message || "Factuur definitief maken is mislukt."));
+    });
+}
+
 function revealExistingStaffAccount(existing, message) {
   const role = String(existing && existing.role || "");
   const userId = Number(existing && existing.user_id || 0);
@@ -8572,8 +8611,6 @@ document.addEventListener("click", event => {
     closeLoginAccountPanels();
     if (authRuntime.mode === "demo") {
       login(role);
-    } else {
-      prefillAuthCredentialsFromSelection(role);
     }
   } else if (loginAccountTrigger) {
     toggleLoginAccountPanel(loginAccountTrigger.dataset.accountPickerTrigger);
@@ -9275,13 +9312,13 @@ function handleMonthDelivery() {
     action: () => {
       const serverDelivery = API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative() && state.currentRole === "admin";
       if (serverDelivery) {
-        const invoiceIds = approved.map(item => serverInvoiceIdFor(item.employee.id, periodKey)).filter(id => id > 0);
-        if (invoiceIds.length !== approved.length) {
+        const serverInvoices = approved.map(item => serverInvoiceFor(item.employee.id, periodKey)).filter(Boolean);
+        if (serverInvoices.length !== approved.length) {
           toast("Niet alle serverfacturen zijn beschikbaar. Open Facturen opnieuw en probeer daarna nogmaals.");
           return;
         }
 
-        Promise.all(invoiceIds.map(id => enqueueInvoiceDeliveryToApi(id)))
+        Promise.all(serverInvoices.map(invoice => finalizeInvoiceAndQueueToApi(invoice)))
           .then(counts => Promise.all([
             refreshEmailQueueReadApi(true),
             refreshInvoicesReadApi(periodKey, true)
@@ -9369,13 +9406,13 @@ document.querySelector("#period-year-picker").addEventListener("change", () => {
 document.querySelector("#login-employee").addEventListener("change", event => {
   state.currentEmployeeId = Number(event.target.value);
   updateLoginEmployeePreview();
-  prefillAuthCredentialsFromSelection("employee", false);
+  prefillAuthCredentialsFromSelection("employee");
   persistState();
 });
 document.querySelector("#login-admin").addEventListener("change", event => {
   state.currentAdminId = String(event.target.value);
   updateLoginAdminPreview();
-  prefillAuthCredentialsFromSelection("admin", false);
+  prefillAuthCredentialsFromSelection("admin");
   persistState();
 });
 document.querySelector("#add-employee").addEventListener("click", () => showEmployeeEditor(null));
@@ -9903,7 +9940,7 @@ document.querySelector("#auth-reset-complete-form")?.addEventListener("submit", 
         document.querySelector("#auth-login-form").hidden = false;
         document.querySelector("#auth-forgot-password").hidden = false;
         document.querySelector("#auth-login-email")?.focus();
-      }, 900);
+      }, 4000);
     })
     .catch(error => {
       const code = String(error && error.message || "");

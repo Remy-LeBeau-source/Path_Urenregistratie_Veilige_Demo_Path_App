@@ -675,7 +675,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 
 .modal-backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: rgba(5,13,27,.58); padding: 20px; backdrop-filter: blur(5px); }
 .modal-backdrop[hidden] { display: none; }
-.modal { position: relative; width: min(470px, 100%); border-radius: 22px; background: #fff; padding: 30px; box-shadow: 0 30px 80px rgba(0,0,0,.26); animation: modalIn .2s ease; }
+.modal { position: relative; width: min(470px, 100%); max-height: calc(100vh - 40px); overflow-y: auto; border-radius: 22px; background: #fff; padding: 30px; box-shadow: 0 30px 80px rgba(0,0,0,.26); animation: modalIn .2s ease; }
 .modal.is-wide { width: min(780px, 100%); max-height: calc(100vh - 40px); overflow-y: auto; }
 @keyframes modalIn { from { opacity: 0; transform: scale(.97) translateY(8px); } to { opacity: 1; transform: none; } }
 .modal h2 { margin: 8px 0; font-family: "Roboto Slab", Georgia, serif; }

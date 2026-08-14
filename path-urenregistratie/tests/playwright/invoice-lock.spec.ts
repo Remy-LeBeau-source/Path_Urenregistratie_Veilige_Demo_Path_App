@@ -160,6 +160,7 @@ test('[INV-H-004] admin lockt approved timesheet naar definitieve immutable fact
     expect(lockResponse!.status).toBe(200);
     expect(lockResponse!.body.ok).toBe(true);
     expect(lockResponse!.body.audit_event).toBe('invoice.locked');
+    expect(Number(lockResponse!.body.queued_count)).toBeGreaterThan(0);
     expect(String(lockResponse!.body.invoice.invoice_number || '').length).toBeGreaterThan(3);
     expect(String(lockResponse!.body.invoice.locked_at || '').length).toBeGreaterThan(10);
     expect(lockResponse!.body.invoice.status).toBe('ready');

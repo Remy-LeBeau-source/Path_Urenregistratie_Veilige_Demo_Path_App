@@ -9,7 +9,7 @@ Feature: Facturen definitief maken en vergrendelen
   @happy
   Scenario: [INV-H-004] admin lockt approved timesheet naar definitieve immutable factuur
     # Testtechniek: Concurrency + toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 20
+    # Aantoonbare Playwright-assertions in deze case: 21
     Given een medewerker een urenstaat heeft ingediend in een herhaalbare testperiode
     And een administrator die urenstaat goedkeurt
     When de administrator de factuur finaliseert met lock-actie

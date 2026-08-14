@@ -76,6 +76,14 @@ Feature: Mailroutering en aflevering
     When de flow voor EQ-N-017 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat niet-beschikbare acceptatieconsole blijft volledig uit beeld
 
+  @happy
+  Scenario: [EQ-H-020] Backoffice finaliseert een serverfactuur vóór de mailqueue en sluit de vervolgtaak
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given een goedgekeurde maar nog niet definitieve serverfactuur als Backoffice-taak klaarstaat
+    When Backoffice de verzending één keer afrondt
+    Then wordt eerst gelockt, niet te vroeg gequeued en verdwijnt de afgeronde vervolgtaak
+
   @negative
   Scenario: [EQ-N-019] gesloten acceptatievenster toont waarom geen mail kan worden verstuurd
     # Testtechniek: Negatieve equivalentieklasse + error guessing

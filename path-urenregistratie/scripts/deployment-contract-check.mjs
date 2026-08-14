@@ -27,6 +27,8 @@ for (const required of [
   'Production mail or acceptance window is still enabled',
   'rollback_on_error',
   'opcache_reset',
+  'chmod 644 "$helper_path"',
+  'PROD OPcache refresh unavailable; continuing to authoritative public smoke',
   'rm -f -- "$helper_path"',
   'curl_status',
   'server/health.php',

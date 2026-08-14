@@ -395,6 +395,109 @@ test.describe('email queue api', () => {
     await expect(consolePanel.getByText('Eerste uitnodiging: wachtwoord aanmaken')).toBeHidden();
   });
 
+  test('[EQ-H-020] Backoffice finaliseert een serverfactuur vóór de mailqueue en sluit de vervolgtaak', async ({ page }) => {
+    let invoiceLocks = 0;
+    let directQueueWrites = 0;
+    let locked = false;
+
+    await page.route('**/server/api/invoices.php*', async route => {
+      if (route.request().method() === 'POST') {
+        invoiceLocks += 1;
+        const payload = route.request().postDataJSON() as Record<string, unknown>;
+        expect(payload).toEqual({ action: 'lock', timesheet_id: 881 });
+        locked = true;
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            ok: true,
+            action: 'lock',
+            queued_count: 3,
+            invoice: { id: 771, timesheet_id: 881, invoice_number: 'PATH-2026-008', status: 'ready', locked_at: '2026-08-14 12:00:00' },
+            timesheet: { id: 881, status: 'invoiced', billable_hours: 144 },
+          }),
+        });
+        return;
+      }
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ok: true,
+          count: 1,
+          items: [{
+            id: 771,
+            timesheet_id: 881,
+            invoice_number: 'PATH-2026-008',
+            employee_name: 'Shawn-Douglas Nahar',
+            period_key: '2026-08',
+            status: 'ready',
+            timesheet_status: locked ? 'invoiced' : 'approved',
+            subtotal: 12312,
+            vat_amount: 2585.52,
+            total: 14897.52,
+            locked,
+            locked_at: locked ? '2026-08-14 12:00:00' : null,
+          }],
+        }),
+      });
+    });
+
+    await page.route('**/server/api/email-queue.php*', async route => {
+      if (route.request().method() === 'POST') {
+        directQueueWrites += 1;
+        await route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ ok: false }) });
+        return;
+      }
+      const items = locked
+        ? ['broker', 'accountant', 'payroll'].map((channel, index) => ({
+            id: 990 + index,
+            invoice_id: 771,
+            channel,
+            recipient_email: `${channel}@example.invalid`,
+            subject_snapshot: `Route ${channel}`,
+            attachment_policy: channel === 'payroll' ? 'none' : 'invoice',
+            status: 'queued',
+            attempt_count: 0,
+            dry_run: true,
+            created_at: '2026-08-14 12:00:00',
+          }))
+        : [];
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true, dry_run: true, count: items.length, items }),
+      });
+    });
+
+    const login = new LoginPage(page);
+    await test.step('Given een goedgekeurde maar nog niet definitieve serverfactuur als Backoffice-taak klaarstaat', async () => {
+      await login.open();
+      await login.loginAsAdmin();
+      const task = page.locator('[data-admin-task-invoice="4"][data-period-key="2026-08"]');
+      if (await task.isHidden()) {
+        const monthToggle = page.locator('[data-admin-task-month-toggle="2026-08"]');
+        await expect(monthToggle).toBeVisible();
+        await monthToggle.click();
+      }
+      await expect(task).toBeVisible();
+      await task.click();
+      await expect(page.locator('#modal-title')).toContainText('PATH-2026-008');
+    });
+
+    await test.step('When Backoffice de verzending één keer afrondt', async () => {
+      await page.locator('#modal-confirm').click();
+    });
+
+    await test.step('Then wordt eerst gelockt, niet te vroeg gequeued en verdwijnt de afgeronde vervolgtaak', async () => {
+      await expect.poll(() => invoiceLocks).toBe(1);
+      expect(directQueueWrites).toBe(0);
+      await expect(page.locator('#toast')).toContainText('3 berichten');
+      await expect(page.locator('[data-admin-task-invoice="4"][data-period-key="2026-08"]')).toHaveCount(0);
+    });
+  });
+
   test('[EQ-N-019] gesloten acceptatievenster toont waarom geen mail kan worden verstuurd', async ({ page }) => {
     const scenarios = [
       ['broker_bundle', 'Broker: factuur + klanturenstaat', 2],

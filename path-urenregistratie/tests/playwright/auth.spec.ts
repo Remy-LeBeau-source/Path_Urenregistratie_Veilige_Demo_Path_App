@@ -120,6 +120,44 @@ test('[AUTH-N-006] ongeldig e-mailformaat wordt als invalid-payload geweigerd', 
   expect(body.error).toBe('invalid-payload');
 });
 
+test('[AUTH-H-010] andere rol kiezen vult zonder herladen direct het juiste testaccount in', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  const employeePassword = requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD');
+  const adminPassword = requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD');
+
+  await test.step('Given de testlogin gereed is zonder pagina-herlaad', async () => {
+    await loginPage.open();
+    await expect(page.locator('#login-screen')).toBeVisible();
+  });
+
+  await test.step('When een andere medewerker via de zichtbare rolkeuze wordt gekozen', async () => {
+    await page.locator('#login-employee-trigger').click();
+    const employeeChoice = page.locator('#login-employee-choices [data-login-account-role="employee"]').nth(1);
+    await expect(employeeChoice).toBeVisible();
+    await employeeChoice.click();
+  });
+
+  await test.step('Then staan e-mail en medewerkerswachtwoord direct klaar zonder F5', async () => {
+    await expect(page.locator('#login-employee-trigger')).toContainText('Stasjo van Bakel');
+    await expect(page.locator('#auth-login-email')).toHaveValue('stasjo@example.invalid');
+    await expect(page.locator('#auth-login-password')).toHaveValue(employeePassword);
+  });
+
+  await test.step('When daarna een beheerder via de zichtbare rolkeuze wordt gekozen', async () => {
+    await page.locator('#login-admin-trigger').click();
+    const adminChoice = page.locator('#login-admin-choices [data-login-account-role="admin"]').last();
+    await expect(adminChoice).toBeVisible();
+    await adminChoice.click();
+  });
+
+  await test.step('Then wisselen e-mail en wachtwoord meteen naar het beheeraccount', async () => {
+    await expect(page.locator('#login-admin-trigger')).toContainText('Joyce van der Steenhoven');
+    await expect(page.locator('#auth-login-email')).toHaveValue('joyce@example.invalid');
+    await expect(page.locator('#auth-login-password')).toHaveValue(adminPassword);
+    await expect(page.locator('#auth-login-feedback')).toContainText('testwachtwoord voorgeselecteerd');
+  });
+});
+
 test('[AUTH-N-007] vijf mislukte logins tonen een servergestuurde aftelling', async ({ page }) => {
   const email = `blocked-${Date.now()}@example.invalid`;
   const api = page.context().request;
