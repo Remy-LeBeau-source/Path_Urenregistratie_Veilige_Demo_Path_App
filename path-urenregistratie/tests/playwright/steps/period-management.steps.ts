@@ -19,7 +19,7 @@ Then("wordt met Playwright-assertions bevestigd dat admin kan periodes ophalen m
 When("de testperiode wordt gesloten");
 Then("is de periode gesloten");
 And("heropenen werkt");
-Given("maanden openen en sluiten is voorbereid");
+Given("maandperiodes beheren is voorbereid");
 When("periods.php wordt aangeroepen zonder sessie");
 Then("wordt met Playwright-assertions bevestigd dat anonieme gebruiker krijgt 401 op periods");
 Given("een ingelogde medewerker");

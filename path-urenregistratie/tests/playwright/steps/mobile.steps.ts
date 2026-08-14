@@ -31,3 +31,4 @@ Given("een beheerder de mobiele Instellingen opent");
 When("de flow voor MOB-H-005 wordt uitgevoerd");
 Then("de verzendregistratie als leesbare kaart binnen het scherm staat");
 And("geheime inhoud verborgen blijft en Vernieuwen een touchdoel is");
+And("de losse mailacceptatieactie binnen het scherm blijft met een volwaardig touchdoel");

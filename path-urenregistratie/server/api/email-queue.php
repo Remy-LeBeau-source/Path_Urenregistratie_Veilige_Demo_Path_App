@@ -43,7 +43,7 @@ if ($method === 'GET') {
         SELECT
             ed.id, ed.user_id, ed.invoice_id, ed.channel, ed.recipient_email, ed.cc_email,
             ed.subject_snapshot, ed.attachment_policy, ed.status,
-            ed.attempt_count, ed.dry_run, ed.last_error, ed.sent_at, ed.created_at,
+            ed.attempt_count, ed.dry_run, ed.acceptance_test, ed.last_error, ed.sent_at, ed.created_at,
             i.invoice_number
         FROM email_deliveries ed
         LEFT JOIN invoices i ON i.id = ed.invoice_id
@@ -76,6 +76,7 @@ if ($method === 'GET') {
             'status'           => (string)$r['status'],
             'attempt_count'    => (int)$r['attempt_count'],
             'dry_run'          => (bool)$r['dry_run'],
+            'acceptance_test'  => (bool)$r['acceptance_test'],
             'last_error'       => $r['last_error'] !== null ? (string)$r['last_error'] : null,
             'sent_at'          => $r['sent_at'] !== null ? (string)$r['sent_at'] : null,
             'created_at'       => (string)$r['created_at'],

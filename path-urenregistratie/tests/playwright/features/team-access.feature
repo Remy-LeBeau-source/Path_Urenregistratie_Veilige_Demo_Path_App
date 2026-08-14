@@ -1,7 +1,7 @@
 @regressie
 @api
 @fase:13
-Feature: Gebruikers en medewerkers beheren
+Feature: Team en toegang beheren
 
   # Native Playwright-uitvoering: tests/playwright/user-management.spec.ts
   # Navigatiemapping: tests/playwright/steps/user-management.steps.ts
@@ -62,3 +62,19 @@ Feature: Gebruikers en medewerkers beheren
     Given een reeds gedeactiveerde medewerker
     When de admin dezelfde medewerker nogmaals probeert te deactiveren
     Then wordt met Playwright-assertions bevestigd dat dubbel deactiveren geeft 409
+
+  @happy
+  Scenario: [USR-H-008] inactieve medewerker zonder historie kan definitief worden verwijderd
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given een nieuwe medewerker zonder uren- of documenthistorie
+    When de admin het account deactiveert en daarna definitief verwijdert
+    Then zijn account, medewerkersprofiel en lege opdracht niet meer aanwezig
+
+  @negative
+  Scenario: [USR-N-009] medewerker met zakelijke historie kan niet definitief worden verwijderd
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given een medewerker met bestaande urenhistorie inactief is
+    When de admin definitief verwijderen probeert
+    Then blijft het account inactief en blijft de historie bewaard

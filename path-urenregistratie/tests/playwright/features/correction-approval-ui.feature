@@ -2,7 +2,7 @@
 @ui
 @desktop
 @fase:9
-Feature: Correcties en goedkeuringen in de desktop-UI
+Feature: Correcties en goedkeuringen behandelen
 
   # Native Playwright-uitvoering: tests/playwright/timesheet-review-ui.spec.ts
   # Navigatiemapping: tests/playwright/steps/timesheets-review-ui.steps.ts

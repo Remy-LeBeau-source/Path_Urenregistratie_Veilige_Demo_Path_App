@@ -1,7 +1,7 @@
 @regressie
 @api
 @fase:15
-Feature: Maanden openen en sluiten
+Feature: Maandperiodes beheren
 
   # Native Playwright-uitvoering: tests/playwright/period-management.spec.ts
   # Navigatiemapping: tests/playwright/steps/period-management.steps.ts
@@ -27,7 +27,7 @@ Feature: Maanden openen en sluiten
   Scenario: [PER-N-003] anonieme gebruiker krijgt 401 op periods
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 1
-    Given maanden openen en sluiten is voorbereid
+    Given maandperiodes beheren is voorbereid
     When periods.php wordt aangeroepen zonder sessie
     Then wordt met Playwright-assertions bevestigd dat anonieme gebruiker krijgt 401 op periods
 
@@ -59,7 +59,7 @@ Feature: Maanden openen en sluiten
   Scenario: [PER-N-007] driecijferig jaar geeft 400
     # Testtechniek: Grenswaardenanalyse
     # Aantoonbare Playwright-assertions in deze case: 2
-    Given maanden openen en sluiten is voorbereid
+    Given maandperiodes beheren is voorbereid
     When de flow voor PER-N-007 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat driecijferig jaar geeft 400
 
@@ -67,7 +67,7 @@ Feature: Maanden openen en sluiten
   Scenario: [PER-N-008] vijfcijferig jaar geeft 400
     # Testtechniek: Grenswaardenanalyse
     # Aantoonbare Playwright-assertions in deze case: 2
-    Given maanden openen en sluiten is voorbereid
+    Given maandperiodes beheren is voorbereid
     When de flow voor PER-N-008 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat vijfcijferig jaar geeft 400
 
@@ -75,7 +75,7 @@ Feature: Maanden openen en sluiten
   Scenario: [PER-N-009] ongeldige maand geeft 400
     # Testtechniek: Grenswaardenanalyse
     # Aantoonbare Playwright-assertions in deze case: 2
-    Given maanden openen en sluiten is voorbereid
+    Given maandperiodes beheren is voorbereid
     When de flow voor PER-N-009 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat ongeldige maand geeft 400
 
@@ -83,6 +83,6 @@ Feature: Maanden openen en sluiten
   Scenario: [PER-N-010] onbekende periodeactie geeft 400
     # Testtechniek: Negatieve equivalentieklasse + error guessing
     # Aantoonbare Playwright-assertions in deze case: 2
-    Given maanden openen en sluiten is voorbereid
+    Given maandperiodes beheren is voorbereid
     When de flow voor PER-N-010 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat onbekende periodeactie geeft 400

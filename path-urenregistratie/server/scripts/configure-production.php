@@ -133,6 +133,14 @@ try {
         ],
         'mail' => [
             'enabled' => false,
+            'test_delivery_enabled' => false,
+            'allowed_recipients' => [],
+            'acceptance_test' => [
+                'enabled' => false,
+                'business_recipient' => '',
+                'password_reset_recipient' => '',
+                'invitation_recipient' => '',
+            ],
             'transport' => 'smtp_relay',
             'smtp_relay' => [
                 'host' => 'smtp-relay.gmail.com',

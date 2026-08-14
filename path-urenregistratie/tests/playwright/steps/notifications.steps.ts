@@ -19,7 +19,7 @@ Then("wordt met Playwright-assertions bevestigd dat ingelogde gebruiker kan noti
 Given("een ingelogde admin");
 When("mark_all_read wordt aangeroepen");
 Then("wordt met Playwright-assertions bevestigd dat mark_all_read werkt zonder fouten");
-Given("meldingen en notificaties is voorbereid");
+Given("meldingen beheren is voorbereid");
 When("notificaties.php zonder sessie wordt aangeroepen");
 Then("wordt met Playwright-assertions bevestigd dat anonieme gebruiker krijgt 401 op notificaties");
 When("een onbekende action wordt verstuurd");
@@ -32,3 +32,5 @@ When("de flow voor NOT-N-007 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat mark_read zonder notification_id geeft 400");
 When("de flow voor NOT-H-008 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat mark_read voor onbekende melding wijzigt nul records");
+When("de flow voor NOT-H-009 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat alles gelezen wist teller en een oudere response kan deze niet herstellen");

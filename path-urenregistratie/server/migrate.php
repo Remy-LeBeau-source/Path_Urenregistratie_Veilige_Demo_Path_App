@@ -110,6 +110,10 @@ function migration_plan(bool $allowDemoMigrations): array
         'id' => '013_password_reset_delivery.sql',
         'path' => __DIR__ . '/migrations/013_password_reset_delivery.sql',
     ];
+    $plan[] = [
+        'id' => '014_mail_acceptance_test.sql',
+        'path' => __DIR__ . '/migrations/014_mail_acceptance_test.sql',
+    ];
 
     return $plan;
 }

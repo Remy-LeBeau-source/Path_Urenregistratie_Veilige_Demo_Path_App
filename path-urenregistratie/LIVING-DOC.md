@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 174 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 186 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 174 unieke case-ID's
+- Playwright executable cases: 186 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 175 unieke case-ID's
+- Totaal executable cases: 187 unieke case-ID's
 - Playwright features: 21
 - Database features: 1
 - Playwright steps mappings: 21
 - Database steps mappings: 1
-- Uitvoeringen: 179
-- Niet-mobile projectuitvoeringen: 169
+- Uitvoeringen: 191
+- Niet-mobile projectuitvoeringen: 181
 - Mobile functionele cases: 5
 - Pixel 7 / Chromium-uitvoeringen: 5
 - iPhone 13 / WebKit-uitvoeringen: 5
 
-De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 174 Playwright-functionele cases in totaal 179 resultaten op: 169 + (5 x 2) = 179.
+De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 186 Playwright-functionele cases in totaal 191 resultaten op: 181 + (5 x 2) = 191.
 
 ## Documentatieketen
 
@@ -38,17 +38,22 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 174 Playwrig
 - [A11Y-H-001] loginformulier is volledig met het toetsenbord bruikbaar en correct gelabeld — Techniek: Toegankelijkheidsinspectie + toetsenbord-use-case · Assertions: 6
 - [A11Y-H-002] admin-dashboard hoofdnavigatie is toetsenbordbereikbaar met herkenbare namen — Techniek: Toegankelijkheidsinspectie + toetsenbord-use-case · Assertions: 4
 
-### Beheer- en instellingenwijzigingen via API
+### Organisatie-instellingen beheren
 
-- Feature: `tests/playwright/features/admin-writes.feature`
+- Feature: `tests/playwright/features/organization-settings.feature`
 - Source: `tests/playwright/admin-writes.spec.ts`
-- Cases: 5
+- Cases: 10
 
 - [ADM-WR-H-001] admin kan company/settings server-led opslaan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 - [ADM-WR-H-002] admin kan beheerder server-led aanmaken en wijzigen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
 - [ADM-WR-H-003] admin kan medewerker server-led aanmaken en bootstrap ziet deze terug — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
+- [ADM-WR-N-001] dubbel accountadres wordt voor medewerker en beheerder vriendelijk geweigerd — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
+- [ADM-WR-N-002] dubbel accountadres blijft uit de lijsten en toont een veilige GUI-melding — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 10
 - [ADM-WR-H-004] admin slaat medewerker zonder SMTP veilig op met toegang in afwachting — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [ADM-WR-H-005] productie toont uitsluitend serveraccounts en opent medewerkerformulier bovenaan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
+- [ADM-WR-H-006] deactiveren verplaatst medewerker direct en leeg account kan worden verwijderd — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
+- [ADM-WR-H-007] serverwrite na Herstel verschijnt direct in Teambeheer — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 5
+- [ADM-WR-H-008] bestaande beheerder en medewerker worden na Herstel direct terug in Teambeheer getoond — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
 
 ### Auditlog en traceerbaarheid
 
@@ -121,18 +126,20 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 174 Playwrig
 - [DASH-H-006] vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [DASH-H-007] dashboardknop behoudt de geldige maand en medewerkeroverzichten — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 
-### E-mailqueue, ontvangers en afleverbeleid
+### Mailroutering en aflevering
 
-- Feature: `tests/playwright/features/email-queue.feature`
+- Feature: `tests/playwright/features/mail-delivery.feature`
 - Source: `tests/playwright/email-queue.spec.ts`
-- Cases: 15
+- Cases: 19
 
 - [EQ-H-001] factuurlock maakt queue-items aan met dry_run=true — Techniek: Toestandsovergang · Assertions: 5
 - [EQ-H-002] broker-channel bundelt factuur en klanturenstaat — Techniek: API-contract + equivalentieklasse · Assertions: 2
 - [EQ-H-003] EasySalary-channel heeft attachment_policy none — Techniek: Equivalentieklassen · Assertions: 2
 - [EQ-H-004] action=enqueue voor gelockte factuur maakt nieuwe items aan — Techniek: Toestandsovergang · Assertions: 6
 - [EQ-H-005] action=list response bevat verplichte velden — Techniek: API-contract + equivalentieklasse · Assertions: 15
-- [EQ-H-015] Backoffice ziet veilige verzendhistorie zonder berichtinhoud — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 10
+- [EQ-H-015] Backoffice ziet veilige verzendhistorie zonder berichtinhoud — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 16
+- [EQ-H-016] Backoffice verstuurt vanuit de acceptatieconsole precies één gekozen scenario — Techniek: API-contract + equivalentieklasse · Assertions: 12
+- [EQ-N-017] niet-vrijgegeven acceptatieconsole toont vijf herkenbare maar geblokkeerde acties — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 9
 - [EQ-N-006] anonieme gebruiker krijgt 401 op list — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2
 - [EQ-N-007] medewerker krijgt 403 op list — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [EQ-N-008] action=enqueue zonder invoice_id geeft 400 — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
@@ -142,6 +149,8 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 174 Playwrig
 - [EQ-N-012] ongeldige status-filter geeft 400 — Techniek: Toestandsovergang · Assertions: 2
 - [EQ-N-013] anonieme enqueue geeft 401 — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [EQ-N-014] unknown action geeft 400 — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
+- [EQ-N-015] acceptatieconsole blijft standaard uit en weigert POST zonder expliciete bevestiging — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 7
+- [EQ-N-016] medewerker krijgt geen toegang tot de mailacceptatieconsole — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 
 ### Facturen definitief maken en vergrendelen
 
@@ -170,9 +179,9 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 174 Playwrig
 - [INV-ID-N-004] settings API weigert een onbekende factuurweergave — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
 - [INV-ID-H-005] instellingen tonen verkoopklare bedrijfsidentiteit en beveiligde verzendmodus — Techniek: API-contract + equivalentieklasse · Assertions: 8
 
-### Facturen in de desktop-UI
+### Facturen bekijken en beheren
 
-- Feature: `tests/playwright/features/invoices-ui.feature`
+- Feature: `tests/playwright/features/invoices.feature`
 - Source: `tests/playwright/invoices.spec.ts`
 - Cases: 7
 
@@ -190,26 +199,27 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 174 Playwrig
 - Source: `tests/playwright/mobile-ui.spec.ts`
 - Cases: 5
 
-- [MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikbaar — Techniek: Responsive viewport + end-to-end use-case · Assertions: 22
+- [MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikbaar — Techniek: Responsive viewport + end-to-end use-case · Assertions: 29
 - [MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documentupload bereiken — Techniek: Responsive viewport + end-to-end use-case · Assertions: 14
 - [MOB-H-003] mobiele correctie herindiening en administratieve goedkeuring zijn bereikbaar — Techniek: Responsive viewport + end-to-end use-case · Assertions: 13
 - [MOB-N-004] mobiele facturen touch targets en modals blijven binnen viewport — Techniek: Responsive viewport + end-to-end use-case · Assertions: 13
-- [MOB-H-005] mobiele verzendadministratie blijft leesbaar en toont geen geheime inhoud — Techniek: Responsive viewport + end-to-end use-case · Assertions: 11
+- [MOB-H-005] mobiele verzendadministratie blijft leesbaar en toont geen geheime inhoud — Techniek: Responsive viewport + end-to-end use-case · Assertions: 15
 
-### Meldingen en notificaties
+### Meldingen beheren
 
 - Feature: `tests/playwright/features/notifications.feature`
 - Source: `tests/playwright/notifications.spec.ts`
-- Cases: 8
+- Cases: 9
 
 - [NOT-H-001] ingelogde gebruiker kan notificaties ophalen — Techniek: API-contract + equivalentieklasse · Assertions: 5
-- [NOT-H-002] mark_all_read werkt zonder fouten — Techniek: Toestandsovergang · Assertions: 4
+- [NOT-H-002] mark_all_read werkt zonder fouten — Techniek: Toestandsovergang · Assertions: 8
 - [NOT-N-003] anonieme gebruiker krijgt 401 op notificaties — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [NOT-N-004] unknown action geeft 400 — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
 - [NOT-H-005] notificatielimiet wordt op minimaal een begrensd — Techniek: Grenswaardenanalyse · Assertions: 3
 - [NOT-H-006] unread-filter retourneert uitsluitend ongelezen meldingen — Techniek: Toestandsovergang · Assertions: 3
 - [NOT-N-007] mark_read zonder notification_id geeft 400 — Techniek: Toestandsovergang · Assertions: 2
 - [NOT-H-008] mark_read voor onbekende melding wijzigt nul records — Techniek: Grenswaardenanalyse · Assertions: 2
+- [NOT-H-009] alles gelezen wist teller en een oudere response kan deze niet herstellen — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 7
 
 ### Wachtwoordherstel en misbruikbeveiliging
 
@@ -231,7 +241,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 174 Playwrig
 - [PWD-N-008] request-reset weigert GET — Techniek: Toestandsovergang · Assertions: 2
 - [PWD-N-009] request-reset met leeg e-mailadres geeft 400 — Techniek: Toestandsovergang · Assertions: 2
 
-### Maanden openen en sluiten
+### Maandperiodes beheren
 
 - Feature: `tests/playwright/features/period-management.feature`
 - Source: `tests/playwright/period-management.spec.ts`
@@ -273,7 +283,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 174 Playwrig
 
 ### Rollen, rechten en gegevensafscherming
 
-- Feature: `tests/playwright/features/roles-api.feature`
+- Feature: `tests/playwright/features/roles-authorization.feature`
 - Source: `tests/playwright/roles-api.spec.ts`
 - Cases: 3
 
@@ -302,9 +312,9 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 174 Playwrig
 - [SEC-H-006] herhaalde mislukte loginpogingen maken security-audit event — Techniek: API-contract + equivalentieklasse · Assertions: 4
 - [SEC-H-007] config voorbeeld bevat voorbereide CSP/CORS/HSTS flags — Techniek: API-contract + equivalentieklasse · Assertions: 3
 
-### Correcties en goedkeuringen via API
+### Correctie- en goedkeuringsproces
 
-- Feature: `tests/playwright/features/timesheets-review-integration.feature`
+- Feature: `tests/playwright/features/correction-approval-workflow.feature`
 - Source: `tests/playwright/timesheet-review-flow.spec.ts`
 - Cases: 3
 
@@ -312,9 +322,9 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 174 Playwrig
 - [TS-REV-API-H-006] gelijktijdige approve-requests door twee beheerders leveren exact één winnaar — Techniek: Concurrency + toestandsovergang · Assertions: 7
 - [TS-REV-API-H-007] jaarwisseling december naar januari verwerkt urenstaten correct over de jaargrens — Techniek: API-contract + equivalentieklasse · Assertions: 7
 
-### Correcties en goedkeuringen in de desktop-UI
+### Correcties en goedkeuringen behandelen
 
-- Feature: `tests/playwright/features/timesheets-review-ui.feature`
+- Feature: `tests/playwright/features/correction-approval-ui.feature`
 - Source: `tests/playwright/timesheet-review-ui.spec.ts`
 - Cases: 5
 
@@ -324,9 +334,9 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 174 Playwrig
 - [TS-REV-UI-N-011] localhost kan demo-uren zonder serverversie voor correctie terugsturen — Techniek: Toestandsovergang · Assertions: 4
 - [TS-REV-UI-N-012] gefactureerde goedkeuring blijft bij serverweigering vergrendeld — Techniek: Toestandsovergang · Assertions: 6
 
-### Urenregistratie via API
+### Urenregistratie verwerken
 
-- Feature: `tests/playwright/features/timesheets-api.feature`
+- Feature: `tests/playwright/features/time-registration.feature`
 - Source: `tests/playwright/timesheet-write.spec.ts`
 - Cases: 5
 
@@ -336,11 +346,11 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 174 Playwrig
 - [TS-API-N-003] write zonder sessie geeft 401 — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
 - [TS-API-N-004] ongeldige payload geeft 400 — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
 
-### Gebruikers en medewerkers beheren
+### Team en toegang beheren
 
-- Feature: `tests/playwright/features/user-management.feature`
+- Feature: `tests/playwright/features/team-access.feature`
 - Source: `tests/playwright/user-management.spec.ts`
-- Cases: 7
+- Cases: 9
 
 - [USR-H-001] admin ziet alle gebruikers van het bedrijf — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [USR-H-002] admin kan medewerker deactiveren en heractiveren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
@@ -349,6 +359,8 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 174 Playwrig
 - [USR-N-005] medewerker mag geen gebruikersbeheer uitvoeren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [USR-N-006] admin kan zichzelf niet deactiveren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2
 - [USR-N-007] dubbel deactiveren geeft 409 — Techniek: Toestandsovergang · Assertions: 2
+- [USR-H-008] inactieve medewerker zonder historie kan definitief worden verwijderd — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 9
+- [USR-N-009] medewerker met zakelijke historie kan niet definitief worden verwijderd — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 
 ### Database-integriteit en CRUD-controle
 

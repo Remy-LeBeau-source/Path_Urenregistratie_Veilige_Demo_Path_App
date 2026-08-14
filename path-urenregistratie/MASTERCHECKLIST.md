@@ -28,7 +28,7 @@ staan onder de genummerde fases verderop in dit document.
 | Fase 9 — Correctie/goedkeuring | ✅ Technisch klaar | Productieacceptatie later |
 | Fase 10 — Klanturenstaat | ✅ VS Code-scope klaar | JPG/PNG → PDF server-side gebouwd en getest (CTS-API-H-005) |
 | Fase 11 — Facturen | ✅ VS Code-scope klaar | Server-side PDF + storage key + geautoriseerde download + inhoudscontrole gebouwd en getest (INV-H-004, INV-N-013) |
-| Fase 12 — Mailqueue | ✅ VS Code-scope klaar | Factuurmail en beveiligde accountuitnodigingen via dezelfde fail-closed queue; echte SMTP blijft gated |
+| Fase 12 — Mailqueue | ✅ VS Code-scope klaar | Fail-closed queue plus vijf afzonderlijk bevestigde acceptatiemails; echte SMTP blijft configuratie- en allowlist-gated |
 | Fase 13 — Bedrijfsgegevens | ✅ VS Code-scope klaar | Definitieve gegevens/accounts → Fase 16 |
 | Fase 14 — TransIP | ✅ VS Code-scope klaar | Deployment/config → Fase 16 |
 | Fase 15 — Release-hardening | ✅ VS Code-scope klaar | Concurrency, jaarwisseling, uploads, accessibility en PWA-manifest/service worker gebouwd en getest |
@@ -89,8 +89,8 @@ Post-live beheer
 
 ## Actuele stand
 
-- [x] Datum: 2026-08-14 (SMTP Relay en externe bezorging bewezen; v0.9.55-verzendadministratie in lokale validatie)
-- [-] Appversie: 0.9.55 in ontwikkeling; v0.9.53 staat op productie
+- [x] Datum: 2026-08-14 (SMTP Relay en externe bezorging bewezen; v0.9.56 lokaal volledig groen)
+- [-] Appversie: 0.9.56 in ontwikkeling; v0.9.53 staat op productie
 - [x] Technische eindsprint afgerond: Fase 10 (JPG/PNG server-side naar PDF via GD + hand-rolled
   PDF-writer `server/lib/simple_pdf.php`), Fase 11 (server-side factuur-PDF, `pdf_storage_key`
   gevuld na lock, geautoriseerde download-endpoint met company-/employee-scope, PDF-inhoudscontrole
@@ -98,8 +98,8 @@ Post-live beheer
   getest; PDF-bijlage nu structureel beschikbaar dankzij Fase 11), Fase 15 (gelijktijdige
   approve-requests door twee beheerders, jaarwisseling december→januari, te grote upload-afwijzing,
   basis toetsenbord-/labelcontrole, PWA-manifest + defensieve service worker).
-- [x] Actuele testinventaris: 174 Playwright + 1 DB = 175 unieke cases en 179 browseruitvoeringen
-  (169 niet-mobiel + 5 mobiele cases x 2 devices).
+- [x] Actuele testinventaris: 186 Playwright + 1 DB = 187 unieke cases en 191 browseruitvoeringen
+  (178 niet-mobiel + 5 mobiele cases x 2 devices).
 - [x] Volledige lokale Playwright-regressie voor v0.9.55: 179/179 groen, inclusief de privacyveilige
   Backoffice-verzendadministratie op desktop en mobiel. `npm run check`, `npm run test:db:crud`,
   `npm run security:deps`, de uitgebreide GUI-smoke en de releasebuild zijn eveneens groen.
@@ -110,7 +110,7 @@ Post-live beheer
   `npm run check`, `npm run test:db:crud`, `npm run security:deps` en `npm run test:gui-smoke`
   zijn op dezelfde werkboom apart groen bevestigd.
 - [x] Living Documentation-telling wordt uit de uitvoerbare specs berekend en met een expliciete
-  inventarisguard bewaakt. Actueel: 174 Playwright-cases, 1 DB-case, 175 unieke cases en 179 uitvoeringen.
+  inventarisguard bewaakt. Actueel: 186 Playwright-cases, 1 DB-case, 187 unieke cases en 191 uitvoeringen.
 - [x] `server/config.local.php` wordt nu ook expliciet door `server/.htaccess` geblokkeerd;
   SAFE-N-008, de smokecheck en de volledige regressie bewaken deze fail-closed productiegrens.
 - [x] Uitvoerbare BDD-engine toegevoegd met `playwright-bdd`: `.feature` genereert een native
@@ -142,6 +142,19 @@ Post-live beheer
 - [x] v0.9.55 maakt de bestaande serverqueue als privacybewuste verzendadministratie zichtbaar voor
   Backoffice: ontvanger, onderwerp, kanaal, bijlagebeleid, status en tijdstip, maar nooit berichttekst
   of wachtwoordlink. EQ-H-015, MOB-H-005, GUI-smoke en de volledige 179/179 regressie zijn groen.
+- [x] v0.9.56 voegt een beheerder-only mailacceptatieconsole toe met vijf losse scenario's, vaste
+  ontvangers, expliciete bevestiging per bericht, zichtbare bijlagetelling en herkenbare
+  `ACCEPTATIETEST · NIET BOEKEN`-markering. De console kent bewust geen bulkknop en blijft zonder
+  serveropt-in/allowlist geblokkeerd. Ook worden gedeactiveerde accounts server-authoritatief onder
+  Inactief getoond en kunnen uitsluitend historie-loze accounts definitief worden verwijderd.
+  Mobiel toont nu het versienummer en lokaal/test ook de Herstel-knop. `npm run check`, de uitgebreide
+  GUI-smoke, DB-CRUD, dependencycontrole en de volledige 191/191 Playwright-regressie zijn lokaal groen.
+  Living-documenttitels en featurebestanden gebruiken bedrijfsgerichte domeinnamen; API/UI-techniek blijft
+  via tags, bronmapping en vaste case-ID's traceerbaar.
+  Een bewuste serverwrite na lokaal Herstel heft de tijdelijke reset-autoriteit op en ververst Teambeheer,
+  zodat nieuw opgeslagen beheerders en medewerkers direct zichtbaar worden.
+  Dubbele accountadressen worden voor medewerker en beheerder met 409 en een veilige GUI-melding
+  geweigerd; SQL-details blijven afgeschermd en de dubbele invoer komt niet in de lijsten.
 - [x] Eerste gecontroleerde cutover van `97065e9` heeft het rollbackpad succesvol bewezen: v0.9.50
   gaf correcte headers en afscherming, maar health meldde veilig `ok=false` omdat een schone
   productiedatabase zonder demadata onterecht als fout gold. v0.9.44 is direct teruggezet zonder
@@ -906,9 +919,13 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
   wachtwoordwijziging: `info@pathconsultancy.nl` (Path Backoffice) en
   `kenrich.lieveld@pathconsultancy.nl` (Kenrich Lieveld). Wachtwoorden staan niet in Git of documentatie.
 - [-] Persoonlijke medewerkeraccounts en eventuele aanvullende beheerders veilig uitnodigen.
-- [-] Gebruikers deactiveren/verwijderenbeleid vastleggen.
+- [x] Gebruikers deactiveren/verwijderenbeleid technisch vastgelegd: deactiveren stopt toegang en
+  bewaart historie; definitief verwijderen kan alleen voor een inactief medewerkersaccount zonder
+  zakelijke of beveiligingshistorie en wordt anders server-side met 409 geblokkeerd.
 - [-] Google Workspace-koppeling.
 - [-] Tweefactorauthenticatie voor beheerders beoordelen (sterk aanbevolen).
+- [-] Productiesessiebeleid aanscherpen van de huidige sliding 8 uur naar bij voorkeur 30 minuten
+  inactiviteit, met een zichtbare waarschuwing en expliciete verlenging; apart bouwen en testen.
 - [-] Bepalen wie productiebeheerder is naast Gio.
 - [-] Privacy- en bewaartermijnen vastleggen voor uren, uploads, facturen en auditlogs.
 - [-] Vastleggen wie gegevens mag exporteren, corrigeren en archiveren.
@@ -968,6 +985,8 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
 - [-] Back-up maken en database/bestanden herstellen uit back-up.
 - [-] Mobiele admin-/medewerkerflow op fysieke iPhone, Android en tablet.
 - [-] PWA-installatie en offline-/updategedrag bepalen op een echt toestel.
+- [x] Mobiel versienummer zichtbaar gemaakt; de lokale/TEST-Herstelknop is mobiel bereikbaar met
+  minimaal 42 px touchdoel. Productie verbergt Herstel bewust omdat productie server-authoritatief is.
 - [-] Monitoring, health monitoring, securitylogging en logrotatie inrichten.
 - [x] Go-live- en rollbackrunbook geschreven in `OPERATIONS-RUNBOOK.md`; daadwerkelijk oefenen blijft extern open.
 - [-] Volledig schone productie-installatie vanaf nul uitvoeren.
@@ -997,12 +1016,13 @@ Status Fase 16:
 - [x] Bundel 2 voorbereiding: checksum-release staat veilig in private TransIP-staging; PHP/PDO,
   opslagrechten, uploadlimieten, cronbeschikbaarheid, SMTP STARTTLS, bedrijfsprofiel, twee
   beheeraccounts, databaseback-up en live read-only preflight zijn bewezen.
-- [-] fase als geheel: v0.9.53 staat veilig live. v0.9.54 met afgeschermde TEST-mailmodus is
-  volledig groen op `main`; v0.9.55 met Backoffice-verzendadministratie wordt gevalideerd.
+- [-] fase als geheel: v0.9.53 staat veilig live. v0.9.54 met afgeschermde TEST-mailmodus en
+  v0.9.55 met Backoffice-verzendadministratie zijn groen op `main`; v0.9.56 wordt lokaal gevalideerd.
   Google SMTP Relay accepteert het uitgaande TransIP-IP `85.10.158.7`, STARTTLS en afzenders binnen
   `pathconsultancy.nl`. Eén gecontroleerde mail van `backoffice@pathconsultancy.nl` naar het vooraf
-  toegestane testadres is extern ontvangen. De acceptatiebatch gebruikt voortaan uitsluitend
-  `info@pathconsultancy.nl`; productiemail blijft uit.
+  toegestane testadres is extern ontvangen. De vijf nieuwe acceptatieknoppen richten de drie
+  businessmails en wachtwoordreset op `info@pathconsultancy.nl` en de eerste uitnodiging op
+  `gch.lieveld@live.nl`; echte verzending blijft uit tot de afzonderlijke serverconfiguratie is gezet.
 
 ---
 

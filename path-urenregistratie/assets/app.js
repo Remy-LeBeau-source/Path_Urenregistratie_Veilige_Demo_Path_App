@@ -19,10 +19,18 @@ function isLocalResetAuthoritative() {
     return false;
   }
 }
+function releaseLocalResetAuthorityAfterServerWrite() {
+  if (!isLocalResetAuthoritative()) return;
+  try {
+    window.localStorage.removeItem(LOCAL_RESET_GUARD_KEY);
+  } catch (_error) { /* the following server refresh remains best effort */ }
+  resetReadApiCaches();
+}
 const READ_API_DASHBOARD_PATH = "/server/api/dashboard.php";
 const READ_API_INVOICES_PATH = "/server/api/invoices.php";
 const READ_API_NOTIFICATIONS_PATH = "/server/api/notifications.php";
 const READ_API_ANNOUNCEMENTS_PATH = "/server/api/announcements.php";
+const MAIL_ACCEPTANCE_API_PATH = "/server/api/mail-acceptance.php";
 const SUPPORT_EMAIL = "backoffice@pathconsultancy.nl";
 const DEFAULT_INVOICE_MAIL_BODY = "Middag,\n\nHierbij stuur ik de ureninformatie van {medewerker} over {maand} {jaar}.\n\nDaadwerkelijk gewerkte uren: {uren} uur.";
 const DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_SUBJECT = "Klanturenstaat {medewerker} – {maand} {jaar}";
@@ -936,6 +944,7 @@ function resetReadApiCaches() {
   readApiDebug.invoices = null;
   readApiDebug.invoicesByPeriod = {};
   readApiDebug.emailQueue = null;
+  readApiDebug.mailAcceptance = null;
   readApiDebug.notifications = null;
   readApiDebug.announcements = null;
   readApiDebug.customerTimesheetsByPeriod = {};
@@ -944,7 +953,9 @@ function resetReadApiCaches() {
   readApiRuntime.dashboardInFlight = false;
   readApiRuntime.invoicesInFlight = false;
   readApiRuntime.emailQueueInFlight = false;
+  readApiRuntime.mailAcceptanceInFlight = false;
   readApiRuntime.notificationsInFlight = false;
+  readApiRuntime.notificationsRequestSerial += 1;
   readApiRuntime.announcementsInFlight = false;
   readApiRuntime.customerTimesheetsInFlight = {};
   readApiRuntime.timesheetsInFlight = {};
@@ -952,6 +963,7 @@ function resetReadApiCaches() {
   readApiRuntime.lastDashboardAt = 0;
   readApiRuntime.lastInvoicesAt = 0;
   readApiRuntime.lastEmailQueueAt = 0;
+  readApiRuntime.lastMailAcceptanceAt = 0;
   readApiRuntime.lastNotificationsAt = 0;
   readApiRuntime.lastAnnouncementsAt = 0;
   readApiRuntime.lastInvoicesByPeriod = {};
@@ -1223,6 +1235,7 @@ const readApiDebug = {
   invoices: null,
   invoicesByPeriod: {},
   emailQueue: null,
+  mailAcceptance: null,
   notifications: null,
   announcements: null,
   customerTimesheetsByPeriod: {}
@@ -1233,7 +1246,9 @@ const readApiRuntime = {
   dashboardInFlight: false,
   invoicesInFlight: false,
   emailQueueInFlight: false,
+  mailAcceptanceInFlight: false,
   notificationsInFlight: false,
+  notificationsRequestSerial: 0,
   announcementsInFlight: false,
   customerTimesheetsInFlight: {},
   timesheetsInFlight: {},
@@ -1241,6 +1256,7 @@ const readApiRuntime = {
   lastDashboardAt: 0,
   lastInvoicesAt: 0,
   lastEmailQueueAt: 0,
+  lastMailAcceptanceAt: 0,
   lastNotificationsAt: 0,
   lastAnnouncementsAt: 0,
   lastInvoicesByPeriod: {},
@@ -1258,6 +1274,7 @@ const readApiSource = {
   dashboard: "fallback",
   invoices: "fallback",
   emailQueue: "fallback",
+  mailAcceptance: "fallback",
   notifications: "fallback",
   announcements: "fallback",
   customerTimesheets: "fallback",
@@ -2212,9 +2229,11 @@ function refreshNotificationsReadApi(force = false) {
   if (!(API_ENABLED && authRuntime.mode === "auth" && state.currentRole)) return Promise.resolve(null);
   const now = Date.now();
   if (!force && (readApiRuntime.notificationsInFlight || (now - readApiRuntime.lastNotificationsAt) < 8000)) return Promise.resolve(null);
+  const requestSerial = ++readApiRuntime.notificationsRequestSerial;
   readApiRuntime.notificationsInFlight = true;
   return fetchReadApi(READ_API_NOTIFICATIONS_PATH + "?limit=50")
     .then(data => {
+      if (requestSerial !== readApiRuntime.notificationsRequestSerial) return data;
       readApiRuntime.lastNotificationsAt = Date.now();
       if (!data) {
         setReadApiSource("notifications", "fallback");
@@ -2230,7 +2249,7 @@ function refreshNotificationsReadApi(force = false) {
       return data;
     })
     .finally(() => {
-      readApiRuntime.notificationsInFlight = false;
+      if (requestSerial === readApiRuntime.notificationsRequestSerial) readApiRuntime.notificationsInFlight = false;
     });
 }
 
@@ -2431,17 +2450,23 @@ function mergeBootstrapIntoState(data) {
     if (!match) return;
 
     employeeByDbId.set(Number(match.id), localEmployee);
-  matchedDbEmployeeIds.add(Number(match.id));
+    matchedDbEmployeeIds.add(Number(match.id));
+    const linkedUser = usersById.get(Number(match.user_id));
     localEmployee.name = String(match.full_name || localEmployee.name || "");
     localEmployee.role = String(match.job_title || localEmployee.role || "");
-    localEmployee.active = Number(match.active || 0) === 1;
-  localEmployee.dbEmployeeId = Number(match.id);
+    // Account access is authoritative for the Teambeheer active/inactive filter. The
+    // employee profile can still be active administratively after login access was
+    // revoked, so showing only employees.active would leave a deactivated account
+    // incorrectly visible under "Actief".
+    localEmployee.active = linkedUser
+      ? Number(linkedUser.active || 0) === 1
+      : Number(match.active || 0) === 1;
+    localEmployee.dbEmployeeId = Number(match.id);
     localEmployee.dbUserId = match.user_id ? Number(match.user_id) : null;
     if (match.employment_start_date) localEmployee.startDate = String(match.employment_start_date);
     if (match.weekly_contract_hours !== undefined && match.weekly_contract_hours !== null) {
       localEmployee.weeklyHours = Number(match.weekly_contract_hours);
     }
-    const linkedUser = usersById.get(Number(match.user_id));
     if (linkedUser && linkedUser.email) localEmployee.email = String(linkedUser.email);
     if (linkedUser) localEmployee.invitationPending = Number(linkedUser.password_ready || 0) !== 1;
   });
@@ -2457,7 +2482,9 @@ function mergeBootstrapIntoState(data) {
       dbUserId: dbEmployee.user_id ? Number(dbEmployee.user_id) : null,
       name: String(dbEmployee.full_name || linkedUser && linkedUser.display_name || "Nieuwe medewerker"),
       email: String(linkedUser && linkedUser.email || "nieuwe-medewerker@example.invalid"),
-      active: Number(dbEmployee.active || 0) === 1,
+      active: linkedUser
+        ? Number(linkedUser.active || 0) === 1
+        : Number(dbEmployee.active || 0) === 1,
       startDate: String(dbEmployee.employment_start_date || ""),
       notificationsEnabled: true,
       emailNotificationsEnabled: true,
@@ -2733,14 +2760,14 @@ function refreshDashboardReadApi(force) {
 }
 
 function refreshBootstrapReadApi(force) {
-  if (!(API_ENABLED && authRuntime.mode === "auth")) return;
+  if (!(API_ENABLED && authRuntime.mode === "auth")) return Promise.resolve(null);
   // A local reset must stay authoritative: never let a (possibly in-flight/delayed) bootstrap merge
   // re-inject server employees/records once the operator has reset to the local demo baseline.
-  if (isLocalResetAuthoritative()) return;
+  if (isLocalResetAuthoritative()) return Promise.resolve(null);
   const now = Date.now();
-  if (!force && (readApiRuntime.bootstrapInFlight || (now - readApiRuntime.lastBootstrapAt) < 30000)) return;
+  if (!force && (readApiRuntime.bootstrapInFlight || (now - readApiRuntime.lastBootstrapAt) < 30000)) return Promise.resolve(null);
   readApiRuntime.bootstrapInFlight = true;
-  fetchReadApi("/server/api/bootstrap.php")
+  return fetchReadApi("/server/api/bootstrap.php")
     .then(data => {
       readApiRuntime.lastBootstrapAt = Date.now();
       if (!data || isLocalResetAuthoritative()) {
@@ -2825,6 +2852,25 @@ function refreshEmailQueueReadApi(force = false) {
     })
     .finally(() => {
       readApiRuntime.emailQueueInFlight = false;
+    });
+}
+
+function refreshMailAcceptanceReadApi(force = false) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin")) return Promise.resolve(null);
+  const now = Date.now();
+  if (!force && (readApiRuntime.mailAcceptanceInFlight || (now - readApiRuntime.lastMailAcceptanceAt) < 15000)) return Promise.resolve(null);
+  readApiRuntime.mailAcceptanceInFlight = true;
+
+  return fetchReadApi(MAIL_ACCEPTANCE_API_PATH)
+    .then(data => {
+      readApiRuntime.lastMailAcceptanceAt = Date.now();
+      readApiDebug.mailAcceptance = data;
+      setReadApiSource("mailAcceptance", data ? "api" : "fallback");
+      renderMailAcceptanceConsole();
+      return data;
+    })
+    .finally(() => {
+      readApiRuntime.mailAcceptanceInFlight = false;
     });
 }
 
@@ -5759,7 +5805,7 @@ function renderEmployees() {
     return '<article class="employee-card' + (active ? "" : " is-inactive") + '">' +
       '<div class="employee-card-head"><div class="employee-identity"><span class="mini-avatar">' + initials(employee.name) + "</span><span><strong>" + escapeHtml(employee.name) + "</strong><small>" + escapeHtml(employee.role) + " · " + escapeHtml(employee.email || "geen accountadres") + (employee.invitationPending ? " · Toegang in afwachting" : "") + "</small></span></div>" + (active ? statusPill(record.timesheetStatus) : '<span class="status-pill status-concept">Inactief</span>') + "</div>" +
       '<div class="employee-details"><div><small>Klant</small><strong>' + escapeHtml(employee.client) + "</strong></div><div><small>Uren per week</small><strong>" + hoursFormat.format(weeklyHoursFor(employee)) + " uur</strong></div><div><small>Broker</small><strong>" + escapeHtml(employee.broker) + "</strong></div></div>" +
-      '<div class="employee-card-actions"><button class="text-button" data-edit-routing="' + employee.id + '">Gegevens aanpassen</button><button class="small-button" data-toggle-employee="' + employee.id + '">' + (active ? "Deactiveren" : "Opnieuw activeren") + "</button></div>" +
+      '<div class="employee-card-actions"><button class="text-button" data-edit-routing="' + employee.id + '">Gegevens aanpassen</button><button class="small-button" data-toggle-employee="' + employee.id + '">' + (active ? "Deactiveren" : "Opnieuw activeren") + "</button>" + (!active && API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin" ? '<button class="text-button danger-text" data-delete-employee="' + employee.id + '">Definitief verwijderen</button>' : "") + "</div>" +
       "</article>";
   }).join("") || '<div class="dashboard-action-empty">Geen medewerkers binnen dit filter.</div>';
   document.querySelectorAll("[data-employee-scope]").forEach(button => button.classList.toggle("is-active", button.dataset.employeeScope === state.employeeScope));
@@ -6031,6 +6077,119 @@ function mailDeliveryStatusMeta(item) {
   return { label: "Klaargezet", tone: "status-ready" };
 }
 
+function mailAcceptanceAttachmentText(count) {
+  const total = Math.max(0, Number(count || 0));
+  if (total === 0) return "Geen bijlagen";
+  if (total === 1) return "1 gecontroleerde PDF-bijlage";
+  return total + " gecontroleerde PDF-bijlagen";
+}
+
+const MAIL_ACCEPTANCE_PLACEHOLDERS = [
+  { key: "broker_bundle", label: "Broker: factuur + klanturenstaat", attachment_count: 2 },
+  { key: "accountant_invoice", label: "Boekhouder: factuur", attachment_count: 1 },
+  { key: "payroll_hours", label: "Salarisadministratie: alleen ureninformatie", attachment_count: 0 },
+  { key: "password_reset", label: "Wachtwoord vergeten: eenmalige link", attachment_count: 0 },
+  { key: "account_invitation", label: "Eerste uitnodiging: wachtwoord aanmaken", attachment_count: 0 }
+];
+
+function renderMailAcceptanceConsole() {
+  if (typeof document === "undefined") return;
+  const container = document.querySelector("#mail-acceptance-console");
+  const status = document.querySelector("#mail-acceptance-status");
+  const summary = document.querySelector("#mail-acceptance-summary");
+  const list = document.querySelector("#mail-acceptance-scenarios");
+  if (!container || !status || !summary || !list) return;
+
+  const data = readApiDebug.mailAcceptance;
+  const scenarios = Array.isArray(data && data.scenarios) ? data.scenarios : [];
+  if (!data) {
+    status.className = "status-pill status-warning";
+    status.textContent = "Niet geladen";
+    summary.textContent = authRuntime.mode === "auth"
+      ? "De beveiligde acceptatieconfiguratie wordt geladen."
+      : "De acceptatieconsole is alleen beschikbaar na beveiligd inloggen.";
+    list.innerHTML = MAIL_ACCEPTANCE_PLACEHOLDERS.map(item =>
+      '<article class="mail-acceptance-scenario" data-mail-acceptance-key="' + escapeHtml(item.key) + '">' +
+        '<div class="mail-acceptance-copy"><strong>' + escapeHtml(item.label) + '</strong><small>Ontvanger nog niet veilig ingesteld · ' + escapeHtml(mailAcceptanceAttachmentText(item.attachment_count)) + '</small></div>' +
+        '<button class="small-button" type="button" data-mail-acceptance-scenario="' + escapeHtml(item.key) + '" disabled>Niet beschikbaar</button>' +
+      '</article>'
+    ).join("");
+    return;
+  }
+
+  const readyCount = scenarios.filter(item => item && item.ready === true).length;
+  status.className = "status-pill " + (data.ready === true ? "status-approved" : "status-warning");
+  status.textContent = data.ready === true ? "Klaar voor test" : "Geblokkeerd";
+  const commonIssues = Array.isArray(data.issues) ? data.issues.filter(Boolean) : [];
+  summary.textContent = commonIssues.length
+    ? commonIssues.join(" ")
+    : readyCount + " van " + scenarios.length + " losse acceptatiescenario’s zijn gereed.";
+
+  list.innerHTML = scenarios.length ? scenarios.map(item => {
+    const scenarioIssues = Array.isArray(item && item.issues) ? item.issues.filter(Boolean) : [];
+    const ready = item && item.ready === true;
+    const details = scenarioIssues.length ? scenarioIssues.join(" ") : mailAcceptanceAttachmentText(item && item.attachment_count);
+    return '<article class="mail-acceptance-scenario" data-mail-acceptance-key="' + escapeHtml(String(item && item.key || "")) + '">' +
+      '<div class="mail-acceptance-copy"><strong>' + escapeHtml(String(item && item.label || "Acceptatiescenario")) + '</strong><small>Aan ' + escapeHtml(String(item && item.recipient || "Niet ingesteld")) + ' · ' + escapeHtml(details) + '</small></div>' +
+      '<button class="small-button" type="button" data-mail-acceptance-scenario="' + escapeHtml(String(item && item.key || "")) + '"' + (ready ? "" : " disabled") + '>Controleer &amp; verstuur 1</button>' +
+    '</article>';
+  }).join("") : '<div class="dashboard-action-empty"><strong>Geen scenario’s geconfigureerd.</strong><br>Er kan niets worden verzonden.</div>';
+}
+
+function showMailAcceptanceConfirmation(scenarioKey) {
+  const data = readApiDebug.mailAcceptance;
+  const scenarios = Array.isArray(data && data.scenarios) ? data.scenarios : [];
+  const scenario = scenarios.find(item => String(item && item.key || "") === String(scenarioKey || ""));
+  if (!scenario || scenario.ready !== true) {
+    toast("Dit acceptatiescenario is niet vrijgegeven.");
+    return;
+  }
+
+  showModal({
+    label: "Eén acceptatiemail",
+    title: String(scenario.label || "Acceptatiemail versturen") + "?",
+    message: "Controleer de vaste testontvanger en bijlagen. Deze actie verstuurt precies één herkenbaar gemarkeerd testbericht.",
+    summary: '<div><span>Ontvanger</span><strong>' + escapeHtml(String(scenario.recipient || "")) + '</strong></div>' +
+      '<div><span>Bijlagen</span><strong>' + escapeHtml(mailAcceptanceAttachmentText(scenario.attachment_count)) + '</strong></div>' +
+      '<div><span>Markering</span><strong>ACCEPTATIETEST · NIET BOEKEN</strong></div>',
+    confirm: "1 acceptatiemail versturen",
+    taskNavigation: false,
+    action: () => sendMailAcceptanceScenario(String(scenario.key || ""))
+  });
+}
+
+function sendMailAcceptanceScenario(scenarioKey) {
+  const confirmButton = document.querySelector("#modal-confirm");
+  confirmButton.disabled = true;
+  confirmButton.textContent = "Beveiligd verzenden…";
+  return requestAuthCsrf()
+    .then(token => fetch(MAIL_ACCEPTANCE_API_PATH, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify({ scenario: scenarioKey, confirm: "SEND_ONE_ACCEPTANCE_MAIL" })
+    }))
+    .then(response => response.json().catch(() => ({})).then(data => ({ ok: response.ok, data })))
+    .then(result => {
+      if (!result.ok || !result.data || result.data.ok !== true) {
+        throw new Error(String(result.data && result.data.message || "De acceptatiemail is niet verzonden."));
+      }
+      closeModal();
+      return Promise.all([
+        refreshEmailQueueReadApi(true),
+        refreshMailAcceptanceReadApi(true)
+      ]).then(() => {
+        renderMailDeliveryHistory();
+        renderMailAcceptanceConsole();
+        toast("Precies één acceptatiemail is door SMTP geaccepteerd.");
+      });
+    })
+    .catch(error => {
+      confirmButton.disabled = false;
+      confirmButton.textContent = "Opnieuw proberen";
+      toast(String(error && error.message || "De acceptatiemail is niet verzonden."));
+    });
+}
+
 function mailDeliveryTimestampLabel(value) {
   if (!value) return "Nog niet verzonden";
   const raw = String(value).trim();
@@ -6080,9 +6239,10 @@ function renderMailDeliveryHistory() {
     const timePrefix = item && item.status === "sent" ? "Verzonden" : "Aangemaakt";
     const invoice = item && item.invoice_number ? " · Factuur " + escapeHtml(item.invoice_number) : "";
     const attempts = Math.max(0, Number(item && item.attempt_count || 0));
-    return '<article class="mail-delivery-history-item" data-mail-delivery-status="' + escapeHtml(String(item && item.status || "queued")) + '">' +
+    const acceptanceLabel = item && item.acceptance_test === true ? '<span class="mail-acceptance-label">Acceptatietest</span>' : '';
+    return '<article class="mail-delivery-history-item" data-mail-delivery-status="' + escapeHtml(String(item && item.status || "queued")) + '" data-mail-acceptance-test="' + (item && item.acceptance_test === true ? "true" : "false") + '">' +
       '<div class="mail-delivery-history-main"><strong>' + escapeHtml(String(item && item.subject_snapshot || "E-mail zonder onderwerp")) + '</strong><small>Aan ' + escapeHtml(String(item && item.recipient_email || "Onbekende ontvanger")) + invoice + '</small></div>' +
-      '<div class="mail-delivery-history-meta"><span>' + escapeHtml(mailDeliveryChannelLabel(item && item.channel)) + '</span><span>' + escapeHtml(mailDeliveryAttachmentLabel(item && item.attachment_policy)) + '</span></div>' +
+      '<div class="mail-delivery-history-meta">' + acceptanceLabel + '<span>' + escapeHtml(mailDeliveryChannelLabel(item && item.channel)) + '</span><span>' + escapeHtml(mailDeliveryAttachmentLabel(item && item.attachment_policy)) + '</span></div>' +
       '<div class="mail-delivery-history-state"><span class="status-pill ' + status.tone + '">' + status.label + '</span><small>' + timePrefix + ' · ' + escapeHtml(mailDeliveryTimestampLabel(eventTime)) + (attempts > 1 ? " · " + attempts + " pogingen" : "") + '</small></div>' +
     '</article>';
   }).join("") : '<div class="dashboard-action-empty"><strong>Nog geen applicatiemails.</strong><br>Na de eerste queue- of verzendactie verschijnt hier het resultaat.</div>';
@@ -6536,7 +6696,7 @@ function renderNotifications() {
   const visible = notifications.filter(item => !item.read);
   const unread = visible.length;
   const count = document.querySelector("#notification-count");
-  count.textContent = unread > 9 ? "9+" : String(unread);
+  count.textContent = unread > 99 ? "99+" : String(unread);
   count.hidden = unread === 0;
   document.querySelector("#notification-title").textContent = unread
     ? unread + " ongelezen melding" + (unread === 1 ? "" : "en")
@@ -6807,6 +6967,7 @@ function renderAll() {
   renderEmployees();
   renderMailTemplates();
   renderMailRecipientSettings();
+  renderMailAcceptanceConsole();
   renderMailDeliveryHistory();
   if (hasEmployees) {
     renderHoursGrid();
@@ -6834,7 +6995,9 @@ function showView(view, options = {}) {
   if (view === "dashboard") renderDashboard();
   if (view === "employee-dashboard") renderEmployeeDashboard();
   if (view === "settings") {
+    renderMailAcceptanceConsole();
     renderMailDeliveryHistory();
+    refreshMailAcceptanceReadApi(false).then(renderMailAcceptanceConsole).catch(() => renderMailAcceptanceConsole());
     refreshEmailQueueReadApi(false).then(renderMailDeliveryHistory).catch(() => renderMailDeliveryHistory());
   }
   const target = document.querySelector("#view-" + view);
@@ -7878,6 +8041,7 @@ function showEmployeeEditor(employeeId) {
         })
           .then(result => {
             writeResult = result;
+            releaseLocalResetAuthorityAfterServerWrite();
             if (newRecipientRequested) {
               state.settings.mailRecipients = effectiveMailRecipients;
               syncLegacyRecipientSettings();
@@ -8004,6 +8168,7 @@ function showAdminEditor(adminId) {
         })
           .then(result => {
             updated.invitationPending = Boolean(result && result.invitation_pending);
+            releaseLocalResetAuthorityAfterServerWrite();
             return result;
           })
           .then(() => refreshBootstrapReadApi(true))
@@ -8037,7 +8202,15 @@ function writeStaffToApi(action, payload) {
     .then(resp => resp.json().catch(() => ({})).then(data => ({ ok: resp.ok, data })))
     .then(result => {
       if (!result.ok || !result.data || result.data.ok !== true) {
-        throw new Error(String(result && result.data && result.data.message || "Opslaan op server mislukt."));
+        const message = String(result && result.data && result.data.message || "Opslaan op server mislukt.");
+        if (result && result.data && result.data.error === "email-already-in-use" && isLocalResetAuthoritative()) {
+          releaseLocalResetAuthorityAfterServerWrite();
+          return refreshBootstrapReadApi(true).then(() => {
+            renderAll();
+            throw new Error(message);
+          });
+        }
+        throw new Error(message);
       }
       return result.data;
     });
@@ -8073,6 +8246,11 @@ function writeUserStatusToApi(dbUserId, action) {
     }))
     .then(resp => resp.json().catch(() => ({})).then(data => ({ ok: resp.ok, data })))
     .then(result => {
+      const alreadyInRequestedState = result && result.data && (
+        (action === "deactivate" && result.data.error === "already-inactive") ||
+        (action === "reactivate" && result.data.error === "already-active")
+      );
+      if (alreadyInRequestedState) return Object.assign({}, result.data, { ok: true, already_in_state: true });
       if (!result.ok || !result.data || result.data.ok !== true) {
         throw new Error(String(result && result.data && result.data.message || "Gebruikersstatus wijzigen op server mislukt."));
       }
@@ -8099,6 +8277,7 @@ function toggleEmployeeStatus(employeeId) {
           return;
         }
         writeUserStatusToApi(dbUserId, active ? "deactivate" : "reactivate")
+          .then(() => { employee.active = !active; })
           .then(() => refreshBootstrapReadApi(true))
           .then(() => { closeModal(); renderAll(); toast(employee.name + (active ? " is gedeactiveerd; de historie is bewaard." : " is opnieuw actief.")); })
           .catch(error => toast(String(error && error.message || "Status wijzigen op server mislukt.")));
@@ -8109,6 +8288,39 @@ function toggleEmployeeStatus(employeeId) {
       closeModal();
       renderAll();
       toast(employee.name + (active ? " is gedeactiveerd; de historie is bewaard." : " is opnieuw actief."));
+    }
+  });
+}
+
+function deleteInactiveEmployee(employeeId) {
+  const employee = employeeById(employeeId);
+  if (!employee || employee.active !== false) {
+    toast("Deactiveer de medewerker eerst.");
+    return;
+  }
+  const dbUserId = Number(employee.dbUserId || 0);
+  if (dbUserId <= 0) {
+    toast("Dit account heeft geen gekoppeld serveraccount en kan hier niet definitief worden verwijderd.");
+    return;
+  }
+  showModal({
+    label: "Medewerker definitief verwijderen",
+    title: employee.name + " definitief verwijderen?",
+    message: "Dit kan uitsluitend wanneer nog geen zakelijke of beveiligingshistorie aan dit account hangt. De server blokkeert verwijderen zodra uren, documenten, facturen, berichten, e-mails of loginactiviteit bestaan.",
+    summary: "<div><span>Voorwaarde</span><strong>Account is inactief</strong></div><div><span>Historie aanwezig</span><strong>Verwijderen wordt geblokkeerd</strong></div><div><span>Zonder historie</span><strong>Account en lege opdracht worden verwijderd</strong></div>",
+    confirm: "Definitief verwijderen",
+    action: () => {
+      writeUserStatusToApi(dbUserId, "delete")
+        .then(() => {
+          state.employees = state.employees.filter(item => Number(item.id) !== Number(employeeId));
+          return refreshBootstrapReadApi(true);
+        })
+        .then(() => {
+          closeModal();
+          renderAll();
+          toast(employee.name + " is definitief verwijderd omdat er geen historie bestond.");
+        })
+        .catch(error => toast(String(error && error.message || "Definitief verwijderen is geblokkeerd.")));
     }
   });
 }
@@ -8701,6 +8913,14 @@ document.addEventListener("click", event => {
 
   const toggleEmployee = event.target.closest("[data-toggle-employee]");
   if (toggleEmployee) toggleEmployeeStatus(Number(toggleEmployee.dataset.toggleEmployee));
+
+  const deleteEmployee = event.target.closest("[data-delete-employee]");
+  if (deleteEmployee) deleteInactiveEmployee(Number(deleteEmployee.dataset.deleteEmployee));
+
+  const mailAcceptanceScenario = event.target.closest("[data-mail-acceptance-scenario]");
+  if (mailAcceptanceScenario && !mailAcceptanceScenario.disabled) {
+    showMailAcceptanceConfirmation(mailAcceptanceScenario.dataset.mailAcceptanceScenario);
+  }
 
   const editAdmin = event.target.closest("[data-edit-admin]");
   if (editAdmin) showAdminEditor(editAdmin.dataset.editAdmin);
@@ -9383,7 +9603,11 @@ document.querySelector("#refresh-mail-delivery-history")?.addEventListener("clic
   button.disabled = true;
   button.textContent = "Vernieuwen…";
   refreshEmailQueueReadApi(true)
-    .then(() => renderMailDeliveryHistory())
+    .then(() => refreshMailAcceptanceReadApi(true))
+    .then(() => {
+      renderMailDeliveryHistory();
+      renderMailAcceptanceConsole();
+    })
     .catch(() => toast("Verzendadministratie kon niet worden vernieuwd."))
     .finally(() => {
       button.disabled = false;
