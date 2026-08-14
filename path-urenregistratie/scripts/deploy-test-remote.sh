@@ -56,12 +56,36 @@ php -r '
   }
   echo "test_mail_window=closed\n";
 ' "$app_root"
+
+wait_for_test_vhost() {
+  local nonce marker_name marker_path attempt response
+  nonce="$(php -r 'echo bin2hex(random_bytes(24));')"
+  marker_name="test-vhost-ready-${nonce}.txt"
+  marker_path="$live_root/$marker_name"
+  printf '%s' "$nonce" > "$marker_path"
+  chmod 644 "$marker_path"
+  for attempt in $(seq 1 30); do
+    response="$(curl -fsS "$test_origin/$marker_name" 2>/dev/null || true)"
+    if [[ "$response" == "$nonce" ]]; then
+      rm -f -- "$marker_path"
+      echo "TEST vhost is ready after attempt $attempt."
+      return 0
+    fi
+    sleep 10
+  done
+  rm -f -- "$marker_path"
+  echo 'TEST vhost does not yet serve its configured document root.' >&2
+  return 1
+}
+
+wait_for_test_vhost
 php server/scripts/database-backup.php --config=server/config.local.php --execute
 php server/migrate.php
 php server/scripts/test-preflight.php --config=server/config.local.php --live
 
 refresh_opcache() {
   local root="$1" nonce helper_name helper_path response curl_status
+  [[ -d "$root/server" ]] || return 0
   nonce="$(php -r 'echo bin2hex(random_bytes(24));')"
   helper_name="cache-refresh-${nonce}.php"
   helper_path="$root/server/$helper_name"
@@ -73,7 +97,7 @@ $invalidated = function_exists('opcache_invalidate') ? opcache_invalidate(__DIR_
 $reset = function_exists('opcache_reset') ? opcache_reset() : false;
 echo json_encode(['ok' => true, 'invalidated' => $invalidated, 'reset' => $reset]);
 PHP
-  chmod 600 "$helper_path"
+  chmod 644 "$helper_path"
   curl_status=0
   response="$(curl -fsS "$test_origin/server/$helper_name")" || curl_status="$?"
   rm -f -- "$helper_path"

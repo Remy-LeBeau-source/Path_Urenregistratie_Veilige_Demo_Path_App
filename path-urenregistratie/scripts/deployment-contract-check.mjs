@@ -52,7 +52,10 @@ for (const required of [
   'server/migrate.php',
   'test-preflight.php --config=server/config.local.php --live',
   'TEST mail or acceptance window is still enabled',
+  'wait_for_test_vhost',
+  'TEST vhost does not yet serve its configured document root',
   'rollback_on_error',
+  '[[ -d "$root/server" ]] || return 0',
   'server/health.php',
 ]) {
   assert.ok(testCombined.includes(required), `Missing TEST deployment safeguard: ${required}`);
