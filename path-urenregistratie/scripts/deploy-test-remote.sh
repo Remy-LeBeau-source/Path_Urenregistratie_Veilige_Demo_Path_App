@@ -128,7 +128,7 @@ cutover_started=1
 mv "$app_root" "$live_root"
 chmod 600 "$live_root/server/config.local.php"
 printf '%s\n' "$source_sha" > "$live_root/.release-sha"
-refresh_opcache "$live_root"
+refresh_opcache "$live_root" || echo 'TEST OPcache refresh unavailable; continuing to public smoke.' >&2
 
 index_snapshot="$release_root/live-index.html"
 health_snapshot="$release_root/live-health.json"

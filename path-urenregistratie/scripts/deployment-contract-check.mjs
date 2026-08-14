@@ -56,6 +56,7 @@ for (const required of [
   'TEST vhost does not yet serve its configured document root',
   'rollback_on_error',
   '[[ -d "$root/server" ]] || return 0',
+  'TEST OPcache refresh unavailable; continuing to public smoke',
   'server/health.php',
 ]) {
   assert.ok(testCombined.includes(required), `Missing TEST deployment safeguard: ${required}`);
