@@ -10,7 +10,7 @@ Feature: Correcties en goedkeuringen behandelen
   @happy
   Scenario: [TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en heropening blijven servergestuurd
     # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 27
+    # Aantoonbare Playwright-assertions in deze case: 29
     Given de medewerker een urenstaat indient in de browser
     When de administrator een correctieverzoek plaatst
     Then ziet de medewerker het correctieverzoek en dient opnieuw in
@@ -20,12 +20,12 @@ Feature: Correcties en goedkeuringen behandelen
     Then opent de medewerker de dashboardcorrectie en kan opnieuw indienen
 
   @happy
-  Scenario: [TS-REV-UI-H-009] medewerker kan een ingediende urenstaat opnieuw indienen
-    # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 4
+  Scenario: [TS-REV-UI-H-009] ingediende urenstaat blijft vergrendeld tot Backoffice een correctie vraagt
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 5
     Given medewerker opent een ingediende urenstaat
     When de flow voor TS-REV-UI-H-009 wordt uitgevoerd
-    Then kan de medewerker opnieuw indienen zonder blokkerende statusmelding
+    Then zijn invoer en indienactie vergrendeld en wacht de medewerker op Backoffice
 
   @happy
   Scenario: [TS-REV-UI-H-010] submitknop is verborgen bij goedgekeurde urenstaat

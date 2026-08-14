@@ -78,3 +78,11 @@ Feature: Team en toegang beheren
     Given een medewerker met bestaande urenhistorie inactief is
     When de admin definitief verwijderen probeert
     Then blijft het account inactief en blijft de historie bewaard
+
+  @happy
+  Scenario: [USR-H-010] inactieve beheerder zonder historie kan definitief worden verwijderd
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given een extra beheerder zonder login- of zakelijke historie
+    When het beheeraccount wordt gedeactiveerd en definitief verwijderd
+    Then komt het lege beheeraccount niet meer in de userlijst voor

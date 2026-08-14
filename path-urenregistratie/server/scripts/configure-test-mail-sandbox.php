@@ -9,10 +9,11 @@ $options = ops_options($argv);
 $configPath = (string)($options['config'] ?? '/data/sites/web/pathconsultancynl/private/path-uren-test/config.local.php');
 $expectedPath = '/data/sites/web/pathconsultancynl/private/path-uren-test/config.local.php';
 $businessRecipient = 'giovanno.maatsen@pathconsultancy.nl';
-$invitationRecipient = 'kenrich.lieveld@pathconsultancy.nl';
+$invitationRecipient = $businessRecipient;
+$secondaryTestAccount = 'kenrich.lieveld@pathconsultancy.nl';
 $acceptanceAccounts = [
     ['email' => $businessRecipient, 'name' => 'Giovanno Maatsen'],
-    ['email' => $invitationRecipient, 'name' => 'Kenrich Lieveld'],
+    ['email' => $secondaryTestAccount, 'name' => 'Kenrich Lieveld'],
 ];
 $temporaryPath = null;
 $backupPath = null;
@@ -26,7 +27,7 @@ try {
             'mode' => 'check',
             'writes_performed' => false,
             'config_path' => $expectedPath,
-            'allowed_recipients' => [$businessRecipient, $invitationRecipient],
+            'allowed_recipients' => [$businessRecipient],
             'test_accounts' => array_column($acceptanceAccounts, 'email'),
             'message' => 'Use --execute --confirm=ENABLE_TEST_MAIL_SANDBOX on TransIP to open only the guarded TEST mail sandbox.',
         ]);
@@ -52,7 +53,7 @@ try {
     $config['mail'] = is_array($config['mail'] ?? null) ? $config['mail'] : [];
     $config['mail']['enabled'] = true;
     $config['mail']['test_delivery_enabled'] = true;
-    $config['mail']['allowed_recipients'] = [$businessRecipient, $invitationRecipient];
+    $config['mail']['allowed_recipients'] = [$businessRecipient];
     $config['mail']['test_redirect_all'] = true;
     $config['mail']['test_sink_recipient'] = $businessRecipient;
     $config['mail']['acceptance_test'] = [
@@ -66,7 +67,7 @@ try {
     if ($relayErrors !== [] || !mail_real_delivery_allowed_for_environment($config)) {
         throw new RuntimeException('Guarded TEST relay configuration is invalid: ' . implode('; ', $relayErrors));
     }
-    foreach ([$businessRecipient, $invitationRecipient] as $recipient) {
+    foreach ([$businessRecipient] as $recipient) {
         if (!mail_recipient_is_allowed($config, $recipient)) {
             throw new RuntimeException('TEST recipient is not protected by the exact allowlist.');
         }
@@ -131,7 +132,7 @@ try {
         'writes_performed' => true,
         'mail_enabled' => true,
         'test_delivery_enabled' => true,
-        'allowed_recipients' => [$businessRecipient, $invitationRecipient],
+        'allowed_recipients' => [$businessRecipient],
         'test_sink_recipient' => $businessRecipient,
         'test_accounts' => array_column($acceptanceAccounts, 'email'),
         'backup_path' => $backupPath,

@@ -42,9 +42,9 @@ Feature: Dashboard en open werkvoorraad
   @negative
   Scenario: [DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus
     # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 14
-    Given Stasjo is ingelogd in de voorbeeldomgeving
-    When Stasjo Herstel kiest en daarna een open urenactie indient
+    # Aantoonbare Playwright-assertions in deze case: 18
+    Given Backoffice de voorbeeldomgeving herstelt en daarna naar Stasjo wisselt
+    When Stasjo daarna een open urenactie indient
     And Stasjo voert daarna F5 uit
     Then blijft de gewijzigde lokale teller zichtbaar en komt geen oude serversessie terug
     And Backoffice kan Marc zijn klanturenstaat goedkeuren zonder statusrace
@@ -88,7 +88,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakiezer blijft leesbaar
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 6
+    # Aantoonbare Playwright-assertions in deze case: 7
     Given een medewerker die een urenstaat vult en het thema wisselt
     When de medewerker uren invult en terug naar het medewerkerdashboard gaat
     Then blijven de maandnamen zichtbaar in donkere modus
@@ -96,7 +96,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-004] terugkeren naar medewerkerdashboard ververst de uren en behoudt maandlabels bij themawissel
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 4
+    # Aantoonbare Playwright-assertions in deze case: 5
     Given een medewerker op donker thema die vanuit dashboard naar uren gaat
     When de medewerker uren wijzigt en terug navigeert via de zichtbare medewerkerroute
     Then zijn de maandlabels nog zichtbaar in de maandkiezer
@@ -149,3 +149,12 @@ Feature: Dashboard en open werkvoorraad
     Given een medewerker die een toekomstige maand probeert te openen
     When de medewerker teruggaat naar het dashboard
     Then staat de periode op augustus en toont het overzicht geen toekomstige maanden
+
+  @happy
+  Scenario: [DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels
+    # Testtechniek: Equivalentieklassen
+    # Aantoonbare Playwright-assertions in deze case: 13
+    Given Backoffice met de volledige serverwerkvoorraad is ingelogd
+    When Backoffice augustus-juli-augustus doorloopt
+    Then blijven globale aantallen, eigenaren en taakidentiteiten gelijk
+    And eigenaarfilters openen alleen hun concrete taakregels

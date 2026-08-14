@@ -38,3 +38,6 @@ Then("zijn account, medewerkersprofiel en lege opdracht niet meer aanwezig");
 Given("een medewerker met bestaande urenhistorie inactief is");
 When("de admin definitief verwijderen probeert");
 Then("blijft het account inactief en blijft de historie bewaard");
+Given("een extra beheerder zonder login- of zakelijke historie");
+When("het beheeraccount wordt gedeactiveerd en definitief verwijderd");
+Then("komt het lege beheeraccount niet meer in de userlijst voor");

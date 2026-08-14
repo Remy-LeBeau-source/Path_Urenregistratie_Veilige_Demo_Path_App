@@ -92,6 +92,26 @@ function mail_test_sink_recipient(array $config): ?string
     return mail_recipient_is_allowed($config, $recipient) ? $recipient : null;
 }
 
+/**
+ * Security invitations use the fixed TEST mailbox while the account itself
+ * retains the address entered by the administrator. Production is unaffected.
+ */
+function mail_test_invitation_recipient(array $config): ?string
+{
+    if (mail_environment($config) !== 'test') {
+        return null;
+    }
+    $mail = isset($config['mail']) && is_array($config['mail']) ? $config['mail'] : [];
+    $acceptance = isset($mail['acceptance_test']) && is_array($mail['acceptance_test'])
+        ? $mail['acceptance_test']
+        : [];
+    $recipient = strtolower(trim((string)($acceptance['invitation_recipient'] ?? '')));
+    if (!filter_var($recipient, FILTER_VALIDATE_EMAIL)) {
+        return null;
+    }
+    return mail_recipient_is_allowed($config, $recipient) ? $recipient : null;
+}
+
 /** @return array{recipient:string,cc:?string,subject:string,body:string,redirected:bool} */
 function mail_effective_delivery(array $config, array $delivery): array
 {
@@ -99,7 +119,13 @@ function mail_effective_delivery(array $config, array $delivery): array
     $cc = !empty($delivery['cc_email']) ? trim((string)$delivery['cc_email']) : null;
     $subject = (string)($delivery['subject_snapshot'] ?? '');
     $body = (string)($delivery['body_snapshot'] ?? '');
-    $sink = (bool)($delivery['acceptance_test'] ?? false) ? null : mail_test_sink_recipient($config);
+    $fixedInvitationRecipient = mail_test_invitation_recipient($config);
+    $isFixedTestInvitation = strtolower(trim((string)($delivery['channel'] ?? ''))) === 'password_reset'
+        && $fixedInvitationRecipient !== null
+        && strtolower($recipient) === $fixedInvitationRecipient;
+    $sink = (bool)($delivery['acceptance_test'] ?? false) || $isFixedTestInvitation
+        ? null
+        : mail_test_sink_recipient($config);
     if ($sink === null) {
         return compact('recipient', 'cc', 'subject', 'body') + ['redirected' => false];
     }

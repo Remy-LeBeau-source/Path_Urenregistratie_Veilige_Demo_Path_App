@@ -79,7 +79,7 @@ Feature: Mailroutering en aflevering
   @happy
   Scenario: [EQ-H-020] Backoffice finaliseert een serverfactuur vóór de mailqueue en sluit de vervolgtaak
     # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 7
+    # Aantoonbare Playwright-assertions in deze case: 8
     Given een goedgekeurde maar nog niet definitieve serverfactuur als Backoffice-taak klaarstaat
     When Backoffice de verzending één keer afrondt
     Then wordt eerst gelockt, niet te vroeg gequeued en verdwijnt de afgeronde vervolgtaak

@@ -247,7 +247,7 @@ function mail_acceptance_send(
             $pdo->prepare('DELETE FROM password_reset_tokens WHERE user_id = :id')
                 ->execute([':id' => (int)$user['id']]);
         }
-        $reset = auth_create_password_reset($pdo, $user, $config);
+        $reset = auth_create_password_reset($pdo, $user, $config, (string)$scenario['kind']);
         if ($reset === null || (int)($reset['delivery_id'] ?? 0) <= 0) {
             throw new RuntimeException('acceptance-security-rate-limit');
         }

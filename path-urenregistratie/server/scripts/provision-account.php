@@ -134,7 +134,7 @@ try {
                 'id' => $userId,
                 'email' => $email,
                 'display_name' => $name,
-            ], $config);
+            ], $config, 'invitation');
             if (!$reset || (int)($reset['delivery_id'] ?? 0) <= 0) {
                 throw new RuntimeException('Account invitation could not be queued. No account changes were saved.');
             }

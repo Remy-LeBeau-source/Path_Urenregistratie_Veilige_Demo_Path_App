@@ -22,7 +22,7 @@ When("de administrator de goedkeuring met reden intrekt");
 Then("opent de medewerker de dashboardcorrectie en kan opnieuw indienen");
 Given("medewerker opent een ingediende urenstaat");
 When("de flow voor TS-REV-UI-H-009 wordt uitgevoerd");
-Then("kan de medewerker opnieuw indienen zonder blokkerende statusmelding");
+Then("zijn invoer en indienactie vergrendeld en wacht de medewerker op Backoffice");
 Given("medewerker opent een goedgekeurde urenstaat");
 When("de flow voor TS-REV-UI-H-010 wordt uitgevoerd");
 Then("is de indienknop verborgen en staat er een statusmelding");

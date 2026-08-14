@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1B38">
   <link rel="manifest" href="manifest.webmanifest">
   <title>Uren & Facturatie</title>
-  <link rel="stylesheet" href="assets/styles.css?v=0.9.63">
+  <link rel="stylesheet" href="assets/styles.css?v=0.9.64">
 </head>
 <body>
   <section class="login-screen" id="login-screen" aria-labelledby="login-title">
@@ -136,7 +136,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 0.9.63</span>
+      <span class="demo-badge">Versie 0.9.64</span>
       </div>
     </aside>
 
@@ -152,7 +152,7 @@
         <div class="topbar-title">
           <p class="eyebrow" id="organization-name">Path Consultancy</p>
           <h1 id="page-title">Urenoverzicht</h1>
-          <span class="demo-badge mobile-version-badge">Versie 0.9.63</span>
+          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 0.9.64</span><span class="environment-badge" id="environment-badge" hidden></span></span>
         </div>
         <div class="topbar-actions">
           <span class="safety-badge">E-mail uitgeschakeld</span>
@@ -316,9 +316,12 @@
         <section class="panel admin-task-panel" id="admin-task-panel">
           <div class="panel-heading admin-task-heading">
             <div><span class="section-label">Zonder maanden wisselen</span><h3 id="admin-task-title">Alle open acties per maand</h3><p id="admin-task-summary">Iedere regel is één actie en toont wie hem moet uitvoeren.</p></div>
+            <button class="small-button" id="admin-task-panel-toggle" type="button" aria-expanded="false" aria-controls="admin-task-content">Overzicht openen</button>
           </div>
-          <div class="admin-task-filters" id="admin-task-filters" role="group" aria-label="Open taken filteren"></div>
-          <div class="admin-task-list" id="admin-task-list"></div>
+          <div id="admin-task-content" hidden>
+            <div class="admin-task-filters" id="admin-task-filters" role="group" aria-label="Open taken filteren"></div>
+            <div class="admin-task-list" id="admin-task-list"></div>
+          </div>
         </section>
 
         <section class="panel customer-timesheet-admin-panel" id="customer-timesheet-admin-panel">
@@ -760,7 +763,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script vite-ignore defer src="assets/jspdf.umd.min.js"></script>
   <script vite-ignore defer src="assets/invoice-fonts.js"></script>
-  <script vite-ignore defer src="assets/app.js?v=0.9.63"></script>
+  <script vite-ignore defer src="assets/app.js?v=0.9.64"></script>
   <script>
     // Defensive: registration failure/unsupported browsers must never affect the app itself.
     if ('serviceWorker' in navigator) {

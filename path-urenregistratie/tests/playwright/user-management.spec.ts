@@ -290,4 +290,47 @@ test.describe('user management api', () => {
       await ctx.dispose();
     }
   });
+
+  test('[USR-H-010] inactieve beheerder zonder historie kan definitief worden verwijderd', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const unique = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    const email = `delete-admin-${unique}@example.invalid`;
+    let userId = 0;
+
+    await test.step('Given een extra beheerder zonder login- of zakelijke historie', async () => {
+      const token = await getCSRF(ctx);
+      const response = await ctx.post('/server/api/staff.php', {
+        headers: { 'X-CSRF-Token': token },
+        data: {
+          action: 'upsert_admin',
+          sendInvitation: false,
+          admin: { name: `Verwijderbare Beheerder ${unique}`, email, active: true },
+        },
+      });
+      const body = await response.json();
+      expect(response.status(), JSON.stringify(body)).toBe(200);
+      userId = Number(body.user_id);
+      expect(userId).toBeGreaterThan(0);
+    });
+
+    await test.step('When het beheeraccount wordt gedeactiveerd en definitief verwijderd', async () => {
+      const deactivate = await postUsers(ctx, { action: 'deactivate', user_id: userId });
+      expect(deactivate.status, JSON.stringify(deactivate.body)).toBe(200);
+      const remove = await postUsers(ctx, { action: 'delete', user_id: userId });
+      expect(remove.status, JSON.stringify(remove.body)).toBe(200);
+      expect(remove.body).toMatchObject({ ok: true, action: 'delete', user_id: userId });
+    });
+
+    await test.step('Then komt het lege beheeraccount niet meer in de userlijst voor', async () => {
+      const usersResponse = await ctx.get('/server/api/users.php');
+      const users = ((await usersResponse.json()).users || []) as Array<{ id: number }>;
+      expect(users.some(user => user.id === userId)).toBe(false);
+    });
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
 });

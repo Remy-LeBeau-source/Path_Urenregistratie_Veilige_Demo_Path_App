@@ -1,6 +1,6 @@
 # Path Uren & Facturatie
 
-Versie v0.9.63 van een configureerbare uren- en facturatieapp. Path Consultancy is de handelsnaam; QSI Consultancy B.V. is de juridische onderneming in de volledig ingevulde voorbeeldorganisatie.
+Versie v0.9.64 van een configureerbare uren- en facturatieapp. Path Consultancy is de handelsnaam; QSI Consultancy B.V. is de juridische onderneming in de volledig ingevulde voorbeeldorganisatie.
 
 ## Wat deze versie laat zien
 

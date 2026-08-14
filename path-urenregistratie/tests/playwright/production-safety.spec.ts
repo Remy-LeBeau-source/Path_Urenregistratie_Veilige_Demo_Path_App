@@ -509,7 +509,7 @@ test('[SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed', a
     expect(dispatch).toContain('invoice_and_customer_timesheet');
     expect(preflight).toContain("'writes_performed' => false");
     expect(resetService).toContain('mail_real_delivery_allowed_for_environment($config)');
-    expect(resetService).toContain('mail_validate_delivery_recipients($config, $email)');
+    expect(resetService).toContain("mail_validate_delivery_recipients($config, $effective['recipient'], $effective['cc'])");
     expect(resetService).toContain("'/index.html#reset-password='");
     expect(resetService).toContain("'delivery_available' => auth_password_reset_delivery_available($config)");
     expect(resetService).toContain('AUTH_PASSWORD_RESET_MAX_REQUESTS = 3');
@@ -557,15 +557,17 @@ test('[SAFE-H-010] echte TEST-mail vereist opt-in en een ontvangers-whitelist', 
   });
 });
 
-test('[SAFE-H-013] TEST-mailsandbox opent alleen atomisch voor twee vaste ontvangers', async () => {
+test('[SAFE-H-013] TEST-mailsandbox opent atomisch voor één vaste mailsink en twee TEST-accounts', async () => {
   let result: { ok?: boolean; mode?: string; writes_performed?: boolean; allowed_recipients?: string[]; test_accounts?: string[] } = {};
-  const expectedRecipients = [
+  const expectedRecipients = ['giovanno.maatsen@pathconsultancy.nl'];
+  const expectedAccounts = [
     'giovanno.maatsen@pathconsultancy.nl',
     'kenrich.lieveld@pathconsultancy.nl',
   ];
 
-  await test.step('Given exact twee vaste TEST-ontvangers en bijbehorende accounts zijn gedefinieerd', async () => {
-    expect(expectedRecipients).toHaveLength(2);
+  await test.step('Given één vaste TEST-mailsink en twee bijbehorende accounts zijn gedefinieerd', async () => {
+    expect(expectedRecipients).toHaveLength(1);
+    expect(expectedAccounts).toHaveLength(2);
   });
 
   await test.step('When de TEST-mailsandboxconfigurator zonder uitvoerbevestiging wordt gestart', async () => {
@@ -576,12 +578,12 @@ test('[SAFE-H-013] TEST-mailsandbox opent alleen atomisch voor twee vaste ontvan
     result = JSON.parse(execution.stdout);
   });
 
-  await test.step('Then blijft de check niet-mutatief en toont hij exact de twee toegestane ontvangers en TEST-accounts', async () => {
+  await test.step('Then blijft de check niet-mutatief en scheidt hij de mailsink van de TEST-accounts', async () => {
     expect(result.ok).toBe(true);
     expect(result.mode).toBe('check');
     expect(result.writes_performed).toBe(false);
     expect(result.allowed_recipients).toEqual(expectedRecipients);
-    expect(result.test_accounts).toEqual(result.allowed_recipients);
+    expect(result.test_accounts).toEqual(expectedAccounts);
   });
 
   await test.step('And zijn bevestiging, accounttransactie, backup, atomische write en deployguard aantoonbaar afgedwongen', async () => {
@@ -678,7 +680,8 @@ test('[SAFE-H-011] groene main-pipeline rolt exact dezelfde release veilig uit n
   await test.step('And blijft mail gesloten en wordt bij een fout automatisch teruggerold', async () => {
     expect(remote).toContain('Production mail or acceptance window is still enabled.');
     expect(remote).toContain('Pending production mail prevents deployment');
-    expect(remote).toContain('mv "$rollback_root" "$live_root"');
+    expect(remote).toContain('move_directory_contents "$live_root" "$failed_root"');
+    expect(remote).toContain('move_directory_contents "$rollback_root" "$live_root"');
     expect(remote).toContain('opcache_reset');
     expect(remote).toContain('chmod 644 "$helper_path"');
     expect(remote).toContain('PROD OPcache refresh unavailable; continuing to authoritative public smoke');

@@ -43,21 +43,54 @@ function auth_password_reset_url(array $config, string $rawToken): string
     return $origin . '/index.html#reset-password=' . rawurlencode($rawToken);
 }
 
-function auth_enqueue_password_reset(PDO $pdo, array $user, array $config, string $rawToken): int
+function auth_password_reset_queue_recipient(array $config, string $accountEmail, string $purpose): string
+{
+    if ($purpose === 'invitation' && mail_environment($config) === 'test') {
+        $fixedRecipient = mail_test_invitation_recipient($config);
+        if ($fixedRecipient === null) {
+            throw new RuntimeException('De vaste TEST-ontvanger voor uitnodigingen is niet veilig ingesteld.');
+        }
+        return $fixedRecipient;
+    }
+    return trim($accountEmail);
+}
+
+function auth_enqueue_password_reset(
+    PDO $pdo,
+    array $user,
+    array $config,
+    string $rawToken,
+    string $purpose = 'password_reset'
+): int
 {
     $userId = (int)$user['id'];
-    $email = trim((string)$user['email']);
-    if ($userId <= 0 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    $accountEmail = trim((string)$user['email']);
+    if ($userId <= 0 || !filter_var($accountEmail, FILTER_VALIDATE_EMAIL)) {
         throw new RuntimeException('Invalid password-reset recipient.');
     }
-    $recipientErrors = mail_validate_delivery_recipients($config, $email);
+    $recipient = auth_password_reset_queue_recipient($config, $accountEmail, $purpose);
+    $effective = mail_effective_delivery($config, [
+        'channel' => 'password_reset',
+        'recipient_email' => $recipient,
+        'cc_email' => null,
+        'subject_snapshot' => '',
+        'body_snapshot' => '',
+        'acceptance_test' => false,
+    ]);
+    $recipientErrors = mail_validate_delivery_recipients($config, $effective['recipient'], $effective['cc']);
     if ($recipientErrors !== []) {
         throw new RuntimeException('Password-reset recipient is not allowed in this environment.');
     }
     $displayName = trim((string)($user['display_name'] ?? '')) ?: 'gebruiker';
     $link = auth_password_reset_url($config, $rawToken);
-    $subject = 'Stel je wachtwoord in voor Uren & Facturatie';
+    $isTestInvitationRedirect = $purpose === 'invitation'
+        && strtolower($recipient) !== strtolower($accountEmail);
+    $subject = ($isTestInvitationRedirect ? '[TEST uitnodiging voor ' . $accountEmail . '] ' : '')
+        . 'Stel je wachtwoord in voor Uren & Facturatie';
     $body = "Beste {$displayName},\n\n"
+        . ($isTestInvitationRedirect
+            ? "TESTUITNODIGING — oorspronkelijke account: {$accountEmail}\n\n"
+            : '')
         . "Gebruik de onderstaande persoonlijke link om je wachtwoord in te stellen. "
         . "De link is twee uur geldig en kan één keer worden gebruikt.\n\n"
         . $link . "\n\n"
@@ -72,7 +105,7 @@ function auth_enqueue_password_reset(PDO $pdo, array $user, array $config, strin
     );
     $stmt->execute([
         ':user_id' => $userId,
-        ':recipient' => $email,
+        ':recipient' => $recipient,
         ':subject' => $subject,
         ':body' => $body,
     ]);
@@ -80,7 +113,12 @@ function auth_enqueue_password_reset(PDO $pdo, array $user, array $config, strin
 }
 
 /** @return array{token:string,expires_at:string,delivery_id:?int}|null */
-function auth_create_password_reset(PDO $pdo, array $user, array $config): ?array
+function auth_create_password_reset(
+    PDO $pdo,
+    array $user,
+    array $config,
+    string $purpose = 'password_reset'
+): ?array
 {
     $userId = (int)$user['id'];
     $realDelivery = auth_password_reset_delivery_available($config);
@@ -113,7 +151,7 @@ function auth_create_password_reset(PDO $pdo, array $user, array $config): ?arra
         )->execute([':uid' => $userId, ':hash' => $tokenHash, ':exp' => $expiresAt]);
 
         if ($realDelivery) {
-            $deliveryId = auth_enqueue_password_reset($pdo, $user, $config, $rawToken);
+            $deliveryId = auth_enqueue_password_reset($pdo, $user, $config, $rawToken, $purpose);
         }
         if ($ownsTransaction) {
             $pdo->commit();

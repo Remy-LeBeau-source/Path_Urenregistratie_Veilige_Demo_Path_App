@@ -22,8 +22,8 @@ staan onder de genummerde fases verderop in dit document.
 | Fase 3 — Read-API | ✅ Klaar | Frontend leest serverdata |
 | Fase 4 — Auth & rollen | ✅ VS Code-scope klaar | Admin/medewerker/sessies, persistente loginblokkade en eenmalige wachtwoordlinks |
 | Fase 5 — Security | ✅ VS Code-scope klaar | Timeout, sliding session, login-audit, dependency-scan; productieheaders (CORS/CSP/HSTS) later op echt domein |
-| Fase 6 — Playwright/BDD/Allure/Living Docs | ✅ Pariteit bewaakt | 195 native Playwright-cases + 1 DB-case; features, stappenindex en living docs worden uit de uitvoerbare specs gegenereerd |
-| Fase 7 — CI/CD | 🛠️ Releasevalidatie | Automatische PROD- en TEST-uitrol bewezen; v0.9.63 wordt pas na lokale smoke en volledige regressie vrijgegeven |
+| Fase 6 — Playwright/BDD/Allure/Living Docs | ✅ Pariteit bewaakt | 203 native Playwright-cases + 1 DB-case; features, stappenindex en living docs worden uit de uitvoerbare specs gegenereerd |
+| Fase 7 — CI/CD | 🛠️ Releasevalidatie | Automatische PROD- en TEST-uitrol bewezen; v0.9.64 is lokaal door smoke en volledige regressie vrijgegeven en wacht op pipelinebewijs |
 | Fase 8 — Uren indienen | ✅ Klaar | Concept → indienen |
 | Fase 9 — Correctie/goedkeuring | ✅ Technisch klaar | Productieacceptatie later |
 | Fase 10 — Klanturenstaat | ✅ VS Code-scope klaar | JPG/PNG → PDF server-side gebouwd en getest (CTS-API-H-005) |
@@ -121,6 +121,12 @@ Post-live beheer
   scrollbaar. Gerichte auth/mail/factuurlock-regressie: 40/40 groen; wachtwoordreset-race: 10/10
   groen; officiële GUI-smoke, volledige Playwright-regressie 200/200, DB-CRUD en dependency-audit
   zijn lokaal groen. De succesbevestiging na wachtwoordinstelling blijft vier seconden leesbaar.
+- [x] v0.9.64 releasekandidaat: één centrale, leesbare E2E-feature borgt nu zes complete
+  bedrijfsketens: stabiele taaktelling over maanden, rolwissel zonder F5, correctie en herindiening,
+  uren-goedkeuring naar factuurtaak, klanturenstaatcontrole naar brokerroute en eenmalige
+  wachtwoordreset met afwijzing van tokenhergebruik. De GUI-smoke voert alle zes ketens uit.
+  Living Docs bevatten 203 Playwright-cases + 1 DB-case; `npm run check`, de uitgebreide
+  `npm run test:gui-smoke` en de volledige desktop/mobile/API-regressie zijn lokaal groen.
 - [!] Google SMTP Relay weigert verzending nog met `550 Invalid credentials for relay [85.10.158.107]`.
   Voeg exact `85.10.158.107` toe aan de Google Workspace SMTP-relay-IP-allowlist. Er is nog geen
   acceptatiemail succesvol verzonden; dit is een externe configuratieblokkade, geen groene mailtest.
@@ -1183,12 +1189,12 @@ Telling fasestatussen:
 
 ## Directe volgende stap
 
-**Fase 1 t/m 15 zijn functioneel ingericht; v0.9.63 is lokaal volledig groen en gereed voor de
+**Fase 1 t/m 15 zijn functioneel ingericht; v0.9.64 is lokaal volledig groen en gereed voor de
 releasepipeline.** De
 aparte TEST-host, database, private opslag, publieke login-smoke en mailsandbox zijn bewezen in
 run `31803329714`.
 
-1. Commit en push v0.9.63 en laat dezelfde release exact door de volledige pipeline, TEST-uitrol en
+1. Commit en push v0.9.64 en laat dezelfde release exact door de volledige pipeline, TEST-uitrol en
    automatische PROD-uitrol bewaken.
 2. Voeg `85.10.158.107` toe aan Google Workspace SMTP Relay. Verstuur daarna op TEST de vijf
    acceptatiemails één voor één en controleer ontvanger, onderwerp, tekst, linkgebruik en PDF-bijlagen.

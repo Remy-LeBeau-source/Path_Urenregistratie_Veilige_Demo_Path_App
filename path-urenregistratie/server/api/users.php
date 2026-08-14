@@ -99,6 +99,20 @@ if ($action === 'deactivate') {
             'message' => 'User is already deactivated.'], 409);
     }
 
+    if ((string)$target['role'] === 'administrator') {
+        $activeAdminStmt = $pdo->prepare(
+            "SELECT COUNT(*) FROM users WHERE company_id = :company_id AND role = 'administrator' AND active = 1"
+        );
+        $activeAdminStmt->execute([':company_id' => $companyId]);
+        if ((int)$activeAdminStmt->fetchColumn() <= 1) {
+            auth_send_json([
+                'ok' => false,
+                'error' => 'last-active-administrator',
+                'message' => 'De laatste actieve beheerder kan niet worden gedeactiveerd.',
+            ], 409);
+        }
+    }
+
     $pdo->prepare('UPDATE users SET active = 0, deactivated_at = CURRENT_TIMESTAMP, deactivated_by = :by WHERE id = :id')
         ->execute([':by' => $actorId, ':id' => $targetId]);
 
@@ -136,18 +150,18 @@ if ($action === 'reactivate') {
 }
 
 if ($action === 'delete') {
-    if ((string)$target['role'] !== 'employee') {
+    if (!in_array((string)$target['role'], ['employee', 'administrator'], true)) {
         auth_send_json([
             'ok' => false,
-            'error' => 'delete-employee-only',
-            'message' => 'Alleen een inactief medewerkersaccount kan via Teambeheer definitief worden verwijderd.',
+            'error' => 'delete-role-not-supported',
+            'message' => 'Alleen een inactief medewerker- of beheerdersaccount kan via Teambeheer definitief worden verwijderd.',
         ], 409);
     }
     if ((bool)$target['active']) {
         auth_send_json([
             'ok' => false,
             'error' => 'delete-requires-inactive',
-            'message' => 'Deactiveer de medewerker voordat je het account definitief verwijdert.',
+            'message' => 'Deactiveer het account voordat je het definitief verwijdert.',
         ], 409);
     }
 
@@ -257,7 +271,7 @@ if ($action === 'force_password_change') {
         $pdo->beginTransaction();
         $pdo->prepare('UPDATE users SET force_password_change = 1 WHERE id = :id')
             ->execute([':id' => $targetId]);
-        $reset = auth_create_password_reset($pdo, $target, $config);
+        $reset = auth_create_password_reset($pdo, $target, $config, 'invitation');
         if (auth_environment_from_config($config) === 'production'
             && (!$reset || (int)($reset['delivery_id'] ?? 0) <= 0)) {
             throw new RuntimeException('Password invitation could not be queued.');

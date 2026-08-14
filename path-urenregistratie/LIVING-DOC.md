@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 195 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 203 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 195 unieke case-ID's
+- Playwright executable cases: 203 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 196 unieke case-ID's
-- Playwright features: 21
+- Totaal executable cases: 204 unieke case-ID's
+- Playwright features: 22
 - Database features: 1
-- Playwright steps mappings: 21
+- Playwright steps mappings: 22
 - Database steps mappings: 1
-- Uitvoeringen: 200
-- Niet-mobile projectuitvoeringen: 190
+- Uitvoeringen: 208
+- Niet-mobile projectuitvoeringen: 198
 - Mobile functionele cases: 5
 - Pixel 7 / Chromium-uitvoeringen: 5
 - iPhone 13 / WebKit-uitvoeringen: 5
 
-De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 195 Playwright-functionele cases in totaal 200 resultaten op: 190 + (5 x 2) = 200.
+De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 203 Playwright-functionele cases in totaal 208 resultaten op: 198 + (5 x 2) = 208.
 
 ## Documentatieketen
 
@@ -89,6 +89,19 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 195 Playwrig
 - [AUTH-N-008] de inlogblokkade en aftelling blijven zichtbaar na herladen — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [AUTH-H-009] lokale login benoemt de veilige testomgeving en productnaam — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
 
+### Bedrijfsketens van medewerker tot Backoffice
+
+- Feature: `tests/playwright/features/end-to-end-workflows.feature`
+- Source: `tests/playwright/business-workflows-e2e.spec.ts`
+- Cases: 6
+
+- [E2E-H-001] herstelbasis houdt globale werkvoorraad stabiel bij maand- en filterwissels — Techniek: Equivalentieklassen · Assertions: 11
+- [E2E-H-002] rolwissel werkt zonder F5 en herstel blijft uitsluitend voor Backoffice — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
+- [E2E-H-003] herindiening verplaatst dezelfde actie van medewerker naar Backoffice — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 18
+- [E2E-H-004] goedkeuring vervangt urencontrole door factuurverzending voor hetzelfde dossier — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
+- [E2E-H-005] klanturenstaatcontrole wordt een brokeractie zonder taakverlies — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
+- [E2E-H-006] eenmalige wachtwoordlink geeft toegang en blokkeert hergebruik — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
+
 ### Klanturenstaten en documentverwerking
 
 - Feature: `tests/playwright/features/customer-timesheets.feature`
@@ -107,25 +120,26 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 195 Playwrig
 
 - Feature: `tests/playwright/features/dashboard.feature`
 - Source: `tests/playwright/dashboard.spec.ts`
-- Cases: 17
+- Cases: 18
 
 - [DASH-H-001] admin dashboard opent zonder console errors — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [DASH-H-002] employee dashboard opent zonder console errors — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 1
 - [DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad niet — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 1
 - [DASH-N-008] voorbeeldgegevens herstellen houdt alle werkvoorraadtellers gelijk — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
-- [DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus — Techniek: Toestandsovergang · Assertions: 14
+- [DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus — Techniek: Toestandsovergang · Assertions: 18
 - [DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker en Backoffice — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 24
 - [DASH-N-009] medewerker teller blijft stabiel bij aug-juli-aug en dashboard triggert geen verborgen timesheet-read — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
 - [DASH-H-012] GUI-smoke scheidt werkacties van medewerkers- en beheerdersaccounts — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 30
 - [DASH-H-013] dashboardmodules tonen compacte documenten, procesfasen en teamacties — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
-- [DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakiezer blijft leesbaar — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
-- [DASH-H-004] terugkeren naar medewerkerdashboard ververst de uren en behoudt maandlabels bij themawissel — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
+- [DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakiezer blijft leesbaar — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
+- [DASH-H-004] terugkeren naar medewerkerdashboard ververst de uren en behoudt maandlabels bij themawissel — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
 - [DASH-H-005] medewerker ziet open maanden compact en kan direct naar de juiste maand springen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [DASH-H-014] medewerker krijgt de eerstvolgende concrete actie met juiste maand en taakroute — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 20
 - [DASH-N-015] medewerkerprioriteit kiest correctie boven document en toont niets als alles klaar is — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 14
 - [DASH-N-016] correctieactie ververst een verborgen rooster uit een eerdere maand — Techniek: Toestandsovergang · Assertions: 11
 - [DASH-H-006] vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [DASH-H-007] dashboardknop behoudt de geldige maand en medewerkeroverzichten — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
+- [DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels — Techniek: Equivalentieklassen · Assertions: 13
 
 ### Mailroutering en aflevering
 
@@ -141,7 +155,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 195 Playwrig
 - [EQ-H-015] Backoffice ziet veilige verzendhistorie zonder berichtinhoud — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 16
 - [EQ-H-016] Backoffice verstuurt vanuit de acceptatieconsole precies één gekozen scenario — Techniek: API-contract + equivalentieklasse · Assertions: 12
 - [EQ-N-017] niet-beschikbare acceptatieconsole blijft volledig uit beeld — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
-- [EQ-H-020] Backoffice finaliseert een serverfactuur vóór de mailqueue en sluit de vervolgtaak — Techniek: Toestandsovergang · Assertions: 7
+- [EQ-H-020] Backoffice finaliseert een serverfactuur vóór de mailqueue en sluit de vervolgtaak — Techniek: Toestandsovergang · Assertions: 8
 - [EQ-N-019] gesloten acceptatievenster toont waarom geen mail kan worden verstuurd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [EQ-N-018] afgewezen acceptatiemail blijft nooit achter voor automatische herverzending — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [EQ-N-006] anonieme gebruiker krijgt 401 op list — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2
@@ -236,7 +250,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 195 Playwrig
 - [PWD-H-003] me.php bevat force_password_change veld — Techniek: API-contract + equivalentieklasse · Assertions: 3
 - [PWD-H-004] ingelogde gebruiker kan het eigen wachtwoord veilig wijzigen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [PWD-H-005] medewerker stelt via een eenmalige e-maillink zelf een wachtwoord in — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
-- [PWD-H-006] TEST-links zijn herhaalbaar zonder normale misbruikbegrenzing te verzwakken — Techniek: Beslissingstabel + equivalentieklassen + toestandsovergang · Assertions: 12
+- [PWD-H-006] TEST-links zijn herhaalbaar zonder normale misbruikbegrenzing te verzwakken — Techniek: Beslissingstabel + equivalentieklassen + toestandsovergang · Assertions: 16
 - [PWD-N-010] twee verschillende wachtwoorden worden in de GUI niet verstuurd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
 - [PWD-N-011] elf tekens ligt onder de wachtwoordgrens van twaalf — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
 - [PWD-N-004] reset-password met ongeldig token geeft 400 — Techniek: Toestandsovergang · Assertions: 2
@@ -286,9 +300,9 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 195 Playwrig
 - [SAFE-N-007] productieconfigurator verwerkt DB-secret uitsluitend interactief en fail-closed — Techniek: Toestandsovergang · Assertions: 14
 - [SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 25
 - [SAFE-H-010] echte TEST-mail vereist opt-in en een ontvangers-whitelist — Techniek: API-contract + equivalentieklasse · Assertions: 12
-- [SAFE-H-013] TEST-mailsandbox opent alleen atomisch voor twee vaste ontvangers — Techniek: API-contract + equivalentieklasse · Assertions: 25
+- [SAFE-H-013] TEST-mailsandbox opent atomisch voor één vaste mailsink en twee TEST-accounts — Techniek: API-contract + equivalentieklasse · Assertions: 26
 - [SAFE-H-006] eerste productieorganisatie wordt gevalideerd en zonder overschrijven ingericht — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 18
-- [SAFE-H-011] groene main-pipeline rolt exact dezelfde release veilig uit naar productie — Techniek: Toestandsovergang + foutinjectie + beslissingstabel · Assertions: 22
+- [SAFE-H-011] groene main-pipeline rolt exact dezelfde release veilig uit naar productie — Techniek: Toestandsovergang + foutinjectie + beslissingstabel · Assertions: 23
 
 ### Rollen, rechten en gegevensafscherming
 
@@ -337,8 +351,8 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 195 Playwrig
 - Source: `tests/playwright/timesheet-review-ui.spec.ts`
 - Cases: 5
 
-- [TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en heropening blijven servergestuurd — Techniek: Toestandsovergang · Assertions: 27
-- [TS-REV-UI-H-009] medewerker kan een ingediende urenstaat opnieuw indienen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
+- [TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en heropening blijven servergestuurd — Techniek: Toestandsovergang · Assertions: 29
+- [TS-REV-UI-H-009] ingediende urenstaat blijft vergrendeld tot Backoffice een correctie vraagt — Techniek: Toestandsovergang · Assertions: 5
 - [TS-REV-UI-H-010] submitknop is verborgen bij goedgekeurde urenstaat — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
 - [TS-REV-UI-N-011] localhost kan demo-uren zonder serverversie voor correctie terugsturen — Techniek: Toestandsovergang · Assertions: 4
 - [TS-REV-UI-N-012] gefactureerde goedkeuring blijft bij serverweigering vergrendeld — Techniek: Toestandsovergang · Assertions: 6
@@ -359,7 +373,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 195 Playwrig
 
 - Feature: `tests/playwright/features/team-access.feature`
 - Source: `tests/playwright/user-management.spec.ts`
-- Cases: 9
+- Cases: 10
 
 - [USR-H-001] admin ziet alle gebruikers van het bedrijf — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [USR-H-002] admin kan medewerker deactiveren en heractiveren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
@@ -370,6 +384,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 195 Playwrig
 - [USR-N-007] dubbel deactiveren geeft 409 — Techniek: Toestandsovergang · Assertions: 2
 - [USR-H-008] inactieve medewerker zonder historie kan definitief worden verwijderd — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 9
 - [USR-N-009] medewerker met zakelijke historie kan niet definitief worden verwijderd — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
+- [USR-H-010] inactieve beheerder zonder historie kan definitief worden verwijderd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 
 ### Database-integriteit en CRUD-controle
 

@@ -407,7 +407,7 @@ if ($action === 'upsert_admin') {
         if ($sendInvitation && $active === 1) {
             $reset = auth_create_password_reset($pdo, [
                 'id' => $dbUserId, 'email' => $email, 'display_name' => $name,
-            ], $config);
+            ], $config, 'invitation');
             if ($reset === null) {
                 throw new RuntimeException('Er is recent al een uitnodiging gemaakt. Probeer het later opnieuw.');
             }
@@ -772,7 +772,7 @@ if ($action === 'upsert_employee') {
         if ($sendInvitation && staff_bool($employee['active'] ?? true, true)) {
             $reset = auth_create_password_reset($pdo, [
                 'id' => $employeeDbUserId, 'email' => $email, 'display_name' => $name,
-            ], $config);
+            ], $config, 'invitation');
             if ($reset === null) {
                 throw new RuntimeException('Er is recent al een uitnodiging gemaakt. Probeer het later opnieuw.');
             }

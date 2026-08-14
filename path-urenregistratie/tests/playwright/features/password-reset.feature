@@ -49,7 +49,7 @@ Feature: Wachtwoordherstel en misbruikbeveiliging
   @happy
   Scenario: [PWD-H-006] TEST-links zijn herhaalbaar zonder normale misbruikbegrenzing te verzwakken
     # Testtechniek: Beslissingstabel + equivalentieklassen + toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 12
+    # Aantoonbare Playwright-assertions in deze case: 16
     Given gewone en speciale TEST-beveiligingsmails als aparte equivalentieklassen gelden
     When herhaling, foutafhandeling en omgevingsscheiding volgens de beslissingstabel worden doorgerekend
     Then alleen de twee vaste TEST-accounts een nieuwe linkcyclus mogen starten

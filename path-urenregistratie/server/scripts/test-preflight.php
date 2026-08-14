@@ -45,10 +45,7 @@ try {
 
     $normalizedAllowedRecipients = mail_allowed_recipients($config);
     sort($normalizedAllowedRecipients);
-    $expectedSandboxRecipients = [
-        'giovanno.maatsen@pathconsultancy.nl',
-        'kenrich.lieveld@pathconsultancy.nl',
-    ];
+    $expectedSandboxRecipients = ['giovanno.maatsen@pathconsultancy.nl'];
     sort($expectedSandboxRecipients);
     $mailClosed = ($mail['enabled'] ?? null) === false
         && ($mail['test_delivery_enabled'] ?? null) === false
@@ -60,7 +57,7 @@ try {
         && $normalizedAllowedRecipients === $expectedSandboxRecipients
         && ($acceptance['business_recipient'] ?? '') === 'giovanno.maatsen@pathconsultancy.nl'
         && ($acceptance['password_reset_recipient'] ?? '') === 'giovanno.maatsen@pathconsultancy.nl'
-        && ($acceptance['invitation_recipient'] ?? '') === 'kenrich.lieveld@pathconsultancy.nl'
+        && ($acceptance['invitation_recipient'] ?? '') === 'giovanno.maatsen@pathconsultancy.nl'
         && ($mail['test_redirect_all'] ?? false) === true
         && ($mail['test_sink_recipient'] ?? '') === 'giovanno.maatsen@pathconsultancy.nl'
         && mail_real_delivery_allowed_for_environment($config);
