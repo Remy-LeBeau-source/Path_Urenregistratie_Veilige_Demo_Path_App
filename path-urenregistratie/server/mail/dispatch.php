@@ -4,6 +4,18 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/smtp.php';
+
+/** @return array{status:string,attempt_count:int} */
+function mail_failed_delivery_retry_state(array $delivery, int $attempt): array
+{
+    $acceptanceTest = (bool)($delivery['acceptance_test'] ?? false);
+    return [
+        // An acceptance button represents exactly one deliberate SMTP attempt.
+        // It must never remain queued and be sent unexpectedly by a later cron.
+        'status' => ($acceptanceTest || $attempt >= MAIL_MAX_ATTEMPTS) ? 'failed' : 'queued',
+        'attempt_count' => $acceptanceTest ? MAIL_MAX_ATTEMPTS : $attempt,
+    ];
+}
 require_once __DIR__ . '/../lib/simple_pdf.php';
 
 function mail_private_storage_root(array $config): string
@@ -232,7 +244,8 @@ function mail_dispatch_delivery(PDO $pdo, array $delivery, array $config): strin
             return 'failed';
         }
         $attempt = (int)($delivery['attempt_count'] ?? 0) + 1;
-        $status = $attempt >= MAIL_MAX_ATTEMPTS ? 'failed' : 'queued';
+        $retryState = mail_failed_delivery_retry_state($delivery, $attempt);
+        $status = $retryState['status'];
         $pdo->prepare(
             'UPDATE email_deliveries
              SET status = :status, attempt_count = :attempts, last_error = :error
@@ -242,7 +255,7 @@ function mail_dispatch_delivery(PDO $pdo, array $delivery, array $config): strin
         )->execute([
             ':status' => $status,
             ':scrub_secret' => $status === 'failed' ? 1 : 0,
-            ':attempts' => $attempt,
+            ':attempts' => $retryState['attempt_count'],
             ':error' => substr($error->getMessage(), 0, 500),
             ':id' => $deliveryId,
         ]);

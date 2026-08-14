@@ -898,10 +898,10 @@ jobs:
           --health-retries=10
 
     steps:
-      - name: Checkout main
+      - name: Checkout exact main release
         uses: actions/checkout@v7
         with:
-          ref: main
+          ref: ${{ env.TARGET_REF }}
 
       - name: Setup Node
         uses: actions/setup-node@v7
@@ -1016,6 +1016,64 @@ jobs:
           if [ -f /tmp/php-server.pid ]; then
             kill "$(cat /tmp/php-server.pid)" || true
           fi
+
+  deploy-prod:
+    name: Deploy Prod to TransIP
+    needs: [prod, live-docs]
+    runs-on: ubuntu-latest
+    environment: prod
+    permissions:
+      contents: read
+    if: >-
+      ${{ always()
+          && needs.prod.result == 'success'
+          && needs.live-docs.result == 'success'
+          && ((github.event_name == 'push' && github.ref == 'refs/heads/main')
+              || (github.event_name == 'workflow_dispatch'
+                  && (inputs.ref == 'main' || inputs.ref == 'refs/heads/main'))) }}
+
+    steps:
+      - name: Checkout exact main release
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TARGET_REF }}
+          fetch-depth: 0
+
+      - name: Verify exact release identity
+        shell: bash
+        run: |
+          SOURCE_SHA="$(git rev-parse HEAD)"
+          if [[ "${GITHUB_EVENT_NAME}" == "push" && "$SOURCE_SHA" != "$GITHUB_SHA" ]]; then
+            echo "Checked-out main does not match the triggering commit." >&2
+            exit 1
+          fi
+          echo "DEPLOY_SOURCE_SHA=$SOURCE_SHA" >> "$GITHUB_ENV"
+
+      - name: Install pinned TransIP SSH identity
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.TRANSIP_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.TRANSIP_SSH_KNOWN_HOSTS }}
+        run: |
+          test -n "$SSH_PRIVATE_KEY"
+          test -n "$SSH_KNOWN_HOSTS"
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/path_uren_transip_ed25519"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/path_uren_transip_ed25519" "$HOME/.ssh/known_hosts"
+          ssh-keygen -y -f "$HOME/.ssh/path_uren_transip_ed25519" > /dev/null
+
+      - name: Deploy, migrate, cut over and run live smoke
+        shell: bash
+        env:
+          TRANSIP_SSH_HOST: ${{ vars.TRANSIP_SSH_HOST }}
+          TRANSIP_SSH_USER: ${{ vars.TRANSIP_SSH_USER }}
+          TRANSIP_PRIVATE_DEPLOYMENTS_ROOT: /data/sites/web/pathconsultancynl/private/path-uren-deployments
+          TRANSIP_LIVE_ROOT: /data/sites/web/pathconsultancynl/subsites/uren.pathconsultancy.nl
+          PRODUCTION_ORIGIN: https://uren.pathconsultancy.nl
+        run: |
+          export TRANSIP_SSH_KEY_PATH="$HOME/.ssh/path_uren_transip_ed25519"
+          bash path-urenregistratie/scripts/deploy-production-transip.sh
 
   prod-main-ref-guard:
     name: Guard non-main for Prod

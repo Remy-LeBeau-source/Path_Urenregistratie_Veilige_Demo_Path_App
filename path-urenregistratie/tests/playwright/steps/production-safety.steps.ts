@@ -65,3 +65,7 @@ Given("de CLI-only productiebedrijfs-bootstrap wordt gelezen");
 When("de flow voor SAFE-H-006 wordt uitgevoerd");
 Then("vereist de bootstrap productie, expliciete bevestiging en geldige bedrijfsgegevens");
 And("maakt hij alleen een lege database aan, logt de handeling en overschrijft nooit afwijkende data");
+Given("het automatische TransIP-deploycontract wordt ingelezen");
+When("validatie, TEST, PROD-regressie en Living Docs groen zijn");
+Then("wordt alleen main met checksum, backup, migratie en live-smoke uitgerold");
+And("blijft mail gesloten en wordt bij een fout automatisch teruggerold");

@@ -1,4 +1,6 @@
 import { expect, request as playwrightRequest, test } from '@playwright/test';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { AuthApi } from './api/AuthApi';
 import { EmailQueueApi } from './api/EmailQueueApi';
 import { InvoiceApi } from './api/InvoiceApi';
@@ -12,6 +14,7 @@ import { LoginPage } from './pages/LoginPage';
 
 const PERIOD_RANGE_START_YEAR = 3000;
 const PERIOD_RANGE_MONTHS = 7000 * 12;
+const execFileAsync = promisify(execFile);
 
 function candidatePeriods(): string[] {
   const startIndex = Date.now() % PERIOD_RANGE_MONTHS;
@@ -395,6 +398,27 @@ test.describe('email queue api', () => {
     await expect(consolePanel).toContainText('Eerste uitnodiging: wachtwoord aanmaken');
     await expect(consolePanel).toContainText('Ontvanger nog niet veilig ingesteld');
     await expect(consolePanel).not.toContainText('Alles versturen');
+  });
+
+  test('[EQ-N-018] afgewezen acceptatiemail blijft nooit achter voor automatische herverzending', async () => {
+    let policy: { ok?: boolean; network_connections?: number; writes_performed?: boolean; checks?: Record<string, boolean> } = {};
+
+    await test.step('Given het fail-closed retrybeleid voor acceptatiemail wordt uitgevoerd', async () => {
+      const execution = await execFileAsync('php', ['server/scripts/mail-acceptance-policy-check.php'], {
+        cwd: process.cwd(),
+        windowsHide: true,
+      });
+      policy = JSON.parse(execution.stdout);
+      expect(policy.ok).toBe(true);
+      expect(policy.network_connections).toBe(0);
+      expect(policy.writes_performed).toBe(false);
+    });
+
+    await test.step('Then is een acceptatiefout single-shot en behoudt gewone mail begrensde retries', async () => {
+      expect(policy.checks?.acceptance_failure_is_single_shot).toBe(true);
+      expect(policy.checks?.normal_delivery_keeps_bounded_retry).toBe(true);
+      expect(policy.checks?.smtp_failure_keeps_safe_response_detail).toBe(true);
+    });
   });
 
   // --------------------------------------------------------------------------

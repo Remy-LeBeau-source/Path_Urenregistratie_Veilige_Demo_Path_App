@@ -1,13 +1,13 @@
 {
   "name": "path-urenregistratie",
-  "version": "0.9.56",
+  "version": "0.9.57",
   "private": true,
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "check": "node --check assets/app.js && node scripts/smoke-test.mjs && npm run test:design && npm run test:bdd:design && npm run test:db:config && npm run test:ops",
     "test:design": "node scripts/test-design-audit.mjs",
-    "test:ops": "php server/scripts/production-preflight.php --config=server/config.example.php && php server/scripts/mail-preflight.php --config=server/config.example.php && php server/scripts/mail-environment-policy-check.php && php server/scripts/mail-acceptance-policy-check.php && php server/scripts/database-backup.php --config=server/config.example.php && php server/scripts/database-restore.php --config=server/config.example.php --file=database/schema.sql && php server/scripts/rotate-logs.php --config=server/config.example.php && php server/scripts/configure-production.php && php server/scripts/provision-company.php --config=server/config.example.php && php server/scripts/provision-account.php --config=server/config.example.php",
+    "test:ops": "php server/scripts/production-preflight.php --config=server/config.example.php && php server/scripts/mail-preflight.php --config=server/config.example.php && php server/scripts/mail-environment-policy-check.php && php server/scripts/mail-acceptance-policy-check.php && php server/scripts/database-backup.php --config=server/config.example.php && php server/scripts/database-restore.php --config=server/config.example.php --file=database/schema.sql && php server/scripts/rotate-logs.php --config=server/config.example.php && php server/scripts/configure-production.php && php server/scripts/provision-company.php --config=server/config.example.php && php server/scripts/provision-account.php --config=server/config.example.php && node scripts/deployment-contract-check.mjs",
     "prod:configure": "php server/scripts/configure-production.php",
     "test:closeout": "node scripts/closeout-to-zero-check.mjs",
     "test:gui-smoke": "node scripts/run-playwright-e2e.mjs --grep DASH-N-010 && node scripts/run-playwright-e2e.mjs --grep TS-REV-UI-H-008 && node scripts/run-playwright-e2e.mjs --grep DASH-N-016 && node scripts/run-playwright-e2e.mjs --grep ADM-WR-H-005 && node scripts/run-playwright-e2e.mjs --project=desktop-chromium --grep ADM-WR-H-006 && node scripts/run-playwright-e2e.mjs --project=desktop-chromium --grep ADM-WR-H-007 && node scripts/run-playwright-e2e.mjs --project=desktop-chromium --grep ADM-WR-H-008 && node scripts/run-playwright-e2e.mjs --project=desktop-chromium --grep NOT-H-009 && node scripts/run-playwright-e2e.mjs --project=desktop-chromium --grep EQ-H-015 && node scripts/run-playwright-e2e.mjs --project=desktop-chromium --grep EQ-H-016 && node scripts/run-playwright-e2e.mjs --project=desktop-chromium --grep EQ-N-017 && node scripts/run-playwright-e2e.mjs --project=mobile-chrome --grep MOB-H-001 && node scripts/run-playwright-e2e.mjs --project=mobile-chrome --grep MOB-H-005",

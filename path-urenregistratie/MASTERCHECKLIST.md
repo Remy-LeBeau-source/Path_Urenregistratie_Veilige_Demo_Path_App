@@ -89,8 +89,8 @@ Post-live beheer
 
 ## Actuele stand
 
-- [x] Datum: 2026-08-14 (SMTP Relay en externe bezorging bewezen; v0.9.56 lokaal volledig groen)
-- [-] Appversie: 0.9.56 in ontwikkeling; v0.9.53 staat op productie
+- [x] Datum: 2026-08-14 (v0.9.56 staat gecontroleerd op productie; v0.9.57 automatiseert de fail-closed uitrol)
+- [-] Appversie: v0.9.56 staat op productie; v0.9.57 is lokaal volledig groen en wacht op CI/automatische uitrol
 - [x] Technische eindsprint afgerond: Fase 10 (JPG/PNG server-side naar PDF via GD + hand-rolled
   PDF-writer `server/lib/simple_pdf.php`), Fase 11 (server-side factuur-PDF, `pdf_storage_key`
   gevuld na lock, geautoriseerde download-endpoint met company-/employee-scope, PDF-inhoudscontrole
@@ -98,11 +98,14 @@ Post-live beheer
   getest; PDF-bijlage nu structureel beschikbaar dankzij Fase 11), Fase 15 (gelijktijdige
   approve-requests door twee beheerders, jaarwisseling december→januari, te grote upload-afwijzing,
   basis toetsenbord-/labelcontrole, PWA-manifest + defensieve service worker).
-- [x] Actuele testinventaris: 186 Playwright + 1 DB = 187 unieke cases en 191 browseruitvoeringen
-  (178 niet-mobiel + 5 mobiele cases x 2 devices).
+- [x] Actuele testinventaris: 188 Playwright + 1 DB = 189 unieke cases en 193 browseruitvoeringen
+  (183 niet-mobiel + 5 mobiele cases x 2 devices).
 - [x] Volledige lokale Playwright-regressie voor v0.9.55: 179/179 groen, inclusief de privacyveilige
   Backoffice-verzendadministratie op desktop en mobiel. `npm run check`, `npm run test:db:crud`,
   `npm run security:deps`, de uitgebreide GUI-smoke en de releasebuild zijn eveneens groen.
+- [x] Volledige lokale Playwright-regressie voor v0.9.57: 193/193 groen. Ook `npm run check`,
+  `npm run test:db:crud`, `npm run security:deps`, de uitgebreide GUI-smoke, de twee nieuwe gerichte
+  regressies SAFE-H-011/EQ-N-018, Bash-syntaxchecks en de releasebuild zijn groen.
 - [x] Volledige lokale Playwright-regressie voor v0.9.54: 176/176 groen. De eerdere v0.9.53-regressie was 175/175 groen en omvatte
   server-authoritatieve productieaccounts en formulierfocus, medewerker-onboarding zonder SMTP, de correctieheropening,
   servergestuurde loginblokkade na F5, eenmalige wachtwoordlink in de GUI, tokenhergebruik,
@@ -110,7 +113,7 @@ Post-live beheer
   `npm run check`, `npm run test:db:crud`, `npm run security:deps` en `npm run test:gui-smoke`
   zijn op dezelfde werkboom apart groen bevestigd.
 - [x] Living Documentation-telling wordt uit de uitvoerbare specs berekend en met een expliciete
-  inventarisguard bewaakt. Actueel: 186 Playwright-cases, 1 DB-case, 187 unieke cases en 191 uitvoeringen.
+  inventarisguard bewaakt. Actueel: 188 Playwright-cases, 1 DB-case, 189 unieke cases en 193 uitvoeringen.
 - [x] `server/config.local.php` wordt nu ook expliciet door `server/.htaccess` geblokkeerd;
   SAFE-N-008, de smokecheck en de volledige regressie bewaken deze fail-closed productiegrens.
 - [x] Uitvoerbare BDD-engine toegevoegd met `playwright-bdd`: `.feature` genereert een native
@@ -125,9 +128,10 @@ Post-live beheer
   autoritatieve blokkade en resterende tijd blijft afdwingen.
 - [x] Medewerkercorrectie voor een al goedgekeurde maand is server-led heropenbaar zolang nog geen
   definitieve factuur bestaat; dashboardnavigatie ververst ook een verborgen grid voor dezelfde periode.
-- [x] Productiecontrole op 2026-08-13: `https://uren.pathconsultancy.nl/index.html` serveert v0.9.53.
-  Health, HTTPS-redirect, CSP, gevoelige-padblokkades, database, bedrijfsidentiteit en twee
-  beheeraccounts zijn na de gecontroleerde cutover groen bevestigd; v0.9.51 blijft als rollback bewaard.
+- [x] Productiecontrole op 2026-08-14: `https://uren.pathconsultancy.nl/index.html` serveert exact
+  v0.9.56 uit commit `257ca35d1e7e45bc467bcf68a568a6f2b73883c5`. Releasechecksum, HTTPS,
+  health, gevoelige-padblokkades, database, bedrijfsidentiteit, private opslag en live preflight zijn groen.
+  v0.9.53 is als directe rollback bewaard.
 - [x] v0.9.52 herstelt accountonboarding zonder actieve SMTP-relay: een beheerder kan medewerker en
   opdracht veilig opslaan met `Toegang in afwachting`; uitnodigen blijft een aparte expliciete actie.
   De hotfix is volledig groen door CI gegaan en gecontroleerd naar productie uitgerold.
@@ -155,6 +159,18 @@ Post-live beheer
   zodat nieuw opgeslagen beheerders en medewerkers direct zichtbaar worden.
   Dubbele accountadressen worden voor medewerker en beheerder met 409 en een veilige GUI-melding
   geweigerd; SQL-details blijven afgeschermd en de dubbele invoer komt niet in de lijsten.
+- [x] v0.9.56 is checksum-gecontroleerd uitgerold. De verse pre-cutoverdatabaseback-up staat buiten
+  de webroot als `path-db-20260814-022748.sql` (94.261 bytes), SHA-256
+  `0ef7f3b8e879e06cd75fef7cebb1959173a737329e92988e74a1df5bee8b9f01`; migratie 014 en de
+  volledige live read-only productiepreflight zijn groen.
+- [-] v0.9.57 voegt automatische PROD-uitrol na volledig groene `prod`- en Living Docs-jobs toe.
+  Het contract vereist exact de trigger-SHA, gepinde SSH-hostkey, checksum en bytecontrole, gesloten
+  mailwindow, lege queue, verse DB-back-up, migraties, live preflight, atomaire cutover, live-smoke en
+  automatische rollback. De volledige lokale 193/193 regressie is groen; de eerste echte main-pipeline
+  moet de externe uitrol nog bewijzen.
+- [x] Mislukte acceptatiemails blijven nooit voor een latere cron achter: één knop is exact één
+  SMTP-poging; bij afwijzing eindigt de levering direct definitief als `failed`. Normale productiemail
+  behoudt de begrensde retry. SMTP-fouten bewaren voortaan de veilige relayreactie voor diagnose.
 - [x] Eerste gecontroleerde cutover van `97065e9` heeft het rollbackpad succesvol bewezen: v0.9.50
   gaf correcte headers en afscherming, maar health meldde veilig `ok=false` omdat een schone
   productiedatabase zonder demadata onterecht als fout gold. v0.9.44 is direct teruggezet zonder
@@ -953,19 +969,23 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
 - [x] Release Pipeline voor v0.9.50-maincommit `97065e9a776fa2cb43da584fbbeee4a8449a683e` volledig groen;
   exact die release is checksum-gecontroleerd in private TransIP-staging geplaatst en de rollback
   naar v0.9.44 is tijdens de eerste live-smoke succesvol bewezen.
-- [-] De config-afschermingshotfix volledig groen door de Release Pipeline laten gaan en exact die
-  nieuwe `headSha` opnieuw checksum-gecontroleerd stagen; `Promote Prod` is geen automatische deploy.
-- [-] Na expliciete `GO_LIVE_<korte_sha>`-toestemming de bewezen stagingrelease gecontroleerd naar
-  de documentroot activeren en de vorige documentroot als rollbackrelease bewaren.
-- [-] Direct na cutover `https://uren.pathconsultancy.nl/index.html#` controleren op HTTP 200,
-  afwezigheid van de TransIP-placeholder, juiste versie, headers, health, login en hash-routing.
+- [x] v0.9.56-release `257ca35d1e7e45bc467bcf68a568a6f2b73883c5` exact uit Git gearchiveerd,
+  lokaal en op TransIP op 19.829.384 bytes en SHA-256
+  `ca938e6938c65fe76fdfec4d2c17864f50d5ec97b95500d6e3133ab08d20e806` geverifieerd.
+- [x] Na expliciete `GO_LIVE_257ca35` is v0.9.56 atomair naar de documentroot geactiveerd en
+  v0.9.53 als rollback onder `rollback-v0.9.53-pre-257ca35` bewaard.
+- [x] Direct na cutover `https://uren.pathconsultancy.nl/index.html#` gecontroleerd op HTTP 200,
+  juiste versie/assets, health, login, hash-routing en volledig groene live preflight.
+- [-] Vanaf v0.9.57 dezelfde uitrol automatisch als laatste main-pipelinejob uitvoeren. Deploy blijft
+  fail-closed bij niet-main, onjuiste SHA/checksum, open mailwindow, niet-lege queue of mislukte live-smoke.
 - [x] Productie `server/config.local.php` via de interactieve fail-closed configurator gemaakt;
   databaseverbinding, private storage, securityconfig en uitgeschakelde echte mail zijn groen.
 - [x] Productiemigraties 012 en 013 zijn op TransIP uitgevoerd; bestaande migraties zijn idempotent
   overgeslagen en demo-migraties staan uit.
 - [x] Bedrijfsprofiel/bootstrap uitgevoerd: Path Consultancy als handelsnaam van QSI Consultancy B.V.;
   de live read-only productiepreflight is daarna volledig groen.
-- [-] Productielogin en productie-smoketest uitvoeren na de expliciet goedgekeurde cutover.
+- [-] Productiebeheerlogin en basissmoke zijn groen; persoonlijke medewerkerlogin en volledige
+  productiepraktijkflow blijven open totdat een echte medewerker veilig is uitgenodigd.
 - [x] Schrijfrechten upload-/PDF-mappen bewezen (mode `700`); PHP `upload_max_filesize=2M`
   en `post_max_size=8M` sluiten aan op de applicatiegrens van maximaal 2 MB; de app forceert
   zelf Secure/HttpOnly/SameSite=Lax voor productiesessies.
@@ -981,7 +1001,11 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
 - [-] Volledige correctie/goedkeuringsflow en alle overige flows (concept, indienen, correctie, herindienen, goedkeuren, klanturenstaat upload/download) handmatig op productie testen.
 - [-] Productieprivacytest; productie-adminlogin en -medewerkerlogin.
 - [-] Factuurbedragen, btw, factuurnummering en PDF controleren op productie.
-- [-] Broker-, boekhouder- en EasySalary-mail dry-run; echte mailroute afzonderlijk testen.
+- [-] SMTP STARTTLS en een eerdere externe proefbezorging zijn bewezen. De vijf scenario's zijn
+  inhoudelijk/preflight groen, maar de volledige acceptatiebundel is nog niet ontvangen en beoordeeld.
+  Drie afwijzingen tijdens Google-configuratiepropagatie zijn definitief afgesloten; er staat niets
+  meer in de queue. Herhaal iedere mail afzonderlijk wanneer de eigenaar online is en sluit daarna
+  `mail.enabled` en `acceptance_test.enabled` opnieuw direct.
 - [-] Back-up maken en database/bestanden herstellen uit back-up.
 - [-] Mobiele admin-/medewerkerflow op fysieke iPhone, Android en tablet.
 - [-] PWA-installatie en offline-/updategedrag bepalen op een echt toestel.
@@ -1016,13 +1040,15 @@ Status Fase 16:
 - [x] Bundel 2 voorbereiding: checksum-release staat veilig in private TransIP-staging; PHP/PDO,
   opslagrechten, uploadlimieten, cronbeschikbaarheid, SMTP STARTTLS, bedrijfsprofiel, twee
   beheeraccounts, databaseback-up en live read-only preflight zijn bewezen.
-- [-] fase als geheel: v0.9.53 staat veilig live. v0.9.54 met afgeschermde TEST-mailmodus en
-  v0.9.55 met Backoffice-verzendadministratie zijn groen op `main`; v0.9.56 wordt lokaal gevalideerd.
+- [-] fase als geheel: v0.9.56 staat veilig live. v0.9.54 met afgeschermde TEST-mailmodus,
+  v0.9.55 met Backoffice-verzendadministratie en v0.9.56 met de acceptatieconsole zijn groen op `main`.
   Google SMTP Relay accepteert het uitgaande TransIP-IP `85.10.158.7`, STARTTLS en afzenders binnen
   `pathconsultancy.nl`. Eén gecontroleerde mail van `backoffice@pathconsultancy.nl` naar het vooraf
   toegestane testadres is extern ontvangen. De vijf nieuwe acceptatieknoppen richten de drie
   businessmails en wachtwoordreset op `info@pathconsultancy.nl` en de eerste uitnodiging op
-  `gch.lieveld@live.nl`; echte verzending blijft uit tot de afzonderlijke serverconfiguratie is gezet.
+  `gch.lieveld@live.nl`. De tijdelijke acceptatiewindow is na de proef aantoonbaar gesloten:
+  `mail.enabled=false`, `acceptance_test.enabled=false`, queue 0 en het testaccount weer inactief.
+  v0.9.57 automatiseert daarna de veilige main→TransIP-uitrol; de vijf ontvangen mails blijven open bewijs.
 
 ---
 
@@ -1074,7 +1100,8 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
 - [x] Fase 15 - lokaal 161/161 browseruitvoeringen groen (inclusief MOB-H-003 en DASH-N-008
   na volledige muterende reeks), GUI smoke en `npm run check` groen; concurrency/jaarwisseling/
   uploads/accessibility/PWA gebouwd en getest; productiepraktijktests/acceptatie → Fase 16
-- [-] Fase 16 - Bundel 1 technisch voorbereid en lokaal groen; Bundel 2 (TransIP/Google/configuratie) en Bundel 3 (productieacceptatie) blijven extern open
+- [-] Fase 16 - Bundel 1 en de gecontroleerde v0.9.56-productiecutover zijn afgerond; automatische
+  uitrol v0.9.57 en Bundel 3 (volledige productieacceptatie) blijven nog te bewijzen
 
 Telling fasestatussen:
 - [x] **15 fasen volledig bewezen of volledig verplaatst voor hun VS-Code-scope: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 en 15.**
@@ -1082,17 +1109,21 @@ Telling fasestatussen:
 
 ## Directe volgende stap
 
-**Fase 1 t/m 15 volledig klaar; Fase-16 Bundel 1 lokaal afgerond.** Externe activatie blijft bewust uit.
+**Fase 1 t/m 15 volledig klaar; v0.9.56 staat veilig op productie.** Echte mail staat weer uit.
 
-1. Start via SSH de interactieve productieconfigurator in staging en typ het DB-wachtwoord
-   uitsluitend in de verborgen terminalprompt.
-2. Draai daarna de statische en live read-only productiepreflight.
-3. Maak en verifieer een verse back-up; plan pas na groen bewijs een afzonderlijk goedgekeurde cutover.
-4. Controleer vóór cutover dat de volledig groene pipeline-`headSha` exact gelijk is aan de
-   checksum-gecontroleerde stagingrelease; `Promote Prod` activeert TransIP niet automatisch.
-5. Vraag expliciet `GO_LIVE_<korte_sha>` en activeer daarna gecontroleerd de documentroot.
-6. Bewijs `https://uren.pathconsultancy.nl/index.html#`, health, headers, login, rollen en rollback.
-7. Voer vervolgens Bundel 3 uit met `mail.enabled=false`; echte SMTP-verzending blijft een aparte toestemming.
+1. Maak v0.9.57 lokaal volledig groen: deploycontract, mailbeleid, smoke, DB-CRUD, dependencycheck,
+   GUI-smoke en alle 193 Playwright-browseruitvoeringen.
+2. Push via een branch en laat PR-controles groen worden; merge daarna naar `main`.
+3. Bewijs dat de nieuwe `deploy-prod`-job exact de volledig groene main-SHA checksum-gecontroleerd
+   naar TransIP uitrolt, vooraf een back-up maakt en de live-smoke uitvoert.
+4. Controleer aansluitend `https://uren.pathconsultancy.nl/index.html#` op v0.9.57, health,
+   login, rollen en volledig groene live preflight.
+5. Herhaal wanneer de eigenaar online is de vijf acceptatiemails één voor één; controleer ontvanger,
+   onderwerp, tekst, links en alle PDF-bijlagen en sluit de mailwindow daarna opnieuw.
+6. Richt zodra `uren-test.pathconsultancy.nl` beschikbaar is een aparte TEST-configuratie en database in;
+   productie blijft vrij van testdata en automatische browsertests.
+7. Rond daarna de open productiepraktijktests, fysieke mobiele acceptatie, cron/monitoring,
+   back-uprestore-oefening, 2FA-/sessiebeleid en eerste volledige maandflow af.
 
 ## Dagelijkse werkwijze (verplicht)
 
