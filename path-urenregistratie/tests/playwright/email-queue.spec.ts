@@ -647,6 +647,55 @@ test.describe('email queue api', () => {
   test('[EQ-N-021] factuurverzending blijft dicht zolang de serveruren niet zijn goedgekeurd', async ({ page }) => {
     let invoiceLocks = 0;
 
+    await page.route('**/server/api/timesheets.php**', async route => {
+      const request = route.request();
+      const url = new URL(request.url());
+      const employeeId = Number(url.searchParams.get('employee_id') || 0);
+      const period = String(url.searchParams.get('period') || '');
+
+      if (request.method() !== 'GET') {
+        await route.continue();
+        return;
+      }
+
+      if (employeeId !== 4 || period !== '2026-08') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ ok: true, found: false, period, employee_id: employeeId, timesheet: null }),
+        });
+        return;
+      }
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ok: true,
+          found: true,
+          period,
+          employee_id: employeeId,
+          timesheet: {
+            id: 882,
+            status: 'submitted',
+            contractual_hours: 160,
+            billable_hours: 144,
+            leave_hours: 0,
+            sickness_hours: 0,
+            employee_note: null,
+            review_note: null,
+            day_entries: [],
+            submitted_at: '2026-08-31T12:00:00Z',
+            approved_at: null,
+            approved_by: null,
+            version: 7,
+            latest_correction: null,
+            correction_history: [],
+          },
+        }),
+      });
+    });
+
     await page.route('**/server/api/invoices.php*', async route => {
       if (route.request().method() === 'POST') {
         invoiceLocks += 1;
