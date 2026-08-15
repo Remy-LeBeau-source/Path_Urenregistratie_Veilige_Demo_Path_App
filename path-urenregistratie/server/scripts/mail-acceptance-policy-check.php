@@ -31,6 +31,7 @@ $checks = [
     'production_console_unavailable' => false,
     'test_console_available' => false,
     'test_runtime_override_available' => false,
+    'local_preview_requires_local_host_and_dry_run' => false,
     'exactly_five_scenarios' => count($definitions) === 5,
     'no_bulk_scenario' => !isset($definitions['bulk']) && !isset($definitions['send_all']),
     'fixed_business_recipient' => true,
@@ -60,6 +61,27 @@ $checks['test_runtime_override_available'] = mail_acceptance_available_for_envir
 ]) === true;
 putenv('PATH_APP_ENVIRONMENT');
 unset($_ENV['PATH_APP_ENVIRONMENT'], $_SERVER['PATH_APP_ENVIRONMENT']);
+
+$localPreviewConfig = $config;
+$localPreviewConfig['environment'] = 'local';
+$localPreviewConfig['mail']['enabled'] = false;
+$originalHost = $_SERVER['HTTP_HOST'] ?? null;
+$_SERVER['HTTP_HOST'] = 'localhost:8000';
+$localPreviewAllowed = mail_acceptance_local_preview_mode($localPreviewConfig)
+    && mail_acceptance_available_for_environment($localPreviewConfig);
+$_SERVER['HTTP_HOST'] = 'uren.pathconsultancy.nl';
+$localPreviewBlockedOutsideLocalhost = !mail_acceptance_local_preview_mode($localPreviewConfig);
+$localPreviewConfig['mail']['enabled'] = true;
+$_SERVER['HTTP_HOST'] = 'localhost:8000';
+$localPreviewBlockedWithRealMail = !mail_acceptance_local_preview_mode($localPreviewConfig);
+if ($originalHost === null) {
+    unset($_SERVER['HTTP_HOST']);
+} else {
+    $_SERVER['HTTP_HOST'] = $originalHost;
+}
+$checks['local_preview_requires_local_host_and_dry_run'] = $localPreviewAllowed
+    && $localPreviewBlockedOutsideLocalhost
+    && $localPreviewBlockedWithRealMail;
 
 $redirectConfig = $config;
 $redirectConfig['environment'] = 'test';

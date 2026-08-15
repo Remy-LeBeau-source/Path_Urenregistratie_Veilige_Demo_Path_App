@@ -1,5 +1,8 @@
-import { expect, test } from '@playwright/test';
+import { expect, request as playwrightRequest, test } from '@playwright/test';
+import { AuthApi } from './api/AuthApi';
+import { InvoiceApi } from './api/InvoiceApi';
 import { captureConsoleErrors, clearConsoleErrors } from './fixtures/consoleErrors';
+import { appConfig, requirePassword } from './fixtures/appConfig';
 import { InvoicesPage } from './pages/InvoicesPage';
 import { LoginPage } from './pages/LoginPage';
 
@@ -84,8 +87,10 @@ test('[INV-H-002] periodefilter juli en augustus werkt', async ({ page }) => {
   });
 });
 
-test('[INV-H-003] server berekent bedrag uit uren en uurtarief voor open facturen', async ({ page }) => {
-  const loginPage = new LoginPage(page);
+test('[INV-H-003] server berekent bedrag uit uren en uurtarief voor open facturen', async () => {
+  const context = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+  const authApi = new AuthApi(context);
+  const invoiceApi = new InvoiceApi(context);
   let target: {
     locked: boolean;
     billable_hours: number;
@@ -96,20 +101,13 @@ test('[INV-H-003] server berekent bedrag uit uren en uurtarief voor open facture
   } | null = null;
 
   await test.step('Given de administrator is ingelogd', async () => {
-    await loginPage.open();
-    await loginPage.loginAsAdmin();
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
   });
 
   await test.step('When factuurdata voor augustus 2026 wordt opgevraagd', async () => {
-    const invoices = await page.evaluate(async () => {
-      const response = await fetch('/server/api/invoices.php?period=2026-08', {
-        method: 'GET',
-        headers: { Accept: 'application/json' },
-      });
-      return response.json();
-    });
-
-    target = invoices.items.find((item: { invoice_number?: string }) => item.invoice_number === 'COA-2026-augustus') || null;
+    const invoices = await invoiceApi.readByPeriod('2026-08');
+    expect(invoices.status).toBe(200);
+    target = invoices.body.items.find((item: { invoice_number?: string }) => item.invoice_number === 'COA-2026-augustus') || null;
   });
 
   await test.step('Then het bedrag komt uit server-side berekening in plaats van alleen statische demo-output', async () => {
@@ -121,6 +119,9 @@ test('[INV-H-003] server berekent bedrag uit uren en uurtarief voor open facture
     expect(target?.vat_amount).toBe(2192.4);
     expect(target?.total).toBe(12632.4);
   });
+
+  await authApi.logout();
+  await context.dispose();
 });
 
 test('[INV-H-006] admin kan het gekozen maanddetail inklappen en weer uitklappen', async ({ page }) => {

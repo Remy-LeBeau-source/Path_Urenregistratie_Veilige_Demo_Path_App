@@ -100,6 +100,10 @@ try {
     ], 500);
 }
 
+if (($result['outcome'] ?? '') === 'previewed' && ($result['preview_only'] ?? false) === true) {
+    auth_send_json(['ok' => true, 'preview_only' => true, 'result' => $result]);
+}
+
 if (($result['outcome'] ?? '') !== 'sent') {
     auth_send_json([
         'ok' => false,

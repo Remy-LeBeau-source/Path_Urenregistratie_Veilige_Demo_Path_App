@@ -27,7 +27,10 @@ const categories = [
   },
 ];
 
-rmSync(outputFolder, { recursive: true, force: true });
+const preserveResults = process.env.PATH_ALLURE_PRESERVE_RESULTS === '1';
+if (!preserveResults) {
+  rmSync(outputFolder, { recursive: true, force: true });
+}
 mkdirSync(outputFolder, { recursive: true });
 writeFileSync(`${outputFolder}/categories.json`, JSON.stringify(categories, null, 2));
 writeFileSync(`${outputFolder}/environment.properties`, [
@@ -37,4 +40,4 @@ writeFileSync(`${outputFolder}/environment.properties`, [
   'reporting=Playwright + Allure',
 ].join('\n') + '\n');
 
-console.log('Allure results voorbereid met functionele categories en environment metadata.');
+console.log(`Allure results ${preserveResults ? 'behouden en ' : ''}voorbereid met functionele categories en environment metadata.`);

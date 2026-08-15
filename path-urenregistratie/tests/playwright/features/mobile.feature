@@ -10,7 +10,7 @@ Feature: Mobiele gebruikerservaring
   @happy
   Scenario: [MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikbaar
     # Testtechniek: Responsive viewport + end-to-end use-case
-    # Aantoonbare Playwright-assertions in deze case: 29
+    # Aantoonbare Playwright-assertions in deze case: 31
     Given de mobiele loginpagina
     When een administrator inlogt en door de mobiele navigatie gaat
     Then Home en rolwissel blijven bereikbaar zonder console- of page-errors

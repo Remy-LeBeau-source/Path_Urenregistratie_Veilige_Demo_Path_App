@@ -161,3 +161,12 @@ Wijzigingen aan bedrijfslogica vereisen in dezelfde commit een update van FO/TO,
 # Fail-closed TEST-mailschakelaar
 
 De bron van waarheid blijft `server/config.local.php`. De webinterface kan uitsluitend op de exacte TEST-origin een reeds volledig geconfigureerde SMTP-sandbox pauzeren of hervatten. Dit gebeurt met een bestand `test-mail-paused.flag` in de private opslag buiten de webroot. De schakelactie vereist een administratorsessie, CSRF en de expliciete bevestiging `SET_TEST_MAIL_STATE`. De endpoint retourneert `mail_mode`, `delivery_allowed`, `test_toggle_available` en het vaste sink-adres. LOCAL en PROD kunnen deze schakelactie niet uitvoeren.
+
+Op loopbackhosts is daarnaast een afzonderlijke lokale previewmodus beschikbaar. De UI-keuze staat
+onder `path-local-mail-preview-enabled` in `localStorage` en is geen transportconfiguratie. De server
+staat preview uitsluitend toe bij `environment=local`, een loopbackhost en uitgeschakelde echte
+mail. `mail-acceptance.php` retourneert dan `preview_only=true`; POST maakt alleen een droge
+queue-/previewregistratie en opent geen netwerkverbinding. TEST gebruikt nooit deze browserkeuze en
+PROD toont uitsluitend status. `EQ-H-025` bewaakt badge- en instellingenbediening, onderwerp, tekst,
+PDF-links en de geen-SMTP-grens; `mail-acceptance-policy-check.php` bewijst daarnaast nul writes en
+nul netwerkverbindingen tijdens de beleidscontrole.

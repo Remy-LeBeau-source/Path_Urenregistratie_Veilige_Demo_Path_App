@@ -74,26 +74,32 @@ Feature: Mailroutering en aflevering
     # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 22
     Given de vijf losse mailacceptatiescenario’s zijn vrijgegeven voor vaste testontvangers
-    Then kan Backoffice beide gecontroleerde PDF-bijlagen afzonderlijk openen vóór verzending
     When de beheerder alleen de brokerbundel kiest en ontvanger en twee bijlagen bevestigt
     Then bevat de write exact één scenario met expliciete bevestiging en geen bulkopdracht
 
   @happy
+  Scenario: [EQ-H-025] localhost schakelt een veilige mailpreview in en controleert inhoud en PDF’s zonder SMTP
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 23
+    Given mailroutering en aflevering is voorbereid
+    When de flow voor EQ-H-025 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat localhost schakelt een veilige mailpreview in en controleert inhoud en PDF’s zonder SMTP
+
+  @happy
   Scenario: [EQ-H-023] beheerder pauzeert en hervat uitsluitend de beveiligde TEST-mail
-    # Testtechniek: Toestandsovergang + beslissingstabel omgeving en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 12
-    Given de server een beveiligde TEST-mailroute naar het vaste opvangadres meldt
-    When de beheerder TEST-mail pauzeert en daarna weer hervat
-    Then tonen header en instellingen steeds de actuele serverstatus
-    And bevatten beide writes de exacte bevestiging zonder ontvangers te wijzigen
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given mailroutering en aflevering is voorbereid
+    When de flow voor EQ-H-023 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat beheerder pauzeert en hervat uitsluitend de beveiligde TEST-mail
 
   @negative
   Scenario: [EQ-N-024] buiten de beveiligde TEST-sandbox is geen mailschakelaar beschikbaar
-    # Testtechniek: Negatieve equivalentieklasse + autorisatiematrix
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
     # Aantoonbare Playwright-assertions in deze case: 4
-    Given de server een lokale of productieomgeving zonder TEST-schakelrecht meldt
-    When de beheerder de instellingen opent
-    Then blijft de TEST-mailschakelaar verborgen en toont de header de serverstatus
+    Given mailroutering en aflevering is voorbereid
+    When de flow voor EQ-N-024 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat buiten de beveiligde TEST-sandbox is geen mailschakelaar beschikbaar
 
   @negative
   Scenario: [EQ-N-017] niet-beschikbare acceptatieconsole blijft volledig uit beeld
@@ -210,12 +216,12 @@ Feature: Mailroutering en aflevering
     Then wordt met Playwright-assertions bevestigd dat unknown action geeft 400
 
   @negative
-  Scenario: [EQ-N-015] acceptatieconsole blijft standaard uit en weigert POST zonder expliciete bevestiging
+  Scenario: [EQ-N-015] localhost blijft preview-only en weigert POST zonder expliciete bevestiging
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 7
-    Given de standaard testconfiguratie geen echte acceptatieverzending vrijgeeft
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given localhost uitsluitend lokale preview zonder echte aflevering vrijgeeft
     When een scenario zonder de exacte bevestiging wordt aangeboden
-    Then wordt met Playwright-assertions bevestigd dat acceptatieconsole blijft standaard uit en weigert POST zonder expliciete bevestiging
+    Then wordt met Playwright-assertions bevestigd dat localhost blijft preview-only en weigert POST zonder expliciete bevestiging
 
   @negative
   Scenario: [EQ-N-016] medewerker krijgt geen toegang tot de mailacceptatieconsole

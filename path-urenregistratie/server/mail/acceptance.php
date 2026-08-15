@@ -7,8 +7,30 @@ require_once __DIR__ . '/queue.php';
 require_once __DIR__ . '/dispatch.php';
 require_once __DIR__ . '/../auth/password-reset-service.php';
 
+function mail_acceptance_request_host(): string
+{
+    $rawHost = strtolower(trim((string)($_SERVER['HTTP_HOST'] ?? '')));
+    if ($rawHost === '') {
+        return '';
+    }
+    if (str_starts_with($rawHost, '[')) {
+        $closingBracket = strpos($rawHost, ']');
+        return $closingBracket === false ? $rawHost : substr($rawHost, 1, $closingBracket - 1);
+    }
+    return explode(':', $rawHost, 2)[0];
+}
+
+function mail_acceptance_local_preview_mode(array $config): bool
+{
+    return in_array(mail_acceptance_request_host(), ['localhost', '127.0.0.1', '::1'], true)
+        && mail_is_dry_run($config);
+}
+
 function mail_acceptance_available_for_environment(array $config): bool
 {
+    if (mail_acceptance_local_preview_mode($config)) {
+        return true;
+    }
     foreach (['PATH_APP_ENVIRONMENT', 'PLAYWRIGHT_ENVIRONMENT', 'APP_ENV', 'PLAYWRIGHT_STAGE'] as $key) {
         $override = getenv($key);
         if ($override !== false && trim((string)$override) !== '') {
@@ -92,30 +114,33 @@ function mail_acceptance_scenario_definitions(array $config): array
 function mail_acceptance_status(PDO $pdo, int $companyId, array $config): array
 {
     $settings = mail_acceptance_settings($config);
-    $enabled = ($settings['enabled'] ?? false) === true;
+    $localPreview = mail_acceptance_local_preview_mode($config);
+    $enabled = $localPreview || ($settings['enabled'] ?? false) === true;
     $issues = [];
     if (!$enabled) {
         $issues[] = 'De acceptatieconsole staat uit in de serverconfiguratie.';
     }
-    if (!mail_real_delivery_allowed_for_environment($config)) {
+    if (!$localPreview && !mail_real_delivery_allowed_for_environment($config)) {
         $issues[] = 'Echte SMTP-verzending is niet vrijgegeven voor deze omgeving.';
     }
-    foreach (mail_validate_relay_config($config) as $relayIssue) {
-        $issues[] = 'SMTP: ' . $relayIssue;
+    if (!$localPreview) {
+        foreach (mail_validate_relay_config($config) as $relayIssue) {
+            $issues[] = 'SMTP: ' . $relayIssue;
+        }
     }
 
     $allowlist = mail_allowed_recipients($config);
     $rows = [];
     foreach (mail_acceptance_scenario_definitions($config) as $key => $scenario) {
         $scenarioIssues = [];
-        $recipient = (string)$scenario['recipient'];
-        if (!filter_var($recipient, FILTER_VALIDATE_EMAIL)) {
+        $recipient = $localPreview ? 'lokale-mailpreview@example.invalid' : (string)$scenario['recipient'];
+        if (!$localPreview && !filter_var($recipient, FILTER_VALIDATE_EMAIL)) {
             $scenarioIssues[] = 'Ontvanger ontbreekt of is ongeldig.';
-        } elseif (!in_array($recipient, $allowlist, true)) {
+        } elseif (!$localPreview && !in_array($recipient, $allowlist, true)) {
             $scenarioIssues[] = 'Ontvanger staat niet op de acceptatie-allowlist.';
         }
 
-        if (in_array($scenario['kind'], ['password_reset', 'invitation'], true) && $recipient !== '') {
+        if (!$localPreview && in_array($scenario['kind'], ['password_reset', 'invitation'], true) && $recipient !== '') {
             if (!auth_password_reset_delivery_available($config)) {
                 $scenarioIssues[] = 'Beveiligde HTTPS-linkverzending is niet beschikbaar.';
             }
@@ -133,10 +158,14 @@ function mail_acceptance_status(PDO $pdo, int $companyId, array $config): array
 
         $rowReady = $enabled && $issues === [] && $scenarioIssues === [];
         $attachmentNames = mail_acceptance_test_attachment_names((string)$scenario['attachment_policy']);
+        $preview = $localPreview ? mail_acceptance_preview_content($scenario) : [];
         $rows[] = array_merge($scenario, [
             'key' => $key,
+            'recipient' => $recipient,
             'ready' => $rowReady,
             'issues' => $scenarioIssues,
+            'preview_subject' => $preview['subject'] ?? null,
+            'preview_body' => $preview['body'] ?? null,
             'attachments' => array_map(
                 static fn(string $filename, int $index): array => ['filename' => $filename, 'index' => $index],
                 $attachmentNames,
@@ -147,6 +176,7 @@ function mail_acceptance_status(PDO $pdo, int $companyId, array $config): array
 
     return [
         'enabled' => $enabled,
+        'preview_only' => $localPreview,
         'ready' => $enabled && $issues === [] && count(array_filter($rows, static fn(array $row): bool => !$row['ready'])) === 0,
         'issues' => array_values(array_unique($issues)),
         'scenarios' => $rows,
@@ -168,10 +198,40 @@ function mail_acceptance_business_vars(): array
     ];
 }
 
+/** @return array{subject:string,body:string} */
+function mail_acceptance_preview_content(array $scenario): array
+{
+    if (($scenario['kind'] ?? '') === 'business') {
+        $channel = (string)($scenario['channel'] ?? '');
+        $template = MAIL_CHANNEL_TEMPLATES[$channel] ?? null;
+        if (!is_array($template)) {
+            throw new RuntimeException('Onbekend zakelijk acceptatiescenario.');
+        }
+        $vars = mail_acceptance_business_vars();
+        return [
+            'subject' => '[LOKALE CONTROLE] ' . mail_render((string)$template['subject'], $vars),
+            'body' => "LOKALE CONTROLE — NIET VERZONDEN\n\n" . mail_render((string)$template['body'], $vars),
+        ];
+    }
+
+    $invitation = ($scenario['kind'] ?? '') === 'invitation';
+    return [
+        'subject' => $invitation
+            ? '[LOKALE CONTROLE] Uitnodiging voor Uren & Facturatie'
+            : '[LOKALE CONTROLE] Wachtwoordherstel voor Uren & Facturatie',
+        'body' => ($invitation
+            ? "Welkom bij Uren & Facturatie. Maak via de eenmalige link veilig je wachtwoord aan."
+            : "Er is een verzoek gedaan om het wachtwoord voor Uren & Facturatie opnieuw in te stellen.")
+            . "\n\nVoorbeeldlink (werkt uitsluitend als controle): http://localhost.invalid/#password-preview",
+    ];
+}
+
 function mail_acceptance_insert_business_delivery(
     PDO $pdo,
     int $actorUserId,
-    array $scenario
+    array $scenario,
+    bool $dryRun = false,
+    ?string $recipientOverride = null
 ): int {
     $channel = (string)$scenario['channel'];
     $template = MAIL_CHANNEL_TEMPLATES[$channel] ?? null;
@@ -181,24 +241,60 @@ function mail_acceptance_insert_business_delivery(
     $vars = mail_acceptance_business_vars();
     mail_assert_vars((string)$template['subject'], $vars, $channel . ' subject');
     mail_assert_vars((string)$template['body'], $vars, $channel . ' body');
-    $subject = '[ACCEPTATIETEST] ' . mail_render((string)$template['subject'], $vars);
-    $body = "ACCEPTATIETEST — NIET BOEKEN OF VERWERKEN\n"
-        . "Dit bericht controleert uitsluitend het mailtransport van Uren & Facturatie.\n\n"
-        . mail_render((string)$template['body'], $vars);
+    if ($dryRun) {
+        $preview = mail_acceptance_preview_content($scenario);
+        $subject = $preview['subject'];
+        $body = $preview['body'];
+    } else {
+        $subject = '[ACCEPTATIETEST] ' . mail_render((string)$template['subject'], $vars);
+        $body = "ACCEPTATIETEST — NIET BOEKEN OF VERWERKEN\n"
+            . "Dit bericht controleert uitsluitend het mailtransport van Uren & Facturatie.\n\n"
+            . mail_render((string)$template['body'], $vars);
+    }
 
     $stmt = $pdo->prepare(
         'INSERT INTO email_deliveries
          (user_id, channel, recipient_email, cc_email, subject_snapshot, body_snapshot,
           attachment_policy, dry_run, acceptance_test, status)
-         VALUES (:user_id, :channel, :recipient, NULL, :subject, :body, :policy, 0, 1, "queued")'
+         VALUES (:user_id, :channel, :recipient, NULL, :subject, :body, :policy, :dry_run, 1, "queued")'
     );
     $stmt->execute([
         ':user_id' => $actorUserId,
         ':channel' => $channel,
-        ':recipient' => (string)$scenario['recipient'],
+        ':recipient' => $recipientOverride ?? (string)$scenario['recipient'],
         ':subject' => $subject,
         ':body' => $body,
         ':policy' => (string)$scenario['attachment_policy'],
+        ':dry_run' => $dryRun ? 1 : 0,
+    ]);
+    return (int)$pdo->lastInsertId();
+}
+
+function mail_acceptance_insert_local_preview_delivery(PDO $pdo, int $actorUserId, array $scenario): int
+{
+    if (($scenario['kind'] ?? '') === 'business') {
+        return mail_acceptance_insert_business_delivery(
+            $pdo,
+            $actorUserId,
+            $scenario,
+            true,
+            'lokale-mailpreview@example.invalid'
+        );
+    }
+
+    $preview = mail_acceptance_preview_content($scenario);
+    $stmt = $pdo->prepare(
+        'INSERT INTO email_deliveries
+         (user_id, channel, recipient_email, cc_email, subject_snapshot, body_snapshot,
+          attachment_policy, dry_run, acceptance_test, status)
+         VALUES (:user_id, :channel, :recipient, NULL, :subject, :body, "none", 1, 1, "queued")'
+    );
+    $stmt->execute([
+        ':user_id' => $actorUserId,
+        ':channel' => 'password_reset',
+        ':recipient' => 'lokale-mailpreview@example.invalid',
+        ':subject' => $preview['subject'],
+        ':body' => $preview['body'],
     ]);
     return (int)$pdo->lastInsertId();
 }
@@ -224,6 +320,22 @@ function mail_acceptance_send(
     }
     if (($scenario['ready'] ?? false) !== true) {
         throw new RuntimeException('acceptance-scenario-not-ready: ' . implode(' ', array_merge($status['issues'], $scenario['issues'])));
+    }
+
+    if (mail_acceptance_local_preview_mode($config)) {
+        $deliveryId = mail_acceptance_insert_local_preview_delivery($pdo, $actorUserId, $scenario);
+        mail_audit($pdo, $companyId, $actorUserId, 'mail.acceptance_preview_created', $deliveryId, [
+            'scenario' => $scenarioKey,
+            'outcome' => 'previewed',
+        ]);
+        return [
+            'delivery_id' => $deliveryId,
+            'scenario' => $scenarioKey,
+            'recipient' => 'lokale-mailpreview@example.invalid',
+            'attachment_count' => $scenario['attachment_count'],
+            'outcome' => 'previewed',
+            'preview_only' => true,
+        ];
     }
 
     $deliveryId = 0;

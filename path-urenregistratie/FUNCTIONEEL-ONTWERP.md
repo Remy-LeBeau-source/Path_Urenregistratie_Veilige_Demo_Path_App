@@ -112,7 +112,14 @@ PDF als een eigen link, zowel in de scenariolijst als in de bevestiging. De geop
 serverdocument dat bij bevestiging als bijlage wordt verzonden; een scenario zonder bijlage toont
 geen documentlink.
 
-LOCAL verstuurt nooit echte mail. TEST herschrijft alle functionele ontvangers naar de vastgelegde testontvanger en markeert elk bericht als acceptatietest. PROD gebruikt uitsluitend de geconfigureerde zakelijke ontvangers. Een mislukte verzending blijft zichtbaar in de verzendadministratie en mag niet als verzonden worden getoond.
+LOCAL verstuurt nooit echte mail. Een beheerder kan daar de lokale mailpreview via Instellingen of
+de statusbadge aan- en uitzetten om onderwerp, tekst, PDF-links en de verzendadministratie te
+controleren; deze bediening kan uitsluitend lokale previewregistraties maken en opent nooit SMTP.
+TEST herschrijft alle functionele ontvangers naar de vastgelegde testontvanger en markeert elk
+bericht als acceptatietest. PROD gebruikt uitsluitend de geconfigureerde zakelijke ontvangers. Een
+mislukte verzending blijft zichtbaar in de verzendadministratie en mag niet als verzonden worden
+getoond. Boekhouding en Salarisadministratie zijn vaste kernroutes: ze kunnen worden aangepast of
+gedeactiveerd, maar alleen zelf toegevoegde routes mogen definitief worden verwijderd.
 
 | Gebeurtenis | Eigenaar vóór | Resultaat | Eigenaar na |
 |---|---|---|---|
@@ -190,8 +197,10 @@ Minimaal de volgende ketens zijn releaseblokkerend:
 | resetlink vanuit Teambeheer voor medewerker en beheerder, nooit voor het eigen account | `user-management.spec.ts` (`USR-H-011`) |
 | mailredirect, allowlist en bijlagen | `email-queue.spec.ts`, password-reset- en mailpolicychecks |
 | acceptatiebijlagen afzonderlijk openen vóór precies één verzending | `email-queue.spec.ts` (`EQ-H-016`) en `mail-acceptance-policy-check.php` |
+| localhost-preview toont inhoud en PDF's zonder SMTP | `email-queue.spec.ts` (`EQ-H-025`) en `mail-acceptance-policy-check.php` |
 | één factuuractie levert exact broker + boekhouding + salarisadministratie | `email-queue.spec.ts` (`EQ-H-022`) |
 | serveruren blokkeren te vroege factuurverzending | `email-queue.spec.ts` (`EQ-N-021`) |
+| alles gelezen blijft leidend bij een oudere notificatieresponse | `notifications.spec.ts` (`NOT-H-009`) |
 | mobiele hoofdketen | `mobile-ui.spec.ts` |
 
 Nieuwe productlogica krijgt in dezelfde wijziging een rij in deze tabel of een aantoonbare koppeling
@@ -203,7 +212,9 @@ De leesbare overkoepelende specificatie staat in
 een tweede, afwijkende implementatie van dezelfde stappen te onderhouden.
 # E-mailstatus per omgeving
 
-- LOCAL blijft altijd controlemodus/dry-run en kan geen echte e-mail activeren.
+- LOCAL blijft altijd controlemodus/dry-run en kan geen echte e-mail activeren. De statusbadge is
+  daar een toetsenbordbedienbare schakelaar voor uitsluitend de lokale previewregistratie.
 - TEST levert echte berichten uitsluitend af bij het vaste, servermatig toegestane opvangadres. Een beheerder kan deze al beveiligde TEST-route in Instellingen pauzeren en hervatten; ontvangers en SMTP-rechten zijn daar niet wijzigbaar.
 - PROD toont de werkelijke serverstatus, maar heeft geen gewone GUI-schakelaar. Activeren of uitschakelen blijft een gecontroleerde beheerhandeling in de productieconfiguratie.
-- De statusbadge in de kop toont daarom expliciet `E-mail uitgeschakeld`, `TEST-mail actief`, `TEST-mail gepauzeerd` of `E-mail actief`.
+- De statusbadge in de kop toont daarom expliciet `Lokale mailpreview uit`, `Lokale mailpreview
+  actief`, `TEST-mail actief`, `TEST-mail gepauzeerd`, `E-mail uitgeschakeld` of `E-mail actief`.

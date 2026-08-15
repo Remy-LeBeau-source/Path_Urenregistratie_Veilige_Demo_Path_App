@@ -108,9 +108,15 @@ Deze momentopname is leidend; de regels eronder bewaren het technische en histor
   berichtinhoud worden niet in de verzendadministratie getoond.
 - [x] Nieuwe lokale regressiefix: na `Overzicht inklappen` en opnieuw `Overzicht openen` staan alle
   maandblokken weer ingeklapt. `npm run check` en `DASH-H-017` zijn groen.
-- [-] De nieuwe inklapfix is nog niet geversioneerd, gecommit, gemerged of uitgerold.
-- [-] Voor deze fix moeten nog de volledige GUI-smoke en volledige Playwright-regressie groen zijn;
-  daarna volgen v0.9.67, build/Living Docs, commit, PR, merge en automatische uitrol.
+- [x] De inklapfix is opgenomen in de huidige v0.9.69-releasekandidaat.
+- [x] De volledige v0.9.69 GUI-smoke is lokaal groen, inclusief desktop, mobiel, notificaties en
+  de gescheiden LOCAL/TEST/PROD-mailstatussen.
+- [x] De volledige v0.9.69 Playwright-matrix is lokaal via vier beheerde shards groen:
+  64 + 47 + 53 + 51 = 215/215 uitvoeringen op de geïsoleerde testdatabase.
+- [x] v0.9.69 is lokaal volledig groen: releasebuild, `npm run check`, DB-H-001, 0 dependency-
+  kwetsbaarheden, volledige GUI-smoke en 215/215 Playwright-uitvoeringen. Allure en Living Docs
+  bevatten dezelfde volledige groene run.
+- [-] Voor v0.9.69 volgen nog commit, push en automatische TEST-/PROD-uitrol.
 - [-] Menselijke TEST-mailacceptatie blijft open totdat broker-, boekhouding-, salaris-,
   wachtwoordherstel- en uitnodigingsmail inhoudelijk zijn gecontroleerd, inclusief de echte
   factuur- en klanturenstaat-PDF waar die route een bijlage vereist.
@@ -119,6 +125,12 @@ Deze momentopname is leidend; de regels eronder bewaren het technische en histor
 - [x] TEST-mail kan in de beheer-UI uitsluitend binnen de reeds beveiligde TEST-sandbox worden
   gepauzeerd of hervat; de vaste sink en allowlist zijn daar niet wijzigbaar. LOCAL blijft dry-run
   en PROD houdt activeren of uitschakelen als gecontroleerde server-side beheerhandeling.
+- [x] LOCAL heeft een afzonderlijke mailpreviewbediening via Instellingen en de statusbadge. Deze
+  toont onderwerp, tekst en PDF-links en maakt uitsluitend lokale previewregistraties; SMTP blijft
+  hard geblokkeerd. `EQ-H-025` is gericht groen in 5,2 s en de beleidscheck bevestigt nul netwerk-
+  verbindingen en nul writes. De volledige smoke/regressie voor deze werkboom loopt nog.
+- [x] `NOT-H-009` bewijst gericht dat Alles als gelezen direct de teller wist en dat een oudere
+  GET-response die lokale, bevestigde write niet kan terugdraaien; 1/1 groen in 3,8 s.
 
 ### Vaste wensen en acceptatieregels uit deze samenwerking
 
@@ -1252,7 +1264,7 @@ Telling fasestatussen:
 
 ## Directe volgende stap
 
-**Fase 1 t/m 15 zijn functioneel ingericht; v0.9.68 borgt de servergestuurde taakstatus,
+**Fase 1 t/m 15 zijn functioneel ingericht; v0.9.69 borgt de servergestuurde taakstatus,
 documentcontrole, drie afzonderlijke mailroutes en afzonderlijk te openen acceptatiebijlagen.** De
 aparte TEST-host, database, private opslag, publieke login-smoke en mailsandbox zijn bewezen in
 run `31803329714`.

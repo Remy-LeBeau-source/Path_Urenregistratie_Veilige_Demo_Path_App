@@ -42,7 +42,7 @@ Feature: Dashboard en open werkvoorraad
   @negative
   Scenario: [DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus
     # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 27
+    # Aantoonbare Playwright-assertions in deze case: 18
     Given Backoffice de voorbeeldomgeving herstelt en daarna naar Stasjo wisselt
     When Stasjo daarna een open urenactie indient
     And Stasjo voert daarna F5 uit
@@ -69,7 +69,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-012] GUI-smoke scheidt werkacties van medewerkers- en beheerdersaccounts
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 30
+    # Aantoonbare Playwright-assertions in deze case: 35
     Given de vaste GUI-baseline met twaalf open acties en zes actieve accounts
     When de flow voor DASH-H-012 wordt uitgevoerd
     Then toont het dashboard zeven Backoffice-acties en vijf wachttaken zonder medewerkerbadge in het menu
@@ -153,7 +153,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels
     # Testtechniek: Equivalentieklassen
-    # Aantoonbare Playwright-assertions in deze case: 18
+    # Aantoonbare Playwright-assertions in deze case: 30
     Given Backoffice met de volledige serverwerkvoorraad is ingelogd
     When Backoffice augustus-juli-augustus doorloopt
     Then blijven globale aantallen, eigenaren en taakidentiteiten gelijk

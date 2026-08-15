@@ -1,4 +1,4 @@
-import { expect, request as playwrightRequest, test } from '@playwright/test';
+import { expect, request as playwrightRequest, test, type Page } from '@playwright/test';
 import { AuthApi } from './api/AuthApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
 import { LoginPage } from './pages/LoginPage';
@@ -18,6 +18,65 @@ async function postNotif(
     data: body,
   });
   return { status: r.status(), body: await r.json() };
+}
+
+async function isolateNotificationsFrontend(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+
+  const admin = {
+    id: 1,
+    company_id: 1,
+    email: 'gio@example.invalid',
+    display_name: 'Gio Maatsen',
+    role: 'administrator',
+    force_password_change: false,
+  };
+  let authenticated = false;
+  const json = (body: unknown) => ({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
+
+  await page.route('**/server/api.php?action=state*', route => route.fulfill(json({ ok: true, state: null })));
+  await page.route('**/server/auth/csrf.php*', route => route.fulfill(json({ ok: true, csrf_token: 'notifications-csrf' })));
+  await page.route('**/server/auth/me.php*', route => route.fulfill(json({
+    ok: true,
+    authenticated,
+    csrf_token: 'notifications-csrf',
+    user: authenticated ? admin : null,
+  })));
+  await page.route('**/server/auth/login.php*', async route => {
+    authenticated = true;
+    await route.fulfill(json({ ok: true, csrf_token: 'notifications-csrf', user: admin }));
+  });
+  await page.route('**/server/auth/logout.php*', async route => {
+    authenticated = false;
+    await route.fulfill(json({ ok: true }));
+  });
+  await page.route('**/server/api/bootstrap.php*', route => route.fulfill(json({
+    ok: true,
+    companies: [{ id: 1, trade_name: 'Path Consultancy', legal_name: 'QSI Consultancy B.V.', app_name: 'Uren & Facturatie' }],
+    users: [admin],
+    employees: [],
+    assignments: [],
+    counterparties: [],
+    assignment_mail_routes: [],
+    mail_recipients: [],
+  })));
+
+  for (const pattern of [
+    '**/server/api/dashboard.php*',
+    '**/server/api/invoices.php*',
+    '**/server/api/announcements.php*',
+    '**/server/api/email-queue.php*',
+    '**/server/api/staff.php*',
+    '**/server/api/settings.php*',
+    '**/server/api/users.php*',
+    '**/server/api/customer-timesheets.php*',
+  ]) {
+    await page.route(pattern, route => route.fulfill(json({ ok: true, items: [], users: [], employees: [], settings: {}, per_maand: [] })));
+  }
+  await page.route('**/server/api/mail-acceptance.php*', route => route.fulfill(json({ ok: true, enabled: false, ready: false, issues: [], scenarios: [] })));
 }
 
 test.describe('notifications api', () => {
@@ -170,6 +229,7 @@ test.describe('notifications api', () => {
       created_at: '2026-08-14 08:00:00',
     }));
 
+    await isolateNotificationsFrontend(page);
     await page.route('**/server/api/notifications.php*', async route => {
       if (route.request().method() === 'POST') {
         const payload = route.request().postDataJSON() as { action?: string };

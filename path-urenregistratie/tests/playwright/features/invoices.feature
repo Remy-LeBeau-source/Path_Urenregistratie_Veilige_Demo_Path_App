@@ -34,7 +34,7 @@ Feature: Facturen bekijken en beheren
   @happy
   Scenario: [INV-H-003] server berekent bedrag uit uren en uurtarief voor open facturen
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 7
+    # Aantoonbare Playwright-assertions in deze case: 8
     Given de administrator is ingelogd
     When factuurdata voor augustus 2026 wordt opgevraagd
     Then het bedrag komt uit server-side berekening in plaats van alleen statische demo-output

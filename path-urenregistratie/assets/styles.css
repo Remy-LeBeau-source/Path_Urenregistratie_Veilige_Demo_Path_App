@@ -241,6 +241,9 @@ select:focus-visible {
 .safety-badge { border: 1px solid #edcfa9; border-radius: 999px; background: var(--warning-bg); color: var(--warning); font-size: 9px; font-weight: 800; letter-spacing: .04em; padding: 7px 10px; text-transform: uppercase; white-space: nowrap; }
 .safety-badge.is-active { border-color: #86d6c1; background: #e3f7f1; color: #087a62; }
 .safety-badge.is-paused { border-color: #edcfa9; background: var(--warning-bg); color: var(--warning); }
+.safety-badge.is-toggleable { cursor: pointer; }
+.safety-badge.is-toggleable:hover { filter: brightness(.97); }
+.safety-badge.is-toggleable:focus-visible { outline: 3px solid rgba(61, 195, 157, .3); outline-offset: 2px; }
 .mail-acceptance-controls { display: flex; align-items: center; gap: 8px; }
 .topbar-quick-reset { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); cursor: pointer; font-size: 10px; font-weight: 700; letter-spacing: .04em; padding: 7px 12px; text-transform: uppercase; }
 .topbar-quick-reset:hover { border-color: var(--mint); color: var(--mint-dark); }

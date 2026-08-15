@@ -6227,11 +6227,68 @@ function testMailRoutingSummary() {
   return { sink };
 }
 
+const LOCAL_MAIL_PREVIEW_STORAGE_KEY = "path-local-mail-preview-enabled";
+
+function localMailPreviewAvailable() {
+  if (typeof window === "undefined") return false;
+  const host = String(window.location.hostname || "").toLowerCase();
+  const serverEnvironment = String(readApiDebug.emailQueue && readApiDebug.emailQueue.environment || "").toLowerCase();
+  // The control belongs to the local runtime, not to an eventually loaded API
+  // response. Keeping it tied to mailAcceptance caused it to disappear again
+  // when another read refresh briefly cleared that cache.
+  return ["localhost", "127.0.0.1", "::1"].includes(host)
+    && (!serverEnvironment || serverEnvironment === "local");
+}
+
+function localMailPreviewEnabled() {
+  if (!localMailPreviewAvailable()) return false;
+  try {
+    return window.localStorage.getItem(LOCAL_MAIL_PREVIEW_STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function setLocalMailPreviewEnabled(enabled) {
+  try {
+    if (enabled) window.localStorage.setItem(LOCAL_MAIL_PREVIEW_STORAGE_KEY, "1");
+    else window.localStorage.removeItem(LOCAL_MAIL_PREVIEW_STORAGE_KEY);
+  } catch {
+    // Een geblokkeerde localStorage mag de veilige droge controlemodus niet doorbreken.
+  }
+}
+
 function renderMailRuntimeStatus() {
   const data = readApiDebug.emailQueue;
   const badge = document.querySelector("#mail-safety-badge");
   const mode = document.querySelector("#setting-send-mode");
   const toggle = document.querySelector("#toggle-test-mail-delivery");
+  if (localMailPreviewAvailable()) {
+    const enabled = localMailPreviewEnabled();
+    if (badge) {
+      badge.textContent = enabled ? "Lokale mailpreview actief" : "Lokale mailpreview uit";
+      badge.classList.toggle("is-active", enabled);
+      badge.classList.toggle("is-paused", !enabled);
+      badge.classList.add("is-toggleable");
+      badge.setAttribute("role", "button");
+      badge.setAttribute("tabindex", "0");
+      badge.setAttribute("aria-label", enabled ? "Lokale mailpreview uitschakelen" : "Lokale mailpreview inschakelen");
+      badge.dataset.mailToggleAvailable = "true";
+      badge.title = "Lokale controlemodus: er wordt nooit extern e-mail verzonden.";
+    }
+    if (mode) {
+      mode.innerHTML = '<option>' + (enabled
+        ? "Lokale preview actief · geen externe verzending"
+        : "Lokale preview uit · geen externe verzending") + '</option>';
+    }
+    if (toggle) {
+      toggle.hidden = false;
+      toggle.dataset.mailToggleMode = "local-preview";
+      toggle.dataset.testMailEnabled = enabled ? "true" : "false";
+      toggle.textContent = enabled ? "Mailpreview uitschakelen" : "Mailpreview inschakelen";
+    }
+    return;
+  }
   const mailMode = String(data && data.mail_mode || "disabled");
   const sink = String(data && data.test_sink_recipient || "").trim();
   const labels = {
@@ -6244,6 +6301,18 @@ function renderMailRuntimeStatus() {
     badge.textContent = labels[mailMode] || labels.disabled;
     badge.classList.toggle("is-active", ["test_active", "production_active"].includes(mailMode));
     badge.classList.toggle("is-paused", mailMode === "test_paused");
+    const toggleAvailable = Boolean(data && data.test_toggle_available === true);
+    badge.classList.toggle("is-toggleable", toggleAvailable);
+    badge.dataset.mailToggleAvailable = toggleAvailable ? "true" : "false";
+    if (toggleAvailable) {
+      badge.setAttribute("role", "button");
+      badge.setAttribute("tabindex", "0");
+      badge.setAttribute("aria-label", mailMode === "test_active" ? "TEST-mail pauzeren" : "TEST-mail hervatten");
+    } else {
+      badge.removeAttribute("role");
+      badge.removeAttribute("tabindex");
+      badge.removeAttribute("aria-label");
+    }
     badge.title = mailMode === "test_active" && sink
       ? "Alle TEST-mail wordt veilig afgeleverd bij " + sink
       : (mailMode === "production_active" ? "Productiemail is actief" : "Er wordt geen echte e-mail verzonden");
@@ -6257,6 +6326,7 @@ function renderMailRuntimeStatus() {
   if (toggle) {
     const available = data && data.test_toggle_available === true;
     toggle.hidden = !available;
+    toggle.dataset.mailToggleMode = "test-delivery";
     toggle.dataset.testMailEnabled = mailMode === "test_active" ? "true" : "false";
     toggle.textContent = mailMode === "test_active" ? "TEST-mail pauzeren" : "TEST-mail hervatten";
   }
@@ -6318,21 +6388,32 @@ function renderMailAcceptanceConsole() {
 
   container.hidden = false;
 
+  const previewOnly = data.preview_only === true;
+  const previewEnabled = !previewOnly || localMailPreviewEnabled();
   const readyCount = scenarios.filter(item => item && item.ready === true).length;
-  status.className = "status-pill " + (data.ready === true ? "status-approved" : "status-warning");
-  status.textContent = data.ready === true ? "Klaar voor test" : "Geblokkeerd";
+  const consoleReady = data.ready === true && previewEnabled;
+  status.className = "status-pill " + (consoleReady ? "status-approved" : "status-warning");
+  status.textContent = previewOnly
+    ? (previewEnabled ? "Lokale preview gereed" : "Preview uit")
+    : (data.ready === true ? "Klaar voor test" : "Geblokkeerd");
   const commonIssues = Array.isArray(data.issues) ? data.issues.filter(Boolean) : [];
-  summary.textContent = commonIssues.length
+  summary.textContent = previewOnly && !previewEnabled
+    ? "Schakel lokale mailpreview in om controleberichten in de lokale verzendadministratie te zetten. Er wordt niets extern verzonden."
+    : commonIssues.length
     ? commonIssues.join(" ")
-    : readyCount + " van " + scenarios.length + " losse acceptatiescenario’s zijn gereed.";
+    : readyCount + " van " + scenarios.length + (previewOnly
+      ? " lokale controlescenario’s zijn gereed; externe verzending blijft geblokkeerd."
+      : " losse acceptatiescenario’s zijn gereed.");
 
   list.innerHTML = scenarios.length ? scenarios.map(item => {
     const scenarioIssues = Array.isArray(item && item.issues) ? item.issues.filter(Boolean) : [];
-    const ready = item && item.ready === true;
+    const ready = item && item.ready === true && previewEnabled;
     const details = scenarioIssues.length ? scenarioIssues.join(" ") : mailAcceptanceAttachmentText(item && item.attachment_count);
-    const actionLabel = ready ? "Controleer &amp; verstuur 1" : (data.enabled === true ? "Niet beschikbaar" : "Mailvenster gesloten");
+    const actionLabel = ready
+      ? (previewOnly ? "Controleer &amp; maak preview" : "Controleer &amp; verstuur 1")
+      : (previewOnly && !previewEnabled ? "Mailpreview uit" : (data.enabled === true ? "Niet beschikbaar" : "Mailvenster gesloten"));
     return '<article class="mail-acceptance-scenario" data-mail-acceptance-key="' + escapeHtml(String(item && item.key || "")) + '">' +
-      '<div class="mail-acceptance-copy"><strong>' + escapeHtml(String(item && item.label || "Acceptatiescenario")) + '</strong><small>Aan ' + escapeHtml(String(item && item.recipient || "Niet ingesteld")) + ' · ' + escapeHtml(details) + '</small>' + (ready ? mailAcceptanceAttachmentLinks(item, true) : "") + '</div>' +
+      '<div class="mail-acceptance-copy"><strong>' + escapeHtml(String(item && item.label || "Acceptatiescenario")) + '</strong><small>' + (previewOnly ? "Alleen lokaal" : "Aan " + escapeHtml(String(item && item.recipient || "Niet ingesteld"))) + ' · ' + escapeHtml(details) + '</small>' + (item && item.ready === true ? mailAcceptanceAttachmentLinks(item, true) : "") + '</div>' +
       '<button class="small-button" type="button" data-mail-acceptance-scenario="' + escapeHtml(String(item && item.key || "")) + '"' + (ready ? "" : " disabled") + '>' + actionLabel + '</button>' +
     '</article>';
   }).join("") : '<div class="dashboard-action-empty"><strong>Geen scenario’s geconfigureerd.</strong><br>Er kan niets worden verzonden.</div>';
@@ -6342,20 +6423,25 @@ function showMailAcceptanceConfirmation(scenarioKey) {
   const data = readApiDebug.mailAcceptance;
   const scenarios = Array.isArray(data && data.scenarios) ? data.scenarios : [];
   const scenario = scenarios.find(item => String(item && item.key || "") === String(scenarioKey || ""));
-  if (!scenario || scenario.ready !== true) {
+  const previewOnly = data && data.preview_only === true;
+  if (!scenario || scenario.ready !== true || (previewOnly && !localMailPreviewEnabled())) {
     toast("Dit acceptatiescenario is niet vrijgegeven.");
     return;
   }
 
   showModal({
-    label: "Eén acceptatiemail",
+    label: previewOnly ? "Lokaal controlevoorbeeld" : "Eén acceptatiemail",
     title: String(scenario.label || "Acceptatiemail versturen") + "?",
-    message: "Controleer de vaste testontvanger en bijlagen. Deze actie verstuurt precies één herkenbaar gemarkeerd testbericht.",
-    summary: '<div><span>Ontvanger</span><strong>' + escapeHtml(String(scenario.recipient || "")) + '</strong></div>' +
+    message: previewOnly
+      ? "Controleer onderwerp, tekst en PDF-bijlagen. Deze actie maakt één lokaal controlevoorbeeld; er wordt niets extern verzonden."
+      : "Controleer de vaste testontvanger en bijlagen. Deze actie verstuurt precies één herkenbaar gemarkeerd testbericht.",
+    summary: '<div><span>' + (previewOnly ? "Aflevering" : "Ontvanger") + '</span><strong>' + (previewOnly ? "Alleen lokale verzendadministratie" : escapeHtml(String(scenario.recipient || ""))) + '</strong></div>' +
       '<div><span>Bijlagen</span><strong>' + escapeHtml(mailAcceptanceAttachmentText(scenario.attachment_count)) + '</strong></div>' +
       mailAcceptanceAttachmentLinks(scenario) +
-      '<div><span>Markering</span><strong>ACCEPTATIETEST · NIET BOEKEN</strong></div>',
-    confirm: "1 acceptatiemail versturen",
+      '<div><span>Onderwerp</span><strong>' + escapeHtml(String(scenario.preview_subject || "Wordt bij verzending samengesteld")) + '</strong></div>' +
+      (scenario.preview_body ? '<div><span>Tekstvoorbeeld</span><strong>' + escapeHtml(String(scenario.preview_body)).replace(/\n/g, '<br>') + '</strong></div>' : "") +
+      '<div><span>Markering</span><strong>' + (previewOnly ? "LOKALE CONTROLE · NIET VERZONDEN" : "ACCEPTATIETEST · NIET BOEKEN") + '</strong></div>',
+    confirm: previewOnly ? "1 controlevoorbeeld maken" : "1 acceptatiemail versturen",
     taskNavigation: false,
     action: () => sendMailAcceptanceScenario(String(scenario.key || ""))
   });
@@ -6383,7 +6469,9 @@ function sendMailAcceptanceScenario(scenarioKey) {
       ]).then(() => {
         renderMailDeliveryHistory();
         renderMailAcceptanceConsole();
-        toast("Precies één acceptatiemail is door SMTP geaccepteerd.");
+        toast(result.data.preview_only === true
+          ? "Eén controlevoorbeeld is lokaal klaargezet; niets is extern verzonden."
+          : "Precies één acceptatiemail is door SMTP geaccepteerd.");
       });
     })
     .catch(error => {
@@ -10131,6 +10219,28 @@ document.querySelector("#toggle-test-mail-delivery")?.addEventListener("click", 
   const button = event.currentTarget;
   const currentlyEnabled = button.dataset.testMailEnabled === "true";
   const nextEnabled = !currentlyEnabled;
+  if (button.dataset.mailToggleMode === "local-preview") {
+    showModal({
+      label: "Lokale mailpreview",
+      title: nextEnabled ? "Lokale mailpreview inschakelen?" : "Lokale mailpreview uitschakelen?",
+      message: nextEnabled
+        ? "Je kunt daarna onderwerp, tekst, queue en PDF-bijlagen lokaal controleren. Er wordt vanaf localhost niets extern verzonden."
+        : "Nieuwe lokale controlevoorbeelden worden geblokkeerd. Bestaande voorbeelden blijven in de verzendadministratie zichtbaar.",
+      summary: '<div><span>Omgeving</span><strong>localhost</strong></div><div><span>Externe aflevering</span><strong>Altijd geblokkeerd</strong></div><div><span>Nieuwe status</span><strong>' + (nextEnabled ? "Preview actief" : "Preview uit") + '</strong></div>',
+      confirm: nextEnabled ? "Mailpreview inschakelen" : "Mailpreview uitschakelen",
+      taskNavigation: false,
+      action: () => {
+        setLocalMailPreviewEnabled(nextEnabled);
+        closeModal();
+        renderMailRuntimeStatus();
+        renderMailAcceptanceConsole();
+        toast(nextEnabled
+          ? "Lokale mailpreview is ingeschakeld; externe verzending blijft geblokkeerd."
+          : "Lokale mailpreview is uitgeschakeld.");
+      }
+    });
+    return;
+  }
   showModal({
     label: "Veilige TEST-mail",
     title: nextEnabled ? "TEST-mail hervatten?" : "TEST-mail pauzeren?",
@@ -10168,10 +10278,29 @@ document.querySelector("#toggle-test-mail-delivery")?.addEventListener("click", 
   });
 });
 
+function activateMailSafetyBadge() {
+  const badge = document.querySelector("#mail-safety-badge");
+  const toggle = document.querySelector("#toggle-test-mail-delivery");
+  if (badge?.dataset.mailToggleAvailable !== "true" || !toggle || toggle.hidden) return;
+  toggle.click();
+}
+
+document.querySelector("#mail-safety-badge")?.addEventListener("click", activateMailSafetyBadge);
+document.querySelector("#mail-safety-badge")?.addEventListener("keydown", event => {
+  if (!["Enter", " "].includes(event.key)) return;
+  event.preventDefault();
+  activateMailSafetyBadge();
+});
+
 document.querySelector("#mark-notifications-read").addEventListener("click", () => {
   if (API_ENABLED && authRuntime.mode === "auth") {
     markAllNotificationsReadApi()
-      .then(() => refreshNotificationsReadApi(true))
+      .then(() => {
+        state.notifications.forEach(item => { item.read = true; });
+        renderNotifications();
+        renderEmployeeAnnouncementArchive();
+        return refreshNotificationsReadApi(true);
+      })
       .then(() => toast("Alle meldingen zijn als gelezen gemarkeerd."))
       .catch(() => toast("Markeren als gelezen op server mislukt."));
     return;

@@ -75,3 +75,4 @@ Given("Backoffice met de volledige serverwerkvoorraad is ingelogd");
 When("Backoffice augustus-juli-augustus doorloopt");
 Then("blijven globale aantallen, eigenaren en taakidentiteiten gelijk");
 And("eigenaarfilters openen alleen hun concrete taakregels");
+And("opnieuw openen zet alle maandblokken terug naar ingeklapt");

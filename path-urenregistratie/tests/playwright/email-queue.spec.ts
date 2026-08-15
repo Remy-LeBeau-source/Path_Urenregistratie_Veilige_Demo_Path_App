@@ -1,4 +1,4 @@
-import { expect, request as playwrightRequest, test } from '@playwright/test';
+import { expect, request as playwrightRequest, test, type Page } from '@playwright/test';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { AuthApi } from './api/AuthApi';
@@ -36,6 +36,72 @@ async function findWritablePeriod(timesheetApi: TimesheetApi): Promise<string> {
     if (s === 'draft' || s === 'correction') return period;
   }
   throw new Error('No writable period for email-queue tests');
+}
+
+async function isolateMailPreviewFrontend(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+
+  const admin = {
+    id: 1,
+    company_id: 1,
+    email: 'gio@example.invalid',
+    display_name: 'Gio Maatsen',
+    role: 'administrator',
+    force_password_change: false,
+  };
+  let authenticated = false;
+  const json = (body: unknown) => ({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
+
+  await page.route('**/server/api.php?action=state*', route => route.fulfill(json({ ok: true, state: null })));
+  await page.route('**/server/auth/csrf.php*', route => route.fulfill(json({ ok: true, csrf_token: 'mail-preview-csrf' })));
+  await page.route('**/server/auth/me.php*', route => route.fulfill(json({
+    ok: true,
+    authenticated,
+    csrf_token: 'mail-preview-csrf',
+    user: authenticated ? admin : null,
+  })));
+  await page.route('**/server/auth/login.php*', async route => {
+    authenticated = true;
+    await route.fulfill(json({ ok: true, csrf_token: 'mail-preview-csrf', user: admin }));
+  });
+
+  await page.route('**/server/api/bootstrap.php*', route => route.fulfill(json({
+    ok: true,
+    companies: [{
+      id: 1,
+      trade_name: 'Path Consultancy',
+      legal_name: 'QSI Consultancy B.V.',
+      app_name: 'Uren & Facturatie',
+      support_name: 'Path Backoffice',
+      support_email: 'backoffice@pathconsultancy.nl',
+      payment_term_days: 30,
+      brand_primary: '#0d1b38',
+      brand_accent: '#3abd9d',
+    }],
+    users: [admin],
+    employees: [],
+    assignments: [],
+    counterparties: [],
+    assignment_mail_routes: [],
+    mail_recipients: [],
+  })));
+
+  const emptyRoutes = [
+    '**/server/api/dashboard.php*',
+    '**/server/api/invoices.php*',
+    '**/server/api/notifications.php*',
+    '**/server/api/announcements.php*',
+    '**/server/api/staff.php*',
+    '**/server/api/settings.php*',
+    '**/server/api/users.php*',
+    '**/server/api/customer-timesheets.php*',
+  ];
+  for (const pattern of emptyRoutes) {
+    await page.route(pattern, route => route.fulfill(json({ ok: true, items: [], users: [], employees: [], settings: {}, per_maand: [] })));
+  }
 }
 
 async function createLockedInvoice() {
@@ -429,9 +495,114 @@ test.describe('email queue api', () => {
     });
   });
 
+  test('[EQ-H-025] localhost schakelt een veilige mailpreview in en controleert inhoud en PDF’s zonder SMTP', async ({ page }) => {
+    test.setTimeout(60_000);
+    let previewCreated = false;
+    const posted: Array<Record<string, unknown>> = [];
+    const scenarios = [{
+      key: 'broker_bundle',
+      label: 'Broker: factuur + klanturenstaat',
+      recipient: 'lokale-mailpreview@example.invalid',
+      attachment_count: 2,
+      ready: true,
+      issues: [],
+      preview_subject: '[LOKALE CONTROLE] Factuur PATH-2026-007 – juli 2026',
+      preview_body: 'LOKALE CONTROLE — NIET VERZONDEN\n\nHierbij sturen wij de gecontroleerde documenten.',
+      attachments: [
+        { index: 0, filename: 'ACCEPTATIETEST-NIET-BOEKEN-Factuur-PATH-2026-007.pdf' },
+        { index: 1, filename: 'ACCEPTATIETEST-NIET-BOEKEN-Klanturenstaat-Stasjo-2026-07.pdf' },
+      ],
+    }];
+
+    await isolateMailPreviewFrontend(page);
+    await page.route('**/server/api/mail-acceptance.php*', async route => {
+      if (route.request().method() === 'POST') {
+        posted.push(route.request().postDataJSON() as Record<string, unknown>);
+        previewCreated = true;
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ ok: true, preview_only: true, result: { scenario: 'broker_bundle', outcome: 'previewed', preview_only: true } }),
+        });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true, enabled: true, ready: true, preview_only: true, issues: [], scenarios }),
+      });
+    });
+    await page.route('**/server/api/email-queue.php*', route => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        environment: 'local',
+        mail_mode: 'disabled',
+        test_toggle_available: false,
+        count: previewCreated ? 1 : 0,
+        items: previewCreated ? [{
+          id: 91,
+          channel: 'broker',
+          recipient_email: 'lokale-mailpreview@example.invalid',
+          subject_snapshot: '[LOKALE CONTROLE] Factuur PATH-2026-007 – juli 2026',
+          attachment_policy: 'invoice_and_customer_timesheet',
+          status: 'queued',
+          dry_run: true,
+          acceptance_test: true,
+          created_at: '2026-08-15 10:45:00',
+        }] : [],
+      }),
+    }));
+
+    const login = new LoginPage(page);
+    await login.open();
+    await login.loginAsAdmin();
+    await page.locator('button[data-view="settings"]').click();
+
+    await expect(page.locator('#mail-safety-badge')).toHaveText('Lokale mailpreview uit');
+    await expect(page.locator('#toggle-test-mail-delivery')).toHaveText('Mailpreview inschakelen');
+    await expect(page.locator('[data-mail-acceptance-scenario="broker_bundle"]')).toBeDisabled();
+    await expect(page.locator('[data-mail-acceptance-key="broker_bundle"] .mail-acceptance-attachment')).toHaveCount(2);
+
+    const previewToggle = page.locator('#toggle-test-mail-delivery');
+    const statusToggle = page.locator('#mail-safety-badge');
+    await expect(statusToggle).toHaveAttribute('role', 'button');
+    await expect(statusToggle).toHaveAttribute('aria-label', 'Lokale mailpreview inschakelen');
+    await statusToggle.focus();
+    await statusToggle.press('Enter');
+    await expect(page.locator('#modal-title')).toHaveText('Lokale mailpreview inschakelen?');
+    await expect(page.locator('#modal-summary')).toContainText('Externe aflevering');
+    await expect(page.locator('#modal-summary')).toContainText('Altijd geblokkeerd');
+    await page.locator('#modal-confirm').click();
+
+    await expect(page.locator('#mail-safety-badge')).toHaveText('Lokale mailpreview actief');
+    await expect(page.locator('[data-mail-acceptance-scenario="broker_bundle"]')).toBeEnabled();
+    await page.locator('[data-mail-acceptance-scenario="broker_bundle"]').click();
+    await expect(page.locator('#modal-summary')).toContainText('Alleen lokale verzendadministratie');
+    await expect(page.locator('#modal-summary')).toContainText('[LOKALE CONTROLE] Factuur PATH-2026-007');
+    await expect(page.locator('#modal-summary')).toContainText('Hierbij sturen wij de gecontroleerde documenten.');
+    await expect(page.locator('#modal-summary .mail-acceptance-attachment')).toHaveCount(2);
+    await expect(page.locator('#modal-confirm')).toHaveText('1 controlevoorbeeld maken');
+    await page.locator('#modal-confirm').click();
+
+    await expect.poll(() => posted.length).toBe(1);
+    expect(posted[0]).toEqual({ scenario: 'broker_bundle', confirm: 'SEND_ONE_ACCEPTANCE_MAIL' });
+    await expect(page.locator('#toast')).toContainText('niets is extern verzonden');
+    await expect(page.locator('#mail-delivery-history-list')).toContainText('Controlevoorbeeld');
+    await expect(page.locator('#mail-delivery-history-list')).toContainText('Factuur + klanturenstaat');
+
+    await expect(statusToggle).toHaveAttribute('aria-label', 'Lokale mailpreview uitschakelen');
+    await statusToggle.click();
+    await page.locator('#modal-confirm').click();
+    await expect(page.locator('#mail-safety-badge')).toHaveText('Lokale mailpreview uit');
+    await expect(page.locator('[data-mail-acceptance-scenario="broker_bundle"]')).toBeDisabled();
+  });
+
   test('[EQ-H-023] beheerder pauzeert en hervat uitsluitend de beveiligde TEST-mail', async ({ page }) => {
     let enabled = true;
     const writes: Array<Record<string, unknown>> = [];
+    await isolateMailPreviewFrontend(page);
     await page.route('**/server/api/email-queue.php*', async route => {
       if (route.request().method() === 'POST') {
         const body = route.request().postDataJSON() as Record<string, unknown>;
@@ -489,6 +660,7 @@ test.describe('email queue api', () => {
   });
 
   test('[EQ-N-024] buiten de beveiligde TEST-sandbox is geen mailschakelaar beschikbaar', async ({ page }) => {
+    await isolateMailPreviewFrontend(page);
     await page.route('**/server/api/email-queue.php*', route => route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -1005,19 +1177,21 @@ test.describe('email queue api', () => {
     await ctx.dispose();
   });
 
-  test('[EQ-N-015] acceptatieconsole blijft standaard uit en weigert POST zonder expliciete bevestiging', async () => {
+  test('[EQ-N-015] localhost blijft preview-only en weigert POST zonder expliciete bevestiging', async () => {
     const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
     const authApi = new AuthApi(ctx);
     await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
 
-    await test.step('Given de standaard testconfiguratie geen echte acceptatieverzending vrijgeeft', async () => {
+    await test.step('Given localhost uitsluitend lokale preview zonder echte aflevering vrijgeeft', async () => {
       const status = await ctx.get(`${appConfig.baseUrl}/server/api/mail-acceptance.php`);
       expect(status.status()).toBe(200);
       const body = await status.json();
       expect(body.ok).toBe(true);
-      expect(body.enabled).toBe(false);
-      expect(body.ready).toBe(false);
+      expect(body.enabled).toBe(true);
+      expect(body.preview_only).toBe(true);
+      expect(body.ready).toBe(true);
       expect(body.scenarios).toHaveLength(5);
+      expect(body.scenarios.every((scenario: { ready?: boolean }) => scenario.ready === true)).toBe(true);
     });
 
     await test.step('When een scenario zonder de exacte bevestiging wordt aangeboden', async () => {
