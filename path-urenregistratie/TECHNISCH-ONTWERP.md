@@ -166,7 +166,9 @@ Op loopbackhosts is daarnaast een afzonderlijke lokale previewmodus beschikbaar.
 onder `path-local-mail-preview-enabled` in `localStorage` en is geen transportconfiguratie. De server
 staat preview uitsluitend toe bij `environment=local`, een loopbackhost en uitgeschakelde echte
 mail. `mail-acceptance.php` retourneert dan `preview_only=true`; POST maakt alleen een droge
-queue-/previewregistratie en opent geen netwerkverbinding. TEST gebruikt nooit deze browserkeuze en
+queue-/previewregistratie en opent geen netwerkverbinding. De frontend presenteert in LOCAL
+`giovanno.maatsen@pathconsultancy.nl` uitsluitend als gesimuleerde TEST-aflevering naast de
+ongewijzigde productieroute; dit adres wordt niet als lokaal SMTP-doel gebruikt. TEST gebruikt nooit deze browserkeuze en
 PROD toont uitsluitend status. `EQ-H-025` bewaakt badge- en instellingenbediening, onderwerp, tekst,
 PDF-links en de geen-SMTP-grens; `mail-acceptance-policy-check.php` bewijst daarnaast nul writes en
 nul netwerkverbindingen tijdens de beleidscontrole.

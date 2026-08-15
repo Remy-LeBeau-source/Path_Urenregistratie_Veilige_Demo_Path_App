@@ -114,7 +114,9 @@ geen documentlink.
 
 LOCAL verstuurt nooit echte mail. Een beheerder kan daar de lokale mailpreview via Instellingen of
 de statusbadge aan- en uitzetten om onderwerp, tekst, PDF-links en de verzendadministratie te
-controleren; deze bediening kan uitsluitend lokale previewregistraties maken en opent nooit SMTP.
+controleren. LOCAL toont daarbij naast iedere bedoelde productieroute expliciet de vaste
+gesimuleerde TEST-aflevering `giovanno.maatsen@pathconsultancy.nl` met de melding dat niets wordt
+verzonden. Deze bediening kan uitsluitend lokale previewregistraties maken en opent nooit SMTP.
 TEST herschrijft alle functionele ontvangers naar de vastgelegde testontvanger en markeert elk
 bericht als acceptatietest. PROD gebruikt uitsluitend de geconfigureerde zakelijke ontvangers. Een
 mislukte verzending blijft zichtbaar in de verzendadministratie en mag niet als verzonden worden

@@ -80,7 +80,7 @@ Feature: Mailroutering en aflevering
   @happy
   Scenario: [EQ-H-025] localhost schakelt een veilige mailpreview in en controleert inhoud en PDF’s zonder SMTP
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 23
+    # Aantoonbare Playwright-assertions in deze case: 33
     Given mailroutering en aflevering is voorbereid
     When de flow voor EQ-H-025 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat localhost schakelt een veilige mailpreview in en controleert inhoud en PDF’s zonder SMTP

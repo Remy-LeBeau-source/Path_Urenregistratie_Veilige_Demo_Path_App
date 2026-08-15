@@ -46,7 +46,7 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
   @happy
   Scenario: [E2E-H-005] klanturenstaatcontrole wordt een brokeractie zonder taakverlies
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 9
+    # Aantoonbare Playwright-assertions in deze case: 13
     Given Backoffice een ontvangen klanturenstaat in de vaste herstelbasis heeft
     When Backoffice het ontvangen klantdocument goedkeurt
     Then staat hetzelfde dossier klaar voor de broker en blijft het globale totaal stabiel

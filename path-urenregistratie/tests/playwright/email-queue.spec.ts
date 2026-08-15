@@ -558,12 +558,17 @@ test.describe('email queue api', () => {
     const login = new LoginPage(page);
     await login.open();
     await login.loginAsAdmin();
-    await page.locator('button[data-view="settings"]').click();
+    await page.evaluate(() => window.showView('settings'));
+    await expect(page.locator('#view-settings')).toHaveClass(/is-active/);
+    await page.evaluate(() => window.refreshMailAcceptanceReadApi(true));
 
     await expect(page.locator('#mail-safety-badge')).toHaveText('Lokale mailpreview uit');
+    await expect(page.locator('#setting-send-mode')).toContainText('giovanno.maatsen@pathconsultancy.nl');
+    await expect(page.locator('#setting-send-mode')).toContainText('geen verzending');
     await expect(page.locator('#toggle-test-mail-delivery')).toHaveText('Mailpreview inschakelen');
     await expect(page.locator('[data-mail-acceptance-scenario="broker_bundle"]')).toBeDisabled();
     await expect(page.locator('[data-mail-acceptance-key="broker_bundle"] .mail-acceptance-attachment')).toHaveCount(2);
+    await expect(page.locator('[data-mail-acceptance-key="broker_bundle"]')).toContainText('Gesimuleerde TEST-aflevering: giovanno.maatsen@pathconsultancy.nl');
 
     const previewToggle = page.locator('#toggle-test-mail-delivery');
     const statusToggle = page.locator('#mail-safety-badge');
@@ -575,11 +580,18 @@ test.describe('email queue api', () => {
     await expect(page.locator('#modal-summary')).toContainText('Externe aflevering');
     await expect(page.locator('#modal-summary')).toContainText('Altijd geblokkeerd');
     await page.locator('#modal-confirm').click();
+    await page.evaluate(() => window.refreshMailAcceptanceReadApi(true));
+    await page.evaluate(() => window.showView('settings'));
+    await expect(page.locator('#view-settings')).toHaveClass(/is-active/);
 
     await expect(page.locator('#mail-safety-badge')).toHaveText('Lokale mailpreview actief');
     await expect(page.locator('[data-mail-acceptance-scenario="broker_bundle"]')).toBeEnabled();
+    await expect(page.locator('[data-mail-acceptance-scenario="broker_bundle"]')).toBeVisible();
     await page.locator('[data-mail-acceptance-scenario="broker_bundle"]').click();
     await expect(page.locator('#modal-summary')).toContainText('Alleen lokale verzendadministratie');
+    await expect(page.locator('#modal-summary')).toContainText('Gesimuleerde TEST-aflevering');
+    await expect(page.locator('#modal-summary')).toContainText('giovanno.maatsen@pathconsultancy.nl');
+    await expect(page.locator('#modal-summary')).toContainText('geen verzending');
     await expect(page.locator('#modal-summary')).toContainText('[LOKALE CONTROLE] Factuur PATH-2026-007');
     await expect(page.locator('#modal-summary')).toContainText('Hierbij sturen wij de gecontroleerde documenten.');
     await expect(page.locator('#modal-summary .mail-acceptance-attachment')).toHaveCount(2);
@@ -591,6 +603,7 @@ test.describe('email queue api', () => {
     await expect(page.locator('#toast')).toContainText('niets is extern verzonden');
     await expect(page.locator('#mail-delivery-history-list')).toContainText('Controlevoorbeeld');
     await expect(page.locator('#mail-delivery-history-list')).toContainText('Factuur + klanturenstaat');
+    await expect(page.locator('#mail-delivery-history-list')).toContainText('Gesimuleerde TEST-aflevering: giovanno.maatsen@pathconsultancy.nl');
 
     await expect(statusToggle).toHaveAttribute('aria-label', 'Lokale mailpreview uitschakelen');
     await statusToggle.click();

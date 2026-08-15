@@ -73,6 +73,17 @@ Bijgewerkt: 15 augustus 2026
   met expliciete Allure-preserve-opt-in samengevoegd tot 215 passed / 0 non-passed; Allure en Living
   Docs zijn opnieuw gebouwd. `git diff --check` en editorfouten zijn schoon. Volgende stap: commit,
   push en vervolgens de TEST-/PROD-releasepipeline volgen; menselijke TEST-mailacceptatie blijft open.
+- 2026-08-15 22:35 · Copilot: op verzoek toont LOCAL nu overal (Instellingen, acceptatiescenario's,
+  bevestiging, factuur-/brokercontrole, verzendadministratie) expliciet de vaste gesimuleerde
+  TEST-ontvanger `giovanno.maatsen@pathconsultancy.nl` naast iedere bedoelde productieroute, met
+  "geen verzending". Bedoelde routes zelf blijven ongewijzigd; alleen presentatie via de nieuwe
+  `mailAcceptanceDeliverySummary()`-helper. Incident: één gecombineerde patch op `index.html` matchte
+  per ongeluk een stale oude editor-snapshot en zou secties (mailacceptatieconsole, verzendadministratie)
+  hebben verwijderd; ontdekt via `git diff`/`git cat-file -p HEAD`, direct `git checkout -- index.html`
+  en de versiebump daarna los opnieuw met exacte huidige tekst toegepast — geverifieerd met een schone
+  diff die alleen 0.9.69→0.9.70 toont. Les vastgelegd in `/memories/repo/build-notes-path-urenregistratie-index-html.md`.
+  Releasekandidaat is nu v0.9.70. Gericht bewijs: `EQ-H-025` en `E2E-H-005` groen, volledige smoke groen.
+  Volgende stap: docs:sync en de volledige lokale gate (smoke, matrix, ci:local, rapportage) herhalen.
 - `node --check assets/app.js`: groen.
 - PHP-lints en `php server/scripts/mail-acceptance-policy-check.php`: eerder groen op deze worktree.
 - Laatste bekende groene main-release vóór deze lokale wijzigingen: SHA `5b4c4fc2e3fa59df11fb83d4b210ea20a32e0e50`.

@@ -4716,9 +4716,11 @@ function showCustomerTimesheetBrokerCheck(employeeId, periodKey, adminTaskId = "
     subject: documentRecord.brokerSubject || defaultMail.subject,
     body: documentRecord.brokerBody || defaultMail.body
   };
-  const testRouting = testMailRoutingSummary();
-  const deliveryMessage = testRouting
-    ? "In TEST wordt een echte verzending uitsluitend bij de vaste testontvanger afgeleverd."
+  const deliveryRouting = mailAcceptanceDeliverySummary();
+  const deliveryMessage = deliveryRouting
+    ? (testMailRoutingSummary()
+      ? "In TEST wordt een echte verzending uitsluitend bij de vaste testontvanger afgeleverd."
+      : "LOCAL toont dezelfde vaste TEST-ontvanger ter controle; er wordt niets verzonden.")
     : "E-mailverzending is uitgeschakeld.";
   if (!isValidEmail(email)) {
     if (adminTaskId) {
@@ -4732,7 +4734,7 @@ function showCustomerTimesheetBrokerCheck(employeeId, periodKey, adminTaskId = "
     title: "Klanturenstaat voor " + employee.name + " controleren?",
     message: "Controleer het bedoelde adres, open de officiële PDF en pas desgewenst het onderwerp of bericht aan. " + deliveryMessage,
     summary: '<div><span>Bedoelde productieroute</span><strong>' + escapeHtml(email) + '</strong></div>' +
-      (testRouting ? '<div><span>Werkelijke TEST-aflevering</span><strong>' + escapeHtml(testRouting.sink) + '</strong></div>' : '') +
+      (deliveryRouting ? '<div><span>' + escapeHtml(deliveryRouting.label) + '</span><strong>' + escapeHtml(deliveryRouting.sink) + ' · ' + escapeHtml(deliveryRouting.description) + '</strong></div>' : '') +
       '<div><span>Bijlage</span><strong>' + escapeHtml(documentRecord.fileName) + '</strong></div>' +
       (documentRecord.fileData ? '<div><span>Document controleren</span><button class="small-button" type="button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + periodKey + '">PDF bekijken</button></div>' : '') +
       '<div class="modal-form full"><label class="full">Onderwerp<input id="customer-timesheet-broker-subject" value="' + escapeHtml(mail.subject) + '"></label><label class="full">Begeleidende tekst<textarea id="customer-timesheet-broker-body" rows="8">' + escapeHtml(mail.body) + '</textarea></label></div>',
@@ -6224,10 +6226,24 @@ function testMailRoutingSummary() {
   const data = readApiDebug.emailQueue;
   const sink = String(data && data.test_sink_recipient || "").trim();
   if (!(data && data.environment === "test" && data.test_redirect_active === true && isValidEmail(sink))) return null;
-  return { sink };
+  return { sink, label: "Werkelijke TEST-aflevering", description: "alle routes worden veilig omgeleid" };
 }
 
 const LOCAL_MAIL_PREVIEW_STORAGE_KEY = "path-local-mail-preview-enabled";
+const LOCAL_TEST_PREVIEW_RECIPIENT = "giovanno.maatsen@pathconsultancy.nl";
+
+function mailAcceptanceDeliverySummary() {
+  const testRouting = testMailRoutingSummary();
+  if (testRouting) return testRouting;
+  if (localMailPreviewAvailable()) {
+    return {
+      sink: LOCAL_TEST_PREVIEW_RECIPIENT,
+      label: "Gesimuleerde TEST-aflevering",
+      description: "alleen zichtbaar ter controle · geen verzending"
+    };
+  }
+  return null;
+}
 
 function localMailPreviewAvailable() {
   if (typeof window === "undefined") return false;
@@ -6278,8 +6294,8 @@ function renderMailRuntimeStatus() {
     }
     if (mode) {
       mode.innerHTML = '<option>' + (enabled
-        ? "Lokale preview actief · geen externe verzending"
-        : "Lokale preview uit · geen externe verzending") + '</option>';
+        ? "Lokale preview actief · TEST-controle naar " + LOCAL_TEST_PREVIEW_RECIPIENT + " · geen verzending"
+        : "Lokale preview uit · TEST-controle naar " + LOCAL_TEST_PREVIEW_RECIPIENT + " · geen verzending") + '</option>';
     }
     if (toggle) {
       toggle.hidden = false;
@@ -6389,6 +6405,7 @@ function renderMailAcceptanceConsole() {
   container.hidden = false;
 
   const previewOnly = data.preview_only === true;
+  const deliveryRouting = mailAcceptanceDeliverySummary();
   const previewEnabled = !previewOnly || localMailPreviewEnabled();
   const readyCount = scenarios.filter(item => item && item.ready === true).length;
   const consoleReady = data.ready === true && previewEnabled;
@@ -6402,7 +6419,7 @@ function renderMailAcceptanceConsole() {
     : commonIssues.length
     ? commonIssues.join(" ")
     : readyCount + " van " + scenarios.length + (previewOnly
-      ? " lokale controlescenario’s zijn gereed; externe verzending blijft geblokkeerd."
+      ? " lokale controlescenario’s zijn gereed voor " + LOCAL_TEST_PREVIEW_RECIPIENT + "; externe verzending blijft geblokkeerd."
       : " losse acceptatiescenario’s zijn gereed.");
 
   list.innerHTML = scenarios.length ? scenarios.map(item => {
@@ -6413,7 +6430,7 @@ function renderMailAcceptanceConsole() {
       ? (previewOnly ? "Controleer &amp; maak preview" : "Controleer &amp; verstuur 1")
       : (previewOnly && !previewEnabled ? "Mailpreview uit" : (data.enabled === true ? "Niet beschikbaar" : "Mailvenster gesloten"));
     return '<article class="mail-acceptance-scenario" data-mail-acceptance-key="' + escapeHtml(String(item && item.key || "")) + '">' +
-      '<div class="mail-acceptance-copy"><strong>' + escapeHtml(String(item && item.label || "Acceptatiescenario")) + '</strong><small>' + (previewOnly ? "Alleen lokaal" : "Aan " + escapeHtml(String(item && item.recipient || "Niet ingesteld"))) + ' · ' + escapeHtml(details) + '</small>' + (item && item.ready === true ? mailAcceptanceAttachmentLinks(item, true) : "") + '</div>' +
+      '<div class="mail-acceptance-copy"><strong>' + escapeHtml(String(item && item.label || "Acceptatiescenario")) + '</strong><small>' + (previewOnly && deliveryRouting ? escapeHtml(deliveryRouting.label + ": " + deliveryRouting.sink) : "Aan " + escapeHtml(String(item && item.recipient || "Niet ingesteld"))) + ' · ' + escapeHtml(details) + '</small>' + (item && item.ready === true ? mailAcceptanceAttachmentLinks(item, true) : "") + '</div>' +
       '<button class="small-button" type="button" data-mail-acceptance-scenario="' + escapeHtml(String(item && item.key || "")) + '"' + (ready ? "" : " disabled") + '>' + actionLabel + '</button>' +
     '</article>';
   }).join("") : '<div class="dashboard-action-empty"><strong>Geen scenario’s geconfigureerd.</strong><br>Er kan niets worden verzonden.</div>';
@@ -6424,6 +6441,7 @@ function showMailAcceptanceConfirmation(scenarioKey) {
   const scenarios = Array.isArray(data && data.scenarios) ? data.scenarios : [];
   const scenario = scenarios.find(item => String(item && item.key || "") === String(scenarioKey || ""));
   const previewOnly = data && data.preview_only === true;
+  const deliveryRouting = mailAcceptanceDeliverySummary();
   if (!scenario || scenario.ready !== true || (previewOnly && !localMailPreviewEnabled())) {
     toast("Dit acceptatiescenario is niet vrijgegeven.");
     return;
@@ -6436,6 +6454,7 @@ function showMailAcceptanceConfirmation(scenarioKey) {
       ? "Controleer onderwerp, tekst en PDF-bijlagen. Deze actie maakt één lokaal controlevoorbeeld; er wordt niets extern verzonden."
       : "Controleer de vaste testontvanger en bijlagen. Deze actie verstuurt precies één herkenbaar gemarkeerd testbericht.",
     summary: '<div><span>' + (previewOnly ? "Aflevering" : "Ontvanger") + '</span><strong>' + (previewOnly ? "Alleen lokale verzendadministratie" : escapeHtml(String(scenario.recipient || ""))) + '</strong></div>' +
+      (previewOnly && deliveryRouting ? '<div><span>' + escapeHtml(deliveryRouting.label) + '</span><strong>' + escapeHtml(deliveryRouting.sink) + ' · ' + escapeHtml(deliveryRouting.description) + '</strong></div>' : '') +
       '<div><span>Bijlagen</span><strong>' + escapeHtml(mailAcceptanceAttachmentText(scenario.attachment_count)) + '</strong></div>' +
       mailAcceptanceAttachmentLinks(scenario) +
       '<div><span>Onderwerp</span><strong>' + escapeHtml(String(scenario.preview_subject || "Wordt bij verzending samengesteld")) + '</strong></div>' +
@@ -6525,11 +6544,11 @@ function renderMailDeliveryHistory() {
   const sent = items.filter(item => item && item.status === "sent" && item.dry_run !== true).length;
   const pending = items.filter(item => item && ["queued", "processing"].includes(String(item.status)) && item.dry_run !== true).length;
   const failed = items.filter(item => item && item.status === "failed" && item.dry_run !== true).length;
-  const testRouting = testMailRoutingSummary();
+  const deliveryRouting = mailAcceptanceDeliverySummary();
   summary.textContent = items.length
     ? "Laatste " + items.length + " registraties · " + sent + " verzonden · " + pending + " in behandeling · " + failed + " mislukt."
     : "Er zijn nog geen e-mails vanuit de applicatie geregistreerd.";
-  if (testRouting) summary.textContent += " TEST levert alle berichten af bij " + testRouting.sink + ".";
+  if (deliveryRouting) summary.textContent += " " + deliveryRouting.label + ": " + deliveryRouting.sink + ".";
 
   list.innerHTML = items.length ? items.map(item => {
     const status = mailDeliveryStatusMeta(item);
@@ -6539,7 +6558,7 @@ function renderMailDeliveryHistory() {
     const attempts = Math.max(0, Number(item && item.attempt_count || 0));
     const acceptanceLabel = item && item.acceptance_test === true ? '<span class="mail-acceptance-label">Acceptatietest</span>' : '';
     return '<article class="mail-delivery-history-item" data-mail-delivery-status="' + escapeHtml(String(item && item.status || "queued")) + '" data-mail-acceptance-test="' + (item && item.acceptance_test === true ? "true" : "false") + '">' +
-      '<div class="mail-delivery-history-main"><strong>' + escapeHtml(String(item && item.subject_snapshot || "E-mail zonder onderwerp")) + '</strong><small>Bedoelde route: ' + escapeHtml(String(item && item.recipient_email || "Onbekende ontvanger")) + invoice + (testRouting ? ' · TEST-aflevering: ' + escapeHtml(testRouting.sink) : '') + '</small></div>' +
+      '<div class="mail-delivery-history-main"><strong>' + escapeHtml(String(item && item.subject_snapshot || "E-mail zonder onderwerp")) + '</strong><small>Bedoelde route: ' + escapeHtml(String(item && item.recipient_email || "Onbekende ontvanger")) + invoice + (deliveryRouting ? ' · ' + escapeHtml(deliveryRouting.label) + ': ' + escapeHtml(deliveryRouting.sink) : '') + '</small></div>' +
       '<div class="mail-delivery-history-meta">' + acceptanceLabel + '<span>' + escapeHtml(mailDeliveryChannelLabel(item && item.channel)) + '</span><span>' + escapeHtml(mailDeliveryAttachmentLabel(item && item.attachment_policy)) + '</span></div>' +
       '<div class="mail-delivery-history-state"><span class="status-pill ' + status.tone + '">' + status.label + '</span><small>' + timePrefix + ' · ' + escapeHtml(mailDeliveryTimestampLabel(eventTime)) + (attempts > 1 ? " · " + attempts + " pogingen" : "") + '</small></div>' +
     '</article>';
@@ -7848,12 +7867,14 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
     return false;
   }
   const routeText = info.routes.map(route => route.name + ": " + (route.invoiceAttachment ? "factuur als PDF" : "geen bijlage") + ".").join("\n");
-  const testRouting = testMailRoutingSummary();
-  const routingHtml = testRouting
-    ? '<div><span>Werkelijke TEST-aflevering</span><strong>' + escapeHtml(testRouting.sink) + ' · alle routes worden veilig omgeleid</strong></div>'
+  const deliveryRouting = mailAcceptanceDeliverySummary();
+  const routingHtml = deliveryRouting
+    ? '<div><span>' + escapeHtml(deliveryRouting.label) + '</span><strong>' + escapeHtml(deliveryRouting.sink) + ' · ' + escapeHtml(deliveryRouting.description) + '</strong></div>'
     : '';
-  const deliveryMessage = testRouting
-    ? "In TEST gaan de drie afzonderlijke berichten uitsluitend naar de vaste testontvanger."
+  const deliveryMessage = deliveryRouting
+    ? (testMailRoutingSummary()
+      ? "In TEST gaan de drie afzonderlijke berichten uitsluitend naar de vaste testontvanger."
+      : "LOCAL toont voor alle drie berichten dezelfde gesimuleerde TEST-ontvanger; er wordt niets verzonden.")
     : "E-mailverzending is uitgeschakeld.";
   showModal({
     label: "Verzending controleren",

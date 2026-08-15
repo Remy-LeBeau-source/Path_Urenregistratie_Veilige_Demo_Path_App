@@ -116,7 +116,12 @@ Deze momentopname is leidend; de regels eronder bewaren het technische en histor
 - [x] v0.9.69 is lokaal volledig groen: releasebuild, `npm run check`, DB-H-001, 0 dependency-
   kwetsbaarheden, volledige GUI-smoke en 215/215 Playwright-uitvoeringen. Allure en Living Docs
   bevatten dezelfde volledige groene run.
-- [-] Voor v0.9.69 volgen nog commit, push en automatische TEST-/PROD-uitrol.
+- [x] v0.9.70 maakt LOCAL een volledig visuele TEST-voorcontrole: naast iedere bedoelde
+  productieroute (broker, klanturenstaatcontrole, factuur/salarisverzending, Instellingen,
+  acceptatiescenario's, bevestiging en verzendadministratie) toont LOCAL expliciet de vaste
+  gesimuleerde TEST-ontvanger `giovanno.maatsen@pathconsultancy.nl` met "geen verzending". `EQ-H-025`,
+  `E2E-H-005` en de volledige smoke zijn hierop gericht groen bevestigd.
+- [-] Voor v0.9.70 volgen nog commit, push en automatische TEST-/PROD-uitrol.
 - [-] Menselijke TEST-mailacceptatie blijft open totdat broker-, boekhouding-, salaris-,
   wachtwoordherstel- en uitnodigingsmail inhoudelijk zijn gecontroleerd, inclusief de echte
   factuur- en klanturenstaat-PDF waar die route een bijlage vereist.
