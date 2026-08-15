@@ -42,7 +42,7 @@ Feature: Dashboard en open werkvoorraad
   @negative
   Scenario: [DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus
     # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 18
+    # Aantoonbare Playwright-assertions in deze case: 27
     Given Backoffice de voorbeeldomgeving herstelt en daarna naar Stasjo wisselt
     When Stasjo daarna een open urenactie indient
     And Stasjo voert daarna F5 uit
@@ -158,3 +158,4 @@ Feature: Dashboard en open werkvoorraad
     When Backoffice augustus-juli-augustus doorloopt
     Then blijven globale aantallen, eigenaren en taakidentiteiten gelijk
     And eigenaarfilters openen alleen hun concrete taakregels
+    And opnieuw openen zet alle maandblokken terug naar ingeklapt

@@ -3947,7 +3947,6 @@ function renderAdminTaskQueue() {
   }
   const filtered = filter === "all" ? tasks : filter === "waiting" ? waiting : actionable;
   const filteredMonthGroups = groupAdminTasksByMonth(filtered);
-  const defaultExpandedMonthKeys = new Set();
   const taskMonths = new Set(tasks.map(task => task.periodKey)).size;
   const taskDossiers = new Set(tasks.map(task => task.periodKey + ":" + task.employee.id)).size;
   const taskTitle = document.querySelector("#admin-task-title");
@@ -3986,7 +3985,7 @@ function renderAdminTaskQueue() {
     const monthSignature = group.tasks.map(task => task.id).join("|");
     const savedMonthState = state.adminTaskMonthState[monthStateKey];
     const hasCurrentExpansionOverride = savedMonthState && savedMonthState.signature === monthSignature;
-    const isExpanded = hasCurrentExpansionOverride ? savedMonthState.expanded : (filter !== "all" || defaultExpandedMonthKeys.has(group.periodKey));
+    const isExpanded = hasCurrentExpansionOverride ? savedMonthState.expanded : false;
     const monthBodyId = "admin-task-month-body-" + group.periodKey;
     return '<section class="admin-task-month" data-admin-task-month="' + group.periodKey + '">' +
       '<button class="admin-task-month-heading" type="button" data-admin-task-month-toggle="' + group.periodKey + '" data-admin-task-month-signature="' + escapeHtml(monthSignature) + '" aria-expanded="' + String(isExpanded) + '" aria-controls="' + monthBodyId + '"><span class="admin-task-month-heading-copy"><span>' + escapeHtml(timing) + '</span><strong>' + escapeHtml(group.period.label) + ' · ' + group.tasks.length + " open " + (group.tasks.length === 1 ? "actie" : "acties") + '</strong></span><span class="admin-task-month-heading-side"><small>' + escapeHtml(ownerSummary) + '</small><span class="admin-task-month-chevron" aria-hidden="true"></span></span></button>' +
@@ -6208,6 +6207,41 @@ function testMailRoutingSummary() {
   return { sink };
 }
 
+function renderMailRuntimeStatus() {
+  const data = readApiDebug.emailQueue;
+  const badge = document.querySelector("#mail-safety-badge");
+  const mode = document.querySelector("#setting-send-mode");
+  const toggle = document.querySelector("#toggle-test-mail-delivery");
+  const mailMode = String(data && data.mail_mode || "disabled");
+  const sink = String(data && data.test_sink_recipient || "").trim();
+  const labels = {
+    test_active: "TEST-mail actief",
+    test_paused: "TEST-mail gepauzeerd",
+    production_active: "E-mail actief",
+    disabled: "E-mail uitgeschakeld"
+  };
+  if (badge) {
+    badge.textContent = labels[mailMode] || labels.disabled;
+    badge.classList.toggle("is-active", ["test_active", "production_active"].includes(mailMode));
+    badge.classList.toggle("is-paused", mailMode === "test_paused");
+    badge.title = mailMode === "test_active" && sink
+      ? "Alle TEST-mail wordt veilig afgeleverd bij " + sink
+      : (mailMode === "production_active" ? "Productiemail is actief" : "Er wordt geen echte e-mail verzonden");
+  }
+  if (mode) {
+    const label = mailMode === "test_active" && sink
+      ? "TEST actief · alles naar " + sink
+      : (mailMode === "test_paused" ? "TEST gepauzeerd · niets wordt verzonden" : (mailMode === "production_active" ? "Productieverzending actief" : "Controlemodus · e-mail uitgeschakeld"));
+    mode.innerHTML = '<option>' + escapeHtml(label) + '</option>';
+  }
+  if (toggle) {
+    const available = data && data.test_toggle_available === true;
+    toggle.hidden = !available;
+    toggle.dataset.testMailEnabled = mailMode === "test_active" ? "true" : "false";
+    toggle.textContent = mailMode === "test_active" ? "TEST-mail pauzeren" : "TEST-mail hervatten";
+  }
+}
+
 function mailAcceptanceAttachmentText(count) {
   const total = Math.max(0, Number(count || 0));
   if (total === 0) return "Geen bijlagen";
@@ -6232,6 +6266,7 @@ function renderMailAcceptanceConsole() {
   if (!container || !status || !summary || !list) return;
 
   const data = readApiDebug.mailAcceptance;
+  renderMailRuntimeStatus();
   const scenarios = Array.isArray(data && data.scenarios) ? data.scenarios : [];
   if (!data) {
     container.hidden = true;
@@ -6356,6 +6391,7 @@ function renderMailDeliveryHistory() {
   if (!list || !summary) return;
 
   const data = readApiDebug.emailQueue;
+  renderMailRuntimeStatus();
   const items = Array.isArray(data && data.items) ? data.items.slice(0, 12) : [];
   if (!data) {
     summary.textContent = authRuntime.mode === "auth"
@@ -9033,7 +9069,19 @@ document.addEventListener("click", event => {
 
   const adminTaskPanelToggle = event.target.closest("#admin-task-panel-toggle");
   if (adminTaskPanelToggle) {
-    state.adminTaskPanelExpanded = !state.adminTaskPanelExpanded;
+    const nextExpanded = !state.adminTaskPanelExpanded;
+    if (!nextExpanded) {
+      document.querySelectorAll("[data-admin-task-month-toggle]").forEach(monthToggle => {
+        const periodKey = monthToggle.dataset.adminTaskMonthToggle;
+        if (!parsePeriodKey(periodKey)) return;
+        const monthStateKey = (state.adminTaskFilter || "all") + ":" + periodKey;
+        state.adminTaskMonthState[monthStateKey] = {
+          expanded: false,
+          signature: monthToggle.dataset.adminTaskMonthSignature || ""
+        };
+      });
+    }
+    state.adminTaskPanelExpanded = nextExpanded;
     persistState();
     renderAdminTaskQueue();
     document.querySelector("#admin-task-panel-toggle")?.focus();
@@ -9041,7 +9089,11 @@ document.addEventListener("click", event => {
 
   const adminTaskFilter = event.target.closest("[data-admin-task-filter]");
   if (adminTaskFilter) {
-    state.adminTaskFilter = adminTaskFilter.dataset.adminTaskFilter;
+    const nextFilter = adminTaskFilter.dataset.adminTaskFilter;
+    Object.keys(state.adminTaskMonthState || {}).forEach(key => {
+      if (key.startsWith(nextFilter + ":")) delete state.adminTaskMonthState[key];
+    });
+    state.adminTaskFilter = nextFilter;
     persistState();
     renderAdminTaskQueue();
   }
@@ -10034,6 +10086,46 @@ document.querySelector("#refresh-mail-delivery-history")?.addEventListener("clic
       button.disabled = false;
       button.textContent = "Vernieuwen";
     });
+});
+document.querySelector("#toggle-test-mail-delivery")?.addEventListener("click", event => {
+  const button = event.currentTarget;
+  const currentlyEnabled = button.dataset.testMailEnabled === "true";
+  const nextEnabled = !currentlyEnabled;
+  showModal({
+    label: "Veilige TEST-mail",
+    title: nextEnabled ? "TEST-mail hervatten?" : "TEST-mail pauzeren?",
+    message: nextEnabled
+      ? "Alleen de vooraf beveiligde TEST-sandbox wordt hervat. Ieder bericht blijft fysiek naar het vaste opvangadres gaan."
+      : "Nieuwe berichten blijven in de verzendadministratie staan, maar worden niet via SMTP afgeleverd totdat TEST-mail weer wordt hervat.",
+    summary: '<div><span>Omgeving</span><strong>uren-test.pathconsultancy.nl</strong></div><div><span>Ontvangers</span><strong>Vaste TEST-allowlist blijft verplicht</strong></div><div><span>Nieuwe status</span><strong>' + (nextEnabled ? "Actief" : "Gepauzeerd") + '</strong></div>',
+    confirm: nextEnabled ? "TEST-mail hervatten" : "TEST-mail pauzeren",
+    taskNavigation: false,
+    action: () => {
+      const confirmButton = document.querySelector("#modal-confirm");
+      confirmButton.disabled = true;
+      return requestAuthCsrf()
+        .then(token => fetch("/server/api/email-queue.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token },
+          body: JSON.stringify({ action: "set-test-delivery", enabled: nextEnabled, confirm: "SET_TEST_MAIL_STATE" })
+        }))
+        .then(response => response.json().catch(() => ({})).then(data => ({ ok: response.ok, data })))
+        .then(result => {
+          if (!result.ok || result.data?.ok !== true) throw new Error(String(result.data?.message || "De TEST-mailstatus kon niet worden gewijzigd."));
+          closeModal();
+          return Promise.all([refreshEmailQueueReadApi(true), refreshMailAcceptanceReadApi(true)]).then(() => {
+            renderMailRuntimeStatus();
+            renderMailAcceptanceConsole();
+            toast(nextEnabled ? "TEST-mail is veilig hervat." : "TEST-mail is gepauzeerd.");
+          });
+        })
+        .catch(error => {
+          confirmButton.disabled = false;
+          confirmButton.textContent = "Opnieuw proberen";
+          toast(String(error?.message || "De TEST-mailstatus kon niet worden gewijzigd."));
+        });
+    }
+  });
 });
 
 document.querySelector("#mark-notifications-read").addEventListener("click", () => {

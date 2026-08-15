@@ -295,6 +295,7 @@ function mail_dispatch_queued(PDO $pdo, int $companyId, array $config, int $limi
 
     $sent = 0;
     $failed = 0;
+    $skipped = 0;
     foreach ($stmt->fetchAll() as $row) {
         $outcome = mail_dispatch_delivery($pdo, $row, $config);
         if ($outcome === 'sent') {

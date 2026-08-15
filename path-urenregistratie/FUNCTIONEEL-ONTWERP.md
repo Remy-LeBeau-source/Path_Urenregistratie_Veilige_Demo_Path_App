@@ -197,3 +197,9 @@ De leesbare overkoepelende specificatie staat in
 `tests/playwright/features/end-to-end-workflows.feature`. De uitvoerbare bron blijft
 `tests/playwright/business-workflows-e2e.spec.ts`; zo is de bedrijfsketen snel te controleren zonder
 een tweede, afwijkende implementatie van dezelfde stappen te onderhouden.
+# E-mailstatus per omgeving
+
+- LOCAL blijft altijd controlemodus/dry-run en kan geen echte e-mail activeren.
+- TEST levert echte berichten uitsluitend af bij het vaste, servermatig toegestane opvangadres. Een beheerder kan deze al beveiligde TEST-route in Instellingen pauzeren en hervatten; ontvangers en SMTP-rechten zijn daar niet wijzigbaar.
+- PROD toont de werkelijke serverstatus, maar heeft geen gewone GUI-schakelaar. Activeren of uitschakelen blijft een gecontroleerde beheerhandeling in de productieconfiguratie.
+- De statusbadge in de kop toont daarom expliciet `E-mail uitgeschakeld`, `TEST-mail actief`, `TEST-mail gepauzeerd` of `E-mail actief`.

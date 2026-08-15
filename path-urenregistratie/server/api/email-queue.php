@@ -84,12 +84,21 @@ if ($method === 'GET') {
     }, $stmt->fetchAll());
 
     $testSink = mail_test_sink_recipient($config);
+    $deliveryAllowed = mail_real_delivery_allowed_for_environment($config);
+    $toggleAvailable = mail_test_delivery_toggle_available($config);
+    $testPaused = mail_test_delivery_is_paused($config);
     auth_send_json([
         'ok' => true,
         'dry_run' => $dryRun,
         'environment' => mail_environment($config),
         'test_redirect_active' => $testSink !== null,
         'test_sink_recipient' => $testSink,
+        'delivery_allowed' => $deliveryAllowed,
+        'test_delivery_paused' => $testPaused,
+        'test_toggle_available' => $toggleAvailable,
+        'mail_mode' => $toggleAvailable
+            ? ($testPaused ? 'test_paused' : 'test_active')
+            : ($deliveryAllowed && mail_environment($config) === 'production' ? 'production_active' : 'disabled'),
         'count' => count($items),
         'items' => $items,
     ]);
@@ -110,6 +119,27 @@ if (!is_array($payload)) {
 }
 
 $action = trim((string)($payload['action'] ?? ''));
+
+// ---- action: set-test-delivery --------------------------------------------
+if ($action === 'set-test-delivery') {
+    if (!hash_equals('SET_TEST_MAIL_STATE', (string)($payload['confirm'] ?? ''))) {
+        auth_send_json(['ok' => false, 'error' => 'explicit-confirmation-required'], 409);
+    }
+    if (!array_key_exists('enabled', $payload) || !is_bool($payload['enabled'])) {
+        auth_send_json(['ok' => false, 'error' => 'invalid-enabled'], 400);
+    }
+    try {
+        mail_set_test_delivery_paused($config, !$payload['enabled']);
+    } catch (RuntimeException $error) {
+        auth_send_json(['ok' => false, 'error' => 'test-mail-toggle-blocked', 'message' => $error->getMessage()], 409);
+    }
+    auth_send_json([
+        'ok' => true,
+        'action' => 'set-test-delivery',
+        'enabled' => (bool)$payload['enabled'],
+        'mail_mode' => $payload['enabled'] ? 'test_active' : 'test_paused',
+    ]);
+}
 
 // ---- action: enqueue -------------------------------------------------------
 if ($action === 'enqueue') {
@@ -171,5 +201,5 @@ if ($action === 'retry') {
 }
 
 auth_send_json(['ok' => false, 'error' => 'unknown-action',
-    'message' => 'action must be one of: enqueue, retry'], 400);
+    'message' => 'action must be one of: enqueue, retry, set-test-delivery'], 400);
 

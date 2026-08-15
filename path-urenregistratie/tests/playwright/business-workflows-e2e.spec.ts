@@ -22,6 +22,15 @@ async function restoreBaseline(page: import('@playwright/test').Page) {
   await expect(page.locator('#hero-task-total')).toHaveText('12 open acties');
 }
 
+async function openAdminTaskMonth(page: import('@playwright/test').Page, periodKey: string) {
+  const toggle = page.locator(`[data-admin-task-month-toggle="${periodKey}"]`);
+  await expect(toggle).toBeVisible();
+  if (await toggle.getAttribute('aria-expanded') !== 'true') {
+    await toggle.click();
+  }
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+}
+
 test('[E2E-H-001] herstelbasis houdt globale werkvoorraad stabiel bij maand- en filterwissels', async ({ page }) => {
   const loginPage = new LoginPage(page);
 
@@ -153,6 +162,7 @@ test('[E2E-H-003] herindiening verplaatst dezelfde actie van medewerker naar Bac
 
     const followUp = page.locator('[data-admin-task-row="hours-review-2026-08-2"]');
     await page.locator('#hero-backoffice-filter').click();
+    await openAdminTaskMonth(page, '2026-08');
     await expect(followUp).toBeVisible();
     await expect(followUp).toContainText('Stasjo van Bakel');
     await expect(followUp).toContainText('Uren controleren');
@@ -259,6 +269,7 @@ test('[E2E-H-005] klanturenstaatcontrole wordt een brokeractie zonder taakverlie
   await test.step('When Backoffice het ontvangen klantdocument goedkeurt', async () => {
     const selected = candidate!;
     await page.locator('#hero-backoffice-filter').click();
+    await openAdminTaskMonth(page, selected.periodKey);
     const taskRow = page.locator(`[data-admin-task-row="${selected.reviewTaskId}"]`);
     await expect(taskRow).toContainText(selected.employeeName);
     await taskRow.locator('[data-review-customer-timesheet]').click();
@@ -295,6 +306,7 @@ test('[E2E-H-005] klanturenstaatcontrole wordt een brokeractie zonder taakverlie
     await expect(page.locator('#modal-summary [data-view-customer-timesheet]')).toHaveText('PDF bekijken');
     await page.locator('#modal-close').click();
     await page.locator('#hero-backoffice-filter').click();
+    await openAdminTaskMonth(page, selected.periodKey);
     const brokerRow = page.locator(`[data-admin-task-row="customer-broker-${selected.periodKey}-${selected.employeeId}"]`);
     await expect(brokerRow).toContainText('Brokerroute controleren');
     await expect(brokerRow.locator('[data-send-customer-timesheet]')).toBeEnabled();

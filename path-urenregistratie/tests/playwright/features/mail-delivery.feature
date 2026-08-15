@@ -77,6 +77,23 @@ Feature: Mailroutering en aflevering
     When de beheerder alleen de brokerbundel kiest en ontvanger en twee bijlagen bevestigt
     Then bevat de write exact één scenario met expliciete bevestiging en geen bulkopdracht
 
+  @happy
+  Scenario: [EQ-H-023] beheerder pauzeert en hervat uitsluitend de beveiligde TEST-mail
+    # Testtechniek: Toestandsovergang + beslissingstabel omgeving en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 12
+    Given de server een beveiligde TEST-mailroute naar het vaste opvangadres meldt
+    When de beheerder TEST-mail pauzeert en daarna weer hervat
+    Then tonen header en instellingen steeds de actuele serverstatus
+    And bevatten beide writes de exacte bevestiging zonder ontvangers te wijzigen
+
+  @negative
+  Scenario: [EQ-N-024] buiten de beveiligde TEST-sandbox is geen mailschakelaar beschikbaar
+    # Testtechniek: Negatieve equivalentieklasse + autorisatiematrix
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given de server een lokale of productieomgeving zonder TEST-schakelrecht meldt
+    When de beheerder de instellingen opent
+    Then blijft de TEST-mailschakelaar verborgen en toont de header de serverstatus
+
   @negative
   Scenario: [EQ-N-017] niet-beschikbare acceptatieconsole blijft volledig uit beeld
     # Testtechniek: Negatieve equivalentieklasse + error guessing

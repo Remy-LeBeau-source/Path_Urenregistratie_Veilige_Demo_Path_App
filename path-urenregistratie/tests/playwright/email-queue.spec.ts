@@ -396,6 +396,81 @@ test.describe('email queue api', () => {
     });
   });
 
+  test('[EQ-H-023] beheerder pauzeert en hervat uitsluitend de beveiligde TEST-mail', async ({ page }) => {
+    let enabled = true;
+    const writes: Array<Record<string, unknown>> = [];
+    await page.route('**/server/api/email-queue.php*', async route => {
+      if (route.request().method() === 'POST') {
+        const body = route.request().postDataJSON() as Record<string, unknown>;
+        writes.push(body);
+        enabled = body.enabled === true;
+        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, action: 'set-test-delivery', enabled }) });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ok: true,
+          environment: 'test',
+          dry_run: false,
+          delivery_allowed: enabled,
+          test_redirect_active: true,
+          test_sink_recipient: 'giovanno.maatsen@pathconsultancy.nl',
+          test_toggle_available: true,
+          test_delivery_paused: !enabled,
+          mail_mode: enabled ? 'test_active' : 'test_paused',
+          count: 0,
+          items: [],
+        }),
+      });
+    });
+    await page.route('**/server/api/mail-acceptance.php', route => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, enabled: true, ready: enabled, issues: enabled ? [] : ['Echte SMTP-verzending is niet vrijgegeven voor deze omgeving.'], scenarios: [] }),
+    }));
+
+    const login = new LoginPage(page);
+    await login.open();
+    await login.loginAsAdmin();
+    await page.locator('button[data-view="settings"]').click();
+
+    await expect(page.locator('#mail-safety-badge')).toHaveText('TEST-mail actief');
+    await expect(page.locator('#setting-send-mode')).toContainText('giovanno.maatsen@pathconsultancy.nl');
+    await expect(page.locator('#toggle-test-mail-delivery')).toHaveText('TEST-mail pauzeren');
+    await page.locator('#toggle-test-mail-delivery').click();
+    await expect(page.locator('#modal-title')).toHaveText('TEST-mail pauzeren?');
+    await page.locator('#modal-confirm').click();
+    await expect(page.locator('#mail-safety-badge')).toHaveText('TEST-mail gepauzeerd');
+    await expect(page.locator('#toggle-test-mail-delivery')).toHaveText('TEST-mail hervatten');
+
+    await page.locator('#toggle-test-mail-delivery').click();
+    await expect(page.locator('#modal-title')).toHaveText('TEST-mail hervatten?');
+    await page.locator('#modal-confirm').click();
+    await expect(page.locator('#mail-safety-badge')).toHaveText('TEST-mail actief');
+    expect(writes).toEqual([
+      { action: 'set-test-delivery', enabled: false, confirm: 'SET_TEST_MAIL_STATE' },
+      { action: 'set-test-delivery', enabled: true, confirm: 'SET_TEST_MAIL_STATE' },
+    ]);
+  });
+
+  test('[EQ-N-024] buiten de beveiligde TEST-sandbox is geen mailschakelaar beschikbaar', async ({ page }) => {
+    await page.route('**/server/api/email-queue.php*', route => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, environment: 'production', delivery_allowed: true, test_toggle_available: false, mail_mode: 'production_active', count: 0, items: [] }),
+    }));
+    const login = new LoginPage(page);
+    await login.open();
+    await login.loginAsAdmin();
+    await page.locator('button[data-view="settings"]').click();
+    await expect(page.locator('#mail-safety-badge')).toHaveText('E-mail actief');
+    await expect(page.locator('#toggle-test-mail-delivery')).toBeHidden();
+    await expect(page.locator('#setting-send-mode')).toContainText('Productieverzending actief');
+    await expect(page.locator('#mail-safety-badge')).toHaveClass(/is-active/);
+  });
+
   test('[EQ-N-017] niet-beschikbare acceptatieconsole blijft volledig uit beeld', async ({ page }) => {
     await page.route('**/server/api/mail-acceptance.php', route => route.fulfill({
       status: 503,
