@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0D1B38">
   <link rel="manifest" href="/assets/manifest-v-Kx2Cfm.webmanifest">
   <title>Uren & Facturatie</title>
-  <link rel="stylesheet" crossorigin href="/assets/index-DRmAFW-5.css">
+  <link rel="stylesheet" crossorigin href="/assets/index-DcgLVtGI.css">
 </head>
 <body>
   <section class="login-screen" id="login-screen" aria-labelledby="login-title">
@@ -136,7 +136,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 0.9.66</span>
+      <span class="demo-badge">Versie 0.9.67</span>
       </div>
     </aside>
 
@@ -152,10 +152,10 @@
         <div class="topbar-title">
           <p class="eyebrow" id="organization-name">Path Consultancy</p>
           <h1 id="page-title">Urenoverzicht</h1>
-          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 0.9.66</span><span class="environment-badge" id="environment-badge" hidden></span></span>
+          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 0.9.67</span><span class="environment-badge" id="environment-badge" hidden></span></span>
         </div>
         <div class="topbar-actions">
-          <span class="safety-badge">E-mail uitgeschakeld</span>
+          <span class="safety-badge" id="mail-safety-badge" title="De verzendstatus wordt beveiligd door de serverconfiguratie">E-mailstatus laden…</span>
           <button class="topbar-quick-reset" id="quick-reset-demo" type="button">Herstel</button>
           <div class="period-control" id="global-period-control" aria-label="Maanddetail openen">
             <button id="period-prev" aria-label="Vorige maand">‹</button>
@@ -631,7 +631,7 @@
             <div class="mail-acceptance-console" id="mail-acceptance-console" aria-labelledby="mail-acceptance-title" hidden>
               <div class="recipient-settings-heading">
                 <div><span class="section-label">Gecontroleerde vrijgave</span><h4 id="mail-acceptance-title">Acceptatietest e-mail</h4></div>
-                <span class="status-pill status-warning" id="mail-acceptance-status">Niet geladen</span>
+                <div class="mail-acceptance-controls"><button class="small-button" id="toggle-test-mail-delivery" type="button" hidden>TEST-mail pauzeren</button><span class="status-pill status-warning" id="mail-acceptance-status">Niet geladen</span></div>
               </div>
               <p class="settings-template-intro" id="mail-acceptance-summary">De server controleert eerst SMTP, de vaste testontvangers en de bijlagen.</p>
               <div class="mail-acceptance-scenarios" id="mail-acceptance-scenarios" aria-live="polite">
@@ -763,7 +763,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script  defer src="assets/jspdf.umd.min.js"></script>
   <script  defer src="assets/invoice-fonts.js"></script>
-  <script  defer src="assets/app.js?v=0.9.66"></script>
+  <script  defer src="assets/app.js?v=0.9.67"></script>
   <script>
     // Defensive: registration failure/unsupported browsers must never affect the app itself.
     if ('serviceWorker' in navigator) {

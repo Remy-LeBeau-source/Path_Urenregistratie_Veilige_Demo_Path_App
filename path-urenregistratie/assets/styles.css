@@ -239,6 +239,9 @@ select:focus-visible {
 .eyebrow, .section-label { margin: 0; color: var(--mint-dark); font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
 .topbar-actions { display: flex; align-items: center; gap: 12px; }
 .safety-badge { border: 1px solid #edcfa9; border-radius: 999px; background: var(--warning-bg); color: var(--warning); font-size: 9px; font-weight: 800; letter-spacing: .04em; padding: 7px 10px; text-transform: uppercase; white-space: nowrap; }
+.safety-badge.is-active { border-color: #86d6c1; background: #e3f7f1; color: #087a62; }
+.safety-badge.is-paused { border-color: #edcfa9; background: var(--warning-bg); color: var(--warning); }
+.mail-acceptance-controls { display: flex; align-items: center; gap: 8px; }
 .topbar-quick-reset { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); cursor: pointer; font-size: 10px; font-weight: 700; letter-spacing: .04em; padding: 7px 12px; text-transform: uppercase; }
 .topbar-quick-reset:hover { border-color: var(--mint); color: var(--mint-dark); }
 
@@ -733,7 +736,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .topbar { min-height: 82px; }
   .eyebrow { display: none; }
   .notification-button { display: none; }
-  .safety-badge { display: none; }
+  .safety-badge { display: inline-flex; font-size: 8px; padding: 6px 8px; }
   .topbar-quick-reset { display: none; }
   .hero-card { margin-top: 20px; padding: 28px; }
   .workflow-track { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }

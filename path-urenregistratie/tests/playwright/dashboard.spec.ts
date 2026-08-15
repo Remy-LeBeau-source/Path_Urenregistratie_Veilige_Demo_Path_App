@@ -575,11 +575,17 @@ test('[DASH-H-012] GUI-smoke scheidt werkacties van medewerkers- en beheerdersac
     await page.locator('#hero-backoffice-filter').click();
     await expect(page.locator('[data-admin-task-filter="actionable"]')).toHaveClass(/is-active/);
     await expect(page.locator('#admin-task-list [data-admin-task-row]')).toHaveCount(7);
-    await expect(page.locator('#admin-task-list [data-admin-task-row]:visible')).toHaveCount(7);
+    await expect(page.locator('#admin-task-list [data-admin-task-row]:visible')).toHaveCount(0);
+    await expect(page.locator('[data-admin-task-month-toggle][aria-expanded="true"]')).toHaveCount(0);
+    await page.locator('[data-admin-task-month-toggle]').first().click();
+    await expect(page.locator('#admin-task-list [data-admin-task-row]:visible').first()).toHaveClass(/is-actionable/);
     await page.locator('#hero-employee-filter').click();
     await expect(page.locator('[data-admin-task-filter="waiting"]')).toHaveClass(/is-active/);
     await expect(page.locator('#admin-task-list [data-admin-task-row]')).toHaveCount(5);
-    await expect(page.locator('#admin-task-list [data-admin-task-row]:visible')).toHaveCount(5);
+    await expect(page.locator('#admin-task-list [data-admin-task-row]:visible')).toHaveCount(0);
+    await expect(page.locator('[data-admin-task-month-toggle][aria-expanded="true"]')).toHaveCount(0);
+    await page.locator('[data-admin-task-month-toggle]').first().click();
+    await expect(page.locator('#admin-task-list [data-admin-task-row]:visible').first()).toHaveClass(/is-waiting/);
   });
 
   await test.step('And Teambeheer toont vier medewerkers en twee beheerders als zes actieve accounts', async () => {
@@ -601,7 +607,8 @@ test('[DASH-H-012] GUI-smoke scheidt werkacties van medewerkers- en beheerdersac
     await expect(page.locator('#admin-task-title')).toHaveText('Acties bij Backoffice per maand');
     await expect(page.locator('#admin-task-summary')).toContainText('7 acties die Backoffice nu kan oppakken');
     await expect(page.locator('#admin-task-list [data-admin-task-row]')).toHaveCount(7);
-    await expect(page.locator('#admin-task-list [data-admin-task-row]:visible')).toHaveCount(7);
+    await expect(page.locator('#admin-task-list [data-admin-task-row]:visible')).toHaveCount(0);
+    await expect(page.locator('[data-admin-task-month-toggle][aria-expanded="true"]')).toHaveCount(0);
     await expect(page.locator('#admin-task-list .admin-task-row.is-waiting')).toHaveCount(0);
     await expect(page.locator('[data-admin-task-filter="all"]')).toHaveText('Alle acties · 12');
     await expect(page.locator('[data-admin-task-filter="actionable"]')).toHaveText('Bij Backoffice · 7');
@@ -1128,9 +1135,37 @@ test('[DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij 
     await expect(page.locator('#admin-task-content')).toBeVisible();
     await expect(page.locator('#admin-task-list [data-admin-task-row]')).toHaveCount(baseline.actionable);
     await expect(page.locator('#admin-task-list .admin-task-row.is-waiting')).toHaveCount(0);
+    await expect(page.locator('#admin-task-list [data-admin-task-row]:visible')).toHaveCount(0);
+    await expect(page.locator('[data-admin-task-month-toggle][aria-expanded="true"]')).toHaveCount(0);
+    await page.locator('[data-admin-task-month-toggle]').first().click();
+    await expect(page.locator('#admin-task-list [data-admin-task-row]:visible').first()).toHaveClass(/is-actionable/);
 
     await page.locator('[data-admin-task-filter="waiting"]').click();
     await expect(page.locator('#admin-task-list [data-admin-task-row]')).toHaveCount(baseline.waiting);
     await expect(page.locator('#admin-task-list .admin-task-row.is-actionable')).toHaveCount(0);
+    await expect(page.locator('#admin-task-list [data-admin-task-row]:visible')).toHaveCount(0);
+    await expect(page.locator('[data-admin-task-month-toggle][aria-expanded="true"]')).toHaveCount(0);
+    await page.locator('[data-admin-task-month-toggle]').first().click();
+    await expect(page.locator('#admin-task-list [data-admin-task-row]:visible').first()).toHaveClass(/is-waiting/);
+  });
+
+  await test.step('And opnieuw openen zet alle maandblokken terug naar ingeklapt', async () => {
+    await page.locator('[data-admin-task-filter="all"]').click();
+    const julyToggle = page.locator('[data-admin-task-month-toggle="2026-07"]');
+    await julyToggle.click();
+    await expect(julyToggle).toHaveAttribute('aria-expanded', 'true');
+
+    await page.locator('#admin-task-panel-toggle').click();
+    await expect(page.locator('#admin-task-content')).toBeHidden();
+    await page.locator('#admin-task-panel-toggle').click();
+    await expect(page.locator('#admin-task-content')).toBeVisible();
+
+    const monthToggles = page.locator('[data-admin-task-month-toggle]');
+    const monthBodies = page.locator('.admin-task-month-body');
+    await expect(monthToggles).toHaveCount(3);
+    for (let index = 0; index < await monthToggles.count(); index += 1) {
+      await expect(monthToggles.nth(index)).toHaveAttribute('aria-expanded', 'false');
+      await expect(monthBodies.nth(index)).toBeHidden();
+    }
   });
 });

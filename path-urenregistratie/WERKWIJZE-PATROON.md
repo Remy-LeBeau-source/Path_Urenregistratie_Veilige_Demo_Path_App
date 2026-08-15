@@ -82,3 +82,6 @@ Een wijziging is pas klaar wanneer:
 - queue en uiteindelijke SMTP-status niet door elkaar worden gehaald;
 - LOCAL/TEST/PROD-beleid aantoonbaar gescheiden blijft;
 - smoke, regressie, documentatie en pipeline groen zijn.
+# Controle bij wijzigingen aan e-mail
+
+Bij iedere mailwijziging worden minimaal deze toestanden aantoonbaar gecontroleerd: LOCAL/dry-run, TEST actief, TEST gepauzeerd en PROD zonder TEST-schakelaar. De UI-status moet rechtstreeks overeenkomen met de serverstatus. Tests bewijzen daarnaast dat TEST-ontvangers niet vanuit de browser kunnen worden verruimd en dat elke mutatie CSRF plus een expliciete bevestiging vereist.

@@ -105,7 +105,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.66"), "Het zichtbare versienummer moet 0.9.66 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.67"), "Het zichtbare versienummer moet 0.9.67 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -151,7 +151,7 @@ const employeePicker = document.querySelector("#login-employee");
 employeePicker.value = "1";
 employeePicker.dispatchEvent(new Event("change", { bubbles: true }));
 const demoScenarioState = JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(demoScenarioState.schemaVersion === 26, "Versie 0.9.66 moet wijzigingen onder de juiste gegevensversie bewaren");
+assert(demoScenarioState.schemaVersion === 26, "Versie 0.9.67 moet wijzigingen onder de juiste gegevensversie bewaren");
 assert(demoScenarioState.settings.companyName === "QSI Consultancy B.V." && demoScenarioState.settings.invoiceNameDisplay === "trade_and_legal", "De standaardfactuuridentiteit moet Path als handelsnaam aan QSI Consultancy B.V. koppelen");
 const freshOpenActions = dom.window.adminOpenTasks();
 const freshJuneActions = freshOpenActions.filter(task => task.periodKey === "2026-06");
@@ -168,11 +168,15 @@ assert(document.querySelector("#hero-task-months").textContent === "Juni 3 + Jul
 assert(document.querySelector("#hero-backoffice-count").textContent === "7" && document.querySelector("#hero-employee-count").textContent === "5", "De dashboardkop moet Backoffice-acties en wachttaken als afzonderlijke visuele aantallen tonen");
 assert(document.querySelector("#dashboard-backoffice-count").textContent === "7" && document.querySelector("#dashboard-employee-count").textContent === "5" && document.querySelector("#dashboard-work-count").getAttribute("aria-label") === "12 open acties: 7 bij Backoffice, 5 wacht op medewerkers", "Dashboard moet links dezelfde werkvoorraad als twee toegankelijke eigenaarbolletjes tonen");
 click("#hero-backoffice-filter");
-assert(document.querySelector("#admin-task-title").textContent === "Acties bij Backoffice per maand" && document.querySelector('[data-admin-task-filter="actionable"]').classList.contains("is-active") && document.querySelectorAll("#admin-task-list [data-admin-task-row]").length === 7 && document.querySelectorAll("#admin-task-list .admin-task-month-body:not([hidden]) [data-admin-task-row]").length === 7 && !document.querySelector("#admin-task-list .admin-task-row.is-waiting"), "Het oranje dashboardbolletje moet herkenbaar alle zeven Backoffice-acties zichtbaar openen");
+assert(document.querySelector("#admin-task-title").textContent === "Acties bij Backoffice per maand" && document.querySelector('[data-admin-task-filter="actionable"]').classList.contains("is-active") && document.querySelectorAll("#admin-task-list [data-admin-task-row]").length === 7 && document.querySelectorAll("#admin-task-list .admin-task-month-body:not([hidden]) [data-admin-task-row]").length === 0 && [...document.querySelectorAll('[data-admin-task-month-toggle]')].every(toggle => toggle.getAttribute("aria-expanded") === "false") && !document.querySelector("#admin-task-list .admin-task-row.is-waiting"), "Het oranje dashboardbolletje moet herkenbaar zeven Backoffice-acties in ingeklapte maandgroepen openen");
+click('#admin-task-list [data-admin-task-month-toggle]');
+assert(document.querySelectorAll("#admin-task-list .admin-task-month-body:not([hidden]) [data-admin-task-row]").length > 0 && [...document.querySelectorAll("#admin-task-list .admin-task-month-body:not([hidden]) [data-admin-task-row]")].every(row => row.classList.contains("is-actionable")), "Na bewust openklappen mag de Backoffice-filter alleen concrete Backoffice-acties tonen");
 click("#hero-employee-filter");
-assert(document.querySelector("#admin-task-title").textContent === "Wacht op medewerkers per maand" && document.querySelector('[data-admin-task-filter="waiting"]').classList.contains("is-active") && document.querySelectorAll("#admin-task-list [data-admin-task-row]").length === 5 && document.querySelectorAll("#admin-task-list .admin-task-month-body:not([hidden]) [data-admin-task-row]").length === 5 && !document.querySelector("#admin-task-list .admin-task-row.is-actionable"), "Het groene dashboardbolletje moet herkenbaar alle vijf wachttaken bij medewerkers zichtbaar openen");
+assert(document.querySelector("#admin-task-title").textContent === "Wacht op medewerkers per maand" && document.querySelector('[data-admin-task-filter="waiting"]').classList.contains("is-active") && document.querySelectorAll("#admin-task-list [data-admin-task-row]").length === 5 && document.querySelectorAll("#admin-task-list .admin-task-month-body:not([hidden]) [data-admin-task-row]").length === 0 && [...document.querySelectorAll('[data-admin-task-month-toggle]')].every(toggle => toggle.getAttribute("aria-expanded") === "false") && !document.querySelector("#admin-task-list .admin-task-row.is-actionable"), "Het groene dashboardbolletje moet herkenbaar vijf wachttaken in ingeklapte maandgroepen openen");
+click('#admin-task-list [data-admin-task-month-toggle]');
+assert(document.querySelectorAll("#admin-task-list .admin-task-month-body:not([hidden]) [data-admin-task-row]").length > 0 && [...document.querySelectorAll("#admin-task-list .admin-task-month-body:not([hidden]) [data-admin-task-row]")].every(row => row.classList.contains("is-waiting")), "Na bewust openklappen mag de medewerkersfilter alleen concrete wachttaken tonen");
 click("#open-work-queue");
-assert(document.querySelector('[data-admin-task-filter="all"]').classList.contains("is-active") && document.querySelectorAll("#admin-task-list [data-admin-task-row]").length === 12, "De algemene werkvoorraadknop moet daarna alle twaalf acties herstellen");
+assert(document.querySelector('[data-admin-task-filter="all"]').classList.contains("is-active") && document.querySelectorAll("#admin-task-list [data-admin-task-row]").length === 12 && [...document.querySelectorAll('[data-admin-task-month-toggle]')].every(toggle => toggle.getAttribute("aria-expanded") === "false"), "De algemene werkvoorraadknop moet alle twaalf acties in ingeklapte maandgroepen herstellen");
 assert(!document.querySelector("#employees-count") && document.querySelector("#team-active-account-count").textContent === "6" && document.querySelector("#team-employees-overview").textContent.includes("4 medewerkers") && document.querySelector("#team-admins-overview").textContent.includes("2 beheerders"), "Het menu mag geen misleidende medewerkerbadge tonen; Teambeheer moet medewerkers en beheerders samen samenvatten");
 assert(document.querySelector('[data-admin-task-month="2026-07"]')?.querySelectorAll("[data-admin-task-row]").length === 5 && document.querySelector('[data-admin-task-month="2026-08"]')?.querySelectorAll("[data-admin-task-row]").length === 4, "De twaalf standaardacties moeten zichtbaar onder juni, juli en augustus worden gegroepeerd");
 assert(document.querySelector('[data-admin-task-month-toggle="2026-07"]').getAttribute("aria-expanded") === "false" && document.querySelector('[data-admin-task-month-toggle="2026-08"]').getAttribute("aria-expanded") === "false", "Open maanden moeten standaard ingeklapt starten zodat je bewust per maand openklapt");
@@ -659,6 +663,10 @@ assert(document.querySelector('[data-admin-task-month-toggle="2026-07"]').getAtt
 julySignatureRecord.invoiceStatus = julySignatureInvoiceSnapshot;
 dom.window.renderAll();
 if (document.querySelector('[data-admin-task-month-toggle="2026-07"]').getAttribute("aria-expanded") === "false") click('[data-admin-task-month-toggle="2026-07"]');
+click("#admin-task-panel-toggle");
+assert(document.querySelector("#admin-task-content").hidden && document.querySelector("#admin-task-panel-toggle").getAttribute("aria-expanded") === "false", "Overzicht inklappen moet de volledige werkvoorraad sluiten");
+click("#admin-task-panel-toggle");
+assert(!document.querySelector("#admin-task-content").hidden && [...document.querySelectorAll('[data-admin-task-month-toggle]')].every(toggle => toggle.getAttribute("aria-expanded") === "false") && [...document.querySelectorAll('.admin-task-month-body')].every(body => body.hidden), "Na opnieuw openen moeten alle maanden weer in de veilige ingeklapte beginstand staan");
 assert(!document.querySelector("#open-periods-panel"), "Een dubbel los maandoverzicht moet vervallen nu de werkvoorraad zelf per maand is gegroepeerd");
 assert(document.querySelector("#metric-actions").closest(".metric-card").textContent.includes("Acties bij Backoffice") && Number(document.querySelector("#metric-actions").textContent) === dashboardActionableTasks.length && document.querySelector("#metric-actions-note").textContent.includes(String(dashboardWaitingTasks.length)), "De actiekaart moet directe Backoffice-acties en het aantal wachttaken apart tonen");
 assert(document.querySelector("#metric-actions-link").textContent.includes(String(dashboardTasks.length)), "De actiekaart moet met één link naar de volledige werkvoorraad verwijzen");
@@ -1514,7 +1522,7 @@ const migrationPicker = migrationDom.window.document.querySelector("#login-admin
 migrationPicker.value = "joyce";
 migrationPicker.dispatchEvent(new migrationDom.window.Event("change", { bubbles: true }));
 const migratedState = JSON.parse(migrationDom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(migratedState.schemaVersion === 26, "Bestaande browsergegevens moeten ook in v0.9.66 veilig behouden blijven");
+assert(migratedState.schemaVersion === 26, "Bestaande browsergegevens moeten ook in v0.9.67 veilig behouden blijven");
 assert(migratedState.settings.companyName === "QSI Consultancy B.V." && migratedState.settings.invoiceNameDisplay === "trade_and_legal", "Migratie moet QSI als B.V. en de gecombineerde factuurweergave veilig aanvullen");
 assert(migratedState.settings.mailRecipients.find(recipient => recipient.id === "payroll").name.includes("Salarisadministratie"), "Migratie moet EasySalary als duidelijke salarisadministratieroute benoemen");
 assert(migratedState.records["2026-07"]["4"].invoiceNumber === "Bel-Shawn-2026-juli", "Migratie moet ook bestaande factuurnummers omzetten naar de afgesproken koppeltekens");
@@ -1608,4 +1616,4 @@ assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("
 assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Playwright stage- en lokale env-bestanden mogen expliciete runner/CI-variabelen niet overschrijven");
 
 dom.window.close();
-console.log("Path v0.9.66 volledige smoke test: geslaagd");
+console.log("Path v0.9.67 volledige smoke test: geslaagd");

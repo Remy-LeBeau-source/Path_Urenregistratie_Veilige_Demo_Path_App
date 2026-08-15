@@ -22,13 +22,13 @@ staan onder de genummerde fases verderop in dit document.
 | Fase 3 — Read-API | ✅ Klaar | Frontend leest serverdata |
 | Fase 4 — Auth & rollen | ✅ VS Code-scope klaar | Admin/medewerker/sessies, persistente loginblokkade en eenmalige wachtwoordlinks |
 | Fase 5 — Security | ✅ VS Code-scope klaar | Timeout, sliding session, login-audit, dependency-scan; productieheaders (CORS/CSP/HSTS) later op echt domein |
-| Fase 6 — Playwright/BDD/Allure/Living Docs | ✅ Pariteit bewaakt | 206 gedocumenteerde Playwright-cases + 1 DB-case; de volledige runner voert inclusief technische projectvarianten 211 tests uit |
-| Fase 7 — CI/CD | 🛠️ Pipelinevalidatie | Automatische PROD- en TEST-uitrol bewezen; v0.9.66 is lokaal groen door check, GUI-smoke en 211-testregressie en wacht op pipelinevrijgave |
+| Fase 6 — Playwright/BDD/Allure/Living Docs | ✅ Pariteit bewaakt | Uitvoerbare features, step-mapping, GUI-smoke en volledige Playwright-/DB-regressie zijn gekoppeld; nieuwe zichtbare regressies krijgen een gerichte case |
+| Fase 7 — CI/CD | ✅ v0.9.66 groen en live | Automatische PROD- en TEST-uitrol bewezen; pipeline-run `31888079947` voor SHA `d749b9e32ff4` is volledig groen |
 | Fase 8 — Uren indienen | ✅ Klaar | Concept → indienen |
 | Fase 9 — Correctie/goedkeuring | ✅ Technisch klaar | Productieacceptatie later |
 | Fase 10 — Klanturenstaat | ✅ VS Code-scope klaar | JPG/PNG → PDF server-side gebouwd en getest (CTS-API-H-005) |
 | Fase 11 — Facturen | ✅ VS Code-scope klaar | Server-side PDF + storage key + geautoriseerde download + inhoudscontrole gebouwd en getest (INV-H-004, INV-N-013) |
-| Fase 12 — Mailqueue | ✅ VS Code-scope klaar | Fail-closed queue plus vijf afzonderlijk bevestigde acceptatiemails; echte SMTP blijft configuratie- en allowlist-gated |
+| Fase 12 — Mailqueue | 🛠️ Techniek klaar; acceptatie open | Fail-closed queue, TEST-sink en gescheiden routes zijn gebouwd; volledige menselijke controle van alle teksten en echte PDF-bijlagen loopt nog |
 | Fase 13 — Bedrijfsgegevens | ✅ VS Code-scope klaar | Definitieve gegevens/accounts → Fase 16 |
 | Fase 14 — TransIP | ✅ VS Code-scope klaar | Deployment/config → Fase 16 |
 | Fase 15 — Release-hardening | ✅ VS Code-scope klaar | Concurrency, jaarwisseling, uploads, accessibility en PWA-manifest/service worker gebouwd en getest |
@@ -89,9 +89,64 @@ Post-live beheer
 
 ## Actuele stand
 
-- [x] Datum: 2026-08-14 (v0.9.61 staat automatisch en gecontroleerd op productie én TEST)
-- [x] Appversie: v0.9.61 (`82afba1c3c2e9508cff08aecea1e37e5f531ff2e`) staat live; de actuele main-SHA wordt bij iedere uitrol exact in
-  `.release-sha` vastgelegd en door pipeline en live-smoke gecontroleerd
+### Leidende momentopname — 2026-08-15
+
+Deze momentopname is leidend; de regels eronder bewaren het technische en historische bewijs.
+
+- [x] PROD `https://uren.pathconsultancy.nl` en TEST `https://uren-test.pathconsultancy.nl`
+  serveren v0.9.66 vanaf main-SHA `d749b9e32ff4`.
+- [x] Release Pipeline-run `31888079947` is volledig groen; validatie, TEST-uitrol,
+  Living Documentation en PROD-promotie zijn afgerond.
+- [x] LOCAL, TEST en PROD gebruiken dezelfde bedrijfslogica. Alleen accountkeuze, resetrechten,
+  testdata en mailaflevering verschillen bewust per omgeving.
+- [x] TEST-mail wordt uitsluitend naar de beveiligde sink
+  `giovanno.maatsen@pathconsultancy.nl` afgeleverd en vermeldt daarnaast voor welke functionele
+  ontvanger het bericht oorspronkelijk bedoeld was. PROD behoudt de echte ontvangers.
+- [x] De drie factuurroutes zijn technisch gescheiden: broker krijgt factuur + klanturenstaat,
+  boekhouding alleen factuur en salarisadministratie alleen ureninformatie zonder bijlage.
+- [x] Wachtwoordherstel en uitnodiging gebruiken eenmalige links; geheime links en volledige
+  berichtinhoud worden niet in de verzendadministratie getoond.
+- [x] Nieuwe lokale regressiefix: na `Overzicht inklappen` en opnieuw `Overzicht openen` staan alle
+  maandblokken weer ingeklapt. `npm run check` en `DASH-H-017` zijn groen.
+- [-] De nieuwe inklapfix is nog niet geversioneerd, gecommit, gemerged of uitgerold.
+- [-] Voor deze fix moeten nog de volledige GUI-smoke en volledige Playwright-regressie groen zijn;
+  daarna volgen v0.9.67, build/Living Docs, commit, PR, merge en automatische uitrol.
+- [-] Menselijke TEST-mailacceptatie blijft open totdat broker-, boekhouding-, salaris-,
+  wachtwoordherstel- en uitnodigingsmail inhoudelijk zijn gecontroleerd, inclusief de echte
+  factuur- en klanturenstaat-PDF waar die route een bijlage vereist.
+- [-] De verzendadministratie moet nog productklaar compact worden gehouden (standaard een korte
+  recente lijst, uitbreidbaar zonder wachtwoordlinks of volledige berichtinhoud te tonen).
+- [x] TEST-mail kan in de beheer-UI uitsluitend binnen de reeds beveiligde TEST-sandbox worden
+  gepauzeerd of hervat; de vaste sink en allowlist zijn daar niet wijzigbaar. LOCAL blijft dry-run
+  en PROD houdt activeren of uitschakelen als gecontroleerde server-side beheerhandeling.
+
+### Vaste wensen en acceptatieregels uit deze samenwerking
+
+- [x] Iedere gevonden regressie wordt vastgelegd in FO/TO, een uitvoerbare feature met concrete
+  assertions en de passende smoke- of regressiesuite.
+- [x] Ketentests volgen de volledige overgang:
+  `startstatus → gebruikersactie → API-write → readback → taakprojectie → teller → vervolgactie → mailqueue → SMTP-status`.
+- [x] Taken hebben steeds één eigenaar: medewerker of Backoffice. Een afgeronde medewerkeractie
+  moet de juiste Backoffice-vervolgactie opleveren en de tellers moeten na F5 en maandwissels gelijk blijven.
+- [x] De maandselector verandert alleen het maanddetail; de totale open werkvoorraad blijft gebaseerd
+  op alle open maanden en mag daardoor niet willekeurig verspringen.
+- [x] Rolwissel op LOCAL/TEST vult de gekozen testaccountgegevens direct zonder F5; PROD toont geen
+  demoaccounts of testwachtwoorden.
+- [x] TEST-herstel mag de gedeelde TEST-baseline terugzetten en opnieuw inloggen vereisen; PROD heeft
+  geen demoherstel. Herstel mag nooit productiedata wijzigen.
+- [x] Accounts zijn organisatiebreed uniek. Deactiveren bewaart historie; definitief verwijderen mag
+  alleen bij een inactief account zonder zakelijke of beveiligingshistorie.
+- [x] Backoffice kan factuur en klanturenstaat vóór verzending veilig inzien. TEST levert alle echte
+  mailroutes af op de vaste sink en toont de oorspronkelijke ontvanger; PROD verzendt origineel.
+- [x] LOCAL verstuurt nooit SMTP-mail, TEST alleen via de exacte sandbox/allowlist en PROD alleen via
+  de productieconfiguratie. Een groene pipeline mag deze scheiding nooit versoepelen.
+- [x] Na een volledig groene lokale gate wordt geversioneerd en gepubliceerd; de pipeline promoveert
+  dezelfde SHA automatisch naar TEST en PROD en verifieert versie, checksum, health en login.
+
+- [x] Historische status vanaf 2026-08-14: v0.9.61 stond automatisch en gecontroleerd op productie én TEST.
+- [x] Historisch releasebewijs: v0.9.61 (`82afba1c3c2e9508cff08aecea1e37e5f531ff2e`)
+  is succesvol uitgerold; iedere volgende main-SHA wordt eveneens exact in `.release-sha`
+  vastgelegd en door pipeline en live-smoke gecontroleerd.
 - [x] TransIP-subsite `https://uren-test.pathconsultancy.nl` bestaat afzonderlijk van PROD met
   HTTPS, HTTP/2 en geforceerde HTTPS; documentroot:
   `/data/sites/web/pathconsultancynl/subsites/uren-test.pathconsultancy.nl`.
@@ -108,10 +163,10 @@ Post-live beheer
 - [x] v0.9.61 TEST-mailsandbox: uitsluitend de vijf afzonderlijk bevestigde acceptatieflows openen
   voor `giovanno.maatsen@pathconsultancy.nl` en `kenrich.lieveld@pathconsultancy.nl`; configuratie,
   twee actieve TEST-accounts, backup en write worden atomisch ingericht. PROD blijft fail-closed.
-- [-] v0.9.62 releasekandidaat: TEST-login vult het gekozen testwachtwoord automatisch in; een
+- [x] v0.9.62 releasebewijs: TEST-login vult het gekozen testwachtwoord automatisch in; een
   beheerder kan de gedeelde TEST-database met expliciete bevestiging terugzetten naar exact 12 open
   acties (Juni 3 + Juli 5 + Augustus 4; Backoffice 7 + medewerkers 5), 4 medewerkers en 8 accounts.
-- [-] v0.9.62 mailisolatie: gewone TEST-mail wordt met oorspronkelijke ontvanger in onderwerp/body
+- [x] v0.9.62 mailisolatie: gewone TEST-mail wordt met oorspronkelijke ontvanger in onderwerp/body
   omgeleid naar `giovanno.maatsen@pathconsultancy.nl`; de aparte uitnodigingscase blijft naar
   `kenrich.lieveld@pathconsultancy.nl`. Wachtwoordherstel en uitnodiging zijn in de acceptatieconsole
   herhaalbaar, terwijl de normale 3-per-15-minuten-begrenzing intact blijft.
@@ -127,13 +182,14 @@ Post-live beheer
   wachtwoordreset met afwijzing van tokenhergebruik. De GUI-smoke voert alle zes ketens uit.
   Living Docs bevatten 203 Playwright-cases + 1 DB-case; `npm run check`, de uitgebreide
   `npm run test:gui-smoke` en de volledige desktop/mobile/API-regressie zijn lokaal groen.
-- [x] v0.9.66 lokaal gevalideerde releasekandidaat: serverstatus is voortaan gezaghebbend voor uren-, factuur- en
+- [x] v0.9.66 gevalideerd en uitgerold: serverstatus is voortaan gezaghebbend voor uren-, factuur- en
   taakstatus; alle servermaanden worden zonder kortsluiting gesynchroniseerd. Eén factuuractie
   levert exact drie afzonderlijke routes op: broker met factuur en klanturenstaat, boekhouding
   met alleen factuur en salarisadministratie zonder bijlage. TEST toont zowel de bedoelde route
   als de werkelijke sink en Backoffice kan factuur en klanturenstaat vóór afronden openen.
   `npm run check`, de volledige GUI-smoke en de volledige regressie met 211 tests zijn op
-  2026-08-15 lokaal groen; publicatie en pipelinebewijs volgen hierna.
+  2026-08-15 lokaal groen. Release Pipeline-run `31888079947` is voor main-SHA
+  `d749b9e32ff4` volledig groen en dezelfde v0.9.66 staat op PROD en TEST.
 - [x] Google SMTP Relay accepteert het bewezen TransIP-IP `85.10.158.107`; een echte TEST-mail is
   op 2026-08-15 ontvangen. De volledige drie-route-bijlagencontrole blijft onderdeel van de
   menselijke TEST-acceptatie.
@@ -1232,3 +1288,4 @@ F. Lokaal getest / gecommit / gepusht / pipeline-status
 - [x] TEST-BDD-MAPPING.md
 - [x] tests/playwright/*.spec.ts
 
+- [x] TEST-mailstatus in de GUI eerlijk tonen en de beveiligde TEST-sandbox gecontroleerd kunnen pauzeren/hervatten; LOCAL blijft dry-run en PROD heeft geen losse GUI-schakelaar.

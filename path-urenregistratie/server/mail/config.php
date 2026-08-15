@@ -34,6 +34,53 @@ function mail_environment(array $config): string
     return strtolower(trim((string)($config['environment'] ?? ($config['app']['environment'] ?? 'production'))));
 }
 
+function mail_test_delivery_pause_file(array $config): string
+{
+    $privateRoot = rtrim((string)($config['storage']['private_root'] ?? ''), '/\\');
+    return $privateRoot === '' ? '' : $privateRoot . DIRECTORY_SEPARATOR . 'test-mail-paused.flag';
+}
+
+function mail_test_delivery_is_paused(array $config): bool
+{
+    $file = mail_test_delivery_pause_file($config);
+    return mail_environment($config) === 'test' && $file !== '' && is_file($file);
+}
+
+/** The web UI may only pause/resume an already server-guarded TEST sandbox. */
+function mail_test_delivery_toggle_available(array $config): bool
+{
+    $origin = rtrim((string)($config['app_origin'] ?? ($config['app']['app_origin'] ?? '')), '/');
+    $mail = isset($config['mail']) && is_array($config['mail']) ? $config['mail'] : [];
+    return mail_environment($config) === 'test'
+        && $origin === 'https://uren-test.pathconsultancy.nl'
+        && mail_is_smtp_relay_enabled($config)
+        && ($mail['test_delivery_enabled'] ?? false) === true
+        && mail_test_sink_recipient($config) !== null
+        && mail_allowed_recipients($config) !== [];
+}
+
+function mail_set_test_delivery_paused(array $config, bool $paused): void
+{
+    if (!mail_test_delivery_toggle_available($config)) {
+        throw new RuntimeException('TEST-mail kan alleen binnen de beveiligde TEST-sandbox worden geschakeld.');
+    }
+    $file = mail_test_delivery_pause_file($config);
+    $directory = dirname($file);
+    if (!is_dir($directory) || !is_writable($directory)) {
+        throw new RuntimeException('De private TEST-opslag is niet schrijfbaar.');
+    }
+    if ($paused) {
+        if (file_put_contents($file, "paused\n", LOCK_EX) === false) {
+            throw new RuntimeException('TEST-mail kon niet worden gepauzeerd.');
+        }
+        @chmod($file, 0600);
+        return;
+    }
+    if (is_file($file) && !unlink($file)) {
+        throw new RuntimeException('TEST-mail kon niet worden hervat.');
+    }
+}
+
 /** @return list<string> */
 function mail_allowed_recipients(array $config): array
 {
@@ -68,7 +115,8 @@ function mail_real_delivery_allowed_for_environment(array $config): bool
     $mail = isset($config['mail']) && is_array($config['mail']) ? $config['mail'] : [];
     return $environment === 'test'
         && ($mail['test_delivery_enabled'] ?? false) === true
-        && mail_allowed_recipients($config) !== [];
+        && mail_allowed_recipients($config) !== []
+        && !mail_test_delivery_is_paused($config);
 }
 
 function mail_recipient_is_allowed(array $config, string $email): bool
