@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 203 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 204 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 203 unieke case-ID's
+- Playwright executable cases: 204 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 204 unieke case-ID's
+- Totaal executable cases: 205 unieke case-ID's
 - Playwright features: 22
 - Database features: 1
 - Playwright steps mappings: 22
 - Database steps mappings: 1
-- Uitvoeringen: 208
-- Niet-mobile projectuitvoeringen: 198
+- Uitvoeringen: 209
+- Niet-mobile projectuitvoeringen: 199
 - Mobile functionele cases: 5
 - Pixel 7 / Chromium-uitvoeringen: 5
 - iPhone 13 / WebKit-uitvoeringen: 5
 
-De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 203 Playwright-functionele cases in totaal 208 resultaten op: 198 + (5 x 2) = 208.
+De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 204 Playwright-functionele cases in totaal 209 resultaten op: 199 + (5 x 2) = 209.
 
 ## Documentatieketen
 
@@ -139,7 +139,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 203 Playwrig
 - [DASH-N-016] correctieactie ververst een verborgen rooster uit een eerdere maand — Techniek: Toestandsovergang · Assertions: 11
 - [DASH-H-006] vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [DASH-H-007] dashboardknop behoudt de geldige maand en medewerkeroverzichten — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
-- [DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels — Techniek: Equivalentieklassen · Assertions: 13
+- [DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels — Techniek: Equivalentieklassen · Assertions: 14
 
 ### Mailroutering en aflevering
 
@@ -152,7 +152,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 203 Playwrig
 - [EQ-H-003] EasySalary-channel heeft attachment_policy none — Techniek: Equivalentieklassen · Assertions: 2
 - [EQ-H-004] action=enqueue voor gelockte factuur maakt nieuwe items aan — Techniek: Toestandsovergang · Assertions: 6
 - [EQ-H-005] action=list response bevat verplichte velden — Techniek: API-contract + equivalentieklasse · Assertions: 15
-- [EQ-H-015] Backoffice ziet veilige verzendhistorie zonder berichtinhoud — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 16
+- [EQ-H-015] Backoffice ziet veilige verzendhistorie zonder berichtinhoud — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 18
 - [EQ-H-016] Backoffice verstuurt vanuit de acceptatieconsole precies één gekozen scenario — Techniek: API-contract + equivalentieklasse · Assertions: 12
 - [EQ-N-017] niet-beschikbare acceptatieconsole blijft volledig uit beeld — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
 - [EQ-H-020] Backoffice finaliseert een serverfactuur vóór de mailqueue en sluit de vervolgtaak — Techniek: Toestandsovergang · Assertions: 8
@@ -373,7 +373,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 203 Playwrig
 
 - Feature: `tests/playwright/features/team-access.feature`
 - Source: `tests/playwright/user-management.spec.ts`
-- Cases: 10
+- Cases: 11
 
 - [USR-H-001] admin ziet alle gebruikers van het bedrijf — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [USR-H-002] admin kan medewerker deactiveren en heractiveren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
@@ -385,6 +385,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 203 Playwrig
 - [USR-H-008] inactieve medewerker zonder historie kan definitief worden verwijderd — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 9
 - [USR-N-009] medewerker met zakelijke historie kan niet definitief worden verwijderd — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 - [USR-H-010] inactieve beheerder zonder historie kan definitief worden verwijderd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
+- [USR-H-011] beheerder verstuurt vanuit Teambeheer een resetlink voor medewerker en beheerder — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 
 ### Database-integriteit en CRUD-controle
 

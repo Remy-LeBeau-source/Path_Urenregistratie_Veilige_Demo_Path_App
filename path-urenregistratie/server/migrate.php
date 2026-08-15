@@ -92,6 +92,10 @@ function migration_plan(bool $allowDemoMigrations): array
             'id' => '009_demo_seed_august_correction_alignment.sql',
             'path' => __DIR__ . '/migrations/009_demo_seed_august_correction_alignment.sql',
         ];
+        $plan[] = [
+            'id' => '016_demo_task_baseline_alignment.sql',
+            'path' => __DIR__ . '/migrations/016_demo_task_baseline_alignment.sql',
+        ];
     }
 
     $plan[] = [

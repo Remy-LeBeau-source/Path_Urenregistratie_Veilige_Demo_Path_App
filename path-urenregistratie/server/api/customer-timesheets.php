@@ -237,9 +237,10 @@ function customer_timesheet_find(PDO $pdo, int $companyId, int $periodId, int $e
     return $row ?: null;
 }
 
-function customer_timesheet_storage_root(): string
+function customer_timesheet_storage_root(array $config): string
 {
-    return dirname(__DIR__, 2) . '/../path-private/customer-timesheets';
+    $privateRoot = auth_private_root_from_config($config);
+    return rtrim($privateRoot, '/\\') . DIRECTORY_SEPARATOR . 'customer-timesheets';
 }
 
 function customer_timesheet_relative_path(int $companyId, int $employeeId, string $periodKey, string $extension): string
@@ -383,7 +384,7 @@ function customer_timesheet_convert_image_to_pdf_bytes(string $tmpPath, string $
     return simple_pdf_looks_valid($pdfBytes) ? $pdfBytes : null;
 }
 
-function customer_timesheet_store_upload(array $upload, int $companyId, int $employeeId, string $periodKey): array
+function customer_timesheet_store_upload(array $config, array $upload, int $companyId, int $employeeId, string $periodKey): array
 {
     $mimeType = $upload['mime_type'];
     $extension = $upload['extension'];
@@ -398,7 +399,7 @@ function customer_timesheet_store_upload(array $upload, int $companyId, int $emp
         }
     }
 
-    $root = customer_timesheet_storage_root();
+    $root = customer_timesheet_storage_root($config);
     $relative = customer_timesheet_relative_path($companyId, $employeeId, $periodKey, $extension);
     $absolute = rtrim($root, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
 
@@ -429,20 +430,20 @@ function customer_timesheet_store_upload(array $upload, int $companyId, int $emp
     ];
 }
 
-function customer_timesheet_absolute_from_key(string $storageKey): string
+function customer_timesheet_absolute_from_key(array $config, string $storageKey): string
 {
-    $root = rtrim(customer_timesheet_storage_root(), '/\\');
+    $root = rtrim(customer_timesheet_storage_root($config), '/\\');
     return $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, ltrim($storageKey, '/\\'));
 }
 
-function customer_timesheet_delete_existing_file(?string $storageKey): void
+function customer_timesheet_delete_existing_file(array $config, ?string $storageKey): void
 {
     $key = trim((string)$storageKey);
     if ($key === '') {
         return;
     }
 
-    $path = customer_timesheet_absolute_from_key($key);
+    $path = customer_timesheet_absolute_from_key($config, $key);
     if (is_file($path)) {
         @unlink($path);
     }
@@ -532,7 +533,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
             ], 404);
         }
 
-        $absolutePath = customer_timesheet_absolute_from_key($storageKey);
+        $absolutePath = customer_timesheet_absolute_from_key($config, $storageKey);
         if (!is_file($absolutePath)) {
             customer_timesheet_json([
                 'ok' => false,
@@ -658,12 +659,12 @@ try {
 
         $stored = null;
         if ($uploaded) {
-            $stored = customer_timesheet_store_upload($uploaded, $companyId, $employeeId, $period['period_key']);
+            $stored = customer_timesheet_store_upload($config, $uploaded, $companyId, $employeeId, $period['period_key']);
         }
 
         if ($existing) {
             if ($stored) {
-                customer_timesheet_delete_existing_file((string)$existing['storage_key']);
+                customer_timesheet_delete_existing_file($config, (string)$existing['storage_key']);
             }
 
             $update = $pdo->prepare(

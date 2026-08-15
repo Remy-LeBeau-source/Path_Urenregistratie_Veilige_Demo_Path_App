@@ -295,6 +295,8 @@ test.describe('email queue api', () => {
       await expect(history.locator('[data-mail-acceptance-test="true"]')).toHaveCount(1);
       await expect(history).toContainText('Verzonden');
       await expect(history).toContainText('Klaargezet');
+      await expect(history).toContainText('00:45');
+      await expect(history).not.toContainText('02:45');
       await expect(history).not.toContainText('MAG-NOOIT-IN-DE-UI-VERSCHIJNEN');
       await expect(history).not.toContainText('reset-password=GEHEIM');
       await expect(history).toContainText('Historische mail 10');

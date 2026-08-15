@@ -80,13 +80,13 @@
 | DASH-N-016 | ui | dashboard.feature | correctieactie ververst een verborgen rooster uit een eerdere maand | Toestandsovergang | 11 | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | correctieactie ververst een verborgen rooster uit een eerdere maand | Negative | 15 | Actueel |
 | DASH-H-006 | ui | dashboard.feature | vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie | Beslissingstabel rollen en autorisatie | 7 | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie | Happy | 15 | Actueel |
 | DASH-H-007 | ui | dashboard.feature | dashboardknop behoudt de geldige maand en medewerkeroverzichten | Beslissingstabel rollen en autorisatie | 4 | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | dashboardknop behoudt de geldige maand en medewerkeroverzichten | Happy | 15 | Actueel |
-| DASH-H-017 | ui | dashboard.feature | serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels | Equivalentieklassen | 13 | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels | Happy | 15 | Actueel |
+| DASH-H-017 | ui | dashboard.feature | serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels | Equivalentieklassen | 14 | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels | Happy | 15 | Actueel |
 | EQ-H-001 | api | mail-delivery.feature | factuurlock maakt queue-items aan met dry_run=true | Toestandsovergang | 5 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | factuurlock maakt queue-items aan met dry_run=true | Happy | 12 | Actueel |
 | EQ-H-002 | api | mail-delivery.feature | broker-channel bundelt factuur en klanturenstaat | API-contract + equivalentieklasse | 2 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | broker-channel bundelt factuur en klanturenstaat | Happy | 12 | Actueel |
 | EQ-H-003 | api | mail-delivery.feature | EasySalary-channel heeft attachment_policy none | Equivalentieklassen | 2 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | EasySalary-channel heeft attachment_policy none | Happy | 12 | Actueel |
 | EQ-H-004 | api | mail-delivery.feature | action=enqueue voor gelockte factuur maakt nieuwe items aan | Toestandsovergang | 6 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | action=enqueue voor gelockte factuur maakt nieuwe items aan | Happy | 12 | Actueel |
 | EQ-H-005 | api | mail-delivery.feature | action=list response bevat verplichte velden | API-contract + equivalentieklasse | 15 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | action=list response bevat verplichte velden | Happy | 12 | Actueel |
-| EQ-H-015 | api | mail-delivery.feature | Backoffice ziet veilige verzendhistorie zonder berichtinhoud | Negatieve equivalentieklasse + error guessing | 16 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | Backoffice ziet veilige verzendhistorie zonder berichtinhoud | Happy | 12 | Actueel |
+| EQ-H-015 | api | mail-delivery.feature | Backoffice ziet veilige verzendhistorie zonder berichtinhoud | Negatieve equivalentieklasse + error guessing | 18 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | Backoffice ziet veilige verzendhistorie zonder berichtinhoud | Happy | 12 | Actueel |
 | EQ-H-016 | api | mail-delivery.feature | Backoffice verstuurt vanuit de acceptatieconsole precies één gekozen scenario | API-contract + equivalentieklasse | 12 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | Backoffice verstuurt vanuit de acceptatieconsole precies één gekozen scenario | Happy | 12 | Actueel |
 | EQ-N-017 | api | mail-delivery.feature | niet-beschikbare acceptatieconsole blijft volledig uit beeld | Negatieve equivalentieklasse + error guessing | 4 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | niet-beschikbare acceptatieconsole blijft volledig uit beeld | Negative | 12 | Actueel |
 | EQ-H-020 | api | mail-delivery.feature | Backoffice finaliseert een serverfactuur vóór de mailqueue en sluit de vervolgtaak | Toestandsovergang | 8 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | Backoffice finaliseert een serverfactuur vóór de mailqueue en sluit de vervolgtaak | Happy | 12 | Actueel |
@@ -221,13 +221,14 @@
 | USR-H-008 | api | team-access.feature | inactieve medewerker zonder historie kan definitief worden verwijderd | Beslissingstabel rollen en autorisatie | 9 | user-management.steps.ts | user-management.spec.ts | API | Gebruikersbeheer | inactieve medewerker zonder historie kan definitief worden verwijderd | Happy | 13 | Actueel |
 | USR-N-009 | api | team-access.feature | medewerker met zakelijke historie kan niet definitief worden verwijderd | Beslissingstabel rollen en autorisatie | 6 | user-management.steps.ts | user-management.spec.ts | API | Gebruikersbeheer | medewerker met zakelijke historie kan niet definitief worden verwijderd | Negative | 13 | Actueel |
 | USR-H-010 | api | team-access.feature | inactieve beheerder zonder historie kan definitief worden verwijderd | Negatieve equivalentieklasse + error guessing | 6 | user-management.steps.ts | user-management.spec.ts | API | Gebruikersbeheer | inactieve beheerder zonder historie kan definitief worden verwijderd | Happy | 13 | Actueel |
+| USR-H-011 | api | team-access.feature | beheerder verstuurt vanuit Teambeheer een resetlink voor medewerker en beheerder | Beslissingstabel rollen en autorisatie | 7 | user-management.steps.ts | user-management.spec.ts | API | Gebruikersbeheer | beheerder verstuurt vanuit Teambeheer een resetlink voor medewerker en beheerder | Happy | 13 | Actueel |
 | DB-H-001 | db | database-integrity.feature | CRUD smoke test werkt in een geïsoleerde tijdelijke tabel | API-contract + equivalentieklasse | 3 | database.steps.ts | database/queries/crud-smoke.sql + scripts/run-db-crud-smoke.mjs | DB / SQL | Database & Infrastructure | Database CRUD smoke | Happy | 16 | Actueel |
 
 ## Totalen
 
-- Playwright executable cases: 203
+- Playwright executable cases: 204
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 204
+- Totaal unieke executable cases: 205
 - Playwright features: 22
 - Database features: 1
 - Playwright steps mappings: 22

@@ -173,9 +173,10 @@ function invoices_round_money(float $value): float
     return round($value, 2);
 }
 
-function invoices_pdf_storage_root(): string
+function invoices_pdf_storage_root(array $config): string
 {
-    return dirname(__DIR__, 2) . '/../path-private/invoices';
+    $privateRoot = auth_private_root_from_config($config);
+    return rtrim($privateRoot, '/\\') . DIRECTORY_SEPARATOR . 'invoices';
 }
 
 function invoices_pdf_relative_path(int $companyId, int $invoiceId): string
@@ -184,9 +185,9 @@ function invoices_pdf_relative_path(int $companyId, int $invoiceId): string
     return (string)$companyId . '/' . (string)$invoiceId . '_' . $token . '.pdf';
 }
 
-function invoices_pdf_absolute_from_key(string $storageKey): string
+function invoices_pdf_absolute_from_key(array $config, string $storageKey): string
 {
-    $root = rtrim(invoices_pdf_storage_root(), '/\\');
+    $root = rtrim(invoices_pdf_storage_root($config), '/\\');
     return $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, ltrim($storageKey, '/\\'));
 }
 
@@ -194,7 +195,7 @@ function invoices_pdf_absolute_from_key(string $storageKey): string
  * Generate a server-side invoice PDF and persist it, filling pdf_storage_key.
  * Never throws: PDF generation failure must not break the invoice lock flow.
  */
-function invoices_generate_and_store_pdf(PDO $pdo, int $invoiceId, int $companyId): bool
+function invoices_generate_and_store_pdf(PDO $pdo, array $config, int $invoiceId, int $companyId): bool
 {
     try {
         $stmt = $pdo->prepare(
@@ -260,7 +261,7 @@ function invoices_generate_and_store_pdf(PDO $pdo, int $invoiceId, int $companyI
         }
 
         $relative = invoices_pdf_relative_path($companyId, $invoiceId);
-        $absolute = invoices_pdf_absolute_from_key($relative);
+        $absolute = invoices_pdf_absolute_from_key($config, $relative);
         $dir = dirname($absolute);
         if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
             return false;
@@ -280,7 +281,7 @@ function invoices_generate_and_store_pdf(PDO $pdo, int $invoiceId, int $companyI
 }
 
 /** Secure, scoped invoice PDF download: session required, company-scoped, employee limited to own invoices. */
-function invoices_download_pdf(PDO $pdo, array $currentUser, array $query): void
+function invoices_download_pdf(PDO $pdo, array $config, array $currentUser, array $query): void
 {
     $invoiceIdRaw = $query['invoice_id'] ?? null;
     if (!(is_string($invoiceIdRaw) && ctype_digit($invoiceIdRaw) && (int)$invoiceIdRaw > 0)) {
@@ -332,7 +333,7 @@ function invoices_download_pdf(PDO $pdo, array $currentUser, array $query): void
         ], 404);
     }
 
-    $absolutePath = invoices_pdf_absolute_from_key($storageKey);
+    $absolutePath = invoices_pdf_absolute_from_key($config, $storageKey);
     if (!is_file($absolutePath)) {
         auth_send_json([
             'ok' => false,
@@ -738,7 +739,7 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
         }
 
         // Generate the server-side invoice PDF after commit; never breaks the lock response on failure.
-        invoices_generate_and_store_pdf($pdo, $invoiceId, $companyId);
+        invoices_generate_and_store_pdf($pdo, $config, $invoiceId, $companyId);
 
         auth_send_json([
             'ok' => true,
@@ -782,7 +783,7 @@ $method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
 
 if ($method === 'GET') {
     if ((string)($_GET['action'] ?? '') === 'download') {
-        invoices_download_pdf($pdo, $currentUser, $_GET);
+        invoices_download_pdf($pdo, $config, $currentUser, $_GET);
     }
 
     $periodFilter = invoices_parse_period(isset($_GET['period']) ? (string)$_GET['period'] : null);

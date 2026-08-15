@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:net';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { config as loadDotEnv } from 'dotenv';
 
@@ -131,15 +132,20 @@ async function main() {
 
   const serverEnv = {
     ...process.env,
+    PATH_APP_DB_NAME: resolvedDatabaseName,
+    PLAYWRIGHT_DB_NAME: resolvedDatabaseName,
     PATH_APP_ENVIRONMENT: 'test',
     PLAYWRIGHT_STAGE: effectiveStage,
     PATH_APP_ALLOW_DEMO_MIGRATIONS: '1',
     PLAYWRIGHT_ALLOW_DEMO_MIGRATIONS: '1',
     PATH_APP_BASE_URL: baseUrl,
+    PATH_APP_PRIVATE_ROOT: path.join(tmpdir(), 'path-urenregistratie-playwright-private'),
   };
 
   const testRuntimeEnv = {
     ...process.env,
+    PATH_APP_DB_NAME: resolvedDatabaseName,
+    PLAYWRIGHT_DB_NAME: resolvedDatabaseName,
     PATH_APP_ENVIRONMENT: 'test',
     PLAYWRIGHT_STAGE: effectiveStage,
     PATH_APP_ALLOW_DEMO_MIGRATIONS: '1',
@@ -205,6 +211,18 @@ async function main() {
     const healthResponse = await waitForHealth(baseUrl);
     const healthBody = await healthResponse.text();
     console.log(`PHP server ready at ${baseUrl} with health payload: ${healthBody.replace(/\s+/g, ' ').slice(0, 220)}`);
+    let healthPayload;
+    try {
+      healthPayload = JSON.parse(healthBody);
+    } catch {
+      throw new Error('E2E precheck failed: PHP health endpoint returned invalid JSON.');
+    }
+    const connectedDatabase = String(healthPayload?.checks?.database_connection?.database || '').trim();
+    if (resolvedDatabaseName && connectedDatabase !== resolvedDatabaseName) {
+      throw new Error(
+        `E2E precheck failed: health endpoint connected to ${connectedDatabase || '(unknown)'} instead of ${resolvedDatabaseName}.`,
+      );
+    }
 
     const rawArgs = process.argv.slice(2);
     const extraArgs = rawArgs[0] === '--' ? rawArgs.slice(1) : rawArgs;

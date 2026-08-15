@@ -86,3 +86,11 @@ Feature: Team en toegang beheren
     Given een extra beheerder zonder login- of zakelijke historie
     When het beheeraccount wordt gedeactiveerd en definitief verwijderd
     Then komt het lege beheeraccount niet meer in de userlijst voor
+
+  @happy
+  Scenario: [USR-H-011] beheerder verstuurt vanuit Teambeheer een resetlink voor medewerker en beheerder
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given Teambeheer resetacties toont voor andere actieve accounts maar niet voor het eigen account
+    When de beheerder voor beide rollen een persoonlijke resetlink bevestigt
+    Then verstuurt de GUI exact twee force_password_change serveracties
