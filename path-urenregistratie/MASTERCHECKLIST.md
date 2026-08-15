@@ -22,8 +22,8 @@ staan onder de genummerde fases verderop in dit document.
 | Fase 3 — Read-API | ✅ Klaar | Frontend leest serverdata |
 | Fase 4 — Auth & rollen | ✅ VS Code-scope klaar | Admin/medewerker/sessies, persistente loginblokkade en eenmalige wachtwoordlinks |
 | Fase 5 — Security | ✅ VS Code-scope klaar | Timeout, sliding session, login-audit, dependency-scan; productieheaders (CORS/CSP/HSTS) later op echt domein |
-| Fase 6 — Playwright/BDD/Allure/Living Docs | ✅ Pariteit bewaakt | 204 Playwright-cases + 1 DB-case; features, stappenindex en living docs worden uit de uitvoerbare specs gegenereerd |
-| Fase 7 — CI/CD | 🛠️ Releasevalidatie | Automatische PROD- en TEST-uitrol bewezen; v0.9.65 wordt lokaal door smoke en volledige regressie gevalideerd vóór pipelinevrijgave |
+| Fase 6 — Playwright/BDD/Allure/Living Docs | ✅ Pariteit bewaakt | 206 gedocumenteerde Playwright-cases + 1 DB-case; de volledige runner voert inclusief technische projectvarianten 211 tests uit |
+| Fase 7 — CI/CD | 🛠️ Pipelinevalidatie | Automatische PROD- en TEST-uitrol bewezen; v0.9.66 is lokaal groen door check, GUI-smoke en 211-testregressie en wacht op pipelinevrijgave |
 | Fase 8 — Uren indienen | ✅ Klaar | Concept → indienen |
 | Fase 9 — Correctie/goedkeuring | ✅ Technisch klaar | Productieacceptatie later |
 | Fase 10 — Klanturenstaat | ✅ VS Code-scope klaar | JPG/PNG → PDF server-side gebouwd en getest (CTS-API-H-005) |
@@ -127,9 +127,16 @@ Post-live beheer
   wachtwoordreset met afwijzing van tokenhergebruik. De GUI-smoke voert alle zes ketens uit.
   Living Docs bevatten 203 Playwright-cases + 1 DB-case; `npm run check`, de uitgebreide
   `npm run test:gui-smoke` en de volledige desktop/mobile/API-regressie zijn lokaal groen.
-- [!] Google SMTP Relay weigert verzending nog met `550 Invalid credentials for relay [85.10.158.107]`.
-  Voeg exact `85.10.158.107` toe aan de Google Workspace SMTP-relay-IP-allowlist. Er is nog geen
-  acceptatiemail succesvol verzonden; dit is een externe configuratieblokkade, geen groene mailtest.
+- [x] v0.9.66 lokaal gevalideerde releasekandidaat: serverstatus is voortaan gezaghebbend voor uren-, factuur- en
+  taakstatus; alle servermaanden worden zonder kortsluiting gesynchroniseerd. Eén factuuractie
+  levert exact drie afzonderlijke routes op: broker met factuur en klanturenstaat, boekhouding
+  met alleen factuur en salarisadministratie zonder bijlage. TEST toont zowel de bedoelde route
+  als de werkelijke sink en Backoffice kan factuur en klanturenstaat vóór afronden openen.
+  `npm run check`, de volledige GUI-smoke en de volledige regressie met 211 tests zijn op
+  2026-08-15 lokaal groen; publicatie en pipelinebewijs volgen hierna.
+- [x] Google SMTP Relay accepteert het bewezen TransIP-IP `85.10.158.107`; een echte TEST-mail is
+  op 2026-08-15 ontvangen. De volledige drie-route-bijlagencontrole blijft onderdeel van de
+  menselijke TEST-acceptatie.
 - [x] De tijdelijke mailacceptatie-workaround is in v0.9.59 uit PROD verwijderd: de console
   is daar niet zichtbaar en de serverendpoint antwoordt in productie fail-closed met 404.
   Localhost en de aparte TEST-omgeving behouden de vijf expliciet bevestigde acceptatieflows.
@@ -1189,12 +1196,12 @@ Telling fasestatussen:
 
 ## Directe volgende stap
 
-**Fase 1 t/m 15 zijn functioneel ingericht; v0.9.65 voegt veilige beheerdergestuurde
-wachtwoordreset, een exacte TEST-baseline en consistente documentopslag en mailtijden toe.** De
+**Fase 1 t/m 15 zijn functioneel ingericht; v0.9.66 borgt de servergestuurde taakstatus,
+documentcontrole en drie afzonderlijke mailroutes.** De
 aparte TEST-host, database, private opslag, publieke login-smoke en mailsandbox zijn bewezen in
 run `31803329714`.
 
-1. Valideer, commit en push v0.9.65 en laat dezelfde release exact door de volledige pipeline, TEST-uitrol en
+1. Commit en push de lokaal groen gevalideerde v0.9.66 en laat dezelfde release exact door de volledige pipeline, TEST-uitrol en
    automatische PROD-uitrol bewaken.
 2. Verstuur op TEST de vijf
    acceptatiemails één voor één en controleer ontvanger, onderwerp, tekst, linkgebruik en PDF-bijlagen.

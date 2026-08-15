@@ -153,7 +153,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels
     # Testtechniek: Equivalentieklassen
-    # Aantoonbare Playwright-assertions in deze case: 14
+    # Aantoonbare Playwright-assertions in deze case: 18
     Given Backoffice met de volledige serverwerkvoorraad is ingelogd
     When Backoffice augustus-juli-augustus doorloopt
     Then blijven globale aantallen, eigenaren en taakidentiteiten gelijk
