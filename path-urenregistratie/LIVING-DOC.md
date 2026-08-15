@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 204 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 206 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 204 unieke case-ID's
+- Playwright executable cases: 206 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 205 unieke case-ID's
+- Totaal executable cases: 207 unieke case-ID's
 - Playwright features: 22
 - Database features: 1
 - Playwright steps mappings: 22
 - Database steps mappings: 1
-- Uitvoeringen: 209
-- Niet-mobile projectuitvoeringen: 199
+- Uitvoeringen: 211
+- Niet-mobile projectuitvoeringen: 201
 - Mobile functionele cases: 5
 - Pixel 7 / Chromium-uitvoeringen: 5
 - iPhone 13 / WebKit-uitvoeringen: 5
 
-De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 204 Playwright-functionele cases in totaal 209 resultaten op: 199 + (5 x 2) = 209.
+De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 206 Playwright-functionele cases in totaal 211 resultaten op: 201 + (5 x 2) = 211.
 
 ## Documentatieketen
 
@@ -99,7 +99,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 204 Playwrig
 - [E2E-H-002] rolwissel werkt zonder F5 en herstel blijft uitsluitend voor Backoffice — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
 - [E2E-H-003] herindiening verplaatst dezelfde actie van medewerker naar Backoffice — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 18
 - [E2E-H-004] goedkeuring vervangt urencontrole door factuurverzending voor hetzelfde dossier — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
-- [E2E-H-005] klanturenstaatcontrole wordt een brokeractie zonder taakverlies — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
+- [E2E-H-005] klanturenstaatcontrole wordt een brokeractie zonder taakverlies — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 9
 - [E2E-H-006] eenmalige wachtwoordlink geeft toegang en blokkeert hergebruik — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 
 ### Klanturenstaten en documentverwerking
@@ -139,23 +139,25 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 204 Playwrig
 - [DASH-N-016] correctieactie ververst een verborgen rooster uit een eerdere maand — Techniek: Toestandsovergang · Assertions: 11
 - [DASH-H-006] vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [DASH-H-007] dashboardknop behoudt de geldige maand en medewerkeroverzichten — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
-- [DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels — Techniek: Equivalentieklassen · Assertions: 14
+- [DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels — Techniek: Equivalentieklassen · Assertions: 18
 
 ### Mailroutering en aflevering
 
 - Feature: `tests/playwright/features/mail-delivery.feature`
 - Source: `tests/playwright/email-queue.spec.ts`
-- Cases: 22
+- Cases: 24
 
 - [EQ-H-001] factuurlock maakt queue-items aan met dry_run=true — Techniek: Toestandsovergang · Assertions: 5
 - [EQ-H-002] broker-channel bundelt factuur en klanturenstaat — Techniek: API-contract + equivalentieklasse · Assertions: 2
 - [EQ-H-003] EasySalary-channel heeft attachment_policy none — Techniek: Equivalentieklassen · Assertions: 2
+- [EQ-H-022] één factuuractie maakt drie gescheiden mailroutes met het juiste bijlagenbeleid — Techniek: API-contract + equivalentieklasse · Assertions: 7
 - [EQ-H-004] action=enqueue voor gelockte factuur maakt nieuwe items aan — Techniek: Toestandsovergang · Assertions: 6
 - [EQ-H-005] action=list response bevat verplichte velden — Techniek: API-contract + equivalentieklasse · Assertions: 15
 - [EQ-H-015] Backoffice ziet veilige verzendhistorie zonder berichtinhoud — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 18
 - [EQ-H-016] Backoffice verstuurt vanuit de acceptatieconsole precies één gekozen scenario — Techniek: API-contract + equivalentieklasse · Assertions: 12
 - [EQ-N-017] niet-beschikbare acceptatieconsole blijft volledig uit beeld — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
-- [EQ-H-020] Backoffice finaliseert een serverfactuur vóór de mailqueue en sluit de vervolgtaak — Techniek: Toestandsovergang · Assertions: 8
+- [EQ-H-020] Backoffice finaliseert een serverfactuur vóór de mailqueue en sluit de vervolgtaak — Techniek: Toestandsovergang · Assertions: 11
+- [EQ-N-021] factuurverzending blijft dicht zolang de serveruren niet zijn goedgekeurd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
 - [EQ-N-019] gesloten acceptatievenster toont waarom geen mail kan worden verstuurd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [EQ-N-018] afgewezen acceptatiemail blijft nooit achter voor automatische herverzending — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [EQ-N-006] anonieme gebruiker krijgt 401 op list — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2

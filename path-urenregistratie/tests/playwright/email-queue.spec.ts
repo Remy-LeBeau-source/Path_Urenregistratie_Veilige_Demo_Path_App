@@ -147,6 +147,29 @@ test.describe('email queue api', () => {
     await test.step('And cleanup', async () => { await authApi.logout(); await ctx.dispose(); });
   });
 
+  test('[EQ-H-022] één factuuractie maakt drie gescheiden mailroutes met het juiste bijlagenbeleid', async () => {
+    const { ctx, authApi, queueApi, invoiceId } = await createLockedInvoice();
+
+    await test.step('Given één goedgekeurde urenstaat als factuur is afgerond', async () => {});
+
+    await test.step('When de drie functionele routes voor dezelfde factuur worden uitgelezen', async () => {
+      const list = await queueApi.list();
+      expect(list.status).toBe(200);
+      const items = (list.body.items as Array<Record<string, unknown>>)
+        .filter(item => Number(item.invoice_id) === invoiceId);
+      const byChannel = new Map(items.map(item => [String(item.channel), item]));
+
+      expect(items).toHaveLength(3);
+      expect([...byChannel.keys()].sort()).toEqual(['accountant', 'broker', 'payroll']);
+      expect(byChannel.get('broker')?.attachment_policy).toBe('invoice_and_customer_timesheet');
+      expect(byChannel.get('accountant')?.attachment_policy).toBe('invoice');
+      expect(byChannel.get('payroll')?.attachment_policy).toBe('none');
+      expect(new Set(items.map(item => Number(item.invoice_id)))).toEqual(new Set([invoiceId]));
+    });
+
+    await test.step('And cleanup', async () => { await authApi.logout(); await ctx.dispose(); });
+  });
+
   test('[EQ-H-004] action=enqueue voor gelockte factuur maakt nieuwe items aan', async () => {
     const { ctx, authApi, queueApi, invoiceId } = await createLockedInvoice();
 
@@ -469,7 +492,15 @@ test.describe('email queue api', () => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ ok: true, dry_run: true, count: items.length, items }),
+        body: JSON.stringify({
+          ok: true,
+          dry_run: false,
+          environment: 'test',
+          test_redirect_active: true,
+          test_sink_recipient: 'giovanno.maatsen@pathconsultancy.nl',
+          count: items.length,
+          items,
+        }),
       });
     });
 
@@ -488,6 +519,9 @@ test.describe('email queue api', () => {
       await expect(task).toBeVisible();
       await task.click();
       await expect(page.locator('#modal-title')).toContainText('PATH-2026-008');
+      await expect(page.locator('#modal-secondary')).toHaveText('Factuur-PDF controleren');
+      await expect(page.locator('#modal-summary')).toContainText('Werkelijke TEST-aflevering');
+      await expect(page.locator('#modal-summary')).toContainText('giovanno.maatsen@pathconsultancy.nl');
     });
 
     await test.step('When Backoffice de verzending één keer afrondt', async () => {
@@ -499,6 +533,69 @@ test.describe('email queue api', () => {
       expect(directQueueWrites).toBe(0);
       await expect(page.locator('#toast')).toContainText('3 berichten');
       await expect(page.locator('[data-admin-task-invoice="4"][data-period-key="2026-08"]')).toHaveCount(0);
+    });
+  });
+
+  test('[EQ-N-021] factuurverzending blijft dicht zolang de serveruren niet zijn goedgekeurd', async ({ page }) => {
+    let invoiceLocks = 0;
+
+    await page.route('**/server/api/invoices.php*', async route => {
+      if (route.request().method() === 'POST') {
+        invoiceLocks += 1;
+        await route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ ok: false }) });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ok: true,
+          count: 1,
+          items: [{
+            id: 772,
+            timesheet_id: 882,
+            invoice_number: 'PATH-2026-008',
+            employee_name: 'Shawn-Douglas Nahar',
+            period_key: '2026-08',
+            status: 'ready',
+            timesheet_status: 'submitted',
+            subtotal: 12312,
+            vat_amount: 2585.52,
+            total: 14897.52,
+            locked: false,
+            locked_at: null,
+          }],
+        }),
+      });
+    });
+    await page.route('**/server/api/email-queue.php*', route => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        dry_run: false,
+        environment: 'test',
+        test_redirect_active: true,
+        test_sink_recipient: 'giovanno.maatsen@pathconsultancy.nl',
+        count: 0,
+        items: [],
+      }),
+    }));
+
+    const login = new LoginPage(page);
+    await test.step('Given de lokale status verouderd is maar de serveruren nog ingediend zijn', async () => {
+      await login.open();
+      await login.loginAsAdmin();
+      await expect.poll(async () => page.evaluate(() => {
+        const runtime = window as typeof window & { __PATH_READ_API?: { invoices?: { items?: Array<{ timesheet_status?: string }> } } };
+        return runtime.__PATH_READ_API?.invoices?.items?.[0]?.timesheet_status || '';
+      })).toBe('submitted');
+    });
+
+    await test.step('Then verschijnt geen factuurverzendtaak en wordt geen lock-write uitgevoerd', async () => {
+      await page.locator('#hero-backoffice-filter').click();
+      await expect(page.locator('[data-admin-task-invoice="4"][data-period-key="2026-08"]')).toHaveCount(0);
+      expect(invoiceLocks).toBe(0);
     });
   });
 

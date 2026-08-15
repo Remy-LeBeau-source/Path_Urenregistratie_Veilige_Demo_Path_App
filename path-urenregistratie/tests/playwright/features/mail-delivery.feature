@@ -34,6 +34,15 @@ Feature: Mailroutering en aflevering
     And cleanup
 
   @happy
+  Scenario: [EQ-H-022] één factuuractie maakt drie gescheiden mailroutes met het juiste bijlagenbeleid
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given één goedgekeurde urenstaat als factuur is afgerond
+    When de drie functionele routes voor dezelfde factuur worden uitgelezen
+    And cleanup
+    Then wordt met Playwright-assertions bevestigd dat één factuuractie maakt drie gescheiden mailroutes met het juiste bijlagenbeleid
+
+  @happy
   Scenario: [EQ-H-004] action=enqueue voor gelockte factuur maakt nieuwe items aan
     # Testtechniek: Toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 6
@@ -79,10 +88,18 @@ Feature: Mailroutering en aflevering
   @happy
   Scenario: [EQ-H-020] Backoffice finaliseert een serverfactuur vóór de mailqueue en sluit de vervolgtaak
     # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 8
+    # Aantoonbare Playwright-assertions in deze case: 11
     Given een goedgekeurde maar nog niet definitieve serverfactuur als Backoffice-taak klaarstaat
     When Backoffice de verzending één keer afrondt
     Then wordt eerst gelockt, niet te vroeg gequeued en verdwijnt de afgeronde vervolgtaak
+
+  @negative
+  Scenario: [EQ-N-021] factuurverzending blijft dicht zolang de serveruren niet zijn goedgekeurd
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given de lokale status verouderd is maar de serveruren nog ingediend zijn
+    When de flow voor EQ-N-021 wordt uitgevoerd
+    Then verschijnt geen factuurverzendtaak en wordt geen lock-write uitgevoerd
 
   @negative
   Scenario: [EQ-N-019] gesloten acceptatievenster toont waarom geen mail kan worden verstuurd

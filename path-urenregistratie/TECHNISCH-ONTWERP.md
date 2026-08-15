@@ -80,6 +80,9 @@ Taak-ID's zijn stabiel opgebouwd uit type, periode en medewerker. Hierdoor kunne
 - `mail.enabled`, testvenster en acceptance guard moeten alle drie passen bij de omgeving.
 - TEST gebruikt `test_redirect_all` en een expliciete allowlist.
 - De envelope/from-identiteit blijft Backoffice; de functionele ontvanger wordt in TEST naar de sink herschreven.
+- Een factuurlock schrijft standaard drie gescheiden `email_deliveries`: `broker`, `accountant` en
+  `payroll`. TEST verandert bij dispatch alleen de effectieve ontvanger; kanaal, oorspronkelijke
+  ontvanger, onderwerp en attachment policy blijven auditbaar.
 - Bijlagen worden server-side op routebeleid gevalideerd.
 - SMTP-succes wordt pas getoond na bevestigde dispatch; fouten blijven met pogingenteller in `email_deliveries`.
 - Databasetijden zonder tijdzone worden als reeds lokale servertijd weergegeven en krijgen niet nogmaals

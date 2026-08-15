@@ -2684,6 +2684,7 @@ function invoiceApiRowsForPeriod(periodKey) {
     subtotal: Number(item && item.subtotal || 0),
     vatAmount: Number(item && item.vat_amount || 0),
     total: Number(item && item.total || 0),
+    timesheetStatus: String(item && item.timesheet_status || "").toLowerCase(),
     locked: Boolean(item && item.locked),
     lockedAt: String(item && item.locked_at || "")
   })).filter(item => item.periodKey === periodKey);
@@ -2734,13 +2735,21 @@ function syncInvoiceStatusesFromApi(periodKey) {
 
       const deliveries = deliveriesByInvoice.get(Number(row.id)) || [];
       const hasDeliveryProof = deliveries.some(item => ["queued", "sent", "failed"].includes(item.status));
-      const nextInvoiceStatus = hasDeliveryProof ? "simulated" : row.status;
+      const serverTimesheetStatus = ["draft", "submitted", "correction", "approved", "invoiced"].includes(row.timesheetStatus)
+        ? row.timesheetStatus
+        : "";
+      const serverTimesheetApproved = ["approved", "invoiced"].includes(serverTimesheetStatus);
+      const nextInvoiceStatus = hasDeliveryProof ? "simulated" : (serverTimesheetStatus && !serverTimesheetApproved ? "concept" : row.status);
       const nextPayrollStatus = hasDeliveryProof
         ? "simulated"
         : (nextInvoiceStatus === "ready" ? "ready" : "concept");
 
       if (record.invoiceNumber !== row.invoiceNumber && row.invoiceNumber) {
         record.invoiceNumber = row.invoiceNumber;
+        changed = true;
+      }
+      if (serverTimesheetStatus && record.timesheetStatus !== serverTimesheetStatus) {
+        record.timesheetStatus = serverTimesheetStatus;
         changed = true;
       }
       if (record.invoiceStatus !== nextInvoiceStatus) {
@@ -2889,15 +2898,20 @@ function refreshInvoicesReadApi(periodKey, force) {
       if (!data) return;
       if (period) readApiDebug.invoicesByPeriod[period] = data;
       else readApiDebug.invoices = data;
+      let invoiceStateChanged = false;
       if (period) {
-        syncInvoiceStatusesFromApi(period);
+        invoiceStateChanged = syncInvoiceStatusesFromApi(period);
       } else {
         const periodKeys = [...new Set((data.items || []).map(item => String(item && item.period_key || "")).filter(parsePeriodKey))];
-        periodKeys.forEach(syncInvoiceStatusesFromApi);
+        periodKeys.forEach(periodKey => {
+          if (syncInvoiceStatusesFromApi(periodKey)) invoiceStateChanged = true;
+        });
       }
       console.log(period ? "[read-api] invoices(" + period + ")" : "[read-api] invoices", data);
       const invoicesViewActive = document.querySelector("#view-invoices")?.classList.contains("is-active");
-      if (invoicesViewActive && (!period || period === currentPeriod().key)) renderInvoices();
+      const dashboardViewActive = document.querySelector("#view-dashboard")?.classList.contains("is-active");
+      if (invoiceStateChanged && dashboardViewActive) renderAll();
+      else if (invoicesViewActive && (!period || period === currentPeriod().key)) renderInvoices();
     })
     .finally(() => {
       readApiRuntime.invoicesInFlight = false;
@@ -4683,6 +4697,10 @@ function showCustomerTimesheetBrokerCheck(employeeId, periodKey, adminTaskId = "
     subject: documentRecord.brokerSubject || defaultMail.subject,
     body: documentRecord.brokerBody || defaultMail.body
   };
+  const testRouting = testMailRoutingSummary();
+  const deliveryMessage = testRouting
+    ? "In TEST wordt een echte verzending uitsluitend bij de vaste testontvanger afgeleverd."
+    : "E-mailverzending is uitgeschakeld.";
   if (!isValidEmail(email)) {
     if (adminTaskId) {
       return showAdminTaskEmailBlocker(adminTaskId, employee, periodKey, [{ name: "Klanturenstaatroute", email, kind: "employee" }], "De brokerroute voor de klanturenstaat");
@@ -4693,8 +4711,12 @@ function showCustomerTimesheetBrokerCheck(employeeId, periodKey, adminTaskId = "
   showModal({
     label: "Aparte brokerroute",
     title: "Klanturenstaat voor " + employee.name + " controleren?",
-    message: "Controleer het adres, de officiële PDF en pas desgewenst het onderwerp of bericht aan. E-mailverzending is uitgeschakeld.",
-    summary: '<div><span>Aan</span><strong>' + escapeHtml(email) + '</strong></div><div><span>Bijlage</span><strong>' + escapeHtml(documentRecord.fileName) + '</strong></div><div class="modal-form full"><label class="full">Onderwerp<input id="customer-timesheet-broker-subject" value="' + escapeHtml(mail.subject) + '"></label><label class="full">Begeleidende tekst<textarea id="customer-timesheet-broker-body" rows="8">' + escapeHtml(mail.body) + '</textarea></label></div>',
+    message: "Controleer het bedoelde adres, open de officiële PDF en pas desgewenst het onderwerp of bericht aan. " + deliveryMessage,
+    summary: '<div><span>Bedoelde productieroute</span><strong>' + escapeHtml(email) + '</strong></div>' +
+      (testRouting ? '<div><span>Werkelijke TEST-aflevering</span><strong>' + escapeHtml(testRouting.sink) + '</strong></div>' : '') +
+      '<div><span>Bijlage</span><strong>' + escapeHtml(documentRecord.fileName) + '</strong></div>' +
+      (documentRecord.fileData ? '<div><span>Document controleren</span><button class="small-button" type="button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + periodKey + '">PDF bekijken</button></div>' : '') +
+      '<div class="modal-form full"><label class="full">Onderwerp<input id="customer-timesheet-broker-subject" value="' + escapeHtml(mail.subject) + '"></label><label class="full">Begeleidende tekst<textarea id="customer-timesheet-broker-body" rows="8">' + escapeHtml(mail.body) + '</textarea></label></div>',
     confirm: "Controle afronden",
     wide: true,
     adminTaskId,
@@ -6179,6 +6201,13 @@ function mailDeliveryStatusMeta(item) {
   return { label: "Klaargezet", tone: "status-ready" };
 }
 
+function testMailRoutingSummary() {
+  const data = readApiDebug.emailQueue;
+  const sink = String(data && data.test_sink_recipient || "").trim();
+  if (!(data && data.environment === "test" && data.test_redirect_active === true && isValidEmail(sink))) return null;
+  return { sink };
+}
+
 function mailAcceptanceAttachmentText(count) {
   const total = Math.max(0, Number(count || 0));
   if (total === 0) return "Geen bijlagen";
@@ -6339,9 +6368,11 @@ function renderMailDeliveryHistory() {
   const sent = items.filter(item => item && item.status === "sent" && item.dry_run !== true).length;
   const pending = items.filter(item => item && ["queued", "processing"].includes(String(item.status)) && item.dry_run !== true).length;
   const failed = items.filter(item => item && item.status === "failed" && item.dry_run !== true).length;
+  const testRouting = testMailRoutingSummary();
   summary.textContent = items.length
     ? "Laatste " + items.length + " registraties · " + sent + " verzonden · " + pending + " in behandeling · " + failed + " mislukt."
     : "Er zijn nog geen e-mails vanuit de applicatie geregistreerd.";
+  if (testRouting) summary.textContent += " TEST levert alle berichten af bij " + testRouting.sink + ".";
 
   list.innerHTML = items.length ? items.map(item => {
     const status = mailDeliveryStatusMeta(item);
@@ -6351,7 +6382,7 @@ function renderMailDeliveryHistory() {
     const attempts = Math.max(0, Number(item && item.attempt_count || 0));
     const acceptanceLabel = item && item.acceptance_test === true ? '<span class="mail-acceptance-label">Acceptatietest</span>' : '';
     return '<article class="mail-delivery-history-item" data-mail-delivery-status="' + escapeHtml(String(item && item.status || "queued")) + '" data-mail-acceptance-test="' + (item && item.acceptance_test === true ? "true" : "false") + '">' +
-      '<div class="mail-delivery-history-main"><strong>' + escapeHtml(String(item && item.subject_snapshot || "E-mail zonder onderwerp")) + '</strong><small>Aan ' + escapeHtml(String(item && item.recipient_email || "Onbekende ontvanger")) + invoice + '</small></div>' +
+      '<div class="mail-delivery-history-main"><strong>' + escapeHtml(String(item && item.subject_snapshot || "E-mail zonder onderwerp")) + '</strong><small>Bedoelde route: ' + escapeHtml(String(item && item.recipient_email || "Onbekende ontvanger")) + invoice + (testRouting ? ' · TEST-aflevering: ' + escapeHtml(testRouting.sink) : '') + '</small></div>' +
       '<div class="mail-delivery-history-meta">' + acceptanceLabel + '<span>' + escapeHtml(mailDeliveryChannelLabel(item && item.channel)) + '</span><span>' + escapeHtml(mailDeliveryAttachmentLabel(item && item.attachment_policy)) + '</span></div>' +
       '<div class="mail-delivery-history-state"><span class="status-pill ' + status.tone + '">' + status.label + '</span><small>' + timePrefix + ' · ' + escapeHtml(mailDeliveryTimestampLabel(eventTime)) + (attempts > 1 ? " · " + attempts + " pogingen" : "") + '</small></div>' +
     '</article>';
@@ -7625,6 +7656,16 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
   const key = periodKey || currentPeriod().key;
   const period = periodFromKey(key);
   const info = invoiceSummary(employeeId, key);
+  const serverInvoice = serverInvoiceFor(employeeId, key);
+  const serverTimesheetStatus = String(serverInvoice && serverInvoice.timesheetStatus || "");
+  if (serverInvoice && serverTimesheetStatus && !["approved", "invoiced"].includes(serverTimesheetStatus)) {
+    info.record.timesheetStatus = serverTimesheetStatus;
+    info.record.invoiceStatus = "concept";
+    persistState();
+    renderAll();
+    toast("Deze uren wachten nog op servergoedkeuring. Controleer eerst de uren.");
+    return false;
+  }
   if (!["approved", "invoiced"].includes(info.record.timesheetStatus) || (info.record.invoiceStatus === "simulated" && info.record.payrollStatus === "simulated")) {
     toast("Deze verzending staat niet meer als beheeractie open.");
     renderAll();
@@ -7643,16 +7684,24 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
     return false;
   }
   const routeText = info.routes.map(route => route.name + ": " + (route.invoiceAttachment ? "factuur als PDF" : "geen bijlage") + ".").join("\n");
+  const testRouting = testMailRoutingSummary();
+  const routingHtml = testRouting
+    ? '<div><span>Werkelijke TEST-aflevering</span><strong>' + escapeHtml(testRouting.sink) + ' · alle routes worden veilig omgeleid</strong></div>'
+    : '';
+  const deliveryMessage = testRouting
+    ? "In TEST gaan de drie afzonderlijke berichten uitsluitend naar de vaste testontvanger."
+    : "E-mailverzending is uitgeschakeld.";
   showModal({
     label: "Verzending controleren",
     title: info.record.invoiceNumber + " · " + period.label,
-    message: "Begeleidende tekst voor ieder afzonderlijk bericht voor de factuur:\n\n" + info.body + "\n\n" + routeText + "\n\nDe officiële klanturenstaat heeft een eigen upload-, controle- en brokerroute. De geselecteerde maand bovenaan hoeft voor deze controle niet te worden gewijzigd. E-mailverzending is uitgeschakeld.",
-    summary: info.html,
+    message: "Begeleidende tekst voor ieder afzonderlijk bericht voor de factuur:\n\n" + info.body + "\n\n" + routeText + "\n\nControleer vóór afronden de conceptfactuur als PDF. De officiële klanturenstaat heeft een eigen upload-, controle- en brokerroute. " + deliveryMessage,
+    summary: info.html + routingHtml,
+    secondary: "Factuur-PDF controleren",
+    secondaryAction: () => downloadInvoicePdf(employeeId, key),
     confirm: "Controle afronden",
     adminTaskId,
     action: () => {
       const baseMsg = "Verzending voor " + info.employee.name + " · " + period.label + " klaargezet";
-      const serverInvoice = serverInvoiceFor(employeeId, key);
       const invId = Number(serverInvoice && serverInvoice.id || 0);
       const serverDelivery = API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative() && state.currentRole === "admin";
       const finishLocalDryRun = (messageSuffix = "") => {
@@ -7705,10 +7754,10 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
   return true;
 }
 
-function invoiceData(employeeId) {
+function invoiceData(employeeId, periodKey = "") {
   const employee = employeeById(employeeId);
-  const record = recordFor(employee.id);
-  const period = currentPeriod();
+  const period = periodKey && parsePeriodKey(periodKey) ? periodFromKey(periodKey) : currentPeriod();
+  const record = recordFor(employee.id, period.key);
   const hours = totalEntries(record.entries);
   const subtotal = Math.round(hours * Number(employee.rate || 0) * 100) / 100;
   const vatRate = 21;
@@ -7820,8 +7869,8 @@ function safeFilename(value) {
   return String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9._-]+/gi, "_").replace(/^_+|_+$/g, "");
 }
 
-function downloadInvoicePdf(employeeId) {
-  const data = invoiceData(employeeId);
+function downloadInvoicePdf(employeeId, periodKey = "") {
+  const data = invoiceData(employeeId, periodKey);
   const identity = invoiceCompanyIdentity();
   const jspdf = window.jspdf;
   if (!jspdf || typeof jspdf.jsPDF !== "function") {
@@ -7960,15 +8009,15 @@ function downloadInvoicePdf(employeeId) {
   return true;
 }
 
-function showInvoiceDocumentPreview(employeeId) {
-  const data = invoiceData(employeeId);
+function showInvoiceDocumentPreview(employeeId, periodKey = "") {
+  const data = invoiceData(employeeId, periodKey);
   showModal({
     label: "Factuurvoorbeeld",
     title: data.record.invoiceNumber,
     message: "Controleer het concept. Dit voorbeeld wordt als PDF bijgevoegd bij ontvangers waarvoor Factuur meesturen is aangevinkt.",
     summary: invoicePreviewMarkup(data),
     secondary: "PDF downloaden",
-    secondaryAction: () => downloadInvoicePdf(employeeId),
+    secondaryAction: () => downloadInvoicePdf(employeeId, periodKey),
     confirm: "Sluiten",
     wide: true,
     action: closeModal
@@ -8355,6 +8404,10 @@ function finalizeInvoiceAndQueueToApi(invoiceRow) {
   const timesheetId = Number(invoiceRow && invoiceRow.timesheetId || 0);
   if (invoiceId <= 0 || timesheetId <= 0) {
     return Promise.reject(new Error("Geen complete serverfactuur gevonden voor deze verzending."));
+  }
+  const serverTimesheetStatus = String(invoiceRow && invoiceRow.timesheetStatus || "").toLowerCase();
+  if (serverTimesheetStatus && !["approved", "invoiced"].includes(serverTimesheetStatus)) {
+    return Promise.reject(new Error("De uren zijn nog niet door de server goedgekeurd. Controleer eerst de uren."));
   }
   const requireQueuedDelivery = count => {
     const queuedCount = Number(count || 0);

@@ -83,7 +83,16 @@ if ($method === 'GET') {
         ];
     }, $stmt->fetchAll());
 
-    auth_send_json(['ok' => true, 'dry_run' => $dryRun, 'count' => count($items), 'items' => $items]);
+    $testSink = mail_test_sink_recipient($config);
+    auth_send_json([
+        'ok' => true,
+        'dry_run' => $dryRun,
+        'environment' => mail_environment($config),
+        'test_redirect_active' => $testSink !== null,
+        'test_sink_recipient' => $testSink,
+        'count' => count($items),
+        'items' => $items,
+    ]);
 }
 
 // ---------------------------------------------------------------------------

@@ -103,6 +103,12 @@ Na goedgekeurde uren controleert Backoffice per medewerker en periode afzonderli
 - wachtwoordreset: eenmalige link, geen bijlage;
 - eerste uitnodiging: eenmalige link om een wachtwoord te maken, geen bijlage.
 
+Eén afgeronde factuuractie maakt bij de standaardroute exact drie afzonderlijke berichten: broker,
+boekhouding en salarisadministratie. Dit zijn drie queue-items en drie SMTP-afleveringen, niet één
+bericht met CC/BCC. In TEST worden ze alle drie fysiek bij de vaste testontvanger afgeleverd, terwijl
+de bedoelde productieroute zichtbaar blijft. De factuur en de officiële klanturenstaat zijn vóór
+afronden afzonderlijk als PDF te controleren.
+
 LOCAL verstuurt nooit echte mail. TEST herschrijft alle functionele ontvangers naar de vastgelegde testontvanger en markeert elk bericht als acceptatietest. PROD gebruikt uitsluitend de geconfigureerde zakelijke ontvangers. Een mislukte verzending blijft zichtbaar in de verzendadministratie en mag niet als verzonden worden getoond.
 
 | Gebeurtenis | Eigenaar vóór | Resultaat | Eigenaar na |
@@ -180,6 +186,8 @@ Minimaal de volgende ketens zijn releaseblokkerend:
 | veilige accountlevenscyclus | `user-management.spec.ts` |
 | resetlink vanuit Teambeheer voor medewerker en beheerder, nooit voor het eigen account | `user-management.spec.ts` (`USR-H-011`) |
 | mailredirect, allowlist en bijlagen | `email-queue.spec.ts`, password-reset- en mailpolicychecks |
+| één factuuractie levert exact broker + boekhouding + salarisadministratie | `email-queue.spec.ts` (`EQ-H-022`) |
+| serveruren blokkeren te vroege factuurverzending | `email-queue.spec.ts` (`EQ-N-021`) |
 | mobiele hoofdketen | `mobile-ui.spec.ts` |
 
 Nieuwe productlogica krijgt in dezelfde wijziging een rij in deze tabel of een aantoonbare koppeling

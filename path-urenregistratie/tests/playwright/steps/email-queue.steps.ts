@@ -23,6 +23,9 @@ Then("heeft de broker-channel attachment_policy=invoice_and_customer_timesheet")
 Given("een gelockte factuur waar payroll_invoice_attachment=false");
 When("de queue-items voor deze factuur worden uitgelezen");
 Then("heeft elke EasySalary-item attachment_policy=none");
+Given("één goedgekeurde urenstaat als factuur is afgerond");
+When("de drie functionele routes voor dezelfde factuur worden uitgelezen");
+Then("wordt met Playwright-assertions bevestigd dat één factuuractie maakt drie gescheiden mailroutes met het juiste bijlagenbeleid");
 Given("een admin is ingelogd met een reeds gelockte factuur");
 When("action=enqueue wordt aangeroepen");
 Then("zijn de nieuwe items in de queue zichtbaar per invoiceId");
@@ -41,6 +44,9 @@ Then("wordt met Playwright-assertions bevestigd dat niet-beschikbare acceptatiec
 Given("een goedgekeurde maar nog niet definitieve serverfactuur als Backoffice-taak klaarstaat");
 When("Backoffice de verzending één keer afrondt");
 Then("wordt eerst gelockt, niet te vroeg gequeued en verdwijnt de afgeronde vervolgtaak");
+Given("de lokale status verouderd is maar de serveruren nog ingediend zijn");
+When("de flow voor EQ-N-021 wordt uitgevoerd");
+Then("verschijnt geen factuurverzendtaak en wordt geen lock-write uitgevoerd");
 When("de flow voor EQ-N-019 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat gesloten acceptatievenster toont waarom geen mail kan worden verstuurd");
 Given("het fail-closed retrybeleid voor acceptatiemail wordt uitgevoerd");

@@ -39,7 +39,11 @@ Een employee ziet alleen eigen data. Er is geen toegang tot volledige medewerker
 
 ## Mail
 
-De demo- en testomgeving verstuurt geen echte mails. Mailflows blijven zichtbaar als preview of routecontrole.
+- LOCAL verstuurt geen echte e-mail en toont alleen preview/routecontrole.
+- TEST kan echte e-mail alleen via de expliciete mailsandbox versturen. Alle routes worden dan
+  fysiek afgeleverd bij `giovanno.maatsen@pathconsultancy.nl`; de bedoelde productieroute blijft
+  in de UI en auditregistratie zichtbaar.
+- PROD gebruikt nooit TEST-omleiding en blijft fail-closed zolang productie-mail niet bewust is vrijgegeven.
 
 ## Security
 
@@ -47,3 +51,7 @@ De demo- en testomgeving verstuurt geen echte mails. Mailflows blijven zichtbaar
 - [server/config.local.php](server/config.local.php) nooit committen
 - `.env.local` nooit committen
 - Demo/testwachtwoorden alleen lokaal en tijdelijk gebruiken
+# Werkwijze
+
+Lees vóór iedere wijziging `WERKWIJZE-PATROON.md`, `FUNCTIONEEL-ONTWERP.md` en
+`TECHNISCH-ONTWERP.md`. De vaste ontwikkel-, test- en releasecriteria staan in dat werkwijzepatroon.

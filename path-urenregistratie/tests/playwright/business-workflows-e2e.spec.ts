@@ -292,6 +292,7 @@ test('[E2E-H-005] klanturenstaatcontrole wordt een brokeractie zonder taakverlie
     });
     await expect(page.locator('#modal')).toBeVisible();
     await expect(page.locator('#modal-title')).toContainText(/klanturenstaat/i);
+    await expect(page.locator('#modal-summary [data-view-customer-timesheet]')).toHaveText('PDF bekijken');
     await page.locator('#modal-close').click();
     await page.locator('#hero-backoffice-filter').click();
     const brokerRow = page.locator(`[data-admin-task-row="customer-broker-${selected.periodKey}-${selected.employeeId}"]`);
