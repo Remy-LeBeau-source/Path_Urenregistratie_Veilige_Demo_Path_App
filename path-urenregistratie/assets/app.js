@@ -5899,7 +5899,7 @@ function renderEmployees() {
     return '<article class="employee-card' + (active ? "" : " is-inactive") + '" data-employee-account-id="' + escapeHtml(employee.id) + '">' +
       '<div class="employee-card-head"><div class="employee-identity"><span class="mini-avatar">' + initials(employee.name) + "</span><span><strong>" + escapeHtml(employee.name) + "</strong><small>" + escapeHtml(employee.role) + " · " + escapeHtml(employee.email || "geen accountadres") + (employee.invitationPending ? " · Toegang in afwachting" : "") + "</small></span></div>" + (active ? statusPill(record.timesheetStatus) : '<span class="status-pill status-concept">Inactief</span>') + "</div>" +
       '<div class="employee-details"><div><small>Klant</small><strong>' + escapeHtml(employee.client) + "</strong></div><div><small>Uren per week</small><strong>" + hoursFormat.format(weeklyHoursFor(employee)) + " uur</strong></div><div><small>Broker</small><strong>" + escapeHtml(employee.broker) + "</strong></div></div>" +
-      '<div class="employee-card-actions"><button class="text-button" data-edit-routing="' + employee.id + '">Gegevens aanpassen</button><button class="small-button" data-toggle-employee="' + employee.id + '">' + (active ? "Deactiveren" : "Opnieuw activeren") + "</button>" + (!active && API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin" ? '<button class="text-button danger-text" data-delete-employee="' + employee.id + '">Definitief verwijderen</button>' : "") + "</div>" +
+      '<div class="employee-card-actions"><button class="text-button" data-edit-routing="' + employee.id + '">Gegevens aanpassen</button>' + (active && Number(employee.dbUserId || 0) > 0 && API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin" ? '<button class="small-button" data-reset-user-password="' + escapeHtml(String(employee.dbUserId)) + '" data-reset-user-name="' + escapeHtml(employee.name) + '">Wachtwoord resetten</button>' : '') + '<button class="small-button" data-toggle-employee="' + employee.id + '">' + (active ? "Deactiveren" : "Opnieuw activeren") + "</button>" + (!active && API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin" ? '<button class="text-button danger-text" data-delete-employee="' + employee.id + '">Definitief verwijderen</button>' : "") + "</div>" +
       "</article>";
   }).join("") || '<div class="dashboard-action-empty">Geen medewerkers binnen dit filter.</div>';
   document.querySelectorAll("[data-employee-scope]").forEach(button => button.classList.toggle("is-active", button.dataset.employeeScope === state.employeeScope));
@@ -5937,7 +5937,10 @@ function renderAdministrators() {
     const deleteAction = !active && API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin"
       ? ' <button class="text-button danger-text" data-delete-admin="' + escapeHtml(admin.id) + '">Definitief verwijderen</button>'
       : "";
-    return '<div class="administrator-row" data-admin-account-id="' + escapeHtml(admin.dbUserId || admin.id) + '"><div class="administrator-person"><span class="mini-avatar">' + initials(admin.name) + '</span><span><strong>' + escapeHtml(admin.name) + '</strong><small>' + escapeHtml(admin.email) + " · " + reason + '</small></span></div><span class="status-pill ' + (active ? "status-approved" : "status-concept") + '">' + (active ? "Actief" : "Inactief") + '</span><div><button class="small-button" data-edit-admin="' + escapeHtml(admin.id) + '">Aanpassen</button> <button class="small-button" data-toggle-admin="' + escapeHtml(admin.id) + '"' + (disabled ? " disabled" : "") + '>' + (active ? "Deactiveren" : "Activeren") + '</button>' + deleteAction + '</div></div>';
+    const passwordResetAction = active && !isCurrent && Number(admin.dbUserId || 0) > 0 && API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin"
+      ? ' <button class="small-button" data-reset-user-password="' + escapeHtml(String(admin.dbUserId)) + '" data-reset-user-name="' + escapeHtml(admin.name) + '">Wachtwoord resetten</button>'
+      : '';
+    return '<div class="administrator-row" data-admin-account-id="' + escapeHtml(admin.dbUserId || admin.id) + '"><div class="administrator-person"><span class="mini-avatar">' + initials(admin.name) + '</span><span><strong>' + escapeHtml(admin.name) + '</strong><small>' + escapeHtml(admin.email) + " · " + reason + '</small></span></div><span class="status-pill ' + (active ? "status-approved" : "status-concept") + '">' + (active ? "Actief" : "Inactief") + '</span><div><button class="small-button" data-edit-admin="' + escapeHtml(admin.id) + '">Aanpassen</button>' + passwordResetAction + ' <button class="small-button" data-toggle-admin="' + escapeHtml(admin.id) + '"' + (disabled ? " disabled" : "") + '>' + (active ? "Deactiveren" : "Activeren") + '</button>' + deleteAction + '</div></div>';
   }).join("");
 }
 
@@ -6296,7 +6299,11 @@ function sendMailAcceptanceScenario(scenarioKey) {
 function mailDeliveryTimestampLabel(value) {
   if (!value) return "Nog niet verzonden";
   const raw = String(value).trim();
-  const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(raw) ? raw.replace(" ", "T") + "Z" : raw;
+  const serverLocalTimestamp = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(raw);
+  // MySQL returns these columns as an Amsterdam wall-clock value without an
+  // offset. Appending Z used to reinterpret that value as UTC and added two
+  // hours in summer. UTC formatting below deliberately preserves its fields.
+  const normalized = serverLocalTimestamp ? raw.replace(" ", "T") + "Z" : raw;
   const date = new Date(normalized);
   if (Number.isNaN(date.getTime())) return raw;
   try {
@@ -6306,7 +6313,7 @@ function mailDeliveryTimestampLabel(value) {
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-      timeZone: "Europe/Amsterdam"
+      timeZone: serverLocalTimestamp ? "UTC" : "Europe/Amsterdam"
     }).format(date);
   } catch {
     return raw;
@@ -8474,6 +8481,42 @@ function writeUserStatusToApi(dbUserId, action) {
     });
 }
 
+function showUserPasswordReset(dbUserId, displayName) {
+  const userId = Number(dbUserId || 0);
+  if (userId <= 0) {
+    toast("Dit account heeft geen gekoppeld serveraccount.");
+    return;
+  }
+  showModal({
+    label: "Wachtwoord opnieuw instellen",
+    title: "Resetlink sturen naar " + displayName + "?",
+    message: "De gebruiker ontvangt een persoonlijke eenmalige link om zelf een nieuw wachtwoord te kiezen. Eerdere ongebruikte resetlinks voor dit account worden ongeldig.",
+    summary: "<div><span>Wachtwoord</span><strong>Wordt nooit zichtbaar voor beheer</strong></div><div><span>Resetlink</span><strong>2 uur geldig · één keer bruikbaar</strong></div>",
+    confirm: "Resetlink versturen",
+    action: () => {
+      const confirmButton = document.querySelector("#modal-confirm");
+      confirmButton.disabled = true;
+      confirmButton.textContent = "Klaarzetten…";
+      writeUserStatusToApi(userId, "force_password_change")
+        .then(result => {
+          closeModal();
+          return refreshEmailQueueReadApi(true).catch(() => null).then(() => result);
+        })
+        .then(result => {
+          renderMailDeliveryHistory();
+          toast(result && result.invitation_queued
+            ? "De persoonlijke resetlink voor " + displayName + " is klaargezet voor verzending."
+            : "Wachtwoordreset is verplicht gesteld. In deze omgeving is geen e-mail klaargezet.");
+        })
+        .catch(error => {
+          confirmButton.disabled = false;
+          confirmButton.textContent = "Opnieuw proberen";
+          toast(String(error && error.message || "De resetlink kon niet worden klaargezet."));
+        });
+    }
+  });
+}
+
 function toggleEmployeeStatus(employeeId) {
   const employee = employeeById(employeeId);
   const active = employee.active !== false;
@@ -9175,6 +9218,14 @@ document.addEventListener("click", event => {
 
   const deleteAdmin = event.target.closest("[data-delete-admin]");
   if (deleteAdmin) deleteInactiveAdmin(deleteAdmin.dataset.deleteAdmin);
+
+  const resetUserPassword = event.target.closest("[data-reset-user-password]");
+  if (resetUserPassword) {
+    showUserPasswordReset(
+      resetUserPassword.dataset.resetUserPassword,
+      resetUserPassword.dataset.resetUserName || "deze gebruiker"
+    );
+  }
 
   const mailAcceptanceScenario = event.target.closest("[data-mail-acceptance-scenario]");
   if (mailAcceptanceScenario && !mailAcceptanceScenario.disabled) {

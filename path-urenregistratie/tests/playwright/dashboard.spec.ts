@@ -1054,6 +1054,7 @@ test('[DASH-H-007] dashboardknop behoudt de geldige maand en medewerkeroverzicht
 });
 
 test('[DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels', async ({ page }) => {
+  test.setTimeout(60_000);
   const loginPage = new LoginPage(page);
   let workflowReads = 0;
 
@@ -1066,8 +1067,30 @@ test('[DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij 
     await loginPage.open();
     await loginPage.loginAsAdmin();
     await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
-    await expect.poll(() => workflowReads, { timeout: 20_000 }).toBeGreaterThanOrEqual(24);
-    await expect.poll(() => page.evaluate(() => window.adminOpenTasks().length), { timeout: 10_000 }).toBeGreaterThan(0);
+    const csrfResponse = await page.request.get('/server/auth/csrf.php');
+    const csrf = await csrfResponse.json() as { csrf_token?: string };
+    const resetResponse = await page.request.post('/server/api/test-reset.php', {
+      headers: { 'X-CSRF-Token': String(csrf.csrf_token || '') },
+      data: { confirm: 'RESET_SHARED_TEST_BASELINE' },
+    });
+    const resetBody = await resetResponse.text();
+    expect(resetResponse.ok(), `TEST-reset gaf HTTP ${resetResponse.status()}: ${resetBody}`).toBe(true);
+    const reset = JSON.parse(resetBody) as { ok?: boolean; reset?: { open_actions?: number } };
+    expect(reset).toMatchObject({ ok: true, reset: { open_actions: 12 } });
+    workflowReads = 0;
+    await page.reload();
+    await expect(page.locator('#login-screen')).toBeVisible();
+    await loginPage.loginAsAdmin();
+    await expect(page.locator('#view-dashboard')).toBeVisible();
+    await expect.poll(() => workflowReads, { timeout: 20_000 }).toBeGreaterThan(0);
+    await expect.poll(() => page.evaluate(() => {
+      const tasks = window.adminOpenTasks();
+      return {
+        total: tasks.length,
+        actionable: tasks.filter(task => task.actionable).length,
+        waiting: tasks.filter(task => !task.actionable).length,
+      };
+    }), { timeout: 20_000 }).toEqual({ total: 12, actionable: 7, waiting: 5 });
     await expect(page.locator('#admin-task-content')).toBeHidden();
   });
 
@@ -1083,6 +1106,7 @@ test('[DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij 
   });
 
   const baseline = await snapshot();
+  expect(baseline).toMatchObject({ total: 12, actionable: 7, waiting: 5 });
 
   await test.step('When Backoffice augustus-juli-augustus doorloopt', async () => {
     await page.locator('#period-prev').click();

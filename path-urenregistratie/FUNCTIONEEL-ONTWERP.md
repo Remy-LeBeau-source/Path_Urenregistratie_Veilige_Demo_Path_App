@@ -122,6 +122,9 @@ LOCAL verstuurt nooit echte mail. TEST herschrijft alle functionele ontvangers n
 - een bestaand account wordt geopend voor aanpassing in plaats van technisch duplicaatfouten te tonen;
 - de laatste actieve beheerder kan niet worden gedeactiveerd of verwijderd;
 - deactiveren stopt toegang maar bewaart zakelijke en beveiligingshistorie;
+- een beheerder kan voor een andere actieve medewerker of beheerder een persoonlijke, eenmalige
+  resetlink laten versturen; het wachtwoord zelf blijft altijd onzichtbaar en het eigen account wordt
+  via deze beheeractie niet aangepast;
 - definitief verwijderen kan alleen bij een inactief account zonder uren, documenten, facturen, berichten, e-mail- of loginhistorie;
 - bij bestaande historie blijft het account inactief bewaard en wordt de blokkeerreden begrijpelijk getoond.
 
@@ -175,6 +178,7 @@ Minimaal de volgende ketens zijn releaseblokkerend:
 | rolwissel zonder F5 | `auth.spec.ts` (`AUTH-H-010`) |
 | reset alleen beheerder | dashboard/security- en end-to-endcases |
 | veilige accountlevenscyclus | `user-management.spec.ts` |
+| resetlink vanuit Teambeheer voor medewerker en beheerder, nooit voor het eigen account | `user-management.spec.ts` (`USR-H-011`) |
 | mailredirect, allowlist en bijlagen | `email-queue.spec.ts`, password-reset- en mailpolicychecks |
 | mobiele hoofdketen | `mobile-ui.spec.ts` |
 

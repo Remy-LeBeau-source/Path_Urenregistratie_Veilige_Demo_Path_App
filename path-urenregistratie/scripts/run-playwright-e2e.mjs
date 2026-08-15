@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:net';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { config as loadDotEnv } from 'dotenv';
 
@@ -136,6 +137,7 @@ async function main() {
     PATH_APP_ALLOW_DEMO_MIGRATIONS: '1',
     PLAYWRIGHT_ALLOW_DEMO_MIGRATIONS: '1',
     PATH_APP_BASE_URL: baseUrl,
+    PATH_APP_PRIVATE_ROOT: path.join(tmpdir(), 'path-urenregistratie-playwright-private'),
   };
 
   const testRuntimeEnv = {

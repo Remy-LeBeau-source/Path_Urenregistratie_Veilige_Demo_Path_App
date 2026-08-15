@@ -38,7 +38,7 @@ if (!hash_equals('RESET_SHARED_TEST_BASELINE', (string)($payload['confirm'] ?? '
 }
 
 try {
-    $summary = test_reset_shared_baseline($pdo, (string)$currentUser['email']);
+    $summary = test_reset_shared_baseline($pdo, $config, (string)$currentUser['email']);
     auth_send_json(['ok' => true, 'reset' => $summary]);
 } catch (Throwable $error) {
     error_log('Shared TEST reset failed: ' . $error->getMessage());

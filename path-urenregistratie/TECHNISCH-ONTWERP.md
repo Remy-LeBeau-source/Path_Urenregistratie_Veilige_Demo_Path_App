@@ -82,6 +82,16 @@ Taak-ID's zijn stabiel opgebouwd uit type, periode en medewerker. Hierdoor kunne
 - De envelope/from-identiteit blijft Backoffice; de functionele ontvanger wordt in TEST naar de sink herschreven.
 - Bijlagen worden server-side op routebeleid gevalideerd.
 - SMTP-succes wordt pas getoond na bevestigde dispatch; fouten blijven met pogingenteller in `email_deliveries`.
+- Databasetijden zonder tijdzone worden als reeds lokale servertijd weergegeven en krijgen niet nogmaals
+  de Amsterdam-offset; expliciete ISO-tijden worden wel naar `Europe/Amsterdam` omgerekend.
+
+### Wachtwoordbeheer
+
+- `force_password_change` is uitsluitend beschikbaar voor een beheerder binnen hetzelfde bedrijf.
+- De API weigert het eigen account en de UI toont de actie alleen bij andere actieve serveraccounts.
+- Een nieuwe reset maakt eerdere ongebruikte tokens ongeldig, zet de resetverplichting en queue't een
+  link die twee uur geldig en eenmaal bruikbaar is.
+- Een beheerder leest of kiest nooit het wachtwoord van een andere gebruiker.
 
 ## 7. Teststrategie en traceerbaarheid
 

@@ -143,6 +143,23 @@ function auth_apply_cors_headers(?array $config, string $methods, string $header
     auth_apply_security_headers($config);
 }
 
+function auth_private_root_from_config(array $config): string
+{
+    $configured = trim((string)($config['storage']['private_root'] ?? ''));
+    if ($configured !== '') {
+        return $configured;
+    }
+
+    if (auth_environment_from_config($config) === 'test') {
+        $testRoot = trim((string)getenv('PATH_APP_PRIVATE_ROOT'));
+        if ($testRoot !== '') {
+            return $testRoot;
+        }
+    }
+
+    return dirname(__DIR__, 2) . '/../path-private';
+}
+
 function auth_normalize_filesystem_path(string $path): string
 {
     $value = str_replace('\\', '/', $path);

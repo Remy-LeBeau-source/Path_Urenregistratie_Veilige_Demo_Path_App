@@ -41,3 +41,6 @@ Then("blijft het account inactief en blijft de historie bewaard");
 Given("een extra beheerder zonder login- of zakelijke historie");
 When("het beheeraccount wordt gedeactiveerd en definitief verwijderd");
 Then("komt het lege beheeraccount niet meer in de userlijst voor");
+Given("Teambeheer resetacties toont voor andere actieve accounts maar niet voor het eigen account");
+When("de beheerder voor beide rollen een persoonlijke resetlink bevestigt");
+Then("verstuurt de GUI exact twee force_password_change serveracties");

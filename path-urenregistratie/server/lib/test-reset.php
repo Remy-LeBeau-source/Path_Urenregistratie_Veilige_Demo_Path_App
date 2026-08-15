@@ -2,13 +2,27 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/simple_pdf.php';
+
 function test_reset_is_available(array $config, string $host): bool
 {
     $normalizedHost = strtolower(trim(preg_replace('/:\d+$/', '', $host) ?? ''));
-    return $normalizedHost === 'uren-test.pathconsultancy.nl'
-        && auth_environment_from_config($config) === 'test'
-        && auth_app_origin_from_config($config) === 'https://uren-test.pathconsultancy.nl'
-        && ($config['allow_demo_migrations'] ?? false) === true;
+    $environmentIsTest = auth_environment_from_config($config) === 'test';
+    $demoMigrationsAllowed = array_key_exists('allow_demo_migrations', $config)
+        ? $config['allow_demo_migrations'] === true
+        : in_array(strtolower(trim((string)getenv('PATH_APP_ALLOW_DEMO_MIGRATIONS'))), ['1', 'true', 'yes', 'on'], true);
+    $remoteTest = $normalizedHost === 'uren-test.pathconsultancy.nl'
+        && auth_app_origin_from_config($config) === 'https://uren-test.pathconsultancy.nl';
+    $configuredDatabase = is_array($config['database'] ?? null)
+        ? trim((string)($config['database']['name'] ?? ''))
+        : '';
+    $databaseName = $configuredDatabase !== ''
+        ? $configuredDatabase
+        : trim((string)getenv('PATH_APP_DB_NAME'));
+    $isolatedLocalTest = in_array($normalizedHost, ['127.0.0.1', 'localhost'], true)
+        && str_ends_with(strtolower($databaseName), '_test');
+
+    return $environmentIsTest && $demoMigrationsAllowed && ($remoteTest || $isolatedLocalTest);
 }
 
 function test_reset_sql(PDO $pdo, string $path): void
@@ -47,8 +61,61 @@ function test_reset_acceptance_accounts(PDO $pdo, int $companyId): void
     }
 }
 
-/** @return array{users:int,employees:int,open_actions:int} */
-function test_reset_shared_baseline(PDO $pdo, string $actorEmail): array
+function test_reset_document_path(string $root, string $bucket, string $storageKey): string
+{
+    $key = trim(str_replace('\\', '/', $storageKey), '/');
+    if ($key === '' || str_contains($key, '..') || str_contains($key, "\0")) {
+        throw new RuntimeException('Ongeldige TEST-opslagsleutel voor ' . $bucket . '.');
+    }
+    return rtrim($root, '/\\') . DIRECTORY_SEPARATOR . $bucket . DIRECTORY_SEPARATOR
+        . str_replace('/', DIRECTORY_SEPARATOR, $key);
+}
+
+/** @return array{invoices:int,customer_timesheets:int} */
+function test_reset_seed_documents(PDO $pdo, array $config): array
+{
+    if (auth_environment_from_config($config) !== 'test') {
+        throw new RuntimeException('TEST-documenten mogen uitsluitend in TEST worden opgebouwd.');
+    }
+    $privateRoot = auth_private_root_from_config($config);
+    if ($privateRoot === '') {
+        throw new RuntimeException('De private TEST-opslag is niet ingesteld.');
+    }
+    $counts = ['invoices' => 0, 'customer_timesheets' => 0];
+    $sources = [
+        'invoices' => ['count_key' => 'invoices', 'rows' => $pdo->query(
+            'SELECT pdf_storage_key AS storage_key, invoice_number AS label
+             FROM invoices WHERE pdf_storage_key IS NOT NULL AND pdf_storage_key <> ""'
+        )->fetchAll()],
+        'customer-timesheets' => ['count_key' => 'customer_timesheets', 'rows' => $pdo->query(
+            'SELECT storage_key, COALESCE(original_file_name, "Klanturenstaat") AS label
+             FROM customer_timesheets WHERE storage_key IS NOT NULL AND storage_key <> ""'
+        )->fetchAll()],
+    ];
+    foreach ($sources as $bucket => $source) {
+        foreach ($source['rows'] as $row) {
+            $path = test_reset_document_path($privateRoot, $bucket, (string)$row['storage_key']);
+            $directory = dirname($path);
+            if (!is_dir($directory) && !mkdir($directory, 0770, true) && !is_dir($directory)) {
+                throw new RuntimeException('De private TEST-documentmap kon niet worden gemaakt.');
+            }
+            $pdf = simple_pdf_text_document([
+                ['text' => 'PATH CONSULTANCY · TESTDOCUMENT', 'size' => 15],
+                'Uitsluitend voor acceptatie- en regressietesten.',
+                'Document: ' . (string)$row['label'],
+                'Omgeving: uren-test.pathconsultancy.nl',
+            ]);
+            if (!simple_pdf_looks_valid($pdf) || file_put_contents($path, $pdf) === false) {
+                throw new RuntimeException('Een TEST-PDF kon niet veilig worden opgebouwd.');
+            }
+            $counts[$source['count_key']]++;
+        }
+    }
+    return $counts;
+}
+
+/** @return array{users:int,employees:int,open_actions:int,documents:array{invoices:int,customer_timesheets:int}} */
+function test_reset_shared_baseline(PDO $pdo, array $config, string $actorEmail): array
 {
     $root = dirname(__DIR__, 2);
     $scripts = [
@@ -57,6 +124,7 @@ function test_reset_shared_baseline(PDO $pdo, string $actorEmail): array
         $root . '/server/migrations/005_demo_auth_hashes_for_existing_seed_users.sql',
         $root . '/server/migrations/008_demo_seed_baseline_alignment.sql',
         $root . '/server/migrations/009_demo_seed_august_correction_alignment.sql',
+        $root . '/server/migrations/016_demo_task_baseline_alignment.sql',
     ];
 
     $pdo->beginTransaction();
@@ -100,9 +168,11 @@ function test_reset_shared_baseline(PDO $pdo, string $actorEmail): array
         throw $error;
     }
 
+    $documents = test_reset_seed_documents($pdo, $config);
     return [
         'users' => (int)$pdo->query('SELECT COUNT(*) FROM users WHERE active = 1')->fetchColumn(),
         'employees' => (int)$pdo->query('SELECT COUNT(*) FROM employees WHERE active = 1')->fetchColumn(),
         'open_actions' => 12,
+        'documents' => $documents,
     ];
 }

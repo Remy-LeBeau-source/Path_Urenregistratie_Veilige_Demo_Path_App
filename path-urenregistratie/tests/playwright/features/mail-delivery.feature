@@ -54,7 +54,7 @@ Feature: Mailroutering en aflevering
   @happy
   Scenario: [EQ-H-015] Backoffice ziet veilige verzendhistorie zonder berichtinhoud
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 16
+    # Aantoonbare Playwright-assertions in deze case: 18
     Given een beheerder is beveiligd ingelogd
     When de beheerder het verzendoverzicht in Instellingen opent
     Then zijn ontvanger, onderwerp, status, tijd en bijlagen zichtbaar zonder geheime inhoud

@@ -1,6 +1,7 @@
 import { expect, request as playwrightRequest, test } from '@playwright/test';
 import { AuthApi } from './api/AuthApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
+import { LoginPage } from './pages/LoginPage';
 
 async function getCSRF(ctx: Awaited<ReturnType<typeof playwrightRequest.newContext>>) {
   const r = await ctx.get('/server/auth/csrf.php');
@@ -332,5 +333,89 @@ test.describe('user management api', () => {
 
     await authApi.logout();
     await ctx.dispose();
+  });
+
+  test('[USR-H-011] beheerder verstuurt vanuit Teambeheer een resetlink voor medewerker en beheerder', async ({ page }) => {
+    const resetRequests: Array<{ action?: string; user_id?: number }> = [];
+    let employeeUserId = 0;
+    const otherAdminId = 99011;
+
+    await page.route('**/server/api/bootstrap.php', async route => {
+      const response = await route.fetch();
+      const body = await response.json();
+      const currentAdmin = body.users.find((user: { role?: string }) => user.role === 'administrator');
+      const employeeUser = body.users.find((user: { role?: string }) => user.role === 'employee');
+      const employee = body.employees.find((item: { user_id?: number }) => Number(item.user_id) === Number(employeeUser?.id));
+      employeeUserId = Number(employeeUser?.id || 0);
+      body.users = [
+        currentAdmin,
+        employeeUser,
+        {
+          id: otherAdminId,
+          company_id: Number(currentAdmin?.company_id || 1),
+          email: 'andere-beheerder@example.invalid',
+          display_name: 'Andere beheerder',
+          role: 'administrator',
+          active: 1,
+          password_ready: 1,
+        },
+      ].filter(Boolean);
+      body.employees = employee ? [employee] : [];
+      body.assignments = body.assignments.filter((item: { employee_id?: number }) => Number(item.employee_id) === Number(employee?.id));
+      await route.fulfill({ response, json: body });
+    });
+    await page.route('**/server/api/users.php', async route => {
+      if (route.request().method() !== 'POST') {
+        await route.continue();
+        return;
+      }
+      const payload = route.request().postDataJSON() as { action?: string; user_id?: number };
+      resetRequests.push(payload);
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true, action: payload.action, user_id: payload.user_id, invitation_queued: true }),
+      });
+    });
+    await page.route('**/server/api/email-queue.php?*', route => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, count: 0, items: [] }),
+    }));
+
+    const loginPage = new LoginPage(page);
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await page.evaluate(async () => {
+      window.localAccountToolsAllowed = () => false;
+      window.applyLoginPresentation(false);
+      await window.refreshBootstrapReadApi(true);
+    });
+    await page.locator('[data-view="employees"]').click();
+
+    await test.step('Given Teambeheer resetacties toont voor andere actieve accounts maar niet voor het eigen account', async () => {
+      await expect(page.locator(`[data-reset-user-password="${employeeUserId}"]`)).toBeVisible();
+      await expect(page.locator(`[data-reset-user-password="${otherAdminId}"]`)).toBeVisible();
+      await expect(page.locator('#administrator-list [data-reset-user-password]')).toHaveCount(1);
+    });
+
+    await test.step('When de beheerder voor beide rollen een persoonlijke resetlink bevestigt', async () => {
+      for (const userId of [employeeUserId, otherAdminId]) {
+        await page.locator(`[data-reset-user-password="${userId}"]`).click();
+        await expect(page.locator('#modal-title')).toContainText('Resetlink sturen');
+        await expect(page.locator('#modal-summary')).toContainText('2 uur geldig');
+        await page.locator('#modal-confirm').click();
+        await expect(page.locator('#modal')).toBeHidden();
+      }
+    });
+
+    await test.step('Then verstuurt de GUI exact twee force_password_change serveracties', async () => {
+      expect(resetRequests).toEqual([
+        { action: 'force_password_change', user_id: employeeUserId },
+        { action: 'force_password_change', user_id: otherAdminId },
+      ]);
+    });
+
+    await loginPage.logout();
   });
 });
