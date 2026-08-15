@@ -95,10 +95,10 @@ $envMap = local_login_hints_load_env_map();
 $guardedTest = local_login_hints_is_guarded_test_host();
 $adminPassword = $guardedTest
     ? 'LocalDemoAdmin2026'
-    : trim((string)($envMap['PLAYWRIGHT_ADMIN_PASSWORD'] ?? getenv('PLAYWRIGHT_ADMIN_PASSWORD') ?? ''));
+    : trim((string)(getenv('PLAYWRIGHT_ADMIN_PASSWORD') ?: ($envMap['PLAYWRIGHT_ADMIN_PASSWORD'] ?? '')));
 $employeePassword = $guardedTest
     ? 'LocalDemoEmployee2026'
-    : trim((string)($envMap['PLAYWRIGHT_EMPLOYEE_PASSWORD'] ?? getenv('PLAYWRIGHT_EMPLOYEE_PASSWORD') ?? ''));
+    : trim((string)(getenv('PLAYWRIGHT_EMPLOYEE_PASSWORD') ?: ($envMap['PLAYWRIGHT_EMPLOYEE_PASSWORD'] ?? '')));
 
 header('Cache-Control: no-store, private');
 

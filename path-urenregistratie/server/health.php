@@ -26,7 +26,10 @@ $result['checks']['config.local.php'] = ['ok' => true];
 
 // load config but never reveal credentials
 $config = include $localConfigPath;
-$healthEnv = path_health_environment($config);
+$configuredRuntimeEnvironment = getenv('PATH_APP_ENVIRONMENT');
+$healthEnv = $configuredRuntimeEnvironment !== false && trim((string)$configuredRuntimeEnvironment) !== ''
+    ? strtolower(trim((string)$configuredRuntimeEnvironment))
+    : path_health_environment($config);
 $db = null;
 if (isset($config['database']) && is_array($config['database'])) {
     $db = $config['database'];
@@ -46,6 +49,26 @@ if (!$db || !isset($db['host']) || !isset($db['name'])) {
     echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     exit;
 }
+
+// The managed Playwright server receives an isolated database through its
+// process environment. Health must inspect that same database instead of the
+// developer's config.local.php fallback, otherwise a green probe can describe
+// a different schema than the API endpoints actually use.
+$healthEnvValue = static function (array $keys): ?string {
+    foreach ($keys as $key) {
+        $value = getenv($key);
+        if ($value !== false && trim((string)$value) !== '') {
+            return trim((string)$value);
+        }
+    }
+    return null;
+};
+$db['host'] = $healthEnvValue(['PATH_APP_DB_HOST', 'PLAYWRIGHT_DB_HOST', 'DB_HOST']) ?? $db['host'];
+$db['port'] = (int)($healthEnvValue(['PATH_APP_DB_PORT', 'PLAYWRIGHT_DB_PORT', 'DB_PORT']) ?? ($db['port'] ?? 3306));
+$db['name'] = $healthEnvValue(['PATH_APP_DB_NAME', 'PLAYWRIGHT_DB_NAME', 'DB_NAME']) ?? $db['name'];
+$db['user'] = $healthEnvValue(['PATH_APP_DB_USER', 'PLAYWRIGHT_DB_USER', 'DB_USER']) ?? ($db['user'] ?? '');
+$db['password'] = $healthEnvValue(['PATH_APP_DB_PASSWORD', 'PLAYWRIGHT_DB_PASSWORD', 'DB_PASSWORD']) ?? ($db['password'] ?? '');
+$db['charset'] = $healthEnvValue(['PATH_APP_DB_CHARSET', 'PLAYWRIGHT_DB_CHARSET', 'DB_CHARSET']) ?? ($db['charset'] ?? 'utf8mb4');
 
 // test database connection (do not echo password)
 try {

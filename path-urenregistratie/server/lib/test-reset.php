@@ -61,6 +61,67 @@ function test_reset_acceptance_accounts(PDO $pdo, int $companyId): void
     }
 }
 
+/**
+ * Preserve only the credentials of accounts that the shared TEST baseline
+ * recreates. Business data is reset, but a CI-generated or locally configured
+ * password must keep working after the reset invalidates the active session.
+ *
+ * @return array<string,array{password_hash:string,force_password_change:int}>
+ */
+function test_reset_capture_baseline_credentials(PDO $pdo): array
+{
+    $emails = [
+        'gio@example.invalid',
+        'joyce@example.invalid',
+        'marc@example.invalid',
+        'stasjo@example.invalid',
+        'brian@example.invalid',
+        'shawn@example.invalid',
+        'giovanno.maatsen@pathconsultancy.nl',
+        'kenrich.lieveld@pathconsultancy.nl',
+    ];
+    $placeholders = implode(', ', array_fill(0, count($emails), '?'));
+    $statement = $pdo->prepare(
+        'SELECT email, password_hash, force_password_change
+         FROM users
+         WHERE email IN (' . $placeholders . ')
+           AND password_hash IS NOT NULL
+           AND password_hash <> ""'
+    );
+    $statement->execute($emails);
+
+    $credentials = [];
+    foreach ($statement->fetchAll() as $row) {
+        $email = strtolower(trim((string)$row['email']));
+        if ($email === '') {
+            continue;
+        }
+        $credentials[$email] = [
+            'password_hash' => (string)$row['password_hash'],
+            'force_password_change' => (int)$row['force_password_change'],
+        ];
+    }
+    return $credentials;
+}
+
+/** @param array<string,array{password_hash:string,force_password_change:int}> $credentials */
+function test_reset_restore_baseline_credentials(PDO $pdo, array $credentials): void
+{
+    $update = $pdo->prepare(
+        'UPDATE users
+         SET password_hash = :password_hash,
+             force_password_change = :force_password_change
+         WHERE email = :email'
+    );
+    foreach ($credentials as $email => $credential) {
+        $update->execute([
+            ':password_hash' => $credential['password_hash'],
+            ':force_password_change' => $credential['force_password_change'],
+            ':email' => $email,
+        ]);
+    }
+}
+
 function test_reset_document_path(string $root, string $bucket, string $storageKey): string
 {
     $key = trim(str_replace('\\', '/', $storageKey), '/');
@@ -127,6 +188,7 @@ function test_reset_shared_baseline(PDO $pdo, array $config, string $actorEmail)
         $root . '/server/migrations/016_demo_task_baseline_alignment.sql',
     ];
 
+    $credentials = test_reset_capture_baseline_credentials($pdo);
     $pdo->beginTransaction();
     try {
         $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
@@ -141,6 +203,7 @@ function test_reset_shared_baseline(PDO $pdo, array $config, string $actorEmail)
             throw new RuntimeException('De vaste TEST-organisatie kon niet worden hersteld.');
         }
         test_reset_acceptance_accounts($pdo, $companyId);
+        test_reset_restore_baseline_credentials($pdo, $credentials);
         $audit = $pdo->prepare(
             'INSERT INTO audit_log (company_id, actor_user_id, event_type, entity_type, entity_id, event_data)
              VALUES (:company_id, NULL, "test.baseline_reset", "database", "pathco_Urentest", :data)'
