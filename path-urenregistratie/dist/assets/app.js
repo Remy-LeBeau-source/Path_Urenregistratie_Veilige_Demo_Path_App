@@ -2739,7 +2739,26 @@ function syncInvoiceStatusesFromApi(periodKey) {
         ? row.timesheetStatus
         : "";
       const serverTimesheetApproved = ["approved", "invoiced"].includes(serverTimesheetStatus);
-      const nextInvoiceStatus = hasDeliveryProof ? "simulated" : (serverTimesheetStatus && !serverTimesheetApproved ? "concept" : row.status);
+      const localTimesheetApproved = ["approved", "invoiced"].includes(record.timesheetStatus);
+      // A direct timesheet read/write carries its own optimistic-lock version and is newer and
+      // more authoritative than the denormalized status embedded in the invoice projection.
+      // Without this precedence, a briefly lagging invoice row can hide the invoice task that
+      // was created by the approval response we just received.
+      const hasVersionedTimesheetState = Number(record.serverVersion || 0) > 0;
+      const effectiveTimesheetApproved = hasVersionedTimesheetState
+        ? localTimesheetApproved
+        : (serverTimesheetStatus ? serverTimesheetApproved : localTimesheetApproved);
+      // Timesheet approval is the business transition that opens the invoice task. The invoice
+      // read model can briefly remain `concept` after that write; it must not hide the newly
+      // created Backoffice action. Delivery proof (or an already locked invoice row) remains
+      // authoritative and closes the task.
+      const nextInvoiceStatus = hasDeliveryProof || row.status === "simulated"
+        ? "simulated"
+        : !hasVersionedTimesheetState && serverTimesheetStatus && !serverTimesheetApproved
+          ? "concept"
+          : effectiveTimesheetApproved
+            ? "ready"
+            : row.status;
       const nextPayrollStatus = hasDeliveryProof
         ? "simulated"
         : (nextInvoiceStatus === "ready" ? "ready" : "concept");
@@ -2748,7 +2767,8 @@ function syncInvoiceStatusesFromApi(periodKey) {
         record.invoiceNumber = row.invoiceNumber;
         changed = true;
       }
-      if (serverTimesheetStatus && record.timesheetStatus !== serverTimesheetStatus) {
+      const invoiceReadMayAdvanceTimesheet = serverTimesheetApproved || !localTimesheetApproved;
+      if (serverTimesheetStatus && invoiceReadMayAdvanceTimesheet && record.timesheetStatus !== serverTimesheetStatus) {
         record.timesheetStatus = serverTimesheetStatus;
         changed = true;
       }
@@ -3830,7 +3850,7 @@ function adminOpenTasks() {
             tasks.push(Object.assign({}, base, { id: "customer-waiting-" + periodKey + "-" + employee.id, type: "customer-waiting", category: "Klanturenstaat", actionable: false, priority: 4, title: documentStatus, note: documentRecord.status === "resubmit" ? "De medewerker moet een nieuw document uploaden." : "De officiële klanturenstaat is nog niet bij Backoffice ingediend." }));
           }
         }
-        if (["approved", "invoiced"].includes(record.timesheetStatus) && (record.invoiceStatus !== "simulated" || record.payrollStatus !== "simulated")) {
+        if (["approved", "invoiced"].includes(record.timesheetStatus) && (record.invoiceStatus === "ready" || record.payrollStatus === "ready")) {
           tasks.push(Object.assign({}, base, { id: "invoice-delivery-" + periodKey + "-" + employee.id, type: "invoice-delivery", category: "Factuur", actionable: true, priority: 4, title: "Verzending controleren", note: "De afzonderlijke factuur- en salarisroutes staan klaar voor controle." }));
         }
       });
@@ -4311,7 +4331,7 @@ function openPeriodSummaries() {
       const drafts = items.filter(item => item.record.timesheetStatus === "draft").length;
       const corrections = items.filter(item => item.record.timesheetStatus === "correction").length;
       const approvals = items.filter(item => item.record.timesheetStatus === "submitted").length;
-      const deliveries = items.filter(item => item.record.timesheetStatus === "approved" && (item.record.invoiceStatus !== "simulated" || item.record.payrollStatus !== "simulated")).length;
+      const deliveries = items.filter(item => item.record.timesheetStatus === "approved" && (item.record.invoiceStatus === "ready" || item.record.payrollStatus === "ready")).length;
       const customerDocuments = items.filter(item => item.employee.customerTimesheetExpected !== false && (["missing", "draft", "received", "resubmit"].includes(customerTimesheetFor(item.record).status) || (customerTimesheetFor(item.record).status === "approved" && item.employee.customerTimesheetBrokerEnabled !== false))).length;
       if (drafts + corrections + approvals + deliveries + customerDocuments === 0) return null;
       const parts = [];
@@ -6249,6 +6269,18 @@ function mailAcceptanceAttachmentText(count) {
   return total + " gecontroleerde PDF-bijlagen";
 }
 
+function mailAcceptanceAttachmentLinks(scenario, compact = false) {
+  const attachments = Array.isArray(scenario && scenario.attachments) ? scenario.attachments : [];
+  if (!attachments.length) return "";
+  const key = encodeURIComponent(String(scenario && scenario.key || ""));
+  return '<div class="mail-acceptance-attachments" aria-label="PDF-bijlagen controleren">' + attachments.map((attachment, fallbackIndex) => {
+    const index = Number.isInteger(Number(attachment && attachment.index)) ? Number(attachment.index) : fallbackIndex;
+    const filename = String(attachment && attachment.filename || "PDF-bijlage");
+    const label = filename.includes("Klanturenstaat") ? "Klanturenstaat-PDF bekijken" : "Factuur-PDF bekijken";
+    return '<a class="small-button mail-acceptance-attachment" target="_blank" rel="noopener" href="' + MAIL_ACCEPTANCE_API_PATH + '?preview_scenario=' + key + '&amp;attachment=' + encodeURIComponent(String(index)) + '" title="' + escapeHtml(filename) + '">' + escapeHtml(compact ? label.replace(" bekijken", "") : label) + '</a>';
+  }).join("") + '</div>';
+}
+
 const MAIL_ACCEPTANCE_PLACEHOLDERS = [
   { key: "broker_bundle", label: "Broker: factuur + klanturenstaat", attachment_count: 2 },
   { key: "accountant_invoice", label: "Boekhouder: factuur", attachment_count: 1 },
@@ -6300,7 +6332,7 @@ function renderMailAcceptanceConsole() {
     const details = scenarioIssues.length ? scenarioIssues.join(" ") : mailAcceptanceAttachmentText(item && item.attachment_count);
     const actionLabel = ready ? "Controleer &amp; verstuur 1" : (data.enabled === true ? "Niet beschikbaar" : "Mailvenster gesloten");
     return '<article class="mail-acceptance-scenario" data-mail-acceptance-key="' + escapeHtml(String(item && item.key || "")) + '">' +
-      '<div class="mail-acceptance-copy"><strong>' + escapeHtml(String(item && item.label || "Acceptatiescenario")) + '</strong><small>Aan ' + escapeHtml(String(item && item.recipient || "Niet ingesteld")) + ' · ' + escapeHtml(details) + '</small></div>' +
+      '<div class="mail-acceptance-copy"><strong>' + escapeHtml(String(item && item.label || "Acceptatiescenario")) + '</strong><small>Aan ' + escapeHtml(String(item && item.recipient || "Niet ingesteld")) + ' · ' + escapeHtml(details) + '</small>' + (ready ? mailAcceptanceAttachmentLinks(item, true) : "") + '</div>' +
       '<button class="small-button" type="button" data-mail-acceptance-scenario="' + escapeHtml(String(item && item.key || "")) + '"' + (ready ? "" : " disabled") + '>' + actionLabel + '</button>' +
     '</article>';
   }).join("") : '<div class="dashboard-action-empty"><strong>Geen scenario’s geconfigureerd.</strong><br>Er kan niets worden verzonden.</div>';
@@ -6321,6 +6353,7 @@ function showMailAcceptanceConfirmation(scenarioKey) {
     message: "Controleer de vaste testontvanger en bijlagen. Deze actie verstuurt precies één herkenbaar gemarkeerd testbericht.",
     summary: '<div><span>Ontvanger</span><strong>' + escapeHtml(String(scenario.recipient || "")) + '</strong></div>' +
       '<div><span>Bijlagen</span><strong>' + escapeHtml(mailAcceptanceAttachmentText(scenario.attachment_count)) + '</strong></div>' +
+      mailAcceptanceAttachmentLinks(scenario) +
       '<div><span>Markering</span><strong>ACCEPTATIETEST · NIET BOEKEN</strong></div>',
     confirm: "1 acceptatiemail versturen",
     taskNavigation: false,
@@ -7338,8 +7371,7 @@ function showHoursReview(employeeId, periodKey, adminTaskId = "") {
     adminTaskId,
     action: () => {
       if (adminTaskId) {
-        const toastMessage = employee.name + " is goedgekeurd voor " + period.label + "; de factuur staat klaar.";
-        finishAdminTaskAndContinue(adminTaskId, () => approveEmployeeState(employee.id, key), toastMessage);
+        approveEmployee(employee.id, key, { adminTaskId });
         return;
       }
       closeModal();
@@ -7359,16 +7391,29 @@ function approveEmployeeState(id, periodKey) {
   addNotification({ audience: "admin", type: "invoice", employeeId: Number(id), title: "Factuur klaar", message: "De factuur voor " + employeeById(id).name + " staat klaar.", periodKey: key, view: "invoices" });
 }
 
-function approveEmployee(id, periodKey) {
+function approveEmployee(id, periodKey, options = {}) {
   const key = periodKey || currentPeriod().key;
   const record = recordFor(id, key);
+  const adminTaskId = String(options.adminTaskId || "");
+  const toastMessage = employeeById(id).name + " is goedgekeurd voor " + periodFromKey(key).label + "; de factuur staat klaar.";
+  const finishApproval = () => {
+    if (adminTaskId) {
+      finishAdminTaskAndContinue(adminTaskId, () => {}, toastMessage);
+      return;
+    }
+    persistState();
+    renderAll();
+    toast(toastMessage);
+  };
   if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
     if (record.timesheetStatus !== "submitted") {
       renderAll();
       toast("Alleen ingediende uren kunnen worden goedgekeurd.");
       return;
     }
-    const btn = document.querySelector('[data-approve="' + id + '"][data-period-key="' + key + '"]');
+    const btn = adminTaskId
+      ? document.querySelector("#modal-confirm")
+      : document.querySelector('[data-approve="' + id + '"][data-period-key="' + key + '"]');
     if (btn && btn.disabled) return;
     if (btn) { btn.disabled = true; btn.textContent = "Bezig\u2026"; }
     const restoreBtn = () => { if (btn) { btn.disabled = false; btn.textContent = "Goedkeuren"; } };
@@ -7380,12 +7425,10 @@ function approveEmployee(id, periodKey) {
           // Timesheet not in DB (demo-only data): fall back to local state approval.
           restoreBtn();
           approveEmployeeState(id, key);
-          persistState();
-          renderAll();
-          toast(employeeById(id).name + " is goedgekeurd voor " + periodFromKey(key).label + "; de factuur staat klaar.");
+          finishApproval();
           return;
         }
-        approveEmployee(id, key);
+        approveEmployee(id, key, options);
       }).catch(() => {
         restoreBtn();
         toast("Kan niet goedkeuren zonder actuele serverversie. Ververs en probeer opnieuw.");
@@ -7399,22 +7442,21 @@ function approveEmployee(id, periodKey) {
       expectedVersion: version
     }).then(() => {
       return Promise.all([
-        refreshTimesheetReadApi(key, id, true),
         refreshInvoicesReadApi(key, true),
         refreshEmailQueueReadApi(true)
       ]).catch(() => null).then(() => {
+        // Merge the invoice read first. The successful timesheet approval response is newer than
+        // a possibly lagging invoice projection, so the local follow-up must end in ready state.
+        syncInvoiceStatusesFromApi(key);
         const refreshed = recordFor(id, key);
         if (refreshed.timesheetStatus !== "approved") {
           refreshed.timesheetStatus = "approved";
-          if (refreshed.invoiceStatus !== "simulated") refreshed.invoiceStatus = "ready";
-          if (refreshed.payrollStatus !== "simulated") refreshed.payrollStatus = "ready";
         }
-        syncInvoiceStatusesFromApi(key);
+        if (refreshed.invoiceStatus !== "simulated") refreshed.invoiceStatus = "ready";
+        if (refreshed.payrollStatus !== "simulated") refreshed.payrollStatus = "ready";
         addNotification({ audience: "employee", type: "approved", employeeId: Number(id), title: "Uren goedgekeurd", message: "Je uren voor " + periodFromKey(key).label + " zijn goedgekeurd.", periodKey: key, view: "employee-dashboard" });
         addNotification({ audience: "admin", type: "invoice", employeeId: Number(id), title: "Factuur klaar", message: "De factuur voor " + employeeById(id).name + " staat klaar.", periodKey: key, view: "invoices" });
-        persistState();
-        renderAll();
-        toast(employeeById(id).name + " is goedgekeurd voor " + periodFromKey(key).label + "; de factuur staat klaar.");
+        finishApproval();
       });
     }).catch(error => {
       restoreBtn();
@@ -7432,9 +7474,7 @@ function approveEmployee(id, periodKey) {
   }
 
   approveEmployeeState(id, key);
-  persistState();
-  renderAll();
-  toast(employeeById(id).name + " is goedgekeurd voor " + periodFromKey(key).label + "; de factuur staat klaar.");
+  finishApproval();
 }
 
 function showCorrectionEditor(id, periodKey, adminTaskId = "") {
@@ -7702,7 +7742,7 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
     toast("Deze uren wachten nog op servergoedkeuring. Controleer eerst de uren.");
     return false;
   }
-  if (!["approved", "invoiced"].includes(info.record.timesheetStatus) || (info.record.invoiceStatus === "simulated" && info.record.payrollStatus === "simulated")) {
+  if (!["approved", "invoiced"].includes(info.record.timesheetStatus) || (info.record.invoiceStatus !== "ready" && info.record.payrollStatus !== "ready")) {
     toast("Deze verzending staat niet meer als beheeractie open.");
     renderAll();
     return false;

@@ -63,6 +63,21 @@ function mail_expected_attachment_count(string $policy): int
     };
 }
 
+/** @return list<string> */
+function mail_acceptance_test_attachment_names(string $policy): array
+{
+    return match ($policy) {
+        'none' => [],
+        'invoice' => ['ACCEPTATIETEST-NIET-BOEKEN-Factuur-PATH-2026-007.pdf'],
+        'customer_timesheet' => ['ACCEPTATIETEST-NIET-BOEKEN-Klanturenstaat-Stasjo-2026-07.pdf'],
+        'invoice_and_customer_timesheet' => [
+            'ACCEPTATIETEST-NIET-BOEKEN-Factuur-PATH-2026-007.pdf',
+            'ACCEPTATIETEST-NIET-BOEKEN-Klanturenstaat-Stasjo-2026-07.pdf',
+        ],
+        default => throw new RuntimeException('Unsupported attachment policy.'),
+    };
+}
+
 /** @return list<array{filename:string,mime:string,data:string}> */
 function mail_acceptance_test_attachments(string $policy): array
 {
@@ -84,21 +99,14 @@ function mail_acceptance_test_attachments(string $policy): array
     if (!simple_pdf_looks_valid($pdf)) {
         throw new RuntimeException('Acceptance test PDF could not be generated.');
     }
-    $attachments = [];
-    if (in_array($policy, ['invoice', 'invoice_and_customer_timesheet'], true)) {
-        $attachments[] = [
-            'filename' => 'ACCEPTATIETEST-NIET-BOEKEN-Factuur-PATH-2026-007.pdf',
+    $attachments = array_map(
+        static fn(string $filename): array => [
+            'filename' => $filename,
             'mime' => 'application/pdf',
             'data' => base64_encode($pdf),
-        ];
-    }
-    if (in_array($policy, ['customer_timesheet', 'invoice_and_customer_timesheet'], true)) {
-        $attachments[] = [
-            'filename' => 'ACCEPTATIETEST-NIET-BOEKEN-Klanturenstaat-Stasjo-2026-07.pdf',
-            'mime' => 'application/pdf',
-            'data' => base64_encode($pdf),
-        ];
-    }
+        ],
+        mail_acceptance_test_attachment_names($policy)
+    );
     if (count($attachments) !== $expected) {
         throw new RuntimeException('Acceptance test mail bundle is incomplete; dispatch blocked.');
     }

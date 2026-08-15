@@ -132,10 +132,16 @@ function mail_acceptance_status(PDO $pdo, int $companyId, array $config): array
         }
 
         $rowReady = $enabled && $issues === [] && $scenarioIssues === [];
+        $attachmentNames = mail_acceptance_test_attachment_names((string)$scenario['attachment_policy']);
         $rows[] = array_merge($scenario, [
             'key' => $key,
             'ready' => $rowReady,
             'issues' => $scenarioIssues,
+            'attachments' => array_map(
+                static fn(string $filename, int $index): array => ['filename' => $filename, 'index' => $index],
+                $attachmentNames,
+                array_keys($attachmentNames)
+            ),
         ]);
     }
 

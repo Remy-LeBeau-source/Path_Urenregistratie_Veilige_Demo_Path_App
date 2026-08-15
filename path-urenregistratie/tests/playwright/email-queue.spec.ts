@@ -337,8 +337,29 @@ test.describe('email queue api', () => {
 
   test('[EQ-H-016] Backoffice verstuurt vanuit de acceptatieconsole precies één gekozen scenario', async ({ page }) => {
     const scenarios = [
-      { key: 'broker_bundle', label: 'Broker: factuur + klanturenstaat', recipient: 'info@pathconsultancy.nl', attachment_count: 2, ready: true, issues: [] },
-      { key: 'accountant_invoice', label: 'Boekhouder: factuur', recipient: 'info@pathconsultancy.nl', attachment_count: 1, ready: true, issues: [] },
+      {
+        key: 'broker_bundle',
+        label: 'Broker: factuur + klanturenstaat',
+        recipient: 'info@pathconsultancy.nl',
+        attachment_count: 2,
+        ready: true,
+        issues: [],
+        attachments: [
+          { index: 0, filename: 'ACCEPTATIETEST-NIET-BOEKEN-Factuur-PATH-2026-007.pdf' },
+          { index: 1, filename: 'ACCEPTATIETEST-NIET-BOEKEN-Klanturenstaat-Stasjo-2026-07.pdf' },
+        ],
+      },
+      {
+        key: 'accountant_invoice',
+        label: 'Boekhouder: factuur',
+        recipient: 'info@pathconsultancy.nl',
+        attachment_count: 1,
+        ready: true,
+        issues: [],
+        attachments: [
+          { index: 0, filename: 'ACCEPTATIETEST-NIET-BOEKEN-Factuur-PATH-2026-007.pdf' },
+        ],
+      },
       { key: 'payroll_hours', label: 'Salarisadministratie: alleen ureninformatie', recipient: 'info@pathconsultancy.nl', attachment_count: 0, ready: true, issues: [] },
       { key: 'password_reset', label: 'Wachtwoord vergeten: eenmalige link', recipient: 'info@pathconsultancy.nl', attachment_count: 0, ready: true, issues: [] },
       { key: 'account_invitation', label: 'Eerste uitnodiging: wachtwoord aanmaken', recipient: 'gch.lieveld@live.nl', attachment_count: 0, ready: true, issues: [] },
@@ -376,6 +397,12 @@ test.describe('email queue api', () => {
       await expect(page.locator('.mail-acceptance-scenario')).toHaveCount(5);
       await expect(page.locator('[data-mail-acceptance-scenario]')).toHaveCount(5);
       await expect(page.locator('#mail-acceptance-console')).not.toContainText('Alles versturen');
+      const brokerPreviews = page.locator('[data-mail-acceptance-key="broker_bundle"] .mail-acceptance-attachment');
+      await expect(brokerPreviews).toHaveCount(2);
+      await expect(brokerPreviews.nth(0)).toHaveText('Factuur-PDF');
+      await expect(brokerPreviews.nth(0)).toHaveAttribute('title', 'ACCEPTATIETEST-NIET-BOEKEN-Factuur-PATH-2026-007.pdf');
+      await expect(brokerPreviews.nth(1)).toHaveText('Klanturenstaat-PDF');
+      await expect(brokerPreviews.nth(1)).toHaveAttribute('title', 'ACCEPTATIETEST-NIET-BOEKEN-Klanturenstaat-Stasjo-2026-07.pdf');
     });
 
     await test.step('When de beheerder alleen de brokerbundel kiest en ontvanger en twee bijlagen bevestigt', async () => {
@@ -384,6 +411,12 @@ test.describe('email queue api', () => {
       await expect(page.locator('#modal-summary')).toContainText('info@pathconsultancy.nl');
       await expect(page.locator('#modal-summary')).toContainText('2 gecontroleerde PDF-bijlagen');
       await expect(page.locator('#modal-summary')).toContainText('ACCEPTATIETEST · NIET BOEKEN');
+      const attachmentPreviews = page.locator('#modal-summary .mail-acceptance-attachment');
+      await expect(attachmentPreviews).toHaveCount(2);
+      await expect(attachmentPreviews.nth(0)).toHaveText('Factuur-PDF bekijken');
+      await expect(attachmentPreviews.nth(0)).toHaveAttribute('href', /preview_scenario=broker_bundle&attachment=0$/);
+      await expect(attachmentPreviews.nth(1)).toHaveText('Klanturenstaat-PDF bekijken');
+      await expect(attachmentPreviews.nth(1)).toHaveAttribute('href', /preview_scenario=broker_bundle&attachment=1$/);
       await expect(page.locator('#modal-confirm')).toHaveText('1 acceptatiemail versturen');
       await page.locator('#modal-confirm').click();
     });

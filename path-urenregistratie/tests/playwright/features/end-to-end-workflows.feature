@@ -58,3 +58,11 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
     Given een actieve medewerker een resetlink aanvraagt
     When de medewerker via de link een sterk nieuw wachtwoord instelt
     Then werkt het nieuwe wachtwoord en is dezelfde link niet opnieuw bruikbaar
+
+  @happy
+  Scenario: [E2E-H-007] taakgestuurde goedkeuring blijft na serververversing afgerond
+    # Testtechniek: Toestandsovergang en read-after-write regressie
+    # Aantoonbare Playwright-assertions in deze case: 10
+    Given een servergestuurde urencontrole in de Backoffice-werkvoorraad staat
+    When Backoffice via de taakmodal goedkeurt
+    Then blijft de controle na volledige server-readback weg en staat de factuurtaak open

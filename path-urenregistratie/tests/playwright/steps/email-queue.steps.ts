@@ -36,6 +36,7 @@ When("de beheerder het verzendoverzicht in Instellingen opent");
 Then("zijn ontvanger, onderwerp, status, tijd en bijlagen zichtbaar zonder geheime inhoud");
 And("Vernieuwen haalt de actuele serverregistraties opnieuw op");
 Given("de vijf losse mailacceptatiescenario’s zijn vrijgegeven voor vaste testontvangers");
+Then("kan Backoffice beide gecontroleerde PDF-bijlagen afzonderlijk openen vóór verzending");
 When("de beheerder alleen de brokerbundel kiest en ontvanger en twee bijlagen bevestigt");
 Then("bevat de write exact één scenario met expliciete bevestiging en geen bulkopdracht");
 Given("mailroutering en aflevering is voorbereid");

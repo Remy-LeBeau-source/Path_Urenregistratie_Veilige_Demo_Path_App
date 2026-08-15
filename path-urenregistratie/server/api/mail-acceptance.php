@@ -32,6 +32,37 @@ $actorUserId = (int)$currentUser['id'];
 $method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
 
 if ($method === 'GET') {
+    $previewScenario = trim((string)($_GET['preview_scenario'] ?? ''));
+    if ($previewScenario !== '') {
+        $attachmentIndex = filter_var($_GET['attachment'] ?? null, FILTER_VALIDATE_INT);
+        $acceptanceStatus = mail_acceptance_status($pdo, $companyId, $config);
+        $scenario = null;
+        foreach ($acceptanceStatus['scenarios'] as $candidate) {
+            if (($candidate['key'] ?? '') === $previewScenario) {
+                $scenario = $candidate;
+                break;
+            }
+        }
+        if (!is_array($scenario) || ($scenario['ready'] ?? false) !== true || $attachmentIndex === false) {
+            auth_send_json(['ok' => false, 'error' => 'attachment-preview-unavailable'], 404);
+        }
+        $attachments = mail_acceptance_test_attachments((string)$scenario['attachment_policy']);
+        $attachment = $attachments[(int)$attachmentIndex] ?? null;
+        if (!is_array($attachment)) {
+            auth_send_json(['ok' => false, 'error' => 'attachment-preview-unavailable'], 404);
+        }
+        $pdf = base64_decode((string)$attachment['data'], true);
+        if ($pdf === false || !simple_pdf_looks_valid($pdf)) {
+            auth_send_json(['ok' => false, 'error' => 'attachment-preview-invalid'], 500);
+        }
+        header_remove('Content-Type');
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: inline; filename="' . str_replace(['"', "\r", "\n"], '', (string)$attachment['filename']) . '"');
+        header('Content-Length: ' . strlen($pdf));
+        header('Cache-Control: no-store');
+        echo $pdf;
+        exit;
+    }
     auth_send_json(array_merge(['ok' => true], mail_acceptance_status($pdo, $companyId, $config)));
 }
 

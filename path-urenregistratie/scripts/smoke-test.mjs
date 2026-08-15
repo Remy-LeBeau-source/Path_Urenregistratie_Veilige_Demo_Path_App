@@ -105,7 +105,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.67"), "Het zichtbare versienummer moet 0.9.67 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.68"), "Het zichtbare versienummer moet 0.9.68 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -151,7 +151,7 @@ const employeePicker = document.querySelector("#login-employee");
 employeePicker.value = "1";
 employeePicker.dispatchEvent(new Event("change", { bubbles: true }));
 const demoScenarioState = JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(demoScenarioState.schemaVersion === 26, "Versie 0.9.67 moet wijzigingen onder de juiste gegevensversie bewaren");
+assert(demoScenarioState.schemaVersion === 26, "Versie 0.9.68 moet wijzigingen onder de juiste gegevensversie bewaren");
 assert(demoScenarioState.settings.companyName === "QSI Consultancy B.V." && demoScenarioState.settings.invoiceNameDisplay === "trade_and_legal", "De standaardfactuuridentiteit moet Path als handelsnaam aan QSI Consultancy B.V. koppelen");
 const freshOpenActions = dom.window.adminOpenTasks();
 const freshJuneActions = freshOpenActions.filter(task => task.periodKey === "2026-06");
@@ -558,6 +558,7 @@ const marcJuly = dom.window.recordFor(1, "2026-07");
 const stasjoJune = dom.window.recordFor(2, "2026-06");
 const marcJune = dom.window.recordFor(1, "2026-06");
 const ownershipScenarioSnapshot = [brianAugust, shawnAugust].map(record => ({
+  timesheetStatus: record.timesheetStatus,
   invoiceStatus: record.invoiceStatus,
   payrollStatus: record.payrollStatus,
   customerStatus: dom.window.customerTimesheetFor(record).status
@@ -605,6 +606,7 @@ assert(document.querySelector("#dashboard-next-action-controls").textContent.inc
 click("#open-work-queue");
 assert(document.querySelectorAll("#admin-task-list [data-admin-task-row]").length === 3 && document.querySelectorAll("#admin-task-list .status-pill").length === 3 && [...document.querySelectorAll("#admin-task-list .status-pill")].every(item => item.textContent === "Actie bij medewerker"), "Iedere taak moet één zichtbare regel met precies één eigenaar hebben");
 [brianAugust, shawnAugust].forEach((record, index) => {
+  record.timesheetStatus = ownershipScenarioSnapshot[index].timesheetStatus;
   record.invoiceStatus = ownershipScenarioSnapshot[index].invoiceStatus;
   record.payrollStatus = ownershipScenarioSnapshot[index].payrollStatus;
   dom.window.customerTimesheetFor(record).status = ownershipScenarioSnapshot[index].customerStatus;
@@ -614,8 +616,6 @@ brianJuly.invoiceStatus = "concept";
 brianJuly.payrollStatus = "concept";
 Object.assign(shawnJuly, shawnJulyInvoiceSnapshot);
 // Restore June and July records modified during the scenario setup.
-// Keep marcAugust at "approved" so it stays out of the approval list in subsequent tests.
-marcAugust.timesheetStatus = "approved";
 marcAugust.timesheetStatus = marcAugustScenarioSnapshot.timesheetStatus;
 marcAugust.invoiceStatus = marcAugustScenarioSnapshot.invoiceStatus;
 marcAugust.payrollStatus = marcAugustScenarioSnapshot.payrollStatus;
@@ -636,7 +636,8 @@ click("#modal-close");
 click('[data-admin-task-filter="waiting"]');
 assert(document.querySelectorAll("#admin-task-list [data-admin-task-row]").length === dashboardWaitingTasks.length && document.querySelector("#admin-task-list").textContent.includes("Actie bij medewerker"), "Bij medewerkers moet alleen de niet-directe taken tonen en per regel de eigenaar benoemen");
 click('[data-admin-task-filter="actionable"]');
-assert(document.querySelectorAll("#admin-task-list [data-admin-task-row]").length === dashboardActionableTasks.length && [...document.querySelectorAll("#admin-task-list .status-pill")].every(item => item.textContent === "Actie bij Backoffice"), "Bij Backoffice moet alleen de direct uitvoerbare acties tonen");
+const renderedActionableTaskIds = [...document.querySelectorAll("#admin-task-list [data-admin-task-row]")].map(item => item.dataset.adminTaskRow);
+assert(renderedActionableTaskIds.length === dashboardActionableTasks.length && [...document.querySelectorAll("#admin-task-list .status-pill")].every(item => item.textContent === "Actie bij Backoffice"), "Bij Backoffice moet alleen de direct uitvoerbare acties tonen; verwacht " + dashboardActionableTasks.map(task => task.id).join(", ") + ", kreeg " + renderedActionableTaskIds.join(", "));
 click('[data-admin-task-filter="all"]');
 const taskMonthKeys = [...document.querySelectorAll("#admin-task-list [data-admin-task-month]")].map(item => item.dataset.adminTaskMonth);
 assert(JSON.stringify(taskMonthKeys) === JSON.stringify(["2026-06", "2026-07", "2026-08"]), "Juni, juli en augustus moeten als maandblokken onder elkaar staan, met de oudste maand eerst");
@@ -700,10 +701,16 @@ if (!document.querySelector("#modal").hidden) click("#modal-confirm");
 choosePeriod("#period-month-picker", "#period-year-picker", "2026-07");
 assert(document.querySelector("#period-label").textContent === "Juli 2026" && document.querySelector("#view-dashboard").classList.contains("is-active") && document.querySelector('[data-admin-task-month="2026-07"]'), "De maandkiezer moet de details wijzigen zonder het globale juliblok uit de werkvoorraad te verwijderen");
 choosePeriod("#period-month-picker", "#period-year-picker", "2026-08");
+// Deze factuursmoke begint bewust ná urencontrole. Eerder maakte een verouderde
+// factuurprojectie de twee submitted records per ongeluk approved; leg de echte
+// procesvoorwaarde vast zodat de test niet van die overschrijving afhankelijk is.
+[marcAugust, brianAugust].forEach(record => {
+  record.timesheetStatus = "approved";
+});
 click('[data-view="invoices"]');
 assert(document.querySelector("#view-invoices").classList.contains("is-active"), "Facturen moet via de hoofdnavigatie bereikbaar blijven");
 assert(!document.querySelector("#view-payroll") && !document.querySelector("#open-payroll-from-invoices"), "Salarisadministratie mag geen apart scherm of vaste factuurknop meer hebben");
-assert(document.querySelector("#test-month-delivery").textContent === "Ga verder \u00b7 2 resterend" && document.querySelector("#month-batch-ready-count").textContent === "2 klaar \u00b7 1 gecontroleerd", "Bij goedgekeurde urenstaten moeten CTA en gereedheidskaart twee klaarstaande facturen tonen");
+assert(document.querySelector("#test-month-delivery").textContent === "Ga verder \u00b7 2 resterend" && document.querySelector("#month-batch-ready-count").textContent === "2 klaar \u00b7 1 gecontroleerd", "Bij goedgekeurde urenstaten moeten CTA en gereedheidskaart twee klaarstaande facturen tonen; CTA=" + document.querySelector("#test-month-delivery").textContent + ", kaart=" + document.querySelector("#month-batch-ready-count").textContent);
 assert(document.querySelector("#invoice-rows").textContent.includes("Correctie nodig"), "De factuurlijst moet openstaande correcties tonen");
 click("#help-launcher");
 document.querySelector("#help-input").value = "mede";
@@ -1522,7 +1529,7 @@ const migrationPicker = migrationDom.window.document.querySelector("#login-admin
 migrationPicker.value = "joyce";
 migrationPicker.dispatchEvent(new migrationDom.window.Event("change", { bubbles: true }));
 const migratedState = JSON.parse(migrationDom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(migratedState.schemaVersion === 26, "Bestaande browsergegevens moeten ook in v0.9.67 veilig behouden blijven");
+assert(migratedState.schemaVersion === 26, "Bestaande browsergegevens moeten ook in v0.9.68 veilig behouden blijven");
 assert(migratedState.settings.companyName === "QSI Consultancy B.V." && migratedState.settings.invoiceNameDisplay === "trade_and_legal", "Migratie moet QSI als B.V. en de gecombineerde factuurweergave veilig aanvullen");
 assert(migratedState.settings.mailRecipients.find(recipient => recipient.id === "payroll").name.includes("Salarisadministratie"), "Migratie moet EasySalary als duidelijke salarisadministratieroute benoemen");
 assert(migratedState.records["2026-07"]["4"].invoiceNumber === "Bel-Shawn-2026-juli", "Migratie moet ook bestaande factuurnummers omzetten naar de afgesproken koppeltekens");
@@ -1616,4 +1623,4 @@ assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("
 assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Playwright stage- en lokale env-bestanden mogen expliciete runner/CI-variabelen niet overschrijven");
 
 dom.window.close();
-console.log("Path v0.9.67 volledige smoke test: geslaagd");
+console.log("Path v0.9.68 volledige smoke test: geslaagd");

@@ -78,7 +78,8 @@ Een wijziging is pas klaar wanneer:
 
 - de serverstatus en UI dezelfde waarheid tonen;
 - tellers en eigenaar bij elke overgang kloppen;
-- documenten vóór verzending geopend kunnen worden;
+- documenten vóór verzending geopend kunnen worden en iedere getoonde bijlagetelling naar exact
+  zoveel afzonderlijk klikbare serverbijlagen leidt;
 - queue en uiteindelijke SMTP-status niet door elkaar worden gehaald;
 - LOCAL/TEST/PROD-beleid aantoonbaar gescheiden blijft;
 - smoke, regressie, documentatie en pipeline groen zijn.
