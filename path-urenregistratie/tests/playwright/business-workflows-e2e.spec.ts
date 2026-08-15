@@ -361,3 +361,148 @@ test('[E2E-H-006] eenmalige wachtwoordlink geeft toegang en blokkeert hergebruik
     }
   }
 });
+
+test('[E2E-H-007] taakgestuurde goedkeuring blijft na serververversing afgerond', async ({ page }) => {
+  test.setTimeout(60_000);
+  const loginPage = new LoginPage(page);
+  const employeeId = 1;
+  const periodKey = '2026-08';
+  const reviewTaskId = `hours-review-${periodKey}-${employeeId}`;
+  const invoiceTaskId = `invoice-delivery-${periodKey}-${employeeId}`;
+  let serverStatus: 'submitted' | 'approved' = 'submitted';
+  let serverVersion = 70;
+  let approveWrites = 0;
+  let targetReads = 0;
+
+  const timesheetPayload = () => ({
+    id: 97001,
+    status: serverStatus,
+    contractual_hours: 168,
+    billable_hours: 16,
+    leave_hours: 0,
+    sickness_hours: 0,
+    employee_note: null,
+    review_note: null,
+    day_entries: [
+      { work_date: `${periodKey}-03`, hours: 8, description: 'Servergestuurde goedkeuring dag 1' },
+      { work_date: `${periodKey}-04`, hours: 8, description: 'Servergestuurde goedkeuring dag 2' },
+    ],
+    submitted_at: '2026-08-31T12:00:00Z',
+    approved_at: serverStatus === 'approved' ? '2026-08-31T12:05:00Z' : null,
+    approved_by: serverStatus === 'approved' ? 100 : null,
+    version: serverVersion,
+    latest_correction: null,
+    correction_history: [],
+  });
+
+  await page.route('**/server/api/timesheets.php**', async (route) => {
+    const request = route.request();
+    const method = request.method().toUpperCase();
+    if (method === 'GET') {
+      const url = new URL(request.url());
+      const requestedEmployee = Number(url.searchParams.get('employee_id') || 0);
+      const requestedPeriod = String(url.searchParams.get('period') || '');
+      if (requestedEmployee === employeeId && requestedPeriod === periodKey) {
+        targetReads += 1;
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            ok: true,
+            found: true,
+            period: periodKey,
+            employee_id: employeeId,
+            timesheet: timesheetPayload(),
+          }),
+        });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ok: true,
+          found: false,
+          period: requestedPeriod,
+          employee_id: requestedEmployee,
+          timesheet: null,
+        }),
+      });
+      return;
+    }
+
+    if (method === 'POST') {
+      const payload = request.postDataJSON() as {
+        action?: string;
+        employee_id?: number;
+        period?: string;
+        expected_version?: number;
+      };
+      if (
+        payload.action === 'approve'
+        && Number(payload.employee_id) === employeeId
+        && String(payload.period) === periodKey
+      ) {
+        expect(Number(payload.expected_version)).toBe(serverVersion);
+        approveWrites += 1;
+        serverStatus = 'approved';
+        serverVersion += 1;
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            ok: true,
+            period: periodKey,
+            employee_id: employeeId,
+            timesheet: timesheetPayload(),
+            audit_event: 'timesheet.approved',
+          }),
+        });
+        return;
+      }
+    }
+
+    await route.continue();
+  });
+
+  await test.step('Given een servergestuurde urencontrole in de Backoffice-werkvoorraad staat', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect.poll(() => page.evaluate((taskId) => (
+      window.adminOpenTasks().some(task => task.id === taskId)
+    ), reviewTaskId)).toBe(true);
+    await page.locator('#hero-backoffice-filter').click();
+    await openAdminTaskMonth(page, periodKey);
+    await expect(page.locator(`[data-admin-task-row="${reviewTaskId}"]`)).toBeVisible();
+  });
+
+  await test.step('When Backoffice via de taakmodal goedkeurt', async () => {
+    const taskRow = page.locator(`[data-admin-task-row="${reviewTaskId}"]`);
+    await taskRow.locator('[data-review]').click();
+    await expect(page.locator('#modal-title')).toContainText('Marc de Roon');
+    await page.locator('#modal-confirm').click();
+    await expect.poll(() => approveWrites).toBe(1);
+    expect(serverStatus).toBe('approved');
+  });
+
+  await test.step('Then blijft de controle na volledige server-readback weg en staat de factuurtaak open', async () => {
+    const taskTransition = async () => page.evaluate(({ reviewId, invoiceId }) => {
+      const tasks = window.adminOpenTasks();
+      return {
+        reviewOpen: tasks.some(task => task.id === reviewId),
+        invoiceOpen: tasks.some(task => task.id === invoiceId && task.actionable),
+      };
+    }, { reviewId: reviewTaskId, invoiceId: invoiceTaskId });
+
+    await expect.poll(taskTransition).toEqual({ reviewOpen: false, invoiceOpen: true });
+    const readsBeforeRefresh = targetReads;
+    await page.evaluate(async ({ key, id }) => {
+      await (window as typeof window & {
+        refreshTimesheetReadApi: (periodKey: string, employeeId: number, force: boolean) => Promise<unknown>;
+      }).refreshTimesheetReadApi(key, id, true);
+    }, { key: periodKey, id: employeeId });
+    await expect.poll(() => targetReads).toBeGreaterThan(readsBeforeRefresh);
+    await expect.poll(taskTransition).toEqual({ reviewOpen: false, invoiceOpen: true });
+    expect(approveWrites).toBe(1);
+  });
+});

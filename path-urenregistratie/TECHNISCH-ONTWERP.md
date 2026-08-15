@@ -83,7 +83,10 @@ Taak-ID's zijn stabiel opgebouwd uit type, periode en medewerker. Hierdoor kunne
 - Een factuurlock schrijft standaard drie gescheiden `email_deliveries`: `broker`, `accountant` en
   `payroll`. TEST verandert bij dispatch alleen de effectieve ontvanger; kanaal, oorspronkelijke
   ontvanger, onderwerp en attachment policy blijven auditbaar.
-- Bijlagen worden server-side op routebeleid gevalideerd.
+- Bijlagen worden server-side op routebeleid gevalideerd. De acceptatiestatus publiceert uitsluitend
+  een veilige bestandsnaam en index. Een geautoriseerde beheerder kan met scenario + index dezelfde
+  server-side gegenereerde PDF inline openen; de endpoint valideert opnieuw het routebeleid en de
+  PDF, gebruikt `no-store` en accepteert nooit een clientpad of vrije bestandsnaam.
 - SMTP-succes wordt pas getoond na bevestigde dispatch; fouten blijven met pogingenteller in `email_deliveries`.
 - Databasetijden zonder tijdzone worden als reeds lokale servertijd weergegeven en krijgen niet nogmaals
   de Amsterdam-offset; expliciete ISO-tijden worden wel naar `Europe/Amsterdam` omgerekend.

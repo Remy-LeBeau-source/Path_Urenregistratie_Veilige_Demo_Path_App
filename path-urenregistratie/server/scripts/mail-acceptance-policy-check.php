@@ -36,6 +36,7 @@ $checks = [
     'fixed_business_recipient' => true,
     'fixed_invitation_recipient' => true,
     'attachment_counts_exact' => true,
+    'attachment_preview_names_exact' => true,
     'pdfs_valid_and_marked' => true,
     'acceptance_failure_is_single_shot' => false,
     'normal_delivery_keeps_bounded_retry' => false,
@@ -173,10 +174,14 @@ foreach ($expected as $key => $attachmentCount) {
             && ($scenario['recipient'] ?? '') === 'giovanno.maatsen@pathconsultancy.nl';
     }
     $attachments = mail_acceptance_test_attachments((string)$scenario['attachment_policy']);
+    $attachmentNames = mail_acceptance_test_attachment_names((string)$scenario['attachment_policy']);
     if (count($attachments) !== $attachmentCount) {
         $checks['attachment_counts_exact'] = false;
     }
-    foreach ($attachments as $attachment) {
+    foreach ($attachments as $index => $attachment) {
+        if (($attachment['filename'] ?? '') !== ($attachmentNames[$index] ?? null)) {
+            $checks['attachment_preview_names_exact'] = false;
+        }
         $decoded = base64_decode((string)($attachment['data'] ?? ''), true);
         if (!str_contains((string)($attachment['filename'] ?? ''), 'ACCEPTATIETEST-NIET-BOEKEN')
             || !is_string($decoded)

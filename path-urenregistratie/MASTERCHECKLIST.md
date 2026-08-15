@@ -1252,10 +1252,13 @@ Telling fasestatussen:
 
 ## Directe volgende stap
 
-**Fase 1 t/m 15 zijn functioneel ingericht; v0.9.66 borgt de servergestuurde taakstatus,
-documentcontrole en drie afzonderlijke mailroutes.** De
+**Fase 1 t/m 15 zijn functioneel ingericht; v0.9.68 borgt de servergestuurde taakstatus,
+documentcontrole, drie afzonderlijke mailroutes en afzonderlijk te openen acceptatiebijlagen.** De
 aparte TEST-host, database, private opslag, publieke login-smoke en mailsandbox zijn bewezen in
 run `31803329714`.
+
+- [x] De acceptatieconsole toont iedere verwachte factuur- en klanturenstaat-PDF afzonderlijk in de
+  lijst én bevestiging en opent exact de serverbijlage die na bevestiging wordt verzonden.
 
 1. Commit en push de lokaal groen gevalideerde v0.9.66 en laat dezelfde release exact door de volledige pipeline, TEST-uitrol en
    automatische PROD-uitrol bewaken.

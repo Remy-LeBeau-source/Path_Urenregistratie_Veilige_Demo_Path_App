@@ -1041,6 +1041,10 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .mail-acceptance-console { margin-top: 22px; padding: 16px; border: 1px solid rgba(200,125,16,.32); border-radius: 14px; background: var(--surface-muted); }
 .mail-acceptance-scenarios { display: grid; gap: 9px; }
 .mail-acceptance-scenario { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 14px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.mail-acceptance-copy { display: grid; gap: 5px; }
+.mail-acceptance-attachments { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 5px; }
+.mail-acceptance-attachment { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.modal-summary > .mail-acceptance-attachments { justify-content: flex-end; }
 .mail-acceptance-copy { min-width: 0; }
 .mail-acceptance-copy strong, .mail-acceptance-copy small { display: block; }
 .mail-acceptance-copy small { margin-top: 4px; color: var(--muted); font-size: 10px; line-height: 1.45; overflow-wrap: anywhere; }
