@@ -205,12 +205,18 @@ function invoices_generate_and_store_pdf(PDO $pdo, array $config, int $invoiceId
                     CONCAT(p.year, "-", LPAD(p.month, 2, "0")) AS period_key,
                     c.trade_name, c.legal_name, c.invoice_name_display,
                     c.address_line, c.postal_code, c.city, c.invoice_phone, c.invoice_email,
-                    c.chamber_of_commerce_number, c.vat_number, c.iban
+                    c.chamber_of_commerce_number, c.vat_number, c.iban, c.payment_term_days,
+                    a.invoice_project_name, a.agreement_number, a.creditor_number, a.contractor_number, a.hourly_rate,
+                    r.trade_name AS recipient_trade_name, r.legal_name AS recipient_legal_name,
+                    r.invoice_address_line AS recipient_address_line,
+                    r.invoice_postal_code AS recipient_postal_code, r.invoice_city AS recipient_city
              FROM invoices i
              JOIN timesheets t ON t.id = i.timesheet_id
              JOIN employees e ON e.id = t.employee_id
              JOIN periods p ON p.id = t.period_id
              JOIN companies c ON c.id = i.company_id
+             JOIN assignments a ON a.id = t.assignment_id
+             LEFT JOIN counterparties r ON r.id = i.recipient_id AND r.company_id = i.company_id
              WHERE i.id = :id AND i.company_id = :company_id
              LIMIT 1'
         );
@@ -235,25 +241,65 @@ function invoices_generate_and_store_pdf(PDO $pdo, array $config, int $invoiceId
             && $legalName !== ''
             && strcasecmp($tradeName, $legalName) !== 0;
         $companyHeading = $combinedIdentity ? $tradeName : ($legalName !== '' ? $legalName : $tradeName);
+
+        $recipientName = trim((string)($row['recipient_trade_name'] ?? '')) !== ''
+            ? trim((string)$row['recipient_trade_name'])
+            : trim((string)($row['recipient_legal_name'] ?? ''));
+        $recipientAddress = trim(
+            trim((string)($row['recipient_address_line'] ?? '')) . ' '
+            . trim((string)($row['recipient_postal_code'] ?? '')) . ' '
+            . trim((string)($row['recipient_city'] ?? ''))
+        );
+        $projectName = trim((string)($row['invoice_project_name'] ?? ''));
+        $references = array_filter([
+            'Overeenkomstnummer' => trim((string)($row['agreement_number'] ?? '')),
+            'Crediteurennummer' => trim((string)($row['creditor_number'] ?? '')),
+            'Nummer opdrachtuitvoerder' => trim((string)($row['contractor_number'] ?? '')),
+        ]);
+        $monthLabel = invoices_month_name((int)substr((string)$row['period_key'], 5, 2));
+        $rateLabel = number_format((float)$row['hourly_rate'], 2, ',', '.');
+        $paymentTermDays = (int)($row['payment_term_days'] ?? 30);
+
         $lines = [
-            ['text' => $companyHeading, 'size' => 14],
+            ['text' => 'FACTUUR ' . (string)$row['invoice_number'], 'size' => 14],
+            'Factuurdatum ' . (string)$row['invoice_date'] . ' | Betreft ' . $monthLabel,
+            ' ',
+            ['text' => 'Facturerende onderneming', 'size' => 9],
+            ['text' => $companyHeading, 'size' => 12],
             ...($combinedIdentity ? [['text' => 'Handelsnaam van ' . $legalName, 'size' => 9]] : []),
             ['text' => $addressLine, 'size' => 9],
             'KvK: ' . trim((string)$row['chamber_of_commerce_number']) . ' | Btw: ' . trim((string)$row['vat_number']),
             'IBAN: ' . trim((string)$row['iban']),
             trim((string)$row['invoice_phone']) . ' | ' . trim((string)$row['invoice_email']),
             ' ',
-            ['text' => 'Factuur ' . (string)$row['invoice_number'], 'size' => 13],
-            'Factuurdatum: ' . (string)$row['invoice_date'],
-            'Vervaldatum: ' . (string)$row['due_date'],
+            ['text' => 'Factuur aan', 'size' => 9],
+            ['text' => ($recipientName !== '' ? $recipientName : 'Nog te bevestigen'), 'size' => 12],
+            ($recipientAddress !== '' ? $recipientAddress : 'Factuuradres: nog definitief bevestigen'),
+            ...($projectName !== '' ? ['Project: ' . $projectName] : []),
+            'Omschrijving: Maand ' . $monthLabel,
+            ...(!empty($references) ? [' '] : []),
+            ...array_map(
+                fn($label, $value) => $label . ': ' . $value,
+                array_keys($references),
+                array_values($references)
+            ),
             ' ',
-            'Medewerker: ' . (string)$row['employee_name'],
-            'Periode: ' . (string)$row['period_key'],
-            'Gewerkte uren: ' . $hoursLabel,
+            'Beste,',
+            'Hierbij doe ik u de factuur toekomen betreft de volgende werkzaamheden.',
             ' ',
-            'Subtotaal: EUR ' . number_format((float)$row['subtotal'], 2, ',', '.'),
+            ['text' => 'Omschrijving / Uren / Tarief / Totaal', 'size' => 9],
+            'Maand ' . $monthLabel . '   ' . $hoursLabel . ' uur   EUR ' . $rateLabel . '/uur   EUR ' . number_format((float)$row['subtotal'], 2, ',', '.'),
+            ' ',
+            'Totaal exclusief: EUR ' . number_format((float)$row['subtotal'], 2, ',', '.'),
             'Btw (' . $vatPercentageLabel . '%): EUR ' . number_format((float)$row['vat_amount'], 2, ',', '.'),
-            ['text' => 'Totaal: EUR ' . number_format((float)$row['total'], 2, ',', '.'), 'size' => 12],
+            ['text' => 'Totaal inclusief: EUR ' . number_format((float)$row['total'], 2, ',', '.'), 'size' => 12],
+            ' ',
+            ['text' => 'Betalingsinformatie', 'size' => 9],
+            'U wordt vriendelijk verzocht uw betaling binnen ' . $paymentTermDays . ' dagen van de factuurdatum over te',
+            'maken op rekening: ' . trim((string)$row['iban']) . ' onder vermelding van factuurnummer: ' . (string)$row['invoice_number'],
+            ' ',
+            'Met vriendelijke groet,',
+            ['text' => $companyHeading, 'size' => 10],
         ];
 
         $logoPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'path-logo.png';
