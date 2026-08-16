@@ -2582,6 +2582,8 @@ function mergeBootstrapIntoState(data) {
     if (assignment.invoice_project_name) localEmployee.invoiceProject = String(assignment.invoice_project_name);
     if (assignment.project_code) localEmployee.projectCode = String(assignment.project_code);
     if (assignment.invoice_number_template) localEmployee.invoiceTemplate = String(assignment.invoice_number_template);
+    if (assignment.invoice_subject_template) localEmployee.mailSubject = String(assignment.invoice_subject_template);
+    if (assignment.invoice_body_template) localEmployee.mailBody = String(assignment.invoice_body_template);
     if (assignment.agreement_number) localEmployee.agreementNumber = String(assignment.agreement_number);
     if (assignment.creditor_number) localEmployee.creditorNumber = String(assignment.creditor_number);
     if (assignment.contractor_number) localEmployee.contractorNumber = String(assignment.contractor_number);
@@ -2709,7 +2711,8 @@ function emailQueueItemsByInvoiceId(periodKey) {
     if (!byInvoice.has(invoiceId)) byInvoice.set(invoiceId, []);
     byInvoice.get(invoiceId).push({
       status,
-      channel: String(item && item.channel || "")
+      channel: String(item && item.channel || ""),
+      dryRun: Boolean(item && item.dry_run)
     });
   });
   return byInvoice;
@@ -2738,7 +2741,14 @@ function syncInvoiceStatusesFromApi(periodKey) {
       if (!row) return;
 
       const deliveries = deliveriesByInvoice.get(Number(row.id)) || [];
-      const hasDeliveryProof = deliveries.some(item => ["queued", "sent", "failed"].includes(item.status));
+      // Dry-run items (LOCAL) always stay queued and count as implicit proof.
+      // Real deliveries (TEST/PROD) must all be sent before the task closes.
+      const realDeliveries = deliveries.filter(item => !item.dryRun);
+      const hasDeliveryProof = deliveries.length > 0 && (
+        realDeliveries.length === 0
+          ? deliveries.every(item => item.dryRun)
+          : realDeliveries.every(item => item.status === "sent")
+      );
       const serverTimesheetStatus = ["draft", "submitted", "correction", "approved", "invoiced"].includes(row.timesheetStatus)
         ? row.timesheetStatus
         : "";
@@ -9825,13 +9835,15 @@ function handleMonthDelivery() {
     action: () => {
       const serverDelivery = API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative() && state.currentRole === "admin";
       if (serverDelivery) {
-        const serverInvoices = approved.map(item => serverInvoiceFor(item.employee.id, periodKey)).filter(Boolean);
-        if (serverInvoices.length !== approved.length) {
-          toast("Niet alle serverfacturen zijn beschikbaar. Open Facturen opnieuw en probeer daarna nogmaals.");
-          return;
-        }
+        // Auto-refresh invoice data so the user never has to manually re-open Facturen.
+        refreshInvoicesReadApi(periodKey, true).catch(() => null).then(() => {
+          const serverInvoices = approved.map(item => serverInvoiceFor(item.employee.id, periodKey)).filter(Boolean);
+          if (serverInvoices.length !== approved.length) {
+            toast("Niet alle serverfacturen zijn beschikbaar. Probeer opnieuw of open Facturen voor meer details.");
+            return;
+          }
 
-        Promise.all(serverInvoices.map(invoice => finalizeInvoiceAndQueueToApi(invoice)))
+          Promise.all(serverInvoices.map(invoice => finalizeInvoiceAndQueueToApi(invoice)))
           .then(deliveries => Promise.all([
             refreshEmailQueueReadApi(true),
             refreshInvoicesReadApi(periodKey, true)
@@ -9850,6 +9862,7 @@ function handleMonthDelivery() {
           .catch(error => {
             toast(String(error && error.message || "Koppeling met mailqueue tijdelijk niet bereikbaar."));
           });
+        });
         return;
       }
 

@@ -89,7 +89,7 @@ Feature: Meldingen beheren
   @happy
   Scenario: [NOT-H-011] medewerker ziet drie echte mededelingen en tellers lopen gelijk terug naar nul
     # Testtechniek: Grenswaardenanalyse
-    # Aantoonbare Playwright-assertions in deze case: 11
+    # Aantoonbare Playwright-assertions in deze case: 10
     Given Stasjo drie ongelezen mededelingen uit de serverbaseline heeft
     When hij de mededelingen een voor een als gelezen markeert
     Then blijven bel, filter en persoonlijke historie op dezelfde serverwaarheid

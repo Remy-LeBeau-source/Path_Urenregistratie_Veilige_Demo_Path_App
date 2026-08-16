@@ -122,6 +122,10 @@ function migration_plan(bool $allowDemoMigrations): array
         'id' => '015_runtime_state_health.sql',
         'path' => __DIR__ . '/migrations/015_runtime_state_health.sql',
     ];
+    $plan[] = [
+        'id' => '017_assignment_invoice_mail_templates.sql',
+        'path' => __DIR__ . '/migrations/017_assignment_invoice_mail_templates.sql',
+    ];
 
     return $plan;
 }

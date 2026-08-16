@@ -256,10 +256,13 @@ function invoices_generate_and_store_pdf(PDO $pdo, array $config, int $invoiceId
             ['text' => 'Totaal: EUR ' . number_format((float)$row['total'], 2, ',', '.'), 'size' => 12],
         ];
 
-        $pdfBytes = simple_pdf_branded_text_document(
-            $lines,
-            dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'path-logo.png'
-        );
+        $logoPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'path-logo.png';
+        try {
+            $pdfBytes = simple_pdf_branded_text_document($lines, $logoPath);
+        } catch (RuntimeException $gdError) {
+            // GD unavailable on this server – fall back to plain-text PDF without logo.
+            $pdfBytes = simple_pdf_text_document($lines);
+        }
         if (!simple_pdf_looks_valid($pdfBytes)) {
             return false;
         }
