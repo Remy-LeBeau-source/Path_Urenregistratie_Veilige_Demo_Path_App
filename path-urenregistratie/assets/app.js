@@ -2701,6 +2701,9 @@ function invoiceApiRowsForPeriod(periodKey) {
     subtotal: Number(item && item.subtotal || 0),
     vatAmount: Number(item && item.vat_amount || 0),
     total: Number(item && item.total || 0),
+    billableHours: Number(item && item.billable_hours || 0),
+    hourlyRate: Number(item && item.hourly_rate || 0),
+    vatPercentage: Number(item && item.vat_percentage || 0),
     timesheetStatus: String(item && item.timesheet_status || "").toLowerCase(),
     locked: Boolean(item && item.locked),
     lockedAt: String(item && item.locked_at || "")
@@ -7860,6 +7863,8 @@ function invoiceSummary(employeeId, periodKey) {
   const subject = formatTemplate(employee.mailSubject, employee, record.invoiceNumber, key);
   const body = formatTemplate(employee.mailBody, employee, record.invoiceNumber, key);
   const total = totalEntries(record.entries);
+  const serverInvoice = serverInvoiceFor(employee.id, key);
+  const subtotal = serverInvoice ? serverInvoice.subtotal : total * employee.rate;
   const routes = deliveryRoutesFor(employee);
   const customerDocument = customerTimesheetFor(record);
   const customerDocumentStatus = (customerTimesheetStatusLabels[customerDocument.status] || customerTimesheetStatusLabels.missing)[0];
@@ -7878,7 +7883,7 @@ function invoiceSummary(employeeId, periodKey) {
       "<div><span>Klanturenstaat</span><strong>" + escapeHtml(customerDocumentStatus) + " · " + escapeHtml(customerDocumentRoute) + "</strong></div>" +
       "<div><span>BCC</span><strong>Niet gebruikt</strong></div>" +
       "<div><span>Brokeronderwerp</span><strong>" + escapeHtml(subject) + "</strong></div>" +
-      "<div><span>Totaal excl. btw</span><strong>" + currency.format(total * employee.rate) + "</strong></div>"
+      "<div><span>Totaal excl. btw</span><strong>" + currency.format(subtotal) + "</strong></div>"
   };
 }
 
@@ -7981,6 +7986,9 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
       };
 
       if (serverDelivery && invId > 0) {
+        document.querySelector("#modal-confirm").disabled = true;
+        document.querySelector("#modal-queue-previous").disabled = true;
+        document.querySelector("#modal-queue-next").disabled = true;
         finalizeInvoiceAndQueueToApi(serverInvoice)
           .then(delivery => Promise.all([
             refreshEmailQueueReadApi(true),
@@ -8003,13 +8011,15 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
             toast(resultMessage);
           }))
           .catch(error => {
+            document.querySelector("#modal-confirm").disabled = false;
+            if (adminTaskId) renderModalTaskNavigation(adminTaskId);
             toast(String(error && error.message || (baseMsg + ". Koppeling met mailqueue tijdelijk niet bereikbaar.")));
           });
         return;
       }
 
       if (serverDelivery && invId <= 0) {
-        finishLocalDryRun("serverfactuur nog niet beschikbaar, lokaal afgerond");
+        toast("Serverfactuur nog niet beschikbaar. De actie blijft open; ververs de factuurgegevens en probeer opnieuw.");
         return;
       }
 
@@ -8023,11 +8033,13 @@ function invoiceData(employeeId, periodKey = "") {
   const employee = employeeById(employeeId);
   const period = periodKey && parsePeriodKey(periodKey) ? periodFromKey(periodKey) : currentPeriod();
   const record = recordFor(employee.id, period.key);
-  const hours = totalEntries(record.entries);
-  const subtotal = Math.round(hours * Number(employee.rate || 0) * 100) / 100;
-  const vatRate = 21;
-  const vatAmount = Math.round(subtotal * vatRate) / 100;
-  const total = Math.round((subtotal + vatAmount) * 100) / 100;
+  const serverInvoice = serverInvoiceFor(employee.id, period.key);
+  const hours = serverInvoice ? serverInvoice.billableHours : totalEntries(record.entries);
+  const rate = serverInvoice ? serverInvoice.hourlyRate : Number(employee.rate || 0);
+  const subtotal = serverInvoice ? serverInvoice.subtotal : Math.round(hours * rate * 100) / 100;
+  const vatRate = serverInvoice ? serverInvoice.vatPercentage : 21;
+  const vatAmount = serverInvoice ? serverInvoice.vatAmount : Math.round(subtotal * vatRate) / 100;
+  const total = serverInvoice ? serverInvoice.total : Math.round((subtotal + vatAmount) * 100) / 100;
   const invoiceDate = utcDate(period.year, period.monthIndex + 1, 1);
   const dueDate = new Date(invoiceDate);
   dueDate.setUTCDate(dueDate.getUTCDate() + Number(state.settings.paymentTerm || 30));
@@ -8037,6 +8049,7 @@ function invoiceData(employeeId, periodKey = "") {
     record,
     period,
     hours,
+    rate,
     subtotal,
     vatRate,
     vatAmount,
@@ -8242,7 +8255,7 @@ function downloadInvoicePdf(employeeId, periodKey = "", outputMode = "download")
   doc.rect(14, tableY + 11, 182, 13, "F");
   drawText("Maand " + data.period.month, 18, tableY + 19, 8.5, ink, "bold");
   drawText(invoiceHours(data.hours), 132, tableY + 19, 8.5, ink, "normal", { align: "right" });
-  drawText(invoiceMoney(data.employee.rate), 162, tableY + 19, 8.5, ink, "normal", { align: "right" });
+  drawText(invoiceMoney(data.rate), 162, tableY + 19, 8.5, ink, "normal", { align: "right" });
   drawText(invoiceMoney(data.subtotal), 191, tableY + 19, 8.5, ink, "bold", { align: "right" });
 
   const totalsY = tableY + 37;

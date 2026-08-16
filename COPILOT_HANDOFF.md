@@ -28,6 +28,14 @@ Verwijder eerdere relevante bevindingen niet. Noteer geen wachtwoorden, tokens o
 
 ## Actuele overdracht
 
+### 2026-08-17 00:51 · Copilot — factuurbedragen en modalrace structureel opgelost
+
+- Diagnose: jsPDF gebruikte lokale entries (screenshot 8 uur/€680), terwijl server/mail 164 uur/€13.940 gebruikte. Tijdens async afronden bleef taaknavigatie actief, waardoor een late Marc-toast zichtbaar kon worden terwijl Shawn al openstond.
+- Fix: genormaliseerde serverfactuur bevat uren/tarief/btw; `invoiceData()` en modalsubtotal gebruiken die serverwaarden. Tijdens afronden worden confirm/vorige/volgende disabled. Ontbrekende serverfactuur rondt auth/TEST niet langer lokaal af.
+- Regressie `EQ-H-020` controleert serverbedragen, geldige PDF en disabled navigatie; 1 passed (4.9s).
+- Versie gesynchroniseerd naar v0.9.88.
+- Volgende stap: `npm run check`, commit/push, pipeline volgen.
+
 ### 2026-08-17 00:11 · Copilot — pipelinefout EQ-H-020 gediagnosticeerd en lokaal groen
 
 - Release Pipeline-run `31975030883`, Validate-job `95233099123`, faalde uitsluitend in `EQ-H-020`.

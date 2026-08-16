@@ -720,6 +720,7 @@ test.describe('email queue api', () => {
         const conceptPdf = String(payload.concept_pdf_base64 || '');
         expect(conceptPdf.length).toBeGreaterThan(1000);
         expect(Buffer.from(conceptPdf, 'base64').subarray(0, 5).toString()).toBe('%PDF-');
+        await new Promise(resolve => setTimeout(resolve, 150));
         locked = true;
         await route.fulfill({
           status: 200,
@@ -754,6 +755,9 @@ test.describe('email queue api', () => {
             subtotal: 12312,
             vat_amount: 2585.52,
             total: 14897.52,
+            billable_hours: 144,
+            hourly_rate: 85.5,
+            vat_percentage: 21,
             locked,
             locked_at: locked ? '2026-08-14 12:00:00' : null,
           }],
@@ -815,10 +819,19 @@ test.describe('email queue api', () => {
       await expect(page.locator('#modal-secondary')).toHaveText('Factuur-PDF controleren');
       await expect(page.locator('#modal-summary')).toContainText('Werkelijke TEST-aflevering');
       await expect(page.locator('#modal-summary')).toContainText('giovanno.maatsen@pathconsultancy.nl');
+      await expect(page.locator('#modal-summary')).toContainText('€ 12.312');
+      const amounts = await page.evaluate(() => {
+        const runtime = window as unknown as { invoiceData: (employeeId: number, periodKey: string) => { hours: number; rate: number; subtotal: number; vatAmount: number; total: number } };
+        return runtime.invoiceData(4, '2026-08');
+      });
+      expect(amounts).toMatchObject({ hours: 144, rate: 85.5, subtotal: 12312, vatAmount: 2585.52, total: 14897.52 });
     });
 
     await test.step('When Backoffice de verzending één keer afrondt', async () => {
       await page.locator('#modal-confirm').click();
+      await expect(page.locator('#modal-confirm')).toBeDisabled();
+      await expect(page.locator('#modal-queue-previous')).toBeDisabled();
+      await expect(page.locator('#modal-queue-next')).toBeDisabled();
     });
 
     await test.step('Then wordt eerst gelockt, niet te vroeg gequeued en verdwijnt de afgeronde vervolgtaak', async () => {

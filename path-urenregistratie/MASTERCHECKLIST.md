@@ -89,6 +89,13 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-17 · v0.9.88 factuurbedragen en async werkvoorraad gelijkgetrokken
+
+- [x] Concept-/mail-PDF gebruikt in auth/TEST serveruren, servertarief, subtotal, btw en totaal; lokale entries zijn alleen fallback buiten servermodus.
+- [x] Verzendmodal toont dezelfde serversubtotal als PDF en mailtekst.
+- [x] Tijdens async `Controle afronden` zijn bevestigen, Vorige en Volgende geblokkeerd; bij ontbrekende serverfactuur blijft de taak fail-closed open.
+- [x] `EQ-H-020` assert exact 144 uur, tarief 85,50, €12.312 excl., €2.585,52 btw, €14.897,52 incl., geldige PDF en geblokkeerde navigatie: 1/1 groen.
+
 ### 2026-08-17 · v0.9.87 CI-contract voor concept-PDF gecorrigeerd
 
 - [x] Release Pipeline-run `31975030883` onderzocht: build/check waren groen en 227 tests draaiden; alleen `EQ-H-020` faalde omdat de oude exacte requestvergelijking het nieuwe `concept_pdf_base64`-veld afwees.
