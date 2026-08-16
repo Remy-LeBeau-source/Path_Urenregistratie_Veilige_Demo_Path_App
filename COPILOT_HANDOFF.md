@@ -28,6 +28,24 @@ Verwijder eerdere relevante bevindingen niet. Noteer geen wachtwoorden, tokens o
 
 ## Actuele overdracht
 
+### 2026-08-16 17:52 · Copilot — auth-booting guard toegevoegd tegen F5-loginflits
+
+- De login-flits bij F5/herstel werd opgespoord als een eerste-paint/bootstrapprobleem: de login- en app-shell konden al zichtbaar zijn voordat de auth-check klaar was.
+- Fix: `index.html` start nu met `body.auth-booting`, `assets/styles.css` verbergt tijdens die bootfase zowel login als app-shell, en `assets/app.js` verwijdert of herstelt die klasse zodra `applyAuthUiMode()` uit `checking` gaat.
+- Ook de bestaande auth-state is behouden: in `checking` blijft alles verborgen, in `demo`/`auth` wordt de bootklasse vrijgegeven zodat de smoke weer een zichtbare rolkeuze ziet.
+- Gewijzigde bestanden: `index.html`, `assets/styles.css`, `assets/app.js`.
+- Uitgevoerde tests en resultaten: de laatste `npm run check` is groen; smoke, design audit, BDD design audit, DB-config precedence en ops-preflight zijn geslaagd op `v0.9.81`.
+- Volgende stap: browsermatig opnieuw controleren op F5/herstel of de loginflits echt weg is en of de 9-open-acties baseline behouden blijft.
+
+### 2026-08-16 17:12 · Copilot — pipelinefix gepusht als 0ef86b1
+
+- De `E2E-H-008`-mapping is toegevoegd en alle GitHub Actions-artifactuploads hebben nu expliciet
+  `retention-days: 7`.
+- De zichtbare versie is opgehoogd naar `v0.9.80` en de smoke-/design-contracten zijn meegedraaid.
+- Bewijs: `npm run check` is groen; commit `0ef86b1` staat op `main` en is gepusht.
+- Huidige GUI-baseline blijft `9 open acties` met `4 bij Backoffice` en `5 wacht op medewerkers`.
+- Volgende stap: alleen nog verder als de gebruiker nieuwe scope vraagt.
+
 ### 2026-08-16 17:12 · Copilot — pipelinefix en artifact-retentie afgerond
 
 - De pipelinefaal kwam niet uit de app-logica zelf, maar uit `test-design-audit.mjs`: executable

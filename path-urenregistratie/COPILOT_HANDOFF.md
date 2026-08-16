@@ -4,6 +4,14 @@ Bijgewerkt: 16 augustus 2026
 
 ## Laatste Codex-overdracht — LOCAL Herstelmeldingen
 
+### 2026-08-16 17:12 · Copilot — pipelinefix gepusht als 0ef86b1
+
+- `E2E-H-008` heeft nu een feature- en stepsmapping; de design-audit is weer groen.
+- Alle artifact-uploads in de GitHub Actions-workflows gebruiken `retention-days: 7`.
+- Versiecontract is doorgeschoven naar `v0.9.80`; `npm run check` is groen.
+- Commit `0ef86b1` is op `main` gepusht.
+- Lokale dashboardbaseline blijft `9 open acties` met `4 bij Backoffice` en `5 wacht op medewerkers`.
+
 ### 2026-08-16 17:12 · Copilot — pipelinefix en artifact-retentie afgerond
 
 - Het CI-probleem zat in de design-audit: `E2E-H-008` was executable zonder feature-mapping.

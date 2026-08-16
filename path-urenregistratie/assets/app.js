@@ -1596,6 +1596,17 @@ function applyAuthUiMode(mode) {
   if (mode === "demo" && !accountToolsAllowed) mode = "unavailable";
   authRuntime.mode = mode;
   const authForm = document.querySelector("#auth-login-form");
+  const loginScreen = document.querySelector("#login-screen");
+  const appShell = document.querySelector("#app-shell");
+  if (mode === "checking") {
+    document.body.classList.add("auth-booting");
+    if (loginScreen) loginScreen.hidden = true;
+    if (appShell) appShell.hidden = true;
+  } else {
+    document.body.classList.remove("auth-booting");
+    if (loginScreen) loginScreen.hidden = false;
+    if (appShell) appShell.hidden = true;
+  }
   if (authForm) authForm.hidden = mode === "demo";
   applyLoginPresentation(accountToolsAllowed);
   if (mode === "auth") {
@@ -7953,7 +7964,7 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
     action: () => {
       const baseMsg = "Verzending voor " + info.employee.name + " · " + period.label + " klaargezet";
       const invId = Number(serverInvoice && serverInvoice.id || 0);
-      const serverDelivery = API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative() && state.currentRole === "admin";
+      const serverDelivery = API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin";
       const finishLocalDryRun = (messageSuffix = "") => {
         const mutate = () => {
           info.record.invoiceStatus = "simulated";
@@ -7978,6 +7989,7 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
             refreshInvoicesReadApi(key, true)
           ]).catch(() => null).then(() => {
             syncInvoiceStatusesFromApi(key);
+            releaseLocalResetAuthorityAfterServerWrite();
             const count = Number(delivery && delivery.queued || 0);
             const delivered = delivery && delivery.testDelivery === true;
             const resultMessage = delivered
@@ -9883,7 +9895,7 @@ function handleMonthDelivery() {
     summary: routeSummary + "<div><span>Klanturenstaten</span><strong>" + customerReady + " klaar voor brokerroute · " + customerReceived + " te controleren · " + customerMissing + " ontbrekend/concept/opnieuw</strong></div>",
     confirm: "Controle afronden",
     action: () => {
-      const serverDelivery = API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative() && state.currentRole === "admin";
+      const serverDelivery = API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin";
       if (serverDelivery) {
         // Auto-refresh invoice data so the user never has to manually re-open Facturen.
         refreshInvoicesReadApi(periodKey, true).catch(() => null).then(() => {
@@ -9899,6 +9911,7 @@ function handleMonthDelivery() {
             refreshInvoicesReadApi(periodKey, true)
           ]).catch(() => null).then(() => {
             syncInvoiceStatusesFromApi(periodKey);
+            releaseLocalResetAuthorityAfterServerWrite();
             persistState();
             closeModal();
             renderAll();

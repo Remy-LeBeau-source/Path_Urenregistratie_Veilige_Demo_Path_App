@@ -89,6 +89,12 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-16 · v0.9.81 auth-booting fix en releasebump
+
+- De login- en app-shell worden nu tijdens auth-bootstrap verborgen via `body.auth-booting`, zodat F5/herstel geen zichtbare loginflits meer kan tonen.
+- De releaseversie is opgehoogd naar v0.9.81 en de smoke-contracten, docs en visible badges zijn meegezet.
+- De actuele browserbaseline blijft 9 open acties: 4 bij Backoffice en 5 wacht op medewerkers.
+
 ### 2026-08-16 · v0.9.79 mobiele appvriendelijke quick fix
 
 - De mobiele app is compacter en rustiger gemaakt zonder desktopgedrag te breken.

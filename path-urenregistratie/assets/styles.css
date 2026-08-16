@@ -42,6 +42,15 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+body.auth-booting {
+  background: var(--navy);
+}
+
+body.auth-booting .login-screen,
+body.auth-booting .app-shell {
+  display: none !important;
+}
+
 button, input, select { font: inherit; }
 button { color: inherit; }
 
