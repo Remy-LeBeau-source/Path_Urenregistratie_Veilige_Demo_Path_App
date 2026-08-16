@@ -28,6 +28,18 @@ Verwijder eerdere relevante bevindingen niet. Noteer geen wachtwoorden, tokens o
 
 ## Actuele overdracht
 
+### 2026-08-16 16:59 · Copilot — F5-persistency op open acties nu bevestigd
+
+- De oorspronkelijke freeze is niet meer reproduceerbaar; de Backoffice-flow loopt door na de
+  eerder gefixte retry- en schemaherstelstappen.
+- Bewijs: live GUI op `http://localhost:8000/#dashboard` ging van `12 open acties` naar `5 open acties`
+  en bleef na F5 op `9 open acties` in plaats van terug te vallen naar `12`.
+- Gewijzigd: geen code in deze stap; wel de lokale overdrachtsdocumentatie bijgewerkt.
+- Uitgevoerde tests en resultaten: `node --check assets/app.js` stond al groen; de browsercontrole na
+  reload bevestigde `9 open acties`, `4 bij Backoffice`, `5 wacht op medewerkers`.
+- Volgende stap: alleen nog commit/push als de gebruiker dat expliciet wil; functioneel lijkt de
+  reload-persistency nu in orde.
+
 ### 2026-08-16 16:50 · Copilot — v0.9.79 hotfix release groen
 
 - De urencontrole-retry is nu uitgegeven als `v0.9.79`; zichtbare labels en smoke-asserties zijn

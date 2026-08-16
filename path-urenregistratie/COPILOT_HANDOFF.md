@@ -4,6 +4,17 @@ Bijgewerkt: 16 augustus 2026
 
 ## Laatste Codex-overdracht — LOCAL Herstelmeldingen
 
+### 2026-08-16 16:59 · Copilot — F5-persistency op open acties nu bevestigd
+
+- De Backoffice-flow is na de eerdere retry- en schemafixes doorgegaan tot `5 open acties`.
+- Bewijs: na F5 op `http://localhost:8000/#dashboard` bleef de dashboardbaseline op `9 open acties`
+  staan, met `4 bij Backoffice` en `5 wacht op medewerkers`, dus geen terugval meer naar `12`.
+- Gewijzigd: alleen deze handoff bijgewerkt; geen extra codewijziging in deze stap.
+- Uitgevoerde tests en resultaten: live browserverificatie na reload; eerder `node --check assets/app.js`
+  groen, en de fix voor de eerder hangende modal was al aanwezig.
+- Volgende stap: als de gebruiker wil, kan dit nu worden afgerond met commit/push; anders blijft dit
+  de actuele lokale eindstatus.
+
 ### 2026-08-16 16:50 · Copilot — v0.9.79 hotfix release groen
 
 - De urencontrole-retry is nu uitgegeven als `v0.9.79`; zichtbare labels en smoke-asserties zijn
