@@ -340,8 +340,7 @@ test('[DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus', as
   });
 
   await test.step('Then blijft de gewijzigde lokale teller zichtbaar en wordt er geen oude serverstatus teruggezet', async () => {
-    await expect(page.locator('#login-screen')).toBeVisible();
-    await loginPage.loginAsEmployee();
+    await expect(page.locator('#login-screen')).toBeHidden();
     await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
     await expect(page.locator('#employee-open-task-total')).toHaveText('2 open acties');
     expect(businessReadHitsAfterReset).toBeLessThanOrEqual(1);
@@ -1089,8 +1088,7 @@ test('[DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij 
     expect(reset).toMatchObject({ ok: true, reset: { open_actions: 12 } });
     workflowReads = 0;
     await page.reload();
-    await expect(page.locator('#login-screen')).toBeVisible();
-    await loginPage.loginAsAdmin();
+    await expect(page.locator('#login-screen')).toBeHidden();
     await expect(page.locator('#view-dashboard')).toBeVisible();
     await expect.poll(() => workflowReads, { timeout: 20_000 }).toBeGreaterThan(0);
     await expect.poll(() => page.evaluate(() => {
