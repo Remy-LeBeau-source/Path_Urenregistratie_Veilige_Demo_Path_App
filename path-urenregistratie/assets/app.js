@@ -8134,7 +8134,7 @@ function safeFilename(value) {
   return String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9._-]+/gi, "_").replace(/^_+|_+$/g, "");
 }
 
-function downloadInvoicePdf(employeeId, periodKey = "") {
+function downloadInvoicePdf(employeeId, periodKey = "", outputMode = "download") {
   const data = invoiceData(employeeId, periodKey);
   const identity = invoiceCompanyIdentity();
   const jspdf = window.jspdf;
@@ -8268,6 +8268,9 @@ function downloadInvoicePdf(employeeId, periodKey = "") {
   doc.rect(0, 282, 210, 15, "F");
   drawText(identity.footer, 14, 291, 6.2, [221, 233, 230]);
   drawText("CONCEPTVOORBEELD", 196, 291, 6.2, mint, "bold", { align: "right" });
+  if (outputMode === "base64") {
+    return String(doc.output("datauristring")).replace(/^data:application\/pdf[^,]*,/, "");
+  }
   const filename = "Conceptfactuur_" + safeFilename(data.record.invoiceNumber) + "_" + safeFilename(data.employee.name) + ".pdf";
   doc.save(filename);
   toast("Conceptfactuur als PDF gedownload. Er is niets verstuurd.");
@@ -8690,11 +8693,19 @@ function finalizeInvoiceAndQueueToApi(invoiceRow) {
     testDelivery: testDeliveryActive()
   }));
 
+  const matchingEmployee = state.employees.find(employee => employee.name === String(invoiceRow && invoiceRow.employeeName || ""));
+  const conceptPdfBase64 = matchingEmployee
+    ? downloadInvoicePdf(matchingEmployee.id, String(invoiceRow && invoiceRow.periodKey || ""), "base64")
+    : "";
+  if (!conceptPdfBase64) {
+    return Promise.reject(new Error("De gecontroleerde conceptfactuur kon niet voor verzending worden gemaakt."));
+  }
+
   return requestAuthCsrf()
     .then(token => fetch("/server/api/invoices.php", {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
-      body: JSON.stringify({ action: "lock", timesheet_id: timesheetId })
+      body: JSON.stringify({ action: "lock", timesheet_id: timesheetId, concept_pdf_base64: conceptPdfBase64 })
     }))
     .then(resp => resp.json().catch(() => ({})).then(data => ({ ok: resp.ok, data })))
     .then(result => {

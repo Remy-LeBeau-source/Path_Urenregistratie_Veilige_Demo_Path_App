@@ -247,10 +247,10 @@ test('[INV-N-007] ongeldige periodefilter geeft nette 400-fout', async ({ page }
   });
 });
 
-test('[INV-H-010] server-PDF branding fallback consistency als GD uitvalt', async ({ page }) => {
+test('[INV-H-010] gecontroleerde concept-PDF wordt als mailbijlage naar de server gestuurd', async ({ page }) => {
   const consoleErrors = captureConsoleErrors(page);
   const loginPage = new LoginPage(page);
-  const invoicesPage = new InvoicesPage(page);
+  let generatedPdf = '';
 
   await test.step('Given de administrator is ingelogd met demo-data', async () => {
     await loginPage.open();
@@ -260,21 +260,18 @@ test('[INV-H-010] server-PDF branding fallback consistency als GD uitvalt', asyn
     clearConsoleErrors(consoleErrors);
   });
 
-  await test.step('When de administrator een factuur via API downloadt', async () => {
-    // Fetch an invoice from demo data
-    const response = await page.evaluate(async () => {
-      const result = await fetch('/server/api/invoices.php?period=2026-08', {
-        method: 'GET',
-        headers: { Accept: 'application/json' },
-      });
-      return result.json();
+  await test.step('When de app de gecontroleerde conceptfactuur voor verzending genereert', async () => {
+    generatedPdf = await page.evaluate(() => {
+      const appWindow = window as unknown as {
+        downloadInvoicePdf: (employeeId: number, periodKey: string, outputMode: string) => string;
+      };
+      return appWindow.downloadInvoicePdf(1, '2026-07', 'base64');
     });
-    expect(Array.isArray(response.items)).toBe(true);
-    expect(response.items.length).toBeGreaterThan(0);
   });
 
-  await test.step('Then is de PDF-respons structureel valide zonder consolefouten', async () => {
-    // The fallback should produce valid PDF regardless of GD extension
+  await test.step('Then is dezelfde payload een volledige geldige PDF voor de mailbijlage', async () => {
+    expect(generatedPdf.length).toBeGreaterThan(1000);
+    expect(Buffer.from(generatedPdf, 'base64').subarray(0, 5).toString()).toBe('%PDF-');
     expect(consoleErrors).toEqual([]);
   });
 });

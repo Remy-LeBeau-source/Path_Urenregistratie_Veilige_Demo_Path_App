@@ -89,6 +89,13 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-16 · v0.9.86 conceptfactuur en TEST-mailbijlage gelijkgetrokken
+
+- [x] De browser genereert bij `Controle afronden` exact dezelfde vormgegeven concept-PDF als bij `Factuur-PDF controleren`.
+- [x] Het factuurlock-request stuurt deze PDF begrensd als Base64 mee; de server valideert PDF-signatuur en maximale grootte en bewaart hem als mailbijlage.
+- [x] API-clients zonder browser-PDF behouden de bestaande veilige serverfallback.
+- [x] Gerichte regressie `INV-H-010` bewijst dat de gegenereerde mailpayload een volledige `%PDF-` is: 1/1 groen.
+
 ### 2026-08-17 · v0.9.82 comprehensive regression prevention: invoice PDF + task ordering
 
 - **Test coverage foundation:** Three-layer prevention system added to catch both bugs and prevent regression:

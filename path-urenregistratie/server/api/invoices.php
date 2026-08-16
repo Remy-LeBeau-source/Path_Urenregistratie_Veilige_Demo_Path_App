@@ -192,6 +192,27 @@ function invoices_pdf_absolute_from_key(array $config, string $storageKey): stri
     return $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, ltrim($storageKey, '/\\'));
 }
 
+function invoices_store_pdf_bytes(PDO $pdo, array $config, int $invoiceId, int $companyId, string $pdfBytes): bool
+{
+    if (!simple_pdf_looks_valid($pdfBytes)) {
+        return false;
+    }
+
+    $relative = invoices_pdf_relative_path($companyId, $invoiceId);
+    $absolute = invoices_pdf_absolute_from_key($config, $relative);
+    $dir = dirname($absolute);
+    if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
+        return false;
+    }
+    if (file_put_contents($absolute, $pdfBytes) === false) {
+        return false;
+    }
+
+    $update = $pdo->prepare('UPDATE invoices SET pdf_storage_key = :key WHERE id = :id');
+    $update->execute([':key' => $relative, ':id' => $invoiceId]);
+    return true;
+}
+
 /**
  * Generate a server-side invoice PDF and persist it, filling pdf_storage_key.
  * Never throws: PDF generation failure must not break the invoice lock flow.
@@ -310,24 +331,7 @@ function invoices_generate_and_store_pdf(PDO $pdo, array $config, int $invoiceId
             // to ensure mail attachment looks identical to app preview
             $pdfBytes = simple_pdf_text_document_with_branding_fallback($lines);
         }
-        if (!simple_pdf_looks_valid($pdfBytes)) {
-            return false;
-        }
-
-        $relative = invoices_pdf_relative_path($companyId, $invoiceId);
-        $absolute = invoices_pdf_absolute_from_key($config, $relative);
-        $dir = dirname($absolute);
-        if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
-            return false;
-        }
-
-        if (file_put_contents($absolute, $pdfBytes) === false) {
-            return false;
-        }
-
-        $update = $pdo->prepare('UPDATE invoices SET pdf_storage_key = :key WHERE id = :id');
-        $update->execute([':key' => $relative, ':id' => $invoiceId]);
-        return true;
+        return invoices_store_pdf_bytes($pdo, $config, $invoiceId, $companyId, $pdfBytes);
     } catch (Throwable $e) {
         error_log('invoices_generate_and_store_pdf failed: ' . $e->getMessage());
         return false;
@@ -523,6 +527,26 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
 
     $timesheetId = (int)$timesheetIdRaw;
     $companyId = (int)$currentUser['company_id'];
+    $conceptPdfBytes = null;
+    if (array_key_exists('concept_pdf_base64', $payload)) {
+        $encodedPdf = (string)$payload['concept_pdf_base64'];
+        if ($encodedPdf === '' || strlen($encodedPdf) > 4_000_000) {
+            auth_send_json([
+                'ok' => false,
+                'error' => 'invalid-concept-pdf',
+                'message' => 'The controlled concept invoice PDF is missing or too large.',
+            ], 400);
+        }
+        $decodedPdf = base64_decode($encodedPdf, true);
+        if (!is_string($decodedPdf) || strlen($decodedPdf) > 3_000_000 || !simple_pdf_looks_valid($decodedPdf)) {
+            auth_send_json([
+                'ok' => false,
+                'error' => 'invalid-concept-pdf',
+                'message' => 'The controlled concept invoice PDF is invalid.',
+            ], 400);
+        }
+        $conceptPdfBytes = $decodedPdf;
+    }
 
     $pdo->beginTransaction();
 
@@ -782,8 +806,10 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
 
         $pdo->commit();
 
-        // Store the immutable PDF before queueing so immediate TEST dispatch can resolve attachments.
-        $pdfGenerated = invoices_generate_and_store_pdf($pdo, $config, $invoiceId, $companyId);
+        // Store the reviewed browser PDF; API clients without one retain the server fallback.
+        $pdfGenerated = $conceptPdfBytes !== null
+            ? invoices_store_pdf_bytes($pdo, $config, $invoiceId, $companyId, $conceptPdfBytes)
+            : invoices_generate_and_store_pdf($pdo, $config, $invoiceId, $companyId);
 
         $queuedDeliveries = [];
         $dispatchResult = ['sent' => 0, 'failed' => 0, 'skipped' => 0];

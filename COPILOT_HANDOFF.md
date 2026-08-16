@@ -28,6 +28,15 @@ Verwijder eerdere relevante bevindingen niet. Noteer geen wachtwoorden, tokens o
 
 ## Actuele overdracht
 
+### 2026-08-16 23:54 · Copilot — concept-PDF wordt voortaan exact als mailbijlage gebruikt
+
+- Diagnose: de app-preview/download kwam uit jsPDF, maar mail gebruikte een afzonderlijke sobere servergenerator; daardoor verschilden de twee documenten altijd, ook wanneer GD aanwezig was.
+- Fix: `downloadInvoicePdf(..., "base64")` levert dezelfde vormgegeven PDF zonder download; `finalizeInvoiceAndQueueToApi()` stuurt deze mee in het lock-request; de server valideert Base64, `%PDF` en maximale grootte en slaat de bytes op als definitieve mailbijlage.
+- Serverfallback blijft beschikbaar voor API-clients die geen browserconcept meesturen.
+- Gewijzigd: `assets/app.js`, `server/api/invoices.php`, `tests/playwright/invoices.spec.ts`, releaseversie/docs/checklist naar v0.9.86.
+- Tests: syntaxcontrole JS/PHP groen; gerichte `INV-H-010` groen, 1 passed (4.7s); `npm run check` volledig groen; `npm run test:gui-smoke` exitcode 0.
+- Volgende stap: commit/push en pipeline volgen; op TEST baseline herstellen vóór nieuwe mailacceptatie omdat `legal_name` handmatig naar `QSI Consultancy B.V.123` was gewijzigd.
+
 ### 2026-08-16 23:17 · Copilot — pre-commit GUI-smoke opnieuw groen
 
 - Extra pre-commit validatie gedraaid op verzoek: `npm run test:gui-smoke`.
