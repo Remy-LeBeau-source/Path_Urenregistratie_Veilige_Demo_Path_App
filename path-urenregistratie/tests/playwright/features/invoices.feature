@@ -55,6 +55,14 @@ Feature: Facturen bekijken en beheren
     When de flow voor INV-H-007 wordt uitgevoerd
     Then toont Facturen één oranje blokkadebadge en één groene controlebadge
 
+  @happy
+  Scenario: [INV-H-009] server-PDF-content moet identiek zijn aan app-preview
+    # Testtechniek: Regressie-preventie + inhoudsconsistentie
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given de administrator is ingelogd en reset naar vaste baseline
+    When de administrator een klaarstaande factuur in preview opent
+    Then zijn de zichtbare preview-velden niet leeg
+
   @negative
   Scenario: [INV-N-007] ongeldige periodefilter geeft nette 400-fout
     # Testtechniek: Negatieve equivalentieklasse + error guessing

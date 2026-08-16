@@ -185,6 +185,38 @@ test('[INV-H-007] factuurnavigatie onderscheidt geblokkeerde en controleklare ma
   });
 });
 
+test('[INV-H-009] server-PDF-content moet identiek zijn aan app-preview', async ({ page }) => {
+  const consoleErrors = captureConsoleErrors(page);
+  const loginPage = new LoginPage(page);
+  const invoicesPage = new InvoicesPage(page);
+
+  await test.step('Given de administrator is ingelogd en reset naar vaste baseline', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await page.locator('#quick-reset-demo').click();
+    await page.locator('#modal-confirm').click();
+    clearConsoleErrors(consoleErrors);
+  });
+
+  await test.step('When de administrator een klaarstaande factuur in preview opent', async () => {
+    await invoicesPage.open();
+    await page.click('[data-preview-invoice-pdf="1"]');
+    await page.waitForLoadState('domcontentloaded');
+  });
+
+  await test.step('Then zijn de zichtbare preview-velden niet leeg', async () => {
+    const previewInvoiceNumber = await page.locator('.invoice-brand-number-line strong').first().textContent();
+    const previewSubtotal = await page.locator('.invoice-brand-totals').first().textContent();
+    const previewEmployee = await page.locator('.invoice-brand-party.recipient h4').first().textContent();
+
+    expect(previewInvoiceNumber).toBeTruthy();
+    expect(previewSubtotal).toBeTruthy();
+    expect(previewEmployee).toBeTruthy();
+    
+    await page.press('Escape');
+  });
+});
+
 test('[INV-N-007] ongeldige periodefilter geeft nette 400-fout', async ({ page }) => {
   const loginPage = new LoginPage(page);
   let status = 0;

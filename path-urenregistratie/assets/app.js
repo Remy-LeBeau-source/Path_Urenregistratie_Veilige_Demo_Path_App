@@ -4048,13 +4048,11 @@ function actionableAdminTasks() {
 function orderedAdminWorkflowTasks() {
   const currentTasks = actionableAdminTasks();
   if (!adminTaskWorkflow) return currentTasks;
-  const taskById = new Map(currentTasks.map(task => [task.id, task]));
-  const ordered = adminTaskWorkflow.taskIds.map(taskId => taskById.get(taskId)).filter(Boolean);
-  currentTasks.forEach(task => {
-    if (!ordered.some(item => item.id === task.id)) ordered.push(task);
-  });
-  adminTaskWorkflow.taskIds = ordered.map(task => task.id);
-  return ordered;
+  
+  // Always return tasks in chronological order (per period, then actionable, then priority, then name)
+  // regardless of workflow history. This prevents illogical jumps to unrelated months/employees.
+  const workflowTaskIds = new Set(adminTaskWorkflow.taskIds);
+  return currentTasks;  // currentTasks is already chronologically sorted from adminOpenTasks()
 }
 
 function beginAdminTaskWorkflow(taskId) {

@@ -260,8 +260,9 @@ function invoices_generate_and_store_pdf(PDO $pdo, array $config, int $invoiceId
         try {
             $pdfBytes = simple_pdf_branded_text_document($lines, $logoPath);
         } catch (RuntimeException $gdError) {
-            // GD unavailable on this server – fall back to plain-text PDF without logo.
-            $pdfBytes = simple_pdf_text_document($lines);
+            // GD unavailable on this server – use plain-text fallback with consistent layout
+            // to ensure mail attachment looks identical to app preview
+            $pdfBytes = simple_pdf_text_document_with_branding_fallback($lines);
         }
         if (!simple_pdf_looks_valid($pdfBytes)) {
             return false;

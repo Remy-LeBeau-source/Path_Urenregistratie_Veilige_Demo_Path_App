@@ -191,6 +191,44 @@ function simple_pdf_branded_text_document(array $lines, string $logoPath): strin
     ]);
 }
 
+/**
+ * Render a fallback PDF with branding-consistent layout but no logo image.
+ * Used when GD extension is unavailable to ensure mail attachment matches app preview layout.
+ */
+function simple_pdf_text_document_with_branding_fallback(array $lines): string
+{
+    $pageW = 595.28;
+    $pageH = 841.89;
+    $marginLeft = 56.0;
+    $y = 690.0;  // Same starting position as branded version (not 780)
+    $lineHeight = 16.0;
+
+    // Render header bar area (without actual image)
+    $content = "q\n0.05 0.11 0.22 rg\n0 730 595.28 111 re f\nQ\n";
+    $content .= "BT\n";
+    foreach ($lines as $line) {
+        $text = is_array($line) ? (string)($line['text'] ?? '') : (string)$line;
+        $size = is_array($line) ? max(6, (int)($line['size'] ?? 11)) : 11;
+        $escaped = simple_pdf_escape_text($text);
+        $content .= sprintf("/F1 %d Tf\n1 0 0 1 %.2F %.2F Tm\n(%s) Tj\n", $size, $marginLeft, $y, $escaped);
+        $y -= $lineHeight;
+    }
+    $content .= 'ET';
+
+    $objects = [];
+    $objects[] = '<< /Type /Catalog /Pages 2 0 R >>';
+    $objects[] = '<< /Type /Pages /Kids [3 0 R] /Count 1 >>';
+    $objects[] = sprintf(
+        '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 %.2F %.2F] /Resources << /Font << /F1 4 0 R >> >> /Contents 3 0 R >>',
+        $pageW,
+        $pageH
+    );
+    $objects[] = '<< /Length ' . strlen($content) . " >>\nstream\n{$content}\nendstream";
+    $objects[] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>';
+
+    return simple_pdf_assemble($objects);
+}
+
 /** True when the given bytes look like a structurally valid, non-empty PDF file. */
 function simple_pdf_looks_valid(string $bytes): bool
 {

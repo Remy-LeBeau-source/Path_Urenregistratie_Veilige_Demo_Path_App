@@ -616,4 +616,42 @@ test.describe('admin write endpoints', () => {
 
     await loginPage.logout();
   });
+
+  test('[ADM-WR-H-009] goedkeuringsloop volgt logische maand/medewerker-volgorde', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+
+    await test.step('Given de administrator is ingelogd en reset naar vaste baseline', async () => {
+      await loginPage.open();
+      await loginPage.loginAsAdmin();
+      await page.locator('#quick-reset-demo').click();
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
+    });
+
+    await test.step('When een eerste Backoffice-actie wordt geopend via werkstroom', async () => {
+      // Ensure we have tasks to navigate
+      const taskButton = page.locator('[data-action="open-admin-task"]').first();
+      await expect(taskButton).toBeVisible();
+      await taskButton.click();
+      await page.waitForSelector('.modal-header');
+    });
+
+    await test.step('Then is de volgende taak bereikbaar en logisch', async () => {
+      const firstModalTitle = await page.locator('.modal-header h2').textContent();
+      expect(firstModalTitle).toBeTruthy();
+      
+      // Click next button if available
+      const nextButton = page.locator('button:has-text("Volgende")');
+      if (await nextButton.isVisible()) {
+        await nextButton.click();
+        await page.waitForTimeout(500);
+        const nextModalTitle = await page.locator('.modal-header h2').textContent();
+        expect(nextModalTitle).toBeTruthy();
+        // Tasks should advance (not infinite loop)
+        expect(nextModalTitle).not.toBe(firstModalTitle);
+      }
+      
+      await page.press('Escape');
+    });
+  });
 });

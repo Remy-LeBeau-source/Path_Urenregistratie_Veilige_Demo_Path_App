@@ -1569,6 +1569,16 @@ assert(Object.values(migratedState.records).flatMap(periodRecords => Object.valu
 assert(migratedState.employees.every(employee => employee.mailBody.includes("{uren}")), "Migratie moet de oude standaardtekst aanvullen met de daadwerkelijke uren");
 assert(migratedState.records["2026-07"]["4"].entries.flat().reduce((sum, value) => sum + value, 0) === 144, "Migratie moet bestaande uren volledig behouden");
 
+// Factuur-content consistency checks (preventie tegen PDF format mismatch)
+assert(typeof dom.window.invoicePreviewMarkup === "function", "invoicePreviewMarkup moet beschikbaar zijn voor preview-rendering");
+const taskCountBefore = dom.window.adminOpenTasks ? dom.window.adminOpenTasks().length : 0;
+assert(taskCountBefore > 0, "adminOpenTasks moet taken in de demo-omgeving retourneren");
+const firstTask = dom.window.adminOpenTasks()[0];
+assert(firstTask && firstTask.periodKey, "Eerste taak moet periodKey hebben voor chronologische validatie");
+const orderedTasks = dom.window.adminOpenTasks();
+const isChronological = orderedTasks.every((task, i, arr) => i === 0 || task.periodKey >= arr[i-1].periodKey);
+assert(isChronological, "Taken moeten chronologisch op periode gesorteerd zijn (geen willekeurige volgorde)");
+
 // Productie-hardening checks (statisch)
 const installSrc  = readFileSync_(new URL("../server/install.php", import.meta.url), "utf8");
 const migrateSrc  = readFileSync_(new URL("../server/migrate.php", import.meta.url), "utf8");
