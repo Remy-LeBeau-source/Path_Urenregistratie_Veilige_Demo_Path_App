@@ -156,7 +156,7 @@ function mail_resolve_attachments(PDO $pdo, array $delivery, array $config): arr
              JOIN customer_timesheets ct ON ct.employee_id = t.employee_id AND ct.period_id = t.period_id
              JOIN employees e ON e.id = t.employee_id
              JOIN periods p ON p.id = t.period_id
-             WHERE i.id = :id AND ct.status = "approved"
+             WHERE i.id = :id AND ct.status IN ("approved", "sent", "sent_to_broker")
              ORDER BY ct.updated_at DESC, ct.id DESC
              LIMIT 1'
         );

@@ -1310,7 +1310,7 @@ let authLoginCountdownTimer = null;
 const AUTH_LOGIN_BLOCK_STORAGE_KEY = "path-auth-login-block-v1";
 let pendingPasswordResetToken = "";
 
-const AUTH_ALWAYS_SHOW_LOGIN_PICKER = true;
+const AUTH_ALWAYS_SHOW_LOGIN_PICKER = false;
 
 const writeRuntime = {
   draftTimer: null,
@@ -9829,7 +9829,7 @@ function handleMonthDelivery() {
   showModal({
     label: "Eén knop · gescheiden routes",
     title: "Maandverzending voor " + currentPeriod().label + " controleren?",
-    message: "Na één bevestiging controleert de app per medewerker een afzonderlijk factuurbericht voor iedere aangevinkte ontvanger, met naam, maand en daadwerkelijke goedgekeurde uren. De factuur gaat alleen mee waar Factuur meesturen is aangevinkt. Klanturenstaten blijven aparte, eerst te controleren PDF-routes. Er wordt geen CC of BCC gebruikt en e-mailverzending is uitgeschakeld.",
+    message: "Na één bevestiging controleert de app per medewerker een afzonderlijk factuurbericht voor iedere aangevinkte ontvanger, met naam, maand en daadwerkelijke goedgekeurde uren. De factuur gaat alleen mee waar Factuur meesturen is aangevinkt. Klanturenstaten blijven aparte, eerst te controleren PDF-routes. Er wordt geen CC of BCC gebruikt en " + (testMailRoutingSummary() ? "in TEST gaan de drie afzonderlijke berichten uitsluitend naar de vaste testontvanger." : "e-mailverzending is uitgeschakeld."),
     summary: routeSummary + "<div><span>Klanturenstaten</span><strong>" + customerReady + " klaar voor brokerroute · " + customerReceived + " te controleren · " + customerMissing + " ontbrekend/concept/opnieuw</strong></div>",
     confirm: "Controle afronden",
     action: () => {
@@ -9873,7 +9873,7 @@ function handleMonthDelivery() {
       persistState();
       closeModal();
       renderAll();
-      toast("Maandverzending gecontroleerd: afzonderlijke berichten per ontvanger; e-mailverzending is uitgeschakeld.");
+      toast("Maandverzending gecontroleerd (dry-run): afzonderlijke berichten per ontvanger klaargezet; geen SMTP-verzending.");
     }
   });
 }

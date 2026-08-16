@@ -186,6 +186,7 @@ function test_reset_shared_baseline(PDO $pdo, array $config, string $actorEmail)
         $root . '/server/migrations/008_demo_seed_baseline_alignment.sql',
         $root . '/server/migrations/009_demo_seed_august_correction_alignment.sql',
         $root . '/server/migrations/016_demo_task_baseline_alignment.sql',
+        $root . '/server/migrations/018_demo_assignment_mail_templates.sql',
     ];
 
     $credentials = test_reset_capture_baseline_credentials($pdo);

@@ -79,17 +79,18 @@ INSERT INTO counterparties (
 INSERT INTO assignments (
   id, company_id, employee_id, client_id, broker_id, assignment_name,
   invoice_project_name, project_code, agreement_number, creditor_number,
-  contractor_number, invoice_number_template, hourly_rate, vat_percentage,
+  contractor_number, invoice_number_template, invoice_subject_template, invoice_body_template,
+  hourly_rate, vat_percentage,
   start_date, invoice_frequency, broker_mail_enabled, broker_invoice_attachment,
   bookkeeper_invoice_attachment, payroll_invoice_attachment,
   customer_timesheet_expected, customer_timesheet_due_workday,
   customer_timesheet_broker_enabled, customer_timesheet_use_broker_email,
   customer_timesheet_broker_email, invoice_without_customer_timesheet_allowed, active
 ) VALUES
-  (1, 1, 1, 1, 10, 'IND', 'IND', 'IND', NULL, NULL, NULL, 'IND-{jaar}-{maand}', 85.00, 21.00, '2026-01-01', 'monthly', TRUE, TRUE, TRUE, FALSE, TRUE, 5, TRUE, TRUE, 'facturen-itaq@example.invalid', TRUE, TRUE),
-  (2, 1, 2, 1, 10, 'IND', 'IND', 'IND-TST-2026', NULL, NULL, NULL, 'IND-StvB-{jaar}-{maand}', 80.00, 21.00, '2026-01-01', 'monthly', TRUE, TRUE, TRUE, FALSE, TRUE, 7, TRUE, FALSE, 'urenstaten-itaq@example.invalid', TRUE, TRUE),
-  (3, 1, 3, 2, 10, 'COA', 'COA', 'COA', NULL, NULL, NULL, 'COA-{jaar}-{maand}', 72.50, 21.00, '2026-01-01', 'monthly', TRUE, TRUE, TRUE, FALSE, TRUE, 5, TRUE, TRUE, 'facturen-itaq@example.invalid', TRUE, TRUE),
-  (4, 1, 4, 3, 11, 'Belastingdienst', 'belastingdienst', '202636991', '202636991', '622085', '217744', 'Bel-Shawn-{jaar}-{maand}', 85.50, 21.00, '2026-07-01', 'monthly', TRUE, TRUE, TRUE, FALSE, TRUE, 10, TRUE, FALSE, 'urenstaten-circle8@example.invalid', TRUE, TRUE);
+  (1, 1, 1, 1, 10, 'IND', 'IND', 'IND', NULL, NULL, NULL, 'IND-{jaar}-{maand}', 'IND - factuur en uren {medewerker} - {maand} {jaar}', 'Middag,\n\nHierbij stuur ik de ureninformatie van {medewerker} over {maand} {jaar}.\n\nDaadwerkelijk gewerkte uren: {uren} uur.', 85.00, 21.00, '2026-01-01', 'monthly', TRUE, TRUE, TRUE, FALSE, TRUE, 5, TRUE, TRUE, 'facturen-itaq@example.invalid', TRUE, TRUE),
+  (2, 1, 2, 1, 10, 'IND', 'IND', 'IND-TST-2026', NULL, NULL, NULL, 'IND-StvB-{jaar}-{maand}', 'Factuur en uren {medewerker} ({klant}) maand {maand} {jaar}', 'Middag,\n\nHierbij stuur ik de ureninformatie van {medewerker} over {maand} {jaar}.\n\nDaadwerkelijk gewerkte uren: {uren} uur.', 80.00, 21.00, '2026-01-01', 'monthly', TRUE, TRUE, TRUE, FALSE, TRUE, 7, TRUE, FALSE, 'urenstaten-itaq@example.invalid', TRUE, TRUE),
+  (3, 1, 3, 2, 10, 'COA', 'COA', 'COA', NULL, NULL, NULL, 'COA-{jaar}-{maand}', 'Factuur en uren {medewerker} ({klant}) maand {maand} {jaar}', 'Middag,\n\nHierbij stuur ik de ureninformatie van {medewerker} over {maand} {jaar}.\n\nDaadwerkelijk gewerkte uren: {uren} uur.', 72.50, 21.00, '2026-01-01', 'monthly', TRUE, TRUE, TRUE, FALSE, TRUE, 5, TRUE, TRUE, 'facturen-itaq@example.invalid', TRUE, TRUE),
+  (4, 1, 4, 3, 11, 'Belastingdienst', 'belastingdienst', '202636991', '202636991', '622085', '217744', 'Bel-Shawn-{jaar}-{maand}', '{factuurnummer} - {medewerker} - overeenkomst {overeenkomstnummer}', 'Middag,\n\nHierbij stuur ik de ureninformatie van {medewerker} over {maand} {jaar}.\n\nDaadwerkelijk gewerkte uren: {uren} uur.', 85.50, 21.00, '2026-07-01', 'monthly', TRUE, TRUE, TRUE, FALSE, TRUE, 10, TRUE, FALSE, 'urenstaten-circle8@example.invalid', TRUE, TRUE);
 
 INSERT INTO mail_recipients (id, company_id, recipient_key, recipient_category, display_name, email, active) VALUES
   (1, 1, 'bookkeeper', 'accounting', 'Boekhouder', 'boekhouder@example.invalid', TRUE),

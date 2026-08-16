@@ -21,6 +21,14 @@ test('[AUTH-H-001] Admin logt in en auth/me geeft de juiste gebruiker terug', as
     expect(meAfterLogin.body.authenticated).toBe(true);
     expect(meAfterLogin.body.user.email).toBe(appConfig.adminEmail);
   });
+
+  await test.step('And F5 behoudt de geldige sessie zonder terugkeer naar accountkeuze', async () => {
+    await page.reload();
+    await expect(page.locator('#app-shell')).toBeVisible();
+    await expect(page.locator('#login-screen')).toBeHidden();
+    const meAfterReload = await authApi.me();
+    expect(meAfterReload.body.authenticated).toBe(true);
+  });
 });
 
 test('[AUTH-H-002] Medewerker logt in en auth/me geeft de juiste gebruiker terug', async ({ page }) => {

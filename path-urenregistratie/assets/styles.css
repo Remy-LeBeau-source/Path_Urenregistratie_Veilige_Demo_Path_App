@@ -1812,9 +1812,16 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
   }
 
   .admin-task-row {
-    grid-template-columns: 1fr;
-    gap: 9px;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 6px 12px;
+    padding: 13px 14px;
   }
+
+  .admin-task-kind { grid-column: 1; grid-row: 1; }
+  .admin-task-person { grid-column: 1; grid-row: 2; }
+  .admin-task-note { grid-column: 1 / -1; grid-row: 3; }
+  .admin-task-action { grid-column: 2; grid-row: 1 / 3; align-self: center; }
 
   .admin-task-kind strong,
   .admin-task-person strong,

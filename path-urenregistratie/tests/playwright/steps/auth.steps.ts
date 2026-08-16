@@ -16,6 +16,7 @@ const But = navigate;
 Given("de Path loginpagina beschikbaar is");
 When("de administrator inlogt met geldige inloggegevens");
 Then("auth/me bevestigt administrator sessie en juiste gebruiker");
+And("F5 behoudt de geldige sessie zonder terugkeer naar accountkeuze");
 When("de medewerker inlogt met geldige inloggegevens");
 Then("auth/me bevestigt medewerkersessie en juiste gebruiker");
 Given("een ingelogde Path gebruiker");

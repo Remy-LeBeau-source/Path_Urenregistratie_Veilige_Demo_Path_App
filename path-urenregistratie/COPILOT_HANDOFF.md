@@ -4,6 +4,14 @@ Bijgewerkt: 16 augustus 2026
 
 ## Laatste Codex-overdracht — LOCAL Herstelmeldingen
 
+### 2026-08-16 · Copilot — v0.9.76 mail-, sessie- en mobiele fixes
+
+- Server gebruikt per-assignment onderwerp/body; migraties 017/018 en TEST-reset zijn gekoppeld.
+- Geldige auth-sessie blijft actief bij F5 en na Herstel; maandverzending auto-refresht facturen.
+- Een taak sluit alleen bij volledige echte aflevering; gecontroleerde klanturenstaat blijft als
+  brokerbijlage bruikbaar. Mobiele taakregels zijn compacter.
+- Gericht groen: 79/79 + F5 1/1 + mail/PDF 3/3; smoke, build en DB-H-001 groen.
+
 ### 2026-08-16 04:06 · Copilot — gewone TEST-mailflow hersteld in v0.9.74
 
 - Gebruikersbevinding bevestigd: de acceptatieconsole dispatchte direct, maar de gewone

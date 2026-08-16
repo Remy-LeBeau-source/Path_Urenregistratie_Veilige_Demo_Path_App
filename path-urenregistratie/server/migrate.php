@@ -68,6 +68,10 @@ function migration_plan(bool $allowDemoMigrations): array
             'id' => '007_password_reset.sql',
             'path' => __DIR__ . '/migrations/007_password_reset.sql',
         ],
+        [
+            'id' => '017_assignment_invoice_mail_templates.sql',
+            'path' => __DIR__ . '/migrations/017_assignment_invoice_mail_templates.sql',
+        ],
     ];
 
     if ($allowDemoMigrations) {
@@ -96,6 +100,10 @@ function migration_plan(bool $allowDemoMigrations): array
             'id' => '016_demo_task_baseline_alignment.sql',
             'path' => __DIR__ . '/migrations/016_demo_task_baseline_alignment.sql',
         ];
+        $plan[] = [
+            'id' => '018_demo_assignment_mail_templates.sql',
+            'path' => __DIR__ . '/migrations/018_demo_assignment_mail_templates.sql',
+        ];
     }
 
     $plan[] = [
@@ -122,11 +130,6 @@ function migration_plan(bool $allowDemoMigrations): array
         'id' => '015_runtime_state_health.sql',
         'path' => __DIR__ . '/migrations/015_runtime_state_health.sql',
     ];
-    $plan[] = [
-        'id' => '017_assignment_invoice_mail_templates.sql',
-        'path' => __DIR__ . '/migrations/017_assignment_invoice_mail_templates.sql',
-    ];
-
     return $plan;
 }
 

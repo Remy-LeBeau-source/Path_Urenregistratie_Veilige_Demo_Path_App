@@ -78,7 +78,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 214 Playwrig
 - Source: `tests/playwright/auth.spec.ts`
 - Cases: 10
 
-- [AUTH-H-001] Admin logt in en auth/me geeft de juiste gebruiker terug — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
+- [AUTH-H-001] Admin logt in en auth/me geeft de juiste gebruiker terug — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 - [AUTH-H-002] Medewerker logt in en auth/me geeft de juiste gebruiker terug — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
 - [AUTH-H-003] Gebruiker logt uit en auth/me geeft authenticated false terug — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 4
 - [AUTH-H-004] Lokale beheeraccount wordt automatisch ingevuld en opent na een klik — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3

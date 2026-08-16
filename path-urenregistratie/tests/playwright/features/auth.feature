@@ -10,10 +10,11 @@ Feature: Inloggen, uitloggen en sessiebeheer
   @happy
   Scenario: [AUTH-H-001] Admin logt in en auth/me geeft de juiste gebruiker terug
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 3
+    # Aantoonbare Playwright-assertions in deze case: 6
     Given de Path loginpagina beschikbaar is
     When de administrator inlogt met geldige inloggegevens
     Then auth/me bevestigt administrator sessie en juiste gebruiker
+    And F5 behoudt de geldige sessie zonder terugkeer naar accountkeuze
 
   @happy
   Scenario: [AUTH-H-002] Medewerker logt in en auth/me geeft de juiste gebruiker terug

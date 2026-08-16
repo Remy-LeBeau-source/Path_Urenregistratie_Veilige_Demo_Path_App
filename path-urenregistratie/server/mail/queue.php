@@ -160,18 +160,22 @@ function mail_enqueue_for_invoice(
             e.full_name AS employee_name,
             a.broker_id, a.broker_mail_enabled, a.broker_invoice_attachment,
             a.bookkeeper_invoice_attachment, a.payroll_invoice_attachment,
+            a.invoice_subject_template, a.invoice_body_template,
+            a.agreement_number, a.contractor_number,
             p.year, p.month,
-            c.trade_name AS company_name
+            c.trade_name AS company_name,
+            cp_client.trade_name AS client_name
          FROM invoices i
          JOIN timesheets t ON t.id = i.timesheet_id
          JOIN employees e ON e.id = t.employee_id
          JOIN assignments a ON a.id = t.assignment_id
+         LEFT JOIN counterparties cp_client ON cp_client.id = a.client_id AND cp_client.company_id = :company_id
          JOIN periods p ON p.id = t.period_id
          JOIN companies c ON c.id = i.company_id
-         WHERE i.id = :invoice_id AND i.company_id = :company_id
+         WHERE i.id = :invoice_id AND i.company_id = :company_id2
          LIMIT 1'
     );
-    $stmt->execute([':invoice_id' => $invoiceId, ':company_id' => $companyId]);
+    $stmt->execute([':invoice_id' => $invoiceId, ':company_id' => $companyId, ':company_id2' => $companyId]);
     $inv = $stmt->fetch();
 
     if (!$inv) {
@@ -185,15 +189,32 @@ function mail_enqueue_for_invoice(
     $month = (int)$inv['month'];
 
     $vars = [
-        'medewerker'   => (string)$inv['employee_name'],
-        'periode'      => mail_month_nl($month) . ' ' . $year,
-        'uren'         => number_format((float)$inv['billable_hours'], 2, ',', '.'),
-        'factuurnummer'=> (string)$inv['invoice_number'],
-        'subtotaal'    => number_format((float)$inv['subtotal'], 2, ',', '.'),
-        'btw'          => number_format((float)$inv['vat_amount'], 2, ',', '.'),
-        'bedrag'       => number_format((float)$inv['total'], 2, ',', '.'),
-        'bedrijf'      => (string)$inv['company_name'],
+        'medewerker'        => (string)$inv['employee_name'],
+        'periode'           => mail_month_nl($month) . ' ' . $year,
+        'maand'             => mail_month_nl($month),
+        'jaar'              => (string)$year,
+        'uren'              => number_format((float)$inv['billable_hours'], 2, ',', '.'),
+        'factuurnummer'     => (string)$inv['invoice_number'],
+        'subtotaal'         => number_format((float)$inv['subtotal'], 2, ',', '.'),
+        'btw'               => number_format((float)$inv['vat_amount'], 2, ',', '.'),
+        'bedrag'            => number_format((float)$inv['total'], 2, ',', '.'),
+        'bedrijf'           => (string)$inv['company_name'],
+        'klant'             => (string)($inv['client_name'] ?? ''),
+        'overeenkomstnummer'=> (string)($inv['agreement_number'] ?? ''),
     ];
+
+    // Use per-assignment templates when set, falling back to generic MAIL_CHANNEL_TEMPLATES.
+    $brokerTplOverride = [];
+    if (!empty($inv['invoice_subject_template']) || !empty($inv['invoice_body_template'])) {
+        $brokerTplOverride = [
+            'subject' => !empty($inv['invoice_subject_template'])
+                ? (string)$inv['invoice_subject_template']
+                : MAIL_CHANNEL_TEMPLATES['broker']['subject'],
+            'body'    => !empty($inv['invoice_body_template'])
+                ? (string)$inv['invoice_body_template']
+                : MAIL_CHANNEL_TEMPLATES['broker']['body'],
+        ];
+    }
 
     $created = [];
 
@@ -209,7 +230,7 @@ function mail_enqueue_for_invoice(
         $broker = $brokerStmt->fetch();
 
         if ($broker && !empty($broker['invoice_email'])) {
-            $tpl = MAIL_CHANNEL_TEMPLATES['broker'];
+            $tpl = !empty($brokerTplOverride) ? $brokerTplOverride : MAIL_CHANNEL_TEMPLATES['broker'];
             mail_assert_vars($tpl['subject'], $vars, 'broker.subject');
             mail_assert_vars($tpl['body'], $vars, 'broker.body');
 
