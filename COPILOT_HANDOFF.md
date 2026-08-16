@@ -28,6 +28,21 @@ Verwijder eerdere relevante bevindingen niet. Noteer geen wachtwoorden, tokens o
 
 ## Actuele overdracht
 
+### 2026-08-16 17:12 · Copilot — pipelinefix en artifact-retentie afgerond
+
+- De pipelinefaal kwam niet uit de app-logica zelf, maar uit `test-design-audit.mjs`: executable
+  case `E2E-H-008` had nog geen feature-/docs-mapping.
+- Fix: `E2E-H-008` toegevoegd aan `tests/playwright/features/end-to-end-workflows.feature`,
+  `tests/playwright/steps/end-to-end-workflows.steps.ts`, `TEST-BDD-MAPPING.md` en
+  `FUNCTIONEEL-ONTWERP.md`.
+- Extra hardening: alle GitHub Actions-artifact-uploads in `ci.yml`, `release-pipeline.yml` en
+  `live-docs.yml` krijgen nu expliciet `retention-days: 7`.
+- Bewijs: `node scripts/test-design-audit.mjs` is weer groen; `git diff --check` gaf alleen de
+  verwachte LF/CRLF-waarschuwingen, geen inhoudelijke diff-fouten.
+- Huidige GUI-baseline op localhost: 9 open acties, waarvan 4 bij Backoffice en 5 wacht op
+  medewerkers.
+- Volgende stap: commit/push van deze pipelinefix.
+
 ### 2026-08-16 16:59 · Copilot — F5-persistency op open acties nu bevestigd
 
 - De oorspronkelijke freeze is niet meer reproduceerbaar; de Backoffice-flow loopt door na de

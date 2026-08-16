@@ -4,6 +4,16 @@ Bijgewerkt: 16 augustus 2026
 
 ## Laatste Codex-overdracht — LOCAL Herstelmeldingen
 
+### 2026-08-16 17:12 · Copilot — pipelinefix en artifact-retentie afgerond
+
+- Het CI-probleem zat in de design-audit: `E2E-H-008` was executable zonder feature-mapping.
+- Oplossing: `E2E-H-008` toegevoegd aan de feature, navigation-only steps, BDD-mapping en
+  functioneel ontwerp.
+- Daarnaast hebben alle `actions/upload-artifact`-stappen nu `retention-days: 7`.
+- Bewijs: `node scripts/test-design-audit.mjs` is groen; de bestaande dashboardbaseline bleef
+  lokaal op `9 open acties` met `4 bij Backoffice` en `5 wacht op medewerkers`.
+- Volgende stap: commit/push van deze fixset.
+
 ### 2026-08-16 16:59 · Copilot — F5-persistency op open acties nu bevestigd
 
 - De Backoffice-flow is na de eerdere retry- en schemafixes doorgegaan tot `5 open acties`.

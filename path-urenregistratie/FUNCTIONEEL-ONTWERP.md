@@ -206,6 +206,7 @@ Minimaal de volgende ketens zijn releaseblokkerend:
 | globale sommen en maandinvariant | `dashboard.spec.ts` (`DASH-H-012`, `DASH-H-017`) |
 | indienen/correctie/herindienen/goedkeuren | `timesheet-review-ui.spec.ts` (`TS-REV-UI-H-008`) |
 | submitted/approved lock | `TS-REV-UI-H-009`, `TS-REV-UI-H-010` |
+| goedkeuren na verouderde versie en refresh | `business-workflows-e2e.spec.ts` (`E2E-H-008`) |
 | rolwissel zonder F5 | `auth.spec.ts` (`AUTH-H-010`) |
 | reset alleen beheerder | dashboard/security- en end-to-endcases |
 | veilige accountlevenscyclus | `user-management.spec.ts` |

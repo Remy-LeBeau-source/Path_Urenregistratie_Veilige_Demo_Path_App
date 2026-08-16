@@ -37,3 +37,6 @@ Then("werkt het nieuwe wachtwoord en is dezelfde link niet opnieuw bruikbaar");
 Given("een servergestuurde urencontrole in de Backoffice-werkvoorraad staat");
 When("Backoffice via de taakmodal goedkeurt");
 Then("blijft de controle na volledige server-readback weg en staat de factuurtaak open");
+Given("een urencontrole met verouderde versie in de Backoffice-werkvoorraad staat");
+When("Backoffice de goedkeuringsactie start en de server een verse versie teruggeeft");
+Then("wordt opnieuw opgehaald en wordt de goedkeuring toch afgerond");

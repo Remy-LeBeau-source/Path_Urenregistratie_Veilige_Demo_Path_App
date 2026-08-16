@@ -244,6 +244,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: release-validate-install-diagnostics
+          retention-days: 7
           path: |
             /tmp/health.json
             /tmp/install.json

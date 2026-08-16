@@ -149,6 +149,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: live-docs-install-diagnostics
+          retention-days: 7
           path: |
             /tmp/health.json
             /tmp/install.json
@@ -197,6 +198,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report
+          retention-days: 7
           path: path-urenregistratie/playwright-report/
 
       - name: Upload Allure report artifact
@@ -204,6 +206,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: allure-report
+          retention-days: 7
           path: path-urenregistratie/allure-report/
 
       - name: Configure GitHub Pages
