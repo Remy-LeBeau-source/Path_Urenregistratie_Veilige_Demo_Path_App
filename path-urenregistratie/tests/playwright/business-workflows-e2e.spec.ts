@@ -510,3 +510,111 @@ test('[E2E-H-007] taakgestuurde goedkeuring blijft na serververversing afgerond'
     expect(approveWrites).toBe(1);
   });
 });
+
+test('[E2E-H-008] urencontrole vraagt na oude versie opnieuw op en maakt daarna toch goedkeuren af', async ({ page }) => {
+  test.setTimeout(60_000);
+  const loginPage = new LoginPage(page);
+  const employeeId = 1;
+  const periodKey = '2026-08';
+  const reviewTaskId = `hours-review-${periodKey}-${employeeId}`;
+  let serverStatus: 'submitted' | 'approved' = 'submitted';
+  let serverVersion = 70;
+  let staleVersionMode = true;
+  let approveWrites = 0;
+
+  const timesheetPayload = () => ({
+    id: 97002,
+    status: serverStatus,
+    contractual_hours: 168,
+    billable_hours: 16,
+    leave_hours: 0,
+    sickness_hours: 0,
+    employee_note: null,
+    review_note: null,
+    day_entries: [
+      { work_date: `${periodKey}-03`, hours: 8, description: 'Versie-refresh goedkeuringsflow dag 1' },
+      { work_date: `${periodKey}-04`, hours: 8, description: 'Versie-refresh goedkeuringsflow dag 2' },
+    ],
+    submitted_at: '2026-08-31T12:00:00Z',
+    approved_at: serverStatus === 'approved' ? '2026-08-31T12:05:00Z' : null,
+    approved_by: serverStatus === 'approved' ? 100 : null,
+    version: staleVersionMode ? 0 : serverVersion,
+    latest_correction: null,
+    correction_history: [],
+  });
+
+  await page.route('**/server/api/timesheets.php**', async (route) => {
+    const request = route.request();
+    const method = request.method().toUpperCase();
+    if (method === 'GET') {
+      const url = new URL(request.url());
+      const requestedEmployee = Number(url.searchParams.get('employee_id') || 0);
+      const requestedPeriod = String(url.searchParams.get('period') || '');
+      if (requestedEmployee === employeeId && requestedPeriod === periodKey) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            ok: true,
+            found: true,
+            period: periodKey,
+            employee_id: employeeId,
+            timesheet: timesheetPayload(),
+          }),
+        });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true, found: false, period: requestedPeriod, employee_id: requestedEmployee, timesheet: null }),
+      });
+      return;
+    }
+
+    if (method === 'POST') {
+      const payload = request.postDataJSON() as { action?: string; employee_id?: number; period?: string; expected_version?: number };
+      if (payload.action === 'approve' && Number(payload.employee_id) === employeeId && String(payload.period) === periodKey) {
+        expect(Number(payload.expected_version)).toBe(serverVersion);
+        approveWrites += 1;
+        serverStatus = 'approved';
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            ok: true,
+            period: periodKey,
+            employee_id: employeeId,
+            timesheet: timesheetPayload(),
+            audit_event: 'timesheet.approved',
+          }),
+        });
+        return;
+      }
+    }
+
+    await route.continue();
+  });
+
+  await test.step('Given een urencontrole eerst met een oude lokale versie opent', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect.poll(() => page.evaluate((taskId) => window.adminOpenTasks().some(task => task.id === taskId), reviewTaskId)).toBe(true);
+    await page.locator('#hero-backoffice-filter').click();
+    await openAdminTaskMonth(page, periodKey);
+    await page.locator(`[data-admin-task-row="${reviewTaskId}"] [data-review]`).click();
+    await expect(page.locator('#modal-title')).toContainText('Marc de Roon');
+    await expect(page.locator('#modal-confirm')).toHaveText('Goedkeuren');
+  });
+
+  await test.step('When Backoffice de confirm drukt na het vrijgeven van de versieverversing', async () => {
+    staleVersionMode = false;
+    await page.locator('#modal-confirm').click();
+    await expect.poll(() => approveWrites).toBe(1);
+  });
+
+  await test.step('Then wordt de urencontrole goedgekeurd en verdwijnt de taak', async () => {
+    await expect(page.locator('#toast')).toContainText('Marc de Roon is goedgekeurd voor Augustus 2026');
+    await expect.poll(() => page.evaluate((taskId) => window.adminOpenTasks().some(task => task.id === taskId), reviewTaskId)).toBe(false);
+  });
+});

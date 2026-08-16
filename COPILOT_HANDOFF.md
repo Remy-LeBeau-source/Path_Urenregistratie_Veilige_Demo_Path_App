@@ -28,6 +28,25 @@ Verwijder eerdere relevante bevindingen niet. Noteer geen wachtwoorden, tokens o
 
 ## Actuele overdracht
 
+### 2026-08-16 16:50 · Copilot — v0.9.79 hotfix release groen
+
+- De urencontrole-retry is nu uitgegeven als `v0.9.79`; zichtbare labels en smoke-asserties zijn
+  meegezet.
+- Bewijs: `npm run build` en `node scripts/smoke-test.mjs` zijn beide groen afgerond op v0.9.79.
+- Gewijzigd: dezelfde hotfixset plus versie- en docsynchronisatie.
+- Volgende stap: commit/push van v0.9.79.
+
+### 2026-08-16 16:43 · Copilot — urencontrole retry-hang gerepareerd
+
+- De urencontrolemodal kon blijven hangen wanneer de lokale recordversie eerst 0 was en daarna
+  een verse serverversie binnenkwam; de interne retry raakte de disabled confirm-knop.
+- Fix: vóór de retry wordt de confirm-knop weer vrijgegeven, zodat de tweede poging werkelijk
+  kan doorgaan.
+- Bewijs: nieuwe Playwright-regressie `E2E-H-008` is 1/1 groen; de bevestiging wordt nu ook na
+  de versie-refresh afgehandeld.
+- Gewijzigd: `assets/app.js`, `tests/playwright/business-workflows-e2e.spec.ts`.
+- Volgende stap: v0.9.79 is gebouwd en gesmoked; commit/push van deze hotfix volgt.
+
 ### 2026-08-16 16:18 · Copilot — v0.9.78 build en smoke groen
 
 - De release is doorgebumped naar `v0.9.78`; zichtbare labels, docs en smoke-asserties zijn meegezet.

@@ -89,12 +89,18 @@ Post-live beheer
 
 ## Actuele stand
 
-### 2026-08-16 · v0.9.78 mobiele appvriendelijke quick fix
+### 2026-08-16 · v0.9.79 mobiele appvriendelijke quick fix
 
 - De mobiele app is compacter en rustiger gemaakt zonder desktopgedrag te breken.
 - De klanturenstaat-maandkeuze sluit weer direct en de onderwerpregels zijn gesynchroniseerd met
   `... ter controle`.
-- De releaseversie is opgehoogd naar v0.9.78; build en smoke zijn opnieuw groen.
+- De releaseversie is opgehoogd naar v0.9.79; build en smoke zijn opnieuw groen.
+
+### 2026-08-16 · Urencontrole retry-hang hotfix
+
+- De urencontrolemodal kon vastlopen bij een verouderde lokale versie die daarna via refresh weer
+  actueel werd; de confirm-knop bleef dan onterecht disabled.
+- De retry geeft de knop nu eerst vrij en de gerichte regressie `E2E-H-008` is groen.
 
 ### Leidende momentopname — 2026-08-15
 

@@ -7553,6 +7553,7 @@ function approveEmployee(id, periodKey, options = {}) {
           finishApproval();
           return;
         }
+        restoreBtn();
         approveEmployee(id, key, options);
       }).catch(() => {
         restoreBtn();
