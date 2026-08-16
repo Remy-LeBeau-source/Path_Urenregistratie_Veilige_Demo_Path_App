@@ -354,26 +354,5 @@ test('[INV-H-012] gesloten factuur PDF bevat alle content sections (recipient, p
       expect(Array.isArray(invoice.lines)).toBe(true);
     }
   });
-    const invoices = await page.evaluate(async () => {
-      const response = await fetch('/server/api/invoices.php?period=2026-08', {
-        method: 'GET',
-        headers: { Accept: 'application/json' },
-      });
-      return response.json();
-    });
-    
-    expect(invoices.ok || Array.isArray(invoices.items)).toBeTruthy();
-    
-    // Find the locked invoice and verify pdf_storage_key is populated
-    const lockedInvoices = Array.isArray(invoices.items) 
-      ? invoices.items.filter((inv: { locked_at?: string }) => inv.locked_at) 
-      : [];
-    
-    if (lockedInvoices.length > 0) {
-      const latest = lockedInvoices[lockedInvoices.length - 1];
-      expect(latest.pdf_storage_key).toBeTruthy();
-      // PDF was generated and stored - content validation is by integration test in path-private/invoices/
-    }
-  });
 });
 
