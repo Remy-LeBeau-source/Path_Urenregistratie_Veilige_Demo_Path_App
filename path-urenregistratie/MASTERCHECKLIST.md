@@ -1169,7 +1169,7 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
 - [x] Eerste brokerroute bevestigd voor `rana.ramjanam@pathconsultancy.nl` (factuur alleen;
   klanturenstaat wordt apart via de klanturenstaatflow verzonden).
 - [x] Eerste twee productiebeheerders aangemaakt met persoonlijke tijdelijke wachtwoorden en verplichte
-  wachtwoordwijziging: `info@pathconsultancy.nl` (Path Backoffice) en
+  wachtwoordwijziging: `backoffice@pathconsultancy.nl` (Path Backoffice) en
   `kenrich.lieveld@pathconsultancy.nl` (Kenrich Lieveld). Wachtwoorden staan niet in Git of documentatie.
 - [-] Persoonlijke medewerkeraccounts en eventuele aanvullende beheerders veilig uitnodigen.
 - [x] Gebruikers deactiveren/verwijderenbeleid technisch vastgelegd: deactiveren stopt toegang en

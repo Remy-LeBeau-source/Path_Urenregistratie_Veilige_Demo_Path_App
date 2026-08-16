@@ -89,3 +89,12 @@ Feature: Facturen bekijken en beheren
     Given de administrator is ingelogd met demo-data inclusief geassigneerde taken
     When de administrator factuurdata voor augustus opvraagt met details
     Then bevat de server-PDF alle inhoudssecties: FACTUUR, Facturerende, Factuur aan, Project, uren/tarief, Betaling
+
+  @happy
+  Scenario: [INV-H-012] gesloten factuur PDF bevat alle content sections (recipient, project, uren/tarief)
+    # Regressie-preventie: invoice PDF completeness
+    # Testtechniek: Regressie-preventie + inhoudsconsistentie
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given de administrator is ingelogd en reset naar vaste baseline
+    When de administrator het factuurscherm opent en een factuur sluit
+    Then zit in de gegenereerde PDF alle content (recipient, project, uren, tarief, betaling)

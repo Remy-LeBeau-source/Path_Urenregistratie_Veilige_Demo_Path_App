@@ -132,7 +132,7 @@ assert(document.querySelector("#period-month-panel").hidden && document.querySel
 assert(document.querySelectorAll("#add-employee").length === 1, "De knop Medewerker toevoegen mag maar één keer bestaan");
 const settingsEmails = [...document.querySelectorAll('input[type="email"]')].map(input => input.value);
 assert(settingsEmails.some(email => email.endsWith("@example.invalid")), "De algemene verzendafzender moet een veilige placeholder zijn");
-assert(settingsEmails.includes("info@pathconsultancy.nl"), "Het e-mailadres uit de originele facturen moet op de PDF-instellingen staan");
+assert(settingsEmails.includes("backoffice@pathconsultancy.nl"), "Het e-mailadres uit de originele facturen moet op de PDF-instellingen staan");
 assert(document.querySelectorAll("#mail-recipient-settings-list .mail-recipient-setting").length === 2, "Boekhouder en EasySalary moeten als centrale ontvangers bestaan");
 assert(document.querySelector("#mail-recipient-settings-list").textContent.includes("salaris@example.invalid"), "Het EasySalary-adres moet centraal zichtbaar zijn");
 assert(document.body.textContent.includes("@example.invalid"), "Veilige brokerplaceholders moeten zichtbaar zijn");
@@ -1202,7 +1202,7 @@ assert(document.querySelector("#modal-summary").textContent.includes("Path Consu
 assert(document.querySelector("#modal-summary").textContent.includes("Laan van ZuidHoorn 165") && document.querySelector("#modal-summary").textContent.includes("2289 DD Rijswijk"), "Het ItaQ-factuuradres moet exact uit de bronfactuur komen");
 assert(document.querySelector("#modal-summary").textContent.includes("2289 DD Rijswijk"), "De postcode en plaats van de ontvanger moeten volledig zichtbaar blijven");
 assert(document.querySelector("#modal-summary").textContent.includes("2026"), "De factuurdatum moet het correcte jaar bevatten");
-assert(document.querySelector("#modal-summary").textContent.includes("06 21 46 91 72") && document.querySelector("#modal-summary").textContent.includes("info@pathconsultancy.nl"), "GSM en e-mail uit de originele facturen moeten zichtbaar zijn");
+assert(document.querySelector("#modal-summary").textContent.includes("0646328283") && document.querySelector("#modal-summary").textContent.includes("backoffice@pathconsultancy.nl"), "GSM en e-mail uit de originele facturen moeten zichtbaar zijn");
 assert(document.querySelector("#modal-summary").textContent.includes("Hierbij doe ik u de factuur toekomen betreft de volgende werkzaamheden."), "De oorspronkelijke factuurinleiding moet behouden blijven");
 assert(document.querySelector("#modal-summary").textContent.includes("binnen 30 dagen van de factuurdatum"), "De oorspronkelijke betalingstekst moet behouden blijven");
 // Invoice amounts: exact check depends on which employee's invoice is previewed first.
@@ -1557,7 +1557,7 @@ assert(migratedState.employees.every(employee => employee.emailNotificationsEnab
 assert(migratedState.employees.every(employee => employee.brokerInvoiceAttachment === true && employee.bookkeeperInvoiceAttachment === true && employee.payrollInvoiceAttachment === false), "Migratie moet de veilige standaardbijlagen per route toevoegen");
 assert(migratedState.employees.every(employee => employee.brokerMailEnabled === true), "Migratie moet voor iedere bestaande broker het keuzevak Ontvangt mail veilig inschakelen");
 assert(migratedState.settings.address === "Du Perronstraat 12" && migratedState.settings.postalCity === "3067 HN Rotterdam", "Migratie moet het oude gecombineerde bedrijfsadres correct splitsen");
-assert(migratedState.settings.phone === "06 21 46 91 72" && migratedState.settings.invoiceEmail === "info@pathconsultancy.nl", "Migratie moet GSM en factuur-e-mail uit de bronfacturen aanvullen");
+assert(migratedState.settings.phone === "0646328283" && migratedState.settings.invoiceEmail === "backoffice@pathconsultancy.nl", "Migratie moet GSM en factuur-e-mail uit de bronfacturen aanvullen");
 assert(migratedState.employees.filter(employee => /itaq/i.test(employee.broker)).every(employee => employee.brokerInvoiceAddress.includes("Laan van ZuidHoorn 165") && employee.invoiceRecipientName === "Itaq"), "Migratie moet de exacte ItaQ-factuurgegevens aanvullen");
 assert(migratedState.employees.find(employee => employee.id === 4).brokerInvoiceAddress.includes("Fultonbaan 6") && migratedState.employees.find(employee => employee.id === 4).invoiceRecipientName === "circle8", "Migratie moet de volledige Circle8-adressering aanvullen");
 assert(migratedState.employees.find(employee => employee.id === 4).agreementNumber === "202636991" && migratedState.employees.find(employee => employee.id === 4).creditorNumber === "622085" && migratedState.employees.find(employee => employee.id === 4).contractorNumber === "217744", "Migratie moet alle drie speciale Shawn-referenties aanvullen");
