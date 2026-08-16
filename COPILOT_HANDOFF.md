@@ -28,6 +28,32 @@ Verwijder eerdere relevante bevindingen niet. Noteer geen wachtwoorden, tokens o
 
 ## Actuele overdracht
 
+### 2026-08-16 23:17 · Copilot — pre-commit GUI-smoke opnieuw groen
+
+- Extra pre-commit validatie gedraaid op verzoek: `npm run test:gui-smoke`.
+- Resultaat: command exitcode `0`; meerdere gerichte GUI-smoke scenario's uitgevoerd met runner-managed PHP-server + geisoleerde testdatabase; zichtbare segmenten tonen `1 passed`-blokken en assets laden op `v0.9.85`.
+- Doel: laatste regressierisico op zichtbare gebruikersflow beperken vlak voor commit/push.
+- Volgende stap: direct commit + push van INV-H-012 fix + versiesynchronisatie.
+
+### 2026-08-16 23:12 · Copilot — INV-H-012 API-route hersteld, volledige regressie groen
+
+- CI-foutoorzaak bevestigd: test `INV-H-012` vroeg `/api/invoices` op en parseerde daardoor HTML (404) als JSON.
+- Fix in `tests/playwright/invoices.spec.ts`: endpoint gecorrigeerd naar `/server/api/invoices.php?period=2026-08` in zowel When als Then, plus assertions aangepast naar bestaande velden (`recipient_id`, `employee_name`, `hourly_rate`, `billable_hours`, `subtotal`, `vat_amount`, `total`).
+- Bewijs:
+  - `npm run check` lokaal groen (smoke + design + bdd-design + db-config + ops).
+  - Geisoleerde rerun `node scripts/run-playwright-e2e.mjs --grep INV-H-007 --project=desktop-chromium` groen (1/1).
+  - Volledige regressie `npm run test:e2e` groen: **227 passed (4.6m)**.
+- Versiesynchronisatie gedaan naar `v0.9.85` in package metadata en zichtbare UI/smoke/live-doc versieverwijzingen.
+- Gewijzigde bestanden in deze stap:
+  - `path-urenregistratie/tests/playwright/invoices.spec.ts`
+  - `path-urenregistratie/package.json`
+  - `path-urenregistratie/package-lock.json`
+  - `path-urenregistratie/index.html`
+  - `path-urenregistratie/scripts/smoke-test.mjs`
+  - `path-urenregistratie/scripts/build-live-doc-bundle.mjs`
+  - `path-urenregistratie/README.md`
+- Volgende stap: commit + push van deze regressiefix en versiebump, daarna CI bevestigen.
+
 ### 2026-08-16 17:52 · Copilot — auth-booting guard toegevoegd tegen F5-loginflits
 
 - De login-flits bij F5/herstel werd opgespoord als een eerste-paint/bootstrapprobleem: de login- en app-shell konden al zichtbaar zijn voordat de auth-check klaar was.

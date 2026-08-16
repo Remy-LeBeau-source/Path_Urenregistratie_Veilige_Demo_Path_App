@@ -330,8 +330,9 @@ test('[INV-H-012] gesloten factuur PDF bevat alle content sections (recipient, p
     
     // Open invoice API to get data for current period
     const invoices = await page.evaluate(async () => {
-      const response = await fetch('/api/invoices?period=2026-08&details=true', {
-        credentials: 'include'
+      const response = await fetch('/server/api/invoices.php?period=2026-08', {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
       });
       return response.json();
     });
@@ -341,18 +342,24 @@ test('[INV-H-012] gesloten factuur PDF bevat alle content sections (recipient, p
   await test.step('Then zit in de gegenereerde PDF alle content (recipient, project, uren, tarief, betaling)', async () => {
     // Verify that PDF generation includes complete content by checking invoice structure
     const invoices = await page.evaluate(async () => {
-      const response = await fetch('/api/invoices?period=2026-08&details=true', {
-        credentials: 'include'
+      const response = await fetch('/server/api/invoices.php?period=2026-08', {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
       });
       return response.json();
     });
     
-    // Check that invoice data has required fields (PDF would include these)
-    if (invoices.items && invoices.items.length > 0) {
-      const invoice = invoices.items[0];
-      expect(invoice).toHaveProperty('lines');
-      expect(Array.isArray(invoice.lines)).toBe(true);
-    }
+    // Check that invoice data has required fields (PDF would include these:
+    // recipient, project/uren/tarief, betaling)
+    expect(invoices.items.length).toBeGreaterThan(0);
+    const invoice = invoices.items[0];
+    expect(invoice).toHaveProperty('recipient_id');
+    expect(invoice).toHaveProperty('employee_name');
+    expect(invoice).toHaveProperty('hourly_rate');
+    expect(invoice).toHaveProperty('billable_hours');
+    expect(invoice).toHaveProperty('subtotal');
+    expect(invoice).toHaveProperty('vat_amount');
+    expect(invoice).toHaveProperty('total');
   });
 });
 
