@@ -4,6 +4,29 @@ Bijgewerkt: 16 augustus 2026
 
 ## Laatste Codex-overdracht — LOCAL Herstelmeldingen
 
+### 2026-08-16 16:18 · Copilot — v0.9.78 build en smoke groen
+
+- De release is doorgebumped naar `v0.9.78`; zichtbare labels, docs en smoke-asserties zijn meegezet.
+- GUI-baseline op localhost: 12 open acties totaal, opgesplitst in 7 bij Backoffice en 5 wacht op medewerkers.
+- Bewijs: `npm run build` en `node scripts/smoke-test.mjs` zijn beide groen afgerond.
+- Gewijzigd: `package.json`, `package-lock.json`, `index.html`, `README.md`,
+  `scripts/build-live-doc-bundle.mjs`, `scripts/smoke-test.mjs`, `MASTERCHECKLIST.md`,
+  `dist/index.html`.
+- Volgende stap: commit/push van deze patchrelease, tenzij de user nog extra scope vraagt.
+
+### 2026-08-16 16:12 · Copilot — invoice-only broker regressies groen
+
+- De resterende stale brokerbundelverwachtingen in `tests/playwright/email-queue.spec.ts` zijn
+  gesynchroniseerd met de huidige invoice-only flow.
+- Bewijs: gerichte reruns zijn groen afgerond voor `EQ-H-016`, `EQ-H-025` en `EQ-N-019`;
+  eerder waren `EQ-H-016`, `EQ-H-025`, `MOB-H-005` en `EQ-H-015` al groen op de direct aangepaste
+  slice.
+- Gewijzigd: `tests/playwright/email-queue.spec.ts`.
+- Uitgevoerde tests en resultaten: alle relevante gerichte Playwright-runs zijn 1/1 groen;
+  lokale precheck en de geïsoleerde testdatabase zijn telkens succesvol opgezet.
+- Volgende stap: geen bredere regressie draaien totdat de user daarom vraagt; deze touched slice is
+  nu afgedekt.
+
 ### 2026-08-16 · Copilot — v0.9.77 mail-, sessie- en mobiele fixes
 
 - Server gebruikt per-assignment onderwerp/body; migraties 017/018 en TEST-reset zijn gekoppeld.

@@ -89,12 +89,12 @@ Post-live beheer
 
 ## Actuele stand
 
-### 2026-08-16 · v0.9.77 mobiele appvriendelijke quick fix
+### 2026-08-16 · v0.9.78 mobiele appvriendelijke quick fix
 
 - De mobiele app is compacter en rustiger gemaakt zonder desktopgedrag te breken.
 - De klanturenstaat-maandkeuze sluit weer direct en de onderwerpregels zijn gesynchroniseerd met
   `... ter controle`.
-- De releaseversie is opgehoogd naar v0.9.77; build en smoke zijn opnieuw groen.
+- De releaseversie is opgehoogd naar v0.9.78; build en smoke zijn opnieuw groen.
 
 ### Leidende momentopname — 2026-08-15
 

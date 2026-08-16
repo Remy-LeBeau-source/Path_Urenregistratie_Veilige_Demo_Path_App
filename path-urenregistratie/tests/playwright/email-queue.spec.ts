@@ -379,7 +379,7 @@ test.describe('email queue api', () => {
       await expect(page.locator('#mail-delivery-history-summary')).toContainText('Laatste 12 registraties');
       await expect(history).toContainText('info@pathconsultancy.nl');
       await expect(history).toContainText('Factuur PATH-2026-007 – juli 2026');
-      await expect(history).toContainText('Factuur + klanturenstaat');
+      await expect(history).toContainText('Factuur');
       await expect(history).toContainText('Acceptatietest');
       await expect(history.locator('[data-mail-acceptance-test="true"]')).toHaveCount(1);
       await expect(history).toContainText('Verzonden');
@@ -405,14 +405,13 @@ test.describe('email queue api', () => {
     const scenarios = [
       {
         key: 'broker_bundle',
-        label: 'Broker: factuur + klanturenstaat',
+        label: 'Broker: factuur',
         recipient: 'info@pathconsultancy.nl',
-        attachment_count: 2,
+        attachment_count: 1,
         ready: true,
         issues: [],
         attachments: [
           { index: 0, filename: 'ACCEPTATIETEST-NIET-BOEKEN-Factuur-PATH-2026-007.pdf' },
-          { index: 1, filename: 'ACCEPTATIETEST-NIET-BOEKEN-Klanturenstaat-Stasjo-2026-07.pdf' },
         ],
       },
       {
@@ -438,7 +437,7 @@ test.describe('email queue api', () => {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ ok: true, result: { scenario: 'broker_bundle', recipient: 'info@pathconsultancy.nl', attachment_count: 2, outcome: 'sent' } }),
+          body: JSON.stringify({ ok: true, result: { scenario: 'broker_bundle', recipient: 'info@pathconsultancy.nl', attachment_count: 1, outcome: 'sent' } }),
         });
         return;
       }
@@ -464,25 +463,21 @@ test.describe('email queue api', () => {
       await expect(page.locator('[data-mail-acceptance-scenario]')).toHaveCount(5);
       await expect(page.locator('#mail-acceptance-console')).not.toContainText('Alles versturen');
       const brokerPreviews = page.locator('[data-mail-acceptance-key="broker_bundle"] .mail-acceptance-attachment');
-      await expect(brokerPreviews).toHaveCount(2);
+      await expect(brokerPreviews).toHaveCount(1);
       await expect(brokerPreviews.nth(0)).toHaveText('Factuur-PDF');
       await expect(brokerPreviews.nth(0)).toHaveAttribute('title', 'ACCEPTATIETEST-NIET-BOEKEN-Factuur-PATH-2026-007.pdf');
-      await expect(brokerPreviews.nth(1)).toHaveText('Klanturenstaat-PDF');
-      await expect(brokerPreviews.nth(1)).toHaveAttribute('title', 'ACCEPTATIETEST-NIET-BOEKEN-Klanturenstaat-Stasjo-2026-07.pdf');
     });
 
-    await test.step('When de beheerder alleen de brokerbundel kiest en ontvanger en twee bijlagen bevestigt', async () => {
+    await test.step('When de beheerder alleen de brokerfactuur kiest en ontvanger en een bijlage bevestigt', async () => {
       await page.locator('[data-mail-acceptance-scenario="broker_bundle"]').click();
-      await expect(page.locator('#modal-title')).toContainText('Broker: factuur + klanturenstaat');
+      await expect(page.locator('#modal-title')).toContainText('Broker: factuur');
       await expect(page.locator('#modal-summary')).toContainText('info@pathconsultancy.nl');
-      await expect(page.locator('#modal-summary')).toContainText('2 gecontroleerde PDF-bijlagen');
+      await expect(page.locator('#modal-summary')).toContainText('1 gecontroleerde PDF-bijlage');
       await expect(page.locator('#modal-summary')).toContainText('ACCEPTATIETEST · NIET BOEKEN');
       const attachmentPreviews = page.locator('#modal-summary .mail-acceptance-attachment');
-      await expect(attachmentPreviews).toHaveCount(2);
+      await expect(attachmentPreviews).toHaveCount(1);
       await expect(attachmentPreviews.nth(0)).toHaveText('Factuur-PDF bekijken');
       await expect(attachmentPreviews.nth(0)).toHaveAttribute('href', /preview_scenario=broker_bundle&attachment=0$/);
-      await expect(attachmentPreviews.nth(1)).toHaveText('Klanturenstaat-PDF bekijken');
-      await expect(attachmentPreviews.nth(1)).toHaveAttribute('href', /preview_scenario=broker_bundle&attachment=1$/);
       await expect(page.locator('#modal-confirm')).toHaveText('1 acceptatiemail versturen');
       await page.locator('#modal-confirm').click();
     });
@@ -501,16 +496,15 @@ test.describe('email queue api', () => {
     const posted: Array<Record<string, unknown>> = [];
     const scenarios = [{
       key: 'broker_bundle',
-      label: 'Broker: factuur + klanturenstaat',
+      label: 'Broker: factuur',
       recipient: 'lokale-mailpreview@example.invalid',
-      attachment_count: 2,
+      attachment_count: 1,
       ready: true,
       issues: [],
       preview_subject: '[LOKALE CONTROLE] Factuur PATH-2026-007 – juli 2026',
-      preview_body: 'LOKALE CONTROLE — NIET VERZONDEN\n\nHierbij sturen wij de gecontroleerde documenten.',
+      preview_body: 'LOKALE CONTROLE — NIET VERZONDEN\n\nHierbij sturen wij de gecontroleerde factuur.',
       attachments: [
         { index: 0, filename: 'ACCEPTATIETEST-NIET-BOEKEN-Factuur-PATH-2026-007.pdf' },
-        { index: 1, filename: 'ACCEPTATIETEST-NIET-BOEKEN-Klanturenstaat-Stasjo-2026-07.pdf' },
       ],
     }];
 
@@ -567,7 +561,7 @@ test.describe('email queue api', () => {
     await expect(page.locator('#setting-send-mode')).toContainText('geen verzending');
     await expect(page.locator('#toggle-test-mail-delivery')).toHaveText('Mailpreview inschakelen');
     await expect(page.locator('[data-mail-acceptance-scenario="broker_bundle"]')).toBeDisabled();
-    await expect(page.locator('[data-mail-acceptance-key="broker_bundle"] .mail-acceptance-attachment')).toHaveCount(2);
+    await expect(page.locator('[data-mail-acceptance-key="broker_bundle"] .mail-acceptance-attachment')).toHaveCount(1);
     await expect(page.locator('[data-mail-acceptance-key="broker_bundle"]')).toContainText('Gesimuleerde TEST-aflevering: giovanno.maatsen@pathconsultancy.nl');
 
     const previewToggle = page.locator('#toggle-test-mail-delivery');
@@ -593,8 +587,8 @@ test.describe('email queue api', () => {
     await expect(page.locator('#modal-summary')).toContainText('giovanno.maatsen@pathconsultancy.nl');
     await expect(page.locator('#modal-summary')).toContainText('geen verzending');
     await expect(page.locator('#modal-summary')).toContainText('[LOKALE CONTROLE] Factuur PATH-2026-007');
-    await expect(page.locator('#modal-summary')).toContainText('Hierbij sturen wij de gecontroleerde documenten.');
-    await expect(page.locator('#modal-summary .mail-acceptance-attachment')).toHaveCount(2);
+    await expect(page.locator('#modal-summary')).toContainText('Hierbij sturen wij de gecontroleerde factuur.');
+    await expect(page.locator('#modal-summary .mail-acceptance-attachment')).toHaveCount(1);
     await expect(page.locator('#modal-confirm')).toHaveText('1 controlevoorbeeld maken');
     await page.locator('#modal-confirm').click();
 
@@ -602,7 +596,7 @@ test.describe('email queue api', () => {
     expect(posted[0]).toEqual({ scenario: 'broker_bundle', confirm: 'SEND_ONE_ACCEPTANCE_MAIL' });
     await expect(page.locator('#toast')).toContainText('niets is extern verzonden');
     await expect(page.locator('#mail-delivery-history-list')).toContainText('Controlevoorbeeld');
-    await expect(page.locator('#mail-delivery-history-list')).toContainText('Factuur + klanturenstaat');
+    await expect(page.locator('#mail-delivery-history-list')).toContainText('Factuur');
     await expect(page.locator('#mail-delivery-history-list')).toContainText('Gesimuleerde TEST-aflevering: giovanno.maatsen@pathconsultancy.nl');
 
     await expect(statusToggle).toHaveAttribute('aria-label', 'Lokale mailpreview uitschakelen');
@@ -709,7 +703,7 @@ test.describe('email queue api', () => {
     const consolePanel = page.locator('#mail-acceptance-console');
     await expect(consolePanel).toBeHidden();
     await expect(consolePanel.locator('[data-mail-acceptance-scenario]:enabled')).toHaveCount(0);
-    await expect(consolePanel.getByText('Broker: factuur + klanturenstaat')).toBeHidden();
+    await expect(consolePanel.getByText('Broker: factuur')).toBeHidden();
     await expect(consolePanel.getByText('Eerste uitnodiging: wachtwoord aanmaken')).toBeHidden();
   });
 
@@ -1019,7 +1013,7 @@ test.describe('email queue api', () => {
 
   test('[EQ-N-019] gesloten acceptatievenster toont waarom geen mail kan worden verstuurd', async ({ page }) => {
     const scenarios = [
-      ['broker_bundle', 'Broker: factuur + klanturenstaat', 2],
+      ['broker_bundle', 'Broker: factuur', 1],
       ['accountant_invoice', 'Boekhouder: factuur', 1],
       ['payroll_hours', 'Salarisadministratie: alleen ureninformatie', 0],
       ['password_reset', 'Wachtwoord vergeten: eenmalige link', 0],
