@@ -112,7 +112,7 @@ Feature: Mailroutering en aflevering
   @happy
   Scenario: [EQ-H-020] Backoffice finaliseert de branded serverfactuur en verzendt drie echte TEST-mails
     # Testtechniek: Toestandsovergang + inhoudsconsistentie + async racepreventie
-    # Aantoonbare Playwright-assertions: serveruren/tarief/subtotal/btw/totaal, geldige PDF en geblokkeerde navigatie
+    # Aantoonbare Playwright-assertions in deze case: 15
     Given een goedgekeurde maar nog niet definitieve serverfactuur als Backoffice-taak klaarstaat
     When Backoffice de verzending één keer afrondt
     Then gebruikt PDF en mail exact dezelfde serverbedragen, wordt eerst gelockt en blijft taaknavigatie geblokkeerd tot afronding
