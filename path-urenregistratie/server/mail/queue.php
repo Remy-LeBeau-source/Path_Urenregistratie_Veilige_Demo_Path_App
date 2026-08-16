@@ -234,11 +234,11 @@ function mail_enqueue_for_invoice(
             mail_assert_vars($tpl['subject'], $vars, 'broker.subject');
             mail_assert_vars($tpl['body'], $vars, 'broker.body');
 
-            // The confirmed production bundle sends the finalized invoice and the separately
-            // approved customer timesheet to the broker. Dispatch refuses incomplete bundles.
+            // The broker mail sends the finalized invoice only; the customer-timesheet route
+            // is handled separately by the dedicated klanturenstaat flow.
             $attachPolicy = (bool)$inv['broker_invoice_attachment']
-                ? 'invoice_and_customer_timesheet'
-                : 'customer_timesheet';
+                ? 'invoice'
+                : 'none';
             $id = mail_insert_delivery(
                 $pdo, $invoiceId, 'broker',
                 (string)$broker['invoice_email'],

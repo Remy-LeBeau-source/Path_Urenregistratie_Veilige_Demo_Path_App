@@ -105,7 +105,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.76"), "Het zichtbare versienummer moet 0.9.76 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.77"), "Het zichtbare versienummer moet 0.9.77 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -151,7 +151,7 @@ const employeePicker = document.querySelector("#login-employee");
 employeePicker.value = "1";
 employeePicker.dispatchEvent(new Event("change", { bubbles: true }));
 const demoScenarioState = JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(demoScenarioState.schemaVersion === 26, "Versie 0.9.76 moet wijzigingen onder de juiste gegevensversie bewaren");
+assert(demoScenarioState.schemaVersion === 26, "Versie 0.9.77 moet wijzigingen onder de juiste gegevensversie bewaren");
 assert(demoScenarioState.settings.companyName === "QSI Consultancy B.V." && demoScenarioState.settings.invoiceNameDisplay === "trade_and_legal", "De standaardfactuuridentiteit moet Path als handelsnaam aan QSI Consultancy B.V. koppelen");
 const freshOpenActions = dom.window.adminOpenTasks();
 const freshJuneActions = freshOpenActions.filter(task => task.periodKey === "2026-06");
@@ -408,7 +408,8 @@ assert(document.querySelector("#customer-timesheet-month").tagName === "BUTTON" 
 click("#customer-timesheet-month");
 assert(!document.querySelector("#customer-timesheet-month-panel").hidden, "Het maandvenster van de klanturenstaat moet openen");
 click("[data-month-control=\"#customer-timesheet-month\"][data-period-month=\"08\"]");
-assert(document.querySelector("#customer-timesheet-subject").textContent === "Klanturenstaat Stasjo van Bakel – augustus 2026" && document.querySelector("#customer-timesheet-month-panel").hidden, "Een gewone maandknop moet de klanturenstaat direct wijzigen en het venster sluiten");
+assert(document.querySelector("#customer-timesheet-subject").textContent === "Klanturenstaat Stasjo van Bakel – augustus 2026 ter controle", "Een gewone maandknop moet de klanturenstaat direct wijzigen");
+assert(document.querySelector("#customer-timesheet-month-panel").hidden, "Een gewone maandknop moet het venster sluiten");
 click("#customer-timesheet-month");
 assert(!document.querySelector("#customer-timesheet-month-panel").hidden, "Het maandvenster moet na een eerdere keuze opnieuw openen");
 click("[data-month-control=\"#customer-timesheet-month\"][data-period-month=\"07\"]");
@@ -417,18 +418,18 @@ click("#customer-timesheet-month");
 const _origCalendarKey = dom.window.currentCalendarPeriodKey;
 dom.window.currentCalendarPeriodKey = () => "9999-12";
 choosePeriod("#customer-timesheet-month", "#customer-timesheet-year", "2026-09");
-assert(document.querySelector("#customer-timesheet-subject").textContent === "Klanturenstaat Stasjo van Bakel – september 2026", "De onderwerpregel moet na de periodekeuze automatisch worden ingevuld");
+assert(document.querySelector("#customer-timesheet-subject").textContent === "Klanturenstaat Stasjo van Bakel – september 2026 ter controle", "De onderwerpregel moet na de periodekeuze automatisch worden ingevuld");
 assert(document.querySelector("#customer-timesheet-mail-route").textContent.includes("Van Stasjo van Bakel aan Path Backoffice") && document.querySelector("#customer-timesheet-mail-route").textContent.includes("backoffice@pathconsultancy.nl"), "De medewerker moet duidelijk zien dat zijn bericht eerst bij de beheerder van Backoffice komt");
-assert(document.querySelector("#customer-timesheet-body").textContent.includes("mijn door de klant verstrekte klanturenstaat") && document.querySelector("#customer-timesheet-body").textContent.includes("september 2026") && document.querySelector("#customer-timesheet-body").textContent.includes("Stasjo van Bakel") && !document.querySelector("#customer-timesheet-body").textContent.includes("Path Backoffice"), "De eerste mail moet namens de medewerker zijn en niet namens Backoffice");
+assert(document.querySelector("#customer-timesheet-body").textContent.includes("mijn klanturenstaat") && document.querySelector("#customer-timesheet-body").textContent.includes("september 2026") && document.querySelector("#customer-timesheet-body").textContent.includes("Stasjo van Bakel") && !document.querySelector("#customer-timesheet-body").textContent.includes("Path Backoffice"), "De eerste mail moet namens de medewerker zijn en niet namens Backoffice");
 click("#customer-timesheet-edit-mail");
-assert(document.querySelector("#modal-title").textContent.includes("Stasjo van Bakel") && document.querySelector("#customer-timesheet-submission-subject").value === "Klanturenstaat Stasjo van Bakel – september 2026", "De medewerker moet onderwerp en bericht vóór indienen kunnen aanpassen");
-document.querySelector("#customer-timesheet-submission-subject").value = "Klanturenstaat Stasjo – september 2026";
+assert(document.querySelector("#modal-title").textContent.includes("Stasjo van Bakel") && document.querySelector("#customer-timesheet-submission-subject").value === "Klanturenstaat Stasjo van Bakel – september 2026 ter controle", "De medewerker moet onderwerp en bericht vóór indienen kunnen aanpassen");
+document.querySelector("#customer-timesheet-submission-subject").value = "Klanturenstaat Stasjo – september 2026 ter controle";
 document.querySelector("#customer-timesheet-submission-body").value = "Goedemiddag,\n\nHierbij stuur ik mijn klanturenstaat ter controle.\n\nMet vriendelijke groet,\n\nStasjo van Bakel";
 click("#modal-confirm");
-assert(document.querySelector("#customer-timesheet-subject").textContent === "Klanturenstaat Stasjo – september 2026" && document.querySelector("#customer-timesheet-body").textContent.includes("Hierbij stuur ik mijn klanturenstaat ter controle"), "Een aangepaste medewerkersmail moet direct in het maandvoorbeeld terugkomen");
+assert(document.querySelector("#customer-timesheet-subject").textContent === "Klanturenstaat Stasjo – september 2026 ter controle" && document.querySelector("#customer-timesheet-body").textContent.includes("Hierbij stuur ik mijn klanturenstaat ter controle"), "Een aangepaste medewerkersmail moet direct in het maandvoorbeeld terugkomen");
 click("#customer-timesheet-edit-mail");
 click("#modal-secondary");
-assert(document.querySelector("#customer-timesheet-subject").textContent === "Klanturenstaat Stasjo van Bakel – september 2026", "De medewerker moet het organisatiestandaardbericht kunnen herstellen");
+assert(document.querySelector("#customer-timesheet-subject").textContent === "Klanturenstaat Stasjo van Bakel – september 2026 ter controle", "De medewerker moet het organisatiestandaardbericht kunnen herstellen");
 assert(document.querySelector("#customer-timesheet-upload-panel").textContent.includes("Downloads/Bestanden"), "De medewerker moet direct zien hoe een PDF vanuit e-mail in de app komt");
 assert(document.querySelector("#customer-timesheet-save-draft").disabled && document.querySelector("#customer-timesheet-submit").disabled && document.querySelector("#customer-timesheet-action-help").textContent.includes("Kies eerst"), "Zonder bestand moeten de knoppen de vervolgstap duidelijk uitleggen");
 const customerTimesheetPdf = new dom.window.File(["%PDF-1.4 klanturenstaat"], "klant_juli.pdf", { type: "application/pdf" });
@@ -448,7 +449,7 @@ const uploadedCustomerState = JSON.parse(dom.window.localStorage.getItem("path-u
 assert(uploadedCustomerState.records["2026-09"]["2"].customerTimesheet.status === "received", "Indienen bij Backoffice moet het concept op Controle nodig zetten");
 assert(uploadedCustomerState.records["2026-09"]["2"].customerTimesheet.fileName === "Klanturenstaat_Stasjo_van_Bakel_2026-09.pdf", "De bestandsnaam moet automatisch medewerker, jaar en maand bevatten");
 assert(uploadedCustomerState.records["2026-09"]["2"].customerTimesheet.fileData.startsWith("data:application/pdf"), "De lokale voorbereiding moet de gekozen PDF bewaren");
-assert(uploadedCustomerState.records["2026-09"]["2"].customerTimesheet.submissionSubject === "Klanturenstaat Stasjo van Bakel – september 2026" && uploadedCustomerState.records["2026-09"]["2"].customerTimesheet.submissionBody.includes("Stasjo van Bakel") && !uploadedCustomerState.records["2026-09"]["2"].customerTimesheet.submissionBody.includes("Path Backoffice"), "De beheerder moet na indienen het onderwerp en bericht van de medewerker terugzien");
+assert(uploadedCustomerState.records["2026-09"]["2"].customerTimesheet.submissionSubject === "Klanturenstaat Stasjo van Bakel – september 2026 ter controle" && uploadedCustomerState.records["2026-09"]["2"].customerTimesheet.submissionBody.includes("Stasjo van Bakel") && !uploadedCustomerState.records["2026-09"]["2"].customerTimesheet.submissionBody.includes("Path Backoffice"), "De beheerder moet na indienen het onderwerp en bericht van de medewerker terugzien");
 assert(uploadedCustomerState.notifications.length === notificationsBeforeCustomerConcept + 1 && uploadedCustomerState.notifications.at(-1).title === "Klanturenstaat ingediend", "Pas indienen moet Backoffice in de app melden");
 choosePeriod("#customer-timesheet-month", "#customer-timesheet-year", "2026-10");
 const customerTimesheetPng = new dom.window.File(["voorbeeldafbeelding"], "klant_oktober.png", { type: "image/png" });
@@ -460,7 +461,7 @@ const convertedImageState = JSON.parse(dom.window.localStorage.getItem("path-ure
 assert(convertedImageState.status === "draft" && convertedImageState.originalFileName === "klant_oktober.png", "Een PNG moet eerst als klanturenstaatconcept kunnen worden opgeslagen");
 assert(convertedImageState.fileName === "Klanturenstaat_Stasjo_van_Bakel_2026-10.pdf" && convertedImageState.fileData.startsWith("data:application/pdf"), "JPG en PNG moeten automatisch één gestandaardiseerde PDF opleveren");
 choosePeriod("#customer-timesheet-month", "#customer-timesheet-year", "2027-01");
-assert(document.querySelector("#customer-timesheet-subject").textContent === "Klanturenstaat Stasjo van Bakel – januari 2027", "De klanturenstaatroute moet automatisch overgaan naar een volgend jaar");
+assert(document.querySelector("#customer-timesheet-subject").textContent === "Klanturenstaat Stasjo van Bakel – januari 2027 ter controle", "De klanturenstaatroute moet automatisch overgaan naar een volgend jaar");
 assert(dom.window.customerTimesheetFileName(demoScenarioState.employees.find(employee => employee.id === 2), "2027-01") === "Klanturenstaat_Stasjo_van_Bakel_2027-01.pdf", "De bestandsnaam moet in een nieuw jaar automatisch 2027 gebruiken");
 choosePeriod("#customer-timesheet-month", "#customer-timesheet-year", "2026-07");
 
@@ -692,7 +693,7 @@ assert(document.querySelector("#customer-timesheet-admin-list").textContent.incl
 click('[data-review-customer-timesheet="1"][data-period-key="2026-08"]');
 assert(document.querySelector("#modal-title").textContent.includes("Marc de Roon") && document.querySelector("#modal-secondary").textContent === "Opnieuw uploaden vragen", "Backoffice moet een officiële PDF kunnen goedkeuren of opnieuw laten uploaden");
 assert(document.querySelector('#modal-summary [data-view-customer-timesheet="1"]'), "Backoffice moet de ingediende PDF kunnen bekijken voordat deze wordt goedgekeurd");
-assert(document.querySelector("#modal-summary").textContent.includes("Van Marc de Roon aan Path Backoffice") && document.querySelector("#modal-summary").textContent.includes("mijn door de klant verstrekte klanturenstaat"), "De beheerder moet eerst het bericht van de medewerker bij de inzending zien");
+assert(document.querySelector("#modal-summary").textContent.includes("Van Marc de Roon aan Path Backoffice") && document.querySelector("#modal-summary").textContent.includes("mijn klanturenstaat"), "De beheerder moet eerst het bericht van de medewerker bij de inzending zien");
 click("#modal-confirm");
 // Remove temp diagnostic
 assert(JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final")).records["2026-08"]["1"].customerTimesheet.status === "approved", "Een gecontroleerde klanturenstaat moet Goedgekeurd worden");
@@ -968,15 +969,15 @@ assert(document.querySelector("#setting-weekly-reminder-day").value === "friday"
 assert(document.querySelectorAll(".reminder-choice-field select[hidden]").length === 7 && document.querySelectorAll("[data-reminder-choice-trigger]").length === 7, "Alle herinneringskeuzes moeten eigen uitklapmenu's gebruiken in plaats van zichtbare browserdropdowns");
 assert(document.querySelector("#setting-weekly-reminder-day-trigger").textContent.includes("Vrijdag") && document.querySelector("#setting-weekly-reminder-time-trigger").textContent.includes("15:00"), "De eigen herinneringsmenu's moeten de actuele keuze direct op de knop tonen");
 assert(document.querySelector("#setting-customer-timesheet-reminder-enabled").checked && document.querySelector("#setting-customer-timesheet-overdue-days").value === "2", "Instellingen moeten klanturenstaatherinneringen apart tonen");
-assert(document.querySelector("#setting-customer-timesheet-submission-subject").value === "Klanturenstaat {medewerker} – {maand} {jaar}" && document.querySelector("#setting-customer-timesheet-submission-body").value.includes("{medewerker}"), "Instellingen moeten een apart standaardsjabloon voor medewerker naar Backoffice tonen");
-assert(document.querySelector("#setting-customer-timesheet-broker-subject").value === "Klanturenstaat {medewerker} – {maand} {jaar}" && document.querySelector("#setting-customer-timesheet-broker-body").value.includes("{afzender}") && document.querySelector("#setting-customer-timesheet-broker-body").value.includes("{organisatie}"), "Instellingen moeten een apart standaardsjabloon voor Backoffice naar broker tonen");
+assert(document.querySelector("#setting-customer-timesheet-submission-subject").value === "Klanturenstaat {medewerker} – {maand} {jaar} ter controle" && document.querySelector("#setting-customer-timesheet-submission-body").value.includes("mijn klanturenstaat"), "Instellingen moeten een apart standaardsjabloon voor medewerker naar Backoffice tonen");
+assert(document.querySelector("#setting-customer-timesheet-broker-subject").value === "Klanturenstaat {medewerker} – {maand} {jaar} voor dossier" && document.querySelector("#setting-customer-timesheet-broker-body").value.includes("Path Backoffice") && document.querySelector("#setting-customer-timesheet-broker-body").value.includes("{organisatie}"), "Instellingen moeten een apart standaardsjabloon voor Backoffice naar broker tonen");
 document.querySelector("#setting-customer-timesheet-submission-subject").value = "Document {medewerker} – {maand} {jaar}";
 document.querySelector("#setting-customer-timesheet-broker-subject").value = "Urenstaat {medewerker} – {maand} {jaar}";
 click("#save-settings");
 let customerTimesheetTemplateState = JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final"));
 assert(customerTimesheetTemplateState.settings.customerTimesheetSubmissionSubject.startsWith("Document") && customerTimesheetTemplateState.settings.customerTimesheetBrokerSubject.startsWith("Urenstaat"), "De twee standaardsjablonen moeten onafhankelijk bewerkbaar en lokaal opgeslagen zijn");
-document.querySelector("#setting-customer-timesheet-submission-subject").value = "Klanturenstaat {medewerker} – {maand} {jaar}";
-document.querySelector("#setting-customer-timesheet-broker-subject").value = "Klanturenstaat {medewerker} – {maand} {jaar}";
+document.querySelector("#setting-customer-timesheet-submission-subject").value = "Klanturenstaat {medewerker} – {maand} {jaar} ter controle";
+document.querySelector("#setting-customer-timesheet-broker-subject").value = "Klanturenstaat {medewerker} – {maand} {jaar} voor dossier";
 click("#save-settings");
 click("#setting-weekly-reminder-day-trigger");
 assert(!document.querySelector("#setting-weekly-reminder-day-choices").hidden, "Een eigen herinneringsmenu moet zichtbaar en aanklikbaar openen");
@@ -1540,7 +1541,7 @@ const migrationPicker = migrationDom.window.document.querySelector("#login-admin
 migrationPicker.value = "joyce";
 migrationPicker.dispatchEvent(new migrationDom.window.Event("change", { bubbles: true }));
 const migratedState = JSON.parse(migrationDom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(migratedState.schemaVersion === 26, "Bestaande browsergegevens moeten ook in v0.9.76 veilig behouden blijven");
+assert(migratedState.schemaVersion === 26, "Bestaande browsergegevens moeten ook in v0.9.77 veilig behouden blijven");
 assert(migratedState.settings.companyName === "QSI Consultancy B.V." && migratedState.settings.invoiceNameDisplay === "trade_and_legal", "Migratie moet QSI als B.V. en de gecombineerde factuurweergave veilig aanvullen");
 assert(migratedState.settings.mailRecipients.find(recipient => recipient.id === "payroll").name.includes("Salarisadministratie"), "Migratie moet EasySalary als duidelijke salarisadministratieroute benoemen");
 assert(migratedState.records["2026-07"]["4"].invoiceNumber === "Bel-Shawn-2026-juli", "Migratie moet ook bestaande factuurnummers omzetten naar de afgesproken koppeltekens");
@@ -1634,4 +1635,4 @@ assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("
 assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Playwright stage- en lokale env-bestanden mogen expliciete runner/CI-variabelen niet overschrijven");
 
 dom.window.close();
-console.log("Path v0.9.76 volledige smoke test: geslaagd");
+console.log("Path v0.9.77 volledige smoke test: geslaagd");

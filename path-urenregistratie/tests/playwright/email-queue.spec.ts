@@ -173,7 +173,7 @@ test.describe('email queue api', () => {
     await test.step('And cleanup', async () => { await authApi.logout(); await ctx.dispose(); });
   });
 
-  test('[EQ-H-002] broker-channel bundelt factuur en klanturenstaat', async () => {
+  test('[EQ-H-002] broker-channel stuurt alleen de factuur', async () => {
     const { ctx, authApi, queueApi, invoiceId } = await createLockedInvoice();
 
     await test.step('Given een gelockte factuur met broker_invoice_attachment=true', async () => {});
@@ -185,9 +185,9 @@ test.describe('email queue api', () => {
         .filter(i => (i.invoice_id as number) === invoiceId && i.channel === 'broker');
     });
 
-    await test.step('Then heeft de broker-channel attachment_policy=invoice_and_customer_timesheet', async () => {
+    await test.step('Then heeft de broker-channel attachment_policy=invoice', async () => {
       expect(brokerItems.length).toBeGreaterThan(0);
-      expect(brokerItems.every(i => i.attachment_policy === 'invoice_and_customer_timesheet')).toBe(true);
+      expect(brokerItems.every(i => i.attachment_policy === 'invoice')).toBe(true);
     });
 
     await test.step('And cleanup', async () => { await authApi.logout(); await ctx.dispose(); });
@@ -227,7 +227,7 @@ test.describe('email queue api', () => {
 
       expect(items).toHaveLength(3);
       expect([...byChannel.keys()].sort()).toEqual(['accountant', 'broker', 'payroll']);
-      expect(byChannel.get('broker')?.attachment_policy).toBe('invoice_and_customer_timesheet');
+      expect(byChannel.get('broker')?.attachment_policy).toBe('invoice');
       expect(byChannel.get('accountant')?.attachment_policy).toBe('invoice');
       expect(byChannel.get('payroll')?.attachment_policy).toBe('none');
       expect(new Set(items.map(item => Number(item.invoice_id)))).toEqual(new Set([invoiceId]));
@@ -313,7 +313,7 @@ test.describe('email queue api', () => {
               recipient_email: 'info@pathconsultancy.nl',
               cc_email: null,
               subject_snapshot: 'Factuur PATH-2026-007 – juli 2026',
-              attachment_policy: 'invoice_and_customer_timesheet',
+              attachment_policy: 'invoice',
               status: 'sent',
               attempt_count: 1,
               dry_run: false,
@@ -546,7 +546,7 @@ test.describe('email queue api', () => {
           channel: 'broker',
           recipient_email: 'lokale-mailpreview@example.invalid',
           subject_snapshot: '[LOKALE CONTROLE] Factuur PATH-2026-007 – juli 2026',
-          attachment_policy: 'invoice_and_customer_timesheet',
+          attachment_policy: 'invoice',
           status: 'queued',
           dry_run: true,
           acceptance_test: true,

@@ -4,13 +4,29 @@ Bijgewerkt: 16 augustus 2026
 
 ## Laatste Codex-overdracht — LOCAL Herstelmeldingen
 
-### 2026-08-16 · Copilot — v0.9.76 mail-, sessie- en mobiele fixes
+### 2026-08-16 · Copilot — v0.9.77 mail-, sessie- en mobiele fixes
 
 - Server gebruikt per-assignment onderwerp/body; migraties 017/018 en TEST-reset zijn gekoppeld.
 - Geldige auth-sessie blijft actief bij F5 en na Herstel; maandverzending auto-refresht facturen.
-- Een taak sluit alleen bij volledige echte aflevering; gecontroleerde klanturenstaat blijft als
-  brokerbijlage bruikbaar. Mobiele taakregels zijn compacter.
+- Broker-facturen sturen nu alleen de factuur; de klanturenstaat loopt via de aparte
+  klanturenstaattaak en de bijbehorende TEST-brokerroute. Mobiele taakregels zijn compacter.
 - Gericht groen: 79/79 + F5 1/1 + mail/PDF 3/3; smoke, build en DB-H-001 groen.
+
+### 2026-08-16 · Copilot — klanturenstaatteksten realistischer gemaakt
+
+- De standaardonderwerpen voor klanturenstaat zijn herschreven naar:
+  medewerker → Backoffice `... ter controle` en Backoffice → broker `... voor dossier`.
+- De brokertekst krijgt nu expliciet een Backoffice-signatuur: `Path Backoffice` + organisatie.
+- Bewijs: gewijzigde smoke-/API-tests en de aparte klanturenstaatflow zijn groen.
+
+### 2026-08-16 · Copilot — mobiele appvriendelijke layout en subjectcontracten
+
+- Mobiele breakpoint is compacter gemaakt: minder randruimte, rustigere cards en duidelijker
+  stapelende panels op telefoon.
+- De klanturenstaat-maandkeuze sluit nu betrouwbaar na selectie en houdt de appflow compact.
+- Het onderwerpcontract voor klanturenstaat is nu in de smoke volledig gesynchroniseerd met
+  `... ter controle`.
+- Bewijs: `node scripts/smoke-test.mjs` geslaagd na de laatste updates.
 
 ### 2026-08-16 04:06 · Copilot — gewone TEST-mailflow hersteld in v0.9.74
 

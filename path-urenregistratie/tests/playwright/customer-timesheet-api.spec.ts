@@ -43,8 +43,8 @@ test.describe('customer timesheet api', () => {
       action: 'send_to_broker',
       period: '2026-07',
       employeeId: 1,
-      subject: 'Klanturenstaat Marc de Roon - juli 2026',
-      body: 'Bijgevoegd staat de officiële klanturenstaat van Marc de Roon over juli 2026.',
+      subject: 'Klanturenstaat Marc de Roon – juli 2026 voor dossier',
+      body: 'Goedemiddag,\n\nHierbij ontvangt u de klanturenstaat van Marc de Roon over juli 2026.\n\nMet vriendelijke groet,\n\nPath Backoffice\nPath Consultancy',
     });
     expect(sent.status).toBe(200);
     expect(sent.body.ok).toBe(true);
@@ -59,7 +59,7 @@ test.describe('customer timesheet api', () => {
     expect(delivery.channel).toBe('broker');
     expect(delivery.attachment_policy).toBe('customer_timesheet');
     expect(delivery.invoice_number).toBe('IND-2026-juli');
-    expect(delivery.subject_snapshot).toBe('Klanturenstaat Marc de Roon - juli 2026');
+    expect(delivery.subject_snapshot).toBe('Klanturenstaat Marc de Roon – juli 2026 voor dossier');
 
     await authApi.logout();
   });

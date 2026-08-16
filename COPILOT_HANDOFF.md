@@ -28,15 +28,27 @@ Verwijder eerdere relevante bevindingen niet. Noteer geen wachtwoorden, tokens o
 
 ## Actuele overdracht
 
-### 2026-08-16 · Copilot — v0.9.76 mail-, sessie- en mobiele fixes
+### 2026-08-16 · Copilot — v0.9.77 mail-, sessie- en mobiele fixes
 
 - Per-opdracht mailonderwerpen en begeleidende teksten zijn server-led via migraties 017/018;
   TEST-reset herstelt ze opnieuw.
 - F5 en TEST-Herstel behouden een geldige sessie; geen onnodige terugkeer naar accountkeuze.
-- Maandverzending ververst serverfacturen automatisch, sluit taken pas als alle echte mails `sent`
-  zijn en hergebruikt een reeds verzonden klanturenstaat als vereiste brokerbijlage.
+- Maandverzending ververst serverfacturen automatisch en de brokerfactuur stuurt nu alleen de
+  factuur; de klanturenstaat blijft een aparte taak via de klanturenstaatflow.
 - Mobiele werkvoorraad is compacter zonder functies te verwijderen.
 - Bewijs: geraakte suites 79/79, F5 1/1, kritieke mail/PDF-ketens 3/3, smoke/build/DB-H-001 groen.
+
+### 2026-08-16 · Copilot — klanturenstaatteksten realistischer gemaakt
+
+- Klanturenstaat-subjects zijn aangepast naar `ter controle` en `voor dossier`.
+- De brokertekst eindigt nu zichtbaar met `Path Backoffice` als signatuur.
+- Gerichte syntax-, smoke- en API-checks zijn opnieuw groen.
+
+### 2026-08-16 · Copilot — mobiele appvriendelijke layout en subjectcontracten
+
+- De gedeelde app-CSS heeft een compactere mobiele breakpoint gekregen voor rustiger overzicht.
+- De klanturenstaat-maandkeuze sluit nu goed en de smoke volgt het nieuwe onderwerpcontract.
+- Verificatie: `node scripts/smoke-test.mjs` slaagt.
 
 ### 2026-08-16 04:06 · Copilot — v0.9.74 gewone TEST-mailflow gerepareerd
 

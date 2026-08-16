@@ -21,7 +21,7 @@ $config['mail']['acceptance_test'] = [
 
 $definitions = mail_acceptance_scenario_definitions($config);
 $expected = [
-    'broker_bundle' => 2,
+    'broker_bundle' => 1,
     'accountant_invoice' => 1,
     'payroll_hours' => 0,
     'password_reset' => 0,

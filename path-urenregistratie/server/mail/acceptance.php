@@ -68,11 +68,11 @@ function mail_acceptance_scenario_definitions(array $config): array
 
     return [
         'broker_bundle' => [
-            'label' => 'Broker: factuur + klanturenstaat',
+            'label' => 'Broker: factuur',
             'recipient' => $businessRecipient,
             'channel' => 'broker',
-            'attachment_policy' => 'invoice_and_customer_timesheet',
-            'attachment_count' => 2,
+            'attachment_policy' => 'invoice',
+            'attachment_count' => 1,
             'kind' => 'business',
         ],
         'accountant_invoice' => [

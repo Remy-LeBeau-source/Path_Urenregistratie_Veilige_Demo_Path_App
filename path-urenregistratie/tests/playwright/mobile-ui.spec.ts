@@ -610,7 +610,7 @@ test('[MOB-H-005] mobiele verzendadministratie blijft leesbaar en toont geen geh
       issues: [],
       scenarios: [{
         key: 'broker_bundle',
-        label: 'Broker: factuur + klanturenstaat',
+        label: 'Broker: factuur',
         recipient: 'info@pathconsultancy.nl',
         attachment_count: 2,
         ready: true,
@@ -632,7 +632,7 @@ test('[MOB-H-005] mobiele verzendadministratie blijft leesbaar en toont geen geh
     const item = history.locator('.mail-delivery-history-item');
     await expect(item).toHaveCount(1);
     await expect(history).toContainText('info@pathconsultancy.nl');
-    await expect(history).toContainText('Factuur + klanturenstaat');
+    await expect(history).toContainText('Factuur');
     await expect(history).toContainText('Verzonden');
     expect(await item.evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(1);
     await assertNoHorizontalOverflow(page);
@@ -655,7 +655,7 @@ test('[MOB-H-005] mobiele verzendadministratie blijft leesbaar en toont geen geh
     const consolePanel = page.locator('#mail-acceptance-console');
     const action = page.locator('[data-mail-acceptance-scenario="broker_bundle"]');
     await expect(consolePanel).toContainText('info@pathconsultancy.nl');
-    await expect(consolePanel).toContainText('2 gecontroleerde PDF-bijlagen');
+    await expect(consolePanel).toContainText('1 gecontroleerde PDF-bijlage');
     await action.scrollIntoViewIfNeeded();
     const box = await action.boundingBox();
     expect(box).not.toBeNull();

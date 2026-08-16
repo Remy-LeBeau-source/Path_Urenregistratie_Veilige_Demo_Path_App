@@ -735,8 +735,8 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .nav-count-group { position: absolute; top: 3px; right: 4px; gap: 2px; }
   .nav-count-group .nav-count { position: static; padding: 1px 5px; }
   .nav-marker { width: 7px; height: 7px; }
-  .main-content { margin-left: 0; padding: 0 18px 95px; }
-  .topbar { min-height: 82px; }
+  .main-content { margin-left: 0; padding: 0 16px 95px; }
+  .topbar { min-height: 82px; gap: 8px; }
   .eyebrow { display: none; }
   .notification-button { display: none; }
   .safety-badge { display: inline-flex; font-size: 8px; padding: 6px 8px; }
@@ -794,7 +794,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .close-card { align-items: flex-start; padding: 15px; }
   .progress-ring { --size: 60px; }
   .progress-ring::before { width: 45px; height: 45px; }
-  .metric-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .metric-grid { grid-template-columns: 1fr; gap: 8px; }
   .metric-card { min-height: 115px; padding: 16px; }
   .metric-card > strong { font-size: 22px; }
   .panel-heading { align-items: flex-start; padding: 18px; }
@@ -812,7 +812,13 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .approval-actions .button { flex: 1; }
   .invoice-toolbar { align-items: flex-start; flex-direction: column; }
   .segmented-control { width: 100%; overflow-x: auto; }
-  .employee-details, .form-grid { grid-template-columns: 1fr; }
+  .employee-details, .form-grid, .team-account-overview, .team-account-groups, .administrator-row, .mail-recipient-setting, .mail-route-choice, .template-item, .announcement-meta, .customer-timesheet-admin-list { grid-template-columns: 1fr; }
+  .team-account-overview, .team-account-groups, .administrator-row, .mail-recipient-setting, .mail-route-choice, .template-item { gap: 10px; }
+  .customer-timesheet-admin-list { padding: 12px 16px 16px; }
+  .template-item { grid-template-columns: 1fr; }
+  .template-person { min-width: 0; }
+  .template-subject { grid-column: auto; grid-row: auto; }
+  .announcement-meta { gap: 8px; }
   .modal { padding: 25px 20px; }
   .modal-form { grid-template-columns: 1fr; }
   .modal-form label.full, .modal-form .full { grid-column: auto; }

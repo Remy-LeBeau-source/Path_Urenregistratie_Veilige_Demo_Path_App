@@ -16,12 +16,12 @@ Feature: Mailroutering en aflevering
     And cleanup
 
   @happy
-  Scenario: [EQ-H-002] broker-channel bundelt factuur en klanturenstaat
+  Scenario: [EQ-H-002] broker-channel stuurt alleen de factuur
     # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 2
     Given een gelockte factuur met broker_invoice_attachment=true
     When de queue wordt uitgelezen
-    Then heeft de broker-channel attachment_policy=invoice_and_customer_timesheet
+    Then heeft de broker-channel attachment_policy=invoice
     And cleanup
 
   @happy
@@ -74,7 +74,7 @@ Feature: Mailroutering en aflevering
     # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 22
     Given de vijf losse mailacceptatiescenario’s zijn vrijgegeven voor vaste testontvangers
-    When de beheerder alleen de brokerbundel kiest en ontvanger en twee bijlagen bevestigt
+    When de beheerder alleen de brokerfactuur kiest en ontvanger en één bijlage bevestigt
     Then bevat de write exact één scenario met expliciete bevestiging en geen bulkopdracht
 
   @happy

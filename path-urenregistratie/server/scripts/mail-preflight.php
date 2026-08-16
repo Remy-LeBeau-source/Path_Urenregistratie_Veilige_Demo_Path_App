@@ -48,10 +48,9 @@ try {
         [
             'channel' => 'broker',
             'to' => 'rana.ramjanam@pathconsultancy.nl',
-            'policy' => 'invoice_and_customer_timesheet',
+            'policy' => 'invoice',
             'attachments' => [
                 ['filename' => 'VOORBEELD-NIET-GELDIG-Factuur-PATH-2026-007.pdf', 'mime' => 'application/pdf', 'data' => $fakePdf],
-                ['filename' => 'VOORBEELD-NIET-GELDIG-Klanturenstaat-Stasjo-2026-07.pdf', 'mime' => 'application/pdf', 'data' => $fakePdf],
             ],
         ],
         [
@@ -105,7 +104,7 @@ try {
         'broker_recipient_exact' => $results[0]['to'] === 'rana.ramjanam@pathconsultancy.nl',
         'accountant_recipient_exact' => $results[1]['to'] === 'giovanno.maatsen@pathconsultancy.nl',
         'payroll_recipient_exact' => $results[2]['to'] === 'gambitizanagi@gmail.com',
-        'broker_two_attachments' => $results[0]['attachment_count'] === 2,
+        'broker_one_attachment' => $results[0]['attachment_count'] === 1,
         'accountant_one_attachment' => $results[1]['attachment_count'] === 1,
         'payroll_zero_attachments' => $results[2]['attachment_count'] === 0,
         'payroll_contains_only_required_data' => str_contains($results[2]['body'], 'Stasjo van Bakel')

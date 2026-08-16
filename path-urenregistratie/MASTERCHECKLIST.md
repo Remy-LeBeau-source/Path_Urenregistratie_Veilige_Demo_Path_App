@@ -89,6 +89,13 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-16 · v0.9.77 mobiele appvriendelijke quick fix
+
+- De mobiele app is compacter en rustiger gemaakt zonder desktopgedrag te breken.
+- De klanturenstaat-maandkeuze sluit weer direct en de onderwerpregels zijn gesynchroniseerd met
+  `... ter controle`.
+- De releaseversie is opgehoogd naar v0.9.77; build en smoke zijn opnieuw groen.
+
 ### Leidende momentopname — 2026-08-15
 
 Deze momentopname is leidend; de regels eronder bewaren het technische en historische bewijs.
@@ -102,8 +109,9 @@ Deze momentopname is leidend; de regels eronder bewaren het technische en histor
 - [x] TEST-mail wordt uitsluitend naar de beveiligde sink
   `giovanno.maatsen@pathconsultancy.nl` afgeleverd en vermeldt daarnaast voor welke functionele
   ontvanger het bericht oorspronkelijk bedoeld was. PROD behoudt de echte ontvangers.
-- [x] De drie factuurroutes zijn technisch gescheiden: broker krijgt factuur + klanturenstaat,
-  boekhouding alleen factuur en salarisadministratie alleen ureninformatie zonder bijlage.
+- [x] De drie factuurroutes zijn technisch gescheiden: broker krijgt factuur alleen,
+  boekhouding alleen factuur en salarisadministratie alleen ureninformatie zonder bijlage;
+  de klanturenstaat wordt via de aparte klanturenstaattaak verzonden.
 - [x] Wachtwoordherstel en uitnodiging gebruiken eenmalige links; geheime links en volledige
   berichtinhoud worden niet in de verzendadministratie getoond.
 - [x] Nieuwe lokale regressiefix: na `Overzicht inklappen` en opnieuw `Overzicht openen` staan alle
@@ -145,13 +153,12 @@ Deze momentopname is leidend; de regels eronder bewaren het technische en histor
   docs-sync met 212 Playwright + 1 DB-case en `git diff --check` zijn groen.
 - [x] v0.9.74 herstelt de gewone TEST-factuurflow: `Controle afronden` genereert eerst de definitieve
   serverfactuur met ingebed Path-logo en zonder conceptwatermerk en dispatcht daarna uitsluitend de
-  drie nieuw aangemaakte TEST-routes. Broker krijgt factuur + goedgekeurde klanturenstaat,
-  Boekhouding alleen factuur en Salarisadministratie geen bijlage. `EQ-H-020`, `INV-H-004` en de
-  mailpolicycheck zijn gericht groen. `EQ-H-026` bewijst daarnaast dat de aparte klanturenstaatknop
-  de juiste officiële medewerker-/periode-PDF via TEST naar Giovanno verzendt. De servergenerator
-  ondersteunt de bestaande `IND`, `IND-StvB`, `COA` en `Bel-Shawn`-patronen. De volledige GUI-smoke
-  en de geraakte regressiesuites zijn groen: mail/factuur 36/36 + klanturenstaat/bedrijfsketen
-  15/15 = 51/51.
+  drie nieuw aangemaakte TEST-routes. Broker krijgt factuur alleen, Boekhouding alleen factuur en
+  Salarisadministratie geen bijlage. `EQ-H-020`, `INV-H-004` en de mailpolicycheck zijn gericht
+  groen. `EQ-H-026` bewijst daarnaast dat de aparte klanturenstaatknop de juiste officiële
+  medewerker-/periode-PDF via TEST naar Giovanno verzendt. De servergenerator ondersteunt de
+  bestaande `IND`, `IND-StvB`, `COA` en `Bel-Shawn`-patronen. De volledige GUI-smoke en de geraakte
+  regressiesuites zijn groen: mail/factuur 36/36 + klanturenstaat/bedrijfsketen 15/15 = 51/51.
 
 ### Vaste wensen en acceptatieregels uit deze samenwerking
 
@@ -1097,7 +1104,8 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
 - [-] Definitieve Circle8-route, factuuradres en e-mailadres/portaal.
 - [x] Boekhouderroute bevestigd voor `giovanno.maatsen@pathconsultancy.nl` (factuur, 1 bijlage).
 - [x] Salarisroute bevestigd voor `gambitizanagi@gmail.com` (naam/maand/uren, 0 bijlagen).
-- [x] Eerste brokerroute bevestigd voor `rana.ramjanam@pathconsultancy.nl` (factuur + klanturenstaat).
+- [x] Eerste brokerroute bevestigd voor `rana.ramjanam@pathconsultancy.nl` (factuur alleen;
+  klanturenstaat wordt apart via de klanturenstaatflow verzonden).
 - [x] Eerste twee productiebeheerders aangemaakt met persoonlijke tijdelijke wachtwoorden en verplichte
   wachtwoordwijziging: `info@pathconsultancy.nl` (Path Backoffice) en
   `kenrich.lieveld@pathconsultancy.nl` (Kenrich Lieveld). Wachtwoorden staan niet in Git of documentatie.
