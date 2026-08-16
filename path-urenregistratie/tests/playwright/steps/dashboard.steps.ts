@@ -28,7 +28,7 @@ Then("blijven de concrete taakregels leidend en verschijnt geen oude teller");
 Given("Backoffice de voorbeeldomgeving herstelt en daarna naar Stasjo wisselt");
 When("Stasjo daarna een open urenactie indient");
 And("Stasjo voert daarna F5 uit");
-Then("blijft de gewijzigde lokale teller zichtbaar en komt geen oude serversessie terug");
+Then("blijft de gewijzigde lokale teller zichtbaar en wordt er geen oude serverstatus teruggezet");
 And("Backoffice kan Marc zijn klanturenstaat goedkeuren zonder statusrace");
 Given("de lokale demo toont alle 12 beginacties en tellerverdeling");
 When("medewerkers alle vijf wachtende acties via de zichtbare interface afronden");

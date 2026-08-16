@@ -136,6 +136,13 @@ Deze momentopname is leidend; de regels eronder bewaren het technische en histor
   verbindingen en nul writes. De volledige smoke/regressie voor deze werkboom loopt nog.
 - [x] `NOT-H-009` bewijst gericht dat Alles als gelezen direct de teller wist en dat een oudere
   GET-response die lokale, bevestigde write niet kan terugdraaien; 1/1 groen in 3,8 s.
+- [x] v0.9.73 maakt de meldingenacceptatie herhaalbaar: Stasjo krijgt na de vaste LOCAL/TEST-baseline
+  drie echte ongelezen mededelingen en `NOT-H-011` bewijst bel, filter en lijst zichtbaar gelijk van
+  `3 → 2 → 1 → 0`. Notificatiesuite 11/11, `npm run check` en GUI-smoke zijn groen. De definitieve
+  regressie na de individuele leesklikfix is via vier geïsoleerde shards volledig groen:
+  `64 + 47 + 55 + 51 = 217/217`. De drie lokale tellertestmeldingen zijn daarna exact als ongelezen
+  gebruikersbaseline hersteld. Ook productiebuild, DB-H-001, dependency-audit met 0 kwetsbaarheden,
+  docs-sync met 212 Playwright + 1 DB-case en `git diff --check` zijn groen.
 
 ### Vaste wensen en acceptatieregels uit deze samenwerking
 
@@ -150,7 +157,9 @@ Deze momentopname is leidend; de regels eronder bewaren het technische en histor
 - [x] Rolwissel op LOCAL/TEST vult de gekozen testaccountgegevens direct zonder F5; PROD toont geen
   demoaccounts of testwachtwoorden.
 - [x] TEST-herstel mag de gedeelde TEST-baseline terugzetten en opnieuw inloggen vereisen; PROD heeft
-  geen demoherstel. Herstel mag nooit productiedata wijzigen.
+  geen demoherstel. Herstel mag nooit productiedata wijzigen. Op verzoek is dit vanaf v0.9.70 voor
+  iedere ingelogde rol (beheerder én medewerker) beschikbaar op LOCAL en TEST; de knop en het
+  server-endpoint blijven buiten LOCAL/TEST volledig geblokkeerd, ook bij hostspoofing.
 - [x] Accounts zijn organisatiebreed uniek. Deactiveren bewaart historie; definitief verwijderen mag
   alleen bij een inactief account zonder zakelijke of beveiligingshistorie.
 - [x] Backoffice kan factuur en klanturenstaat vóór verzending veilig inzien. TEST levert alle echte
@@ -1269,16 +1278,17 @@ Telling fasestatussen:
 
 ## Directe volgende stap
 
-**Fase 1 t/m 15 zijn functioneel ingericht; v0.9.69 borgt de servergestuurde taakstatus,
-documentcontrole, drie afzonderlijke mailroutes en afzonderlijk te openen acceptatiebijlagen.** De
+**Fase 1 t/m 15 zijn functioneel ingericht; v0.9.73 borgt daarnaast dat meldingen direct vanaf de
+eerste render servergestuurd zijn en zichtbaar synchroon van `3 → 2 → 1 → 0` lopen.** De
 aparte TEST-host, database, private opslag, publieke login-smoke en mailsandbox zijn bewezen in
 run `31803329714`.
 
 - [x] De acceptatieconsole toont iedere verwachte factuur- en klanturenstaat-PDF afzonderlijk in de
   lijst én bevestiging en opent exact de serverbijlage die na bevestiging wordt verzonden.
 
-1. Commit en push de lokaal groen gevalideerde v0.9.66 en laat dezelfde release exact door de volledige pipeline, TEST-uitrol en
-   automatische PROD-uitrol bewaken.
+1. Commit en push de lokaal volledig groen gevalideerde v0.9.73 en laat dezelfde release exact door de volledige pipeline, TEST-uitrol en
+   automatische PROD-uitrol bewaken. Lokaal bewijs: `npm run check` groen, GUI-smoke groen en
+  217/217 Playwright-uitvoeringen groen; build, DB-H-001, dependency-audit en diffcontrole zijn ook groen.
 2. Verstuur op TEST de vijf
    acceptatiemails één voor één en controleer ontvanger, onderwerp, tekst, linkgebruik en PDF-bijlagen.
 3. Rond daarna de open productiepraktijktests, fysieke mobiele acceptatie, cron/monitoring,

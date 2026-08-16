@@ -63,6 +63,10 @@ mailaflevering mogen verschillen, de bedrijfsstatussen niet.
 Na iedere echte statusovergang mogen deze aantallen veranderen. Maandnavigatie, een render, F5 of
 een rolwissel mogen ze nooit op zichzelf veranderen.
 
+Na LOCAL Herstel ziet Stasjo exact drie ongelezen algemene mededelingen. Belbadge,
+mededelingenfilter en ongelezen kaarten tonen daarom alle drie `3`; urenstatusmeldingen uit de
+herstelhistorie mogen dit acceptatieaantal niet verhogen.
+
 ## 5. Urenstaat-statusketen
 
 | Beginstatus | Actie | Nieuwe status | Nieuwe eigenaar |
@@ -203,6 +207,7 @@ Minimaal de volgende ketens zijn releaseblokkerend:
 | één factuuractie levert exact broker + boekhouding + salarisadministratie | `email-queue.spec.ts` (`EQ-H-022`) |
 | serveruren blokkeren te vroege factuurverzending | `email-queue.spec.ts` (`EQ-N-021`) |
 | alles gelezen blijft leidend bij een oudere notificatieresponse | `notifications.spec.ts` (`NOT-H-009`) |
+| auth-login toont nooit eerst demo-aantallen; daarna lopen bel, filter en lijst per leesactie gelijk van 3 naar 0 | `notifications.spec.ts` (`NOT-H-011`) |
 | mobiele hoofdketen | `mobile-ui.spec.ts` |
 
 Nieuwe productlogica krijgt in dezelfde wijziging een rij in deze tabel of een aantoonbare koppeling

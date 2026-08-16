@@ -105,7 +105,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.70"), "Het zichtbare versienummer moet 0.9.70 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.73"), "Het zichtbare versienummer moet 0.9.73 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -151,7 +151,7 @@ const employeePicker = document.querySelector("#login-employee");
 employeePicker.value = "1";
 employeePicker.dispatchEvent(new Event("change", { bubbles: true }));
 const demoScenarioState = JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(demoScenarioState.schemaVersion === 26, "Versie 0.9.70 moet wijzigingen onder de juiste gegevensversie bewaren");
+assert(demoScenarioState.schemaVersion === 26, "Versie 0.9.73 moet wijzigingen onder de juiste gegevensversie bewaren");
 assert(demoScenarioState.settings.companyName === "QSI Consultancy B.V." && demoScenarioState.settings.invoiceNameDisplay === "trade_and_legal", "De standaardfactuuridentiteit moet Path als handelsnaam aan QSI Consultancy B.V. koppelen");
 const freshOpenActions = dom.window.adminOpenTasks();
 const freshJuneActions = freshOpenActions.filter(task => task.periodKey === "2026-06");
@@ -293,7 +293,9 @@ const brianOpenSummaries = dom.window.employeeOpenMonthSummaries(3, "2026-06");
 const brianOpenActions = brianOpenSummaries.flatMap(item => item.actions);
 assert(brianOpenActions.length > 0 && document.querySelectorAll("#employee-open-overview-list [data-employee-action-row]").length === brianOpenActions.length, "Het medewerkersdashboard moet iedere open taak als concrete actieregel tonen");
 assert(!document.querySelector("#employee-dashboard-all-actions").hidden && document.querySelector("#employee-dashboard-all-actions").textContent.includes(String(brianOpenActions.length)), "De medewerker moet vanuit de hero alle eigen open acties kunnen openen");
-assert(document.querySelector('#employee-open-overview-list [data-employee-open-month-toggle]').getAttribute('aria-expanded') === 'true' && !document.querySelector('#employee-open-overview-list .employee-open-month-body').hidden, "De eerstvolgende open maand moet direct uitgeklapt zichtbaar zijn");
+assert(document.querySelector('#employee-open-overview-list [data-employee-open-month-toggle]').getAttribute('aria-expanded') === 'false' && document.querySelector('#employee-open-overview-list .employee-open-month-body').hidden, "Iedere open maand moet standaard ingeklapt starten");
+click('#employee-open-overview-list [data-employee-open-month-toggle]');
+assert(document.querySelector('#employee-open-overview-list [data-employee-open-month-toggle]').getAttribute('aria-expanded') === 'true' && !document.querySelector('#employee-open-overview-list .employee-open-month-body').hidden, "Een gekozen open maand moet na een klik uitklappen");
 assert(document.querySelector("#employee-dashboard-action").dataset.employeeActionPeriod === brianOpenSummaries[0].periodKey && document.querySelector("#employee-dashboard-action").dataset.employeeActionType === brianOpenSummaries[0].actions[0].type, "De hoofdactie moet naar de eerstvolgende concrete taak en maand wijzen");
 const brianJuneDecisionRecord = dom.window.recordFor(3, "2026-06");
 const brianJuneDecisionSnapshot = JSON.parse(JSON.stringify(brianJuneDecisionRecord));
@@ -354,7 +356,7 @@ assert(JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final")).e
 click("#notification-button");
 assert(!document.querySelector("#notification-panel").hidden, "De meldingknop moet altijd een venster openen");
 assert(!document.querySelector(".notification-test-actions"), "Kunstmatige voorbeeldmeldingen mogen niet in de medewerkersinterface staan");
-assert(document.querySelector("#notification-list").textContent.includes("Correctie gevraagd"), "Een medewerker moet eigen vooraf klaargezette meldingen zien");
+assert(document.querySelector("#notification-list").textContent.includes("Planning augustus beschikbaar"), "Een medewerker moet eigen vooraf klaargezette algemene mededelingen zien");
 dom.window.createTestNotification("reminder");
 assert(document.querySelector("#notification-list").textContent.includes("Urenherinnering"), "Een urenherinnering moet direct testbaar zijn");
 assert(JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final")).notifications.at(-1).emailRequested === false, "Een uitgeschakelde e-mailvoorkeur moet ook bij urenmeldingen alleen de aanvullende e-mail overslaan");
@@ -1538,7 +1540,7 @@ const migrationPicker = migrationDom.window.document.querySelector("#login-admin
 migrationPicker.value = "joyce";
 migrationPicker.dispatchEvent(new migrationDom.window.Event("change", { bubbles: true }));
 const migratedState = JSON.parse(migrationDom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(migratedState.schemaVersion === 26, "Bestaande browsergegevens moeten ook in v0.9.70 veilig behouden blijven");
+assert(migratedState.schemaVersion === 26, "Bestaande browsergegevens moeten ook in v0.9.73 veilig behouden blijven");
 assert(migratedState.settings.companyName === "QSI Consultancy B.V." && migratedState.settings.invoiceNameDisplay === "trade_and_legal", "Migratie moet QSI als B.V. en de gecombineerde factuurweergave veilig aanvullen");
 assert(migratedState.settings.mailRecipients.find(recipient => recipient.id === "payroll").name.includes("Salarisadministratie"), "Migratie moet EasySalary als duidelijke salarisadministratieroute benoemen");
 assert(migratedState.records["2026-07"]["4"].invoiceNumber === "Bel-Shawn-2026-juli", "Migratie moet ook bestaande factuurnummers omzetten naar de afgesproken koppeltekens");
@@ -1616,7 +1618,7 @@ assert(invoiceIdentityMigrationSrc.includes("invoice_name_display") && invoiceId
 assert(passwordResetMigrationSrc.includes("password_reset") && passwordResetMigrationSrc.includes("fk_email_deliveries_user"), "Beveiligingsmails moeten zonder factuurkoppeling aan de juiste organisatiegebruiker hangen");
 assert(passwordResetServiceSrc.includes("#reset-password=") && passwordResetServiceSrc.includes("AUTH_PASSWORD_RESET_MAX_REQUESTS = 3") && requestResetSrc.includes("auth_password_reset_public_response"), "Resetlinks moeten logveilig, eenmalig voorbereid, begrensd en enumeration-safe zijn");
 assert(mailAcceptanceSrc.includes("$origin === 'https://uren-test.pathconsultancy.nl'") && mailAcceptanceSrc.includes("DELETE FROM password_reset_tokens WHERE user_id = :id") && mailAcceptancePolicySrc.includes("test_security_scenarios_repeatable"), "Alleen de twee speciale acceptatielinks mogen op de exacte TEST-origin herhaalbaar zijn");
-assert(testResetApiSrc.includes("auth_require_role(['administrator']") && testResetApiSrc.includes("security_require_csrf_token()") && testResetApiSrc.includes("RESET_SHARED_TEST_BASELINE"), "De gedeelde TEST-reset moet beheerrol, CSRF en expliciete bevestiging eisen");
+assert(testResetApiSrc.includes("auth_require_role(['administrator', 'employee']") && testResetApiSrc.includes("security_require_csrf_token()") && testResetApiSrc.includes("RESET_SHARED_TEST_BASELINE"), "De gedeelde TEST-reset moet beheer- of medewerkerrol, CSRF en expliciete bevestiging eisen");
 assert(testResetPolicySrc.includes("spoofed_test_host_on_production_blocked") && testResetPolicySrc.includes("missing_demo_permission_blocked") && testResetPolicySrc.includes("'open_actions' => 12"), "De TEST-resetbeslissingstabel moet PROD, hostspoofing en een afwijkende baseline blokkeren");
 assert(dispatchSrc.includes("password-reset-link-expired") && dispatchSrc.includes("beveiligingslink verwijderd na verzending"), "Verlopen of verzonden resetlinks moeten uit de mailqueue worden gewist");
 assert(backupSrc.includes("--single-transaction") && restoreSrc.includes("RESTORE_") && rotateLogsSrc.includes("retention_days"), "Backup, herstelbevestiging en logretentie moeten operationeel voorbereid zijn");
@@ -1632,4 +1634,4 @@ assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("
 assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Playwright stage- en lokale env-bestanden mogen expliciete runner/CI-variabelen niet overschrijven");
 
 dom.window.close();
-console.log("Path v0.9.70 volledige smoke test: geslaagd");
+console.log("Path v0.9.73 volledige smoke test: geslaagd");

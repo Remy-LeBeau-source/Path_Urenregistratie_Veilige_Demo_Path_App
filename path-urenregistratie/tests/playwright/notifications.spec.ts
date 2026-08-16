@@ -22,8 +22,12 @@ async function postNotif(
 
 async function isolateNotificationsFrontend(page: Page): Promise<void> {
   await page.addInitScript(() => {
+    const isolationMarker = 'path-notifications-test-initialized';
+    if (sessionStorage.getItem(isolationMarker) === '1') return;
+
     localStorage.clear();
     sessionStorage.clear();
+    sessionStorage.setItem(isolationMarker, '1');
   });
 
   const admin = {
@@ -267,6 +271,114 @@ test.describe('notifications api', () => {
     await page.waitForTimeout(150);
     await expect(page.locator('#notification-title')).toHaveText('Geen ongelezen meldingen');
     await expect(page.locator('#notification-count')).toBeHidden();
+
+    await loginPage.logout();
+  });
+
+  test('[NOT-H-010] Herstel zet drie lokale basismeldingen terug en beschermt ze tegen serveroverschrijving', async ({ page }) => {
+    let unreadCount = 5;
+
+    await page.route('**/server/api/notifications.php*', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true, count: unreadCount, unread_count: unreadCount, items: Array.from({ length: unreadCount }, (_, i) => ({ id: 9000 + i, period_id: null, period_key: null, announcement_id: null, notification_type: 'correction_required', title: `Melding ${i + 1}`, message: '', target_route: 'dashboard', read: false, read_at: null, created_at: '2026-08-05 10:00:00' })) }),
+      });
+    });
+
+    await isolateNotificationsFrontend(page);
+
+    const loginPage = new LoginPage(page);
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+
+    // Use the app's own refresh function to populate the stale count.
+    await page.evaluate(() => { void window.refreshNotificationsReadApi(true); });
+    await expect(page.locator('#notification-count')).toHaveText('5');
+
+    // De oude serverwaarheid is 0. Die mag de herstelde lokale baseline niet
+    // opnieuw overschrijven zolang Herstel lokaal leidend is.
+    unreadCount = 0;
+    await page.locator('#quick-reset-demo').click();
+    await page.locator('#modal-confirm').click();
+
+    await expect(page.locator('#notification-count')).toHaveText('3');
+    await expect(page.locator('#notification-title')).toHaveText('3 ongelezen meldingen');
+    await expect(page.locator('#notification-list .notification-item.is-unread')).toHaveCount(3);
+    await expect(page.locator('#notification-list')).toContainText('Correctie nodig');
+    await expect(page.locator('#notification-list')).toContainText('Uren ingediend');
+    await expect(page.locator('#notification-list')).toContainText('Maandcontrole juli bijna klaar');
+
+    // Ook een expliciete, vertraagde refresh mag de lokale resetbaseline niet wissen.
+    await page.evaluate(() => { void window.refreshNotificationsReadApi(true); });
+    await page.waitForTimeout(250);
+    await expect(page.locator('#notification-count')).toHaveText('3');
+
+    // De resetguard staat in sessionStorage en moet dus ook een F5 plus
+    // herlogin overleven.
+    await page.reload();
+    if (await page.locator('#login-screen').isVisible()) {
+      await loginPage.loginAsAdmin();
+    }
+    await expect(page.locator('#app-shell')).toBeVisible();
+    await expect(page.locator('#notification-count')).toHaveText('3');
+    await expect(page.locator('#notification-list .notification-item.is-unread')).toHaveCount(3);
+
+    const employeeProjection = await page.evaluate(() => {
+      state.currentRole = 'employee';
+      state.currentEmployeeId = 2;
+      renderNotifications();
+      renderEmployeeAnnouncementArchive();
+      return {
+        badge: document.querySelector('#notification-count')?.textContent,
+        filter: document.querySelector('#announcement-unread-filter')?.textContent,
+        cards: document.querySelectorAll('#employee-announcement-list .employee-announcement-card.is-unread').length,
+      };
+    });
+    expect(employeeProjection).toEqual({ badge: '3', filter: 'Ongelezen mededelingen · 3', cards: 3 });
+
+    await page.locator('#employee-announcement-list [data-read-announcement]').first().evaluate(element => {
+      (element as HTMLButtonElement).click();
+    });
+    await expect(page.locator('#notification-count')).toHaveText('2');
+    await expect(page.locator('#announcement-unread-filter')).toHaveText('Ongelezen mededelingen · 2');
+    await expect(page.locator('#employee-announcement-list .employee-announcement-card.is-unread')).toHaveCount(2);
+
+    await loginPage.logout();
+  });
+
+  test('[NOT-H-011] medewerker ziet drie echte mededelingen en tellers lopen gelijk terug naar nul', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+
+    await test.step('Given Stasjo drie ongelezen mededelingen uit de serverbaseline heeft', async () => {
+      await loginPage.open();
+      await loginPage.loginAsEmployee();
+      expect(await page.locator('#notification-count').isHidden()).toBe(true);
+      await expect(page.locator('#notification-count')).toHaveText('3');
+      await page.locator('button[data-view="employee-announcements"]').click();
+      await expect(page.locator('#announcement-unread-filter')).toHaveText('Ongelezen mededelingen · 3');
+      await expect(page.locator('#employee-announcement-list .employee-announcement-card.is-unread')).toHaveCount(3);
+    });
+
+    await test.step('When hij de mededelingen een voor een als gelezen markeert', async () => {
+      for (const remaining of [2, 1, 0]) {
+        await page.locator('#employee-announcement-list [data-read-announcement]').first().click();
+        await expect(page.locator('#announcement-unread-filter')).toHaveText(`Ongelezen mededelingen · ${remaining}`);
+        await expect(page.locator('#employee-announcement-list .employee-announcement-card.is-unread')).toHaveCount(remaining);
+        if (remaining > 0) {
+          await expect(page.locator('#notification-count')).toHaveText(String(remaining));
+        } else {
+          await expect(page.locator('#notification-count')).toBeHidden();
+        }
+      }
+    });
+
+    await test.step('Then blijven bel, filter en persoonlijke historie op dezelfde serverwaarheid', async () => {
+      await page.locator('[data-announcement-archive-filter="all"]').click();
+      await expect(page.locator('#employee-announcement-list .employee-announcement-card')).toHaveCount(3);
+      await expect(page.locator('#employee-announcement-list .employee-announcement-card.is-unread')).toHaveCount(0);
+      await expect(page.locator('#notification-title')).toHaveText('Geen ongelezen meldingen');
+    });
 
     await loginPage.logout();
   });

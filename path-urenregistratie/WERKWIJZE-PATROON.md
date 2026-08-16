@@ -72,7 +72,22 @@ geen CC/BCC gebruikt om de drie routes samen te voegen.
 8. Bij een fout: bewijs de oorzaak, voeg eerst de ontbrekende regressie toe, repareer en herhaal
    vanaf de kleinst falende laag. Verhoog geen timeout en gebruik geen forced click als maskering.
 
-## 6. Klaarcriteria
+## 6. Geen vraaglus bij oplevering
+
+- Vertaal iedere zichtbare gebruikersmelding eerst naar één concrete browserketen met beginstand,
+  actie en zichtbaar eindresultaat; vraag niet opnieuw naar informatie die al in chat, screenshot of
+  overdracht staat.
+- Een groene brede regressie vervangt nooit de eigen zichtbare eindtest van precies die keten.
+- Bouw de handmatige acceptatiestappen die de gebruiker krijgt ook in als echte Playwright-case en,
+  wanneer releasekritiek, in `test:gui-smoke`.
+- Controleer na iedere write alle geraakte projecties: serverreadback, belbadge, schermfilter, lijst,
+  rolwissel en F5 waar relevant. Alleen een API-status of één teller is onvoldoende.
+- Verhoog de patchversie en zichtbare versielabels vóór de gebruiker opnieuw lokaal test, zodat
+  ondubbelzinnig zichtbaar is welke oplevering wordt beoordeeld.
+- Zeg pas `Je kunt nu testen op localhost` nadat de gerichte browsercase, GUI-smoke en vereiste
+  regressie zelf zijn uitgevoerd en groen zijn. Meld tussendoor actief diagnose, wijziging en tests.
+
+## 7. Klaarcriteria
 
 Een wijziging is pas klaar wanneer:
 

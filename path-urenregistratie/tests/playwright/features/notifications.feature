@@ -77,3 +77,19 @@ Feature: Meldingen beheren
     Given meldingen beheren is voorbereid
     When de flow voor NOT-H-009 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat alles gelezen wist teller en een oudere response kan deze niet herstellen
+
+  @happy
+  Scenario: [NOT-H-010] Herstel zet drie lokale basismeldingen terug en beschermt ze tegen serveroverschrijving
+    # Testtechniek: Herstelbaarheid + toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 15
+    Given meldingen beheren is voorbereid
+    When de flow voor NOT-H-010 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat herstel zet drie lokale basismeldingen terug en beschermt ze tegen serveroverschrijving
+
+  @happy
+  Scenario: [NOT-H-011] medewerker ziet drie echte mededelingen en tellers lopen gelijk terug naar nul
+    # Testtechniek: Grenswaardenanalyse
+    # Aantoonbare Playwright-assertions in deze case: 11
+    Given Stasjo drie ongelezen mededelingen uit de serverbaseline heeft
+    When hij de mededelingen een voor een als gelezen markeert
+    Then blijven bel, filter en persoonlijke historie op dezelfde serverwaarheid

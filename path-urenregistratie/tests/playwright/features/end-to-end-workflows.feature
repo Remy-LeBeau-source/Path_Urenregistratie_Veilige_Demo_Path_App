@@ -18,12 +18,12 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
     And de eigenaarfilters tonen uitsluitend hun zeven en vijf concrete acties
 
   @happy
-  Scenario: [E2E-H-002] rolwissel werkt zonder F5 en herstel blijft uitsluitend voor Backoffice
+  Scenario: [E2E-H-002] rolwissel werkt zonder F5 en herstel blijft beschikbaar voor iedere rol op LOCAL/TEST
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 11
     Given de TEST-login met accountkeuzes zichtbaar is
     When Stasjo via de medewerkerskeuze wordt geselecteerd
-    Then staan zijn testcredentials direct klaar en is Herstel na inloggen verborgen
+    Then staan zijn testcredentials direct klaar en blijft Herstel ook voor hem beschikbaar op LOCAL/TEST
     When naar Joyce als beheerder wordt gewisseld zonder pagina-herlaad
     Then wisselen de credentials direct en krijgt Backoffice de herstelbediening
 

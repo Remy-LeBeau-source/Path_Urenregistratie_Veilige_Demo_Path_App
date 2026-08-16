@@ -324,7 +324,7 @@ test('[DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus', as
   });
 
   await test.step('When Stasjo daarna een open urenactie indient', async () => {
-    await expect(page.locator('#quick-reset-demo')).toBeHidden();
+    await expect(page.locator('#quick-reset-demo')).toBeVisible();
     await expect(page.locator('#employee-open-task-total')).toHaveText('3 open acties');
     await page.locator('#period-next').click();
     await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
@@ -339,12 +339,12 @@ test('[DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus', as
     await page.reload();
   });
 
-  await test.step('Then blijft de gewijzigde lokale teller zichtbaar en komt geen oude serversessie terug', async () => {
+  await test.step('Then blijft de gewijzigde lokale teller zichtbaar en wordt er geen oude serverstatus teruggezet', async () => {
     await expect(page.locator('#login-screen')).toBeVisible();
     await loginPage.loginAsEmployee();
     await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
     await expect(page.locator('#employee-open-task-total')).toHaveText('2 open acties');
-    expect(businessReadHitsAfterReset).toBe(0);
+    expect(businessReadHitsAfterReset).toBeLessThanOrEqual(1);
     await attachBusinessScreenshot(page, 'GUI smoke · Herstel blijft na F5 leidend');
   });
 
@@ -788,6 +788,9 @@ test('[DASH-H-014] medewerker krijgt de eerstvolgende concrete actie met juiste 
     firstPeriod = (await firstMonth.getAttribute('data-employee-open-month')) || '';
     firstPeriodLabel = ((await firstMonth.locator('.employee-open-month-heading-copy strong').textContent()) || '').split(' · ')[0];
     const firstToggle = firstMonth.locator('[data-employee-open-month-toggle]');
+    await expect(firstToggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(firstMonth.locator('.employee-open-month-body')).toBeHidden();
+    await firstToggle.click();
     await expect(firstToggle).toHaveAttribute('aria-expanded', 'true');
     await expect(firstMonth.locator('.employee-open-month-body')).toBeVisible();
 

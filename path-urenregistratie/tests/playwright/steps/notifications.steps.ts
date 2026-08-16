@@ -34,3 +34,8 @@ When("de flow voor NOT-H-008 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat mark_read voor onbekende melding wijzigt nul records");
 When("de flow voor NOT-H-009 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat alles gelezen wist teller en een oudere response kan deze niet herstellen");
+When("de flow voor NOT-H-010 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat herstel zet drie lokale basismeldingen terug en beschermt ze tegen serveroverschrijving");
+Given("Stasjo drie ongelezen mededelingen uit de serverbaseline heeft");
+When("hij de mededelingen een voor een als gelezen markeert");
+Then("blijven bel, filter en persoonlijke historie op dezelfde serverwaarheid");

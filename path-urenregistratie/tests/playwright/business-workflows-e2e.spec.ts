@@ -81,7 +81,7 @@ test('[E2E-H-001] herstelbasis houdt globale werkvoorraad stabiel bij maand- en 
   });
 });
 
-test('[E2E-H-002] rolwissel werkt zonder F5 en herstel blijft uitsluitend voor Backoffice', async ({ page }) => {
+test('[E2E-H-002] rolwissel werkt zonder F5 en herstel blijft beschikbaar voor iedere rol op LOCAL/TEST', async ({ page }) => {
   const loginPage = new LoginPage(page);
   const employeePassword = requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD');
   const adminPassword = requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD');
@@ -97,12 +97,12 @@ test('[E2E-H-002] rolwissel werkt zonder F5 en herstel blijft uitsluitend voor B
     await page.locator('#login-employee-choices [data-login-account-role="employee"]').filter({ hasText: 'Stasjo van Bakel' }).click();
   });
 
-  await test.step('Then staan zijn testcredentials direct klaar en is Herstel na inloggen verborgen', async () => {
+  await test.step('Then staan zijn testcredentials direct klaar en blijft Herstel ook voor hem beschikbaar op LOCAL/TEST', async () => {
     await expect(page.locator('#auth-login-email')).toHaveValue('stasjo@example.invalid');
     await expect(page.locator('#auth-login-password')).toHaveValue(employeePassword);
     await page.locator('#auth-login-submit').click();
     await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
-    await expect(page.locator('#quick-reset-demo')).toBeHidden();
+    await expect(page.locator('#quick-reset-demo')).toBeVisible();
     await expect(page.locator('button[data-view="settings"]')).toBeHidden();
   });
 

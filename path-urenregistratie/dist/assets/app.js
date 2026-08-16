@@ -371,7 +371,7 @@ function demoNotifications() {
     { id: 1, audience: "admin", employeeId: 2, title: "Correctie nodig", message: "Stasjo moet augustus nog aanpassen.", periodKey: "2026-08", view: "approvals", read: false, createdAt: "5 augustus, 10:15" },
     { id: 2, audience: "admin", employeeId: 4, title: "Uren ingediend", message: "Shawn-Douglas heeft Augustus 2026 ingediend.", periodKey: "2026-08", view: "approvals", read: false, createdAt: "Vandaag, 09:18" },
     { id: 3, audience: "admin", title: "Maandcontrole juli bijna klaar", message: "Juli 2026 heeft nog één resterende verzendcontrole; augustus toont de open blokkades.", periodKey: "2026-07", view: "invoices", read: false, createdAt: "Vandaag, 09:25" },
-    { id: 4, audience: "employee", employeeId: 2, title: "Correctie gevraagd", message: "Controleer 12 augustus en dien de maand daarna opnieuw in.", periodKey: "2026-08", view: "timesheet", read: false, createdAt: "5 augustus, 10:15" },
+    { id: 4, audience: "employee", employeeId: 2, title: "Correctie gevraagd", message: "Controleer 12 augustus en dien de maand daarna opnieuw in.", periodKey: "2026-08", view: "timesheet", read: true, createdAt: "5 augustus, 10:15" },
     { id: 5, audience: "employee", employeeId: 4, title: "Uren wachten op controle", message: "Je uren voor Augustus 2026 zijn ingediend.", periodKey: "2026-08", view: "employee-dashboard", read: false, createdAt: "Vandaag, 09:18" }
   ];
   let id = notifications.length + 1;
@@ -388,7 +388,7 @@ function demoNotifications() {
         announcementId,
         emailRequested: announcement.emailRecipientIds.includes(employeeId),
         view: "employee-announcements",
-        read: announcementId === 2 && employeeId < 3,
+        read: announcementId === 2 && employeeId === 1,
         createdAt: announcement.createdAt
       });
     });
@@ -3785,10 +3785,11 @@ function renderEmployeeDashboard() {
     if (openOverviewNote && nextOpenMonth && nextOpenAction) {
       openOverviewNote.textContent = 'Begin met ' + nextOpenAction.label.toLowerCase() + ' voor ' + nextOpenMonth.period.label + '.';
     }
-    openOverviewList.innerHTML = openMonthSummaries.map((item, index) => {
+    openOverviewList.innerHTML = openMonthSummaries.map((item) => {
       const monthBodyId = 'employee-open-month-body-' + item.periodKey;
       const actionCount = item.actions.length;
-      const expanded = index === 0;
+      // Every month starts collapsed; a render never re-expands a month the medewerker chose to open or close.
+      const expanded = false;
       return '<section class="employee-open-month' + (item.current ? ' is-current' : '') + '" data-employee-open-month="' + item.periodKey + '">' +
         '<button class="employee-open-month-heading" type="button" data-employee-open-month-toggle="' + item.periodKey + '" aria-expanded="' + (expanded ? 'true' : 'false') + '" aria-controls="' + monthBodyId + '">' +
           '<span class="employee-open-month-heading-copy"><strong>' + escapeHtml(item.period.label) + ' · ' + actionCount + ' open ' + (actionCount === 1 ? 'actie' : 'acties') + '</strong><small>' + escapeHtml(item.notes) + '</small></span>' +
@@ -6996,13 +6997,9 @@ function addNotification(notification, force) {
 
 function notificationsForCurrentProfile() {
   if (!state.currentRole) return [];
-  if (API_ENABLED && authRuntime.mode === "auth") {
-    return state.notifications
-      .slice()
-      .sort((left, right) => Number(right.id) - Number(left.id));
-  }
   return state.notifications
     .filter(item => state.currentRole === "admin" ? item.audience === "admin" : item.audience === "employee" && Number(item.employeeId) === currentEmployee().id)
+    .slice()
     .sort((left, right) => Number(right.id) - Number(left.id));
 }
 
@@ -7357,6 +7354,7 @@ function login(role) {
   const profile = profileForRole(role);
   if (!profile) return;
   state.currentRole = role;
+  if (API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative()) state.notifications = [];
   persistState();
   document.body.dataset.role = role;
   document.querySelector("#login-screen").hidden = true;
@@ -7763,8 +7761,10 @@ function syncResetControlVisibility(resetToolsAllowed = localAccountToolsAllowed
   const quickReset = document.querySelector("#quick-reset-demo");
   const settingsReset = document.querySelector("#reset-demo");
   const sharedTestResetAllowed = window.location.hostname.toLowerCase() === "uren-test.pathconsultancy.nl";
-  const adminAllowed = !state.currentRole || state.currentRole === "admin";
-  if (quickReset) quickReset.hidden = !(adminAllowed && (resetToolsAllowed || sharedTestResetAllowed));
+  // LOCAL and TEST reset are both safe for any role: LOCAL only clears this
+  // browser's own state, and the shared TEST reset endpoint accepts any
+  // authenticated role while staying blocked outside LOCAL/TEST.
+  if (quickReset) quickReset.hidden = !(resetToolsAllowed || sharedTestResetAllowed);
   if (settingsReset) settingsReset.hidden = !(state.currentRole === "admin" && (resetToolsAllowed || sharedTestResetAllowed));
 }
 
@@ -9118,7 +9118,7 @@ document.addEventListener("click", event => {
         closeTopbarPopovers();
       };
 
-      if (API_ENABLED && authRuntime.mode === "auth") {
+      if (API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative()) {
         markNotificationReadApi(item.id)
           .then(() => refreshNotificationsReadApi(true))
           .catch(() => null)
@@ -9530,7 +9530,7 @@ document.addEventListener("click", event => {
   const readAnnouncement = event.target.closest("[data-read-announcement]");
   if (readAnnouncement && state.currentRole === "employee") {
     const announcementId = Number(readAnnouncement.dataset.readAnnouncement || 0);
-    if (API_ENABLED && authRuntime.mode === "auth") {
+    if (API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative()) {
       markAnnouncementReadApi(announcementId)
         .then(() => refreshNotificationsReadApi(true))
         .then(() => toast("Mededeling als gelezen gemarkeerd."))
@@ -10314,10 +10314,10 @@ document.querySelector("#mail-safety-badge")?.addEventListener("keydown", event 
 });
 
 document.querySelector("#mark-notifications-read").addEventListener("click", () => {
-  if (API_ENABLED && authRuntime.mode === "auth") {
+  if (API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative()) {
     markAllNotificationsReadApi()
       .then(() => {
-        state.notifications.forEach(item => { item.read = true; });
+        notificationsForCurrentProfile().forEach(item => { item.read = true; });
         renderNotifications();
         renderEmployeeAnnouncementArchive();
         return refreshNotificationsReadApi(true);

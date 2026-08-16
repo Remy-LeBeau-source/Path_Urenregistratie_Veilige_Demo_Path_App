@@ -19,7 +19,7 @@ Then("blijven totaal, eigenaarschap en taakidentiteiten ongewijzigd");
 And("de eigenaarfilters tonen uitsluitend hun zeven en vijf concrete acties");
 Given("de TEST-login met accountkeuzes zichtbaar is");
 When("Stasjo via de medewerkerskeuze wordt geselecteerd");
-Then("staan zijn testcredentials direct klaar en is Herstel na inloggen verborgen");
+Then("staan zijn testcredentials direct klaar en blijft Herstel ook voor hem beschikbaar op LOCAL/TEST");
 When("naar Joyce als beheerder wordt gewisseld zonder pagina-herlaad");
 Then("wisselen de credentials direct en krijgt Backoffice de herstelbediening");
 Given("de herstelbasis Stasjo een correctieactie en Backoffice zeven acties geeft");

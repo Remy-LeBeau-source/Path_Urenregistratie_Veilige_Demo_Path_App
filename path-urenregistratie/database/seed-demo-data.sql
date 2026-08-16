@@ -197,20 +197,27 @@ INSERT INTO announcements (
   audience_label, email_requested, created_at, updated_at
 ) VALUES
   (1, 1, 1, 'standard', 'sent', 'Uren juli indienen', 'Dien je uren over juli uiterlijk maandag 3 augustus in. Controleer vóór het indienen of alle werkdagen zijn ingevuld.', 'Alle medewerkers', TRUE, '2026-07-30 10:15:00', '2026-07-30 10:15:00'),
-  (2, 1, 2, 'standard', 'draft', 'Reminder klanturenstaten', 'Controleer of je officiële klanturenstaat van de klant al is geüpload.', 'Alle medewerkers', FALSE, '2026-08-06 14:30:00', '2026-08-06 14:30:00');
+  (2, 1, 2, 'standard', 'draft', 'Reminder klanturenstaten', 'Controleer of je officiële klanturenstaat van de klant al is geüpload.', 'Alle medewerkers', FALSE, '2026-08-06 14:30:00', '2026-08-06 14:30:00'),
+  (3, 1, 1, 'standard', 'sent', 'Planning augustus beschikbaar', 'De urenregistratie voor augustus staat klaar. Je kunt tussentijds opslaan en aan het einde van de maand indienen.', 'Alle medewerkers', FALSE, '2026-08-03 08:45:00', '2026-08-03 08:45:00'),
+  (4, 1, 2, 'standard', 'sent', 'Controleer je open acties', 'Controleer vóór het indienen of je uren en klanturenstaat volledig zijn.', 'Alle medewerkers', FALSE, '2026-08-07 09:30:00', '2026-08-07 09:30:00');
 
 INSERT INTO announcement_recipients (announcement_id, user_id, email_requested, email_status) VALUES
   (1, 3, TRUE, 'sent'), (1, 4, TRUE, 'sent'), (1, 5, TRUE, 'sent'), (1, 6, TRUE, 'sent'),
-  (2, 3, FALSE, 'not_requested'), (2, 4, FALSE, 'not_requested'), (2, 5, FALSE, 'not_requested'), (2, 6, FALSE, 'not_requested');
+  (2, 3, FALSE, 'not_requested'), (2, 4, FALSE, 'not_requested'), (2, 5, FALSE, 'not_requested'), (2, 6, FALSE, 'not_requested'),
+  (3, 3, FALSE, 'not_requested'), (3, 4, FALSE, 'not_requested'), (3, 5, FALSE, 'not_requested'), (3, 6, FALSE, 'not_requested'),
+  (4, 3, FALSE, 'not_requested'), (4, 4, FALSE, 'not_requested'), (4, 5, FALSE, 'not_requested'), (4, 6, FALSE, 'not_requested');
 
 INSERT INTO notifications (
-  id, company_id, user_id, period_id, notification_type, title, message, target_route, read_at, created_at
+  id, company_id, user_id, period_id, announcement_id, notification_type, title, message, target_route, read_at, created_at
 ) VALUES
-  (1, 1, 1, 3, 'correction_required', 'Correctie nodig', 'Stasjo moet augustus nog aanpassen.', 'approvals', NULL, '2026-08-05 10:15:00'),
-  (2, 1, 1, 3, 'timesheet_submitted', 'Uren ingediend', 'Shawn-Douglas heeft augustus 2026 ingediend.', 'approvals', NULL, '2026-08-07 09:18:00'),
-  (3, 1, 1, 2, 'invoice_ready', 'Maandcontrole juli bijna klaar', 'Juli 2026 heeft nog één resterende verzendcontrole, augustus toont de open blokkades.', 'invoices', NULL, '2026-08-07 09:25:00'),
-  (4, 1, 4, 3, 'correction_required', 'Correctie gevraagd', 'Controleer 12 augustus en dien de maand daarna opnieuw in.', 'timesheet', NULL, '2026-08-05 10:15:00'),
-  (5, 1, 6, 3, 'timesheet_submitted', 'Uren wachten op controle', 'Je uren voor augustus 2026 zijn ingediend.', 'employee-dashboard', NULL, '2026-08-07 09:18:00');
+  (1, 1, 1, 3, NULL, 'correction_required', 'Correctie nodig', 'Stasjo moet augustus nog aanpassen.', 'approvals', NULL, '2026-08-05 10:15:00'),
+  (2, 1, 1, 3, NULL, 'timesheet_submitted', 'Uren ingediend', 'Shawn-Douglas heeft augustus 2026 ingediend.', 'approvals', NULL, '2026-08-07 09:18:00'),
+  (3, 1, 1, 2, NULL, 'invoice_ready', 'Maandcontrole juli bijna klaar', 'Juli 2026 heeft nog één resterende verzendcontrole, augustus toont de open blokkades.', 'invoices', NULL, '2026-08-07 09:25:00'),
+  (4, 1, 4, 3, NULL, 'correction_required', 'Correctie gevraagd', 'Controleer 12 augustus en dien de maand daarna opnieuw in.', 'timesheet', '2026-08-05 10:20:00', '2026-08-05 10:15:00'),
+  (5, 1, 6, 3, NULL, 'timesheet_submitted', 'Uren wachten op controle', 'Je uren voor augustus 2026 zijn ingediend.', 'employee-dashboard', NULL, '2026-08-07 09:18:00'),
+  (6, 1, 4, NULL, 1, 'announcement', 'Uren juli indienen', 'Dien je uren over juli uiterlijk maandag 3 augustus in. Controleer vóór het indienen of alle werkdagen zijn ingevuld.', 'employee-announcements', NULL, '2026-07-30 10:15:00'),
+  (7, 1, 4, NULL, 3, 'announcement', 'Planning augustus beschikbaar', 'De urenregistratie voor augustus staat klaar. Je kunt tussentijds opslaan en aan het einde van de maand indienen.', 'employee-announcements', NULL, '2026-08-03 08:45:00'),
+  (8, 1, 4, NULL, 4, 'announcement', 'Controleer je open acties', 'Controleer vóór het indienen of je uren en klanturenstaat volledig zijn.', 'employee-announcements', NULL, '2026-08-07 09:30:00');
 
 INSERT INTO audit_log (company_id, actor_user_id, event_type, entity_type, entity_id, event_data) VALUES
-  (1, 1, 'demo_seed_loaded', 'database', 'path_urenregistratie', JSON_OBJECT('version', '0.9.21', 'note', 'Demo-data sluit aan op de browser-GUI basisstand.'));
+  (1, 1, 'demo_seed_loaded', 'database', 'path_urenregistratie', JSON_OBJECT('version', '0.9.71', 'note', 'Demo-data sluit aan op de browser-GUI basisstand.'));

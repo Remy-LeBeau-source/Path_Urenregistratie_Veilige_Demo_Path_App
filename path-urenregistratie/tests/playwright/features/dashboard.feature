@@ -46,7 +46,7 @@ Feature: Dashboard en open werkvoorraad
     Given Backoffice de voorbeeldomgeving herstelt en daarna naar Stasjo wisselt
     When Stasjo daarna een open urenactie indient
     And Stasjo voert daarna F5 uit
-    Then blijft de gewijzigde lokale teller zichtbaar en komt geen oude serversessie terug
+    Then blijft de gewijzigde lokale teller zichtbaar en wordt er geen oude serverstatus teruggezet
     And Backoffice kan Marc zijn klanturenstaat goedkeuren zonder statusrace
 
   @happy
@@ -112,7 +112,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-014] medewerker krijgt de eerstvolgende concrete actie met juiste maand en taakroute
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 20
+    # Aantoonbare Playwright-assertions in deze case: 22
     Given een medewerker met meerdere open acties over verschillende maanden
     When het dashboard de werkvoorraad prioriteert
     Then opent de hoofdactie exact de geprioriteerde maand en juiste taakroute

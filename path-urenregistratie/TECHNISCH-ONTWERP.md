@@ -131,6 +131,13 @@ De ketentests voeren bedrijfsstappen in de natuurlijke volgorde uit. Zij control
 minimaal status, eigenaar/vervolgtaak, globale sommen en zichtbare actie. Een test die alleen de
 eindstatus controleert is voor een bedrijfskritieke overgang onvoldoende.
 
+Voor meldingen is de serverlijst gezaghebbend. De vaste LOCAL/TEST-baseline bevat voor Stasjo drie
+ongelezen mededelingen. `NOT-H-011` leest deze via de echte API en bewijst na iedere individuele
+leeswrite dat belbadge, mededelingenfilter en persoonlijke lijst atomisch dezelfde reeks
+`3 → 2 → 1 → 0` tonen. Bij auth-login wordt de lokale demo-notificatieprojectie vóór de eerste
+app-render geleegd, zodat `15`/`10` nooit als tijdelijke serverwaarheid zichtbaar worden. Een
+mock-only tellertest is hiervoor niet voldoende.
+
 De expliciete ketenspecificatie `end-to-end-workflows.feature` wordt uit
 `business-workflows-e2e.spec.ts` gegenereerd. De eerste releaseblokkades bewijzen: (1) stabiele
 12/7/5-herstelbasis bij maand- en filterwissels, (2) rolwissel en autorisatie zonder F5 en (3)

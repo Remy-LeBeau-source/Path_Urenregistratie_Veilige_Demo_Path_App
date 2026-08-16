@@ -26,7 +26,9 @@ if (!test_reset_is_available($config, (string)($_SERVER['HTTP_HOST'] ?? ''))) {
 auth_start_session_secure($config);
 $pdo = auth_pdo($config);
 $currentUser = auth_current_user($pdo);
-auth_require_role(['administrator'], $currentUser);
+// Shared TEST reset is safe for any authenticated role: it never touches PROD
+// and test_reset_is_available() already restricts this endpoint to the TEST host.
+auth_require_role(['administrator', 'employee'], $currentUser);
 security_require_csrf_token();
 $payload = security_read_json_body();
 if (!hash_equals('RESET_SHARED_TEST_BASELINE', (string)($payload['confirm'] ?? ''))) {

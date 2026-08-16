@@ -1,6 +1,120 @@
 # Copilot handoff — lokale mailpreview en regressieherstel
 
-Bijgewerkt: 15 augustus 2026
+Bijgewerkt: 16 augustus 2026
+
+## Laatste Codex-overdracht — LOCAL Herstelmeldingen
+
+### 2026-08-16 03:38 · Copilot — v0.9.73 lokale releasegate volledig groen
+
+- Productiebuild, `npm run check`, DB-H-001, dependency-audit (0 kwetsbaarheden), docs-sync
+  (212 Playwright + 1 DB) en repositorybrede diffcontrole zijn groen.
+- Drie door Vite achtergelaten eindspaties in `dist/index.html` zijn inhoudsneutraal verwijderd;
+  bron en buildartefact tonen en laden exact v0.9.73.
+- Samen met de GUI-smoke en 217/217 regressie is v0.9.73 lokaal volledig vrijgegeven voor
+  commit/push. Er is nog geen echte mail verstuurd en nog niets gedeployed.
+
+### 2026-08-16 03:35 · Copilot — v0.9.73 regressie 217/217 groen
+
+- Alle vier definitieve shards zijn na de individuele leesklikfix groen:
+  `64 + 47 + 55 + 51 = 217/217`, 0 failures.
+- Iedere shard bouwde de geisoleerde `path_urenregistratie_test`-database opnieuw op; desktop,
+  API, Mobile Chrome en Mobile Safari zijn volledig meegenomen.
+- Nog niet gepubliceerd. Volgende stap: compacte technische releasechecks en daarna commit/push.
+
+### 2026-08-16 03:29 · Copilot — v0.9.73 GUI-smoke groen
+
+- `npm run test:gui-smoke` is na de individuele leesklikfix volledig groen afgerond met exitcode 0.
+- De geisoleerde testdatabase is per deelrun opnieuw opgebouwd; meldingen `NOT-H-009/010/011`,
+  werkvoorraad, rolwissel, lokale mailpreview, omgevingsveiligheid en mobiel liepen mee.
+- Nog geen commit, push, deployment of echte mail. Volgende stap: vier volledige regressieshards.
+
+### 2026-08-16 · Copilot — v0.9.73 individuele leesactie hersteld
+
+- Gebruiker bevestigde dat bel/filter/kaarten op 3 stonden, maar één klik niet naar 2 ging.
+- Oorzaak: de klik koos in auth-modus nog de serverwrite terwijl de LOCAL-resetguard de readback
+  blokkeerde; de lokale melding bleef daardoor ongewijzigd.
+- Individuele belklik, mededelingenklik en `Alles gelezen` gebruiken onder LOCAL-resetgezag nu
+  consequent de lokale state. Zonder resetguard blijft de serverwrite leidend.
+- `NOT-H-010` klikt nu echt één mededeling en eist bel/filter/kaarten `3 → 2`.
+- Releasekandidaat en zichtbare labels zijn verhoogd naar v0.9.73. Alleen gerichte/goedkope
+  validatie volgt; geen nieuwe volledige dure regressieronde zonder expliciet verzoek.
+- Bewijs afgerond: `NOT-H-010` 1/1 groen in 3,2 s; syntax en v0.9.73-smoke groen; Living Docs
+  gesynchroniseerd op 212 Playwright + 1 DB; versiecontract v0.9.73 groen.
+
+### 2026-08-16 · Copilot — releasekandidaat verhoogd naar v0.9.72
+
+- De aanvullende Stasjo-fix (bel, filter en kaarten alle drie exact 3) valt onder v0.9.72.
+- Packageversie, zichtbare labels, asset-cachekeys, smokecontract, README, checklist en
+  Living Documentation-versielabel zijn gesynchroniseerd.
+- Historische v0.9.71-bewijsregels blijven ongewijzigd. Geen nieuwe dure regressierun uitgevoerd;
+  de onderliggende code was direct daarvoor 217/217 groen.
+
+### 2026-08-16 · Copilot — GUI-smoke opnieuw groen
+
+- Na de laatste Herstelmeldingenpatch is `npm run test:gui-smoke` volledig groen afgerond.
+- De GUI-gate bevat zowel `NOT-H-010` (`0 → Herstel → 3`, F5/herlogin) als `NOT-H-011`
+  (`3 → 2 → 1 → 0`). Geen deelrun meldde een failure.
+- Volgende stap: regressieshards 1/4 tot en met 4/4 opnieuw draaien. Nog niet publiceren.
+
+### 2026-08-16 · Copilot — vier regressieshards opnieuw groen
+
+- Definitieve rerun na de laatste Codex-patch: `64 + 47 + 55 + 51 = 217/217`, 0 failures.
+- Iedere shard is op een verse geïsoleerde Playwright-database uitgevoerd.
+- Nog te doen vóór vrijgave: echte localhost-GUI-flow `0 → Herstel → 3`, F5/herlogin en lokale
+  acceptatiebaseline zichtbaar controleren. Nog niet committen of publiceren vóór die closeout.
+
+### 2026-08-16 · Copilot — Stasjo-tellers nog ongelijk, lokale basis gecorrigeerd
+
+- Eigen localhostcontrole bewees admin `3 → 0 → Herstel → 3` en behoud na F5/herlogin.
+- De daaropvolgende Stasjo-controle vond nog bel `3`, mededelingenfilter `2`, kaarten `2`.
+- Oorzaak: één ongelezen correctiestatus plus twee ongelezen algemene mededelingen. De correctiestatus
+  is in de herstelbasis nu gelezen en de derde algemene mededeling ongelezen; taakstatus blijft gelijk.
+- `NOT-H-010` controleert nu na LOCAL Herstel ook Stasjo's bel, filter en kaarten op exact `3`.
+- Volgende stap: gerichte test en daarna alle geraakte gates opnieuw uitvoeren. Nog niet vrijgeven.
+
+### 2026-08-16 · Copilot — gerichte Stasjo-baseline groen
+
+- Versterkte `NOT-H-010` is groen: 1/1 in 3,2 s (totale run 4,5 s).
+- Na LOCAL Herstel zijn nu admin `3`, en Stasjo bel `3`, filter `3`, kaarten `3` aantoonbaar gelijk.
+- Volgende stap: notificatiesuite, `npm run check`, GUI-smoke en vier shards opnieuw uitvoeren.
+
+### 2026-08-16 · Copilot — modulecheck en documentatie groen
+
+- Volledige notificatiesuite: 11/11 groen in 9,4 s.
+- `npm run check`: volledig groen, inclusief v0.9.71-smoke, 213/213 testdesignmapping, BDD,
+  databaseconfig en operationele veiligheidschecks.
+- `npm run docs:sync`: groen; 212 Playwright-cases + 1 DB-case = 213 cases.
+- Volgende stap: GUI-smoke en volledige vier-shard regressie opnieuw draaien.
+
+Status: **lokaal opgelost en gericht bewezen; niet gecommit, niet gepusht en niet gedeployed**.
+
+- Gebruikersmelding: na `Alles gelezen` en daarna `Herstel` verschenen de drie lokale
+  basismeldingen heel kort, waarna de teller weer naar nul sprong.
+- Oorzaak: `freshState()` zette correct drie ongelezen meldingen terug, maar een direct daarna
+  geforceerde serverrefresh omzeilde de LOCAL-resetguard en overschreef ze met de reeds gelezen
+  serverstatus. Login kon dezelfde lokale baseline opnieuw leegmaken.
+- Productfix in `assets/app.js`:
+  - notificatie- en mededelingenreads respecteren weer de LOCAL-resetguard;
+  - geen geforceerde notification/announcement-readback direct na LOCAL Herstel;
+  - login wist notificaties niet wanneer de lokale resetbaseline gezaghebbend is;
+  - meldingen blijven per actieve rol/medewerker gefilterd;
+  - `Alles gelezen` wijzigt alleen de meldingen van het huidige profiel.
+- Regressie in `tests/playwright/notifications.spec.ts`:
+  `NOT-H-010` bewijst nu `0 → Herstel → exact 3`, controleert de drie titels, beschermt tegen
+  een serverresponse met nul en controleert persistentie na F5/herlogin.
+- BDD en uitvoer zijn gelijkgetrokken in
+  `tests/playwright/features/notifications.feature`,
+  `tests/playwright/steps/notifications.steps.ts` en het GUI-smokecommando in `package.json`.
+- Bewijs op 16 augustus 2026:
+  - `NOT-H-010`: **1/1 groen** (4,5 s);
+  - volledige `notifications.spec.ts`: **11/11 groen** (9,4 s);
+  - `npm run check`: **groen**, exitcode 0 (63,8 s);
+  - `git diff --check`: geen whitespacefouten.
+- Nog niet opnieuw uitgevoerd na deze laatste gerichte patch: de volledige GUI-smoke en de vier
+  regressieshards. Copilot mag die als volgende gate draaien, maar mag niet suggereren dat ze al
+  ná deze patch bewezen groen zijn.
+- Werkboom bevat een bredere, nog niet gepubliceerde v0.9.71-batch. Niets resetten, uitchecken,
+  stagen, committen, pushen of deployen zonder nieuwe opdracht. Geen echte mail verzenden.
 
 ## Start hier
 
@@ -28,6 +142,82 @@ Bijgewerkt: 15 augustus 2026
   - nieuwe regressie `EQ-H-025` voor lokale preview, badgebediening, inhoud, PDF's en geen SMTP.
 
 ## Bewezen status
+
+### 2026-08-16 · Codex — v0.9.71 lokale eindgate voltooid
+
+- De vier definitieve regressieshards zijn volledig groen: `64 + 47 + 55 + 51 = 217/217`.
+- De volledige GUI-smoke is groen (`exit 0`, circa 200 s) en `npm run check` is groen (`exit 0`).
+- `NOT-H-011` bewijst het echte eerste-loginpad: geen tijdelijke demo-`15/10`, daarna exact drie
+  servermededelingen en synchroon `3 → 2 → 1 → 0` in badge, filter en kaarten.
+- De lokale gebruikersbaseline is na de tests veilig teruggezet naar exact drie ongelezen
+  `Lokale tellertest 1/2/3 van 3`-meldingen, zonder overige lokale data te wissen.
+- FO, TO, features, stappen, mapping, werkwijze en masterchecklist bevatten dezelfde regressieregel.
+- Volgende stap: bewuste commit/push van v0.9.71 en de GitHub-checks volgen. Geen echte mail of
+  handmatige productieactie is onderdeel van deze release.
+
+### 2026-08-16 01:24 · Directe overdracht aan Codex
+
+- Doel: zichtbare medewerkersmeldingen op LOCAL/TEST moeten met echte serverdata beginnen op drie
+  ongelezen mededelingen en per individuele leesactie overal gelijk lopen: belbadge, filter en lijst
+  `3 → 2 → 1 → 0`. Geen vrijgave op alleen een brede regressie; Codex moet de echte localhost-GUI
+  zelf als laatste stap controleren.
+- Gevonden echte bug: handmatige localhost-GUI op v0.9.71 liet direct na login bel `15` en filter
+  `10` zien, ondanks drie servermededelingen. Eerste klik corrigeerde naar 2, daarna 1 en 0.
+  `login(role)` renderde de demo-notificaties vóór de asynchrone serverreadback.
+- Productfix: `assets/app.js` leegt in auth-modus alleen `state.notifications` vóór `renderAll()`.
+  De serverrefresh blijft gezaghebbend. `NOT-H-011` eist nu direct na login een verborgen badge,
+  daarna drie echte servermededelingen en de volledige 3→2→1→0-reeks.
+- Serverbaseline: `database/seed-demo-data.sql` heeft drie gekoppelde, ongelezen mededelingen voor
+  Stasjo; de eerdere correctiemelding staat gelezen. Releasekandidaat en zichtbare labels: v0.9.71.
+- Werkwijze is aangescherpt in `WERKWIJZE-PATROON.md`: geen vraaglus, exacte handmatige flow in
+  Playwright/smoke bouwen, patchversie verhogen, eigen zichtbare eindtest en pas daarna vrijgeven.
+- Testresultaten: notificatiespec 11/11 groen; versterkte `NOT-H-011` 1/1 groen in 3,6 s;
+  `npm run check` groen met 213/213 traceerbaarheid; GUI-smoke exit 0; gerichte Mobile Safari
+  `MOB-H-003` 1/1 groen. Mobile test controleert nu zichtbaar verdwijnen van de goedkeuringskaart
+  in plaats van een redundant intern response-signaal.
+- Volledige regressie: eerdere 217/217 was vóór de laatste loginfix en is geen eindbewijs.
+  Definitieve rerun erna: shard 1/4 64 groen, shard 2/4 47 groen; shards 3/4 en 4/4 staan open.
+- Lokale DB: de drie tijdelijke titels `Lokale tellertest 1 van 3`, `2 van 3`, `3 van 3` zijn door
+  de eigen GUI-run gelezen. Zet ze vóór gebruikersacceptatie opnieuw ongelezen klaar zonder andere
+  lokale data te verwijderen.
+- Nog doen: shards 3 en 4, eventueel docs opnieuw synchroniseren, lokale drie meldingen herstellen,
+  verse localhost-GUI bewijzen zonder 15/10-flash, checklist/handoff afsluiten. Zeg pas daarna
+  letterlijk `Je kunt nu testen op localhost`.
+- Geen commit/push, geen echte mail en geen go-live. Dirty worktree behouden; niet resetten.
+
+- 2026-08-16 00:47 · Copilot: de eerdere groene regressie dekte de zichtbare meldingenacceptatie
+  niet. Nieuwe echte browsercase `NOT-H-011` faalt aantoonbaar: na medewerkerslogin toont de oude
+  browserseed kort 15, waarna de server naar 1 corrigeert; verwacht zijn drie gekoppelde
+  mededelingen en vervolgens `3 → 2 → 1 → 0`. Oorzaak: `database/seed-demo-data.sql` bevatte voor
+  Stasjo één gewone melding en geen aan het mededelingenarchief gekoppelde notificaties. Gewijzigd:
+  test, serverseed, feature/mapping, FO/TO, werkwijze, checklist, GUI-smoke en versievoorbereiding
+  naar v0.9.71. Volgende stap: `NOT-H-011` opnieuw draaien en lokale keten verder valideren.
+- 2026-08-16 00:48 · Copilot: `NOT-H-011` is met de echte geïsoleerde testdatabase groen in 3,4 s.
+  De test logt in als Stasjo, ziet drie servermededelingen en voert drie echte
+  `mark_announcement_read`-writes uit; na iedere readback blijven belbadge, filter en lijst gelijk
+  op `3 → 2 → 1 → 0`, waarna alle drie als gelezen in de historie blijven. Gewijzigde bestanden:
+  geen aanvullende productwijziging na de seed-/testpatch. Volgende stap: notificatiesuite,
+  `npm run check`, GUI-smoke en volledige regressie.
+- 2026-08-16 00:56 · Copilot: notificatiesuite 11/11 groen; versiecontract toont overal v0.9.71;
+  `npm run check` volledig groen met 213/213 ontwerpgevallen, BDD, databaseconfig en operationele
+  veiligheidschecks. De volledige `npm run test:gui-smoke` is eveneens groen en bevat nu verplicht
+  `NOT-H-011`. Gewijzigd na de eerste check: ontbrekende featuremapping voor `NOT-H-010`, parservaste
+  mapping voor `NOT-H-011` en smokeversietekst. Volgende stap: Living Docs synchroniseren en de
+  volledige vier-shard regressie uitvoeren.
+- 2026-08-16 01:02 · Copilot: regressieshards 1-3 waren groen (64 + 47 + 55); shard 4 gaf
+  50 groen en één timeout in `MOB-H-003` Mobile Safari. Screenshotbewijs toont de juiste
+  goedkeuringskaart, maar de test bleef wachten op een redundant intern POST-response-signaal tot
+  de totale 30 seconden verstreken. De test controleert nu uitsluitend de zichtbare contractuitkomst:
+  klik Goedkeuren en de kaart verdwijnt. Geen timeout verhoogd en geen forced click toegevoegd.
+  Volgende stap: `MOB-H-003` gericht op Mobile Safari herhalen en daarna shard 4 opnieuw draaien.
+- 2026-08-16 01:20 · Copilot: gerichte Mobile Safari-case en herhaalde shard 4 zijn groen, waarmee
+  de volledige regressie 217/217 groen werd. De daaropvolgende echte localhost-GUI-controle
+  reproduceerde echter exact de gebruikersbug: bij login bel 15 en mededelingenfilter 10, terwijl
+  de server drie echte testmededelingen had; na de eerste leesactie corrigeerde dit naar 2→1→0.
+  Oorzaak: `login(role)` renderde de demo-notificatieprojectie vóór de asynchrone serverrefresh.
+  Fix: in auth-modus wordt alleen `state.notifications` vóór de eerste app-render geleegd;
+  `NOT-H-011` eist nu direct na login een verborgen badge en daarna 3→2→1→0. Volgende stap:
+  gerichte test, check, GUI-smoke, regressie en echte localhost-GUI opnieuw uitvoeren.
 
 - 2026-08-15 20:56 · Copilot: `EQ-H-025` gebruikte ten onrechte de volledige lokale auth- en
   bootstrapketen voor een afgebakend frontendcontract. Daardoor liep de case tegen 120 seconden en

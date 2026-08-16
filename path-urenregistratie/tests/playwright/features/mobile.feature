@@ -18,7 +18,7 @@ Feature: Mobiele gebruikerservaring
   @happy
   Scenario: [MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documentupload bereiken
     # Testtechniek: Responsive viewport + end-to-end use-case
-    # Aantoonbare Playwright-assertions in deze case: 14
+    # Aantoonbare Playwright-assertions in deze case: 15
     Given een medewerker met een mobiele schrijfbare maand
     When uren als concept worden gewijzigd en daarna ingediend
     Then klanturenstaat en notificaties blijven mobiel bereikbaar
@@ -26,7 +26,7 @@ Feature: Mobiele gebruikerservaring
   @happy
   Scenario: [MOB-H-003] mobiele correctie herindiening en administratieve goedkeuring zijn bereikbaar
     # Testtechniek: Responsive viewport + end-to-end use-case
-    # Aantoonbare Playwright-assertions in deze case: 13
+    # Aantoonbare Playwright-assertions in deze case: 12
     Given de medewerker mobiel uren indient
     When de administrator mobiel een correctie vraagt
     Then de medewerker de melding leest aanpast en opnieuw indient
