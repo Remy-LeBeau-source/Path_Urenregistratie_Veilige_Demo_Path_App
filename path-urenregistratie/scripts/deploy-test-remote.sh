@@ -138,8 +138,9 @@ failed_root="$deployments_root/failed-${deployment_id}-${timestamp}"
 
 move_directory_contents() {
   local source="$1" target="$2"
-  [[ -d "$source" && -d "$target" ]] || return 1
-  find "$source" -mindepth 1 -maxdepth 1 -exec mv -- {} "$target/" \;
+  if [[ ! -d "$source" ]]; then echo "move_directory_contents: source is not a directory: $source" >&2; return 1; fi
+  if [[ ! -d "$target" ]]; then echo "move_directory_contents: target is not a directory: $target" >&2; return 1; fi
+  find "$source" -mindepth 1 -maxdepth 1 -exec mv -v -- {} "$target/" \;
 }
 
 mkdir -m 700 "$rollback_root" "$failed_root"
@@ -160,18 +161,27 @@ rollback_on_error() {
 trap rollback_on_error EXIT HUP INT TERM
 
 cutover_started=1
+echo "Cutover: moving current live content to rollback root..." >&2
 move_directory_contents "$live_root" "$rollback_root"
+echo "Cutover: moving new release into live root..." >&2
 move_directory_contents "$app_root" "$live_root"
+echo "Cutover: securing config permissions..." >&2
 chmod 600 "$live_root/server/config.local.php"
+echo "Cutover: writing release SHA marker..." >&2
 printf '%s\n' "$source_sha" > "$live_root/.release-sha"
+echo "Cutover: refreshing OPcache..." >&2
 refresh_opcache "$live_root" || echo 'TEST OPcache refresh unavailable; continuing to public smoke.' >&2
 
+echo "Public smoke: fetching index.html..." >&2
 index_snapshot="$release_root/live-index.html"
 health_snapshot="$release_root/live-health.json"
 curl -fsS "$test_origin/index.html?release=$deployment_id" -o "$index_snapshot"
 grep -Fq "Versie $version" "$index_snapshot"
+echo "Public smoke: fetching app.js..." >&2
 curl -fsS "$test_origin/assets/app.js?v=$version" -o /dev/null
+echo "Public smoke: fetching styles.css..." >&2
 curl -fsS "$test_origin/assets/styles.css?v=$version" -o /dev/null
+echo "Public smoke: fetching health.php..." >&2
 curl -fsS "$test_origin/server/health.php" -o "$health_snapshot"
 php -r '
   require $argv[1];
