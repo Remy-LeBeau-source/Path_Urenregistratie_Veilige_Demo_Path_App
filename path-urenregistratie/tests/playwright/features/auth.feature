@@ -83,6 +83,16 @@ Feature: Inloggen, uitloggen en sessiebeheer
     When de pagina met F5 wordt herladen
     Then blijft de aflopende blokkade zichtbaar en blijft de server leidend
 
+  @negative
+  Scenario: [AUTH-N-009] geen loginflits: login-scherm en app-shell blijven verborgen tijdens auth-bootstrap na F5
+    # Regressie-preventie: F5-loginflits
+    # Testtechniek: Regressie-preventie + toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given de administrator is ingelogd
+    When de pagina met F5 wordt herladen terwijl de sessiecontrole vertraagd is
+    Then blijft body.auth-booting actief en zijn beide shells onzichtbaar zolang de sessiecontrole loopt
+    And na afronden van de sessiecontrole verdwijnt auth-booting en toont alleen de juiste shell
+
   @happy
   Scenario: [AUTH-H-009] lokale login benoemt de veilige testomgeving en productnaam
     # Testtechniek: End-to-end use-case + visuele contractasserties

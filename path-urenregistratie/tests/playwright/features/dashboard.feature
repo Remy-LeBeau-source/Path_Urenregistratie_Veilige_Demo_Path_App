@@ -49,6 +49,15 @@ Feature: Dashboard en open werkvoorraad
     Then blijft de gewijzigde lokale teller zichtbaar en wordt er geen oude serverstatus teruggezet
     And Backoffice kan Marc zijn klanturenstaat goedkeuren zonder statusrace
 
+  @negative
+  Scenario: [DASH-N-011] afgeronde Backoffice-taak en teller blijven na F5 stabiel, ongeacht het beginaantal
+    # Regressie-preventie: taakteller na F5
+    # Testtechniek: Regressie-preventie + toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given de administrator is ingelogd en reset naar vaste baseline
+    When een actionable urencontrole-taak (hours-review) wordt goedgekeurd
+    Then blijft de goedgekeurde taak weg en de teller stabiel na F5
+
   @happy
   Scenario: [DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker en Backoffice
     # Testtechniek: Beslissingstabel rollen en autorisatie

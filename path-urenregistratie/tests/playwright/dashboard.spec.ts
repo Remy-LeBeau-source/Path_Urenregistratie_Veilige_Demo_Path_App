@@ -369,6 +369,73 @@ test('[DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus', as
   });
 });
 
+test('[DASH-N-011] afgeronde Backoffice-taak en teller blijven na F5 stabiel, ongeacht het beginaantal', async ({ page }) => {
+  // Regression guard for the "12 -> 5 -> 9" class of bug: completing a Backoffice task must not
+  // revert after a reload, and the counter shown right after the action must survive F5 unchanged.
+  // Note: completing one task can legitimately chain into a follow-up task (e.g. hours-review ->
+  // invoice-delivery), so the total is NOT asserted to change - only that neither the specific
+  // completed task reappears, nor does the counter jump to a different (stale) value after F5.
+  const loginPage = new LoginPage(page);
+  let totalAfterAction = '';
+  let approvedEmployeeId = 0;
+  let approvedPeriodKey = '';
+
+  await test.step('Given de administrator is ingelogd en reset naar vaste baseline', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await page.locator('#quick-reset-demo').click();
+    await page.locator('#modal-confirm').click();
+    await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
+  });
+
+  await test.step('When een actionable urencontrole-taak (hours-review) wordt goedgekeurd', async () => {
+    const nextReview = await page.evaluate(() => {
+      const task = window.adminOpenTasks().find(item => item.type === 'hours-review' && item.actionable);
+      return task ? { employeeId: task.employee.id, periodKey: task.periodKey } : null;
+    });
+    expect(nextReview).not.toBeNull();
+    approvedEmployeeId = nextReview!.employeeId;
+    approvedPeriodKey = nextReview!.periodKey;
+
+    await page.locator('#hero-backoffice-filter').click();
+    const openMonthToggle = page.locator(`[data-admin-task-month-toggle="${approvedPeriodKey}"]`);
+    if (await openMonthToggle.getAttribute('aria-expanded') !== 'true') {
+      await openMonthToggle.click();
+    }
+    const taskRow = page.locator(`[data-admin-task-row="hours-review-${approvedPeriodKey}-${approvedEmployeeId}"]`);
+    const reviewButton = taskRow.locator(`[data-review="${approvedEmployeeId}"][data-period-key="${approvedPeriodKey}"]`);
+    await expect(reviewButton).toBeVisible();
+    await reviewButton.click();
+    await expect(page.locator('#modal-confirm')).toHaveText('Goedkeuren');
+    await page.locator('#modal-confirm').click();
+    await expect(page.locator('#toast')).toContainText('is goedgekeurd');
+
+    await expect.poll(() => page.evaluate(
+      ({ employeeId, periodKey }) => window.adminOpenTasks().some(
+        task => task.type === 'hours-review' && task.employee.id === employeeId && task.periodKey === periodKey
+      ),
+      { employeeId: approvedEmployeeId, periodKey: approvedPeriodKey }
+    ), { timeout: 10_000 }).toBe(false);
+
+    totalAfterAction = (await page.locator('#hero-task-total').innerText()).trim();
+    expect(totalAfterAction).toMatch(/^\d+ open acties$/);
+  });
+
+  await test.step('Then blijft de goedgekeurde taak weg en de teller stabiel na F5', async () => {
+    await page.reload();
+    await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
+    await expect(page.locator('#hero-task-total')).toHaveText(totalAfterAction, { timeout: 15_000 });
+
+    const stillApprovedAway = await page.evaluate(
+      ({ employeeId, periodKey }) => !window.adminOpenTasks().some(
+        task => task.type === 'hours-review' && task.employee.id === employeeId && task.periodKey === periodKey
+      ),
+      { employeeId: approvedEmployeeId, periodKey: approvedPeriodKey }
+    );
+    expect(stillApprovedAway).toBe(true);
+  });
+});
+
 test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker en Backoffice', async ({ page }) => {
   // Heavy multi-step closeout flow (12 sequential UI actions + a file upload); test.slow()'s 3x multiplier of the
   // 30s default (90s) was observed to be exceeded on slower CI runners, so set an explicit, larger budget instead.

@@ -1,0 +1,206 @@
+E2E precheck ok: http://127.0.0.1:8000 will be served by a runner-managed PHP server using DB path_urenregistratie_test.
+Prepared isolated Playwright database: path_urenregistratie_test
+{
+    "ok": true,
+    "executed": [
+        "001_database_schema.sql",
+        "003_auth_schema.sql",
+        "006_email_queue_dry_run.sql",
+        "007_password_reset.sql",
+        "017_assignment_invoice_mail_templates.sql",
+        "002_database_seed.sql",
+        "004_demo_employee_auth_seed.sql",
+        "005_demo_auth_hashes_for_existing_seed_users.sql",
+        "008_demo_seed_baseline_alignment.sql",
+        "009_demo_seed_august_correction_alignment.sql",
+        "016_demo_task_baseline_alignment.sql",
+        "018_demo_assignment_mail_templates.sql",
+        "010_add_timesheet_version.sql",
+        "011_mail_bundle_attachment_policy.sql",
+        "012_invoice_company_identity.sql",
+        "013_password_reset_delivery.sql",
+        "014_mail_acceptance_test.sql",
+        "015_runtime_state_health.sql"
+    ],
+    "skipped": [],
+    "demo_skipped": []
+}Migrated isolated Playwright database: path_urenregistratie_test
+Allure results voorbereid met functionele categories en environment metadata.
+[Sun Aug 16 21:54:03 2026] PHP 8.4.24 Development Server (http://127.0.0.1:8000) started
+[Sun Aug 16 21:54:04 2026] 127.0.0.1:58499 Accepted
+[Sun Aug 16 21:54:04 2026] 127.0.0.1:58499 [200]: GET /server/health.php
+[Sun Aug 16 21:54:04 2026] 127.0.0.1:58499 Closing
+PHP server ready at http://127.0.0.1:8000 with health payload: { "php_version": "8.4.24", "checks": { "pdo_mysql": { "ok": true }, "config.local.php": { "ok": true }, "database_connection": { "ok": true, "host": "127.0.0.1", "database": "path_urenregistratie_test" }, "app_state": { 
+
+Running 1 test using 1 worker
+
+[Sun Aug 16 21:54:05 2026] 127.0.0.1:50562 Accepted
+[Sun Aug 16 21:54:05 2026] 127.0.0.1:50562 [200]: GET /
+[Sun Aug 16 21:54:05 2026] 127.0.0.1:50562 Closing
+[Sun Aug 16 21:54:05 2026] 127.0.0.1:56143 Accepted
+[Sun Aug 16 21:54:05 2026] 127.0.0.1:54237 Accepted
+[Sun Aug 16 21:54:05 2026] 127.0.0.1:56143 [200]: GET /assets/styles.css?v=0.9.82
+[Sun Aug 16 21:54:05 2026] 127.0.0.1:54237 [200]: GET /assets/path-logo.png
+[Sun Aug 16 21:54:05 2026] 127.0.0.1:56143 Closing
+[Sun Aug 16 21:54:05 2026] 127.0.0.1:54237 Closing
+[Sun Aug 16 21:54:05 2026] 127.0.0.1:57182 Accepted
+[Sun Aug 16 21:54:05 2026] 127.0.0.1:58857 Accepted
+[Sun Aug 16 21:54:05 2026] 127.0.0.1:52103 Accepted
+[Sun Aug 16 21:54:05 2026] 127.0.0.1:57182 [200]: GET /assets/jspdf.umd.min.js
+[Sun Aug 16 21:54:05 2026] 127.0.0.1:58857 [200]: GET /assets/invoice-fonts.js
+[Sun Aug 16 21:54:05 2026] 127.0.0.1:52103 [200]: GET /assets/app.js?v=0.9.82
+[Sun Aug 16 21:54:05 2026] 127.0.0.1:58857 Closing
+[Sun Aug 16 21:54:05 2026] 127.0.0.1:57182 Closing
+[Sun Aug 16 21:54:05 2026] 127.0.0.1:52103 Closing
+[Sun Aug 16 21:54:06 2026] 127.0.0.1:60271 Accepted
+[Sun Aug 16 21:54:06 2026] 127.0.0.1:60271 [200]: GET /server/auth/csrf.php
+[Sun Aug 16 21:54:06 2026] 127.0.0.1:60271 Closing
+[Sun Aug 16 21:54:06 2026] 127.0.0.1:59034 Accepted
+[Sun Aug 16 21:54:06 2026] 127.0.0.1:59034 [200]: GET /server/auth/me.php
+[Sun Aug 16 21:54:06 2026] 127.0.0.1:59034 Closing
+[Sun Aug 16 21:54:06 2026] 127.0.0.1:57968 Accepted
+[Sun Aug 16 21:54:06 2026] 127.0.0.1:57968 [200]: GET /server/auth/local-login-hints.php
+[Sun Aug 16 21:54:06 2026] 127.0.0.1:57968 Closing
+[Sun Aug 16 21:54:07 2026] 127.0.0.1:50160 Accepted
+[Sun Aug 16 21:54:07 2026] 127.0.0.1:50160 [200]: POST /server/auth/login.php
+[Sun Aug 16 21:54:07 2026] 127.0.0.1:50160 Closing
+[Sun Aug 16 21:54:07 2026] 127.0.0.1:62738 Accepted
+[Sun Aug 16 21:54:07 2026] 127.0.0.1:57528 Accepted
+[Sun Aug 16 21:54:07 2026] 127.0.0.1:64406 Accepted
+[Sun Aug 16 21:54:07 2026] 127.0.0.1:62738 [200]: GET /server/api/dashboard.php
+[Sun Aug 16 21:54:07 2026] 127.0.0.1:62738 Closing
+[Sun Aug 16 21:54:07 2026] 127.0.0.1:57528 [200]: GET /server/api/invoices.php?period=2026-08
+[Sun Aug 16 21:54:07 2026] 127.0.0.1:57528 Closing
+[Sun Aug 16 21:54:07 2026] 127.0.0.1:64406 [200]: GET /server/api/email-queue.php?limit=100
+[Sun Aug 16 21:54:07 2026] 127.0.0.1:64406 Closing
+[Sun Aug 16 21:54:07 2026] 127.0.0.1:54897 Accepted
+[Sun Aug 16 21:54:07 2026] 127.0.0.1:50746 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:54897 [200]: GET /server/api/customer-timesheets.php?period=2026-08&employee_id=1
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:54897 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:50495 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:50746 [200]: GET /server/api/customer-timesheets.php?period=2026-08&employee_id=2
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:50746 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:60812 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:50495 [200]: GET /server/api/customer-timesheets.php?period=2026-08&employee_id=3
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:50495 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:57516 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:60812 [200]: GET /server/api/customer-timesheets.php?period=2026-08&employee_id=4
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:60812 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:64574 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:57516 [200]: GET /server/api/bootstrap.php
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:57516 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:56305 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:64574 [200]: GET /server/api/dashboard.php
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:64574 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:51348 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:56305 [200]: GET /server/api/invoices.php
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:56305 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:52335 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:51348 [200]: GET /server/api/invoices.php?period=2026-07
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:51348 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:59785 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:52335 [200]: GET /server/api/notifications.php?limit=50
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:52335 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:55003 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:59785 [200]: GET /server/api/announcements.php?limit=100
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:59785 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:61266 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:55003 [200]: POST /server/api.php?action=state
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:55003 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:61266 [200]: GET /server/api/notifications.php?limit=50
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:61266 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:49672 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:50160 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:51656 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:53104 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:63741 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:50524 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:49672 [200]: GET /server/api/timesheets.php?period=2026-05&employee_id=1
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:49672 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:50160 [200]: GET /server/api/customer-timesheets.php?period=2026-05&employee_id=1
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:50160 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:51656 [200]: GET /server/api/timesheets.php?period=2026-05&employee_id=2
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:51656 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:53104 [200]: GET /server/api/customer-timesheets.php?period=2026-05&employee_id=2
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:53104 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:63741 [200]: GET /server/api/timesheets.php?period=2026-05&employee_id=3
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:63741 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:50524 [200]: GET /server/api/customer-timesheets.php?period=2026-05&employee_id=3
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:50524 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:55881 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:53655 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:55881 [200]: GET /server/api/timesheets.php?period=2026-06&employee_id=1
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:55881 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:53015 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:53655 [200]: GET /server/api/customer-timesheets.php?period=2026-06&employee_id=1
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:53655 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:55041 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:53015 [200]: GET /server/api/timesheets.php?period=2026-06&employee_id=2
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:53015 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:53847 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:55041 [200]: GET /server/api/customer-timesheets.php?period=2026-06&employee_id=2
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:55041 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:58872 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:53847 [200]: GET /server/api/timesheets.php?period=2026-06&employee_id=3
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:53847 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:52488 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:58872 [200]: GET /server/api/customer-timesheets.php?period=2026-06&employee_id=3
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:58872 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:51625 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:52488 [200]: GET /server/api/timesheets.php?period=2026-07&employee_id=1
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:52488 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:63738 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:51625 [200]: GET /server/api/customer-timesheets.php?period=2026-07&employee_id=1
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:51625 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:62117 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:63738 [200]: GET /server/api/timesheets.php?period=2026-07&employee_id=2
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:63738 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:58479 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:62117 [200]: GET /server/api/customer-timesheets.php?period=2026-07&employee_id=2
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:62117 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:55798 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:58479 [200]: GET /server/api/timesheets.php?period=2026-07&employee_id=3
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:58479 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:57095 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:55798 [200]: GET /server/api/customer-timesheets.php?period=2026-07&employee_id=3
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:55798 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:58599 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:57095 [200]: GET /server/api/timesheets.php?period=2026-07&employee_id=4
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:57095 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:56518 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:58599 [200]: GET /server/api/customer-timesheets.php?period=2026-07&employee_id=4
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:58599 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:55612 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:56518 [200]: GET /server/api/timesheets.php?period=2026-08&employee_id=1
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:56518 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:52560 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:55612 [200]: GET /server/api/customer-timesheets.php?period=2026-08&employee_id=1
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:55612 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:54766 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:52560 [200]: GET /server/api/timesheets.php?period=2026-08&employee_id=2
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:52560 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:52695 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:54766 [200]: GET /server/api/customer-timesheets.php?period=2026-08&employee_id=2
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:54766 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:62340 Accepted
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:52695 [200]: GET /server/api/timesheets.php?period=2026-08&employee_id=3
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:52695 Closing
+[Sun Aug 16 21:54:08 2026] 127.0.0.1:64675 Accepted
+[Sun Aug 16 21:54:09 2026] 127.0.0.1:62340 [200]: GET /server/api/customer-timesheets.php?period=2026-08&employee_id=3
+[Sun Aug 16 21:54:09 2026] 127.0.0.1:62340 Closing
+[Sun Aug 16 21:54:09 2026] 127.0.0.1:53117 Accepted
+[Sun Aug 16 21:54:09 2026] 127.0.0.1:64675 [200]: GET /server/api/timesheets.php?period=2026-08&employee_id=4
+[Sun Aug 16 21:54:09 2026] 127.0.0.1:64675 Closing
+[Sun Aug 16 21:54:09 2026] 127.0.0.1:55861 Accepted
+[Sun Aug 16 21:54:09 2026] 127.0.0.1:53117 [200]: GET /server/api/customer-timesheets.php?period=2026-08&employee_id=4
+[Sun Aug 16 21:54:09 2026] 127.0.0.1:53117 Closing
+[Sun Aug 16 21:54:09 2026] 127.0.0.1:55861 [200]: GET /server/api/invoices.php?period=2026-08
+[Sun Aug 16 21:54:09 2026] 127.0.0.1:55861 Closing
+  Ô£ô  1 [desktop-chromium] ÔÇ║ tests\playwright\invoices.spec.ts:282:5 ÔÇ║ [INV-H-011] beperkte factuur-inhoud: alle velden in server-PDF inclusief recipient/project/uren/betaling (3.5s)
+
+  1 passed (4.7s)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

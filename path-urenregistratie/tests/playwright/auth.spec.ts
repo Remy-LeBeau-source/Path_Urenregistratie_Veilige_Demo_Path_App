@@ -238,6 +238,41 @@ test('[AUTH-N-008] de inlogblokkade en aftelling blijven zichtbaar na herladen',
   });
 });
 
+test('[AUTH-N-009] geen loginflits: login-scherm en app-shell blijven verborgen tijdens auth-bootstrap na F5', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given de administrator is ingelogd', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect(page.locator('#app-shell')).toBeVisible();
+  });
+
+  await test.step('When de pagina met F5 wordt herladen terwijl de sessiecontrole vertraagd is', async () => {
+    await page.route('**/server/auth/me.php', async route => {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      await route.continue();
+    });
+    await page.reload({ waitUntil: 'commit' });
+  });
+
+  await test.step('Then blijft body.auth-booting actief en zijn beide shells onzichtbaar zolang de sessiecontrole loopt', async () => {
+    await expect(page.locator('body')).toHaveClass(/auth-booting/);
+    await expect(page.locator('#login-screen')).toBeHidden();
+    await expect(page.locator('#app-shell')).toBeHidden();
+    const loginScreenDisplay = await page.locator('#login-screen').evaluate(el => getComputedStyle(el).display);
+    const appShellDisplay = await page.locator('#app-shell').evaluate(el => getComputedStyle(el).display);
+    expect(loginScreenDisplay).toBe('none');
+    expect(appShellDisplay).toBe('none');
+  });
+
+  await test.step('And na afronden van de sessiecontrole verdwijnt auth-booting en toont alleen de juiste shell', async () => {
+    await expect(page.locator('body')).not.toHaveClass(/auth-booting/, { timeout: 10_000 });
+    await expect(page.locator('#app-shell')).toBeVisible();
+    await expect(page.locator('#login-screen')).toBeHidden();
+    await page.unroute('**/server/auth/me.php');
+  });
+});
+
 test('[AUTH-H-009] lokale login benoemt de veilige testomgeving en productnaam', async ({ page }) => {
   const loginPage = new LoginPage(page);
 

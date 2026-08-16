@@ -70,3 +70,22 @@ Feature: Facturen bekijken en beheren
     Given de administrator is ingelogd
     When een ongeldige periodefilter wordt opgevraagd
     Then geeft de API invalid-period met status 400 terug
+
+  @happy
+  Scenario: [INV-H-010] server-PDF branding fallback consistency als GD uitvalt
+    # Regressie-preventie: PDF-branding fallback
+    # Testtechniek: Regressie-preventie + fallback-rendering
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given de administrator is ingelogd met demo-data
+    When de administrator een factuur via API downloadt
+    Then is de PDF-respons structureel valide zonder consolefouten
+
+  @happy
+  Scenario: [INV-H-011] beperkte factuur-inhoud: alle velden in server-PDF inclusief recipient/project/uren/betaling
+    # Regressie-preventie: invoice PDF beperkte inhoud
+    # Testtechniek: Regressie-preventie + inhoudsconsistentie
+    # Bug-fix referentie: F5-loginflits, taakteller na F5, invoice PDF beperkte inhoud
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given de administrator is ingelogd met demo-data inclusief geassigneerde taken
+    When de administrator factuurdata voor augustus opvraagt met details
+    Then bevat de server-PDF alle inhoudssecties: FACTUUR, Facturerende, Factuur aan, Project, uren/tarief, Betaling
