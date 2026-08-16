@@ -28,6 +28,16 @@ Verwijder eerdere relevante bevindingen niet. Noteer geen wachtwoorden, tokens o
 
 ## Actuele overdracht
 
+### 2026-08-17 00:11 · Copilot — pipelinefout EQ-H-020 gediagnosticeerd en lokaal groen
+
+- Release Pipeline-run `31975030883`, Validate-job `95233099123`, faalde uitsluitend in `EQ-H-020`.
+- Bewijs: build en `npm run check` waren groen; Playwright bereikte alle 227 tests. De assertion verwachtte exact `{ action: "lock", timesheet_id: 881 }`, terwijl v0.9.86 terecht ook `concept_pdf_base64` verstuurt.
+- Fix in `tests/playwright/email-queue.spec.ts`: basisvelden via `toMatchObject`, plus inhoudelijke validatie dat Base64 langer dan 1000 tekens is en decodeert naar `%PDF-`.
+- Gerichte test: `node scripts/run-playwright-e2e.mjs --project=desktop-chromium --grep EQ-H-020` groen, 1 passed (4.8s).
+- Versie opgehoogd en zichtbare labels gesynchroniseerd naar v0.9.87.
+- Releasevalidatie: `npm run check` groen; `npm run test:gui-smoke` exitcode 0.
+- Volgende stap: commit/push en nieuwe pipeline volgen.
+
 ### 2026-08-16 23:54 · Copilot — concept-PDF wordt voortaan exact als mailbijlage gebruikt
 
 - Diagnose: de app-preview/download kwam uit jsPDF, maar mail gebruikte een afzonderlijke sobere servergenerator; daardoor verschilden de twee documenten altijd, ook wanneer GD aanwezig was.

@@ -716,7 +716,10 @@ test.describe('email queue api', () => {
       if (route.request().method() === 'POST') {
         invoiceLocks += 1;
         const payload = route.request().postDataJSON() as Record<string, unknown>;
-        expect(payload).toEqual({ action: 'lock', timesheet_id: 881 });
+        expect(payload).toMatchObject({ action: 'lock', timesheet_id: 881 });
+        const conceptPdf = String(payload.concept_pdf_base64 || '');
+        expect(conceptPdf.length).toBeGreaterThan(1000);
+        expect(Buffer.from(conceptPdf, 'base64').subarray(0, 5).toString()).toBe('%PDF-');
         locked = true;
         await route.fulfill({
           status: 200,

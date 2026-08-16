@@ -89,6 +89,12 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-17 · v0.9.87 CI-contract voor concept-PDF gecorrigeerd
+
+- [x] Release Pipeline-run `31975030883` onderzocht: build/check waren groen en 227 tests draaiden; alleen `EQ-H-020` faalde omdat de oude exacte requestvergelijking het nieuwe `concept_pdf_base64`-veld afwees.
+- [x] `EQ-H-020` controleert nu de bestaande lockvelden én dat `concept_pdf_base64` decodeert naar een volledige `%PDF-`-payload.
+- [x] Gerichte herhaling van de exacte CI-test is groen: 1/1 passed (4.8s).
+
 ### 2026-08-16 · v0.9.86 conceptfactuur en TEST-mailbijlage gelijkgetrokken
 
 - [x] De browser genereert bij `Controle afronden` exact dezelfde vormgegeven concept-PDF als bij `Factuur-PDF controleren`.
