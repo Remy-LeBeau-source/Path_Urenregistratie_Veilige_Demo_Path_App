@@ -7,6 +7,14 @@ Feature: Klanturenstaten en documentverwerking
   # Navigatiemapping: tests/playwright/steps/customer-timesheets.steps.ts
 
   @happy
+  Scenario: [CTS-API-H-009] brokerroute koppelt de officiële klanturenstaat aan dezelfde medewerker en periode
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 12
+    Given klanturenstaten en documentverwerking is voorbereid
+    When de flow voor CTS-API-H-009 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat brokerroute koppelt de officiële klanturenstaat aan dezelfde medewerker en periode
+
+  @happy
   Scenario: [CTS-API-H-001] employee uploadt klanturenstaat, dient in en downloadt; admin kan goedkeuren en resubmit vragen
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 28

@@ -13,6 +13,9 @@ const And = navigate;
 const But = navigate;
 
 // Eenvoudige F12-navigatie; de echte acties en assertions staan in het specbestand hierboven.
+Given("klanturenstaten en documentverwerking is voorbereid");
+When("de flow voor CTS-API-H-009 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat brokerroute koppelt de officiële klanturenstaat aan dezelfde medewerker en periode");
 Given("de medewerker is ingelogd in auth-modus");
 When("de medewerker een concept uploadt en indient");
 Then("de medewerker kan het ingediende document teruglezen en downloaden");

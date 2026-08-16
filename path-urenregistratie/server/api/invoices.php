@@ -7,6 +7,7 @@ require_once __DIR__ . '/../security/csrf.php';
 require_once __DIR__ . '/../security/validation.php';
 require_once __DIR__ . '/../mail/queue.php';
 require_once __DIR__ . '/../mail/config.php';
+require_once __DIR__ . '/../mail/dispatch.php';
 require_once __DIR__ . '/../lib/simple_pdf.php';
 
 header('Content-Type: application/json; charset=utf-8');
@@ -255,7 +256,10 @@ function invoices_generate_and_store_pdf(PDO $pdo, array $config, int $invoiceId
             ['text' => 'Totaal: EUR ' . number_format((float)$row['total'], 2, ',', '.'), 'size' => 12],
         ];
 
-        $pdfBytes = simple_pdf_text_document($lines);
+        $pdfBytes = simple_pdf_branded_text_document(
+            $lines,
+            dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'path-logo.png'
+        );
         if (!simple_pdf_looks_valid($pdfBytes)) {
             return false;
         }
@@ -728,24 +732,29 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
 
         $pdo->commit();
 
-        // Queue e-mail deliveries after commit; dry_run=true until dispatch is activated.
+        // Store the immutable PDF before queueing so immediate TEST dispatch can resolve attachments.
+        $pdfGenerated = invoices_generate_and_store_pdf($pdo, $config, $invoiceId, $companyId);
+
         $queuedDeliveries = [];
+        $dispatchResult = ['sent' => 0, 'failed' => 0, 'skipped' => 0];
         try {
             $mailDryRun = mail_is_dry_run($config);
             $queuedDeliveries = mail_enqueue_for_invoice($pdo, $invoiceId, $companyId, (int)$currentUser['id'], $mailDryRun);
+            if ($pdfGenerated) {
+                $dispatchResult = mail_dispatch_created($pdo, $queuedDeliveries, $config);
+            }
         } catch (Throwable $queueError) {
             // Queue failure must never break the lock response.
             error_log('mail_enqueue_for_invoice failed: ' . $queueError->getMessage());
         }
-
-        // Generate the server-side invoice PDF after commit; never breaks the lock response on failure.
-        invoices_generate_and_store_pdf($pdo, $config, $invoiceId, $companyId);
 
         auth_send_json([
             'ok' => true,
             'action' => 'lock',
             'audit_event' => 'invoice.locked',
             'queued_count' => count($queuedDeliveries),
+            'dispatch_result' => $dispatchResult,
+            'pdf_generated' => $pdfGenerated,
             'invoice' => [
                 'id' => (int)$invoice['id'],
                 'timesheet_id' => (int)$invoice['timesheet_id'],

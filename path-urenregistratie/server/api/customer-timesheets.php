@@ -6,6 +6,8 @@ require_once __DIR__ . '/../auth/session.php';
 require_once __DIR__ . '/../security/csrf.php';
 require_once __DIR__ . '/../security/validation.php';
 require_once __DIR__ . '/../lib/simple_pdf.php';
+require_once __DIR__ . '/../mail/queue.php';
+require_once __DIR__ . '/../mail/dispatch.php';
 
 header('Content-Type: application/json; charset=utf-8');
 auth_apply_cors_headers(auth_try_load_raw_config(), 'GET, POST, OPTIONS', 'Content-Type, X-CSRF-Token');
@@ -591,7 +593,7 @@ if (!$payload) {
 $action = security_require_enum_field(
     $payload,
     'action',
-    ['save_draft', 'submit', 'approve', 'request_resubmit', 'mark_sent', 'mark_sent_to_broker', 'mark_skipped', 'restore_missing'],
+    ['save_draft', 'submit', 'approve', 'request_resubmit', 'mark_sent', 'mark_sent_to_broker', 'send_to_broker', 'mark_skipped', 'restore_missing'],
     'Invalid customer timesheet action.'
 );
 $period = customer_timesheet_parse_period_key(security_require_string_field($payload, 'period', 'period is required.', 7));
@@ -600,7 +602,7 @@ $companyId = (int)$currentUser['company_id'];
 $employeeId = (int)$employee['id'];
 $assignmentId = customer_timesheet_assignment_id($pdo, $companyId, $employeeId, customer_timesheet_optional_positive_int($payload, 'assignment_id'));
 
-if (in_array($action, ['approve', 'request_resubmit', 'mark_sent', 'mark_sent_to_broker'], true) && (string)$currentUser['role'] !== 'administrator') {
+if (in_array($action, ['approve', 'request_resubmit', 'mark_sent', 'mark_sent_to_broker', 'send_to_broker'], true) && (string)$currentUser['role'] !== 'administrator') {
     customer_timesheet_json([
         'ok' => false,
         'error' => 'forbidden-action',
@@ -611,6 +613,105 @@ if (in_array($action, ['approve', 'request_resubmit', 'mark_sent', 'mark_sent_to
 $reviewNote = '';
 if ($action === 'request_resubmit' || $action === 'mark_skipped') {
     $reviewNote = customer_timesheet_required_text($payload, 'review_note', 2000);
+}
+
+if ($action === 'send_to_broker') {
+    $subject = customer_timesheet_required_text($payload, 'subject', 250);
+    $body = customer_timesheet_required_text($payload, 'body', 5000);
+    $pdo->beginTransaction();
+    try {
+        $periodId = customer_timesheet_ensure_period($pdo, $companyId, $period['year'], $period['month']);
+        $existing = customer_timesheet_find($pdo, $companyId, $periodId, $employeeId, $assignmentId);
+        if (!$existing || (string)$existing['status'] !== 'approved') {
+            throw new RuntimeException('Alleen een goedgekeurde klanturenstaat kan worden verzonden.');
+        }
+        $routeStmt = $pdo->prepare(
+            'SELECT i.id AS invoice_id, a.customer_timesheet_use_broker_email,
+                    a.customer_timesheet_broker_email, cp.invoice_email
+             FROM invoices i
+             JOIN timesheets t ON t.id = i.timesheet_id
+             JOIN assignments a ON a.id = t.assignment_id
+             LEFT JOIN counterparties cp ON cp.id = a.broker_id AND cp.company_id = :broker_company_id
+             WHERE i.company_id = :invoice_company_id AND t.employee_id = :employee_id
+               AND t.period_id = :period_id AND t.assignment_id = :assignment_id
+             ORDER BY i.id DESC LIMIT 1'
+        );
+        $routeStmt->execute([
+            ':broker_company_id' => $companyId,
+            ':invoice_company_id' => $companyId,
+            ':employee_id' => $employeeId,
+            ':period_id' => $periodId,
+            ':assignment_id' => $assignmentId,
+        ]);
+        $route = $routeStmt->fetch();
+        if (!$route) {
+            throw new RuntimeException('Voor deze medewerker en periode ontbreekt de gekoppelde factuurroute.');
+        }
+        $recipient = (bool)$route['customer_timesheet_use_broker_email']
+            ? trim((string)$route['invoice_email'])
+            : trim((string)$route['customer_timesheet_broker_email']);
+        $deliveryId = mail_insert_delivery(
+            $pdo,
+            (int)$route['invoice_id'],
+            'broker',
+            $recipient,
+            null,
+            $subject,
+            $body,
+            'customer_timesheet',
+            mail_is_dry_run($config)
+        );
+        mail_audit($pdo, $companyId, (int)$currentUser['id'], 'email.queued', $deliveryId, [
+            'channel' => 'broker',
+            'customer_timesheet_id' => (int)$existing['id'],
+            'period' => $period['period_key'],
+        ]);
+        $pdo->commit();
+
+        $dispatchResult = mail_dispatch_created($pdo, [['id' => $deliveryId]], $config);
+        $testDelivery = mail_dispatch_after_user_action($config);
+        if ($testDelivery && (int)$dispatchResult['sent'] !== 1) {
+            customer_timesheet_json([
+                'ok' => false,
+                'error' => 'customer-timesheet-mail-not-delivered',
+                'message' => 'De TEST-mail is niet afgeleverd. De brokeractie blijft open.',
+                'dispatch_result' => $dispatchResult,
+            ], 502);
+        }
+
+        $pdo->beginTransaction();
+        $pdo->prepare(
+            'UPDATE customer_timesheets SET status = "sent_to_broker", sent_to_broker_at = CURRENT_TIMESTAMP WHERE id = :id AND status = "approved"'
+        )->execute([':id' => (int)$existing['id']]);
+        $latest = customer_timesheet_find($pdo, $companyId, $periodId, $employeeId, $assignmentId);
+        customer_timesheet_audit($pdo, $companyId, (int)$currentUser['id'], (int)$existing['id'], 'customer_timesheet.sent_to_broker', [
+            'period' => $period['period_key'],
+            'employee_id' => $employeeId,
+            'assignment_id' => $assignmentId,
+            'delivery_id' => $deliveryId,
+            'dispatch_result' => $dispatchResult,
+        ]);
+        $pdo->commit();
+        customer_timesheet_json([
+            'ok' => true,
+            'period' => $period['period_key'],
+            'employee_id' => $employeeId,
+            'assignment_id' => $assignmentId,
+            'customer_timesheet' => customer_timesheet_payload_from_row($latest, $period['period_key'], $employeeId, $assignmentId),
+            'delivery_id' => $deliveryId,
+            'dispatch_result' => $dispatchResult,
+            'test_delivery' => $testDelivery,
+        ]);
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        customer_timesheet_json([
+            'ok' => false,
+            'error' => 'customer-timesheet-broker-send-failed',
+            'message' => $error->getMessage(),
+        ], 409);
+    }
 }
 
 $uploaded = null;

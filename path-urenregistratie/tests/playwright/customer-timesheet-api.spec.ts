@@ -30,6 +30,40 @@ async function findWritablePeriod(api: CustomerTimesheetApi): Promise<string> {
 }
 
 test.describe('customer timesheet api', () => {
+  test('[CTS-API-H-009] brokerroute koppelt de officiële klanturenstaat aan dezelfde medewerker en periode', async ({ request }) => {
+    const authApi = new AuthApi(request);
+    const customerApi = new CustomerTimesheetApi(request);
+
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+    const before = await customerApi.read('2026-07', 1);
+    expect(before.status).toBe(200);
+    expect(before.body.customer_timesheet.status).toBe('approved');
+
+    const sent = await customerApi.write({
+      action: 'send_to_broker',
+      period: '2026-07',
+      employeeId: 1,
+      subject: 'Klanturenstaat Marc de Roon - juli 2026',
+      body: 'Bijgevoegd staat de officiële klanturenstaat van Marc de Roon over juli 2026.',
+    });
+    expect(sent.status).toBe(200);
+    expect(sent.body.ok).toBe(true);
+    expect(sent.body.customer_timesheet.status).toBe('sent_to_broker');
+    expect(Number(sent.body.delivery_id)).toBeGreaterThan(0);
+
+    const queueResponse = await request.get('/server/api/email-queue.php');
+    expect(queueResponse.status()).toBe(200);
+    const queue = await queueResponse.json();
+    const delivery = queue.items.find((item: Record<string, unknown>) => Number(item.id) === Number(sent.body.delivery_id));
+    expect(delivery).toBeTruthy();
+    expect(delivery.channel).toBe('broker');
+    expect(delivery.attachment_policy).toBe('customer_timesheet');
+    expect(delivery.invoice_number).toBe('IND-2026-juli');
+    expect(delivery.subject_snapshot).toBe('Klanturenstaat Marc de Roon - juli 2026');
+
+    await authApi.logout();
+  });
+
   test('[CTS-API-H-001] employee uploadt klanturenstaat, dient in en downloadt; admin kan goedkeuren en resubmit vragen', async ({ request }) => {
     const authApi = new AuthApi(request);
     const customerApi = new CustomerTimesheetApi(request);

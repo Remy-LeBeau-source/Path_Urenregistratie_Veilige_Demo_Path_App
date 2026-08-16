@@ -28,6 +28,24 @@ Verwijder eerdere relevante bevindingen niet. Noteer geen wachtwoorden, tokens o
 
 ## Actuele overdracht
 
+### 2026-08-16 04:06 · Copilot — v0.9.74 gewone TEST-mailflow gerepareerd
+
+- De gewone factuurflow bleef terecht als bug gemeld op `klaargezet`; alleen de acceptatieconsole
+  deed directe SMTP-dispatch.
+- Factuurlock genereert nu eerst de definitieve branded server-PDF met Path-logo en dispatcht daarna
+  in de beveiligde TEST-sandbox exact de nieuwe broker-/boekhouding-/salarisitems. LOCAL/PROD-grenzen
+  blijven ongewijzigd en een onvolledige TEST-aflevering laat de beheeractie open.
+- Gericht groen: `EQ-H-020` (3 echte TEST-mails) en `INV-H-004` (logo, Path/QSI, geen conceptmarkering).
+- Ook de losse klanturenstaatroute is hersteld: `send_to_broker` gebruikt de officiële PDF van de
+  juiste medewerker/periode en dispatcht op TEST alleen naar Giovanno. `EQ-H-026` is 1/1 groen en
+  beschikbaar als gerichte mailflow-smoke.
+- Volledige GUI-smoke en alle geraakte suites zijn groen: 36/36 mail/factuur + 15/15
+  klanturenstaat/bedrijfsketen = 51/51. Nog niet gecommit/gepusht; laatste build/DB/audit volgt.
+- Productiebuild, DB-H-001, dependency-audit (0 kwetsbaarheden), v0.9.74-versiecontract en
+  `git diff --check` zijn eveneens groen. Commit/push volgt direct.
+- Vaste afspraak: iedere release krijgt gerichte regressie op alle geraakte codepaden; volledige
+  matrix alleen bij gedeelde kernlogica, breed risico of expliciet verzoek.
+
 ### 2026-08-16 03:38 · Copilot — v0.9.73 lokale releasegate volledig groen
 
 - Naast GUI-smoke en 217/217 regressie zijn ook productiebuild, `npm run check`, DB-H-001,

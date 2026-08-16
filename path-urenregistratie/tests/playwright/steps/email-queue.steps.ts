@@ -50,6 +50,8 @@ Then("wordt met Playwright-assertions bevestigd dat niet-beschikbare acceptatiec
 Given("een goedgekeurde maar nog niet definitieve serverfactuur als Backoffice-taak klaarstaat");
 When("Backoffice de verzending één keer afrondt");
 Then("wordt eerst gelockt, niet te vroeg gequeued en verdwijnt de afgeronde vervolgtaak");
+When("de flow voor EQ-H-026 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat backoffice verzendt de juiste officiële klanturenstaat via TEST naar Giovanno");
 Given("de lokale status verouderd is maar de serveruren nog ingediend zijn");
 When("de flow voor EQ-N-021 wordt uitgevoerd");
 Then("verschijnt geen factuurverzendtaak en wordt geen lock-write uitgevoerd");

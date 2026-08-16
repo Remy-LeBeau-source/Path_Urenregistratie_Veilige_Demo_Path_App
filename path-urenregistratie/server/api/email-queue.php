@@ -164,12 +164,16 @@ if ($action === 'enqueue') {
         auth_send_json(['ok' => false, 'error' => 'enqueue-failed', 'message' => $code], 500);
     }
 
+    require_once __DIR__ . '/../mail/dispatch.php';
+    $dispatchResult = mail_dispatch_created($pdo, $created, $config);
+
     auth_send_json([
         'ok'      => true,
         'action'  => 'enqueue',
         'dry_run' => $dryRun,
         'created' => $created,
         'count'   => count($created),
+        'dispatch_result' => $dispatchResult,
     ]);
 }
 

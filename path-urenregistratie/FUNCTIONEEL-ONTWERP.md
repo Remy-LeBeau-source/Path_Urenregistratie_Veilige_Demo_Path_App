@@ -122,10 +122,19 @@ controleren. LOCAL toont daarbij naast iedere bedoelde productieroute expliciet 
 gesimuleerde TEST-aflevering `giovanno.maatsen@pathconsultancy.nl` met de melding dat niets wordt
 verzonden. Deze bediening kan uitsluitend lokale previewregistraties maken en opent nooit SMTP.
 TEST herschrijft alle functionele ontvangers naar de vastgelegde testontvanger en markeert elk
-bericht als acceptatietest. PROD gebruikt uitsluitend de geconfigureerde zakelijke ontvangers. Een
+bericht als TEST-aflevering. Bij `Controle afronden` maakt de server eerst de definitieve factuur-PDF
+met Path-logo en zonder conceptwatermerk; daarna worden uitsluitend de zojuist aangemaakte broker-,
+boekhoudings- en salarisitems direct verzonden. De broker ontvangt factuur plus goedgekeurde
+klanturenstaat, Boekhouding alleen de factuur en Salarisadministratie geen bijlage. PROD gebruikt
+uitsluitend de geconfigureerde zakelijke ontvangers en verwerkt de queue via de beheerworker. Een
 mislukte verzending blijft zichtbaar in de verzendadministratie en mag niet als verzonden worden
 getoond. Boekhouding en Salarisadministratie zijn vaste kernroutes: ze kunnen worden aangepast of
 gedeactiveerd, maar alleen zelf toegevoegde routes mogen definitief worden verwijderd.
+
+Dezelfde servergenerator verwerkt ieder geconfigureerd factuurnummerpatroon per medewerker en
+periode, waaronder `IND-*`, `IND-StvB-*`, `COA-*` en `Bel-Shawn-*`. De aparte knop
+`Brokerroute controleren` verzendt de officiële, goedgekeurde klanturenstaat van exact dezelfde
+medewerker en periode; op TEST wordt ook deze fysieke mail uitsluitend bij Giovanno afgeleverd.
 
 | Gebeurtenis | Eigenaar vóór | Resultaat | Eigenaar na |
 |---|---|---|---|

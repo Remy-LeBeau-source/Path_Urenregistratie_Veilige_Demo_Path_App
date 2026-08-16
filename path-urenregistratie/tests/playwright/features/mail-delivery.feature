@@ -110,12 +110,20 @@ Feature: Mailroutering en aflevering
     Then wordt met Playwright-assertions bevestigd dat niet-beschikbare acceptatieconsole blijft volledig uit beeld
 
   @happy
-  Scenario: [EQ-H-020] Backoffice finaliseert een serverfactuur vóór de mailqueue en sluit de vervolgtaak
-    # Testtechniek: Toestandsovergang
+  Scenario: [EQ-H-020] Backoffice finaliseert de branded serverfactuur en verzendt drie echte TEST-mails
+    # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 11
     Given een goedgekeurde maar nog niet definitieve serverfactuur als Backoffice-taak klaarstaat
     When Backoffice de verzending één keer afrondt
     Then wordt eerst gelockt, niet te vroeg gequeued en verdwijnt de afgeronde vervolgtaak
+
+  @happy
+  Scenario: [EQ-H-026] Backoffice verzendt de juiste officiële klanturenstaat via TEST naar Giovanno
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given mailroutering en aflevering is voorbereid
+    When de flow voor EQ-H-026 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat backoffice verzendt de juiste officiële klanturenstaat via TEST naar Giovanno
 
   @negative
   Scenario: [EQ-N-021] factuurverzending blijft dicht zolang de serveruren niet zijn goedgekeurd

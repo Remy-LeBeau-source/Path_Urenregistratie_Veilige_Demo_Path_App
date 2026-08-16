@@ -83,6 +83,9 @@ Taak-ID's zijn stabiel opgebouwd uit type, periode en medewerker. Hierdoor kunne
 - Een factuurlock schrijft standaard drie gescheiden `email_deliveries`: `broker`, `accountant` en
   `payroll`. TEST verandert bij dispatch alleen de effectieve ontvanger; kanaal, oorspronkelijke
   ontvanger, onderwerp en attachment policy blijven auditbaar.
+- De factuurlock genereert en bewaart eerst de definitieve branded server-PDF met ingebed Path-logo.
+  Alleen in de volledig vrijgegeven TEST-sandbox dispatcht dezelfde gebruikersactie daarna exact de
+  nieuw aangemaakte delivery-ID's. LOCAL blijft dry-run; PROD blijft queue/worker-gestuurd.
 - Bijlagen worden server-side op routebeleid gevalideerd. De acceptatiestatus publiceert uitsluitend
   een veilige bestandsnaam en index. Een geautoriseerde beheerder kan met scenario + index dezelfde
   server-side gegenereerde PDF inline openen; de endpoint valideert opnieuw het routebeleid en de

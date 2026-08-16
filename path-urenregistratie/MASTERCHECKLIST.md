@@ -143,11 +143,22 @@ Deze momentopname is leidend; de regels eronder bewaren het technische en histor
   `64 + 47 + 55 + 51 = 217/217`. De drie lokale tellertestmeldingen zijn daarna exact als ongelezen
   gebruikersbaseline hersteld. Ook productiebuild, DB-H-001, dependency-audit met 0 kwetsbaarheden,
   docs-sync met 212 Playwright + 1 DB-case en `git diff --check` zijn groen.
+- [x] v0.9.74 herstelt de gewone TEST-factuurflow: `Controle afronden` genereert eerst de definitieve
+  serverfactuur met ingebed Path-logo en zonder conceptwatermerk en dispatcht daarna uitsluitend de
+  drie nieuw aangemaakte TEST-routes. Broker krijgt factuur + goedgekeurde klanturenstaat,
+  Boekhouding alleen factuur en Salarisadministratie geen bijlage. `EQ-H-020`, `INV-H-004` en de
+  mailpolicycheck zijn gericht groen. `EQ-H-026` bewijst daarnaast dat de aparte klanturenstaatknop
+  de juiste officiële medewerker-/periode-PDF via TEST naar Giovanno verzendt. De servergenerator
+  ondersteunt de bestaande `IND`, `IND-StvB`, `COA` en `Bel-Shawn`-patronen. De volledige GUI-smoke
+  en de geraakte regressiesuites zijn groen: mail/factuur 36/36 + klanturenstaat/bedrijfsketen
+  15/15 = 51/51.
 
 ### Vaste wensen en acceptatieregels uit deze samenwerking
 
 - [x] Iedere gevonden regressie wordt vastgelegd in FO/TO, een uitvoerbare feature met concrete
   assertions en de passende smoke- of regressiesuite.
+- [x] Iedere release draait minimaal gerichte regressie op alle geraakte codepaden plus de vaste
+  smoke/checkgates; alleen gedeelde kernlogica, breed risico of expliciet verzoek vereist de volledige matrix.
 - [x] Ketentests volgen de volledige overgang:
   `startstatus → gebruikersactie → API-write → readback → taakprojectie → teller → vervolgactie → mailqueue → SMTP-status`.
 - [x] Taken hebben steeds één eigenaar: medewerker of Backoffice. Een afgeronde medewerkeractie

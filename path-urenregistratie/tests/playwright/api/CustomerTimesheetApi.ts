@@ -8,6 +8,7 @@ type CustomerTimesheetWriteAction =
   | 'request_resubmit'
   | 'mark_sent'
   | 'mark_sent_to_broker'
+  | 'send_to_broker'
   | 'mark_skipped'
   | 'restore_missing';
 
@@ -17,6 +18,8 @@ type WritePayload = {
   employeeId?: number;
   assignmentId?: number;
   reviewNote?: string;
+  subject?: string;
+  body?: string;
   file?: {
     name: string;
     mimeType: string;
@@ -83,6 +86,8 @@ export class CustomerTimesheetApi {
     if (payload.employeeId !== undefined) base.employee_id = String(payload.employeeId);
     if (payload.assignmentId !== undefined) base.assignment_id = String(payload.assignmentId);
     if (payload.reviewNote !== undefined) base.review_note = payload.reviewNote;
+    if (payload.subject !== undefined) base.subject = payload.subject;
+    if (payload.body !== undefined) base.body = payload.body;
 
     const endpoint = '/server/api/customer-timesheets.php';
     const requestBody = payload.file ? { ...base, file: payload.file } : base;

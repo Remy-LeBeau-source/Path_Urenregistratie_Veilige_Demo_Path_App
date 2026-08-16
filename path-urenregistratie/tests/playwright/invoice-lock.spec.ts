@@ -192,6 +192,12 @@ test('[INV-H-004] admin lockt approved timesheet naar definitieve immutable fact
     expect(download.contentType).toContain('application/pdf');
     expect(download.body.subarray(0, 5).toString('latin1')).toBe('%PDF-');
     expect(download.body.subarray(-16).toString('latin1')).toContain('%%EOF');
+    const pdfText = download.body.toString('latin1');
+    expect(pdfText).toContain('/Im1 Do');
+    expect(pdfText).toContain('Path Consultancy');
+    expect(pdfText).toContain('QSI Consultancy B.V.');
+    expect(pdfText).not.toContain('CONCEPT');
+    expect(pdfText).not.toContain('NIET VERZONDEN');
   });
 
   await test.step('And cleanup de administrator-sessie wordt afgesloten', async () => {

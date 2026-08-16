@@ -126,6 +126,71 @@ function simple_pdf_text_document(array $lines): string
     return simple_pdf_assemble($objects);
 }
 
+/** Render a branded text PDF with a PNG logo embedded as a JPEG image XObject. */
+function simple_pdf_branded_text_document(array $lines, string $logoPath): string
+{
+    if (!function_exists('imagecreatefrompng') || !is_file($logoPath)) {
+        throw new RuntimeException('PNG logo rendering is unavailable.');
+    }
+    $source = @imagecreatefrompng($logoPath);
+    if ($source === false) {
+        throw new RuntimeException('PNG logo could not be loaded.');
+    }
+    $width = imagesx($source);
+    $height = imagesy($source);
+    $flattened = imagecreatetruecolor($width, $height);
+    $white = imagecolorallocate($flattened, 255, 255, 255);
+    imagefill($flattened, 0, 0, $white);
+    imagealphablending($flattened, true);
+    imagecopy($flattened, $source, 0, 0, 0, 0, $width, $height);
+    ob_start();
+    imagejpeg($flattened, null, 90);
+    $jpegBytes = (string)ob_get_clean();
+    imagedestroy($source);
+    imagedestroy($flattened);
+    if ($jpegBytes === '') {
+        throw new RuntimeException('Logo JPEG conversion failed.');
+    }
+
+    $pageW = 595.28;
+    $pageH = 841.89;
+    $marginLeft = 56.0;
+    $y = 690.0;
+    $lineHeight = 16.0;
+    $drawW = 122.0;
+    $drawH = $drawW * ($height / max(1, $width));
+    $content = "q\n0.05 0.11 0.22 rg\n0 730 595.28 111 re f\nQ\n";
+    $content .= sprintf("q\n%.2F 0 0 %.2F 56 %.2F cm\n/Im1 Do\nQ\n", $drawW, $drawH, 758.0);
+    $content .= "BT\n";
+    foreach ($lines as $line) {
+        $text = is_array($line) ? (string)($line['text'] ?? '') : (string)$line;
+        $size = is_array($line) ? max(6, (int)($line['size'] ?? 11)) : 11;
+        $escaped = simple_pdf_escape_text($text);
+        $content .= sprintf("/F1 %d Tf\n1 0 0 1 %.2F %.2F Tm\n(%s) Tj\n", $size, $marginLeft, $y, $escaped);
+        $y -= $lineHeight;
+    }
+    $content .= 'ET';
+
+    return simple_pdf_assemble([
+        '<< /Type /Catalog /Pages 2 0 R >>',
+        '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+        sprintf(
+            '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 %.2F %.2F] /Resources << /Font << /F1 5 0 R >> /XObject << /Im1 6 0 R >> >> /Contents 4 0 R >>',
+            $pageW,
+            $pageH
+        ),
+        '<< /Length ' . strlen($content) . ">>\nstream\n{$content}\nendstream",
+        '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>',
+        sprintf(
+            '<< /Type /XObject /Subtype /Image /Width %d /Height %d /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length %d >>' . "\nstream\n%s\nendstream",
+            $width,
+            $height,
+            strlen($jpegBytes),
+            $jpegBytes
+        ),
+    ]);
+}
+
 /** True when the given bytes look like a structurally valid, non-empty PDF file. */
 function simple_pdf_looks_valid(string $bytes): bool
 {

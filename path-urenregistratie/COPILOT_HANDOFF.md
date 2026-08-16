@@ -4,6 +4,28 @@ Bijgewerkt: 16 augustus 2026
 
 ## Laatste Codex-overdracht — LOCAL Herstelmeldingen
 
+### 2026-08-16 04:06 · Copilot — gewone TEST-mailflow hersteld in v0.9.74
+
+- Gebruikersbevinding bevestigd: de acceptatieconsole dispatchte direct, maar de gewone
+  factuurflow liet alle routes alleen op `queued/klaargezet` staan.
+- Root cause: factuurlock queue'de vóór PDF-generatie en riep geen dispatch aan; de worker/cron was
+  niet onderdeel van de zichtbare TEST-actie.
+- Fix: definitieve branded server-PDF met echt Path-logo eerst opslaan; daarna uitsluitend in de
+  beveiligde TEST-sandbox de zojuist gemaakte delivery-ID's direct dispatchen. LOCAL blijft dry-run
+  en PROD blijft worker-gestuurd. De taak sluit alleen als alle TEST-items werkelijk `sent` zijn.
+- Gericht bewijs: `EQ-H-020` 1/1 groen en toont `3 e-mails verzonden`; `INV-H-004` 1/1 groen en
+  bewijst logo-XObject, Path/QSI-identiteit en afwezigheid van `CONCEPT`/`NIET VERZONDEN`.
+- Aanvullend: de aparte klanturenstaatmodal gebruikte nog `mark_sent` en meldde onterecht dat niets
+  was verzonden. Nieuwe serveractie `send_to_broker` queue't de officiële goedgekeurde PDF van exact
+  dezelfde medewerker/periode, dispatcht hem op TEST naar Giovanno en sluit pas na `sent`.
+  `EQ-H-026` is 1/1 groen en beschikbaar als `npm run test:mail-flow`.
+- Releasebewijs: docs/check/diff groen, volledige GUI-smoke groen en geraakte regressiesuites
+  36/36 + 15/15 = 51/51 groen. Volgende stap: build/DB/audit, commit en push.
+- Eindgate afgerond: productiebuild, DB-H-001, dependency-audit met 0 kwetsbaarheden,
+  v0.9.74-versiecontract en schone diff zijn groen. Commit/push volgt direct.
+- Nieuwe vaste afspraak: iedere release krijgt gerichte regressie voor alle geraakte codepaden;
+  volledige matrix alleen bij gedeelde kernlogica, breed risico of expliciet verzoek.
+
 ### 2026-08-16 03:38 · Copilot — v0.9.73 lokale releasegate volledig groen
 
 - Productiebuild, `npm run check`, DB-H-001, dependency-audit (0 kwetsbaarheden), docs-sync

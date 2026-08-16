@@ -316,3 +316,30 @@ function mail_dispatch_queued(PDO $pdo, int $companyId, array $config, int $limi
     }
     return ['sent' => $sent, 'failed' => $failed, 'skipped' => $skipped];
 }
+
+/** @param list<array<string,mixed>> $created */
+function mail_dispatch_created(PDO $pdo, array $created, array $config): array
+{
+    $result = ['sent' => 0, 'failed' => 0, 'skipped' => 0];
+    if (!mail_dispatch_after_user_action($config)) {
+        return $result;
+    }
+
+    $select = $pdo->prepare('SELECT * FROM email_deliveries WHERE id = :id AND status = "queued" LIMIT 1');
+    foreach ($created as $item) {
+        $deliveryId = (int)($item['id'] ?? 0);
+        if ($deliveryId <= 0) {
+            $result['skipped']++;
+            continue;
+        }
+        $select->execute([':id' => $deliveryId]);
+        $delivery = $select->fetch();
+        if (!$delivery) {
+            $result['skipped']++;
+            continue;
+        }
+        $outcome = mail_dispatch_delivery($pdo, $delivery, $config);
+        $result[array_key_exists($outcome, $result) ? $outcome : 'failed']++;
+    }
+    return $result;
+}

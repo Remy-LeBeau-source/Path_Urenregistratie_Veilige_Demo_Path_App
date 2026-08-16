@@ -2034,6 +2034,8 @@ function writeCustomerTimesheetToApi(action, options = {}) {
   const periodKey = String(options.periodKey || currentPeriod().key);
   const assignmentId = Number(options.assignmentId || 0);
   const reviewNote = String(options.reviewNote || "").trim();
+  const subject = String(options.subject || "").trim();
+  const body = String(options.body || "").trim();
   const file = options.file || null;
 
   return requestAuthCsrf()
@@ -2048,6 +2050,8 @@ function writeCustomerTimesheetToApi(action, options = {}) {
       if (reviewNote) {
         formData.append("review_note", reviewNote);
       }
+      if (subject) formData.append("subject", subject);
+      if (body) formData.append("body", body);
       if (file) {
         formData.append("file", file, file.name || "klanturenstaat");
       }
@@ -4750,11 +4754,16 @@ function showCustomerTimesheetBrokerCheck(employeeId, periodKey, adminTaskId = "
         return;
       }
       if (isCustomerTimesheetApiMode()) {
-        writeCustomerTimesheetToApi("mark_sent", {
+        writeCustomerTimesheetToApi("send_to_broker", {
           employeeId: employee.id,
-          periodKey
-        }).then(() => {
-          const toastMessage = "Brokerroute gecontroleerd. Er is niets echt verzonden.";
+          periodKey,
+          subject,
+          body
+        }).then(result => {
+          const sent = Number(result && result.dispatch_result && result.dispatch_result.sent || 0);
+          const toastMessage = result && result.test_delivery === true
+            ? "Klanturenstaat verzonden via TEST naar " + LOCAL_TEST_PREVIEW_RECIPIENT + "."
+            : "Brokerroute gecontroleerd; " + (sent > 0 ? "e-mail verzonden." : "bericht klaargezet.");
           if (adminTaskId) {
             finishAdminTaskAndContinue(adminTaskId, () => {}, toastMessage);
             return;
@@ -7831,7 +7840,7 @@ function enqueueInvoiceDeliveryToApi(invoiceId) {
         const message = String(result && result.data && result.data.message || "Queueactie bij server mislukt.");
         throw new Error(message);
       }
-      return Number(result.data.count || 0);
+      return result.data;
     });
 }
 
@@ -7908,19 +7917,24 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
 
       if (serverDelivery && invId > 0) {
         finalizeInvoiceAndQueueToApi(serverInvoice)
-          .then(count => Promise.all([
+          .then(delivery => Promise.all([
             refreshEmailQueueReadApi(true),
             refreshInvoicesReadApi(key, true)
           ]).catch(() => null).then(() => {
             syncInvoiceStatusesFromApi(key);
+            const count = Number(delivery && delivery.queued || 0);
+            const delivered = delivery && delivery.testDelivery === true;
+            const resultMessage = delivered
+              ? baseMsg + ": " + Number(delivery.sent || 0) + (Number(delivery.sent || 0) === 1 ? " e-mail verzonden." : " e-mails verzonden.")
+              : baseMsg + " (dry-run): " + count + (count === 1 ? " bericht" : " berichten") + " klaargezet.";
             if (adminTaskId) {
-              finishAdminTaskAndContinue(adminTaskId, () => {}, baseMsg + " (dry-run): " + count + (count === 1 ? " bericht" : " berichten") + " klaargezet.");
+              finishAdminTaskAndContinue(adminTaskId, () => {}, resultMessage);
               return;
             }
             closeModal();
             persistState();
             renderAll();
-            toast(baseMsg + " (dry-run): " + count + (count === 1 ? " bericht" : " berichten") + " klaargezet.");
+            toast(resultMessage);
           }))
           .catch(error => {
             toast(String(error && error.message || (baseMsg + ". Koppeling met mailqueue tijdelijk niet bereikbaar.")));
@@ -8594,12 +8608,21 @@ function finalizeInvoiceAndQueueToApi(invoiceRow) {
   if (serverTimesheetStatus && !["approved", "invoiced"].includes(serverTimesheetStatus)) {
     return Promise.reject(new Error("De uren zijn nog niet door de server goedgekeurd. Controleer eerst de uren."));
   }
-  const requireQueuedDelivery = count => {
-    const queuedCount = Number(count || 0);
+  const testDeliveryActive = () => String(readApiDebug.emailQueue && readApiDebug.emailQueue.environment || "").toLowerCase() === "test"
+    && readApiDebug.emailQueue && readApiDebug.emailQueue.delivery_allowed === true;
+  const requireDelivery = result => {
+    const queuedCount = Number(result && result.queued || 0);
     if (queuedCount <= 0) throw new Error("Er zijn geen mailroutes klaargezet. De beheeractie blijft open.");
-    return queuedCount;
+    if (result && result.testDelivery && Number(result.sent || 0) !== queuedCount) {
+      throw new Error("Niet alle TEST-mails zijn afgeleverd. De beheeractie blijft open; controleer de verzendadministratie.");
+    }
+    return result;
   };
-  if (invoiceRow.locked) return enqueueInvoiceDeliveryToApi(invoiceId).then(requireQueuedDelivery);
+  if (invoiceRow.locked) return enqueueInvoiceDeliveryToApi(invoiceId).then(data => requireDelivery({
+    queued: Number(data && data.count || 0),
+    sent: Number(data && data.dispatch_result && data.dispatch_result.sent || 0),
+    testDelivery: testDeliveryActive()
+  }));
 
   return requestAuthCsrf()
     .then(token => fetch("/server/api/invoices.php", {
@@ -8612,11 +8635,23 @@ function finalizeInvoiceAndQueueToApi(invoiceRow) {
       if (result.ok && result.data && result.data.ok === true) {
         const queuedCount = Number(result.data.queued_count || 0);
         return queuedCount > 0
-          ? queuedCount
-          : enqueueInvoiceDeliveryToApi(invoiceId).then(requireQueuedDelivery);
+          ? requireDelivery({
+              queued: queuedCount,
+              sent: Number(result.data.dispatch_result && result.data.dispatch_result.sent || 0),
+              testDelivery: testDeliveryActive()
+            })
+          : enqueueInvoiceDeliveryToApi(invoiceId).then(data => requireDelivery({
+              queued: Number(data && data.count || 0),
+              sent: Number(data && data.dispatch_result && data.dispatch_result.sent || 0),
+              testDelivery: testDeliveryActive()
+            }));
       }
       if (result.data && result.data.error === "invoice-already-locked") {
-        return enqueueInvoiceDeliveryToApi(invoiceId).then(requireQueuedDelivery);
+        return enqueueInvoiceDeliveryToApi(invoiceId).then(data => requireDelivery({
+          queued: Number(data && data.count || 0),
+          sent: Number(data && data.dispatch_result && data.dispatch_result.sent || 0),
+          testDelivery: testDeliveryActive()
+        }));
       }
       throw new Error(String(result.data && result.data.message || "Factuur definitief maken is mislukt."));
     });
@@ -9797,7 +9832,7 @@ function handleMonthDelivery() {
         }
 
         Promise.all(serverInvoices.map(invoice => finalizeInvoiceAndQueueToApi(invoice)))
-          .then(counts => Promise.all([
+          .then(deliveries => Promise.all([
             refreshEmailQueueReadApi(true),
             refreshInvoicesReadApi(periodKey, true)
           ]).catch(() => null).then(() => {
@@ -9805,8 +9840,12 @@ function handleMonthDelivery() {
             persistState();
             closeModal();
             renderAll();
-            const totalMessages = counts.reduce((sum, value) => sum + Number(value || 0), 0);
-            toast("Maandverzending gecontroleerd (dry-run): " + totalMessages + " berichten klaargezet via serverqueue.");
+            const totalMessages = deliveries.reduce((sum, delivery) => sum + Number(delivery && delivery.queued || 0), 0);
+            const totalSent = deliveries.reduce((sum, delivery) => sum + Number(delivery && delivery.sent || 0), 0);
+            const testDelivery = deliveries.length > 0 && deliveries.every(delivery => delivery && delivery.testDelivery === true);
+            toast(testDelivery
+              ? "Maandverzending afgerond: " + totalSent + " e-mails verzonden via de beveiligde TEST-aflevering."
+              : "Maandverzending gecontroleerd (dry-run): " + totalMessages + " berichten klaargezet via serverqueue.");
           }))
           .catch(error => {
             toast(String(error && error.message || "Koppeling met mailqueue tijdelijk niet bereikbaar."));

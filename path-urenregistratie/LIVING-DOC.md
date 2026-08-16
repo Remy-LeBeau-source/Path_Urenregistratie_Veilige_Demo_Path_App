@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 212 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 214 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 212 unieke case-ID's
+- Playwright executable cases: 214 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 213 unieke case-ID's
+- Totaal executable cases: 215 unieke case-ID's
 - Playwright features: 22
 - Database features: 1
 - Playwright steps mappings: 22
 - Database steps mappings: 1
-- Uitvoeringen: 217
-- Niet-mobile projectuitvoeringen: 207
+- Uitvoeringen: 219
+- Niet-mobile projectuitvoeringen: 209
 - Mobile functionele cases: 5
 - Pixel 7 / Chromium-uitvoeringen: 5
 - iPhone 13 / WebKit-uitvoeringen: 5
 
-De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 212 Playwright-functionele cases in totaal 217 resultaten op: 207 + (5 x 2) = 217.
+De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 214 Playwright-functionele cases in totaal 219 resultaten op: 209 + (5 x 2) = 219.
 
 ## Documentatieketen
 
@@ -107,8 +107,9 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 212 Playwrig
 
 - Feature: `tests/playwright/features/customer-timesheets.feature`
 - Source: `tests/playwright/customer-timesheet-api.spec.ts`
-- Cases: 7
+- Cases: 8
 
+- [CTS-API-H-009] brokerroute koppelt de officiële klanturenstaat aan dezelfde medewerker en periode — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
 - [CTS-API-H-001] employee uploadt klanturenstaat, dient in en downloadt; admin kan goedkeuren en resubmit vragen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 28
 - [CTS-API-N-006] employee kan geen klanturenstaat voor andere medewerker wijzigen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [CTS-API-N-007] employee kan geen admin reviewactie uitvoeren op klanturenstaat — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
@@ -146,7 +147,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 212 Playwrig
 
 - Feature: `tests/playwright/features/mail-delivery.feature`
 - Source: `tests/playwright/email-queue.spec.ts`
-- Cases: 27
+- Cases: 28
 
 - [EQ-H-001] factuurlock maakt queue-items aan met dry_run=true — Techniek: Toestandsovergang · Assertions: 5
 - [EQ-H-002] broker-channel bundelt factuur en klanturenstaat — Techniek: API-contract + equivalentieklasse · Assertions: 2
@@ -160,7 +161,8 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 212 Playwrig
 - [EQ-H-023] beheerder pauzeert en hervat uitsluitend de beveiligde TEST-mail — Techniek: Toestandsovergang · Assertions: 9
 - [EQ-N-024] buiten de beveiligde TEST-sandbox is geen mailschakelaar beschikbaar — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
 - [EQ-N-017] niet-beschikbare acceptatieconsole blijft volledig uit beeld — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
-- [EQ-H-020] Backoffice finaliseert een serverfactuur vóór de mailqueue en sluit de vervolgtaak — Techniek: Toestandsovergang · Assertions: 11
+- [EQ-H-020] Backoffice finaliseert de branded serverfactuur en verzendt drie echte TEST-mails — Techniek: API-contract + equivalentieklasse · Assertions: 11
+- [EQ-H-026] Backoffice verzendt de juiste officiële klanturenstaat via TEST naar Giovanno — Techniek: API-contract + equivalentieklasse · Assertions: 8
 - [EQ-N-021] factuurverzending blijft dicht zolang de serveruren niet zijn goedgekeurd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
 - [EQ-N-019] gesloten acceptatievenster toont waarom geen mail kan worden verstuurd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [EQ-N-018] afgewezen acceptatiemail blijft nooit achter voor automatische herverzending — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
@@ -182,7 +184,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 212 Playwrig
 - Source: `tests/playwright/invoice-lock.spec.ts`
 - Cases: 8
 
-- [INV-H-004] admin lockt approved timesheet naar definitieve immutable factuur — Techniek: Concurrency + toestandsovergang · Assertions: 21
+- [INV-H-004] admin lockt approved timesheet naar definitieve immutable factuur — Techniek: Concurrency + toestandsovergang · Assertions: 26
 - [INV-N-015] definitief gefactureerde uren kunnen niet voor correctie worden heropend — Techniek: Toestandsovergang · Assertions: 9
 - [INV-N-008] anonieme gebruiker kan factuur niet locken — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
 - [INV-N-009] medewerker mag factuur niet finaliseren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3

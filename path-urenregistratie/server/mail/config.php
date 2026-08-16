@@ -119,6 +119,12 @@ function mail_real_delivery_allowed_for_environment(array $config): bool
         && !mail_test_delivery_is_paused($config);
 }
 
+    function mail_dispatch_after_user_action(array $config): bool
+    {
+        return mail_environment($config) === 'test'
+        && mail_real_delivery_allowed_for_environment($config);
+    }
+
 function mail_recipient_is_allowed(array $config, string $email): bool
 {
     if (mail_environment($config) === 'production') {

@@ -713,7 +713,7 @@ test.describe('email queue api', () => {
     await expect(consolePanel.getByText('Eerste uitnodiging: wachtwoord aanmaken')).toBeHidden();
   });
 
-  test('[EQ-H-020] Backoffice finaliseert een serverfactuur vóór de mailqueue en sluit de vervolgtaak', async ({ page }) => {
+  test('[EQ-H-020] Backoffice finaliseert de branded serverfactuur en verzendt drie echte TEST-mails', async ({ page }) => {
     let invoiceLocks = 0;
     let directQueueWrites = 0;
     let locked = false;
@@ -731,6 +731,8 @@ test.describe('email queue api', () => {
             ok: true,
             action: 'lock',
             queued_count: 3,
+            dispatch_result: { sent: 3, failed: 0, skipped: 0 },
+            pdf_generated: true,
             invoice: { id: 771, timesheet_id: 881, invoice_number: 'PATH-2026-008', status: 'ready', locked_at: '2026-08-14 12:00:00' },
             timesheet: { id: 881, status: 'invoiced', billable_hours: 144 },
           }),
@@ -789,6 +791,7 @@ test.describe('email queue api', () => {
           ok: true,
           dry_run: false,
           environment: 'test',
+          delivery_allowed: true,
           test_redirect_active: true,
           test_sink_recipient: 'giovanno.maatsen@pathconsultancy.nl',
           count: items.length,
@@ -824,9 +827,82 @@ test.describe('email queue api', () => {
     await test.step('Then wordt eerst gelockt, niet te vroeg gequeued en verdwijnt de afgeronde vervolgtaak', async () => {
       await expect.poll(() => invoiceLocks).toBe(1);
       expect(directQueueWrites).toBe(0);
-      await expect(page.locator('#toast')).toContainText('3 berichten');
+      await expect(page.locator('#toast')).toContainText('3 e-mails verzonden');
       await expect(page.locator('[data-admin-task-invoice="4"][data-period-key="2026-08"]')).toHaveCount(0);
     });
+  });
+
+  test('[EQ-H-026] Backoffice verzendt de juiste officiële klanturenstaat via TEST naar Giovanno', async ({ page }) => {
+    let postedBody = '';
+    await page.route('**/server/api/email-queue.php*', route => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        environment: 'test',
+        delivery_allowed: true,
+        test_redirect_active: true,
+        test_sink_recipient: 'giovanno.maatsen@pathconsultancy.nl',
+        test_toggle_available: true,
+        mail_mode: 'test_active',
+        count: 0,
+        items: [],
+      }),
+    }));
+    await page.route('**/server/api/customer-timesheets.php', async route => {
+      if (route.request().method() !== 'POST') {
+        await route.continue();
+        return;
+      }
+      postedBody = route.request().postData() || '';
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ok: true,
+          period: '2026-07',
+          employee_id: 1,
+          assignment_id: 1,
+          test_delivery: true,
+          dispatch_result: { sent: 1, failed: 0, skipped: 0 },
+          customer_timesheet: {
+            status: 'sent_to_broker',
+            original_file_name: 'Klanturenstaat_Marc_de_Roon_2026-07.pdf',
+            stored_file_name: 'Klanturenstaat_Marc_de_Roon_2026-07.pdf',
+            storage_key: '1/1/2026-07.pdf',
+            mime_type: 'application/pdf',
+            sent_to_broker_at: '2026-08-16 04:10:00',
+          },
+        }),
+      });
+    });
+
+    const login = new LoginPage(page);
+    await login.open();
+    await login.loginAsAdmin();
+    await page.evaluate(() => {
+      const record = window.recordFor(1, '2026-07');
+      const documentRecord = window.customerTimesheetFor(record);
+      documentRecord.status = 'approved';
+      documentRecord.fileName = 'Klanturenstaat_Marc_de_Roon_2026-07.pdf';
+      documentRecord.fileData = '/server/api/customer-timesheets.php?action=download&period=2026-07&employee_id=1';
+      window.renderAll();
+      window.showCustomerTimesheetBrokerCheck(1, '2026-07');
+    });
+
+    await expect(page.locator('#modal-title')).toContainText('Marc de Roon');
+    await expect(page.locator('#modal-summary')).toContainText('giovanno.maatsen@pathconsultancy.nl');
+    await expect(page.locator('#modal-summary')).toContainText('Klanturenstaat_Marc_de_Roon_2026-07.pdf');
+    await expect(page.locator('#modal-summary [data-view-customer-timesheet]')).toHaveText('PDF bekijken');
+    await page.locator('#customer-timesheet-broker-subject').fill('Klanturenstaat Marc de Roon - juli 2026');
+    await page.locator('#customer-timesheet-broker-body').fill('Bijgevoegd staat de officiële klanturenstaat van Marc de Roon.');
+    await page.locator('#modal-confirm').click();
+
+    await expect.poll(() => postedBody).toContain('name="action"');
+    expect(postedBody).toContain('send_to_broker');
+    expect(postedBody).toContain('Klanturenstaat Marc de Roon - juli 2026');
+    expect(postedBody).toContain('officiële klanturenstaat van Marc de Roon');
+    await expect(page.locator('#toast')).toContainText('Klanturenstaat verzonden via TEST naar giovanno.maatsen@pathconsultancy.nl');
   });
 
   test('[EQ-N-021] factuurverzending blijft dicht zolang de serveruren niet zijn goedgekeurd', async ({ page }) => {

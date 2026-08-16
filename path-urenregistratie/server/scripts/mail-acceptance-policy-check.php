@@ -48,6 +48,7 @@ $checks = [
     'acceptance_invitation_keeps_fixed_recipient' => false,
     'production_invitation_keeps_account_recipient' => false,
     'production_never_redirects' => false,
+    'user_action_dispatch_only_in_guarded_test' => false,
 ];
 $checks['production_console_unavailable'] = mail_acceptance_available_for_environment([
     'environment' => 'production',
@@ -158,6 +159,14 @@ $checks['production_invitation_keeps_account_recipient'] = auth_password_reset_q
 ) === 'echte.gebruiker@pathconsultancy.nl';
 $checks['production_never_redirects'] = $production['recipient'] === 'broker@example.com'
     && $production['redirected'] === false;
+$guardedUserActionConfig = $redirectConfig;
+$guardedUserActionConfig['mail']['enabled'] = true;
+$guardedUserActionConfig['mail']['transport'] = 'smtp_relay';
+$guardedUserActionConfig['mail']['test_delivery_enabled'] = true;
+$checks['user_action_dispatch_only_in_guarded_test'] = mail_dispatch_after_user_action($guardedUserActionConfig)
+    && !mail_dispatch_after_user_action(array_replace($guardedUserActionConfig, ['environment' => 'production']))
+    && !mail_dispatch_after_user_action(array_replace($guardedUserActionConfig, ['environment' => 'local']))
+    && !mail_dispatch_after_user_action(array_replace_recursive($guardedUserActionConfig, ['mail' => ['test_delivery_enabled' => false]]));
 
 $acceptanceFailure = mail_failed_delivery_retry_state(['acceptance_test' => true], 1);
 $normalFirstFailure = mail_failed_delivery_retry_state(['acceptance_test' => false], 1);
