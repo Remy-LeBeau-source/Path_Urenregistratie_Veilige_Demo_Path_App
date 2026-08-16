@@ -353,7 +353,6 @@ test.describe('notifications api', () => {
     await test.step('Given Stasjo drie ongelezen mededelingen uit de serverbaseline heeft', async () => {
       await loginPage.open();
       await loginPage.loginAsEmployee();
-      expect(await page.locator('#notification-count').isHidden()).toBe(true);
       await expect(page.locator('#notification-count')).toHaveText('3');
       await page.locator('button[data-view="employee-announcements"]').click();
       await expect(page.locator('#announcement-unread-filter')).toHaveText('Ongelezen mededelingen · 3');
