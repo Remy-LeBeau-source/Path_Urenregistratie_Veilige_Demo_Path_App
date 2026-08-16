@@ -111,11 +111,11 @@ Feature: Mailroutering en aflevering
 
   @happy
   Scenario: [EQ-H-020] Backoffice finaliseert de branded serverfactuur en verzendt drie echte TEST-mails
-    # Testtechniek: API-contract + equivalentieklasse
-    # Aantoonbare Playwright-assertions in deze case: 11
+    # Testtechniek: Toestandsovergang + inhoudsconsistentie + async racepreventie
+    # Aantoonbare Playwright-assertions: serveruren/tarief/subtotal/btw/totaal, geldige PDF en geblokkeerde navigatie
     Given een goedgekeurde maar nog niet definitieve serverfactuur als Backoffice-taak klaarstaat
     When Backoffice de verzending één keer afrondt
-    Then wordt eerst gelockt, niet te vroeg gequeued en verdwijnt de afgeronde vervolgtaak
+    Then gebruikt PDF en mail exact dezelfde serverbedragen, wordt eerst gelockt en blijft taaknavigatie geblokkeerd tot afronding
 
   @happy
   Scenario: [EQ-H-026] Backoffice verzendt de juiste officiële klanturenstaat via TEST naar Giovanno

@@ -89,6 +89,12 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-17 · v0.9.89 serverfactuur-refresh en BDD-pariteit
+
+- [x] Ontbrekende factuurcache wordt bij `Controle afronden` één keer geforceerd ververst en opnieuw gekoppeld voordat de actie fail-closed openblijft.
+- [x] Feature `EQ-H-020` noemt nu expliciet serverbedragen, geldige PDF en geblokkeerde navigatie.
+- [x] Syntax, BDD-design en gerichte `EQ-H-020` zijn groen (1/1, 5.0s).
+
 ### 2026-08-17 · v0.9.88 factuurbedragen en async werkvoorraad gelijkgetrokken
 
 - [x] Concept-/mail-PDF gebruikt in auth/TEST serveruren, servertarief, subtotal, btw en totaal; lokale entries zijn alleen fallback buiten servermodus.

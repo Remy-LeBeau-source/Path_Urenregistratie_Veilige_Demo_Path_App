@@ -8019,7 +8019,22 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
       }
 
       if (serverDelivery && invId <= 0) {
-        toast("Serverfactuur nog niet beschikbaar. De actie blijft open; ververs de factuurgegevens en probeer opnieuw.");
+        document.querySelector("#modal-confirm").disabled = true;
+        refreshInvoicesReadApi(key, true).then(() => {
+          const refreshedInvoice = serverInvoiceFor(employeeId, key);
+          if (!refreshedInvoice) throw new Error("Serverfactuur nog niet beschikbaar. De actie blijft open; probeer het later opnieuw.");
+          return finalizeInvoiceAndQueueToApi(refreshedInvoice);
+        }).then(() => Promise.all([
+          refreshEmailQueueReadApi(true),
+          refreshInvoicesReadApi(key, true)
+        ])).then(() => {
+          releaseLocalResetAuthorityAfterServerWrite();
+          if (adminTaskId) finishAdminTaskAndContinue(adminTaskId, () => {}, baseMsg + ".");
+          else closeModal();
+        }).catch(error => {
+          document.querySelector("#modal-confirm").disabled = false;
+          toast(String(error && error.message || "Serverfactuur kon niet worden geladen."));
+        });
         return;
       }
 

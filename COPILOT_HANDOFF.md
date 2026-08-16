@@ -28,6 +28,14 @@ Verwijder eerdere relevante bevindingen niet. Noteer geen wachtwoorden, tokens o
 
 ## Actuele overdracht
 
+### 2026-08-17 01:20 · Copilot — ontbrekende serverfactuurcache krijgt refresh-retry
+
+- Screenshot bevestigde dat bedragen gelijk waren, maar `Controle afronden` nog kon melden dat de serverfactuur ontbrak.
+- Fix: bij ontbrekende mapping ververst de app de periodefacturen geforceerd, koppelt opnieuw en rondt pas daarna af; anders blijft de taak fail-closed open.
+- Feature `mail-delivery.feature` is gelijkgetrokken met de echte `EQ-H-020`-assertions.
+- Tests: JS-syntax groen, BDD-design groen, `EQ-H-020` 1 passed (5.1s).
+- Versie v0.9.89; volgende stap commit/push en pipeline volgen.
+
 ### 2026-08-17 00:51 · Copilot — factuurbedragen en modalrace structureel opgelost
 
 - Diagnose: jsPDF gebruikte lokale entries (screenshot 8 uur/€680), terwijl server/mail 164 uur/€13.940 gebruikte. Tijdens async afronden bleef taaknavigatie actief, waardoor een late Marc-toast zichtbaar kon worden terwijl Shawn al openstond.
