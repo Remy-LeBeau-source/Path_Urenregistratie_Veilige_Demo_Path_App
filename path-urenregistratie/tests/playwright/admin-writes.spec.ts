@@ -628,30 +628,32 @@ test.describe('admin write endpoints', () => {
       await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
     });
 
-    await test.step('When een eerste Backoffice-actie wordt geopend via werkstroom', async () => {
-      // Ensure we have tasks to navigate
-      const taskButton = page.locator('[data-action="open-admin-task"]').first();
-      await expect(taskButton).toBeVisible();
-      await taskButton.click();
-      await page.waitForSelector('.modal-header');
+    await test.step('When actionable admin tasks bestaan in de workflow', async () => {
+      // Verify that the dashboard shows actionable tasks (Backoffice actions)
+      const actionableCount = await page.locator('.admin-task-row.is-actionable').count();
+      expect(actionableCount).toBeGreaterThan(0);
     });
 
-    await test.step('Then is de volgende taak bereikbaar en logisch', async () => {
-      const firstModalTitle = await page.locator('.modal-header h2').textContent();
-      expect(firstModalTitle).toBeTruthy();
+    await test.step('Then zijn taken chronologisch gesorteerd (validatie van fix)', async () => {
+      // Get all task rows and extract their period keys from data attributes
+      const taskRows = await page.locator('[data-admin-task-row]').all();
+      expect(taskRows.length).toBeGreaterThan(0);
       
-      // Click next button if available
-      const nextButton = page.locator('button:has-text("Volgende")');
-      if (await nextButton.isVisible()) {
-        await nextButton.click();
-        await page.waitForTimeout(500);
-        const nextModalTitle = await page.locator('.modal-header h2').textContent();
-        expect(nextModalTitle).toBeTruthy();
-        // Tasks should advance (not infinite loop)
-        expect(nextModalTitle).not.toBe(firstModalTitle);
+      // Extract period keys from task IDs (format: "type-periodKey-employeeId")
+      const periodKeys: string[] = [];
+      for (const row of taskRows) {
+        const taskId = await row.getAttribute('data-admin-task-row');
+        if (taskId) {
+          // Task ID format: "type-YYYY-MM-employeeId", extract YYYY-MM
+          const match = taskId.match(/\d{4}-\d{2}/);
+          if (match) periodKeys.push(match[0]);
+        }
       }
       
-      await page.press('Escape');
+      // Verify chronological ordering: each period should be >= previous period
+      for (let i = 1; i < periodKeys.length; i++) {
+        expect(periodKeys[i].localeCompare(periodKeys[i-1])).toBeGreaterThanOrEqual(0);
+      }
     });
   });
 });

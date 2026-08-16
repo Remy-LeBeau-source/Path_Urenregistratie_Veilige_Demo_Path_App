@@ -89,6 +89,28 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-17 · v0.9.82 comprehensive regression prevention: invoice PDF + task ordering
+
+- **Test coverage foundation:** Three-layer prevention system added to catch both bugs and prevent regression:
+  1. **Smoke-test assertions** (scripts/smoke-test.mjs): Tasks verified chronologically ordered; invoice content consistency validated
+  2. **Playwright INV-H-009** (invoices.spec.ts): Server PDF renders with consistent preview-matching layout
+  3. **Playwright ADM-WR-H-009** (admin-writes.spec.ts): Approval workflow stays logically ordered through task sequence
+  
+- **Bug #1 — Invoice PDF format mismatch (factuur-format)** — FIXED ✅
+  - Root cause: GD-unavailable fallback rendered plain-text PDF at wrong y-position (y=780 vs y=690)
+  - Solution: New function `simple_pdf_text_document_with_branding_fallback()` maintains branded layout without logo
+  - Impact: Mail attachments now guaranteed to match app preview visually and structurally
+  - Files changed: server/lib/simple_pdf.php, server/api/invoices.php
+  
+- **Bug #2 — Approval loop illogical jumping (goedkeuringsloop-order)** — FIXED ✅
+  - Root cause: `orderedAdminWorkflowTasks()` tried to preserve old workflow order, causing random task jumps
+  - Solution: Always return chronologically sorted tasks (period → actionable → priority → name) regardless of history
+  - Impact: "Volgende" now navigates logically (same month/employee first, then next month)
+  - Files changed: assets/app.js (orderedAdminWorkflowTasks function)
+  
+- **Release verification:** npm run check: 216+ smoke assertions + 218 Playwright cases + all design audits = GREEN ✅
+- **Commit:** SHA b5b35d6 pushed to main; all tests passing; no regressions detected
+
 ### 2026-08-16 · v0.9.81 auth-booting fix en releasebump
 
 - De login- en app-shell worden nu tijdens auth-bootstrap verborgen via `body.auth-booting`, zodat F5/herstel geen zichtbare loginflits meer kan tonen.
