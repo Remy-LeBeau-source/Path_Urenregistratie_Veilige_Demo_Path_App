@@ -1596,6 +1596,17 @@ function applyAuthUiMode(mode) {
   if (mode === "demo" && !accountToolsAllowed) mode = "unavailable";
   authRuntime.mode = mode;
   const authForm = document.querySelector("#auth-login-form");
+  const loginScreen = document.querySelector("#login-screen");
+  const appShell = document.querySelector("#app-shell");
+  if (mode === "checking") {
+    document.body.classList.add("auth-booting");
+    if (loginScreen) loginScreen.hidden = true;
+    if (appShell) appShell.hidden = true;
+  } else {
+    document.body.classList.remove("auth-booting");
+    if (loginScreen) loginScreen.hidden = false;
+    if (appShell) appShell.hidden = true;
+  }
   if (authForm) authForm.hidden = mode === "demo";
   applyLoginPresentation(accountToolsAllowed);
   if (mode === "auth") {
@@ -4037,13 +4048,11 @@ function actionableAdminTasks() {
 function orderedAdminWorkflowTasks() {
   const currentTasks = actionableAdminTasks();
   if (!adminTaskWorkflow) return currentTasks;
-  const taskById = new Map(currentTasks.map(task => [task.id, task]));
-  const ordered = adminTaskWorkflow.taskIds.map(taskId => taskById.get(taskId)).filter(Boolean);
-  currentTasks.forEach(task => {
-    if (!ordered.some(item => item.id === task.id)) ordered.push(task);
-  });
-  adminTaskWorkflow.taskIds = ordered.map(task => task.id);
-  return ordered;
+  
+  // Always return tasks in chronological order (per period, then actionable, then priority, then name)
+  // regardless of workflow history. This prevents illogical jumps to unrelated months/employees.
+  const workflowTaskIds = new Set(adminTaskWorkflow.taskIds);
+  return currentTasks;  // currentTasks is already chronologically sorted from adminOpenTasks()
 }
 
 function beginAdminTaskWorkflow(taskId) {
@@ -4527,39 +4536,64 @@ function showCustomerTimesheetDetails(employeeId, periodKey, reviewMode, adminTa
       secondary: "Opnieuw uploaden vragen",
       adminTaskId,
       action: () => {
+        const handleApproveSuccess = () => {
+          const toastMessage = "De klanturenstaat van " + employee.name + " is goedgekeurd.";
+          if (adminTaskId) {
+            finishAdminTaskAndContinue(adminTaskId, () => {}, toastMessage);
+            return;
+          }
+          persistState(); closeModal(); renderAll(); toast(toastMessage);
+        };
+        const approveNow = () => {
+          if (isCustomerTimesheetApiMode()) {
+            return writeCustomerTimesheetToApi("approve", {
+              employeeId: employee.id,
+              periodKey: period.key
+            }).then(handleApproveSuccess);
+          }
+          const mutate = () => {
+            documentRecord.status = "approved";
+            const timestamp = correctionTimestamp();
+            documentRecord.reviewedAt = timestamp.label;
+            documentRecord.reviewedBy = currentAdmin().name;
+            documentRecord.reviewNote = "";
+            addNotification({ audience: "employee", type: "customer-timesheet", employeeId: employee.id, title: "Klanturenstaat goedgekeurd", message: "Je klanturenstaat voor " + period.label + " is gecontroleerd.", periodKey: period.key, view: "timesheet" }, true);
+          };
+          const toastMessage = "De klanturenstaat van " + employee.name + " is goedgekeurd.";
+          if (adminTaskId) {
+            finishAdminTaskAndContinue(adminTaskId, mutate, toastMessage);
+            return;
+          }
+          mutate();
+          persistState(); closeModal(); renderAll(); toast(toastMessage);
+          return Promise.resolve();
+        };
         if (isCustomerTimesheetApiMode()) {
-          writeCustomerTimesheetToApi("approve", {
-            employeeId: employee.id,
-            periodKey: period.key
-          }).then(() => {
-            const toastMessage = "De klanturenstaat van " + employee.name + " is goedgekeurd.";
-            if (adminTaskId) {
-              finishAdminTaskAndContinue(adminTaskId, () => {}, toastMessage);
+          approveNow().catch(error => {
+            const message = String(error && error.message || "Klanturenstaat goedkeuren mislukt op server.");
+            if (/only submitted customer timesheet|alleen een ingediende klanturenstaat/i.test(message)) {
+              refreshCustomerTimesheetReadApi(period.key, employee.id, true)
+                .then(() => {
+                  const refreshed = customerTimesheetFor(recordFor(employee.id, period.key));
+                  if (refreshed.status === "approved") {
+                    handleApproveSuccess();
+                    return;
+                  }
+                  if (refreshed.status !== "received") throw error;
+                  return approveNow();
+                })
+                .catch(retryError => {
+                  toast(String(retryError && retryError.message || "De status is ondertussen gewijzigd. De actuele klanturenstaat wordt opnieuw geladen."));
+                });
               return;
             }
-            persistState(); closeModal(); renderAll(); toast(toastMessage);
-          }).catch(error => {
             refreshCustomerTimesheetReadApi(period.key, employee.id, true);
-            toast("De status is ondertussen gewijzigd. De actuele klanturenstaat wordt opnieuw geladen.");
+            toast(message);
             console.warn("Klanturenstaat goedkeuren mislukt", error);
           });
           return;
         }
-        const mutate = () => {
-          documentRecord.status = "approved";
-          const timestamp = correctionTimestamp();
-          documentRecord.reviewedAt = timestamp.label;
-          documentRecord.reviewedBy = currentAdmin().name;
-          documentRecord.reviewNote = "";
-          addNotification({ audience: "employee", type: "customer-timesheet", employeeId: employee.id, title: "Klanturenstaat goedgekeurd", message: "Je klanturenstaat voor " + period.label + " is gecontroleerd.", periodKey: period.key, view: "timesheet" }, true);
-        };
-        const toastMessage = "De klanturenstaat van " + employee.name + " is goedgekeurd.";
-        if (adminTaskId) {
-          finishAdminTaskAndContinue(adminTaskId, mutate, toastMessage);
-          return;
-        }
-        mutate();
-        persistState(); closeModal(); renderAll(); toast(toastMessage);
+        approveNow();
       },
       secondaryAction: () => {
         if (isCustomerTimesheetApiMode()) {
@@ -4760,28 +4794,47 @@ function showCustomerTimesheetBrokerCheck(employeeId, periodKey, adminTaskId = "
     action: () => {
       const subject = document.querySelector("#customer-timesheet-broker-subject").value.trim();
       const body = document.querySelector("#customer-timesheet-broker-body").value.trim();
+      const handleSuccess = result => {
+        const sent = Number(result && result.dispatch_result && result.dispatch_result.sent || 0);
+        const toastMessage = result && result.test_delivery === true
+          ? "Klanturenstaat verzonden via TEST naar " + LOCAL_TEST_PREVIEW_RECIPIENT + "."
+          : "Brokerroute gecontroleerd; " + (sent > 0 ? "e-mail verzonden." : "bericht klaargezet.");
+        if (adminTaskId) {
+          finishAdminTaskAndContinue(adminTaskId, () => {}, toastMessage);
+          return;
+        }
+        persistState(); closeModal(); renderAll(); toast(toastMessage);
+      };
       if (!subject || !body) {
         toast("Vul een onderwerp en begeleidende tekst in.");
         return;
       }
       if (isCustomerTimesheetApiMode()) {
-        writeCustomerTimesheetToApi("send_to_broker", {
+        const sendToBroker = () => writeCustomerTimesheetToApi("send_to_broker", {
           employeeId: employee.id,
           periodKey,
           subject,
           body
-        }).then(result => {
-          const sent = Number(result && result.dispatch_result && result.dispatch_result.sent || 0);
-          const toastMessage = result && result.test_delivery === true
-            ? "Klanturenstaat verzonden via TEST naar " + LOCAL_TEST_PREVIEW_RECIPIENT + "."
-            : "Brokerroute gecontroleerd; " + (sent > 0 ? "e-mail verzonden." : "bericht klaargezet.");
-          if (adminTaskId) {
-            finishAdminTaskAndContinue(adminTaskId, () => {}, toastMessage);
+        }).then(handleSuccess);
+        sendToBroker().catch(error => {
+          const message = String(error && error.message || "Brokerroute-status opslaan op server mislukt.");
+          if (/only approved customer timesheet can be sent|alleen een goedgekeurde klanturenstaat kan worden verzonden/i.test(message)) {
+            refreshCustomerTimesheetReadApi(periodKey, employee.id, true)
+              .then(() => {
+                const refreshed = customerTimesheetFor(recordFor(employee.id, periodKey));
+                if (refreshed.status === "sent_to_broker" || refreshed.status === "sent") {
+                  handleSuccess({ test_delivery: false, dispatch_result: { sent: 1 } });
+                  return;
+                }
+                if (refreshed.status !== "approved") throw error;
+                return sendToBroker();
+              })
+              .catch(retryError => {
+                toast(String(retryError && retryError.message || message));
+              });
             return;
           }
-          persistState(); closeModal(); renderAll(); toast(toastMessage);
-        }).catch(error => {
-          toast(String(error && error.message || "Brokerroute-status opslaan op server mislukt."));
+          toast(message);
         });
         return;
       }
@@ -7909,7 +7962,7 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
     action: () => {
       const baseMsg = "Verzending voor " + info.employee.name + " · " + period.label + " klaargezet";
       const invId = Number(serverInvoice && serverInvoice.id || 0);
-      const serverDelivery = API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative() && state.currentRole === "admin";
+      const serverDelivery = API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin";
       const finishLocalDryRun = (messageSuffix = "") => {
         const mutate = () => {
           info.record.invoiceStatus = "simulated";
@@ -7934,6 +7987,7 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
             refreshInvoicesReadApi(key, true)
           ]).catch(() => null).then(() => {
             syncInvoiceStatusesFromApi(key);
+            releaseLocalResetAuthorityAfterServerWrite();
             const count = Number(delivery && delivery.queued || 0);
             const delivered = delivery && delivery.testDelivery === true;
             const resultMessage = delivered
@@ -9839,7 +9893,7 @@ function handleMonthDelivery() {
     summary: routeSummary + "<div><span>Klanturenstaten</span><strong>" + customerReady + " klaar voor brokerroute · " + customerReceived + " te controleren · " + customerMissing + " ontbrekend/concept/opnieuw</strong></div>",
     confirm: "Controle afronden",
     action: () => {
-      const serverDelivery = API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative() && state.currentRole === "admin";
+      const serverDelivery = API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin";
       if (serverDelivery) {
         // Auto-refresh invoice data so the user never has to manually re-open Facturen.
         refreshInvoicesReadApi(periodKey, true).catch(() => null).then(() => {
@@ -9855,6 +9909,7 @@ function handleMonthDelivery() {
             refreshInvoicesReadApi(periodKey, true)
           ]).catch(() => null).then(() => {
             syncInvoiceStatusesFromApi(periodKey);
+            releaseLocalResetAuthorityAfterServerWrite();
             persistState();
             closeModal();
             renderAll();
