@@ -99,6 +99,6 @@ Feature: Inloggen, uitloggen en sessiebeheer
     # Aantoonbare Playwright-assertions in deze case: 6
     Given de lokale Path loginpagina beschikbaar is
     Then heet het omgevingsveld Veilige testomgeving
-    And heet de lokale titel Welkom bij Uren & Facturatie
+    And heet de lokale titel Welkom bij Path Uren & Facturatie
     When dezelfde login als productiepresentatie wordt getoond
     Then heten omgeving en titel Beveiligde omgeving en Inloggen

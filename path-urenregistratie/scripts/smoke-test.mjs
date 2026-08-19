@@ -26,7 +26,7 @@ assert(dom.window.testAccountToolsAllowed("localhost") && dom.window.testAccount
 dom.window.applyLoginPresentation(false);
 assert(dom.window.document.querySelector("#local-account-login-tools").hidden && dom.window.document.querySelector("#local-login-note").hidden && dom.window.document.querySelector("#login-title").textContent === "Inloggen" && dom.window.document.querySelector("#login-environment-label").textContent === "Beveiligde omgeving", "De productiepresentatie mag geen lokale accountkeuze of demotekst tonen");
 dom.window.applyLoginPresentation(true);
-assert(dom.window.document.querySelector("#login-environment-label").textContent === "Veilige testomgeving" && dom.window.document.querySelector("#login-title").textContent === "Welkom bij Uren & Facturatie", "De lokale login moet de veilige testomgeving en productnaam herkenbaar benoemen");
+assert(dom.window.document.querySelector("#login-environment-label").textContent === "Veilige testomgeving" && dom.window.document.querySelector("#login-title").textContent === "Welkom bij Path Uren & Facturatie", "De lokale login moet de veilige testomgeving en productnaam herkenbaar benoemen");
 
 const pdfDownloads = [];
 dom.window.jspdf = {

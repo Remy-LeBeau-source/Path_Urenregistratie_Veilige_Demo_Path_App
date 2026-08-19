@@ -133,7 +133,7 @@ test('[SAFE-H-012] TEST toont accountkeuze met autofill en een afgeschermde gede
   await test.step('Then blijven TEST-bediening en presentatie zichtbaar zonder PROD-rechten te verruimen', async () => {
     await expect(page.locator('#local-account-login-tools')).toBeVisible();
     await expect(page.locator('#login-environment-label')).toHaveText('Veilige testomgeving');
-    await expect(page.locator('#login-title')).toHaveText('Welkom bij Uren & Facturatie');
+    await expect(page.locator('#login-title')).toHaveText('Welkom bij Path Uren & Facturatie');
     await expect(page.locator('#login-intro')).toContainText('Deze testomgeving');
     await expect(page.locator('#quick-reset-demo')).toBeHidden();
     await expect(page.locator('#reset-demo')).toBeHidden();

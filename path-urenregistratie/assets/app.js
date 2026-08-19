@@ -7828,7 +7828,7 @@ function applyLoginPresentation(accountToolsAllowed, resetToolsAllowed = localAc
     try { window.localStorage.removeItem(LOCAL_RESET_GUARD_KEY); } catch (_error) { /* production remains server-authoritative */ }
   }
   if (environmentLabel) environmentLabel.textContent = accountToolsAllowed ? "Veilige testomgeving" : "Beveiligde omgeving";
-  if (title) title.textContent = accountToolsAllowed ? "Welkom bij Uren & Facturatie" : "Inloggen";
+  if (title) title.textContent = accountToolsAllowed ? "Welkom bij Path Uren & Facturatie" : "Inloggen";
   if (intro) intro.textContent = accountToolsAllowed
     ? "Deze testomgeving gebruikt persoonlijke testaccounts. Productie gebruikt persoonlijke accounts met e-mail en wachtwoord."
     : "Log in met je zakelijke e-mailadres. Je rol en toegangsrechten worden na het inloggen automatisch toegepast.";

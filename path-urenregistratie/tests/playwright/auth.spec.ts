@@ -286,8 +286,8 @@ test('[AUTH-H-009] lokale login benoemt de veilige testomgeving en productnaam',
     await expect(page.locator('#local-account-login-tools')).toBeVisible();
   });
 
-  await test.step('And heet de lokale titel Welkom bij Uren & Facturatie', async () => {
-    await expect(page.locator('#login-title')).toHaveText('Welkom bij Uren & Facturatie');
+    await test.step('And heet de lokale titel Welkom bij Path Uren & Facturatie', async () => {
+    await expect(page.locator('#login-title')).toHaveText('Welkom bij Path Uren & Facturatie');
   });
 
   await test.step('When dezelfde login als productiepresentatie wordt getoond', async () => {

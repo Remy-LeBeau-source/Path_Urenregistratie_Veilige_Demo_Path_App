@@ -220,7 +220,7 @@ function mail_acceptance_preview_content(array $scenario): array
             ? '[LOKALE CONTROLE] Uitnodiging voor Uren & Facturatie'
             : '[LOKALE CONTROLE] Wachtwoordherstel voor Uren & Facturatie',
         'body' => ($invitation
-            ? "Welkom bij Uren & Facturatie. Maak via de eenmalige link veilig je wachtwoord aan."
+            ? "Welkom bij Path Uren & Facturatie. Maak via de eenmalige link veilig je wachtwoord aan."
             : "Er is een verzoek gedaan om het wachtwoord voor Uren & Facturatie opnieuw in te stellen.")
             . "\n\nVoorbeeldlink (werkt uitsluitend als controle): http://localhost.invalid/#password-preview",
     ];

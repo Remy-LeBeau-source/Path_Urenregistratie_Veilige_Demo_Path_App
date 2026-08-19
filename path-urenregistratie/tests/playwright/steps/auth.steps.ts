@@ -43,6 +43,6 @@ Given("het account door vijf mislukte pogingen is geblokkeerd");
 When("de pagina met F5 wordt herladen");
 Then("blijft de aflopende blokkade zichtbaar en blijft de server leidend");
 Then("heet het omgevingsveld Veilige testomgeving");
-And("heet de lokale titel Welkom bij Uren & Facturatie");
+And("heet de lokale titel Welkom bij Path Uren & Facturatie");
 When("dezelfde login als productiepresentatie wordt getoond");
 Then("heten omgeving en titel Beveiligde omgeving en Inloggen");

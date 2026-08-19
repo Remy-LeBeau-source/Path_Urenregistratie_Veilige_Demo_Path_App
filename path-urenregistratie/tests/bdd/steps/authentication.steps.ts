@@ -11,8 +11,8 @@ Then('heet het omgevingsveld Veilige testomgeving', async ({ page }) => {
   await expect(page.locator('#local-account-login-tools')).toBeVisible();
 });
 
-Then('heet de lokale titel Welkom bij Uren & Facturatie', async ({ page }) => {
-  await expect(page.locator('#login-title')).toHaveText('Welkom bij Uren & Facturatie');
+Then('heet de lokale titel Welkom bij Path Uren & Facturatie', async ({ page }) => {
+  await expect(page.locator('#login-title')).toHaveText('Welkom bij Path Uren & Facturatie');
 });
 
 When('dezelfde login als productiepresentatie wordt getoond', async ({ page }) => {
