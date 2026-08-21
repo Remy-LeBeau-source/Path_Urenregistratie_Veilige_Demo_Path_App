@@ -809,4 +809,52 @@ test.describe('admin write endpoints', () => {
 
     await loginPage.logout();
   });
+
+  test('[ADM-WR-N-005] beheerder aanmaken met een al bestaande naam vraagt eerst bevestiging i.p.v. stil een tweede account te maken', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    const duplicateName = 'Joyce van der Steenhoven';
+    const suffix = Date.now().toString().slice(-7);
+    const newEmail = `joyce-duplicate-${suffix}@example.invalid`;
+
+    await test.step('Given de administrator is ingelogd en Teambeheer heeft geopend', async () => {
+      await loginPage.open();
+      await loginPage.loginAsAdmin();
+      await page.locator('[data-view="employees"]').click();
+      await expect(page.locator('#administrator-list')).toContainText(duplicateName);
+    });
+
+    await test.step('When een nieuwe beheerder met dezelfde naam maar een ander adres wordt opgeslagen', async () => {
+      await page.locator('#add-admin').click();
+      await page.locator('#edit-admin-name').fill(duplicateName);
+      await page.locator('#edit-admin-email').fill(newEmail);
+      await page.locator('#modal-confirm').click();
+    });
+
+    await test.step('Then verschijnt eerst een bevestigingsvraag en is er nog niets opgeslagen', async () => {
+      await expect(page.locator('#modal-title')).toContainText(duplicateName);
+      await expect(page.locator('#modal-message')).toContainText(duplicateName);
+      await expect(page.locator('#modal-confirm')).toHaveText('Toch een nieuw, apart account aanmaken');
+      await expect(page.locator('#administrator-list .administrator-row', { hasText: newEmail })).toHaveCount(0);
+    });
+
+    await test.step('And Annuleren maakt geen account aan', async () => {
+      await page.locator('#modal-cancel').click();
+      await expect(page.locator('#modal')).toBeHidden();
+      await expect(page.locator('#administrator-list')).not.toContainText(newEmail);
+    });
+
+    await test.step('And bij expliciete bevestiging wordt het aparte account alsnog aangemaakt', async () => {
+      await page.locator('#add-admin').click();
+      await page.locator('#edit-admin-name').fill(duplicateName);
+      await page.locator('#edit-admin-email').fill(newEmail);
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#modal-confirm')).toHaveText('Toch een nieuw, apart account aanmaken');
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#modal')).toBeHidden();
+      await expect(page.locator('#administrator-list')).toContainText(newEmail);
+      await expect(page.locator('#administrator-list .administrator-row', { hasText: duplicateName })).toHaveCount(2);
+    });
+
+    await loginPage.logout();
+  });
 });

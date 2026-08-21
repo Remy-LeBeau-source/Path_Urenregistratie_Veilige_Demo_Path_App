@@ -51,3 +51,8 @@ Then("blijven de nieuwe beheerder en medewerker zichtbaar in Teambeheer");
 Given("de administrator Instellingen heeft geopend");
 When("de pagina echt opnieuw wordt geladen (F5)");
 Then("blijft Instellingen actief in plaats van terug te vallen op Dashboard");
+Given("de administrator is ingelogd en Teambeheer heeft geopend");
+When("een nieuwe beheerder met dezelfde naam maar een ander adres wordt opgeslagen");
+Then("verschijnt eerst een bevestigingsvraag en is er nog niets opgeslagen");
+And("Annuleren maakt geen account aan");
+And("bij expliciete bevestiging wordt het aparte account alsnog aangemaakt");

@@ -89,6 +89,13 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-21 · v0.9.92 Waarschuwing bij dubbele beheerdersnaam met ander adres
+
+- [x] **UX-fix:** een nieuwe beheerder aanmaken met dezelfde naam als een bestaand account maar een (per ongeluk) ander/verkeerd getypt e-mailadres werd voorheen stil als apart, tweede account opgeslagen — de bestaande exacte-e-mail-dubbelcheck vangt dit niet, want het adres verschilt echt. Nieuwe admin-editor toont nu eerst een bevestigingsvraag ("Er bestaat al een beheerder met de naam …") met een keuze: alsnog een apart account aanmaken, of annuleren. Blokkeert niet hard, want twee verschillende mensen kunnen legitiem dezelfde naam hebben. `autocomplete="off"` toegevoegd aan naam/adresveld als extra remedie tegen browser-autofill-interferentie tijdens het typen. Nieuwe test `ADM-WR-N-005` (bevestigt zowel annuleren als doorzetten).
+- [x] Kortstondig een servergrens op periodejaren geprobeerd om de eerdere periode-explosie (zie v0.9.91) hard te blokkeren; teruggedraaid nadat bleek dat meerdere bestaande tests (`email-queue.spec.ts` reserveert doelbewust het jaartallenbereik 3000–9999 als botsingsvrije testruimte) daar legitiem op leunen. Geen wijziging in productiecode overgebleven van deze poging.
+- [x] Lokale database nogmaals opgeschoond: eigen vergeten testaccounts (`LoopTest 0/1/2`, uit een eigen verificatiescript) en overige experimentele beheerdersaccounts verwijderd.
+- [x] Versie 0.9.91 → 0.9.92.
+
 ### 2026-08-21 · v0.9.91 F5 behoudt het geopende scherm, CI-versiechecks rechtgetrokken, duplicaat-e-mail-UX bewezen
 
 - [x] **UX-fix:** F5 sprong altijd terug naar Dashboard/Mijn overzicht, ook als je op een ander scherm zat. `login()` (aangeroepen bij elke sessie-herstel-op-laadtijd, niet alleen bij een echte inlogklik) forceerde altijd de standaard startview. Bij een geldige sessie op laadtijd wordt nu, ná het herstellen van de sessie, de laatst geopende view uit `window.location.hash` hersteld. Nieuwe test `ADM-WR-H-011`.

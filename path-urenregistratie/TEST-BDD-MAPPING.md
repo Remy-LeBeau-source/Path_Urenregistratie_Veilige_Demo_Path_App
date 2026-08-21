@@ -35,6 +35,7 @@
 | ADM-WR-H-009 | api | organization-settings.feature | goedkeuringsloop volgt logische maand/medewerker-volgorde | Beslissingstabel rollen en autorisatie | 4 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | goedkeuringsloop volgt logische maand/medewerker-volgorde | Happy | 2 | Actueel |
 | ADM-WR-H-010 | api | organization-settings.feature | server-led aangemaakte beheerder en medewerker overleven een echte paginaherlading | Beslissingstabel rollen en autorisatie | 7 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | server-led aangemaakte beheerder en medewerker overleven een echte paginaherlading | Happy | 2 | Actueel |
 | ADM-WR-H-011 | api | organization-settings.feature | een echte paginaherlading blijft op het geopende scherm i.p.v. terug te springen naar Dashboard | API-contract + equivalentieklasse | 5 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | een echte paginaherlading blijft op het geopende scherm i.p.v. terug te springen naar Dashboard | Happy | 2 | Actueel |
+| ADM-WR-N-005 | api | organization-settings.feature | beheerder aanmaken met een al bestaande naam vraagt eerst bevestiging i.p.v. stil een tweede account te maken | Negatieve equivalentieklasse + error guessing | 11 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | beheerder aanmaken met een al bestaande naam vraagt eerst bevestiging i.p.v. stil een tweede account te maken | Negative | 2 | Actueel |
 | AUD-H-001 | api | audit-log.feature | admin kan auditlog ophalen | Beslissingstabel rollen en autorisatie | 7 | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | admin kan auditlog ophalen | Happy | 16 | Actueel |
 | AUD-H-002 | api | audit-log.feature | auditlog filtert op entity_type | Equivalentieklassen | 3 | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | auditlog filtert op entity_type | Happy | 16 | Actueel |
 | AUD-H-003 | api | audit-log.feature | auditlog filtert op event_type | Equivalentieklassen | 3 | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | auditlog filtert op event_type | Happy | 16 | Actueel |
@@ -249,9 +250,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 227
+- Playwright executable cases: 228
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 228
+- Totaal unieke executable cases: 229
 - Playwright features: 22
 - Database features: 1
 - Playwright steps mappings: 22
