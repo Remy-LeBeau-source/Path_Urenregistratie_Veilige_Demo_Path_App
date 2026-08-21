@@ -89,6 +89,12 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-21 · v0.9.94 Wachtwoordmanager-interferentie in naam/adresvelden tegengegaan
+
+- [x] **Robuustheidsfix:** herhaaldelijk kwam er verminkte tekst (herhaalde tekenreeksen) in het naam- of e-mailveld van de beheerder/medewerker-editor terecht tijdens het typen — niet reproduceerbaar via een geautomatiseerde browser die écht, teken voor teken typt, dus geen bug in de eigen logica. De app kan principieel nooit onderscheiden of getypte tekst van de gebruiker zelf komt of door een browserextensie is ingevoegd; het enige haalbare tegenmiddel is bekende wachtwoordmanagers expliciet vragen het veld te negeren. `data-lpignore` (LastPass), `data-1p-ignore` (1Password), `data-bwignore` (Bitwarden) en `data-form-type="other"` toegevoegd aan naam/e-mailveld van zowel de beheerder- als de medewerker-editor, naast de al aanwezige `autocomplete="off"`.
+- [x] Nieuwe regressie `ADM-WR-N-006` bewijst dat de eerder als "inconsistent" ervaren twee schermen (naamwaarschuwing, dan pas de harde e-mailblokkade) in werkelijkheid twee opeenvolgende stappen van precies dezelfde, deterministische poging zijn.
+- [x] Versie 0.9.93 → 0.9.94. Volledige lokale desktop-Playwright-regressie: 224/224 groen. `npm run check`: groen.
+
 ### 2026-08-21 · v0.9.92 Waarschuwing bij dubbele beheerdersnaam met ander adres
 
 - [x] **UX-fix:** een nieuwe beheerder aanmaken met dezelfde naam als een bestaand account maar een (per ongeluk) ander/verkeerd getypt e-mailadres werd voorheen stil als apart, tweede account opgeslagen — de bestaande exacte-e-mail-dubbelcheck vangt dit niet, want het adres verschilt echt. Nieuwe admin-editor toont nu eerst een bevestigingsvraag ("Er bestaat al een beheerder met de naam …") met een keuze: alsnog een apart account aanmaken, of annuleren. Blokkeert niet hard, want twee verschillende mensen kunnen legitiem dezelfde naam hebben. `autocomplete="off"` toegevoegd aan naam/adresveld als extra remedie tegen browser-autofill-interferentie tijdens het typen. Nieuwe test `ADM-WR-N-005` (bevestigt zowel annuleren als doorzetten).

@@ -8412,8 +8412,8 @@ function showEmployeeEditor(employeeId) {
   }).join("");
   const summary = '<div class="modal-form">' +
     '<p class="full form-help">Account en contract</p>' +
-    '<label>Voor- en achternaam<input id="edit-name" value="' + escapeHtml(employee.name) + '"></label>' +
-    '<label>Zakelijk accountadres<input id="edit-account-email" type="email" value="' + escapeHtml(employee.email || (serverAccountMode ? "" : "nieuwe-medewerker@example.invalid")) + '"></label>' +
+    '<label>Voor- en achternaam<input id="edit-name" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" value="' + escapeHtml(employee.name) + '"></label>' +
+    '<label>Zakelijk accountadres<input id="edit-account-email" type="email" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" value="' + escapeHtml(employee.email || (serverAccountMode ? "" : "nieuwe-medewerker@example.invalid")) + '"></label>' +
     '<label>Functie<input id="edit-role" value="' + escapeHtml(employee.role) + '"></label>' +
     '<label>Startdatum<input id="edit-start-date" type="date" value="' + escapeHtml(employee.startDate || "2026-08-01") + '"></label>' +
     '<label>Contract<input id="edit-contract" value="' + escapeHtml(employee.contract) + '"></label>' +
@@ -8647,7 +8647,7 @@ function showAdminEditor(adminId) {
   const serverAccountMode = API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin";
   const admin = existing || { id: "admin-" + (state.admins.length + 1), name: "", email: serverAccountMode ? "" : "nieuwe-beheerder@example.invalid", active: true, emailNotificationsEnabled: true, photo: "" };
   const invitationDeliveryAvailable = authRuntime.passwordResetDeliveryAvailable === true;
-  const summary = '<div class="modal-form"><label>Voor- en achternaam<input id="edit-admin-name" autocomplete="off" value="' + escapeHtml(admin.name) + '"></label><label>Zakelijk accountadres<input id="edit-admin-email" type="email" autocomplete="off" value="' + escapeHtml(admin.email) + '"></label><label class="check-row full"><input id="edit-admin-notifications" type="checkbox" checked><span>Meldingen over ingediende uren en facturen ontvangen</span></label>' +
+  const summary = '<div class="modal-form"><label>Voor- en achternaam<input id="edit-admin-name" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" value="' + escapeHtml(admin.name) + '"></label><label>Zakelijk accountadres<input id="edit-admin-email" type="email" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" value="' + escapeHtml(admin.email) + '"></label><label class="check-row full"><input id="edit-admin-notifications" type="checkbox" checked><span>Meldingen over ingediende uren en facturen ontvangen</span></label>' +
     (!existing && serverAccountMode ? '<label class="check-row full"><input id="edit-admin-invite" type="checkbox"' + (invitationDeliveryAvailable ? " checked" : " disabled") + '><span>' + (invitationDeliveryAvailable ? "Persoonlijke uitnodiging per e-mail versturen" : "Uitnodiging volgt zodra e-mail is ingeschakeld") + '</span></label>' : "") +
     '<p class="full form-help">' + (serverAccountMode ? "Het beheeraccount wordt veilig op de server opgeslagen. Zonder uitnodiging blijft de toegang in afwachting." : "Het account wordt lokaal bewaard en er wordt nog geen uitnodiging verstuurd. Productieaccounts worden veilig door een beheerder ingericht.") + '</p></div>';
   const sendInvitationChecked = () => Boolean(document.querySelector("#edit-admin-invite") && document.querySelector("#edit-admin-invite").checked);
