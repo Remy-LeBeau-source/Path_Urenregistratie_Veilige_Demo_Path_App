@@ -136,3 +136,12 @@ Feature: Organisatie-instellingen beheren
     Then verschijnt eerst een bevestigingsvraag en is er nog niets opgeslagen
     And Annuleren maakt geen account aan
     And bij expliciete bevestiging wordt het aparte account alsnog aangemaakt
+
+  @negative
+  Scenario: [ADM-WR-N-006] dubbele naam ÉN al bestaand e-mailadres: eerst de naamwaarschuwing, daarna alsnog de harde e-mailblokkade
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given er al een beheerder én een medewerker bestaan met verschillende namen
+    When een nieuwe beheerder met dezelfde naam én het e-mailadres van de medewerker wordt opgeslagen
+    Then verschijnt éérst de naamwaarschuwing, vóór er ooit naar de server wordt geschreven
+    And na expliciete bevestiging blokkeert de server alsnog hard op het al bestaande e-mailadres

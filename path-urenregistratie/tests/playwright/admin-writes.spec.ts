@@ -857,4 +857,56 @@ test.describe('admin write endpoints', () => {
 
     await loginPage.logout();
   });
+
+  test('[ADM-WR-N-006] dubbele naam ÉN al bestaand e-mailadres: eerst de naamwaarschuwing, daarna alsnog de harde e-mailblokkade', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    const suffix = Date.now().toString().slice(-7);
+    const sharedName = `Botsnaam ${suffix}`;
+    const employeeEmail = `botsadres-${suffix}@example.invalid`;
+
+    await test.step('Given er al een beheerder én een medewerker bestaan met verschillende namen', async () => {
+      await loginPage.open();
+      await loginPage.loginAsAdmin();
+      await page.locator('[data-view="employees"]').click();
+
+      await page.locator('#add-admin').click();
+      await page.locator('#edit-admin-name').fill(sharedName);
+      await page.locator('#edit-admin-email').fill(`admin-${suffix}@example.invalid`);
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#modal')).toBeHidden();
+      await expect(page.locator('#administrator-list')).toContainText(sharedName);
+
+      await page.locator('#add-employee').click();
+      await page.locator('#edit-name').fill(`Andere naam ${suffix}`);
+      await page.locator('#edit-account-email').fill(employeeEmail);
+      await page.locator('#edit-role').fill('Consultant');
+      await page.locator('#edit-client').fill('Botsklant');
+      await page.locator('#edit-project').fill(`BOTS-${suffix}`);
+      await page.locator('#edit-broker').fill('Botsbroker');
+      await page.locator('#edit-broker-email').fill('broker@example.invalid');
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#modal')).toBeHidden();
+    });
+
+    await test.step('When een nieuwe beheerder met dezelfde naam én het e-mailadres van de medewerker wordt opgeslagen', async () => {
+      await page.locator('#add-admin').click();
+      await page.locator('#edit-admin-name').fill(sharedName);
+      await page.locator('#edit-admin-email').fill(employeeEmail);
+      await page.locator('#modal-confirm').click();
+    });
+
+    await test.step('Then verschijnt éérst de naamwaarschuwing, vóór er ooit naar de server wordt geschreven', async () => {
+      await expect(page.locator('#modal-title')).toContainText(sharedName);
+      await expect(page.locator('#modal-confirm')).toHaveText('Toch een nieuw, apart account aanmaken');
+    });
+
+    await test.step('And na expliciete bevestiging blokkeert de server alsnog hard op het al bestaande e-mailadres', async () => {
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#toast')).toContainText('hoort al bij', { timeout: 10_000 });
+      await expect(page.locator('#administrator-list .administrator-row', { hasText: sharedName })).toHaveCount(1);
+      await expect(page.locator('#employee-grid .employee-card', { hasText: employeeEmail })).toHaveClass(/account-conflict-focus/);
+    });
+
+    await loginPage.logout();
+  });
 });
