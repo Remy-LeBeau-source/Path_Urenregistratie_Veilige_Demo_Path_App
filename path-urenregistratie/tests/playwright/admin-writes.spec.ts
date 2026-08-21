@@ -315,9 +315,24 @@ test.describe('admin write endpoints', () => {
       await page.locator('#modal-confirm').click();
     });
 
-    await test.step('Then verschijnt een duidelijke toast en wordt de bestaande medewerker uitgelicht, i.p.v. stil niets te doen', async () => {
-      await expect(page.locator('#modal')).toBeHidden();
+    await test.step('Then verschijnt een blokkade-popup en wordt de bestaande medewerker uitgelicht, i.p.v. stil niets te doen', async () => {
+      await expect(page.locator('#modal')).toBeVisible();
+      await expect(page.locator('#modal-title')).toContainText(employeeName);
+      await expect(page.locator('#modal-message')).toContainText('hoort al bij');
+      await expect(page.locator('#modal-message')).toContainText('een naam mag wél twee keer');
       await expect(page.locator('#toast')).toContainText('hoort al bij', { timeout: 10_000 });
+    });
+
+    await test.step('And "Adres aanpassen" opent het formulier opnieuw met de ingevulde gegevens intact', async () => {
+      await expect(page.locator('#modal-confirm')).toHaveText('Adres aanpassen');
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#edit-admin-name')).toHaveValue(`Botsingsbeheerder ${suffix}`);
+      await expect(page.locator('#edit-admin-email')).toHaveValue(employeeEmail.toUpperCase());
+    });
+
+    await test.step('And na sluiten is er niets aangemaakt en is het bestaande account uitgelicht', async () => {
+      await page.locator('#modal-cancel').click();
+      await expect(page.locator('#modal')).toBeHidden();
       await expect(page.locator(`[data-employee-account-id]:has-text("${employeeName}")`)).toHaveClass(/account-conflict-focus/);
       await expect(page.locator('#administrator-list')).not.toContainText(`Botsingsbeheerder ${suffix}`);
     });
@@ -342,6 +357,9 @@ test.describe('admin write endpoints', () => {
     await page.locator('#edit-admin-email').fill(duplicateEmail);
     await page.locator('#modal-confirm').click();
     await expect(page.locator('#toast')).toContainText('hoort al bij');
+    // The block is now surfaced as its own modal; dismiss it before asserting the list.
+    await expect(page.locator('#modal-title')).toContainText('hoort al bij');
+    await page.locator('#modal-cancel').click();
     await expect(page.locator('#modal')).toBeHidden();
     await expect(adminRows).toHaveCount(adminCountBefore);
     await expect(adminRows.filter({ hasText: appConfig.adminEmail })).toHaveClass(/account-conflict-focus/);
@@ -354,6 +372,8 @@ test.describe('admin write endpoints', () => {
     await page.locator('#edit-broker-email').fill('broker@example.invalid');
     await page.locator('#modal-confirm').click();
     await expect(page.locator('#toast')).toContainText('hoort al bij');
+    await expect(page.locator('#modal-title')).toContainText('hoort al bij');
+    await page.locator('#modal-cancel').click();
     await expect(page.locator('#modal')).toBeHidden();
     await expect(employeeCards).toHaveCount(employeeCountBefore);
     await expect(adminRows.filter({ hasText: appConfig.adminEmail })).toHaveClass(/account-conflict-focus/);
@@ -678,6 +698,7 @@ test.describe('admin write endpoints', () => {
     await page.locator('#modal-confirm').click();
 
     await expect(page.locator('#toast')).toContainText(`hoort al bij ${existingEmployeeName}`);
+    await page.locator('#modal-cancel').click();
     await expect(page.locator('#modal')).toBeHidden();
     await expect(page.locator('[data-employee-scope="inactive"]')).toHaveClass(/is-active/);
     await expect(page.locator('#employee-grid')).toContainText(existingEmployeeName);
@@ -693,6 +714,7 @@ test.describe('admin write endpoints', () => {
     await page.locator('#modal-confirm').click();
 
     await expect(page.locator('#toast')).toContainText(`hoort al bij ${existingAdminName}`);
+    await page.locator('#modal-cancel').click();
     await expect(page.locator('#modal')).toBeHidden();
     await expect(page.locator('#administrator-list .administrator-row').filter({ hasText: existingAdminEmail })).toHaveClass(/account-conflict-focus/);
 
@@ -810,7 +832,7 @@ test.describe('admin write endpoints', () => {
     await loginPage.logout();
   });
 
-  test('[ADM-WR-N-005] beheerder aanmaken met een al bestaande naam vraagt eerst bevestiging i.p.v. stil een tweede account te maken', async ({ page }) => {
+  test('[ADM-WR-N-005] een al bestaande naam blokkeert of waarschuwt niet: alleen het e-mailadres moet uniek zijn', async ({ page }) => {
     const loginPage = new LoginPage(page);
     const duplicateName = 'Joyce van der Steenhoven';
     const suffix = Date.now().toString().slice(-7);
@@ -823,34 +845,16 @@ test.describe('admin write endpoints', () => {
       await expect(page.locator('#administrator-list')).toContainText(duplicateName);
     });
 
-    await test.step('When een nieuwe beheerder met dezelfde naam maar een ander adres wordt opgeslagen', async () => {
+    await test.step('When een nieuwe beheerder met dezelfde naam maar een uniek adres wordt opgeslagen', async () => {
       await page.locator('#add-admin').click();
       await page.locator('#edit-admin-name').fill(duplicateName);
       await page.locator('#edit-admin-email').fill(newEmail);
       await page.locator('#modal-confirm').click();
     });
 
-    await test.step('Then verschijnt eerst een bevestigingsvraag en is er nog niets opgeslagen', async () => {
-      await expect(page.locator('#modal-title')).toContainText(duplicateName);
-      await expect(page.locator('#modal-message')).toContainText(duplicateName);
-      await expect(page.locator('#modal-confirm')).toHaveText('Toch een nieuw, apart account aanmaken');
-      await expect(page.locator('#administrator-list .administrator-row', { hasText: newEmail })).toHaveCount(0);
-    });
-
-    await test.step('And Annuleren maakt geen account aan', async () => {
-      await page.locator('#modal-cancel').click();
-      await expect(page.locator('#modal')).toBeHidden();
-      await expect(page.locator('#administrator-list')).not.toContainText(newEmail);
-    });
-
-    await test.step('And bij expliciete bevestiging wordt het aparte account alsnog aangemaakt', async () => {
-      await page.locator('#add-admin').click();
-      await page.locator('#edit-admin-name').fill(duplicateName);
-      await page.locator('#edit-admin-email').fill(newEmail);
-      await page.locator('#modal-confirm').click();
-      await expect(page.locator('#modal-confirm')).toHaveText('Toch een nieuw, apart account aanmaken');
-      await page.locator('#modal-confirm').click();
-      await expect(page.locator('#modal')).toBeHidden();
+    await test.step('Then wordt het account direct aangemaakt, zonder tussenvraag over de naam', async () => {
+      await expect(page.locator('#modal')).toBeHidden({ timeout: 10_000 });
+      await expect(page.locator('#toast')).toContainText('Beheerder op de server opgeslagen');
       await expect(page.locator('#administrator-list')).toContainText(newEmail);
       await expect(page.locator('#administrator-list .administrator-row', { hasText: duplicateName })).toHaveCount(2);
     });
@@ -858,7 +862,7 @@ test.describe('admin write endpoints', () => {
     await loginPage.logout();
   });
 
-  test('[ADM-WR-N-006] dubbele naam ÉN al bestaand e-mailadres: eerst de naamwaarschuwing, daarna alsnog de harde e-mailblokkade', async ({ page }) => {
+  test('[ADM-WR-N-006] dubbele naam is toegestaan, maar een al gebruikt e-mailadres wordt hard geblokkeerd', async ({ page }) => {
     const loginPage = new LoginPage(page);
     const suffix = Date.now().toString().slice(-7);
     const sharedName = `Botsnaam ${suffix}`;
@@ -895,14 +899,11 @@ test.describe('admin write endpoints', () => {
       await page.locator('#modal-confirm').click();
     });
 
-    await test.step('Then verschijnt éérst de naamwaarschuwing, vóór er ooit naar de server wordt geschreven', async () => {
-      await expect(page.locator('#modal-title')).toContainText(sharedName);
-      await expect(page.locator('#modal-confirm')).toHaveText('Toch een nieuw, apart account aanmaken');
-    });
-
-    await test.step('And na expliciete bevestiging blokkeert de server alsnog hard op het al bestaande e-mailadres', async () => {
-      await page.locator('#modal-confirm').click();
+    await test.step('Then komt er geen tussenvraag over de naam en blokkeert de server hard op het al gebruikte e-mailadres', async () => {
       await expect(page.locator('#toast')).toContainText('hoort al bij', { timeout: 10_000 });
+      await expect(page.locator('#modal-title')).toContainText('hoort al bij');
+      await page.locator('#modal-cancel').click();
+      await expect(page.locator('#modal')).toBeHidden();
       await expect(page.locator('#administrator-list .administrator-row', { hasText: sharedName })).toHaveCount(1);
       await expect(page.locator('#employee-grid .employee-card', { hasText: employeeEmail })).toHaveClass(/account-conflict-focus/);
     });
@@ -972,9 +973,10 @@ test.describe('admin write endpoints', () => {
       await page.locator('#edit-admin-name').fill(clonedAdminName);
       await page.locator('#edit-admin-email').fill(clonedEmployeeEmail);
       await page.locator('#modal-confirm').click();
-      await expect(page.locator('#modal-confirm')).toHaveText('Toch een nieuw, apart account aanmaken');
-      await page.locator('#modal-confirm').click();
       await expect(page.locator('#toast')).toContainText('hoort al bij', { timeout: 10_000 });
+      await expect(page.locator('#modal-title')).toContainText('hoort al bij');
+      await page.locator('#modal-cancel').click();
+      await expect(page.locator('#modal')).toBeHidden();
       expect(await activeCount()).toBe(baseline + 1);
       expect(await adminRowCount(clonedAdminName)).toBe(1);
     });
@@ -990,6 +992,44 @@ test.describe('admin write endpoints', () => {
       expect(await activeCount()).toBe(baseline + 2);
       expect(await adminRowCount(uniqueAdminName)).toBe(1);
       expect(await adminRowCount(clonedAdminName)).toBe(1);
+    });
+
+    await loginPage.logout();
+  });
+
+  test('[ADM-WR-H-012] na Herstel legt Teambeheer uit dat de telling lokaal is en kan de serverstand terug worden gehaald', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    const notice = page.locator('#team-account-local-notice');
+    const count = () => page.locator('#team-active-account-count').innerText().then(Number);
+
+    let serverCount = 0;
+
+    await test.step('Given Teambeheer de serverstand toont zonder melding', async () => {
+      await loginPage.open();
+      await loginPage.loginAsAdmin();
+      await page.locator('[data-view="employees"]').click();
+      await expect(page.locator('#team-active-account-count')).toBeVisible();
+      serverCount = await count();
+      await expect(notice).toBeHidden();
+    });
+
+    await test.step('When de administrator Herstel gebruikt en terugkeert naar Teambeheer', async () => {
+      await page.locator('#quick-reset-demo').click();
+      await page.locator('#modal-confirm').click();
+      await page.locator('[data-view="employees"]').click();
+    });
+
+    await test.step('Then verklaart een zichtbare melding dat deze telling niet van de server komt', async () => {
+      await expect(notice).toBeVisible();
+      await expect(notice).toContainText('lokale voorbeeldweergave');
+      await expect(page.locator('#team-account-load-server')).toBeVisible();
+    });
+
+    await test.step('And de knop haalt de echte serverstand terug en laat de melding verdwijnen', async () => {
+      await page.locator('#team-account-load-server').click();
+      await expect(page.locator('#toast')).toContainText('serverstand is geladen', { timeout: 10_000 });
+      await expect(notice).toBeHidden();
+      expect(await count()).toBe(serverCount);
     });
 
     await loginPage.logout();

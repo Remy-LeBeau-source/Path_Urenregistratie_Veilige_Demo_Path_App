@@ -49,15 +49,16 @@ Feature: Organisatie-instellingen beheren
   @negative
   Scenario: [ADM-WR-N-004] beheerder aanmaken met het e-mailadres van een bestaande medewerker toont een duidelijke melding (geen silent failure)
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 6
+    # Aantoonbare Playwright-assertions in deze case: 13
     Given er al een medewerker met een vast e-mailadres bestaat
     When een beheerder wordt aangemaakt met exact datzelfde adres
-    Then verschijnt een duidelijke toast en wordt de bestaande medewerker uitgelicht, i.p.v. stil niets te doen
+    Then verschijnt een blokkade-popup en wordt de bestaande medewerker uitgelicht, i.p.v. stil niets te doen
+    And na sluiten is er niets aangemaakt en is het bestaande account uitgelicht
 
   @negative
   Scenario: [ADM-WR-N-002] dubbel accountadres opent het bestaande account zonder duplicaat
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 12
+    # Aantoonbare Playwright-assertions in deze case: 14
     Given organisatie-instellingen beheren is voorbereid
     When de flow voor ADM-WR-N-002 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat dubbel accountadres opent het bestaande account zonder duplicaat
@@ -128,29 +129,35 @@ Feature: Organisatie-instellingen beheren
     Then blijft Instellingen actief in plaats van terug te vallen op Dashboard
 
   @negative
-  Scenario: [ADM-WR-N-005] beheerder aanmaken met een al bestaande naam vraagt eerst bevestiging i.p.v. stil een tweede account te maken
+  Scenario: [ADM-WR-N-005] een al bestaande naam blokkeert of waarschuwt niet: alleen het e-mailadres moet uniek zijn
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 11
+    # Aantoonbare Playwright-assertions in deze case: 5
     Given de administrator is ingelogd en Teambeheer heeft geopend
-    When een nieuwe beheerder met dezelfde naam maar een ander adres wordt opgeslagen
-    Then verschijnt eerst een bevestigingsvraag en is er nog niets opgeslagen
-    And Annuleren maakt geen account aan
-    And bij expliciete bevestiging wordt het aparte account alsnog aangemaakt
+    When een nieuwe beheerder met dezelfde naam maar een uniek adres wordt opgeslagen
+    Then wordt het account direct aangemaakt, zonder tussenvraag over de naam
 
   @negative
-  Scenario: [ADM-WR-N-006] dubbele naam ÉN al bestaand e-mailadres: eerst de naamwaarschuwing, daarna alsnog de harde e-mailblokkade
+  Scenario: [ADM-WR-N-006] dubbele naam is toegestaan, maar een al gebruikt e-mailadres wordt hard geblokkeerd
     # Testtechniek: Negatieve equivalentieklasse + error guessing
     # Aantoonbare Playwright-assertions in deze case: 8
     Given er al een beheerder én een medewerker bestaan met verschillende namen
     When een nieuwe beheerder met dezelfde naam én het e-mailadres van de medewerker wordt opgeslagen
-    Then verschijnt éérst de naamwaarschuwing, vóór er ooit naar de server wordt geschreven
-    And na expliciete bevestiging blokkeert de server alsnog hard op het al bestaande e-mailadres
+    Then komt er geen tussenvraag over de naam en blokkeert de server hard op het al gebruikte e-mailadres
 
   @negative
   Scenario: [ADM-WR-N-007] actief-accounttotaal klopt op elke stap: exact duplicaat verandert niets, uniek account telt precies 1 op
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 14
+    # Aantoonbare Playwright-assertions in deze case: 15
     Given de administrator is ingelogd en Teambeheer heeft geopend
     When een medewerker en een beheerder worden toegevoegd, telt het totaal telkens precies 1 op t.o.v. daarvóór
     Then verandert een poging met exact hetzelfde e-mailadres het totaal niet
     And een volledig uniek account telt precies 1 op, zonder dat er verder iets bijkomt
+
+  @happy
+  Scenario: [ADM-WR-H-012] na Herstel legt Teambeheer uit dat de telling lokaal is en kan de serverstand terug worden gehaald
+    # Testtechniek: Herstelbaarheid + toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given Teambeheer de serverstand toont zonder melding
+    When de administrator Herstel gebruikt en terugkeert naar Teambeheer
+    Then verklaart een zichtbare melding dat deze telling niet van de server komt
+    And de knop haalt de echte serverstand terug en laat de melding verdwijnen

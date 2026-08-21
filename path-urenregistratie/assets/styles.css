@@ -660,6 +660,9 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .hero-owner-badge:hover { border-color: rgba(255,255,255,.55); transform: translateY(-1px); }
 .hero-owner-badge:focus-visible { outline: 3px solid rgba(255,255,255,.55); outline-offset: 2px; }
 .safe-domain-note { margin: 15px 0 5px; border-radius: 11px; background: var(--green-light); color: var(--teal); font-size: 10px; line-height: 1.5; padding: 11px 13px; }
+.team-account-local-notice { display: grid; gap: 4px; margin: 10px 0 0; border-radius: 11px; background: #fff5e6; color: #8a5a12; font-size: 11px; line-height: 1.5; padding: 10px 12px; }
+.team-account-local-notice strong { color: #7a4d0a; }
+.team-account-local-notice .text-button { justify-self: start; margin-top: 2px; color: #7a4d0a; font-weight: 800; text-decoration: underline; }
 .email-template-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
 .email-preview { margin-top: 18px; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: #fbfcfc; }
 .email-preview > div { display: grid; grid-template-columns: 95px 1fr; gap: 15px; border-bottom: 1px solid #e9eeee; padding: 10px 14px; }

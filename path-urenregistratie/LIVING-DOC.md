@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 230 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 231 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 230 unieke case-ID's
+- Playwright executable cases: 231 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 231 unieke case-ID's
+- Totaal executable cases: 232 unieke case-ID's
 - Playwright features: 22
 - Database features: 1
 - Playwright steps mappings: 22
 - Database steps mappings: 1
-- Uitvoeringen: 235
-- Niet-mobile projectuitvoeringen: 225
+- Uitvoeringen: 236
+- Niet-mobile projectuitvoeringen: 226
 - Mobile functionele cases: 5
 - Pixel 7 / Chromium-uitvoeringen: 5
 - iPhone 13 / WebKit-uitvoeringen: 5
 
-De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 230 Playwright-functionele cases in totaal 235 resultaten op: 225 + (5 x 2) = 235.
+De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 231 Playwright-functionele cases in totaal 236 resultaten op: 226 + (5 x 2) = 236.
 
 ## Documentatieketen
 
@@ -42,15 +42,15 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 230 Playwrig
 
 - Feature: `tests/playwright/features/organization-settings.feature`
 - Source: `tests/playwright/admin-writes.spec.ts`
-- Cases: 18
+- Cases: 19
 
 - [ADM-WR-H-001] admin kan company/settings server-led opslaan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 - [ADM-WR-H-002] admin kan beheerder server-led aanmaken en wijzigen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
 - [ADM-WR-H-003] admin kan medewerker server-led aanmaken en bootstrap ziet deze terug — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
 - [ADM-WR-N-001] dubbel accountadres geeft veilige metadata van het bestaande bedrijfsaccount — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 8
 - [ADM-WR-N-003] beheerder aanmaken met het e-mailadres van een bestaande medewerker wordt geweigerd — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 10
-- [ADM-WR-N-004] beheerder aanmaken met het e-mailadres van een bestaande medewerker toont een duidelijke melding (geen silent failure) — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
-- [ADM-WR-N-002] dubbel accountadres opent het bestaande account zonder duplicaat — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 12
+- [ADM-WR-N-004] beheerder aanmaken met het e-mailadres van een bestaande medewerker toont een duidelijke melding (geen silent failure) — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
+- [ADM-WR-N-002] dubbel accountadres opent het bestaande account zonder duplicaat — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 14
 - [ADM-WR-H-004] admin slaat medewerker zonder SMTP veilig op met toegang in afwachting — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [ADM-WR-H-005] productie toont uitsluitend serveraccounts en opent medewerkerformulier bovenaan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
 - [ADM-WR-H-006] deactiveren verplaatst medewerker direct en leeg account kan worden verwijderd — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
@@ -59,9 +59,10 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 230 Playwrig
 - [ADM-WR-H-009] goedkeuringsloop volgt logische maand/medewerker-volgorde — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [ADM-WR-H-010] server-led aangemaakte beheerder en medewerker overleven een echte paginaherlading — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [ADM-WR-H-011] een echte paginaherlading blijft op het geopende scherm i.p.v. terug te springen naar Dashboard — Techniek: API-contract + equivalentieklasse · Assertions: 5
-- [ADM-WR-N-005] beheerder aanmaken met een al bestaande naam vraagt eerst bevestiging i.p.v. stil een tweede account te maken — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 11
-- [ADM-WR-N-006] dubbele naam ÉN al bestaand e-mailadres: eerst de naamwaarschuwing, daarna alsnog de harde e-mailblokkade — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 8
-- [ADM-WR-N-007] actief-accounttotaal klopt op elke stap: exact duplicaat verandert niets, uniek account telt precies 1 op — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 14
+- [ADM-WR-N-005] een al bestaande naam blokkeert of waarschuwt niet: alleen het e-mailadres moet uniek zijn — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
+- [ADM-WR-N-006] dubbele naam is toegestaan, maar een al gebruikt e-mailadres wordt hard geblokkeerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 8
+- [ADM-WR-N-007] actief-accounttotaal klopt op elke stap: exact duplicaat verandert niets, uniek account telt precies 1 op — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 15
+- [ADM-WR-H-012] na Herstel legt Teambeheer uit dat de telling lokaal is en kan de serverstand terug worden gehaald — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 8
 
 ### Auditlog en traceerbaarheid
 
