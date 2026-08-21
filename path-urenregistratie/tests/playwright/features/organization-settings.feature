@@ -39,6 +39,22 @@ Feature: Organisatie-instellingen beheren
     Then wordt met Playwright-assertions bevestigd dat dubbel accountadres geeft veilige metadata van het bestaande bedrijfsaccount
 
   @negative
+  Scenario: [ADM-WR-N-003] beheerder aanmaken met het e-mailadres van een bestaande medewerker wordt geweigerd
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 10
+    Given organisatie-instellingen beheren is voorbereid
+    When de flow voor ADM-WR-N-003 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat beheerder aanmaken met het e-mailadres van een bestaande medewerker wordt geweigerd
+
+  @negative
+  Scenario: [ADM-WR-N-004] beheerder aanmaken met het e-mailadres van een bestaande medewerker toont een duidelijke melding (geen silent failure)
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given er al een medewerker met een vast e-mailadres bestaat
+    When een beheerder wordt aangemaakt met exact datzelfde adres
+    Then verschijnt een duidelijke toast en wordt de bestaande medewerker uitgelicht, i.p.v. stil niets te doen
+
+  @negative
   Scenario: [ADM-WR-N-002] dubbel accountadres opent het bestaande account zonder duplicaat
     # Testtechniek: Negatieve equivalentieklasse + error guessing
     # Aantoonbare Playwright-assertions in deze case: 12
@@ -94,3 +110,19 @@ Feature: Organisatie-instellingen beheren
     Given de administrator is ingelogd en reset naar vaste baseline
     When actionable admin tasks bestaan in de workflow
     Then zijn taken chronologisch gesorteerd (validatie van fix)
+
+  @happy
+  Scenario: [ADM-WR-H-010] server-led aangemaakte beheerder en medewerker overleven een echte paginaherlading
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given de administrator een nieuwe beheerder en medewerker server-led opslaat (geen gemockte API)
+    When de pagina echt opnieuw wordt geladen (F5), niet alleen opnieuw gerenderd
+    Then blijven de nieuwe beheerder en medewerker zichtbaar in Teambeheer
+
+  @happy
+  Scenario: [ADM-WR-H-011] een echte paginaherlading blijft op het geopende scherm i.p.v. terug te springen naar Dashboard
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given de administrator Instellingen heeft geopend
+    When de pagina echt opnieuw wordt geladen (F5)
+    Then blijft Instellingen actief in plaats van terug te vallen op Dashboard

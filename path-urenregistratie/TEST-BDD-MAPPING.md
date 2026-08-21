@@ -24,6 +24,8 @@
 | ADM-WR-H-002 | api | organization-settings.feature | admin kan beheerder server-led aanmaken en wijzigen | Beslissingstabel rollen en autorisatie | 12 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | admin kan beheerder server-led aanmaken en wijzigen | Happy | 2 | Actueel |
 | ADM-WR-H-003 | api | organization-settings.feature | admin kan medewerker server-led aanmaken en bootstrap ziet deze terug | Beslissingstabel rollen en autorisatie | 11 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | admin kan medewerker server-led aanmaken en bootstrap ziet deze terug | Happy | 2 | Actueel |
 | ADM-WR-N-001 | api | organization-settings.feature | dubbel accountadres geeft veilige metadata van het bestaande bedrijfsaccount | Negatieve equivalentieklasse + error guessing | 8 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | dubbel accountadres geeft veilige metadata van het bestaande bedrijfsaccount | Negative | 2 | Actueel |
+| ADM-WR-N-003 | api | organization-settings.feature | beheerder aanmaken met het e-mailadres van een bestaande medewerker wordt geweigerd | Beslissingstabel rollen en autorisatie | 10 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | beheerder aanmaken met het e-mailadres van een bestaande medewerker wordt geweigerd | Negative | 2 | Actueel |
+| ADM-WR-N-004 | api | organization-settings.feature | beheerder aanmaken met het e-mailadres van een bestaande medewerker toont een duidelijke melding (geen silent failure) | Beslissingstabel rollen en autorisatie | 6 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | beheerder aanmaken met het e-mailadres van een bestaande medewerker toont een duidelijke melding (geen silent failure) | Negative | 2 | Actueel |
 | ADM-WR-N-002 | api | organization-settings.feature | dubbel accountadres opent het bestaande account zonder duplicaat | Negatieve equivalentieklasse + error guessing | 12 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | dubbel accountadres opent het bestaande account zonder duplicaat | Negative | 2 | Actueel |
 | ADM-WR-H-004 | api | organization-settings.feature | admin slaat medewerker zonder SMTP veilig op met toegang in afwachting | Beslissingstabel rollen en autorisatie | 8 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | admin slaat medewerker zonder SMTP veilig op met toegang in afwachting | Happy | 2 | Actueel |
 | ADM-WR-H-005 | api | organization-settings.feature | productie toont uitsluitend serveraccounts en opent medewerkerformulier bovenaan | Beslissingstabel rollen en autorisatie | 13 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | productie toont uitsluitend serveraccounts en opent medewerkerformulier bovenaan | Happy | 2 | Actueel |
@@ -31,6 +33,8 @@
 | ADM-WR-H-007 | api | organization-settings.feature | serverwrite na Herstel verschijnt direct in Teambeheer | Herstelbaarheid + toestandsovergang | 5 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | serverwrite na Herstel verschijnt direct in Teambeheer | Happy | 2 | Actueel |
 | ADM-WR-H-008 | api | organization-settings.feature | bestaande beheerder en medewerker worden na Herstel direct terug in Teambeheer getoond | Beslissingstabel rollen en autorisatie | 13 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | bestaande beheerder en medewerker worden na Herstel direct terug in Teambeheer getoond | Happy | 2 | Actueel |
 | ADM-WR-H-009 | api | organization-settings.feature | goedkeuringsloop volgt logische maand/medewerker-volgorde | Beslissingstabel rollen en autorisatie | 4 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | goedkeuringsloop volgt logische maand/medewerker-volgorde | Happy | 2 | Actueel |
+| ADM-WR-H-010 | api | organization-settings.feature | server-led aangemaakte beheerder en medewerker overleven een echte paginaherlading | Beslissingstabel rollen en autorisatie | 7 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | server-led aangemaakte beheerder en medewerker overleven een echte paginaherlading | Happy | 2 | Actueel |
+| ADM-WR-H-011 | api | organization-settings.feature | een echte paginaherlading blijft op het geopende scherm i.p.v. terug te springen naar Dashboard | API-contract + equivalentieklasse | 5 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | een echte paginaherlading blijft op het geopende scherm i.p.v. terug te springen naar Dashboard | Happy | 2 | Actueel |
 | AUD-H-001 | api | audit-log.feature | admin kan auditlog ophalen | Beslissingstabel rollen en autorisatie | 7 | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | admin kan auditlog ophalen | Happy | 16 | Actueel |
 | AUD-H-002 | api | audit-log.feature | auditlog filtert op entity_type | Equivalentieklassen | 3 | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | auditlog filtert op entity_type | Happy | 16 | Actueel |
 | AUD-H-003 | api | audit-log.feature | auditlog filtert op event_type | Equivalentieklassen | 3 | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | auditlog filtert op event_type | Happy | 16 | Actueel |
@@ -245,9 +249,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 223
+- Playwright executable cases: 227
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 224
+- Totaal unieke executable cases: 228
 - Playwright features: 22
 - Database features: 1
 - Playwright steps mappings: 22

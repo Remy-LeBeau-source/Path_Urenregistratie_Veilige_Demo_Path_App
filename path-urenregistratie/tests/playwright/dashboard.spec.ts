@@ -341,7 +341,10 @@ test('[DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus', as
 
   await test.step('Then blijft de gewijzigde lokale teller zichtbaar en wordt er geen oude serverstatus teruggezet', async () => {
     await expect(page.locator('#login-screen')).toBeHidden();
-    await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
+    // F5 nu bewust het laatst geopende scherm herstelt (i.p.v. altijd terug
+    // naar Dashboard te springen), staat Stasjo na herladen weer op de
+    // urenstaat waar die was, niet op het overzicht.
+    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
     await expect(page.locator('#employee-open-task-total')).toHaveText('2 open acties');
     expect(businessReadHitsAfterReset).toBeLessThanOrEqual(1);
     await attachBusinessScreenshot(page, 'GUI smoke · Herstel blijft na F5 leidend');

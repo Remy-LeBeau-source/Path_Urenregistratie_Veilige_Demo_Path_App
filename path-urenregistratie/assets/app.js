@@ -2159,12 +2159,18 @@ function initializeAuthSession() {
         }
 
         setAuthLoginFeedback("", false);
+        const hashViewOnLoad = String(window.location.hash || "").replace(/^#/, "");
         applyAuthUserToState(data.user, { loginUser: true });
         // Must run after setAuthDebug() above so authRuntime.authenticated is
         // already true; triggerReadApiWarmup() no-ops otherwise (this was a
         // real bug: a freshly created admin/employee vanished after a real
         // page reload because the warmup silently skipped itself every time).
         triggerReadApiWarmup();
+        // applyAuthUserToState() -> login() always lands on the role's home
+        // view. A real page reload should stay where the operator was
+        // instead of bouncing back to the dashboard every time; showView()
+        // itself safely no-ops on an unknown/empty hash.
+        if (hashViewOnLoad) showView(hashViewOnLoad);
       } else {
         setAuthDebug({ authenticated: false, role: "", user_id: null, mode: "auth", available: true, error: "not-authenticated" });
         logoutLocal();

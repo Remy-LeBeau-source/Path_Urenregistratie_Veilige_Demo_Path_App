@@ -89,6 +89,14 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-21 · v0.9.91 F5 behoudt het geopende scherm, CI-versiechecks rechtgetrokken, duplicaat-e-mail-UX bewezen
+
+- [x] **UX-fix:** F5 sprong altijd terug naar Dashboard/Mijn overzicht, ook als je op een ander scherm zat. `login()` (aangeroepen bij elke sessie-herstel-op-laadtijd, niet alleen bij een echte inlogklik) forceerde altijd de standaard startview. Bij een geldige sessie op laadtijd wordt nu, ná het herstellen van de sessie, de laatst geopende view uit `window.location.hash` hersteld. Nieuwe test `ADM-WR-H-011`.
+- [x] **Procesfix:** de CI-check op PR #24 faalde (`smoke-test.mjs` verwachtte hardcoded "0.9.89" als zichtbaar versienummer, terwijl de app inmiddels 0.9.90 was) — dit was een tweede, apart hardcoded versiecheckpunt naast `package.json`/`index.html` dat bij het ophogen van de versie werd gemist. Rechtgetrokken (en dezelfde stale referentie in `build-live-doc-bundle.mjs`); `npm run check` lokaal gedraaid vóór het pushen om dit soort verrassingen voortaan te voorkomen.
+- [x] **Onderhoudsfix:** `scripts/sync-living-docs.mjs` had een hardcoded exact-aantal-cases-guard die bij elke nieuwe test handmatig moest worden opgehoogd (drie keer nodig deze sessie alleen al). Vervangen door een guard die alleen nog controleert op unieke case-ID's en precies 1 DB-case — de eigenlijke veiligheidseigenschap, zonder handmatig onderhoud.
+- [x] **Bevestigd, geen bug:** een beheerder aanmaken met het e-mailadres van een bestaande medewerker wordt terecht geweigerd (één e-mailadres = één account). Nieuwe cases `ADM-WR-N-003` (API) en `ADM-WR-N-004` (browser-UI, bevestigt dat de toast + gemarkeerde bestaande medewerker altijd verschijnen, geen silent failure).
+- [x] Versie 0.9.90 → 0.9.91. Volledige lokale desktop-Playwright-regressie: 222/222 groen. `npm run check` (dezelfde poort als CI): groen.
+
 ### 2026-08-21 · v0.9.90 TEST-mail-CC, dag/week-uitsplitsing in urencontrole en F5-reloadbug in Teambeheer
 
 - [x] **Bugfix (kritiek):** een net server-led aangemaakte beheerder of medewerker verdween na een echte paginaherlading (F5) uit Teambeheer, terug naar de kale standaarddemolijst. Oorzaak: `triggerReadApiWarmup()` in `assets/app.js` werd bij het laden van de pagina aangeroepen vóórdat `authRuntime.authenticated` op `true` stond, waardoor de functie zichzelf altijd stilzwijgend oversloeg en de serverdata nooit werd opgehaald. Verplaatst naar ná de authenticatiebevestiging. Bewezen met een nieuwe, niet-gemockte test `ADM-WR-H-010` die een echte `page.reload()` uitvoert.

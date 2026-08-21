@@ -243,6 +243,88 @@ test.describe('admin write endpoints', () => {
     await ctx.dispose();
   });
 
+  test('[ADM-WR-N-003] beheerder aanmaken met het e-mailadres van een bestaande medewerker wordt geweigerd', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const suffix = Date.now().toString().slice(-7);
+    const employeeEmail = `bestaande-medewerker-${suffix}@example.invalid`;
+
+    const employeeWrite = await postJson(ctx, '/server/api/staff.php', {
+      action: 'upsert_employee',
+      sendInvitation: false,
+      employee: { name: `Bestaande medewerker ${suffix}`, email: employeeEmail, role: 'Consultant', client: 'Klant', project: `PROJ-${suffix}`, broker: 'Broker', brokerEmail: 'broker@example.invalid' },
+      mailRecipients: [],
+    });
+    expect(employeeWrite.status, JSON.stringify(employeeWrite.body)).toBe(200);
+    expect(employeeWrite.body.ok).toBe(true);
+
+    const adminWrite = await postJson(ctx, '/server/api/staff.php', {
+      action: 'upsert_admin',
+      sendInvitation: false,
+      admin: { name: 'Nieuwe beheerder met bestaand adres', email: employeeEmail.toUpperCase(), active: true },
+    });
+
+    expect(adminWrite.status).toBe(409);
+    expect(adminWrite.body.ok).toBe(false);
+    expect(adminWrite.body.error).toBe('email-already-in-use');
+    expect(adminWrite.body.message).toContain('hoort al bij');
+    expect(adminWrite.body.existing_account).toMatchObject({ role: 'employee', active: true });
+    expect(Number(adminWrite.body.existing_account?.user_id)).toBeGreaterThan(0);
+    expect(JSON.stringify(adminWrite.body)).not.toContain('SQLSTATE');
+
+    const bootstrapAfter = await ctx.get('/server/api/bootstrap.php');
+    const afterBody = await bootstrapAfter.json();
+    const adminRowsWithThisEmail = (afterBody.users as Array<{ email: string; role: string }>)
+      .filter(user => String(user.email).toLowerCase() === employeeEmail.toLowerCase() && user.role === 'administrator');
+    expect(adminRowsWithThisEmail).toHaveLength(0);
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
+
+  test('[ADM-WR-N-004] beheerder aanmaken met het e-mailadres van een bestaande medewerker toont een duidelijke melding (geen silent failure)', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await page.locator('[data-view="employees"]').click();
+
+    const suffix = Date.now().toString().slice(-7);
+    const employeeName = `Botsingsmedewerker ${suffix}`;
+    const employeeEmail = `botsing-${suffix}@example.invalid`;
+
+    await test.step('Given er al een medewerker met een vast e-mailadres bestaat', async () => {
+      await page.locator('#add-employee').click();
+      await page.locator('#edit-name').fill(employeeName);
+      await page.locator('#edit-account-email').fill(employeeEmail);
+      await page.locator('#edit-role').fill('Consultant');
+      await page.locator('#edit-client').fill('Botsingsklant');
+      await page.locator('#edit-project').fill(`BOTS-${suffix}`);
+      await page.locator('#edit-broker').fill('Botsingsbroker');
+      await page.locator('#edit-broker-email').fill('broker@example.invalid');
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#modal')).toBeHidden();
+      await expect(page.locator('#employee-grid')).toContainText(employeeName);
+    });
+
+    await test.step('When een beheerder wordt aangemaakt met exact datzelfde adres', async () => {
+      await page.locator('#add-admin').click();
+      await page.locator('#edit-admin-name').fill(`Botsingsbeheerder ${suffix}`);
+      await page.locator('#edit-admin-email').fill(employeeEmail.toUpperCase());
+      await page.locator('#modal-confirm').click();
+    });
+
+    await test.step('Then verschijnt een duidelijke toast en wordt de bestaande medewerker uitgelicht, i.p.v. stil niets te doen', async () => {
+      await expect(page.locator('#modal')).toBeHidden();
+      await expect(page.locator('#toast')).toContainText('hoort al bij', { timeout: 10_000 });
+      await expect(page.locator(`[data-employee-account-id]:has-text("${employeeName}")`)).toHaveClass(/account-conflict-focus/);
+      await expect(page.locator('#administrator-list')).not.toContainText(`Botsingsbeheerder ${suffix}`);
+    });
+
+    await loginPage.logout();
+  });
+
   test('[ADM-WR-N-002] dubbel accountadres opent het bestaande account zonder duplicaat', async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.open();
@@ -699,6 +781,30 @@ test.describe('admin write endpoints', () => {
     await test.step('Then blijven de nieuwe beheerder en medewerker zichtbaar in Teambeheer', async () => {
       await expect(page.locator('#administrator-list')).toContainText(adminName, { timeout: 10_000 });
       await expect(page.locator('#employee-grid')).toContainText(employeeName, { timeout: 10_000 });
+    });
+
+    await loginPage.logout();
+  });
+
+  test('[ADM-WR-H-011] een echte paginaherlading blijft op het geopende scherm i.p.v. terug te springen naar Dashboard', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+
+    await test.step('Given de administrator Instellingen heeft geopend', async () => {
+      await loginPage.open();
+      await loginPage.loginAsAdmin();
+      await page.locator('[data-view="settings"]').click();
+      await expect(page.locator('#view-settings')).toHaveClass(/is-active/);
+      await expect(page).toHaveURL(/#settings$/);
+    });
+
+    await test.step('When de pagina echt opnieuw wordt geladen (F5)', async () => {
+      await page.reload();
+      await expect(page.locator('#login-screen')).toBeHidden({ timeout: 15_000 });
+    });
+
+    await test.step('Then blijft Instellingen actief in plaats van terug te vallen op Dashboard', async () => {
+      await expect(page.locator('#view-settings')).toHaveClass(/is-active/, { timeout: 10_000 });
+      await expect(page.locator('#view-dashboard')).not.toHaveClass(/is-active/);
     });
 
     await loginPage.logout();
