@@ -72,9 +72,9 @@ Feature: Mailroutering en aflevering
   @happy
   Scenario: [EQ-H-016] Backoffice verstuurt vanuit de acceptatieconsole precies één gekozen scenario
     # Testtechniek: API-contract + equivalentieklasse
-    # Aantoonbare Playwright-assertions in deze case: 22
+    # Aantoonbare Playwright-assertions in deze case: 18
     Given de vijf losse mailacceptatiescenario’s zijn vrijgegeven voor vaste testontvangers
-    When de beheerder alleen de brokerfactuur kiest en ontvanger en één bijlage bevestigt
+    When de beheerder alleen de brokerfactuur kiest en ontvanger en een bijlage bevestigt
     Then bevat de write exact één scenario met expliciete bevestiging en geen bulkopdracht
 
   @happy
@@ -111,11 +111,11 @@ Feature: Mailroutering en aflevering
 
   @happy
   Scenario: [EQ-H-020] Backoffice finaliseert de branded serverfactuur en verzendt drie echte TEST-mails
-    # Testtechniek: Toestandsovergang + inhoudsconsistentie + async racepreventie
-    # Aantoonbare Playwright-assertions in deze case: 15
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 18
     Given een goedgekeurde maar nog niet definitieve serverfactuur als Backoffice-taak klaarstaat
     When Backoffice de verzending één keer afrondt
-    Then gebruikt PDF en mail exact dezelfde serverbedragen, wordt eerst gelockt en blijft taaknavigatie geblokkeerd tot afronding
+    Then wordt eerst gelockt, niet te vroeg gequeued en verdwijnt de afgeronde vervolgtaak
 
   @happy
   Scenario: [EQ-H-026] Backoffice verzendt de juiste officiële klanturenstaat via TEST naar Giovanno

@@ -37,3 +37,6 @@ When("de flow voor ADM-WR-H-007 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat serverwrite na Herstel verschijnt direct in Teambeheer");
 When("de flow voor ADM-WR-H-008 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat bestaande beheerder en medewerker worden na Herstel direct terug in Teambeheer getoond");
+Given("de administrator is ingelogd en reset naar vaste baseline");
+When("actionable admin tasks bestaan in de workflow");
+Then("zijn taken chronologisch gesorteerd (validatie van fix)");

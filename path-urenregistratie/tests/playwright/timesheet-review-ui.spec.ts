@@ -524,3 +524,57 @@ test('[TS-REV-UI-N-012] gefactureerde goedkeuring blijft bij serverweigering ver
   });
 });
 
+test('[TS-REV-UI-H-011] urencontrole toont dag/week-uitsplitsing vóór goedkeuren', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await page.route('**/server/api/timesheets.php**', async (route) => {
+    if (route.request().method().toUpperCase() !== 'GET') { await route.continue(); return; }
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
+      ok: true, found: true, period: PERIOD_KEY, employee_id: 2,
+      timesheet: { id: 9003, status: 'submitted', contractual_hours: 160, billable_hours: 15,
+        leave_hours: 0, sickness_hours: 0, employee_note: null, review_note: null,
+        day_entries: [
+          { work_date: `${PERIOD_KEY}-01`, hours: 6, description: 'dag 1' },
+          { work_date: `${PERIOD_KEY}-02`, hours: 9, description: 'dag 2' },
+        ],
+        submitted_at: new Date().toISOString(), approved_at: null, approved_by: null,
+        version: 1, latest_correction: null, correction_history: [] } }) });
+  });
+
+  let employeeName = '';
+
+  await test.step('Given medewerker opent een ingediende urenstaat', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await openView(page, 'timesheet');
+    await setPeriod(page, PERIOD_KEY);
+    employeeName = (await page.locator('#timesheet-employee').textContent() || '').trim();
+    expect(employeeName.length).toBeGreaterThan(0);
+    await loginPage.logout();
+    await loginPage.assertLoggedOut();
+  });
+
+  await test.step('When de administrator de urencontrole opent', async () => {
+    await loginPage.loginAsAdmin();
+    await openView(page, 'approvals');
+    await setPeriod(page, PERIOD_KEY);
+    const approvalCard = page
+      .locator(`article.approval-card[data-approval-period="${PERIOD_KEY}"]`)
+      .filter({ hasText: employeeName })
+      .first();
+    await expect(approvalCard).toBeVisible();
+    await approvalCard.locator('[data-review]').click();
+    await expect(page.locator('#modal')).toBeVisible();
+  });
+
+  await test.step('Then ziet de administrator de exacte dag- en weektotalen van de medewerker', async () => {
+    const grid = page.locator('#modal-summary .hours-review-grid');
+    await expect(grid).toBeVisible();
+    const cells = grid.locator('tbody .workday-cell strong');
+    await expect(cells.nth(0)).toHaveText('6,0');
+    await expect(cells.nth(1)).toHaveText('9,0');
+    await expect(grid.locator('tbody .week-total').first()).toHaveText('15,0');
+    await expect(grid.locator('tfoot th').last()).toHaveText('15,0');
+  });
+});
+

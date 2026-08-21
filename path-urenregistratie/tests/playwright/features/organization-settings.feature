@@ -86,3 +86,11 @@ Feature: Organisatie-instellingen beheren
     Given organisatie-instellingen beheren is voorbereid
     When de flow voor ADM-WR-H-008 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat bestaande beheerder en medewerker worden na Herstel direct terug in Teambeheer getoond
+
+  @happy
+  Scenario: [ADM-WR-H-009] goedkeuringsloop volgt logische maand/medewerker-volgorde
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given de administrator is ingelogd en reset naar vaste baseline
+    When actionable admin tasks bestaan in de workflow
+    Then zijn taken chronologisch gesorteerd (validatie van fix)

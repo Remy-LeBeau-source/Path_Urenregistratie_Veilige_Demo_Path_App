@@ -51,9 +51,8 @@ Feature: Dashboard en open werkvoorraad
 
   @negative
   Scenario: [DASH-N-011] afgeronde Backoffice-taak en teller blijven na F5 stabiel, ongeacht het beginaantal
-    # Regressie-preventie: taakteller na F5
-    # Testtechniek: Regressie-preventie + toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 6
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 9
     Given de administrator is ingelogd en reset naar vaste baseline
     When een actionable urencontrole-taak (hours-review) wordt goedgekeurd
     Then blijft de goedgekeurde taak weg en de teller stabiel na F5

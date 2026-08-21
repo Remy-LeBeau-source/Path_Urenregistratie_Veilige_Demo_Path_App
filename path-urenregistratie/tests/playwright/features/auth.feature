@@ -85,9 +85,8 @@ Feature: Inloggen, uitloggen en sessiebeheer
 
   @negative
   Scenario: [AUTH-N-009] geen loginflits: login-scherm en app-shell blijven verborgen tijdens auth-bootstrap na F5
-    # Regressie-preventie: F5-loginflits
-    # Testtechniek: Regressie-preventie + toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 7
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 9
     Given de administrator is ingelogd
     When de pagina met F5 wordt herladen terwijl de sessiecontrole vertraagd is
     Then blijft body.auth-booting actief en zijn beide shells onzichtbaar zolang de sessiecontrole loopt

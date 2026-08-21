@@ -656,4 +656,51 @@ test.describe('admin write endpoints', () => {
       }
     });
   });
+
+  test('[ADM-WR-H-010] server-led aangemaakte beheerder en medewerker overleven een echte paginaherlading', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    const suffix = Date.now().toString().slice(-7);
+    const adminName = `Reload Beheerder ${suffix}`;
+    const adminEmail = `reload-admin-${suffix}@example.invalid`;
+    const employeeName = `Reload Medewerker ${suffix}`;
+    const employeeEmail = `reload-employee-${suffix}@example.invalid`;
+
+    await test.step('Given de administrator een nieuwe beheerder en medewerker server-led opslaat (geen gemockte API)', async () => {
+      await loginPage.open();
+      await loginPage.loginAsAdmin();
+      await page.locator('[data-view="employees"]').click();
+
+      await page.locator('#add-admin').click();
+      await page.locator('#edit-admin-name').fill(adminName);
+      await page.locator('#edit-admin-email').fill(adminEmail);
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#modal')).toBeHidden();
+      await expect(page.locator('#administrator-list')).toContainText(adminName);
+
+      await page.locator('#add-employee').click();
+      await page.locator('#edit-name').fill(employeeName);
+      await page.locator('#edit-account-email').fill(employeeEmail);
+      await page.locator('#edit-role').fill('Consultant');
+      await page.locator('#edit-client').fill('Reloadklant');
+      await page.locator('#edit-project').fill(`RELOAD-${suffix}`);
+      await page.locator('#edit-broker').fill('Reloadbroker');
+      await page.locator('#edit-broker-email').fill('broker@example.invalid');
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#modal')).toBeHidden();
+      await expect(page.locator('#employee-grid')).toContainText(employeeName);
+    });
+
+    await test.step('When de pagina echt opnieuw wordt geladen (F5), niet alleen opnieuw gerenderd', async () => {
+      await page.reload();
+      await expect(page.locator('#login-screen')).toBeHidden({ timeout: 15_000 });
+      await page.locator('[data-view="employees"]').click();
+    });
+
+    await test.step('Then blijven de nieuwe beheerder en medewerker zichtbaar in Teambeheer', async () => {
+      await expect(page.locator('#administrator-list')).toContainText(adminName, { timeout: 10_000 });
+      await expect(page.locator('#employee-grid')).toContainText(employeeName, { timeout: 10_000 });
+    });
+
+    await loginPage.logout();
+  });
 });

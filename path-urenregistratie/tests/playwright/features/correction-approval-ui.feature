@@ -50,3 +50,11 @@ Feature: Correcties en goedkeuringen behandelen
     Given Backoffice een goedgekeurde maand met definitieve factuur bekijkt
     When de server heropenen wegens facturatie weigert
     Then blijft de maand goedgekeurd en krijgt Backoffice een duidelijke blokkade
+
+  @happy
+  Scenario: [TS-REV-UI-H-011] urencontrole toont dag/week-uitsplitsing vóór goedkeuren
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given medewerker opent een ingediende urenstaat
+    When de administrator de urencontrole opent
+    Then ziet de administrator de exacte dag- en weektotalen van de medewerker

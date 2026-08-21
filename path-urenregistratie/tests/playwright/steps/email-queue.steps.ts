@@ -37,7 +37,7 @@ When("de beheerder het verzendoverzicht in Instellingen opent");
 Then("zijn ontvanger, onderwerp, status, tijd en bijlagen zichtbaar zonder geheime inhoud");
 And("Vernieuwen haalt de actuele serverregistraties opnieuw op");
 Given("de vijf losse mailacceptatiescenario’s zijn vrijgegeven voor vaste testontvangers");
-When("de beheerder alleen de brokerfactuur kiest en ontvanger en één bijlage bevestigt");
+When("de beheerder alleen de brokerfactuur kiest en ontvanger en een bijlage bevestigt");
 Then("bevat de write exact één scenario met expliciete bevestiging en geen bulkopdracht");
 Given("mailroutering en aflevering is voorbereid");
 When("de flow voor EQ-H-025 wordt uitgevoerd");

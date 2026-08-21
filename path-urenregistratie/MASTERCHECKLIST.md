@@ -89,6 +89,16 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-21 · v0.9.90 TEST-mail-CC, dag/week-uitsplitsing in urencontrole en F5-reloadbug in Teambeheer
+
+- [x] **Bugfix (kritiek):** een net server-led aangemaakte beheerder of medewerker verdween na een echte paginaherlading (F5) uit Teambeheer, terug naar de kale standaarddemolijst. Oorzaak: `triggerReadApiWarmup()` in `assets/app.js` werd bij het laden van de pagina aangeroepen vóórdat `authRuntime.authenticated` op `true` stond, waardoor de functie zichzelf altijd stilzwijgend oversloeg en de serverdata nooit werd opgehaald. Verplaatst naar ná de authenticatiebevestiging. Bewezen met een nieuwe, niet-gemockte test `ADM-WR-H-010` die een echte `page.reload()` uitvoert.
+- [x] TEST-mailsandbox stuurt voortaan elke omgeleide TEST-mail zowel naar `giovanno.maatsen@pathconsultancy.nl` (vaste sink) als in CC naar `kenrich.lieveld@pathconsultancy.nl`, in plaats van alleen naar giovanno; `mail_test_sink_cc_recipient()` toegevoegd aan `server/mail/config.php`, blijft uitsluitend actief binnen `environment === 'test'`.
+- [x] Opgeschoond: een per ongeluk hardcoded persoonlijk Gmail-adres in het offline `mail-preflight.php`-demoscript vervangen door het bestaande boekhoud-adres; geen functioneel effect (dry-run, geen echte verzending).
+- [x] De urencontrolemodal (vóór goedkeuren) toont nu een alleen-lezen dag/week-uitsplitsing van de ingevulde uren, dezelfde weergave als de medewerker zelf ziet bij invullen, i.p.v. alleen een maandtotaal. Nieuwe case `TS-REV-UI-H-011`.
+- [x] `scripts/sync-living-docs.mjs` had een verouderde hardcoded caseteller (verwachtte 214, werkelijk al 222 vóór deze release) waardoor `npm run docs:sync` al langere tijd stil faalde; dit script zit niet in de `npm run check`-CI-gate, dus het viel niet eerder op. Teller gecorrigeerd naar 223 Playwright + 1 DB-case; synchronisatie opnieuw gedraaid en daarmee ook een aantal losgeraakte featurebestanden (o.a. `invoices.feature`, `mail-delivery.feature`) en een verweesd duplicaatbestand (`admin-writes.feature`, overbodig naast `organization-settings.feature`) rechtgetrokken.
+- [x] Lokale database opgeschoond: 24 leftover testfixture-accounts (`admin-write-*`/`employee-write-*@example.invalid`, zonder enige zakelijke of beveiligingshistorie) verwijderd uit `path_urenregistratie`; kwamen niet van deze sessie maar van een eerdere testrun die buiten de geïsoleerde `_test`-database om liep.
+- [x] Volledige lokale desktop-Playwright-regressie: 219/219 groen.
+
 ### 2026-08-17 · v0.9.89 serverfactuur-refresh en BDD-pariteit
 
 - [x] Ontbrekende factuurcache wordt bij `Controle afronden` één keer geforceerd ververst en opnieuw gekoppeld voordat de actie fail-closed openblijft.

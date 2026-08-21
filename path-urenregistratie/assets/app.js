@@ -2135,7 +2135,6 @@ function initializeAuthSession() {
       authRuntime.checked = true;
       authRuntime.available = true;
       applyAuthUiMode("auth");
-      triggerReadApiWarmup();
       prefillAuthCredentialsFromSelection("admin", false);
       if (data && data.ok === true && data.authenticated === true && data.user) {
         setAuthDebug({
@@ -2161,6 +2160,11 @@ function initializeAuthSession() {
 
         setAuthLoginFeedback("", false);
         applyAuthUserToState(data.user, { loginUser: true });
+        // Must run after setAuthDebug() above so authRuntime.authenticated is
+        // already true; triggerReadApiWarmup() no-ops otherwise (this was a
+        // real bug: a freshly created admin/employee vanished after a real
+        // page reload because the warmup silently skipped itself every time).
+        triggerReadApiWarmup();
       } else {
         setAuthDebug({ authenticated: false, role: "", user_id: null, mode: "auth", available: true, error: "not-authenticated" });
         logoutLocal();
@@ -7530,6 +7534,30 @@ function closeModal() {
   adminTaskWorkflow = null;
 }
 
+/**
+ * Read-only dag/week-uitsplitsing van de ingevulde uren, zoals de medewerker
+ * die zelf invult, voor gebruik in de goedkeuringscontrole. Toont nooit
+ * invoervelden en verandert nooit data.
+ */
+function hoursReviewGridHtml(record, period) {
+  const rows = period.weekRows.map((week, weekIndex) => {
+    const weekEntries = record.entries[weekIndex] || [];
+    const cells = week.days.map((day, dayIndex) => {
+      if (!day) return '<td class="outside-month"><span class="outside-month-mark" aria-hidden="true">—</span></td>';
+      const value = Number(weekEntries[dayIndex] || 0);
+      return '<td class="workday-cell"><span class="date-number">' + day.day + '</span><strong>' + (value > 0 ? hoursFormat.format(value) : "0") + '</strong></td>';
+    }).join("");
+    const weekTotal = weekEntries.reduce((sum, value) => sum + (Number(value) || 0), 0);
+    const yearNote = week.year === period.year ? "" : " · " + week.year;
+    return '<tr><td>Week ' + week.number + yearNote + "</td>" + cells + '<td class="week-total">' + hoursFormat.format(weekTotal) + "</td></tr>";
+  }).join("");
+  return '<div class="table-wrap"><table class="hours-table hours-review-grid">' +
+    '<thead><tr><th>Week</th><th>Ma</th><th>Di</th><th>Wo</th><th>Do</th><th>Vr</th><th>Totaal</th></tr></thead>' +
+    '<tbody>' + rows + '</tbody>' +
+    '<tfoot><tr><th colspan="6">Maandtotaal declarabel</th><th>' + hoursFormat.format(totalEntries(record.entries)) + '</th></tr></tfoot>' +
+    '</table></div>';
+}
+
 function showHoursReview(employeeId, periodKey, adminTaskId = "") {
   const employee = employeeById(employeeId);
   const key = periodKey || currentPeriod().key;
@@ -7545,10 +7573,11 @@ function showHoursReview(employeeId, periodKey, adminTaskId = "") {
     label: "Urencontrole",
     title: "Controleer " + employee.name,
     message: "Controleer de uren en het tarief voor " + period.label + ". De geselecteerde maand bovenaan hoeft hiervoor niet te worden gewijzigd.",
-    summary: "<div><span>Maand</span><strong>" + escapeHtml(period.label) + "</strong></div><div><span>Declarabel</span><strong>" + hoursFormat.format(total) + " uur</strong></div><div><span>Tarief</span><strong>" + currency.format(employee.rate) + " per uur</strong></div><div><span>Verwacht factuurbedrag</span><strong>" + currency.format(total * employee.rate) + "</strong></div>",
+    summary: "<div><span>Maand</span><strong>" + escapeHtml(period.label) + "</strong></div><div><span>Declarabel</span><strong>" + hoursFormat.format(total) + " uur</strong></div><div><span>Tarief</span><strong>" + currency.format(employee.rate) + " per uur</strong></div><div><span>Verwacht factuurbedrag</span><strong>" + currency.format(total * employee.rate) + "</strong></div>" + hoursReviewGridHtml(record, period),
     secondary: "Terugsturen voor correctie",
     secondaryAction: () => showCorrectionEditor(employee.id, key, adminTaskId),
     confirm: "Goedkeuren",
+    wide: true,
     adminTaskId,
     action: () => {
       if (adminTaskId) {

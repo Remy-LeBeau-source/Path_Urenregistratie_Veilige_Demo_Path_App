@@ -33,3 +33,5 @@ Then("wordt de lokale status bijgewerkt zonder ongeldige serverwrite");
 Given("Backoffice een goedgekeurde maand met definitieve factuur bekijkt");
 When("de server heropenen wegens facturatie weigert");
 Then("blijft de maand goedgekeurd en krijgt Backoffice een duidelijke blokkade");
+When("de administrator de urencontrole opent");
+Then("ziet de administrator de exacte dag- en weektotalen van de medewerker");

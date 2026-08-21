@@ -27,7 +27,8 @@ try {
             'mode' => 'check',
             'writes_performed' => false,
             'config_path' => $expectedPath,
-            'allowed_recipients' => [$businessRecipient],
+            'allowed_recipients' => [$businessRecipient, $secondaryTestAccount],
+            'test_sink_cc_recipient' => $secondaryTestAccount,
             'test_accounts' => array_column($acceptanceAccounts, 'email'),
             'message' => 'Use --execute --confirm=ENABLE_TEST_MAIL_SANDBOX on TransIP to open only the guarded TEST mail sandbox.',
         ]);
@@ -53,9 +54,10 @@ try {
     $config['mail'] = is_array($config['mail'] ?? null) ? $config['mail'] : [];
     $config['mail']['enabled'] = true;
     $config['mail']['test_delivery_enabled'] = true;
-    $config['mail']['allowed_recipients'] = [$businessRecipient];
+    $config['mail']['allowed_recipients'] = [$businessRecipient, $secondaryTestAccount];
     $config['mail']['test_redirect_all'] = true;
     $config['mail']['test_sink_recipient'] = $businessRecipient;
+    $config['mail']['test_sink_cc_recipient'] = $secondaryTestAccount;
     $config['mail']['acceptance_test'] = [
         'enabled' => true,
         'business_recipient' => $businessRecipient,
@@ -67,7 +69,7 @@ try {
     if ($relayErrors !== [] || !mail_real_delivery_allowed_for_environment($config)) {
         throw new RuntimeException('Guarded TEST relay configuration is invalid: ' . implode('; ', $relayErrors));
     }
-    foreach ([$businessRecipient] as $recipient) {
+    foreach ([$businessRecipient, $secondaryTestAccount] as $recipient) {
         if (!mail_recipient_is_allowed($config, $recipient)) {
             throw new RuntimeException('TEST recipient is not protected by the exact allowlist.');
         }

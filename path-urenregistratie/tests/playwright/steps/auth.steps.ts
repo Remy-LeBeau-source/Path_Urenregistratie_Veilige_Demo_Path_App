@@ -43,6 +43,10 @@ Then("toont de UI de resterende blokkeertijd en blijft het formulier bruikbaar v
 Given("het account door vijf mislukte pogingen is geblokkeerd");
 When("de pagina met F5 wordt herladen");
 Then("blijft de aflopende blokkade zichtbaar en blijft de server leidend");
+Given("de administrator is ingelogd");
+When("de pagina met F5 wordt herladen terwijl de sessiecontrole vertraagd is");
+Then("blijft body.auth-booting actief en zijn beide shells onzichtbaar zolang de sessiecontrole loopt");
+And("na afronden van de sessiecontrole verdwijnt auth-booting en toont alleen de juiste shell");
 Then("heet het omgevingsveld Veilige testomgeving");
 And("heet de lokale titel Welkom bij Path Uren & Facturatie");
 When("dezelfde login als productiepresentatie wordt getoond");
