@@ -45,7 +45,13 @@ try {
 
     $normalizedAllowedRecipients = mail_allowed_recipients($config);
     sort($normalizedAllowedRecipients);
-    $expectedSandboxRecipients = ['giovanno.maatsen@pathconsultancy.nl'];
+    // Both guarded TEST inboxes: the primary sink and the CC copy. Keep this in
+    // exact lockstep with configure-test-mail-sandbox.php -- the whole point of
+    // the allowlist is that no third address can ever slip in.
+    $expectedSandboxRecipients = [
+        'giovanno.maatsen@pathconsultancy.nl',
+        'kenrich.lieveld@pathconsultancy.nl',
+    ];
     sort($expectedSandboxRecipients);
     $mailClosed = ($mail['enabled'] ?? null) === false
         && ($mail['test_delivery_enabled'] ?? null) === false
@@ -60,6 +66,7 @@ try {
         && ($acceptance['invitation_recipient'] ?? '') === 'giovanno.maatsen@pathconsultancy.nl'
         && ($mail['test_redirect_all'] ?? false) === true
         && ($mail['test_sink_recipient'] ?? '') === 'giovanno.maatsen@pathconsultancy.nl'
+        && ($mail['test_sink_cc_recipient'] ?? '') === 'kenrich.lieveld@pathconsultancy.nl'
         && mail_real_delivery_allowed_for_environment($config);
 
     $checks = [

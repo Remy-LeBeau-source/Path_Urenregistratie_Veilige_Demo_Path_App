@@ -6044,6 +6044,31 @@ function renderTeamAccountOverview() {
   const totalElement = document.querySelector("#team-active-account-count");
   const groups = document.querySelector("#team-account-groups");
   if (totalElement) totalElement.textContent = String(total);
+
+  // After Herstel the app deliberately shows the local demo baseline and
+  // ignores the server until the next write. Without saying so, the count
+  // silently jumps (e.g. 6 -> 11) the moment anything is saved, which reads
+  // as accounts appearing out of nowhere. Make the state visible instead.
+  const notice = document.querySelector("#team-account-local-notice");
+  if (notice) {
+    const localDemoActive = isLocalResetAuthoritative();
+    notice.hidden = !localDemoActive;
+    if (localDemoActive) {
+      notice.innerHTML = '<strong>Je ziet nu de lokale voorbeeldweergave.</strong>' +
+        '<span>Deze telling komt uit het herstelde voorbeeld, niet van de server. Zodra je iets opslaat, verschijnt de echte serverstand ' +
+        '(en kan dit aantal veranderen). <button class="text-button" type="button" id="team-account-load-server">Nu de serverstand laden</button></span>';
+      const loadButton = document.querySelector("#team-account-load-server");
+      if (loadButton) {
+        loadButton.addEventListener("click", () => {
+          releaseLocalResetAuthorityAfterServerWrite();
+          refreshBootstrapReadApi(true)
+            .then(() => { renderAll(); toast("De echte serverstand is geladen."); })
+            .catch(() => toast("Serverstand laden is niet gelukt."));
+        });
+      }
+    }
+  }
+
   if (!groups) return;
   const groupMarkup = (kind, label, people, totalCount) => {
     const inactiveCount = Math.max(0, totalCount - people.length);
@@ -8355,11 +8380,13 @@ function showInvoiceDocumentPreview(employeeId, periodKey = "") {
   });
 }
 
-function showEmployeeEditor(employeeId) {
+// `prefill` keeps the already-entered values when the form has to be reopened
+// after a rejected save (see showAdminEditor for the same pattern).
+function showEmployeeEditor(employeeId, prefill) {
   const existing = employeeId ? employeeById(employeeId) : null;
   const nextId = state.employees.reduce((max, employee) => Math.max(max, employee.id), 0) + 1;
   const serverAccountMode = API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin";
-  const employee = existing || {
+  const employeeBase = existing || {
     id: nextId,
     name: "",
     email: serverAccountMode ? "" : "nieuwe-medewerker@example.invalid",
@@ -8395,6 +8422,7 @@ function showEmployeeEditor(employeeId) {
     customerTimesheetBrokerEmail: serverAccountMode ? "" : "nieuw-adres@example.invalid",
     invoiceWithoutCustomerTimesheetAllowed: true
   };
+  const employee = Object.assign({}, employeeBase, prefill && typeof prefill === "object" ? prefill : {});
   const invitationDeliveryAvailable = authRuntime.passwordResetDeliveryAvailable === true;
   const invitationControl = !existing || employee.invitationPending === true
     ? (serverAccountMode
@@ -8576,7 +8604,11 @@ function showEmployeeEditor(employeeId) {
             }
             if (addAnother) showEmployeeEditor(null);
           })
-          .catch(error => handleStaffWriteError(error, "Medewerker opslaan op server mislukt."));
+          .catch(error => handleStaffWriteError(
+            error,
+            "Medewerker opslaan op server mislukt.",
+            () => showEmployeeEditor(employeeId, updated)
+          ));
         return;
       }
 
@@ -8642,10 +8674,16 @@ function showEmployeeEditor(employeeId) {
   syncCustomerTimesheetRoute();
 }
 
-function showAdminEditor(adminId) {
+// `prefill` keeps what was already typed when the form has to be reopened
+// after a rejected save, so one wrong character never costs a full re-entry.
+function showAdminEditor(adminId, prefill) {
   const existing = adminId ? adminById(adminId) : null;
   const serverAccountMode = API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin";
-  const admin = existing || { id: "admin-" + (state.admins.length + 1), name: "", email: serverAccountMode ? "" : "nieuwe-beheerder@example.invalid", active: true, emailNotificationsEnabled: true, photo: "" };
+  const admin = Object.assign(
+    {},
+    existing || { id: "admin-" + (state.admins.length + 1), name: "", email: serverAccountMode ? "" : "nieuwe-beheerder@example.invalid", active: true, emailNotificationsEnabled: true, photo: "" },
+    prefill && typeof prefill === "object" ? prefill : {}
+  );
   const invitationDeliveryAvailable = authRuntime.passwordResetDeliveryAvailable === true;
   const summary = '<div class="modal-form"><label>Voor- en achternaam<input id="edit-admin-name" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" value="' + escapeHtml(admin.name) + '"></label><label>Zakelijk accountadres<input id="edit-admin-email" type="email" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" value="' + escapeHtml(admin.email) + '"></label><label class="check-row full"><input id="edit-admin-notifications" type="checkbox" checked><span>Meldingen over ingediende uren en facturen ontvangen</span></label>' +
     (!existing && serverAccountMode ? '<label class="check-row full"><input id="edit-admin-invite" type="checkbox"' + (invitationDeliveryAvailable ? " checked" : " disabled") + '><span>' + (invitationDeliveryAvailable ? "Persoonlijke uitnodiging per e-mail versturen" : "Uitnodiging volgt zodra e-mail is ingeschakeld") + '</span></label>' : "") +
@@ -8675,7 +8713,11 @@ function showAdminEditor(adminId) {
           renderAll();
           toast("Beheerder op de server opgeslagen.");
         })
-        .catch(error => handleStaffWriteError(error, "Beheerder opslaan op server mislukt."));
+        .catch(error => handleStaffWriteError(
+          error,
+          "Beheerder opslaan op server mislukt.",
+          () => showAdminEditor(adminId, { name: updated.name, email: updated.email })
+        ));
       return;
     }
 
@@ -8707,28 +8749,10 @@ function showAdminEditor(adminId) {
       }
       const updated = Object.assign({}, admin, { name: name.value.trim(), email: email.value.trim(), active: admin.active !== false, emailNotificationsEnabled: document.querySelector("#edit-admin-notifications").checked });
 
-      // A different email always creates a genuinely separate account, so a
-      // typo in the address (e.g. browser-autofill inserting stray text)
-      // silently produces a second account with the same name instead of
-      // being caught by the existing exact-email duplicate check. Catch that
-      // case here with a confirmation step instead of a hard block, since two
-      // different real people can legitimately share a display name.
-      const duplicateNameMatch = !existing && state.admins.find(item =>
-        String(item.name || "").trim().toLowerCase() === updated.name.toLowerCase()
-        && String(item.email || "").trim().toLowerCase() !== updated.email.toLowerCase()
-      );
-      if (duplicateNameMatch) {
-        showModal({
-          label: "Naam komt al voor",
-          title: "Bestaat “" + updated.name + "” al niet?",
-          message: "Er bestaat al een beheerder met de naam “" + updated.name + "” (" + duplicateNameMatch.email + "). Controleer of dit een typefout in het adres is voordat je een tweede, apart account aanmaakt.",
-          confirm: "Toch een nieuw, apart account aanmaken",
-          wide: true,
-          action: () => saveAdmin(updated)
-        });
-        return;
-      }
-
+      // Deliberately no warning on a duplicate display name: two different
+      // people may legitimately share one, so flagging it is pure noise. Only
+      // the email has to be unique, and that is enforced server-side with a
+      // hard block (surfaced by handleStaffWriteError).
       saveAdmin(updated);
     }
   });
@@ -8825,7 +8849,7 @@ function finalizeInvoiceAndQueueToApi(invoiceRow) {
     });
 }
 
-function revealExistingStaffAccount(existing, message) {
+function revealExistingStaffAccount(existing, message, reopenForm) {
   const role = String(existing && existing.role || "");
   const userId = Number(existing && existing.user_id || 0);
   const employeeId = Number(existing && existing.employee_id || 0);
@@ -8856,10 +8880,31 @@ function revealExistingStaffAccount(existing, message) {
     window.setTimeout(() => target.classList.remove("account-conflict-focus"), 5000);
   });
 
+  // A duplicate email is a hard block, not a hint: showing it only as a toast
+  // in the corner made it easy to miss and left the impression that saving had
+  // silently done nothing. Use the same modal treatment as the name check.
+  const existingName = String(existing && existing.display_name || "dit account");
+  const roleLabel = role === "employee" ? "medewerker" : "beheerder";
+  // Closing outright would throw away everything the operator just typed and
+  // force a full re-entry over one wrong character, so offer to reopen the
+  // form with the entered values still in place.
+  const canReopen = typeof reopenForm === "function";
+  showModal({
+    label: "E-mailadres al in gebruik",
+    title: "Dit adres hoort al bij " + existingName,
+    message: message + " Eén e-mailadres kan maar bij één account horen — een naam mag wél twee keer voorkomen, een adres niet. "
+      + "Pas het adres aan als dit een andere " + roleLabel + " moet worden, of gebruik het bestaande account dat nu is geopend.",
+    confirm: canReopen ? "Adres aanpassen" : "Begrepen",
+    secondary: canReopen ? "Sluiten" : "",
+    secondaryAction: canReopen ? () => closeModal() : null,
+    wide: true,
+    action: canReopen ? () => reopenForm() : () => closeModal()
+  });
+
   toast(message);
 }
 
-function handleStaffWriteError(error, fallbackMessage) {
+function handleStaffWriteError(error, fallbackMessage, reopenForm) {
   const message = String(error && error.message || fallbackMessage);
   if (error && error.code === "email-already-in-use" && error.details && error.details.existing_account) {
     const existing = error.details.existing_account;
@@ -8869,12 +8914,12 @@ function handleStaffWriteError(error, fallbackMessage) {
       ? state.admins.some(item => Number(item.dbUserId || 0) === userId)
       : state.employees.some(item => Number(item.dbUserId || 0) === userId || Number(item.dbEmployeeId || item.id || 0) === employeeId);
     if (alreadyLoaded) {
-      revealExistingStaffAccount(existing, message);
+      revealExistingStaffAccount(existing, message, reopenForm);
       return null;
     }
     return refreshBootstrapReadApi(true)
       .catch(() => null)
-      .then(() => revealExistingStaffAccount(existing, message));
+      .then(() => revealExistingStaffAccount(existing, message, reopenForm));
   }
   toast(message);
   return null;
