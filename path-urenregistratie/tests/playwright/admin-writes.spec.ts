@@ -243,6 +243,88 @@ test.describe('admin write endpoints', () => {
     await ctx.dispose();
   });
 
+  test('[ADM-WR-N-003] beheerder aanmaken met het e-mailadres van een bestaande medewerker wordt geweigerd', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const suffix = Date.now().toString().slice(-7);
+    const employeeEmail = `bestaande-medewerker-${suffix}@example.invalid`;
+
+    const employeeWrite = await postJson(ctx, '/server/api/staff.php', {
+      action: 'upsert_employee',
+      sendInvitation: false,
+      employee: { name: `Bestaande medewerker ${suffix}`, email: employeeEmail, role: 'Consultant', client: 'Klant', project: `PROJ-${suffix}`, broker: 'Broker', brokerEmail: 'broker@example.invalid' },
+      mailRecipients: [],
+    });
+    expect(employeeWrite.status, JSON.stringify(employeeWrite.body)).toBe(200);
+    expect(employeeWrite.body.ok).toBe(true);
+
+    const adminWrite = await postJson(ctx, '/server/api/staff.php', {
+      action: 'upsert_admin',
+      sendInvitation: false,
+      admin: { name: 'Nieuwe beheerder met bestaand adres', email: employeeEmail.toUpperCase(), active: true },
+    });
+
+    expect(adminWrite.status).toBe(409);
+    expect(adminWrite.body.ok).toBe(false);
+    expect(adminWrite.body.error).toBe('email-already-in-use');
+    expect(adminWrite.body.message).toContain('hoort al bij');
+    expect(adminWrite.body.existing_account).toMatchObject({ role: 'employee', active: true });
+    expect(Number(adminWrite.body.existing_account?.user_id)).toBeGreaterThan(0);
+    expect(JSON.stringify(adminWrite.body)).not.toContain('SQLSTATE');
+
+    const bootstrapAfter = await ctx.get('/server/api/bootstrap.php');
+    const afterBody = await bootstrapAfter.json();
+    const adminRowsWithThisEmail = (afterBody.users as Array<{ email: string; role: string }>)
+      .filter(user => String(user.email).toLowerCase() === employeeEmail.toLowerCase() && user.role === 'administrator');
+    expect(adminRowsWithThisEmail).toHaveLength(0);
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
+
+  test('[ADM-WR-N-004] beheerder aanmaken met het e-mailadres van een bestaande medewerker toont een duidelijke melding (geen silent failure)', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await page.locator('[data-view="employees"]').click();
+
+    const suffix = Date.now().toString().slice(-7);
+    const employeeName = `Botsingsmedewerker ${suffix}`;
+    const employeeEmail = `botsing-${suffix}@example.invalid`;
+
+    await test.step('Given er al een medewerker met een vast e-mailadres bestaat', async () => {
+      await page.locator('#add-employee').click();
+      await page.locator('#edit-name').fill(employeeName);
+      await page.locator('#edit-account-email').fill(employeeEmail);
+      await page.locator('#edit-role').fill('Consultant');
+      await page.locator('#edit-client').fill('Botsingsklant');
+      await page.locator('#edit-project').fill(`BOTS-${suffix}`);
+      await page.locator('#edit-broker').fill('Botsingsbroker');
+      await page.locator('#edit-broker-email').fill('broker@example.invalid');
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#modal')).toBeHidden();
+      await expect(page.locator('#employee-grid')).toContainText(employeeName);
+    });
+
+    await test.step('When een beheerder wordt aangemaakt met exact datzelfde adres', async () => {
+      await page.locator('#add-admin').click();
+      await page.locator('#edit-admin-name').fill(`Botsingsbeheerder ${suffix}`);
+      await page.locator('#edit-admin-email').fill(employeeEmail.toUpperCase());
+      await page.locator('#modal-confirm').click();
+    });
+
+    await test.step('Then verschijnt een duidelijke toast en wordt de bestaande medewerker uitgelicht, i.p.v. stil niets te doen', async () => {
+      await expect(page.locator('#modal')).toBeHidden();
+      await expect(page.locator('#toast')).toContainText('hoort al bij', { timeout: 10_000 });
+      await expect(page.locator(`[data-employee-account-id]:has-text("${employeeName}")`)).toHaveClass(/account-conflict-focus/);
+      await expect(page.locator('#administrator-list')).not.toContainText(`Botsingsbeheerder ${suffix}`);
+    });
+
+    await loginPage.logout();
+  });
+
   test('[ADM-WR-N-002] dubbel accountadres opent het bestaande account zonder duplicaat', async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.open();
@@ -655,5 +737,261 @@ test.describe('admin write endpoints', () => {
         expect(periodKeys[i].localeCompare(periodKeys[i-1])).toBeGreaterThanOrEqual(0);
       }
     });
+  });
+
+  test('[ADM-WR-H-010] server-led aangemaakte beheerder en medewerker overleven een echte paginaherlading', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    const suffix = Date.now().toString().slice(-7);
+    const adminName = `Reload Beheerder ${suffix}`;
+    const adminEmail = `reload-admin-${suffix}@example.invalid`;
+    const employeeName = `Reload Medewerker ${suffix}`;
+    const employeeEmail = `reload-employee-${suffix}@example.invalid`;
+
+    await test.step('Given de administrator een nieuwe beheerder en medewerker server-led opslaat (geen gemockte API)', async () => {
+      await loginPage.open();
+      await loginPage.loginAsAdmin();
+      await page.locator('[data-view="employees"]').click();
+
+      await page.locator('#add-admin').click();
+      await page.locator('#edit-admin-name').fill(adminName);
+      await page.locator('#edit-admin-email').fill(adminEmail);
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#modal')).toBeHidden();
+      await expect(page.locator('#administrator-list')).toContainText(adminName);
+
+      await page.locator('#add-employee').click();
+      await page.locator('#edit-name').fill(employeeName);
+      await page.locator('#edit-account-email').fill(employeeEmail);
+      await page.locator('#edit-role').fill('Consultant');
+      await page.locator('#edit-client').fill('Reloadklant');
+      await page.locator('#edit-project').fill(`RELOAD-${suffix}`);
+      await page.locator('#edit-broker').fill('Reloadbroker');
+      await page.locator('#edit-broker-email').fill('broker@example.invalid');
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#modal')).toBeHidden();
+      await expect(page.locator('#employee-grid')).toContainText(employeeName);
+    });
+
+    await test.step('When de pagina echt opnieuw wordt geladen (F5), niet alleen opnieuw gerenderd', async () => {
+      await page.reload();
+      await expect(page.locator('#login-screen')).toBeHidden({ timeout: 15_000 });
+      await page.locator('[data-view="employees"]').click();
+    });
+
+    await test.step('Then blijven de nieuwe beheerder en medewerker zichtbaar in Teambeheer', async () => {
+      await expect(page.locator('#administrator-list')).toContainText(adminName, { timeout: 10_000 });
+      await expect(page.locator('#employee-grid')).toContainText(employeeName, { timeout: 10_000 });
+    });
+
+    await loginPage.logout();
+  });
+
+  test('[ADM-WR-H-011] een echte paginaherlading blijft op het geopende scherm i.p.v. terug te springen naar Dashboard', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+
+    await test.step('Given de administrator Instellingen heeft geopend', async () => {
+      await loginPage.open();
+      await loginPage.loginAsAdmin();
+      await page.locator('[data-view="settings"]').click();
+      await expect(page.locator('#view-settings')).toHaveClass(/is-active/);
+      await expect(page).toHaveURL(/#settings$/);
+    });
+
+    await test.step('When de pagina echt opnieuw wordt geladen (F5)', async () => {
+      await page.reload();
+      await expect(page.locator('#login-screen')).toBeHidden({ timeout: 15_000 });
+    });
+
+    await test.step('Then blijft Instellingen actief in plaats van terug te vallen op Dashboard', async () => {
+      await expect(page.locator('#view-settings')).toHaveClass(/is-active/, { timeout: 10_000 });
+      await expect(page.locator('#view-dashboard')).not.toHaveClass(/is-active/);
+    });
+
+    await loginPage.logout();
+  });
+
+  test('[ADM-WR-N-005] beheerder aanmaken met een al bestaande naam vraagt eerst bevestiging i.p.v. stil een tweede account te maken', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    const duplicateName = 'Joyce van der Steenhoven';
+    const suffix = Date.now().toString().slice(-7);
+    const newEmail = `joyce-duplicate-${suffix}@example.invalid`;
+
+    await test.step('Given de administrator is ingelogd en Teambeheer heeft geopend', async () => {
+      await loginPage.open();
+      await loginPage.loginAsAdmin();
+      await page.locator('[data-view="employees"]').click();
+      await expect(page.locator('#administrator-list')).toContainText(duplicateName);
+    });
+
+    await test.step('When een nieuwe beheerder met dezelfde naam maar een ander adres wordt opgeslagen', async () => {
+      await page.locator('#add-admin').click();
+      await page.locator('#edit-admin-name').fill(duplicateName);
+      await page.locator('#edit-admin-email').fill(newEmail);
+      await page.locator('#modal-confirm').click();
+    });
+
+    await test.step('Then verschijnt eerst een bevestigingsvraag en is er nog niets opgeslagen', async () => {
+      await expect(page.locator('#modal-title')).toContainText(duplicateName);
+      await expect(page.locator('#modal-message')).toContainText(duplicateName);
+      await expect(page.locator('#modal-confirm')).toHaveText('Toch een nieuw, apart account aanmaken');
+      await expect(page.locator('#administrator-list .administrator-row', { hasText: newEmail })).toHaveCount(0);
+    });
+
+    await test.step('And Annuleren maakt geen account aan', async () => {
+      await page.locator('#modal-cancel').click();
+      await expect(page.locator('#modal')).toBeHidden();
+      await expect(page.locator('#administrator-list')).not.toContainText(newEmail);
+    });
+
+    await test.step('And bij expliciete bevestiging wordt het aparte account alsnog aangemaakt', async () => {
+      await page.locator('#add-admin').click();
+      await page.locator('#edit-admin-name').fill(duplicateName);
+      await page.locator('#edit-admin-email').fill(newEmail);
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#modal-confirm')).toHaveText('Toch een nieuw, apart account aanmaken');
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#modal')).toBeHidden();
+      await expect(page.locator('#administrator-list')).toContainText(newEmail);
+      await expect(page.locator('#administrator-list .administrator-row', { hasText: duplicateName })).toHaveCount(2);
+    });
+
+    await loginPage.logout();
+  });
+
+  test('[ADM-WR-N-006] dubbele naam ÉN al bestaand e-mailadres: eerst de naamwaarschuwing, daarna alsnog de harde e-mailblokkade', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    const suffix = Date.now().toString().slice(-7);
+    const sharedName = `Botsnaam ${suffix}`;
+    const employeeEmail = `botsadres-${suffix}@example.invalid`;
+
+    await test.step('Given er al een beheerder én een medewerker bestaan met verschillende namen', async () => {
+      await loginPage.open();
+      await loginPage.loginAsAdmin();
+      await page.locator('[data-view="employees"]').click();
+
+      await page.locator('#add-admin').click();
+      await page.locator('#edit-admin-name').fill(sharedName);
+      await page.locator('#edit-admin-email').fill(`admin-${suffix}@example.invalid`);
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#modal')).toBeHidden();
+      await expect(page.locator('#administrator-list')).toContainText(sharedName);
+
+      await page.locator('#add-employee').click();
+      await page.locator('#edit-name').fill(`Andere naam ${suffix}`);
+      await page.locator('#edit-account-email').fill(employeeEmail);
+      await page.locator('#edit-role').fill('Consultant');
+      await page.locator('#edit-client').fill('Botsklant');
+      await page.locator('#edit-project').fill(`BOTS-${suffix}`);
+      await page.locator('#edit-broker').fill('Botsbroker');
+      await page.locator('#edit-broker-email').fill('broker@example.invalid');
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#modal')).toBeHidden();
+    });
+
+    await test.step('When een nieuwe beheerder met dezelfde naam én het e-mailadres van de medewerker wordt opgeslagen', async () => {
+      await page.locator('#add-admin').click();
+      await page.locator('#edit-admin-name').fill(sharedName);
+      await page.locator('#edit-admin-email').fill(employeeEmail);
+      await page.locator('#modal-confirm').click();
+    });
+
+    await test.step('Then verschijnt éérst de naamwaarschuwing, vóór er ooit naar de server wordt geschreven', async () => {
+      await expect(page.locator('#modal-title')).toContainText(sharedName);
+      await expect(page.locator('#modal-confirm')).toHaveText('Toch een nieuw, apart account aanmaken');
+    });
+
+    await test.step('And na expliciete bevestiging blokkeert de server alsnog hard op het al bestaande e-mailadres', async () => {
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#toast')).toContainText('hoort al bij', { timeout: 10_000 });
+      await expect(page.locator('#administrator-list .administrator-row', { hasText: sharedName })).toHaveCount(1);
+      await expect(page.locator('#employee-grid .employee-card', { hasText: employeeEmail })).toHaveClass(/account-conflict-focus/);
+    });
+
+    await loginPage.logout();
+  });
+
+  test('[ADM-WR-N-007] actief-accounttotaal klopt op elke stap: exact duplicaat verandert niets, uniek account telt precies 1 op', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    const suffix = Date.now().toString().slice(-7);
+    const clonedEmployeeName = `KlantAccount ${suffix}`;
+    const clonedEmployeeEmail = `gedeeld-${suffix}@example.invalid`;
+    const clonedAdminName = `TwaalfKloon ${suffix}`;
+    const clonedAdminEmail = `admin-twaalf-${suffix}@example.invalid`;
+    const uniqueAdminName = `Volledig Uniek ${suffix}`;
+    const uniqueAdminEmail = `totaal-uniek-${suffix}@example.invalid`;
+
+    const activeCount = () => page.locator('#team-active-account-count').innerText().then(Number);
+    const adminRowCount = (name: string) => page.locator('#administrator-list .administrator-row', { hasText: name }).count();
+
+    // A fresh Herstel only resets the *local* demo baseline shown before any
+    // server write happens; the shared TEST database itself accumulates real
+    // rows from every earlier test in this same run (they don't reset each
+    // other's server state). So the very first real write in this test can
+    // jump the total by more than 1 -- that's expected, not a bug -- because
+    // it's the moment the client syncs onto the database's true state. Every
+    // step after that first sync is measured relative to what THIS test
+    // itself just saw, not to a hardcoded absolute baseline.
+    let baseline = 0;
+
+    await test.step('Given de administrator is ingelogd en Teambeheer heeft geopend', async () => {
+      await loginPage.open();
+      await loginPage.loginAsAdmin();
+      await page.locator('#quick-reset-demo').click();
+      await page.locator('#modal-confirm').click();
+      await page.locator('[data-view="employees"]').click();
+      await expect(page.locator('#team-active-account-count')).toBeVisible({ timeout: 10_000 });
+    });
+
+    await test.step('When een medewerker en een beheerder worden toegevoegd, telt het totaal telkens precies 1 op t.o.v. daarvóór', async () => {
+      await page.locator('#add-employee').click();
+      await page.locator('#edit-name').fill(clonedEmployeeName);
+      await page.locator('#edit-account-email').fill(clonedEmployeeEmail);
+      await page.locator('#edit-role').fill('Consultant');
+      await page.locator('#edit-client').fill('Klant');
+      await page.locator('#edit-project').fill(`PROJ-${suffix}`);
+      await page.locator('#edit-broker').fill('Broker');
+      await page.locator('#edit-broker-email').fill('broker@example.invalid');
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#modal')).toBeHidden();
+      // First real write of this test: this is where the client syncs onto
+      // the database's true, possibly-accumulated state. Capture it as our
+      // own baseline rather than asserting an absolute number.
+      baseline = await activeCount();
+      expect(await adminRowCount(clonedAdminName)).toBe(0);
+
+      await page.locator('#add-admin').click();
+      await page.locator('#edit-admin-name').fill(clonedAdminName);
+      await page.locator('#edit-admin-email').fill(clonedAdminEmail);
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#modal')).toBeHidden();
+      expect(await activeCount()).toBe(baseline + 1);
+    });
+
+    await test.step('Then verandert een poging met exact hetzelfde e-mailadres het totaal niet', async () => {
+      await page.locator('#add-admin').click();
+      await page.locator('#edit-admin-name').fill(clonedAdminName);
+      await page.locator('#edit-admin-email').fill(clonedEmployeeEmail);
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#modal-confirm')).toHaveText('Toch een nieuw, apart account aanmaken');
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#toast')).toContainText('hoort al bij', { timeout: 10_000 });
+      expect(await activeCount()).toBe(baseline + 1);
+      expect(await adminRowCount(clonedAdminName)).toBe(1);
+    });
+
+    await test.step('And een volledig uniek account telt precies 1 op, zonder dat er verder iets bijkomt', async () => {
+      await page.locator('#add-admin').click();
+      await page.locator('#edit-admin-name').fill(uniqueAdminName);
+      await page.locator('#edit-admin-email').fill(uniqueAdminEmail);
+      await page.locator('#modal-confirm').click();
+      // No name collision, so no confirmation step -- the modal must close straight away.
+      await expect(page.locator('#modal')).toBeHidden({ timeout: 10_000 });
+      await expect(page.locator('#toast')).toContainText('Beheerder op de server opgeslagen');
+      expect(await activeCount()).toBe(baseline + 2);
+      expect(await adminRowCount(uniqueAdminName)).toBe(1);
+      expect(await adminRowCount(clonedAdminName)).toBe(1);
+    });
+
+    await loginPage.logout();
   });
 });

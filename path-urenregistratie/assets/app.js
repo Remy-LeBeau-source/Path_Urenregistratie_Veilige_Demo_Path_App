@@ -2135,7 +2135,6 @@ function initializeAuthSession() {
       authRuntime.checked = true;
       authRuntime.available = true;
       applyAuthUiMode("auth");
-      triggerReadApiWarmup();
       prefillAuthCredentialsFromSelection("admin", false);
       if (data && data.ok === true && data.authenticated === true && data.user) {
         setAuthDebug({
@@ -2160,7 +2159,18 @@ function initializeAuthSession() {
         }
 
         setAuthLoginFeedback("", false);
+        const hashViewOnLoad = String(window.location.hash || "").replace(/^#/, "");
         applyAuthUserToState(data.user, { loginUser: true });
+        // Must run after setAuthDebug() above so authRuntime.authenticated is
+        // already true; triggerReadApiWarmup() no-ops otherwise (this was a
+        // real bug: a freshly created admin/employee vanished after a real
+        // page reload because the warmup silently skipped itself every time).
+        triggerReadApiWarmup();
+        // applyAuthUserToState() -> login() always lands on the role's home
+        // view. A real page reload should stay where the operator was
+        // instead of bouncing back to the dashboard every time; showView()
+        // itself safely no-ops on an unknown/empty hash.
+        if (hashViewOnLoad) showView(hashViewOnLoad);
       } else {
         setAuthDebug({ authenticated: false, role: "", user_id: null, mode: "auth", available: true, error: "not-authenticated" });
         logoutLocal();
@@ -7530,6 +7540,30 @@ function closeModal() {
   adminTaskWorkflow = null;
 }
 
+/**
+ * Read-only dag/week-uitsplitsing van de ingevulde uren, zoals de medewerker
+ * die zelf invult, voor gebruik in de goedkeuringscontrole. Toont nooit
+ * invoervelden en verandert nooit data.
+ */
+function hoursReviewGridHtml(record, period) {
+  const rows = period.weekRows.map((week, weekIndex) => {
+    const weekEntries = record.entries[weekIndex] || [];
+    const cells = week.days.map((day, dayIndex) => {
+      if (!day) return '<td class="outside-month"><span class="outside-month-mark" aria-hidden="true">—</span></td>';
+      const value = Number(weekEntries[dayIndex] || 0);
+      return '<td class="workday-cell"><span class="date-number">' + day.day + '</span><strong>' + (value > 0 ? hoursFormat.format(value) : "0") + '</strong></td>';
+    }).join("");
+    const weekTotal = weekEntries.reduce((sum, value) => sum + (Number(value) || 0), 0);
+    const yearNote = week.year === period.year ? "" : " · " + week.year;
+    return '<tr><td>Week ' + week.number + yearNote + "</td>" + cells + '<td class="week-total">' + hoursFormat.format(weekTotal) + "</td></tr>";
+  }).join("");
+  return '<div class="table-wrap"><table class="hours-table hours-review-grid">' +
+    '<thead><tr><th>Week</th><th>Ma</th><th>Di</th><th>Wo</th><th>Do</th><th>Vr</th><th>Totaal</th></tr></thead>' +
+    '<tbody>' + rows + '</tbody>' +
+    '<tfoot><tr><th colspan="6">Maandtotaal declarabel</th><th>' + hoursFormat.format(totalEntries(record.entries)) + '</th></tr></tfoot>' +
+    '</table></div>';
+}
+
 function showHoursReview(employeeId, periodKey, adminTaskId = "") {
   const employee = employeeById(employeeId);
   const key = periodKey || currentPeriod().key;
@@ -7545,10 +7579,11 @@ function showHoursReview(employeeId, periodKey, adminTaskId = "") {
     label: "Urencontrole",
     title: "Controleer " + employee.name,
     message: "Controleer de uren en het tarief voor " + period.label + ". De geselecteerde maand bovenaan hoeft hiervoor niet te worden gewijzigd.",
-    summary: "<div><span>Maand</span><strong>" + escapeHtml(period.label) + "</strong></div><div><span>Declarabel</span><strong>" + hoursFormat.format(total) + " uur</strong></div><div><span>Tarief</span><strong>" + currency.format(employee.rate) + " per uur</strong></div><div><span>Verwacht factuurbedrag</span><strong>" + currency.format(total * employee.rate) + "</strong></div>",
+    summary: "<div><span>Maand</span><strong>" + escapeHtml(period.label) + "</strong></div><div><span>Declarabel</span><strong>" + hoursFormat.format(total) + " uur</strong></div><div><span>Tarief</span><strong>" + currency.format(employee.rate) + " per uur</strong></div><div><span>Verwacht factuurbedrag</span><strong>" + currency.format(total * employee.rate) + "</strong></div>" + hoursReviewGridHtml(record, period),
     secondary: "Terugsturen voor correctie",
     secondaryAction: () => showCorrectionEditor(employee.id, key, adminTaskId),
     confirm: "Goedkeuren",
+    wide: true,
     adminTaskId,
     action: () => {
       if (adminTaskId) {
@@ -8377,8 +8412,8 @@ function showEmployeeEditor(employeeId) {
   }).join("");
   const summary = '<div class="modal-form">' +
     '<p class="full form-help">Account en contract</p>' +
-    '<label>Voor- en achternaam<input id="edit-name" value="' + escapeHtml(employee.name) + '"></label>' +
-    '<label>Zakelijk accountadres<input id="edit-account-email" type="email" value="' + escapeHtml(employee.email || (serverAccountMode ? "" : "nieuwe-medewerker@example.invalid")) + '"></label>' +
+    '<label>Voor- en achternaam<input id="edit-name" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" value="' + escapeHtml(employee.name) + '"></label>' +
+    '<label>Zakelijk accountadres<input id="edit-account-email" type="email" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" value="' + escapeHtml(employee.email || (serverAccountMode ? "" : "nieuwe-medewerker@example.invalid")) + '"></label>' +
     '<label>Functie<input id="edit-role" value="' + escapeHtml(employee.role) + '"></label>' +
     '<label>Startdatum<input id="edit-start-date" type="date" value="' + escapeHtml(employee.startDate || "2026-08-01") + '"></label>' +
     '<label>Contract<input id="edit-contract" value="' + escapeHtml(employee.contract) + '"></label>' +
@@ -8612,9 +8647,46 @@ function showAdminEditor(adminId) {
   const serverAccountMode = API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin";
   const admin = existing || { id: "admin-" + (state.admins.length + 1), name: "", email: serverAccountMode ? "" : "nieuwe-beheerder@example.invalid", active: true, emailNotificationsEnabled: true, photo: "" };
   const invitationDeliveryAvailable = authRuntime.passwordResetDeliveryAvailable === true;
-  const summary = '<div class="modal-form"><label>Voor- en achternaam<input id="edit-admin-name" value="' + escapeHtml(admin.name) + '"></label><label>Zakelijk accountadres<input id="edit-admin-email" type="email" value="' + escapeHtml(admin.email) + '"></label><label class="check-row full"><input id="edit-admin-notifications" type="checkbox" checked><span>Meldingen over ingediende uren en facturen ontvangen</span></label>' +
+  const summary = '<div class="modal-form"><label>Voor- en achternaam<input id="edit-admin-name" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" value="' + escapeHtml(admin.name) + '"></label><label>Zakelijk accountadres<input id="edit-admin-email" type="email" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" value="' + escapeHtml(admin.email) + '"></label><label class="check-row full"><input id="edit-admin-notifications" type="checkbox" checked><span>Meldingen over ingediende uren en facturen ontvangen</span></label>' +
     (!existing && serverAccountMode ? '<label class="check-row full"><input id="edit-admin-invite" type="checkbox"' + (invitationDeliveryAvailable ? " checked" : " disabled") + '><span>' + (invitationDeliveryAvailable ? "Persoonlijke uitnodiging per e-mail versturen" : "Uitnodiging volgt zodra e-mail is ingeschakeld") + '</span></label>' : "") +
     '<p class="full form-help">' + (serverAccountMode ? "Het beheeraccount wordt veilig op de server opgeslagen. Zonder uitnodiging blijft de toegang in afwachting." : "Het account wordt lokaal bewaard en er wordt nog geen uitnodiging verstuurd. Productieaccounts worden veilig door een beheerder ingericht.") + '</p></div>';
+  const sendInvitationChecked = () => Boolean(document.querySelector("#edit-admin-invite") && document.querySelector("#edit-admin-invite").checked);
+
+  const saveAdmin = updated => {
+    if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
+      writeStaffToApi("upsert_admin", {
+        sendInvitation: sendInvitationChecked(),
+        admin: {
+          dbUserId: Number(admin.dbUserId || 0),
+          name: updated.name,
+          email: updated.email,
+          active: updated.active,
+          emailNotificationsEnabled: updated.emailNotificationsEnabled
+        }
+      })
+        .then(result => {
+          updated.invitationPending = Boolean(result && result.invitation_pending);
+          releaseLocalResetAuthorityAfterServerWrite();
+          return result;
+        })
+        .then(() => refreshBootstrapReadApi(true))
+        .then(() => {
+          closeModal();
+          renderAll();
+          toast("Beheerder op de server opgeslagen.");
+        })
+        .catch(error => handleStaffWriteError(error, "Beheerder opslaan op server mislukt."));
+      return;
+    }
+
+    if (existing) state.admins[state.admins.findIndex(item => item.id === existing.id)] = updated;
+    else state.admins.push(updated);
+    persistState();
+    closeModal();
+    renderAll();
+    toast("Beheerder lokaal opgeslagen. Er is geen uitnodiging verstuurd.");
+  };
+
   showModal({
     label: existing ? "Beheerder aanpassen" : "Beheerder toevoegen",
     title: admin.name || "Nieuwe beheerder",
@@ -8635,38 +8707,29 @@ function showAdminEditor(adminId) {
       }
       const updated = Object.assign({}, admin, { name: name.value.trim(), email: email.value.trim(), active: admin.active !== false, emailNotificationsEnabled: document.querySelector("#edit-admin-notifications").checked });
 
-      if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
-        writeStaffToApi("upsert_admin", {
-          sendInvitation: Boolean(document.querySelector("#edit-admin-invite") && document.querySelector("#edit-admin-invite").checked),
-          admin: {
-            dbUserId: Number(admin.dbUserId || 0),
-            name: updated.name,
-            email: updated.email,
-            active: updated.active,
-            emailNotificationsEnabled: updated.emailNotificationsEnabled
-          }
-        })
-          .then(result => {
-            updated.invitationPending = Boolean(result && result.invitation_pending);
-            releaseLocalResetAuthorityAfterServerWrite();
-            return result;
-          })
-          .then(() => refreshBootstrapReadApi(true))
-          .then(() => {
-            closeModal();
-            renderAll();
-            toast("Beheerder op de server opgeslagen.");
-          })
-          .catch(error => handleStaffWriteError(error, "Beheerder opslaan op server mislukt."));
+      // A different email always creates a genuinely separate account, so a
+      // typo in the address (e.g. browser-autofill inserting stray text)
+      // silently produces a second account with the same name instead of
+      // being caught by the existing exact-email duplicate check. Catch that
+      // case here with a confirmation step instead of a hard block, since two
+      // different real people can legitimately share a display name.
+      const duplicateNameMatch = !existing && state.admins.find(item =>
+        String(item.name || "").trim().toLowerCase() === updated.name.toLowerCase()
+        && String(item.email || "").trim().toLowerCase() !== updated.email.toLowerCase()
+      );
+      if (duplicateNameMatch) {
+        showModal({
+          label: "Naam komt al voor",
+          title: "Bestaat “" + updated.name + "” al niet?",
+          message: "Er bestaat al een beheerder met de naam “" + updated.name + "” (" + duplicateNameMatch.email + "). Controleer of dit een typefout in het adres is voordat je een tweede, apart account aanmaakt.",
+          confirm: "Toch een nieuw, apart account aanmaken",
+          wide: true,
+          action: () => saveAdmin(updated)
+        });
         return;
       }
 
-      if (existing) state.admins[state.admins.findIndex(item => item.id === existing.id)] = updated;
-      else state.admins.push(updated);
-      persistState();
-      closeModal();
-      renderAll();
-      toast("Beheerder lokaal opgeslagen. Er is geen uitnodiging verstuurd.");
+      saveAdmin(updated);
     }
   });
 }

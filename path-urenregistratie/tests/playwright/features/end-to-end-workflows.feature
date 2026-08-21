@@ -69,8 +69,8 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
 
   @happy
   Scenario: [E2E-H-008] urencontrole vraagt na oude versie opnieuw op en maakt daarna toch goedkeuren af
-    # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 5
-    Given een urencontrole met verouderde versie in de Backoffice-werkvoorraad staat
-    When Backoffice de goedkeuringsactie start en de server een verse versie teruggeeft
-    Then wordt opnieuw opgehaald en wordt de goedkeuring toch afgerond
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given een urencontrole eerst met een oude lokale versie opent
+    When Backoffice de confirm drukt na het vrijgeven van de versieverversing
+    Then wordt de urencontrole goedgekeurd en verdwijnt de taak

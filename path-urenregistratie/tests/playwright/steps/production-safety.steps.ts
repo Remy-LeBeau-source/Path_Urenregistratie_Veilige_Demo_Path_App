@@ -69,7 +69,7 @@ Then("zijn TLS, dry-run, private storage, HSTS en niet-mutatieve checks afgedwon
 Given("het uitvoerbare TEST-mailbeleid wordt gecontroleerd");
 When("de productie-, test- en developmentconfiguraties worden doorgerekend");
 Then("blijft TEST gesloten zonder whitelist en kan alleen de toegestane ontvanger door");
-Given("één vaste TEST-mailsink en twee bijbehorende accounts zijn gedefinieerd");
+Given("twee toegestane TEST-ontvangers (primaire sink + CC) en twee bijbehorende accounts zijn gedefinieerd");
 When("de TEST-mailsandboxconfigurator zonder uitvoerbevestiging wordt gestart");
 Then("blijft de check niet-mutatief en scheidt hij de mailsink van de TEST-accounts");
 And("zijn bevestiging, accounttransactie, backup, atomische write en deployguard aantoonbaar afgedwongen");

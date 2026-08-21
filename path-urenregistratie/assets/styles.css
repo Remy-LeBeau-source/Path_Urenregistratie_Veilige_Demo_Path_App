@@ -470,6 +470,9 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .hours-table .outside-month { background: #fafcfc; color: #c6ced1; }
 .outside-month-mark { display: grid; width: 64px; height: 42px; place-items: center; margin: 26px auto 0; border-radius: 11px; background: #f4f7f7; color: #bdc7cb; }
 .hours-table .week-total { color: var(--navy); font-size: 12px; font-weight: 800; }
+.hours-review-grid .workday-cell { display: table-cell; }
+.hours-review-grid .workday-cell .date-number { display: block; margin: 0 auto 7px; width: fit-content; }
+.hours-review-grid .workday-cell strong { display: block; color: var(--navy); font-size: 14px; }
 .hours-table tfoot th { border: 0; background: var(--green-light); color: var(--teal); text-align: right; }
 .hours-table tfoot th:last-child { text-align: center; }
 .timesheet-actions { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 22px 24px; }

@@ -39,6 +39,22 @@ Feature: Organisatie-instellingen beheren
     Then wordt met Playwright-assertions bevestigd dat dubbel accountadres geeft veilige metadata van het bestaande bedrijfsaccount
 
   @negative
+  Scenario: [ADM-WR-N-003] beheerder aanmaken met het e-mailadres van een bestaande medewerker wordt geweigerd
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 10
+    Given organisatie-instellingen beheren is voorbereid
+    When de flow voor ADM-WR-N-003 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat beheerder aanmaken met het e-mailadres van een bestaande medewerker wordt geweigerd
+
+  @negative
+  Scenario: [ADM-WR-N-004] beheerder aanmaken met het e-mailadres van een bestaande medewerker toont een duidelijke melding (geen silent failure)
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given er al een medewerker met een vast e-mailadres bestaat
+    When een beheerder wordt aangemaakt met exact datzelfde adres
+    Then verschijnt een duidelijke toast en wordt de bestaande medewerker uitgelicht, i.p.v. stil niets te doen
+
+  @negative
   Scenario: [ADM-WR-N-002] dubbel accountadres opent het bestaande account zonder duplicaat
     # Testtechniek: Negatieve equivalentieklasse + error guessing
     # Aantoonbare Playwright-assertions in deze case: 12
@@ -86,3 +102,55 @@ Feature: Organisatie-instellingen beheren
     Given organisatie-instellingen beheren is voorbereid
     When de flow voor ADM-WR-H-008 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat bestaande beheerder en medewerker worden na Herstel direct terug in Teambeheer getoond
+
+  @happy
+  Scenario: [ADM-WR-H-009] goedkeuringsloop volgt logische maand/medewerker-volgorde
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given de administrator is ingelogd en reset naar vaste baseline
+    When actionable admin tasks bestaan in de workflow
+    Then zijn taken chronologisch gesorteerd (validatie van fix)
+
+  @happy
+  Scenario: [ADM-WR-H-010] server-led aangemaakte beheerder en medewerker overleven een echte paginaherlading
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given de administrator een nieuwe beheerder en medewerker server-led opslaat (geen gemockte API)
+    When de pagina echt opnieuw wordt geladen (F5), niet alleen opnieuw gerenderd
+    Then blijven de nieuwe beheerder en medewerker zichtbaar in Teambeheer
+
+  @happy
+  Scenario: [ADM-WR-H-011] een echte paginaherlading blijft op het geopende scherm i.p.v. terug te springen naar Dashboard
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given de administrator Instellingen heeft geopend
+    When de pagina echt opnieuw wordt geladen (F5)
+    Then blijft Instellingen actief in plaats van terug te vallen op Dashboard
+
+  @negative
+  Scenario: [ADM-WR-N-005] beheerder aanmaken met een al bestaande naam vraagt eerst bevestiging i.p.v. stil een tweede account te maken
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 11
+    Given de administrator is ingelogd en Teambeheer heeft geopend
+    When een nieuwe beheerder met dezelfde naam maar een ander adres wordt opgeslagen
+    Then verschijnt eerst een bevestigingsvraag en is er nog niets opgeslagen
+    And Annuleren maakt geen account aan
+    And bij expliciete bevestiging wordt het aparte account alsnog aangemaakt
+
+  @negative
+  Scenario: [ADM-WR-N-006] dubbele naam ÉN al bestaand e-mailadres: eerst de naamwaarschuwing, daarna alsnog de harde e-mailblokkade
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given er al een beheerder én een medewerker bestaan met verschillende namen
+    When een nieuwe beheerder met dezelfde naam én het e-mailadres van de medewerker wordt opgeslagen
+    Then verschijnt éérst de naamwaarschuwing, vóór er ooit naar de server wordt geschreven
+    And na expliciete bevestiging blokkeert de server alsnog hard op het al bestaande e-mailadres
+
+  @negative
+  Scenario: [ADM-WR-N-007] actief-accounttotaal klopt op elke stap: exact duplicaat verandert niets, uniek account telt precies 1 op
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 14
+    Given de administrator is ingelogd en Teambeheer heeft geopend
+    When een medewerker en een beheerder worden toegevoegd, telt het totaal telkens precies 1 op t.o.v. daarvóór
+    Then verandert een poging met exact hetzelfde e-mailadres het totaal niet
+    And een volledig uniek account telt precies 1 op, zonder dat er verder iets bijkomt

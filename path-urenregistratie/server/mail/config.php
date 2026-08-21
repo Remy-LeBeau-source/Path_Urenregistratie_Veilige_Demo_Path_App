@@ -147,6 +147,26 @@ function mail_test_sink_recipient(array $config): ?string
 }
 
 /**
+ * Optional second guarded TEST inbox that receives a copy (via CC) of every
+ * redirected TEST mail alongside the primary sink. Never used in production.
+ */
+function mail_test_sink_cc_recipient(array $config): ?string
+{
+    if (mail_environment($config) !== 'test') {
+        return null;
+    }
+    $mail = isset($config['mail']) && is_array($config['mail']) ? $config['mail'] : [];
+    $recipient = strtolower(trim((string)($mail['test_sink_cc_recipient'] ?? '')));
+    if ($recipient === '' || !filter_var($recipient, FILTER_VALIDATE_EMAIL)) {
+        return null;
+    }
+    if ($recipient === mail_test_sink_recipient($config)) {
+        return null;
+    }
+    return mail_recipient_is_allowed($config, $recipient) ? $recipient : null;
+}
+
+/**
  * Security invitations use the fixed TEST mailbox while the account itself
  * retains the address entered by the administrator. Production is unaffected.
  */
@@ -186,7 +206,7 @@ function mail_effective_delivery(array $config, array $delivery): array
 
     return [
         'recipient' => $sink,
-        'cc' => null,
+        'cc' => mail_test_sink_cc_recipient($config),
         'subject' => '[TEST voor ' . $recipient . '] ' . $subject,
         'body' => "TESTOMLEIDING — niet doorsturen of boeken.\nOorspronkelijke ontvanger: " . $recipient
             . ($cc ? "\nOorspronkelijke CC: " . $cc : '') . "\n\n" . $body,

@@ -557,16 +557,19 @@ test('[SAFE-H-010] echte TEST-mail vereist opt-in en een ontvangers-whitelist', 
   });
 });
 
-test('[SAFE-H-013] TEST-mailsandbox opent atomisch voor één vaste mailsink en twee TEST-accounts', async () => {
+test('[SAFE-H-013] TEST-mailsandbox opent atomisch voor twee toegestane TEST-ontvangers (sink + CC)', async () => {
   let result: { ok?: boolean; mode?: string; writes_performed?: boolean; allowed_recipients?: string[]; test_accounts?: string[] } = {};
-  const expectedRecipients = ['giovanno.maatsen@pathconsultancy.nl'];
+  const expectedRecipients = [
+    'giovanno.maatsen@pathconsultancy.nl',
+    'kenrich.lieveld@pathconsultancy.nl',
+  ];
   const expectedAccounts = [
     'giovanno.maatsen@pathconsultancy.nl',
     'kenrich.lieveld@pathconsultancy.nl',
   ];
 
-  await test.step('Given één vaste TEST-mailsink en twee bijbehorende accounts zijn gedefinieerd', async () => {
-    expect(expectedRecipients).toHaveLength(1);
+  await test.step('Given twee toegestane TEST-ontvangers (primaire sink + CC) en twee bijbehorende accounts zijn gedefinieerd', async () => {
+    expect(expectedRecipients).toHaveLength(2);
     expect(expectedAccounts).toHaveLength(2);
   });
 
@@ -597,6 +600,7 @@ test('[SAFE-H-013] TEST-mailsandbox opent atomisch voor één vaste mailsink en 
     expect(configurator).toContain("$config['mail']['test_delivery_enabled'] = true");
     expect(configurator).toContain("$config['mail']['test_redirect_all'] = true");
     expect(configurator).toContain("$config['mail']['test_sink_recipient'] = $businessRecipient");
+    expect(configurator).toContain("$config['mail']['test_sink_cc_recipient'] = $secondaryTestAccount");
     expect(configurator).toContain('$pdo->beginTransaction()');
     expect(configurator).toContain('password_hash(bin2hex(random_bytes(32)), PASSWORD_DEFAULT)');
     expect(configurator).toContain('$pdo->rollBack()');

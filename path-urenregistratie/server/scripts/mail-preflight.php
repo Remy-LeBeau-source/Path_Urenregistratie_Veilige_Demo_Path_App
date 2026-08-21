@@ -63,7 +63,7 @@ try {
         ],
         [
             'channel' => 'payroll',
-            'to' => 'gambitizanagi@gmail.com',
+            'to' => 'giovanno.maatsen@pathconsultancy.nl',
             'policy' => 'none',
             'attachments' => [],
         ],
@@ -103,7 +103,7 @@ try {
         'from_address_exact' => ($relay['from_email'] ?? '') === 'backoffice@pathconsultancy.nl',
         'broker_recipient_exact' => $results[0]['to'] === 'rana.ramjanam@pathconsultancy.nl',
         'accountant_recipient_exact' => $results[1]['to'] === 'giovanno.maatsen@pathconsultancy.nl',
-        'payroll_recipient_exact' => $results[2]['to'] === 'gambitizanagi@gmail.com',
+        'payroll_recipient_exact' => $results[2]['to'] === 'giovanno.maatsen@pathconsultancy.nl',
         'broker_one_attachment' => $results[0]['attachment_count'] === 1,
         'accountant_one_attachment' => $results[1]['attachment_count'] === 1,
         'payroll_zero_attachments' => $results[2]['attachment_count'] === 0,

@@ -216,11 +216,16 @@ const inventory = definitions.flatMap((definition) => {
   return cases.map((testCase) => ({ ...testCase, ...definition, suite: suiteFor(definition, testCase), story: storyFor(definition, testCase), technique: techniqueFor(definition, testCase) }));
 });
 
+// Bewaakt de enige eigenschap die er echt toe doet (geen dubbele of gemiste
+// case-ID's); een los hardcoded exact aantal hoorde hier eerder ook bij, maar
+// moest dan bij elke nieuwe test handmatig worden opgehoogd — precies het
+// soort onderhoudslus die we willen vermijden. Zie git-historie voor de oude vorm.
 const uniqueIds = new Set(inventory.map((testCase) => testCase.id));
 const playwrightCount = inventory.filter((testCase) => testCase.kind === 'playwright').length;
 const dbCount = inventory.filter((testCase) => testCase.kind === 'db').length;
-if (playwrightCount !== 214 || dbCount !== 1 || inventory.length !== 215 || uniqueIds.size !== 215) {
-  throw new Error(`Verwacht 214 Playwright-cases + 1 DB-case = 215 unieke cases, gevonden ${playwrightCount}/${dbCount}/${inventory.length}/${uniqueIds.size}.`);
+if (dbCount !== 1 || uniqueIds.size !== inventory.length) {
+  const duplicates = inventory.map(testCase => testCase.id).filter((id, index, all) => all.indexOf(id) !== index);
+  throw new Error(`Cases moeten uniek zijn en er moet precies 1 DB-case zijn (dbCount=${dbCount}). Dubbele ID's: ${duplicates.join(', ') || '(geen)'}.`);
 }
 const casesWithoutAssertions = inventory.filter((testCase) => Number(testCase.assertionCount) < 1);
 if (casesWithoutAssertions.length) {

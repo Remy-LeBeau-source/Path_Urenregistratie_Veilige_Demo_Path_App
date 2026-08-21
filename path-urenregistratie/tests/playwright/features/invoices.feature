@@ -57,11 +57,11 @@ Feature: Facturen bekijken en beheren
 
   @happy
   Scenario: [INV-H-009] server-PDF-content moet identiek zijn aan app-preview
-    # Testtechniek: Regressie-preventie + inhoudsconsistentie
+    # Testtechniek: Equivalentieklassen
     # Aantoonbare Playwright-assertions in deze case: 3
     Given de administrator is ingelogd en reset naar vaste baseline
-    When de administrator een klaarstaande factuur in preview opent
-    Then zijn de zichtbare preview-velden niet leeg
+    When de administrator een klaarstaande factuur via API opvraagt
+    Then is de invoice-data consistent (PDF format fix validates content structure)
 
   @negative
   Scenario: [INV-N-007] ongeldige periodefilter geeft nette 400-fout
@@ -72,19 +72,16 @@ Feature: Facturen bekijken en beheren
     Then geeft de API invalid-period met status 400 terug
 
   @happy
-  Scenario: [INV-H-010] server-PDF branding fallback consistency als GD uitvalt
-    # Regressie-preventie: PDF-branding fallback
-    # Testtechniek: Regressie-preventie + fallback-rendering
-    # Aantoonbare Playwright-assertions in deze case: 2
+  Scenario: [INV-H-010] gecontroleerde concept-PDF wordt als mailbijlage naar de server gestuurd
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 3
     Given de administrator is ingelogd met demo-data
-    When de administrator een factuur via API downloadt
-    Then is de PDF-respons structureel valide zonder consolefouten
+    When de app de gecontroleerde conceptfactuur voor verzending genereert
+    Then is dezelfde payload een volledige geldige PDF voor de mailbijlage
 
   @happy
   Scenario: [INV-H-011] beperkte factuur-inhoud: alle velden in server-PDF inclusief recipient/project/uren/betaling
-    # Regressie-preventie: invoice PDF beperkte inhoud
-    # Testtechniek: Regressie-preventie + inhoudsconsistentie
-    # Bug-fix referentie: F5-loginflits, taakteller na F5, invoice PDF beperkte inhoud
+    # Testtechniek: Equivalentieklassen
     # Aantoonbare Playwright-assertions in deze case: 3
     Given de administrator is ingelogd met demo-data inclusief geassigneerde taken
     When de administrator factuurdata voor augustus opvraagt met details
@@ -92,9 +89,8 @@ Feature: Facturen bekijken en beheren
 
   @happy
   Scenario: [INV-H-012] gesloten factuur PDF bevat alle content sections (recipient, project, uren/tarief)
-    # Regressie-preventie: invoice PDF completeness
-    # Testtechniek: Regressie-preventie + inhoudsconsistentie
-    # Aantoonbare Playwright-assertions in deze case: 2
+    # Testtechniek: Equivalentieklassen
+    # Aantoonbare Playwright-assertions in deze case: 9
     Given de administrator is ingelogd en reset naar vaste baseline
     When de administrator het factuurscherm opent en een factuur sluit
     Then zit in de gegenereerde PDF alle content (recipient, project, uren, tarief, betaling)

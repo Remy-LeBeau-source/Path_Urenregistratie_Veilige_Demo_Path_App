@@ -89,6 +89,37 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-21 · v0.9.94 Wachtwoordmanager-interferentie in naam/adresvelden tegengegaan
+
+- [x] **Robuustheidsfix:** herhaaldelijk kwam er verminkte tekst (herhaalde tekenreeksen) in het naam- of e-mailveld van de beheerder/medewerker-editor terecht tijdens het typen — niet reproduceerbaar via een geautomatiseerde browser die écht, teken voor teken typt, dus geen bug in de eigen logica. De app kan principieel nooit onderscheiden of getypte tekst van de gebruiker zelf komt of door een browserextensie is ingevoegd; het enige haalbare tegenmiddel is bekende wachtwoordmanagers expliciet vragen het veld te negeren. `data-lpignore` (LastPass), `data-1p-ignore` (1Password), `data-bwignore` (Bitwarden) en `data-form-type="other"` toegevoegd aan naam/e-mailveld van zowel de beheerder- als de medewerker-editor, naast de al aanwezige `autocomplete="off"`.
+- [x] Nieuwe regressie `ADM-WR-N-006` bewijst dat de eerder als "inconsistent" ervaren twee schermen (naamwaarschuwing, dan pas de harde e-mailblokkade) in werkelijkheid twee opeenvolgende stappen van precies dezelfde, deterministische poging zijn.
+- [x] Versie 0.9.93 → 0.9.94. Volledige lokale desktop-Playwright-regressie: 224/224 groen. `npm run check`: groen.
+
+### 2026-08-21 · v0.9.92 Waarschuwing bij dubbele beheerdersnaam met ander adres
+
+- [x] **UX-fix:** een nieuwe beheerder aanmaken met dezelfde naam als een bestaand account maar een (per ongeluk) ander/verkeerd getypt e-mailadres werd voorheen stil als apart, tweede account opgeslagen — de bestaande exacte-e-mail-dubbelcheck vangt dit niet, want het adres verschilt echt. Nieuwe admin-editor toont nu eerst een bevestigingsvraag ("Er bestaat al een beheerder met de naam …") met een keuze: alsnog een apart account aanmaken, of annuleren. Blokkeert niet hard, want twee verschillende mensen kunnen legitiem dezelfde naam hebben. `autocomplete="off"` toegevoegd aan naam/adresveld als extra remedie tegen browser-autofill-interferentie tijdens het typen. Nieuwe test `ADM-WR-N-005` (bevestigt zowel annuleren als doorzetten).
+- [x] Kortstondig een servergrens op periodejaren geprobeerd om de eerdere periode-explosie (zie v0.9.91) hard te blokkeren; teruggedraaid nadat bleek dat meerdere bestaande tests (`email-queue.spec.ts` reserveert doelbewust het jaartallenbereik 3000–9999 als botsingsvrije testruimte) daar legitiem op leunen. Geen wijziging in productiecode overgebleven van deze poging.
+- [x] Lokale database nogmaals opgeschoond: eigen vergeten testaccounts (`LoopTest 0/1/2`, uit een eigen verificatiescript) en overige experimentele beheerdersaccounts verwijderd.
+- [x] Versie 0.9.91 → 0.9.92.
+
+### 2026-08-21 · v0.9.91 F5 behoudt het geopende scherm, CI-versiechecks rechtgetrokken, duplicaat-e-mail-UX bewezen
+
+- [x] **UX-fix:** F5 sprong altijd terug naar Dashboard/Mijn overzicht, ook als je op een ander scherm zat. `login()` (aangeroepen bij elke sessie-herstel-op-laadtijd, niet alleen bij een echte inlogklik) forceerde altijd de standaard startview. Bij een geldige sessie op laadtijd wordt nu, ná het herstellen van de sessie, de laatst geopende view uit `window.location.hash` hersteld. Nieuwe test `ADM-WR-H-011`.
+- [x] **Procesfix:** de CI-check op PR #24 faalde (`smoke-test.mjs` verwachtte hardcoded "0.9.89" als zichtbaar versienummer, terwijl de app inmiddels 0.9.90 was) — dit was een tweede, apart hardcoded versiecheckpunt naast `package.json`/`index.html` dat bij het ophogen van de versie werd gemist. Rechtgetrokken (en dezelfde stale referentie in `build-live-doc-bundle.mjs`); `npm run check` lokaal gedraaid vóór het pushen om dit soort verrassingen voortaan te voorkomen.
+- [x] **Onderhoudsfix:** `scripts/sync-living-docs.mjs` had een hardcoded exact-aantal-cases-guard die bij elke nieuwe test handmatig moest worden opgehoogd (drie keer nodig deze sessie alleen al). Vervangen door een guard die alleen nog controleert op unieke case-ID's en precies 1 DB-case — de eigenlijke veiligheidseigenschap, zonder handmatig onderhoud.
+- [x] **Bevestigd, geen bug:** een beheerder aanmaken met het e-mailadres van een bestaande medewerker wordt terecht geweigerd (één e-mailadres = één account). Nieuwe cases `ADM-WR-N-003` (API) en `ADM-WR-N-004` (browser-UI, bevestigt dat de toast + gemarkeerde bestaande medewerker altijd verschijnen, geen silent failure).
+- [x] Versie 0.9.90 → 0.9.91. Volledige lokale desktop-Playwright-regressie: 222/222 groen. `npm run check` (dezelfde poort als CI): groen.
+
+### 2026-08-21 · v0.9.90 TEST-mail-CC, dag/week-uitsplitsing in urencontrole en F5-reloadbug in Teambeheer
+
+- [x] **Bugfix (kritiek):** een net server-led aangemaakte beheerder of medewerker verdween na een echte paginaherlading (F5) uit Teambeheer, terug naar de kale standaarddemolijst. Oorzaak: `triggerReadApiWarmup()` in `assets/app.js` werd bij het laden van de pagina aangeroepen vóórdat `authRuntime.authenticated` op `true` stond, waardoor de functie zichzelf altijd stilzwijgend oversloeg en de serverdata nooit werd opgehaald. Verplaatst naar ná de authenticatiebevestiging. Bewezen met een nieuwe, niet-gemockte test `ADM-WR-H-010` die een echte `page.reload()` uitvoert.
+- [x] TEST-mailsandbox stuurt voortaan elke omgeleide TEST-mail zowel naar `giovanno.maatsen@pathconsultancy.nl` (vaste sink) als in CC naar `kenrich.lieveld@pathconsultancy.nl`, in plaats van alleen naar giovanno; `mail_test_sink_cc_recipient()` toegevoegd aan `server/mail/config.php`, blijft uitsluitend actief binnen `environment === 'test'`.
+- [x] Opgeschoond: een per ongeluk hardcoded persoonlijk Gmail-adres in het offline `mail-preflight.php`-demoscript vervangen door het bestaande boekhoud-adres; geen functioneel effect (dry-run, geen echte verzending).
+- [x] De urencontrolemodal (vóór goedkeuren) toont nu een alleen-lezen dag/week-uitsplitsing van de ingevulde uren, dezelfde weergave als de medewerker zelf ziet bij invullen, i.p.v. alleen een maandtotaal. Nieuwe case `TS-REV-UI-H-011`.
+- [x] `scripts/sync-living-docs.mjs` had een verouderde hardcoded caseteller (verwachtte 214, werkelijk al 222 vóór deze release) waardoor `npm run docs:sync` al langere tijd stil faalde; dit script zit niet in de `npm run check`-CI-gate, dus het viel niet eerder op. Teller gecorrigeerd naar 223 Playwright + 1 DB-case; synchronisatie opnieuw gedraaid en daarmee ook een aantal losgeraakte featurebestanden (o.a. `invoices.feature`, `mail-delivery.feature`) en een verweesd duplicaatbestand (`admin-writes.feature`, overbodig naast `organization-settings.feature`) rechtgetrokken.
+- [x] Lokale database opgeschoond: 24 leftover testfixture-accounts (`admin-write-*`/`employee-write-*@example.invalid`, zonder enige zakelijke of beveiligingshistorie) verwijderd uit `path_urenregistratie`; kwamen niet van deze sessie maar van een eerdere testrun die buiten de geïsoleerde `_test`-database om liep.
+- [x] Volledige lokale desktop-Playwright-regressie: 219/219 groen.
+
 ### 2026-08-17 · v0.9.89 serverfactuur-refresh en BDD-pariteit
 
 - [x] Ontbrekende factuurcache wordt bij `Controle afronden` één keer geforceerd ververst en opnieuw gekoppeld voordat de actie fail-closed openblijft.
