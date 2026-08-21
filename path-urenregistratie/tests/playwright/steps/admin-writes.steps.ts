@@ -60,3 +60,6 @@ Given("er al een beheerder én een medewerker bestaan met verschillende namen");
 When("een nieuwe beheerder met dezelfde naam én het e-mailadres van de medewerker wordt opgeslagen");
 Then("verschijnt éérst de naamwaarschuwing, vóór er ooit naar de server wordt geschreven");
 And("na expliciete bevestiging blokkeert de server alsnog hard op het al bestaande e-mailadres");
+When("een medewerker en een beheerder worden toegevoegd, telt het totaal telkens precies 1 op t.o.v. daarvóór");
+Then("verandert een poging met exact hetzelfde e-mailadres het totaal niet");
+And("een volledig uniek account telt precies 1 op, zonder dat er verder iets bijkomt");

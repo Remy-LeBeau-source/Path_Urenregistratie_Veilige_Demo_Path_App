@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 229 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 230 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 229 unieke case-ID's
+- Playwright executable cases: 230 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 230 unieke case-ID's
+- Totaal executable cases: 231 unieke case-ID's
 - Playwright features: 22
 - Database features: 1
 - Playwright steps mappings: 22
 - Database steps mappings: 1
-- Uitvoeringen: 234
-- Niet-mobile projectuitvoeringen: 224
+- Uitvoeringen: 235
+- Niet-mobile projectuitvoeringen: 225
 - Mobile functionele cases: 5
 - Pixel 7 / Chromium-uitvoeringen: 5
 - iPhone 13 / WebKit-uitvoeringen: 5
 
-De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 229 Playwright-functionele cases in totaal 234 resultaten op: 224 + (5 x 2) = 234.
+De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 230 Playwright-functionele cases in totaal 235 resultaten op: 225 + (5 x 2) = 235.
 
 ## Documentatieketen
 
@@ -42,7 +42,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 229 Playwrig
 
 - Feature: `tests/playwright/features/organization-settings.feature`
 - Source: `tests/playwright/admin-writes.spec.ts`
-- Cases: 17
+- Cases: 18
 
 - [ADM-WR-H-001] admin kan company/settings server-led opslaan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 - [ADM-WR-H-002] admin kan beheerder server-led aanmaken en wijzigen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
@@ -61,6 +61,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 229 Playwrig
 - [ADM-WR-H-011] een echte paginaherlading blijft op het geopende scherm i.p.v. terug te springen naar Dashboard — Techniek: API-contract + equivalentieklasse · Assertions: 5
 - [ADM-WR-N-005] beheerder aanmaken met een al bestaande naam vraagt eerst bevestiging i.p.v. stil een tweede account te maken — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 11
 - [ADM-WR-N-006] dubbele naam ÉN al bestaand e-mailadres: eerst de naamwaarschuwing, daarna alsnog de harde e-mailblokkade — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 8
+- [ADM-WR-N-007] actief-accounttotaal klopt op elke stap: exact duplicaat verandert niets, uniek account telt precies 1 op — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 14
 
 ### Auditlog en traceerbaarheid
 

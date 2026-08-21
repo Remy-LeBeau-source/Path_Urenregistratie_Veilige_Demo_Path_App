@@ -909,4 +909,89 @@ test.describe('admin write endpoints', () => {
 
     await loginPage.logout();
   });
+
+  test('[ADM-WR-N-007] actief-accounttotaal klopt op elke stap: exact duplicaat verandert niets, uniek account telt precies 1 op', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    const suffix = Date.now().toString().slice(-7);
+    const clonedEmployeeName = `KlantAccount ${suffix}`;
+    const clonedEmployeeEmail = `gedeeld-${suffix}@example.invalid`;
+    const clonedAdminName = `TwaalfKloon ${suffix}`;
+    const clonedAdminEmail = `admin-twaalf-${suffix}@example.invalid`;
+    const uniqueAdminName = `Volledig Uniek ${suffix}`;
+    const uniqueAdminEmail = `totaal-uniek-${suffix}@example.invalid`;
+
+    const activeCount = () => page.locator('#team-active-account-count').innerText().then(Number);
+    const adminRowCount = (name: string) => page.locator('#administrator-list .administrator-row', { hasText: name }).count();
+
+    // A fresh Herstel only resets the *local* demo baseline shown before any
+    // server write happens; the shared TEST database itself accumulates real
+    // rows from every earlier test in this same run (they don't reset each
+    // other's server state). So the very first real write in this test can
+    // jump the total by more than 1 -- that's expected, not a bug -- because
+    // it's the moment the client syncs onto the database's true state. Every
+    // step after that first sync is measured relative to what THIS test
+    // itself just saw, not to a hardcoded absolute baseline.
+    let baseline = 0;
+
+    await test.step('Given de administrator is ingelogd en Teambeheer heeft geopend', async () => {
+      await loginPage.open();
+      await loginPage.loginAsAdmin();
+      await page.locator('#quick-reset-demo').click();
+      await page.locator('#modal-confirm').click();
+      await page.locator('[data-view="employees"]').click();
+      await expect(page.locator('#team-active-account-count')).toBeVisible({ timeout: 10_000 });
+    });
+
+    await test.step('When een medewerker en een beheerder worden toegevoegd, telt het totaal telkens precies 1 op t.o.v. daarvóór', async () => {
+      await page.locator('#add-employee').click();
+      await page.locator('#edit-name').fill(clonedEmployeeName);
+      await page.locator('#edit-account-email').fill(clonedEmployeeEmail);
+      await page.locator('#edit-role').fill('Consultant');
+      await page.locator('#edit-client').fill('Klant');
+      await page.locator('#edit-project').fill(`PROJ-${suffix}`);
+      await page.locator('#edit-broker').fill('Broker');
+      await page.locator('#edit-broker-email').fill('broker@example.invalid');
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#modal')).toBeHidden();
+      // First real write of this test: this is where the client syncs onto
+      // the database's true, possibly-accumulated state. Capture it as our
+      // own baseline rather than asserting an absolute number.
+      baseline = await activeCount();
+      expect(await adminRowCount(clonedAdminName)).toBe(0);
+
+      await page.locator('#add-admin').click();
+      await page.locator('#edit-admin-name').fill(clonedAdminName);
+      await page.locator('#edit-admin-email').fill(clonedAdminEmail);
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#modal')).toBeHidden();
+      expect(await activeCount()).toBe(baseline + 1);
+    });
+
+    await test.step('Then verandert een poging met exact hetzelfde e-mailadres het totaal niet', async () => {
+      await page.locator('#add-admin').click();
+      await page.locator('#edit-admin-name').fill(clonedAdminName);
+      await page.locator('#edit-admin-email').fill(clonedEmployeeEmail);
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#modal-confirm')).toHaveText('Toch een nieuw, apart account aanmaken');
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#toast')).toContainText('hoort al bij', { timeout: 10_000 });
+      expect(await activeCount()).toBe(baseline + 1);
+      expect(await adminRowCount(clonedAdminName)).toBe(1);
+    });
+
+    await test.step('And een volledig uniek account telt precies 1 op, zonder dat er verder iets bijkomt', async () => {
+      await page.locator('#add-admin').click();
+      await page.locator('#edit-admin-name').fill(uniqueAdminName);
+      await page.locator('#edit-admin-email').fill(uniqueAdminEmail);
+      await page.locator('#modal-confirm').click();
+      // No name collision, so no confirmation step -- the modal must close straight away.
+      await expect(page.locator('#modal')).toBeHidden({ timeout: 10_000 });
+      await expect(page.locator('#toast')).toContainText('Beheerder op de server opgeslagen');
+      expect(await activeCount()).toBe(baseline + 2);
+      expect(await adminRowCount(uniqueAdminName)).toBe(1);
+      expect(await adminRowCount(clonedAdminName)).toBe(1);
+    });
+
+    await loginPage.logout();
+  });
 });
