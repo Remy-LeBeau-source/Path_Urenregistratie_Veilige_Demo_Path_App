@@ -112,8 +112,8 @@ blijft uitgeschakeld; dat is een bewuste veiligheidsinstelling en geen openstaan
 ## Veiligheidsgrenzen
 
 - Geen wachtwoorden, tokens of databasegeheimen in documentatie of logs opnemen.
-- De PROD-deploy van `c703ee3` is met expliciete toestemming voltooid. De gebruiker gaf ook expliciet
-  toestemming om een volgende groene release via de bestaande pipeline naar PROD door te zetten.
+- De PROD-deploy van exact `c703ee3` is met expliciete toestemming voltooid. Verbreed die toestemming
+  niet automatisch naar latere functionele releases; controleer daarvoor opnieuw de actuele scope.
 - PROD-mail en verbreding van de TEST-allowlist blijven buiten scope.
 - Nieuwe documentatie-only commits bij voorkeur met `[skip ci]`; normale main-pushes starten een
   volledige releasepipeline.
