@@ -72,6 +72,9 @@ export class CustomerTimesheetApi {
     return {
       status: response.status(),
       contentType: response.headers()['content-type'] || '',
+      contentDisposition: response.headers()['content-disposition'] || '',
+      cacheControl: response.headers()['cache-control'] || '',
+      contentTypeOptions: response.headers()['x-content-type-options'] || '',
       body,
     };
   }

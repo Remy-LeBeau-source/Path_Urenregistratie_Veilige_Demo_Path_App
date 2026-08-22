@@ -2,12 +2,28 @@ import { expect, test } from '@playwright/test';
 import { AuthApi } from './api/AuthApi';
 import { CustomerTimesheetApi } from './api/CustomerTimesheetApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
+import { LoginPage } from './pages/LoginPage';
+import { attachBusinessScreenshot } from './reporting/uiAttachments';
 
 const CANDIDATE_PERIODS = Array.from({ length: 240 }, (_, index) => {
   const year = 2130 + Math.floor(index / 12);
   const month = (index % 12) + 1;
   return `${year}-${String(month).padStart(2, '0')}`;
 });
+
+const CORRUPT_JPEG_BUFFER = Buffer.from(
+  '/9j/4AAQSkZJRgABAQEAYABgAAD//gA7Q1JFQVRPUjogZ2QtanBlZyB2MS4wICh1c2luZyBJSkcgSlBFRyB2ODApLCBxdWFsaXR5ID0gODUK/9sAQwAFAwQEBAMFBAQEBQUFBgcMCAcHBwcPCwsJDBEPEhIRDxERExYcFxMUGhURERghGBodHR8fHxMXIiQiHiQcHh8e/9sAQwEFBQUHBgcOCAgOHhQRFB4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4e/8AAEQgABAAEAwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A5WiiivmT9wP/2Q==',
+  'base64',
+);
+const TINY_PNG_BUFFER = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+  'base64',
+);
+const OVERSIZED_DIMENSION_PNG_BUFFER = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAF3EAAAABCAIAAAAAAAAA',
+  'base64',
+);
+const TINY_PDF_BUFFER = Buffer.from('%PDF-1.4\n% klanturenstaat testbestand\n%%EOF', 'utf8');
 
 async function findWritablePeriod(api: CustomerTimesheetApi): Promise<string> {
   for (const period of CANDIDATE_PERIODS) {
@@ -86,7 +102,7 @@ test.describe('customer timesheet api', () => {
         file: {
           name: 'klanturenstaat.pdf',
           mimeType: 'application/pdf',
-          buffer: Buffer.from('%PDF-1.4\n% test klanturenstaat', 'utf8'),
+          buffer: TINY_PDF_BUFFER,
         },
       });
 
@@ -189,7 +205,7 @@ test.describe('customer timesheet api', () => {
         file: {
           name: 'klanturenstaat.pdf',
           mimeType: 'application/pdf',
-          buffer: Buffer.from('%PDF-1.4\n% scope test', 'utf8'),
+          buffer: TINY_PDF_BUFFER,
         },
       });
 
@@ -223,7 +239,7 @@ test.describe('customer timesheet api', () => {
         file: {
           name: 'klanturenstaat.pdf',
           mimeType: 'application/pdf',
-          buffer: Buffer.from('%PDF-1.4\n% review scope', 'utf8'),
+          buffer: TINY_PDF_BUFFER,
         },
       });
       expect(draft.status).toBe(200);
@@ -284,7 +300,7 @@ test.describe('customer timesheet api', () => {
         file: {
           name: 'klanturenstaat.pdf',
           mimeType: 'application/pdf',
-          buffer: Buffer.from('%PDF-1.4\n% skip restore', 'utf8'),
+          buffer: TINY_PDF_BUFFER,
         },
       });
       expect(draft.status).toBe(200);
@@ -350,7 +366,7 @@ test.describe('customer timesheet api', () => {
     });
   });
 
-  test('[CTS-API-H-005] JPG-upload wordt server-side automatisch als PDF opgeslagen', async ({ request }) => {
+  test('[CTS-API-H-005] JPG- en PNG-upload worden als inline bekijkbare PDF opgeslagen', async ({ request }) => {
     const authApi = new AuthApi(request);
     const customerApi = new CustomerTimesheetApi(request);
 
@@ -383,19 +399,144 @@ test.describe('customer timesheet api', () => {
       expect(draft.body.customer_timesheet.status).toBe('draft');
     });
 
-    await test.step('Then is het opgeslagen document een geldig PDF, geen JPG', async () => {
+    await test.step('Then is de JPG als inline bekijkbare PDF met een PDF-bestandsnaam opgeslagen', async () => {
       const readBack = await customerApi.read(period);
       expect(readBack.status).toBe(200);
       expect(readBack.body.customer_timesheet.mime_type).toBe('application/pdf');
+      expect(readBack.body.customer_timesheet.storage_key).toMatch(/\.pdf$/i);
+      expect(readBack.body.customer_timesheet.stored_file_name).toMatch(/\.pdf$/i);
 
       const download = await customerApi.download(period);
       expect(download.status).toBe(200);
       expect(download.contentType).toContain('application/pdf');
+      expect(download.contentDisposition).toMatch(/^inline;/i);
+      expect(download.contentDisposition).toMatch(/filename="[^"]+\.pdf"/i);
+      expect(download.contentDisposition).not.toMatch(/\.jpe?g"/i);
+      expect(download.cacheControl).toContain('no-store');
+      expect(download.contentTypeOptions).toBe('nosniff');
       expect(download.body.subarray(0, 5).toString('latin1')).toBe('%PDF-');
+      expect(download.body.subarray(-32).toString('latin1')).toContain('%%EOF');
+    });
+
+    await test.step('When de medewerker het concept vervangt door een PNG', async () => {
+      const draft = await customerApi.write({
+        action: 'save_draft',
+        period,
+        file: {
+          name: 'klanturenstaat-scan.png',
+          mimeType: 'image/png',
+          buffer: TINY_PNG_BUFFER,
+        },
+      });
+
+      expect(draft.status).toBe(200);
+      expect(draft.body.ok).toBe(true);
+      expect(draft.body.customer_timesheet.status).toBe('draft');
+    });
+
+    await test.step('Then is ook de PNG als inline bekijkbare PDF opgeslagen', async () => {
+      const readBack = await customerApi.read(period);
+      expect(readBack.status).toBe(200);
+      expect(readBack.body.customer_timesheet.original_file_name).toBe('klanturenstaat-scan.png');
+      expect(readBack.body.customer_timesheet.mime_type).toBe('application/pdf');
+      expect(readBack.body.customer_timesheet.storage_key).toMatch(/\.pdf$/i);
+      expect(readBack.body.customer_timesheet.stored_file_name).toMatch(/\.pdf$/i);
+
+      const download = await customerApi.download(period);
+      expect(download.status).toBe(200);
+      expect(download.contentType).toContain('application/pdf');
+      expect(download.contentDisposition).toMatch(/^inline;/i);
+      expect(download.contentDisposition).toMatch(/filename="[^"]+\.pdf"/i);
+      expect(download.contentDisposition).not.toMatch(/\.png"/i);
+      expect(download.cacheControl).toContain('no-store');
+      expect(download.contentTypeOptions).toBe('nosniff');
+      expect(download.body.subarray(0, 5).toString('latin1')).toBe('%PDF-');
+      expect(download.body.subarray(-32).toString('latin1')).toContain('%%EOF');
     });
 
     await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {
       await authApi.logout();
+    });
+  });
+
+  test('[CTS-API-H-006] medewerker uploadt zichtbaar een afbeelding en kan die na nieuwe login bekijken', async ({ page }) => {
+    const authApi = new AuthApi(page.request);
+    const customerApi = new CustomerTimesheetApi(page.request);
+    const loginPage = new LoginPage(page);
+    const period = '2199-12';
+    const uploadName = 'klanturenstaat-opnieuw-inloggen.png';
+
+    await test.step('Given de medewerker via de zichtbare upload een PNG als concept opslaat', async () => {
+      await page.clock.setFixedTime(new Date('2199-12-15T12:00:00Z'));
+      await loginPage.open();
+      await loginPage.loginAsEmployee();
+      await page.locator('#period-year-picker').fill('2199');
+      await page.locator('#period-month-picker').click();
+      await page.locator('[data-period-month="12"][data-month-control="#period-month-picker"]').click();
+      await expect(page.locator('#period-picker')).toHaveValue(period);
+      await page.locator('button[data-view="timesheet"]').click();
+      await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+
+      const uploadPanel = page.locator('#customer-timesheet-upload-panel');
+      await expect(uploadPanel).toContainText('PDF blijft ongewijzigd; JPG en PNG worden automatisch als PDF opgeslagen.');
+      await expect(uploadPanel.locator('label', { has: page.locator('#customer-timesheet-file') })).toContainText('PDF, JPG of PNG');
+      await page.locator('#customer-timesheet-file').setInputFiles({
+        name: uploadName,
+        mimeType: 'image/png',
+        buffer: TINY_PNG_BUFFER,
+      });
+      await expect(page.locator('#customer-timesheet-action-help')).toContainText('Bestand gekozen');
+      await expect(page.locator('#customer-timesheet-save-draft')).toBeEnabled();
+      await page.locator('#customer-timesheet-save-draft').click();
+      await expect(page.locator('#toast')).toContainText('Concept opgeslagen');
+      await expect(page.locator('#customer-timesheet-current')).toContainText(uploadName);
+      await loginPage.logout();
+    });
+
+    await test.step('When dezelfde medewerker opnieuw inlogt en via de zichtbare maandkeuze dezelfde periode opent', async () => {
+      await loginPage.loginAsEmployee();
+      await page.locator('#period-year-picker').fill('2199');
+      await page.locator('#period-month-picker').click();
+      await page.locator('[data-period-month="12"][data-month-control="#period-month-picker"]').click();
+      await expect(page.locator('#period-picker')).toHaveValue(period);
+      await page.locator('button[data-view="timesheet"]').click();
+      await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+    });
+
+    await test.step('Then verschijnt het serverdocument en levert Klanturenstaat bekijken een inline PDF-response', async () => {
+      const currentDocument = page.locator('#customer-timesheet-current');
+      await expect(currentDocument).toContainText(uploadName);
+      await expect(currentDocument).toContainText('omgezet naar PDF');
+      const viewButton = currentDocument.locator('[data-view-customer-timesheet]');
+      await expect(viewButton).toBeVisible();
+      await expect(viewButton).toHaveText('Klanturenstaat bekijken');
+      await attachBusinessScreenshot(page, 'Klanturenstaat · Afbeeldingsupload zichtbaar na nieuwe login');
+
+      const responsePromise = page.context().waitForEvent('response', {
+        predicate: response => response.url().includes('/server/api/customer-timesheets.php?action=download')
+          && response.url().includes('period=2199-12'),
+      });
+      await viewButton.click();
+      const response = await responsePromise;
+      expect(response.status()).toBe(200);
+      expect(response.headers()['content-type'] || '').toContain('application/pdf');
+      expect(response.headers()['content-disposition'] || '').toMatch(/^inline;.*\.pdf"$/i);
+      expect(response.headers()['cache-control'] || '').toContain('no-store');
+      expect(response.headers()['x-content-type-options'] || '').toBe('nosniff');
+    });
+
+    await test.step('And cleanup: zet de geïsoleerde toekomstcase terug naar ontbrekend en log uit', async () => {
+      const skipped = await customerApi.write({
+        action: 'mark_skipped',
+        period,
+        reviewNote: 'Automatische testcleanup voor geïsoleerde toekomstperiode.',
+      });
+      expect(skipped.status).toBe(200);
+      expect(skipped.body.customer_timesheet.status).toBe('skipped');
+      const restored = await customerApi.write({ action: 'restore_missing', period });
+      expect(restored.status).toBe(200);
+      expect(restored.body.customer_timesheet.status).toBe('missing');
+      await loginPage.logout();
     });
   });
 
@@ -430,6 +571,82 @@ test.describe('customer timesheet api', () => {
       expect(oversizedUpload.status).toBe(400);
       expect(oversizedUpload.body.ok).toBe(false);
       expect(oversizedUpload.body.error).toBe('invalid-upload');
+    });
+
+    await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {
+      await authApi.logout();
+    });
+  });
+
+  test('[CTS-API-N-009] corrupte of te grote afbeelding en nep-PDF worden geweigerd zonder bestaand concept te vervangen', async ({ request }) => {
+    const authApi = new AuthApi(request);
+    const customerApi = new CustomerTimesheetApi(request);
+
+    let period = '';
+    let before: Awaited<ReturnType<CustomerTimesheetApi['read']>>;
+
+    await test.step('Given de medewerker is ingelogd en de bestaande klanturenstaat is vastgelegd', async () => {
+      const employeeLogin = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      expect(employeeLogin.user.role).toBe('employee');
+      period = await findWritablePeriod(customerApi);
+      before = await customerApi.read(period);
+      expect(before.status).toBe(200);
+    });
+
+    await test.step('When de medewerker corrupte bytes met een JPG-bestandsnaam uploadt', async () => {
+      const invalidUpload = await customerApi.write({
+        action: 'save_draft',
+        period,
+        file: {
+          name: 'corrupte-klanturenstaat.jpg',
+          mimeType: 'image/jpeg',
+          buffer: CORRUPT_JPEG_BUFFER,
+        },
+      });
+
+      expect(invalidUpload.status).toBe(400);
+      expect(invalidUpload.body.ok).toBe(false);
+      expect(invalidUpload.body.error).toBe('invalid-upload');
+    });
+
+    await test.step('And een afbeelding boven de veilige dimensiegrens wordt geweigerd', async () => {
+      const oversizedDimensions = await customerApi.write({
+        action: 'save_draft',
+        period,
+        file: {
+          name: 'te-brede-klanturenstaat.png',
+          mimeType: 'image/png',
+          buffer: OVERSIZED_DIMENSION_PNG_BUFFER,
+        },
+      });
+
+      expect(oversizedDimensions.status).toBe(400);
+      expect(oversizedDimensions.body.ok).toBe(false);
+      expect(oversizedDimensions.body.error).toBe('invalid-upload');
+    });
+
+    await test.step('Then worden tekstbytes met alleen een PDF-bestandsnaam ook geweigerd', async () => {
+      const disguisedPdf = await customerApi.write({
+        action: 'save_draft',
+        period,
+        file: {
+          name: 'geen-echte-klanturenstaat.pdf',
+          mimeType: 'application/pdf',
+          buffer: Buffer.from('dit is geen geldig PDF-bestand', 'utf8'),
+        },
+      });
+
+      expect(disguisedPdf.status).toBe(400);
+      expect(disguisedPdf.body.ok).toBe(false);
+      expect(disguisedPdf.body.error).toBe('invalid-upload');
+      expect(String(disguisedPdf.body.message || '')).toContain('PDF-bestand');
+    });
+
+    await test.step('Then blijft het bestaande document ongewijzigd', async () => {
+      const after = await customerApi.read(period);
+      expect(after.status).toBe(200);
+      expect(after.body.found).toBe(before.body.found);
+      expect(after.body.customer_timesheet?.storage_key || '').toBe(before.body.customer_timesheet?.storage_key || '');
     });
 
     await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {

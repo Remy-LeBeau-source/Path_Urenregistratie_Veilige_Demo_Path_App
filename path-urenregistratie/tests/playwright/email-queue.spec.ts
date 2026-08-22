@@ -903,7 +903,7 @@ test.describe('email queue api', () => {
     await expect(page.locator('#modal-title')).toContainText('Marc de Roon');
     await expect(page.locator('#modal-summary')).toContainText('giovanno.maatsen@pathconsultancy.nl');
     await expect(page.locator('#modal-summary')).toContainText('Klanturenstaat_Marc_de_Roon_2026-07.pdf');
-    await expect(page.locator('#modal-summary [data-view-customer-timesheet]')).toHaveText('PDF bekijken');
+    await expect(page.locator('#modal-summary [data-view-customer-timesheet]')).toHaveText('Klanturenstaat bekijken');
     await page.locator('#customer-timesheet-broker-subject').fill('Klanturenstaat Marc de Roon - juli 2026');
     await page.locator('#customer-timesheet-broker-body').fill('Bijgevoegd staat de officiële klanturenstaat van Marc de Roon.');
     await page.locator('#modal-confirm').click();

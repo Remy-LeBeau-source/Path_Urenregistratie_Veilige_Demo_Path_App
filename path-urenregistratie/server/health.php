@@ -15,6 +15,16 @@ $result = [
 $pdoMysqlLoaded = extension_loaded('pdo_mysql');
 $result['checks']['pdo_mysql'] = $pdoMysqlLoaded ? ['ok' => true] : ['ok' => false, 'message' => 'pdo_mysql extension not enabled'];
 
+// JPG/PNG klanturenstaten have a hard PDF-normalization contract. Report the
+// web runtime unhealthy when that conversion path is unavailable.
+$imageConversionReady = extension_loaded('gd')
+    && function_exists('imagecreatefromjpeg')
+    && function_exists('imagecreatefrompng')
+    && function_exists('imagejpeg');
+$result['checks']['customer_timesheet_image_conversion'] = $imageConversionReady
+    ? ['ok' => true]
+    : ['ok' => false, 'message' => 'GD image-to-PDF conversion support not enabled'];
+
 // check config.local.php exists
 $localConfigPath = __DIR__ . '/config.local.php';
 if (!file_exists($localConfigPath)) {

@@ -307,7 +307,7 @@ test('[E2E-H-005] klanturenstaatcontrole wordt een brokeractie zonder taakverlie
     await expect(page.locator('#modal-summary')).toContainText('Gesimuleerde TEST-aflevering');
     await expect(page.locator('#modal-summary')).toContainText('giovanno.maatsen@pathconsultancy.nl');
     await expect(page.locator('#modal-summary')).toContainText('geen verzending');
-    await expect(page.locator('#modal-summary [data-view-customer-timesheet]')).toHaveText('PDF bekijken');
+    await expect(page.locator('#modal-summary [data-view-customer-timesheet]')).toHaveText('Klanturenstaat bekijken');
     await page.locator('#modal-close').click();
     await page.locator('#hero-backoffice-filter').click();
     await openAdminTaskMonth(page, selected.periodKey);

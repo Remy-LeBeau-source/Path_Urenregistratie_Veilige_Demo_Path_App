@@ -95,7 +95,15 @@ een vertraagde eerdere read mag een nieuwere status niet terugzetten.
 | goedgekeurd | brokerroute gecontroleerd | verzonden/sent | afgerond |
 | toegestaan alternatief | document wordt gemotiveerd overgeslagen | overgeslagen/skipped | volgens factuurbeleid |
 
-Een geüpload document blijft als PDF controleerbaar. Een factuur mag alleen zonder klanturenstaat verder als de opdracht dit expliciet toestaat.
+Een geldige PDF blijft ongewijzigd; een geldige JPG of PNG wordt bij upload server-side naar PDF
+omgezet. Een bestand met alleen een PDF-extensie maar zonder geldige PDF-opbouw wordt geweigerd.
+Onleesbare of onveilig grote afbeeldingen worden eveneens geweigerd en een bestaand concept blijft
+dan ongewijzigd. Het opgeslagen document blijft voor de medewerker en Backoffice via
+**Klanturenstaat bekijken** inline als PDF controleerbaar, met een effectieve `.pdf`-bestandsnaam —
+ook na herladen, opnieuw inloggen of wisselen van maand. Een historisch rauw afbeeldingsbestand kan
+nog worden bekeken, maar moet opnieuw als PDF/JPG/PNG worden aangeleverd voordat Backoffice het kan
+goedkeuren of mailen. Een factuur mag alleen zonder klanturenstaat verder als de opdracht dit
+expliciet toestaat.
 
 ## 7. Factuur- en mailketen
 
@@ -121,8 +129,9 @@ de statusbadge aan- en uitzetten om onderwerp, tekst, PDF-links en de verzendadm
 controleren. LOCAL toont daarbij naast iedere bedoelde productieroute expliciet de vaste
 gesimuleerde TEST-aflevering `giovanno.maatsen@pathconsultancy.nl` met de melding dat niets wordt
 verzonden. Deze bediening kan uitsluitend lokale previewregistraties maken en opent nooit SMTP.
-TEST herschrijft alle functionele ontvangers naar de vastgelegde testontvanger en markeert elk
-bericht als TEST-aflevering. Bij `Controle afronden` maakt de server eerst de definitieve factuur-PDF
+TEST herschrijft alle functionele ontvangers naar de vastgelegde testontvanger Giovanno, voegt
+Kenrich als vaste CC toe en markeert elk bericht als TEST-aflevering. Bij `Controle afronden` maakt
+de server eerst de definitieve factuur-PDF
 met Path-logo en zonder conceptwatermerk; daarna worden uitsluitend de zojuist aangemaakte broker-,
 boekhoudings- en salarisitems direct verzonden. De broker ontvangt factuur plus goedgekeurde
 klanturenstaat, Boekhouding alleen de factuur en Salarisadministratie geen bijlage. PROD gebruikt
@@ -134,7 +143,7 @@ gedeactiveerd, maar alleen zelf toegevoegde routes mogen definitief worden verwi
 Dezelfde servergenerator verwerkt ieder geconfigureerd factuurnummerpatroon per medewerker en
 periode, waaronder `IND-*`, `IND-StvB-*`, `COA-*` en `Bel-Shawn-*`. De aparte knop
 `Brokerroute controleren` verzendt de officiële, goedgekeurde klanturenstaat van exact dezelfde
-medewerker en periode; op TEST wordt ook deze fysieke mail uitsluitend bij Giovanno afgeleverd.
+medewerker en periode; op TEST gaat ook deze fysieke mail naar Giovanno met Kenrich in CC.
 
 | Gebeurtenis | Eigenaar vóór | Resultaat | Eigenaar na |
 |---|---|---|---|
@@ -202,6 +211,8 @@ Minimaal de volgende ketens zijn releaseblokkerend:
 | correctie herindienen en taakoverdracht medewerker → Backoffice | `business-workflows-e2e.spec.ts` (`E2E-H-003`) |
 | uren goedkeuren en vervolgactie factuurverzending | `business-workflows-e2e.spec.ts` (`E2E-H-004`) |
 | klanturenstaat goedkeuren en vervolgactie brokerroute | `business-workflows-e2e.spec.ts` (`E2E-H-005`) |
+| JPG/PNG worden valide, inline bekijkbare PDF's; corrupte/te grote afbeeldingen en nep-PDF's blijven fail-closed | `customer-timesheet-api.spec.ts` (`CTS-API-H-005`, `CTS-API-N-009`) |
+| medewerker uploadt zichtbaar PDF/JPG/PNG en ziet de eigen klanturenstaat na nieuwe login en maandwissel | `customer-timesheet-api.spec.ts` (`CTS-API-H-006`) |
 | wachtwoord instellen via eenmalige link en hergebruik blokkeren | `business-workflows-e2e.spec.ts` (`E2E-H-006`) |
 | globale sommen en maandinvariant | `dashboard.spec.ts` (`DASH-H-012`, `DASH-H-017`) |
 | indienen/correctie/herindienen/goedkeuren | `timesheet-review-ui.spec.ts` (`TS-REV-UI-H-008`) |

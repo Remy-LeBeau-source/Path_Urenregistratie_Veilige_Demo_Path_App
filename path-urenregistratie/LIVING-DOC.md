@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 231 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 233 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 231 unieke case-ID's
+- Playwright executable cases: 233 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 232 unieke case-ID's
+- Totaal executable cases: 234 unieke case-ID's
 - Playwright features: 22
 - Database features: 1
 - Playwright steps mappings: 22
 - Database steps mappings: 1
-- Uitvoeringen: 236
-- Niet-mobile projectuitvoeringen: 226
+- Uitvoeringen: 238
+- Niet-mobile projectuitvoeringen: 228
 - Mobile functionele cases: 5
 - Pixel 7 / Chromium-uitvoeringen: 5
 - iPhone 13 / WebKit-uitvoeringen: 5
 
-De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 231 Playwright-functionele cases in totaal 236 resultaten op: 226 + (5 x 2) = 236.
+De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 233 Playwright-functionele cases in totaal 238 resultaten op: 228 + (5 x 2) = 238.
 
 ## Documentatieketen
 
@@ -118,7 +118,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 231 Playwrig
 
 - Feature: `tests/playwright/features/customer-timesheets.feature`
 - Source: `tests/playwright/customer-timesheet-api.spec.ts`
-- Cases: 8
+- Cases: 10
 
 - [CTS-API-H-009] brokerroute koppelt de officiële klanturenstaat aan dezelfde medewerker en periode — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
 - [CTS-API-H-001] employee uploadt klanturenstaat, dient in en downloadt; admin kan goedkeuren en resubmit vragen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 28
@@ -126,8 +126,10 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 231 Playwrig
 - [CTS-API-N-007] employee kan geen admin reviewactie uitvoeren op klanturenstaat — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
 - [CTS-API-H-004] employee kan mark_skipped registreren en restore_missing terugdraaien — Techniek: Toestandsovergang · Assertions: 9
 - [CTS-API-N-005] employee krijgt 400 bij ongeldig bestandstype — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
-- [CTS-API-H-005] JPG-upload wordt server-side automatisch als PDF opgeslagen — Techniek: Equivalentieklassen · Assertions: 9
+- [CTS-API-H-005] JPG- en PNG-upload worden als inline bekijkbare PDF opgeslagen — Techniek: Equivalentieklassen · Assertions: 34
+- [CTS-API-H-006] medewerker uploadt zichtbaar een afbeelding en kan die na nieuwe login bekijken — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 23
 - [CTS-API-N-008] employee krijgt 400 bij een te grote klanturenstaat-upload — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
+- [CTS-API-N-009] corrupte of te grote afbeelding en nep-PDF worden geweigerd zonder bestaand concept te vervangen — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 15
 
 ### Dashboard en open werkvoorraad
 

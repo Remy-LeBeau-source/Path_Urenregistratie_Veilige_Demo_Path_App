@@ -12,6 +12,10 @@ require_once __DIR__ . '/../mail/dispatch.php';
 header('Content-Type: application/json; charset=utf-8');
 auth_apply_cors_headers(auth_try_load_raw_config(), 'GET, POST, OPTIONS', 'Content-Type, X-CSRF-Token');
 
+const CUSTOMER_TIMESHEET_MAX_IMAGE_DIMENSION = 6000;
+const CUSTOMER_TIMESHEET_MAX_IMAGE_PIXELS = 12500000;
+const CUSTOMER_TIMESHEET_MAX_PDF_IMAGE_PIXELS = 8000000;
+
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
     http_response_code(204);
     exit;
@@ -339,6 +343,17 @@ function customer_timesheet_detect_upload(array $file): array
         ], 400);
     }
 
+    if ($mimeType === 'application/pdf') {
+        $pdfBytes = file_get_contents($tmpName);
+        if (!is_string($pdfBytes) || !simple_pdf_looks_valid($pdfBytes)) {
+            customer_timesheet_json([
+                'ok' => false,
+                'error' => 'invalid-upload',
+                'message' => 'Het gekozen PDF-bestand is beschadigd of ongeldig.',
+            ], 400);
+        }
+    }
+
     return [
         'tmp_name' => $tmpName,
         'size' => $size,
@@ -354,6 +369,21 @@ function customer_timesheet_convert_image_to_pdf_bytes(string $tmpPath, string $
         return null;
     }
 
+    $size = @getimagesize($tmpPath);
+    if (!is_array($size)) {
+        return null;
+    }
+    $width = (int)($size[0] ?? 0);
+    $height = (int)($size[1] ?? 0);
+    $detectedMime = strtolower((string)($size['mime'] ?? ''));
+    if ($width <= 0 || $height <= 0
+        || $width > CUSTOMER_TIMESHEET_MAX_IMAGE_DIMENSION
+        || $height > CUSTOMER_TIMESHEET_MAX_IMAGE_DIMENSION
+        || ($width * $height) > CUSTOMER_TIMESHEET_MAX_IMAGE_PIXELS
+        || $detectedMime !== $mimeType) {
+        return null;
+    }
+
     $image = null;
     if ($mimeType === 'image/jpeg' && function_exists('imagecreatefromjpeg')) {
         $image = @imagecreatefromjpeg($tmpPath);
@@ -365,24 +395,36 @@ function customer_timesheet_convert_image_to_pdf_bytes(string $tmpPath, string $
         return null;
     }
 
-    // Flatten any transparency onto white before re-encoding as a normalized JPEG.
-    $width = imagesx($image);
-    $height = imagesy($image);
-    $flattened = imagecreatetruecolor($width, $height);
-    imagefill($flattened, 0, 0, (int)imagecolorallocate($flattened, 255, 255, 255));
-    imagecopy($flattened, $image, 0, 0, 0, 0, $width, $height);
+    // Bound the second GD surface as well: a small compressed upload must never
+    // allocate unbounded memory while transparency is flattened onto white.
+    $scale = min(1.0, sqrt(CUSTOMER_TIMESHEET_MAX_PDF_IMAGE_PIXELS / ($width * $height)));
+    $pdfWidth = max(1, (int)floor($width * $scale));
+    $pdfHeight = max(1, (int)floor($height * $scale));
+    $flattened = @imagecreatetruecolor($pdfWidth, $pdfHeight);
+    if (!($flattened instanceof \GdImage)) {
+        imagedestroy($image);
+        return null;
+    }
+    $white = imagecolorallocate($flattened, 255, 255, 255);
+    $filled = $white !== false && imagefill($flattened, 0, 0, $white);
+    $copied = $filled && imagecopyresampled($flattened, $image, 0, 0, 0, 0, $pdfWidth, $pdfHeight, $width, $height);
     imagedestroy($image);
-
-    ob_start();
-    imagejpeg($flattened, null, 90);
-    $jpegBytes = (string)ob_get_clean();
-    imagedestroy($flattened);
-
-    if ($jpegBytes === '') {
+    if (!$copied) {
+        imagedestroy($flattened);
         return null;
     }
 
-    $pdfBytes = simple_pdf_from_jpeg($jpegBytes, $width, $height);
+    ob_start();
+    $encoded = @imagejpeg($flattened, null, 90);
+    $buffer = ob_get_clean();
+    imagedestroy($flattened);
+    $jpegBytes = is_string($buffer) ? $buffer : '';
+
+    if (!$encoded || $jpegBytes === '') {
+        return null;
+    }
+
+    $pdfBytes = simple_pdf_from_jpeg($jpegBytes, $pdfWidth, $pdfHeight);
     return simple_pdf_looks_valid($pdfBytes) ? $pdfBytes : null;
 }
 
@@ -395,10 +437,15 @@ function customer_timesheet_store_upload(array $config, array $upload, int $comp
     // JPG/PNG uploads are converted server-side to PDF so every stored klanturenstaat is a PDF.
     if ($mimeType === 'image/jpeg' || $mimeType === 'image/png') {
         $pdfBytes = customer_timesheet_convert_image_to_pdf_bytes($upload['tmp_name'], $mimeType);
-        if ($pdfBytes !== null) {
-            $mimeType = 'application/pdf';
-            $extension = 'pdf';
+        if ($pdfBytes === null) {
+            customer_timesheet_json([
+                'ok' => false,
+                'error' => 'invalid-upload',
+                'message' => 'De afbeelding kon niet veilig naar PDF worden omgezet. Kies een geldige JPG, PNG of PDF.',
+            ], 400);
         }
+        $mimeType = 'application/pdf';
+        $extension = 'pdf';
     }
 
     $root = customer_timesheet_storage_root($config);
@@ -436,6 +483,22 @@ function customer_timesheet_absolute_from_key(array $config, string $storageKey)
 {
     $root = rtrim(customer_timesheet_storage_root($config), '/\\');
     return $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, ltrim($storageKey, '/\\'));
+}
+
+function customer_timesheet_inline_file_name(array $record): string
+{
+    $mimeType = strtolower(trim((string)($record['mime_type'] ?? 'application/pdf')));
+    $original = basename(trim((string)($record['original_file_name'] ?? '')));
+    $stored = basename(trim((string)($record['stored_file_name'] ?? '')));
+    $candidate = $original !== '' ? $original : ($stored !== '' ? $stored : 'klanturenstaat.pdf');
+
+    if ($mimeType === 'application/pdf') {
+        $stem = trim((string)pathinfo($candidate, PATHINFO_FILENAME));
+        $candidate = ($stem !== '' ? $stem : 'klanturenstaat') . '.pdf';
+    }
+
+    $safe = preg_replace('/[^A-Za-z0-9._-]+/', '_', $candidate);
+    return is_string($safe) && $safe !== '' ? $safe : 'klanturenstaat.pdf';
 }
 
 function customer_timesheet_delete_existing_file(array $config, ?string $storageKey): void
@@ -544,12 +607,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
             ], 404);
         }
 
-        $downloadName = (string)($existing['original_file_name'] ?? $existing['stored_file_name'] ?? 'klanturenstaat.pdf');
         $mimeType = (string)($existing['mime_type'] ?? 'application/pdf');
+        $downloadName = customer_timesheet_inline_file_name($existing);
 
+        header_remove('Content-Type');
         header('Content-Type: ' . $mimeType);
         header('Content-Length: ' . (string)filesize($absolutePath));
-        header('Content-Disposition: attachment; filename="' . str_replace('"', '', $downloadName) . '"');
+        header('Content-Disposition: inline; filename="' . $downloadName . '"');
+        header('Cache-Control: private, no-store');
+        header('X-Content-Type-Options: nosniff');
         readfile($absolutePath);
         exit;
     }
@@ -837,6 +903,16 @@ try {
                     'ok' => false,
                     'error' => 'invalid-customer-timesheet-transition',
                     'message' => 'Alleen een ingediende klanturenstaat kan worden goedgekeurd.',
+                    ], 409);
+            }
+            if (strtolower((string)($existing['mime_type'] ?? '')) !== 'application/pdf') {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                customer_timesheet_json([
+                    'ok' => false,
+                    'error' => 'customer-timesheet-pdf-required',
+                    'message' => 'Dit oudere afbeeldingsbestand is nog niet als PDF opgeslagen. Vraag de medewerker het bestand opnieuw te uploaden.',
                 ], 409);
             }
 

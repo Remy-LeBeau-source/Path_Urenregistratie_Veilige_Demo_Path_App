@@ -324,6 +324,22 @@ async function waitForEditableTimesheetInputs(page: Page, timeout = 20_000): Pro
   await expect(inputs.first()).toBeVisible({ timeout });
 }
 
+async function submitTimesheetAndWaitForServer(page: Page): Promise<void> {
+  const submitResponse = page.waitForResponse(response => {
+    if (!response.url().includes('/server/api/timesheets.php') || response.request().method() !== 'POST') return false;
+    try {
+      const payload = response.request().postDataJSON() as { action?: string } | null;
+      return payload?.action === 'submit';
+    } catch {
+      return false;
+    }
+  });
+
+  await page.locator('#submit-timesheet').click();
+  expect((await submitResponse).ok()).toBe(true);
+  await expect(page.locator('#timesheet-status')).toHaveText('Ingediend', { timeout: 15_000 });
+}
+
 async function assertNoHorizontalOverflow(page: Page): Promise<void> {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
 }
@@ -430,8 +446,7 @@ test('[MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documen
     expect((await draftResponse).ok()).toBe(true);
     await expect(page.locator('#timesheet-status')).toHaveText('Nog invullen');
 
-    await page.locator('#submit-timesheet').click();
-    await expect(page.locator('#timesheet-status')).toHaveText('Ingediend');
+    await submitTimesheetAndWaitForServer(page);
   });
 
   await test.step('Then klanturenstaat en notificaties blijven mobiel bereikbaar', async () => {
@@ -468,8 +483,7 @@ test('[MOB-H-003] mobiele correctie herindiening en administratieve goedkeuring 
     await expect(inputs).toHaveCount(2, { timeout: 10_000 });
     await inputs.nth(0).fill('8');
     await inputs.nth(1).fill('8');
-    await page.locator('#submit-timesheet').click();
-    await expect(page.locator('#timesheet-status')).toHaveText('Ingediend');
+    await submitTimesheetAndWaitForServer(page);
   });
 
   await test.step('When de administrator mobiel een correctie vraagt', async () => {
@@ -497,8 +511,7 @@ test('[MOB-H-003] mobiele correctie herindiening en administratieve goedkeuring 
     const inputs = page.locator('#hours-grid .hours-input:not([disabled]):visible');
     await expect(inputs).toHaveCount(2, { timeout: 10_000 });
     await inputs.nth(1).fill('4');
-    await page.locator('#submit-timesheet').click();
-    await expect(page.locator('#timesheet-status')).toHaveText('Ingediend');
+    await submitTimesheetAndWaitForServer(page);
   });
 
   await test.step('And de administrator mobiel goedkeurt', async () => {
