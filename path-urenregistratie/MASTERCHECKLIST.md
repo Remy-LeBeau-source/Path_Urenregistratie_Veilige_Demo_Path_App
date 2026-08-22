@@ -94,6 +94,13 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-22 · v0.9.114 herstel van een gedeeld wachtwoord moet luidruchtig falen
+
+- [x] **Testhardening.** `E2E-H-006` wijzigt het wachtwoord van een **gedeeld** demo-account en zette het in een `finally` terug. Maar het herstel stond achter `if (typeof restore.body.token === 'string')`: slaat de limiet van drie herstelverzoeken per kwartier aan, dan komt er geen token, wordt er stil niets teruggezet, en faalt elke latere case die met dat account inlogt met een onverklaarbare 401. Dat kostte eerder vandaag uren zoeken en 62 rode tests. Een mislukt herstel faalt nu hard op de plek waar het misgaat.
+- [x] **Waarom dit ertoe doet buiten de testsuite:** exact hetzelfde patroon blokkeerde vandaag de TEST-uitrol. De pipeline strandde twee keer op `Public TEST login failed for administrator`, omdat het echte wachtwoord op TEST uit de pas liep met de CI-secret.
+- [x] FO aangevuld met `ADM-WR-H-013`, `ADM-WR-H-014` en `EQ-H-027`, die er nog niet in stonden.
+- [x] Versie 0.9.113 → 0.9.114.
+
 ### 2026-08-22 · v0.9.109 verkeerde naam na inloggen, en één begeleidende tekst voor iedere ontvanger
 
 - [x] **Bugfix (je zag de naam van een collega).** Na inloggen als Marc stond er `Stasjo van Bakel` boven het scherm. De koppeling van het getoonde profiel aan de ingelogde gebruiker liep alleen in productiemodus; op localhost en `uren-test` blijft de demo-catalogus bewust staan en werd die koppeling overgeslagen. De selectie bleef daardoor wijzen naar het standaard gekozen demo-account. Het herstelde zichzelf niet.
@@ -1468,6 +1475,24 @@ Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor j
 - [-] Maandelijkse dependency-updates plannen; elk kwartaal een hersteltest van de back-up.
 - [-] Database-/opslaggroei, verlopen/inactieve accounts en auditlogs periodiek controleren.
 - [-] Daarna normaal beheerregime.
+
+#### Openstaande functionele taak na go-live: herinneringen daadwerkelijk laten versturen
+
+- [-] **Herinneringen werken nu niet automatisch.** Het instellingenscherm biedt vier blokken aan —
+  week nog niet compleet, maand nog niet ingediend, vorige maand staat nog open, en goedkeuring wacht
+  op beheerder — met per blok een dag- en tijdkeuze. Er is geen serverplanning die ze uitvoert. Het
+  scherm is daar eerlijk over (`Voorbereiding · niet automatisch`), dus dit is geen bug en geen
+  go-live-blokkade, maar de functie bestaat feitelijk niet.
+- [-] **Wie dit bouwt, moet twee dingen doen, niet één.** Deze vier instellingen hebben **geen
+  serverkolommen**: ze bestaan alleen in de browser van degene die ze instelde. Er is dus opslag
+  nodig én uitvoering. Alleen een cronjob toevoegen is niet genoeg — die heeft niets om te lezen.
+  Alleen `customer_timesheet_reminder_*` wordt al wel server-side bewaard.
+- [-] **Aandachtspunt bij de uitvoering:** een herinneringsmail hoort dezelfde afgeschermde route te
+  volgen als de rest. Op TEST betekent dat omleiding naar de vaste sink; op productie mag hij pas
+  verzenden nadat echte mail daar is geactiveerd.
+- [-] **Eerst meten, dan bouwen:** loop één echte maand zonder herinneringen. Dan weet je welke van
+  de vier je werkelijk nodig hebt in plaats van alle vier te bouwen.
+
 
 Status Fase 16:
 - [x] technische audit-API-basis aanwezig en getest

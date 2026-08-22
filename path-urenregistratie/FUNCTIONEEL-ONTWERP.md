@@ -241,6 +241,9 @@ Minimaal de volgende ketens zijn releaseblokkerend:
 | wachtwoord-vergeten verraadt niet welke e-mailadressen bestaan | `password-reset.spec.ts` (`PWD-H-014`) |
 | productie toont nooit dry-run-jargon of een plaatsvervangend token aan een gebruiker | `password-reset.spec.ts` (`PWD-N-016`) |
 | het resetscherm neemt het inlogadres over, weigert een leeg adres en laat terugkeren | `password-reset.spec.ts` (`PWD-N-015`) |
+| onderwerp en begeleidende tekst van een opdracht blijven na opslaan bewaard | `admin-writes.spec.ts` (`ADM-WR-H-013`) |
+| een eigen tekst per ontvanger wordt bewaard; een leeg veld blijft de opdrachttekst erven | `admin-writes.spec.ts` (`ADM-WR-H-014`) |
+| twee nieuw toegevoegde ontvangers krijgen allebei echt een factuurmail | `email-queue.spec.ts` (`EQ-H-027`) |
 | mobiele hoofdketen | `mobile-ui.spec.ts` |
 | iedere medewerker en beheerder ziet na inloggen de eigen naam, nooit die van een collega | `auth.spec.ts` (`AUTH-H-020`, `AUTH-H-021`) |
 | één begeleidende tekst bereikt broker, boekhouding en salarisadministratie | `email-queue.spec.ts` (`EQ-H-022`) |
