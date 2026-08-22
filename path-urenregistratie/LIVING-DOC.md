@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 242 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 245 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 242 unieke case-ID's
+- Playwright executable cases: 245 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 243 unieke case-ID's
+- Totaal executable cases: 246 unieke case-ID's
 - Playwright features: 23
 - Database features: 1
 - Playwright steps mappings: 23
 - Database steps mappings: 1
-- Uitvoeringen: 249
-- Niet-mobile projectuitvoeringen: 235
+- Uitvoeringen: 252
+- Niet-mobile projectuitvoeringen: 238
 - Mobile functionele cases: 7
 - Pixel 7 / Chromium-uitvoeringen: 7
 - iPhone 13 / WebKit-uitvoeringen: 7
 
-De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 242 Playwright-functionele cases in totaal 249 resultaten op: 235 + (7 x 2) = 249.
+De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 245 Playwright-functionele cases in totaal 252 resultaten op: 238 + (7 x 2) = 252.
 
 ## Documentatieketen
 
@@ -211,13 +211,14 @@ De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 242 Playwrig
 
 - Feature: `tests/playwright/features/invoice-company-identity.feature`
 - Source: `tests/playwright/invoice-company-identity.spec.ts`
-- Cases: 5
+- Cases: 6
 
 - [INV-ID-H-001] handelsnaam en juridische naam staan samen op de factuurpreview — Techniek: API-contract + equivalentieklasse · Assertions: 3
 - [INV-ID-H-002] alleen juridische naam is als factuurweergave te kiezen — Techniek: Equivalentieklassen · Assertions: 3
 - [INV-ID-H-003] factuuridentiteit wordt door settings API opgeslagen en via bootstrap herladen — Techniek: API-contract + equivalentieklasse · Assertions: 2
 - [INV-ID-N-004] settings API weigert een onbekende factuurweergave — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
 - [INV-ID-H-005] instellingen tonen verkoopklare bedrijfsidentiteit en beveiligde verzendmodus — Techniek: API-contract + equivalentieklasse · Assertions: 8
+- [INV-ID-H-006] bedrijfsgegevens uit het instellingenformulier blijven bewaard en komen op de factuur — Techniek: API-contract + equivalentieklasse · Assertions: 5
 
 ### Facturen bekijken en beheren
 
@@ -286,7 +287,7 @@ De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 242 Playwrig
 
 - Feature: `tests/playwright/features/password-reset.feature`
 - Source: `tests/playwright/password-reset.spec.ts`
-- Cases: 15
+- Cases: 17
 
 - [PWD-H-001] request-reset retourneert token in demo-modus — Techniek: Toestandsovergang · Assertions: 12
 - [PWD-H-002] onbekend e-mailadres retourneert ook ok=true (geen email-enumeration) — Techniek: API-contract + equivalentieklasse · Assertions: 3
@@ -303,6 +304,8 @@ De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 242 Playwrig
 - [PWD-N-008] request-reset weigert GET — Techniek: Toestandsovergang · Assertions: 2
 - [PWD-N-009] request-reset met leeg e-mailadres geeft 400 — Techniek: Toestandsovergang · Assertions: 2
 - [PWD-H-012] een aangevraagde reset wordt ook echt verzonden, niet alleen in de wachtrij gezet — Techniek: Toestandsovergang · Assertions: 24
+- [PWD-H-014] wachtwoord-vergeten op het inlogscherm verraadt niet welke e-mailadressen bestaan — Techniek: API-contract + equivalentieklasse · Assertions: 11
+- [PWD-N-015] het resetscherm neemt het ingevulde adres over, weigert een leeg adres en laat terugkeren naar inloggen — Techniek: Toestandsovergang · Assertions: 10
 
 ### Maandperiodes beheren
 

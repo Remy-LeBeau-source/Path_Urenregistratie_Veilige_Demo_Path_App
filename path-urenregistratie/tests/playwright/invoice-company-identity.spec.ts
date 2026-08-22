@@ -153,4 +153,66 @@ test.describe('facturerende ondernemingsidentiteit', () => {
     await expect(page.locator('#modal-summary')).toContainText('SMTP Relay');
     await expect(page.locator('#modal-summary')).toContainText('Controleren zonder verzenden');
   });
+  test('[INV-ID-H-006] bedrijfsgegevens uit het instellingenformulier blijven bewaard en komen op de factuur', async ({ page }) => {
+    // The API round-trip was covered, but nothing proved the *form* actually
+    // collects these fields. They end up on a real invoice: a betaalregel with
+    // the wrong IBAN sends a client's money to the wrong account, and a missing
+    // KvK/BTW-nummer makes the invoice fiscally invalid. This walks the route a
+    // beheerder takes, and puts the values back afterwards.
+    const login = new LoginPage(page);
+    await login.open();
+    await login.loginAsAdmin();
+    await openSettings(page);
+
+    const fields = ['setting-iban', 'setting-kvk', 'setting-vat', 'setting-address', 'setting-postal-city', 'setting-phone', 'setting-invoice-email'] as const;
+    const original: Record<string, string> = {};
+    for (const id of fields) original[id] = await page.locator('#' + id).inputValue();
+
+    const changed: Record<string, string> = {
+      'setting-iban': 'NL02ABNA0123456789',
+      'setting-kvk': '12345678',
+      'setting-vat': 'NL009876543B01',
+      'setting-address': 'Teststraat 1',
+      'setting-postal-city': '1234 AB Amsterdam',
+      'setting-phone': '0612345678',
+      'setting-invoice-email': 'facturen@pathconsultancy.nl',
+    };
+
+    const saveSettings = async () => {
+      const response = page.waitForResponse(item => item.url().includes('/server/api/settings.php') && item.request().method() === 'POST');
+      await page.locator('#save-settings').click();
+      expect((await response).status()).toBe(200);
+      await expect(page.locator('#toast')).toContainText('Instellingen zijn op de server opgeslagen');
+    };
+
+    try {
+      await test.step('When de beheerder de bedrijfsgegevens aanpast en opslaat', async () => {
+        for (const id of fields) await page.locator('#' + id).fill(changed[id]);
+        await saveSettings();
+      });
+
+      await test.step('Then staan ze na een herlaad nog steeds in het formulier', async () => {
+        await page.reload();
+        await openSettings(page);
+        for (const id of fields) {
+          await expect(page.locator('#' + id), id + ' moet bewaard blijven').toHaveValue(changed[id]);
+        }
+      });
+
+      await test.step('And staat het opgeslagen IBAN op de betaalregel van de factuur', async () => {
+        await openFirstInvoicePreview(page);
+        await expect(page.locator('.invoice-brand-payment')).toContainText(changed['setting-iban']);
+      });
+    } finally {
+      // Never leave the shared settings row on test values: every later invoice
+      // case would otherwise assert against them.
+      await page.reload();
+      await openSettings(page);
+      for (const id of fields) await page.locator('#' + id).fill(original[id]);
+      await saveSettings();
+      for (const id of fields) {
+        await expect(page.locator('#' + id), id + ' moet hersteld zijn').toHaveValue(original[id]);
+      }
+    }
+  });
 });

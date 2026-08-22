@@ -6986,6 +6986,16 @@ function renderReminderScheduleSummary() {
     : "<strong>Planning uit</strong><span>Alle geplande herinneringen staan uit.</span>";
 }
 
+// Refilling the settings form must never wipe out what someone is typing. The
+// only safe moment to skip is while a field in the form actually holds focus.
+function settingsFormIsBeingEdited() {
+  const active = document.activeElement;
+  if (!active) return false;
+  const view = document.querySelector("#view-settings");
+  if (!view || !view.contains(active)) return false;
+  return active.tagName === "INPUT" || active.tagName === "SELECT" || active.tagName === "TEXTAREA";
+}
+
 function populateSettings() {
   const settings = state.settings;
   document.querySelector("#setting-organization-name").value = settings.organizationName;
@@ -7427,6 +7437,13 @@ function renderAll() {
     renderHoursGrid();
     renderCustomerTimesheetPanel();
   }
+  // The settings form used to be filled only once at boot, from the locally
+  // restored state -- before the server bootstrap had arrived. A beheerder who
+  // reloaded therefore kept seeing stale bedrijfsgegevens, and pressing
+  // "Wijzigingen opslaan" wrote those stale values straight back over the
+  // correct server data. Refill on every render so the form always reflects what
+  // the server actually holds.
+  if (!settingsFormIsBeingEdited()) populateSettings();
   renderProfileChrome();
   syncEnvironmentChrome();
   syncResetControlVisibility(localAccountToolsAllowed());

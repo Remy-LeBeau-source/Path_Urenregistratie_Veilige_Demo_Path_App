@@ -57,3 +57,12 @@ Then("wordt een gequeuede reset direct gedispatcht, na de commit en zonder de to
 When("de uitgenodigde persoon de eenmalige link opent en een wachtwoord instelt");
 Then("verschijnt een duidelijke bevestiging met een knop om in te loggen");
 And("die knop brengt de persoon naar het inlogscherm");
+When("een bestaand adres een resetverzoek doet");
+And("een onbekend adres exact hetzelfde verzoek doet");
+Then("is de melding woordelijk gelijk en noemt die het adres niet");
+Given("een ingevuld inlogadres");
+When("de gebruiker op Wachtwoord vergeten klikt");
+Then("is het adres overgenomen zodat het niet opnieuw getypt hoeft te worden");
+When("het adres wordt gewist en het formulier toch wordt verstuurd");
+Then("komt er een expliciete melding en wordt er niets verstuurd");
+And("brengt Terug naar inloggen de gebruiker terug bij het inlogformulier zonder oude melding");

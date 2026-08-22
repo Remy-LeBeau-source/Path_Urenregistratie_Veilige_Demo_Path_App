@@ -143,6 +143,17 @@ Gebruikte testtechnieken:
 
 De GUI-smoke bevat de kortste complete bedrijfsketen. De volledige regressie bevat daarnaast foutpaden, concurrency, grenzen, toegankelijkheid, mobiel en servercontracten.
 
+Een API-case die zijn payload uit de bestaande waarden opbouwt (`iban: company.iban || '...'`) bewijst
+niet dat een veld bewaard blijft — hij slaagt ook als het veld nooit wordt opgeslagen. Waar een
+formulier de enige route van de gebruiker is, moet minstens één case dat formulier zelf gebruiken:
+invullen, opslaan, herladen, terugcontroleren. Een case die de shared settings-rij wijzigt zet de
+oorspronkelijke waarden in een `finally` terug, anders lopen latere cases tegen testwaarden aan.
+
+Formulieren die uit `state` worden gevuld, horen bij elke render opnieuw gevuld te worden. Wordt dat
+maar één keer bij het opstarten gedaan, dan staat er verouderde data op het scherm zodra de
+server-bootstrap later binnenkomt — en verstuurt een opslagactie die verouderde data terug. Het
+opnieuw vullen mag nooit gebeuren terwijl een veld in dat formulier focus heeft.
+
 De mobiele suite draait apart op `mobile-chrome` (Pixel 7) en `mobile-safari` (iPhone 13) en voert
 uitsluitend `mobile-ui.spec.ts` uit. Elk mobiel scherm dat een medewerker realistisch op een telefoon
 opent, hoort daar een case te hebben — inclusief de eenmalige schermen buiten de dagelijkse keten,

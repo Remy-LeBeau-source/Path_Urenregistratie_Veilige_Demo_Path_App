@@ -138,6 +138,7 @@
 | INV-ID-H-003 | integration | invoice-company-identity.feature | factuuridentiteit wordt door settings API opgeslagen en via bootstrap herladen | API-contract + equivalentieklasse | 2 | invoice-company-identity.steps.ts | invoice-company-identity.spec.ts | DB / Integratie | Facturatie | factuuridentiteit wordt door settings API opgeslagen en via bootstrap herladen | Happy | 11 | Actueel |
 | INV-ID-N-004 | integration | invoice-company-identity.feature | settings API weigert een onbekende factuurweergave | Negatieve equivalentieklasse + error guessing | 2 | invoice-company-identity.steps.ts | invoice-company-identity.spec.ts | DB / Integratie | Facturatie | settings API weigert een onbekende factuurweergave | Negative | 11 | Actueel |
 | INV-ID-H-005 | integration | invoice-company-identity.feature | instellingen tonen verkoopklare bedrijfsidentiteit en beveiligde verzendmodus | API-contract + equivalentieklasse | 8 | invoice-company-identity.steps.ts | invoice-company-identity.spec.ts | DB / Integratie | Facturatie | instellingen tonen verkoopklare bedrijfsidentiteit en beveiligde verzendmodus | Happy | 11 | Actueel |
+| INV-ID-H-006 | integration | invoice-company-identity.feature | bedrijfsgegevens uit het instellingenformulier blijven bewaard en komen op de factuur | API-contract + equivalentieklasse | 5 | invoice-company-identity.steps.ts | invoice-company-identity.spec.ts | DB / Integratie | Facturatie | bedrijfsgegevens uit het instellingenformulier blijven bewaard en komen op de factuur | Happy | 11 | Actueel |
 | INV-H-001 | ui | invoices.feature | admin facturen zichtbaar en console errors 0 | Beslissingstabel rollen en autorisatie | 1 | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | admin facturen zichtbaar en console errors 0 | Happy | 11 | Actueel |
 | INV-N-005 | ui | invoices.feature | employee facturen zichtbaar maar beperkt en console errors 0 | Negatieve equivalentieklasse + error guessing | 4 | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | employee facturen zichtbaar maar beperkt en console errors 0 | Negative | 11 | Actueel |
 | INV-H-002 | ui | invoices.feature | periodefilter juli en augustus werkt | Equivalentieklassen | 4 | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | periodefilter juli en augustus werkt | Happy | 11 | Actueel |
@@ -188,6 +189,8 @@
 | PWD-N-008 | security | password-reset.feature | request-reset weigert GET | Toestandsovergang | 2 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
 | PWD-N-009 | security | password-reset.feature | request-reset met leeg e-mailadres geeft 400 | Toestandsovergang | 2 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
 | PWD-H-012 | security | password-reset.feature | een aangevraagde reset wordt ook echt verzonden, niet alleen in de wachtrij gezet | Toestandsovergang | 24 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
+| PWD-H-014 | security | password-reset.feature | wachtwoord-vergeten op het inlogscherm verraadt niet welke e-mailadressen bestaan | API-contract + equivalentieklasse | 11 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
+| PWD-N-015 | security | password-reset.feature | het resetscherm neemt het ingevulde adres over, weigert een leeg adres en laat terugkeren naar inloggen | Toestandsovergang | 10 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
 | PER-H-001 | api | period-management.feature | admin kan periodes ophalen met overzicht | Beslissingstabel rollen en autorisatie | 6 | period-management.steps.ts | period-management.spec.ts | API | Periodebeheer | admin kan periodes ophalen met overzicht | Happy | 15 | Actueel |
 | PER-H-002 | api | period-management.feature | admin kan periode sluiten en heropenen | Beslissingstabel rollen en autorisatie | 9 | period-management.steps.ts | period-management.spec.ts | API | Periodebeheer | admin kan periode sluiten en heropenen | Happy | 15 | Actueel |
 | PER-N-003 | api | period-management.feature | anonieme gebruiker krijgt 401 op periods | Beslissingstabel rollen en autorisatie | 1 | period-management.steps.ts | period-management.spec.ts | API | Periodebeheer | anonieme gebruiker krijgt 401 op periods | Negative | 15 | Actueel |
@@ -264,9 +267,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 242
+- Playwright executable cases: 245
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 243
+- Totaal unieke executable cases: 246
 - Playwright features: 23
 - Database features: 1
 - Playwright steps mappings: 23

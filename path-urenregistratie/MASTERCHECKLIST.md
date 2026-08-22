@@ -89,6 +89,17 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-22 · v0.9.104 instellingenformulier toonde verouderde bedrijfsgegevens en kon ze terugschrijven
+
+- [x] **Bugfix (bedrijfsgegevens konden worden overschreven).** `populateSettings()` stond niet in `renderAll()`. Het instellingenformulier werd daardoor één keer bij het opstarten gevuld — uit de lokaal herstelde state, dus vóórdat de server-bootstrap binnen was — en daarna nooit meer. Een beheerder die de pagina herlaadde zag verouderde bedrijfsgegevens staan, en wie dan op `Wijzigingen opslaan` drukte, verstuurde exact die verouderde waarden en overschreef de juiste serverdata. Dat verklaart het eerder waargenomen verlies van bedrijfsgegevens. Het formulier wordt nu bij elke render opnieuw gevuld, met een guard (`settingsFormIsBeingEdited()`) die dat nooit doet terwijl iemand in dat formulier typt.
+- [x] **Waarom geen enkele test dit ving:** `INV-ID-H-003` dekte wél de settings-API, maar bouwde zijn payload uit de bestaande waarden (`iban: company.iban || '...'`). Die case slaagt dus ook als IBAN nooit bewaard blijft. En het formulier zelf werd nergens gebruikt — alle dekking ging via de API om de UI heen.
+- [x] **`INV-ID-H-006`** loopt de route van de beheerder: bedrijfsgegevens aanpassen in het formulier, opslaan, herladen, controleren dat alle zeven velden bewaard zijn, en dat het opgeslagen IBAN op de betaalregel van de factuur staat. De oorspronkelijke waarden worden in een `finally` teruggezet, zodat latere factuurcases niet tegen testwaarden aanlopen.
+- [x] **Wachtwoord-vergeten had nul dekking.** Het hele zelfbedieningsscherm op de inlogpagina (`#auth-forgot-password`, `#auth-reset-form`, `#auth-reset-submit`, `#auth-reset-cancel`) werd door geen enkele test aangeraakt, terwijl dat de eerste route is die iemand zonder toegang neemt.
+- [x] **`PWD-H-014`** bewijst dat het scherm geen accounts verraadt: een bestaand en een onbekend adres krijgen woordelijk dezelfde melding. De server had die enumeratie-guard al, maar niets bewees dat de UI hem nakwam.
+- [x] **`PWD-N-015`** dekt dat het scherm het ingevulde inlogadres overneemt, een leeg adres expliciet weigert, en dat `Terug naar inloggen` terugkeert zonder oude melding.
+- [x] Smoke-test uitgebreid met twee bewakingen op de instellingenfix; TO en FO bijgewerkt.
+- [x] Versie 0.9.103 → 0.9.104. Volledige desktopregressie: 240/240 groen.
+
 ### 2026-08-22 · v0.9.103 mobiele scan: telefoongaten in de toegangsketen en mededelingen gedicht
 
 - [x] **Mobiele dekking nagelopen per scherm.** De telefoonsuite dekte login/navigatie, uren indienen met upload, correctie en goedkeuring, facturen met tikdoelen, en de mailconsole — maar twee schermen die een medewerker juist op de telefoon opent, hadden geen enkele mobiele case: het instellen van een wachtwoord via een uitnodiging, en het lezen van een mededeling.
