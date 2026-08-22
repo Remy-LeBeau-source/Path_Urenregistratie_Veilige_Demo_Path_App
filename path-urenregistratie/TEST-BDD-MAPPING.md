@@ -210,7 +210,8 @@
 | PER-N-010 | api | period-management.feature | onbekende periodeactie geeft 400 | Negatieve equivalentieklasse + error guessing | 2 | period-management.steps.ts | period-management.spec.ts | API | Periodebeheer | onbekende periodeactie geeft 400 | Negative | 15 | Actueel |
 | SAFE-H-001 | security | production-safety.feature | login picker vult alleen lokaal demo-wachtwoord in wanneer hints beschikbaar zijn | API-contract + equivalentieklasse | 9 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | login picker vult alleen lokaal demo-wachtwoord in wanneer hints beschikbaar zijn | Happy | 14 | Actueel |
 | SAFE-H-012 | security | production-safety.feature | TEST toont accountkeuze met autofill en een afgeschermde gedeelde reset | Beslissingstabel + equivalentieklassen + toestandsovergang | 19 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | TEST toont accountkeuze met autofill en een afgeschermde gedeelde reset | Happy | 14 | Actueel |
-| SAFE-H-014 | security | production-safety.feature | gedeelde TEST-reset herstelt alleen de exacte veilige 12-actiebaseline | Beslissingstabel + equivalentieklassen + toestandsovergang | 12 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | gedeelde TEST-reset herstelt alleen de exacte veilige 12-actiebaseline | Happy | 14 | Actueel |
+| SAFE-H-014 | security | production-safety.feature | gedeelde TEST-reset herstelt alleen de exacte veilige 12-actiebaseline | Beslissingstabel + equivalentieklassen + toestandsovergang | 25 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | gedeelde TEST-reset herstelt alleen de exacte veilige 12-actiebaseline | Happy | 14 | Actueel |
+| SAFE-H-015 | security | production-safety.feature | TEST-deploy herstelt en verifieert de vaste accountbaseline vóór cutover | Herstelbaarheid + toestandsovergang | 23 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | TEST-deploy herstelt en verifieert de vaste accountbaseline vóór cutover | Happy | 14 | Actueel |
 | SAFE-N-001 | security | production-safety.feature | frontend source bevat geen plaintext demo-credentials | Negatieve equivalentieklasse + error guessing | 3 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | frontend source bevat geen plaintext demo-credentials | Negative | 14 | Actueel |
 | SAFE-N-002 | security | production-safety.feature | writes zonder csrf blijven geblokkeerd | Negatieve equivalentieklasse + error guessing | 2 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | writes zonder csrf blijven geblokkeerd | Negative | 14 | Actueel |
 | SAFE-H-002 | security | production-safety.feature | timesheet writeflow blijft werkend (draft + submit) | API-contract + equivalentieklasse | 8 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | timesheet writeflow blijft werkend (draft + submit) | Happy | 14 | Actueel |
@@ -274,9 +275,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 252
+- Playwright executable cases: 253
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 253
+- Totaal unieke executable cases: 254
 - Playwright features: 23
 - Database features: 1
 - Playwright steps mappings: 23

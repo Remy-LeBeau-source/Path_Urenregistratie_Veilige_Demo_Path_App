@@ -172,11 +172,19 @@ medewerker en periode; op TEST gaat ook deze fysieke mail naar Giovanno met Kenr
 
 Herstellen in TEST zet uitsluitend de aparte TEST-database terug naar de vaste demonstratiebasis. Productie wordt nooit geraakt. De resetactie:
 
-1. vereist een beheerder;
+1. vereist een ingelogde beheerder of medewerker, CSRF en expliciete bevestiging;
 2. wist TEST-mutaties en TEST-mailhistorie;
-3. herstelt accounts, perioden, uren, klanturenstaten, facturen en taakverdeling als één transactie;
-4. levert na afloop dezelfde aantallen en statussen als de vastgelegde baseline;
-5. is voor een medewerker niet zichtbaar en server-side verboden.
+3. herstelt op de publieke TEST-omgeving de zes demoaccounts met hun vaste rol, actieve status en
+   vaste TEST-inloggegevens; lokaal en in CI blijven de tijdelijk gegenereerde testwachtwoorden behouden;
+4. herstelt accounts, perioden, uren, klanturenstaten, facturen en taakverdeling als één transactie;
+5. levert na afloop dezelfde aantallen en statussen als de vastgelegde baseline;
+6. is alleen in de exacte afgeschermde TEST-sandbox beschikbaar en valt daarbuiten server-side dicht.
+
+Een automatische TEST-deploy voert hetzelfde baselineherstel uit vóór de documentroot wordt
+omgeschakeld. De reset is daar alleen toegestaan als host, origin, database én private opslag exact
+de afgeschermde TEST-configuratie vormen; ook databasehost, poort en databasegebruiker moeten exact
+overeenkomen. Na de reset worden alle zes demoaccounts gecontroleerd en beheerder en medewerker opnieuw via de
+publieke loginroute gecontroleerd; een afwijkend account blokkeert de release vóór verdere promotie.
 
 ## 10. Acceptatieketens
 

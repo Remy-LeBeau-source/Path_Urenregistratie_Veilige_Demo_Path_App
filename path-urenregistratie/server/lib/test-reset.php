@@ -4,6 +4,35 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/simple_pdf.php';
 
+const TEST_RESET_REMOTE_ORIGIN = 'https://uren-test.pathconsultancy.nl';
+const TEST_RESET_REMOTE_DATABASE_HOST = 'pathco-urentest.db.transip.me';
+const TEST_RESET_REMOTE_DATABASE_PORT = 3306;
+const TEST_RESET_REMOTE_DATABASE = 'pathco_Urentest';
+const TEST_RESET_REMOTE_DATABASE_USER = 'pathco_UrenTestUser';
+const TEST_RESET_REMOTE_PRIVATE_ROOT = '/data/sites/web/pathconsultancynl/private/path-uren-test';
+
+final class TestResetPostCommitException extends RuntimeException
+{
+}
+
+function test_reset_remote_contract_is_exact(array $config): bool
+{
+    $database = is_array($config['database'] ?? null) ? $config['database'] : [];
+    $storage = is_array($config['storage'] ?? null) ? $config['storage'] : [];
+    $privateRoot = rtrim(str_replace('\\', '/', trim((string)($storage['private_root'] ?? ''))), '/');
+    $rawEnvironment = strtolower(trim((string)($config['environment'] ?? ($config['app']['environment'] ?? ''))));
+
+    return $rawEnvironment === 'test'
+        && auth_environment_from_config($config) === 'test'
+        && ($config['allow_demo_migrations'] ?? false) === true
+        && auth_app_origin_from_config($config) === TEST_RESET_REMOTE_ORIGIN
+        && strtolower(trim((string)($database['host'] ?? ''))) === TEST_RESET_REMOTE_DATABASE_HOST
+        && (int)($database['port'] ?? 3306) === TEST_RESET_REMOTE_DATABASE_PORT
+        && trim((string)($database['name'] ?? '')) === TEST_RESET_REMOTE_DATABASE
+        && trim((string)($database['user'] ?? '')) === TEST_RESET_REMOTE_DATABASE_USER
+        && $privateRoot === TEST_RESET_REMOTE_PRIVATE_ROOT;
+}
+
 function test_reset_is_available(array $config, string $host): bool
 {
     $normalizedHost = strtolower(trim(preg_replace('/:\d+$/', '', $host) ?? ''));
@@ -12,7 +41,7 @@ function test_reset_is_available(array $config, string $host): bool
         ? $config['allow_demo_migrations'] === true
         : in_array(strtolower(trim((string)getenv('PATH_APP_ALLOW_DEMO_MIGRATIONS'))), ['1', 'true', 'yes', 'on'], true);
     $remoteTest = $normalizedHost === 'uren-test.pathconsultancy.nl'
-        && auth_app_origin_from_config($config) === 'https://uren-test.pathconsultancy.nl';
+        && test_reset_remote_contract_is_exact($config);
     $configuredDatabase = is_array($config['database'] ?? null)
         ? trim((string)($config['database']['name'] ?? ''))
         : '';
@@ -23,6 +52,33 @@ function test_reset_is_available(array $config, string $host): bool
         && str_ends_with(strtolower($databaseName), '_test');
 
     return $environmentIsTest && $demoMigrationsAllowed && ($remoteTest || $isolatedLocalTest);
+}
+
+function test_reset_should_preserve_demo_credentials(array $config): bool
+{
+    return !test_reset_remote_contract_is_exact($config);
+}
+
+/** @return list<string> */
+function test_reset_baseline_credential_emails(bool $preserveDemoCredentials): array
+{
+    $acceptanceAccounts = [
+        'giovanno.maatsen@pathconsultancy.nl',
+        'kenrich.lieveld@pathconsultancy.nl',
+    ];
+    if (!$preserveDemoCredentials) {
+        return $acceptanceAccounts;
+    }
+
+    return [
+        'gio@example.invalid',
+        'joyce@example.invalid',
+        'marc@example.invalid',
+        'stasjo@example.invalid',
+        'brian@example.invalid',
+        'shawn@example.invalid',
+        ...$acceptanceAccounts,
+    ];
 }
 
 function test_reset_sql(PDO $pdo, string $path): void
@@ -68,25 +124,17 @@ function test_reset_acceptance_accounts(PDO $pdo, int $companyId): void
  *
  * @return array<string,array{password_hash:string,force_password_change:int}>
  */
-function test_reset_capture_baseline_credentials(PDO $pdo): array
+function test_reset_capture_baseline_credentials(PDO $pdo, bool $preserveDemoCredentials = true): array
 {
-    $emails = [
-        'gio@example.invalid',
-        'joyce@example.invalid',
-        'marc@example.invalid',
-        'stasjo@example.invalid',
-        'brian@example.invalid',
-        'shawn@example.invalid',
-        'giovanno.maatsen@pathconsultancy.nl',
-        'kenrich.lieveld@pathconsultancy.nl',
-    ];
+    $emails = test_reset_baseline_credential_emails($preserveDemoCredentials);
     $placeholders = implode(', ', array_fill(0, count($emails), '?'));
     $statement = $pdo->prepare(
         'SELECT email, password_hash, force_password_change
          FROM users
          WHERE email IN (' . $placeholders . ')
            AND password_hash IS NOT NULL
-           AND password_hash <> ""'
+           AND password_hash <> ""
+         FOR UPDATE'
     );
     $statement->execute($emails);
 
@@ -102,6 +150,51 @@ function test_reset_capture_baseline_credentials(PDO $pdo): array
         ];
     }
     return $credentials;
+}
+
+function test_reset_verify_remote_demo_credentials(PDO $pdo, array $config): int
+{
+    if (!test_reset_remote_contract_is_exact($config)) {
+        throw new RuntimeException('Canonical demo credentials may be verified only for the exact remote TEST contract.');
+    }
+
+    $expected = [
+        'gio@example.invalid' => ['role' => 'administrator', 'password' => 'LocalDemoAdmin2026'],
+        'joyce@example.invalid' => ['role' => 'administrator', 'password' => 'LocalDemoAdmin2026'],
+        'marc@example.invalid' => ['role' => 'employee', 'password' => 'LocalDemoEmployee2026'],
+        'stasjo@example.invalid' => ['role' => 'employee', 'password' => 'LocalDemoEmployee2026'],
+        'brian@example.invalid' => ['role' => 'employee', 'password' => 'LocalDemoEmployee2026'],
+        'shawn@example.invalid' => ['role' => 'employee', 'password' => 'LocalDemoEmployee2026'],
+    ];
+    $placeholders = implode(', ', array_fill(0, count($expected), '?'));
+    $statement = $pdo->prepare(
+        'SELECT company_id, email, role, active, password_hash, force_password_change
+         FROM users WHERE email IN (' . $placeholders . ')'
+    );
+    $statement->execute(array_keys($expected));
+
+    $rows = [];
+    foreach ($statement->fetchAll() as $row) {
+        $rows[strtolower(trim((string)$row['email']))] = $row;
+    }
+    if (count($rows) !== count($expected)) {
+        throw new RuntimeException('The remote TEST demo account set is incomplete.');
+    }
+
+    foreach ($expected as $email => $account) {
+        $row = $rows[$email] ?? null;
+        $valid = is_array($row)
+            && (int)$row['company_id'] === 1
+            && (string)$row['role'] === $account['role']
+            && (int)$row['active'] === 1
+            && (int)$row['force_password_change'] === 0
+            && password_verify($account['password'], (string)$row['password_hash']);
+        if (!$valid) {
+            throw new RuntimeException('A remote TEST demo account does not match the canonical login baseline.');
+        }
+    }
+
+    return count($expected);
 }
 
 /** @param array<string,array{password_hash:string,force_password_change:int}> $credentials */
@@ -175,7 +268,7 @@ function test_reset_seed_documents(PDO $pdo, array $config): array
     return $counts;
 }
 
-/** @return array{users:int,employees:int,open_actions:int,documents:array{invoices:int,customer_timesheets:int}} */
+/** @return array{users:int,employees:int,open_actions:int,verified_demo_accounts:int,documents:array{invoices:int,customer_timesheets:int}} */
 function test_reset_shared_baseline(PDO $pdo, array $config, string $actorEmail): array
 {
     $root = dirname(__DIR__, 2);
@@ -189,9 +282,20 @@ function test_reset_shared_baseline(PDO $pdo, array $config, string $actorEmail)
         $root . '/server/migrations/018_demo_assignment_mail_templates.sql',
     ];
 
-    $credentials = test_reset_capture_baseline_credentials($pdo);
+    $verifiedDemoAccounts = 0;
     $pdo->beginTransaction();
     try {
+        $preserveDemoCredentials = test_reset_should_preserve_demo_credentials($config);
+        $credentials = test_reset_capture_baseline_credentials($pdo, $preserveDemoCredentials);
+        if (!$preserveDemoCredentials) {
+            $requiredCredentialEmails = test_reset_baseline_credential_emails(false);
+            $capturedCredentialEmails = array_keys($credentials);
+            sort($requiredCredentialEmails);
+            sort($capturedCredentialEmails);
+            if ($capturedCredentialEmails !== $requiredCredentialEmails) {
+                throw new RuntimeException('Both TEST acceptance account credentials must exist before the shared reset.');
+            }
+        }
         $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
         foreach (['password_reset_tokens', 'auth_login_audit'] as $table) {
             $pdo->exec('DELETE FROM ' . $table);
@@ -218,6 +322,12 @@ function test_reset_shared_baseline(PDO $pdo, array $config, string $actorEmail)
                 'initiated_by' => strtolower(trim($actorEmail)),
             ], JSON_UNESCAPED_SLASHES),
         ]);
+        if (test_reset_remote_contract_is_exact($config)) {
+            // Verify the canonical logins while the reset transaction still owns
+            // the changed user rows. A concurrent password write cannot race this
+            // deployment proof between verification and commit.
+            $verifiedDemoAccounts = test_reset_verify_remote_demo_credentials($pdo, $config);
+        }
         $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
         $pdo->commit();
     } catch (Throwable $error) {
@@ -232,11 +342,20 @@ function test_reset_shared_baseline(PDO $pdo, array $config, string $actorEmail)
         throw $error;
     }
 
-    $documents = test_reset_seed_documents($pdo, $config);
-    return [
-        'users' => (int)$pdo->query('SELECT COUNT(*) FROM users WHERE active = 1')->fetchColumn(),
-        'employees' => (int)$pdo->query('SELECT COUNT(*) FROM employees WHERE active = 1')->fetchColumn(),
-        'open_actions' => 12,
-        'documents' => $documents,
-    ];
+    try {
+        $documents = test_reset_seed_documents($pdo, $config);
+        return [
+            'users' => (int)$pdo->query('SELECT COUNT(*) FROM users WHERE active = 1')->fetchColumn(),
+            'employees' => (int)$pdo->query('SELECT COUNT(*) FROM employees WHERE active = 1')->fetchColumn(),
+            'open_actions' => 12,
+            'verified_demo_accounts' => $verifiedDemoAccounts,
+            'documents' => $documents,
+        ];
+    } catch (Throwable $error) {
+        throw new TestResetPostCommitException(
+            'The database baseline was committed, but post-commit document work failed: ' . $error->getMessage(),
+            0,
+            $error
+        );
+    }
 }

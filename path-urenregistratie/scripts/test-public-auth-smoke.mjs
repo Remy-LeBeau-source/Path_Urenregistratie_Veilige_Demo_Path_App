@@ -23,6 +23,63 @@ function sessionCookie(response) {
   return String(values[0] || '').split(';', 1)[0];
 }
 
+async function loginAccount(account) {
+  assert.ok(account.password.length >= 12, `Missing protected TEST password for ${account.role}`);
+
+  const csrfResponse = await fetch(`${baseUrl}/server/auth/csrf.php`, {
+    headers: { Accept: 'application/json' },
+    redirect: 'error',
+  });
+  assert.equal(csrfResponse.status, 200, `CSRF bootstrap failed for ${account.role}`);
+  const initialCookie = sessionCookie(csrfResponse);
+  const csrf = await csrfResponse.json();
+  assert.ok(initialCookie && csrf.csrf_token, `Secure TEST session bootstrap is incomplete for ${account.role}`);
+
+  const loginResponse = await fetch(`${baseUrl}/server/auth/login.php`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': csrf.csrf_token,
+      Cookie: initialCookie,
+    },
+    body: JSON.stringify({ email: account.email, password: account.password }),
+    redirect: 'error',
+  });
+  const login = await loginResponse.json();
+  assert.equal(loginResponse.status, 200, `Public TEST login failed for ${account.role}`);
+  assert.equal(login.ok, true, `Public TEST login did not confirm success for ${account.role}`);
+  assert.equal(login.user?.role, account.role, `Public TEST returned the wrong role for ${account.role}`);
+  console.log(`Public TEST login verified: ${account.role}`);
+
+  return {
+    cookie: sessionCookie(loginResponse) || initialCookie,
+    csrfToken: String(login.csrf_token || csrf.csrf_token),
+  };
+}
+
+async function resetSharedBaseline(session) {
+  const resetResponse = await fetch(`${baseUrl}/server/api/test-reset.php`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': session.csrfToken,
+      Cookie: session.cookie,
+    },
+    body: JSON.stringify({ confirm: 'RESET_SHARED_TEST_BASELINE' }),
+    redirect: 'error',
+  });
+  const reset = await resetResponse.json();
+  assert.equal(resetResponse.status, 200, 'Public TEST baseline reset failed');
+  assert.equal(reset.ok, true, 'Public TEST baseline reset did not confirm success');
+  assert.equal(reset.reset?.users, 8, 'Public TEST reset must restore six demo and two acceptance accounts');
+  assert.equal(reset.reset?.employees, 4, 'Public TEST reset must restore four demo employees');
+  assert.equal(reset.reset?.open_actions, 12, 'Public TEST reset must restore the twelve-action baseline');
+  assert.equal(reset.reset?.verified_demo_accounts, 6, 'Public TEST reset must verify all six canonical demo accounts');
+  console.log('Public TEST shared baseline reset verified');
+}
+
 const hintsResponse = await fetch(`${baseUrl}/server/auth/local-login-hints.php`, {
   headers: { Accept: 'application/json' },
   redirect: 'error',
@@ -35,54 +92,11 @@ assert.equal(hints.adminPassword, accounts[0].password, 'Public TEST admin autof
 assert.equal(hints.employeePassword, accounts[1].password, 'Public TEST employee autofill differs from the protected credential');
 console.log('Public TEST automatic login fill verified');
 
+const initialAdminSession = await loginAccount(accounts[0]);
+await resetSharedBaseline(initialAdminSession);
+
+// Re-authenticate both roles after the reset. This proves that the baseline did
+// not preserve a drifted password hash or account state.
 for (const account of accounts) {
-  assert.ok(account.password.length >= 12, `Missing protected TEST password for ${account.role}`);
-
-  const csrfResponse = await fetch(`${baseUrl}/server/auth/csrf.php`, {
-    headers: { Accept: 'application/json' },
-    redirect: 'error',
-  });
-  assert.equal(csrfResponse.status, 200, `CSRF bootstrap failed for ${account.role}`);
-  const cookie = sessionCookie(csrfResponse);
-  const csrf = await csrfResponse.json();
-  assert.ok(cookie && csrf.csrf_token, `Secure TEST session bootstrap is incomplete for ${account.role}`);
-
-  const loginResponse = await fetch(`${baseUrl}/server/auth/login.php`, {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      'X-CSRF-Token': csrf.csrf_token,
-      Cookie: cookie,
-    },
-    body: JSON.stringify({ email: account.email, password: account.password }),
-    redirect: 'error',
-  });
-  const login = await loginResponse.json();
-  assert.equal(loginResponse.status, 200, `Public TEST login failed for ${account.role}`);
-  assert.equal(login.ok, true, `Public TEST login did not confirm success for ${account.role}`);
-  assert.equal(login.user?.role, account.role, `Public TEST returned the wrong role for ${account.role}`);
-  console.log(`Public TEST login verified: ${account.role}`);
-
-  if (account.role === 'administrator') {
-    const authenticatedCookie = sessionCookie(loginResponse) || cookie;
-    const resetResponse = await fetch(`${baseUrl}/server/api/test-reset.php`, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'X-CSRF-Token': csrf.csrf_token,
-        Cookie: authenticatedCookie,
-      },
-      body: JSON.stringify({ confirm: 'RESET_SHARED_TEST_BASELINE' }),
-      redirect: 'error',
-    });
-    const reset = await resetResponse.json();
-    assert.equal(resetResponse.status, 200, 'Public TEST baseline reset failed');
-    assert.equal(reset.ok, true, 'Public TEST baseline reset did not confirm success');
-    assert.equal(reset.reset?.users, 8, 'Public TEST reset must restore six demo and two acceptance accounts');
-    assert.equal(reset.reset?.employees, 4, 'Public TEST reset must restore four demo employees');
-    assert.equal(reset.reset?.open_actions, 12, 'Public TEST reset must restore the twelve-action baseline');
-    console.log('Public TEST shared baseline reset verified');
-  }
+  await loginAccount(account);
 }

@@ -28,7 +28,7 @@ staan onder de genummerde fases verderop in dit document.
 | Fase 4 — Auth & rollen | ✅ VS Code-scope klaar | Admin/medewerker/sessies, persistente loginblokkade en eenmalige wachtwoordlinks |
 | Fase 5 — Security | ✅ VS Code-scope klaar | Timeout, sliding session, login-audit, dependency-scan; productieheaders (CORS/CSP/HSTS) later op echt domein |
 | Fase 6 — Playwright/BDD/Allure/Living Docs | ✅ Pariteit bewaakt | Uitvoerbare features, step-mapping, GUI-smoke en volledige Playwright-/DB-regressie zijn gekoppeld; nieuwe zichtbare regressies krijgen een gerichte case |
-| Fase 7 — CI/CD | ✅ v0.9.66 groen en live | Automatische PROD- en TEST-uitrol bewezen; pipeline-run `31888079947` voor SHA `d749b9e32ff4` is volledig groen |
+| Fase 7 — CI/CD | ⚠️ v0.9.113-fix klaar voor PR | Run `32571958567` zette TEST `0.9.111` live maar stopte op een afgedreven adminlogin (401); `0.9.113` herstelt en verifieert de vaste TEST-loginbaseline vóór cutover. PROD bleef veilig op `0.9.106`. |
 | Fase 8 — Uren indienen | ✅ Klaar | Concept → indienen |
 | Fase 9 — Correctie/goedkeuring | ✅ Technisch klaar | Productieacceptatie later |
 | Fase 10 — Klanturenstaat | ✅ VS Code-scope klaar | JPG/PNG → inline PDF + employee-readback fail-closed getest (CTS-API-H-005/H-006, N-009) |

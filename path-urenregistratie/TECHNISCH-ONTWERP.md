@@ -253,6 +253,17 @@ het globale totaal verandert.
 responseveld, maar ook de werkelijke geprojecteerde taakregels. Verschillen zijn alleen toegestaan
 voor URL, sessiecookie, secrets, database-instantie, resettransport en mailtransport.
 
+De publieke TEST-reset gebruikt de canonieke rolhashes uit migraties 004/005 en bewaart uitsluitend
+de twee echte mailacceptatieaccounts. Lokale en CI-resets bewaren juist hun tijdelijk gegenereerde
+demo-wachtwoorden. De destructieve remote variant is alleen beschikbaar bij de exacte combinatie
+van raw omgeving `test`, origin `https://uren-test.pathconsultancy.nl`, databasehost
+`pathco-urentest.db.transip.me`, poort `3306`, database `pathco_Urentest`, gebruiker
+`pathco_UrenTestUser` en private root `/data/sites/web/pathconsultancynl/private/path-uren-test`;
+een afwijking valt vóór iedere write gesloten uit. Beide acceptatieaccounts moeten vóór de reset
+een bestaande credential hebben. Alle zes canonieke demoaccounts worden binnen dezelfde
+databasetransactie en vóór commit geverifieerd. Een fout bij de daaropvolgende documentopbouw wordt
+expliciet als post-commit mutatie gerapporteerd.
+
 ## 8. Releasecontract
 
 Een release mag pas door wanneer:
@@ -262,9 +273,12 @@ Een release mag pas door wanneer:
 3. GUI-smoke met de hoofdketen groen is;
 4. volledige Playwright-regressie groen is;
 5. omgevingspreflight groen is;
-6. deploychecksum en versie overeenkomen;
-7. publieke health- en login-smoke groen zijn;
-8. bij fout automatisch de vorige inhoud naar dezelfde stabiele documentroot wordt teruggezet.
+6. na backup en migratie de vaste TEST-baseline plus alle zes demo-logincontracten vóór cutover
+   zijn hersteld en geverifieerd;
+7. deploychecksum en versie overeenkomen;
+8. publieke health- en login-smoke groen zijn, inclusief een nieuwe beheerder- én medewerkerlogin
+   na de gedeelde reset;
+9. bij fout automatisch de vorige inhoud naar dezelfde stabiele documentroot wordt teruggezet.
 
 Wijzigingen aan bedrijfslogica vereisen in dezelfde commit een update van FO/TO, featurecase en uitvoerbare assertion.
 # Fail-closed TEST-mailschakelaar
