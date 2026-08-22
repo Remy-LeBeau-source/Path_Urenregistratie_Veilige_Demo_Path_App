@@ -176,9 +176,22 @@ test('[SAFE-H-014] gedeelde TEST-reset herstelt alleen de exacte veilige 12-acti
   await test.step('When alle toegestane en verboden resetovergangen niet-mutatief worden doorgerekend', async () => {
     expect(result.checks?.exact_test_host_allowed).toBe(true);
     expect(result.checks?.production_blocked).toBe(true);
+    expect(result.checks?.raw_production_environment_cannot_be_overridden).toBe(true);
     expect(result.checks?.spoofed_test_host_on_production_blocked).toBe(true);
     expect(result.checks?.wrong_host_on_test_blocked).toBe(true);
+    expect(result.checks?.wrong_origin_on_test_blocked).toBe(true);
     expect(result.checks?.missing_demo_permission_blocked).toBe(true);
+    expect(result.checks?.mispointed_test_database_host_blocked).toBe(true);
+    expect(result.checks?.mispointed_test_database_port_blocked).toBe(true);
+    expect(result.checks?.mispointed_test_database_blocked).toBe(true);
+    expect(result.checks?.mispointed_test_database_user_blocked).toBe(true);
+    expect(result.checks?.effective_database_host_override_blocked).toBe(true);
+    expect(result.checks?.effective_database_port_override_blocked).toBe(true);
+    expect(result.checks?.effective_database_name_override_blocked).toBe(true);
+    expect(result.checks?.effective_database_user_override_blocked).toBe(true);
+    expect(result.checks?.mispointed_test_private_root_blocked).toBe(true);
+    expect(result.checks?.public_test_preserves_only_acceptance_credentials).toBe(true);
+    expect(result.checks?.local_test_preserves_runtime_demo_credentials).toBe(true);
   });
 
   await test.step('Then seed, accounts, auditrelatie en exact twaalf open acties herstelbaar blijven', async () => {
@@ -187,6 +200,60 @@ test('[SAFE-H-014] gedeelde TEST-reset herstelt alleen de exacte veilige 12-acti
     expect(result.checks?.twelve_action_baseline_contract).toBe(true);
     expect(result.checks?.reset_audit_avoids_stale_actor_fk).toBe(true);
     expect(result.checks?.foreign_keys_restored).toBe(true);
+    expect(result.checks?.both_acceptance_credentials_required_before_remote_reset).toBe(true);
+    expect(result.checks?.remote_demo_credentials_verified).toBe(true);
+    expect(result.checks?.post_commit_failure_reported_as_write).toBe(true);
+    expect(result.checks?.cli_usage_mode_is_explicitly_informational).toBe(true);
+  });
+});
+
+test('[SAFE-H-015] TEST-deploy herstelt en verifieert de vaste accountbaseline vóór cutover', async () => {
+  let deploy = '';
+  let resetCli = '';
+  let resetLibrary = '';
+  let publicAuthSmoke = '';
+
+  await test.step('Given de bewaakte TEST-baseline-CLI en deploybron zijn ingelezen', async () => {
+    deploy = await readFile(join(process.cwd(), 'scripts', 'deploy-test-remote.sh'), 'utf8');
+    resetCli = await readFile(join(process.cwd(), 'server', 'scripts', 'reset-test-baseline.php'), 'utf8');
+    resetLibrary = await readFile(join(process.cwd(), 'server', 'lib', 'test-reset.php'), 'utf8');
+    publicAuthSmoke = await readFile(join(process.cwd(), 'scripts', 'test-public-auth-smoke.mjs'), 'utf8');
+
+    expect(deploy).toContain('reset-test-baseline.php');
+    expect(resetCli).toContain("require_once __DIR__ . '/../lib/test-reset.php'");
+    expect(resetCli).toContain('RESET_SHARED_TEST_BASELINE');
+    expect(resetCli).toContain('/data/sites/web/pathconsultancynl/private/path-uren-test/config.local.php');
+  });
+
+  await test.step('When backup, migratie, baselineherstel, live-preflight en cutover in vaste volgorde staan', async () => {
+    const backupIndex = deploy.indexOf('database-backup.php');
+    const migrateIndex = deploy.indexOf('server/migrate.php');
+    const resetIndex = deploy.indexOf('reset-test-baseline.php');
+    const preflightIndex = deploy.indexOf('test-preflight.php --config=server/config.local.php --live');
+    const cutoverIndex = deploy.indexOf('cutover_started=1');
+
+    expect(backupIndex).toBeGreaterThanOrEqual(0);
+    expect(migrateIndex).toBeGreaterThan(backupIndex);
+    expect(resetIndex).toBeGreaterThan(migrateIndex);
+    expect(preflightIndex).toBeGreaterThan(resetIndex);
+    expect(cutoverIndex).toBeGreaterThan(preflightIndex);
+    expect(deploy).toMatch(/php server\/scripts\/reset-test-baseline\.php\s*\\\s*--config="\$canonical_config"\s*\\\s*--execute\s*\\\s*--confirm=RESET_SHARED_TEST_BASELINE/);
+  });
+
+  await test.step('Then zijn TEST-database, private opslag en beide loginrollen vóór vrijgave bewezen', async () => {
+    expect(resetLibrary).toContain("TEST_RESET_REMOTE_DATABASE_HOST = 'pathco-urentest.db.transip.me'");
+    expect(resetLibrary).toContain('TEST_RESET_REMOTE_DATABASE_PORT = 3306');
+    expect(resetLibrary).toContain("TEST_RESET_REMOTE_DATABASE = 'pathco_Urentest'");
+    expect(resetLibrary).toContain("TEST_RESET_REMOTE_DATABASE_USER = 'pathco_UrenTestUser'");
+    expect(resetLibrary).toContain("TEST_RESET_REMOTE_PRIVATE_ROOT = '/data/sites/web/pathconsultancynl/private/path-uren-test'");
+    expect(resetLibrary).toContain('test_reset_should_preserve_demo_credentials');
+    expect(resetLibrary.indexOf('$verifiedDemoAccounts = test_reset_verify_remote_demo_credentials')).toBeLessThan(resetLibrary.indexOf('$pdo->commit()'));
+    expect(resetCli).toContain("$reset['verified_demo_accounts']");
+    expect(resetCli).toContain('$error instanceof TestResetPostCommitException');
+    expect(publicAuthSmoke).toMatch(/loginAccount\(accounts\[0\]\)[\s\S]*resetSharedBaseline/);
+    expect(publicAuthSmoke).toMatch(/for \(const account of accounts\)[\s\S]*loginAccount\(account\)/);
+    expect(publicAuthSmoke).toContain("reset.reset?.verified_demo_accounts, 6");
+    expect(publicAuthSmoke).not.toMatch(/LocalDemo(?:Admin|Employee)2026/);
   });
 });
 

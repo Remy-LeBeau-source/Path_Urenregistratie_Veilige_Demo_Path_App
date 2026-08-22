@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -9,7 +10,19 @@ const remote = await readFile(join(root, 'scripts', 'deploy-production-remote.sh
 const combined = `${runner}\n${remote}`;
 const testRunner = await readFile(join(root, 'scripts', 'deploy-test-transip.sh'), 'utf8');
 const testRemote = await readFile(join(root, 'scripts', 'deploy-test-remote.sh'), 'utf8');
+const testResetCli = await readFile(join(root, 'server', 'scripts', 'reset-test-baseline.php'), 'utf8');
+const testResetLibrary = await readFile(join(root, 'server', 'lib', 'test-reset.php'), 'utf8');
 const testCombined = `${testRunner}\n${testRemote}`;
+
+function runBaselineCli(args) {
+  const result = spawnSync('php', ['server/scripts/reset-test-baseline.php', ...args], {
+    cwd: root,
+    encoding: 'utf8',
+    windowsHide: true,
+  });
+  assert.equal(result.error, undefined, 'Guarded TEST baseline CLI must be executable');
+  return { status: result.status, payload: JSON.parse(String(result.stdout || '{}')) };
+}
 
 assert.match(workflow, /deploy-prod:\s*[\s\S]*needs:\s*\[prod, live-docs\]/, 'PROD deployment must wait for regression and Living Docs');
 assert.match(workflow, /environment:\s*prod/, 'PROD deployment must use the protected prod environment');
@@ -103,6 +116,56 @@ assert.match(
 );
 const publicAuthSmoke = await readFile(join(root, 'scripts', 'test-public-auth-smoke.mjs'), 'utf8');
 assert.doesNotMatch(publicAuthSmoke, /LocalDemo(?:Admin|Employee)2026/, 'Public TEST login smoke may not hardcode passwords');
+assert.match(
+  testRemote,
+  /database-backup\.php[\s\S]*server\/migrate\.php[\s\S]*reset-test-baseline\.php[\s\S]*test-preflight\.php --config=server\/config\.local\.php --live[\s\S]*cutover_started=1/,
+  'TEST must restore and verify the guarded shared baseline after migrate and before cutover',
+);
+assert.match(
+  testRemote,
+  /php server\/scripts\/reset-test-baseline\.php\s*\\\s*--config="\$canonical_config"\s*\\\s*--execute\s*\\\s*--confirm=RESET_SHARED_TEST_BASELINE/,
+  'TEST deploy must execute the guarded baseline CLI with its canonical config and exact confirmation',
+);
+for (const required of [
+  '/data/sites/web/pathconsultancynl/private/path-uren-test/config.local.php',
+  'RESET_SHARED_TEST_BASELINE',
+  "test_reset_is_available($config, 'uren-test.pathconsultancy.nl')",
+  "$reset['verified_demo_accounts']",
+]) {
+  assert.ok(testResetCli.includes(required), `Missing guarded TEST baseline CLI safeguard: ${required}`);
+}
+assert.match(testResetLibrary, /TEST_RESET_REMOTE_DATABASE_HOST\s*=\s*'pathco-urentest\.db\.transip\.me'/, 'Remote TEST reset must pin the database host');
+assert.match(testResetLibrary, /TEST_RESET_REMOTE_DATABASE_PORT\s*=\s*3306/, 'Remote TEST reset must pin the database port');
+assert.match(testResetLibrary, /TEST_RESET_REMOTE_DATABASE\s*=\s*'pathco_Urentest'/, 'Remote TEST reset must pin the isolated database');
+assert.match(testResetLibrary, /TEST_RESET_REMOTE_DATABASE_USER\s*=\s*'pathco_UrenTestUser'/, 'Remote TEST reset must pin the database user');
+assert.match(testResetLibrary, /\$effectiveDatabase\s*=\s*auth_db_from_config\(\$config\)/, 'Remote TEST reset must validate the effective database after environment overrides');
+assert.match(testResetLibrary, /TEST_RESET_REMOTE_PRIVATE_ROOT\s*=\s*'\/data\/sites\/web\/pathconsultancynl\/private\/path-uren-test'/, 'Remote TEST reset must pin private storage');
+assert.match(testResetLibrary, /test_reset_should_preserve_demo_credentials[\s\S]*!test_reset_remote_contract_is_exact/, 'Only local\/CI resets may preserve runtime demo hashes');
+assert.match(testResetLibrary, /test_reset_verify_remote_demo_credentials\(\$pdo, \$config\)[\s\S]*\$pdo->commit\(\)/, 'Canonical demo credentials must be verified inside the reset transaction');
+assert.match(testResetCli, /'writes_performed'\s*=>\s*\$error instanceof TestResetPostCommitException/, 'Post-commit reset failures must report that writes occurred');
+const baselineUsage = runBaselineCli([]);
+assert.equal(baselineUsage.status, 0, 'Baseline CLI usage mode must remain non-mutative and successful');
+assert.deepEqual(
+  { mode: baselineUsage.payload.mode, writes: baselineUsage.payload.writes_performed, validated: baselineUsage.payload.validation_performed },
+  { mode: 'usage', writes: false, validated: false },
+  'Baseline CLI usage output must explicitly say that no validation or writes occurred',
+);
+const rejectedConfirmation = runBaselineCli(['--execute', '--confirm=WRONG']);
+assert.equal(rejectedConfirmation.status, 1, 'Baseline CLI must reject the wrong confirmation');
+assert.equal(rejectedConfirmation.payload.writes_performed, false, 'Wrong confirmation must fail before writes');
+const rejectedConfigPath = runBaselineCli([
+  '--execute',
+  '--confirm=RESET_SHARED_TEST_BASELINE',
+  '--config=server/config.test.example.php',
+]);
+assert.equal(rejectedConfigPath.status, 1, 'Baseline CLI must reject a non-canonical config path');
+assert.equal(rejectedConfigPath.payload.writes_performed, false, 'Wrong config path must fail before writes');
+assert.match(
+  publicAuthSmoke,
+  /loginAccount\(accounts\[0\]\)[\s\S]*resetSharedBaseline[\s\S]*for \(const account of accounts\)[\s\S]*loginAccount\(account\)/,
+  'Public TEST smoke must re-authenticate administrator and employee after the shared reset',
+);
+assert.doesNotMatch(testCombined, /LocalDemo(?:Admin|Employee)2026/, 'TEST deploy transport must not contain demo credentials');
 assert.doesNotMatch(testCombined, /pathco_Urenuru|uren\.pathconsultancy\.nl(?![\w-])/, 'TEST deploy must never target PROD identifiers');
 assert.doesNotMatch(testCombined, /BEGIN (?:OPENSSH|RSA|EC) PRIVATE KEY/, 'TEST private keys may never be embedded');
 assert.doesNotMatch(testRemote, /\bseq\b/, 'TEST deploy must use Bash built-ins available on the TransIP shell');

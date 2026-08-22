@@ -2,6 +2,30 @@
 
 Bijgewerkt: 22 augustus 2026, Europe/Amsterdam.
 
+## Actuele overdracht — v0.9.113
+
+Deze sectie vervangt de startstatus hieronder; de rest van het bestand blijft als historische context
+staan.
+
+- Onderzochte release: [run 32571958567](https://github.com/Remy-LeBeau-source/Path_Urenregistratie_Veilige_Demo_Path_App/actions/runs/32571958567), main-SHA `714cce1`, versie `0.9.111`.
+- Alle gates en de TEST-cutover waren groen. Alleen `Verify public TEST account logins` faalde:
+  `gio@example.invalid` gaf HTTP 401. TEST serveert daardoor wel `0.9.111`; PROD bleef veilig op
+  `0.9.106` en is niet gepromoveerd.
+- Oorzaak: de gedeelde TEST-reset bewaarde de al afgedreven demo-wachtwoordhash en zette die na de
+  seed terug. Daardoor kon opnieuw deployen de vaste login niet herstellen.
+- Fix `0.9.113`: de publieke TEST-reset bewaart alleen de twee acceptatieaccounts, herstelt de zes
+  demoaccounts canoniek en verifieert ze binnen de resettransactie. De deploy voert dit uit na backup
+  en migratie maar vóór preflight/cutover. De publieke smoke logt daarna opnieuw in als beheerder én
+  medewerker.
+- De destructieve guard pint raw omgeving, origin, databasehost, poort, naam, gebruiker en private
+  opslag exact. Verkeerde config/confirm valt vóór writes dicht; een fout na DB-commit wordt als write
+  gerapporteerd.
+- Lokaal groen: `npm run check`, volledige `npm run test:gui-smoke`, gerichte `SAFE-H-014` en
+  `SAFE-H-015`, PHP/Node/Git-Bash-syntax, resetpolicy en deploymentcontract.
+- Werkbranch: `fix/test-login-baseline-v0.9.113`, schoon gebaseerd op `origin/main`. Na een groene PR
+  mag main de normale nieuwe releasepipeline starten. Run `32571958567` ongewijzigd rerunnen heeft
+  geen nut; niet handmatig naar PROD promoveren.
+
 ## Startstatus
 
 - Werkmap: `C:\Users\gchli\Documents\path site\Path_Urenregistratie_Veilige_Demo_Path_App`

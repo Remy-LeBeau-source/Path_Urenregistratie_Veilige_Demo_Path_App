@@ -25,10 +25,18 @@ Feature: Veilige productieconfiguratie en deployment
   @happy
   Scenario: [SAFE-H-014] gedeelde TEST-reset herstelt alleen de exacte veilige 12-actiebaseline
     # Testtechniek: Beslissingstabel + equivalentieklassen + toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 12
+    # Aantoonbare Playwright-assertions in deze case: 29
     Given TEST, PROD, verkeerde host en ontbrekend demorecht als beslissingstabel zijn gedefinieerd
     When alle toegestane en verboden resetovergangen niet-mutatief worden doorgerekend
     Then seed, accounts, auditrelatie en exact twaalf open acties herstelbaar blijven
+
+  @happy
+  Scenario: [SAFE-H-015] TEST-deploy herstelt en verifieert de vaste accountbaseline vóór cutover
+    # Testtechniek: Herstelbaarheid + toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 23
+    Given de bewaakte TEST-baseline-CLI en deploybron zijn ingelezen
+    When backup, migratie, baselineherstel, live-preflight en cutover in vaste volgorde staan
+    Then zijn TEST-database, private opslag en beide loginrollen vóór vrijgave bewezen
 
   @negative
   Scenario: [SAFE-N-001] frontend source bevat geen plaintext demo-credentials

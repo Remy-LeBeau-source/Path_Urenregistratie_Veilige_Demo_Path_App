@@ -108,6 +108,10 @@ wait_for_test_vhost() {
 wait_for_test_vhost
 php server/scripts/database-backup.php --config=server/config.local.php --execute
 php server/migrate.php
+php server/scripts/reset-test-baseline.php \
+  --config="$canonical_config" \
+  --execute \
+  --confirm=RESET_SHARED_TEST_BASELINE
 php server/scripts/test-preflight.php --config=server/config.local.php --live
 
 refresh_opcache() {

@@ -23,6 +23,9 @@ Then("blijven TEST-bediening en presentatie zichtbaar zonder PROD-rechten te ver
 Given("TEST, PROD, verkeerde host en ontbrekend demorecht als beslissingstabel zijn gedefinieerd");
 When("alle toegestane en verboden resetovergangen niet-mutatief worden doorgerekend");
 Then("seed, accounts, auditrelatie en exact twaalf open acties herstelbaar blijven");
+Given("de bewaakte TEST-baseline-CLI en deploybron zijn ingelezen");
+When("backup, migratie, baselineherstel, live-preflight en cutover in vaste volgorde staan");
+Then("zijn TEST-database, private opslag en beide loginrollen vóór vrijgave bewezen");
 Given("de frontend source wordt opgehaald");
 When("de flow voor SAFE-N-001 wordt uitgevoerd");
 Then("bevat de frontend geen plaintext demo-credentials");

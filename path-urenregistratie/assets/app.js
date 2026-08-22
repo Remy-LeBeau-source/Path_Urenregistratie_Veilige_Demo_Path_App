@@ -8542,6 +8542,8 @@ function showEmployeeEditor(employeeId, prefill) {
     '<label>E-mailadres<input id="edit-new-recipient-email" type="email" placeholder="naam@example.invalid"></label>' +
     '<label class="check-row"><input id="edit-new-recipient-enabled" type="checkbox" checked><span>Deze medewerker ontvangt via deze ontvanger mail</span></label>' +
     '<label class="check-row"><input id="edit-new-recipient-invoice" type="checkbox"><span>Factuur als PDF meesturen</span></label>' +
+    '<label class="full">Eigen onderwerp <small>leeg = zelfde als de opdracht</small><input id="edit-new-recipient-subject" placeholder="Zelfde als de opdracht"></label>' +
+    '<label class="full">Eigen begeleidende tekst <small>leeg = zelfde als de opdracht</small><textarea id="edit-new-recipient-body" rows="3" placeholder="Zelfde als de opdracht"></textarea></label>' +
     '<p class="full form-help">De naam bepaal je zelf. De ontvanger wordt centraal bewaard en is daarna ook bij andere medewerkers beschikbaar.</p>' +
     '<p class="full form-help">Klanturenstaat · officieel bestand van de klant (PDF, JPG of PNG)</p>' +
     '<label class="check-row full"><input id="edit-customer-timesheet-expected" type="checkbox"' + (employee.customerTimesheetExpected !== false ? " checked" : "") + '><span>Voor deze medewerker wordt iedere maand een klanturenstaat verwacht</span></label>' +
@@ -8621,7 +8623,11 @@ function showEmployeeEditor(employeeId, prefill) {
         });
         mailRecipientRoutes[newRecipientId] = {
           enabled: newRecipientEnabled,
-          invoiceAttachment: newRecipientEnabled && document.querySelector("#edit-new-recipient-invoice").checked
+          invoiceAttachment: newRecipientEnabled && document.querySelector("#edit-new-recipient-invoice").checked,
+          // Also optional here: empty keeps the new recipient inheriting the
+          // assignment text instead of freezing a copy of it at creation time.
+          mailSubject: (document.querySelector("#edit-new-recipient-subject")?.value || "").trim(),
+          mailBody: (document.querySelector("#edit-new-recipient-body")?.value || "").trim()
         };
       }
       const updated = Object.assign({}, employee, {
