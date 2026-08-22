@@ -1299,7 +1299,13 @@ const authRuntime = {
   localLoginHints: null,
   localLoginHintsPromise: null,
   passwordResetDeliveryAvailable: false,
-  serverStateInitialized: false
+  serverStateInitialized: false,
+  // Who is actually logged in, kept apart from the demo catalogue so the screen
+  // can never present a colleague as the current user.
+  identityUserId: 0,
+  identityName: "",
+  identityEmail: "",
+  identityBoundUserId: 0
 };
 
 let authLoginCountdownTimer = null;
@@ -1637,6 +1643,14 @@ function applyAuthUserToState(user, options = {}) {
   const settings = Object.assign({ loginUser: true }, options);
   const role = normalizeAuthRole(String(user && user.role || ""));
   if (!role) return false;
+
+  // Remember who the session says this is. The demo catalogue may renumber or
+  // omit accounts, so the shown name can fall back on the session itself
+  // instead of on whoever happens to be first in the list.
+  authRuntime.identityUserId = Number(user && user.id || 0);
+  authRuntime.identityName = String(user && user.display_name || "");
+  authRuntime.identityEmail = String(user && user.email || "");
+  authRuntime.identityBoundUserId = 0;
 
   if (role === "admin") {
     const adminMatch = state.admins.find(admin =>
@@ -2597,6 +2611,24 @@ function mergeBootstrapIntoState(data) {
     matchedDbEmployeeIds.add(dbId);
   });
 
+  // Bind the shown profile to whoever is actually logged in. This used to run
+  // only when the server catalogue was authoritative, so on the demo hosts
+  // (localhost and uren-test) the selection kept pointing at the demo account
+  // that happened to be picked -- logging in as Marc greeted you as Stasjo.
+  // Re-bind only when the authenticated user changes, so a deliberate role
+  // switch on TEST is not undone by the next background refresh.
+  const boundUserId = Number(authDebug.user_id || authRuntime.identityUserId || 0);
+  if (authRuntime.mode === "auth" && boundUserId > 0 && authRuntime.identityBoundUserId !== boundUserId) {
+    const sessionEmail = String(authRuntime.identityEmail || "").toLowerCase();
+    const boundAdmin = state.admins.find(admin => Number(admin.dbUserId || 0) === boundUserId)
+      || state.admins.find(admin => String(admin.email || "").toLowerCase() === sessionEmail);
+    const boundEmployee = state.employees.find(employee => Number(employee.dbUserId || 0) === boundUserId)
+      || state.employees.find(employee => String(employee.email || "").toLowerCase() === sessionEmail);
+    if (boundAdmin) state.currentAdminId = String(boundAdmin.id);
+    if (boundEmployee) state.currentEmployeeId = Number(boundEmployee.id);
+    if (boundAdmin || boundEmployee) authRuntime.identityBoundUserId = boundUserId;
+  }
+
   if (serverAccountsAreAuthoritative) {
     const authenticatedUserId = Number(authDebug.user_id || 0);
     const authenticatedAdmin = state.admins.find(admin => Number(admin.dbUserId || 0) === authenticatedUserId);
@@ -2651,7 +2683,11 @@ function mergeBootstrapIntoState(data) {
       if (!key) return;
       localEmployee.mailRecipientRoutes[key] = {
         enabled: Number(route.enabled || 0) === 1,
-        invoiceAttachment: Number(route.include_invoice_pdf || 0) === 1
+        invoiceAttachment: Number(route.include_invoice_pdf || 0) === 1,
+        // Empty stays empty: that is what keeps this recipient inheriting the
+        // assignment template instead of freezing a copy of it.
+        mailSubject: String(route.subject_template || ""),
+        mailBody: String(route.body_template || "")
       };
     });
   });
@@ -3502,22 +3538,55 @@ function toggleLoginAccountPanel(role) {
   trigger.setAttribute("aria-expanded", willOpen ? "true" : "false");
 }
 
+// The session is the only trustworthy source for *who you are*. The demo
+// catalogue may not contain the authenticated account at all, and
+// currentEmployee() then falls back to the first active colleague -- which is
+// how "unknown" turned into someone else's name above your screen. Showing no
+// name is acceptable; showing a colleague's name is not.
+function authenticatedIdentityName() {
+  if (authRuntime.mode !== "auth" || !authRuntime.authenticated) return "";
+  return String(authRuntime.identityName || "");
+}
+
+function profileMatchesSession(profile) {
+  const sessionEmail = String(authRuntime.identityEmail || "").toLowerCase();
+  if (!sessionEmail) return true;
+  return String(profile && profile.email || "").toLowerCase() === sessionEmail;
+}
+
 function profileForRole(role) {
+  const sessionName = authenticatedIdentityName();
+  const sessionProfile = base => {
+    if (!sessionName) return base;
+    if (base && profileMatchesSession(base)) return base;
+    // Keep the role label and home view; replace only the identity.
+    const label = role === "admin" ? roleProfiles.admin.label : roleProfiles.employee.label;
+    const home = role === "admin" ? roleProfiles.admin.home : roleProfiles.employee.home;
+    return {
+      initials: initials(sessionName),
+      name: sessionName,
+      email: String(authRuntime.identityEmail || ""),
+      photo: "",
+      label,
+      home
+    };
+  };
+
   if (role === "admin") {
     const admin = currentAdmin();
-    if (!admin) return null;
-    return { initials: initials(admin.name), name: admin.name, email: admin.email, photo: admin.photo || "", label: roleProfiles.admin.label, home: roleProfiles.admin.home };
+    if (!admin) return sessionName ? sessionProfile(null) : null;
+    return sessionProfile({ initials: initials(admin.name), name: admin.name, email: admin.email, photo: admin.photo || "", label: roleProfiles.admin.label, home: roleProfiles.admin.home });
   }
   const employee = currentEmployee();
-  if (!employee) return null;
-  return {
+  if (!employee) return sessionName ? sessionProfile(null) : null;
+  return sessionProfile({
     initials: initials(employee.name),
     name: employee.name,
     email: employee.email,
     photo: employee.photo || "",
     label: roleProfiles.employee.label,
     home: roleProfiles.employee.home
-  };
+  });
 }
 
 function statusPill(status) {
@@ -8441,6 +8510,8 @@ function showEmployeeEditor(employeeId, prefill) {
       '<div><strong>' + escapeHtml(recipient.name) + '</strong><small>' + escapeHtml(recipientCategoryLabel(recipient.category)) + ' · ' + escapeHtml(recipient.email) + '</small></div>' +
       '<label class="route-toggle"><input type="checkbox" data-mail-recipient-enabled="' + escapeHtml(recipient.id) + '"' + (enabled ? " checked" : "") + '><span>Ontvangt mail</span></label>' +
       '<label class="route-toggle"><input type="checkbox" data-mail-recipient-invoice="' + escapeHtml(recipient.id) + '"' + (preference.invoiceAttachment === true ? " checked" : "") + (enabled ? "" : " disabled") + '><span>Factuur meesturen</span></label>' +
+      '<label class="route-template full">Eigen onderwerp <small>leeg = zelfde als de opdracht</small><input type="text" data-mail-recipient-subject="' + escapeHtml(recipient.id) + '" placeholder="Zelfde als de opdracht" value="' + escapeHtml(preference.mailSubject || "") + '"' + (enabled ? "" : " disabled") + '></label>' +
+      '<label class="route-template full">Eigen begeleidende tekst <small>leeg = zelfde als de opdracht</small><textarea rows="3" data-mail-recipient-body="' + escapeHtml(recipient.id) + '" placeholder="Zelfde als de opdracht"' + (enabled ? "" : " disabled") + '>' + escapeHtml(preference.mailBody || "") + '</textarea></label>' +
     '</article>';
   }).join("");
   const summary = '<div class="modal-form">' +
@@ -8461,9 +8532,9 @@ function showEmployeeEditor(employeeId, prefill) {
     '<label>Project op factuur<input id="edit-invoice-project" value="' + escapeHtml(employee.invoiceProject || employee.client || "") + '"></label>' +
     '<label>Factuurtarief<input id="edit-rate" type="number" min="0" step="0.5" value="' + employee.rate + '"></label>' +
     '<label class="full">Onderwerp<input id="edit-subject" value="' + escapeHtml(employee.mailSubject) + '"></label>' +
-    '<label class="full">Begeleidende tekst<textarea id="edit-body" rows="5">' + escapeHtml(employee.mailBody) + "</textarea></label>" +
+    '<label class="full">Begeleidende tekst · voor iedere ontvanger<textarea id="edit-body" rows="5">' + escapeHtml(employee.mailBody) + "</textarea></label>" +
     '<p class="full form-help">Beschikbare velden: {medewerker}, {klant}, {broker}, {maand}, {jaar}, {uren}, {factuurnummer}, {overeenkomstnummer}</p>' +
-    '<p class="full form-help">Vaste ontvangers: boekhouding en salarisadministratie · iedere aangevinkte ontvanger krijgt een aparte mail; een urenstaat wordt nergens toegevoegd</p>' +
+    '<p class="full form-help">Deze tekst gaat naar iedere aangevinkte ontvanger: broker, boekhouding en salarisadministratie krijgen elk een eigen mail met dezelfde begeleidende tekst. Een urenstaat wordt nergens toegevoegd.</p>' +
     '<div class="mail-route-choice-list full"><article class="mail-route-choice"><div><strong>' + escapeHtml(employee.broker || "Broker") + '</strong><small>' + escapeHtml(employee.brokerEmail) + ' · broker van deze medewerker</small></div><label class="route-toggle"><input id="edit-broker-enabled" type="checkbox"' + (employee.brokerMailEnabled !== false ? " checked" : "") + '><span>Ontvangt mail</span></label><label class="route-toggle"><input id="edit-broker-invoice" type="checkbox"' + (employee.brokerInvoiceAttachment !== false ? " checked" : "") + (employee.brokerMailEnabled !== false ? "" : " disabled") + '><span>Factuur meesturen</span></label></article>' + routeChoices + '</div>' +
     '<p class="full form-help">Nieuwe vaste ontvanger toevoegen (optioneel)</p>' +
     '<label>Type ontvanger<select id="edit-new-recipient-category" aria-label="Type nieuwe ontvanger"><option value="accounting">Boekhouding</option><option value="payroll">Salarisadministratie</option><option value="other" selected>Overig</option></select></label>' +
@@ -8526,7 +8597,16 @@ function showEmployeeEditor(employeeId, prefill) {
       document.querySelectorAll("[data-mail-recipient-enabled]").forEach(input => {
         const id = input.dataset.mailRecipientEnabled;
         const invoiceInput = [...document.querySelectorAll("[data-mail-recipient-invoice]")].find(item => item.dataset.mailRecipientInvoice === id);
-        mailRecipientRoutes[id] = { enabled: input.checked, invoiceAttachment: input.checked && Boolean(invoiceInput && invoiceInput.checked) };
+        const subjectInput = [...document.querySelectorAll("[data-mail-recipient-subject]")].find(item => item.dataset.mailRecipientSubject === id);
+        const bodyInput = [...document.querySelectorAll("[data-mail-recipient-body]")].find(item => item.dataset.mailRecipientBody === id);
+        // An empty field is not an override: it keeps inheriting the assignment text,
+        // so one edit there still reaches every recipient without its own exception.
+        mailRecipientRoutes[id] = {
+          enabled: input.checked,
+          invoiceAttachment: input.checked && Boolean(invoiceInput && invoiceInput.checked),
+          mailSubject: subjectInput ? subjectInput.value.trim() : "",
+          mailBody: bodyInput ? bodyInput.value.trim() : ""
+        };
       });
       const effectiveMailRecipients = (state.settings.mailRecipients || []).map(item => Object.assign({}, item));
       if (newRecipientRequested) {

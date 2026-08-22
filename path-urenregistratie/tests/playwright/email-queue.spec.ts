@@ -8,6 +8,22 @@ import { TimesheetApi } from './api/TimesheetApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
 import { LoginPage } from './pages/LoginPage';
 
+async function eqCsrf(ctx: Awaited<ReturnType<typeof playwrightRequest.newContext>>) {
+  const response = await ctx.get('/server/auth/csrf.php');
+  const body = await response.json();
+  return String(body.csrf_token || '');
+}
+
+async function postJson(
+  ctx: Awaited<ReturnType<typeof playwrightRequest.newContext>>,
+  path: string,
+  payload: Record<string, unknown>
+) {
+  const token = await eqCsrf(ctx);
+  const response = await ctx.post(path, { headers: { 'X-CSRF-Token': token }, data: payload });
+  return { status: response.status(), body: await response.json() as Record<string, unknown> };
+}
+
 // ---------------------------------------------------------------------------
 // Shared helpers
 // ---------------------------------------------------------------------------
@@ -231,6 +247,14 @@ test.describe('email queue api', () => {
       expect(byChannel.get('accountant')?.attachment_policy).toBe('invoice');
       expect(byChannel.get('payroll')?.attachment_policy).toBe('none');
       expect(new Set(items.map(item => Number(item.invoice_id)))).toEqual(new Set([invoiceId]));
+
+      // One accompanying text for every recipient. The assignment template used to
+      // reach the broker only, so the bookkeeper and the payroll office kept
+      // hardcoded wording that nobody could change from the screen. All three must
+      // now carry the subject set on the assignment.
+      const onderwerpen = items.map(item => String(item.subject_snapshot || ''));
+      expect(new Set(onderwerpen).size, 'de drie mails moeten hetzelfde onderwerp uit de opdracht dragen: ' + onderwerpen.join(' | ')).toBe(1);
+      expect(onderwerpen[0], 'het onderwerp moet uit de opdracht komen, niet uit een vaste sjabloon').not.toContain('Factuuradministratie');
     });
 
     await test.step('And cleanup', async () => { await authApi.logout(); await ctx.dispose(); });
@@ -1315,5 +1339,118 @@ test.describe('email queue api', () => {
     expect(response.status()).toBe(403);
     await authApi.logout();
     await ctx.dispose();
+  });
+});
+
+test.describe('nieuwe mailontvangers end-to-end', () => {
+  // The screen lets a beheerder add a recipient, tick "Ontvangt mail", and expect
+  // mail. This drives the whole real chain -- add two recipients, attach them to
+  // the assignment, submit and approve hours, finalise the invoice -- and then
+  // checks that both actually received something. Everything is put back
+  // afterwards, because these recipients and routes are shared test data.
+  test('[EQ-H-027] twee nieuw toegevoegde ontvangers krijgen allebei echt een factuurmail', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const unique = Date.now().toString().slice(-7);
+    const boekhoudingEmail = `extra-boekhouding-${unique}@example.invalid`;
+    const overigEmail = `extra-overig-${unique}@example.invalid`;
+    const eigenOnderwerp = `Eigen onderwerp boekhouding ${unique} - {factuurnummer}`;
+
+    const before = await (await ctx.get('/server/api/bootstrap.php')).json();
+    const oorspronkelijkeOntvangers = before.mail_recipients as Array<Record<string, unknown>>;
+    // The bootstrap employee rows carry no email, so resolve the account through
+    // the users list first. Matching on the wrong employee silently rewires a
+    // colleague's mail routes.
+    const gebruiker = (before.users as Array<Record<string, unknown>>)
+      .find(item => String(item.email || '').toLowerCase() === appConfig.employeeEmail.toLowerCase());
+    expect(gebruiker, 'de testmedewerker moet een account hebben').toBeDefined();
+    const medewerker = (before.employees as Array<Record<string, unknown>>)
+      .find(item => Number(item.user_id) === Number(gebruiker?.id));
+    expect(medewerker, 'de testmedewerker moet bestaan').toBeDefined();
+
+    const herstelPayload = JSON.parse(JSON.stringify(oorspronkelijkeOntvangers));
+
+    try {
+      await test.step('Given twee nieuwe ontvangers op de opdracht staan', async () => {
+        const nieuweOntvangers = [
+          ...oorspronkelijkeOntvangers.map(item => ({
+            id: String(item.recipient_key || item.id),
+            email: String(item.email),
+            name: String(item.display_name),
+            category: String(item.recipient_category),
+            active: true,
+          })),
+          { id: `extra-boekhouding-${unique}`, email: boekhoudingEmail, name: 'Extra boekhouding', category: 'accounting', active: true },
+          { id: `extra-overig-${unique}`, email: overigEmail, name: 'Extra overig', category: 'other', active: true },
+        ];
+
+        const write = await postJson(ctx, '/server/api/staff.php', {
+          action: 'upsert_employee',
+          sendInvitation: false,
+          employee: {
+            name: String(medewerker?.full_name || ''),
+            email: appConfig.employeeEmail,
+            dbEmployeeId: Number(medewerker?.id || 0),
+            dbUserId: Number(medewerker?.user_id || 0),
+            role: 'Consultant',
+            active: true,
+            mailRecipientRoutes: {
+              [`extra-boekhouding-${unique}`]: { enabled: true, invoiceAttachment: true, mailSubject: eigenOnderwerp, mailBody: '' },
+              [`extra-overig-${unique}`]: { enabled: true, invoiceAttachment: false, mailSubject: '', mailBody: '' },
+            },
+          },
+          mailRecipients: nieuweOntvangers,
+        });
+        expect(write.status, JSON.stringify(write.body)).toBe(200);
+      });
+
+      let ontvangen: Array<Record<string, unknown>> = [];
+      await test.step('When de volledige uren- en factuurketen wordt doorlopen', async () => {
+        const flow = await createLockedInvoice();
+        const list = await flow.queueApi.list();
+        expect(list.status).toBe(200);
+        ontvangen = (list.body.items as Array<Record<string, unknown>>)
+          .filter(item => Number(item.invoice_id) === flow.invoiceId);
+        await flow.authApi.logout();
+        await flow.ctx.dispose();
+      });
+
+      await test.step('Then krijgt de nieuwe boekhoudingsontvanger een mail met de eigen tekst', async () => {
+        const boekhouding = ontvangen.find(item => String(item.recipient_email) === boekhoudingEmail);
+        expect(boekhouding, 'de nieuwe boekhoudingsontvanger moet een mail krijgen').toBeDefined();
+        expect(String(boekhouding?.subject_snapshot), 'de eigen tekst van deze ontvanger moet worden gebruikt')
+          .toContain(`Eigen onderwerp boekhouding ${unique}`);
+      });
+
+      await test.step('And krijgt ook de tweede nieuwe ontvanger een mail', async () => {
+        const overig = ontvangen.find(item => String(item.recipient_email) === overigEmail);
+        expect(overig, 'een aangevinkte ontvanger die geen mail krijgt is stil dataverlies').toBeDefined();
+      });
+    } finally {
+      await postJson(ctx, '/server/api/staff.php', {
+        action: 'upsert_employee',
+        sendInvitation: false,
+        employee: {
+          name: String(medewerker?.full_name || ''),
+          email: appConfig.employeeEmail,
+          dbEmployeeId: Number(medewerker?.id || 0),
+          dbUserId: Number(medewerker?.user_id || 0),
+          role: 'Consultant',
+          active: true,
+          mailRecipientRoutes: {},
+        },
+        mailRecipients: herstelPayload.map((item: Record<string, unknown>) => ({
+          id: String(item.recipient_key || item.id),
+          email: String(item.email),
+          name: String(item.display_name),
+          category: String(item.recipient_category),
+          active: true,
+        })),
+      });
+      await authApi.logout();
+      await ctx.dispose();
+    }
   });
 });

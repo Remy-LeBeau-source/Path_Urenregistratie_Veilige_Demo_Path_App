@@ -23,6 +23,23 @@ Feature: Organisatie-instellingen beheren
     Then wordt met Playwright-assertions bevestigd dat admin kan beheerder server-led aanmaken en wijzigen
 
   @happy
+  Scenario: [ADM-WR-H-014] een eigen tekst per ontvanger wordt bewaard en een leeg veld blijft erven
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given organisatie-instellingen beheren is voorbereid
+    When de flow voor ADM-WR-H-014 wordt uitgevoerd
+    Then draagt alleen de boekhouding een eigen tekst
+    And blijft de salarisroute leeg, zodat die de opdrachttekst blijft erven
+
+  @happy
+  Scenario: [ADM-WR-H-013] onderwerp en begeleidende tekst van een opdracht blijven bewaard
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given organisatie-instellingen beheren is voorbereid
+    When de flow voor ADM-WR-H-013 wordt uitgevoerd
+    Then leest de bootstrap exact wat er is ingevuld terug
+
+  @happy
   Scenario: [ADM-WR-H-003] admin kan medewerker server-led aanmaken en bootstrap ziet deze terug
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 11

@@ -95,9 +95,33 @@ Feature: Inloggen, uitloggen en sessiebeheer
   @happy
   Scenario: [AUTH-H-009] lokale login benoemt de veilige testomgeving en productnaam
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 6
+    # Aantoonbare Playwright-assertions in deze case: 10
     Given de lokale Path loginpagina beschikbaar is
     Then heet het omgevingsveld Veilige testomgeving
     And heet de lokale titel Welkom bij Path Uren & Facturatie
     When dezelfde login als productiepresentatie wordt getoond
     Then heten omgeving en titel Beveiligde omgeving en Inloggen
+
+  @happy
+  Scenario: [AUTH-H-020] elke medewerker ziet na inloggen de eigen naam, nooit die van een collega
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 1
+    Given inloggen, uitloggen en sessiebeheer is voorbereid
+    When de flow voor AUTH-H-020 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat elke medewerker ziet na inloggen de eigen naam, nooit die van een collega
+
+  @happy
+  Scenario: [AUTH-H-021] elke beheerder ziet na inloggen de eigen naam, nooit die van een collega
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 1
+    Given inloggen, uitloggen en sessiebeheer is voorbereid
+    When de flow voor AUTH-H-021 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat elke beheerder ziet na inloggen de eigen naam, nooit die van een collega
+
+  @happy
+  Scenario: [AUTH-H-022] in productiemodus toont de app de naam van de ingelogde gebruiker
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given inloggen, uitloggen en sessiebeheer is voorbereid
+    When de flow voor AUTH-H-022 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat in productiemodus toont de app de naam van de ingelogde gebruiker

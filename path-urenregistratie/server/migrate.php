@@ -72,6 +72,10 @@ function migration_plan(bool $allowDemoMigrations): array
             'id' => '017_assignment_invoice_mail_templates.sql',
             'path' => __DIR__ . '/migrations/017_assignment_invoice_mail_templates.sql',
         ],
+        [
+            'id' => '019_assignment_route_mail_templates.sql',
+            'path' => __DIR__ . '/migrations/019_assignment_route_mail_templates.sql',
+        ],
     ];
 
     if ($allowDemoMigrations) {
@@ -129,6 +133,12 @@ function migration_plan(bool $allowDemoMigrations): array
     $plan[] = [
         'id' => '015_runtime_state_health.sql',
         'path' => __DIR__ . '/migrations/015_runtime_state_health.sql',
+    ];
+    $plan[] = [
+        // Must run after 013, which rewrites the same channel enum and would
+        // otherwise drop the 'other' value again.
+        'id' => '020_email_channel_other.sql',
+        'path' => __DIR__ . '/migrations/020_email_channel_other.sql',
     ];
     return $plan;
 }

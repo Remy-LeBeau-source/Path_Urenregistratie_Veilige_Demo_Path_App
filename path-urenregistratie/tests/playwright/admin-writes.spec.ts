@@ -133,6 +133,165 @@ test.describe('admin write endpoints', () => {
     await ctx.dispose();
   });
 
+  test('[ADM-WR-H-014] een eigen tekst per ontvanger wordt bewaard en een leeg veld blijft erven', async () => {
+    // Inheritance is the whole point: an empty override must stay empty, so one
+    // edit on the assignment keeps reaching every recipient without an exception.
+    // Storing a copy instead would silently freeze that recipient's wording.
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const unique = Date.now().toString().slice(-7);
+    const eigenOnderwerp = `Alleen voor de boekhouding ${unique} - {factuurnummer}`;
+    const eigenTekst = `Beste boekhouding,\n\nFactuur {factuurnummer} voor {medewerker}.\n\nTotaal: EUR {bedrag}.`;
+
+    const before = await (await ctx.get('/server/api/bootstrap.php')).json();
+
+    const write = await postJson(ctx, '/server/api/staff.php', {
+      action: 'upsert_employee',
+      sendInvitation: false,
+      employee: {
+        name: `Route Medewerker ${unique}`,
+        email: `route-write-${unique}@example.invalid`,
+        role: 'Tester',
+        startDate: '2026-08-01',
+        active: true,
+        weeklyHours: 36,
+        rate: 80,
+        projectCode: `RTE-${unique}`,
+        invoiceProject: `Project ${unique}`,
+        invoiceTemplate: '{klant}-{jaar}-{maand}',
+        mailSubject: 'Opdrachtonderwerp {medewerker} - {maand} {jaar}',
+        mailBody: 'Middag,\n\nOpdrachttekst voor {medewerker}.',
+        client: 'ItaQ Consultancy',
+        broker: 'ItaQ Consultancy',
+        brokerEmail: 'broker@example.invalid',
+        brokerMailEnabled: true,
+        brokerInvoiceAttachment: true,
+        bookkeeperInvoiceAttachment: true,
+        payrollInvoiceAttachment: false,
+        customerTimesheetExpected: true,
+        customerTimesheetDueWorkday: 5,
+        customerTimesheetBrokerEnabled: false,
+        customerTimesheetUseBrokerEmail: true,
+        customerTimesheetBrokerEmail: 'broker@example.invalid',
+        invoiceWithoutCustomerTimesheetAllowed: true,
+        mailRecipientRoutes: {
+          // Deliberate exception for one recipient ...
+          bookkeeper: { enabled: true, invoiceAttachment: true, mailSubject: eigenOnderwerp, mailBody: eigenTekst },
+          // ... and no exception for the other, which must keep inheriting.
+          payroll: { enabled: true, invoiceAttachment: false, mailSubject: '', mailBody: '' },
+        },
+      },
+      mailRecipients: before.mail_recipients,
+    });
+    expect(write.status, JSON.stringify(write.body)).toBe(200);
+    const employeeId = Number(write.body.employee_id);
+
+    await test.step('Then draagt alleen de boekhouding een eigen tekst', async () => {
+      const after = await (await ctx.get('/server/api/bootstrap.php')).json();
+      const assignment = (after.assignments as Array<Record<string, unknown>>)
+        .find(item => Number(item.employee_id) === employeeId);
+      expect(assignment, 'de opdracht moet bestaan').toBeDefined();
+      const routes = (after.assignment_mail_routes as Array<Record<string, unknown>>)
+        .filter(item => Number(item.assignment_id) === Number(assignment?.id));
+      const boekhouding = routes.find(item => String(item.recipient_key) === 'bookkeeper');
+      const salaris = routes.find(item => String(item.recipient_key) === 'payroll');
+      expect(boekhouding, 'de boekhoudingsroute moet bestaan').toBeDefined();
+      expect(salaris, 'de salarisroute moet bestaan').toBeDefined();
+      expect(String(boekhouding?.subject_template)).toBe(eigenOnderwerp);
+      expect(String(boekhouding?.body_template)).toBe(eigenTekst);
+    });
+
+    await test.step('And blijft de salarisroute leeg, zodat die de opdrachttekst blijft erven', async () => {
+      const after = await (await ctx.get('/server/api/bootstrap.php')).json();
+      const assignment = (after.assignments as Array<Record<string, unknown>>)
+        .find(item => Number(item.employee_id) === employeeId);
+      const salaris = (after.assignment_mail_routes as Array<Record<string, unknown>>)
+        .filter(item => Number(item.assignment_id) === Number(assignment?.id))
+        .find(item => String(item.recipient_key) === 'payroll');
+      // Null, not an empty copy: that is what keeps the inheritance alive.
+      expect(salaris?.subject_template ?? null, 'een leeg veld mag geen kopie opslaan').toBeNull();
+      expect(salaris?.body_template ?? null, 'een leeg veld mag geen kopie opslaan').toBeNull();
+    });
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
+
+  test('[ADM-WR-H-013] onderwerp en begeleidende tekst van een opdracht blijven bewaard', async () => {
+    // The screen offers both fields and the form collected them on save, but the
+    // server never wrote the columns: an edited subject or text was silently
+    // discarded and the seeded value came back on the next reload. Nothing caught
+    // that, because every other case reused the values it had just read.
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const unique = Date.now().toString().slice(-7);
+    const employeeEmail = `tpl-write-${unique}@example.invalid`;
+    const onderwerp = `Eigen onderwerp ${unique} - {medewerker} - {maand} {jaar}`;
+    const tekst = `Middag,
+
+Eigen tekst ${unique} voor {medewerker} over {maand} {jaar}.
+
+Uren: {uren} uur.`;
+
+    const before = await (await ctx.get('/server/api/bootstrap.php')).json();
+
+    const write = await postJson(ctx, '/server/api/staff.php', {
+      action: 'upsert_employee',
+      sendInvitation: false,
+      employee: {
+        name: `Sjabloon Medewerker ${unique}`,
+        email: employeeEmail,
+        role: 'Tester',
+        startDate: '2026-08-01',
+        active: true,
+        weeklyHours: 36,
+        rate: 80,
+        projectCode: `TPL-${unique}`,
+        invoiceProject: `Project ${unique}`,
+        invoiceTemplate: '{klant}-{jaar}-{maand}',
+        mailSubject: onderwerp,
+        mailBody: tekst,
+        client: 'ItaQ Consultancy',
+        broker: 'ItaQ Consultancy',
+        brokerEmail: 'broker@example.invalid',
+        brokerMailEnabled: true,
+        brokerInvoiceAttachment: true,
+        bookkeeperInvoiceAttachment: true,
+        payrollInvoiceAttachment: false,
+        customerTimesheetExpected: true,
+        customerTimesheetDueWorkday: 5,
+        customerTimesheetBrokerEnabled: false,
+        customerTimesheetUseBrokerEmail: true,
+        customerTimesheetBrokerEmail: 'broker@example.invalid',
+        invoiceWithoutCustomerTimesheetAllowed: true,
+        mailRecipientRoutes: {
+          bookkeeper: { enabled: true, invoiceAttachment: true },
+          payroll: { enabled: true, invoiceAttachment: false },
+        },
+      },
+      mailRecipients: before.mail_recipients,
+    });
+    expect(write.status, JSON.stringify(write.body)).toBe(200);
+    const employeeId = Number(write.body.employee_id);
+    expect(employeeId).toBeGreaterThan(0);
+
+    await test.step('Then leest de bootstrap exact wat er is ingevuld terug', async () => {
+      const after = await (await ctx.get('/server/api/bootstrap.php')).json();
+      const assignment = (after.assignments as Array<Record<string, unknown>>)
+        .find(item => Number(item.employee_id) === employeeId);
+      expect(assignment, 'de opdracht moet bestaan').toBeDefined();
+      expect(String(assignment?.invoice_subject_template), 'het onderwerp moet bewaard blijven').toBe(onderwerp);
+      expect(String(assignment?.invoice_body_template), 'de begeleidende tekst moet bewaard blijven, inclusief regeleindes').toBe(tekst);
+    });
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
+
   test('[ADM-WR-H-003] admin kan medewerker server-led aanmaken en bootstrap ziet deze terug', async () => {
     const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
     const authApi = new AuthApi(ctx);

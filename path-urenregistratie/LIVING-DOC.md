@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 246 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 252 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 246 unieke case-ID's
+- Playwright executable cases: 252 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 247 unieke case-ID's
+- Totaal executable cases: 253 unieke case-ID's
 - Playwright features: 23
 - Database features: 1
 - Playwright steps mappings: 23
 - Database steps mappings: 1
-- Uitvoeringen: 253
-- Niet-mobile projectuitvoeringen: 239
+- Uitvoeringen: 259
+- Niet-mobile projectuitvoeringen: 245
 - Mobile functionele cases: 7
 - Pixel 7 / Chromium-uitvoeringen: 7
 - iPhone 13 / WebKit-uitvoeringen: 7
 
-De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 246 Playwright-functionele cases in totaal 253 resultaten op: 239 + (7 x 2) = 253.
+De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 252 Playwright-functionele cases in totaal 259 resultaten op: 245 + (7 x 2) = 259.
 
 ## Documentatieketen
 
@@ -42,10 +42,12 @@ De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 246 Playwrig
 
 - Feature: `tests/playwright/features/organization-settings.feature`
 - Source: `tests/playwright/admin-writes.spec.ts`
-- Cases: 19
+- Cases: 21
 
 - [ADM-WR-H-001] admin kan company/settings server-led opslaan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 - [ADM-WR-H-002] admin kan beheerder server-led aanmaken en wijzigen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
+- [ADM-WR-H-014] een eigen tekst per ontvanger wordt bewaard en een leeg veld blijft erven — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
+- [ADM-WR-H-013] onderwerp en begeleidende tekst van een opdracht blijven bewaard — Techniek: API-contract + equivalentieklasse · Assertions: 5
 - [ADM-WR-H-003] admin kan medewerker server-led aanmaken en bootstrap ziet deze terug — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
 - [ADM-WR-N-001] dubbel accountadres geeft veilige metadata van het bestaande bedrijfsaccount — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 8
 - [ADM-WR-N-003] beheerder aanmaken met het e-mailadres van een bestaande medewerker wordt geweigerd — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 10
@@ -85,7 +87,7 @@ De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 246 Playwrig
 
 - Feature: `tests/playwright/features/auth.feature`
 - Source: `tests/playwright/auth.spec.ts`
-- Cases: 11
+- Cases: 14
 
 - [AUTH-H-001] Admin logt in en auth/me geeft de juiste gebruiker terug — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 - [AUTH-H-002] Medewerker logt in en auth/me geeft de juiste gebruiker terug — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
@@ -97,7 +99,10 @@ De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 246 Playwrig
 - [AUTH-N-007] vijf mislukte logins tonen een servergestuurde aftelling — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
 - [AUTH-N-008] de inlogblokkade en aftelling blijven zichtbaar na herladen — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [AUTH-N-009] geen loginflits: login-scherm en app-shell blijven verborgen tijdens auth-bootstrap na F5 — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 9
-- [AUTH-H-009] lokale login benoemt de veilige testomgeving en productnaam — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
+- [AUTH-H-009] lokale login benoemt de veilige testomgeving en productnaam — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 10
+- [AUTH-H-020] elke medewerker ziet na inloggen de eigen naam, nooit die van een collega — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
+- [AUTH-H-021] elke beheerder ziet na inloggen de eigen naam, nooit die van een collega — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
+- [AUTH-H-022] in productiemodus toont de app de naam van de ingelogde gebruiker — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 2
 
 ### Bedrijfsketens van medewerker tot Backoffice
 
@@ -161,12 +166,12 @@ De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 246 Playwrig
 
 - Feature: `tests/playwright/features/mail-delivery.feature`
 - Source: `tests/playwright/email-queue.spec.ts`
-- Cases: 28
+- Cases: 29
 
 - [EQ-H-001] factuurlock maakt queue-items aan met dry_run=true — Techniek: Toestandsovergang · Assertions: 5
 - [EQ-H-002] broker-channel stuurt alleen de factuur — Techniek: API-contract + equivalentieklasse · Assertions: 2
 - [EQ-H-003] EasySalary-channel heeft attachment_policy none — Techniek: Equivalentieklassen · Assertions: 2
-- [EQ-H-022] één factuuractie maakt drie gescheiden mailroutes met het juiste bijlagenbeleid — Techniek: API-contract + equivalentieklasse · Assertions: 7
+- [EQ-H-022] één factuuractie maakt drie gescheiden mailroutes met het juiste bijlagenbeleid — Techniek: API-contract + equivalentieklasse · Assertions: 9
 - [EQ-H-004] action=enqueue voor gelockte factuur maakt nieuwe items aan — Techniek: Toestandsovergang · Assertions: 6
 - [EQ-H-005] action=list response bevat verplichte velden — Techniek: API-contract + equivalentieklasse · Assertions: 15
 - [EQ-H-015] Backoffice ziet veilige verzendhistorie zonder berichtinhoud — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 18
@@ -191,6 +196,7 @@ De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 246 Playwrig
 - [EQ-N-014] unknown action geeft 400 — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
 - [EQ-N-015] localhost blijft preview-only en weigert POST zonder expliciete bevestiging — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 9
 - [EQ-N-016] medewerker krijgt geen toegang tot de mailacceptatieconsole — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
+- [EQ-H-027] twee nieuw toegevoegde ontvangers krijgen allebei echt een factuurmail — Techniek: API-contract + equivalentieklasse · Assertions: 7
 
 ### Facturen definitief maken en vergrendelen
 

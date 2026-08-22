@@ -36,7 +36,7 @@ Feature: Mailroutering en aflevering
   @happy
   Scenario: [EQ-H-022] één factuuractie maakt drie gescheiden mailroutes met het juiste bijlagenbeleid
     # Testtechniek: API-contract + equivalentieklasse
-    # Aantoonbare Playwright-assertions in deze case: 7
+    # Aantoonbare Playwright-assertions in deze case: 9
     Given één goedgekeurde urenstaat als factuur is afgerond
     When de drie functionele routes voor dezelfde factuur worden uitgelezen
     And cleanup
@@ -238,3 +238,12 @@ Feature: Mailroutering en aflevering
     Given mailroutering en aflevering is voorbereid
     When de flow voor EQ-N-016 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat medewerker krijgt geen toegang tot de mailacceptatieconsole
+
+  @happy
+  Scenario: [EQ-H-027] twee nieuw toegevoegde ontvangers krijgen allebei echt een factuurmail
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given twee nieuwe ontvangers op de opdracht staan
+    When de volledige uren- en factuurketen wordt doorlopen
+    Then krijgt de nieuwe boekhoudingsontvanger een mail met de eigen tekst
+    And krijgt ook de tweede nieuwe ontvanger een mail

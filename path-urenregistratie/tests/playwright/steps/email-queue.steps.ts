@@ -89,3 +89,7 @@ When("een scenario zonder de exacte bevestiging wordt aangeboden");
 Then("wordt met Playwright-assertions bevestigd dat localhost blijft preview-only en weigert POST zonder expliciete bevestiging");
 When("de flow voor EQ-N-016 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat medewerker krijgt geen toegang tot de mailacceptatieconsole");
+Given("twee nieuwe ontvangers op de opdracht staan");
+When("de volledige uren- en factuurketen wordt doorlopen");
+Then("krijgt de nieuwe boekhoudingsontvanger een mail met de eigen tekst");
+And("krijgt ook de tweede nieuwe ontvanger een mail");
