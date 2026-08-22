@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 240 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 242 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 240 unieke case-ID's
+- Playwright executable cases: 242 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 241 unieke case-ID's
+- Totaal executable cases: 243 unieke case-ID's
 - Playwright features: 23
 - Database features: 1
 - Playwright steps mappings: 23
 - Database steps mappings: 1
-- Uitvoeringen: 245
+- Uitvoeringen: 249
 - Niet-mobile projectuitvoeringen: 235
-- Mobile functionele cases: 5
-- Pixel 7 / Chromium-uitvoeringen: 5
-- iPhone 13 / WebKit-uitvoeringen: 5
+- Mobile functionele cases: 7
+- Pixel 7 / Chromium-uitvoeringen: 7
+- iPhone 13 / WebKit-uitvoeringen: 7
 
-De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 240 Playwright-functionele cases in totaal 245 resultaten op: 235 + (5 x 2) = 245.
+De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 242 Playwright-functionele cases in totaal 249 resultaten op: 235 + (7 x 2) = 249.
 
 ## Documentatieketen
 
@@ -241,13 +241,15 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 240 Playwrig
 
 - Feature: `tests/playwright/features/mobile.feature`
 - Source: `tests/playwright/mobile-ui.spec.ts`
-- Cases: 5
+- Cases: 7
 
 - [MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikbaar — Techniek: Responsive viewport + end-to-end use-case · Assertions: 31
 - [MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documentupload bereiken — Techniek: Responsive viewport + end-to-end use-case · Assertions: 14
 - [MOB-H-003] mobiele correctie herindiening en administratieve goedkeuring zijn bereikbaar — Techniek: Responsive viewport + end-to-end use-case · Assertions: 10
 - [MOB-N-004] mobiele facturen touch targets en modals blijven binnen viewport — Techniek: Responsive viewport + end-to-end use-case · Assertions: 13
 - [MOB-H-005] mobiele verzendadministratie blijft leesbaar en toont geen geheime inhoud — Techniek: Responsive viewport + end-to-end use-case · Assertions: 15
+- [MOB-H-006] een uitgenodigde collega stelt op de telefoon een wachtwoord in en ziet een duidelijke bevestiging — Techniek: Responsive viewport + end-to-end use-case · Assertions: 15
+- [MOB-H-007] een medewerker leest mededelingen op de telefoon zonder afgekapte tekst — Techniek: Responsive viewport + end-to-end use-case · Assertions: 4
 
 ### Meldingen beheren
 

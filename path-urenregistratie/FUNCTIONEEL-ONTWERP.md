@@ -230,6 +230,8 @@ Minimaal de volgende ketens zijn releaseblokkerend:
 | alles gelezen blijft leidend bij een oudere notificatieresponse | `notifications.spec.ts` (`NOT-H-009`) |
 | auth-login toont nooit eerst demo-aantallen; daarna lopen bel, filter en lijst per leesactie gelijk van 3 naar 0 | `notifications.spec.ts` (`NOT-H-011`) |
 | mobiele hoofdketen | `mobile-ui.spec.ts` |
+| een uitgenodigde collega kan op de telefoon een wachtwoord instellen en ziet de bevestiging | `mobile-ui.spec.ts` (`MOB-H-006`) |
+| een lange mededeling is op de telefoon volledig leesbaar zonder zijwaarts scrollen | `mobile-ui.spec.ts` (`MOB-H-007`) |
 
 Nieuwe productlogica krijgt in dezelfde wijziging een rij in deze tabel of een aantoonbare koppeling
 naar een bestaande ketentest.

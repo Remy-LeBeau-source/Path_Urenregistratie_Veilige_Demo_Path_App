@@ -105,7 +105,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.102"), "Het zichtbare versienummer moet 0.9.102 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.103"), "Het zichtbare versienummer moet 0.9.103 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -1110,8 +1110,15 @@ click("#switch-role");
 employeePicker.value = "3";
 employeePicker.dispatchEvent(new Event("change", { bubbles: true }));
 click('[data-login-role="employee"]');
-// TODO: correction-message check aangepassen voor 2-entry correctionHistory (baseline heeft al 1 seed-entry).
 assert(document.querySelector("#employee-dashboard-correction-message"), "De correctionkaart moet op het medewerkerdashboard zichtbaar zijn");
+// De kaart toonde alleen dát er een correctie was; niet wélke. De correctie die
+// hierboven is gevraagd betreft juli, terwijl de medewerker in augustus staat.
+// De kaart hoort de openstaande correctie van de huidige maand te tonen, niet de
+// zojuist gevraagde uit een afgesloten maand -- anders werkt de medewerker aan de
+// verkeerde opdracht.
+const dashboardCorrectionText = document.querySelector("#employee-dashboard-correction-message").textContent;
+assert(dashboardCorrectionText.includes("12 augustus"), "De correctiekaart moet de openstaande correctie van de huidige maand tonen");
+assert(!dashboardCorrectionText.includes("14 juli"), "Een correctie op een afgesloten maand mag de kaart van de huidige maand niet overschrijven");
 click("#notification-button");
 assert(document.querySelector("#notification-list").textContent.includes("Algemene testmededeling"), "Een algemene mededeling moet bij iedere gekozen medewerker in de app verschijnen");
 assert(document.querySelector("#notification-list").textContent.includes("deadline is vrijdag"), "Een correctie op een mededeling moet als nieuw bericht zichtbaar zijn");
@@ -1644,4 +1651,4 @@ assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("
 assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Playwright stage- en lokale env-bestanden mogen expliciete runner/CI-variabelen niet overschrijven");
 
 dom.window.close();
-console.log("Path v0.9.102 volledige smoke test: geslaagd");
+console.log("Path v0.9.103 volledige smoke test: geslaagd");

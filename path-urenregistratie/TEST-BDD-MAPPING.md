@@ -154,6 +154,8 @@
 | MOB-H-003 | ui | mobile.feature | mobiele correctie herindiening en administratieve goedkeuring zijn bereikbaar | Responsive viewport + end-to-end use-case | 10 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | Correctie en goedkeuring | Happy | 15 | Actueel |
 | MOB-N-004 | ui | mobile.feature | mobiele facturen touch targets en modals blijven binnen viewport | Responsive viewport + end-to-end use-case | 13 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | mobiele facturen touch targets en modals blijven binnen viewport | Negative | 15 | Actueel |
 | MOB-H-005 | ui | mobile.feature | mobiele verzendadministratie blijft leesbaar en toont geen geheime inhoud | Responsive viewport + end-to-end use-case | 15 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | mobiele verzendadministratie blijft leesbaar en toont geen geheime inhoud | Happy | 15 | Actueel |
+| MOB-H-006 | ui | mobile.feature | een uitgenodigde collega stelt op de telefoon een wachtwoord in en ziet een duidelijke bevestiging | Responsive viewport + end-to-end use-case | 15 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | een uitgenodigde collega stelt op de telefoon een wachtwoord in en ziet een duidelijke bevestiging | Happy | 15 | Actueel |
+| MOB-H-007 | ui | mobile.feature | een medewerker leest mededelingen op de telefoon zonder afgekapte tekst | Responsive viewport + end-to-end use-case | 4 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | een medewerker leest mededelingen op de telefoon zonder afgekapte tekst | Happy | 15 | Actueel |
 | NOT-H-001 | api | notifications.feature | ingelogde gebruiker kan notificaties ophalen | API-contract + equivalentieklasse | 5 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | ingelogde gebruiker kan notificaties ophalen | Happy | 15 | Actueel |
 | NOT-H-002 | api | notifications.feature | mark_all_read werkt zonder fouten | Toestandsovergang | 8 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | mark_all_read werkt zonder fouten | Happy | 15 | Actueel |
 | NOT-N-003 | api | notifications.feature | anonieme gebruiker krijgt 401 op notificaties | Beslissingstabel rollen en autorisatie | 1 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | anonieme gebruiker krijgt 401 op notificaties | Negative | 15 | Actueel |
@@ -262,9 +264,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 240
+- Playwright executable cases: 242
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 241
+- Totaal unieke executable cases: 243
 - Playwright features: 23
 - Database features: 1
 - Playwright steps mappings: 23

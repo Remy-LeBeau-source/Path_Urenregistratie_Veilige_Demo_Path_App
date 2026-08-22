@@ -676,3 +676,136 @@ test('[MOB-H-005] mobiele verzendadministratie blijft leesbaar en toont geen geh
     await assertNoHorizontalOverflow(page);
   });
 });
+
+test('[MOB-H-006] een uitgenodigde collega stelt op de telefoon een wachtwoord in en ziet een duidelijke bevestiging', async ({ page }) => {
+  // An invitation mail is usually opened on a phone, so the one screen a new
+  // colleague sees before they can work must hold up on a small viewport:
+  // both fields reachable, the confirmation readable, and no sideways scroll.
+  const errors = captureConsoleErrors(page);
+  await isolateFrontendState(page);
+
+  const token = 'a'.repeat(64);
+  let resetPayload: Record<string, unknown> | null = null;
+
+  await page.route('**/server/auth/reset-password.php', async route => {
+    resetPayload = route.request().postDataJSON() as Record<string, unknown>;
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, message: 'Password updated successfully.' }),
+    });
+  });
+
+  await test.step('Given de uitgenodigde collega de link uit de mail opent op de telefoon', async () => {
+    await page.goto(`/index.html#reset-password=${token}`);
+    await expect(page).not.toHaveURL(/reset-password=/);
+    await expect(page.locator('#auth-reset-complete-form')).toBeVisible();
+    await assertNoHorizontalOverflow(page);
+  });
+
+  await test.step('When beide wachtwoordvelden op het kleine scherm worden ingevuld', async () => {
+    const newPassword = page.locator('#auth-reset-new-password');
+    const confirmPassword = page.locator('#auth-reset-confirm-password');
+    await expect(newPassword).toBeVisible();
+    await expect(confirmPassword).toBeVisible();
+    await newPassword.fill('RuimVoldoendeLang2026!');
+    await confirmPassword.fill('RuimVoldoendeLang2026!');
+
+    const submit = page.locator('#auth-reset-complete-submit');
+    const box = await submit.boundingBox();
+    expect(box).not.toBeNull();
+    // Touch targets stay tappable on a phone.
+    expect(box!.height).toBeGreaterThanOrEqual(40);
+    await submit.click();
+  });
+
+  await test.step('Then verschijnt de bevestiging met een tapbare knop en past alles binnen het scherm', async () => {
+    expect(resetPayload).not.toBeNull();
+    expect(String((resetPayload as Record<string, unknown>).token)).toBe(token);
+
+    const feedback = page.locator('#auth-reset-complete-feedback');
+    await expect(feedback).toBeVisible();
+    await expect(feedback).toContainText('Gelukt!');
+
+    const gotoLogin = page.locator('#auth-reset-goto-login');
+    await expect(gotoLogin).toBeVisible();
+    const loginBox = await gotoLogin.boundingBox();
+    expect(loginBox).not.toBeNull();
+    expect(loginBox!.height).toBeGreaterThanOrEqual(40);
+    await assertNoHorizontalOverflow(page);
+
+    await gotoLogin.click();
+    await expect(page.locator('#auth-login-form')).toBeVisible();
+    await assertNoHorizontalOverflow(page);
+  });
+
+  expect(errors, errors.join('\n')).toEqual([]);
+  await attachBusinessScreenshot(page, 'Mobiel · wachtwoord instellen na uitnodiging');
+});
+
+test('[MOB-H-007] een medewerker leest mededelingen op de telefoon zonder afgekapte tekst', async ({ page }) => {
+  // Announcements are how the office reaches everyone at once, and most
+  // employees read them on a phone. A long message must stay fully readable
+  // without the page scrolling sideways.
+  const errors = captureConsoleErrors(page);
+  const loginPage = new LoginPage(page);
+  await isolateFrontendState(page);
+
+  const longMessage = 'Vanaf maandag geldt een nieuwe aanlevertermijn voor de klanturenstaat. '
+    + 'Lever het document uiterlijk op de vijfde werkdag aan, zodat de facturatie op tijd verwerkt kan worden.';
+
+  // In auth mode the employee's announcement archive is built from their
+  // notifications, not from the announcements endpoint, so mock that source.
+  await page.route('**/server/api/notifications.php*', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        count: 1,
+        items: [{
+          id: 9001,
+          announcement_id: 9001,
+          notification_type: 'announcement',
+          title: 'Nieuwe aanlevertermijn klanturenstaat',
+          message: longMessage,
+          target_route: 'employee-announcements',
+          read_at: null,
+          created_at: '2026-08-20 09:00:00',
+        }],
+      }),
+    });
+  });
+
+  // This case is about reading an announcement, not about hours. Stub the
+  // timesheet read so a warm-up fetch that races the fresh session cannot log a
+  // 401 and fail the console-error assertion for an unrelated reason.
+  await page.route('**/server/api/timesheets.php**', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ ok: true, found: false }),
+  }));
+
+  await test.step('Given een ingelogde medewerker op de telefoon', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    clearConsoleErrors(errors);
+    await assertNoHorizontalOverflow(page);
+  });
+
+  await test.step('When de medewerker de mededelingen opent', async () => {
+    await page.locator('button[data-view="employee-announcements"]:visible').first().click();
+    await expect(page.locator('#view-employee-announcements')).toHaveClass(/is-active/);
+  });
+
+  await test.step('Then is de volledige mededeling leesbaar en scrollt de pagina niet zijwaarts', async () => {
+    const list = page.locator('#employee-announcement-list');
+    await expect(list).toContainText('Nieuwe aanlevertermijn klanturenstaat');
+    // The whole message must be present, not cut off at a fixed width.
+    await expect(list).toContainText('uiterlijk op de vijfde werkdag');
+    await assertNoHorizontalOverflow(page);
+  });
+
+  expect(errors, errors.join('\n')).toEqual([]);
+  await attachBusinessScreenshot(page, 'Mobiel · mededeling lezen');
+});
