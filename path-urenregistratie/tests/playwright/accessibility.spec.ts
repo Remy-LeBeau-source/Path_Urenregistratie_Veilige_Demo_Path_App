@@ -69,30 +69,37 @@ test('[A11Y-H-003] lopende tekst blijft op een breed scherm leesbaar van regelle
   await loginPage.open();
   await loginPage.loginAsAdmin();
 
-  const telTeLangeRegels = async () => page.evaluate(() => {
-    const teLang: string[] = [];
+  // Meten in pixels, niet in geschatte tekens. Het aantal tekens per regel hangt
+  // af van het lettertype, en op een bouwmachine zonder de projectlettertypes valt
+  // de browser terug op andere maten -- dan meet je het lettertype in plaats van de
+  // regellengte. Dezelfde alinea kwam daar op 95 tekens uit in plaats van 75, en de
+  // test faalde terwijl de CSS klopte.
+  //
+  // Een alinea van 75 tekens komt bij deze lettergroottes rond de 550px uit. De grens
+  // ligt op 900px: ruim genoeg om lettertypeverschillen te overleven, streng genoeg
+  // om te vangen dat een alinea de volle inhoudsbreedte van 1122px pakt.
+  const MAX_ALINEABREEDTE = 900;
+  const telTeBredeAlineas = async () => page.evaluate((grens) => {
+    const teBreed: string[] = [];
     document.querySelectorAll('.view.is-active p, .view.is-active li').forEach(el => {
       const rect = el.getBoundingClientRect();
       if (rect.width === 0 || rect.height === 0) return;
       const tekst = (el.textContent || '').trim();
       if (tekst.length < 90) return;
-      const px = parseFloat(getComputedStyle(el).fontSize) || 14;
-      // Een teken is bij deze lettertypes ruwweg een halve regelhoogte breed.
-      const tekens = Math.round(rect.width / (px * 0.5));
-      if (tekens > 90) {
+      if (rect.width > grens) {
         const e = el as HTMLElement;
-        teLang.push((e.id || e.className || e.tagName) + '=' + tekens);
+        teBreed.push((e.id || e.className || e.tagName) + '=' + Math.round(rect.width) + 'px');
       }
     });
-    return [...new Set(teLang)];
-  });
+    return [...new Set(teBreed)];
+  }, MAX_ALINEABREEDTE);
 
   for (const view of ['dashboard', 'announcements', 'settings'] as const) {
     await test.step(`Het scherm ${view} houdt zijn alinea's leesbaar`, async () => {
       await page.locator(`button[data-view="${view}"]`).first().click();
       await expect(page.locator(`#view-${view}`)).toHaveClass(/is-active/);
-      const teLang = await telTeLangeRegels();
-      expect(teLang, `${view}: alinea's met meer dan 90 tekens per regel — ${teLang.join(', ')}`).toEqual([]);
+      const teBreed = await telTeBredeAlineas();
+      expect(teBreed, `${view}: alinea's breder dan ${MAX_ALINEABREEDTE}px, dus te lange regels — ${teBreed.join(', ')}`).toEqual([]);
     });
   }
 });
