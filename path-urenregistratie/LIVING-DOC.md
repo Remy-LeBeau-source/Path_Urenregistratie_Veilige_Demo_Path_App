@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 245 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 246 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 245 unieke case-ID's
+- Playwright executable cases: 246 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 246 unieke case-ID's
+- Totaal executable cases: 247 unieke case-ID's
 - Playwright features: 23
 - Database features: 1
 - Playwright steps mappings: 23
 - Database steps mappings: 1
-- Uitvoeringen: 252
-- Niet-mobile projectuitvoeringen: 238
+- Uitvoeringen: 253
+- Niet-mobile projectuitvoeringen: 239
 - Mobile functionele cases: 7
 - Pixel 7 / Chromium-uitvoeringen: 7
 - iPhone 13 / WebKit-uitvoeringen: 7
 
-De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 245 Playwright-functionele cases in totaal 252 resultaten op: 238 + (7 x 2) = 252.
+De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 246 Playwright-functionele cases in totaal 253 resultaten op: 239 + (7 x 2) = 253.
 
 ## Documentatieketen
 
@@ -287,7 +287,7 @@ De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 245 Playwrig
 
 - Feature: `tests/playwright/features/password-reset.feature`
 - Source: `tests/playwright/password-reset.spec.ts`
-- Cases: 17
+- Cases: 18
 
 - [PWD-H-001] request-reset retourneert token in demo-modus — Techniek: Toestandsovergang · Assertions: 12
 - [PWD-H-002] onbekend e-mailadres retourneert ook ok=true (geen email-enumeration) — Techniek: API-contract + equivalentieklasse · Assertions: 3
@@ -306,6 +306,7 @@ De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 245 Playwrig
 - [PWD-H-012] een aangevraagde reset wordt ook echt verzonden, niet alleen in de wachtrij gezet — Techniek: Toestandsovergang · Assertions: 24
 - [PWD-H-014] wachtwoord-vergeten op het inlogscherm verraadt niet welke e-mailadressen bestaan — Techniek: API-contract + equivalentieklasse · Assertions: 11
 - [PWD-N-015] het resetscherm neemt het ingevulde adres over, weigert een leeg adres en laat terugkeren naar inloggen — Techniek: Toestandsovergang · Assertions: 10
+- [PWD-N-016] productie toont nooit dry-run-jargon aan iemand die zijn wachtwoord kwijt is — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 7
 
 ### Maandperiodes beheren
 

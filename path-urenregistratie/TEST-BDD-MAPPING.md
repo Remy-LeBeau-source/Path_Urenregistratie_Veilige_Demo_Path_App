@@ -191,6 +191,7 @@
 | PWD-H-012 | security | password-reset.feature | een aangevraagde reset wordt ook echt verzonden, niet alleen in de wachtrij gezet | Toestandsovergang | 24 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
 | PWD-H-014 | security | password-reset.feature | wachtwoord-vergeten op het inlogscherm verraadt niet welke e-mailadressen bestaan | API-contract + equivalentieklasse | 11 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
 | PWD-N-015 | security | password-reset.feature | het resetscherm neemt het ingevulde adres over, weigert een leeg adres en laat terugkeren naar inloggen | Toestandsovergang | 10 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
+| PWD-N-016 | security | password-reset.feature | productie toont nooit dry-run-jargon aan iemand die zijn wachtwoord kwijt is | Negatieve equivalentieklasse + error guessing | 7 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
 | PER-H-001 | api | period-management.feature | admin kan periodes ophalen met overzicht | Beslissingstabel rollen en autorisatie | 6 | period-management.steps.ts | period-management.spec.ts | API | Periodebeheer | admin kan periodes ophalen met overzicht | Happy | 15 | Actueel |
 | PER-H-002 | api | period-management.feature | admin kan periode sluiten en heropenen | Beslissingstabel rollen en autorisatie | 9 | period-management.steps.ts | period-management.spec.ts | API | Periodebeheer | admin kan periode sluiten en heropenen | Happy | 15 | Actueel |
 | PER-N-003 | api | period-management.feature | anonieme gebruiker krijgt 401 op periods | Beslissingstabel rollen en autorisatie | 1 | period-management.steps.ts | period-management.spec.ts | API | Periodebeheer | anonieme gebruiker krijgt 401 op periods | Negative | 15 | Actueel |
@@ -267,9 +268,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 245
+- Playwright executable cases: 246
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 246
+- Totaal unieke executable cases: 247
 - Playwright features: 23
 - Database features: 1
 - Playwright steps mappings: 23

@@ -105,7 +105,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.104"), "Het zichtbare versienummer moet 0.9.104 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.106"), "Het zichtbare versienummer moet 0.9.106 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -1634,6 +1634,13 @@ assert(passwordResetMigrationSrc.includes("password_reset") && passwordResetMigr
 assert(passwordResetServiceSrc.includes("#reset-password=") && passwordResetServiceSrc.includes("AUTH_PASSWORD_RESET_MAX_REQUESTS = 3") && requestResetSrc.includes("auth_password_reset_public_response"), "Resetlinks moeten logveilig, eenmalig voorbereid, begrensd en enumeration-safe zijn");
 assert(passwordResetServiceSrc.includes("mail_dispatch_created(") && passwordResetServiceSrc.indexOf("mail_dispatch_created(") > passwordResetServiceSrc.indexOf("$pdo->commit();"), "Een herstel- of uitnodigingsmail moet na de commit ook echt worden verzonden en niet alleen in de wachtrij blijven staan");
 assert(announcementsApiSrc.includes("function announcement_truncate") && announcementsApiSrc.includes("announcement_truncate($message, 400)") && announcementsApiSrc.includes("function_exists('mb_substr')"), "Mededelingen mogen niet stukgaan op een PHP-installatie zonder mbstring: de notificatietekst moet via de guarded helper worden afgekapt");
+// Zonder maildbezorging moet wachtwoordherstel altijd dezelfde zin tonen en het
+// testtoken hooguit aanvullen. Een zin die van het token afhangt verraadt welke
+// accounts bestaan, want de server geeft alleen een token voor een bestaand
+// account; op productie leverde datzelfde pad dry-run-jargon op bij een gewone
+// gebruiker.
+assert(appJsSrc.includes('+ (data.token ? " · Token: " + data.token'), "Het testtoken bij wachtwoordherstel moet de vaste zin aanvullen, niet vervangen");
+assert(!appJsSrc.includes("Resetverzoek verstuurd (dry-run)"), "De dry-run-tekst mag niet meer aan een gebruiker worden getoond");
 const renderAllBody = appJsSrc.slice(appJsSrc.indexOf("function renderAll()"), appJsSrc.indexOf("function prefersReducedMotion()"));
 assert(renderAllBody.includes("settingsFormIsBeingEdited()) populateSettings()"), "renderAll moet het instellingenformulier opnieuw vullen: anders blijven na een herlaad de lokaal herstelde bedrijfsgegevens staan en overschrijft Wijzigingen opslaan de juiste serverdata");
 assert(appJsSrc.includes("function settingsFormIsBeingEdited") && appJsSrc.includes("view.contains(active)"), "Het opnieuw vullen van het instellingenformulier mag nooit gebeuren terwijl iemand in dat formulier typt");
@@ -1655,4 +1662,4 @@ assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("
 assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Playwright stage- en lokale env-bestanden mogen expliciete runner/CI-variabelen niet overschrijven");
 
 dom.window.close();
-console.log("Path v0.9.104 volledige smoke test: geslaagd");
+console.log("Path v0.9.106 volledige smoke test: geslaagd");

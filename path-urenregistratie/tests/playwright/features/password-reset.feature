@@ -147,3 +147,11 @@ Feature: Wachtwoordherstel en misbruikbeveiliging
     When het adres wordt gewist en het formulier toch wordt verstuurd
     Then komt er een expliciete melding en wordt er niets verstuurd
     And brengt Terug naar inloggen de gebruiker terug bij het inlogformulier zonder oude melding
+
+  @negative
+  Scenario: [PWD-N-016] productie toont nooit dry-run-jargon aan iemand die zijn wachtwoord kwijt is
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given wachtwoordherstel en misbruikbeveiliging is voorbereid
+    When iemand op productie een resetverzoek doet
+    Then krijgt die een bruikbare instructie zonder jargon of nep-token
