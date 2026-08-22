@@ -1421,6 +1421,13 @@ function restoreAuthLoginCountdown() {
 }
 
 function showPasswordResetForm() {
+  // A one-time link must win over whoever happens to be logged in on this
+  // browser. Without this the form is revealed inside a login screen that is
+  // hidden behind the app, so clicking the invitation while an admin session is
+  // open silently lands on the dashboard and nothing explains why.
+  if (state.currentRole || authRuntime.authenticated) {
+    logoutLocal();
+  }
   document.querySelector("#local-account-login-tools").hidden = true;
   document.querySelector("#auth-login-form").hidden = true;
   document.querySelector("#auth-forgot-password").hidden = true;
@@ -2487,6 +2494,12 @@ function mergeBootstrapIntoState(data) {
   if (company.customer_timesheet_overdue_workdays !== undefined && company.customer_timesheet_overdue_workdays !== null) {
     state.settings.customerTimesheetOverdueWorkdays = Number(company.customer_timesheet_overdue_workdays) || state.settings.customerTimesheetOverdueWorkdays;
   }
+  // The four klanturenstaat mail texts are server-side now. Empty means "never
+  // changed": keep the built-in default rather than blanking the field.
+  if (company.customer_timesheet_submission_subject) state.settings.customerTimesheetSubmissionSubject = String(company.customer_timesheet_submission_subject);
+  if (company.customer_timesheet_submission_body) state.settings.customerTimesheetSubmissionBody = String(company.customer_timesheet_submission_body);
+  if (company.customer_timesheet_broker_subject) state.settings.customerTimesheetBrokerSubject = String(company.customer_timesheet_broker_subject);
+  if (company.customer_timesheet_broker_body) state.settings.customerTimesheetBrokerBody = String(company.customer_timesheet_broker_body);
 
   const companyUsers = users.filter(user => Number(user.company_id) === Number(company.id));
   const adminUsers = companyUsers.filter(user => String(user.role || "") === "administrator");
@@ -8535,7 +8548,7 @@ function showEmployeeEditor(employeeId, prefill) {
     '<label class="full">Begeleidende tekst · voor iedere ontvanger<textarea id="edit-body" rows="5">' + escapeHtml(employee.mailBody) + "</textarea></label>" +
     '<p class="full form-help">Beschikbare velden: {medewerker}, {klant}, {broker}, {maand}, {jaar}, {uren}, {factuurnummer}, {overeenkomstnummer}</p>' +
     '<p class="full form-help">Deze tekst gaat naar iedere aangevinkte ontvanger: broker, boekhouding en salarisadministratie krijgen elk een eigen mail met dezelfde begeleidende tekst. Een urenstaat wordt nergens toegevoegd.</p>' +
-    '<div class="mail-route-choice-list full"><article class="mail-route-choice"><div><strong>' + escapeHtml(employee.broker || "Broker") + '</strong><small>' + escapeHtml(employee.brokerEmail) + ' · broker van deze medewerker</small></div><label class="route-toggle"><input id="edit-broker-enabled" type="checkbox"' + (employee.brokerMailEnabled !== false ? " checked" : "") + '><span>Ontvangt mail</span></label><label class="route-toggle"><input id="edit-broker-invoice" type="checkbox"' + (employee.brokerInvoiceAttachment !== false ? " checked" : "") + (employee.brokerMailEnabled !== false ? "" : " disabled") + '><span>Factuur meesturen</span></label></article>' + routeChoices + '</div>' +
+    '<div class="mail-route-choice-list full"><article class="mail-route-choice"><div><strong>' + escapeHtml(employee.broker || "Broker") + '</strong><small>' + escapeHtml(employee.brokerEmail) + ' · broker van deze medewerker<br>gebruikt de begeleidende tekst hierboven</small></div><label class="route-toggle"><input id="edit-broker-enabled" type="checkbox"' + (employee.brokerMailEnabled !== false ? " checked" : "") + '><span>Ontvangt mail</span></label><label class="route-toggle"><input id="edit-broker-invoice" type="checkbox"' + (employee.brokerInvoiceAttachment !== false ? " checked" : "") + (employee.brokerMailEnabled !== false ? "" : " disabled") + '><span>Factuur meesturen</span></label></article>' + routeChoices + '</div>' +
     '<p class="full form-help">Nieuwe vaste ontvanger toevoegen (optioneel)</p>' +
     '<label>Type ontvanger<select id="edit-new-recipient-category" aria-label="Type nieuwe ontvanger"><option value="accounting">Boekhouding</option><option value="payroll">Salarisadministratie</option><option value="other" selected>Overig</option></select></label>' +
     '<label>Naam / kopje<input id="edit-new-recipient-name" placeholder="Bijvoorbeeld: Salarisadministratie of EasySalary"></label>' +

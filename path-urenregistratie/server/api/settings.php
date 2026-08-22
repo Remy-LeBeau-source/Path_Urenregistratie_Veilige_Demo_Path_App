@@ -48,6 +48,23 @@ function settings_string(mixed $value, int $maxLength = 0): string
     return $text;
 }
 
+/**
+ * Multi-line mail template text. Newlines carry meaning here, and a plain
+ * substr() can cut a multi-byte character in half.
+ */
+function settings_text(mixed $value, int $maxLength): string
+{
+    $text = trim((string)($value ?? ''));
+    if ($maxLength <= 0) {
+        return $text;
+    }
+    if (function_exists('mb_substr')) {
+        return mb_substr($text, 0, $maxLength);
+    }
+    $truncated = preg_replace('/^(.{0,' . $maxLength . '}).*$/su', '$1', $text);
+    return is_string($truncated) ? $truncated : substr($text, 0, $maxLength);
+}
+
 function settings_bool(mixed $value, bool $default = false): bool
 {
     if ($value === null) {
@@ -116,7 +133,11 @@ try {
              payment_term_days = :payment_term_days,
              customer_timesheet_reminder_enabled = :customer_timesheet_reminder_enabled,
              customer_timesheet_reminder_time = :customer_timesheet_reminder_time,
-             customer_timesheet_overdue_workdays = :customer_timesheet_overdue_workdays
+             customer_timesheet_overdue_workdays = :customer_timesheet_overdue_workdays,
+             customer_timesheet_submission_subject = :customer_timesheet_submission_subject,
+             customer_timesheet_submission_body = :customer_timesheet_submission_body,
+             customer_timesheet_broker_subject = :customer_timesheet_broker_subject,
+             customer_timesheet_broker_body = :customer_timesheet_broker_body
          WHERE id = :company_id'
     );
 
@@ -173,6 +194,12 @@ try {
         ':customer_timesheet_reminder_enabled' => settings_bool($settings['customerTimesheetReminderEnabled'] ?? true, true) ? 1 : 0,
         ':customer_timesheet_reminder_time' => $reminderTime . ':00',
         ':customer_timesheet_overdue_workdays' => $overdueWorkdays,
+        // These four were collected by the form but never stored: the texts lived
+        // only in the browser of whoever typed them, so F5 lost the change.
+        ':customer_timesheet_submission_subject' => settings_string($settings['customerTimesheetSubmissionSubject'] ?? '', 250) ?: null,
+        ':customer_timesheet_submission_body' => settings_text($settings['customerTimesheetSubmissionBody'] ?? '', 4000) ?: null,
+        ':customer_timesheet_broker_subject' => settings_string($settings['customerTimesheetBrokerSubject'] ?? '', 250) ?: null,
+        ':customer_timesheet_broker_body' => settings_text($settings['customerTimesheetBrokerBody'] ?? '', 4000) ?: null,
         ':company_id' => $companyId,
     ]);
 

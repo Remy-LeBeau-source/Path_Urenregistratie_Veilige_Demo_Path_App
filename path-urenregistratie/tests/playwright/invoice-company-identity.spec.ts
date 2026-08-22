@@ -216,3 +216,62 @@ test.describe('facturerende ondernemingsidentiteit', () => {
     }
   });
 });
+
+test('[INV-ID-H-007] de klanturenstaat-mailteksten blijven na opslaan bewaard', async ({ page }) => {
+  // Reported from the screen: typing in these four fields and pressing F5 lost the
+  // change. The form collected them, but settings.php had no columns to store
+  // them, so the texts lived only in the browser of whoever typed them.
+  const login = new LoginPage(page);
+  await login.open();
+  await login.loginAsAdmin();
+  await openSettings(page);
+
+  const velden = [
+    'setting-customer-timesheet-submission-subject',
+    'setting-customer-timesheet-submission-body',
+    'setting-customer-timesheet-broker-subject',
+    'setting-customer-timesheet-broker-body',
+  ] as const;
+
+  const origineel: Record<string, string> = {};
+  for (const id of velden) origineel[id] = await page.locator('#' + id).inputValue();
+
+  const uniek = Date.now().toString().slice(-6);
+  const gewijzigd: Record<string, string> = {
+    'setting-customer-timesheet-submission-subject': `Klanturenstaat {medewerker} ter controle ${uniek}`,
+    'setting-customer-timesheet-submission-body': `Goedemiddag,\n\nHierbij mijn klanturenstaat ${uniek} over {maand} {jaar}.`,
+    'setting-customer-timesheet-broker-subject': `Klanturenstaat {medewerker} voor dossier ${uniek}`,
+    'setting-customer-timesheet-broker-body': `Goedemiddag,\n\nHierbij de klanturenstaat ${uniek} van {medewerker}.`,
+  };
+
+  const opslaan = async () => {
+    const response = page.waitForResponse(item => item.url().includes('/server/api/settings.php') && item.request().method() === 'POST');
+    await page.locator('#save-settings').click();
+    expect((await response).status()).toBe(200);
+    await expect(page.locator('#toast')).toContainText('Instellingen zijn op de server opgeslagen');
+  };
+
+  try {
+    await test.step('When de vier teksten worden aangepast en opgeslagen', async () => {
+      for (const id of velden) await page.locator('#' + id).fill(gewijzigd[id]);
+      await opslaan();
+    });
+
+    await test.step('Then staan ze na een herlaad nog steeds in het formulier', async () => {
+      await page.reload();
+      await openSettings(page);
+      for (const id of velden) {
+        await expect(page.locator('#' + id), id + ' moet bewaard blijven').toHaveValue(gewijzigd[id]);
+      }
+    });
+  } finally {
+    // Shared company settings: never leave test wording behind.
+    await page.reload();
+    await openSettings(page);
+    for (const id of velden) await page.locator('#' + id).fill(origineel[id]);
+    await opslaan();
+    for (const id of velden) {
+      await expect(page.locator('#' + id), id + ' moet hersteld zijn').toHaveValue(origineel[id]);
+    }
+  }
+});

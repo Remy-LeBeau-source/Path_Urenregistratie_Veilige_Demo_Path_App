@@ -28,3 +28,4 @@ Then("wordt met Playwright-assertions bevestigd dat instellingen tonen verkoopkl
 When("de beheerder de bedrijfsgegevens aanpast en opslaat");
 Then("staan ze na een herlaad nog steeds in het formulier");
 And("staat het opgeslagen IBAN op de betaalregel van de factuur");
+When("de vier teksten worden aangepast en opgeslagen");

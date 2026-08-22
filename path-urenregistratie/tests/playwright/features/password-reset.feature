@@ -155,3 +155,11 @@ Feature: Wachtwoordherstel en misbruikbeveiliging
     Given wachtwoordherstel en misbruikbeveiliging is voorbereid
     When iemand op productie een resetverzoek doet
     Then krijgt die een bruikbare instructie zonder jargon of nep-token
+
+  @happy
+  Scenario: [PWD-H-017] een uitnodigingslink opent het wachtwoordscherm, ook als er al iemand is ingelogd
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given een uitgenodigde collega met een geldige eenmalige link
+    When de beheerder ingelogd blijft en de link in dezelfde browser opent
+    Then verschijnt het wachtwoordscherm en niet het dashboard

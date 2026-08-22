@@ -242,8 +242,20 @@ Feature: Mailroutering en aflevering
   @happy
   Scenario: [EQ-H-027] twee nieuw toegevoegde ontvangers krijgen allebei echt een factuurmail
     # Testtechniek: API-contract + equivalentieklasse
-    # Aantoonbare Playwright-assertions in deze case: 7
+    # Aantoonbare Playwright-assertions in deze case: 20
     Given twee nieuwe ontvangers op de opdracht staan
     When de volledige uren- en factuurketen wordt doorlopen
     Then krijgt de nieuwe boekhoudingsontvanger een mail met de eigen tekst
     And krijgt ook de tweede nieuwe ontvanger een mail
+    And staat in de verzonden mail exact wat er is ingevuld
+
+  @happy
+  Scenario: [EQ-H-028] nieuw account, eigen tekst, en die tekst komt terug in de verzonden mail
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 26
+    Given een nieuwe beheerder is aangemaakt
+    And een nieuwe medewerker met een eigen ontvanger, onderwerp en tekst
+    And de medewerker stelt via de eenmalige link een wachtwoord in
+    When de medewerker uren indient en Backoffice goedkeurt en factureert
+    Then staat de zelf ingevoerde tekst letterlijk in de verzonden mail
+    And opruimen: de aangemaakte accounts worden gedeactiveerd

@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 253 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 257 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 253 unieke case-ID's
+- Playwright executable cases: 257 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 254 unieke case-ID's
+- Totaal executable cases: 258 unieke case-ID's
 - Playwright features: 23
 - Database features: 1
 - Playwright steps mappings: 23
 - Database steps mappings: 1
-- Uitvoeringen: 260
-- Niet-mobile projectuitvoeringen: 246
+- Uitvoeringen: 264
+- Niet-mobile projectuitvoeringen: 250
 - Mobile functionele cases: 7
 - Pixel 7 / Chromium-uitvoeringen: 7
 - iPhone 13 / WebKit-uitvoeringen: 7
 
-De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 253 Playwright-functionele cases in totaal 260 resultaten op: 246 + (7 x 2) = 260.
+De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 257 Playwright-functionele cases in totaal 264 resultaten op: 250 + (7 x 2) = 264.
 
 ## Documentatieketen
 
@@ -42,7 +42,7 @@ De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 253 Playwrig
 
 - Feature: `tests/playwright/features/organization-settings.feature`
 - Source: `tests/playwright/admin-writes.spec.ts`
-- Cases: 21
+- Cases: 22
 
 - [ADM-WR-H-001] admin kan company/settings server-led opslaan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 - [ADM-WR-H-002] admin kan beheerder server-led aanmaken en wijzigen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
@@ -65,6 +65,7 @@ De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 253 Playwrig
 - [ADM-WR-N-006] dubbele naam is toegestaan, maar een al gebruikt e-mailadres wordt hard geblokkeerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 8
 - [ADM-WR-N-007] actief-accounttotaal klopt op elke stap: exact duplicaat verandert niets, uniek account telt precies 1 op — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 15
 - [ADM-WR-H-012] na Herstel legt Teambeheer uit dat de telling lokaal is en kan de serverstand terug worden gehaald — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 8
+- [ADM-WR-H-015] onderwerp, tekst en een eigen tekst per ontvanger blijven na F5 in het scherm staan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 
 ### Auditlog en traceerbaarheid
 
@@ -166,7 +167,7 @@ De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 253 Playwrig
 
 - Feature: `tests/playwright/features/mail-delivery.feature`
 - Source: `tests/playwright/email-queue.spec.ts`
-- Cases: 29
+- Cases: 30
 
 - [EQ-H-001] factuurlock maakt queue-items aan met dry_run=true — Techniek: Toestandsovergang · Assertions: 5
 - [EQ-H-002] broker-channel stuurt alleen de factuur — Techniek: API-contract + equivalentieklasse · Assertions: 2
@@ -196,7 +197,8 @@ De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 253 Playwrig
 - [EQ-N-014] unknown action geeft 400 — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
 - [EQ-N-015] localhost blijft preview-only en weigert POST zonder expliciete bevestiging — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 9
 - [EQ-N-016] medewerker krijgt geen toegang tot de mailacceptatieconsole — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
-- [EQ-H-027] twee nieuw toegevoegde ontvangers krijgen allebei echt een factuurmail — Techniek: API-contract + equivalentieklasse · Assertions: 7
+- [EQ-H-027] twee nieuw toegevoegde ontvangers krijgen allebei echt een factuurmail — Techniek: API-contract + equivalentieklasse · Assertions: 20
+- [EQ-H-028] nieuw account, eigen tekst, en die tekst komt terug in de verzonden mail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 26
 
 ### Facturen definitief maken en vergrendelen
 
@@ -217,7 +219,7 @@ De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 253 Playwrig
 
 - Feature: `tests/playwright/features/invoice-company-identity.feature`
 - Source: `tests/playwright/invoice-company-identity.spec.ts`
-- Cases: 6
+- Cases: 7
 
 - [INV-ID-H-001] handelsnaam en juridische naam staan samen op de factuurpreview — Techniek: API-contract + equivalentieklasse · Assertions: 3
 - [INV-ID-H-002] alleen juridische naam is als factuurweergave te kiezen — Techniek: Equivalentieklassen · Assertions: 3
@@ -225,6 +227,7 @@ De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 253 Playwrig
 - [INV-ID-N-004] settings API weigert een onbekende factuurweergave — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
 - [INV-ID-H-005] instellingen tonen verkoopklare bedrijfsidentiteit en beveiligde verzendmodus — Techniek: API-contract + equivalentieklasse · Assertions: 8
 - [INV-ID-H-006] bedrijfsgegevens uit het instellingenformulier blijven bewaard en komen op de factuur — Techniek: API-contract + equivalentieklasse · Assertions: 5
+- [INV-ID-H-007] de klanturenstaat-mailteksten blijven na opslaan bewaard — Techniek: API-contract + equivalentieklasse · Assertions: 4
 
 ### Facturen bekijken en beheren
 
@@ -293,7 +296,7 @@ De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 253 Playwrig
 
 - Feature: `tests/playwright/features/password-reset.feature`
 - Source: `tests/playwright/password-reset.spec.ts`
-- Cases: 18
+- Cases: 19
 
 - [PWD-H-001] request-reset retourneert token in demo-modus — Techniek: Toestandsovergang · Assertions: 12
 - [PWD-H-002] onbekend e-mailadres retourneert ook ok=true (geen email-enumeration) — Techniek: API-contract + equivalentieklasse · Assertions: 3
@@ -313,6 +316,7 @@ De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 253 Playwrig
 - [PWD-H-014] wachtwoord-vergeten op het inlogscherm verraadt niet welke e-mailadressen bestaan — Techniek: API-contract + equivalentieklasse · Assertions: 11
 - [PWD-N-015] het resetscherm neemt het ingevulde adres over, weigert een leeg adres en laat terugkeren naar inloggen — Techniek: Toestandsovergang · Assertions: 10
 - [PWD-N-016] productie toont nooit dry-run-jargon aan iemand die zijn wachtwoord kwijt is — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 7
+- [PWD-H-017] een uitnodigingslink opent het wachtwoordscherm, ook als er al iemand is ingelogd — Techniek: API-contract + equivalentieklasse · Assertions: 8
 
 ### Maandperiodes beheren
 

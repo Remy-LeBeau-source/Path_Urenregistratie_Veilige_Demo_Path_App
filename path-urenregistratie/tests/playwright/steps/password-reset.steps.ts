@@ -68,3 +68,6 @@ Then("komt er een expliciete melding en wordt er niets verstuurd");
 And("brengt Terug naar inloggen de gebruiker terug bij het inlogformulier zonder oude melding");
 When("iemand op productie een resetverzoek doet");
 Then("krijgt die een bruikbare instructie zonder jargon of nep-token");
+Given("een uitgenodigde collega met een geldige eenmalige link");
+When("de beheerder ingelogd blijft en de link in dezelfde browser opent");
+Then("verschijnt het wachtwoordscherm en niet het dashboard");
