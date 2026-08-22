@@ -56,9 +56,10 @@ Eén afgeronde standaardfactuuractie maakt exact drie gescheiden queue-items:
 | Boekhouding | factuuradministratie | alleen factuur |
 | Salarisadministratie | ureninformatie | geen bijlage |
 
-In TEST gaan de drie SMTP-afleveringen fysiek naar `giovanno.maatsen@pathconsultancy.nl`. De bedoelde
-productieontvanger, route, onderwerp en attachment policy blijven zichtbaar en auditbaar. Er wordt
-geen CC/BCC gebruikt om de drie routes samen te voegen.
+In TEST gaan de drie SMTP-afleveringen fysiek naar `giovanno.maatsen@pathconsultancy.nl`, met
+`kenrich.lieveld@pathconsultancy.nl` als vaste CC. De bedoelde productieontvanger, route, onderwerp
+en attachment policy blijven zichtbaar en auditbaar. Iedere functionele route blijft een eigen
+bericht; CC wordt uitsluitend gebruikt om beide TEST-beoordelaars dezelfde sandboxmail te geven.
 
 ## 5. Uitvoeringsvolgorde
 

@@ -130,7 +130,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: pdo_mysql
+          extensions: pdo_mysql, gd, fileinfo
 
       - name: Install dependencies
         run: npm ci
@@ -333,7 +333,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: pdo_mysql
+          extensions: pdo_mysql, gd, fileinfo
 
       - name: Install dependencies
         run: npm ci
@@ -475,7 +475,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: pdo_mysql
+          extensions: pdo_mysql, gd, fileinfo
 
       - name: Install dependencies
         run: npm ci
@@ -679,7 +679,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: pdo_mysql
+          extensions: pdo_mysql, gd, fileinfo
 
       - name: Install dependencies
         run: npm ci
@@ -835,7 +835,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: pdo_mysql
+          extensions: pdo_mysql, gd, fileinfo
 
       - name: Install dependencies
         run: npm ci
@@ -978,7 +978,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: pdo_mysql
+          extensions: pdo_mysql, gd, fileinfo
 
       - name: Install dependencies
         run: npm ci

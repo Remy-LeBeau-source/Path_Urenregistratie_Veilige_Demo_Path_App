@@ -26,7 +26,7 @@ staan onder de genummerde fases verderop in dit document.
 | Fase 7 — CI/CD | ✅ v0.9.66 groen en live | Automatische PROD- en TEST-uitrol bewezen; pipeline-run `31888079947` voor SHA `d749b9e32ff4` is volledig groen |
 | Fase 8 — Uren indienen | ✅ Klaar | Concept → indienen |
 | Fase 9 — Correctie/goedkeuring | ✅ Technisch klaar | Productieacceptatie later |
-| Fase 10 — Klanturenstaat | ✅ VS Code-scope klaar | JPG/PNG → PDF server-side gebouwd en getest (CTS-API-H-005) |
+| Fase 10 — Klanturenstaat | ✅ VS Code-scope klaar | JPG/PNG → inline PDF + employee-readback fail-closed getest (CTS-API-H-005/H-006, N-009) |
 | Fase 11 — Facturen | ✅ VS Code-scope klaar | Server-side PDF + storage key + geautoriseerde download + inhoudscontrole gebouwd en getest (INV-H-004, INV-N-013) |
 | Fase 12 — Mailqueue | 🛠️ Techniek klaar; acceptatie open | Fail-closed queue, TEST-sink en gescheiden routes zijn gebouwd; volledige menselijke controle van alle teksten en echte PDF-bijlagen loopt nog |
 | Fase 13 — Bedrijfsgegevens | ✅ VS Code-scope klaar | Definitieve gegevens/accounts → Fase 16 |
@@ -89,9 +89,32 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-22 · v0.9.100 afbeeldingen weer zichtbaar en TEST-deployguard gelijkgetrokken
+
+- [x] **JPG/PNG-preview hersteld:** de opgeslagen bytes en MIME waren al PDF, maar de download werd
+  geforceerd als bijlage met de oorspronkelijke `.jpg`/`.png`-naam. De geautoriseerde endpoint levert
+  nu inline PDF met een veilige `.pdf`-naam, `no-store` en `nosniff`.
+- [x] **Readback voor medewerkers hersteld:** de eigen klanturenstaat wordt na een nieuwe login en
+  maandwissel opnieuw uit de server gehydrateerd. Daardoor blijft **Klanturenstaat bekijken** ook
+  buiten de oorspronkelijke uploadsessie zichtbaar (`CTS-API-H-006`, zichtbare upload-, uitlog-,
+  inlog- en maandwisselflow voor PDF/JPG/PNG).
+- [x] **Conversie fail-closed gemaakt:** onleesbare of onveilig grote JPG/PNG, een nep-PDF of
+  ontbrekende conversieondersteuning geeft `invalid-upload`; een bestaand concept blijft intact.
+  Historische niet-PDF-records kunnen niet worden goedgekeurd of als PDF worden gemaild. GD/fileinfo
+  zijn expliciet onderdeel van alle CI-PHP-runtimes en de web-healthcheck bewaakt de
+  afbeeldingsconversie (`CTS-API-N-009`).
+- [x] **Mislukte pipeline-run `32535972097` verklaard en gerepareerd:** de tweede, ingebedde guard in
+  `deploy-test-remote.sh` verwachtte nog alleen Giovanno, terwijl de canonieke TEST-sandbox terecht
+  Giovanno plus Kenrich als CC toestaat. Runtimeguard en `deployment-contract-check.mjs` controleren
+  nu exact dezelfde twee adressen én `test_sink_cc_recipient`; de fout trad vóór cutover op, dus TEST
+  bleef ongewijzigd en er is geen mail verstuurd.
+- [x] **Volledige lokale releasecheck groen:** 238/238 Playwright-uitvoeringen, GUI-smoke, `npm run check`,
+  build, documentatiesynchronisatie, database-CRUD, dependency-audit en PHP/shell-syntaxcontroles zijn geslaagd.
+- [-] Commit/push, concept-PR en de vervangende CI-uitvoering volgen direct na deze lokale releasecheck.
+
 ### 2026-08-22 · v0.9.99 TEST-deploy gedeblokkeerd, duidelijke accountmeldingen en zichtbare lokale demomodus
 
-- [x] **Pipelinefix (blokkeerde de TEST-uitrol):** `test-preflight.php` verwachtte hardgecodeerd exact één toegestane TEST-ontvanger, terwijl de mailsandbox sinds v0.9.90 ook een CC naar het tweede acceptatieaccount stuurt. De check bewoog niet mee en zette `mail_fail_closed_or_exactly_guarded` op false, waardoor `Deploy Test to TransIP` faalde. Verwachting bijgewerkt naar beide adressen én meteen strenger gemaakt: `test_sink_cc_recipient` wordt nu expliciet gecontroleerd, zodat er nooit stilzwijgend een derde adres bij kan komen. De executie-uitvoer van `configure-test-mail-sandbox.php` rapporteerde bovendien nog de oude enkele ontvanger; ook rechtgetrokken.
+- [x] **Eerste pipelinefix:** `test-preflight.php` verwachtte hardgecodeerd exact één toegestane TEST-ontvanger, terwijl de mailsandbox sinds v0.9.90 ook een CC naar het tweede acceptatieaccount stuurt. Deze eerste check is naar beide adressen en de expliciete `test_sink_cc_recipient` bijgewerkt. Run `32535972097` bewees daarna dat in het daadwerkelijke deployscript nog een tweede kopie van de oude één-adresguard stond; die vervolgfix staat bij v0.9.100.
 - [x] **Oorzaak gevonden van de al dagen gemelde "telling springt van 6 naar 10":** dit was geen fout in het aanmaken van accounts. Na `Herstel` toont de app bewust de lokale demo-baseline (6 accounts) en negeert de server tot de eerstvolgende schrijfactie — en dát moment liet het echte serveraantal verschijnen. Nergens was zichtbaar dat je in die modus zat. Teambeheer toont nu een duidelijke melding zolang de lokale weergave actief is, met een knop om direct de serverstand te laden. Nieuwe case `ADM-WR-H-012`.
 - [x] **Bedrijfsgegevens hersteld:** KvK, btw-nummer, IBAN, adres, postcode/plaats en telefoon van bedrijf 1 waren door een eerdere testrun overschreven met dummywaarden (`12345678`, `NL00BANK0123456789`, "Voorbeeldstraat 1"). Teruggezet naar de in `PRODUCTIE-CHECKLIST.md` bevestigde waarden — dit had anders zo op de eerste echte facturen gestaan.
 - [x] **Accountmeldingen verduidelijkt:** de waarschuwing bij een dubbele naam is volledig verwijderd (een naam mág twee keer voorkomen; alleen het e-mailadres moet uniek zijn). De blokkade op een al gebruikt e-mailadres is van een makkelijk te missen toast naar een echte pop-up gegaan, met de keuze **Adres aanpassen** — die het formulier heropent met alle ingevulde velden intact — of **Sluiten**. Cases `ADM-WR-N-004` t/m `N-007` bijgewerkt.

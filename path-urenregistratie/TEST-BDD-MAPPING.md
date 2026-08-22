@@ -74,8 +74,10 @@
 | CTS-API-N-007 | api | customer-timesheets.feature | employee kan geen admin reviewactie uitvoeren op klanturenstaat | Beslissingstabel rollen en autorisatie | 12 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Negative | 10 | Actueel |
 | CTS-API-H-004 | api | customer-timesheets.feature | employee kan mark_skipped registreren en restore_missing terugdraaien | Toestandsovergang | 9 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Happy | 10 | Actueel |
 | CTS-API-N-005 | api | customer-timesheets.feature | employee krijgt 400 bij ongeldig bestandstype | Negatieve equivalentieklasse + error guessing | 4 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Negative | 10 | Actueel |
-| CTS-API-H-005 | api | customer-timesheets.feature | JPG-upload wordt server-side automatisch als PDF opgeslagen | Equivalentieklassen | 9 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Happy | 10 | Actueel |
+| CTS-API-H-005 | api | customer-timesheets.feature | JPG- en PNG-upload worden als inline bekijkbare PDF opgeslagen | Equivalentieklassen | 34 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Happy | 10 | Actueel |
+| CTS-API-H-006 | api | customer-timesheets.feature | medewerker uploadt zichtbaar een afbeelding en kan die na nieuwe login bekijken | Beslissingstabel rollen en autorisatie | 23 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Happy | 10 | Actueel |
 | CTS-API-N-008 | api | customer-timesheets.feature | employee krijgt 400 bij een te grote klanturenstaat-upload | Negatieve equivalentieklasse + error guessing | 4 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Negative | 10 | Actueel |
+| CTS-API-N-009 | api | customer-timesheets.feature | corrupte of te grote afbeelding en nep-PDF worden geweigerd zonder bestaand concept te vervangen | Negatieve equivalentieklasse + error guessing | 15 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Negative | 10 | Actueel |
 | DASH-H-001 | ui | dashboard.feature | admin dashboard opent zonder console errors | Beslissingstabel rollen en autorisatie | 1 | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | admin dashboard opent zonder console errors | Happy | 15 | Actueel |
 | DASH-H-002 | ui | dashboard.feature | employee dashboard opent zonder console errors | Negatieve equivalentieklasse + error guessing | 1 | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | employee dashboard opent zonder console errors | Happy | 15 | Actueel |
 | DASH-N-007 | ui | dashboard.feature | afwijkend API-totaal overschrijft de concrete werkvoorraad niet | Negatieve equivalentieklasse + error guessing | 1 | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | afwijkend API-totaal overschrijft de concrete werkvoorraad niet | Negative | 15 | Actueel |
@@ -253,9 +255,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 231
+- Playwright executable cases: 233
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 232
+- Totaal unieke executable cases: 234
 - Playwright features: 22
 - Database features: 1
 - Playwright steps mappings: 22

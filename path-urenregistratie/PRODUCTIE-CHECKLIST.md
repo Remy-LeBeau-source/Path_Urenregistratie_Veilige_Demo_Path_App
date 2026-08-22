@@ -32,7 +32,7 @@ Dit is een levende checklist. Bevestigde punten worden uit **Nog te beslissen** 
 - **Ontvangt mail** en **Factuur meesturen** zijn per medewerker voor de broker en iedere centrale ontvanger afzonderlijk instelbaar.
 - De app maakt zelf geen klanturenstaat. Een medewerker kan het officiële klantdocument later en los van de urenregistratie als PDF, JPG of PNG toevoegen. JPG en PNG worden automatisch als PDF opgeslagen.
 - Een klanturenstaat kan eerst als privéconcept worden opgeslagen. Pas **Indienen bij Backoffice** maakt een in-app melding voor Backoffice.
-- Medewerker en Backoffice kunnen de opgeslagen PDF bekijken. Na goedkeuring kan Backoffice onderwerp en begeleidende tekst van de aparte brokerroute nog aanpassen.
+- Medewerker en Backoffice openen het opgeslagen document via **Klanturenstaat bekijken**. Na goedkeuring kan Backoffice onderwerp en begeleidende tekst van de aparte brokerroute nog aanpassen.
 - Per medewerker zijn klanturenstaatdeadline, standaard of afwijkend brokeradres, brokerroute en **factuur mag zonder klanturenstaat** instelbaar.
 - Een klanturenstaat gaat pas na Backoffice-controle naar de broker. De bevestigde eerste productiebundel bevat voor de broker factuur + goedgekeurde klanturenstaat; boekhouder krijgt alleen de factuur en salarisadministratie krijgt geen bijlage.
 - De standaard begeleidende tekst begint met `Middag,` en bevat `{medewerker}`, `{maand}` en `{uren}`.

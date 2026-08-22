@@ -217,7 +217,7 @@ function seedCustomerTimesheet(record, status, fileName) {
     uploadedBy: hasDocument ? "Voorbeeldgegevens" : "",
     reviewedAt: ["approved", "sent", "resubmit"].includes(status) ? "6 augustus 2026 om 11:00" : "",
     reviewedBy: ["approved", "sent", "resubmit"].includes(status) ? "Joyce van der Steenhoven" : "",
-    reviewNote: status === "resubmit" ? "Upload de definitieve, door de klant bevestigde PDF." : "",
+    reviewNote: status === "resubmit" ? "Upload de definitieve, door de klant bevestigde klanturenstaat als PDF, JPG of PNG." : "",
     sentAt: status === "sent" ? "6 augustus 2026 om 12:00" : ""
   });
   return record;
@@ -918,7 +918,7 @@ function loadState() {
           juneStasjo.payrollStatus = "concept";
           juneStasjo.entries = emptyEntries("2026-06");
           julyCustomer.status = "resubmit";
-          julyCustomer.reviewNote = "Upload de definitieve, door de klant bevestigde PDF.";
+          julyCustomer.reviewNote = "Upload de definitieve, door de klant bevestigde klanturenstaat als PDF, JPG of PNG.";
         }
       }
     }
@@ -962,6 +962,8 @@ function resetReadApiCaches() {
   readApiRuntime.announcementsInFlight = false;
   readApiRuntime.customerTimesheetsInFlight = {};
   readApiRuntime.timesheetsInFlight = {};
+  readApiRuntime.customerTimesheetMutationEpochByKey = {};
+  readApiRuntime.timesheetMutationEpochByKey = {};
   readApiRuntime.lastBootstrapAt = 0;
   readApiRuntime.lastDashboardAt = 0;
   readApiRuntime.lastInvoicesAt = 0;
@@ -1258,6 +1260,7 @@ const readApiRuntime = {
   announcementsInFlight: false,
   customerTimesheetsInFlight: {},
   timesheetsInFlight: {},
+  customerTimesheetMutationEpochByKey: {},
   timesheetMutationEpochByKey: {},
   lastBootstrapAt: 0,
   lastDashboardAt: 0,
@@ -1945,13 +1948,20 @@ function refreshEmployeeOpenTasksReadApi(force = false) {
   readApiRuntime.employeeOpenTasksSyncInFlight = true;
   let changed = false;
   return periodKeys.reduce((chain, periodKey) => chain.then(() =>
-    refreshTimesheetReadApi(periodKey, employee.id, force)
-      .then(record => {
-        if (record) changed = true;
+    Promise.allSettled([
+      refreshTimesheetReadApi(periodKey, employee.id, force),
+      refreshCustomerTimesheetReadApi(periodKey, employee.id, force)
+    ]).then(results => {
+        if (results.some(result => result.status === "fulfilled" && result.value)) changed = true;
       })
-      .catch(() => null)
   ), Promise.resolve())
-    .then(() => changed)
+    .then(() => {
+      const sameEmployeeAndPeriod = state.currentRole === "employee"
+        && Number(currentEmployee()?.id || 0) === Number(employee.id)
+        && currentPeriod().key === selectedPeriodKey;
+      if (changed && sameEmployeeAndPeriod) renderCustomerTimesheetPanel();
+      return changed;
+    })
     .finally(() => {
       readApiRuntime.employeeOpenTasksSyncInFlight = false;
       readApiRuntime.lastEmployeeOpenTasksSyncAt = Date.now();
@@ -2040,6 +2050,12 @@ function applyCustomerTimesheetApiRecord(employeeId, periodKey, data) {
   return documentRecord;
 }
 
+function applyMissingCustomerTimesheetApiRecord(employeeId, periodKey) {
+  const record = recordFor(Number(employeeId), periodKey);
+  record.customerTimesheet = blankCustomerTimesheet();
+  return record.customerTimesheet;
+}
+
 function writeCustomerTimesheetToApi(action, options = {}) {
   const employeeId = Number(options.employeeId || currentEmployee().id);
   const periodKey = String(options.periodKey || currentPeriod().key);
@@ -2048,6 +2064,8 @@ function writeCustomerTimesheetToApi(action, options = {}) {
   const subject = String(options.subject || "").trim();
   const body = String(options.body || "").trim();
   const file = options.file || null;
+  const mutationKey = periodKey + ":" + employeeId;
+  readApiRuntime.customerTimesheetMutationEpochByKey[mutationKey] = Number(readApiRuntime.customerTimesheetMutationEpochByKey[mutationKey] || 0) + 1;
 
   return requestAuthCsrf()
     .then(token => {
@@ -2079,7 +2097,9 @@ function writeCustomerTimesheetToApi(action, options = {}) {
         const message = String(result && result.data && result.data.message || "Klanturenstaatactie op server mislukt.");
         throw new Error(message);
       }
+      readApiRuntime.customerTimesheetMutationEpochByKey[mutationKey] = Number(readApiRuntime.customerTimesheetMutationEpochByKey[mutationKey] || 0) + 1;
       applyCustomerTimesheetApiRecord(employeeId, periodKey, result.data);
+      readApiRuntime.lastCustomerTimesheetsByPeriod[mutationKey] = Date.now();
       return result.data;
     });
 }
@@ -3028,15 +3048,18 @@ function refreshMailAcceptanceReadApi(force = false) {
 }
 
 function refreshCustomerTimesheetReadApi(periodKey, employeeId, force = false) {
-  if (!isCustomerTimesheetAdminApiMode()) return Promise.resolve(null);
+  if (!isCustomerTimesheetApiMode() || !["admin", "employee"].includes(state.currentRole)) return Promise.resolve(null);
   const period = parsePeriodKey(periodKey) ? periodKey : "";
   const employee = Number(employeeId || 0);
   if (!period || !Number.isFinite(employee) || employee <= 0) return Promise.resolve(null);
+  if (state.currentRole === "employee" && Number(currentEmployee()?.id || 0) !== employee) return Promise.resolve(null);
 
   const key = period + ":" + employee;
+  const mutationEpoch = Number(readApiRuntime.customerTimesheetMutationEpochByKey[key] || 0);
   const now = Date.now();
   const lastAt = Number(readApiRuntime.lastCustomerTimesheetsByPeriod[key] || 0);
-  if (!force && (readApiRuntime.customerTimesheetsInFlight[key] || (now - lastAt) < 15000)) return Promise.resolve(null);
+  if (readApiRuntime.customerTimesheetsInFlight[key]) return Promise.resolve(null);
+  if (!force && (now - lastAt) < 15000) return Promise.resolve(null);
 
   readApiRuntime.customerTimesheetsInFlight[key] = true;
   const endpoint = WRITE_CUSTOMER_TIMESHEET_PATH + "?period=" + encodeURIComponent(period) + "&employee_id=" + encodeURIComponent(String(employee));
@@ -3045,14 +3068,20 @@ function refreshCustomerTimesheetReadApi(periodKey, employeeId, force = false) {
     .then(data => {
       readApiRuntime.lastCustomerTimesheetsByPeriod[key] = Date.now();
       if (isLocalResetAuthoritative()) return null;
+      if (Number(readApiRuntime.customerTimesheetMutationEpochByKey[key] || 0) !== mutationEpoch) return null;
       if (!data || data.found !== true || !data.customer_timesheet) {
-        setReadApiSource("customerTimesheets", "fallback");
-        return;
+        if (!data || data.ok !== true || data.found !== false) {
+          setReadApiSource("customerTimesheets", "fallback");
+          return null;
+        }
+        if (!readApiDebug.customerTimesheetsByPeriod[period]) readApiDebug.customerTimesheetsByPeriod[period] = {};
+        readApiDebug.customerTimesheetsByPeriod[period][String(employee)] = data;
+        applyMissingCustomerTimesheetApiRecord(employee, period);
+      } else {
+        if (!readApiDebug.customerTimesheetsByPeriod[period]) readApiDebug.customerTimesheetsByPeriod[period] = {};
+        readApiDebug.customerTimesheetsByPeriod[period][String(employee)] = data;
+        applyCustomerTimesheetApiRecord(employee, period, data);
       }
-
-      if (!readApiDebug.customerTimesheetsByPeriod[period]) readApiDebug.customerTimesheetsByPeriod[period] = {};
-      readApiDebug.customerTimesheetsByPeriod[period][String(employee)] = data;
-      applyCustomerTimesheetApiRecord(employee, period, data);
       setReadApiSource("customerTimesheets", "api");
 
       const dashboardViewActive = document.querySelector("#view-dashboard")?.classList.contains("is-active");
@@ -4434,7 +4463,7 @@ function renderCustomerTimesheetPanel() {
   current.innerHTML = documentRecord.status === "skipped"
     ? '<div><div><strong>Als rechtstreeks gemaild geregistreerd</strong><small>' + escapeHtml(documentRecord.skippedReason || "De klanturenstaat is al rechtstreeks naar Path Backoffice gemaild.") + (documentRecord.skippedBy ? " · door " + escapeHtml(documentRecord.skippedBy) : "") + (documentRecord.skippedAt ? " · " + escapeHtml(documentRecord.skippedAt) : "") + '</small></div>' + customerTimesheetStatusPill(record) + '<button class="small-button" data-restore-customer-timesheet>Alsnog uploaden</button></div>'
     : documentRecord.fileName
-      ? '<div><div><strong>' + escapeHtml(documentRecord.fileName) + '</strong><small>' + (documentRecord.isExample ? "Voorbeeldbestand · geen echt klantdocument" : "Opgeslagen " + escapeHtml(documentRecord.uploadedAt || "datum onbekend") + (/\.(jpe?g|png)$/i.test(documentRecord.originalFileName || "") ? " · " + escapeHtml(documentRecord.originalFileName) + " omgezet naar PDF" : "")) + (documentRecord.status === "received" ? " · Backoffice heeft een melding in de app" : "") + (documentRecord.reviewNote ? " · " + escapeHtml(documentRecord.reviewNote) : "") + '</small></div><span class="status-pill ' + status[1] + '">' + escapeHtml(status[0]) + '</span>' + (documentRecord.fileData ? '<button class="small-button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">PDF bekijken</button>' : '<span></span>') + '</div>'
+      ? '<div><div><strong>' + escapeHtml(documentRecord.fileName) + '</strong><small>' + (documentRecord.isExample ? "Voorbeeldbestand · geen echt klantdocument" : "Opgeslagen " + escapeHtml(documentRecord.uploadedAt || "datum onbekend") + (documentRecord.mimeType === "application/pdf" && /\.(jpe?g|png)$/i.test(documentRecord.originalFileName || "") ? " · " + escapeHtml(documentRecord.originalFileName) + " omgezet naar PDF" : "")) + (documentRecord.status === "received" ? " · Backoffice heeft een melding in de app" : "") + (documentRecord.reviewNote ? " · " + escapeHtml(documentRecord.reviewNote) : "") + '</small></div><span class="status-pill ' + status[1] + '">' + escapeHtml(status[0]) + '</span>' + (documentRecord.fileData ? '<button class="small-button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">Klanturenstaat bekijken</button>' : '<span></span>') + '</div>'
       : '<div><div><strong>Nog geen klanturenstaat voor ' + escapeHtml(period.label) + '</strong><small>De urenregistratie kan wel gewoon worden ingevuld en ingediend.</small></div>' + customerTimesheetStatusPill(record) + '<span></span></div>';
   const locked = ["received", "approved", "sent", "sent_to_broker", "skipped"].includes(documentRecord.status);
   const saveButton = document.querySelector("#customer-timesheet-save-draft");
@@ -4538,12 +4567,12 @@ function showCustomerTimesheetDetails(employeeId, periodKey, reviewMode, adminTa
   const submissionSummary = documentRecord.status === "skipped"
     ? ''
     : '<div class="customer-timesheet-submission-review"><span>Van ' + escapeHtml(employee.name) + ' aan ' + escapeHtml(state.settings.supportName || "Path Backoffice") + '</span><strong>' + escapeHtml(submissionMail.subject) + '</strong><pre>' + escapeHtml(submissionMail.body) + '</pre></div>';
-  const summary = '<div><span>Status</span><strong>' + escapeHtml(status[0]) + '</strong></div><div><span>Bestand</span><strong>' + escapeHtml(documentRecord.fileName || (documentRecord.status === "skipped" ? "Niet via de app ontvangen" : "Nog niet ontvangen")) + '</strong></div>' + skippedSummary + (documentRecord.fileData ? '<div><span>Document controleren</span><button class="small-button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">PDF bekijken</button></div>' : '') + submissionSummary + '<div><span>Deadline</span><strong>Werkdag ' + Number(employee.customerTimesheetDueWorkday || 5) + '</strong></div><div><span>Brokerroute na goedkeuring</span><strong>' + escapeHtml(route) + '</strong></div><div><span>Factuur zonder klanturenstaat</span><strong>' + (employee.invoiceWithoutCustomerTimesheetAllowed === false ? "Niet toegestaan" : "Toegestaan") + '</strong></div><div><span>Onderwerp naar broker</span><strong>' + escapeHtml(brokerMail.subject) + '</strong></div>';
+  const summary = '<div><span>Status</span><strong>' + escapeHtml(status[0]) + '</strong></div><div><span>Bestand</span><strong>' + escapeHtml(documentRecord.fileName || (documentRecord.status === "skipped" ? "Niet via de app ontvangen" : "Nog niet ontvangen")) + '</strong></div>' + skippedSummary + (documentRecord.fileData ? '<div><span>Document controleren</span><button class="small-button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">Klanturenstaat bekijken</button></div>' : '') + submissionSummary + '<div><span>Deadline</span><strong>Werkdag ' + Number(employee.customerTimesheetDueWorkday || 5) + '</strong></div><div><span>Brokerroute na goedkeuring</span><strong>' + escapeHtml(route) + '</strong></div><div><span>Factuur zonder klanturenstaat</span><strong>' + (employee.invoiceWithoutCustomerTimesheetAllowed === false ? "Niet toegestaan" : "Toegestaan") + '</strong></div><div><span>Onderwerp naar broker</span><strong>' + escapeHtml(brokerMail.subject) + '</strong></div>';
   if (reviewMode && documentRecord.status === "received") {
     showModal({
       label: "Klanturenstaat controleren",
       title: employee.name + " · " + period.label,
-      message: "Controleer of dit de officiële PDF van de klant en de juiste periode is. Path maakt dit document niet zelf.",
+      message: "Controleer de opgeslagen PDF van de klanturenstaat en de juiste periode. Een aangeleverde JPG of PNG is hierbij al naar PDF omgezet; Path maakt het brondocument niet zelf.",
       summary,
       confirm: "Goedkeuren",
       secondary: "Opnieuw uploaden vragen",
@@ -4613,9 +4642,9 @@ function showCustomerTimesheetDetails(employeeId, periodKey, reviewMode, adminTa
           writeCustomerTimesheetToApi("request_resubmit", {
             employeeId: employee.id,
             periodKey: period.key,
-            reviewNote: "Upload de juiste of definitieve PDF van de klant."
+            reviewNote: "Upload de juiste of definitieve klanturenstaat als PDF, JPG of PNG."
           }).then(() => {
-            const toastMessage = "Er is in de app gevraagd om een nieuwe PDF. Er is niets gemaild.";
+            const toastMessage = "Er is in de app gevraagd om een nieuw bestand. Er is niets gemaild.";
             if (adminTaskId) {
               finishAdminTaskAndContinue(adminTaskId, () => {}, toastMessage);
               return;
@@ -4630,10 +4659,10 @@ function showCustomerTimesheetDetails(employeeId, periodKey, reviewMode, adminTa
         }
         const mutate = () => {
           documentRecord.status = "resubmit";
-          documentRecord.reviewNote = "Upload de juiste of definitieve PDF van de klant.";
-          addNotification({ audience: "employee", type: "customer-timesheet", employeeId: employee.id, title: "Klanturenstaat opnieuw uploaden", message: "Upload voor " + period.label + " de juiste of definitieve PDF van de klant.", periodKey: period.key, view: "timesheet" }, true);
+          documentRecord.reviewNote = "Upload de juiste of definitieve klanturenstaat als PDF, JPG of PNG.";
+          addNotification({ audience: "employee", type: "customer-timesheet", employeeId: employee.id, title: "Klanturenstaat opnieuw uploaden", message: "Upload voor " + period.label + " de juiste of definitieve klanturenstaat als PDF, JPG of PNG.", periodKey: period.key, view: "timesheet" }, true);
         };
-        const toastMessage = "Er is in de app gevraagd om een nieuwe PDF. Er is niets gemaild.";
+        const toastMessage = "Er is in de app gevraagd om een nieuw bestand. Er is niets gemaild.";
         if (adminTaskId) {
           finishAdminTaskAndContinue(adminTaskId, mutate, toastMessage);
           return;
@@ -4656,7 +4685,7 @@ function remindCustomerTimesheet(employeeId, periodKey) {
   const timestamp = correctionTimestamp();
   documentRecord.reminderCount += 1;
   documentRecord.lastReminderAt = timestamp.label;
-  addNotification({ audience: "employee", type: "customer-timesheet-reminder", employeeId: employee.id, title: "Klanturenstaat ontbreekt", message: "Upload de officiële PDF van de klant voor " + periodFromKey(periodKey).label + ". Deze upload staat los van je urenregistratie.", periodKey, view: "timesheet" }, true);
+  addNotification({ audience: "employee", type: "customer-timesheet-reminder", employeeId: employee.id, title: "Klanturenstaat ontbreekt", message: "Upload de officiële klanturenstaat als PDF, JPG of PNG voor " + periodFromKey(periodKey).label + ". Deze upload staat los van je urenregistratie.", periodKey, view: "timesheet" }, true);
   persistState(); renderAll(); toast("Herinnering in de app klaargezet voor " + employee.name + "; e-mailverzending is uitgeschakeld.");
 }
 
@@ -4795,11 +4824,11 @@ function showCustomerTimesheetBrokerCheck(employeeId, periodKey, adminTaskId = "
   showModal({
     label: "Aparte brokerroute",
     title: "Klanturenstaat voor " + employee.name + " controleren?",
-    message: "Controleer het bedoelde adres, open de officiële PDF en pas desgewenst het onderwerp of bericht aan. " + deliveryMessage,
+    message: "Controleer het bedoelde adres, open de opgeslagen PDF en pas desgewenst het onderwerp of bericht aan. " + deliveryMessage,
     summary: '<div><span>Bedoelde productieroute</span><strong>' + escapeHtml(email) + '</strong></div>' +
       (deliveryRouting ? '<div><span>' + escapeHtml(deliveryRouting.label) + '</span><strong>' + escapeHtml(deliveryRouting.sink) + ' · ' + escapeHtml(deliveryRouting.description) + '</strong></div>' : '') +
       '<div><span>Bijlage</span><strong>' + escapeHtml(documentRecord.fileName) + '</strong></div>' +
-      (documentRecord.fileData ? '<div><span>Document controleren</span><button class="small-button" type="button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + periodKey + '">PDF bekijken</button></div>' : '') +
+      (documentRecord.fileData ? '<div><span>Document controleren</span><button class="small-button" type="button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + periodKey + '">Klanturenstaat bekijken</button></div>' : '') +
       '<div class="modal-form full"><label class="full">Onderwerp<input id="customer-timesheet-broker-subject" value="' + escapeHtml(mail.subject) + '"></label><label class="full">Begeleidende tekst<textarea id="customer-timesheet-broker-body" rows="8">' + escapeHtml(mail.body) + '</textarea></label></div>',
     confirm: "Controle afronden",
     wide: true,
@@ -8467,7 +8496,7 @@ function showEmployeeEditor(employeeId, prefill) {
     '<label class="check-row"><input id="edit-new-recipient-enabled" type="checkbox" checked><span>Deze medewerker ontvangt via deze ontvanger mail</span></label>' +
     '<label class="check-row"><input id="edit-new-recipient-invoice" type="checkbox"><span>Factuur als PDF meesturen</span></label>' +
     '<p class="full form-help">De naam bepaal je zelf. De ontvanger wordt centraal bewaard en is daarna ook bij andere medewerkers beschikbaar.</p>' +
-    '<p class="full form-help">Klanturenstaat · officiële PDF van de klant</p>' +
+    '<p class="full form-help">Klanturenstaat · officieel bestand van de klant (PDF, JPG of PNG)</p>' +
     '<label class="check-row full"><input id="edit-customer-timesheet-expected" type="checkbox"' + (employee.customerTimesheetExpected !== false ? " checked" : "") + '><span>Voor deze medewerker wordt iedere maand een klanturenstaat verwacht</span></label>' +
     '<label>Verwacht vóór werkdag<select id="edit-customer-timesheet-due-day" aria-label="Deadline klanturenstaat"><option value="3"' + (Number(employee.customerTimesheetDueWorkday || 5) === 3 ? " selected" : "") + '>3e werkdag</option><option value="5"' + (Number(employee.customerTimesheetDueWorkday || 5) === 5 ? " selected" : "") + '>5e werkdag</option><option value="7"' + (Number(employee.customerTimesheetDueWorkday || 5) === 7 ? " selected" : "") + '>7e werkdag</option><option value="10"' + (Number(employee.customerTimesheetDueWorkday || 5) === 10 ? " selected" : "") + '>10e werkdag</option></select></label>' +
     '<label class="check-row"><input id="edit-customer-timesheet-broker-enabled" type="checkbox"' + (employee.customerTimesheetBrokerEnabled !== false ? " checked" : "") + '><span>Na controle apart naar broker klaarzetten</span></label>' +
@@ -10122,6 +10151,21 @@ function setPeriod(periodKey) {
   document.querySelectorAll("[data-invoice-filter]").forEach(button => button.classList.toggle("is-active", button.dataset.invoiceFilter === "all"));
   persistState();
   renderAll();
+  if (isCustomerTimesheetApiMode() && state.currentRole === "employee") {
+    const employee = currentEmployee();
+    refreshCustomerTimesheetReadApi(next, employee.id, true)
+      .then(data => {
+        const stillSelected = state.currentRole === "employee"
+          && Number(currentEmployee()?.id || 0) === Number(employee.id)
+          && currentPeriod().key === next;
+        if (!data || !stillSelected) return;
+        renderCustomerTimesheetPanel();
+        if (document.querySelector("#view-employee-dashboard")?.classList.contains("is-active")) {
+          renderEmployeeDashboard();
+        }
+      })
+      .catch(() => null);
+  }
   toast("Periode gewijzigd naar " + currentPeriod().label + ".");
   return true;
 }
@@ -10233,7 +10277,7 @@ function customerTimesheetPdfData(sourceData, sourceType) {
 }
 
 function notifyCustomerTimesheetSubmitted(employee, periodKey) {
-  addNotification({ audience: "admin", type: "customer-timesheet", employeeId: employee.id, title: "Klanturenstaat ingediend", message: employee.name + " heeft de officiële PDF voor " + periodFromKey(periodKey).label + " ingediend voor controle.", periodKey, view: "dashboard" }, true);
+  addNotification({ audience: "admin", type: "customer-timesheet", employeeId: employee.id, title: "Klanturenstaat ingediend", message: employee.name + " heeft de officiële klanturenstaat voor " + periodFromKey(periodKey).label + " ingediend voor controle.", periodKey, view: "dashboard" }, true);
 }
 
 function storeCustomerTimesheetFile(targetStatus) {

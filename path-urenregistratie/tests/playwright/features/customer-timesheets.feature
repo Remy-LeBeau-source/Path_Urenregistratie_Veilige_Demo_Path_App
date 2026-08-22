@@ -63,13 +63,24 @@ Feature: Klanturenstaten en documentverwerking
     Then wordt met Playwright-assertions bevestigd dat employee krijgt 400 bij ongeldig bestandstype
 
   @happy
-  Scenario: [CTS-API-H-005] JPG-upload wordt server-side automatisch als PDF opgeslagen
+  Scenario: [CTS-API-H-005] JPG- en PNG-upload worden als inline bekijkbare PDF opgeslagen
     # Testtechniek: Equivalentieklassen
-    # Aantoonbare Playwright-assertions in deze case: 9
+    # Aantoonbare Playwright-assertions in deze case: 34
     Given de medewerker is ingelogd
     When de medewerker een JPG uploadt als concept-klanturenstaat
-    Then is het opgeslagen document een geldig PDF, geen JPG
+    Then is de JPG als inline bekijkbare PDF met een PDF-bestandsnaam opgeslagen
+    When de medewerker het concept vervangt door een PNG
+    Then is ook de PNG als inline bekijkbare PDF opgeslagen
     And cleanup: sessie sluiten voor testisolatie
+
+  @happy
+  Scenario: [CTS-API-H-006] medewerker uploadt zichtbaar een afbeelding en kan die na nieuwe login bekijken
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 23
+    Given de medewerker via de zichtbare upload een PNG als concept opslaat
+    When dezelfde medewerker opnieuw inlogt en via de zichtbare maandkeuze dezelfde periode opent
+    Then verschijnt het serverdocument en levert Klanturenstaat bekijken een inline PDF-response
+    And cleanup: zet de geïsoleerde toekomstcase terug naar ontbrekend en log uit
 
   @negative
   Scenario: [CTS-API-N-008] employee krijgt 400 bij een te grote klanturenstaat-upload
@@ -79,3 +90,14 @@ Feature: Klanturenstaten en documentverwerking
     When de medewerker een PDF van ruim boven de 2 MB-limiet uploadt
     And cleanup: sessie sluiten voor testisolatie
     Then wordt met Playwright-assertions bevestigd dat employee krijgt 400 bij een te grote klanturenstaat-upload
+
+  @negative
+  Scenario: [CTS-API-N-009] corrupte of te grote afbeelding en nep-PDF worden geweigerd zonder bestaand concept te vervangen
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 15
+    Given de medewerker is ingelogd en de bestaande klanturenstaat is vastgelegd
+    When de medewerker corrupte bytes met een JPG-bestandsnaam uploadt
+    And een afbeelding boven de veilige dimensiegrens wordt geweigerd
+    Then worden tekstbytes met alleen een PDF-bestandsnaam ook geweigerd
+    Then blijft het bestaande document ongewijzigd
+    And cleanup: sessie sluiten voor testisolatie

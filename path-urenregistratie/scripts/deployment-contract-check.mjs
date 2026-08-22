@@ -16,6 +16,11 @@ assert.match(workflow, /environment:\s*prod/, 'PROD deployment must use the prot
 assert.match(workflow, /secrets\.TRANSIP_SSH_PRIVATE_KEY/, 'SSH private key must come from GitHub Secrets');
 assert.match(workflow, /secrets\.TRANSIP_SSH_KNOWN_HOSTS/, 'Pinned host keys must come from GitHub Secrets');
 assert.match(workflow, /github\.ref == 'refs\/heads\/main'/, 'Only main may deploy automatically');
+assert.equal(
+  (workflow.match(/extensions:\s*pdo_mysql, gd, fileinfo/g) || []).length,
+  6,
+  'Every PHP regression job must provide the image-to-PDF runtime extensions',
+);
 
 for (const required of [
   'StrictHostKeyChecking=yes',
@@ -78,13 +83,18 @@ assert.match(workflow, /TEST_PUBLIC_ADMIN_PASSWORD:\s*\$\{\{ secrets\.PLAYWRIGHT
 assert.match(workflow, /TEST_PUBLIC_EMPLOYEE_PASSWORD:\s*\$\{\{ secrets\.PLAYWRIGHT_EMPLOYEE_PASSWORD \}\}/, 'Public TEST employee password must come from a protected environment secret');
 assert.match(
   testRemote,
-  /\$expected = \["giovanno\.maatsen@pathconsultancy\.nl"\];/,
-  'Guarded TEST delivery must use exactly one sink recipient',
+  /\$expected = \["giovanno\.maatsen@pathconsultancy\.nl", "kenrich\.lieveld@pathconsultancy\.nl"\];/,
+  'Guarded TEST delivery must use exactly the primary sink and its acceptance CC recipient',
 );
 assert.doesNotMatch(
   testRemote,
-  /\$expected = \["giovanno\.maatsen@pathconsultancy\.nl", "kenrich\.lieveld@pathconsultancy\.nl"\];/,
-  'TEST account identities must not broaden the mail delivery allowlist',
+  /\$expected = \["giovanno\.maatsen@pathconsultancy\.nl"\];/,
+  'The TEST deployment guard must not regress to the stale one-recipient allowlist',
+);
+assert.match(
+  testRemote,
+  /\(\$mail\["test_sink_cc_recipient"\] \?\? ""\) === "kenrich\.lieveld@pathconsultancy\.nl"/,
+  'Guarded TEST delivery must verify the exact acceptance CC recipient',
 );
 assert.match(
   testRemote,

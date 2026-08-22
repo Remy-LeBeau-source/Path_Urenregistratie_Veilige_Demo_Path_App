@@ -564,6 +564,11 @@ test('[DASH-N-009] medewerker teller blijft stabiel bij aug-juli-aug en dashboar
   let timesheetReadHits = 0;
 
   await test.step('Given de medewerker zit op het dashboard en timesheet-read is gemonitord', async () => {
+    await page.route('**/server/api/customer-timesheets.php**', route => route.fulfill({
+      status: 503,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: false })
+    }));
     await page.route('**/server/api/timesheets.php**', async route => {
       if (route.request().method() === 'GET') {
         timesheetReadHits += 1;
@@ -973,6 +978,12 @@ test('[DASH-N-015] medewerkerprioriteit kiest correctie boven document en toont 
 
 test('[DASH-N-016] correctieactie ververst een verborgen rooster uit een eerdere maand', async ({ page }) => {
   const loginPage = new LoginPage(page);
+
+  // Deze test is uitsluitend gericht op het servergestuurde urenrooster. Houd de
+  // expliciet lokaal ingerichte klantdocumentstatus buiten de echte API-readback.
+  await page.route('**/server/api/customer-timesheets.php**', async route => {
+    await route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ ok: false }) });
+  });
 
   await page.route('**/server/api/timesheets.php**', async route => {
     const request = route.request();

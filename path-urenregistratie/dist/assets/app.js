@@ -217,7 +217,7 @@ function seedCustomerTimesheet(record, status, fileName) {
     uploadedBy: hasDocument ? "Voorbeeldgegevens" : "",
     reviewedAt: ["approved", "sent", "resubmit"].includes(status) ? "6 augustus 2026 om 11:00" : "",
     reviewedBy: ["approved", "sent", "resubmit"].includes(status) ? "Joyce van der Steenhoven" : "",
-    reviewNote: status === "resubmit" ? "Upload de definitieve, door de klant bevestigde PDF." : "",
+    reviewNote: status === "resubmit" ? "Upload de definitieve, door de klant bevestigde klanturenstaat als PDF, JPG of PNG." : "",
     sentAt: status === "sent" ? "6 augustus 2026 om 12:00" : ""
   });
   return record;
@@ -918,7 +918,7 @@ function loadState() {
           juneStasjo.payrollStatus = "concept";
           juneStasjo.entries = emptyEntries("2026-06");
           julyCustomer.status = "resubmit";
-          julyCustomer.reviewNote = "Upload de definitieve, door de klant bevestigde PDF.";
+          julyCustomer.reviewNote = "Upload de definitieve, door de klant bevestigde klanturenstaat als PDF, JPG of PNG.";
         }
       }
     }
@@ -962,6 +962,8 @@ function resetReadApiCaches() {
   readApiRuntime.announcementsInFlight = false;
   readApiRuntime.customerTimesheetsInFlight = {};
   readApiRuntime.timesheetsInFlight = {};
+  readApiRuntime.customerTimesheetMutationEpochByKey = {};
+  readApiRuntime.timesheetMutationEpochByKey = {};
   readApiRuntime.lastBootstrapAt = 0;
   readApiRuntime.lastDashboardAt = 0;
   readApiRuntime.lastInvoicesAt = 0;
@@ -1258,6 +1260,7 @@ const readApiRuntime = {
   announcementsInFlight: false,
   customerTimesheetsInFlight: {},
   timesheetsInFlight: {},
+  customerTimesheetMutationEpochByKey: {},
   timesheetMutationEpochByKey: {},
   lastBootstrapAt: 0,
   lastDashboardAt: 0,
@@ -1945,13 +1948,20 @@ function refreshEmployeeOpenTasksReadApi(force = false) {
   readApiRuntime.employeeOpenTasksSyncInFlight = true;
   let changed = false;
   return periodKeys.reduce((chain, periodKey) => chain.then(() =>
-    refreshTimesheetReadApi(periodKey, employee.id, force)
-      .then(record => {
-        if (record) changed = true;
+    Promise.allSettled([
+      refreshTimesheetReadApi(periodKey, employee.id, force),
+      refreshCustomerTimesheetReadApi(periodKey, employee.id, force)
+    ]).then(results => {
+        if (results.some(result => result.status === "fulfilled" && result.value)) changed = true;
       })
-      .catch(() => null)
   ), Promise.resolve())
-    .then(() => changed)
+    .then(() => {
+      const sameEmployeeAndPeriod = state.currentRole === "employee"
+        && Number(currentEmployee()?.id || 0) === Number(employee.id)
+        && currentPeriod().key === selectedPeriodKey;
+      if (changed && sameEmployeeAndPeriod) renderCustomerTimesheetPanel();
+      return changed;
+    })
     .finally(() => {
       readApiRuntime.employeeOpenTasksSyncInFlight = false;
       readApiRuntime.lastEmployeeOpenTasksSyncAt = Date.now();
@@ -2040,6 +2050,12 @@ function applyCustomerTimesheetApiRecord(employeeId, periodKey, data) {
   return documentRecord;
 }
 
+function applyMissingCustomerTimesheetApiRecord(employeeId, periodKey) {
+  const record = recordFor(Number(employeeId), periodKey);
+  record.customerTimesheet = blankCustomerTimesheet();
+  return record.customerTimesheet;
+}
+
 function writeCustomerTimesheetToApi(action, options = {}) {
   const employeeId = Number(options.employeeId || currentEmployee().id);
   const periodKey = String(options.periodKey || currentPeriod().key);
@@ -2048,6 +2064,8 @@ function writeCustomerTimesheetToApi(action, options = {}) {
   const subject = String(options.subject || "").trim();
   const body = String(options.body || "").trim();
   const file = options.file || null;
+  const mutationKey = periodKey + ":" + employeeId;
+  readApiRuntime.customerTimesheetMutationEpochByKey[mutationKey] = Number(readApiRuntime.customerTimesheetMutationEpochByKey[mutationKey] || 0) + 1;
 
   return requestAuthCsrf()
     .then(token => {
@@ -2079,7 +2097,9 @@ function writeCustomerTimesheetToApi(action, options = {}) {
         const message = String(result && result.data && result.data.message || "Klanturenstaatactie op server mislukt.");
         throw new Error(message);
       }
+      readApiRuntime.customerTimesheetMutationEpochByKey[mutationKey] = Number(readApiRuntime.customerTimesheetMutationEpochByKey[mutationKey] || 0) + 1;
       applyCustomerTimesheetApiRecord(employeeId, periodKey, result.data);
+      readApiRuntime.lastCustomerTimesheetsByPeriod[mutationKey] = Date.now();
       return result.data;
     });
 }
@@ -2135,7 +2155,6 @@ function initializeAuthSession() {
       authRuntime.checked = true;
       authRuntime.available = true;
       applyAuthUiMode("auth");
-      triggerReadApiWarmup();
       prefillAuthCredentialsFromSelection("admin", false);
       if (data && data.ok === true && data.authenticated === true && data.user) {
         setAuthDebug({
@@ -2160,7 +2179,18 @@ function initializeAuthSession() {
         }
 
         setAuthLoginFeedback("", false);
+        const hashViewOnLoad = String(window.location.hash || "").replace(/^#/, "");
         applyAuthUserToState(data.user, { loginUser: true });
+        // Must run after setAuthDebug() above so authRuntime.authenticated is
+        // already true; triggerReadApiWarmup() no-ops otherwise (this was a
+        // real bug: a freshly created admin/employee vanished after a real
+        // page reload because the warmup silently skipped itself every time).
+        triggerReadApiWarmup();
+        // applyAuthUserToState() -> login() always lands on the role's home
+        // view. A real page reload should stay where the operator was
+        // instead of bouncing back to the dashboard every time; showView()
+        // itself safely no-ops on an unknown/empty hash.
+        if (hashViewOnLoad) showView(hashViewOnLoad);
       } else {
         setAuthDebug({ authenticated: false, role: "", user_id: null, mode: "auth", available: true, error: "not-authenticated" });
         logoutLocal();
@@ -2701,6 +2731,9 @@ function invoiceApiRowsForPeriod(periodKey) {
     subtotal: Number(item && item.subtotal || 0),
     vatAmount: Number(item && item.vat_amount || 0),
     total: Number(item && item.total || 0),
+    billableHours: Number(item && item.billable_hours || 0),
+    hourlyRate: Number(item && item.hourly_rate || 0),
+    vatPercentage: Number(item && item.vat_percentage || 0),
     timesheetStatus: String(item && item.timesheet_status || "").toLowerCase(),
     locked: Boolean(item && item.locked),
     lockedAt: String(item && item.locked_at || "")
@@ -3015,15 +3048,18 @@ function refreshMailAcceptanceReadApi(force = false) {
 }
 
 function refreshCustomerTimesheetReadApi(periodKey, employeeId, force = false) {
-  if (!isCustomerTimesheetAdminApiMode()) return Promise.resolve(null);
+  if (!isCustomerTimesheetApiMode() || !["admin", "employee"].includes(state.currentRole)) return Promise.resolve(null);
   const period = parsePeriodKey(periodKey) ? periodKey : "";
   const employee = Number(employeeId || 0);
   if (!period || !Number.isFinite(employee) || employee <= 0) return Promise.resolve(null);
+  if (state.currentRole === "employee" && Number(currentEmployee()?.id || 0) !== employee) return Promise.resolve(null);
 
   const key = period + ":" + employee;
+  const mutationEpoch = Number(readApiRuntime.customerTimesheetMutationEpochByKey[key] || 0);
   const now = Date.now();
   const lastAt = Number(readApiRuntime.lastCustomerTimesheetsByPeriod[key] || 0);
-  if (!force && (readApiRuntime.customerTimesheetsInFlight[key] || (now - lastAt) < 15000)) return Promise.resolve(null);
+  if (readApiRuntime.customerTimesheetsInFlight[key]) return Promise.resolve(null);
+  if (!force && (now - lastAt) < 15000) return Promise.resolve(null);
 
   readApiRuntime.customerTimesheetsInFlight[key] = true;
   const endpoint = WRITE_CUSTOMER_TIMESHEET_PATH + "?period=" + encodeURIComponent(period) + "&employee_id=" + encodeURIComponent(String(employee));
@@ -3032,14 +3068,20 @@ function refreshCustomerTimesheetReadApi(periodKey, employeeId, force = false) {
     .then(data => {
       readApiRuntime.lastCustomerTimesheetsByPeriod[key] = Date.now();
       if (isLocalResetAuthoritative()) return null;
+      if (Number(readApiRuntime.customerTimesheetMutationEpochByKey[key] || 0) !== mutationEpoch) return null;
       if (!data || data.found !== true || !data.customer_timesheet) {
-        setReadApiSource("customerTimesheets", "fallback");
-        return;
+        if (!data || data.ok !== true || data.found !== false) {
+          setReadApiSource("customerTimesheets", "fallback");
+          return null;
+        }
+        if (!readApiDebug.customerTimesheetsByPeriod[period]) readApiDebug.customerTimesheetsByPeriod[period] = {};
+        readApiDebug.customerTimesheetsByPeriod[period][String(employee)] = data;
+        applyMissingCustomerTimesheetApiRecord(employee, period);
+      } else {
+        if (!readApiDebug.customerTimesheetsByPeriod[period]) readApiDebug.customerTimesheetsByPeriod[period] = {};
+        readApiDebug.customerTimesheetsByPeriod[period][String(employee)] = data;
+        applyCustomerTimesheetApiRecord(employee, period, data);
       }
-
-      if (!readApiDebug.customerTimesheetsByPeriod[period]) readApiDebug.customerTimesheetsByPeriod[period] = {};
-      readApiDebug.customerTimesheetsByPeriod[period][String(employee)] = data;
-      applyCustomerTimesheetApiRecord(employee, period, data);
       setReadApiSource("customerTimesheets", "api");
 
       const dashboardViewActive = document.querySelector("#view-dashboard")?.classList.contains("is-active");
@@ -4421,7 +4463,7 @@ function renderCustomerTimesheetPanel() {
   current.innerHTML = documentRecord.status === "skipped"
     ? '<div><div><strong>Als rechtstreeks gemaild geregistreerd</strong><small>' + escapeHtml(documentRecord.skippedReason || "De klanturenstaat is al rechtstreeks naar Path Backoffice gemaild.") + (documentRecord.skippedBy ? " · door " + escapeHtml(documentRecord.skippedBy) : "") + (documentRecord.skippedAt ? " · " + escapeHtml(documentRecord.skippedAt) : "") + '</small></div>' + customerTimesheetStatusPill(record) + '<button class="small-button" data-restore-customer-timesheet>Alsnog uploaden</button></div>'
     : documentRecord.fileName
-      ? '<div><div><strong>' + escapeHtml(documentRecord.fileName) + '</strong><small>' + (documentRecord.isExample ? "Voorbeeldbestand · geen echt klantdocument" : "Opgeslagen " + escapeHtml(documentRecord.uploadedAt || "datum onbekend") + (/\.(jpe?g|png)$/i.test(documentRecord.originalFileName || "") ? " · " + escapeHtml(documentRecord.originalFileName) + " omgezet naar PDF" : "")) + (documentRecord.status === "received" ? " · Backoffice heeft een melding in de app" : "") + (documentRecord.reviewNote ? " · " + escapeHtml(documentRecord.reviewNote) : "") + '</small></div><span class="status-pill ' + status[1] + '">' + escapeHtml(status[0]) + '</span>' + (documentRecord.fileData ? '<button class="small-button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">PDF bekijken</button>' : '<span></span>') + '</div>'
+      ? '<div><div><strong>' + escapeHtml(documentRecord.fileName) + '</strong><small>' + (documentRecord.isExample ? "Voorbeeldbestand · geen echt klantdocument" : "Opgeslagen " + escapeHtml(documentRecord.uploadedAt || "datum onbekend") + (documentRecord.mimeType === "application/pdf" && /\.(jpe?g|png)$/i.test(documentRecord.originalFileName || "") ? " · " + escapeHtml(documentRecord.originalFileName) + " omgezet naar PDF" : "")) + (documentRecord.status === "received" ? " · Backoffice heeft een melding in de app" : "") + (documentRecord.reviewNote ? " · " + escapeHtml(documentRecord.reviewNote) : "") + '</small></div><span class="status-pill ' + status[1] + '">' + escapeHtml(status[0]) + '</span>' + (documentRecord.fileData ? '<button class="small-button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">Klanturenstaat bekijken</button>' : '<span></span>') + '</div>'
       : '<div><div><strong>Nog geen klanturenstaat voor ' + escapeHtml(period.label) + '</strong><small>De urenregistratie kan wel gewoon worden ingevuld en ingediend.</small></div>' + customerTimesheetStatusPill(record) + '<span></span></div>';
   const locked = ["received", "approved", "sent", "sent_to_broker", "skipped"].includes(documentRecord.status);
   const saveButton = document.querySelector("#customer-timesheet-save-draft");
@@ -4525,12 +4567,12 @@ function showCustomerTimesheetDetails(employeeId, periodKey, reviewMode, adminTa
   const submissionSummary = documentRecord.status === "skipped"
     ? ''
     : '<div class="customer-timesheet-submission-review"><span>Van ' + escapeHtml(employee.name) + ' aan ' + escapeHtml(state.settings.supportName || "Path Backoffice") + '</span><strong>' + escapeHtml(submissionMail.subject) + '</strong><pre>' + escapeHtml(submissionMail.body) + '</pre></div>';
-  const summary = '<div><span>Status</span><strong>' + escapeHtml(status[0]) + '</strong></div><div><span>Bestand</span><strong>' + escapeHtml(documentRecord.fileName || (documentRecord.status === "skipped" ? "Niet via de app ontvangen" : "Nog niet ontvangen")) + '</strong></div>' + skippedSummary + (documentRecord.fileData ? '<div><span>Document controleren</span><button class="small-button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">PDF bekijken</button></div>' : '') + submissionSummary + '<div><span>Deadline</span><strong>Werkdag ' + Number(employee.customerTimesheetDueWorkday || 5) + '</strong></div><div><span>Brokerroute na goedkeuring</span><strong>' + escapeHtml(route) + '</strong></div><div><span>Factuur zonder klanturenstaat</span><strong>' + (employee.invoiceWithoutCustomerTimesheetAllowed === false ? "Niet toegestaan" : "Toegestaan") + '</strong></div><div><span>Onderwerp naar broker</span><strong>' + escapeHtml(brokerMail.subject) + '</strong></div>';
+  const summary = '<div><span>Status</span><strong>' + escapeHtml(status[0]) + '</strong></div><div><span>Bestand</span><strong>' + escapeHtml(documentRecord.fileName || (documentRecord.status === "skipped" ? "Niet via de app ontvangen" : "Nog niet ontvangen")) + '</strong></div>' + skippedSummary + (documentRecord.fileData ? '<div><span>Document controleren</span><button class="small-button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">Klanturenstaat bekijken</button></div>' : '') + submissionSummary + '<div><span>Deadline</span><strong>Werkdag ' + Number(employee.customerTimesheetDueWorkday || 5) + '</strong></div><div><span>Brokerroute na goedkeuring</span><strong>' + escapeHtml(route) + '</strong></div><div><span>Factuur zonder klanturenstaat</span><strong>' + (employee.invoiceWithoutCustomerTimesheetAllowed === false ? "Niet toegestaan" : "Toegestaan") + '</strong></div><div><span>Onderwerp naar broker</span><strong>' + escapeHtml(brokerMail.subject) + '</strong></div>';
   if (reviewMode && documentRecord.status === "received") {
     showModal({
       label: "Klanturenstaat controleren",
       title: employee.name + " · " + period.label,
-      message: "Controleer of dit de officiële PDF van de klant en de juiste periode is. Path maakt dit document niet zelf.",
+      message: "Controleer de opgeslagen PDF van de klanturenstaat en de juiste periode. Een aangeleverde JPG of PNG is hierbij al naar PDF omgezet; Path maakt het brondocument niet zelf.",
       summary,
       confirm: "Goedkeuren",
       secondary: "Opnieuw uploaden vragen",
@@ -4600,9 +4642,9 @@ function showCustomerTimesheetDetails(employeeId, periodKey, reviewMode, adminTa
           writeCustomerTimesheetToApi("request_resubmit", {
             employeeId: employee.id,
             periodKey: period.key,
-            reviewNote: "Upload de juiste of definitieve PDF van de klant."
+            reviewNote: "Upload de juiste of definitieve klanturenstaat als PDF, JPG of PNG."
           }).then(() => {
-            const toastMessage = "Er is in de app gevraagd om een nieuwe PDF. Er is niets gemaild.";
+            const toastMessage = "Er is in de app gevraagd om een nieuw bestand. Er is niets gemaild.";
             if (adminTaskId) {
               finishAdminTaskAndContinue(adminTaskId, () => {}, toastMessage);
               return;
@@ -4617,10 +4659,10 @@ function showCustomerTimesheetDetails(employeeId, periodKey, reviewMode, adminTa
         }
         const mutate = () => {
           documentRecord.status = "resubmit";
-          documentRecord.reviewNote = "Upload de juiste of definitieve PDF van de klant.";
-          addNotification({ audience: "employee", type: "customer-timesheet", employeeId: employee.id, title: "Klanturenstaat opnieuw uploaden", message: "Upload voor " + period.label + " de juiste of definitieve PDF van de klant.", periodKey: period.key, view: "timesheet" }, true);
+          documentRecord.reviewNote = "Upload de juiste of definitieve klanturenstaat als PDF, JPG of PNG.";
+          addNotification({ audience: "employee", type: "customer-timesheet", employeeId: employee.id, title: "Klanturenstaat opnieuw uploaden", message: "Upload voor " + period.label + " de juiste of definitieve klanturenstaat als PDF, JPG of PNG.", periodKey: period.key, view: "timesheet" }, true);
         };
-        const toastMessage = "Er is in de app gevraagd om een nieuwe PDF. Er is niets gemaild.";
+        const toastMessage = "Er is in de app gevraagd om een nieuw bestand. Er is niets gemaild.";
         if (adminTaskId) {
           finishAdminTaskAndContinue(adminTaskId, mutate, toastMessage);
           return;
@@ -4643,7 +4685,7 @@ function remindCustomerTimesheet(employeeId, periodKey) {
   const timestamp = correctionTimestamp();
   documentRecord.reminderCount += 1;
   documentRecord.lastReminderAt = timestamp.label;
-  addNotification({ audience: "employee", type: "customer-timesheet-reminder", employeeId: employee.id, title: "Klanturenstaat ontbreekt", message: "Upload de officiële PDF van de klant voor " + periodFromKey(periodKey).label + ". Deze upload staat los van je urenregistratie.", periodKey, view: "timesheet" }, true);
+  addNotification({ audience: "employee", type: "customer-timesheet-reminder", employeeId: employee.id, title: "Klanturenstaat ontbreekt", message: "Upload de officiële klanturenstaat als PDF, JPG of PNG voor " + periodFromKey(periodKey).label + ". Deze upload staat los van je urenregistratie.", periodKey, view: "timesheet" }, true);
   persistState(); renderAll(); toast("Herinnering in de app klaargezet voor " + employee.name + "; e-mailverzending is uitgeschakeld.");
 }
 
@@ -4782,11 +4824,11 @@ function showCustomerTimesheetBrokerCheck(employeeId, periodKey, adminTaskId = "
   showModal({
     label: "Aparte brokerroute",
     title: "Klanturenstaat voor " + employee.name + " controleren?",
-    message: "Controleer het bedoelde adres, open de officiële PDF en pas desgewenst het onderwerp of bericht aan. " + deliveryMessage,
+    message: "Controleer het bedoelde adres, open de opgeslagen PDF en pas desgewenst het onderwerp of bericht aan. " + deliveryMessage,
     summary: '<div><span>Bedoelde productieroute</span><strong>' + escapeHtml(email) + '</strong></div>' +
       (deliveryRouting ? '<div><span>' + escapeHtml(deliveryRouting.label) + '</span><strong>' + escapeHtml(deliveryRouting.sink) + ' · ' + escapeHtml(deliveryRouting.description) + '</strong></div>' : '') +
       '<div><span>Bijlage</span><strong>' + escapeHtml(documentRecord.fileName) + '</strong></div>' +
-      (documentRecord.fileData ? '<div><span>Document controleren</span><button class="small-button" type="button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + periodKey + '">PDF bekijken</button></div>' : '') +
+      (documentRecord.fileData ? '<div><span>Document controleren</span><button class="small-button" type="button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + periodKey + '">Klanturenstaat bekijken</button></div>' : '') +
       '<div class="modal-form full"><label class="full">Onderwerp<input id="customer-timesheet-broker-subject" value="' + escapeHtml(mail.subject) + '"></label><label class="full">Begeleidende tekst<textarea id="customer-timesheet-broker-body" rows="8">' + escapeHtml(mail.body) + '</textarea></label></div>',
     confirm: "Controle afronden",
     wide: true,
@@ -6031,6 +6073,31 @@ function renderTeamAccountOverview() {
   const totalElement = document.querySelector("#team-active-account-count");
   const groups = document.querySelector("#team-account-groups");
   if (totalElement) totalElement.textContent = String(total);
+
+  // After Herstel the app deliberately shows the local demo baseline and
+  // ignores the server until the next write. Without saying so, the count
+  // silently jumps (e.g. 6 -> 11) the moment anything is saved, which reads
+  // as accounts appearing out of nowhere. Make the state visible instead.
+  const notice = document.querySelector("#team-account-local-notice");
+  if (notice) {
+    const localDemoActive = isLocalResetAuthoritative();
+    notice.hidden = !localDemoActive;
+    if (localDemoActive) {
+      notice.innerHTML = '<strong>Je ziet nu de lokale voorbeeldweergave.</strong>' +
+        '<span>Deze telling komt uit het herstelde voorbeeld, niet van de server. Zodra je iets opslaat, verschijnt de echte serverstand ' +
+        '(en kan dit aantal veranderen). <button class="text-button" type="button" id="team-account-load-server">Nu de serverstand laden</button></span>';
+      const loadButton = document.querySelector("#team-account-load-server");
+      if (loadButton) {
+        loadButton.addEventListener("click", () => {
+          releaseLocalResetAuthorityAfterServerWrite();
+          refreshBootstrapReadApi(true)
+            .then(() => { renderAll(); toast("De echte serverstand is geladen."); })
+            .catch(() => toast("Serverstand laden is niet gelukt."));
+        });
+      }
+    }
+  }
+
   if (!groups) return;
   const groupMarkup = (kind, label, people, totalCount) => {
     const inactiveCount = Math.max(0, totalCount - people.length);
@@ -7527,6 +7594,30 @@ function closeModal() {
   adminTaskWorkflow = null;
 }
 
+/**
+ * Read-only dag/week-uitsplitsing van de ingevulde uren, zoals de medewerker
+ * die zelf invult, voor gebruik in de goedkeuringscontrole. Toont nooit
+ * invoervelden en verandert nooit data.
+ */
+function hoursReviewGridHtml(record, period) {
+  const rows = period.weekRows.map((week, weekIndex) => {
+    const weekEntries = record.entries[weekIndex] || [];
+    const cells = week.days.map((day, dayIndex) => {
+      if (!day) return '<td class="outside-month"><span class="outside-month-mark" aria-hidden="true">—</span></td>';
+      const value = Number(weekEntries[dayIndex] || 0);
+      return '<td class="workday-cell"><span class="date-number">' + day.day + '</span><strong>' + (value > 0 ? hoursFormat.format(value) : "0") + '</strong></td>';
+    }).join("");
+    const weekTotal = weekEntries.reduce((sum, value) => sum + (Number(value) || 0), 0);
+    const yearNote = week.year === period.year ? "" : " · " + week.year;
+    return '<tr><td>Week ' + week.number + yearNote + "</td>" + cells + '<td class="week-total">' + hoursFormat.format(weekTotal) + "</td></tr>";
+  }).join("");
+  return '<div class="table-wrap"><table class="hours-table hours-review-grid">' +
+    '<thead><tr><th>Week</th><th>Ma</th><th>Di</th><th>Wo</th><th>Do</th><th>Vr</th><th>Totaal</th></tr></thead>' +
+    '<tbody>' + rows + '</tbody>' +
+    '<tfoot><tr><th colspan="6">Maandtotaal declarabel</th><th>' + hoursFormat.format(totalEntries(record.entries)) + '</th></tr></tfoot>' +
+    '</table></div>';
+}
+
 function showHoursReview(employeeId, periodKey, adminTaskId = "") {
   const employee = employeeById(employeeId);
   const key = periodKey || currentPeriod().key;
@@ -7542,10 +7633,11 @@ function showHoursReview(employeeId, periodKey, adminTaskId = "") {
     label: "Urencontrole",
     title: "Controleer " + employee.name,
     message: "Controleer de uren en het tarief voor " + period.label + ". De geselecteerde maand bovenaan hoeft hiervoor niet te worden gewijzigd.",
-    summary: "<div><span>Maand</span><strong>" + escapeHtml(period.label) + "</strong></div><div><span>Declarabel</span><strong>" + hoursFormat.format(total) + " uur</strong></div><div><span>Tarief</span><strong>" + currency.format(employee.rate) + " per uur</strong></div><div><span>Verwacht factuurbedrag</span><strong>" + currency.format(total * employee.rate) + "</strong></div>",
+    summary: "<div><span>Maand</span><strong>" + escapeHtml(period.label) + "</strong></div><div><span>Declarabel</span><strong>" + hoursFormat.format(total) + " uur</strong></div><div><span>Tarief</span><strong>" + currency.format(employee.rate) + " per uur</strong></div><div><span>Verwacht factuurbedrag</span><strong>" + currency.format(total * employee.rate) + "</strong></div>" + hoursReviewGridHtml(record, period),
     secondary: "Terugsturen voor correctie",
     secondaryAction: () => showCorrectionEditor(employee.id, key, adminTaskId),
     confirm: "Goedkeuren",
+    wide: true,
     adminTaskId,
     action: () => {
       if (adminTaskId) {
@@ -7860,6 +7952,8 @@ function invoiceSummary(employeeId, periodKey) {
   const subject = formatTemplate(employee.mailSubject, employee, record.invoiceNumber, key);
   const body = formatTemplate(employee.mailBody, employee, record.invoiceNumber, key);
   const total = totalEntries(record.entries);
+  const serverInvoice = serverInvoiceFor(employee.id, key);
+  const subtotal = serverInvoice ? serverInvoice.subtotal : total * employee.rate;
   const routes = deliveryRoutesFor(employee);
   const customerDocument = customerTimesheetFor(record);
   const customerDocumentStatus = (customerTimesheetStatusLabels[customerDocument.status] || customerTimesheetStatusLabels.missing)[0];
@@ -7878,7 +7972,7 @@ function invoiceSummary(employeeId, periodKey) {
       "<div><span>Klanturenstaat</span><strong>" + escapeHtml(customerDocumentStatus) + " · " + escapeHtml(customerDocumentRoute) + "</strong></div>" +
       "<div><span>BCC</span><strong>Niet gebruikt</strong></div>" +
       "<div><span>Brokeronderwerp</span><strong>" + escapeHtml(subject) + "</strong></div>" +
-      "<div><span>Totaal excl. btw</span><strong>" + currency.format(total * employee.rate) + "</strong></div>"
+      "<div><span>Totaal excl. btw</span><strong>" + currency.format(subtotal) + "</strong></div>"
   };
 }
 
@@ -7981,6 +8075,9 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
       };
 
       if (serverDelivery && invId > 0) {
+        document.querySelector("#modal-confirm").disabled = true;
+        document.querySelector("#modal-queue-previous").disabled = true;
+        document.querySelector("#modal-queue-next").disabled = true;
         finalizeInvoiceAndQueueToApi(serverInvoice)
           .then(delivery => Promise.all([
             refreshEmailQueueReadApi(true),
@@ -8003,13 +8100,30 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
             toast(resultMessage);
           }))
           .catch(error => {
+            document.querySelector("#modal-confirm").disabled = false;
+            if (adminTaskId) renderModalTaskNavigation(adminTaskId);
             toast(String(error && error.message || (baseMsg + ". Koppeling met mailqueue tijdelijk niet bereikbaar.")));
           });
         return;
       }
 
       if (serverDelivery && invId <= 0) {
-        finishLocalDryRun("serverfactuur nog niet beschikbaar, lokaal afgerond");
+        document.querySelector("#modal-confirm").disabled = true;
+        refreshInvoicesReadApi(key, true).then(() => {
+          const refreshedInvoice = serverInvoiceFor(employeeId, key);
+          if (!refreshedInvoice) throw new Error("Serverfactuur nog niet beschikbaar. De actie blijft open; probeer het later opnieuw.");
+          return finalizeInvoiceAndQueueToApi(refreshedInvoice);
+        }).then(() => Promise.all([
+          refreshEmailQueueReadApi(true),
+          refreshInvoicesReadApi(key, true)
+        ])).then(() => {
+          releaseLocalResetAuthorityAfterServerWrite();
+          if (adminTaskId) finishAdminTaskAndContinue(adminTaskId, () => {}, baseMsg + ".");
+          else closeModal();
+        }).catch(error => {
+          document.querySelector("#modal-confirm").disabled = false;
+          toast(String(error && error.message || "Serverfactuur kon niet worden geladen."));
+        });
         return;
       }
 
@@ -8023,11 +8137,13 @@ function invoiceData(employeeId, periodKey = "") {
   const employee = employeeById(employeeId);
   const period = periodKey && parsePeriodKey(periodKey) ? periodFromKey(periodKey) : currentPeriod();
   const record = recordFor(employee.id, period.key);
-  const hours = totalEntries(record.entries);
-  const subtotal = Math.round(hours * Number(employee.rate || 0) * 100) / 100;
-  const vatRate = 21;
-  const vatAmount = Math.round(subtotal * vatRate) / 100;
-  const total = Math.round((subtotal + vatAmount) * 100) / 100;
+  const serverInvoice = serverInvoiceFor(employee.id, period.key);
+  const hours = serverInvoice ? serverInvoice.billableHours : totalEntries(record.entries);
+  const rate = serverInvoice ? serverInvoice.hourlyRate : Number(employee.rate || 0);
+  const subtotal = serverInvoice ? serverInvoice.subtotal : Math.round(hours * rate * 100) / 100;
+  const vatRate = serverInvoice ? serverInvoice.vatPercentage : 21;
+  const vatAmount = serverInvoice ? serverInvoice.vatAmount : Math.round(subtotal * vatRate) / 100;
+  const total = serverInvoice ? serverInvoice.total : Math.round((subtotal + vatAmount) * 100) / 100;
   const invoiceDate = utcDate(period.year, period.monthIndex + 1, 1);
   const dueDate = new Date(invoiceDate);
   dueDate.setUTCDate(dueDate.getUTCDate() + Number(state.settings.paymentTerm || 30));
@@ -8037,6 +8153,7 @@ function invoiceData(employeeId, periodKey = "") {
     record,
     period,
     hours,
+    rate,
     subtotal,
     vatRate,
     vatAmount,
@@ -8134,7 +8251,7 @@ function safeFilename(value) {
   return String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9._-]+/gi, "_").replace(/^_+|_+$/g, "");
 }
 
-function downloadInvoicePdf(employeeId, periodKey = "") {
+function downloadInvoicePdf(employeeId, periodKey = "", outputMode = "download") {
   const data = invoiceData(employeeId, periodKey);
   const identity = invoiceCompanyIdentity();
   const jspdf = window.jspdf;
@@ -8242,7 +8359,7 @@ function downloadInvoicePdf(employeeId, periodKey = "") {
   doc.rect(14, tableY + 11, 182, 13, "F");
   drawText("Maand " + data.period.month, 18, tableY + 19, 8.5, ink, "bold");
   drawText(invoiceHours(data.hours), 132, tableY + 19, 8.5, ink, "normal", { align: "right" });
-  drawText(invoiceMoney(data.employee.rate), 162, tableY + 19, 8.5, ink, "normal", { align: "right" });
+  drawText(invoiceMoney(data.rate), 162, tableY + 19, 8.5, ink, "normal", { align: "right" });
   drawText(invoiceMoney(data.subtotal), 191, tableY + 19, 8.5, ink, "bold", { align: "right" });
 
   const totalsY = tableY + 37;
@@ -8268,6 +8385,9 @@ function downloadInvoicePdf(employeeId, periodKey = "") {
   doc.rect(0, 282, 210, 15, "F");
   drawText(identity.footer, 14, 291, 6.2, [221, 233, 230]);
   drawText("CONCEPTVOORBEELD", 196, 291, 6.2, mint, "bold", { align: "right" });
+  if (outputMode === "base64") {
+    return String(doc.output("datauristring")).replace(/^data:application\/pdf[^,]*,/, "");
+  }
   const filename = "Conceptfactuur_" + safeFilename(data.record.invoiceNumber) + "_" + safeFilename(data.employee.name) + ".pdf";
   doc.save(filename);
   toast("Conceptfactuur als PDF gedownload. Er is niets verstuurd.");
@@ -8289,11 +8409,13 @@ function showInvoiceDocumentPreview(employeeId, periodKey = "") {
   });
 }
 
-function showEmployeeEditor(employeeId) {
+// `prefill` keeps the already-entered values when the form has to be reopened
+// after a rejected save (see showAdminEditor for the same pattern).
+function showEmployeeEditor(employeeId, prefill) {
   const existing = employeeId ? employeeById(employeeId) : null;
   const nextId = state.employees.reduce((max, employee) => Math.max(max, employee.id), 0) + 1;
   const serverAccountMode = API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin";
-  const employee = existing || {
+  const employeeBase = existing || {
     id: nextId,
     name: "",
     email: serverAccountMode ? "" : "nieuwe-medewerker@example.invalid",
@@ -8329,6 +8451,7 @@ function showEmployeeEditor(employeeId) {
     customerTimesheetBrokerEmail: serverAccountMode ? "" : "nieuw-adres@example.invalid",
     invoiceWithoutCustomerTimesheetAllowed: true
   };
+  const employee = Object.assign({}, employeeBase, prefill && typeof prefill === "object" ? prefill : {});
   const invitationDeliveryAvailable = authRuntime.passwordResetDeliveryAvailable === true;
   const invitationControl = !existing || employee.invitationPending === true
     ? (serverAccountMode
@@ -8346,8 +8469,8 @@ function showEmployeeEditor(employeeId) {
   }).join("");
   const summary = '<div class="modal-form">' +
     '<p class="full form-help">Account en contract</p>' +
-    '<label>Voor- en achternaam<input id="edit-name" value="' + escapeHtml(employee.name) + '"></label>' +
-    '<label>Zakelijk accountadres<input id="edit-account-email" type="email" value="' + escapeHtml(employee.email || (serverAccountMode ? "" : "nieuwe-medewerker@example.invalid")) + '"></label>' +
+    '<label>Voor- en achternaam<input id="edit-name" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" value="' + escapeHtml(employee.name) + '"></label>' +
+    '<label>Zakelijk accountadres<input id="edit-account-email" type="email" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" value="' + escapeHtml(employee.email || (serverAccountMode ? "" : "nieuwe-medewerker@example.invalid")) + '"></label>' +
     '<label>Functie<input id="edit-role" value="' + escapeHtml(employee.role) + '"></label>' +
     '<label>Startdatum<input id="edit-start-date" type="date" value="' + escapeHtml(employee.startDate || "2026-08-01") + '"></label>' +
     '<label>Contract<input id="edit-contract" value="' + escapeHtml(employee.contract) + '"></label>' +
@@ -8373,7 +8496,7 @@ function showEmployeeEditor(employeeId) {
     '<label class="check-row"><input id="edit-new-recipient-enabled" type="checkbox" checked><span>Deze medewerker ontvangt via deze ontvanger mail</span></label>' +
     '<label class="check-row"><input id="edit-new-recipient-invoice" type="checkbox"><span>Factuur als PDF meesturen</span></label>' +
     '<p class="full form-help">De naam bepaal je zelf. De ontvanger wordt centraal bewaard en is daarna ook bij andere medewerkers beschikbaar.</p>' +
-    '<p class="full form-help">Klanturenstaat · officiële PDF van de klant</p>' +
+    '<p class="full form-help">Klanturenstaat · officieel bestand van de klant (PDF, JPG of PNG)</p>' +
     '<label class="check-row full"><input id="edit-customer-timesheet-expected" type="checkbox"' + (employee.customerTimesheetExpected !== false ? " checked" : "") + '><span>Voor deze medewerker wordt iedere maand een klanturenstaat verwacht</span></label>' +
     '<label>Verwacht vóór werkdag<select id="edit-customer-timesheet-due-day" aria-label="Deadline klanturenstaat"><option value="3"' + (Number(employee.customerTimesheetDueWorkday || 5) === 3 ? " selected" : "") + '>3e werkdag</option><option value="5"' + (Number(employee.customerTimesheetDueWorkday || 5) === 5 ? " selected" : "") + '>5e werkdag</option><option value="7"' + (Number(employee.customerTimesheetDueWorkday || 5) === 7 ? " selected" : "") + '>7e werkdag</option><option value="10"' + (Number(employee.customerTimesheetDueWorkday || 5) === 10 ? " selected" : "") + '>10e werkdag</option></select></label>' +
     '<label class="check-row"><input id="edit-customer-timesheet-broker-enabled" type="checkbox"' + (employee.customerTimesheetBrokerEnabled !== false ? " checked" : "") + '><span>Na controle apart naar broker klaarzetten</span></label>' +
@@ -8510,7 +8633,11 @@ function showEmployeeEditor(employeeId) {
             }
             if (addAnother) showEmployeeEditor(null);
           })
-          .catch(error => handleStaffWriteError(error, "Medewerker opslaan op server mislukt."));
+          .catch(error => handleStaffWriteError(
+            error,
+            "Medewerker opslaan op server mislukt.",
+            () => showEmployeeEditor(employeeId, updated)
+          ));
         return;
       }
 
@@ -8576,14 +8703,61 @@ function showEmployeeEditor(employeeId) {
   syncCustomerTimesheetRoute();
 }
 
-function showAdminEditor(adminId) {
+// `prefill` keeps what was already typed when the form has to be reopened
+// after a rejected save, so one wrong character never costs a full re-entry.
+function showAdminEditor(adminId, prefill) {
   const existing = adminId ? adminById(adminId) : null;
   const serverAccountMode = API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin";
-  const admin = existing || { id: "admin-" + (state.admins.length + 1), name: "", email: serverAccountMode ? "" : "nieuwe-beheerder@example.invalid", active: true, emailNotificationsEnabled: true, photo: "" };
+  const admin = Object.assign(
+    {},
+    existing || { id: "admin-" + (state.admins.length + 1), name: "", email: serverAccountMode ? "" : "nieuwe-beheerder@example.invalid", active: true, emailNotificationsEnabled: true, photo: "" },
+    prefill && typeof prefill === "object" ? prefill : {}
+  );
   const invitationDeliveryAvailable = authRuntime.passwordResetDeliveryAvailable === true;
-  const summary = '<div class="modal-form"><label>Voor- en achternaam<input id="edit-admin-name" value="' + escapeHtml(admin.name) + '"></label><label>Zakelijk accountadres<input id="edit-admin-email" type="email" value="' + escapeHtml(admin.email) + '"></label><label class="check-row full"><input id="edit-admin-notifications" type="checkbox" checked><span>Meldingen over ingediende uren en facturen ontvangen</span></label>' +
+  const summary = '<div class="modal-form"><label>Voor- en achternaam<input id="edit-admin-name" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" value="' + escapeHtml(admin.name) + '"></label><label>Zakelijk accountadres<input id="edit-admin-email" type="email" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" value="' + escapeHtml(admin.email) + '"></label><label class="check-row full"><input id="edit-admin-notifications" type="checkbox" checked><span>Meldingen over ingediende uren en facturen ontvangen</span></label>' +
     (!existing && serverAccountMode ? '<label class="check-row full"><input id="edit-admin-invite" type="checkbox"' + (invitationDeliveryAvailable ? " checked" : " disabled") + '><span>' + (invitationDeliveryAvailable ? "Persoonlijke uitnodiging per e-mail versturen" : "Uitnodiging volgt zodra e-mail is ingeschakeld") + '</span></label>' : "") +
     '<p class="full form-help">' + (serverAccountMode ? "Het beheeraccount wordt veilig op de server opgeslagen. Zonder uitnodiging blijft de toegang in afwachting." : "Het account wordt lokaal bewaard en er wordt nog geen uitnodiging verstuurd. Productieaccounts worden veilig door een beheerder ingericht.") + '</p></div>';
+  const sendInvitationChecked = () => Boolean(document.querySelector("#edit-admin-invite") && document.querySelector("#edit-admin-invite").checked);
+
+  const saveAdmin = updated => {
+    if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
+      writeStaffToApi("upsert_admin", {
+        sendInvitation: sendInvitationChecked(),
+        admin: {
+          dbUserId: Number(admin.dbUserId || 0),
+          name: updated.name,
+          email: updated.email,
+          active: updated.active,
+          emailNotificationsEnabled: updated.emailNotificationsEnabled
+        }
+      })
+        .then(result => {
+          updated.invitationPending = Boolean(result && result.invitation_pending);
+          releaseLocalResetAuthorityAfterServerWrite();
+          return result;
+        })
+        .then(() => refreshBootstrapReadApi(true))
+        .then(() => {
+          closeModal();
+          renderAll();
+          toast("Beheerder op de server opgeslagen.");
+        })
+        .catch(error => handleStaffWriteError(
+          error,
+          "Beheerder opslaan op server mislukt.",
+          () => showAdminEditor(adminId, { name: updated.name, email: updated.email })
+        ));
+      return;
+    }
+
+    if (existing) state.admins[state.admins.findIndex(item => item.id === existing.id)] = updated;
+    else state.admins.push(updated);
+    persistState();
+    closeModal();
+    renderAll();
+    toast("Beheerder lokaal opgeslagen. Er is geen uitnodiging verstuurd.");
+  };
+
   showModal({
     label: existing ? "Beheerder aanpassen" : "Beheerder toevoegen",
     title: admin.name || "Nieuwe beheerder",
@@ -8604,38 +8778,11 @@ function showAdminEditor(adminId) {
       }
       const updated = Object.assign({}, admin, { name: name.value.trim(), email: email.value.trim(), active: admin.active !== false, emailNotificationsEnabled: document.querySelector("#edit-admin-notifications").checked });
 
-      if (API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin") {
-        writeStaffToApi("upsert_admin", {
-          sendInvitation: Boolean(document.querySelector("#edit-admin-invite") && document.querySelector("#edit-admin-invite").checked),
-          admin: {
-            dbUserId: Number(admin.dbUserId || 0),
-            name: updated.name,
-            email: updated.email,
-            active: updated.active,
-            emailNotificationsEnabled: updated.emailNotificationsEnabled
-          }
-        })
-          .then(result => {
-            updated.invitationPending = Boolean(result && result.invitation_pending);
-            releaseLocalResetAuthorityAfterServerWrite();
-            return result;
-          })
-          .then(() => refreshBootstrapReadApi(true))
-          .then(() => {
-            closeModal();
-            renderAll();
-            toast("Beheerder op de server opgeslagen.");
-          })
-          .catch(error => handleStaffWriteError(error, "Beheerder opslaan op server mislukt."));
-        return;
-      }
-
-      if (existing) state.admins[state.admins.findIndex(item => item.id === existing.id)] = updated;
-      else state.admins.push(updated);
-      persistState();
-      closeModal();
-      renderAll();
-      toast("Beheerder lokaal opgeslagen. Er is geen uitnodiging verstuurd.");
+      // Deliberately no warning on a duplicate display name: two different
+      // people may legitimately share one, so flagging it is pure noise. Only
+      // the email has to be unique, and that is enforced server-side with a
+      // hard block (surfaced by handleStaffWriteError).
+      saveAdmin(updated);
     }
   });
 }
@@ -8690,11 +8837,19 @@ function finalizeInvoiceAndQueueToApi(invoiceRow) {
     testDelivery: testDeliveryActive()
   }));
 
+  const matchingEmployee = state.employees.find(employee => employee.name === String(invoiceRow && invoiceRow.employeeName || ""));
+  const conceptPdfBase64 = matchingEmployee
+    ? downloadInvoicePdf(matchingEmployee.id, String(invoiceRow && invoiceRow.periodKey || ""), "base64")
+    : "";
+  if (!conceptPdfBase64) {
+    return Promise.reject(new Error("De gecontroleerde conceptfactuur kon niet voor verzending worden gemaakt."));
+  }
+
   return requestAuthCsrf()
     .then(token => fetch("/server/api/invoices.php", {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
-      body: JSON.stringify({ action: "lock", timesheet_id: timesheetId })
+      body: JSON.stringify({ action: "lock", timesheet_id: timesheetId, concept_pdf_base64: conceptPdfBase64 })
     }))
     .then(resp => resp.json().catch(() => ({})).then(data => ({ ok: resp.ok, data })))
     .then(result => {
@@ -8723,7 +8878,7 @@ function finalizeInvoiceAndQueueToApi(invoiceRow) {
     });
 }
 
-function revealExistingStaffAccount(existing, message) {
+function revealExistingStaffAccount(existing, message, reopenForm) {
   const role = String(existing && existing.role || "");
   const userId = Number(existing && existing.user_id || 0);
   const employeeId = Number(existing && existing.employee_id || 0);
@@ -8754,10 +8909,31 @@ function revealExistingStaffAccount(existing, message) {
     window.setTimeout(() => target.classList.remove("account-conflict-focus"), 5000);
   });
 
+  // A duplicate email is a hard block, not a hint: showing it only as a toast
+  // in the corner made it easy to miss and left the impression that saving had
+  // silently done nothing. Use the same modal treatment as the name check.
+  const existingName = String(existing && existing.display_name || "dit account");
+  const roleLabel = role === "employee" ? "medewerker" : "beheerder";
+  // Closing outright would throw away everything the operator just typed and
+  // force a full re-entry over one wrong character, so offer to reopen the
+  // form with the entered values still in place.
+  const canReopen = typeof reopenForm === "function";
+  showModal({
+    label: "E-mailadres al in gebruik",
+    title: "Dit adres hoort al bij " + existingName,
+    message: message + " Eén e-mailadres kan maar bij één account horen — een naam mag wél twee keer voorkomen, een adres niet. "
+      + "Pas het adres aan als dit een andere " + roleLabel + " moet worden, of gebruik het bestaande account dat nu is geopend.",
+    confirm: canReopen ? "Adres aanpassen" : "Begrepen",
+    secondary: canReopen ? "Sluiten" : "",
+    secondaryAction: canReopen ? () => closeModal() : null,
+    wide: true,
+    action: canReopen ? () => reopenForm() : () => closeModal()
+  });
+
   toast(message);
 }
 
-function handleStaffWriteError(error, fallbackMessage) {
+function handleStaffWriteError(error, fallbackMessage, reopenForm) {
   const message = String(error && error.message || fallbackMessage);
   if (error && error.code === "email-already-in-use" && error.details && error.details.existing_account) {
     const existing = error.details.existing_account;
@@ -8767,12 +8943,12 @@ function handleStaffWriteError(error, fallbackMessage) {
       ? state.admins.some(item => Number(item.dbUserId || 0) === userId)
       : state.employees.some(item => Number(item.dbUserId || 0) === userId || Number(item.dbEmployeeId || item.id || 0) === employeeId);
     if (alreadyLoaded) {
-      revealExistingStaffAccount(existing, message);
+      revealExistingStaffAccount(existing, message, reopenForm);
       return null;
     }
     return refreshBootstrapReadApi(true)
       .catch(() => null)
-      .then(() => revealExistingStaffAccount(existing, message));
+      .then(() => revealExistingStaffAccount(existing, message, reopenForm));
   }
   toast(message);
   return null;
@@ -9975,6 +10151,21 @@ function setPeriod(periodKey) {
   document.querySelectorAll("[data-invoice-filter]").forEach(button => button.classList.toggle("is-active", button.dataset.invoiceFilter === "all"));
   persistState();
   renderAll();
+  if (isCustomerTimesheetApiMode() && state.currentRole === "employee") {
+    const employee = currentEmployee();
+    refreshCustomerTimesheetReadApi(next, employee.id, true)
+      .then(data => {
+        const stillSelected = state.currentRole === "employee"
+          && Number(currentEmployee()?.id || 0) === Number(employee.id)
+          && currentPeriod().key === next;
+        if (!data || !stillSelected) return;
+        renderCustomerTimesheetPanel();
+        if (document.querySelector("#view-employee-dashboard")?.classList.contains("is-active")) {
+          renderEmployeeDashboard();
+        }
+      })
+      .catch(() => null);
+  }
   toast("Periode gewijzigd naar " + currentPeriod().label + ".");
   return true;
 }
@@ -10086,7 +10277,7 @@ function customerTimesheetPdfData(sourceData, sourceType) {
 }
 
 function notifyCustomerTimesheetSubmitted(employee, periodKey) {
-  addNotification({ audience: "admin", type: "customer-timesheet", employeeId: employee.id, title: "Klanturenstaat ingediend", message: employee.name + " heeft de officiële PDF voor " + periodFromKey(periodKey).label + " ingediend voor controle.", periodKey, view: "dashboard" }, true);
+  addNotification({ audience: "admin", type: "customer-timesheet", employeeId: employee.id, title: "Klanturenstaat ingediend", message: employee.name + " heeft de officiële klanturenstaat voor " + periodFromKey(periodKey).label + " ingediend voor controle.", periodKey, view: "dashboard" }, true);
 }
 
 function storeCustomerTimesheetFile(targetStatus) {

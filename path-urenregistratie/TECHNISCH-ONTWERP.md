@@ -52,6 +52,12 @@ Taak-ID's zijn stabiel opgebouwd uit type, periode en medewerker. Hierdoor kunne
 
 - Bootstrap levert de complete lijst van geldige periodekeys.
 - Na beheerlogin worden uren, klanturenstaten en factuurstatussen voor alle geldige combinaties opgehaald.
+- Na medewerkerlogin en bij maandwissel wordt de eigen klanturenstaat gericht opgehaald; de server
+  blijft de `employee_id` aan de ingelogde medewerker koppelen en de frontend projecteert de
+  `download_url` opnieuw in zowel dashboard als uploadpaneel.
+- Een `found: false`-antwoord is gezaghebbend en wist een eventueel lokaal of demorecord voor die
+  medewerker/periode. Iedere klanturenstaatmutatie verhoogt daarnaast een epoch per sleutel, zodat
+  een eerder begonnen GET-resultaat een zojuist opgeslagen document nooit kan overschrijven.
 - De hydratatie heeft één in-flight guard en een korte TTL tegen dubbele requests.
 - Na hydratatie volgt één volledige render.
 - Na medewerker- of beheerwrite wordt minimaal het betrokken record geforceerd herlezen.
@@ -62,6 +68,24 @@ Taak-ID's zijn stabiel opgebouwd uit type, periode en medewerker. Hierdoor kunne
   nieuwe conceptwijziging bestaat.
 - Serverpayloads worden aan de grens genormaliseerd; optionele arrays zoals announcement-
   ontvangers zijn nooit impliciet verplicht voor een volledige render.
+
+### Klanturenstaat-bestandscontract
+
+- Toegestane bronnen zijn PDF, JPG/JPEG en PNG, maximaal 2 MB.
+- PDF-upload vereist zowel een geldige PDF-header als een eindmarkering; alleen een bestandsnaam of
+  aangeleverd MIME-type is niet voldoende.
+- JPG/PNG worden met GD genormaliseerd en als valide PDF-bytes onder een `.pdf` storage key bewaard.
+- Afbeeldingsbreedte, -hoogte en totaal aantal pixels hebben vaste bovengrenzen vóór decode en vóór
+  PDF-opbouw, zodat een klein gecomprimeerd bestand geen onbegrensd geheugen kan opeisen.
+- Afbeeldingsdecode of PDF-conversie faalt gesloten met `invalid-upload`; rauwe afbeeldingsbytes
+  worden nooit stil als officieel document opgeslagen en een bestaand concept wordt niet vervangen.
+- De downloadendpoint blijft geautoriseerd op bedrijf, rol, medewerker en opdracht en levert een
+  PDF met `Content-Type: application/pdf`, `Content-Disposition: inline`, een veilige `.pdf`-naam,
+  `Cache-Control: private, no-store` en `X-Content-Type-Options: nosniff`.
+- De healthcheck vereist de GD-functies die deze ondersteunde uploadroute nodig heeft; alle CI-
+  regressiejobs installeren `pdo_mysql`, `gd` en `fileinfo` expliciet.
+- Historische records met een niet-PDF-MIME mogen nog geautoriseerd worden bekeken, maar worden
+  niet goedgekeurd of als PDF-bijlage verzonden totdat een ondersteund document opnieuw is geüpload.
 
 ### Render- en schrijfvolgorde
 

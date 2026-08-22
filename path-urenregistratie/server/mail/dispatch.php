@@ -150,7 +150,7 @@ function mail_resolve_attachments(PDO $pdo, array $delivery, array $config): arr
 
     if (in_array($policy, ['customer_timesheet', 'invoice_and_customer_timesheet'], true)) {
         $stmt = $pdo->prepare(
-            'SELECT ct.storage_key, e.full_name, p.year, p.month
+            'SELECT ct.storage_key, ct.mime_type, e.full_name, p.year, p.month
              FROM invoices i
              JOIN timesheets t ON t.id = i.timesheet_id
              JOIN customer_timesheets ct ON ct.employee_id = t.employee_id AND ct.period_id = t.period_id
@@ -162,6 +162,9 @@ function mail_resolve_attachments(PDO $pdo, array $delivery, array $config): arr
         );
         $stmt->execute([':id' => $invoiceId]);
         $timesheet = $stmt->fetch();
+        if ($timesheet && strtolower((string)($timesheet['mime_type'] ?? '')) !== 'application/pdf') {
+            throw new RuntimeException('Required approved customer timesheet is not normalized as PDF; re-upload is required.');
+        }
         $path = $timesheet ? mail_storage_path($config, 'customer-timesheets', (string)($timesheet['storage_key'] ?? '')) : null;
         if ($path === null) {
             throw new RuntimeException('Required approved customer timesheet PDF is unavailable.');
