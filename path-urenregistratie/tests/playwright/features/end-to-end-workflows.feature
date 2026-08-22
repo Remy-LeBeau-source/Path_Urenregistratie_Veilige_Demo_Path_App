@@ -54,7 +54,7 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
   @happy
   Scenario: [E2E-H-006] eenmalige wachtwoordlink geeft toegang en blokkeert hergebruik
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 9
+    # Aantoonbare Playwright-assertions in deze case: 11
     Given een actieve medewerker een resetlink aanvraagt
     When de medewerker via de link een sterk nieuw wachtwoord instelt
     Then werkt het nieuwe wachtwoord en is dezelfde link niet opnieuw bruikbaar
