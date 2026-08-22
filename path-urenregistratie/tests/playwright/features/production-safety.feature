@@ -25,7 +25,7 @@ Feature: Veilige productieconfiguratie en deployment
   @happy
   Scenario: [SAFE-H-014] gedeelde TEST-reset herstelt alleen de exacte veilige 12-actiebaseline
     # Testtechniek: Beslissingstabel + equivalentieklassen + toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 25
+    # Aantoonbare Playwright-assertions in deze case: 29
     Given TEST, PROD, verkeerde host en ontbrekend demorecht als beslissingstabel zijn gedefinieerd
     When alle toegestane en verboden resetovergangen niet-mutatief worden doorgerekend
     Then seed, accounts, auditrelatie en exact twaalf open acties herstelbaar blijven

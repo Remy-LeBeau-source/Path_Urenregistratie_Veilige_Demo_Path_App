@@ -185,6 +185,10 @@ test('[SAFE-H-014] gedeelde TEST-reset herstelt alleen de exacte veilige 12-acti
     expect(result.checks?.mispointed_test_database_port_blocked).toBe(true);
     expect(result.checks?.mispointed_test_database_blocked).toBe(true);
     expect(result.checks?.mispointed_test_database_user_blocked).toBe(true);
+    expect(result.checks?.effective_database_host_override_blocked).toBe(true);
+    expect(result.checks?.effective_database_port_override_blocked).toBe(true);
+    expect(result.checks?.effective_database_name_override_blocked).toBe(true);
+    expect(result.checks?.effective_database_user_override_blocked).toBe(true);
     expect(result.checks?.mispointed_test_private_root_blocked).toBe(true);
     expect(result.checks?.public_test_preserves_only_acceptance_credentials).toBe(true);
     expect(result.checks?.local_test_preserves_runtime_demo_credentials).toBe(true);

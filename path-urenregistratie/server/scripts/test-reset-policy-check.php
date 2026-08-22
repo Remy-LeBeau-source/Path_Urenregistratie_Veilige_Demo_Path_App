@@ -5,6 +5,17 @@ declare(strict_types=1);
 require_once __DIR__ . '/../auth/session.php';
 require_once __DIR__ . '/../lib/test-reset.php';
 
+function test_reset_rejects_effective_database_override(array $config, string $key, string $value): bool
+{
+    $previous = getenv($key);
+    putenv($key . '=' . $value);
+    try {
+        return !test_reset_remote_contract_is_exact($config);
+    } finally {
+        $previous === false ? putenv($key) : putenv($key . '=' . $previous);
+    }
+}
+
 $test = [
     'environment' => 'test',
     'app_origin' => 'https://uren-test.pathconsultancy.nl',
@@ -36,6 +47,17 @@ $production = [
 ];
 $source = file_get_contents(__DIR__ . '/../lib/test-reset.php') ?: '';
 $cliSource = file_get_contents(__DIR__ . '/reset-test-baseline.php') ?: '';
+$databaseOverrideKeys = [
+    'PATH_APP_DB_HOST', 'PLAYWRIGHT_DB_HOST', 'DB_HOST',
+    'PATH_APP_DB_PORT', 'PLAYWRIGHT_DB_PORT', 'DB_PORT',
+    'PATH_APP_DB_NAME', 'PLAYWRIGHT_DB_NAME', 'DB_NAME',
+    'PATH_APP_DB_USER', 'PLAYWRIGHT_DB_USER', 'DB_USER',
+];
+$databaseOverrideValues = [];
+foreach ($databaseOverrideKeys as $key) {
+    $databaseOverrideValues[$key] = getenv($key);
+    putenv($key);
+}
 $publicCredentialEmails = test_reset_baseline_credential_emails(
     test_reset_should_preserve_demo_credentials($test)
 );
@@ -53,6 +75,10 @@ $checks = [
     'mispointed_test_database_port_blocked' => !test_reset_is_available(array_replace_recursive($test, ['database' => ['port' => 3307]]), 'uren-test.pathconsultancy.nl'),
     'mispointed_test_database_blocked' => !test_reset_is_available(array_replace_recursive($test, ['database' => ['name' => 'pathco_Urenuru']]), 'uren-test.pathconsultancy.nl'),
     'mispointed_test_database_user_blocked' => !test_reset_is_available(array_replace_recursive($test, ['database' => ['user' => 'pathco_UrenUser']]), 'uren-test.pathconsultancy.nl'),
+    'effective_database_host_override_blocked' => test_reset_rejects_effective_database_override($test, 'PATH_APP_DB_HOST', '127.0.0.1'),
+    'effective_database_port_override_blocked' => test_reset_rejects_effective_database_override($test, 'PATH_APP_DB_PORT', '3307'),
+    'effective_database_name_override_blocked' => test_reset_rejects_effective_database_override($test, 'PATH_APP_DB_NAME', 'pathco_Urenuru'),
+    'effective_database_user_override_blocked' => test_reset_rejects_effective_database_override($test, 'PATH_APP_DB_USER', 'pathco_UrenUser'),
     'mispointed_test_private_root_blocked' => !test_reset_is_available(array_merge($test, ['storage' => ['private_root' => '/data/sites/web/pathconsultancynl/private/path-uren-prod']]), 'uren-test.pathconsultancy.nl'),
     'isolated_local_test_database_allowed' => test_reset_is_available($localTest, '127.0.0.1'),
     'non_test_local_database_blocked' => !test_reset_is_available(array_replace_recursive($localTest, ['database' => ['name' => 'path_urenregistratie']]), '127.0.0.1'),
@@ -90,6 +116,9 @@ $checks = [
         && str_contains($cliSource, "test_reset_is_available(\$config, 'uren-test.pathconsultancy.nl')")
         && str_contains($cliSource, "\$reset['verified_demo_accounts']"),
 ];
+foreach ($databaseOverrideValues as $key => $value) {
+    $value === false ? putenv($key) : putenv($key . '=' . $value);
+}
 $ok = !in_array(false, $checks, true);
 echo json_encode(['ok' => $ok, 'writes_performed' => false, 'checks' => $checks], JSON_PRETTY_PRINT) . PHP_EOL;
 exit($ok ? 0 : 1);

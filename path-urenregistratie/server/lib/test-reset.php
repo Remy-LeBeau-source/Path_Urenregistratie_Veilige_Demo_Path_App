@@ -18,6 +18,7 @@ final class TestResetPostCommitException extends RuntimeException
 function test_reset_remote_contract_is_exact(array $config): bool
 {
     $database = is_array($config['database'] ?? null) ? $config['database'] : [];
+    $effectiveDatabase = auth_db_from_config($config);
     $storage = is_array($config['storage'] ?? null) ? $config['storage'] : [];
     $privateRoot = rtrim(str_replace('\\', '/', trim((string)($storage['private_root'] ?? ''))), '/');
     $rawEnvironment = strtolower(trim((string)($config['environment'] ?? ($config['app']['environment'] ?? ''))));
@@ -30,6 +31,10 @@ function test_reset_remote_contract_is_exact(array $config): bool
         && (int)($database['port'] ?? 3306) === TEST_RESET_REMOTE_DATABASE_PORT
         && trim((string)($database['name'] ?? '')) === TEST_RESET_REMOTE_DATABASE
         && trim((string)($database['user'] ?? '')) === TEST_RESET_REMOTE_DATABASE_USER
+        && strtolower(trim((string)($effectiveDatabase['host'] ?? ''))) === TEST_RESET_REMOTE_DATABASE_HOST
+        && (int)($effectiveDatabase['port'] ?? 3306) === TEST_RESET_REMOTE_DATABASE_PORT
+        && trim((string)($effectiveDatabase['name'] ?? '')) === TEST_RESET_REMOTE_DATABASE
+        && trim((string)($effectiveDatabase['user'] ?? '')) === TEST_RESET_REMOTE_DATABASE_USER
         && $privateRoot === TEST_RESET_REMOTE_PRIVATE_ROOT;
 }
 

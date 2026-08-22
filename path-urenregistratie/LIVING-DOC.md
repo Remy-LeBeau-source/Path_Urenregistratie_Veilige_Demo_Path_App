@@ -339,7 +339,7 @@ De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 253 Playwrig
 
 - [SAFE-H-001] login picker vult alleen lokaal demo-wachtwoord in wanneer hints beschikbaar zijn — Techniek: API-contract + equivalentieklasse · Assertions: 9
 - [SAFE-H-012] TEST toont accountkeuze met autofill en een afgeschermde gedeelde reset — Techniek: Beslissingstabel + equivalentieklassen + toestandsovergang · Assertions: 19
-- [SAFE-H-014] gedeelde TEST-reset herstelt alleen de exacte veilige 12-actiebaseline — Techniek: Beslissingstabel + equivalentieklassen + toestandsovergang · Assertions: 25
+- [SAFE-H-014] gedeelde TEST-reset herstelt alleen de exacte veilige 12-actiebaseline — Techniek: Beslissingstabel + equivalentieklassen + toestandsovergang · Assertions: 29
 - [SAFE-H-015] TEST-deploy herstelt en verifieert de vaste accountbaseline vóór cutover — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 23
 - [SAFE-N-001] frontend source bevat geen plaintext demo-credentials — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 3
 - [SAFE-N-002] writes zonder csrf blijven geblokkeerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2

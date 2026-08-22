@@ -138,6 +138,7 @@ assert.match(testResetLibrary, /TEST_RESET_REMOTE_DATABASE_HOST\s*=\s*'pathco-ur
 assert.match(testResetLibrary, /TEST_RESET_REMOTE_DATABASE_PORT\s*=\s*3306/, 'Remote TEST reset must pin the database port');
 assert.match(testResetLibrary, /TEST_RESET_REMOTE_DATABASE\s*=\s*'pathco_Urentest'/, 'Remote TEST reset must pin the isolated database');
 assert.match(testResetLibrary, /TEST_RESET_REMOTE_DATABASE_USER\s*=\s*'pathco_UrenTestUser'/, 'Remote TEST reset must pin the database user');
+assert.match(testResetLibrary, /\$effectiveDatabase\s*=\s*auth_db_from_config\(\$config\)/, 'Remote TEST reset must validate the effective database after environment overrides');
 assert.match(testResetLibrary, /TEST_RESET_REMOTE_PRIVATE_ROOT\s*=\s*'\/data\/sites\/web\/pathconsultancynl\/private\/path-uren-test'/, 'Remote TEST reset must pin private storage');
 assert.match(testResetLibrary, /test_reset_should_preserve_demo_credentials[\s\S]*!test_reset_remote_contract_is_exact/, 'Only local\/CI resets may preserve runtime demo hashes');
 assert.match(testResetLibrary, /test_reset_verify_remote_demo_credentials\(\$pdo, \$config\)[\s\S]*\$pdo->commit\(\)/, 'Canonical demo credentials must be verified inside the reset transaction');

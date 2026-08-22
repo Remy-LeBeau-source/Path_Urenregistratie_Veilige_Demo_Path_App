@@ -259,7 +259,8 @@ demo-wachtwoorden. De destructieve remote variant is alleen beschikbaar bij de e
 van raw omgeving `test`, origin `https://uren-test.pathconsultancy.nl`, databasehost
 `pathco-urentest.db.transip.me`, poort `3306`, database `pathco_Urentest`, gebruiker
 `pathco_UrenTestUser` en private root `/data/sites/web/pathconsultancynl/private/path-uren-test`;
-een afwijking valt vóór iedere write gesloten uit. Beide acceptatieaccounts moeten vóór de reset
+zowel de ruwe configuratie als de effectieve database na eventuele omgevingsvariabelen moet hieraan
+voldoen. Een afwijking valt vóór iedere write gesloten uit. Beide acceptatieaccounts moeten vóór de reset
 een bestaande credential hebben. Alle zes canonieke demoaccounts worden binnen dezelfde
 databasetransactie en vóór commit geverifieerd. Een fout bij de daaropvolgende documentopbouw wordt
 expliciet als post-commit mutatie gerapporteerd.
