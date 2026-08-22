@@ -30,6 +30,27 @@ extra releasepipeline naast `32544919862` start.
 
 ## Wat is opgelost
 
+### Versie 0.9.104 — instellingenformulier en wachtwoord-vergeten
+
+PR #29 is gemerged. De scan is daarna voortgezet door elk element-id in `index.html` te vergelijken
+met wat de tests aanraken. Dat legde één echte bug en één ongedekt scherm bloot.
+
+- **Bedrijfsgegevens konden worden overschreven.** `populateSettings()` stond niet in `renderAll()`.
+  Het instellingenformulier werd één keer bij het opstarten gevuld uit de lokaal herstelde state —
+  dus vóór de server-bootstrap — en daarna nooit meer. Na een herlaad stonden er verouderde
+  bedrijfsgegevens, en `Wijzigingen opslaan` verstuurde exact die verouderde waarden over de juiste
+  serverdata heen. Dit verklaart het eerder waargenomen verlies van bedrijfsgegevens. Het formulier
+  wordt nu bij elke render gevuld, met een guard die dat nooit doet terwijl iemand erin typt.
+- **Waarom niets dit ving:** `INV-ID-H-003` dekte de settings-API, maar bouwde zijn payload uit de
+  bestaande waarden. Die case slaagt dus ook als IBAN nooit bewaard blijft. Het formulier zelf werd
+  door geen enkele test gebruikt.
+- **`INV-ID-H-006`** loopt nu de route van de beheerder en zet de oorspronkelijke waarden in een
+  `finally` terug.
+- **Wachtwoord-vergeten had nul dekking** — het eerste scherm dat iemand zonder toegang opent.
+  `PWD-H-014` bewijst dat een bestaand en een onbekend adres woordelijk dezelfde melding krijgen
+  (de server had die enumeratie-guard al; niets bewees dat de UI hem nakwam). `PWD-N-015` dekt het
+  overnemen van het inlogadres, het weigeren van een leeg adres en het terugkeren naar inloggen.
+
 ### Versie 0.9.103 — mobiele scan
 
 PR #28 is gemerged. Daarna is de volledige applicatie ook op de mobiele weergave nagelopen. De

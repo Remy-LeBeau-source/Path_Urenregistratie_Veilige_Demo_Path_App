@@ -45,3 +45,12 @@ Feature: Facturerende onderneming en handelsnaam
     Given facturerende onderneming en handelsnaam is voorbereid
     When de flow voor INV-ID-H-005 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat instellingen tonen verkoopklare bedrijfsidentiteit en beveiligde verzendmodus
+
+  @happy
+  Scenario: [INV-ID-H-006] bedrijfsgegevens uit het instellingenformulier blijven bewaard en komen op de factuur
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given facturerende onderneming en handelsnaam is voorbereid
+    When de beheerder de bedrijfsgegevens aanpast en opslaat
+    Then staan ze na een herlaad nog steeds in het formulier
+    And staat het opgeslagen IBAN op de betaalregel van de factuur

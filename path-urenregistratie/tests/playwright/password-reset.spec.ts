@@ -478,4 +478,89 @@ test.describe('password reset api', () => {
       });
     });
   }
+  test('[PWD-H-014] wachtwoord-vergeten op het inlogscherm verraadt niet welke e-mailadressen bestaan', async ({ page }) => {
+    // The self-service route a locked-out person actually takes. The server
+    // already answers identically for known and unknown addresses to prevent
+    // account enumeration, but nothing proved the screen keeps that promise --
+    // a different message for an unknown address would leak the whole user list
+    // to anyone with a browser.
+    const feedbackFor = async (email: string): Promise<string> => {
+      await page.goto('/');
+      await expect(page.locator('#login-screen')).toBeVisible();
+
+      await page.locator('#auth-forgot-password').click();
+      await expect(page.locator('#auth-reset-form')).toBeVisible();
+      await expect(page.locator('#auth-login-form')).toBeHidden();
+      await expect(page.locator('#auth-forgot-password')).toBeHidden();
+
+      await page.locator('#auth-reset-email').fill(email);
+      await page.locator('#auth-reset-submit').click();
+
+      const feedback = page.locator('#auth-reset-feedback');
+      await expect(feedback).toBeVisible();
+      await expect(feedback).not.toHaveText('Verzoek wordt verstuurd...');
+      return (await feedback.textContent() || '').trim();
+    };
+
+    let knownFeedback = '';
+    let unknownFeedback = '';
+
+    await test.step('When een bestaand adres een resetverzoek doet', async () => {
+      knownFeedback = await feedbackFor(appConfig.adminEmail);
+      expect(knownFeedback.length).toBeGreaterThan(0);
+    });
+
+    await test.step('And een onbekend adres exact hetzelfde verzoek doet', async () => {
+      unknownFeedback = await feedbackFor('bestaat-echt-niet-' + Date.now() + '@pathconsultancy.nl');
+    });
+
+    await test.step('Then is de melding woordelijk gelijk en noemt die het adres niet', async () => {
+      // A dry-run response embeds a per-request token, so compare the part that
+      // would carry the leak rather than the volatile token itself.
+      const withoutToken = (text: string) => text.split('Token:')[0].trim();
+      expect(withoutToken(unknownFeedback)).toBe(withoutToken(knownFeedback));
+      expect(knownFeedback).not.toContain(appConfig.adminEmail);
+      expect(unknownFeedback.toLowerCase()).not.toContain('onbekend adres');
+      expect(unknownFeedback.toLowerCase()).not.toContain('bestaat niet');
+    });
+  });
+
+  test('[PWD-N-015] het resetscherm neemt het ingevulde adres over, weigert een leeg adres en laat terugkeren naar inloggen', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('#login-screen')).toBeVisible();
+
+    await test.step('Given een ingevuld inlogadres', async () => {
+      await page.locator('#auth-login-email').fill('vergeten@pathconsultancy.nl');
+    });
+
+    await test.step('When de gebruiker op Wachtwoord vergeten klikt', async () => {
+      await page.locator('#auth-forgot-password').click();
+      await expect(page.locator('#auth-reset-form')).toBeVisible();
+    });
+
+    await test.step('Then is het adres overgenomen zodat het niet opnieuw getypt hoeft te worden', async () => {
+      await expect(page.locator('#auth-reset-email')).toHaveValue('vergeten@pathconsultancy.nl');
+    });
+
+    await test.step('When het adres wordt gewist en het formulier toch wordt verstuurd', async () => {
+      // Explicitly cleared: the screen carries the login address over, so an
+      // empty field is only reachable when someone wipes it on purpose.
+      await page.locator('#auth-reset-email').fill('');
+      await page.locator('#auth-reset-submit').click();
+    });
+
+    await test.step('Then komt er een expliciete melding en wordt er niets verstuurd', async () => {
+      await expect(page.locator('#auth-reset-feedback')).toBeVisible();
+      await expect(page.locator('#auth-reset-feedback')).toHaveText('Vul een e-mailadres in.');
+    });
+
+    await test.step('And brengt Terug naar inloggen de gebruiker terug bij het inlogformulier zonder oude melding', async () => {
+      await page.locator('#auth-reset-cancel').click();
+      await expect(page.locator('#auth-login-form')).toBeVisible();
+      await expect(page.locator('#auth-reset-form')).toBeHidden();
+      await expect(page.locator('#auth-forgot-password')).toBeVisible();
+      await expect(page.locator('#auth-login-email')).toBeVisible();
+      await expect(page.locator('#auth-reset-feedback')).toBeHidden();
+    });
+  });
 });

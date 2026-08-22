@@ -25,3 +25,6 @@ When("de flow voor INV-ID-N-004 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat settings API weigert een onbekende factuurweergave");
 When("de flow voor INV-ID-H-005 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat instellingen tonen verkoopklare bedrijfsidentiteit en beveiligde verzendmodus");
+When("de beheerder de bedrijfsgegevens aanpast en opslaat");
+Then("staan ze na een herlaad nog steeds in het formulier");
+And("staat het opgeslagen IBAN op de betaalregel van de factuur");

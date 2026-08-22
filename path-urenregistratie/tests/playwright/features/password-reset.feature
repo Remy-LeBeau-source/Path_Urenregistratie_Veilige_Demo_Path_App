@@ -127,3 +127,23 @@ Feature: Wachtwoordherstel en misbruikbeveiliging
     When de uitgenodigde persoon de eenmalige link opent en een wachtwoord instelt
     Then verschijnt een duidelijke bevestiging met een knop om in te loggen
     And die knop brengt de persoon naar het inlogscherm
+
+  @happy
+  Scenario: [PWD-H-014] wachtwoord-vergeten op het inlogscherm verraadt niet welke e-mailadressen bestaan
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 11
+    Given wachtwoordherstel en misbruikbeveiliging is voorbereid
+    When een bestaand adres een resetverzoek doet
+    And een onbekend adres exact hetzelfde verzoek doet
+    Then is de melding woordelijk gelijk en noemt die het adres niet
+
+  @negative
+  Scenario: [PWD-N-015] het resetscherm neemt het ingevulde adres over, weigert een leeg adres en laat terugkeren naar inloggen
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 10
+    Given een ingevuld inlogadres
+    When de gebruiker op Wachtwoord vergeten klikt
+    Then is het adres overgenomen zodat het niet opnieuw getypt hoeft te worden
+    When het adres wordt gewist en het formulier toch wordt verstuurd
+    Then komt er een expliciete melding en wordt er niets verstuurd
+    And brengt Terug naar inloggen de gebruiker terug bij het inlogformulier zonder oude melding
