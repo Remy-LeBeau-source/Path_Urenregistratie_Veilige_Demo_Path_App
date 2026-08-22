@@ -30,6 +30,31 @@ extra releasepipeline naast `32544919862` start.
 
 ## Wat is opgelost
 
+### Versie 0.9.102 — volledige applicatiescan
+
+Na een scan van alle schermen bleek Mededelingen het grootste gat: nul geautomatiseerde cases,
+terwijl de acceptatielijst er acht punten over bevat. Die scan legde twee echte bugs bloot.
+
+- **Mededelingen versturen was volledig kapot.** `announcements.php` riep `mb_substr()` direct aan;
+  op een PHP-installatie zonder de `mbstring`-extensie liep de hele actie stuk op
+  `Call to undefined function`. Vervangen door `announcement_truncate()`, met dezelfde
+  `function_exists`-guard die `simple_pdf.php` al gebruikte en een UTF-8-bewuste fallback die
+  meerbyte-tekens niet halverwege afkapt.
+- **Concept verwijderen crashte met een 500 inclusief stacktrace.** De actie wiste alleen de
+  `announcements`-rij terwijl `announcement_recipients` en `notifications` foreign keys houden.
+  Ruimt nu eerst de gekoppelde rijen op binnen één transactie; de oorzaak gaat naar het serverlog en
+  de externe melding blijft generiek.
+- De opslagactie ving fouten af en gooide de oorzaak weg, waardoor mislukte opslag niet te
+  onderzoeken was. De oorzaak wordt nu gelogd.
+- Nieuw `announcements.spec.ts` met `ANN-H-001` t/m `ANN-N-006`.
+- `PWD-H-013` doorloopt voor **beide rollen** de volledige toegangsketen: account aanmaken met
+  uitnodiging, uitnodiging daadwerkelijk verzonden, wachtwoord instellen via de eenmalige link,
+  expliciete bevestiging, en daarna echt kunnen inloggen.
+- Na het instellen van een wachtwoord verschijnt nu een duidelijke bevestiging met een knop
+  `Nu inloggen`; het scherm schakelt niet meer vanzelf om. Een leeg formulier was voorheen het enige
+  zichtbare resultaat van een geslaagde actie en las als "er gebeurde niets".
+- Smoke-test uitgebreid met drie bewakingen; FO en TO bijgewerkt.
+
 ### PR #27 / versie 0.9.101
 
 - Wachtwoordherstel en uitnodigingen worden nu daadwerkelijk via de maildispatch verzonden in plaats

@@ -53,5 +53,7 @@ Then("wordt met Playwright-assertions bevestigd dat request-reset weigert GET");
 When("de flow voor PWD-N-009 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat request-reset met leeg e-mailadres geeft 400");
 Given("de resetservice de verzendfunctie beschikbaar heeft");
-When("de flow voor PWD-H-012 wordt uitgevoerd");
 Then("wordt een gequeuede reset direct gedispatcht, na de commit en zonder de token ongeldig te maken");
+When("de uitgenodigde persoon de eenmalige link opent en een wachtwoord instelt");
+Then("verschijnt een duidelijke bevestiging met een knop om in te loggen");
+And("die knop brengt de persoon naar het inlogscherm");

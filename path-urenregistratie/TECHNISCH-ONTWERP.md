@@ -206,3 +206,32 @@ ongewijzigde productieroute; dit adres wordt niet als lokaal SMTP-doel gebruikt.
 PROD toont uitsluitend status. `EQ-H-025` bewaakt badge- en instellingenbediening, onderwerp, tekst,
 PDF-links en de geen-SMTP-grens; `mail-acceptance-policy-check.php` bewijst daarnaast nul writes en
 nul netwerkverbindingen tijdens de beleidscontrole.
+
+# Beveiligingsmail wordt verzonden, niet alleen klaargezet
+
+Iedere wachtrij-route (`invoices.php`, `customer-timesheets.php`, `email-queue.php` en de
+acceptatieconsole) roept na het klaarzetten `mail_dispatch_created()` aan. `auth_create_password_reset()`
+deed dat als enige niet en wachtte daarmee op een cronjob die op TEST niet draait; herstel- en
+uitnodigingsmails bleven daardoor met `status = queued` en `attempt_count = 0` staan. De verzendstap
+staat nu in de gedeelde functie, zodat herstel, uitnodiging en de resetlink vanuit Teambeheer
+dezelfde route volgen. Verzenden gebeurt ná de commit, zodat SMTP nooit binnen een transactie wordt
+geopend, en een mislukte verzending laat een al uitgegeven token intact: de levering blijft met
+foutmelding in de wachtrij staan. Productie blijft wachtrij-only; de guard in
+`mail_dispatch_created()` staat directe verzending uitsluitend toe in de afgeschermde TEST-sandbox.
+`PWD-H-012` bewaakt de aanroep, de plaats ná de commit en de token-behoudende foutafhandeling.
+
+# Mededelingen zonder mbstring-afhankelijkheid en met opruimbare concepten
+
+`announcements.php` kapte de notificatietekst af met een directe `mb_substr()`-aanroep. Op een
+PHP-installatie zonder de `mbstring`-extensie liep de hele verzendactie daardoor stuk op
+`Call to undefined function`; mededelingen versturen was dan volledig onmogelijk.
+`announcement_truncate()` gebruikt `mb_substr()` waar beschikbaar en valt anders terug op een
+UTF-8-bewuste regex, zodat een meerbyte-teken nooit halverwege wordt afgekapt — dezelfde
+guard-aanpak die `simple_pdf.php` al hanteerde voor `mb_convert_encoding()`.
+
+Een concept verwijderen wiste bovendien alleen de `announcements`-rij, terwijl
+`announcement_recipients` en `notifications` foreign keys houden. De aanroeper kreeg daardoor een
+onafgevangen `PDOException` als HTTP 500 mét stacktrace en er werd niets verwijderd. De actie ruimt
+nu eerst de gekoppelde ontvangers en meldingen op, binnen één transactie, en beantwoordt een fout
+met een generieke melding terwijl de oorzaak naar het serverlog gaat. Beide regressies staan in de
+smoke-test en in `ANN-H-002`.

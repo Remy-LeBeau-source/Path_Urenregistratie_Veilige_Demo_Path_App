@@ -10734,6 +10734,22 @@ document.querySelector("#auth-reset-cancel")?.addEventListener("click", () => {
   const fb = document.querySelector("#auth-reset-feedback");
   if (fb) { fb.hidden = true; fb.textContent = ""; }
 });
+// Same screen serves both roles, so one handler covers admin and employee.
+document.querySelector("#auth-reset-goto-login")?.addEventListener("click", () => {
+  document.querySelector("#auth-reset-complete-form").hidden = true;
+  document.querySelector("#auth-login-form").hidden = false;
+  document.querySelector("#auth-forgot-password").hidden = false;
+  const completeFeedback = document.querySelector("#auth-reset-complete-feedback");
+  if (completeFeedback) {
+    completeFeedback.hidden = true;
+    completeFeedback.textContent = "";
+    completeFeedback.classList.remove("is-success");
+  }
+  document.querySelector("#auth-reset-goto-login").hidden = true;
+  const submit = document.querySelector("#auth-reset-complete-submit");
+  if (submit) { submit.hidden = false; submit.disabled = false; }
+  document.querySelector("#auth-login-email")?.focus();
+});
 document.querySelector("#auth-reset-submit")?.addEventListener("click", () => {
   const emailInput = document.querySelector("#auth-reset-email");
   const feedback = document.querySelector("#auth-reset-feedback");
@@ -10796,14 +10812,16 @@ document.querySelector("#auth-reset-complete-form")?.addEventListener("submit", 
       pendingPasswordResetToken = "";
       document.querySelector("#auth-reset-new-password").value = "";
       document.querySelector("#auth-reset-confirm-password").value = "";
-      showFeedback("Je wachtwoord is ingesteld. Je kunt nu inloggen.", false);
-      document.querySelector("#auth-reset-complete-submit").disabled = true;
-      window.setTimeout(() => {
-        document.querySelector("#auth-reset-complete-form").hidden = true;
-        document.querySelector("#auth-login-form").hidden = false;
-        document.querySelector("#auth-forgot-password").hidden = false;
-        document.querySelector("#auth-login-email")?.focus();
-      }, 4000);
+      // Clearing the fields is the only visible result of a success, which
+      // reads exactly like "nothing happened". Confirm it explicitly and let
+      // the operator move on when ready instead of switching the screen from
+      // under them after a few seconds.
+      showFeedback("Gelukt! Je wachtwoord is ingesteld. Je kunt nu inloggen met je e-mailadres en dit nieuwe wachtwoord.", false);
+      const feedbackElement = document.querySelector("#auth-reset-complete-feedback");
+      if (feedbackElement) feedbackElement.classList.add("is-success");
+      document.querySelector("#auth-reset-complete-submit").hidden = true;
+      const gotoLogin = document.querySelector("#auth-reset-goto-login");
+      if (gotoLogin) gotoLogin.hidden = false;
     })
     .catch(error => {
       const code = String(error && error.message || "");

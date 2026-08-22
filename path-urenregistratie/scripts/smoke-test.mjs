@@ -105,7 +105,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.101"), "Het zichtbare versienummer moet 0.9.101 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.102"), "Het zichtbare versienummer moet 0.9.102 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -1587,6 +1587,7 @@ const productionPreflightSrc = readFileSync_(new URL("../server/scripts/producti
 const invoiceIdentityMigrationSrc = readFileSync_(new URL("../server/migrations/012_invoice_company_identity.sql", import.meta.url), "utf8");
 const passwordResetMigrationSrc = readFileSync_(new URL("../server/migrations/013_password_reset_delivery.sql", import.meta.url), "utf8");
 const passwordResetServiceSrc = readFileSync_(new URL("../server/auth/password-reset-service.php", import.meta.url), "utf8");
+const announcementsApiSrc = readFileSync_(new URL("../server/api/announcements.php", import.meta.url), "utf8");
 const requestResetSrc = readFileSync_(new URL("../server/auth/request-reset.php", import.meta.url), "utf8");
 const mailAcceptanceSrc = readFileSync_(new URL("../server/mail/acceptance.php", import.meta.url), "utf8");
 const mailAcceptancePolicySrc = readFileSync_(new URL("../server/scripts/mail-acceptance-policy-check.php", import.meta.url), "utf8");
@@ -1623,6 +1624,9 @@ assert(productionPreflightSrc.includes("writes_performed' => false") && producti
 assert(invoiceIdentityMigrationSrc.includes("invoice_name_display") && invoiceIdentityMigrationSrc.includes("invoice_phone") && invoiceIdentityMigrationSrc.includes("invoice_email"), "De factuuridentiteit moet via een expliciete databasemigratie worden opgeslagen");
 assert(passwordResetMigrationSrc.includes("password_reset") && passwordResetMigrationSrc.includes("fk_email_deliveries_user"), "Beveiligingsmails moeten zonder factuurkoppeling aan de juiste organisatiegebruiker hangen");
 assert(passwordResetServiceSrc.includes("#reset-password=") && passwordResetServiceSrc.includes("AUTH_PASSWORD_RESET_MAX_REQUESTS = 3") && requestResetSrc.includes("auth_password_reset_public_response"), "Resetlinks moeten logveilig, eenmalig voorbereid, begrensd en enumeration-safe zijn");
+assert(passwordResetServiceSrc.includes("mail_dispatch_created(") && passwordResetServiceSrc.indexOf("mail_dispatch_created(") > passwordResetServiceSrc.indexOf("$pdo->commit();"), "Een herstel- of uitnodigingsmail moet na de commit ook echt worden verzonden en niet alleen in de wachtrij blijven staan");
+assert(announcementsApiSrc.includes("function announcement_truncate") && announcementsApiSrc.includes("announcement_truncate($message, 400)") && announcementsApiSrc.includes("function_exists('mb_substr')"), "Mededelingen mogen niet stukgaan op een PHP-installatie zonder mbstring: de notificatietekst moet via de guarded helper worden afgekapt");
+assert(/DELETE FROM announcement_recipients WHERE announcement_id/.test(announcementsApiSrc) && /DELETE FROM notifications WHERE announcement_id/.test(announcementsApiSrc), "Een concept verwijderen moet eerst de gekoppelde ontvangers en meldingen opruimen zodat de foreign key nooit een onafgevangen 500 veroorzaakt");
 assert(mailAcceptanceSrc.includes("$origin === 'https://uren-test.pathconsultancy.nl'") && mailAcceptanceSrc.includes("DELETE FROM password_reset_tokens WHERE user_id = :id") && mailAcceptancePolicySrc.includes("test_security_scenarios_repeatable"), "Alleen de twee speciale acceptatielinks mogen op de exacte TEST-origin herhaalbaar zijn");
 assert(testResetApiSrc.includes("auth_require_role(['administrator', 'employee']") && testResetApiSrc.includes("security_require_csrf_token()") && testResetApiSrc.includes("RESET_SHARED_TEST_BASELINE"), "De gedeelde TEST-reset moet beheer- of medewerkerrol, CSRF en expliciete bevestiging eisen");
 assert(testResetPolicySrc.includes("spoofed_test_host_on_production_blocked") && testResetPolicySrc.includes("missing_demo_permission_blocked") && testResetPolicySrc.includes("'open_actions' => 12"), "De TEST-resetbeslissingstabel moet PROD, hostspoofing en een afwijkende baseline blokkeren");
@@ -1640,4 +1644,4 @@ assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("
 assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Playwright stage- en lokale env-bestanden mogen expliciete runner/CI-variabelen niet overschrijven");
 
 dom.window.close();
-console.log("Path v0.9.101 volledige smoke test: geslaagd");
+console.log("Path v0.9.102 volledige smoke test: geslaagd");
