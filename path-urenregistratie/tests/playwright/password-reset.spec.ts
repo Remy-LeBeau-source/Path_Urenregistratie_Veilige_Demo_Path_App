@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { AuthApi } from './api/AuthApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
+import { LoginPage } from './pages/LoginPage';
 
 const execFileAsync = promisify(execFile);
 
@@ -594,5 +595,70 @@ test.describe('password reset api', () => {
       await expect(feedback).not.toContainText('zie server');
       await expect(feedback).not.toContainText('onbekend');
     });
+  });
+
+  test('[PWD-H-017] een uitnodigingslink opent het wachtwoordscherm, ook als er al iemand is ingelogd', async ({ page }) => {
+    // Gemeld vanaf TEST: de beheerder maakt een medewerker aan, klikt in dezelfde
+    // browser op de uitnodigingslink, en belandt op het dashboard in plaats van op
+    // het wachtwoordscherm. De reden is dat het formulier binnen het inlogscherm
+    // wordt onthuld, en dat scherm zit verborgen achter de app zolang er een
+    // sessie is. De eerdere cases logden eerst uit en liepen er daarom omheen.
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const auth = new AuthApi(ctx);
+    await auth.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const uniek = Date.now().toString().slice(-7);
+    const adres = `uitnodiging-${uniek}@example.invalid`;
+
+    let token = '';
+    await test.step('Given een uitgenodigde collega met een geldige eenmalige link', async () => {
+      const before = await (await ctx.get('/server/api/bootstrap.php')).json();
+      const aangemaakt = await postAuth(ctx, '/server/api/staff.php', {
+        action: 'upsert_employee',
+        sendInvitation: false,
+        employee: {
+          name: `Uitgenodigd ${uniek}`,
+          email: adres,
+          role: 'Tester',
+          startDate: '2026-08-01',
+          active: true,
+          weeklyHours: 36,
+          rate: 80,
+          client: 'ItaQ Consultancy',
+          broker: 'ItaQ Consultancy',
+          brokerEmail: 'broker@example.invalid',
+        },
+        mailRecipients: before.mail_recipients,
+      });
+      expect(aangemaakt.status, JSON.stringify(aangemaakt.body)).toBe(200);
+
+      const reset = await postAuth(ctx, '/server/auth/request-reset.php', { email: adres });
+      expect(reset.status).toBe(200);
+      expect(typeof reset.body.token, 'de uitnodiging moet een token opleveren').toBe('string');
+      token = String(reset.body.token);
+    });
+
+    await test.step('When de beheerder ingelogd blijft en de link in dezelfde browser opent', async () => {
+      const login = new LoginPage(page);
+      await login.open();
+      await login.loginAsAdmin();
+      await expect(page.locator('#app-shell')).toBeVisible();
+
+      await page.goto(`/index.html#reset-password=${token}`);
+    });
+
+    await test.step('Then verschijnt het wachtwoordscherm en niet het dashboard', async () => {
+      await expect(
+        page.locator('#auth-reset-complete-form'),
+        'de eenmalige link hoort te winnen van de openstaande sessie'
+      ).toBeVisible();
+      await expect(page.locator('#login-screen')).toBeVisible();
+      await expect(page.locator('#app-shell')).toBeHidden();
+      // Het token mag nooit in de adresbalk of de historie blijven staan.
+      await expect(page).not.toHaveURL(/reset-password=/);
+    });
+
+    await auth.logout();
+    await ctx.dispose();
   });
 });

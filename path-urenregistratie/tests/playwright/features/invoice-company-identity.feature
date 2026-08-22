@@ -54,3 +54,11 @@ Feature: Facturerende onderneming en handelsnaam
     When de beheerder de bedrijfsgegevens aanpast en opslaat
     Then staan ze na een herlaad nog steeds in het formulier
     And staat het opgeslagen IBAN op de betaalregel van de factuur
+
+  @happy
+  Scenario: [INV-ID-H-007] de klanturenstaat-mailteksten blijven na opslaan bewaard
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given facturerende onderneming en handelsnaam is voorbereid
+    When de vier teksten worden aangepast en opgeslagen
+    Then staan ze na een herlaad nog steeds in het formulier

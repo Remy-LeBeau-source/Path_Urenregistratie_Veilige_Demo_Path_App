@@ -390,7 +390,14 @@ if ($action === 'upsert_admin') {
                 ':company_id' => $companyId,
             ]);
 
-            if ($update->rowCount() === 0) {
+            // rowCount() telt gewijzigde rijen, niet gevonden rijen. Een opslag die
+            // dit record niet verandert -- alleen een mailtekst of een route -- gaf
+            // anders ten onrechte "niet gevonden".
+            $bestaat = $pdo->prepare(
+                'SELECT id FROM users WHERE id = :id AND company_id = :company_id LIMIT 1'
+            );
+            $bestaat->execute([':id' => $dbUserId, ':company_id' => $companyId]);
+            if ($bestaat->fetchColumn() === false) {
                 throw new RuntimeException('Admin user was not found in company scope.');
             }
         } else {
@@ -452,6 +459,9 @@ if ($action === 'upsert_admin') {
         if ($e instanceof PDOException && (string)$e->getCode() === '23000') {
             staff_send_email_conflict(staff_find_email_conflict($pdo, $email, $dbUserId), $companyId);
         }
+        // Without this the cause is thrown away and a failed save is not
+        // diagnosable: the caller only sees a generic 500.
+        error_log('Employee upsert failed: ' . $e->getMessage());
         $message = $e instanceof RuntimeException
             ? $e->getMessage()
             : 'De beheerder kon niet worden opgeslagen. Probeer het opnieuw.';
@@ -592,7 +602,14 @@ if ($action === 'upsert_employee') {
                 ':id' => $employeeDbId,
                 ':company_id' => $companyId,
             ]);
-            if ($updateEmployee->rowCount() === 0) {
+            // rowCount() telt gewijzigde rijen, niet gevonden rijen. Een opslag die
+            // dit record niet verandert -- alleen een mailtekst of een route -- gaf
+            // anders ten onrechte "niet gevonden".
+            $bestaat = $pdo->prepare(
+                'SELECT id FROM employees WHERE id = :id AND company_id = :company_id LIMIT 1'
+            );
+            $bestaat->execute([':id' => $employeeDbId, ':company_id' => $companyId]);
+            if ($bestaat->fetchColumn() === false) {
                 throw new RuntimeException('Employee profile was not found in company scope.');
             }
         } else {

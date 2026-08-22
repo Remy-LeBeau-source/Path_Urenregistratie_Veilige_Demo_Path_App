@@ -1194,3 +1194,80 @@ Uren: {uren} uur.`;
     await loginPage.logout();
   });
 });
+
+test('[ADM-WR-H-015] onderwerp, tekst en een eigen tekst per ontvanger blijven na F5 in het scherm staan', async ({ page }) => {
+  // ADM-WR-H-013 en H-014 bewijzen de opslag via de API. Dit loopt de route die de
+  // beheerder echt neemt: het formulier openen, typen, opslaan, F5. Precies die
+  // route was stuk -- het scherm bood de velden aan en de server gooide ze weg.
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsAdmin();
+  await page.locator('[data-view="employees"]').click();
+
+  const uniek = Date.now().toString().slice(-6);
+  const onderwerp = `Opdrachtonderwerp ${uniek} - {medewerker} - {maand} {jaar}`;
+  const tekst = `Middag,\n\nOpdrachttekst ${uniek} voor {medewerker} over {maand} {jaar}.`;
+  const eigenOnderwerp = `Alleen boekhouding ${uniek} - {factuurnummer}`;
+
+  const openEerste = async () => {
+    await page.locator('[data-edit-routing]').first().click();
+    await expect(page.locator('#edit-subject')).toBeVisible();
+  };
+
+  const opslaan = async () => {
+    const response = page.waitForResponse(item => item.url().includes('/server/api/staff.php') && item.request().method() === 'POST');
+    await page.locator('#modal-confirm').click();
+    const res = await response;
+    const tekstBody = await res.text();
+    expect(res.status(), 'opslaan mag niet falen als alleen teksten wijzigen: ' + tekstBody).toBe(200);
+  };
+
+  await openEerste();
+
+  const origineelOnderwerp = await page.locator('#edit-subject').inputValue();
+  const origineelTekst = await page.locator('#edit-body').inputValue();
+  const eersteOntvanger = page.locator('[data-mail-recipient-subject]').first();
+  const ontvangerId = await eersteOntvanger.getAttribute('data-mail-recipient-subject');
+  const origineelEigen = await eersteOntvanger.inputValue();
+
+  try {
+    await test.step('Given het formulier de twee velden toont, ook bij een nieuwe ontvanger', async () => {
+      // Zonder deze velden kan een beheerder pas na opslaan en heropenen afwijken.
+      await expect(page.locator('#edit-new-recipient-subject'), 'een nieuwe ontvanger moet meteen een eigen onderwerp kunnen krijgen').toBeAttached();
+      await expect(page.locator('#edit-new-recipient-body'), 'een nieuwe ontvanger moet meteen een eigen tekst kunnen krijgen').toBeAttached();
+    });
+
+    await test.step('When onderwerp, tekst en een eigen tekst voor een ontvanger worden ingevuld', async () => {
+      await page.locator('#edit-subject').fill(onderwerp);
+      await page.locator('#edit-body').fill(tekst);
+      await eersteOntvanger.fill(eigenOnderwerp);
+      await opslaan();
+    });
+
+    await test.step('Then staat alles er na een F5 nog steeds', async () => {
+      await page.reload();
+      await page.locator('[data-view="employees"]').click();
+      await openEerste();
+      await expect(page.locator('#edit-subject'), 'het onderwerp moet bewaard blijven').toHaveValue(onderwerp);
+      await expect(page.locator('#edit-body'), 'de begeleidende tekst moet bewaard blijven').toHaveValue(tekst);
+      await expect(
+        page.locator(`[data-mail-recipient-subject="${ontvangerId}"]`),
+        'de eigen tekst van deze ontvanger moet bewaard blijven'
+      ).toHaveValue(eigenOnderwerp);
+    });
+
+    await test.step('And opslaan werkt ook als er verder niets aan het account verandert', async () => {
+      // Dit was de rowCount-bug: een opslag die het gebruikersrecord niet wijzigt
+      // gaf "gebruiker niet gevonden".
+      await opslaan();
+    });
+  } finally {
+    await page.reload();
+    await page.locator('[data-view="employees"]').click();
+    await openEerste();
+    await page.locator('#edit-subject').fill(origineelOnderwerp);
+    await page.locator('#edit-body').fill(origineelTekst);
+    await page.locator(`[data-mail-recipient-subject="${ontvangerId}"]`).fill(origineelEigen);
+    await opslaan();
+  }
+});

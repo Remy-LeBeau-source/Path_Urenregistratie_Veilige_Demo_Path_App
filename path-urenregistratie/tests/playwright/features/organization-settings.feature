@@ -178,3 +178,12 @@ Feature: Organisatie-instellingen beheren
     When de administrator Herstel gebruikt en terugkeert naar Teambeheer
     Then verklaart een zichtbare melding dat deze telling niet van de server komt
     And de knop haalt de echte serverstand terug en laat de melding verdwijnen
+
+  @happy
+  Scenario: [ADM-WR-H-015] onderwerp, tekst en een eigen tekst per ontvanger blijven na F5 in het scherm staan
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given het formulier de twee velden toont, ook bij een nieuwe ontvanger
+    When onderwerp, tekst en een eigen tekst voor een ontvanger worden ingevuld
+    Then staat alles er na een F5 nog steeds
+    And opslaan werkt ook als er verder niets aan het account verandert

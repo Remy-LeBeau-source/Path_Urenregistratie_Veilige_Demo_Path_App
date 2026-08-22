@@ -140,6 +140,10 @@ function migration_plan(bool $allowDemoMigrations): array
         'id' => '020_email_channel_other.sql',
         'path' => __DIR__ . '/migrations/020_email_channel_other.sql',
     ];
+    $plan[] = [
+        'id' => '021_customer_timesheet_mail_templates.sql',
+        'path' => __DIR__ . '/migrations/021_customer_timesheet_mail_templates.sql',
+    ];
     return $plan;
 }
 

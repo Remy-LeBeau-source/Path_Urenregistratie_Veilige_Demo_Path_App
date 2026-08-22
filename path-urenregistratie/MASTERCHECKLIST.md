@@ -94,6 +94,22 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-22 · Fase 12 afgerond
+
+- [x] Gio heeft de mailacceptatie op TEST uitgevoerd: de routes en de bijlagen zijn inhoudelijk gecontroleerd. Fase 12 is daarmee klaar; **alleen Fase 16 staat nog open**.
+- [x] Tijdens dat testen kwamen nog twee zaken boven die inmiddels zijn opgelost: de klanturenstaat-mailteksten werden niet opgeslagen, en een uitnodigingslink verloor het van een openstaande sessie.
+
+### 2026-08-22 · v0.9.116 een uitnodigingslink verloor het van een openstaande sessie
+
+- [x] **Bugfix, gemeld vanaf TEST.** Een beheerder maakt een medewerker aan en klikt in dezelfde browser op de uitnodigingslink. Het wachtwoordscherm wordt onthuld *binnen* het inlogscherm, en dat zit verborgen achter de app zolang er een sessie is. Resultaat: je belandt op het dashboard en niets legt uit waarom. Een geldige eenmalige link wint nu van de openstaande sessie; de browser logt lokaal uit en toont het wachtwoordscherm.
+- [x] **Waarom dit niet eerder opviel:** de uitgenodigde collega heeft normaal geen sessie, dus voor die persoon werkte het. `PWD-H-013` en `MOB-H-006` logden bovendien eerst uit — het testcommentaar beschreef dit gedrag zelfs als reden om dat te doen. Daarmee is een gebruikersprobleem als testdetail behandeld. `PWD-H-017` legt nu exact het gemelde scenario vast; tegencontrole gedaan.
+- [x] **Verzwarende omstandigheid:** het token wordt bij het laden meteen uit de adresbalk gehaald, zodat het niet in de browserhistorie blijft staan. Na deze misser is een F5 dus zinloos en is een nieuwe link nodig.
+- [x] **Klanturenstaat-mailteksten worden nu server-side opgeslagen** (migratie 021). De vier velden werden door het formulier verzameld maar nergens bewaard; ze bestonden alleen in de browser van wie ze typte. `INV-ID-H-007` dekt dit via het scherm met F5.
+- [x] **De `rowCount`-fout zat op drie plekken, niet op één.** Naast `users` ook op `employees` en op het beheerdersaccount. Elke opslag die het betreffende record niet wijzigde — alleen een mailtekst of een route — gaf "niet gevonden". `ADM-WR-H-015` liep de echte route door het scherm en vond de twee die de API-tests misten.
+- [x] **`EQ-H-027` uitgebreid** met wat er werkelijk in de mailbox belandt: eigen onderwerp én eigen tekst voor een ontvanger met een afwijking, de opdrachttekst voor wie erft, en hetzelfde voor een bestaande ontvanger. Leest `subject_snapshot` en `body_snapshot` via een CLI-only, `_test`-only inspectiescript.
+- [x] **Testfout in mijn eigen opzet hersteld:** het herstel van `EQ-H-027` zette `mailRecipientRoutes: {}`, terwijl `staff.php` eerst alle routes wist. Die case zou de testmedewerker permanent zonder mailroutes hebben achtergelaten.
+- [x] Versie 0.9.115 → 0.9.116.
+
 ### 2026-08-22 · v0.9.114 herstel van een gedeeld wachtwoord moet luidruchtig falen
 
 - [x] **Testhardening.** `E2E-H-006` wijzigt het wachtwoord van een **gedeeld** demo-account en zette het in een `finally` terug. Maar het herstel stond achter `if (typeof restore.body.token === 'string')`: slaat de limiet van drie herstelverzoeken per kwartier aan, dan komt er geen token, wordt er stil niets teruggezet, en faalt elke latere case die met dat account inlogt met een onverklaarbare 401. Dat kostte eerder vandaag uren zoeken en 62 rode tests. Een mislukt herstel faalt nu hard op de plek waar het misgaat.
@@ -362,7 +378,7 @@ Deze momentopname is leidend; de regels eronder bewaren het technische en histor
   gesimuleerde TEST-ontvanger `giovanno.maatsen@pathconsultancy.nl` met "geen verzending". `EQ-H-025`,
   `E2E-H-005` en de volledige smoke zijn hierop gericht groen bevestigd.
 - [x] Voor v0.9.70 zijn commit, push en de automatische TEST-/PROD-uitrol uitgevoerd.
-- [-] Menselijke TEST-mailacceptatie blijft open totdat broker-, boekhouding-, salaris-,
+- [x] **Menselijke TEST-mailacceptatie: door Gio uitgevoerd op 22 augustus 2026.** Mail en bijlagen zijn inhoudelijk gecontroleerd op TEST (versie 0.9.114). Daarmee is het laatste openstaande punt van Fase 12 afgerond en resteert alleen Fase 16.
   wachtwoordherstel- en uitnodigingsmail inhoudelijk zijn gecontroleerd, inclusief de echte
   factuur- en klanturenstaat-PDF waar die route een bijlage vereist.
 
