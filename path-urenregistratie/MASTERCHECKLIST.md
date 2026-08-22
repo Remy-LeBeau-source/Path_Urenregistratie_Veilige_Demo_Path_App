@@ -89,6 +89,24 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-22 · v0.9.106 productie toonde dry-run-jargon aan wie zijn wachtwoord kwijt was
+
+- [x] **Op productie waargenomen door Gio.** Wie op productie een resetverzoek deed, kreeg te zien: `Resetverzoek verstuurd (dry-run). Token: (zie server) · Geldig tot: onbekend`. Dat is ontwikkelaarsjargon plus een plaatsvervangende tekst, getoond aan iemand die simpelweg zijn wachtwoord kwijt is.
+- [x] **Geen lek.** Het token stond er niet in: de server geeft op productie bewust géén token terug (`request-reset.php` maakt daar zelfs geen token aan zolang verzending niet beschikbaar is). `(zie server)` was de fallbacktekst van de browser omdat het veld ontbrak. De enumeratiebescherming bleef ook intact.
+- [x] **Oorzaak:** de frontend testte eerst op `dry_run`. Productie meldt óók `dry_run`, omdat echte verzending daar bewust uitstaat — maar zonder token. Daardoor werd de juiste productietekst (`Neem contact op met Backoffice om je toegang veilig te herstellen.`) nooit bereikt. De dry-run-tekst verschijnt nu alleen nog als er daadwerkelijk een token is, wat uitsluitend lokaal en op test gebeurt.
+- [x] **`PWD-N-016`** bootst exact het productie-antwoord na (`dry_run: true`, `delivery_available: false`, geen token) en eist de Backoffice-tekst zonder `dry-run`, `Token`, `zie server` of `onbekend`. Tegencontrole gedaan: met de oude code valt de test om.
+- [x] **Let op — dit was de cosmetische kant.** De inhoudelijke situatie blijft dat op productie niemand zelf een wachtwoord kan herstellen, omdat echte SMTP-verzending daar bewust uitstaat. Dat is Fase 16 (echte mail activeren op PROD), geen bug. Tot dan is doorverwijzen naar Backoffice het juiste antwoord.
+- [x] Versie 0.9.105 → 0.9.106.
+
+### 2026-08-22 · v0.9.105 bedieningselementen verwijderd die niets deden
+
+- [x] **Drie schakelaars in Instellingen deden niets.** `Goedkeuring verplicht`, `Factuurnummer vastzetten` en `Auditlog bijhouden` werden alleen in het formulier gezet en weer uitgelezen; nergens anders in de app gelezen, en de server heeft er geen kolommen voor en negeerde ze. Een beheerder kon `Auditlog bijhouden` uitzetten terwijl de server gewoon doorlogde. Wat ze beloofden staat namelijk permanent aan. Ze zijn vervangen door een read-only lijst met de tekst dat de server deze regels altijd afdwingt, ongeacht wat er in de browser staat.
+- [x] **Waarom niet alsnog gebouwd:** ze implementeren betekent bouwen dat je veiligheidsmaatregelen kunt uitzetten — drie nieuwe manieren om de app onveiliger te maken, met drie nieuwe testpaden, vlak voor go-live. Bij `Auditlog bijhouden` komt daar een compliance-risico bovenop.
+- [x] **Dode renderlaag van het open-maandenpaneel opgeruimd.** `#open-periods-panel` is in v0.9.16 (7 augustus) bewust uit `index.html` gehaald toen "Alle open acties per maand" het overnam, maar de JS en CSS bleven staan. `renderOpenPeriods()` brak daardoor bij elke aanroep meteen af, de `data-open-period`-handler kon nooit afvuren, en `Toon volledig team` kon nooit zichtbaar worden. Verwijderd: de renderfunctie, beide click-handlers, de weesknop, de `attention`-scope met bijbehorende persistentie, en de CSS.
+- [x] **`openPeriodSummaries()` blijft staan** — die is géén dode code: hij voedt `adminOpenTasks()`, de opvolger, die wel gedekt is.
+- [x] **Herinneringen ongewijzigd gelaten.** Het blok is al eerlijk gelabeld (`Voorbereiding · niet automatisch`) en de tekst zegt dat automatische uitvoering pas na activering van de serverplanning werkt. Dat klopt met de werkelijkheid: er is geen scheduler. In het TO is vastgelegd dat deze instellingen ook niet server-side bewaard worden, zodat dat bij het bouwen van de planning niet over het hoofd wordt gezien.
+- [x] Versie 0.9.104 → 0.9.105.
+
 ### 2026-08-22 · v0.9.104 instellingenformulier toonde verouderde bedrijfsgegevens en kon ze terugschrijven
 
 - [x] **Bugfix (bedrijfsgegevens konden worden overschreven).** `populateSettings()` stond niet in `renderAll()`. Het instellingenformulier werd daardoor één keer bij het opstarten gevuld — uit de lokaal herstelde state, dus vóórdat de server-bootstrap binnen was — en daarna nooit meer. Een beheerder die de pagina herlaadde zag verouderde bedrijfsgegevens staan, en wie dan op `Wijzigingen opslaan` drukte, verstuurde exact die verouderde waarden en overschreef de juiste serverdata. Dat verklaart het eerder waargenomen verlies van bedrijfsgegevens. Het formulier wordt nu bij elke render opnieuw gevuld, met een guard (`settingsFormIsBeingEdited()`) die dat nooit doet terwijl iemand in dat formulier typt.

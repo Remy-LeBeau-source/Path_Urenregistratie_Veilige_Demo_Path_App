@@ -143,6 +143,33 @@ Gebruikte testtechnieken:
 
 De GUI-smoke bevat de kortste complete bedrijfsketen. De volledige regressie bevat daarnaast foutpaden, concurrency, grenzen, toegankelijkheid, mobiel en servercontracten.
 
+### Dry-run betekent niet hetzelfde op elke omgeving
+
+`auth_password_reset_public_response()` zet `dry_run` op `!$realDelivery`. Lokaal en op test staat
+daar een echt token bij, als vervanging voor een mail die daar niet aankomt. **Productie meldt óók
+`dry_run`** — echte SMTP-verzending staat daar bewust uit — maar geeft geen token terug, en maakt er
+zelfs geen aan zolang verzending niet beschikbaar is.
+
+Een frontend die eerst op `dry_run` test, laat daardoor op productie ontwikkelaarsjargon zien aan
+iemand die zijn wachtwoord kwijt is. De juiste conditie is `dry_run && token`: praat pas over een
+token als er er een is. Wie een omgevingsvlag in de UI gebruikt, moet nagaan wat die vlag op
+productie betekent, niet alleen wat hij lokaal doet.
+
+### Instellingen die de server niet kent
+
+Niet elk veld in Instellingen heeft een serverkolom. `settings.php` bewaart de bedrijfsidentiteit,
+de branding, de betalingstermijn en de klanturenstaat-herinnering. De overige
+herinneringsinstellingen (week, maandeinde, achterstand, goedkeuring) bestaan alleen in de browser en
+worden door geen enkele serverplanning uitgevoerd — er is namelijk geen scheduler. Het scherm is
+daarop eerlijk gelabeld als `Voorbereiding · niet automatisch`. Wie die planning alsnog bouwt, moet
+dus twee dingen doen: de kolommen toevoegen én de uitvoering, niet alleen de uitvoering.
+
+Een bedieningselement dat niets doet is erger dan een ontbrekend bedieningselement: het wekt de
+indruk dat er iets is ingesteld. `Goedkeuring verplicht`, `Factuurnummer vastzetten` en
+`Auditlog bijhouden` waren zulke schakelaars — de server dwingt die regels altijd af en negeerde de
+waarden volledig. Ze zijn vervangen door een read-only lijst. Een veiligheidsregel die altijd geldt,
+hoort geen uitschakelaar te krijgen alleen omdat er ruimte voor is in de UI.
+
 Een API-case die zijn payload uit de bestaande waarden opbouwt (`iban: company.iban || '...'`) bewijst
 niet dat een veld bewaard blijft — hij slaagt ook als het veld nooit wordt opgeslagen. Waar een
 formulier de enige route van de gebruiker is, moet minstens één case dat formulier zelf gebruiken:

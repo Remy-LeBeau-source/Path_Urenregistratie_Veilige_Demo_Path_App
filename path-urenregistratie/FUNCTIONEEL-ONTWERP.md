@@ -231,6 +231,7 @@ Minimaal de volgende ketens zijn releaseblokkerend:
 | auth-login toont nooit eerst demo-aantallen; daarna lopen bel, filter en lijst per leesactie gelijk van 3 naar 0 | `notifications.spec.ts` (`NOT-H-011`) |
 | bedrijfsgegevens uit het instellingenformulier blijven bewaard en komen op de factuur | `invoice-company-identity.spec.ts` (`INV-ID-H-006`) |
 | wachtwoord-vergeten verraadt niet welke e-mailadressen bestaan | `password-reset.spec.ts` (`PWD-H-014`) |
+| productie toont nooit dry-run-jargon of een plaatsvervangend token aan een gebruiker | `password-reset.spec.ts` (`PWD-N-016`) |
 | het resetscherm neemt het inlogadres over, weigert een leeg adres en laat terugkeren | `password-reset.spec.ts` (`PWD-N-015`) |
 | mobiele hoofdketen | `mobile-ui.spec.ts` |
 | een uitgenodigde collega kan op de telefoon een wachtwoord instellen en ziet de bevestiging | `mobile-ui.spec.ts` (`MOB-H-006`) |

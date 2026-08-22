@@ -517,7 +517,7 @@ test.describe('password reset api', () => {
     await test.step('Then is de melding woordelijk gelijk en noemt die het adres niet', async () => {
       // A dry-run response embeds a per-request token, so compare the part that
       // would carry the leak rather than the volatile token itself.
-      const withoutToken = (text: string) => text.split('Token:')[0].trim();
+      const withoutToken = (text: string) => text.split(' · Token:')[0].trim();
       expect(withoutToken(unknownFeedback)).toBe(withoutToken(knownFeedback));
       expect(knownFeedback).not.toContain(appConfig.adminEmail);
       expect(unknownFeedback.toLowerCase()).not.toContain('onbekend adres');
@@ -561,6 +561,38 @@ test.describe('password reset api', () => {
       await expect(page.locator('#auth-forgot-password')).toBeVisible();
       await expect(page.locator('#auth-login-email')).toBeVisible();
       await expect(page.locator('#auth-reset-feedback')).toBeHidden();
+    });
+  });
+  test('[PWD-N-016] productie toont nooit dry-run-jargon aan iemand die zijn wachtwoord kwijt is', async ({ page }) => {
+    // Seen live on production: someone requesting a reset got
+    // \"Resetverzoek verstuurd (dry-run). Token: (zie server) · Geldig tot:
+    // onbekend\". Production reports dry_run because real delivery is
+    // deliberately off, but it returns no token -- so the branch printed
+    // developer jargon and a placeholder to a real user. Mock exactly the
+    // production response shape.
+    await page.route('**/server/auth/request-reset.php', route => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, dry_run: true, delivery_available: false }),
+    }));
+
+    await page.goto('/');
+    await expect(page.locator('#login-screen')).toBeVisible();
+
+    await test.step('When iemand op productie een resetverzoek doet', async () => {
+      await page.locator('#auth-forgot-password').click();
+      await page.locator('#auth-reset-email').fill('kwijt@pathconsultancy.nl');
+      await page.locator('#auth-reset-submit').click();
+    });
+
+    await test.step('Then krijgt die een bruikbare instructie zonder jargon of nep-token', async () => {
+      const feedback = page.locator('#auth-reset-feedback');
+      await expect(feedback).toBeVisible();
+      await expect(feedback).toHaveText('Neem contact op met Backoffice om je toegang veilig te herstellen.');
+      await expect(feedback).not.toContainText('dry-run');
+      await expect(feedback).not.toContainText('Token');
+      await expect(feedback).not.toContainText('zie server');
+      await expect(feedback).not.toContainText('onbekend');
     });
   });
 });

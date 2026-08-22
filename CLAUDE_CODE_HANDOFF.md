@@ -30,6 +30,41 @@ extra releasepipeline naast `32544919862` start.
 
 ## Wat is opgelost
 
+### Versie 0.9.106 — dry-run-jargon op productie
+
+Op productie waargenomen: wie een resetverzoek deed kreeg `Resetverzoek verstuurd (dry-run). Token:
+(zie server) · Geldig tot: onbekend`.
+
+- **Geen lek.** De server geeft op productie geen token terug en maakt er zelfs geen aan zolang
+  verzending niet beschikbaar is; `(zie server)` was de fallbacktekst van de browser. De
+  enumeratiebescherming bleef intact.
+- **Oorzaak.** De frontend testte eerst op `dry_run`. Productie meldt dat óók — echte verzending
+  staat daar bewust uit — maar zonder token, waardoor de juiste productietekst nooit werd bereikt.
+  De conditie is nu `dry_run && token`.
+- **`PWD-N-016`** bootst het productie-antwoord exact na. Tegencontrole gedaan: met de oude code valt
+  de test om.
+- **Blijft open, en is geen bug:** op productie kan niemand zelf een wachtwoord herstellen zolang
+  echte SMTP-verzending daar uitstaat. Dat is Fase 16. Tot dan is doorverwijzen naar Backoffice het
+  juiste antwoord, en dat is nu ook wat het scherm zegt.
+
+### Versie 0.9.105 — bedieningselementen verwijderd die niets deden
+
+PR #30 is gemerged. Daarna zijn twee bevindingen uit de scan opgeruimd.
+
+- **Drie schakelaars in Instellingen deden niets.** `Goedkeuring verplicht`, `Factuurnummer
+  vastzetten` en `Auditlog bijhouden` werden alleen in het formulier gezet en weer uitgelezen. De
+  server heeft er geen kolommen voor en negeerde ze volledig; een beheerder kon `Auditlog bijhouden`
+  uitzetten terwijl de server gewoon doorlogde. Vervangen door een read-only lijst. Ze alsnog bouwen
+  zou betekenen: drie manieren toevoegen om veiligheidsmaatregelen uit te zetten.
+- **Dode renderlaag opgeruimd.** `#open-periods-panel` is in v0.9.16 bewust uit `index.html` gehaald
+  toen "Alle open acties per maand" het overnam; de JS en CSS bleven staan. `renderOpenPeriods()`,
+  beide click-handlers, de weesknop `Toon volledig team` en de `attention`-scope zijn verwijderd.
+  **`openPeriodSummaries()` blijft** — die voedt `adminOpenTasks()`, de opvolger.
+- **Herinneringen bewust ongewijzigd.** Het blok is al gelabeld als `Voorbereiding · niet
+  automatisch` en dat klopt: er is geen scheduler. Let op bij het alsnog bouwen daarvan: de
+  week-, maandeinde-, achterstand- en goedkeuringsinstellingen hebben ook **geen serverkolommen**,
+  dus dat vraagt zowel opslag als uitvoering.
+
 ### Versie 0.9.104 — instellingenformulier en wachtwoord-vergeten
 
 PR #29 is gemerged. De scan is daarna voortgezet door elk element-id in `index.html` te vergelijken

@@ -66,3 +66,5 @@ Then("is het adres overgenomen zodat het niet opnieuw getypt hoeft te worden");
 When("het adres wordt gewist en het formulier toch wordt verstuurd");
 Then("komt er een expliciete melding en wordt er niets verstuurd");
 And("brengt Terug naar inloggen de gebruiker terug bij het inlogformulier zonder oude melding");
+When("iemand op productie een resetverzoek doet");
+Then("krijgt die een bruikbare instructie zonder jargon of nep-token");

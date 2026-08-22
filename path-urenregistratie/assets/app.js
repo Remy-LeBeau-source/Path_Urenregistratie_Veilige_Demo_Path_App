@@ -406,7 +406,6 @@ function freshState() {
     invoiceFilter: "all",
     invoiceDetailCollapsed: true,
     approvalScope: "all",
-    dashboardTeamScope: "all",
     adminTaskFilter: "all",
     adminTaskPanelExpanded: false,
     adminTaskMonthState: {},
@@ -469,10 +468,7 @@ function freshState() {
       customerTimesheetSubmissionSubject: DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_SUBJECT,
       customerTimesheetSubmissionBody: DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_BODY,
       customerTimesheetBrokerSubject: DEFAULT_CUSTOMER_TIMESHEET_BROKER_SUBJECT,
-      customerTimesheetBrokerBody: DEFAULT_CUSTOMER_TIMESHEET_BROKER_BODY,
-      approvalRequired: true,
-      lockInvoice: true,
-      auditLog: true
+      customerTimesheetBrokerBody: DEFAULT_CUSTOMER_TIMESHEET_BROKER_BODY
     },
     employees: [
       {
@@ -931,7 +927,6 @@ function loadState() {
     }
     saved.invoiceFilter = "all";
     if (!["all", "month"].includes(saved.approvalScope)) saved.approvalScope = "all";
-    if (!["all", "attention"].includes(saved.dashboardTeamScope)) saved.dashboardTeamScope = "all";
     if (!["actionable", "waiting", "all"].includes(saved.adminTaskFilter)) saved.adminTaskFilter = "all";
     if (!["active", "inactive", "all"].includes(saved.employeeScope)) saved.employeeScope = "active";
     if (!["all", "unread", "withdrawn"].includes(saved.announcementArchiveFilter)) saved.announcementArchiveFilter = "all";
@@ -1015,7 +1010,6 @@ function ensureSeedDataIntegrity(candidateState, fallbackState, sourceLabel) {
   restored.preferences = Object.assign({}, restored.preferences, candidate.preferences || {});
   restored.invoiceFilter = "all";
   restored.approvalScope = ["all", "month"].includes(candidate.approvalScope) ? candidate.approvalScope : restored.approvalScope;
-  restored.dashboardTeamScope = ["all", "attention"].includes(candidate.dashboardTeamScope) ? candidate.dashboardTeamScope : restored.dashboardTeamScope;
   restored.adminTaskFilter = ["actionable", "waiting", "all"].includes(candidate.adminTaskFilter) ? candidate.adminTaskFilter : restored.adminTaskFilter;
   restored.employeeScope = ["active", "inactive", "all"].includes(candidate.employeeScope) ? candidate.employeeScope : restored.employeeScope;
   restored.announcementArchiveFilter = ["all", "unread", "withdrawn"].includes(candidate.announcementArchiveFilter) ? candidate.announcementArchiveFilter : restored.announcementArchiveFilter;
@@ -1164,7 +1158,6 @@ function persistState() {
           invoiceFilter: "all",
           approvalScope: state.approvalScope,
           employeeScope: state.employeeScope,
-          dashboardTeamScope: state.dashboardTeamScope,
           announcementArchiveFilter: state.announcementArchiveFilter,
           hoursWeekScope: state.hoursWeekScope,
           hoursWeekScopeTouched: state.hoursWeekScopeTouched,
@@ -4378,7 +4371,6 @@ function resetHomeDashboardState(role = state.currentRole) {
     ensurePeriodRecords(defaultPeriodKey);
   }
   state.invoiceFilter = "all";
-  state.dashboardTeamScope = "all";
   state.adminTaskFilter = "all";
   persistState();
   renderPeriodHeadings();
@@ -4411,26 +4403,6 @@ function openPeriodSummaries() {
       return { periodKey, period: periodFromKey(periodKey), isOverdue: periodKey < currentMonthKey, timing, openCount: drafts + corrections + approvals + deliveries + customerDocuments, parts, counts: { drafts, corrections, approvals, deliveries, customerDocuments } };
     })
     .filter(Boolean);
-}
-
-function renderOpenPeriods() {
-  const summaries = openPeriodSummaries();
-  const panel = document.querySelector("#open-periods-panel");
-  const list = document.querySelector("#open-periods-list");
-  if (!panel || !list) return;
-  panel.hidden = summaries.length === 0;
-  list.innerHTML = summaries.map(item => {
-    const buttons = [];
-    if (item.counts.approvals) buttons.push('<button class="small-button" data-open-period="' + item.periodKey + '" data-open-period-view="approvals" data-open-period-section="approvals">Uren controleren · ' + item.counts.approvals + '</button>');
-    if (item.counts.drafts + item.counts.corrections) buttons.push('<button class="small-button" data-open-period="' + item.periodKey + '" data-open-period-view="dashboard" data-open-period-section="team">Open urentaken · ' + (item.counts.drafts + item.counts.corrections) + '</button>');
-    if (item.counts.customerDocuments) buttons.push('<button class="small-button" data-open-period="' + item.periodKey + '" data-open-period-view="dashboard" data-open-period-section="customer-timesheets">Klanturenstaten · ' + item.counts.customerDocuments + '</button>');
-    if (item.counts.deliveries) buttons.push('<button class="small-button" data-open-period="' + item.periodKey + '" data-open-period-view="invoices" data-open-period-section="deliveries">Verzendingen · ' + item.counts.deliveries + '</button>');
-    return '<div class="open-period-row' + (item.isOverdue ? " is-overdue" : "") + '" data-open-period-row="' + item.periodKey + '">' +
-      '<div class="open-period-month"><strong>' + escapeHtml(item.period.label) + '</strong><small>' + escapeHtml(item.timing) + '</small></div>' +
-      '<div class="open-period-status"><strong>' + item.openCount + " openstaande " + (item.openCount === 1 ? "taak" : "taken") + '</strong><small>' + escapeHtml(item.parts.join(" · ")) + '</small></div>' +
-      '<div class="open-period-actions">' + buttons.join("") + '</div>' +
-    '</div>';
-  }).join("");
 }
 
 function setWorkflowStep(id, visualState) {
@@ -4961,16 +4933,10 @@ function renderDashboard() {
   const isFuturePeriod = period.key > currentMonthKey;
   const rows = activeEmployees().map(employee => ({ employee, record: recordFor(employee.id) }));
   const attentionRows = rows.filter(item => ["draft", "correction"].includes(item.record.timesheetStatus));
-  const displayedRows = state.dashboardTeamScope === "attention" ? attentionRows : rows;
   const submittedRows = rows.filter(item => item.record.timesheetStatus === "submitted");
-  document.querySelector("#dashboard-team-title").textContent = state.dashboardTeamScope === "attention"
-    ? "Wacht op medewerker · " + period.label
-    : "Teamstatus · " + period.label;
-  document.querySelector("#dashboard-team-summary").textContent = state.dashboardTeamScope === "attention"
-    ? attentionRows.length + " " + (attentionRows.length === 1 ? "medewerker moet" : "medewerkers moeten") + " uren aanvullen of corrigeren"
-    : rows.length + " medewerkers · " + submittedRows.length + " te controleren · " + attentionRows.length + " " + (attentionRows.length === 1 ? "wacht op medewerker" : "wachten op medewerkers");
-  document.querySelector("#dashboard-team-clear-filter").hidden = state.dashboardTeamScope !== "attention";
-  document.querySelector("#dashboard-employee-rows").innerHTML = displayedRows.map(item => {
+  document.querySelector("#dashboard-team-title").textContent = "Teamstatus · " + period.label;
+  document.querySelector("#dashboard-team-summary").textContent = rows.length + " medewerkers · " + submittedRows.length + " te controleren · " + attentionRows.length + " " + (attentionRows.length === 1 ? "wacht op medewerker" : "wachten op medewerkers");
+  document.querySelector("#dashboard-employee-rows").innerHTML = rows.map(item => {
     const employee = item.employee;
     const record = item.record;
     const total = totalEntries(record.entries);
@@ -5044,7 +5010,6 @@ function renderDashboard() {
   setWorkflowStep("#workflow-send", simulated === rows.length ? "is-done" : simulated ? "is-current" : "");
   renderDashboardActions();
   renderAdminTaskQueue();
-  renderOpenPeriods();
   renderCustomerTimesheetAdmin();
 }
 
@@ -7033,9 +6998,6 @@ function populateSettings() {
   document.querySelector("#setting-customer-timesheet-submission-body").value = settings.customerTimesheetSubmissionBody || DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_BODY;
   document.querySelector("#setting-customer-timesheet-broker-subject").value = settings.customerTimesheetBrokerSubject || DEFAULT_CUSTOMER_TIMESHEET_BROKER_SUBJECT;
   document.querySelector("#setting-customer-timesheet-broker-body").value = settings.customerTimesheetBrokerBody || DEFAULT_CUSTOMER_TIMESHEET_BROKER_BODY;
-  document.querySelector("#setting-approval-required").checked = settings.approvalRequired;
-  document.querySelector("#setting-lock-invoice").checked = settings.lockInvoice;
-  document.querySelector("#setting-audit-log").checked = settings.auditLog;
   updateInvoiceIdentityPreview();
   syncReminderControls();
   renderMailRecipientSettings();
@@ -7085,10 +7047,7 @@ function saveSettings() {
     customerTimesheetSubmissionSubject: document.querySelector("#setting-customer-timesheet-submission-subject").value.trim() || DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_SUBJECT,
     customerTimesheetSubmissionBody: document.querySelector("#setting-customer-timesheet-submission-body").value.trim() || DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_BODY,
     customerTimesheetBrokerSubject: document.querySelector("#setting-customer-timesheet-broker-subject").value.trim() || DEFAULT_CUSTOMER_TIMESHEET_BROKER_SUBJECT,
-    customerTimesheetBrokerBody: document.querySelector("#setting-customer-timesheet-broker-body").value.trim() || DEFAULT_CUSTOMER_TIMESHEET_BROKER_BODY,
-    approvalRequired: document.querySelector("#setting-approval-required").checked,
-    lockInvoice: document.querySelector("#setting-lock-invoice").checked,
-    auditLog: document.querySelector("#setting-audit-log").checked
+    customerTimesheetBrokerBody: document.querySelector("#setting-customer-timesheet-broker-body").value.trim() || DEFAULT_CUSTOMER_TIMESHEET_BROKER_BODY
   });
 
   if (API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative() && state.currentRole === "admin") {
@@ -9602,15 +9561,6 @@ document.addEventListener("click", event => {
     return;
   }
 
-  const dashboardTeamFilter = event.target.closest("[data-dashboard-team-filter]");
-  if (dashboardTeamFilter) {
-    state.dashboardTeamScope = dashboardTeamFilter.dataset.dashboardTeamFilter;
-    persistState();
-    renderDashboard();
-    showView("dashboard");
-    const teamTitle = document.querySelector("#dashboard-team-title");
-    if (typeof teamTitle.scrollIntoView === "function") teamTitle.scrollIntoView({ behavior: smoothScrollBehavior(), block: "start" });
-  }
 
   const adminHoursDetail = event.target.closest("[data-admin-hours-detail]");
   if (adminHoursDetail) showAdminHoursDetail(Number(adminHoursDetail.dataset.adminHoursDetail), adminHoursDetail.dataset.periodKey || currentPeriod().key);
@@ -9671,21 +9621,6 @@ document.addEventListener("click", event => {
       if (customerPanel && typeof customerPanel.scrollIntoView === "function") customerPanel.scrollIntoView({ behavior: smoothScrollBehavior(), block: "start" });
     }
     return;
-  }
-
-  const openPeriod = event.target.closest("[data-open-period]");
-  if (openPeriod) {
-    const targetView = openPeriod.dataset.openPeriodView || "dashboard";
-    const targetSection = openPeriod.dataset.openPeriodSection || "";
-    if (targetView === "approvals") state.approvalScope = "month";
-    setPeriod(openPeriod.dataset.openPeriod);
-    if (targetView === "dashboard") state.dashboardTeamScope = targetSection === "team" ? "attention" : "all";
-    persistState();
-    renderAll();
-    showView(targetView);
-    const teamTitle = document.querySelector("#dashboard-team-title");
-    const sectionTarget = targetSection === "customer-timesheets" ? document.querySelector("#customer-timesheet-admin-panel") : teamTitle;
-    if (targetView === "dashboard" && sectionTarget && typeof sectionTarget.scrollIntoView === "function") sectionTarget.scrollIntoView({ behavior: smoothScrollBehavior(), block: "start" });
   }
 
   const hoursWeekScope = event.target.closest("[data-hours-week-scope]");
@@ -10164,7 +10099,6 @@ function setPeriod(periodKey) {
   if (document.querySelector("#view-invoices")?.classList.contains("is-active")) state.invoiceDetailCollapsed = false;
   ensurePeriodRecords(next);
   state.invoiceFilter = "all";
-  state.dashboardTeamScope = "all";
   document.querySelectorAll("[data-invoice-filter]").forEach(button => button.classList.toggle("is-active", button.dataset.invoiceFilter === "all"));
   persistState();
   renderAll();
@@ -10781,12 +10715,20 @@ document.querySelector("#auth-reset-submit")?.addEventListener("click", () => {
     }).then(r => r.json()).then(data => {
       if (feedback) {
         if (data.ok) {
-          if (data.dry_run) {
-            feedback.textContent = "Resetverzoek verstuurd (dry-run). Token: " + (data.token || "(zie server)") + " · Geldig tot: " + (data.expires_at || "onbekend");
-          } else if (data.delivery_available) {
+          if (data.delivery_available) {
             feedback.textContent = "Resetverzoek verstuurd. Controleer je e-mail.";
           } else {
-            feedback.textContent = "Neem contact op met Backoffice om je toegang veilig te herstellen.";
+            // No mail goes out when delivery is unavailable: on production real
+            // SMTP is deliberately off, locally there is none at all. So the
+            // honest answer is the same in both cases, and it must be worded
+            // identically for a known and an unknown address -- the server only
+            // hands out a raw token for an account that exists, so making the
+            // sentence depend on that token would reveal which accounts exist.
+            // The token is a local/test convenience: appended, never substituted.
+            // This used to print "(dry-run) · Token: (zie server)" on production
+            // to people who had simply lost their password.
+            feedback.textContent = "Neem contact op met Backoffice om je toegang veilig te herstellen."
+              + (data.token ? " · Token: " + data.token + " · Geldig tot: " + (data.expires_at || "onbekend") : "");
           }
         } else {
           feedback.textContent = "Resetverzoek mislukt. Probeer opnieuw.";
