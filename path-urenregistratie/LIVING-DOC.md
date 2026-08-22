@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 257 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 258 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 257 unieke case-ID's
+- Playwright executable cases: 258 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 258 unieke case-ID's
+- Totaal executable cases: 259 unieke case-ID's
 - Playwright features: 23
 - Database features: 1
 - Playwright steps mappings: 23
 - Database steps mappings: 1
-- Uitvoeringen: 264
-- Niet-mobile projectuitvoeringen: 250
+- Uitvoeringen: 265
+- Niet-mobile projectuitvoeringen: 251
 - Mobile functionele cases: 7
 - Pixel 7 / Chromium-uitvoeringen: 7
 - iPhone 13 / WebKit-uitvoeringen: 7
 
-De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 257 Playwright-functionele cases in totaal 264 resultaten op: 250 + (7 x 2) = 264.
+De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 258 Playwright-functionele cases in totaal 265 resultaten op: 251 + (7 x 2) = 265.
 
 ## Documentatieketen
 
@@ -42,7 +42,7 @@ De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 257 Playwrig
 
 - Feature: `tests/playwright/features/organization-settings.feature`
 - Source: `tests/playwright/admin-writes.spec.ts`
-- Cases: 22
+- Cases: 23
 
 - [ADM-WR-H-001] admin kan company/settings server-led opslaan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 - [ADM-WR-H-002] admin kan beheerder server-led aanmaken en wijzigen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
@@ -66,6 +66,7 @@ De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 257 Playwrig
 - [ADM-WR-N-007] actief-accounttotaal klopt op elke stap: exact duplicaat verandert niets, uniek account telt precies 1 op — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 15
 - [ADM-WR-H-012] na Herstel legt Teambeheer uit dat de telling lokaal is en kan de serverstand terug worden gehaald — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 8
 - [ADM-WR-H-015] onderwerp, tekst en een eigen tekst per ontvanger blijven na F5 in het scherm staan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
+- [ADM-WR-H-016] de routevinkjes van een opdracht blijven na opslaan en F5 staan zoals gezet — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 3
 
 ### Auditlog en traceerbaarheid
 

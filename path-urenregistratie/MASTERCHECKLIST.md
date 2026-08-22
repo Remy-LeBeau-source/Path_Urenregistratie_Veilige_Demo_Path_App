@@ -94,6 +94,14 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-22 · v0.9.117 routevinkjes sprongen na een herlaad terug
+
+- [x] **Bugfix, gemeld vanaf TEST.** Het brokervinkje liet zich omzetten en opslaan gaf netjes een 200, maar na een herlaad stond het weer aan. De server bewaarde de waarde correct en de bootstrap gaf hem ook terug; de frontend las hem alleen **nooit terug** en zette het profiel bij elke merge hard op de standaardwaarde.
+- [x] **Vijf andere schakelaars hadden precies hetzelfde:** factuur meesturen bij broker, boekhouding en salaris, klanturenstaat verwacht, brokerroute voor de klanturenstaat, en factureren zonder klanturenstaat. Allemaal aangevuld in dezelfde terugleesstap, met een expliciete null-controle omdat `0` daar een geldige waarde is.
+- [x] **Zelfde familie als eerder vandaag:** de server slaat op, het scherm toont, en de laag ertussen laat het vallen. Dit is de vierde keer; de eerdere drie zaten in het instellingenformulier, in de opdrachtsjablonen en in de klanturenstaat-teksten.
+- [x] `ADM-WR-H-016` zet het vinkje om, slaat op, herlaadt en eist dat het blijft staan; daarna wordt het teruggezet. Tegencontrole gedaan.
+- [x] Versie 0.9.116 → 0.9.117.
+
 ### 2026-08-22 · Fase 12 afgerond
 
 - [x] Gio heeft de mailacceptatie op TEST uitgevoerd: de routes en de bijlagen zijn inhoudelijk gecontroleerd. Fase 12 is daarmee klaar; **alleen Fase 16 staat nog open**.

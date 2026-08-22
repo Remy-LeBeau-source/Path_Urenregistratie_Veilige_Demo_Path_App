@@ -74,3 +74,5 @@ Given("het formulier de twee velden toont, ook bij een nieuwe ontvanger");
 When("onderwerp, tekst en een eigen tekst voor een ontvanger worden ingevuld");
 Then("staat alles er na een F5 nog steeds");
 And("opslaan werkt ook als er verder niets aan het account verandert");
+When("het brokervinkje wordt omgezet en opgeslagen");
+Then("staat het na een herlaad nog steeds zo");

@@ -2670,6 +2670,19 @@ function mergeBootstrapIntoState(data) {
       localEmployee.customerTimesheetDueWorkday = Number(assignment.customer_timesheet_due_workday);
     }
     if (assignment.customer_timesheet_broker_email) localEmployee.customerTimesheetBrokerEmail = String(assignment.customer_timesheet_broker_email);
+    // Deze schakelaars werden wel opgeslagen en teruggegeven, maar nooit
+    // teruggelezen: het profiel zette ze telkens hard op de standaardwaarde.
+    // Wie het brokervinkje uitzette, zag het na een herlaad weer aanstaan.
+    // Let op de expliciete null-controle: 0 is hier een geldige waarde.
+    const vlag = (waarde, huidig) => (waarde === undefined || waarde === null ? huidig : Number(waarde) === 1);
+    localEmployee.brokerMailEnabled = vlag(assignment.broker_mail_enabled, localEmployee.brokerMailEnabled);
+    localEmployee.brokerInvoiceAttachment = vlag(assignment.broker_invoice_attachment, localEmployee.brokerInvoiceAttachment);
+    localEmployee.bookkeeperInvoiceAttachment = vlag(assignment.bookkeeper_invoice_attachment, localEmployee.bookkeeperInvoiceAttachment);
+    localEmployee.payrollInvoiceAttachment = vlag(assignment.payroll_invoice_attachment, localEmployee.payrollInvoiceAttachment);
+    localEmployee.customerTimesheetExpected = vlag(assignment.customer_timesheet_expected, localEmployee.customerTimesheetExpected);
+    localEmployee.customerTimesheetBrokerEnabled = vlag(assignment.customer_timesheet_broker_enabled, localEmployee.customerTimesheetBrokerEnabled);
+    localEmployee.customerTimesheetUseBrokerEmail = vlag(assignment.customer_timesheet_use_broker_email, localEmployee.customerTimesheetUseBrokerEmail);
+    localEmployee.invoiceWithoutCustomerTimesheetAllowed = vlag(assignment.invoice_without_customer_timesheet_allowed, localEmployee.invoiceWithoutCustomerTimesheetAllowed);
 
     const client = counterpartiesById.get(Number(assignment.client_id || 0));
     const broker = counterpartiesById.get(Number(assignment.broker_id || 0));
