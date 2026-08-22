@@ -2683,7 +2683,11 @@ function mergeBootstrapIntoState(data) {
       if (!key) return;
       localEmployee.mailRecipientRoutes[key] = {
         enabled: Number(route.enabled || 0) === 1,
-        invoiceAttachment: Number(route.include_invoice_pdf || 0) === 1
+        invoiceAttachment: Number(route.include_invoice_pdf || 0) === 1,
+        // Empty stays empty: that is what keeps this recipient inheriting the
+        // assignment template instead of freezing a copy of it.
+        mailSubject: String(route.subject_template || ""),
+        mailBody: String(route.body_template || "")
       };
     });
   });
@@ -8506,6 +8510,8 @@ function showEmployeeEditor(employeeId, prefill) {
       '<div><strong>' + escapeHtml(recipient.name) + '</strong><small>' + escapeHtml(recipientCategoryLabel(recipient.category)) + ' · ' + escapeHtml(recipient.email) + '</small></div>' +
       '<label class="route-toggle"><input type="checkbox" data-mail-recipient-enabled="' + escapeHtml(recipient.id) + '"' + (enabled ? " checked" : "") + '><span>Ontvangt mail</span></label>' +
       '<label class="route-toggle"><input type="checkbox" data-mail-recipient-invoice="' + escapeHtml(recipient.id) + '"' + (preference.invoiceAttachment === true ? " checked" : "") + (enabled ? "" : " disabled") + '><span>Factuur meesturen</span></label>' +
+      '<label class="route-template full">Eigen onderwerp <small>leeg = zelfde als de opdracht</small><input type="text" data-mail-recipient-subject="' + escapeHtml(recipient.id) + '" placeholder="Zelfde als de opdracht" value="' + escapeHtml(preference.mailSubject || "") + '"' + (enabled ? "" : " disabled") + '></label>' +
+      '<label class="route-template full">Eigen begeleidende tekst <small>leeg = zelfde als de opdracht</small><textarea rows="3" data-mail-recipient-body="' + escapeHtml(recipient.id) + '" placeholder="Zelfde als de opdracht"' + (enabled ? "" : " disabled") + '>' + escapeHtml(preference.mailBody || "") + '</textarea></label>' +
     '</article>';
   }).join("");
   const summary = '<div class="modal-form">' +
@@ -8591,7 +8597,16 @@ function showEmployeeEditor(employeeId, prefill) {
       document.querySelectorAll("[data-mail-recipient-enabled]").forEach(input => {
         const id = input.dataset.mailRecipientEnabled;
         const invoiceInput = [...document.querySelectorAll("[data-mail-recipient-invoice]")].find(item => item.dataset.mailRecipientInvoice === id);
-        mailRecipientRoutes[id] = { enabled: input.checked, invoiceAttachment: input.checked && Boolean(invoiceInput && invoiceInput.checked) };
+        const subjectInput = [...document.querySelectorAll("[data-mail-recipient-subject]")].find(item => item.dataset.mailRecipientSubject === id);
+        const bodyInput = [...document.querySelectorAll("[data-mail-recipient-body]")].find(item => item.dataset.mailRecipientBody === id);
+        // An empty field is not an override: it keeps inheriting the assignment text,
+        // so one edit there still reaches every recipient without its own exception.
+        mailRecipientRoutes[id] = {
+          enabled: input.checked,
+          invoiceAttachment: input.checked && Boolean(invoiceInput && invoiceInput.checked),
+          mailSubject: subjectInput ? subjectInput.value.trim() : "",
+          mailBody: bodyInput ? bodyInput.value.trim() : ""
+        };
       });
       const effectiveMailRecipients = (state.settings.mailRecipients || []).map(item => Object.assign({}, item));
       if (newRecipientRequested) {

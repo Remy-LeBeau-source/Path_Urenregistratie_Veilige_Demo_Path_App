@@ -76,6 +76,8 @@ try {
             amr.mail_recipient_id,
             amr.enabled,
             amr.include_invoice_pdf,
+            amr.subject_template,
+            amr.body_template,
             mr.recipient_key,
             mr.display_name
          FROM assignment_mail_routes amr

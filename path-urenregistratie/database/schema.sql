@@ -348,7 +348,7 @@ CREATE TABLE email_deliveries (
   timesheet_id BIGINT UNSIGNED NULL,
   customer_timesheet_id BIGINT UNSIGNED NULL,
   announcement_id BIGINT UNSIGNED NULL,
-  channel ENUM('broker', 'accountant', 'payroll', 'reminder', 'customer_timesheet', 'announcement', 'password_reset') NOT NULL,
+  channel ENUM('broker', 'accountant', 'payroll', 'other', 'reminder', 'customer_timesheet', 'announcement', 'password_reset') NOT NULL,
   recipient_email VARCHAR(190) NOT NULL,
   cc_email VARCHAR(190) NULL,
   subject_snapshot VARCHAR(255) NOT NULL,

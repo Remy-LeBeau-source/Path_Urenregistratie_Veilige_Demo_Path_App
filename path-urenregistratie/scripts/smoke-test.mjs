@@ -105,7 +105,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.109"), "Het zichtbare versienummer moet 0.9.109 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.111"), "Het zichtbare versienummer moet 0.9.111 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -1644,6 +1644,18 @@ assert(announcementsApiSrc.includes("function announcement_truncate") && announc
 // gebruiker.
 assert(appJsSrc.includes('+ (data.token ? " · Token: " + data.token'), "Het testtoken bij wachtwoordherstel moet de vaste zin aanvullen, niet vervangen");
 assert(!appJsSrc.includes("Resetverzoek verstuurd (dry-run)"), "De dry-run-tekst mag niet meer aan een gebruiker worden getoond");
+const mailQueueSrc = readFileSync_(new URL("../server/mail/queue.php", import.meta.url), "utf8");
+// Het scherm bood deze twee velden al aan terwijl de server ze niet wegschreef:
+// een aangepast onderwerp of tekst verdween stil bij opslaan.
+assert(staffApiSrc.includes("invoice_subject_template = :invoice_subject_template") && staffApiSrc.includes("invoice_body_template = :invoice_body_template"), "Onderwerp en begeleidende tekst van een opdracht moeten server-side worden opgeslagen");
+// rowCount() telt gewijzigde rijen, niet gevonden rijen. Als "0" gelezen werd als
+// "niet gevonden", faalde elke opslag die het accountrecord niet veranderde.
+assert(!staffApiSrc.includes("if ($updateUser->rowCount() === 0) {"), "Een opslag die het accountrecord niet wijzigt mag niet als ontbrekende gebruiker worden gelezen");
+// Het instellingenscherm biedt de categorie Overig aan; zonder kanaalsjabloon werd
+// zo een ontvanger stil overgeslagen en kreeg die nooit mail.
+assert(mailQueueSrc.includes("'other' => ["), "Een ontvanger met categorie Overig moet ook een mailsjabloon hebben, anders krijgt die stil nooit mail");
+// Overerving: een leeg veld bij de ontvanger mag de opdrachttekst niet vervangen.
+assert(mailQueueSrc.includes("$routeSubject !== '' ? $routeSubject :") && mailQueueSrc.includes("$routeBody !== '' ? $routeBody :"), "Een eigen tekst per ontvanger moet de opdrachttekst alleen overrulen als die is ingevuld");
 const renderAllBody = appJsSrc.slice(appJsSrc.indexOf("function renderAll()"), appJsSrc.indexOf("function prefersReducedMotion()"));
 assert(renderAllBody.includes("settingsFormIsBeingEdited()) populateSettings()"), "renderAll moet het instellingenformulier opnieuw vullen: anders blijven na een herlaad de lokaal herstelde bedrijfsgegevens staan en overschrijft Wijzigingen opslaan de juiste serverdata");
 assert(appJsSrc.includes("function settingsFormIsBeingEdited") && appJsSrc.includes("view.contains(active)"), "Het opnieuw vullen van het instellingenformulier mag nooit gebeuren terwijl iemand in dat formulier typt");
@@ -1665,4 +1677,4 @@ assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("
 assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Playwright stage- en lokale env-bestanden mogen expliciete runner/CI-variabelen niet overschrijven");
 
 dom.window.close();
-console.log("Path v0.9.109 volledige smoke test: geslaagd");
+console.log("Path v0.9.111 volledige smoke test: geslaagd");

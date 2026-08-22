@@ -30,5 +30,5 @@ PREPARE s FROM @sql_delivery_user_idx; EXECUTE s; DEALLOCATE PREPARE s;
 
 ALTER TABLE email_deliveries
     MODIFY COLUMN channel
-        ENUM('broker', 'accountant', 'payroll', 'reminder', 'customer_timesheet', 'announcement', 'password_reset')
+        ENUM('broker', 'accountant', 'payroll', 'other', 'reminder', 'customer_timesheet', 'announcement', 'password_reset')
         NOT NULL;

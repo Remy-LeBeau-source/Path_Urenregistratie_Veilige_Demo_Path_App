@@ -48,6 +48,24 @@ function staff_string(mixed $value, int $maxLength = 0): string
     return $text;
 }
 
+/**
+ * Multi-line template text. Newlines are meaningful here, and a plain substr()
+ * can cut a multi-byte character in half; simple_pdf.php and announcements.php
+ * already guard their mb_ calls the same way.
+ */
+function staff_text(mixed $value, int $maxLength): string
+{
+    $text = trim((string)($value ?? ''));
+    if ($maxLength <= 0) {
+        return $text;
+    }
+    if (function_exists('mb_substr')) {
+        return mb_substr($text, 0, $maxLength);
+    }
+    $truncated = preg_replace('/^(.{0,' . $maxLength . '}).*$/su', '$1', $text);
+    return is_string($truncated) ? $truncated : substr($text, 0, $maxLength);
+}
+
 function staff_email(mixed $value): string
 {
     $email = trim((string)($value ?? ''));
@@ -503,6 +521,17 @@ if ($action === 'upsert_employee') {
         $recipientIdByKey = staff_upsert_mail_recipients($pdo, $companyId, $mailRecipients);
 
         if ($employeeDbUserId > 0) {
+            // rowCount() reports rows CHANGED, not rows matched -- MYSQL_ATTR_FOUND_ROWS
+            // is deliberately off. Treating 0 as "not found" made every save fail that
+            // did not alter the user row itself: changing only a mail route, the
+            // accompanying text or the rate came back as "user was not found".
+            $existsStmt = $pdo->prepare(
+                'SELECT id FROM users WHERE id = :id AND company_id = :company_id LIMIT 1'
+            );
+            $existsStmt->execute([':id' => $employeeDbUserId, ':company_id' => $companyId]);
+            if ($existsStmt->fetchColumn() === false) {
+                throw new RuntimeException('Employee user was not found in company scope.');
+            }
             $employeeActive = staff_bool($employee['active'] ?? true, true) ? 1 : 0;
             $deactivatedAt = $employeeActive === 1 ? null : date('Y-m-d H:i:s');
             $deactivatedBy = $employeeActive === 1 ? null : $actorId;
@@ -526,9 +555,6 @@ if ($action === 'upsert_employee') {
                 ':id' => $employeeDbUserId,
                 ':company_id' => $companyId,
             ]);
-            if ($updateUser->rowCount() === 0) {
-                throw new RuntimeException('Employee user was not found in company scope.');
-            }
         } else {
             $createdUser = true;
             $insertUser = $pdo->prepare(
@@ -627,6 +653,8 @@ if ($action === 'upsert_employee') {
                      creditor_number = :creditor_number,
                      contractor_number = :contractor_number,
                      invoice_number_template = :invoice_number_template,
+                     invoice_subject_template = :invoice_subject_template,
+                     invoice_body_template = :invoice_body_template,
                      hourly_rate = :hourly_rate,
                      broker_mail_enabled = :broker_mail_enabled,
                      broker_invoice_attachment = :broker_invoice_attachment,
@@ -649,6 +677,11 @@ if ($action === 'upsert_employee') {
                 ':creditor_number' => staff_string($employee['creditorNumber'] ?? '', 80),
                 ':contractor_number' => staff_string($employee['contractorNumber'] ?? '', 80),
                 ':invoice_number_template' => staff_string($employee['invoiceTemplate'] ?? '', 120),
+                // The screen offers these two fields and the form collects them, but they
+                // were never written: an edited subject or accompanying text was silently
+                // discarded and the seeded value came back on the next reload.
+                ':invoice_subject_template' => staff_string($employee['mailSubject'] ?? '', 255),
+                ':invoice_body_template' => staff_text($employee['mailBody'] ?? '', 4000),
                 ':hourly_rate' => $rate,
                 ':broker_mail_enabled' => staff_bool($employee['brokerMailEnabled'] ?? true, true) ? 1 : 0,
                 ':broker_invoice_attachment' => staff_bool($employee['brokerInvoiceAttachment'] ?? true, true) ? 1 : 0,
@@ -669,6 +702,7 @@ if ($action === 'upsert_employee') {
                     assignment_name, invoice_project_name, project_code,
                     agreement_number, creditor_number, contractor_number,
                     invoice_number_template, hourly_rate, start_date,
+                    invoice_subject_template, invoice_body_template,
                     broker_mail_enabled, broker_invoice_attachment,
                     bookkeeper_invoice_attachment, payroll_invoice_attachment,
                     customer_timesheet_expected, customer_timesheet_due_workday,
@@ -680,6 +714,7 @@ if ($action === 'upsert_employee') {
                     :assignment_name, :invoice_project_name, :project_code,
                     :agreement_number, :creditor_number, :contractor_number,
                     :invoice_number_template, :hourly_rate, :start_date,
+                    :invoice_subject_template, :invoice_body_template,
                     :broker_mail_enabled, :broker_invoice_attachment,
                     :bookkeeper_invoice_attachment, :payroll_invoice_attachment,
                     :customer_timesheet_expected, :customer_timesheet_due_workday,
@@ -700,6 +735,11 @@ if ($action === 'upsert_employee') {
                 ':creditor_number' => staff_string($employee['creditorNumber'] ?? '', 80),
                 ':contractor_number' => staff_string($employee['contractorNumber'] ?? '', 80),
                 ':invoice_number_template' => staff_string($employee['invoiceTemplate'] ?? '', 120),
+                // The screen offers these two fields and the form collects them, but they
+                // were never written: an edited subject or accompanying text was silently
+                // discarded and the seeded value came back on the next reload.
+                ':invoice_subject_template' => staff_string($employee['mailSubject'] ?? '', 255),
+                ':invoice_body_template' => staff_text($employee['mailBody'] ?? '', 4000),
                 ':hourly_rate' => $rate,
                 ':start_date' => $startDate,
                 ':broker_mail_enabled' => staff_bool($employee['brokerMailEnabled'] ?? true, true) ? 1 : 0,
@@ -739,14 +779,18 @@ if ($action === 'upsert_employee') {
                 }
 
                 $insertRoute = $pdo->prepare(
-                    'INSERT INTO assignment_mail_routes (assignment_id, mail_recipient_id, enabled, include_invoice_pdf)
-                     VALUES (:assignment_id, :mail_recipient_id, :enabled, :include_invoice_pdf)'
+                    'INSERT INTO assignment_mail_routes (assignment_id, mail_recipient_id, enabled, include_invoice_pdf, subject_template, body_template)
+                     VALUES (:assignment_id, :mail_recipient_id, :enabled, :include_invoice_pdf, :subject_template, :body_template)'
                 );
                 $insertRoute->execute([
                     ':assignment_id' => $assignmentId,
                     ':mail_recipient_id' => $recipientId,
                     ':enabled' => staff_bool($routeConfig['enabled'] ?? false, false) ? 1 : 0,
                     ':include_invoice_pdf' => staff_bool($routeConfig['invoiceAttachment'] ?? false, false) ? 1 : 0,
+                    // Empty means inherit the assignment template; storing NULL keeps that
+                    // distinction explicit instead of persisting an empty override.
+                    ':subject_template' => staff_string($routeConfig['mailSubject'] ?? '', 250) !== '' ? staff_string($routeConfig['mailSubject'] ?? '', 250) : null,
+                    ':body_template' => staff_text($routeConfig['mailBody'] ?? '', 4000) !== '' ? staff_text($routeConfig['mailBody'] ?? '', 4000) : null,
                 ]);
             }
         }

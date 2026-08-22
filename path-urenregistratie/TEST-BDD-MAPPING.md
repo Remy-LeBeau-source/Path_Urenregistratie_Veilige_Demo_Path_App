@@ -22,6 +22,8 @@
 | A11Y-H-002 | ui | accessibility.feature | admin-dashboard hoofdnavigatie is toetsenbordbereikbaar met herkenbare namen | Toegankelijkheidsinspectie + toetsenbord-use-case | 4 | accessibility.steps.ts | accessibility.spec.ts | UI Desktop | Accessibility | admin-dashboard hoofdnavigatie is toetsenbordbereikbaar met herkenbare namen | Happy | 15 | Actueel |
 | ADM-WR-H-001 | api | organization-settings.feature | admin kan company/settings server-led opslaan | Beslissingstabel rollen en autorisatie | 6 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | admin kan company/settings server-led opslaan | Happy | 2 | Actueel |
 | ADM-WR-H-002 | api | organization-settings.feature | admin kan beheerder server-led aanmaken en wijzigen | Beslissingstabel rollen en autorisatie | 12 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | admin kan beheerder server-led aanmaken en wijzigen | Happy | 2 | Actueel |
+| ADM-WR-H-014 | api | organization-settings.feature | een eigen tekst per ontvanger wordt bewaard en een leeg veld blijft erven | Beslissingstabel rollen en autorisatie | 8 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | een eigen tekst per ontvanger wordt bewaard en een leeg veld blijft erven | Happy | 2 | Actueel |
+| ADM-WR-H-013 | api | organization-settings.feature | onderwerp en begeleidende tekst van een opdracht blijven bewaard | API-contract + equivalentieklasse | 5 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | onderwerp en begeleidende tekst van een opdracht blijven bewaard | Happy | 2 | Actueel |
 | ADM-WR-H-003 | api | organization-settings.feature | admin kan medewerker server-led aanmaken en bootstrap ziet deze terug | Beslissingstabel rollen en autorisatie | 11 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | admin kan medewerker server-led aanmaken en bootstrap ziet deze terug | Happy | 2 | Actueel |
 | ADM-WR-N-001 | api | organization-settings.feature | dubbel accountadres geeft veilige metadata van het bestaande bedrijfsaccount | Negatieve equivalentieklasse + error guessing | 8 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | dubbel accountadres geeft veilige metadata van het bestaande bedrijfsaccount | Negative | 2 | Actueel |
 | ADM-WR-N-003 | api | organization-settings.feature | beheerder aanmaken met het e-mailadres van een bestaande medewerker wordt geweigerd | Beslissingstabel rollen en autorisatie | 10 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | beheerder aanmaken met het e-mailadres van een bestaande medewerker wordt geweigerd | Negative | 2 | Actueel |
@@ -128,6 +130,7 @@
 | EQ-N-014 | api | mail-delivery.feature | unknown action geeft 400 | Negatieve equivalentieklasse + error guessing | 2 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | unknown action geeft 400 | Negative | 12 | Actueel |
 | EQ-N-015 | api | mail-delivery.feature | localhost blijft preview-only en weigert POST zonder expliciete bevestiging | Negatieve equivalentieklasse + error guessing | 9 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | localhost blijft preview-only en weigert POST zonder expliciete bevestiging | Negative | 12 | Actueel |
 | EQ-N-016 | api | mail-delivery.feature | medewerker krijgt geen toegang tot de mailacceptatieconsole | Beslissingstabel rollen en autorisatie | 1 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | medewerker krijgt geen toegang tot de mailacceptatieconsole | Negative | 12 | Actueel |
+| EQ-H-027 | api | mail-delivery.feature | twee nieuw toegevoegde ontvangers krijgen allebei echt een factuurmail | API-contract + equivalentieklasse | 7 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | twee nieuw toegevoegde ontvangers krijgen allebei echt een factuurmail | Happy | 12 | Actueel |
 | INV-H-004 | integration | invoice-locking.feature | admin lockt approved timesheet naar definitieve immutable factuur | Concurrency + toestandsovergang | 26 | invoice-locking.steps.ts | invoice-lock.spec.ts | DB / Integratie | Facturatie | Factuur definitief maken | Happy | 11 | Actueel |
 | INV-N-015 | integration | invoice-locking.feature | definitief gefactureerde uren kunnen niet voor correctie worden heropend | Toestandsovergang | 9 | invoice-locking.steps.ts | invoice-lock.spec.ts | DB / Integratie | Facturatie | definitief gefactureerde uren kunnen niet voor correctie worden heropend | Negative | 11 | Actueel |
 | INV-N-008 | integration | invoice-locking.feature | anonieme gebruiker kan factuur niet locken | Beslissingstabel rollen en autorisatie | 3 | invoice-locking.steps.ts | invoice-lock.spec.ts | DB / Integratie | Facturatie | Factuur definitief maken | Negative | 11 | Actueel |
@@ -271,9 +274,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 249
+- Playwright executable cases: 252
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 250
+- Totaal unieke executable cases: 253
 - Playwright features: 23
 - Database features: 1
 - Playwright steps mappings: 23

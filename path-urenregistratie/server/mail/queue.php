@@ -31,6 +31,17 @@ const MAIL_CHANNEL_TEMPLATES = [
             "Salarisverwerking:\nMedewerker: {medewerker}\nPeriode: {periode}\n"
             . "Goedgekeurde uren: {uren}",
     ],
+    // The settings screen offers 'Overig' as a category, and a recipient with it
+    // used to be dropped silently: the channel had no template, so the queue loop
+    // skipped it. Someone ticked "Ontvangt mail" and nothing ever arrived. Neutral
+    // wording that holds for any recipient; no attachment, same as payroll.
+    'other' => [
+        'subject' => 'Ureninformatie {medewerker} - {periode}',
+        'body' =>
+            "Hierbij de ureninformatie van {medewerker} over {periode}.
+"
+            . "Goedgekeurde uren: {uren}",
+    ],
 ];
 
 // ---------------------------------------------------------------------------
@@ -209,11 +220,11 @@ function mail_enqueue_for_invoice(
     // each channel keeps its own default for whatever the assignment leaves empty.
     $assignmentSubject = (string)($inv['invoice_subject_template'] ?? '');
     $assignmentBody = (string)($inv['invoice_body_template'] ?? '');
-    $templateFor = static function (string $channel) use ($assignmentSubject, $assignmentBody): array {
+    $templateFor = static function (string $channel, string $routeSubject = '', string $routeBody = '') use ($assignmentSubject, $assignmentBody): array {
         $base = MAIL_CHANNEL_TEMPLATES[$channel];
         return [
-            'subject' => $assignmentSubject !== '' ? $assignmentSubject : $base['subject'],
-            'body'    => $assignmentBody !== '' ? $assignmentBody : $base['body'],
+            'subject' => $routeSubject !== '' ? $routeSubject : ($assignmentSubject !== '' ? $assignmentSubject : $base['subject']),
+            'body'    => $routeBody !== '' ? $routeBody : ($assignmentBody !== '' ? $assignmentBody : $base['body']),
         ];
     };
 
@@ -259,7 +270,8 @@ function mail_enqueue_for_invoice(
     // Mail-route channels (bookkeeper / payroll via assignment_mail_routes)
     // ------------------------------------------------------------------
     $routeStmt = $pdo->prepare(
-        'SELECT amr.include_invoice_pdf, mr.id AS recipient_id, mr.recipient_category,
+        'SELECT amr.include_invoice_pdf, amr.subject_template, amr.body_template,
+                mr.id AS recipient_id, mr.recipient_category,
                 mr.display_name, mr.email
          FROM assignment_mail_routes amr
          JOIN mail_recipients mr ON mr.id = amr.mail_recipient_id
@@ -290,11 +302,15 @@ function mail_enqueue_for_invoice(
             $attachPolicy = 'none';
         }
 
+        // An unknown category is informational, not a reason to drop the recipient.
         if (!isset(MAIL_CHANNEL_TEMPLATES[$channel])) {
-            continue;
+            $channel = 'other';
         }
 
-        $tpl = $templateFor($channel);
+        // Inheritance: an override on this recipient wins, otherwise the assignment
+        // template, otherwise the channel default. Empty is not an override -- that is
+        // what makes one edit on the assignment reach every recipient without one.
+        $tpl = $templateFor($channel, (string)($route['subject_template'] ?? ''), (string)($route['body_template'] ?? ''));
         mail_assert_vars($tpl['subject'], $vars, $channel . '.subject');
         mail_assert_vars($tpl['body'], $vars, $channel . '.body');
 
