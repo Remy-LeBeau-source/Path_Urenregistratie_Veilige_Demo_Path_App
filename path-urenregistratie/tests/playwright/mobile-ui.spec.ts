@@ -637,6 +637,10 @@ test('[MOB-H-005] mobiele verzendadministratie blijft leesbaar en toont geen geh
     await loginPage.loginAsAdmin();
     clearConsoleErrors(errors);
     await openView(page, 'settings');
+    // Op een telefoon beginnen de instellingenpanelen dichtgeklapt, anders is het
+    // scherm bijna elf schermen lang. Openen wat je nodig hebt hoort bij de flow.
+    const verzendKop = page.locator('#view-settings .settings-card', { has: page.locator('#mail-delivery-history-title') }).locator('.settings-card-heading');
+    if (await verzendKop.count() > 0) await verzendKop.first().click();
     await expect(page.locator('#mail-delivery-history-title')).toHaveText('Recente e-mails');
   });
 
@@ -808,4 +812,107 @@ test('[MOB-H-007] een medewerker leest mededelingen op de telefoon zonder afgeka
 
   expect(errors, errors.join('\n')).toEqual([]);
   await attachBusinessScreenshot(page, 'Mobiel · mededeling lezen');
+});
+
+test('[MOB-H-008] elk hoofdscherm blijft op een telefoon leesbaar en bedienbaar', async ({ page }) => {
+  // Doorgemeten op 412px. Voor deze fix stonden er 89 tikdoelen onder de 44px en
+  // 107 teksten onder de 11px, en werden de instellingenpanelen 87px afgesneden.
+  // Deze case houdt die norm vast: wie later iets toevoegt met 9px-tekst of een
+  // knop van 28px, ziet dat hier meteen terug in plaats van pas op een toestel.
+  test.setTimeout(120_000);
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsAdmin();
+
+  const meet = async () => page.evaluate(() => {
+    const doc = document.documentElement;
+    const zichtbaar = (el: Element) => {
+      const r = el.getBoundingClientRect();
+      return r.width > 0 && r.height > 0;
+    };
+    const omschrijf = (el: Element) => {
+      const e = el as HTMLElement;
+      return (e.tagName + (e.id ? '#' + e.id : '')).slice(0, 40);
+    };
+    const afgesneden: string[] = [];
+    document.querySelectorAll('.view.is-active *').forEach(el => {
+      if (!zichtbaar(el)) return;
+      // Een eigen horizontale scroller mag breder zijn dan het scherm.
+      if (el.closest('.table-wrap')) return;
+      if (el.getBoundingClientRect().right > doc.clientWidth + 1) afgesneden.push(omschrijf(el));
+    });
+    const kleineDoelen: string[] = [];
+    document.querySelectorAll('.view.is-active button, .view.is-active select, .view.is-active textarea, .view.is-active input:not([type=checkbox])').forEach(el => {
+      if (!zichtbaar(el)) return;
+      if (el.getBoundingClientRect().height < 44) kleineDoelen.push(omschrijf(el) + '=' + Math.round(el.getBoundingClientRect().height));
+    });
+    return { afgesneden: [...new Set(afgesneden)], kleineDoelen: [...new Set(kleineDoelen)] };
+  });
+
+  for (const view of ['approvals', 'invoices', 'announcements', 'employees'] as const) {
+    await test.step(`Het scherm ${view} blijft binnen het scherm en bedienbaar`, async () => {
+      await page.locator(`button[data-view="${view}"]:visible`).first().click();
+      await expect(page.locator(`#view-${view}`)).toHaveClass(/is-active/);
+      const uitslag = await meet();
+      expect(uitslag.afgesneden, `${view}: inhoud valt buiten het scherm — ${uitslag.afgesneden.join(', ')}`).toEqual([]);
+      expect(uitslag.kleineDoelen, `${view}: tikdoelen onder 44px — ${uitslag.kleineDoelen.join(', ')}`).toEqual([]);
+    });
+  }
+
+  await test.step('Instellingen valt niet meer buiten het scherm', async () => {
+    await page.locator('button[data-view="settings"]:visible').first().click();
+    await expect(page.locator('#view-settings')).toHaveClass(/is-active/);
+    const uitslag = await meet();
+    expect(uitslag.afgesneden, `instellingen: inhoud valt buiten het scherm — ${uitslag.afgesneden.join(', ')}`).toEqual([]);
+  });
+});
+
+test('[MOB-H-009] instellingen en urenstaat zijn op een telefoon te overzien', async ({ page }) => {
+  // Instellingen was 10,9 schermen scrollen en de urenstaat schoof zijwaarts weg
+  // onder je duim terwijl je cijfers typte. Deze case houdt beide vast: panelen
+  // beginnen dicht en open je zelf, en de urenstaat past binnen het scherm.
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsAdmin();
+
+  await test.step('Given de instellingen beginnen dichtgeklapt', async () => {
+    await page.locator('button[data-view="settings"]:visible').first().click();
+    await expect(page.locator('#view-settings')).toHaveClass(/is-active/);
+
+    const panelen = page.locator('#view-settings .settings-card[data-settings-collapsible="true"]');
+    expect(await panelen.count(), 'de instellingenpanelen moeten inklapbaar zijn').toBeGreaterThan(0);
+    expect(
+      await page.locator('#view-settings .settings-card[data-settings-open="true"]').count(),
+      'ze horen dicht te beginnen, anders blijft het scherm even lang'
+    ).toBe(0);
+
+    const schermen = await page.evaluate(() => document.documentElement.scrollHeight / document.documentElement.clientHeight);
+    expect(schermen, 'dichtgeklapt mag het scherm hooguit een paar schermlengtes zijn').toBeLessThan(4);
+  });
+
+  await test.step('When een paneel wordt geopend, verschijnt de inhoud', async () => {
+    const eerste = page.locator('#view-settings .settings-card[data-settings-collapsible="true"]').first();
+    await eerste.locator('.settings-card-heading').click();
+    await expect(eerste).toHaveAttribute('data-settings-open', 'true');
+    await expect(eerste.locator('.settings-card-heading')).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  await test.step('And de urenstaat past binnen het scherm zonder zijwaarts schuiven', async () => {
+    await loginPage.logout();
+    await loginPage.loginAsEmployee();
+    await page.locator('button[data-view="timesheet"]:visible').first().click();
+    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+
+    const meting = await page.evaluate(() => {
+      const wrap = document.querySelector('.table-wrap') as HTMLElement | null;
+      const tabel = document.querySelector('.hours-table') as HTMLElement | null;
+      return {
+        tabel: tabel ? Math.round(tabel.getBoundingClientRect().width) : 0,
+        viewport: document.documentElement.clientWidth,
+        zijwaarts: wrap ? wrap.scrollWidth > wrap.clientWidth + 1 : false,
+      };
+    });
+    expect(meting.zijwaarts, 'de urenstaat mag op een telefoon niet zijwaarts schuiven').toBe(false);
+    expect(meting.tabel, 'de urenstaat moet binnen het scherm passen').toBeLessThanOrEqual(meting.viewport);
+  });
 });

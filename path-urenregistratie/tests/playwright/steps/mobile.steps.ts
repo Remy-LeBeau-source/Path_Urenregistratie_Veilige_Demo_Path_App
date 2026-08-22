@@ -39,3 +39,10 @@ Then("verschijnt de bevestiging met een tapbare knop en past alles binnen het sc
 Given("een ingelogde medewerker op de telefoon");
 When("de medewerker de mededelingen opent");
 Then("is de volledige mededeling leesbaar en scrollt de pagina niet zijwaarts");
+Given("mobiele gebruikerservaring is voorbereid");
+When("de flow voor MOB-H-008 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat elk hoofdscherm blijft op een telefoon leesbaar en bedienbaar");
+Given("de instellingen beginnen dichtgeklapt");
+When("een paneel wordt geopend, verschijnt de inhoud");
+And("de urenstaat past binnen het scherm zonder zijwaarts schuiven");
+Then("wordt met Playwright-assertions bevestigd dat instellingen en urenstaat zijn op een telefoon te overzien");

@@ -58,3 +58,41 @@ test('[A11Y-H-002] admin-dashboard hoofdnavigatie is toetsenbordbereikbaar met h
     await page.keyboard.press('Enter');
   });
 });
+
+test('[A11Y-H-003] lopende tekst blijft op een breed scherm leesbaar van regellengte', async ({ page }) => {
+  // Gemeten op 1440px: het correctiebericht dat een medewerker moet lezen om te
+  // weten wát hij moet aanpassen, liep over 172 tekens per regel. Boven ongeveer
+  // 75 raakt je oog bij het terugspringen de volgende regel kwijt. Er stond
+  // nergens een begrenzing op regellengte.
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsAdmin();
+
+  const telTeLangeRegels = async () => page.evaluate(() => {
+    const teLang: string[] = [];
+    document.querySelectorAll('.view.is-active p, .view.is-active li').forEach(el => {
+      const rect = el.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      const tekst = (el.textContent || '').trim();
+      if (tekst.length < 90) return;
+      const px = parseFloat(getComputedStyle(el).fontSize) || 14;
+      // Een teken is bij deze lettertypes ruwweg een halve regelhoogte breed.
+      const tekens = Math.round(rect.width / (px * 0.5));
+      if (tekens > 90) {
+        const e = el as HTMLElement;
+        teLang.push((e.id || e.className || e.tagName) + '=' + tekens);
+      }
+    });
+    return [...new Set(teLang)];
+  });
+
+  for (const view of ['dashboard', 'announcements', 'settings'] as const) {
+    await test.step(`Het scherm ${view} houdt zijn alinea's leesbaar`, async () => {
+      await page.locator(`button[data-view="${view}"]`).first().click();
+      await expect(page.locator(`#view-${view}`)).toHaveClass(/is-active/);
+      const teLang = await telTeLangeRegels();
+      expect(teLang, `${view}: alinea's met meer dan 90 tekens per regel — ${teLang.join(', ')}`).toEqual([]);
+    });
+  }
+});

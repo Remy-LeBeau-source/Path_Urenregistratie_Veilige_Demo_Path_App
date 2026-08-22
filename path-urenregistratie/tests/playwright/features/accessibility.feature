@@ -22,3 +22,11 @@ Feature: Toegankelijkheid en toetsenbordbediening
     Given de administrator is ingelogd
     Then heeft elke hoofdnavigatieknop een herkenbare, unieke naam
     When de eerste hoofdnavigatieknop via het toetsenbord wordt bediend
+
+  @happy
+  Scenario: [A11Y-H-003] lopende tekst blijft op een breed scherm leesbaar van regellengte
+    # Testtechniek: Toegankelijkheidsinspectie + toetsenbord-use-case
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given toegankelijkheid en toetsenbordbediening is voorbereid
+    When de flow voor A11Y-H-003 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat lopende tekst blijft op een breed scherm leesbaar van regellengte

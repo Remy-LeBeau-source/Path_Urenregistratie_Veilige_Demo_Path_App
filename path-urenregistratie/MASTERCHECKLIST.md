@@ -94,6 +94,39 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-22 · v0.9.119 volledige interface-upgrade, telefoon en desktop
+
+**Telefoon.** Alle tien hoofdschermen doorgemeten op 412px, beide rollen.
+
+- [x] **Instellingen van 10,9 naar 2,2 schermen.** De zeven panelen zijn inklapbaar en beginnen dicht; de kop werkt als knop, met toetsenbordbediening en `aria-expanded`. Op desktop verandert er niets — daar past alles naast elkaar en is inklappen juist hinderlijk.
+- [x] **Urenstaat past nu binnen het scherm.** Zeven kolommen van 88px op 412px betekende zijwaarts schuiven terwijl je cijfers typt. Nu per week een blok met per dag een regel: datum links, invoerveld rechts. Alleen CSS, dus de opbouw blijft dezelfde tabel en de toegankelijkheid ongemoeid.
+- [x] **Tikdoelen van 89 naar 2** onder de 44px-norm, **tekst van 107 naar 43** onder 11px, en **geen afgesneden inhoud** meer.
+- [x] **iOS:** `viewport-fit=cover` toegevoegd — zonder die vlag deden de veilige zones niets en viel de onderbalk deels achter de home-balk. Plus `apple-mobile-web-app-capable`, zodat "Zet op beginscherm" als app opent in plaats van als browsertab. Invoervelden op 16px, anders zoomt Safari in en verspringt het scherm.
+- [x] **Android:** tap-highlight uit (grijze flits bij elke aanraking) en `overscroll-behavior: contain`, zodat pull-to-refresh niet afgaat tijdens het vegen in een lijst.
+- [x] **Beide:** `touch-action: manipulation` haalt de vertraging van 300ms na elke tik weg.
+
+**Desktop.** Doorgemeten op 1440px.
+
+- [x] **Regellengte begrensd op 75 tekens.** Er stond nergens een begrenzing. Het correctiebericht dat een medewerker moet lezen om te weten wát hij moet aanpassen, liep over **172 tekens per regel**; op het dashboard 147. Boven ongeveer 75 raakt je oog bij het terugspringen de volgende regel kwijt. Van 16 te lange alinea's naar 0. Kaarten, tabellen en knoppen houden de volle breedte.
+- [x] Vijf van de acht desktopschermen passen in één tot anderhalf scherm; instellingen is met 5 de enige uitschieter. Dat is daar acceptabel omdat de panelen naast elkaar staan.
+
+- [x] `MOB-H-008`, `MOB-H-009` en `A11Y-H-003` houden de normen vast: tikdoelen, schermlengte, zijwaarts schuiven en regellengte. Zonder die cases kruipt dit er ongemerkt weer in.
+- [x] **Twee eigen fouten onderweg hersteld:** de inklapfunctie brak de render in elke omgeving zonder `window.matchMedia`, en er was een meetprobe zonder assertions in de suite blijven staan. Beide gevonden door de gate.
+- [x] Versie 0.9.118 → 0.9.119.
+
+### 2026-08-22 · v0.9.118 telefoonoptimalisatie op basis van een doormeting
+
+- [x] **Eerst gemeten, toen pas aangepast.** Alle tien hoofdschermen zijn op een scherm van 412px doorgemeten voor beide rollen: schermlengte, afgesneden inhoud, tikdoelen onder 44px en tekst onder 11px. Dat leverde 89 te kleine tikdoelen op, 107 te kleine teksten en 87px afgesneden inhoud.
+- [x] **Afgesneden inhoud opgelost.** 48 CSS-regels gebruikten `grid-template-columns: 1fr`, wat `minmax(auto, 1fr)` betekent en dus niet kan krimpen onder de inhoud. Eén lang invoerveld duwde daardoor het hele paneel buiten beeld; de instellingenpanelen waren 485px op een scherm van 412px. Nu `minmax(0, 1fr)`.
+- [x] **Tikdoelen van 89 naar 2.** Filterknoppen stonden op 28px, hero-filters op 32px en vinkjes op 17px. Alles naar de norm van 44px die zowel Apple als Google hanteert; bij een vinkje is het hele label nu het tikgebied in plaats van alleen het vierkantje.
+- [x] **Tekst van 107 naar 43 onder de norm.** De dagnummers in de urenstaat stonden op 8px en statuslabels op 9px — precies de tekst die je moet kunnen lezen tijdens het invullen. Minimaal 11px, tabelkoppen 12px.
+- [x] **iOS zoomde in bij elk invoerveld.** Safari zoomt automatisch zodra een veld tekst onder 16px heeft, waardoor het scherm verspringt. Alle velden staan nu op 16px.
+- [x] **Veilige zones.** De vastgezette onderbalk houdt nu rekening met de home-balk op toestellen met een notch.
+- [x] **Correctie op mijn eigen bevinding:** de urenstaattabel leek afgesneden, maar zit in een `overflow-x: auto`-wrapper en scrollt correct binnen zijn eigen kader. De meting telde dat ten onrechte mee.
+- [x] `MOB-H-008` houdt de norm vast: wie later iets toevoegt met 9px-tekst of een knop van 28px, ziet dat in de tests in plaats van pas op een toestel.
+- [-] **Nog open, bewust:** de schermlengte. Instellingen is 10,9 schermen scrollen en het dashboard 6,2. Dat vraagt inklapbare secties, en dat verandert hoe het scherm werkt — aparte stap.
+- [x] Versie 0.9.117 → 0.9.118.
+
 ### 2026-08-22 · v0.9.117 routevinkjes sprongen na een herlaad terug
 
 - [x] **Bugfix, gemeld vanaf TEST.** Het brokervinkje liet zich omzetten en opslaan gaf netjes een 200, maar na een herlaad stond het weer aan. De server bewaarde de waarde correct en de bootstrap gaf hem ook terug; de frontend las hem alleen **nooit terug** en zette het profiel bij elke merge hard op de standaardwaarde.

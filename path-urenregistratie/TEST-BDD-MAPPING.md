@@ -20,6 +20,7 @@
 |---|---|---|---|---|---:|---|---|---|---|---|---|---:|---|
 | A11Y-H-001 | ui | accessibility.feature | loginformulier is volledig met het toetsenbord bruikbaar en correct gelabeld | Toegankelijkheidsinspectie + toetsenbord-use-case | 6 | accessibility.steps.ts | accessibility.spec.ts | UI Desktop | Accessibility | loginformulier is volledig met het toetsenbord bruikbaar en correct gelabeld | Happy | 15 | Actueel |
 | A11Y-H-002 | ui | accessibility.feature | admin-dashboard hoofdnavigatie is toetsenbordbereikbaar met herkenbare namen | Toegankelijkheidsinspectie + toetsenbord-use-case | 4 | accessibility.steps.ts | accessibility.spec.ts | UI Desktop | Accessibility | admin-dashboard hoofdnavigatie is toetsenbordbereikbaar met herkenbare namen | Happy | 15 | Actueel |
+| A11Y-H-003 | ui | accessibility.feature | lopende tekst blijft op een breed scherm leesbaar van regellengte | Toegankelijkheidsinspectie + toetsenbord-use-case | 2 | accessibility.steps.ts | accessibility.spec.ts | UI Desktop | Accessibility | lopende tekst blijft op een breed scherm leesbaar van regellengte | Happy | 15 | Actueel |
 | ADM-WR-H-001 | api | organization-settings.feature | admin kan company/settings server-led opslaan | Beslissingstabel rollen en autorisatie | 6 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | admin kan company/settings server-led opslaan | Happy | 2 | Actueel |
 | ADM-WR-H-002 | api | organization-settings.feature | admin kan beheerder server-led aanmaken en wijzigen | Beslissingstabel rollen en autorisatie | 12 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | admin kan beheerder server-led aanmaken en wijzigen | Happy | 2 | Actueel |
 | ADM-WR-H-014 | api | organization-settings.feature | een eigen tekst per ontvanger wordt bewaard en een leeg veld blijft erven | Beslissingstabel rollen en autorisatie | 8 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | een eigen tekst per ontvanger wordt bewaard en een leeg veld blijft erven | Happy | 2 | Actueel |
@@ -167,6 +168,8 @@
 | MOB-H-005 | ui | mobile.feature | mobiele verzendadministratie blijft leesbaar en toont geen geheime inhoud | Responsive viewport + end-to-end use-case | 15 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | mobiele verzendadministratie blijft leesbaar en toont geen geheime inhoud | Happy | 15 | Actueel |
 | MOB-H-006 | ui | mobile.feature | een uitgenodigde collega stelt op de telefoon een wachtwoord in en ziet een duidelijke bevestiging | Responsive viewport + end-to-end use-case | 15 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | een uitgenodigde collega stelt op de telefoon een wachtwoord in en ziet een duidelijke bevestiging | Happy | 15 | Actueel |
 | MOB-H-007 | ui | mobile.feature | een medewerker leest mededelingen op de telefoon zonder afgekapte tekst | Responsive viewport + end-to-end use-case | 4 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | een medewerker leest mededelingen op de telefoon zonder afgekapte tekst | Happy | 15 | Actueel |
+| MOB-H-008 | ui | mobile.feature | elk hoofdscherm blijft op een telefoon leesbaar en bedienbaar | Responsive viewport + end-to-end use-case | 5 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | elk hoofdscherm blijft op een telefoon leesbaar en bedienbaar | Happy | 15 | Actueel |
+| MOB-H-009 | ui | mobile.feature | instellingen en urenstaat zijn op een telefoon te overzien | Responsive viewport + end-to-end use-case | 9 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | instellingen en urenstaat zijn op een telefoon te overzien | Happy | 15 | Actueel |
 | NOT-H-001 | api | notifications.feature | ingelogde gebruiker kan notificaties ophalen | API-contract + equivalentieklasse | 5 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | ingelogde gebruiker kan notificaties ophalen | Happy | 15 | Actueel |
 | NOT-H-002 | api | notifications.feature | mark_all_read werkt zonder fouten | Toestandsovergang | 8 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | mark_all_read werkt zonder fouten | Happy | 15 | Actueel |
 | NOT-N-003 | api | notifications.feature | anonieme gebruiker krijgt 401 op notificaties | Beslissingstabel rollen en autorisatie | 1 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | anonieme gebruiker krijgt 401 op notificaties | Negative | 15 | Actueel |
@@ -280,9 +283,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 258
+- Playwright executable cases: 261
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 259
+- Totaal unieke executable cases: 262
 - Playwright features: 23
 - Database features: 1
 - Playwright steps mappings: 23

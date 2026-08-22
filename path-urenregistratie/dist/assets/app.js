@@ -7056,6 +7056,73 @@ function settingsFormIsBeingEdited() {
   return active.tagName === "INPUT" || active.tagName === "SELECT" || active.tagName === "TEXTAREA";
 }
 
+// Instellingen is op een telefoon bijna elf schermen lang. Dat is geen scherm
+// meer maar een lijst waar je doorheen ploegt om het ene veld te vinden dat je
+// zoekt. Op smalle schermen worden de zeven panelen daarom inklapbaar en
+// beginnen ze dicht; je opent wat je nodig hebt.
+//
+// Op desktop verandert er niets: daar past alles naast elkaar en is inklappen
+// juist hinderlijk. De omschakeling luistert naar de schermbreedte, zodat ook
+// draaien van een tablet meteen goed valt.
+const SETTINGS_COLLAPSE_QUERY = "(max-width: 700px)";
+
+function settingsCardHeading(card) {
+  return card.querySelector(".email-template-heading") || card.querySelector("h3");
+}
+
+function toggleSettingsCard(card) {
+  const open = card.dataset.settingsOpen === "true";
+  card.dataset.settingsOpen = open ? "false" : "true";
+  const heading = settingsCardHeading(card);
+  if (heading) heading.setAttribute("aria-expanded", open ? "false" : "true");
+}
+
+function applySettingsCollapse() {
+  // matchMedia bestaat niet in elke omgeving waarin deze code draait. Zonder
+  // deze controle brak een ontbrekende browserfunctie de hele render.
+  if (typeof window.matchMedia !== "function") return;
+  const smal = window.matchMedia(SETTINGS_COLLAPSE_QUERY).matches;
+  document.querySelectorAll("#view-settings .settings-card").forEach(card => {
+    const heading = settingsCardHeading(card);
+    if (!heading) return;
+
+    if (!smal) {
+      // Alles weer open en de knopsemantiek weg, anders blijft een voorleesprogramma
+      // op een breed scherm over een knop praten die niets meer doet.
+      card.removeAttribute("data-settings-collapsible");
+      card.removeAttribute("data-settings-open");
+      heading.removeAttribute("role");
+      heading.removeAttribute("tabindex");
+      heading.removeAttribute("aria-expanded");
+      return;
+    }
+
+    if (card.dataset.settingsCollapsible === "true") return;
+    card.dataset.settingsCollapsible = "true";
+    card.dataset.settingsOpen = "false";
+    heading.classList.add("settings-card-heading");
+    heading.setAttribute("role", "button");
+    heading.setAttribute("tabindex", "0");
+    heading.setAttribute("aria-expanded", "false");
+    heading.addEventListener("click", () => toggleSettingsCard(card));
+    heading.addEventListener("keydown", event => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      toggleSettingsCard(card);
+    });
+  });
+}
+
+// Een veld dat via een validatiefout of een directe link de aandacht krijgt, mag
+// niet onzichtbaar in een dichtgeklapt paneel blijven zitten.
+function revealSettingsCardFor(element) {
+  const card = element && element.closest ? element.closest(".settings-card") : null;
+  if (!card || card.dataset.settingsCollapsible !== "true") return;
+  if (card.dataset.settingsOpen === "true") return;
+  toggleSettingsCard(card);
+}
+
+
 function populateSettings() {
   const settings = state.settings;
   document.querySelector("#setting-organization-name").value = settings.organizationName;
@@ -7498,6 +7565,7 @@ function renderAll() {
   // correct server data. Refill on every render so the form always reflects what
   // the server actually holds.
   if (!settingsFormIsBeingEdited()) populateSettings();
+  applySettingsCollapse();
   renderProfileChrome();
   syncEnvironmentChrome();
   syncResetControlVisibility(localAccountToolsAllowed());
