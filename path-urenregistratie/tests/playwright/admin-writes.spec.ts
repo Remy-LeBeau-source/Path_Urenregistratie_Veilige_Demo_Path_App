@@ -1271,3 +1271,51 @@ test('[ADM-WR-H-015] onderwerp, tekst en een eigen tekst per ontvanger blijven n
     await opslaan();
   }
 });
+
+test('[ADM-WR-H-016] de routevinkjes van een opdracht blijven na opslaan en F5 staan zoals gezet', async ({ page }) => {
+  // Gemeld vanaf TEST: het brokervinkje liet zich wel omzetten en opslaan gaf 200,
+  // maar na een herlaad stond het weer aan. De server bewaarde het correct en gaf
+  // het ook terug; de frontend las het alleen nooit terug en zette het profiel
+  // telkens hard op de standaardwaarde. Vier andere schakelaars hadden hetzelfde.
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsAdmin();
+  await page.locator('[data-view="employees"]').click();
+
+  const openEerste = async () => {
+    await page.locator('[data-edit-routing]').first().click();
+    await expect(page.locator('#edit-broker-enabled')).toBeVisible();
+  };
+
+  const opslaan = async () => {
+    const response = page.waitForResponse(item => item.url().includes('/server/api/staff.php') && item.request().method() === 'POST');
+    await page.locator('#modal-confirm').click();
+    expect((await response).status()).toBe(200);
+  };
+
+  await openEerste();
+  const origineel = await page.locator('#edit-broker-enabled').isChecked();
+
+  try {
+    await test.step('When het brokervinkje wordt omgezet en opgeslagen', async () => {
+      await page.locator('#edit-broker-enabled').setChecked(!origineel);
+      await opslaan();
+    });
+
+    await test.step('Then staat het na een herlaad nog steeds zo', async () => {
+      await page.reload();
+      await page.locator('[data-view="employees"]').click();
+      await openEerste();
+      await expect(
+        page.locator('#edit-broker-enabled'),
+        'een uitgezet brokervinkje mag na een herlaad niet vanzelf terugspringen'
+      ).toBeChecked({ checked: !origineel });
+    });
+  } finally {
+    await page.reload();
+    await page.locator('[data-view="employees"]').click();
+    await openEerste();
+    await page.locator('#edit-broker-enabled').setChecked(origineel);
+    await opslaan();
+  }
+});

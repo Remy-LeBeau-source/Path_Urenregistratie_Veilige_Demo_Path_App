@@ -187,3 +187,11 @@ Feature: Organisatie-instellingen beheren
     When onderwerp, tekst en een eigen tekst voor een ontvanger worden ingevuld
     Then staat alles er na een F5 nog steeds
     And opslaan werkt ook als er verder niets aan het account verandert
+
+  @happy
+  Scenario: [ADM-WR-H-016] de routevinkjes van een opdracht blijven na opslaan en F5 staan zoals gezet
+    # Testtechniek: Herstelbaarheid + toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given organisatie-instellingen beheren is voorbereid
+    When het brokervinkje wordt omgezet en opgeslagen
+    Then staat het na een herlaad nog steeds zo

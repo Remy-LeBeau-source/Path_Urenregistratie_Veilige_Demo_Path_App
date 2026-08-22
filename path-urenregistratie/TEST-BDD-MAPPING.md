@@ -42,6 +42,7 @@
 | ADM-WR-N-007 | api | organization-settings.feature | actief-accounttotaal klopt op elke stap: exact duplicaat verandert niets, uniek account telt precies 1 op | Negatieve equivalentieklasse + error guessing | 15 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | actief-accounttotaal klopt op elke stap: exact duplicaat verandert niets, uniek account telt precies 1 op | Negative | 2 | Actueel |
 | ADM-WR-H-012 | api | organization-settings.feature | na Herstel legt Teambeheer uit dat de telling lokaal is en kan de serverstand terug worden gehaald | Herstelbaarheid + toestandsovergang | 8 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | na Herstel legt Teambeheer uit dat de telling lokaal is en kan de serverstand terug worden gehaald | Happy | 2 | Actueel |
 | ADM-WR-H-015 | api | organization-settings.feature | onderwerp, tekst en een eigen tekst per ontvanger blijven na F5 in het scherm staan | Beslissingstabel rollen en autorisatie | 7 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | onderwerp, tekst en een eigen tekst per ontvanger blijven na F5 in het scherm staan | Happy | 2 | Actueel |
+| ADM-WR-H-016 | api | organization-settings.feature | de routevinkjes van een opdracht blijven na opslaan en F5 staan zoals gezet | Herstelbaarheid + toestandsovergang | 3 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | de routevinkjes van een opdracht blijven na opslaan en F5 staan zoals gezet | Happy | 2 | Actueel |
 | AUD-H-001 | api | audit-log.feature | admin kan auditlog ophalen | Beslissingstabel rollen en autorisatie | 7 | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | admin kan auditlog ophalen | Happy | 16 | Actueel |
 | AUD-H-002 | api | audit-log.feature | auditlog filtert op entity_type | Equivalentieklassen | 3 | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | auditlog filtert op entity_type | Happy | 16 | Actueel |
 | AUD-H-003 | api | audit-log.feature | auditlog filtert op event_type | Equivalentieklassen | 3 | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | auditlog filtert op event_type | Happy | 16 | Actueel |
@@ -279,9 +280,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 257
+- Playwright executable cases: 258
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 258
+- Totaal unieke executable cases: 259
 - Playwright features: 23
 - Database features: 1
 - Playwright steps mappings: 23
