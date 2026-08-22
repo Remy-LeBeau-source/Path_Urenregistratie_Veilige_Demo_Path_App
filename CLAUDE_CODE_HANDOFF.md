@@ -30,6 +30,25 @@ extra releasepipeline naast `32544919862` start.
 
 ## Wat is opgelost
 
+### Versie 0.9.103 — mobiele scan
+
+PR #28 is gemerged. Daarna is de volledige applicatie ook op de mobiele weergave nagelopen. De
+telefoonsuite dekte de dagelijkse keten al, maar twee schermen die een medewerker juist op een
+telefoon opent hadden geen enkele mobiele case.
+
+- **`MOB-H-006`** — een uitgenodigde collega stelt op de telefoon een wachtwoord in. Bewaakt geen
+  zijwaartse scroll, tikdoelen van minimaal 40px, de bevestiging `Gelukt!` en de werkende knop
+  `Nu inloggen`. Dit is exact het scherm dat in 0.9.102 is gewijzigd; die wijziging was tot nu toe
+  alleen op desktop bewezen.
+- **`MOB-H-007`** — een medewerker leest een lange mededeling op de telefoon; de volledige tekst moet
+  aanwezig zijn en de pagina mag niet zijwaarts scrollen.
+- **Let op bij nieuwe mobiele cases:** het mededelingenarchief van een medewerker wordt in
+  auth-modus opgebouwd uit `notifications.php`, niet uit `announcements.php`. Een mock op het
+  announcements-endpoint heeft daar geen effect.
+- **Testrace, geen applicatiefout:** `MOB-H-007` slaagde los maar viel in de volledige suite om op
+  een 401 van een urenophaling die met de verse sessie racete. De urenophaling wordt in die case nu
+  gestubd. Daarna drie opeenvolgende volledige `mobile-chrome`-runs groen plus `mobile-safari` groen.
+
 ### Versie 0.9.102 — volledige applicatiescan
 
 Na een scan van alle schermen bleek Mededelingen het grootste gat: nul geautomatiseerde cases,

@@ -89,6 +89,14 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-22 · v0.9.103 mobiele scan: telefoongaten in de toegangsketen en mededelingen gedicht
+
+- [x] **Mobiele dekking nagelopen per scherm.** De telefoonsuite dekte login/navigatie, uren indienen met upload, correctie en goedkeuring, facturen met tikdoelen, en de mailconsole — maar twee schermen die een medewerker juist op de telefoon opent, hadden geen enkele mobiele case: het instellen van een wachtwoord via een uitnodiging, en het lezen van een mededeling.
+- [x] **`MOB-H-006`:** een uitgenodigde collega stelt op de telefoon een wachtwoord in. Bewaakt dat de pagina niet zijwaarts scrollt, dat de tikdoelen minimaal 40px hoog zijn, dat de bevestiging `Gelukt!` daadwerkelijk verschijnt en dat de knop `Nu inloggen` zichtbaar en aantikbaar is. Dit is precies het scherm dat in 0.9.102 is aangepast; zonder deze case was die wijziging alleen op desktop bewezen.
+- [x] **`MOB-H-007`:** een medewerker leest een lange mededeling op de telefoon. Bewaakt dat de volledige tekst aanwezig is — niet afgekapt op een vaste breedte — en dat de pagina niet zijwaarts scrollt.
+- [x] **Testbevinding:** `MOB-H-007` slaagde los maar viel in de volledige suite om op een 401 van een urenophaling die met de verse sessie racete. Dat is geen applicatiefout maar een testrace; de urenophaling wordt in deze case nu gestubd, omdat de case over mededelingen gaat en niet over uren. Daarna drie opeenvolgende volledige `mobile-chrome`-runs groen plus `mobile-safari` groen.
+- [x] Versie 0.9.102 → 0.9.103. Living Documentation: 242 Playwright-cases + 1 DB-case.
+
 ### 2026-08-22 · v0.9.102 volledige applicatiescan: mededelingen waren stuk, toegangsketen nu end-to-end gedekt
 
 - [x] **Bugfix (mededelingen volledig onbruikbaar):** `announcements.php` kapte de notificatietekst af met een directe `mb_substr()`-aanroep. Op een PHP-installatie zonder de `mbstring`-extensie — zoals de lokale ontwikkelomgeving — liep de hele verzendactie stuk op `Call to undefined function`, waardoor er géén enkele mededeling verstuurd kon worden. Vervangen door `announcement_truncate()`, die `mb_substr()` gebruikt waar beschikbaar en anders terugvalt op een UTF-8-bewuste regex zodat een meerbyte-teken nooit halverwege wordt afgekapt. Dit is dezelfde guard-aanpak die `simple_pdf.php` al hanteerde.

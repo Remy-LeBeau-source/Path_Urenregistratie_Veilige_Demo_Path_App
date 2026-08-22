@@ -143,6 +143,17 @@ Gebruikte testtechnieken:
 
 De GUI-smoke bevat de kortste complete bedrijfsketen. De volledige regressie bevat daarnaast foutpaden, concurrency, grenzen, toegankelijkheid, mobiel en servercontracten.
 
+De mobiele suite draait apart op `mobile-chrome` (Pixel 7) en `mobile-safari` (iPhone 13) en voert
+uitsluitend `mobile-ui.spec.ts` uit. Elk mobiel scherm dat een medewerker realistisch op een telefoon
+opent, hoort daar een case te hebben — inclusief de eenmalige schermen buiten de dagelijkse keten,
+zoals het instellen van een wachtwoord via een uitnodiging. Twee bewakingen keren in vrijwel elke
+mobiele case terug: de pagina mag niet zijwaarts scrollen, en tikdoelen zijn minimaal 40px hoog.
+
+Een mobiele case mockt de endpoints die niet tot zijn onderwerp horen. Een ongemockte leesactie kan
+met de verse sessie racen en een 401 in de console loggen, wat de case rood maakt om een reden die
+niets met het geteste scherm te maken heeft. Dat is een testrace, geen applicatiefout — maar het
+onderscheid is alleen betrouwbaar te maken als de niet-relevante endpoints vastliggen.
+
 ### Testlagen
 
 | Laag | Bewijst | Mag niet vervangen worden door |

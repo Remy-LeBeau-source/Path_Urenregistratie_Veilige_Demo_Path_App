@@ -50,3 +50,19 @@ Feature: Mobiele gebruikerservaring
     Then de verzendregistratie als leesbare kaart binnen het scherm staat
     And geheime inhoud verborgen blijft en Vernieuwen een touchdoel is
     And de losse mailacceptatieactie binnen het scherm blijft met een volwaardig touchdoel
+
+  @happy
+  Scenario: [MOB-H-006] een uitgenodigde collega stelt op de telefoon een wachtwoord in en ziet een duidelijke bevestiging
+    # Testtechniek: Responsive viewport + end-to-end use-case
+    # Aantoonbare Playwright-assertions in deze case: 15
+    Given de uitgenodigde collega de link uit de mail opent op de telefoon
+    When beide wachtwoordvelden op het kleine scherm worden ingevuld
+    Then verschijnt de bevestiging met een tapbare knop en past alles binnen het scherm
+
+  @happy
+  Scenario: [MOB-H-007] een medewerker leest mededelingen op de telefoon zonder afgekapte tekst
+    # Testtechniek: Responsive viewport + end-to-end use-case
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given een ingelogde medewerker op de telefoon
+    When de medewerker de mededelingen opent
+    Then is de volledige mededeling leesbaar en scrollt de pagina niet zijwaarts
