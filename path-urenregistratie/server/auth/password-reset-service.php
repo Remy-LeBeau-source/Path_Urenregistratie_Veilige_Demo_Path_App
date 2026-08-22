@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../mail/config.php';
+// Needed so a queued reset/invitation is actually dispatched in the guarded
+// TEST sandbox instead of waiting for a cron that does not run there.
+require_once __DIR__ . '/../mail/dispatch.php';
 
 const AUTH_PASSWORD_RESET_TTL_HOURS = 2;
 const AUTH_PASSWORD_RESET_MAX_REQUESTS = 3;
@@ -161,6 +164,22 @@ function auth_create_password_reset(
             $pdo->rollBack();
         }
         throw $error;
+    }
+
+    // Every other queueing path (invoices, customer timesheets, the mail
+    // console) dispatches right away in the guarded TEST sandbox; this one did
+    // not, so reset and invitation mails sat in the queue forever on TEST and
+    // never reached the sink. Dispatch after the commit so SMTP is never opened
+    // inside the transaction. Production stays queue-only: the guard inside
+    // mail_dispatch_created() only allows this in guarded TEST.
+    if ($deliveryId !== null && $deliveryId > 0 && function_exists('mail_dispatch_created')) {
+        try {
+            mail_dispatch_created($pdo, [['id' => $deliveryId]], $config);
+        } catch (Throwable $dispatchError) {
+            // A failed send must never invalidate an already-issued token; the
+            // delivery stays queued with its recorded error for a retry.
+            error_log('Password-reset mail could not be dispatched: ' . $dispatchError->getMessage());
+        }
     }
 
     return ['token' => $rawToken, 'expires_at' => $expiresAt, 'delivery_id' => $deliveryId];

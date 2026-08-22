@@ -89,6 +89,14 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-22 · v0.9.101 wachtwoordherstelmail werd wel klaargezet maar nooit verzonden
+
+- [x] **Bugfix (blokkeerde de mailacceptatie):** een wachtwoordherstel- of uitnodigingsverzoek zette de mail wél in `email_deliveries`, maar verstuurde hem als enige route nooit. Op TEST bleven die berichten daardoor op status `queued` staan met `attempt_count = 0`; er kwam nooit een resetlink aan. Vastgesteld door de verzendadministratie van TEST uit te lezen: drie resetpogingen van 03:41–03:42 stonden `queued`, terwijl broker-, factuur- en salarisberichten uit dezelfde periode gewoon `sent` waren.
+- [x] Oorzaak: iedere andere wachtrij-route (`invoices.php`, `customer-timesheets.php`, `email-queue.php`, en de acceptatieconsole) roept na het klaarzetten direct de verzendstap aan; `auth_create_password_reset()` deed dat niet en wachtte dus op een cronjob die op TEST niet draait. Dat verklaart ook waarom de vijf knoppen in de acceptatieconsole wél werkten en de gewone herstelknop niet.
+- [x] Opgelost in de gedeelde functie, zodat herstel, uitnodiging en de resetlink vanuit Teambeheer allemaal meeliften. Verzending gebeurt ná de commit (nooit SMTP binnen een transactie) en een mislukte verzending maakt een al uitgegeven token nooit ongeldig — de levering blijft dan met foutmelding in de wachtrij staan. Productie blijft bewust wachtrij-only; de guard in `mail_dispatch_created()` staat directe verzending alleen toe in de afgeschermde TEST-sandbox.
+- [x] Nieuwe regressie `PWD-H-012` borgt dat de verzendstap aanwezig blijft, ná de commit staat en de token bij een verzendfout intact laat.
+- [x] Versie 0.9.100 → 0.9.101. Volledige lokale desktop-Playwright-regressie: 229/229 groen. `npm run check`: groen.
+
 ### 2026-08-22 · v0.9.100 afbeeldingen weer zichtbaar en TEST-deployguard gelijkgetrokken
 
 - [x] **JPG/PNG-preview hersteld:** de opgeslagen bytes en MIME waren al PDF, maar de download werd
