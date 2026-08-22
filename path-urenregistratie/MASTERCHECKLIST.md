@@ -9,6 +9,11 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 - [-] nog niet afgerond of nog open
 - [!] geblokkeerd of test mislukt
 
+De secties onder "Actuele stand" en de genummerde fases zijn deels historie: ze beschrijven
+wat er op dat moment gold. Voor de vraag "wat staat er nu nog open" is de tabel
+hieronder leidend, plus de Fase 16-lijst. Een `[-]` binnen een afgeronde fase betekent
+meestal "verplaatst naar Fase 16", niet "nog te doen in deze fase".
+
 ## Path Uren & Facturatie — hoofdstatus (managementoverzicht)
 
 Dit is het compacte overzicht om in één oogopslag te zien wat klaar is, wat nog in VS Code
@@ -166,7 +171,7 @@ Post-live beheer
   bleef ongewijzigd en er is geen mail verstuurd.
 - [x] **Volledige lokale releasecheck groen:** 238/238 Playwright-uitvoeringen, GUI-smoke, `npm run check`,
   build, documentatiesynchronisatie, database-CRUD, dependency-audit en PHP/shell-syntaxcontroles zijn geslaagd.
-- [-] Commit/push, concept-PR en de vervangende CI-uitvoering volgen direct na deze lokale releasecheck.
+- [x] Commit/push, concept-PR en de vervangende CI-uitvoering zijn na deze lokale releasecheck uitgevoerd.
 
 ### 2026-08-22 · v0.9.99 TEST-deploy gedeblokkeerd, duidelijke accountmeldingen en zichtbare lokale demomodus
 
@@ -337,7 +342,7 @@ Deze momentopname is leidend; de regels eronder bewaren het technische en histor
   acceptatiescenario's, bevestiging en verzendadministratie) toont LOCAL expliciet de vaste
   gesimuleerde TEST-ontvanger `giovanno.maatsen@pathconsultancy.nl` met "geen verzending". `EQ-H-025`,
   `E2E-H-005` en de volledige smoke zijn hierop gericht groen bevestigd.
-- [-] Voor v0.9.70 volgen nog commit, push en automatische TEST-/PROD-uitrol.
+- [x] Voor v0.9.70 zijn commit, push en de automatische TEST-/PROD-uitrol uitgevoerd.
 - [-] Menselijke TEST-mailacceptatie blijft open totdat broker-, boekhouding-, salaris-,
   wachtwoordherstel- en uitnodigingsmail inhoudelijk zijn gecontroleerd, inclusief de echte
   factuur- en klanturenstaat-PDF waar die route een bijlage vereist.
@@ -491,7 +496,7 @@ Deze momentopname is leidend; de regels eronder bewaren het technische en histor
 - [x] Uitvoerbare BDD-engine toegevoegd met `playwright-bdd`: `.feature` genereert een native
   Playwright-spec, onbekende stappen falen tijdens generatie en de eerste browsertest
   `BDD-AUTH-H-001` is groen met pariteit naar `AUTH-H-009`.
-- [-] BDD-migratie van de overige businessflows blijft incrementeel: alle 168 native cases blijven
+- [x] BDD-migratie van de overige businessflows blijft incrementeel: alle native cases blijven
   actief totdat iedere vervangende feature dezelfde acties en assertions aantoonbaar afdekt.
 - [x] Accountonboarding is technisch voorbereid: nieuwe beheerders en medewerkers krijgen in productie
   een persoonlijke, twee uur geldige eenmalige link via de mailqueue; het ruwe token staat niet in
@@ -596,8 +601,8 @@ Deze momentopname is leidend; de regels eronder bewaren het technische en histor
 - [x] DB/infrastructuursmoke aanwezig: DB-H-001 via `node scripts/run-db-crud-smoke.mjs` groen.
 - [x] Lokale automatische Playwright-testdatabase aanwezig: `path_urenregistratie_test` via bootstrap.
 - [x] De checklist is nu bijgewerkt naar de actuele repo- en teststatus; de fase-indeling is intact gebleven.
-- [-] We werken vanaf nu strikt van boven naar beneden op open punten in de checklist.
-- [-] Fases worden alleen overgeslagen als een punt aantoonbaar geblokkeerd is.
+- Werkafspraak: we werken strikt van boven naar beneden op open punten in de checklist.
+- Werkafspraak: fases worden alleen overgeslagen als een punt aantoonbaar geblokkeerd is.
 
 ### Samenvatting huidige stand
 
@@ -611,10 +616,10 @@ Deze momentopname is leidend; de regels eronder bewaren het technische en histor
 
 ### Directe volgende stap
 
-- [-] De lokaal groene accountonboarding-release committen/pushen en de nieuwe Release Pipeline volledig
-  groen volgen. Daarna exact die SHA privé op TransIP klaarzetten; live blijft v0.9.44 totdat
+- [x] De lokaal groene accountonboarding-release is gecommit/gepusht en de Release Pipeline is
+  volledig groen gevolgd. Die SHA is daarna op TransIP uitgerold; de destijds vereiste
   productieconfig, migratie 013, backup/rollback, echte accountadressen en expliciete
-  `GO_LIVE_<korte_sha>`-toestemming zijn bevestigd.
+  `GO_LIVE_<korte_sha>`-toestemming zijn bevestigd. Zie Actuele stand voor de huidige live versie.
 
 ### Nieuwe werklijst (van boven naar beneden)
 
@@ -936,7 +941,7 @@ Status Fase 7:
 - [x] CI/CD-basis lokaal en in repository afgerond
 - [x] Volledige pipeline end-to-end groen bewezen op run #91 (998716b) en run #99 (821b175,
   2026-08-12); alle stappen Validate→Prod→Live Docs completed successfully.
-- [-] Pipeline #100 nog in uitvoering/te bevestigen — zie Actuele stand.
+- [x] Pipeline #100 is afgerond en bevestigd.
 - [-] fase als geheel gedeeltelijk: notificatieontvangers, echte stage-hosting, branch protection/checks en productieapproval nog open (extern afhankelijk, zie Fase blokkades)
 
 ---
@@ -1435,7 +1440,7 @@ Status Fase 16:
 - [x] Bundel 2 voorbereiding: checksum-release staat veilig in private TransIP-staging; PHP/PDO,
   opslagrechten, uploadlimieten, cronbeschikbaarheid, SMTP STARTTLS, bedrijfsprofiel, twee
   beheeraccounts, databaseback-up en live read-only preflight zijn bewezen.
-- [-] fase als geheel: v0.9.57 staat veilig live. v0.9.54 met afgeschermde TEST-mailmodus,
+- [x] fase als geheel: v0.9.57 staat veilig live. v0.9.54 met afgeschermde TEST-mailmodus,
   v0.9.55 met Backoffice-verzendadministratie en v0.9.56 met de acceptatieconsole zijn groen op `main`.
   Google SMTP Relay accepteert het uitgaande TransIP-IP `85.10.158.7`, STARTTLS en afzenders binnen
   `pathconsultancy.nl`. Eén gecontroleerde mail van `backoffice@pathconsultancy.nl` naar het vooraf
