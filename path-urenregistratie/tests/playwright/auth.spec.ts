@@ -302,3 +302,117 @@ test('[AUTH-H-009] lokale login benoemt de veilige testomgeving en productnaam',
     await expect(page.locator('#login-title')).toHaveText('Inloggen');
   });
 });
+
+// Reported from the app: after a password reset, logging in as Stasjo showed
+// "Welkom Marc". The cause is visible in the code -- on login the app only binds
+// state.currentEmployeeId when it can already match the account in its locally
+// loaded list, and currentEmployee() otherwise falls back to the FIRST active
+// employee. So a mismatch shows someone else's name, and briefly their context.
+// This walks every seeded account of both roles.
+// Scoped to the company under test. admin@example.invalid belongs to a second
+// demo company ("Demo BV"), and employee.demo@example.invalid has no user row at
+// all -- migration 005 sets a hash for an address that is never inserted.
+const SEEDED_EMPLOYEES = [
+  'marc@example.invalid',
+  'stasjo@example.invalid',
+  'brian@example.invalid',
+  'shawn@example.invalid',
+] as const;
+
+const SEEDED_ADMINS = [
+  'gio@example.invalid',
+  'joyce@example.invalid',
+] as const;
+
+async function assertOwnNameShown(page: import('@playwright/test').Page, email: string, password: string): Promise<string> {
+  const login = new LoginPage(page);
+  await login.open();
+  await login.login(email, password);
+  await expect(page.locator('#workspace-name')).not.toBeEmpty();
+
+  const serverName = await page.evaluate(async () => {
+    const response = await fetch('/server/auth/me.php');
+    const data = await response.json();
+    return String(data?.user?.display_name || '');
+  });
+  expect(serverName, `${email} moet een servernaam hebben`).not.toBe('');
+
+  // Give the app every chance to settle: if it only binds the identity once the
+  // bootstrap lands, this still passes. What must never happen is that the name
+  // of a colleague keeps standing there.
+  await expect(
+    page.locator('#workspace-name'),
+    `${email} kreeg de naam van iemand anders te zien`
+  ).toHaveText(serverName, { timeout: 15000 });
+  await expect(
+    page.locator('#profile-menu-name'),
+    `${email}: profielmenu wijkt af van de werkbalk`
+  ).toHaveText(serverName, { timeout: 15000 });
+
+  return serverName;
+}
+
+test('[AUTH-H-020] elke medewerker ziet na inloggen de eigen naam, nooit die van een collega', async ({ page }) => {
+  const password = requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD');
+  const seen = new Map<string, string>();
+
+  for (const email of SEEDED_EMPLOYEES) {
+    await test.step(`${email} ziet de eigen naam`, async () => {
+      const shownName = await assertOwnNameShown(page, email, password);
+      seen.set(email, shownName);
+      await new LoginPage(page).logout();
+    });
+  }
+
+  await test.step('En geen twee accounts tonen dezelfde naam', async () => {
+    // If the fallback fires, several accounts collapse onto the same person.
+    const namen = [...seen.values()];
+    expect(new Set(namen).size, 'meerdere accounts toonden dezelfde naam: ' + namen.join(', ')).toBe(namen.length);
+  });
+});
+
+test('[AUTH-H-021] elke beheerder ziet na inloggen de eigen naam, nooit die van een collega', async ({ page }) => {
+  const password = requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD');
+  const seen = new Map<string, string>();
+
+  for (const email of SEEDED_ADMINS) {
+    await test.step(`${email} ziet de eigen naam`, async () => {
+      const shownName = await assertOwnNameShown(page, email, password);
+      seen.set(email, shownName);
+      await new LoginPage(page).logout();
+    });
+  }
+
+  await test.step('En geen twee accounts tonen dezelfde naam', async () => {
+    const namen = [...seen.values()];
+    expect(new Set(namen).size, 'meerdere accounts toonden dezelfde naam: ' + namen.join(', ')).toBe(namen.length);
+  });
+});
+
+test('[AUTH-H-022] in productiemodus toont de app de naam van de ingelogde gebruiker', async ({ page }) => {
+  // The demo hosts (localhost and uren-test) deliberately keep the full demo
+  // catalogue, and there the app showed the *selected* demo account instead of
+  // the authenticated one. Production clears that catalogue and binds on
+  // dbUserId. This pins down that production really is unaffected, so the defect
+  // stays scoped to the demo hosts instead of being assumed harmless.
+  const login = new LoginPage(page);
+  await login.open();
+  await login.login('marc@example.invalid', requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+
+  const serverName = await page.evaluate(async () => {
+    const response = await fetch('/server/auth/me.php');
+    const data = await response.json();
+    return String(data?.user?.display_name || '');
+  });
+  expect(serverName).toBe('Marc de Roon');
+
+  await page.evaluate(async () => {
+    (window as unknown as { localAccountToolsAllowed: () => boolean }).localAccountToolsAllowed = () => false;
+    await (window as unknown as { refreshBootstrapReadApi: (force: boolean) => Promise<unknown> }).refreshBootstrapReadApi(true);
+  });
+
+  await expect(
+    page.locator('#workspace-name'),
+    'in productiemodus moet de eigen naam verschijnen'
+  ).toHaveText(serverName, { timeout: 15000 });
+});

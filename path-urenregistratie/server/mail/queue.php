@@ -203,18 +203,19 @@ function mail_enqueue_for_invoice(
         'overeenkomstnummer'=> (string)($inv['agreement_number'] ?? ''),
     ];
 
-    // Use per-assignment templates when set, falling back to generic MAIL_CHANNEL_TEMPLATES.
-    $brokerTplOverride = [];
-    if (!empty($inv['invoice_subject_template']) || !empty($inv['invoice_body_template'])) {
-        $brokerTplOverride = [
-            'subject' => !empty($inv['invoice_subject_template'])
-                ? (string)$inv['invoice_subject_template']
-                : MAIL_CHANNEL_TEMPLATES['broker']['subject'],
-            'body'    => !empty($inv['invoice_body_template'])
-                ? (string)$inv['invoice_body_template']
-                : MAIL_CHANNEL_TEMPLATES['broker']['body'],
+    // One accompanying text for every recipient. The assignment template used to
+    // apply to the broker only, so the bookkeeper and the payroll office silently
+    // kept hardcoded wording that nobody could edit. It now wins for every channel;
+    // each channel keeps its own default for whatever the assignment leaves empty.
+    $assignmentSubject = (string)($inv['invoice_subject_template'] ?? '');
+    $assignmentBody = (string)($inv['invoice_body_template'] ?? '');
+    $templateFor = static function (string $channel) use ($assignmentSubject, $assignmentBody): array {
+        $base = MAIL_CHANNEL_TEMPLATES[$channel];
+        return [
+            'subject' => $assignmentSubject !== '' ? $assignmentSubject : $base['subject'],
+            'body'    => $assignmentBody !== '' ? $assignmentBody : $base['body'],
         ];
-    }
+    };
 
     $created = [];
 
@@ -230,7 +231,7 @@ function mail_enqueue_for_invoice(
         $broker = $brokerStmt->fetch();
 
         if ($broker && !empty($broker['invoice_email'])) {
-            $tpl = !empty($brokerTplOverride) ? $brokerTplOverride : MAIL_CHANNEL_TEMPLATES['broker'];
+            $tpl = $templateFor('broker');
             mail_assert_vars($tpl['subject'], $vars, 'broker.subject');
             mail_assert_vars($tpl['body'], $vars, 'broker.body');
 
@@ -293,7 +294,7 @@ function mail_enqueue_for_invoice(
             continue;
         }
 
-        $tpl = MAIL_CHANNEL_TEMPLATES[$channel];
+        $tpl = $templateFor($channel);
         mail_assert_vars($tpl['subject'], $vars, $channel . '.subject');
         mail_assert_vars($tpl['body'], $vars, $channel . '.body');
 

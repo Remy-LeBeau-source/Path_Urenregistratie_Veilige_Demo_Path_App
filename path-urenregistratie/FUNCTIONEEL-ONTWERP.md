@@ -234,6 +234,8 @@ Minimaal de volgende ketens zijn releaseblokkerend:
 | productie toont nooit dry-run-jargon of een plaatsvervangend token aan een gebruiker | `password-reset.spec.ts` (`PWD-N-016`) |
 | het resetscherm neemt het inlogadres over, weigert een leeg adres en laat terugkeren | `password-reset.spec.ts` (`PWD-N-015`) |
 | mobiele hoofdketen | `mobile-ui.spec.ts` |
+| iedere medewerker en beheerder ziet na inloggen de eigen naam, nooit die van een collega | `auth.spec.ts` (`AUTH-H-020`, `AUTH-H-021`) |
+| één begeleidende tekst bereikt broker, boekhouding en salarisadministratie | `email-queue.spec.ts` (`EQ-H-022`) |
 | een uitgenodigde collega kan op de telefoon een wachtwoord instellen en ziet de bevestiging | `mobile-ui.spec.ts` (`MOB-H-006`) |
 | een lange mededeling is op de telefoon volledig leesbaar zonder zijwaarts scrollen | `mobile-ui.spec.ts` (`MOB-H-007`) |
 

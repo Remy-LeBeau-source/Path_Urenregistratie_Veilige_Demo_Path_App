@@ -30,6 +30,33 @@ extra releasepipeline naast `32544919862` start.
 
 ## Wat is opgelost
 
+### Versie 0.9.109 — verkeerde naam na inloggen, en één begeleidende tekst
+
+Door Gio gemeld: inloggen als Stasjo, daarna kwam hij terug in het menu en zag `Welkom Marc`.
+
+- **Reproduceerbaar voor beide rollen.** `AUTH-H-020` en `AUTH-H-021` doorlopen alle medewerkers en
+  beheerders van het bedrijf onder test. Vóór de fix toonde inloggen als Marc `Stasjo van Bakel` en
+  inloggen als Joyce een andere beheerder. Het herstelde zichzelf niet, ook niet na 15 seconden.
+- **Oorzaak.** Het profiel werd alleen aan de ingelogde gebruiker gekoppeld wanneer de
+  servercatalogus leidend was. De demo-hosts (localhost, `uren-test`) houden die catalogus bewust in
+  stand, dus daar sloeg de koppeling nooit aan en bleef de standaard demo-selectie staan.
+- **Fix in twee delen.** Het profiel volgt nu op elke omgeving de sessie (op `dbUserId`, met het
+  sessie-e-mailadres als terugval), en `profileForRole()` gebruikt bij verschil de naam uit de sessie.
+  Die tweede regel is het vangnet: `currentEmployee()` viel bij een onbekend id terug op de eerste
+  actieve medewerker, en zo werd "onbekend" andermans naam.
+- **`AUTH-H-022`** legt vast dat productie niet geraakt werd, zodat het defect aantoonbaar tot de
+  demo-hosts beperkt bleef in plaats van dat aan te nemen.
+- **Dode verwijzing gevonden:** `employee.demo@example.invalid` krijgt in migratie 005 een
+  wachtwoordhash, maar wordt nergens als gebruiker aangemaakt. `admin@example.invalid` hoort bij een
+  tweede demobedrijf ("Demo BV"). Beide vallen buiten het bedrijf onder test.
+- **Eén begeleidende tekst voor iedere ontvanger.** De opdrachttekst bereikte alleen de broker;
+  boekhouding en salaris hielden bewoording die vastzat in `queue.php`. Eén factuur gaf zo drie
+  verschillende teksten, waarvan er één aanpasbaar was. `$templateFor($channel)` laat de opdrachttekst
+  nu voor elk kanaal winnen. `EQ-H-022` eist dat de drie mails hetzelfde onderwerp uit de opdracht
+  dragen; tegencontrole gedaan.
+- **Let op bij uitbreiden:** `mail_assert_vars()` laat verzenden falen op een onbekende variabele.
+  Een vrij tekstveld zonder die controle kan de facturatie blokkeren.
+
 ### Versie 0.9.106 — dry-run-jargon op productie
 
 Op productie waargenomen: wie een resetverzoek deed kreeg `Resetverzoek verstuurd (dry-run). Token:
@@ -200,11 +227,17 @@ De twee tussentijdse rode tests waren testproblemen en zijn gericht hersteld:
 4. Daarna blijft de menselijke mailacceptatie open: controleer op TEST via Instellingen →
    mailacceptatieconsole de vijf routes, inclusief inhoud en bijlagen:
 
-   - Broker: factuur plus klanturenstaat.
+   - Broker: factuur (de klanturenstaat gaat via een eigen verzendflow, niet mee met de factuurmail).
    - Boekhouder: alleen factuur.
    - Salaris/EasySalary: geen bijlage.
    - Wachtwoordherstel.
    - Uitnodiging nieuw account.
+
+**Twee dingen die tijd kosten als je ze niet weet.** De acceptatieconsole stuurt een *gegenereerde*
+test-PDF mee (`ACCEPTATIETEST-NIET-BOEKEN-...pdf`), geen echte factuur - die knoppen bewijzen de
+leidingen, niet de inhoud van een factuur. En de resetlink is juist wel echt: elke druk op die knop
+wist eerst alle bestaande tokens van dat account, dus een tweede druk maakt de link uit de eerste mail
+stil ongeldig terwijl die mail er identiek uitziet. Link is 2 uur geldig en eenmalig.
 
 Echte TEST-mail mag uitsluitend naar Giovanno met Kenrich als vaste CC. PROD SMTP-real-delivery
 blijft uitgeschakeld; dat is een bewuste veiligheidsinstelling en geen openstaande releasefout.

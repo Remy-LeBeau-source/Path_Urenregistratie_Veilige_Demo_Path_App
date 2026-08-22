@@ -231,6 +231,14 @@ test.describe('email queue api', () => {
       expect(byChannel.get('accountant')?.attachment_policy).toBe('invoice');
       expect(byChannel.get('payroll')?.attachment_policy).toBe('none');
       expect(new Set(items.map(item => Number(item.invoice_id)))).toEqual(new Set([invoiceId]));
+
+      // One accompanying text for every recipient. The assignment template used to
+      // reach the broker only, so the bookkeeper and the payroll office kept
+      // hardcoded wording that nobody could change from the screen. All three must
+      // now carry the subject set on the assignment.
+      const onderwerpen = items.map(item => String(item.subject_snapshot || ''));
+      expect(new Set(onderwerpen).size, 'de drie mails moeten hetzelfde onderwerp uit de opdracht dragen: ' + onderwerpen.join(' | ')).toBe(1);
+      expect(onderwerpen[0], 'het onderwerp moet uit de opdracht komen, niet uit een vaste sjabloon').not.toContain('Factuuradministratie');
     });
 
     await test.step('And cleanup', async () => { await authApi.logout(); await ctx.dispose(); });

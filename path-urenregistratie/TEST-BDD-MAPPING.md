@@ -59,7 +59,10 @@
 | AUTH-N-007 | ui | auth.feature | vijf mislukte logins tonen een servergestuurde aftelling | Negatieve equivalentieklasse + error guessing | 4 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Negative | 4 | Actueel |
 | AUTH-N-008 | ui | auth.feature | de inlogblokkade en aftelling blijven zichtbaar na herladen | Negatieve equivalentieklasse + error guessing | 6 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Negative | 4 | Actueel |
 | AUTH-N-009 | ui | auth.feature | geen loginflits: login-scherm en app-shell blijven verborgen tijdens auth-bootstrap na F5 | Negatieve equivalentieklasse + error guessing | 9 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Negative | 4 | Actueel |
-| AUTH-H-009 | ui | auth.feature | lokale login benoemt de veilige testomgeving en productnaam | End-to-end use-case + visuele contractasserties | 6 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Happy | 4 | Actueel |
+| AUTH-H-009 | ui | auth.feature | lokale login benoemt de veilige testomgeving en productnaam | End-to-end use-case + visuele contractasserties | 10 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Happy | 4 | Actueel |
+| AUTH-H-020 | ui | auth.feature | elke medewerker ziet na inloggen de eigen naam, nooit die van een collega | Beslissingstabel rollen en autorisatie | 1 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Happy | 4 | Actueel |
+| AUTH-H-021 | ui | auth.feature | elke beheerder ziet na inloggen de eigen naam, nooit die van een collega | Beslissingstabel rollen en autorisatie | 1 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Happy | 4 | Actueel |
+| AUTH-H-022 | ui | auth.feature | in productiemodus toont de app de naam van de ingelogde gebruiker | End-to-end use-case + visuele contractasserties | 2 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Happy | 4 | Actueel |
 | E2E-H-001 | integration | end-to-end-workflows.feature | herstelbasis houdt globale werkvoorraad stabiel bij maand- en filterwissels | Equivalentieklassen | 11 | end-to-end-workflows.steps.ts | business-workflows-e2e.spec.ts | DB / Integratie | Bedrijfsketens | herstelbasis houdt globale werkvoorraad stabiel bij maand- en filterwissels | Happy | 16 | Actueel |
 | E2E-H-002 | integration | end-to-end-workflows.feature | rolwissel werkt zonder F5 en herstel blijft beschikbaar voor iedere rol op LOCAL/TEST | Beslissingstabel rollen en autorisatie | 11 | end-to-end-workflows.steps.ts | business-workflows-e2e.spec.ts | DB / Integratie | Bedrijfsketens | rolwissel werkt zonder F5 en herstel blijft beschikbaar voor iedere rol op LOCAL/TEST | Happy | 16 | Actueel |
 | E2E-H-003 | integration | end-to-end-workflows.feature | herindiening verplaatst dezelfde actie van medewerker naar Backoffice | Beslissingstabel rollen en autorisatie | 18 | end-to-end-workflows.steps.ts | business-workflows-e2e.spec.ts | DB / Integratie | Bedrijfsketens | herindiening verplaatst dezelfde actie van medewerker naar Backoffice | Happy | 16 | Actueel |
@@ -100,7 +103,7 @@
 | EQ-H-001 | api | mail-delivery.feature | factuurlock maakt queue-items aan met dry_run=true | Toestandsovergang | 5 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | factuurlock maakt queue-items aan met dry_run=true | Happy | 12 | Actueel |
 | EQ-H-002 | api | mail-delivery.feature | broker-channel stuurt alleen de factuur | API-contract + equivalentieklasse | 2 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | broker-channel stuurt alleen de factuur | Happy | 12 | Actueel |
 | EQ-H-003 | api | mail-delivery.feature | EasySalary-channel heeft attachment_policy none | Equivalentieklassen | 2 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | EasySalary-channel heeft attachment_policy none | Happy | 12 | Actueel |
-| EQ-H-022 | api | mail-delivery.feature | één factuuractie maakt drie gescheiden mailroutes met het juiste bijlagenbeleid | API-contract + equivalentieklasse | 7 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | één factuuractie maakt drie gescheiden mailroutes met het juiste bijlagenbeleid | Happy | 12 | Actueel |
+| EQ-H-022 | api | mail-delivery.feature | één factuuractie maakt drie gescheiden mailroutes met het juiste bijlagenbeleid | API-contract + equivalentieklasse | 9 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | één factuuractie maakt drie gescheiden mailroutes met het juiste bijlagenbeleid | Happy | 12 | Actueel |
 | EQ-H-004 | api | mail-delivery.feature | action=enqueue voor gelockte factuur maakt nieuwe items aan | Toestandsovergang | 6 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | action=enqueue voor gelockte factuur maakt nieuwe items aan | Happy | 12 | Actueel |
 | EQ-H-005 | api | mail-delivery.feature | action=list response bevat verplichte velden | API-contract + equivalentieklasse | 15 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | action=list response bevat verplichte velden | Happy | 12 | Actueel |
 | EQ-H-015 | api | mail-delivery.feature | Backoffice ziet veilige verzendhistorie zonder berichtinhoud | Negatieve equivalentieklasse + error guessing | 18 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | Backoffice ziet veilige verzendhistorie zonder berichtinhoud | Happy | 12 | Actueel |
@@ -268,9 +271,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 246
+- Playwright executable cases: 249
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 247
+- Totaal unieke executable cases: 250
 - Playwright features: 23
 - Database features: 1
 - Playwright steps mappings: 23

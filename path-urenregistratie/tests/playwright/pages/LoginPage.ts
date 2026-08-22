@@ -39,7 +39,7 @@ export class LoginPage {
     await expect(this.page.locator('#auth-login-submit')).toBeVisible();
   }
 
-  private async login(email: string, password: string): Promise<void> {
+  async login(email: string, password: string): Promise<void> {
     await expect(this.page.locator('#login-screen')).toBeVisible();
     await this.waitForAuthModeReady();
     await expect(this.page.locator('#auth-login-submit')).toBeEnabled();

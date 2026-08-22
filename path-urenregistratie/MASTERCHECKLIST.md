@@ -94,6 +94,18 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-22 · v0.9.109 verkeerde naam na inloggen, en één begeleidende tekst voor iedere ontvanger
+
+- [x] **Bugfix (je zag de naam van een collega).** Na inloggen als Marc stond er `Stasjo van Bakel` boven het scherm. De koppeling van het getoonde profiel aan de ingelogde gebruiker liep alleen in productiemodus; op localhost en `uren-test` blijft de demo-catalogus bewust staan en werd die koppeling overgeslagen. De selectie bleef daardoor wijzen naar het standaard gekozen demo-account. Het herstelde zichzelf niet.
+- [x] **Deel 1 van de fix:** het profiel volgt nu op elke omgeving de ingelogde sessie, gekoppeld op `dbUserId` met het sessie-e-mailadres als terugval. Er wordt alleen opnieuw gekoppeld wanneer er een andere gebruiker inlogt, zodat het bewust wisselen van medewerker op TEST blijft werken.
+- [x] **Deel 2 van de fix (vangnet):** `currentEmployee()` viel bij een onbekend id terug op de eerste actieve medewerker — zo werd "onbekend" andermans naam. `profileForRole()` vergelijkt het profiel nu met de sessie en gebruikt bij verschil de naam uit de sessie. Rol en startscherm blijven ongewijzigd; alleen de identiteit wordt gecorrigeerd. Liever geen naam dan de verkeerde naam.
+- [x] **`AUTH-H-020` en `AUTH-H-021`** doorlopen alle medewerkers en alle beheerders van het bedrijf onder test en eisen dat ieder zijn eigen naam ziet én dat geen twee accounts dezelfde naam tonen. Beide waren rood vóór de fix. **`AUTH-H-022`** legt vast dat productie niet geraakt werd, zodat het defect aantoonbaar tot de demo-hosts beperkt bleef.
+- [x] **Testbevinding:** `admin@example.invalid` hoort bij een tweede demobedrijf ("Demo BV") en `employee.demo@example.invalid` bestaat helemaal niet — migratie 005 zet een wachtwoordhash voor een adres dat nergens als gebruiker wordt aangemaakt. Een onschuldige dode verwijzing; de cases zijn op het bedrijf onder test gescoopt.
+- [x] **Eén begeleidende tekst voor iedere ontvanger.** De tekst uit het opdrachtformulier bereikte alleen de broker; boekhouding en salarisadministratie hielden bewoording die vastzat in `queue.php` en die niemand kon aanpassen. Dat leverde drie verschillende teksten voor dezelfde factuur op. De opdrachttekst wint nu voor elk kanaal, met per kanaal nog een eigen standaard voor wat leeg blijft.
+- [x] **`EQ-H-022` uitgebreid:** de drie mails van één factuur moeten hetzelfde onderwerp uit de opdracht dragen. Tegencontrole gedaan: met de oude code komen er drie verschillende onderwerpen uit.
+- [x] Schermtekst aangepast zodat duidelijk is dat de begeleidende tekst naar iedere ontvanger gaat; smoke-test daarop bijgesteld.
+- [x] Versie 0.9.108 → 0.9.109. Living Documentation: 249 Playwright-cases + 1 DB-case.
+
 ### 2026-08-22 · v0.9.106 productie toonde dry-run-jargon aan wie zijn wachtwoord kwijt was
 
 - [x] **Op productie waargenomen door Gio.** Wie op productie een resetverzoek deed, kreeg te zien: `Resetverzoek verstuurd (dry-run). Token: (zie server) · Geldig tot: onbekend`. Dat is ontwikkelaarsjargon plus een plaatsvervangende tekst, getoond aan iemand die simpelweg zijn wachtwoord kwijt is.
@@ -346,6 +358,31 @@ Deze momentopname is leidend; de regels eronder bewaren het technische en histor
 - [-] Menselijke TEST-mailacceptatie blijft open totdat broker-, boekhouding-, salaris-,
   wachtwoordherstel- en uitnodigingsmail inhoudelijk zijn gecontroleerd, inclusief de echte
   factuur- en klanturenstaat-PDF waar die route een bijlage vereist.
+
+#### Zo voer je de mailacceptatie uit (Fase 12)
+
+De acceptatieconsole en de echte flow bewijzen **niet hetzelfde**. Doe ze allebei, in deze volgorde.
+
+**Stap 1 - de vijf knoppen in Instellingen -> Acceptatietest e-mail.** Dit bewijst dat SMTP werkt, dat
+de ontvangers en routering kloppen, dat het bijlagemechanisme werkt en dat de mailteksten renderen.
+De meegestuurde PDF is een **gegenereerde testbijlage** (`ACCEPTATIETEST-NIET-BOEKEN-...pdf`, met vaste
+dummygegevens), dus dit zegt niets over de juistheid van een echte factuur.
+
+**Stap 2 - de echte flow op TEST.** Uren indienen, goedkeuren, factuur maken en versturen. TEST leidt
+alles om naar de vaste sink, dus de echte factuur-PDF komt in de eigen postbus binnen. Pas hier
+controleer je bedrag, btw, factuurnummer, bedrijfsgegevens en IBAN.
+
+**Stap 3 - de klanturenstaat apart.** Die gaat niet mee met de factuurmail: de brokerroute vanuit een
+factuur stuurt uitsluitend de factuur mee, en de klanturenstaat heeft een eigen verzendflow. De broker
+krijgt in de praktijk dus twee losse mails. Test die route met een echt geupload document.
+
+**Valkuil bij de twee beveiligingsmails.** Anders dan de bijlagen is de resetlink **echt**. Op TEST wist
+elke druk op die knop eerst alle bestaande tokens van dat account, dus een tweede druk maakt de link uit
+de eerste mail stil ongeldig - en die oude mail ziet er identiek uit. Een link is bovendien 2 uur geldig
+(`AUTH_PASSWORD_RESET_TTL_HOURS`) en eenmalig. Dus: een keer drukken, de nieuwste mail pakken, meteen
+gebruiken. De knop herstelt het wachtwoord van het speciale acceptatieaccount, niet van het eigen
+beheerdersaccount.
+
 - [-] De verzendadministratie moet nog productklaar compact worden gehouden (standaard een korte
   recente lijst, uitbreidbaar zonder wachtwoordlinks of volledige berichtinhoud te tonen).
 - [x] TEST-mail kan in de beheer-UI uitsluitend binnen de reeds beveiligde TEST-sandbox worden

@@ -155,6 +155,32 @@ iemand die zijn wachtwoord kwijt is. De juiste conditie is `dry_run && token`: p
 token als er er een is. Wie een omgevingsvlag in de UI gebruikt, moet nagaan wat die vlag op
 productie betekent, niet alleen wat hij lokaal doet.
 
+### Identiteit komt uit de sessie, niet uit de catalogus
+
+De demo-hosts (localhost en `uren-test`) houden de volledige demo-catalogus bewust in stand. De
+koppeling van het getoonde profiel aan de ingelogde gebruiker liep echter alleen wanneer de
+servercatalogus leidend was, dus juist op die hosts niet. De selectie bleef daardoor wijzen naar het
+standaard gekozen demo-account: inloggen als Marc leverde `Stasjo van Bakel` op.
+
+Twee regels gelden nu. Ten eerste volgt het profiel op **elke** omgeving de ingelogde sessie,
+gekoppeld op `dbUserId` met het sessie-e-mailadres als terugval, en wordt alleen opnieuw gekoppeld
+wanneer de ingelogde gebruiker wijzigt — anders zou een achtergrondverversing een bewuste rolwissel
+op TEST ongedaan maken. Ten tweede mag een terugval nooit een andere persoon opleveren:
+`currentEmployee()` pakt bij een onbekend id de eerste actieve medewerker, en zo werd "onbekend"
+andermans naam. `profileForRole()` vergelijkt het profiel daarom met de sessie en gebruikt bij
+verschil de naam uit de sessie. Geen naam is acceptabel, de verkeerde naam niet.
+
+### Eén begeleidende tekst voor iedere ontvanger
+
+De tekst uit het opdrachtformulier bereikte alleen het brokerkanaal; boekhouding en
+salarisadministratie hielden bewoording die vastzat in `queue.php`. Eén factuur leverde daardoor drie
+verschillende teksten op, waarvan er maar één aanpasbaar was. `$templateFor($channel)` laat de
+opdrachttekst nu voor elk kanaal winnen, met per kanaal nog een eigen standaard voor wat leeg blijft.
+Alle sjabloonvariabelen komen uit één gedeelde `$vars`, dus een tekst werkt in elk kanaal.
+
+Let op bij het toevoegen van een kanaal: `mail_assert_vars()` laat de verzending falen op een
+variabele die niet bestaat. Een tekstveld zonder die controle kan dus de facturatie blokkeren.
+
 ### Instellingen die de server niet kent
 
 Niet elk veld in Instellingen heeft een serverkolom. `settings.php` bewaart de bedrijfsidentiteit,
