@@ -246,3 +246,30 @@ een tweede, afwijkende implementatie van dezelfde stappen te onderhouden.
 - PROD toont de werkelijke serverstatus, maar heeft geen gewone GUI-schakelaar. Activeren of uitschakelen blijft een gecontroleerde beheerhandeling in de productieconfiguratie.
 - De statusbadge in de kop toont daarom expliciet `Lokale mailpreview uit`, `Lokale mailpreview
   actief`, `TEST-mail actief`, `TEST-mail gepauzeerd`, `E-mail uitgeschakeld` of `E-mail actief`.
+
+# Toegang voor een nieuwe collega
+
+Er is geen zelfregistratie. Een beheerder maakt het account aan in Teambeheer en vinkt daarbij
+`Persoonlijke uitnodiging per e-mail versturen` aan. De uitgenodigde persoon ontvangt een
+uitnodigingsmail met een persoonlijke link die twee uur geldig is en eenmalig kan worden gebruikt.
+Via die link stelt de persoon zelf een wachtwoord van minimaal twaalf tekens in en logt daarna in
+met het eigen e-mailadres. Zolang er nog geen wachtwoord is ingesteld toont Teambeheer
+`Toegang in afwachting`.
+
+Na het instellen verschijnt een expliciete bevestiging met een knop `Nu inloggen`. Het scherm
+schakelt niet meer vanzelf om: een leeg formulier was voorheen het enige zichtbare resultaat van een
+geslaagde actie en las daardoor als "er gebeurde niets". Dezelfde bevestiging geldt voor beide
+rollen; `PWD-H-013` doorloopt de volledige keten voor zowel een beheerder als een medewerker.
+
+Is een link verlopen of kwijt, dan stuurt de beheerder een nieuwe via `Wachtwoord resetten` in
+Teambeheer, of vraagt de persoon zelf een link aan via `Wachtwoord vergeten`. Elke nieuwe link maakt
+de vorige ongeldig.
+
+# Mededelingen
+
+Een beheerder plaatst een mededeling voor iedereen, een klantgroep of geselecteerde medewerkers. Een
+concept blijft uitsluitend bij beheerders en veroorzaakt geen melding of e-mail; alleen een concept
+mag definitief worden verwijderd. Een verzonden mededeling kan uitsluitend met een verplichte reden
+worden ingetrokken, en pas een ingetrokken mededeling kan bij medewerkers worden verborgen. Titel,
+bericht en minimaal één ontvanger zijn verplicht bij verzenden. Medewerkers kunnen zelf geen
+mededelingen versturen. De cases `ANN-H-001` tot en met `ANN-N-006` bewaken deze regels.

@@ -339,7 +339,7 @@ test('[E2E-H-006] eenmalige wachtwoordlink geeft toegang en blokkeert hergebruik
       await page.locator('#auth-reset-new-password').fill(temporaryPassword);
       await page.locator('#auth-reset-confirm-password').fill(temporaryPassword);
       await page.locator('#auth-reset-complete-submit').click();
-      await expect(page.locator('#auth-reset-complete-feedback')).toHaveText('Je wachtwoord is ingesteld. Je kunt nu inloggen.');
+      await expect(page.locator('#auth-reset-complete-feedback')).toContainText('Je wachtwoord is ingesteld');
       changed = true;
     });
 
@@ -347,6 +347,11 @@ test('[E2E-H-006] eenmalige wachtwoordlink geeft toegang en blokkeert hergebruik
       const reused = await postAuth(page, '/server/auth/reset-password.php', { token, new_password: temporaryPassword });
       expect(reused.status).toBe(409);
       expect(reused.body.error).toBe('token-already-used');
+
+      // The screen no longer switches on its own after a few seconds; the
+      // person confirms with the explicit button instead.
+      await page.locator('#auth-reset-goto-login').click();
+      await expect(page.locator('#auth-login-form')).toBeVisible();
 
       await page.locator('#auth-login-email').fill(appConfig.employeeEmail);
       await page.locator('#auth-login-password').fill(temporaryPassword);

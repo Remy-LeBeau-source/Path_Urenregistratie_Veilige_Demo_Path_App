@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 234 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 240 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 234 unieke case-ID's
+- Playwright executable cases: 240 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 235 unieke case-ID's
-- Playwright features: 22
+- Totaal executable cases: 241 unieke case-ID's
+- Playwright features: 23
 - Database features: 1
-- Playwright steps mappings: 22
+- Playwright steps mappings: 23
 - Database steps mappings: 1
-- Uitvoeringen: 239
-- Niet-mobile projectuitvoeringen: 229
+- Uitvoeringen: 245
+- Niet-mobile projectuitvoeringen: 235
 - Mobile functionele cases: 5
 - Pixel 7 / Chromium-uitvoeringen: 5
 - iPhone 13 / WebKit-uitvoeringen: 5
 
-De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 234 Playwright-functionele cases in totaal 239 resultaten op: 229 + (5 x 2) = 239.
+De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 240 Playwright-functionele cases in totaal 245 resultaten op: 235 + (5 x 2) = 245.
 
 ## Documentatieketen
 
@@ -110,7 +110,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 234 Playwrig
 - [E2E-H-003] herindiening verplaatst dezelfde actie van medewerker naar Backoffice — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 18
 - [E2E-H-004] goedkeuring vervangt urencontrole door factuurverzending voor hetzelfde dossier — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
 - [E2E-H-005] klanturenstaatcontrole wordt een brokeractie zonder taakverlies — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
-- [E2E-H-006] eenmalige wachtwoordlink geeft toegang en blokkeert hergebruik — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
+- [E2E-H-006] eenmalige wachtwoordlink geeft toegang en blokkeert hergebruik — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 9
 - [E2E-H-007] taakgestuurde goedkeuring blijft na serververversing afgerond — Techniek: Toestandsovergang · Assertions: 5
 - [E2E-H-008] urencontrole vraagt na oude versie opnieuw op en maakt daarna toch goedkeuren af — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 
@@ -267,6 +267,19 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 234 Playwrig
 - [NOT-H-010] Herstel zet drie lokale basismeldingen terug en beschermt ze tegen serveroverschrijving — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 15
 - [NOT-H-011] medewerker ziet drie echte mededelingen en tellers lopen gelijk terug naar nul — Techniek: Grenswaardenanalyse · Assertions: 10
 
+### Mededelingen versturen, intrekken en verbergen
+
+- Feature: `tests/playwright/features/announcements.feature`
+- Source: `tests/playwright/announcements.spec.ts`
+- Cases: 6
+
+- [ANN-H-001] beheerder verstuurt een mededeling aan een gekozen medewerker — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
+- [ANN-H-002] een concept blijft intern en kan daarna definitief worden verwijderd — Techniek: API-contract + equivalentieklasse · Assertions: 7
+- [ANN-H-003] intrekken met reden en daarna verbergen bij medewerkers — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
+- [ANN-N-004] intrekken zonder reden wordt geweigerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 3
+- [ANN-N-005] verzenden zonder titel, bericht of ontvanger wordt geweigerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
+- [ANN-N-006] een medewerker kan zelf geen mededeling versturen en anoniem is alles dicht — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2
+
 ### Wachtwoordherstel en misbruikbeveiliging
 
 - Feature: `tests/playwright/features/password-reset.feature`
@@ -287,7 +300,7 @@ De 5 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 234 Playwrig
 - [PWD-N-007] login wordt geblokkeerd na 5 mislukte pogingen (rate-limit) — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
 - [PWD-N-008] request-reset weigert GET — Techniek: Toestandsovergang · Assertions: 2
 - [PWD-N-009] request-reset met leeg e-mailadres geeft 400 — Techniek: Toestandsovergang · Assertions: 2
-- [PWD-H-012] een aangevraagde reset wordt ook echt verzonden, niet alleen in de wachtrij gezet — Techniek: Toestandsovergang · Assertions: 5
+- [PWD-H-012] een aangevraagde reset wordt ook echt verzonden, niet alleen in de wachtrij gezet — Techniek: Toestandsovergang · Assertions: 24
 
 ### Maandperiodes beheren
 

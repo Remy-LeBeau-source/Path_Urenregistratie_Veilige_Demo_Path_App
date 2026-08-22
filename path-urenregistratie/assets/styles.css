@@ -660,6 +660,9 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .hero-owner-badge:hover { border-color: rgba(255,255,255,.55); transform: translateY(-1px); }
 .hero-owner-badge:focus-visible { outline: 3px solid rgba(255,255,255,.55); outline-offset: 2px; }
 .safe-domain-note { margin: 15px 0 5px; border-radius: 11px; background: var(--green-light); color: var(--teal); font-size: 10px; line-height: 1.5; padding: 11px 13px; }
+/* A cleared form is the only other sign that setting a password worked, which
+   reads as "nothing happened" -- so confirm it unmistakably. */
+#auth-reset-complete-feedback.is-success { margin: 14px 0 12px; border-radius: 12px; border: 1px solid var(--mint); background: var(--green-light); color: var(--teal); font-size: 13px; font-weight: 700; line-height: 1.5; padding: 14px 16px; }
 .team-account-local-notice { display: grid; gap: 4px; margin: 10px 0 0; border-radius: 11px; background: #fff5e6; color: #8a5a12; font-size: 11px; line-height: 1.5; padding: 10px 12px; }
 .team-account-local-notice strong { color: #7a4d0a; }
 .team-account-local-notice .text-button { justify-self: start; margin-top: 2px; color: #7a4d0a; font-weight: 800; text-decoration: underline; }

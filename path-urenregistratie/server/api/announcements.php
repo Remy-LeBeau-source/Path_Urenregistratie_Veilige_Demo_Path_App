@@ -5,6 +5,26 @@ declare(strict_types=1);
 require_once __DIR__ . '/../auth/session.php';
 require_once __DIR__ . '/../security/csrf.php';
 
+/**
+ * Truncate without depending on the mbstring extension.
+ *
+ * Sending an announcement used to call mb_substr() directly, so on any PHP
+ * build without mbstring the whole action died with "Call to undefined
+ * function" -- announcements could not be sent at all. simple_pdf.php already
+ * guards its mb_ call the same way. A plain substr() would be unsafe here
+ * because it can cut a multi-byte character in half, so fall back to a
+ * UTF-8-aware regex instead.
+ */
+function announcement_truncate(string $text, int $maxCharacters): string
+{
+    if (function_exists('mb_substr')) {
+        return mb_substr($text, 0, $maxCharacters);
+    }
+
+    $truncated = preg_replace('/^(.{0,' . $maxCharacters . '}).*$/su', '$1', $text);
+    return is_string($truncated) ? $truncated : substr($text, 0, $maxCharacters);
+}
+
 header('Content-Type: application/json; charset=utf-8');
 auth_apply_cors_headers(auth_try_load_raw_config(), 'GET, POST, OPTIONS', 'Content-Type, X-CSRF-Token');
 
@@ -268,7 +288,7 @@ if ($action === 'send' || $action === 'save_draft') {
                     ':uid'     => (int)$recipientUserId,
                     ':aid'     => $announcementId,
                     ':title'   => $title,
-                    ':message' => mb_substr($message, 0, 400),
+                    ':message' => announcement_truncate($message, 400),
                 ]);
             }
         }
@@ -276,6 +296,9 @@ if ($action === 'send' || $action === 'save_draft') {
         $pdo->commit();
     } catch (Throwable $e) {
         $pdo->rollBack();
+        // The response stays generic on purpose, but silently discarding the
+        // cause made a failing save impossible to diagnose.
+        error_log('Announcement save failed: ' . $e->getMessage());
         auth_send_json(['ok' => false, 'error' => 'db-error', 'message' => 'Could not save announcement.'], 500);
     }
 
@@ -369,8 +392,25 @@ if ($action === 'delete_draft') {
         auth_send_json(['ok' => false, 'error' => 'invalid-status', 'message' => 'Only drafts can be deleted.'], 409);
     }
 
-    $pdo->prepare("DELETE FROM announcements WHERE id = :id AND company_id = :cid")
-        ->execute([':id' => $announcementId, ':cid' => $companyId]);
+    // Rows in announcement_recipients (and any notification referencing this
+    // draft) hold foreign keys, so deleting the announcement first threw an
+    // uncaught PDOException -- the caller got a 500 with a full stack trace
+    // instead of a usable answer, and nothing was deleted. Clear the children
+    // first, inside one transaction so a partial delete cannot survive.
+    $pdo->beginTransaction();
+    try {
+        $pdo->prepare('DELETE FROM announcement_recipients WHERE announcement_id = :id')
+            ->execute([':id' => $announcementId]);
+        $pdo->prepare('DELETE FROM notifications WHERE announcement_id = :id AND company_id = :cid')
+            ->execute([':id' => $announcementId, ':cid' => $companyId]);
+        $pdo->prepare('DELETE FROM announcements WHERE id = :id AND company_id = :cid')
+            ->execute([':id' => $announcementId, ':cid' => $companyId]);
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        error_log('Announcement draft delete failed: ' . $e->getMessage());
+        auth_send_json(['ok' => false, 'error' => 'db-error', 'message' => 'Could not delete draft.'], 500);
+    }
 
     auth_send_json(['ok' => true, 'action' => 'delete_draft', 'deleted' => 1]);
 }

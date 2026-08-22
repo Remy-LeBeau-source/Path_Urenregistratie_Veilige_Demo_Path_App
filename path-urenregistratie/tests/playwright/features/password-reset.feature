@@ -121,7 +121,9 @@ Feature: Wachtwoordherstel en misbruikbeveiliging
   @happy
   Scenario: [PWD-H-012] een aangevraagde reset wordt ook echt verzonden, niet alleen in de wachtrij gezet
     # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 5
+    # Aantoonbare Playwright-assertions in deze case: 24
     Given de resetservice de verzendfunctie beschikbaar heeft
-    When de flow voor PWD-H-012 wordt uitgevoerd
     Then wordt een gequeuede reset direct gedispatcht, na de commit en zonder de token ongeldig te maken
+    When de uitgenodigde persoon de eenmalige link opent en een wachtwoord instelt
+    Then verschijnt een duidelijke bevestiging met een knop om in te loggen
+    And die knop brengt de persoon naar het inlogscherm

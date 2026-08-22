@@ -89,6 +89,17 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-22 · v0.9.102 volledige applicatiescan: mededelingen waren stuk, toegangsketen nu end-to-end gedekt
+
+- [x] **Bugfix (mededelingen volledig onbruikbaar):** `announcements.php` kapte de notificatietekst af met een directe `mb_substr()`-aanroep. Op een PHP-installatie zonder de `mbstring`-extensie — zoals de lokale ontwikkelomgeving — liep de hele verzendactie stuk op `Call to undefined function`, waardoor er géén enkele mededeling verstuurd kon worden. Vervangen door `announcement_truncate()`, die `mb_substr()` gebruikt waar beschikbaar en anders terugvalt op een UTF-8-bewuste regex zodat een meerbyte-teken nooit halverwege wordt afgekapt. Dit is dezelfde guard-aanpak die `simple_pdf.php` al hanteerde.
+- [x] **Bugfix (concept verwijderen crashte):** de actie wiste alleen de `announcements`-rij terwijl `announcement_recipients` en `notifications` foreign keys houden. De aanroeper kreeg een onafgevangen `PDOException` als HTTP 500 **inclusief stacktrace en bestandspaden**, en er werd niets verwijderd. Ruimt nu eerst de gekoppelde ontvangers en meldingen op binnen één transactie, met een generieke foutmelding naar buiten en de oorzaak naar het serverlog.
+- [x] **Diagnostiek:** de opslagactie voor mededelingen ving fouten af en gooide de oorzaak weg, waardoor een mislukte opslag niet te onderzoeken was. De oorzaak gaat nu naar het serverlog; de externe melding blijft bewust generiek.
+- [x] **Grootste testgat gedicht:** Mededelingen had géén enkele geautomatiseerde case terwijl de acceptatielijst er acht punten over bevat. Nieuw bestand `announcements.spec.ts` met `ANN-H-001` t/m `ANN-N-006`: versturen aan gekozen ontvanger, concept blijft intern en is verwijderbaar, intrekken met verplichte reden gevolgd door verbergen, intrekken zonder reden geweigerd, ontbrekende titel/bericht/ontvanger apart gemeld, en afscherming voor medewerkers en anonieme aanroepen.
+- [x] **Toegangsketen end-to-end gedekt:** `PWD-H-013` doorloopt voor **beide rollen** precies de route van een nieuwe collega: beheerder maakt het account aan met uitnodiging, de uitnodiging wordt daadwerkelijk verzonden, de persoon stelt via de eenmalige link een wachtwoord in, krijgt een expliciete bevestiging en kan daarna echt inloggen.
+- [x] **UX:** na het instellen van een wachtwoord was een leeg formulier het enige zichtbare resultaat, wat las als "er gebeurde niets". Er verschijnt nu een duidelijke bevestiging met een knop `Nu inloggen`; het scherm schakelt niet meer vanzelf om na vier seconden.
+- [x] Smoke-test uitgebreid met drie nieuwe bewakingen: verzending ná de commit bij herstelmail, de mbstring-guard, en het opruimen van gekoppelde rijen vóór het verwijderen van een concept. FO en TO bijgewerkt met de toegangsketen en beide mededelingen-fixes.
+- [x] Versie 0.9.101 → 0.9.102. Living Documentation: 240 Playwright-cases + 1 DB-case.
+
 ### 2026-08-22 · v0.9.101 wachtwoordherstelmail werd wel klaargezet maar nooit verzonden
 
 - [x] **Bugfix (blokkeerde de mailacceptatie):** een wachtwoordherstel- of uitnodigingsverzoek zette de mail wél in `email_deliveries`, maar verstuurde hem als enige route nooit. Op TEST bleven die berichten daardoor op status `queued` staan met `attempt_count = 0`; er kwam nooit een resetlink aan. Vastgesteld door de verzendadministratie van TEST uit te lezen: drie resetpogingen van 03:41–03:42 stonden `queued`, terwijl broker-, factuur- en salarisberichten uit dezelfde periode gewoon `sent` waren.
