@@ -54,6 +54,16 @@ extra releasepipeline naast `32544919862` start.
 
 ## Wat is opgelost
 
+### Versie 0.9.114 — een stil mislukt wachtwoordherstel
+
+- **`E2E-H-006`** wijzigt een gedeeld demo-wachtwoord. Het herstel in de `finally` was
+  voorwaardelijk op een token dat de throttle (drie per kwartier) kan weigeren; dan werd er stil
+  niets hersteld en viel alles daarna om met 401. Het herstel faalt nu hard.
+- **Zelfde patroon, echte omgeving:** de TEST-uitrol strandde vandaag twee keer op
+  `Public TEST login failed for administrator`. Wie een wachtwoord op TEST wijzigt, moet de
+  CI-secret `PLAYWRIGHT_ADMIN_PASSWORD` meenemen — of het wachtwoord terugzetten.
+- FO aangevuld met de drie nieuwste cases.
+
 ### Versie 0.9.109 — verkeerde naam na inloggen, en één begeleidende tekst
 
 Door Gio gemeld: inloggen als Stasjo, daarna kwam hij terug in het menu en zag `Welkom Marc`.

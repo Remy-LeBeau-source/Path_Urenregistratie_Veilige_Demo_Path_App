@@ -360,13 +360,18 @@ test('[E2E-H-006] eenmalige wachtwoordlink geeft toegang en blokkeert hergebruik
     });
   } finally {
     if (changed) {
+      // This case changes the password of a SHARED demo account. If the restore
+      // silently does not happen -- the reset endpoint throttles to three requests
+      // per fifteen minutes, and then returns no token -- every later case that logs
+      // in as this employee fails with an unexplained 401. That cost hours once.
+      // So a failed restore has to fail loudly, here, instead of poisoning the run.
       const restore = await postAuth(page, '/server/auth/request-reset.php', { email: appConfig.employeeEmail });
-      if (typeof restore.body.token === 'string') {
-        await postAuth(page, '/server/auth/reset-password.php', {
-          token: restore.body.token,
-          new_password: originalPassword,
-        });
-      }
+      expect(typeof restore.body.token, 'herstel van het gedeelde wachtwoord kreeg geen token (throttle?)').toBe('string');
+      const restored = await postAuth(page, '/server/auth/reset-password.php', {
+        token: restore.body.token as string,
+        new_password: originalPassword,
+      });
+      expect(restored.body.ok, 'het gedeelde wachtwoord moet zijn teruggezet').toBe(true);
     }
   }
 });
