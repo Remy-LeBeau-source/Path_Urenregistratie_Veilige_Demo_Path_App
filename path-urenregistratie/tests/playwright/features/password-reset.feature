@@ -117,3 +117,11 @@ Feature: Wachtwoordherstel en misbruikbeveiliging
     Given wachtwoordherstel en misbruikbeveiliging is voorbereid
     When de flow voor PWD-N-009 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat request-reset met leeg e-mailadres geeft 400
+
+  @happy
+  Scenario: [PWD-H-012] een aangevraagde reset wordt ook echt verzonden, niet alleen in de wachtrij gezet
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given de resetservice de verzendfunctie beschikbaar heeft
+    When de flow voor PWD-H-012 wordt uitgevoerd
+    Then wordt een gequeuede reset direct gedispatcht, na de commit en zonder de token ongeldig te maken

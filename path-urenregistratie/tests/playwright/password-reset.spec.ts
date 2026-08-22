@@ -366,4 +366,29 @@ test.describe('password reset api', () => {
     expect(response.body.error).toBe('invalid-payload');
     await ctx.dispose();
   });
+
+  test('[PWD-H-012] een aangevraagde reset wordt ook echt verzonden, niet alleen in de wachtrij gezet', async () => {
+    // Regression: every other queueing path dispatched immediately in the
+    // guarded TEST sandbox, but the reset/invitation path only enqueued. On
+    // TEST that left reset mails stuck at status "queued" with zero attempts,
+    // so no reset link ever arrived.
+    const source = await readFile(
+      join(process.cwd(), 'server', 'auth', 'password-reset-service.php'),
+      'utf8'
+    );
+
+    await test.step('Given de resetservice de verzendfunctie beschikbaar heeft', async () => {
+      expect(source).toContain("require_once __DIR__ . '/../mail/dispatch.php'");
+    });
+
+    await test.step('Then wordt een gequeuede reset direct gedispatcht, na de commit en zonder de token ongeldig te maken', async () => {
+      expect(source).toContain('mail_dispatch_created($pdo, [[\'id\' => $deliveryId]], $config)');
+      const dispatchIndex = source.indexOf('mail_dispatch_created(');
+      const commitIndex = source.indexOf('$pdo->commit();');
+      expect(commitIndex).toBeGreaterThan(0);
+      expect(dispatchIndex).toBeGreaterThan(commitIndex);
+      // A failing send must not throw away an already-issued token.
+      expect(source).toContain('Password-reset mail could not be dispatched');
+    });
+  });
 });

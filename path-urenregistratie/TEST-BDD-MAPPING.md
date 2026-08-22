@@ -150,8 +150,8 @@
 | INV-H-011 | ui | invoices.feature | beperkte factuur-inhoud: alle velden in server-PDF inclusief recipient/project/uren/betaling | Equivalentieklassen | 3 | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | beperkte factuur-inhoud: alle velden in server-PDF inclusief recipient/project/uren/betaling | Happy | 11 | Actueel |
 | INV-H-012 | ui | invoices.feature | gesloten factuur PDF bevat alle content sections (recipient, project, uren/tarief) | Equivalentieklassen | 9 | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | gesloten factuur PDF bevat alle content sections (recipient, project, uren/tarief) | Happy | 11 | Actueel |
 | MOB-H-001 | ui | mobile.feature | mobiele login navigatie en dashboard blijven volledig bereikbaar | Responsive viewport + end-to-end use-case | 31 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | Veilige toegang en sessies | Happy | 15 | Actueel |
-| MOB-H-002 | ui | mobile.feature | mobiele medewerker kan concepturen opslaan indienen en documentupload bereiken | Responsive viewport + end-to-end use-case | 15 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | Uren registreren en indienen | Happy | 15 | Actueel |
-| MOB-H-003 | ui | mobile.feature | mobiele correctie herindiening en administratieve goedkeuring zijn bereikbaar | Responsive viewport + end-to-end use-case | 12 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | Correctie en goedkeuring | Happy | 15 | Actueel |
+| MOB-H-002 | ui | mobile.feature | mobiele medewerker kan concepturen opslaan indienen en documentupload bereiken | Responsive viewport + end-to-end use-case | 14 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | Uren registreren en indienen | Happy | 15 | Actueel |
+| MOB-H-003 | ui | mobile.feature | mobiele correctie herindiening en administratieve goedkeuring zijn bereikbaar | Responsive viewport + end-to-end use-case | 10 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | Correctie en goedkeuring | Happy | 15 | Actueel |
 | MOB-N-004 | ui | mobile.feature | mobiele facturen touch targets en modals blijven binnen viewport | Responsive viewport + end-to-end use-case | 13 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | mobiele facturen touch targets en modals blijven binnen viewport | Negative | 15 | Actueel |
 | MOB-H-005 | ui | mobile.feature | mobiele verzendadministratie blijft leesbaar en toont geen geheime inhoud | Responsive viewport + end-to-end use-case | 15 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | mobiele verzendadministratie blijft leesbaar en toont geen geheime inhoud | Happy | 15 | Actueel |
 | NOT-H-001 | api | notifications.feature | ingelogde gebruiker kan notificaties ophalen | API-contract + equivalentieklasse | 5 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | ingelogde gebruiker kan notificaties ophalen | Happy | 15 | Actueel |
@@ -179,6 +179,7 @@
 | PWD-N-007 | security | password-reset.feature | login wordt geblokkeerd na 5 mislukte pogingen (rate-limit) | Negatieve equivalentieklasse + error guessing | 2 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
 | PWD-N-008 | security | password-reset.feature | request-reset weigert GET | Toestandsovergang | 2 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
 | PWD-N-009 | security | password-reset.feature | request-reset met leeg e-mailadres geeft 400 | Toestandsovergang | 2 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
+| PWD-H-012 | security | password-reset.feature | een aangevraagde reset wordt ook echt verzonden, niet alleen in de wachtrij gezet | Toestandsovergang | 5 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
 | PER-H-001 | api | period-management.feature | admin kan periodes ophalen met overzicht | Beslissingstabel rollen en autorisatie | 6 | period-management.steps.ts | period-management.spec.ts | API | Periodebeheer | admin kan periodes ophalen met overzicht | Happy | 15 | Actueel |
 | PER-H-002 | api | period-management.feature | admin kan periode sluiten en heropenen | Beslissingstabel rollen en autorisatie | 9 | period-management.steps.ts | period-management.spec.ts | API | Periodebeheer | admin kan periode sluiten en heropenen | Happy | 15 | Actueel |
 | PER-N-003 | api | period-management.feature | anonieme gebruiker krijgt 401 op periods | Beslissingstabel rollen en autorisatie | 1 | period-management.steps.ts | period-management.spec.ts | API | Periodebeheer | anonieme gebruiker krijgt 401 op periods | Negative | 15 | Actueel |
@@ -255,9 +256,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 233
+- Playwright executable cases: 234
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 234
+- Totaal unieke executable cases: 235
 - Playwright features: 22
 - Database features: 1
 - Playwright steps mappings: 22
