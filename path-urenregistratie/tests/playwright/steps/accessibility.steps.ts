@@ -20,3 +20,6 @@ When("er met Tab door het formulier wordt genavigeerd");
 Given("de administrator is ingelogd");
 Then("heeft elke hoofdnavigatieknop een herkenbare, unieke naam");
 When("de eerste hoofdnavigatieknop via het toetsenbord wordt bediend");
+Given("toegankelijkheid en toetsenbordbediening is voorbereid");
+When("de flow voor A11Y-H-003 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat lopende tekst blijft op een breed scherm leesbaar van regellengte");

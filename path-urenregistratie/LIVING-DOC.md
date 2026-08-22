@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 258 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 261 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 258 unieke case-ID's
+- Playwright executable cases: 261 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 259 unieke case-ID's
+- Totaal executable cases: 262 unieke case-ID's
 - Playwright features: 23
 - Database features: 1
 - Playwright steps mappings: 23
 - Database steps mappings: 1
-- Uitvoeringen: 265
-- Niet-mobile projectuitvoeringen: 251
-- Mobile functionele cases: 7
-- Pixel 7 / Chromium-uitvoeringen: 7
-- iPhone 13 / WebKit-uitvoeringen: 7
+- Uitvoeringen: 270
+- Niet-mobile projectuitvoeringen: 252
+- Mobile functionele cases: 9
+- Pixel 7 / Chromium-uitvoeringen: 9
+- iPhone 13 / WebKit-uitvoeringen: 9
 
-De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 258 Playwright-functionele cases in totaal 265 resultaten op: 251 + (7 x 2) = 265.
+De 9 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 261 Playwright-functionele cases in totaal 270 resultaten op: 252 + (9 x 2) = 270.
 
 ## Documentatieketen
 
@@ -33,10 +33,11 @@ De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 258 Playwrig
 
 - Feature: `tests/playwright/features/accessibility.feature`
 - Source: `tests/playwright/accessibility.spec.ts`
-- Cases: 2
+- Cases: 3
 
 - [A11Y-H-001] loginformulier is volledig met het toetsenbord bruikbaar en correct gelabeld — Techniek: Toegankelijkheidsinspectie + toetsenbord-use-case · Assertions: 6
 - [A11Y-H-002] admin-dashboard hoofdnavigatie is toetsenbordbereikbaar met herkenbare namen — Techniek: Toegankelijkheidsinspectie + toetsenbord-use-case · Assertions: 4
+- [A11Y-H-003] lopende tekst blijft op een breed scherm leesbaar van regellengte — Techniek: Toegankelijkheidsinspectie + toetsenbord-use-case · Assertions: 2
 
 ### Organisatie-instellingen beheren
 
@@ -252,7 +253,7 @@ De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 258 Playwrig
 
 - Feature: `tests/playwright/features/mobile.feature`
 - Source: `tests/playwright/mobile-ui.spec.ts`
-- Cases: 7
+- Cases: 9
 
 - [MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikbaar — Techniek: Responsive viewport + end-to-end use-case · Assertions: 31
 - [MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documentupload bereiken — Techniek: Responsive viewport + end-to-end use-case · Assertions: 14
@@ -261,6 +262,8 @@ De 7 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 258 Playwrig
 - [MOB-H-005] mobiele verzendadministratie blijft leesbaar en toont geen geheime inhoud — Techniek: Responsive viewport + end-to-end use-case · Assertions: 15
 - [MOB-H-006] een uitgenodigde collega stelt op de telefoon een wachtwoord in en ziet een duidelijke bevestiging — Techniek: Responsive viewport + end-to-end use-case · Assertions: 15
 - [MOB-H-007] een medewerker leest mededelingen op de telefoon zonder afgekapte tekst — Techniek: Responsive viewport + end-to-end use-case · Assertions: 4
+- [MOB-H-008] elk hoofdscherm blijft op een telefoon leesbaar en bedienbaar — Techniek: Responsive viewport + end-to-end use-case · Assertions: 5
+- [MOB-H-009] instellingen en urenstaat zijn op een telefoon te overzien — Techniek: Responsive viewport + end-to-end use-case · Assertions: 9
 
 ### Meldingen beheren
 

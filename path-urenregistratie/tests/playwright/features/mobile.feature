@@ -66,3 +66,20 @@ Feature: Mobiele gebruikerservaring
     Given een ingelogde medewerker op de telefoon
     When de medewerker de mededelingen opent
     Then is de volledige mededeling leesbaar en scrollt de pagina niet zijwaarts
+
+  @happy
+  Scenario: [MOB-H-008] elk hoofdscherm blijft op een telefoon leesbaar en bedienbaar
+    # Testtechniek: Responsive viewport + end-to-end use-case
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given mobiele gebruikerservaring is voorbereid
+    When de flow voor MOB-H-008 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat elk hoofdscherm blijft op een telefoon leesbaar en bedienbaar
+
+  @happy
+  Scenario: [MOB-H-009] instellingen en urenstaat zijn op een telefoon te overzien
+    # Testtechniek: Responsive viewport + end-to-end use-case
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given de instellingen beginnen dichtgeklapt
+    When een paneel wordt geopend, verschijnt de inhoud
+    And de urenstaat past binnen het scherm zonder zijwaarts schuiven
+    Then wordt met Playwright-assertions bevestigd dat instellingen en urenstaat zijn op een telefoon te overzien
