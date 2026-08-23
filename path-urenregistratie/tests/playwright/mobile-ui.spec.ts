@@ -998,3 +998,153 @@ test('[MOB-H-010] een veeg over het scherm scrollt de pagina echt', async ({ pag
       .toBeGreaterThan(200);
   });
 });
+
+test('[MOB-H-011] geen enkele tekst op een telefoon staat onder de leesbare ondergrens', async ({ page }) => {
+  // Doorgemeten op 412px: 89 teksten stonden onder 11px, verspreid over zes
+  // schermen, met de kleinste op 8px. Die komen uit basisregels die op desktop
+  // bewust klein zijn -- daar heb je ruimte -- maar op een telefoon niet meer te
+  // lezen zijn. Dat was precies de klacht: alles moet leesbaar zijn.
+  //
+  // MOB-H-008 meet tikdoelen en afgesneden inhoud, niet de tekstgrootte. Deze case
+  // houdt die ondergrens vast, over alle beheerdersschermen heen.
+  test.setTimeout(180_000);
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsAdmin();
+
+  const meetScherm = async () => page.evaluate(() => {
+    const zichtbaar = (el: Element) => {
+      const r = el.getBoundingClientRect();
+      return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden';
+    };
+    const actief = document.querySelector('.view.is-active');
+    const teKlein: string[] = [];
+    if (!actief) return teKlein;
+
+    actief.querySelectorAll('*').forEach(el => {
+      if (!zichtbaar(el) || el.children.length > 0) return;
+      const tekst = (el.textContent || '').trim();
+      if (!tekst) return;
+      const px = parseFloat(getComputedStyle(el).fontSize) || 0;
+      if (px === 0 || px >= 11) return;
+      const e = el as HTMLElement;
+      const naam = e.tagName.toLowerCase()
+        + (typeof e.className === 'string' && e.className ? '.' + e.className.trim().split(/\s+/)[0] : '');
+      teKlein.push(naam + '=' + px + 'px "' + tekst.slice(0, 30) + '"');
+    });
+    return [...new Set(teKlein)];
+  });
+
+  for (const view of ['dashboard', 'approvals', 'invoices', 'announcements', 'employees', 'settings'] as const) {
+    await test.step(`Het scherm ${view} houdt alle tekst leesbaar`, async () => {
+      await page.locator(`button[data-view="${view}"]:visible`).first().click();
+      await expect(page.locator(`#view-${view}`)).toHaveClass(/is-active/);
+      const teKlein = await meetScherm();
+      expect(teKlein, `${view}: tekst onder 11px — ${teKlein.join(', ')}`).toEqual([]);
+    });
+  }
+});
+
+test('[MOB-H-012] de app is als PWA te installeren met een echt vierkant icoon', async ({ page }) => {
+  // Het manifest verwees voor zowel 192x192 als 512x512 naar path-logo.png, en dat
+  // is 162x54 -- een breed logo. Android kan zo'n icoon weigeren of vervormd tonen.
+  // Er was bovendien geen apple-touch-icon, waardoor iOS zelf een schermafdruk als
+  // beginschermicoon maakt. Dat merk je pas op een echt toestel, dus deze case
+  // controleert het hier.
+  await page.goto('/');
+
+  const manifestHref = await test.step('Given de pagina verwijst naar een manifest en een iOS-icoon', async () => {
+    const manifest = page.locator('link[rel="manifest"]');
+    await expect(manifest, 'zonder manifest is de app niet installeerbaar').toHaveCount(1);
+    await expect(page.locator('link[rel="apple-touch-icon"]'),
+      'zonder dit icoon maakt iOS een schermafdruk als beginschermicoon').toHaveCount(1);
+    return await manifest.getAttribute('href');
+  });
+
+  await test.step('Then beschrijft het manifest een installeerbare app', async () => {
+    const antwoord = await page.request.get('/' + manifestHref);
+    expect(antwoord.status(), 'het manifest moet opvraagbaar zijn').toBe(200);
+    const manifest = await antwoord.json();
+
+    expect(manifest.display, 'standalone opent zonder browserbalk').toBe('standalone');
+    expect(String(manifest.name || ''), 'de app moet een naam hebben').not.toBe('');
+    expect(Array.isArray(manifest.icons) && manifest.icons.length >= 2,
+      'er zijn minstens een gewoon en een maskeerbaar icoon nodig').toBe(true);
+    expect(manifest.icons.some((i: { purpose?: string }) => String(i.purpose || '').includes('maskable')),
+      'Android snijdt een vorm uit het icoon; zonder maskeerbare variant valt het logo weg').toBe(true);
+  });
+
+  await test.step('And is elk icoon werkelijk vierkant en van de opgegeven maat', async () => {
+    const antwoord = await page.request.get('/' + manifestHref);
+    const manifest = await antwoord.json();
+
+    for (const icoon of manifest.icons) {
+      const bestand = await page.request.get('/' + icoon.src);
+      expect(bestand.status(), `${icoon.src} moet bestaan`).toBe(200);
+
+      // De afmetingen staan in de IHDR-chunk van een PNG, direct na de kop.
+      const bytes = await bestand.body();
+      const breedte = bytes.readUInt32BE(16);
+      const hoogte = bytes.readUInt32BE(20);
+      const opgegeven = Number(String(icoon.sizes).split('x')[0]);
+
+      expect(breedte, `${icoon.src} moet vierkant zijn, is ${breedte}x${hoogte}`).toBe(hoogte);
+      expect(breedte, `${icoon.src} zegt ${icoon.sizes} maar is ${breedte}x${hoogte}`).toBe(opgegeven);
+    }
+  });
+});
+
+test('[MOB-H-013] de uitnodiging om te installeren verschijnt alleen waar hij hoort', async ({ page, browserName }) => {
+  // Zonder uitnodiging moet iedereen zelf het browsermenu in om de app op zijn
+  // startscherm te zetten, en dat doet niemand. Android meldt via
+  // beforeinstallprompt dat installeren kan; die melding vangen we op zodat we
+  // zelf bepalen wanneer we het vragen.
+  //
+  // Op een laptop bieden we het bewust niet aan: Chrome zet daar zelf al een
+  // installatie-icoon in de adresbalk, en het verschil tussen een tabblad en een
+  // eigen venster is daar klein.
+  const balk = page.locator('#install-banner');
+
+  await test.step('Given de app draait op telefoonformaat', async () => {
+    await page.goto('/');
+    await expect(balk, 'de balk hoort verborgen te beginnen').toBeHidden();
+  });
+
+  await test.step('When de browser meldt dat installeren mogelijk is', async () => {
+    await page.evaluate(() => window.dispatchEvent(new Event('beforeinstallprompt')));
+    await expect(balk).toBeVisible();
+
+    // Op iOS kan de app het installeren niet zelf starten -- dat gaat alleen via het
+    // deelmenu van Safari -- dus daar staat er uitleg in plaats van een knop.
+    const knop = page.locator('#install-banner-accept');
+    if (browserName === 'chromium') {
+      await expect(knop, 'op Android kan de app het installeren zelf starten').toBeVisible();
+    } else {
+      await expect(knop, 'op iOS bestaat die mogelijkheid niet').toBeHidden();
+      await expect(page.locator('#install-banner-hint')).toContainText('Zet op beginscherm');
+    }
+  });
+
+  await test.step('Then verdwijnt de balk na Niet nu en blijft hij weg na een herlaad', async () => {
+    await page.locator('#install-banner-dismiss').click();
+    await expect(balk).toBeHidden();
+
+    await page.reload();
+    await page.evaluate(() => window.dispatchEvent(new Event('beforeinstallprompt')));
+    await expect(balk, 'wie de vraag heeft weggeklikt moet hem niet opnieuw krijgen').toBeHidden();
+  });
+
+  await test.step('And blijft hij op een laptopscherm helemaal weg', async () => {
+    await page.evaluate(() => {
+      try {
+        window.localStorage.removeItem('path-install-afgewezen');
+      } catch {
+        // opslag geblokkeerd; dan is er ook niets te wissen
+      }
+    });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.reload();
+    await page.evaluate(() => window.dispatchEvent(new Event('beforeinstallprompt')));
+    await expect(balk, 'op desktop biedt Chrome het zelf al aan').toBeHidden();
+  });
+});

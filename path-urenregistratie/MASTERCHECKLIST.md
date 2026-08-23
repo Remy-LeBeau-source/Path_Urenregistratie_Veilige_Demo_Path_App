@@ -94,6 +94,33 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-23 · v0.9.124 leesbaarheid, contrast en een werkend app-icoon
+
+**Tekstgrootte op de telefoon.**
+
+- [x] **89 teksten stonden onder de ondergrens van 11px**, verspreid over zes schermen en met de kleinste op 8px. Ze komen uit basisregels die op desktop bewust klein zijn -- daar heb je ruimte -- maar op 412px niet meer te lezen zijn.
+- [x] **Ondergrens ingevoerd voor 165 selectors.** Gegenereerd uit de stylesheet zelf, niet met de hand, zodat er niets over het hoofd wordt gezien. Alleen binnen de mobiele media query, dus op desktop verandert er niets. Nagemeten: nul te kleine teksten, nul dingen buiten beeld.
+
+**Contrast, op beide formaten gelijk.**
+
+- [x] **Ruim 200 teksten haalden de contrastnorm van 4,5:1 niet.** Kleuren veranderen niet mee met de schermbreedte, dus dit gold voor desktop en telefoon even hard: 218 op desktop, 211 op de telefoon.
+- [x] **Vier kleuren waren de oorzaak.** `--muted` (4,10:1 op de groene kaarten) is zeven stappen donkerder gemaakt; die kleur wordt uitsluitend als tekst gebruikt, dus dat kon rechtstreeks. `--mint-dark` en `--warning` zijn ook achtergrond en rand -- die tokens blijven ongewijzigd en kregen een tekstvariant ernaast, zodat het accentgroen precies blijft zoals het was. Twee tabelkoppen stonden op een eigen te licht grijs.
+- [x] **Uitkomst: van 218 naar 23 op desktop en van 211 naar 23 op de telefoon.** Die resterende 23 zijn geen echt probleem maar een beperking van de meting: het zijn witte teksten op panelen met een kleurverloop, en een verloop is niet als achtergrondkleur te lezen. In werkelijkheid is dat wit op donkerblauw, ongeveer 16:1.
+- [x] **Donkere modus nagekeken:** de tokens staan in de stylesheet maar `data-theme` wordt nergens gezet, dus die modus wordt nooit aangezet. Zou dat wel gebeuren, dan haalt hij alle normen ruim (5,6:1 tot 16:1). Geen werk nodig.
+- [x] **`scripts/smoke-test.mjs` bewaakt de drie tekstkleuren**, elk tegen de achtergronden waarop hij echt voorkomt. Geverifieerd door de oude kleur terug te zetten.
+
+**App-icoon: het manifest klopte niet.**
+
+- [x] **Het manifest verwees voor zowel 192x192 als 512x512 naar `path-logo.png`, en dat is 162x54** -- een breed logo, geen vierkant icoon. Android kan zo'n icoon weigeren of vervormd tonen. Er was bovendien helemaal geen `apple-touch-icon`, waardoor iOS zelf een schermafdruk als beginschermicoon maakt. Dat valt pas op een echt toestel op.
+- [x] **`scripts/build-app-icons.mjs` toegevoegd:** maakt vijf iconen uit het bestaande logo, gecentreerd op het huisstijlblauw. Geen nieuw beeldmerk verzonnen. Inclusief een maskeerbare variant met een kleiner logo, want Android snijdt daar een cirkel uit.
+- [x] **Manifest en pagina bijgewerkt:** juiste afmetingen met `purpose`, plus `apple-touch-icon` en een favicon. De app had tot nu toe ook geen favicon.
+- [x] **PWA werkt op TEST.** TEST draait op https, de bestanden staan in git en worden door de deploy meegenomen, en de service worker wordt in `index.html` geregistreerd. "Zet op beginscherm" kan dus nu al getest worden; daar is productie niet voor nodig.
+- [x] **Offline-gedrag blijft Fase 16.** De service worker is bewust leeg en dat staat er met reden bij: offline caching vraagt een go-live-beslissing.
+- [x] **Uitnodiging om te installeren toegevoegd.** Zonder aanmoediging moet iedereen zelf het browsermenu in, en dat doet niemand. Android meldt via beforeinstallprompt dat installeren kan; die melding wordt opgevangen zodat de app zelf bepaalt wanneer hij het vraagt. Wegklikken wordt onthouden. Op iOS bestaat die melding niet, dus daar verschijnt de instructie via het deelmenu.
+- [x] **Bewust alleen op telefoonformaat.** Op een laptop zet Chrome zelf al een installatie-icoon in de adresbalk, en daar is het verschil tussen een tabblad en een eigen venster klein. Een eigen balk zou daar een tweede aanbod zijn over het scherm van iemand die de hele dag in de app werkt.
+- [x] **Drie nieuwe cases:** MOB-H-011 (geen tekst onder 11px op zes schermen), MOB-H-012 (manifest, apple-touch-icon, maskeerbaar icoon, en elk icoonbestand echt vierkant en van de opgegeven maat -- uitgelezen uit de PNG-kop), MOB-H-013 (de balk verschijnt op een telefoon, verdwijnt na wegklikken, blijft weg na een herlaad, en komt op desktop niet). Alle drie geverifieerd door de fout terug te zetten.
+- [x] Versie 0.9.123 → 0.9.124.
+
 ### 2026-08-23 · v0.9.123 kolomlabels op de telefoon waren te klein
 
 - [x] **Gio vroeg of het overzicht op de telefoon anders is dan op desktop.** Nagemeten: de inhoud is gelijk (vier panelen, vier medewerkerrijen, geen enkel gegeven dat alleen op desktop staat). De indeling verschilt bewust -- zes kolommen passen niet op 412px, dus elke medewerker wordt een kaartje waarin die zes velden onder elkaar staan.

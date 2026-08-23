@@ -91,3 +91,29 @@ Feature: Mobiele gebruikerservaring
     Given de pagina is langer dan het scherm
     Then blokkeert geen enkele laag het doorgeven van de veeg
     When er met een vinger omhoog wordt geveegd, komt de pagina in beweging
+
+  @happy
+  Scenario: [MOB-H-011] geen enkele tekst op een telefoon staat onder de leesbare ondergrens
+    # Testtechniek: Responsive viewport + end-to-end use-case
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given mobiele gebruikerservaring is voorbereid
+    When de flow voor MOB-H-011 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat geen enkele tekst op een telefoon staat onder de leesbare ondergrens
+
+  @happy
+  Scenario: [MOB-H-012] de app is als PWA te installeren met een echt vierkant icoon
+    # Testtechniek: Responsive viewport + end-to-end use-case
+    # Aantoonbare Playwright-assertions in deze case: 10
+    Given de pagina verwijst naar een manifest en een iOS-icoon
+    When de flow voor MOB-H-012 wordt uitgevoerd
+    Then beschrijft het manifest een installeerbare app
+    And is elk icoon werkelijk vierkant en van de opgegeven maat
+
+  @happy
+  Scenario: [MOB-H-013] de uitnodiging om te installeren verschijnt alleen waar hij hoort
+    # Testtechniek: Responsive viewport + end-to-end use-case
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given de app draait op telefoonformaat
+    When de browser meldt dat installeren mogelijk is
+    Then verdwijnt de balk na Niet nu en blijft hij weg na een herlaad
+    And blijft hij op een laptopscherm helemaal weg

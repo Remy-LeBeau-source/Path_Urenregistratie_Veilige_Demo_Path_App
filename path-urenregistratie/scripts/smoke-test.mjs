@@ -148,12 +148,56 @@ assert(document.querySelectorAll("select:not([hidden])").length === 0, "De vaste
   assert(teKleineLabels.length === 0, `Een label uit de opmaak is schermtekst en moet minstens 11px zijn (${teKleineLabels.join(" | ")})`);
 }
 
+// Tekstkleuren moeten leesbaar zijn tegen de lichte achtergronden van de app. De
+// norm voor gewone tekst is 4,5:1. Voor de aanpassing haalde --muted 4,10:1 op de
+// groene kaarten en gaven de accentkleuren als tekst 3,54:1 en 3,40:1; samen ruim
+// 200 teksten onder de norm, op desktop en telefoon gelijk. Deze controle houdt de
+// tokens vast, zodat ze niet stilletjes weer lichter worden.
+{
+  const kanaal = (v) => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  };
+  const helderheid = ([r, g, b]) => 0.2126 * kanaal(r) + 0.7152 * kanaal(g) + 0.0722 * kanaal(b);
+  const contrast = (a, b) => {
+    const l1 = helderheid(a);
+    const l2 = helderheid(b);
+    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+  };
+  const uitHex = (h) => [h.slice(1, 3), h.slice(3, 5), h.slice(5, 7)].map((p) => parseInt(p, 16));
+  const tokenWaarde = (naam) => {
+    const treffer = new RegExp("--" + naam + ":\\s*(#[0-9a-fA-F]{6})").exec(styles);
+    if (!treffer) throw new Error("kleur --" + naam + " niet gevonden in styles.css");
+    return uitHex(treffer[1]);
+  };
+
+  // De donkerste lichte achtergrond waarop deze tekst voorkomt is het groen van de
+  // kaarten; wit is de meest voorkomende. Beide moeten de norm halen.
+  // Elke kleur tegen de achtergronden waarop hij echt voorkomt. De
+  // waarschuwingskleur staat alleen op zijn eigen oranje vlak, niet op de groene
+  // kaarten, dus daartegen toetsen zou een fout melden die niemand ziet.
+  const teToetsen = [
+    ["muted", [[255, 255, 255], uitHex("#e7f8f3")]],
+    ["mint-dark-tekst", [[255, 255, 255], uitHex("#e7f8f3")]],
+    ["warning-tekst", [[255, 255, 255], uitHex("#fff5e8")]],
+  ];
+  const teLicht = [];
+  for (const [naam, achtergronden] of teToetsen) {
+    const kleur = tokenWaarde(naam);
+    for (const achter of achtergronden) {
+      const verhouding = contrast(kleur, achter);
+      if (verhouding < 4.5) teLicht.push("--" + naam + " = " + verhouding.toFixed(2) + ":1");
+    }
+  }
+  assert(teLicht.length === 0, `Tekstkleuren moeten minstens 4,5:1 contrast houden (${teLicht.join(" | ")})`);
+}
+
 assert(document.querySelectorAll("#dashboard-employee-rows tr").length === 4, "Dashboard moet vier demo-medewerkers tonen");
 assert(document.querySelector("#dashboard-team-title").textContent === "Teamstatus · Augustus 2026" && document.querySelector("#dashboard-team-summary").textContent === "4 medewerkers · 2 te controleren · 1 wacht op medewerker", "Het teamoverzicht moet maand, controles en wachttaken compact samenvatten");
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.123"), "Het zichtbare versienummer moet 0.9.123 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.124"), "Het zichtbare versienummer moet 0.9.124 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -1733,4 +1777,4 @@ assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("
 assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Playwright stage- en lokale env-bestanden mogen expliciete runner/CI-variabelen niet overschrijven");
 
 dom.window.close();
-console.log("Path v0.9.123 volledige smoke test: geslaagd");
+console.log("Path v0.9.124 volledige smoke test: geslaagd");

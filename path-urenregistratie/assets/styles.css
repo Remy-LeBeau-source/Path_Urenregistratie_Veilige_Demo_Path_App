@@ -6,12 +6,18 @@
   --teal: #165d64;
   --green-light: #e7f8f3;
   --ink: #172332;
-  --muted: #6c7886;
+  --muted: #65717f;
   --line: #dfe6e9;
   --surface: #ffffff;
   --background: #f3f7f6;
   --warning: #bb7623;
   --warning-bg: #fff5e8;
+  /* Tekstvarianten. --mint-dark en --warning blijven ongewijzigd als accent-,
+     achtergrond- en randkleur; als tekst haalden ze de contrastnorm niet
+     (3,54:1 en 3,40:1 tegenover de vereiste 4,5:1). Zelfde tint, alleen donker
+     genoeg om te lezen. */
+  --mint-dark-tekst: #037f63;
+  --warning-tekst: #a5600d;
   --danger: #a34b4b;
   --shadow: 0 14px 35px rgba(13, 27, 56, 0.08);
   --radius: 18px;
@@ -124,7 +130,7 @@ select:focus-visible {
 .login-option small { margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.45; }
 .login-avatar { display: grid; width: 44px; height: 44px; place-items: center; border-radius: 13px; background: var(--navy); color: #fff; font-size: 12px; font-weight: 800; }
 .login-avatar.employee { background: var(--mint); color: var(--navy); }
-.login-arrow { color: var(--mint-dark); font-size: 22px; }
+.login-arrow { color: var(--mint-dark-tekst); font-size: 22px; }
 .login-panel .login-note { border-radius: 12px; background: var(--green-light); color: var(--teal); font-size: 11px; padding: 12px 14px; }
 .login-panel .login-note[hidden] { display: none; }
 
@@ -219,7 +225,7 @@ select:focus-visible {
 .demo-badge { width: fit-content; border: 1px solid rgba(255,255,255,.13); border-radius: 999px; color: #9eb0c1; font-size: 10px; letter-spacing: .07em; padding: 5px 9px; text-transform: uppercase; }
 .topbar-context { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
 .environment-badge { display: inline-flex; width: fit-content; align-items: center; border: 1px solid #e6b66a; border-radius: 999px; background: #fff4df; color: #8b5200; font-size: 9px; font-weight: 900; letter-spacing: .08em; padding: 5px 9px; text-transform: uppercase; }
-.environment-badge.is-local { border-color: #8fd9c7; background: var(--green-light); color: var(--mint-dark); }
+.environment-badge.is-local { border-color: #8fd9c7; background: var(--green-light); color: var(--mint-dark-tekst); }
 .switch-role { width: fit-content; border: 0; border-bottom: 1px solid rgba(255,255,255,.23); background: transparent; color: #b9c7d3; cursor: pointer; font-size: 11px; padding: 0 0 3px; }
 .switch-role:hover { color: #fff; }
 
@@ -245,17 +251,17 @@ select:focus-visible {
 
 .topbar h1 { margin: 2px 0 0; font-family: "Roboto Slab", Georgia, serif; font-size: clamp(24px, 3vw, 31px); letter-spacing: 0; }
 .mobile-topbar-home { display: none; }
-.eyebrow, .section-label { margin: 0; color: var(--mint-dark); font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.eyebrow, .section-label { margin: 0; color: var(--mint-dark-tekst); font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
 .topbar-actions { display: flex; align-items: center; gap: 12px; }
-.safety-badge { border: 1px solid #edcfa9; border-radius: 999px; background: var(--warning-bg); color: var(--warning); font-size: 9px; font-weight: 800; letter-spacing: .04em; padding: 7px 10px; text-transform: uppercase; white-space: nowrap; }
+.safety-badge { border: 1px solid #edcfa9; border-radius: 999px; background: var(--warning-bg); color: var(--warning-tekst); font-size: 9px; font-weight: 800; letter-spacing: .04em; padding: 7px 10px; text-transform: uppercase; white-space: nowrap; }
 .safety-badge.is-active { border-color: #86d6c1; background: #e3f7f1; color: #087a62; }
-.safety-badge.is-paused { border-color: #edcfa9; background: var(--warning-bg); color: var(--warning); }
+.safety-badge.is-paused { border-color: #edcfa9; background: var(--warning-bg); color: var(--warning-tekst); }
 .safety-badge.is-toggleable { cursor: pointer; }
 .safety-badge.is-toggleable:hover { filter: brightness(.97); }
 .safety-badge.is-toggleable:focus-visible { outline: 3px solid rgba(61, 195, 157, .3); outline-offset: 2px; }
 .mail-acceptance-controls { display: flex; align-items: center; gap: 8px; }
 .topbar-quick-reset { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); cursor: pointer; font-size: 10px; font-weight: 700; letter-spacing: .04em; padding: 7px 12px; text-transform: uppercase; }
-.topbar-quick-reset:hover { border-color: var(--mint); color: var(--mint-dark); }
+.topbar-quick-reset:hover { border-color: var(--mint); color: var(--mint-dark-tekst); }
 
 .period-control { display: flex; min-height: 48px; align-items: center; gap: 3px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: 0 5px 18px rgba(13,27,56,.04); padding: 0 4px; }
 .period-control button { width: 34px; height: 34px; border: 0; border-radius: 9px; background: transparent; cursor: pointer; font-size: 22px; line-height: 1; }
@@ -343,7 +349,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .dashboard-next-action-side > div { margin-top: 9px; }
 .dashboard-next-action-side .small-button { min-height: 42px; border-color: var(--warning); background: var(--surface); color: var(--navy); font-size: 11px; padding: 10px 17px; }
 .text-button { border: 0; background: transparent; color: var(--teal); cursor: pointer; font-size: 12px; font-weight: 800; padding: 7px; }
-.text-button:hover { color: var(--mint-dark); }
+.text-button:hover { color: var(--mint-dark-tekst); }
 .text-button.danger-text { color: var(--danger); }
 .text-button.danger-text:hover { color: #7f3030; }
 
@@ -364,7 +370,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .metric-link { display: block; width: fit-content; margin-top: 13px; border: 0; border-bottom: 1px solid currentColor; background: transparent; color: var(--teal); cursor: pointer; font: inherit; font-size: 11px; font-weight: 800; padding: 0 0 2px; }
 .metric-link:hover { color: var(--navy); }
 .metric-note { color: var(--muted); font-size: 11px; }
-.metric-note.positive { color: var(--mint-dark); }
+.metric-note.positive { color: var(--mint-dark-tekst); }
 
 .panel { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: 0 8px 28px rgba(13,27,56,.035); }
 #admin-task-panel { scroll-margin-top: 104px; }
@@ -391,14 +397,14 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .workflow-step small { margin-top: 3px; font-size: 9px; }
 .workflow-step.is-done > span { border-color: var(--mint); background: var(--mint); color: var(--navy); }
 .workflow-step.is-done strong, .workflow-step.is-current strong { color: var(--navy); }
-.workflow-step.is-current > span { border-color: var(--mint); background: var(--green-light); color: var(--mint-dark); }
+.workflow-step.is-current > span { border-color: var(--mint); background: var(--green-light); color: var(--mint-dark-tekst); }
 .workflow-line { flex: 1; height: 1px; min-width: 20px; background: var(--line); margin: 0 12px; }
 .workflow-line.is-done { background: var(--mint); }
 
 .table-wrap { overflow-x: auto; }
 .data-table, .hours-table { width: 100%; border-collapse: collapse; }
 .data-table th, .data-table td { padding: 14px 22px; border-top: 1px solid #edf1f2; text-align: left; white-space: nowrap; }
-.data-table th { color: #87929d; font-size: 9px; letter-spacing: .07em; text-transform: uppercase; }
+.data-table th { color: #67727d; font-size: 9px; letter-spacing: .07em; text-transform: uppercase; }
 .data-table td { font-size: 12px; }
 .data-table td strong, .data-table td small { display: block; }
 .data-table td small { margin-top: 3px; color: var(--muted); font-size: 9px; }
@@ -406,10 +412,10 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .mini-avatar { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; background: var(--green-light); color: var(--teal); font-size: 10px; font-weight: 800; }
 
 .status-pill { display: inline-flex; min-height: 25px; align-items: center; border-radius: 999px; font-size: 9px; font-weight: 800; padding: 4px 9px; }
-.status-approved, .status-sent { background: var(--green-light); color: var(--mint-dark); }
+.status-approved, .status-sent { background: var(--green-light); color: var(--mint-dark-tekst); }
 .status-submitted, .status-ready { background: #eaf1fa; color: #315d91; }
 .status-concept { background: #f1f2f3; color: #6f7b86; }
-.status-warning { background: var(--warning-bg); color: var(--warning); }
+.status-warning { background: var(--warning-bg); color: var(--warning-tekst); }
 
 .view-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 25px; margin: 35px 0 22px; }
 .view-heading h2 { margin: 5px 0 7px; font-family: "Roboto Slab", Georgia, serif; font-size: clamp(27px, 3.5vw, 37px); letter-spacing: -.025em; }
@@ -437,7 +443,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .correction-banner.dashboard-correction { grid-template-columns: auto minmax(0,1fr) auto; align-items: center; }
 .correction-banner-icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; background: var(--warning); color: #fff; font-size: 16px; font-weight: 900; }
 .correction-banner strong, .correction-banner p, .correction-banner small { display: block; }
-.correction-banner strong { color: var(--warning); font-size: 12px; }
+.correction-banner strong { color: var(--warning-tekst); font-size: 12px; }
 .correction-banner p { margin: 5px 0 4px; font-size: 12px; line-height: 1.5; white-space: pre-line; }
 .correction-banner small { color: var(--muted); font-size: 9px; }
 
@@ -458,7 +464,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .hours-visible-total span { color: var(--muted); font-size: 8px; text-transform: uppercase; }
 .hours-visible-total strong { margin-top: 3px; color: var(--navy); font-size: 13px; }
 .hours-table th, .hours-table td { min-width: 88px; border-bottom: 1px solid #edf1f2; padding: 11px 10px; text-align: center; vertical-align: middle; }
-.hours-table th { background: #fafcfc; color: #7a8792; font-size: 10px; }
+.hours-table th { background: #fafcfc; color: #697681; font-size: 10px; }
 .hours-table tbody tr { transition: background .15s ease; }
 .hours-table tbody tr:hover { background: #fbfdfd; }
 .hours-table td:first-child { min-width: 100px; color: var(--teal); font-size: 11px; font-weight: 800; }
@@ -647,7 +653,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .customer-timesheet-template-card textarea { min-height: 150px; resize: vertical; line-height: 1.55; }
 .customer-timesheet-template-card > small { color: var(--muted); font-size: 9px; line-height: 1.5; }
 .form-grid input.is-invalid, .modal-form input.is-invalid, .modal-form textarea.is-invalid { border-color: var(--danger); background: #fff7f7; box-shadow: 0 0 0 3px rgba(163,75,75,.09); }
-.settings-warning { margin: 15px 0 0; border-radius: 11px; background: var(--warning-bg); color: var(--warning); font-size: 10px; line-height: 1.5; padding: 11px 13px; }
+.settings-warning { margin: 15px 0 0; border-radius: 11px; background: var(--warning-bg); color: var(--warning-tekst); font-size: 10px; line-height: 1.5; padding: 11px 13px; }
 .invoice-identity-preview { display: grid; gap: 3px; border: 1px solid rgba(58,189,157,.34); border-radius: 12px; background: var(--green-light); padding: 13px 15px; }
 .invoice-identity-preview span { color: var(--teal); font-size: 9px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
 .invoice-identity-preview strong { color: var(--ink); font-family: "Roboto Slab", Georgia, serif; font-size: 17px; }
@@ -671,7 +677,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .email-preview > div { display: grid; grid-template-columns: 95px 1fr; gap: 15px; border-bottom: 1px solid #e9eeee; padding: 10px 14px; }
 .email-preview span { color: var(--muted); font-size: 10px; }
 .email-preview strong { color: var(--navy); font-size: 11px; overflow-wrap: anywhere; }
-.email-preview strong small { color: var(--warning); font-size: 9px; }
+.email-preview strong small { color: var(--warning-tekst); font-size: 9px; }
 .email-preview p { margin: 0; background: #fff; color: var(--ink); font-size: 12px; line-height: 1.55; padding: 20px 14px; }
 .template-list { display: grid; gap: 10px; margin-top: 18px; }
 .template-item { display: grid; grid-template-columns: minmax(220px, .8fr) minmax(300px, 1.4fr) auto; align-items: center; gap: 20px; border: 1px solid var(--line); border-radius: 14px; background: #fbfcfc; padding: 14px; }
@@ -952,7 +958,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .employee-open-action-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 18px; align-items: center; padding: 14px 16px; }
 .employee-open-action-row + .employee-open-action-row { border-top: 1px solid #e4ece8; }
 .employee-open-action-copy span, .employee-open-action-copy strong, .employee-open-action-copy small { display: block; }
-.employee-open-action-copy span { color: var(--mint-dark); font-size: 8px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.employee-open-action-copy span { color: var(--mint-dark-tekst); font-size: 8px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
 .employee-open-action-copy strong { margin-top: 4px; color: var(--navy); font-size: 12px; }
 .employee-open-action-copy small { margin-top: 3px; color: var(--muted); font-size: 10px; line-height: 1.5; }
 .employee-open-month-heading .status-pill { min-width: 138px; justify-content: center; }
@@ -962,7 +968,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .employee-history-row strong, .employee-history-row small { display: block; }
 .employee-history-row strong { font-size: 11px; }
 .employee-history-row small { margin-top: 3px; color: var(--muted); font-size: 9px; }
-.employee-history-current { display: inline-flex; margin-left: 8px; border-radius: 999px; background: var(--green-light); color: var(--mint-dark); font-size: 8px; font-weight: 900; padding: 4px 7px; vertical-align: middle; }
+.employee-history-current { display: inline-flex; margin-left: 8px; border-radius: 999px; background: var(--green-light); color: var(--mint-dark-tekst); font-size: 8px; font-weight: 900; padding: 4px 7px; vertical-align: middle; }
 
 .timesheet-submit-note { margin: 0; color: var(--muted); font-size: 11px; font-style: italic; }
 .admin-task-panel { margin-bottom: 18px; overflow: hidden; }
@@ -972,14 +978,14 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .admin-task-heading > .small-button { flex: 0 0 auto; }
 .admin-task-filters { display: flex; flex-wrap: wrap; gap: 7px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--surface-muted); padding: 11px 24px; }
 .admin-task-filters button { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); cursor: pointer; font-size: 9px; font-weight: 800; padding: 8px 11px; }
-.admin-task-filters button.is-active { border-color: var(--mint-dark); background: var(--green-light); color: var(--mint-dark); }
+.admin-task-filters button.is-active { border-color: var(--mint-dark); background: var(--green-light); color: var(--mint-dark-tekst); }
 .admin-task-list { display: grid; }
 .admin-task-month + .admin-task-month { border-top: 10px solid var(--surface-muted); }
 .admin-task-month-heading { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 18px; border: 0; border-bottom: 1px solid var(--line); background: var(--surface-muted); color: inherit; cursor: pointer; font: inherit; padding: 14px 24px; text-align: left; }
 .admin-task-month-heading:hover { background: color-mix(in srgb, var(--surface-muted) 78%, var(--green-light)); }
 .admin-task-month-heading:focus-visible { position: relative; z-index: 1; outline: 3px solid color-mix(in srgb, var(--mint-dark) 35%, transparent); outline-offset: -3px; }
 .admin-task-month-heading-copy, .admin-task-month-heading-copy > span, .admin-task-month-heading-copy > strong, .admin-task-month-heading small { display: block; }
-.admin-task-month-heading-copy > span { color: var(--mint-dark); font-size: 10px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.admin-task-month-heading-copy > span { color: var(--mint-dark-tekst); font-size: 10px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
 .admin-task-month-heading-copy > strong { margin-top: 3px; color: var(--navy); font-family: "Roboto Slab", Georgia, serif; font-size: 16px; }
 .admin-task-month-heading small { color: var(--muted); font-size: 9px; font-weight: 700; text-align: right; }
 .admin-task-month-heading-side { display: flex; align-items: center; gap: 14px; color: inherit; letter-spacing: normal; text-transform: none; }
@@ -987,14 +993,14 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .admin-task-month-chevron { width: 9px; height: 9px; flex: 0 0 auto; border-right: 2px solid var(--navy); border-bottom: 2px solid var(--navy); transform: rotate(45deg); transition: transform .18s ease; }
 .admin-task-month-heading[aria-expanded="false"] .admin-task-month-chevron { transform: rotate(-45deg); }
 .admin-task-owner-heading { border-bottom: 1px solid var(--line); background: var(--surface); color: var(--muted); font-size: 9px; font-weight: 900; letter-spacing: .04em; padding: 10px 24px; text-transform: uppercase; }
-.admin-task-owner-heading.is-actionable { color: var(--mint-dark); }
+.admin-task-owner-heading.is-actionable { color: var(--mint-dark-tekst); }
 .admin-task-owner-heading.is-waiting { color: #a86b13; }
 .admin-task-row { display: grid; grid-template-columns: minmax(145px,.7fr) minmax(175px,.8fr) minmax(260px,1.25fr) auto; gap: 16px; align-items: center; border-bottom: 1px solid var(--line); padding: 15px 24px; }
 .admin-task-owner-group:last-child .admin-task-row:last-child { border-bottom: 0; }
 .admin-task-row.is-actionable { box-shadow: inset 4px 0 0 var(--mint-dark); }
 .admin-task-row.is-waiting { box-shadow: inset 4px 0 0 var(--warning); background: color-mix(in srgb, var(--warning-bg) 26%, var(--surface)); }
 .admin-task-kind span, .admin-task-kind strong, .admin-task-person strong, .admin-task-person small, .admin-task-note small { display: block; }
-.admin-task-kind span { color: var(--mint-dark); font-size: 8px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.admin-task-kind span { color: var(--mint-dark-tekst); font-size: 8px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
 .admin-task-kind strong { margin-top: 4px; color: var(--navy); font-size: 11px; }
 .admin-task-person strong { font-size: 11px; }
 .admin-task-person small, .admin-task-note small { margin-top: 3px; color: var(--muted); font-size: 9px; line-height: 1.4; }
@@ -1122,7 +1128,7 @@ html[data-theme="dark"] .mail-acceptance-label { background: #4b3520; color: #ff
 .customer-timesheet-upload-actions { display: flex; gap: 9px; justify-content: flex-end; }
 .customer-timesheet-upload-actions .button:disabled { opacity: .48; cursor: not-allowed; }
 .customer-timesheet-action-help { grid-column: 1/-1; color: var(--muted); font-size: 10px; line-height: 1.5; }
-.customer-timesheet-action-help.is-warning { color: var(--warning); font-weight: 700; }
+.customer-timesheet-action-help.is-warning { color: var(--warning-tekst); font-weight: 700; }
 .customer-timesheet-action-help.is-ready { color: var(--teal); font-weight: 700; }
 .customer-timesheet-current { margin-top: 16px; }
 .customer-timesheet-current > div, .customer-timesheet-admin-row { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 14px; align-items: center; border: 1px solid var(--line); border-radius: 13px; background: var(--surface-muted); padding: 13px 15px; }
@@ -1269,7 +1275,7 @@ html[data-theme="dark"] .mail-acceptance-label { background: #4b3520; color: #ff
 .invoice-brand-closing strong { color: var(--navy); }
 .invoice-brand-footer { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 54px; background: var(--navy); color: #dceae6; font-size: 8px; padding: 14px 34px; }
 .invoice-brand-footer strong { color: var(--mint); }
-.announcement-withdrawal-note { border: 1px solid color-mix(in srgb, var(--warning) 32%, var(--line)); border-radius: 10px; background: var(--warning-bg); color: var(--warning); font-size: 10px; line-height: 1.55; margin: 13px 0; padding: 11px 12px; }
+.announcement-withdrawal-note { border: 1px solid color-mix(in srgb, var(--warning) 32%, var(--line)); border-radius: 10px; background: var(--warning-bg); color: var(--warning-tekst); font-size: 10px; line-height: 1.55; margin: 13px 0; padding: 11px 12px; }
 .announcement-withdrawal-note strong { display: block; margin-bottom: 3px; }
 .announcement-archive-filter { width: fit-content; margin: 0 0 16px; }
 .employee-announcement-list { display: grid; }
@@ -2287,4 +2293,233 @@ button,
   #employee-dashboard-correction-message {
     max-width: none;
   }
+}
+
+/* === Ondergrens voor leesbare tekst op een telefoon === */
+/*
+   Op desktop mag tekst klein zijn -- daar heb je ruimte en zit je verder van het
+   scherm af. Op 412px is 8 of 9 pixels niet meer te lezen, en dat was precies de
+   klacht: alles moet leesbaar zijn.
+
+   Deze regels herhalen de selectors die zelf onder 11px zitten en zetten ze op de
+   ondergrens. Zelfde selector, later in het bestand, dus die wint -- en alleen
+   binnen deze media query, dus op desktop verandert er niets. Aangemaakt door
+   analyse van de stylesheet, niet met de hand, zodat er niets over het hoofd wordt
+   gezien.
+*/
+@media (max-width: 720px) {
+  .account-choice-panel button small { font-size: 11px; }
+  .admin-task-filters button { font-size: 11px; }
+  .admin-task-heading p { font-size: 11px; }
+  .admin-task-kind span { font-size: 11px; }
+  .admin-task-month-heading small { font-size: 11px; }
+  .admin-task-month-heading-copy > span { font-size: 11px; }
+  .admin-task-note small { font-size: 11px; }
+  .admin-task-owner-heading { font-size: 11px; }
+  .admin-task-person small { font-size: 11px; }
+  .administrator-person small { font-size: 11px; }
+  .announcement-item-head > small { font-size: 11px; }
+  .announcement-meta span { font-size: 11px; }
+  .announcement-meta strong { font-size: 11px; }
+  .announcement-withdrawal-note { font-size: 11px; }
+  .approval-data small { font-size: 11px; }
+  .approval-person small { font-size: 11px; }
+  .assignment-bar small { font-size: 11px; }
+  .correction-banner small { font-size: 11px; }
+  .customer-timesheet-action-help { font-size: 11px; }
+  .customer-timesheet-admin-meta small { font-size: 11px; }
+  .customer-timesheet-admin-meta strong { font-size: 11px; }
+  .customer-timesheet-admin-panel .panel-heading p { font-size: 11px; }
+  .customer-timesheet-field-label { font-size: 11px; }
+  .customer-timesheet-mail-preview span { font-size: 11px; }
+  .customer-timesheet-template-card > small { font-size: 11px; }
+  .customer-timesheet-template-card label { font-size: 11px; }
+  .customer-timesheet-upload-grid .month-choice-panel button { font-size: 11px; }
+  .customer-timesheet-upload-grid label { font-size: 11px; }
+  .dashboard-team-panel .panel-heading p { font-size: 11px; }
+  .data-table td small { font-size: 11px; }
+  .data-table th { font-size: 11px; }
+  .demo-badge { font-size: 11px; }
+  .demo-employee-picker small { font-size: 11px; }
+  .email-preview span { font-size: 11px; }
+  .email-preview strong small { font-size: 11px; }
+  .employee-announcement-card footer { font-size: 11px; }
+  .employee-announcement-card header > small { font-size: 11px; }
+  .employee-details small { font-size: 11px; }
+  .employee-details strong { font-size: 11px; }
+  .employee-history-current { font-size: 11px; }
+  .employee-history-head { font-size: 11px; }
+  .employee-history-row small { font-size: 11px; }
+  .employee-identity small { font-size: 11px; }
+  .employee-month-progress > span { font-size: 11px; }
+  .employee-month-progress small { font-size: 11px; }
+  .employee-next-action-label { font-size: 11px; }
+  .employee-next-action-meta { font-size: 11px; }
+  .employee-open-action-copy small { font-size: 11px; }
+  .employee-open-action-copy span { font-size: 11px; }
+  .employee-open-month-heading-copy small { font-size: 11px; }
+  .environment-badge { font-size: 11px; }
+  .eyebrow { font-size: 11px; }
+  .fixed-audience span { font-size: 11px; }
+  .fixed-audience strong { font-size: 11px; }
+  .form-grid label { font-size: 11px; }
+  .help-clear { font-size: 11px; }
+  .help-contact-actions a { font-size: 11px; }
+  .help-contact-actions button { font-size: 11px; }
+  .help-faq-heading small { font-size: 11px; }
+  .help-form button { font-size: 11px; }
+  .help-inline-topics button { font-size: 11px; }
+  .help-panel header small { font-size: 11px; }
+  .help-suggestions button { font-size: 11px; }
+  .hero-owner-badge { font-size: 11px; }
+  .hero-task-math > span { font-size: 11px; }
+  .hero-task-math small { font-size: 11px; }
+  .hours-table .date-number { font-size: 11px; }
+  .hours-table th { font-size: 11px; }
+  .hours-view-toolbar > div:first-child small { font-size: 11px; }
+  .hours-visible-total span { font-size: 11px; }
+  .invoice-action-note { font-size: 11px; }
+  .invoice-brand-contact { font-size: 11px; }
+  .invoice-brand-footer { font-size: 11px; }
+  .invoice-brand-label { font-size: 11px; }
+  .invoice-brand-logo span { font-size: 11px; }
+  .invoice-brand-number-line span { font-size: 11px; }
+  .invoice-brand-party .invoice-brand-identity { font-size: 11px; }
+  .invoice-brand-party dl { font-size: 11px; }
+  .invoice-brand-party dt { font-size: 11px; }
+  .invoice-brand-payment p { font-size: 11px; }
+  .invoice-brand-references span { font-size: 11px; }
+  .invoice-brand-title > small { font-size: 11px; }
+  .invoice-brand-title > span { font-size: 11px; }
+  .invoice-brand-totals { font-size: 11px; }
+  .invoice-brand-totals span { font-size: 11px; }
+  .invoice-branded-template .invoice-preview-table th { font-size: 11px; }
+  .invoice-identity-preview small { font-size: 11px; }
+  .invoice-identity-preview span { font-size: 11px; }
+  .invoice-month-overview-action small { font-size: 11px; }
+  .invoice-month-overview-copy p { font-size: 11px; }
+  .invoice-month-overview-empty { font-size: 11px; }
+  .invoice-month-overview-item small { font-size: 11px; }
+  .invoice-status-guide small { font-size: 11px; }
+  .mail-acceptance-copy small { font-size: 11px; }
+  .mail-delivery-history-main small { font-size: 11px; }
+  .mail-delivery-history-meta span { font-size: 11px; }
+  .mail-delivery-history-state small { font-size: 11px; }
+  .mail-route-guide small { font-size: 11px; }
+  .mini-avatar { font-size: 11px; }
+  .mobile-brand-home span { font-size: 11px; }
+  .modal-form .form-help { font-size: 11px; }
+  .modal-form label { font-size: 11px; }
+  .modal-queue small { font-size: 11px; }
+  .month-batch-blocker-copy small { font-size: 11px; }
+  .month-batch-blocker-copy strong { font-size: 11px; }
+  .month-batch-blocker-owner small { font-size: 11px; }
+  .month-batch-blocker-owner strong { font-size: 11px; }
+  .month-batch-summary > p { font-size: 11px; }
+  .nav-item span:nth-child(2) { font-size: 11px; }
+  .notification-button b { font-size: 11px; }
+  .notification-item small { font-size: 11px; }
+  .notification-item span { font-size: 11px; }
+  .notification-test-actions > p { font-size: 11px; }
+  .notification-test-actions > small { font-size: 11px; }
+  .notification-test-actions button { font-size: 11px; }
+  .period-control .month-choice-panel button { font-size: 11px; }
+  .period-control .month-picker-trigger { font-size: 11px; }
+  .period-picker-caption { font-size: 11px; }
+  .period-picker-fields input { font-size: 11px; }
+  .popover-footer-button { font-size: 11px; }
+  .popover-heading small { font-size: 11px; }
+  .preference-row small { font-size: 11px; }
+  .profile-editor-copy small { font-size: 11px; }
+  .profile-menu-person small { font-size: 11px; }
+  .profile-photo-control input { font-size: 11px; }
+  .recipient-choice small { font-size: 11px; }
+  .recipient-choice strong { font-size: 11px; }
+  .reminder-choice-field { font-size: 11px; }
+  .reminder-choice-panel button { font-size: 11px; }
+  .reminder-choice-trigger { font-size: 11px; }
+  .reminder-fixed-moment { font-size: 11px; }
+  .reminder-fixed-moment small { font-size: 11px; }
+  .reminder-fixed-moment strong { font-size: 11px; }
+  .reminder-rule .check-row small { font-size: 11px; }
+  .reminder-rule .check-row strong { font-size: 11px; }
+  .reminder-schedule-summary > strong { font-size: 11px; }
+  .reminder-schedule-summary span { font-size: 11px; }
+  .route-list small { font-size: 11px; }
+  .route-template small { font-size: 11px; }
+  .safe-domain-note { font-size: 11px; }
+  .safety-badge { font-size: 11px; }
+  .section-label { font-size: 11px; }
+  .segmented-control button { font-size: 11px; }
+  .settings-rule-list small { font-size: 11px; }
+  .settings-rule-list strong { font-size: 11px; }
+  .settings-section-nav button { font-size: 11px; }
+  .settings-warning { font-size: 11px; }
+  .small-button { font-size: 11px; }
+  .status-pill { font-size: 11px; }
+  .summary-note p { font-size: 11px; }
+  .team-account-avatar { font-size: 11px; }
+  .team-account-group small { font-size: 11px; }
+  .team-account-overview-copy small { font-size: 11px; }
+  .template-person small { font-size: 11px; }
+  .template-subject small { font-size: 11px; }
+  .timesheet-actions small { font-size: 11px; }
+  .toggle-grid small { font-size: 11px; }
+  .toggle-grid strong { font-size: 11px; }
+  .topbar-quick-reset { font-size: 11px; }
+  .updated-label { font-size: 11px; }
+  .workflow-heading-meta small { font-size: 11px; }
+  .workflow-progress-card small { font-size: 11px; }
+  .workflow-step small { font-size: 11px; }
+  /* Optional per-recipient overrides. They span the full row so the two toggles
+   keep their own line { font-size: 11px; }
+  and an empty field stays visibly optional. */
+.route-template { font-size: 11px; }
+}
+
+/* ---------------------------------------------------------------------------
+   Uitnodiging om de app te installeren
+   ---------------------------------------------------------------------------
+   Onderin, want daar zit de duim. Boven de mobiele onderbalk zodat hij niets
+   afdekt, en met ruimte voor de veilige zone van een iPhone.
+   --------------------------------------------------------------------------- */
+.install-banner {
+  position: fixed;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  left: 16px;
+  /* Onder een dialoogvenster (backdrop staat op 100): een uitnodiging mag nooit
+     boven iets liggen waar iemand mee bezig is. */
+  z-index: 90;
+  display: flex;
+  max-width: 460px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-inline: auto;
+  border-radius: 16px;
+  background: var(--navy);
+  color: #fff;
+  box-shadow: 0 18px 45px rgba(13, 27, 56, .3);
+  padding: 14px 16px;
+}
+
+.install-banner[hidden] { display: none; }
+.install-banner-copy { display: grid; gap: 3px; min-width: 0; }
+.install-banner-copy strong { font-size: 13px; }
+.install-banner-copy small { color: #c9d5e2; font-size: 11px; }
+.install-banner-actions { display: flex; align-items: center; gap: 8px; }
+.install-banner-actions .button { min-height: 44px; padding-inline: 18px; }
+.install-banner-actions .text-button { min-height: 44px; color: #c9d5e2; }
+
+@media (max-width: 520px) {
+  .install-banner { flex-direction: column; align-items: stretch; }
+  .install-banner-actions { justify-content: space-between; }
+  .install-banner-actions .button { flex: 1; }
+}
+
+/* Onderin zit op een telefoon de navigatiebalk; die mag niet worden afgedekt. */
+@media (max-width: 720px) {
+  .install-banner { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
 }

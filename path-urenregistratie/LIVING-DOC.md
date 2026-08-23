@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 263 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 266 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 263 unieke case-ID's
+- Playwright executable cases: 266 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 264 unieke case-ID's
+- Totaal executable cases: 267 unieke case-ID's
 - Playwright features: 23
 - Database features: 1
 - Playwright steps mappings: 23
 - Database steps mappings: 1
-- Uitvoeringen: 273
+- Uitvoeringen: 279
 - Niet-mobile projectuitvoeringen: 253
-- Mobile functionele cases: 10
-- Pixel 7 / Chromium-uitvoeringen: 10
-- iPhone 13 / WebKit-uitvoeringen: 10
+- Mobile functionele cases: 13
+- Pixel 7 / Chromium-uitvoeringen: 13
+- iPhone 13 / WebKit-uitvoeringen: 13
 
-De 10 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 263 Playwright-functionele cases in totaal 273 resultaten op: 253 + (10 x 2) = 273.
+De 13 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 266 Playwright-functionele cases in totaal 279 resultaten op: 253 + (13 x 2) = 279.
 
 ## Documentatieketen
 
@@ -254,7 +254,7 @@ De 10 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 263 Playwri
 
 - Feature: `tests/playwright/features/mobile.feature`
 - Source: `tests/playwright/mobile-ui.spec.ts`
-- Cases: 10
+- Cases: 13
 
 - [MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikbaar — Techniek: Responsive viewport + end-to-end use-case · Assertions: 31
 - [MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documentupload bereiken — Techniek: Responsive viewport + end-to-end use-case · Assertions: 14
@@ -266,6 +266,9 @@ De 10 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 263 Playwri
 - [MOB-H-008] elk hoofdscherm blijft op een telefoon leesbaar en bedienbaar — Techniek: Responsive viewport + end-to-end use-case · Assertions: 5
 - [MOB-H-009] instellingen en urenstaat zijn op een telefoon te overzien — Techniek: Responsive viewport + end-to-end use-case · Assertions: 9
 - [MOB-H-010] een veeg over het scherm scrollt de pagina echt — Techniek: Responsive viewport + end-to-end use-case · Assertions: 3
+- [MOB-H-011] geen enkele tekst op een telefoon staat onder de leesbare ondergrens — Techniek: Responsive viewport + end-to-end use-case · Assertions: 2
+- [MOB-H-012] de app is als PWA te installeren met een echt vierkant icoon — Techniek: Responsive viewport + end-to-end use-case · Assertions: 10
+- [MOB-H-013] de uitnodiging om te installeren verschijnt alleen waar hij hoort — Techniek: Responsive viewport + end-to-end use-case · Assertions: 8
 
 ### Meldingen beheren
 

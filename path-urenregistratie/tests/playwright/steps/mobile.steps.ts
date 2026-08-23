@@ -49,3 +49,13 @@ Then("wordt met Playwright-assertions bevestigd dat instellingen en urenstaat zi
 Given("de pagina is langer dan het scherm");
 Then("blokkeert geen enkele laag het doorgeven van de veeg");
 When("er met een vinger omhoog wordt geveegd, komt de pagina in beweging");
+When("de flow voor MOB-H-011 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat geen enkele tekst op een telefoon staat onder de leesbare ondergrens");
+Given("de pagina verwijst naar een manifest en een iOS-icoon");
+When("de flow voor MOB-H-012 wordt uitgevoerd");
+Then("beschrijft het manifest een installeerbare app");
+And("is elk icoon werkelijk vierkant en van de opgegeven maat");
+Given("de app draait op telefoonformaat");
+When("de browser meldt dat installeren mogelijk is");
+Then("verdwijnt de balk na Niet nu en blijft hij weg na een herlaad");
+And("blijft hij op een laptopscherm helemaal weg");
