@@ -94,6 +94,14 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-23 · v0.9.123 kolomlabels op de telefoon waren te klein
+
+- [x] **Gio vroeg of het overzicht op de telefoon anders is dan op desktop.** Nagemeten: de inhoud is gelijk (vier panelen, vier medewerkerrijen, geen enkel gegeven dat alleen op desktop staat). De indeling verschilt bewust -- zes kolommen passen niet op 412px, dus elke medewerker wordt een kaartje waarin die zes velden onder elkaar staan.
+- [x] **Wel te klein.** De kolomkoppen komen op een telefoon uit de opmaak (content: attr(data-label)) en stonden op 8px, terwijl de ondergrens voor schermtekst 11px is. Nu 11px.
+- [x] **Blinde vlek in de eigen norm.** MOB-H-008 meet echte elementen, en querySelectorAll kent geen pseudo-elementen -- dit label kon die case dus principieel niet zien. De smoke test legt nu elk label uit de opmaak langs dezelfde ondergrens. Geverifieerd door de 8px terug te zetten: dan faalt hij, met selector en maat erbij.
+- [x] **Een nuttige toelichting was ook verborgen.** Op smalle schermen werd elke .updated-label weggehaald. Dat klopt voor "De taakverdeling staat ernaast" (daar staat niets naast), maar niet voor "Staat los van uren indienen", wat verklaart wat je ziet. Alleen de indelingsnotitie wordt nu verborgen; de rest blijft staan, op 11px.
+- [x] Versie 0.9.122 → 0.9.123.
+
 ### 2026-08-23 · v0.9.122 wisselvallige regressiesuite bij de bron aangepakt
 
 - [x] **Drie verschillende cases vielen elk een keer om in een verder groene ronde,** telkens op wachten en telkens slagend als je ze los draaide. Dat kostte drie extra ronden van zeven minuten en maakt de gate een onbetrouwbaar signaal.

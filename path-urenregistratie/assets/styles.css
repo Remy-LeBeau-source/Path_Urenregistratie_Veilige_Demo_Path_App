@@ -826,7 +826,12 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .metric-card { min-height: 115px; padding: 16px; }
   .metric-card > strong { font-size: 22px; }
   .panel-heading { align-items: flex-start; padding: 18px; }
-  .updated-label { display: none; }
+  /* Alleen de notitie die naar de indeling verwijst verbergen: op een telefoon staat
+     er niets naast, dus die zin klopt daar niet. De overige toelichtingen blijven wel
+     staan -- ze verklaren wat je ziet -- en gaan naar 11px, de ondergrens voor
+     schermtekst op een telefoon. */
+  .updated-label.is-indelingsnotitie { display: none; }
+  .updated-label { font-size: 11px; }
   .view-heading { align-items: flex-start; flex-direction: column; }
   .view-heading .button { width: 100%; }
   .heading-actions { width: 100%; }
@@ -1180,7 +1185,7 @@ html[data-theme="dark"] .mail-acceptance-label { background: #4b3520; color: #ff
   .dashboard-team-table, .dashboard-team-table tbody { display: block; width: 100%; }
   .dashboard-team-table tr { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0; margin: 0 0 10px; border: 1px solid var(--line); border-radius: 13px; overflow: hidden; }
   .dashboard-team-table td { display: block; min-width: 0; border: 0; border-top: 1px solid var(--line); border-radius: 0; padding: 12px; white-space: normal; }
-  .dashboard-team-table td::before { display: block; margin-bottom: 5px; color: var(--muted); content: attr(data-label); font-size: 8px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+  .dashboard-team-table td::before { display: block; margin-bottom: 5px; color: var(--muted); content: attr(data-label); font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
   .dashboard-team-table td:first-child { grid-column: 1/-1; border: 0; border-radius: 0; }
   .dashboard-team-table td:last-child { grid-column: 1/-1; border: 0; border-top: 1px solid var(--line); border-radius: 0; text-align: left; }
   .dashboard-team-table .dashboard-team-action { width: 100%; min-height: 40px; }

@@ -128,12 +128,32 @@ assert(document.querySelectorAll("select:not([hidden])").length === 0, "De vaste
   assert(bodyRegels.length === 0, `overscroll-behavior mag niet op body staan, dat breekt het scrollen op de telefoon (gevonden bij: ${bodyRegels.join(" | ")})`);
 }
 
+// Op een telefoon worden brede tabellen kaartjes en verdwijnen de kolomkoppen. De
+// betekenis komt dan uit een label in de opmaak (content: attr(data-label)). Dat is
+// echte schermtekst en valt dus onder dezelfde ondergrens van 11px als de rest --
+// het dashboardlabel stond op 8px. De mobiele cases kunnen dit niet zien, want
+// querySelectorAll kent geen pseudo-elementen. Vandaar hier, op de stylesheet zelf.
+{
+  const teKleineLabels = [];
+  for (const blok of styles.split("}")) {
+    const grens = blok.lastIndexOf("{");
+    if (grens < 0) continue;
+    const inhoud = blok.slice(grens + 1);
+    if (!inhoud.includes("content: attr(")) continue;
+    const maat = /font-size:\s*([0-9.]+)px/.exec(inhoud);
+    if (!maat) continue;
+    if (Number(maat[1]) >= 11) continue;
+    teKleineLabels.push(blok.slice(0, grens).trim().split(",").pop().trim() + " = " + maat[1] + "px");
+  }
+  assert(teKleineLabels.length === 0, `Een label uit de opmaak is schermtekst en moet minstens 11px zijn (${teKleineLabels.join(" | ")})`);
+}
+
 assert(document.querySelectorAll("#dashboard-employee-rows tr").length === 4, "Dashboard moet vier demo-medewerkers tonen");
 assert(document.querySelector("#dashboard-team-title").textContent === "Teamstatus · Augustus 2026" && document.querySelector("#dashboard-team-summary").textContent === "4 medewerkers · 2 te controleren · 1 wacht op medewerker", "Het teamoverzicht moet maand, controles en wachttaken compact samenvatten");
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.122"), "Het zichtbare versienummer moet 0.9.122 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.123"), "Het zichtbare versienummer moet 0.9.123 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -1713,4 +1733,4 @@ assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("
 assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Playwright stage- en lokale env-bestanden mogen expliciete runner/CI-variabelen niet overschrijven");
 
 dom.window.close();
-console.log("Path v0.9.122 volledige smoke test: geslaagd");
+console.log("Path v0.9.123 volledige smoke test: geslaagd");
