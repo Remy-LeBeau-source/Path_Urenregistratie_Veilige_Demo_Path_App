@@ -201,6 +201,19 @@ async function main() {
     }
   }
 
+  // De ingebouwde PHP-server handelt standaard een verzoek tegelijk af. Het opstarten
+  // van de app vuurt er een reeks achter elkaar af (csrf, me, bootstrap, dashboard,
+  // facturen, mailwachtrij), en die staan dan in de rij achter elkaar. Onder belasting
+  // duurde dat af en toe langer dan de wachttijd van een case, met een enkele
+  // wisselvallige val tot gevolg terwijl er niets mis was.
+  //
+  // Meer werkers lost dat bij de bron op. Het is een POSIX-voorziening (fork), dus op
+  // Windows heeft het geen effect; daar helpt alleen de ruimere opstartwachttijd in
+  // LoginPage.
+  if (process.platform !== 'win32' && !serverEnv.PHP_CLI_SERVER_WORKERS) {
+    serverEnv.PHP_CLI_SERVER_WORKERS = '4';
+  }
+
   const serverProcess = spawn(phpPath, ['-S', serverAddress, '-t', '.'], {
     cwd: process.cwd(),
     stdio: 'inherit',

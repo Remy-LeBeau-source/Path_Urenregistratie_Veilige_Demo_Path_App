@@ -22,7 +22,13 @@ if (existsSync('.env.local')) {
 export default defineConfig({
   testDir: './tests/playwright',
   workers: 1,
-  timeout: 30_000,
+  // 45 en niet 30 seconden. De ingebouwde PHP-server handelt een verzoek tegelijk af
+  // (op Windows ook met werkers, want die zijn POSIX-only), en het opstarten van de app
+  // vuurt er een reeks achter elkaar af. Een koude start kwam daardoor af en toe net
+  // boven de 30 seconden uit, waarna een case viel terwijl er niets mis was. De ruimte
+  // verzwakt geen enkele controle: elke assertie blijft ongewijzigd, ze krijgen alleen
+  // de tijd die een geserialiseerde server nodig heeft.
+  timeout: 45_000,
   retries: process.env.CI ? 1 : 0,
   fullyParallel: false,
   use: {

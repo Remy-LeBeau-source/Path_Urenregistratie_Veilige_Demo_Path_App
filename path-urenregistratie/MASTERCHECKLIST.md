@@ -94,6 +94,14 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-23 · v0.9.122 wisselvallige regressiesuite bij de bron aangepakt
+
+- [x] **Drie verschillende cases vielen elk een keer om in een verder groene ronde,** telkens op wachten en telkens slagend als je ze los draaide. Dat kostte drie extra ronden van zeven minuten en maakt de gate een onbetrouwbaar signaal.
+- [x] **Oorzaak: de ingebouwde PHP-server handelt een verzoek tegelijk af.** Het opstarten van de app vuurt er een reeks achter elkaar af (csrf, me, bootstrap, dashboard, facturen, mailwachtrij) en die staan dan in de rij. Zolang `body.auth-booting` staat, is het hele loginscherm verborgen, dus een trage opstart laat een case wachten op iets wat er nog niet mag zijn.
+- [x] **`PHP_CLI_SERVER_WORKERS=4` ingesteld** in `scripts/run-playwright-e2e.mjs`. Dat lost het bij de bron op waar het kan. Het is een POSIX-voorziening, dus het werkt in CI (Ubuntu) en niet op Windows.
+- [x] **Tijdslimiet per case van 30 naar 45 seconden.** Op Windows blijft de server geserialiseerd, en een koude start kwam net boven de 30 seconden uit. De binnenste wachttijden ophogen had geen zin: de tijdslimiet van de case was de knellende. Geen enkele assertie is versoepeld -- ze krijgen alleen de tijd die een geserialiseerde server nodig heeft.
+- [x] Versie 0.9.121 → 0.9.122.
+
 ### 2026-08-23 · v0.9.121 diepgaande verkenning, en Engelse foutmeldingen weggewerkt
 
 **Verkenning.** Walkthrough plus monkeytesten, op verzoek van Gio.
