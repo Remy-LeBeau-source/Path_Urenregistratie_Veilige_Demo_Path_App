@@ -1111,16 +1111,18 @@ test('[MOB-H-013] de uitnodiging om te installeren verschijnt alleen waar hij ho
   });
 
   await test.step('When de browser meldt dat installeren mogelijk is', async () => {
-    await page.evaluate(() => window.dispatchEvent(new Event('beforeinstallprompt')));
-    await expect(balk).toBeVisible();
-
-    // Op iOS kan de app het installeren niet zelf starten -- dat gaat alleen via het
-    // deelmenu van Safari -- dus daar staat er uitleg in plaats van een knop.
-    const knop = page.locator('#install-banner-accept');
+    // Alleen Chrome-achtigen sturen deze melding. Op WebKit hem kunstmatig
+    // afvuren zou gedrag toetsen dat op een echte iPhone nooit voorkomt; daar
+    // hoort de balk vanzelf te verschijnen met uitleg, en dat dekt MOB-H-015.
     if (browserName === 'chromium') {
-      await expect(knop, 'op Android kan de app het installeren zelf starten').toBeVisible();
+      await page.evaluate(() => window.dispatchEvent(new Event('beforeinstallprompt')));
+      await expect(balk).toBeVisible();
+      await expect(page.locator('#install-banner-accept'),
+        'met een melding van de browser kan de app het installeren zelf starten').toBeVisible();
     } else {
-      await expect(knop, 'op iOS bestaat die mogelijkheid niet').toBeHidden();
+      await expect(balk).toBeVisible({ timeout: 15_000 });
+      await expect(page.locator('#install-banner-accept'),
+        'op iOS bestaat die mogelijkheid niet').toBeHidden();
       await expect(page.locator('#install-banner-hint')).toContainText('Zet op beginscherm');
     }
   });
@@ -1193,5 +1195,84 @@ test('[MOB-H-014] het aanbod om te installeren blijft bereikbaar na wegklikken o
 
     const onthouden = await page.evaluate(() => window.localStorage.getItem('path-install-afgewezen'));
     expect(onthouden, 'na installeren mag er geen oude afwijzing blijven staan').toBeNull();
+  });
+});
+
+test('[MOB-H-015] het aanbod verschijnt uit zichzelf, ook zonder melding van de browser', async ({ page, browserName }) => {
+  // Gio verwijderde de app en kreeg niets meer te zien. De browser meldt na een
+  // eerdere installatie lang niet meer dat installeren kan, en daar heeft een
+  // website geen invloed op. Mijn balk hing aan diezelfde melding en had dus
+  // precies hetzelfde probleem.
+  //
+  // Nu bepaalt de app het zelf. Kan het installeren echt gestart worden, dan staat
+  // er een knop; kan dat niet, dan staat er hoe het via het menu van de browser
+  // gaat -- maar zichtbaar, niet weggestopt.
+  test.setTimeout(60_000);
+  const balk = page.locator('#install-banner');
+
+  await test.step('Given iemand opent de app in de browser en de browser meldt niets', async () => {
+    await page.goto('/');
+    await page.evaluate(() => {
+      try {
+        window.localStorage.removeItem('path-install-afgewezen');
+      } catch {
+        // opslag geblokkeerd; dan is er ook niets te wissen
+      }
+    });
+    await page.reload();
+  });
+
+  await test.step('Then verschijnt het aanbod alsnog, met uitleg in plaats van een knop', async () => {
+    await expect(balk, 'zonder eigen aanbod ben je afhankelijk van de browser').toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('#install-banner-accept'),
+      'zonder melding van de browser kan de app het installeren niet zelf starten').toBeHidden();
+    await expect(page.locator('#install-banner-hint')).toContainText(/menu|Delen/);
+  });
+
+  // Alleen Chrome-achtigen kunnen het installeren zelf starten; op WebKit bestaat
+  // die mogelijkheid niet en blijft het bij de uitleg hierboven.
+  if (browserName !== 'chromium') return;
+
+  await test.step('And verschijnt er wel een knop zodra de browser het alsnog meldt', async () => {
+    await page.evaluate(() => window.dispatchEvent(new Event('beforeinstallprompt')));
+    await expect(page.locator('#install-banner-accept')).toBeVisible();
+  });
+});
+
+test('[MOB-H-016] de knop Installeren doet nooit stil niets', async ({ page, browserName }) => {
+  // Gio drukte op Installeren en er gebeurde niets. De klikafhandeling begon met
+  // "if (!bewaardeMelding) return;" -- had de browser geen bruikbare melding
+  // gegeven, dan deed de knop dus helemaal niets. Geen melding, geen uitleg.
+  // Een knop die er staat en niets doet is erger dan geen knop.
+  if (browserName !== 'chromium') return;
+
+  test.setTimeout(60_000);
+  await page.goto('/');
+  await page.evaluate(() => {
+    try {
+      window.localStorage.removeItem('path-install-afgewezen');
+    } catch {
+      // opslag geblokkeerd; dan is er ook niets te wissen
+    }
+  });
+  await page.reload();
+
+  await test.step('Given het aanbod staat er zonder bruikbare melding van de browser', async () => {
+    await expect(page.locator('#install-banner')).toBeVisible({ timeout: 15_000 });
+    // Zonder melding hoort de knop verborgen te zijn; we tonen hem toch, om te
+    // bewijzen dat een klik dan alsnog iets doet.
+    await page.evaluate(() => {
+      const knop = document.querySelector('#install-banner-accept');
+      if (knop) knop.removeAttribute('hidden');
+    });
+  });
+
+  await test.step('When er op Installeren wordt gedrukt', async () => {
+    await page.locator('#install-banner-accept').click();
+  });
+
+  await test.step('Then krijgt de gebruiker uitleg in plaats van stilte', async () => {
+    await expect(page.locator('#toast'), 'zonder terugkoppeling lijkt het alsof de knop kapot is')
+      .toContainText(/menu|Delen/, { timeout: 10_000 });
   });
 });

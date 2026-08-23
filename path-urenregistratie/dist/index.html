@@ -148,7 +148,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 0.9.126</span>
+      <span class="demo-badge">Versie 0.9.128</span>
       </div>
     </aside>
 
@@ -164,7 +164,7 @@
         <div class="topbar-title">
           <p class="eyebrow" id="organization-name">Path Consultancy</p>
           <h1 id="page-title">Urenoverzicht</h1>
-          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 0.9.126</span><span class="environment-badge" id="environment-badge" hidden></span></span>
+          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 0.9.128</span><span class="environment-badge" id="environment-badge" hidden></span></span>
         </div>
         <div class="topbar-actions">
           <span class="safety-badge" id="mail-safety-badge" title="De verzendstatus wordt beveiligd door de serverconfiguratie">E-mailstatus laden…</span>
@@ -791,7 +791,7 @@
   </div>
   <script  defer src="assets/jspdf.umd.min.js"></script>
   <script  defer src="assets/invoice-fonts.js"></script>
-  <script  defer src="assets/app.js?v=0.9.126"></script>
+  <script  defer src="assets/app.js?v=0.9.128"></script>
   <script>
     // Defensive: registration failure/unsupported browsers must never affect the app itself.
     if ('serviceWorker' in navigator) {
@@ -914,6 +914,7 @@
       window.addEventListener("beforeinstallprompt", function (gebeurtenis) {
         gebeurtenis.preventDefault();
         bewaardeMelding = gebeurtenis;
+        werkBalkBij();
         tonen();
       });
 
@@ -930,18 +931,53 @@
         werkMenuBij();
       });
 
+      function meldAanGebruiker(tekst) {
+        // toast() komt uit app.js. Is die er niet, dan is de balktekst zelf het
+        // laatste redmiddel -- stil blijven mag niet.
+        if (typeof window.toast === "function") {
+          window.toast(tekst);
+          return;
+        }
+        if (hint) hint.textContent = tekst;
+      }
+
       accepteren.addEventListener("click", function () {
-        if (!bewaardeMelding) return;
+        if (!bewaardeMelding) {
+          // Geen bruikbare melding van de browser: dan is uitleggen het enige wat
+          // kan. Nooit stil niets doen.
+          werkBalkBij();
+          meldAanGebruiker(uitlegVoorDezeBrowser());
+          return;
+        }
+
         var melding = bewaardeMelding;
         bewaardeMelding = null;
         verbergen();
+
         try {
-          melding.prompt();
+          var uitkomst = melding.prompt();
+          // Chrome geeft via userChoice terug wat de gebruiker koos. Zonder deze
+          // terugkoppeling lijkt wegklikken van het venster op "er gebeurt niets".
+          if (melding.userChoice && typeof melding.userChoice.then === "function") {
+            melding.userChoice.then(function (keuze) {
+              if (keuze && keuze.outcome === "accepted") return;
+              werkBalkBij();
+              tonen();
+              meldAanGebruiker("Niet geinstalleerd. Je kunt het altijd opnieuw doen via het profielmenu.");
+            }).catch(function () {
+              // Geen terugkoppeling beschikbaar; de balk staat er weer, dat volstaat.
+              werkBalkBij();
+              tonen();
+            });
+          }
+          if (uitkomst && typeof uitkomst.catch === "function") uitkomst.catch(function () {});
         } catch (fout) {
-          // Browser wil niet; dan blijft het bij het menu van de browser zelf.
+          // Starten lukte niet; dan alsnog uitleggen in plaats van niets doen.
+          werkBalkBij();
+          tonen();
+          meldAanGebruiker(uitlegVoorDezeBrowser());
         }
       });
-
       wegklikken.addEventListener("click", function () {
         verbergen();
         try {
@@ -951,23 +987,33 @@
         }
       });
 
-      // iOS Safari: geen melding beschikbaar, dus uitleggen hoe het daar gaat.
-      try {
-        var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        var isSafari = /Safari/.test(navigator.userAgent) && !/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent);
-        if (isIOS && isSafari && !draaitAlsApp()) {
-          if (hint) hint.textContent = "Tik op Delen en kies Zet op beginscherm.";
-          accepteren.setAttribute("hidden", "");
-          // Niet meteen bij binnenkomst vragen. Android wacht vanzelf tot de
-          // browser vindt dat installeren zinvol is; op iOS bestaat dat signaal
-          // niet, dus wachten we tot iemand de app daadwerkelijk even gebruikt.
-          // Direct bij het laden vragen is opdringerig en ging bovendien over een
-          // openstaand dialoogvenster heen.
-          window.setTimeout(tonen, 8000);
-        }
-      } catch (fout) {
-        // Geen uitleg is beter dan een stukke pagina.
+      // Hoe je installeert verschilt per browser, en alleen Chrome-achtigen laten
+      // ons het zelf starten. Zonder die mogelijkheid is uitleggen het enige wat
+      // kan -- maar dan nog steeds zichtbaar, niet weggestopt.
+      function uitlegVoorDezeBrowser() {
+        var ua = navigator.userAgent;
+        var isIOS = /iPad|iPhone|iPod/.test(ua);
+        if (isIOS) return "Tik onderin op Delen en kies Zet op beginscherm.";
+        return "Open het menu van je browser (drie puntjes) en kies App installeren.";
       }
+
+      function werkBalkBij() {
+        if (bewaardeMelding) {
+          if (hint) hint.textContent = "Dan open je hem als app, zonder adresbalk.";
+          accepteren.removeAttribute("hidden");
+        } else {
+          if (hint) hint.textContent = uitlegVoorDezeBrowser();
+          accepteren.setAttribute("hidden", "");
+        }
+      }
+
+      // Niet meteen bij binnenkomst: eerst even laten zien wat de app is. En niet
+      // wachten op de browser, want dat signaal komt na een eerdere installatie
+      // lang niet meer.
+      window.setTimeout(function () {
+        werkBalkBij();
+        tonen();
+      }, 3000);
     })();
   </script>
 </body>

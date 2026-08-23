@@ -94,6 +94,23 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-23 · v0.9.128 de knop Installeren deed stil niets
+
+- [x] **Gio drukte op Installeren en er gebeurde niets.** De klikafhandeling begon met een stille afbreking: had de browser geen bruikbare melding gegeven, dan deed de knop letterlijk niets. Geen venster, geen melding. Hij loste het daarna zelf op via de drie puntjes van Chrome, wat klopt: dat menu werkt onafhankelijk van dat signaal.
+- [x] **Waarom die melding uitbleef** is de tweede helft. Google documenteert dat het signaal niet komt zolang de app geinstalleerd is, en verder pas per paginanavigatie. Welke van de twee het hier was valt zonder logboek van het toestel niet vast te stellen -- en dat hoeft ook niet, want het gedrag mag in geen van beide gevallen stilte zijn.
+- [x] **De knop doet nu altijd iets zichtbaars.** Geen melding beschikbaar: uitleg hoe het via het menu van die browser gaat. Wel beschikbaar: het venster van de browser, plus terugkoppeling als iemand dat wegklikt. Mislukt het starten: ook uitleg.
+- [x] **MOB-H-016 toegevoegd**, met de knop kunstmatig zichtbaar gemaakt zonder melding, om te bewijzen dat een klik dan alsnog iets doet. Geverifieerd door de oude code terug te zetten: dan blijft de melding uit.
+- [x] **Uitgezocht bij de bron hoe Chrome dit doet.** Wegklikken van de eigen balk van Chrome geeft ongeveer drie maanden stilte; na het verwijderen van een app hoort het signaal juist weer bij elke paginanavigatie te komen. Het signaal aan de site en de balk van Chrome zijn twee verschillende dingen -- daarom mag een eigen aanbod nooit aan dat signaal hangen.
+- [x] Versie 0.9.127 → 0.9.128.
+
+### 2026-08-23 · v0.9.127 het aanbod om te installeren toont zichzelf
+
+- [x] **Gio: app verwijderd, en het aanbod kwam nog steeds niet terug.** De balk van Chrome zelf is niet terug te roepen -- die browser besluit dat zelf en houdt het na een installatie of wegklik lang tegen, juist om te voorkomen dat sites daarmee gaan zeuren. Daar heeft geen enkele website invloed op.
+- [x] **Mijn eigen balk hing aan diezelfde melding en had dus precies hetzelfde probleem.** Dat is omgedraaid: de app bepaalt nu zelf wanneer het aanbod verschijnt, drie seconden na binnenkomst. Is de melding van de browser beschikbaar, dan staat er een knop die het installeren start; zo niet, dan staat er hoe het via het menu van die browser gaat. Zichtbaar, niet weggestopt.
+- [x] **MOB-H-015 toegevoegd:** het aanbod verschijnt uit zichzelf zonder enige melding van de browser, met uitleg in plaats van een knop, en de knop verschijnt alsnog zodra de browser het meldt.
+- [x] **MOB-H-013 rechtgezet.** Die vuurde op WebKit kunstmatig een melding af die op een echte iPhone nooit komt, en toetste vervolgens het gedrag dat daarbij hoort. Nu toetst hij per motor wat er werkelijk gebeurt.
+- [x] Versie 0.9.126 → 0.9.127.
+
 ### 2026-08-23 · v0.9.126 het app-icoon was te klein om te herkennen
 
 - [x] **Door Gio gemeld met een foto van zijn beginscherm: logo en tekst nauwelijks te zien.** Twee oorzaken. Het maskeerbare icoon hield veel rand vrij omdat Android er een vorm uit snijdt, en het logo is een breed woordmerk waarvan de tekst op iconformaat wegvalt.

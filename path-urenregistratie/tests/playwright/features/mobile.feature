@@ -112,7 +112,7 @@ Feature: Mobiele gebruikerservaring
   @happy
   Scenario: [MOB-H-013] de uitnodiging om te installeren verschijnt alleen waar hij hoort
     # Testtechniek: Responsive viewport + end-to-end use-case
-    # Aantoonbare Playwright-assertions in deze case: 8
+    # Aantoonbare Playwright-assertions in deze case: 9
     Given de app draait op telefoonformaat
     When de browser meldt dat installeren mogelijk is
     Then verdwijnt de balk na Niet nu en blijft hij weg na een herlaad
@@ -127,3 +127,20 @@ Feature: Mobiele gebruikerservaring
     Then staat Op startscherm zetten altijd in het profielmenu
     And vervalt een eerdere Niet nu na dertig dagen
     And wist een installatie de eerdere keuze, zodat het aanbod na verwijderen terugkomt
+
+  @happy
+  Scenario: [MOB-H-015] het aanbod verschijnt uit zichzelf, ook zonder melding van de browser
+    # Testtechniek: Responsive viewport + end-to-end use-case
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given iemand opent de app in de browser en de browser meldt niets
+    When de flow voor MOB-H-015 wordt uitgevoerd
+    Then verschijnt het aanbod alsnog, met uitleg in plaats van een knop
+    And verschijnt er wel een knop zodra de browser het alsnog meldt
+
+  @happy
+  Scenario: [MOB-H-016] de knop Installeren doet nooit stil niets
+    # Testtechniek: Responsive viewport + end-to-end use-case
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given het aanbod staat er zonder bruikbare melding van de browser
+    When er op Installeren wordt gedrukt
+    Then krijgt de gebruiker uitleg in plaats van stilte
