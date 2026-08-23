@@ -324,3 +324,58 @@ test('[INV-ID-H-008] typen in een instelling bevriest de rest van het formulier 
       .toHaveValue(getypt);
   });
 });
+
+test('[INV-ID-H-009] website en slogan blijven bewaard en komen onder de mail', async ({ page }) => {
+  // Dezelfde valkuil als eerder bij de klanturenstaat-teksten: het formulier
+  // verzamelt een veld, maar er is geen kolom om het in te bewaren, dus het leeft
+  // alleen in de browser van wie het typte. Een F5 was het kwijt.
+  //
+  // Deze twee velden voeden de handtekening onder de mails van Backoffice, dus
+  // ze moeten de hele keten door: formulier, server, database en terug.
+  const login = new LoginPage(page);
+  await login.open();
+  await login.loginAsAdmin();
+  await openSettings(page);
+
+  const velden = ['setting-website', 'setting-tagline'] as const;
+  const origineel: Record<string, string> = {};
+  for (const id of velden) origineel[id] = await page.locator('#' + id).inputValue();
+
+  const uniek = Date.now().toString().slice(-6);
+  const gewijzigd: Record<string, string> = {
+    'setting-website': `www.test-${uniek}.invalid`,
+    'setting-tagline': `Slogan voor de proef ${uniek}`,
+  };
+
+  const opslaan = async () => {
+    const antwoord = page.waitForResponse(item =>
+      item.url().includes('/server/api/settings.php') && item.request().method() === 'POST');
+    await page.locator('#save-settings').click();
+    expect((await antwoord).status()).toBe(200);
+    await expect(page.locator('#toast')).toContainText('Instellingen zijn op de server opgeslagen');
+  };
+
+  try {
+    await test.step('When website en slogan worden ingevuld en opgeslagen', async () => {
+      for (const id of velden) await page.locator('#' + id).fill(gewijzigd[id]);
+      await opslaan();
+    });
+
+    await test.step('Then staan ze na een herlaad nog steeds in het formulier', async () => {
+      const gegevensBinnen = page.waitForResponse(item =>
+        item.url().includes('/server/api/bootstrap.php'), { timeout: 20_000 });
+      await page.reload();
+      await gegevensBinnen;
+      await openSettings(page);
+      for (const id of velden) {
+        await expect(page.locator('#' + id), id + ' moet bewaard blijven').toHaveValue(gewijzigd[id]);
+      }
+    });
+  } finally {
+    // Gedeelde bedrijfsinstellingen: nooit proefteksten laten staan.
+    await page.reload();
+    await openSettings(page);
+    for (const id of velden) await page.locator('#' + id).fill(origineel[id]);
+    await opslaan();
+  }
+});

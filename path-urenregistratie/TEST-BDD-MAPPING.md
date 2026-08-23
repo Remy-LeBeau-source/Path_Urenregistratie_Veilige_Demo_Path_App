@@ -151,6 +151,7 @@
 | INV-ID-H-006 | integration | invoice-company-identity.feature | bedrijfsgegevens uit het instellingenformulier blijven bewaard en komen op de factuur | API-contract + equivalentieklasse | 5 | invoice-company-identity.steps.ts | invoice-company-identity.spec.ts | DB / Integratie | Facturatie | bedrijfsgegevens uit het instellingenformulier blijven bewaard en komen op de factuur | Happy | 11 | Actueel |
 | INV-ID-H-007 | integration | invoice-company-identity.feature | de klanturenstaat-mailteksten blijven na opslaan bewaard | API-contract + equivalentieklasse | 4 | invoice-company-identity.steps.ts | invoice-company-identity.spec.ts | DB / Integratie | Facturatie | de klanturenstaat-mailteksten blijven na opslaan bewaard | Happy | 11 | Actueel |
 | INV-ID-H-008 | integration | invoice-company-identity.feature | typen in een instelling bevriest de rest van het formulier niet | API-contract + equivalentieklasse | 4 | invoice-company-identity.steps.ts | invoice-company-identity.spec.ts | DB / Integratie | Facturatie | typen in een instelling bevriest de rest van het formulier niet | Happy | 11 | Actueel |
+| INV-ID-H-009 | integration | invoice-company-identity.feature | website en slogan blijven bewaard en komen onder de mail | API-contract + equivalentieklasse | 3 | invoice-company-identity.steps.ts | invoice-company-identity.spec.ts | DB / Integratie | Facturatie | website en slogan blijven bewaard en komen onder de mail | Happy | 11 | Actueel |
 | INV-H-001 | ui | invoices.feature | admin facturen zichtbaar en console errors 0 | Beslissingstabel rollen en autorisatie | 1 | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | admin facturen zichtbaar en console errors 0 | Happy | 11 | Actueel |
 | INV-N-005 | ui | invoices.feature | employee facturen zichtbaar maar beperkt en console errors 0 | Negatieve equivalentieklasse + error guessing | 4 | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | employee facturen zichtbaar maar beperkt en console errors 0 | Negative | 11 | Actueel |
 | INV-H-002 | ui | invoices.feature | periodefilter juli en augustus werkt | Equivalentieklassen | 4 | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | periodefilter juli en augustus werkt | Happy | 11 | Actueel |
@@ -292,9 +293,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 270
+- Playwright executable cases: 271
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 271
+- Totaal unieke executable cases: 272
 - Playwright features: 23
 - Database features: 1
 - Playwright steps mappings: 23

@@ -144,6 +144,10 @@ function migration_plan(bool $allowDemoMigrations): array
         'id' => '021_customer_timesheet_mail_templates.sql',
         'path' => __DIR__ . '/migrations/021_customer_timesheet_mail_templates.sql',
     ];
+    $plan[] = [
+        'id' => '022_company_website_tagline.sql',
+        'path' => __DIR__ . '/migrations/022_company_website_tagline.sql',
+    ];
     return $plan;
 }
 

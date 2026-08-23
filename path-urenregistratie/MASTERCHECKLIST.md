@@ -94,6 +94,21 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-24 · v0.9.132 handtekening onder de mail, en donkere modus aangepakt
+
+- [x] **Handtekening onder de drie mails.** Ze sloten af met alleen de bedrijfsnaam. Nu met naam, bedrijf, e-mailadres, website en slogan -- allemaal uit Instellingen, dus wie ze daar aanpast ziet dat in alle drie de mails terug.
+- [x] **Website en slogan toegevoegd** als velden, met migratie 022. Die stonden nergens: niet in de instellingen en niet in de database. INV-ID-H-009 legt de hele keten vast (formulier, server, database, terug na een herlaad) -- precies de valkuil waar we vanavond al twee keer in liepen.
+- [x] **Het logo uit de echte handtekening blijft er bewust af.** De mails gaan als platte tekst met de factuur als PDF-bijlage; een afbeelding vraagt een opgemaakte mail, met een tweede versie in platte tekst, een ingesloten afbeelding en testwerk over verschillende mailclients. Dat raakt de verzendlaag die nu bewezen werkt, en dat vlak voor de livegang.
+- [x] **Migratie 022 viel eerst om op een puntkomma in het commentaar.** De migratielezer knipt het bestand op puntkomma's, ook binnen een toelichting. Dat staat nu als waarschuwing in dat bestand.
+
+**Donkere modus, gemeld door Gio met een schermafdruk.**
+
+- [x] **--navy werd in donkere modus niet herzien**, terwijl die kleur op 64 plekken tekst is. Dat gaf daar dezelfde kleur als de achtergrond. Afgesplitst naar --navy-tekst, dat per modus wordt bepaald; --navy zelf blijft ongewijzigd want dat is ook achtergrond en rand.
+- [x] **Mijn eigen tekstkleuren van 0.9.124 waren fout in donkere modus.** --mint-dark-tekst en --warning-tekst zijn gemaakt om het contrast in lichte modus te repareren en zijn dus donker. Nu hebben beide een lichte tegenhanger.
+- [x] **60 vaste lichte vlakken in de opmaak, met al 77 losse uitzonderingen ernaast.** Er werd stukje bij beetje aan gelapt, dus elke nieuwe kaart was weer een gat. 44 daarvan hebben nu een naam die per modus een keer wordt bepaald.
+- [x] **Eerlijk over wat niet vaststaat:** de eerste metingen aan donkere modus waren onbruikbaar. Het thema werd met de hand gezet, maar elke render roept applyTheme aan en zet het terug op de opgeslagen keuze -- er is dus een mengsel gemeten. Een tweede poging liep vast omdat de app de gewone browserkeuzelijsten heeft vervangen door eigen bediening. De drie oorzaken hierboven zijn uit de code vastgesteld en staan vast; of donkere modus nu helemaal klopt is niet gemeten.
+- [x] Versie 0.9.131 → 0.9.132.
+
 ### 2026-08-23 · v0.9.131 eigen standaardtekst voor boekhouder en salarisadministratie
 
 - [x] **Door Gio gemeld: de boekhouder kreeg brokertaal.** Letterlijk "Middag, Hierbij stuur ik de ureninformatie van Marc de Roon over juli 2026. Daadwerkelijk gewerkte uren: 164,00 uur." Dat is een bericht aan de broker, en het las bij de boekhouder als een bericht aan de verkeerde persoon.

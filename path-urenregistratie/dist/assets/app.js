@@ -430,6 +430,8 @@ function freshState() {
       appName: "Uren & Facturatie",
       supportName: "Path Backoffice",
       supportEmail: "backoffice@pathconsultancy.nl",
+      website: "www.pathconsultancy.nl",
+      tagline: "De specialist van morgen, vandaag onderweg!",
       brandPrimary: "#0d1b38",
       brandAccent: "#3abd9d",
       brandLogo: "",
@@ -2440,6 +2442,9 @@ function mergeBootstrapIntoState(data) {
   state.settings.appName = String(company.app_name || state.settings.appName || "");
   state.settings.supportName = String(company.support_name || state.settings.supportName || "");
   state.settings.supportEmail = String(company.support_email || state.settings.supportEmail || "");
+  // Leeg betekent hier "nooit ingevuld": dan blijft de ingebouwde tekst staan.
+  if (company.website) state.settings.website = String(company.website);
+  if (company.tagline) state.settings.tagline = String(company.tagline);
   state.settings.companyName = String(company.legal_name || state.settings.companyName || "");
   state.settings.invoiceNameDisplay = ["trade_and_legal", "legal_only"].includes(String(company.invoice_name_display || ""))
     ? String(company.invoice_name_display)
@@ -7231,6 +7236,8 @@ function populateSettings() {
   zetInstelling("setting-app-name", settings.appName);
   zetInstelling("setting-support-name", settings.supportName);
   zetInstelling("setting-support-email", settings.supportEmail);
+  zetInstelling("setting-website", settings.website || "");
+  zetInstelling("setting-tagline", settings.tagline || "");
   zetInstelling("setting-brand-primary", normalizedBrandColor(settings.brandPrimary, "#0d1b38"));
   zetInstelling("setting-brand-accent", normalizedBrandColor(settings.brandAccent, "#3abd9d"));
   pendingBrandLogo = String(settings.brandLogo || "");
@@ -7282,6 +7289,8 @@ function saveSettings() {
     appName: document.querySelector("#setting-app-name").value.trim() || "Uren & Facturatie",
     supportName: document.querySelector("#setting-support-name").value.trim() || "Ondersteuning",
     supportEmail: document.querySelector("#setting-support-email").value.trim(),
+    website: document.querySelector("#setting-website").value.trim(),
+    tagline: document.querySelector("#setting-tagline").value.trim(),
     brandPrimary: normalizedBrandColor(document.querySelector("#setting-brand-primary").value, "#0d1b38"),
     brandAccent: normalizedBrandColor(document.querySelector("#setting-brand-accent").value, "#3abd9d"),
     brandLogo: pendingBrandLogo,

@@ -70,3 +70,11 @@ Feature: Facturerende onderneming en handelsnaam
     Given de cursor staat in een van de instellingen
     When een ander veld verouderd raakt en het scherm opnieuw wordt opgebouwd
     Then wordt het verouderde veld hersteld en blijft het getypte veld staan
+
+  @happy
+  Scenario: [INV-ID-H-009] website en slogan blijven bewaard en komen onder de mail
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given facturerende onderneming en handelsnaam is voorbereid
+    When website en slogan worden ingevuld en opgeslagen
+    Then staan ze na een herlaad nog steeds in het formulier

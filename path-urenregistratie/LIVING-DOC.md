@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 270 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 271 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 270 unieke case-ID's
+- Playwright executable cases: 271 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 271 unieke case-ID's
+- Totaal executable cases: 272 unieke case-ID's
 - Playwright features: 23
 - Database features: 1
 - Playwright steps mappings: 23
 - Database steps mappings: 1
-- Uitvoeringen: 287
-- Niet-mobile projectuitvoeringen: 253
+- Uitvoeringen: 288
+- Niet-mobile projectuitvoeringen: 254
 - Mobile functionele cases: 17
 - Pixel 7 / Chromium-uitvoeringen: 17
 - iPhone 13 / WebKit-uitvoeringen: 17
 
-De 17 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 270 Playwright-functionele cases in totaal 287 resultaten op: 253 + (17 x 2) = 287.
+De 17 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 271 Playwright-functionele cases in totaal 288 resultaten op: 254 + (17 x 2) = 288.
 
 ## Documentatieketen
 
@@ -221,7 +221,7 @@ De 17 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 270 Playwri
 
 - Feature: `tests/playwright/features/invoice-company-identity.feature`
 - Source: `tests/playwright/invoice-company-identity.spec.ts`
-- Cases: 8
+- Cases: 9
 
 - [INV-ID-H-001] handelsnaam en juridische naam staan samen op de factuurpreview — Techniek: API-contract + equivalentieklasse · Assertions: 3
 - [INV-ID-H-002] alleen juridische naam is als factuurweergave te kiezen — Techniek: Equivalentieklassen · Assertions: 3
@@ -231,6 +231,7 @@ De 17 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 270 Playwri
 - [INV-ID-H-006] bedrijfsgegevens uit het instellingenformulier blijven bewaard en komen op de factuur — Techniek: API-contract + equivalentieklasse · Assertions: 5
 - [INV-ID-H-007] de klanturenstaat-mailteksten blijven na opslaan bewaard — Techniek: API-contract + equivalentieklasse · Assertions: 4
 - [INV-ID-H-008] typen in een instelling bevriest de rest van het formulier niet — Techniek: API-contract + equivalentieklasse · Assertions: 4
+- [INV-ID-H-009] website en slogan blijven bewaard en komen onder de mail — Techniek: API-contract + equivalentieklasse · Assertions: 3
 
 ### Facturen bekijken en beheren
 

@@ -32,3 +32,4 @@ When("de vier teksten worden aangepast en opgeslagen");
 Given("de cursor staat in een van de instellingen");
 When("een ander veld verouderd raakt en het scherm opnieuw wordt opgebouwd");
 Then("wordt het verouderde veld hersteld en blijft het getypte veld staan");
+When("website en slogan worden ingevuld en opgeslagen");

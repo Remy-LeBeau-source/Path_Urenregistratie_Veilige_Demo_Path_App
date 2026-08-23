@@ -16,7 +16,8 @@ const MAIL_CHANNEL_TEMPLATES = [
             . "Bijgevoegd ontvangt u factuur {factuurnummer} voor de periode {periode}.\n\n"
             . "Medewerker: {medewerker}\nUren: {uren}\n"
             . "Subtotaal: € {subtotaal}\nBtw: € {btw}\nTotaal: € {bedrag}\n\n"
-            . "Met vriendelijke groet,\n{bedrijf}",
+            . "Met vriendelijke groet,\n\n"
+            . "{ondersteuning}\n{bedrijf}\n{contactmail}\n{website}\n\n{slogan}",
     ],
     'accountant' => [
         // Het factuurnummer staat vooraan in het onderwerp: een boekhouder zoekt
@@ -31,7 +32,8 @@ const MAIL_CHANNEL_TEMPLATES = [
             . "Subtotaal: € {subtotaal}\n"
             . "Btw: € {btw}\n"
             . "Totaal: € {bedrag}\n\n"
-            . "Met vriendelijke groet,\n{bedrijf}",
+            . "Met vriendelijke groet,\n\n"
+            . "{ondersteuning}\n{bedrijf}\n{contactmail}\n{website}\n\n{slogan}",
     ],
     'payroll' => [
         // Bewust geen bedragen en geen factuurnummer: de salarisadministratie
@@ -42,7 +44,8 @@ const MAIL_CHANNEL_TEMPLATES = [
             "Goedemiddag,\n\n"
             . "Hierbij de goedgekeurde uren van {medewerker} over {periode}.\n\n"
             . "Gewerkte uren: {uren}\n\n"
-            . "Met vriendelijke groet,\n{bedrijf}",
+            . "Met vriendelijke groet,\n\n"
+            . "{ondersteuning}\n{bedrijf}\n{contactmail}\n{website}\n\n{slogan}",
     ],
     // The settings screen offers 'Overig' as a category, and a recipient with it
     // used to be dropped silently: the channel had no template, so the queue loop
@@ -188,6 +191,10 @@ function mail_enqueue_for_invoice(
             a.agreement_number, a.contractor_number,
             p.year, p.month,
             c.trade_name AS company_name,
+            c.support_name AS support_name,
+            c.support_email AS support_email,
+            c.website AS company_website,
+            c.tagline AS company_tagline,
             cp_client.trade_name AS client_name
          FROM invoices i
          JOIN timesheets t ON t.id = i.timesheet_id
@@ -223,6 +230,10 @@ function mail_enqueue_for_invoice(
         'btw'               => number_format((float)$inv['vat_amount'], 2, ',', '.'),
         'bedrag'            => number_format((float)$inv['total'], 2, ',', '.'),
         'bedrijf'           => (string)$inv['company_name'],
+        'ondersteuning'     => (string)($inv['support_name'] ?? ''),
+        'contactmail'       => (string)($inv['support_email'] ?? ''),
+        'website'           => (string)($inv['company_website'] ?? ''),
+        'slogan'            => (string)($inv['company_tagline'] ?? ''),
         'klant'             => (string)($inv['client_name'] ?? ''),
         'overeenkomstnummer'=> (string)($inv['agreement_number'] ?? ''),
     ];
