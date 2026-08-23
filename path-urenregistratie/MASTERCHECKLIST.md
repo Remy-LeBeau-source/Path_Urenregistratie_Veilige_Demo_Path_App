@@ -94,6 +94,23 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-23 · v0.9.126 het app-icoon was te klein om te herkennen
+
+- [x] **Door Gio gemeld met een foto van zijn beginscherm: logo en tekst nauwelijks te zien.** Twee oorzaken. Het maskeerbare icoon hield veel rand vrij omdat Android er een vorm uit snijdt, en het logo is een breed woordmerk waarvan de tekst op iconformaat wegvalt.
+- [x] **Eerst alleen het symbool geprobeerd.** Dat leest beter op klein formaat, maar het symbool in het bronbestand is 36x41 pixels; voor een icoon van 512 is dat acht keer vergroten en dat wordt blokkerig. Bovendien wilde Gio het volledige logo houden.
+- [x] **Het volledige logo, zo groot als kan.** Gewoon icoon van 78 naar 88 procent breed, iOS van 72 naar 82, maskeerbaar van 56 naar 72. Dat laatste is uitgerekend en geen gok: Android snijdt een cirkel uit met een doorsnede van 80 procent, en bij een verhouding van 3:1 liggen de hoekpunten van een logo van 72 procent breed nog net binnen die cirkel (op 76 procent). Bij 76 procent breed vallen ze erbuiten en wordt consultancy afgekapt.
+- [x] **Meteen scherper ook**, want het hele logo is 162 pixels breed tegenover 36 voor het losse symbool: veel minder vergroten.
+- [x] **Beperking vastgelegd:** het bronbestand is 162x54 en 2 kB. Een echt scherp icoon van 512 vraagt een groter logobestand, het liefst als SVG of als PNG van minstens 512x512. De generator hoeft dan alleen een betere bron te krijgen.
+- [x] Versie 0.9.125 → 0.9.126.
+
+### 2026-08-23 · v0.9.125 het aanbod om te installeren was eenmalig
+
+- [x] **Door Gio gemeld: app verwijderd, en de vraag om te installeren kwam niet meer terug.** Twee oorzaken. De keuze Niet nu werd voor altijd onthouden, en de browser meldt uit zichzelf pas veel later opnieuw dat installeren kan -- na het verwijderen van een app houdt Chrome dat een tijd tegen.
+- [x] **Op het tweede hebben we geen invloed**, en dat maakt een balk die alleen op dat signaal wacht per definitie onbetrouwbaar. Daarom staat Op startscherm zetten nu vast in het profielmenu. Is de melding van de browser beschikbaar, dan start het installeren meteen; zo niet, dan verschijnt de uitleg voor die browser.
+- [x] **Niet nu vervalt na dertig dagen** in plaats van voor altijd, en wordt gewist zodra iemand de app installeert -- zodat het aanbod na verwijderen gewoon weer kan komen.
+- [x] **MOB-H-014 toegevoegd:** het menu-item staat er altijd, een verse afwijzing houdt de balk weg, een afwijzing van 31 dagen oud niet meer, en installeren wist de oude keuze. Geverifieerd door het oude gedrag terug te zetten: dan faalt de case op het ontbrekende menu-item.
+- [x] Versie 0.9.124 → 0.9.125.
+
 ### 2026-08-23 · v0.9.124 leesbaarheid, contrast en een werkend app-icoon
 
 **Tekstgrootte op de telefoon.**

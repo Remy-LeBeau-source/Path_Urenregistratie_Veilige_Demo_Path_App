@@ -117,3 +117,13 @@ Feature: Mobiele gebruikerservaring
     When de browser meldt dat installeren mogelijk is
     Then verdwijnt de balk na Niet nu en blijft hij weg na een herlaad
     And blijft hij op een laptopscherm helemaal weg
+
+  @happy
+  Scenario: [MOB-H-014] het aanbod om te installeren blijft bereikbaar na wegklikken of verwijderen
+    # Testtechniek: Responsive viewport + end-to-end use-case
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given de app draait in de browser
+    When de flow voor MOB-H-014 wordt uitgevoerd
+    Then staat Op startscherm zetten altijd in het profielmenu
+    And vervalt een eerdere Niet nu na dertig dagen
+    And wist een installatie de eerdere keuze, zodat het aanbod na verwijderen terugkomt

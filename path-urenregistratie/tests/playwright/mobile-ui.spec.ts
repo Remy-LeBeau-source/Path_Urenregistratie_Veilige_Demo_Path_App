@@ -1148,3 +1148,50 @@ test('[MOB-H-013] de uitnodiging om te installeren verschijnt alleen waar hij ho
     await expect(balk, 'op desktop biedt Chrome het zelf al aan').toBeHidden();
   });
 });
+
+test('[MOB-H-014] het aanbod om te installeren blijft bereikbaar na wegklikken of verwijderen', async ({ page }) => {
+  // Gio verwijderde de app en kreeg de vraag niet meer terug. Twee oorzaken: de
+  // keuze "Niet nu" werd voor altijd onthouden, en de browser meldt uit zichzelf
+  // pas weer veel later dat installeren kan. Op dat tweede hebben we geen invloed,
+  // dus moet er een vaste plek zijn waar je het zelf kunt opzoeken.
+  const balk = page.locator('#install-banner');
+  const menuItem = page.locator('#profile-action-install');
+
+  await test.step('Given de app draait in de browser', async () => {
+    await page.goto('/');
+    const login = new LoginPage(page);
+    await login.loginAsAdmin();
+  });
+
+  await test.step('Then staat Op startscherm zetten altijd in het profielmenu', async () => {
+    await page.locator('#profile-menu-button').click();
+    await expect(menuItem, 'zonder vaste plek ben je afhankelijk van wanneer de browser het meldt')
+      .toBeVisible();
+    await page.keyboard.press('Escape');
+  });
+
+  await test.step('And vervalt een eerdere Niet nu na dertig dagen', async () => {
+    // Een keuze van vandaag houdt de balk weg.
+    await page.evaluate(() => window.localStorage.setItem('path-install-afgewezen', String(Date.now())));
+    await page.reload();
+    await page.evaluate(() => window.dispatchEvent(new Event('beforeinstallprompt')));
+    await expect(balk, 'wie net Niet nu koos moet niet meteen opnieuw gevraagd worden').toBeHidden();
+
+    // Een keuze van meer dan dertig dagen geleden niet meer.
+    await page.evaluate(() => {
+      const eenendertigDagen = 31 * 24 * 60 * 60 * 1000;
+      window.localStorage.setItem('path-install-afgewezen', String(Date.now() - eenendertigDagen));
+    });
+    await page.reload();
+    await page.evaluate(() => window.dispatchEvent(new Event('beforeinstallprompt')));
+    await expect(balk, 'na dertig dagen mag het aanbod terugkomen').toBeVisible();
+  });
+
+  await test.step('And wist een installatie de eerdere keuze, zodat het aanbod na verwijderen terugkomt', async () => {
+    await page.evaluate(() => window.localStorage.setItem('path-install-afgewezen', String(Date.now())));
+    await page.evaluate(() => window.dispatchEvent(new Event('appinstalled')));
+
+    const onthouden = await page.evaluate(() => window.localStorage.getItem('path-install-afgewezen'));
+    expect(onthouden, 'na installeren mag er geen oude afwijzing blijven staan').toBeNull();
+  });
+});

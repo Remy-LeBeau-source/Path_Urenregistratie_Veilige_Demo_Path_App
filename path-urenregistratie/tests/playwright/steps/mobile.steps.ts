@@ -59,3 +59,8 @@ Given("de app draait op telefoonformaat");
 When("de browser meldt dat installeren mogelijk is");
 Then("verdwijnt de balk na Niet nu en blijft hij weg na een herlaad");
 And("blijft hij op een laptopscherm helemaal weg");
+Given("de app draait in de browser");
+When("de flow voor MOB-H-014 wordt uitgevoerd");
+Then("staat Op startscherm zetten altijd in het profielmenu");
+And("vervalt een eerdere Niet nu na dertig dagen");
+And("wist een installatie de eerdere keuze, zodat het aanbod na verwijderen terugkomt");

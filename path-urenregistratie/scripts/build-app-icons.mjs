@@ -152,6 +152,71 @@ function crc32(buf) {
   return c ^ 0xffffffff;
 }
 
+// --- Het symbool uit het logo snijden --------------------------------------
+
+// Het logo is een breed woordmerk: een groen symbool, een gat, en dan "Path"
+// met "consultancy" eronder. Op een icoon van pakweg een centimeter is die
+// tekst niet te lezen -- daar heb je een symbool voor nodig. We snijden dus het
+// linkerdeel uit: alles tot het eerste echte gat in het beeld.
+function snijSymboolUit(beeld) {
+  const gevuld = [];
+  for (let x = 0; x < beeld.breedte; x++) {
+    let aantal = 0;
+    for (let y = 0; y < beeld.hoogte; y++) {
+      // Stevige drempel: halfdoorzichtige randpixels van het woordmerk horen
+      // niet mee te tellen, anders snijden we vlekjes mee.
+      if (beeld.rgba[(y * beeld.breedte + x) * 4 + 3] > 160) aantal++;
+    }
+    gevuld.push(aantal);
+  }
+
+  let begin = gevuld.findIndex(n => n > 0);
+  if (begin < 0) return beeld;
+
+  // Doorlopen tot een gat van minstens vier lege kolommen: dat scheidt het
+  // symbool van het woordmerk.
+  let eind = begin;
+  let leeg = 0;
+  for (let x = begin; x < beeld.breedte; x++) {
+    if (gevuld[x] > 0) {
+      eind = x;
+      leeg = 0;
+    } else {
+      leeg++;
+      if (leeg >= 4) break;
+    }
+  }
+
+  let boven = 0;
+  let onder = beeld.hoogte - 1;
+  const rijGevuld = (y) => {
+    for (let x = begin; x <= eind; x++) {
+      if (beeld.rgba[(y * beeld.breedte + x) * 4 + 3] > 160) return true;
+    }
+    return false;
+  };
+  while (boven < beeld.hoogte && !rijGevuld(boven)) boven++;
+  while (onder > boven && !rijGevuld(onder)) onder--;
+
+  const breedte = eind - begin + 1;
+  const hoogte = onder - boven + 1;
+  const rgba = Buffer.alloc(breedte * hoogte * 4);
+  for (let y = 0; y < hoogte; y++) {
+    for (let x = 0; x < breedte; x++) {
+      const bron = ((y + boven) * beeld.breedte + (x + begin)) * 4;
+      const doel = (y * breedte + x) * 4;
+      for (let k = 0; k < 4; k++) rgba[doel + k] = beeld.rgba[bron + k];
+    }
+  }
+  // Losse halfdoorzichtige puntjes wegpoetsen: die vallen op een egale
+  // achtergrond op als vuiltjes.
+  for (let p = 0; p < breedte * hoogte; p++) {
+    if (rgba[p * 4 + 3] < 120) rgba[p * 4 + 3] = 0;
+  }
+
+  return { breedte, hoogte, rgba };
+}
+
 // --- Icoon samenstellen ----------------------------------------------------
 
 // Bilineair schalen: bij een icoon van 512 wordt het logo groter dan zijn eigen
@@ -223,20 +288,25 @@ function maakIcoon(logo, maat, logoDeelVanBreedte) {
 const logo = leesPng(BRON);
 console.log('bron: ' + BRON + ' (' + logo.breedte + 'x' + logo.hoogte + ')');
 
+// Het volledige logo, niet alleen het symbool. Het woordmerk maakt de app
+// herkenbaar, en het is bovendien scherper: 162 pixels breed tegenover 36 voor
+// het losse symbool, dus veel minder vergroten.
+//
+// De maten zijn zo groot als kan. Voor het maskeerbare icoon is dat uitgerekend:
+// Android snijdt een cirkel uit met een doorsnede van 80% van het icoon, en bij
+// een verhouding van 3:1 liggen de hoekpunten van een logo van 72% breed nog net
+// binnen die cirkel (op 76%). Bij 76% breed vallen ze erbuiten.
 const iconen = [
-  // Gewone iconen: het logo mag ruim in beeld staan.
-  { pad: 'assets/icon-192.png', maat: 192, deel: 0.78 },
-  { pad: 'assets/icon-512.png', maat: 512, deel: 0.78 },
-  // iOS snijdt zelf de hoeken af, dus iets meer rand.
-  { pad: 'assets/apple-touch-icon.png', maat: 180, deel: 0.72 },
-  // Maskeerbaar: Android snijdt hier een cirkel uit. Alles buiten de veilige
-  // zone van 80% kan wegvallen, dus het logo blijft klein en gecentreerd.
-  { pad: 'assets/icon-maskable-512.png', maat: 512, deel: 0.56 },
-  { pad: 'assets/favicon-32.png', maat: 32, deel: 0.86 },
+  { pad: 'assets/icon-192.png', maat: 192, deel: 0.88 },
+  { pad: 'assets/icon-512.png', maat: 512, deel: 0.88 },
+  // iOS rondt zelf de hoeken af, dus daar iets meer rand.
+  { pad: 'assets/apple-touch-icon.png', maat: 180, deel: 0.82 },
+  { pad: 'assets/icon-maskable-512.png', maat: 512, deel: 0.72 },
+  { pad: 'assets/favicon-32.png', maat: 32, deel: 0.92 },
 ];
 
 for (const icoon of iconen) {
-  const beeld = maakIcoon(logo, icoon.maat, icoon.deel);
+  const beeld = maakIcoon(icoon.beeld || logo, icoon.maat, icoon.deel);
   schrijfPng(icoon.pad, beeld.breedte, beeld.hoogte, beeld.rgba);
   console.log('  ' + icoon.pad + ' (' + icoon.maat + 'x' + icoon.maat + ')');
 }

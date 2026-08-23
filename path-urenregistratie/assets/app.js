@@ -9574,12 +9574,29 @@ document.addEventListener("click", event => {
 
   if (!event.target.closest(".topbar-popover") && !notificationButton && !profileButton) closeTopbarPopovers();
 
+/* Op startscherm zetten, vanuit het profielmenu.
+
+   De browser meldt zelf wanneer installeren kan, maar doet dat op eigen momenten
+   en houdt het na het verwijderen van de app een tijd tegen. Wie het dan toch wil,
+   moet het ergens kunnen opzoeken. Hebben we de melding van de browser, dan starten
+   we het meteen; hebben we die niet, dan is uitleggen het enige wat kan. */
+function toonInstallatieAanbod() {
+  const aanbod = window.pathInstallatieAanbod;
+  if (aanbod && aanbod.beschikbaar() && aanbod.start()) return;
+
+  const opIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  toast(opIOS
+    ? "Tik onderin op Delen en kies Zet op beginscherm."
+    : "Open het menu van je browser en kies App installeren of Toevoegen aan startscherm.");
+}
+
   const profileAction = event.target.closest("[data-profile-action]");
   if (profileAction) {
     closeTopbarPopovers();
     if (profileAction.dataset.profileAction === "profile") showProfileEditor();
     if (profileAction.dataset.profileAction === "password") showPasswordEditor();
     if (profileAction.dataset.profileAction === "preferences") showPreferences();
+    if (profileAction.dataset.profileAction === "install") toonInstallatieAanbod();
     if (profileAction.dataset.profileAction === "help") openHelp();
     if (["switch", "logout"].includes(profileAction.dataset.profileAction)) logout();
   }

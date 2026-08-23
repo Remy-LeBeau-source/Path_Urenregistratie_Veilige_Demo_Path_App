@@ -175,6 +175,7 @@
 | MOB-H-011 | ui | mobile.feature | geen enkele tekst op een telefoon staat onder de leesbare ondergrens | Responsive viewport + end-to-end use-case | 2 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | geen enkele tekst op een telefoon staat onder de leesbare ondergrens | Happy | 15 | Actueel |
 | MOB-H-012 | ui | mobile.feature | de app is als PWA te installeren met een echt vierkant icoon | Responsive viewport + end-to-end use-case | 10 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | de app is als PWA te installeren met een echt vierkant icoon | Happy | 15 | Actueel |
 | MOB-H-013 | ui | mobile.feature | de uitnodiging om te installeren verschijnt alleen waar hij hoort | Responsive viewport + end-to-end use-case | 8 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | de uitnodiging om te installeren verschijnt alleen waar hij hoort | Happy | 15 | Actueel |
+| MOB-H-014 | ui | mobile.feature | het aanbod om te installeren blijft bereikbaar na wegklikken of verwijderen | Responsive viewport + end-to-end use-case | 4 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | het aanbod om te installeren blijft bereikbaar na wegklikken of verwijderen | Happy | 15 | Actueel |
 | NOT-H-001 | api | notifications.feature | ingelogde gebruiker kan notificaties ophalen | API-contract + equivalentieklasse | 5 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | ingelogde gebruiker kan notificaties ophalen | Happy | 15 | Actueel |
 | NOT-H-002 | api | notifications.feature | mark_all_read werkt zonder fouten | Toestandsovergang | 8 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | mark_all_read werkt zonder fouten | Happy | 15 | Actueel |
 | NOT-N-003 | api | notifications.feature | anonieme gebruiker krijgt 401 op notificaties | Beslissingstabel rollen en autorisatie | 1 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | anonieme gebruiker krijgt 401 op notificaties | Negative | 15 | Actueel |
@@ -288,9 +289,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 266
+- Playwright executable cases: 267
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 267
+- Totaal unieke executable cases: 268
 - Playwright features: 23
 - Database features: 1
 - Playwright steps mappings: 23
