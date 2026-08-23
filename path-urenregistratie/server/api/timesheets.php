@@ -26,7 +26,7 @@ function timesheet_parse_period_key(string $periodKey): array
         auth_send_json([
             'ok' => false,
             'error' => 'invalid-payload',
-            'message' => 'Period must be in YYYY-MM format.',
+            'message' => 'De periode moet de notatie JJJJ-MM hebben.',
         ], 400);
     }
 
@@ -63,7 +63,7 @@ function timesheet_expected_version(array $payload, bool $required): ?int
     auth_send_json([
         'ok' => false,
         'error' => 'invalid-payload',
-        'message' => 'expected_version must be a positive integer.',
+        'message' => 'De meegestuurde versie van de urenstaat is ongeldig.',
     ], 400);
 }
 
@@ -127,7 +127,7 @@ function timesheet_optional_employee_id(array $payload): ?int
     auth_send_json([
         'ok' => false,
         'error' => 'invalid-payload',
-        'message' => 'employee_id must be a positive integer when provided.',
+        'message' => 'De meegestuurde medewerker is ongeldig.',
     ], 400);
 }
 
@@ -155,7 +155,7 @@ function timesheet_employee_from_payload(PDO $pdo, array $currentUser, array $pa
             auth_send_json([
                 'ok' => false,
                 'error' => 'forbidden-employee-scope',
-                'message' => 'Employee can only modify own timesheet.',
+                'message' => 'Een medewerker kan alleen de eigen urenstaat aanpassen.',
             ], 403);
         }
 
@@ -185,7 +185,7 @@ function timesheet_employee_from_payload(PDO $pdo, array $currentUser, array $pa
         auth_send_json([
             'ok' => false,
             'error' => 'employee-not-found',
-            'message' => 'Employee was not found in your company scope.',
+            'message' => 'De medewerker is niet gevonden binnen jouw bedrijfsomgeving.',
         ], 404);
     }
 
@@ -209,7 +209,7 @@ function timesheet_assignment_id(PDO $pdo, int $companyId, int $employeeId): int
         auth_send_json([
             'ok' => false,
             'error' => 'assignment-not-found',
-            'message' => 'No active assignment found for this employee.',
+            'message' => 'Voor deze medewerker is geen actieve plaatsing gevonden.',
         ], 409);
     }
 
@@ -234,7 +234,7 @@ function timesheet_parse_day_entries(array $payload, int $year, int $month, floa
             auth_send_json([
                 'ok' => false,
                 'error' => 'invalid-payload',
-                'message' => 'Each day_entries item must be an object.',
+                'message' => 'De dagregels van de urenstaat hebben een ongeldige vorm.',
             ], 400);
         }
 
@@ -243,7 +243,7 @@ function timesheet_parse_day_entries(array $payload, int $year, int $month, floa
             auth_send_json([
                 'ok' => false,
                 'error' => 'invalid-payload',
-                'message' => 'Each day entry work_date must be in YYYY-MM-DD format.',
+                'message' => 'Elke dagregel moet een datum hebben in de notatie JJJJ-MM-DD.',
             ], 400);
         }
 
@@ -255,7 +255,7 @@ function timesheet_parse_day_entries(array $payload, int $year, int $month, floa
             auth_send_json([
                 'ok' => false,
                 'error' => 'invalid-payload',
-                'message' => 'Each day entry work_date must be a valid date.',
+                'message' => 'Elke dagregel moet een bestaande datum hebben.',
             ], 400);
         }
 
@@ -263,7 +263,7 @@ function timesheet_parse_day_entries(array $payload, int $year, int $month, floa
             auth_send_json([
                 'ok' => false,
                 'error' => 'invalid-payload',
-                'message' => 'Each day entry work_date must be within the selected period.',
+                'message' => 'Elke dagregel moet binnen de gekozen periode vallen.',
             ], 400);
         }
 
@@ -272,7 +272,7 @@ function timesheet_parse_day_entries(array $payload, int $year, int $month, floa
             auth_send_json([
                 'ok' => false,
                 'error' => 'invalid-payload',
-                'message' => 'Each day entry hours field must be numeric.',
+                'message' => 'Het aantal uren op een dagregel moet een getal zijn.',
             ], 400);
         }
 
@@ -281,7 +281,7 @@ function timesheet_parse_day_entries(array $payload, int $year, int $month, floa
             auth_send_json([
                 'ok' => false,
                 'error' => 'invalid-payload',
-                'message' => 'Each day entry hours value must be between 0 and 24.',
+                'message' => 'Het aantal uren op een dag moet tussen 0 en 24 liggen.',
             ], 400);
         }
 
@@ -294,7 +294,7 @@ function timesheet_parse_day_entries(array $payload, int $year, int $month, floa
             auth_send_json([
                 'ok' => false,
                 'error' => 'invalid-payload',
-                'message' => 'Each day entry description must be at most 200 characters.',
+                'message' => 'De toelichting bij een dagregel mag maximaal 200 tekens lang zijn.',
             ], 400);
         }
 
@@ -556,7 +556,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
     auth_send_json([
         'ok' => false,
         'error' => 'method-not-allowed',
-        'message' => 'Only GET and POST are allowed on this endpoint.',
+        'message' => 'Alleen GET en POST zijn toegestaan op dit onderdeel.',
     ], 405);
 }
 
@@ -576,7 +576,7 @@ if ($action === 'request_correction' || $action === 'approve') {
         auth_send_json([
             'ok' => false,
             'error' => 'forbidden-action',
-            'message' => 'Only administrator can perform this action.',
+            'message' => 'Alleen een beheerder kan deze actie uitvoeren.',
         ], 403);
     }
 
@@ -639,7 +639,7 @@ try {
             auth_send_json([
                 'ok' => false,
                 'error' => 'timesheet-locked',
-                'message' => 'Approved or invoiced timesheets cannot be changed.',
+                'message' => 'Een goedgekeurde of gefactureerde urenstaat kan niet meer worden gewijzigd.',
             ], 409);
         }
 
@@ -708,7 +708,7 @@ try {
                     auth_send_json([
                         'ok' => false,
                         'error' => 'stale-version',
-                        'message' => 'Timesheet was changed by someone else. Reload and try again.',
+                        'message' => 'Deze urenstaat is ondertussen door iemand anders gewijzigd. Ververs de pagina en probeer opnieuw.',
                     ], 409);
                 }
             } else {
@@ -772,7 +772,7 @@ try {
                 auth_send_json([
                     'ok' => false,
                     'error' => 'invalid-timesheet-transition',
-                    'message' => 'Only submitted or approved timesheets can be moved to correction.',
+                    'message' => 'Alleen een ingediende of goedgekeurde urenstaat kan naar correctie worden gezet.',
                 ], 409);
             }
 
@@ -794,7 +794,7 @@ try {
                     auth_send_json([
                         'ok' => false,
                         'error' => 'timesheet-invoiced',
-                        'message' => 'Approved timesheet cannot be reopened after an invoice has been created.',
+                        'message' => 'Een goedgekeurde urenstaat kan niet meer worden heropend zodra er een factuur van is gemaakt.',
                     ], 409);
                 }
             }
@@ -822,7 +822,7 @@ try {
                 auth_send_json([
                     'ok' => false,
                     'error' => 'stale-version',
-                    'message' => 'Timesheet was changed by someone else. Reload and try again.',
+                    'message' => 'Deze urenstaat is ondertussen door iemand anders gewijzigd. Ververs de pagina en probeer opnieuw.',
                 ], 409);
             }
 
@@ -847,7 +847,7 @@ try {
                 auth_send_json([
                     'ok' => false,
                     'error' => 'invalid-timesheet-transition',
-                    'message' => 'Only submitted timesheets can be approved.',
+                    'message' => 'Alleen een ingediende urenstaat kan worden goedgekeurd.',
                 ], 409);
             }
 
@@ -873,7 +873,7 @@ try {
                 auth_send_json([
                     'ok' => false,
                     'error' => 'stale-version',
-                    'message' => 'Timesheet was changed by someone else. Reload and try again.',
+                    'message' => 'Deze urenstaat is ondertussen door iemand anders gewijzigd. Ververs de pagina en probeer opnieuw.',
                 ], 409);
             }
 
@@ -887,7 +887,7 @@ try {
             auth_send_json([
                 'ok' => false,
                 'error' => 'timesheet-not-found',
-                'message' => 'No timesheet exists for this employee and period.',
+                'message' => 'Voor deze medewerker en periode bestaat geen urenstaat.',
             ], 404);
         }
 
@@ -967,6 +967,6 @@ try {
     auth_send_json([
         'ok' => false,
         'error' => 'timesheet-write-failed',
-        'message' => 'Could not store timesheet write action.',
+        'message' => 'De wijziging in de urenstaat kon niet worden opgeslagen.',
     ], 500);
 }

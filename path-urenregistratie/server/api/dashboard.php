@@ -61,6 +61,6 @@ try {
     api_send_json([
         'ok' => false,
         'error' => 'dashboard-query-failed',
-        'message' => 'Could not load dashboard data.',
+        'message' => 'Het dashboard kon niet worden geladen. Ververs de pagina.',
     ], 500);
 }

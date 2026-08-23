@@ -119,7 +119,7 @@ if ($role !== 'administrator' && $role !== 'employee') {
     auth_send_json([
         'ok' => false,
         'error' => 'role-not-allowed',
-        'message' => 'Only administrator and employee roles are allowed in this auth phase.',
+        'message' => 'Alleen de rollen beheerder en medewerker kunnen inloggen.',
     ], 403);
 }
 

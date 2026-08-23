@@ -12,8 +12,8 @@
   <meta name="apple-mobile-web-app-title" content="Uren & Facturatie">
   <meta name="theme-color" content="#0D1B38">
   <link rel="manifest" href="/assets/manifest-v-Kx2Cfm.webmanifest">
-  <title>Uren & Facturatie</title>
-  <link rel="stylesheet" crossorigin href="/assets/index-CKMBCz2f.css">
+  <title>Uren & Facturatie</title>
+  <link rel="stylesheet" crossorigin href="/assets/index-D_qSBh5z.css">
 </head>
 <body class="auth-booting">
   <section class="login-screen" id="login-screen" aria-labelledby="login-title">
@@ -70,7 +70,7 @@
       </form>
       <div id="auth-reset-form" hidden>
         <p>Vul je e-mailadres in om een resetlink te ontvangen.</p>
-        <input id="auth-reset-email" type="email" autocomplete="username" placeholder="E-mailadres">
+        <input id="auth-reset-email" type="email" autocomplete="username" placeholder="E-mailadres" aria-label="E-mailadres voor de herstellink">
         <button class="button button-primary" id="auth-reset-submit" type="button">Verstuur resetverzoek</button>
         <button class="button button-ghost" id="auth-reset-cancel" type="button">Terug naar inloggen</button>
         <p id="auth-reset-feedback" hidden></p>
@@ -144,7 +144,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 0.9.119</span>
+      <span class="demo-badge">Versie 0.9.121</span>
       </div>
     </aside>
 
@@ -160,7 +160,7 @@
         <div class="topbar-title">
           <p class="eyebrow" id="organization-name">Path Consultancy</p>
           <h1 id="page-title">Urenoverzicht</h1>
-          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 0.9.119</span><span class="environment-badge" id="environment-badge" hidden></span></span>
+          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 0.9.121</span><span class="environment-badge" id="environment-badge" hidden></span></span>
         </div>
         <div class="topbar-actions">
           <span class="safety-badge" id="mail-safety-badge" title="De verzendstatus wordt beveiligd door de serverconfiguratie">E-mailstatus laden…</span>
@@ -692,28 +692,28 @@
             <div class="reminder-rules">
               <div class="reminder-rule">
                 <label class="check-row"><input id="setting-weekly-reminder-enabled" type="checkbox"><span><strong>Week nog niet compleet</strong><small>Alleen als de medewerker de huidige week nog niet heeft ingevuld</small></span></label>
-                <div class="reminder-choice-field"><span>Wanneer?</span><select id="setting-weekly-reminder-day"><option value="thursday">Donderdag</option><option value="friday">Vrijdag</option></select></div>
-                <div class="reminder-choice-field"><span>Tijdstip</span><select id="setting-weekly-reminder-time"><option value="12:00">12:00</option><option value="15:00">15:00</option><option value="16:00">16:00</option></select></div>
+                <div class="reminder-choice-field"><span>Wanneer?</span><select id="setting-weekly-reminder-day" aria-label="Dag voor de herinnering: week nog niet compleet"><option value="thursday">Donderdag</option><option value="friday">Vrijdag</option></select></div>
+                <div class="reminder-choice-field"><span>Tijdstip</span><select id="setting-weekly-reminder-time" aria-label="Tijdstip voor de herinnering: week nog niet compleet"><option value="12:00">12:00</option><option value="15:00">15:00</option><option value="16:00">16:00</option></select></div>
               </div>
               <div class="reminder-rule">
                 <label class="check-row"><input id="setting-month-end-reminder-enabled" type="checkbox"><span><strong>Maand nog niet ingediend</strong><small>Alleen als de volledige maand nog niet is ingediend</small></span></label>
                 <span class="reminder-fixed-moment"><small>Wanneer?</small><strong>Laatste werkdag</strong></span>
-                <div class="reminder-choice-field"><span>Tijdstip</span><select id="setting-month-end-reminder-time"><option value="12:00">12:00</option><option value="15:00">15:00</option><option value="16:00">16:00</option></select></div>
+                <div class="reminder-choice-field"><span>Tijdstip</span><select id="setting-month-end-reminder-time" aria-label="Tijdstip voor de herinnering: einde van de maand"><option value="12:00">12:00</option><option value="15:00">15:00</option><option value="16:00">16:00</option></select></div>
               </div>
               <div class="reminder-rule">
                 <label class="check-row"><input id="setting-overdue-reminder-enabled" type="checkbox"><span><strong>Vorige maand staat nog open</strong><small>Voor medewerkers met een achterstallige maand</small></span></label>
                 <span class="reminder-fixed-moment"><small>Wanneer?</small><strong>Eerste werkdag</strong></span>
-                <div class="reminder-choice-field"><span>Tijdstip</span><select id="setting-overdue-reminder-time"><option value="09:00">09:00</option><option value="12:00">12:00</option><option value="15:00">15:00</option></select></div>
+                <div class="reminder-choice-field"><span>Tijdstip</span><select id="setting-overdue-reminder-time" aria-label="Tijdstip voor de herinnering: urenstaat te laat"><option value="09:00">09:00</option><option value="12:00">12:00</option><option value="15:00">15:00</option></select></div>
               </div>
               <div class="reminder-rule">
                 <label class="check-row"><input id="setting-approval-reminder-enabled" type="checkbox"><span><strong>Goedkeuring wacht op beheerder</strong><small>Alleen als ingediende uren nog niet zijn gecontroleerd</small></span></label>
                 <span class="reminder-fixed-moment"><small>Wanneer?</small><strong>Eerste werkdag</strong></span>
-                <div class="reminder-choice-field"><span>Tijdstip</span><select id="setting-approval-reminder-time"><option value="09:00">09:00</option><option value="10:00">10:00</option><option value="12:00">12:00</option></select></div>
+                <div class="reminder-choice-field"><span>Tijdstip</span><select id="setting-approval-reminder-time" aria-label="Tijdstip voor de herinnering: goedkeuring blijft liggen"><option value="09:00">09:00</option><option value="10:00">10:00</option><option value="12:00">12:00</option></select></div>
               </div>
               <div class="reminder-rule">
                 <label class="check-row"><input id="setting-customer-timesheet-reminder-enabled" type="checkbox"><span><strong>Klanturenstaat ontbreekt</strong><small>Eén werkdag voor de persoonlijke deadline, op de deadline en daarna nog één keer</small></span></label>
-                <div class="reminder-choice-field"><span>Eerste herinnering</span><select id="setting-customer-timesheet-reminder-time"><option value="12:00">12:00</option><option value="15:00">15:00</option><option value="16:00">16:00</option></select></div>
-                <div class="reminder-choice-field"><span>Laatste herinnering</span><select id="setting-customer-timesheet-overdue-days"><option value="1">1 werkdag te laat</option><option value="2">2 werkdagen te laat</option><option value="3">3 werkdagen te laat</option><option value="5">5 werkdagen te laat</option></select></div>
+                <div class="reminder-choice-field"><span>Eerste herinnering</span><select id="setting-customer-timesheet-reminder-time" aria-label="Tijdstip voor de herinnering: klanturenstaat ontbreekt"><option value="12:00">12:00</option><option value="15:00">15:00</option><option value="16:00">16:00</option></select></div>
+                <div class="reminder-choice-field"><span>Laatste herinnering</span><select id="setting-customer-timesheet-overdue-days" aria-label="Aantal dagen voordat een klanturenstaat te laat heet"><option value="1">1 werkdag te laat</option><option value="2">2 werkdagen te laat</option><option value="3">3 werkdagen te laat</option><option value="5">5 werkdagen te laat</option></select></div>
               </div>
             </div>
             <div class="reminder-schedule-footer"><div class="reminder-schedule-summary" id="reminder-schedule-summary"></div><button class="small-button" type="button" id="test-reminder-schedule">Voorbeeldmelding maken</button></div>
@@ -771,7 +771,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script  defer src="assets/jspdf.umd.min.js"></script>
   <script  defer src="assets/invoice-fonts.js"></script>
-  <script  defer src="assets/app.js?v=0.9.119"></script>
+  <script  defer src="assets/app.js?v=0.9.121"></script>
   <script>
     // Defensive: registration failure/unsupported browsers must never affect the app itself.
     if ('serviceWorker' in navigator) {

@@ -872,5 +872,5 @@ if ($action === 'upsert_employee') {
 auth_send_json([
     'ok' => false,
     'error' => 'invalid-action',
-    'message' => 'action must be upsert_admin or upsert_employee',
+    'message' => 'Deze actie wordt niet ondersteund.',
 ], 400);

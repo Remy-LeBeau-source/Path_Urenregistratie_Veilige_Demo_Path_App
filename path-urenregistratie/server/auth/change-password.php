@@ -22,14 +22,14 @@ if (strlen($newPassword) < 12) {
     auth_send_json([
         'ok' => false,
         'error' => 'password-too-short',
-        'message' => 'Password must be at least 12 characters.',
+        'message' => 'Het wachtwoord moet minstens 12 tekens lang zijn.',
     ], 400);
 }
 if (hash_equals($currentPassword, $newPassword)) {
     auth_send_json([
         'ok' => false,
         'error' => 'password-unchanged',
-        'message' => 'New password must differ from the current password.',
+        'message' => 'Het nieuwe wachtwoord moet verschillen van het huidige.',
     ], 400);
 }
 

@@ -16,7 +16,7 @@ function security_read_json_body(): array
         auth_send_json([
             'ok' => false,
             'error' => 'invalid-json',
-            'message' => 'Request body must be valid JSON.',
+            'message' => 'De inhoud van het verzoek is geen geldige JSON.',
         ], 400);
     }
 

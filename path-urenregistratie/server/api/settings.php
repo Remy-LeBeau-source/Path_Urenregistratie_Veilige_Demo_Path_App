@@ -83,7 +83,7 @@ function settings_email_or_null(mixed $value): ?string
         auth_send_json([
             'ok' => false,
             'error' => 'invalid-payload',
-            'message' => 'One or more email fields are invalid.',
+            'message' => 'Een of meer e-mailvelden zijn ongeldig.',
         ], 400);
     }
     return $email;

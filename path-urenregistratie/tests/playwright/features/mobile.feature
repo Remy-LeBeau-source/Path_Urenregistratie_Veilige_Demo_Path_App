@@ -83,3 +83,11 @@ Feature: Mobiele gebruikerservaring
     When een paneel wordt geopend, verschijnt de inhoud
     And de urenstaat past binnen het scherm zonder zijwaarts schuiven
     Then wordt met Playwright-assertions bevestigd dat instellingen en urenstaat zijn op een telefoon te overzien
+
+  @happy
+  Scenario: [MOB-H-010] een veeg over het scherm scrollt de pagina echt
+    # Testtechniek: Responsive viewport + end-to-end use-case
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given de pagina is langer dan het scherm
+    Then blokkeert geen enkele laag het doorgeven van de veeg
+    When er met een vinger omhoog wordt geveegd, komt de pagina in beweging

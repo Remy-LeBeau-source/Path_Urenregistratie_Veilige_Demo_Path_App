@@ -243,7 +243,7 @@ test('[INV-N-007] ongeldige periodefilter geeft nette 400-fout', async ({ page }
     expect(status).toBe(400);
     expect(body?.ok).toBe(false);
     expect(body?.error).toBe('invalid-period');
-    expect(String(body?.message || '')).toContain('between 01 and 12');
+    expect(String(body?.message || '')).toContain('tussen 01 en 12');
   });
 });
 

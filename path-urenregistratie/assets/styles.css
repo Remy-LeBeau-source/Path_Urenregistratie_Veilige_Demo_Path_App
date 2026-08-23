@@ -2128,8 +2128,7 @@ button,
   user-select: none;
 }
 
-/* Doorschieten van een scrollend paneel mag de hele pagina niet meeslepen, en
-   pull-to-refresh mag niet afgaan terwijl je in een lijst omhoog veegt. */
+/* Doorschieten van een scrollend paneel mag de hele pagina niet meeslepen. */
 .table-wrap,
 .modal-body,
 .help-panel {
@@ -2137,9 +2136,11 @@ button,
   -webkit-overflow-scrolling: touch;
 }
 
-body {
-  overscroll-behavior-y: contain;
-}
+/* Let op: geef body hier GEEN overscroll-behavior. Onder 720px staat er al
+   html, body { overflow-x: hidden }, waardoor body een eigen scrollgebied wordt
+   dat precies zo hoog is als zijn inhoud -- er valt daar dus niets te scrollen.
+   Containment op body blokkeert dan het doorgeven van de veeg naar het document
+   erboven, en de telefoon scrollt helemaal niet meer. Zie MOB-H-010. */
 
 /* ---------------------------------------------------------------------------
    Urenstaat op een telefoon: rijen per dag in plaats van een weekraster

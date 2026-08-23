@@ -888,7 +888,7 @@ try {
             customer_timesheet_json([
                 'ok' => false,
                 'error' => 'customer-timesheet-not-found',
-                'message' => 'No customer timesheet exists for this period and employee.',
+                'message' => 'Voor deze periode en medewerker bestaat geen klanturenstaat.',
             ], 404);
         }
 

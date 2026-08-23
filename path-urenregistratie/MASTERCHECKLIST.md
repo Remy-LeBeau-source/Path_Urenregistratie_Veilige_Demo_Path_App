@@ -94,6 +94,49 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-23 · v0.9.121 diepgaande verkenning, en Engelse foutmeldingen weggewerkt
+
+**Verkenning.** Walkthrough plus monkeytesten, op verzoek van Gio.
+
+- [x] **Walkthrough:** negen schermen voor beide rollen, ruim 1300 zichtbare elementen gekeurd op JavaScript-fouten, mislukte serververzoeken, foutcodes, lekkende programmeerwaarden (`undefined`, `NaN`, `[object Object]`, `Invalid Date`), inhoud buiten beeld, knoppen zonder label, lege tabellen en dubbele element-ids. Na elk scherm een F5. Nul vondsten; de rolscheiding klopt (beheerder zes menu-items, medewerker drie, geen overlap).
+- [x] **Monkey:** drie ronden van 180 willekeurige handelingen met een vaste startwaarde, dus herhaalbaar. Klikken en typen met lelijke waarden (leeg, spaties, -1, 999999, 8,5 tegenover 8.5, accenttekens, HTML-tags, een apostrof met streepjes). Na elke stap gecontroleerd op verdwenen hoofdinhoud, gestapelde dialoogvensters en schermen zonder inhoud. 540 handelingen, nul fouten.
+- [x] **Eigen opzet twee keer gerepareerd onderweg.** De eerste monkeyronde logde zichzelf na 23 stappen uit via een knop met de tekst "Ander account of rol", die mijn uitsluiting niet herkende. En de eerste walkthrough meldde nul vondsten zonder te laten zien wat hij gekeurd had; dat is niet te onderscheiden van een test die niets doet, dus die logt nu per scherm.
+
+**Engelse foutmeldingen op een Nederlands scherm.**
+
+- [x] **71 meldingen vertaald in de API.** De server antwoordt met een code (`error`) en een tekst (`message`); die tekst zet de app rechtstreeks in een toast of statusregel. De nieuwere endpoints waren al Nederlands, de oudere Engels. Wie meer dan 24 uur op een dag invulde, kreeg letterlijk "Each day entry hours value must be between 0 and 24." te zien. Ook het wachtwoordherstel dat Gio zelf getest heeft, gaf "Password must be at least 12 characters." en "This reset token has already been used."
+- [x] **Bij de bron vertaald, niet in de app.** Eerst een vertaaltabel in de app gebouwd op foutcode; die aanpak weer teruggedraaid omdat codes als `invalid-timesheet-transition` meerdere verschillende meldingen hebben ("alleen ingediende urenstaten kunnen worden goedgekeurd" tegenover "kan naar correctie"), en vertalen op code die op een zin perst. De helft van de server gaf al Nederlands, dus de conventie was er al.
+- [x] **Twee verborgen koppelingen opgelost.** De app las op twee plekken de Engelse zin om te beslissen wat hij deed: opnieuw inloggen bij een CSRF-fout, en het scherm verversen bij een urenstaat die door goedkeuring of facturatie vergrendeld is. Vertalen zou die stil hebben gebroken. Beide werken nu op de foutcode (`csrf-invalid`, `timesheet-locked`), wat de juiste afspraak is.
+- [x] **Buiten beeld gelaten:** `server/scripts/*` en `server/health.php`. Dat is tekst voor de beheerder op de opdrachtregel, en de testen controleren daar juist op de Engelse formulering.
+- [x] **`scripts/server-message-language-check.mjs` toegevoegd aan `npm run check`.** Die faalt zodra er een nieuwe Engelse schermmelding bij komt. Geverifieerd door er een terug te zetten.
+- [x] Een verouderde testcase in `timesheet-review-ui.spec.ts` controleerde op de Engelse toasttekst; die verwacht nu de Nederlandse zin. Alle andere testen controleren op de foutcode en zijn ongemoeid: geverifieerd tegen alle 71 vertaalde zinnen.
+- [x] **`INV-N-007` brak op de vertaling, en dat legde een gat in mijn eigen controle bloot.** Die case controleerde op het fragment `between 01 and 12`, terwijl mijn afhankelijkheidscontrole op hele zinnen zocht. Case aangepast naar `tussen 01 en 12`, en daarna een bredere scan gedraaid die elke tekstvergelijking in de testen langs de vertaalde meldingen legt. Geen tweede geval gevonden.
+
+**Verder opgeruimd in dezelfde ronde.**
+
+- [x] **Drie debugregels verwijderd** die bij elke paginalading het volledige serverantwoord in de browserconsole stortten, inclusief medewerkersnamen, tarieven en factuurgegevens. Dat stond ook zo in productie. De gegevens blijven bereikbaar via `window.__PATH_READ_API`, dus er gaat niets verloren, en echte fouten in de console vallen nu op.
+- [x] **Acht invoervelden hadden geen toegankelijke naam.** Zeven keuzelijsten in het herinneringenblok stonden naast een `<span>`, en dat telt niet als naam; het e-mailveld bij "wachtwoord vergeten" had alleen een placeholder, die verdwijnt zodra je typt. Allemaal een `aria-label` gegeven, wat niets verandert aan wat je ziet.
+- [x] **Nagekeken en schoon bevonden:** Engelse tekst in app en pagina (geen), verwijzingen naar niet-bestaande elementen (393 nagekeken, geen), externe links zonder `rel="noopener"` (geen), inline event-handlers in de pagina (geen).
+
+**Instellingenformulier bevroor bij typen.**
+
+- [x] **Gevonden doordat `INV-ID-H-007` een keer wisselvallig faalde.** Bij het uitzoeken bleek het formulier het bijwerken van *alle* velden over te slaan zodra de cursor in een van de velden stond. Dat was bedoeld om je invoer te beschermen, maar het gevolg is dat elk ander veld op zijn oude of standaardwaarde blijft staan -- en bij het volgende opslaan wordt die oude waarde teruggeschreven. Dat is dezelfde klacht als eerder over verouderde bedrijfsgegevens in het instellingenformulier.
+- [x] **Nu gericht:** het formulier houdt bij welke velden je zelf hebt aangepast en nog niet hebt opgeslagen. Alleen die blijven staan; al het andere volgt de server. Na een geslaagde opslag is de lijst weer leeg. Werkt ook voor aankruisvakjes en keuzelijsten. De functie `settingsFormIsBeingEdited` was daarmee dood hout en is verwijderd.
+- [x] **Eerste poging was fout en is door de gate gevangen.** Ik beschermde eerst alleen het veld waar de cursor in stond. Daardoor brak `INV-ID-H-006`: wie meerdere velden invult voordat hij opslaat, raakt de eerder ingevulde velden kwijt zodra er tussendoor verse servergegevens binnenkomen. Dat is een echte regressie, geen testkwestie -- vandaar het bijhouden van alle aangeraakte velden.
+- [x] **`INV-ID-H-008` toegevoegd:** typen in een instelling terwijl het scherm opnieuw wordt opgebouwd. Geverifieerd door de oude versie terug te zetten: dan blijft "VEROUDERDE WAARDE" staan en faalt de case.
+- [x] **`INV-ID-H-007` deterministisch gemaakt.** Het formulier begint na een herlaad met de ingebouwde standaardteksten en krijgt de opgeslagen teksten pas zodra `bootstrap.php` antwoordt; de case beoordeelde soms dat tussenmoment. Hij wacht nu op dat antwoord in plaats van op goed geluk. De controle zelf is niet versoepeld.
+
+- [x] Versie 0.9.120 → 0.9.121.
+
+### 2026-08-23 · v0.9.120 telefoon scrolde helemaal niet meer
+
+- [x] **Door Gio gemeld op TEST 0.9.119: de telefoonversie liet zich niet scrollen.** Twee losse regels veroorzaakten dat samen. `html, body { overflow-x: hidden }` (staat er sinds 0.9.45) maakt van `body` een eigen scrollgebied dat precies zo hoog is als zijn inhoud, dus daar valt niets te scrollen. De in 0.9.119 toegevoegde `overscroll-behavior-y: contain` op datzelfde `body` blokkeerde vervolgens het doorgeven van de veeg aan het document erboven. Resultaat: nul beweging.
+- [x] **Regel verwijderd van `body`.** Doorschieten wordt nog steeds tegengehouden waar het veilig is: `.table-wrap`, `.modal-body` en `.help-panel`. Pull-to-refresh onderdrukken is een luxe, scrollen niet. Er staat nu een toelichting bij de regel die uitlegt waarom `body` hierbuiten moet blijven.
+- [x] **Waarom geen enkele test dit zag.** Alle mobiele cases scrollen met `window.scrollTo`, en dat gaat langs `body` heen -- dus werkte het in de test gewoon. De opmaak was gemeten, de bediening niet. Dezelfde blinde vlek als eerder bij de instellingen: de laag ertussen werd overgeslagen.
+- [x] **`MOB-H-010` toegevoegd:** veegt met een echte aanraking in plaats van programmatisch. Geverifieerd door de bug tijdelijk terug te zetten: dan faalt de case.
+- [x] **Bewaking ook buiten Playwright gelegd.** De WebKit-motor van Playwright kent `overscroll-behavior` niet (`CSS.supports` geeft daar false), dus die run kan deze fout principieel niet zien -- terwijl echte iOS Safari 16+ hem wel heeft. Een controle op berekende stijl zou daar dus schijnzekerheid geven. De smoke test controleert daarom de stylesheet zelf op regels die `overscroll-behavior` op `body` zetten, wat op elke omgeving werkt. Geverifieerd tegen drie vormen: los, in een samengestelde selector, en binnen een media query.
+- [x] Versie 0.9.119 → 0.9.120.
+
 ### 2026-08-22 · v0.9.119 volledige interface-upgrade, telefoon en desktop
 
 **Telefoon.** Alle tien hoofdschermen doorgemeten op 412px, beide rollen.
@@ -102,7 +145,7 @@ Post-live beheer
 - [x] **Urenstaat past nu binnen het scherm.** Zeven kolommen van 88px op 412px betekende zijwaarts schuiven terwijl je cijfers typt. Nu per week een blok met per dag een regel: datum links, invoerveld rechts. Alleen CSS, dus de opbouw blijft dezelfde tabel en de toegankelijkheid ongemoeid.
 - [x] **Tikdoelen van 89 naar 2** onder de 44px-norm, **tekst van 107 naar 43** onder 11px, en **geen afgesneden inhoud** meer.
 - [x] **iOS:** `viewport-fit=cover` toegevoegd — zonder die vlag deden de veilige zones niets en viel de onderbalk deels achter de home-balk. Plus `apple-mobile-web-app-capable`, zodat "Zet op beginscherm" als app opent in plaats van als browsertab. Invoervelden op 16px, anders zoomt Safari in en verspringt het scherm.
-- [x] **Android:** tap-highlight uit (grijze flits bij elke aanraking) en `overscroll-behavior: contain`, zodat pull-to-refresh niet afgaat tijdens het vegen in een lijst.
+- [x] **Android:** tap-highlight uit (grijze flits bij elke aanraking) en `overscroll-behavior: contain` op scrollende panelen. **Let op:** die regel stond hier ook op `body` en brak daarmee het scrollen op de telefoon volledig -- teruggedraaid in 0.9.120.
 - [x] **Beide:** `touch-action: manipulation` haalt de vertraging van 300ms na elke tik weg.
 
 **Desktop.** Doorgemeten op 1440px.

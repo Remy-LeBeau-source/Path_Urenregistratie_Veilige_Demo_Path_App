@@ -15,7 +15,7 @@ function security_csrf_token(): string
         auth_send_json([
             'ok' => false,
             'error' => 'session-not-started',
-            'message' => 'Session must be started before issuing a CSRF token.',
+            'message' => 'De sessie moet gestart zijn voordat een CSRF-token kan worden afgegeven.',
         ], 500);
     }
 

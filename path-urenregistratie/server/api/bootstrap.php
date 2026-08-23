@@ -116,6 +116,6 @@ try {
     api_send_json([
         'ok' => false,
         'error' => 'bootstrap-query-failed',
-        'message' => 'Could not load bootstrap data.',
+        'message' => 'De gegevens konden niet worden geladen. Ververs de pagina.',
     ], 500);
 }

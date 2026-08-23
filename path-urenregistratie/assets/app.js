@@ -1732,8 +1732,9 @@ function requestAuthLogin(email, password) {
   return requestAuthCsrf()
     .then(sendLoginWithToken)
     .then(result => {
-      const message = String(result && result.data && result.data.message || "").toLowerCase();
-      const csrfError = message.includes("csrf") || message.includes("missing or invalid csrf token");
+      // Op de foutcode en niet op de tekst: die tekst is schermtekst en mag
+      // veranderen, de code is de vaste afspraak met de server.
+      const csrfError = String(result && result.data && result.data.error || "") === "csrf-invalid";
       if (result && result.ok === false && csrfError) {
         authRuntime.csrfToken = "";
         return requestAuthCsrf().then(sendLoginWithToken);
@@ -1998,9 +1999,10 @@ function writeTimesheetToApi(action) {
     .then(result => {
       if (!result.ok || !result.data || result.data.ok !== true) {
         const raw = result && result.data && result.data.message;
-        const normalizedRaw = String(raw || "").toLowerCase();
-        const invalidTransition = result && result.data && result.data.error === "invalid-timesheet-transition";
-        const lockedByApprovalOrInvoice = /approved or invoiced timesheets cannot be changed/.test(normalizedRaw);
+        const foutcode = String(result && result.data && result.data.error || "");
+        const invalidTransition = foutcode === "invalid-timesheet-transition";
+        // Ook hier op de code: dit stond op de Engelse zin van de server.
+        const lockedByApprovalOrInvoice = foutcode === "timesheet-locked";
         if (invalidTransition) {
           throw new Error("Deze urenstaat is al ingediend. Alleen concepten en correcties kunnen worden ingediend.");
         }
@@ -2932,7 +2934,6 @@ function refreshDashboardReadApi(force) {
       readApiRuntime.lastDashboardAt = Date.now();
       if (!data) return;
       readApiDebug.dashboard = data;
-      console.log("[read-api] dashboard", data);
       const dashboardViewActive = document.querySelector("#view-dashboard")?.classList.contains("is-active");
       if (dashboardViewActive) renderDashboard();
     })
@@ -2960,7 +2961,6 @@ function refreshBootstrapReadApi(force) {
       const merged = mergeBootstrapIntoState(data);
       setReadApiSource("bootstrap", merged ? "api" : "fallback");
       if (merged) {
-        console.log("[read-api] bootstrap", data);
         renderAll();
       }
     })
@@ -3040,7 +3040,6 @@ function refreshInvoicesReadApi(periodKey, force) {
           if (syncInvoiceStatusesFromApi(periodKey)) invoiceStateChanged = true;
         });
       }
-      console.log(period ? "[read-api] invoices(" + period + ")" : "[read-api] invoices", data);
       const invoicesViewActive = document.querySelector("#view-invoices")?.classList.contains("is-active");
       const dashboardViewActive = document.querySelector("#view-dashboard")?.classList.contains("is-active");
       if (invoiceStateChanged && dashboardViewActive) renderAll();
@@ -7048,14 +7047,6 @@ function renderReminderScheduleSummary() {
 
 // Refilling the settings form must never wipe out what someone is typing. The
 // only safe moment to skip is while a field in the form actually holds focus.
-function settingsFormIsBeingEdited() {
-  const active = document.activeElement;
-  if (!active) return false;
-  const view = document.querySelector("#view-settings");
-  if (!view || !view.contains(active)) return false;
-  return active.tagName === "INPUT" || active.tagName === "SELECT" || active.tagName === "TEXTAREA";
-}
-
 // Instellingen is op een telefoon bijna elf schermen lang. Dat is geen scherm
 // meer maar een lijst waar je doorheen ploegt om het ene veld te vinden dat je
 // zoekt. Op smalle schermen worden de zeven panelen daarom inklapbaar en
@@ -7123,43 +7114,87 @@ function revealSettingsCardFor(element) {
 }
 
 
+/* ---------------------------------------------------------------------------
+   Welke instelvelden heeft iemand zelf aangepast?
+   ---------------------------------------------------------------------------
+   Het scherm bouwt zichzelf opnieuw op zodra er verse servergegevens binnenkomen.
+   Dat mag nooit iets wegvagen wat iemand net heeft ingetypt maar nog niet heeft
+   opgeslagen -- ook niet in een veld waar de cursor op dat moment niet in staat,
+   want je vult er meestal meerdere achter elkaar in.
+
+   Andersom mag het formulier ook niet in zijn geheel bevriezen zodra je ergens in
+   typt: dan blijven de overige velden op een verouderde waarde staan en schrijft
+   Wijzigingen opslaan die zo terug. Dat was precies de klacht over verouderde
+   bedrijfsgegevens. Vandaar deze lijst: alleen wat jij hebt aangeraakt blijft staan,
+   de rest volgt de server. Zie INV-ID-H-008.
+   --------------------------------------------------------------------------- */
+const aangeraakteInstellingen = new Set();
+
+function onthoudAangeraakteInstelling(event) {
+  const veld = event.target;
+  if (!veld || !veld.id) return;
+  const view = document.querySelector("#view-settings");
+  if (!view || !view.contains(veld)) return;
+  if (!["INPUT", "SELECT", "TEXTAREA"].includes(veld.tagName)) return;
+  aangeraakteInstellingen.add(veld.id);
+}
+
+document.addEventListener("input", onthoudAangeraakteInstelling, true);
+document.addEventListener("change", onthoudAangeraakteInstelling, true);
+
+// Een veld dat iemand zelf heeft aangepast en nog niet heeft opgeslagen wordt
+// overgeslagen. Bewust niet: waarde onthouden, overschrijven en terugzetten --
+// dat vecht met wat er op dat moment wordt ingetypt en levert aan elkaar geplakte
+// tekst op. Wat jij hebt aangeraakt, blijft onaangeroerd.
+function zetInstelling(id, waarde) {
+  if (aangeraakteInstellingen.has(id)) return;
+  const veld = document.querySelector("#" + id);
+  if (veld) veld.value = waarde;
+}
+
+function zetInstellingAangevinkt(id, aangevinkt) {
+  if (aangeraakteInstellingen.has(id)) return;
+  const veld = document.querySelector("#" + id);
+  if (veld) veld.checked = aangevinkt;
+}
+
 function populateSettings() {
   const settings = state.settings;
-  document.querySelector("#setting-organization-name").value = settings.organizationName;
-  document.querySelector("#setting-app-name").value = settings.appName;
-  document.querySelector("#setting-support-name").value = settings.supportName;
-  document.querySelector("#setting-support-email").value = settings.supportEmail;
-  document.querySelector("#setting-brand-primary").value = normalizedBrandColor(settings.brandPrimary, "#0d1b38");
-  document.querySelector("#setting-brand-accent").value = normalizedBrandColor(settings.brandAccent, "#3abd9d");
+  zetInstelling("setting-organization-name", settings.organizationName);
+  zetInstelling("setting-app-name", settings.appName);
+  zetInstelling("setting-support-name", settings.supportName);
+  zetInstelling("setting-support-email", settings.supportEmail);
+  zetInstelling("setting-brand-primary", normalizedBrandColor(settings.brandPrimary, "#0d1b38"));
+  zetInstelling("setting-brand-accent", normalizedBrandColor(settings.brandAccent, "#3abd9d"));
   pendingBrandLogo = String(settings.brandLogo || "");
   document.querySelector("#setting-brand-logo-preview").src = pendingBrandLogo || PATH_LOGO_DATA_URL;
-  document.querySelector("#setting-company-name").value = settings.companyName;
-  document.querySelector("#setting-invoice-name-display").value = settings.invoiceNameDisplay || "trade_and_legal";
-  document.querySelector("#setting-kvk").value = settings.kvk;
-  document.querySelector("#setting-vat").value = settings.vat;
-  document.querySelector("#setting-iban").value = settings.iban;
-  document.querySelector("#setting-address").value = settings.address;
-  document.querySelector("#setting-postal-city").value = settings.postalCity;
-  document.querySelector("#setting-phone").value = settings.phone;
-  document.querySelector("#setting-invoice-email").value = settings.invoiceEmail;
-  document.querySelector("#setting-payment-term").value = settings.paymentTerm;
-  document.querySelector("#setting-sender").value = settings.sender;
-  document.querySelector("#setting-weekly-reminder-enabled").checked = settings.weeklyReminderEnabled !== false;
-  document.querySelector("#setting-weekly-reminder-day").value = settings.weeklyReminderDay || "friday";
-  document.querySelector("#setting-weekly-reminder-time").value = settings.weeklyReminderTime || "15:00";
-  document.querySelector("#setting-month-end-reminder-enabled").checked = settings.monthEndReminderEnabled !== false;
-  document.querySelector("#setting-month-end-reminder-time").value = settings.monthEndReminderTime || "15:00";
-  document.querySelector("#setting-overdue-reminder-enabled").checked = settings.overdueReminderEnabled !== false;
-  document.querySelector("#setting-overdue-reminder-time").value = settings.overdueReminderTime || "09:00";
-  document.querySelector("#setting-approval-reminder-enabled").checked = settings.approvalReminderEnabled !== false;
-  document.querySelector("#setting-approval-reminder-time").value = settings.approvalReminderTime || "10:00";
-  document.querySelector("#setting-customer-timesheet-reminder-enabled").checked = settings.customerTimesheetReminderEnabled !== false;
-  document.querySelector("#setting-customer-timesheet-reminder-time").value = settings.customerTimesheetReminderTime || "15:00";
-  document.querySelector("#setting-customer-timesheet-overdue-days").value = String(settings.customerTimesheetOverdueWorkdays || 2);
-  document.querySelector("#setting-customer-timesheet-submission-subject").value = settings.customerTimesheetSubmissionSubject || DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_SUBJECT;
-  document.querySelector("#setting-customer-timesheet-submission-body").value = settings.customerTimesheetSubmissionBody || DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_BODY;
-  document.querySelector("#setting-customer-timesheet-broker-subject").value = settings.customerTimesheetBrokerSubject || DEFAULT_CUSTOMER_TIMESHEET_BROKER_SUBJECT;
-  document.querySelector("#setting-customer-timesheet-broker-body").value = settings.customerTimesheetBrokerBody || DEFAULT_CUSTOMER_TIMESHEET_BROKER_BODY;
+  zetInstelling("setting-company-name", settings.companyName);
+  zetInstelling("setting-invoice-name-display", settings.invoiceNameDisplay || "trade_and_legal");
+  zetInstelling("setting-kvk", settings.kvk);
+  zetInstelling("setting-vat", settings.vat);
+  zetInstelling("setting-iban", settings.iban);
+  zetInstelling("setting-address", settings.address);
+  zetInstelling("setting-postal-city", settings.postalCity);
+  zetInstelling("setting-phone", settings.phone);
+  zetInstelling("setting-invoice-email", settings.invoiceEmail);
+  zetInstelling("setting-payment-term", settings.paymentTerm);
+  zetInstelling("setting-sender", settings.sender);
+  zetInstellingAangevinkt("setting-weekly-reminder-enabled", settings.weeklyReminderEnabled !== false);
+  zetInstelling("setting-weekly-reminder-day", settings.weeklyReminderDay || "friday");
+  zetInstelling("setting-weekly-reminder-time", settings.weeklyReminderTime || "15:00");
+  zetInstellingAangevinkt("setting-month-end-reminder-enabled", settings.monthEndReminderEnabled !== false);
+  zetInstelling("setting-month-end-reminder-time", settings.monthEndReminderTime || "15:00");
+  zetInstellingAangevinkt("setting-overdue-reminder-enabled", settings.overdueReminderEnabled !== false);
+  zetInstelling("setting-overdue-reminder-time", settings.overdueReminderTime || "09:00");
+  zetInstellingAangevinkt("setting-approval-reminder-enabled", settings.approvalReminderEnabled !== false);
+  zetInstelling("setting-approval-reminder-time", settings.approvalReminderTime || "10:00");
+  zetInstellingAangevinkt("setting-customer-timesheet-reminder-enabled", settings.customerTimesheetReminderEnabled !== false);
+  zetInstelling("setting-customer-timesheet-reminder-time", settings.customerTimesheetReminderTime || "15:00");
+  zetInstelling("setting-customer-timesheet-overdue-days", String(settings.customerTimesheetOverdueWorkdays || 2));
+  zetInstelling("setting-customer-timesheet-submission-subject", settings.customerTimesheetSubmissionSubject || DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_SUBJECT);
+  zetInstelling("setting-customer-timesheet-submission-body", settings.customerTimesheetSubmissionBody || DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_BODY);
+  zetInstelling("setting-customer-timesheet-broker-subject", settings.customerTimesheetBrokerSubject || DEFAULT_CUSTOMER_TIMESHEET_BROKER_SUBJECT);
+  zetInstelling("setting-customer-timesheet-broker-body", settings.customerTimesheetBrokerBody || DEFAULT_CUSTOMER_TIMESHEET_BROKER_BODY);
   updateInvoiceIdentityPreview();
   syncReminderControls();
   renderMailRecipientSettings();
@@ -7220,6 +7255,8 @@ function saveSettings() {
         syncLegacyRecipientSettings();
         persistState();
         renderAll();
+        // Opgeslagen: vanaf nu mag de server deze velden weer bijwerken.
+        aangeraakteInstellingen.clear();
         toast("Instellingen zijn op de server opgeslagen.");
       })
       .catch(error => {
@@ -7564,7 +7601,10 @@ function renderAll() {
   // "Wijzigingen opslaan" wrote those stale values straight back over the
   // correct server data. Refill on every render so the form always reflects what
   // the server actually holds.
-  if (!settingsFormIsBeingEdited()) populateSettings();
+  // Altijd vullen. populateSettings laat het veld waar de cursor in staat met
+  // rust; de rest moet wel de serverwaarde krijgen, anders schrijft een latere
+  // opslag verouderde waarden terug.
+  populateSettings();
   applySettingsCollapse();
   renderProfileChrome();
   syncEnvironmentChrome();

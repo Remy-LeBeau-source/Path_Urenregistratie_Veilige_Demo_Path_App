@@ -258,7 +258,12 @@ test('[INV-ID-H-007] de klanturenstaat-mailteksten blijven na opslaan bewaard', 
     });
 
     await test.step('Then staan ze na een herlaad nog steeds in het formulier', async () => {
+      // Het formulier begint na een herlaad met de ingebouwde standaardteksten en
+      // krijgt de opgeslagen teksten pas zodra bootstrap.php antwoordt. Zonder
+      // hierop te wachten beoordeelt de case soms dat tussenmoment.
+      const gegevensBinnen = page.waitForResponse(item => item.url().includes('/server/api/bootstrap.php'), { timeout: 20_000 });
       await page.reload();
+      await gegevensBinnen;
       await openSettings(page);
       for (const id of velden) {
         await expect(page.locator('#' + id), id + ' moet bewaard blijven').toHaveValue(gewijzigd[id]);
@@ -274,4 +279,48 @@ test('[INV-ID-H-007] de klanturenstaat-mailteksten blijven na opslaan bewaard', 
       await expect(page.locator('#' + id), id + ' moet hersteld zijn').toHaveValue(origineel[id]);
     }
   }
+});
+
+test('[INV-ID-H-008] typen in een instelling bevriest de rest van het formulier niet', async ({ page }) => {
+  // Het formulier sloeg het bijwerken van alle velden over zodra de cursor in
+  // een van de velden stond. Bedoeld om je invoer te beschermen, maar het gevolg
+  // was dat elk ander veld op zijn oude waarde bleef staan -- en bij het volgende
+  // opslaan werd die oude waarde gewoon teruggeschreven. Dat is de klacht over
+  // verouderde bedrijfsgegevens in het instellingenformulier.
+  //
+  // Nu wordt alleen het veld waar de cursor in staat met rust gelaten.
+  const login = new LoginPage(page);
+  await login.open();
+  await login.loginAsAdmin();
+  await openSettings(page);
+
+  const getypt = 'Tekst die ik aan het typen ben';
+  let verwachteAppNaam = '';
+
+  await test.step('Given de cursor staat in een van de instellingen', async () => {
+    verwachteAppNaam = await page.locator('#setting-app-name').inputValue();
+    expect(verwachteAppNaam, 'de appnaam moet gevuld zijn, anders zegt deze case niets').not.toBe('');
+
+    const veld = page.locator('#setting-customer-timesheet-submission-subject');
+    await veld.click();
+    await veld.fill(getypt);
+    await expect(page.locator('#setting-customer-timesheet-submission-subject')).toBeFocused();
+  });
+
+  await test.step('When een ander veld verouderd raakt en het scherm opnieuw wordt opgebouwd', async () => {
+    // Een verouderde waarde nabootsen zoals die ontstaat wanneer het formulier
+    // eerder met een oude stand is gevuld.
+    await page.evaluate(() => {
+      const el = document.querySelector('#setting-app-name') as HTMLInputElement | null;
+      if (el) el.value = 'VEROUDERDE WAARDE';
+    });
+    await page.evaluate(() => (window as unknown as { renderAll: () => void }).renderAll());
+  });
+
+  await test.step('Then wordt het verouderde veld hersteld en blijft het getypte veld staan', async () => {
+    await expect(page.locator('#setting-app-name'), 'een veld waar je niet in typt moet wel worden bijgewerkt')
+      .toHaveValue(verwachteAppNaam);
+    await expect(page.locator('#setting-customer-timesheet-submission-subject'), 'het veld waar je in typt mag niet worden overschreven')
+      .toHaveValue(getypt);
+  });
 });

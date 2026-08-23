@@ -100,12 +100,40 @@ assert(/\.invoice-brand-number-line\s+strong\s*\{[^}]*color:\s*#fff/.test(styles
 assert(/\.invoice-brand-references\s+strong\s*\{[^}]*color:\s*#fff/.test(styles), "Shawns drie brokerreferenties moeten wit en zichtbaar zijn in het donkerblauwe referentieblok");
 assert(document.querySelectorAll("select:not([hidden])").length === 0, "De vaste interface mag geen zichtbare native browserdropdowns meer bevatten");
 
+// Onder 720px staat er `html, body { overflow-x: hidden }`, waardoor body een eigen
+// scrollgebied wordt dat precies zo hoog is als zijn inhoud -- er valt daar dus niets
+// te scrollen. Zet je daar dan overscroll-behavior op, dan blokkeert dat het doorgeven
+// van een veeg aan het document erboven en scrollt de telefoon helemaal niet meer.
+// Dat gebeurde in 0.9.119. Deze controle staat hier en niet in Playwright, omdat de
+// WebKit-motor overscroll-behavior niet kent en het daar dus niet te meten is, terwijl
+// echte iOS Safari 16+ hem wel heeft. Zie MOB-H-010.
+{
+  // Geen regex hier: de CSS wordt blok voor blok uit elkaar gehaald. Van elk blok is
+  // de selector alles na de laatste accolade ervoor, zodat een regel binnen een
+  // @media-blok ook los wordt herkend.
+  const bodyRegels = [];
+  for (const blok of styles.split("}")) {
+    const grens = blok.lastIndexOf("{");
+    if (grens < 0) continue;
+    if (!blok.slice(grens + 1).includes("overscroll-behavior")) continue;
+    const selector = blok.slice(0, grens).trim();
+    // Elke selector in de groep telt apart: ".app-shell, body { ... }" raakt body ook.
+    // ".modal-body" mag geen treffer geven, vandaar de vergelijking op het hele woord.
+    const raaktBody = selector.split(",").some(deel => {
+      const d = deel.trim();
+      return d === "body" || d.endsWith(" body");
+    });
+    if (raaktBody) bodyRegels.push(selector);
+  }
+  assert(bodyRegels.length === 0, `overscroll-behavior mag niet op body staan, dat breekt het scrollen op de telefoon (gevonden bij: ${bodyRegels.join(" | ")})`);
+}
+
 assert(document.querySelectorAll("#dashboard-employee-rows tr").length === 4, "Dashboard moet vier demo-medewerkers tonen");
 assert(document.querySelector("#dashboard-team-title").textContent === "Teamstatus · Augustus 2026" && document.querySelector("#dashboard-team-summary").textContent === "4 medewerkers · 2 te controleren · 1 wacht op medewerker", "Het teamoverzicht moet maand, controles en wachttaken compact samenvatten");
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.119"), "Het zichtbare versienummer moet 0.9.119 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.121"), "Het zichtbare versienummer moet 0.9.121 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -1659,8 +1687,14 @@ assert(mailQueueSrc.includes("'other' => ["), "Een ontvanger met categorie Overi
 // Overerving: een leeg veld bij de ontvanger mag de opdrachttekst niet vervangen.
 assert(mailQueueSrc.includes("$routeSubject !== '' ? $routeSubject :") && mailQueueSrc.includes("$routeBody !== '' ? $routeBody :"), "Een eigen tekst per ontvanger moet de opdrachttekst alleen overrulen als die is ingevuld");
 const renderAllBody = appJsSrc.slice(appJsSrc.indexOf("function renderAll()"), appJsSrc.indexOf("function prefersReducedMotion()"));
-assert(renderAllBody.includes("settingsFormIsBeingEdited()) populateSettings()"), "renderAll moet het instellingenformulier opnieuw vullen: anders blijven na een herlaad de lokaal herstelde bedrijfsgegevens staan en overschrijft Wijzigingen opslaan de juiste serverdata");
-assert(appJsSrc.includes("function settingsFormIsBeingEdited") && appJsSrc.includes("view.contains(active)"), "Het opnieuw vullen van het instellingenformulier mag nooit gebeuren terwijl iemand in dat formulier typt");
+// renderAll moet het instellingenformulier onvoorwaardelijk opnieuw vullen. Stond hier eerder
+// een wachter die het hele formulier oversloeg zodra de cursor in een veld stond, dan bleven
+// alle andere velden op hun oude waarde staan en schreef Wijzigingen opslaan die terug.
+assert(/\n\s*populateSettings\(\);/.test(renderAllBody) && !renderAllBody.includes('settingsFormIsBeingEdited'), "renderAll moet het instellingenformulier altijd opnieuw vullen, zonder wachter die het hele formulier overslaat");
+// De bescherming hoort in populateSettings zelf te zitten en precies een veld te sparen:
+// dat waar de cursor in staat. Zie INV-ID-H-008.
+const populateBody = appJsSrc.slice(appJsSrc.indexOf("function populateSettings()"), appJsSrc.indexOf("function saveSettings()"));
+assert(populateBody.includes("zetInstelling(") && appJsSrc.includes("if (aangeraakteInstellingen.has(id)) return;"), "populateSettings moet de velden sparen die zelf zijn aangepast en nog niet opgeslagen, en de rest wel bijwerken");
 assert(/DELETE FROM announcement_recipients WHERE announcement_id/.test(announcementsApiSrc) && /DELETE FROM notifications WHERE announcement_id/.test(announcementsApiSrc), "Een concept verwijderen moet eerst de gekoppelde ontvangers en meldingen opruimen zodat de foreign key nooit een onafgevangen 500 veroorzaakt");
 assert(mailAcceptanceSrc.includes("$origin === 'https://uren-test.pathconsultancy.nl'") && mailAcceptanceSrc.includes("DELETE FROM password_reset_tokens WHERE user_id = :id") && mailAcceptancePolicySrc.includes("test_security_scenarios_repeatable"), "Alleen de twee speciale acceptatielinks mogen op de exacte TEST-origin herhaalbaar zijn");
 assert(testResetApiSrc.includes("auth_require_role(['administrator', 'employee']") && testResetApiSrc.includes("security_require_csrf_token()") && testResetApiSrc.includes("RESET_SHARED_TEST_BASELINE"), "De gedeelde TEST-reset moet beheer- of medewerkerrol, CSRF en expliciete bevestiging eisen");
@@ -1679,4 +1713,4 @@ assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("
 assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Playwright stage- en lokale env-bestanden mogen expliciete runner/CI-variabelen niet overschrijven");
 
 dom.window.close();
-console.log("Path v0.9.119 volledige smoke test: geslaagd");
+console.log("Path v0.9.121 volledige smoke test: geslaagd");

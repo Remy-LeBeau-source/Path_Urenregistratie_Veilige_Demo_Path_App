@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 261 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 263 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 261 unieke case-ID's
+- Playwright executable cases: 263 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 262 unieke case-ID's
+- Totaal executable cases: 264 unieke case-ID's
 - Playwright features: 23
 - Database features: 1
 - Playwright steps mappings: 23
 - Database steps mappings: 1
-- Uitvoeringen: 270
-- Niet-mobile projectuitvoeringen: 252
-- Mobile functionele cases: 9
-- Pixel 7 / Chromium-uitvoeringen: 9
-- iPhone 13 / WebKit-uitvoeringen: 9
+- Uitvoeringen: 273
+- Niet-mobile projectuitvoeringen: 253
+- Mobile functionele cases: 10
+- Pixel 7 / Chromium-uitvoeringen: 10
+- iPhone 13 / WebKit-uitvoeringen: 10
 
-De 9 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 261 Playwright-functionele cases in totaal 270 resultaten op: 252 + (9 x 2) = 270.
+De 10 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 263 Playwright-functionele cases in totaal 273 resultaten op: 253 + (10 x 2) = 273.
 
 ## Documentatieketen
 
@@ -221,7 +221,7 @@ De 9 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 261 Playwrig
 
 - Feature: `tests/playwright/features/invoice-company-identity.feature`
 - Source: `tests/playwright/invoice-company-identity.spec.ts`
-- Cases: 7
+- Cases: 8
 
 - [INV-ID-H-001] handelsnaam en juridische naam staan samen op de factuurpreview — Techniek: API-contract + equivalentieklasse · Assertions: 3
 - [INV-ID-H-002] alleen juridische naam is als factuurweergave te kiezen — Techniek: Equivalentieklassen · Assertions: 3
@@ -230,6 +230,7 @@ De 9 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 261 Playwrig
 - [INV-ID-H-005] instellingen tonen verkoopklare bedrijfsidentiteit en beveiligde verzendmodus — Techniek: API-contract + equivalentieklasse · Assertions: 8
 - [INV-ID-H-006] bedrijfsgegevens uit het instellingenformulier blijven bewaard en komen op de factuur — Techniek: API-contract + equivalentieklasse · Assertions: 5
 - [INV-ID-H-007] de klanturenstaat-mailteksten blijven na opslaan bewaard — Techniek: API-contract + equivalentieklasse · Assertions: 4
+- [INV-ID-H-008] typen in een instelling bevriest de rest van het formulier niet — Techniek: API-contract + equivalentieklasse · Assertions: 4
 
 ### Facturen bekijken en beheren
 
@@ -253,7 +254,7 @@ De 9 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 261 Playwrig
 
 - Feature: `tests/playwright/features/mobile.feature`
 - Source: `tests/playwright/mobile-ui.spec.ts`
-- Cases: 9
+- Cases: 10
 
 - [MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikbaar — Techniek: Responsive viewport + end-to-end use-case · Assertions: 31
 - [MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documentupload bereiken — Techniek: Responsive viewport + end-to-end use-case · Assertions: 14
@@ -264,6 +265,7 @@ De 9 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 261 Playwrig
 - [MOB-H-007] een medewerker leest mededelingen op de telefoon zonder afgekapte tekst — Techniek: Responsive viewport + end-to-end use-case · Assertions: 4
 - [MOB-H-008] elk hoofdscherm blijft op een telefoon leesbaar en bedienbaar — Techniek: Responsive viewport + end-to-end use-case · Assertions: 5
 - [MOB-H-009] instellingen en urenstaat zijn op een telefoon te overzien — Techniek: Responsive viewport + end-to-end use-case · Assertions: 9
+- [MOB-H-010] een veeg over het scherm scrollt de pagina echt — Techniek: Responsive viewport + end-to-end use-case · Assertions: 3
 
 ### Meldingen beheren
 

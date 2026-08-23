@@ -146,7 +146,7 @@ if ($action === 'enqueue') {
     $invoiceIdRaw = $payload['invoice_id'] ?? null;
     if (!is_numeric($invoiceIdRaw) || (int)$invoiceIdRaw <= 0) {
         auth_send_json(['ok' => false, 'error' => 'missing-invoice-id',
-            'message' => 'invoice_id must be a positive integer'], 400);
+            'message' => 'Er is geen geldige factuur meegestuurd.'], 400);
     }
     $invoiceId = (int)$invoiceIdRaw;
 
@@ -159,7 +159,7 @@ if ($action === 'enqueue') {
         }
         if ($code === 'invoice-not-locked') {
             auth_send_json(['ok' => false, 'error' => 'invoice-not-locked',
-                'message' => 'Invoice must be finalized before queueing mail'], 409);
+                'message' => 'Maak de factuur eerst definitief voordat je de mail klaarzet.'], 409);
         }
         auth_send_json(['ok' => false, 'error' => 'enqueue-failed', 'message' => $code], 500);
     }
@@ -182,7 +182,7 @@ if ($action === 'retry') {
     $deliveryIdRaw = $payload['delivery_id'] ?? null;
     if (!is_numeric($deliveryIdRaw) || (int)$deliveryIdRaw <= 0) {
         auth_send_json(['ok' => false, 'error' => 'missing-delivery-id',
-            'message' => 'delivery_id must be a positive integer'], 400);
+            'message' => 'Er is geen geldige verzending meegestuurd.'], 400);
     }
     $deliveryId = (int)$deliveryIdRaw;
 

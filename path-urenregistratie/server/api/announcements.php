@@ -155,7 +155,7 @@ if ($method !== 'POST') {
 }
 
 if (!$isAdmin) {
-    auth_send_json(['ok' => false, 'error' => 'forbidden', 'message' => 'Only administrators can write announcements.'], 403);
+    auth_send_json(['ok' => false, 'error' => 'forbidden', 'message' => 'Alleen een beheerder kan mededelingen versturen.'], 403);
 }
 
 security_require_csrf_token();
@@ -195,7 +195,7 @@ if ($action === 'send' || $action === 'save_draft') {
         }
     } else {
         if ($title === '' && $message === '') {
-            auth_send_json(['ok' => false, 'error' => 'empty-draft', 'message' => 'Provide at least a title or message for a draft.'], 400);
+            auth_send_json(['ok' => false, 'error' => 'empty-draft', 'message' => 'Vul minstens een titel of een bericht in om een concept te bewaren.'], 400);
         }
     }
 
@@ -299,7 +299,7 @@ if ($action === 'send' || $action === 'save_draft') {
         // The response stays generic on purpose, but silently discarding the
         // cause made a failing save impossible to diagnose.
         error_log('Announcement save failed: ' . $e->getMessage());
-        auth_send_json(['ok' => false, 'error' => 'db-error', 'message' => 'Could not save announcement.'], 500);
+        auth_send_json(['ok' => false, 'error' => 'db-error', 'message' => 'De mededeling kon niet worden opgeslagen. Probeer het opnieuw.'], 500);
     }
 
     auth_send_json(['ok' => true, 'action' => $action, 'id' => $announcementId]);
@@ -328,7 +328,7 @@ if ($action === 'withdraw') {
         auth_send_json(['ok' => false, 'error' => 'not-found'], 404);
     }
     if ((string)$announcement['status'] !== 'sent') {
-        auth_send_json(['ok' => false, 'error' => 'invalid-status', 'message' => 'Only sent announcements can be withdrawn.'], 409);
+        auth_send_json(['ok' => false, 'error' => 'invalid-status', 'message' => 'Alleen een verzonden mededeling kan worden ingetrokken.'], 409);
     }
 
     $pdo->prepare("UPDATE announcements SET status = 'withdrawn', withdrawal_reason = :reason, withdrawn_by = :uid, withdrawn_at = CURRENT_TIMESTAMP WHERE id = :id AND company_id = :cid")
@@ -360,7 +360,7 @@ if ($action === 'hide') {
         auth_send_json(['ok' => false, 'error' => 'not-found'], 404);
     }
     if ((string)$announcement['status'] !== 'withdrawn') {
-        auth_send_json(['ok' => false, 'error' => 'invalid-status', 'message' => 'Only withdrawn announcements can be hidden.'], 409);
+        auth_send_json(['ok' => false, 'error' => 'invalid-status', 'message' => 'Alleen een ingetrokken mededeling kan worden verborgen.'], 409);
     }
 
     // Mark all notifications for this announcement read so they disappear from employee bell
@@ -389,7 +389,7 @@ if ($action === 'delete_draft') {
         auth_send_json(['ok' => false, 'error' => 'not-found'], 404);
     }
     if ((string)$announcement['status'] !== 'draft') {
-        auth_send_json(['ok' => false, 'error' => 'invalid-status', 'message' => 'Only drafts can be deleted.'], 409);
+        auth_send_json(['ok' => false, 'error' => 'invalid-status', 'message' => 'Alleen een concept kan worden verwijderd.'], 409);
     }
 
     // Rows in announcement_recipients (and any notification referencing this
@@ -409,7 +409,7 @@ if ($action === 'delete_draft') {
     } catch (Throwable $e) {
         $pdo->rollBack();
         error_log('Announcement draft delete failed: ' . $e->getMessage());
-        auth_send_json(['ok' => false, 'error' => 'db-error', 'message' => 'Could not delete draft.'], 500);
+        auth_send_json(['ok' => false, 'error' => 'db-error', 'message' => 'Het concept kon niet worden verwijderd. Probeer het opnieuw.'], 500);
     }
 
     auth_send_json(['ok' => true, 'action' => 'delete_draft', 'deleted' => 1]);

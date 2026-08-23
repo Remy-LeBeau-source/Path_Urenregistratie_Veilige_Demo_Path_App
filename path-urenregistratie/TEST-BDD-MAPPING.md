@@ -150,6 +150,7 @@
 | INV-ID-H-005 | integration | invoice-company-identity.feature | instellingen tonen verkoopklare bedrijfsidentiteit en beveiligde verzendmodus | API-contract + equivalentieklasse | 8 | invoice-company-identity.steps.ts | invoice-company-identity.spec.ts | DB / Integratie | Facturatie | instellingen tonen verkoopklare bedrijfsidentiteit en beveiligde verzendmodus | Happy | 11 | Actueel |
 | INV-ID-H-006 | integration | invoice-company-identity.feature | bedrijfsgegevens uit het instellingenformulier blijven bewaard en komen op de factuur | API-contract + equivalentieklasse | 5 | invoice-company-identity.steps.ts | invoice-company-identity.spec.ts | DB / Integratie | Facturatie | bedrijfsgegevens uit het instellingenformulier blijven bewaard en komen op de factuur | Happy | 11 | Actueel |
 | INV-ID-H-007 | integration | invoice-company-identity.feature | de klanturenstaat-mailteksten blijven na opslaan bewaard | API-contract + equivalentieklasse | 4 | invoice-company-identity.steps.ts | invoice-company-identity.spec.ts | DB / Integratie | Facturatie | de klanturenstaat-mailteksten blijven na opslaan bewaard | Happy | 11 | Actueel |
+| INV-ID-H-008 | integration | invoice-company-identity.feature | typen in een instelling bevriest de rest van het formulier niet | API-contract + equivalentieklasse | 4 | invoice-company-identity.steps.ts | invoice-company-identity.spec.ts | DB / Integratie | Facturatie | typen in een instelling bevriest de rest van het formulier niet | Happy | 11 | Actueel |
 | INV-H-001 | ui | invoices.feature | admin facturen zichtbaar en console errors 0 | Beslissingstabel rollen en autorisatie | 1 | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | admin facturen zichtbaar en console errors 0 | Happy | 11 | Actueel |
 | INV-N-005 | ui | invoices.feature | employee facturen zichtbaar maar beperkt en console errors 0 | Negatieve equivalentieklasse + error guessing | 4 | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | employee facturen zichtbaar maar beperkt en console errors 0 | Negative | 11 | Actueel |
 | INV-H-002 | ui | invoices.feature | periodefilter juli en augustus werkt | Equivalentieklassen | 4 | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | periodefilter juli en augustus werkt | Happy | 11 | Actueel |
@@ -170,6 +171,7 @@
 | MOB-H-007 | ui | mobile.feature | een medewerker leest mededelingen op de telefoon zonder afgekapte tekst | Responsive viewport + end-to-end use-case | 4 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | een medewerker leest mededelingen op de telefoon zonder afgekapte tekst | Happy | 15 | Actueel |
 | MOB-H-008 | ui | mobile.feature | elk hoofdscherm blijft op een telefoon leesbaar en bedienbaar | Responsive viewport + end-to-end use-case | 5 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | elk hoofdscherm blijft op een telefoon leesbaar en bedienbaar | Happy | 15 | Actueel |
 | MOB-H-009 | ui | mobile.feature | instellingen en urenstaat zijn op een telefoon te overzien | Responsive viewport + end-to-end use-case | 9 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | instellingen en urenstaat zijn op een telefoon te overzien | Happy | 15 | Actueel |
+| MOB-H-010 | ui | mobile.feature | een veeg over het scherm scrollt de pagina echt | Responsive viewport + end-to-end use-case | 3 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | een veeg over het scherm scrollt de pagina echt | Happy | 15 | Actueel |
 | NOT-H-001 | api | notifications.feature | ingelogde gebruiker kan notificaties ophalen | API-contract + equivalentieklasse | 5 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | ingelogde gebruiker kan notificaties ophalen | Happy | 15 | Actueel |
 | NOT-H-002 | api | notifications.feature | mark_all_read werkt zonder fouten | Toestandsovergang | 8 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | mark_all_read werkt zonder fouten | Happy | 15 | Actueel |
 | NOT-N-003 | api | notifications.feature | anonieme gebruiker krijgt 401 op notificaties | Beslissingstabel rollen en autorisatie | 1 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | anonieme gebruiker krijgt 401 op notificaties | Negative | 15 | Actueel |
@@ -283,9 +285,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 261
+- Playwright executable cases: 263
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 262
+- Totaal unieke executable cases: 264
 - Playwright features: 23
 - Database features: 1
 - Playwright steps mappings: 23

@@ -351,7 +351,7 @@ function auth_pdo(array $config): PDO
         auth_send_json([
             'ok' => false,
             'error' => 'db-connection',
-            'message' => 'Could not connect to database.',
+            'message' => 'Er kon geen verbinding met de database worden gemaakt.',
         ], 500);
     }
 }

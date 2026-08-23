@@ -72,13 +72,13 @@ $targetIdRaw = $payload['user_id'] ?? null;
 
 if (!is_numeric($targetIdRaw) || (int)$targetIdRaw <= 0) {
     auth_send_json(['ok' => false, 'error' => 'missing-user-id',
-        'message' => 'user_id must be a positive integer'], 400);
+        'message' => 'Er is geen geldige gebruiker meegestuurd.'], 400);
 }
 $targetId = (int)$targetIdRaw;
 
 if ($targetId === $actorId) {
     auth_send_json(['ok' => false, 'error' => 'cannot-modify-self',
-        'message' => 'You cannot modify your own account via this endpoint.'], 409);
+        'message' => 'Je kunt je eigen account hier niet wijzigen.'], 409);
 }
 
 // Load target user — must be in same company.

@@ -62,3 +62,11 @@ Feature: Facturerende onderneming en handelsnaam
     Given facturerende onderneming en handelsnaam is voorbereid
     When de vier teksten worden aangepast en opgeslagen
     Then staan ze na een herlaad nog steeds in het formulier
+
+  @happy
+  Scenario: [INV-ID-H-008] typen in een instelling bevriest de rest van het formulier niet
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given de cursor staat in een van de instellingen
+    When een ander veld verouderd raakt en het scherm opnieuw wordt opgebouwd
+    Then wordt het verouderde veld hersteld en blijft het getypte veld staan

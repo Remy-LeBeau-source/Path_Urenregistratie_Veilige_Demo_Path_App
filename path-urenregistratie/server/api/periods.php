@@ -85,13 +85,13 @@ $periodKey = trim((string)($payload['period_key'] ?? ''));
 
 if (!preg_match('/^(\d{4})-(\d{2})$/', $periodKey, $m)) {
     auth_send_json(['ok' => false, 'error' => 'invalid-period',
-        'message' => 'period_key must be YYYY-MM'], 400);
+        'message' => 'De periode moet de notatie JJJJ-MM hebben.'], 400);
 }
 $year  = (int)$m[1];
 $month = (int)$m[2];
 if ($year < 1000 || $year > 9999 || $month < 1 || $month > 12) {
     auth_send_json(['ok' => false, 'error' => 'invalid-period',
-        'message' => 'period_key must contain a supported year and month'], 400);
+        'message' => 'De periode bevat geen geldig jaar of geldige maand.'], 400);
 }
 
 // Load or auto-create the period for this company.
@@ -151,7 +151,7 @@ if ($action === 'close') {
 if ($action === 'reopen') {
     if ((string)$period['status'] !== 'closed') {
         auth_send_json(['ok' => false, 'error' => 'not-closed',
-            'message' => 'Only closed periods can be reopened.'], 409);
+            'message' => 'Alleen een afgesloten periode kan opnieuw worden geopend.'], 409);
     }
 
     $pdo->prepare(

@@ -46,3 +46,6 @@ Given("de instellingen beginnen dichtgeklapt");
 When("een paneel wordt geopend, verschijnt de inhoud");
 And("de urenstaat past binnen het scherm zonder zijwaarts schuiven");
 Then("wordt met Playwright-assertions bevestigd dat instellingen en urenstaat zijn op een telefoon te overzien");
+Given("de pagina is langer dan het scherm");
+Then("blokkeert geen enkele laag het doorgeven van de veeg");
+When("er met een vinger omhoog wordt geveegd, komt de pagina in beweging");

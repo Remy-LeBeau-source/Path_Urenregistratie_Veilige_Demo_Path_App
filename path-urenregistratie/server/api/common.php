@@ -96,7 +96,7 @@ function api_load_config(): array
         api_send_json([
             'ok' => false,
             'error' => 'invalid-config',
-            'message' => 'server/config.local.php must return an array.'
+            'message' => 'server/config.local.php moet een array teruggeven.'
         ], 500);
     }
 

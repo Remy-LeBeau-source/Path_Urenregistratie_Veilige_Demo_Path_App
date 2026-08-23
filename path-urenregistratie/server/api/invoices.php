@@ -76,7 +76,7 @@ function invoices_parse_period(?string $period): array
         auth_send_json([
             'ok' => false,
             'error' => 'invalid-period',
-            'message' => 'period must match YYYY-MM, e.g. 2026-07',
+            'message' => 'De periode moet de notatie JJJJ-MM hebben, bijvoorbeeld 2026-07.',
         ], 400);
     }
 
@@ -86,7 +86,7 @@ function invoices_parse_period(?string $period): array
         auth_send_json([
             'ok' => false,
             'error' => 'invalid-period',
-            'message' => 'period month must be between 01 and 12',
+            'message' => 'De maand in de periode moet tussen 01 en 12 liggen.',
         ], 400);
     }
 
@@ -346,7 +346,7 @@ function invoices_download_pdf(PDO $pdo, array $config, array $currentUser, arra
         auth_send_json([
             'ok' => false,
             'error' => 'invalid-payload',
-            'message' => 'invoice_id must be a positive integer.',
+            'message' => 'Er is geen geldige factuur meegestuurd.',
         ], 400);
     }
 
@@ -367,7 +367,7 @@ function invoices_download_pdf(PDO $pdo, array $config, array $currentUser, arra
         auth_send_json([
             'ok' => false,
             'error' => 'invoice-not-found',
-            'message' => 'Invoice was not found in your company scope.',
+            'message' => 'De factuur is niet gevonden binnen jouw bedrijfsomgeving.',
         ], 404);
     }
 
@@ -377,7 +377,7 @@ function invoices_download_pdf(PDO $pdo, array $config, array $currentUser, arra
             auth_send_json([
                 'ok' => false,
                 'error' => 'forbidden-action',
-                'message' => 'Employees may only download their own invoices.',
+                'message' => 'Een medewerker kan alleen de eigen facturen downloaden.',
             ], 403);
         }
     }
@@ -387,7 +387,7 @@ function invoices_download_pdf(PDO $pdo, array $config, array $currentUser, arra
         auth_send_json([
             'ok' => false,
             'error' => 'invoice-pdf-missing',
-            'message' => 'For this invoice no PDF has been generated yet.',
+            'message' => 'Voor deze factuur is nog geen PDF gemaakt.',
         ], 404);
     }
 
@@ -396,7 +396,7 @@ function invoices_download_pdf(PDO $pdo, array $config, array $currentUser, arra
         auth_send_json([
             'ok' => false,
             'error' => 'invoice-pdf-missing',
-            'message' => 'The stored PDF file was not found on the server.',
+            'message' => 'Het opgeslagen PDF-bestand is niet gevonden op de server.',
         ], 404);
     }
 
@@ -512,7 +512,7 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
         auth_send_json([
             'ok' => false,
             'error' => 'forbidden-action',
-            'message' => 'Only administrator can lock invoices.',
+            'message' => 'Alleen een beheerder kan een factuur definitief maken.',
         ], 403);
     }
 
@@ -521,7 +521,7 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
         auth_send_json([
             'ok' => false,
             'error' => 'invalid-payload',
-            'message' => 'timesheet_id must be a positive integer.',
+            'message' => 'Er is geen geldige urenstaat meegestuurd.',
         ], 400);
     }
 
@@ -598,7 +598,7 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
             auth_send_json([
                 'ok' => false,
                 'error' => 'timesheet-not-found',
-                'message' => 'Timesheet was not found in your company scope.',
+                'message' => 'De urenstaat is niet gevonden binnen jouw bedrijfsomgeving.',
             ], 404);
         }
 
@@ -620,7 +620,7 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
             auth_send_json([
                 'ok' => false,
                 'error' => 'invalid-invoice-state',
-                'message' => 'Invoice state does not allow re-finalization.',
+                'message' => 'De huidige status van deze factuur staat opnieuw definitief maken niet toe.',
             ], 409);
         }
 
@@ -631,7 +631,7 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
             auth_send_json([
                 'ok' => false,
                 'error' => 'timesheet-not-approved',
-                'message' => 'Only approved timesheets can be finalized into invoices.',
+                'message' => 'Alleen een goedgekeurde urenstaat kan tot een factuur worden verwerkt.',
             ], 409);
         }
 
@@ -664,7 +664,7 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
             auth_send_json([
                 'ok' => false,
                 'error' => 'recipient-not-found',
-                'message' => 'Could not determine invoice recipient for this assignment.',
+                'message' => 'Voor deze plaatsing kon geen factuurontvanger worden bepaald.',
             ], 409);
         }
 
@@ -766,7 +766,7 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
             auth_send_json([
                 'ok' => false,
                 'error' => 'timesheet-state-conflict',
-                'message' => 'Timesheet changed before invoice could be finalized.',
+                'message' => 'De urenstaat is gewijzigd voordat de factuur definitief kon worden gemaakt. Ververs en probeer opnieuw.',
             ], 409);
         }
 
@@ -859,7 +859,7 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
         auth_send_json([
             'ok' => false,
             'error' => 'invoice-lock-failed',
-            'message' => 'Could not finalize invoice.',
+            'message' => 'De factuur kon niet definitief worden gemaakt.',
         ], 500);
     }
 }
@@ -879,7 +879,7 @@ if ($method !== 'POST') {
     auth_send_json([
         'ok' => false,
         'error' => 'method-not-allowed',
-        'message' => 'Only GET and POST are allowed on this endpoint.',
+        'message' => 'Alleen GET en POST zijn toegestaan op dit onderdeel.',
     ], 405);
 }
 
@@ -894,5 +894,5 @@ if ($action === 'lock') {
 auth_send_json([
     'ok' => false,
     'error' => 'unsupported-action',
-    'message' => 'Unsupported invoice action.',
+    'message' => 'Deze factuuractie wordt niet ondersteund.',
 ], 400);

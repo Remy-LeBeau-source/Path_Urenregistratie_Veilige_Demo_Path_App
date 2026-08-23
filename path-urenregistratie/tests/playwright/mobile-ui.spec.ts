@@ -916,3 +916,78 @@ test('[MOB-H-009] instellingen en urenstaat zijn op een telefoon te overzien', a
     expect(meting.tabel, 'de urenstaat moet binnen het scherm passen').toBeLessThanOrEqual(meting.viewport);
   });
 });
+
+test('[MOB-H-010] een veeg over het scherm scrollt de pagina echt', async ({ page, browserName }) => {
+  // Gio meldde dat de telefoonversie helemaal niet meer scrolde. Twee losse regels
+  // veroorzaakten dat samen: `html, body { overflow-x: hidden }` maakt van body een
+  // eigen scrollgebied dat precies zo hoog is als zijn inhoud, en een
+  // `overscroll-behavior` op dat body blokkeert vervolgens het doorgeven van de veeg
+  // aan het document erboven. Vinger op het scherm gaf dan nul beweging.
+  //
+  // Geen enkele bestaande case zag dit, omdat ze allemaal met window.scrollTo
+  // scrollen -- en dat gaat langs body heen en werkt dus gewoon. Deze case veegt
+  // daarom met een echte aanraking, en controleert daarnaast de voorwaarde zelf,
+  // zodat ook de iPhone-run (waar aanraking niet te simuleren is) hem afvangt.
+  test.setTimeout(120_000);
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+
+  await test.step('Given de pagina is langer dan het scherm', async () => {
+    const maten = await page.evaluate(() => ({
+      inhoud: document.documentElement.scrollHeight,
+      scherm: document.documentElement.clientHeight,
+    }));
+    expect(maten.inhoud, 'er moet iets te scrollen zijn, anders zegt deze case niets')
+      .toBeGreaterThan(maten.scherm + 200);
+  });
+
+  await test.step('Then blokkeert geen enkele laag het doorgeven van de veeg', async () => {
+    // Een laag breekt het scrollen zodra hij zelf een scrollgebied is, daarin niets
+    // te scrollen heeft, en containment aan heeft staan: de veeg stopt dan bij hem.
+    const blokkades = await page.evaluate(() => {
+      const gevonden: string[] = [];
+      [document.documentElement, document.body].forEach(el => {
+        const cs = getComputedStyle(el);
+        const isScrollgebied = cs.overflowY !== 'visible' && cs.overflowY !== 'clip';
+        const heeftRuimte = el.scrollHeight > el.clientHeight + 1;
+        const houdtVast = cs.overscrollBehaviorY === 'contain' || cs.overscrollBehaviorY === 'none';
+        if (isScrollgebied && !heeftRuimte && houdtVast) {
+          gevonden.push(el.tagName.toLowerCase() + ' (overflow-y=' + cs.overflowY
+            + ', overscroll-behavior-y=' + cs.overscrollBehaviorY + ')');
+        }
+      });
+      return gevonden;
+    });
+    expect(blokkades, 'deze laag houdt de veeg vast zonder zelf te kunnen scrollen').toEqual([]);
+  });
+
+  if (browserName !== 'chromium') {
+    // Aanraking is alleen via CDP te sturen en dat bestaat op WebKit niet. Hier
+    // stoppen met test.skip zou de hele case overslaan, inclusief de controle
+    // hierboven -- en juist die is de dekking voor de iPhone. Dus alleen deze
+    // laatste stap valt weg, de case blijft meetellen.
+    return;
+  }
+
+  await test.step('When er met een vinger omhoog wordt geveegd, komt de pagina in beweging', async () => {
+
+    const cdp = await page.context().newCDPSession(page);
+    const breedte = page.viewportSize()?.width ?? 412;
+    const x = Math.round(breedte / 2);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(200);
+
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y: 700 }] });
+    for (let y = 700; y >= 200; y -= 25) {
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y }] });
+      await page.waitForTimeout(16);
+    }
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await page.waitForTimeout(400);
+
+    const verplaatsing = await page.evaluate(() => window.scrollY);
+    expect(verplaatsing, 'een veeg van 500px moet de pagina merkbaar verplaatsen')
+      .toBeGreaterThan(200);
+  });
+});
