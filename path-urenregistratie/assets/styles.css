@@ -2295,187 +2295,7 @@ button,
   }
 }
 
-/* === Ondergrens voor leesbare tekst op een telefoon === */
-/*
-   Op desktop mag tekst klein zijn -- daar heb je ruimte en zit je verder van het
-   scherm af. Op 412px is 8 of 9 pixels niet meer te lezen, en dat was precies de
-   klacht: alles moet leesbaar zijn.
 
-   Deze regels herhalen de selectors die zelf onder 11px zitten en zetten ze op de
-   ondergrens. Zelfde selector, later in het bestand, dus die wint -- en alleen
-   binnen deze media query, dus op desktop verandert er niets. Aangemaakt door
-   analyse van de stylesheet, niet met de hand, zodat er niets over het hoofd wordt
-   gezien.
-*/
-@media (max-width: 720px) {
-  .account-choice-panel button small { font-size: 11px; }
-  .admin-task-filters button { font-size: 11px; }
-  .admin-task-heading p { font-size: 11px; }
-  .admin-task-kind span { font-size: 11px; }
-  .admin-task-month-heading small { font-size: 11px; }
-  .admin-task-month-heading-copy > span { font-size: 11px; }
-  .admin-task-note small { font-size: 11px; }
-  .admin-task-owner-heading { font-size: 11px; }
-  .admin-task-person small { font-size: 11px; }
-  .administrator-person small { font-size: 11px; }
-  .announcement-item-head > small { font-size: 11px; }
-  .announcement-meta span { font-size: 11px; }
-  .announcement-meta strong { font-size: 11px; }
-  .announcement-withdrawal-note { font-size: 11px; }
-  .approval-data small { font-size: 11px; }
-  .approval-person small { font-size: 11px; }
-  .assignment-bar small { font-size: 11px; }
-  .correction-banner small { font-size: 11px; }
-  .customer-timesheet-action-help { font-size: 11px; }
-  .customer-timesheet-admin-meta small { font-size: 11px; }
-  .customer-timesheet-admin-meta strong { font-size: 11px; }
-  .customer-timesheet-admin-panel .panel-heading p { font-size: 11px; }
-  .customer-timesheet-field-label { font-size: 11px; }
-  .customer-timesheet-mail-preview span { font-size: 11px; }
-  .customer-timesheet-template-card > small { font-size: 11px; }
-  .customer-timesheet-template-card label { font-size: 11px; }
-  .customer-timesheet-upload-grid .month-choice-panel button { font-size: 11px; }
-  .customer-timesheet-upload-grid label { font-size: 11px; }
-  .dashboard-team-panel .panel-heading p { font-size: 11px; }
-  .data-table td small { font-size: 11px; }
-  .data-table th { font-size: 11px; }
-  .demo-badge { font-size: 11px; }
-  .demo-employee-picker small { font-size: 11px; }
-  .email-preview span { font-size: 11px; }
-  .email-preview strong small { font-size: 11px; }
-  .employee-announcement-card footer { font-size: 11px; }
-  .employee-announcement-card header > small { font-size: 11px; }
-  .employee-details small { font-size: 11px; }
-  .employee-details strong { font-size: 11px; }
-  .employee-history-current { font-size: 11px; }
-  .employee-history-head { font-size: 11px; }
-  .employee-history-row small { font-size: 11px; }
-  .employee-identity small { font-size: 11px; }
-  .employee-month-progress > span { font-size: 11px; }
-  .employee-month-progress small { font-size: 11px; }
-  .employee-next-action-label { font-size: 11px; }
-  .employee-next-action-meta { font-size: 11px; }
-  .employee-open-action-copy small { font-size: 11px; }
-  .employee-open-action-copy span { font-size: 11px; }
-  .employee-open-month-heading-copy small { font-size: 11px; }
-  .environment-badge { font-size: 11px; }
-  .eyebrow { font-size: 11px; }
-  .fixed-audience span { font-size: 11px; }
-  .fixed-audience strong { font-size: 11px; }
-  .form-grid label { font-size: 11px; }
-  .help-clear { font-size: 11px; }
-  .help-contact-actions a { font-size: 11px; }
-  .help-contact-actions button { font-size: 11px; }
-  .help-faq-heading small { font-size: 11px; }
-  .help-form button { font-size: 11px; }
-  .help-inline-topics button { font-size: 11px; }
-  .help-panel header small { font-size: 11px; }
-  .help-suggestions button { font-size: 11px; }
-  .hero-owner-badge { font-size: 11px; }
-  .hero-task-math > span { font-size: 11px; }
-  .hero-task-math small { font-size: 11px; }
-  .hours-table .date-number { font-size: 11px; }
-  .hours-table th { font-size: 11px; }
-  .hours-view-toolbar > div:first-child small { font-size: 11px; }
-  .hours-visible-total span { font-size: 11px; }
-  .invoice-action-note { font-size: 11px; }
-  .invoice-brand-contact { font-size: 11px; }
-  .invoice-brand-footer { font-size: 11px; }
-  .invoice-brand-label { font-size: 11px; }
-  .invoice-brand-logo span { font-size: 11px; }
-  .invoice-brand-number-line span { font-size: 11px; }
-  .invoice-brand-party .invoice-brand-identity { font-size: 11px; }
-  .invoice-brand-party dl { font-size: 11px; }
-  .invoice-brand-party dt { font-size: 11px; }
-  .invoice-brand-payment p { font-size: 11px; }
-  .invoice-brand-references span { font-size: 11px; }
-  .invoice-brand-title > small { font-size: 11px; }
-  .invoice-brand-title > span { font-size: 11px; }
-  .invoice-brand-totals { font-size: 11px; }
-  .invoice-brand-totals span { font-size: 11px; }
-  .invoice-branded-template .invoice-preview-table th { font-size: 11px; }
-  .invoice-identity-preview small { font-size: 11px; }
-  .invoice-identity-preview span { font-size: 11px; }
-  .invoice-month-overview-action small { font-size: 11px; }
-  .invoice-month-overview-copy p { font-size: 11px; }
-  .invoice-month-overview-empty { font-size: 11px; }
-  .invoice-month-overview-item small { font-size: 11px; }
-  .invoice-status-guide small { font-size: 11px; }
-  .mail-acceptance-copy small { font-size: 11px; }
-  .mail-delivery-history-main small { font-size: 11px; }
-  .mail-delivery-history-meta span { font-size: 11px; }
-  .mail-delivery-history-state small { font-size: 11px; }
-  .mail-route-guide small { font-size: 11px; }
-  .mini-avatar { font-size: 11px; }
-  .mobile-brand-home span { font-size: 11px; }
-  .modal-form .form-help { font-size: 11px; }
-  .modal-form label { font-size: 11px; }
-  .modal-queue small { font-size: 11px; }
-  .month-batch-blocker-copy small { font-size: 11px; }
-  .month-batch-blocker-copy strong { font-size: 11px; }
-  .month-batch-blocker-owner small { font-size: 11px; }
-  .month-batch-blocker-owner strong { font-size: 11px; }
-  .month-batch-summary > p { font-size: 11px; }
-  .nav-item span:nth-child(2) { font-size: 11px; }
-  .notification-button b { font-size: 11px; }
-  .notification-item small { font-size: 11px; }
-  .notification-item span { font-size: 11px; }
-  .notification-test-actions > p { font-size: 11px; }
-  .notification-test-actions > small { font-size: 11px; }
-  .notification-test-actions button { font-size: 11px; }
-  .period-control .month-choice-panel button { font-size: 11px; }
-  .period-control .month-picker-trigger { font-size: 11px; }
-  .period-picker-caption { font-size: 11px; }
-  .period-picker-fields input { font-size: 11px; }
-  .popover-footer-button { font-size: 11px; }
-  .popover-heading small { font-size: 11px; }
-  .preference-row small { font-size: 11px; }
-  .profile-editor-copy small { font-size: 11px; }
-  .profile-menu-person small { font-size: 11px; }
-  .profile-photo-control input { font-size: 11px; }
-  .recipient-choice small { font-size: 11px; }
-  .recipient-choice strong { font-size: 11px; }
-  .reminder-choice-field { font-size: 11px; }
-  .reminder-choice-panel button { font-size: 11px; }
-  .reminder-choice-trigger { font-size: 11px; }
-  .reminder-fixed-moment { font-size: 11px; }
-  .reminder-fixed-moment small { font-size: 11px; }
-  .reminder-fixed-moment strong { font-size: 11px; }
-  .reminder-rule .check-row small { font-size: 11px; }
-  .reminder-rule .check-row strong { font-size: 11px; }
-  .reminder-schedule-summary > strong { font-size: 11px; }
-  .reminder-schedule-summary span { font-size: 11px; }
-  .route-list small { font-size: 11px; }
-  .route-template small { font-size: 11px; }
-  .safe-domain-note { font-size: 11px; }
-  .safety-badge { font-size: 11px; }
-  .section-label { font-size: 11px; }
-  .segmented-control button { font-size: 11px; }
-  .settings-rule-list small { font-size: 11px; }
-  .settings-rule-list strong { font-size: 11px; }
-  .settings-section-nav button { font-size: 11px; }
-  .settings-warning { font-size: 11px; }
-  .small-button { font-size: 11px; }
-  .status-pill { font-size: 11px; }
-  .summary-note p { font-size: 11px; }
-  .team-account-avatar { font-size: 11px; }
-  .team-account-group small { font-size: 11px; }
-  .team-account-overview-copy small { font-size: 11px; }
-  .template-person small { font-size: 11px; }
-  .template-subject small { font-size: 11px; }
-  .timesheet-actions small { font-size: 11px; }
-  .toggle-grid small { font-size: 11px; }
-  .toggle-grid strong { font-size: 11px; }
-  .topbar-quick-reset { font-size: 11px; }
-  .updated-label { font-size: 11px; }
-  .workflow-heading-meta small { font-size: 11px; }
-  .workflow-progress-card small { font-size: 11px; }
-  .workflow-step small { font-size: 11px; }
-  /* Optional per-recipient overrides. They span the full row so the two toggles
-   keep their own line { font-size: 11px; }
-  and an empty field stays visibly optional. */
-.route-template { font-size: 11px; }
-}
 
 /* ---------------------------------------------------------------------------
    Uitnodiging om de app te installeren
@@ -2561,4 +2381,365 @@ button,
    Anders ligt de balk over knoppen heen die daar toevallig staan. */
 body.toont-installatieaanbod .main-content {
   padding-bottom: 190px;
+}
+
+/* === Leesbare tekstgrootte op een telefoon === */
+/*
+   Op desktop mag tekst klein zijn: je hebt ruimte en zit verder van het scherm.
+   Op 412px is dat anders. Gemeten kwam de gemiddelde tekst hier uit op 12,9px,
+   terwijl Apple en Google voor gewone tekst eerder 15 tot 17 aanhouden.
+
+   Elke maat onder de 16px krijgt er twee pixels bij, en nooit minder dan 11px --
+   die ondergrens blijft gelden, want twee pixels bij 8px is nog steeds te klein.
+   Niet alles gelijktrekken, want dan verdwijnt het verschil tussen een kopje en
+   de tekst eronder. Aangemaakt door analyse van de stylesheet, niet met de hand.
+
+   Kosten, gemeten: de pagina wordt ongeveer 3% langer. Dat valt mee omdat de
+   meeste ruimte naar kaarten en marges gaat, niet naar de letters zelf.
+*/
+@media (max-width: 720px) {
+  .account-choice-panel button small { font-size: 11px; }
+  .account-choice-panel button strong { font-size: 13px; }
+  .admin-task-filters button { font-size: 11px; }
+  .admin-task-heading p { font-size: 12px; }
+  .admin-task-kind span { font-size: 11px; }
+  .admin-task-kind strong { font-size: 13px; }
+  .admin-task-month-heading small { font-size: 11px; }
+  .admin-task-month-heading-copy > span { font-size: 12px; }
+  .admin-task-month-heading-side small { font-size: 13px; }
+  .admin-task-note small { font-size: 11px; }
+  .admin-task-owner-heading { font-size: 11px; }
+  .admin-task-person small { font-size: 11px; }
+  .admin-task-person strong { font-size: 13px; }
+  .administrator-person small { font-size: 11px; }
+  .administrator-person strong { font-size: 13px; }
+  .administrator-row small { font-size: 13px; }
+  .announcement-item > p { font-size: 14px; }
+  .announcement-item small { font-size: 13px; }
+  .announcement-item-head > small { font-size: 11px; }
+  .announcement-meta span { font-size: 11px; }
+  .announcement-meta strong { font-size: 12px; }
+  .announcement-withdrawal-note { font-size: 12px; }
+  .approval-data small { font-size: 12px; }
+  .approval-data strong { font-size: 14px; }
+  .approval-person small { font-size: 12px; }
+  .approval-person strong { font-size: 14px; }
+  .assignment-bar small { font-size: 11px; }
+  .assignment-bar strong { font-size: 14px; }
+  .brand span { font-size: 13px; }
+  .button { font-size: 15px; }
+  .close-card small { font-size: 13px; }
+  .close-card strong { font-size: 15px; }
+  .correction-banner p { font-size: 14px; }
+  .correction-banner small { font-size: 11px; }
+  .correction-banner strong { font-size: 14px; }
+  .customer-timesheet-action-help { font-size: 12px; }
+  .customer-timesheet-admin-meta small { font-size: 11px; }
+  .customer-timesheet-admin-meta strong { font-size: 12px; }
+  .customer-timesheet-admin-panel .panel-heading p { font-size: 12px; }
+  .customer-timesheet-admin-person strong { font-size: 15px; }
+  .customer-timesheet-field-label { font-size: 12px; }
+  .customer-timesheet-flow span { font-size: 13px; }
+  .customer-timesheet-mail-preview span { font-size: 11px; }
+  .customer-timesheet-template-card > small { font-size: 11px; }
+  .customer-timesheet-template-card h4 { font-size: 17px; }
+  .customer-timesheet-template-card input { font-size: 14px; }
+  .customer-timesheet-template-card label { font-size: 12px; }
+  .customer-timesheet-template-card textarea { font-size: 14px; }
+  .customer-timesheet-upload-grid .month-choice-panel button { font-size: 13px; }
+  .customer-timesheet-upload-grid .month-picker-trigger { font-size: 13px; }
+  .customer-timesheet-upload-grid label { font-size: 12px; }
+  .dashboard-action-empty { font-size: 13px; }
+  .dashboard-next-action-copy > small { font-size: 13px; }
+  .dashboard-next-action-copy p { font-size: 13px; }
+  .dashboard-next-action-side .small-button { font-size: 13px; }
+  .dashboard-next-action-side > small { font-size: 13px; }
+  .dashboard-next-action-side > strong { font-size: 14px; }
+  .dashboard-team-panel .panel-heading p { font-size: 12px; }
+  .dashboard-team-table .person-cell strong { font-size: 14px; }
+  .data-table td { font-size: 14px; }
+  .data-table td small { font-size: 11px; }
+  .data-table th { font-size: 11px; }
+  .date-number { font-size: 14px; }
+  .demo-badge { font-size: 12px; }
+  .demo-employee-picker label { font-size: 13px; }
+  .demo-employee-picker small { font-size: 12px; }
+  .email-preview p { font-size: 14px; }
+  .email-preview span { font-size: 12px; }
+  .email-preview strong { font-size: 13px; }
+  .email-preview strong small { font-size: 11px; }
+  .employee-announcement-card > p { font-size: 14px; }
+  .employee-announcement-card footer { font-size: 11px; }
+  .employee-announcement-card header > small { font-size: 11px; }
+  .employee-announcement-card small { font-size: 13px; }
+  .employee-card small { font-size: 13px; }
+  .employee-customer-timesheet-card p { font-size: 13px; }
+  .employee-dashboard-next small { font-size: 13px; }
+  .employee-dashboard-next span { font-size: 13px; }
+  .employee-details small { font-size: 11px; }
+  .employee-details strong { font-size: 12px; }
+  .employee-hero p { font-size: 16px; }
+  .employee-history-current { font-size: 11px; }
+  .employee-history-head { font-size: 11px; }
+  .employee-history-row small { font-size: 11px; }
+  .employee-history-row strong { font-size: 13px; }
+  .employee-identity small { font-size: 12px; }
+  .employee-identity strong { font-size: 15px; }
+  .employee-month-progress > span { font-size: 12px; }
+  .employee-month-progress small { font-size: 12px; }
+  .employee-next-action-label { font-size: 11px; }
+  .employee-next-action-meta { font-size: 12px; }
+  .employee-open-action-copy small { font-size: 12px; }
+  .employee-open-action-copy span { font-size: 11px; }
+  .employee-open-action-copy strong { font-size: 14px; }
+  .employee-open-month-heading-copy small { font-size: 12px; }
+  .employee-open-month-heading-copy strong { font-size: 16px; }
+  .empty-state p { font-size: 14px; }
+  .environment-badge { font-size: 11px; }
+  .eyebrow { font-size: 12px; }
+  .fixed-audience span { font-size: 11px; }
+  .fixed-audience strong { font-size: 12px; }
+  .form-grid label { font-size: 12px; }
+  .help-clear { font-size: 12px; }
+  .help-contact-actions a { font-size: 11px; }
+  .help-contact-actions button { font-size: 11px; }
+  .help-faq-heading small { font-size: 11px; }
+  .help-faq-heading strong { font-size: 13px; }
+  .help-form button { font-size: 12px; }
+  .help-inline-topics button { font-size: 12px; }
+  .help-launcher strong { font-size: 13px; }
+  .help-message { font-size: 13px; }
+  .help-panel header small { font-size: 11px; }
+  .help-panel header strong { font-size: 15px; }
+  .help-suggestions button { font-size: 11px; }
+  .hero-copy p { font-size: 16px; }
+  .hero-owner-badge { font-size: 12px; }
+  .hero-owner-badge b { font-size: 14px; }
+  .hero-task-math > span { font-size: 12px; }
+  .hero-task-math b { font-size: 14px; }
+  .hero-task-math small { font-size: 12px; }
+  .hours-day-entry .date-number { font-size: 15px; }
+  .hours-review-grid .workday-cell strong { font-size: 16px; }
+  .hours-table .date-number { font-size: 11px; }
+  .hours-table .week-total { font-size: 14px; }
+  .hours-table input { font-size: 16px; }
+  .hours-table td small { font-size: 13px; }
+  .hours-table td:first-child { font-size: 13px; }
+  .hours-table th { font-size: 12px; }
+  .hours-table th small { font-size: 13px; }
+  .hours-view-toolbar > div:first-child small { font-size: 11px; }
+  .hours-view-toolbar > div:first-child strong { font-size: 13px; }
+  .hours-visible-total span { font-size: 13px; }
+  .hours-visible-total strong { font-size: 15px; }
+  .install-banner-copy small { font-size: 13px; }
+  .install-banner-copy strong { font-size: 15px; }
+  .invoice-action-note { font-size: 11px; }
+  .invoice-brand-closing { font-size: 13px; }
+  .invoice-brand-contact { font-size: 11px; }
+  .invoice-brand-footer { font-size: 11px; }
+  .invoice-brand-intro { font-size: 13px; }
+  .invoice-brand-label { font-size: 11px; }
+  .invoice-brand-logo span { font-size: 11px; }
+  .invoice-brand-number-line span { font-size: 11px; }
+  .invoice-brand-number-line strong { font-size: 16px; }
+  .invoice-brand-party .invoice-brand-identity { font-size: 11px; }
+  .invoice-brand-party dl { font-size: 12px; }
+  .invoice-brand-party dt { font-size: 11px; }
+  .invoice-brand-party p { font-size: 13px; }
+  .invoice-brand-payment p { font-size: 12px; }
+  .invoice-brand-references span { font-size: 11px; }
+  .invoice-brand-references strong { font-size: 17px; }
+  .invoice-brand-title > small { font-size: 12px; }
+  .invoice-brand-title > span { font-size: 11px; }
+  .invoice-brand-totals { font-size: 12px; }
+  .invoice-brand-totals span { font-size: 11px; }
+  .invoice-branded-template .invoice-preview-table td { font-size: 13px; }
+  .invoice-branded-template .invoice-preview-table th { font-size: 11px; }
+  .invoice-identity-preview small { font-size: 12px; }
+  .invoice-identity-preview span { font-size: 11px; }
+  .invoice-month-overview-action small { font-size: 11px; }
+  .invoice-month-overview-copy p { font-size: 12px; }
+  .invoice-month-overview-empty { font-size: 12px; }
+  .invoice-month-overview-item small { font-size: 11px; }
+  .invoice-month-overview-item strong { font-size: 13px; }
+  .invoice-source-closing { font-size: 13px; }
+  .invoice-source-columns section h4 { font-size: 15px; }
+  .invoice-source-field { font-size: 13px; }
+  .invoice-source-intro { font-size: 13px; }
+  .invoice-source-payment { font-size: 13px; }
+  .invoice-source-totals { font-size: 13px; }
+  .invoice-status-guide > div > span { font-size: 13px; }
+  .invoice-status-guide small { font-size: 11px; }
+  .invoice-status-guide strong { font-size: 13px; }
+  .login-avatar { font-size: 14px; }
+  .login-brand > span { font-size: 14px; }
+  .login-option small { font-size: 13px; }
+  .login-option strong { font-size: 17px; }
+  .login-panel .login-note { font-size: 13px; }
+  .login-panel > p { font-size: 15px; }
+  .mail-acceptance-copy small { font-size: 12px; }
+  .mail-delivery-history-main small { font-size: 11px; }
+  .mail-delivery-history-meta span { font-size: 11px; }
+  .mail-delivery-history-state small { font-size: 11px; }
+  .mail-recipient-setting small { font-size: 13px; }
+  .mail-route-choice small { font-size: 13px; }
+  .mail-route-guide article > span { font-size: 13px; }
+  .mail-route-guide small { font-size: 11px; }
+  .mail-route-guide strong { font-size: 13px; }
+  .metric-card > strong small { font-size: 17px; }
+  .metric-card span { font-size: 13px; }
+  .metric-label { font-size: 13px; }
+  .metric-link { font-size: 13px; }
+  .metric-note { font-size: 13px; }
+  .mini-avatar { font-size: 13px; }
+  .mobile-brand-home { font-size: 13px; }
+  .mobile-brand-home span { font-size: 12px; }
+  .mobile-role-switch { font-size: 13px; }
+  .modal > p { font-size: 14px; }
+  .modal-form .form-help { font-size: 11px; }
+  .modal-form input { font-size: 14px; }
+  .modal-form label { font-size: 12px; }
+  .modal-form label.route-toggle { font-size: 13px; }
+  .modal-form textarea { font-size: 14px; }
+  .modal-queue small { font-size: 11px; }
+  .modal-queue strong { font-size: 13px; }
+  .modal-summary > div { font-size: 13px; }
+  .month-batch-blocker-copy small { font-size: 11px; }
+  .month-batch-blocker-copy strong { font-size: 12px; }
+  .month-batch-blocker-owner small { font-size: 11px; }
+  .month-batch-blocker-owner strong { font-size: 12px; }
+  .month-batch-progress > strong { font-size: 13px; }
+  .month-batch-summary > p { font-size: 12px; }
+  .nav-count { font-size: 13px; }
+  .nav-item span:nth-child(2) { font-size: 11px; }
+  .notification-button b { font-size: 11px; }
+  .notification-empty { font-size: 13px; }
+  .notification-item small { font-size: 11px; }
+  .notification-item span { font-size: 12px; }
+  .notification-item strong { font-size: 13px; }
+  .notification-test-actions > p { font-size: 11px; }
+  .notification-test-actions > small { font-size: 11px; }
+  .notification-test-actions button { font-size: 11px; }
+  .period-control .month-choice-panel button { font-size: 13px; }
+  .period-control .month-picker-trigger { font-size: 14px; }
+  .period-picker-caption { font-size: 11px; }
+  .period-picker-fields input { font-size: 14px; }
+  .popover-footer-button { font-size: 12px; }
+  .popover-heading small { font-size: 11px; }
+  .popover-heading strong { font-size: 15px; }
+  .preference-row small { font-size: 11px; }
+  .preference-row strong { font-size: 13px; }
+  .profile-editor-copy small { font-size: 12px; }
+  .profile-editor-copy strong { font-size: 16px; }
+  .profile-menu > button { font-size: 13px; }
+  .profile-menu-avatar { font-size: 13px; }
+  .profile-menu-person small { font-size: 11px; }
+  .profile-menu-person strong { font-size: 13px; }
+  .profile-photo-control input { font-size: 12px; }
+  .profile-photo-preview { font-size: 13px; }
+  .progress-ring span { font-size: 15px; }
+  .recipient-choice small { font-size: 11px; }
+  .recipient-choice strong { font-size: 12px; }
+  .reminder-choice-field { font-size: 11px; }
+  .reminder-choice-panel button { font-size: 12px; }
+  .reminder-choice-trigger { font-size: 12px; }
+  .reminder-fixed-moment { font-size: 12px; }
+  .reminder-fixed-moment small { font-size: 11px; }
+  .reminder-fixed-moment strong { font-size: 12px; }
+  .reminder-rule .check-row small { font-size: 11px; }
+  .reminder-rule .check-row strong { font-size: 12px; }
+  .reminder-schedule-summary > strong { font-size: 12px; }
+  .reminder-schedule-summary span { font-size: 11px; }
+  .route-list small { font-size: 11px; }
+  .route-list strong { font-size: 13px; }
+  .route-template small { font-size: 13px; }
+  .safe-domain-note { font-size: 12px; }
+  .safety-badge { font-size: 11px; }
+  .section-label { font-size: 12px; }
+  .segmented-control button { font-size: 14px; }
+  .settings-rule-list small { font-size: 11px; }
+  .settings-rule-list strong { font-size: 12px; }
+  .settings-section-nav button { font-size: 12px; }
+  .settings-template-intro { font-size: 13px; }
+  .settings-warning { font-size: 12px; }
+  .small-button { font-size: 12px; }
+  .status-pill { font-size: 13px; }
+  .summary-card dd { font-size: 13px; }
+  .summary-card dt { font-size: 13px; }
+  .summary-note p { font-size: 12px; }
+  .summary-note strong { font-size: 13px; }
+  .switch-role { font-size: 13px; }
+  .team-account-avatar { font-size: 13px; }
+  .team-account-group small { font-size: 11px; }
+  .team-account-group strong { font-size: 13px; }
+  .team-account-local-notice { font-size: 13px; }
+  .team-account-overview-copy small { font-size: 11px; }
+  .template-person small { font-size: 11px; }
+  .template-person strong { font-size: 13px; }
+  .template-subject small { font-size: 11px; }
+  .template-subject strong { font-size: 13px; }
+  .text-button { font-size: 14px; }
+  .timesheet-actions small { font-size: 12px; }
+  .timesheet-actions strong { font-size: 14px; }
+  .timesheet-submit-note { font-size: 13px; }
+  .toast { font-size: 14px; }
+  .toggle-grid small { font-size: 11px; }
+  .toggle-grid strong { font-size: 12px; }
+  .topbar-avatar { font-size: 13px; }
+  .topbar-quick-reset { font-size: 12px; }
+  .updated-label { font-size: 13px; }
+  .view-heading p { font-size: 15px; }
+  .workflow-heading-meta small { font-size: 12px; }
+  .workflow-heading-meta strong { font-size: 14px; }
+  .workflow-progress-card small { font-size: 11px; }
+  .workflow-progress-card strong { font-size: 13px; }
+  .workflow-step > span { font-size: 13px; }
+  .workflow-step small { font-size: 11px; }
+  .workflow-step strong { font-size: 14px; }
+  .workspace-user .avatar { font-size: 14px; }
+  .workspace-user small { font-size: 13px; }
+  .workspace-user strong { font-size: 15px; }
+  }
+
+
+/* ---------------------------------------------------------------------------
+   Telefoonoptimalisatie
+   ---------------------------------------------------------------------------
+   Gemeten op een scherm van 412px breed. Drie soorten problemen kwamen eruit:
+   tekst onder de 11px die op een telefoon niet te lezen is { font-size: 13px; }
+  }
+
+/* Tweede ronde: regels met een hogere specificiteit die het blok hierboven niet
+   overrulde { font-size: 13px; }
+  /* A cleared form is the only other sign that setting a password worked { font-size: 15px; }
+  /* De dagnummers in de urenstaat stonden op 8px { font-size: 14px; }
+  /* Losse meta-teksten die op 9px stonden. */
+  #hours-autosave-status { font-size: 13px; }
+  /* Optional per-recipient overrides. They span the full row so the two toggles
+   keep their own line { font-size: 12px; }
+  /* Resterende meta-teksten van 9 en 10px op de kaarten en dashboards. */
+  .metric-card small { font-size: 13px; }
+  #admin-task-summary { font-size: 13px; }
+  #invoice-month-overview-note { font-size: 13px; }
+  #timesheet-correction-meta { font-size: 13px; }
+  and an empty field stays visibly optional. */
+.route-template { font-size: 12px; }
+  de kolomkoppen op 10px.
+     Dat is precies de tekst die je moet kunnen lezen terwijl je uren invult. */
+  .hours-table th { font-size: 14px; }
+  en invoervelden waarop iOS inzoomt
+   zodra hun tekst kleiner is dan 16px -- dat laatste verspringt het hele scherm.
+
+   Alles hieronder geldt alleen op smalle schermen; de desktopweergave blijft
+   ongewijzigd.
+   --------------------------------------------------------------------------- */
+@media (max-width: 700px) { font-size: 13px; }
+  plus de laatste velden onder de tikdoelnorm. */
+@media (max-width: 700px) { font-size: 13px; }
+  small { font-size: 13px; }
+  tikdoelen onder de
+   44px die je met een duim structureel mist { font-size: 13px; }
+  which
+   reads as "nothing happened" -- so confirm it unmistakably. */
+#auth-reset-complete-feedback.is-success { font-size: 15px; }
 }

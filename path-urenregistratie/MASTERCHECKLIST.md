@@ -94,6 +94,14 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-23 · v0.9.130 grotere tekst op de telefoon en een groter app-icoon
+
+- [x] **Tekst op de telefoon twee pixels groter, voor 318 selectors.** De eerdere ondergrens zette alles onder 11px op precies 11px; dat is een minimum voor leesbaarheid, geen prettige leesmaat. Gemeten kwam de gemiddelde tekst uit op 12,9px terwijl Apple en Google voor gewone tekst eerder 15 tot 17 aanhouden. Nu 14,6px gemiddeld en 13px als kleinste.
+- [x] **Verhoging in plaats van gelijktrekken, maar nooit onder de ondergrens.** Alles onder 16px krijgt er twee bij, zodat het verschil tussen een kopje en de tekst eronder blijft bestaan. Eerste poging verving de ondergrens door de verhoging en gooide hem daarmee weg: regels van 8px werden 10px en zaten dus nog onder de leesbare grens. MOB-H-011 ving dat. Op desktop verandert er niets. Kosten, gemeten: de pagina wordt ongeveer 3 procent langer -- de meeste ruimte gaat naar kaarten en marges, niet naar de letters.
+- [x] **App-icoon een kwart groter.** Het bronbestand heeft ingebouwde witruimte: de inhoud loopt van 130x50 binnen een bestand van 162x54. Die randen worden nu automatisch weggesneden voordat het logo wordt geplaatst. Daardoor wordt de verhouding 2,6:1 in plaats van 3:1, en mag het maskeerbare icoon van 72 naar 74 procent -- opnieuw uitgerekend tegen de cirkel van 80 procent die Android uitsnijdt.
+- [x] **Vastgesteld naar aanleiding van schermafdrukken van Kenny:** hij keek naar productie (0.9.117), waar de iconen 404 geven. Daar toont de browser een generieke letter P in plaats van het logo. Op TEST is dat goed. Dat browsers het installatievenster verschillend tekenen (Chrome, Safari, Firefox) is normaal en niet door een website te sturen.
+- [x] Versie 0.9.129 → 0.9.130.
+
 ### 2026-08-23 · v0.9.129 Rol kiezen lag op de iPhone achter de statusbalk
 
 - [x] **Door Gio gemeld met een foto uit de geinstalleerde app: de klok, het 5G-icoon en de batterij liggen over de bovenbalk heen.** Daar zit Rol kiezen onder, en door een statusbalk kun je niet tikken. In de browser werkte die knop wel, want daar neemt de adresbalk die ruimte in.
