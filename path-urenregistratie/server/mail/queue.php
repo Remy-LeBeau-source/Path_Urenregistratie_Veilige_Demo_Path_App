@@ -19,17 +19,30 @@ const MAIL_CHANNEL_TEMPLATES = [
             . "Met vriendelijke groet,\n{bedrijf}",
     ],
     'accountant' => [
-        'subject' => 'Factuuradministratie {factuurnummer} – {periode}',
+        // Het factuurnummer staat vooraan in het onderwerp: een boekhouder zoekt
+        // daarop terug, niet op een naam. De bedragen staan uitgesplitst in het
+        // bericht, zodat de administratie klopt zonder de bijlage te openen.
+        'subject' => 'Factuur {factuurnummer} · {medewerker} · {periode}',
         'body' =>
-            "Ter informatie: factuur {factuurnummer} voor de periode {periode} is definitief gemaakt.\n"
-            . "Medewerker: {medewerker}\n"
-            . "Subtotaal: € {subtotaal}\nBtw: € {btw}\nTotaal: € {bedrag}",
+            "Goedemiddag,\n\n"
+            . "Hierbij de factuur van {medewerker} over {periode}.\n\n"
+            . "Factuurnummer: {factuurnummer}\n"
+            . "Gewerkte uren: {uren}\n"
+            . "Subtotaal: € {subtotaal}\n"
+            . "Btw: € {btw}\n"
+            . "Totaal: € {bedrag}\n\n"
+            . "Met vriendelijke groet,\n{bedrijf}",
     ],
     'payroll' => [
-        'subject' => 'Ureninformatie {medewerker} – {periode}',
+        // Bewust geen bedragen en geen factuurnummer: de salarisadministratie
+        // hoort alleen de ureninformatie te krijgen, en er gaat hier ook geen
+        // factuur als bijlage mee. Dat staat zo in het instellingenscherm.
+        'subject' => 'Uren {medewerker} · {periode}',
         'body' =>
-            "Salarisverwerking:\nMedewerker: {medewerker}\nPeriode: {periode}\n"
-            . "Goedgekeurde uren: {uren}",
+            "Goedemiddag,\n\n"
+            . "Hierbij de goedgekeurde uren van {medewerker} over {periode}.\n\n"
+            . "Gewerkte uren: {uren}\n\n"
+            . "Met vriendelijke groet,\n{bedrijf}",
     ],
     // The settings screen offers 'Overig' as a category, and a recipient with it
     // used to be dropped silently: the channel had no template, so the queue loop
@@ -214,17 +227,31 @@ function mail_enqueue_for_invoice(
         'overeenkomstnummer'=> (string)($inv['agreement_number'] ?? ''),
     ];
 
-    // One accompanying text for every recipient. The assignment template used to
-    // apply to the broker only, so the bookkeeper and the payroll office silently
-    // kept hardcoded wording that nobody could edit. It now wins for every channel;
-    // each channel keeps its own default for whatever the assignment leaves empty.
+    // Welke begeleidende tekst een ontvanger krijgt, in deze volgorde:
+    //
+    //   1. de tekst die bij die ene ontvanger is ingevuld -- die wint altijd
+    //   2. de tekst bij de opdracht
+    //   3. de standaardtekst van het soort ontvanger
+    //
+    // Met een uitzondering: de boekhouder slaat stap 2 over. De opdrachttekst is
+    // geschreven aan de broker ("Hierbij stuur ik de ureninformatie van...") en
+    // las bij de boekhouder als een bericht aan de verkeerde persoon. Die krijgt
+    // daarom zijn eigen standaard, met het factuurnummer en de bedragen. Wil je
+    // daar toch iets anders, dan vul je het bij die ontvanger in en wint stap 1.
     $assignmentSubject = (string)($inv['invoice_subject_template'] ?? '');
     $assignmentBody = (string)($inv['invoice_body_template'] ?? '');
     $templateFor = static function (string $channel, string $routeSubject = '', string $routeBody = '') use ($assignmentSubject, $assignmentBody): array {
         $base = MAIL_CHANNEL_TEMPLATES[$channel];
+        // De opdrachttekst is geschreven aan de broker. Voor de boekhouder en de
+        // salarisadministratie las die als een bericht aan de verkeerde persoon,
+        // dus die twee houden hun eigen standaard. Wie daar iets anders wil, vult
+        // het bij die ontvanger in -- dat wint van allebei.
+        $viaOpdracht = !in_array($channel, ['accountant', 'payroll'], true);
+        $opdrachtSubject = $viaOpdracht ? $assignmentSubject : '';
+        $opdrachtBody = $viaOpdracht ? $assignmentBody : '';
         return [
-            'subject' => $routeSubject !== '' ? $routeSubject : ($assignmentSubject !== '' ? $assignmentSubject : $base['subject']),
-            'body'    => $routeBody !== '' ? $routeBody : ($assignmentBody !== '' ? $assignmentBody : $base['body']),
+            'subject' => $routeSubject !== '' ? $routeSubject : ($opdrachtSubject !== '' ? $opdrachtSubject : $base['subject']),
+            'body'    => $routeBody !== '' ? $routeBody : ($opdrachtBody !== '' ? $opdrachtBody : $base['body']),
         ];
     };
 

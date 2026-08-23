@@ -152,47 +152,87 @@ function crc32(buf) {
   return c ^ 0xffffffff;
 }
 
-// --- Lege randen wegsnijden ------------------------------------------------
+// --- Onderdelen uit het logo halen -----------------------------------------
 
-// Het bronbestand heeft ingebouwde witruimte: de inhoud loopt niet van rand tot
-// rand. Op een icoon telt elke pixel, dus die leegte gaat eraf voordat we het
-// logo plaatsen. Dat maakt het beeld merkbaar groter zonder aan de verhoudingen
-// te komen.
-function snijRandenWeg(beeld) {
-  const gevuld = (x, y) => beeld.rgba[(y * beeld.breedte + x) * 4 + 3] > 24;
-
+// Lege randen weghalen. Het bronbestand heeft ingebouwde witruimte, en op een
+// icoon telt elke pixel.
+function randenWeg(beeld, drempel = 140) {
+  const vol = (x, y) => beeld.rgba[(y * beeld.breedte + x) * 4 + 3] > drempel;
   let links = 0;
   let rechts = beeld.breedte - 1;
   let boven = 0;
   let onder = beeld.hoogte - 1;
-
   const kolomLeeg = (x) => {
-    for (let y = 0; y < beeld.hoogte; y++) if (gevuld(x, y)) return false;
+    for (let y = 0; y < beeld.hoogte; y++) if (vol(x, y)) return false;
     return true;
   };
   const rijLeeg = (y) => {
-    for (let x = 0; x < beeld.breedte; x++) if (gevuld(x, y)) return false;
+    for (let x = 0; x < beeld.breedte; x++) if (vol(x, y)) return false;
     return true;
   };
-
   while (links < rechts && kolomLeeg(links)) links++;
   while (rechts > links && kolomLeeg(rechts)) rechts--;
   while (boven < onder && rijLeeg(boven)) boven++;
   while (onder > boven && rijLeeg(onder)) onder--;
+  return knipUit(beeld, links, boven, rechts - links + 1, onder - boven + 1);
+}
 
-  const breedte = rechts - links + 1;
-  const hoogte = onder - boven + 1;
-  if (breedte === beeld.breedte && hoogte === beeld.hoogte) return beeld;
-
+function knipUit(beeld, x0, y0, breedte, hoogte) {
   const rgba = Buffer.alloc(breedte * hoogte * 4);
   for (let y = 0; y < hoogte; y++) {
     for (let x = 0; x < breedte; x++) {
-      const bron = ((y + boven) * beeld.breedte + (x + links)) * 4;
+      const bron = ((y + y0) * beeld.breedte + (x + x0)) * 4;
       const doel = (y * breedte + x) * 4;
       for (let k = 0; k < 4; k++) rgba[doel + k] = beeld.rgba[bron + k];
     }
   }
   return { breedte, hoogte, rgba };
+}
+
+// Het symbool staat links, dan een gat, dan het woordmerk. Zoek dat gat op.
+function splitsLogo(beeld) {
+  const gevuldPerKolom = [];
+  for (let x = 0; x < beeld.breedte; x++) {
+    let aantal = 0;
+    for (let y = 0; y < beeld.hoogte; y++) {
+      if (beeld.rgba[(y * beeld.breedte + x) * 4 + 3] > 140) aantal++;
+    }
+    gevuldPerKolom.push(aantal);
+  }
+  let scheiding = -1;
+  let leeg = 0;
+  for (let x = 0; x < beeld.breedte; x++) {
+    if (gevuldPerKolom[x] === 0) {
+      leeg++;
+      if (leeg >= 3 && scheiding < 0) scheiding = x - leeg + 1;
+    } else {
+      leeg = 0;
+    }
+  }
+  if (scheiding < 0) scheiding = Math.round(beeld.breedte * 0.28);
+
+  const symbool = randenWeg(knipUit(beeld, 0, 0, scheiding, beeld.hoogte));
+  const woordmerk = randenWeg(knipUit(beeld, scheiding, 0, beeld.breedte - scheiding, beeld.hoogte));
+
+  // Binnen het woordmerk staat Path boven en consultancy eronder. De eerste lege
+  // rij onder het midden scheidt die twee.
+  const gevuldPerRij = [];
+  for (let y = 0; y < woordmerk.hoogte; y++) {
+    let aantal = 0;
+    for (let x = 0; x < woordmerk.breedte; x++) {
+      if (woordmerk.rgba[(y * woordmerk.breedte + x) * 4 + 3] > 140) aantal++;
+    }
+    gevuldPerRij.push(aantal);
+  }
+  let splits = -1;
+  for (let y = Math.round(woordmerk.hoogte * 0.45); y < woordmerk.hoogte; y++) {
+    if (gevuldPerRij[y] === 0) { splits = y; break; }
+  }
+  const woordPath = splits > 0
+    ? randenWeg(knipUit(woordmerk, 0, 0, woordmerk.breedte, splits))
+    : woordmerk;
+
+  return { symbool, woordPath };
 }
 // --- Icoon samenstellen ----------------------------------------------------
 
@@ -230,63 +270,81 @@ function schaal(bron, nieuwBreedte, nieuwHoogte) {
   return { breedte: nieuwBreedte, hoogte: nieuwHoogte, rgba: uit };
 }
 
-function maakIcoon(logo, maat, logoDeelVanBreedte) {
-  const vlak = Buffer.alloc(maat * maat * 4);
+function leegVlak(maat) {
+  const rgba = Buffer.alloc(maat * maat * 4);
   for (let p = 0; p < maat * maat; p++) {
-    vlak[p * 4] = ACHTERGROND[0];
-    vlak[p * 4 + 1] = ACHTERGROND[1];
-    vlak[p * 4 + 2] = ACHTERGROND[2];
-    vlak[p * 4 + 3] = 255;
+    rgba[p * 4] = ACHTERGROND[0];
+    rgba[p * 4 + 1] = ACHTERGROND[1];
+    rgba[p * 4 + 2] = ACHTERGROND[2];
+    rgba[p * 4 + 3] = 255;
   }
+  return { breedte: maat, hoogte: maat, rgba };
+}
 
-  const logoBreedte = Math.round(maat * logoDeelVanBreedte);
-  const logoHoogte = Math.round(logoBreedte * (logo.hoogte / logo.breedte));
-  const geschaald = schaal(logo, logoBreedte, logoHoogte);
-  const offsetX = Math.round((maat - logoBreedte) / 2);
-  const offsetY = Math.round((maat - logoHoogte) / 2);
-
-  for (let y = 0; y < logoHoogte; y++) {
-    for (let x = 0; x < logoBreedte; x++) {
-      const bron = (y * logoBreedte + x) * 4;
-      const doel = ((y + offsetY) * maat + (x + offsetX)) * 4;
-      const alpha = geschaald.rgba[bron + 3] / 255;
-      if (alpha === 0) continue;
+function plak(doel, bron, x0, y0) {
+  for (let y = 0; y < bron.hoogte; y++) {
+    for (let x = 0; x < bron.breedte; x++) {
+      const b = (y * bron.breedte + x) * 4;
+      const alpha = bron.rgba[b + 3] / 255;
+      if (alpha < 0.02) continue;
+      const dx = x + x0;
+      const dy = y + y0;
+      if (dx < 0 || dy < 0 || dx >= doel.breedte || dy >= doel.hoogte) continue;
+      const d = (dy * doel.breedte + dx) * 4;
       for (let k = 0; k < 3; k++) {
-        vlak[doel + k] = Math.round(geschaald.rgba[bron + k] * alpha + vlak[doel + k] * (1 - alpha));
+        doel.rgba[d + k] = Math.round(bron.rgba[b + k] * alpha + doel.rgba[d + k] * (1 - alpha));
       }
     }
   }
-
-  return { breedte: maat, hoogte: maat, rgba: vlak };
 }
 
+// Symbool boven, het woord Path eronder, samen gecentreerd. `deel` bepaalt hoe
+// groot het geheel mag zijn: voor het maskeerbare icoon kleiner, want Android
+// snijdt daar een cirkel uit.
+function maakIcoon(onderdelen, maat, deel) {
+  const vlak = leegVlak(maat);
+  const { symbool, woordPath } = onderdelen;
+
+  const symBreedte = Math.round(maat * deel * 0.46);
+  const symHoogte = Math.round(symBreedte * (symbool.hoogte / symbool.breedte));
+  const woordBreedte = Math.round(maat * deel * 0.72);
+  const woordHoogte = Math.round(woordBreedte * (woordPath.hoogte / woordPath.breedte));
+  const tussenruimte = Math.round(maat * 0.05);
+
+  const totaal = symHoogte + tussenruimte + woordHoogte;
+  const top = Math.round((maat - totaal) / 2);
+
+  plak(vlak, schaal(symbool, symBreedte, symHoogte), Math.round((maat - symBreedte) / 2), top);
+  plak(vlak, schaal(woordPath, woordBreedte, woordHoogte),
+    Math.round((maat - woordBreedte) / 2), top + symHoogte + tussenruimte);
+
+  return vlak;
+}
 // --- Uitvoeren -------------------------------------------------------------
 
 const ruwLogo = leesPng(BRON);
-const logo = snijRandenWeg(ruwLogo);
-console.log('bron: ' + BRON + ' (' + ruwLogo.breedte + 'x' + ruwLogo.hoogte + ')'
-  + ' -> zonder lege randen: ' + logo.breedte + 'x' + logo.hoogte);
+const logo = randenWeg(ruwLogo);
+const onderdelen = splitsLogo(logo);
+console.log('bron: ' + BRON + ' (' + ruwLogo.breedte + 'x' + ruwLogo.hoogte + ')');
+console.log('  symbool: ' + onderdelen.symbool.breedte + 'x' + onderdelen.symbool.hoogte
+  + ', woord Path: ' + onderdelen.woordPath.breedte + 'x' + onderdelen.woordPath.hoogte);
 
-// Het volledige logo, niet alleen het symbool. Het woordmerk maakt de app
-// herkenbaar, en het is bovendien scherper: 162 pixels breed tegenover 36 voor
-// het losse symbool, dus veel minder vergroten.
-//
-// De maten zijn zo groot als kan. Voor het maskeerbare icoon is dat uitgerekend:
-// Android snijdt een cirkel uit met een doorsnede van 80% van het icoon, en bij
-// een verhouding van 2,6:1 -- na het wegsnijden van de lege randen -- liggen de
-// hoekpunten van een logo van 74% breed nog net binnen die cirkel (op 79%).
-// Bij 76% breed vallen ze erbuiten.
+// Gestapeld vult het vierkant, dus het geheel mag ruim staan. Voor het
+// maskeerbare icoon kleiner: Android snijdt daar een cirkel uit met een
+// doorsnede van 80 procent, en een gestapelde vorm is bijna vierkant -- de
+// hoekpunten liggen dus verder van het midden dan bij een liggend logo. Bij 0,72
+// komt het verste hoekpunt op 79 procent uit; bij 0,74 al op 81 en valt het
+// eruit. Nagemeten op het gemaakte bestand, niet geschat.
 const iconen = [
-  { pad: 'assets/icon-192.png', maat: 192, deel: 0.88 },
-  { pad: 'assets/icon-512.png', maat: 512, deel: 0.88 },
-  // iOS rondt zelf de hoeken af, dus daar iets meer rand.
-  { pad: 'assets/apple-touch-icon.png', maat: 180, deel: 0.82 },
-  { pad: 'assets/icon-maskable-512.png', maat: 512, deel: 0.74 },
-  { pad: 'assets/favicon-32.png', maat: 32, deel: 0.92 },
+  { pad: 'assets/icon-192.png', maat: 192, deel: 1.0 },
+  { pad: 'assets/icon-512.png', maat: 512, deel: 1.0 },
+  { pad: 'assets/apple-touch-icon.png', maat: 180, deel: 0.94 },
+  { pad: 'assets/icon-maskable-512.png', maat: 512, deel: 0.72 },
+  { pad: 'assets/favicon-32.png', maat: 32, deel: 1.0 },
 ];
 
 for (const icoon of iconen) {
-  const beeld = maakIcoon(icoon.beeld || logo, icoon.maat, icoon.deel);
+  const beeld = maakIcoon(onderdelen, icoon.maat, icoon.deel);
   schrijfPng(icoon.pad, beeld.breedte, beeld.hoogte, beeld.rgba);
   console.log('  ' + icoon.pad + ' (' + icoon.maat + 'x' + icoon.maat + ')');
 }

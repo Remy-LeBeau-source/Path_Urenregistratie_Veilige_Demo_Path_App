@@ -174,7 +174,7 @@ De 17 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 270 Playwri
 - [EQ-H-001] factuurlock maakt queue-items aan met dry_run=true — Techniek: Toestandsovergang · Assertions: 5
 - [EQ-H-002] broker-channel stuurt alleen de factuur — Techniek: API-contract + equivalentieklasse · Assertions: 2
 - [EQ-H-003] EasySalary-channel heeft attachment_policy none — Techniek: Equivalentieklassen · Assertions: 2
-- [EQ-H-022] één factuuractie maakt drie gescheiden mailroutes met het juiste bijlagenbeleid — Techniek: API-contract + equivalentieklasse · Assertions: 9
+- [EQ-H-022] één factuuractie maakt drie gescheiden mailroutes met het juiste bijlagenbeleid — Techniek: API-contract + equivalentieklasse · Assertions: 11
 - [EQ-H-004] action=enqueue voor gelockte factuur maakt nieuwe items aan — Techniek: Toestandsovergang · Assertions: 6
 - [EQ-H-005] action=list response bevat verplichte velden — Techniek: API-contract + equivalentieklasse · Assertions: 15
 - [EQ-H-015] Backoffice ziet veilige verzendhistorie zonder berichtinhoud — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 18
@@ -199,7 +199,7 @@ De 17 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 270 Playwri
 - [EQ-N-014] unknown action geeft 400 — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
 - [EQ-N-015] localhost blijft preview-only en weigert POST zonder expliciete bevestiging — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 9
 - [EQ-N-016] medewerker krijgt geen toegang tot de mailacceptatieconsole — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
-- [EQ-H-027] twee nieuw toegevoegde ontvangers krijgen allebei echt een factuurmail — Techniek: API-contract + equivalentieklasse · Assertions: 20
+- [EQ-H-027] twee nieuw toegevoegde ontvangers krijgen allebei echt een factuurmail — Techniek: API-contract + equivalentieklasse · Assertions: 21
 - [EQ-H-028] nieuw account, eigen tekst, en die tekst komt terug in de verzonden mail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 26
 
 ### Facturen definitief maken en vergrendelen

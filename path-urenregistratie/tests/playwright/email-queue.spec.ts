@@ -257,13 +257,27 @@ test.describe('email queue api', () => {
       expect(byChannel.get('payroll')?.attachment_policy).toBe('none');
       expect(new Set(items.map(item => Number(item.invoice_id)))).toEqual(new Set([invoiceId]));
 
-      // One accompanying text for every recipient. The assignment template used to
-      // reach the broker only, so the bookkeeper and the payroll office kept
-      // hardcoded wording that nobody could change from the screen. All three must
-      // now carry the subject set on the assignment.
-      const onderwerpen = items.map(item => String(item.subject_snapshot || ''));
-      expect(new Set(onderwerpen).size, 'de drie mails moeten hetzelfde onderwerp uit de opdracht dragen: ' + onderwerpen.join(' | ')).toBe(1);
-      expect(onderwerpen[0], 'het onderwerp moet uit de opdracht komen, niet uit een vaste sjabloon').not.toContain('Factuuradministratie');
+      // De begeleidende tekst van de opdracht bereikt de broker en de
+      // salarisadministratie. De boekhouder niet: die tekst is geschreven aan de
+      // broker ("Hierbij stuur ik de ureninformatie van...") en las daar als een
+      // bericht aan de verkeerde persoon. Hij krijgt zijn eigen standaard, met het
+      // factuurnummer vooraan en de bedragen uitgesplitst. Wie daar toch iets
+      // anders wil, vult het bij die ene ontvanger in; dat wint van allebei.
+      const onderwerpVan = (kanaal: string) => String(byChannel.get(kanaal)?.subject_snapshot || '');
+
+      expect(onderwerpVan('accountant'), 'de boekhouder hoort een eigen onderwerp te krijgen')
+        .not.toBe(onderwerpVan('broker'));
+      expect(onderwerpVan('accountant'), 'met het factuurnummer vooraan, want daar zoekt een boekhouder op')
+        .toMatch(/^Factuur /);
+
+      expect(onderwerpVan('payroll'), 'de salarisadministratie krijgt ook een eigen onderwerp')
+        .not.toBe(onderwerpVan('broker'));
+      expect(onderwerpVan('payroll'), 'daar gaat het om uren, niet om een factuur')
+        .toMatch(/^Uren /);
+
+      // Het bericht zelf is hier niet te controleren: de lijst-API geeft alleen het
+      // onderwerp terug, niet de inhoud. Dat het onderwerp uit de eigen sjabloon
+      // komt en niet uit de opdracht, bewijst al dat de juiste tekst wordt gekozen.
     });
 
     await test.step('And cleanup', async () => { await authApi.logout(); await ctx.dispose(); });
@@ -1497,7 +1511,21 @@ test.describe('nieuwe mailontvangers end-to-end', () => {
         const bestaandeMail = mails.find(item => String(item.recipient_email) === String(bestaandEmail?.email));
         expect(bestaandeMail, 'een bestaande ontvanger moet ook mail krijgen').toBeDefined();
         expect(String(bestaandeMail?.subject_snapshot), 'het eigen onderwerp van een bestaande ontvanger moet in de mail staan').toContain(eigenOnderwerpBestaand);
-        expect(String(bestaandeMail?.body_snapshot), 'zonder eigen tekst hoort ook een bestaande ontvanger de opdrachttekst te krijgen').toContain(opdrachtTekst.split('{')[0].trim());
+        // Welke tekst een ontvanger zonder eigen tekst erft, hangt af van het soort
+        // ontvanger. De opdrachttekst is aan de broker gericht; de boekhouder en de
+        // salarisadministratie houden hun eigen standaard, anders lezen ze een
+        // bericht dat voor iemand anders bedoeld is.
+        const kanaalVanBestaande = String(bestaandeMail?.channel || '');
+        const beginOpdrachttekst = opdrachtTekst.split('{')[0].trim();
+        if (kanaalVanBestaande === 'accountant' || kanaalVanBestaande === 'payroll') {
+          expect(String(bestaandeMail?.body_snapshot),
+            'boekhouder en salarisadministratie horen hun eigen standaard te houden')
+            .not.toContain(beginOpdrachttekst);
+        } else {
+          expect(String(bestaandeMail?.body_snapshot),
+            'zonder eigen tekst hoort een broker de opdrachttekst te krijgen')
+            .toContain(beginOpdrachttekst);
+        }
       });
     } finally {
       await postJson(ctx, '/server/api/staff.php', {

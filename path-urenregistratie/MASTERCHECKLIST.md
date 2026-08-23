@@ -94,6 +94,24 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-23 · v0.9.131 eigen standaardtekst voor boekhouder en salarisadministratie
+
+- [x] **Door Gio gemeld: de boekhouder kreeg brokertaal.** Letterlijk "Middag, Hierbij stuur ik de ureninformatie van Marc de Roon over juli 2026. Daadwerkelijk gewerkte uren: 164,00 uur." Dat is een bericht aan de broker, en het las bij de boekhouder als een bericht aan de verkeerde persoon.
+- [x] **Oorzaak was de eerdere wens "een tekst voor iedereen".** De tekst op opdrachtniveau won voor elk kanaal, dus ook voor de boekhouder en de salarisadministratie, die daardoor hun eigen standaard nooit meer haalden.
+- [x] **Boekhouder krijgt nu een eigen standaard:** factuurnummer vooraan in het onderwerp, want daar zoekt een boekhouder op, en de bedragen uitgesplitst in het bericht zodat de administratie klopt zonder de bijlage te openen.
+- [x] **Salarisadministratie ook, en bewust zonder bedragen en zonder factuurnummer.** In het instellingenscherm staat dat die alleen ureninformatie krijgt en standaard geen factuurgegevens; dan hoort de tekst dat ook niet te bevatten.
+- [x] **De volgorde is nu: tekst bij die ene ontvanger, dan de tekst bij de opdracht, dan de standaard van het kanaal.** Boekhouder en salarisadministratie slaan de opdrachttekst over. Wie daar toch iets anders wil, vult het bij die ontvanger in en dat wint van allebei.
+- [x] **Voor productie is niets te doen.** Deze teksten staan in de code, niet in de database, en gaan dus vanzelf mee met elke uitrol. De brokertekst uit de demogegevens (018_demo_assignment_mail_templates.sql en de demo-seed) wordt op productie overgeslagen, want daar staat allow_demo_migrations op false. Op een schone productieomgeving vallen alle drie de ontvangers dus terug op deze standaarden.
+- [x] **EQ-H-022 aangepast.** Die legde vast dat alle drie de mails hetzelfde onderwerp uit de opdracht dragen -- de oude wens. Nu toetst hij de nieuwe regel: broker krijgt de opdrachttekst, de boekhouder een eigen onderwerp met het factuurnummer vooraan.
+**Verder in dezelfde release, alles uit meldingen van Gio op zijn eigen toestel.**
+
+- [x] **Profielfoto werd geweigerd in plaats van verkleind.** De grens stond op 700 kB terwijl een telefoonfoto al snel 2 tot 5 MB is; die functie werkte dus in de praktijk nooit. De foto wordt nu in de browser teruggebracht naar 256 in het vierkant, vierkant bijgesneden vanuit het midden, met de EXIF-stand meegenomen zodat een staande foto niet gekanteld binnenkomt. Daarmee is de grens overbodig; er staat alleen nog een ruime bovengrens van 20 MB tegen een onbedoeld enorm bestand.
+- [x] **Meldingsvinkjes klopten niet met wat ze deden.** Een beheerder had twee vinkjes voor vier soorten meldingen, en Ingediende uren zette in werkelijkheid alles behalve facturen uit -- dus ook klanturenstaten, zonder dat daar iets over stond. Per rol nu drie vinkjes die precies iets betekenen, met klanturenstaten als eigen schakelaar.
+- [x] **Weggehaald wat geen nut had:** Facturen klaar bij de beheerder (die maakt de factuur zelf) en Urenherinneringen bij de medewerker (die planning draait nog niet). Die laatste komt terug zodra de planner er is.
+- [x] **App-icoon gestapeld.** Het logo is 2,6 keer zo breed als hoog; in een vierkant vult het dan hooguit een derde van de hoogte, hoe breed je het ook maakt. Symbool boven, het woord Path eronder, consultancy weggelaten -- dat is op iconformaat toch niet te lezen. De generator snijdt beide onderdelen zelf uit het logo, dus er is geen nieuw beeldmerk verzonnen.
+- [x] **Maskeerbare variant nagemeten op het gemaakte bestand.** Een gestapelde vorm is bijna vierkant, dus de hoekpunten liggen verder van het midden dan bij een liggend logo: bij dezelfde maat kwam het verste punt op 86 procent uit terwijl Android op 80 afsnijdt. Stap voor stap verkleind en gemeten tot 0,72, waar het op 79 procent uitkomt. Die meetwaarden staan in de code.
+- [x] Versie 0.9.130 → 0.9.131.
+
 ### 2026-08-23 · v0.9.130 grotere tekst op de telefoon en een groter app-icoon
 
 - [x] **Tekst op de telefoon twee pixels groter, voor 318 selectors.** De eerdere ondergrens zette alles onder 11px op precies 11px; dat is een minimum voor leesbaarheid, geen prettige leesmaat. Gemeten kwam de gemiddelde tekst uit op 12,9px terwijl Apple en Google voor gewone tekst eerder 15 tot 17 aanhouden. Nu 14,6px gemiddeld en 13px als kleinste.

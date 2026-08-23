@@ -419,7 +419,7 @@ function freshState() {
       hourReminders: true,
       statusNotifications: true,
       approvalNotifications: true,
-      invoiceNotifications: true
+      invoiceNotifications: true, customerTimesheetNotifications: true
     },
     admins: [
       { id: "gio", name: "Gio Maatsen", email: "gio@example.invalid", active: true, emailNotificationsEnabled: true, photo: "" },
@@ -7055,6 +7055,73 @@ function renderReminderScheduleSummary() {
 // Op desktop verandert er niets: daar past alles naast elkaar en is inklappen
 // juist hinderlijk. De omschakeling luistert naar de schermbreedte, zodat ook
 // draaien van een tablet meteen goed valt.
+/* ---------------------------------------------------------------------------
+   Profielfoto verkleinen voordat hij wordt bewaard
+   ---------------------------------------------------------------------------
+   De foto wordt als tekst in de app-status opgeslagen, en die omzetting maakt
+   hem nog eens een derde groter. Daarom stond er een grens van 700 kB -- maar
+   een foto van een telefoon is al snel 2 tot 5 MB, dus die grens betekende in de
+   praktijk dat de functie nooit werkte.
+
+   Een avatar wordt op zo'n 40 pixels getoond. 256 in het vierkant is dus ruim
+   voldoende, ook op een scherm met hoge resolutie, en levert een bestand van
+   enkele tientallen kilobytes op. Daarmee is de grens overbodig geworden.
+
+   De foto wordt vierkant bijgesneden vanuit het midden, zodat een staande of
+   liggende foto niet uitgerekt in de ronde avatar belandt.
+   --------------------------------------------------------------------------- */
+const PROFIELFOTO_MAAT = 256;
+
+function verkleinProfielfoto(file) {
+  const tekenen = (bron, breedte, hoogte) => {
+    const doek = document.createElement("canvas");
+    doek.width = PROFIELFOTO_MAAT;
+    doek.height = PROFIELFOTO_MAAT;
+    const penseel = doek.getContext("2d");
+    if (!penseel) throw new Error("geen canvas beschikbaar");
+
+    // Vierkant uitsnijden vanuit het midden.
+    const zijde = Math.min(breedte, hoogte);
+    const bronX = (breedte - zijde) / 2;
+    const bronY = (hoogte - zijde) / 2;
+    penseel.drawImage(bron, bronX, bronY, zijde, zijde, 0, 0, PROFIELFOTO_MAAT, PROFIELFOTO_MAAT);
+    return doek.toDataURL("image/jpeg", 0.85);
+  };
+
+  // createImageBitmap draait de foto meteen goed op basis van de EXIF-stand;
+  // zonder dat komt een staande telefoonfoto gekanteld binnen.
+  if (typeof createImageBitmap === "function") {
+    return createImageBitmap(file, { imageOrientation: "from-image" })
+      .then(bitmap => {
+        const uit = tekenen(bitmap, bitmap.width, bitmap.height);
+        if (typeof bitmap.close === "function") bitmap.close();
+        return uit;
+      })
+      .catch(() => verkleinViaAfbeelding(file, tekenen));
+  }
+  return verkleinViaAfbeelding(file, tekenen);
+}
+
+function verkleinViaAfbeelding(file, tekenen) {
+  return new Promise((klaar, mislukt) => {
+    const lezer = new FileReader();
+    lezer.addEventListener("error", () => mislukt(new Error("lezen mislukt")));
+    lezer.addEventListener("load", () => {
+      const afbeelding = new Image();
+      afbeelding.addEventListener("error", () => mislukt(new Error("laden mislukt")));
+      afbeelding.addEventListener("load", () => {
+        try {
+          klaar(tekenen(afbeelding, afbeelding.naturalWidth, afbeelding.naturalHeight));
+        } catch (fout) {
+          mislukt(fout);
+        }
+      });
+      afbeelding.src = String(lezer.result || "");
+    });
+    lezer.readAsDataURL(file);
+  });
+}
+
 const SETTINGS_COLLAPSE_QUERY = "(max-width: 700px)";
 
 function settingsCardHeading(card) {
@@ -7283,10 +7350,15 @@ function addNotification(notification, force) {
   }
   const audience = notification.audience;
   const targetEmployee = audience === "employee" ? employeeById(notification.employeeId) : null;
-  if (!force && audience === "admin" && !state.preferences.approvalNotifications && notification.type !== "invoice") return;
-  if (!force && audience === "admin" && notification.type === "invoice" && !state.preferences.invoiceNotifications) return;
-  if (!force && audience === "employee" && !state.preferences.statusNotifications && notification.type !== "reminder") return;
-  if (!force && audience === "employee" && notification.type === "reminder" && !state.preferences.hourReminders) return;
+  // Klanturenstaten zaten hiervoor onder het vinkje voor ingediende uren, zonder
+  // dat daar iets over stond: wie dat uitzette, hoorde ook niets meer over een
+  // binnengekomen klanturenstaat. Ze hebben nu hun eigen schakelaar.
+  const gaatOverKlanturenstaat = String(notification.type || "").startsWith("customer-timesheet");
+  if (!force && gaatOverKlanturenstaat && state.preferences.customerTimesheetNotifications === false) return;
+  if (!force && !gaatOverKlanturenstaat) {
+    if (audience === "admin" && notification.type !== "invoice" && !state.preferences.approvalNotifications) return;
+    if (audience === "employee" && notification.type !== "reminder" && !state.preferences.statusNotifications) return;
+  }
   if (!force && audience === "employee" && notification.type === "reminder" && targetEmployee && targetEmployee.notificationsEnabled === false) return;
   state.notifications.push(Object.assign({
     id: nextNotificationId(),
@@ -9393,17 +9465,29 @@ function showProfileEditor() {
   document.querySelector("#profile-photo-input").addEventListener("change", event => {
     const file = event.target.files && event.target.files[0];
     if (!file) return;
-    if (!file.type.startsWith("image/") || file.size > 700000) {
-      toast("Kies een PNG, JPG of WebP kleiner dan 700 KB.");
+
+    if (!file.type.startsWith("image/")) {
+      toast("Kies een afbeelding: PNG, JPG of WebP.");
       event.target.value = "";
       return;
     }
-    const reader = new FileReader();
-    reader.addEventListener("load", () => {
-      pendingProfilePhoto = String(reader.result || "");
-      applyAvatar(document.querySelector("#profile-photo-preview"), profile.name, pendingProfilePhoto);
-    });
-    reader.readAsDataURL(file);
+    // Ruime bovengrens tegen een onbedoeld enorm bestand. De echte grootte doet
+    // er niet toe: we verkleinen hem hieronder toch.
+    if (file.size > 20000000) {
+      toast("Deze afbeelding is te groot. Kies er een kleiner dan 20 MB.");
+      event.target.value = "";
+      return;
+    }
+
+    verkleinProfielfoto(file)
+      .then(dataUrl => {
+        pendingProfilePhoto = dataUrl;
+        applyAvatar(document.querySelector("#profile-photo-preview"), profile.name, pendingProfilePhoto);
+      })
+      .catch(() => {
+        toast("Deze afbeelding kon niet worden gelezen. Probeer een andere.");
+        event.target.value = "";
+      });
   });
   document.querySelector("#remove-profile-photo").addEventListener("click", () => {
     pendingProfilePhoto = "";
@@ -9456,8 +9540,16 @@ function showPasswordEditor() {
 
 function showPreferences() {
   const profile = currentProfileData();
-  const adminRows = state.currentRole === "admin" ? '<div class="preference-row"><span><strong>Ingediende uren</strong><small>Melding zodra uren ter controle klaarstaan</small></span><input id="pref-approvals" aria-label="Meldingen over ingediende uren" type="checkbox"' + (state.preferences.approvalNotifications ? " checked" : "") + '></div><div class="preference-row"><span><strong>Facturen klaar</strong><small>Melding na het goedkeuren van uren</small></span><input id="pref-invoices" aria-label="Meldingen over facturen" type="checkbox"' + (state.preferences.invoiceNotifications ? " checked" : "") + '></div>' : '<div class="preference-row"><span><strong>Urenherinneringen</strong><small>Volgens de ingestelde week- en maandplanning</small></span><input id="pref-hours" aria-label="Urenherinneringen" type="checkbox"' + (state.preferences.hourReminders ? " checked" : "") + '></div><div class="preference-row"><span><strong>Statuswijzigingen</strong><small>Correctie nodig en goedkeuring</small></span><input id="pref-status" aria-label="Statusmeldingen" type="checkbox"' + (state.preferences.statusNotifications ? " checked" : "") + '></div>';
-  const emailRow = '<div class="preference-row"><span><strong>Aanvullende e-mailmeldingen</strong><small>Uit: meldingen blijven wel in de app zichtbaar</small></span><input id="pref-email-notifications" aria-label="Aanvullende e-mailmeldingen" type="checkbox"' + (profile.source.emailNotificationsEnabled !== false ? " checked" : "") + '></div>';
+  // Per rol alleen de meldingen waar die rol iets mee moet. Een beheerder hoeft
+  // geen bericht dat de factuur klaar is -- die heeft hij zelf gemaakt. Een
+  // medewerker hoeft geen bericht dat zijn eigen uren zijn ingediend.
+  const adminRows = state.currentRole === "admin"
+    ? '<div class="preference-row"><span><strong>Uren ter controle</strong><small>Een medewerker heeft uren ingediend</small></span>' + '<input id="pref-approvals" aria-label="Berichten over uren die ter controle klaarstaan" type="checkbox"' + (state.preferences.approvalNotifications ? " checked" : "") + '></div>'
+      + '<div class="preference-row"><span><strong>Klanturenstaten</strong><small>Binnengekomen of overgeslagen</small></span>' + '<input id="pref-customer-timesheets" aria-label="Berichten over klanturenstaten" type="checkbox"' + (state.preferences.customerTimesheetNotifications ? " checked" : "") + '></div>'
+    : '<div class="preference-row"><span><strong>Goedkeuring en correctie</strong><small>Je uren zijn goedgekeurd, of er is een correctie gevraagd</small></span>' + '<input id="pref-status" aria-label="Berichten over goedkeuring en correctie" type="checkbox"' + (state.preferences.statusNotifications ? " checked" : "") + '></div>'
+      + '<div class="preference-row"><span><strong>Klanturenstaten</strong><small>Ontbreekt, opnieuw uploaden, of goedgekeurd</small></span>' + '<input id="pref-customer-timesheets" aria-label="Berichten over klanturenstaten" type="checkbox"' + (state.preferences.customerTimesheetNotifications ? " checked" : "") + '></div>'
+  ;
+  const emailRow = '<div class="preference-row"><span><strong>Aanvullende e-mailmeldingen</strong><small>Zet je dit uit, dan blijven meldingen in de app wel zichtbaar</small></span><input id="pref-email-notifications" aria-label="Aanvullende e-mailmeldingen" type="checkbox"' + (profile.source.emailNotificationsEnabled !== false ? " checked" : "") + '></div>';
   const summary = '<div class="preference-list"><div class="preference-row"><span><strong>Uiterlijk</strong><small>Licht is standaard; Automatisch volgt je apparaat</small></span><select id="pref-theme" aria-label="Uiterlijk"><option value="light"' + (state.preferences.theme === "light" ? " selected" : "") + '>Licht</option><option value="system"' + (state.preferences.theme === "system" ? " selected" : "") + '>Automatisch</option><option value="dark"' + (state.preferences.theme === "dark" ? " selected" : "") + '>Donker</option></select></div>' + adminRows + emailRow + '</div>';
   showModal({
     label: "Voorkeuren",
@@ -9470,11 +9562,12 @@ function showPreferences() {
       profile.source.emailNotificationsEnabled = document.querySelector("#pref-email-notifications").checked;
       if (state.currentRole === "admin") {
         state.preferences.approvalNotifications = document.querySelector("#pref-approvals").checked;
-        state.preferences.invoiceNotifications = document.querySelector("#pref-invoices").checked;
       } else {
-        state.preferences.hourReminders = document.querySelector("#pref-hours").checked;
         state.preferences.statusNotifications = document.querySelector("#pref-status").checked;
       }
+      // Dit vinkje staat er voor beide rollen.
+      const klanturenstaten = document.querySelector("#pref-customer-timesheets");
+      if (klanturenstaten) state.preferences.customerTimesheetNotifications = klanturenstaten.checked;
       persistState();
       closeModal();
       applyTheme();
