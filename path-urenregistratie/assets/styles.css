@@ -2523,3 +2523,42 @@ button,
 @media (max-width: 720px) {
   .install-banner { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
 }
+
+/* ---------------------------------------------------------------------------
+   Veilige zone aan de bovenkant
+   ---------------------------------------------------------------------------
+   Als de app vanaf het beginscherm wordt geopend, staat er op iOS geen adresbalk
+   meer boven de pagina. Met `apple-mobile-web-app-status-bar-style` op
+   black-translucent loopt de pagina dan door tot achter de statusbalk -- de klok,
+   het batterijpictogram en het netwerkicoon liggen daardoor over de bovenbalk van
+   de app heen. Wat daaronder zit is niet meer aan te tikken.
+
+   Dat trof Rol kiezen: in de browser werkte die knop wel, in de app niet, omdat
+   daar de adresbalk die ruimte innam.
+
+   env(safe-area-inset-top) is precies zo hoog als die statusbalk, en nul zodra
+   er geen statusbalk overheen ligt -- dus in de browser en op desktop verandert
+   er niets. De achtergrond van de balk loopt wel door tot de rand, zodat het
+   geen witte strook wordt.
+   --------------------------------------------------------------------------- */
+.topbar {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Ook het loginscherm en de zijbalk beginnen bovenaan het scherm. */
+.login-screen {
+  padding-top: calc(28px + env(safe-area-inset-top, 0px));
+}
+
+@media (max-width: 720px) {
+  /* De uitklappanelen hangen onder de bovenbalk; die schuiven mee omlaag. */
+  .popover-panel {
+    top: calc(82px + env(safe-area-inset-top, 0px));
+  }
+}
+
+/* Zolang het installatieaanbod in beeld staat, schuift de pagina eronder mee.
+   Anders ligt de balk over knoppen heen die daar toevallig staan. */
+body.toont-installatieaanbod .main-content {
+  padding-bottom: 190px;
+}

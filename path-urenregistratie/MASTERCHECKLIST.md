@@ -94,6 +94,17 @@ Post-live beheer
 
 ## Actuele stand
 
+### 2026-08-23 · v0.9.129 Rol kiezen lag op de iPhone achter de statusbalk
+
+- [x] **Door Gio gemeld met een foto uit de geinstalleerde app: de klok, het 5G-icoon en de batterij liggen over de bovenbalk heen.** Daar zit Rol kiezen onder, en door een statusbalk kun je niet tikken. In de browser werkte die knop wel, want daar neemt de adresbalk die ruimte in.
+- [x] **Oorzaak was mijn eigen mobiele upgrade.** Met viewport-fit=cover en apple-mobile-web-app-status-bar-style op black-translucent loopt de pagina door tot achter de statusbalk. Ik had veilige zones toegevoegd voor onderin (de home-streep, de navigatiebalk) maar de bovenkant vergeten -- terwijl ik juist het gedrag had aangezet dat die zone nodig maakt.
+- [x] **De bovenbalk houdt nu env(safe-area-inset-top) vrij.** Dat is nul zodra er geen statusbalk overheen ligt, dus in de browser en op desktop verandert er niets. Het loginscherm en de uitklappanelen schuiven mee.
+- [x] **Bewaking in de smoke test, bewust niet in Playwright.** Geen enkele browsermotor in de testopstelling rapporteert een echte veilige zone -- dit is alleen op een fysiek toestel te zien. Daarom controleert de gate dat de regel aantoonbaar in de stylesheet staat. Geverifieerd door hem te verwijderen.
+- [x] **Nagezocht en bevestigd:** op iOS bestaat het signaal beforeinstallprompt niet en kan geen enkele website het installeren zelf starten. Elke installatie gaat daar handmatig via Delen en Zet op beginscherm. De balk toont daar dus uitleg in plaats van een knop; dat is geen tekortkoming maar een keuze van Apple.
+- [x] **Het installatieaanbod dekte knoppen af.** Bij het schrijven van MOB-H-017 bleek de balk over Bekijk alle 3 open acties te liggen. Extra ruimte onderaan de pagina loste dat niet op: die helpt alleen als je helemaal naar beneden scrolt, terwijl een vaste balk op elke scrollpositie iets afdekt. Het aanbod verdwijnt daarom na twaalf seconden vanzelf -- gezien is genoeg, en via het profielmenu blijft het altijd bereikbaar.
+- [x] **MOB-H-017 toegevoegd:** de balk verdwijnt vanzelf, en daarna ligt er geen bedienbaar element meer onder. Dezelfde soort fout als eerder, toen de balk over een openstaand dialoogvenster lag.
+- [x] Versie 0.9.128 → 0.9.129.
+
 ### 2026-08-23 · v0.9.128 de knop Installeren deed stil niets
 
 - [x] **Gio drukte op Installeren en er gebeurde niets.** De klikafhandeling begon met een stille afbreking: had de browser geen bruikbare melding gegeven, dan deed de knop letterlijk niets. Geen venster, geen melding. Hij loste het daarna zelf op via de drie puntjes van Chrome, wat klopt: dat menu werkt onafhankelijk van dat signaal.

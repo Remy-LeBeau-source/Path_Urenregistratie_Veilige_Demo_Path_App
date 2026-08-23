@@ -178,6 +178,7 @@
 | MOB-H-014 | ui | mobile.feature | het aanbod om te installeren blijft bereikbaar na wegklikken of verwijderen | Responsive viewport + end-to-end use-case | 4 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | het aanbod om te installeren blijft bereikbaar na wegklikken of verwijderen | Happy | 15 | Actueel |
 | MOB-H-015 | ui | mobile.feature | het aanbod verschijnt uit zichzelf, ook zonder melding van de browser | Responsive viewport + end-to-end use-case | 4 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | het aanbod verschijnt uit zichzelf, ook zonder melding van de browser | Happy | 15 | Actueel |
 | MOB-H-016 | ui | mobile.feature | de knop Installeren doet nooit stil niets | Responsive viewport + end-to-end use-case | 2 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | de knop Installeren doet nooit stil niets | Happy | 15 | Actueel |
+| MOB-H-017 | ui | mobile.feature | het installatieaanbod dekt geen knoppen af | Responsive viewport + end-to-end use-case | 3 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | het installatieaanbod dekt geen knoppen af | Happy | 15 | Actueel |
 | NOT-H-001 | api | notifications.feature | ingelogde gebruiker kan notificaties ophalen | API-contract + equivalentieklasse | 5 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | ingelogde gebruiker kan notificaties ophalen | Happy | 15 | Actueel |
 | NOT-H-002 | api | notifications.feature | mark_all_read werkt zonder fouten | Toestandsovergang | 8 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | mark_all_read werkt zonder fouten | Happy | 15 | Actueel |
 | NOT-N-003 | api | notifications.feature | anonieme gebruiker krijgt 401 op notificaties | Beslissingstabel rollen en autorisatie | 1 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | anonieme gebruiker krijgt 401 op notificaties | Negative | 15 | Actueel |
@@ -291,9 +292,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 269
+- Playwright executable cases: 270
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 270
+- Totaal unieke executable cases: 271
 - Playwright features: 23
 - Database features: 1
 - Playwright steps mappings: 23

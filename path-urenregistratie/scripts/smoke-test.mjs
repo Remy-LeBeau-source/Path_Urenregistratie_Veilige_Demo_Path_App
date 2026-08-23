@@ -148,6 +148,24 @@ assert(document.querySelectorAll("select:not([hidden])").length === 0, "De vaste
   assert(teKleineLabels.length === 0, `Een label uit de opmaak is schermtekst en moet minstens 11px zijn (${teKleineLabels.join(" | ")})`);
 }
 
+// Wordt de app vanaf het beginscherm geopend, dan staat er op iOS geen adresbalk
+// meer boven de pagina. Met apple-mobile-web-app-status-bar-style op
+// black-translucent loopt de pagina door tot achter de statusbalk, en liggen de
+// klok, het 5G-icoon en de batterij over de bovenbalk van de app heen. Wat
+// daaronder zit is niet aan te tikken: Rol kiezen werkte in de browser wel en in
+// de app niet.
+//
+// env(safe-area-inset-top) is precies zo hoog als die statusbalk en nul zodra er
+// geen overheen ligt. Deze controle staat hier en niet in Playwright, omdat geen
+// enkele browsermotor in de testopstelling een echte veilige zone rapporteert --
+// dit is alleen op een fysiek toestel te zien, en juist daarom moet de regel
+// aantoonbaar in de stylesheet staan.
+{
+  const bovenbalk = styles.slice(styles.lastIndexOf(".topbar {"));
+  const heeftVeiligeZone = /padding-top:\s*env\(safe-area-inset-top/.test(bovenbalk.slice(0, 400));
+  assert(heeftVeiligeZone, "De bovenbalk moet env(safe-area-inset-top) aanhouden, anders valt hij op iOS achter de statusbalk");
+}
+
 // Tekstkleuren moeten leesbaar zijn tegen de lichte achtergronden van de app. De
 // norm voor gewone tekst is 4,5:1. Voor de aanpassing haalde --muted 4,10:1 op de
 // groene kaarten en gaven de accentkleuren als tekst 3,54:1 en 3,40:1; samen ruim
@@ -197,7 +215,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.128"), "Het zichtbare versienummer moet 0.9.128 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.129"), "Het zichtbare versienummer moet 0.9.129 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -1777,4 +1795,4 @@ assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("
 assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Playwright stage- en lokale env-bestanden mogen expliciete runner/CI-variabelen niet overschrijven");
 
 dom.window.close();
-console.log("Path v0.9.128 volledige smoke test: geslaagd");
+console.log("Path v0.9.129 volledige smoke test: geslaagd");

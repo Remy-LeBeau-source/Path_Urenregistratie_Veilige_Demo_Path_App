@@ -1276,3 +1276,58 @@ test('[MOB-H-016] de knop Installeren doet nooit stil niets', async ({ page, bro
       .toContainText(/menu|Delen/, { timeout: 10_000 });
   });
 });
+
+test('[MOB-H-017] het installatieaanbod dekt geen knoppen af', async ({ page }) => {
+  // De balk ligt vast onderin over de pagina heen. Wat daar toevallig staat is
+  // dan niet meer aan te tikken -- dezelfde fout als eerder, toen hij over een
+  // openstaand dialoogvenster lag. Zolang hij in beeld is krijgt de pagina er
+  // onderaan ruimte bij.
+  test.setTimeout(90_000);
+  const login = new LoginPage(page);
+  await login.open();
+  await login.loginAsEmployee();
+
+  await page.evaluate(() => {
+    try {
+      window.localStorage.removeItem('path-install-afgewezen');
+    } catch {
+      // opslag geblokkeerd; dan is er ook niets te wissen
+    }
+  });
+  await page.reload();
+
+  await test.step('Given het aanbod staat in beeld', async () => {
+    await expect(page.locator('#install-banner')).toBeVisible({ timeout: 15_000 });
+  });
+
+  await test.step('Then verdwijnt hij vanzelf, zodat hij niets blijvend afdekt', async () => {
+    // Een balk die blijft staan dekt op elke scrollpositie iets af; extra ruimte
+    // onderaan de pagina helpt alleen aan het eind. Daarom verdwijnt hij vanzelf.
+    await expect(page.locator('#install-banner'),
+      'blijft hij staan, dan ligt er altijd wel iets onder').toBeHidden({ timeout: 20_000 });
+  });
+
+  await test.step('And ligt er daarna niets meer onder de balk', async () => {
+    const afgedekt = await page.evaluate(() => {
+      const balk = document.querySelector('#install-banner');
+      if (!balk) return [];
+      const b = balk.getBoundingClientRect();
+      const gevonden: string[] = [];
+
+      document.querySelectorAll('.view.is-active button, .view.is-active a[href], .view.is-active input')
+        .forEach(el => {
+          const r = el.getBoundingClientRect();
+          if (r.width === 0 || r.height === 0) return;
+          // Overlapt dit element het vlak van de balk?
+          const overlapt = r.left < b.right && r.right > b.left && r.top < b.bottom && r.bottom > b.top;
+          if (!overlapt) return;
+          const e = el as HTMLElement;
+          gevonden.push(e.tagName.toLowerCase() + (e.id ? '#' + e.id : '')
+            + ' "' + (e.textContent || '').trim().slice(0, 25) + '"');
+        });
+      return [...new Set(gevonden)];
+    });
+
+    expect(afgedekt, `deze knoppen liggen onder de balk: ${afgedekt.join(', ')}`).toEqual([]);
+  });
+});

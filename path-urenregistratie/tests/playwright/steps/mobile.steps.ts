@@ -71,3 +71,7 @@ And("verschijnt er wel een knop zodra de browser het alsnog meldt");
 Given("het aanbod staat er zonder bruikbare melding van de browser");
 When("er op Installeren wordt gedrukt");
 Then("krijgt de gebruiker uitleg in plaats van stilte");
+Given("het aanbod staat in beeld");
+When("de flow voor MOB-H-017 wordt uitgevoerd");
+Then("verdwijnt hij vanzelf, zodat hij niets blijvend afdekt");
+And("ligt er daarna niets meer onder de balk");
