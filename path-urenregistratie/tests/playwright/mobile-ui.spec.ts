@@ -844,7 +844,14 @@ test('[MOB-H-008] elk hoofdscherm blijft op een telefoon leesbaar en bedienbaar'
     const kleineDoelen: string[] = [];
     document.querySelectorAll('.view.is-active button, .view.is-active select, .view.is-active textarea, .view.is-active input:not([type=checkbox])').forEach(el => {
       if (!zichtbaar(el)) return;
-      if (el.getBoundingClientRect().height < 44) kleineDoelen.push(omschrijf(el) + '=' + Math.round(el.getBoundingClientRect().height));
+      // Afronden voor het vergelijken. De norm is 44 punten; of een knop 43,99 of
+      // 44,00 hoog uitvalt hangt af van de letterafmetingen van de machine, niet van
+      // de bedienbaarheid. Zonder afronden viel een knop van precies 44 in CI om
+      // terwijl hij hier slaagde -- en de foutmelding zei dan "BUTTON=44", want die
+      // rondde wel af. Meten met meer precisie dan de norm betekenis heeft levert
+      // alleen ruis op.
+      const hoogte = Math.round(el.getBoundingClientRect().height);
+      if (hoogte < 44) kleineDoelen.push(omschrijf(el) + '=' + hoogte);
     });
     return { afgesneden: [...new Set(afgesneden)], kleineDoelen: [...new Set(kleineDoelen)] };
   });
