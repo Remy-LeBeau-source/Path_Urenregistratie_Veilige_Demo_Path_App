@@ -437,15 +437,23 @@ test('[INV-ID-H-010] instellingen tonen de standaardtekst die de ontvanger werke
     }
   });
 
-  await test.step('And zegt hij erbij of de opdrachttekst hier voorgaat', async () => {
+  await test.step('And geeft elke ontvanger dezelfde uitleg', async () => {
+    // Hier stonden twee verschillende zinnen, want er golden twee regels: sommige
+    // ontvangers erfden de opdrachttekst en andere niet. Wie in dit scherm keek zag
+    // dus per rij iets anders staan zonder dat duidelijk was waarom. Nu is er één
+    // regel, dus hoort er ook één zin te staan -- bij iedereen dezelfde.
+    const zinnen: string[] = [];
     for (const ontvanger of ontvangers) {
       const naam = String(ontvanger.display_name);
-      const category = String(ontvanger.recipient_category);
-      const slaatOver = category === 'accounting' || category === 'payroll';
       const rij = page.locator('.mail-recipient-setting').filter({ hasText: naam }).first();
-      await expect(rij.locator('details.mail-standaardtekst'), naam + ': de uitleg moet kloppen met de volgorde op de server')
-        .toContainText(slaatOver ? 'ook als bij de opdracht iets anders staat' : 'Krijgt de tekst van de opdracht');
+      const uitleg = rij.locator('details.mail-standaardtekst .form-help').first();
+      await expect(uitleg, naam + ': er hoort uitleg bij te staan').toBeVisible();
+      zinnen.push(((await uitleg.textContent()) ?? '').trim());
     }
+    expect(zinnen.length, 'zonder ontvangers zegt deze stap niets').toBeGreaterThan(0);
+    expect([...new Set(zinnen)], 'elke ontvanger hoort dezelfde uitleg te krijgen').toHaveLength(1);
+    expect(zinnen[0].toLowerCase(), 'de uitleg mag niet meer naar de opdracht verwijzen: die laag bestaat niet meer')
+      .not.toContain('opdracht');
   });
 
   await test.step('And heeft de boekhouder werkelijk de soort boekhouding', async () => {
@@ -463,7 +471,8 @@ test('[INV-ID-H-010] instellingen tonen de standaardtekst die de ontvanger werke
     // dus hij hoort hier alleen te lezen te zijn, met de weg erheen erbij.
     const brokerBlok = page.locator('#mail-broker-route-info .mail-recipient-setting');
     await expect(brokerBlok, 'de broker hoort in het instellingenscherm te staan').toHaveCount(1);
-    await expect(brokerBlok, 'er moet bij staan waar je hem wel wijzigt').toContainText('per opdracht');
+    await expect(brokerBlok, 'er moet bij staan waar je hem wel wijzigt').toContainText('bij Medewerkers');
+    await expect(brokerBlok, 'en waarom hij hier niet in de lijst staat').toContainText('per medewerker');
     await expect(brokerBlok.locator('button'), 'de broker is hier niet te wijzigen, dus geen knoppen')
       .toHaveCount(0);
 

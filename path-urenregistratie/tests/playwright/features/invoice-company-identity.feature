@@ -82,9 +82,9 @@ Feature: Facturerende onderneming en handelsnaam
   @happy
   Scenario: [INV-ID-H-010] instellingen tonen de standaardtekst die de ontvanger werkelijk krijgt
     # Testtechniek: API-contract + gegevensbron-vergelijking
-    # Aantoonbare Playwright-assertions in deze case: 12
+    # Aantoonbare Playwright-assertions in deze case: 15
     Given de beheerder is ingelogd en de server stuurt de standaardteksten mee
     When de lijst met vaste ontvangers wordt geopend
     Then staat bij elke ontvanger de tekst van de server
-    And zegt hij erbij of de opdrachttekst hier voorgaat
+    And geeft elke ontvanger dezelfde uitleg
     And heeft de boekhouder werkelijk de soort boekhouding

@@ -215,7 +215,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.134"), "Het zichtbare versienummer moet 0.9.134 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.135"), "Het zichtbare versienummer moet 0.9.135 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -255,7 +255,7 @@ assert(!/\.notification-button \.bell-shape \{[^}]*var\(--navy\)/.test(styles), 
 // twee ontvangers terwijl er drie mails uitgingen. Hij hoort er alleen te lezen te
 // staan, met de plek erbij waar je hem wel wijzigt.
 assert(document.querySelectorAll("#mail-broker-route-info .mail-recipient-setting").length === 1, "De broker moet in het instellingenscherm staan, ook al staat hij per opdracht");
-assert(document.querySelector("#mail-broker-route-info").textContent.includes("per opdracht"), "Bij de broker moet staan waar je hem wel aanpast");
+assert(document.querySelector("#mail-broker-route-info").textContent.includes("bij Medewerkers"), "Bij de broker moet staan waar je hem wel aanpast");
 assert(document.querySelectorAll("#mail-broker-route-info button").length === 0, "De broker is hier niet te wijzigen, dus hoort er geen knop bij te staan");
 assert(document.body.textContent.includes("@example.invalid"), "Veilige brokerplaceholders moeten zichtbaar zijn");
 
@@ -1038,10 +1038,39 @@ assert(document.querySelector('[data-mail-recipient-enabled="payroll"]').checked
 assert(!document.querySelector('[data-mail-recipient-invoice="payroll"]').checked, "EasySalary moet standaard zonder factuurbijlage beginnen");
 assert(document.querySelector(".mail-route-choice-list").textContent.includes("salaris@example.invalid"), "Bij de medewerker moet zichtbaar zijn welk EasySalary-adres is gekozen");
 assert(document.querySelector("#edit-body").value.includes("{uren}"), "De standaard begeleidende tekst moet het daadwerkelijke urenaantal bevatten");
-assert(document.querySelector("#modal-summary").textContent.includes("broker, boekhouding en salarisadministratie"), "Nieuwe medewerker moet alle drie de ontvangers in hetzelfde formulier tonen");
-// Eén begeleidende tekst voor iedere ontvanger: het scherm moet dat ook zeggen,
-// anders denkt een beheerder dat hij alleen de brokermail aanpast.
-assert(document.querySelector("#modal-summary").textContent.includes("dezelfde begeleidende tekst"), "Het formulier moet duidelijk maken dat de begeleidende tekst naar iedere ontvanger gaat");
+// Deze controle hing aan een volzin in een uitlegtekst, en viel dus om zodra die
+// werd herschreven terwijl het scherm gewoon klopte. Nu kijkt hij naar de rijen
+// zelf: broker, boekhouding en salarisadministratie horen alle drie in hetzelfde
+// formulier te staan, elk met een eigen keuzevak.
+{
+  const routes = document.querySelector(".mail-route-choice-list");
+  assert(routes !== null, "Het formulier moet een lijst met ontvangers tonen");
+  assert(document.querySelector("#edit-broker-enabled") !== null, "De broker moet als eigen rij in het formulier staan");
+  assert(document.querySelector('[data-mail-recipient-enabled="bookkeeper"]') !== null, "De boekhouding moet als eigen rij in het formulier staan");
+  assert(document.querySelector('[data-mail-recipient-enabled="payroll"]') !== null, "De salarisadministratie moet als eigen rij in het formulier staan");
+  // En de broker heeft nu dezelfde velden als de rest: zijn tekst stond eerder los
+  // bovenaan, onder de kop "voor iedere ontvanger", want vroeger erfde iedereen hem.
+  assert(routes.querySelector("#edit-subject") !== null && routes.querySelector("#edit-body") !== null, "De eigen tekst van de broker hoort in zijn eigen rij te staan, net als bij de andere ontvangers");
+}
+// Eén regel voor iedereen: elk tekstveld legt hetzelfde uit. Stonden hier eerder
+// drie verschillende zinnen door elkaar, want de regel verschilde per soort.
+{
+  const uitleg = [...document.querySelectorAll(".route-template small")].map(el => el.textContent.trim());
+  assert(uitleg.length >= 4, "Elke ontvanger hoort een eigen onderwerp en tekst te hebben");
+  const afwijkend = uitleg.filter(tekst => tekst !== "leeg = de standaardtekst");
+  assert(afwijkend.length === 0, "Elk tekstveld moet dezelfde uitleg geven, maar deze wijken af: " + afwijkend.join(" | "));
+}
+// Hier stond de omgekeerde eis: dat het scherm moest zeggen dat één begeleidende
+// tekst naar iedere ontvanger ging. Dat was ook zo, en het was de bron van de
+// verwarring -- die tekst was aan de broker geschreven en las bij de boekhouder als
+// een bericht aan de verkeerde persoon. Nu heeft elke ontvanger zijn eigen tekst,
+// dus het scherm moet dat zeggen, niet het tegendeel.
+{
+  const uitleg = document.querySelector("#modal-summary").textContent;
+  assert(uitleg.includes("eigen mail"), "Het formulier moet duidelijk maken dat elke ontvanger een eigen mail krijgt");
+  assert(uitleg.includes("standaardtekst"), "Het formulier moet duidelijk maken wat er gebeurt als je een tekstveld leeg laat");
+  assert(!uitleg.includes("dezelfde begeleidende tekst"), "Het formulier mag niet meer beweren dat iedereen dezelfde begeleidende tekst krijgt: dat geldt sinds 0.9.135 niet meer");
+}
 assert(document.querySelector("#edit-new-recipient-name") && document.querySelector("#edit-new-recipient-email"), "Vanuit Nieuwe medewerker moet direct een eigen vaste ontvanger toegevoegd kunnen worden");
 assert(document.querySelector("#edit-customer-timesheet-expected").checked && document.querySelector("#edit-invoice-without-customer-timesheet").checked, "Een nieuwe medewerker moet standaard een klanturenstaat verwachten zonder de factuur te blokkeren");
 assert(document.querySelector("#edit-customer-timesheet-due-day") && document.querySelector("#edit-customer-timesheet-broker-email"), "Deadline en eventueel afwijkend brokeradres moeten per medewerker instelbaar zijn");
@@ -1827,7 +1856,7 @@ assert(announcementsApiSrc.includes("function announcement_truncate") && announc
 assert(appJsSrc.includes('+ (data.token ? " · Token: " + data.token'), "Het testtoken bij wachtwoordherstel moet de vaste zin aanvullen, niet vervangen");
 assert(!appJsSrc.includes("Resetverzoek verstuurd (dry-run)"), "De dry-run-tekst mag niet meer aan een gebruiker worden getoond");
 const mailQueueSrc = readFileSync_(new URL("../server/mail/queue.php", import.meta.url), "utf8");
-// De sjablonen staan sinds 0.9.134 apart, zodat de mailmodule en het
+// De sjablonen staan sinds 0.9.135 apart, zodat de mailmodule en het
 // instellingenscherm dezelfde bron gebruiken.
 const mailTemplatesSrc = readFileSync_(new URL("../server/mail/templates.php", import.meta.url), "utf8");
 const settingsApiSrc = readFileSync_(new URL("../server/api/settings.php", import.meta.url), "utf8");
@@ -1908,4 +1937,4 @@ assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("
 assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Playwright stage- en lokale env-bestanden mogen expliciete runner/CI-variabelen niet overschrijven");
 
 dom.window.close();
-console.log("Path v0.9.134 volledige smoke test: geslaagd");
+console.log("Path v0.9.135 volledige smoke test: geslaagd");

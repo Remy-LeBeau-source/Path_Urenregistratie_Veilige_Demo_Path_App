@@ -302,8 +302,6 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 html[data-theme="dark"] .period-control .month-choice-panel button:hover,
 html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel button:hover { background: #183148; }
 .notification-button { position: relative; width: 42px; height: 42px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); cursor: pointer; }
-.notification-button span { position: absolute; inset: 11px 12px 12px; border: 2px solid var(--navy); border-top-left-radius: 10px; border-top-right-radius: 10px; border-bottom: 0; }
-.notification-button::after { position: absolute; top: 8px; right: 8px; width: 7px; height: 7px; border: 2px solid #fff; border-radius: 50%; background: var(--mint); content: ""; }
 
 .view { display: none; animation: viewIn .28s ease; }
 .view.is-active { display: block; }
@@ -894,9 +892,12 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 /* Dit was een blokje met alleen een boven- en zijrand: een boog, geen bel. En de
    kleur stond vast op --navy, wat in de donkere modus juist de achtergrond is, dus
    daar was hij helemaal weg. Nu een echte belvorm die de tekstkleur volgt. */
-.notification-button .bell-shape { display: grid; place-items: center; width: 100%; height: 100%; color: var(--navy-tekst); }
+/* De bel vult de knop en staat gecentreerd. Er stond hier eerder een tweede regel
+   (.notification-button span) die alleen boven- en zijranden tekende -- een boog,
+   geen bel -- en die bleef naast de nieuwe vorm staan. */
+.notification-button { display: grid; place-items: center; }
+.notification-button .bell-shape { display: grid; place-items: center; color: var(--navy-tekst); }
 .notification-button .bell-shape svg { width: 22px; height: 22px; }
-.notification-button::after { display: none; }
 .notification-button b { position: absolute; top: -6px; right: -6px; display: grid; min-width: 20px; height: 20px; place-items: center; border: 2px solid var(--background); border-radius: 999px; background: var(--mint); color: var(--navy); font-size: 9px; padding: 0 4px; }
 .profile-menu-button { display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); cursor: pointer; padding: 0; }
 .topbar-avatar, .profile-menu-avatar, .profile-photo-preview { display: grid; place-items: center; overflow: hidden; border-radius: 10px; background: var(--mint); color: var(--navy); font-size: 11px; font-weight: 900; background-position: center; background-size: cover; }

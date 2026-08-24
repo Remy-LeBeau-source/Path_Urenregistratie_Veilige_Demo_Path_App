@@ -3227,19 +3227,11 @@ function standaardTekstVoor(kanaal) {
   return mailStandaardTeksten[kanaal] || null;
 }
 
-// De boekhouder en de salarisadministratie slaan de opdrachttekst over; bij hen
-// is de standaard hieronder dus werkelijk wat ze krijgen.
-function standaardVolgtOpdracht(kanaal) {
-  return kanaal !== "accountant" && kanaal !== "payroll";
-}
-
-// Wat er gebeurt als je dit veld leeg laat. De tekst zelf staat bij
-// Instellingen; hier alleen de volgorde, want die verschilt per soort.
-function standaardTekstUitleg(category) {
-  return standaardVolgtOpdracht(kanaalVoorSoort(category))
-    ? "leeg = de tekst van de opdracht"
-    : "leeg = de standaardtekst";
-}
+// Wat er gebeurt als je dit veld leeg laat. Eén zin, voor elke ontvanger --
+// er is geen uitzondering meer om uit te leggen. De tekst zelf staat bij
+// Instellingen, zodat hij op één plek staat en niet in elk formulier.
+const LEEG_IS_STANDAARD = "leeg = de standaardtekst";
+const LEEG_IS_STANDAARD_UITLEG = "Laat leeg voor de standaardtekst. Die staat bij Instellingen, onder E-mail &amp; ontvangers.";
 
 function recipientCategoryLabel(category) {
   return ({ accounting: "Boekhouding", payroll: "Salarisadministratie", other: "Overig" })[category] || "Overig";
@@ -3781,6 +3773,10 @@ function renderPeriodHeadings() {
   document.querySelector("#employee-period-label").textContent = period.month + " " + period.year;
 }
 
+// De laatst toegepaste modus, zodat de merk-opmaak alleen bij een echte
+// wisseling opnieuw wordt gezet en niet bij elke hertekening.
+let vorigeModus = null;
+
 function applyTheme() {
   const choice = state.preferences && state.preferences.theme ? state.preferences.theme : "light";
   let resolved = choice;
@@ -3790,9 +3786,17 @@ function applyTheme() {
   document.documentElement.dataset.theme = resolved;
   document.documentElement.dataset.themeChoice = choice;
   // Het logo hangt aan de modus: donker woordmerk op een lichte topbalk, wit op
-  // een donkere. Zonder deze regel bleef de vorige versie staan tot de app zichzelf
+  // een donkere. Zonder dit bleef de vorige versie staan tot de app zichzelf
   // helemaal opnieuw tekende.
-  if (typeof applyOrganizationBranding === "function") applyOrganizationBranding();
+  //
+  // Alleen bij een echte wisseling. applyTheme() draait bij elke hertekening, en
+  // de merk-opmaak opnieuw toepassen terwijl er niets veranderd is, is werk dat
+  // niets oplevert -- het zet alleen dezelfde afbeelding en dezelfde kleuren
+  // terug.
+  if (vorigeModus !== resolved) {
+    vorigeModus = resolved;
+    if (typeof applyOrganizationBranding === "function") applyOrganizationBranding();
+  }
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = resolved === "dark" ? "#09131f" : normalizedBrandColor(state.settings.brandPrimary, "#0d1b38");
 }
@@ -6461,9 +6465,8 @@ function renderMailRecipientSettings() {
 function standaardTekstBlok(kanaal) {
   const sjabloon = standaardTekstVoor(kanaal);
   if (!sjabloon) return "";
-  const inleiding = standaardVolgtOpdracht(kanaal)
-    ? "Krijgt de tekst van de opdracht. Staat daar niets, dan deze standaardtekst:"
-    : "Krijgt deze standaardtekst, ook als bij de opdracht iets anders staat:";
+  // Eén regel voor iedereen: is er bij de ontvanger niets ingevuld, dan dit.
+  const inleiding = "Krijgt deze tekst, tenzij bij een medewerker iets eigens is ingevuld:";
   return '<details class="mail-standaardtekst full"><summary>Welke tekst krijgt deze ontvanger?</summary>' +
     '<p class="form-help">' + escapeHtml(inleiding) + '</p>' +
     '<p class="mail-standaardtekst-onderwerp"><strong>Onderwerp</strong><br>' + escapeHtml(sjabloon.subject || "") + '</p>' +
@@ -6480,9 +6483,9 @@ function renderMailBrokerRouteInfo() {
   const doel = document.querySelector("#mail-broker-route-info");
   if (!doel) return;
   doel.innerHTML = '<article class="mail-recipient-setting is-informational">' +
-    '<div><strong>Broker</strong><small>Krijgt de factuur · ingesteld per opdracht</small></div>' +
+    '<div><strong>Broker</strong><small>Krijgt de factuur · niet één adres, maar één per medewerker</small></div>' +
     '<span class="status-pill status-concept">Per opdracht</span>' +
-    '<div><small class="form-help">Wijzig dit bij Medewerkers, in de opdracht van de betreffende medewerker.</small></div>' +
+    '<div><small class="form-help">Daarom staat hij hier niet in de lijst: naam, adres en eigen tekst wijzig je bij Medewerkers, in de opdracht van die ene medewerker.</small></div>' +
     standaardTekstBlok("broker") +
   '</article>';
 }
@@ -8816,8 +8819,8 @@ function showEmployeeEditor(employeeId, prefill) {
       '<div><strong>' + escapeHtml(recipient.name) + '</strong><small>' + escapeHtml(recipientCategoryLabel(recipient.category)) + ' · ' + escapeHtml(recipient.email) + '</small></div>' +
       '<label class="route-toggle"><input type="checkbox" data-mail-recipient-enabled="' + escapeHtml(recipient.id) + '"' + (enabled ? " checked" : "") + '><span>Ontvangt mail</span></label>' +
       '<label class="route-toggle"><input type="checkbox" data-mail-recipient-invoice="' + escapeHtml(recipient.id) + '"' + (preference.invoiceAttachment === true ? " checked" : "") + (enabled ? "" : " disabled") + '><span>Factuur meesturen</span></label>' +
-      '<label class="route-template full">Eigen onderwerp <small>' + escapeHtml(standaardTekstUitleg(recipient.category)) + '</small><input type="text" data-mail-recipient-subject="' + escapeHtml(recipient.id) + '" placeholder="" value="' + escapeHtml(preference.mailSubject || "") + '"' + (enabled ? "" : " disabled") + '></label>' +
-      '<label class="route-template full">Eigen begeleidende tekst <small>' + escapeHtml(standaardTekstUitleg(recipient.category)) + '</small><textarea rows="3" data-mail-recipient-body="' + escapeHtml(recipient.id) + '" placeholder=""' + (enabled ? "" : " disabled") + '>' + escapeHtml(preference.mailBody || "") + '</textarea></label>' +
+      '<label class="route-template full">Eigen onderwerp <small>' + LEEG_IS_STANDAARD + '</small><input type="text" data-mail-recipient-subject="' + escapeHtml(recipient.id) + '" placeholder="" value="' + escapeHtml(preference.mailSubject || "") + '"' + (enabled ? "" : " disabled") + '></label>' +
+      '<label class="route-template full">Eigen begeleidende tekst <small>' + LEEG_IS_STANDAARD + '</small><textarea rows="3" data-mail-recipient-body="' + escapeHtml(recipient.id) + '" placeholder=""' + (enabled ? "" : " disabled") + '>' + escapeHtml(preference.mailBody || "") + '</textarea></label>' +
       '<p class="form-help full">Laat leeg voor de standaardtekst. Die staat bij Instellingen, onder E-mail &amp; ontvangers.</p>' +
     '</article>';
   }).join("");
@@ -8838,19 +8841,24 @@ function showEmployeeEditor(employeeId, prefill) {
     '<label>Factuuradres broker<textarea id="edit-broker-invoice-address" rows="2" placeholder="Straat en huisnummer&#10;Postcode en plaats">' + escapeHtml(employee.brokerInvoiceAddress || "") + '</textarea></label>' +
     '<label>Project op factuur<input id="edit-invoice-project" value="' + escapeHtml(employee.invoiceProject || employee.client || "") + '"></label>' +
     '<label>Factuurtarief<input id="edit-rate" type="number" min="0" step="0.5" value="' + employee.rate + '"></label>' +
-    '<label class="full">Onderwerp<input id="edit-subject" value="' + escapeHtml(employee.mailSubject) + '"></label>' +
-    '<label class="full">Begeleidende tekst · voor iedere ontvanger<textarea id="edit-body" rows="5">' + escapeHtml(employee.mailBody) + "</textarea></label>" +
+    '<p class="full form-help">Elke ontvanger hieronder krijgt zijn eigen mail. Laat een tekstveld leeg, dan gaat de standaardtekst voor dat soort ontvanger mee. Een urenstaat wordt nergens toegevoegd.</p>' +
     '<p class="full form-help">Beschikbare velden: {medewerker}, {klant}, {broker}, {maand}, {jaar}, {uren}, {factuurnummer}, {overeenkomstnummer}</p>' +
-    '<p class="full form-help">Deze tekst gaat naar iedere aangevinkte ontvanger: broker, boekhouding en salarisadministratie krijgen elk een eigen mail met dezelfde begeleidende tekst. Een urenstaat wordt nergens toegevoegd.</p>' +
-    '<div class="mail-route-choice-list full"><article class="mail-route-choice"><div><strong>' + escapeHtml(employee.broker || "Broker") + '</strong><small>' + escapeHtml(employee.brokerEmail) + ' · broker van deze medewerker<br>gebruikt de begeleidende tekst hierboven</small></div><label class="route-toggle"><input id="edit-broker-enabled" type="checkbox"' + (employee.brokerMailEnabled !== false ? " checked" : "") + '><span>Ontvangt mail</span></label><label class="route-toggle"><input id="edit-broker-invoice" type="checkbox"' + (employee.brokerInvoiceAttachment !== false ? " checked" : "") + (employee.brokerMailEnabled !== false ? "" : " disabled") + '><span>Factuur meesturen</span></label></article>' + routeChoices + '</div>' +
+    '<div class="mail-route-choice-list full"><article class="mail-route-choice">' +
+          '<div><strong>' + escapeHtml(employee.broker || "Broker") + '</strong><small>' + escapeHtml(employee.brokerEmail) + ' · broker van deze medewerker</small></div>' +
+          '<label class="route-toggle"><input id="edit-broker-enabled" type="checkbox"' + (employee.brokerMailEnabled !== false ? " checked" : "") + '><span>Ontvangt mail</span></label>' +
+          '<label class="route-toggle"><input id="edit-broker-invoice" type="checkbox"' + (employee.brokerInvoiceAttachment !== false ? " checked" : "") + (employee.brokerMailEnabled !== false ? "" : " disabled") + '><span>Factuur meesturen</span></label>' +
+          '<label class="route-template full">Eigen onderwerp <small>' + LEEG_IS_STANDAARD + '</small><input type="text" id="edit-subject" value="' + escapeHtml(employee.mailSubject) + '"></label>' +
+          '<label class="route-template full">Eigen begeleidende tekst <small>' + LEEG_IS_STANDAARD + '</small><textarea id="edit-body" rows="5">' + escapeHtml(employee.mailBody) + '</textarea></label>' +
+          '<p class="form-help full">' + LEEG_IS_STANDAARD_UITLEG + '</p>' +
+        '</article>' + routeChoices + '</div>' +
     '<p class="full form-help">Nieuwe vaste ontvanger toevoegen (optioneel)</p>' +
     '<label>Type ontvanger<select id="edit-new-recipient-category" aria-label="Type nieuwe ontvanger"><option value="accounting">Boekhouding</option><option value="payroll">Salarisadministratie</option><option value="other" selected>Overig</option></select></label>' +
     '<label>Naam / kopje<input id="edit-new-recipient-name" placeholder="Bijvoorbeeld: Salarisadministratie of EasySalary"></label>' +
     '<label>E-mailadres<input id="edit-new-recipient-email" type="email" placeholder="naam@example.invalid"></label>' +
     '<label class="check-row"><input id="edit-new-recipient-enabled" type="checkbox" checked><span>Deze medewerker ontvangt via deze ontvanger mail</span></label>' +
     '<label class="check-row"><input id="edit-new-recipient-invoice" type="checkbox"><span>Factuur als PDF meesturen</span></label>' +
-    '<label class="full">Eigen onderwerp <small>leeg = zelfde als de opdracht</small><input id="edit-new-recipient-subject" placeholder="Zelfde als de opdracht"></label>' +
-    '<label class="full">Eigen begeleidende tekst <small>leeg = zelfde als de opdracht</small><textarea id="edit-new-recipient-body" rows="3" placeholder="Zelfde als de opdracht"></textarea></label>' +
+    '<label class="full">Eigen onderwerp <small>' + LEEG_IS_STANDAARD + '</small><input id="edit-new-recipient-subject"></label>' +
+    '<label class="full">Eigen begeleidende tekst <small>' + LEEG_IS_STANDAARD + '</small><textarea id="edit-new-recipient-body" rows="3"></textarea></label>' +
     '<p class="full form-help">De naam bepaal je zelf. De ontvanger wordt centraal bewaard en is daarna ook bij andere medewerkers beschikbaar.</p>' +
     '<p class="full form-help">Klanturenstaat · officieel bestand van de klant (PDF, JPG of PNG)</p>' +
     '<label class="check-row full"><input id="edit-customer-timesheet-expected" type="checkbox"' + (employee.customerTimesheetExpected !== false ? " checked" : "") + '><span>Voor deze medewerker wordt iedere maand een klanturenstaat verwacht</span></label>' +

@@ -1500,9 +1500,19 @@ test.describe('nieuwe mailontvangers end-to-end', () => {
         expect(String(eigen?.body_snapshot), 'de eigen tekst moet in de mail staan').toContain(`Eigen tekst ${unique}`);
         expect(String(eigen?.body_snapshot), 'de opdrachttekst mag niet meer in deze mail staan').not.toContain(opdrachtTekst.split('{')[0].trim());
 
+        // Eén regel voor iedereen: leeg veld betekent de standaardtekst van het soort
+        // ontvanger. Hier stond eerder dat deze ontvanger de opdrachttekst hoorde te
+        // erven. Dat was precies het probleem -- die tekst is aan de broker geschreven
+        // en las bij iedere andere ontvanger als een bericht aan de verkeerde persoon.
+        const standaarden = before.mail_channel_defaults as Record<string, { subject: string; body: string }>;
+        expect(standaarden?.other?.body, 'de server hoort de standaardtekst mee te sturen').toBeTruthy();
+
         const geerfd = mails.find(item => String(item.recipient_email) === overigEmail);
         expect(geerfd, 'de ontvanger zonder eigen tekst moet een mail hebben').toBeDefined();
-        expect(String(geerfd?.body_snapshot), 'zonder eigen tekst hoort de opdrachttekst in de mail te staan').toContain(opdrachtTekst.split('{')[0].trim());
+        expect(String(geerfd?.body_snapshot), 'zonder eigen tekst hoort de standaardtekst van dat soort ontvanger in de mail te staan')
+          .toContain(standaarden.other.body.split('{')[0].trim());
+        expect(String(geerfd?.body_snapshot), 'de opdrachttekst is van de broker en hoort hier niet meer te staan')
+          .not.toContain(opdrachtTekst.split('{')[0].trim());
         expect(String(geerfd?.subject_snapshot), 'die ontvanger mag niet het eigen onderwerp van een ander krijgen').not.toContain(`Eigen onderwerp boekhouding ${unique}`);
 
         // En een bestaande ontvanger die al op de opdracht stond.
@@ -1511,21 +1521,19 @@ test.describe('nieuwe mailontvangers end-to-end', () => {
         const bestaandeMail = mails.find(item => String(item.recipient_email) === String(bestaandEmail?.email));
         expect(bestaandeMail, 'een bestaande ontvanger moet ook mail krijgen').toBeDefined();
         expect(String(bestaandeMail?.subject_snapshot), 'het eigen onderwerp van een bestaande ontvanger moet in de mail staan').toContain(eigenOnderwerpBestaand);
-        // Welke tekst een ontvanger zonder eigen tekst erft, hangt af van het soort
-        // ontvanger. De opdrachttekst is aan de broker gericht; de boekhouder en de
-        // salarisadministratie houden hun eigen standaard, anders lezen ze een
-        // bericht dat voor iemand anders bedoeld is.
+        // Hier stond een vertakking: wie erfde de opdrachttekst wel en wie niet. Die
+        // vertakking bestaat niet meer. Een vaste ontvanger is nooit de broker, dus
+        // krijgt altijd de standaardtekst van zijn eigen soort -- ongeacht wat er bij
+        // de opdracht staat.
         const kanaalVanBestaande = String(bestaandeMail?.channel || '');
-        const beginOpdrachttekst = opdrachtTekst.split('{')[0].trim();
-        if (kanaalVanBestaande === 'accountant' || kanaalVanBestaande === 'payroll') {
-          expect(String(bestaandeMail?.body_snapshot),
-            'boekhouder en salarisadministratie horen hun eigen standaard te houden')
-            .not.toContain(beginOpdrachttekst);
-        } else {
-          expect(String(bestaandeMail?.body_snapshot),
-            'zonder eigen tekst hoort een broker de opdrachttekst te krijgen')
-            .toContain(beginOpdrachttekst);
-        }
+        expect(kanaalVanBestaande, 'een vaste ontvanger is nooit het brokerkanaal').not.toBe('broker');
+        expect(String(bestaandeMail?.body_snapshot),
+          'een vaste ontvanger hoort de standaardtekst van zijn soort te krijgen, niet de opdrachttekst')
+          .not.toContain(opdrachtTekst.split('{')[0].trim());
+        expect(standaarden[kanaalVanBestaande]?.body, 'kanaal ' + kanaalVanBestaande + ' hoort een standaardtekst te hebben').toBeTruthy();
+        expect(String(bestaandeMail?.body_snapshot),
+          'en dat moet de tekst zijn die de server voor dat kanaal opgeeft')
+          .toContain(standaarden[kanaalVanBestaande].body.split('{')[0].trim());
       });
     } finally {
       await postJson(ctx, '/server/api/staff.php', {

@@ -188,26 +188,27 @@ function mail_enqueue_for_invoice(
         'overeenkomstnummer'=> (string)($inv['agreement_number'] ?? ''),
     ];
 
-    // Welke begeleidende tekst een ontvanger krijgt, in deze volgorde:
+    // Welke begeleidende tekst een ontvanger krijgt. Eén regel, voor iedereen:
     //
-    //   1. de tekst die bij die ene ontvanger is ingevuld -- die wint altijd
-    //   2. de tekst bij de opdracht
-    //   3. de standaardtekst van het soort ontvanger
+    //   1. de tekst die bij die ene ontvanger is ingevuld -- die wint
+    //   2. anders de standaardtekst van zijn soort
     //
-    // Met een uitzondering: de boekhouder slaat stap 2 over. De opdrachttekst is
-    // geschreven aan de broker ("Hierbij stuur ik de ureninformatie van...") en
-    // las bij de boekhouder als een bericht aan de verkeerde persoon. Die krijgt
-    // daarom zijn eigen standaard, met het factuurnummer en de bedragen. Wil je
-    // daar toch iets anders, dan vul je het bij die ontvanger in en wint stap 1.
+    // Hier stond eerder een tussenstap: "de tekst bij de opdracht", die iedereen
+    // erfde behalve de boekhouder en de salarisadministratie. Dat was de bron van
+    // het probleem. Die tekst is namelijk aan de broker geschreven ("Hierbij stuur
+    // ik de ureninformatie van...") en las bij een andere ontvanger als een bericht
+    // aan de verkeerde persoon. De uitzondering die dat repareerde, maakte het
+    // scherm onnavolgbaar: waar je keek gold een andere regel.
+    //
+    // De opdrachttekst is daarom geen aparte laag meer maar wat hij altijd al was:
+    // de eigen tekst van de broker. Alleen die leest hem nog.
     $assignmentSubject = (string)($inv['invoice_subject_template'] ?? '');
     $assignmentBody = (string)($inv['invoice_body_template'] ?? '');
     $templateFor = static function (string $channel, string $routeSubject = '', string $routeBody = '') use ($assignmentSubject, $assignmentBody): array {
         $base = MAIL_CHANNEL_TEMPLATES[$channel];
-        // De opdrachttekst is geschreven aan de broker. Voor de boekhouder en de
-        // salarisadministratie las die als een bericht aan de verkeerde persoon,
-        // dus die twee houden hun eigen standaard. Wie daar iets anders wil, vult
-        // het bij die ontvanger in -- dat wint van allebei.
-        $viaOpdracht = !in_array($channel, ['accountant', 'payroll'], true);
+        // Alleen de broker leest de opdrachttekst, want dat is zijn eigen tekst.
+        // Elke andere ontvanger valt terug op de standaardtekst van zijn soort.
+        $viaOpdracht = $channel === 'broker';
         $opdrachtSubject = $viaOpdracht ? $assignmentSubject : '';
         $opdrachtBody = $viaOpdracht ? $assignmentBody : '';
         return [
