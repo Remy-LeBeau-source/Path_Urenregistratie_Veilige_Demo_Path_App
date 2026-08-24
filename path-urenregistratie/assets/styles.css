@@ -1091,6 +1091,18 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .recipient-settings-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 22px 0 12px; }
 .recipient-settings-heading h4 { margin: 3px 0 0; font-size: 17px; }
 .mail-recipient-settings-list, .mail-route-choice-list { display: grid; gap: 10px; }
+/* De standaardtekst per soort ontvanger. Eigen onderdeel, want hij hoort bij het
+   soort en niet bij een ontvanger. */
+/* Het instellingenscherm zet zijn onderdelen in twee kolommen. Zonder deze regel
+   stond dit blok in een halve kolom met een lege witte helft ernaast. */
+.mail-standaardtekst-lijst { grid-column: 1 / -1; display: grid; gap: 10px; margin-bottom: 18px; }
+.mail-channel-template { display: grid; gap: 8px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-muted); }
+.mail-channel-template strong { display: block; }
+.mail-channel-template small { display: block; margin-top: 3px; color: var(--muted); }
+/* Onderwerp en tekst horen er hetzelfde uit te zien: het is dezelfde mail. Het
+   onderwerpveld erfde een kleiner lettertype van .route-template. */
+.mail-channel-template input, .mail-channel-template textarea { font-family: inherit; font-size: 13px; }
+.mail-channel-template textarea { min-height: 190px; }
 .mail-recipient-setting, .mail-route-choice { display: grid; grid-template-columns: minmax(0,1fr) auto auto; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-muted); }
 .mail-recipient-setting.is-inactive { opacity: .62; }
 /* De broker is hier alleen te lezen: hij staat per opdracht, niet in deze lijst. */

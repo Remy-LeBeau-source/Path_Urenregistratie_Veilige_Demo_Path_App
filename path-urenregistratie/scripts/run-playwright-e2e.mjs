@@ -242,6 +242,17 @@ async function main() {
     const groupRaw = String(process.env.PLAYWRIGHT_GROUP || '').trim().toLowerCase();
 
     const groupToGrep = {
+      // Vier lagen, elk met een eigen naam en een eigen knop:
+      //
+      //   db   los script, npm run test:db:crud, cases DB-*
+      //   api  het contract van de eindpunten, zonder scherm
+      //   e2e  de volledige keten: uren, goedkeuren, factuur, mail
+      //   ui   wat je op het scherm ziet, desktop en telefoon
+      //
+      // De e2e-laag bestond al als eigen bestand met een eigen feature, maar was
+      // niet apart te draaien. Een nieuwe case die de hele keten doorloopt hoort
+      // E2E- te heten, zodat hij hier vanzelf in valt.
+      e2e: '\\[E2E-',
       auth: '\\[AUTH-',
       security: '\\[(SEC|SAFE)-',
       dashboard: '\\[DASH-',

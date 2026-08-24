@@ -6,6 +6,7 @@ require_once __DIR__ . '/../auth/session.php';
 require_once __DIR__ . '/../security/csrf.php';
 require_once __DIR__ . '/../security/validation.php';
 require_once __DIR__ . '/mail-recipients.php';
+require_once __DIR__ . '/../mail/templates.php';
 
 header('Content-Type: application/json; charset=utf-8');
 auth_apply_cors_headers(auth_try_load_raw_config(), 'POST, OPTIONS', 'Content-Type, X-CSRF-Token');
@@ -31,6 +32,7 @@ $actorId = (int)$currentUser['id'];
 $payload = security_read_json_body();
 $settings = $payload['settings'] ?? null;
 $mailRecipients = $payload['mailRecipients'] ?? null;
+$mailChannelTemplates = $payload['mailChannelTemplates'] ?? null;
 
 if (!is_array($settings)) {
     auth_send_json([
@@ -207,6 +209,55 @@ try {
         ':customer_timesheet_broker_body' => settings_text($settings['customerTimesheetBrokerBody'] ?? '', 4000) ?: null,
         ':company_id' => $companyId,
     ]);
+
+    if (is_array($mailChannelTemplates)) {
+        // De standaardtekst per soort ontvanger. Leeg opslaan betekent: terug naar
+        // de meegeleverde tekst. Daarom wordt de rij dan verwijderd in plaats van
+        // leeggemaakt -- anders zou een leeg veld iets anders betekenen dan geen
+        // rij, en dat verschil kun je in het scherm niet zien.
+        $bekend = array_keys(MAIL_CHANNEL_TEMPLATES);
+        $wis = $pdo->prepare(
+            'DELETE FROM mail_channel_templates WHERE company_id = :company_id AND channel = :channel'
+        );
+        $zet = $pdo->prepare(
+            'INSERT INTO mail_channel_templates (company_id, channel, subject_template, body_template)
+             VALUES (:company_id, :channel, :subject_template, :body_template)
+             ON DUPLICATE KEY UPDATE subject_template = VALUES(subject_template),
+                                     body_template = VALUES(body_template)'
+        );
+
+        foreach ($mailChannelTemplates as $kanaal => $sjabloon) {
+            if (!is_array($sjabloon) || !in_array((string)$kanaal, $bekend, true)) {
+                continue;
+            }
+            $onderwerp = settings_string($sjabloon['subject'] ?? '', 250);
+            $tekst = settings_text($sjabloon['body'] ?? '', 4000);
+
+            // Leeg betekent: terug naar de meegeleverde tekst.
+            //
+            // En gelijk aan de meegeleverde tekst betekent hetzelfde. Het scherm
+            // stuurt bij elke keer opslaan alle vier de kanalen mee, gevuld met wat
+            // er op dat moment geldt. Zonder deze vergelijking zou iemand die de
+            // teksten nooit aanraakt ze toch als eigen tekst vastleggen, en daarna
+            // niet meer meelopen met verbeteringen eraan -- zonder dat hij iets
+            // heeft gedaan.
+            $meegeleverd = MAIL_CHANNEL_TEMPLATES[(string)$kanaal];
+            $zelfdeAlsMeegeleverd = ($onderwerp === '' || $onderwerp === $meegeleverd['subject'])
+                && ($tekst === '' || $tekst === $meegeleverd['body']);
+
+            if ($zelfdeAlsMeegeleverd) {
+                $wis->execute([':company_id' => $companyId, ':channel' => (string)$kanaal]);
+                continue;
+            }
+
+            $zet->execute([
+                ':company_id' => $companyId,
+                ':channel' => (string)$kanaal,
+                ':subject_template' => $onderwerp !== '' ? $onderwerp : null,
+                ':body_template' => $tekst !== '' ? $tekst : null,
+            ]);
+        }
+    }
 
     if (is_array($mailRecipients)) {
         // Hetzelfde opslaan gebeurt vanuit staff.php. Het stond hier twee keer

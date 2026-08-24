@@ -113,6 +113,9 @@ function mail_acceptance_scenario_definitions(array $config): array
 /** @return array{enabled:bool,ready:bool,issues:list<string>,scenarios:list<array<string,mixed>>} */
 function mail_acceptance_status(PDO $pdo, int $companyId, array $config): array
 {
+    // De teksten zoals dit bedrijf ze heeft ingesteld, zodat de acceptatietest laat
+    // zien wat er werkelijk uitgaat en niet wat we ooit hebben meegeleverd.
+    $sjablonen = mail_channel_templates_for($pdo, $companyId);
     $settings = mail_acceptance_settings($config);
     $localPreview = mail_acceptance_local_preview_mode($config);
     $enabled = $localPreview || ($settings['enabled'] ?? false) === true;
@@ -158,7 +161,7 @@ function mail_acceptance_status(PDO $pdo, int $companyId, array $config): array
 
         $rowReady = $enabled && $issues === [] && $scenarioIssues === [];
         $attachmentNames = mail_acceptance_test_attachment_names((string)$scenario['attachment_policy']);
-        $preview = $localPreview ? mail_acceptance_preview_content($scenario) : [];
+        $preview = $localPreview ? mail_acceptance_preview_content($scenario, $sjablonen) : [];
         $rows[] = array_merge($scenario, [
             'key' => $key,
             'recipient' => $recipient,
@@ -199,11 +202,12 @@ function mail_acceptance_business_vars(): array
 }
 
 /** @return array{subject:string,body:string} */
-function mail_acceptance_preview_content(array $scenario): array
+function mail_acceptance_preview_content(array $scenario, ?array $sjablonen = null): array
 {
+    $sjablonen = $sjablonen ?? MAIL_CHANNEL_TEMPLATES;
     if (($scenario['kind'] ?? '') === 'business') {
         $channel = (string)($scenario['channel'] ?? '');
-        $template = MAIL_CHANNEL_TEMPLATES[$channel] ?? null;
+        $template = $sjablonen[$channel] ?? null;
         if (!is_array($template)) {
             throw new RuntimeException('Onbekend zakelijk acceptatiescenario.');
         }
@@ -231,10 +235,12 @@ function mail_acceptance_insert_business_delivery(
     int $actorUserId,
     array $scenario,
     bool $dryRun = false,
-    ?string $recipientOverride = null
+    ?string $recipientOverride = null,
+    ?array $sjablonen = null
 ): int {
+    $sjablonen = $sjablonen ?? MAIL_CHANNEL_TEMPLATES;
     $channel = (string)$scenario['channel'];
-    $template = MAIL_CHANNEL_TEMPLATES[$channel] ?? null;
+    $template = $sjablonen[$channel] ?? null;
     if (!is_array($template)) {
         throw new RuntimeException('Onbekend zakelijk acceptatiescenario.');
     }
@@ -242,7 +248,7 @@ function mail_acceptance_insert_business_delivery(
     mail_assert_vars((string)$template['subject'], $vars, $channel . ' subject');
     mail_assert_vars((string)$template['body'], $vars, $channel . ' body');
     if ($dryRun) {
-        $preview = mail_acceptance_preview_content($scenario);
+        $preview = mail_acceptance_preview_content($scenario, $sjablonen);
         $subject = $preview['subject'];
         $body = $preview['body'];
     } else {
@@ -270,7 +276,7 @@ function mail_acceptance_insert_business_delivery(
     return (int)$pdo->lastInsertId();
 }
 
-function mail_acceptance_insert_local_preview_delivery(PDO $pdo, int $actorUserId, array $scenario): int
+function mail_acceptance_insert_local_preview_delivery(PDO $pdo, int $actorUserId, array $scenario, ?array $sjablonen = null): int
 {
     if (($scenario['kind'] ?? '') === 'business') {
         return mail_acceptance_insert_business_delivery(
@@ -282,7 +288,7 @@ function mail_acceptance_insert_local_preview_delivery(PDO $pdo, int $actorUserI
         );
     }
 
-    $preview = mail_acceptance_preview_content($scenario);
+    $preview = mail_acceptance_preview_content($scenario, $sjablonen);
     $stmt = $pdo->prepare(
         'INSERT INTO email_deliveries
          (user_id, channel, recipient_email, cc_email, subject_snapshot, body_snapshot,
@@ -323,7 +329,7 @@ function mail_acceptance_send(
     }
 
     if (mail_acceptance_local_preview_mode($config)) {
-        $deliveryId = mail_acceptance_insert_local_preview_delivery($pdo, $actorUserId, $scenario);
+        $deliveryId = mail_acceptance_insert_local_preview_delivery($pdo, $actorUserId, $scenario, mail_channel_templates_for($pdo, $companyId));
         mail_audit($pdo, $companyId, $actorUserId, 'mail.acceptance_preview_created', $deliveryId, [
             'scenario' => $scenarioKey,
             'outcome' => 'previewed',
@@ -340,7 +346,7 @@ function mail_acceptance_send(
 
     $deliveryId = 0;
     if ($scenario['kind'] === 'business') {
-        $deliveryId = mail_acceptance_insert_business_delivery($pdo, $actorUserId, $scenario);
+        $deliveryId = mail_acceptance_insert_business_delivery($pdo, $actorUserId, $scenario, false, null, mail_channel_templates_for($pdo, $companyId));
     } else {
         $userStmt = $pdo->prepare(
             'SELECT id, email, display_name, active FROM users

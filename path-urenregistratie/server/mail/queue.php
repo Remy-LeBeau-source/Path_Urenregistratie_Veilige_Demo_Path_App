@@ -202,10 +202,13 @@ function mail_enqueue_for_invoice(
     //
     // De opdrachttekst is daarom geen aparte laag meer maar wat hij altijd al was:
     // de eigen tekst van de broker. Alleen die leest hem nog.
+    // De standaardteksten zoals dit bedrijf ze heeft ingesteld. Zonder eigen
+    // instelling zijn dat de meegeleverde teksten.
+    $sjablonen = mail_channel_templates_for($pdo, $companyId);
     $assignmentSubject = (string)($inv['invoice_subject_template'] ?? '');
     $assignmentBody = (string)($inv['invoice_body_template'] ?? '');
-    $templateFor = static function (string $channel, string $routeSubject = '', string $routeBody = '') use ($assignmentSubject, $assignmentBody): array {
-        $base = MAIL_CHANNEL_TEMPLATES[$channel];
+    $templateFor = static function (string $channel, string $routeSubject = '', string $routeBody = '') use ($assignmentSubject, $assignmentBody, $sjablonen): array {
+        $base = $sjablonen[$channel];
         // Alleen de broker leest de opdrachttekst, want dat is zijn eigen tekst.
         // Elke andere ontvanger valt terug op de standaardtekst van zijn soort.
         $viaOpdracht = $channel === 'broker';
@@ -311,7 +314,7 @@ function mail_enqueue_for_invoice(
         }
 
         // An unknown category is informational, not a reason to drop the recipient.
-        if (!isset(MAIL_CHANNEL_TEMPLATES[$channel])) {
+        if (!isset($sjablonen[$channel])) {
             $channel = 'other';
         }
 
@@ -348,7 +351,7 @@ function mail_enqueue_for_invoice(
         $fallbackPayrollEmail = (string)($fallbackPayrollStmt->fetchColumn() ?: '');
 
         if ($fallbackPayrollEmail !== '') {
-            $tpl = MAIL_CHANNEL_TEMPLATES['payroll'];
+            $tpl = $sjablonen['payroll'];
             mail_assert_vars($tpl['subject'], $vars, 'payroll.subject');
             mail_assert_vars($metHandtekening($tpl['body']), $vars, 'payroll.body');
 

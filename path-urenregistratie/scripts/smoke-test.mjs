@@ -215,7 +215,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.135"), "Het zichtbare versienummer moet 0.9.135 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.136"), "Het zichtbare versienummer moet 0.9.136 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -1037,7 +1037,12 @@ assert(document.querySelector("#edit-broker-invoice").checked && document.queryS
 assert(document.querySelector('[data-mail-recipient-enabled="payroll"]').checked, "EasySalary moet standaard als afzonderlijke ontvanger aangevinkt zijn");
 assert(!document.querySelector('[data-mail-recipient-invoice="payroll"]').checked, "EasySalary moet standaard zonder factuurbijlage beginnen");
 assert(document.querySelector(".mail-route-choice-list").textContent.includes("salaris@example.invalid"), "Bij de medewerker moet zichtbaar zijn welk EasySalary-adres is gekozen");
-assert(document.querySelector("#edit-body").value.includes("{uren}"), "De standaard begeleidende tekst moet het daadwerkelijke urenaantal bevatten");
+// Dit veld begon met een kopie van een standaardtekst erin. Sinds leeg "de
+// standaardtekst" betekent, is dat verwarrend: je ziet niet of iemand bewust iets
+// eigens heeft ingevuld of dat het formulier het voor hem deed. Een nieuwe
+// medewerker begint daarom leeg.
+assert(document.querySelector("#edit-body").value === "", "Bij een nieuwe medewerker moet de eigen tekst leeg beginnen: leeg betekent de standaardtekst");
+assert(document.querySelector("#edit-subject").value === "", "Bij een nieuwe medewerker moet het eigen onderwerp leeg beginnen");
 // Deze controle hing aan een volzin in een uitlegtekst, en viel dus om zodra die
 // werd herschreven terwijl het scherm gewoon klopte. Nu kijkt hij naar de rijen
 // zelf: broker, boekhouding en salarisadministratie horen alle drie in hetzelfde
@@ -1069,7 +1074,7 @@ assert(document.querySelector("#edit-body").value.includes("{uren}"), "De standa
   const uitleg = document.querySelector("#modal-summary").textContent;
   assert(uitleg.includes("eigen mail"), "Het formulier moet duidelijk maken dat elke ontvanger een eigen mail krijgt");
   assert(uitleg.includes("standaardtekst"), "Het formulier moet duidelijk maken wat er gebeurt als je een tekstveld leeg laat");
-  assert(!uitleg.includes("dezelfde begeleidende tekst"), "Het formulier mag niet meer beweren dat iedereen dezelfde begeleidende tekst krijgt: dat geldt sinds 0.9.135 niet meer");
+  assert(!uitleg.includes("dezelfde begeleidende tekst"), "Het formulier mag niet meer beweren dat iedereen dezelfde begeleidende tekst krijgt: dat geldt sinds 0.9.136 niet meer");
 }
 assert(document.querySelector("#edit-new-recipient-name") && document.querySelector("#edit-new-recipient-email"), "Vanuit Nieuwe medewerker moet direct een eigen vaste ontvanger toegevoegd kunnen worden");
 assert(document.querySelector("#edit-customer-timesheet-expected").checked && document.querySelector("#edit-invoice-without-customer-timesheet").checked, "Een nieuwe medewerker moet standaard een klanturenstaat verwachten zonder de factuur te blokkeren");
@@ -1856,7 +1861,7 @@ assert(announcementsApiSrc.includes("function announcement_truncate") && announc
 assert(appJsSrc.includes('+ (data.token ? " · Token: " + data.token'), "Het testtoken bij wachtwoordherstel moet de vaste zin aanvullen, niet vervangen");
 assert(!appJsSrc.includes("Resetverzoek verstuurd (dry-run)"), "De dry-run-tekst mag niet meer aan een gebruiker worden getoond");
 const mailQueueSrc = readFileSync_(new URL("../server/mail/queue.php", import.meta.url), "utf8");
-// De sjablonen staan sinds 0.9.135 apart, zodat de mailmodule en het
+// De sjablonen staan sinds 0.9.136 apart, zodat de mailmodule en het
 // instellingenscherm dezelfde bron gebruiken.
 const mailTemplatesSrc = readFileSync_(new URL("../server/mail/templates.php", import.meta.url), "utf8");
 const settingsApiSrc = readFileSync_(new URL("../server/api/settings.php", import.meta.url), "utf8");
@@ -1870,10 +1875,27 @@ assert(settingsApiSrc.includes("customer_timesheet_submission_subject = :custome
 // Het instellingenscherm biedt de categorie Overig aan; zonder kanaalsjabloon werd
 // zo een ontvanger stil overgeslagen en kreeg die nooit mail.
 assert(mailTemplatesSrc.includes("'other' => ["), "Een ontvanger met categorie Overig moet ook een mailsjabloon hebben, anders krijgt die stil nooit mail");
+// De garantie dat er uren in de mail staan zat aan een voorgevuld formulierveld.
+// Dat veld begint nu leeg, dus de garantie hoort waar hij thuishoort: in de
+// standaardteksten zelf. Een mail over een urenstaat zonder urenaantal is geen mail.
+for (const kanaal of ["broker", "accountant", "payroll", "other"]) {
+  const blok = mailTemplatesSrc.slice(mailTemplatesSrc.indexOf("'" + kanaal + "' => ["));
+  const einde = blok.indexOf("],");
+  assert(einde > 0, "Kanaal " + kanaal + " hoort een sjabloon te hebben");
+  assert(blok.slice(0, einde).includes("{uren}"), "De standaardtekst van kanaal " + kanaal + " moet het daadwerkelijke urenaantal noemen");
+}
 // Het instellingenscherm laat de standaardteksten zien. Het haalt ze bij de
 // server op; een tweede kopie in de browser zou stil uiteen gaan lopen met wat
 // er werkelijk verstuurd wordt, en dat merk je pas in het postvak van de klant.
-assert(bootstrapApiSrc.includes("'mail_channel_defaults' => MAIL_CHANNEL_TEMPLATES"), "De bootstrap moet de standaardteksten meesturen, anders kan het instellingenscherm ze niet tonen");
+// De bootstrap stuurt twee dingen: wat er werkelijk geldt voor dit bedrijf, en
+// wat we meeleveren. Dat tweede is nodig om te kunnen laten zien waar "Terug naar
+// de meegeleverde tekst" naartoe gaat.
+assert(bootstrapApiSrc.includes("mail_channel_templates_for($pdo, $companyId)"), "De bootstrap moet de ingestelde standaardteksten meesturen, niet alleen de meegeleverde");
+assert(bootstrapApiSrc.includes("'mail_channel_shipped' => MAIL_CHANNEL_TEMPLATES"), "De bootstrap moet ook de meegeleverde teksten meesturen, voor de knop die ze terugzet");
+// De mailmodule mag nergens meer rechtstreeks de meegeleverde tekst pakken: dan
+// zou een ingestelde tekst op die ene plek stil niet doorwerken.
+const queueSrcNu = readFileSync_(new URL("../server/mail/queue.php", import.meta.url), "utf8");
+assert(!queueSrcNu.includes("MAIL_CHANNEL_TEMPLATES["), "queue.php moet de ingestelde teksten gebruiken, niet de meegeleverde");
 assert(appJsSrc.includes("data.mail_channel_defaults"), "Het instellingenscherm moet de standaardteksten van de server lezen");
 // De broker is een kanaal, geen soort ontvanger: hij staat per opdracht en niet in
 // de lijst met vaste ontvangers. Wie die twee door elkaar haalt, laat bij de broker
@@ -1937,4 +1959,4 @@ assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("
 assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Playwright stage- en lokale env-bestanden mogen expliciete runner/CI-variabelen niet overschrijven");
 
 dom.window.close();
-console.log("Path v0.9.135 volledige smoke test: geslaagd");
+console.log("Path v0.9.136 volledige smoke test: geslaagd");

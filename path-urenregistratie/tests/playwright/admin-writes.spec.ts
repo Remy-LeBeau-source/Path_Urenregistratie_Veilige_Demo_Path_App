@@ -1284,6 +1284,178 @@ Uren: {uren} uur.`;
     await authApi.logout();
     await ctx.dispose();
   });
+
+  test('[ADM-WR-H-018] een nieuwe ontvanger komt bij andere medewerkers ongevinkt binnen', async () => {
+    // Gio vroeg dit letterlijk: "als ik een ontvanger aanmaak komt het bij iedere
+    // medewerker -- maar als ik hem bij een medewerker niet wil?" De lijst is van het
+    // bedrijf, dus de rij verschijnt overal. Wat niet mag gebeuren is dat hij daar
+    // ook meteen aanstaat: dan gaat er mail naar iemand die jij nooit hebt gekozen,
+    // en dat merk je pas in het postvak van de klant.
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const uniek = Date.now().toString().slice(-6);
+    const sleutel = `alleen-voor-een-${uniek}`;
+    const adres = `alleen-voor-een-${uniek}@example.invalid`;
+
+    const before = await (await ctx.get('/server/api/bootstrap.php')).json();
+    const medewerkers = (before.employees ?? []) as Array<Record<string, unknown>>;
+    expect(medewerkers.length, 'deze case heeft twee medewerkers nodig').toBeGreaterThan(1);
+
+    const accounts = (before.users ?? []) as Array<Record<string, unknown>>;
+    const adresVan = (mw: Record<string, unknown>) =>
+      String(accounts.find(u => Number(u.id) === Number(mw.user_id))?.email ?? '');
+
+    const eerste = medewerkers[0];
+    const tweede = medewerkers[1];
+    const bestaandeOntvangers = (before.mail_recipients as Array<Record<string, unknown>>).map(item => ({
+      id: String(item.recipient_key || item.id),
+      email: String(item.email),
+      name: String(item.display_name),
+      category: String(item.recipient_category),
+      active: true,
+    }));
+
+    await test.step('When de beheerder bij een medewerker een nieuwe ontvanger toevoegt', async () => {
+      const write = await postJson(ctx, '/server/api/staff.php', {
+        action: 'upsert_employee',
+        sendInvitation: false,
+        employee: {
+          name: String(eerste.full_name || ''),
+          email: adresVan(eerste),
+          dbEmployeeId: Number(eerste.id || 0),
+          dbUserId: Number(eerste.user_id || 0),
+          role: 'Consultant',
+          active: true,
+          mailRecipientRoutes: { [sleutel]: { enabled: true, invoiceAttachment: false } },
+        },
+        mailRecipients: [...bestaandeOntvangers,
+          { id: sleutel, email: adres, name: `Alleen voor een ${uniek}`, category: 'other', active: true }],
+      });
+      expect(write.status, JSON.stringify(write.body)).toBe(200);
+    });
+
+    try {
+      await test.step('Then staat hij bij die medewerker aan', async () => {
+        const na = await (await ctx.get('/server/api/bootstrap.php')).json();
+        const ontvanger = (na.mail_recipients as Array<Record<string, unknown>>)
+          .find(item => String(item.recipient_key) === sleutel);
+        expect(ontvanger, 'de nieuwe ontvanger hoort in de bedrijfslijst te staan').toBeDefined();
+
+        const opdrachtVanEerste = (na.assignments as Array<Record<string, unknown>>)
+          .find(item => Number(item.employee_id) === Number(eerste.id));
+        expect(opdrachtVanEerste, 'de eerste medewerker hoort een opdracht te hebben').toBeDefined();
+
+        const route = (na.assignment_mail_routes as Array<Record<string, unknown>>)
+          .find(item => Number(item.assignment_id) === Number(opdrachtVanEerste?.id)
+            && Number(item.mail_recipient_id) === Number(ontvanger?.id));
+        expect(route, 'bij de medewerker waar je hem toevoegt hoort een route te staan').toBeDefined();
+        expect(Number(route?.enabled), 'en die hoort aan te staan').toBe(1);
+      });
+
+      await test.step('And staat hij bij een andere medewerker niet aan', async () => {
+        // Dit is de eigenlijke garantie. Of de rij daar zichtbaar is doet er niet toe
+        // -- of er mail heen gaat wel, en dat hangt aan enabled.
+        const na = await (await ctx.get('/server/api/bootstrap.php')).json();
+        const ontvanger = (na.mail_recipients as Array<Record<string, unknown>>)
+          .find(item => String(item.recipient_key) === sleutel);
+        const opdrachtVanTweede = (na.assignments as Array<Record<string, unknown>>)
+          .find(item => Number(item.employee_id) === Number(tweede.id));
+
+        if (opdrachtVanTweede) {
+          const route = (na.assignment_mail_routes as Array<Record<string, unknown>>)
+            .find(item => Number(item.assignment_id) === Number(opdrachtVanTweede.id)
+              && Number(item.mail_recipient_id) === Number(ontvanger?.id));
+          if (route) {
+            expect(Number(route.enabled), 'een nieuwe ontvanger mag bij een andere medewerker niet vanzelf aanstaan')
+              .toBe(0);
+          }
+        }
+
+        // En hard: er hoort nergens anders een ingeschakelde route naar dit adres te
+        // bestaan dan bij de medewerker waar hij is toegevoegd.
+        const opdrachtVanEerste = (na.assignments as Array<Record<string, unknown>>)
+          .find(item => Number(item.employee_id) === Number(eerste.id));
+        const aangezet = (na.assignment_mail_routes as Array<Record<string, unknown>>)
+          .filter(item => Number(item.mail_recipient_id) === Number(ontvanger?.id) && Number(item.enabled) === 1)
+          .map(item => Number(item.assignment_id));
+        expect(aangezet, 'alleen de medewerker waar je hem aanvinkt hoort mail naar dit adres te sturen')
+          .toEqual([Number(opdrachtVanEerste?.id)]);
+      });
+
+      await test.step('And een ontvanger die via Instellingen wordt toegevoegd staat nergens aan', async () => {
+        // De tweede manier om er een aan te maken: centraal bij Instellingen, zonder
+        // dat er een medewerker in beeld is. Dan hoort er nergens een route te
+        // ontstaan -- de rij verschijnt overal, maar uit.
+        const sleutelCentraal = `centraal-${uniek}`;
+        const adresCentraal = `centraal-${uniek}@example.invalid`;
+        const bedrijf = before.companies[0];
+
+        const opslaan = await postJson(ctx, '/server/api/settings.php', {
+          settings: {
+            organizationName: String(bedrijf.trade_name || bedrijf.legal_name || ''),
+            companyName: String(bedrijf.legal_name || ''),
+            invoiceNameDisplay: String(bedrijf.invoice_name_display || 'trade_and_legal'),
+            appName: String(bedrijf.app_name || ''),
+            supportName: String(bedrijf.support_name || ''),
+            supportEmail: String(bedrijf.support_email || ''),
+            website: String(bedrijf.website || ''),
+            tagline: String(bedrijf.tagline || ''),
+            brandPrimary: String(bedrijf.brand_primary || '#0d1b38'),
+            brandAccent: String(bedrijf.brand_accent || '#3abd9d'),
+            kvk: String(bedrijf.chamber_of_commerce_number || ''),
+            vat: String(bedrijf.vat_number || ''),
+            iban: String(bedrijf.iban || ''),
+            address: String(bedrijf.address_line || ''),
+            postalCity: [bedrijf.postal_code || '', bedrijf.city || ''].join(' ').trim(),
+            phone: String(bedrijf.invoice_phone || ''),
+            invoiceEmail: String(bedrijf.invoice_email || ''),
+            paymentTerm: Number(bedrijf.payment_term_days || 30),
+            customerTimesheetReminderEnabled: Boolean(bedrijf.customer_timesheet_reminder_enabled),
+            customerTimesheetReminderTime: String(bedrijf.customer_timesheet_reminder_time || '15:00').slice(0, 5),
+            customerTimesheetOverdueWorkdays: Number(bedrijf.customer_timesheet_overdue_workdays || 2),
+            customerTimesheetSubmissionSubject: String(bedrijf.customer_timesheet_submission_subject || ''),
+            customerTimesheetSubmissionBody: String(bedrijf.customer_timesheet_submission_body || ''),
+            customerTimesheetBrokerSubject: String(bedrijf.customer_timesheet_broker_subject || ''),
+            customerTimesheetBrokerBody: String(bedrijf.customer_timesheet_broker_body || ''),
+          },
+          mailRecipients: [...bestaandeOntvangers,
+            { id: sleutel, email: adres, name: `Alleen voor een ${uniek}`, category: 'other', active: true },
+            { id: sleutelCentraal, email: adresCentraal, name: `Centraal ${uniek}`, category: 'other', active: true }],
+        });
+        expect(opslaan.status, JSON.stringify(opslaan.body)).toBe(200);
+
+        const na = await (await ctx.get('/server/api/bootstrap.php')).json();
+        const centraal = (na.mail_recipients as Array<Record<string, unknown>>)
+          .find(item => String(item.recipient_key) === sleutelCentraal);
+        expect(centraal, 'de centraal toegevoegde ontvanger hoort te bestaan').toBeDefined();
+
+        const routes = (na.assignment_mail_routes as Array<Record<string, unknown>>)
+          .filter(item => Number(item.mail_recipient_id) === Number(centraal?.id) && Number(item.enabled) === 1);
+        expect(routes, 'een centraal toegevoegde ontvanger mag bij niemand vanzelf aanstaan').toEqual([]);
+      });
+    } finally {
+      // Gedeelde bedrijfsgegevens: de proefontvanger weer weg.
+      await postJson(ctx, '/server/api/staff.php', {
+        action: 'upsert_employee',
+        sendInvitation: false,
+        employee: {
+          name: String(eerste.full_name || ''),
+          email: adresVan(eerste),
+          dbEmployeeId: Number(eerste.id || 0),
+          dbUserId: Number(eerste.user_id || 0),
+          role: 'Consultant',
+          active: true,
+          mailRecipientRoutes: { [sleutel]: { enabled: false, invoiceAttachment: false } },
+        },
+        mailRecipients: [...bestaandeOntvangers,
+          { id: sleutel, email: adres, name: `Alleen voor een ${uniek}`, category: 'other', active: false }],
+      });
+      await authApi.logout();
+      await ctx.dispose();
+    }
+  });
 });
 
 test('[ADM-WR-H-015] onderwerp, tekst en een eigen tekst per ontvanger blijven na F5 in het scherm staan', async ({ page }) => {

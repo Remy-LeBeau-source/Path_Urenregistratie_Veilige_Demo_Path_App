@@ -152,6 +152,10 @@ function migration_plan(bool $allowDemoMigrations): array
         'id' => '023_repair_recipient_category.sql',
         'path' => __DIR__ . '/migrations/023_repair_recipient_category.sql',
     ];
+    $plan[] = [
+        'id' => '024_mail_channel_templates.sql',
+        'path' => __DIR__ . '/migrations/024_mail_channel_templates.sql',
+    ];
     return $plan;
 }
 

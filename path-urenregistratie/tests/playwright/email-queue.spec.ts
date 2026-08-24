@@ -1371,7 +1371,7 @@ test.describe('nieuwe mailontvangers end-to-end', () => {
   // the assignment, submit and approve hours, finalise the invoice -- and then
   // checks that both actually received something. Everything is put back
   // afterwards, because these recipients and routes are shared test data.
-  test('[EQ-H-027] twee nieuw toegevoegde ontvangers krijgen allebei echt een factuurmail', async () => {
+  test('[E2E-H-009] twee nieuw toegevoegde ontvangers krijgen allebei echt een factuurmail', async () => {
     const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
     const authApi = new AuthApi(ctx);
     await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
@@ -1567,7 +1567,7 @@ test.describe('volledige keten van nieuw account tot mailinhoud', () => {
   // een beheerder en een medewerker aanmaken, de medewerker een wachtwoord laten
   // instellen via de eenmalige link, uren indienen, goedkeuren, factureren, en
   // dan controleren dat de zelf ingevoerde tekst ook echt in de mail staat.
-  test('[EQ-H-028] nieuw account, eigen tekst, en die tekst komt terug in de verzonden mail', async () => {
+  test('[E2E-H-010] nieuw account, eigen tekst, en die tekst komt terug in de verzonden mail', async () => {
     const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
     const authApi = new AuthApi(ctx);
     const timesheetApi = new TimesheetApi(ctx);
@@ -1806,5 +1806,140 @@ test.describe('handtekening onder elke mail', () => {
     });
 
     await test.step('And cleanup', async () => { await authApi.logout(); await ctx.dispose(); });
+  });
+});
+
+test.describe('eigen standaardtekst per soort ontvanger', () => {
+  test('[E2E-H-011] een aangepaste standaardtekst komt werkelijk in de mail en is terug te zetten', async () => {
+    // De standaardtekst was het belangrijkste geworden -- leeg bij een ontvanger
+    // betekent immers "deze tekst" -- en stond vast in server/mail/templates.php. Om
+    // te veranderen wat de boekhouder leest moest je in de code. Dit legt de hele lus
+    // vast: aanpassen, opgeslagen, werkelijk in de verzonden mail, en terug te zetten
+    // naar wat we meeleveren.
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const uniek = Date.now().toString().slice(-6);
+    const eigenOnderwerp = `Boekhoudtekst ${uniek} voor {medewerker}`;
+    const eigenTekst = `Beste boekhouding,\n\nProefversie ${uniek}.\n\nGewerkte uren: {uren}`;
+
+    const before = await (await ctx.get('/server/api/bootstrap.php')).json();
+    const meegeleverd = before.mail_channel_shipped as Record<string, { subject: string; body: string }>;
+    expect(meegeleverd?.accountant?.body, 'de meegeleverde teksten horen mee te komen').toBeTruthy();
+
+    const bedrijf = before.companies[0];
+    const bewaar = async (sjablonen: Record<string, { subject: string; body: string }>) => {
+      const antwoord = await postJson(ctx, '/server/api/settings.php', {
+        settings: {
+          organizationName: String(bedrijf.trade_name || bedrijf.legal_name || ''),
+          companyName: String(bedrijf.legal_name || ''),
+          invoiceNameDisplay: String(bedrijf.invoice_name_display || 'trade_and_legal'),
+          appName: String(bedrijf.app_name || ''),
+          supportName: String(bedrijf.support_name || ''),
+          supportEmail: String(bedrijf.support_email || ''),
+          website: String(bedrijf.website || ''),
+          tagline: String(bedrijf.tagline || ''),
+          brandPrimary: String(bedrijf.brand_primary || '#0d1b38'),
+          brandAccent: String(bedrijf.brand_accent || '#3abd9d'),
+          kvk: String(bedrijf.chamber_of_commerce_number || ''),
+          vat: String(bedrijf.vat_number || ''),
+          iban: String(bedrijf.iban || ''),
+          address: String(bedrijf.address_line || ''),
+          postalCity: [bedrijf.postal_code || '', bedrijf.city || ''].join(' ').trim(),
+          phone: String(bedrijf.invoice_phone || ''),
+          invoiceEmail: String(bedrijf.invoice_email || ''),
+          paymentTerm: Number(bedrijf.payment_term_days || 30),
+          customerTimesheetReminderEnabled: Boolean(bedrijf.customer_timesheet_reminder_enabled),
+          customerTimesheetReminderTime: String(bedrijf.customer_timesheet_reminder_time || '15:00').slice(0, 5),
+          customerTimesheetOverdueWorkdays: Number(bedrijf.customer_timesheet_overdue_workdays || 2),
+          customerTimesheetSubmissionSubject: String(bedrijf.customer_timesheet_submission_subject || ''),
+          customerTimesheetSubmissionBody: String(bedrijf.customer_timesheet_submission_body || ''),
+          customerTimesheetBrokerSubject: String(bedrijf.customer_timesheet_broker_subject || ''),
+          customerTimesheetBrokerBody: String(bedrijf.customer_timesheet_broker_body || ''),
+        },
+        mailRecipients: before.mail_recipients,
+        mailChannelTemplates: sjablonen,
+      });
+      expect(antwoord.status, JSON.stringify(antwoord.body)).toBe(200);
+    };
+
+    try {
+      await test.step('Given opslaan zonder iets te wijzigen legt niets vast', async () => {
+        // Het scherm stuurt bij elke keer opslaan alle vier de kanalen mee, gevuld met
+        // wat er op dat moment geldt. Zonder vergelijking met de meegeleverde tekst zou
+        // iemand die deze velden nooit aanraakt ze toch als eigen tekst vastleggen -- en
+        // daarna niet meer meelopen met verbeteringen eraan, zonder iets te hebben
+        // gedaan. Dat is niet te zien in het scherm, en dat maakt het gevaarlijk.
+        const voor = await (await ctx.get('/server/api/bootstrap.php')).json();
+        const geldendVoor = voor.mail_channel_defaults as Record<string, { subject: string; body: string }>;
+
+        // Precies wat het scherm zou sturen: de geldende tekst, onveranderd terug.
+        await bewaar(Object.fromEntries(Object.entries(geldendVoor)
+          .map(([kanaal, sjabloon]) => [kanaal, { subject: sjabloon.subject, body: sjabloon.body }])));
+
+        const na = await (await ctx.get('/server/api/bootstrap.php')).json();
+        const geldendNa = na.mail_channel_defaults as Record<string, { subject: string; body: string }>;
+        for (const kanaal of Object.keys(meegeleverd)) {
+          expect(geldendNa[kanaal].subject, kanaal + ': het onderwerp mag niet veranderen').toBe(geldendVoor[kanaal].subject);
+          expect(geldendNa[kanaal].body, kanaal + ': de tekst mag niet veranderen').toBe(geldendVoor[kanaal].body);
+          expect(geldendNa[kanaal].body, kanaal + ': en hoort nog steeds de meegeleverde tekst te zijn')
+            .toBe(meegeleverd[kanaal].body);
+        }
+
+        // En dit is het eigenlijke punt. Aan de tekst zie je niets: die is identiek,
+        // of er nu wel of geen eigen rij is weggeschreven. Het verschil komt pas boven
+        // wanneer wij ooit de meegeleverde tekst verbeteren -- dan krijgt wie zo'n rij
+        // heeft die verbetering niet, zonder ooit iets te hebben aangepast. Daarom
+        // wordt hier gekeken naar wat er is opgeslagen, niet naar wat eruit komt.
+        expect(na.mail_channel_customised, 'opslaan zonder iets te wijzigen mag geen eigen tekst vastleggen')
+          .toEqual([]);
+      });
+
+      await test.step('When de beheerder de standaardtekst voor de boekhouding aanpast', async () => {
+        await bewaar({ accountant: { subject: eigenOnderwerp, body: eigenTekst } });
+      });
+
+      await test.step('Then geldt die tekst voortaan voor dat soort ontvanger', async () => {
+        const na = await (await ctx.get('/server/api/bootstrap.php')).json();
+        const geldt = na.mail_channel_defaults as Record<string, { subject: string; body: string }>;
+        expect(geldt.accountant.subject, 'het aangepaste onderwerp hoort te gelden').toBe(eigenOnderwerp);
+        expect(geldt.accountant.body, 'de aangepaste tekst hoort te gelden').toBe(eigenTekst);
+        // En de meegeleverde tekst blijft apart bestaan, anders kun je nooit terug.
+        expect((na.mail_channel_shipped as Record<string, { body: string }>).accountant.body,
+          'de meegeleverde tekst mag niet worden overschreven')
+          .toBe(meegeleverd.accountant.body);
+      });
+
+      await test.step('And staat hij werkelijk in de verzonden mail', async () => {
+        // Dit is het punt van de hele wijziging. Dat het scherm hem toont is niet
+        // genoeg -- hij moet in het bericht belanden dat de klant leest.
+        const flow = await createLockedInvoice();
+        const mails = await verzondenMails(flow.invoiceId);
+        const boekhouding = mails.find(item => String(item.channel) === 'accountant');
+        expect(boekhouding, 'de boekhouding hoort een mail te krijgen').toBeDefined();
+        expect(String(boekhouding?.body_snapshot), 'de aangepaste tekst hoort in de mail te staan')
+          .toContain(`Proefversie ${uniek}`);
+        expect(String(boekhouding?.subject_snapshot), 'en het aangepaste onderwerp ook')
+          .toContain(`Boekhoudtekst ${uniek}`);
+        expect(String(boekhouding?.body_snapshot), 'de handtekening hoort er nog steeds onder te staan')
+          .toContain('Met vriendelijke groet');
+        await flow.authApi.logout();
+        await flow.ctx.dispose();
+      });
+
+    } finally {
+      await test.step('And leeg opslaan zet de meegeleverde tekst terug', async () => {
+        await bewaar({ accountant: { subject: '', body: '' } });
+        const na = await (await ctx.get('/server/api/bootstrap.php')).json();
+        const geldt = na.mail_channel_defaults as Record<string, { subject: string; body: string }>;
+        expect(geldt.accountant.body, 'leeg opslaan hoort terug te vallen op de meegeleverde tekst')
+          .toBe(meegeleverd.accountant.body);
+        expect(geldt.accountant.subject, 'ook het onderwerp hoort terug te vallen')
+          .toBe(meegeleverd.accountant.subject);
+      });
+      await authApi.logout();
+      await ctx.dispose();
+    }
   });
 });

@@ -2472,6 +2472,12 @@ function mergeBootstrapIntoState(data) {
   if (data.mail_channel_defaults && typeof data.mail_channel_defaults === "object") {
     mailStandaardTeksten = data.mail_channel_defaults;
   }
+  if (data.mail_channel_shipped && typeof data.mail_channel_shipped === "object") {
+    mailMeegeleverdeTeksten = data.mail_channel_shipped;
+  }
+  if (Array.isArray(data.mail_channel_customised)) {
+    mailEigenTeksten = data.mail_channel_customised;
+  }
   readApiRuntime.adminWorkflowPeriodKeys = (Array.isArray(data.periods) ? data.periods : [])
     .map(period => String(period && period.period_key || ""))
     .filter(periodKey => parsePeriodKey(periodKey))
@@ -2625,8 +2631,9 @@ function mergeBootstrapIntoState(data) {
       weeklyHours: Number(dbEmployee.weekly_contract_hours || 0),
       projectCode: "",
       invoiceTemplate: "{klant}-{jaar}-{maand}",
-      mailSubject: "Factuur {factuurnummer} - {medewerker} - {maand} {jaar}",
-      mailBody: DEFAULT_INVOICE_MAIL_BODY,
+      // Leeg: dan geldt de standaardtekst van de server. Zie server/mail/templates.php.
+      mailSubject: "",
+      mailBody: "",
       brokerInvoiceAttachment: true,
       bookkeeperInvoiceAttachment: true,
       payrollInvoiceAttachment: false,
@@ -3214,6 +3221,15 @@ function activeMailRecipients() {
 // server/mail/templates.php. Ze staan hier niet nog een keer: één bron, anders
 // laat dit scherm iets anders zien dan er verstuurd wordt.
 let mailStandaardTeksten = {};
+
+// Wat we meeleveren, los van wat dit bedrijf heeft ingesteld. Nodig om te kunnen
+// laten zien waar "Terug naar de standaard" naartoe gaat.
+let mailMeegeleverdeTeksten = {};
+
+// Welke kanalen werkelijk een eigen tekst hebben staan. Afleiden uit een
+// vergelijking met de meegeleverde tekst gaat mis: een opgeslagen tekst die
+// toevallig gelijk is, is er nog steeds een en bevriest die tekst.
+let mailEigenTeksten = [];
 
 // Welke standaardtekst hoort bij welk soort ontvanger. Dit volgt de indeling in
 // server/mail/queue.php: alleen boekhouding en salarisadministratie hebben een
@@ -6444,6 +6460,7 @@ function updateHoursTotal(markDraft) {
 }
 
 function renderMailRecipientSettings() {
+  renderMailChannelTemplates();
   renderMailBrokerRouteInfo();
   const list = document.querySelector("#mail-recipient-settings-list");
   if (!list) return;
@@ -6479,6 +6496,36 @@ function standaardTekstBlok(kanaal) {
 // als eerste, want hij krijgt de factuur. Hij is geen vaste ontvanger: wie het
 // is en of hij mail krijgt, staat per opdracht bij de medewerker. Daarom een
 // eigen blok, zonder knoppen om iets aan te passen, met de weg erheen erbij.
+// De standaardtekst hoort bij het soort ontvanger, niet bij een ontvanger. Twee
+// ontvangers van hetzelfde soort delen er dus een. Daarom staat dit hier als
+// eigen onderdeel en niet in de uitklapper per ontvanger -- dat zou suggereren
+// dat je hem voor die ene ontvanger aanpast.
+const MAIL_KANAAL_NAMEN = {
+  broker: "Broker",
+  accountant: "Boekhouding",
+  payroll: "Salarisadministratie",
+  other: "Overig"
+};
+
+function renderMailChannelTemplates() {
+  const doel = document.querySelector("#mail-channel-template-list");
+  if (!doel) return;
+
+  doel.innerHTML = Object.keys(MAIL_KANAAL_NAMEN).map(kanaal => {
+    const geldt = mailStandaardTeksten[kanaal] || { subject: "", body: "" };
+    const meegeleverd = mailMeegeleverdeTeksten[kanaal] || { subject: "", body: "" };
+    const eigen = mailEigenTeksten.indexOf(kanaal) >= 0;
+    return '<article class="mail-channel-template" data-mail-channel="' + escapeHtml(kanaal) + '">' +
+      '<div><strong>' + escapeHtml(MAIL_KANAAL_NAMEN[kanaal]) + '</strong>' +
+        '<small>' + (eigen ? "Eigen tekst ingesteld" : "Standaardtekst zoals meegeleverd") + '</small></div>' +
+      '<label class="route-template full">Onderwerp<input type="text" data-mail-channel-subject="' + escapeHtml(kanaal) + '" value="' + escapeHtml(geldt.subject || "") + '"></label>' +
+      '<label class="route-template full">Begeleidende tekst<textarea rows="10" data-mail-channel-body="' + escapeHtml(kanaal) + '">' + escapeHtml(geldt.body || "") + '</textarea></label>' +
+      '<p class="form-help full">De handtekening komt er automatisch onder. Leeg laten kan ook: dan geldt de meegeleverde tekst.</p>' +
+      (eigen ? '<button class="text-button" type="button" data-mail-channel-reset="' + escapeHtml(kanaal) + '">Terug naar de meegeleverde tekst</button>' : "") +
+    '</article>';
+  }).join("");
+}
+
 function renderMailBrokerRouteInfo() {
   const doel = document.querySelector("#mail-broker-route-info");
   if (!doel) return;
@@ -8792,8 +8839,9 @@ function showEmployeeEditor(employeeId, prefill) {
     weeklyHours: 0,
     projectCode: "",
     invoiceTemplate: "{klant}-{jaar}-{maand}",
-    mailSubject: "Factuur {factuurnummer} - {medewerker} - {maand} {jaar}",
-    mailBody: DEFAULT_INVOICE_MAIL_BODY,
+    // Leeg: dan geldt de standaardtekst van de server. Zie server/mail/templates.php.
+    mailSubject: "",
+    mailBody: "",
     brokerInvoiceAttachment: true,
     bookkeeperInvoiceAttachment: true,
     payrollInvoiceAttachment: false,
@@ -8851,7 +8899,7 @@ function showEmployeeEditor(employeeId, prefill) {
           '<label class="route-template full">Eigen begeleidende tekst <small>' + LEEG_IS_STANDAARD + '</small><textarea id="edit-body" rows="5">' + escapeHtml(employee.mailBody) + '</textarea></label>' +
           '<p class="form-help full">' + LEEG_IS_STANDAARD_UITLEG + '</p>' +
         '</article>' + routeChoices + '</div>' +
-    '<p class="full form-help">Nieuwe vaste ontvanger toevoegen (optioneel)</p>' +
+    '<p class="full form-help">Nieuwe vaste ontvanger toevoegen (optioneel). Hij komt bij elke medewerker in de lijst te staan, maar ongevinkt: alleen waar je hem aanvinkt gaat er mail heen.</p>' +
     '<label>Type ontvanger<select id="edit-new-recipient-category" aria-label="Type nieuwe ontvanger"><option value="accounting">Boekhouding</option><option value="payroll">Salarisadministratie</option><option value="other" selected>Overig</option></select></label>' +
     '<label>Naam / kopje<input id="edit-new-recipient-name" placeholder="Bijvoorbeeld: Salarisadministratie of EasySalary"></label>' +
     '<label>E-mailadres<input id="edit-new-recipient-email" type="email" placeholder="naam@example.invalid"></label>' +
@@ -8859,7 +8907,7 @@ function showEmployeeEditor(employeeId, prefill) {
     '<label class="check-row"><input id="edit-new-recipient-invoice" type="checkbox"><span>Factuur als PDF meesturen</span></label>' +
     '<label class="full">Eigen onderwerp <small>' + LEEG_IS_STANDAARD + '</small><input id="edit-new-recipient-subject"></label>' +
     '<label class="full">Eigen begeleidende tekst <small>' + LEEG_IS_STANDAARD + '</small><textarea id="edit-new-recipient-body" rows="3"></textarea></label>' +
-    '<p class="full form-help">De naam bepaal je zelf. De ontvanger wordt centraal bewaard en is daarna ook bij andere medewerkers beschikbaar.</p>' +
+    '<p class="full form-help">De naam bepaal je zelf. Het adres wordt een keer centraal bewaard, zodat je het niet bij iedere medewerker opnieuw hoeft in te typen.</p>' +
     '<p class="full form-help">Klanturenstaat · officieel bestand van de klant (PDF, JPG of PNG)</p>' +
     '<label class="check-row full"><input id="edit-customer-timesheet-expected" type="checkbox"' + (employee.customerTimesheetExpected !== false ? " checked" : "") + '><span>Voor deze medewerker wordt iedere maand een klanturenstaat verwacht</span></label>' +
     '<label>Verwacht vóór werkdag<select id="edit-customer-timesheet-due-day" aria-label="Deadline klanturenstaat"><option value="3"' + (Number(employee.customerTimesheetDueWorkday || 5) === 3 ? " selected" : "") + '>3e werkdag</option><option value="5"' + (Number(employee.customerTimesheetDueWorkday || 5) === 5 ? " selected" : "") + '>5e werkdag</option><option value="7"' + (Number(employee.customerTimesheetDueWorkday || 5) === 7 ? " selected" : "") + '>7e werkdag</option><option value="10"' + (Number(employee.customerTimesheetDueWorkday || 5) === 10 ? " selected" : "") + '>10e werkdag</option></select></label>' +
@@ -9331,6 +9379,34 @@ function handleStaffWriteError(error, fallbackMessage, reopenForm) {
   return null;
 }
 
+// Leeg opslaan betekent: terug naar de meegeleverde tekst. De server verwijdert
+// de rij dan, zodat een leeg veld niet iets anders betekent dan geen rij.
+document.addEventListener("click", event => {
+  const knop = event.target.closest("[data-mail-channel-reset]");
+  if (!knop) return;
+  const kanaal = knop.getAttribute("data-mail-channel-reset");
+  const meegeleverd = mailMeegeleverdeTeksten[kanaal];
+  if (!meegeleverd) return;
+  const onderwerp = document.querySelector('[data-mail-channel-subject="' + kanaal + '"]');
+  const tekst = document.querySelector('[data-mail-channel-body="' + kanaal + '"]');
+  if (onderwerp) onderwerp.value = String(meegeleverd.subject || "");
+  if (tekst) tekst.value = String(meegeleverd.body || "");
+  toast("Meegeleverde tekst teruggezet. Klik op Wijzigingen opslaan om het vast te leggen.");
+});
+
+function verzamelMailChannelTemplates() {
+  const uit = {};
+  document.querySelectorAll("[data-mail-channel-subject]").forEach(veld => {
+    const kanaal = veld.getAttribute("data-mail-channel-subject");
+    const tekstveld = document.querySelector('[data-mail-channel-body="' + kanaal + '"]');
+    uit[kanaal] = {
+      subject: String(veld.value || "").trim(),
+      body: String(tekstveld ? tekstveld.value : "").trim()
+    };
+  });
+  return uit;
+}
+
 function writeSettingsToApi(nextSettings) {
   if (!(API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin")) return Promise.resolve(null);
   return requestAuthCsrf()
@@ -9339,7 +9415,8 @@ function writeSettingsToApi(nextSettings) {
       headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token },
       body: JSON.stringify({
         settings: nextSettings,
-        mailRecipients: state.settings.mailRecipients
+        mailRecipients: state.settings.mailRecipients,
+        mailChannelTemplates: verzamelMailChannelTemplates()
       })
     }))
     .then(resp => resp.json().catch(() => ({})).then(data => ({ ok: resp.ok, data })))

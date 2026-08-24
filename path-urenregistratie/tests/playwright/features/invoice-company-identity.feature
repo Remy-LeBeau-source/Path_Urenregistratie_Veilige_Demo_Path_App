@@ -81,10 +81,11 @@ Feature: Facturerende onderneming en handelsnaam
 
   @happy
   Scenario: [INV-ID-H-010] instellingen tonen de standaardtekst die de ontvanger werkelijk krijgt
-    # Testtechniek: API-contract + gegevensbron-vergelijking
-    # Aantoonbare Playwright-assertions in deze case: 15
-    Given de beheerder is ingelogd en de server stuurt de standaardteksten mee
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 17
+    Given facturerende onderneming en handelsnaam is voorbereid
     When de lijst met vaste ontvangers wordt geopend
     Then staat bij elke ontvanger de tekst van de server
     And geeft elke ontvanger dezelfde uitleg
     And heeft de boekhouder werkelijk de soort boekhouding
+    And staat de broker er ook bij, ook al is hij geen vaste ontvanger

@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { captureConsoleErrors, clearConsoleErrors } from './fixtures/consoleErrors';
 import { LoginPage } from './pages/LoginPage';
 import { attachBusinessScreenshot } from './reporting/uiAttachments';
+import { openProfielmenu } from './pages/TopbarMenu';
 
 const MOBILE_PERIOD = '2026-01';
 const CORRECTION_MESSAGE = 'Controleer dag 2: dit moet 4 uur zijn.';
@@ -1166,7 +1167,7 @@ test('[MOB-H-014] het aanbod om te installeren blijft bereikbaar na wegklikken o
   });
 
   await test.step('Then staat Op startscherm zetten altijd in het profielmenu', async () => {
-    await page.locator('#profile-menu-button').click();
+    await openProfielmenu(page);
     await expect(menuItem, 'zonder vaste plek ben je afhankelijk van wanneer de browser het meldt')
       .toBeVisible();
     await page.keyboard.press('Escape');

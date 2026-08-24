@@ -65,3 +65,80 @@ const MAIL_CHANNEL_TEMPLATES = [
             . "Goedgekeurde uren: {uren}",
     ],
 ];
+
+/**
+ * De teksten zoals ze werkelijk gelden voor een bedrijf.
+ *
+ * MAIL_CHANNEL_TEMPLATES hierboven is wat we meeleveren. Een bedrijf kan dat per
+ * kanaal overschrijven bij Instellingen. Er wordt bewust geen rij aangemaakt bij
+ * het opzetten van een bedrijf: ontbreekt de rij, of is het veld leeg, dan geldt
+ * de meegeleverde tekst. Zo loopt wie niets aanpast mee met verbeteringen daaraan,
+ * en houdt wie wel aanpast zijn eigen tekst.
+ *
+ * @return array<string, array{subject: string, body: string}>
+ */
+function mail_channel_templates_for(PDO $pdo, int $companyId): array
+{
+    $uit = MAIL_CHANNEL_TEMPLATES;
+
+    try {
+        $stmt = $pdo->prepare(
+            'SELECT channel, subject_template, body_template FROM mail_channel_templates WHERE company_id = :company_id'
+        );
+        $stmt->execute([':company_id' => $companyId]);
+        $rijen = $stmt->fetchAll();
+    } catch (Throwable $e) {
+        // De tabel komt met migratie 024. Draait die nog niet, dan zijn de
+        // meegeleverde teksten het antwoord -- geen reden om de mail te stoppen.
+        return $uit;
+    }
+
+    foreach ($rijen as $rij) {
+        $kanaal = (string)($rij['channel'] ?? '');
+        if (!isset($uit[$kanaal])) {
+            continue;
+        }
+        $onderwerp = trim((string)($rij['subject_template'] ?? ''));
+        $tekst = trim((string)($rij['body_template'] ?? ''));
+        if ($onderwerp !== '') {
+            $uit[$kanaal]['subject'] = $onderwerp;
+        }
+        if ($tekst !== '') {
+            $uit[$kanaal]['body'] = $tekst;
+        }
+    }
+
+    return $uit;
+}
+
+/**
+ * Welke kanalen een eigen tekst hebben staan.
+ *
+ * Dit is niet hetzelfde als 'wijkt af van de meegeleverde tekst'. Een opgeslagen
+ * tekst die toevallig gelijk is aan de meegeleverde, is nog steeds een eigen tekst:
+ * hij bevriest die tekst, zodat een latere verbetering aan de meegeleverde versie
+ * niet meer doorkomt. Dat verschil is aan de uitkomst niet te zien, en juist daarom
+ * moet het apart worden gemeld.
+ *
+ * @return array<int, string>
+ */
+function mail_channel_customised_for(PDO $pdo, int $companyId): array
+{
+    try {
+        $stmt = $pdo->prepare(
+            'SELECT channel FROM mail_channel_templates WHERE company_id = :company_id'
+        );
+        $stmt->execute([':company_id' => $companyId]);
+    } catch (Throwable $e) {
+        return [];
+    }
+
+    $uit = [];
+    foreach ($stmt->fetchAll() as $rij) {
+        $kanaal = (string)($rij['channel'] ?? '');
+        if (isset(MAIL_CHANNEL_TEMPLATES[$kanaal])) {
+            $uit[] = $kanaal;
+        }
+    }
+    return $uit;
+}

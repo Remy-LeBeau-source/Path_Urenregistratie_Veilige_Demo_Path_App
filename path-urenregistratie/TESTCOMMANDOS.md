@@ -71,11 +71,39 @@ Deze scripts laden `.env.local`, controleren de app en vereiste testwachtwoorden
 | `npm run test:e2e:group:roles` | Rollen- en autorisatiecases. |
 | `npm run test:e2e:group:timesheets` | Uren- en reviewcases. |
 | `npm run test:e2e:group:customer` | Klanturenstaatcases. |
+| `npm run test:e2e:group:e2e` | De volledige keten: uren, goedkeuren, factuur, mail. |
 | `npm run test:e2e:group:api` | Belangrijkste API-cases. |
 | `npm run test:e2e:group:ui` | Desktop UI-cases. |
 | `npm run test:e2e:group:ui-desktop` | Desktop UI op Chromium. |
 | `npm run test:e2e:group:ui-mobile` | Mobile UI op Pixel 7 en iPhone 13. |
 
+## Vier lagen, en waar een nieuwe case thuishoort
+
+| Laag | Draai je met | Cases | Wat hij bewijst |
+| --- | --- | --- | --- |
+| **DB** | `npm run test:db:crud` | `DB-*` | dat de gegevens kloppen en blijven kloppen |
+| **API** | `npm run test:e2e:group:api` | `AUTH-`, `SEC-`, `ROLE-`, `TS-API-`, `CTS-API-` | het contract van een eindpunt, zonder scherm |
+| **E2E** | `npm run test:e2e:group:e2e` | `E2E-*` | de hele keten van uren tot mail |
+| **UI** | `npm run test:e2e:group:ui`, `:ui-mobile` | `DASH-`, `INV-`, `MOB-` | wat je op het scherm ziet en kunt bedienen |
+
+Het voorvoegsel van het casenummer bepaalt de laag -- de groepen filteren daarop.
+Loopt een nieuwe case de volledige keten door (uren indienen, goedkeuren,
+factureren, mail), geef hem dan `E2E-`. Test hij een eindpunt zonder scherm, dan
+hoort hij bij de API-laag.
+
+Drie cases zijn op 2026-08-24 hernoemd omdat ze de volledige keten doorlopen en
+dus in de E2E-laag horen. Hun oude nummers staan hieronder, zodat je ze in oudere
+testverslagen en in de living documentation kunt terugvinden.
+
+| Oud | Nieuw | Wat de case doet |
+| --- | --- | --- |
+| `EQ-H-027` | `E2E-H-009` | twee nieuw toegevoegde ontvangers krijgen allebei echt een factuurmail |
+| `EQ-H-028` | `E2E-H-010` | nieuw account, eigen tekst, en die tekst komt terug in de verzonden mail |
+| `EQ-H-030` | `E2E-H-011` | een aangepaste standaardtekst komt werkelijk in de mail en is terug te zetten |
+
+De code van deze drie staat nog in `email-queue.spec.ts`, omdat ze leunen op de
+helpers daar. Hun scenario staat wel in `end-to-end-workflows.feature`: daar zoek
+je een ketenverhaal.
 Andere ondersteunde groepen worden zo gestart:
 
 ```powershell
@@ -92,7 +120,7 @@ npm run test:e2e
 Remove-Item Env:PLAYWRIGHT_GROUP
 ```
 
-Ondersteunde waarden: `auth`, `security`, `dashboard`, `invoices`, `roles`, `timesheets`, `customer`, `customer-timesheets`, `api`, `ui`, `ui-desktop`, `ui-mobile`, `mobile`, `happy`, `negative`, `phase10` en `phase11`.
+Ondersteunde waarden: `auth`, `security`, `dashboard`, `invoices`, `roles`, `timesheets`, `customer`, `customer-timesheets`, `e2e`, `api`, `ui`, `ui-desktop`, `ui-mobile`, `mobile`, `happy`, `negative`, `phase10` en `phase11`.
 
 ## Een project, bestand of case draaien
 

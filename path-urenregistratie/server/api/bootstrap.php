@@ -102,7 +102,16 @@ try {
         'ok' => true,
         // Zodat het instellingenscherm kan laten zien welke tekst een ontvanger
         // krijgt zolang er niets eigens is ingevuld.
-        'mail_channel_defaults' => MAIL_CHANNEL_TEMPLATES,
+        // Wat er werkelijk geldt voor dit bedrijf: de meegeleverde teksten, met
+        // daaroverheen wat er bij Instellingen is ingesteld.
+        'mail_channel_defaults' => mail_channel_templates_for($pdo, $companyId),
+        // En de meegeleverde teksten apart, zodat het scherm kan laten zien
+        // waar "Terug naar de standaard" naartoe gaat.
+        'mail_channel_shipped' => MAIL_CHANNEL_TEMPLATES,
+        // Welke kanalen werkelijk een eigen rij hebben. Nodig omdat een opgeslagen
+        // tekst die gelijk is aan de meegeleverde er aan de buitenkant hetzelfde
+        // uitziet, maar wel de tekst bevriest.
+        'mail_channel_customised' => mail_channel_customised_for($pdo, $companyId),
         'companies' => $companies,
         'users' => $users,
         'employees' => $employees,

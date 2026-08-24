@@ -33,3 +33,8 @@ Given("de cursor staat in een van de instellingen");
 When("een ander veld verouderd raakt en het scherm opnieuw wordt opgebouwd");
 Then("wordt het verouderde veld hersteld en blijft het getypte veld staan");
 When("website en slogan worden ingevuld en opgeslagen");
+When("de lijst met vaste ontvangers wordt geopend");
+Then("staat bij elke ontvanger de tekst van de server");
+And("geeft elke ontvanger dezelfde uitleg");
+And("heeft de boekhouder werkelijk de soort boekhouding");
+And("staat de broker er ook bij, ook al is hij geen vaste ontvanger");

@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 271 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 276 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 271 unieke case-ID's
+- Playwright executable cases: 276 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 272 unieke case-ID's
+- Totaal executable cases: 277 unieke case-ID's
 - Playwright features: 23
 - Database features: 1
 - Playwright steps mappings: 23
 - Database steps mappings: 1
-- Uitvoeringen: 288
-- Niet-mobile projectuitvoeringen: 254
+- Uitvoeringen: 293
+- Niet-mobile projectuitvoeringen: 259
 - Mobile functionele cases: 17
 - Pixel 7 / Chromium-uitvoeringen: 17
 - iPhone 13 / WebKit-uitvoeringen: 17
 
-De 17 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 271 Playwright-functionele cases in totaal 288 resultaten op: 254 + (17 x 2) = 288.
+De 17 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 276 Playwright-functionele cases in totaal 293 resultaten op: 259 + (17 x 2) = 293.
 
 ## Documentatieketen
 
@@ -43,7 +43,7 @@ De 17 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 271 Playwri
 
 - Feature: `tests/playwright/features/organization-settings.feature`
 - Source: `tests/playwright/admin-writes.spec.ts`
-- Cases: 23
+- Cases: 25
 
 - [ADM-WR-H-001] admin kan company/settings server-led opslaan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 - [ADM-WR-H-002] admin kan beheerder server-led aanmaken en wijzigen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
@@ -66,6 +66,8 @@ De 17 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 271 Playwri
 - [ADM-WR-N-006] dubbele naam is toegestaan, maar een al gebruikt e-mailadres wordt hard geblokkeerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 8
 - [ADM-WR-N-007] actief-accounttotaal klopt op elke stap: exact duplicaat verandert niets, uniek account telt precies 1 op — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 15
 - [ADM-WR-H-012] na Herstel legt Teambeheer uit dat de telling lokaal is en kan de serverstand terug worden gehaald — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 8
+- [ADM-WR-H-017] een ontvangerslijst terugsturen zoals hij binnenkwam verandert niets — Techniek: API-contract + equivalentieklasse · Assertions: 12
+- [ADM-WR-H-018] een nieuwe ontvanger komt bij andere medewerkers ongevinkt binnen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
 - [ADM-WR-H-015] onderwerp, tekst en een eigen tekst per ontvanger blijven na F5 in het scherm staan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [ADM-WR-H-016] de routevinkjes van een opdracht blijven na opslaan en F5 staan zoals gezet — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 3
 
@@ -169,7 +171,7 @@ De 17 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 271 Playwri
 
 - Feature: `tests/playwright/features/mail-delivery.feature`
 - Source: `tests/playwright/email-queue.spec.ts`
-- Cases: 30
+- Cases: 32
 
 - [EQ-H-001] factuurlock maakt queue-items aan met dry_run=true — Techniek: Toestandsovergang · Assertions: 5
 - [EQ-H-002] broker-channel stuurt alleen de factuur — Techniek: API-contract + equivalentieklasse · Assertions: 2
@@ -199,8 +201,10 @@ De 17 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 271 Playwri
 - [EQ-N-014] unknown action geeft 400 — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
 - [EQ-N-015] localhost blijft preview-only en weigert POST zonder expliciete bevestiging — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 9
 - [EQ-N-016] medewerker krijgt geen toegang tot de mailacceptatieconsole — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
-- [EQ-H-027] twee nieuw toegevoegde ontvangers krijgen allebei echt een factuurmail — Techniek: API-contract + equivalentieklasse · Assertions: 21
-- [EQ-H-028] nieuw account, eigen tekst, en die tekst komt terug in de verzonden mail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 26
+- [E2E-H-009] twee nieuw toegevoegde ontvangers krijgen allebei echt een factuurmail — Techniek: API-contract + equivalentieklasse · Assertions: 25
+- [E2E-H-010] nieuw account, eigen tekst, en die tekst komt terug in de verzonden mail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 28
+- [EQ-H-029] elke ontvanger krijgt de handtekening, ook onder een eigen tekst — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
+- [E2E-H-011] een aangepaste standaardtekst komt werkelijk in de mail en is terug te zetten — Techniek: API-contract + equivalentieklasse · Assertions: 15
 
 ### Facturen definitief maken en vergrendelen
 
@@ -221,7 +225,7 @@ De 17 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 271 Playwri
 
 - Feature: `tests/playwright/features/invoice-company-identity.feature`
 - Source: `tests/playwright/invoice-company-identity.spec.ts`
-- Cases: 9
+- Cases: 10
 
 - [INV-ID-H-001] handelsnaam en juridische naam staan samen op de factuurpreview — Techniek: API-contract + equivalentieklasse · Assertions: 3
 - [INV-ID-H-002] alleen juridische naam is als factuurweergave te kiezen — Techniek: Equivalentieklassen · Assertions: 3
@@ -232,6 +236,7 @@ De 17 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 271 Playwri
 - [INV-ID-H-007] de klanturenstaat-mailteksten blijven na opslaan bewaard — Techniek: API-contract + equivalentieklasse · Assertions: 4
 - [INV-ID-H-008] typen in een instelling bevriest de rest van het formulier niet — Techniek: API-contract + equivalentieklasse · Assertions: 4
 - [INV-ID-H-009] website en slogan blijven bewaard en komen onder de mail — Techniek: API-contract + equivalentieklasse · Assertions: 3
+- [INV-ID-H-010] instellingen tonen de standaardtekst die de ontvanger werkelijk krijgt — Techniek: API-contract + equivalentieklasse · Assertions: 17
 
 ### Facturen bekijken en beheren
 

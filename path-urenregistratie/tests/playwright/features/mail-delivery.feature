@@ -240,9 +240,9 @@ Feature: Mailroutering en aflevering
     Then wordt met Playwright-assertions bevestigd dat medewerker krijgt geen toegang tot de mailacceptatieconsole
 
   @happy
-  Scenario: [EQ-H-027] twee nieuw toegevoegde ontvangers krijgen allebei echt een factuurmail
+  Scenario: [E2E-H-009] twee nieuw toegevoegde ontvangers krijgen allebei echt een factuurmail
     # Testtechniek: API-contract + equivalentieklasse
-    # Aantoonbare Playwright-assertions in deze case: 21
+    # Aantoonbare Playwright-assertions in deze case: 25
     Given twee nieuwe ontvangers op de opdracht staan
     When de volledige uren- en factuurketen wordt doorlopen
     Then krijgt de nieuwe boekhoudingsontvanger een mail met de eigen tekst
@@ -250,9 +250,9 @@ Feature: Mailroutering en aflevering
     And staat in de verzonden mail exact wat er is ingevuld
 
   @happy
-  Scenario: [EQ-H-028] nieuw account, eigen tekst, en die tekst komt terug in de verzonden mail
+  Scenario: [E2E-H-010] nieuw account, eigen tekst, en die tekst komt terug in de verzonden mail
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 26
+    # Aantoonbare Playwright-assertions in deze case: 28
     Given een nieuwe beheerder is aangemaakt
     And een nieuwe medewerker met een eigen ontvanger, onderwerp en tekst
     And de medewerker stelt via de eenmalige link een wachtwoord in
@@ -262,10 +262,20 @@ Feature: Mailroutering en aflevering
 
   @happy
   Scenario: [EQ-H-029] elke ontvanger krijgt de handtekening, ook onder een eigen tekst
-    # Testtechniek: Equivalentieklasse over de mailroutes
-    # Aantoonbare Playwright-assertions in deze case: 10
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 8
     Given een factuur is definitief gemaakt
     When de mails voor de ontvangers worden klaargezet
     Then draagt elke route dezelfde afsluiting
     And staat de afsluiting er ook bij een kanaal met een eigen tekst
     And cleanup
+
+  @happy
+  Scenario: [E2E-H-011] een aangepaste standaardtekst komt werkelijk in de mail en is terug te zetten
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 15
+    Given opslaan zonder iets te wijzigen legt niets vast
+    When de beheerder de standaardtekst voor de boekhouding aanpast
+    Then geldt die tekst voortaan voor dat soort ontvanger
+    And staat hij werkelijk in de verzonden mail
+    And leeg opslaan zet de meegeleverde tekst terug

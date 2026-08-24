@@ -72,14 +72,19 @@ export class LoginPage {
     const indicator = this.page.locator('#auth-mode-indicator');
     const submit = this.page.locator('#auth-login-submit');
 
-    await expect(indicator).toBeVisible({ timeout: 10_000 });
-    // Functional readiness is the login button becoming enabled.
-    // The indicator text can lag intermittently in CI/local runs.
-    await expect(submit).toBeEnabled({ timeout: 15_000 });
+    // Klaar zijn betekent: je kunt inloggen. Dat is de knop, niet het tekstje
+    // ernaast. Hier stond eerst een eis dat de indicator zichtbaar moest zijn
+    // voordat er verder werd gekeken, en die viel af en toe om op een trage
+    // machine -- terwijl het inlogscherm gewoon werkte. Een test die omvalt zonder
+    // dat er iets mis is, kost je het vertrouwen in de hele suite.
+    await expect(submit).toBeEnabled({ timeout: 20_000 });
 
+    // De indicator wordt daarna nog wel nagelopen, want hij vertelt in welke modus
+    // je zit -- en op productie mag daar nooit "Lokale demo-modus" staan. Alleen de
+    // volgorde is omgedraaid: eerst werkt het, dan pas wat het erover zegt.
     await expect(indicator).toContainText(
       /Auth-modus actief|Lokale demo-modus actief|Controle van auth-sessie wordt uitgevoerd\./,
-      { timeout: 5_000 }
+      { timeout: 10_000 }
     );
   }
 }

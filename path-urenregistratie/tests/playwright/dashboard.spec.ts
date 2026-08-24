@@ -3,6 +3,7 @@ import { captureConsoleErrors, clearConsoleErrors } from './fixtures/consoleErro
 import { DashboardPage } from './pages/DashboardPage';
 import { LoginPage } from './pages/LoginPage';
 import { attachBusinessScreenshot } from './reporting/uiAttachments';
+import { openProfielmenu } from './pages/TopbarMenu';
 
 type MutableRecord = {
   entries: number[][];
@@ -732,7 +733,7 @@ test('[DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakie
   await test.step('Given een medewerker die een urenstaat vult en het thema wisselt', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
-    await page.locator('#profile-menu-button').click();
+    await openProfielmenu(page);
     await page.locator('[data-profile-action="preferences"]').click();
     await page.locator('#pref-theme-trigger').click();
     await page.locator('[data-standard-choice-target="pref-theme"][data-standard-choice-value="dark"]').click();
@@ -784,7 +785,7 @@ test('[DASH-H-004] terugkeren naar medewerkerdashboard ververst de uren en behou
   await test.step('Given een medewerker op donker thema die vanuit dashboard naar uren gaat', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
-    await page.locator('#profile-menu-button').click();
+    await openProfielmenu(page);
     await page.locator('[data-profile-action="preferences"]').click();
     await page.locator('#pref-theme-trigger').click();
     await page.locator('[data-standard-choice-target="pref-theme"][data-standard-choice-value="dark"]').click();
