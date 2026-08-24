@@ -456,4 +456,19 @@ test('[INV-ID-H-010] instellingen tonen de standaardtekst die de ontvanger werke
     expect(String(boekhouder.recipient_category), 'een ontvanger met sleutel bookkeeper hoort soort accounting te hebben')
       .toBe('accounting');
   });
+
+  await test.step('And staat de broker er ook bij, ook al is hij geen vaste ontvanger', async () => {
+    // De broker kreeg wel een mail maar stond nergens in dit scherm. Wie hier keek
+    // zag twee ontvangers terwijl er drie mails uitgingen. Hij staat per opdracht,
+    // dus hij hoort hier alleen te lezen te zijn, met de weg erheen erbij.
+    const brokerBlok = page.locator('#mail-broker-route-info .mail-recipient-setting');
+    await expect(brokerBlok, 'de broker hoort in het instellingenscherm te staan').toHaveCount(1);
+    await expect(brokerBlok, 'er moet bij staan waar je hem wel wijzigt').toContainText('per opdracht');
+    await expect(brokerBlok.locator('button'), 'de broker is hier niet te wijzigen, dus geen knoppen')
+      .toHaveCount(0);
+
+    await brokerBlok.locator('details.mail-standaardtekst > summary').click();
+    const getoond = ((await brokerBlok.locator('.mail-standaardtekst-inhoud').textContent()) ?? '').replace(/\r/g, '');
+    expect(getoond.trim(), 'de brokertekst moet van de server komen').toBe(standaarden.broker.body.trim());
+  });
 });

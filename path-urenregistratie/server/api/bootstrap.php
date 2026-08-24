@@ -111,7 +111,6 @@ try {
         'counterparties' => $counterparties,
         'assignment_mail_routes' => $assignmentMailRoutes,
         'mail_recipients' => $mailRecipients,
-        'mailRecipients' => $mailRecipients,
         'capabilities' => [
             'password_reset_delivery' => auth_password_reset_delivery_available(auth_load_raw_config()),
         ],

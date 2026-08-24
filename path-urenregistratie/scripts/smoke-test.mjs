@@ -215,7 +215,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.133"), "Het zichtbare versienummer moet 0.9.133 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.134"), "Het zichtbare versienummer moet 0.9.134 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -245,6 +245,18 @@ assert(settingsEmails.some(email => email.endsWith("@example.invalid")), "De alg
 assert(settingsEmails.includes("backoffice@pathconsultancy.nl"), "Het e-mailadres uit de originele facturen moet op de PDF-instellingen staan");
 assert(document.querySelectorAll("#mail-recipient-settings-list .mail-recipient-setting").length === 2, "Boekhouder en EasySalary moeten als centrale ontvangers bestaan");
 assert(document.querySelector("#mail-recipient-settings-list").textContent.includes("salaris@example.invalid"), "Het EasySalary-adres moet centraal zichtbaar zijn");
+// De bel was een blokje met alleen een boven- en zijrand -- een boog, geen bel --
+// en de kleur stond vast op --navy, wat in de donkere modus de achtergrond is. Daar
+// was hij dus helemaal weg.
+assert(document.querySelector("#notification-button .bell-shape svg") !== null, "De meldingenbel moet een echte belvorm zijn, geen randen om een leeg blokje");
+assert(document.querySelectorAll("#notification-button .bell-shape svg path").length >= 3, "De bel hoort een koepel, een knopje en een klepel te hebben");
+assert(!/\.notification-button \.bell-shape \{[^}]*var\(--navy\)/.test(styles), "De bel mag niet op --navy staan: dat is in de donkere modus de achtergrondkleur, dus dan is hij onzichtbaar");
+// De broker kreeg wel een mail maar stond nergens in dit scherm: wie hier keek zag
+// twee ontvangers terwijl er drie mails uitgingen. Hij hoort er alleen te lezen te
+// staan, met de plek erbij waar je hem wel wijzigt.
+assert(document.querySelectorAll("#mail-broker-route-info .mail-recipient-setting").length === 1, "De broker moet in het instellingenscherm staan, ook al staat hij per opdracht");
+assert(document.querySelector("#mail-broker-route-info").textContent.includes("per opdracht"), "Bij de broker moet staan waar je hem wel aanpast");
+assert(document.querySelectorAll("#mail-broker-route-info button").length === 0, "De broker is hier niet te wijzigen, dus hoort er geen knop bij te staan");
 assert(document.body.textContent.includes("@example.invalid"), "Veilige brokerplaceholders moeten zichtbaar zijn");
 
 assert(!document.querySelector("#login-screen").hidden, "De rolkeuze moet bij het openen zichtbaar zijn");
@@ -1709,7 +1721,67 @@ const passwordResetMigrationSrc = readFileSync_(new URL("../server/migrations/01
 const passwordResetServiceSrc = readFileSync_(new URL("../server/auth/password-reset-service.php", import.meta.url), "utf8");
 const announcementsApiSrc = readFileSync_(new URL("../server/api/announcements.php", import.meta.url), "utf8");
 const requestResetSrc = readFileSync_(new URL("../server/auth/request-reset.php", import.meta.url), "utf8");
+// Een lichte vlakkleur die alleen in :root staat, houdt in de donkere modus zijn
+// lichte waarde. De tekstkleuren gaan wel mee, dus dan krijg je een witte knop met
+// witte tekst. Zo waren "Open detail" en "Alle openstaande" onleesbaar: --vlak,
+// --vlak-zacht en --vlak-warm hadden geen donkere waarde.
+{
+  const blokVan = (zoek) => {
+    const i = styles.indexOf(zoek);
+    if (i < 0) return null;
+    const start = styles.indexOf("{", i);
+    let diepte = 0;
+    for (let p = start; p < styles.length; p++) {
+      if (styles[p] === "{") diepte++;
+      else if (styles[p] === "}") {
+        diepte--;
+        if (diepte === 0) return styles.slice(start, p);
+      }
+    }
+    return null;
+  };
+  const kleurenIn = (blok) => {
+    const uit = {};
+    for (const m of blok.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;]+);/gi)) uit[m[1]] = m[2].trim();
+    return uit;
+  };
+  const lichtBlok = blokVan(":root {");
+  const donkerBlok = blokVan('html[data-theme="dark"] {');
+  assert(lichtBlok !== null && donkerBlok !== null, "De kleurblokken voor de lichte en donkere modus moeten allebei bestaan");
+
+  const licht = kleurenIn(lichtBlok);
+  const donker = kleurenIn(donkerBlok);
+  for (const [naam, waarde] of Object.entries(licht)) {
+    const hex = /^#([0-9a-f]{6})$/i.exec(String(waarde).trim());
+    if (!hex) continue;
+    const [r, g, b] = [0, 2, 4].map(i => parseInt(hex[1].slice(i, i + 2), 16));
+    const helderheid = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    if (helderheid <= 0.75) continue;
+    assert(donker[naam] !== undefined, "Kleur " + naam + " is een licht vlak (" + waarde + ") en heeft geen donkere waarde: die blijft dus wit in de donkere modus, met lichte tekst erop");
+  }
+}
+
 const appJsSrc = readFileSync_(new URL("../assets/app.js", import.meta.url), "utf8");
+
+// Het logo stond als losse base64 uit 2023 in app.js, naast assets/path-logo.png.
+// Die twee liepen uit elkaar: het bestand had een donker woordmerk, de code een wit
+// -- en dus was "Path" onzichtbaar op de witte topbalk, terwijl het bestand er
+// prima uitzag. Er zijn nu twee versies, elk voor een eigen ondergrond, en beide
+// moeten letterlijk gelijk zijn aan het bestand waar ze uit komen.
+for (const [naam, bestand] of [
+  ["PATH_LOGO_OP_LICHT", "../assets/path-logo.png"],
+  ["PATH_LOGO_OP_DONKER", "../assets/path-logo-wit.png"],
+]) {
+  const treffer = new RegExp("const " + naam + ' = "data:image/png;base64,([^"]*)";').exec(appJsSrc);
+  assert(treffer !== null, naam + " hoort in app.js te staan als data-URL");
+  const uitBestand = readFileSync_(new URL(bestand, import.meta.url)).toString("base64");
+  assert(treffer[1] === uitBestand, naam + " loopt niet gelijk met " + bestand + ": draai scripts/build-app-icons.mjs opnieuw");
+}
+assert(!appJsSrc.includes("PATH_LOGO_DATA_URL"), "De oude losse logoconstante hoort weg te zijn: een logo per ondergrond, uit de bouwer");
+// De topbalk is wit in de lichte modus en donker in de donkere, dus daar hangt de
+// keuze aan de modus. De factuurkop is altijd donkerblauw.
+assert(appJsSrc.includes('brandLogoUrl(donkereModusActief() ? "donker" : "licht")'), "Het logo in de topbalk moet de lichte of donkere modus volgen");
+assert(appJsSrc.includes('brandLogoUrl("donker")'), "Op de donkerblauwe factuurkop hoort het witte woordmerk");
 const mailAcceptanceSrc = readFileSync_(new URL("../server/mail/acceptance.php", import.meta.url), "utf8");
 const mailAcceptancePolicySrc = readFileSync_(new URL("../server/scripts/mail-acceptance-policy-check.php", import.meta.url), "utf8");
 const testResetApiSrc = readFileSync_(new URL("../server/api/test-reset.php", import.meta.url), "utf8");
@@ -1755,7 +1827,7 @@ assert(announcementsApiSrc.includes("function announcement_truncate") && announc
 assert(appJsSrc.includes('+ (data.token ? " · Token: " + data.token'), "Het testtoken bij wachtwoordherstel moet de vaste zin aanvullen, niet vervangen");
 assert(!appJsSrc.includes("Resetverzoek verstuurd (dry-run)"), "De dry-run-tekst mag niet meer aan een gebruiker worden getoond");
 const mailQueueSrc = readFileSync_(new URL("../server/mail/queue.php", import.meta.url), "utf8");
-// De sjablonen staan sinds 0.9.133 apart, zodat de mailmodule en het
+// De sjablonen staan sinds 0.9.134 apart, zodat de mailmodule en het
 // instellingenscherm dezelfde bron gebruiken.
 const mailTemplatesSrc = readFileSync_(new URL("../server/mail/templates.php", import.meta.url), "utf8");
 const settingsApiSrc = readFileSync_(new URL("../server/api/settings.php", import.meta.url), "utf8");
@@ -1774,6 +1846,11 @@ assert(mailTemplatesSrc.includes("'other' => ["), "Een ontvanger met categorie O
 // er werkelijk verstuurd wordt, en dat merk je pas in het postvak van de klant.
 assert(bootstrapApiSrc.includes("'mail_channel_defaults' => MAIL_CHANNEL_TEMPLATES"), "De bootstrap moet de standaardteksten meesturen, anders kan het instellingenscherm ze niet tonen");
 assert(appJsSrc.includes("data.mail_channel_defaults"), "Het instellingenscherm moet de standaardteksten van de server lezen");
+// De broker is een kanaal, geen soort ontvanger: hij staat per opdracht en niet in
+// de lijst met vaste ontvangers. Wie die twee door elkaar haalt, laat bij de broker
+// de algemene tekst zien in plaats van zijn eigen.
+assert(appJsSrc.includes("standaardTekstBlok(\"broker\")"), "Het brokerblok moet het brokerkanaal tonen, niet een soort ontvanger");
+assert(appJsSrc.includes("standaardTekstBlok(kanaalVoorSoort(recipient.category))"), "Bij een vaste ontvanger moet de soort eerst naar een kanaal worden vertaald");
 // De soort ontvanger bepaalt welke tekst iemand krijgt. De demo-seed liet die
 // kolom leeg, dus viel de boekhouder terug op de standaardwaarde other en kreeg
 // stilletjes de algemene tekst -- er ging wel gewoon een mail uit, dus dat viel
@@ -1831,4 +1908,4 @@ assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("
 assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Playwright stage- en lokale env-bestanden mogen expliciete runner/CI-variabelen niet overschrijven");
 
 dom.window.close();
-console.log("Path v0.9.133 volledige smoke test: geslaagd");
+console.log("Path v0.9.134 volledige smoke test: geslaagd");

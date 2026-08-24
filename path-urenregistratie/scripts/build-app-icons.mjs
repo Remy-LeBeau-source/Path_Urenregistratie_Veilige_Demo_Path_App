@@ -291,7 +291,15 @@ console.log('  Consultancy: ' + (delen.woordConsultancy
   : 'niet gevonden'));
 
 // 1. Liggend logo voor de koptekst en het loginscherm.
-{
+//
+//    Twee versies, en dat is geen luxe: het woordmerk is donkerblauw en verdwijnt
+//    op een donkere ondergrond, wit verdwijnt op een lichte. Het logo staat in deze
+//    app op allebei -- de topbalk is wit in de lichte modus en donker in de donkere,
+//    en de factuurkop is altijd donkerblauw. Eén bestand kan dat niet dekken.
+for (const variant of [
+  { pad: 'assets/path-logo.png', wit: false, waarvoor: 'op een lichte ondergrond' },
+  { pad: 'assets/path-logo-wit.png', wit: true, waarvoor: 'op een donkere ondergrond' },
+]) {
   const hoogte = 216;
   const symHoogte = Math.round(hoogte * 0.86);
   const symBreedte = Math.round(symHoogte * (delen.symbool.breedte / delen.symbool.hoogte));
@@ -315,14 +323,16 @@ console.log('  Consultancy: ' + (delen.woordConsultancy
   plak(vlak, schaal(delen.symbool, symBreedte, symHoogte), 0, Math.round((hoogte - symHoogte) / 2));
 
   const woordTop = Math.round((hoogte - woordHoogte) / 2);
-  plak(vlak, schaal(delen.woordPath, pathBreedte, pathHoogte), symBreedte + tussen, woordTop);
+  const woord = variant.wit ? witMaken(delen.woordPath) : delen.woordPath;
+  plak(vlak, schaal(woord, pathBreedte, pathHoogte), symBreedte + tussen, woordTop);
   if (delen.woordConsultancy) {
-    plak(vlak, schaal(delen.woordConsultancy, consBreedte, consHoogte),
+    const onderschrift = variant.wit ? witMaken(delen.woordConsultancy) : delen.woordConsultancy;
+    plak(vlak, schaal(onderschrift, consBreedte, consHoogte),
       symBreedte + tussen, woordTop + pathHoogte + kier);
   }
 
-  schrijfPng('assets/path-logo.png', vlak);
-  console.log('  assets/path-logo.png (' + breedte + 'x' + hoogte + ', liggend)');
+  schrijfPng(variant.pad, vlak);
+  console.log('  ' + variant.pad + ' (' + breedte + 'x' + hoogte + ', liggend, ' + variant.waarvoor + ')');
 }
 
 // 2. De app-iconen: gestapeld op het huisstijlblauw, zonder "Consultancy".
@@ -377,6 +387,33 @@ const iconen = [
 for (const icoon of iconen) {
   schrijfPng(icoon.pad, maakIcoon(icoon.maat, icoon.deel));
   console.log('  ' + icoon.pad + ' (' + icoon.maat + 'x' + icoon.maat + ')');
+}
+
+// 3. Dezelfde twee logo's als data-URL in app.js.
+//
+//    De factuur-PDF kan geen bestand laden, dus daar moet het logo als tekst in de
+//    code staan. Die stond er als losse base64 uit 2023 -- een tweede kopie die
+//    stilletjes uit de pas liep met assets/path-logo.png. Nu schrijft deze bouwer
+//    ze allebei, uit dezelfde bron, zodat dat niet meer kan.
+{
+  const appPad = 'assets/app.js';
+  let app = readFileSync(appPad, 'utf8');
+
+  const varianten = [
+    { naam: 'PATH_LOGO_OP_LICHT', bestand: 'assets/path-logo.png' },
+    { naam: 'PATH_LOGO_OP_DONKER', bestand: 'assets/path-logo-wit.png' },
+  ];
+
+  for (const variant of varianten) {
+    const base64 = readFileSync(variant.bestand).toString('base64');
+    const nieuw = 'const ' + variant.naam + ' = "data:image/png;base64,' + base64 + '";';
+    const patroon = new RegExp('const ' + variant.naam + ' = "[^"]*";');
+    if (!patroon.test(app)) throw new Error(variant.naam + ' staat niet in ' + appPad);
+    app = app.replace(patroon, nieuw);
+    console.log('  ' + variant.naam + ' bijgewerkt (' + Math.round(base64.length / 1024) + ' kB tekst)');
+  }
+
+  writeFileSync(appPad, app);
 }
 
 console.log('klaar');

@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../auth/session.php';
 require_once __DIR__ . '/../security/csrf.php';
 require_once __DIR__ . '/../security/validation.php';
+require_once __DIR__ . '/mail-recipients.php';
 require_once __DIR__ . '/../auth/password-reset-service.php';
 
 header('Content-Type: application/json; charset=utf-8');
@@ -134,124 +135,14 @@ function staff_send_email_conflict(?array $existing = null, int $companyId = 0):
     auth_send_json($response, 409);
 }
 
+// Het opslaan zelf staat in mail-recipients.php, gedeeld met settings.php.
+// Hier alleen de keuze die dit eindpunt maakt: een onjuist adres wordt
+// overgeslagen, want een medewerker opslaan mag niet stuklopen op een
+// ontvanger die verderop in het formulier staat.
 function staff_upsert_mail_recipients(PDO $pdo, int $companyId, array $items): array
 {
-    if (!is_array($items) || $items === []) {
-        $items = [];
-    }
-
-    $byKey = [];
-
-    $existingStmt = $pdo->prepare('SELECT id, recipient_key, email FROM mail_recipients WHERE company_id = :company_id');
-    $existingStmt->execute([':company_id' => $companyId]);
-    $existing = $existingStmt->fetchAll();
-
-    $existingById = [];
-    $existingByKey = [];
-    foreach ($existing as $row) {
-        $id = (int)$row['id'];
-        $key = trim((string)($row['recipient_key'] ?? ''));
-        $existingById[$id] = $row;
-        if ($key !== '') {
-            $existingByKey[$key] = $row;
-        }
-    }
-
-    foreach ($items as $item) {
-        if (!is_array($item)) {
-            continue;
-        }
-
-        $rawId = staff_string($item['id'] ?? '', 80);
-        $numericId = ctype_digit($rawId) ? (int)$rawId : 0;
-        $recipientKey = $numericId > 0 ? '' : $rawId;
-        $email = staff_string($item['email'] ?? '', 190);
-        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            continue;
-        }
-
-        // Zie settings.php: bootstrap.php geeft dezelfde ontvanger terug als
-        // display_name/recipient_category. Wie de lijst teruggaf zoals hij hem
-        // kreeg, wiste stil de naam en de soort, en daarmee de mailtekst.
-        $name = staff_string($item['name'] ?? $item['display_name'] ?? '', 160);
-        if ($name === '') {
-            $name = $email;
-        }
-        $category = staff_string($item['category'] ?? $item['recipient_category'] ?? 'other', 60);
-        if ($category === '') {
-            $category = 'other';
-        }
-        $active = staff_bool($item['active'] ?? true, true) ? 1 : 0;
-
-        $matched = null;
-        if ($numericId > 0 && isset($existingById[$numericId])) {
-            $matched = $existingById[$numericId];
-        } elseif ($recipientKey !== '' && isset($existingByKey[$recipientKey])) {
-            $matched = $existingByKey[$recipientKey];
-        }
-
-        if ($matched) {
-            $recipientId = (int)$matched['id'];
-            $deactivatedAt = $active === 1 ? null : date('Y-m-d H:i:s');
-            $updateStmt = $pdo->prepare(
-                'UPDATE mail_recipients
-                 SET recipient_key = :recipient_key,
-                     recipient_category = :recipient_category,
-                     display_name = :display_name,
-                     email = :email,
-                     active = :active,
-                     deactivated_at = :deactivated_at
-                 WHERE id = :id AND company_id = :company_id'
-            );
-            $updateStmt->execute([
-                ':recipient_key' => $recipientKey !== '' ? $recipientKey : $matched['recipient_key'],
-                ':recipient_category' => $category,
-                ':display_name' => $name,
-                ':email' => $email,
-                ':active' => $active,
-                ':deactivated_at' => $deactivatedAt,
-                ':id' => $recipientId,
-                ':company_id' => $companyId,
-            ]);
-            $resolvedKey = $recipientKey !== '' ? $recipientKey : trim((string)($matched['recipient_key'] ?? ''));
-            $byKey[$resolvedKey !== '' ? $resolvedKey : (string)$recipientId] = $recipientId;
-            continue;
-        }
-
-        $insertStmt = $pdo->prepare(
-            'INSERT INTO mail_recipients (company_id, recipient_key, recipient_category, display_name, email, active, deactivated_at)
-             VALUES (:company_id, :recipient_key, :recipient_category, :display_name, :email, :active, :deactivated_at)'
-        );
-        $deactivatedAt = $active === 1 ? null : date('Y-m-d H:i:s');
-        $insertStmt->execute([
-            ':company_id' => $companyId,
-            ':recipient_key' => $recipientKey !== '' ? $recipientKey : null,
-            ':recipient_category' => $category,
-            ':display_name' => $name,
-            ':email' => $email,
-            ':active' => $active,
-            ':deactivated_at' => $deactivatedAt,
-        ]);
-
-        $insertedId = (int)$pdo->lastInsertId();
-        $key = $recipientKey !== '' ? $recipientKey : (string)$insertedId;
-        $byKey[$key] = $insertedId;
-    }
-
-    $finalStmt = $pdo->prepare('SELECT id, recipient_key FROM mail_recipients WHERE company_id = :company_id');
-    $finalStmt->execute([':company_id' => $companyId]);
-    foreach ($finalStmt->fetchAll() as $row) {
-        $id = (int)$row['id'];
-        $key = trim((string)($row['recipient_key'] ?? ''));
-        $byKey[(string)$id] = $id;
-        if ($key !== '') {
-            $byKey[$key] = $id;
-        }
-    }
-
-    return $byKey;
+    return mail_recipients_upsert($pdo, $companyId, $items)['keys'];
 }
-
 function staff_upsert_counterparty(PDO $pdo, int $companyId, string $type, string $name, ?string $email, ?string $address): int
 {
     $effectiveName = staff_string($name, 180);

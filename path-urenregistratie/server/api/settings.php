@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../auth/session.php';
 require_once __DIR__ . '/../security/csrf.php';
 require_once __DIR__ . '/../security/validation.php';
+require_once __DIR__ . '/mail-recipients.php';
 
 header('Content-Type: application/json; charset=utf-8');
 auth_apply_cors_headers(auth_try_load_raw_config(), 'POST, OPTIONS', 'Content-Type, X-CSRF-Token');
@@ -208,96 +209,19 @@ try {
     ]);
 
     if (is_array($mailRecipients)) {
-        $existingStmt = $pdo->prepare('SELECT id, recipient_key FROM mail_recipients WHERE company_id = :company_id');
-        $existingStmt->execute([':company_id' => $companyId]);
-        $existing = $existingStmt->fetchAll();
+        // Hetzelfde opslaan gebeurt vanuit staff.php. Het stond hier twee keer
+        // uitgeschreven en moest daardoor ook twee keer worden gerepareerd.
+        $uitkomst = mail_recipients_upsert($pdo, $companyId, $mailRecipients);
 
-        $existingById = [];
-        $existingByKey = [];
-        foreach ($existing as $row) {
-            $id = (int)$row['id'];
-            $key = trim((string)($row['recipient_key'] ?? ''));
-            $existingById[$id] = $row;
-            if ($key !== '') {
-                $existingByKey[$key] = $row;
-            }
-        }
-
-        foreach ($mailRecipients as $recipient) {
-            if (!is_array($recipient)) {
-                continue;
-            }
-
-            $rawId = settings_string($recipient['id'] ?? '', 80);
-            $numericId = ctype_digit($rawId) ? (int)$rawId : 0;
-            $recipientKey = $numericId > 0 ? '' : $rawId;
-            $email = settings_email_or_null($recipient['email'] ?? null);
-            if ($email === null) {
-                continue;
-            }
-
-            // De browser stuurt name/category, maar bootstrap.php geeft dezelfde
-            // ontvanger terug als display_name/recipient_category. Wie de lijst
-            // teruggaf zoals hij hem kreeg, wiste zo stil de naam -- die werd het
-            // e-mailadres -- en de soort, die terugviel op 'other'. Daarmee kreeg
-            // de boekhouder ineens de algemene mailtekst, zonder enig signaal.
-            // Beide schrijfwijzen worden daarom geaccepteerd.
-            $displayName = settings_string($recipient['name'] ?? $recipient['display_name'] ?? '', 160);
-            if ($displayName === '') {
-                $displayName = $email;
-            }
-            $category = settings_string($recipient['category'] ?? $recipient['recipient_category'] ?? 'other', 60);
-            if ($category === '') {
-                $category = 'other';
-            }
-
-            $active = settings_bool($recipient['active'] ?? true, true) ? 1 : 0;
-
-            $matched = null;
-            if ($numericId > 0 && isset($existingById[$numericId])) {
-                $matched = $existingById[$numericId];
-            } elseif ($recipientKey !== '' && isset($existingByKey[$recipientKey])) {
-                $matched = $existingByKey[$recipientKey];
-            }
-
-            if ($matched) {
-                $deactivatedAt = $active === 1 ? null : date('Y-m-d H:i:s');
-                $updateRecipient = $pdo->prepare(
-                    'UPDATE mail_recipients
-                     SET recipient_key = :recipient_key,
-                         recipient_category = :recipient_category,
-                         display_name = :display_name,
-                         email = :email,
-                         active = :active,
-                         deactivated_at = :deactivated_at
-                     WHERE id = :id AND company_id = :company_id'
-                );
-                $updateRecipient->execute([
-                    ':recipient_key' => $recipientKey !== '' ? $recipientKey : $matched['recipient_key'],
-                    ':recipient_category' => $category,
-                    ':display_name' => $displayName,
-                    ':email' => $email,
-                    ':active' => $active,
-                    ':deactivated_at' => $deactivatedAt,
-                    ':id' => (int)$matched['id'],
-                    ':company_id' => $companyId,
-                ]);
-            } else {
-                $deactivatedAt = $active === 1 ? null : date('Y-m-d H:i:s');
-                $insertRecipient = $pdo->prepare(
-                    'INSERT INTO mail_recipients (company_id, recipient_key, recipient_category, display_name, email, active, deactivated_at)
-                     VALUES (:company_id, :recipient_key, :recipient_category, :display_name, :email, :active, :deactivated_at)'
-                );
-                $insertRecipient->execute([
-                    ':company_id' => $companyId,
-                    ':recipient_key' => $recipientKey !== '' ? $recipientKey : null,
-                    ':recipient_category' => $category,
-                    ':display_name' => $displayName,
-                    ':email' => $email,
-                    ':active' => $active,
-                    ':deactivated_at' => $deactivatedAt,
-                ]);
-            }
+        // Een onjuist adres wordt hier geweigerd in plaats van stil overgeslagen:
+        // wie een ontvanger invult en opslaat, hoort te horen dat het misging.
+        if ($uitkomst['invalid'] !== []) {
+            $pdo->rollBack();
+            auth_send_json([
+                'ok' => false,
+                'error' => 'invalid-payload',
+                'message' => 'Een of meer e-mailvelden zijn ongeldig.',
+            ], 400);
         }
     }
 

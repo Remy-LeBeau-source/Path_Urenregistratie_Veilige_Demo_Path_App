@@ -141,7 +141,7 @@ select:focus-visible {
 .login-option strong { color: var(--navy-tekst); font-size: 15px; }
 .login-option small { margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.45; }
 .login-avatar { display: grid; width: 44px; height: 44px; place-items: center; border-radius: 13px; background: var(--navy); color: #fff; font-size: 12px; font-weight: 800; }
-.login-avatar.employee { background: var(--mint); color: var(--navy-tekst); }
+.login-avatar.employee { background: var(--mint); color: var(--navy); }
 .login-arrow { color: var(--mint-dark-tekst); font-size: 22px; }
 .login-panel .login-note { border-radius: 12px; background: var(--green-light); color: var(--teal); font-size: 11px; padding: 12px 14px; }
 .login-panel .login-note[hidden] { display: none; }
@@ -219,7 +219,7 @@ select:focus-visible {
 }
 
 .nav-item.is-active .nav-marker { border-color: var(--mint); background: var(--mint); }
-.nav-count { margin-left: auto; border-radius: 999px; background: var(--mint); color: var(--navy-tekst); font-size: 11px; font-weight: 800; padding: 2px 7px; }
+.nav-count { margin-left: auto; border-radius: 999px; background: var(--mint); color: var(--navy); font-size: 11px; font-weight: 800; padding: 2px 7px; }
 .nav-count-group { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; }
 .nav-count-group[hidden] { display: none; }
 .nav-count-group .nav-count { margin-left: 0; }
@@ -230,7 +230,7 @@ select:focus-visible {
 
 .sidebar-footer { display: grid; gap: 16px; }
 .workspace-user { display: flex; align-items: center; gap: 10px; }
-.workspace-user .avatar { display: grid; width: 36px; height: 36px; place-items: center; overflow: hidden; border-radius: 10px; background: var(--mint); color: var(--navy-tekst); font-size: 12px; font-weight: 800; background-position: center; background-size: cover; }
+.workspace-user .avatar { display: grid; width: 36px; height: 36px; place-items: center; overflow: hidden; border-radius: 10px; background: var(--mint); color: var(--navy); font-size: 12px; font-weight: 800; background-position: center; background-size: cover; }
 .workspace-user strong, .workspace-user small { display: block; }
 .workspace-user strong { font-size: 13px; }
 .workspace-user small { margin-top: 2px; color: #91a4b6; font-size: 11px; }
@@ -292,7 +292,7 @@ select:focus-visible {
 .month-choice-panel[hidden] { display: none; }
 .period-control .month-choice-panel button, .customer-timesheet-upload-grid .month-choice-panel button { width: auto; height: auto; min-height: 34px; border: 1px solid transparent; border-radius: 8px; background: var(--surface-muted); color: var(--ink); padding: 7px 8px; cursor: pointer; font: inherit; font-size: 10px; font-weight: 700; line-height: 1.2; }
 .period-control .month-choice-panel button:hover, .customer-timesheet-upload-grid .month-choice-panel button:hover { border-color: var(--mint); background: var(--green-light); }
-.period-control .month-choice-panel button.is-active, .customer-timesheet-upload-grid .month-choice-panel button.is-active { border-color: var(--mint-dark); background: var(--mint); color: var(--navy-tekst); }
+.period-control .month-choice-panel button.is-active, .customer-timesheet-upload-grid .month-choice-panel button.is-active { border-color: var(--mint-dark); background: var(--mint); color: var(--navy); }
 html[data-theme="dark"] .period-control .month-picker-trigger,
 html[data-theme="dark"] .customer-timesheet-upload-grid .month-picker-trigger { color: var(--ink); background: #0c1723; }
 html[data-theme="dark"] .month-picker-trigger::after { color: var(--muted); }
@@ -336,7 +336,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .button:hover { transform: translateY(-1px); }
 }
 .button:disabled { cursor: not-allowed; filter: grayscale(.25); opacity: .48; transform: none; }
-.button-primary { background: var(--mint); color: var(--navy-tekst); box-shadow: 0 8px 18px rgba(58,189,157,.2); }
+.button-primary { background: var(--mint); color: var(--navy); box-shadow: 0 8px 18px rgba(58,189,157,.2); }
 .button-primary:hover { background: #48caa9; box-shadow: 0 11px 23px rgba(58,189,157,.25); }
 .button-ghost { border-color: var(--line); background: var(--vlak); color: var(--navy-tekst); }
 .hero-card .button-ghost { border-color: rgba(255,255,255,.19); background: rgba(255,255,255,.08); color: #fff; }
@@ -407,7 +407,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .workflow-step strong, .workflow-step small { display: block; }
 .workflow-step strong { color: #73808c; font-size: 12px; }
 .workflow-step small { margin-top: 3px; font-size: 9px; }
-.workflow-step.is-done > span { border-color: var(--mint); background: var(--mint); color: var(--navy-tekst); }
+.workflow-step.is-done > span { border-color: var(--mint); background: var(--mint); color: var(--navy); }
 .workflow-step.is-done strong, .workflow-step.is-current strong { color: var(--navy-tekst); }
 .workflow-step.is-current > span { border-color: var(--mint); background: var(--green-light); color: var(--mint-dark-tekst); }
 .workflow-line { flex: 1; height: 1px; min-width: 20px; background: var(--line); margin: 0 12px; }
@@ -426,7 +426,9 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .status-pill { display: inline-flex; min-height: 25px; align-items: center; border-radius: 999px; font-size: 9px; font-weight: 800; padding: 4px 9px; }
 .status-approved, .status-sent { background: var(--green-light); color: var(--mint-dark-tekst); }
 .status-submitted, .status-ready { background: #eaf1fa; color: #315d91; }
-.status-concept { background: #f1f2f3; color: #6f7b86; }
+/* Vaste lichte pil met grijze tekst: bleef wit in de donkere modus, en 3,9:1 is
+   ook bij daglicht te weinig voor een statuslabel. */
+.status-concept { background: var(--vlak-zacht); color: var(--muted); }
 .status-warning { background: var(--warning-bg); color: var(--warning-tekst); }
 
 .view-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 25px; margin: 35px 0 22px; }
@@ -453,7 +455,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 
 .correction-banner { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 14px; align-items: start; margin: 0 0 18px; border: 1px solid #edc58f; border-radius: 16px; background: var(--warning-bg); color: var(--ink); padding: 17px 19px; }
 .correction-banner.dashboard-correction { grid-template-columns: auto minmax(0,1fr) auto; align-items: center; }
-.correction-banner-icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; background: var(--warning); color: #fff; font-size: 16px; font-weight: 900; }
+.correction-banner-icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; background: var(--warning); color: var(--navy); font-size: 16px; font-weight: 900; }
 .correction-banner strong, .correction-banner p, .correction-banner small { display: block; }
 .correction-banner strong { color: var(--warning-tekst); font-size: 12px; }
 .correction-banner p { margin: 5px 0 4px; font-size: 12px; line-height: 1.5; white-space: pre-line; }
@@ -485,8 +487,8 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .hours-table input { width: 64px; height: 42px; border: 1px solid var(--line); border-radius: 11px; background: var(--vlak); color: var(--navy-tekst); font-size: 14px; font-weight: 700; text-align: center; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
 .hours-table input:hover { border-color: #b9d9d1; }
 .hours-table input:focus { outline: 0; border-color: var(--mint); box-shadow: 0 0 0 4px rgba(58,189,157,.14); transform: translateY(-1px); }
-.hours-table .outside-month { background: var(--vlak); color: #c6ced1; }
-.outside-month-mark { display: grid; width: 64px; height: 42px; place-items: center; margin: 26px auto 0; border-radius: 11px; background: #f4f7f7; color: #bdc7cb; }
+.hours-table .outside-month { background: var(--vlak); color: var(--muted); }
+.outside-month-mark { display: grid; width: 64px; height: 42px; place-items: center; margin: 26px auto 0; border-radius: 11px; background: var(--vlak-zacht); color: var(--muted); }
 .hours-table .week-total { color: var(--navy-tekst); font-size: 12px; font-weight: 800; }
 .hours-review-grid .workday-cell { display: table-cell; }
 .hours-review-grid .workday-cell .date-number { display: block; margin: 0 auto 7px; width: fit-content; }
@@ -519,7 +521,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .approval-person small, .approval-data small { margin-top: 4px; color: var(--muted); font-size: 10px; }
 .approval-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .empty-state { border: 1px dashed #b9d9d1; border-radius: 20px; background: var(--vlak-zacht); padding: 70px 25px; text-align: center; }
-.empty-check { display: grid; width: 48px; height: 48px; place-items: center; margin: 0 auto 15px; border-radius: 50%; background: var(--mint); color: var(--navy-tekst); font-weight: 900; }
+.empty-check { display: grid; width: 48px; height: 48px; place-items: center; margin: 0 auto 15px; border-radius: 50%; background: var(--mint); color: var(--navy); font-weight: 900; }
 .empty-state h3 { margin: 0; font-family: "Roboto Slab", Georgia, serif; }
 .empty-state p { color: var(--muted); font-size: 12px; }
 .approval-empty-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
@@ -576,8 +578,8 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .invoice-status-guide > div.is-current { border-color: #9edccb; background: var(--green-light); box-shadow: 0 6px 20px rgba(58,189,157,.09); }
 .invoice-status-guide > div.is-blocked { border-color: #f0d2a8; background: var(--warning-bg); }
 .invoice-status-guide > div > span { display: grid; width: 30px; height: 30px; flex: 0 0 30px; place-items: center; border-radius: 9px; background: var(--green-light); color: var(--teal); font-size: 11px; font-weight: 900; }
-.invoice-status-guide > div.is-current > span { background: var(--mint); color: var(--navy-tekst); }
-.invoice-status-guide > div.is-blocked > span { background: var(--warning); color: var(--navy-tekst); }
+.invoice-status-guide > div.is-current > span { background: var(--mint); color: var(--navy); }
+.invoice-status-guide > div.is-blocked > span { background: var(--warning); color: var(--navy); }
 .invoice-status-guide p, .invoice-status-guide strong, .invoice-status-guide small { display: block; margin: 0; }
 .invoice-status-guide strong { color: var(--navy-tekst); font-size: 11px; }
 .invoice-status-guide small { margin-top: 3px; color: var(--muted); font-size: 9px; line-height: 1.4; }
@@ -596,7 +598,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .invoice-action-note { color: var(--muted); font-size: 9px; font-weight: 700; }
 .small-button { border: 1px solid var(--line); border-radius: 9px; background: var(--vlak); color: var(--teal); cursor: pointer; font-size: 10px; font-weight: 800; padding: 7px 10px; }
 .small-button:hover { border-color: var(--mint); background: var(--green-light); }
-.small-button.send { border-color: var(--mint); background: var(--mint); color: var(--navy-tekst); }
+.small-button.send { border-color: var(--mint); background: var(--mint); color: var(--navy); }
 
 .employee-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
 .employee-card { border: 1px solid var(--line); border-radius: var(--radius); background: var(--vlak); padding: 22px; box-shadow: 0 8px 24px rgba(13,27,56,.035); }
@@ -889,11 +891,15 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .demo-account-grid .demo-employee-picker { margin-top: 0; }
 
 .topbar-popover { position: relative; }
-.notification-button .bell-shape { position: absolute; inset: 11px 12px 12px; border: 2px solid var(--navy); border-top-left-radius: 10px; border-top-right-radius: 10px; border-bottom: 0; }
+/* Dit was een blokje met alleen een boven- en zijrand: een boog, geen bel. En de
+   kleur stond vast op --navy, wat in de donkere modus juist de achtergrond is, dus
+   daar was hij helemaal weg. Nu een echte belvorm die de tekstkleur volgt. */
+.notification-button .bell-shape { display: grid; place-items: center; width: 100%; height: 100%; color: var(--navy-tekst); }
+.notification-button .bell-shape svg { width: 22px; height: 22px; }
 .notification-button::after { display: none; }
-.notification-button b { position: absolute; top: -6px; right: -6px; display: grid; min-width: 20px; height: 20px; place-items: center; border: 2px solid var(--background); border-radius: 999px; background: var(--mint); color: var(--navy-tekst); font-size: 9px; padding: 0 4px; }
+.notification-button b { position: absolute; top: -6px; right: -6px; display: grid; min-width: 20px; height: 20px; place-items: center; border: 2px solid var(--background); border-radius: 999px; background: var(--mint); color: var(--navy); font-size: 9px; padding: 0 4px; }
 .profile-menu-button { display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); cursor: pointer; padding: 0; }
-.topbar-avatar, .profile-menu-avatar, .profile-photo-preview { display: grid; place-items: center; overflow: hidden; border-radius: 10px; background: var(--mint); color: var(--navy-tekst); font-size: 11px; font-weight: 900; background-position: center; background-size: cover; }
+.topbar-avatar, .profile-menu-avatar, .profile-photo-preview { display: grid; place-items: center; overflow: hidden; border-radius: 10px; background: var(--mint); color: var(--navy); font-size: 11px; font-weight: 900; background-position: center; background-size: cover; }
 .topbar-avatar { width: 32px; height: 32px; }
 .profile-menu-avatar { width: 42px; height: 42px; }
 .popover-panel { position: absolute; top: calc(100% + 11px); right: 0; z-index: 60; width: min(360px, calc(100vw - 28px)); overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: 0 24px 55px rgba(13,27,56,.18); }
@@ -1086,6 +1092,9 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .mail-recipient-settings-list, .mail-route-choice-list { display: grid; gap: 10px; }
 .mail-recipient-setting, .mail-route-choice { display: grid; grid-template-columns: minmax(0,1fr) auto auto; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-muted); }
 .mail-recipient-setting.is-inactive { opacity: .62; }
+/* De broker is hier alleen te lezen: hij staat per opdracht, niet in deze lijst. */
+.mail-recipient-setting.is-informational { background: var(--vlak-warm); }
+.mail-recipient-setting.is-informational .form-help { margin: 0; }
 /* De standaardtekst per ontvanger. Dichtgeklapt zodat de lijst kort blijft, maar
    uitklapbaar zodat je kunt zien wat er verstuurd wordt zonder te versturen. */
 .mail-standaardtekst { grid-column: 1 / -1; margin-top: 4px; border-top: 1px solid var(--line); padding-top: 8px; }
@@ -1219,7 +1228,9 @@ html[data-theme="dark"] .mail-acceptance-label { background: #4b3520; color: #ff
 .modal-form label.route-toggle { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 700; }
 .modal-form .route-toggle input { display: inline-block; width: 18px; height: 18px; margin: 0; padding: 0; accent-color: var(--mint-dark); }
 
-.invoice-document-preview { padding: 28px; border: 1px solid var(--line); border-radius: 14px; background: var(--vlak); color: #122034; }
+/* Papier blijft papier: dit voorbeeld laat zien wat er straks uit de printer
+   komt, dus het wisselt bewust niet mee met de donkere modus. */
+.invoice-document-preview { padding: 28px; border: 1px solid var(--line); border-radius: 14px; background: #ffffff; color: #122034; }
 .invoice-source-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; }
 .invoice-source-columns section h4 { margin: 0 0 10px; padding: 6px 8px; background: #eee; font-size: 13px; }
 .invoice-source-field { display: grid; grid-template-columns: minmax(120px,.9fr) minmax(0,1.3fr); gap: 12px; min-height: 25px; font-size: 11px; line-height: 1.45; }
@@ -1244,7 +1255,7 @@ html[data-theme="dark"] .mail-acceptance-label { background: #4b3520; color: #ff
 .invoice-preview-table th:first-child, .invoice-preview-table td:first-child { text-align: left; }
 .invoice-preview-totals > div:last-child { display: grid; grid-template-columns: 1fr auto; gap: 8px 20px; }
 .invoice-preview-total { padding-top: 8px; border-top: 2px solid #122034; font-size: 18px; font-weight: 800; }
-.invoice-preview-watermark { margin-top: 24px; padding: 10px; border-radius: 9px; background: var(--vlak-warm); color: #9b5e13; text-align: center; font-weight: 800; }
+.invoice-preview-watermark { margin-top: 24px; padding: 10px; border-radius: 9px; background: #fffaf4; color: #9b5e13; text-align: center; font-weight: 800; }
 .invoice-branded-template { overflow: hidden; padding: 0; border: 0; border-radius: 16px; box-shadow: 0 14px 40px rgba(13,27,56,.12); }
 .invoice-brand-header { display: grid; grid-template-columns: 1fr 1.25fr; align-items: center; min-height: 174px; background: var(--navy); color: #fff; padding: 28px 34px; }
 .invoice-brand-logo img { display: block; width: 155px; max-width: 100%; }
@@ -1256,7 +1267,7 @@ html[data-theme="dark"] .mail-acceptance-label { background: #4b3520; color: #ff
 .invoice-brand-number-line { display: flex; justify-content: flex-end; align-items: baseline; gap: 5px; margin-top: 7px; color: #fff; }
 .invoice-brand-number-line span { font-size: 8px; font-weight: 800; }
 .invoice-brand-number-line strong { color: #fff; font-size: 14px; }
-.invoice-brand-title > span { display: inline-block; margin-top: 11px; border-radius: 999px; background: var(--mint); color: var(--navy-tekst); font-size: 8px; font-weight: 900; padding: 7px 12px; }
+.invoice-brand-title > span { display: inline-block; margin-top: 11px; border-radius: 999px; background: var(--mint); color: var(--navy); font-size: 8px; font-weight: 900; padding: 7px 12px; }
 .invoice-brand-accent { height: 6px; background: var(--mint); }
 .invoice-brand-parties { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding: 28px 34px 0; }
 .invoice-brand-party { min-height: 238px; border: 1px solid var(--line); border-radius: 16px; background: var(--vlak-zacht); padding: 22px 24px; }
@@ -1318,7 +1329,7 @@ html[data-theme="dark"] .mail-acceptance-label { background: #4b3520; color: #ff
 .fixed-audience span { margin-top: 4px; font-size: 9px; }
 
 .help-launcher { position: fixed; right: 24px; bottom: 22px; z-index: 80; display: flex; min-height: 48px; align-items: center; gap: 8px; border: 0; border-radius: 999px; background: var(--navy); color: #fff; cursor: pointer; box-shadow: 0 16px 38px rgba(13,27,56,.25); padding: 6px 15px 6px 7px; }
-.help-launcher > span { display: grid; width: 35px; height: 35px; place-items: center; border-radius: 50%; background: var(--mint); color: var(--navy-tekst); font-size: 16px; font-weight: 900; }
+.help-launcher > span { display: grid; width: 35px; height: 35px; place-items: center; border-radius: 50%; background: var(--mint); color: var(--navy); font-size: 16px; font-weight: 900; }
 .help-launcher strong { font-size: 11px; }
 .help-panel { position: fixed; right: 24px; bottom: 82px; z-index: 90; display: grid; width: min(420px, calc(100vw - 28px)); max-height: min(700px, calc(100vh - 110px)); grid-template-rows: auto auto minmax(120px,1fr) auto; overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); box-shadow: 0 28px 70px rgba(13,27,56,.24); }
 .help-panel header { display: flex; align-items: center; justify-content: space-between; gap: 15px; background: linear-gradient(135deg, #0d1b38, #174b55); color: #fff; padding: 18px; }
@@ -1348,7 +1359,7 @@ html[data-theme="dark"] .mail-acceptance-label { background: #4b3520; color: #ff
 .help-suggestions [data-help-topic="contact"] { grid-column: 1 / -1; border-color: transparent; background: var(--green-light); color: var(--navy-tekst); font-weight: 900; }
 .help-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; border-bottom: 1px solid var(--line); background: var(--surface); padding: 11px; }
 .help-form input { min-width: 0; height: 40px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); padding: 0 11px; }
-.help-form button { border: 0; border-radius: 10px; background: var(--mint); color: var(--navy-tekst); cursor: pointer; font-size: 10px; font-weight: 900; padding: 0 14px; }
+.help-form button { border: 0; border-radius: 10px; background: var(--mint); color: var(--navy); cursor: pointer; font-size: 10px; font-weight: 900; padding: 0 14px; }
 .help-inline-topics { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
 .help-inline-topics button { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--navy-tekst); cursor: pointer; font-size: 10px; font-weight: 900; padding: 8px 11px; text-align: left; }
 .help-inline-topics button:hover { border-color: var(--mint); background: var(--green-light); }
@@ -1360,7 +1371,15 @@ html[data-theme="dark"] { color-scheme: dark; --ink: #e7eef4; --muted: #9aaab7; 
   --navy-tekst: #dbe6f2;
   --mint-dark-tekst: #5fd7ba;
   --warning-tekst: #f0bd7a;
-  --tabelkop: #9aaab7; }
+  --tabelkop: #9aaab7;
+  /* En de vlakken zelf. Deze drie ontbraken hier, en dat was geen detail: de
+     tekstkleuren hierboven werden wel licht, de vlakken bleven wit. Zo kreeg je
+     een witte knop met witte tekst -- "Open detail" en "Alle openstaande" waren
+     daardoor onleesbaar in de donkere modus. Een lichte vlakkleur die hier niet
+     staat, blijft licht. */
+  --vlak: #111d2b;
+  --vlak-zacht: #16232f;
+  --vlak-warm: #2b2318; }
 html[data-theme="dark"] .login-screen { background: radial-gradient(circle at 15% 15%, rgba(58,189,157,.17), transparent 28%), #07111d; }
 html[data-theme="dark"] .login-panel,
 html[data-theme="dark"] .approval-card,
@@ -1417,7 +1436,9 @@ html[data-theme="dark"] .summary-card dl div { border-color: var(--line); }
 html[data-theme="dark"] .hours-table th,
 html[data-theme="dark"] .hours-table .outside-month { background: #0d1825; }
 html[data-theme="dark"] .hours-table tbody tr:hover { background: #0e1a27; }
-html[data-theme="dark"] .outside-month-mark { background: #111d2b; color: #607181; }
+/* Deze losse uitzondering is niet meer nodig: .outside-month-mark staat nu op
+   tokens die zelf al meewisselen, en #607181 haalde hier 3,4:1. */
+html[data-theme="dark"] .outside-month-mark { background: var(--vlak-zacht); color: var(--muted); }
 html[data-theme="dark"] .help-faq-heading strong { color: var(--ink); }
 html[data-theme="dark"] .metric-card.attention { border-color: #5f4327; background: linear-gradient(150deg,#111d2b,#211a12); }
 html[data-theme="dark"] .modal { background: var(--surface); color: var(--ink); }
