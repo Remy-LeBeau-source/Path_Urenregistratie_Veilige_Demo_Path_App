@@ -115,6 +115,25 @@ Na goedgekeurde uren controleert Backoffice per medewerker en periode afzonderli
 - wachtwoordreset: eenmalige link, geen bijlage;
 - eerste uitnodiging: eenmalige link om een wachtwoord te maken, geen bijlage.
 
+Daarnaast kan Backoffice zelf ontvangers van het type **Overig** toevoegen. Die krijgen standaard
+alleen ureninformatie, maar de factuur kan per medewerker worden meegestuurd met het vinkje
+*Factuur meesturen*. De salarisadministratie is de enige route die nooit een factuur krijgt; daar
+is dat vinkje uitgeschakeld met de reden erbij.
+
+### Welke tekst een ontvanger krijgt
+
+Eén regel, voor iedere ontvanger: **is er bij die ontvanger een eigen tekst ingevuld, dan die --
+anders de standaardtekst van zijn soort.** Er is geen tussenlaag. De tekst die vroeger "de tekst bij
+de opdracht" heette is de eigen tekst van de broker en wordt door niemand anders gelezen.
+
+De vier standaardteksten (broker, boekhouding, salarisadministratie, overig) zijn aanpasbaar bij
+Instellingen → Teksten. Laat je een veld leeg, of zet je het terug met *Terug naar de meegeleverde
+tekst*, dan geldt weer wat er wordt meegeleverd -- en loop je mee met latere verbeteringen daaraan.
+
+Onder elke mail komt automatisch de handtekening: ondersteuningsnaam, bedrijf, contactadres,
+website en slogan uit Instellingen. Die hoort bij de afzender, niet bij de tekst, en staat daarom
+ook onder een zelf geschreven bericht.
+
 Eén afgeronde factuuractie maakt bij de standaardroute exact drie afzonderlijke berichten: broker,
 boekhouding en salarisadministratie. Dit zijn drie queue-items en drie SMTP-afleveringen, niet één
 bericht met CC/BCC. In TEST worden ze alle drie fysiek bij de vaste testontvanger afgeleverd, terwijl
@@ -242,11 +261,16 @@ Minimaal de volgende ketens zijn releaseblokkerend:
 | productie toont nooit dry-run-jargon of een plaatsvervangend token aan een gebruiker | `password-reset.spec.ts` (`PWD-N-016`) |
 | het resetscherm neemt het inlogadres over, weigert een leeg adres en laat terugkeren | `password-reset.spec.ts` (`PWD-N-015`) |
 | onderwerp en begeleidende tekst van een opdracht blijven na opslaan bewaard | `admin-writes.spec.ts` (`ADM-WR-H-013`) |
-| een eigen tekst per ontvanger wordt bewaard; een leeg veld blijft de opdrachttekst erven | `admin-writes.spec.ts` (`ADM-WR-H-014`) |
-| twee nieuw toegevoegde ontvangers krijgen allebei echt een factuurmail | `email-queue.spec.ts` (`EQ-H-027`) |
+| een eigen tekst per ontvanger wordt bewaard; een leeg veld valt terug op de standaardtekst van dat soort | `admin-writes.spec.ts` (`ADM-WR-H-014`) |
+| twee nieuw toegevoegde ontvangers krijgen allebei echt een factuurmail | `email-queue.spec.ts` (`E2E-H-009`, was `EQ-H-027`) |
+| een aangepaste standaardtekst komt werkelijk in de mail en is terug te zetten | `email-queue.spec.ts` (`E2E-H-011`, was `EQ-H-030`) |
+| opslaan zonder iets te wijzigen legt geen eigen standaardtekst vast | `email-queue.spec.ts` (`E2E-H-011`) |
+| het vinkje Factuur meesturen bepaalt werkelijk of de bijlage meegaat | `email-queue.spec.ts` (`E2E-H-012`) |
+| een nieuwe ontvanger komt bij andere medewerkers ongevinkt binnen | `admin-writes.spec.ts` (`ADM-WR-H-018`) |
+| het instellingenscherm toont de tekst die de ontvanger werkelijk krijgt | `invoice-company-identity.spec.ts` (`INV-ID-H-010`) |
 | mobiele hoofdketen | `mobile-ui.spec.ts` |
 | iedere medewerker en beheerder ziet na inloggen de eigen naam, nooit die van een collega | `auth.spec.ts` (`AUTH-H-020`, `AUTH-H-021`) |
-| één begeleidende tekst bereikt broker, boekhouding en salarisadministratie | `email-queue.spec.ts` (`EQ-H-022`) |
+| één factuuractie maakt drie gescheiden mailroutes met het juiste bijlagenbeleid | `email-queue.spec.ts` (`EQ-H-022`) |
 | een uitgenodigde collega kan op de telefoon een wachtwoord instellen en ziet de bevestiging | `mobile-ui.spec.ts` (`MOB-H-006`) |
 | een lange mededeling is op de telefoon volledig leesbaar zonder zijwaarts scrollen | `mobile-ui.spec.ts` (`MOB-H-007`) |
 

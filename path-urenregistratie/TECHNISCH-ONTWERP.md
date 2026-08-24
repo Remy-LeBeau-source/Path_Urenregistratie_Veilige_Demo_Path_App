@@ -170,16 +170,56 @@ op TEST ongedaan maken. Ten tweede mag een terugval nooit een andere persoon opl
 andermans naam. `profileForRole()` vergelijkt het profiel daarom met de sessie en gebruikt bij
 verschil de naam uit de sessie. Geen naam is acceptabel, de verkeerde naam niet.
 
-### Eén begeleidende tekst voor iedere ontvanger
+### Welke begeleidende tekst een ontvanger krijgt
 
-De tekst uit het opdrachtformulier bereikte alleen het brokerkanaal; boekhouding en
-salarisadministratie hielden bewoording die vastzat in `queue.php`. Eén factuur leverde daardoor drie
-verschillende teksten op, waarvan er maar één aanpasbaar was. `$templateFor($channel)` laat de
-opdrachttekst nu voor elk kanaal winnen, met per kanaal nog een eigen standaard voor wat leeg blijft.
-Alle sjabloonvariabelen komen uit één gedeelde `$vars`, dus een tekst werkt in elk kanaal.
+Eén regel, voor iedere ontvanger:
+
+1. de tekst die bij díe ontvanger is ingevuld — die wint
+2. anders de standaardtekst van zijn soort
+
+Meer lagen zijn er niet. Hier stond eerder een tussenstap: "de tekst bij de opdracht", die iedereen
+erfde behalve de boekhouder en de salarisadministratie. Dat was de bron van een reeks fouten. Die
+tekst is namelijk aan de bróker geschreven ("Hierbij stuur ik de ureninformatie van...") en las bij
+een andere ontvanger als een bericht aan de verkeerde persoon. De uitzondering die dat repareerde
+maakte het instellingenscherm onnavolgbaar: per rij gold een andere regel, en er stonden drie
+verschillende zinnen door elkaar over wat een leeg veld betekent.
+
+De opdrachttekst is daarom geen aparte laag meer maar wat hij altijd al was: **de eigen tekst van de
+broker**. Alleen die leest hem nog. In het medewerkersscherm staat hij dan ook in de rij van de
+broker, met dezelfde twee velden als iedere andere ontvanger.
+
+De standaardteksten per soort staan in `server/mail/templates.php` en zijn **aanpasbaar** bij
+Instellingen → Teksten. Een aangepaste tekst komt in `mail_channel_templates` (bedrijf + kanaal).
+Ontbreekt die rij, dan geldt de meegeleverde tekst uit `templates.php`. Dat is een bewuste keuze:
+wie niets aanpast loopt mee met verbeteringen aan de meegeleverde teksten, en wie wel aanpast houdt
+zijn eigen tekst.
+
+Daaruit volgt een val die niet aan de uitkomst te zien is. Het instellingenscherm stuurt bij iedere
+keer opslaan alle vier de kanalen mee, gevuld met wat er op dat moment geldt. Zonder vergelijking met
+de meegeleverde tekst zou iemand die deze velden nooit aanraakt ze tóch als eigen tekst vastleggen —
+en daarna niet meer meelopen met verbeteringen, zonder ooit iets te hebben gedaan. `settings.php`
+verwijdert de rij daarom zodra de ingestuurde tekst leeg is óf gelijk aan de meegeleverde.
+
+Een test die alleen naar de uitkomst kijkt vangt dat niet: de tekst is immers identiek. Daarom meldt
+`bootstrap.php` apart welke kanalen werkelijk een eigen rij hebben (`mail_channel_customised`), en
+kijken zowel het scherm als `E2E-H-011` daarnaar in plaats van naar de tekst zelf.
 
 Let op bij het toevoegen van een kanaal: `mail_assert_vars()` laat de verzending falen op een
 variabele die niet bestaat. Een tekstveld zonder die controle kan dus de facturatie blokkeren.
+
+### Een bedieningselement dat niets doet
+
+`include_invoice_pdf` werd voor een ontvanger van het type Overig genegeerd: `queue.php` zette
+`$attachPolicy = 'none'` ongeacht het vinkje. Het vinkje werd wel opgeslagen en bleef aangevinkt
+staan, dus het scherm toonde een instelling die niets deed. Zoiets merk je pas wanneer de ontvanger
+belt dat de factuur ontbreekt.
+
+Overig volgt nu het vinkje. De salarisadministratie houdt haar uitzondering — die krijgt bewust nooit
+bedragen — maar daar wordt het vinkje niet meer aangeboden: het staat uitgeschakeld met de reden
+erbij. Een dood vinkje aanbieden is net zo misleidend als een genegeerd vinkje.
+
+Dit is dezelfde regel als bij `Goedkeuring verplicht` en `Factuurnummer vastzetten` hieronder: een
+schakelaar die de server negeert hoort niet in het scherm te staan.
 
 ### Instellingen die de server niet kent
 
@@ -239,6 +279,20 @@ leeswrite dat belbadge, mededelingenfilter en persoonlijke lijst atomisch dezelf
 `3 → 2 → 1 → 0` tonen. Bij auth-login wordt de lokale demo-notificatieprojectie vóór de eerste
 app-render geleegd, zodat `15`/`10` nooit als tijdelijke serverwaarheid zichtbaar worden. Een
 mock-only tellertest is hiervoor niet voldoende.
+
+Die lagen zijn sinds 0.9.136 ook los te draaien, en het voorvoegsel van het casenummer bepaalt in
+welke laag een case valt:
+
+| Laag | Draai je met | Cases |
+| --- | --- | --- |
+| DB | `npm run test:db:crud` | `DB-*` |
+| API | `npm run test:e2e:group:api` | `AUTH-`, `SEC-`, `ROLE-`, `TS-API-`, `CTS-API-` |
+| E2E | `npm run test:e2e:group:e2e` | `E2E-*` |
+| UI | `npm run test:e2e:group:ui`, `:ui-mobile` | `DASH-`, `INV-`, `MOB-` |
+
+Loopt een nieuwe case de volledige keten door -- uren indienen, goedkeuren, factureren, mail -- dan
+krijgt hij `E2E-`. Drie cases zijn daarom hernoemd; de omzettabel staat in `TESTCOMMANDOS.md`,
+zodat oude nummers in eerdere testverslagen terugvindbaar blijven.
 
 De expliciete ketenspecificatie `end-to-end-workflows.feature` wordt uit
 `business-workflows-e2e.spec.ts` gegenereerd. De eerste releaseblokkades bewijzen: (1) stabiele

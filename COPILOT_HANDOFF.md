@@ -28,6 +28,64 @@ Verwijder eerdere relevante bevindingen niet. Noteer geen wachtwoorden, tokens o
 
 ## Actuele overdracht
 
+### 2026-08-24 · Claude Code — v0.9.133 t/m v0.9.138: mailteksten, aanpasbare standaarden, E2E-laag
+
+Werk gedaan door Claude Code, rechtstreeks op `main` (geen PR's in deze periode). TEST draait
+`0.9.138`; PROD staat nog op `0.9.117` en wacht op Gio's goedkeuringspoort — **niet handmatig
+promoveren**.
+
+**Wat er functioneel is veranderd, en wat dat betekent als je hierin verder werkt:**
+
+1. **De begeleidende tekst volgt nu één regel:** eigen tekst bij de ontvanger wint, anders de
+   standaardtekst van dat soort. De laag "tekst bij de opdracht" bestaat niet meer als aparte laag —
+   dat is de eigen tekst van de broker geworden, en alleen die leest hem. Wie code raakt in
+   `server/mail/queue.php` rond `$templateFor`: er is geen erfvolgorde van drie stappen meer.
+2. **Standaardteksten zijn aanpasbaar** bij Instellingen → Teksten, per kanaal. Tabel
+   `mail_channel_templates` (migratie 024), gelezen via `mail_channel_templates_for()`. **Geen rij =
+   de meegeleverde tekst uit `templates.php`** — dat is bewust, zodat wie niets aanpast meeloopt met
+   verbeteringen. Sla dus nooit een rij op die gelijk is aan de meegeleverde tekst; `settings.php`
+   verwijdert hem in dat geval juist.
+3. **Twee bedieningselementen die logen zijn rechtgezet.** De soort ontvanger werd stil overschreven
+   bij opslaan (bootstrap geeft `display_name`/`recipient_category`, het opslaan las alleen
+   `name`/`category`) — migratie 023 herstelt bestaande rijen. En `include_invoice_pdf` werd bij
+   Overig genegeerd.
+
+**Vallen die tijd hebben gekost en die je waarschijnlijk ook tegenkomt:**
+
+- De **migratieloper knipt op puntkomma, ook binnen commentaar**. Geen puntkomma in een toelichting.
+- **Kolomtypes volgen de bestaande tabellen, niet `001_core_schema.sql`.** Dat bestand zegt `INT`;
+  de werkelijke schema's gebruiken `BIGINT UNSIGNED`. Een foreign key met het verkeerde type weigert.
+- **Een test die alleen naar de uitkomst kijkt kan een echte fout missen.** Een opgeslagen tekst die
+  gelijk is aan de meegeleverde ziet er aan de buitenkant hetzelfde uit als géén opgeslagen tekst, en
+  juist dat verschil is het probleem. `bootstrap.php` meldt daarom apart welke kanalen een eigen rij
+  hebben (`mail_channel_customised`). Draai elke nieuwe case één keer met de fix eruit — dat heeft
+  hier twee zwakke tests aan het licht gebracht die groen bleven terwijl de bug erin zat.
+- **Wisselvallige tests hadden hier één terugkerende oorzaak:** wachten op iets wat er toevallig bij
+  staat in plaats van op wat werkt (een tekstje naast een knop, een paneel na een klik die kan landen
+  voordat de app zijn afhandeling heeft gekoppeld). Drie gevallen opgelost via `openPaneel` in
+  `tests/playwright/pages/TopbarMenu.ts`. Niet uitputtend nagelopen.
+
+**Teststructuur is veranderd.** Er zijn nu vier benoemde lagen met elk een eigen commando: DB, API,
+E2E en UI. Het voorvoegsel van het casenummer bepaalt de laag. Drie cases die de volledige keten
+doorlopen zijn hernoemd naar `E2E-H-009/010/011`; de omzettabel met hun oude nummers staat in
+`TESTCOMMANDOS.md`, zodat oudere testverslagen leesbaar blijven. Loopt een nieuwe case de hele keten
+door, geef hem dan `E2E-`.
+
+**Wat openstaat en waar je niet blind op moet bouwen:**
+
+- Drie waarnemingen van Gio zijn **niet gereproduceerd**: na Herstel blijft een nieuw aangemaakte
+  persoon staan, na aanmaken eerst opslaan en F5 voordat je iets kunt invullen, en verkeerde vinkjes
+  na aanmaken. Op een schone database klopt alles, server én scherm. De verklaring die ervoor lag —
+  een botsende ontvangersleutel na Herstel — is uitgelokt en **weerlegd**. Bouw hier niets op voordat
+  er een reproductie is; de meest waarschijnlijke resterende verklaring is een oude `app.js` in de
+  browsercache.
+- De suite sharden (825s naar ~210s) is afgesproken voor ná PROD.
+- Fase 16 blijft de enige echte openstaande fase.
+
+Volledige verantwoording per punt staat in `MASTERCHECKLIST.md` onder *v0.9.133 t/m v0.9.138*, en het
+gewijzigde ontwerp in `TECHNISCH-ONTWERP.md` (*Welke begeleidende tekst een ontvanger krijgt*, *Een
+bedieningselement dat niets doet*) en `FUNCTIONEEL-ONTWERP.md` (hoofdstuk 7).
+
 ### 2026-08-17 01:20 · Copilot — ontbrekende serverfactuurcache krijgt refresh-retry
 
 - Screenshot bevestigde dat bedragen gelijk waren, maar `Controle afronden` nog kon melden dat de serverfactuur ontbrak.

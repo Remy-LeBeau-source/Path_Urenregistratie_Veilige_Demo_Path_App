@@ -1,30 +1,87 @@
 # Handoff voor Claude Code
 
-Bijgewerkt: 22 augustus 2026, Europe/Amsterdam.
+Bijgewerkt: 24 augustus 2026, Europe/Amsterdam.
 
-## Actuele overdracht — v0.9.113
+## Actuele overdracht — v0.9.138 (24 augustus 2026)
 
-Deze sectie vervangt de startstatus hieronder; de rest van het bestand blijft als historische context
-staan.
+Deze sectie vervangt alles hieronder; de rest van het bestand blijft als historische context staan.
 
-- Onderzochte release: [run 32571958567](https://github.com/Remy-LeBeau-source/Path_Urenregistratie_Veilige_Demo_Path_App/actions/runs/32571958567), main-SHA `714cce1`, versie `0.9.111`.
-- Alle gates en de TEST-cutover waren groen. Alleen `Verify public TEST account logins` faalde:
-  `gio@example.invalid` gaf HTTP 401. TEST serveert daardoor wel `0.9.111`; PROD bleef veilig op
-  `0.9.106` en is niet gepromoveerd.
-- Oorzaak: de gedeelde TEST-reset bewaarde de al afgedreven demo-wachtwoordhash en zette die na de
-  seed terug. Daardoor kon opnieuw deployen de vaste login niet herstellen.
-- Fix `0.9.113`: de publieke TEST-reset bewaart alleen de twee acceptatieaccounts, herstelt de zes
-  demoaccounts canoniek en verifieert ze binnen de resettransactie. De deploy voert dit uit na backup
-  en migratie maar vóór preflight/cutover. De publieke smoke logt daarna opnieuw in als beheerder én
-  medewerker.
-- De destructieve guard pint raw omgeving, origin, databasehost, poort, naam, gebruiker en private
-  opslag exact. Verkeerde config/confirm valt vóór writes dicht; een fout na DB-commit wordt als write
-  gerapporteerd.
-- Lokaal groen: `npm run check`, volledige `npm run test:gui-smoke`, gerichte `SAFE-H-014` en
-  `SAFE-H-015`, PHP/Node/Git-Bash-syntax, resetpolicy en deploymentcontract.
-- Werkbranch: `fix/test-login-baseline-v0.9.113`, schoon gebaseerd op `origin/main`. Na een groene PR
-  mag main de normale nieuwe releasepipeline starten. Run `32571958567` ongewijzigd rerunnen heeft
-  geen nut; niet handmatig naar PROD promoveren.
+### Waar het staat
+
+| Omgeving | Versie | Toestand |
+|---|---|---|
+| TEST | `0.9.138` | uitgerold, https://uren-test.pathconsultancy.nl |
+| PROD | `0.9.117` | wacht op de goedkeuringspoort van Gio; niet handmatig promoveren |
+
+Werkwijze in deze periode: rechtstreeks op `main`, geen PR's. Elke wijziging krijgt een versienummer,
+draait lokaal `npm run check` plus de volledige suite, en gaat daarna de pipeline in.
+
+### Wat er in deze reeks is veranderd
+
+De volledige verantwoording staat in `MASTERCHECKLIST.md` onder *v0.9.133 t/m v0.9.138*. De kern:
+
+1. **Eén regel voor de begeleidende tekst.** Eigen tekst bij de ontvanger wint, anders de
+   standaardtekst van zijn soort. De tussenlaag "tekst bij de opdracht" bestaat niet meer — dat is de
+   eigen tekst van de broker geworden. Zie het TO, sectie *Welke begeleidende tekst een ontvanger
+   krijgt*.
+2. **Standaardteksten aanpasbaar** bij Instellingen → Teksten, per soort ontvanger. Tabel
+   `mail_channel_templates` (migratie 024). Geen rij = de meegeleverde tekst uit `templates.php`.
+3. **Twee bedieningselementen die logen** zijn rechtgezet: de soort ontvanger die stil werd
+   overschreven bij opslaan (migratie 023), en het vinkje *Factuur meesturen* dat bij Overig werd
+   genegeerd.
+4. **E2E is een eigen, draaibare laag** (`npm run test:e2e:group:e2e`). De vier lagen en de
+   naamgevingsregel staan in `TESTCOMMANDOS.md`.
+
+### Wat een opvolger moet weten
+
+**De migratieloper knipt op puntkomma, ook binnen commentaar.** Zet dus geen puntkomma in een
+toelichting boven een migratie. Dat heeft al een keer een migratie laten falen.
+
+**Kolomtypes volgen de bestaande tabellen, niet `001_core_schema.sql`.** Dat bestand zegt `INT`,
+maar de werkelijke schema's gebruiken `BIGINT UNSIGNED`. Een verwijzing met het verkeerde type
+weigert MySQL.
+
+**Een test die alleen naar de uitkomst kijkt, kan een echte fout missen.** Bij de standaardteksten is
+een opgeslagen tekst die gelijk is aan de meegeleverde aan de buitenkant niet te onderscheiden van
+géén opgeslagen tekst — en juist dat verschil is het probleem. Daarom meldt `bootstrap.php` apart
+welke kanalen een eigen rij hebben. Controleer bij dit soort werk altijd of je test ook faalt met de
+fix eruit; dat is hier drie keer nuttig gebleken en heeft twee zwakke tests aan het licht gebracht.
+
+**Een walkthrough vindt wat asserties niet vinden.** Drie schermfouten (labels naast in plaats van
+boven de velden, te kleine tekstvakken, het blok onder het verkeerde tabblad) kwamen door de suite
+heen. Schrijf zo'n ronde als schermafdrukken die je zelf bekijkt, niet als verwachtingen — een
+assertie controleert alleen wat je al had bedacht.
+
+**Wisselvallige tests hebben hier één terugkerende oorzaak:** wachten op iets wat er toevallig bij
+staat in plaats van op wat werkt. Drie gevallen zijn opgelost via `tests/playwright/pages/TopbarMenu.ts`
+(`openPaneel`). Het patroon is niet uitputtend nagelopen.
+
+**De TEST-host begrenst verbindingen.** `Verify public TEST account logins` viel twee keer om op een
+connect-time-out vanaf de GitHub-runner terwijl de site vanaf elders binnen een tiende seconde
+antwoordde; na een kwartier lukte het wel. Het script heeft daarom een herkansing met een luide
+`LET OP`-regel. Komt die regel vaker terug, dan is het een firewall- of rate-limitkwestie bij TransIP
+— en dat is infrastructuur, dus niet zelf aanpassen.
+
+### Wat openstaat
+
+- **Drie waarnemingen van Gio zijn niet gereproduceerd:** na Herstel blijft een nieuw aangemaakte
+  persoon staan, na aanmaken eerst opslaan en F5 voordat je iets kunt invullen, en verkeerde vinkjes
+  na aanmaken. Op een schone database klopt alles, server én scherm. De verklaring die ervoor lag —
+  een botsende ontvangersleutel na Herstel — is uitgelokt en **weerlegd**. Meest waarschijnlijke
+  resterende verklaring is een oude `app.js` in de browsercache. Wacht op een harde ververs en de
+  exacte klikvolgorde voordat je hier iets bouwt.
+- **De suite sharden** (825s naar ~210s, zonder een assertie in te leveren). Afgesproken voor ná
+  PROD, omdat het verborgen koppelingen tussen tests bloot zal leggen.
+- **Fase 16** blijft de enige echte openstaande fase: echte mail op PROD, backup én restore, fysieke
+  toestellen, monitoring, rollback en één echte maandronde.
+
+### Vaste afspraken met Gio
+
+- Versienummer ophogen zodra werk werkelijk uitgaat, niet eerder.
+- Lokaal testen vóór pushen; geen infrastructuurwijziging zonder overleg.
+- Per release vertellen wat er veranderd is en wat hij zelf kan nakijken — beginnend bij welke versie
+  er **werkelijk** op TEST draait, en eindigend met wat er níet in zit.
+- PROD gaat alleen via zijn eigen goedkeuring in GitHub.
 
 ## Startstatus
 
