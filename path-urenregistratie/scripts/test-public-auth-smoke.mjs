@@ -16,6 +16,20 @@ const accounts = [
   },
 ];
 
+let herkansingenGebruikt = 0;
+
+async function haalOp(url, opties = {}) {
+  try {
+    return await fetch(url, opties);
+  } catch (eerste) {
+    const reden = String(eerste?.cause?.code || eerste?.code || eerste?.message || eerste);
+    console.warn(`Verbinding met ${url} mislukte (${reden}). Nog een poging over 20 seconden.`);
+    await new Promise((klaar) => setTimeout(klaar, 20_000));
+    herkansingenGebruikt += 1;
+    return await fetch(url, opties);
+  }
+}
+
 function sessionCookie(response) {
   const values = typeof response.headers.getSetCookie === 'function'
     ? response.headers.getSetCookie()
@@ -26,7 +40,7 @@ function sessionCookie(response) {
 async function loginAccount(account) {
   assert.ok(account.password.length >= 12, `Missing protected TEST password for ${account.role}`);
 
-  const csrfResponse = await fetch(`${baseUrl}/server/auth/csrf.php`, {
+  const csrfResponse = await haalOp(`${baseUrl}/server/auth/csrf.php`, {
     headers: { Accept: 'application/json' },
     redirect: 'error',
   });
@@ -35,7 +49,7 @@ async function loginAccount(account) {
   const csrf = await csrfResponse.json();
   assert.ok(initialCookie && csrf.csrf_token, `Secure TEST session bootstrap is incomplete for ${account.role}`);
 
-  const loginResponse = await fetch(`${baseUrl}/server/auth/login.php`, {
+  const loginResponse = await haalOp(`${baseUrl}/server/auth/login.php`, {
     method: 'POST',
     headers: {
       Accept: 'application/json',
@@ -59,7 +73,7 @@ async function loginAccount(account) {
 }
 
 async function resetSharedBaseline(session) {
-  const resetResponse = await fetch(`${baseUrl}/server/api/test-reset.php`, {
+  const resetResponse = await haalOp(`${baseUrl}/server/api/test-reset.php`, {
     method: 'POST',
     headers: {
       Accept: 'application/json',
@@ -80,7 +94,7 @@ async function resetSharedBaseline(session) {
   console.log('Public TEST shared baseline reset verified');
 }
 
-const hintsResponse = await fetch(`${baseUrl}/server/auth/local-login-hints.php`, {
+const hintsResponse = await haalOp(`${baseUrl}/server/auth/local-login-hints.php`, {
   headers: { Accept: 'application/json' },
   redirect: 'error',
 });
@@ -99,4 +113,14 @@ await resetSharedBaseline(initialAdminSession);
 // not preserve a drifted password hash or account state.
 for (const account of accounts) {
   await loginAccount(account);
+}
+
+// Zichtbaar houden dat het gebeurde. Een herkansing die niemand opmerkt is een
+// probleem dat langzaam groeit.
+if (herkansingenGebruikt > 0) {
+  console.warn(`LET OP: ${herkansingenGebruikt} verbinding(en) lukten pas bij de tweede poging.`);
+  console.warn(
+    'De controle is geslaagd, maar de TEST-host was even niet bereikbaar vanaf deze runner. '
+    + 'Gebeurt dit vaker, kijk dan naar snelheidsbegrenzing of firewallregels bij TransIP.'
+  );
 }

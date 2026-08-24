@@ -215,7 +215,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.137"), "Het zichtbare versienummer moet 0.9.137 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.138"), "Het zichtbare versienummer moet 0.9.138 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -1074,7 +1074,7 @@ assert(document.querySelector("#edit-subject").value === "", "Bij een nieuwe med
   const uitleg = document.querySelector("#modal-summary").textContent;
   assert(uitleg.includes("eigen mail"), "Het formulier moet duidelijk maken dat elke ontvanger een eigen mail krijgt");
   assert(uitleg.includes("standaardtekst"), "Het formulier moet duidelijk maken wat er gebeurt als je een tekstveld leeg laat");
-  assert(!uitleg.includes("dezelfde begeleidende tekst"), "Het formulier mag niet meer beweren dat iedereen dezelfde begeleidende tekst krijgt: dat geldt sinds 0.9.137 niet meer");
+  assert(!uitleg.includes("dezelfde begeleidende tekst"), "Het formulier mag niet meer beweren dat iedereen dezelfde begeleidende tekst krijgt: dat geldt sinds 0.9.138 niet meer");
 }
 assert(document.querySelector("#edit-new-recipient-name") && document.querySelector("#edit-new-recipient-email"), "Vanuit Nieuwe medewerker moet direct een eigen vaste ontvanger toegevoegd kunnen worden");
 assert(document.querySelector("#edit-customer-timesheet-expected").checked && document.querySelector("#edit-invoice-without-customer-timesheet").checked, "Een nieuwe medewerker moet standaard een klanturenstaat verwachten zonder de factuur te blokkeren");
@@ -1861,7 +1861,7 @@ assert(announcementsApiSrc.includes("function announcement_truncate") && announc
 assert(appJsSrc.includes('+ (data.token ? " · Token: " + data.token'), "Het testtoken bij wachtwoordherstel moet de vaste zin aanvullen, niet vervangen");
 assert(!appJsSrc.includes("Resetverzoek verstuurd (dry-run)"), "De dry-run-tekst mag niet meer aan een gebruiker worden getoond");
 const mailQueueSrc = readFileSync_(new URL("../server/mail/queue.php", import.meta.url), "utf8");
-// De sjablonen staan sinds 0.9.137 apart, zodat de mailmodule en het
+// De sjablonen staan sinds 0.9.138 apart, zodat de mailmodule en het
 // instellingenscherm dezelfde bron gebruiken.
 const mailTemplatesSrc = readFileSync_(new URL("../server/mail/templates.php", import.meta.url), "utf8");
 const settingsApiSrc = readFileSync_(new URL("../server/api/settings.php", import.meta.url), "utf8");
@@ -1959,4 +1959,4 @@ assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("
 assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Playwright stage- en lokale env-bestanden mogen expliciete runner/CI-variabelen niet overschrijven");
 
 dom.window.close();
-console.log("Path v0.9.137 volledige smoke test: geslaagd");
+console.log("Path v0.9.138 volledige smoke test: geslaagd");

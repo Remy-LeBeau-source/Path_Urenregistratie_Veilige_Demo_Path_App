@@ -74,3 +74,11 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
     Given een urencontrole eerst met een oude lokale versie opent
     When Backoffice de confirm drukt na het vrijgeven van de versieverversing
     Then wordt de urencontrole goedgekeurd en verdwijnt de taak
+
+  @happy
+  Scenario: [E2E-H-012] het vinkje Factuur meesturen bepaalt werkelijk of de bijlage meegaat
+    # Testtechniek: End-to-end use-case + beslissingstabel per soort ontvanger
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given een ontvanger van het type Overig met Factuur meesturen aan
+    When de volledige keten tot en met de mail wordt doorlopen
+    Then blijft de uitzondering voor de salarisadministratie staan

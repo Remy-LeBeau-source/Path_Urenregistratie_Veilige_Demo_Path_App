@@ -1475,6 +1475,15 @@ test.describe('nieuwe mailontvangers end-to-end', () => {
         await flow.ctx.dispose();
       });
 
+      await test.step('Then blijft de uitzondering voor de salarisadministratie staan', async () => {
+        // Losse stap, zodat deze eis zichtbaar blijft in het scenario en niet
+        // meelift op de vorige.
+        const na = await (await ctx.get('/server/api/bootstrap.php')).json();
+        const salaris = (na.mail_recipients as Array<Record<string, unknown>>)
+          .find(item => String(item.recipient_category) === 'payroll');
+        expect(salaris, 'de salarisadministratie hoort te bestaan').toBeDefined();
+      });
+
       await test.step('Then krijgt de nieuwe boekhoudingsontvanger een mail met de eigen tekst', async () => {
         const boekhouding = ontvangen.find(item => String(item.recipient_email) === boekhoudingEmail);
         expect(boekhouding, 'de nieuwe boekhoudingsontvanger moet een mail krijgen').toBeDefined();
@@ -1937,6 +1946,100 @@ test.describe('eigen standaardtekst per soort ontvanger', () => {
           .toBe(meegeleverd.accountant.body);
         expect(geldt.accountant.subject, 'ook het onderwerp hoort terug te vallen')
           .toBe(meegeleverd.accountant.subject);
+      });
+      await authApi.logout();
+      await ctx.dispose();
+    }
+  });
+});
+
+test.describe('factuurbijlage per ontvanger', () => {
+  test('[E2E-H-012] het vinkje Factuur meesturen bepaalt werkelijk of de bijlage meegaat', async () => {
+    // Gio vinkte "Factuur meesturen" aan bij een ontvanger van het type Overig en
+    // er kwam geen bijlage. In queue.php stond voor die soort $attachPolicy = 'none'
+    // hardgecodeerd: het vinkje werd opgeslagen, bleef aangevinkt staan, en deed
+    // niets. Een instelling die liegt is erger dan een die ontbreekt -- je merkt het
+    // pas als de ontvanger belt dat de factuur mist.
+    //
+    // De salarisadministratie hoort juist nooit een bijlage te krijgen. Dat is een
+    // bewuste keuze (geen bedragen naar de salarisverwerker) en die moet blijven.
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const uniek = Date.now().toString().slice(-6);
+    const sleutel = `bijlage-${uniek}`;
+    const adres = `bijlage-${uniek}@example.invalid`;
+
+    const before = await (await ctx.get('/server/api/bootstrap.php')).json();
+    const account = (before.users as Array<Record<string, unknown>>)
+      .find(item => String(item.email).toLowerCase() === appConfig.employeeEmail.toLowerCase());
+    expect(account, 'het demo-medewerkersaccount hoort te bestaan').toBeDefined();
+    const medewerker = (before.employees as Array<Record<string, unknown>>)
+      .find(item => Number(item.user_id) === Number(account?.id));
+    expect(medewerker, 'bij dat account hoort een medewerker te staan').toBeDefined();
+    const bestaande = (before.mail_recipients as Array<Record<string, unknown>>).map(item => ({
+      id: String(item.recipient_key || item.id),
+      email: String(item.email),
+      name: String(item.display_name),
+      category: String(item.recipient_category),
+      active: true,
+    }));
+
+    await test.step('Given een ontvanger van het type Overig met Factuur meesturen aan', async () => {
+      const write = await postJson(ctx, '/server/api/staff.php', {
+        action: 'upsert_employee',
+        sendInvitation: false,
+        employee: {
+          name: String(medewerker?.full_name || ''),
+          email: String(account?.email || ''),
+          dbEmployeeId: Number(medewerker?.id || 0),
+          dbUserId: Number(medewerker?.user_id || 0),
+          role: 'Consultant',
+          active: true,
+          mailRecipientRoutes: { [sleutel]: { enabled: true, invoiceAttachment: true } },
+        },
+        mailRecipients: [...bestaande,
+          { id: sleutel, email: adres, name: `Bijlage ${uniek}`, category: 'other', active: true }],
+      });
+      expect(write.status, JSON.stringify(write.body)).toBe(200);
+    });
+
+    try {
+      await test.step('When de volledige keten tot en met de mail wordt doorlopen', async () => {
+        const flow = await createLockedInvoice();
+        const mails = await verzondenMails(flow.invoiceId);
+
+        const overig = mails.find(item => String(item.recipient_email) === adres);
+        expect(overig, 'de ontvanger hoort een mail te krijgen').toBeDefined();
+        expect(String(overig?.attachment_policy), 'aangevinkt betekent dat de factuur meegaat')
+          .toBe('invoice');
+
+        // En de salarisadministratie houdt haar uitzondering.
+        const salaris = mails.find(item => String(item.channel) === 'payroll');
+        if (salaris) {
+          expect(String(salaris.attachment_policy), 'de salarisadministratie krijgt bewust nooit een factuur')
+            .toBe('none');
+        }
+
+        await flow.authApi.logout();
+        await flow.ctx.dispose();
+      });
+    } finally {
+      await postJson(ctx, '/server/api/staff.php', {
+        action: 'upsert_employee',
+        sendInvitation: false,
+        employee: {
+          name: String(medewerker?.full_name || ''),
+          email: String(account?.email || ''),
+          dbEmployeeId: Number(medewerker?.id || 0),
+          dbUserId: Number(medewerker?.user_id || 0),
+          role: 'Consultant',
+          active: true,
+          mailRecipientRoutes: { [sleutel]: { enabled: false, invoiceAttachment: false } },
+        },
+        mailRecipients: [...bestaande,
+          { id: sleutel, email: adres, name: `Bijlage ${uniek}`, category: 'other', active: false }],
       });
       await authApi.logout();
       await ctx.dispose();

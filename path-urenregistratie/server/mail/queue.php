@@ -308,9 +308,12 @@ function mail_enqueue_for_invoice(
             $attachPolicy  = ((bool)$route['include_invoice_pdf'] && (bool)$inv['bookkeeper_invoice_attachment'])
                 ? 'invoice' : 'none';
         } else {
-            // Unknown category: treat as informational, no attachment.
+            // Een ontvanger van het type Overig kreeg hier altijd 'none', ongeacht
+            // het vinkje "Factuur meesturen". Dat vinkje werd wel opgeslagen en bleef
+            // aangevinkt staan, dus je zag een instelling die niets deed -- en dat merk
+            // je pas als de ontvanger je belt dat de factuur ontbreekt.
             $channel      = $category;
-            $attachPolicy = 'none';
+            $attachPolicy = (bool)$route['include_invoice_pdf'] ? 'invoice' : 'none';
         }
 
         // An unknown category is informational, not a reason to drop the recipient.
