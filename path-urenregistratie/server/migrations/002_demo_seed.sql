@@ -124,8 +124,8 @@ ORDER BY e.id
 LIMIT 2;
 
 -- ensure mail recipients exist before creating invoices
-INSERT INTO mail_recipients (company_id, recipient_key, display_name, email, active, created_at)
-SELECT c.id, 'bookkeeper', 'Boekhouding', 'boekhouding@example.invalid', 1, NOW()
+INSERT INTO mail_recipients (company_id, recipient_key, recipient_category, display_name, email, active, created_at)
+SELECT c.id, 'bookkeeper', 'accounting', 'Boekhouding', 'boekhouding@example.invalid', 1, NOW()
 FROM companies c
 WHERE c.legal_name = 'Demo BV' AND NOT EXISTS (SELECT 1 FROM mail_recipients m WHERE m.company_id = c.id AND m.recipient_key = 'bookkeeper');
 
@@ -160,8 +160,8 @@ WHERE c.legal_name = 'Demo BV' AND NOT EXISTS (SELECT 1 FROM invoices i WHERE i.
 LIMIT 10;
 
 -- mail recipients (adapted to recipient_key/display_name schema)
-INSERT INTO mail_recipients (company_id, recipient_key, display_name, email, active, created_at)
-SELECT c.id, 'bookkeeper', 'Boekhouding', 'boekhouding@example.invalid', 1, NOW()
+INSERT INTO mail_recipients (company_id, recipient_key, recipient_category, display_name, email, active, created_at)
+SELECT c.id, 'bookkeeper', 'accounting', 'Boekhouding', 'boekhouding@example.invalid', 1, NOW()
 FROM companies c
 WHERE c.legal_name = 'Demo BV' AND NOT EXISTS (SELECT 1 FROM mail_recipients m WHERE m.company_id = c.id AND m.recipient_key = 'bookkeeper');
 

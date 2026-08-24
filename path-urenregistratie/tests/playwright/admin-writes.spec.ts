@@ -1193,6 +1193,97 @@ Uren: {uren} uur.`;
 
     await loginPage.logout();
   });
+
+  test('[ADM-WR-H-017] een ontvangerslijst terugsturen zoals hij binnenkwam verandert niets', async () => {
+    // De bootstrap geeft een ontvanger als display_name en recipient_category. Het
+    // opslaan las alleen name en category. Wie de lijst dus teruggaf zoals hij hem
+    // kreeg -- en dat doet elk scherm dat één ontvanger wijzigt en de rest meestuurt --
+    // wiste stil de naam, die het e-mailadres werd, en de soort, die terugviel op
+    // 'other'. Gevolg: de boekhouder kreeg de algemene mailtekst in plaats van zijn
+    // eigen tekst, zonder dat er ergens iets misging. Er ging gewoon een mail uit.
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const before = await ctx.get('/server/api/bootstrap.php');
+    expect(before.status()).toBe(200);
+    const beforeBody = await before.json();
+    const ervoor = (beforeBody.mail_recipients ?? []) as Array<Record<string, unknown>>;
+    expect(ervoor.length, 'zonder ontvangers zegt deze case niets').toBeGreaterThan(0);
+
+    const metSoort = ervoor.filter(item => String(item.recipient_category) !== 'other');
+    expect(metSoort.length, 'er hoort minstens één ontvanger met een eigen soort te zijn')
+      .toBeGreaterThan(0);
+
+    // Letterlijk terugsturen wat er binnenkwam, zonder iets te veranderen. Het
+    // eindpunt eist een settings-blok, en het schrijft elk veld dat het kent: een
+    // half gevuld blok wist de rest. Daarom gaan alle bedrijfsgegevens mee met de
+    // waarden die er nu al staan, zodat deze case alleen over de ontvangers gaat en
+    // niets achterlaat voor de volgende test.
+    const bedrijf = beforeBody.companies[0];
+    const opslaan = await postJson(ctx, '/server/api/settings.php', {
+      settings: {
+        organizationName: String(bedrijf.trade_name || bedrijf.legal_name || ''),
+        companyName: String(bedrijf.legal_name || ''),
+        invoiceNameDisplay: String(bedrijf.invoice_name_display || 'trade_and_legal'),
+        appName: String(bedrijf.app_name || ''),
+        supportName: String(bedrijf.support_name || ''),
+        supportEmail: String(bedrijf.support_email || ''),
+        website: String(bedrijf.website || ''),
+        tagline: String(bedrijf.tagline || ''),
+        brandPrimary: String(bedrijf.brand_primary || '#0d1b38'),
+        brandAccent: String(bedrijf.brand_accent || '#3abd9d'),
+        kvk: String(bedrijf.chamber_of_commerce_number || ''),
+        vat: String(bedrijf.vat_number || ''),
+        iban: String(bedrijf.iban || ''),
+        address: String(bedrijf.address_line || ''),
+        postalCity: [bedrijf.postal_code || '', bedrijf.city || ''].join(' ').trim(),
+        phone: String(bedrijf.invoice_phone || ''),
+        invoiceEmail: String(bedrijf.invoice_email || ''),
+        paymentTerm: Number(bedrijf.payment_term_days || 30),
+        customerTimesheetReminderEnabled: Boolean(bedrijf.customer_timesheet_reminder_enabled),
+        customerTimesheetReminderTime: String(bedrijf.customer_timesheet_reminder_time || '15:00').slice(0, 5),
+        customerTimesheetOverdueWorkdays: Number(bedrijf.customer_timesheet_overdue_workdays || 2),
+        customerTimesheetSubmissionSubject: String(bedrijf.customer_timesheet_submission_subject || ''),
+        customerTimesheetSubmissionBody: String(bedrijf.customer_timesheet_submission_body || ''),
+        customerTimesheetBrokerSubject: String(bedrijf.customer_timesheet_broker_subject || ''),
+        customerTimesheetBrokerBody: String(bedrijf.customer_timesheet_broker_body || ''),
+      },
+      mailRecipients: ervoor,
+    });
+    expect(opslaan.status, JSON.stringify(opslaan.body)).toBe(200);
+    expect(opslaan.body.ok).toBe(true);
+
+    const after = await ctx.get('/server/api/bootstrap.php');
+    expect(after.status()).toBe(200);
+    const afterBody = await after.json();
+
+    // Dezelfde rondrit-eis geldt voor de bedrijfsgegevens: wat onveranderd terug
+    // gaat, hoort onveranderd terug te komen. Staat dit niet vast, dan laat deze
+    // case stilletjes een gewijzigde stand achter voor de volgende test.
+    const bedrijfErna = afterBody.companies[0];
+    for (const veld of ['support_name', 'support_email', 'website', 'tagline', 'invoice_email']) {
+      expect(String(bedrijfErna[veld] ?? ''), veld + ' hoort onveranderd te blijven')
+        .toBe(String(bedrijf[veld] ?? ''));
+    }
+
+    const erna = (afterBody.mail_recipients ?? []) as Array<Record<string, unknown>>;
+    expect(erna.length, 'er mag geen ontvanger bij komen of verdwijnen').toBe(ervoor.length);
+
+    for (const oud of ervoor) {
+      const nieuw = erna.find(item => Number(item.id) === Number(oud.id));
+      expect(nieuw, 'ontvanger ' + oud.id + ' moet er nog zijn').toBeDefined();
+      expect(String(nieuw?.display_name), 'de naam van ' + String(oud.display_name) + ' mag niet veranderen')
+        .toBe(String(oud.display_name));
+      expect(String(nieuw?.recipient_category), 'de soort van ' + String(oud.display_name) + ' bepaalt de mailtekst en mag niet veranderen')
+        .toBe(String(oud.recipient_category));
+      expect(String(nieuw?.email), 'het adres van ' + String(oud.display_name) + ' mag niet veranderen')
+        .toBe(String(oud.email));
+    }
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
 });
 
 test('[ADM-WR-H-015] onderwerp, tekst en een eigen tekst per ontvanger blijven na F5 in het scherm staan', async ({ page }) => {

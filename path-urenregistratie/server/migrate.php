@@ -148,6 +148,10 @@ function migration_plan(bool $allowDemoMigrations): array
         'id' => '022_company_website_tagline.sql',
         'path' => __DIR__ . '/migrations/022_company_website_tagline.sql',
     ];
+    $plan[] = [
+        'id' => '023_repair_recipient_category.sql',
+        'path' => __DIR__ . '/migrations/023_repair_recipient_category.sql',
+    ];
     return $plan;
 }
 

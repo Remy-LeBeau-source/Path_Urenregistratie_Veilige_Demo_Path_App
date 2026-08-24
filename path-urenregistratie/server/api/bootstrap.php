@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/common.php';
+require_once __DIR__ . '/../mail/templates.php';
 require_once __DIR__ . '/../auth/password-reset-service.php';
 
 api_require_get_only();
@@ -99,6 +100,9 @@ try {
 
     api_send_json([
         'ok' => true,
+        // Zodat het instellingenscherm kan laten zien welke tekst een ontvanger
+        // krijgt zolang er niets eigens is ingevuld.
+        'mail_channel_defaults' => MAIL_CHANNEL_TEMPLATES,
         'companies' => $companies,
         'users' => $users,
         'employees' => $employees,

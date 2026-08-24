@@ -42,7 +42,7 @@ Feature: Organisatie-instellingen beheren
   @happy
   Scenario: [ADM-WR-H-003] admin kan medewerker server-led aanmaken en bootstrap ziet deze terug
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 11
+    # Aantoonbare Playwright-assertions in deze case: 16
     Given organisatie-instellingen beheren is voorbereid
     When de flow voor ADM-WR-H-003 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat admin kan medewerker server-led aanmaken en bootstrap ziet deze terug
@@ -195,3 +195,11 @@ Feature: Organisatie-instellingen beheren
     Given organisatie-instellingen beheren is voorbereid
     When het brokervinkje wordt omgezet en opgeslagen
     Then staat het na een herlaad nog steeds zo
+
+  @happy
+  Scenario: [ADM-WR-H-017] een ontvangerslijst terugsturen zoals hij binnenkwam verandert niets
+    # Testtechniek: API-rondrit (lossless round-trip)
+    # Aantoonbare Playwright-assertions in deze case: 11
+    Given de beheerder leest de vaste ontvangers uit de bootstrap
+    When diezelfde lijst onveranderd wordt teruggestuurd naar het opslaan-eindpunt
+    Then houden naam, soort en adres van elke ontvanger hun waarde

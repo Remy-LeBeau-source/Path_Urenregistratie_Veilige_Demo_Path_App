@@ -259,3 +259,13 @@ Feature: Mailroutering en aflevering
     When de medewerker uren indient en Backoffice goedkeurt en factureert
     Then staat de zelf ingevoerde tekst letterlijk in de verzonden mail
     And opruimen: de aangemaakte accounts worden gedeactiveerd
+
+  @happy
+  Scenario: [EQ-H-029] elke ontvanger krijgt de handtekening, ook onder een eigen tekst
+    # Testtechniek: Equivalentieklasse over de mailroutes
+    # Aantoonbare Playwright-assertions in deze case: 10
+    Given een factuur is definitief gemaakt
+    When de mails voor de ontvangers worden klaargezet
+    Then draagt elke route dezelfde afsluiting
+    And staat de afsluiting er ook bij een kanaal met een eigen tekst
+    And cleanup

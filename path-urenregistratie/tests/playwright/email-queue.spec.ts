@@ -1705,6 +1705,15 @@ test.describe('volledige keten van nieuw account tot mailinhoud', () => {
       const broker = mails.find(item => String(item.channel) === 'broker');
       expect(broker, 'de broker moet ook een mail krijgen').toBeDefined();
       expect(String(broker?.body_snapshot), 'de broker krijgt de opdrachttekst').toContain('Opdrachttekst voor');
+
+      // De handtekening stond eerst in de standaardteksten. De broker gebruikt de
+      // opdrachttekst, en die overschrijft de standaard -- dus daar verdween de
+      // handtekening mee, wat Gio in zijn eigen postvak zag. Een handtekening hoort
+      // bij de afzender, niet bij de tekst, dus ook hieronder.
+      expect(String(broker?.body_snapshot), 'ook onder de opdrachttekst hoort de afsluiting te staan')
+        .toContain('Met vriendelijke groet');
+      expect(String(eigen?.body_snapshot), 'ook onder een eigen tekst hoort de afsluiting te staan')
+        .toContain('Met vriendelijke groet');
     });
 
     await test.step('And opruimen: de aangemaakte accounts worden gedeactiveerd', async () => {
@@ -1729,5 +1738,65 @@ test.describe('volledige keten van nieuw account tot mailinhoud', () => {
 
     await authApi.logout();
     await ctx.dispose();
+  });
+});
+
+test.describe('handtekening onder elke mail', () => {
+  test('[EQ-H-029] elke ontvanger krijgt de handtekening, ook onder een eigen tekst', async () => {
+    // De handtekening stond eerst in de drie standaardteksten. De broker gebruikt
+    // de tekst van de opdracht, en die overschrijft de standaard -- dus daar
+    // verdween de handtekening mee. Gio zag dat in zijn eigen postvak.
+    //
+    // Een handtekening hoort bij de afzender, niet bij de tekst. Hij hoort dus
+    // onder elke mail te staan, ongeacht welke tekst er wordt gebruikt.
+    //
+    // De inhoud wordt hier via de CLI-inspecteur gelezen, niet via de lijst-API.
+    // Die API laat de inhoud bewust niet zien: in dezelfde wachtrij staan de mails
+    // voor wachtwoordherstel, met de eenmalige link erin.
+    const { ctx, authApi, queueApi, invoiceId } = await createLockedInvoice();
+
+    await test.step('Given een factuur is definitief gemaakt', async () => {});
+
+    await test.step('When de mails voor de ontvangers worden klaargezet', async () => {
+      // Klaarzetten volstaat: de handtekening wordt bij het opstellen vastgelegd,
+      // niet pas bij het versturen. Zo is hij te controleren zonder te mailen.
+      const klaar = await queueApi.list();
+      expect(klaar.status, 'de wachtrij hoort leesbaar te zijn').toBe(200);
+    });
+
+    await test.step('Then draagt elke route dezelfde afsluiting', async () => {
+      const mails = await verzondenMails(invoiceId);
+      // Welke routes er precies aanstaan hangt af van de opdracht. Twee is het
+      // minimum waarbij deze case iets zegt: één route bewijst niet dat de
+      // afsluiting overal langskomt.
+      expect(mails.length, 'er horen meerdere routes klaar te staan').toBeGreaterThanOrEqual(2);
+
+      for (const mail of mails) {
+        const bericht = String(mail.body_snapshot || '');
+        const kanaal = String(mail.channel || '');
+        expect(bericht, kanaal + ': het bericht mag niet leeg zijn').not.toBe('');
+        expect(bericht, kanaal + ': de afsluiting hoort er te staan').toContain('Met vriendelijke groet');
+        expect(bericht, kanaal + ': de naam van de afzender hoort er te staan').toContain('Backoffice');
+        expect(bericht.trimEnd().endsWith('Gewerkte uren: 8,00'),
+          kanaal + ': de afsluiting hoort onderaan te staan, niet ergens in het midden').toBe(false);
+      }
+    });
+
+    await test.step('And staat de afsluiting er ook bij een kanaal met een eigen tekst', async () => {
+      // De boekhouder en de salarisadministratie hebben een eigen standaardtekst
+      // die de opdrachttekst overruled. Ook daar hoort de afsluiting onder.
+      const mails = await verzondenMails(invoiceId);
+      const eigenTekstKanalen = mails.filter(mail =>
+        ['accountant', 'payroll'].includes(String(mail.channel)));
+      expect(eigenTekstKanalen.length, 'er hoort minstens één kanaal met een eigen tekst te zijn')
+        .toBeGreaterThan(0);
+      for (const mail of eigenTekstKanalen) {
+        expect(String(mail.body_snapshot).trimEnd().endsWith('backoffice@pathconsultancy.nl')
+          || String(mail.body_snapshot).includes('Met vriendelijke groet'),
+        String(mail.channel) + ': de afsluiting hoort onder de eigen tekst te staan').toBe(true);
+      }
+    });
+
+    await test.step('And cleanup', async () => { await authApi.logout(); await ctx.dispose(); });
   });
 });

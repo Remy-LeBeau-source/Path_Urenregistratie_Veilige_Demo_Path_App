@@ -1086,6 +1086,12 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .mail-recipient-settings-list, .mail-route-choice-list { display: grid; gap: 10px; }
 .mail-recipient-setting, .mail-route-choice { display: grid; grid-template-columns: minmax(0,1fr) auto auto; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-muted); }
 .mail-recipient-setting.is-inactive { opacity: .62; }
+/* De standaardtekst per ontvanger. Dichtgeklapt zodat de lijst kort blijft, maar
+   uitklapbaar zodat je kunt zien wat er verstuurd wordt zonder te versturen. */
+.mail-standaardtekst { grid-column: 1 / -1; margin-top: 4px; border-top: 1px solid var(--line); padding-top: 8px; }
+.mail-standaardtekst > summary { cursor: pointer; color: var(--mint-dark-tekst); font-size: 13px; }
+.mail-standaardtekst-onderwerp { margin: 8px 0 4px; font-size: 13px; color: var(--navy-tekst); }
+.mail-standaardtekst-inhoud { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--vlak-zacht); border: 1px solid var(--line); color: var(--navy-tekst); font: inherit; font-size: 13px; white-space: pre-wrap; overflow-x: auto; }
 .mail-recipient-setting strong, .mail-route-choice strong { display: block; }
 .mail-recipient-setting small, .mail-route-choice small { display: block; margin-top: 3px; color: var(--muted); }
 /* Optional per-recipient overrides. They span the full row so the two toggles

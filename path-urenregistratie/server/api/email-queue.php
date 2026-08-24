@@ -71,6 +71,10 @@ if ($method === 'GET') {
             'channel'          => (string)$r['channel'],
             'recipient_email'  => (string)$r['recipient_email'],
             'cc_email'         => $r['cc_email'] !== null ? (string)$r['cc_email'] : null,
+            // Bewust geen body_snapshot: in deze lijst staan ook de mails voor
+            // wachtwoordherstel, en die bevatten de eenmalige link. Een beheerder
+            // zou daarmee het account van iedere collega kunnen overnemen. Wie de
+            // inhoud moet nakijken gebruikt server/scripts/mail-delivery-inspect.php.
             'subject_snapshot' => (string)$r['subject_snapshot'],
             'attachment_policy'=> (string)$r['attachment_policy'],
             'status'           => (string)$r['status'],

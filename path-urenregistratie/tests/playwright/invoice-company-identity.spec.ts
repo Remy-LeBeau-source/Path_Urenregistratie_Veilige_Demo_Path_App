@@ -379,3 +379,81 @@ test('[INV-ID-H-009] website en slogan blijven bewaard en komen onder de mail', 
     await opslaan();
   }
 });
+
+test('[INV-ID-H-010] instellingen tonen de standaardtekst die de ontvanger werkelijk krijgt', async ({ page }) => {
+  // De standaardteksten stonden in server/mail/queue.php en nergens anders. Het
+  // instellingenscherm zei bij elke ontvanger "Zelfde als de opdracht" -- bij de
+  // boekhouder en de salarisadministratie is dat onwaar, want die slaan de
+  // opdrachttekst juist over. Je kon dus alleen zien wat er verstuurd werd door
+  // het te versturen.
+  //
+  // Deze case liep bij het schrijven meteen ergens tegenaan: de boekhouder in de
+  // seed had helemaal geen soort, viel terug op 'other', en kreeg dus de algemene
+  // tekst in plaats van de boekhoudertekst. Dat was niet te zien -- er ging wel
+  // gewoon een mail uit. Daarom wordt de soort hier ook los nagelopen.
+  //
+  // De vergelijking gaat tegen wat de server in dit gesprek meestuurt, niet tegen
+  // een letterlijke tekst in deze test: een tweede kopie in de frontend zou anders
+  // pas opvallen in het postvak van de klant.
+  const login = new LoginPage(page);
+  await login.open();
+
+  const bootstrapBinnen = page.waitForResponse(item =>
+    item.url().includes('/server/api/bootstrap.php'), { timeout: 20_000 });
+  await login.loginAsAdmin();
+  const payload = await (await bootstrapBinnen).json();
+
+  const standaarden = payload.mail_channel_defaults as Record<string, { subject: string; body: string }>;
+  expect(standaarden, 'de server hoort de standaardteksten mee te sturen').toBeTruthy();
+  for (const kanaal of ['accountant', 'payroll', 'other']) {
+    expect(standaarden[kanaal]?.body, 'kanaal ' + kanaal + ' hoort een tekst te hebben').toBeTruthy();
+  }
+  expect(standaarden.payroll.body, 'de salarisadministratie hoort geen bedragen te zien').not.toContain('{bedrag');
+  expect(standaarden.accountant.body.trim(), 'boekhouder en salaris horen niet dezelfde tekst te krijgen')
+    .not.toBe(standaarden.payroll.body.trim());
+
+  const alleOntvangers = (payload.mail_recipients ?? []) as Array<Record<string, unknown>>;
+  const ontvangers = alleOntvangers.filter(item => Number(item.active) === 1);
+  expect(ontvangers.length, 'zonder ontvangers zegt deze case niets').toBeGreaterThan(0);
+
+  const soortVan = (category: string) =>
+    ({ accounting: 'accountant', payroll: 'payroll' } as Record<string, string>)[category] || 'other';
+
+  await test.step('When de lijst met vaste ontvangers wordt geopend', async () => {
+    await openSettings(page);
+    await expect(page.locator('.mail-recipient-setting').first()).toBeVisible();
+  });
+
+  await test.step('Then staat bij elke ontvanger de tekst van de server', async () => {
+    for (const ontvanger of ontvangers) {
+      const naam = String(ontvanger.display_name);
+      const kanaal = soortVan(String(ontvanger.recipient_category));
+      const rij = page.locator('.mail-recipient-setting').filter({ hasText: naam }).first();
+      await rij.locator('details.mail-standaardtekst > summary').click();
+
+      const getoond = ((await rij.locator('.mail-standaardtekst-inhoud').textContent()) ?? '').replace(/\r/g, '');
+      expect(getoond.trim(), naam + ' hoort de tekst van kanaal ' + kanaal + ' te tonen, niet een eigen kopie')
+        .toBe(standaarden[kanaal].body.trim());
+    }
+  });
+
+  await test.step('And zegt hij erbij of de opdrachttekst hier voorgaat', async () => {
+    for (const ontvanger of ontvangers) {
+      const naam = String(ontvanger.display_name);
+      const category = String(ontvanger.recipient_category);
+      const slaatOver = category === 'accounting' || category === 'payroll';
+      const rij = page.locator('.mail-recipient-setting').filter({ hasText: naam }).first();
+      await expect(rij.locator('details.mail-standaardtekst'), naam + ': de uitleg moet kloppen met de volgorde op de server')
+        .toContainText(slaatOver ? 'ook als bij de opdracht iets anders staat' : 'Krijgt de tekst van de opdracht');
+    }
+  });
+
+  await test.step('And heeft de boekhouder werkelijk de soort boekhouding', async () => {
+    // De seed vulde deze kolom niet, dus stond er 'other' en kreeg de boekhouder
+    // stilletjes de algemene tekst.
+    const boekhouder = alleOntvangers.find(item => String(item.recipient_key) === 'bookkeeper');
+    if (!boekhouder) return;
+    expect(String(boekhouder.recipient_category), 'een ontvanger met sleutel bookkeeper hoort soort accounting te hebben')
+      .toBe('accounting');
+  });
+});

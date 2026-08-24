@@ -2459,6 +2459,9 @@ function mergeBootstrapIntoState(data) {
   const counterparties = Array.isArray(data.counterparties) ? data.counterparties : [];
   const assignmentMailRoutes = Array.isArray(data.assignment_mail_routes) ? data.assignment_mail_routes : [];
   const recipients = Array.isArray(data.mail_recipients || data.mailRecipients) ? (data.mail_recipients || data.mailRecipients) : [];
+  if (data.mail_channel_defaults && typeof data.mail_channel_defaults === "object") {
+    mailStandaardTeksten = data.mail_channel_defaults;
+  }
   readApiRuntime.adminWorkflowPeriodKeys = (Array.isArray(data.periods) ? data.periods : [])
     .map(period => String(period && period.period_key || ""))
     .filter(periodKey => parsePeriodKey(periodKey))
@@ -3195,6 +3198,32 @@ function mailRecipientById(id) {
 
 function activeMailRecipients() {
   return (state.settings.mailRecipients || []).filter(recipient => recipient.active !== false);
+}
+
+// De standaardteksten per soort ontvanger komen van de server, uit
+// server/mail/templates.php. Ze staan hier niet nog een keer: één bron, anders
+// laat dit scherm iets anders zien dan er verstuurd wordt.
+let mailStandaardTeksten = {};
+
+// Welke standaardtekst hoort bij welk soort ontvanger. Dit volgt de indeling in
+// server/mail/queue.php: alleen boekhouding en salarisadministratie hebben een
+// eigen kanaal, al het overige valt onder 'other'. De broker staat hier
+// bewust niet tussen -- dat is geen vaste ontvanger maar een route op de opdracht.
+function standaardTekstVoor(category) {
+  const kanaal = ({ accounting: "accountant", payroll: "payroll" })[category] || "other";
+  return mailStandaardTeksten[kanaal] || null;
+}
+
+// De boekhouder en de salarisadministratie slaan de opdrachttekst over; bij hen
+// is de standaard hieronder dus werkelijk wat ze krijgen.
+function standaardVolgtOpdracht(category) {
+  return category !== "accounting" && category !== "payroll";
+}
+
+function standaardTekstUitleg(category) {
+  return standaardVolgtOpdracht(category)
+    ? "leeg = zelfde als de opdracht"
+    : "leeg = de standaardtekst hieronder";
 }
 
 function recipientCategoryLabel(category) {
@@ -6392,9 +6421,42 @@ function renderMailRecipientSettings() {
     '<article class="mail-recipient-setting' + (recipient.active === false ? " is-inactive" : "") + '">' +
       '<div><strong>' + escapeHtml(recipient.name) + '</strong><small>' + escapeHtml(recipientCategoryLabel(recipient.category)) + ' · ' + escapeHtml(recipient.email) + '</small></div>' +
       '<span class="status-pill ' + (recipient.active === false ? "status-concept" : "status-approved") + '">' + (recipient.active === false ? "Inactief" : "Beschikbaar") + '</span>' +
+      standaardTekstBlok(recipient) +
       '<div><button class="small-button" data-edit-mail-recipient="' + escapeHtml(recipient.id) + '">Aanpassen</button> <button class="text-button" data-toggle-mail-recipient="' + escapeHtml(recipient.id) + '">' + (recipient.active === false ? "Activeren" : "Deactiveren") + '</button>' + (recipient.id === "bookkeeper" || recipient.id === "payroll" ? "" : ' <button class="text-button danger-text" data-delete-mail-recipient="' + escapeHtml(recipient.id) + '">Verwijderen</button>') + '</div>' +
     '</article>'
   ).join("") : '<div class="dashboard-action-empty"><strong>Nog geen vaste ontvangers.</strong><br>Voeg bijvoorbeeld boekhouding of een salarisadministratie toe.</div>';
+}
+
+// Zonder dit kon je alleen zien welke tekst een ontvanger krijgt door hem
+// werkelijk te versturen. De tekst staat dichtgeklapt, zodat de lijst kort
+// blijft maar niets verborgen is.
+// De grijze tekst in een leeg veld zei overal "Zelfde als de opdracht". Bij de
+// boekhouder en de salarisadministratie is dat niet waar -- die slaan de
+// opdrachttekst over -- dus stond daar het verkeerde.
+function standaardOnderwerpHint(category) {
+  const sjabloon = standaardTekstVoor(category);
+  if (!standaardVolgtOpdracht(category) && sjabloon) return sjabloon.subject || "";
+  return "Zelfde als de opdracht";
+}
+
+function standaardTekstHint(category) {
+  const sjabloon = standaardTekstVoor(category);
+  if (!standaardVolgtOpdracht(category) && sjabloon) return String(sjabloon.body || "").split(String.fromCharCode(10))[0];
+  return "Zelfde als de opdracht";
+}
+
+function standaardTekstBlok(recipient) {
+  const sjabloon = standaardTekstVoor(recipient.category);
+  if (!sjabloon) return "";
+  const inleiding = standaardVolgtOpdracht(recipient.category)
+    ? "Krijgt de tekst van de opdracht. Staat daar niets, dan deze standaardtekst:"
+    : "Krijgt deze standaardtekst, ook als bij de opdracht iets anders staat:";
+  return '<details class="mail-standaardtekst full"><summary>Welke tekst krijgt deze ontvanger?</summary>' +
+    '<p class="form-help">' + escapeHtml(inleiding) + '</p>' +
+    '<p class="mail-standaardtekst-onderwerp"><strong>Onderwerp</strong><br>' + escapeHtml(sjabloon.subject || "") + '</p>' +
+    '<pre class="mail-standaardtekst-inhoud">' + escapeHtml(sjabloon.body || "") + '</pre>' +
+    '<p class="form-help">De handtekening komt er automatisch onder.</p>' +
+  '</details>';
 }
 
 function mailDeliveryChannelLabel(channel) {
@@ -8725,8 +8787,9 @@ function showEmployeeEditor(employeeId, prefill) {
       '<div><strong>' + escapeHtml(recipient.name) + '</strong><small>' + escapeHtml(recipientCategoryLabel(recipient.category)) + ' · ' + escapeHtml(recipient.email) + '</small></div>' +
       '<label class="route-toggle"><input type="checkbox" data-mail-recipient-enabled="' + escapeHtml(recipient.id) + '"' + (enabled ? " checked" : "") + '><span>Ontvangt mail</span></label>' +
       '<label class="route-toggle"><input type="checkbox" data-mail-recipient-invoice="' + escapeHtml(recipient.id) + '"' + (preference.invoiceAttachment === true ? " checked" : "") + (enabled ? "" : " disabled") + '><span>Factuur meesturen</span></label>' +
-      '<label class="route-template full">Eigen onderwerp <small>leeg = zelfde als de opdracht</small><input type="text" data-mail-recipient-subject="' + escapeHtml(recipient.id) + '" placeholder="Zelfde als de opdracht" value="' + escapeHtml(preference.mailSubject || "") + '"' + (enabled ? "" : " disabled") + '></label>' +
-      '<label class="route-template full">Eigen begeleidende tekst <small>leeg = zelfde als de opdracht</small><textarea rows="3" data-mail-recipient-body="' + escapeHtml(recipient.id) + '" placeholder="Zelfde als de opdracht"' + (enabled ? "" : " disabled") + '>' + escapeHtml(preference.mailBody || "") + '</textarea></label>' +
+      '<label class="route-template full">Eigen onderwerp <small>' + escapeHtml(standaardTekstUitleg(recipient.category)) + '</small><input type="text" data-mail-recipient-subject="' + escapeHtml(recipient.id) + '" placeholder="' + escapeHtml(standaardOnderwerpHint(recipient.category)) + '" value="' + escapeHtml(preference.mailSubject || "") + '"' + (enabled ? "" : " disabled") + '></label>' +
+      '<label class="route-template full">Eigen begeleidende tekst <small>' + escapeHtml(standaardTekstUitleg(recipient.category)) + '</small><textarea rows="3" data-mail-recipient-body="' + escapeHtml(recipient.id) + '" placeholder="' + escapeHtml(standaardTekstHint(recipient.category)) + '"' + (enabled ? "" : " disabled") + '>' + escapeHtml(preference.mailBody || "") + '</textarea></label>' +
+      standaardTekstBlok(recipient) +
     '</article>';
   }).join("");
   const summary = '<div class="modal-form">' +

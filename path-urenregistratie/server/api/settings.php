@@ -236,11 +236,17 @@ try {
                 continue;
             }
 
-            $displayName = settings_string($recipient['name'] ?? '', 160);
+            // De browser stuurt name/category, maar bootstrap.php geeft dezelfde
+            // ontvanger terug als display_name/recipient_category. Wie de lijst
+            // teruggaf zoals hij hem kreeg, wiste zo stil de naam -- die werd het
+            // e-mailadres -- en de soort, die terugviel op 'other'. Daarmee kreeg
+            // de boekhouder ineens de algemene mailtekst, zonder enig signaal.
+            // Beide schrijfwijzen worden daarom geaccepteerd.
+            $displayName = settings_string($recipient['name'] ?? $recipient['display_name'] ?? '', 160);
             if ($displayName === '') {
                 $displayName = $email;
             }
-            $category = settings_string($recipient['category'] ?? 'other', 60);
+            $category = settings_string($recipient['category'] ?? $recipient['recipient_category'] ?? 'other', 60);
             if ($category === '') {
                 $category = 'other';
             }

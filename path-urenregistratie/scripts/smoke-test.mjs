@@ -215,7 +215,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.132"), "Het zichtbare versienummer moet 0.9.132 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.133"), "Het zichtbare versienummer moet 0.9.133 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -1755,6 +1755,9 @@ assert(announcementsApiSrc.includes("function announcement_truncate") && announc
 assert(appJsSrc.includes('+ (data.token ? " · Token: " + data.token'), "Het testtoken bij wachtwoordherstel moet de vaste zin aanvullen, niet vervangen");
 assert(!appJsSrc.includes("Resetverzoek verstuurd (dry-run)"), "De dry-run-tekst mag niet meer aan een gebruiker worden getoond");
 const mailQueueSrc = readFileSync_(new URL("../server/mail/queue.php", import.meta.url), "utf8");
+// De sjablonen staan sinds 0.9.133 apart, zodat de mailmodule en het
+// instellingenscherm dezelfde bron gebruiken.
+const mailTemplatesSrc = readFileSync_(new URL("../server/mail/templates.php", import.meta.url), "utf8");
 const settingsApiSrc = readFileSync_(new URL("../server/api/settings.php", import.meta.url), "utf8");
 // Het scherm bood deze twee velden al aan terwijl de server ze niet wegschreef:
 // een aangepast onderwerp of tekst verdween stil bij opslaan.
@@ -1765,7 +1768,40 @@ assert(!staffApiSrc.includes("rowCount() === 0"), "Geen enkele opslag in staff.p
 assert(settingsApiSrc.includes("customer_timesheet_submission_subject = :customer_timesheet_submission_subject"), "De klanturenstaat-mailteksten moeten server-side worden opgeslagen: ze bestonden alleen in de browser van wie ze typte");
 // Het instellingenscherm biedt de categorie Overig aan; zonder kanaalsjabloon werd
 // zo een ontvanger stil overgeslagen en kreeg die nooit mail.
-assert(mailQueueSrc.includes("'other' => ["), "Een ontvanger met categorie Overig moet ook een mailsjabloon hebben, anders krijgt die stil nooit mail");
+assert(mailTemplatesSrc.includes("'other' => ["), "Een ontvanger met categorie Overig moet ook een mailsjabloon hebben, anders krijgt die stil nooit mail");
+// Het instellingenscherm laat de standaardteksten zien. Het haalt ze bij de
+// server op; een tweede kopie in de browser zou stil uiteen gaan lopen met wat
+// er werkelijk verstuurd wordt, en dat merk je pas in het postvak van de klant.
+assert(bootstrapApiSrc.includes("'mail_channel_defaults' => MAIL_CHANNEL_TEMPLATES"), "De bootstrap moet de standaardteksten meesturen, anders kan het instellingenscherm ze niet tonen");
+assert(appJsSrc.includes("data.mail_channel_defaults"), "Het instellingenscherm moet de standaardteksten van de server lezen");
+// De soort ontvanger bepaalt welke tekst iemand krijgt. De demo-seed liet die
+// kolom leeg, dus viel de boekhouder terug op de standaardwaarde other en kreeg
+// stilletjes de algemene tekst -- er ging wel gewoon een mail uit, dus dat viel
+// nergens op.
+const demoSeedSrc = readFileSync_(new URL("../server/migrations/002_demo_seed.sql", import.meta.url), "utf8");
+for (const kolommen of demoSeedSrc.split("INSERT INTO mail_recipients ").slice(1)) {
+  const kop = kolommen.slice(0, kolommen.indexOf(")"));
+  assert(kop.includes("recipient_category"), "Elke seed van een vaste ontvanger moet recipient_category invullen, anders krijgt die stil de verkeerde mailtekst");
+}
+const migratePlanSrc = readFileSync_(new URL("../server/migrate.php", import.meta.url), "utf8");
+assert(migratePlanSrc.includes("023_repair_recipient_category.sql"), "De herstelmigratie voor de soort ontvanger moet in de migratielijst staan");
+// Een tekst met een echt regeleinde in de bron, in plaats van een geschreven
+// backslash-n, zet stil een wagenterugloop in de verzonden mail en maakt van een
+// witregel een gewone regelovergang. Dat is hier al een keer gebeurd. Elke regel
+// in de sjablonen hoort daarom een even aantal aanhalingstekens te hebben: geen
+// tekst die doorloopt naar de volgende regel.
+const sjabloonBlok = mailTemplatesSrc.slice(mailTemplatesSrc.indexOf("const MAIL_CHANNEL_TEMPLATES"));
+for (const [nummer, regel] of sjabloonBlok.split(/\r?\n/).entries()) {
+  const zonderCommentaar = regel.trimStart().startsWith("//") ? "" : regel;
+  const tellingen = (zonderCommentaar.match(/"/g) || []).length;
+  assert(tellingen % 2 === 0, "Regel " + (nummer + 1) + " van de mailsjablonen loopt door naar de volgende regel: schrijf het regeleinde als teken, niet als een echt regeleinde");
+}
+// De browser moet dezelfde indeling aanhouden als server/mail/queue.php: alles
+// buiten boekhouding en salarisadministratie valt onder other, niet onder broker.
+assert(appJsSrc.includes("payroll: \"payroll\" })[category] || \"other\""), "De browser moet onbekende ontvangers op kanaal other zetten, net als de server");
+for (const zin of ["Hierbij de factuur van", "Geachte relatie,"]) {
+  assert(!appJsSrc.includes(zin), "De standaardmailtekst hoort alleen op de server te staan, maar app.js bevat: " + zin);
+}
 // Overerving: een leeg veld bij de ontvanger mag de opdrachttekst niet vervangen.
 assert(mailQueueSrc.includes("$routeSubject !== '' ? $routeSubject :") && mailQueueSrc.includes("$routeBody !== '' ? $routeBody :"), "Een eigen tekst per ontvanger moet de opdrachttekst alleen overrulen als die is ingevuld");
 const renderAllBody = appJsSrc.slice(appJsSrc.indexOf("function renderAll()"), appJsSrc.indexOf("function prefersReducedMotion()"));
@@ -1795,4 +1831,4 @@ assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("
 assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Playwright stage- en lokale env-bestanden mogen expliciete runner/CI-variabelen niet overschrijven");
 
 dom.window.close();
-console.log("Path v0.9.132 volledige smoke test: geslaagd");
+console.log("Path v0.9.133 volledige smoke test: geslaagd");

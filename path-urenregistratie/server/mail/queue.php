@@ -8,57 +8,7 @@ require_once __DIR__ . '/config.php';
 // Template definitions
 // ---------------------------------------------------------------------------
 
-const MAIL_CHANNEL_TEMPLATES = [
-    'broker' => [
-        'subject' => 'Factuur {factuurnummer} – {periode}',
-        'body' =>
-            "Geachte relatie,\n\n"
-            . "Bijgevoegd ontvangt u factuur {factuurnummer} voor de periode {periode}.\n\n"
-            . "Medewerker: {medewerker}\nUren: {uren}\n"
-            . "Subtotaal: € {subtotaal}\nBtw: € {btw}\nTotaal: € {bedrag}\n\n"
-            . "Met vriendelijke groet,\n\n"
-            . "{ondersteuning}\n{bedrijf}\n{contactmail}\n{website}\n\n{slogan}",
-    ],
-    'accountant' => [
-        // Het factuurnummer staat vooraan in het onderwerp: een boekhouder zoekt
-        // daarop terug, niet op een naam. De bedragen staan uitgesplitst in het
-        // bericht, zodat de administratie klopt zonder de bijlage te openen.
-        'subject' => 'Factuur {factuurnummer} · {medewerker} · {periode}',
-        'body' =>
-            "Goedemiddag,\n\n"
-            . "Hierbij de factuur van {medewerker} over {periode}.\n\n"
-            . "Factuurnummer: {factuurnummer}\n"
-            . "Gewerkte uren: {uren}\n"
-            . "Subtotaal: € {subtotaal}\n"
-            . "Btw: € {btw}\n"
-            . "Totaal: € {bedrag}\n\n"
-            . "Met vriendelijke groet,\n\n"
-            . "{ondersteuning}\n{bedrijf}\n{contactmail}\n{website}\n\n{slogan}",
-    ],
-    'payroll' => [
-        // Bewust geen bedragen en geen factuurnummer: de salarisadministratie
-        // hoort alleen de ureninformatie te krijgen, en er gaat hier ook geen
-        // factuur als bijlage mee. Dat staat zo in het instellingenscherm.
-        'subject' => 'Uren {medewerker} · {periode}',
-        'body' =>
-            "Goedemiddag,\n\n"
-            . "Hierbij de goedgekeurde uren van {medewerker} over {periode}.\n\n"
-            . "Gewerkte uren: {uren}\n\n"
-            . "Met vriendelijke groet,\n\n"
-            . "{ondersteuning}\n{bedrijf}\n{contactmail}\n{website}\n\n{slogan}",
-    ],
-    // The settings screen offers 'Overig' as a category, and a recipient with it
-    // used to be dropped silently: the channel had no template, so the queue loop
-    // skipped it. Someone ticked "Ontvangt mail" and nothing ever arrived. Neutral
-    // wording that holds for any recipient; no attachment, same as payroll.
-    'other' => [
-        'subject' => 'Ureninformatie {medewerker} - {periode}',
-        'body' =>
-            "Hierbij de ureninformatie van {medewerker} over {periode}.
-"
-            . "Goedgekeurde uren: {uren}",
-    ],
-];
+require_once __DIR__ . '/templates.php';
 
 // ---------------------------------------------------------------------------
 // Template helpers
@@ -266,6 +216,25 @@ function mail_enqueue_for_invoice(
         ];
     };
 
+    // De handtekening hoort bij de afzender, niet bij de tekst. Hij gaat daarom
+    // onder elke mail, ook onder een eigen tekst bij een ontvanger of de tekst
+    // bij de opdracht. Lege velden slaan we over, zodat er geen witregels
+    // blijven staan wanneer website of slogan niet zijn ingevuld.
+    $handtekeningRegels = array_values(array_filter([
+        (string)($inv['support_name'] ?? ''),
+        (string)$inv['company_name'],
+        (string)($inv['support_email'] ?? ''),
+        (string)($inv['company_website'] ?? ''),
+    ], static fn (string $regel): bool => trim($regel) !== ''));
+
+    $slogan = trim((string)($inv['company_tagline'] ?? ''));
+    $handtekening = "\n\nMet vriendelijke groet,\n\n" . implode("\n", $handtekeningRegels);
+    if ($slogan !== '') $handtekening .= "\n\n" . $slogan;
+
+    $metHandtekening = static function (string $tekst) use ($handtekening): string {
+        return rtrim($tekst) . $handtekening;
+    };
+
     $created = [];
 
     // ------------------------------------------------------------------
@@ -282,7 +251,7 @@ function mail_enqueue_for_invoice(
         if ($broker && !empty($broker['invoice_email'])) {
             $tpl = $templateFor('broker');
             mail_assert_vars($tpl['subject'], $vars, 'broker.subject');
-            mail_assert_vars($tpl['body'], $vars, 'broker.body');
+            mail_assert_vars($metHandtekening($tpl['body']), $vars, 'broker.body');
 
             // The broker mail sends the finalized invoice only; the customer-timesheet route
             // is handled separately by the dedicated klanturenstaat flow.
@@ -294,7 +263,7 @@ function mail_enqueue_for_invoice(
                 (string)$broker['invoice_email'],
                 !empty($broker['cc_email']) ? (string)$broker['cc_email'] : null,
                 mail_render($tpl['subject'], $vars),
-                mail_render($tpl['body'], $vars),
+                mail_render($metHandtekening($tpl['body']), $vars),
                 $attachPolicy, $dryRun
             );
             mail_audit($pdo, $companyId, $actorUserId,
@@ -350,13 +319,13 @@ function mail_enqueue_for_invoice(
         // what makes one edit on the assignment reach every recipient without one.
         $tpl = $templateFor($channel, (string)($route['subject_template'] ?? ''), (string)($route['body_template'] ?? ''));
         mail_assert_vars($tpl['subject'], $vars, $channel . '.subject');
-        mail_assert_vars($tpl['body'], $vars, $channel . '.body');
+        mail_assert_vars($metHandtekening($tpl['body']), $vars, $channel . '.body');
 
         $id = mail_insert_delivery(
             $pdo, $invoiceId, $channel,
             (string)$route['email'], null,
             mail_render($tpl['subject'], $vars),
-            mail_render($tpl['body'], $vars),
+            mail_render($metHandtekening($tpl['body']), $vars),
             $attachPolicy, $dryRun
         );
         mail_audit($pdo, $companyId, $actorUserId,
@@ -380,7 +349,7 @@ function mail_enqueue_for_invoice(
         if ($fallbackPayrollEmail !== '') {
             $tpl = MAIL_CHANNEL_TEMPLATES['payroll'];
             mail_assert_vars($tpl['subject'], $vars, 'payroll.subject');
-            mail_assert_vars($tpl['body'], $vars, 'payroll.body');
+            mail_assert_vars($metHandtekening($tpl['body']), $vars, 'payroll.body');
 
             $id = mail_insert_delivery(
                 $pdo,
@@ -389,7 +358,7 @@ function mail_enqueue_for_invoice(
                 $fallbackPayrollEmail,
                 null,
                 mail_render($tpl['subject'], $vars),
-                mail_render($tpl['body'], $vars),
+                mail_render($metHandtekening($tpl['body']), $vars),
                 'none',
                 $dryRun
             );

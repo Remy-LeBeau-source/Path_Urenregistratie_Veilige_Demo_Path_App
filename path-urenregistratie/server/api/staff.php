@@ -170,11 +170,14 @@ function staff_upsert_mail_recipients(PDO $pdo, int $companyId, array $items): a
             continue;
         }
 
-        $name = staff_string($item['name'] ?? '', 160);
+        // Zie settings.php: bootstrap.php geeft dezelfde ontvanger terug als
+        // display_name/recipient_category. Wie de lijst teruggaf zoals hij hem
+        // kreeg, wiste stil de naam en de soort, en daarmee de mailtekst.
+        $name = staff_string($item['name'] ?? $item['display_name'] ?? '', 160);
         if ($name === '') {
             $name = $email;
         }
-        $category = staff_string($item['category'] ?? 'other', 60);
+        $category = staff_string($item['category'] ?? $item['recipient_category'] ?? 'other', 60);
         if ($category === '') {
             $category = 'other';
         }
