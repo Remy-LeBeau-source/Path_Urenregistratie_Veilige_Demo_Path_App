@@ -3,7 +3,7 @@ import { captureConsoleErrors, clearConsoleErrors } from './fixtures/consoleErro
 import { DashboardPage } from './pages/DashboardPage';
 import { LoginPage } from './pages/LoginPage';
 import { attachBusinessScreenshot } from './reporting/uiAttachments';
-import { openProfielmenu } from './pages/TopbarMenu';
+import { openPaneel, openProfielmenu } from './pages/TopbarMenu';
 
 type MutableRecord = {
   entries: number[][];
@@ -475,7 +475,7 @@ test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker e
   }
 
   async function chooseMonth(month: string): Promise<void> {
-    await page.locator('#period-month-picker').click();
+    await openPaneel(page, '#period-month-picker', '#period-month-panel');
     const panel = page.locator('#period-month-panel');
     await expect(panel).toBeVisible();
     const picker = panel.locator(`[data-period-month="${month}"][data-month-control="#period-month-picker"]`);
@@ -755,7 +755,7 @@ test('[DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakie
   });
 
   await test.step('Then blijven de maandnamen zichtbaar in donkere modus', async () => {
-    await page.locator('#period-month-picker').click();
+    await openPaneel(page, '#period-month-picker', '#period-month-panel');
     await expect(page.locator('#period-month-panel')).toBeVisible();
     const firstMonth = page.locator('#period-month-panel button').first();
     await expect(firstMonth).toBeVisible();
@@ -806,7 +806,7 @@ test('[DASH-H-004] terugkeren naar medewerkerdashboard ververst de uren en behou
   });
 
   await test.step('Then zijn de maandlabels nog zichtbaar in de maandkiezer', async () => {
-    await page.locator('#period-month-picker').click();
+    await openPaneel(page, '#period-month-picker', '#period-month-panel');
     await expect(page.locator('#period-month-panel')).toBeVisible();
     await expect(page.locator('#period-month-panel button').nth(6)).toHaveText('Juli');
   });
@@ -1068,7 +1068,7 @@ test('[DASH-N-016] correctieactie ververst een verborgen rooster uit een eerdere
       runtime.renderAll();
     });
     await page.locator('button[data-view="timesheet"]').click();
-    await page.locator('#period-month-picker').click();
+    await openPaneel(page, '#period-month-picker', '#period-month-panel');
     await page.locator('#period-month-panel [data-period-month="07"][data-month-control="#period-month-picker"]').click();
     await expect(page.locator('#timesheet-period-title')).toHaveText('Juli 2026');
     await expect(page.locator('#timesheet-status')).toHaveText('Goedgekeurd');

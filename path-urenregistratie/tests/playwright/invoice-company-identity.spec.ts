@@ -2,6 +2,7 @@ import { expect, request as playwrightRequest, test } from '@playwright/test';
 import { AuthApi } from './api/AuthApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
 import { LoginPage } from './pages/LoginPage';
+import { openPaneel } from './pages/TopbarMenu';
 
 const TRADE_NAME = 'Path Consultancy';
 const LEGAL_NAME = 'QSI Consultancy B.V.';
@@ -14,7 +15,7 @@ async function openSettings(page: import('@playwright/test').Page) {
 async function saveInvoiceIdentity(page: import('@playwright/test').Page, display: 'trade_and_legal' | 'legal_only') {
   await page.locator('#setting-organization-name').fill(TRADE_NAME);
   await page.locator('#setting-company-name').fill(LEGAL_NAME);
-  await page.locator('#setting-invoice-name-display-trigger').click();
+  await openPaneel(page, '#setting-invoice-name-display-trigger', '#setting-invoice-name-display-choices');
   await page.locator(`[data-standard-choice-target="setting-invoice-name-display"][data-standard-choice-value="${display}"]`).click();
   await expect(page.locator('#setting-invoice-identity-heading')).toHaveText(display === 'legal_only' ? LEGAL_NAME : TRADE_NAME);
   await expect(page.locator('#setting-invoice-identity-subline')).toHaveText(display === 'legal_only'
