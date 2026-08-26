@@ -1,6 +1,6 @@
 {
   "name": "path-urenregistratie",
-  "version": "0.9.138",
+  "version": "0.9.140",
   "private": true,
   "scripts": {
     "dev": "vite",
@@ -32,6 +32,8 @@
     "test:e2e:group:timesheets": "set PLAYWRIGHT_GROUP=timesheets&& node scripts/run-playwright-e2e.mjs",
     "test:e2e:group:customer": "set PLAYWRIGHT_GROUP=customer&& node scripts/run-playwright-e2e.mjs",
     "test:e2e:group:e2e": "set PLAYWRIGHT_GROUP=e2e&& node scripts/run-playwright-e2e.mjs",
+    "test:e2e:group:e2e:ui": "set PLAYWRIGHT_GROUP=e2e&& node scripts/run-playwright-e2e.mjs --ui",
+    "test:e2e:group:e2e:headed": "set PLAYWRIGHT_GROUP=e2e&& node scripts/run-playwright-e2e.mjs --headed",
     "test:e2e:group:api": "set PLAYWRIGHT_GROUP=api&& node scripts/run-playwright-e2e.mjs",
     "test:e2e:group:ui": "set PLAYWRIGHT_GROUP=ui&& node scripts/run-playwright-e2e.mjs",
     "test:e2e:group:ui-desktop": "set PLAYWRIGHT_GROUP=ui-desktop&& node scripts/run-playwright-e2e.mjs --project=desktop-chromium",

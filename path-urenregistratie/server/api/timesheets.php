@@ -632,6 +632,26 @@ try {
         $timesheetId = (int)$existing['id'];
         $existingStatus = (string)$existing['status'];
 
+        // Een ingediende urenstaat ligt bij Backoffice. Het Functioneel Ontwerp is
+        // daar ondubbelzinnig over: de medewerker wacht, en komt er pas weer bij
+        // nadat Backoffice om correctie heeft gevraagd. Het scherm deed dat al -- de
+        // velden gaan op slot en de indienknop is dood -- maar de server liet een
+        // rechtstreekse schrijfpoging gewoon door. Wie de app omzeilde, kon zijn
+        // uren na het indienen dus alsnog aanpassen zonder dat Backoffice iets
+        // merkte. Een slot dat alleen in de browser zit, is geen slot.
+        if (in_array($action, ['save_draft', 'submit'], true)
+            && $existingStatus === 'submitted'
+            && (string)$currentUser['role'] === 'employee') {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            auth_send_json([
+                'ok' => false,
+                'error' => 'timesheet-locked',
+                'message' => 'Een ingediende urenstaat ligt bij Backoffice en kan niet meer worden gewijzigd.',
+            ], 409);
+        }
+
         if (in_array($action, ['save_draft', 'submit'], true) && in_array($existingStatus, ['approved', 'invoiced', 'rejected'], true)) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();

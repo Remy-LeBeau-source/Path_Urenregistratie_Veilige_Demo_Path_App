@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -130,6 +130,12 @@ async function main() {
     throw new Error(`Allure prep failed with exit code ${allurePrepare.status ?? 1}.`);
   }
 
+  // Iedere runner krijgt zijn eigen private opslag. Zo kan een eerdere UI-run
+  // nooit een achtergebleven PDF aan een volgende case "lenen". De map wordt pas
+  // verwijderd nadat Playwright UI én de beheerde PHP-server zijn afgesloten.
+  const privateRoot = mkdtempSync(path.join(tmpdir(), 'path-urenregistratie-playwright-'));
+  const runId = path.basename(privateRoot);
+
   const serverEnv = {
     ...process.env,
     PATH_APP_DB_NAME: resolvedDatabaseName,
@@ -139,7 +145,8 @@ async function main() {
     PATH_APP_ALLOW_DEMO_MIGRATIONS: '1',
     PLAYWRIGHT_ALLOW_DEMO_MIGRATIONS: '1',
     PATH_APP_BASE_URL: baseUrl,
-    PATH_APP_PRIVATE_ROOT: path.join(tmpdir(), 'path-urenregistratie-playwright-private'),
+    PATH_APP_PRIVATE_ROOT: privateRoot,
+    PATH_APP_E2E_RUN_ID: runId,
   };
 
   const testRuntimeEnv = {
@@ -151,6 +158,8 @@ async function main() {
     PATH_APP_ALLOW_DEMO_MIGRATIONS: '1',
     PLAYWRIGHT_ALLOW_DEMO_MIGRATIONS: '1',
     PATH_APP_BASE_URL: baseUrl,
+    PATH_APP_PRIVATE_ROOT: privateRoot,
+    PATH_APP_E2E_RUN_ID: runId,
   };
 
   if (effectiveStage !== 'prod') {
@@ -314,6 +323,15 @@ async function main() {
       serverProcess.kill();
       await new Promise((resolve) => serverProcess.once('exit', resolve));
     }
+    const resolvedPrivateRoot = path.resolve(privateRoot);
+    const resolvedTempRoot = path.resolve(tmpdir()) + path.sep;
+    if (
+      !resolvedPrivateRoot.startsWith(resolvedTempRoot)
+      || !path.basename(resolvedPrivateRoot).startsWith('path-urenregistratie-playwright-')
+    ) {
+      throw new Error(`Refusing to clean unexpected Playwright private root: ${resolvedPrivateRoot}`);
+    }
+    rmSync(resolvedPrivateRoot, { recursive: true, force: true });
   }
 }
 

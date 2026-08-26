@@ -404,6 +404,11 @@ function invoices_download_pdf(PDO $pdo, array $config, array $currentUser, arra
     header('Content-Type: application/pdf');
     header('Content-Length: ' . (string)filesize($absolutePath));
     header('Content-Disposition: attachment; filename="' . $downloadName . '"');
+    // Een factuur bevat tarieven, uren en NAW-gegevens. Het uitleveren van de
+    // klanturenstaat zette deze twee headers al, hier ontbraken ze -- waardoor juist
+    // het gevoeligste document in een browser- of proxycache kon blijven liggen.
+    header('Cache-Control: private, no-store');
+    header('X-Content-Type-Options: nosniff');
     readfile($absolutePath);
     exit;
 }

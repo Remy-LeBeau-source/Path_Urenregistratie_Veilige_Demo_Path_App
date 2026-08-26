@@ -1,4 +1,6 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures/e2eIsolation';
+import { request as playwrightRequest } from '@playwright/test';
+import { AuthApi } from './api/AuthApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
 import { LoginPage } from './pages/LoginPage';
 
@@ -318,15 +320,50 @@ test('[E2E-H-005] klanturenstaatcontrole wordt een brokeractie zonder taakverlie
 });
 
 test('[E2E-H-006] eenmalige wachtwoordlink geeft toegang en blokkeert hergebruik', async ({ page }) => {
-  test.setTimeout(60_000);
-  const originalPassword = requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD');
-  const temporaryPassword = 'E2eTijdelijk!2026';
-  let changed = false;
+  test.setTimeout(90_000);
+
+  // Deze case draaide op het GEDEELDE demo-account: hij veranderde daar het
+  // wachtwoord en zette het achteraf terug. Dat is twee keer misgegaan.
+  //
+  // Het reseteindpunt staat drie aanvragen per kwartier toe. Twee aanvragen per
+  // uitvoering maal drie browserprojecten is zes -- dus tegen het derde project is
+  // de limiet op, komt het herstel niet meer door, en logt geen enkele latere case
+  // meer in als deze medewerker. Op mobile-safari viel daardoor E2E-H-007 om met
+  // "E-mailadres of wachtwoord is onjuist", zonder dat daar iets mis was.
+  //
+  // De oplossing is niet nóg een vangnet om het herstel heen, maar het gedeelde
+  // account niet meer aanraken: deze case maakt zijn eigen wegwerpmedewerker.
+  const uniek = `${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 900 + 100)}`;
+  const eigenAdres = `resetproef-${uniek}@example.invalid`;
+  const eigenNaam = `Resetproef ${uniek}`;
+  const nieuwWachtwoord = `E2eTijdelijk!${uniek}`;
+
+  let gebruikerId = 0;
+  let medewerkerId = 0;
   let token = '';
 
+  const beheer = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+  const beheerAuth = new AuthApi(beheer);
+  const beheerPost = async (pad: string, data: JsonBody) => {
+    const csrf = await (await beheer.get('/server/auth/csrf.php')).json() as { csrf_token?: string };
+    const res = await beheer.post(pad, { headers: { 'X-CSRF-Token': String(csrf.csrf_token || '') }, data });
+    return { status: res.status(), body: await res.json() as JsonBody };
+  };
+
   try {
-    await test.step('Given een actieve medewerker een resetlink aanvraagt', async () => {
-      const response = await postAuth(page, '/server/auth/request-reset.php', { email: appConfig.employeeEmail });
+    await test.step('Given een eigen wegwerpmedewerker een resetlink aanvraagt', async () => {
+      await beheerAuth.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+      const aangemaakt = await beheerPost('/server/api/staff.php', {
+        action: 'upsert_employee',
+        sendInvitation: false,
+        employee: { name: eigenNaam, email: eigenAdres, role: 'Consultant', active: true },
+      });
+      expect(aangemaakt.status, JSON.stringify(aangemaakt.body)).toBe(200);
+      gebruikerId = Number(aangemaakt.body.user_id || 0);
+      medewerkerId = Number(aangemaakt.body.employee_id || 0);
+      expect(gebruikerId, 'de wegwerpmedewerker hoort een account te krijgen').toBeGreaterThan(0);
+
+      const response = await postAuth(page, '/server/auth/request-reset.php', { email: eigenAdres });
       expect(response.status).toBe(200);
       expect(response.body.ok).toBe(true);
       expect(response.body.token).toMatch(/^[a-f0-9]{64}$/);
@@ -336,43 +373,55 @@ test('[E2E-H-006] eenmalige wachtwoordlink geeft toegang en blokkeert hergebruik
     await test.step('When de medewerker via de link een sterk nieuw wachtwoord instelt', async () => {
       await page.goto(`${appConfig.baseUrl}/index.html#reset-password=${token}`);
       await expect(page.locator('#auth-reset-complete-form')).toBeVisible();
-      await page.locator('#auth-reset-new-password').fill(temporaryPassword);
-      await page.locator('#auth-reset-confirm-password').fill(temporaryPassword);
+      await page.locator('#auth-reset-new-password').fill(nieuwWachtwoord);
+      await page.locator('#auth-reset-confirm-password').fill(nieuwWachtwoord);
       await page.locator('#auth-reset-complete-submit').click();
       await expect(page.locator('#auth-reset-complete-feedback')).toContainText('Je wachtwoord is ingesteld');
-      changed = true;
     });
 
     await test.step('Then werkt het nieuwe wachtwoord en is dezelfde link niet opnieuw bruikbaar', async () => {
-      const reused = await postAuth(page, '/server/auth/reset-password.php', { token, new_password: temporaryPassword });
-      expect(reused.status).toBe(409);
-      expect(reused.body.error).toBe('token-already-used');
+      const hergebruik = await postAuth(page, '/server/auth/reset-password.php', { token, new_password: nieuwWachtwoord });
+      expect(hergebruik.status, 'een gebruikte link mag niet nog eens werken').toBe(409);
+      expect(hergebruik.body.error).toBe('token-already-used');
 
-      // The screen no longer switches on its own after a few seconds; the
-      // person confirms with the explicit button instead.
       await page.locator('#auth-reset-goto-login').click();
       await expect(page.locator('#auth-login-form')).toBeVisible();
 
-      await page.locator('#auth-login-email').fill(appConfig.employeeEmail);
-      await page.locator('#auth-login-password').fill(temporaryPassword);
+      await page.locator('#auth-login-email').fill(eigenAdres);
+      await page.locator('#auth-login-password').fill(nieuwWachtwoord);
       await page.locator('#auth-login-submit').click();
+      await expect(page.locator('#view-employee-dashboard'), 'met het nieuwe wachtwoord hoort hij binnen te zijn')
+        .toHaveClass(/is-active/);
+
+      // En hij is werkelijk zichzelf, niet een collega uit de gedeelde stand.
+      const ik = await (await page.request.get('/server/auth/me.php')).json() as JsonBody;
+      const gebruiker = ik.user as Record<string, unknown> | undefined;
+      expect(String(gebruiker?.email), 'hij hoort als zichzelf ingelogd te zijn').toBe(eigenAdres);
+    });
+
+    await test.step('And het gedeelde demo-account is niet aangeraakt', async () => {
+      // De eigenlijke winst van deze wijziging: wat hierboven gebeurt, mag geen
+      // enkel gevolg hebben voor het account waar alle andere cases op leunen.
+      // Eerst de wegwerpmedewerker uitloggen: zolang die sessie staat is het
+      // inlogscherm verborgen en meet je niets.
+      await postAuth(page, '/server/auth/logout.php', {});
+      const gedeeld = new LoginPage(page);
+      await gedeeld.open();
+      await gedeeld.loginAsEmployee();
       await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
     });
   } finally {
-    if (changed) {
-      // This case changes the password of a SHARED demo account. If the restore
-      // silently does not happen -- the reset endpoint throttles to three requests
-      // per fifteen minutes, and then returns no token -- every later case that logs
-      // in as this employee fails with an unexplained 401. That cost hours once.
-      // So a failed restore has to fail loudly, here, instead of poisoning the run.
-      const restore = await postAuth(page, '/server/auth/request-reset.php', { email: appConfig.employeeEmail });
-      expect(typeof restore.body.token, 'herstel van het gedeelde wachtwoord kreeg geen token (throttle?)').toBe('string');
-      const restored = await postAuth(page, '/server/auth/reset-password.php', {
-        token: restore.body.token as string,
-        new_password: originalPassword,
-      });
-      expect(restored.body.ok, 'het gedeelde wachtwoord moet zijn teruggezet').toBe(true);
+    await postAuth(page, '/server/auth/logout.php', {}).catch(() => null);
+    if (gebruikerId > 0) {
+      await beheerPost('/server/api/staff.php', {
+        action: 'upsert_employee',
+        sendInvitation: false,
+        employee: { name: eigenNaam, email: eigenAdres, dbEmployeeId: medewerkerId, dbUserId: gebruikerId, role: 'Consultant', active: false },
+      }).catch(() => null);
+      await beheerPost('/server/api/users.php', { action: 'delete', user_id: gebruikerId }).catch(() => null);
     }
+    await beheerAuth.logout().catch(() => null);
+    await beheer.dispose();
   }
 });
 

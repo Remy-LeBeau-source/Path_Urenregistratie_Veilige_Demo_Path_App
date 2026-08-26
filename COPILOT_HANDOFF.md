@@ -2,6 +2,157 @@
 
 Dit bestand is de gedeelde brug tussen GitHub Copilot en Codex. Chatvensters zijn niet onderling zichtbaar, maar beide assistenten kunnen dit bestand in de werkmap lezen.
 
+## Voor Codex — stand van Claude Code, 24 augustus
+
+Niets gecommit, gepusht of gedeployed sinds `5fdf8fa`. Bronversie lokaal `0.9.139`,
+TEST draait `0.9.138`. PROD blijft op zijn eigen oudere versie en wordt niet aangeraakt.
+
+#### Aanvulling Claude Code — 24 augustus, na de Codex-sectie hierboven
+
+Werk uit dezelfde dag, deels vóór en deels naast het Codex-werk. Alles staat lokaal;
+**er is niets gecommit, gepusht of gedeployed** sinds `5fdf8fa`. Bronversie `0.9.139`,
+TEST draait `0.9.138`.
+
+**Beantwoord: `TeamManagementPage.ts` compileert.** Dat stond hierboven als eerste
+open vraag. Gecontroleerd met een wegwerpspec die het page-object importeert en
+`npx playwright test --list` — één test gevonden, geen TypeScript-fout. De spec is
+daarna verwijderd. De **selectors** zijn daarmee nog niet bewezen; dat gebeurt pas
+als een echte case ermee klikt.
+
+**Toegevoegde E2E-cases** (nog als API/request-tests in `email-queue.spec.ts`, dus
+kandidaten voor de GUI-omzetting die hierboven onder stap 5 staat):
+
+| Case | Wat hij bewijst |
+|---|---|
+| `E2E-H-013` | nieuwe medewerker: gegevens blijven staan incl. contract, urenstaat wordt werk op het dashboard, factuur ontstaat, elke mail heeft onderwerp, naam en handtekening en géén onvervangen `{veld}` |
+| `E2E-H-014` | nieuwe beheerder logt zelf in, ziet dezelfde werkvoorraad als een bestaande en maakt de keten af |
+| `E2E-H-015` | volledige CRUD: aanmaken, wijzigen, deactiveren, definitief verwijderen laat geen medewerker, opdracht of account achter |
+| `E2E-H-016` | elk veld dat het medewerkersformulier verstuurt komt exact terug, of staat met naam en reden in een uitzonderingslijst |
+
+`E2E-H-009/010/011` zijn hernoemd uit `EQ-H-027/028/030`; de omzettabel staat in
+`TESTCOMMANDOS.md`. **Let op de ID-botsing** die hierboven onder stap 6 staat: deze
+nummers bestaan nu zowel in de feature van Codex als in `email-queue.spec.ts`.
+Afstemmen vóór de GUI-omzetting, anders verwijzen twee dingen naar hetzelfde nummer.
+
+**Overige lokale wijzigingen van deze hand**
+
+- `playwright.config.ts`: mobiele projecten matchen ook `business-workflows-e2e.spec.ts`.
+  Codex heeft dit inmiddels verbreed naar `business-workflows-*.spec.ts`; controleer
+  welke versie in de werkboom staat en houd de bredere.
+- `package.json`: `test:e2e:group:e2e`, `:e2e:ui` en `:e2e:headed`, zodat Gio de
+  E2E-laag zelf kan draaien en in de Playwright-GUI kan bekijken. Dat heeft hij
+  expliciet gevraagd.
+- `server/scripts/mail-delivery-inspect.php`: meldt nu ook `invoice_number` en een
+  `attachment`-blok (bestaat, bytes, is_pdf, sleutel, pad).
+  **Waarschuwing:** de bestandscontrole werkt nog niet betrouwbaar. De runner geeft
+  iedere run een eigen tijdelijke private opslagroot; deze inspecteur loste een ander
+  pad op. `E2E-H-013` controleert daarom alleen dat `pdf_storage_key` gevuld is —
+  die wordt pas gezet ná een geslaagde schrijfactie. Codex' `e2e-state-inspect.php`
+  lijkt hiervoor de betere weg; sluit daarop aan in plaats van dit uit te breiden.
+- Migratie 025 `contract_label` plus `staff.php`, `bootstrap.php` en `app.js`.
+- `queue.php`: Overig volgt nu `include_invoice_pdf`; salaris houdt zijn uitzondering
+  en het vinkje staat daar uitgeschakeld met reden.
+
+**Wisselvallige tests**, drie keer dezelfde oorzaak: wachten op iets wat er toevallig
+bij staat in plaats van op wat werkt. Opgelost via `openPaneel` in
+`tests/playwright/pages/TopbarMenu.ts` (profielmenu, maandkiezer, keuzeknop) en in
+`LoginPage.ts` (wachtte op het tekstje naast de inlogknop in plaats van op de knop).
+Het patroon is **niet uitputtend nagelopen**.
+
+**Bekend en nog niet opgelost:** `E2E-H-007` heeft een stap die twee dingen belooft
+("blijft de controle weg en staat de factuurtaak open") en géén van beide controleert
+— de enige assertie is dat er één schrijfactie was. Ook `E2E-H-004` mist een controle
+op uren en bedrag. Beide stonden op de lijst toen de sessie werd onderbroken.
+
+**Laatste meting:** volledige suite `299 passed` op `0.9.139`-broncode; E2E-laag
+`15 passed` desktop; `business-workflows-e2e.spec.ts` `8 passed` op mobile-chrome en
+`7 passed / 1 failed` op mobile-safari — die ene is `E2E-H-007`, met
+*"Login faalde: E-mailadres of wachtwoord is onjuist"*. Dat sluit aan op stap 3
+hierboven: H006/H007 hangen aan het gedeelde demowachtwoord en moeten naar een
+wegwerpaccount.
+
+#### Bevindingen van Gio uit de handmatige ronde op TEST (24 augustus)
+
+Dit is de openstaande lijst uit zijn eigen testronde. Twee zijn opgelost, zes niet
+gereproduceerd. Ze staan hier omdat ze anders tussen het E2E-werk door verdwijnen —
+en omdat de niet-gereproduceerde er níet uitzien als verzinsels: hij zag ze op TEST,
+ik niet op een schone database. Dat verschil is zelf het spoor.
+
+**Opgelost en met een case vastgelegd**
+
+| Bevinding | Oorzaak | Vastgelegd in |
+|---|---|---|
+| Contract invullen, opslaan, veld blijft leeg | er bestond geen kolom; het veld leefde alleen in de browser | migratie 025 `contract_label`, `E2E-H-015`/`E2E-H-016` |
+| *Factuur meesturen* aanvinken bij Overig levert geen bijlage | `queue.php` zette `$attachPolicy = 'none'` ongeacht het vinkje | `E2E-H-012` |
+| Boekhouder kreeg de algemene in plaats van zijn eigen mailtekst | soort ontvanger werd stil overschreven bij opslaan | migratie 023, `ADM-WR-H-017` |
+
+Bij de salarisadministratie is het bijlagevinkje nu uitgeschakeld met de reden erbij:
+de server weigert daar categorisch een factuur, en een dood vinkje aanbieden is net
+zo misleidend als een genegeerd vinkje.
+
+**Niet gereproduceerd — niet afgesloten**
+
+1. Na **Herstel** blijft een nieuw aangemaakte persoon staan.
+2. Na aanmaken moet je eerst opslaan **en F5** voordat je iets kunt invullen.
+3. Na aanmaken staan **verkeerde vinkjes** aan bij een ontvanger.
+4. Bij een nieuwe medewerker **geen klant zichtbaar** en de naam ontbreekt.
+5. Een ingediende urenstaat kwam **niet als taak** terug.
+6. Bij afronden: *"Niet alle serverfacturen zijn beschikbaar."*
+
+Wat er wél is vastgesteld:
+
+- Op een schone database klopt alles. De opdracht krijgt `client_id` en `broker_id`,
+  de kaart toont klant en broker, een nieuwe ontvanger staat bij een tweede
+  medewerker op `enabled=0`, en na F5 verandert er niets. Zie de walkthroughs; die
+  zijn daarna opgeruimd.
+- De melding bij 6 verschijnt wanneer niet elke goedgekeurde medewerker een
+  serverfactuur heeft — `serverInvoiceFor()` in `assets/app.js`. Dat is het symptoom,
+  niet de oorzaak.
+- **Mijn verklaring is weerlegd.** Ik vermoedde dat de browser na een herstel een
+  botsende ontvangersleutel kon maken (`nextMailRecipientId()` telt in de lokale
+  lijst, de server werkt bij op dezelfde sleutel bij). Uitgelokt en gemeten: na de
+  herlading haalt de app de ontvangers eerst bij de server op en telt netjes door.
+  Geen botsing. Bouw hier dus niets op.
+- Meest waarschijnlijke resterende verklaring: **een oude `app.js` in zijn browser**.
+  De betrokken schermen zijn in 0.9.133–0.9.138 zwaar gewijzigd, en dit heeft eerder
+  een half uur gekost. Gio is gevraagd één keer hard te verversen (`Ctrl+Shift+R`) en
+  het opnieuw te proberen; **dat antwoord staat nog open**. Herstel in de app is iets
+  anders dan een harde ververs — dat onderscheid was hem niet duidelijk.
+
+Volgende stap voor wie dit oppakt: vraag de exacte klikvolgorde en of het na een
+harde ververs nog optreedt. Reproduceer eerst, bouw daarna pas. Drie van deze zes
+zouden door `E2E-H-013` en `E2E-H-016` gedekt moeten zijn zodra die op TEST-data
+draaien in plaats van op een verse database.
+
+**Eerder door Gio gemeld met schermafdrukken, allemaal opgelost en uitgerold**
+
+Deze staan hier zodat de reeks compleet is: het waren er niet zes maar veel meer, en
+bijna alles kwam uit zijn eigen ronde op een telefoon — niet uit de suite.
+
+| Bevinding | Opgelost in |
+|---|---|
+| Scrollen werkte helemaal niet op de telefoon | 0.9.120 |
+| Kolomlabels op de telefoon 8px, onleesbaar | 0.9.123 |
+| Rolkeuze viel op iOS achter de statusbalk | 0.9.128 |
+| App-icoon onleesbaar op het beginscherm | 0.9.130/0.9.134 |
+| "Installeren" kwam nooit meer terug na verwijderen | 0.9.129 |
+| Installeerknop deed niets bij het indrukken | 0.9.130 |
+| Donkere modus: tekst in dialogen onleesbaar | 0.9.132/0.9.134 |
+| Witte knoppen met witte tekst (Goedkeuringen, Facturen) | 0.9.134 |
+| "Path" onzichtbaar in de topbalk bij daglicht | 0.9.134 |
+| Meldingenbel was een boog en stond niet gecentreerd | 0.9.135 |
+| Broker ontbrak volledig in Instellingen | 0.9.134 |
+| Drie verschillende zinnen over wat een leeg tekstveld betekent | 0.9.135 |
+| Handtekening ontbrak onder de brokermail | 0.9.132 |
+| Profielfoto uploaden werkte niet | eerder |
+| Meldingsvinkjes klopten niet per rol | eerder |
+
+Patroon dat hieruit spreekt en dat de moeite van het onthouden waard is: **vrijwel
+elke bevinding kwam uit handmatig kijken op een echt toestel, niet uit de suite.**
+Meerdere ervan gingen door een volledig groene regressie heen. Dat is de reden dat
+Gio nu een zichtbare GUI-suite wil die hij zelf kan draaien — en dat een walkthrough
+met schermafdrukken die je zelf bekijkt, geen luxe is naast de asserties.
+
 ## Samenwerking Copilot ↔ Codex
 
 Copilot en Codex kunnen niet rechtstreeks communiceren. Werkwijze:

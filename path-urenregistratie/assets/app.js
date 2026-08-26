@@ -1939,9 +1939,23 @@ function refreshTimesheetReadApi(periodKey, employeeId, force = false) {
   const mutationEpoch = Number(readApiRuntime.timesheetMutationEpochByKey[key] || 0);
   const now = Date.now();
   const lastAt = Number(readApiRuntime.lastTimesheetsByKey[key] || 0);
-  if (!force && (readApiRuntime.timesheetsInFlight[key] || (now - lastAt) < 15000)) return Promise.resolve(null);
+  // Een lezing die al onderweg is, gaf hier eerder null terug. De aanroeper leidde
+  // daaruit af dat er niets te doen was en tekende niet opnieuw -- terwijl die
+  // lezing even later wél een nieuwe status neerzette. Gevolg: je opende je
+  // urenstaat vlak na het laden van de pagina en zag de vorige status staan, tot je
+  // ergens anders heen klikte en terugkwam. Dat is de "mijn uren staan nog open"-
+  // melding die niet weg wilde. Geef daarom de lopende belofte terug, zodat wie
+  // erop wacht hertekent zodra het antwoord er is.
+  const lopend = readApiRuntime.timesheetsInFlight[key];
+  if (!force && lopend) return lopend;
+  if (!force && (now - lastAt) < 15000) return Promise.resolve(null);
 
-  readApiRuntime.timesheetsInFlight[key] = true;
+  const inFlight = fetchTimesheetReadApi(key, period, employee, mutationEpoch);
+  readApiRuntime.timesheetsInFlight[key] = inFlight;
+  return inFlight;
+}
+
+function fetchTimesheetReadApi(key, period, employee, mutationEpoch) {
   const endpoint = WRITE_TIMESHEET_PATH + "?period=" + encodeURIComponent(period) + "&employee_id=" + encodeURIComponent(String(employee));
   return fetchReadApi(endpoint)
     .then(data => {
@@ -1954,7 +1968,7 @@ function refreshTimesheetReadApi(periodKey, employeeId, force = false) {
       return applyTimesheetApiPayload(employee, period, data.timesheet);
     })
     .finally(() => {
-      readApiRuntime.timesheetsInFlight[key] = false;
+      readApiRuntime.timesheetsInFlight[key] = null;
     });
 }
 
@@ -2693,6 +2707,10 @@ function mergeBootstrapIntoState(data) {
     if (assignment.agreement_number) localEmployee.agreementNumber = String(assignment.agreement_number);
     if (assignment.creditor_number) localEmployee.creditorNumber = String(assignment.creditor_number);
     if (assignment.contractor_number) localEmployee.contractorNumber = String(assignment.contractor_number);
+    // Het contractlabel ("Vast · 36 uur") had geen kolom en ging bij elke herlaad
+    // verloren. De app leidt er ook het aantal contracturen uit af, dus het is niet
+    // alleen een opschrift.
+    if (assignment.contract_label) localEmployee.contract = String(assignment.contract_label);
     if (assignment.customer_timesheet_due_workday !== undefined && assignment.customer_timesheet_due_workday !== null) {
       localEmployee.customerTimesheetDueWorkday = Number(assignment.customer_timesheet_due_workday);
     }
@@ -3137,13 +3155,16 @@ function refreshCustomerTimesheetReadApi(periodKey, employeeId, force = false) {
   const mutationEpoch = Number(readApiRuntime.customerTimesheetMutationEpochByKey[key] || 0);
   const now = Date.now();
   const lastAt = Number(readApiRuntime.lastCustomerTimesheetsByPeriod[key] || 0);
-  if (readApiRuntime.customerTimesheetsInFlight[key]) return Promise.resolve(null);
+  // Zelfde reden als bij de urenstaat: wie op een al lopende lezing stuitte, kreeg
+  // null en concludeerde dat er niets was veranderd. Bij de takentellers betekent
+  // dat een openstaande taak die blijft staan nadat hij is afgehandeld.
+  const lopend = readApiRuntime.customerTimesheetsInFlight[key];
+  if (lopend) return lopend;
   if (!force && (now - lastAt) < 15000) return Promise.resolve(null);
 
-  readApiRuntime.customerTimesheetsInFlight[key] = true;
   const endpoint = WRITE_CUSTOMER_TIMESHEET_PATH + "?period=" + encodeURIComponent(period) + "&employee_id=" + encodeURIComponent(String(employee));
 
-  return fetchReadApi(endpoint)
+  const inFlight = fetchReadApi(endpoint)
     .then(data => {
       readApiRuntime.lastCustomerTimesheetsByPeriod[key] = Date.now();
       if (isLocalResetAuthoritative()) return null;
@@ -3174,8 +3195,10 @@ function refreshCustomerTimesheetReadApi(periodKey, employeeId, force = false) {
       return data;
     })
     .finally(() => {
-      readApiRuntime.customerTimesheetsInFlight[key] = false;
+      readApiRuntime.customerTimesheetsInFlight[key] = null;
     });
+  readApiRuntime.customerTimesheetsInFlight[key] = inFlight;
+  return inFlight;
 }
 
 function currentPeriod() {

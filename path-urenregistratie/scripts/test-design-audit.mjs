@@ -12,7 +12,9 @@ const failures = [];
 
 for (const file of featureFiles) {
   const source = readFileSync(path.join(featuresDir, file), 'utf8');
-  const scenarioPattern = /(^\s*@(happy|negative)\s*$\r?\n\s*Scenario:\s*\[([^\]]+)]([^\r\n]*)\r?\n)([\s\S]*?)(?=^\s*@(happy|negative)\s*$|(?![\s\S]))/gm;
+  // Naast @happy/@negative mag een scenario uitvoeringstags dragen (@gui, @desktop,
+  // @mobile). Die bepalen in welke projecten de case draait, niet of hij geldig is.
+  const scenarioPattern = new RegExp(String.raw`(^[ \t]*@(happy|negative)(?:[ \t]+@[\w-]+)*[ \t]*$\r?\n\s*Scenario:\s*\[([^\]]+)]([^\r\n]*)\r?\n)([\s\S]*?)(?=^[ \t]*@(happy|negative)(?:[ \t]+@[\w-]+)*[ \t]*$|(?![\s\S]))`, 'gm');
   const matches = [...source.matchAll(scenarioPattern)];
   if (!matches.length) failures.push(`${file}: geen scenario's gevonden.`);
 

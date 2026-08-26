@@ -104,16 +104,19 @@ function test_reset_sql(PDO $pdo, string $path): void
 function test_reset_acceptance_accounts(PDO $pdo, int $companyId): void
 {
     $accounts = [
-        ['email' => 'giovanno.maatsen@pathconsultancy.nl', 'name' => 'Giovanno Maatsen'],
-        ['email' => 'kenrich.lieveld@pathconsultancy.nl', 'name' => 'Kenrich Lieveld'],
+        ['id' => 1001, 'email' => 'giovanno.maatsen@pathconsultancy.nl', 'name' => 'Giovanno Maatsen'],
+        ['id' => 1002, 'email' => 'kenrich.lieveld@pathconsultancy.nl', 'name' => 'Kenrich Lieveld'],
     ];
     $insert = $pdo->prepare(
         'INSERT INTO users
-         (company_id, email, display_name, role, active, password_hash, force_password_change)
-         VALUES (:company_id, :email, :name, "administrator", 1, :password_hash, 1)'
+         (id, company_id, email, display_name, role, active, password_hash, force_password_change)
+         VALUES (:id, :company_id, :email, :name, "administrator", 1, :password_hash, 1)'
     );
     foreach ($accounts as $account) {
         $insert->execute([
+            // Fixed TEST-only ids keep repeated shared-baseline resets semantically
+            // identical. AUTO_INCREMENT itself may advance, but no row identity drifts.
+            ':id' => $account['id'],
             ':company_id' => $companyId,
             ':email' => $account['email'],
             ':name' => $account['name'],

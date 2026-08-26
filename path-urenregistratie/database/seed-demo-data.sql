@@ -129,22 +129,22 @@ INSERT INTO timesheets (
   (15, 4, 3, 3, 151.20, 144.00, 0.00, 0.00, 'submitted', '2026-08-31 16:00:00', NULL, NULL, NULL),
   (16, 4, 4, 4, 151.20, 144.00, 0.00, 0.00, 'approved', '2026-08-31 16:10:00', '2026-09-01 10:05:00', 1, NULL);
 
-INSERT INTO time_entries (timesheet_id, work_date, entry_type, hours, description) VALUES
-  (1, '2026-05-29', 'billable', 8.00, 'Demo dagentry'),
-  (2, '2026-05-29', 'billable', 8.00, 'Demo dagentry'),
-  (3, '2026-05-29', 'billable', 8.00, 'Demo dagentry'),
-  (4, '2026-05-29', 'billable', 8.00, 'Demo dagentry'),
-  (5, '2026-06-30', 'billable', 8.00, 'Demo dagentry'),
-  (6, '2026-06-30', 'billable', 8.00, 'Demo dagentry'),
-  (7, '2026-06-30', 'billable', 8.00, 'Demo dagentry'),
-  (8, '2026-06-30', 'billable', 8.00, 'Demo dagentry'),
-  (9, '2026-07-31', 'billable', 8.00, 'Demo dagentry'),
-  (10, '2026-07-31', 'billable', 8.00, 'Demo dagentry'),
-  (11, '2026-07-31', 'billable', 8.00, 'Demo dagentry'),
-  (12, '2026-07-31', 'billable', 8.00, 'Demo dagentry'),
-  (14, '2026-08-12', 'billable', 4.00, 'Demo dagentry met correctieverzoek'),
-  (15, '2026-08-31', 'billable', 8.00, 'Demo dagentry'),
-  (16, '2026-08-31', 'billable', 8.00, 'Demo dagentry');
+INSERT INTO time_entries (id, timesheet_id, work_date, entry_type, hours, description) VALUES
+  (1, 1, '2026-05-29', 'billable', 8.00, 'Demo dagentry'),
+  (2, 2, '2026-05-29', 'billable', 8.00, 'Demo dagentry'),
+  (3, 3, '2026-05-29', 'billable', 8.00, 'Demo dagentry'),
+  (4, 4, '2026-05-29', 'billable', 8.00, 'Demo dagentry'),
+  (5, 5, '2026-06-30', 'billable', 8.00, 'Demo dagentry'),
+  (6, 6, '2026-06-30', 'billable', 8.00, 'Demo dagentry'),
+  (7, 7, '2026-06-30', 'billable', 8.00, 'Demo dagentry'),
+  (8, 8, '2026-06-30', 'billable', 8.00, 'Demo dagentry'),
+  (9, 9, '2026-07-31', 'billable', 8.00, 'Demo dagentry'),
+  (10, 10, '2026-07-31', 'billable', 8.00, 'Demo dagentry'),
+  (11, 11, '2026-07-31', 'billable', 8.00, 'Demo dagentry'),
+  (12, 12, '2026-07-31', 'billable', 8.00, 'Demo dagentry'),
+  (13, 14, '2026-08-12', 'billable', 4.00, 'Demo dagentry met correctieverzoek'),
+  (14, 15, '2026-08-31', 'billable', 8.00, 'Demo dagentry'),
+  (15, 16, '2026-08-31', 'billable', 8.00, 'Demo dagentry');
 
 INSERT INTO timesheet_corrections (id, timesheet_id, requested_by, correction_message, requested_at) VALUES
   (1, 14, 1, 'Controleer 12 augustus: daar staat 8 uur, maar volgens de planning hoort dit 4 uur te zijn.', '2026-08-05 10:15:00');

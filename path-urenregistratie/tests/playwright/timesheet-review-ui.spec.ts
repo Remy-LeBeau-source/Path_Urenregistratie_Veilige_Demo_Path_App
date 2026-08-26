@@ -203,7 +203,13 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
       request.method() === 'POST' &&
       String((request.postDataJSON() as { action?: string } | null)?.action || '') === 'submit'
     );
-    await page.locator('#submit-timesheet').click();
+    {
+      // Indienen is een serverwrite; de zichtbare status volgt pas daarna.
+      const indienen = page.waitForResponse(response =>
+        response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
+      await page.locator('#submit-timesheet').click();
+      await indienen;
+    }
     await submitWrite;
     expect(mockStatus).toBe('submitted');
     await expect.poll(() => page.evaluate(() => {
@@ -223,7 +229,7 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
       }
     });
     expect(renderDiagnostic.error).toBe('');
-    await expect(page.locator('#timesheet-status')).toHaveText('Ingediend');
+    await expect(page.locator('#timesheet-status')).toHaveText('Ingediend', { timeout: 15_000 });
   });
 
   await test.step('When de administrator een correctieverzoek plaatst', async () => {
@@ -244,11 +250,18 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
 
     await expect(page.locator('#modal')).toBeVisible();
     await page.locator('#correction-reason').fill(CORRECTION_MESSAGE);
+
+    // Ook dit is een serverwrite. In een losse run gaat het net goed, in de volle
+    // suite -- met een tragere machine onder belasting -- net niet. Wachten op het
+    // antwoord maakt de case ongevoelig voor hoe druk het toevallig is.
+    const correctie = page.waitForResponse(response =>
+      response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
     await page.locator('#modal-confirm').click();
+    await correctie;
 
     await expect(
       page.locator(`article.approval-card[data-approval-period="${PERIOD_KEY}"]`).filter({ hasText: employeeName })
-    ).toHaveCount(0);
+    ).toHaveCount(0, { timeout: 15_000 });
   });
 
   await test.step('Then ziet de medewerker het correctieverzoek en dient opnieuw in', async () => {
@@ -264,8 +277,14 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
     await expect(page.locator('#timesheet-correction-message')).toContainText('Controleer dag 2');
 
     await fillFirstTwoHours(page, '8', '4');
-    await page.locator('#submit-timesheet').click();
-    await expect(page.locator('#timesheet-status')).toHaveText('Ingediend');
+    {
+      // Indienen is een serverwrite; de zichtbare status volgt pas daarna.
+      const indienen = page.waitForResponse(response =>
+        response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
+      await page.locator('#submit-timesheet').click();
+      await indienen;
+    }
+    await expect(page.locator('#timesheet-status')).toHaveText('Ingediend', { timeout: 15_000 });
     await expect(page.locator('#timesheet-correction-banner')).toBeHidden();
   });
 
@@ -283,11 +302,18 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
       .first();
 
     await expect(approvalCardAfterResubmit).toBeVisible();
+
+    // Goedkeuren is een serverwrite; de kaart verdwijnt pas als die is afgerond.
+    // Zonder daarop te wachten meet je de netwerklatentie in plaats van het gedrag,
+    // en dat viel hier af en toe om zonder dat er iets mis was.
+    const goedkeuring = page.waitForResponse(response =>
+      response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
     await approvalCardAfterResubmit.locator('[data-approve]').click();
+    await goedkeuring;
 
     await expect(
       page.locator(`article.approval-card[data-approval-period="${PERIOD_KEY}"]`).filter({ hasText: employeeName })
-    ).toHaveCount(0);
+    ).toHaveCount(0, { timeout: 15_000 });
   });
 
   await test.step('Then ziet de medewerker de eindstatus Goedgekeurd', async () => {
@@ -343,8 +369,14 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
     await expect(page.locator('#submit-timesheet')).toContainText('opnieuw indienen');
 
     await fillFirstTwoHours(page, '8', '3');
-    await page.locator('#submit-timesheet').click();
-    await expect(page.locator('#timesheet-status')).toHaveText('Ingediend');
+    {
+      // Indienen is een serverwrite; de zichtbare status volgt pas daarna.
+      const indienen = page.waitForResponse(response =>
+        response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
+      await page.locator('#submit-timesheet').click();
+      await indienen;
+    }
+    await expect(page.locator('#timesheet-status')).toHaveText('Ingediend', { timeout: 15_000 });
     await expect(page.locator('#timesheet-correction-banner')).toBeHidden();
   });
 });
@@ -368,7 +400,7 @@ test('[TS-REV-UI-H-009] ingediende urenstaat blijft vergrendeld tot Backoffice e
     await loginPage.loginAsEmployee();
     await openView(page, 'timesheet');
     await setPeriod(page, PERIOD_KEY);
-    await expect(page.locator('#timesheet-status')).toHaveText('Ingediend');
+    await expect(page.locator('#timesheet-status')).toHaveText('Ingediend', { timeout: 15_000 });
   });
 
   await test.step('Then zijn invoer en indienactie vergrendeld en wacht de medewerker op Backoffice', async () => {

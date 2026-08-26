@@ -7,7 +7,7 @@ Feature: Urenregistratie verwerken
   # Navigatiemapping: tests/playwright/steps/timesheets-api.steps.ts
 
   @happy
-  Scenario: [TS-API-H-001] employee save draft, read back, submit, bewerkt en dient opnieuw in
+  Scenario: [TS-API-H-001] employee save draft, read back, submit; daarna zit de urenstaat op slot
     # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 31
     Given de medewerker is ingelogd
@@ -15,7 +15,7 @@ Feature: Urenregistratie verwerken
     Then save_draft werkt en zet status op draft
     Then read back van draft bevat dagregels en auditdata
     When submit wordt uitgevoerd met expected_version
-    Then een ingediende urenstaat kan worden bewerkt en opnieuw ingediend
+    Then is een ingediende urenstaat op slot en blijft hij ongewijzigd
     And cleanup: sessie sluiten voor testisolatie
 
   @negative

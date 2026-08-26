@@ -2,6 +2,297 @@
 
 Bijgewerkt: 24 augustus 2026, Europe/Amsterdam.
 
+## Actuele Codex-aanvulling — volledige E2E-keten (lokaal, nog niet vrijgegeven)
+
+Deze sectie is de actuele werkoverdracht voor het onderhanden E2E-werk en gaat vóór de oudere
+releasehistorie hieronder.
+
+Werkregel van Gio: werk deze sectie tijdens de sprint steeds bij na een groene mijlpaal, een nieuwe
+bevinding/blokkade, een relevante ontwerpbeslissing en iedere commit, pipeline- of TEST-status. Wacht
+daarmee niet tot het einde van de sessie.
+
+### Opdracht en afgesproken uitvoervolgorde
+
+Gio wil de volledige bedrijfsflow als echte, zichtbare Playwright-GUI-suite kunnen bekijken en zelf
+kunnen starten. Iedere businesscase moet op `desktop-chromium`, `mobile-chrome` en `mobile-safari`
+draaien en moet niet alleen de DOM, maar ook server-readback, databasewrites, mailinhoud,
+ontvangers, onderwerpen, handtekeningen, variabelevervanging, PDF-bijlagen en cleanup bewijzen.
+
+De afgesproken volgorde is:
+
+1. lokaal alle native GUI-tests en isolatie afbouwen;
+2. een korte lokale technische preflight uitvoeren (compile/list, isolatie en één login per browser);
+3. na een groene lokale poort naar TEST deployen; Gio heeft TEST-publicatie voor deze sprint
+   expliciet toegestaan;
+4. daarna samen de volledige suite zichtbaar op normale snelheid tegen TEST uitvoeren;
+5. na iedere case database en private opslag aantoonbaar schoon achterlaten.
+
+Geen volledige verborgen run vóór de gezamenlijke acceptatieronde. Een kleine gerichte preflight is
+wel afgesproken. Commit/push en TEST-deployment zijn na een groene lokale poort toegestaan.
+
+### Permanente releasegrens: TEST en PROD blijven gescheiden
+
+- TEST mag de nieuwste gevalideerde E2E-versie krijgen; PROD blijft bewust op zijn eigen oudere,
+  afzonderlijke versie staan.
+- Iedere releasepipeline moet na TEST altijd stoppen op de beschermde GitHub-omgeving `prod`, bij
+  de handmatige `Promote Prod`-review. De workflow heeft hiervoor `environment: prod`; die
+  repository-environmentbescherming mag niet worden omzeild of verwijderd.
+- Codex/een opvolger keurt `Promote Prod` nooit goed, start geen afzonderlijke
+  productiepromotieworkflow en voert `Deploy Prod to TransIP` nooit uit zonder een nieuwe,
+  ondubbelzinnige opdracht van Gio.
+- Geen echte productie-mail en geen andere PROD-mutatie. Een wachtende gele PROD-review na een
+  geslaagde TEST-deployment is de gewenste eindtoestand, niet iets dat moet worden opgelost.
+
+### Exacte huidige stand
+
+- Werkmap: `path-urenregistratie`; branch `main`; uitgangs-SHA `5fdf8faed2a7`.
+- De werkboom bevat bestaande én nieuwe lokale wijzigingen. Niets resetten of blind overschrijven.
+- Bronversie staat lokaal op `0.9.139`; TEST stond bij aanvang op `0.9.138`.
+- `tests/playwright/features/end-to-end-workflows.feature` bevat **25 scenario's**: H001–H019,
+  H022 en N017–N021. Het hoogste nummer is 022; dit is dus niet hetzelfde als het aantal cases.
+  Over drie browserprojecten is de beoogde matrix **75 uitvoeringen**.
+- H001–H008 bestaan als native browsertests in `business-workflows-e2e.spec.ts`.
+- H009–H015 bestaan nog als request/API-tests in `email-queue.spec.ts`; zij moeten nog door echte
+  GUI-besturing worden vervangen en daarna een niet-conflicterend API-contract-ID krijgen als de
+  onderliggende requesttests behouden blijven.
+- H022 is toegevoegd als eerste echte GUI-case met de nieuwe automatische isolatiefixture en is
+  groen op desktop Chromium, mobiel Chrome en mobiel Safari. De case bewijst GUI-write/readback,
+  gekoppelde DB-rijen en een byte-identieke database-/bestandsbaseline na cleanup.
+- H016–H019 en N017–N021 zijn nog niet als native tests gebouwd. De feature beschrijft dus het
+  gewenste contract, maar de volledige uitvoerbare dekking mag nog niet als afgerond worden gemeld.
+
+### Reeds lokaal gewijzigd voor deze sprint
+
+- `tests/playwright/features/end-to-end-workflows.feature`: alle gewenste ketens expliciet gemaakt,
+  inclusief CRUD-veldmatrix, toegestane en verboden statusovergangen, idempotency, autorisatie,
+  mailtemplates, TEST-sinkregels, fysieke PDF-controles en schoonmaakcontract.
+- `scripts/run-playwright-e2e.mjs`: iedere run krijgt een unieke tijdelijke private opslagroot;
+  server en testoracle delen dezelfde root en de runner verwijdert hem gecontroleerd na afloop.
+- `server/scripts/e2e-state-inspect.php`: CLI-oracle voor `_test`-databasefingerprint,
+  tabelaantallen, scenario-marker, foreign-keywezen en databasegekoppelde PDF-bestanden.
+- `tests/playwright/fixtures/e2eIsolation.ts`: automatische fixture die vóór iedere case de gedeelde
+  TEST-baseline herstelt en daarna fingerprint, tabelaantallen, marker=0, scenario-rijen=0,
+  wezen=0, geldige PDF-verwijzingen en exact passende private bestanden eist. De browser wordt vóór
+  teardown naar `about:blank` gestuurd om polling-/bootstrap-races te stoppen. Voor- en nasnapshots
+  worden als JSON aan het Playwright-resultaat toegevoegd.
+- `tests/playwright/business-workflows-isolation.spec.ts`: nieuwe H022-GUI-case die via het echte
+  medewerkersformulier account, medewerker en opdracht schrijft, GUI-readback en gekoppelde
+  databaserijen controleert en de fixture daarna cleanup laat bewijzen.
+- `tests/playwright/pages/TeamManagementPage.ts`: gedeeld page-object voor zichtbare Teambeheer-
+  navigatie, alle medewerker-/opdracht-/routevelden, create/update/deactivate/delete en beheerder-
+  create. Iedere save vangt request, HTTP-response en responsebody af. Dit bestand is als laatste
+  stap toegevoegd en is **nog niet gecompileerd of in een case gebruikt**; begin een vervolgsessie
+  dus met een gerichte Playwright `--list`/case-run en herstel eventuele TypeScript- of selectorfout.
+- `playwright.config.ts`: beide mobiele projecten matchen nu `business-workflows-*.spec.ts`, zodat
+  opgesplitste businessspecs niet ongemerkt alleen op desktop draaien.
+- Contractveld: lokale applicatie-/API-/migratiewijzigingen bewaren en lezen `contract_label` terug
+  (migratie 025). Dit werk zat al in de dirty werkboom en hoort bij de velddekking.
+- Mailinspectie: lokale aanzet om niet alleen attachmentbeleid maar bestand bestaan, grootte en
+  `%PDF`-inhoud te controleren. Nog gericht verifiëren voordat hierop vertrouwd wordt.
+
+Reeds uitgevoerde goedkope controles na de laatste patches:
+
+- `php -l server/scripts/e2e-state-inspect.php`: groen;
+- `node --check scripts/run-playwright-e2e.mjs`: groen;
+- `git diff --check`: geen whitespacefouten, alleen bestaande LF→CRLF-waarschuwingen.
+
+De H022-ontwikkeling vond eerst een onjuiste multisetvergelijking voor gedeelde voorbeeld-PDF's en
+daarna niet-deterministische auto-increment-ID's in `time_entries` en `timesheet_corrections`.
+De TEST-seed gebruikt daar nu vaste ID's; de inspector rapporteert daarnaast fingerprints per tabel.
+Eindbewijs: desktop `1/1` groen en mobiele matrix `2/2` groen. Dit bewijst de isolatielaag, nog niet
+de volledige nieuwe suite.
+
+### Inhoudelijk dekkingscontract
+
+De uiteindelijke native tests moeten minimaal bewijzen:
+
+- alle velden die een formulier verstuurt komen exact terug uit request, bootstrap, database en GUI,
+  of staan met veldnaam en reden in een expliciete uitzonderingslijst;
+- aanmaken, wijzigen, deactiveren en definitief verwijderen laten geen gebruiker, medewerker,
+  opdracht, route, token, delivery, document of andere wees achter;
+- onderwerp, body, vijf handtekeningvelden en eigen/standaardtekst staan exact in de delivery;
+  geen onvervangen `{...}` blijft in onderwerp of body staan;
+- TEST levert fysiek uitsluitend aan de vaste sink en vaste CC; het bedoelde adres blijft als audit-
+  bestemming aantoonbaar. LOCAL doet geen echte netwerklevering;
+- `Factuur meesturen` resulteert in een werkelijk bestaand, niet-leeg PDF-bestand met `%PDF-` en
+  `%%EOF`; salarisadministratie krijgt exact nul bijlagen;
+- documentdownload heeft veilige bestandsnaam en headers en ongeautoriseerde toegang faalt;
+- iedere toegestane statusovergang muteert exact eenmaal; stale, dubbelklik, forbidden transition en
+  medewerker-adminpogingen laten toestand en tellers intact;
+- na iedere case is de oorspronkelijke DB-/bestandsbaseline exact hersteld.
+
+Werkelijke ontvangst in een externe persoonlijke mailbox is geen lokale assertie. Op TEST wordt de
+gecontroleerde sandbox/sink bewezen; een echte externe inboxronde blijft een aparte, expliciet
+geautoriseerde acceptatiepoort.
+
+### Directe vervolgstappen
+
+1. H022 laten compileren en gericht op desktop uitvoeren; fouten in fixture/inspector oplossen.
+2. H022 gericht op mobile Chrome en mobile Safari uitvoeren.
+3. De isolatiefixture aan alle businessspecs koppelen en H006 losmaken van het gedeelde
+   demowachtwoord.
+4. Page objects/helpers bouwen voor Teambeheer, Urenstaat, Werkvoorraad, Facturatie en
+   Mailinstellingen; zakelijke writes uitsluitend via zichtbare locators uitvoeren.
+5. H009–H021 als echte GUI-tests bouwen, request/DB alleen gebruiken voor voorbereiding,
+   read-only oracle, gecontroleerde foutinjectie en cleanup.
+6. Dubbele E2E-ID's in `email-queue.spec.ts` en `mail-delivery.feature` opruimen.
+7. Pas nadat native specs de bron van waarheid zijn `docs:sync` aanpassen/draaien; de huidige
+   generator kent slechts het oude bestand en kan handmatige feature-uitbreidingen overschrijven.
+8. Lokale preflight afronden, bevindingen in deze handoff zetten en Gio om deployakkoord vragen.
+
+Status bij de laatste usage-stop: stappen 1 en 2 zijn afgerond (`1/1` desktop en `2/2` mobiel groen),
+en `business-workflows-e2e.spec.ts` importeert inmiddels de automatische isolatiefixture. Stap 3 is
+dus gedeeltelijk gedaan; H006 moet nog inhoudelijk naar een disposable account. Het page-object voor
+stap 4 is aangemaakt maar nog niet geverifieerd. H009–H021 zijn nog niet als native GUI-cases gereed.
+Schatting voor afbouw en gerichte regressie: circa 2–4 uur, exclusief de gezamenlijke zichtbare
+acceptatieronde. Er is nog niets gecommit, gepusht of naar TEST/PROD gedeployed.
+
+### Aanvulling Claude Code — 24 augustus, na de Codex-sectie hierboven
+
+Werk uit dezelfde dag, deels vóór en deels naast het Codex-werk. Alles staat lokaal;
+**er is niets gecommit, gepusht of gedeployed** sinds `5fdf8fa`. Bronversie `0.9.139`,
+TEST draait `0.9.138`.
+
+**Beantwoord: `TeamManagementPage.ts` compileert.** Dat stond hierboven als eerste
+open vraag. Gecontroleerd met een wegwerpspec die het page-object importeert en
+`npx playwright test --list` — één test gevonden, geen TypeScript-fout. De spec is
+daarna verwijderd. De **selectors** zijn daarmee nog niet bewezen; dat gebeurt pas
+als een echte case ermee klikt.
+
+**Toegevoegde E2E-cases** (nog als API/request-tests in `email-queue.spec.ts`, dus
+kandidaten voor de GUI-omzetting die hierboven onder stap 5 staat):
+
+| Case | Wat hij bewijst |
+|---|---|
+| `E2E-H-013` | nieuwe medewerker: gegevens blijven staan incl. contract, urenstaat wordt werk op het dashboard, factuur ontstaat, elke mail heeft onderwerp, naam en handtekening en géén onvervangen `{veld}` |
+| `E2E-H-014` | nieuwe beheerder logt zelf in, ziet dezelfde werkvoorraad als een bestaande en maakt de keten af |
+| `E2E-H-015` | volledige CRUD: aanmaken, wijzigen, deactiveren, definitief verwijderen laat geen medewerker, opdracht of account achter |
+| `E2E-H-016` | elk veld dat het medewerkersformulier verstuurt komt exact terug, of staat met naam en reden in een uitzonderingslijst |
+
+`E2E-H-009/010/011` zijn hernoemd uit `EQ-H-027/028/030`; de omzettabel staat in
+`TESTCOMMANDOS.md`. **Let op de ID-botsing** die hierboven onder stap 6 staat: deze
+nummers bestaan nu zowel in de feature van Codex als in `email-queue.spec.ts`.
+Afstemmen vóór de GUI-omzetting, anders verwijzen twee dingen naar hetzelfde nummer.
+
+**Overige lokale wijzigingen van deze hand**
+
+- `playwright.config.ts`: mobiele projecten matchen ook `business-workflows-e2e.spec.ts`.
+  Codex heeft dit inmiddels verbreed naar `business-workflows-*.spec.ts`; controleer
+  welke versie in de werkboom staat en houd de bredere.
+- `package.json`: `test:e2e:group:e2e`, `:e2e:ui` en `:e2e:headed`, zodat Gio de
+  E2E-laag zelf kan draaien en in de Playwright-GUI kan bekijken. Dat heeft hij
+  expliciet gevraagd.
+- `server/scripts/mail-delivery-inspect.php`: meldt nu ook `invoice_number` en een
+  `attachment`-blok (bestaat, bytes, is_pdf, sleutel, pad).
+  **Waarschuwing:** de bestandscontrole werkt nog niet betrouwbaar. De runner geeft
+  iedere run een eigen tijdelijke private opslagroot; deze inspecteur loste een ander
+  pad op. `E2E-H-013` controleert daarom alleen dat `pdf_storage_key` gevuld is —
+  die wordt pas gezet ná een geslaagde schrijfactie. Codex' `e2e-state-inspect.php`
+  lijkt hiervoor de betere weg; sluit daarop aan in plaats van dit uit te breiden.
+- Migratie 025 `contract_label` plus `staff.php`, `bootstrap.php` en `app.js`.
+- `queue.php`: Overig volgt nu `include_invoice_pdf`; salaris houdt zijn uitzondering
+  en het vinkje staat daar uitgeschakeld met reden.
+
+**Wisselvallige tests**, drie keer dezelfde oorzaak: wachten op iets wat er toevallig
+bij staat in plaats van op wat werkt. Opgelost via `openPaneel` in
+`tests/playwright/pages/TopbarMenu.ts` (profielmenu, maandkiezer, keuzeknop) en in
+`LoginPage.ts` (wachtte op het tekstje naast de inlogknop in plaats van op de knop).
+Het patroon is **niet uitputtend nagelopen**.
+
+**Bekend en nog niet opgelost:** `E2E-H-007` heeft een stap die twee dingen belooft
+("blijft de controle weg en staat de factuurtaak open") en géén van beide controleert
+— de enige assertie is dat er één schrijfactie was. Ook `E2E-H-004` mist een controle
+op uren en bedrag. Beide stonden op de lijst toen de sessie werd onderbroken.
+
+**Laatste meting:** volledige suite `299 passed` op `0.9.139`-broncode; E2E-laag
+`15 passed` desktop; `business-workflows-e2e.spec.ts` `8 passed` op mobile-chrome en
+`7 passed / 1 failed` op mobile-safari — die ene is `E2E-H-007`, met
+*"Login faalde: E-mailadres of wachtwoord is onjuist"*. Dat sluit aan op stap 3
+hierboven: H006/H007 hangen aan het gedeelde demowachtwoord en moeten naar een
+wegwerpaccount.
+
+### Bevindingen van Gio uit de handmatige ronde op TEST (24 augustus)
+
+Dit is de openstaande lijst uit zijn eigen testronde. Twee zijn opgelost, zes niet
+gereproduceerd. Ze staan hier omdat ze anders tussen het E2E-werk door verdwijnen —
+en omdat de niet-gereproduceerde er níet uitzien als verzinsels: hij zag ze op TEST,
+ik niet op een schone database. Dat verschil is zelf het spoor.
+
+**Opgelost en met een case vastgelegd**
+
+| Bevinding | Oorzaak | Vastgelegd in |
+|---|---|---|
+| Contract invullen, opslaan, veld blijft leeg | er bestond geen kolom; het veld leefde alleen in de browser | migratie 025 `contract_label`, `E2E-H-015`/`E2E-H-016` |
+| *Factuur meesturen* aanvinken bij Overig levert geen bijlage | `queue.php` zette `$attachPolicy = 'none'` ongeacht het vinkje | `E2E-H-012` |
+| Boekhouder kreeg de algemene in plaats van zijn eigen mailtekst | soort ontvanger werd stil overschreven bij opslaan | migratie 023, `ADM-WR-H-017` |
+
+Bij de salarisadministratie is het bijlagevinkje nu uitgeschakeld met de reden erbij:
+de server weigert daar categorisch een factuur, en een dood vinkje aanbieden is net
+zo misleidend als een genegeerd vinkje.
+
+**Niet gereproduceerd — niet afgesloten**
+
+1. Na **Herstel** blijft een nieuw aangemaakte persoon staan.
+2. Na aanmaken moet je eerst opslaan **en F5** voordat je iets kunt invullen.
+3. Na aanmaken staan **verkeerde vinkjes** aan bij een ontvanger.
+4. Bij een nieuwe medewerker **geen klant zichtbaar** en de naam ontbreekt.
+5. Een ingediende urenstaat kwam **niet als taak** terug.
+6. Bij afronden: *"Niet alle serverfacturen zijn beschikbaar."*
+
+Wat er wél is vastgesteld:
+
+- Op een schone database klopt alles. De opdracht krijgt `client_id` en `broker_id`,
+  de kaart toont klant en broker, een nieuwe ontvanger staat bij een tweede
+  medewerker op `enabled=0`, en na F5 verandert er niets. Zie de walkthroughs; die
+  zijn daarna opgeruimd.
+- De melding bij 6 verschijnt wanneer niet elke goedgekeurde medewerker een
+  serverfactuur heeft — `serverInvoiceFor()` in `assets/app.js`. Dat is het symptoom,
+  niet de oorzaak.
+- **Mijn verklaring is weerlegd.** Ik vermoedde dat de browser na een herstel een
+  botsende ontvangersleutel kon maken (`nextMailRecipientId()` telt in de lokale
+  lijst, de server werkt bij op dezelfde sleutel bij). Uitgelokt en gemeten: na de
+  herlading haalt de app de ontvangers eerst bij de server op en telt netjes door.
+  Geen botsing. Bouw hier dus niets op.
+- Meest waarschijnlijke resterende verklaring: **een oude `app.js` in zijn browser**.
+  De betrokken schermen zijn in 0.9.133–0.9.138 zwaar gewijzigd, en dit heeft eerder
+  een half uur gekost. Gio is gevraagd één keer hard te verversen (`Ctrl+Shift+R`) en
+  het opnieuw te proberen; **dat antwoord staat nog open**. Herstel in de app is iets
+  anders dan een harde ververs — dat onderscheid was hem niet duidelijk.
+
+Volgende stap voor wie dit oppakt: vraag de exacte klikvolgorde en of het na een
+harde ververs nog optreedt. Reproduceer eerst, bouw daarna pas. Drie van deze zes
+zouden door `E2E-H-013` en `E2E-H-016` gedekt moeten zijn zodra die op TEST-data
+draaien in plaats van op een verse database.
+
+**Eerder door Gio gemeld met schermafdrukken, allemaal opgelost en uitgerold**
+
+Deze staan hier zodat de reeks compleet is: het waren er niet zes maar veel meer, en
+bijna alles kwam uit zijn eigen ronde op een telefoon — niet uit de suite.
+
+| Bevinding | Opgelost in |
+|---|---|
+| Scrollen werkte helemaal niet op de telefoon | 0.9.120 |
+| Kolomlabels op de telefoon 8px, onleesbaar | 0.9.123 |
+| Rolkeuze viel op iOS achter de statusbalk | 0.9.128 |
+| App-icoon onleesbaar op het beginscherm | 0.9.130/0.9.134 |
+| "Installeren" kwam nooit meer terug na verwijderen | 0.9.129 |
+| Installeerknop deed niets bij het indrukken | 0.9.130 |
+| Donkere modus: tekst in dialogen onleesbaar | 0.9.132/0.9.134 |
+| Witte knoppen met witte tekst (Goedkeuringen, Facturen) | 0.9.134 |
+| "Path" onzichtbaar in de topbalk bij daglicht | 0.9.134 |
+| Meldingenbel was een boog en stond niet gecentreerd | 0.9.135 |
+| Broker ontbrak volledig in Instellingen | 0.9.134 |
+| Drie verschillende zinnen over wat een leeg tekstveld betekent | 0.9.135 |
+| Handtekening ontbrak onder de brokermail | 0.9.132 |
+| Profielfoto uploaden werkte niet | eerder |
+| Meldingsvinkjes klopten niet per rol | eerder |
+
+Patroon dat hieruit spreekt en dat de moeite van het onthouden waard is: **vrijwel
+elke bevinding kwam uit handmatig kijken op een echt toestel, niet uit de suite.**
+Meerdere ervan gingen door een volledig groene regressie heen. Dat is de reden dat
+Gio nu een zichtbare GUI-suite wil die hij zelf kan draaien — en dat een walkthrough
+met schermafdrukken die je zelf bekijkt, geen luxe is naast de asserties.
+
 ## Actuele overdracht — v0.9.138 (24 augustus 2026)
 
 Deze sectie vervangt alles hieronder; de rest van het bestand blijft als historische context staan.
@@ -62,8 +353,130 @@ antwoordde; na een kwartier lukte het wel. Het script heeft daarom een herkansin
 `LET OP`-regel. Komt die regel vaker terug, dan is het een firewall- of rate-limitkwestie bij TransIP
 — en dat is infrastructuur, dus niet zelf aanpassen.
 
+### Aanvulling Claude Code — 26 augustus
+
+**Een echte bug gevonden en verholpen: een status die na verversen achterliep.**
+
+Bij het bouwen van `E2E-N-020` viel op dat het urenscherm direct na een pagina-verversing
+"Correctie nodig" toonde terwijl de server op dat moment `submitted` teruggaf — gemeten, niet
+vermoed: het netwerkverkeer laat de lezing én het juiste antwoord zien. Klikte je daarna ergens
+anders heen en terug, dan klopte het wel.
+
+De oorzaak zit in `refreshTimesheetReadApi()` in `assets/app.js`. Stuitte die functie op een lezing
+die al onderweg was, dan gaf hij `null` terug. `renderHoursGrid()` leidde daaruit af dat er niets te
+doen was en tekende níet opnieuw — terwijl die lopende lezing even later wel degelijk een nieuwe
+status neerzette. Precies bij het openen van je urenstaat vlak na het laden van de pagina liepen die
+twee door elkaar. De functie geeft nu de lopende belofte terug, zodat de aanroeper hertekent zodra
+het antwoord er is. Dezelfde fout stond in `refreshCustomerTimesheetReadApi()` en is meteen
+meegenomen: daar liet de `null` de takentellers achterlopen.
+
+Dit is vermoedelijk de verklaring voor twee van Gio's bevindingen die tot nu toe niet te reproduceren
+waren — "ik vul alle uren in en krijg steeds de melding dat de uren openstaan" en "de urenstaat
+gedaan maar kwam niet als taak". Het is een tijdsafhankelijke fout, en dat is waarom hij hem wél zag
+en een schone testronde niet. **Niet als afgesloten beschouwen tot Gio het op TEST bevestigt.**
+
+De regressie eromheen is bewust breed gedraaid, want dit raakt kernlogica van de lees-API.
+
+**Een tweede echte bug: een ingediende urenstaat zat alleen in de browser op slot.**
+
+De FO zegt in hoofdstuk 5 (regel 83) dat ook `submitted` vergrendeld is: de medewerker wacht op
+Backoffice en komt er pas weer bij na een correctieverzoek. Het scherm deed dat ook netjes. De
+server niet: `timesheets.php` blokkeerde alleen `approved`, `invoiced` en `rejected`. Wie de app
+omzeilde en rechtstreeks een `save_draft` stuurde, kon zijn uren ná het indienen alsnog aanpassen
+zonder dat Backoffice iets merkte.
+
+Dat dit niet eerder opviel, heeft een leerzame oorzaak. De bestaande assertie in `E2E-H-017` stuurde
+haar payload in **camelCase** (`expectedVersion`, `dayEntries`), terwijl de API **snake_case**
+verwacht. De server antwoordde dus 400 `invalid-payload`, de test zag "geweigerd" en werd groen --
+terwijl het slot nooit was aangeraakt. Een assertie die om de verkeerde reden slaagt is erger dan
+geen assertie: hij geeft rust die er niet is.
+
+Verholpen in `server/api/timesheets.php`: een medewerker die op `submitted` wil schrijven krijgt nu
+409 `timesheet-locked`. Beheerders zijn ongemoeid gelaten. `E2E-N-017` en `E2E-H-017` eisen nu niet
+"een weigering" maar exact dat foutcontract, zodat deze val niet terug kan komen.
+
+**Verder in deze ronde:**
+
+- `E2E-N-020` gebouwd (`business-workflows-authz.spec.ts`), 3/3 groen op desktop, mobile-chrome en
+  mobile-safari. De case eist niet alleen dat beheerdersknoppen verborgen zijn, maar forceert elk
+  beheerdersscherm alsnog open — anders bewijst die lus niets zodra de knoppen ontbreken.
+- `npm run test:design` weer werkend gekregen. Twee oorzaken: de scenario-regex accepteerde maar één
+  tag per regel, terwijl scenario's nu `@happy @gui @desktop @mobile` dragen; en een aantal
+  scenario's had `# Assertioncontract:` in plaats van de vereiste telling. Die tellingen zijn
+  **geteld in de specs**, niet geschat.
+- ID-botsing opgelost: de nieuwe GUI-scenario's droegen de ID's van de al draaiende API-cases
+  `E2E-H-009/010/011`. De draaiende cases houden hun ID; de GUI-varianten zijn `E2E-H-023/024/025`.
+
+### Stand einde 27 augustus — alles groen
+
+**354 passed, 0 failed (15,0 min).** `npm run test:design` groen: 294 cases, 184 happy en 110
+negatief, elk gekoppeld aan zijn scenario. Alle 25 E2E-cases draaien op desktop-chromium,
+mobile-chrome en mobile-safari.
+
+**Het mobiele probleem met `E2E-H-025` was geen bug.** Onder 700px zijn de instellingenpanelen
+bewust ingeklapt (`styles.css` regel 2285): de kop blijft staan en werkt als knop. Het tekstveld
+stond er dus wel, met hoogte nul, omdat de test het paneel nooit opentikte. De eerdere inschatting in
+de vorige sectie hieronder — "waarschijnlijk een echte bug" — is daarmee weerlegd. Laten staan als
+waarschuwing: hoogte nul ziet er van buitenaf uit als een kapot scherm.
+
+**Wel een echte vondst bij het uitzoeken daarvan.** De assertie "opslaan zonder wijziging mag geen
+eigen standaardtekst vastleggen" stond groen om niets. `mail_channel_customised` is een **lijst met
+kanaalnamen**, geen object, dus `.accountant` was altijd `undefined` en de controle slaagde ongeacht
+wat er werkelijk was opgeslagen. Dat is precies de stille freeze-bug uit 0.9.135, met een bewaker die
+niets bewaakte. Nu op `.includes('accountant')`.
+
+**Flakiness bij de bron aangepakt, niet weggemaskeerd.** `TS-REV-UI-H-008` viel twee regressies
+achter elkaar om, elke keer op een andere stap. Oorzaak overal hetzelfde: klikken en meteen de nieuwe
+toestand eisen, zonder de write af te wachten. In een losse run gaat dat net goed, in de volle suite
+niet. Vier plekken voorzien van een wachtmoment. Ditzelfde patroon zat ook in de nieuwe mailcases en
+in `E2E-N-018`.
+
+Niets gecommit, gepusht of uitgerold. Lokaal 0.9.139; TEST draait 0.9.138.
+
+**Volgende stap, wachtend op Gio's akkoord:** versie bumpen, naar TEST, en daarna de GUI-walkthrough
+met schermafdrukken op TEST draaien — daar staat de mailsandbox aan, dus onderwerp, body en bijlage
+zijn daar echt te zien. Gio moet daar de drie serverbugs van deze ronde zelf narekenen.
+
+### Stand einde 26 augustus
+
+Alle 25 E2E-cases zijn gebouwd. `npm run test:design` is groen: 294 cases, elk gekoppeld aan zijn
+scenario, 184 happy en 110 negatief.
+
+Laatste volledige regressie: **352 passed, 2 failed (15,1 min)**. Beide failures zijn dezelfde case
+op dezelfde plek: `E2E-H-025` op mobile-chrome en mobile-safari, in de eerste stap, waar het
+tekstveld met de standaardtekst voor Boekhouding niet zichtbaar wordt. Op desktop-chromium is die
+case groen.
+
+**Wat daar aan de hand is, voor wie het oppakt.** De lijst met standaardteksten wordt door twee
+renderpaden opgebouwd — `renderAll()` en de functie die het instellingenformulier vult — en welke
+er wint hangt af van de timing van de serverlezing. Kom je daar net tussenin, dan sta je op een leeg
+blok. Een langere wachttijd helpt niet (met 20s faalt hij ook), opnieuw naar Instellingen navigeren
+loste het op desktop wel op en op mobiel niet. **Dit is waarschijnlijk een echte bug in de app en
+niet alleen een testprobleem**: als het blok op een telefoon leeg kan blijven, ziet Gio daar zijn
+standaardteksten ook niet. Eerst reproduceren met de hand op een telefoon, dán pas de test aanpassen.
+Niet oplossen door de case desktop-only te maken; dat verbergt precies het probleem.
+
+**Nieuw in deze ronde, alles groen behalve het bovenstaande:** `E2E-N-017`, `E2E-N-018`, `E2E-N-019`,
+`E2E-N-020`, `E2E-N-021`, `E2E-H-018`, `E2E-H-019`, `E2E-H-023`, `E2E-H-024`.
+
+**Derde bug verholpen:** de factuur-PDF ging de deur uit zonder `Cache-Control: private, no-store`
+en zonder `X-Content-Type-Options: nosniff`, terwijl de klanturenstaat die headers wél had. Juist het
+document met tarieven en NAW-gegevens kon dus in een cache blijven liggen. Rechtgezet in
+`server/api/invoices.php`.
+
+**Twee testlaagfouten die zelf iets zeiden.** De keuzelijst "type ontvanger" was via `selectOption`
+niet te bedienen: de app vervangt die `<select>` door een eigen widget en verbergt het origineel.
+Dat pad was dus nog nooit via het scherm getest. En `E2E-H-019` stond groen zonder iets te bewijzen —
+de tweede klik leverde helemaal geen tweede verzoek op, omdat de GUI de knop uitzet. Op mobile-safari
+komt hij er wél doorheen. De case beproeft de server nu met twee werkelijk gelijktijdige verzoeken.
+
+Niets gecommit, gepusht of uitgerold. Lokaal is 0.9.139; TEST draait 0.9.138.
+
 ### Wat openstaat
 
+- **Nog geen executable test:** `E2E-H-018`, `E2E-H-019`, `E2E-H-023`, `E2E-H-024`, `E2E-H-025`,
+  `E2E-N-017`, `E2E-N-018`, `E2E-N-019`, `E2E-N-021`. De scenario's staan er volledig; de audit valt
+  daar terecht op om. Dat is de eerstvolgende bouwlijst.
 - **Drie waarnemingen van Gio zijn niet gereproduceerd:** na Herstel blijft een nieuw aangemaakte
   persoon staan, na aanmaken eerst opslaan en F5 voordat je iets kunt invullen, en verkeerde vinkjes
   na aanmaken. Op een schone database klopt alles, server én scherm. De verklaring die ervoor lag —

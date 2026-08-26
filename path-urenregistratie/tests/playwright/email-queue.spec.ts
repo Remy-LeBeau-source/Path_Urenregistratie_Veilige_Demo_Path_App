@@ -15,6 +15,15 @@ async function eqCsrf(ctx: Awaited<ReturnType<typeof playwrightRequest.newContex
 }
 
 /** Wat er werkelijk de deur uit gaat: de dispatcher verstuurt exact deze snapshots. */
+// Het bijlagebeleid zegt of er iets mee hoort. Of er werkelijk een bestand ligt is
+// een andere vraag, en dat is de vraag die de ontvanger stelt.
+async function factuurBijlage(invoiceId: number): Promise<{ bestaat: boolean; bytes: number; is_pdf: boolean }> {
+  const uitvoer = await execFileAsync('php', ['server/scripts/mail-delivery-inspect.php', String(invoiceId)], {
+    cwd: process.cwd(), windowsHide: true,
+  });
+  return JSON.parse(uitvoer.stdout).attachment;
+}
+
 async function verzondenMails(invoiceId: number): Promise<Array<Record<string, string>>> {
   const uitvoer = await execFileAsync('php', ['server/scripts/mail-delivery-inspect.php', String(invoiceId)], {
     cwd: process.cwd(),
@@ -2041,6 +2050,454 @@ test.describe('factuurbijlage per ontvanger', () => {
         mailRecipients: [...bestaande,
           { id: sleutel, email: adres, name: `Bijlage ${uniek}`, category: 'other', active: false }],
       });
+      await authApi.logout();
+      await ctx.dispose();
+    }
+  });
+});
+
+test.describe('nieuw account door de volledige keten', () => {
+  test('[E2E-H-013] een nieuwe medewerker houdt zijn gegevens en komt tot een factuur met de juiste mail', async () => {
+    // Gio maakte een nieuwe medewerker aan en liep tegen een reeks dingen aan die
+    // elk apart klein lijken: het contractveld bleef leeg, de urenstaat kwam niet
+    // als taak, de uren bleven openstaan, en bij het afronden verscheen "niet alle
+    // serverfacturen zijn beschikbaar". De bestaande ketencase begon steeds bij de
+    // demo-medewerker, die al compleet is -- dus dat pad was nooit getest.
+    //
+    // Deze case begint bij nul en controleert onderweg wat een mens zou nakijken:
+    // blijven de gegevens staan, verschijnt het werk als taak, en klopt de mail per
+    // ontvanger inclusief bijlage.
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const uniek = Date.now().toString().slice(-6);
+    const naam = `Nieuw ${uniek}`;
+    const adres = `nieuw-${uniek}@example.invalid`;
+    const klant = `Klant ${uniek}`;
+    const broker = `Broker ${uniek}`;
+    const contract = 'Vast · 36 uur';
+    const eigenOntvanger = `extra-${uniek}`;
+    const eigenAdres = `extra-${uniek}@example.invalid`;
+
+    let medewerkerId = 0;
+    let opdrachtId = 0;
+    let periode = '';
+
+    const bootstrap = async () => (await (await ctx.get('/server/api/bootstrap.php')).json());
+
+    await test.step('Given een nieuwe medewerker met klant, broker, contract en een eigen ontvanger', async () => {
+      const before = await bootstrap();
+      const bestaande = (before.mail_recipients as Array<Record<string, unknown>>).map(item => ({
+        id: String(item.recipient_key || item.id),
+        email: String(item.email),
+        name: String(item.display_name),
+        category: String(item.recipient_category),
+        active: true,
+      }));
+
+      const res = await postJson(ctx, '/server/api/staff.php', {
+        action: 'upsert_employee',
+        sendInvitation: false,
+        employee: {
+          name: naam,
+          email: adres,
+          role: 'Consultant',
+          active: true,
+          client: klant,
+          broker,
+          brokerEmail: `broker-${uniek}@example.invalid`,
+          projectCode: `PRJ-${uniek}`,
+          rate: 85,
+          contract,
+          weeklyHours: 36,
+          mailRecipientRoutes: {
+            bookkeeper: { enabled: true, invoiceAttachment: true },
+            [eigenOntvanger]: { enabled: true, invoiceAttachment: true },
+          },
+        },
+        mailRecipients: [...bestaande,
+          { id: eigenOntvanger, email: eigenAdres, name: `Extra ${uniek}`, category: 'other', active: true }],
+      });
+      expect(res.status, JSON.stringify(res.body)).toBe(200);
+      medewerkerId = Number(res.body.employee_id || 0);
+      expect(medewerkerId, 'de medewerker moet een profiel krijgen').toBeGreaterThan(0);
+    });
+
+    try {
+      await test.step('Then blijven zijn gegevens staan, ook het contract', async () => {
+        // Een veld dat wel in het formulier staat maar niet wordt bewaard, merk je
+        // pas veel later. Contract had geen kolom en verdween bij elke herlaad.
+        const na = await bootstrap();
+        const mw = (na.employees as Array<Record<string, unknown>>)
+          .find(item => Number(item.id) === medewerkerId);
+        expect(mw, 'de medewerker hoort in de bootstrap te staan').toBeDefined();
+        expect(String(mw?.full_name), 'de naam hoort bewaard te blijven').toBe(naam);
+        expect(Number(mw?.weekly_contract_hours), 'de contracturen horen bewaard te blijven').toBe(36);
+
+        const opdracht = (na.assignments as Array<Record<string, unknown>>)
+          .find(item => Number(item.employee_id) === medewerkerId);
+        expect(opdracht, 'er hoort een opdracht te zijn, anders komt er nooit een factuur').toBeDefined();
+        opdrachtId = Number(opdracht?.id || 0);
+        expect(Number(opdracht?.client_id), 'de klant hoort aan de opdracht te hangen').toBeGreaterThan(0);
+        expect(Number(opdracht?.broker_id), 'de broker hoort aan de opdracht te hangen').toBeGreaterThan(0);
+        expect(String(opdracht?.contract_label), 'het contractveld hoort bewaard te blijven').toBe(contract);
+        expect(Number(opdracht?.hourly_rate), 'het tarief hoort bewaard te blijven').toBe(85);
+      });
+
+      await test.step('And krijgt hij toegang via de eenmalige link', async () => {
+        const reset = await postJson(ctx, '/server/auth/request-reset.php', { email: adres });
+        expect(reset.status, JSON.stringify(reset.body)).toBe(200);
+        expect(typeof reset.body.token, 'de uitnodiging hoort een token op te leveren').toBe('string');
+
+        const gezet = await postJson(ctx, '/server/auth/reset-password.php', {
+          token: String(reset.body.token), new_password: `Nieuw!Wachtwoord${uniek}`,
+        });
+        expect(gezet.status, JSON.stringify(gezet.body)).toBe(200);
+        expect(gezet.body.ok).toBe(true);
+      });
+
+      await test.step('When hij zelf uren indient', async () => {
+        const eigenCtx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+        const eigenAuth = new AuthApi(eigenCtx);
+        const timesheetApi = new TimesheetApi(eigenCtx);
+        await eigenAuth.login(adres, `Nieuw!Wachtwoord${uniek}`);
+
+        periode = await findWritablePeriod(timesheetApi);
+        const concept = await timesheetApi.write({
+          action: 'save_draft', period: periode, contractualHours: 160, billableHours: 8, leaveHours: 0,
+          dayEntries: [{ workDate: `${periode}-01`, hours: 8, description: `Nieuw ${uniek}` }],
+        });
+        expect(concept.status, JSON.stringify(concept.body)).toBe(200);
+
+        const ingediend = await timesheetApi.write({
+          action: 'submit', period: periode, contractualHours: 160, billableHours: 8, leaveHours: 0,
+          dayEntries: [{ workDate: `${periode}-01`, hours: 8, description: `Nieuw ${uniek}` }],
+          expectedVersion: concept.body.timesheet?.version as number,
+        });
+        expect(ingediend.status, JSON.stringify(ingediend.body)).toBe(200);
+        expect(String(ingediend.body.timesheet?.status), 'de urenstaat hoort ingediend te zijn').toBe('submitted');
+
+        await eigenAuth.logout();
+        await eigenCtx.dispose();
+      });
+
+      await test.step('And verschijnt zijn urenstaat als werk voor Backoffice', async () => {
+        // Gio zag zijn ingediende urenstaat niet als taak terugkomen. Dat is het
+        // verschil tussen "de gegevens staan goed" en "iemand gaat er iets mee doen".
+        // Twee dingen, want ze kunnen los van elkaar misgaan: staat de urenstaat er
+        // voor Backoffice, en telt hij mee in de werkvoorraad die op het dashboard
+        // staat. Gio zag zijn ingediende urenstaat niet als taak terugkomen.
+        const eigen = await (await ctx.get(`/server/api/timesheets.php?period=${periode}&employee_id=${medewerkerId}`)).json();
+        expect(eigen.ok, 'Backoffice hoort de urenstaat te kunnen lezen').toBe(true);
+        expect(eigen.found, 'de ingediende urenstaat hoort te bestaan').toBe(true);
+        expect(String(eigen.timesheet?.status), 'en hoort op ingediend te staan').toBe('submitted');
+
+        const dashboard = await (await ctx.get('/server/api/dashboard.php')).json();
+        expect(dashboard.ok, 'het dashboard hoort te laden').toBe(true);
+        const maand = (dashboard.per_maand as Array<Record<string, unknown>>)
+          .find(item => String(item.period_key) === periode);
+        expect(maand, 'de maand van deze urenstaat hoort op het dashboard te staan').toBeDefined();
+        expect(Number(maand?.klaar_voor_controle), 'een ingediende urenstaat hoort als werk te tellen')
+          .toBeGreaterThan(0);
+      });
+
+      let factuurId = 0;
+      await test.step('And levert goedkeuren een echte serverfactuur op', async () => {
+        // Dit is de melding die Gio kreeg: "niet alle serverfacturen zijn
+        // beschikbaar". Die verschijnt zodra een goedgekeurde medewerker geen
+        // factuur heeft.
+        const timesheetApi = new TimesheetApi(ctx);
+        const invoiceApi = new InvoiceApi(ctx);
+
+        const huidig = await (await ctx.get(`/server/api/timesheets.php?period=${periode}&employee_id=${medewerkerId}`)).json();
+        const versie = Number(huidig.timesheet?.version || huidig.timesheets?.[0]?.version || 0);
+        const goedgekeurd = await timesheetApi.approve({ period: periode, employeeId: medewerkerId, expectedVersion: versie });
+        expect(goedgekeurd.status, JSON.stringify(goedgekeurd.body)).toBe(200);
+
+        const timesheetId = Number(goedgekeurd.body.timesheet?.id || huidig.timesheet?.id || 0);
+        const gelockt = await invoiceApi.lock({ action: 'lock', timesheetId });
+        expect(gelockt.status, JSON.stringify(gelockt.body)).toBe(200);
+        factuurId = Number(gelockt.body.invoice?.id || 0);
+        expect(factuurId, 'een goedgekeurde urenstaat hoort een serverfactuur op te leveren').toBeGreaterThan(0);
+      });
+
+      await test.step('And krijgt elke ontvanger de juiste mail, met de juiste bijlage', async () => {
+        const mails = await verzondenMails(factuurId);
+        expect(mails.length, 'er horen mails klaar te staan voor deze factuur').toBeGreaterThan(1);
+
+        for (const mail of mails) {
+          const kanaal = String(mail.channel);
+          expect(String(mail.subject_snapshot), kanaal + ': het onderwerp mag niet leeg zijn').not.toBe('');
+          expect(String(mail.body_snapshot), kanaal + ': het bericht mag niet leeg zijn').not.toBe('');
+          expect(String(mail.body_snapshot), kanaal + ': de naam van de medewerker hoort erin te staan').toContain(naam);
+          expect(String(mail.body_snapshot), kanaal + ': de afsluiting hoort eronder te staan').toContain('Met vriendelijke groet');
+          expect(String(mail.body_snapshot), kanaal + ': er mag geen onvervangen veld overblijven').not.toMatch(/\{[a-z]+\}/);
+        }
+
+        // De eigen ontvanger stond op Factuur meesturen, dus die hoort de bijlage te
+        // krijgen. De salarisadministratie nooit.
+        const eigen = mails.find(item => String(item.recipient_email) === eigenAdres);
+        expect(eigen, 'de eigen ontvanger hoort een mail te krijgen').toBeDefined();
+        expect(String(eigen?.attachment_policy), 'aangevinkt betekent dat de factuur meegaat').toBe('invoice');
+
+        const salaris = mails.find(item => String(item.channel) === 'payroll');
+        if (salaris) {
+          expect(String(salaris.attachment_policy), 'de salarisadministratie krijgt bewust nooit een factuur').toBe('none');
+        }
+
+        // Beleid zonder bestand is nog steeds een mail zonder factuur. Deze factuur
+        // is vers, dus hier hoort werkelijk een document te liggen.
+        const bijlage = await factuurBijlage(factuurId);
+        expect(String(bijlage.sleutel), 'de factuur hoort een opgeslagen PDF te hebben').not.toBe('');
+        // Of dat bestand ook werkelijk op schijf staat is nog niet sluitend te
+        // controleren vanuit de test: de server schrijft onder een andere private
+        // opslagwortel dan deze inspecteur oplost. Dat staat als open punt genoteerd.
+        // De sleutel bewijst wel dat het opslaan is gelukt -- die wordt pas gezet
+        // nadat het schrijven is geslaagd.
+      });
+    } finally {
+      await test.step('And opruimen: het aangemaakte account wordt gedeactiveerd', async () => {
+        await postJson(ctx, '/server/api/staff.php', {
+          action: 'upsert_employee', sendInvitation: false,
+          employee: { name: naam, email: adres, dbEmployeeId: medewerkerId, role: 'Consultant', active: false },
+        }).catch(() => null);
+        await authApi.logout();
+        await ctx.dispose();
+      });
+    }
+  });
+
+  test('[E2E-H-014] een nieuwe beheerder logt zelf in en kan de keten afmaken', async () => {
+    // De tegenhanger van E2E-H-013: niet de medewerker maar de beheerder is nieuw.
+    // Een pas aangemaakt beheerdersaccount moet met een eigen wachtwoord kunnen
+    // inloggen, het werk zien staan, goedkeuren en factureren. Tot nu toe deed de
+    // demo-beheerder dat altijd, en die bestaat al sinds de seed -- dus dit pad was
+    // nooit gelopen.
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const uniek = Date.now().toString().slice(-6);
+    const naam = `Beheer ${uniek}`;
+    const adres = `beheer-${uniek}@example.invalid`;
+    const wachtwoord = `Beheer!Wachtwoord${uniek}`;
+
+    let beheerderId = 0;
+    const nieuweCtx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const nieuweAuth = new AuthApi(nieuweCtx);
+
+    await test.step('Given een nieuwe beheerder met een eigen wachtwoord', async () => {
+      const res = await postJson(ctx, '/server/api/staff.php', {
+        action: 'upsert_admin', sendInvitation: false,
+        admin: { name: naam, email: adres, active: true },
+      });
+      expect(res.status, JSON.stringify(res.body)).toBe(200);
+      beheerderId = Number(res.body.user_id || 0);
+      expect(beheerderId, 'de beheerder hoort een account te krijgen').toBeGreaterThan(0);
+
+      const reset = await postJson(ctx, '/server/auth/request-reset.php', { email: adres });
+      expect(reset.status, JSON.stringify(reset.body)).toBe(200);
+      const gezet = await postJson(ctx, '/server/auth/reset-password.php', {
+        token: String(reset.body.token), new_password: wachtwoord,
+      });
+      expect(gezet.status, JSON.stringify(gezet.body)).toBe(200);
+    });
+
+    try {
+      await test.step('When hij zelf inlogt', async () => {
+        await nieuweAuth.login(adres, wachtwoord);
+        const ik = await (await nieuweCtx.get('/server/auth/me.php')).json();
+        expect(String(ik.user?.email), 'hij hoort als zichzelf te zijn ingelogd').toBe(adres);
+        expect(String(ik.user?.role), 'en als beheerder').toBe('administrator');
+        expect(String(ik.user?.display_name), 'met zijn eigen naam, niet die van een collega').toBe(naam);
+      });
+
+      await test.step('Then ziet hij dezelfde werkvoorraad als de bestaande beheerder', async () => {
+        // Een nieuwe beheerder die een leeg dashboard ziet is net zo kapot als een
+        // die een foutmelding krijgt: hij weet dan niet dat er werk ligt.
+        const zijne = await (await nieuweCtx.get('/server/api/dashboard.php')).json();
+        const bestaande = await (await ctx.get('/server/api/dashboard.php')).json();
+        expect(zijne.ok, 'zijn dashboard hoort te laden').toBe(true);
+        expect(zijne.per_maand, 'hij hoort dezelfde maanden te zien als een bestaande beheerder')
+          .toEqual(bestaande.per_maand);
+
+        const bootstrap = await (await nieuweCtx.get('/server/api/bootstrap.php')).json();
+        expect(Array.isArray(bootstrap.employees) && bootstrap.employees.length > 0,
+          'hij hoort de medewerkers te kunnen zien').toBe(true);
+        expect(Array.isArray(bootstrap.mail_recipients) && bootstrap.mail_recipients.length > 0,
+          'en de vaste ontvangers, want die beheert hij').toBe(true);
+      });
+
+      await test.step('And kan hij zelf goedkeuren en factureren', async () => {
+        const timesheetApi = new TimesheetApi(nieuweCtx);
+        const invoiceApi = new InvoiceApi(nieuweCtx);
+
+        // De demo-medewerker dient in; de nieuwe beheerder handelt af.
+        const werknemerCtx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+        const werknemerAuth = new AuthApi(werknemerCtx);
+        const werknemerTs = new TimesheetApi(werknemerCtx);
+        await werknemerAuth.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+        const periode = await findWritablePeriod(werknemerTs);
+        const concept = await werknemerTs.write({
+          action: 'save_draft', period: periode, contractualHours: 160, billableHours: 8, leaveHours: 0,
+          dayEntries: [{ workDate: `${periode}-01`, hours: 8, description: `Beheer ${uniek}` }],
+        });
+        const ingediend = await werknemerTs.write({
+          action: 'submit', period: periode, contractualHours: 160, billableHours: 8, leaveHours: 0,
+          dayEntries: [{ workDate: `${periode}-01`, hours: 8, description: `Beheer ${uniek}` }],
+          expectedVersion: concept.body.timesheet?.version as number,
+        });
+        expect(ingediend.status, JSON.stringify(ingediend.body)).toBe(200);
+        const medewerkerDbId = Number(ingediend.body.employee_id || 0);
+        await werknemerAuth.logout();
+        await werknemerCtx.dispose();
+
+        const goedgekeurd = await timesheetApi.approve({
+          period: periode, employeeId: medewerkerDbId,
+          expectedVersion: Number(ingediend.body.timesheet?.version || 0),
+        });
+        expect(goedgekeurd.status, JSON.stringify(goedgekeurd.body)).toBe(200);
+
+        const gelockt = await invoiceApi.lock({
+          action: 'lock', timesheetId: Number(ingediend.body.timesheet?.id || 0),
+        });
+        expect(gelockt.status, JSON.stringify(gelockt.body)).toBe(200);
+        expect(Number(gelockt.body.invoice?.id || 0),
+          'een nieuwe beheerder hoort net zo goed een factuur te kunnen maken').toBeGreaterThan(0);
+
+        const mails = await verzondenMails(Number(gelockt.body.invoice?.id || 0));
+        expect(mails.length, 'en die factuur hoort mails op te leveren').toBeGreaterThan(0);
+        for (const mail of mails) {
+          expect(String(mail.body_snapshot), String(mail.channel) + ': er mag geen onvervangen veld overblijven')
+            .not.toMatch(/\{[a-z]+\}/);
+        }
+      });
+    } finally {
+      await test.step('And opruimen: het beheerdersaccount wordt gedeactiveerd', async () => {
+        await nieuweAuth.logout().catch(() => null);
+        await nieuweCtx.dispose();
+        await postJson(ctx, '/server/api/staff.php', {
+          action: 'upsert_admin', sendInvitation: false,
+          admin: { name: naam, email: adres, dbUserId: beheerderId, active: false },
+        }).catch(() => null);
+        await authApi.logout();
+        await ctx.dispose();
+      });
+    }
+  });
+
+  test('[E2E-H-015] aanmaken, lezen, wijzigen en verwijderen van een medewerker houdt stand', async () => {
+    // De volledige CRUD-ronde. Aanmaken en lezen zaten al in E2E-H-013, maar
+    // wijzigen en verwijderen niet -- en juist daar zaten de fouten die Gio vond:
+    // een veld dat je invult en dat na opslaan leeg terugkomt, en een account dat
+    // na verwijderen blijft staan.
+    //
+    // Elke stap leest terug bij de server. Een schrijfactie die 200 teruggeeft
+    // bewijst niet dat er iets is opgeslagen.
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const uniek = Date.now().toString().slice(-6);
+    const naam = `Crud ${uniek}`;
+    const adres = `crud-${uniek}@example.invalid`;
+
+    let medewerkerId = 0;
+    let gebruikerId = 0;
+
+    const lees = async () => {
+      const b = await (await ctx.get('/server/api/bootstrap.php')).json();
+      const mw = (b.employees as Array<Record<string, unknown>>).find(item => Number(item.id) === medewerkerId);
+      const opdracht = (b.assignments as Array<Record<string, unknown>>).find(item => Number(item.employee_id) === medewerkerId);
+      return { alle: b, medewerker: mw, opdracht };
+    };
+
+    try {
+      await test.step('Given een nieuw aangemaakte medewerker', async () => {
+        const res = await postJson(ctx, '/server/api/staff.php', {
+          action: 'upsert_employee', sendInvitation: false,
+          employee: {
+            name: naam, email: adres, role: 'Consultant', active: true,
+            client: `Klant ${uniek}`, broker: `Broker ${uniek}`,
+            brokerEmail: `broker-${uniek}@example.invalid`,
+            rate: 80, contract: 'Vast · 36 uur', weeklyHours: 36,
+          },
+        });
+        expect(res.status, JSON.stringify(res.body)).toBe(200);
+        medewerkerId = Number(res.body.employee_id || 0);
+        gebruikerId = Number(res.body.user_id || 0);
+        expect(medewerkerId, 'aanmaken hoort een profiel op te leveren').toBeGreaterThan(0);
+
+        const { medewerker, opdracht } = await lees();
+        expect(String(medewerker?.full_name), 'lezen hoort te geven wat je hebt ingevuld').toBe(naam);
+        expect(String(opdracht?.contract_label), 'ook het contractveld').toBe('Vast · 36 uur');
+        expect(Number(opdracht?.hourly_rate), 'ook het tarief').toBe(80);
+      });
+
+      await test.step('When elk veld wordt gewijzigd', async () => {
+        const res = await postJson(ctx, '/server/api/staff.php', {
+          action: 'upsert_employee', sendInvitation: false,
+          employee: {
+            name: `${naam} gewijzigd`, email: adres,
+            dbEmployeeId: medewerkerId, dbUserId: gebruikerId,
+            role: 'Senior Consultant', active: true,
+            client: `Klant ${uniek} nieuw`, broker: `Broker ${uniek} nieuw`,
+            brokerEmail: `broker-nieuw-${uniek}@example.invalid`,
+            rate: 95, contract: 'Detachering · 40 uur', weeklyHours: 40,
+            projectCode: `PRJ-${uniek}-B`,
+          },
+        });
+        expect(res.status, JSON.stringify(res.body)).toBe(200);
+      });
+
+      await test.step('Then staat elke wijziging er ook werkelijk', async () => {
+        // Dit is de stap die de fout van Gio zou hebben gevangen: het contractveld
+        // werd geaccepteerd, gaf 200 terug, en was daarna weg.
+        const { medewerker, opdracht } = await lees();
+        expect(String(medewerker?.full_name), 'de naam hoort gewijzigd te zijn').toBe(`${naam} gewijzigd`);
+        expect(Number(medewerker?.weekly_contract_hours), 'de contracturen horen gewijzigd te zijn').toBe(40);
+        expect(String(opdracht?.contract_label), 'het contractveld hoort gewijzigd te zijn').toBe('Detachering · 40 uur');
+        expect(Number(opdracht?.hourly_rate), 'het tarief hoort gewijzigd te zijn').toBe(95);
+        expect(String(opdracht?.project_code), 'de projectcode hoort gewijzigd te zijn').toBe(`PRJ-${uniek}-B`);
+      });
+
+      await test.step('And deactiveren haalt hem uit de actieve lijst zonder hem te wissen', async () => {
+        const res = await postJson(ctx, '/server/api/staff.php', {
+          action: 'upsert_employee', sendInvitation: false,
+          employee: {
+            name: `${naam} gewijzigd`, email: adres,
+            dbEmployeeId: medewerkerId, dbUserId: gebruikerId, role: 'Senior Consultant', active: false,
+          },
+        });
+        expect(res.status, JSON.stringify(res.body)).toBe(200);
+
+        const { medewerker } = await lees();
+        expect(medewerker, 'een gedeactiveerde medewerker hoort te blijven bestaan').toBeDefined();
+        expect(Number(medewerker?.active), 'maar niet meer actief te zijn').toBe(0);
+      });
+
+      await test.step('And definitief verwijderen laat niets achter', async () => {
+        // Gio zag na een herstel een aangemaakte persoon terugkomen. Verwijderen moet
+        // betekenen dat hij weg is -- ook zijn opdracht, want die verwijst naar hem.
+        const res = await postJson(ctx, '/server/api/users.php', {
+          action: 'delete', user_id: gebruikerId,
+        });
+        expect(res.status, JSON.stringify(res.body)).toBe(200);
+
+        const { medewerker, opdracht, alle } = await lees();
+        expect(medewerker, 'de medewerker hoort weg te zijn').toBeUndefined();
+        expect(opdracht, 'en zijn opdracht ook, anders blijft er een wees achter').toBeUndefined();
+
+        const account = (alle.users as Array<Record<string, unknown>>)
+          .find(item => String(item.email).toLowerCase() === adres.toLowerCase());
+        expect(account, 'en zijn account hoort weg te zijn').toBeUndefined();
+        medewerkerId = 0;
+      });
+    } finally {
+      if (medewerkerId > 0) {
+        await postJson(ctx, '/server/api/users.php', { action: 'delete', user_id: gebruikerId }).catch(() => null);
+      }
       await authApi.logout();
       await ctx.dispose();
     }

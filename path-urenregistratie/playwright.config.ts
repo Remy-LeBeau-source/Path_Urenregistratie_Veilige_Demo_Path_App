@@ -61,14 +61,14 @@ export default defineConfig({
       use: {
         ...devices['Pixel 7'],
       },
-      testMatch: ['**/mobile-ui.spec.ts'],
+      testMatch: ['**/mobile-ui.spec.ts', '**/business-workflows-*.spec.ts'],
     },
     {
       name: 'mobile-safari',
       use: {
         ...devices['iPhone 13'],
       },
-      testMatch: ['**/mobile-ui.spec.ts'],
+      testMatch: ['**/mobile-ui.spec.ts', '**/business-workflows-*.spec.ts'],
     },
   ],
 });

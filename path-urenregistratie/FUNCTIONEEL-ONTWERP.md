@@ -76,7 +76,7 @@ herstelhistorie mogen dit acceptatieaantal niet verhogen.
 | correctie | medewerker dient opnieuw in | ingediend/submitted | Backoffice |
 | ingediend | beheerder keurt goed | goedgekeurd/approved | Backoffice voor factuurcontrole |
 | goedgekeurd | factuur wordt definitief | gefactureerd/invoiced | Backoffice voor verzending |
-| goedgekeurd/gefactureerd | medewerker probeert te wijzigen | geweigerd | ongewijzigd |
+| ingediend/goedgekeurd/gefactureerd | medewerker probeert te wijzigen | geweigerd | ongewijzigd |
 
 Een correctie toont de reden, de aanvrager en de betreffende periode. Een medewerker kan tijdens `correction` invoeren en opnieuw indienen. Na goedkeuring zijn invoervelden vergrendeld en is geen indienactie nodig.
 

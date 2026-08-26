@@ -45,7 +45,7 @@ async function findWritablePeriod(timesheetApi: TimesheetApi): Promise<string> {
 }
 
 test.describe('timesheet write api', () => {
-  test('[TS-API-H-001] employee save draft, read back, submit, bewerkt en dient opnieuw in', async ({ request }) => {
+  test('[TS-API-H-001] employee save draft, read back, submit; daarna zit de urenstaat op slot', async ({ request }) => {
     const authApi = new AuthApi(request);
     const timesheetApi = new TimesheetApi(request);
 
@@ -116,7 +116,13 @@ test.describe('timesheet write api', () => {
       expect(readBackSubmitted.body.last_audit.event_type).toBe('timesheet.submitted');
     });
 
-    await test.step('Then een ingediende urenstaat kan worden bewerkt en opnieuw ingediend', async () => {
+    await test.step('Then is een ingediende urenstaat op slot en blijft hij ongewijzigd', async () => {
+      // Deze stap eiste eerder het tegenovergestelde: dat een medewerker zijn
+      // ingediende urenstaat nog mocht bewerken en opnieuw indienen. Dat botste met
+      // het Functioneel Ontwerp hoofdstuk 5, dat zegt dat ook submitted vergrendeld
+      // is en alleen een expliciet correctieverzoek de maand weer openzet -- en met
+      // de GUI, die de velden al op slot zette. Gio heeft de knoop doorgehakt: op
+      // slot. De server weigert nu, en deze stap bewaakt dat.
       const submitted = await timesheetApi.read(period);
       const submittedVersion = Number(submitted.body?.timesheet?.version || 0);
 
@@ -131,14 +137,14 @@ test.describe('timesheet write api', () => {
         dayEntries: buildDayEntries(period, 5, 5),
       });
 
-      expect(editWrite.status).toBe(200);
-      expect(editWrite.body.ok).toBe(true);
-      expect(editWrite.body.timesheet.status).toBe('draft');
+      expect(editWrite.status).toBe(409);
+      expect(editWrite.body.ok).toBe(false);
+      expect(editWrite.body.error).toBe('timesheet-locked');
 
       const resubmitWrite = await timesheetApi.write({
         action: 'submit',
         period,
-        expectedVersion: Number(editWrite.body.timesheet.version),
+        expectedVersion: submittedVersion,
         contractualHours: 160,
         billableHours: 10,
         leaveHours: 0,
@@ -146,9 +152,13 @@ test.describe('timesheet write api', () => {
         dayEntries: buildDayEntries(period, 5, 5),
       });
 
-      expect(resubmitWrite.status).toBe(200);
-      expect(resubmitWrite.body.ok).toBe(true);
-      expect(resubmitWrite.body.timesheet.status).toBe('submitted');
+      expect(resubmitWrite.status).toBe(409);
+      expect(resubmitWrite.body.error).toBe('timesheet-locked');
+
+      // En de geweigerde pogingen hebben niets verschoven.
+      const naPoging = await timesheetApi.read(period);
+      expect(naPoging.body.timesheet.status).toBe('submitted');
+      expect(Number(naPoging.body.timesheet.version)).toBe(submittedVersion);
     });
 
     await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {

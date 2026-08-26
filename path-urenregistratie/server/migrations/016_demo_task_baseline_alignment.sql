@@ -123,8 +123,8 @@ WHERE p.company_id = 1
   AND p.month = 7
   AND e.full_name = 'Marc de Roon';
 
-INSERT INTO timesheet_corrections (timesheet_id, requested_by, correction_message, requested_at)
-SELECT t.id, 1,
+INSERT INTO timesheet_corrections (id, timesheet_id, requested_by, correction_message, requested_at)
+SELECT 2, t.id, 1,
   'Controleer 22 juli: de uren moeten worden afgestemd met de klantregistratie.',
   '2026-08-05 10:15:00'
 FROM timesheets t

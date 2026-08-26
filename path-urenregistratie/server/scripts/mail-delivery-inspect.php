@@ -37,4 +37,27 @@ $stmt = $pdo->prepare(
 );
 $stmt->execute([':invoice_id' => $invoiceId]);
 
-echo json_encode(['ok' => true, 'deliveries' => $stmt->fetchAll()], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), "\n";
+// Het bijlagebeleid zegt of er iets mee zou moeten. Dat is niet hetzelfde als een
+// bestand dat er werkelijk is. Een test die alleen het beleid controleert, mist een
+// lege of ontbrekende PDF -- en dat merkt de ontvanger als eerste.
+require_once __DIR__ . '/../mail/dispatch.php';
+
+$factuurStmt = $pdo->prepare('SELECT pdf_storage_key, invoice_number FROM invoices WHERE id = :id LIMIT 1');
+$factuurStmt->execute([':id' => $invoiceId]);
+$factuur = $factuurStmt->fetch();
+$sleutel = (string)($factuur['pdf_storage_key'] ?? '');
+$bestandspad = $sleutel !== '' ? mail_storage_path($config, 'invoices', $sleutel) : null;
+
+$bijlage = ['bestaat' => false, 'bytes' => 0, 'is_pdf' => false, 'sleutel' => $sleutel, 'pad' => (string)$bestandspad];
+if ($bestandspad !== null && is_file($bestandspad)) {
+    $bijlage['bestaat'] = true;
+    $bijlage['bytes'] = (int)filesize($bestandspad);
+    $bijlage['is_pdf'] = strncmp((string)file_get_contents($bestandspad, false, null, 0, 5), '%PDF-', 5) === 0;
+}
+
+echo json_encode([
+    'ok' => true,
+    'deliveries' => $stmt->fetchAll(),
+    'invoice_number' => (string)($factuur['invoice_number'] ?? ''),
+    'attachment' => $bijlage,
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), "\n";
