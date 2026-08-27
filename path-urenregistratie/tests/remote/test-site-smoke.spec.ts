@@ -61,14 +61,19 @@ test('[TEST-SMOKE-02] beheerder kan inloggen en elke view laadt zonder fouten', 
   await expect(page.locator('.demo-badge').first(), 'de versiebadge hoort in de app te staan')
     .toContainText(`Versie ${VERWACHTE_VERSIE}`);
 
-  const views = ['dashboard', 'timesheet', 'approvals', 'invoices', 'announcements', 'employees', 'settings'];
-  for (const view of views) {
-    const knop = page.locator(`button[data-view="${view}"]`).first();
-    if (await knop.count() === 0) continue;
+  // Loop over de navigatieknoppen die voor deze rol werkelijk zichtbaar zijn --
+  // sommige (timesheet) zijn role-employee-only en blijven voor de beheerder
+  // hidden. Elke zichtbare view hoort te openen met een titel en zonder fouten.
+  const zichtbareViews = page.locator('nav button[data-view]:visible');
+  const aantal = await zichtbareViews.count();
+  expect(aantal, 'de beheerder hoort meerdere navigatie-items te hebben').toBeGreaterThanOrEqual(3);
+  for (let i = 0; i < aantal; i++) {
+    const knop = zichtbareViews.nth(i);
+    const view = await knop.getAttribute('data-view');
     await knop.click();
     await expect(page.locator('#page-title'), `view ${view} hoort een titel te tonen`).not.toBeEmpty();
     await expect(page.locator('#app-shell')).toBeVisible();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(200);
   }
 
   // Factuuroverzicht: minstens één factuur uit de demo-seed hoort zichtbaar te zijn.
@@ -85,9 +90,13 @@ test('[TEST-SMOKE-03] medewerker ziet alleen de eigen uren', async ({ page }) =>
   await page.locator('button[data-view="timesheet"]').first().click();
   await expect(page.locator('#timesheet-status')).toBeVisible();
 
-  // Een medewerker hoort geen beheerknoppen te zien.
-  await expect(page.locator('button[data-view="approvals"]')).toHaveCount(0);
-  await expect(page.locator('button[data-view="employees"]')).toHaveCount(0);
+  // Een medewerker hoort geen beheerknoppen te kunnen gebruiken. De SPA bouwt de
+  // nav eenmalig op en verbergt de beheeritems per rol, dus toets op zichtbaarheid.
+  await expect(page.locator('button[data-view="approvals"]')).toBeHidden();
+  await expect(page.locator('button[data-view="employees"]')).toBeHidden();
+  // En de server weigert de beheerroute ook echt.
+  const approve = await page.request.get('/server/api/timesheets.php?period=2026-08&employee_id=1');
+  expect([401, 403]).toContain(approve.status());
 
   expect(fouten, `console/HTTP-fouten op TEST:\n${fouten.join('\n')}`).toEqual([]);
 });

@@ -5,8 +5,18 @@ const root = process.cwd();
 const playwrightDir = path.join(root, 'tests', 'playwright');
 const featuresDir = path.join(playwrightDir, 'features');
 
+const remoteDir = path.join(root, 'tests', 'remote');
 const featureFiles = readdirSync(featuresDir).filter((file) => file.endsWith('.feature')).sort();
 const specFiles = readdirSync(playwrightDir).filter((file) => file.endsWith('.spec.ts')).sort();
+// De live-TEST-regressie onder tests/remote/ hoort dezelfde ontwerpdiscipline te
+// volgen: elke uitvoerbare case heeft een feature-scenario met techniek,
+// Given/When/Then en een assertion-telling.
+let remoteSpecFiles = [];
+try {
+  remoteSpecFiles = readdirSync(remoteDir).filter((file) => file.endsWith('.spec.ts')).sort();
+} catch {
+  remoteSpecFiles = [];
+}
 const featureCases = [];
 const failures = [];
 
@@ -40,6 +50,10 @@ for (const file of featureFiles) {
 const specIds = [];
 for (const file of specFiles) {
   const source = readFileSync(path.join(playwrightDir, file), 'utf8');
+  for (const match of source.matchAll(/test\(\s*(['"])\[([^\]]+)]/g)) specIds.push(match[2].trim());
+}
+for (const file of remoteSpecFiles) {
+  const source = readFileSync(path.join(remoteDir, file), 'utf8');
   for (const match of source.matchAll(/test\(\s*(['"])\[([^\]]+)]/g)) specIds.push(match[2].trim());
 }
 specIds.push('DB-H-001');
