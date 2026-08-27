@@ -204,8 +204,8 @@ foreach ($expected as $key => $attachmentCount) {
         $checks['fixed_business_recipient'] = $checks['fixed_business_recipient']
             && ($scenario['recipient'] ?? '') === 'giovanno.maatsen@pathconsultancy.nl';
     }
-    $attachments = mail_acceptance_test_attachments((string)$scenario['attachment_policy']);
-    $attachmentNames = mail_acceptance_test_attachment_names((string)$scenario['attachment_policy']);
+    $attachments = mail_acceptance_test_attachments(null, (string)$scenario['attachment_policy']);
+    $attachmentNames = mail_acceptance_test_attachment_names(null, (string)$scenario['attachment_policy']);
     if (count($attachments) !== $attachmentCount) {
         $checks['attachment_counts_exact'] = false;
     }

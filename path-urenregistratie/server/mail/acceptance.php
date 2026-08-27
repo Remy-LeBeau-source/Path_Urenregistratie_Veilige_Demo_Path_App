@@ -160,8 +160,8 @@ function mail_acceptance_status(PDO $pdo, int $companyId, array $config): array
         }
 
         $rowReady = $enabled && $issues === [] && $scenarioIssues === [];
-        $attachmentNames = mail_acceptance_test_attachment_names((string)$scenario['attachment_policy']);
-        $preview = $localPreview ? mail_acceptance_preview_content($scenario, $sjablonen) : [];
+        $attachmentNames = mail_acceptance_test_attachment_names($pdo, (string)$scenario['attachment_policy']);
+        $preview = $localPreview ? mail_acceptance_preview_content($pdo, $scenario, $sjablonen) : [];
         $rows[] = array_merge($scenario, [
             'key' => $key,
             'recipient' => $recipient,
@@ -187,22 +187,26 @@ function mail_acceptance_status(PDO $pdo, int $companyId, array $config): array
 }
 
 /** @return array<string,string> */
-function mail_acceptance_business_vars(): array
+function mail_acceptance_business_vars(?PDO $pdo): array
 {
+    // Uit de laatste echte verzonden factuur -- geen verzonnen naam of nummer.
+    $snap = mail_acceptance_business_snapshot($pdo);
+    $maanden = [1 => 'januari', 'februari', 'maart', 'april', 'mei', 'juni',
+        'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
     return [
-        'medewerker' => 'Stasjo van Bakel',
-        'periode' => 'juli 2026',
-        'uren' => '144,00',
-        'factuurnummer' => 'PATH-2026-007',
-        'subtotaal' => '11.520,00',
-        'btw' => '2.419,20',
-        'bedrag' => '13.939,20',
+        'medewerker' => $snap['employee_name'],
+        'periode' => ($maanden[$snap['month']] ?? (string)$snap['month']) . ' ' . $snap['year'],
+        'uren' => number_format($snap['billable_hours'], 2, ',', '.'),
+        'factuurnummer' => $snap['invoice_number'],
+        'subtotaal' => number_format($snap['subtotal'], 2, ',', '.'),
+        'btw' => number_format($snap['vat_amount'], 2, ',', '.'),
+        'bedrag' => number_format($snap['total'], 2, ',', '.'),
         'bedrijf' => 'Path Consultancy — handelsnaam van QSI Consultancy B.V.',
     ];
 }
 
 /** @return array{subject:string,body:string} */
-function mail_acceptance_preview_content(array $scenario, ?array $sjablonen = null): array
+function mail_acceptance_preview_content(?PDO $pdo, array $scenario, ?array $sjablonen = null): array
 {
     $sjablonen = $sjablonen ?? MAIL_CHANNEL_TEMPLATES;
     if (($scenario['kind'] ?? '') === 'business') {
@@ -211,7 +215,7 @@ function mail_acceptance_preview_content(array $scenario, ?array $sjablonen = nu
         if (!is_array($template)) {
             throw new RuntimeException('Onbekend zakelijk acceptatiescenario.');
         }
-        $vars = mail_acceptance_business_vars();
+        $vars = mail_acceptance_business_vars($pdo);
         return [
             'subject' => '[LOKALE CONTROLE] ' . mail_render((string)$template['subject'], $vars),
             'body' => "LOKALE CONTROLE — NIET VERZONDEN\n\n" . mail_render((string)$template['body'], $vars),
@@ -244,11 +248,11 @@ function mail_acceptance_insert_business_delivery(
     if (!is_array($template)) {
         throw new RuntimeException('Onbekend zakelijk acceptatiescenario.');
     }
-    $vars = mail_acceptance_business_vars();
+    $vars = mail_acceptance_business_vars($pdo);
     mail_assert_vars((string)$template['subject'], $vars, $channel . ' subject');
     mail_assert_vars((string)$template['body'], $vars, $channel . ' body');
     if ($dryRun) {
-        $preview = mail_acceptance_preview_content($scenario, $sjablonen);
+        $preview = mail_acceptance_preview_content($pdo, $scenario, $sjablonen);
         $subject = $preview['subject'];
         $body = $preview['body'];
     } else {
@@ -288,7 +292,7 @@ function mail_acceptance_insert_local_preview_delivery(PDO $pdo, int $actorUserI
         );
     }
 
-    $preview = mail_acceptance_preview_content($scenario, $sjablonen);
+    $preview = mail_acceptance_preview_content($pdo, $scenario, $sjablonen);
     $stmt = $pdo->prepare(
         'INSERT INTO email_deliveries
          (user_id, channel, recipient_email, cc_email, subject_snapshot, body_snapshot,
@@ -396,7 +400,14 @@ function mail_acceptance_send(
     if (!$delivery) {
         throw new RuntimeException('acceptance-delivery-not-found');
     }
-    $outcome = mail_dispatch_delivery($pdo, $delivery, $config);
+    // auth_create_password_reset() verstuurt de beveiligingslink in de guarded
+    // TEST-sandbox nu zelf al. Dan staat de rij op 'sent' en zou een tweede
+    // mail_dispatch_delivery() de claim mislopen en 'skipped' teruggeven -- wat de
+    // console als mislukt las (HTTP 502) terwijl de mail juist wél verstuurd was.
+    // Alleen nog dispatchen als de rij echt nog wacht.
+    $reedsVerstuurd = (string)($delivery['status'] ?? '') === 'sent'
+        && (int)($delivery['dry_run'] ?? 1) === 0;
+    $outcome = $reedsVerstuurd ? 'sent' : mail_dispatch_delivery($pdo, $delivery, $config);
     mail_audit($pdo, $companyId, $actorUserId, 'mail.acceptance_test_dispatched', $deliveryId, [
         'scenario' => $scenarioKey,
         'recipient' => $scenario['recipient'],

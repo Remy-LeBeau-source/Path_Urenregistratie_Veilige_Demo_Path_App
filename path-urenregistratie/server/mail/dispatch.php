@@ -18,6 +18,59 @@ function mail_failed_delivery_retry_state(array $delivery, int $attempt): array
 }
 require_once __DIR__ . '/../lib/simple_pdf.php';
 
+/**
+ * De echte gegevens van de laatst verzonden factuur van de vaste organisatie.
+ *
+ * De acceptatietest liet hier vaste verzonnen waarden zien (PATH-2026-007,
+ * 144 uur, mei/juni-bedragen). Dat verwarde: het factuurnummer moet de echte
+ * per-opdracht-nummering volgen en pas meeschuiven als er een nieuwe maand- of
+ * jaarfactuur bij komt. Dit leest die laatste echte factuur uit.
+ *
+ * @return array{invoice_number:string,employee_name:string,year:int,month:int,billable_hours:float,subtotal:float,vat_amount:float,total:float}
+ */
+function mail_acceptance_business_snapshot(?PDO $pdo): array
+{
+    $row = false;
+    if ($pdo instanceof PDO) {
+        try {
+            $stmt = $pdo->query(
+                'SELECT i.invoice_number, i.subtotal, i.vat_amount, i.total,
+                        p.year, p.month, t.billable_hours, e.full_name AS employee_name
+                 FROM invoices i
+                 JOIN timesheets t ON t.id = i.timesheet_id
+                 JOIN periods p ON p.id = t.period_id
+                 JOIN employees e ON e.id = t.employee_id
+                 WHERE i.company_id = (SELECT MIN(id) FROM companies) AND i.status = "sent"
+                 ORDER BY p.year DESC, p.month DESC, i.id DESC
+                 LIMIT 1'
+            );
+            $row = $stmt !== false ? $stmt->fetch() : false;
+        } catch (Throwable $e) {
+            $row = false;
+        }
+    }
+    if (!is_array($row)) {
+        // Verse database zonder verzonden factuur: neutrale, herkenbaar niet-echte
+        // waarden -- nog steeds geen verzonnen persoonsnaam of factuurnummer.
+        return [
+            'invoice_number' => 'ACCEPTATIETEST-GEEN-VERZONDEN-FACTUUR',
+            'employee_name' => 'Acceptatietest medewerker',
+            'year' => (int)date('Y'), 'month' => (int)date('n'),
+            'billable_hours' => 0.0, 'subtotal' => 0.0, 'vat_amount' => 0.0, 'total' => 0.0,
+        ];
+    }
+    return [
+        'invoice_number' => (string)$row['invoice_number'],
+        'employee_name' => (string)$row['employee_name'],
+        'year' => (int)$row['year'],
+        'month' => (int)$row['month'],
+        'billable_hours' => (float)$row['billable_hours'],
+        'subtotal' => (float)$row['subtotal'],
+        'vat_amount' => (float)$row['vat_amount'],
+        'total' => (float)$row['total'],
+    ];
+}
+
 function mail_private_storage_root(array $config): string
 {
     $configured = trim((string)($config['storage']['private_root'] ?? ''));
@@ -64,37 +117,45 @@ function mail_expected_attachment_count(string $policy): int
 }
 
 /** @return list<string> */
-function mail_acceptance_test_attachment_names(string $policy): array
+function mail_acceptance_test_attachment_names(?PDO $pdo, string $policy): array
 {
+    $snap = mail_acceptance_business_snapshot($pdo);
+    $veiligNummer = preg_replace('/[^A-Za-z0-9_-]/', '_', $snap['invoice_number']) ?: 'factuur';
+    $veiligeMedewerker = preg_replace('/[^A-Za-z0-9_-]/', '_', $snap['employee_name']) ?: 'medewerker';
+    $factuur = "ACCEPTATIETEST-NIET-BOEKEN-Factuur-{$veiligNummer}.pdf";
+    $klanturenstaat = sprintf('ACCEPTATIETEST-NIET-BOEKEN-Klanturenstaat-%s-%04d-%02d.pdf',
+        $veiligeMedewerker, $snap['year'], $snap['month']);
     return match ($policy) {
         'none' => [],
-        'invoice' => ['ACCEPTATIETEST-NIET-BOEKEN-Factuur-PATH-2026-007.pdf'],
-        'customer_timesheet' => ['ACCEPTATIETEST-NIET-BOEKEN-Klanturenstaat-Stasjo-2026-07.pdf'],
-        'invoice_and_customer_timesheet' => [
-            'ACCEPTATIETEST-NIET-BOEKEN-Factuur-PATH-2026-007.pdf',
-            'ACCEPTATIETEST-NIET-BOEKEN-Klanturenstaat-Stasjo-2026-07.pdf',
-        ],
+        'invoice' => [$factuur],
+        'customer_timesheet' => [$klanturenstaat],
+        'invoice_and_customer_timesheet' => [$factuur, $klanturenstaat],
         default => throw new RuntimeException('Unsupported attachment policy.'),
     };
 }
 
 /** @return list<array{filename:string,mime:string,data:string}> */
-function mail_acceptance_test_attachments(string $policy): array
+function mail_acceptance_test_attachments(?PDO $pdo, string $policy): array
 {
     $expected = mail_expected_attachment_count($policy);
     if ($expected === 0) {
         return [];
     }
+    $snap = mail_acceptance_business_snapshot($pdo);
+    $maanden = [1 => 'januari', 'februari', 'maart', 'april', 'mei', 'juni',
+        'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
+    $periode = ($maanden[$snap['month']] ?? (string)$snap['month']) . ' ' . $snap['year'];
     $pdf = simple_pdf_text_document([
         ['text' => 'ACCEPTATIETEST - NIET BOEKEN OF VERWERKEN', 'size' => 16],
         '',
         'Path Consultancy - Uren & Facturatie',
-        'Medewerker: Stasjo van Bakel',
-        'Periode: juli 2026',
-        'Goedgekeurde uren: 144,00',
-        'Factuurnummer: PATH-2026-007',
+        'Medewerker: ' . $snap['employee_name'],
+        'Periode: ' . $periode,
+        'Goedgekeurde uren: ' . number_format($snap['billable_hours'], 2, ',', '.'),
+        'Factuurnummer: ' . $snap['invoice_number'],
         '',
-        'Dit document bevat uitsluitend vaste acceptatietestgegevens.',
+        'Dit document herhaalt de laatste echte verzonden factuur en dient uitsluitend',
+        'om het mailtransport te controleren. Niet boeken of verwerken.',
     ]);
     if (!simple_pdf_looks_valid($pdf)) {
         throw new RuntimeException('Acceptance test PDF could not be generated.');
@@ -105,7 +166,7 @@ function mail_acceptance_test_attachments(string $policy): array
             'mime' => 'application/pdf',
             'data' => base64_encode($pdf),
         ],
-        mail_acceptance_test_attachment_names($policy)
+        mail_acceptance_test_attachment_names($pdo, $policy)
     );
     if (count($attachments) !== $expected) {
         throw new RuntimeException('Acceptance test mail bundle is incomplete; dispatch blocked.');
@@ -123,7 +184,7 @@ function mail_resolve_attachments(PDO $pdo, array $delivery, array $config): arr
     }
 
     if ((bool)($delivery['acceptance_test'] ?? false)) {
-        return mail_acceptance_test_attachments($policy);
+        return mail_acceptance_test_attachments($pdo, $policy);
     }
 
     $invoiceId = (int)($delivery['invoice_id'] ?? 0);

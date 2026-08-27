@@ -46,7 +46,7 @@ if ($method === 'GET') {
         if (!is_array($scenario) || ($scenario['ready'] ?? false) !== true || $attachmentIndex === false) {
             auth_send_json(['ok' => false, 'error' => 'attachment-preview-unavailable'], 404);
         }
-        $attachments = mail_acceptance_test_attachments((string)$scenario['attachment_policy']);
+        $attachments = mail_acceptance_test_attachments($pdo, (string)$scenario['attachment_policy']);
         $attachment = $attachments[(int)$attachmentIndex] ?? null;
         if (!is_array($attachment)) {
             auth_send_json(['ok' => false, 'error' => 'attachment-preview-unavailable'], 404);
