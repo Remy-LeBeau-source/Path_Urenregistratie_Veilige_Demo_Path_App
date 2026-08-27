@@ -14,6 +14,38 @@ declare(strict_types=1);
 require __DIR__ . '/cli-bootstrap.php';
 require_once __DIR__ . '/../auth/session.php';
 
+/**
+ * Pull the visible text out of a PDF produced by server/lib/simple_pdf.php.
+ *
+ * That writer keeps every content stream uncompressed and lays each line down as
+ * a single `(escaped text) Tj`, so the text is recoverable without a PDF parser:
+ * find the string operands, reverse the `\( \) \\` escaping, and turn the
+ * Windows-1252 bytes back into UTF-8. Tests use this to assert what a recipient
+ * actually reads on the invoice -- the byte check alone let an empty or
+ * wrong-content PDF through.
+ */
+function inspect_pdf_text(string $bytes): string
+{
+    if (!str_starts_with($bytes, '%PDF-')) {
+        return '';
+    }
+    if (!preg_match_all('/\(((?:\\\\.|[^\\\\()])*)\)\s*Tj/s', $bytes, $matches)) {
+        return '';
+    }
+    $lines = [];
+    foreach ($matches[1] as $raw) {
+        $decoded = str_replace(['\\\\', '\\(', '\\)'], ['\\', '(', ')'], $raw);
+        if (function_exists('mb_convert_encoding')) {
+            $utf8 = @mb_convert_encoding($decoded, 'UTF-8', 'Windows-1252');
+            if (is_string($utf8) && $utf8 !== '') {
+                $decoded = $utf8;
+            }
+        }
+        $lines[] = $decoded;
+    }
+    return implode("\n", $lines);
+}
+
 $config = auth_load_raw_config();
 $db = auth_db_from_config($config);
 $database = (string)($db['name'] ?? '');
@@ -30,7 +62,7 @@ if ($invoiceId <= 0) {
 
 $pdo = auth_pdo($config);
 $stmt = $pdo->prepare(
-    'SELECT channel, recipient_email, subject_snapshot, body_snapshot, attachment_policy
+    'SELECT channel, recipient_email, cc_email, subject_snapshot, body_snapshot, attachment_policy, dry_run
      FROM email_deliveries
      WHERE invoice_id = :invoice_id
      ORDER BY id'
@@ -48,11 +80,15 @@ $factuur = $factuurStmt->fetch();
 $sleutel = (string)($factuur['pdf_storage_key'] ?? '');
 $bestandspad = $sleutel !== '' ? mail_storage_path($config, 'invoices', $sleutel) : null;
 
-$bijlage = ['bestaat' => false, 'bytes' => 0, 'is_pdf' => false, 'sleutel' => $sleutel, 'pad' => (string)$bestandspad];
+$bijlage = ['bestaat' => false, 'bytes' => 0, 'is_pdf' => false, 'sleutel' => $sleutel, 'pad' => (string)$bestandspad, 'pdf_text' => ''];
 if ($bestandspad !== null && is_file($bestandspad)) {
+    $inhoud = (string)file_get_contents($bestandspad);
     $bijlage['bestaat'] = true;
-    $bijlage['bytes'] = (int)filesize($bestandspad);
-    $bijlage['is_pdf'] = strncmp((string)file_get_contents($bestandspad, false, null, 0, 5), '%PDF-', 5) === 0;
+    $bijlage['bytes'] = strlen($inhoud);
+    $bijlage['is_pdf'] = strncmp($inhoud, '%PDF-', 5) === 0;
+    // De ontvanger leest tekst, geen magic bytes. Een geldige maar lege of
+    // verkeerd gevulde factuur-PDF kwam er eerder ongemerkt doorheen.
+    $bijlage['pdf_text'] = inspect_pdf_text($inhoud);
 }
 
 echo json_encode([
@@ -60,4 +96,5 @@ echo json_encode([
     'deliveries' => $stmt->fetchAll(),
     'invoice_number' => (string)($factuur['invoice_number'] ?? ''),
     'attachment' => $bijlage,
+    'pdf_text' => $bijlage['pdf_text'],
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), "\n";

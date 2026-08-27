@@ -308,6 +308,20 @@ function test_reset_shared_baseline(PDO $pdo, array $config, string $actorEmail)
         foreach (['password_reset_tokens', 'auth_login_audit'] as $table) {
             $pdo->exec('DELETE FROM ' . $table);
         }
+        // app_state is a transient browser-state blob that server/api.php creates
+        // on demand; the demo seed never touches it. Without clearing it here, any
+        // UI-driven test that changes role/period leaves the row mutated and the
+        // e2eIsolation fingerprint check drifts on app_state. Clearing it is the
+        // isolation intent -- the row is rebuilt on the next ?action=state write.
+        // Guarded by an existence check because CREATE TABLE would implicitly
+        // commit this reset transaction, and the table is absent until first use.
+        $appStateExists = (int)$pdo->query(
+            "SELECT COUNT(*) FROM information_schema.TABLES
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'app_state'"
+        )->fetchColumn() > 0;
+        if ($appStateExists) {
+            $pdo->exec('DELETE FROM app_state');
+        }
         foreach ($scripts as $script) {
             test_reset_sql($pdo, $script);
         }
