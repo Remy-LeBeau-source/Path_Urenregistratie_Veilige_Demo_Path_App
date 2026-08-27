@@ -8720,7 +8720,9 @@ function downloadInvoicePdf(employeeId, periodKey = "", outputMode = "download")
   doc.setFillColor(...mint);
   doc.rect(0, 46, 210, 1.5, "F");
   // De kop van de PDF is donkerblauw, dus daar hoort het witte woordmerk.
-  doc.addImage(brandLogoUrl("donker"), "PNG", 15, 14, 45, 15);
+  // 40 x 18.5 mm houdt de verhouding 466:216 van path-logo-wit.png aan; 45 x 15
+  // rekte het logo horizontaal uit.
+  doc.addImage(brandLogoUrl("donker"), "PNG", 15, 13, 40, 18.5);
   drawText("UREN & FACTURATIE", 15, 38, 6.8, [191, 217, 210], "bold");
   drawText("FACTUUR", 195, 20, 21, [255, 255, 255], "bold", { align: "right" });
   drawText("Factuurnummer: " + data.record.invoiceNumber, 195, 30, 9.2, [255, 255, 255], "bold", { align: "right" });

@@ -145,18 +145,31 @@ function mail_acceptance_test_attachments(?PDO $pdo, string $policy): array
     $maanden = [1 => 'januari', 'februari', 'maart', 'april', 'mei', 'juni',
         'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
     $periode = ($maanden[$snap['month']] ?? (string)$snap['month']) . ' ' . $snap['year'];
-    $pdf = simple_pdf_text_document([
-        ['text' => 'ACCEPTATIETEST - NIET BOEKEN OF VERWERKEN', 'size' => 16],
-        '',
-        'Path Consultancy - Uren & Facturatie',
+    $regels = [
+        ['text' => 'ACCEPTATIETEST - NIET BOEKEN OF VERWERKEN', 'size' => 14],
+        ['text' => 'FACTUUR ' . $snap['invoice_number'], 'size' => 14],
+        'Betreft ' . $periode,
+        ' ',
+        'Path Consultancy - handelsnaam van QSI Consultancy B.V.',
         'Medewerker: ' . $snap['employee_name'],
-        'Periode: ' . $periode,
-        'Goedgekeurde uren: ' . number_format($snap['billable_hours'], 2, ',', '.'),
-        'Factuurnummer: ' . $snap['invoice_number'],
-        '',
+        'Gewerkte uren: ' . number_format($snap['billable_hours'], 2, ',', '.'),
+        ' ',
+        'Totaal exclusief: EUR ' . number_format($snap['subtotal'], 2, ',', '.'),
+        'Btw: EUR ' . number_format($snap['vat_amount'], 2, ',', '.'),
+        ['text' => 'Totaal inclusief: EUR ' . number_format($snap['total'], 2, ',', '.'), 'size' => 12],
+        ' ',
         'Dit document herhaalt de laatste echte verzonden factuur en dient uitsluitend',
         'om het mailtransport te controleren. Niet boeken of verwerken.',
-    ]);
+    ];
+    // Dezelfde branded server-generator als de echte factuur: Path-logo en kopbalk,
+    // geen platte tekst-PDF meer. Zonder GD valt het terug op de branded layout
+    // zonder logo-afbeelding.
+    $logoPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'path-logo.png';
+    try {
+        $pdf = simple_pdf_branded_text_document($regels, $logoPath);
+    } catch (Throwable $gdError) {
+        $pdf = simple_pdf_text_document_with_branding_fallback($regels);
+    }
     if (!simple_pdf_looks_valid($pdf)) {
         throw new RuntimeException('Acceptance test PDF could not be generated.');
     }
