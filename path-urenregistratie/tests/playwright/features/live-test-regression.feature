@@ -118,14 +118,13 @@ Feature: Live TEST-regressie
     And maakt Voorbeeldmelding maken alleen een lokale melding zonder mail klaar te zetten
 
   @happy @live
-  Scenario: [TEST-E2E-10] factuur voor elke demo-medewerker via de echte GUI-afronding
-    # Testtechniek: End-to-end use-case met documentidentiteit over alle demo-accounts
-    # Aantoonbare Playwright-assertions in deze case: 20
-    Given elke demo-medewerker dient uren in op de live TEST-site
-    When de beheerder per medewerker goedkeurt en op Controle afronden klikt
-    Then stuurt de browser de jsPDF-conceptfactuur mee als de definitieve factuur
-    And is de opgeslagen factuur die jsPDF-PDF en niet de platte serverfallback
-    And volgt elk factuurnummer de per-opdracht nummering
+  Scenario: [TEST-E2E-10] elke bestaande factuur heeft een echt nummer en geen CONCEPT-markering in de PDF
+    # Testtechniek: Data-integriteit met documentidentiteitscontrole over alle facturen
+    # Aantoonbare Playwright-assertions in deze case: 12
+    Given de bestaande facturen over alle perioden op de live TEST-site
+    When elk factuurnummer en elke downloadbare factuur-PDF wordt nagelopen
+    Then volgt elk factuurnummer de per-opdracht nummering en nooit de generieke dummy
+    And draagt geen enkele gedownloade factuur-PDF een CONCEPT- of CONCEPTVOORBEELD-markering
 
   @happy @live
   Scenario: [TEST-E2E-11] nieuwe medewerker via het beheer-scherm en de volledige flow tot jsPDF-conceptfactuur

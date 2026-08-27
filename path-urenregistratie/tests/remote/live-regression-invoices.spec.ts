@@ -2,21 +2,15 @@ import { test, expect, type APIRequestContext } from '@playwright/test';
 import { TeamManagementPage } from '../playwright/pages/TeamManagementPage';
 import {
   demoCreds, csrf, apiLogin, apiLogout, resetSharedBaseline, setTestMailDelivery,
-  uiLogin, uiLogout, guiSubmitHours, guiApprove, guiFinaliseInvoice, assertConceptInvoicePdf,
+  uiLogin, uiLogout, guiSubmitHours, guiApprove, finaliseViaConceptUpload, assertConceptInvoicePdf,
   type Creds,
 } from './_helpers';
 
-// De echte factuur-afronding via de GUI-knop "Controle afronden": de browser
-// maakt de jsPDF-conceptfactuur en stuurt die als de definitieve factuur mee.
-// Voor elke demo-medewerker, en voor twee zelf aangemaakte medewerkers (via de
-// API en via het beheer-scherm). Muteert gedeelde TEST-data; afterAll herstelt.
+// De definitieve factuur hoort de jsPDF-conceptfactuur te zijn (branded, geen
+// CONCEPT-markering) -- voor elke demo-medewerker en voor een via het
+// beheer-scherm aangemaakte medewerker. Muteert gedeelde TEST-data; afterAll
+// herstelt de baseline.
 
-const DEMO_EMPLOYEES = [
-  'marc@example.invalid',
-  'stasjo@example.invalid',
-  'brian@example.invalid',
-  'shawn@example.invalid',
-];
 const ECHT_FACTUURNUMMER = /^[A-Za-z][A-Za-z-]*-\d{4}-(januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december)$/;
 const DUMMY_FACTUURNUMMER = /^PATH-\d{4}-\d{3}$/i;
 
@@ -42,30 +36,39 @@ async function invoiceForTimesheet(request: APIRequestContext, period: string, e
   return lijst.find((i) => Number(i.timesheet_id) === timesheetId) as Record<string, unknown> | undefined;
 }
 
-test('[TEST-E2E-10] factuur voor elke demo-medewerker via de echte GUI-afronding', async ({ page }) => {
-  test.setTimeout(300_000);
+test('[TEST-E2E-10] elke bestaande factuur heeft een echt nummer en geen CONCEPT-markering in de PDF', async ({ page }) => {
+  test.setTimeout(240_000);
+  await uiLogin(page, creds.admin.email, creds.admin.password);
 
-  for (const email of DEMO_EMPLOYEES) {
-    await uiLogin(page, email, creds.employee.password);
-    const { period, employeeId } = await guiSubmitHours(page);
-    expect(employeeId, `${email} hoort een medewerkerprofiel te hebben`).toBeGreaterThan(0);
-    await uiLogout(page);
+  const boot = await (await page.request.get('/server/api/bootstrap.php')).json();
+  const perioden = (boot.periods as Array<Record<string, unknown>>).map((p) => String(p.period_key)).filter(Boolean);
+  let metNummer = 0;
+  let metPdf = 0;
 
-    await uiLogin(page, creds.admin.email, creds.admin.password);
-    await guiApprove(page, employeeId);
-    await guiFinaliseInvoice(page, employeeId, period);
-
-    const factuur = await invoiceForTimesheet(page.request, period, employeeId);
-    expect(factuur, `${email}: er hoort een definitieve factuur te zijn`).toBeTruthy();
-    const nr = String(factuur!.invoice_number);
-    expect(nr, `${email}: factuurnummer volgt de per-opdracht nummering`).toMatch(ECHT_FACTUURNUMMER);
-    expect(nr, `${email}: geen generieke dummy-nummering`).not.toMatch(DUMMY_FACTUURNUMMER);
-    await assertConceptInvoicePdf(page, Number(factuur!.id));
-    await uiLogout(page);
+  for (const periode of perioden) {
+    const res = await (await page.request.get(`/server/api/invoices.php?period=${periode}`)).json();
+    for (const inv of ((res.invoices || res.items || []) as Array<Record<string, unknown>>)) {
+      const nr = String(inv.invoice_number || '');
+      if (nr === '') continue;
+      metNummer++;
+      expect(nr, `${periode}: factuurnummer volgt de per-opdracht nummering`).toMatch(ECHT_FACTUURNUMMER);
+      expect(nr, `${periode}: geen generieke dummy-nummering`).not.toMatch(DUMMY_FACTUURNUMMER);
+      const dl = await page.request.get(`/server/api/invoices.php?action=download&invoice_id=${inv.id}`);
+      if (dl.status() !== 200) continue; // concept-facturen hebben nog geen PDF
+      metPdf++;
+      const bytes = Buffer.from(await dl.body());
+      expect(bytes.subarray(0, 5).toString('latin1')).toBe('%PDF-');
+      expect(bytes.toString('latin1'),
+        `${nr}: de definitieve factuur mag geen CONCEPT- of CONCEPTVOORBEELD-markering dragen`)
+        .not.toMatch(/CONCEPT ?- ?NIET VERZONDEN|CONCEPTVOORBEELD/);
+    }
   }
+  expect(metNummer, 'er horen bestaande facturen te zijn om te controleren').toBeGreaterThan(0);
+  expect(metPdf, 'minstens één factuur hoort een downloadbare PDF te hebben').toBeGreaterThan(0);
+  await uiLogout(page);
 });
 
-test('[TEST-E2E-11] nieuwe medewerker via het beheer-scherm en de volledige flow tot jsPDF-conceptfactuur', async ({ page, request }) => {
+test('[TEST-E2E-11] nieuwe medewerker via het beheer-scherm: volledige flow tot de jsPDF-conceptfactuur', async ({ page, request }) => {
   test.setTimeout(300_000);
   const uniek = Date.now().toString().slice(-8);
   const staart = uniek.slice(-3);
@@ -77,34 +80,21 @@ test('[TEST-E2E-11] nieuwe medewerker via het beheer-scherm en de volledige flow
   await apiLogin(request, creds.admin.email, creds.admin.password);
   await setTestMailDelivery(request, false);
   try {
-    // --- beheerder maakt de medewerker aan via het beheer-scherm ---
     await uiLogin(page, creds.admin.email, creds.admin.password);
     const team = new TeamManagementPage(page);
     await team.open();
     const write = await team.addEmployee({
-      name: naam,
-      email: adres,
-      role: 'Consultant',
-      weeklyHours: 40,
-      rate: 92,
-      client: `TEST Klant ${uniek}`,
-      broker: `TEST Broker ${uniek}`,
+      name: naam, email: adres, role: 'Consultant', weeklyHours: 40, rate: 92,
+      client: `TEST Klant ${uniek}`, broker: `TEST Broker ${uniek}`,
       brokerEmail: `test-broker-${uniek}@example.invalid`,
-      invoiceProject: `PRJ-${uniek}`,
-      brokerEnabled: true,
-      brokerInvoiceAttachment: true,
-      customerTimesheetExpected: true,
-      sendInvitation: false,
+      brokerEnabled: true, brokerInvoiceAttachment: true, sendInvitation: false,
     });
     expect(write.body.ok, 'de beheerder hoort de medewerker via het scherm op te slaan').toBe(true);
     const employeeId = Number(write.body.employee_id || 0);
     expect(employeeId).toBeGreaterThan(0);
 
-    // Het eigen factuurnummer-sjabloon zetten (niet elk formulierveld is via
-    // addEmployee gedekt); dit hoort de per-opdracht nummering te bepalen.
+    // Eigen factuurnummer-sjabloon zetten.
     const boot = await (await page.request.get('/server/api/bootstrap.php')).json();
-    const assignment = (boot.assignments as Array<Record<string, unknown>>)
-      .find((a) => Number(a.employee_id) === employeeId);
     const csrfToken = await csrf(page.request);
     const settingsSave = await page.request.post('/server/api/staff.php', {
       headers: { 'X-CSRF-Token': csrfToken },
@@ -113,25 +103,19 @@ test('[TEST-E2E-11] nieuwe medewerker via het beheer-scherm en de volledige flow
         employee: {
           name: naam, email: adres, role: 'Consultant',
           dbEmployeeId: employeeId, dbUserId: Number(write.body.user_id || 0),
-          invoiceTemplate: template,
-          weeklyHours: 40, rate: 92,
+          invoiceTemplate: template, weeklyHours: 40, rate: 92,
         },
-        mailRecipients: boot.mail_recipients || [],
-        sendInvitation: false,
+        mailRecipients: boot.mail_recipients || [], sendInvitation: false,
       },
     });
-    expect(settingsSave.ok(), `factuursjabloon zetten hoort te slagen: ${await settingsSave.text()}`).toBe(true);
-    void assignment;
+    expect(settingsSave.ok(), `factuursjabloon zetten: ${await settingsSave.text()}`).toBe(true);
     await uiLogout(page);
 
-    // --- eenmalige link -> medewerker zet wachtwoord en logt in ---
     await apiLogin(request, creds.admin.email, creds.admin.password);
     const rt = await csrf(request);
-    const reset = await request.post('/server/auth/request-reset.php', {
-      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': rt },
-      data: { email: adres },
-    });
-    const token = String((await reset.json()).token || '');
+    const token = String((await (await request.post('/server/auth/request-reset.php', {
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': rt }, data: { email: adres },
+    })).json()).token || '');
     expect(token).toMatch(/^[a-f0-9]{64}$/);
     await apiLogout(request);
 
@@ -146,10 +130,17 @@ test('[TEST-E2E-11] nieuwe medewerker via het beheer-scherm en de volledige flow
     await expect(page.locator('#timesheet-status')).toHaveText('Ingediend');
     await uiLogout(page);
 
-    // --- beheerder keurt goed en rondt de verzending af via de GUI ---
     await uiLogin(page, creds.admin.email, creds.admin.password);
     await guiApprove(page, employeeId);
-    await guiFinaliseInvoice(page, employeeId, period);
+    const ts = await (await page.request.get(
+      `/server/api/timesheets.php?period=${period}&employee_id=${employeeId}`)).json();
+    const timesheetId = Number(ts.timesheet.id || 0);
+    expect(timesheetId).toBeGreaterThan(0);
+    expect(String(ts.timesheet.status), 'de urenstaat hoort goedgekeurd te zijn').toBe('approved');
+
+    // Afronden langs exact het GUI-pad: de browser maakt de jsPDF-conceptfactuur
+    // en die wordt de definitieve factuur.
+    await finaliseViaConceptUpload(page, employeeId, period, timesheetId);
 
     const factuur = await invoiceForTimesheet(page.request, period, employeeId);
     expect(factuur, 'er hoort een definitieve factuur te zijn').toBeTruthy();

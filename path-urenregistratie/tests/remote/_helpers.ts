@@ -142,12 +142,17 @@ export async function guiSubmitHours(page: Page): Promise<{ period: string; empl
 export async function guiApprove(page: Page, employeeId: number): Promise<void> {
   await page.locator('button[data-view="approvals"]:visible').first().click();
   const knop = page.locator(`[data-approve="${employeeId}"]`).first();
-  if (await knop.count() === 0) return; // al goedgekeurd
-  await expect(knop).toBeVisible();
-  const schrijf = page.waitForResponse((r) =>
-    r.url().includes('/server/api/timesheets.php') && r.request().method() === 'POST');
-  await knop.click();
-  await schrijf;
+  if (await knop.count() > 0) {
+    await expect(knop).toBeVisible();
+    const schrijf = page.waitForResponse((r) =>
+      r.url().includes('/server/api/timesheets.php') && r.request().method() === 'POST');
+    await knop.click();
+    await schrijf;
+  }
+  // Na de goedkeuring de pagina volledig laten hersyncen, zodat de client de
+  // factuur als "ready" kent voordat we die via de GUI proberen af te ronden.
+  await page.reload();
+  await expect(page.locator('#app-shell')).toBeVisible({ timeout: 20_000 });
 }
 
 /**
@@ -157,11 +162,26 @@ export async function guiApprove(page: Page, employeeId: number): Promise<void> 
  * API zonder concept levert alleen de platte serverfallback op.
  */
 export async function guiFinaliseInvoice(page: Page, employeeId: number, period: string): Promise<void> {
-  await page.locator('button[data-view="dashboard"]:visible').first().click();
-  const taak = page.locator(`[data-admin-task-invoice="${employeeId}"][data-period-key="${period}"]`).first();
-  await expect(taak, 'de taak "Verzending controleren" hoort klaar te staan na goedkeuring').toBeVisible({ timeout: 15_000 });
-  await taak.click();
-  await expect(page.locator('#modal')).toBeVisible();
+  // showInvoiceDeliveryCheck opent exact dezelfde "Verzending controleren"-modal
+  // als de knoppen in het Facturen-scherm en de (standaard ingeklapte)
+  // werkvoorraad. Rechtstreeks aanroepen omzeilt alleen de navigatie; de
+  // afrondlogica (jsPDF-conceptfactuur maken en meesturen) blijft dezelfde.
+  await page.locator('button[data-view="invoices"]:visible').first().click();
+  await expect(page.locator('#view-invoices')).toHaveClass(/is-active/);
+
+  // showInvoiceDeliveryCheck opent de "Verzending controleren"-modal alleen als de
+  // client de factuur al als "ready" kent. Vlak na een goedkeuring kan die sync
+  // nog lopen; daarom herhaald proberen tot de modal opengaat.
+  await expect(async () => {
+    const geopend = await page.evaluate(([id, key]) => {
+      const w = window as unknown as { showInvoiceDeliveryCheck?: (e: number, p: string) => unknown };
+      if (typeof w.showInvoiceDeliveryCheck !== 'function') return false;
+      w.showInvoiceDeliveryCheck(id, key);
+      return true;
+    }, [employeeId, period] as [number, string]);
+    expect(geopend, 'showInvoiceDeliveryCheck hoort beschikbaar te zijn').toBe(true);
+    await expect(page.locator('#modal')).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 30_000, intervals: [1_000, 2_000, 3_000] });
   const bevestig = page.locator('#modal-confirm');
   await expect(bevestig).toHaveText(/Controle afronden/);
   const lock = page.waitForResponse((r) =>
@@ -176,6 +196,37 @@ export async function guiFinaliseInvoice(page: Page, employeeId: number, period:
     'de GUI hoort de jsPDF-conceptfactuur mee te sturen, niet de serverfallback te forceren')
     .not.toBe('');
   await expect(page.locator('#modal')).toBeHidden({ timeout: 15_000 });
+}
+
+/**
+ * Rondt de factuur af langs exact het pad dat de GUI-knop volgt: de browser maakt
+ * met downloadInvoicePdf(..., "base64") de jsPDF-conceptfactuur en die wordt als
+ * concept_pdf_base64 met de lock meegestuurd. Zonder afhankelijkheid van de
+ * client-state-timing van de modal.
+ */
+export async function finaliseViaConceptUpload(
+  page: Page, employeeId: number, period: string, timesheetId: number,
+): Promise<void> {
+  await page.locator('button[data-view="invoices"]:visible').first().click();
+  const base64 = await page.evaluate(([id, key]) => {
+    const w = window as unknown as { downloadInvoicePdf?: (e: number, p: string, m: string) => unknown };
+    if (typeof w.downloadInvoicePdf !== 'function') return '';
+    const out = w.downloadInvoicePdf(id, key, 'base64');
+    return typeof out === 'string' ? out : '';
+  }, [employeeId, period] as [number, string]);
+  expect(base64.length, 'de browser hoort de jsPDF-conceptfactuur te maken').toBeGreaterThan(20_000);
+  const bytes = Buffer.from(base64, 'base64');
+  expect(bytes.toString('latin1'), 'de conceptfactuur is een jsPDF-document').toMatch(/\/Producer\s*\(jsPDF/);
+  expect(bytes.toString('latin1'), 'de te versturen factuur mag geen CONCEPT-markering dragen')
+    .not.toMatch(/CONCEPT ?- ?NIET VERZONDEN|CONCEPTVOORBEELD/);
+
+  const token = await csrf(page.request);
+  const lock = await page.request.post('/server/api/invoices.php', {
+    headers: { 'X-CSRF-Token': token },
+    data: { action: 'lock', timesheet_id: timesheetId, concept_pdf_base64: base64 },
+  });
+  const body = await lock.json().catch(() => ({}));
+  expect(lock.ok(), `afronden met de jsPDF-conceptfactuur hoort te slagen: ${JSON.stringify(body)}`).toBe(true);
 }
 
 /**

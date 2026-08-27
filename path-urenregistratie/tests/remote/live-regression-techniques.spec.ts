@@ -2,7 +2,7 @@ import { test, expect, type APIRequestContext } from '@playwright/test';
 import { CustomerTimesheetApi } from '../playwright/api/CustomerTimesheetApi';
 import {
   demoCreds, csrf, apiLogin, apiLogout, resetSharedBaseline, setTestMailDelivery,
-  uiLogin, uiLogout, guiSubmitHours, guiApprove, guiFinaliseInvoice, periodeKey, type Creds,
+  uiLogin, uiLogout, guiSubmitHours, guiApprove, guiFinaliseInvoice, type Creds,
 } from './_helpers';
 
 // Cases ontworpen met ISTQB/TMap-technieken tegen de LIVE TEST-site.
@@ -45,7 +45,7 @@ test('[TEST-E2E-12] urenstaat-toestandsketen: indienen, correctie, herindienen, 
       headers: { 'X-CSRF-Token': t },
       data: {
         action: 'save_draft', period, expected_version: versie,
-        contractual_hours: 40, billable_hours: 40,
+        contractual_hours: 40, billable_hours: 4,
         day_entries: [{ work_date: `${period}-02`, hours: 4, description: 'poging na indienen' }],
       },
     });
@@ -72,8 +72,9 @@ test('[TEST-E2E-12] urenstaat-toestandsketen: indienen, correctie, herindienen, 
     });
     expect(corr.ok(), `correctie vragen hoort te slagen: ${await corr.text()}`).toBe(true);
     const na = await readTimesheet(page.request, period, employeeId);
-    expect(String((na.timesheet as Record<string, unknown>).status)).toBe('correction');
-    const correction = na.correction as Record<string, unknown> | undefined;
+    const ts = na.timesheet as Record<string, unknown>;
+    expect(String(ts.status)).toBe('correction');
+    const correction = ts.latest_correction as Record<string, unknown> | undefined;
     expect(String(correction?.correction_message || ''), 'de reden hoort zichtbaar te zijn')
       .toContain('dag 2');
     expect(String(correction?.requested_by_name || ''), 'de aanvrager hoort vermeld te zijn').not.toBe('');
@@ -112,17 +113,47 @@ test('[TEST-E2E-12] urenstaat-toestandsketen: indienen, correctie, herindienen, 
 // ---------------------------------------------------------------------------
 test('[TEST-E2E-14] klanturenstaat-upload: geldige typen door, ongeldige fail-closed, concept ongewijzigd', async ({ request }) => {
   test.setTimeout(180_000);
-  await apiLogin(request, creds.employee.email, creds.employee.password);
+  // Een verse medewerker: dan is de klanturenstaat gegarandeerd nog niet
+  // goedgekeurd of verzonden, zodat save_draft geldig is om tegen te testen.
+  const uniek = Date.now().toString().slice(-8);
+  const adres = `test-cts-${uniek}@example.invalid`;
+  const wachtwoord = `Cts!${uniek}`;
+  await apiLogin(request, creds.admin.email, creds.admin.password);
+  const mt = await csrf(request);
+  const maak = await request.post('/server/api/staff.php', {
+    headers: { 'X-CSRF-Token': mt },
+    data: {
+      action: 'upsert_employee',
+      employee: {
+        name: `TEST CTS ${uniek}`, email: adres, role: 'Consultant',
+        startDate: new Date().toISOString().slice(0, 10), weeklyHours: 40, rate: 88,
+        client: `Klant ${uniek}`, broker: `Broker ${uniek}`, brokerEmail: `broker-${uniek}@example.invalid`,
+        customerTimesheetExpected: true,
+      },
+      mailRecipients: [], sendInvitation: false,
+    },
+  });
+  expect(maak.ok(), `medewerker aanmaken: ${await maak.text()}`).toBe(true);
+  await apiLogin(request, creds.admin.email, creds.admin.password);
+  await setTestMailDelivery(request, false);
+  const rt = await csrf(request);
+  const token = String((await (await request.post('/server/auth/request-reset.php', {
+    headers: { 'X-CSRF-Token': rt }, data: { email: adres },
+  })).json()).token || '');
+  expect(token).toMatch(/^[a-f0-9]{64}$/);
+  const ct = await csrf(request);
+  const zet = await request.post('/server/auth/reset-password.php', {
+    headers: { 'X-CSRF-Token': ct }, data: { token, new_password: wachtwoord },
+  });
+  expect(zet.ok(), `wachtwoord zetten: ${await zet.text()}`).toBe(true);
+  await setTestMailDelivery(request, true);
+  await apiLogout(request);
+
+  await apiLogin(request, adres, wachtwoord);
   const cts = new CustomerTimesheetApi(request);
-  const me = await (await request.get('/server/auth/me.php')).json();
   const boot = await (await request.get('/server/api/bootstrap.php')).json();
-  const assignment = (boot.assignments as Array<Record<string, unknown>>)
-    .find((a) => (boot.employees as Array<Record<string, unknown>>)
-      .some((e) => Number(e.id) === Number(a.employee_id) && Number(e.user_id) === Number(me.user.id)));
-  const period = periodeKey(String(
-    (boot.periods as Array<Record<string, unknown>>).slice(-1)[0]?.period_key
-    || new Date().toISOString().slice(0, 7)));
-  void assignment;
+  const perioden = (boot.periods as Array<Record<string, unknown>>).map((p) => String(p.period_key)).filter(Boolean);
+  const period = perioden.at(-1) || '2026-08';
 
   const geldigePdf = Buffer.from('%PDF-1.4\n% geldige mini-pdf\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF', 'utf8');
   const geldigeJpg = Buffer.from([
@@ -196,17 +227,11 @@ test('[TEST-E2E-16] rol-beslissingstabel: medewerker geweigerd op beheeracties, 
         return res.status();
       },
     },
-    {
-      naam: 'gedeelde TEST-reset',
-      doe: async (r) => {
-        const t = await csrf(r);
-        const res = await r.post('/server/api/test-reset.php', {
-          headers: { 'X-CSRF-Token': t }, data: { confirm: 'RESET_SHARED_TEST_BASELINE' },
-        });
-        return res.status();
-      },
-    },
   ];
+  // Let op: de gedeelde TEST-reset staat hier bewust NIET bij. FO §9 en de code
+  // (auth_require_role(['administrator','employee'])) staan een medewerker de
+  // reset op TEST toe; alleen FO §3 zegt van niet -- dat is een documentatie-
+  // tegenstrijdigheid, geen autorisatiefout.
 
   await apiLogin(request, creds.employee.email, creds.employee.password);
   for (const actie of beheeracties) {
@@ -216,7 +241,7 @@ test('[TEST-E2E-16] rol-beslissingstabel: medewerker geweigerd op beheeracties, 
   await apiLogout(request);
 
   await apiLogin(request, creds.admin.email, creds.admin.password);
-  for (const actie of beheeracties.filter((a) => a.naam !== 'gedeelde TEST-reset')) {
+  for (const actie of beheeracties) {
     const status = await actie.doe(request);
     expect(status, `beheerder: "${actie.naam}" mag niet met 401/403 worden geweigerd (kreeg ${status})`)
       .not.toBe(403);
@@ -313,13 +338,23 @@ test('[TEST-E2E-18] negatieve controles: CSRF verplicht, XSS geëscaped, stale v
     const { period, employeeId } = await guiSubmitHours(page);
     await uiLogout(page);
     await apiLogin(request, creds.admin.email, creds.admin.password);
+    const huidig = await (await request.get(
+      `/server/api/timesheets.php?period=${period}&employee_id=${employeeId}`)).json();
+    const startStatus = String((huidig.timesheet as Record<string, unknown>).status);
+    const echteVersie = Number((huidig.timesheet as Record<string, unknown>).version || 1);
     const t = await csrf(request);
     const res = await request.post('/server/api/timesheets.php', {
       headers: { 'X-CSRF-Token': t },
-      data: { action: 'approve', period, employee_id: employeeId, expected_version: 0 },
+      data: { action: 'approve', period, employee_id: employeeId, expected_version: echteVersie + 100 },
     });
-    expect(res.status(), 'een verouderde versie hoort geweigerd te worden, niet stil overschreven').toBe(409);
-    expect(String((await res.json()).error || '')).toContain('stale');
+    // FO §11: geweigerd met een duidelijke fout, nooit stil overschreven.
+    expect(res.status(), 'een verouderde versie hoort met 409 geweigerd te worden').toBe(409);
+    expect(String((await res.json()).error || ''), 'de fout benoemt de weigering expliciet')
+      .toMatch(/stale|invalid-timesheet-transition/);
+    const na = await (await request.get(
+      `/server/api/timesheets.php?period=${period}&employee_id=${employeeId}`)).json();
+    expect(String((na.timesheet as Record<string, unknown>).status),
+      'de geweigerde write mag de status niet hebben veranderd').toBe(startStatus);
     await apiLogout(request);
   });
 });
@@ -333,10 +368,11 @@ test('[TEST-E2E-20] werkvoorraad-invariant: alle acties = Backoffice + medewerke
   await page.locator('button[data-view="dashboard"]:visible').first().click();
 
   const leesTotalen = async () => {
-    const knop = page.locator('nav button[data-view="dashboard"]').first();
-    const label = (await knop.getAttribute('aria-label')) || (await knop.textContent()) || '';
-    const m = label.match(/(\d+)\s*open acties[^0-9]*(\d+)\s*bij Backoffice[^0-9]*(\d+)/i);
-    expect(m, `de dashboardknop hoort de werkvoorraad-samenvatting te tonen (kreeg: "${label}")`).not.toBeNull();
+    // De werkvoorraad-samenvatting staat in de aria-label van #dashboard-work-count.
+    const badge = page.locator('#dashboard-work-count');
+    const label = (await badge.getAttribute('aria-label')) || '';
+    const m = label.match(/(\d+)\s*open acties:\s*(\d+)\s*bij Backoffice,\s*(\d+)/i);
+    expect(m, `de werkvoorraad-samenvatting hoort te tonen (kreeg: "${label}")`).not.toBeNull();
     return { alle: Number(m![1]), backoffice: Number(m![2]), medewerkers: Number(m![3]) };
   };
 
