@@ -116,3 +116,80 @@ export function nlBedrag(waarde: number): string {
 export function btwLabel(pct: number): string {
   return nlBedrag(pct).replace(/0+$/, '').replace(/,$/, '');
 }
+
+/** Vult 8 uur op de eerste vrije dag en dient de urenstaat in, als de ingelogde medewerker. */
+export async function guiSubmitHours(page: Page): Promise<{ period: string; employeeId: number }> {
+  await page.locator('button[data-view="timesheet"]:visible').first().click();
+  await expect(page.locator('#timesheet-status')).toBeVisible();
+  const period = periodeKey(String(await page.locator('#period-label').textContent() || ''));
+  const me = await (await page.request.get('/server/auth/me.php')).json();
+  const boot = await (await page.request.get('/server/api/bootstrap.php')).json();
+  const employeeId = Number((boot.employees as Array<Record<string, unknown>>)
+    .find((e) => Number(e.user_id) === Number(me.user.id))?.id || 0);
+  const invoer = page.locator('#hours-grid .hours-input:not([disabled])').first();
+  if (await invoer.count()) {
+    await invoer.fill('8');
+    await invoer.press('Tab');
+    const schrijf = page.waitForResponse((r) =>
+      r.url().includes('/server/api/timesheets.php') && r.request().method() === 'POST');
+    await page.locator('#submit-timesheet').click();
+    await schrijf;
+  }
+  return { period, employeeId };
+}
+
+/** Keurt de urenstaat van een medewerker goed via het goedkeuringsscherm (als admin). */
+export async function guiApprove(page: Page, employeeId: number): Promise<void> {
+  await page.locator('button[data-view="approvals"]:visible').first().click();
+  const knop = page.locator(`[data-approve="${employeeId}"]`).first();
+  if (await knop.count() === 0) return; // al goedgekeurd
+  await expect(knop).toBeVisible();
+  const schrijf = page.waitForResponse((r) =>
+    r.url().includes('/server/api/timesheets.php') && r.request().method() === 'POST');
+  await knop.click();
+  await schrijf;
+}
+
+/**
+ * Rondt de verzending af via de echte GUI-knop "Controle afronden". Dat is het
+ * pad waar de browser de jsPDF-conceptfactuur maakt en als concept_pdf_base64
+ * naar de server stuurt -- die PDF wordt de definitieve factuur. Een lock via de
+ * API zonder concept levert alleen de platte serverfallback op.
+ */
+export async function guiFinaliseInvoice(page: Page, employeeId: number, period: string): Promise<void> {
+  await page.locator('button[data-view="dashboard"]:visible').first().click();
+  const taak = page.locator(`[data-admin-task-invoice="${employeeId}"][data-period-key="${period}"]`).first();
+  await expect(taak, 'de taak "Verzending controleren" hoort klaar te staan na goedkeuring').toBeVisible({ timeout: 15_000 });
+  await taak.click();
+  await expect(page.locator('#modal')).toBeVisible();
+  const bevestig = page.locator('#modal-confirm');
+  await expect(bevestig).toHaveText(/Controle afronden/);
+  const lock = page.waitForResponse((r) =>
+    r.url().includes('/server/api/invoices.php') && r.request().method() === 'POST');
+  await bevestig.click();
+  const resp = await lock;
+  const body = await resp.json().catch(() => ({}));
+  expect(resp.ok(), `afronden hoort te slagen: ${JSON.stringify(body)}`).toBe(true);
+  // De browser hoort een echte jsPDF-conceptfactuur te hebben meegestuurd.
+  const verzonden = resp.request().postDataJSON() as Record<string, unknown>;
+  expect(String(verzonden.concept_pdf_base64 || ''),
+    'de GUI hoort de jsPDF-conceptfactuur mee te sturen, niet de serverfallback te forceren')
+    .not.toBe('');
+  await expect(page.locator('#modal')).toBeHidden({ timeout: 15_000 });
+}
+
+/**
+ * De opgeslagen factuur-PDF hoort de jsPDF-conceptfactuur te zijn (branded, met
+ * lettertypes) en niet de platte simple_pdf-serverfallback.
+ */
+export async function assertConceptInvoicePdf(page: Page, invoiceId: number): Promise<void> {
+  const dl = await page.request.get(`/server/api/invoices.php?action=download&invoice_id=${invoiceId}`);
+  expect(dl.status(), 'de factuur-PDF hoort op te halen te zijn').toBe(200);
+  const bytes = Buffer.from(await dl.body());
+  expect(bytes.subarray(0, 5).toString('latin1')).toBe('%PDF-');
+  expect(bytes.subarray(-2048).toString('latin1')).toContain('%%EOF');
+  const head = bytes.toString('latin1');
+  expect(head, 'de definitieve factuur hoort de jsPDF-conceptfactuur te zijn, niet de platte serverfallback')
+    .toMatch(/\/Producer\s*\(jsPDF/);
+  expect(bytes.length, 'een branded jsPDF-factuur is fors groter dan de platte fallback').toBeGreaterThan(60_000);
+}

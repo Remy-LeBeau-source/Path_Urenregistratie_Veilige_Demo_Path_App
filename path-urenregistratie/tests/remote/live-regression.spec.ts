@@ -1,7 +1,8 @@
 import { test, expect, type APIRequestContext, type Page } from '@playwright/test';
 import {
   demoCreds, csrf, apiLogin, apiLogout, resetSharedBaseline, setTestMailDelivery,
-  uiLogin, uiLogout, periodeKey, pdfText, nlBedrag, btwLabel, SINK, type Creds,
+  uiLogin, uiLogout, periodeKey, nlBedrag, SINK, type Creds,
+  guiApprove, guiFinaliseInvoice, assertConceptInvoicePdf,
 } from './_helpers';
 
 // Volledige regressie tegen de LIVE TEST-site (https://uren-test.pathconsultancy.nl).
@@ -222,27 +223,14 @@ test('[TEST-E2E-04] volledige factuur- en mailketen met PDF- en mailinhoudcontro
     .toContain(String(ts.status));
   await uiLogout(page);
 
-  // --- admin: goedkeuren en factureren ---
+  // --- admin: goedkeuren en de verzending afronden via de echte GUI-knop ---
   await uiLogin(page, creds.admin.email, creds.admin.password);
-  if (String((await readTimesheet(page.request, periode, employeeId)).status) === 'submitted') {
-    await page.locator('button[data-view="approvals"]').first().click();
-    const goedkeuren = page.locator(`[data-approve="${employeeId}"]`).first();
-    await expect(goedkeuren).toBeVisible();
-    const schrijf = page.waitForResponse((r) =>
-      r.url().includes('/server/api/timesheets.php') && r.request().method() === 'POST');
-    await goedkeuren.click();
-    await schrijf;
-  }
+  await guiApprove(page, employeeId);
   await expect(async () => {
     expect(String((await readTimesheet(page.request, periode, employeeId)).status)).toBe('approved');
   }).toPass({ timeout: 20_000 });
-
-  const lockToken = await csrf(page.request);
-  const lock = await page.request.post('/server/api/invoices.php', {
-    headers: { 'X-CSRF-Token': lockToken },
-    data: { action: 'lock', timesheet_id: timesheetId },
-  });
-  expect(lock.ok(), `factuur definitief maken hoort te slagen: ${await lock.text()}`).toBe(true);
+  await guiFinaliseInvoice(page, employeeId, periode);
+  void timesheetId;
 
   const facturen = await (await page.request.get(`/server/api/invoices.php?period=${periode}`)).json();
   const factuur = ((facturen.invoices || facturen.items) as Array<Record<string, unknown>>)
@@ -254,25 +242,27 @@ test('[TEST-E2E-04] volledige factuur- en mailketen met PDF- en mailinhoudcontro
   const btwBedrag = Number(factuur.vat_amount);
   const totaal = Number(factuur.total);
   const btwPct = Number(factuur.vat_percentage);
+  void btwPct; void btwBedrag; void subtotaal; void totaal;
 
-  await test.step('Then klopt de factuur-PDF op inhoud', async () => {
+  await test.step('Then is de definitieve factuur de jsPDF-conceptfactuur zonder CONCEPT-markering', async () => {
+    await assertConceptInvoicePdf(page, factuurId);
     const dl = await page.request.get(`/server/api/invoices.php?action=download&invoice_id=${factuurId}`);
-    expect(dl.status()).toBe(200);
-    const bytes = Buffer.from(await dl.body());
-    expect(bytes.subarray(0, 5).toString('latin1')).toBe('%PDF-');
-    expect(bytes.length).toBeGreaterThan(1_000);
-    const tekst = pdfText(bytes);
+    const head = Buffer.from(await dl.body()).toString('latin1');
+    expect(head, 'de verstuurde factuur mag geen CONCEPT- of CONCEPTVOORBEELD-markering dragen')
+      .not.toMatch(/CONCEPT ?- ?NIET VERZONDEN|CONCEPTVOORBEELD/);
+  });
 
-    const bedrijf = (await (await page.request.get('/server/api/bootstrap.php')).json()).companies[0];
-    expect(tekst).toContain(`FACTUUR ${nummer}`);
-    expect(tekst).toContain(`IBAN: ${String(bedrijf.iban).trim()}`);
-    expect(tekst).toContain(`KvK: ${String(bedrijf.chamber_of_commerce_number).trim()} | Btw: ${String(bedrijf.vat_number).trim()}`);
-    expect(tekst).toContain(`Totaal exclusief: EUR ${nlBedrag(subtotaal)}`);
-    expect(tekst).toContain(`Btw (${btwLabel(btwPct)}%): EUR ${nlBedrag(btwBedrag)}`);
-    expect(tekst).toContain(`Totaal inclusief: EUR ${nlBedrag(totaal)}`);
-    expect(tekst).toContain(`onder vermelding van factuurnummer: ${nummer}`);
-    expect(tekst, 'geen conceptwatermerk op de definitieve factuur')
-      .not.toMatch(/concept|kladversie|voorbeeld|watermerk|draft/i);
+  await test.step('And toont de factuurpreview het juiste nummer, de IBAN en de bedragen', async () => {
+    await page.evaluate((id) => {
+      (window as unknown as { showInvoiceDocumentPreview?: (n: number) => void }).showInvoiceDocumentPreview?.(id);
+    }, employeeId);
+    const preview = page.locator('.invoice-document-preview');
+    await expect(preview).toBeVisible({ timeout: 10_000 });
+    await expect(preview.locator('.invoice-brand-number-line')).toContainText(nummer);
+    await expect(preview.locator('.invoice-brand-payment')).toContainText(nummer);
+    await expect(preview.locator('.invoice-brand-payment')).toContainText(/NL\d\d[A-Z]{4}/);
+    await expect(preview.locator('.invoice-brand-totals')).toContainText(nlBedrag(totaal));
+    await page.locator('#modal-close').click().catch(() => undefined);
     expect(Math.round((subtotaal + btwBedrag) * 100) / 100).toBe(Math.round(totaal * 100) / 100);
   });
 

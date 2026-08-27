@@ -116,3 +116,22 @@ Feature: Live TEST-regressie
     When een herinneringsregel wordt om- en teruggezet en opgeslagen
     Then blijft de gewijzigde instelling na herladen bewaard
     And maakt Voorbeeldmelding maken alleen een lokale melding zonder mail klaar te zetten
+
+  @happy @live
+  Scenario: [TEST-E2E-10] factuur voor elke demo-medewerker via de echte GUI-afronding
+    # Testtechniek: End-to-end use-case met documentidentiteit over alle demo-accounts
+    # Aantoonbare Playwright-assertions in deze case: 20
+    Given elke demo-medewerker dient uren in op de live TEST-site
+    When de beheerder per medewerker goedkeurt en op Controle afronden klikt
+    Then stuurt de browser de jsPDF-conceptfactuur mee als de definitieve factuur
+    And is de opgeslagen factuur die jsPDF-PDF en niet de platte serverfallback
+    And volgt elk factuurnummer de per-opdracht nummering
+
+  @happy @live
+  Scenario: [TEST-E2E-11] nieuwe medewerker via het beheer-scherm en de volledige flow tot jsPDF-conceptfactuur
+    # Testtechniek: End-to-end use-case vanaf beheer-scherm tot definitieve jsPDF-factuur
+    # Aantoonbare Playwright-assertions in deze case: 12
+    Given de beheerder maakt via het teambeheerscherm een medewerker met eigen opdracht-opties aan
+    When de medewerker zelf inlogt, uren indient en de beheerder de verzending via de GUI afrondt
+    Then is de definitieve factuur de jsPDF-conceptfactuur zonder CONCEPT-markering
+    And volgt het factuurnummer het eigen opdracht-sjabloon
