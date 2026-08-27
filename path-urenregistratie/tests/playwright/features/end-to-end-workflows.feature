@@ -382,3 +382,33 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
     And levert zoeken op de unieke marker nul gebruikers, medewerkers, opdrachten, routes, urenregels, facturen, deliveries en tokens op
     And bestaan geen verweesde foreign-keyrelaties, tijdelijke PDF's of achtergebleven sessies voor die marker
     And kunnen de vaste beheerder en medewerker opnieuw met hun oorspronkelijke testwachtwoord inloggen
+
+  @happy @gui @desktop
+  Scenario: [E2E-H-026] de definitieve factuur-PDF bevat de juiste bedragen en identiteit en geen conceptwatermerk
+    # Aantoonbare Playwright-assertions in deze case: 17
+    # Testtechniek: End-to-end use-case met documentinhoud-integriteit
+    # Uitvoermatrix: desktop-chromium
+    # Assertioncontract: factuurnummer, IBAN, KvK/Btw en exacte bedragen in de PDF-tekst, sluitende btw-berekening en geen conceptwatermerk.
+    Given de fixture de testbaseline en een unieke case-marker vastlegt
+    And de uren-, goedkeurings- en factuurketen via de GUI tot een definitieve factuur is doorlopen
+    When de verzonden factuurmail en de bijbehorende PDF-tekst worden uitgelezen
+    Then bevat de PDF letterlijk het factuurnummer, de IBAN en de KvK/Btw-regel van de organisatie
+    And komen totaal exclusief, de btw-regel met percentage en totaal inclusief exact overeen met de vastgelegde bedragen
+    And klopt subtotaal plus btw met het totaal en de btw met het percentage van het subtotaal
+    And draagt de definitieve factuur geen concept-, klad- of watermerkaanduiding
+    And herstelt de fixture na de case de testbaseline exact
+
+  @happy @gui @desktop
+  Scenario: [E2E-H-027] elk kanaal krijgt de standaardtekst van de server en geen enkele mail verlaat de machine
+    # Aantoonbare Playwright-assertions in deze case: 16
+    # Testtechniek: Gegevensstroomtest van sjabloon naar verzonden mail met dry-run-invariant
+    # Uitvoermatrix: desktop-chromium
+    # Assertioncontract: geen onvervangen velden, boekhouding en salaris dragen de server-standaardtekst, elke delivery dry_run=1 en salaris zonder bijlage.
+    Given de fixture de testbaseline vastlegt en de server-standaardteksten uit de bootstrap zijn gelezen
+    And de uren-, goedkeurings- en factuurketen via de GUI zonder eigen teksten is doorlopen
+    When de verzonden deliveries van de factuur worden uitgelezen
+    Then draagt geen enkele delivery een onvervangen veld of lege onderwerp- of bodytekst
+    And dragen de boekhoudings- en salariskanalen exact de standaardtekst die de server meestuurt
+    And is elke delivery als dry-run vastgelegd zodat er lokaal geen mail wordt verstuurd
+    And krijgt de salarisadministratie categorisch geen factuur als bijlage
+    And herstelt de fixture na de case de testbaseline exact
