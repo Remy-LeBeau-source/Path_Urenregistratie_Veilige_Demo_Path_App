@@ -8725,8 +8725,13 @@ function downloadInvoicePdf(employeeId, periodKey = "", outputMode = "download")
   drawText("FACTUUR", 195, 20, 21, [255, 255, 255], "bold", { align: "right" });
   drawText("Factuurnummer: " + data.record.invoiceNumber, 195, 30, 9.2, [255, 255, 255], "bold", { align: "right" });
   drawText("Factuurdatum  " + data.invoiceDate + "   |   Betreft  " + data.period.month, 195, 37.5, 7.2, [221, 233, 230], "normal", { align: "right" });
-  roundedBox(151.5, 40, 43.5, 6.5, mint, null, 3.2);
-  drawText("CONCEPT - NIET VERZONDEN", 192.5, 44.2, 5.9, navy, "bold", { align: "right" });
+  // De conceptmarkering hoort alleen op de controledownload, niet op de PDF die
+  // met base64 wordt opgehaald voor verzending -- die wordt de definitieve
+  // factuur en mag geen CONCEPT dragen.
+  if (outputMode !== "base64") {
+    roundedBox(151.5, 40, 43.5, 6.5, mint, null, 3.2);
+    drawText("CONCEPT - NIET VERZONDEN", 192.5, 44.2, 5.9, navy, "bold", { align: "right" });
+  }
 
   roundedBox(14, 55, 88, 58, background, line);
   roundedBox(107, 55, 89, 58, mintLight);
@@ -8808,7 +8813,9 @@ function downloadInvoicePdf(employeeId, periodKey = "", outputMode = "download")
   doc.setFillColor(...navy);
   doc.rect(0, 282, 210, 15, "F");
   drawText(identity.footer, 14, 291, 6.2, [221, 233, 230]);
-  drawText("CONCEPTVOORBEELD", 196, 291, 6.2, mint, "bold", { align: "right" });
+  if (outputMode !== "base64") {
+    drawText("CONCEPTVOORBEELD", 196, 291, 6.2, mint, "bold", { align: "right" });
+  }
   if (outputMode === "base64") {
     return String(doc.output("datauristring")).replace(/^data:application\/pdf[^,]*,/, "");
   }
