@@ -135,3 +135,57 @@ Feature: Live TEST-regressie
     When de medewerker zelf inlogt, uren indient en de beheerder de verzending via de GUI afrondt
     Then is de definitieve factuur de jsPDF-conceptfactuur zonder CONCEPT-markering
     And volgt het factuurnummer het eigen opdracht-sjabloon
+
+  @happy @live
+  Scenario: [TEST-E2E-12] urenstaat-toestandsketen: indienen, correctie, herindienen, goedkeuren; ongeldige overgang geweigerd
+    # Testtechniek: Toestandsovergangstabel met negatieve overgang
+    # Aantoonbare Playwright-assertions in deze case: 10
+    Given een medewerker heeft uren ingediend op de live TEST-site
+    When de medewerker na indienen probeert te wijzigen, Backoffice correctie met reden vraagt, de medewerker herindient en Backoffice goedkeurt
+    Then wordt de wijziging na indienen geweigerd zonder statuswijziging
+    And gaat de status via correctie met zichtbare reden en aanvrager terug naar submitted en daarna approved
+
+  @happy @live
+  Scenario: [TEST-E2E-14] klanturenstaat-upload: geldige typen door, ongeldige fail-closed, concept ongewijzigd
+    # Testtechniek: Equivalentieklassen en grenswaarden op bestandsupload
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given een medewerker met een openstaande klanturenstaatperiode
+    When een geldige PDF, een nep-PDF, een corrupte afbeelding, een te groot bestand en een geldige JPG worden geupload
+    Then worden geldige typen geaccepteerd en als PDF opgeslagen
+    And worden de nep-PDF, de corrupte afbeelding en het te grote bestand fail-closed geweigerd terwijl het bestaande concept blijft
+
+  @happy @live
+  Scenario: [TEST-E2E-16] rol-beslissingstabel: medewerker geweigerd op beheeracties, beheerder toegestaan
+    # Testtechniek: Beslissingstabel rollen en autorisatie tegen de echte omgeving
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given zowel een medewerker- als een beheerdersessie op de live TEST-site
+    When elke rol goedkeuren, medewerker aanmaken en de gedeelde TEST-reset via de API probeert
+    Then weigert de server elke beheeractie voor de medewerker met 401 of 403
+    And staat de server dezelfde acties voor de beheerder toe
+
+  @happy @live
+  Scenario: [TEST-E2E-17] één factuuractie levert exact drie gescheiden routes met het juiste bijlagebeleid
+    # Testtechniek: Beslissingstabel mailroutering en bijlagebeleid
+    # Aantoonbare Playwright-assertions in deze case: 12
+    Given een goedgekeurde urenstaat op de live TEST-site
+    When de beheerder de verzending via de GUI afrondt
+    Then ontstaan precies drie afzonderlijke deliveries: broker, boekhouding en salaris
+    And krijgt broker de factuur, boekhouding de factuur en salaris geen bijlage, zonder CC- of BCC-bundel
+
+  @happy @live
+  Scenario: [TEST-E2E-18] negatieve controles: CSRF verplicht, XSS geëscaped, stale version geweigerd
+    # Testtechniek: Negatieve equivalentieklasse plus error guessing op de echte API
+    # Aantoonbare Playwright-assertions in deze case: 10
+    Given een beheerder- en medewerkersessie op de live TEST-site
+    When een POST zonder CSRF-token, een script-payload in een naamveld en een verouderde expected_version worden geprobeerd
+    Then weigert de server de POST zonder token
+    And wordt de script-payload veilig opgeslagen en geëscaped weergegeven, en wordt de verouderde versie met een stale-version-fout geweigerd
+
+  @happy @live
+  Scenario: [TEST-E2E-20] werkvoorraad-invariant: alle acties is Backoffice plus medewerkers, ongewijzigd bij maandnavigatie
+    # Testtechniek: Data-integriteit met invariantcontrole
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given de beheerder opent het dashboard op de live TEST-site
+    When de werkvoorraad-samenvatting wordt gelezen en daarna door de maanden wordt genavigeerd
+    Then is alle acties gelijk aan de som van Backoffice- en medewerkeracties
+    And wijzigt maandnavigatie de globale totalen niet
