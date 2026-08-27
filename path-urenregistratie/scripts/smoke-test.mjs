@@ -1953,6 +1953,17 @@ assert(configureProductionSrc.includes("Database passwords in command arguments 
 assert(staffApiSrc.includes("$sendInvitation = staff_bool($payload['sendInvitation'] ?? false, false)") && staffApiSrc.includes("'invitation_pending' => $invitationPending") && staffApiSrc.includes("invitation-delivery-unavailable"), "Medewerkers moeten zonder SMTP veilig opgeslagen kunnen worden en uitnodigingen moeten expliciet en capability-gestuurd zijn");
 assert(bootstrapApiSrc.includes("password_reset_delivery") && bootstrapApiSrc.includes("password_ready"), "De beheer-GUI moet uitnodigingsbeschikbaarheid en accountgereedheid uit de serverbootstrap ontvangen");
 assert(rootHtaccessSrc.includes("Content-Security-Policy") && rootHtaccessSrc.includes("RewriteCond %{HTTPS} !=on") && /^\s*# Header always set Strict-Transport-Security/m.test(rootHtaccessSrc), "De publieke app moet HTTPS/CSP afdwingen terwijl HSTS voorbereid maar uitgeschakeld blijft");
+// De CSP van de publieke app is script-src 'self' zonder 'unsafe-inline', hash of nonce.
+// Een inline <script> met inhoud wordt daar dus stil geblokkeerd -- zo bleef de service
+// worker ongeregistreerd en de installatiebanner dood op TEST/PROD. Alle scripts in
+// index.html horen extern (src=) te zijn.
+{
+  const cspBlokkeertInline = /script-src[^;]*'self'/.test(rootHtaccessSrc)
+    && !/script-src[^;]*'unsafe-inline'/.test(rootHtaccessSrc)
+    && !/script-src[^;]*'(nonce-|sha256-|sha384-|sha512-)/.test(rootHtaccessSrc);
+  const inlineScriptMetInhoud = /<script(?![^>]*\bsrc=)[^>]*>\s*\S[\s\S]*?<\/script>/i.test(html);
+  assert(!(cspBlokkeertInline && inlineScriptMetInhoud), "index.html mag geen inline <script> met inhoud bevatten zolang de CSP script-src 'self' zonder unsafe-inline/hash/nonce afdwingt: verplaats de code naar een extern bestand");
+}
 assert(playwrightRunnerSrc.includes("url.hostname === 'localhost'") && playwrightRunnerSrc.includes("url.hostname = '127.0.0.1'") && playwrightRunnerSrc.includes("PATH_APP_BASE_URL: baseUrl"), "De Playwright-runner moet browsers en de beheerde PHP-server op dezelfde IPv4-origin houden");
 assert(playwrightDbBootstrapSrc.includes("namedTestDatabase") && playwrightDbBootstrapSrc.includes("isolatedCiDatabase") && playwrightDbBootstrapSrc.includes("Refusing destructive Playwright database bootstrap"), "De Playwright DB-bootstrap mag uitsluitend een herkenbare test- of geïsoleerde CI-database opnieuw opbouwen");
 assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("isolatedCiDatabase") && dbCrudSmokeSrc.includes("DB CRUD smoke is not allowed"), "De DB CRUD-smoke moet fail-closed buiten een test- of geïsoleerde CI-database");
