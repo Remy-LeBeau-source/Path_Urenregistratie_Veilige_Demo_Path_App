@@ -2,7 +2,7 @@ import { test, expect, type APIRequestContext } from '@playwright/test';
 import { CustomerTimesheetApi } from '../playwright/api/CustomerTimesheetApi';
 import {
   demoCreds, csrf, apiLogin, apiLogout, resetSharedBaseline, setTestMailDelivery,
-  uiLogin, uiLogout, guiSubmitHours, guiApprove, finaliseViaConceptUpload, assertConceptInvoicePdf,
+  uiLogin, uiLogout, guiSubmitHours, guiApprove, apiApprove, finaliseViaConceptUpload, assertConceptInvoicePdf,
   createDemoEmployee, createDemoAdmin, validPdfBytes, currentPeriodKey, type Creds,
 } from './_helpers';
 
@@ -458,7 +458,11 @@ test('[TEST-E2E-22] herinneringen: samenvatting volgt exact de instellingen, kla
       await opslaan();
       await page.reload();
       await page.locator('button[data-view="settings"]:visible').first().click();
-      expect(await leesServerTijd(), 'bootstrap hoort de nieuwe tijd te melden').toContain(doel);
+      // De bootstrap-lezing kan vlak na de save nog de oude waarde teruggeven;
+      // even kort herhalen tot de wijziging doorkomt.
+      await expect(async () => {
+        expect(await leesServerTijd(), 'bootstrap hoort de nieuwe tijd te melden').toContain(doel);
+      }).toPass({ timeout: 15_000, intervals: [500, 1_000, 2_000] });
       await expect(page.locator('#setting-customer-timesheet-reminder-time')).toHaveValue(doel);
     });
   } finally {
@@ -589,14 +593,17 @@ test('[TEST-E2E-24] medewerker deactiveren blokkeert inloggen; data blijft; hera
 // ===========================================================================
 // TEST-E2E-27 - Beslissingstabel: goedgekeurde urenstaat heropenen
 // ===========================================================================
-test('[TEST-E2E-27] goedgekeurde urenstaat zonder factuur mag terug naar correctie; met factuur wordt heropenen geweigerd', async ({ page }) => {
+test('[TEST-E2E-27] goedgekeurde urenstaat zonder factuur mag terug naar correctie; met factuur wordt heropenen geweigerd', async ({ page, request }) => {
   test.setTimeout(240_000);
-  await uiLogin(page, creds.employee.email, creds.employee.password);
+  // Verse medewerker: dan is de urenstaat gegarandeerd nog niet gefactureerd
+  // door een eerdere case in dit bestand.
+  const emp = await createDemoEmployee(request, creds, { namePrefix: 'TEST Heropen' });
+  await uiLogin(page, emp.email, emp.password);
   const { period, employeeId } = await guiSubmitHours(page);
   await uiLogout(page);
 
   await uiLogin(page, creds.admin.email, creds.admin.password);
-  await guiApprove(page, employeeId);
+  await apiApprove(page.request, period, employeeId);
   let ts = (await readTimesheet(page.request, period, employeeId)).timesheet;
   expect(String(ts?.status)).toBe('approved');
 
@@ -615,7 +622,7 @@ test('[TEST-E2E-27] goedgekeurde urenstaat zonder factuur mag terug naar correct
   await uiLogout(page);
 
   await test.step('Medewerker herindient, beheerder keurt opnieuw goed en maakt de factuur', async () => {
-    await uiLogin(page, creds.employee.email, creds.employee.password);
+    await uiLogin(page, emp.email, emp.password);
     await page.locator('button[data-view="timesheet"]:visible').first().click();
     const invoer = page.locator('#hours-grid .hours-input:not([disabled])').first();
     await expect(invoer).toBeVisible();
@@ -628,7 +635,7 @@ test('[TEST-E2E-27] goedgekeurde urenstaat zonder factuur mag terug naar correct
     await uiLogout(page);
 
     await uiLogin(page, creds.admin.email, creds.admin.password);
-    await guiApprove(page, employeeId);
+    await apiApprove(page.request, period, employeeId);
     ts = (await readTimesheet(page.request, period, employeeId)).timesheet;
     await finaliseViaConceptUpload(page, employeeId, period, Number(ts?.id));
     expect(String((await readTimesheet(page.request, period, employeeId)).timesheet?.status)).toBe('invoiced');
@@ -669,8 +676,9 @@ test('[TEST-E2E-30] twee medewerkers met hetzelfde nummer-sjabloon in dezelfde p
     await uiLogout(page);
 
     await uiLogin(page, creds.admin.email, creds.admin.password);
-    await guiApprove(page, sub.employeeId);
+    await apiApprove(page.request, sub.period, sub.employeeId);
     const ts = (await readTimesheet(page.request, sub.period, sub.employeeId)).timesheet;
+    expect(String(ts?.status), `${emp.name} hoort goedgekeurd te zijn voor het afronden`).toBe('approved');
     await finaliseViaConceptUpload(page, sub.employeeId, sub.period, Number(ts?.id));
     const facturen = await (await page.request.get(`/server/api/invoices.php?period=${sub.period}`)).json();
     const factuur = ((facturen.invoices || facturen.items || []) as Array<Record<string, unknown>>)

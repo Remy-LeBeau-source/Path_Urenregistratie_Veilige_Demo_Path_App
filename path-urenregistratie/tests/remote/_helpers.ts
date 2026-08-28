@@ -325,6 +325,27 @@ export function currentPeriodKey(): string {
 }
 
 /**
+ * Keurt een ingediende urenstaat deterministisch goed via de API (de aanroeper
+ * moet met een beheerdersessie zijn ingelogd). Betrouwbaarder dan de GUI-knop
+ * voor data-integriteitscases die niet de goedkeur-UI testen.
+ */
+export async function apiApprove(request: APIRequestContext, period: string, employeeId: number): Promise<void> {
+  const cur = await (await request.get(
+    `/server/api/timesheets.php?period=${period}&employee_id=${employeeId}`)).json();
+  const status = String((cur.timesheet as Record<string, unknown> | undefined)?.status || '');
+  expect(status, `alleen een ingediende urenstaat kan worden goedgekeurd (was: ${status})`).toBe('submitted');
+  const token = await csrf(request);
+  const r = await request.post('/server/api/timesheets.php', {
+    headers: { 'X-CSRF-Token': token },
+    data: {
+      action: 'approve', period, employee_id: employeeId,
+      expected_version: Number((cur.timesheet as Record<string, unknown>).version || 1),
+    },
+  });
+  expect(r.ok(), `goedkeuren via API hoort te slagen: ${await r.text()}`).toBe(true);
+}
+
+/**
  * Maakt via de beheerder-API een verse administrator aan en zet met het
  * reset-token een wachtwoord. Zelfde patroon als createDemoEmployee.
  */
