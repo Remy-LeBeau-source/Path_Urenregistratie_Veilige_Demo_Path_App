@@ -12,13 +12,20 @@ Deze sectie gaat vóór alle oudere secties hieronder.
 - TEST/PROD-DB in VS Code lukt niet (TransIP ProxySQL weigert de DB-Client-driver); phpMyAdmin of
   SSH-shell gebruiken. SSH-sleutel staat op `C:\Users\gchli\.ssh\path_transip`, geregistreerd bij TransIP.
 
-### Vrijgegeven naar TEST deze sessie
+### Vrijgegeven naar TEST deze sessie (TEST staat op 0.9.146)
 - **0.9.142** — acceptatieconsole-PDF is de branded lay-out (Path-logo + kopbalk).
 - **0.9.143** — factuur-telefoonnummer `0646328283 → 0646328286` (+ migratie `026` voor gedeployde
   data); `{klant}` in het factuurnummer wordt de klantnaam (server `invoices.php` + browser
   `app.js`); client-default `INV-{jaar}-{maand}` gelijk aan de server.
 - **0.9.144** — acceptatiemail hangt de **echte** laatst-verzonden factuur-PDF aan wanneer die
   bestaat (`mail_acceptance_real_invoice_attachment()`), alleen met `ACCEPTATIETEST-`-naam.
+- **0.9.145** — `#install-banner-accept` had alleen `.button` (geen vulkleur) en was onzichtbaar op
+  de donkere balk; nu `button button-primary`. Kwam boven doordat de banner sinds `pwa-install.js`
+  weer werkt. `smoke-test.mjs` eist een gevulde knopvariant.
+- **0.9.146** — `mail_acceptance_real_invoice_attachment()` weigert nu het lege `test-reset.php`-
+  placeholder-PDF (`TESTDOCUMENT`-marker of `< 20 kB` en geen jsPDF); zonder echte factuur valt de
+  acceptatiemail terug op het gegenereerde branded NIET-BOEKEN-document. `smoke-test.mjs` bewaakt
+  de marker-check.
 - CI: `release-pipeline.yml` `Validate` en `Promote Test` draaien nu **4-way gesharded**
   (`strategy.matrix.shard`), ~50 → ~20 min, alle tests blijven draaien.
 - `smoke-test.mjs`-guard: geen `action:'lock'` zonder `concept_pdf_base64` in `tests/remote/`.
@@ -26,8 +33,8 @@ Deze sectie gaat vóór alle oudere secties hieronder.
 ### TEST-regressie (`tests/remote/`, aparte `playwright.test-remote.config.ts`, tegen de live site)
 - Charter in `tests/remote/TEST-CHARTER.md`; scenario's in
   `tests/playwright/features/live-test-regression.feature`.
-- Cases: SMOKE-01..04, E2E-01..08, 10..25, 27, 30 = **29 cases, 29/29 groen tegen 0.9.144**
-  (`--project=desktop`, 7,0 min). Commit `bbb58dd`.
+- Cases: SMOKE-01..04, E2E-01..08, 10..25, 27, 30, 31 = **30 cases, 30/30 groen tegen 0.9.146**
+  (`--project=desktop`, 6,6 min). Commit `8bc82e4`. E2E-31 = Marc + Brian via de afrond-flow.
 - Helpers in `tests/remote/_helpers.ts`: `createDemoEmployee` (echte klantnaam + eigen sjabloon),
   `createDemoAdmin`, `apiApprove` (deterministische API-goedkeuring — gebruiken voor data-
   integriteitscases i.p.v. de soms-race-gevoelige GUI-knop), `finaliseViaConceptUpload`,
