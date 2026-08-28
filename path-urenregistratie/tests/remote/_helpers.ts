@@ -244,3 +244,75 @@ export async function assertConceptInvoicePdf(page: Page, invoiceId: number): Pr
     .toMatch(/\/Producer\s*\(jsPDF/);
   expect(bytes.length, 'een branded jsPDF-factuur is fors groter dan de platte fallback').toBeGreaterThan(60_000);
 }
+
+export type NewEmployee = { id: number; email: string; password: string; name: string };
+
+/** Een minimale maar geldige PDF-bytesequence voor uploadtests. */
+export function validPdfBytes(note = 'charter'): Buffer {
+  return Buffer.from(`%PDF-1.4\n% ${note}\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF`, 'utf8');
+}
+
+/**
+ * Maakt op de TEST-site een verse medewerker aan via de beheerder-API, zet met
+ * het reset-token een wachtwoord en geeft de inloggegevens terug. Muteert
+ * gedeelde TEST-data; de aanroepende suite hoort in afterAll de baseline terug
+ * te zetten. Mail wordt tijdens het zetten van het wachtwoord gepauzeerd zodat
+ * request-reset.php het token in de response teruggeeft.
+ */
+export async function createDemoEmployee(
+  request: APIRequestContext,
+  creds: Creds,
+  opts: { customerTimesheet?: boolean; invoiceTemplate?: string; namePrefix?: string } = {},
+): Promise<NewEmployee> {
+  const uniek = `${Date.now()}`.slice(-8) + String(Math.floor(Math.random() * 900 + 100));
+  const naam = `${opts.namePrefix || 'TEST Charter'} ${uniek}`;
+  const email = `charter-${uniek}@example.invalid`;
+  const password = `Charter!${uniek}`;
+
+  await apiLogin(request, creds.admin.email, creds.admin.password);
+  const employee: Record<string, unknown> = {
+    name: naam, email, role: 'Consultant',
+    startDate: new Date().toISOString().slice(0, 10),
+    weeklyHours: 40, rate: 85,
+    client: `Klant ${uniek}`, broker: `Broker ${uniek}`,
+    brokerEmail: `broker-${uniek}@example.invalid`,
+  };
+  if (opts.customerTimesheet) employee.customerTimesheetExpected = true;
+  if (opts.invoiceTemplate) employee.invoiceTemplate = opts.invoiceTemplate;
+
+  const t = await csrf(request);
+  const maak = await request.post('/server/api/staff.php', {
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': t },
+    data: { action: 'upsert_employee', employee, mailRecipients: [], sendInvitation: false },
+  });
+  expect(maak.ok(), `medewerker aanmaken hoort te slagen: ${await maak.text()}`).toBe(true);
+  const id = Number((await maak.json()).employee_id || 0);
+  expect(id, 'de nieuwe medewerker hoort een id te krijgen').toBeGreaterThan(0);
+
+  await setTestMailDelivery(request, false);
+  try {
+    const rt = await csrf(request);
+    const reset = await request.post('/server/auth/request-reset.php', {
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': rt },
+      data: { email },
+    });
+    const token = String((await reset.json()).token || '');
+    expect(token, 'het reset-token hoort in de response te staan').toMatch(/^[a-f0-9]{64}$/);
+    const ct = await csrf(request);
+    const zet = await request.post('/server/auth/reset-password.php', {
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': ct },
+      data: { token, new_password: password },
+    });
+    expect(zet.ok(), `wachtwoord zetten hoort te slagen: ${await zet.text()}`).toBe(true);
+  } finally {
+    await setTestMailDelivery(request, true);
+  }
+  await apiLogout(request);
+  return { id, email, password, name: naam };
+}
+
+/** Het huidige periodesleutel JJJJ-MM op basis van de systeemklok. */
+export function currentPeriodKey(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}

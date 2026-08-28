@@ -26,6 +26,7 @@ config- en omgevingsfouten die de lokale suite niet ziet.
 | Robuustheid / "monkey" | TEST-E2E-19 (lange strings, dubbelklik-idempotentie, navigatie tijdens request) | §11 |
 | Data-integriteit / invarianten | TEST-E2E-20 (werkvoorraad: alle = Backoffice + medewerkers; maandnavigatie wijzigt niets) | §4 |
 | Exploratory | TEST-SMOKE-02 (alle views), TEST-E2E-08 (herinneringen), TEST-E2E-21 (mededelingen + instellingen) | hele app |
+| Gegevensstroom + neveneffect | TEST-E2E-22 (herinnering-planningslogica, server-wiring, voorbeeldmelding) | §8 |
 | Deploycontract | TEST-SMOKE-01 (versie/headers/health) | §2 |
 
 ## Cases
@@ -51,3 +52,4 @@ config- en omgevingsfouten die de lokale suite niet ziet.
 - **TEST-E2E-19** — robuustheid: zeer lange string in een tekstveld wordt begrensd of nette fout; dubbel indienen/goedkeuren is idempotent (geen dubbele factuur); wegnavigeren tijdens een write laat geen half-record achter.
 - **TEST-E2E-20** — werkvoorraad-invarianten: `alle acties = Backoffice + medewerkers`; na reset 12/7/5 verdeeld over juni/juli/augustus; maandnavigatie, render of rolwissel wijzigen de totalen niet.
 - **TEST-E2E-21** — exploratory: mededelingenscherm (beheerder plaatst/trekt in), instellingen-inhoudsmenu, elke primaire knop aanwezig.
+- **TEST-E2E-22** — herinneringen: de samenvatting `#reminder-schedule-summary` is een zuivere afleiding van de instellingen (beslissingstabel per regel + grenswaarden dag/tijd + enkelvoud/meervoud "regel"/"regels" + "Planning uit"); de klanturenstaat-tijd — de enige regel met een echte serverkolom — bereikt de server en overleeft herladen; "Voorbeeldmelding maken" laat de mailwachtrij ongemoeid en meldt dat expliciet. Het op de klok geplande afvuren valt buiten scope: dat vraagt een serverplanning die op TEST niet actief is.

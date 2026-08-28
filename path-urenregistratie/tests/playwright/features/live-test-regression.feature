@@ -188,3 +188,52 @@ Feature: Live TEST-regressie
     When de werkvoorraad-samenvatting wordt gelezen en daarna door de maanden wordt genavigeerd
     Then is alle acties gelijk aan de som van Backoffice- en medewerkeracties
     And wijzigt maandnavigatie de globale totalen niet
+
+  @happy @live
+  Scenario: [TEST-E2E-13] klanturenstaat-toestandsketen: indienen, opnieuw opvragen, herindienen, goedkeuren, brokerroute
+    # Testtechniek: Toestandsovergangstabel met negatieve overgangen op de klanturenstaat
+    # Aantoonbare Playwright-assertions in deze case: 19
+    Given een verse medewerker met een openstaande klanturenstaatperiode op de live TEST-site
+    When de medewerker indient, Backoffice de brokerroute vóór goedkeuring probeert, een nieuw document met reden vraagt, goedkeuren op resubmit probeert, de medewerker herindient en Backoffice goedkeurt en doorzet
+    Then worden beide ongeldige overgangen met 409 geweigerd zonder statuswijziging
+    And loopt de status via received, resubmit met bewaarde reden, opnieuw received, approved naar sent_to_broker
+    And blijft het document na een verse login inline als PDF bekijkbaar
+
+  @happy @live
+  Scenario: [TEST-E2E-15] uren-invoer EP/BVA: 0 en 24 door, negatief, boven 24 en niet-numeriek fail-closed
+    # Testtechniek: Equivalentieklassen en grenswaardenanalyse op de urendaginvoer
+    # Aantoonbare Playwright-assertions in deze case: 19
+    Given een verse medewerker met een concept-urenstaat op de live TEST-site
+    When achtereenvolgens 8, 0, 24, 24,01, min 1, 25 en een niet-numerieke waarde als daguren worden opgeslagen
+    Then worden 8, 0 en 24 uur geaccepteerd en persistent opgeslagen
+    And worden 24,01, negatief, boven 24 en niet-numeriek met een invalid-payload 400 geweigerd
+    And laat elke geweigerde invoer de opgeslagen uren ongewijzigd
+
+  @happy @live
+  Scenario: [TEST-E2E-19] robuustheid: te lange invoer begrensd, dubbele acties idempotent, gelijktijdige writes consistent
+    # Testtechniek: Robuustheids- en monkey-test met gelijktijdigheid en idempotentie
+    # Aantoonbare Playwright-assertions in deze case: 18
+    Given een verse medewerker en een beheerdersessie op de live TEST-site
+    When een toelichting van 5000 tekens, een naam van 20000 tekens, twee gelijktijdige factuur-locks, een dubbele goedkeuring en vier gelijktijdige concept-writes met dezelfde versie worden geprobeerd
+    Then geeft de server op de te lange invoer een nette 400 en nooit een 500, en blijft het geldige concept staan
+    And levert de dubbele lock precies één factuur op en wordt de tweede goedkeuring geweigerd
+    And wint precies één gelijktijdige write, worden de andere drie stale-version geweigerd en is de eindstaat consistent
+
+  @happy @live
+  Scenario: [TEST-E2E-21] exploratory: mededeling plaatsen, ontvangen, intrekken met historie; instellingenmenu compleet
+    # Testtechniek: Exploratory rondgang langs mededelingen en het instellingenscherm
+    # Aantoonbare Playwright-assertions in deze case: 18
+    Given een beheerder- en een medewerkersessie op de live TEST-site
+    When de beheerder een concept opslaat, een mededeling verzendt, die intrekt met reden en het concept verwijdert
+    Then ziet de ontvanger de mededeling in het eigen archief en blijft na intrekken de historie bestaan
+    And is het concept na verwijderen weg en toont het instellingenscherm het volledige inhoudsmenu met alle primaire knoppen
+
+  @happy @live
+  Scenario: [TEST-E2E-22] herinneringen: samenvatting volgt de instellingen, klanturenstaat-tijd bereikt de server, voorbeeld zonder neveneffect
+    # Testtechniek: Beslissingstabel en grenswaarden op de planningsafleiding plus neveneffectcontrole
+    # Aantoonbare Playwright-assertions in deze case: 14
+    Given het herinneringen-scherm van de beheerder op de live TEST-site
+    When de regels een voor een aan- en uitgezet worden en de klanturenstaat-tijd wordt opgeslagen en herladen
+    Then volgt de planningssamenvatting exact de ingestelde regels, dagen, tijden en het aantal regels
+    And komt de gewijzigde klanturenstaat-tijd via bootstrap terug na herladen
+    And zet Voorbeeldmelding maken geen mail klaar en meldt dat expliciet

@@ -1,7 +1,7 @@
 import { test, expect, type APIRequestContext } from '@playwright/test';
 import {
   demoCreds, csrf, apiLogin, apiLogout, resetSharedBaseline, setTestMailDelivery,
-  uiLogin, uiLogout, periodeKey, type Creds,
+  uiLogin, uiLogout, periodeKey, finaliseViaConceptUpload, type Creds,
 } from './_helpers';
 
 // Verbreding van de TEST-regressie: alle demo-medewerkers, een zelf aangemaakte
@@ -143,13 +143,14 @@ test('[TEST-E2E-07] nieuwe medewerker met eigen opdracht-opties: volledige keten
       r.url().includes('/server/api/timesheets.php') && r.request().method() === 'POST');
     await goedkeuren.click();
     await w;
+    // De client moet de factuur als "ready" kennen voordat downloadInvoicePdf
+    // een geldige jsPDF-conceptfactuur kan opbouwen.
+    await page.reload();
+    await expect(page.locator('#app-shell')).toBeVisible({ timeout: 20_000 });
 
-    const lockToken = await csrf(page.request);
-    const lock = await page.request.post('/server/api/invoices.php', {
-      headers: { 'X-CSRF-Token': lockToken },
-      data: { action: 'lock', timesheet_id: timesheetId },
-    });
-    expect(lock.ok(), `factuur maken hoort te slagen: ${await lock.text()}`).toBe(true);
+    // Afronden via het echte jsPDF-conceptpad: op TEST met echte mail mag hier
+    // nooit de platte serverfallback-PDF ontstaan.
+    await finaliseViaConceptUpload(page, employeeId, periode, timesheetId);
 
     const facturen = await (await page.request.get(`/server/api/invoices.php?period=${periode}`)).json();
     const factuur = ((facturen.invoices || facturen.items) as Array<Record<string, unknown>>)

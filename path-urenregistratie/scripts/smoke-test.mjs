@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { readFileSync as readFileSync_ } from "node:fs";
+import { readFileSync as readFileSync_, readdirSync as readdirSync_ } from "node:fs";
 import { JSDOM } from "jsdom";
 
 const root = new URL("../", import.meta.url);
@@ -1968,6 +1968,33 @@ assert(playwrightRunnerSrc.includes("url.hostname === 'localhost'") && playwrigh
 assert(playwrightDbBootstrapSrc.includes("namedTestDatabase") && playwrightDbBootstrapSrc.includes("isolatedCiDatabase") && playwrightDbBootstrapSrc.includes("Refusing destructive Playwright database bootstrap"), "De Playwright DB-bootstrap mag uitsluitend een herkenbare test- of geïsoleerde CI-database opnieuw opbouwen");
 assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("isolatedCiDatabase") && dbCrudSmokeSrc.includes("DB CRUD smoke is not allowed"), "De DB CRUD-smoke moet fail-closed buiten een test- of geïsoleerde CI-database");
 assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Playwright stage- en lokale env-bestanden mogen expliciete runner/CI-variabelen niet overschrijven");
+
+// De TEST-regressiesuite (tests/remote/) draait tegen de LIVE TEST-site MET echte
+// mail. Een factuur daar vergrendelen via invoices.php action:'lock' zonder de
+// jsPDF-conceptfactuur (concept_pdf_base64) laat de server terugvallen op de
+// platte simple_pdf-tekstfactuur -- en die gaat dan echt als bijlage de deur uit.
+// Elke lock in tests/remote/ moet daarom concept_pdf_base64 meesturen.
+{
+  const remoteDir = new URL("../tests/remote/", import.meta.url);
+  const remoteFiles = readdirSync_(remoteDir).filter((n) => n.endsWith(".ts"));
+  const lockZonderConcept = [];
+  for (const naam of remoteFiles) {
+    const src = readFileSync_(new URL(naam, remoteDir), "utf8");
+    const patroon = /action:\s*['"]lock['"]/g;
+    let m;
+    while ((m = patroon.exec(src)) !== null) {
+      const venster = src.slice(Math.max(0, m.index - 600), m.index + 600);
+      if (!venster.includes("concept_pdf_base64")) {
+        const regel = src.slice(0, m.index).split("\n").length;
+        lockZonderConcept.push(`${naam}:${regel}`);
+      }
+    }
+  }
+  assert(
+    lockZonderConcept.length === 0,
+    `tests/remote/ mag een factuur nooit vergrendelen zonder jsPDF-conceptfactuur (concept_pdf_base64); anders verstuurt TEST de platte fallback-PDF. Overtredingen: ${lockZonderConcept.join(", ")}`,
+  );
+}
 
 dom.window.close();
 console.log("Path v0.9.142 volledige smoke test: geslaagd");

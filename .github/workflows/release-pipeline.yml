@@ -96,6 +96,14 @@ jobs:
     needs: notify-team
     if: ${{ always() && (needs.notify-team.result == 'success' || needs.notify-team.result == 'skipped') }}
     runs-on: ubuntu-latest
+    # De Playwright-suite draait serieel (workers: 1, gedeelde DB + PHP-dev-server
+    # met de fingerprint-isolatiefixture). We versnellen zonder dekking te
+    # verliezen door de suite over vier parallelle jobs te shard-en: elke shard
+    # heeft zijn eigen mysql-service en php -S, en draait 1/4 van de tests.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     defaults:
       run:
         working-directory: path-urenregistratie
@@ -270,6 +278,8 @@ jobs:
         run: npm run build
 
       - name: Smoke check
+        # Statische controle: één keer per commit volstaat, niet op elke shard.
+        if: ${{ matrix.shard == 1 }}
         run: npm run check
 
       - name: Stop CI PHP server before Playwright
@@ -284,7 +294,7 @@ jobs:
           PATH_APP_BASE_URL: http://127.0.0.1:8000
           PLAYWRIGHT_ADMIN_EMAIL: gio@example.invalid
           PLAYWRIGHT_EMPLOYEE_EMAIL: stasjo@example.invalid
-        run: npm run test:e2e
+        run: npm run test:e2e -- --shard=${{ matrix.shard }}/4
 
       - name: Stop PHP server
         if: always()
@@ -441,6 +451,12 @@ jobs:
     needs: validate
     runs-on: ubuntu-latest
     environment: test
+    # Zelfde shard-aanpak als Validate: de volledige suite draait, verdeeld over
+    # vier parallelle jobs met elk een eigen mysql-service en php -S.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     defaults:
       run:
         working-directory: path-urenregistratie
@@ -542,6 +558,8 @@ jobs:
         run: npm run build
 
       - name: Smoke check
+        # Statische controle: één keer per commit volstaat, niet op elke shard.
+        if: ${{ matrix.shard == 1 }}
         run: npm run check
 
       - name: Resolve stage regression target
@@ -554,9 +572,13 @@ jobs:
             echo "PATH_APP_BASE_URL=${STAGE_PATH_APP_BASE_URL}" >> $GITHUB_ENV
             echo "PLAYWRIGHT_ADMIN_PASSWORD=${STAGE_PLAYWRIGHT_ADMIN_PASSWORD}" >> $GITHUB_ENV
             echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=${STAGE_PLAYWRIGHT_EMPLOYEE_PASSWORD}" >> $GITHUB_ENV
+            # Een externe stage-URL deelt één database: dan mogen de shards elkaar
+            # niet in de weg zitten, dus draait alleen shard 1 de volledige suite.
+            if [ "${{ matrix.shard }}" = "1" ]; then echo "E2E_SHARD_ARG=" >> $GITHUB_ENV; else echo "E2E_SHARD_ARG=SKIP" >> $GITHUB_ENV; fi
             echo "Using configured test stage target."
           else
             echo "PATH_APP_BASE_URL=http://127.0.0.1:8000" >> $GITHUB_ENV
+            echo "E2E_SHARD_ARG=--shard=${{ matrix.shard }}/4" >> $GITHUB_ENV
             echo "Using local fallback regression target for test."
           fi
 
@@ -569,7 +591,11 @@ jobs:
 
       - name: Run stage E2E
         run: |
-          npm run test:e2e
+          if [ "${E2E_SHARD_ARG:-}" = "SKIP" ]; then
+            echo "Externe stage-target: shard ${{ matrix.shard }} wordt overgeslagen (shard 1 draait de volledige suite)."
+            exit 0
+          fi
+          npm run test:e2e -- ${E2E_SHARD_ARG:-}
 
       - name: Stop fallback PHP server
         if: always()
