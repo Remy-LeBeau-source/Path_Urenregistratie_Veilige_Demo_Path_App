@@ -60,6 +60,17 @@ Deze sectie gaat vóór alle oudere secties hieronder.
   tweeregelige strook (`.is-strip`) die aansluit op de "Volgende actie"-kaart; metric-grid
   toont nog 2 kaarten (kaart 2+4 `display:none`, elementen blijven); procesmeter is een dunne
   strook. **Herstel-knop blijft altijd zichtbaar** (0.9.150 verborg 'm in de app-modus — teruggedraaid).
+- **0.9.152 — TERUGGEDRAAID.** Was een donkere "mix-look" voor het medewerker-dashboard;
+  Gio koos daarna toch het lichte compacte voorstel (`f3eb9179`). Revert `9b0a0bf`.
+- **0.9.153 — beheerdersdashboard 1-op-1 met het lichte compacte voorstel.** Herokaart +
+  losse "Volgende actie"-kaart → één `.dash-statusrow` (periode + klikbare tellingen + volgende
+  actie + knop). Metric-grid 4 → 2: kaarten "Goedgekeurd" en "Acties bij Backoffice" **echt uit
+  de HTML** (niet verstopt); `renderDashboard()` schrijft er niet meer naar. Procesmeter = dunne
+  strook. ~8 asserties in `smoke-test.mjs` / `dashboard.spec.ts` herschreven naar
+  `#hero-backoffice-count` / `#open-work-queue` / `.dash-statusrow` — functionele asserties
+  ongemoeid. Ook: `.htaccess` zet nu `Cache-Control: no-cache` op `index.html` / `sw.js` /
+  `manifest.webmanifest` zodat een deploy meteen zichtbaar is.
+  Medewerker-dashboard krijgt dezelfde behandeling in 0.9.154.
 - CI: `release-pipeline.yml` `Validate` en `Promote Test` draaien nu **4-way gesharded**
   (`strategy.matrix.shard`), ~50 → ~20 min, alle tests blijven draaien.
 - `smoke-test.mjs`-guard: geen `action:'lock'` zonder `concept_pdf_base64` in `tests/remote/`;

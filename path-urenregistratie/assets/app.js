@@ -4005,6 +4005,8 @@ function renderEmployeeDashboard() {
     else dashboardBadge.removeAttribute("aria-label");
   }
   document.querySelector("#employee-dashboard-greeting").textContent = greetingForNow() + ", " + firstName;
+  const employeeStatusPeriod = document.querySelector("#employee-status-period");
+  if (employeeStatusPeriod) employeeStatusPeriod.textContent = period.label;
   document.querySelector("#employee-dashboard-next").textContent = next;
   document.querySelector("#employee-dashboard-next-label").textContent = nextOpenAction ? "Volgende actie" : "Deze maand";
   document.querySelector("#employee-dashboard-next-meta").textContent = nextOpenMonth
@@ -4551,9 +4553,10 @@ function renderDashboardActions() {
   if (heroMonthsEl) heroMonthsEl.textContent = workCount ? adminTaskMonthEquation(tasks) : "Alles afgerond";
   const heroOwnersEl = document.querySelector("#hero-task-owners");
   if (heroOwnersEl) heroOwnersEl.textContent = workCount ? "Backoffice " + actionableCount + " + wacht op medewerkers " + waitingCount + " = " + workCount : "Backoffice 0 + wacht op medewerkers 0 = 0";
-  document.querySelector("#metric-actions").textContent = actionableCount;
-  document.querySelector("#metric-actions-note").textContent = waitingCount ? waitingCount + " " + (waitingCount === 1 ? "actie wacht" : "acties wachten") + " op medewerkers" : "Niets wacht op medewerkers";
-  document.querySelector("#metric-actions-link").textContent = workCount ? "Bekijk alle " + workCount + " acties" : "Alles afgerond";
+  // De losse "Acties bij Backoffice"-kaart is vervallen; deze getallen staan nu in
+  // de statusregel (#hero-backoffice-count / #hero-employee-count / #hero-task-total).
+  const statusPeriodEl = document.querySelector("#dashboard-status-period");
+  if (statusPeriodEl) statusPeriodEl.textContent = currentPeriod().label;
   document.querySelector("#workflow-open-count").textContent = "Deze maand: " + selectedTasks.length + " open " + (selectedTasks.length === 1 ? "actie" : "acties");
   document.querySelector("#workflow-open-breakdown").textContent = selectedActionableCount + " bij Backoffice · " + selectedWaitingCount + " wacht op medewerkers · waarvan " + selectedCustomerCount + " klanturensta" + (selectedCustomerCount === 1 ? "at" : "ten");
   renderDashboardNextAction(tasks);
@@ -5191,14 +5194,9 @@ function renderDashboard() {
       ? "Iedereen heeft " + period.label + " ingediend"
       : (dashboardRowsTotal - submitted) + " nog niet ingediend voor " + period.label;
   submittedNote.classList.toggle("positive", !isFuturePeriod && submitted === dashboardRowsTotal);
-  document.querySelector("#metric-approved").innerHTML = approved + " <small>/ " + dashboardRowsTotal + "</small>";
-  document.querySelector("#metric-approved-note").textContent = open ? open + " wachten op controle voor " + period.label : "Geen openstaande controles voor " + period.label;
+  // De "Goedgekeurd"-kaart is vervallen; openstaande controles staan als concrete
+  // regels in de werkvoorraad en in de teamtabel eronder.
   const allOpenCount = allOpenApprovals().length;
-  const approvedAction = document.querySelector("#metric-approved-action");
-  approvedAction.hidden = open === 0 && allOpenCount === 0;
-  approvedAction.textContent = open
-    ? "Open " + open + (open === 1 ? " controle" : " controles")
-    : "Bekijk alle openstaande · " + allOpenCount;
   document.querySelector("#metric-invoice-total").textContent = currency.format(invoiceTotal);
   renderApprovalNavBadge(allOpenCount);
 

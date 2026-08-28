@@ -459,6 +459,28 @@ kwam een pre-existing CSS-fout boven: `#install-banner-accept` had alleen
 `.button` (geen vulkleur) en viel weg op de donkere balk. De knop heeft nu
 `button button-primary`; `smoke-test.mjs` eist een gevulde knopvariant.
 
+# Beheerdersdashboard 1-op-1 met het compacte voorstel (0.9.153)
+
+Voorstel `dashboard-drie-looks` / de compacte mockup `f3eb9179`, nu écht doorgevoerd —
+decoratie-elementen zijn **verwijderd**, niet verstopt, en de tests die op die opmaak
+checkten zijn herschreven naar de nieuwe locatie (dezelfde garantie, ander element).
+
+- De hoge herokaart (`.hero-card`) én de losse "Volgende actie"-kaart zijn samengevoegd
+  tot één `.dash-statusrow`: links de periode + de tellingen als klikbare eigenaarsfilters
+  (`#hero-task-total` / `#hero-backoffice-count` / `#hero-employee-count` / `#open-work-queue`),
+  midden de eerstvolgende actie (`#dashboard-next-action-*`), rechts de primaire knop.
+- De metric-grid ging van 4 naar **2 kaarten**: "Uren ingediend" en "Facturen klaar".
+  De kaarten "Goedgekeurd" en "Acties bij Backoffice" zijn uit de HTML gehaald;
+  `renderDashboard()` schrijft niet meer naar `#metric-approved*` / `#metric-actions*`.
+  Openstaande controles staan als concrete regels in de werkvoorraad en in de teamtabel.
+- De procesmeter (`.workflow-panel`) is een dunne strook: kop + meter + vier fasen op
+  één regel, geen eigen kaartachtergrond meer.
+- Testmigratie: ~8 asserties in `smoke-test.mjs` en `dashboard.spec.ts` die
+  `#metric-actions` / `#metric-approved` / `.hero-card` lazen, checken nu
+  `#hero-backoffice-count` / `#hero-employee-count` / `#open-work-queue` / `.dash-statusrow`
+  of de `adminOpenTasks()`-afgeleide. Alle functionele asserties (klikken, tellingen,
+  rolafscherming) zijn ongemoeid en blijven groen.
+
 # Compacter beheerdersdashboard (0.9.150)
 
 Het dashboard toonde hetzelfde totaal aan open acties op vier plekken, elk met een

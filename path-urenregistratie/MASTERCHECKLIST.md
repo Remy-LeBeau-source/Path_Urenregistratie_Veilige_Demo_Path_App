@@ -1857,6 +1857,14 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
   tweeregelige strook die aansluit op de "Volgende actie"-kaart; metric-grid 4 → 2 zichtbare
   kaarten (2+4 `display:none`, elementen blijven); procesmeter dunne strook. Herstel-knop
   blijft altijd zichtbaar (0.9.150-verberging in app-modus teruggedraaid).
+- [x] 0.9.152 — donkere mix-look medewerker-dashboard; **teruggedraaid** (Gio koos het lichte
+  compacte voorstel). Revert `9b0a0bf`.
+- [x] 0.9.153 — **beheerdersdashboard 1-op-1 met het compacte voorstel**: herokaart + losse
+  "Volgende actie"-kaart → één `.dash-statusrow`; metric-grid 4 → 2 (kaarten "Goedgekeurd" en
+  "Acties bij Backoffice" écht uit de HTML); procesmeter dunne strook; `.htaccess` zet
+  `Cache-Control: no-cache` op `index.html`/`sw.js`/`manifest`. ~8 asserties herschreven,
+  functionele asserties ongemoeid. smoke + dashboard.spec (27) + business-workflows +
+  mobile-ui (36) groen. Medewerker-dashboard volgt in 0.9.154.
 - [x] FO/TO bijgewerkt; beide handoffs + auto-geheugen bijgewerkt.
 
 Telling fasestatussen:

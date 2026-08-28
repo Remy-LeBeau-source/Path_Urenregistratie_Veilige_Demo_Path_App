@@ -217,9 +217,8 @@ test('[DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad ni
         totalMatches: text('#hero-task-total') === `${total} open acties`,
         summaryMatch: text('#admin-task-summary').includes(`Backoffice kan ${backoffice} oppakken; ${employees} `),
         ownerBadgesMatch: text('#hero-backoffice-count') === String(backoffice) && text('#hero-employee-count') === String(employees),
-        metricMatches: text('#metric-actions') === String(backoffice),
         queueMatches: text('#open-work-queue') === `Bekijk alle ${total} open acties`,
-        staleTotalsAbsent: !['#hero-task-total', '#admin-task-summary', '#metric-actions']
+        staleTotalsAbsent: !['#hero-task-total', '#admin-task-summary', '#hero-backoffice-count', '#hero-employee-count']
           .some(selector => /(?:132|205)/.test(text(selector)))
       };
     })).toEqual({
@@ -227,7 +226,6 @@ test('[DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad ni
       totalMatches: true,
       summaryMatch: true,
       ownerBadgesMatch: true,
-      metricMatches: true,
       queueMatches: true,
       staleTotalsAbsent: true
     });
@@ -676,7 +674,7 @@ test('[DASH-H-012] GUI-smoke scheidt werkacties van medewerkers- en beheerdersac
 
   await test.step('And Dashboard opent bovenaan terwijl eigenaarbolletjes gericht naar hun werkvoorraad springen', async () => {
     await page.locator('button[data-view="dashboard"]').click();
-    await expect(page.locator('.hero-card')).toBeInViewport();
+    await expect(page.locator('#dashboard-next-action-card')).toBeInViewport();
     await page.locator('#hero-backoffice-filter').click();
     await expect(page.locator('#admin-task-panel')).toBeInViewport();
     await expect(page.locator('#admin-task-title')).toHaveText('Acties bij Backoffice per maand');

@@ -10,7 +10,7 @@ export class DashboardPage {
   }
 
   async assertEmployeeDashboardVisible(): Promise<void> {
-    await expect(this.page.locator('#employee-dashboard-greeting')).toBeVisible();
+    await expect(this.page.locator('#employee-dashboard-next')).toBeVisible();
     await expect(this.page.locator('button[data-view="approvals"]')).toBeHidden();
     await expect(this.page.locator('button[data-view="announcements"]')).toBeHidden();
   }

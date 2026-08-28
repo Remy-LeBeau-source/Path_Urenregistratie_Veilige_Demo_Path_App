@@ -20,4 +20,11 @@ Options -Indexes
   Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; object-src 'none'; img-src 'self' data: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self' blob:"
   # Prepared only. Enable after HTTPS has been proven in production:
   # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+  # De app-shell en de service worker moeten elke keer bij de server revalideren,
+  # zodat een nieuwe deploy meteen zichtbaar is zonder harde refresh. De assets
+  # zelf zijn ge-cachebust met ?v=<versie>, dus die mogen wel gecachet blijven.
+  <FilesMatch "^(index\.html|sw\.js|manifest\.webmanifest)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
 </IfModule>
