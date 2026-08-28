@@ -19,15 +19,15 @@ config- en omgevingsfouten die de lokale suite niet ziet.
 |---|---|---|
 | Equivalentieklassen (EP) | TEST-E2E-14 (uploadtypen), TEST-E2E-15 (uren-invoer) | §5, §6 |
 | Grenswaardenanalyse (BVA) | TEST-E2E-15 (0 / 24 / <0 / >24), TEST-E2E-14 (2 MB-grens) | §5, §6 |
-| Beslissingstabel | TEST-E2E-16 (rol × actie), TEST-E2E-17 (mailroutering × bijlage) | §3, §7 |
+| Beslissingstabel | TEST-E2E-16 (rol × actie), TEST-E2E-17 (mailroutering × bijlage), TEST-E2E-25 (Overig-kanaal × Factuur meesturen) | §3, §7 |
 | Toestandsovergang | TEST-E2E-12 (urenstaat-keten), TEST-E2E-13 (klanturenstaat-keten), TEST-E2E-24 (accountstatus), TEST-E2E-27 (heropen goedgekeurd) | §5, §6 |
 | Use-case / end-to-end | TEST-E2E-04, TEST-E2E-10, TEST-E2E-11, TEST-E2E-23 (verse beheerder), TEST-E2E-31 (Marc + Brian afronden) | §7, §10 |
-| Negatieve test / error guessing | TEST-E2E-18 (CSRF, XSS, stale version, injectie) | §11 |
+| Negatieve test / error guessing | TEST-E2E-18 (CSRF, XSS, stale version, injectie), TEST-E2E-28 (directe objectverwijzing tussen medewerkers) | §11 |
 | Robuustheid / "monkey" | TEST-E2E-19 (lange strings, dubbelklik-idempotentie, navigatie tijdens request) | §11 |
 | Data-integriteit / invarianten | TEST-E2E-20 (werkvoorraad-invariant), TEST-E2E-30 (factuurnummer-uniciteit bij gelijk sjabloon) | §4, §7 |
 | Exploratory | TEST-SMOKE-02 (alle views), TEST-E2E-08 (herinneringen), TEST-E2E-21 (mededelingen + instellingen) | hele app |
-| Gegevensstroom + neveneffect | TEST-E2E-22 (herinnering-planningslogica, server-wiring, voorbeeldmelding) | §8 |
-| Deploycontract | TEST-SMOKE-01 (versie/headers/health) | §2 |
+| Gegevensstroom + neveneffect | TEST-E2E-22 (herinnering-planningslogica, server-wiring, voorbeeldmelding), TEST-E2E-29 (wachtwoord-reset over de echte SMTP-weg) | §8 |
+| Deploycontract | TEST-SMOKE-01 (versie/headers/health), TEST-E2E-26 (CSP/securityheaders + PWA-assets + SW-registratie) | §2 |
 
 ## Cases
 
@@ -58,3 +58,7 @@ config- en omgevingsfouten die de lokale suite niet ziet.
 - **TEST-E2E-27** — heropen-beslissingstabel: een goedgekeurde urenstaat zónder factuur mag terug naar correctie; zodra er een factuur van is, wordt heropenen met 409 (`timesheet-invoiced`) geweigerd, status ongewijzigd.
 - **TEST-E2E-30** — factuurnummer-invariant: twee medewerkers met exact hetzelfde nummer-sjabloon in dezelfde periode krijgen elk een uniek nummer; het tweede krijgt een numerieke suffix, nooit een dubbel nummer.
 - **TEST-E2E-31** — Marc en Brian (nog niet via afronden getest): uren indienen → goedkeuren → factuur via de GUI afronden; elke definitieve factuur is de branded jsPDF-conceptfactuur zonder conceptwatermerk, met een per-opdracht factuurnummer.
+- **TEST-E2E-25** — Overig-kanaal × *Factuur meesturen*: een medewerker krijgt twee ontvangers van het type Overig, bij één staat *Factuur meesturen* aan en bij één uit. Na de volledige GUI-afronding heeft de aangevinkte route de factuur-PDF als bijlage (`attachment_policy` bevat `invoice`) en de uitgevinkte geen (`none`); de salarisadministratie houdt haar vaste uitzondering. Lokaal gedekt door `E2E-H-012`; deze case dekt het op de echte deploy.
+- **TEST-E2E-26** — deploycontract voor security en PWA: de CSP bevat `script-src 'self'` **zonder** `unsafe-inline` en heeft `frame-ancestors 'none'`, `object-src 'none'` en `worker-src 'self'`; `X-Frame-Options`, `Referrer-Policy` en `Permissions-Policy` staan; `sw.js` (JavaScript-content-type), `manifest.webmanifest` (valide JSON met naam/start_url/icons) en `assets/icon-192.png` (afbeelding) zijn ophaalbaar; in de browser registreert de service worker zich zonder CSP-overtredingen. Vangt precies de klasse fout waarbij de CSP het inline SW-script stil blokkeerde.
+- **TEST-E2E-28** — directe objectverwijzing tussen medewerkers: als medewerker Stasjo elke poging om de uren, klanturenstaat, klanturenstaat-download, goedkeuring of het auditlog van een **andere** medewerker te raken → 401/403 (download 404 mag ook), en de download geeft nooit PDF-bytes terug. Bewijst dat de autorisatie per object op de live host geldt, niet alleen dat de navigatie verborgen is.
+- **TEST-E2E-29** — wachtwoord-reset over de echte verzendweg: met maillevering aan (de normale TEST-stand, géén pauze zoals E2E-02) levert een publieke *wachtwoord vergeten*-aanvraag een `password_reset`-rij op die status `sent` bereikt (niet blijft hangen op `queued`, niet `failed`), met de oorspronkelijke ontvanger auditbaar in de rij en zonder token in de HTTP-response.

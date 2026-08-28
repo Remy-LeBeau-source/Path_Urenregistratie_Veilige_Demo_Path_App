@@ -209,3 +209,62 @@ test('[TEST-E2E-08] herinneringen: instelling bewaren en een veilige voorbeeldme
     .toBe(Number(queueVoor.count ?? (queueVoor.items || []).length));
   await uiLogout(page);
 });
+
+test('[TEST-E2E-28] een medewerker komt niet bij de gegevens of acties van een andere medewerker', async ({ request }) => {
+  test.setTimeout(120_000);
+  const periode = '2026-08';
+
+  // Given: de id's van een andere demo-medewerker (Marc), opgehaald als beheerder.
+  await apiLogin(request, creds.admin.email, creds.admin.password);
+  const boot = await (await request.get('/server/api/bootstrap.php')).json();
+  const marcUser = (boot.users as Array<Record<string, unknown>>)
+    .find((u) => String(u.email).toLowerCase() === 'marc@example.invalid');
+  const marc = (boot.employees as Array<Record<string, unknown>>)
+    .find((e) => Number(e.user_id) === Number(marcUser?.id));
+  expect(marc, 'de demo-medewerker Marc hoort te bestaan').toBeTruthy();
+  const marcId = Number(marc!.id);
+  expect(marcId).toBeGreaterThan(0);
+  // Een factuur van Marc uit de demo-seed, voor de download-poging.
+  let marcFactuurId = 0;
+  for (const p of ['2026-06', '2026-07', '2026-08']) {
+    const lijst = await (await request.get(`/server/api/invoices.php?period=${p}`)).json();
+    const gevonden = ((lijst.items || lijst.invoices || []) as Array<Record<string, unknown>>)
+      .find((i) => String(i.employee_name) === String(marc!.full_name));
+    if (gevonden) { marcFactuurId = Number(gevonden.id); break; }
+  }
+  expect(marcFactuurId, 'er hoort een demo-factuur van Marc te zijn').toBeGreaterThan(0);
+  await apiLogout(request);
+
+  // When: Stasjo (een andere medewerker) probeert Marcs gegevens te lezen en acties uit te voeren.
+  await apiLogin(request, creds.employee.email, creds.employee.password);
+  const token = await csrf(request);
+
+  const urenLezen = await request.get(
+    `/server/api/timesheets.php?period=${periode}&employee_id=${marcId}`);
+  const klantLezen = await request.get(
+    `/server/api/customer-timesheets.php?period=${periode}&employee_id=${marcId}`);
+  const klantDownload = await request.get(
+    `/server/api/customer-timesheets.php?action=download&period=${periode}&employee_id=${marcId}&assignment_id=1`);
+  const goedkeuren = await request.post('/server/api/timesheets.php', {
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
+    data: { action: 'approve', period: periode, employee_id: marcId, expected_version: 1 },
+  });
+  const auditLezen = await request.get('/server/api/audit-log.php?limit=10');
+  const factuurDownload = await request.get(
+    `/server/api/invoices.php?action=download&invoice_id=${marcFactuurId}`);
+  await apiLogout(request);
+
+  // Then: elke poging wordt geweigerd; geen enkele lekt Marcs gegevens.
+  expect([401, 403], `uren van een ander lezen: ${urenLezen.status()}`).toContain(urenLezen.status());
+  expect([401, 403], `klanturenstaat van een ander lezen: ${klantLezen.status()}`).toContain(klantLezen.status());
+  expect([401, 403, 404], `klanturenstaat van een ander downloaden: ${klantDownload.status()}`)
+    .toContain(klantDownload.status());
+  expect(klantDownload.headers()['content-type'] || '', 'de download mag geen PDF teruggeven')
+    .not.toMatch(/application\/pdf/);
+  expect([401, 403], `uren van een ander goedkeuren: ${goedkeuren.status()}`).toContain(goedkeuren.status());
+  expect([401, 403], `het auditlog is beheerder-only: ${auditLezen.status()}`).toContain(auditLezen.status());
+  expect([401, 403], `de factuur-PDF van een ander downloaden: ${factuurDownload.status()}`)
+    .toContain(factuurDownload.status());
+  expect(factuurDownload.headers()['content-type'] || '', 'de factuur-download mag geen PDF teruggeven')
+    .not.toMatch(/application\/pdf/);
+});

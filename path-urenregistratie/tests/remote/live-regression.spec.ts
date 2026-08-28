@@ -339,3 +339,87 @@ test('[TEST-E2E-05] acceptatieconsole verstuurt de vijf scenario-mails naar de s
   }
   await apiLogout(request);
 });
+
+test('[TEST-E2E-29] een wachtwoord-vergeten-aanvraag wordt op de live SMTP-weg echt verstuurd', async ({ request }) => {
+  test.setTimeout(120_000);
+  // Bewust een ander demo-account dan E2E-02 (marc) i.v.m. de 3-per-15-min-grens.
+  const doel = 'shawn@example.invalid';
+
+  // Given: maillevering staat aan (de normale TEST-stand). Geen pauze zoals E2E-02:
+  // deze case toetst juist dat de mail de echte verzendweg naar de sink haalt en
+  // niet als "queued" blijft hangen -- dat gebeurde eerder op TEST.
+  await apiLogin(request, creds.admin.email, creds.admin.password);
+  await setTestMailDelivery(request, true);
+  const voor = await (await request.get('/server/api/email-queue.php?limit=100')).json();
+  const resetVoor = ((voor.items || []) as Array<Record<string, unknown>>)
+    .filter((d) => String(d.channel) === 'password_reset').length;
+  await apiLogout(request);
+
+  // When: een publieke wachtwoord-vergeten-aanvraag.
+  const r = await request.post('/server/auth/request-reset.php', {
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': await csrf(request) },
+    data: { email: doel },
+  });
+  expect(r.status(), 'de resetaanvraag hoort te slagen (rate limit: max 3 per 15 min)').toBe(200);
+  expect(String((await r.json()).token || ''),
+    'met echte levering hoort het token niet in de response te staan, alleen in de mail').toBe('');
+
+  // Then: er is een nieuwe password_reset-levering, hij gaat naar het echte adres
+  // (auditbaar), eindigt niet als "failed" en bereikt "sent".
+  await apiLogin(request, creds.admin.email, creds.admin.password);
+  let rij: Record<string, unknown> | undefined;
+  await expect(async () => {
+    const na = await (await request.get('/server/api/email-queue.php?limit=100')).json();
+    const rijen = ((na.items || []) as Array<Record<string, unknown>>)
+      .filter((d) => String(d.channel) === 'password_reset');
+    expect(rijen.length, 'er hoort een nieuwe password_reset-mail bij te zijn gekomen')
+      .toBeGreaterThan(resetVoor);
+    rij = rijen[0];
+    expect(String(rij!.status), `de resetmail mag niet als mislukt eindigen (was: ${String(rij!.status)})`)
+      .not.toBe('failed');
+    expect(String(rij!.status), `de resetmail hoort verstuurd te worden, niet in de wachtrij te blijven hangen (was: ${String(rij!.status)})`)
+      .toBe('sent');
+  }).toPass({ timeout: 25_000, intervals: [1_000, 2_000, 3_000] });
+
+  expect(String(rij!.recipient_email), 'de oorspronkelijke ontvanger blijft auditbaar in de rij')
+    .toBe(doel);
+  expect(String(rij!.subject_snapshot).toLowerCase(),
+    'het onderwerp hoort over het wachtwoord of toegang te gaan').toMatch(/wachtwoord|toegang|reset/);
+  await apiLogout(request);
+});
+
+test('[TEST-E2E-33] de wachtwoord-reset-drempel stopt de vierde aanvraag binnen het venster', async ({ request }) => {
+  test.setTimeout(120_000);
+  // Ander demo-account dan E2E-02 (marc) en E2E-29 (shawn) i.v.m. de 3-per-15-min-grens.
+  // De baseline-reset in afterAll wist password_reset_tokens, dus per volledige run
+  // begint de teller weer op nul; we meten het aantal nieuwe leveringen als delta.
+  const doel = 'brian@example.invalid';
+
+  await apiLogin(request, creds.admin.email, creds.admin.password);
+  await setTestMailDelivery(request, true);
+  const tel = async () => {
+    const q = await (await request.get('/server/api/email-queue.php?limit=100')).json();
+    return ((q.items || []) as Array<Record<string, unknown>>)
+      .filter((d) => String(d.channel) === 'password_reset' && String(d.recipient_email) === doel).length;
+  };
+  const voor = await tel();
+  await apiLogout(request);
+
+  // Vier aanvragen achter elkaar; de drempel is 3 per 15 minuten.
+  for (let i = 0; i < 4; i++) {
+    const r = await request.post('/server/auth/request-reset.php', {
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': await csrf(request) },
+      data: { email: doel },
+    });
+    expect(r.status(), `aanvraag ${i + 1} hoort 200 te geven (anti-enumeratie, ook als geweigerd)`).toBe(200);
+  }
+
+  await apiLogin(request, creds.admin.email, creds.admin.password);
+  let na = 0;
+  await expect(async () => {
+    na = await tel();
+    expect(na, 'de eerste drie aanvragen horen verwerkt te zijn').toBeGreaterThan(voor);
+  }).toPass({ timeout: 20_000, intervals: [1_000, 2_000, 3_000] });
+  expect(na - voor, 'de vierde aanvraag binnen het venster mag geen extra mail opleveren').toBe(3);
+  await apiLogout(request);
+});

@@ -368,6 +368,53 @@ test('[TEST-E2E-21] exploratory: mededeling plaatsen, ontvangen, intrekken met h
 });
 
 // ===========================================================================
+// TEST-E2E-34 — Stored-XSS-tripwire op mededelingen
+// ---------------------------------------------------------------------------
+// Titel en bericht van een mededeling worden aan elke geadresseerde medewerker
+// getoond. De frontend escapet ze (escapeHtml) en de CSP verbiedt inline script;
+// deze case bewaakt op de echte deploy dat scriptinhoud als tekst blijft staan
+// en niets uitvoert.
+// ===========================================================================
+test('[TEST-E2E-34] een mededeling met scriptinhoud belandt als tekst bij de medewerker, niet als code', async ({ page, request }) => {
+  test.setTimeout(120_000);
+  const stempel = Date.now().toString().slice(-7);
+  const nep = `<script>window.__xss34=1</script><img src=x onerror="window.__xss34=1">`;
+
+  await apiLogin(request, creds.admin.email, creds.admin.password);
+  const boot = await (await request.get('/server/api/bootstrap.php')).json();
+  const stasjoUser = (boot.users as Array<Record<string, unknown>>)
+    .find((u) => String(u.email) === 'stasjo@example.invalid');
+  const ontvangerId = Number(stasjoUser?.id || 0);
+  expect(ontvangerId, 'de demo-medewerker hoort een user_id te hebben').toBeGreaterThan(0);
+
+  const verzonden = await request.post('/server/api/announcements.php', {
+    headers: { 'X-CSRF-Token': await csrf(request) },
+    data: {
+      action: 'send',
+      title: `XSS ${stempel} ${nep}`,
+      message: `Bericht ${stempel} ${nep}`,
+      recipient_user_ids: [ontvangerId],
+      audience_label: '1 medewerker',
+    },
+  });
+  expect(verzonden.status(), `verzenden: ${await verzonden.text()}`).toBe(200);
+  await apiLogout(request);
+
+  await uiLogin(page, 'stasjo@example.invalid', creds.employee.password);
+  await page.locator('button[data-view="employee-announcements"]:visible').first().click();
+  await expect(page.locator('#view-employee-announcements')).toHaveClass(/is-active/);
+  const lijst = page.locator('#employee-announcement-list');
+  await expect(lijst).toContainText(`Bericht ${stempel}`);
+  // De payload hoort zichtbaar als tekst te staan, niet uitgevoerd te zijn.
+  await expect(lijst, 'de scripttekst hoort letterlijk zichtbaar te zijn').toContainText('<script>');
+  expect(await page.evaluate(() => (window as unknown as { __xss34?: number }).__xss34),
+    'er mag geen script uit de mededeling zijn uitgevoerd').toBeUndefined();
+  expect(await lijst.locator('img[src="x"]').count(),
+    'de img-payload mag geen echt element in de DOM worden').toBe(0);
+  await uiLogout(page);
+});
+
+// ===========================================================================
 // TEST-E2E-22 — Herinneringen: planningslogica, server-wiring, veilige voorbeeldmelding
 // ---------------------------------------------------------------------------
 // Het daadwerkelijke, op de klok geplande afvuren vraagt een serverplanning die

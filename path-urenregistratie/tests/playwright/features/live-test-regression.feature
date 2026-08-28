@@ -147,11 +147,11 @@ Feature: Live TEST-regressie
   @happy @live
   Scenario: [TEST-E2E-14] klanturenstaat-upload: geldige typen door, ongeldige fail-closed, concept ongewijzigd
     # Testtechniek: Equivalentieklassen en grenswaarden op bestandsupload
-    # Aantoonbare Playwright-assertions in deze case: 9
+    # Aantoonbare Playwright-assertions in deze case: 12
     Given een medewerker met een openstaande klanturenstaatperiode
-    When een geldige PDF, een nep-PDF, een corrupte afbeelding, een te groot bestand en een geldige JPG worden geupload
+    When een geldige PDF, een nep-PDF, een corrupte afbeelding, een te groot bestand, een geldige JPG en een PNG met enorme afmetingen worden geupload
     Then worden geldige typen geaccepteerd en als PDF opgeslagen
-    And worden de nep-PDF, de corrupte afbeelding en het te grote bestand fail-closed geweigerd terwijl het bestaande concept blijft
+    And worden de nep-PDF, de corrupte afbeelding, het te grote bestand en de PNG boven de afmetingcap fail-closed geweigerd terwijl het bestaande concept blijft
 
   @happy @live
   Scenario: [TEST-E2E-16] rol-beslissingstabel: medewerker geweigerd op beheeracties, beheerder toegestaan
@@ -282,3 +282,66 @@ Feature: Live TEST-regressie
     When elk uren indient, de beheerder goedkeurt en de factuur via de GUI afrondt
     Then is elke definitieve factuur de branded jsPDF-conceptfactuur zonder conceptwatermerk
     And volgt elk factuurnummer de per-opdracht nummering
+
+  @happy @live
+  Scenario: [TEST-E2E-25] Overig-ontvanger: het vinkje Factuur meesturen bepaalt of de bijlage meegaat
+    # Testtechniek: Beslissingstabel op de include-invoice-pdf-toggle van het Overig-kanaal
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given een medewerker met twee Overig-ontvangers op de live TEST-site, bij één Factuur meesturen aan en bij één uit
+    When de volledige factuurketen via de GUI wordt afgerond
+    Then krijgt de aangevinkte Overig-ontvanger de factuur-PDF als bijlage en de uitgevinkte geen bijlage
+    And houdt de salarisadministratie haar vaste uitzondering zonder bijlage
+
+  @happy @live
+  Scenario: [TEST-E2E-26] de deploy levert de veiligheidsheaders en PWA-assets die de app nodig heeft
+    # Testtechniek: Deploycontract op securityheaders, CSP en service-worker-registratie
+    # Aantoonbare Playwright-assertions in deze case: 15
+    Given de gedeployde TEST-site
+    When de responseheaders, sw.js, het manifest en een icoon worden opgevraagd en de pagina in de browser laadt
+    Then bevat de CSP script-src 'self' zonder unsafe-inline en staan frame-ancestors, object-src en worker-src goed
+    And zijn sw.js, het manifest en het icoon ophaalbaar en registreert de service worker zich zonder CSP-overtredingen
+
+  @happy @live
+  Scenario: [TEST-E2E-28] een medewerker komt niet bij de gegevens of acties van een andere medewerker
+    # Testtechniek: Negatieve test op directe objectverwijzingen en rolafscherming
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given de ingelogde medewerker Stasjo en de id-s en een factuur van een andere medewerker op de live TEST-site
+    When Stasjo de uren, klanturenstaat, klanturenstaat-download, goedkeuring, het auditlog en de factuur-PDF van die ander probeert te raken
+    Then wordt elke poging met 401, 403 of 404 geweigerd
+    And geven de klanturenstaat-download en de factuur-download geen PDF terug
+
+  @happy @live
+  Scenario: [TEST-E2E-29] een wachtwoord-vergeten-aanvraag wordt op de live SMTP-weg echt verstuurd
+    # Testtechniek: Gegevensstroom over de echte mailverzendweg met statuscontrole
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given maillevering staat aan op de live TEST-site
+    When een publieke wachtwoord-vergeten-aanvraag voor een demo-account wordt gedaan
+    Then komt er een nieuwe password_reset-levering bij met status sent en zonder token in de response
+    And blijft de oorspronkelijke ontvanger auditbaar in de wachtrij
+
+  @happy @live
+  Scenario: [TEST-E2E-32] de live sessie is een veilige cookie en valt na uitloggen echt om
+    # Testtechniek: Deploycontract op sessiecookie-attributen en sessielevenscyclus
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given de gedeployde TEST-site zonder sessie
+    When er wordt ingelogd, de sessiecookie wordt bekeken en daarna uitgelogd
+    Then is een beschermd endpoint zonder sessie dicht en heeft de sessiecookie HttpOnly, SameSite=Lax en Secure
+    And is hetzelfde endpoint na uitloggen weer dicht
+
+  @happy @live
+  Scenario: [TEST-E2E-33] de wachtwoord-reset-drempel stopt de vierde aanvraag binnen het venster
+    # Testtechniek: Grenswaardenanalyse op de reset-throttle met neveneffectcontrole
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given een demo-account zonder recente reset-aanvragen op de live TEST-site
+    When vier wachtwoord-vergeten-aanvragen achter elkaar worden gedaan
+    Then geeft elke aanvraag 200 tegen enumeratie
+    And leveren precies drie ervan een mail op en de vierde niet
+
+  @happy @live
+  Scenario: [TEST-E2E-34] een mededeling met scriptinhoud belandt als tekst bij de medewerker, niet als code
+    # Testtechniek: Negatieve test op stored-XSS in mededelingen tegen de echte deploy
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given de beheerder verstuurt een mededeling met script- en img-payload naar een medewerker
+    When die medewerker inlogt en het mededelingen-archief opent
+    Then staat de payload zichtbaar als tekst en is er geen script uitgevoerd
+    And is er geen echt img-element uit de payload in de DOM gekomen

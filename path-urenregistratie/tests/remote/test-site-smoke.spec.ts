@@ -54,6 +54,88 @@ test('[TEST-SMOKE-01] de TEST-site draait de verwachte versie met veilige header
   expect(headers['content-security-policy'] || '', 'er hoort een CSP te staan').toContain("default-src 'self'");
 });
 
+test('[TEST-E2E-26] de deploy levert de veiligheidsheaders en PWA-assets die de app nodig heeft', async ({ page, request }) => {
+  const index = await request.get('/index.html');
+  const h = index.headers();
+  const csp = h['content-security-policy'] || '';
+
+  // De inline SW-registratie werd ooit stil door `script-src 'self'` geblokkeerd;
+  // de service worker registreerde nooit en de installbanner deed niets. Deze
+  // case bewaakt precies dat contract op de echte deploy.
+  expect(csp, "CSP hoort script-src 'self' te bevatten").toMatch(/script-src[^;]*'self'/);
+  expect(csp, 'script-src mag geen unsafe-inline toestaan').not.toMatch(/script-src[^;]*unsafe-inline/);
+  expect(csp, "CSP hoort frame-ancestors 'none' te bevatten").toContain("frame-ancestors 'none'");
+  expect(csp, "CSP hoort object-src 'none' te bevatten").toContain("object-src 'none'");
+  expect(csp, 'CSP hoort worker-src voor de service worker te bevatten').toMatch(/worker-src[^;]*'self'/);
+  expect(h['x-frame-options'] || '', 'X-Frame-Options hoort DENY te zijn').toMatch(/DENY/i);
+  expect(h['referrer-policy'] || '', 'er hoort een Referrer-Policy te staan').not.toBe('');
+  expect(h['permissions-policy'] || '', 'er hoort een Permissions-Policy te staan').toContain('geolocation=()');
+
+  // Service worker en manifest moeten ophaalbaar zijn met bruikbare inhoud.
+  const sw = await request.get('/sw.js');
+  expect(sw.status(), 'sw.js hoort 200 te geven').toBe(200);
+  expect(sw.headers()['content-type'] || '', 'sw.js hoort als JavaScript geserveerd te worden')
+    .toMatch(/javascript|ecmascript/i);
+
+  const manifest = await request.get('/manifest.webmanifest');
+  expect(manifest.status(), 'manifest.webmanifest hoort 200 te geven').toBe(200);
+  const mf = JSON.parse(await manifest.text());
+  expect(mf.name, 'het manifest hoort een naam te hebben').toBeTruthy();
+  expect(mf.start_url, 'het manifest hoort een start_url te hebben').toBeTruthy();
+  expect(Array.isArray(mf.icons) && mf.icons.length, 'het manifest hoort iconen te noemen').toBeTruthy();
+
+  const icon = await request.get('/assets/icon-192.png');
+  expect(icon.status(), 'het 192px-icoon hoort te bestaan').toBe(200);
+  expect(icon.headers()['content-type'] || '', 'het icoon hoort een afbeelding te zijn').toMatch(/image\//);
+
+  // In de browser hoort de service worker zich echt te registreren, zonder CSP-overtredingen.
+  const cspFouten: string[] = [];
+  page.on('console', (m) => {
+    if (m.type() === 'error' && /content security policy|refused to (load|execute|connect|apply)/i.test(m.text())) {
+      cspFouten.push(m.text());
+    }
+  });
+  await page.goto('/');
+  await expect(page.locator('#login-screen')).toBeVisible();
+  await expect(async () => {
+    const status = await page.evaluate(async () => {
+      if (!('serviceWorker' in navigator)) return 'geen-serviceworker-api';
+      const reg = await navigator.serviceWorker.getRegistration().catch(() => null);
+      return reg ? 'geregistreerd' : 'geen-registratie';
+    });
+    expect(status, 'de service worker hoort zich op de live site te registreren').toBe('geregistreerd');
+  }).toPass({ timeout: 15_000, intervals: [500, 1_000, 2_000] });
+  expect(cspFouten, `CSP-overtredingen op de live site:\n${cspFouten.join('\n')}`).toEqual([]);
+});
+
+test('[TEST-E2E-32] de live sessie is een veilige cookie en valt na uitloggen echt om', async ({ request }) => {
+  // Ongeauthenticeerd hoort een beschermd endpoint dicht te zijn.
+  const zonder = await request.get('/server/api/bootstrap.php');
+  expect([401, 403], `zonder sessie hoort bootstrap dicht te zijn: ${zonder.status()}`).toContain(zonder.status());
+
+  // Inloggen zet een sessiecookie met veilige vlaggen (HTTPS -> Secure).
+  const csrfToken = String((await (await request.get('/server/auth/csrf.php')).json()).csrf_token || '');
+  const login = await request.post('/server/auth/login.php', {
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+    data: { email: ADMIN.email, password: ADMIN.password },
+  });
+  expect(login.ok(), `inloggen hoort te slagen: ${await login.text()}`).toBe(true);
+  const setCookies = login.headersArray()
+    .filter((h) => h.name.toLowerCase() === 'set-cookie').map((h) => h.value);
+  const sessie = setCookies.find((c) => /sess|phpsessid|path/i.test(c)) || setCookies[0] || '';
+  expect(sessie, 'inloggen hoort een sessiecookie te zetten').not.toBe('');
+  expect(sessie, 'de sessiecookie hoort HttpOnly te zijn').toMatch(/HttpOnly/i);
+  expect(sessie, 'de sessiecookie hoort SameSite=Lax te zijn').toMatch(/SameSite=Lax/i);
+  expect(sessie, 'op de HTTPS-site hoort de sessiecookie Secure te zijn').toMatch(/;\s*Secure/i);
+
+  // Na uitloggen is dezelfde context geen sessie meer.
+  const uitToken = String((await (await request.get('/server/auth/csrf.php')).json()).csrf_token || '');
+  const uit = await request.post('/server/auth/logout.php', { headers: { 'X-CSRF-Token': uitToken } });
+  expect(uit.ok(), 'uitloggen hoort te slagen').toBe(true);
+  const na = await request.get('/server/api/bootstrap.php');
+  expect([401, 403], `na uitloggen hoort bootstrap weer dicht te zijn: ${na.status()}`).toContain(na.status());
+});
+
 test('[TEST-SMOKE-02] beheerder kan inloggen en elke view laadt zonder fouten', async ({ page }) => {
   const fouten = vangConsoleFouten(page);
   await login(page, ADMIN);
