@@ -34,7 +34,7 @@ function mail_acceptance_business_snapshot(?PDO $pdo): array
     if ($pdo instanceof PDO) {
         try {
             $stmt = $pdo->query(
-                'SELECT i.invoice_number, i.subtotal, i.vat_amount, i.total,
+                'SELECT i.invoice_number, i.subtotal, i.vat_amount, i.total, i.pdf_storage_key,
                         p.year, p.month, t.billable_hours, e.full_name AS employee_name
                  FROM invoices i
                  JOIN timesheets t ON t.id = i.timesheet_id
@@ -57,6 +57,7 @@ function mail_acceptance_business_snapshot(?PDO $pdo): array
             'employee_name' => 'Acceptatietest medewerker',
             'year' => (int)date('Y'), 'month' => (int)date('n'),
             'billable_hours' => 0.0, 'subtotal' => 0.0, 'vat_amount' => 0.0, 'total' => 0.0,
+            'pdf_storage_key' => '',
         ];
     }
     return [
@@ -68,6 +69,7 @@ function mail_acceptance_business_snapshot(?PDO $pdo): array
         'subtotal' => (float)$row['subtotal'],
         'vat_amount' => (float)$row['vat_amount'],
         'total' => (float)$row['total'],
+        'pdf_storage_key' => (string)($row['pdf_storage_key'] ?? ''),
     ];
 }
 
@@ -134,8 +136,41 @@ function mail_acceptance_test_attachment_names(?PDO $pdo, string $policy): array
     };
 }
 
+/**
+ * De echte, opgeslagen PDF van de laatst verzonden factuur -- exact wat een
+ * ontvanger normaal krijgt (de branded jsPDF-factuur). Null als er geen
+ * verzonden factuur is of het bestand niet op schijf staat.
+ *
+ * @return array{filename:string,mime:string,data:string}|null
+ */
+function mail_acceptance_real_invoice_attachment(?PDO $pdo, array $config): ?array
+{
+    if (!($pdo instanceof PDO) || $config === []) {
+        return null;
+    }
+    $snap = mail_acceptance_business_snapshot($pdo);
+    $key = (string)($snap['pdf_storage_key'] ?? '');
+    if ($key === '') {
+        return null;
+    }
+    $path = mail_storage_path($config, 'invoices', $key);
+    if ($path === null) {
+        return null;
+    }
+    $bytes = @file_get_contents($path);
+    if ($bytes === false || $bytes === '' || !simple_pdf_looks_valid($bytes)) {
+        return null;
+    }
+    $veiligNummer = preg_replace('/[^A-Za-z0-9_-]/', '_', $snap['invoice_number']) ?: 'factuur';
+    return [
+        'filename' => "ACCEPTATIETEST-NIET-BOEKEN-Factuur-{$veiligNummer}.pdf",
+        'mime' => 'application/pdf',
+        'data' => base64_encode($bytes),
+    ];
+}
+
 /** @return list<array{filename:string,mime:string,data:string}> */
-function mail_acceptance_test_attachments(?PDO $pdo, string $policy): array
+function mail_acceptance_test_attachments(?PDO $pdo, string $policy, array $config = []): array
 {
     $expected = mail_expected_attachment_count($policy);
     if ($expected === 0) {
@@ -173,12 +208,19 @@ function mail_acceptance_test_attachments(?PDO $pdo, string $policy): array
     if (!simple_pdf_looks_valid($pdf)) {
         throw new RuntimeException('Acceptance test PDF could not be generated.');
     }
+    // Als er een echte verzonden factuur is, stuurt de acceptatietest die echte
+    // PDF mee (de branded jsPDF-factuur) -- alleen met een ACCEPTATIETEST-naam.
+    // Zo ziet elke medewerker er identiek uit en test dit het echte
+    // bijlagepad. Zonder echte factuur valt het terug op het gegenereerde
+    // NIET-BOEKEN-document.
+    $realInvoice = mail_acceptance_real_invoice_attachment($pdo, $config);
     $attachments = array_map(
-        static fn(string $filename): array => [
-            'filename' => $filename,
-            'mime' => 'application/pdf',
-            'data' => base64_encode($pdf),
-        ],
+        static function (string $filename) use ($pdf, $realInvoice): array {
+            if ($realInvoice !== null && str_contains($filename, 'Factuur')) {
+                return ['filename' => $filename, 'mime' => 'application/pdf', 'data' => $realInvoice['data']];
+            }
+            return ['filename' => $filename, 'mime' => 'application/pdf', 'data' => base64_encode($pdf)];
+        },
         mail_acceptance_test_attachment_names($pdo, $policy)
     );
     if (count($attachments) !== $expected) {
@@ -197,7 +239,7 @@ function mail_resolve_attachments(PDO $pdo, array $delivery, array $config): arr
     }
 
     if ((bool)($delivery['acceptance_test'] ?? false)) {
-        return mail_acceptance_test_attachments($pdo, $policy);
+        return mail_acceptance_test_attachments($pdo, $policy, $config);
     }
 
     $invoiceId = (int)($delivery['invoice_id'] ?? 0);

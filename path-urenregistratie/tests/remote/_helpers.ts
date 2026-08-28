@@ -323,3 +323,49 @@ export function currentPeriodKey(): string {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 }
+
+/**
+ * Maakt via de beheerder-API een verse administrator aan en zet met het
+ * reset-token een wachtwoord. Zelfde patroon als createDemoEmployee.
+ */
+export async function createDemoAdmin(
+  request: APIRequestContext,
+  creds: Creds,
+  namePrefix = 'TEST Beheerder',
+): Promise<{ id: number; email: string; password: string; name: string }> {
+  const uniek = `${Date.now()}`.slice(-8) + String(Math.floor(Math.random() * 900 + 100));
+  const name = `${namePrefix} ${uniek}`;
+  const email = `admin-${uniek}@example.invalid`;
+  const password = `Beheer!${uniek}`;
+
+  await apiLogin(request, creds.admin.email, creds.admin.password);
+  const t = await csrf(request);
+  const maak = await request.post('/server/api/staff.php', {
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': t },
+    data: { action: 'upsert_admin', admin: { name, email, active: true }, sendInvitation: false },
+  });
+  expect(maak.ok(), `beheerder aanmaken hoort te slagen: ${await maak.text()}`).toBe(true);
+  const id = Number((await maak.json()).user_id || 0);
+  expect(id, 'de nieuwe beheerder hoort een user_id te krijgen').toBeGreaterThan(0);
+
+  await setTestMailDelivery(request, false);
+  try {
+    const rt = await csrf(request);
+    const reset = await request.post('/server/auth/request-reset.php', {
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': rt },
+      data: { email },
+    });
+    const token = String((await reset.json()).token || '');
+    expect(token, 'het reset-token hoort in de response te staan').toMatch(/^[a-f0-9]{64}$/);
+    const ct = await csrf(request);
+    const zet = await request.post('/server/auth/reset-password.php', {
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': ct },
+      data: { token, new_password: password },
+    });
+    expect(zet.ok(), `wachtwoord zetten hoort te slagen: ${await zet.text()}`).toBe(true);
+  } finally {
+    await setTestMailDelivery(request, true);
+  }
+  await apiLogout(request);
+  return { id, email, password, name };
+}

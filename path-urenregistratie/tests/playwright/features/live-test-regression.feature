@@ -237,3 +237,12 @@ Feature: Live TEST-regressie
     Then volgt de planningssamenvatting exact de ingestelde regels, dagen, tijden en het aantal regels
     And komt de gewijzigde klanturenstaat-tijd via bootstrap terug na herladen
     And zet Voorbeeldmelding maken geen mail klaar en meldt dat expliciet
+
+  @happy @live
+  Scenario: [TEST-E2E-23] verse beheerder: aanmaken, inloggen, goedkeuren en factuur afronden
+    # Testtechniek: End-to-end use-case met een zelf aangemaakte administrator i.p.v. de demo-beheerder
+    # Aantoonbare Playwright-assertions in deze case: 13
+    Given de bestaande beheerder maakt via het beheer-pad een nieuwe administrator aan
+    When die nieuwe beheerder zelf inlogt, een ingediende urenstaat goedkeurt en de factuur afrondt
+    Then ziet de nieuwe beheerder de beheerschermen en is de rol administrator
+    And is de definitieve factuur de jsPDF-conceptfactuur en ontstaan de drie mailroutes broker, boekhouding en salaris

@@ -2,8 +2,8 @@ import { test, expect, type APIRequestContext } from '@playwright/test';
 import { CustomerTimesheetApi } from '../playwright/api/CustomerTimesheetApi';
 import {
   demoCreds, csrf, apiLogin, apiLogout, resetSharedBaseline, setTestMailDelivery,
-  uiLogin, uiLogout, guiSubmitHours, guiApprove, finaliseViaConceptUpload,
-  createDemoEmployee, validPdfBytes, currentPeriodKey, type Creds,
+  uiLogin, uiLogout, guiSubmitHours, guiApprove, finaliseViaConceptUpload, assertConceptInvoicePdf,
+  createDemoEmployee, createDemoAdmin, validPdfBytes, currentPeriodKey, type Creds,
 } from './_helpers';
 
 /**
@@ -475,4 +475,59 @@ test('[TEST-E2E-22] herinneringen: samenvatting volgt exact de instellingen, kla
       .toBe(Number(voor.count ?? (voor.items || []).length));
   });
   await uiLogout(page);
+});
+
+// ===========================================================================
+// TEST-E2E-23 — Nieuwe beheerder aanmaken, laten inloggen, en de kern-flow draaien
+// ---------------------------------------------------------------------------
+// Alle andere cases gebruiken de bestaande demo-beheerder. Deze bevestigt dat
+// een vers aangemaakte administrator (via het beheer-pad) volledig kan werken:
+// goedkeuren, factuur afronden tot de jsPDF-conceptfactuur, en de mailroutering.
+// ===========================================================================
+test('[TEST-E2E-23] verse beheerder: aanmaken, inloggen, goedkeuren en factuur afronden', async ({ page, request }) => {
+  test.setTimeout(240_000);
+  const admin = await createDemoAdmin(request, creds, 'TEST Verse beheerder');
+
+  await test.step('De nieuwe beheerder logt zelf in en ziet de beheerschermen', async () => {
+    await uiLogin(page, admin.email, admin.password);
+    const ik = await (await page.request.get('/server/auth/me.php')).json();
+    expect(String(ik.user.email)).toBe(admin.email);
+    expect(String(ik.user.role), 'de nieuwe gebruiker hoort administrator te zijn').toBe('administrator');
+    await expect(page.locator('button[data-view="approvals"]:visible').first()).toBeVisible();
+    await expect(page.locator('button[data-view="employees"]:visible').first()).toBeVisible();
+    await expect(page.locator('button[data-view="settings"]:visible').first()).toBeVisible();
+    await uiLogout(page);
+  });
+
+  // Een demo-medewerker dient uren in die de nieuwe beheerder daarna verwerkt.
+  await uiLogin(page, creds.employee.email, creds.employee.password);
+  const { period, employeeId } = await guiSubmitHours(page);
+  await uiLogout(page);
+
+  await test.step('De nieuwe beheerder keurt goed en rondt de factuur af', async () => {
+    await uiLogin(page, admin.email, admin.password);
+    await guiApprove(page, employeeId);
+    const ts = await (await page.request.get(
+      `/server/api/timesheets.php?period=${period}&employee_id=${employeeId}`)).json();
+    const timesheetId = Number(ts.timesheet.id || 0);
+    expect(timesheetId).toBeGreaterThan(0);
+
+    await finaliseViaConceptUpload(page, employeeId, period, timesheetId);
+
+    const facturen = await (await page.request.get(`/server/api/invoices.php?period=${period}`)).json();
+    const factuur = ((facturen.invoices || facturen.items || []) as Array<Record<string, unknown>>)
+      .find((i) => Number(i.timesheet_id) === timesheetId) as Record<string, unknown>;
+    expect(factuur, 'de nieuwe beheerder hoort een factuur te hebben gemaakt').toBeTruthy();
+    const invoiceId = Number(factuur.id);
+    await assertConceptInvoicePdf(page, invoiceId);
+
+    const queue = await (await page.request.get('/server/api/email-queue.php?limit=100')).json();
+    const deliveries = ((queue.items || []) as Array<Record<string, unknown>>)
+      .filter((d) => Number(d.invoice_id) === invoiceId);
+    const kanaal = (k: string) => deliveries.filter((d) => String(d.channel) === k).length;
+    expect(kanaal('broker'), 'brokerroute').toBe(1);
+    expect(kanaal('accountant'), 'boekhoudingsroute').toBe(1);
+    expect(kanaal('payroll'), 'salarisroute').toBe(1);
+    await uiLogout(page);
+  });
 });

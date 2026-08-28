@@ -21,7 +21,7 @@ config- en omgevingsfouten die de lokale suite niet ziet.
 | Grenswaardenanalyse (BVA) | TEST-E2E-15 (0 / 24 / <0 / >24), TEST-E2E-14 (2 MB-grens) | §5, §6 |
 | Beslissingstabel | TEST-E2E-16 (rol × actie), TEST-E2E-17 (mailroutering × bijlage) | §3, §7 |
 | Toestandsovergang | TEST-E2E-12 (urenstaat-keten + ongeldige overgangen), TEST-E2E-13 (klanturenstaat-keten) | §5, §6 |
-| Use-case / end-to-end | TEST-E2E-04, TEST-E2E-10, TEST-E2E-11 | §7, §10 |
+| Use-case / end-to-end | TEST-E2E-04, TEST-E2E-10, TEST-E2E-11, TEST-E2E-23 (verse beheerder) | §7, §10 |
 | Negatieve test / error guessing | TEST-E2E-18 (CSRF, XSS, stale version, injectie) | §11 |
 | Robuustheid / "monkey" | TEST-E2E-19 (lange strings, dubbelklik-idempotentie, navigatie tijdens request) | §11 |
 | Data-integriteit / invarianten | TEST-E2E-20 (werkvoorraad: alle = Backoffice + medewerkers; maandnavigatie wijzigt niets) | §4 |
@@ -53,3 +53,4 @@ config- en omgevingsfouten die de lokale suite niet ziet.
 - **TEST-E2E-20** — werkvoorraad-invarianten: `alle acties = Backoffice + medewerkers`; na reset 12/7/5 verdeeld over juni/juli/augustus; maandnavigatie, render of rolwissel wijzigen de totalen niet.
 - **TEST-E2E-21** — exploratory: mededelingenscherm (beheerder plaatst/trekt in), instellingen-inhoudsmenu, elke primaire knop aanwezig.
 - **TEST-E2E-22** — herinneringen: de samenvatting `#reminder-schedule-summary` is een zuivere afleiding van de instellingen (beslissingstabel per regel + grenswaarden dag/tijd + enkelvoud/meervoud "regel"/"regels" + "Planning uit"); de klanturenstaat-tijd — de enige regel met een echte serverkolom — bereikt de server en overleeft herladen; "Voorbeeldmelding maken" laat de mailwachtrij ongemoeid en meldt dat expliciet. Het op de klok geplande afvuren valt buiten scope: dat vraagt een serverplanning die op TEST niet actief is.
+- **TEST-E2E-23** — verse beheerder: de bestaande beheerder maakt via het beheer-pad een nieuwe administrator aan; die logt zelf in (rol = administrator, beheerschermen zichtbaar), keurt een ingediende urenstaat goed en rondt de factuur af tot de jsPDF-conceptfactuur met de drie mailroutes. Bevestigt dat een niet-demo beheerder volledig functioneert.
