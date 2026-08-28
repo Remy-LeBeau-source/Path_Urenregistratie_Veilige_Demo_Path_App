@@ -697,3 +697,36 @@ test('[TEST-E2E-30] twee medewerkers met hetzelfde nummer-sjabloon in dezelfde p
   expect(nummers.every((n) => basis.test(n) || metSuffix.test(n)), 'beide nummers volgen het sjabloon').toBe(true);
   expect(nummers.some((n) => metSuffix.test(n)), 'het tweede nummer hoort een numerieke suffix te krijgen').toBe(true);
 });
+
+// ===========================================================================
+// TEST-E2E-31 - Elke demo-medewerker levert een echte jsPDF-conceptfactuur
+// ---------------------------------------------------------------------------
+// E2E-04/17 ronden af voor stasjo, E2E-07/11/30 voor verse medewerkers. Marc en
+// Brian werden nog niet via de volledige afrond-flow getest.
+// ===========================================================================
+test('[TEST-E2E-31] Marc en Brian: volledige afrond-flow levert de branded jsPDF-factuur', async ({ page }) => {
+  test.setTimeout(300_000);
+  const ECHT = /^[A-Za-z][A-Za-z-]*-\d{4}-(januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december)$/;
+  for (const email of ['marc@example.invalid', 'brian@example.invalid']) {
+    await uiLogin(page, email, creds.employee.password);
+    const me = await (await page.request.get('/server/auth/me.php')).json();
+    const boot = await (await page.request.get('/server/api/bootstrap.php')).json();
+    const employeeId = Number((boot.employees as Array<Record<string, unknown>>)
+      .find((e) => Number(e.user_id) === Number(me.user.id))?.id || 0);
+    const { period } = await guiSubmitHours(page);
+    await uiLogout(page);
+
+    await uiLogin(page, creds.admin.email, creds.admin.password);
+    await apiApprove(page.request, period, employeeId);
+    const ts = (await readTimesheet(page.request, period, employeeId)).timesheet;
+    await finaliseViaConceptUpload(page, employeeId, period, Number(ts?.id));
+
+    const facturen = await (await page.request.get(`/server/api/invoices.php?period=${period}`)).json();
+    const factuur = ((facturen.invoices || facturen.items || []) as Array<Record<string, unknown>>)
+      .find((i) => Number(i.timesheet_id) === Number(ts?.id)) as Record<string, unknown>;
+    expect(factuur, `${email} hoort een factuur te hebben`).toBeTruthy();
+    expect(String(factuur.invoice_number), `${email}: factuurnummer volgt de per-opdracht nummering`).toMatch(ECHT);
+    await assertConceptInvoicePdf(page, Number(factuur.id));
+    await uiLogout(page);
+  }
+});

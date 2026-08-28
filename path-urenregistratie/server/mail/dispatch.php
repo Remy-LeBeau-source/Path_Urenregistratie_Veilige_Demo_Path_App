@@ -161,6 +161,16 @@ function mail_acceptance_real_invoice_attachment(?PDO $pdo, array $config): ?arr
     if ($bytes === false || $bytes === '' || !simple_pdf_looks_valid($bytes)) {
         return null;
     }
+    // Alleen een echte factuur-PDF spiegelen: de branded jsPDF-conceptfactuur uit
+    // de browser, of een fors branded serverdocument. Het lege placeholder-PDF dat
+    // test-reset.php aan de geseede baseline-facturen hangt ("PATH CONSULTANCY .
+    // TESTDOCUMENT") is geen factuur -- dan valt de acceptatiemail terug op het
+    // gegenereerde NIET-BOEKEN-document met nummer, naam, uren en bedragen.
+    $isJsPdf = (bool)preg_match('/\/Producer\s*\(jsPDF/', $bytes);
+    $isTestResetPlaceholder = str_contains($bytes, 'TESTDOCUMENT');
+    if ($isTestResetPlaceholder || (!$isJsPdf && strlen($bytes) < 20000)) {
+        return null;
+    }
     $veiligNummer = preg_replace('/[^A-Za-z0-9_-]/', '_', $snap['invoice_number']) ?: 'factuur';
     return [
         'filename' => "ACCEPTATIETEST-NIET-BOEKEN-Factuur-{$veiligNummer}.pdf",

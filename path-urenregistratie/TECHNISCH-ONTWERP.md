@@ -457,3 +457,15 @@ gebruiken die i.p.v. de GUI-knop, die voor een vers aangemaakte medewerker in
 een lus soms de goedkeurrij niet toont. State-machine-cases draaien bovendien op
 verse `createDemoEmployee`-medewerkers, omdat `creds.employee` (stasjo) binnen
 één spec-bestand al door een eerdere case gefactureerd kan zijn.
+
+# Acceptatiemail: alleen een echte factuur-PDF spiegelen
+
+`mail_acceptance_real_invoice_attachment()` pakte de opgeslagen PDF van de laatst
+verzonden factuur. Na een `resetSharedBaseline` hangen de geseede
+baseline-facturen echter een leeg placeholderdocument uit `test-reset.php`
+("PATH CONSULTANCY . TESTDOCUMENT"); dat belandde zo als "factuur" in de
+acceptatiemail. De functie eist nu dat de bytes een jsPDF-conceptfactuur zijn
+(`/Producer (jsPDF`) of een fors branded serverdocument (>= 20 kB), en weigert
+alles met de marker `TESTDOCUMENT`. Zonder echte factuur valt de acceptatiemail
+terug op het gegenereerde branded NIET-BOEKEN-document met nummer, medewerker,
+uren en bedragen. `smoke-test.mjs` bewaakt de marker-check.

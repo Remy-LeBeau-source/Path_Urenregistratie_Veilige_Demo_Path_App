@@ -21,7 +21,7 @@ config- en omgevingsfouten die de lokale suite niet ziet.
 | Grenswaardenanalyse (BVA) | TEST-E2E-15 (0 / 24 / <0 / >24), TEST-E2E-14 (2 MB-grens) | §5, §6 |
 | Beslissingstabel | TEST-E2E-16 (rol × actie), TEST-E2E-17 (mailroutering × bijlage) | §3, §7 |
 | Toestandsovergang | TEST-E2E-12 (urenstaat-keten), TEST-E2E-13 (klanturenstaat-keten), TEST-E2E-24 (accountstatus), TEST-E2E-27 (heropen goedgekeurd) | §5, §6 |
-| Use-case / end-to-end | TEST-E2E-04, TEST-E2E-10, TEST-E2E-11, TEST-E2E-23 (verse beheerder) | §7, §10 |
+| Use-case / end-to-end | TEST-E2E-04, TEST-E2E-10, TEST-E2E-11, TEST-E2E-23 (verse beheerder), TEST-E2E-31 (Marc + Brian afronden) | §7, §10 |
 | Negatieve test / error guessing | TEST-E2E-18 (CSRF, XSS, stale version, injectie) | §11 |
 | Robuustheid / "monkey" | TEST-E2E-19 (lange strings, dubbelklik-idempotentie, navigatie tijdens request) | §11 |
 | Data-integriteit / invarianten | TEST-E2E-20 (werkvoorraad-invariant), TEST-E2E-30 (factuurnummer-uniciteit bij gelijk sjabloon) | §4, §7 |
@@ -57,3 +57,4 @@ config- en omgevingsfouten die de lokale suite niet ziet.
 - **TEST-E2E-24** — accountlevenscyclus: een medewerker deactiveren blokkeert inloggen (401/403) terwijl het account zichtbaar en als inactief gemarkeerd blijft; heractiveren herstelt de toegang.
 - **TEST-E2E-27** — heropen-beslissingstabel: een goedgekeurde urenstaat zónder factuur mag terug naar correctie; zodra er een factuur van is, wordt heropenen met 409 (`timesheet-invoiced`) geweigerd, status ongewijzigd.
 - **TEST-E2E-30** — factuurnummer-invariant: twee medewerkers met exact hetzelfde nummer-sjabloon in dezelfde periode krijgen elk een uniek nummer; het tweede krijgt een numerieke suffix, nooit een dubbel nummer.
+- **TEST-E2E-31** — Marc en Brian (nog niet via afronden getest): uren indienen → goedkeuren → factuur via de GUI afronden; elke definitieve factuur is de branded jsPDF-conceptfactuur zonder conceptwatermerk, met een per-opdracht factuurnummer.

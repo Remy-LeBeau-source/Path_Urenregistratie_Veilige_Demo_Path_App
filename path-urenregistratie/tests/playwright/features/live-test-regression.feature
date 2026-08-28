@@ -273,3 +273,12 @@ Feature: Live TEST-regressie
     When beide in dezelfde periode uren indienen en hun facturen worden afgerond
     Then verschillen de twee factuurnummers ondanks het gelijke sjabloon
     And krijgt het tweede nummer een numerieke suffix
+
+  @happy @live
+  Scenario: [TEST-E2E-31] Marc en Brian: volledige afrond-flow levert de branded jsPDF-factuur
+    # Testtechniek: End-to-end use-case over de nog niet via afronden geteste demo-medewerkers
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given de demo-medewerkers Marc en Brian op de live TEST-site
+    When elk uren indient, de beheerder goedkeurt en de factuur via de GUI afrondt
+    Then is elke definitieve factuur de branded jsPDF-conceptfactuur zonder conceptwatermerk
+    And volgt elk factuurnummer de per-opdracht nummering

@@ -215,7 +215,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.145"), "Het zichtbare versienummer moet 0.9.145 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.146"), "Het zichtbare versienummer moet 0.9.146 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -1948,6 +1948,7 @@ assert(mailAcceptanceSrc.includes("$origin === 'https://uren-test.pathconsultanc
 assert(testResetApiSrc.includes("auth_require_role(['administrator', 'employee']") && testResetApiSrc.includes("security_require_csrf_token()") && testResetApiSrc.includes("RESET_SHARED_TEST_BASELINE"), "De gedeelde TEST-reset moet beheer- of medewerkerrol, CSRF en expliciete bevestiging eisen");
 assert(testResetPolicySrc.includes("spoofed_test_host_on_production_blocked") && testResetPolicySrc.includes("missing_demo_permission_blocked") && testResetPolicySrc.includes("'open_actions' => 12"), "De TEST-resetbeslissingstabel moet PROD, hostspoofing en een afwijkende baseline blokkeren");
 assert(dispatchSrc.includes("password-reset-link-expired") && dispatchSrc.includes("beveiligingslink verwijderd na verzending"), "Verlopen of verzonden resetlinks moeten uit de mailqueue worden gewist");
+assert(dispatchSrc.includes("mail_acceptance_real_invoice_attachment") && dispatchSrc.includes("str_contains($bytes, 'TESTDOCUMENT')"), "De acceptatiemail mag alleen een echte factuur-PDF spiegelen, nooit het lege test-reset-placeholderdocument");
 assert(backupSrc.includes("--single-transaction") && restoreSrc.includes("RESTORE_") && rotateLogsSrc.includes("retention_days"), "Backup, herstelbevestiging en logretentie moeten operationeel voorbereid zijn");
 assert(provisionAccountSrc.includes("Passwords in command arguments are forbidden") && provisionAccountSrc.includes("force_password_change = 1") && provisionAccountSrc.includes(":password_hash, 1)") && provisionAccountSrc.includes("auth_create_password_reset") && changePasswordSrc.includes("current_password") && changePasswordSrc.includes("force_password_change = 0"), "Productieaccounts moeten zonder wachtwoordargument, met persoonlijke uitnodiging, verplichte eerste wijziging en een eigen wijzigingsflow worden beheerd");
 assert(provisionCompanySrc.includes("PROVISION_COMPANY") && provisionCompanySrc.includes("provision_company_validate") && provisionCompanySrc.includes("Refusing to overwrite an existing company with different data.") && provisionCompanySrc.includes("company.production_provisioned") && !/example\.invalid|Demo BV/.test(provisionCompanySrc), "De eerste productieorganisatie moet expliciet, gevalideerd, auditbaar en zonder demo- of overschrijfpad worden ingericht");
@@ -2007,4 +2008,4 @@ assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Pla
 }
 
 dom.window.close();
-console.log("Path v0.9.145 volledige smoke test: geslaagd");
+console.log("Path v0.9.146 volledige smoke test: geslaagd");
