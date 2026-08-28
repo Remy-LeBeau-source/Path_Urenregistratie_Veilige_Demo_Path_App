@@ -96,7 +96,7 @@ test.describe('facturerende ondernemingsidentiteit', () => {
           iban: company.iban || 'NL95INGB0006947972',
           address: company.address_line || 'Du Perronstraat 12',
           postalCity: '3067 HN Rotterdam',
-          phone: '0646328283',
+          phone: '0646328286',
           invoiceEmail: 'backoffice@pathconsultancy.nl',
           paymentTerm: Number(company.payment_term_days || 30),
           customerTimesheetReminderEnabled: true,
@@ -115,7 +115,7 @@ test.describe('facturerende ondernemingsidentiteit', () => {
       invoice_name_display: 'trade_and_legal',
       postal_code: '3067 HN',
       city: 'Rotterdam',
-      invoice_phone: '0646328283',
+      invoice_phone: '0646328286',
       invoice_email: 'backoffice@pathconsultancy.nl',
     });
     await auth.logout();

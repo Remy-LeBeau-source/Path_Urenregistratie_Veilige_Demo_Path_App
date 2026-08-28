@@ -32,7 +32,7 @@ INSERT INTO companies (
   1, 'path-consultancy', 'QSI Consultancy B.V.', 'Path Consultancy', 'trade_and_legal', 'Uren & Facturatie',
   'Path Backoffice', 'backoffice@pathconsultancy.nl',
   '#0d1b38', '#3abd9d', '89320018', 'NL001622017B32', 'NL95INGB0006947972',
-  'Du Perronstraat 12', '3067 HN', 'Rotterdam', '0646328283', 'backoffice@pathconsultancy.nl', 'NL', 'QSI', 30,
+  'Du Perronstraat 12', '3067 HN', 'Rotterdam', '0646328286', 'backoffice@pathconsultancy.nl', 'NL', 'QSI', 30,
   TRUE, '15:00:00', 2
 );
 

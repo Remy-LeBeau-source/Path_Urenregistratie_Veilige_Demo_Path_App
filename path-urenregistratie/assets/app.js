@@ -452,7 +452,7 @@ function freshState() {
       iban: "NL95INGB0006947972",
       address: "Du Perronstraat 12",
       postalCity: "3067 HN Rotterdam",
-      phone: "0646328283",
+      phone: "0646328286",
       invoiceEmail: "backoffice@pathconsultancy.nl",
       paymentTerm: "30",
       sender: "backoffice@example.invalid",
@@ -851,7 +851,7 @@ function loadState() {
         Object.entries(periodRecords).forEach(([employeeId, record]) => {
           const employee = saved.employees.find(item => Number(item.id) === Number(employeeId));
           if (employee && record && typeof record === "object") {
-            record.invoiceNumber = formatInvoiceNumber(employee.invoiceTemplate, periodKey);
+            record.invoiceNumber = formatInvoiceNumber(employee.invoiceTemplate, periodKey, employee.client);
           }
         });
       });
@@ -2644,7 +2644,9 @@ function mergeBootstrapIntoState(data) {
       contract: "",
       weeklyHours: Number(dbEmployee.weekly_contract_hours || 0),
       projectCode: "",
-      invoiceTemplate: "{klant}-{jaar}-{maand}",
+      // Gelijk aan de serverstandaard (invoices.php). Een {klant}-token wordt
+      // in formatInvoiceNumber niet ingevuld en belandde zo letterlijk op de PDF.
+      invoiceTemplate: "INV-{jaar}-{maand}",
       // Leeg: dan geldt de standaardtekst van de server. Zie server/mail/templates.php.
       mailSubject: "",
       mailBody: "",
@@ -3380,19 +3382,29 @@ function defaultContractHours(employee, periodKey) {
   return Math.round((period.businessDays * weeklyHoursFor(employee) / 5) * 10) / 10;
 }
 
-function formatInvoiceNumber(template, periodKey) {
+// Een {klant}-token in het nummer wordt de klantnaam, gestript tot letters en
+// cijfers zodat het een bruikbaar factuurnummer blijft. Gelijk aan
+// invoices_number_token() op de server.
+function invoiceNumberToken(value) {
+  const schoon = String(value || "").replace(/[^A-Za-z0-9]+/g, "");
+  return schoon || "Klant";
+}
+
+function formatInvoiceNumber(template, periodKey, clientName) {
   const period = periodFromKey(periodKey);
   return String(template || "Factuur-{jaar}-{maand}")
     .replaceAll("{jaar}", String(period.year))
-    .replaceAll("{maand}", period.month);
+    .replaceAll("{maand}", period.month)
+    .replaceAll("{klant}", invoiceNumberToken(clientName));
 }
 
 function invoiceNumberFor(employeeId, periodKey) {
   const employee = employeeById(employeeId);
+  const clientName = (employee && employee.client) || "";
   const template = employee && employee.invoiceTemplate
     ? employee.invoiceTemplate
-    : ((employee && employee.client) || "Factuur") + "-{jaar}-{maand}";
-  return formatInvoiceNumber(template, periodKey);
+    : (invoiceNumberToken(clientName) || "Factuur") + "-{jaar}-{maand}";
+  return formatInvoiceNumber(template, periodKey, clientName);
 }
 
 function normalizeRecord(record, employee, periodKey) {
@@ -8870,7 +8882,8 @@ function showEmployeeEditor(employeeId, prefill) {
     contract: "",
     weeklyHours: 0,
     projectCode: "",
-    invoiceTemplate: "{klant}-{jaar}-{maand}",
+    // Gelijk aan de serverstandaard (invoices.php); {klant} werd niet ingevuld.
+    invoiceTemplate: "INV-{jaar}-{maand}",
     // Leeg: dan geldt de standaardtekst van de server. Zie server/mail/templates.php.
     mailSubject: "",
     mailBody: "",

@@ -44,11 +44,20 @@ function invoices_month_name(int $month): string
     return $names[$month] ?? sprintf('%02d', $month);
 }
 
-function invoices_apply_template(string $template, int $year, int $month): string
+// Een {klant}-token in het nummersjabloon wordt de klantnaam, gestript tot
+// letters en cijfers zodat het een bruikbaar factuurnummer blijft. Gelijk aan
+// invoiceNumberToken() in de browser.
+function invoices_number_token(string $value): string
+{
+    $clean = preg_replace('/[^A-Za-z0-9]+/', '', trim($value)) ?? '';
+    return $clean !== '' ? $clean : 'Klant';
+}
+
+function invoices_apply_template(string $template, int $year, int $month, string $clientName = ''): string
 {
     $resolved = str_replace(
-        ['{jaar}', '{maand}', '{month}', '{year}'],
-        [(string)$year, invoices_month_name($month), sprintf('%02d', $month), (string)$year],
+        ['{jaar}', '{maand}', '{month}', '{year}', '{klant}'],
+        [(string)$year, invoices_month_name($month), sprintf('%02d', $month), (string)$year, invoices_number_token($clientName)],
         $template
     );
 
@@ -127,9 +136,9 @@ function invoices_employee_context(PDO $pdo, array $currentUser): array
     ];
 }
 
-function invoices_allocate_number(PDO $pdo, int $companyId, string $template, int $year, int $month): string
+function invoices_allocate_number(PDO $pdo, int $companyId, string $template, int $year, int $month, string $clientName = ''): string
 {
-    $base = invoices_apply_template($template, $year, $month);
+    $base = invoices_apply_template($template, $year, $month, $clientName);
     $stmt = $pdo->prepare(
         'SELECT invoice_number
          FROM invoices
@@ -572,6 +581,7 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
                 a.invoice_number_template,
                 a.client_id,
                 a.broker_id,
+                COALESCE(NULLIF(cl.trade_name, \'\'), cl.legal_name) AS client_name,
                 c.payment_term_days,
                 i.id AS invoice_id,
                 i.invoice_number,
@@ -586,6 +596,7 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
              JOIN periods p ON p.id = t.period_id
              JOIN assignments a ON a.id = t.assignment_id
              JOIN companies c ON c.id = p.company_id
+             LEFT JOIN counterparties cl ON cl.id = a.client_id AND cl.company_id = p.company_id
              LEFT JOIN invoices i ON i.timesheet_id = t.id
              WHERE t.id = :timesheet_id AND p.company_id = :company_id
              FOR UPDATE'
@@ -684,7 +695,8 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
                 $companyId,
                 $template,
                 (int)$row['year'],
-                (int)$row['month']
+                (int)$row['month'],
+                (string)($row['client_name'] ?? '')
             );
         }
 

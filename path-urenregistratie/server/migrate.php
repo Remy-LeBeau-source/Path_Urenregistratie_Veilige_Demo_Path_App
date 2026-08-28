@@ -160,6 +160,10 @@ function migration_plan(bool $allowDemoMigrations): array
         'id' => '025_assignment_contract_label.sql',
         'path' => __DIR__ . '/migrations/025_assignment_contract_label.sql',
     ];
+    $plan[] = [
+        'id' => '026_company_invoice_phone_fix.sql',
+        'path' => __DIR__ . '/migrations/026_company_invoice_phone_fix.sql',
+    ];
     return $plan;
 }
 

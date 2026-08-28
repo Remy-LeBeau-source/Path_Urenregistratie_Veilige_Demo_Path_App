@@ -265,6 +265,7 @@ export async function createDemoEmployee(
   opts: { customerTimesheet?: boolean; invoiceTemplate?: string; namePrefix?: string } = {},
 ): Promise<NewEmployee> {
   const uniek = `${Date.now()}`.slice(-8) + String(Math.floor(Math.random() * 900 + 100));
+  const kort = uniek.slice(-4);
   const naam = `${opts.namePrefix || 'TEST Charter'} ${uniek}`;
   const email = `charter-${uniek}@example.invalid`;
   const password = `Charter!${uniek}`;
@@ -274,11 +275,17 @@ export async function createDemoEmployee(
     name: naam, email, role: 'Consultant',
     startDate: new Date().toISOString().slice(0, 10),
     weeklyHours: 40, rate: 85,
-    client: `Klant ${uniek}`, broker: `Broker ${uniek}`,
+    client: `Klantbedrijf ${uniek} B.V.`, broker: `Broker ${uniek} B.V.`,
     brokerEmail: `broker-${uniek}@example.invalid`,
+    invoiceProject: `Detachering ${uniek}`,
+    projectCode: `TST${kort}`,
+    agreementNumber: `OVK-${kort}`,
+    // Zonder expliciet sjabloon valt de client-render terug op "{klant}-..."
+    // en dat token wordt niet ingevuld -> een letterlijk {klant} in het
+    // factuurnummer op de PDF. Altijd een concreet sjabloon meegeven.
+    invoiceTemplate: opts.invoiceTemplate || `TST${kort}-{jaar}-{maand}`,
   };
   if (opts.customerTimesheet) employee.customerTimesheetExpected = true;
-  if (opts.invoiceTemplate) employee.invoiceTemplate = opts.invoiceTemplate;
 
   const t = await csrf(request);
   const maak = await request.post('/server/api/staff.php', {

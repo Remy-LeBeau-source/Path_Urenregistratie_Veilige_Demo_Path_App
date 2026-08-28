@@ -215,7 +215,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.142"), "Het zichtbare versienummer moet 0.9.142 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.143"), "Het zichtbare versienummer moet 0.9.143 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -1368,7 +1368,9 @@ assert(document.querySelector("#modal-summary").textContent.includes("Path Consu
 assert(document.querySelector("#modal-summary").textContent.includes("Laan van ZuidHoorn 165") && document.querySelector("#modal-summary").textContent.includes("2289 DD Rijswijk"), "Het ItaQ-factuuradres moet exact uit de bronfactuur komen");
 assert(document.querySelector("#modal-summary").textContent.includes("2289 DD Rijswijk"), "De postcode en plaats van de ontvanger moeten volledig zichtbaar blijven");
 assert(document.querySelector("#modal-summary").textContent.includes("2026"), "De factuurdatum moet het correcte jaar bevatten");
-assert(document.querySelector("#modal-summary").textContent.includes("0646328283") && document.querySelector("#modal-summary").textContent.includes("backoffice@pathconsultancy.nl"), "GSM en e-mail uit de originele facturen moeten zichtbaar zijn");
+assert(document.querySelector("#modal-summary").textContent.includes("0646328286") && document.querySelector("#modal-summary").textContent.includes("backoffice@pathconsultancy.nl"), "GSM en e-mail uit de originele facturen moeten zichtbaar zijn");
+assert(dom.window.formatInvoiceNumber("{klant}-{jaar}-{maand}", "2026-08", "ACME Consultancy B.V.") === "ACMEConsultancyBV-2026-augustus", "Een {klant}-token in het factuurnummersjabloon wordt de klantnaam zonder spaties en leestekens");
+assert(dom.window.formatInvoiceNumber("INV-{jaar}-{maand}", "2026-08", "") === "INV-2026-augustus", "Het klantonafhankelijke standaardsjabloon blijft ongemoeid");
 assert(document.querySelector("#modal-summary").textContent.includes("Hierbij doe ik u de factuur toekomen betreft de volgende werkzaamheden."), "De oorspronkelijke factuurinleiding moet behouden blijven");
 assert(document.querySelector("#modal-summary").textContent.includes("binnen 30 dagen van de factuurdatum"), "De oorspronkelijke betalingstekst moet behouden blijven");
 // Invoice amounts: exact check depends on which employee's invoice is previewed first.
@@ -1723,7 +1725,7 @@ assert(migratedState.employees.every(employee => employee.emailNotificationsEnab
 assert(migratedState.employees.every(employee => employee.brokerInvoiceAttachment === true && employee.bookkeeperInvoiceAttachment === true && employee.payrollInvoiceAttachment === false), "Migratie moet de veilige standaardbijlagen per route toevoegen");
 assert(migratedState.employees.every(employee => employee.brokerMailEnabled === true), "Migratie moet voor iedere bestaande broker het keuzevak Ontvangt mail veilig inschakelen");
 assert(migratedState.settings.address === "Du Perronstraat 12" && migratedState.settings.postalCity === "3067 HN Rotterdam", "Migratie moet het oude gecombineerde bedrijfsadres correct splitsen");
-assert(migratedState.settings.phone === "0646328283" && migratedState.settings.invoiceEmail === "backoffice@pathconsultancy.nl", "Migratie moet GSM en factuur-e-mail uit de bronfacturen aanvullen");
+assert(migratedState.settings.phone === "0646328286" && migratedState.settings.invoiceEmail === "backoffice@pathconsultancy.nl", "Migratie moet GSM en factuur-e-mail uit de bronfacturen aanvullen");
 assert(migratedState.employees.filter(employee => /itaq/i.test(employee.broker)).every(employee => employee.brokerInvoiceAddress.includes("Laan van ZuidHoorn 165") && employee.invoiceRecipientName === "Itaq"), "Migratie moet de exacte ItaQ-factuurgegevens aanvullen");
 assert(migratedState.employees.find(employee => employee.id === 4).brokerInvoiceAddress.includes("Fultonbaan 6") && migratedState.employees.find(employee => employee.id === 4).invoiceRecipientName === "circle8", "Migratie moet de volledige Circle8-adressering aanvullen");
 assert(migratedState.employees.find(employee => employee.id === 4).agreementNumber === "202636991" && migratedState.employees.find(employee => employee.id === 4).creditorNumber === "622085" && migratedState.employees.find(employee => employee.id === 4).contractorNumber === "217744", "Migratie moet alle drie speciale Shawn-referenties aanvullen");
@@ -1997,4 +1999,4 @@ assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Pla
 }
 
 dom.window.close();
-console.log("Path v0.9.142 volledige smoke test: geslaagd");
+console.log("Path v0.9.143 volledige smoke test: geslaagd");

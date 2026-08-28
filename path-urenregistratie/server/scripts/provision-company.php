@@ -23,7 +23,7 @@ function provision_company_path_profile(): array
         'address_line' => 'Du Perronstraat 12',
         'postal_code' => '3067 HN',
         'city' => 'Rotterdam',
-        'invoice_phone' => '0646328283',
+        'invoice_phone' => '0646328286',
         'invoice_email' => 'backoffice@pathconsultancy.nl',
         'country_code' => 'NL',
         'invoice_prefix' => 'PATH',

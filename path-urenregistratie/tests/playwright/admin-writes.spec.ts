@@ -54,7 +54,7 @@ test.describe('admin write endpoints', () => {
         iban: company.iban || 'NL00BANK0123456789',
         address: company.address_line || 'Voorbeeldstraat 1',
         postalCity: [company.postal_code || '1234 AB', company.city || 'Rotterdam'].join(' '),
-        phone: company.invoice_phone || '0646328283',
+        phone: company.invoice_phone || '0646328286',
         invoiceEmail: company.invoice_email || 'backoffice@pathconsultancy.nl',
         paymentTerm: Number(company.payment_term_days || 30),
         customerTimesheetReminderEnabled: true,
