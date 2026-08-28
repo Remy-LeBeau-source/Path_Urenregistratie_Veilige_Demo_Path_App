@@ -28,7 +28,7 @@ staan onder de genummerde fases verderop in dit document.
 | Fase 4 — Auth & rollen | ✅ VS Code-scope klaar | Admin/medewerker/sessies, persistente loginblokkade en eenmalige wachtwoordlinks |
 | Fase 5 — Security | ✅ VS Code-scope klaar | Timeout, sliding session, login-audit, dependency-scan; productieheaders (CORS/CSP/HSTS) later op echt domein |
 | Fase 6 — Playwright/BDD/Allure/Living Docs | ✅ Pariteit bewaakt | Uitvoerbare features, step-mapping, GUI-smoke en volledige Playwright-/DB-regressie zijn gekoppeld; nieuwe zichtbare regressies krijgen een gerichte case |
-| Fase 7 — CI/CD | ⚠️ v0.9.113-fix klaar voor PR | Run `32571958567` zette TEST `0.9.111` live maar stopte op een afgedreven adminlogin (401); `0.9.113` herstelt en verifieert de vaste TEST-loginbaseline vóór cutover. PROD bleef veilig op `0.9.106`. |
+| Fase 7 — CI/CD | ✅ Bewezen | 4-way gesharde `Validate` + `Promote Test` (~50 → ~20 min); een push naar `main` draait Validate → Promote Test → Deploy Test → Live Docs; `Promote Prod` blijft de handmatige gele poort. Veel releases via deze weg live gezet, laatst `0.9.149` (run `33154305844`, alle shards groen). |
 | Fase 8 — Uren indienen | ✅ Klaar | Concept → indienen |
 | Fase 9 — Correctie/goedkeuring | ✅ Technisch klaar | Productieacceptatie later |
 | Fase 10 — Klanturenstaat | ✅ VS Code-scope klaar | JPG/PNG → inline PDF + employee-readback fail-closed getest (CTS-API-H-005/H-006, N-009) |
@@ -1813,7 +1813,7 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
 - [-] Fase 16 - Bundel 1, de gecontroleerde productiecutover en de automatische v0.9.57-uitrol zijn
   afgerond; Bundel 3 (volledige menselijke productieacceptatie en beheerinrichting) blijft open
 
-### 28 aug 2026 — Claude Code, TEST op 0.9.144
+### 28 aug 2026 — Claude Code, TEST op 0.9.149
 
 - [x] 0.9.142 — acceptatieconsole-PDF is de branded lay-out (Path-logo + kopbalk).
 - [x] 0.9.143 — factuur-telefoonnummer `0646328283 → 0646328286`, migratie `026` corrigeert
@@ -1831,16 +1831,22 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
 - [x] E2E-23 (verse beheerder), E2E-24 (accountlevenscyclus), E2E-27 (heropen-beslissingstabel),
   E2E-30 (factuurnummer-uniciteit) toegevoegd en groen. Nieuwe helper `apiApprove` voor
   deterministische goedkeuring; state-machine-cases draaien op verse `createDemoEmployee`-medewerkers.
-- [x] `E2E-H-025` uit quarantaine (0.9.149): render-race in `renderMailChannelTemplates()` gedempt
-  (geen herbouw terwijl de cursor in de lijst zit), goedkeuring via API i.p.v. de knop, en
-  `test_reset_shared_baseline()` wist `mail_channel_templates`. Lokaal 3/3 groen.
 - [x] 0.9.147 — `{broker}`-token in mailteksten, install-banner stopt na installatie
-  (`getInstalledRelatedApps`), `dist/` gitignored.
+  (`getInstalledRelatedApps`), `dist/` gitignored. **Deployde niet**: zie 0.9.148.
 - [x] 0.9.148 (hotfix) — 0.9.147's `{broker}`-join gaf de factuur-laadquery een tweede
   `:company_id`; echte prepares (emulatie uit) → `SQLSTATE[HY093]`, elke factuurmail faalde,
   pipeline `29acf2a` niet gedeployd. Fix: `:company_id` / `:company_id2` / `:company_id3` apart
   gebonden. `smoke-test.mjs` bewaakt nu dat de factuur-laadquery `:company_id` hooguit één keer heeft.
-- [x] FO/TO bijgewerkt; beide handoffs bijgewerkt.
+  30/30 remote-regressie groen tegen 0.9.148.
+- [x] 0.9.149 — `E2E-H-025` uit quarantaine, alle drie fragiliteiten opgelost:
+  render-race in `renderMailChannelTemplates()` gedempt (geen `innerHTML`-herbouw terwijl de cursor
+  in de lijst zit; `renderAll` blijft `populateSettings()` onvoorwaardelijk doen), goedkeuring via
+  `timesheets.php` API i.p.v. de knop, en `test_reset_shared_baseline()` wist `mail_channel_templates`.
+  Lokaal 3/3 (desktop-chromium, mobile-chrome, mobile-safari); pipeline `33154305844` Validate 4/4 +
+  Promote Test 4/4 + Deploy Test groen; 4/4 remote-smokes groen tegen live 0.9.149.
+- [x] Dev-machine: geplande taak `PathMySQL` (bij inloggen) start de lokale MySQL als 3306 niet
+  luistert — geen handmatige start meer nodig.
+- [x] FO/TO bijgewerkt; beide handoffs + auto-geheugen bijgewerkt.
 
 Telling fasestatussen:
 - [x] **15 fasen volledig bewezen of volledig verplaatst voor hun VS-Code-scope: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 en 15.**
@@ -1848,21 +1854,24 @@ Telling fasestatussen:
 
 ## Directe volgende stap
 
-**Fase 1 t/m 15 zijn functioneel ingericht; v0.9.73 borgt daarnaast dat meldingen direct vanaf de
-eerste render servergestuurd zijn en zichtbaar synchroon van `3 → 2 → 1 → 0` lopen.** De
-aparte TEST-host, database, private opslag, publieke login-smoke en mailsandbox zijn bewezen in
-run `31803329714`.
+**Alle VS Code-scope (Fase 1 t/m 15) is af en bewezen. TEST draait `0.9.149`, volledige pipeline
+groen, PROD onaangeraakt.** Wat nog openstaat is Fase 16 — buiten VS Code, geen code meer:
 
-- [x] De acceptatieconsole toont iedere verwachte factuur- en klanturenstaat-PDF afzonderlijk in de
-  lijst én bevestiging en opent exact de serverbijlage die na bevestiging wordt verzonden.
+1. **Menselijke mailacceptatie op TEST** — de vijf acceptatiemails één voor één versturen en
+   ontvanger, onderwerp, tekst, linkgebruik en PDF-bijlagen aftekenen. (Techniek + automatische
+   dekking staan; dit is de handmatige eindcontrole. Gio deed dit eerder op 0.9.114; opnieuw doen
+   op de huidige release vóór go-live.)
+2. **`Promote Prod`** — handmatige poort in de pipeline; alleen Gio keurt goed. Niets gaat
+   automatisch naar PROD.
+3. **Productie-operationeel** — fysieke mobiele acceptatie, cron/monitoring, back-up/restore-oefening,
+   2FA-/sessiebeleid, eerste volledige maandflow. Zie het Fase 16-blok bovenaan.
 
-1. Commit en push de lokaal volledig groen gevalideerde v0.9.73 en laat dezelfde release exact door de volledige pipeline, TEST-uitrol en
-   automatische PROD-uitrol bewaken. Lokaal bewijs: `npm run check` groen, GUI-smoke groen en
-  217/217 Playwright-uitvoeringen groen; build, DB-H-001, dependency-audit en diffcontrole zijn ook groen.
-2. Verstuur op TEST de vijf
-   acceptatiemails één voor één en controleer ontvanger, onderwerp, tekst, linkgebruik en PDF-bijlagen.
-3. Rond daarna de open productiepraktijktests, fysieke mobiele acceptatie, cron/monitoring,
-   back-uprestore-oefening, 2FA-/sessiebeleid en eerste volledige maandflow af.
+Optioneel/parkeren (geen blokkade):
+- DB-GUI voor TEST/PROD: cweijan werkt niet door TransIP's ProxySQL; route is phpMyAdmin of
+  SSH-`mysql`-CLI. Eventueel HeidiSQL/Workbench over een SSH-tunnel proberen.
+- Live-versie van `E2E-25` ("Overig + Factuur meesturen") — vraagt route-config-plumbing via
+  `assignment_mail_routes.include_invoice_pdf`.
+- Acceptatiemail-PDF: door Gio bewust losgelaten, niet verder oppakken zonder nieuwe opdracht.
 
 ## Dagelijkse werkwijze (verplicht)
 
