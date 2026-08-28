@@ -215,7 +215,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.144"), "Het zichtbare versienummer moet 0.9.144 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.145"), "Het zichtbare versienummer moet 0.9.145 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -1966,6 +1966,14 @@ assert(rootHtaccessSrc.includes("Content-Security-Policy") && rootHtaccessSrc.in
   const inlineScriptMetInhoud = /<script(?![^>]*\bsrc=)[^>]*>\s*\S[\s\S]*?<\/script>/i.test(html);
   assert(!(cspBlokkeertInline && inlineScriptMetInhoud), "index.html mag geen inline <script> met inhoud bevatten zolang de CSP script-src 'self' zonder unsafe-inline/hash/nonce afdwingt: verplaats de code naar een extern bestand");
 }
+// De "Installeren"-knop van de installatiebanner moet een zichtbare achtergrond
+// hebben. Alleen `.button` geeft geen vulkleur; op de donkere balk viel de knop
+// zo weg. Hij hoort een van de gevulde varianten te krijgen.
+{
+  const accept = document.querySelector("#install-banner-accept");
+  assert(accept && /\bbutton-(primary|ghost|danger)\b/.test(accept.className),
+    "#install-banner-accept moet een gevulde knopvariant (button-primary/ghost/danger) hebben, anders is hij onzichtbaar op de balk");
+}
 assert(playwrightRunnerSrc.includes("url.hostname === 'localhost'") && playwrightRunnerSrc.includes("url.hostname = '127.0.0.1'") && playwrightRunnerSrc.includes("PATH_APP_BASE_URL: baseUrl"), "De Playwright-runner moet browsers en de beheerde PHP-server op dezelfde IPv4-origin houden");
 assert(playwrightDbBootstrapSrc.includes("namedTestDatabase") && playwrightDbBootstrapSrc.includes("isolatedCiDatabase") && playwrightDbBootstrapSrc.includes("Refusing destructive Playwright database bootstrap"), "De Playwright DB-bootstrap mag uitsluitend een herkenbare test- of geïsoleerde CI-database opnieuw opbouwen");
 assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("isolatedCiDatabase") && dbCrudSmokeSrc.includes("DB CRUD smoke is not allowed"), "De DB CRUD-smoke moet fail-closed buiten een test- of geïsoleerde CI-database");
@@ -1999,4 +2007,4 @@ assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Pla
 }
 
 dom.window.close();
-console.log("Path v0.9.144 volledige smoke test: geslaagd");
+console.log("Path v0.9.145 volledige smoke test: geslaagd");

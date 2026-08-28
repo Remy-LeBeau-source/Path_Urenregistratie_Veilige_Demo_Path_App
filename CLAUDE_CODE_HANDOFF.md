@@ -26,10 +26,14 @@ Deze sectie gaat vóór alle oudere secties hieronder.
 ### TEST-regressie (`tests/remote/`, aparte `playwright.test-remote.config.ts`, tegen de live site)
 - Charter in `tests/remote/TEST-CHARTER.md`; scenario's in
   `tests/playwright/features/live-test-regression.feature`.
-- Cases: SMOKE-01..04, E2E-01..08, 10..25 en 27, 30. **25/25 groen tegen 0.9.143.**
-  E2E-23/24/27/30 zijn nieuw en moeten nog een keer volledig tegen 0.9.144 draaien.
+- Cases: SMOKE-01..04, E2E-01..08, 10..25, 27, 30 = **29 cases, 29/29 groen tegen 0.9.144**
+  (`--project=desktop`, 7,0 min). Commit `bbb58dd`.
 - Helpers in `tests/remote/_helpers.ts`: `createDemoEmployee` (echte klantnaam + eigen sjabloon),
-  `createDemoAdmin`, `finaliseViaConceptUpload`, `assertConceptInvoicePdf`, `currentPeriodKey`.
+  `createDemoAdmin`, `apiApprove` (deterministische API-goedkeuring — gebruiken voor data-
+  integriteitscases i.p.v. de soms-race-gevoelige GUI-knop), `finaliseViaConceptUpload`,
+  `assertConceptInvoicePdf`, `currentPeriodKey`.
+- Les: verse `createDemoEmployee`-medewerkers gebruiken voor state-machine-cases; `creds.employee`
+  (stasjo) raakt binnen een bestand gefactureerd door een eerdere case.
 
 ### Bekende blokkade / quarantaine
 - **`E2E-H-025`** (`business-workflows-mail.spec.ts`) staat op `test.fixme` sinds 28 aug. Pre-existing
@@ -41,13 +45,14 @@ Deze sectie gaat vóór alle oudere secties hieronder.
   (`workflow_dispatch`) laat Promote Test / Deploy Test **skippen**. Niet handmatig cancelen/
   hertriggeren — `concurrency: cancel-in-progress` maakt er een knoop van.
 
-### Nog te doen
-- Volledige `tests/remote/`-suite (29 cases) tegen 0.9.144 draaien; bevindingen in E2E-23/24/27/30
-  bulk-fixen en hertesten; daarna committen (test-only, geen versiebump).
+### Nog te doen (ochtend)
+- **`E2E-H-025` uit quarantaine halen**: de twee renderpaden voor de standaardtekstenlijst
+  ontknopen (`business-workflows-mail.spec.ts`, zie de comment daar), dan de `test.skip` weg.
 - Optioneel meer chartercases (E2E-25 "Overig + Factuur meesturen" is lokaal al `E2E-H-012`;
   een live-versie vraagt route-config-plumbing via `assignment_mail_routes.include_invoice_pdf`).
 - Instellingen-hulptekst noemt `{broker}`/`{medewerker}` als factuurnummer-veld; die worden nergens
-  ingevuld — of laten werken, of uit de hulptekst halen.
+  ingevuld (server noch browser) — of laten werken, of uit de hulptekst halen. Ontwerpkeuze voor Gio.
+- Bevestigen dat de pipeline voor `bbb58dd` (test-only) groen werd.
 
 ### Onveranderd: PROD-grens
 Niets naar PROD. `Promote Prod` blijft de handmatige gele poort; nooit zelf goedkeuren.

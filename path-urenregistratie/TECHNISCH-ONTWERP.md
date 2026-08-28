@@ -432,3 +432,28 @@ factuur vergrendelt via `action:'lock'` zonder `concept_pdf_base64` binnen 600 t
 jsPDF-conceptfactuur valt de server terug op de platte `simple_pdf`-tekstfactuur, en op de LIVE
 TEST-site met echte mail ging die dan als bijlage de deur uit. Alle afrondingen in `tests/remote/`
 lopen via `finaliseViaConceptUpload()` / `guiFinaliseInvoice()`.
+
+# Installatiebanner: knop zichtbaar en de flaky mailcase in quarantaine
+
+Het inline SW-registratie-/installatiebanner-script in `index.html` werd door de
+`script-src 'self'`-CSP stil geblokkeerd op TEST/PROD; het is verplaatst naar
+`assets/pwa-install.js`. Daardoor verscheen de banner voor het eerst op TEST en
+kwam een pre-existing CSS-fout boven: `#install-banner-accept` had alleen
+`.button` (geen vulkleur) en viel weg op de donkere balk. De knop heeft nu
+`button button-primary`; `smoke-test.mjs` eist een gevulde knopvariant.
+
+`E2E-H-025` (`business-workflows-mail.spec.ts`) staat op `test.skip(true, ...)`:
+een pre-existing render-race (twee renderpaden voor de standaardtekstenlijst)
+die op mobile-safari beide pogingen omviel en met de gesharde suite de deploy
+blokkeerde. De feature blijft gedekt door `E2E-H-024` en de settings-/
+acceptatietests.
+
+# Live TEST-regressie: deterministische goedkeuring voor data-integriteitscases
+
+`tests/remote/_helpers.ts` heeft `apiApprove(request, period, employeeId)`: leest
+de urenstaat, eist status `submitted`, keurt via `timesheets.php` goed met de
+juiste `expected_version`. Data-integriteitscases (`TEST-E2E-27`, `-30`)
+gebruiken die i.p.v. de GUI-knop, die voor een vers aangemaakte medewerker in
+een lus soms de goedkeurrij niet toont. State-machine-cases draaien bovendien op
+verse `createDemoEmployee`-medewerkers, omdat `creds.employee` (stasjo) binnen
+één spec-bestand al door een eerdere case gefactureerd kan zijn.
