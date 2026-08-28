@@ -17,7 +17,7 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <title>Uren & Facturatie</title>
-  <link rel="stylesheet" href="assets/styles.css?v=0.9.151">
+  <link rel="stylesheet" href="assets/styles.css?v=0.9.152">
 </head>
 <body class="auth-booting">
   <section class="login-screen" id="login-screen" aria-labelledby="login-title">
@@ -148,7 +148,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 0.9.151</span>
+      <span class="demo-badge">Versie 0.9.152</span>
       </div>
     </aside>
 
@@ -164,7 +164,7 @@
         <div class="topbar-title">
           <p class="eyebrow" id="organization-name">Path Consultancy</p>
           <h1 id="page-title">Urenoverzicht</h1>
-          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 0.9.151</span><span class="environment-badge" id="environment-badge" hidden></span></span>
+          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 0.9.152</span><span class="environment-badge" id="environment-badge" hidden></span></span>
         </div>
         <div class="topbar-actions">
           <span class="safety-badge" id="mail-safety-badge" title="De verzendstatus wordt beveiligd door de serverconfiguratie">E-mailstatus laden…</span>
@@ -211,24 +211,21 @@
       </header>
 
       <section class="view role-employee-only" id="view-employee-dashboard" data-title="Mijn overzicht">
-        <div class="employee-hero">
-          <div>
-            <span class="section-label">Mijn werkvoorraad</span>
-            <h2 id="employee-dashboard-greeting">Goedemiddag</h2>
-            <span class="employee-next-action-label" id="employee-dashboard-next-label">Volgende actie</span>
-            <p id="employee-dashboard-next">Bekijk wat je als eerste moet afronden.</p>
-            <small class="employee-next-action-meta" id="employee-dashboard-next-meta">Huidige maand</small>
-            <div class="employee-hero-actions">
-              <button class="button button-primary" id="employee-dashboard-action" data-go="timesheet">Uren verder invullen</button>
-              <button class="button button-ghost employee-all-actions-button" id="employee-dashboard-all-actions" type="button" data-scroll-target="employee-open-overview">Bekijk alle open acties</button>
-            </div>
+        <div class="employee-hero dash-focus">
+          <h2 id="employee-dashboard-greeting">Goedemiddag</h2>
+          <span class="employee-next-action-label" id="employee-dashboard-next-label">Dit nu</span>
+          <p id="employee-dashboard-next">Bekijk wat je als eerste moet afronden.</p>
+          <small class="employee-next-action-meta" id="employee-dashboard-next-meta">Huidige maand</small>
+          <div class="employee-hero-actions">
+            <button class="button button-primary" id="employee-dashboard-action" data-go="timesheet">Uren verder invullen</button>
+            <button class="button button-ghost employee-all-actions-button" id="employee-dashboard-all-actions" type="button" data-scroll-target="employee-open-overview">Bekijk alle open acties</button>
           </div>
-          <div class="hero-task-math" aria-label="Controle van het totaal aan open acties voor medewerker">
-            <span>Mijn open acties</span>
-            <strong id="employee-open-task-total">0 open acties</strong>
-            <div><small>Per maand</small><b id="employee-open-task-months">Alles afgerond</b></div>
-            <div><small>Per type</small><b id="employee-open-task-owners">Urenregistraties 0 + klanturenstaten 0 = 0</b></div>
-          </div>
+        </div>
+        <div class="dash-kpi hero-task-math" aria-label="Controle van het totaal aan open acties voor medewerker">
+          <span class="dash-kpi-title">Mijn open acties</span>
+          <strong id="employee-open-task-total">0 open acties</strong>
+          <span class="dash-kpi-cell"><small>Per maand</small><b id="employee-open-task-months">Alles afgerond</b></span>
+          <span class="dash-kpi-cell"><small>Per type</small><b id="employee-open-task-owners">Urenregistraties 0 + klanturenstaten 0 = 0</b></span>
         </div>
         <section class="panel employee-open-overview" id="employee-open-overview" hidden>
           <div class="panel-heading"><div><span class="section-label">Jouw acties</span><h3>Open acties per maand</h3><p id="employee-open-overview-note">De eerstvolgende maand staat voor je open.</p></div><small id="employee-open-overview-count">0 open maanden</small></div>
@@ -796,7 +793,7 @@
   </div>
   <script vite-ignore defer src="assets/jspdf.umd.min.js"></script>
   <script vite-ignore defer src="assets/invoice-fonts.js"></script>
-  <script vite-ignore defer src="assets/app.js?v=0.9.151"></script>
-  <script vite-ignore defer src="assets/pwa-install.js?v=0.9.151"></script>
+  <script vite-ignore defer src="assets/app.js?v=0.9.152"></script>
+  <script vite-ignore defer src="assets/pwa-install.js?v=0.9.152"></script>
 </body>
 </html>

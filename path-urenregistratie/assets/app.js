@@ -4006,7 +4006,9 @@ function renderEmployeeDashboard() {
   }
   document.querySelector("#employee-dashboard-greeting").textContent = greetingForNow() + ", " + firstName;
   document.querySelector("#employee-dashboard-next").textContent = next;
-  document.querySelector("#employee-dashboard-next-label").textContent = nextOpenAction ? "Volgende actie" : "Deze maand";
+  document.querySelector("#employee-dashboard-next-label").textContent = nextOpenAction
+    ? "Dit nu · actie 1 van " + employeeOpenActions.length
+    : "Deze maand";
   document.querySelector("#employee-dashboard-next-meta").textContent = nextOpenMonth
     ? nextOpenMonth.period.label + " · actie 1 van " + employeeOpenActions.length
     : period.label + " · alles afgerond";

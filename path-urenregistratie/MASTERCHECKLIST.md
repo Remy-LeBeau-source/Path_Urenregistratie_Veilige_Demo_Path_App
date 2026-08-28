@@ -1857,6 +1857,11 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
   tweeregelige strook die aansluit op de "Volgende actie"-kaart; metric-grid 4 → 2 zichtbare
   kaarten (2+4 `display:none`, elementen blijven); procesmeter dunne strook. Herstel-knop
   blijft altijd zichtbaar (0.9.150-verberging in app-modus teruggedraaid).
+- [x] 0.9.152 — mix-look, **medewerker-dashboard**: `.employee-hero` → gecentreerd donker
+  "Dit nu"-focusblok, begroeting `display:none` (blijft in DOM), rekensom-kaart → monospace
+  KPI-regel, open-acties-lijst compacter met amber-rand. Testmigratie in `DashboardPage.ts` /
+  `dashboard.spec.ts` / `mobile-ui.spec.ts`. Smoke + dashboard.spec + mobile-ui groen.
+  Beheerder-dashboard volgt in 0.9.153. Voorstellen als artifacts.
 - [x] FO/TO bijgewerkt; beide handoffs + auto-geheugen bijgewerkt.
 
 Telling fasestatussen:

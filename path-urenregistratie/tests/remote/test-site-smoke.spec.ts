@@ -6,7 +6,7 @@ import { test, expect, type Page, type ConsoleMessage } from '@playwright/test';
 // ontbrekende assets, 500's, verkeerde config, CSP die scripts blokkeert,
 // verkeerde versie, gebroken views.
 
-const VERWACHTE_VERSIE = process.env.TEST_REMOTE_EXPECTED_VERSION || '0.9.151';
+const VERWACHTE_VERSIE = process.env.TEST_REMOTE_EXPECTED_VERSION || '0.9.152';
 const ADMIN = { email: 'gio@example.invalid', password: 'LocalDemoAdmin2026' };
 const EMPLOYEE = { email: 'stasjo@example.invalid', password: 'LocalDemoEmployee2026' };
 

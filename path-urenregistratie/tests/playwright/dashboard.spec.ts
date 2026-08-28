@@ -883,7 +883,7 @@ test('[DASH-H-014] medewerker krijgt de eerstvolgende concrete actie met juiste 
 
     const firstAction = firstMonth.locator('[data-employee-open-action]').first();
     firstActionType = (await firstAction.getAttribute('data-employee-open-action')) || '';
-    await expect(page.locator('#employee-dashboard-next-label')).toHaveText('Volgende actie');
+    await expect(page.locator('#employee-dashboard-next-label')).toContainText('Dit nu');
     await expect(page.locator('#employee-dashboard-next-meta')).toContainText(firstPeriodLabel);
     await expect(page.locator('#employee-dashboard-action')).toHaveAttribute('data-employee-action-period', firstPeriod);
     await expect(page.locator('#employee-dashboard-action')).toHaveAttribute('data-employee-action-type', firstActionType);

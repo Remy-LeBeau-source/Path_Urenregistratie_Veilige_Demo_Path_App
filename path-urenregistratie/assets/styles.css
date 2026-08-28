@@ -957,12 +957,49 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .profile-menu > button:hover { background: var(--vlak-zacht); }
 .profile-menu .danger-menu-item { margin-top: 4px; border-top: 1px solid var(--line); border-radius: 0 0 9px 9px; color: var(--danger); }
 
-.employee-hero { display: grid; grid-template-columns: minmax(0,1.25fr) minmax(270px,.75fr); gap: 34px; align-items: center; margin: 30px 0 18px; border-radius: 24px; background: linear-gradient(135deg, #0d1b38, #174b55); color: #fff; padding: 36px 40px; box-shadow: 0 18px 45px rgba(13,27,56,.14); }
-.employee-hero h2 { margin: 9px 0 8px; color: #fff; font-family: "Roboto Slab", Georgia, serif; font-size: clamp(28px,4vw,40px); }
-.employee-hero p { margin: 6px 0 4px; color: #fff; font-size: 14px; font-weight: 700; line-height: 1.5; }
+/* Mix-look "Dit nu"-focusblok (0.9.152). Was een tweekoloms herokaart met een
+   begroeting en rekensommen ernaast; nu één gecentreerd blok: kicker, de
+   eerstvolgende actie groot, wie/wanneer, en de knoppen. De rekensommen zakken
+   naar een monospace-KPI-regel eronder (.dash-kpi). Blijft donker in beide thema's. */
+.employee-hero.dash-focus {
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px;
+  margin: 20px 0 0;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px 14px 0 0;
+  background:
+    radial-gradient(120% 150% at 50% 0%, rgba(58,189,157,.12), transparent 60%),
+    linear-gradient(135deg, #0d1b38, #143f4d);
+  color: #fff;
+  padding: 30px 28px 26px;
+  box-shadow: none;
+}
+.employee-hero.dash-focus #employee-dashboard-greeting { display: none; }
+.employee-hero.dash-focus h2 { margin: 0; color: #fff; font-family: "Roboto Slab", Georgia, serif; font-size: clamp(28px,4vw,40px); }
+.employee-hero.dash-focus p { order: 3; margin: 0; max-width: 26ch; color: #fff; font-family: "Roboto Slab", Georgia, serif; font-weight: 700; font-size: clamp(19px,3vw,24px); line-height: 1.18; letter-spacing: -.01em; }
+.employee-hero.dash-focus .employee-next-action-label { order: 2; display: block; margin: 0; color: var(--mint); font-family: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace; font-size: 10px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; }
+.employee-hero.dash-focus .employee-next-action-meta { order: 4; display: block; margin: 0; color: #b9c7d4; font-size: 11px; }
+.employee-hero.dash-focus .employee-hero-actions { order: 5; margin-top: 6px; }
 .employee-next-action-label { display: block; margin-top: 22px; color: var(--mint); font-size: 9px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
 .employee-next-action-meta { display: block; margin-bottom: 17px; color: #b9c7d4; font-size: 10px; }
-.employee-hero-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+.employee-hero-actions { display: flex; flex-wrap: wrap; gap: 9px; justify-content: center; }
+
+/* Monospace KPI-regel onder het focusblok - vervangt de losse rekensom-kaart. */
+.dash-kpi {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 20px;
+  margin: 0 0 14px;
+  border: 1px solid var(--line); border-top: 0;
+  border-radius: 0 0 14px 14px;
+  background: var(--surface);
+  padding: 11px 18px;
+  font-family: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+  font-size: 11.5px; color: var(--muted);
+}
+.dash-kpi .dash-kpi-title { color: var(--muted); text-transform: uppercase; letter-spacing: .1em; font-size: 9.5px; }
+.dash-kpi > strong { font-family: "Roboto Slab", Georgia, serif; font-size: 15px; color: var(--navy-tekst); }
+.dash-kpi .dash-kpi-cell { display: inline-flex; gap: 6px; }
+.dash-kpi .dash-kpi-cell small { color: var(--muted); }
+.dash-kpi .dash-kpi-cell b { color: var(--navy-tekst); font-weight: 500; }
+.dash-kpi .dash-kpi-cell:last-child { margin-left: auto; }
 .employee-all-actions-button { border-color: rgba(255,255,255,.32); background: rgba(255,255,255,.08); color: #fff; }
 .employee-all-actions-button:hover { background: rgba(255,255,255,.15); }
 .employee-all-actions-button[hidden] { display: none; }
@@ -981,12 +1018,13 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .employee-customer-timesheet-card p { margin: 7px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
 .employee-customer-timesheet-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .employee-metrics .compact-metric { font-size: 20px; }
-.employee-open-overview { scroll-margin-top: 110px; margin: 0 0 22px; overflow: hidden; border-radius: 22px; background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(244,249,247,.98)); box-shadow: 0 16px 34px rgba(13,27,56,.06); }
-.employee-open-overview .panel-heading { align-items: flex-start; }
-.employee-open-overview-list { display: grid; gap: 12px; padding: 0 24px 24px; }
-.employee-open-month { border: 1px solid #dbe6e2; border-radius: 18px; background: linear-gradient(135deg, #fff, #fbfefd); overflow: hidden; }
-.employee-open-month.is-current { border-color: var(--mint-dark); box-shadow: 0 0 0 2px rgba(37,150,124,.08), 0 12px 24px rgba(13,27,56,.08); }
-.employee-open-month-heading { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 14px; border: 0; background: transparent; color: inherit; cursor: pointer; font: inherit; padding: 15px 16px; text-align: left; transition: background .16s ease; }
+.employee-open-overview { scroll-margin-top: 110px; margin: 0 0 14px; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: 0 4px 14px rgba(13,27,56,.035); }
+.employee-open-overview .panel-heading { align-items: flex-start; padding: 14px 16px 10px; }
+.employee-open-overview .panel-heading h3 { font-size: 14px; }
+.employee-open-overview-list { display: grid; gap: 8px; padding: 0 14px 14px; }
+.employee-open-month { border: 1px solid var(--line); border-left: 3px solid var(--warning); border-radius: 8px; background: var(--surface); overflow: hidden; }
+.employee-open-month.is-current { border-left-color: var(--mint-dark); box-shadow: 0 0 0 2px rgba(37,150,124,.06); }
+.employee-open-month-heading { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 14px; border: 0; background: transparent; color: inherit; cursor: pointer; font: inherit; padding: 11px 14px; text-align: left; transition: background .16s ease; }
 .employee-open-month-heading:hover { background: #f4faf8; }
 .employee-open-month-heading-copy { min-width: 0; }
 .employee-open-month-heading-copy strong, .employee-open-month-heading-copy small { display: block; }
@@ -1976,6 +2014,10 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
     margin-top: 16px;
     padding: 22px 18px;
   }
+  .employee-hero.dash-focus { margin-top: 14px; padding: 22px 16px 20px; }
+  .employee-hero.dash-focus p { font-size: 18px; }
+  .dash-kpi { gap: 6px 14px; padding: 10px 14px; }
+  .dash-kpi .dash-kpi-cell:last-child { margin-left: 0; }
 
   .hero-copy h2,
   .employee-hero h2 {
