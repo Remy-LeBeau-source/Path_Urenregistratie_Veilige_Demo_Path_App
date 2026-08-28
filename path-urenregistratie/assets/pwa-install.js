@@ -66,6 +66,28 @@ if ('serviceWorker' in navigator) {
     }
   }
 
+  function isIOS() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent);
+  }
+
+  // Chrome/Android stuurt na een installatie geen beforeinstallprompt meer, maar
+  // in een gewoon tabblad weet de pagina dat niet uit zichzelf. getInstalledRelatedApps
+  // vertelt het wel -- die staat in het manifest onder related_applications.
+  // Zonder die API (iOS, Firefox) blijft dit false en valt alles terug op het oude
+  // gedrag.
+  var appGeinstalleerd = false;
+  function controleerInstallatie() {
+    if (draaitAlsApp()) { appGeinstalleerd = true; werkMenuBij(); verbergen(); return; }
+    if (typeof navigator.getInstalledRelatedApps !== "function") return;
+    navigator.getInstalledRelatedApps().then(function (apps) {
+      if (Array.isArray(apps) && apps.some(function (a) { return a && a.platform === "webapp"; })) {
+        appGeinstalleerd = true;
+        werkMenuBij();
+        verbergen();
+      }
+    }).catch(function () { /* niet ondersteund of geweigerd; oude gedrag blijft */ });
+  }
+
   function verbergen() {
     balk.setAttribute("hidden", "");
     document.body.classList.remove("toont-installatieaanbod");
@@ -93,7 +115,10 @@ if ('serviceWorker' in navigator) {
   function werkMenuBij() {
     var item = document.querySelector("#profile-action-install");
     if (!item) return;
-    if (draaitAlsApp()) item.setAttribute("hidden", "");
+    // De vaste plek in het profielmenu blijft, zodat je het aanbod zelf kunt
+    // opzoeken als de browser het niet uit zichzelf meldt. Alleen weg zodra de app
+    // draait of aantoonbaar geinstalleerd is -- dan valt er niks te installeren.
+    if (draaitAlsApp() || appGeinstalleerd) item.setAttribute("hidden", "");
     else item.removeAttribute("hidden");
   }
 
@@ -122,7 +147,7 @@ if ('serviceWorker' in navigator) {
   }
 
   function tonen() {
-    if (alAfgewezen() || draaitAlsApp() || !opTelefoon()) return;
+    if (alAfgewezen() || draaitAlsApp() || appGeinstalleerd || !opTelefoon()) return;
     // Niet vragen terwijl iemand met een dialoogvenster bezig is.
     if (dialoogOpen()) return;
     balk.removeAttribute("hidden");
@@ -219,14 +244,19 @@ if ('serviceWorker' in navigator) {
   // Hoe je installeert verschilt per browser, en alleen Chrome-achtigen laten
   // ons het zelf starten. Zonder die mogelijkheid is uitleggen het enige wat
   // kan -- maar dan nog steeds zichtbaar, niet weggestopt.
+  // Hoe je installeert verschilt per browser; alleen Chrome-achtigen laten ons het
+  // zelf starten. Zonder die mogelijkheid is uitleggen het enige wat kan.
   function uitlegVoorDezeBrowser() {
-    var ua = navigator.userAgent;
-    var isIOS = /iPad|iPhone|iPod/.test(ua);
-    if (isIOS) return "Tik onderin op Delen en kies Zet op beginscherm.";
+    if (isIOS()) return "Tik onderin op Delen en kies Zet op beginscherm.";
     return "Open het menu van je browser (drie puntjes) en kies App installeren.";
   }
 
   function werkBalkBij() {
+    if (appGeinstalleerd) {
+      // Aantoonbaar geinstalleerd -- niks meer aan te bieden.
+      verbergen();
+      return;
+    }
     if (bewaardeMelding) {
       if (hint) hint.textContent = "Dan open je hem als app, zonder adresbalk.";
       accepteren.removeAttribute("hidden");
@@ -239,6 +269,7 @@ if ('serviceWorker' in navigator) {
   // Niet meteen bij binnenkomst: eerst even laten zien wat de app is. En niet
   // wachten op de browser, want dat signaal komt na een eerdere installatie
   // lang niet meer.
+  controleerInstallatie();
   window.setTimeout(function () {
     werkBalkBij();
     tonen();

@@ -11,3 +11,6 @@ playwright-report/
 test-results/
 test-results-*/
 live-doc-site/
+
+# Vite build output (regenerated door npm run build; wordt niet geserveerd, assets/ is de bron)
+dist/

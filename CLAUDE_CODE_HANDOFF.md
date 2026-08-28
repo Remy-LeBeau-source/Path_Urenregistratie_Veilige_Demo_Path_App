@@ -26,6 +26,16 @@ Deze sectie gaat vóór alle oudere secties hieronder.
   placeholder-PDF (`TESTDOCUMENT`-marker of `< 20 kB` en geen jsPDF); zonder echte factuur valt de
   acceptatiemail terug op het gegenereerde branded NIET-BOEKEN-document. `smoke-test.mjs` bewaakt
   de marker-check.
+- **0.9.147** — drie dingen:
+  1. `{broker}` ontbrak in de mail-render-variabelen (`queue.php` `$vars`) terwijl de hulptekst het
+     noemt -> toegevoegd (`broker_name` join). `{medewerker}/{klant}/{uren}/{factuurnummer}/
+     {overeenkomstnummer}` werkten al.
+  2. Install-banner-UX: na installeren bleef de banner + het profielmenu-item "Op startscherm zetten"
+     in het gewone tabblad zeuren. `manifest.webmanifest` heeft nu `related_applications`, en
+     `pwa-install.js` gebruikt `navigator.getInstalledRelatedApps()` (+ `display-mode: standalone`):
+     is de PWA aantoonbaar geinstalleerd, dan verdwijnen banner én menu-item. Niet-geinstalleerd
+     gedrag ongewijzigd (banner/menu blijven met handmatige uitleg). Nieuwe test `MOB-H-018`.
+  3. `dist/` in `.gitignore` + `git rm --cached` (Vite-output, wordt niet geserveerd, CI bouwt zelf).
 - CI: `release-pipeline.yml` `Validate` en `Promote Test` draaien nu **4-way gesharded**
   (`strategy.matrix.shard`), ~50 → ~20 min, alle tests blijven draaien.
 - `smoke-test.mjs`-guard: geen `action:'lock'` zonder `concept_pdf_base64` in `tests/remote/`.
@@ -43,11 +53,19 @@ Deze sectie gaat vóór alle oudere secties hieronder.
   (stasjo) raakt binnen een bestand gefactureerd door een eerdere case.
 
 ### Bekende blokkade / quarantaine
-- **`E2E-H-025`** (`business-workflows-mail.spec.ts`) staat op `test.fixme` sinds 28 aug. Pre-existing
-  render-race (twee renderpaden voor de standaardtekstenlijst), geen regressie van deze sessie. Met
-  de suite nu gesharded landt hij vaker op mobile-safari in dezelfde shard en faalde daar beide
-  pogingen, waardoor de 0.9.144-deploy bleef hangen. Feature blijft gedekt door `E2E-H-024` + de
-  settings-/acceptatietests. **Ochtendtaak:** de twee renderpaden ontknopen en `fixme` weghalen.
+- **`E2E-H-025`** (`business-workflows-mail.spec.ts`) staat op `test.skip(true, ...)` sinds 28 aug.
+  Geen regressie van deze sessie. Bewust **niet blind gefixt** — de case heeft drie losse
+  fragiliteiten die apart aandacht nodig hebben:
+  1. **Render-race** in de mail-standaardtekstenlijst (`app.js`): de lijst wordt door twee
+     renderpaden opgebouwd; typ/fill je tussen die twee in, dan wordt je invoer overschreven en sla
+     je stil de oude waarde op. De test compenseert al met reload-retries maar valt op mobile-safari
+     af en toe alsnog om.
+  2. **`ketenTotFactuur()`** in dezelfde spec leunt op de GUI-goedkeurknop en op een schone
+     urenstaat-startstate; bij CI-datacontentie kwam "correction" i.p.v. "approved" terug. Zelfde
+     patroon als de charter-fixes: verse `createDemoEmployee` + `apiApprove` maakt dit deterministisch.
+  3. **Cleanup-lek**: faalt de "When"-stap, dan draait de "Then"-herstelstap niet en blijft de
+     `mail_channel_templates`-customisatie staan -> de isolatiefixture meldt baseline-drift.
+  Feature zelf gedekt door `E2E-H-024` + de settings-/acceptatietests. Pak 1/2/3 apart aan, dan skip weg.
 - **Pipeline-trigger:** alleen een **push** naar `main` draait de deploy-jobs. `gh workflow run`
   (`workflow_dispatch`) laat Promote Test / Deploy Test **skippen**. Niet handmatig cancelen/
   hertriggeren — `concurrency: cancel-in-progress` maakt er een knoop van.
@@ -64,9 +82,8 @@ Deze sectie gaat vóór alle oudere secties hieronder.
   ontknopen (`business-workflows-mail.spec.ts`, zie de comment daar), dan de `test.skip` weg.
 - Optioneel meer chartercases (E2E-25 "Overig + Factuur meesturen" is lokaal al `E2E-H-012`;
   een live-versie vraagt route-config-plumbing via `assignment_mail_routes.include_invoice_pdf`).
-- Instellingen-hulptekst noemt `{broker}`/`{medewerker}` als factuurnummer-veld; die worden nergens
-  ingevuld (server noch browser) — of laten werken, of uit de hulptekst halen. Ontwerpkeuze voor Gio.
-- Bevestigen dat de pipeline voor `bbb58dd` (test-only) groen werd.
+- **AF (28 aug, 0.9.147):** `{broker}` in mailteksten opgelost; install-banner zeurt niet meer na
+  installatie (`getInstalledRelatedApps`); `dist/` gitignored. Zie de 0.9.147-regel hierboven.
 
 ### Onveranderd: PROD-grens
 Niets naar PROD. `Promote Prod` blijft de handmatige gele poort; nooit zelf goedkeuren.

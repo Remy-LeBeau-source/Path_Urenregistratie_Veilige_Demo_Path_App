@@ -145,12 +145,14 @@ function mail_enqueue_for_invoice(
             c.support_email AS support_email,
             c.website AS company_website,
             c.tagline AS company_tagline,
-            cp_client.trade_name AS client_name
+            cp_client.trade_name AS client_name,
+            COALESCE(NULLIF(cp_broker.trade_name, \'\'), cp_broker.legal_name) AS broker_name
          FROM invoices i
          JOIN timesheets t ON t.id = i.timesheet_id
          JOIN employees e ON e.id = t.employee_id
          JOIN assignments a ON a.id = t.assignment_id
          LEFT JOIN counterparties cp_client ON cp_client.id = a.client_id AND cp_client.company_id = :company_id
+         LEFT JOIN counterparties cp_broker ON cp_broker.id = a.broker_id AND cp_broker.company_id = :company_id
          JOIN periods p ON p.id = t.period_id
          JOIN companies c ON c.id = i.company_id
          WHERE i.id = :invoice_id AND i.company_id = :company_id2
@@ -185,6 +187,7 @@ function mail_enqueue_for_invoice(
         'website'           => (string)($inv['company_website'] ?? ''),
         'slogan'            => (string)($inv['company_tagline'] ?? ''),
         'klant'             => (string)($inv['client_name'] ?? ''),
+        'broker'            => (string)($inv['broker_name'] ?? ''),
         'overeenkomstnummer'=> (string)($inv['agreement_number'] ?? ''),
     ];
 

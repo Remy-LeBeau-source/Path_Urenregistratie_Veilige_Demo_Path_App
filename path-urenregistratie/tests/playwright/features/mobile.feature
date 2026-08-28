@@ -153,3 +153,12 @@ Feature: Mobiele gebruikerservaring
     When de flow voor MOB-H-017 wordt uitgevoerd
     Then verdwijnt hij vanzelf, zodat hij niets blijvend afdekt
     And ligt er daarna niets meer onder de balk
+
+  @happy
+  Scenario: [MOB-H-018] na installatie verdwijnt het installatieaanbod uit de balk en het profielmenu
+    # Testtechniek: Toestandsafhankelijke UI met getInstalledRelatedApps
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given de app is geinstalleerd en wordt in een gewoon browsertabblad geopend
+    When de browser alsnog een installvraag meldt en de eigen timer verloopt
+    Then blijft de installatiebalk verborgen
+    And is Op startscherm zetten uit het profielmenu verdwenen

@@ -1332,3 +1332,36 @@ test('[MOB-H-017] het installatieaanbod dekt geen knoppen af', async ({ page }) 
     expect(afgedekt, `deze knoppen liggen onder de balk: ${afgedekt.join(', ')}`).toEqual([]);
   });
 });
+
+test('[MOB-H-018] na installatie verdwijnt het installatieaanbod uit de balk en het profielmenu', async ({ page }) => {
+  // Gio installeerde de app en kreeg in het gewone tabblad tóch nog de balk en het
+  // menu-item "Op startscherm zetten"; klikken gaf "open het browsermenu..." terwijl
+  // de app er al stond. getInstalledRelatedApps (uit het manifest, related_applications)
+  // vertelt of de PWA geinstalleerd is -- dan hoort het aanbod overal weg.
+  test.setTimeout(60_000);
+  await page.addInitScript(() => {
+    (navigator as unknown as { getInstalledRelatedApps: () => Promise<unknown[]> })
+      .getInstalledRelatedApps = () => Promise.resolve([{ platform: 'webapp', url: '', id: '' }]);
+  });
+
+  const login = new LoginPage(page);
+  await login.open();
+  await login.loginAsAdmin();
+  await page.evaluate(() => {
+    try { window.localStorage.removeItem('path-install-afgewezen'); } catch { /* geblokkeerd */ }
+  });
+  await page.reload();
+
+  await test.step('Then blijft de balk weg, ook na een melding van de browser en de eigen timer', async () => {
+    await page.evaluate(() => window.dispatchEvent(new Event('beforeinstallprompt')));
+    await page.waitForTimeout(3_500);
+    await expect(page.locator('#install-banner'),
+      'een geinstalleerde app hoeft niet opnieuw aangeboden te worden').toBeHidden();
+  });
+
+  await test.step('And is "Op startscherm zetten" uit het profielmenu verdwenen', async () => {
+    await openProfielmenu(page);
+    await expect(page.locator('#profile-action-install'),
+      'het menu-item hoort weg te zijn zodra de app geinstalleerd is').toBeHidden();
+  });
+});
