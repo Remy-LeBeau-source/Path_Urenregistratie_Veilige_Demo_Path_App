@@ -450,7 +450,7 @@ jsPDF-conceptfactuur valt de server terug op de platte `simple_pdf`-tekstfactuur
 TEST-site met echte mail ging die dan als bijlage de deur uit. Alle afrondingen in `tests/remote/`
 lopen via `finaliseViaConceptUpload()` / `guiFinaliseInvoice()`.
 
-# Installatiebanner: knop zichtbaar en de flaky mailcase in quarantaine
+# Installatiebanner: knop zichtbaar
 
 Het inline SW-registratie-/installatiebanner-script in `index.html` werd door de
 `script-src 'self'`-CSP stil geblokkeerd op TEST/PROD; het is verplaatst naar
@@ -459,11 +459,24 @@ kwam een pre-existing CSS-fout boven: `#install-banner-accept` had alleen
 `.button` (geen vulkleur) en viel weg op de donkere balk. De knop heeft nu
 `button button-primary`; `smoke-test.mjs` eist een gevulde knopvariant.
 
-`E2E-H-025` (`business-workflows-mail.spec.ts`) staat op `test.skip(true, ...)`:
-een pre-existing render-race (twee renderpaden voor de standaardtekstenlijst)
-die op mobile-safari beide pogingen omviel en met de gesharde suite de deploy
-blokkeerde. De feature blijft gedekt door `E2E-H-024` en de settings-/
-acceptatietests.
+# E2E-H-025 uit quarantaine (0.9.149)
+
+De case stond op `test.skip` om drie losse fragiliteiten; alle drie nu opgelost:
+1. **Render-race.** De standaardtekstenlijst wordt door twee renderpaden
+   opgebouwd (`renderAll()` en het opnieuw vullen van het instellingenformulier,
+   beide via `renderMailChannelTemplates()`). Vuurde er een terwijl je in een
+   veld typte, dan verving `innerHTML` je invoer door de serverstand en ging die
+   oude waarde mee bij opslaan. `renderMailChannelTemplates()` slaat de herbouw nu
+   over zolang de lijst er staat én de cursor er middenin zit
+   (`doel.contains(document.activeElement)`) -- alleen deze lijst, niet het hele
+   formulier (`renderAll` blijft `populateSettings()` onvoorwaardelijk doen).
+2. **Goedkeuring via de GUI-knop.** `ketenTotFactuur()` keurt nu goed via
+   `timesheets.php` (`action: 'approve'` + `expected_version`) in plaats van de
+   knop, die onder CI-datacontentie soms `correction` opleverde.
+3. **Cleanup-lek.** `test_reset_shared_baseline()` (`server/lib/test-reset.php`)
+   wist nu ook `mail_channel_templates`. De demo-seed maakt daar nooit een rij, dus
+   een half afgebroken run die een kanaal had aangepast gaf baseline-drift op die
+   tabel; na de reset is hij weer leeg, gelijk aan de baseline.
 
 # Live TEST-regressie: deterministische goedkeuring voor data-integriteitscases
 

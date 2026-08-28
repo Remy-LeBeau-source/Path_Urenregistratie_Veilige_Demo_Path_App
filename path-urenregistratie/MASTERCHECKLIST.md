@@ -1831,7 +1831,9 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
 - [x] E2E-23 (verse beheerder), E2E-24 (accountlevenscyclus), E2E-27 (heropen-beslissingstabel),
   E2E-30 (factuurnummer-uniciteit) toegevoegd en groen. Nieuwe helper `apiApprove` voor
   deterministische goedkeuring; state-machine-cases draaien op verse `createDemoEmployee`-medewerkers.
-- [x] `E2E-H-025` in quarantaine (`test.skip`) — pre-existing render-race, ochtendtaak.
+- [x] `E2E-H-025` uit quarantaine (0.9.149): render-race in `renderMailChannelTemplates()` gedempt
+  (geen herbouw terwijl de cursor in de lijst zit), goedkeuring via API i.p.v. de knop, en
+  `test_reset_shared_baseline()` wist `mail_channel_templates`. Lokaal 3/3 groen.
 - [x] 0.9.147 — `{broker}`-token in mailteksten, install-banner stopt na installatie
   (`getInstalledRelatedApps`), `dist/` gitignored.
 - [x] 0.9.148 (hotfix) — 0.9.147's `{broker}`-join gaf de factuur-laadquery een tweede

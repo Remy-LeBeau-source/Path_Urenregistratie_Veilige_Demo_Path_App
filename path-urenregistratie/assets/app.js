@@ -6546,6 +6546,14 @@ function renderMailChannelTemplates() {
   const doel = document.querySelector("#mail-channel-template-list");
   if (!doel) return;
 
+  // Twee renderpaden bouwen deze lijst op: renderAll() en het opnieuw vullen van
+  // het instellingenformulier. Vuurt er een terwijl iemand in een van deze
+  // velden typt, dan verving innerHTML stil de ingetypte tekst door de
+  // serverstand -- en bij opslaan ging die oude waarde mee. Staat de lijst er al
+  // en zit de cursor er middenin, dan laten we hem met rust; de opslag leest toch
+  // de live waarde uit het veld. Alleen deze lijst, niet het hele formulier.
+  if (doel.childElementCount > 0 && doel.contains(document.activeElement)) return;
+
   doel.innerHTML = Object.keys(MAIL_KANAAL_NAMEN).map(kanaal => {
     const geldt = mailStandaardTeksten[kanaal] || { subject: "", body: "" };
     const meegeleverd = mailMeegeleverdeTeksten[kanaal] || { subject: "", body: "" };

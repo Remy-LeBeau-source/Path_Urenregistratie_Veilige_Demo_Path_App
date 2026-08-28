@@ -60,19 +60,16 @@ Deze sectie gaat vóór alle oudere secties hieronder.
   (stasjo) raakt binnen een bestand gefactureerd door een eerdere case.
 
 ### Bekende blokkade / quarantaine
-- **`E2E-H-025`** (`business-workflows-mail.spec.ts`) staat op `test.skip(true, ...)` sinds 28 aug.
-  Geen regressie van deze sessie. Bewust **niet blind gefixt** — de case heeft drie losse
-  fragiliteiten die apart aandacht nodig hebben:
-  1. **Render-race** in de mail-standaardtekstenlijst (`app.js`): de lijst wordt door twee
-     renderpaden opgebouwd; typ/fill je tussen die twee in, dan wordt je invoer overschreven en sla
-     je stil de oude waarde op. De test compenseert al met reload-retries maar valt op mobile-safari
-     af en toe alsnog om.
-  2. **`ketenTotFactuur()`** in dezelfde spec leunt op de GUI-goedkeurknop en op een schone
-     urenstaat-startstate; bij CI-datacontentie kwam "correction" i.p.v. "approved" terug. Zelfde
-     patroon als de charter-fixes: verse `createDemoEmployee` + `apiApprove` maakt dit deterministisch.
-  3. **Cleanup-lek**: faalt de "When"-stap, dan draait de "Then"-herstelstap niet en blijft de
-     `mail_channel_templates`-customisatie staan -> de isolatiefixture meldt baseline-drift.
-  Feature zelf gedekt door `E2E-H-024` + de settings-/acceptatietests. Pak 1/2/3 apart aan, dan skip weg.
+- **`E2E-H-025`** — **uit quarantaine (0.9.149)**, alle drie de fragiliteiten opgelost:
+  1. **Render-race** in de mail-standaardtekstenlijst: `renderMailChannelTemplates()` (`app.js`) slaat
+     de `innerHTML`-herbouw nu over zolang de lijst er staat én de cursor erin zit
+     (`doel.contains(document.activeElement)`). `renderAll` blijft `populateSettings()` onvoorwaardelijk doen.
+  2. **`ketenTotFactuur()`** keurt nu goed via `timesheets.php` (`action:'approve'` + `expected_version`)
+     i.p.v. de GUI-knop.
+  3. **Cleanup-lek**: `test_reset_shared_baseline()` (`server/lib/test-reset.php`) wist nu ook
+     `mail_channel_templates` — de demo-seed maakt daar nooit een rij, dus een half afgebroken run
+     geeft geen baseline-drift meer.
+  Lokaal 3/3 groen (desktop-chromium, mobile-chrome, mobile-safari), 2,3 min.
 - **Pipeline-trigger:** alleen een **push** naar `main` draait de deploy-jobs. `gh workflow run`
   (`workflow_dispatch`) laat Promote Test / Deploy Test **skippen**. Niet handmatig cancelen/
   hertriggeren — `concurrency: cancel-in-progress` maakt er een knoop van.
@@ -85,13 +82,13 @@ Deze sectie gaat vóór alle oudere secties hieronder.
   via SSH tegen de TEST-FPM. Gio wil er geen uitgebreid nep-factuurdocument van maken en heeft het
   bewust losgelaten — de echte factuurdekking loopt via de flow (E2E-04/17/23/30/31, groen).
   **Niet verder wijzigen zonder expliciete nieuwe opdracht van Gio.**
-- **`E2E-H-025` uit quarantaine halen**: de twee renderpaden voor de standaardtekstenlijst
-  ontknopen (`business-workflows-mail.spec.ts`, zie de comment daar), dan de `test.skip` weg.
 - Optioneel meer chartercases (E2E-25 "Overig + Factuur meesturen" is lokaal al `E2E-H-012`;
   een live-versie vraagt route-config-plumbing via `assignment_mail_routes.include_invoice_pdf`).
 - **AF (28 aug, 0.9.147 + hotfix 0.9.148):** `{broker}` in mailteksten opgelost; install-banner
   zeurt niet meer na installatie (`getInstalledRelatedApps`); `dist/` gitignored. 0.9.147 zelf
   faalde op een `HY093`-regressie (dubbele `:company_id`), 0.9.148 is de hotfix + smoke-guard.
+  In 0.9.149: `E2E-H-025` uit quarantaine (render-race + API-goedkeuring + baseline-reset
+  wist `mail_channel_templates`).
   Zie de 0.9.147/0.9.148-regels hierboven.
 
 ### Onveranderd: PROD-grens

@@ -305,7 +305,13 @@ function test_reset_shared_baseline(PDO $pdo, array $config, string $actorEmail)
             }
         }
         $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
-        foreach (['password_reset_tokens', 'auth_login_audit'] as $table) {
+        // mail_channel_templates holds per-company overrides of the built-in mail
+        // texts. The demo seed never creates a row here, so the baseline is empty;
+        // a UI test that customises a channel and then fails before its own
+        // teardown leaves a row behind, and the e2eIsolation fingerprint check
+        // drifts on this table. Clearing it is the isolation intent -- an override
+        // is opt-in and rebuilt only when a test explicitly saves one.
+        foreach (['password_reset_tokens', 'auth_login_audit', 'mail_channel_templates'] as $table) {
             $pdo->exec('DELETE FROM ' . $table);
         }
         // app_state is a transient browser-state blob that server/api.php creates
