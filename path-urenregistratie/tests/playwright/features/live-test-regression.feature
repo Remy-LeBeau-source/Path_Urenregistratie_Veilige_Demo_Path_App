@@ -246,3 +246,30 @@ Feature: Live TEST-regressie
     When die nieuwe beheerder zelf inlogt, een ingediende urenstaat goedkeurt en de factuur afrondt
     Then ziet de nieuwe beheerder de beheerschermen en is de rol administrator
     And is de definitieve factuur de jsPDF-conceptfactuur en ontstaan de drie mailroutes broker, boekhouding en salaris
+
+  @happy @live
+  Scenario: [TEST-E2E-24] medewerker deactiveren blokkeert inloggen; data blijft; heractiveren herstelt toegang
+    # Testtechniek: Toestandsovergang op de accountstatus met negatieve login-controle
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given een verse medewerker die kan inloggen op de live TEST-site
+    When de beheerder het account deactiveert en daarna weer heractiveert
+    Then wordt inloggen tijdens de deactivatie met 401 of 403 geweigerd terwijl het account zichtbaar en als inactief gemarkeerd blijft
+    And werkt inloggen na heractiveren weer
+
+  @happy @live
+  Scenario: [TEST-E2E-27] goedgekeurde urenstaat zonder factuur mag terug naar correctie; met factuur wordt heropenen geweigerd
+    # Testtechniek: Beslissingstabel op de heropen-overgang van een goedgekeurde urenstaat
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given een goedgekeurde urenstaat zonder factuur op de live TEST-site
+    When de beheerder correctie vraagt, de medewerker herindient, opnieuw wordt goedgekeurd en de factuur wordt gemaakt, en daarna nogmaals correctie wordt gevraagd
+    Then is de eerste correctie toegestaan en gaat de status naar correctie
+    And wordt de tweede correctie na facturatie met 409 geweigerd zonder statuswijziging
+
+  @happy @live
+  Scenario: [TEST-E2E-30] twee medewerkers met hetzelfde nummer-sjabloon in dezelfde periode krijgen elk een uniek nummer
+    # Testtechniek: Data-integriteit met uniciteitsinvariant op factuurnummers
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given twee verse medewerkers met exact hetzelfde factuurnummer-sjabloon op de live TEST-site
+    When beide in dezelfde periode uren indienen en hun facturen worden afgerond
+    Then verschillen de twee factuurnummers ondanks het gelijke sjabloon
+    And krijgt het tweede nummer een numerieke suffix

@@ -531,3 +531,161 @@ test('[TEST-E2E-23] verse beheerder: aanmaken, inloggen, goedkeuren en factuur a
     await uiLogout(page);
   });
 });
+
+async function rawLogin(request: APIRequestContext, email: string, password: string): Promise<number> {
+  const token = await csrf(request);
+  const res = await request.post('/server/auth/login.php', {
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
+    data: { email, password },
+  });
+  return res.status();
+}
+
+// ===========================================================================
+// TEST-E2E-24 - Toestandsovergang op het account: deactiveren en heractiveren
+// ===========================================================================
+test('[TEST-E2E-24] medewerker deactiveren blokkeert inloggen; data blijft; heractiveren herstelt toegang', async ({ request }) => {
+  test.setTimeout(180_000);
+  const emp = await createDemoEmployee(request, creds, { namePrefix: 'TEST Levenscyclus' });
+
+  expect(await rawLogin(request, emp.email, emp.password), 'een verse medewerker hoort te kunnen inloggen').toBe(200);
+  await apiLogout(request);
+
+  await apiLogin(request, creds.admin.email, creds.admin.password);
+  const boot = await (await request.get('/server/api/bootstrap.php')).json();
+  const userId = Number((boot.users as Array<Record<string, unknown>>).find((u) => String(u.email) === emp.email)?.id || 0);
+  expect(userId, 'de medewerker hoort een user-account te hebben').toBeGreaterThan(0);
+
+  await test.step('Deactiveren -> inloggen geweigerd, maar nog zichtbaar voor beheer', async () => {
+    const t = await csrf(request);
+    const r = await request.post('/server/api/users.php', {
+      headers: { 'X-CSRF-Token': t }, data: { action: 'deactivate', user_id: userId },
+    });
+    expect(r.ok(), `deactiveren hoort te slagen: ${await r.text()}`).toBe(true);
+    await apiLogout(request);
+
+    expect([401, 403], 'een gedeactiveerde medewerker mag niet meer inloggen')
+      .toContain(await rawLogin(request, emp.email, emp.password));
+
+    await apiLogin(request, creds.admin.email, creds.admin.password);
+    const na = await (await request.get('/server/api/bootstrap.php')).json();
+    const rec = (na.users as Array<Record<string, unknown>>).find((u) => String(u.email) === emp.email);
+    expect(rec, 'de gedeactiveerde medewerker blijft in het beheer zichtbaar').toBeTruthy();
+    expect(Boolean(rec?.active), 'en staat als inactief gemarkeerd').toBe(false);
+  });
+
+  await test.step('Heractiveren -> inloggen werkt weer', async () => {
+    const t = await csrf(request);
+    const r = await request.post('/server/api/users.php', {
+      headers: { 'X-CSRF-Token': t }, data: { action: 'reactivate', user_id: userId },
+    });
+    expect(r.ok(), `heractiveren hoort te slagen: ${await r.text()}`).toBe(true);
+    await apiLogout(request);
+    expect(await rawLogin(request, emp.email, emp.password), 'na heractiveren hoort inloggen weer te werken').toBe(200);
+    await apiLogout(request);
+  });
+});
+
+// ===========================================================================
+// TEST-E2E-27 - Beslissingstabel: goedgekeurde urenstaat heropenen
+// ===========================================================================
+test('[TEST-E2E-27] goedgekeurde urenstaat zonder factuur mag terug naar correctie; met factuur wordt heropenen geweigerd', async ({ page }) => {
+  test.setTimeout(240_000);
+  await uiLogin(page, creds.employee.email, creds.employee.password);
+  const { period, employeeId } = await guiSubmitHours(page);
+  await uiLogout(page);
+
+  await uiLogin(page, creds.admin.email, creds.admin.password);
+  await guiApprove(page, employeeId);
+  let ts = (await readTimesheet(page.request, period, employeeId)).timesheet;
+  expect(String(ts?.status)).toBe('approved');
+
+  await test.step('Goedgekeurd zonder factuur -> correctie toegestaan', async () => {
+    const t = await csrf(page.request);
+    const r = await page.request.post('/server/api/timesheets.php', {
+      headers: { 'X-CSRF-Token': t },
+      data: {
+        action: 'request_correction', period, employee_id: employeeId,
+        expected_version: Number(ts?.version || 1), correction_message: 'Graag augustus nalopen.',
+      },
+    });
+    expect(r.ok(), `correctie op goedgekeurd-zonder-factuur hoort te mogen: ${await r.text()}`).toBe(true);
+    expect(String((await readTimesheet(page.request, period, employeeId)).timesheet?.status)).toBe('correction');
+  });
+  await uiLogout(page);
+
+  await test.step('Medewerker herindient, beheerder keurt opnieuw goed en maakt de factuur', async () => {
+    await uiLogin(page, creds.employee.email, creds.employee.password);
+    await page.locator('button[data-view="timesheet"]:visible').first().click();
+    const invoer = page.locator('#hours-grid .hours-input:not([disabled])').first();
+    await expect(invoer).toBeVisible();
+    await invoer.fill('8');
+    await invoer.press('Tab');
+    const schrijf = page.waitForResponse((r) =>
+      r.url().includes('/server/api/timesheets.php') && r.request().method() === 'POST');
+    await page.locator('#submit-timesheet').click();
+    await schrijf;
+    await uiLogout(page);
+
+    await uiLogin(page, creds.admin.email, creds.admin.password);
+    await guiApprove(page, employeeId);
+    ts = (await readTimesheet(page.request, period, employeeId)).timesheet;
+    await finaliseViaConceptUpload(page, employeeId, period, Number(ts?.id));
+    expect(String((await readTimesheet(page.request, period, employeeId)).timesheet?.status)).toBe('invoiced');
+  });
+
+  await test.step('Met factuur -> heropenen geweigerd, status ongewijzigd', async () => {
+    const na = (await readTimesheet(page.request, period, employeeId)).timesheet;
+    const t = await csrf(page.request);
+    const r = await page.request.post('/server/api/timesheets.php', {
+      headers: { 'X-CSRF-Token': t },
+      data: {
+        action: 'request_correction', period, employee_id: employeeId,
+        expected_version: Number(na?.version || 1), correction_message: 'Toch nog wijzigen.',
+      },
+    });
+    expect([409, 422], `heropenen na facturatie hoort geweigerd te worden (kreeg ${r.status()})`).toContain(r.status());
+    expect(String((await r.json().catch(() => ({}))).error || '')).toMatch(/invoiced|invalid-timesheet-transition/);
+    expect(String((await readTimesheet(page.request, period, employeeId)).timesheet?.status),
+      'de geweigerde heropening mag de status niet veranderen').toBe('invoiced');
+  });
+  await uiLogout(page);
+});
+
+// ===========================================================================
+// TEST-E2E-30 - Invariant: factuurnummers zijn uniek, ook bij hetzelfde sjabloon
+// ===========================================================================
+test('[TEST-E2E-30] twee medewerkers met hetzelfde nummer-sjabloon in dezelfde periode krijgen elk een uniek nummer', async ({ page, request }) => {
+  test.setTimeout(300_000);
+  const stamp = Date.now().toString().slice(-6);
+  const sjabloon = `UNIEK${stamp}-{jaar}-{maand}`;
+  const a = await createDemoEmployee(request, creds, { namePrefix: 'TEST Nummer-A', invoiceTemplate: sjabloon });
+  const b = await createDemoEmployee(request, creds, { namePrefix: 'TEST Nummer-B', invoiceTemplate: sjabloon });
+
+  const nummers: string[] = [];
+  for (const emp of [a, b]) {
+    await uiLogin(page, emp.email, emp.password);
+    const sub = await guiSubmitHours(page);
+    await uiLogout(page);
+
+    await uiLogin(page, creds.admin.email, creds.admin.password);
+    await guiApprove(page, sub.employeeId);
+    const ts = (await readTimesheet(page.request, sub.period, sub.employeeId)).timesheet;
+    await finaliseViaConceptUpload(page, sub.employeeId, sub.period, Number(ts?.id));
+    const facturen = await (await page.request.get(`/server/api/invoices.php?period=${sub.period}`)).json();
+    const factuur = ((facturen.invoices || facturen.items || []) as Array<Record<string, unknown>>)
+      .find((i) => Number(i.timesheet_id) === Number(ts?.id)) as Record<string, unknown>;
+    expect(factuur, `medewerker ${emp.name} hoort een factuur te hebben`).toBeTruthy();
+    nummers.push(String(factuur.invoice_number));
+    await uiLogout(page);
+  }
+
+  const [n1, n2] = nummers;
+  expect(n1, 'beide facturen hebben een nummer').not.toBe('');
+  expect(n2).not.toBe('');
+  expect(n1, 'de twee factuurnummers moeten verschillen ondanks hetzelfde sjabloon').not.toBe(n2);
+  const metSuffix = new RegExp(`^UNIEK${stamp}-\\d{4}-[a-z]+-\\d+$`);
+  const basis = new RegExp(`^UNIEK${stamp}-\\d{4}-[a-z]+$`);
+  expect(nummers.every((n) => basis.test(n) || metSuffix.test(n)), 'beide nummers volgen het sjabloon').toBe(true);
+  expect(nummers.some((n) => metSuffix.test(n)), 'het tweede nummer hoort een numerieke suffix te krijgen').toBe(true);
+});

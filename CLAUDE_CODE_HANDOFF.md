@@ -1,6 +1,56 @@
 # Handoff voor Claude Code
 
-Bijgewerkt: 24 augustus 2026, Europe/Amsterdam.
+Bijgewerkt: 28 augustus 2026, Europe/Amsterdam.
+
+## Sessie 28 aug 2026 — Claude Code (nieuwe machine, native MySQL)
+
+Deze sectie gaat vóór alle oudere secties hieronder.
+
+### Omgeving
+- Oude laptop stuk; nieuwe Windows-machine, **zonder Docker**. PHP 8.4 (winget), MySQL 8.0.40
+  (ZIP, matcht CI), app-DB `path_urenregistratie_test`. Zie `~/.claude/.../memory/dev-environment-this-machine.md`.
+- TEST/PROD-DB in VS Code lukt niet (TransIP ProxySQL weigert de DB-Client-driver); phpMyAdmin of
+  SSH-shell gebruiken. SSH-sleutel staat op `C:\Users\gchli\.ssh\path_transip`, geregistreerd bij TransIP.
+
+### Vrijgegeven naar TEST deze sessie
+- **0.9.142** — acceptatieconsole-PDF is de branded lay-out (Path-logo + kopbalk).
+- **0.9.143** — factuur-telefoonnummer `0646328283 → 0646328286` (+ migratie `026` voor gedeployde
+  data); `{klant}` in het factuurnummer wordt de klantnaam (server `invoices.php` + browser
+  `app.js`); client-default `INV-{jaar}-{maand}` gelijk aan de server.
+- **0.9.144** — acceptatiemail hangt de **echte** laatst-verzonden factuur-PDF aan wanneer die
+  bestaat (`mail_acceptance_real_invoice_attachment()`), alleen met `ACCEPTATIETEST-`-naam.
+- CI: `release-pipeline.yml` `Validate` en `Promote Test` draaien nu **4-way gesharded**
+  (`strategy.matrix.shard`), ~50 → ~20 min, alle tests blijven draaien.
+- `smoke-test.mjs`-guard: geen `action:'lock'` zonder `concept_pdf_base64` in `tests/remote/`.
+
+### TEST-regressie (`tests/remote/`, aparte `playwright.test-remote.config.ts`, tegen de live site)
+- Charter in `tests/remote/TEST-CHARTER.md`; scenario's in
+  `tests/playwright/features/live-test-regression.feature`.
+- Cases: SMOKE-01..04, E2E-01..08, 10..25 en 27, 30. **25/25 groen tegen 0.9.143.**
+  E2E-23/24/27/30 zijn nieuw en moeten nog een keer volledig tegen 0.9.144 draaien.
+- Helpers in `tests/remote/_helpers.ts`: `createDemoEmployee` (echte klantnaam + eigen sjabloon),
+  `createDemoAdmin`, `finaliseViaConceptUpload`, `assertConceptInvoicePdf`, `currentPeriodKey`.
+
+### Bekende blokkade / quarantaine
+- **`E2E-H-025`** (`business-workflows-mail.spec.ts`) staat op `test.fixme` sinds 28 aug. Pre-existing
+  render-race (twee renderpaden voor de standaardtekstenlijst), geen regressie van deze sessie. Met
+  de suite nu gesharded landt hij vaker op mobile-safari in dezelfde shard en faalde daar beide
+  pogingen, waardoor de 0.9.144-deploy bleef hangen. Feature blijft gedekt door `E2E-H-024` + de
+  settings-/acceptatietests. **Ochtendtaak:** de twee renderpaden ontknopen en `fixme` weghalen.
+- **Pipeline-trigger:** alleen een **push** naar `main` draait de deploy-jobs. `gh workflow run`
+  (`workflow_dispatch`) laat Promote Test / Deploy Test **skippen**. Niet handmatig cancelen/
+  hertriggeren — `concurrency: cancel-in-progress` maakt er een knoop van.
+
+### Nog te doen
+- Volledige `tests/remote/`-suite (29 cases) tegen 0.9.144 draaien; bevindingen in E2E-23/24/27/30
+  bulk-fixen en hertesten; daarna committen (test-only, geen versiebump).
+- Optioneel meer chartercases (E2E-25 "Overig + Factuur meesturen" is lokaal al `E2E-H-012`;
+  een live-versie vraagt route-config-plumbing via `assignment_mail_routes.include_invoice_pdf`).
+- Instellingen-hulptekst noemt `{broker}`/`{medewerker}` als factuurnummer-veld; die worden nergens
+  ingevuld — of laten werken, of uit de hulptekst halen.
+
+### Onveranderd: PROD-grens
+Niets naar PROD. `Promote Prod` blijft de handmatige gele poort; nooit zelf goedkeuren.
 
 ## Actuele Codex-aanvulling — volledige E2E-keten (lokaal, nog niet vrijgegeven)
 

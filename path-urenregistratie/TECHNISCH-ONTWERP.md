@@ -379,3 +379,56 @@ onafgevangen `PDOException` als HTTP 500 mét stacktrace en er werd niets verwij
 nu eerst de gekoppelde ontvangers en meldingen op, binnen één transactie, en beantwoordt een fout
 met een generieke melding terwijl de oorzaak naar het serverlog gaat. Beide regressies staan in de
 smoke-test en in `ANN-H-002`.
+
+# Factuurnummer: {klant} wordt de klantnaam, server en browser identiek
+
+`formatInvoiceNumber()` (browser) en `invoices_apply_template()` (server) vulden alleen `{jaar}` en
+`{maand}` in. Een opdracht zonder eigen sjabloon viel in de browser terug op `"{klant}-{jaar}-{maand}"`
+terwijl de server voor datzelfde geval `INV-{jaar}-{maand}` gebruikte; het `{klant}`-token belandde
+zo letterlijk op de PDF en e-mail en PDF toonden verschillende nummers.
+
+Beide kanten hebben nu een `invoiceNumberToken()` / `invoices_number_token()`: de klantnaam
+gestript tot `[A-Za-z0-9]`, met `Klant` als terugval. `invoices_apply_template()` en
+`invoices_allocate_number()` krijgen de klantnaam mee; de lock-query in `invoices.php` joint
+`counterparties` voor `client_name`. De client-side standaard is gelijkgetrokken naar
+`INV-{jaar}-{maand}`. `invoices_allocate_number()` blijft de basis met een numerieke suffix
+uniek maken. `smoke-test.mjs` controleert de `{klant}`-resolutie; `TEST-E2E-30` bewaakt de
+uniciteit bij een gedeeld sjabloon.
+
+# Company-telefoonnummer gecorrigeerd met een idempotente migratie
+
+`0646328283` moest `0646328286` zijn. Seed (`database/seed-demo-data.sql`), `provision-company.php`,
+de app-default in `assets/app.js` en de betrokken tests zijn bijgewerkt. Voor al gedeployde
+omgevingen zet migratie `026_company_invoice_phone_fix.sql` exact die ene waarde recht
+(`UPDATE companies SET invoice_phone = '0646328286' WHERE invoice_phone = '0646328283'`), veilig
+herhaalbaar en geregistreerd in `migrate.php`.
+
+# Acceptatiemail hangt de echte factuur-PDF aan wanneer die bestaat
+
+`mail_acceptance_test_attachments()` genereerde altijd een server-document dat er anders uitzag dan
+een echte factuur, wat steeds tot de vraag "waarom is factuur X kapot" leidde. `mail_acceptance_
+business_snapshot()` geeft nu ook `pdf_storage_key` terug; `mail_acceptance_real_invoice_attachment()`
+haalt de opgeslagen PDF van de laatst verzonden factuur van schijf (via `mail_storage_path()`).
+Bestaat die, dan gebruikt de acceptatiemail díe bytes voor de Factuur-bijlage — alleen met een
+`ACCEPTATIETEST-NIET-BOEKEN-`-bestandsnaam en het NIET-BOEKEN-onderwerp. Zonder verzonden factuur,
+of zonder leesbaar bestand, valt het terug op het gegenereerde branded NIET-BOEKEN-document.
+`mail_acceptance_test_attachments()` krijgt hiervoor `array $config`; call sites in `dispatch.php`
+en `api/mail-acceptance.php` geven `$config` mee, de offline `mail-acceptance-policy-check.php`
+blijft op het gegenereerde document.
+
+# CI: de Playwright-suite draait gesharded, zonder dekkingsverlies
+
+De volledige suite draait serieel (`workers: 1`, gedeelde DB + PHP-dev-server met de fingerprint-
+isolatiefixture). In `release-pipeline.yml` hebben de jobs `Validate` en `Promote Test` nu
+`strategy.matrix.shard: [1,2,3,4]`, elk met een eigen `mysql:8.0`-service en `php -S`, en draaien
+`npm run test:e2e -- --shard=<n>/4`. Alle tests blijven draaien; `npm run check` draait nog maar op
+shard 1. Wanneer een externe stage-URL is geconfigureerd (`vars.PATH_APP_BASE_URL`) draait alleen
+shard 1 de suite tegen die gedeelde database. Verwachte doorlooptijd naar TEST: ~50 → ~20 min.
+
+# Guard: geen platte fallback-factuur in de TEST-regressie
+
+`smoke-test.mjs` (in `npm run check`) faalt de build als een bestand onder `tests/remote/` een
+factuur vergrendelt via `action:'lock'` zonder `concept_pdf_base64` binnen 600 tekens. Zonder de
+jsPDF-conceptfactuur valt de server terug op de platte `simple_pdf`-tekstfactuur, en op de LIVE
+TEST-site met echte mail ging die dan als bijlage de deur uit. Alle afrondingen in `tests/remote/`
+lopen via `finaliseViaConceptUpload()` / `guiFinaliseInvoice()`.

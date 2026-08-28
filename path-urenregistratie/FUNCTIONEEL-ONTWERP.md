@@ -141,7 +141,10 @@ de bedoelde productieroute zichtbaar blijft. De factuur en de officiële klantur
 afronden afzonderlijk als PDF te controleren. Ook de losse acceptatieknoppen tonen iedere verwachte
 PDF als een eigen link, zowel in de scenariolijst als in de bevestiging. De geopende PDF is exact het
 serverdocument dat bij bevestiging als bijlage wordt verzonden; een scenario zonder bijlage toont
-geen documentlink.
+geen documentlink. Als er al een echte verzonden factuur is, hangt de acceptatiemail díe opgeslagen
+factuur-PDF eraan (met een `ACCEPTATIETEST-`-bestandsnaam), zodat het scenario er identiek uitziet
+als een echte factuur en het echte bijlagepad meetest; zonder verzonden factuur valt het terug op
+een gegenereerd, branded NIET-BOEKEN-document.
 
 LOCAL verstuurt nooit echte mail. Een beheerder kan daar de lokale mailpreview via Instellingen of
 de statusbadge aan- en uitzetten om onderwerp, tekst, PDF-links en de verzendadministratie te
@@ -160,7 +163,11 @@ getoond. Boekhouding en Salarisadministratie zijn vaste kernroutes: ze kunnen wo
 gedeactiveerd, maar alleen zelf toegevoegde routes mogen definitief worden verwijderd.
 
 Dezelfde servergenerator verwerkt ieder geconfigureerd factuurnummerpatroon per medewerker en
-periode, waaronder `IND-*`, `IND-StvB-*`, `COA-*` en `Bel-Shawn-*`. De aparte knop
+periode, waaronder `IND-*`, `IND-StvB-*`, `COA-*` en `Bel-Shawn-*`. In het patroon worden
+`{jaar}` en `{maand}` altijd ingevuld en `{klant}` de klantnaam, gestript tot letters en cijfers;
+server en browser vullen dit identiek in, en een patroon zonder eigen invulling valt terug op
+`INV-{jaar}-{maand}`. Twee medewerkers met hetzelfde patroon in dezelfde periode krijgen elk een
+uniek nummer: het tweede krijgt een numerieke suffix (`-2`). De aparte knop
 `Brokerroute controleren` verzendt de officiële, goedgekeurde klanturenstaat van exact dezelfde
 medewerker en periode; op TEST gaat ook deze fysieke mail naar Giovanno met Kenrich in CC.
 

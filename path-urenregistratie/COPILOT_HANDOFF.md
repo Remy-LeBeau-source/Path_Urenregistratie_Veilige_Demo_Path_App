@@ -1,6 +1,13 @@
 # Copilot handoff — lokale mailpreview en regressieherstel
 
-Bijgewerkt: 24 augustus 2026
+Bijgewerkt: 28 augustus 2026
+
+## Stand 28 augustus 2026 (Claude Code)
+
+Zie `../CLAUDE_CODE_HANDOFF.md` bovenaan voor de volledige sessiecontext. TEST staat op **0.9.144**
+(branded acceptatie-PDF, telefoonnummer `…286` + migratie `026`, `{klant}` in het factuurnummer
+werkt server+browser, acceptatiemail hangt de echte factuur-PDF aan). CI `Validate`/`Promote Test`
+draaien 4-way gesharded. Nieuwe live-regressie in `tests/remote/`. PROD-grens onveranderd.
 
 ## Voor Codex — stand van Claude Code, 24 augustus
 

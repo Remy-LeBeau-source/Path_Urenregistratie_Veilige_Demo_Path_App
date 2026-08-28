@@ -2,6 +2,18 @@
 
 Dit bestand is de gedeelde brug tussen GitHub Copilot en Codex. Chatvensters zijn niet onderling zichtbaar, maar beide assistenten kunnen dit bestand in de werkmap lezen.
 
+## Stand 28 augustus 2026 (Claude Code)
+
+Volledige context: `CLAUDE_CODE_HANDOFF.md` bovenaan. Kort:
+- TEST staat op **0.9.144**. Vrijgegeven deze sessie: 0.9.142 (branded acceptatie-PDF),
+  0.9.143 (telefoonnummer `…286` + migratie `026`, `{klant}` in factuurnummer werkt server+browser),
+  0.9.144 (acceptatiemail hangt de echte factuur-PDF aan wanneer die bestaat).
+- CI `release-pipeline.yml`: `Validate` en `Promote Test` draaien 4-way gesharded (~50 → ~20 min).
+- Nieuwe live-regressie in `tests/remote/` (aparte config) met charter; cases SMOKE-01..04,
+  E2E-01..30 (deels). `smoke-test.mjs`-guard: geen invoice-lock zonder `concept_pdf_base64` in `tests/remote/`.
+- FO/TO bijgewerkt (factuurnummer-`{klant}`, acceptatiemail, gesharde CI, guard).
+- PROD-grens onveranderd: nooit `Promote Prod` goedkeuren.
+
 ## Voor Codex — stand van Claude Code, 24 augustus
 
 Niets gecommit, gepusht of gedeployed sinds `5fdf8fa`. Bronversie lokaal `0.9.139`,

@@ -1813,6 +1813,25 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
 - [-] Fase 16 - Bundel 1, de gecontroleerde productiecutover en de automatische v0.9.57-uitrol zijn
   afgerond; Bundel 3 (volledige menselijke productieacceptatie en beheerinrichting) blijft open
 
+### 28 aug 2026 — Claude Code, TEST op 0.9.144
+
+- [x] 0.9.142 — acceptatieconsole-PDF is de branded lay-out (Path-logo + kopbalk).
+- [x] 0.9.143 — factuur-telefoonnummer `0646328283 → 0646328286`, migratie `026` corrigeert
+  gedeployde `companies`-data (idempotent). `{klant}` in het factuurnummer wordt de klantnaam,
+  server (`invoices.php`) en browser (`app.js`) identiek; client-default gelijk aan de server
+  (`INV-{jaar}-{maand}`).
+- [x] 0.9.144 — acceptatiemail hangt de echte laatst-verzonden factuur-PDF aan wanneer die bestaat
+  (`mail_acceptance_real_invoice_attachment()`), alleen met `ACCEPTATIETEST-`-bestandsnaam.
+- [x] CI `release-pipeline.yml`: `Validate` en `Promote Test` 4-way gesharded
+  (`strategy.matrix.shard`), ~50 → ~20 min, volledige suite blijft draaien.
+- [x] `smoke-test.mjs`-guard: geen `action:'lock'` zonder `concept_pdf_base64` in `tests/remote/`.
+- [x] Live TEST-regressie in `tests/remote/` (aparte `playwright.test-remote.config.ts`) + charter
+  `tests/remote/TEST-CHARTER.md`; feature-scenario's in `live-test-regression.feature`. Cases
+  SMOKE-01..04, E2E-01..08, 10..25, 27, 30. **25/25 groen tegen 0.9.143.**
+- [!] E2E-23/24/27/30 (nieuwe beheerder, accountlevenscyclus, heropen-beslissingstabel,
+  factuurnummer-uniciteit) — nog één volledige run tegen 0.9.144 nodig, dan bulk-fix + hertest.
+- [x] FO/TO bijgewerkt; beide handoffs bijgewerkt.
+
 Telling fasestatussen:
 - [x] **15 fasen volledig bewezen of volledig verplaatst voor hun VS-Code-scope: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 en 15.**
 - [x] 1 fase is de laatste, verzamelende fase: 16 (alle buiten-VS-Code-taken + post-live beheer).
