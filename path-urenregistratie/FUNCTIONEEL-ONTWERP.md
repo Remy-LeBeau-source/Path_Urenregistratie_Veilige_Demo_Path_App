@@ -46,7 +46,9 @@ De volgende invarianten gelden altijd:
 3. een taak staat nooit tegelijk bij Backoffice en medewerker;
 4. wisselen van maand, scherm of rol creëert of verwijdert geen taak;
 5. na een geslaagde mutatie is de vervolgtaak zonder F5 zichtbaar;
-6. de werkvoorraad opent standaard ingeklapt en kan gericht op `alle`, `Backoffice` of `medewerkers` worden geopend.
+6. de open takenlijst staat standaard uitgeklapt en kan gericht op `alle`, `Backoffice` of `medewerkers` worden gefilterd of dichtgeklapt.
+
+Het dashboard opent met een compacte statusregel (totaal open acties, verdeling per eigenaar, knop naar de eerstvolgende actie), gevolgd door de open takenlijst en de teamtabel. De bewijsvoering dat het totaal klopt — per maand en per eigenaar opgeteld — staat bij de takenlijst zelf, niet meer als losse rekensommen in de kop.
 
 ### Vaste demonstratiebasis na Herstel
 

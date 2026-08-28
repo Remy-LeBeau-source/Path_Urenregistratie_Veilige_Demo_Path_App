@@ -1846,6 +1846,13 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
   Promote Test 4/4 + Deploy Test groen; 4/4 remote-smokes groen tegen live 0.9.149.
 - [x] Dev-machine: geplande taak `PathMySQL` (bij inloggen) start de lokale MySQL als 3306 niet
   luistert — geen handmatige start meer nodig.
+- [x] 0.9.149 (tests) — 7 nieuwe live-regressiecases (E2E-25/26/28-uitgebreid/29/32/33/34) +
+  E2E-14 decompressiebom-PNG; 37/37 remote groen tegen live TEST.
+- [x] 0.9.150 — **compacter beheerdersdashboard**: herokaart → statusregel, begroeting + de
+  `= N`-rekensommen weg (bewijs bij `#admin-task-summary`), open takenlijst standaard uitgeklapt,
+  compacte metric-grid + workflow-strook, mobiele hero-padding ~14px, `body.staat-als-app`
+  verbergt Herstel-knop + versiebadge in standalone. `npm run check` + dashboard/mobile-ui/
+  business-workflows Playwright-specs groen. Visueel voorstel als artifact.
 - [x] FO/TO bijgewerkt; beide handoffs + auto-geheugen bijgewerkt.
 
 Telling fasestatussen:

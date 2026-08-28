@@ -43,9 +43,23 @@ Deze sectie gaat vóór alle oudere secties hieronder.
     Validate-shards 1/2/4 (elke factuur+mail-test) en 0.9.147 is **nooit gedeployd**. Fix: de drie
     plekken heten nu `:company_id`, `:company_id2`, `:company_id3` en worden alle drie gebonden.
     `smoke-test.mjs` bewaakt nu dat de factuur-laadquery `:company_id` hooguit één keer bevat.
+- **0.9.149** — `E2E-H-025` uit quarantaine (render-race in `renderMailChannelTemplates()`,
+  API-goedkeuring in `ketenTotFactuur`, `test_reset_shared_baseline` wist `mail_channel_templates`).
+- **0.9.149 (tests)** — 7 nieuwe live-regressiecases: `TEST-E2E-25` (Overig-kanaal × Factuur
+  meesturen), `-26` (CSP/PWA-deploycontract), `-28` uitgebreid (IDOR incl. factuur-PDF), `-29`
+  (reset via echte SMTP), `-32` (sessiecookie), `-33` (reset-throttle), `-34` (stored-XSS);
+  `-14` uitgebreid (decompressiebom-PNG). 37/37 remote groen.
+- **0.9.150 — compacter beheerdersdashboard.** Herokaart → lage statusregel; begroeting en de
+  `= N`-rekensommen (`#hero-task-months`/`#hero-task-owners`) weg (bewijs staat nu bij
+  `#admin-task-summary`); open takenlijst standaard uitgeklapt (`state.adminTaskPanelExpanded`
+  default `true`); `.metric-grid.is-compact`, compacte workflow-strook, mobiele hero-padding
+  ~14px; `body.staat-als-app` (standalone) verbergt Herstel-knop + versiebadge in de topbar.
+  Testmigratie in `smoke-test.mjs`, `dashboard.spec.ts`, `end-to-end-workflows.feature`.
+  Visueel voorstel: artifact `path-uren-compacter`.
 - CI: `release-pipeline.yml` `Validate` en `Promote Test` draaien nu **4-way gesharded**
   (`strategy.matrix.shard`), ~50 → ~20 min, alle tests blijven draaien.
-- `smoke-test.mjs`-guard: geen `action:'lock'` zonder `concept_pdf_base64` in `tests/remote/`.
+- `smoke-test.mjs`-guard: geen `action:'lock'` zonder `concept_pdf_base64` in `tests/remote/`;
+  factuur-laadquery mag `:company_id` hooguit één keer bevatten (HY093-guard).
 
 ### TEST-regressie (`tests/remote/`, aparte `playwright.test-remote.config.ts`, tegen de live site)
 - Charter in `tests/remote/TEST-CHARTER.md`; scenario's in

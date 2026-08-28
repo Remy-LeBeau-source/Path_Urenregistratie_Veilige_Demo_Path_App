@@ -459,6 +459,30 @@ kwam een pre-existing CSS-fout boven: `#install-banner-accept` had alleen
 `.button` (geen vulkleur) en viel weg op de donkere balk. De knop heeft nu
 `button button-primary`; `smoke-test.mjs` eist een gevulde knopvariant.
 
+# Compacter beheerdersdashboard (0.9.150)
+
+Het dashboard toonde hetzelfde totaal aan open acties op vier plekken, elk met een
+eigen rekensom. Herzien tot **statusregel + open takenlijst + teamtabel**:
+
+- `.hero-card` is een lage strook (`is-strip`): aandacht-notitie + eigenaarsbadges
+  links, `#hero-task-total` + "Open werkvoorraad" rechts. **Weg:** `#admin-dashboard-greeting`
+  (begroeting) en het `.hero-task-math`-blok (`#hero-task-months` / `#hero-task-owners`,
+  de "= N"-rekensommen). De één-op-één-bewijsvoering van het totaal per maand en per
+  eigenaar staat nog steeds in `#admin-task-summary`, bij de takenlijst zelf.
+- `renderDashboardActions()` schrijft nog steeds naar `#hero-task-months` /
+  `#hero-task-owners` **als ze bestaan** (`?.`-guards), zodat de functie los van de
+  DOM-indeling blijft werken.
+- De open takenlijst staat **standaard uit** (`state.adminTaskPanelExpanded` default
+  `true`, storage-coercion `!== false`); de toggle klapt hem alleen dicht op verzoek.
+- `.dashboard-next-action-card`, `.metric-grid.is-compact`, `.workflow-overview` en de
+  progress-ring zijn strakker; mobiele hero-padding van 24-28px naar ~14px.
+- **App-modus:** `markeerAppModus()` zet `body.staat-als-app` bij
+  `display-mode: standalone`; CSS verbergt dan de Herstel-knop en de versiebadge in de
+  topbar en maakt de balk smaller. Niet-standalone gedrag onveranderd.
+- Testmigratie: `smoke-test.mjs` (kop-rekensommen → `#admin-task-summary`, begroeting →
+  `#profile-menu-name`), `dashboard.spec.ts` (`#hero-task-owners` → `#admin-task-summary`,
+  takenlijst start zichtbaar), `end-to-end-workflows.feature` (E2E-H-001-tekst).
+
 # E2E-H-025 uit quarantaine (0.9.149)
 
 De case stond op `test.skip` om drie losse fragiliteiten; alle drie nu opgelost:

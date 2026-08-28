@@ -417,7 +417,7 @@ function freshState() {
     invoiceDetailCollapsed: true,
     approvalScope: "all",
     adminTaskFilter: "all",
-    adminTaskPanelExpanded: false,
+    adminTaskPanelExpanded: true,
     adminTaskMonthState: {},
     hoursWeekScope: "all",
     hoursWeekScopeTouched: false,
@@ -667,7 +667,7 @@ function loadState() {
     saved.hoursWeekScope = typeof saved.hoursWeekScope === "string" ? saved.hoursWeekScope : "all";
     saved.hoursWeekScopeTouched = saved.hoursWeekScopeTouched === true;
     saved.invoiceDetailCollapsed = saved.invoiceDetailCollapsed === true;
-    saved.adminTaskPanelExpanded = saved.adminTaskPanelExpanded === true;
+    saved.adminTaskPanelExpanded = saved.adminTaskPanelExpanded !== false;
     saved.adminTaskMonthState = saved.adminTaskMonthState && typeof saved.adminTaskMonthState === "object" && !Array.isArray(saved.adminTaskMonthState)
       ? Object.fromEntries(Object.entries(saved.adminTaskMonthState).filter(([stateKey, monthState]) => {
         const [scope, periodKey] = stateKey.split(":");
@@ -1028,7 +1028,7 @@ function ensureSeedDataIntegrity(candidateState, fallbackState, sourceLabel) {
   restored.hoursWeekScope = typeof candidate.hoursWeekScope === "string" ? candidate.hoursWeekScope : restored.hoursWeekScope;
   restored.hoursWeekScopeTouched = candidate.hoursWeekScopeTouched === true;
   restored.invoiceDetailCollapsed = candidate.invoiceDetailCollapsed === true;
-  restored.adminTaskPanelExpanded = candidate.adminTaskPanelExpanded === true;
+  restored.adminTaskPanelExpanded = candidate.adminTaskPanelExpanded !== false;
   restored.adminTaskMonthState = candidate.adminTaskMonthState && typeof candidate.adminTaskMonthState === "object" && !Array.isArray(candidate.adminTaskMonthState)
     ? candidate.adminTaskMonthState
     : restored.adminTaskMonthState;
@@ -4230,11 +4230,13 @@ function renderAdminTaskQueue() {
   const filter = state.adminTaskFilter || "all";
   const content = document.querySelector("#admin-task-content");
   const toggle = document.querySelector("#admin-task-panel-toggle");
-  const expanded = state.adminTaskPanelExpanded === true;
+  // De open takenlijst is de kernfunctie van dit dashboard; hij staat standaard
+  // open en klapt alleen dicht als je er zelf voor kiest.
+  const expanded = state.adminTaskPanelExpanded !== false;
   if (content) content.hidden = !expanded;
   if (toggle) {
     toggle.setAttribute("aria-expanded", String(expanded));
-    toggle.textContent = expanded ? "Overzicht inklappen" : "Overzicht openen";
+    toggle.textContent = expanded ? "Overzicht sluiten" : "Overzicht openen";
   }
   const filtered = filter === "all" ? tasks : filter === "waiting" ? waiting : actionable;
   const filteredMonthGroups = groupAdminTasksByMonth(filtered);
@@ -4518,7 +4520,8 @@ function renderDashboardActions() {
   const selectedWaitingCount = selectedTasks.length - selectedActionableCount;
   const selectedCustomerCount = selectedTasks.filter(task => task.category === "Klanturenstaat").length;
   const admin = currentAdmin();
-  document.querySelector("#admin-dashboard-greeting").textContent = greetingForNow() + ", " + (admin ? admin.name.split(/\s+/)[0] : "beheerder");
+  const greetingEl = document.querySelector("#admin-dashboard-greeting");
+  if (greetingEl) greetingEl.textContent = greetingForNow() + ", " + (admin ? admin.name.split(/\s+/)[0] : "beheerder");
   document.querySelector("#admin-attention-note").textContent = workCount
     ? workCount + " open " + (workCount === 1 ? "actie" : "acties") + " in " + workDossiers + " " + (workDossiers === 1 ? "dossier" : "dossiers") + " over " + workMonths + " " + (workMonths === 1 ? "maand" : "maanden") + "."
     : "Er staat niets open: alle uren, klanturenstaten en verzendcontroles zijn afgerond.";
@@ -4544,8 +4547,10 @@ function renderDashboardActions() {
   workQueueAction.textContent = "Bekijk alle " + workCount + " open " + (workCount === 1 ? "actie" : "acties");
   workQueueAction.dataset.openWorkFilter = "all";
   document.querySelector("#hero-task-total").textContent = workCount + " open " + (workCount === 1 ? "actie" : "acties");
-  document.querySelector("#hero-task-months").textContent = workCount ? adminTaskMonthEquation(tasks) : "Alles afgerond";
-  document.querySelector("#hero-task-owners").textContent = workCount ? "Backoffice " + actionableCount + " + wacht op medewerkers " + waitingCount + " = " + workCount : "Backoffice 0 + wacht op medewerkers 0 = 0";
+  const heroMonthsEl = document.querySelector("#hero-task-months");
+  if (heroMonthsEl) heroMonthsEl.textContent = workCount ? adminTaskMonthEquation(tasks) : "Alles afgerond";
+  const heroOwnersEl = document.querySelector("#hero-task-owners");
+  if (heroOwnersEl) heroOwnersEl.textContent = workCount ? "Backoffice " + actionableCount + " + wacht op medewerkers " + waitingCount + " = " + workCount : "Backoffice 0 + wacht op medewerkers 0 = 0";
   document.querySelector("#metric-actions").textContent = actionableCount;
   document.querySelector("#metric-actions-note").textContent = waitingCount ? waitingCount + " " + (waitingCount === 1 ? "actie wacht" : "acties wachten") + " op medewerkers" : "Niets wacht op medewerkers";
   document.querySelector("#metric-actions-link").textContent = workCount ? "Bekijk alle " + workCount + " acties" : "Alles afgerond";
@@ -10044,7 +10049,8 @@ function toonInstallatieAanbod() {
 
   const adminTaskPanelToggle = event.target.closest("#admin-task-panel-toggle");
   if (adminTaskPanelToggle) {
-    const nextExpanded = !state.adminTaskPanelExpanded;
+    // Standaard open (undefined telt als open), dus toggelen tegen de effectieve stand.
+    const nextExpanded = state.adminTaskPanelExpanded === false;
     if (!nextExpanded) {
       document.querySelectorAll("[data-admin-task-month-toggle]").forEach(monthToggle => {
         const periodKey = monthToggle.dataset.adminTaskMonthToggle;
@@ -11394,6 +11400,24 @@ window.addEventListener("scroll", () => {
 initializeReminderChoiceMenus();
 initializeStandardChoiceMenus();
 populateSettings();
+
+// Draait de app als geïnstalleerde PWA (standalone), dan is de topbar-versiebadge
+// en de Herstel-knop demomeubel dat alleen ruimte kost. Een body-klasse laat de
+// CSS die verbergen en de balk smaller maken.
+function markeerAppModus() {
+  try {
+    const alsApp = window.matchMedia("(display-mode: standalone)").matches
+      || window.navigator.standalone === true;
+    document.body.classList.toggle("staat-als-app", alsApp);
+  } catch (fout) {
+    // matchMedia niet beschikbaar; dan gewoon de gebruikelijke weergave
+  }
+}
+markeerAppModus();
+try {
+  window.matchMedia("(display-mode: standalone)").addEventListener("change", markeerAppModus);
+} catch (fout) { /* oudere browser zonder addEventListener op MediaQueryList */ }
+
 renderAll();
 const passwordResetLinkActive = consumePasswordResetFragment();
 initializeAuthSession().finally(() => {

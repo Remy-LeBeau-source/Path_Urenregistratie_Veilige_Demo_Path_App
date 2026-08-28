@@ -20,8 +20,8 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
     # Testtechniek: Equivalentieklassen
     Given Backoffice de vaste herstelbasis met twaalf open acties opent
     Then tonen juni, juli en augustus respectievelijk 3, 5 en 4 acties
-    And geldt zichtbaar 12 alle acties = 7 bij Backoffice + 5 bij medewerkers
-    And staat iedere taak bij precies één eigenaar en opent de werkvoorraad standaard ingeklapt
+    And tonen de eigenaarsbadges 7 bij Backoffice en 5 bij medewerkers en bewijst de open takenlijst 12 = 7 + 5
+    And staat iedere taak bij precies één eigenaar en opent de werkvoorraad standaard uitgeklapt
     When Backoffice tussen juni, juli en augustus wisselt en daarna ieder eigenaarfilter opent
     Then blijven totaal, eigenaarschap, taaktypes en concrete taakidentiteiten ongewijzigd
     And tonen Alle, Backoffice en Medewerkers uitsluitend hun 12, 7 en 5 concrete acties

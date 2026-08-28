@@ -215,7 +215,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.149"), "Het zichtbare versienummer moet 0.9.149 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.150"), "Het zichtbare versienummer moet 0.9.150 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -286,7 +286,7 @@ assert(freshOpenActions.length === 12 && freshJuneActions.length === 3 && freshJ
 assert(freshBackofficeActions.length === 7 && freshEmployeeActions.length === 5, "De standaarddemo moet exact Backoffice 7 + medewerkers 5 = 12 tonen");
 assert(JSON.stringify(freshTaskTypes) === JSON.stringify(["customer-broker", "customer-review", "customer-waiting", "hours-correction", "hours-draft", "hours-review", "invoice-delivery"]), "De compacte GUI-baseline moet alle zeven mogelijke open taaktypen afdekken");
 assert(new Set(freshOpenActions.map(task => task.periodKey + ":" + task.employee.id)).size === 10, "De twaalf standaardacties moeten tien medewerker-maanddossiers vormen");
-assert(document.querySelector("#hero-task-months").textContent === "Juni 3 + Juli 5 + Augustus 4 = 12" && document.querySelector("#hero-task-owners").textContent === "Backoffice 7 + wacht op medewerkers 5 = 12", "De bovenkant moet beide standaardrekensommen direct tonen");
+assert(document.querySelector("#hero-task-total").textContent === "12 open acties" && document.querySelector("#admin-task-summary").textContent.includes("Juni 3 + Juli 5 + Augustus 4 = 12"), "De statusregel toont het totaal; de rekensom staat bij de open takenlijst zelf (0.9.150: geen dubbele rekensommen meer in de kop)");
 assert(document.querySelector("#hero-backoffice-count").textContent === "7" && document.querySelector("#hero-employee-count").textContent === "5", "De dashboardkop moet Backoffice-acties en wachttaken als afzonderlijke visuele aantallen tonen");
 assert(document.querySelector("#dashboard-backoffice-count").textContent === "7" && document.querySelector("#dashboard-employee-count").textContent === "5" && document.querySelector("#dashboard-work-count").getAttribute("aria-label") === "12 open acties: 7 bij Backoffice, 5 wacht op medewerkers", "Dashboard moet links dezelfde werkvoorraad als twee toegankelijke eigenaarbolletjes tonen");
 click("#hero-backoffice-filter");
@@ -652,7 +652,7 @@ assert(document.querySelector('[data-view="timesheet"]').hidden, "Mijn uren moet
 dom.window.showView("timesheet");
 assert(document.querySelector("#view-dashboard").classList.contains("is-active"), "Ook een oude directe link naar Mijn uren moet een beheerder terugsturen naar het dashboard");
 assert(document.querySelector("#workspace-avatar").textContent === "JV", "Joyce moet overal haar eigen initialen tonen");
-assert(document.querySelector("#admin-dashboard-greeting").textContent.includes("Joyce"), "Het beheerdersdashboard moet de gekozen beheerder begroeten");
+assert(document.querySelector("#profile-menu-name").textContent.includes("Joyce"), "Het profielmenu moet de gekozen beheerder tonen");
 assert(document.querySelector("#period-label").textContent === "December 2037", "De beheerder moet dezelfde gekozen maand zien");
 assert(document.querySelector("#dashboard-team-title").textContent.includes("December 2037"), "De actieve maand moet ook boven het teamoverzicht op het dashboard staan");
 assert(document.querySelector("#workflow-period-title").textContent.includes("december 2037"), "Het dashboard moet de gekozen periode gebruiken");
@@ -725,7 +725,7 @@ assert(document.querySelector("#admin-attention-note").textContent === "3 open a
 assert(document.querySelector("#metric-actions").textContent === "0" && document.querySelector("#metric-actions-note").textContent === "3 acties wachten op medewerkers", "De actiekaart moet duidelijk tonen dat Backoffice niets direct hoeft te doen");
 assert(document.querySelector("#metric-actions-link").textContent === "Bekijk alle 3 acties", "De KPI-link moet wel naar alle wachtende acties blijven verwijzen");
 assert(document.querySelector("#open-work-queue").textContent === "Bekijk alle 3 open acties", "De hoofdknop moet altijd naar het volledige actietotaal verwijzen");
-assert(document.querySelector("#hero-task-months").textContent === "Juni 1 + Juli 1 + Augustus 1 = 3" && document.querySelector("#hero-task-owners").textContent === "Backoffice 0 + wacht op medewerkers 3 = 3", "De bovenkant moet het totaal zowel per maand als per eigenaar bewijsbaar maken");
+assert(document.querySelector("#admin-task-summary").textContent.includes("Juni 1 + Juli 1 + Augustus 1 = 3") && document.querySelector("#admin-task-summary").textContent.includes("Backoffice kan 0 oppakken; 3 wachten op medewerkers"), "De open takenlijst bewijst het totaal per maand en per eigenaar (0.9.150: verplaatst van de kop naar de takenlijst)");
 assert(document.querySelector("#dashboard-next-action-label").textContent === "Voor jou is nu niets te doen" && document.querySelector("#dashboard-next-action-title").textContent.includes("Wacht op Brian Hek") && !document.querySelector("#dashboard-next-action-button"), "Zonder Backoffice-actie moet de vaste kaart de eerstvolgende medewerker tonen in plaats van een onbruikbare startknop");
 assert(document.querySelector("#dashboard-next-action-controls").textContent.includes("Herinner medewerker"), "Een wachtende klanturenstaat moet vanuit de prioriteitenkaart herinnerd kunnen worden");
 click("#open-work-queue");
@@ -2024,4 +2024,4 @@ assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Pla
 }
 
 dom.window.close();
-console.log("Path v0.9.149 volledige smoke test: geslaagd");
+console.log("Path v0.9.150 volledige smoke test: geslaagd");

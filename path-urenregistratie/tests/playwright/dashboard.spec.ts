@@ -215,17 +215,17 @@ test('[DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad ni
       return {
         hasRows: total > 0,
         totalMatches: text('#hero-task-total') === `${total} open acties`,
-        ownersMatch: text('#hero-task-owners') === `Backoffice ${backoffice} + wacht op medewerkers ${employees} = ${total}`,
+        summaryMatch: text('#admin-task-summary').includes(`Backoffice kan ${backoffice} oppakken; ${employees} `),
         ownerBadgesMatch: text('#hero-backoffice-count') === String(backoffice) && text('#hero-employee-count') === String(employees),
         metricMatches: text('#metric-actions') === String(backoffice),
         queueMatches: text('#open-work-queue') === `Bekijk alle ${total} open acties`,
-        staleTotalsAbsent: !['#hero-task-total', '#hero-task-owners', '#metric-actions']
+        staleTotalsAbsent: !['#hero-task-total', '#admin-task-summary', '#metric-actions']
           .some(selector => /(?:132|205)/.test(text(selector)))
       };
     })).toEqual({
       hasRows: true,
       totalMatches: true,
-      ownersMatch: true,
+      summaryMatch: true,
       ownerBadgesMatch: true,
       metricMatches: true,
       queueMatches: true,
@@ -1181,7 +1181,7 @@ test('[DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij 
         waiting: tasks.filter(task => !task.actionable).length,
       };
     }), { timeout: 20_000 }).toEqual({ total: 12, actionable: 7, waiting: 5 });
-    await expect(page.locator('#admin-task-content')).toBeHidden();
+    await expect(page.locator('#admin-task-content')).toBeVisible();
   });
 
   const snapshot = async () => page.evaluate(() => {

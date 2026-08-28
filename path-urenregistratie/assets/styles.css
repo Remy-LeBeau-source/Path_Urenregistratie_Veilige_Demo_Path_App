@@ -275,6 +275,13 @@ select:focus-visible {
 .topbar-quick-reset { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); cursor: pointer; font-size: 10px; font-weight: 700; letter-spacing: .04em; padding: 7px 12px; text-transform: uppercase; }
 .topbar-quick-reset:hover { border-color: var(--mint); color: var(--mint-dark-tekst); }
 
+/* Als geïnstalleerde app (standalone) is de versiebadge en de Herstel-knop
+   demomeubel dat alleen ruimte kost; weg ermee, en de balk mag smaller. */
+body.staat-als-app .mobile-version-badge,
+body.staat-als-app #quick-reset-demo,
+body.staat-als-app .topbar-quick-reset:not([hidden]) { display: none !important; }
+body.staat-als-app .topbar { min-height: 0; }
+
 .period-control { display: flex; min-height: 48px; align-items: center; gap: 3px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: 0 5px 18px rgba(13,27,56,.04); padding: 0 4px; }
 .period-control button { width: 34px; height: 34px; border: 0; border-radius: 9px; background: transparent; cursor: pointer; font-size: 22px; line-height: 1; }
 .period-control button:hover { background: var(--green-light); }
@@ -307,27 +314,30 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .view.is-active { display: block; }
 @keyframes viewIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
 
+/* Compacte statusregel (0.9.150). Was een hoge, dubbel-gevulde herokaart met
+   begroeting en twee rekensommen; nu één rustige strook: aandacht-notitie +
+   eigenaarsbadges links, totaal + "Open werkvoorraad" rechts. */
 .hero-card {
   position: relative;
   overflow: hidden;
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(300px, .65fr);
-  gap: 32px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px 28px;
   align-items: center;
-  min-height: 220px;
-  margin: 24px 0 16px;
-  border-radius: 14px;
-  background: linear-gradient(120deg, #0d1b38 0%, #102746 62%, #164b57 100%);
+  margin: 20px 0 12px;
+  border-radius: 12px;
+  background: linear-gradient(120deg, #0d1b38 0%, #102746 70%, #143f4d 100%);
   color: #fff;
-  padding: 30px 34px;
-  box-shadow: 0 12px 30px rgba(13,27,56,.12);
+  padding: 16px 20px;
+  box-shadow: 0 8px 22px rgba(13,27,56,.10);
 }
 
 .hero-card::after { display: none; }
-.hero-copy { position: relative; z-index: 1; }
-.hero-copy h2 { max-width: 670px; margin: 9px 0 10px; font-family: "Roboto Slab", Georgia, serif; font-size: clamp(28px, 4vw, 38px); letter-spacing: 0; line-height: 1.12; }
-.hero-copy p { max-width: 680px; margin: 0; color: #d2dce4; font-size: 14px; line-height: 1.55; }
-.hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.hero-copy { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 8px; }
+.hero-copy p { max-width: 62ch; margin: 0; color: #d2dce4; font-size: 13px; line-height: 1.5; }
+.hero-strip-side { position: relative; z-index: 1; display: flex; align-items: center; gap: 16px; }
+.hero-strip-side #hero-task-total { font-family: "Roboto Slab", Georgia, serif; font-size: 20px; white-space: nowrap; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 
 .button { min-height: 42px; border: 1px solid transparent; border-radius: 11px; cursor: pointer; font-size: 13px; font-weight: 700; padding: 10px 17px; transition: transform .16s ease, box-shadow .16s ease, background .16s ease; }
 @media (hover: hover) and (pointer: fine) {
@@ -339,17 +349,10 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .button-ghost { border-color: var(--line); background: var(--vlak); color: var(--navy-tekst); }
 .hero-card .button-ghost { border-color: rgba(255,255,255,.19); background: rgba(255,255,255,.08); color: #fff; }
 .hero-card .button-ghost:hover { background: rgba(255,255,255,.13); }
-.hero-task-math { position: relative; z-index: 1; display: grid; gap: 11px; border: 1px solid rgba(255,255,255,.18); border-radius: 10px; background: rgba(255,255,255,.06); padding: 18px; }
-.hero-task-math > span { color: #b9c7d4; font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
-.hero-task-math > strong { font-family: "Roboto Slab", Georgia, serif; font-size: 26px; }
-.hero-task-math > div { display: grid; gap: 3px; border-top: 1px solid rgba(255,255,255,.1); padding-top: 10px; }
-.hero-task-math small { color: #b9c7d4; font-size: 10px; }
-.hero-task-math b { color: #fff; font-size: 12px; line-height: 1.4; }
-
-.dashboard-next-action-card { display: grid; grid-template-columns: minmax(0,1fr) minmax(260px,auto); gap: 28px; align-items: center; margin-bottom: 16px; border: 1px solid var(--line); border-left: 4px solid var(--mint-dark); border-radius: 10px; background: var(--surface); padding: 18px 24px; box-shadow: 0 4px 14px rgba(13,27,56,.035); }
+.dashboard-next-action-card { display: grid; grid-template-columns: minmax(0,1fr) minmax(240px,auto); gap: 20px; align-items: center; margin-bottom: 12px; border: 1px solid var(--line); border-left: 4px solid var(--mint-dark); border-radius: 10px; background: var(--surface); padding: 12px 18px; box-shadow: 0 4px 14px rgba(13,27,56,.035); }
 .dashboard-next-action-card.is-waiting { border-left-color: var(--warning); background: linear-gradient(135deg,var(--surface),var(--warning-bg)); }
 .dashboard-next-action-card.is-complete { border-left-color: var(--mint-dark); background: linear-gradient(135deg,var(--surface),var(--green-light)); }
-.dashboard-next-action-copy h3 { margin: 5px 0 7px; color: var(--navy-tekst); font-family: "Roboto Slab", Georgia, serif; font-size: 20px; }
+.dashboard-next-action-copy h3 { margin: 3px 0 5px; color: var(--navy-tekst); font-family: "Roboto Slab", Georgia, serif; font-size: 17px; }
 .dashboard-next-action-copy p { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; color: var(--ink); font-size: 11px; }
 .dashboard-next-action-copy p span::before { margin-right: 8px; color: var(--muted); content: "·"; }
 .dashboard-next-action-copy > small { display: block; margin-top: 7px; color: var(--muted); font-size: 11px; line-height: 1.5; }
@@ -371,24 +374,31 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .progress-ring::before { grid-area: 1/1; width: 53px; height: 53px; border-radius: 50%; background: var(--navy-soft); content: ""; }
 .progress-ring span { z-index: 1; grid-area: 1/1; font-size: 13px; font-weight: 800; }
 
-.metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px; margin-bottom: 18px; }
+.metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 14px; }
+.metric-grid.is-compact { gap: 10px; }
 .metric-card { min-height: 128px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 20px; box-shadow: none; }
+.metric-grid.is-compact .metric-card { min-height: 0; padding: 12px 14px; }
 .metric-card.attention { border-color: #efddc7; background: linear-gradient(150deg, #fff, #fff8ef); }
 .metric-label { display: block; color: var(--muted); font-size: 11px; font-weight: 600; }
 .metric-card > strong { display: block; margin: 10px 0 8px; color: var(--navy-tekst); font-family: "Roboto Slab", Georgia, serif; font-size: 28px; }
+.metric-grid.is-compact .metric-card > strong { margin: 5px 0 4px; font-size: 21px; }
 .metric-card > strong small { color: #9aa4ae; font-size: 15px; }
+.metric-grid.is-compact .metric-card > strong small { font-size: 13px; }
 .metric-link { display: block; width: fit-content; margin-top: 13px; border: 0; border-bottom: 1px solid currentColor; background: transparent; color: var(--teal); cursor: pointer; font: inherit; font-size: 11px; font-weight: 800; padding: 0 0 2px; }
+.metric-grid.is-compact .metric-link { margin-top: 7px; }
 .metric-link:hover { color: var(--navy-tekst); }
 .metric-note { color: var(--muted); font-size: 11px; }
 .metric-note.positive { color: var(--mint-dark-tekst); }
 
 .panel { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: 0 8px 28px rgba(13,27,56,.035); }
 #admin-task-panel { scroll-margin-top: 104px; }
-.workflow-panel { margin-bottom: 18px; padding: 24px; }
+.workflow-panel { margin-bottom: 14px; padding: 16px 20px; }
 .panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px 24px 17px; }
-.workflow-panel .panel-heading { padding: 0 0 24px; }
-.workflow-overview { display: grid; grid-template-columns: minmax(230px,.38fr) minmax(0,1fr); gap: 24px; align-items: center; border: 1px solid var(--line); border-radius: 16px; background: var(--surface-muted); padding: 18px; }
-.workflow-progress-card { display: flex; width: 100%; align-items: center; gap: 14px; margin: 0; border-right: 1px solid var(--line); color: var(--navy-tekst); padding: 2px 20px 2px 0; }
+.workflow-panel .panel-heading { padding: 0 0 14px; }
+.workflow-overview { display: grid; grid-template-columns: minmax(200px,.34fr) minmax(0,1fr); gap: 16px; align-items: center; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-muted); padding: 12px 14px; }
+.workflow-progress-card { display: flex; width: 100%; align-items: center; gap: 12px; margin: 0; border-right: 1px solid var(--line); color: var(--navy-tekst); padding: 2px 16px 2px 0; }
+.workflow-progress-card .progress-ring { --size: 44px !important; }
+.workflow-progress-card .progress-ring::before { width: 33px !important; height: 33px !important; }
 .workflow-progress-card .progress-ring { --size: 54px; background: conic-gradient(var(--mint-dark) calc(var(--progress) * 1%), #dfe8e5 0); }
 .workflow-progress-card .progress-ring::before { width: 41px; height: 41px; background: var(--surface); }
 .workflow-progress-card strong, .workflow-progress-card small { display: block; }
@@ -787,7 +797,9 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .notification-button { display: none; }
   .safety-badge { display: inline-flex; font-size: 8px; padding: 6px 8px; }
   .topbar-quick-reset { display: none; }
-  .hero-card { margin-top: 20px; padding: 28px; }
+  .hero-card { margin-top: 16px; padding: 14px 16px; }
+  .hero-strip-side { width: 100%; justify-content: space-between; }
+  .hero-actions, .hero-actions .button { width: 100%; }
   .workflow-track { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .workflow-heading-meta { justify-items: start; text-align: left; }
   .dashboard-next-action-card { grid-template-columns: minmax(0, 1fr); gap: 16px; }
@@ -826,9 +838,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .period-picker-wrap { min-width: 166px; }
   .period-picker-fields { grid-template-columns: minmax(86px,1fr) 68px; }
   .period-picker-fields input, .period-control .month-picker-trigger { font-size: 10px; }
-  .hero-card { border-radius: 18px; padding: 24px 20px; }
-  .hero-copy h2 { font-size: 29px; }
-  .hero-actions, .hero-actions .button { width: 100%; }
+  .hero-card { border-radius: 14px; padding: 13px 15px; }
   .hours-week-filter { width: 100%; }
   .hours-week-filter button { flex: 0 0 auto; }
   .reminder-rule { grid-template-columns: minmax(0, 1fr); }
@@ -1942,7 +1952,12 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
     padding: 16px;
   }
 
-  .hero-card,
+  .hero-card {
+    min-height: auto;
+    margin-top: 14px;
+    padding: 13px 15px;
+  }
+
   .employee-hero {
     min-height: auto;
     margin-top: 16px;
@@ -2571,12 +2586,10 @@ body.toont-installatieaanbod .main-content {
   .help-panel header small { font-size: 11px; }
   .help-panel header strong { font-size: 15px; }
   .help-suggestions button { font-size: 11px; }
-  .hero-copy p { font-size: 16px; }
+  .hero-copy p { font-size: 13px; }
   .hero-owner-badge { font-size: 12px; }
   .hero-owner-badge b { font-size: 14px; }
-  .hero-task-math > span { font-size: 12px; }
-  .hero-task-math b { font-size: 14px; }
-  .hero-task-math small { font-size: 12px; }
+  .hero-strip-side #hero-task-total { font-size: 17px; }
   .hours-day-entry .date-number { font-size: 15px; }
   .hours-review-grid .workday-cell strong { font-size: 16px; }
   .hours-table .date-number { font-size: 11px; }
