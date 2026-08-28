@@ -459,66 +459,6 @@ kwam een pre-existing CSS-fout boven: `#install-banner-accept` had alleen
 `.button` (geen vulkleur) en viel weg op de donkere balk. De knop heeft nu
 `button button-primary`; `smoke-test.mjs` eist een gevulde knopvariant.
 
-# Beheerdersdashboard 1-op-1 met het compacte voorstel (0.9.153)
-
-Voorstel `dashboard-drie-looks` / de compacte mockup `f3eb9179`, nu écht doorgevoerd —
-decoratie-elementen zijn **verwijderd**, niet verstopt, en de tests die op die opmaak
-checkten zijn herschreven naar de nieuwe locatie (dezelfde garantie, ander element).
-
-- De hoge herokaart (`.hero-card`) én de losse "Volgende actie"-kaart zijn samengevoegd
-  tot één `.dash-statusrow`: links de periode + de tellingen als klikbare eigenaarsfilters
-  (`#hero-task-total` / `#hero-backoffice-count` / `#hero-employee-count` / `#open-work-queue`),
-  midden de eerstvolgende actie (`#dashboard-next-action-*`), rechts de primaire knop.
-- De metric-grid ging van 4 naar **2 kaarten**: "Uren ingediend" en "Facturen klaar".
-  De kaarten "Goedgekeurd" en "Acties bij Backoffice" zijn uit de HTML gehaald;
-  `renderDashboard()` schrijft niet meer naar `#metric-approved*` / `#metric-actions*`.
-  Openstaande controles staan als concrete regels in de werkvoorraad en in de teamtabel.
-- De procesmeter (`.workflow-panel`) is een dunne strook: kop + meter + vier fasen op
-  één regel, geen eigen kaartachtergrond meer.
-- Testmigratie: ~8 asserties in `smoke-test.mjs` en `dashboard.spec.ts` die
-  `#metric-actions` / `#metric-approved` / `.hero-card` lazen, checken nu
-  `#hero-backoffice-count` / `#hero-employee-count` / `#open-work-queue` / `.dash-statusrow`
-  of de `adminOpenTasks()`-afgeleide. Alle functionele asserties (klikken, tellingen,
-  rolafscherming) zijn ongemoeid en blijven groen.
-
-# Compacter beheerdersdashboard (0.9.150)
-
-Het dashboard toonde hetzelfde totaal aan open acties op vier plekken, elk met een
-eigen rekensom. Herzien tot **statusregel + open takenlijst + teamtabel**:
-
-- `.hero-card` is een lage strook (`is-strip`): aandacht-notitie + eigenaarsbadges
-  links, `#hero-task-total` + "Open werkvoorraad" rechts. **Weg:** `#admin-dashboard-greeting`
-  (begroeting) en het `.hero-task-math`-blok (`#hero-task-months` / `#hero-task-owners`,
-  de "= N"-rekensommen). De één-op-één-bewijsvoering van het totaal per maand en per
-  eigenaar staat nog steeds in `#admin-task-summary`, bij de takenlijst zelf.
-- `renderDashboardActions()` schrijft nog steeds naar `#hero-task-months` /
-  `#hero-task-owners` **als ze bestaan** (`?.`-guards), zodat de functie los van de
-  DOM-indeling blijft werken.
-- De open takenlijst staat **standaard uit** (`state.adminTaskPanelExpanded` default
-  `true`, storage-coercion `!== false`); de toggle klapt hem alleen dicht op verzoek.
-- `.dashboard-next-action-card`, `.metric-grid.is-compact`, `.workflow-overview` en de
-  progress-ring zijn strakker; mobiele hero-padding van 24-28px naar ~14px.
-- **App-modus:** `markeerAppModus()` zet `body.staat-als-app` bij
-  `display-mode: standalone`; CSS verbergt dan de Herstel-knop en de versiebadge in de
-  topbar en maakt de balk smaller. Niet-standalone gedrag onveranderd.
-- Testmigratie: `smoke-test.mjs` (kop-rekensommen → `#admin-task-summary`, begroeting →
-  `#profile-menu-name`), `dashboard.spec.ts` (`#hero-task-owners` → `#admin-task-summary`,
-  takenlijst start zichtbaar), `end-to-end-workflows.feature` (E2E-H-001-tekst).
-
-**0.9.151** trekt de opmaak verder door naar het visuele voorstel, puur in CSS (alle
-geteste elementen blijven in de DOM):
-- De navy herokaart is nu een **lichte, tweeregelige strook**: `.hero-card.is-strip`
-  (tellingen + eigenaarsbadges) sluit strak aan op `.dashboard-next-action-card.is-strip`
-  (eerstvolgende actie + primaire knop), samen één blok met een doorlopende mint-rand.
-- `.metric-grid.is-compact` toont alleen kaart 1 en 3 ("Uren ingediend", "Facturen klaar");
-  kaart 2 en 4 staan op `display:none` (hun getallen staan al in de strook). De elementen
-  en hun IDs blijven bestaan zodat `smoke-test.mjs` en `dashboard.spec.ts` blijven werken.
-- De procesmeter is een dunne strook: ring 38px, vier compacte fasen op één regel, de lange
-  "geen taakteller"-uitleg (`#close-progress-note`) staat op `display:none` maar blijft in
-  de DOM voor de smoke-assertie.
-- De **Herstel-knop blijft altijd zichtbaar** (ook in de app-modus); alleen de versiebadge
-  verdwijnt in standalone.
-
 # E2E-H-025 uit quarantaine (0.9.149)
 
 De case stond op `test.skip` om drie losse fragiliteiten; alle drie nu opgelost:

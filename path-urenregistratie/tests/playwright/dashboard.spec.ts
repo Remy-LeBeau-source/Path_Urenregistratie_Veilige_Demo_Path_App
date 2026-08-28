@@ -215,17 +215,19 @@ test('[DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad ni
       return {
         hasRows: total > 0,
         totalMatches: text('#hero-task-total') === `${total} open acties`,
-        summaryMatch: text('#admin-task-summary').includes(`Backoffice kan ${backoffice} oppakken; ${employees} `),
+        ownersMatch: text('#hero-task-owners') === `Backoffice ${backoffice} + wacht op medewerkers ${employees} = ${total}`,
         ownerBadgesMatch: text('#hero-backoffice-count') === String(backoffice) && text('#hero-employee-count') === String(employees),
+        metricMatches: text('#metric-actions') === String(backoffice),
         queueMatches: text('#open-work-queue') === `Bekijk alle ${total} open acties`,
-        staleTotalsAbsent: !['#hero-task-total', '#admin-task-summary', '#hero-backoffice-count', '#hero-employee-count']
+        staleTotalsAbsent: !['#hero-task-total', '#hero-task-owners', '#metric-actions']
           .some(selector => /(?:132|205)/.test(text(selector)))
       };
     })).toEqual({
       hasRows: true,
       totalMatches: true,
-      summaryMatch: true,
+      ownersMatch: true,
       ownerBadgesMatch: true,
+      metricMatches: true,
       queueMatches: true,
       staleTotalsAbsent: true
     });
@@ -674,7 +676,7 @@ test('[DASH-H-012] GUI-smoke scheidt werkacties van medewerkers- en beheerdersac
 
   await test.step('And Dashboard opent bovenaan terwijl eigenaarbolletjes gericht naar hun werkvoorraad springen', async () => {
     await page.locator('button[data-view="dashboard"]').click();
-    await expect(page.locator('#dashboard-next-action-card')).toBeInViewport();
+    await expect(page.locator('.hero-card')).toBeInViewport();
     await page.locator('#hero-backoffice-filter').click();
     await expect(page.locator('#admin-task-panel')).toBeInViewport();
     await expect(page.locator('#admin-task-title')).toHaveText('Acties bij Backoffice per maand');
@@ -1179,7 +1181,7 @@ test('[DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij 
         waiting: tasks.filter(task => !task.actionable).length,
       };
     }), { timeout: 20_000 }).toEqual({ total: 12, actionable: 7, waiting: 5 });
-    await expect(page.locator('#admin-task-content')).toBeVisible();
+    await expect(page.locator('#admin-task-content')).toBeHidden();
   });
 
   const snapshot = async () => page.evaluate(() => {

@@ -1846,25 +1846,6 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
   Promote Test 4/4 + Deploy Test groen; 4/4 remote-smokes groen tegen live 0.9.149.
 - [x] Dev-machine: geplande taak `PathMySQL` (bij inloggen) start de lokale MySQL als 3306 niet
   luistert — geen handmatige start meer nodig.
-- [x] 0.9.149 (tests) — 7 nieuwe live-regressiecases (E2E-25/26/28-uitgebreid/29/32/33/34) +
-  E2E-14 decompressiebom-PNG; 37/37 remote groen tegen live TEST.
-- [x] 0.9.150 — **compacter beheerdersdashboard**: herokaart → statusregel, begroeting + de
-  `= N`-rekensommen weg (bewijs bij `#admin-task-summary`), open takenlijst standaard uitgeklapt,
-  compacte metric-grid + workflow-strook, mobiele hero-padding ~14px, `body.staat-als-app`
-  verbergt Herstel-knop + versiebadge in standalone. `npm run check` + dashboard/mobile-ui/
-  business-workflows Playwright-specs groen. Visueel voorstel als artifact. Remote-regressie 37/37 groen.
-- [x] 0.9.151 — opmaak doorgetrokken naar het voorstel (CSS-only): herokaart → lichte
-  tweeregelige strook die aansluit op de "Volgende actie"-kaart; metric-grid 4 → 2 zichtbare
-  kaarten (2+4 `display:none`, elementen blijven); procesmeter dunne strook. Herstel-knop
-  blijft altijd zichtbaar (0.9.150-verberging in app-modus teruggedraaid).
-- [x] 0.9.152 — donkere mix-look medewerker-dashboard; **teruggedraaid** (Gio koos het lichte
-  compacte voorstel). Revert `9b0a0bf`.
-- [x] 0.9.153 — **beheerdersdashboard 1-op-1 met het compacte voorstel**: herokaart + losse
-  "Volgende actie"-kaart → één `.dash-statusrow`; metric-grid 4 → 2 (kaarten "Goedgekeurd" en
-  "Acties bij Backoffice" écht uit de HTML); procesmeter dunne strook; `.htaccess` zet
-  `Cache-Control: no-cache` op `index.html`/`sw.js`/`manifest`. ~8 asserties herschreven,
-  functionele asserties ongemoeid. smoke + dashboard.spec (27) + business-workflows +
-  mobile-ui (36) groen. Medewerker-dashboard volgt in 0.9.154.
 - [x] FO/TO bijgewerkt; beide handoffs + auto-geheugen bijgewerkt.
 
 Telling fasestatussen:

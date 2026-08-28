@@ -5,7 +5,7 @@ Dit bestand is de gedeelde brug tussen GitHub Copilot en Codex. Chatvensters zij
 ## Stand 28 augustus 2026 (Claude Code)
 
 Volledige context: `CLAUDE_CODE_HANDOFF.md` bovenaan. Kort:
-- TEST staat op **0.9.149** (0.9.150 in de pijplijn). Vrijgegeven deze sessie: 0.9.142 (branded acceptatie-PDF),
+- TEST staat op **0.9.146**. Vrijgegeven deze sessie: 0.9.142 (branded acceptatie-PDF),
   0.9.143 (telefoonnummer `…286` + migratie `026`, `{klant}` in factuurnummer werkt server+browser),
   0.9.144 (acceptatiemail hangt de echte factuur-PDF aan wanneer die bestaat), 0.9.145/0.9.146
   (install-knop zichtbaar; acceptatiemail weigert het lege `test-reset`-placeholder-PDF).
@@ -14,19 +14,9 @@ Volledige context: `CLAUDE_CODE_HANDOFF.md` bovenaan. Kort:
   **0.9.148** is de hotfix: `:company_id` / `:company_id2` / `:company_id3` apart gebonden;
   `smoke-test.mjs` bewaakt nu herhaalde placeholders in die query. `{broker}` werkt nu in mailteksten,
   install-banner stopt na installatie (`getInstalledRelatedApps`), `dist/` gitignored.
-- **0.9.149**: `E2E-H-025` uit quarantaine + 7 nieuwe live-regressiecases (Overig-bijlage,
-  CSP/PWA-deploycontract, IDOR incl. factuur-PDF, reset via echte SMTP, sessiecookie, reset-throttle,
-  stored-XSS) + decompressiebom-PNG. 37/37 remote groen.
-- **0.9.150/0.9.151 — compacter beheerdersdashboard**: herokaart → lichte tweeregelige
-  statusregel (`.is-strip`) die aansluit op de "Volgende actie"-kaart; begroeting en de
-  `= N`-rekensommen weg (bewijs bij `#admin-task-summary`); open takenlijst standaard uitgeklapt;
-  metric-grid 4 → 2 zichtbare kaarten (2+4 `display:none`, elementen blijven voor de tests);
-  procesmeter dunne strook. Herstel-knop blijft altijd; alleen de versiebadge verdwijnt in
-  `body.staat-als-app` (standalone). Testmigratie in `smoke-test.mjs` / `dashboard.spec.ts` /
-  `end-to-end-workflows.feature`.
 - CI `release-pipeline.yml`: `Validate` en `Promote Test` draaien 4-way gesharded (~50 → ~20 min).
 - Nieuwe live-regressie in `tests/remote/` (aparte config) met charter; cases SMOKE-01..04,
-  E2E-01..34. `smoke-test.mjs`-guard: geen invoice-lock zonder `concept_pdf_base64` in `tests/remote/`.
+  E2E-01..30 (deels). `smoke-test.mjs`-guard: geen invoice-lock zonder `concept_pdf_base64` in `tests/remote/`.
 - FO/TO bijgewerkt (factuurnummer-`{klant}`, acceptatiemail, gesharde CI, guard).
 - PROD-grens onveranderd: nooit `Promote Prod` goedkeuren.
 
