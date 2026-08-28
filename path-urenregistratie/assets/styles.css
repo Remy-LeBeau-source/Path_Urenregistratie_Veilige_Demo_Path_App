@@ -275,11 +275,9 @@ select:focus-visible {
 .topbar-quick-reset { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); cursor: pointer; font-size: 10px; font-weight: 700; letter-spacing: .04em; padding: 7px 12px; text-transform: uppercase; }
 .topbar-quick-reset:hover { border-color: var(--mint); color: var(--mint-dark-tekst); }
 
-/* Als geïnstalleerde app (standalone) is de versiebadge en de Herstel-knop
-   demomeubel dat alleen ruimte kost; weg ermee, en de balk mag smaller. */
-body.staat-als-app .mobile-version-badge,
-body.staat-als-app #quick-reset-demo,
-body.staat-als-app .topbar-quick-reset:not([hidden]) { display: none !important; }
+/* Als geïnstalleerde app (standalone) kost de versiebadge in de topbar alleen
+   ruimte; weg ermee. De Herstel-knop blijft: die is nog nodig. */
+body.staat-als-app .mobile-version-badge { display: none !important; }
 body.staat-als-app .topbar { min-height: 0; }
 
 .period-control { display: flex; min-height: 48px; align-items: center; gap: 3px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: 0 5px 18px rgba(13,27,56,.04); padding: 0 4px; }
@@ -314,30 +312,34 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .view.is-active { display: block; }
 @keyframes viewIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
 
-/* Compacte statusregel (0.9.150). Was een hoge, dubbel-gevulde herokaart met
-   begroeting en twee rekensommen; nu één rustige strook: aandacht-notitie +
-   eigenaarsbadges links, totaal + "Open werkvoorraad" rechts. */
+/* Statusregel (0.9.151). Was een hoge navy herokaart + aparte "Volgende actie"-
+   kaart + 4 metric-kaarten. Nu één lichte, tweeregelige strook: bovenin de
+   tellingen + eigenaarsbadges, eronder de eerstvolgende concrete actie met de
+   primaire knop. Samen lezen ze als één blok (gedeelde mint-rand links). */
 .hero-card {
   position: relative;
-  overflow: hidden;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 20px 28px;
+  gap: 10px 24px;
   align-items: center;
-  margin: 20px 0 12px;
-  border-radius: 12px;
-  background: linear-gradient(120deg, #0d1b38 0%, #102746 70%, #143f4d 100%);
-  color: #fff;
-  padding: 16px 20px;
-  box-shadow: 0 8px 22px rgba(13,27,56,.10);
+  margin: 18px 0 0;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--mint-dark);
+  border-radius: 12px 12px 0 0;
+  border-bottom: 0;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 12px 18px;
+  box-shadow: 0 4px 14px rgba(13,27,56,.035);
 }
 
 .hero-card::after { display: none; }
-.hero-copy { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 8px; }
-.hero-copy p { max-width: 62ch; margin: 0; color: #d2dce4; font-size: 13px; line-height: 1.5; }
-.hero-strip-side { position: relative; z-index: 1; display: flex; align-items: center; gap: 16px; }
-.hero-strip-side #hero-task-total { font-family: "Roboto Slab", Georgia, serif; font-size: 20px; white-space: nowrap; }
+.hero-copy { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 6px; }
+.hero-copy p { max-width: 66ch; margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.45; }
+.hero-strip-side { position: relative; z-index: 1; display: flex; align-items: center; gap: 14px; }
+.hero-strip-side #hero-task-total { font-family: "Roboto Slab", Georgia, serif; font-size: 17px; white-space: nowrap; color: var(--navy-tekst); }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+#open-work-queue { min-height: 0; padding: 6px 12px; font-size: 11px; }
 
 .button { min-height: 42px; border: 1px solid transparent; border-radius: 11px; cursor: pointer; font-size: 13px; font-weight: 700; padding: 10px 17px; transition: transform .16s ease, box-shadow .16s ease, background .16s ease; }
 @media (hover: hover) and (pointer: fine) {
@@ -350,17 +352,22 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .hero-card .button-ghost { border-color: rgba(255,255,255,.19); background: rgba(255,255,255,.08); color: #fff; }
 .hero-card .button-ghost:hover { background: rgba(255,255,255,.13); }
 .dashboard-next-action-card { display: grid; grid-template-columns: minmax(0,1fr) minmax(240px,auto); gap: 20px; align-items: center; margin-bottom: 12px; border: 1px solid var(--line); border-left: 4px solid var(--mint-dark); border-radius: 10px; background: var(--surface); padding: 12px 18px; box-shadow: 0 4px 14px rgba(13,27,56,.035); }
+/* Onderste helft van de statusregel: sluit strak aan op .hero-card erboven. */
+.dashboard-next-action-card.is-strip { margin-bottom: 12px; border-radius: 0 0 12px 12px; border-top: 1px solid var(--line); box-shadow: 0 4px 14px rgba(13,27,56,.035); padding: 10px 18px; }
+.dashboard-next-action-card.is-strip.is-waiting { border-left-color: var(--warning); background: var(--surface); }
+.dashboard-next-action-card.is-strip.is-complete { border-left-color: var(--mint-dark); background: var(--surface); }
 .dashboard-next-action-card.is-waiting { border-left-color: var(--warning); background: linear-gradient(135deg,var(--surface),var(--warning-bg)); }
 .dashboard-next-action-card.is-complete { border-left-color: var(--mint-dark); background: linear-gradient(135deg,var(--surface),var(--green-light)); }
-.dashboard-next-action-copy h3 { margin: 3px 0 5px; color: var(--navy-tekst); font-family: "Roboto Slab", Georgia, serif; font-size: 17px; }
+.dashboard-next-action-copy h3 { margin: 0 0 3px; color: var(--navy-tekst); font-family: "Roboto Slab", Georgia, serif; font-size: 15px; }
 .dashboard-next-action-copy p { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; color: var(--ink); font-size: 11px; }
 .dashboard-next-action-copy p span::before { margin-right: 8px; color: var(--muted); content: "·"; }
-.dashboard-next-action-copy > small { display: block; margin-top: 7px; color: var(--muted); font-size: 11px; line-height: 1.5; }
-.dashboard-next-action-side { display: grid; justify-items: end; gap: 4px; text-align: right; }
-.dashboard-next-action-side > strong { color: var(--navy-tekst); font-size: 12px; }
-.dashboard-next-action-side > small { color: var(--muted); font-size: 11px; }
-.dashboard-next-action-side > div { margin-top: 9px; }
+.dashboard-next-action-copy > small { display: block; margin-top: 4px; color: var(--muted); font-size: 10.5px; line-height: 1.4; }
+.dashboard-next-action-side { display: grid; justify-items: end; gap: 3px; text-align: right; }
+.dashboard-next-action-side > strong { color: var(--navy-tekst); font-size: 11px; }
+.dashboard-next-action-side > small { color: var(--muted); font-size: 10.5px; }
+.dashboard-next-action-side > div { margin-top: 5px; }
 .dashboard-next-action-side .small-button { min-height: 42px; border-color: var(--warning); background: var(--surface); color: var(--navy-tekst); font-size: 11px; padding: 10px 17px; }
+.dashboard-next-action-card.is-strip .button-primary { min-height: 38px; padding: 8px 16px; font-size: 12px; }
 .text-button { border: 0; background: transparent; color: var(--teal); cursor: pointer; font-size: 12px; font-weight: 800; padding: 7px; }
 .text-button:hover { color: var(--mint-dark-tekst); }
 .text-button.danger-text { color: var(--danger); }
@@ -375,9 +382,13 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .progress-ring span { z-index: 1; grid-area: 1/1; font-size: 13px; font-weight: 800; }
 
 .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 14px; }
-.metric-grid.is-compact { gap: 10px; }
+/* Compact: alleen "Uren ingediend" en "Facturen klaar" tonen; "Goedgekeurd" en
+   "Acties bij Backoffice" staan al in de statusregel, dus die kaarten weg. */
+.metric-grid.is-compact { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; margin-top: 14px; }
+.metric-grid.is-compact .metric-card:nth-child(2),
+.metric-grid.is-compact .metric-card:nth-child(4) { display: none; }
 .metric-card { min-height: 128px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 20px; box-shadow: none; }
-.metric-grid.is-compact .metric-card { min-height: 0; padding: 12px 14px; }
+.metric-grid.is-compact .metric-card { min-height: 0; padding: 13px 16px; }
 .metric-card.attention { border-color: #efddc7; background: linear-gradient(150deg, #fff, #fff8ef); }
 .metric-label { display: block; color: var(--muted); font-size: 11px; font-weight: 600; }
 .metric-card > strong { display: block; margin: 10px 0 8px; color: var(--navy-tekst); font-family: "Roboto Slab", Georgia, serif; font-size: 28px; }
@@ -392,29 +403,31 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 
 .panel { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: 0 8px 28px rgba(13,27,56,.035); }
 #admin-task-panel { scroll-margin-top: 104px; }
-.workflow-panel { margin-bottom: 14px; padding: 16px 20px; }
+/* Procesmeter als dunne strook (0.9.151): kleine ring + vier compacte fasen op
+   één regel, minimale hoogte. De lange "geen taakteller"-uitleg blijft in de DOM
+   maar staat niet meer in beeld. */
+.workflow-panel { margin-bottom: 14px; padding: 12px 16px; }
 .panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px 24px 17px; }
-.workflow-panel .panel-heading { padding: 0 0 14px; }
-.workflow-overview { display: grid; grid-template-columns: minmax(200px,.34fr) minmax(0,1fr); gap: 16px; align-items: center; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-muted); padding: 12px 14px; }
-.workflow-progress-card { display: flex; width: 100%; align-items: center; gap: 12px; margin: 0; border-right: 1px solid var(--line); color: var(--navy-tekst); padding: 2px 16px 2px 0; }
-.workflow-progress-card .progress-ring { --size: 44px !important; }
-.workflow-progress-card .progress-ring::before { width: 33px !important; height: 33px !important; }
-.workflow-progress-card .progress-ring { --size: 54px; background: conic-gradient(var(--mint-dark) calc(var(--progress) * 1%), #dfe8e5 0); }
-.workflow-progress-card .progress-ring::before { width: 41px; height: 41px; background: var(--surface); }
-.workflow-progress-card strong, .workflow-progress-card small { display: block; }
-.workflow-progress-card strong { font-size: 11px; }
-.workflow-progress-card small { max-width: 320px; margin-top: 3px; color: var(--muted); font-size: 9px; line-height: 1.45; }
+.workflow-panel .panel-heading { padding: 0 0 10px; }
+.workflow-panel .panel-heading h3 { font-size: 14px; }
+.workflow-overview { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 14px; align-items: center; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-muted); padding: 8px 12px; }
+.workflow-progress-card { display: flex; width: auto; align-items: center; gap: 10px; margin: 0; border-right: 1px solid var(--line); color: var(--navy-tekst); padding: 0 14px 0 0; }
+.workflow-progress-card .progress-ring { --size: 42px; background: conic-gradient(var(--mint-dark) calc(var(--progress) * 1%), #dfe8e5 0); }
+.workflow-progress-card .progress-ring::before { width: 31px; height: 31px; background: var(--surface); }
+.workflow-progress-card .progress-ring span { font-size: 11px; }
+.workflow-progress-card strong { display: block; font-size: 10.5px; white-space: nowrap; }
+.workflow-progress-card small { display: none; }
 .workflow-heading-meta { display: grid; justify-items: end; gap: 3px; text-align: right; }
 .workflow-heading-meta strong { color: var(--navy-tekst); font-size: 12px; }
 .workflow-heading-meta small { color: var(--muted); font-size: 10px; }
 .panel-heading h3, .settings-card h3, .summary-card h3 { margin: 4px 0 0; font-family: "Roboto Slab", Georgia, serif; font-size: 19px; }
 .updated-label { color: var(--muted); font-size: 10px; }
 .workflow-track { display: flex; align-items: center; justify-content: space-between; }
-.workflow-step { display: flex; min-width: 126px; align-items: center; gap: 11px; color: #99a4ae; }
-.workflow-step > span { display: grid; flex: 0 0 auto; width: 34px; height: 34px; place-items: center; border: 1px solid var(--line); border-radius: 10px; background: var(--vlak); font-size: 11px; font-weight: 800; }
+.workflow-step { display: flex; min-width: 0; align-items: center; gap: 8px; color: #99a4ae; }
+.workflow-step > span { display: grid; flex: 0 0 auto; width: 24px; height: 24px; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--vlak); font-size: 10px; font-weight: 800; }
 .workflow-step strong, .workflow-step small { display: block; }
-.workflow-step strong { color: #73808c; font-size: 12px; }
-.workflow-step small { margin-top: 3px; font-size: 9px; }
+.workflow-step strong { color: #73808c; font-size: 11px; }
+.workflow-step small { margin-top: 1px; font-size: 9px; white-space: nowrap; }
 .workflow-step.is-done > span { border-color: var(--mint); background: var(--mint); color: var(--navy); }
 .workflow-step.is-done strong, .workflow-step.is-current strong { color: var(--navy-tekst); }
 .workflow-step.is-current > span { border-color: var(--mint); background: var(--green-light); color: var(--mint-dark-tekst); }

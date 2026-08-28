@@ -17,11 +17,13 @@ Volledige context: `CLAUDE_CODE_HANDOFF.md` bovenaan. Kort:
 - **0.9.149**: `E2E-H-025` uit quarantaine + 7 nieuwe live-regressiecases (Overig-bijlage,
   CSP/PWA-deploycontract, IDOR incl. factuur-PDF, reset via echte SMTP, sessiecookie, reset-throttle,
   stored-XSS) + decompressiebom-PNG. 37/37 remote groen.
-- **0.9.150 — compacter beheerdersdashboard**: herokaart → lage statusregel, begroeting en de
-  `= N`-rekensommen weg (bewijs staat bij `#admin-task-summary`), open takenlijst standaard
-  uitgeklapt, compacte metric-grid + workflow-strook, mobiele dichtheid, `body.staat-als-app`
-  verbergt Herstel-knop + versiebadge in de app-modus. Testmigratie in `smoke-test.mjs` /
-  `dashboard.spec.ts` / `end-to-end-workflows.feature`.
+- **0.9.150/0.9.151 — compacter beheerdersdashboard**: herokaart → lichte tweeregelige
+  statusregel (`.is-strip`) die aansluit op de "Volgende actie"-kaart; begroeting en de
+  `= N`-rekensommen weg (bewijs bij `#admin-task-summary`); open takenlijst standaard uitgeklapt;
+  metric-grid 4 → 2 zichtbare kaarten (2+4 `display:none`, elementen blijven voor de tests);
+  procesmeter dunne strook. Herstel-knop blijft altijd; alleen de versiebadge verdwijnt in
+  `body.staat-als-app` (standalone). Testmigratie in `smoke-test.mjs` / `dashboard.spec.ts` /
+  `end-to-end-workflows.feature`.
 - CI `release-pipeline.yml`: `Validate` en `Promote Test` draaien 4-way gesharded (~50 → ~20 min).
 - Nieuwe live-regressie in `tests/remote/` (aparte config) met charter; cases SMOKE-01..04,
   E2E-01..34. `smoke-test.mjs`-guard: geen invoice-lock zonder `concept_pdf_base64` in `tests/remote/`.

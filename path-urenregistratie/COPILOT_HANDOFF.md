@@ -6,9 +6,10 @@ Bijgewerkt: 28 augustus 2026
 
 Zie `../CLAUDE_CODE_HANDOFF.md` bovenaan voor de volledige sessiecontext. Ook: 0.9.149
 (`E2E-H-025` uit quarantaine + 7 nieuwe live-regressiecases + decompressiebom-PNG, 37/37 remote
-groen) en **0.9.150** (compacter beheerdersdashboard: herokaart → statusregel, `= N`-rekensommen
-weg, open takenlijst standaard uitgeklapt, `body.staat-als-app` schoont de topbar op in de
-app-modus). TEST staat op **0.9.146**
+groen) en **0.9.150/0.9.151** (compacter beheerdersdashboard: herokaart → lichte tweeregelige
+statusregel die aansluit op de "Volgende actie"-kaart, `= N`-rekensommen weg, open takenlijst
+standaard uitgeklapt, metric-grid 4 → 2 zichtbare kaarten, procesmeter dunne strook;
+Herstel-knop blijft, versiebadge weg in de app-modus). TEST staat op **0.9.146**
 (branded acceptatie-PDF, telefoonnummer `…286` + migratie `026`, `{klant}` in het factuurnummer
 werkt server+browser, acceptatiemail hangt de echte factuur-PDF aan / weigert het lege placeholder-
 PDF, install-knop zichtbaar). **0.9.147** viel om op een `SQLSTATE[HY093]`: de `{broker}`-token-fix

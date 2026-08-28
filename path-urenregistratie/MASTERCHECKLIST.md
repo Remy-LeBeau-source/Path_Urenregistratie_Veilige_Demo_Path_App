@@ -1852,7 +1852,11 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
   `= N`-rekensommen weg (bewijs bij `#admin-task-summary`), open takenlijst standaard uitgeklapt,
   compacte metric-grid + workflow-strook, mobiele hero-padding ~14px, `body.staat-als-app`
   verbergt Herstel-knop + versiebadge in standalone. `npm run check` + dashboard/mobile-ui/
-  business-workflows Playwright-specs groen. Visueel voorstel als artifact.
+  business-workflows Playwright-specs groen. Visueel voorstel als artifact. Remote-regressie 37/37 groen.
+- [x] 0.9.151 — opmaak doorgetrokken naar het voorstel (CSS-only): herokaart → lichte
+  tweeregelige strook die aansluit op de "Volgende actie"-kaart; metric-grid 4 → 2 zichtbare
+  kaarten (2+4 `display:none`, elementen blijven); procesmeter dunne strook. Herstel-knop
+  blijft altijd zichtbaar (0.9.150-verberging in app-modus teruggedraaid).
 - [x] FO/TO bijgewerkt; beide handoffs + auto-geheugen bijgewerkt.
 
 Telling fasestatussen:

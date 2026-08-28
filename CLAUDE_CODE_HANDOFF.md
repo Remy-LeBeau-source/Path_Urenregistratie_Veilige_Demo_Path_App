@@ -56,6 +56,10 @@ Deze sectie gaat vóór alle oudere secties hieronder.
   ~14px; `body.staat-als-app` (standalone) verbergt Herstel-knop + versiebadge in de topbar.
   Testmigratie in `smoke-test.mjs`, `dashboard.spec.ts`, `end-to-end-workflows.feature`.
   Visueel voorstel: artifact `path-uren-compacter`.
+- **0.9.151 — opmaak doorgetrokken naar het voorstel (CSS-only).** Herokaart → lichte
+  tweeregelige strook (`.is-strip`) die aansluit op de "Volgende actie"-kaart; metric-grid
+  toont nog 2 kaarten (kaart 2+4 `display:none`, elementen blijven); procesmeter is een dunne
+  strook. **Herstel-knop blijft altijd zichtbaar** (0.9.150 verborg 'm in de app-modus — teruggedraaid).
 - CI: `release-pipeline.yml` `Validate` en `Promote Test` draaien nu **4-way gesharded**
   (`strategy.matrix.shard`), ~50 → ~20 min, alle tests blijven draaien.
 - `smoke-test.mjs`-guard: geen `action:'lock'` zonder `concept_pdf_base64` in `tests/remote/`;

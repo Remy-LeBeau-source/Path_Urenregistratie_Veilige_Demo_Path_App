@@ -483,6 +483,20 @@ eigen rekensom. Herzien tot **statusregel + open takenlijst + teamtabel**:
   `#profile-menu-name`), `dashboard.spec.ts` (`#hero-task-owners` → `#admin-task-summary`,
   takenlijst start zichtbaar), `end-to-end-workflows.feature` (E2E-H-001-tekst).
 
+**0.9.151** trekt de opmaak verder door naar het visuele voorstel, puur in CSS (alle
+geteste elementen blijven in de DOM):
+- De navy herokaart is nu een **lichte, tweeregelige strook**: `.hero-card.is-strip`
+  (tellingen + eigenaarsbadges) sluit strak aan op `.dashboard-next-action-card.is-strip`
+  (eerstvolgende actie + primaire knop), samen één blok met een doorlopende mint-rand.
+- `.metric-grid.is-compact` toont alleen kaart 1 en 3 ("Uren ingediend", "Facturen klaar");
+  kaart 2 en 4 staan op `display:none` (hun getallen staan al in de strook). De elementen
+  en hun IDs blijven bestaan zodat `smoke-test.mjs` en `dashboard.spec.ts` blijven werken.
+- De procesmeter is een dunne strook: ring 38px, vier compacte fasen op één regel, de lange
+  "geen taakteller"-uitleg (`#close-progress-note`) staat op `display:none` maar blijft in
+  de DOM voor de smoke-assertie.
+- De **Herstel-knop blijft altijd zichtbaar** (ook in de app-modus); alleen de versiebadge
+  verdwijnt in standalone.
+
 # E2E-H-025 uit quarantaine (0.9.149)
 
 De case stond op `test.skip` om drie losse fragiliteiten; alle drie nu opgelost:
