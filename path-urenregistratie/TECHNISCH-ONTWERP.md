@@ -497,26 +497,6 @@ geteste elementen blijven in de DOM):
 - De **Herstel-knop blijft altijd zichtbaar** (ook in de app-modus); alleen de versiebadge
   verdwijnt in standalone.
 
-# Mix-look, medewerker-dashboard (0.9.152)
-
-Eerste stap naar de "Focus + Console"-mix (visueel voorstel `dashboard-mix-voorbeeld`).
-Alleen het medewerker-dashboard (`#view-employee-dashboard`); interactie ongewijzigd.
-
-- `.employee-hero` → `.dash-focus`: één gecentreerd donker blok. De begroeting
-  (`#employee-dashboard-greeting`) staat op `display:none` maar blijft in de DOM en wordt
-  nog gevuld (smoke eist de voornaam). `#employee-dashboard-next-label` is nu de kicker
-  ("Dit nu · actie 1 van N", door `renderEmployeeDashboard()` gezet); `#employee-dashboard-next`
-  is de grote kop.
-- De rekensom-kaart ernaast → `.dash-kpi`: een monospace-regel (systeem-monospace, want de
-  CSP blokkeert Google Fonts) met `#employee-open-task-total` / `-months` / `-owners`.
-- `.employee-open-overview` compacter: `--surface`-paneel, kleinere radius, elke maandkaart
-  een amber (`--warning`) linkerrand.
-- Testmigratie: `DashboardPage.assertEmployeeDashboardVisible()` checkt nu `#employee-dashboard-next`
-  i.p.v. de (verborgen) begroeting; `dashboard.spec.ts` + `mobile-ui.spec.ts` verwachten
-  "Dit nu" i.p.v. "Volgende actie".
-
-Beheerder-dashboard volgt in 0.9.153.
-
 # E2E-H-025 uit quarantaine (0.9.149)
 
 De case stond op `test.skip` om drie losse fragiliteiten; alle drie nu opgelost:

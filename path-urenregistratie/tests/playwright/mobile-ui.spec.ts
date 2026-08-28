@@ -422,7 +422,7 @@ test('[MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documen
     await loginPage.open();
     await loginPage.loginAsEmployee();
     clearConsoleErrors(errors);
-    await expect(page.locator('#employee-dashboard-next-label')).toHaveText(/Dit nu|Deze maand/);
+    await expect(page.locator('#employee-dashboard-next-label')).toHaveText(/Volgende actie|Deze maand/);
     if (await page.locator('#employee-open-overview').isVisible()) {
       const firstMonth = page.locator('#employee-open-overview-list [data-employee-open-month]').first();
       const firstToggle = firstMonth.locator('[data-employee-open-month-toggle]');

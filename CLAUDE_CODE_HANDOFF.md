@@ -60,12 +60,6 @@ Deze sectie gaat vóór alle oudere secties hieronder.
   tweeregelige strook (`.is-strip`) die aansluit op de "Volgende actie"-kaart; metric-grid
   toont nog 2 kaarten (kaart 2+4 `display:none`, elementen blijven); procesmeter is een dunne
   strook. **Herstel-knop blijft altijd zichtbaar** (0.9.150 verborg 'm in de app-modus — teruggedraaid).
-- **0.9.152 — mix-look, medewerker-dashboard.** `.employee-hero` → `.dash-focus` (gecentreerd
-  donker "Dit nu"-blok); begroeting `display:none` (blijft in DOM); rekensom-kaart → `.dash-kpi`
-  monospace-regel; open-acties-lijst compacter met amber-rand. `renderEmployeeDashboard()` zet de
-  kicker "Dit nu · actie 1 van N". Testmigratie: `DashboardPage` checkt `#employee-dashboard-next`,
-  `dashboard.spec`/`mobile-ui.spec` verwachten "Dit nu". Beheerder volgt in 0.9.153.
-  Voorstellen als artifacts: `dashboard-drie-looks`, `dashboard-mix-voorbeeld`.
 - CI: `release-pipeline.yml` `Validate` en `Promote Test` draaien nu **4-way gesharded**
   (`strategy.matrix.shard`), ~50 → ~20 min, alle tests blijven draaien.
 - `smoke-test.mjs`-guard: geen `action:'lock'` zonder `concept_pdf_base64` in `tests/remote/`;
