@@ -28,6 +28,7 @@ export default defineConfig({
   plugins: [includeLocalDemoScript()],
   server: {
     host: "0.0.0.0",
+    open: true,
     allowedHosts: ["terminal.local"]
   },
   build: {
