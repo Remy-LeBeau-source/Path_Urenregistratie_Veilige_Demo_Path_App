@@ -152,13 +152,21 @@ function mail_enqueue_for_invoice(
          JOIN employees e ON e.id = t.employee_id
          JOIN assignments a ON a.id = t.assignment_id
          LEFT JOIN counterparties cp_client ON cp_client.id = a.client_id AND cp_client.company_id = :company_id
-         LEFT JOIN counterparties cp_broker ON cp_broker.id = a.broker_id AND cp_broker.company_id = :company_id
+         LEFT JOIN counterparties cp_broker ON cp_broker.id = a.broker_id AND cp_broker.company_id = :company_id3
          JOIN periods p ON p.id = t.period_id
          JOIN companies c ON c.id = i.company_id
          WHERE i.id = :invoice_id AND i.company_id = :company_id2
          LIMIT 1'
     );
-    $stmt->execute([':invoice_id' => $invoiceId, ':company_id' => $companyId, ':company_id2' => $companyId]);
+    // Named placeholders are not reused: this PDO connection runs with native
+    // prepares (emulation off), which rejects a repeated :name with HY093. Each
+    // occurrence of the company id gets its own bind.
+    $stmt->execute([
+        ':invoice_id'  => $invoiceId,
+        ':company_id'  => $companyId,
+        ':company_id2' => $companyId,
+        ':company_id3' => $companyId,
+    ]);
     $inv = $stmt->fetch();
 
     if (!$inv) {

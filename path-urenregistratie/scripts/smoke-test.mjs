@@ -215,7 +215,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.147"), "Het zichtbare versienummer moet 0.9.147 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.148"), "Het zichtbare versienummer moet 0.9.148 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -1935,6 +1935,21 @@ for (const zin of ["Hierbij de factuur van", "Geachte relatie,"]) {
 // Overerving: een leeg veld bij de ontvanger mag de opdrachttekst niet vervangen.
 assert(mailQueueSrc.includes("$routeSubject !== '' ? $routeSubject :") && mailQueueSrc.includes("$routeBody !== '' ? $routeBody :"), "Een eigen tekst per ontvanger moet de opdrachttekst alleen overrulen als die is ingevuld");
 assert(mailQueueSrc.includes("'broker'") && mailQueueSrc.includes("broker_name"), "Het {broker}-token uit de hulptekst moet in de mail-render-variabelen zitten, anders blijft het letterlijk staan");
+// Deze PDO-verbinding draait met echte prepares (emulatie uit). Dan mag eenzelfde
+// benoemde placeholder :naam niet twee keer in dezelfde query staan -- MySQL geeft
+// dan SQLSTATE[HY093] en elke factuurmail klapt eruit. Dat gebeurde toen de
+// {broker}-join een tweede :company_id kreeg naast de :company_id van de
+// {klant}-join. De factuur-laadquery van mail_enqueue_for_invoice heeft drie
+// plekken met het bedrijfs-id: die moeten :company_id, :company_id2 en
+// :company_id3 heten, niet drie keer :company_id.
+const factuurLaadQuery = mailQueueSrc.slice(
+  mailQueueSrc.indexOf("FROM invoices i"),
+  mailQueueSrc.indexOf("LIMIT 1'", mailQueueSrc.indexOf("FROM invoices i")),
+);
+assert(
+  (factuurLaadQuery.match(/:company_id(?![0-9])/g) || []).length <= 1,
+  "queue.php gebruikt :company_id meer dan een keer in de factuur-laadquery; echte prepares geven daarop SQLSTATE[HY093]. Geef elke plek een eigen naam (:company_id2, :company_id3, ...) en bind ze allemaal in execute()",
+);
 const renderAllBody = appJsSrc.slice(appJsSrc.indexOf("function renderAll()"), appJsSrc.indexOf("function prefersReducedMotion()"));
 // renderAll moet het instellingenformulier onvoorwaardelijk opnieuw vullen. Stond hier eerder
 // een wachter die het hele formulier oversloeg zodra de cursor in een veld stond, dan bleven
@@ -2009,4 +2024,4 @@ assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Pla
 }
 
 dom.window.close();
-console.log("Path v0.9.147 volledige smoke test: geslaagd");
+console.log("Path v0.9.148 volledige smoke test: geslaagd");

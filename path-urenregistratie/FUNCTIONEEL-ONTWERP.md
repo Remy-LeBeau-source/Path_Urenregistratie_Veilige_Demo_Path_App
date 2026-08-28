@@ -134,6 +134,11 @@ Onder elke mail komt automatisch de handtekening: ondersteuningsnaam, bedrijf, c
 website en slogan uit Instellingen. Die hoort bij de afzender, niet bij de tekst, en staat daarom
 ook onder een zelf geschreven bericht.
 
+In onderwerp en tekst mag je tokens gebruiken die de server invult: onder meer `{medewerker}`,
+`{klant}`, `{broker}`, `{periode}`, `{maand}`, `{jaar}`, `{uren}`, `{factuurnummer}`, `{bedrag}` en
+`{overeenkomstnummer}`. `{broker}` wordt de handelsnaam (anders de statutaire naam) van de broker
+bij de opdracht; staat er geen broker, dan blijft het leeg.
+
 Eén afgeronde factuuractie maakt bij de standaardroute exact drie afzonderlijke berichten: broker,
 boekhouding en salarisadministratie. Dit zijn drie queue-items en drie SMTP-afleveringen, niet één
 bericht met CC/BCC. In TEST worden ze alle drie fysiek bij de vaste testontvanger afgeleverd, terwijl

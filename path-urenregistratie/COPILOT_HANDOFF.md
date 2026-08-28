@@ -4,9 +4,14 @@ Bijgewerkt: 28 augustus 2026
 
 ## Stand 28 augustus 2026 (Claude Code)
 
-Zie `../CLAUDE_CODE_HANDOFF.md` bovenaan voor de volledige sessiecontext. TEST staat op **0.9.144**
+Zie `../CLAUDE_CODE_HANDOFF.md` bovenaan voor de volledige sessiecontext. TEST staat op **0.9.146**
 (branded acceptatie-PDF, telefoonnummer `…286` + migratie `026`, `{klant}` in het factuurnummer
-werkt server+browser, acceptatiemail hangt de echte factuur-PDF aan). CI `Validate`/`Promote Test`
+werkt server+browser, acceptatiemail hangt de echte factuur-PDF aan / weigert het lege placeholder-
+PDF, install-knop zichtbaar). **0.9.147** viel om op een `SQLSTATE[HY093]`: de `{broker}`-token-fix
+gaf de factuur-laadquery in `queue.php` een tweede `:company_id` en echte prepares weigeren dat —
+elke factuurmail faalde. **0.9.148** is de hotfix (`:company_id` / `:company_id2` / `:company_id3`
+apart gebonden; `smoke-test.mjs` bewaakt het). `{broker}` werkt nu in mailteksten, install-banner
+stopt na installatie (`getInstalledRelatedApps`), `dist/` gitignored. CI `Validate`/`Promote Test`
 draaien 4-way gesharded. Nieuwe live-regressie in `tests/remote/`. PROD-grens onveranderd.
 
 ## Voor Codex — stand van Claude Code, 24 augustus

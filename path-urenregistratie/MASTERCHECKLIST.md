@@ -1832,6 +1832,12 @@ Deze mogen **absoluut niet open** blijven wanneer echte medewerkers starten:
   E2E-30 (factuurnummer-uniciteit) toegevoegd en groen. Nieuwe helper `apiApprove` voor
   deterministische goedkeuring; state-machine-cases draaien op verse `createDemoEmployee`-medewerkers.
 - [x] `E2E-H-025` in quarantaine (`test.skip`) — pre-existing render-race, ochtendtaak.
+- [x] 0.9.147 — `{broker}`-token in mailteksten, install-banner stopt na installatie
+  (`getInstalledRelatedApps`), `dist/` gitignored.
+- [x] 0.9.148 (hotfix) — 0.9.147's `{broker}`-join gaf de factuur-laadquery een tweede
+  `:company_id`; echte prepares (emulatie uit) → `SQLSTATE[HY093]`, elke factuurmail faalde,
+  pipeline `29acf2a` niet gedeployd. Fix: `:company_id` / `:company_id2` / `:company_id3` apart
+  gebonden. `smoke-test.mjs` bewaakt nu dat de factuur-laadquery `:company_id` hooguit één keer heeft.
 - [x] FO/TO bijgewerkt; beide handoffs bijgewerkt.
 
 Telling fasestatussen:

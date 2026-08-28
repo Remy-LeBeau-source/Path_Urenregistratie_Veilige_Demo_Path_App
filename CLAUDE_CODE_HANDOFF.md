@@ -36,6 +36,13 @@ Deze sectie gaat vóór alle oudere secties hieronder.
      is de PWA aantoonbaar geinstalleerd, dan verdwijnen banner én menu-item. Niet-geinstalleerd
      gedrag ongewijzigd (banner/menu blijven met handmatige uitleg). Nieuwe test `MOB-H-018`.
   3. `dist/` in `.gitignore` + `git rm --cached` (Vite-output, wordt niet geserveerd, CI bouwt zelf).
+  - **Regressie in 0.9.147, hotfix 0.9.148:** de `{broker}`-join gaf de factuur-laadquery van
+    `mail_enqueue_for_invoice` een **tweede** `:company_id` (naast die van de `{klant}`-join). Deze
+    PDO draait met echte prepares (emulatie uit) -> herhaalde benoemde placeholder = `SQLSTATE[HY093]
+    Invalid parameter number`, elke factuurmail klapte eruit. Pipeline `29acf2a` faalde daardoor op
+    Validate-shards 1/2/4 (elke factuur+mail-test) en 0.9.147 is **nooit gedeployd**. Fix: de drie
+    plekken heten nu `:company_id`, `:company_id2`, `:company_id3` en worden alle drie gebonden.
+    `smoke-test.mjs` bewaakt nu dat de factuur-laadquery `:company_id` hooguit één keer bevat.
 - CI: `release-pipeline.yml` `Validate` en `Promote Test` draaien nu **4-way gesharded**
   (`strategy.matrix.shard`), ~50 → ~20 min, alle tests blijven draaien.
 - `smoke-test.mjs`-guard: geen `action:'lock'` zonder `concept_pdf_base64` in `tests/remote/`.
@@ -82,8 +89,10 @@ Deze sectie gaat vóór alle oudere secties hieronder.
   ontknopen (`business-workflows-mail.spec.ts`, zie de comment daar), dan de `test.skip` weg.
 - Optioneel meer chartercases (E2E-25 "Overig + Factuur meesturen" is lokaal al `E2E-H-012`;
   een live-versie vraagt route-config-plumbing via `assignment_mail_routes.include_invoice_pdf`).
-- **AF (28 aug, 0.9.147):** `{broker}` in mailteksten opgelost; install-banner zeurt niet meer na
-  installatie (`getInstalledRelatedApps`); `dist/` gitignored. Zie de 0.9.147-regel hierboven.
+- **AF (28 aug, 0.9.147 + hotfix 0.9.148):** `{broker}` in mailteksten opgelost; install-banner
+  zeurt niet meer na installatie (`getInstalledRelatedApps`); `dist/` gitignored. 0.9.147 zelf
+  faalde op een `HY093`-regressie (dubbele `:company_id`), 0.9.148 is de hotfix + smoke-guard.
+  Zie de 0.9.147/0.9.148-regels hierboven.
 
 ### Onveranderd: PROD-grens
 Niets naar PROD. `Promote Prod` blijft de handmatige gele poort; nooit zelf goedkeuren.

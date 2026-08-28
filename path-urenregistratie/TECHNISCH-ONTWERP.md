@@ -395,6 +395,23 @@ gestript tot `[A-Za-z0-9]`, met `Klant` als terugval. `invoices_apply_template()
 uniek maken. `smoke-test.mjs` controleert de `{klant}`-resolutie; `TEST-E2E-30` bewaakt de
 uniciteit bij een gedeeld sjabloon.
 
+# {broker}-token in mailteksten — en de HY093-valkuil bij herhaalde placeholders
+
+De hulptekst bij *Eigen onderwerp/tekst* noemt `{broker}`, maar `mail_render()` kreeg die sleutel
+nooit: `mail_enqueue_for_invoice()` bouwt `$vars` en `broker` ontbrak. Het token bleef letterlijk
+in de verzonden mail staan. Opgelost met een `LEFT JOIN counterparties cp_broker` in de factuur-
+laadquery (`COALESCE(NULLIF(cp_broker.trade_name, ''), cp_broker.legal_name) AS broker_name`) en
+`'broker' => (string)($inv['broker_name'] ?? '')` in `$vars`.
+
+Die join introduceerde eerst een **tweede** `:company_id` naast die van de `cp_client`-join. De
+PDO-verbinding draait met **echte prepares** (`ATTR_EMULATE_PREPARES = false`); MySQL weigert dan
+een benoemde placeholder die twee keer in dezelfde query voorkomt met `SQLSTATE[HY093] Invalid
+parameter number`. Gevolg: élke factuurmail (`mail_enqueue_for_invoice`) faalde en pipeline
+`29acf2a` (0.9.147) viel om op Validate-shards 1/2/4 — 0.9.147 is nooit gedeployd. De drie plekken
+met het bedrijfs-id heten nu `:company_id`, `:company_id2` en `:company_id3` en worden alle drie
+los gebonden in `execute()`. `smoke-test.mjs` controleert dat de factuur-laadquery `:company_id`
+(zonder cijfer erachter) hooguit één keer bevat.
+
 # Company-telefoonnummer gecorrigeerd met een idempotente migratie
 
 `0646328283` moest `0646328286` zijn. Seed (`database/seed-demo-data.sql`), `provision-company.php`,

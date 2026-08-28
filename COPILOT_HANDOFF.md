@@ -5,9 +5,15 @@ Dit bestand is de gedeelde brug tussen GitHub Copilot en Codex. Chatvensters zij
 ## Stand 28 augustus 2026 (Claude Code)
 
 Volledige context: `CLAUDE_CODE_HANDOFF.md` bovenaan. Kort:
-- TEST staat op **0.9.144**. Vrijgegeven deze sessie: 0.9.142 (branded acceptatie-PDF),
+- TEST staat op **0.9.146**. Vrijgegeven deze sessie: 0.9.142 (branded acceptatie-PDF),
   0.9.143 (telefoonnummer `…286` + migratie `026`, `{klant}` in factuurnummer werkt server+browser),
-  0.9.144 (acceptatiemail hangt de echte factuur-PDF aan wanneer die bestaat).
+  0.9.144 (acceptatiemail hangt de echte factuur-PDF aan wanneer die bestaat), 0.9.145/0.9.146
+  (install-knop zichtbaar; acceptatiemail weigert het lege `test-reset`-placeholder-PDF).
+- **0.9.147** viel om: de `{broker}`-token-fix in `queue.php` gaf de factuur-laadquery een tweede
+  `:company_id` → echte prepares (emulatie uit) geven `SQLSTATE[HY093]`, elke factuurmail faalde.
+  **0.9.148** is de hotfix: `:company_id` / `:company_id2` / `:company_id3` apart gebonden;
+  `smoke-test.mjs` bewaakt nu herhaalde placeholders in die query. `{broker}` werkt nu in mailteksten,
+  install-banner stopt na installatie (`getInstalledRelatedApps`), `dist/` gitignored.
 - CI `release-pipeline.yml`: `Validate` en `Promote Test` draaien 4-way gesharded (~50 → ~20 min).
 - Nieuwe live-regressie in `tests/remote/` (aparte config) met charter; cases SMOKE-01..04,
   E2E-01..30 (deels). `smoke-test.mjs`-guard: geen invoice-lock zonder `concept_pdf_base64` in `tests/remote/`.
