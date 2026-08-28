@@ -53,14 +53,13 @@ Deze sectie gaat vóór alle oudere secties hieronder.
   hertriggeren — `concurrency: cancel-in-progress` maakt er een knoop van.
 
 ### Nog te doen (ochtend)
-- **Acceptatiemail-PDF — GEDEPRIORITEERD door Gio.** Na 0.9.146 zou hij het lege
-  `test-reset.php`-placeholder (`simple_pdf_text_document`, ~1 kB, tekst "TESTDOCUMENT") moeten
-  weigeren en terugvallen op het gegenereerde branded NIET-BOEKEN-document. Gio meldt "werkt nog
-  niet". De guard-logica in `mail_acceptance_real_invoice_attachment()` is nagelopen tegen de echte
-  generator in `test-reset.php` en klopt (zowel de `TESTDOCUMENT`-marker als `< 20 kB && geen jsPDF`
-  vangen dat placeholder). Meest waarschijnlijke oorzaak: opcache/deploy-versheid op TEST, of getest
-  vóór de 0.9.146-deploy klaar was. Echte factuurverificatie loopt hoe dan ook via de flow
-  (E2E-04/17/23/30/31, groen). Niet verder achteraan zitten tenzij Gio erom vraagt.
+- **Acceptatiemail-PDF — NIET VERDER OPPAKKEN (Gio, 28 aug).** Stand op 0.9.146:
+  `mail_acceptance_real_invoice_attachment()` pakt de échte opgeslagen jsPDF-factuur als de laatst
+  verzonden factuur die heeft, en weigert het lege `test-reset.php`-placeholder (`TESTDOCUMENT`-marker
+  of `< 20 kB && geen jsPDF`); anders het simpele branded samenvattingsdocument. Geverifieerd correct
+  via SSH tegen de TEST-FPM. Gio wil er geen uitgebreid nep-factuurdocument van maken en heeft het
+  bewust losgelaten — de echte factuurdekking loopt via de flow (E2E-04/17/23/30/31, groen).
+  **Niet verder wijzigen zonder expliciete nieuwe opdracht van Gio.**
 - **`E2E-H-025` uit quarantaine halen**: de twee renderpaden voor de standaardtekstenlijst
   ontknopen (`business-workflows-mail.spec.ts`, zie de comment daar), dan de `test.skip` weg.
 - Optioneel meer chartercases (E2E-25 "Overig + Factuur meesturen" is lokaal al `E2E-H-012`;
