@@ -1744,6 +1744,7 @@ assert(dom.window.document.title.length > 0, "Document moet geladen zijn");
 
 // Productie-hardening checks (statisch)
 const installSrc  = readFileSync_(new URL("../server/install.php", import.meta.url), "utf8");
+const apiPhpSrc   = readFileSync_(new URL("../server/api.php", import.meta.url), "utf8");
 const migrateSrc  = readFileSync_(new URL("../server/migrate.php", import.meta.url), "utf8");
 const healthSrc   = readFileSync_(new URL("../server/health.php", import.meta.url), "utf8");
 const healthPolicySrc = readFileSync_(new URL("../server/lib/health_policy.php", import.meta.url), "utf8");
@@ -1949,6 +1950,17 @@ const factuurLaadQuery = mailQueueSrc.slice(
 assert(
   (factuurLaadQuery.match(/:company_id(?![0-9])/g) || []).length <= 1,
   "queue.php gebruikt :company_id meer dan een keer in de factuur-laadquery; echte prepares geven daarop SQLSTATE[HY093]. Geef elke plek een eigen naam (:company_id2, :company_id3, ...) en bind ze allemaal in execute()",
+);
+// Zelfde valkuil op het app-state-opslagpad: de upsert in api.php mag :state niet
+// hergebruiken in de ON DUPLICATE KEY UPDATE-tak. Dit endpoint draait nu nog met
+// emulatie aan, maar de smoke bewaakt het alsof echte prepares gelden.
+const appStateUpsert = apiPhpSrc.slice(
+  apiPhpSrc.indexOf("INSERT INTO app_state"),
+  apiPhpSrc.indexOf("'", apiPhpSrc.indexOf("ON DUPLICATE KEY UPDATE")),
+);
+assert(
+  (appStateUpsert.match(/:state(?![_a-z0-9])/g) || []).length <= 1,
+  "api.php gebruikt :state meer dan een keer in de app_state-upsert; echte prepares geven daarop SQLSTATE[HY093]. Geef de UPDATE-tak een eigen naam (:state_update) en bind beide in execute()",
 );
 const renderAllBody = appJsSrc.slice(appJsSrc.indexOf("function renderAll()"), appJsSrc.indexOf("function prefersReducedMotion()"));
 // renderAll moet het instellingenformulier onvoorwaardelijk opnieuw vullen. Stond hier eerder

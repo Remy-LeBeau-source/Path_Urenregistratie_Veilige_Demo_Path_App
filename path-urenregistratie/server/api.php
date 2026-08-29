@@ -87,8 +87,12 @@ if ($action === 'state') {
         }
         $stateJson = json_encode($data['state'], JSON_UNESCAPED_UNICODE);
         $pdo->exec('CREATE TABLE IF NOT EXISTS app_state (id INT PRIMARY KEY, state LONGTEXT, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)');
-        $stmt = $pdo->prepare('INSERT INTO app_state (id, state) VALUES (1, :state) ON DUPLICATE KEY UPDATE state = :state, updated_at = CURRENT_TIMESTAMP');
-        $stmt->execute([':state' => $stateJson]);
+        // Een benoemde placeholder mag maar een keer per query voorkomen: met echte
+        // prepares (emulatie uit, zoals de rest van de codebase draait) geeft een
+        // herhaalde :state anders SQLSTATE[HY093]. Insert- en update-tak krijgen
+        // daarom elk een eigen naam, allebei met dezelfde waarde gebonden.
+        $stmt = $pdo->prepare('INSERT INTO app_state (id, state) VALUES (1, :state) ON DUPLICATE KEY UPDATE state = :state_update, updated_at = CURRENT_TIMESTAMP');
+        $stmt->execute([':state' => $stateJson, ':state_update' => $stateJson]);
         auth_send_json(['ok' => true]);
     }
 }

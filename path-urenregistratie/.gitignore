@@ -2,6 +2,11 @@
 backups/
 node_modules/
 .env.local
+
+# Lokale debug- en runlogs horen niet in git en al helemaal niet in de deploy
+full-check.log
+test-output.log
+*.local.log
 allure-results/
 allure-report/
 server/config.local.php
