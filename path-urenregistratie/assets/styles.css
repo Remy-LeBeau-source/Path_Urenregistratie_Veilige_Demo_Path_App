@@ -460,6 +460,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .correction-banner small { color: var(--muted); font-size: 9px; }
 
 .timesheet-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 18px; }
+.timesheet-layout > * { min-width: 0; }
 .timesheet-panel { overflow: hidden; }
 .assignment-bar { display: grid; grid-template-columns: 1.4fr .6fr .7fr; gap: 18px; background: var(--navy); color: #fff; padding: 20px 24px; }
 .assignment-bar small, .assignment-bar strong { display: block; }
@@ -525,6 +526,11 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .approval-empty-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
 
 .invoice-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 17px 22px; }
+.invoice-toolbar-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 12px; }
+.invoice-search input { width: min(320px, 40vw); min-height: 38px; border: 1px solid var(--line); border-radius: 10px; background: var(--vlak); color: var(--navy-tekst); padding: 9px 12px; font: inherit; font-size: 11px; }
+.invoice-search input:focus { border-color: var(--mint-dark); outline: 3px solid rgba(58,189,157,.16); }
+.invoice-page-size { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 10px; font-weight: 700; white-space: nowrap; }
+.invoice-page-size select { min-height: 38px; border: 1px solid var(--line); border-radius: 10px; background: var(--vlak); color: var(--navy-tekst); padding: 7px 28px 7px 10px; font: inherit; }
 .invoice-pagination { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 14px 22px; border-top: 1px solid var(--line); }
 .invoice-month-overview { display: grid; gap: 16px; margin-bottom: 17px; border: 1px solid var(--line); border-left: 4px solid var(--mint); border-radius: 15px; background: var(--vlak); padding: 16px 18px; box-shadow: 0 5px 18px rgba(13,27,56,.025); }
 .invoice-month-overview[hidden] { display: none; }
@@ -936,6 +942,8 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .profile-menu .danger-menu-item { margin-top: 4px; border-top: 1px solid var(--line); border-radius: 0 0 9px 9px; color: var(--danger); }
 
 .employee-hero { display: grid; grid-template-columns: minmax(0,1.25fr) minmax(270px,.75fr); gap: 34px; align-items: center; margin: 30px 0 18px; border-radius: 24px; background: linear-gradient(135deg, #0d1b38, #174b55); color: #fff; padding: 36px 40px; box-shadow: 0 18px 45px rgba(13,27,56,.14); }
+.employee-hero.is-complete { grid-template-columns: minmax(0, 720px); padding-block: 28px; }
+.employee-hero.is-complete .hero-task-math { display: none; }
 .employee-hero h2 { margin: 9px 0 8px; color: #fff; font-family: "Roboto Slab", Georgia, serif; font-size: clamp(28px,4vw,40px); }
 .employee-hero p { margin: 6px 0 4px; color: #fff; font-size: 14px; font-weight: 700; line-height: 1.5; }
 .employee-next-action-label { display: block; margin-top: 22px; color: var(--mint); font-size: 9px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }

@@ -53,5 +53,5 @@ Then("blijft het documentvenster open met een duidelijke validatiefout");
 When("de medewerker een externe factuur probeert te uploaden");
 Then("weigert de server de factuuractie met status 403");
 Given("de administrator heeft een testdataset met 32 facturen");
-When("de administrator naar de tweede archiefpagina gaat");
-Then("worden eerst 25 en daarna 7 facturen getoond");
+When("de administrator bladert en zoekt op medewerker of factuurnummer");
+Then("blijven maximaal 25 resultaten per pagina zichtbaar en klopt de zoekselectie");

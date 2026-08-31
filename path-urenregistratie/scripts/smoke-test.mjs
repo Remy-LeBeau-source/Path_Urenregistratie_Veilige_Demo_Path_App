@@ -1819,9 +1819,8 @@ for (const [naam, bestand] of [
   assert(treffer[1] === uitBestand, naam + " loopt niet gelijk met " + bestand + ": draai scripts/build-app-icons.mjs opnieuw");
 }
 assert(!appJsSrc.includes("PATH_LOGO_DATA_URL"), "De oude losse logoconstante hoort weg te zijn: een logo per ondergrond, uit de bouwer");
-// De topbalk is wit in de lichte modus en donker in de donkere, dus daar hangt de
-// keuze aan de modus. De factuurkop is altijd donkerblauw.
-assert(appJsSrc.includes('brandLogoUrl(donkereModusActief() ? "donker" : "licht")'), "Het logo in de topbalk moet de lichte of donkere modus volgen");
+// De zijbalk is in beide thema's donker. Andere logoposities volgen het thema.
+assert(appJsSrc.includes('onDarkSurface || donkereModusActief() ? "donker" : "licht"'), "Het logo moet het contrast van zijn werkelijke ondergrond volgen");
 assert(appJsSrc.includes('brandLogoUrl("donker")'), "Op de donkerblauwe factuurkop hoort het witte woordmerk");
 const mailAcceptanceSrc = readFileSync_(new URL("../server/mail/acceptance.php", import.meta.url), "utf8");
 const mailAcceptancePolicySrc = readFileSync_(new URL("../server/scripts/mail-acceptance-policy-check.php", import.meta.url), "utf8");

@@ -138,6 +138,22 @@ test('[INV-H-016] factuurdataset met 32 records wordt in pagina’s van maximaal
   await expect(page.locator('#invoice-rows tr')).toHaveCount(7);
   await expect(page.locator('#invoice-page-status')).toHaveText('Pagina 2 van 2 · 32 facturen');
   await expect(page.locator('#invoice-page-next')).toBeDisabled();
+
+  await page.locator('[data-standard-choice-control="invoice-page-size"]').click();
+  await page.locator('[data-standard-choice-target="invoice-page-size"][data-standard-choice-value="10"]').click();
+  await expect(page.locator('#invoice-page-size')).toHaveValue('10');
+  await expect(page.locator('#invoice-rows tr')).toHaveCount(10);
+  await expect(page.locator('#invoice-page-status')).toHaveText('Pagina 1 van 4 · 32 facturen');
+
+  await page.locator('#invoice-search').fill('Test Medewerker 2');
+  await expect(page.locator('#invoice-rows tr')).toHaveCount(8);
+  await expect(page.locator('#invoice-page-status')).toHaveText('Pagina 1 van 1 · 8 facturen');
+  await expect(page.locator('#invoice-rows')).toContainText('Test Medewerker 2');
+  await expect(page.locator('#invoice-rows')).not.toContainText('Test Medewerker 1');
+
+  await page.locator('#invoice-search').fill('DATASET-032');
+  await expect(page.locator('#invoice-rows tr')).toHaveCount(1);
+  await expect(page.locator('#invoice-rows')).toContainText('DATASET-032');
 });
 
 test('[INV-N-005] employee facturen zichtbaar maar beperkt en console errors 0', async ({ page }) => {

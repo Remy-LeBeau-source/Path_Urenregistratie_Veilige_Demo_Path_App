@@ -523,7 +523,11 @@
               <button data-invoice-filter="ready">Factuur klaar</button>
               <button data-invoice-filter="simulated">Verzending gecontroleerd</button>
             </div>
-            <button class="text-button" id="download-invoice-list">Download overzicht</button>
+            <div class="invoice-toolbar-actions">
+              <label class="invoice-search"><span class="sr-only">Zoek in facturen</span><input id="invoice-search" type="search" placeholder="Zoek medewerker of factuurnummer" autocomplete="off"></label>
+              <label class="invoice-page-size">Per pagina <select id="invoice-page-size" aria-label="Aantal facturen per pagina"><option value="5">5</option><option value="10">10</option><option value="25" selected>25</option></select></label>
+              <button class="text-button" id="download-invoice-list">Download overzicht</button>
+            </div>
           </div>
           <div class="table-wrap">
             <table class="data-table invoice-table">

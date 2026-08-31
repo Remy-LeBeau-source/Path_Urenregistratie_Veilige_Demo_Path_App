@@ -1285,6 +1285,8 @@ const readApiRuntime = {
   lastAdminWorkflowAt: 0,
   adminWorkflowPeriodKeys: []
   ,invoicePage: 1
+  ,invoicePageSize: 25
+  ,invoiceSearch: ""
 };
 
 window.__PATH_READ_API = readApiDebug;
@@ -4125,6 +4127,7 @@ function renderEmployeeDashboard() {
   const allActionsButton = document.querySelector("#employee-dashboard-all-actions");
   allActionsButton.hidden = employeeOpenActions.length === 0;
   allActionsButton.textContent = "Bekijk alle " + employeeOpenActions.length + " open " + (employeeOpenActions.length === 1 ? "actie" : "acties");
+  document.querySelector(".employee-hero").classList.toggle("is-complete", employeeOpenActions.length === 0);
   document.querySelector("#employee-dashboard-period").textContent = period.label;
   document.querySelector("#employee-dashboard-hours").textContent = hoursFormat.format(accounted) + " uur";
   document.querySelector("#employee-dashboard-contract").textContent = "van " + hoursFormat.format(record.contractHours) + " contracturen";
@@ -5713,8 +5716,14 @@ function renderInvoices() {
   const rows = periodRows.filter(item => state.invoiceFilter === "all" || item.record.invoiceStatus === state.invoiceFilter);
   const tbody = document.querySelector("#invoice-rows");
   if (apiRows) {
-    const filteredApiRows = apiRows.filter(item => state.invoiceFilter === "all" || item.status === state.invoiceFilter);
-    const pageSize = 25;
+    const invoiceSearch = String(readApiRuntime.invoiceSearch || "").trim().toLocaleLowerCase("nl-NL");
+    const filteredApiRows = apiRows.filter(item => {
+      if (state.invoiceFilter !== "all" && item.status !== state.invoiceFilter) return false;
+      if (!invoiceSearch) return true;
+      return [item.invoiceNumber, item.employeeName, item.periodKey, item.statusRaw, item.status]
+        .some(value => String(value || "").toLocaleLowerCase("nl-NL").includes(invoiceSearch));
+    });
+    const pageSize = [5, 10, 25].includes(Number(readApiRuntime.invoicePageSize)) ? Number(readApiRuntime.invoicePageSize) : 25;
     const pageCount = Math.max(1, Math.ceil(filteredApiRows.length / pageSize));
     readApiRuntime.invoicePage = Math.min(Math.max(1, Number(readApiRuntime.invoicePage || 1)), pageCount);
     const visibleApiRows = filteredApiRows.slice((readApiRuntime.invoicePage - 1) * pageSize, readApiRuntime.invoicePage * pageSize);
@@ -10667,6 +10676,16 @@ document.querySelectorAll("[data-invoice-filter]").forEach(button => button.addE
 }));
 document.querySelector("#invoice-page-prev").addEventListener("click", () => { readApiRuntime.invoicePage = Math.max(1, readApiRuntime.invoicePage - 1); renderInvoices(); });
 document.querySelector("#invoice-page-next").addEventListener("click", () => { readApiRuntime.invoicePage += 1; renderInvoices(); });
+document.querySelector("#invoice-search").addEventListener("input", event => {
+  readApiRuntime.invoiceSearch = event.target.value;
+  readApiRuntime.invoicePage = 1;
+  renderInvoices();
+});
+document.querySelector("#invoice-page-size").addEventListener("change", event => {
+  readApiRuntime.invoicePageSize = Number(event.target.value);
+  readApiRuntime.invoicePage = 1;
+  renderInvoices();
+});
 
 function handleMonthDelivery() {
   const readiness = monthBatchReadiness(currentPeriod().key);
