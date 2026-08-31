@@ -64,10 +64,13 @@
         </div>
       </div>
       <form id="auth-login-form" aria-label="Inloggen met e-mail en wachtwoord">
-        <label for="auth-login-email">E-mail</label>
-        <input id="auth-login-email" name="email" type="email" autocomplete="username" inputmode="email" placeholder="admin@example.invalid" required>
+        <label for="auth-login-email">E-mailadres</label>
+        <input id="auth-login-email" name="email" type="email" autocomplete="username" inputmode="email" placeholder="naam@pathconsultancy.nl" required>
         <label for="auth-login-password">Wachtwoord</label>
-        <input id="auth-login-password" name="password" type="password" autocomplete="current-password" placeholder="Wachtwoord" required>
+        <span class="login-password-field">
+          <input id="auth-login-password" name="password" type="password" autocomplete="current-password" placeholder="Wachtwoord" required>
+          <button id="auth-password-toggle" type="button" aria-label="Wachtwoord tonen" aria-pressed="false"><span aria-hidden="true">◉</span></button>
+        </span>
         <button class="button button-primary" id="auth-login-submit" type="submit">Inloggen</button>
         <p id="auth-login-feedback" role="status" aria-live="polite" hidden></p>
         <button class="button button-ghost" id="auth-forgot-password" type="button">Wachtwoord vergeten?</button>
@@ -92,6 +95,7 @@
       </form>
       <p class="login-note" id="auth-mode-indicator">Controle van auth-sessie wordt uitgevoerd.</p>
       <p class="login-note" id="local-login-note">De standaardgegevens gebruiken veilige voorbeeldadressen. Je mag zelf echte gegevens invoeren; deze lokale versie bewaart ze alleen in deze browser en e-mailverzending is uitgeschakeld.</p>
+      <footer class="login-footer"><span>© 2026 Path Consultancy</span><span>Versie 0.9.156</span></footer>
     </div>
   </section>
 

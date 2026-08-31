@@ -741,6 +741,15 @@ test('[MOB-H-006] een uitgenodigde collega stelt op de telefoon een wachtwoord i
 
     await gotoLogin.click();
     await expect(page.locator('#auth-login-form')).toBeVisible();
+    await page.evaluate(() => {
+      const runtime = window as typeof window & { applyLoginPresentation: (allowed: boolean) => void };
+      runtime.applyLoginPresentation(false);
+    });
+    await expect(page.locator('.login-panel')).toHaveClass(/is-production-login/);
+    await expect(page.locator('.login-footer')).toBeVisible();
+    const productionSubmitBox = await page.locator('#auth-login-submit').boundingBox();
+    expect(productionSubmitBox).not.toBeNull();
+    expect(productionSubmitBox!.height).toBeGreaterThanOrEqual(44);
     await assertNoHorizontalOverflow(page);
   });
 

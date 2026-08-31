@@ -145,6 +145,22 @@ select:focus-visible {
 .login-arrow { color: var(--mint-dark-tekst); font-size: 22px; }
 .login-panel .login-note { border-radius: 12px; background: var(--green-light); color: var(--teal); font-size: 11px; padding: 12px 14px; }
 .login-panel .login-note[hidden] { display: none; }
+.login-panel.is-production-login { width: min(100%, 560px); padding: 42px 56px 30px; }
+.login-panel.is-production-login .login-brand { margin-bottom: 34px; padding-bottom: 28px; border-bottom: 1px solid var(--line); }
+#auth-login-form { display: grid; gap: 9px; margin-top: 22px; }
+#auth-login-form > label { color: var(--navy-tekst); font-size: 12px; font-weight: 800; }
+#auth-login-form > input,
+.login-password-field input { width: 100%; min-height: 50px; border: 1px solid var(--line); border-radius: 11px; background: var(--vlak); color: var(--navy-tekst); padding: 12px 14px; font: inherit; font-size: 14px; }
+#auth-login-form > input:focus,
+.login-password-field input:focus { border-color: var(--mint-dark); outline: 3px solid rgba(58,189,157,.16); }
+.login-password-field { position: relative; display: block; }
+.login-password-field input { padding-right: 52px; }
+.login-password-field button { position: absolute; top: 50%; right: 8px; display: grid; width: 38px; height: 38px; place-items: center; border: 0; border-radius: 9px; background: transparent; color: var(--navy-tekst); cursor: pointer; transform: translateY(-50%); }
+.login-password-field button:hover { background: var(--vlak-zacht); }
+#auth-login-submit { width: 100%; min-height: 50px; margin-top: 8px; }
+#auth-forgot-password { justify-self: center; min-height: auto; border: 0; background: transparent; color: var(--navy-tekst); padding: 7px 4px; text-decoration: underline; text-underline-offset: 3px; }
+#auth-login-feedback { margin: 0; border-radius: 9px; background: var(--warning-bg); padding: 10px 12px; font-size: 11px; }
+.login-footer { display: flex; justify-content: space-between; gap: 16px; margin-top: 20px; border-top: 1px solid var(--line); color: var(--muted); padding-top: 16px; font-size: 9px; }
 
 .sidebar {
   position: fixed;
@@ -825,9 +841,11 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 @media (max-width: 590px) {
   .login-screen { align-items: start; padding: 18px 12px; }
   .login-panel { border-radius: 20px; padding: 28px 20px; }
+  .login-panel.is-production-login { padding: 28px 20px 22px; }
   .login-brand { margin-bottom: 30px; }
   .login-option { gap: 11px; padding: 14px 12px; }
   .login-avatar { width: 39px; height: 39px; }
+  .login-footer { align-items: center; flex-direction: column; gap: 4px; }
   .main-content { padding-inline: 12px; }
   .topbar h1 { font-size: 21px; }
   .period-picker-wrap { min-width: 166px; }

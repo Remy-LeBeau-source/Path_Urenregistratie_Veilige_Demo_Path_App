@@ -300,6 +300,21 @@ test('[AUTH-H-009] lokale login benoemt de veilige testomgeving en productnaam',
   await test.step('Then heten omgeving en titel Beveiligde omgeving en Inloggen', async () => {
     await expect(page.locator('#login-environment-label')).toHaveText('Beveiligde omgeving');
     await expect(page.locator('#login-title')).toHaveText('Inloggen');
+    await expect(page.locator('.login-panel')).toHaveClass(/is-production-login/);
+    await expect(page.locator('#auth-login-email')).toHaveAttribute('placeholder', 'naam@pathconsultancy.nl');
+    await expect(page.locator('#auth-login-submit')).toBeVisible();
+    await expect(page.locator('.login-footer')).toContainText('© 2026 Path Consultancy');
+    await expect(page.locator('.login-footer')).toContainText('Versie 0.9.156');
+  });
+
+  await test.step('And kan het wachtwoord toegankelijk worden getoond en weer verborgen', async () => {
+    const password = page.locator('#auth-login-password');
+    await expect(password).toHaveAttribute('type', 'password');
+    await page.locator('#auth-password-toggle').click();
+    await expect(password).toHaveAttribute('type', 'text');
+    await expect(page.locator('#auth-password-toggle')).toHaveAttribute('aria-label', 'Wachtwoord verbergen');
+    await page.locator('#auth-password-toggle').click();
+    await expect(password).toHaveAttribute('type', 'password');
   });
 });
 

@@ -8470,12 +8470,14 @@ function testAccountToolsAllowed(hostname = window.location.hostname) {
 }
 
 function applyLoginPresentation(accountToolsAllowed, resetToolsAllowed = localAccountToolsAllowed()) {
+  const panel = document.querySelector(".login-panel");
   const tools = document.querySelector("#local-account-login-tools");
   const localNote = document.querySelector("#local-login-note");
   const environmentLabel = document.querySelector("#login-environment-label");
   const title = document.querySelector("#login-title");
   const intro = document.querySelector("#login-intro");
   if (tools) tools.hidden = !accountToolsAllowed;
+  if (panel) panel.classList.toggle("is-production-login", !accountToolsAllowed);
   if (localNote) localNote.hidden = !accountToolsAllowed;
   syncResetControlVisibility(resetToolsAllowed);
   if (!resetToolsAllowed) {
@@ -11313,6 +11315,16 @@ document.querySelector("#help-form").addEventListener("submit", event => {
   if (!question) return;
   input.value = "";
   answerHelpQuestion(question);
+});
+document.querySelector("#auth-password-toggle")?.addEventListener("click", event => {
+  const button = event.currentTarget;
+  const password = document.querySelector("#auth-login-password");
+  if (!password) return;
+  const visible = password.type === "text";
+  password.type = visible ? "password" : "text";
+  button.setAttribute("aria-pressed", String(!visible));
+  button.setAttribute("aria-label", visible ? "Wachtwoord tonen" : "Wachtwoord verbergen");
+  password.focus();
 });
 document.querySelector("#auth-login-form")?.addEventListener("submit", event => {
   event.preventDefault();
