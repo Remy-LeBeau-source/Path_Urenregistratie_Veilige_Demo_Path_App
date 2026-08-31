@@ -70,6 +70,30 @@ Feature: Mailroutering en aflevering
     And Vernieuwen haalt de actuele serverregistraties opnieuw op
 
   @happy
+  Scenario: [EQ-H-031] mislukte mail blijft herstelbaar en verzonden mail heeft geen herhaalactie
+    # Testtechniek: Toestandsovergang + herstelpad
+    # Aantoonbare Playwright-assertions in deze case: 10
+    Given een mislukte en een reeds verzonden mail in de verzendadministratie staan
+    When Backoffice de mislukte mail gemotiveerd opnieuw klaarzet
+    Then blijft alleen de mislukte mail herstelbaar en krijgt verzonden mail geen herhaalactie
+
+  @happy
+  Scenario: [EQ-H-032] handmatige herstart na maximale pogingen is auditbaar en eenmalig
+    # Testtechniek: Toestandsovergang + grenswaarde retries
+    # Aantoonbare Playwright-assertions in deze case: 10
+    Given een levering na het maximale aantal pogingen definitief is mislukt
+    When Backoffice met de exacte bevestiging en een geldige reden herstart
+    Then wordt dezelfde levering eenmaal opnieuw klaargezet en een tweede herstart geblokkeerd
+
+  @happy
+  Scenario: [EQ-H-033] queue-API pagineert en zoekt server-side
+    # Testtechniek: Grenswaarde + API-contract
+    # Aantoonbare Playwright-assertions in deze case: 11
+    Given meerdere leveringen in de serverwachtrij staan
+    When Backoffice per pagina navigeert en op factuurnummer zoekt
+    Then levert de server het juiste bereik en uitsluitend passende resultaten
+
+  @happy
   Scenario: [EQ-H-016] Backoffice verstuurt vanuit de acceptatieconsole precies één gekozen scenario
     # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 18

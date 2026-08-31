@@ -521,11 +521,18 @@
         </div>
         <section class="panel" id="invoice-detail-panel" hidden>
           <div class="invoice-toolbar">
-            <div class="segmented-control" role="group" aria-label="Factuurfilter">
-              <button class="is-active" data-invoice-filter="all">Alle</button>
-              <button data-invoice-filter="concept">Nog niet klaar</button>
-              <button data-invoice-filter="ready">Factuur klaar</button>
-              <button data-invoice-filter="simulated">Verzending gecontroleerd</button>
+            <div class="invoice-filter-groups">
+              <div class="segmented-control" role="group" aria-label="Factuurfilter">
+                <button class="is-active" data-invoice-filter="all">Alle</button>
+                <button data-invoice-filter="concept">Nog niet klaar</button>
+                <button data-invoice-filter="ready">Factuur klaar</button>
+                <button data-invoice-filter="simulated">Verzending gecontroleerd</button>
+              </div>
+              <div class="segmented-control invoice-document-filter" role="group" aria-label="Documentfilter">
+                <button class="is-active" data-invoice-document-filter="all">Alle documenten</button>
+                <button data-invoice-document-filter="complete">Documenten compleet</button>
+                <button data-invoice-document-filter="missing">Document ontbreekt</button>
+              </div>
             </div>
             <div class="invoice-toolbar-actions">
               <label class="invoice-search"><span class="sr-only">Zoek in facturen</span><input id="invoice-search" type="search" placeholder="Zoek medewerker of factuurnummer" autocomplete="off"></label>
@@ -535,7 +542,7 @@
           </div>
           <div class="table-wrap">
             <table class="data-table invoice-table">
-              <thead><tr><th>Factuur</th><th>Consultant</th><th>Broker</th><th>Bedrag</th><th>Status</th><th>Actie</th></tr></thead>
+              <thead><tr><th>Factuur</th><th>Consultant</th><th>Documenten</th><th>Bedrag</th><th>Status</th><th>Actie</th></tr></thead>
               <tbody id="invoice-rows"></tbody>
             </table>
           </div>
@@ -674,8 +681,18 @@
                 <button class="small-button" id="refresh-mail-delivery-history" type="button">Vernieuwen</button>
               </div>
               <p class="settings-template-intro" id="mail-delivery-history-summary">De applicatie toont hier per bericht de ontvanger, het onderwerp, de status en het verzendmoment.</p>
+              <div class="mail-delivery-history-controls" aria-label="Verzendadministratie filteren">
+                <label class="mail-delivery-search"><span>Zoeken</span><input id="mail-delivery-search" type="search" placeholder="Medewerker, factuur of ontvanger" autocomplete="off"></label>
+                <label><span>Status</span><select id="mail-delivery-status-filter"><option value="">Alle</option><option value="queued">In wachtrij</option><option value="processing">Bezig</option><option value="failed">Actie vereist</option><option value="sent">Verzonden</option></select></label>
+                <label><span>Per pagina</span><select id="mail-delivery-page-size"><option value="10">10</option><option value="25">25</option><option value="50">50</option></select></label>
+              </div>
               <div class="mail-delivery-history-list" id="mail-delivery-history-list" aria-live="polite">
                 <div class="dashboard-action-empty"><strong>Nog geen servergegevens geladen.</strong><br>Open dit onderdeel na beveiligd inloggen opnieuw.</div>
+              </div>
+              <div class="mail-delivery-pagination" id="mail-delivery-pagination" hidden>
+                <button class="small-button" id="mail-delivery-previous" type="button">Vorige</button>
+                <span id="mail-delivery-page-label">Pagina 1</span>
+                <button class="small-button" id="mail-delivery-next" type="button">Volgende</button>
               </div>
               <p class="safe-domain-note">Wachtwoordlinks en volledige berichtinhoud worden hier nooit getoond. Voor technische aflevering blijft het Google e-maillogboek beschikbaar.</p>
             </div>

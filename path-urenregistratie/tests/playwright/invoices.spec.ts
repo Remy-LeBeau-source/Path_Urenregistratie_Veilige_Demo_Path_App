@@ -47,7 +47,8 @@ test('[INV-H-013] documentarchief toont factuur en klanturenstaat zonder bestand
       invoice_number: 'TEST-ARCHIEF-001', employee_name: 'Test Medewerker', period_key: '2026-08',
       status: 'ready', timesheet_status: 'invoiced', subtotal: 1000, vat_amount: 210,
       total: 1210, billable_hours: 10, hourly_rate: 100, vat_percentage: 21, locked: true,
-      invoice_download_url: '/server/api/invoices.php?action=download&id=901',
+      invoice_download_url: '/server/api/invoices.php?action=download&invoice_id=901',
+      invoice_source: 'external', invoice_upload_reason: 'Ontvangen van broker', invoice_original_file_name: 'brokerfactuur.pdf',
       customer_timesheet_status: 'approved', customer_timesheet_file_name: 'urenstaat.pdf',
       customer_timesheet_download_url: '/server/api/customer-timesheets.php?action=download&period=2026-08&employee_id=4&assignment_id=4',
     }] }),
@@ -58,10 +59,17 @@ test('[INV-H-013] documentarchief toont factuur en klanturenstaat zonder bestand
   const detail = page.locator('#invoice-detail-toggle');
   if (await detail.getAttribute('aria-expanded') !== 'true') await detail.click();
 
-  await expect(page.getByRole('button', { name: 'Documenten bekijken' })).toHaveCount(1);
-  await page.getByRole('button', { name: 'Documenten bekijken' }).click();
+  await expect(page.locator('[data-document-focus="invoice"]')).toContainText('Factuur ✓');
+  await expect(page.locator('[data-document-focus="customer-timesheet"]')).toContainText('Urenstaat ✓');
+  const documentArchiveButton = page.locator('button[data-invoice-documents]:not([data-document-focus])');
+  await expect(documentArchiveButton).toHaveCount(1);
+  await documentArchiveButton.click();
   await expect(page.locator('#modal-title')).toHaveText('TEST-ARCHIEF-001');
-  await expect(page.locator('[data-document-kind="invoice"]')).toHaveAttribute('href', /action=download&id=901/);
+  await expect(page.locator('[data-document-card="invoice"] .document-status-pill')).toHaveText('Aanwezig');
+  await expect(page.locator('[data-document-card="customer-timesheet"] .document-status-pill')).toHaveText('Aanwezig');
+  await expect(page.locator('[data-document-kind="invoice"]')).toHaveAttribute('href', /action=download&invoice_id=901/);
+  await expect(page.locator('[data-invoice-upload-reason]')).toHaveText('Ontvangen van broker');
+  await expect(page.locator('[data-document-card="invoice"]')).toContainText('brokerfactuur.pdf');
   await expect(page.locator('[data-document-kind="customer-timesheet"]')).toHaveAttribute('href', /customer-timesheets\.php\?action=download/);
   await expect(page.locator('#invoice-customer-timesheet-file')).toHaveCount(0);
 });
@@ -74,7 +82,7 @@ test('[INV-N-014] ontbrekende klanturenstaat accepteert uitsluitend PDF JPG of P
       id: 902, timesheet_id: 802, employee_id: 4, assignment_id: 4,
       invoice_number: 'TEST-ARCHIEF-002', employee_name: 'Test Medewerker', period_key: '2026-08',
       status: 'ready', timesheet_status: 'invoiced', total: 1210, locked: true,
-      invoice_download_url: '/server/api/invoices.php?action=download&id=902',
+      invoice_download_url: '/server/api/invoices.php?action=download&invoice_id=902',
       customer_timesheet_status: 'skipped', customer_timesheet_note: 'Al rechtstreeks gemaild',
       customer_timesheet_download_url: null,
     }] }),
@@ -84,14 +92,59 @@ test('[INV-N-014] ontbrekende klanturenstaat accepteert uitsluitend PDF JPG of P
   await page.locator('button[data-view="invoices"]').click();
   const detail = page.locator('#invoice-detail-toggle');
   if (await detail.getAttribute('aria-expanded') !== 'true') await detail.click();
-  await page.getByRole('button', { name: 'Documenten bekijken' }).click();
+  await page.locator('[data-document-focus="customer-timesheet"]').click();
 
   const upload = page.locator('#invoice-customer-timesheet-file');
   await expect(upload).toHaveAttribute('accept', 'application/pdf,image/jpeg,image/png');
+  await expect(upload).toBeFocused();
+  await expect(page.locator('#modal-confirm')).toHaveText('Urenstaat opslaan');
   await upload.setInputFiles({ name: 'malware.exe', mimeType: 'application/octet-stream', buffer: Buffer.from('not allowed') });
   await page.locator('#modal-confirm').click();
   await expect(page.locator('#toast')).toContainText('Alleen PDF, JPG en PNG zijn toegestaan');
   await expect(page.locator('#modal')).toBeVisible();
+});
+
+test('[INV-H-018] externe factuur slaat PDF JPG en PNG via de factuur-API op', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  const item = {
+    id: 903, timesheet_id: 803, employee_id: 4, assignment_id: 4,
+    invoice_number: 'TEST-ARCHIEF-003', employee_name: 'Test Medewerker', period_key: '2026-08',
+    status: 'ready', timesheet_status: 'invoiced', total: 1210, locked: true,
+    invoice_download_url: null, customer_timesheet_status: 'approved',
+    customer_timesheet_download_url: '/server/api/customer-timesheets.php?action=download&period=2026-08&employee_id=4&assignment_id=4',
+  };
+  await page.route('**/server/api/invoices.php?period=*', route => route.fulfill({
+    status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items: [item] }),
+  }));
+  await page.route('**/server/api/invoices.php', route => {
+    if (route.request().method() === 'POST') {
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true }) });
+    }
+    return route.fallback();
+  });
+  await loginPage.open();
+  await loginPage.loginAsAdmin();
+  await page.locator('button[data-view="invoices"]').click();
+  const detail = page.locator('#invoice-detail-toggle');
+  if (await detail.getAttribute('aria-expanded') !== 'true') await detail.click();
+
+  for (const file of [
+    { name: 'factuur.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n%%EOF') },
+    { name: 'factuur.jpg', mimeType: 'image/jpeg', buffer: Buffer.from([0xff, 0xd8, 0xff, 0xd9]) },
+    { name: 'factuur.png', mimeType: 'image/png', buffer: Buffer.from([0x89, 0x50, 0x4e, 0x47]) },
+  ]) {
+    await page.locator('[data-document-focus="invoice"]').click();
+    await page.locator('#external-invoice-file').setInputFiles(file);
+    await page.locator('#external-invoice-reason').fill('Ontvangen van broker');
+    await expect(page.locator('#modal-confirm')).toHaveText('Factuur opslaan');
+    const requestPromise = page.waitForRequest(request => request.method() === 'POST' && /\/server\/api\/invoices\.php$/.test(request.url()));
+    await page.locator('#modal-confirm').click();
+    const request = await requestPromise;
+    expect(request.postData()).toContain('upload_external');
+    expect(request.postData()).toContain(file.name);
+    expect(request.postData()).toContain('Ontvangen van broker');
+    await expect(page.locator('#modal')).toBeHidden();
+  }
 });
 
 test('[INV-N-017] medewerker mag geen externe factuur uploaden', async ({ page }) => {
@@ -122,8 +175,9 @@ test('[INV-H-016] factuurdataset met 32 records wordt in pagina’s van maximaal
     id: 1000 + index, timesheet_id: 2000 + index, employee_id: 4 + (index % 4), assignment_id: 4 + (index % 4),
     invoice_number: `DATASET-${String(index + 1).padStart(3, '0')}`, employee_name: `Test Medewerker ${(index % 4) + 1}`,
     period_key: '2026-08', status: index % 3 === 0 ? 'concept' : 'ready', timesheet_status: 'invoiced',
-    total: 1000 + index, locked: true, invoice_download_url: `/server/api/invoices.php?action=download&id=${1000 + index}`,
-    customer_timesheet_status: index % 5 === 0 ? 'skipped' : 'approved', customer_timesheet_download_url: null,
+    total: 1000 + index, locked: true, invoice_download_url: `/server/api/invoices.php?action=download&invoice_id=${1000 + index}`,
+    customer_timesheet_status: index % 5 === 0 ? 'skipped' : 'approved',
+    customer_timesheet_download_url: index % 5 === 0 ? null : `/server/api/customer-timesheets.php?action=download&employee_id=${4 + (index % 4)}&period=2026-08`,
   }));
   await page.route('**/server/api/invoices.php?period=*', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items }) }));
   await loginPage.open();
@@ -138,6 +192,15 @@ test('[INV-H-016] factuurdataset met 32 records wordt in pagina’s van maximaal
   await expect(page.locator('#invoice-rows tr')).toHaveCount(7);
   await expect(page.locator('#invoice-page-status')).toHaveText('Pagina 2 van 2 · 32 facturen');
   await expect(page.locator('#invoice-page-next')).toBeDisabled();
+
+  await page.locator('[data-invoice-document-filter="missing"]').click();
+  await expect(page.locator('#invoice-rows tr')).toHaveCount(7);
+  await expect(page.locator('#invoice-page-status')).toHaveText('Pagina 1 van 1 · 7 facturen');
+  await expect(page.locator('#invoice-rows')).toContainText('Urenstaat ontbreekt');
+  await page.locator('[data-invoice-document-filter="complete"]').click();
+  await expect(page.locator('#invoice-rows tr')).toHaveCount(25);
+  await expect(page.locator('#invoice-page-status')).toHaveText('Pagina 1 van 1 · 25 facturen');
+  await page.locator('[data-invoice-document-filter="all"]').click();
 
   await page.locator('[data-standard-choice-control="invoice-page-size"]').click();
   await page.locator('[data-standard-choice-target="invoice-page-size"][data-standard-choice-value="10"]').click();

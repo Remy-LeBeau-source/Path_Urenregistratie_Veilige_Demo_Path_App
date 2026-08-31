@@ -184,7 +184,7 @@ function invoices_upload_external(PDO $pdo, array $config, array $currentUser): 
         ':event_type' => 'invoice.external_document_added', ':entity_type' => 'invoice', ':entity_id' => (string)$invoiceId,
         ':event_data' => json_encode(['invoice_number' => $invoice['invoice_number'], 'original_name' => $upload['name'], 'source_mime' => $upload['source_mime'], 'reason' => $reason], JSON_UNESCAPED_UNICODE),
     ]);
-    auth_send_json(['ok' => true, 'action' => 'upload_external', 'invoice_id' => (int)$invoiceId, 'source' => 'external', 'download_url' => '/server/api/invoices.php?action=download&id=' . (int)$invoiceId]);
+    auth_send_json(['ok' => true, 'action' => 'upload_external', 'invoice_id' => (int)$invoiceId, 'source' => 'external', 'download_url' => '/server/api/invoices.php?action=download&invoice_id=' . (int)$invoiceId]);
 }
 
 function invoices_employee_context(PDO $pdo, array $currentUser): array
@@ -566,7 +566,37 @@ function invoices_read(PDO $pdo, array $currentUser, array $periodFilter): void
     $stmt->execute();
     $rows = $stmt->fetchAll();
 
-    $items = array_map(static function (array $row): array {
+    // De externe bron en reden staan bewust in de immutable auditlog. Voor het
+    // documentarchief lezen we alleen de laatste toevoeging per factuur terug;
+    // de PDF-bytes zelf blijven buiten deze lichte lijstresponse.
+    $externalDocumentAudit = [];
+    if (!$isEmployee) {
+        $auditStmt = $pdo->prepare(
+            'SELECT entity_id, event_data
+             FROM audit_log
+             WHERE company_id = :company_id
+               AND event_type = :event_type
+               AND entity_type = :entity_type
+             ORDER BY id DESC'
+        );
+        $auditStmt->execute([
+            ':company_id' => $companyId,
+            ':event_type' => 'invoice.external_document_added',
+            ':entity_type' => 'invoice',
+        ]);
+        foreach ($auditStmt->fetchAll() as $auditRow) {
+            $entityId = (string)($auditRow['entity_id'] ?? '');
+            if ($entityId === '' || isset($externalDocumentAudit[$entityId])) continue;
+            $decoded = json_decode((string)($auditRow['event_data'] ?? ''), true);
+            if (!is_array($decoded)) $decoded = [];
+            $externalDocumentAudit[$entityId] = [
+                'reason' => trim((string)($decoded['reason'] ?? '')),
+                'original_name' => trim((string)($decoded['original_name'] ?? '')),
+            ];
+        }
+    }
+
+    $items = array_map(static function (array $row) use ($externalDocumentAudit): array {
         $isLocked = $row['locked_at'] !== null;
         $billableHours = (float)$row['billable_hours'];
         $hourlyRate = (float)$row['hourly_rate'];
@@ -579,6 +609,7 @@ function invoices_read(PDO $pdo, array $currentUser, array $periodFilter): void
         $subtotal = $isLocked ? (float)$row['subtotal'] : $calculatedSubtotal;
         $vatAmount = $isLocked ? (float)$row['vat_amount'] : $calculatedVatAmount;
         $total = $isLocked ? (float)$row['total'] : $calculatedTotal;
+        $externalAudit = $externalDocumentAudit[(string)$row['id']] ?? null;
 
         return [
             'id' => (int)$row['id'],
@@ -599,8 +630,11 @@ function invoices_read(PDO $pdo, array $currentUser, array $periodFilter): void
             'locked' => $isLocked,
             'locked_at' => $row['locked_at'] !== null ? (string)$row['locked_at'] : null,
             'invoice_download_url' => trim((string)($row['pdf_storage_key'] ?? '')) !== ''
-                ? '/server/api/invoices.php?action=download&id=' . (string)$row['id']
+                ? '/server/api/invoices.php?action=download&invoice_id=' . (string)$row['id']
                 : null,
+            'invoice_source' => $externalAudit ? 'external' : 'generated',
+            'invoice_upload_reason' => $externalAudit ? (string)$externalAudit['reason'] : null,
+            'invoice_original_file_name' => $externalAudit ? (string)$externalAudit['original_name'] : null,
             'customer_timesheet_status' => $row['customer_timesheet_status'] !== null ? (string)$row['customer_timesheet_status'] : 'missing',
             'customer_timesheet_file_name' => $row['customer_timesheet_file_name'] !== null ? (string)$row['customer_timesheet_file_name'] : null,
             'customer_timesheet_note' => $row['customer_timesheet_note'] !== null ? (string)$row['customer_timesheet_note'] : null,

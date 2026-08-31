@@ -333,7 +333,7 @@ function parseFeatureDocument(file, source) {
   return { file, title, featureTags, spec, steps, scenarios };
 }
 
-function renderLivingDocViewer(features, generatedAt, allureSummary) {
+function renderLivingDocViewer(features, generatedAt, allureSummary, releaseMetadata) {
   const featureData = JSON.stringify(features).replaceAll('<', '\\u003c');
   const scenarioTotal = features.reduce((sum, feature) => sum + feature.scenarios.length, 0);
   const happyTotal = features.reduce((sum, feature) => sum + feature.scenarios.filter(scenario => scenario.tags.includes('@happy')).length, 0);
@@ -355,7 +355,7 @@ function renderLivingDocViewer(features, generatedAt, allureSummary) {
         <a href="playwright-report/index.html">Playwright</a>
         <a href="allure-report/index.html">Allure</a>
       </nav>
-      <span class="run-status"><span class="status-dot"></span>${allureSummary.passed}/${allureSummary.total} passed</span>
+      <span class="run-status"><span class="status-dot"></span>v${escapeHtml(releaseMetadata.version)} · ${escapeHtml(releaseMetadata.stage)} · ${allureSummary.passed}/${allureSummary.total} passed</span>
     </header>
     <div class="viewer-shell">
       <aside class="feature-sidebar">
@@ -403,7 +403,7 @@ function renderLivingDocViewer(features, generatedAt, allureSummary) {
         </section>
       </main>
     </div>
-    <footer class="viewer-footer">Gegenereerd uit Native Playwright-documentatie op ${escapeHtml(generatedAt)}</footer>
+    <footer class="viewer-footer">Path Uren &amp; Facturatie v${escapeHtml(releaseMetadata.version)} · ${escapeHtml(releaseMetadata.stage)} · doel ${escapeHtml(releaseMetadata.target)} · gegenereerd op ${escapeHtml(generatedAt)}</footer>
     <script>
       const features = ${featureData};
       const params = new URLSearchParams(window.location.search);
@@ -930,7 +930,7 @@ ${contentHtml}
 `;
 }
 
-function wrapIndexHtml({ generatedAt, stats, features }) {
+function wrapIndexHtml({ generatedAt, stats, features, releaseMetadata }) {
   const scenarioCount = features.reduce((sum, feature) => sum + feature.scenarios.length, 0);
   return `<!doctype html>
 <html lang="nl">
@@ -955,6 +955,9 @@ ${renderStatCards(stats, 'dark')}
           <aside class="hero-panel">
             <div class="panel-title">Laatste regressie</div>
             <p><strong>Alle controles geslaagd.</strong><br>De Living Documentation en rapportages zijn uit dezelfde Playwright-run opgebouwd.</p>
+            <p class="stamp"><span class="stamp-label">Versie</span><br>v${escapeHtml(releaseMetadata.version)}</p>
+            <p class="stamp"><span class="stamp-label">Stage</span><br>${escapeHtml(releaseMetadata.stage)}</p>
+            <p class="stamp"><span class="stamp-label">Doelstraat</span><br>${escapeHtml(releaseMetadata.target)}</p>
             <p class="stamp"><span class="stamp-label">Gegenereerd op</span><br>${generatedAt}</p>
           </aside>
         </div>
@@ -980,7 +983,7 @@ ${renderStatCards(stats, 'dark')}
       </section>
 
       <footer class="portal-footer">
-        <span>Path Uren &amp; Facturatie · Living Documentation v0.9.156</span>
+        <span>Path Uren &amp; Facturatie · Living Documentation v${escapeHtml(releaseMetadata.version)}</span>
         <span><a href="LIVING-DOC.md">Markdown</a> · <a href="TEST-BDD-MAPPING.md">Mapping bron</a></span>
       </footer>
     </main>
@@ -1071,6 +1074,12 @@ async function main() {
   await cp(join(root, 'allure-report'), join(outDir, 'allure-report'), { recursive: true });
 
   const generatedAt = new Date().toISOString();
+  const packageMetadata = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
+  const releaseMetadata = {
+    version: String(packageMetadata.version || 'onbekend'),
+    stage: String(process.env.PATH_REPORT_STAGE || (process.env.CI ? 'CI release regression' : 'Lokale regressie')),
+    target: String(process.env.PATH_REPORT_TARGET || (process.env.CI ? 'TEST -> PROD' : 'lokale testomgeving')),
+  };
   const livingDocMarkdown = await readFile(join(root, 'LIVING-DOC.md'), 'utf8');
   const mappingMarkdown = await readFile(join(root, 'TEST-BDD-MAPPING.md'), 'utf8');
   const livingDocRender = markdownToHtml(livingDocMarkdown, { omitFirstH1: true });
@@ -1092,7 +1101,7 @@ async function main() {
     { href: 'allure-report/index.html', eyebrow: 'Report', title: 'Allure Report', description: 'Bekijk de rijkere rapportage en attachments.' },
   ];
 
-  const livingDocHtml = renderLivingDocViewer(featureOverview.features, generatedAt, allureSummary);
+  const livingDocHtml = renderLivingDocViewer(featureOverview.features, generatedAt, allureSummary, releaseMetadata);
 
   const mappingHtml = wrapDocumentHtml({
     title: 'Path Test Traceability',
@@ -1119,6 +1128,7 @@ async function main() {
 
   const indexHtml = wrapIndexHtml({
     generatedAt,
+    releaseMetadata,
     stats: [
       { label: 'Feature files', value: featureOverview.featureCount, note: 'BDD-bronbestanden in de bundle.' },
       { label: 'Scenario\'s', value: featureOverview.scenarioCount, note: 'Herleidbare scenario\'s uit de features.' },

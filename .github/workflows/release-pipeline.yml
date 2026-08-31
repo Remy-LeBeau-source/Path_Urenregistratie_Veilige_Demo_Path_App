@@ -671,6 +671,9 @@ jobs:
     name: Publish Live Docs
     needs: test
     runs-on: ubuntu-latest
+    env:
+      PATH_REPORT_STAGE: CI release regression
+      PATH_REPORT_TARGET: TEST -> PROD
     defaults:
       run:
         working-directory: path-urenregistratie

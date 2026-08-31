@@ -486,3 +486,70 @@ function mail_retry_delivery(PDO $pdo, int $deliveryId, int $companyId, int $act
         'dry_run'       => (bool)$delivery['dry_run'],
     ];
 }
+
+/**
+ * Handmatige herstart nadat de begrensde verzendpogingen zijn verbruikt.
+ * Hetzelfde delivery-record wordt hergebruikt, zodat geen tweede factuurmail
+ * kan ontstaan en de auditketen intact blijft. Een verzonden bericht kan deze
+ * route nooit bereiken.
+ */
+function mail_reissue_failed_delivery(
+    PDO $pdo,
+    int $deliveryId,
+    int $companyId,
+    int $actorUserId,
+    string $reason
+): array {
+    $reason = trim($reason);
+    if (mb_strlen($reason) < 10 || mb_strlen($reason) > 300) {
+        throw new \RuntimeException('invalid-reissue-reason');
+    }
+
+    $stmt = $pdo->prepare(
+        'SELECT ed.id, ed.status, ed.attempt_count, ed.channel, ed.dry_run,
+                COALESCE(i.company_id, u.company_id) AS delivery_company_id
+         FROM email_deliveries ed
+         LEFT JOIN invoices i ON i.id = ed.invoice_id
+         LEFT JOIN users u ON u.id = ed.user_id
+         WHERE ed.id = :id'
+    );
+    $stmt->execute([':id' => $deliveryId]);
+    $delivery = $stmt->fetch();
+
+    if (!$delivery) throw new \RuntimeException('delivery-not-found');
+    if ((int)$delivery['delivery_company_id'] !== $companyId) throw new \RuntimeException('forbidden');
+    if ((string)$delivery['channel'] === 'password_reset') throw new \RuntimeException('reset-reissue-required');
+    if ((string)$delivery['status'] !== 'failed') throw new \RuntimeException('not-failed');
+    if ((int)$delivery['attempt_count'] < MAIL_MAX_ATTEMPTS) {
+        throw new \RuntimeException('retry-still-available');
+    }
+
+    $pdo->beginTransaction();
+    try {
+        $update = $pdo->prepare(
+            'UPDATE email_deliveries
+             SET status = "queued", attempt_count = 0, last_error = NULL, sent_at = NULL
+             WHERE id = :id AND status = "failed" AND attempt_count >= :max_attempts'
+        );
+        $update->execute([':id' => $deliveryId, ':max_attempts' => MAIL_MAX_ATTEMPTS]);
+        if ($update->rowCount() !== 1) throw new \RuntimeException('delivery-state-changed');
+
+        mail_audit($pdo, $companyId, $actorUserId, 'email.manual_reissue_requested', $deliveryId, [
+            'channel' => (string)$delivery['channel'],
+            'previous_attempt_count' => (int)$delivery['attempt_count'],
+            'reason' => $reason,
+        ]);
+        $pdo->commit();
+    } catch (Throwable $error) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $error;
+    }
+
+    return [
+        'id' => $deliveryId,
+        'status' => 'queued',
+        'attempt_count' => 0,
+        'dry_run' => (bool)$delivery['dry_run'],
+        'manual_reissue' => true,
+    ];
+}

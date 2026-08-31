@@ -37,17 +37,24 @@ if ($method === 'GET') {
             'message' => 'status must be one of: queued, processing, sent, failed'], 400);
     }
 
-    $limit = min(100, max(1, (int)($_GET['limit'] ?? 50)));
+    $limit  = min(100, max(1, (int)($_GET['limit'] ?? 10)));
+    $offset = min(100000, max(0, (int)($_GET['offset'] ?? 0)));
+    $query  = mb_substr(trim((string)($_GET['q'] ?? '')), 0, 120);
 
     $sql = '
         SELECT
             ed.id, ed.user_id, ed.invoice_id, ed.channel, ed.recipient_email, ed.cc_email,
             ed.subject_snapshot, ed.attachment_policy, ed.status,
             ed.attempt_count, ed.dry_run, ed.acceptance_test, ed.last_error, ed.sent_at, ed.created_at,
-            i.invoice_number
+            i.invoice_number, e.full_name AS employee_name,
+            CASE WHEN ed.status IN ("queued", "processing")
+                       AND ed.created_at < DATE_SUB(NOW(), INTERVAL 15 MINUTE)
+                 THEN 1 ELSE 0 END AS is_stalled
         FROM email_deliveries ed
         LEFT JOIN invoices i ON i.id = ed.invoice_id
         LEFT JOIN users u ON u.id = ed.user_id
+        LEFT JOIN timesheets t ON t.id = i.timesheet_id
+        LEFT JOIN employees e ON e.id = t.employee_id
         WHERE COALESCE(i.company_id, u.company_id) = :company_id
     ';
     $params = [':company_id' => $companyId];
@@ -57,7 +64,30 @@ if ($method === 'GET') {
         $params[':status'] = $statusFilter;
     }
 
-    $sql .= ' ORDER BY ed.created_at DESC LIMIT ' . $limit;
+    if ($query !== '') {
+        // Native PDO prepares mogen dezelfde benoemde placeholder niet opnieuw
+        // gebruiken. Geef ieder zoekveld daarom een eigen parameter; anders
+        // faalt precies de zoekactie met SQLSTATE[HY093].
+        $sql .= ' AND (ed.subject_snapshot LIKE :query_subject
+                       OR ed.recipient_email LIKE :query_recipient
+                       OR i.invoice_number LIKE :query_invoice
+                       OR e.full_name LIKE :query_employee)';
+        $needle = '%' . $query . '%';
+        $params[':query_subject'] = $needle;
+        $params[':query_recipient'] = $needle;
+        $params[':query_invoice'] = $needle;
+        $params[':query_employee'] = $needle;
+    }
+
+    $countSql = 'SELECT COUNT(*) FROM (' . $sql . ') AS filtered_deliveries';
+    $countStmt = $pdo->prepare($countSql);
+    $countStmt->execute($params);
+    $total = (int)$countStmt->fetchColumn();
+
+    $sql .= ' ORDER BY
+                CASE ed.status WHEN "failed" THEN 0 WHEN "processing" THEN 1 WHEN "queued" THEN 2 ELSE 3 END,
+                COALESCE(ed.sent_at, ed.created_at) DESC
+              LIMIT ' . $limit . ' OFFSET ' . $offset;
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
@@ -68,6 +98,7 @@ if ($method === 'GET') {
             'user_id'          => $r['user_id'] !== null ? (int)$r['user_id'] : null,
             'invoice_id'       => $r['invoice_id'] !== null ? (int)$r['invoice_id'] : null,
             'invoice_number'   => $r['invoice_number'] !== null ? (string)$r['invoice_number'] : null,
+            'employee_name'    => $r['employee_name'] !== null ? (string)$r['employee_name'] : null,
             'channel'          => (string)$r['channel'],
             'recipient_email'  => (string)$r['recipient_email'],
             'cc_email'         => $r['cc_email'] !== null ? (string)$r['cc_email'] : null,
@@ -82,6 +113,13 @@ if ($method === 'GET') {
             'dry_run'          => (bool)$r['dry_run'],
             'acceptance_test'  => (bool)$r['acceptance_test'],
             'last_error'       => $r['last_error'] !== null ? (string)$r['last_error'] : null,
+            'is_stalled'       => (bool)$r['is_stalled'],
+            'can_retry'        => (string)$r['status'] === 'failed'
+                && (string)$r['channel'] !== 'password_reset'
+                && (int)$r['attempt_count'] < MAIL_MAX_ATTEMPTS,
+            'requires_manual_reissue' => (string)$r['status'] === 'failed'
+                && (string)$r['channel'] !== 'password_reset'
+                && (int)$r['attempt_count'] >= MAIL_MAX_ATTEMPTS,
             'sent_at'          => $r['sent_at'] !== null ? (string)$r['sent_at'] : null,
             'created_at'       => (string)$r['created_at'],
         ];
@@ -104,6 +142,12 @@ if ($method === 'GET') {
             ? ($testPaused ? 'test_paused' : 'test_active')
             : ($deliveryAllowed && mail_environment($config) === 'production' ? 'production_active' : 'disabled'),
         'count' => count($items),
+        'total' => $total,
+        'limit' => $limit,
+        'offset' => $offset,
+        'query' => $query,
+        'status_filter' => $statusFilter,
+        'has_more' => ($offset + count($items)) < $total,
         'items' => $items,
     ]);
 }
@@ -208,6 +252,40 @@ if ($action === 'retry') {
     auth_send_json(['ok' => true, 'action' => 'retry', 'delivery' => $result]);
 }
 
+// ---- action: reissue -----------------------------------------------------
+if ($action === 'reissue') {
+    if (!hash_equals('REISSUE_FAILED_DELIVERY', (string)($payload['confirm'] ?? ''))) {
+        auth_send_json(['ok' => false, 'error' => 'explicit-confirmation-required'], 409);
+    }
+    $deliveryIdRaw = $payload['delivery_id'] ?? null;
+    if (!is_numeric($deliveryIdRaw) || (int)$deliveryIdRaw <= 0) {
+        auth_send_json(['ok' => false, 'error' => 'missing-delivery-id'], 400);
+    }
+    try {
+        $result = mail_reissue_failed_delivery(
+            $pdo,
+            (int)$deliveryIdRaw,
+            $companyId,
+            $actorUserId,
+            (string)($payload['reason'] ?? '')
+        );
+    } catch (\RuntimeException $e) {
+        $code = $e->getMessage();
+        $map = [
+            'delivery-not-found' => [404, 'Delivery not found.'],
+            'forbidden' => [403, 'Delivery belongs to another company.'],
+            'not-failed' => [409, 'Only failed deliveries can be reissued.'],
+            'retry-still-available' => [409, 'Use the normal retry before a manual reissue.'],
+            'reset-reissue-required' => [409, 'Request a new password link instead.'],
+            'invalid-reissue-reason' => [400, 'Geef een reden van 10 tot 300 tekens op.'],
+            'delivery-state-changed' => [409, 'Delivery state changed; refresh and try again.'],
+        ];
+        [$status, $message] = $map[$code] ?? [500, $code];
+        auth_send_json(['ok' => false, 'error' => $code, 'message' => $message], $status);
+    }
+    auth_send_json(['ok' => true, 'action' => 'reissue', 'delivery' => $result]);
+}
+
 auth_send_json(['ok' => false, 'error' => 'unknown-action',
-    'message' => 'action must be one of: enqueue, retry, set-test-delivery'], 400);
+    'message' => 'action must be one of: enqueue, retry, reissue, set-test-delivery'], 400);
 

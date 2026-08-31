@@ -1287,7 +1287,14 @@ const readApiRuntime = {
   ,invoicePage: 1
   ,invoicePageSize: 25
   ,invoiceSearch: ""
+  ,invoiceDocumentFilter: "all"
+  ,mailDeliveryStatus: ""
+  ,mailDeliveryQuery: ""
+  ,mailDeliveryLimit: 10
+  ,mailDeliveryOffset: 0
 };
+
+let mailDeliverySearchTimer = null;
 
 window.__PATH_READ_API = readApiDebug;
 
@@ -2846,6 +2853,9 @@ function invoiceApiRowsForPeriod(periodKey) {
     locked: Boolean(item && item.locked),
     lockedAt: String(item && item.locked_at || ""),
     invoiceDownloadUrl: String(item && item.invoice_download_url || ""),
+    invoiceSource: String(item && item.invoice_source || "generated"),
+    invoiceUploadReason: String(item && item.invoice_upload_reason || ""),
+    invoiceOriginalFileName: String(item && item.invoice_original_file_name || ""),
     customerTimesheetStatus: String(item && item.customer_timesheet_status || "missing"),
     customerTimesheetFileName: String(item && item.customer_timesheet_file_name || ""),
     customerTimesheetNote: String(item && item.customer_timesheet_note || ""),
@@ -2853,31 +2863,70 @@ function invoiceApiRowsForPeriod(periodKey) {
   })).filter(item => item.periodKey === periodKey);
 }
 
-function showInvoiceDocuments(invoiceId) {
+function invoiceDocumentsComplete(item) {
+  return Boolean(item && item.invoiceDownloadUrl && item.customerTimesheetDownloadUrl);
+}
+
+function invoiceDocumentBadgesHtml(item) {
+  const invoicePresent = Boolean(item.invoiceDownloadUrl);
+  const timesheetPresent = Boolean(item.customerTimesheetDownloadUrl);
+  const badge = (kind, label, present) => {
+    const stateLabel = present ? "aanwezig" : "ontbreekt";
+    return '<button type="button" class="document-availability-badge ' + (present ? "is-present" : "is-missing") + '" data-invoice-documents="' + item.id + '" data-document-focus="' + kind + '" aria-label="' + escapeHtml(label + " " + stateLabel + " voor " + item.employeeName + "; documenten bekijken") + '">' + escapeHtml(label + (present ? " ✓" : " ontbreekt")) + '</button>';
+  };
+  return '<div class="invoice-document-badges">' +
+    badge("invoice", "Factuur", invoicePresent) +
+    badge("customer-timesheet", "Urenstaat", timesheetPresent) +
+    '</div>';
+}
+
+function showInvoiceDocuments(invoiceId, focusKind = "") {
   const item = (invoiceApiRowsForPeriod(currentPeriod().key) || []).find(row => Number(row.id) === Number(invoiceId));
   if (!item) {
     toast("De factuurdocumenten konden niet worden gevonden.");
     return;
   }
+  const invoicePresent = Boolean(item.invoiceDownloadUrl);
+  const customerPresent = Boolean(item.customerTimesheetDownloadUrl);
   const invoiceDocument = item.invoiceDownloadUrl
-    ? '<a class="small-button" data-document-kind="invoice" href="' + escapeHtml(item.invoiceDownloadUrl) + '" target="_blank" rel="noopener">Factuur-PDF openen</a>'
-    : '<span class="invoice-action-note">Factuur-PDF is nog niet beschikbaar.</span>';
+    ? '<div class="invoice-document-links"><a class="small-button" data-document-kind="invoice" href="' + escapeHtml(item.invoiceDownloadUrl) + '" target="_blank" rel="noopener">Openen</a><a class="text-button" href="' + escapeHtml(item.invoiceDownloadUrl) + '" download>Downloaden</a></div>' +
+      (item.invoiceSource === "external" ? '<dl class="invoice-document-metadata"><div><dt>Bron</dt><dd>Extern toegevoegd</dd></div>' +
+        (item.invoiceOriginalFileName ? '<div><dt>Bestand</dt><dd>' + escapeHtml(item.invoiceOriginalFileName) + '</dd></div>' : '') +
+        (item.invoiceUploadReason ? '<div><dt>Reden</dt><dd data-invoice-upload-reason>' + escapeHtml(item.invoiceUploadReason) + '</dd></div>' : '') + '</dl>' : '')
+    : '<p class="invoice-document-missing-note">Factuur-PDF is nog niet beschikbaar.</p>';
   const customerDocument = item.customerTimesheetDownloadUrl
-    ? '<a class="small-button" data-document-kind="customer-timesheet" href="' + escapeHtml(item.customerTimesheetDownloadUrl) + '" target="_blank" rel="noopener">Klanturenstaat openen</a>'
-    : '<span class="invoice-action-note">Geen klanturenstaatbestand bewaard' + (item.customerTimesheetStatus === "skipped" ? " · rechtstreeks gemaild" : "") + '.</span>';
+    ? '<div class="invoice-document-links"><a class="small-button" data-document-kind="customer-timesheet" href="' + escapeHtml(item.customerTimesheetDownloadUrl) + '" target="_blank" rel="noopener">Openen</a><a class="text-button" href="' + escapeHtml(item.customerTimesheetDownloadUrl) + '" download>Downloaden</a></div>'
+    : '<p class="invoice-document-missing-note">Geen klanturenstaatbestand bewaard' + (item.customerTimesheetStatus === "skipped" ? " · rechtstreeks gemaild" : "") + '.</p>';
   const upload = !item.customerTimesheetDownloadUrl
-    ? '<div class="form-field"><label for="invoice-customer-timesheet-file">Klanturenstaat alsnog toevoegen</label><input id="invoice-customer-timesheet-file" type="file" accept="application/pdf,image/jpeg,image/png"><small>PDF, JPG of PNG. Afbeeldingen worden veilig als PDF opgeslagen.</small></div>'
+    ? '<div class="form-field invoice-document-upload"><label for="invoice-customer-timesheet-file">Urenstaat toevoegen</label><input id="invoice-customer-timesheet-file" type="file" accept="application/pdf,image/jpeg,image/png"><small>PDF, JPG of PNG. Afbeeldingen worden veilig als PDF opgeslagen.</small></div>'
     : '';
   const invoiceUpload = !item.invoiceDownloadUrl
-    ? '<div class="form-field"><label for="external-invoice-file">Externe factuur toevoegen</label><input id="external-invoice-file" type="file" accept="application/pdf,image/jpeg,image/png"><label for="external-invoice-reason">Reden</label><input id="external-invoice-reason" type="text" maxlength="250" placeholder="Bijvoorbeeld: ontvangen van broker"><small>Een bestaand factuurdocument wordt nooit stil overschreven.</small></div>'
+    ? '<div class="form-field invoice-document-upload"><label for="external-invoice-file">Factuur toevoegen</label><input id="external-invoice-file" type="file" accept="application/pdf,image/jpeg,image/png"><label for="external-invoice-reason">Reden</label><input id="external-invoice-reason" type="text" maxlength="250" placeholder="Bijvoorbeeld: ontvangen van broker"><small>Een bestaand factuurdocument wordt nooit stil overschreven.</small></div>'
     : '';
+  const card = (kind, title, present, documentHtml, uploadHtml) => '<section class="invoice-document-card ' + (present ? "is-present" : "is-missing") + '" data-document-card="' + kind + '">' +
+    '<header><strong>' + title + '</strong><span class="document-status-pill ' + (present ? "is-present" : "is-missing") + '">' + (present ? "Aanwezig" : "Ontbreekt") + '</span></header>' +
+    '<div class="invoice-document-card-body">' + documentHtml + uploadHtml + '</div></section>';
+  const hasUpload = !invoicePresent || !customerPresent;
+  const initialFocus = focusKind === "invoice"
+    ? (invoicePresent ? '[data-document-kind="invoice"]' : "#external-invoice-file")
+    : focusKind === "customer-timesheet"
+      ? (customerPresent ? '[data-document-kind="customer-timesheet"]' : "#invoice-customer-timesheet-file")
+      : "";
+  const initialConfirm = focusKind === "invoice" && !invoicePresent
+    ? "Factuur opslaan"
+    : focusKind === "customer-timesheet" && !customerPresent
+      ? "Urenstaat opslaan"
+      : hasUpload ? "Bestand opslaan" : "Sluiten";
   showModal({
     label: "Documentarchief",
     title: item.invoiceNumber,
     message: item.employeeName + " · " + periodFromKey(item.periodKey).label,
-    summary: '<div class="modal-summary-grid"><section><strong>Factuur</strong><div class="invoice-action">' + invoiceDocument + '</div></section><section><strong>Klanturenstaat</strong><div class="invoice-action">' + customerDocument + '</div></section></div>' + invoiceUpload + upload,
-    confirm: (upload || invoiceUpload) ? "Bestand opslaan" : "Sluiten",
-    action: (upload || invoiceUpload) ? () => {
+    summary: '<div class="invoice-document-card-grid">' +
+      card("invoice", "Factuur", invoicePresent, invoiceDocument, invoiceUpload) +
+      card("customer-timesheet", "Urenstaat", customerPresent, customerDocument, upload) +
+      '</div>',
+    confirm: initialConfirm,
+    action: hasUpload ? () => {
       const invoiceInput = document.querySelector("#external-invoice-file");
       const invoiceFile = invoiceInput && invoiceInput.files && invoiceInput.files[0];
       if (invoiceFile) {
@@ -2899,7 +2948,7 @@ function showInvoiceDocuments(invoiceId) {
           data.append("invoice_id", String(item.id));
           data.append("reason", reason);
           data.append("file", invoiceFile, invoiceFile.name || "factuur");
-          return fetch(READ_INVOICES_PATH, { method: "POST", headers: { "Accept": "application/json", "X-CSRF-Token": token }, body: data });
+          return fetch(READ_API_INVOICES_PATH, { method: "POST", headers: { "Accept": "application/json", "X-CSRF-Token": token }, body: data });
         }).then(response => response.json().catch(() => ({})).then(data => ({ ok: response.ok, data })))
           .then(result => {
             if (!result.ok || result.data.ok !== true) throw new Error(String(result.data.message || "Uploaden is mislukt."));
@@ -2937,8 +2986,22 @@ function showInvoiceDocuments(invoiceId) {
           toast(String(error && error.message || "Uploaden is mislukt."));
         });
     } : closeModal,
-    wide: true
+    wide: true,
+    initialFocus
   });
+  if (hasUpload) {
+    const invoiceInput = document.querySelector("#external-invoice-file");
+    const timesheetInput = document.querySelector("#invoice-customer-timesheet-file");
+    const confirmButton = document.querySelector("#modal-confirm");
+    if (invoiceInput) invoiceInput.addEventListener("change", () => {
+      if (timesheetInput) timesheetInput.value = "";
+      confirmButton.textContent = "Factuur opslaan";
+    });
+    if (timesheetInput) timesheetInput.addEventListener("change", () => {
+      if (invoiceInput) invoiceInput.value = "";
+      confirmButton.textContent = "Urenstaat opslaan";
+    });
+  }
 }
 
 function emailQueueItemsByInvoiceId(periodKey) {
@@ -3200,7 +3263,14 @@ function refreshEmailQueueReadApi(force = false) {
   if (!force && (readApiRuntime.emailQueueInFlight || (now - readApiRuntime.lastEmailQueueAt) < 15000)) return Promise.resolve(null);
   readApiRuntime.emailQueueInFlight = true;
 
-  return fetchReadApi("/server/api/email-queue.php?limit=100")
+  const params = new URLSearchParams({
+    limit: String(readApiRuntime.mailDeliveryLimit),
+    offset: String(readApiRuntime.mailDeliveryOffset)
+  });
+  if (readApiRuntime.mailDeliveryStatus) params.set("status", readApiRuntime.mailDeliveryStatus);
+  if (readApiRuntime.mailDeliveryQuery) params.set("q", readApiRuntime.mailDeliveryQuery);
+
+  return fetchReadApi("/server/api/email-queue.php?" + params.toString())
     .then(data => {
       readApiRuntime.lastEmailQueueAt = Date.now();
       if (!data) {
@@ -5717,8 +5787,11 @@ function renderInvoices() {
   const tbody = document.querySelector("#invoice-rows");
   if (apiRows) {
     const invoiceSearch = String(readApiRuntime.invoiceSearch || "").trim().toLocaleLowerCase("nl-NL");
+    const documentFilter = String(readApiRuntime.invoiceDocumentFilter || "all");
     const filteredApiRows = apiRows.filter(item => {
       if (state.invoiceFilter !== "all" && item.status !== state.invoiceFilter) return false;
+      if (documentFilter === "complete" && !invoiceDocumentsComplete(item)) return false;
+      if (documentFilter === "missing" && invoiceDocumentsComplete(item)) return false;
       if (!invoiceSearch) return true;
       return [item.invoiceNumber, item.employeeName, item.periodKey, item.statusRaw, item.status]
         .some(value => String(value || "").toLocaleLowerCase("nl-NL").includes(invoiceSearch));
@@ -5734,7 +5807,7 @@ function renderInvoices() {
       return "<tr>" +
         "<td><strong>" + escapeHtml(item.invoiceNumber) + "</strong><small>" + escapeHtml(periodFromKey(item.periodKey).label) + "</small></td>" +
         "<td><strong>" + escapeHtml(item.employeeName) + "</strong><small>" + escapeHtml(item.periodKey) + "</small></td>" +
-        "<td><strong>Documentarchief</strong><small>PDF-bestanden op aanvraag</small></td>" +
+        "<td>" + invoiceDocumentBadgesHtml(item) + "</td>" +
         "<td><strong>" + currency.format(item.total) + "</strong><small>" + escapeHtml(amountNote) + "</small></td>" +
         "<td><span class=\"status-pill " + (item.status === "ready" ? "status-ready" : item.status === "concept" ? "status-concept" : "status-sent") + "\">" + escapeHtml(item.statusRaw || item.status) + "</span></td>" +
         '<td><div class="invoice-action"><button class="small-button" data-invoice-documents="' + item.id + '">Documenten bekijken</button></div></td>' +
@@ -7038,27 +7111,52 @@ function renderMailDeliveryHistory() {
   if (typeof document === "undefined") return;
   const list = document.querySelector("#mail-delivery-history-list");
   const summary = document.querySelector("#mail-delivery-history-summary");
+  const search = document.querySelector("#mail-delivery-search");
+  const statusFilter = document.querySelector("#mail-delivery-status-filter");
+  const pageSize = document.querySelector("#mail-delivery-page-size");
+  const pagination = document.querySelector("#mail-delivery-pagination");
+  const previous = document.querySelector("#mail-delivery-previous");
+  const next = document.querySelector("#mail-delivery-next");
+  const pageLabel = document.querySelector("#mail-delivery-page-label");
   if (!list || !summary) return;
 
   const data = readApiDebug.emailQueue;
   renderMailRuntimeStatus();
-  const items = Array.isArray(data && data.items) ? data.items.slice(0, 12) : [];
+  const items = Array.isArray(data && data.items) ? data.items : [];
+  if (search && document.activeElement !== search) search.value = readApiRuntime.mailDeliveryQuery;
+  if (statusFilter) statusFilter.value = readApiRuntime.mailDeliveryStatus;
+  if (pageSize) pageSize.value = String(readApiRuntime.mailDeliveryLimit);
   if (!data) {
     summary.textContent = authRuntime.mode === "auth"
       ? "De beveiligde verzendadministratie wordt geladen."
       : "Verzendhistorie is beschikbaar na beveiligd inloggen op de serveromgeving.";
     list.innerHTML = '<div class="dashboard-action-empty"><strong>Nog geen servergegevens geladen.</strong><br>Er worden lokaal geen e-mails verzonden.</div>';
+    if (pagination) pagination.hidden = true;
     return;
   }
 
+  const total = Math.max(0, Number(data.total ?? items.length));
+  const offset = Math.max(0, Number(data.offset ?? readApiRuntime.mailDeliveryOffset));
+  const limit = Math.max(1, Number(data.limit ?? readApiRuntime.mailDeliveryLimit));
   const sent = items.filter(item => item && item.status === "sent" && item.dry_run !== true).length;
   const pending = items.filter(item => item && ["queued", "processing"].includes(String(item.status)) && item.dry_run !== true).length;
   const failed = items.filter(item => item && item.status === "failed" && item.dry_run !== true).length;
   const deliveryRouting = mailAcceptanceDeliverySummary();
   summary.textContent = items.length
-    ? "Laatste " + items.length + " registraties · " + sent + " verzonden · " + pending + " in behandeling · " + failed + " mislukt."
-    : "Er zijn nog geen e-mails vanuit de applicatie geregistreerd.";
+    ? "Resultaten " + (offset + 1) + "–" + (offset + items.length) + " van " + total + " · op deze pagina " + sent + " verzonden · " + pending + " in behandeling · " + failed + " actie vereist."
+    : (readApiRuntime.mailDeliveryQuery || readApiRuntime.mailDeliveryStatus
+      ? "Geen e-mails gevonden met deze filters."
+      : "Er zijn nog geen e-mails vanuit de applicatie geregistreerd.");
   if (deliveryRouting) summary.textContent += " " + deliveryRouting.label + ": " + deliveryRouting.sink + ".";
+
+  if (pagination && previous && next && pageLabel) {
+    const page = Math.floor(offset / limit) + 1;
+    const pages = Math.max(1, Math.ceil(total / limit));
+    pagination.hidden = total <= limit;
+    previous.disabled = offset <= 0;
+    next.disabled = offset + items.length >= total;
+    pageLabel.textContent = "Pagina " + page + " van " + pages;
+  }
 
   list.innerHTML = items.length ? items.map(item => {
     const status = mailDeliveryStatusMeta(item);
@@ -7067,10 +7165,18 @@ function renderMailDeliveryHistory() {
     const invoice = item && item.invoice_number ? " · Factuur " + escapeHtml(item.invoice_number) : "";
     const attempts = Math.max(0, Number(item && item.attempt_count || 0));
     const acceptanceLabel = item && item.acceptance_test === true ? '<span class="mail-acceptance-label">Acceptatietest</span>' : '';
-    return '<article class="mail-delivery-history-item" data-mail-delivery-status="' + escapeHtml(String(item && item.status || "queued")) + '" data-mail-acceptance-test="' + (item && item.acceptance_test === true ? "true" : "false") + '">' +
-      '<div class="mail-delivery-history-main"><strong>' + escapeHtml(String(item && item.subject_snapshot || "E-mail zonder onderwerp")) + '</strong><small>Bedoelde route: ' + escapeHtml(String(item && item.recipient_email || "Onbekende ontvanger")) + invoice + (deliveryRouting ? ' · ' + escapeHtml(deliveryRouting.label) + ': ' + escapeHtml(deliveryRouting.sink) : '') + '</small></div>' +
+    const error = item && item.last_error ? '<small class="mail-delivery-error">Fout: ' + escapeHtml(String(item.last_error)) + '</small>' : '';
+    const stalled = item && item.is_stalled === true;
+    let recovery = '';
+    if (item && item.can_retry === true) {
+      recovery = '<button class="small-button" type="button" data-retry-mail-delivery="' + Number(item.id) + '">Opnieuw proberen</button>';
+    } else if (item && item.requires_manual_reissue === true) {
+      recovery = '<button class="small-button" type="button" data-reissue-mail-delivery="' + Number(item.id) + '">Herstart met reden</button>';
+    }
+    return '<article class="mail-delivery-history-item" data-mail-delivery-status="' + escapeHtml(String(item && item.status || "queued")) + '" data-mail-stalled="' + (stalled ? "true" : "false") + '" data-mail-acceptance-test="' + (item && item.acceptance_test === true ? "true" : "false") + '">' +
+      '<div class="mail-delivery-history-main"><strong>' + escapeHtml(String(item && item.subject_snapshot || "E-mail zonder onderwerp")) + '</strong><small>Bedoelde route: ' + escapeHtml(String(item && item.recipient_email || "Onbekende ontvanger")) + invoice + (item && item.employee_name ? ' · ' + escapeHtml(String(item.employee_name)) : '') + (deliveryRouting ? ' · ' + escapeHtml(deliveryRouting.label) + ': ' + escapeHtml(deliveryRouting.sink) : '') + '</small>' + error + '</div>' +
       '<div class="mail-delivery-history-meta">' + acceptanceLabel + '<span>' + escapeHtml(mailDeliveryChannelLabel(item && item.channel)) + '</span><span>' + escapeHtml(mailDeliveryAttachmentLabel(item && item.attachment_policy)) + '</span></div>' +
-      '<div class="mail-delivery-history-state"><span class="status-pill ' + status.tone + '">' + status.label + '</span><small>' + timePrefix + ' · ' + escapeHtml(mailDeliveryTimestampLabel(eventTime)) + (attempts > 1 ? " · " + attempts + " pogingen" : "") + '</small></div>' +
+      '<div class="mail-delivery-history-state"><span class="status-pill ' + status.tone + '">' + (stalled ? "Controle nodig" : status.label) + '</span><small>' + timePrefix + ' · ' + escapeHtml(mailDeliveryTimestampLabel(eventTime)) + (attempts > 1 ? " · " + attempts + " pogingen" : "") + '</small>' + recovery + '</div>' +
     '</article>';
   }).join("") : '<div class="dashboard-action-empty"><strong>Nog geen applicatiemails.</strong><br>Na de eerste queue- of verzendactie verschijnt hier het resultaat.</div>';
 }
@@ -10489,7 +10595,7 @@ function toonInstallatieAanbod() {
   if (previewInvoicePdf) showInvoiceDocumentPreview(Number(previewInvoicePdf.dataset.previewInvoicePdf));
 
   const invoiceDocuments = event.target.closest("[data-invoice-documents]");
-  if (invoiceDocuments) showInvoiceDocuments(Number(invoiceDocuments.dataset.invoiceDocuments));
+  if (invoiceDocuments) showInvoiceDocuments(Number(invoiceDocuments.dataset.invoiceDocuments), String(invoiceDocuments.dataset.documentFocus || ""));
 
   const viewInvoice = event.target.closest("[data-view-invoice]");
   if (viewInvoice) {
@@ -10676,6 +10782,12 @@ document.querySelectorAll("[data-invoice-filter]").forEach(button => button.addE
   document.querySelectorAll("[data-invoice-filter]").forEach(item => item.classList.toggle("is-active", item === button));
   renderInvoices();
 }));
+document.querySelectorAll("[data-invoice-document-filter]").forEach(button => button.addEventListener("click", () => {
+  readApiRuntime.invoicePage = 1;
+  readApiRuntime.invoiceDocumentFilter = button.dataset.invoiceDocumentFilter;
+  document.querySelectorAll("[data-invoice-document-filter]").forEach(item => item.classList.toggle("is-active", item === button));
+  renderInvoices();
+}));
 document.querySelector("#invoice-page-prev").addEventListener("click", () => { readApiRuntime.invoicePage = Math.max(1, readApiRuntime.invoicePage - 1); renderInvoices(); });
 document.querySelector("#invoice-page-next").addEventListener("click", () => { readApiRuntime.invoicePage += 1; renderInvoices(); });
 document.querySelector("#invoice-search").addEventListener("input", event => {
@@ -10814,7 +10926,10 @@ function setPeriod(periodKey) {
   if (document.querySelector("#view-invoices")?.classList.contains("is-active")) state.invoiceDetailCollapsed = false;
   ensurePeriodRecords(next);
   state.invoiceFilter = "all";
+  readApiRuntime.invoiceDocumentFilter = "all";
+  readApiRuntime.invoicePage = 1;
   document.querySelectorAll("[data-invoice-filter]").forEach(button => button.classList.toggle("is-active", button.dataset.invoiceFilter === "all"));
+  document.querySelectorAll("[data-invoice-document-filter]").forEach(button => button.classList.toggle("is-active", button.dataset.invoiceDocumentFilter === "all"));
   persistState();
   renderAll();
   if (isCustomerTimesheetApiMode() && state.currentRole === "employee") {
@@ -11205,6 +11320,107 @@ document.querySelector("#refresh-mail-delivery-history")?.addEventListener("clic
       button.disabled = false;
       button.textContent = "Vernieuwen";
     });
+});
+
+function updateMailDeliveryView(patch) {
+  Object.assign(readApiRuntime, patch);
+  readApiRuntime.lastEmailQueueAt = 0;
+  return refreshEmailQueueReadApi(true).then(renderMailDeliveryHistory);
+}
+
+function postMailDeliveryRecovery(action, deliveryId, extra = {}) {
+  return requestAuthCsrf()
+    .then(token => fetch("/server/api/email-queue.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify({ action, delivery_id: Number(deliveryId), ...extra })
+    }))
+    .then(response => response.json().catch(() => ({})).then(data => ({ ok: response.ok, data })))
+    .then(result => {
+      if (!result.ok || result.data?.ok !== true) {
+        throw new Error(String(result.data?.message || "De verzendactie kon niet worden uitgevoerd."));
+      }
+      return result.data;
+    });
+}
+
+function openMailDeliveryRecovery(deliveryId, manualReissue) {
+  const item = (readApiDebug.emailQueue?.items || []).find(entry => Number(entry?.id) === Number(deliveryId));
+  if (!item) return;
+  const reasonField = manualReissue
+    ? '<div class="modal-form"><label class="full">Reden voor handmatige herstart<textarea id="mail-delivery-reissue-reason" rows="3" maxlength="300" placeholder="Bijvoorbeeld: ontvangeradres gecorrigeerd en gecontroleerd"></textarea></label><p class="full form-help">Minimaal 10 tekens. De reden wordt in het auditlog opgeslagen.</p></div>'
+    : '';
+  showModal({
+    label: manualReissue ? "Actie vereist" : "Verzending opnieuw aanbieden",
+    title: manualReissue ? "Nieuwe verzendpoging starten?" : "Bericht opnieuw in de wachtrij zetten?",
+    message: "Alleen dit ene niet-verzonden bericht wordt opnieuw aangeboden. Een reeds verzonden bericht kan deze actie niet gebruiken.",
+    summary: '<div><span>Onderwerp</span><strong>' + escapeHtml(String(item.subject_snapshot || "E-mail zonder onderwerp")) + '</strong></div><div><span>Ontvanger</span><strong>' + escapeHtml(String(item.recipient_email || "Onbekend")) + '</strong></div>' + reasonField,
+    confirm: manualReissue ? "Nieuwe poging starten" : "Opnieuw proberen",
+    taskNavigation: false,
+    action: () => {
+      const reason = manualReissue ? String(document.querySelector("#mail-delivery-reissue-reason")?.value || "").trim() : "";
+      if (manualReissue && (reason.length < 10 || reason.length > 300)) {
+        const field = document.querySelector("#mail-delivery-reissue-reason");
+        field?.classList.add("is-invalid");
+        field?.focus();
+        toast("Geef een duidelijke reden van minimaal 10 tekens op.");
+        return false;
+      }
+      const confirmButton = document.querySelector("#modal-confirm");
+      if (confirmButton) confirmButton.disabled = true;
+      return postMailDeliveryRecovery(
+        manualReissue ? "reissue" : "retry",
+        deliveryId,
+        manualReissue ? { reason, confirm: "REISSUE_FAILED_DELIVERY" } : {}
+      ).then(() => {
+        closeModal();
+        return updateMailDeliveryView({ mailDeliveryOffset: 0 }).then(() => {
+          toast(manualReissue ? "Het bericht staat opnieuw klaar en blijft zichtbaar tot het is verzonden." : "Het bericht staat opnieuw in de wachtrij.");
+        });
+      }).catch(error => {
+        if (confirmButton) confirmButton.disabled = false;
+        toast(String(error?.message || "De verzendactie kon niet worden uitgevoerd."));
+      });
+    }
+  });
+}
+
+document.querySelector("#mail-delivery-history-list")?.addEventListener("click", event => {
+  const retry = event.target.closest("[data-retry-mail-delivery]");
+  if (retry) return openMailDeliveryRecovery(retry.dataset.retryMailDelivery, false);
+  const reissue = event.target.closest("[data-reissue-mail-delivery]");
+  if (reissue) openMailDeliveryRecovery(reissue.dataset.reissueMailDelivery, true);
+});
+
+document.querySelector("#mail-delivery-search")?.addEventListener("input", event => {
+  window.clearTimeout(mailDeliverySearchTimer);
+  mailDeliverySearchTimer = window.setTimeout(() => {
+    updateMailDeliveryView({
+      mailDeliveryQuery: String(event.target.value || "").trim(),
+      mailDeliveryOffset: 0
+    });
+  }, 350);
+});
+
+document.querySelector("#mail-delivery-status-filter")?.addEventListener("change", event => {
+  updateMailDeliveryView({ mailDeliveryStatus: String(event.target.value || ""), mailDeliveryOffset: 0 });
+});
+
+document.querySelector("#mail-delivery-page-size")?.addEventListener("change", event => {
+  const limit = [10, 25, 50].includes(Number(event.target.value)) ? Number(event.target.value) : 10;
+  updateMailDeliveryView({ mailDeliveryLimit: limit, mailDeliveryOffset: 0 });
+});
+
+document.querySelector("#mail-delivery-previous")?.addEventListener("click", () => {
+  updateMailDeliveryView({
+    mailDeliveryOffset: Math.max(0, readApiRuntime.mailDeliveryOffset - readApiRuntime.mailDeliveryLimit)
+  });
+});
+
+document.querySelector("#mail-delivery-next")?.addEventListener("click", () => {
+  updateMailDeliveryView({
+    mailDeliveryOffset: readApiRuntime.mailDeliveryOffset + readApiRuntime.mailDeliveryLimit
+  });
 });
 document.querySelector("#toggle-test-mail-delivery")?.addEventListener("click", event => {
   const button = event.currentTarget;

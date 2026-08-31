@@ -100,7 +100,12 @@ async function main() {
 
   const baseUrl = normalizeLocalBaseUrl(process.env.PATH_APP_BASE_URL);
   const phpPath = resolvePhpPath();
-  const serverAddress = '127.0.0.1:8000';
+  const serverUrl = new URL(baseUrl);
+  const serverPort = Number(serverUrl.port || 8000);
+  if (serverUrl.protocol !== 'http:' || serverUrl.hostname !== '127.0.0.1' || !Number.isInteger(serverPort) || serverPort < 1024 || serverPort > 65535) {
+    throw new Error('E2E precheck failed: PATH_APP_BASE_URL must be an http://127.0.0.1 URL with a valid local port.');
+  }
+  const serverAddress = `127.0.0.1:${serverPort}`;
 
   await assertServerPortAvailable(baseUrl);
 

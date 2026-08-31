@@ -1,4 +1,4 @@
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
 const outputFolder = 'allure-results';
 const categories = [
@@ -28,6 +28,10 @@ const categories = [
 ];
 
 const preserveResults = process.env.PATH_ALLURE_PRESERVE_RESULTS === '1';
+const packageMetadata = JSON.parse(readFileSync('package.json', 'utf8'));
+const applicationVersion = String(packageMetadata.version || 'onbekend');
+const reportStage = String(process.env.PATH_REPORT_STAGE || (process.env.CI ? 'CI release regression' : process.env.PLAYWRIGHT_STAGE || 'local'));
+const reportTarget = String(process.env.PATH_REPORT_TARGET || (process.env.CI ? 'TEST -> PROD' : 'lokale testomgeving'));
 if (!preserveResults) {
   rmSync(outputFolder, { recursive: true, force: true });
 }
@@ -35,8 +39,9 @@ mkdirSync(outputFolder, { recursive: true });
 writeFileSync(`${outputFolder}/categories.json`, JSON.stringify(categories, null, 2));
 writeFileSync(`${outputFolder}/environment.properties`, [
   'application=Path Urenregistratie',
-  `version=${process.env.npm_package_version || '0.9.41'}`,
-  `stage=${process.env.PLAYWRIGHT_STAGE || 'local'}`,
+  `version=${applicationVersion}`,
+  `stage=${reportStage}`,
+  `target=${reportTarget}`,
   'reporting=Playwright + Allure',
 ].join('\n') + '\n');
 

@@ -32,6 +32,19 @@ async function verzondenMails(invoiceId: number): Promise<Array<Record<string, s
   return JSON.parse(uitvoer.stdout).deliveries as Array<Record<string, string>>;
 }
 
+async function forceDeliveryToFinalFailure(deliveryId: number): Promise<void> {
+  const php = [
+    'require "server/scripts/cli-bootstrap.php";',
+    'require "server/mail/queue.php";',
+    '$config=require "server/config.local.php";',
+    '$pdo=ops_pdo($config);',
+    '$stmt=$pdo->prepare("UPDATE email_deliveries SET status=\'failed\', attempt_count=:attempts, last_error=\'SMTP test failure\' WHERE id=:id");',
+    '$stmt->execute([":attempts"=>MAIL_MAX_ATTEMPTS,":id"=>(int)$argv[1]]);',
+    'if($stmt->rowCount()!==1){fwrite(STDERR,"delivery-not-updated\\n");exit(1);}',
+  ].join(' ');
+  await execFileAsync('php', ['-r', php, String(deliveryId)], { cwd: process.cwd(), windowsHide: true });
+}
+
 async function postJson(
   ctx: Awaited<ReturnType<typeof playwrightRequest.newContext>>,
   path: string,
@@ -353,70 +366,54 @@ test.describe('email queue api', () => {
 
   test('[EQ-H-015] Backoffice ziet veilige verzendhistorie zonder berichtinhoud', async ({ page }) => {
     let queueRequests = 0;
+    const allItems = [
+      {
+        id: 902, user_id: null, invoice_id: 71, invoice_number: 'PATH-2026-007', employee_name: 'Shawn-Douglas Nahar',
+        channel: 'broker', recipient_email: 'info@pathconsultancy.nl', cc_email: null,
+        subject_snapshot: 'Factuur PATH-2026-007 – juli 2026', attachment_policy: 'invoice', status: 'sent',
+        attempt_count: 1, dry_run: false, acceptance_test: true, sent_at: '2026-08-14 00:45:00',
+        created_at: '2026-08-14 00:44:00', body_snapshot: 'MAG-NOOIT-IN-DE-UI-VERSCHIJNEN'
+      },
+      {
+        id: 901, user_id: 7, invoice_id: null, invoice_number: null, employee_name: null,
+        channel: 'password_reset', recipient_email: 'info@pathconsultancy.nl', cc_email: null,
+        subject_snapshot: 'Stel je wachtwoord in voor Uren & Facturatie', attachment_policy: 'none', status: 'queued',
+        attempt_count: 0, dry_run: false, sent_at: null, created_at: '2026-08-14 00:43:00',
+        body_snapshot: 'https://example.invalid/#reset-password=GEHEIM'
+      },
+      ...Array.from({ length: 13 }, (_, index) => ({
+        id: 880 - index, user_id: null, invoice_id: null, invoice_number: null, employee_name: 'Historische medewerker',
+        channel: 'accountant', recipient_email: 'info@pathconsultancy.nl', cc_email: null,
+        subject_snapshot: `Historische mail ${index + 1}`, attachment_policy: 'invoice', status: 'sent',
+        attempt_count: 1, dry_run: false, acceptance_test: false,
+        sent_at: `2026-08-13 23:${String(59 - index).padStart(2, '0')}:00`,
+        created_at: `2026-08-13 23:${String(58 - index).padStart(2, '0')}:00`,
+        body_snapshot: `VERBORGEN-BERICHTINHOUD-${index + 1}`,
+      }))
+    ];
     await page.route('**/server/api/email-queue.php*', async route => {
       queueRequests += 1;
+      const url = new URL(route.request().url());
+      const limit = Number(url.searchParams.get('limit') || 10);
+      const offset = Number(url.searchParams.get('offset') || 0);
+      const status = String(url.searchParams.get('status') || '');
+      const query = String(url.searchParams.get('q') || '').toLowerCase();
+      const filtered = allItems.filter(item => {
+        if (status && item.status !== status) return false;
+        if (!query) return true;
+        return [item.subject_snapshot, item.recipient_email, item.invoice_number, item.employee_name]
+          .some(value => String(value || '').toLowerCase().includes(query));
+      });
+      const items = filtered.slice(offset, offset + limit);
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
           ok: true,
           dry_run: false,
-          count: 15,
-          items: [
-            {
-              id: 902,
-              user_id: null,
-              invoice_id: 71,
-              invoice_number: 'PATH-2026-007',
-              channel: 'broker',
-              recipient_email: 'info@pathconsultancy.nl',
-              cc_email: null,
-              subject_snapshot: 'Factuur PATH-2026-007 – juli 2026',
-              attachment_policy: 'invoice',
-              status: 'sent',
-              attempt_count: 1,
-              dry_run: false,
-              acceptance_test: true,
-              sent_at: '2026-08-14 00:45:00',
-              created_at: '2026-08-14 00:44:00',
-              body_snapshot: 'MAG-NOOIT-IN-DE-UI-VERSCHIJNEN'
-            },
-            {
-              id: 901,
-              user_id: 7,
-              invoice_id: null,
-              invoice_number: null,
-              channel: 'password_reset',
-              recipient_email: 'info@pathconsultancy.nl',
-              cc_email: null,
-              subject_snapshot: 'Stel je wachtwoord in voor Uren & Facturatie',
-              attachment_policy: 'none',
-              status: 'queued',
-              attempt_count: 0,
-              dry_run: false,
-              sent_at: null,
-              created_at: '2026-08-14 00:43:00',
-              body_snapshot: 'https://example.invalid/#reset-password=GEHEIM'
-            },
-            ...Array.from({ length: 13 }, (_, index) => ({
-              id: 880 - index,
-              user_id: null,
-              invoice_id: null,
-              invoice_number: null,
-              channel: 'accountant',
-              recipient_email: 'info@pathconsultancy.nl',
-              cc_email: null,
-              subject_snapshot: `Historische mail ${index + 1}`,
-              attachment_policy: 'invoice',
-              status: 'sent',
-              attempt_count: 1,
-              dry_run: false,
-              acceptance_test: false,
-              sent_at: `2026-08-13 23:${String(59 - index).padStart(2, '0')}:00`,
-              created_at: `2026-08-13 23:${String(58 - index).padStart(2, '0')}:00`,
-              body_snapshot: `VERBORGEN-BERICHTINHOUD-${index + 1}`,
-            }))
-          ]
+          count: items.length, total: filtered.length, limit, offset,
+          has_more: offset + items.length < filtered.length,
+          items
         })
       });
     });
@@ -434,8 +431,9 @@ test.describe('email queue api', () => {
 
     await test.step('Then zijn ontvanger, onderwerp, status, tijd en bijlagen zichtbaar zonder geheime inhoud', async () => {
       const history = page.locator('#mail-delivery-history-list');
-      await expect(history.locator('.mail-delivery-history-item')).toHaveCount(12);
-      await expect(page.locator('#mail-delivery-history-summary')).toContainText('Laatste 12 registraties');
+      await expect(history.locator('.mail-delivery-history-item')).toHaveCount(10);
+      await expect(page.locator('#mail-delivery-history-summary')).toContainText('Resultaten 1–10 van 15');
+      await expect(page.locator('#mail-delivery-page-label')).toHaveText('Pagina 1 van 2');
       await expect(history).toContainText('info@pathconsultancy.nl');
       await expect(history).toContainText('Factuur PATH-2026-007 – juli 2026');
       await expect(history).toContainText('Factuur');
@@ -447,9 +445,24 @@ test.describe('email queue api', () => {
       await expect(history).not.toContainText('02:45');
       await expect(history).not.toContainText('MAG-NOOIT-IN-DE-UI-VERSCHIJNEN');
       await expect(history).not.toContainText('reset-password=GEHEIM');
-      await expect(history).toContainText('Historische mail 10');
-      await expect(history).not.toContainText('Historische mail 11');
+      await expect(history).toContainText('Historische mail 8');
+      await expect(history).not.toContainText('Historische mail 9');
       await expect(history).not.toContainText('VERBORGEN-BERICHTINHOUD');
+    });
+
+    await test.step('And pagineren, filteren en zoeken de lange lijst server-side', async () => {
+      await page.locator('#mail-delivery-next').click();
+      await expect(page.locator('#mail-delivery-page-label')).toHaveText('Pagina 2 van 2');
+      await expect(page.locator('#mail-delivery-history-list .mail-delivery-history-item')).toHaveCount(5);
+
+      await page.locator('#mail-delivery-status-filter-trigger').click();
+      await page.locator('[data-standard-choice-target="mail-delivery-status-filter"][data-standard-choice-value="sent"]').click();
+      await expect(page.locator('#mail-delivery-history-summary')).toContainText('van 14');
+      await expect(page.locator('#mail-delivery-history-list')).not.toContainText('Klaargezet');
+
+      await page.locator('#mail-delivery-search').fill('PATH-2026-007');
+      await expect(page.locator('#mail-delivery-history-list .mail-delivery-history-item')).toHaveCount(1);
+      await expect(page.locator('#mail-delivery-history-list')).toContainText('Shawn-Douglas Nahar');
     });
 
     await test.step('And Vernieuwen haalt de actuele serverregistraties opnieuw op', async () => {
@@ -458,6 +471,131 @@ test.describe('email queue api', () => {
       await expect.poll(() => queueRequests).toBeGreaterThan(before);
       await expect(page.locator('#refresh-mail-delivery-history')).toBeEnabled();
     });
+  });
+
+  test('[EQ-H-031] mislukte mail blijft herstelbaar en verzonden mail heeft geen herhaalactie', async ({ page }) => {
+    let failedStatus = 'failed';
+    let recoveryPayload: Record<string, unknown> | null = null;
+    await isolateMailPreviewFrontend(page);
+    await page.route('**/server/api/mail-acceptance.php*', route => route.fulfill({
+      status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, ready: false, scenarios: [] })
+    }));
+    await page.route('**/server/api/email-queue.php*', async route => {
+      if (route.request().method() === 'POST') {
+        recoveryPayload = route.request().postDataJSON() as Record<string, unknown>;
+        failedStatus = 'queued';
+        return route.fulfill({
+          status: 200, contentType: 'application/json',
+          body: JSON.stringify({ ok: true, action: 'reissue', delivery: { id: 3001, status: 'queued', attempt_count: 0 } })
+        });
+      }
+      const items = [
+        {
+          id: 3001, invoice_id: 90, invoice_number: 'PROD-PILOT-2026-08', employee_name: 'PROD Pilot Medewerker',
+          channel: 'broker', recipient_email: 'gambitizanagi@gmail.com', subject_snapshot: 'PROD pilotmail',
+          attachment_policy: 'invoice', status: failedStatus, attempt_count: failedStatus === 'failed' ? 3 : 0,
+          dry_run: false, last_error: failedStatus === 'failed' ? 'SMTP recipient rejected' : null,
+          requires_manual_reissue: failedStatus === 'failed', can_retry: false, created_at: '2026-08-31 20:00:00', sent_at: null,
+        },
+        {
+          id: 3000, invoice_id: 89, invoice_number: 'PROD-PILOT-2026-07', employee_name: 'PROD Pilot Medewerker',
+          channel: 'broker', recipient_email: 'gambitizanagi@gmail.com', subject_snapshot: 'Reeds verzonden pilotmail',
+          attachment_policy: 'invoice', status: 'sent', attempt_count: 1, dry_run: false,
+          requires_manual_reissue: false, can_retry: false, created_at: '2026-08-30 20:00:00', sent_at: '2026-08-30 20:01:00',
+        }
+      ];
+      await route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify({ ok: true, count: 2, total: 2, limit: 10, offset: 0, items })
+      });
+    });
+
+    const login = new LoginPage(page);
+    await login.open();
+    await login.loginAsAdmin();
+    await page.locator('button[data-view="settings"]').click();
+
+    const history = page.locator('#mail-delivery-history-list');
+    await expect(history).toContainText('SMTP recipient rejected');
+    await expect(history.locator('[data-reissue-mail-delivery="3001"]')).toHaveCount(1);
+    await expect(history.locator('[data-mail-delivery-status="sent"] button')).toHaveCount(0);
+
+    await history.locator('[data-reissue-mail-delivery="3001"]').click();
+    await page.locator('#mail-delivery-reissue-reason').fill('Ontvangeradres gecontroleerd en hersteld');
+    await page.locator('#modal-confirm').click();
+    await expect.poll(() => recoveryPayload).not.toBeNull();
+    expect(recoveryPayload).toMatchObject({
+      action: 'reissue', delivery_id: 3001, confirm: 'REISSUE_FAILED_DELIVERY',
+      reason: 'Ontvangeradres gecontroleerd en hersteld'
+    });
+    await expect(history.locator('[data-reissue-mail-delivery]')).toHaveCount(0);
+    await expect(history.locator('[data-mail-delivery-status="sent"] button')).toHaveCount(0);
+  });
+
+  test('[EQ-H-032] handmatige herstart na maximale pogingen is auditbaar en eenmalig', async () => {
+    const { ctx, authApi, queueApi, invoiceId } = await createLockedInvoice();
+    const queued = await queueApi.list({ status: 'queued' });
+    const item = (queued.body.items as Array<Record<string, unknown>>)
+      .find(entry => Number(entry.invoice_id) === invoiceId && String(entry.channel) !== 'password_reset');
+    expect(item).toBeDefined();
+    await forceDeliveryToFinalFailure(Number(item!.id));
+
+    const missingReason = await postJson(ctx, '/server/api/email-queue.php', {
+      action: 'reissue', delivery_id: Number(item!.id), confirm: 'REISSUE_FAILED_DELIVERY', reason: 'te kort'
+    });
+    expect(missingReason.status).toBe(400);
+    expect(missingReason.body.error).toBe('invalid-reissue-reason');
+
+    const reissued = await postJson(ctx, '/server/api/email-queue.php', {
+      action: 'reissue', delivery_id: Number(item!.id), confirm: 'REISSUE_FAILED_DELIVERY',
+      reason: 'SMTP-storing opgelost en ontvanger gecontroleerd'
+    });
+    expect(reissued.status).toBe(200);
+    expect(reissued.body.action).toBe('reissue');
+    expect((reissued.body.delivery as Record<string, unknown>).status).toBe('queued');
+    expect((reissued.body.delivery as Record<string, unknown>).attempt_count).toBe(0);
+
+    const duplicate = await postJson(ctx, '/server/api/email-queue.php', {
+      action: 'reissue', delivery_id: Number(item!.id), confirm: 'REISSUE_FAILED_DELIVERY',
+      reason: 'Tweede herstart hoort nu niet mogelijk te zijn'
+    });
+    expect(duplicate.status).toBe(409);
+    expect(duplicate.body.error).toBe('not-failed');
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
+
+  test('[EQ-H-033] queue-API pagineert en zoekt server-side', async () => {
+    const { ctx, authApi, queueApi, invoiceId } = await createLockedInvoice();
+    const createdQueue = await queueApi.list();
+    const createdItem = (createdQueue.body.items as Array<Record<string, unknown>>)
+      .find(item => Number(item.invoice_id) === invoiceId);
+    expect(createdItem).toBeDefined();
+    const invoiceNumber = String(createdItem!.invoice_number || '');
+    expect(invoiceNumber).not.toBe('');
+    const firstResponse = await ctx.get('/server/api/email-queue.php?limit=1&offset=0');
+    const first = await firstResponse.json() as Record<string, unknown>;
+    expect(firstResponse.status()).toBe(200);
+    expect(first.count).toBe(1);
+    expect(Number(first.total)).toBeGreaterThanOrEqual(3);
+    expect(first.limit).toBe(1);
+    expect(first.offset).toBe(0);
+    expect(first.has_more).toBe(true);
+
+    const secondResponse = await ctx.get('/server/api/email-queue.php?limit=1&offset=1');
+    const second = await secondResponse.json() as Record<string, unknown>;
+    expect(secondResponse.status()).toBe(200);
+    expect(Number((first.items as Array<Record<string, unknown>>)[0].id))
+      .not.toBe(Number((second.items as Array<Record<string, unknown>>)[0].id));
+
+    const searchResponse = await ctx.get(`/server/api/email-queue.php?limit=10&q=${encodeURIComponent(invoiceNumber)}`);
+    const search = await searchResponse.json() as Record<string, unknown>;
+    expect(searchResponse.status()).toBe(200);
+    expect((search.items as Array<Record<string, unknown>>).every(item => Number(item.invoice_id) === invoiceId)).toBe(true);
+
+    await authApi.logout();
+    await ctx.dispose();
   });
 
   test('[EQ-H-016] Backoffice verstuurt vanuit de acceptatieconsole precies één gekozen scenario', async ({ page }) => {

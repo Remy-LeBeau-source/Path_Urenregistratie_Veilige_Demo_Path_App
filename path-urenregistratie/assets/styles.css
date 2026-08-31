@@ -542,12 +542,40 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .approval-empty-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
 
 .invoice-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 17px 22px; }
+.invoice-filter-groups { display: grid; gap: 8px; min-width: 0; }
+.invoice-document-filter button { font-size: 9px; }
 .invoice-toolbar-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 12px; }
 .invoice-search input { width: min(320px, 40vw); min-height: 38px; border: 1px solid var(--line); border-radius: 10px; background: var(--vlak); color: var(--navy-tekst); padding: 9px 12px; font: inherit; font-size: 11px; }
 .invoice-search input:focus { border-color: var(--mint-dark); outline: 3px solid rgba(58,189,157,.16); }
 .invoice-page-size { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 10px; font-weight: 700; white-space: nowrap; }
 .invoice-page-size select { min-height: 38px; border: 1px solid var(--line); border-radius: 10px; background: var(--vlak); color: var(--navy-tekst); padding: 7px 28px 7px 10px; font: inherit; }
 .invoice-pagination { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 14px 22px; border-top: 1px solid var(--line); }
+.invoice-document-badges { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.document-availability-badge { min-height: 30px; border: 1px solid transparent; border-radius: 999px; cursor: pointer; padding: 5px 9px; font: inherit; font-size: 9px; font-weight: 900; transition: transform .15s ease, box-shadow .15s ease; }
+.document-availability-badge:hover { box-shadow: 0 5px 12px rgba(13,27,56,.09); transform: translateY(-1px); }
+.document-availability-badge:focus-visible { outline: 3px solid rgba(58,189,157,.25); outline-offset: 2px; }
+.document-availability-badge.is-present { border-color: #bce7dc; background: var(--green-light); color: var(--teal); }
+.document-availability-badge.is-missing { border-color: #efc98d; background: var(--warning-bg); color: var(--warning-tekst); }
+
+.modal-summary > .invoice-document-card-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; color: inherit; }
+.invoice-document-card { min-width: 0; border: 1px solid var(--line); border-radius: 14px; background: var(--vlak); padding: 15px; }
+.invoice-document-card.is-present { border-color: #bce7dc; }
+.invoice-document-card.is-missing { border-color: #efc98d; }
+.invoice-document-card > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); padding-bottom: 11px; }
+.invoice-document-card > header strong { font-size: 13px; }
+.document-status-pill { border: 1px solid transparent; border-radius: 999px; padding: 4px 8px; font-size: 9px; font-weight: 900; }
+.document-status-pill.is-present { border-color: #bce7dc; background: var(--green-light); color: var(--teal); }
+.document-status-pill.is-missing { border-color: #efc98d; background: var(--warning-bg); color: var(--warning-tekst); }
+.invoice-document-card-body { display: grid; gap: 13px; padding-top: 12px; }
+.invoice-document-links { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.invoice-document-metadata { display: grid; gap: 7px; margin: 0; border-top: 1px solid var(--line); padding-top: 11px; }
+.invoice-document-metadata > div { display: grid; grid-template-columns: 72px minmax(0,1fr); gap: 10px; }
+.invoice-document-metadata dt { color: var(--muted); font-size: 9px; font-weight: 800; }
+.invoice-document-metadata dd { min-width: 0; margin: 0; overflow-wrap: anywhere; color: var(--navy-tekst); font-size: 10px; font-weight: 800; }
+.invoice-document-missing-note { min-height: 32px; margin: 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.invoice-document-upload { display: grid; gap: 7px; margin: 0; }
+.invoice-document-upload input[type="file"], .invoice-document-upload input[type="text"] { width: 100%; min-width: 0; }
+.invoice-document-upload small { color: var(--muted); line-height: 1.45; }
 .invoice-month-overview { display: grid; gap: 16px; margin-bottom: 17px; border: 1px solid var(--line); border-left: 4px solid var(--mint); border-radius: 15px; background: var(--vlak); padding: 16px 18px; box-shadow: 0 5px 18px rgba(13,27,56,.025); }
 .invoice-month-overview[hidden] { display: none; }
 .invoice-month-overview[data-state="blocked"] { border-left-color: var(--warning); background: linear-gradient(135deg,#fff,#fffaf4); }
@@ -1161,14 +1189,23 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .mail-acceptance-label { display: inline-block !important; width: fit-content; margin: 0 0 3px; padding: 2px 7px; border-radius: 999px; background: #fff0dc; color: #9a5a00 !important; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
 html[data-theme="dark"] .mail-acceptance-label { background: #4b3520; color: #ffd59b !important; }
 .mail-delivery-history { margin-top: 24px; padding-top: 2px; border-top: 1px solid var(--line); }
+.mail-delivery-history-controls { display: grid; grid-template-columns: minmax(240px,1fr) minmax(150px,.3fr) minmax(120px,.2fr); gap: 10px; margin: 14px 0; }
+.mail-delivery-history-controls label { display: grid; gap: 5px; color: var(--muted); font-size: 10px; font-weight: 800; }
+.mail-delivery-history-controls input, .mail-delivery-history-controls select { width: 100%; min-height: 40px; }
 .mail-delivery-history-list { display: grid; gap: 9px; }
 .mail-delivery-history-item { display: grid; grid-template-columns: minmax(0,1.25fr) minmax(180px,.8fr) auto; align-items: center; gap: 14px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-muted); }
+.mail-delivery-history-item[data-mail-delivery-status="failed"], .mail-delivery-history-item[data-mail-stalled="true"] { border-color: #e2a755; background: #fff8ed; }
+html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="failed"], html[data-theme="dark"] .mail-delivery-history-item[data-mail-stalled="true"] { background: #35291d; }
 .mail-delivery-history-main, .mail-delivery-history-meta { min-width: 0; }
 .mail-delivery-history-main strong, .mail-delivery-history-main small, .mail-delivery-history-meta span { display: block; }
 .mail-delivery-history-main strong { overflow-wrap: anywhere; }
 .mail-delivery-history-main small, .mail-delivery-history-meta span { margin-top: 3px; color: var(--muted); font-size: 9px; line-height: 1.45; overflow-wrap: anywhere; }
 .mail-delivery-history-state { display: grid; justify-items: end; gap: 5px; text-align: right; }
 .mail-delivery-history-state small { color: var(--muted); font-size: 9px; white-space: nowrap; }
+.mail-delivery-history-state .small-button { margin-top: 3px; }
+.mail-delivery-error { max-width: 360px; color: #a14f24 !important; white-space: normal !important; }
+.mail-delivery-pagination { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 12px; }
+.mail-delivery-pagination span { min-width: 120px; color: var(--muted); font-size: 11px; text-align: center; }
 
 @media (max-width: 760px) {
   .mail-acceptance-console { padding: 13px; }
@@ -1176,6 +1213,8 @@ html[data-theme="dark"] .mail-acceptance-label { background: #4b3520; color: #ff
   .mail-acceptance-scenario .small-button { width: 100%; min-height: 44px; }
   .mail-delivery-history-item { grid-template-columns: minmax(0, 1fr); align-items: start; }
   .mail-delivery-history-state { justify-items: start; text-align: left; }
+  .mail-delivery-history-controls { grid-template-columns: minmax(0,1fr); }
+  .mail-delivery-pagination { justify-content: space-between; }
   #refresh-mail-delivery-history { min-height: 44px; }
 }
 
@@ -1892,7 +1931,7 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
 
   .invoice-table td:nth-child(1)::before { content: "Factuur"; }
   .invoice-table td:nth-child(2)::before { content: "Consultant"; }
-  .invoice-table td:nth-child(3)::before { content: "Broker"; }
+  .invoice-table td:nth-child(3)::before { content: "Documenten"; }
   .invoice-table td:nth-child(4)::before { content: "Bedrag"; }
   .invoice-table td:nth-child(5)::before { content: "Status"; }
   .invoice-table td:nth-child(6)::before { content: "Actie"; }
@@ -1909,6 +1948,26 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
     width: 100%;
     min-height: 40px;
     text-align: center;
+  }
+
+  .invoice-filter-groups,
+  .invoice-toolbar-actions {
+    width: 100%;
+  }
+
+  .invoice-document-badges {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .document-availability-badge {
+    width: 100%;
+    min-height: 40px;
+    text-align: left;
+  }
+
+  .modal-summary > .invoice-document-card-grid {
+    grid-template-columns: minmax(0,1fr);
   }
 
   .admin-task-filters {

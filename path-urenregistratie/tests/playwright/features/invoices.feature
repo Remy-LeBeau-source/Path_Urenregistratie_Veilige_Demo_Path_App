@@ -98,7 +98,7 @@ Feature: Facturen bekijken en beheren
   @happy
   Scenario: [INV-H-013] documentarchief toont factuur en klanturenstaat zonder bestanden vooraf te laden
     # Testtechniek: Use-case + lazy-loading contract
-    # Aantoonbare Playwright-assertions in deze case: 5
+    # Aantoonbare Playwright-assertions in deze case: 11
     Given de administrator heeft een factuur met twee bewaarde documenten
     When de administrator Documenten bekijken opent
     Then zijn factuur en klanturenstaat afzonderlijk op aanvraag beschikbaar
@@ -106,10 +106,18 @@ Feature: Facturen bekijken en beheren
   @negative
   Scenario: [INV-N-014] ontbrekende klanturenstaat accepteert uitsluitend PDF JPG of PNG
     # Testtechniek: Negatieve equivalentieklasse + bestandsvalidatie
-    # Aantoonbare Playwright-assertions in deze case: 3
+    # Aantoonbare Playwright-assertions in deze case: 5
     Given de administrator heeft een factuur zonder bewaarde klanturenstaat
     When de administrator een niet toegestaan bestand kiest
     Then blijft het documentvenster open met een duidelijke validatiefout
+
+  @happy
+  Scenario: [INV-H-018] externe factuur bewaart PDF JPG en PNG met reden via de factuur-API
+    # Testtechniek: Equivalentieklassen voor drie toegestane bestandstypen + requestcontract
+    # Aantoonbare Playwright-assertions in deze case: 15
+    Given de administrator heeft een factuur zonder bewaard factuurdocument
+    When de administrator achtereenvolgens PDF JPG en PNG met een reden toevoegt
+    Then worden alle drie via de factuur-API opgeslagen met bestandsnaam en reden
 
   @negative
   Scenario: [INV-N-017] medewerker mag geen externe factuur uploaden
@@ -120,9 +128,9 @@ Feature: Facturen bekijken en beheren
     Then weigert de server de factuuractie met status 403
 
   @happy
-  Scenario: [INV-H-016] groot factuurarchief wordt gepagineerd en is doorzoekbaar
-    # Testtechniek: Grenswaardenanalyse rond paginagrootte 25 + zoek-equivalentieklassen
-    # Aantoonbare Playwright-assertions in deze case: 11
+  Scenario: [INV-H-016] groot factuurarchief wordt gepagineerd doorzoekbaar en op documenten gefilterd
+    # Testtechniek: Grenswaardenanalyse rond paginagrootte 25 + zoek- en documentequivalentieklassen
+    # Aantoonbare Playwright-assertions in deze case: 19
     Given de administrator heeft een testdataset met 32 facturen
-    When de administrator bladert en zoekt op medewerker of factuurnummer
-    Then blijven maximaal 25 resultaten per pagina zichtbaar en klopt de zoekselectie
+    When de administrator bladert zoekt en filtert op complete of ontbrekende documenten
+    Then blijven maximaal 25 resultaten per pagina zichtbaar en kloppen zoek- en documentselectie
