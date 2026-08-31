@@ -1,4 +1,5 @@
 import { expect, type APIRequestContext, type Page } from '@playwright/test';
+import { jsPDF } from 'jspdf';
 
 export const SINK = 'giovanno.maatsen@pathconsultancy.nl';
 
@@ -249,7 +250,15 @@ export type NewEmployee = { id: number; email: string; password: string; name: s
 
 /** Een minimale maar geldige PDF-bytesequence voor uploadtests. */
 export function validPdfBytes(note = 'charter'): Buffer {
-  return Buffer.from(`%PDF-1.4\n% ${note}\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF`, 'utf8');
+  const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(16);
+  pdf.text('Klanturenstaat - acceptatiecontrole', 20, 24);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(11);
+  pdf.text(`Controle: ${note}`, 20, 36);
+  pdf.text('Dit document is een volledige, leesbare PDF met een geldige paginaboom en xref-tabel.', 20, 46);
+  return Buffer.from(pdf.output('arraybuffer'));
 }
 
 /**

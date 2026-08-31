@@ -2,7 +2,7 @@ import { test, expect, type APIRequestContext } from '@playwright/test';
 import { CustomerTimesheetApi } from '../playwright/api/CustomerTimesheetApi';
 import {
   demoCreds, csrf, apiLogin, apiLogout, resetSharedBaseline, setTestMailDelivery,
-  uiLogin, uiLogout, guiSubmitHours, guiApprove, guiFinaliseInvoice, type Creds,
+  uiLogin, uiLogout, guiSubmitHours, guiApprove, guiFinaliseInvoice, validPdfBytes, type Creds,
 } from './_helpers';
 
 // Cases ontworpen met ISTQB/TMap-technieken tegen de LIVE TEST-site.
@@ -155,7 +155,7 @@ test('[TEST-E2E-14] klanturenstaat-upload: geldige typen door, ongeldige fail-cl
   const perioden = (boot.periods as Array<Record<string, unknown>>).map((p) => String(p.period_key)).filter(Boolean);
   const period = perioden.at(-1) || '2026-08';
 
-  const geldigePdf = Buffer.from('%PDF-1.4\n% geldige mini-pdf\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF', 'utf8');
+  const geldigePdf = validPdfBytes('upload-equivalentieklasse');
   const geldigeJpg = Buffer.from([
     0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01,
     ...new Array(400).fill(0x20), 0xff, 0xd9,

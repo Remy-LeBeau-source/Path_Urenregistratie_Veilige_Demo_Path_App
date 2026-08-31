@@ -232,9 +232,29 @@ function simple_pdf_text_document_with_branding_fallback(array $lines): string
 /** True when the given bytes look like a structurally valid, non-empty PDF file. */
 function simple_pdf_looks_valid(string $bytes): bool
 {
-    if (strlen($bytes) < 16) {
+    if (strlen($bytes) < 64 || !str_starts_with($bytes, '%PDF-')) {
         return false;
     }
 
-    return str_starts_with($bytes, '%PDF-') && str_contains(substr($bytes, -32), '%%EOF');
+    // Alleen een %PDF-header en %%EOF is onvoldoende: zo accepteerden de
+    // uploadtests eerder een bestand zonder catalogus, pagina's en xref-tabel.
+    // Dat zag er technisch uit als PDF, maar gangbare lezers konden het niet
+    // openen. Elke complete klassieke PDF én PDF met xref-stream eindigt met
+    // startxref, een byte-offset en %%EOF.
+    if (!preg_match('/startxref\s+(\d+)\s+%%EOF\s*$/s', $bytes, $match)) {
+        return false;
+    }
+
+    $xrefOffset = (int)$match[1];
+    if ($xrefOffset <= 0 || $xrefOffset >= strlen($bytes)) {
+        return false;
+    }
+
+    $xrefTarget = substr($bytes, $xrefOffset, 32);
+    $pointsToXref = str_starts_with($xrefTarget, 'xref');
+    $pointsToXrefStream = preg_match('/^\d+\s+\d+\s+obj\b/', $xrefTarget) === 1;
+
+    return ($pointsToXref || $pointsToXrefStream)
+        && str_contains($bytes, '/Type /Catalog')
+        && str_contains($bytes, '/Type /Page');
 }
