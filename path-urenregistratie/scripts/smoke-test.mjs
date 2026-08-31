@@ -15,7 +15,18 @@ dom.window.scrollTo = () => {};
 dom.window.URL.createObjectURL = () => "blob:test";
 dom.window.URL.revokeObjectURL = () => {};
 dom.window.fetch = () => new Promise(() => {});
-dom.window.eval(script);
+// Deze statische smoke bewaakt de vaste demo-baseline van augustus 2026. Zonder
+// vaste klok voegt de app bij iedere echte maandwisseling terecht een nieuwe
+// werkmaand toe en worden exacte baseline-aantallen kalenderafhankelijk.
+// Injecteer alleen de kalenderfunctie in de geëvalueerde testkopie. Een globale
+// nep-Date verstoort timers en unieke ID's; de echte browser-E2E blijft bovendien
+// bewust de actuele kalendermaand controleren.
+const smokeScript = script.replace(
+  /function currentCalendarPeriodKey\(\) \{\r?\n  const now = new Date\(\);/,
+  "function currentCalendarPeriodKey() {\n  const now = new Date('2026-08-31T12:00:00.000Z');",
+);
+if (smokeScript === script) throw new Error("De vaste smokeklok kon niet veilig worden geïnjecteerd");
+dom.window.eval(smokeScript);
 if (typeof dom.window.applyAuthUiMode === "function") {
   dom.window.applyAuthUiMode("demo");
 }
@@ -214,6 +225,12 @@ assert(document.querySelectorAll("select:not([hidden])").length === 0, "De vaste
   assert(teLicht.length === 0, `Tekstkleuren moeten minstens 4,5:1 contrast houden (${teLicht.join(" | ")})`);
 }
 
+// De app start in de door deze harness vastgezette kalendermaand. De vaste demo-
+// asserties hieronder mogen daardoor niet bij een echte maandwisseling breken.
+const _currentCalendarMonth = dom.window.currentCalendarPeriodKey();
+assert(dom.window.currentPeriod().key === _currentCalendarMonth, "De app moet bij eerste start de huidige kalendermaand tonen, niet een hardcoded maand");
+dom.window.setPeriod("2026-08");
+
 assert(document.querySelectorAll("#dashboard-employee-rows tr").length === 4, "Dashboard moet vier demo-medewerkers tonen");
 assert(document.querySelector("#dashboard-team-title").textContent === "Teamstatus · Augustus 2026" && document.querySelector("#dashboard-team-summary").textContent === "4 medewerkers · 2 te controleren · 1 wacht op medewerker", "Het teamoverzicht moet maand, controles en wachttaken compact samenvatten");
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
@@ -225,9 +242,7 @@ assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary h
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("ItaQ Consultancy"), "De echte brokernaam moet zichtbaar zijn");
 
-// Verify app starts at current calendar month, then navigate to demo month for the rest of the assertions.
-const _currentCalendarMonth = dom.window.currentCalendarPeriodKey();
-assert(dom.window.currentPeriod().key === _currentCalendarMonth, "De app moet bij eerste start de huidige kalendermaand tonen, niet een hardcoded maand");
+// Navigate to the next fixed demo month for the remaining assertions.
 dom.window.setPeriod("2026-07");
 dom.window.renderAll();
 
