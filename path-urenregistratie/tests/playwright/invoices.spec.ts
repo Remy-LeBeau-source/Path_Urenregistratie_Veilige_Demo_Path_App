@@ -39,6 +39,7 @@ test('[INV-H-001] admin facturen zichtbaar en console errors 0', async ({ page }
 
 test('[INV-H-013] documentarchief toont factuur en klanturenstaat zonder bestanden vooraf te laden', async ({ page }) => {
   const loginPage = new LoginPage(page);
+  const invoicesPage = new InvoicesPage(page);
   await page.route('**/server/api/invoices.php?period=*', route => route.fulfill({
     status: 200,
     contentType: 'application/json',
@@ -55,9 +56,8 @@ test('[INV-H-013] documentarchief toont factuur en klanturenstaat zonder bestand
   }));
   await loginPage.open();
   await loginPage.loginAsAdmin();
-  await page.locator('button[data-view="invoices"]').click();
-  const detail = page.locator('#invoice-detail-toggle');
-  if (await detail.getAttribute('aria-expanded') !== 'true') await detail.click();
+  await invoicesPage.open();
+  await invoicesPage.selectPeriod('2026-08');
 
   await expect(page.locator('[data-document-focus="invoice"]')).toContainText('Factuur ✓');
   await expect(page.locator('[data-document-focus="customer-timesheet"]')).toContainText('Urenstaat ✓');
@@ -76,6 +76,7 @@ test('[INV-H-013] documentarchief toont factuur en klanturenstaat zonder bestand
 
 test('[INV-N-014] ontbrekende klanturenstaat accepteert uitsluitend PDF JPG of PNG', async ({ page }) => {
   const loginPage = new LoginPage(page);
+  const invoicesPage = new InvoicesPage(page);
   await page.route('**/server/api/invoices.php?period=*', route => route.fulfill({
     status: 200, contentType: 'application/json',
     body: JSON.stringify({ ok: true, items: [{
@@ -89,9 +90,8 @@ test('[INV-N-014] ontbrekende klanturenstaat accepteert uitsluitend PDF JPG of P
   }));
   await loginPage.open();
   await loginPage.loginAsAdmin();
-  await page.locator('button[data-view="invoices"]').click();
-  const detail = page.locator('#invoice-detail-toggle');
-  if (await detail.getAttribute('aria-expanded') !== 'true') await detail.click();
+  await invoicesPage.open();
+  await invoicesPage.selectPeriod('2026-08');
   await page.locator('[data-document-focus="customer-timesheet"]').click();
 
   const upload = page.locator('#invoice-customer-timesheet-file');
@@ -106,6 +106,7 @@ test('[INV-N-014] ontbrekende klanturenstaat accepteert uitsluitend PDF JPG of P
 
 test('[INV-H-018] externe factuur slaat PDF JPG en PNG via de factuur-API op', async ({ page }) => {
   const loginPage = new LoginPage(page);
+  const invoicesPage = new InvoicesPage(page);
   const item = {
     id: 903, timesheet_id: 803, employee_id: 4, assignment_id: 4,
     invoice_number: 'TEST-ARCHIEF-003', employee_name: 'Test Medewerker', period_key: '2026-08',
@@ -124,9 +125,8 @@ test('[INV-H-018] externe factuur slaat PDF JPG en PNG via de factuur-API op', a
   });
   await loginPage.open();
   await loginPage.loginAsAdmin();
-  await page.locator('button[data-view="invoices"]').click();
-  const detail = page.locator('#invoice-detail-toggle');
-  if (await detail.getAttribute('aria-expanded') !== 'true') await detail.click();
+  await invoicesPage.open();
+  await invoicesPage.selectPeriod('2026-08');
 
   for (const file of [
     { name: 'factuur.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n%%EOF') },
@@ -171,6 +171,7 @@ test('[INV-N-017] medewerker mag geen externe factuur uploaden', async ({ page }
 
 test('[INV-H-016] factuurdataset met 32 records wordt in pagina’s van maximaal 25 getoond', async ({ page }) => {
   const loginPage = new LoginPage(page);
+  const invoicesPage = new InvoicesPage(page);
   const items = Array.from({ length: 32 }, (_, index) => ({
     id: 1000 + index, timesheet_id: 2000 + index, employee_id: 4 + (index % 4), assignment_id: 4 + (index % 4),
     invoice_number: `DATASET-${String(index + 1).padStart(3, '0')}`, employee_name: `Test Medewerker ${(index % 4) + 1}`,
@@ -182,9 +183,8 @@ test('[INV-H-016] factuurdataset met 32 records wordt in pagina’s van maximaal
   await page.route('**/server/api/invoices.php?period=*', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items }) }));
   await loginPage.open();
   await loginPage.loginAsAdmin();
-  await page.locator('button[data-view="invoices"]').click();
-  const detail = page.locator('#invoice-detail-toggle');
-  if (await detail.getAttribute('aria-expanded') !== 'true') await detail.click();
+  await invoicesPage.open();
+  await invoicesPage.selectPeriod('2026-08');
 
   await expect(page.locator('#invoice-rows tr')).toHaveCount(25);
   await expect(page.locator('#invoice-page-status')).toHaveText('Pagina 1 van 2 · 32 facturen');

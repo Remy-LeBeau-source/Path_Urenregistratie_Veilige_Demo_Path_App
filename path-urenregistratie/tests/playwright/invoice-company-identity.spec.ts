@@ -374,8 +374,10 @@ test('[INV-ID-H-009] website en slogan blijven bewaard en komen onder de mail', 
     });
   } finally {
     // Gedeelde bedrijfsinstellingen: nooit proefteksten laten staan.
-    await page.reload();
-    await openSettings(page);
+    // Na de bewaarcontrole staat het formulier al open. Een extra reload hydrateert
+    // de volledige beheerworkflow opnieuw en maakt deze cleanup afhankelijk van de
+    // hoeveelheid testhistorie die eerder in dezelfde shard is opgebouwd.
+    if (!(await page.locator('#setting-website').isVisible())) await openSettings(page);
     for (const id of velden) await page.locator('#' + id).fill(origineel[id]);
     await opslaan();
   }
@@ -447,7 +449,13 @@ test('[INV-ID-H-010] instellingen tonen de standaardtekst die de ontvanger werke
     for (const ontvanger of ontvangers) {
       const naam = String(ontvanger.display_name);
       const rij = page.locator('.mail-recipient-setting').filter({ hasText: naam }).first();
-      const uitleg = rij.locator('details.mail-standaardtekst .form-help').first();
+      const details = rij.locator('details.mail-standaardtekst');
+      // Een vertraagde server-refresh kan de rij opnieuw renderen en het details-
+      // element inklappen. Open de actuele rij daarom opnieuw vóór de UI-assertie.
+      if (!(await details.evaluate(element => (element as HTMLDetailsElement).open))) {
+        await details.locator('summary').click();
+      }
+      const uitleg = details.locator('.form-help').first();
       await expect(uitleg, naam + ': er hoort uitleg bij te staan').toBeVisible();
       zinnen.push(((await uitleg.textContent()) ?? '').trim());
     }
