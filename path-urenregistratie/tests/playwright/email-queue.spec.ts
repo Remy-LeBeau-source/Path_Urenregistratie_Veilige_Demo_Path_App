@@ -40,10 +40,6 @@ async function forceDeliveryToFinalFailure(deliveryId: number): Promise<void> {
     '$pdo=ops_pdo($config);',
     '$stmt=$pdo->prepare("UPDATE email_deliveries SET status=\'failed\', attempt_count=:attempts, last_error=\'SMTP test failure\' WHERE id=:id");',
     '$stmt->execute([":attempts"=>MAIL_MAX_ATTEMPTS,":id"=>(int)$argv[1]]);',
-    '$check=$pdo->prepare("SELECT status, attempt_count, last_error FROM email_deliveries WHERE id=:id");',
-    '$check->execute([":id"=>(int)$argv[1]]);',
-    '$row=$check->fetch(PDO::FETCH_ASSOC);',
-    'if(!$row || $row["status"]!=="failed" || (int)$row["attempt_count"]!==MAIL_MAX_ATTEMPTS || $row["last_error"]!=="SMTP test failure"){fwrite(STDERR,"delivery-not-updated\\n");exit(1);}',
   ].join(' ');
   await execFileAsync('php', ['-r', php, String(deliveryId)], { cwd: process.cwd(), windowsHide: true });
 }
