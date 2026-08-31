@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { jsPDF } from 'jspdf';
 import { AuthApi } from './api/AuthApi';
 import { CustomerTimesheetApi } from './api/CustomerTimesheetApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
@@ -23,7 +24,12 @@ const OVERSIZED_DIMENSION_PNG_BUFFER = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAF3EAAAABCAIAAAAAAAAA',
   'base64',
 );
-const TINY_PDF_BUFFER = Buffer.from('%PDF-1.4\n% klanturenstaat testbestand\n%%EOF', 'utf8');
+const readablePdf = new jsPDF({ unit: 'mm', format: 'a4' });
+readablePdf.setFontSize(16);
+readablePdf.text('Klanturenstaat API-test', 20, 25);
+readablePdf.setFontSize(11);
+readablePdf.text('Volledige leesbare PDF-fixture met paginaboom en xref-tabel.', 20, 38);
+const TINY_PDF_BUFFER = Buffer.from(readablePdf.output('arraybuffer'));
 
 async function findWritablePeriod(api: CustomerTimesheetApi): Promise<string> {
   for (const period of CANDIDATE_PERIODS) {
