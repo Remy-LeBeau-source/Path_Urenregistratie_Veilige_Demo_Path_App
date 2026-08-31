@@ -262,6 +262,13 @@ test.describe('notifications api', () => {
     holdNextGet = true;
     await page.evaluate(() => { void window.refreshNotificationsReadApi(true); });
     await expect.poll(() => staleCaptured).toBe(true);
+    // Een achtergrond-scroll (bijvoorbeeld door late layout-hydratatie) mag het
+    // popover sluiten. Deze case test de stale-responsebeveiliging, dus open het
+    // meldingenmenu vlak voor de gebruikersactie opnieuw wanneer dat nodig is.
+    if (await page.locator('#notification-panel').isHidden()) {
+      await page.locator('#notification-button').click();
+    }
+    await expect(page.locator('#mark-notifications-read')).toBeVisible();
     await page.locator('#mark-notifications-read').click();
     await expect(page.locator('#notification-title')).toHaveText('Geen ongelezen meldingen');
     await expect(page.locator('#notification-count')).toBeHidden();
