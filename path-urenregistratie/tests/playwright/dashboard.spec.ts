@@ -1,9 +1,14 @@
 import { expect, test } from '@playwright/test';
 import { captureConsoleErrors, clearConsoleErrors } from './fixtures/consoleErrors';
+import { useFixedDemoClock } from './fixtures/fixedDemoClock';
 import { DashboardPage } from './pages/DashboardPage';
 import { LoginPage } from './pages/LoginPage';
 import { attachBusinessScreenshot } from './reporting/uiAttachments';
 import { openPaneel, openProfielmenu } from './pages/TopbarMenu';
+
+test.beforeEach(async ({ page }) => {
+  await useFixedDemoClock(page);
+});
 
 type MutableRecord = {
   entries: number[][];

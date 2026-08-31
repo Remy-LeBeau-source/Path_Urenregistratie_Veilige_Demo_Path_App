@@ -1,11 +1,16 @@
 import { expect, test, type Page } from '@playwright/test';
 import { captureConsoleErrors, clearConsoleErrors } from './fixtures/consoleErrors';
+import { useFixedDemoClock } from './fixtures/fixedDemoClock';
 import { LoginPage } from './pages/LoginPage';
 import { attachBusinessScreenshot } from './reporting/uiAttachments';
 import { openProfielmenu } from './pages/TopbarMenu';
 
 const MOBILE_PERIOD = '2026-01';
 const CORRECTION_MESSAGE = 'Controleer dag 2: dit moet 4 uur zijn.';
+
+test.beforeEach(async ({ page }) => {
+  await useFixedDemoClock(page);
+});
 
 type MockAuthUser = {
   id: number;

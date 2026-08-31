@@ -1,5 +1,6 @@
 import { test, expect } from './fixtures/e2eIsolation';
 import type { Page } from '@playwright/test';
+import { useFixedDemoClock } from './fixtures/fixedDemoClock';
 import { LoginPage } from './pages/LoginPage';
 
 // Wat er gebeurt als het misgaat en je het opnieuw probeert.
@@ -14,6 +15,10 @@ import { LoginPage } from './pages/LoginPage';
 // staan, is er niets half aangemaakt, en levert opnieuw proberen precies één factuur op.
 
 type Json = Record<string, unknown>;
+
+test.beforeEach(async ({ page }) => {
+  await useFixedDemoClock(page);
+});
 
 async function csrf(page: Page): Promise<string> {
   const body = await (await page.request.get('/server/auth/csrf.php')).json() as Json;

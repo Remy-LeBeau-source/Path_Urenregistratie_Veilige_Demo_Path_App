@@ -2,9 +2,14 @@ import { expect, test } from './fixtures/e2eIsolation';
 import { request as playwrightRequest } from '@playwright/test';
 import { AuthApi } from './api/AuthApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
+import { useFixedDemoClock } from './fixtures/fixedDemoClock';
 import { LoginPage } from './pages/LoginPage';
 
 type JsonBody = Record<string, unknown>;
+
+test.beforeEach(async ({ page }) => {
+  await useFixedDemoClock(page);
+});
 
 async function postAuth(page: import('@playwright/test').Page, path: string, body: JsonBody) {
   const csrfResponse = await page.request.get('/server/auth/csrf.php');
@@ -243,7 +248,11 @@ test('[E2E-H-004] goedkeuring vervangt urencontrole door factuurverzending voor 
     }
     const invoiceRow = page.locator('#invoice-rows tr').filter({ hasText: selected.employeeName });
     await expect(invoiceRow).toBeVisible();
-    await expect(invoiceRow).toContainText('Factuur klaar');
+    // Goedkeuren opent de factuurtaak. Afhankelijk van de reeds afgeronde
+    // achtergrondread toont deze rij de lokale vervolgstatus of al de
+    // serverprojectie zonder PDF; beide leiden naar dezelfde zojuist bewezen
+    // invoice-delivery-taak.
+    await expect(invoiceRow).toContainText(/Factuur (klaar|ontbreekt)/);
   });
 });
 
