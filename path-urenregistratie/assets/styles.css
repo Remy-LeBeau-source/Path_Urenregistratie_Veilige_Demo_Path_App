@@ -2211,9 +2211,17 @@ button,
 .table-wrap,
 .modal-body,
 .help-panel {
-  overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
+
+/* Tabellen mogen horizontaal binnen hun eigen vak blijven, maar een verticaal
+   muiswiel of touchpad boven de urentabel moet de pagina blijven scrollen. */
+.table-wrap {
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: auto;
+}
+.modal-body,
+.help-panel { overscroll-behavior: contain; }
 
 /* Let op: geef body hier GEEN overscroll-behavior. Onder 720px staat er al
    html, body { overflow-x: hidden }, waardoor body een eigen scrollgebied wordt
