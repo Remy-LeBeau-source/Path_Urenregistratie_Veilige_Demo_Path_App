@@ -10,7 +10,7 @@ Feature: Toegankelijkheid en toetsenbordbediening
   @happy
   Scenario: [A11Y-H-001] loginformulier is volledig met het toetsenbord bruikbaar en correct gelabeld
     # Testtechniek: Toegankelijkheidsinspectie + toetsenbord-use-case
-    # Aantoonbare Playwright-assertions in deze case: 6
+    # Aantoonbare Playwright-assertions in deze case: 7
     Given de loginpagina is geopend
     Then hebben e-mail, wachtwoord en inlogknop een programmatisch gekoppeld label
     When er met Tab door het formulier wordt genavigeerd

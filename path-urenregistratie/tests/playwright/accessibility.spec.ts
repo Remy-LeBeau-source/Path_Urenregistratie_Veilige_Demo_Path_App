@@ -26,6 +26,9 @@ test('[A11Y-H-001] loginformulier is volledig met het toetsenbord bruikbaar en c
     await expect(page.locator('#auth-login-password')).toBeFocused();
 
     await page.keyboard.press('Tab');
+    await expect(page.getByRole('button', { name: 'Wachtwoord tonen', exact: true })).toBeFocused();
+
+    await page.keyboard.press('Tab');
     await expect(page.getByRole('button', { name: 'Inloggen', exact: true })).toBeFocused();
   });
 });
