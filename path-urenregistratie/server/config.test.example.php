@@ -48,6 +48,7 @@ return [
         'rotate_max_bytes' => 10 * 1024 * 1024,
     ],
     'mail' => [
+        'production_mode' => 'disabled',
         'enabled' => false,
         'test_delivery_enabled' => false,
         'allowed_recipients' => [],

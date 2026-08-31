@@ -133,6 +133,7 @@ try {
         ],
         'mail' => [
             'enabled' => false,
+            'production_mode' => 'disabled',
             'test_delivery_enabled' => false,
             'allowed_recipients' => [],
             'acceptance_test' => [

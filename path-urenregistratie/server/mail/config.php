@@ -34,6 +34,14 @@ function mail_environment(array $config): string
     return strtolower(trim((string)($config['environment'] ?? ($config['app']['environment'] ?? 'production'))));
 }
 
+/** Production mail is an explicit three-state switch: disabled, pilot or live. */
+function mail_production_mode(array $config): string
+{
+    $mail = isset($config['mail']) && is_array($config['mail']) ? $config['mail'] : [];
+    $mode = strtolower(trim((string)($mail['production_mode'] ?? 'disabled')));
+    return in_array($mode, ['disabled', 'pilot', 'live'], true) ? $mode : 'invalid';
+}
+
 function mail_test_delivery_pause_file(array $config): string
 {
     $privateRoot = rtrim((string)($config['storage']['private_root'] ?? ''), '/\\');
@@ -99,9 +107,8 @@ function mail_allowed_recipients(array $config): array
 }
 
 /**
- * Production may deliver when SMTP is enabled. TEST additionally requires an
- * explicit opt-in and a non-empty recipient allowlist. Every other environment
- * remains fail-closed even if mail.enabled is accidentally changed.
+ * Production requires an explicit pilot/live mode. Pilot delivery is further
+ * restricted by the recipient allowlist. TEST requires its own sandbox opt-in.
  */
 function mail_real_delivery_allowed_for_environment(array $config): bool
 {
@@ -110,7 +117,9 @@ function mail_real_delivery_allowed_for_environment(array $config): bool
     }
     $environment = mail_environment($config);
     if ($environment === 'production') {
-        return true;
+        $mode = mail_production_mode($config);
+        return $mode === 'live'
+            || ($mode === 'pilot' && mail_allowed_recipients($config) !== []);
     }
     $mail = isset($config['mail']) && is_array($config['mail']) ? $config['mail'] : [];
     return $environment === 'test'
@@ -128,7 +137,9 @@ function mail_real_delivery_allowed_for_environment(array $config): bool
 function mail_recipient_is_allowed(array $config, string $email): bool
 {
     if (mail_environment($config) === 'production') {
-        return true;
+        return mail_production_mode($config) === 'live'
+            || (mail_production_mode($config) === 'pilot'
+                && in_array(strtolower(trim($email)), mail_allowed_recipients($config), true));
     }
     return in_array(strtolower(trim($email)), mail_allowed_recipients($config), true);
 }
@@ -271,6 +282,21 @@ function mail_validate_relay_config(array $config): array
             $errors[] = 'mail.test_delivery_enabled must be true for TEST delivery';
         } elseif (mail_allowed_recipients($config) === []) {
             $errors[] = 'mail.allowed_recipients must contain at least one address for TEST delivery';
+        }
+    }
+    if (mail_environment($config) === 'production') {
+        $mode = mail_production_mode($config);
+        if ($mode === 'invalid') {
+            $errors[] = 'mail.production_mode must be disabled, pilot or live';
+        }
+        if (($mail['enabled'] ?? false) === true && $mode === 'disabled') {
+            $errors[] = 'mail.production_mode must be pilot or live when production delivery is enabled';
+        }
+        if ($mode === 'pilot' && mail_allowed_recipients($config) === []) {
+            $errors[] = 'mail.allowed_recipients must contain at least one address in production pilot mode';
+        }
+        if ($mode === 'pilot' && ($mail['test_redirect_all'] ?? false) === true) {
+            $errors[] = 'mail.test_redirect_all must be false in production pilot mode';
         }
     }
 

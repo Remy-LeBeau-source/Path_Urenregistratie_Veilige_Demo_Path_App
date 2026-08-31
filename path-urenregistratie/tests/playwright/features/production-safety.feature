@@ -149,7 +149,7 @@ Feature: Veilige productieconfiguratie en deployment
   @happy
   Scenario: [SAFE-H-010] echte TEST-mail vereist opt-in en een ontvangers-whitelist
     # Testtechniek: API-contract + equivalentieklasse
-    # Aantoonbare Playwright-assertions in deze case: 12
+    # Aantoonbare Playwright-assertions in deze case: 16
     Given het uitvoerbare TEST-mailbeleid wordt gecontroleerd
     When de productie-, test- en developmentconfiguraties worden doorgerekend
     Then blijft TEST gesloten zonder whitelist en kan alleen de toegestane ontvanger door

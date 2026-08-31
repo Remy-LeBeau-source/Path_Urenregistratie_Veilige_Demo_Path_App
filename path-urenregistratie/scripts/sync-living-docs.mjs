@@ -11,7 +11,7 @@ const definitions = [
   { kind: 'playwright', spec: 'admin-writes.spec.ts', feature: 'organization-settings.feature', steps: 'admin-writes.steps.ts', name: 'Organisatie-instellingen beheren', tags: ['regressie', 'api', 'fase:2'], parentSuite: 'API', suite: 'Admin Writes', allureFeature: 'Beheer & Instellingen', phase: 2 },
   { kind: 'playwright', spec: 'audit-log.spec.ts', feature: 'audit-log.feature', steps: 'audit-log.steps.ts', name: 'Auditlog en traceerbaarheid', tags: ['regressie', 'api', 'fase:16'], parentSuite: 'API', suite: 'Audit Log', allureFeature: 'Audit & Security', phase: 16 },
   { kind: 'playwright', spec: 'auth.spec.ts', feature: 'auth.feature', steps: 'auth.steps.ts', name: 'Inloggen, uitloggen en sessiebeheer', tags: ['regressie', 'ui', 'desktop', 'fase:4'], parentSuite: 'UI Desktop', suite: 'Login', allureFeature: 'Authenticatie', phase: 4 },
-  { kind: 'playwright', spec: 'business-workflows-e2e.spec.ts', feature: 'end-to-end-workflows.feature', steps: 'end-to-end-workflows.steps.ts', name: 'Bedrijfsketens van medewerker tot Backoffice', tags: ['regressie', 'integration', 'ui', 'desktop', 'fase:16'], parentSuite: 'DB / Integratie', suite: 'End-to-end Workflows', allureFeature: 'Bedrijfsketens', phase: 16 },
+  { kind: 'playwright', spec: 'business-workflows-*.spec.ts', specs: readdirSync(playwrightDir).filter((file) => file.startsWith('business-workflows-') && file.endsWith('.spec.ts')).sort(), feature: 'end-to-end-workflows.feature', steps: 'end-to-end-workflows.steps.ts', name: 'Bedrijfsketens van medewerker tot Backoffice', tags: ['regressie', 'integration', 'ui', 'desktop', 'fase:16'], parentSuite: 'DB / Integratie', suite: 'End-to-end Workflows', allureFeature: 'Bedrijfsketens', phase: 16 },
   { kind: 'playwright', spec: 'customer-timesheet-api.spec.ts', feature: 'customer-timesheets.feature', steps: 'customer-timesheets.steps.ts', name: 'Klanturenstaten en documentverwerking', tags: ['regressie', 'api', 'fase:10'], parentSuite: 'API', suite: 'Customer Timesheets', allureFeature: 'Klanturenstaten', phase: 10 },
   { kind: 'playwright', spec: 'dashboard.spec.ts', feature: 'dashboard.feature', steps: 'dashboard.steps.ts', name: 'Dashboard en open werkvoorraad', tags: ['regressie', 'ui', 'desktop', 'fase:15'], parentSuite: 'UI Desktop', suite: 'Dashboard', allureFeature: 'Dashboard', phase: 15 },
   { kind: 'playwright', spec: 'email-queue.spec.ts', feature: 'mail-delivery.feature', steps: 'email-queue.steps.ts', name: 'Mailroutering en aflevering', tags: ['regressie', 'api', 'fase:12'], parentSuite: 'API', suite: 'Email Queue', allureFeature: 'E-mailverwerking', phase: 12 },
@@ -30,6 +30,7 @@ const definitions = [
   { kind: 'playwright', spec: 'timesheet-review-ui.spec.ts', feature: 'correction-approval-ui.feature', steps: 'timesheets-review-ui.steps.ts', name: 'Correcties en goedkeuringen behandelen', tags: ['regressie', 'ui', 'desktop', 'fase:9'], parentSuite: 'UI Desktop', suite: 'Correcties', allureFeature: 'Correctie & Goedkeuring', phase: 9 },
   { kind: 'playwright', spec: 'timesheet-write.spec.ts', feature: 'time-registration.feature', steps: 'timesheets-api.steps.ts', name: 'Urenregistratie verwerken', tags: ['regressie', 'api', 'fase:8'], parentSuite: 'API', suite: 'Timesheets', allureFeature: 'Urenregistratie', phase: 8 },
   { kind: 'playwright', spec: 'user-management.spec.ts', feature: 'team-access.feature', steps: 'user-management.steps.ts', name: 'Team en toegang beheren', tags: ['regressie', 'api', 'fase:13'], parentSuite: 'API', suite: 'User Management', allureFeature: 'Gebruikersbeheer', phase: 13 },
+  { kind: 'playwright', spec: '../remote/*.spec.ts', specDir: path.join(root, 'tests', 'remote'), specs: readdirSync(path.join(root, 'tests', 'remote')).filter((file) => file.endsWith('.spec.ts')).sort(), feature: 'live-test-regression.feature', steps: 'live-test-regression.steps.ts', name: 'Live TEST-regressie en deployacceptatie', tags: ['regressie', 'integration', 'live', 'fase:16'], parentSuite: 'DB / Integratie', suite: 'Live TEST', allureFeature: 'Live TEST-regressie', phase: 16 },
   { kind: 'db', feature: 'database-integrity.feature', steps: 'database.steps.ts', name: 'Database-integriteit en CRUD-controle', tags: ['regressie', 'db', 'fase:16'], parentSuite: 'DB / SQL', suite: 'Database Integrity', allureFeature: 'Database & Infrastructure', phase: 16, source: 'database/queries/crud-smoke.sql', runner: 'scripts/run-db-crud-smoke.mjs' },
 ];
 
@@ -42,7 +43,9 @@ function extractCases(definition) {
     ] }];
   }
 
-  const source = readFileSync(path.join(playwrightDir, definition.spec), 'utf8');
+  const specDir = definition.specDir || playwrightDir;
+  const specFiles = definition.specs || [definition.spec];
+  const source = specFiles.map((file) => readFileSync(path.join(specDir, file), 'utf8')).join('\n\n');
   const pattern = /test\(\s*(['"])\[([^\]]+)\]\s*([^'"\r\n]+)\1\s*,/g;
   const matches = [...source.matchAll(pattern)];
   const cases = matches.map((match, index) => {

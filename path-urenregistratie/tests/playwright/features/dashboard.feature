@@ -96,7 +96,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakiezer blijft leesbaar
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 7
+    # Aantoonbare Playwright-assertions in deze case: 10
     Given een medewerker die een urenstaat vult en het thema wisselt
     When de medewerker uren invult en terug naar het medewerkerdashboard gaat
     Then blijven de maandnamen zichtbaar in donkere modus

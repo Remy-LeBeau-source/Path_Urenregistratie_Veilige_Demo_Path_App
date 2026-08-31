@@ -19,7 +19,7 @@ When("een herhaalbare schrijfbare testperiode is geselecteerd");
 Then("save_draft werkt en zet status op draft");
 Then("read back van draft bevat dagregels en auditdata");
 When("submit wordt uitgevoerd met expected_version");
-Then("een ingediende urenstaat kan worden bewerkt en opnieuw ingediend");
+Then("is een ingediende urenstaat op slot en blijft hij ongewijzigd");
 And("cleanup: sessie sluiten voor testisolatie");
 Given("een ingelogde medewerker");
 When("de medewerker een andere employee_id probeert te schrijven");

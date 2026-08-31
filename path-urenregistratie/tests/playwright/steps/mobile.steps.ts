@@ -75,3 +75,5 @@ Given("het aanbod staat in beeld");
 When("de flow voor MOB-H-017 wordt uitgevoerd");
 Then("verdwijnt hij vanzelf, zodat hij niets blijvend afdekt");
 And("ligt er daarna niets meer onder de balk");
+When("de flow voor MOB-H-018 wordt uitgevoerd");
+Then("blijft de balk weg, ook na een melding van de browser en de eigen timer");

@@ -12,7 +12,7 @@ De applicatie ondersteunt de maandketen van urenregistratie tot gecontroleerde f
 |---|---|---|---|---|---|
 | LOCAL | `http://localhost:8000` | lokale/testdata | ja | beheerder | nee |
 | TEST | `https://uren-test.pathconsultancy.nl` | aparte TEST-database | ja | beheerder | uitsluitend via test-allowlist |
-| PROD | `https://uren.pathconsultancy.nl` | productiegegevens | nee | nee | alleen na productieconfiguratie |
+| PROD | `https://uren.pathconsultancy.nl` | productiegegevens | nee | nee | uit, afgeschermde pilot-allowlist of expliciet live |
 
 In de applicatiekop staat in LOCAL `LOKAAL`, in TEST `TESTOMGEVING` en in PROD geen testlabel. Productie toont nooit demoaccounts, testwachtwoorden of herstel van testgegevens.
 
@@ -254,6 +254,7 @@ Minimaal de volgende ketens zijn releaseblokkerend:
 | medewerker uploadt zichtbaar PDF/JPG/PNG en ziet de eigen klanturenstaat na nieuwe login en maandwissel | `customer-timesheet-api.spec.ts` (`CTS-API-H-006`) |
 | wachtwoord instellen via eenmalige link en hergebruik blokkeren | `business-workflows-e2e.spec.ts` (`E2E-H-006`) |
 | globale sommen en maandinvariant | `dashboard.spec.ts` (`DASH-H-012`, `DASH-H-017`) |
+| open medewerkeracties blijven leesbaar in licht en donker met minimaal 4,5:1 tekstcontrast | `dashboard.spec.ts` (`DASH-H-003`) |
 | indienen/correctie/herindienen/goedkeuren | `timesheet-review-ui.spec.ts` (`TS-REV-UI-H-008`) |
 | submitted/approved lock | `TS-REV-UI-H-009`, `TS-REV-UI-H-010` |
 | goedkeuren na verouderde versie en refresh | `business-workflows-e2e.spec.ts` (`E2E-H-008`) |

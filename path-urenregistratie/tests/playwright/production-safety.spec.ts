@@ -612,7 +612,11 @@ test('[SAFE-H-010] echte TEST-mail vereist opt-in en een ontvangers-whitelist', 
     expect(result.ok).toBe(true);
     expect(result.writes_performed).toBe(false);
     expect(result.network_connections).toBe(0);
-    expect(result.checks?.production_enabled_without_allowlist).toBe(true);
+    expect(result.checks?.production_enabled_without_mode_is_blocked).toBe(true);
+    expect(result.checks?.production_pilot_is_enabled).toBe(true);
+    expect(result.checks?.production_pilot_allowlisted_recipient_is_allowed).toBe(true);
+    expect(result.checks?.production_pilot_other_recipient_is_blocked).toBe(true);
+    expect(result.checks?.production_live_is_enabled_without_allowlist).toBe(true);
     expect(result.checks?.test_without_guard_is_blocked).toBe(true);
     expect(result.checks?.guarded_test_is_enabled).toBe(true);
     expect(result.checks?.allowlisted_recipient_is_allowed).toBe(true);

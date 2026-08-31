@@ -52,8 +52,10 @@ return [
     // No username or password: authentication is handled by the registered outgoing TransIP IP.
     'mail' => [
         'enabled' => false,              // set to true to enable real SMTP dispatch
+        // disabled = no production mail; pilot = allowlist only; live = normal business recipients.
+        'production_mode' => 'disabled',
         // TEST may send only when this switch is true and every recipient is
-        // listed below. Production does not require an allowlist.
+        // listed below. Production pilot mode uses the same exact allowlist.
         'test_delivery_enabled' => false,
         'allowed_recipients' => [],
         // Guarded TEST may redirect every ordinary application message to one

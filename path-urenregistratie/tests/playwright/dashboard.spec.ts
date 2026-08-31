@@ -755,6 +755,39 @@ test('[DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakie
   });
 
   await test.step('Then blijven de maandnamen zichtbaar in donkere modus', async () => {
+    const openOverview = page.locator('#employee-open-overview');
+    await expect(openOverview).toBeVisible();
+    const overviewContrast = await openOverview.evaluate((overview) => {
+      const parseRgb = (value: string) => (value.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+      const luminance = (rgb: number[]) => {
+        const channels = rgb.map((value) => {
+          const channel = value / 255;
+          return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+        });
+        return (0.2126 * channels[0]) + (0.7152 * channels[1]) + (0.0722 * channels[2]);
+      };
+      const foreground = luminance(parseRgb(getComputedStyle(overview.querySelector('h3')!).color));
+      const background = luminance(parseRgb(getComputedStyle(overview).backgroundColor));
+      return (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05);
+    });
+    expect(overviewContrast).toBeGreaterThanOrEqual(4.5);
+
+    const firstOpenMonth = page.locator('#employee-open-overview-list [data-employee-open-month]').first();
+    const openMonthContrast = await firstOpenMonth.evaluate((month) => {
+      const parseRgb = (value: string) => (value.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+      const luminance = (rgb: number[]) => {
+        const channels = rgb.map((value) => {
+          const channel = value / 255;
+          return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+        });
+        return (0.2126 * channels[0]) + (0.7152 * channels[1]) + (0.0722 * channels[2]);
+      };
+      const foreground = luminance(parseRgb(getComputedStyle(month.querySelector('strong')!).color));
+      const background = luminance(parseRgb(getComputedStyle(month).backgroundColor));
+      return (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05);
+    });
+    expect(openMonthContrast).toBeGreaterThanOrEqual(4.5);
+
     await openPaneel(page, '#period-month-picker', '#period-month-panel');
     await expect(page.locator('#period-month-panel')).toBeVisible();
     const firstMonth = page.locator('#period-month-panel button').first();

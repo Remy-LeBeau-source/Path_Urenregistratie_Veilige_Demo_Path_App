@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 276 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 333 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 276 unieke case-ID's
+- Playwright executable cases: 333 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 277 unieke case-ID's
-- Playwright features: 23
+- Totaal executable cases: 334 unieke case-ID's
+- Playwright features: 24
 - Database features: 1
-- Playwright steps mappings: 23
+- Playwright steps mappings: 24
 - Database steps mappings: 1
-- Uitvoeringen: 293
-- Niet-mobile projectuitvoeringen: 259
-- Mobile functionele cases: 17
-- Pixel 7 / Chromium-uitvoeringen: 17
-- iPhone 13 / WebKit-uitvoeringen: 17
+- Uitvoeringen: 351
+- Niet-mobile projectuitvoeringen: 315
+- Mobile functionele cases: 18
+- Pixel 7 / Chromium-uitvoeringen: 18
+- iPhone 13 / WebKit-uitvoeringen: 18
 
-De 17 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 276 Playwright-functionele cases in totaal 293 resultaten op: 259 + (17 x 2) = 293.
+De 18 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 333 Playwright-functionele cases in totaal 351 resultaten op: 315 + (18 x 2) = 351.
 
 ## Documentatieketen
 
@@ -112,17 +112,32 @@ De 17 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 276 Playwri
 ### Bedrijfsketens van medewerker tot Backoffice
 
 - Feature: `tests/playwright/features/end-to-end-workflows.feature`
-- Source: `tests/playwright/business-workflows-e2e.spec.ts`
-- Cases: 8
+- Source: `tests/playwright/business-workflows-*.spec.ts`
+- Cases: 23
 
+- [E2E-H-018] iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF — Techniek: Equivalentieklassen · Assertions: 25
+- [E2E-N-020] een medewerker kan de Backoffice-keten niet uitvoeren en een weigering verandert niets — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 26
+- [E2E-N-018] documentlinks accepteren geen ongeautoriseerde gebruiker, clientpad of vrije bestandsnaam — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 19
 - [E2E-H-001] herstelbasis houdt globale werkvoorraad stabiel bij maand- en filterwissels — Techniek: Equivalentieklassen · Assertions: 11
 - [E2E-H-002] rolwissel werkt zonder F5 en herstel blijft beschikbaar voor iedere rol op LOCAL/TEST — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
 - [E2E-H-003] herindiening verplaatst dezelfde actie van medewerker naar Backoffice — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 18
 - [E2E-H-004] goedkeuring vervangt urencontrole door factuurverzending voor hetzelfde dossier — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
 - [E2E-H-005] klanturenstaatcontrole wordt een brokeractie zonder taakverlies — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
-- [E2E-H-006] eenmalige wachtwoordlink geeft toegang en blokkeert hergebruik — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
+- [E2E-H-006] eenmalige wachtwoordlink geeft toegang en blokkeert hergebruik — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
 - [E2E-H-007] taakgestuurde goedkeuring blijft na serververversing afgerond — Techniek: Toestandsovergang · Assertions: 5
 - [E2E-H-008] urencontrole vraagt na oude versie opnieuw op en maakt daarna toch goedkeuren af — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
+- [E2E-N-019] een mislukte factuurpoging laat niets half achter en opnieuw proberen levert één factuur — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 19
+- [E2E-H-016] ieder wijzigbaar Teambeheerveld heeft een aantoonbaar opslag- of uitzonderingscontract — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 32
+- [E2E-H-019] dubbel klikken maakt nooit dubbele statussen, facturen of mails — Techniek: Toestandsovergang · Assertions: 23
+- [E2E-H-022] iedere case laat database en private opslag aantoonbaar schoon achter — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 20
+- [E2E-N-017] submitted, approved en invoiced blokkeren iedere verboden medewerkerwrite — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 30
+- [E2E-H-026] de definitieve factuur-PDF bevat de juiste bedragen en identiteit en geen conceptwatermerk — Techniek: Equivalentieklassen · Assertions: 16
+- [E2E-H-027] elk kanaal krijgt de standaardtekst van de server en geen enkele mail verlaat de machine — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 19
+- [E2E-H-023] twee nieuw toegevoegde ontvangers krijgen via de volledige GUI-keten ieder hun eigen factuurmail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
+- [E2E-H-024] een nieuw account krijgt via de GUI toegang en zijn eigen tekst komt letterlijk in de verzonden mail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 18
+- [E2E-H-025] een aangepaste standaardtekst werkt in de echte mail en is via de GUI terug te zetten — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 15
+- [E2E-N-021] een gedeactiveerd account met historie blijft veilig bewaard en legt de blokkeerreden uit — Techniek: Toestandsovergang · Assertions: 20
+- [E2E-H-017] de volledige toegestane urenstatusketen bewaakt na iedere write status, eigenaar en taak — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 18
 
 ### Klanturenstaten en documentverwerking
 
@@ -157,7 +172,7 @@ De 17 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 276 Playwri
 - [DASH-N-009] medewerker teller blijft stabiel bij aug-juli-aug en dashboard triggert geen verborgen timesheet-read — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
 - [DASH-H-012] GUI-smoke scheidt werkacties van medewerkers- en beheerdersaccounts — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 35
 - [DASH-H-013] dashboardmodules tonen compacte documenten, procesfasen en teamacties — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
-- [DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakiezer blijft leesbaar — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
+- [DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakiezer blijft leesbaar — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 10
 - [DASH-H-004] terugkeren naar medewerkerdashboard ververst de uren en behoudt maandlabels bij themawissel — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
 - [DASH-H-005] medewerker ziet open maanden compact en kan direct naar de juiste maand springen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [DASH-H-014] medewerker krijgt de eerstvolgende concrete actie met juiste maand en taakroute — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 22
@@ -171,7 +186,7 @@ De 17 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 276 Playwri
 
 - Feature: `tests/playwright/features/mail-delivery.feature`
 - Source: `tests/playwright/email-queue.spec.ts`
-- Cases: 32
+- Cases: 36
 
 - [EQ-H-001] factuurlock maakt queue-items aan met dry_run=true — Techniek: Toestandsovergang · Assertions: 5
 - [EQ-H-002] broker-channel stuurt alleen de factuur — Techniek: API-contract + equivalentieklasse · Assertions: 2
@@ -201,10 +216,14 @@ De 17 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 276 Playwri
 - [EQ-N-014] unknown action geeft 400 — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
 - [EQ-N-015] localhost blijft preview-only en weigert POST zonder expliciete bevestiging — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 9
 - [EQ-N-016] medewerker krijgt geen toegang tot de mailacceptatieconsole — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
-- [E2E-H-009] twee nieuw toegevoegde ontvangers krijgen allebei echt een factuurmail — Techniek: API-contract + equivalentieklasse · Assertions: 25
+- [E2E-H-009] twee nieuw toegevoegde ontvangers krijgen allebei echt een factuurmail — Techniek: API-contract + equivalentieklasse · Assertions: 26
 - [E2E-H-010] nieuw account, eigen tekst, en die tekst komt terug in de verzonden mail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 28
 - [EQ-H-029] elke ontvanger krijgt de handtekening, ook onder een eigen tekst — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [E2E-H-011] een aangepaste standaardtekst komt werkelijk in de mail en is terug te zetten — Techniek: API-contract + equivalentieklasse · Assertions: 15
+- [E2E-H-012] het vinkje Factuur meesturen bepaalt werkelijk of de bijlage meegaat — Techniek: API-contract + equivalentieklasse · Assertions: 6
+- [E2E-H-013] een nieuwe medewerker houdt zijn gegevens en komt tot een factuur met de juiste mail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 36
+- [E2E-H-014] een nieuwe beheerder logt zelf in en kan de keten afmaken — Techniek: API-contract + equivalentieklasse · Assertions: 17
+- [E2E-H-015] aanmaken, lezen, wijzigen en verwijderen van een medewerker houdt stand — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 18
 
 ### Facturen definitief maken en vergrendelen
 
@@ -260,7 +279,7 @@ De 17 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 276 Playwri
 
 - Feature: `tests/playwright/features/mobile.feature`
 - Source: `tests/playwright/mobile-ui.spec.ts`
-- Cases: 17
+- Cases: 18
 
 - [MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikbaar — Techniek: Responsive viewport + end-to-end use-case · Assertions: 31
 - [MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documentupload bereiken — Techniek: Responsive viewport + end-to-end use-case · Assertions: 14
@@ -279,6 +298,7 @@ De 17 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 276 Playwri
 - [MOB-H-015] het aanbod verschijnt uit zichzelf, ook zonder melding van de browser — Techniek: Responsive viewport + end-to-end use-case · Assertions: 4
 - [MOB-H-016] de knop Installeren doet nooit stil niets — Techniek: Responsive viewport + end-to-end use-case · Assertions: 2
 - [MOB-H-017] het installatieaanbod dekt geen knoppen af — Techniek: Responsive viewport + end-to-end use-case · Assertions: 3
+- [MOB-H-018] na installatie verdwijnt het installatieaanbod uit de balk en het profielmenu — Techniek: Responsive viewport + end-to-end use-case · Assertions: 2
 
 ### Meldingen beheren
 
@@ -377,7 +397,7 @@ De 17 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 276 Playwri
 - [SAFE-N-006] destructieve DB-testsetup weigert productie en niet-testdatabases — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 15
 - [SAFE-N-007] productieconfigurator verwerkt DB-secret uitsluitend interactief en fail-closed — Techniek: Toestandsovergang · Assertions: 14
 - [SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 25
-- [SAFE-H-010] echte TEST-mail vereist opt-in en een ontvangers-whitelist — Techniek: API-contract + equivalentieklasse · Assertions: 12
+- [SAFE-H-010] echte TEST-mail vereist opt-in en een ontvangers-whitelist — Techniek: API-contract + equivalentieklasse · Assertions: 16
 - [SAFE-H-013] TEST-mailsandbox opent atomisch voor twee toegestane TEST-ontvangers (sink + CC) — Techniek: API-contract + equivalentieklasse · Assertions: 27
 - [SAFE-H-006] eerste productieorganisatie wordt gevalideerd en zonder overschrijven ingericht — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 18
 - [SAFE-H-011] groene main-pipeline rolt exact dezelfde release veilig uit naar productie — Techniek: Toestandsovergang + foutinjectie + beslissingstabel · Assertions: 23
@@ -442,7 +462,7 @@ De 17 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 276 Playwri
 - Source: `tests/playwright/timesheet-write.spec.ts`
 - Cases: 5
 
-- [TS-API-H-001] employee save draft, read back, submit, bewerkt en dient opnieuw in — Techniek: API-contract + equivalentieklasse · Assertions: 31
+- [TS-API-H-001] employee save draft, read back, submit; daarna zit de urenstaat op slot — Techniek: API-contract + equivalentieklasse · Assertions: 32
 - [TS-API-N-010] employee mag geen andere medewerker schrijven — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [TS-API-N-011] write zonder csrf geeft 403 — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
 - [TS-API-N-003] write zonder sessie geeft 401 — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
@@ -465,6 +485,50 @@ De 17 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 276 Playwri
 - [USR-N-009] medewerker met zakelijke historie kan niet definitief worden verwijderd — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 - [USR-H-010] inactieve beheerder zonder historie kan definitief worden verwijderd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [USR-H-011] beheerder verstuurt vanuit Teambeheer een resetlink voor medewerker en beheerder — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
+
+### Live TEST-regressie en deployacceptatie
+
+- Feature: `tests/playwright/features/live-test-regression.feature`
+- Source: `tests/playwright/../remote/*.spec.ts`
+- Cases: 37
+
+- [TEST-E2E-13] klanturenstaat-toestandsketen: indienen, opnieuw opvragen, herindienen, goedkeuren, brokerroute — Techniek: Toestandsovergang · Assertions: 20
+- [TEST-E2E-15] uren-invoer EP/BVA: 0 en 24 door, negatief, >24 en niet-numeriek fail-closed — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 10
+- [TEST-E2E-19] robuustheid: te lange invoer begrensd, dubbele acties idempotent, gelijktijdige writes consistent — Techniek: Concurrency + toestandsovergang · Assertions: 19
+- [TEST-E2E-21] exploratory: mededeling plaatsen, ontvangen, intrekken met historie; instellingenmenu compleet — Techniek: API-contract + equivalentieklasse · Assertions: 18
+- [TEST-E2E-34] een mededeling met scriptinhoud belandt als tekst bij de medewerker, niet als code — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
+- [TEST-E2E-22] herinneringen: samenvatting volgt exact de instellingen, klanturenstaat-tijd bereikt de server, voorbeeld zonder neveneffect — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 18
+- [TEST-E2E-23] verse beheerder: aanmaken, inloggen, goedkeuren en factuur afronden — Techniek: Toestandsovergang · Assertions: 10
+- [TEST-E2E-24] medewerker deactiveren blokkeert inloggen; data blijft; heractiveren herstelt toegang — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
+- [TEST-E2E-27] goedgekeurde urenstaat zonder factuur mag terug naar correctie; met factuur wordt heropenen geweigerd — Techniek: Toestandsovergang · Assertions: 8
+- [TEST-E2E-30] twee medewerkers met hetzelfde nummer-sjabloon in dezelfde periode krijgen elk een uniek nummer — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
+- [TEST-E2E-31] Marc en Brian: volledige afrond-flow levert de branded jsPDF-factuur — Techniek: Equivalentieklassen · Assertions: 2
+- [TEST-E2E-10] elke bestaande factuur heeft een echt nummer en geen CONCEPT-markering in de PDF — Techniek: Equivalentieklassen · Assertions: 6
+- [TEST-E2E-11] nieuwe medewerker via het beheer-scherm: volledige flow tot de jsPDF-conceptfactuur — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
+- [TEST-E2E-25] Overig-ontvanger: het vinkje Factuur meesturen bepaalt op de live site of de bijlage meegaat — Techniek: API-contract + equivalentieklasse · Assertions: 9
+- [TEST-E2E-12] urenstaat-toestandsketen: indienen, correctie, herindienen, goedkeuren; ongeldige overgang geweigerd — Techniek: Toestandsovergang · Assertions: 12
+- [TEST-E2E-14] klanturenstaat-upload: geldige typen door, ongeldige fail-closed, concept ongewijzigd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 15
+- [TEST-E2E-16] rol-beslissingstabel: medewerker geweigerd op beheeracties, beheerder toegestaan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
+- [TEST-E2E-17] één factuuractie levert exact drie gescheiden routes met het juiste bijlagebeleid — Techniek: API-contract + equivalentieklasse · Assertions: 9
+- [TEST-E2E-18] negatieve controles: CSRF verplicht, XSS geëscaped, stale version geweigerd — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 9
+- [TEST-E2E-20] werkvoorraad-invariant: alle acties = Backoffice + medewerkers, ongewijzigd bij maandnavigatie — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
+- [TEST-E2E-06] elke demo-medewerker ziet alleen eigen data; alle facturen hebben een echt nummer — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
+- [TEST-E2E-07] nieuwe medewerker met eigen opdracht-opties: volledige keten en eigen factuurnummer — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
+- [TEST-E2E-08] herinneringen: instelling bewaren en een veilige voorbeeldmelding — Techniek: API-contract + equivalentieklasse · Assertions: 7
+- [TEST-E2E-28] een medewerker komt niet bij de gegevens of acties van een andere medewerker — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
+- [TEST-E2E-01] inloggen: juiste credentials binnen, foute geweigerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
+- [TEST-E2E-02] wachtwoord vergeten: aanvraag, nieuw wachtwoord, oude link vervalt — Techniek: API-contract + equivalentieklasse · Assertions: 6
+- [TEST-E2E-03] medewerker aanmaken, laat hem zelf inloggen en alleen eigen uren zien — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 9
+- [TEST-E2E-04] volledige factuur- en mailketen met PDF- en mailinhoudcontrole — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 21
+- [TEST-E2E-05] acceptatieconsole verstuurt de vijf scenario-mails naar de sink — Techniek: API-contract + equivalentieklasse · Assertions: 9
+- [TEST-E2E-29] een wachtwoord-vergeten-aanvraag wordt op de live SMTP-weg echt verstuurd — Techniek: API-contract + equivalentieklasse · Assertions: 8
+- [TEST-E2E-33] de wachtwoord-reset-drempel stopt de vierde aanvraag binnen het venster — Techniek: Toestandsovergang · Assertions: 7
+- [TEST-SMOKE-01] de TEST-site draait de verwachte versie met veilige headers — Techniek: API-contract + equivalentieklasse · Assertions: 7
+- [TEST-E2E-26] de deploy levert de veiligheidsheaders en PWA-assets die de app nodig heeft — Techniek: API-contract + equivalentieklasse · Assertions: 20
+- [TEST-E2E-32] de live sessie is een veilige cookie en valt na uitloggen echt om — Techniek: API-contract + equivalentieklasse · Assertions: 8
+- [TEST-SMOKE-02] beheerder kan inloggen en elke view laadt zonder fouten — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
+- [TEST-SMOKE-03] medewerker ziet alleen de eigen uren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
+- [TEST-SMOKE-04] de factuurpreview rendert met bedragen en bedrijfsidentiteit — Techniek: API-contract + equivalentieklasse · Assertions: 4
 
 ### Database-integriteit en CRUD-controle
 

@@ -36,6 +36,7 @@ try {
         __DIR__ . '/database-restore.php',
         __DIR__ . '/rotate-logs.php',
         __DIR__ . '/configure-production.php',
+        __DIR__ . '/configure-production-mail-pilot.php',
         __DIR__ . '/provision-company.php',
         __DIR__ . '/provision-account.php',
         dirname(__DIR__) . '/auth/change-password.php',
@@ -58,7 +59,11 @@ try {
         'log_retention_configured' => (int)($logging['retention_days'] ?? 0) >= 1
             && (int)($logging['rotate_max_bytes'] ?? 0) >= 1024 * 1024,
         'smtp_relay_contract_valid' => mail_validate_relay_config($config) === [],
-        'smtp_real_delivery_disabled' => mail_is_dry_run($config) && ($mail['enabled'] ?? null) === false,
+        'smtp_delivery_policy_safe' => mail_validate_relay_config($config) === []
+            && (
+                (mail_is_dry_run($config) && mail_production_mode($config) === 'disabled')
+                || mail_real_delivery_allowed_for_environment($config)
+            ),
         'required_operational_files_present' => count(array_filter($requiredFiles, 'is_file')) === count($requiredFiles),
     ];
 

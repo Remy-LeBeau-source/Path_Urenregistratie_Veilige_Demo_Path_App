@@ -9,7 +9,7 @@ Feature: Urenregistratie verwerken
   @happy
   Scenario: [TS-API-H-001] employee save draft, read back, submit; daarna zit de urenstaat op slot
     # Testtechniek: API-contract + equivalentieklasse
-    # Aantoonbare Playwright-assertions in deze case: 31
+    # Aantoonbare Playwright-assertions in deze case: 32
     Given de medewerker is ingelogd
     When een herhaalbare schrijfbare testperiode is geselecteerd
     Then save_draft werkt en zet status op draft

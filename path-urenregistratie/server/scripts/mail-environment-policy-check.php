@@ -5,7 +5,13 @@ declare(strict_types=1);
 require_once __DIR__ . '/../auth/session.php';
 require_once __DIR__ . '/../auth/password-reset-service.php';
 
-function policy_config(string $environment, bool $enabled, bool $testEnabled, array $recipients): array
+function policy_config(
+    string $environment,
+    bool $enabled,
+    bool $testEnabled,
+    array $recipients,
+    string $productionMode = 'disabled'
+): array
 {
     return [
         'environment' => $environment,
@@ -13,6 +19,7 @@ function policy_config(string $environment, bool $enabled, bool $testEnabled, ar
         'app' => ['app_origin' => 'https://uren-test.pathconsultancy.nl'],
         'mail' => [
             'enabled' => $enabled,
+            'production_mode' => $productionMode,
             'test_delivery_enabled' => $testEnabled,
             'allowed_recipients' => $recipients,
             'transport' => 'smtp_relay',
@@ -27,7 +34,9 @@ function policy_config(string $environment, bool $enabled, bool $testEnabled, ar
 }
 
 $allowedAddress = 'backoffice@pathconsultancy.nl';
-$production = policy_config('production', true, false, []);
+$productionClosed = policy_config('production', true, false, [], 'disabled');
+$productionPilot = policy_config('production', true, false, [$allowedAddress], 'pilot');
+$productionLive = policy_config('production', true, false, [], 'live');
 $testClosed = policy_config('test', true, false, []);
 $testGuarded = policy_config('test', true, true, [$allowedAddress]);
 $development = policy_config('development', true, true, [$allowedAddress]);
@@ -35,7 +44,13 @@ $guardedResponse = auth_password_reset_public_response($testGuarded, str_repeat(
 $closedResponse = auth_password_reset_public_response($testClosed, str_repeat('b', 64), '2099-01-01 00:00:00');
 
 $checks = [
-    'production_enabled_without_allowlist' => mail_real_delivery_allowed_for_environment($production),
+    'production_enabled_without_mode_is_blocked' => !mail_real_delivery_allowed_for_environment($productionClosed),
+    'production_disabled_mode_has_config_error' => mail_validate_relay_config($productionClosed) !== [],
+    'production_pilot_is_enabled' => mail_real_delivery_allowed_for_environment($productionPilot),
+    'production_pilot_allowlisted_recipient_is_allowed' => mail_recipient_is_allowed($productionPilot, $allowedAddress),
+    'production_pilot_other_recipient_is_blocked' => !mail_recipient_is_allowed($productionPilot, 'ander@example.com'),
+    'production_live_is_enabled_without_allowlist' => mail_real_delivery_allowed_for_environment($productionLive),
+    'production_live_recipient_is_allowed' => mail_recipient_is_allowed($productionLive, 'zakelijk@example.com'),
     'test_without_guard_is_blocked' => !mail_real_delivery_allowed_for_environment($testClosed),
     'test_without_guard_has_config_error' => mail_validate_relay_config($testClosed) !== [],
     'guarded_test_is_enabled' => mail_real_delivery_allowed_for_environment($testGuarded),

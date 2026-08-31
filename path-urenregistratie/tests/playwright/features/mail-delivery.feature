@@ -242,9 +242,10 @@ Feature: Mailroutering en aflevering
   @happy
   Scenario: [E2E-H-009] twee nieuw toegevoegde ontvangers krijgen allebei echt een factuurmail
     # Testtechniek: API-contract + equivalentieklasse
-    # Aantoonbare Playwright-assertions in deze case: 25
+    # Aantoonbare Playwright-assertions in deze case: 26
     Given twee nieuwe ontvangers op de opdracht staan
     When de volledige uren- en factuurketen wordt doorlopen
+    Then blijft de uitzondering voor de salarisadministratie staan
     Then krijgt de nieuwe boekhoudingsontvanger een mail met de eigen tekst
     And krijgt ook de tweede nieuwe ontvanger een mail
     And staat in de verzonden mail exact wat er is ingevuld
@@ -279,3 +280,44 @@ Feature: Mailroutering en aflevering
     Then geldt die tekst voortaan voor dat soort ontvanger
     And staat hij werkelijk in de verzonden mail
     And leeg opslaan zet de meegeleverde tekst terug
+
+  @happy
+  Scenario: [E2E-H-012] het vinkje Factuur meesturen bepaalt werkelijk of de bijlage meegaat
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given een ontvanger van het type Overig met Factuur meesturen aan
+    When de volledige keten tot en met de mail wordt doorlopen
+    Then wordt met Playwright-assertions bevestigd dat het vinkje Factuur meesturen bepaalt werkelijk of de bijlage meegaat
+
+  @happy
+  Scenario: [E2E-H-013] een nieuwe medewerker houdt zijn gegevens en komt tot een factuur met de juiste mail
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 36
+    Given een nieuwe medewerker met klant, broker, contract en een eigen ontvanger
+    Then blijven zijn gegevens staan, ook het contract
+    And krijgt hij toegang via de eenmalige link
+    When hij zelf uren indient
+    And verschijnt zijn urenstaat als werk voor Backoffice
+    And levert goedkeuren een echte serverfactuur op
+    And krijgt elke ontvanger de juiste mail, met de juiste bijlage
+    And opruimen: het aangemaakte account wordt gedeactiveerd
+
+  @happy
+  Scenario: [E2E-H-014] een nieuwe beheerder logt zelf in en kan de keten afmaken
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 17
+    Given een nieuwe beheerder met een eigen wachtwoord
+    When hij zelf inlogt
+    Then ziet hij dezelfde werkvoorraad als de bestaande beheerder
+    And kan hij zelf goedkeuren en factureren
+    And opruimen: het beheerdersaccount wordt gedeactiveerd
+
+  @happy
+  Scenario: [E2E-H-015] aanmaken, lezen, wijzigen en verwijderen van een medewerker houdt stand
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 18
+    Given een nieuw aangemaakte medewerker
+    When elk veld wordt gewijzigd
+    Then staat elke wijziging er ook werkelijk
+    And deactiveren haalt hem uit de actieve lijst zonder hem te wissen
+    And definitief verwijderen laat niets achter

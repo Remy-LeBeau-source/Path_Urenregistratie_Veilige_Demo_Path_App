@@ -958,24 +958,24 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .employee-customer-timesheet-card p { margin: 7px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
 .employee-customer-timesheet-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .employee-metrics .compact-metric { font-size: 20px; }
-.employee-open-overview { scroll-margin-top: 110px; margin: 0 0 22px; overflow: hidden; border-radius: 22px; background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(244,249,247,.98)); box-shadow: 0 16px 34px rgba(13,27,56,.06); }
+.employee-open-overview { scroll-margin-top: 110px; margin: 0 0 22px; overflow: hidden; border-radius: 22px; background-color: var(--vlak); background-image: linear-gradient(180deg, var(--vlak), var(--vlak-zacht)); box-shadow: 0 16px 34px rgba(13,27,56,.06); }
 .employee-open-overview .panel-heading { align-items: flex-start; }
 .employee-open-overview-list { display: grid; gap: 12px; padding: 0 24px 24px; }
-.employee-open-month { border: 1px solid #dbe6e2; border-radius: 18px; background: linear-gradient(135deg, #fff, #fbfefd); overflow: hidden; }
+.employee-open-month { border: 1px solid var(--line); border-radius: 18px; background-color: var(--vlak); background-image: linear-gradient(135deg, var(--vlak), var(--vlak-zacht)); overflow: hidden; }
 .employee-open-month.is-current { border-color: var(--mint-dark); box-shadow: 0 0 0 2px rgba(37,150,124,.08), 0 12px 24px rgba(13,27,56,.08); }
 .employee-open-month-heading { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 14px; border: 0; background: transparent; color: inherit; cursor: pointer; font: inherit; padding: 15px 16px; text-align: left; transition: background .16s ease; }
-.employee-open-month-heading:hover { background: #f4faf8; }
+.employee-open-month-heading:hover { background: var(--green-light); }
 .employee-open-month-heading-copy { min-width: 0; }
 .employee-open-month-heading-copy strong, .employee-open-month-heading-copy small { display: block; }
 .employee-open-month-heading-copy strong { color: var(--navy-tekst); font-size: 14px; }
 .employee-open-month-heading-copy small { margin-top: 4px; color: var(--muted); font-size: 10px; line-height: 1.5; }
 .employee-open-month-heading-side { display: flex; align-items: center; gap: 10px; }
-.employee-open-month-chevron { width: 9px; height: 9px; flex: 0 0 auto; border-right: 2px solid var(--navy); border-bottom: 2px solid var(--navy); transform: rotate(-45deg); transition: transform .18s ease; }
+.employee-open-month-chevron { width: 9px; height: 9px; flex: 0 0 auto; border-right: 2px solid var(--navy-tekst); border-bottom: 2px solid var(--navy-tekst); transform: rotate(-45deg); transition: transform .18s ease; }
 .employee-open-month-heading[aria-expanded="true"] .employee-open-month-chevron { transform: rotate(45deg); }
-.employee-open-month-body { border-top: 1px solid #e4ece8; background: #fbfefd; }
+.employee-open-month-body { border-top: 1px solid var(--line); background: var(--vlak-zacht); }
 .employee-open-action-list { display: grid; }
 .employee-open-action-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 18px; align-items: center; padding: 14px 16px; }
-.employee-open-action-row + .employee-open-action-row { border-top: 1px solid #e4ece8; }
+.employee-open-action-row + .employee-open-action-row { border-top: 1px solid var(--line); }
 .employee-open-action-copy span, .employee-open-action-copy strong, .employee-open-action-copy small { display: block; }
 .employee-open-action-copy span { color: var(--mint-dark-tekst); font-size: 8px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
 .employee-open-action-copy strong { margin-top: 4px; color: var(--navy-tekst); font-size: 12px; }
@@ -2759,46 +2759,14 @@ body.toont-installatieaanbod .main-content {
   .workspace-user small { font-size: 13px; }
   .workspace-user strong { font-size: 15px; }
   }
-
-
-/* ---------------------------------------------------------------------------
-   Telefoonoptimalisatie
-   ---------------------------------------------------------------------------
-   Gemeten op een scherm van 412px breed. Drie soorten problemen kwamen eruit:
-   tekst onder de 11px die op een telefoon niet te lezen is { font-size: 13px; }
-  }
-
-/* Tweede ronde: regels met een hogere specificiteit die het blok hierboven niet
-   overrulde { font-size: 13px; }
-  /* A cleared form is the only other sign that setting a password worked { font-size: 15px; }
-  /* De dagnummers in de urenstaat stonden op 8px { font-size: 14px; }
-  /* Losse meta-teksten die op 9px stonden. */
-  #hours-autosave-status { font-size: 13px; }
-  /* Optional per-recipient overrides. They span the full row so the two toggles
-   keep their own line { font-size: 12px; }
-  /* Resterende meta-teksten van 9 en 10px op de kaarten en dashboards. */
-  .metric-card small { font-size: 13px; }
-  #admin-task-summary { font-size: 13px; }
-  #invoice-month-overview-note { font-size: 13px; }
+/* Tweede mobiele ronde: hogere specificiteit dan de algemene regels hierboven. */
+@media (max-width: 700px) {
+  #hours-autosave-status,
+  .metric-card small,
+  #admin-task-summary,
+  #invoice-month-overview-note,
   #timesheet-correction-meta { font-size: 13px; }
-  and an empty field stays visibly optional. */
-.route-template { font-size: 12px; }
-  de kolomkoppen op 10px.
-     Dat is precies de tekst die je moet kunnen lezen terwijl je uren invult. */
+  .route-template { font-size: 12px; }
   .hours-table th { font-size: 14px; }
-  en invoervelden waarop iOS inzoomt
-   zodra hun tekst kleiner is dan 16px -- dat laatste verspringt het hele scherm.
-
-   Alles hieronder geldt alleen op smalle schermen; de desktopweergave blijft
-   ongewijzigd.
-   --------------------------------------------------------------------------- */
-@media (max-width: 700px) { font-size: 13px; }
-  plus de laatste velden onder de tikdoelnorm. */
-@media (max-width: 700px) { font-size: 13px; }
-  small { font-size: 13px; }
-  tikdoelen onder de
-   44px die je met een duim structureel mist { font-size: 13px; }
-  which
-   reads as "nothing happened" -- so confirm it unmistakably. */
-#auth-reset-complete-feedback.is-success { font-size: 15px; }
+  #auth-reset-complete-feedback.is-success { font-size: 15px; }
 }

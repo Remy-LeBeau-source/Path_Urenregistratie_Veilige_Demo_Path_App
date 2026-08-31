@@ -336,6 +336,15 @@ Een release mag pas door wanneer:
 9. bij fout automatisch de vorige inhoud naar dezelfde stabiele documentroot wordt teruggezet.
 
 Wijzigingen aan bedrijfslogica vereisen in dezelfde commit een update van FO/TO, featurecase en uitvoerbare assertion.
+
+# Medewerkerwerkvoorraad volgt thema-oppervlakken (0.9.154)
+
+De open-maandenkaart gebruikte vaste witte gradients en vaste lichte randkleuren. In donkere modus
+werden de teksttokens wel licht, waardoor titel, toelichting en maandregels vrijwel wit op wit
+verschenen. De kaart, maandregels, uitklapbody, hoverkleur, scheidingslijnen en chevron gebruiken nu
+de bestaande thema-oppervlakken (`--vlak`, `--vlak-zacht`, `--green-light`, `--line` en
+`--navy-tekst`). `DASH-H-003` meet in een echte browser het berekende contrast van de kaarttitel en
+een maandregel en blokkeert de release onder 4,5:1.
 # Fail-closed TEST-mailschakelaar
 
 De bron van waarheid blijft `server/config.local.php`. De webinterface kan uitsluitend op de exacte TEST-origin een reeds volledig geconfigureerde SMTP-sandbox pauzeren of hervatten. Dit gebeurt met een bestand `test-mail-paused.flag` in de private opslag buiten de webroot. De schakelactie vereist een administratorsessie, CSRF en de expliciete bevestiging `SET_TEST_MAIL_STATE`. De endpoint retourneert `mail_mode`, `delivery_allowed`, `test_toggle_available` en het vaste sink-adres. LOCAL en PROD kunnen deze schakelactie niet uitvoeren.
@@ -499,3 +508,13 @@ acceptatiemail. De functie eist nu dat de bytes een jsPDF-conceptfactuur zijn
 alles met de marker `TESTDOCUMENT`. Zonder echte factuur valt de acceptatiemail
 terug op het gegenereerde branded NIET-BOEKEN-document met nummer, medewerker,
 uren en bedragen. `smoke-test.mjs` bewaakt de marker-check.
+
+# Productiemail: afgeschermde pilotstand (0.9.154)
+
+Productiemail heeft de expliciete standen `disabled`, `pilot` en `live`;
+`mail.enabled=true` is op zichzelf niet meer voldoende. In `pilot` controleert
+de server iedere primaire ontvanger en CC exact tegen `mail.allowed_recipients`.
+`configure-production-mail-pilot.php` activeert of sluit deze stand atomisch en
+met een letterlijke bevestiging. Daarbij worden alle TEST-schakelaars uitgezet.
+De productiepreflight accepteert uitsluitend een veilige uitgeschakelde stand
+of een volledig geldige actieve pilot/live-policy.
