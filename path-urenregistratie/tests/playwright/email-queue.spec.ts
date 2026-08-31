@@ -34,10 +34,13 @@ async function verzondenMails(invoiceId: number): Promise<Array<Record<string, s
 
 async function forceDeliveryToFinalFailure(deliveryId: number): Promise<void> {
   const php = [
-    'require "server/scripts/cli-bootstrap.php";',
+    // Gebruik dezelfde environment-aware DB-resolutie als de HTTP-API. In CI
+    // wijst PLAYWRIGHT_DB_NAME naar de geisoleerde testdatabase, terwijl de
+    // statische config.local.php nog de bootstrapdatabase bevat.
+    'require "server/auth/session.php";',
     'require "server/mail/queue.php";',
     '$config=require "server/config.local.php";',
-    '$pdo=ops_pdo($config);',
+    '$pdo=auth_pdo($config);',
     '$stmt=$pdo->prepare("UPDATE email_deliveries SET status=\'failed\', attempt_count=:attempts, last_error=\'SMTP test failure\' WHERE id=:id");',
     '$stmt->execute([":attempts"=>MAIL_MAX_ATTEMPTS,":id"=>(int)$argv[1]]);',
   ].join(' ');
