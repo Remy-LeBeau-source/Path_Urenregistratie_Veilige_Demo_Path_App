@@ -107,6 +107,86 @@ function invoices_parse_period(?string $period): array
     ];
 }
 
+function invoices_external_upload_bytes(array $file): array
+{
+    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+        auth_send_json(['ok' => false, 'error' => 'invalid-upload', 'message' => 'Het uploaden van de externe factuur is mislukt.'], 400);
+    }
+    $size = (int)($file['size'] ?? 0);
+    $tmp = (string)($file['tmp_name'] ?? '');
+    if ($size <= 0 || $size > 5 * 1024 * 1024 || $tmp === '' || !is_uploaded_file($tmp)) {
+        auth_send_json(['ok' => false, 'error' => 'invalid-upload', 'message' => 'De externe factuur moet groter zijn dan 0 en maximaal 5 MB zijn.'], 400);
+    }
+    $finfo = function_exists('finfo_open') ? finfo_open(FILEINFO_MIME_TYPE) : false;
+    $mime = $finfo ? strtolower((string)finfo_file($finfo, $tmp)) : '';
+    if ($finfo) finfo_close($finfo);
+    if ($mime === 'application/pdf') {
+        $bytes = file_get_contents($tmp);
+        if (!is_string($bytes) || !simple_pdf_looks_valid($bytes)) {
+            auth_send_json(['ok' => false, 'error' => 'invalid-upload', 'message' => 'Het gekozen PDF-bestand is beschadigd of ongeldig.'], 400);
+        }
+        return ['bytes' => $bytes, 'name' => basename((string)($file['name'] ?? 'factuur.pdf')), 'source_mime' => $mime];
+    }
+    if (!in_array($mime, ['image/jpeg', 'image/png'], true) || !function_exists('imagecreatetruecolor')) {
+        auth_send_json(['ok' => false, 'error' => 'invalid-upload', 'message' => 'Alleen PDF, JPG en PNG zijn toegestaan.'], 400);
+    }
+    $dimensions = @getimagesize($tmp);
+    $width = (int)($dimensions[0] ?? 0);
+    $height = (int)($dimensions[1] ?? 0);
+    if ($width <= 0 || $height <= 0 || $width > 6000 || $height > 6000 || $width * $height > 20_000_000
+        || strtolower((string)($dimensions['mime'] ?? '')) !== $mime) {
+        auth_send_json(['ok' => false, 'error' => 'invalid-upload', 'message' => 'De afbeelding is beschadigd of te groot.'], 400);
+    }
+    $image = $mime === 'image/jpeg' ? @imagecreatefromjpeg($tmp) : @imagecreatefrompng($tmp);
+    if (!($image instanceof \GdImage)) {
+        auth_send_json(['ok' => false, 'error' => 'invalid-upload', 'message' => 'De afbeelding kon niet veilig worden geopend.'], 400);
+    }
+    $flattened = imagecreatetruecolor($width, $height);
+    $white = imagecolorallocate($flattened, 255, 255, 255);
+    imagefill($flattened, 0, 0, $white);
+    imagecopy($flattened, $image, 0, 0, 0, 0, $width, $height);
+    imagedestroy($image);
+    ob_start();
+    imagejpeg($flattened, null, 90);
+    $jpeg = ob_get_clean();
+    imagedestroy($flattened);
+    $bytes = is_string($jpeg) ? simple_pdf_from_jpeg($jpeg, $width, $height) : '';
+    if (!simple_pdf_looks_valid($bytes)) {
+        auth_send_json(['ok' => false, 'error' => 'invalid-upload', 'message' => 'De afbeelding kon niet veilig naar PDF worden omgezet.'], 400);
+    }
+    return ['bytes' => $bytes, 'name' => basename((string)($file['name'] ?? 'factuur')), 'source_mime' => $mime];
+}
+
+function invoices_upload_external(PDO $pdo, array $config, array $currentUser): void
+{
+    if ((string)$currentUser['role'] !== 'administrator') {
+        auth_send_json(['ok' => false, 'error' => 'forbidden-action', 'message' => 'Alleen een beheerder kan een externe factuur toevoegen.'], 403);
+    }
+    $invoiceId = filter_var($_POST['invoice_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+    $reason = trim((string)($_POST['reason'] ?? ''));
+    if (!$invoiceId || mb_strlen($reason) < 5 || !isset($_FILES['file'])) {
+        auth_send_json(['ok' => false, 'error' => 'invalid-payload', 'message' => 'Factuur, bestand en een reden van minimaal 5 tekens zijn verplicht.'], 400);
+    }
+    $stmt = $pdo->prepare('SELECT id, invoice_number, pdf_storage_key FROM invoices WHERE id = :id AND company_id = :company_id LIMIT 1');
+    $stmt->execute([':id' => $invoiceId, ':company_id' => (int)$currentUser['company_id']]);
+    $invoice = $stmt->fetch();
+    if (!$invoice) auth_send_json(['ok' => false, 'error' => 'invoice-not-found', 'message' => 'De factuur is niet gevonden.'], 404);
+    if (trim((string)($invoice['pdf_storage_key'] ?? '')) !== '') {
+        auth_send_json(['ok' => false, 'error' => 'invoice-document-exists', 'message' => 'Er bestaat al een factuurdocument; stil overschrijven is niet toegestaan.'], 409);
+    }
+    $upload = invoices_external_upload_bytes($_FILES['file']);
+    if (!invoices_store_pdf_bytes($pdo, $config, (int)$invoiceId, (int)$currentUser['company_id'], $upload['bytes'])) {
+        auth_send_json(['ok' => false, 'error' => 'storage-failed', 'message' => 'De externe factuur kon niet worden opgeslagen.'], 500);
+    }
+    $audit = $pdo->prepare('INSERT INTO audit_log (company_id, actor_user_id, event_type, entity_type, entity_id, event_data) VALUES (:company_id, :actor, :event_type, :entity_type, :entity_id, :event_data)');
+    $audit->execute([
+        ':company_id' => (int)$currentUser['company_id'], ':actor' => (int)$currentUser['id'],
+        ':event_type' => 'invoice.external_document_added', ':entity_type' => 'invoice', ':entity_id' => (string)$invoiceId,
+        ':event_data' => json_encode(['invoice_number' => $invoice['invoice_number'], 'original_name' => $upload['name'], 'source_mime' => $upload['source_mime'], 'reason' => $reason], JSON_UNESCAPED_UNICODE),
+    ]);
+    auth_send_json(['ok' => true, 'action' => 'upload_external', 'invoice_id' => (int)$invoiceId, 'source' => 'external', 'download_url' => '/server/api/invoices.php?action=download&id=' . (int)$invoiceId]);
+}
+
 function invoices_employee_context(PDO $pdo, array $currentUser): array
 {
     $stmt = $pdo->prepare(
@@ -436,6 +516,7 @@ function invoices_read(PDO $pdo, array $currentUser, array $periodFilter): void
             i.invoice_date,
             i.due_date,
             i.status,
+            i.pdf_storage_key,
             i.locked_at,
             i.recipient_id,
             i.subtotal,
@@ -443,15 +524,23 @@ function invoices_read(PDO $pdo, array $currentUser, array $periodFilter): void
             i.vat_amount,
             i.total,
             e.full_name AS employee_name,
+            t.employee_id,
+            t.assignment_id,
             t.status AS timesheet_status,
             t.billable_hours,
             a.hourly_rate,
-            CONCAT(p.year, "-", LPAD(p.month, 2, "0")) AS period_key
+            CONCAT(p.year, "-", LPAD(p.month, 2, "0")) AS period_key,
+            ct.status AS customer_timesheet_status,
+            ct.storage_key AS customer_timesheet_storage_key,
+            ct.original_file_name AS customer_timesheet_file_name,
+            ct.review_note AS customer_timesheet_note
         FROM invoices i
         JOIN timesheets t ON t.id = i.timesheet_id
         JOIN employees e ON e.id = t.employee_id
         JOIN assignments a ON a.id = t.assignment_id
         JOIN periods p ON p.id = t.period_id
+        LEFT JOIN customer_timesheets ct
+          ON ct.period_id = t.period_id AND ct.employee_id = t.employee_id AND ct.assignment_id = t.assignment_id
         WHERE i.company_id = :company_id
     ';
 
@@ -494,6 +583,8 @@ function invoices_read(PDO $pdo, array $currentUser, array $periodFilter): void
         return [
             'id' => (int)$row['id'],
             'timesheet_id' => (int)$row['timesheet_id'],
+            'employee_id' => (int)$row['employee_id'],
+            'assignment_id' => (int)$row['assignment_id'],
             'invoice_number' => (string)$row['invoice_number'],
             'invoice_date' => (string)$row['invoice_date'],
             'due_date' => (string)$row['due_date'],
@@ -507,6 +598,16 @@ function invoices_read(PDO $pdo, array $currentUser, array $periodFilter): void
             'vat_percentage' => $vatPercentage,
             'locked' => $isLocked,
             'locked_at' => $row['locked_at'] !== null ? (string)$row['locked_at'] : null,
+            'invoice_download_url' => trim((string)($row['pdf_storage_key'] ?? '')) !== ''
+                ? '/server/api/invoices.php?action=download&id=' . (string)$row['id']
+                : null,
+            'customer_timesheet_status' => $row['customer_timesheet_status'] !== null ? (string)$row['customer_timesheet_status'] : 'missing',
+            'customer_timesheet_file_name' => $row['customer_timesheet_file_name'] !== null ? (string)$row['customer_timesheet_file_name'] : null,
+            'customer_timesheet_note' => $row['customer_timesheet_note'] !== null ? (string)$row['customer_timesheet_note'] : null,
+            'customer_timesheet_download_url' => trim((string)($row['customer_timesheet_storage_key'] ?? '')) !== ''
+                ? '/server/api/customer-timesheets.php?action=download&period=' . rawurlencode((string)$row['period_key'])
+                    . '&employee_id=' . (string)$row['employee_id'] . '&assignment_id=' . (string)$row['assignment_id']
+                : null,
             'subtotal' => $subtotal,
             'vat_amount' => $vatAmount,
             'total' => $total,
@@ -901,6 +1002,10 @@ if ($method !== 'POST') {
 }
 
 security_require_csrf_token();
+$contentType = strtolower((string)($_SERVER['CONTENT_TYPE'] ?? ''));
+if (str_starts_with($contentType, 'multipart/form-data') && (string)($_POST['action'] ?? '') === 'upload_external') {
+    invoices_upload_external($pdo, $config, $currentUser);
+}
 $payload = security_read_json_body();
 $action = security_require_enum_field($payload, 'action', ['lock'], 'Invalid invoice action.');
 

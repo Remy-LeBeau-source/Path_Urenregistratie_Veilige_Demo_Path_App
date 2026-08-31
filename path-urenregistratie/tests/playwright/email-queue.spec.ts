@@ -247,23 +247,26 @@ test.describe('email queue api', () => {
     await test.step('And cleanup', async () => { await authApi.logout(); await ctx.dispose(); });
   });
 
-  test('[EQ-H-022] één factuuractie maakt drie gescheiden mailroutes met het juiste bijlagenbeleid', async () => {
+  test('[EQ-H-022] één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie', async () => {
     const { ctx, authApi, queueApi, invoiceId } = await createLockedInvoice();
 
     await test.step('Given één goedgekeurde urenstaat als factuur is afgerond', async () => {});
 
-    await test.step('When de drie functionele routes voor dezelfde factuur worden uitgelezen', async () => {
+    await test.step('When de routes voor dezelfde factuur worden uitgelezen', async () => {
       const list = await queueApi.list();
       expect(list.status).toBe(200);
       const items = (list.body.items as Array<Record<string, unknown>>)
         .filter(item => Number(item.invoice_id) === invoiceId);
       const byChannel = new Map(items.map(item => [String(item.channel), item]));
 
-      expect(items).toHaveLength(3);
-      expect([...byChannel.keys()].sort()).toEqual(['accountant', 'broker', 'payroll']);
+      expect(items).toHaveLength(4);
+      expect([...byChannel.keys()].sort()).toEqual(['accountant', 'broker', 'other', 'payroll']);
       expect(byChannel.get('broker')?.attachment_policy).toBe('invoice');
       expect(byChannel.get('accountant')?.attachment_policy).toBe('invoice');
       expect(byChannel.get('payroll')?.attachment_policy).toBe('none');
+      expect(byChannel.get('other')?.recipient_email).toBe('backoffice@pathconsultancy.nl');
+      expect(byChannel.get('other')?.attachment_policy).toBe('invoice');
+      expect(String(byChannel.get('other')?.subject_snapshot || '')).toMatch(/^Archiefkopie factuur /);
       expect(new Set(items.map(item => Number(item.invoice_id)))).toEqual(new Set([invoiceId]));
 
       // De begeleidende tekst van de opdracht bereikt de broker en de

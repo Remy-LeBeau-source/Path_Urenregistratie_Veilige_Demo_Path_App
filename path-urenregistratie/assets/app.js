@@ -53,6 +53,7 @@ const MONTH_NAMES = [
   "januari", "februari", "maart", "april", "mei", "juni",
   "juli", "augustus", "september", "oktober", "november", "december"
 ];
+const WEEKDAY_SHORT = ["Ma", "Di", "Wo", "Do", "Vr"];
 
 function defaultMailRecipientRoutes() {
   return {
@@ -1283,6 +1284,7 @@ const readApiRuntime = {
   adminWorkflowInFlight: false,
   lastAdminWorkflowAt: 0,
   adminWorkflowPeriodKeys: []
+  ,invoicePage: 1
 };
 
 window.__PATH_READ_API = readApiDebug;
@@ -2825,6 +2827,8 @@ function invoiceApiRowsForPeriod(periodKey) {
   return dataset.items.map(item => ({
     id: Number(item && item.id || 0),
     timesheetId: Number(item && item.timesheet_id || 0),
+    employeeId: Number(item && item.employee_id || 0),
+    assignmentId: Number(item && item.assignment_id || 0),
     invoiceNumber: String(item && item.invoice_number || ""),
     employeeName: String(item && item.employee_name || "Onbekend"),
     periodKey: String(item && item.period_key || periodKey),
@@ -2838,8 +2842,101 @@ function invoiceApiRowsForPeriod(periodKey) {
     vatPercentage: Number(item && item.vat_percentage || 0),
     timesheetStatus: String(item && item.timesheet_status || "").toLowerCase(),
     locked: Boolean(item && item.locked),
-    lockedAt: String(item && item.locked_at || "")
+    lockedAt: String(item && item.locked_at || ""),
+    invoiceDownloadUrl: String(item && item.invoice_download_url || ""),
+    customerTimesheetStatus: String(item && item.customer_timesheet_status || "missing"),
+    customerTimesheetFileName: String(item && item.customer_timesheet_file_name || ""),
+    customerTimesheetNote: String(item && item.customer_timesheet_note || ""),
+    customerTimesheetDownloadUrl: String(item && item.customer_timesheet_download_url || "")
   })).filter(item => item.periodKey === periodKey);
+}
+
+function showInvoiceDocuments(invoiceId) {
+  const item = (invoiceApiRowsForPeriod(currentPeriod().key) || []).find(row => Number(row.id) === Number(invoiceId));
+  if (!item) {
+    toast("De factuurdocumenten konden niet worden gevonden.");
+    return;
+  }
+  const invoiceDocument = item.invoiceDownloadUrl
+    ? '<a class="small-button" data-document-kind="invoice" href="' + escapeHtml(item.invoiceDownloadUrl) + '" target="_blank" rel="noopener">Factuur-PDF openen</a>'
+    : '<span class="invoice-action-note">Factuur-PDF is nog niet beschikbaar.</span>';
+  const customerDocument = item.customerTimesheetDownloadUrl
+    ? '<a class="small-button" data-document-kind="customer-timesheet" href="' + escapeHtml(item.customerTimesheetDownloadUrl) + '" target="_blank" rel="noopener">Klanturenstaat openen</a>'
+    : '<span class="invoice-action-note">Geen klanturenstaatbestand bewaard' + (item.customerTimesheetStatus === "skipped" ? " · rechtstreeks gemaild" : "") + '.</span>';
+  const upload = !item.customerTimesheetDownloadUrl
+    ? '<div class="form-field"><label for="invoice-customer-timesheet-file">Klanturenstaat alsnog toevoegen</label><input id="invoice-customer-timesheet-file" type="file" accept="application/pdf,image/jpeg,image/png"><small>PDF, JPG of PNG. Afbeeldingen worden veilig als PDF opgeslagen.</small></div>'
+    : '';
+  const invoiceUpload = !item.invoiceDownloadUrl
+    ? '<div class="form-field"><label for="external-invoice-file">Externe factuur toevoegen</label><input id="external-invoice-file" type="file" accept="application/pdf,image/jpeg,image/png"><label for="external-invoice-reason">Reden</label><input id="external-invoice-reason" type="text" maxlength="250" placeholder="Bijvoorbeeld: ontvangen van broker"><small>Een bestaand factuurdocument wordt nooit stil overschreven.</small></div>'
+    : '';
+  showModal({
+    label: "Documentarchief",
+    title: item.invoiceNumber,
+    message: item.employeeName + " · " + periodFromKey(item.periodKey).label,
+    summary: '<div class="modal-summary-grid"><section><strong>Factuur</strong><div class="invoice-action">' + invoiceDocument + '</div></section><section><strong>Klanturenstaat</strong><div class="invoice-action">' + customerDocument + '</div></section></div>' + invoiceUpload + upload,
+    confirm: (upload || invoiceUpload) ? "Bestand opslaan" : "Sluiten",
+    action: (upload || invoiceUpload) ? () => {
+      const invoiceInput = document.querySelector("#external-invoice-file");
+      const invoiceFile = invoiceInput && invoiceInput.files && invoiceInput.files[0];
+      if (invoiceFile) {
+        const reason = String(document.querySelector("#external-invoice-reason")?.value || "").trim();
+        if (reason.length < 5) {
+          toast("Vul een reden van minimaal 5 tekens in.");
+          return;
+        }
+        const allowed = ["application/pdf", "image/jpeg", "image/png"];
+        if (!allowed.includes(String(invoiceFile.type || "").toLowerCase())) {
+          toast("Alleen PDF, JPG en PNG zijn toegestaan.");
+          return;
+        }
+        const button = document.querySelector("#modal-confirm");
+        button.disabled = true;
+        requestAuthCsrf().then(token => {
+          const data = new FormData();
+          data.append("action", "upload_external");
+          data.append("invoice_id", String(item.id));
+          data.append("reason", reason);
+          data.append("file", invoiceFile, invoiceFile.name || "factuur");
+          return fetch(READ_INVOICES_PATH, { method: "POST", headers: { "Accept": "application/json", "X-CSRF-Token": token }, body: data });
+        }).then(response => response.json().catch(() => ({})).then(data => ({ ok: response.ok, data })))
+          .then(result => {
+            if (!result.ok || result.data.ok !== true) throw new Error(String(result.data.message || "Uploaden is mislukt."));
+            return refreshInvoicesReadApi(item.periodKey, true);
+          }).then(() => { closeModal(); renderInvoices(); toast("Externe factuur is als PDF opgeslagen."); })
+          .catch(error => { button.disabled = false; toast(String(error && error.message || "Uploaden is mislukt.")); });
+        return;
+      }
+      const input = document.querySelector("#invoice-customer-timesheet-file");
+      const file = input && input.files && input.files[0];
+      if (!file) {
+        toast(input ? "Kies eerst een PDF-, JPG- of PNG-bestand." : "Kies eerst een externe factuur.");
+        return;
+      }
+      const allowed = ["application/pdf", "image/jpeg", "image/png"];
+      if (!allowed.includes(String(file.type || "").toLowerCase())) {
+        toast("Alleen PDF, JPG en PNG zijn toegestaan.");
+        return;
+      }
+      const button = document.querySelector("#modal-confirm");
+      button.disabled = true;
+      writeCustomerTimesheetToApi("save_draft", {
+        employeeId: item.employeeId,
+        assignmentId: item.assignmentId,
+        periodKey: item.periodKey,
+        file
+      }).then(() => refreshInvoicesReadApi(item.periodKey, true))
+        .then(() => {
+          closeModal();
+          renderInvoices();
+          toast("Klanturenstaat is veilig als document opgeslagen.");
+        })
+        .catch(error => {
+          button.disabled = false;
+          toast(String(error && error.message || "Uploaden is mislukt."));
+        });
+    } : closeModal,
+    wide: true
+  });
 }
 
 function emailQueueItemsByInvoiceId(periodKey) {
@@ -3310,11 +3407,13 @@ function hexColorToRgb(value, fallback) {
 function applyOrganizationBranding() {
   const organizationName = String(state.settings.organizationName || "Organisatie").trim();
   const appName = String(state.settings.appName || "Uren & Facturatie").trim();
-  const logo = brandLogoUrl(donkereModusActief() ? "donker" : "licht");
   document.title = organizationName + " · " + appName;
   document.querySelectorAll("[data-app-name]").forEach(element => { element.textContent = appName; });
   document.querySelectorAll("[data-brand-logo]").forEach(image => {
-    image.src = logo;
+    // De desktopzijbalk heeft ook in de lichte modus een donkere ondergrond.
+    // Kies daarom per logopositie het contrast, niet alleen op basis van het thema.
+    const onDarkSurface = Boolean(image.closest("#sidebar-brand"));
+    image.src = brandLogoUrl(onDarkSurface || donkereModusActief() ? "donker" : "licht");
     image.alt = organizationName + " logo";
   });
   const organizationLabel = document.querySelector("#organization-name");
@@ -3995,6 +4094,10 @@ function renderEmployeeDashboard() {
   if (nextOpenMonth && nextOpenAction) {
     next = nextOpenAction.description + " voor " + nextOpenMonth.period.label + ".";
     action = nextOpenAction.button;
+  } else {
+    next = "Alles voor deze maand is afgerond.";
+    action = "Uren bekijken";
+    note = "Afgerond";
   }
   const dashboardBadge = document.querySelector("#employee-dashboard-count");
   if (dashboardBadge) {
@@ -5611,23 +5714,33 @@ function renderInvoices() {
   const tbody = document.querySelector("#invoice-rows");
   if (apiRows) {
     const filteredApiRows = apiRows.filter(item => state.invoiceFilter === "all" || item.status === state.invoiceFilter);
-    tbody.innerHTML = filteredApiRows.map(item => {
+    const pageSize = 25;
+    const pageCount = Math.max(1, Math.ceil(filteredApiRows.length / pageSize));
+    readApiRuntime.invoicePage = Math.min(Math.max(1, Number(readApiRuntime.invoicePage || 1)), pageCount);
+    const visibleApiRows = filteredApiRows.slice((readApiRuntime.invoicePage - 1) * pageSize, readApiRuntime.invoicePage * pageSize);
+    tbody.innerHTML = visibleApiRows.map(item => {
       const amountNote = item.subtotal > 0
         ? "Subtotaal " + currency.format(item.subtotal) + " · btw " + currency.format(item.vatAmount)
         : "Geen bedrag";
       return "<tr>" +
         "<td><strong>" + escapeHtml(item.invoiceNumber) + "</strong><small>" + escapeHtml(periodFromKey(item.periodKey).label) + "</small></td>" +
         "<td><strong>" + escapeHtml(item.employeeName) + "</strong><small>" + escapeHtml(item.periodKey) + "</small></td>" +
-        "<td><strong>API</strong><small>Read-only</small></td>" +
+        "<td><strong>Documentarchief</strong><small>PDF-bestanden op aanvraag</small></td>" +
         "<td><strong>" + currency.format(item.total) + "</strong><small>" + escapeHtml(amountNote) + "</small></td>" +
         "<td><span class=\"status-pill " + (item.status === "ready" ? "status-ready" : item.status === "concept" ? "status-concept" : "status-sent") + "\">" + escapeHtml(item.statusRaw || item.status) + "</span></td>" +
-        '<td><div class="invoice-action"><span class="invoice-action-note">Read-only API</span></div></td>' +
+        '<td><div class="invoice-action"><button class="small-button" data-invoice-documents="' + item.id + '">Documenten bekijken</button></div></td>' +
         "</tr>";
     }).join("");
     if (!filteredApiRows.length) {
       tbody.innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:#6c7886">Geen facturen binnen dit filter.</td></tr>';
     }
+    const pagination = document.querySelector("#invoice-pagination");
+    pagination.hidden = filteredApiRows.length <= pageSize;
+    document.querySelector("#invoice-page-status").textContent = "Pagina " + readApiRuntime.invoicePage + " van " + pageCount + " · " + filteredApiRows.length + " facturen";
+    document.querySelector("#invoice-page-prev").disabled = readApiRuntime.invoicePage <= 1;
+    document.querySelector("#invoice-page-next").disabled = readApiRuntime.invoicePage >= pageCount;
   } else {
+    document.querySelector("#invoice-pagination").hidden = true;
     tbody.innerHTML = rows.map(item => {
       const employee = item.employee;
       const record = item.record;
@@ -6389,7 +6502,7 @@ function renderHoursGrid() {
       if (!day) return '<td class="outside-month"><span class="outside-month-mark" aria-hidden="true">—</span></td>';
       const value = Number(record.entries[weekIndex][dayIndex] || 0);
       const displayValue = value > 0 ? String(value) : "";
-      return '<td class="workday-cell"><label class="hours-day-entry"><span class="date-number">' + day.day + ' ' + escapeHtml(period.month.slice(0, 3)) + '</span><input class="hours-input" data-week-index="' + weekIndex + '" data-day-index="' + dayIndex + '" type="number" min="0" max="24" step="0.5" value="' + displayValue + '" placeholder="0" aria-label="' + escapeHtml(day.label) + '"' + (editable ? "" : " disabled") + '></label></td>';
+      return '<td class="workday-cell"><label class="hours-day-entry"><span class="date-number">' + WEEKDAY_SHORT[dayIndex] + ' ' + day.day + ' ' + escapeHtml(period.month.slice(0, 3)) + '</span><input class="hours-input" data-week-index="' + weekIndex + '" data-day-index="' + dayIndex + '" type="number" min="0" max="24" step="0.5" value="' + displayValue + '" placeholder="0" aria-label="' + escapeHtml(WEEKDAY_SHORT[dayIndex] + ' ' + day.label) + '"' + (editable ? "" : " disabled") + '></label></td>';
     }).join("");
     const yearNote = week.year === period.year ? "" : " · " + week.year;
     return '<tr data-week-index="' + weekIndex + '"><td>Week ' + week.number + yearNote + "</td>" + cells + '<td class="week-total">0,0</td></tr>';
@@ -8048,7 +8161,7 @@ function hoursReviewGridHtml(record, period) {
     const cells = week.days.map((day, dayIndex) => {
       if (!day) return '<td class="outside-month"><span class="outside-month-mark" aria-hidden="true">—</span></td>';
       const value = Number(weekEntries[dayIndex] || 0);
-      return '<td class="workday-cell"><span class="date-number">' + day.day + '</span><strong>' + (value > 0 ? hoursFormat.format(value) : "0") + '</strong></td>';
+      return '<td class="workday-cell"><span class="date-number">' + WEEKDAY_SHORT[dayIndex] + ' ' + day.day + ' ' + escapeHtml(period.month.slice(0, 3)) + '</span><strong>' + (value > 0 ? hoursFormat.format(value) : "0") + '</strong></td>';
     }).join("");
     const weekTotal = weekEntries.reduce((sum, value) => sum + (Number(value) || 0), 0);
     const yearNote = week.year === period.year ? "" : " · " + week.year;
@@ -8386,6 +8499,12 @@ function syncEnvironmentChrome(hostname = window.location.hostname) {
   badge.hidden = !(isTest || isLocal);
   badge.textContent = isTest ? "TESTOMGEVING" : (isLocal ? "LOKAAL" : "");
   badge.classList.toggle("is-local", isLocal && !isTest);
+
+  const isProduction = normalized === "uren.pathconsultancy.nl";
+  const desktopLogout = document.querySelector("#switch-role");
+  const mobileLogout = document.querySelector("#mobile-switch-role");
+  if (desktopLogout) desktopLogout.textContent = isProduction ? "Uitloggen" : "Andere rol kiezen";
+  if (mobileLogout) mobileLogout.textContent = isProduction ? "Uitloggen" : "Rol kiezen";
 }
 
 function invoiceSummary(employeeId, periodKey) {
@@ -10358,6 +10477,9 @@ function toonInstallatieAanbod() {
   const previewInvoicePdf = event.target.closest("[data-preview-invoice-pdf]");
   if (previewInvoicePdf) showInvoiceDocumentPreview(Number(previewInvoicePdf.dataset.previewInvoicePdf));
 
+  const invoiceDocuments = event.target.closest("[data-invoice-documents]");
+  if (invoiceDocuments) showInvoiceDocuments(Number(invoiceDocuments.dataset.invoiceDocuments));
+
   const viewInvoice = event.target.closest("[data-view-invoice]");
   if (viewInvoice) {
     const info = invoiceSummary(Number(viewInvoice.dataset.viewInvoice));
@@ -10538,10 +10660,13 @@ document.querySelector("#approve-all").addEventListener("click", () => {
 });
 
 document.querySelectorAll("[data-invoice-filter]").forEach(button => button.addEventListener("click", () => {
+  readApiRuntime.invoicePage = 1;
   state.invoiceFilter = button.dataset.invoiceFilter;
   document.querySelectorAll("[data-invoice-filter]").forEach(item => item.classList.toggle("is-active", item === button));
   renderInvoices();
 }));
+document.querySelector("#invoice-page-prev").addEventListener("click", () => { readApiRuntime.invoicePage = Math.max(1, readApiRuntime.invoicePage - 1); renderInvoices(); });
+document.querySelector("#invoice-page-next").addEventListener("click", () => { readApiRuntime.invoicePage += 1; renderInvoices(); });
 
 function handleMonthDelivery() {
   const readiness = monthBatchReadiness(currentPeriod().key);

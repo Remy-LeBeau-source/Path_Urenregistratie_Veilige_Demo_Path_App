@@ -392,6 +392,43 @@ function mail_enqueue_for_invoice(
         }
     }
 
+    // Backoffice keeps the statutory invoice archive. This is deliberately a
+    // separate invoice-only delivery: customer timesheets and payroll data are
+    // never attached to this copy. Avoid a duplicate when the same mailbox is
+    // already an explicit invoice recipient for this assignment.
+    $archiveEmail = strtolower(trim((string)($inv['support_email'] ?? '')));
+    $alreadyReceivesInvoice = false;
+    foreach ($created as $delivery) {
+        $deliveryId = (int)($delivery['id'] ?? 0);
+        if ($deliveryId <= 0) continue;
+        $addressStmt = $pdo->prepare('SELECT recipient_email FROM email_deliveries WHERE id = :id LIMIT 1');
+        $addressStmt->execute([':id' => $deliveryId]);
+        if (strtolower(trim((string)($addressStmt->fetchColumn() ?: ''))) === $archiveEmail
+            && (string)($delivery['attachment_policy'] ?? '') === 'invoice') {
+            $alreadyReceivesInvoice = true;
+            break;
+        }
+    }
+    if ($archiveEmail !== '' && filter_var($archiveEmail, FILTER_VALIDATE_EMAIL) && !$alreadyReceivesInvoice) {
+        $subject = 'Archiefkopie factuur ' . (string)$inv['invoice_number'];
+        $body = "Beste backoffice,\n\nBijgaand staat de archiefkopie van factuur "
+            . (string)$inv['invoice_number'] . ' voor ' . (string)$inv['employee_name']
+            . '. Deze kopie bevat uitsluitend de factuur.' . $handtekening;
+        $id = mail_insert_delivery(
+            $pdo, $invoiceId, 'other', $archiveEmail, null,
+            $subject, $body, 'invoice', $dryRun
+        );
+        mail_audit($pdo, $companyId, $actorUserId,
+            $dryRun ? 'email.dry_run' : 'email.queued', $id,
+            ['channel' => 'backoffice_archive', 'invoice_number' => $inv['invoice_number']]);
+        $created[] = [
+            'id' => $id,
+            'channel' => 'backoffice_archive',
+            'attachment_policy' => 'invoice',
+            'dry_run' => $dryRun,
+        ];
+    }
+
     return $created;
 }
 

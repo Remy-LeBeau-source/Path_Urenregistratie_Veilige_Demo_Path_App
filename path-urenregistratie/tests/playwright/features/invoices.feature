@@ -94,3 +94,35 @@ Feature: Facturen bekijken en beheren
     Given de administrator is ingelogd en reset naar vaste baseline
     When de administrator het factuurscherm opent en een factuur sluit
     Then zit in de gegenereerde PDF alle content (recipient, project, uren, tarief, betaling)
+
+  @happy
+  Scenario: [INV-H-013] documentarchief toont factuur en klanturenstaat zonder bestanden vooraf te laden
+    # Testtechniek: Use-case + lazy-loading contract
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given de administrator heeft een factuur met twee bewaarde documenten
+    When de administrator Documenten bekijken opent
+    Then zijn factuur en klanturenstaat afzonderlijk op aanvraag beschikbaar
+
+  @negative
+  Scenario: [INV-N-014] ontbrekende klanturenstaat accepteert uitsluitend PDF JPG of PNG
+    # Testtechniek: Negatieve equivalentieklasse + bestandsvalidatie
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given de administrator heeft een factuur zonder bewaarde klanturenstaat
+    When de administrator een niet toegestaan bestand kiest
+    Then blijft het documentvenster open met een duidelijke validatiefout
+
+  @negative
+  Scenario: [INV-N-017] medewerker mag geen externe factuur uploaden
+    # Testtechniek: Autorisatiematrix + negatieve API-test
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given de medewerker is ingelogd
+    When de medewerker een externe factuur probeert te uploaden
+    Then weigert de server de factuuractie met status 403
+
+  @happy
+  Scenario: [INV-H-016] factuurdataset met 32 records wordt gepagineerd
+    # Testtechniek: Grenswaardenanalyse rond paginagrootte 25
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given de administrator heeft een testdataset met 32 facturen
+    When de administrator naar de tweede archiefpagina gaat
+    Then worden eerst 25 en daarna 7 facturen getoond

@@ -92,6 +92,10 @@ assert(styles.includes("@media (max-width: 590px)"), "Er moet een mobiele layout
 assert(styles.includes("v0.9.45 · mobiele bediening") && styles.includes("@media (max-width: 720px)"), "De expliciete mobiele touch-layout moet aanwezig blijven");
 assert(document.querySelector(".mobile-brand-home [data-brand-logo]") && document.querySelector(".mobile-brand-home [data-brand-logo]").tagName === "IMG", "Mobiel moet het Path-logo als zichtbare Home-knop tonen");
 assert(document.querySelector("#mobile-switch-role")?.textContent.includes("Rol kiezen"), "Mobiel moet een directe knop Rol kiezen hebben zodat verversen niet nodig is");
+assert(document.querySelector("#sidebar-brand [data-brand-logo]")?.src !== document.querySelector(".mobile-brand-home [data-brand-logo]")?.src, "De donkere zijbalk moet de lichte logoversie gebruiken en de lichte topbalk de donkere versie");
+dom.window.syncEnvironmentChrome("uren.pathconsultancy.nl");
+assert(document.querySelector("#switch-role")?.textContent === "Uitloggen" && document.querySelector("#mobile-switch-role")?.textContent === "Uitloggen", "Productie moet de afmeldactie duidelijk Uitloggen noemen");
+dom.window.syncEnvironmentChrome("localhost");
 assert(/@media\s*\(max-width:\s*720px\)[\s\S]*\.invoice-table\s+thead\s*\{\s*display:\s*none/.test(styles), "De factuurtabel moet op mobiel als kaartweergave tonen in plaats van als brede tabel");
 assert(/@media\s*\(max-width:\s*720px\)[\s\S]*\.month-choice-panel\s*\{[\s\S]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,1fr\)\)/.test(styles), "De maandkeuze moet op mobiel als twee-koloms touchmenu openen");
 assert(/@media\s*\(max-width:\s*720px\)[\s\S]*\.modal-actions\s*\{[\s\S]*grid-template-columns:\s*1fr/.test(styles), "Modalacties moeten op mobiel onder elkaar staan");
@@ -215,7 +219,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.9.155"), "Het zichtbare versienummer moet 0.9.155 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.9.156"), "Het zichtbare versienummer moet 0.9.156 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -2036,4 +2040,8 @@ assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Pla
 }
 
 dom.window.close();
-console.log("Path v0.9.155 volledige smoke test: geslaagd");
+console.log("Path v0.9.156 volledige smoke test: geslaagd");
+// app.js schedules browser refresh timers. In JSDOM those timers can keep Node
+// alive after every assertion has completed, which made the release check look
+// stuck. End explicitly only after the complete smoke contract is green.
+process.exit(0);

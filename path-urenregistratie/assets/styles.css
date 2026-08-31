@@ -525,6 +525,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .approval-empty-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
 
 .invoice-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 17px 22px; }
+.invoice-pagination { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 14px 22px; border-top: 1px solid var(--line); }
 .invoice-month-overview { display: grid; gap: 16px; margin-bottom: 17px; border: 1px solid var(--line); border-left: 4px solid var(--mint); border-radius: 15px; background: var(--vlak); padding: 16px 18px; box-shadow: 0 5px 18px rgba(13,27,56,.025); }
 .invoice-month-overview[hidden] { display: none; }
 .invoice-month-overview[data-state="blocked"] { border-left-color: var(--warning); background: linear-gradient(135deg,#fff,#fffaf4); }
