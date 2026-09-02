@@ -65,6 +65,7 @@ assert.doesNotMatch(remote, /mv "\$live_root" "\$rollback_root"/, 'PROD document
 
 assert.match(workflow, /deploy-test:\s*[\s\S]*needs:\s*test/, 'TEST deployment must wait for TEST regression');
 assert.match(workflow, /deploy-test:\s*[\s\S]*environment:\s*test/, 'TEST deployment must use the test environment');
+assert.match(workflow, /deploy-test:\s*[\s\S]*if:\s*>-[\s\S]*always\(\) && needs\.test\.result == 'success'/, 'TEST deployment must explicitly continue only after successful TEST regression');
 assert.match(workflow, /test:\s*[\s\S]*needs:\s*validate[\s\S]*if:\s*\$\{\{ always\(\) && needs\.validate\.result == 'success' \}\}/, 'TEST regression must explicitly continue after a successful Validate matrix');
 assert.match(workflow, /deploy_test:\s*[\s\S]*default:\s*false[\s\S]*type:\s*boolean/, 'Manual non-main TEST deployment must require an explicit boolean opt-in');
 assert.match(workflow, /deploy-test:\s*[\s\S]*inputs\.deploy_test == true/, 'The TEST deploy job must consume the explicit manual opt-in');

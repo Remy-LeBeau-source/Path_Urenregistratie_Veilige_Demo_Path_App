@@ -621,10 +621,11 @@ jobs:
     permissions:
       contents: read
     if: >-
-      ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main')
+      ${{ always() && needs.test.result == 'success'
+          && ((github.event_name == 'push' && github.ref == 'refs/heads/main')
           || (github.event_name == 'workflow_dispatch'
               && ((inputs.ref == 'main' || inputs.ref == 'refs/heads/main')
-                  || inputs.deploy_test == true)) }}
+                  || inputs.deploy_test == true))) }}
 
     steps:
       - name: Checkout exact main release
