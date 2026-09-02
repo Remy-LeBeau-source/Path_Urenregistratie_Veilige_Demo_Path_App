@@ -8403,7 +8403,7 @@ function showModal(options) {
   dialog.scrollTop = 0;
 }
 
-function closeModal() {
+function closeModal(runCloseAction = false) {
   const afterClose = modalCloseAction;
   const modal = document.querySelector("#modal");
   if (modal.contains(document.activeElement)) document.activeElement.blur();
@@ -8419,7 +8419,7 @@ function closeModal() {
   modalSecondaryAction = null;
   modalCloseAction = null;
   adminTaskWorkflow = null;
-  if (typeof afterClose === "function") afterClose();
+  if (runCloseAction && typeof afterClose === "function") afterClose();
 }
 
 /**
@@ -9824,10 +9824,15 @@ function revealExistingStaffAccount(existing, message, reopenForm) {
       + "Pas het adres aan als dit een andere " + roleLabel + " moet worden, of gebruik het bestaande account dat nu is geopend.",
     confirm: canReopen ? "Adres aanpassen" : "Begrepen",
     secondary: canReopen ? "Sluiten" : "",
-    secondaryAction: canReopen ? () => closeModal() : null,
+    secondaryAction: canReopen ? () => closeModal(true) : null,
     closeAction: focusExistingAccount,
     wide: true,
-    action: canReopen ? () => reopenForm() : () => closeModal()
+    action: canReopen
+      ? () => {
+        reopenForm();
+        modalCloseAction = focusExistingAccount;
+      }
+      : () => closeModal(true)
   });
 
   toast(message);
@@ -11920,7 +11925,7 @@ document.querySelector("#auth-reset-complete-form")?.addEventListener("submit", 
 document.querySelector("#switch-role").addEventListener("click", logout);
 document.querySelector("#mobile-switch-role").addEventListener("click", logout);
 document.querySelector("#modal-close").addEventListener("click", closeModal);
-document.querySelector("#modal-cancel").addEventListener("click", closeModal);
+document.querySelector("#modal-cancel").addEventListener("click", () => closeModal(true));
 document.querySelector("#modal-secondary").addEventListener("click", () => modalSecondaryAction ? modalSecondaryAction() : closeModal());
 document.querySelector("#modal-confirm").addEventListener("click", () => modalAction ? modalAction() : closeModal());
 document.querySelector("#modal-queue-previous").addEventListener("click", () => moveAdminTaskWorkflow(-1));
