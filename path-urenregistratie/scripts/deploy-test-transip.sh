@@ -40,7 +40,13 @@ cleanup() {
 trap cleanup EXIT
 
 archive="$temp_root/path-uren-test-${short_sha}.tar.gz"
-remote_script_local="$repo_root/path-urenregistratie/scripts/deploy-test-remote.sh"
+remote_script_source="$repo_root/path-urenregistratie/scripts/deploy-test-remote.sh"
+remote_script_local="$temp_root/deploy-test-remote.sh"
+# Git bewaart shellscripts als LF, maar een Windows-worktree kan de losse kopie
+# met CRLF uitchecken. Stuur daarom een expliciet genormaliseerde tijdelijke
+# kopie; anders leest de remote bash `pipefail\r` als een ongeldige optie.
+tr -d '\r' < "$remote_script_source" > "$remote_script_local"
+chmod 700 "$remote_script_local"
 git -C "$repo_root" archive --format=tar.gz --prefix=path-urenregistratie/ -o "$archive" "${DEPLOY_SOURCE_SHA}:path-urenregistratie"
 archive_sha="$(sha256sum "$archive" | awk '{print $1}')"
 archive_bytes="$(wc -c < "$archive" | tr -d '[:space:]')"
