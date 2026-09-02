@@ -106,7 +106,7 @@ Feature: Facturen bekijken en beheren
   @negative
   Scenario: [INV-N-019] lege actuele maand met open medewerkeruren is geblokkeerd en nooit afgerond
     # Testtechniek: Negatieve toestandsovergang bij maandwissel
-    # Aantoonbare Playwright-assertions in deze case: 7
+    # Aantoonbare Playwright-assertions in deze case: 8
     Given Backoffice op TEST in september inlogt met vier nog niet ingediende urenstaten
     When Backoffice de septemberfacturen opent
     Then toont september vier blokkades en geen afgeronde maandcontrole

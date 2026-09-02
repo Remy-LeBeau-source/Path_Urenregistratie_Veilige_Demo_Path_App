@@ -280,7 +280,7 @@ De 18 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 345 Playwri
 - [INV-H-003] server berekent bedrag uit uren en uurtarief voor open facturen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 8
 - [INV-H-006] admin kan het gekozen maanddetail inklappen en weer uitklappen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
 - [INV-H-007] factuurnavigatie onderscheidt geblokkeerde en controleklare maanden met oranje en groen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 10
-- [INV-N-019] lege actuele maand met open medewerkeruren is geblokkeerd en nooit afgerond — Techniek: Negatieve toestandsovergang bij maandwissel · Assertions: 7
+- [INV-N-019] lege actuele maand met open medewerkeruren is geblokkeerd en nooit afgerond — Techniek: Negatieve toestandsovergang bij maandwissel · Assertions: 8
 - [INV-H-009] server-PDF-content moet identiek zijn aan app-preview — Techniek: Equivalentieklassen · Assertions: 3
 - [INV-N-007] ongeldige periodefilter geeft nette 400-fout — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
 - [INV-H-010] gecontroleerde concept-PDF wordt als mailbijlage naar de server gestuurd — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3

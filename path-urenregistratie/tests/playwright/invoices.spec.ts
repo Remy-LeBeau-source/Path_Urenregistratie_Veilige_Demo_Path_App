@@ -441,6 +441,11 @@ test('[INV-N-019] lege actuele maand met open medewerkeruren is geblokkeerd en n
   await test.step('Given Backoffice op TEST in september inlogt met vier nog niet ingediende urenstaten', async () => {
     await loginPage.open();
     await loginPage.loginAsAdmin();
+    // Andere factuurcases in dezelfde CI-shard schrijven bewust serverdata.
+    // Herstel daarom eerst de vaste TEST-baseline voordat september wordt geteld.
+    await page.locator('#quick-reset-demo').click();
+    await page.locator('#modal-confirm').click();
+    await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
   });
 
   await test.step('When Backoffice de septemberfacturen opent', async () => {
