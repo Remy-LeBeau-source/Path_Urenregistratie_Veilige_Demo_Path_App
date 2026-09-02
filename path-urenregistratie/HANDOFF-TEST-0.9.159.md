@@ -25,6 +25,11 @@ toont de verzenduitkomst. De intrekactie voor een externe urenbevestiging is vis
 - goedgekeurde uren met open factuuractie en nog zonder factuurrij;
 - rechtstreeks gemailde urenstaat die extern kan worden bevestigd en ingetrokken.
 
+Deze vier records worden na een TEST-baselineherstel veilig en zonder mail aangemaakt met:
+`php server/scripts/seed-test-september-acceptance.php --execute --confirm=SEED_TEST_SEPTEMBER_ACCEPTANCE`.
+Het script weigert iedere omgeving buiten het exacte gedeelde TEST-contract en overschrijft geen
+bestaande septemberuren of -facturen.
+
 ## Geautomatiseerd bewijs
 
 - `INV-H-020`: externe urenbevestiging, waarschuwing, groene projectie en herstelpad;
