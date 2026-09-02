@@ -454,6 +454,10 @@ jobs:
   test:
     name: Promote Test
     needs: validate
+    # Maak de overgang expliciet. Bij handmatige TEST-only runs worden andere
+    # promotiejobs bewust overgeslagen; die skip-cascade mag een volledig
+    # geslaagde Validate-matrix niet tegenhouden.
+    if: ${{ always() && needs.validate.result == 'success' }}
     runs-on: ubuntu-latest
     environment: test
     # Zelfde shard-aanpak als Validate: de volledige suite draait, verdeeld over
