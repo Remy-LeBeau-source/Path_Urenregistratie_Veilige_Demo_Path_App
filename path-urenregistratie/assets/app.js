@@ -985,6 +985,7 @@ function resetReadApiCaches() {
   readApiRuntime.employeeOpenTasksSyncInFlight = false;
   readApiRuntime.lastEmployeeOpenTasksSyncAt = 0;
   readApiRuntime.employeeOpenTasksHydrated = false;
+  readApiRuntime.adminWorkflowHydrated = false;
 }
 
 function hasRequiredSeedData(candidate) {
@@ -1285,6 +1286,7 @@ const readApiRuntime = {
   adminWorkflowInFlight: false,
   lastAdminWorkflowAt: 0,
   adminWorkflowPeriodKeys: []
+  ,adminWorkflowHydrated: false
   ,invoicePage: 1
   ,invoicePageSize: 25
   ,invoiceSearch: ""
@@ -3325,7 +3327,10 @@ function refreshAdminWorkflowReadApi(force = false) {
   if (!(API_ENABLED && authRuntime.mode === "auth" && authRuntime.authenticated && state.currentRole === "admin")) {
     return Promise.resolve(false);
   }
-  if (isLocalResetAuthoritative()) return Promise.resolve(false);
+  if (isLocalResetAuthoritative()) {
+    readApiRuntime.adminWorkflowHydrated = true;
+    return Promise.resolve(false);
+  }
 
   const now = Date.now();
   if (!force && (readApiRuntime.adminWorkflowInFlight || (now - readApiRuntime.lastAdminWorkflowAt) < 15000)) {
@@ -3336,7 +3341,10 @@ function refreshAdminWorkflowReadApi(force = false) {
   const periodKeys = readApiRuntime.adminWorkflowPeriodKeys
     .filter(periodKey => parsePeriodKey(periodKey) && periodKey <= currentMonthKey);
   const employees = activeEmployees();
-  if (!periodKeys.length || !employees.length) return Promise.resolve(false);
+  if (!periodKeys.length || !employees.length) {
+    readApiRuntime.adminWorkflowHydrated = true;
+    return Promise.resolve(false);
+  }
 
   readApiRuntime.adminWorkflowInFlight = true;
   const reads = [];
@@ -3356,6 +3364,7 @@ function refreshAdminWorkflowReadApi(force = false) {
     .then(() => refreshInvoicesReadApi("", true))
     .then(() => {
       readApiRuntime.lastAdminWorkflowAt = Date.now();
+      readApiRuntime.adminWorkflowHydrated = true;
       renderAll();
       return true;
     })
@@ -4829,7 +4838,59 @@ function renderDashboardNextAction(tasks) {
   controls.innerHTML = "";
 }
 
+function awaitingAdminWorkflowHydration() {
+  return API_ENABLED && authRuntime.mode === "auth" && authRuntime.authenticated
+    && state.currentRole === "admin" && !readApiRuntime.adminWorkflowHydrated
+    && !isLocalResetAuthoritative();
+}
+
+// On a fresh load the locally persisted seed shows a task count that the first
+// admin-workflow read then corrects (often downward). Rendering that provisional
+// number as if it were final made the dashboard visibly jump a second or two
+// after login. Until the first server sync lands, show a neutral loading state
+// instead of a figure that is about to change.
+function renderDashboardActionsLoading() {
+  const admin = currentAdmin();
+  const setText = (selector, value) => { const node = document.querySelector(selector); if (node) node.textContent = value; };
+  const setHidden = (selector, hidden) => { const node = document.querySelector(selector); if (node) node.hidden = hidden; };
+  setText("#admin-dashboard-greeting", greetingForNow() + ", " + (admin ? admin.name.split(/\s+/)[0] : "beheerder"));
+  setText("#admin-attention-note", "De actuele werkvoorraad wordt opgehaald…");
+  setText("#hero-backoffice-count", "–");
+  setText("#hero-employee-count", "–");
+  setHidden("#hero-owner-badges", true);
+  setHidden("#dashboard-work-count", true);
+  setHidden("#dashboard-backoffice-count", true);
+  setHidden("#dashboard-employee-count", true);
+  setText("#hero-task-total", "Werkvoorraad laden…");
+  setText("#hero-task-months", "");
+  setText("#hero-task-owners", "");
+  setText("#metric-actions", "–");
+  setText("#metric-actions-note", "De actuele werkvoorraad wordt opgehaald…");
+  setText("#metric-actions-link", "Even geduld…");
+  setText("#workflow-open-count", "Deze maand: werkvoorraad laden…");
+  setText("#workflow-open-breakdown", "");
+  const workQueueAction = document.querySelector("#open-work-queue");
+  if (workQueueAction) workQueueAction.hidden = true;
+  const card = document.querySelector("#dashboard-next-action-card");
+  if (card) {
+    card.classList.remove("is-actionable", "is-waiting", "is-complete");
+    setText("#dashboard-next-action-label", "Werkvoorraad laden…");
+    setText("#dashboard-next-action-title", "Even geduld, de actuele werkvoorraad wordt opgehaald");
+    setText("#dashboard-next-action-person", "Backoffice");
+    setText("#dashboard-next-action-period", currentPeriod().label);
+    setText("#dashboard-next-action-note", "De teller kan nog kort wijzigen tot de serverstand is geladen.");
+    setText("#dashboard-next-action-queue", "");
+    setText("#dashboard-next-action-waiting", "");
+    const controls = document.querySelector("#dashboard-next-action-controls");
+    if (controls) controls.innerHTML = "";
+  }
+}
+
 function renderDashboardActions() {
+  if (awaitingAdminWorkflowHydration()) {
+    renderDashboardActionsLoading();
+    return;
+  }
   const tasks = adminOpenTasks();
   const workCount = tasks.length;
   const actionableCount = tasks.filter(task => task.actionable).length;
@@ -8298,6 +8359,7 @@ function login(role) {
   if (role === "admin") {
     const selectedAdmin = document.querySelector("#login-admin").value;
     if (adminById(selectedAdmin) && adminById(selectedAdmin).active !== false) state.currentAdminId = selectedAdmin;
+    readApiRuntime.adminWorkflowHydrated = !(API_ENABLED && authRuntime.mode === "auth");
   }
   if (role === "employee") {
     const selectedEmployee = Number(document.querySelector("#login-employee").value);
@@ -8328,6 +8390,7 @@ function logoutLocal() {
   state.currentRole = null;
   authRuntime.authenticated = false;
   readApiRuntime.employeeOpenTasksHydrated = false;
+  readApiRuntime.adminWorkflowHydrated = false;
   unresolvedHelpQuestion = "";
   closeLoginAccountPanels();
   delete document.body.dataset.role;
