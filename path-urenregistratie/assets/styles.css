@@ -352,6 +352,8 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .button:disabled { cursor: not-allowed; filter: grayscale(.25); opacity: .48; transform: none; }
 .button-primary { background: var(--mint); color: var(--navy); box-shadow: 0 8px 18px rgba(58,189,157,.2); }
 .button-primary:hover { background: #48caa9; box-shadow: 0 11px 23px rgba(58,189,157,.25); }
+.button-danger { border-color: #913f3f; background: var(--danger); color: #fff; box-shadow: 0 8px 18px rgba(163,75,75,.22); }
+.button-danger:hover { background: #8d3d3d; box-shadow: 0 11px 23px rgba(163,75,75,.28); }
 .button-ghost { border-color: var(--line); background: var(--vlak); color: var(--navy-tekst); }
 .hero-card .button-ghost { border-color: rgba(255,255,255,.19); background: rgba(255,255,255,.08); color: #fff; }
 .hero-card .button-ghost:hover { background: rgba(255,255,255,.13); }
@@ -573,6 +575,14 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .invoice-document-metadata dt { color: var(--muted); font-size: 9px; font-weight: 800; }
 .invoice-document-metadata dd { min-width: 0; margin: 0; overflow-wrap: anywhere; color: var(--navy-tekst); font-size: 10px; font-weight: 800; }
 .invoice-document-missing-note { min-height: 32px; margin: 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.invoice-document-restore { display: grid; gap: 7px; }
+.document-restore-action { width: 100%; min-height: 42px; border-color: color-mix(in srgb,var(--warning) 62%,var(--line)); background: var(--warning-bg); color: var(--warning-tekst); font-size: 11px; box-shadow: 0 5px 14px rgba(187,118,35,.12); }
+.document-restore-action:hover { border-color: var(--warning); background: color-mix(in srgb,var(--warning-bg) 72%,var(--vlak)); color: var(--warning-tekst); box-shadow: 0 7px 18px rgba(187,118,35,.18); }
+.document-restore-action:focus-visible { outline: 3px solid color-mix(in srgb,var(--warning) 30%,transparent); outline-offset: 2px; }
+.invoice-document-restore small { color: var(--muted); font-size: 9px; line-height: 1.45; }
+.external-timesheet-warning { display: grid; gap: 7px; border: 1px solid color-mix(in srgb,var(--danger) 48%,var(--line)); border-left: 4px solid var(--danger); border-radius: 11px; background: color-mix(in srgb,var(--danger) 8%,var(--vlak)); color: var(--navy-tekst); padding: 12px 13px; }
+.external-timesheet-warning strong { color: var(--danger); }
+.external-timesheet-warning p { margin: 0; color: var(--muted); line-height: 1.55; }
 .invoice-document-upload { display: grid; gap: 7px; margin: 0; }
 .invoice-document-upload input[type="file"], .invoice-document-upload input[type="text"] { width: 100%; min-width: 0; }
 .invoice-document-upload small { color: var(--muted); line-height: 1.45; }

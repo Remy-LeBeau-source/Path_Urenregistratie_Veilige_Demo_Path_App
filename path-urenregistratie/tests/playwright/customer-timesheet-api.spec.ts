@@ -94,6 +94,17 @@ async function findWritablePeriod(api: CustomerTimesheetApi): Promise<string> {
   throw new Error('No writable customer-timesheet period found in 240 candidate months.');
 }
 
+async function findEmptyPeriod(api: CustomerTimesheetApi): Promise<string> {
+  for (const period of CANDIDATE_PERIODS) {
+    const read = await api.read(period, undefined, undefined, { attach: false });
+    if (read.status === 200 && read.body?.ok && read.body.found === false) {
+      return period;
+    }
+  }
+
+  throw new Error('No empty customer-timesheet period found in 240 candidate months.');
+}
+
 test.describe('customer timesheet api', () => {
   test('[CTS-API-H-009] brokerroute koppelt de officiële klanturenstaat aan dezelfde medewerker en periode', async ({ request }) => {
     const authApi = new AuthApi(request);
@@ -338,25 +349,20 @@ test.describe('customer timesheet api', () => {
 
     let period = '';
 
-    await test.step('Given de medewerker is ingelogd met een concept klanturenstaat', async () => {
+    await test.step('Given de medewerker is ingelogd in een lege maand zonder klanturenstaatrecord', async () => {
       const employeeLogin = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
       expect(employeeLogin.user.role).toBe('employee');
-
-      period = await findWritablePeriod(customerApi);
-      const draft = await customerApi.write({
-        action: 'save_draft',
-        period,
-        file: {
-          name: 'klanturenstaat.pdf',
-          mimeType: 'application/pdf',
-          buffer: TINY_PDF_BUFFER,
-        },
-      });
-      expect(draft.status).toBe(200);
-      expect(draft.body.customer_timesheet.status).toBe('draft');
+      period = await findEmptyPeriod(customerApi);
+      const initial = await customerApi.read(period);
+      expect(initial.status).toBe(200);
+      expect(initial.body.found).toBe(false);
     });
 
-    await test.step('When de medewerker mark_skipped uitvoert met reden', async () => {
+    await test.step('When de medewerker eerst zonder en daarna met reden rechtstreeks gemaild registreert', async () => {
+      const invalid = await customerApi.write({ action: 'mark_skipped', period });
+      expect(invalid.status).toBe(400);
+      expect(invalid.body.error).toBe('invalid-payload');
+
       const skipped = await customerApi.write({
         action: 'mark_skipped',
         period,
@@ -365,9 +371,14 @@ test.describe('customer timesheet api', () => {
       expect(skipped.status).toBe(200);
       expect(skipped.body.ok).toBe(true);
       expect(skipped.body.customer_timesheet.status).toBe('skipped');
+      expect(skipped.body.customer_timesheet.review_note).toBe('Al rechtstreeks verstuurd buiten de app');
     });
 
-    await test.step('Then restore_missing zet de status terug naar missing', async () => {
+    await test.step('Then readback de nieuwe rij toont en restore_missing terugzet naar missing', async () => {
+      const readback = await customerApi.read(period);
+      expect(readback.status).toBe(200);
+      expect(readback.body.found).toBe(true);
+      expect(readback.body.customer_timesheet.status).toBe('skipped');
       const restored = await customerApi.write({
         action: 'restore_missing',
         period,
@@ -379,6 +390,58 @@ test.describe('customer timesheet api', () => {
 
     await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {
       await authApi.logout();
+    });
+  });
+
+  test('[CTS-API-H-013] medewerker registreert rechtstreeks gemaild zichtbaar vanuit een lege actuele maand', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await page.clock.setFixedTime(new Date('2026-09-02T10:00:00.000Z'));
+
+    await test.step('Given de medewerker in september start zonder klanturenstaatrecord', async () => {
+      await loginPage.open();
+      await loginPage.loginAsEmployee();
+      const initialResponse = await page.request.get('/server/api/customer-timesheets.php?period=2026-09');
+      const initial = await initialResponse.json();
+      expect(initialResponse.status()).toBe(200);
+      expect(initial.found).toBe(false);
+      await expect(page.locator('#period-label')).toHaveText('September 2026');
+      await expect(page.locator('#employee-customer-timesheet-title')).toHaveText('Klanturenstaat staat nog open');
+      await expect(page.locator('#employee-customer-timesheet-skip')).toBeVisible();
+    });
+
+    await test.step('When de medewerker de zichtbare registratie met verplichte reden afrondt', async () => {
+      await page.locator('#employee-customer-timesheet-skip').click();
+      await expect(page.locator('#modal-title')).toContainText('September 2026');
+      await expect(page.locator('#customer-timesheet-skip-reason')).toHaveValue('De klanturenstaat is al rechtstreeks naar Path Backoffice gemaild.');
+      const responsePromise = page.waitForResponse(response => response.request().method() === 'POST' && /customer-timesheets\.php$/.test(response.url()));
+      await page.locator('#modal-confirm').click();
+      const response = await responsePromise;
+      expect(response.status()).toBe(200);
+      await expect(page.locator('#toast')).toContainText('rechtstreeks gemaild geregistreerd');
+      await expect(page.locator('#employee-customer-timesheet-title')).toHaveText('Als rechtstreeks gemaild geregistreerd');
+      await expect(page.locator('#employee-customer-timesheet-skip')).toHaveText('Alsnog uploaden');
+    });
+
+    await test.step('Then serverreadback en F5 dezelfde status tonen en herstel opnieuw werkt', async () => {
+      const readbackResponse = await page.request.get('/server/api/customer-timesheets.php?period=2026-09');
+      const readback = await readbackResponse.json();
+      expect(readback.found).toBe(true);
+      expect(readback.customer_timesheet.status).toBe('skipped');
+
+      await page.reload();
+      await expect(page.locator('#app-shell')).toBeVisible();
+      await expect(page.locator('#period-label')).toHaveText('September 2026');
+      await expect(page.locator('#employee-customer-timesheet-title')).toHaveText('Als rechtstreeks gemaild geregistreerd');
+      await expect(page.locator('#employee-customer-timesheet-status')).toHaveText('Al rechtstreeks gemaild');
+
+      const restorePromise = page.waitForResponse(response => response.request().method() === 'POST' && /customer-timesheets\.php$/.test(response.url()));
+      await page.locator('#employee-customer-timesheet-skip').click();
+      const restored = await restorePromise;
+      expect(restored.status()).toBe(200);
+      await expect(page.locator('#employee-customer-timesheet-title')).toHaveText('Klanturenstaat staat nog open');
+      const restoredBody = await restored.json();
+      expect(restoredBody.customer_timesheet.status).toBe('missing');
+      await loginPage.logout();
     });
   });
 

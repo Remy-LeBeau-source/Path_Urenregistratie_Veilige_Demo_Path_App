@@ -1360,3 +1360,60 @@ test('[DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij 
     }
   });
 });
+
+test('[DASH-H-019] werkvoorraadhydratatie negeert toekomstperioden en begrenst parallelle reads', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  const futureReads: string[] = [];
+
+  await page.route('**/server/api/bootstrap.php', async route => {
+    const response = await route.fetch();
+    const payload = await response.json() as { periods?: Array<Record<string, unknown>> };
+    payload.periods = [
+      ...(Array.isArray(payload.periods) ? payload.periods : []),
+      { id: 999_991, period_key: '2199-11', year: 2199, month: 11 },
+      { id: 999_992, period_key: '2199-12', year: 2199, month: 12 },
+    ];
+    await route.fulfill({ response, json: payload });
+  });
+  page.on('request', request => {
+    if (/period=2199-(?:11|12)/.test(request.url())) futureReads.push(request.url());
+  });
+
+  await test.step('Given Backoffice een bootstrap met ongeldige toekomstperioden ontvangt', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
+    await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
+  });
+
+  await test.step('Then toekomstperioden veroorzaken geen workflowreads', async () => {
+    await page.waitForTimeout(1_000);
+    expect(futureReads).toEqual([]);
+  });
+
+  await test.step('And de gedeelde leeswachtrij voert maximaal vier taken tegelijk uit', async () => {
+    const concurrency = await page.evaluate(async () => {
+      const helper = (window as unknown as {
+        settlePromiseFactoriesWithConcurrency: (
+          factories: Array<() => Promise<number>>,
+          concurrency: number,
+        ) => Promise<Array<{ status: string }>>;
+      }).settlePromiseFactoriesWithConcurrency;
+      let active = 0;
+      let maximum = 0;
+      const factories = Array.from({ length: 12 }, (_, index) => () => new Promise<number>(resolve => {
+        active += 1;
+        maximum = Math.max(maximum, active);
+        window.setTimeout(() => {
+          active -= 1;
+          resolve(index);
+        }, 15);
+      }));
+      const results = await helper(factories, 4);
+      return { maximum, resultCount: results.length, allSettled: results.every(result => result.status === 'fulfilled') };
+    });
+    expect(concurrency.maximum).toBe(4);
+    expect(concurrency.resultCount).toBe(12);
+    expect(concurrency.allSettled).toBe(true);
+  });
+});

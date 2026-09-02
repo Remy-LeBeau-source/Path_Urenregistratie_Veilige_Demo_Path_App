@@ -1041,6 +1041,7 @@ function ensureSeedDataIntegrity(candidateState, fallbackState, sourceLabel) {
 let state = loadState();
 let modalAction = null;
 let modalSecondaryAction = null;
+let modalCloseAction = null;
 let adminTaskWorkflow = null;
 let pendingProfilePhoto = "";
 let pendingBrandLogo = "";
@@ -2892,6 +2893,40 @@ function invoiceDocumentBadgesHtml(item) {
     '</div>';
 }
 
+function persistExternalCustomerTimesheetConfirmation(item, reviewNote) {
+  const button = document.querySelector("#modal-confirm");
+  button.disabled = true;
+  writeCustomerTimesheetToApi("confirm_external", {
+    employeeId: item.employeeId,
+    assignmentId: item.assignmentId,
+    periodKey: item.periodKey,
+    reviewNote
+  }).then(() => refreshInvoicesReadApi(item.periodKey, true))
+    .then(() => {
+      closeModal();
+      renderInvoices();
+      toast("De urenstaat staat groen als extern bevestigd.");
+    })
+    .catch(error => {
+      button.disabled = false;
+      toast(String(error && error.message || "Extern bevestigen is mislukt."));
+    });
+}
+
+function showExternalCustomerTimesheetFinalWarning(item, reviewNote) {
+  showModal({
+    label: "Laatste controle",
+    title: "Weet je het zeker?",
+    message: item.employeeName + " · " + periodFromKey(item.periodKey).label,
+    summary: '<div class="external-timesheet-warning" role="alert"><strong>Er wordt geen urenstaatbestand opgeslagen.</strong>' +
+      '<p>Deze externe bevestiging telt wel als complete urenstaat en zet de maandcontrole op groen.</p></div>' +
+      '<dl class="invoice-document-metadata"><div><dt>Reden</dt><dd>' + escapeHtml(reviewNote) + '</dd></div></dl>',
+    confirm: "Ja, extern bevestigen",
+    danger: true,
+    action: () => persistExternalCustomerTimesheetConfirmation(item, reviewNote)
+  });
+}
+
 function showExternalCustomerTimesheetConfirmation(item) {
   const reasons = [
     "Uren per e-mail goedgekeurd",
@@ -2908,7 +2943,7 @@ function showExternalCustomerTimesheetConfirmation(item) {
       reasons.map(reason => '<option value="' + escapeHtml(reason) + '">' + escapeHtml(reason) + '</option>').join("") +
       '</select></div><div class="form-field"><label for="external-timesheet-detail">Aanvulling (optioneel)</label><textarea id="external-timesheet-detail" maxlength="1000" placeholder="Bij Anders is een toelichting verplicht"></textarea></div>' +
       '<p class="modal-note">De app bewaart automatisch wie dit registreert en wanneer. Deze bevestiging telt als complete urenstaat voor de maandcontrole.</p>',
-    confirm: "Extern bevestigen",
+    confirm: "Reden controleren",
     action: () => {
       const reason = String(document.querySelector("#external-timesheet-reason")?.value || "").trim();
       const detail = String(document.querySelector("#external-timesheet-detail")?.value || "").trim();
@@ -2917,23 +2952,7 @@ function showExternalCustomerTimesheetConfirmation(item) {
         return;
       }
       const reviewNote = detail ? reason + " — " + detail : reason;
-      const button = document.querySelector("#modal-confirm");
-      button.disabled = true;
-      writeCustomerTimesheetToApi("confirm_external", {
-        employeeId: item.employeeId,
-        assignmentId: item.assignmentId,
-        periodKey: item.periodKey,
-        reviewNote
-      }).then(() => refreshInvoicesReadApi(item.periodKey, true))
-        .then(() => {
-          closeModal();
-          renderInvoices();
-          toast("De urenstaat staat groen als extern bevestigd.");
-        })
-        .catch(error => {
-          button.disabled = false;
-          toast(String(error && error.message || "Extern bevestigen is mislukt."));
-        });
+      showExternalCustomerTimesheetFinalWarning(item, reviewNote);
     },
     initialFocus: "#external-timesheet-reason-trigger"
   });
@@ -2986,7 +3005,9 @@ function showInvoiceDocuments(invoiceId, focusKind = "") {
   const customerDocument = item.customerTimesheetDownloadUrl
     ? '<div class="invoice-document-links"><a class="small-button" data-document-kind="customer-timesheet" href="' + escapeHtml(item.customerTimesheetDownloadUrl) + '" target="_blank" rel="noopener">Openen</a><a class="text-button" href="' + escapeHtml(item.customerTimesheetDownloadUrl) + '" download>Downloaden</a></div>'
     : customerExternallyConfirmed
-      ? '<p class="invoice-document-missing-note">Extern bevestigd' + (invoiceExternalConfirmationReason(item) ? ': ' + escapeHtml(invoiceExternalConfirmationReason(item)) : '') + '.</p><button type="button" class="text-button" data-restore-external-timesheet>Bevestiging terugdraaien</button>'
+      ? '<p class="invoice-document-missing-note">Extern bevestigd' + (invoiceExternalConfirmationReason(item) ? ': ' + escapeHtml(invoiceExternalConfirmationReason(item)) : '') + '.</p>' +
+        '<div class="invoice-document-restore"><button type="button" class="small-button document-restore-action" data-restore-external-timesheet>Externe bevestiging terugdraaien</button>' +
+        '<small>De urenstaat wordt daarna weer als ontbrekend gemarkeerd.</small></div>'
       : '<p class="invoice-document-missing-note">Geen klanturenstaatbestand bewaard.</p>';
   const upload = !item.customerTimesheetDownloadUrl
     ? '<div class="form-field invoice-document-upload"><label for="invoice-customer-timesheet-file">Urenstaat toevoegen</label><input id="invoice-customer-timesheet-file" type="file" accept="application/pdf,image/jpeg,image/png"><small>PDF, JPG of PNG. Afbeeldingen worden veilig als PDF opgeslagen.</small>' +
@@ -3278,6 +3299,26 @@ function refreshBootstrapReadApi(force) {
 // Backoffice totals cover every relevant month, not only the month currently
 // visible in the UI. Hydrate the full server workflow after bootstrap so a
 // month switch can never create or remove unrelated work from the counters.
+function settlePromiseFactoriesWithConcurrency(factories, concurrency = 4) {
+  const tasks = Array.isArray(factories) ? factories : [];
+  if (!tasks.length) return Promise.resolve([]);
+  const results = new Array(tasks.length);
+  let nextIndex = 0;
+  const worker = () => {
+    const index = nextIndex++;
+    if (index >= tasks.length) return Promise.resolve();
+    return Promise.resolve()
+      .then(() => tasks[index]())
+      .then(
+        value => { results[index] = { status: "fulfilled", value }; },
+        reason => { results[index] = { status: "rejected", reason }; }
+      )
+      .then(worker);
+  };
+  const workerCount = Math.max(1, Math.min(Number(concurrency) || 1, tasks.length));
+  return Promise.all(Array.from({ length: workerCount }, worker)).then(() => results);
+}
+
 function refreshAdminWorkflowReadApi(force = false) {
   if (!(API_ENABLED && authRuntime.mode === "auth" && authRuntime.authenticated && state.currentRole === "admin")) {
     return Promise.resolve(false);
@@ -3289,7 +3330,9 @@ function refreshAdminWorkflowReadApi(force = false) {
     return Promise.resolve(false);
   }
 
-  const periodKeys = readApiRuntime.adminWorkflowPeriodKeys.filter(periodKey => parsePeriodKey(periodKey));
+  const currentMonthKey = currentCalendarPeriodKey();
+  const periodKeys = readApiRuntime.adminWorkflowPeriodKeys
+    .filter(periodKey => parsePeriodKey(periodKey) && periodKey <= currentMonthKey);
   const employees = activeEmployees();
   if (!periodKeys.length || !employees.length) return Promise.resolve(false);
 
@@ -3299,12 +3342,15 @@ function refreshAdminWorkflowReadApi(force = false) {
     employees
       .filter(employee => !employee.startDate || employee.startDate.slice(0, 7) <= periodKey)
       .forEach(employee => {
-        reads.push(refreshTimesheetReadApi(periodKey, employee.id, force));
-        reads.push(refreshCustomerTimesheetReadApi(periodKey, employee.id, force));
+        reads.push(() => refreshTimesheetReadApi(periodKey, employee.id, force));
+        reads.push(() => refreshCustomerTimesheetReadApi(periodKey, employee.id, force));
       });
   });
 
-  return Promise.allSettled(reads)
+  // A growing company and month history can otherwise create hundreds of
+  // simultaneous PHP requests at login. A small queue keeps the UI responsive
+  // and prevents one slow read from starving auth/navigation requests.
+  return settlePromiseFactoriesWithConcurrency(reads, 4)
     .then(() => refreshInvoicesReadApi("", true))
     .then(() => {
       readApiRuntime.lastAdminWorkflowAt = Date.now();
@@ -8320,21 +8366,25 @@ function toast(message) {
 }
 
 function showModal(options) {
-  const settings = Object.assign({ label: "Controle", title: "", message: "", summary: "", confirm: "Bevestigen", action: null, secondary: "", secondaryAction: null, wide: false, adminTaskId: "", taskNavigation: true, initialFocus: "" }, options);
+  const settings = Object.assign({ label: "Controle", title: "", message: "", summary: "", confirm: "Bevestigen", action: null, secondary: "", secondaryAction: null, closeAction: null, wide: false, danger: false, adminTaskId: "", taskNavigation: true, initialFocus: "" }, options);
   document.querySelector("#modal-label").textContent = settings.label;
   document.querySelector("#modal-title").textContent = settings.title;
   document.querySelector("#modal-message").textContent = settings.message;
   document.querySelector("#modal-summary").innerHTML = settings.summary;
   initializeStandardChoiceMenus(document.querySelector("#modal-summary"));
   document.querySelector("#modal-summary").hidden = !settings.summary;
-  document.querySelector("#modal-confirm").textContent = settings.confirm;
-  document.querySelector("#modal-confirm").disabled = false;
+  const confirmButton = document.querySelector("#modal-confirm");
+  confirmButton.textContent = settings.confirm;
+  confirmButton.disabled = false;
+  confirmButton.classList.toggle("button-primary", !settings.danger);
+  confirmButton.classList.toggle("button-danger", settings.danger);
   document.querySelector("#modal-secondary").textContent = settings.secondary || "Terugsturen";
   document.querySelector("#modal-secondary").hidden = !settings.secondary;
   const dialog = document.querySelector(".modal");
   dialog.classList.toggle("is-wide", settings.wide);
   modalAction = settings.action;
   modalSecondaryAction = settings.secondaryAction;
+  modalCloseAction = settings.closeAction;
   document.querySelector("#modal").hidden = false;
   const taskNavigation = document.querySelector("#modal-queue");
   if (settings.adminTaskId && settings.taskNavigation !== false && adminTaskWorkflow) {
@@ -8352,16 +8402,22 @@ function showModal(options) {
 }
 
 function closeModal() {
+  const afterClose = modalCloseAction;
   const modal = document.querySelector("#modal");
   if (modal.contains(document.activeElement)) document.activeElement.blur();
   modal.hidden = true;
   document.querySelector(".modal").classList.remove("is-wide");
   document.querySelector("#modal-secondary").hidden = true;
-  document.querySelector("#modal-confirm").disabled = false;
+  const confirmButton = document.querySelector("#modal-confirm");
+  confirmButton.disabled = false;
+  confirmButton.classList.add("button-primary");
+  confirmButton.classList.remove("button-danger");
   document.querySelector("#modal-queue").hidden = true;
   modalAction = null;
   modalSecondaryAction = null;
+  modalCloseAction = null;
   adminTaskWorkflow = null;
+  if (typeof afterClose === "function") afterClose();
 }
 
 /**
@@ -9704,7 +9760,7 @@ function revealExistingStaffAccount(existing, message, reopenForm) {
   renderAll();
   showView("employees");
 
-  window.requestAnimationFrame(() => {
+  const focusExistingAccount = () => window.requestAnimationFrame(() => {
     let target = null;
     if (role === "employee") {
       const employee = state.employees.find(item =>
@@ -9739,6 +9795,7 @@ function revealExistingStaffAccount(existing, message, reopenForm) {
     confirm: canReopen ? "Adres aanpassen" : "Begrepen",
     secondary: canReopen ? "Sluiten" : "",
     secondaryAction: canReopen ? () => closeModal() : null,
+    closeAction: focusExistingAccount,
     wide: true,
     action: canReopen ? () => reopenForm() : () => closeModal()
   });

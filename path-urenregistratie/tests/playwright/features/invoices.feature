@@ -33,8 +33,8 @@ Feature: Facturen bekijken en beheren
 
   @happy
   Scenario: [INV-H-020] Backoffice kan een ontbrekende urenstaat extern bevestigen en terugdraaien
-    # Testtechniek: Toestandsovergang en equivalentieklasse voor externe bevestiging
-    # Aantoonbare Playwright-assertions in deze case: 9
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 19
     Given Backoffice de door Shawn rechtstreeks gemailde urenstaat in september opent
     When Backoffice de ontvangen urenbevestiging met een standaardreden vastlegt
     Then telt de urenstaat groen mee en kan Backoffice de bevestiging terugdraaien
@@ -105,7 +105,7 @@ Feature: Facturen bekijken en beheren
 
   @negative
   Scenario: [INV-N-019] lege actuele maand met open medewerkeruren is geblokkeerd en nooit afgerond
-    # Testtechniek: Negatieve toestandsovergang bij maandwissel
+    # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 8
     Given Backoffice op TEST in september inlogt met vier nog niet ingediende urenstaten
     When Backoffice de septemberfacturen opent

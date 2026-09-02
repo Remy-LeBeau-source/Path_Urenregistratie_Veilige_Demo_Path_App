@@ -33,9 +33,12 @@ Then("wordt met Playwright-assertions bevestigd dat employee kan geen klanturens
 Given("de medewerker is ingelogd met een ingediende klanturenstaat");
 When("de medewerker approve probeert uit te voeren");
 Then("de medewerker ook geen request_resubmit mag uitvoeren");
-Given("de medewerker is ingelogd met een concept klanturenstaat");
-When("de medewerker mark_skipped uitvoert met reden");
-Then("restore_missing zet de status terug naar missing");
+Given("de medewerker is ingelogd in een lege maand zonder klanturenstaatrecord");
+When("de medewerker eerst zonder en daarna met reden rechtstreeks gemaild registreert");
+Then("readback de nieuwe rij toont en restore_missing terugzet naar missing");
+Given("de medewerker in september start zonder klanturenstaatrecord");
+When("de medewerker de zichtbare registratie met verplichte reden afrondt");
+Then("serverreadback en F5 dezelfde status tonen en herstel opnieuw werkt");
 When("de medewerker een tekstbestand uploadt als klanturenstaat");
 Then("wordt met Playwright-assertions bevestigd dat employee krijgt 400 bij ongeldig bestandstype");
 When("de medewerker een JPG uploadt als concept-klanturenstaat");

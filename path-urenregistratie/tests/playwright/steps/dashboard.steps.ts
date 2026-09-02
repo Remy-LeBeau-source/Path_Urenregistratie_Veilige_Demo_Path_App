@@ -86,3 +86,7 @@ When("Backoffice augustus-juli-augustus doorloopt");
 Then("blijven globale aantallen, eigenaren en taakidentiteiten gelijk");
 And("eigenaarfilters openen alleen hun concrete taakregels");
 And("opnieuw openen zet alle maandblokken terug naar ingeklapt");
+Given("Backoffice een bootstrap met ongeldige toekomstperioden ontvangt");
+When("de flow voor DASH-H-019 wordt uitgevoerd");
+Then("toekomstperioden veroorzaken geen workflowreads");
+And("de gedeelde leeswachtrij voert maximaal vier taken tegelijk uit");

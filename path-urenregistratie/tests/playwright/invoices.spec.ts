@@ -116,11 +116,13 @@ test('[INV-H-020] Backoffice kan een ontbrekende urenstaat extern bevestigen en 
     customer_timesheet_note: 'De klanturenstaat is al rechtstreeks naar Path Backoffice gemaild.',
     customer_timesheet_download_url: null,
   };
+  let customerTimesheetWrites = 0;
   await page.route('**/server/api/invoices.php?period=*', route => route.fulfill({
     status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items: [item] }),
   }));
   await page.route('**/server/api/customer-timesheets.php', async route => {
     if (route.request().method() !== 'POST') return route.fallback();
+    customerTimesheetWrites += 1;
     const body = route.request().postData() || '';
     const confirming = body.includes('confirm_external');
     item.customer_timesheet_status = confirming ? 'skipped' : 'missing';
@@ -153,11 +155,27 @@ test('[INV-H-020] Backoffice kan een ontbrekende urenstaat extern bevestigen en 
     await expect(page.locator('#external-timesheet-reason-trigger')).toBeFocused();
     await page.locator('#external-timesheet-reason-trigger').click();
     await page.locator('[data-standard-choice-target="external-timesheet-reason"][data-standard-choice-value="Uren per e-mail goedgekeurd"]').click();
+    await page.locator('#modal-confirm').click();
+    await expect(page.locator('#modal-title')).toHaveText('Weet je het zeker?');
+    await expect(page.locator('.external-timesheet-warning')).toContainText('Er wordt geen urenstaatbestand opgeslagen');
+    await expect(page.locator('#modal-confirm')).toHaveText('Ja, extern bevestigen');
+    await expect(page.locator('#modal-confirm')).toHaveClass(/button-danger/);
+    expect(customerTimesheetWrites).toBe(0);
+
+    await page.locator('#modal-cancel').click();
+    expect(customerTimesheetWrites).toBe(0);
+    await page.locator('[data-document-focus="customer-timesheet"]').click();
+    await page.locator('[data-confirm-external-timesheet]').click();
+    await page.locator('#external-timesheet-reason-trigger').click();
+    await page.locator('[data-standard-choice-target="external-timesheet-reason"][data-standard-choice-value="Uren per e-mail goedgekeurd"]').click();
+    await page.locator('#modal-confirm').click();
+
     const requestPromise = page.waitForRequest(request => request.method() === 'POST' && /customer-timesheets\.php$/.test(request.url()));
     await page.locator('#modal-confirm').click();
     const request = await requestPromise;
     expect(request.postData()).toContain('confirm_external');
     expect(request.postData()).toContain('Uren per e-mail goedgekeurd');
+    expect(customerTimesheetWrites).toBe(1);
   });
 
   await test.step('Then telt de urenstaat groen mee en kan Backoffice de bevestiging terugdraaien', async () => {
@@ -165,7 +183,11 @@ test('[INV-H-020] Backoffice kan een ontbrekende urenstaat extern bevestigen en 
     await page.locator('[data-document-focus="customer-timesheet"]').click();
     await expect(page.locator('[data-document-card="customer-timesheet"] .document-status-pill')).toHaveText('Extern bevestigd');
     await expect(page.locator('[data-document-card="customer-timesheet"]')).toContainText('Uren per e-mail goedgekeurd');
-    await page.locator('[data-restore-external-timesheet]').click();
+    const restoreButton = page.locator('[data-restore-external-timesheet]');
+    await expect(restoreButton).toHaveText('Externe bevestiging terugdraaien');
+    await expect(restoreButton).toHaveClass(/document-restore-action/);
+    await expect(page.locator('.invoice-document-restore')).toContainText('weer als ontbrekend gemarkeerd');
+    await restoreButton.click();
     await page.locator('#modal-confirm').click();
     await expect(page.locator('[data-document-focus="customer-timesheet"]')).toContainText('Urenstaat ontbreekt');
   });

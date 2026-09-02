@@ -928,7 +928,68 @@ try {
             ]);
             $timesheetId = (int)$pdo->lastInsertId();
         }
-    } elseif ($action === 'approve' || $action === 'request_resubmit' || $action === 'mark_sent' || $action === 'mark_sent_to_broker' || $action === 'mark_skipped' || $action === 'restore_missing') {
+    } elseif ($action === 'mark_skipped') {
+        if ((string)$currentUser['role'] !== 'employee') {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            customer_timesheet_json([
+                'ok' => false,
+                'error' => 'forbidden-action',
+                'message' => 'Alleen een medewerker kan een klanturenstaat als rechtstreeks gemaild registreren.',
+            ], 403);
+        }
+
+        if ($existing && !in_array((string)$existing['status'], ['missing', 'draft', 'resubmit'], true)) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            customer_timesheet_json([
+                'ok' => false,
+                'error' => 'invalid-customer-timesheet-transition',
+                'message' => 'Deze klanturenstaat kan niet meer als rechtstreeks gemaild worden geregistreerd.',
+            ], 409);
+        }
+
+        $statusToPersist = 'skipped';
+        $eventType = 'customer_timesheet.skipped';
+        if ($existing) {
+            $update = $pdo->prepare(
+                'UPDATE customer_timesheets
+                 SET status = :status,
+                     review_note = :review_note,
+                     reviewed_at = CURRENT_TIMESTAMP,
+                     reviewed_by = :reviewed_by
+                 WHERE id = :id'
+            );
+            $update->execute([
+                ':status' => $statusToPersist,
+                ':review_note' => $reviewNote,
+                ':reviewed_by' => (int)$currentUser['id'],
+                ':id' => (int)$existing['id'],
+            ]);
+            $timesheetId = (int)$existing['id'];
+        } else {
+            // A new month has no customer_timesheets row yet. The employee-facing
+            // action is valid precisely in that state, so persist the first row
+            // here instead of requiring a dummy upload before it can be skipped.
+            $insert = $pdo->prepare(
+                'INSERT INTO customer_timesheets
+                 (period_id, employee_id, assignment_id, status, review_note, reviewed_at, reviewed_by)
+                 VALUES
+                 (:period_id, :employee_id, :assignment_id, :status, :review_note, CURRENT_TIMESTAMP, :reviewed_by)'
+            );
+            $insert->execute([
+                ':period_id' => $periodId,
+                ':employee_id' => $employeeId,
+                ':assignment_id' => $assignmentId,
+                ':status' => $statusToPersist,
+                ':review_note' => $reviewNote,
+                ':reviewed_by' => (int)$currentUser['id'],
+            ]);
+            $timesheetId = (int)$pdo->lastInsertId();
+        }
+    } elseif ($action === 'approve' || $action === 'request_resubmit' || $action === 'mark_sent' || $action === 'mark_sent_to_broker' || $action === 'restore_missing') {
         if (!$existing) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
@@ -1049,34 +1110,6 @@ try {
             );
             $update->execute([
                 ':status' => $statusToPersist,
-                ':id' => (int)$existing['id'],
-            ]);
-        } elseif ($action === 'mark_skipped') {
-            if ((string)$currentUser['role'] !== 'employee') {
-                if ($pdo->inTransaction()) {
-                    $pdo->rollBack();
-                }
-                customer_timesheet_json([
-                    'ok' => false,
-                    'error' => 'forbidden-action',
-                    'message' => 'Alleen een medewerker kan een klanturenstaat als rechtstreeks gemaild registreren.',
-                ], 403);
-            }
-
-            $statusToPersist = 'skipped';
-            $eventType = 'customer_timesheet.skipped';
-            $update = $pdo->prepare(
-                'UPDATE customer_timesheets
-                 SET status = :status,
-                     review_note = :review_note,
-                     reviewed_at = CURRENT_TIMESTAMP,
-                     reviewed_by = :reviewed_by
-                 WHERE id = :id'
-            );
-            $update->execute([
-                ':status' => $statusToPersist,
-                ':review_note' => $reviewNote,
-                ':reviewed_by' => (int)$currentUser['id'],
                 ':id' => (int)$existing['id'],
             ]);
         } else {

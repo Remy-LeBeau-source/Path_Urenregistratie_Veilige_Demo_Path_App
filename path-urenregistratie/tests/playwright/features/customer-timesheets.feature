@@ -55,11 +55,19 @@ Feature: Klanturenstaten en documentverwerking
   @happy
   Scenario: [CTS-API-H-004] employee kan mark_skipped registreren en restore_missing terugdraaien
     # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 9
-    Given de medewerker is ingelogd met een concept klanturenstaat
-    When de medewerker mark_skipped uitvoert met reden
-    Then restore_missing zet de status terug naar missing
+    # Aantoonbare Playwright-assertions in deze case: 15
+    Given de medewerker is ingelogd in een lege maand zonder klanturenstaatrecord
+    When de medewerker eerst zonder en daarna met reden rechtstreeks gemaild registreert
+    Then readback de nieuwe rij toont en restore_missing terugzet naar missing
     And cleanup: sessie sluiten voor testisolatie
+
+  @happy
+  Scenario: [CTS-API-H-013] medewerker registreert rechtstreeks gemaild zichtbaar vanuit een lege actuele maand
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 20
+    Given de medewerker in september start zonder klanturenstaatrecord
+    When de medewerker de zichtbare registratie met verplichte reden afrondt
+    Then serverreadback en F5 dezelfde status tonen en herstel opnieuw werkt
 
   @negative
   Scenario: [CTS-API-N-005] employee krijgt 400 bij ongeldig bestandstype

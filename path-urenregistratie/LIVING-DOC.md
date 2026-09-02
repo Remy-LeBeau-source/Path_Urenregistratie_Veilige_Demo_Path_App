@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 345 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 347 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 345 unieke case-ID's
+- Playwright executable cases: 347 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 346 unieke case-ID's
+- Totaal executable cases: 348 unieke case-ID's
 - Playwright features: 24
 - Database features: 1
 - Playwright steps mappings: 24
 - Database steps mappings: 1
-- Uitvoeringen: 363
-- Niet-mobile projectuitvoeringen: 327
+- Uitvoeringen: 365
+- Niet-mobile projectuitvoeringen: 329
 - Mobile functionele cases: 18
 - Pixel 7 / Chromium-uitvoeringen: 18
 - iPhone 13 / WebKit-uitvoeringen: 18
 
-De 18 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 345 Playwright-functionele cases in totaal 363 resultaten op: 327 + (18 x 2) = 363.
+De 18 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 347 Playwright-functionele cases in totaal 365 resultaten op: 329 + (18 x 2) = 365.
 
 ## Documentatieketen
 
@@ -143,14 +143,15 @@ De 18 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 345 Playwri
 
 - Feature: `tests/playwright/features/customer-timesheets.feature`
 - Source: `tests/playwright/customer-timesheet-api.spec.ts`
-- Cases: 11
+- Cases: 12
 
 - [CTS-API-H-012] admin kan een ontbrekende klanturenstaat extern bevestigen en terugzetten — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 15
 - [CTS-API-H-009] brokerroute koppelt de officiële klanturenstaat aan dezelfde medewerker en periode — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
 - [CTS-API-H-001] employee uploadt klanturenstaat, dient in en downloadt; admin kan goedkeuren en resubmit vragen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 28
 - [CTS-API-N-006] employee kan geen klanturenstaat voor andere medewerker wijzigen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [CTS-API-N-007] employee kan geen admin reviewactie uitvoeren op klanturenstaat — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
-- [CTS-API-H-004] employee kan mark_skipped registreren en restore_missing terugdraaien — Techniek: Toestandsovergang · Assertions: 9
+- [CTS-API-H-004] employee kan mark_skipped registreren en restore_missing terugdraaien — Techniek: Toestandsovergang · Assertions: 15
+- [CTS-API-H-013] medewerker registreert rechtstreeks gemaild zichtbaar vanuit een lege actuele maand — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 20
 - [CTS-API-N-005] employee krijgt 400 bij ongeldig bestandstype — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
 - [CTS-API-H-005] JPG- en PNG-upload worden als inline bekijkbare PDF opgeslagen — Techniek: Equivalentieklassen · Assertions: 34
 - [CTS-API-H-006] medewerker uploadt zichtbaar een afbeelding en kan die na nieuwe login bekijken — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 23
@@ -161,11 +162,11 @@ De 18 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 345 Playwri
 
 - Feature: `tests/playwright/features/dashboard.feature`
 - Source: `tests/playwright/dashboard.spec.ts`
-- Cases: 20
+- Cases: 21
 
 - [DASH-H-001] admin dashboard opent zonder console errors — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [DASH-H-002] employee dashboard opent zonder console errors — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 1
-- [DASH-H-018] iedere login opent de actuele maand en bewaart daarna de handmatige keuze — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 23
+- [DASH-H-018] iedere login opent de actuele maand en bewaart daarna de handmatige keuze — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 24
 - [DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad niet — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 1
 - [DASH-N-008] voorbeeldgegevens herstellen houdt alle werkvoorraadtellers gelijk — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus — Techniek: Toestandsovergang · Assertions: 18
@@ -183,6 +184,7 @@ De 18 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 345 Playwri
 - [DASH-H-006] vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [DASH-H-007] dashboardknop behoudt de geldige maand en medewerkeroverzichten — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels — Techniek: Equivalentieklassen · Assertions: 30
+- [DASH-H-019] werkvoorraadhydratatie negeert toekomstperioden en begrenst parallelle reads — Techniek: Equivalentieklassen · Assertions: 6
 
 ### Mailroutering en aflevering
 
@@ -271,7 +273,7 @@ De 18 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 345 Playwri
 - [INV-H-001] admin facturen zichtbaar en console errors 0 — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [INV-H-013] documentarchief toont factuur en klanturenstaat zonder bestanden vooraf te laden — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 11
 - [INV-N-014] ontbrekende klanturenstaat accepteert uitsluitend PDF JPG of PNG — Techniek: Toestandsovergang · Assertions: 5
-- [INV-H-020] Backoffice kan een ontbrekende urenstaat extern bevestigen en terugdraaien — Techniek: Toestandsovergang en equivalentieklasse voor externe bevestiging · Assertions: 9
+- [INV-H-020] Backoffice kan een ontbrekende urenstaat extern bevestigen en terugdraaien — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 19
 - [INV-H-018] externe factuur slaat PDF JPG en PNG via de factuur-API op — Techniek: Equivalentieklassen · Assertions: 5
 - [INV-N-017] medewerker mag geen externe factuur uploaden — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
 - [INV-H-016] factuurdataset met 32 records wordt in pagina’s van maximaal 25 getoond — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 19
@@ -280,7 +282,7 @@ De 18 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 345 Playwri
 - [INV-H-003] server berekent bedrag uit uren en uurtarief voor open facturen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 8
 - [INV-H-006] admin kan het gekozen maanddetail inklappen en weer uitklappen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
 - [INV-H-007] factuurnavigatie onderscheidt geblokkeerde en controleklare maanden met oranje en groen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 10
-- [INV-N-019] lege actuele maand met open medewerkeruren is geblokkeerd en nooit afgerond — Techniek: Negatieve toestandsovergang bij maandwissel · Assertions: 8
+- [INV-N-019] lege actuele maand met open medewerkeruren is geblokkeerd en nooit afgerond — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [INV-H-009] server-PDF-content moet identiek zijn aan app-preview — Techniek: Equivalentieklassen · Assertions: 3
 - [INV-N-007] ongeldige periodefilter geeft nette 400-fout — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
 - [INV-H-010] gecontroleerde concept-PDF wordt als mailbijlage naar de server gestuurd — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3

@@ -26,7 +26,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-018] iedere login opent de actuele maand en bewaart daarna de handmatige keuze
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 23
+    # Aantoonbare Playwright-assertions in deze case: 24
     Given Backoffice in september inlogt met een eerder bewaarde maand
     Then opent de actuele kalendermaand voor Backoffice
     And Goedkeuringen en Facturen tonen de juiste septemberbeginstand
@@ -178,3 +178,12 @@ Feature: Dashboard en open werkvoorraad
     Then blijven globale aantallen, eigenaren en taakidentiteiten gelijk
     And eigenaarfilters openen alleen hun concrete taakregels
     And opnieuw openen zet alle maandblokken terug naar ingeklapt
+
+  @happy
+  Scenario: [DASH-H-019] werkvoorraadhydratatie negeert toekomstperioden en begrenst parallelle reads
+    # Testtechniek: Equivalentieklassen
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given Backoffice een bootstrap met ongeldige toekomstperioden ontvangt
+    When de flow voor DASH-H-019 wordt uitgevoerd
+    Then toekomstperioden veroorzaken geen workflowreads
+    And de gedeelde leeswachtrij voert maximaal vier taken tegelijk uit
