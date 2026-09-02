@@ -1,0 +1,15 @@
+{
+  "artboards": [
+    { "file": "Login.dc.html", "x": 0, "y": 0, "w": 1440, "h": 900, "title": "Login" },
+    { "file": "Main.dc.html", "x": 1560, "y": 0, "w": 1440, "h": 1200, "title": "Dashboard (beheerder)" },
+    { "file": "Urenoverzicht.dc.html", "x": 3120, "y": 0, "w": 1440, "h": 1040, "title": "Urenoverzicht (medewerker)" },
+    { "file": "Goedkeuringen.dc.html", "x": 0, "y": 1360, "w": 1440, "h": 940, "title": "Goedkeuringen" },
+    { "file": "Facturen.dc.html", "x": 1560, "y": 1360, "w": 1440, "h": 1000, "title": "Facturen" },
+    { "file": "Documentarchief.dc.html", "x": 3120, "y": 1360, "w": 1440, "h": 900, "title": "Documentarchief (modal)" },
+    { "file": "Klanturenstaten.dc.html", "x": 0, "y": 2520, "w": 1440, "h": 960, "title": "Klanturenstaten" },
+    { "file": "Mededelingen.dc.html", "x": 1560, "y": 2520, "w": 1440, "h": 940, "title": "Mededelingen" },
+    { "file": "Medewerkers.dc.html", "x": 3120, "y": 2520, "w": 1440, "h": 1080, "title": "Medewerkers (Teambeheer)" },
+    { "file": "Instellingen.dc.html", "x": 0, "y": 3760, "w": 1440, "h": 1000, "title": "Instellingen" }
+  ],
+  "launch": { "view": "canvas" }
+}
