@@ -184,12 +184,93 @@ test('[INV-H-020] Backoffice kan een ontbrekende urenstaat extern bevestigen en 
     await expect(page.locator('[data-document-card="customer-timesheet"] .document-status-pill')).toHaveText('Extern bevestigd');
     await expect(page.locator('[data-document-card="customer-timesheet"]')).toContainText('Uren per e-mail goedgekeurd');
     const restoreButton = page.locator('[data-restore-external-timesheet]');
-    await expect(restoreButton).toHaveText('Externe bevestiging terugdraaien');
+    await expect(restoreButton).toHaveText('Externe bevestiging intrekken');
     await expect(restoreButton).toHaveClass(/document-restore-action/);
+    await expect(restoreButton).toHaveCSS('border-left-width', '6px');
+    await expect(restoreButton).toHaveCSS('font-weight', '900');
     await expect(page.locator('.invoice-document-restore')).toContainText('weer als ontbrekend gemarkeerd');
     await restoreButton.click();
+    await expect(page.locator('#modal-title')).toHaveText('Externe bevestiging intrekken?');
+    await expect(page.locator('#modal-confirm')).toHaveText('Ja, bevestiging intrekken');
     await page.locator('#modal-confirm').click();
     await expect(page.locator('[data-document-focus="customer-timesheet"]')).toContainText('Urenstaat ontbreekt');
+  });
+});
+
+test('[INV-H-021] goedgekeurde septemberuren maken de ontbrekende serverfactuur bij afronden aan', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  let invoiceLocked = false;
+  let lockPayload: Record<string, unknown> | null = null;
+  const lockedItem = {
+    id: 921, timesheet_id: 820, employee_id: 1, assignment_id: 1,
+    invoice_number: 'IND-StvB-2026-september', employee_name: 'Stasjo van Bakel', period_key: '2026-09',
+    status: 'ready', timesheet_status: 'invoiced', subtotal: 1600, vat_amount: 336,
+    total: 1936, billable_hours: 20, hourly_rate: 80, vat_percentage: 21, locked: true,
+    locked_at: '2026-09-02 14:00:00', invoice_download_url: '/server/api/invoices.php?action=download&invoice_id=921',
+    customer_timesheet_status: 'skipped', customer_timesheet_note: 'Extern bevestigd: Uren per e-mail goedgekeurd',
+    customer_timesheet_download_url: null,
+  };
+
+  await page.route('**/server/api/invoices.php?period=2026-09', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ ok: true, items: invoiceLocked ? [lockedItem] : [] }),
+  }));
+  await page.route('**/server/api/invoices.php', async route => {
+    if (route.request().method() !== 'POST') return route.fallback();
+    lockPayload = JSON.parse(route.request().postData() || '{}');
+    invoiceLocked = true;
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        queued_count: 3,
+        dispatch_result: { sent: 3, failed: 0, skipped: 0 },
+        invoice: { id: 921, timesheet_id: 820, status: 'ready', locked_at: '2026-09-02 14:00:00' },
+        timesheet: { id: 820, status: 'invoiced', billable_hours: 20 },
+      }),
+    });
+  });
+  await page.route('**/server/api/email-queue.php*', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ ok: true, environment: 'test', delivery_allowed: true, items: [] }),
+  }));
+
+  await test.step('Given Stasjo goedgekeurde septemberuren heeft maar nog geen factuurrij', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await page.evaluate(() => {
+      const appWindow = window as unknown as {
+        applyTimesheetApiPayload: (employeeId: number, period: string, payload: unknown) => unknown;
+        showInvoiceDeliveryCheck: (employeeId: number, period: string) => boolean;
+      };
+      appWindow.applyTimesheetApiPayload(1, '2026-09', {
+        id: 820,
+        status: 'approved',
+        version: 3,
+        contractual_hours: 160,
+        billable_hours: 20,
+        leave_hours: 0,
+        sickness_hours: 0,
+        day_entries: [{ work_date: '2026-09-01', hours: 8 }, { work_date: '2026-09-02', hours: 8 }, { work_date: '2026-09-03', hours: 4 }],
+      });
+      appWindow.showInvoiceDeliveryCheck(1, '2026-09');
+    });
+    await expect(page.locator('#modal-title')).toContainText('September 2026');
+  });
+
+  await test.step('When Backoffice de controle afrondt', async () => {
+    await page.locator('#modal-confirm').click();
+    await expect(page.locator('#toast')).toContainText('3 e-mails verzonden');
+  });
+
+  await test.step('Then maakt de app de serverfactuur vanuit de goedgekeurde urenstaat en sluit de taak', async () => {
+    await expect.poll(() => lockPayload).not.toBeNull();
+    expect(lockPayload).toMatchObject({ action: 'lock', timesheet_id: 820 });
+    expect(String(lockPayload?.concept_pdf_base64 || '').length).toBeGreaterThan(1000);
+    await expect(page.locator('#modal')).toBeHidden();
   });
 });
 

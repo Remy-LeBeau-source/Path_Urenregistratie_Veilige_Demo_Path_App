@@ -186,7 +186,8 @@
 | INV-H-001 | ui | invoices.feature | admin facturen zichtbaar en console errors 0 | Beslissingstabel rollen en autorisatie | 1 | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | admin facturen zichtbaar en console errors 0 | Happy | 11 | Actueel |
 | INV-H-013 | ui | invoices.feature | documentarchief toont factuur en klanturenstaat zonder bestanden vooraf te laden | Negatieve equivalentieklasse + error guessing | 11 | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | documentarchief toont factuur en klanturenstaat zonder bestanden vooraf te laden | Happy | 11 | Actueel |
 | INV-N-014 | ui | invoices.feature | ontbrekende klanturenstaat accepteert uitsluitend PDF JPG of PNG | Toestandsovergang | 5 | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | ontbrekende klanturenstaat accepteert uitsluitend PDF JPG of PNG | Negative | 11 | Actueel |
-| INV-H-020 | ui | invoices.feature | Backoffice kan een ontbrekende urenstaat extern bevestigen en terugdraaien | Negatieve equivalentieklasse + error guessing | 19 | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | Backoffice kan een ontbrekende urenstaat extern bevestigen en terugdraaien | Happy | 11 | Actueel |
+| INV-H-020 | ui | invoices.feature | Backoffice kan een ontbrekende urenstaat extern bevestigen en terugdraaien | Negatieve equivalentieklasse + error guessing | 23 | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | Backoffice kan een ontbrekende urenstaat extern bevestigen en terugdraaien | Happy | 11 | Actueel |
+| INV-H-021 | ui | invoices.feature | goedgekeurde septemberuren maken de ontbrekende serverfactuur bij afronden aan | Negatieve equivalentieklasse + error guessing | 5 | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | goedgekeurde septemberuren maken de ontbrekende serverfactuur bij afronden aan | Happy | 11 | Actueel |
 | INV-H-018 | ui | invoices.feature | externe factuur slaat PDF JPG en PNG via de factuur-API op | Equivalentieklassen | 5 | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | externe factuur slaat PDF JPG en PNG via de factuur-API op | Happy | 11 | Actueel |
 | INV-N-017 | ui | invoices.feature | medewerker mag geen externe factuur uploaden | Beslissingstabel rollen en autorisatie | 3 | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | medewerker mag geen externe factuur uploaden | Negative | 11 | Actueel |
 | INV-H-016 | ui | invoices.feature | factuurdataset met 32 records wordt in pagina’s van maximaal 25 getoond | End-to-end use-case + visuele contractasserties | 19 | invoices-ui.steps.ts | invoices.spec.ts | UI Desktop | Facturatie | factuurdataset met 32 records wordt in pagina’s van maximaal 25 getoond | Happy | 11 | Actueel |
@@ -369,9 +370,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 347
+- Playwright executable cases: 348
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 348
+- Totaal unieke executable cases: 349
 - Playwright features: 24
 - Database features: 1
 - Playwright steps mappings: 24

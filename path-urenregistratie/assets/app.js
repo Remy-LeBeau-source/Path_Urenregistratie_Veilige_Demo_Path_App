@@ -1878,6 +1878,8 @@ function applyTimesheetApiPayload(employeeId, periodKey, timesheet) {
   if (timesheet.sickness_hours !== undefined) record.sick = Number(timesheet.sickness_hours) || 0;
 
   record.timesheetStatus = String(timesheet.status || record.timesheetStatus || "draft");
+  const timesheetId = Number(timesheet.id || 0);
+  record.serverTimesheetId = Number.isFinite(timesheetId) && timesheetId > 0 ? timesheetId : (Number(record.serverTimesheetId || 0) || null);
   record.reviewNote = String(timesheet.review_note || "");
   record.approvedAt = timesheet.approved_at ? String(timesheet.approved_at) : null;
   record.approvedBy = Number(timesheet.approved_by) || null;
@@ -2961,10 +2963,10 @@ function showExternalCustomerTimesheetConfirmation(item) {
 function restoreExternalCustomerTimesheet(item) {
   showModal({
     label: "Urenstaat herstellen",
-    title: "Externe bevestiging terugdraaien?",
+    title: "Externe bevestiging intrekken?",
     message: item.employeeName + " · " + periodFromKey(item.periodKey).label,
     summary: "<p>De urenstaat wordt weer als ontbrekend getoond en blokkeert daarna opnieuw de maandcontrole.</p>",
-    confirm: "Terugdraaien",
+    confirm: "Ja, bevestiging intrekken",
     danger: true,
     action: () => {
       const button = document.querySelector("#modal-confirm");
@@ -3006,7 +3008,7 @@ function showInvoiceDocuments(invoiceId, focusKind = "") {
     ? '<div class="invoice-document-links"><a class="small-button" data-document-kind="customer-timesheet" href="' + escapeHtml(item.customerTimesheetDownloadUrl) + '" target="_blank" rel="noopener">Openen</a><a class="text-button" href="' + escapeHtml(item.customerTimesheetDownloadUrl) + '" download>Downloaden</a></div>'
     : customerExternallyConfirmed
       ? '<p class="invoice-document-missing-note">Extern bevestigd' + (invoiceExternalConfirmationReason(item) ? ': ' + escapeHtml(invoiceExternalConfirmationReason(item)) : '') + '.</p>' +
-        '<div class="invoice-document-restore"><button type="button" class="small-button document-restore-action" data-restore-external-timesheet>Externe bevestiging terugdraaien</button>' +
+        '<div class="invoice-document-restore"><button type="button" class="small-button document-restore-action" data-restore-external-timesheet>Externe bevestiging intrekken</button>' +
         '<small>De urenstaat wordt daarna weer als ontbrekend gemarkeerd.</small></div>'
       : '<p class="invoice-document-missing-note">Geen klanturenstaatbestand bewaard.</p>';
   const upload = !item.customerTimesheetDownloadUrl
@@ -8945,15 +8947,36 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
         document.querySelector("#modal-confirm").disabled = true;
         refreshInvoicesReadApi(key, true).then(() => {
           const refreshedInvoice = serverInvoiceFor(employeeId, key);
-          if (!refreshedInvoice) throw new Error("Serverfactuur nog niet beschikbaar. De actie blijft open; probeer het later opnieuw.");
-          return finalizeInvoiceAndQueueToApi(refreshedInvoice);
-        }).then(() => Promise.all([
+          const timesheetId = Number(info.record.serverTimesheetId || 0);
+          if (refreshedInvoice) return finalizeInvoiceAndQueueToApi(refreshedInvoice);
+          if (timesheetId <= 0) throw new Error("De goedgekeurde serverurenstaat kon niet worden gevonden. Ververs en probeer opnieuw.");
+          return finalizeInvoiceAndQueueToApi({
+            id: 0,
+            timesheetId,
+            employeeName: info.employee.name,
+            periodKey: key,
+            timesheetStatus: info.record.timesheetStatus,
+            locked: false
+          });
+        }).then(delivery => Promise.all([
           refreshEmailQueueReadApi(true),
           refreshInvoicesReadApi(key, true)
-        ])).then(() => {
+        ]).then(() => delivery)).then(delivery => {
+          syncInvoiceStatusesFromApi(key);
           releaseLocalResetAuthorityAfterServerWrite();
-          if (adminTaskId) finishAdminTaskAndContinue(adminTaskId, () => {}, baseMsg + ".");
-          else closeModal();
+          const count = Number(delivery && delivery.queued || 0);
+          const delivered = delivery && delivery.testDelivery === true;
+          const resultMessage = delivered
+            ? baseMsg + ": " + Number(delivery.sent || 0) + (Number(delivery.sent || 0) === 1 ? " e-mail verzonden." : " e-mails verzonden.")
+            : baseMsg + " (dry-run): " + count + (count === 1 ? " bericht" : " berichten") + " klaargezet.";
+          if (adminTaskId) {
+            finishAdminTaskAndContinue(adminTaskId, () => {}, resultMessage);
+            return;
+          }
+          closeModal();
+          persistState();
+          renderAll();
+          toast(resultMessage);
         }).catch(error => {
           document.querySelector("#modal-confirm").disabled = false;
           toast(String(error && error.message || "Serverfactuur kon niet worden geladen."));
@@ -9683,7 +9706,7 @@ function writeStaffToApi(action, payload) {
 function finalizeInvoiceAndQueueToApi(invoiceRow) {
   const invoiceId = Number(invoiceRow && invoiceRow.id || 0);
   const timesheetId = Number(invoiceRow && invoiceRow.timesheetId || 0);
-  if (invoiceId <= 0 || timesheetId <= 0) {
+  if (timesheetId <= 0 || (invoiceRow && invoiceRow.locked && invoiceId <= 0)) {
     return Promise.reject(new Error("Geen complete serverfactuur gevonden voor deze verzending."));
   }
   const serverTimesheetStatus = String(invoiceRow && invoiceRow.timesheetStatus || "").toLowerCase();
@@ -9724,24 +9747,31 @@ function finalizeInvoiceAndQueueToApi(invoiceRow) {
     .then(result => {
       if (result.ok && result.data && result.data.ok === true) {
         const queuedCount = Number(result.data.queued_count || 0);
+        const lockedInvoiceId = Number(result.data.invoice && result.data.invoice.id || invoiceId);
         return queuedCount > 0
           ? requireDelivery({
               queued: queuedCount,
               sent: Number(result.data.dispatch_result && result.data.dispatch_result.sent || 0),
               testDelivery: testDeliveryActive()
             })
-          : enqueueInvoiceDeliveryToApi(invoiceId).then(data => requireDelivery({
+          : enqueueInvoiceDeliveryToApi(lockedInvoiceId).then(data => requireDelivery({
               queued: Number(data && data.count || 0),
               sent: Number(data && data.dispatch_result && data.dispatch_result.sent || 0),
               testDelivery: testDeliveryActive()
             }));
       }
       if (result.data && result.data.error === "invoice-already-locked") {
-        return enqueueInvoiceDeliveryToApi(invoiceId).then(data => requireDelivery({
+        const enqueueLockedInvoice = lockedInvoiceId => enqueueInvoiceDeliveryToApi(lockedInvoiceId).then(data => requireDelivery({
           queued: Number(data && data.count || 0),
           sent: Number(data && data.dispatch_result && data.dispatch_result.sent || 0),
           testDelivery: testDeliveryActive()
         }));
+        if (invoiceId > 0) return enqueueLockedInvoice(invoiceId);
+        return refreshInvoicesReadApi(String(invoiceRow && invoiceRow.periodKey || ""), true).then(() => {
+          const refreshed = serverInvoiceFor(Number((state.employees.find(employee => employee.name === String(invoiceRow && invoiceRow.employeeName || "")) || {}).id || 0), String(invoiceRow && invoiceRow.periodKey || ""));
+          if (!refreshed || Number(refreshed.id || 0) <= 0) throw new Error("De definitieve serverfactuur kon na verversen niet worden gevonden.");
+          return enqueueLockedInvoice(Number(refreshed.id));
+        });
       }
       throw new Error(String(result.data && result.data.message || "Factuur definitief maken is mislukt."));
     });

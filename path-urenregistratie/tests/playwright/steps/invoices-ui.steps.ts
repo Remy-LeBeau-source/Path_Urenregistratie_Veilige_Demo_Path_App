@@ -25,6 +25,9 @@ Then("wordt met Playwright-assertions bevestigd dat ontbrekende klanturenstaat a
 Given("Backoffice de door Shawn rechtstreeks gemailde urenstaat in september opent");
 When("Backoffice de ontvangen urenbevestiging met een standaardreden vastlegt");
 Then("telt de urenstaat groen mee en kan Backoffice de bevestiging terugdraaien");
+Given("Stasjo goedgekeurde septemberuren heeft maar nog geen factuurrij");
+When("Backoffice de controle afrondt");
+Then("maakt de app de serverfactuur vanuit de goedgekeurde urenstaat en sluit de taak");
 When("de flow voor INV-H-018 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat externe factuur slaat PDF JPG en PNG via de factuur-API op");
 When("de flow voor INV-N-017 wordt uitgevoerd");

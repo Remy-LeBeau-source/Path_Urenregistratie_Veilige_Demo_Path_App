@@ -55,6 +55,12 @@ Per medewerker/periode worden taken deterministisch afgeleid:
 - klanturenstaat `approved` met brokerroute → brokercontrole door Backoffice;
 - goedgekeurde/gefactureerde uren zonder volledig verzendbewijs → factuur-/verzendcontrole door Backoffice.
 
+Een goedgekeurde urenstaat hoeft nog geen rij in `invoices` te hebben. De frontend bewaart daarom
+het server-`timesheet_id` uit de urenstaatreadback. Als `Controle afronden` nog geen factuurrij
+vindt, verstuurt hij de gecontroleerde concept-PDF samen met dit `timesheet_id` naar de lock-API;
+die maakt de factuur atomisch aan en retourneert het nieuwe factuur-id. Een ontbrekend
+`timesheet_id` blijft fail-closed en laat de Backoffice-taak open.
+
 Taak-ID's zijn stabiel opgebouwd uit type, periode en medewerker. Hierdoor kunnen filters, tellingen en tests dezelfde actie eenduidig volgen.
 
 ## 5. Cache- en synchronisatiecontract

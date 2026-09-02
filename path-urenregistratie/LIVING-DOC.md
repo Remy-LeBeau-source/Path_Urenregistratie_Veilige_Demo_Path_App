@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 347 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 348 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 347 unieke case-ID's
+- Playwright executable cases: 348 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 348 unieke case-ID's
+- Totaal executable cases: 349 unieke case-ID's
 - Playwright features: 24
 - Database features: 1
 - Playwright steps mappings: 24
 - Database steps mappings: 1
-- Uitvoeringen: 365
-- Niet-mobile projectuitvoeringen: 329
+- Uitvoeringen: 366
+- Niet-mobile projectuitvoeringen: 330
 - Mobile functionele cases: 18
 - Pixel 7 / Chromium-uitvoeringen: 18
 - iPhone 13 / WebKit-uitvoeringen: 18
 
-De 18 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 347 Playwright-functionele cases in totaal 365 resultaten op: 329 + (18 x 2) = 365.
+De 18 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 348 Playwright-functionele cases in totaal 366 resultaten op: 330 + (18 x 2) = 366.
 
 ## Documentatieketen
 
@@ -268,12 +268,13 @@ De 18 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 347 Playwri
 
 - Feature: `tests/playwright/features/invoices.feature`
 - Source: `tests/playwright/invoices.spec.ts`
-- Cases: 18
+- Cases: 19
 
 - [INV-H-001] admin facturen zichtbaar en console errors 0 — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [INV-H-013] documentarchief toont factuur en klanturenstaat zonder bestanden vooraf te laden — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 11
 - [INV-N-014] ontbrekende klanturenstaat accepteert uitsluitend PDF JPG of PNG — Techniek: Toestandsovergang · Assertions: 5
-- [INV-H-020] Backoffice kan een ontbrekende urenstaat extern bevestigen en terugdraaien — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 19
+- [INV-H-020] Backoffice kan een ontbrekende urenstaat extern bevestigen en terugdraaien — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 23
+- [INV-H-021] goedgekeurde septemberuren maken de ontbrekende serverfactuur bij afronden aan — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
 - [INV-H-018] externe factuur slaat PDF JPG en PNG via de factuur-API op — Techniek: Equivalentieklassen · Assertions: 5
 - [INV-N-017] medewerker mag geen externe factuur uploaden — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
 - [INV-H-016] factuurdataset met 32 records wordt in pagina’s van maximaal 25 getoond — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 19

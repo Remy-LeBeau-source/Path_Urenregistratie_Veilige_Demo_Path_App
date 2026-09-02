@@ -34,10 +34,18 @@ Feature: Facturen bekijken en beheren
   @happy
   Scenario: [INV-H-020] Backoffice kan een ontbrekende urenstaat extern bevestigen en terugdraaien
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 19
+    # Aantoonbare Playwright-assertions in deze case: 23
     Given Backoffice de door Shawn rechtstreeks gemailde urenstaat in september opent
     When Backoffice de ontvangen urenbevestiging met een standaardreden vastlegt
     Then telt de urenstaat groen mee en kan Backoffice de bevestiging terugdraaien
+
+  @happy
+  Scenario: [INV-H-021] goedgekeurde septemberuren maken de ontbrekende serverfactuur bij afronden aan
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given Stasjo goedgekeurde septemberuren heeft maar nog geen factuurrij
+    When Backoffice de controle afrondt
+    Then maakt de app de serverfactuur vanuit de goedgekeurde urenstaat en sluit de taak
 
   @happy
   Scenario: [INV-H-018] externe factuur slaat PDF JPG en PNG via de factuur-API op

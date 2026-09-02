@@ -274,6 +274,7 @@ Minimaal de volgende ketens zijn releaseblokkerend:
 | iedere rol start bij login in de actuele maand; handmatige maandkeuze blijft tot de volgende login behouden | `dashboard.spec.ts` (`DASH-H-018`) |
 | een actuele maand met niet-ingediende uren is geblokkeerd en wordt nooit als afgeronde maandcontrole getoond | `invoices.spec.ts` (`INV-N-019`) |
 | Backoffice kan een ontbrekende urenstaat met reden extern bevestigen, groen laten meetellen en terugdraaien | `invoices.spec.ts` (`INV-H-020`) |
+| goedgekeurde uren zonder bestaande factuurrij worden bij `Controle afronden` server-side tot factuur verwerkt | `invoices.spec.ts` (`INV-H-021`) |
 | open medewerkeracties blijven leesbaar in licht en donker met minimaal 4,5:1 tekstcontrast | `dashboard.spec.ts` (`DASH-H-003`) |
 | indienen/correctie/herindienen/goedkeuren | `timesheet-review-ui.spec.ts` (`TS-REV-UI-H-008`) |
 | submitted/approved lock | `TS-REV-UI-H-009`, `TS-REV-UI-H-010` |
