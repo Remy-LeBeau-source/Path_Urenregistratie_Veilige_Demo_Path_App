@@ -19,3 +19,7 @@ live-doc-site/
 
 # Vite build output (regenerated door npm run build; wordt niet geserveerd, assets/ is de bron)
 dist/
+
+# Runtime debug log en het eenmalige PROD-masterdatamigratiescript: op schijf houden, buiten Git.
+debug.log
+server/scripts/migrate-test-masterdata-to-production.php
