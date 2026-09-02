@@ -8,6 +8,11 @@ on:
         required: true
         default: "main"
         type: string
+      deploy_test:
+        description: "Deploy deze ref uitsluitend naar TEST"
+        required: true
+        default: false
+        type: boolean
   push:
     branches:
       - main
@@ -614,7 +619,8 @@ jobs:
     if: >-
       ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main')
           || (github.event_name == 'workflow_dispatch'
-              && (inputs.ref == 'main' || inputs.ref == 'refs/heads/main')) }}
+              && ((inputs.ref == 'main' || inputs.ref == 'refs/heads/main')
+                  || inputs.deploy_test == true)) }}
 
     steps:
       - name: Checkout exact main release

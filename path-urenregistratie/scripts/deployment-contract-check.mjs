@@ -65,7 +65,10 @@ assert.doesNotMatch(remote, /mv "\$live_root" "\$rollback_root"/, 'PROD document
 
 assert.match(workflow, /deploy-test:\s*[\s\S]*needs:\s*test/, 'TEST deployment must wait for TEST regression');
 assert.match(workflow, /deploy-test:\s*[\s\S]*environment:\s*test/, 'TEST deployment must use the test environment');
+assert.match(workflow, /deploy_test:\s*[\s\S]*default:\s*false[\s\S]*type:\s*boolean/, 'Manual non-main TEST deployment must require an explicit boolean opt-in');
+assert.match(workflow, /deploy-test:\s*[\s\S]*inputs\.deploy_test == true/, 'The TEST deploy job must consume the explicit manual opt-in');
 assert.match(workflow, /prod:\s*[\s\S]*needs:\s*\[test, deploy-test\]/, 'PROD promotion must wait for public TEST deployment');
+assert.match(workflow, /\n  prod:\s*[\s\S]*if:\s*\$\{\{[^\n]*inputs\.ref == 'main'[^\n]*\}\}/, 'Manual PROD promotion must remain restricted to main');
 for (const required of [
   '/data/sites/web/pathconsultancynl/private/path-uren-test-deployments',
   '/data/sites/web/pathconsultancynl/private/path-uren-test',
