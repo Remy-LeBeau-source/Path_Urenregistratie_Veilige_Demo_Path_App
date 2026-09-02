@@ -1041,7 +1041,7 @@ function ensureSeedDataIntegrity(candidateState, fallbackState, sourceLabel) {
 let state = loadState();
 let modalAction = null;
 let modalSecondaryAction = null;
-let modalCloseAction = null;
+let modalDismissAction = null;
 let adminTaskWorkflow = null;
 let pendingProfilePhoto = "";
 let pendingBrandLogo = "";
@@ -8366,7 +8366,8 @@ function toast(message) {
 }
 
 function showModal(options) {
-  const settings = Object.assign({ label: "Controle", title: "", message: "", summary: "", confirm: "Bevestigen", action: null, secondary: "", secondaryAction: null, closeAction: null, wide: false, danger: false, adminTaskId: "", taskNavigation: true, initialFocus: "" }, options);
+  const settings = Object.assign({ label: "Controle", title: "", message: "", summary: "", confirm: "Bevestigen", action: null, secondary: "", secondaryAction: null, dismissAction: null, wide: false, danger: false, adminTaskId: "", taskNavigation: true, initialFocus: "" }, options);
+  const inheritedDismissAction = !document.querySelector("#modal").hidden ? modalDismissAction : null;
   document.querySelector("#modal-label").textContent = settings.label;
   document.querySelector("#modal-title").textContent = settings.title;
   document.querySelector("#modal-message").textContent = settings.message;
@@ -8384,7 +8385,10 @@ function showModal(options) {
   dialog.classList.toggle("is-wide", settings.wide);
   modalAction = settings.action;
   modalSecondaryAction = settings.secondaryAction;
-  modalCloseAction = settings.closeAction;
+  // Een bevestiging kan de ene modal door de volgende vervangen (zoals na
+  // "Adres aanpassen"). Bewaar de oorspronkelijke sluitactie in die keten,
+  // maar voer haar niet uit na een geslaagde programmatische opslag.
+  modalDismissAction = settings.dismissAction || inheritedDismissAction;
   document.querySelector("#modal").hidden = false;
   const taskNavigation = document.querySelector("#modal-queue");
   if (settings.adminTaskId && settings.taskNavigation !== false && adminTaskWorkflow) {
@@ -8401,8 +8405,8 @@ function showModal(options) {
   dialog.scrollTop = 0;
 }
 
-function closeModal() {
-  const afterClose = modalCloseAction;
+function closeModal(dismissed = false) {
+  const afterDismiss = dismissed ? modalDismissAction : null;
   const modal = document.querySelector("#modal");
   if (modal.contains(document.activeElement)) document.activeElement.blur();
   modal.hidden = true;
@@ -8415,9 +8419,9 @@ function closeModal() {
   document.querySelector("#modal-queue").hidden = true;
   modalAction = null;
   modalSecondaryAction = null;
-  modalCloseAction = null;
+  modalDismissAction = null;
   adminTaskWorkflow = null;
-  if (typeof afterClose === "function") afterClose();
+  if (typeof afterDismiss === "function") afterDismiss();
 }
 
 /**
@@ -9794,10 +9798,10 @@ function revealExistingStaffAccount(existing, message, reopenForm) {
       + "Pas het adres aan als dit een andere " + roleLabel + " moet worden, of gebruik het bestaande account dat nu is geopend.",
     confirm: canReopen ? "Adres aanpassen" : "Begrepen",
     secondary: canReopen ? "Sluiten" : "",
-    secondaryAction: canReopen ? () => closeModal() : null,
-    closeAction: focusExistingAccount,
+    secondaryAction: canReopen ? () => closeModal(true) : null,
+    dismissAction: focusExistingAccount,
     wide: true,
-    action: canReopen ? () => reopenForm() : () => closeModal()
+    action: canReopen ? () => reopenForm() : () => closeModal(true)
   });
 
   toast(message);
@@ -11889,18 +11893,18 @@ document.querySelector("#auth-reset-complete-form")?.addEventListener("submit", 
 });
 document.querySelector("#switch-role").addEventListener("click", logout);
 document.querySelector("#mobile-switch-role").addEventListener("click", logout);
-document.querySelector("#modal-close").addEventListener("click", closeModal);
-document.querySelector("#modal-cancel").addEventListener("click", closeModal);
+document.querySelector("#modal-close").addEventListener("click", () => closeModal(true));
+document.querySelector("#modal-cancel").addEventListener("click", () => closeModal(true));
 document.querySelector("#modal-secondary").addEventListener("click", () => modalSecondaryAction ? modalSecondaryAction() : closeModal());
 document.querySelector("#modal-confirm").addEventListener("click", () => modalAction ? modalAction() : closeModal());
 document.querySelector("#modal-queue-previous").addEventListener("click", () => moveAdminTaskWorkflow(-1));
 document.querySelector("#modal-queue-next").addEventListener("click", () => moveAdminTaskWorkflow(1));
-document.querySelector("#modal").addEventListener("click", event => { if (event.target.id === "modal") closeModal(); });
+document.querySelector("#modal").addEventListener("click", event => { if (event.target.id === "modal") closeModal(true); });
 document.addEventListener("keydown", event => {
   if (event.key === "Escape") {
     closeLoginAccountPanels();
     if (!document.querySelector("#modal").hidden) {
-      closeModal();
+      closeModal(true);
       return;
     }
     closeTopbarPopovers();
