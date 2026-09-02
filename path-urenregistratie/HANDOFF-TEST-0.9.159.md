@@ -18,17 +18,20 @@ toont de verzenduitkomst. De intrekactie voor een externe urenbevestiging is vis
 7. Kies de knop, controleer de rode bevestigingsmodal en annuleer eenmaal.
 8. Herhaal en bevestig; de urenstaat moet daarna weer als ontbrekend/oranje blokkeren.
 
-## Klaargezette septembergevallen
+## Klaargezette werkmaandgevallen (open taken-set)
 
-- open uren bij medewerker;
-- ingediende uren die wachten op Backoffice;
-- goedgekeurde uren met open factuuractie en nog zonder factuurrij;
-- rechtstreeks gemailde urenstaat die extern kan worden bevestigd en ingetrokken.
+De vier actieve TEST-medewerkers dekken samen elke open-taaksoort voor de actuele werkmaand:
 
-Deze vier records worden na een TEST-baselineherstel veilig en zonder mail aangemaakt met:
-`php server/scripts/seed-test-september-acceptance.php --execute --confirm=SEED_TEST_SEPTEMBER_ACCEPTANCE`.
-Het script weigert iedere omgeving buiten het exacte gedeelde TEST-contract en overschrijft geen
-bestaande septemberuren of -facturen.
+- Marc de Roon — `draft`, klanturenstaat ontbreekt: open uren bij medewerker;
+- Brian Hek — `submitted`, klanturenstaat ontvangen: open goedkeuring + klanturenstaat controleren;
+- Stasjo van Bakel — `approved`, klanturenstaat goedgekeurd, nog geen factuurrij: open brokerroute
+  controleren + open factuur (de controle maakt de serverfactuur aan);
+- Shawn-Douglas Nahar — `approved`, rechtstreeks gemaild, factuurrij aanwezig: open verzending controleren.
+
+Deze records worden na een TEST-baselineherstel veilig en zonder mail aangemaakt met:
+`php server/scripts/seed-test-working-month.php --execute --confirm=SEED_TEST_WORKING_MONTH`.
+Het script richt zich altijd op de kalendermaand van nu (of `--month=JJJJ-MM`), weigert iedere
+omgeving buiten het exacte gedeelde TEST-contract en overschrijft geen bestaande uren of facturen.
 
 ## Geautomatiseerd bewijs
 
