@@ -48,6 +48,13 @@ De volgende invarianten gelden altijd:
 5. na een geslaagde mutatie is de vervolgtaak zonder F5 zichtbaar;
 6. de werkvoorraad opent standaard ingeklapt en kan gericht op `alle`, `Backoffice` of `medewerkers` worden geopend.
 
+Bij iedere nieuwe login opent de maandkiezer voor iedere rol op de actuele kalendermaand in
+`Europe/Amsterdam`. Een maand die de gebruiker daarna kiest blijft in alle maandgebonden schermen
+actief zolang die ingelogde sessie duurt. Gewone scherm- of dashboardnavigatie verandert die keuze
+niet; na uitloggen en opnieuw inloggen wordt opnieuw de dan actuele maand gekozen. Ook een nog lege
+actuele maand telt bij de medewerker als open werkmaand: uren indienen en, indien vereist, de
+klanturenstaat aanleveren staan in dezelfde persoonlijke actielijst.
+
 ### Vaste demonstratiebasis na Herstel
 
 LOCAL en TEST tonen na een beheerder-reset dezelfde functionele basis. Infrastructuur en
@@ -94,6 +101,7 @@ een vertraagde eerdere read mag een nieuwere status niet terugzetten.
 | ontvangen | beheerder keurt goed | goedgekeurd/approved | Backoffice voor brokerroute |
 | goedgekeurd | brokerroute gecontroleerd | verzonden/sent | afgerond |
 | toegestaan alternatief | document wordt gemotiveerd overgeslagen | overgeslagen/skipped | volgens factuurbeleid |
+| ontbreekt/concept | Backoffice legt externe goedkeuring met verplichte reden vast | extern bevestigd/skipped | afgerond voor documentcontrole |
 
 Een geldige PDF blijft ongewijzigd; een geldige JPG of PNG wordt bij upload server-side naar PDF
 omgezet. Een bestand met alleen een PDF-extensie maar zonder geldige PDF-opbouw wordt geweigerd.
@@ -104,6 +112,15 @@ ook na herladen, opnieuw inloggen of wisselen van maand. Een historisch rauw afb
 nog worden bekeken, maar moet opnieuw als PDF/JPG/PNG worden aangeleverd voordat Backoffice het kan
 goedkeuren of mailen. Een factuur mag alleen zonder klanturenstaat verder als de opdracht dit
 expliciet toestaat.
+
+Als de klant geen apart urenstaatbestand levert maar de uren wel aantoonbaar per e-mail, in een
+klantportaal of rechtstreeks aan Backoffice goedkeurt, kan Backoffice in het Documentarchief
+**Extern bevestigd** kiezen. Een verplichte standaardreden of gemotiveerde optie **Anders** wordt
+met gebruiker en tijdstip bewaard. De urenstaat telt daarna groen mee in de maandcontrole; Backoffice
+kan de bevestiging terugdraaien, waarna het document opnieuw als ontbrekend blokkeert.
+De registratie **Al rechtstreeks gemaild** door een medewerker is nadrukkelijk nog geen
+Backoffice-bevestiging: die blijft oranje en blokkerend totdat Backoffice het bewijs controleert en
+zelf **Extern bevestigd** vastlegt.
 
 ## 7. Factuur- en mailketen
 
@@ -254,6 +271,9 @@ Minimaal de volgende ketens zijn releaseblokkerend:
 | medewerker uploadt zichtbaar PDF/JPG/PNG en ziet de eigen klanturenstaat na nieuwe login en maandwissel | `customer-timesheet-api.spec.ts` (`CTS-API-H-006`) |
 | wachtwoord instellen via eenmalige link en hergebruik blokkeren | `business-workflows-e2e.spec.ts` (`E2E-H-006`) |
 | globale sommen en maandinvariant | `dashboard.spec.ts` (`DASH-H-012`, `DASH-H-017`) |
+| iedere rol start bij login in de actuele maand; handmatige maandkeuze blijft tot de volgende login behouden | `dashboard.spec.ts` (`DASH-H-018`) |
+| een actuele maand met niet-ingediende uren is geblokkeerd en wordt nooit als afgeronde maandcontrole getoond | `invoices.spec.ts` (`INV-N-019`) |
+| Backoffice kan een ontbrekende urenstaat met reden extern bevestigen, groen laten meetellen en terugdraaien | `invoices.spec.ts` (`INV-H-020`) |
 | open medewerkeracties blijven leesbaar in licht en donker met minimaal 4,5:1 tekstcontrast | `dashboard.spec.ts` (`DASH-H-003`) |
 | indienen/correctie/herindienen/goedkeuren | `timesheet-review-ui.spec.ts` (`TS-REV-UI-H-008`) |
 | submitted/approved lock | `TS-REV-UI-H-009`, `TS-REV-UI-H-010` |

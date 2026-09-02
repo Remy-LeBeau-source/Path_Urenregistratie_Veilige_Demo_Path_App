@@ -15,6 +15,54 @@ Feature: Facturen bekijken en beheren
     When de administrator het facturenscherm opent
     Then facturen per periode zijn zichtbaar zonder consolefouten
 
+  @happy
+  Scenario: [INV-H-013] documentarchief toont factuur en klanturenstaat zonder bestanden vooraf te laden
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 11
+    Given facturen bekijken en beheren is voorbereid
+    When de flow voor INV-H-013 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat documentarchief toont factuur en klanturenstaat zonder bestanden vooraf te laden
+
+  @negative
+  Scenario: [INV-N-014] ontbrekende klanturenstaat accepteert uitsluitend PDF JPG of PNG
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given facturen bekijken en beheren is voorbereid
+    When de flow voor INV-N-014 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat ontbrekende klanturenstaat accepteert uitsluitend PDF JPG of PNG
+
+  @happy
+  Scenario: [INV-H-020] Backoffice kan een ontbrekende urenstaat extern bevestigen en terugdraaien
+    # Testtechniek: Toestandsovergang en equivalentieklasse voor externe bevestiging
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given Backoffice de door Shawn rechtstreeks gemailde urenstaat in september opent
+    When Backoffice de ontvangen urenbevestiging met een standaardreden vastlegt
+    Then telt de urenstaat groen mee en kan Backoffice de bevestiging terugdraaien
+
+  @happy
+  Scenario: [INV-H-018] externe factuur slaat PDF JPG en PNG via de factuur-API op
+    # Testtechniek: Equivalentieklassen
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given facturen bekijken en beheren is voorbereid
+    When de flow voor INV-H-018 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat externe factuur slaat PDF JPG en PNG via de factuur-API op
+
+  @negative
+  Scenario: [INV-N-017] medewerker mag geen externe factuur uploaden
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given facturen bekijken en beheren is voorbereid
+    When de flow voor INV-N-017 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat medewerker mag geen externe factuur uploaden
+
+  @happy
+  Scenario: [INV-H-016] factuurdataset met 32 records wordt in pagina’s van maximaal 25 getoond
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 19
+    Given facturen bekijken en beheren is voorbereid
+    When de flow voor INV-H-016 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat factuurdataset met 32 records wordt in pagina’s van maximaal 25 getoond
+
   @negative
   Scenario: [INV-N-005] employee facturen zichtbaar maar beperkt en console errors 0
     # Testtechniek: Negatieve equivalentieklasse + error guessing
@@ -55,6 +103,14 @@ Feature: Facturen bekijken en beheren
     When de flow voor INV-H-007 wordt uitgevoerd
     Then toont Facturen één oranje blokkadebadge en één groene controlebadge
 
+  @negative
+  Scenario: [INV-N-019] lege actuele maand met open medewerkeruren is geblokkeerd en nooit afgerond
+    # Testtechniek: Negatieve toestandsovergang bij maandwissel
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given Backoffice op TEST in september inlogt met vier nog niet ingediende urenstaten
+    When Backoffice de septemberfacturen opent
+    Then toont september vier blokkades en geen afgeronde maandcontrole
+
   @happy
   Scenario: [INV-H-009] server-PDF-content moet identiek zijn aan app-preview
     # Testtechniek: Equivalentieklassen
@@ -94,43 +150,3 @@ Feature: Facturen bekijken en beheren
     Given de administrator is ingelogd en reset naar vaste baseline
     When de administrator het factuurscherm opent en een factuur sluit
     Then zit in de gegenereerde PDF alle content (recipient, project, uren, tarief, betaling)
-
-  @happy
-  Scenario: [INV-H-013] documentarchief toont factuur en klanturenstaat zonder bestanden vooraf te laden
-    # Testtechniek: Use-case + lazy-loading contract
-    # Aantoonbare Playwright-assertions in deze case: 11
-    Given de administrator heeft een factuur met twee bewaarde documenten
-    When de administrator Documenten bekijken opent
-    Then zijn factuur en klanturenstaat afzonderlijk op aanvraag beschikbaar
-
-  @negative
-  Scenario: [INV-N-014] ontbrekende klanturenstaat accepteert uitsluitend PDF JPG of PNG
-    # Testtechniek: Negatieve equivalentieklasse + bestandsvalidatie
-    # Aantoonbare Playwright-assertions in deze case: 5
-    Given de administrator heeft een factuur zonder bewaarde klanturenstaat
-    When de administrator een niet toegestaan bestand kiest
-    Then blijft het documentvenster open met een duidelijke validatiefout
-
-  @happy
-  Scenario: [INV-H-018] externe factuur bewaart PDF JPG en PNG met reden via de factuur-API
-    # Testtechniek: Equivalentieklassen voor drie toegestane bestandstypen + requestcontract
-    # Aantoonbare Playwright-assertions in deze case: 15
-    Given de administrator heeft een factuur zonder bewaard factuurdocument
-    When de administrator achtereenvolgens PDF JPG en PNG met een reden toevoegt
-    Then worden alle drie via de factuur-API opgeslagen met bestandsnaam en reden
-
-  @negative
-  Scenario: [INV-N-017] medewerker mag geen externe factuur uploaden
-    # Testtechniek: Autorisatiematrix + negatieve API-test
-    # Aantoonbare Playwright-assertions in deze case: 3
-    Given de medewerker is ingelogd
-    When de medewerker een externe factuur probeert te uploaden
-    Then weigert de server de factuuractie met status 403
-
-  @happy
-  Scenario: [INV-H-016] groot factuurarchief wordt gepagineerd doorzoekbaar en op documenten gefilterd
-    # Testtechniek: Grenswaardenanalyse rond paginagrootte 25 + zoek- en documentequivalentieklassen
-    # Aantoonbare Playwright-assertions in deze case: 19
-    Given de administrator heeft een testdataset met 32 facturen
-    When de administrator bladert zoekt en filtert op complete of ontbrekende documenten
-    Then blijven maximaal 25 resultaten per pagina zichtbaar en kloppen zoek- en documentselectie

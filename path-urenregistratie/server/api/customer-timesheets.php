@@ -659,7 +659,7 @@ if (!$payload) {
 $action = security_require_enum_field(
     $payload,
     'action',
-    ['save_draft', 'submit', 'approve', 'request_resubmit', 'mark_sent', 'mark_sent_to_broker', 'send_to_broker', 'mark_skipped', 'restore_missing'],
+    ['save_draft', 'submit', 'approve', 'request_resubmit', 'mark_sent', 'mark_sent_to_broker', 'send_to_broker', 'mark_skipped', 'confirm_external', 'restore_missing'],
     'Invalid customer timesheet action.'
 );
 $period = customer_timesheet_parse_period_key(security_require_string_field($payload, 'period', 'period is required.', 7));
@@ -668,7 +668,7 @@ $companyId = (int)$currentUser['company_id'];
 $employeeId = (int)$employee['id'];
 $assignmentId = customer_timesheet_assignment_id($pdo, $companyId, $employeeId, customer_timesheet_optional_positive_int($payload, 'assignment_id'));
 
-if (in_array($action, ['approve', 'request_resubmit', 'mark_sent', 'mark_sent_to_broker', 'send_to_broker'], true) && (string)$currentUser['role'] !== 'administrator') {
+if (in_array($action, ['approve', 'request_resubmit', 'mark_sent', 'mark_sent_to_broker', 'send_to_broker', 'confirm_external'], true) && (string)$currentUser['role'] !== 'administrator') {
     customer_timesheet_json([
         'ok' => false,
         'error' => 'forbidden-action',
@@ -677,7 +677,7 @@ if (in_array($action, ['approve', 'request_resubmit', 'mark_sent', 'mark_sent_to
 }
 
 $reviewNote = '';
-if ($action === 'request_resubmit' || $action === 'mark_skipped') {
+if ($action === 'request_resubmit' || $action === 'mark_skipped' || $action === 'confirm_external') {
     $reviewNote = customer_timesheet_required_text($payload, 'review_note', 2000);
 }
 
@@ -880,6 +880,54 @@ try {
             ]);
             $timesheetId = (int)$pdo->lastInsertId();
         }
+    } elseif ($action === 'confirm_external') {
+        if ($existing && in_array((string)$existing['status'], ['approved', 'sent', 'sent_to_broker'], true)) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            customer_timesheet_json([
+                'ok' => false,
+                'error' => 'customer-timesheet-locked',
+                'message' => 'Een goedgekeurde of verzonden klanturenstaat kan niet als extern bevestigd worden vervangen.',
+            ], 409);
+        }
+
+        $statusToPersist = 'skipped';
+        $externalReviewNote = 'Extern bevestigd: ' . $reviewNote;
+        $eventType = 'customer_timesheet.externally_confirmed';
+        if ($existing) {
+            $update = $pdo->prepare(
+                'UPDATE customer_timesheets
+                 SET status = :status,
+                     review_note = :review_note,
+                     reviewed_at = CURRENT_TIMESTAMP,
+                     reviewed_by = :reviewed_by
+                 WHERE id = :id'
+            );
+            $update->execute([
+                ':status' => $statusToPersist,
+                ':review_note' => $externalReviewNote,
+                ':reviewed_by' => (int)$currentUser['id'],
+                ':id' => (int)$existing['id'],
+            ]);
+            $timesheetId = (int)$existing['id'];
+        } else {
+            $insert = $pdo->prepare(
+                'INSERT INTO customer_timesheets
+                 (period_id, employee_id, assignment_id, status, review_note, reviewed_at, reviewed_by)
+                 VALUES
+                 (:period_id, :employee_id, :assignment_id, :status, :review_note, CURRENT_TIMESTAMP, :reviewed_by)'
+            );
+            $insert->execute([
+                ':period_id' => $periodId,
+                ':employee_id' => $employeeId,
+                ':assignment_id' => $assignmentId,
+                ':status' => $statusToPersist,
+                ':review_note' => $externalReviewNote,
+                ':reviewed_by' => (int)$currentUser['id'],
+            ]);
+            $timesheetId = (int)$pdo->lastInsertId();
+        }
     } elseif ($action === 'approve' || $action === 'request_resubmit' || $action === 'mark_sent' || $action === 'mark_sent_to_broker' || $action === 'mark_skipped' || $action === 'restore_missing') {
         if (!$existing) {
             if ($pdo->inTransaction()) {
@@ -1032,14 +1080,14 @@ try {
                 ':id' => (int)$existing['id'],
             ]);
         } else {
-            if ((string)$currentUser['role'] !== 'employee') {
+            if (!in_array((string)$currentUser['role'], ['employee', 'administrator'], true)) {
                 if ($pdo->inTransaction()) {
                     $pdo->rollBack();
                 }
                 customer_timesheet_json([
                     'ok' => false,
                     'error' => 'forbidden-action',
-                    'message' => 'Alleen een medewerker kan de status terugzetten naar ontbrekend.',
+                    'message' => 'Alleen een medewerker of beheerder kan de status terugzetten naar ontbrekend.',
                 ], 403);
             }
 
@@ -1050,7 +1098,7 @@ try {
                 customer_timesheet_json([
                     'ok' => false,
                     'error' => 'invalid-customer-timesheet-transition',
-                    'message' => 'Alleen een als rechtstreeks gemaild geregistreerde klanturenstaat kan worden teruggezet naar ontbrekend.',
+                    'message' => 'Alleen een als rechtstreeks gemaild of extern bevestigd geregistreerde klanturenstaat kan worden teruggezet naar ontbrekend.',
                 ], 409);
             }
 

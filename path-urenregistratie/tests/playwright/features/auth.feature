@@ -95,12 +95,13 @@ Feature: Inloggen, uitloggen en sessiebeheer
   @happy
   Scenario: [AUTH-H-009] lokale login benoemt de veilige testomgeving en productnaam
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 10
+    # Aantoonbare Playwright-assertions in deze case: 19
     Given de lokale Path loginpagina beschikbaar is
     Then heet het omgevingsveld Veilige testomgeving
     And heet de lokale titel Welkom bij Path Uren & Facturatie
     When dezelfde login als productiepresentatie wordt getoond
     Then heten omgeving en titel Beveiligde omgeving en Inloggen
+    And kan het wachtwoord toegankelijk worden getoond en weer verborgen
 
   @happy
   Scenario: [AUTH-H-020] elke medewerker ziet na inloggen de eigen naam, nooit die van een collega

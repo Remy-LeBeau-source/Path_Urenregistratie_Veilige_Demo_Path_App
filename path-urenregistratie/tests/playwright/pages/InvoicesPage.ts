@@ -29,6 +29,10 @@ export class InvoicesPage {
         await detailToggle.click();
       }
     }
-    await expect(this.page.locator('#month-batch-label')).toContainText(period === '2026-07' ? 'Juli 2026' : 'Augustus 2026');
+    const [year, month] = period.split('-').map(Number);
+    const label = new Intl.DateTimeFormat('nl-NL', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+      .format(new Date(Date.UTC(year, month - 1, 1)))
+      .replace(/^./, character => character.toUpperCase());
+    await expect(this.page.locator('#month-batch-label')).toContainText(label);
   }
 }

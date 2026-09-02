@@ -84,7 +84,7 @@ test('[INV-N-014] ontbrekende klanturenstaat accepteert uitsluitend PDF JPG of P
       invoice_number: 'TEST-ARCHIEF-002', employee_name: 'Test Medewerker', period_key: '2026-08',
       status: 'ready', timesheet_status: 'invoiced', total: 1210, locked: true,
       invoice_download_url: '/server/api/invoices.php?action=download&invoice_id=902',
-      customer_timesheet_status: 'skipped', customer_timesheet_note: 'Al rechtstreeks gemaild',
+      customer_timesheet_status: 'missing', customer_timesheet_note: null,
       customer_timesheet_download_url: null,
     }] }),
   }));
@@ -102,6 +102,73 @@ test('[INV-N-014] ontbrekende klanturenstaat accepteert uitsluitend PDF JPG of P
   await page.locator('#modal-confirm').click();
   await expect(page.locator('#toast')).toContainText('Alleen PDF, JPG en PNG zijn toegestaan');
   await expect(page.locator('#modal')).toBeVisible();
+});
+
+test('[INV-H-020] Backoffice kan een ontbrekende urenstaat extern bevestigen en terugdraaien', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  const invoicesPage = new InvoicesPage(page);
+  const item = {
+    id: 920, timesheet_id: 820, employee_id: 4, assignment_id: 4,
+    invoice_number: 'TEST-EXTERN-001', employee_name: 'Shawn-Douglas Nahar', period_key: '2026-09',
+    status: 'ready', timesheet_status: 'invoiced', total: 1210, locked: true,
+    invoice_download_url: '/server/api/invoices.php?action=download&invoice_id=920',
+    customer_timesheet_status: 'skipped',
+    customer_timesheet_note: 'De klanturenstaat is al rechtstreeks naar Path Backoffice gemaild.',
+    customer_timesheet_download_url: null,
+  };
+  await page.route('**/server/api/invoices.php?period=*', route => route.fulfill({
+    status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items: [item] }),
+  }));
+  await page.route('**/server/api/customer-timesheets.php', async route => {
+    if (route.request().method() !== 'POST') return route.fallback();
+    const body = route.request().postData() || '';
+    const confirming = body.includes('confirm_external');
+    item.customer_timesheet_status = confirming ? 'skipped' : 'missing';
+    item.customer_timesheet_note = confirming ? 'Extern bevestigd: Uren per e-mail goedgekeurd' : null;
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        period: '2026-09',
+        employee_id: 4,
+        assignment_id: 4,
+        customer_timesheet: { status: item.customer_timesheet_status, review_note: item.customer_timesheet_note },
+      }),
+    });
+  });
+
+  await test.step('Given Backoffice de door Shawn rechtstreeks gemailde urenstaat in september opent', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await invoicesPage.open();
+    await invoicesPage.selectPeriod('2026-09');
+    await expect(page.locator('[data-document-focus="customer-timesheet"]')).toContainText('Urenstaat ontbreekt');
+    await page.locator('[data-document-focus="customer-timesheet"]').click();
+    await expect(page.locator('[data-document-card="customer-timesheet"] .document-status-pill')).toHaveText('Ontbreekt');
+  });
+
+  await test.step('When Backoffice de ontvangen urenbevestiging met een standaardreden vastlegt', async () => {
+    await page.locator('[data-confirm-external-timesheet]').click();
+    await expect(page.locator('#external-timesheet-reason-trigger')).toBeFocused();
+    await page.locator('#external-timesheet-reason-trigger').click();
+    await page.locator('[data-standard-choice-target="external-timesheet-reason"][data-standard-choice-value="Uren per e-mail goedgekeurd"]').click();
+    const requestPromise = page.waitForRequest(request => request.method() === 'POST' && /customer-timesheets\.php$/.test(request.url()));
+    await page.locator('#modal-confirm').click();
+    const request = await requestPromise;
+    expect(request.postData()).toContain('confirm_external');
+    expect(request.postData()).toContain('Uren per e-mail goedgekeurd');
+  });
+
+  await test.step('Then telt de urenstaat groen mee en kan Backoffice de bevestiging terugdraaien', async () => {
+    await expect(page.locator('[data-document-focus="customer-timesheet"]')).toContainText('Urenstaat ✓');
+    await page.locator('[data-document-focus="customer-timesheet"]').click();
+    await expect(page.locator('[data-document-card="customer-timesheet"] .document-status-pill')).toHaveText('Extern bevestigd');
+    await expect(page.locator('[data-document-card="customer-timesheet"]')).toContainText('Uren per e-mail goedgekeurd');
+    await page.locator('[data-restore-external-timesheet]').click();
+    await page.locator('#modal-confirm').click();
+    await expect(page.locator('[data-document-focus="customer-timesheet"]')).toContainText('Urenstaat ontbreekt');
+  });
 });
 
 test('[INV-H-018] externe factuur slaat PDF JPG en PNG via de factuur-API op', async ({ page }) => {
@@ -364,6 +431,33 @@ test('[INV-H-007] factuurnavigatie onderscheidt geblokkeerde en controleklare ma
     await expect(blockedBadge).toHaveCSS('background-color', 'rgb(187, 118, 35)');
     await expect(readyBadge).toHaveCSS('background-color', 'rgb(58, 189, 157)');
     await expect(page.locator('#employees-count')).toHaveCount(0);
+  });
+});
+
+test('[INV-N-019] lege actuele maand met open medewerkeruren is geblokkeerd en nooit afgerond', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await page.clock.setFixedTime(new Date('2026-09-02T10:00:00.000Z'));
+
+  await test.step('Given Backoffice op TEST in september inlogt met vier nog niet ingediende urenstaten', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+  });
+
+  await test.step('When Backoffice de septemberfacturen opent', async () => {
+    await page.locator('button[data-view="invoices"]').click();
+    if (await page.locator('#month-batch-card').isHidden()) {
+      await page.locator('#invoice-detail-toggle').click();
+    }
+  });
+
+  await test.step('Then toont september vier blokkades en geen afgeronde maandcontrole', async () => {
+    await expect(page.locator('#period-label')).toHaveText('September 2026');
+    await expect(page.locator('#month-batch-status')).toHaveText('4 blokkades');
+    await expect(page.locator('#month-batch-blockers [data-month-batch-blocker]')).toHaveCount(4);
+    await expect(page.locator('#month-batch-progress-value')).toHaveText('0/4 gecontroleerd');
+    await expect(page.locator('#test-month-delivery')).toHaveText('Bekijk 4 blokkades');
+    await expect(page.locator('#test-month-delivery')).toBeEnabled();
+    await expect(page.locator('#test-month-delivery')).not.toHaveText('Maandcontrole afgerond');
   });
 });
 

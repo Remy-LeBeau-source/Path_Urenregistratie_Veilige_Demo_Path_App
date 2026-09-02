@@ -154,6 +154,70 @@ test('[DASH-H-002] employee dashboard opent zonder console errors', async ({ pag
   });
 });
 
+test('[DASH-H-018] iedere login opent de actuele maand en bewaart daarna de handmatige keuze', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await page.clock.setFixedTime(new Date('2026-09-02T10:00:00.000Z'));
+
+  await test.step('Given Backoffice in september inlogt met een eerder bewaarde maand', async () => {
+    await page.addInitScript(() => {
+      const key = 'path-uren-demo-v07-final';
+      const saved = JSON.parse(window.localStorage.getItem(key) || '{}');
+      window.localStorage.setItem(key, JSON.stringify({ ...saved, schemaVersion: 26, selectedPeriodKey: '2026-08' }));
+    });
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+  });
+
+  await test.step('Then opent de actuele kalendermaand voor Backoffice', async () => {
+    await expect(page.locator('#period-label')).toHaveText('September 2026');
+    await expect(page.locator('#hero-task-total')).toHaveText('20 open acties');
+    await expect(page.locator('[data-admin-task-month="2026-09"]')).toContainText('September 2026 · 8 open acties');
+    await expect(page.locator('[data-admin-task-month="2026-09"]')).toContainText('0 bij Backoffice · 8 bij medewerkers');
+  });
+
+  await test.step('And Goedkeuringen en Facturen tonen de juiste septemberbeginstand', async () => {
+    await page.locator('button[data-view="approvals"]').click();
+    await expect(page.locator('[data-review][data-period-key="2026-09"]')).toHaveCount(0);
+    await page.locator('button[data-view="invoices"]').click();
+    if (await page.locator('#month-batch-card').isHidden()) await page.locator('#invoice-detail-toggle').click();
+    await expect(page.locator('#month-batch-status')).toHaveText('4 blokkades');
+    await expect(page.locator('#month-batch-progress-value')).toHaveText('0/4 gecontroleerd');
+    await expect(page.locator('#test-month-delivery')).toHaveText('Bekijk 4 blokkades');
+    await page.locator('button[data-view="dashboard"]').click();
+    await expect(page.locator('#period-label')).toHaveText('September 2026');
+  });
+
+  await test.step('When Backoffice augustus kiest en binnen de app navigeert', async () => {
+    await page.locator('#period-prev').click();
+    await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
+    await page.locator('button[data-view="invoices"]').click();
+    await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
+    await page.locator('button[data-view="dashboard"]').click();
+  });
+
+  await test.step('Then blijft augustus binnen de sessie gekozen', async () => {
+    await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
+  });
+
+  await test.step('And een nieuwe medewerkerlogin begint opnieuw in september', async () => {
+    await loginPage.logout();
+    await loginPage.loginAsEmployee();
+    await expect(page.locator('#period-label')).toHaveText('September 2026');
+    await expect(page.locator('#employee-open-task-total')).toHaveText('5 open acties');
+    await expect(page.locator('[data-employee-open-month="2026-09"]')).toContainText('September 2026 · 2 open acties');
+    await expect(page.locator('[data-employee-open-month="2026-09"]')).toContainText('Uren indienen · Klanturenstaat uploaden');
+    await expect(page.locator('#employee-customer-timesheet-period')).toHaveText('September 2026');
+    await expect(page.locator('#employee-dashboard-period')).toHaveText('September 2026');
+    await expect(page.locator('#employee-history')).toContainText('September 2026');
+    await page.locator('button[data-view="timesheet"]').click();
+    await expect(page.locator('#timesheet-period-title')).toHaveText('September 2026');
+    await expect(page.locator('#submit-timesheet')).toBeVisible();
+    await expect(page.locator('#customer-timesheet-period')).toHaveValue('2026-09');
+    await page.locator('button[data-view="employee-dashboard"]').click();
+    await expect(page.locator('#period-label')).toHaveText('September 2026');
+  });
+});
+
 test('[DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad niet', async ({ page }) => {
   const loginPage = new LoginPage(page);
 

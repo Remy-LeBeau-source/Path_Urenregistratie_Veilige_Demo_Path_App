@@ -73,7 +73,7 @@ Feature: Meldingen beheren
   @happy
   Scenario: [NOT-H-009] alles gelezen wist teller en een oudere response kan deze niet herstellen
     # Testtechniek: Herstelbaarheid + toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 7
+    # Aantoonbare Playwright-assertions in deze case: 8
     Given meldingen beheren is voorbereid
     When de flow voor NOT-H-009 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat alles gelezen wist teller en een oudere response kan deze niet herstellen

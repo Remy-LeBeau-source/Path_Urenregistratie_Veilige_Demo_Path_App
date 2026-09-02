@@ -54,7 +54,7 @@ Feature: Mobiele gebruikerservaring
   @happy
   Scenario: [MOB-H-006] een uitgenodigde collega stelt op de telefoon een wachtwoord in en ziet een duidelijke bevestiging
     # Testtechniek: Responsive viewport + end-to-end use-case
-    # Aantoonbare Playwright-assertions in deze case: 15
+    # Aantoonbare Playwright-assertions in deze case: 19
     Given de uitgenodigde collega de link uit de mail opent op de telefoon
     When beide wachtwoordvelden op het kleine scherm worden ingevuld
     Then verschijnt de bevestiging met een tapbare knop en past alles binnen het scherm

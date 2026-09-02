@@ -34,13 +34,13 @@ Feature: Mailroutering en aflevering
     And cleanup
 
   @happy
-  Scenario: [EQ-H-022] één factuuractie maakt drie gescheiden mailroutes met het juiste bijlagenbeleid
+  Scenario: [EQ-H-022] één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie
     # Testtechniek: API-contract + equivalentieklasse
-    # Aantoonbare Playwright-assertions in deze case: 11
+    # Aantoonbare Playwright-assertions in deze case: 14
     Given één goedgekeurde urenstaat als factuur is afgerond
-    When de drie functionele routes voor dezelfde factuur worden uitgelezen
+    When de routes voor dezelfde factuur worden uitgelezen
     And cleanup
-    Then wordt met Playwright-assertions bevestigd dat één factuuractie maakt drie gescheiden mailroutes met het juiste bijlagenbeleid
+    Then wordt met Playwright-assertions bevestigd dat één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie
 
   @happy
   Scenario: [EQ-H-004] action=enqueue voor gelockte factuur maakt nieuwe items aan
@@ -63,35 +63,36 @@ Feature: Mailroutering en aflevering
   @happy
   Scenario: [EQ-H-015] Backoffice ziet veilige verzendhistorie zonder berichtinhoud
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 18
+    # Aantoonbare Playwright-assertions in deze case: 25
     Given een beheerder is beveiligd ingelogd
     When de beheerder het verzendoverzicht in Instellingen opent
     Then zijn ontvanger, onderwerp, status, tijd en bijlagen zichtbaar zonder geheime inhoud
+    And pagineren, filteren en zoeken de lange lijst server-side
     And Vernieuwen haalt de actuele serverregistraties opnieuw op
 
   @happy
   Scenario: [EQ-H-031] mislukte mail blijft herstelbaar en verzonden mail heeft geen herhaalactie
-    # Testtechniek: Toestandsovergang + herstelpad
-    # Aantoonbare Playwright-assertions in deze case: 10
-    Given een mislukte en een reeds verzonden mail in de verzendadministratie staan
-    When Backoffice de mislukte mail gemotiveerd opnieuw klaarzet
-    Then blijft alleen de mislukte mail herstelbaar en krijgt verzonden mail geen herhaalactie
+    # Testtechniek: Herstelbaarheid + toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given mailroutering en aflevering is voorbereid
+    When de flow voor EQ-H-031 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat mislukte mail blijft herstelbaar en verzonden mail heeft geen herhaalactie
 
   @happy
   Scenario: [EQ-H-032] handmatige herstart na maximale pogingen is auditbaar en eenmalig
-    # Testtechniek: Toestandsovergang + grenswaarde retries
-    # Aantoonbare Playwright-assertions in deze case: 10
-    Given een levering na het maximale aantal pogingen definitief is mislukt
-    When Backoffice met de exacte bevestiging en een geldige reden herstart
-    Then wordt dezelfde levering eenmaal opnieuw klaargezet en een tweede herstart geblokkeerd
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given mailroutering en aflevering is voorbereid
+    When de flow voor EQ-H-032 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat handmatige herstart na maximale pogingen is auditbaar en eenmalig
 
   @happy
   Scenario: [EQ-H-033] queue-API pagineert en zoekt server-side
-    # Testtechniek: Grenswaarde + API-contract
-    # Aantoonbare Playwright-assertions in deze case: 11
-    Given meerdere leveringen in de serverwachtrij staan
-    When Backoffice per pagina navigeert en op factuurnummer zoekt
-    Then levert de server het juiste bereik en uitsluitend passende resultaten
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 12
+    Given mailroutering en aflevering is voorbereid
+    When de flow voor EQ-H-033 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat queue-API pagineert en zoekt server-side
 
   @happy
   Scenario: [EQ-H-016] Backoffice verstuurt vanuit de acceptatieconsole precies één gekozen scenario

@@ -28,6 +28,15 @@
 Belangrijke regels:
 
 - `selectedPeriodKey` bestuurt alleen detailweergaven;
+- `login(role)` zet `selectedPeriodKey` voor iedere rol op de actuele maand volgens
+  `Europe/Amsterdam`; daarna blijft de handmatige keuze app-breed behouden tot de volgende login;
+- dashboard- en schermnavigatie wijzigen `selectedPeriodKey` niet;
+- `monthBatchReadiness()` houdt een ingediende urenstaat die nog op Backoffice wacht als harde
+  blokkade; daarna kan een controleerbare levering de maand op `ready` zetten ondanks een
+  medewerkerscorrectie. Zonder controleerbare levering en met resterende actuele urenstatussen is
+  de maand `blocked`; alleen nul relevante blockers en nul pending deliveries is `controlled`;
+- het alle-maanden-factuuroverzicht projecteert uitsluitend perioden tot en met de actuele
+  Amsterdamse kalendermaand; alleen openen van een toekomstige maand maakt geen factuurblokkade;
 - `adminOpenTasks()` gebruikt alle gehydrateerde perioden;
 - detailreads mogen één record actualiseren, maar niet ongerelateerde records verwijderen;
 - `adminTaskPanelExpanded` is uitsluitend UI-status;
@@ -86,6 +95,13 @@ Taak-ID's zijn stabiel opgebouwd uit type, periode en medewerker. Hierdoor kunne
   regressiejobs installeren `pdo_mysql`, `gd` en `fileinfo` expliciet.
 - Historische records met een niet-PDF-MIME mogen nog geautoriseerd worden bekeken, maar worden
   niet goedgekeurd of als PDF-bijlage verzonden totdat een ondersteund document opnieuw is geüpload.
+- De beheeractie `confirm_external` is alleen voor `administrator`, vereist `review_note` en schrijft
+  auditbaar status `skipped`, `reviewed_by` en `reviewed_at`. De server markeert deze beheerbevestiging
+  met het vaste prefix `Extern bevestigd:`. Als nog geen klanturenstaatrecord bestaat, maakt de endpoint
+  exact één record onder de unieke sleutel periode + medewerker + opdracht. Alleen `skipped` mét dat
+  beheerprefix geldt voor documentcompleetheid als groen alternatief; een medewerkerregistratie
+  **Al rechtstreeks gemaild** blijft oranje en blokkerend. `restore_missing` zet de beheerbevestiging
+  voor medewerker of beheerder expliciet terug naar ontbrekend.
 
 ### Render- en schrijfvolgorde
 

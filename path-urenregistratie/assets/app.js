@@ -1069,7 +1069,7 @@ const customerTimesheetStatusLabels = {
   received: ["Controle nodig", "status-submitted"],
   approved: ["Goedgekeurd", "status-approved"],
   resubmit: ["Opnieuw uploaden", "status-warning"],
-  skipped: ["Al rechtstreeks gemaild", "status-approved"],
+  skipped: ["Al rechtstreeks gemaild", "status-warning"],
   sent: ["Naar broker gecontroleerd", "status-sent"],
   sent_to_broker: ["Naar broker gecontroleerd", "status-sent"]
 };
@@ -2863,13 +2863,25 @@ function invoiceApiRowsForPeriod(periodKey) {
   })).filter(item => item.periodKey === periodKey);
 }
 
+function invoiceCustomerTimesheetExternallyConfirmed(item) {
+  return Boolean(
+    item &&
+    item.customerTimesheetStatus === "skipped" &&
+    String(item.customerTimesheetNote || "").startsWith("Extern bevestigd:")
+  );
+}
+
+function invoiceExternalConfirmationReason(item) {
+  return String(item && item.customerTimesheetNote || "").replace(/^Extern bevestigd:\s*/, "");
+}
+
 function invoiceDocumentsComplete(item) {
-  return Boolean(item && item.invoiceDownloadUrl && item.customerTimesheetDownloadUrl);
+  return Boolean(item && item.invoiceDownloadUrl && (item.customerTimesheetDownloadUrl || invoiceCustomerTimesheetExternallyConfirmed(item)));
 }
 
 function invoiceDocumentBadgesHtml(item) {
   const invoicePresent = Boolean(item.invoiceDownloadUrl);
-  const timesheetPresent = Boolean(item.customerTimesheetDownloadUrl);
+  const timesheetPresent = Boolean(item.customerTimesheetDownloadUrl || invoiceCustomerTimesheetExternallyConfirmed(item));
   const badge = (kind, label, present) => {
     const stateLabel = present ? "aanwezig" : "ontbreekt";
     return '<button type="button" class="document-availability-badge ' + (present ? "is-present" : "is-missing") + '" data-invoice-documents="' + item.id + '" data-document-focus="' + kind + '" aria-label="' + escapeHtml(label + " " + stateLabel + " voor " + item.employeeName + "; documenten bekijken") + '">' + escapeHtml(label + (present ? " ✓" : " ontbreekt")) + '</button>';
@@ -2880,6 +2892,82 @@ function invoiceDocumentBadgesHtml(item) {
     '</div>';
 }
 
+function showExternalCustomerTimesheetConfirmation(item) {
+  const reasons = [
+    "Uren per e-mail goedgekeurd",
+    "Uren in klantportaal goedgekeurd",
+    "Klant gebruikt geen aparte urenstaat",
+    "Bevestiging rechtstreeks door Backoffice ontvangen",
+    "Anders, namelijk…"
+  ];
+  showModal({
+    label: "Urenstaat afronden",
+    title: "Extern bevestigd",
+    message: item.employeeName + " · " + periodFromKey(item.periodKey).label,
+    summary: '<div class="form-field"><label for="external-timesheet-reason">Reden</label><select id="external-timesheet-reason">' +
+      reasons.map(reason => '<option value="' + escapeHtml(reason) + '">' + escapeHtml(reason) + '</option>').join("") +
+      '</select></div><div class="form-field"><label for="external-timesheet-detail">Aanvulling (optioneel)</label><textarea id="external-timesheet-detail" maxlength="1000" placeholder="Bij Anders is een toelichting verplicht"></textarea></div>' +
+      '<p class="modal-note">De app bewaart automatisch wie dit registreert en wanneer. Deze bevestiging telt als complete urenstaat voor de maandcontrole.</p>',
+    confirm: "Extern bevestigen",
+    action: () => {
+      const reason = String(document.querySelector("#external-timesheet-reason")?.value || "").trim();
+      const detail = String(document.querySelector("#external-timesheet-detail")?.value || "").trim();
+      if (reason.startsWith("Anders") && detail.length < 5) {
+        toast("Vul bij Anders een toelichting van minimaal 5 tekens in.");
+        return;
+      }
+      const reviewNote = detail ? reason + " — " + detail : reason;
+      const button = document.querySelector("#modal-confirm");
+      button.disabled = true;
+      writeCustomerTimesheetToApi("confirm_external", {
+        employeeId: item.employeeId,
+        assignmentId: item.assignmentId,
+        periodKey: item.periodKey,
+        reviewNote
+      }).then(() => refreshInvoicesReadApi(item.periodKey, true))
+        .then(() => {
+          closeModal();
+          renderInvoices();
+          toast("De urenstaat staat groen als extern bevestigd.");
+        })
+        .catch(error => {
+          button.disabled = false;
+          toast(String(error && error.message || "Extern bevestigen is mislukt."));
+        });
+    },
+    initialFocus: "#external-timesheet-reason-trigger"
+  });
+}
+
+function restoreExternalCustomerTimesheet(item) {
+  showModal({
+    label: "Urenstaat herstellen",
+    title: "Externe bevestiging terugdraaien?",
+    message: item.employeeName + " · " + periodFromKey(item.periodKey).label,
+    summary: "<p>De urenstaat wordt weer als ontbrekend getoond en blokkeert daarna opnieuw de maandcontrole.</p>",
+    confirm: "Terugdraaien",
+    danger: true,
+    action: () => {
+      const button = document.querySelector("#modal-confirm");
+      button.disabled = true;
+      writeCustomerTimesheetToApi("restore_missing", {
+        employeeId: item.employeeId,
+        assignmentId: item.assignmentId,
+        periodKey: item.periodKey
+      }).then(() => refreshInvoicesReadApi(item.periodKey, true))
+        .then(() => {
+          closeModal();
+          renderInvoices();
+          toast("De urenstaat staat weer als ontbrekend.");
+        })
+        .catch(error => {
+          button.disabled = false;
+          toast(String(error && error.message || "Terugdraaien is mislukt."));
+        });
+    }
+  });
+}
+
 function showInvoiceDocuments(invoiceId, focusKind = "") {
   const item = (invoiceApiRowsForPeriod(currentPeriod().key) || []).find(row => Number(row.id) === Number(invoiceId));
   if (!item) {
@@ -2887,7 +2975,8 @@ function showInvoiceDocuments(invoiceId, focusKind = "") {
     return;
   }
   const invoicePresent = Boolean(item.invoiceDownloadUrl);
-  const customerPresent = Boolean(item.customerTimesheetDownloadUrl);
+  const customerExternallyConfirmed = invoiceCustomerTimesheetExternallyConfirmed(item);
+  const customerPresent = Boolean(item.customerTimesheetDownloadUrl || customerExternallyConfirmed);
   const invoiceDocument = item.invoiceDownloadUrl
     ? '<div class="invoice-document-links"><a class="small-button" data-document-kind="invoice" href="' + escapeHtml(item.invoiceDownloadUrl) + '" target="_blank" rel="noopener">Openen</a><a class="text-button" href="' + escapeHtml(item.invoiceDownloadUrl) + '" download>Downloaden</a></div>' +
       (item.invoiceSource === "external" ? '<dl class="invoice-document-metadata"><div><dt>Bron</dt><dd>Extern toegevoegd</dd></div>' +
@@ -2896,15 +2985,18 @@ function showInvoiceDocuments(invoiceId, focusKind = "") {
     : '<p class="invoice-document-missing-note">Factuur-PDF is nog niet beschikbaar.</p>';
   const customerDocument = item.customerTimesheetDownloadUrl
     ? '<div class="invoice-document-links"><a class="small-button" data-document-kind="customer-timesheet" href="' + escapeHtml(item.customerTimesheetDownloadUrl) + '" target="_blank" rel="noopener">Openen</a><a class="text-button" href="' + escapeHtml(item.customerTimesheetDownloadUrl) + '" download>Downloaden</a></div>'
-    : '<p class="invoice-document-missing-note">Geen klanturenstaatbestand bewaard' + (item.customerTimesheetStatus === "skipped" ? " · rechtstreeks gemaild" : "") + '.</p>';
+    : customerExternallyConfirmed
+      ? '<p class="invoice-document-missing-note">Extern bevestigd' + (invoiceExternalConfirmationReason(item) ? ': ' + escapeHtml(invoiceExternalConfirmationReason(item)) : '') + '.</p><button type="button" class="text-button" data-restore-external-timesheet>Bevestiging terugdraaien</button>'
+      : '<p class="invoice-document-missing-note">Geen klanturenstaatbestand bewaard.</p>';
   const upload = !item.customerTimesheetDownloadUrl
-    ? '<div class="form-field invoice-document-upload"><label for="invoice-customer-timesheet-file">Urenstaat toevoegen</label><input id="invoice-customer-timesheet-file" type="file" accept="application/pdf,image/jpeg,image/png"><small>PDF, JPG of PNG. Afbeeldingen worden veilig als PDF opgeslagen.</small></div>'
+    ? '<div class="form-field invoice-document-upload"><label for="invoice-customer-timesheet-file">Urenstaat toevoegen</label><input id="invoice-customer-timesheet-file" type="file" accept="application/pdf,image/jpeg,image/png"><small>PDF, JPG of PNG. Afbeeldingen worden veilig als PDF opgeslagen.</small>' +
+      (!customerExternallyConfirmed ? '<button type="button" class="small-button" data-confirm-external-timesheet>Geen bestand? Extern bevestigen</button>' : '') + '</div>'
     : '';
   const invoiceUpload = !item.invoiceDownloadUrl
     ? '<div class="form-field invoice-document-upload"><label for="external-invoice-file">Factuur toevoegen</label><input id="external-invoice-file" type="file" accept="application/pdf,image/jpeg,image/png"><label for="external-invoice-reason">Reden</label><input id="external-invoice-reason" type="text" maxlength="250" placeholder="Bijvoorbeeld: ontvangen van broker"><small>Een bestaand factuurdocument wordt nooit stil overschreven.</small></div>'
     : '';
-  const card = (kind, title, present, documentHtml, uploadHtml) => '<section class="invoice-document-card ' + (present ? "is-present" : "is-missing") + '" data-document-card="' + kind + '">' +
-    '<header><strong>' + title + '</strong><span class="document-status-pill ' + (present ? "is-present" : "is-missing") + '">' + (present ? "Aanwezig" : "Ontbreekt") + '</span></header>' +
+  const card = (kind, title, present, documentHtml, uploadHtml, presentLabel = "Aanwezig") => '<section class="invoice-document-card ' + (present ? "is-present" : "is-missing") + '" data-document-card="' + kind + '">' +
+    '<header><strong>' + title + '</strong><span class="document-status-pill ' + (present ? "is-present" : "is-missing") + '">' + (present ? presentLabel : "Ontbreekt") + '</span></header>' +
     '<div class="invoice-document-card-body">' + documentHtml + uploadHtml + '</div></section>';
   const hasUpload = !invoicePresent || !customerPresent;
   const initialFocus = focusKind === "invoice"
@@ -2923,7 +3015,7 @@ function showInvoiceDocuments(invoiceId, focusKind = "") {
     message: item.employeeName + " · " + periodFromKey(item.periodKey).label,
     summary: '<div class="invoice-document-card-grid">' +
       card("invoice", "Factuur", invoicePresent, invoiceDocument, invoiceUpload) +
-      card("customer-timesheet", "Urenstaat", customerPresent, customerDocument, upload) +
+      card("customer-timesheet", "Urenstaat", customerPresent, customerDocument, upload, customerExternallyConfirmed ? "Extern bevestigd" : "Aanwezig") +
       '</div>',
     confirm: initialConfirm,
     action: hasUpload ? () => {
@@ -3002,6 +3094,10 @@ function showInvoiceDocuments(invoiceId, focusKind = "") {
       confirmButton.textContent = "Urenstaat opslaan";
     });
   }
+  const confirmExternalButton = document.querySelector("[data-confirm-external-timesheet]");
+  if (confirmExternalButton) confirmExternalButton.addEventListener("click", () => showExternalCustomerTimesheetConfirmation(item));
+  const restoreExternalButton = document.querySelector("[data-restore-external-timesheet]");
+  if (restoreExternalButton) restoreExternalButton.addEventListener("click", () => restoreExternalCustomerTimesheet(item));
 }
 
 function emailQueueItemsByInvoiceId(periodKey) {
@@ -4318,7 +4414,10 @@ function employeeOpenMonthSummaries(employeeId, currentPeriodKey) {
     .sort()
     .map(key => {
       const historyRecord = recordFor(employee.id, key);
-      if (!recordHasPeriodActivity(historyRecord)) return null;
+      if (!employeeStartedByPeriodEnd(employee, key)) return null;
+      // De actuele kalendermaand is ook zonder geboekte uren een echte
+      // werkmaand. Historische en toekomstige lege maanden blijven verborgen.
+      if (key !== currentPeriodKey && !recordHasPeriodActivity(historyRecord)) return null;
       const customerRecord = customerTimesheetFor(historyRecord);
       const actions = [];
 
@@ -4749,12 +4848,9 @@ function latestActivePeriodKeyForRole(role = state.currentRole) {
 }
 
 function resetHomeDashboardState(role = state.currentRole) {
-  const homeRole = role || state.currentRole;
-  const defaultPeriodKey = latestActivePeriodKeyForRole(homeRole);
-  if (defaultPeriodKey && parsePeriodKey(defaultPeriodKey) && defaultPeriodKey !== state.selectedPeriodKey) {
-    state.selectedPeriodKey = defaultPeriodKey;
-    ensurePeriodRecords(defaultPeriodKey);
-  }
+  // Terugkeren naar het startscherm is gewone navigatie binnen dezelfde
+  // sessie. Alleen een nieuwe login kiest opnieuw de actuele kalendermaand;
+  // een maand die de gebruiker daarna bewust kiest blijft app-breed actief.
   state.invoiceFilter = "all";
   state.adminTaskFilter = "all";
   persistState();
@@ -5540,6 +5636,8 @@ function monthBatchReadiness(periodKey) {
       ? "blocked"
       : pendingRows.length
         ? "ready"
+        : blockers.length && (key >= currentCalendarPeriodKey() || controlledRows.length === 0)
+        ? "blocked"
         : "controlled";
   return {
     periodKey: key,
@@ -5575,6 +5673,7 @@ function monthBatchCtaState(readiness) {
 
 function invoiceBatchAttentionSummary() {
   const batches = Object.keys(state.records || {})
+    .filter(periodKey => parsePeriodKey(periodKey) && periodKey <= currentCalendarPeriodKey())
     .sort()
     .map(periodKey => monthBatchReadiness(periodKey))
     .filter(readiness => readiness.total > 0 && readiness.state !== "controlled" && readiness.state !== "empty" && monthBatchHasAttentionActivity(readiness));
@@ -8155,15 +8254,15 @@ function login(role) {
   if (role === "employee") {
     const selectedEmployee = Number(document.querySelector("#login-employee").value);
     if (employeeById(selectedEmployee)) state.currentEmployeeId = selectedEmployee;
-    const currentMonthKey = currentCalendarPeriodKey();
-    if (parsePeriodKey(currentMonthKey)) {
-      state.selectedPeriodKey = currentMonthKey;
-      ensurePeriodRecords(currentMonthKey);
-    }
     readApiRuntime.employeeOpenTasksHydrated = !(API_ENABLED && authRuntime.mode === "auth");
   }
   const profile = profileForRole(role);
   if (!profile) return;
+  const currentMonthKey = currentCalendarPeriodKey();
+  if (parsePeriodKey(currentMonthKey)) {
+    state.selectedPeriodKey = currentMonthKey;
+    ensurePeriodRecords(currentMonthKey);
+  }
   state.currentRole = role;
   if (API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative()) state.notifications = [];
   persistState();

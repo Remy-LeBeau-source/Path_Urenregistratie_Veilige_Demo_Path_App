@@ -7,6 +7,14 @@ Feature: Klanturenstaten en documentverwerking
   # Navigatiemapping: tests/playwright/steps/customer-timesheets.steps.ts
 
   @happy
+  Scenario: [CTS-API-H-012] admin kan een ontbrekende klanturenstaat extern bevestigen en terugzetten
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 15
+    Given de beheerder is ingelogd bij een periode zonder klanturenstaatrecord
+    When de beheerder eerst zonder en daarna met verplichte reden extern bevestigt
+    Then de bevestiging auditbaar leesbaar is en door de beheerder kan worden teruggedraaid
+
+  @happy
   Scenario: [CTS-API-H-009] brokerroute koppelt de officiële klanturenstaat aan dezelfde medewerker en periode
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 12

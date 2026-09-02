@@ -14,6 +14,9 @@ const And = navigate;
 const But = navigate;
 
 // Eenvoudige F12-navigatie; de echte acties en assertions staan in het specbestand hierboven.
+Given("de beheerder is ingelogd bij een periode zonder klanturenstaatrecord");
+When("de beheerder eerst zonder en daarna met verplichte reden extern bevestigt");
+Then("de bevestiging auditbaar leesbaar is en door de beheerder kan worden teruggedraaid");
 Given("klanturenstaten en documentverwerking is voorbereid");
 When("de flow voor CTS-API-H-009 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat brokerroute koppelt de officiële klanturenstaat aan dezelfde medewerker en periode");

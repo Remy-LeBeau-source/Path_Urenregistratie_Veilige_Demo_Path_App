@@ -12,6 +12,49 @@ const CANDIDATE_PERIODS = Array.from({ length: 240 }, (_, index) => {
   return `${year}-${String(month).padStart(2, '0')}`;
 });
 
+test('[CTS-API-H-012] admin kan een ontbrekende klanturenstaat extern bevestigen en terugzetten', async ({ request }) => {
+  const authApi = new AuthApi(request);
+  const customerApi = new CustomerTimesheetApi(request);
+  const period = '2199-11';
+  const employeeId = 4;
+
+  await test.step('Given de beheerder is ingelogd bij een periode zonder klanturenstaatrecord', async () => {
+    const login = await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+    expect(login.user.role).toBe('administrator');
+    const initial = await customerApi.read(period, employeeId);
+    expect(initial.status).toBe(200);
+    expect(initial.body.found).toBe(false);
+  });
+
+  await test.step('When de beheerder eerst zonder en daarna met verplichte reden extern bevestigt', async () => {
+    const invalid = await customerApi.write({ action: 'confirm_external', period, employeeId });
+    expect(invalid.status).toBe(400);
+    expect(invalid.body.error).toBe('invalid-payload');
+    const confirmed = await customerApi.write({
+      action: 'confirm_external',
+      period,
+      employeeId,
+      reviewNote: 'Uren per e-mail goedgekeurd',
+    });
+    expect(confirmed.status).toBe(200);
+    expect(confirmed.body.customer_timesheet.status).toBe('skipped');
+    expect(confirmed.body.customer_timesheet.review_note).toBe('Extern bevestigd: Uren per e-mail goedgekeurd');
+    expect(confirmed.body.audit_event).toBe('customer_timesheet.externally_confirmed');
+  });
+
+  await test.step('Then de bevestiging auditbaar leesbaar is en door de beheerder kan worden teruggedraaid', async () => {
+    const read = await customerApi.read(period, employeeId);
+    expect(read.body.found).toBe(true);
+    expect(read.body.customer_timesheet.status).toBe('skipped');
+    expect(read.body.customer_timesheet.reviewed_by).toBeTruthy();
+    expect(read.body.customer_timesheet.reviewed_at).toBeTruthy();
+    const restored = await customerApi.write({ action: 'restore_missing', period, employeeId });
+    expect(restored.status).toBe(200);
+    expect(restored.body.customer_timesheet.status).toBe('missing');
+    await authApi.logout();
+  });
+});
+
 const CORRUPT_JPEG_BUFFER = Buffer.from(
   '/9j/4AAQSkZJRgABAQEAYABgAAD//gA7Q1JFQVRPUjogZ2QtanBlZyB2MS4wICh1c2luZyBJSkcgSlBFRyB2ODApLCBxdWFsaXR5ID0gODUK/9sAQwAFAwQEBAMFBAQEBQUFBgcMCAcHBwcPCwsJDBEPEhIRDxERExYcFxMUGhURERghGBodHR8fHxMXIiQiHiQcHh8e/9sAQwEFBQUHBgcOCAgOHhQRFB4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4e/8AAEQgABAAEAwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A5WiiivmT9wP/2Q==',
   'base64',

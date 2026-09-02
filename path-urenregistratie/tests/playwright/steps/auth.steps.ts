@@ -51,6 +51,7 @@ Then("heet het omgevingsveld Veilige testomgeving");
 And("heet de lokale titel Welkom bij Path Uren & Facturatie");
 When("dezelfde login als productiepresentatie wordt getoond");
 Then("heten omgeving en titel Beveiligde omgeving en Inloggen");
+And("kan het wachtwoord toegankelijk worden getoond en weer verborgen");
 When("de flow voor AUTH-H-020 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat elke medewerker ziet na inloggen de eigen naam, nooit die van een collega");
 When("de flow voor AUTH-H-021 wordt uitgevoerd");

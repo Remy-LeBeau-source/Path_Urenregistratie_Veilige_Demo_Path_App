@@ -10,6 +10,7 @@ type CustomerTimesheetWriteAction =
   | 'mark_sent_to_broker'
   | 'send_to_broker'
   | 'mark_skipped'
+  | 'confirm_external'
   | 'restore_missing';
 
 type WritePayload = {

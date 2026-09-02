@@ -23,6 +23,17 @@ Feature: Dashboard en open werkvoorraad
     When de medewerker het dashboard opent
     Then alleen medewerkersinformatie wordt getoond zonder consolefouten
 
+  @happy
+  Scenario: [DASH-H-018] iedere login opent de actuele maand en bewaart daarna de handmatige keuze
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 23
+    Given Backoffice in september inlogt met een eerder bewaarde maand
+    Then opent de actuele kalendermaand voor Backoffice
+    And Goedkeuringen en Facturen tonen de juiste septemberbeginstand
+    When Backoffice augustus kiest en binnen de app navigeert
+    Then blijft augustus binnen de sessie gekozen
+    And een nieuwe medewerkerlogin begint opnieuw in september
+
   @negative
   Scenario: [DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad niet
     # Testtechniek: Negatieve equivalentieklasse + error guessing
