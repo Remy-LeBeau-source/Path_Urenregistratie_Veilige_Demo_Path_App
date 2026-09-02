@@ -122,6 +122,7 @@
 | DASH-H-014 | ui | dashboard.feature | medewerker krijgt de eerstvolgende concrete actie met juiste maand en taakroute | Beslissingstabel rollen en autorisatie | 22 | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | medewerker krijgt de eerstvolgende concrete actie met juiste maand en taakroute | Happy | 15 | Actueel |
 | DASH-N-015 | ui | dashboard.feature | medewerkerprioriteit kiest correctie boven document en toont niets als alles klaar is | Beslissingstabel rollen en autorisatie | 14 | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | medewerkerprioriteit kiest correctie boven document en toont niets als alles klaar is | Negative | 15 | Actueel |
 | DASH-N-016 | ui | dashboard.feature | correctieactie ververst een verborgen rooster uit een eerdere maand | Toestandsovergang | 11 | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | correctieactie ververst een verborgen rooster uit een eerdere maand | Negative | 15 | Actueel |
+| DASH-N-017 | ui | dashboard.feature | beheerderdashboard toont een laadtoestand tot de eerste werkvoorraad-sync | Negatieve equivalentieklasse + error guessing | 7 | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | beheerderdashboard toont een laadtoestand tot de eerste werkvoorraad-sync | Negative | 15 | Actueel |
 | DASH-H-006 | ui | dashboard.feature | vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie | Beslissingstabel rollen en autorisatie | 7 | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie | Happy | 15 | Actueel |
 | DASH-H-007 | ui | dashboard.feature | dashboardknop behoudt de geldige maand en medewerkeroverzichten | Beslissingstabel rollen en autorisatie | 4 | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | dashboardknop behoudt de geldige maand en medewerkeroverzichten | Happy | 15 | Actueel |
 | DASH-H-017 | ui | dashboard.feature | serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels | Equivalentieklassen | 30 | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels | Happy | 15 | Actueel |
@@ -370,9 +371,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 348
+- Playwright executable cases: 349
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 349
+- Totaal unieke executable cases: 350
 - Playwright features: 24
 - Database features: 1
 - Playwright steps mappings: 24

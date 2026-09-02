@@ -38,6 +38,11 @@ Belangrijke regels:
 - het alle-maanden-factuuroverzicht projecteert uitsluitend perioden tot en met de actuele
   Amsterdamse kalendermaand; alleen openen van een toekomstige maand maakt geen factuurblokkade;
 - `adminOpenTasks()` gebruikt alle gehydrateerde perioden;
+- zolang `readApiRuntime.adminWorkflowHydrated` nog `false` is, toont het beheerderdashboard een
+  neutrale "Werkvoorraad laden…"-toestand (`renderDashboardActionsLoading()`) in plaats van de
+  lokaal geseede teller die daarna omlaag corrigeert. De vlag wordt `true` na de eerste geslaagde
+  `refreshAdminWorkflowReadApi`, en direct bij een gezaghebbende lokale reset of wanneer er geen
+  perioden/medewerkers te synchroniseren zijn;
 - detailreads mogen één record actualiseren, maar niet ongerelateerde records verwijderen;
 - `adminTaskPanelExpanded` is uitsluitend UI-status;
 - rolwissel in TEST behoudt de volledige democatalogus; productie gebruikt uitsluitend serveraccounts;

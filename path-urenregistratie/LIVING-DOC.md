@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 348 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 349 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 348 unieke case-ID's
+- Playwright executable cases: 349 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 349 unieke case-ID's
+- Totaal executable cases: 350 unieke case-ID's
 - Playwright features: 24
 - Database features: 1
 - Playwright steps mappings: 24
 - Database steps mappings: 1
-- Uitvoeringen: 366
-- Niet-mobile projectuitvoeringen: 330
+- Uitvoeringen: 367
+- Niet-mobile projectuitvoeringen: 331
 - Mobile functionele cases: 18
 - Pixel 7 / Chromium-uitvoeringen: 18
 - iPhone 13 / WebKit-uitvoeringen: 18
 
-De 18 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 348 Playwright-functionele cases in totaal 366 resultaten op: 330 + (18 x 2) = 366.
+De 18 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 349 Playwright-functionele cases in totaal 367 resultaten op: 331 + (18 x 2) = 367.
 
 ## Documentatieketen
 
@@ -162,7 +162,7 @@ De 18 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 348 Playwri
 
 - Feature: `tests/playwright/features/dashboard.feature`
 - Source: `tests/playwright/dashboard.spec.ts`
-- Cases: 21
+- Cases: 22
 
 - [DASH-H-001] admin dashboard opent zonder console errors — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [DASH-H-002] employee dashboard opent zonder console errors — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 1
@@ -181,6 +181,7 @@ De 18 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 348 Playwri
 - [DASH-H-014] medewerker krijgt de eerstvolgende concrete actie met juiste maand en taakroute — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 22
 - [DASH-N-015] medewerkerprioriteit kiest correctie boven document en toont niets als alles klaar is — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 14
 - [DASH-N-016] correctieactie ververst een verborgen rooster uit een eerdere maand — Techniek: Toestandsovergang · Assertions: 11
+- [DASH-N-017] beheerderdashboard toont een laadtoestand tot de eerste werkvoorraad-sync — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 7
 - [DASH-H-006] vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [DASH-H-007] dashboardknop behoudt de geldige maand en medewerkeroverzichten — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels — Techniek: Equivalentieklassen · Assertions: 30

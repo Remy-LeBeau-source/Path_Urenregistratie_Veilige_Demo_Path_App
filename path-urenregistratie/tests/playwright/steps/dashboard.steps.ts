@@ -75,6 +75,9 @@ And("bij een volledig afgeronde werkvoorraad verdwijnen taaklijst en prioriteits
 Given("juli als goedgekeurde verborgen urenstaat is achtergebleven");
 When("het dashboard augustus prioriteert en Open correctie wordt gekozen");
 Then("toont Mijn uren augustus als bewerkbare correctie met herindienknop");
+Given("de eerste werkvoorraad-sync nog niet is teruggekomen");
+Then("toont het dashboard een neutrale laadtoestand en geen voorlopige teller");
+When("de sync binnenkomt, verschijnt de gezaghebbende teller");
 Given("een medewerker zonder open acties in een lege toekomstmaand");
 When("de medewerker een toekomstige maand probeert te openen");
 Then("verschijnt september niet als open medewerkermaand");

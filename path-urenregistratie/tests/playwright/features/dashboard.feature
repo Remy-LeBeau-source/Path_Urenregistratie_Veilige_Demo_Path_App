@@ -153,6 +153,14 @@ Feature: Dashboard en open werkvoorraad
     When het dashboard augustus prioriteert en Open correctie wordt gekozen
     Then toont Mijn uren augustus als bewerkbare correctie met herindienknop
 
+  @negative
+  Scenario: [DASH-N-017] beheerderdashboard toont een laadtoestand tot de eerste werkvoorraad-sync
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given de eerste werkvoorraad-sync nog niet is teruggekomen
+    Then toont het dashboard een neutrale laadtoestand en geen voorlopige teller
+    When de sync binnenkomt, verschijnt de gezaghebbende teller
+
   @happy
   Scenario: [DASH-H-006] vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie
     # Testtechniek: Beslissingstabel rollen en autorisatie

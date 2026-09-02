@@ -1200,6 +1200,39 @@ test('[DASH-N-016] correctieactie ververst een verborgen rooster uit een eerdere
   });
 });
 
+test('[DASH-N-017] beheerderdashboard toont een laadtoestand tot de eerste werkvoorraad-sync', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  let bootstrapGateOpen = false;
+
+  await page.route('**/server/api/bootstrap.php', async route => {
+    while (!bootstrapGateOpen) {
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
+    await route.continue();
+  });
+
+  await test.step('Given de eerste werkvoorraad-sync nog niet is teruggekomen', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
+  });
+
+  await test.step('Then toont het dashboard een neutrale laadtoestand en geen voorlopige teller', async () => {
+    await expect(page.locator('#hero-task-total')).toHaveText(/laden/i, { timeout: 10_000 });
+    await expect(page.locator('#hero-task-total')).not.toHaveText(/\d+ open actie/);
+    await expect(page.locator('#dashboard-work-count')).toBeHidden();
+    await expect(page.locator('#open-work-queue')).toBeHidden();
+  });
+
+  await test.step('When de sync binnenkomt, verschijnt de gezaghebbende teller', async () => {
+    bootstrapGateOpen = true;
+    await expect(page.locator('#hero-task-total')).toHaveText(/^\d+ open actie/, { timeout: 15_000 });
+    await expect(page.locator('#hero-task-total')).not.toHaveText(/laden/i);
+  });
+
+  await loginPage.logout();
+});
+
 test('[DASH-H-006] vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie', async ({ page }) => {
   const loginPage = new LoginPage(page);
   let openOverviewVisible = false;

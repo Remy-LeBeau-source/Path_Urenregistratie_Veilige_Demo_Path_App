@@ -250,7 +250,11 @@ Minimaal de volgende ketens zijn releaseblokkerend:
 
 - Validatiefouten blijven in het actieve formulier zichtbaar en sluiten de modal niet.
 - Een unieke-emailconflict toont een begrijpelijke melding en opent waar mogelijk het bestaande
-  account; ruwe SQL-fouten worden nooit aan de gebruiker getoond.
+  account; ruwe SQL-fouten worden nooit aan de gebruiker getoond. De blokkadepopup licht het
+  bestaande account alleen uit bij annuleren of sluiten van de popup — een geslaagde opslag na
+  "Adres aanpassen" licht nooit per ongeluk het oude, conflicterende account uit.
+- Het beheerderdashboard toont bij een verse login of paginaherlading eerst "Werkvoorraad laden…"
+  totdat de serverstand binnen is, in plaats van een lokaal geschatte teller die daarna nog wijzigt.
 - Een mislukte write verandert geen teller, eigenaar of status in de UI.
 - Een herhaalde write met dezelfde versie is idempotent of wordt met een duidelijke stale-version-
   melding geweigerd.

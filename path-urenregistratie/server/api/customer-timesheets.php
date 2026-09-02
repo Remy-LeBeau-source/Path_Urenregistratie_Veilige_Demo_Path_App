@@ -716,25 +716,73 @@ if ($action === 'send_to_broker') {
         $recipient = (bool)$route['customer_timesheet_use_broker_email']
             ? trim((string)$route['invoice_email'])
             : trim((string)$route['customer_timesheet_broker_email']);
-        $deliveryId = mail_insert_delivery(
-            $pdo,
-            (int)$route['invoice_id'],
-            'broker',
-            $recipient,
-            null,
-            $subject,
-            $body,
-            'customer_timesheet',
-            mail_is_dry_run($config)
+
+        // Een eerdere poging kan een brokerregel hebben achtergelaten (TEST-mail die
+        // niet afgeleverd werd valt na de eerste poging terug op `queued`). Zonder
+        // deze controle stapelt elke herhaalde `Controle afronden` een extra
+        // brokerregel op, met dubbele klanturenstaatmails zodra aflevering later wel
+        // lukt. De maandelijkse factuur-brokermail heeft `attachment_policy = invoice`
+        // of `none`; alleen de klanturenstaatroute gebruikt `customer_timesheet`, dus
+        // die filteren we hier expliciet zodat de twee brokerkanalen niet botsen.
+        $existingBrokerStmt = $pdo->prepare(
+            'SELECT id, status FROM email_deliveries
+             WHERE invoice_id = :invoice_id AND channel = "broker"
+               AND attachment_policy = "customer_timesheet"
+               AND status IN ("queued", "processing", "sent")
+             ORDER BY id DESC LIMIT 1'
         );
+        $existingBrokerStmt->execute([':invoice_id' => (int)$route['invoice_id']]);
+        $existingBroker = $existingBrokerStmt->fetch();
+
+        $alreadySent = $existingBroker && (string)$existingBroker['status'] === 'sent';
+        if ($existingBroker && (string)$existingBroker['status'] === 'processing') {
+            $pdo->rollBack();
+            customer_timesheet_json([
+                'ok' => false,
+                'error' => 'customer-timesheet-broker-send-in-progress',
+                'message' => 'Er loopt al een brokerlevering voor deze factuur. Wacht de uitkomst af voordat je opnieuw verzendt.',
+            ], 409);
+        }
+
+        if ($alreadySent) {
+            $deliveryId = (int)$existingBroker['id'];
+        } elseif ($existingBroker) {
+            // Bestaande `queued` regel hergebruiken met de actuele tekst.
+            $deliveryId = (int)$existingBroker['id'];
+            $pdo->prepare(
+                'UPDATE email_deliveries
+                 SET recipient_email = :recipient, subject_snapshot = :subject, body_snapshot = :body
+                 WHERE id = :id AND channel = "broker" AND status = "queued"'
+            )->execute([
+                ':recipient' => $recipient,
+                ':subject' => $subject,
+                ':body' => $body,
+                ':id' => $deliveryId,
+            ]);
+        } else {
+            $deliveryId = mail_insert_delivery(
+                $pdo,
+                (int)$route['invoice_id'],
+                'broker',
+                $recipient,
+                null,
+                $subject,
+                $body,
+                'customer_timesheet',
+                mail_is_dry_run($config)
+            );
+        }
         mail_audit($pdo, $companyId, (int)$currentUser['id'], 'email.queued', $deliveryId, [
             'channel' => 'broker',
             'customer_timesheet_id' => (int)$existing['id'],
             'period' => $period['period_key'],
+            'reused_delivery' => $existingBroker ? (string)$existingBroker['status'] : 'new',
         ]);
         $pdo->commit();
 
-        $dispatchResult = mail_dispatch_created($pdo, [['id' => $deliveryId]], $config);
+        $dispatchResult = $alreadySent
+            ? ['sent' => 1, 'failed' => 0, 'skipped' => 0]
+            : mail_dispatch_created($pdo, [['id' => $deliveryId]], $config);
         $testDelivery = mail_dispatch_after_user_action($config);
         if ($testDelivery && (int)$dispatchResult['sent'] !== 1) {
             customer_timesheet_json([
