@@ -166,6 +166,12 @@ test('[DASH-H-018] iedere login opent de actuele maand en bewaart daarna de hand
     });
     await loginPage.open();
     await loginPage.loginAsAdmin();
+    // De loginmaand zelf moet al vóór herstel kloppen. Herstel daarna de vaste
+    // lokale demo-beginstand, zodat mutaties uit andere CI-shards de aantallen
+    // van deze scenario-asserties niet kunnen beïnvloeden.
+    await expect(page.locator('#period-label')).toHaveText('September 2026');
+    await page.locator('#quick-reset-demo').click();
+    await page.locator('#modal-confirm').click();
   });
 
   await test.step('Then opent de actuele kalendermaand voor Backoffice', async () => {
@@ -564,7 +570,7 @@ test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker e
     await expect(page.locator('#hero-task-total')).toHaveText('12 open acties');
     await expect(page.locator('#admin-task-summary')).toContainText('Backoffice kan 7 oppakken; 5 wachten op medewerkers');
     await expect(page.locator('#admin-task-list [data-admin-task-row]')).toHaveCount(12);
-    console.log('GUI-CLOSEOUT baseline: 12 open acties; Backoffice 7; medewerkers 5; Stasjo 3 medewerkeracties; Brian 2 medewerkeracties plus 1 Backoffice-controle; Shawn 1 open dossieractie.');
+    console.log('GUI-CLOSEOUT baseline: 12 open acties; Backoffice 7; medewerkers 5; Stasjo 3 medewerkeracties; Brian 2 medewerkeracties plus 1 Backoffice-controle; Shawn 0 medewerkeracties (gestart per juli, juni telt niet mee).');
 
     await openDemoEmployee(2);
     await expect(page.locator('#employee-open-task-total')).toHaveText('3 open acties');
@@ -573,7 +579,7 @@ test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker e
     await openDemoEmployee(1);
     await expect(page.locator('#employee-open-task-total')).toHaveText('0 open acties');
     await openDemoEmployee(4);
-    await expect(page.locator('#employee-open-task-total')).toHaveText('1 open actie');
+    await expect(page.locator('#employee-open-task-total')).toHaveText('0 open acties');
   });
 
   await test.step('When medewerkers alle vijf wachtende acties via de zichtbare interface afronden', async () => {
