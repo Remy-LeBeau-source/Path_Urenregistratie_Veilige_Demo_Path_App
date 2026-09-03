@@ -30,3 +30,11 @@ Feature: Rollen, rechten en gegevensafscherming
     Given de medewerker is ingelogd
     When de medewerker bootstrapdata opvraagt
     Then de medewerker ziet alleen eigen invoice-data
+
+  @negative
+  Scenario: [ROLE-N-004] een medewerker krijgt 403 op elke beheerder-only schrijfactie
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given een ingelogde medewerker
+    When elke beheerder-only schrijfactie en beheerdersbron wordt aangeroepen
+    Then weigert de server steeds met 401 of 403

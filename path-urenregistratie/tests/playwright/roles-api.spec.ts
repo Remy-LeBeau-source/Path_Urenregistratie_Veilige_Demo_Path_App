@@ -85,3 +85,40 @@ test('[ROLE-H-002] employee ziet alleen eigen data', async ({ request }) => {
   });
 });
 
+
+test('[ROLE-N-004] een medewerker krijgt 403 op elke beheerder-only schrijfactie', async ({ request }) => {
+  const authApi = new AuthApi(request);
+  const csrf = async () => String((await (await request.get('/server/auth/csrf.php')).json()).csrf_token || '');
+  const post = async (path: string, data: Record<string, unknown>) => {
+    const r = await request.post(path, { headers: { 'X-CSRF-Token': await csrf() }, data });
+    return { status: r.status(), body: await r.json().catch(() => ({})) };
+  };
+
+  await test.step('Given een ingelogde medewerker', async () => {
+    const login = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+    expect(login.user.role).toBe('employee');
+  });
+
+  await test.step('Then weigert elke beheerder-only actie met 403 en verandert er niets', async () => {
+    // [path, payload] -- elk is een echte beheerder-schrijfactie.
+    const beheerderActies: Array<[string, Record<string, unknown>]> = [
+      ['/server/api/users.php', { action: 'deactivate', user_id: 1 }],
+      ['/server/api/staff.php', { action: 'upsert_employee', sendInvitation: false, employee: { name: 'X', email: 'x@example.invalid', role: 'Consultant', startDate: '2026-08-01', active: true, client: 'C', broker: 'B', brokerEmail: 'b@example.invalid', projectCode: 'X1' }, mailRecipients: [] }],
+      ['/server/api/settings.php', { settings: { supportName: 'Hack' } }],
+      ['/server/api/announcements.php', { action: 'create', title: 'X', message: 'X' }],
+      ['/server/api/periods.php', { action: 'close', period: '2026-08' }],
+    ];
+    for (const [path, payload] of beheerderActies) {
+      const res = await post(path, payload);
+      expect([401, 403], `${path}: status ${res.status} (${JSON.stringify(res.body).slice(0, 120)})`).toContain(res.status);
+    }
+  });
+
+  await test.step('And ook de leesbare beheerdersbronnen blijven dicht', async () => {
+    for (const path of ['/server/api/audit-log.php', '/server/api/email-queue.php', '/server/api/mail-acceptance.php']) {
+      const r = await request.get(path);
+      expect([401, 403], `${path}: ${r.status()}`).toContain(r.status());
+    }
+    await authApi.logout();
+  });
+});
