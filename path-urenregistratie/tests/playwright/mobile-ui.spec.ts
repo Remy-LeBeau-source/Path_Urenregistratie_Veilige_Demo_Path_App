@@ -889,6 +889,40 @@ test('[MOB-H-008] elk hoofdscherm blijft op een telefoon leesbaar en bedienbaar'
   });
 });
 
+test('[MOB-H-019] mobiele Hulp & contact blijft sluitbaar nadat een FAQ-antwoord het paneel laat groeien', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+
+  const closeButton = page.locator('#help-close');
+  const withinViewport = async () => page.evaluate(() => {
+    const btn = document.querySelector('#help-close');
+    if (!btn) return { ok: false, top: null, bottom: null, height: window.innerHeight };
+    const rect = btn.getBoundingClientRect();
+    return { ok: rect.top >= 0 && rect.bottom <= window.innerHeight, top: rect.top, bottom: rect.bottom, height: window.innerHeight };
+  });
+
+  await test.step('Given de medewerker opent Hulp & contact op de telefoon', async () => {
+    await page.locator('#help-launcher').click();
+    await expect(page.locator('#help-panel')).toBeVisible();
+    await expect(closeButton).toBeVisible();
+    expect((await withinViewport()).ok, 'het kruisje staat bij openen niet volledig in beeld').toBe(true);
+  });
+
+  await test.step('When een onderwerp bij Veelgestelde vragen wordt gekozen en het antwoord het paneel laat groeien', async () => {
+    await page.locator('#help-suggestions [data-help-topic]').first().click();
+    await expect(page.locator('#help-messages')).not.toBeEmpty();
+  });
+
+  await test.step('Then blijft het kruisje volledig in beeld en sluit het het paneel', async () => {
+    await expect(closeButton).toBeVisible();
+    const meting = await withinViewport();
+    expect(meting.ok, `het kruisje viel buiten het scherm (top ${meting.top}, bottom ${meting.bottom}, hoogte ${meting.height})`).toBe(true);
+    await closeButton.click();
+    await expect(page.locator('#help-panel')).toBeHidden();
+  });
+});
+
 test('[MOB-H-009] instellingen en urenstaat zijn op een telefoon te overzien', async ({ page }) => {
   // Instellingen was 10,9 schermen scrollen en de urenstaat schoof zijwaarts weg
   // onder je duim terwijl je cijfers typte. Deze case houdt beide vast: panelen

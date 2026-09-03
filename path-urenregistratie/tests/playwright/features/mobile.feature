@@ -76,6 +76,14 @@ Feature: Mobiele gebruikerservaring
     Then wordt met Playwright-assertions bevestigd dat elk hoofdscherm blijft op een telefoon leesbaar en bedienbaar
 
   @happy
+  Scenario: [MOB-H-019] mobiele Hulp & contact blijft sluitbaar nadat een FAQ-antwoord het paneel laat groeien
+    # Testtechniek: Responsive viewport + end-to-end use-case
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given de medewerker opent Hulp & contact op de telefoon
+    When een onderwerp bij Veelgestelde vragen wordt gekozen en het antwoord het paneel laat groeien
+    Then blijft het kruisje volledig in beeld en sluit het het paneel
+
+  @happy
   Scenario: [MOB-H-009] instellingen en urenstaat zijn op een telefoon te overzien
     # Testtechniek: Responsive viewport + end-to-end use-case
     # Aantoonbare Playwright-assertions in deze case: 9

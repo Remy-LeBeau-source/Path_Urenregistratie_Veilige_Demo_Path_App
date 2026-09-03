@@ -63,7 +63,12 @@ const { document, Event, MouseEvent, KeyboardEvent } = dom.window;
 const downloads = [];
 dom.window.HTMLAnchorElement.prototype.click = function captureDownload() {
   downloads.push({ filename: this.download, href: this.href });
+  // De factuurdownload loopt niet meer via jsPDF's save() maar via een expliciete
+  // <a download>-klik (deliverBlobDownload), zodat het app-tabblad nooit wordt
+  // vervangen. Registreer een .pdf-download hier zodat de bestaande checks blijven werken.
+  if (String(this.download || "").toLowerCase().endsWith(".pdf")) pdfDownloads.push(this.download);
 };
+if (typeof dom.window.URL.revokeObjectURL !== "function") dom.window.URL.revokeObjectURL = () => {};
 
 function click(selector) {
   const element = document.querySelector(selector);

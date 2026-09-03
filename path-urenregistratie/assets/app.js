@@ -3001,13 +3001,13 @@ function showInvoiceDocuments(invoiceId, focusKind = "") {
   const customerExternallyConfirmed = invoiceCustomerTimesheetExternallyConfirmed(item);
   const customerPresent = Boolean(item.customerTimesheetDownloadUrl || customerExternallyConfirmed);
   const invoiceDocument = item.invoiceDownloadUrl
-    ? '<div class="invoice-document-links"><a class="small-button" data-document-kind="invoice" href="' + escapeHtml(item.invoiceDownloadUrl) + '" target="_blank" rel="noopener">Openen</a><a class="text-button" href="' + escapeHtml(item.invoiceDownloadUrl) + '" download>Downloaden</a></div>' +
+    ? '<div class="invoice-document-links"><button type="button" class="small-button" data-document-kind="invoice" data-doc-open="' + escapeHtml(item.invoiceDownloadUrl) + '">Openen</button><button type="button" class="text-button" data-doc-download="' + escapeHtml(item.invoiceDownloadUrl) + '" data-doc-name="Factuur-' + escapeHtml(safeFilename(String(item.invoiceNumber || item.periodKey || "document"))) + '.pdf">Downloaden</button></div>' +
       (item.invoiceSource === "external" ? '<dl class="invoice-document-metadata"><div><dt>Bron</dt><dd>Extern toegevoegd</dd></div>' +
         (item.invoiceOriginalFileName ? '<div><dt>Bestand</dt><dd>' + escapeHtml(item.invoiceOriginalFileName) + '</dd></div>' : '') +
         (item.invoiceUploadReason ? '<div><dt>Reden</dt><dd data-invoice-upload-reason>' + escapeHtml(item.invoiceUploadReason) + '</dd></div>' : '') + '</dl>' : '')
     : '<p class="invoice-document-missing-note">Factuur-PDF is nog niet beschikbaar.</p>';
   const customerDocument = item.customerTimesheetDownloadUrl
-    ? '<div class="invoice-document-links"><a class="small-button" data-document-kind="customer-timesheet" href="' + escapeHtml(item.customerTimesheetDownloadUrl) + '" target="_blank" rel="noopener">Openen</a><a class="text-button" href="' + escapeHtml(item.customerTimesheetDownloadUrl) + '" download>Downloaden</a></div>'
+    ? '<div class="invoice-document-links"><button type="button" class="small-button" data-document-kind="customer-timesheet" data-doc-open="' + escapeHtml(item.customerTimesheetDownloadUrl) + '">Openen</button><button type="button" class="text-button" data-doc-download="' + escapeHtml(item.customerTimesheetDownloadUrl) + '" data-doc-name="Klanturenstaat-' + escapeHtml(safeFilename(String(item.periodKey || "document"))) + '.pdf">Downloaden</button></div>'
     : customerExternallyConfirmed
       ? '<p class="invoice-document-missing-note">Extern bevestigd' + (invoiceExternalConfirmationReason(item) ? ': ' + escapeHtml(invoiceExternalConfirmationReason(item)) : '') + '.</p>' +
         '<div class="invoice-document-restore"><button type="button" class="small-button document-restore-action" data-restore-external-timesheet>Externe bevestiging intrekken</button>' +
@@ -7154,7 +7154,7 @@ function mailAcceptanceAttachmentLinks(scenario, compact = false) {
     const index = Number.isInteger(Number(attachment && attachment.index)) ? Number(attachment.index) : fallbackIndex;
     const filename = String(attachment && attachment.filename || "PDF-bijlage");
     const label = filename.includes("Klanturenstaat") ? "Klanturenstaat-PDF bekijken" : "Factuur-PDF bekijken";
-    return '<a class="small-button mail-acceptance-attachment" target="_blank" rel="noopener" href="' + MAIL_ACCEPTANCE_API_PATH + '?preview_scenario=' + key + '&amp;attachment=' + encodeURIComponent(String(index)) + '" title="' + escapeHtml(filename) + '">' + escapeHtml(compact ? label.replace(" bekijken", "") : label) + '</a>';
+    return '<a class="small-button mail-acceptance-attachment" target="path-document" rel="noopener" href="' + MAIL_ACCEPTANCE_API_PATH + '?preview_scenario=' + key + '&amp;attachment=' + encodeURIComponent(String(index)) + '" title="' + escapeHtml(filename) + '">' + escapeHtml(compact ? label.replace(" bekijken", "") : label) + '</a>';
   }).join("") + '</div>';
 }
 
@@ -9171,6 +9171,70 @@ function safeFilename(value) {
   return String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9._-]+/gi, "_").replace(/^_+|_+$/g, "");
 }
 
+// Levert een bestand af als download zonder ooit weg te navigeren. jsPDF's
+// doc.save() en een kale <a target="_blank"> naar een blob/data-URL vielen op
+// Android Chrome en in de PWA terug op navigatie naar de PDF-viewer, waardoor
+// het app-tabblad "overgenomen" leek en de gebruiker niet meer terugkon.
+function deliverBlobDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.rel = "noopener";
+  link.style.display = "none";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+function dataUrlToBlob(dataUrl) {
+  const [meta, base64] = String(dataUrl).split(",");
+  const mime = (meta.match(/data:([^;]+)/) || [])[1] || "application/octet-stream";
+  const bytes = atob(base64 || "");
+  const buffer = new Uint8Array(bytes.length);
+  for (let index = 0; index < bytes.length; index += 1) buffer[index] = bytes.charCodeAt(index);
+  return new Blob([buffer], { type: mime });
+}
+
+function filenameFromResponse(response, fallback) {
+  const disposition = response.headers.get("Content-Disposition") || "";
+  const match = disposition.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
+  try {
+    return match ? decodeURIComponent(match[1]) : fallback;
+  } catch (_error) {
+    return match ? match[1] : fallback;
+  }
+}
+
+// Bekijken en downloaden lopen altijd via fetch -> blob, zodat de
+// Content-Disposition van de server (soms inline, soms attachment) niet meer
+// bepaalt of Chrome het bestand toont of ophaalt. Bekijken opent één vast,
+// hergebruikt tabblad; het app-tabblad blijft staan. Downloaden navigeert nooit.
+function openDocumentInTab(url) {
+  const viewer = window.open("about:blank", "path-document");
+  fetch(url, { credentials: "same-origin" })
+    .then(response => (response.ok ? response.blob() : Promise.reject(new Error("HTTP " + response.status))))
+    .then(blob => {
+      const objectUrl = URL.createObjectURL(blob);
+      if (viewer && !viewer.closed) viewer.location.href = objectUrl;
+      else deliverBlobDownload(blob, "document.pdf");
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
+    })
+    .catch(() => {
+      if (viewer && !viewer.closed) viewer.close();
+      toast("Het document kon niet worden geopend. Gebruik Downloaden.");
+    });
+}
+
+function downloadDocument(url, fallbackName) {
+  fetch(url, { credentials: "same-origin" })
+    .then(response => (response.ok
+      ? response.blob().then(blob => deliverBlobDownload(blob, filenameFromResponse(response, fallbackName)))
+      : Promise.reject(new Error("HTTP " + response.status))))
+    .catch(() => toast("Het document kon niet worden gedownload. Probeer het later opnieuw."));
+}
+
 function downloadInvoicePdf(employeeId, periodKey = "", outputMode = "download") {
   const data = invoiceData(employeeId, periodKey);
   const identity = invoiceCompanyIdentity();
@@ -9319,7 +9383,7 @@ function downloadInvoicePdf(employeeId, periodKey = "", outputMode = "download")
     return String(doc.output("datauristring")).replace(/^data:application\/pdf[^,]*,/, "");
   }
   const filename = "Conceptfactuur_" + safeFilename(data.record.invoiceNumber) + "_" + safeFilename(data.employee.name) + ".pdf";
-  doc.save(filename);
+  deliverBlobDownload(doc.output("blob"), filename);
   toast("Conceptfactuur als PDF gedownload. Er is niets verstuurd.");
   return true;
 }
@@ -10309,15 +10373,7 @@ function showPreferences() {
 
 function downloadCsv(filename, rows) {
   const csv = rows.map(row => row.map(value => '"' + String(value).replaceAll('"', '""') + '"').join(";")).join("\n");
-  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  document.body.append(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
+  deliverBlobDownload(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }), filename);
 }
 
 document.addEventListener("click", event => {
@@ -10639,16 +10695,30 @@ function toonInstallatieAanbod() {
   const customerTimesheetSend = event.target.closest("[data-send-customer-timesheet]");
   if (customerTimesheetSend) showCustomerTimesheetBrokerCheck(Number(customerTimesheetSend.dataset.sendCustomerTimesheet), customerTimesheetSend.dataset.periodKey);
 
+  const documentOpen = event.target.closest("[data-doc-open]");
+  if (documentOpen) {
+    event.preventDefault();
+    openDocumentInTab(documentOpen.dataset.docOpen);
+    return;
+  }
+  const documentDownload = event.target.closest("[data-doc-download]");
+  if (documentDownload) {
+    event.preventDefault();
+    downloadDocument(documentDownload.dataset.docDownload, documentDownload.dataset.docName || "document.pdf");
+    return;
+  }
+
   const customerTimesheetView = event.target.closest("[data-view-customer-timesheet]");
   if (customerTimesheetView) {
     const record = recordFor(Number(customerTimesheetView.dataset.viewCustomerTimesheet), customerTimesheetView.dataset.periodKey);
     const documentRecord = customerTimesheetFor(record);
     if (documentRecord.fileData) {
-      const link = document.createElement("a");
-      link.href = documentRecord.fileData;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      link.click();
+      const naam = documentRecord.fileName || ("Klanturenstaat_" + (customerTimesheetView.dataset.periodKey || "") + ".pdf");
+      if (String(documentRecord.fileData).startsWith("data:")) {
+        deliverBlobDownload(dataUrlToBlob(documentRecord.fileData), naam);
+      } else {
+        openDocumentInTab(documentRecord.fileData);
+      }
     }
   }
 

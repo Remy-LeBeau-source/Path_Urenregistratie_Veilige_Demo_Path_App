@@ -211,6 +211,7 @@
 | MOB-H-006 | ui | mobile.feature | een uitgenodigde collega stelt op de telefoon een wachtwoord in en ziet een duidelijke bevestiging | Responsive viewport + end-to-end use-case | 19 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | een uitgenodigde collega stelt op de telefoon een wachtwoord in en ziet een duidelijke bevestiging | Happy | 15 | Actueel |
 | MOB-H-007 | ui | mobile.feature | een medewerker leest mededelingen op de telefoon zonder afgekapte tekst | Responsive viewport + end-to-end use-case | 4 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | een medewerker leest mededelingen op de telefoon zonder afgekapte tekst | Happy | 15 | Actueel |
 | MOB-H-008 | ui | mobile.feature | elk hoofdscherm blijft op een telefoon leesbaar en bedienbaar | Responsive viewport + end-to-end use-case | 5 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | elk hoofdscherm blijft op een telefoon leesbaar en bedienbaar | Happy | 15 | Actueel |
+| MOB-H-019 | ui | mobile.feature | mobiele Hulp & contact blijft sluitbaar nadat een FAQ-antwoord het paneel laat groeien | Responsive viewport + end-to-end use-case | 7 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | mobiele Hulp & contact blijft sluitbaar nadat een FAQ-antwoord het paneel laat groeien | Happy | 15 | Actueel |
 | MOB-H-009 | ui | mobile.feature | instellingen en urenstaat zijn op een telefoon te overzien | Responsive viewport + end-to-end use-case | 9 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | instellingen en urenstaat zijn op een telefoon te overzien | Happy | 15 | Actueel |
 | MOB-H-010 | ui | mobile.feature | een veeg over het scherm scrollt de pagina echt | Responsive viewport + end-to-end use-case | 3 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | een veeg over het scherm scrollt de pagina echt | Happy | 15 | Actueel |
 | MOB-H-011 | ui | mobile.feature | geen enkele tekst op een telefoon staat onder de leesbare ondergrens | Responsive viewport + end-to-end use-case | 2 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | geen enkele tekst op een telefoon staat onder de leesbare ondergrens | Happy | 15 | Actueel |
@@ -371,9 +372,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 349
+- Playwright executable cases: 350
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 350
+- Totaal unieke executable cases: 351
 - Playwright features: 24
 - Database features: 1
 - Playwright steps mappings: 24

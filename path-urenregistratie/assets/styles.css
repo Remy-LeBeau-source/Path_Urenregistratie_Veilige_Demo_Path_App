@@ -793,7 +793,13 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 @keyframes modalIn { from { opacity: 0; transform: scale(.97) translateY(8px); } to { opacity: 1; transform: none; } }
 .modal h2 { margin: 8px 0; font-family: "Roboto Slab", Georgia, serif; }
 .modal > p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; white-space: pre-line; }
-.modal-close { position: absolute; top: 14px; right: 14px; width: 34px; height: 34px; border: 0; border-radius: 10px; background: #f1f4f4; cursor: pointer; font-size: 21px; }
+/* Sticky i.p.v. absolute: bij een lang formulier of nadat de toetsenbord-focus
+   het venster omhoog scrolde, verdween het kruisje boven de rand. Nu blijft het
+   in beeld boven de scrollende modalinhoud; float houdt het rechtsboven zonder
+   een eigen regel op te eisen. */
+.modal-close { position: sticky; top: 0; z-index: 3; float: right; display: grid; place-items: center; width: 34px; height: 34px; margin: -14px -14px 4px 12px; border: 0; border-radius: 10px; background: #f1f4f4; cursor: pointer; font-size: 21px; line-height: 1; }
+.modal-close:hover { background: #e6ebeb; }
+.modal-close:focus-visible { outline: 3px solid rgba(58,189,157,.32); outline-offset: 2px; }
 .modal-summary { display: grid; gap: 8px; margin: 20px 0; border-radius: 14px; background: var(--vlak-zacht); padding: 15px; }
 .modal-summary > div { display: flex; justify-content: space-between; gap: 20px; color: var(--muted); font-size: 11px; }
 .modal-summary strong { color: var(--navy-tekst); }
@@ -1497,6 +1503,11 @@ html[data-theme="dark"] .modal-summary,
 html[data-theme="dark"] .employee-details div,
 html[data-theme="dark"] .segmented-control,
 html[data-theme="dark"] .help-messages { background: #0d1825; }
+/* De sluitknop hield een vaste lichtgrijze achtergrond zonder eigen
+   tekstkleur: in donkere modus werd het een witte blok met een bijna
+   onzichtbaar kruisje. Lichte modus blijft ongewijzigd. */
+html[data-theme="dark"] .modal-close { background: #1d2b3b; color: var(--navy-tekst); }
+html[data-theme="dark"] .modal-close:hover { background: #263a4e; }
 html[data-theme="dark"] input,
 html[data-theme="dark"] select,
 html[data-theme="dark"] textarea,
@@ -1602,7 +1613,7 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
   .announcement-archive-filter { width: 100%; overflow-x: auto; }
   .recipient-choice-grid { grid-template-columns: minmax(0, 1fr); }
   .help-launcher { right: 12px; bottom: 78px; }
-  .help-panel { right: 12px; bottom: 136px; max-height: calc(100vh - 155px); }
+  .help-panel { right: 12px; left: 12px; bottom: 12px; max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); }
   .help-suggestions { grid-template-columns: minmax(0, 1fr); }
   .help-suggestions [data-help-topic="contact"] { grid-column: 1; }
 }
@@ -2116,10 +2127,15 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
 
   .help-panel {
     right: 12px;
-    bottom: 132px;
+    bottom: 12px;
     left: 12px;
     width: auto;
-    max-height: calc(100vh - 150px);
+    /* Van onderaf gestapeld met een op 100vh gebaseerde max-hoogte schoof de
+       koptekst (met het kruisje) achter de mobiele adresbalk zodra een antwoord
+       het paneel liet groeien. Nu boven én onder verankerd en gemeten aan de
+       zichtbare hoogte (dvh), zodat de koptekst altijd in beeld blijft. */
+    max-height: calc(100vh - 24px);
+    max-height: calc(100dvh - 24px);
   }
 }
 

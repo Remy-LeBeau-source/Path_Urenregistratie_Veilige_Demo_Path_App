@@ -67,10 +67,10 @@ test('[INV-H-013] documentarchief toont factuur en klanturenstaat zonder bestand
   await expect(page.locator('#modal-title')).toHaveText('TEST-ARCHIEF-001');
   await expect(page.locator('[data-document-card="invoice"] .document-status-pill')).toHaveText('Aanwezig');
   await expect(page.locator('[data-document-card="customer-timesheet"] .document-status-pill')).toHaveText('Aanwezig');
-  await expect(page.locator('[data-document-kind="invoice"]')).toHaveAttribute('href', /action=download&invoice_id=901/);
+  await expect(page.locator('[data-document-kind="invoice"]')).toHaveAttribute('data-doc-open', /action=download&invoice_id=901/);
   await expect(page.locator('[data-invoice-upload-reason]')).toHaveText('Ontvangen van broker');
   await expect(page.locator('[data-document-card="invoice"]')).toContainText('brokerfactuur.pdf');
-  await expect(page.locator('[data-document-kind="customer-timesheet"]')).toHaveAttribute('href', /customer-timesheets\.php\?action=download/);
+  await expect(page.locator('[data-document-kind="customer-timesheet"]')).toHaveAttribute('data-doc-open', /customer-timesheets\.php\?action=download/);
   await expect(page.locator('#invoice-customer-timesheet-file')).toHaveCount(0);
 });
 
