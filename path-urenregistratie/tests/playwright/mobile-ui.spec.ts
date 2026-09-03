@@ -1440,3 +1440,35 @@ test('[MOB-H-020] het manifest gebruikt overal dezelfde navy statusbalkkleur', a
       .not.toContain('#BB7623');
   });
 });
+
+test('[MOB-H-021] de service worker en de iOS-beginschermmeta vormen een geldig installatiecontract', async ({ page }) => {
+  // Zonder een opvraagbare sw.js registreert de installbanner niet; zonder de
+  // apple-mobile-web-app-meta opent iOS de app met browserbalk en zonder titel.
+  await page.goto('/');
+
+  await test.step('Given de pagina registreert een service worker', async () => {
+    const html = await (await page.request.get('/index.html')).text();
+    // De registratie zit in pwa-install.js, dat de pagina inlaadt.
+    expect(html).toMatch(/pwa-install\.js/);
+  });
+
+  await test.step('When sw.js wordt opgehaald', async () => {
+    const sw = await page.request.get('/sw.js');
+    expect(sw.status(), 'sw.js hoort 200 te geven').toBe(200);
+    expect(sw.headers()['content-type'] || '', 'sw.js hoort als JavaScript geserveerd te worden')
+      .toMatch(/javascript|ecmascript/i);
+    const body = await sw.text();
+    expect(body, 'de service worker hoort een install-handler te hebben').toContain("addEventListener('install'");
+    expect(body, 'geen fetch-handler: mag runtime-gedrag niet stil veranderen').not.toContain("addEventListener('fetch'");
+  });
+
+  await test.step('Then staan de iOS-beginschermmeta compleet in de pagina', async () => {
+    await expect(page.locator('meta[name="apple-mobile-web-app-capable"][content="yes"]')).toHaveCount(1);
+    await expect(page.locator('meta[name="apple-mobile-web-app-status-bar-style"]')).toHaveCount(1);
+    await expect(page.locator('meta[name="apple-mobile-web-app-title"]')).toHaveCount(1);
+    await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveCount(1);
+    const icon = await page.request.get('/assets/apple-touch-icon.png');
+    expect(icon.status(), 'het apple-touch-icon hoort te bestaan').toBe(200);
+    expect(icon.headers()['content-type'] || '').toMatch(/image\//);
+  });
+});
