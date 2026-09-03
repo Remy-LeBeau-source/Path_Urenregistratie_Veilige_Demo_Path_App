@@ -831,6 +831,10 @@ test('[DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakie
 
   await test.step('Then blijven de maandnamen zichtbaar in donkere modus', async () => {
     const openOverview = page.locator('#employee-open-overview');
+    // Deze case blokkeert timesheets.php bewust met een 503. De open-maandenkaart
+    // blijft verborgen zolang de eerste werkvoorraad-sync loopt, dus wacht eerst
+    // tot die ronde klaar is voordat de zichtbaarheid wordt beoordeeld.
+    await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i, { timeout: 15_000 });
     await expect(openOverview).toBeVisible();
     const overviewContrast = await openOverview.evaluate((overview) => {
       const parseRgb = (value: string) => (value.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
@@ -1280,6 +1284,10 @@ test('[DASH-H-006] vooruit bladeren maakt geen lege toekomstmaand zichtbaar als 
     await loginPage.loginAsEmployee();
     await page.locator('button[data-view="employee-dashboard"]').click();
     await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
+    // Wacht tot de eerste werkvoorraad-sync binnen is: zolang die loopt is de
+    // open-maandenkaart bewust verborgen, en dan legt deze case een beginstand
+    // vast die na de sync alsnog verandert.
+    await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i);
     openOverviewVisible = await page.locator('#employee-open-overview').isVisible();
     baselinePeriod = (await page.locator('#period-label').textContent()) || '';
     await expect(page.locator('#employee-open-overview-list')).not.toContainText('September 2026');

@@ -985,6 +985,7 @@ function resetReadApiCaches() {
   readApiRuntime.employeeOpenTasksSyncInFlight = false;
   readApiRuntime.lastEmployeeOpenTasksSyncAt = 0;
   readApiRuntime.employeeOpenTasksHydrated = false;
+  readApiRuntime.employeeOpenTasksHydrationStarted = false;
   readApiRuntime.adminWorkflowHydrated = false;
 }
 
@@ -1283,6 +1284,7 @@ const readApiRuntime = {
   employeeOpenTasksSyncInFlight: false,
   lastEmployeeOpenTasksSyncAt: 0,
   employeeOpenTasksHydrated: false,
+  employeeOpenTasksHydrationStarted: false,
   adminWorkflowInFlight: false,
   lastAdminWorkflowAt: 0,
   adminWorkflowPeriodKeys: []
@@ -2162,6 +2164,12 @@ function writeCustomerTimesheetToApi(action, options = {}) {
       readApiRuntime.customerTimesheetMutationEpochByKey[mutationKey] = Number(readApiRuntime.customerTimesheetMutationEpochByKey[mutationKey] || 0) + 1;
       applyCustomerTimesheetApiRecord(employeeId, periodKey, result.data);
       readApiRuntime.lastCustomerTimesheetsByPeriod[mutationKey] = Date.now();
+      // Zeven andere serverschrijfwegen deden dit al, deze niet. Bleef de
+      // lokale-herstelvlag staan, dan werd elke serverlezing daarna genegeerd:
+      // de klanturenstaat stond op de server al als "rechtstreeks gemaild"
+      // geregistreerd terwijl de app hem als open taak bleef tonen, en een
+      // tweede poging liep tegen een 409 aan zonder dat je zag waarom.
+      releaseLocalResetAuthorityAfterServerWrite();
       return result.data;
     });
 }
@@ -4267,22 +4275,36 @@ function renderEmployeeDashboard() {
   // "Alles voor deze maand is afgerond", om na ~2 seconden alsnog naar "2 open
   // acties" te springen -- dezelfde sprong als eerder op het beheerderdashboard.
   const awaitingOpenTasks = needsInitialHydration;
-  if (needsInitialHydration && !readApiRuntime.employeeOpenTasksSyncInFlight) {
+  // Eén keer starten, en dan ook echt afmaken. Dit stond eerder achter
+  // "!employeeOpenTasksSyncInFlight": liep er bij de eerste tekening al een sync
+  // (wat bij het opstarten vrijwel altijd zo is), dan werd deze tak overgeslagen
+  // en zette niemand employeeOpenTasksHydrated. De laadtekst bleef dan staan tot
+  // een volgende tekening hem toevallig alsnog ophaalde -- tien seconden of
+  // langer. refreshEmployeeOpenTasksReadApi(true) forceert en wacht netjes af.
+  if (needsInitialHydration && !readApiRuntime.employeeOpenTasksHydrationStarted) {
+    readApiRuntime.employeeOpenTasksHydrationStarted = true;
+    const rondAf = () => {
+      if (readApiRuntime.employeeOpenTasksHydrated) return;
+      readApiRuntime.employeeOpenTasksHydrated = true;
+      // Ook opnieuw tekenen als het medewerkerdashboard niet de actieve view is:
+      // de laadtekst moet weg zijn tegen de tijd dat de medewerker er heen
+      // navigeert (bv. na F5 op de urenstaat).
+      const stillEmployee = state.currentRole === "employee";
+      const stillSameEmployee = Number(currentEmployee().id) === employeeId;
+      const stillSamePeriod = currentPeriod().key === selectedPeriodAtRender;
+      if (stillEmployee && stillSameEmployee && stillSamePeriod) renderEmployeeDashboard();
+    };
+    // Vangnet: een verzoek dat blijft hangen mag de laadtekst niet eindeloos
+    // laten staan. De normale sync is ruim binnen een seconde klaar; blijft hij
+    // langer weg, dan tonen we gewoon de lokaal bekende stand. Kort houden --
+    // een laadtekst die seconden blijft staan is erger dan een getal dat nog
+    // een keer bijwerkt.
+    const vangnet = setTimeout(rondAf, 4000);
     refreshEmployeeOpenTasksReadApi(true)
-      .then(() => {
-        readApiRuntime.employeeOpenTasksHydrated = true;
-      })
-      .catch(() => {
-        readApiRuntime.employeeOpenTasksHydrated = true;
-      })
+      .catch(() => null)
       .finally(() => {
-        // Ook opnieuw tekenen als het medewerkerdashboard niet de actieve view
-        // is: de laadtekst moet daar weg zijn tegen de tijd dat de medewerker er
-        // heen navigeert (bv. na F5 op de urenstaat).
-        const stillEmployee = state.currentRole === "employee";
-        const stillSameEmployee = Number(currentEmployee().id) === employeeId;
-        const stillSamePeriod = currentPeriod().key === selectedPeriodAtRender;
-        if (stillEmployee && stillSameEmployee && stillSamePeriod) renderEmployeeDashboard();
+        clearTimeout(vangnet);
+        rondAf();
       });
   }
   refreshEmployeeOpenTasksReadApi(false).then(changed => {
@@ -5314,7 +5336,18 @@ function showSkipCustomerTimesheet() {
         }).then(() => {
           persistState(); closeModal(); renderAll(); toast("De klanturenstaat staat als rechtstreeks gemaild geregistreerd.");
         }).catch(error => {
-          toast(String(error && error.message || "Registreren als rechtstreeks gemaild mislukt op server."));
+          const melding = String(error && error.message || "Registreren als rechtstreeks gemaild mislukt op server.");
+          // Weigert de server omdat de klanturenstaat al verder is, dan loopt dit
+          // scherm achter. Haal de serverstand op en teken opnieuw, zodat je ziet
+          // wat er werkelijk staat in plaats van een open taak met een melding
+          // die niet uitlegt waarom hij niet meer kan.
+          refreshCustomerTimesheetReadApi(period.key, employee.id, true)
+            .catch(() => null)
+            .then(() => {
+              closeModal();
+              renderAll();
+              toast(melding);
+            });
         });
         return;
       }
@@ -8398,6 +8431,7 @@ function login(role) {
     const selectedEmployee = Number(document.querySelector("#login-employee").value);
     if (employeeById(selectedEmployee)) state.currentEmployeeId = selectedEmployee;
     readApiRuntime.employeeOpenTasksHydrated = !(API_ENABLED && authRuntime.mode === "auth");
+    readApiRuntime.employeeOpenTasksHydrationStarted = false;
   }
   const profile = profileForRole(role);
   if (!profile) return;
@@ -8423,6 +8457,7 @@ function logoutLocal() {
   state.currentRole = null;
   authRuntime.authenticated = false;
   readApiRuntime.employeeOpenTasksHydrated = false;
+  readApiRuntime.employeeOpenTasksHydrationStarted = false;
   readApiRuntime.adminWorkflowHydrated = false;
   unresolvedHelpQuestion = "";
   closeLoginAccountPanels();
