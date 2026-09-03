@@ -4262,6 +4262,11 @@ function renderEmployeeDashboard() {
   const employeeId = Number(employee.id);
   const selectedPeriodAtRender = currentPeriod().key;
   const needsInitialHydration = API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "employee" && !readApiRuntime.employeeOpenTasksHydrated;
+  // Tot de eerste serversync binnen is, kent de lokaal bewaarde stand de open
+  // taken van deze maand nog niet. Zonder deze vlag toonde het dashboard dan
+  // "Alles voor deze maand is afgerond", om na ~2 seconden alsnog naar "2 open
+  // acties" te springen -- dezelfde sprong als eerder op het beheerderdashboard.
+  const awaitingOpenTasks = needsInitialHydration;
   if (needsInitialHydration && !readApiRuntime.employeeOpenTasksSyncInFlight) {
     refreshEmployeeOpenTasksReadApi(true)
       .then(() => {
@@ -4271,10 +4276,13 @@ function renderEmployeeDashboard() {
         readApiRuntime.employeeOpenTasksHydrated = true;
       })
       .finally(() => {
-        const stillEmployeeView = document.querySelector("#view-employee-dashboard")?.classList.contains("is-active");
+        // Ook opnieuw tekenen als het medewerkerdashboard niet de actieve view
+        // is: de laadtekst moet daar weg zijn tegen de tijd dat de medewerker er
+        // heen navigeert (bv. na F5 op de urenstaat).
+        const stillEmployee = state.currentRole === "employee";
         const stillSameEmployee = Number(currentEmployee().id) === employeeId;
         const stillSamePeriod = currentPeriod().key === selectedPeriodAtRender;
-        if (stillEmployeeView && stillSameEmployee && stillSamePeriod) renderEmployeeDashboard();
+        if (stillEmployee && stillSameEmployee && stillSamePeriod) renderEmployeeDashboard();
       });
   }
   refreshEmployeeOpenTasksReadApi(false).then(changed => {
@@ -4324,7 +4332,11 @@ function renderEmployeeDashboard() {
   const nextOpenAction = nextOpenMonth?.actions[0] || null;
   const openHoursCount = employeeOpenActions.filter(item => item.type === "hours").length;
   const openCustomerCount = employeeOpenActions.filter(item => item.type === "customer").length;
-  if (nextOpenMonth && nextOpenAction) {
+  if (awaitingOpenTasks) {
+    next = "Je werkvoorraad wordt opgehaald…";
+    action = "Even geduld…";
+    note = "Werkvoorraad laden…";
+  } else if (nextOpenMonth && nextOpenAction) {
     next = nextOpenAction.description + " voor " + nextOpenMonth.period.label + ".";
     action = nextOpenAction.button;
   } else {
@@ -4335,19 +4347,27 @@ function renderEmployeeDashboard() {
   const dashboardBadge = document.querySelector("#employee-dashboard-count");
   if (dashboardBadge) {
     const openCount = employeeOpenActions.length;
-    dashboardBadge.textContent = String(openCount);
-    dashboardBadge.hidden = openCount === 0;
-    if (openCount > 0) dashboardBadge.setAttribute("aria-label", openCount + " open actie" + (openCount === 1 ? "" : "s") + " op je dashboard");
-    else dashboardBadge.removeAttribute("aria-label");
+    if (awaitingOpenTasks) {
+      dashboardBadge.hidden = true;
+      dashboardBadge.removeAttribute("aria-label");
+    } else {
+      dashboardBadge.textContent = String(openCount);
+      dashboardBadge.hidden = openCount === 0;
+      if (openCount > 0) dashboardBadge.setAttribute("aria-label", openCount + " open actie" + (openCount === 1 ? "" : "s") + " op je dashboard");
+      else dashboardBadge.removeAttribute("aria-label");
+    }
   }
   document.querySelector("#employee-dashboard-greeting").textContent = greetingForNow() + ", " + firstName;
   document.querySelector("#employee-dashboard-next").textContent = next;
-  document.querySelector("#employee-dashboard-next-label").textContent = nextOpenAction ? "Volgende actie" : "Deze maand";
-  document.querySelector("#employee-dashboard-next-meta").textContent = nextOpenMonth
-    ? nextOpenMonth.period.label + " · actie 1 van " + employeeOpenActions.length
-    : period.label + " · alles afgerond";
+  document.querySelector("#employee-dashboard-next-label").textContent = awaitingOpenTasks ? "Bezig" : (nextOpenAction ? "Volgende actie" : "Deze maand");
+  document.querySelector("#employee-dashboard-next-meta").textContent = awaitingOpenTasks
+    ? period.label + " · werkvoorraad laden…"
+    : (nextOpenMonth
+      ? nextOpenMonth.period.label + " · actie 1 van " + employeeOpenActions.length
+      : period.label + " · alles afgerond");
   const dashboardAction = document.querySelector("#employee-dashboard-action");
   dashboardAction.textContent = action;
+  dashboardAction.disabled = awaitingOpenTasks;
   if (nextOpenMonth && nextOpenAction) {
     dashboardAction.dataset.employeeActionPeriod = nextOpenMonth.periodKey;
     dashboardAction.dataset.employeeActionType = nextOpenAction.type;
@@ -4356,16 +4376,16 @@ function renderEmployeeDashboard() {
     delete dashboardAction.dataset.employeeActionType;
   }
   const allActionsButton = document.querySelector("#employee-dashboard-all-actions");
-  allActionsButton.hidden = employeeOpenActions.length === 0;
+  allActionsButton.hidden = awaitingOpenTasks || employeeOpenActions.length === 0;
   allActionsButton.textContent = "Bekijk alle " + employeeOpenActions.length + " open " + (employeeOpenActions.length === 1 ? "actie" : "acties");
-  document.querySelector(".employee-hero").classList.toggle("is-complete", employeeOpenActions.length === 0);
+  document.querySelector(".employee-hero").classList.toggle("is-complete", !awaitingOpenTasks && employeeOpenActions.length === 0);
   document.querySelector("#employee-dashboard-period").textContent = period.label;
   document.querySelector("#employee-dashboard-hours").textContent = hoursFormat.format(accounted) + " uur";
   document.querySelector("#employee-dashboard-contract").textContent = "van " + hoursFormat.format(record.contractHours) + " contracturen";
   document.querySelector("#employee-dashboard-progress").style.width = progress + "%";
-  document.querySelector("#employee-open-task-total").textContent = employeeOpenActions.length + " open " + (employeeOpenActions.length === 1 ? "actie" : "acties");
-  document.querySelector("#employee-open-task-months").textContent = employeeOpenActions.length ? employeeOpenMonthEquation(openMonthSummaries) : "Alles afgerond";
-  document.querySelector("#employee-open-task-owners").textContent = "Urenregistraties " + openHoursCount + " + klanturenstaten " + openCustomerCount + " = " + employeeOpenActions.length;
+  document.querySelector("#employee-open-task-total").textContent = awaitingOpenTasks ? "Werkvoorraad laden…" : (employeeOpenActions.length + " open " + (employeeOpenActions.length === 1 ? "actie" : "acties"));
+  document.querySelector("#employee-open-task-months").textContent = awaitingOpenTasks ? "" : (employeeOpenActions.length ? employeeOpenMonthEquation(openMonthSummaries) : "Alles afgerond");
+  document.querySelector("#employee-open-task-owners").textContent = awaitingOpenTasks ? "" : ("Urenregistraties " + openHoursCount + " + klanturenstaten " + openCustomerCount + " = " + employeeOpenActions.length);
   document.querySelector("#employee-dashboard-status").textContent = status[0];
   document.querySelector("#employee-dashboard-status-note").textContent = note;
   document.querySelector("#employee-dashboard-billable").textContent = hoursFormat.format(total);
@@ -4386,7 +4406,7 @@ function renderEmployeeDashboard() {
   const openOverviewCount = document.querySelector('#employee-open-overview-count');
   const openOverviewList = document.querySelector('#employee-open-overview-list');
   if (openOverview && openOverviewCount && openOverviewList) {
-    openOverview.hidden = openMonthSummaries.length === 0;
+    openOverview.hidden = awaitingOpenTasks || openMonthSummaries.length === 0;
     openOverviewCount.textContent = openMonthSummaries.length + ' open maand' + (openMonthSummaries.length === 1 ? '' : 'en');
     const openOverviewNote = document.querySelector('#employee-open-overview-note');
     if (openOverviewNote && nextOpenMonth && nextOpenAction) {

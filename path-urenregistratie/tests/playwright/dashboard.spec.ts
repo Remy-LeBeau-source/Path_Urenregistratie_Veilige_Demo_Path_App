@@ -1233,6 +1233,43 @@ test('[DASH-N-017] beheerderdashboard toont een laadtoestand tot de eerste werkv
   await loginPage.logout();
 });
 
+test('[DASH-N-018] medewerkerdashboard toont een laadtoestand tot de eerste werkvoorraad-sync', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  let timesheetGateOpen = false;
+
+  // De open-taken-hydratie van de medewerker haalt de urenstaat en de
+  // klanturenstaat van de maand op. Zolang dat hangt, mag het dashboard niet
+  // stellig "Alles voor deze maand is afgerond" tonen om daarna alsnog naar
+  // "open acties" te springen.
+  await page.route('**/server/api/timesheets.php**', async route => {
+    while (!timesheetGateOpen) {
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
+    await route.continue();
+  });
+
+  await test.step('Given de eerste werkvoorraad-sync van de medewerker nog niet terug is', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('button[data-view="employee-dashboard"]').click();
+    await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
+  });
+
+  await test.step('Then toont het dashboard een neutrale laadtoestand en geen stellige afgerond-tekst', async () => {
+    await expect(page.locator('#employee-open-task-total')).toHaveText(/laden/i, { timeout: 10_000 });
+    await expect(page.locator('#employee-dashboard-next')).not.toHaveText(/afgerond/i);
+    await expect(page.locator('#employee-dashboard-action')).toBeDisabled();
+  });
+
+  await test.step('When de sync binnenkomt, verschijnt de gezaghebbende stand', async () => {
+    timesheetGateOpen = true;
+    await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i, { timeout: 15_000 });
+    await expect(page.locator('#employee-dashboard-action')).toBeEnabled();
+  });
+
+  await loginPage.logout();
+});
+
 test('[DASH-H-006] vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie', async ({ page }) => {
   const loginPage = new LoginPage(page);
   let openOverviewVisible = false;

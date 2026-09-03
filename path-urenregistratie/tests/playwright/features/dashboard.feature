@@ -161,6 +161,14 @@ Feature: Dashboard en open werkvoorraad
     Then toont het dashboard een neutrale laadtoestand en geen voorlopige teller
     When de sync binnenkomt, verschijnt de gezaghebbende teller
 
+  @negative
+  Scenario: [DASH-N-018] medewerkerdashboard toont een laadtoestand tot de eerste werkvoorraad-sync
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given de eerste werkvoorraad-sync van de medewerker nog niet terug is
+    Then toont het dashboard een neutrale laadtoestand en geen stellige afgerond-tekst
+    When de sync binnenkomt, verschijnt de gezaghebbende stand
+
   @happy
   Scenario: [DASH-H-006] vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie
     # Testtechniek: Beslissingstabel rollen en autorisatie
