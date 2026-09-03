@@ -1306,8 +1306,6 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 /* Papier blijft papier: dit voorbeeld laat zien wat er straks uit de printer
    komt, dus het wisselt bewust niet mee met de donkere modus. */
 .invoice-document-preview { padding: 28px; border: 1px solid var(--line); border-radius: 14px; background: #ffffff; color: #122034; }
-.invoice-source-field { display: grid; grid-template-columns: minmax(120px,.9fr) minmax(0,1.3fr); gap: 12px; min-height: 25px; font-size: 11px; line-height: 1.45; }
-.invoice-source-field strong { font-weight: 500; white-space: pre-line; }
 .invoice-preview-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
 .invoice-preview-table th, .invoice-preview-table td { padding: 11px 8px; border-bottom: 1px solid #dfe7e5; text-align: right; }
 .invoice-preview-table th:first-child, .invoice-preview-table td:first-child { text-align: left; }
@@ -1522,7 +1520,6 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
   .employee-history-head { display: none; }
   .administrator-row { grid-template-columns: 1fr auto; }
   .mail-recipient-setting, .mail-route-choice { grid-template-columns: 1fr auto; }
-  .invoice-source-field { grid-template-columns: minmax(0, 1fr); gap: 2px; }
   body[data-role="employee"] .nav-list { grid-template-columns: repeat(3,1fr); }
   .mail-route-guide { grid-template-columns: minmax(0, 1fr); }
   .announcement-meta { grid-template-columns: minmax(0, 1fr); }
@@ -2685,7 +2682,6 @@ body.toont-installatieaanbod .main-content {
   .invoice-month-overview-empty { font-size: 12px; }
   .invoice-month-overview-item small { font-size: 11px; }
   .invoice-month-overview-item strong { font-size: 13px; }
-  .invoice-source-field { font-size: 13px; }
   .invoice-status-guide > button > span { font-size: 13px; }
   .invoice-status-guide small { font-size: 11px; }
   .invoice-status-guide strong { font-size: 13px; }

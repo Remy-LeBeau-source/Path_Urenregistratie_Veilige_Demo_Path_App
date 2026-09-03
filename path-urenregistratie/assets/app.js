@@ -1223,31 +1223,7 @@ function persistState() {
   }
 }
 
-function loadStateFromServer() {
-  if (!API_ENABLED || isLocalResetAuthoritative()) return;
-  try {
-    fetch(API_STATE_PATH, { method: "GET", headers: { "Accept": "application/json" } })
-      .then(resp => {
-        if (!resp.ok) throw new Error("no-state");
-        return resp.json();
-      })
-      .then(data => {
-        if (data && data.state) {
-          try {
-            const merged = Object.assign(freshState(), data.state);
-            const fallback = freshState();
-            state = ensureSeedDataIntegrity(merged, fallback, "server-state");
-            renderAll();
-          } catch (e) {
-            console.warn("Failed to apply server state", e);
-          }
-        }
-      })
-      .catch(() => {});
-  } catch (e) {
-    console.warn("Failed to load state from API", e);
-  }
-}
+
 
 const readApiDebug = {
   bootstrap: null,
@@ -4543,9 +4519,7 @@ function adminOpenTasks() {
   return tasks.sort((left, right) => left.periodKey.localeCompare(right.periodKey) || Number(right.actionable) - Number(left.actionable) || left.priority - right.priority || left.employee.name.localeCompare(right.employee.name));
 }
 
-function employeeOpenTasks(employeeId) {
-  return adminOpenTasks().filter(task => Number(task.employee.id) === Number(employeeId));
-}
+
 
 function employeeOpenMonthSummaries(employeeId, currentPeriodKey) {
   const employee = employeeById(employeeId);
@@ -4704,6 +4678,11 @@ function renderAdminTaskQueue() {
       '<div class="admin-task-month-body" id="' + monthBodyId + '"' + (isExpanded ? "" : " hidden") + '>' + ownerGroups.join("") + '</div>' +
     '</section>';
   }).join("") || '<div class="dashboard-action-empty">' + (filter === "actionable" ? "Er ligt niets meer bij Backoffice." : filter === "waiting" ? "Er liggen geen acties bij medewerkers." : "Alle acties zijn afgerond.") + '</div>';
+}
+
+// Wordt gebruikt door scripts/closeout-to-zero-check.mjs via het jsdom-window.
+function employeeOpenTasks(employeeId) {
+  return adminOpenTasks().filter(task => Number(task.employee.id) === Number(employeeId));
 }
 
 function actionableAdminTasks() {
@@ -5036,19 +5015,7 @@ function recordHasPeriodActivity(record) {
   return totalEntries(record.entries) > 0 || Number(record.leave || 0) > 0 || Number(record.sick || 0) > 0 || record.timesheetStatus !== "draft" || record.invoiceStatus !== "concept" || record.payrollStatus !== "concept" || correctionHistoryFor(record).length > 0 || customerTimesheetFor(record).status !== "missing";
 }
 
-function latestActivePeriodKeyForRole(role = state.currentRole) {
-  const roleKey = role || state.currentRole || "employee";
-  const currentMonthKey = currentCalendarPeriodKey();
-  let keys = Object.keys(state.records || {}).filter(key => parsePeriodKey(key));
-  if (roleKey === "employee") {
-    const employee = currentEmployee();
-    if (!employee) return state.selectedPeriodKey;
-    keys = keys.filter(key => key <= currentMonthKey && recordHasPeriodActivity(recordFor(employee.id, key)));
-  } else {
-    keys = keys.filter(key => activeEmployees().some(employee => recordHasPeriodActivity(recordFor(employee.id, key))));
-  }
-  return keys.sort((left, right) => right.localeCompare(left))[0] || state.selectedPeriodKey;
-}
+
 
 function resetHomeDashboardState(role = state.currentRole) {
   // Terugkeren naar het startscherm is gewone navigatie binnen dezelfde
@@ -7906,12 +7873,7 @@ function applySettingsCollapse() {
 
 // Een veld dat via een validatiefout of een directe link de aandacht krijgt, mag
 // niet onzichtbaar in een dichtgeklapt paneel blijven zitten.
-function revealSettingsCardFor(element) {
-  const card = element && element.closest ? element.closest(".settings-card") : null;
-  if (!card || card.dataset.settingsCollapsible !== "true") return;
-  if (card.dataset.settingsOpen === "true") return;
-  toggleSettingsCard(card);
-}
+
 
 
 /* ---------------------------------------------------------------------------
@@ -9219,9 +9181,7 @@ function brokerInvoiceAddress(employee) {
   return address || "Factuuradres: nog definitief bevestigen";
 }
 
-function brokerInvoiceAddressHtml(employee) {
-  return escapeHtml(brokerInvoiceAddress(employee)).replace(/\r?\n/g, "<br>");
-}
+
 
 function brokerInvoiceAddressLines(employee) {
   return brokerInvoiceAddress(employee).split(/\r?\n/).filter(Boolean);
@@ -9249,9 +9209,7 @@ function invoiceReferenceRows(employee) {
   ].filter(([, value]) => String(value || "").trim());
 }
 
-function invoiceField(label, value) {
-  return '<div class="invoice-source-field"><span>' + escapeHtml(label) + '</span><strong>' + escapeHtml(value) + '</strong></div>';
-}
+
 
 function invoicePreviewMarkup(data) {
   const employee = data.employee;
