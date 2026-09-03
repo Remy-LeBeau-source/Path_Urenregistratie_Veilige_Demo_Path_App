@@ -163,3 +163,19 @@ Feature: Wachtwoordherstel en misbruikbeveiliging
     Given een uitgenodigde collega met een geldige eenmalige link
     When de beheerder ingelogd blijft en de link in dezelfde browser opent
     Then verschijnt het wachtwoordscherm en niet het dashboard
+
+  @happy
+  Scenario: [PWD-H-018] de accountuitnodiging gebruikt een aanpasbare welkomsttekst met een vaste afzender-handtekening
+    # Testtechniek: broncontract
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given de uitnodigingstekst als kanaalsjabloon "account_invitation" bestaat
+    When een beheerder de tekst bij Instellingen wil aanpassen
+    Then staat de meegeleverde welkomsttekst met de link erin klaar en wordt de handtekening "Robot Path IT" altijd toegevoegd
+
+  @happy
+  Scenario: [PWD-H-019] een beheerder mag dezelfde persoon meerdere keren achter elkaar uitnodigen, de publieke wachtwoord-vergeten blijft begrensd
+    # Testtechniek: grenswaarde + broncontract
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given een nieuwe medewerker met een verstuurde uitnodiging
+    When de beheerder de uitnodiging vier keer achter elkaar opnieuw verstuurt
+    Then lukt elke poging en blijft de misbruikbegrenzing alleen op de publieke aanvraag staan

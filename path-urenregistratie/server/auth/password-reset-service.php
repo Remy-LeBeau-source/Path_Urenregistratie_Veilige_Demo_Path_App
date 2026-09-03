@@ -6,6 +6,8 @@ require_once __DIR__ . '/../mail/config.php';
 // Needed so a queued reset/invitation is actually dispatched in the guarded
 // TEST sandbox instead of waiting for a cron that does not run there.
 require_once __DIR__ . '/../mail/dispatch.php';
+// De uitnodigingstekst komt uit de aanpasbare kanaalsjablonen (Instellingen).
+require_once __DIR__ . '/../mail/templates.php';
 
 const AUTH_PASSWORD_RESET_TTL_HOURS = 2;
 const AUTH_PASSWORD_RESET_MAX_REQUESTS = 3;
@@ -58,6 +60,79 @@ function auth_password_reset_queue_recipient(array $config, string $accountEmail
     return trim($accountEmail);
 }
 
+/**
+ * Onderwerp en tekst voor de accountuitnodiging. De tekst komt uit de
+ * aanpasbare kanaalsjablonen (Instellingen -> Standaardteksten); de
+ * afzender-handtekening ("Robot Path IT") wordt hier toegevoegd, net zoals de
+ * mailmodule dat bij de factuurmails doet.
+ *
+ * @return array{0:string,1:string} [subject, body]
+ */
+function auth_invitation_message(PDO $pdo, int $userId, string $displayName, string $link): array
+{
+    $bedrijf = 'Path Consultancy';
+    $app = 'Uren & Facturatie';
+    $supportEmail = '';
+    $website = '';
+    $slogan = '';
+    $companyId = 0;
+
+    try {
+        $stmt = $pdo->prepare(
+            'SELECT c.id, c.trade_name, c.app_name, c.support_email, c.website, c.tagline
+             FROM users u JOIN companies c ON c.id = u.company_id
+             WHERE u.id = :id LIMIT 1'
+        );
+        $stmt->execute([':id' => $userId]);
+        $row = $stmt->fetch();
+        if (is_array($row)) {
+            $companyId = (int)($row['id'] ?? 0);
+            $bedrijf = trim((string)($row['trade_name'] ?? '')) ?: $bedrijf;
+            $app = trim((string)($row['app_name'] ?? '')) ?: $app;
+            $supportEmail = trim((string)($row['support_email'] ?? ''));
+            $website = trim((string)($row['website'] ?? ''));
+            $slogan = trim((string)($row['tagline'] ?? ''));
+        }
+    } catch (Throwable $e) {
+        // Zonder bedrijfsgegevens blijft de meegeleverde tekst met de standaardnamen.
+    }
+
+    $sjabloon = MAIL_CHANNEL_TEMPLATES['account_invitation'];
+    if ($companyId > 0) {
+        $eigen = mail_channel_templates_for($pdo, $companyId);
+        if (isset($eigen['account_invitation'])) {
+            $sjabloon = $eigen['account_invitation'];
+        }
+    }
+
+    $vars = [
+        '{naam}' => $displayName,
+        '{app}' => $app,
+        '{bedrijf}' => $bedrijf,
+        '{link}' => $link,
+        '{geldigheid}' => AUTH_PASSWORD_RESET_TTL_HOURS === 2 ? 'twee uur' : AUTH_PASSWORD_RESET_TTL_HOURS . ' uur',
+    ];
+    $subject = strtr((string)$sjabloon['subject'], $vars);
+    $body = strtr((string)$sjabloon['body'], $vars);
+
+    // Vangnet: haalt iemand {link} uit de eigen tekst, dan zou de uitnodiging
+    // geen manier bevatten om een wachtwoord in te stellen. Zet hem er dan onder.
+    if (strpos($body, $link) === false) {
+        $body = rtrim($body) . "\n\n" . $link;
+    }
+
+    $regels = array_values(array_filter(
+        ['Robot Path IT', 'Automatisering & accountbeheer', $supportEmail, $website],
+        static fn($regel) => trim((string)$regel) !== ''
+    ));
+    $handtekening = "\n\nMet vriendelijke groet,\n\n" . implode("\n", $regels);
+    if ($slogan !== '') {
+        $handtekening .= "\n\n" . $slogan;
+    }
+
+    return [$subject, rtrim($body) . $handtekening];
+}
+
 function auth_enqueue_password_reset(
     PDO $pdo,
     array $user,
@@ -88,17 +163,27 @@ function auth_enqueue_password_reset(
     $link = auth_password_reset_url($config, $rawToken);
     $isTestInvitationRedirect = $purpose === 'invitation'
         && strtolower($recipient) !== strtolower($accountEmail);
-    $subject = ($isTestInvitationRedirect ? '[TEST uitnodiging voor ' . $accountEmail . '] ' : '')
-        . 'Stel je wachtwoord in voor Uren & Facturatie';
-    $body = "Beste {$displayName},\n\n"
-        . ($isTestInvitationRedirect
-            ? "TESTUITNODIGING — oorspronkelijke account: {$accountEmail}\n\n"
-            : '')
-        . "Gebruik de onderstaande persoonlijke link om je wachtwoord in te stellen. "
-        . "De link is twee uur geldig en kan één keer worden gebruikt.\n\n"
-        . $link . "\n\n"
-        . "Heb je dit niet aangevraagd? Negeer deze e-mail en neem bij twijfel contact op met Backoffice.\n\n"
-        . "Met vriendelijke groet,\nPath Consultancy";
+    $testNote = $isTestInvitationRedirect
+        ? "TESTUITNODIGING — oorspronkelijke account: {$accountEmail}\n\n"
+        : '';
+    $testSubjectPrefix = $isTestInvitationRedirect
+        ? '[TEST uitnodiging voor ' . $accountEmail . '] '
+        : '';
+
+    if ($purpose === 'invitation') {
+        [$subject, $body] = auth_invitation_message($pdo, $userId, $displayName, $link);
+        $subject = $testSubjectPrefix . $subject;
+        $body = $testNote . $body;
+    } else {
+        $subject = $testSubjectPrefix . 'Stel je wachtwoord in voor Uren & Facturatie';
+        $body = "Beste {$displayName},\n\n"
+            . $testNote
+            . "Gebruik de onderstaande persoonlijke link om je wachtwoord in te stellen. "
+            . "De link is twee uur geldig en kan één keer worden gebruikt.\n\n"
+            . $link . "\n\n"
+            . "Heb je dit niet aangevraagd? Negeer deze e-mail en neem bij twijfel contact op met Backoffice.\n\n"
+            . "Met vriendelijke groet,\nPath Consultancy";
+    }
 
     $stmt = $pdo->prepare(
         'INSERT INTO email_deliveries
@@ -125,7 +210,11 @@ function auth_create_password_reset(
 {
     $userId = (int)$user['id'];
     $realDelivery = auth_password_reset_delivery_available($config);
-    if ($realDelivery) {
+    // De rem op herhaald aanvragen geldt voor de publieke "wachtwoord vergeten"
+    // (anti-misbruik). Een beheerder die vanuit de app een uitnodiging of reset
+    // (opnieuw) verstuurt, is een ingelogde handeling en wordt niet geremd --
+    // meerdere pogingen tijdens inrichten of testen moeten gewoon lukken.
+    if ($realDelivery && $purpose !== 'invitation') {
         $throttle = $pdo->prepare(
             'SELECT COUNT(*) FROM password_reset_tokens
              WHERE user_id = :uid AND created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 15 MINUTE)'

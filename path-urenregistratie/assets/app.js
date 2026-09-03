@@ -6954,7 +6954,8 @@ const MAIL_KANAAL_NAMEN = {
   broker: "Broker",
   accountant: "Boekhouding",
   payroll: "Salarisadministratie",
-  other: "Overig"
+  other: "Overig",
+  account_invitation: "Accountuitnodiging"
 };
 
 function renderMailChannelTemplates() {

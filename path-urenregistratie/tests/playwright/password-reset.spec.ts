@@ -661,4 +661,72 @@ test.describe('password reset api', () => {
     await auth.logout();
     await ctx.dispose();
   });
+
+  test('[PWD-H-018] de accountuitnodiging gebruikt een aanpasbare welkomsttekst met een vaste afzender-handtekening', async () => {
+    const templates = await readFile(join(process.cwd(), 'server', 'mail', 'templates.php'), 'utf8');
+    const service = await readFile(join(process.cwd(), 'server', 'auth', 'password-reset-service.php'), 'utf8');
+    const appJs = await readFile(join(process.cwd(), 'assets', 'app.js'), 'utf8');
+
+    await test.step('Given de uitnodigingstekst als kanaalsjabloon "account_invitation" bestaat', async () => {
+      const blok = templates.slice(templates.indexOf("'account_invitation'"));
+      expect(blok, 'de uitnodiging hoort een eigen kanaalsjabloon te hebben').toContain("'account_invitation' => [");
+      expect(blok, 'de meegeleverde welkomsttekst hoort de persoonlijke link te bevatten').toContain('{link}');
+      expect(blok).toContain('{naam}');
+    });
+
+    await test.step('When een beheerder de tekst bij Instellingen wil aanpassen', async () => {
+      expect(appJs, 'het instellingenscherm hoort een blok "Accountuitnodiging" te tonen')
+        .toContain('account_invitation: "Accountuitnodiging"');
+    });
+
+    await test.step('Then staat de welkomsttekst klaar en wordt de handtekening "Robot Path IT" altijd toegevoegd', async () => {
+      expect(service).toContain('function auth_invitation_message(');
+      expect(service, 'de eigen tekst per bedrijf hoort voorrang te krijgen').toContain('mail_channel_templates_for(');
+      expect(service, 'de afzender-handtekening hoort vast toegevoegd te worden').toContain("'Robot Path IT'");
+      // Vangnet: ook als iemand {link} uit de eigen tekst haalt, hoort de link er te staan.
+      expect(service).toContain('strpos($body, $link) === false');
+    });
+  });
+
+  test('[PWD-H-019] een beheerder mag dezelfde persoon meerdere keren achter elkaar uitnodigen, de publieke wachtwoord-vergeten blijft begrensd', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const service = await readFile(join(process.cwd(), 'server', 'auth', 'password-reset-service.php'), 'utf8');
+    const suffix = Date.now().toString().slice(-7);
+    const email = `herhaal-uitnodiging-${suffix}@example.invalid`;
+    let userId = 0;
+
+    await test.step('Given een nieuwe medewerker met een verstuurde uitnodiging', async () => {
+      const authApi = new AuthApi(ctx);
+      await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+      const created = await postAuth(ctx, '/server/api/staff.php', {
+        action: 'upsert_employee',
+        sendInvitation: true,
+        employee: {
+          name: `Herhaaltest ${suffix}`, email, role: 'Consultant', startDate: '2026-08-01', active: true,
+          client: 'Herhaalklant', broker: 'Herhaalbroker', brokerEmail: 'broker@example.invalid',
+          projectCode: `HERH-${suffix}`,
+        },
+        mailRecipients: [],
+      });
+      expect(created.status, JSON.stringify(created.body)).toBe(200);
+      userId = Number(created.body.user_id);
+      expect(userId).toBeGreaterThan(0);
+    });
+
+    await test.step('When de beheerder de uitnodiging vier keer achter elkaar opnieuw verstuurt', async () => {
+      for (let poging = 1; poging <= 4; poging++) {
+        const res = await postAuth(ctx, '/server/api/users.php', { action: 'force_password_change', user_id: userId });
+        expect(res.status, `poging ${poging}: ${JSON.stringify(res.body)}`).toBe(200);
+        expect(res.body.ok, `poging ${poging} hoort te slagen zonder misbruikbegrenzing`).toBe(true);
+      }
+    });
+
+    await test.step('Then blijft de misbruikbegrenzing alleen op de publieke aanvraag staan', async () => {
+      expect(service, 'de rem hoort de door-een-beheerder-gestuurde uitnodiging over te slaan')
+        .toContain("$purpose !== 'invitation'");
+      expect(service, 'de publieke wachtwoord-vergeten houdt de begrenzing van 3').toContain('AUTH_PASSWORD_RESET_MAX_REQUESTS = 3');
+    });
+
+    await ctx.dispose();
+  });
 });

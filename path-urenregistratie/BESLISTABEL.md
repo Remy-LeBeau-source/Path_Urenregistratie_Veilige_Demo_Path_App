@@ -77,6 +77,16 @@ Losse regressiestatus staat in `MASTERCHECKLIST.md`; livegang-checklist in `PROD
 | MO4 | Het mobiele **Hulp & contact**-paneel is boven én onder verankerd met `dvh` → de koptekst met het kruisje blijft zichtbaar nadat een FAQ-antwoord het paneel laat groeien. | Kruisje schoof achter de adresbalk. `MOB-H-019`. | vast |
 | MO5 | Openstaand: bij een klanturenstaat die als "rechtstreeks gemaild" of "extern bevestigd" is geregistreerd wil de gebruiker een duidelijker (niet per se rode) indicator, zodat de beheerder er niet overheen leest. Nog niet gedaan — na de downloadflow. | — | open |
 
+## 7b. Accountuitnodiging (0.9.163)
+
+| # | Keuze | Waarom | Status |
+|---|---|---|---|
+| U1 | Bij een **nieuwe** medewerker/beheerder staat het uitnodigingsvinkje standaard **aan**; bij het **bewerken** van een bestaande persoon standaard **uit** (anders opnieuw uitnodigen bij elke wijziging). | Al zo, bevestigd. | vast |
+| U2 | Op **TEST** gaat elke uitnodiging/reset naar de vaste `invitation_recipient` (`giovanno.maatsen@pathconsultancy.nl`), met `[TEST uitnodiging voor <adres>]` in het onderwerp. Nooit naar het ingevulde adres. Productie mailt wél het echte adres. | TEST mag geen echte onbekende mailen. | vast |
+| U3 | De uitnodigingstekst is een **aanpasbaar kanaalsjabloon** `account_invitation` (Instellingen → Standaardteksten). Leeg = meegeleverde welkomsttekst. Tokens: `{naam} {app} {bedrijf} {link} {geldigheid}`. Vangnet: ontbreekt `{link}` in de eigen tekst, dan wordt de link er alsnog onder gezet. | Tekst mocht niet meer in de code vastzitten. | vast |
+| U4 | Vaste afzender-handtekening onder de uitnodiging: **"Robot Path IT" / "Automatisering & accountbeheer"** + `support_email` + website + slogan. Wordt automatisch toegevoegd, net als bij de factuurmails. | Herkenbaar als automatisch bericht. | vast |
+| U5 | Een **door de beheerder** gestuurde uitnodiging/reset (`purpose = invitation`) kent **geen** misbruikbegrenzing. De publieke "wachtwoord vergeten" houdt 3 per 15 min. | Beheerder is ingelogd; meerdere pogingen bij inrichten/testen moeten lukken. | vast |
+
 ## 8. Omgeving & techniek (feiten, geen keuzes)
 
 | # | Feit |

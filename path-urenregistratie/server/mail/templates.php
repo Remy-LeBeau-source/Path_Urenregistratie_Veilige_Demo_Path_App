@@ -64,6 +64,20 @@ const MAIL_CHANNEL_TEMPLATES = [
             . "Hierbij de ureninformatie van {medewerker} over {periode}.\n\n"
             . "Goedgekeurde uren: {uren}",
     ],
+    // De eerste e-mail die een nieuwe of gemigreerde medewerker krijgt: een
+    // uitnodiging om zelf een wachtwoord in te stellen. Stond eerder hard in
+    // server/auth/password-reset-service.php; nu hier zodat een bedrijf hem bij
+    // Instellingen kan aanpassen. Andere tokens dan de factuurkanalen:
+    // {naam} {app} {bedrijf} {link} {geldigheid}. De afzender-handtekening
+    // wordt door de mailmodule toegevoegd, dus geen eigen afsluiting hier.
+    'account_invitation' => [
+        'subject' => 'Welkom bij {app} - stel je wachtwoord in',
+        'body' =>
+            "Hoi {naam},\n\n"
+            . "Je account voor {app} van {bedrijf} staat klaar. Stel via de persoonlijke link hieronder je wachtwoord in, dan kun je meteen aan de slag.\n\n"
+            . "{link}\n\n"
+            . "De link werkt {geldigheid} en kan een keer worden gebruikt. Heb je hier niet om gevraagd? Dan mag je deze e-mail negeren.",
+    ],
 ];
 
 /**
