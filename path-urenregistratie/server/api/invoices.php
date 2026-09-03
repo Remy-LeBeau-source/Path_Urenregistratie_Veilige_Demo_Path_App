@@ -533,7 +533,9 @@ function invoices_read(PDO $pdo, array $currentUser, array $periodFilter): void
             ct.status AS customer_timesheet_status,
             ct.storage_key AS customer_timesheet_storage_key,
             ct.original_file_name AS customer_timesheet_file_name,
-            ct.review_note AS customer_timesheet_note
+            ct.review_note AS customer_timesheet_note,
+            ct.reviewed_at AS customer_timesheet_reviewed_at,
+            ctu.display_name AS customer_timesheet_reviewed_by
         FROM invoices i
         JOIN timesheets t ON t.id = i.timesheet_id
         JOIN employees e ON e.id = t.employee_id
@@ -541,6 +543,11 @@ function invoices_read(PDO $pdo, array $currentUser, array $periodFilter): void
         JOIN periods p ON p.id = t.period_id
         LEFT JOIN customer_timesheets ct
           ON ct.period_id = t.period_id AND ct.employee_id = t.employee_id AND ct.assignment_id = t.assignment_id
+        -- Wie de klanturenstaat als rechtstreeks gemaild of extern bevestigd
+        -- registreerde. Zonder deze naam kan de beheerder in het documentarchief
+        -- alleen zien dat het gebeurd is, niet door wie of wanneer.
+        LEFT JOIN users ctu
+          ON ctu.id = ct.reviewed_by AND ctu.company_id = i.company_id
         WHERE i.company_id = :company_id
     ';
 
@@ -638,6 +645,8 @@ function invoices_read(PDO $pdo, array $currentUser, array $periodFilter): void
             'customer_timesheet_status' => $row['customer_timesheet_status'] !== null ? (string)$row['customer_timesheet_status'] : 'missing',
             'customer_timesheet_file_name' => $row['customer_timesheet_file_name'] !== null ? (string)$row['customer_timesheet_file_name'] : null,
             'customer_timesheet_note' => $row['customer_timesheet_note'] !== null ? (string)$row['customer_timesheet_note'] : null,
+            'customer_timesheet_reviewed_at' => $row['customer_timesheet_reviewed_at'] !== null ? (string)$row['customer_timesheet_reviewed_at'] : null,
+            'customer_timesheet_reviewed_by' => $row['customer_timesheet_reviewed_by'] !== null ? (string)$row['customer_timesheet_reviewed_by'] : null,
             'customer_timesheet_download_url' => trim((string)($row['customer_timesheet_storage_key'] ?? '')) !== ''
                 ? '/server/api/customer-timesheets.php?action=download&period=' . rawurlencode((string)$row['period_key'])
                     . '&employee_id=' . (string)$row['employee_id'] . '&assignment_id=' . (string)$row['assignment_id']

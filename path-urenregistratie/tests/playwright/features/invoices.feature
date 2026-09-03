@@ -158,3 +158,12 @@ Feature: Facturen bekijken en beheren
     Given de administrator is ingelogd en reset naar vaste baseline
     When de administrator het factuurscherm opent en een factuur sluit
     Then zit in de gegenereerde PDF alle content (recipient, project, uren, tarief, betaling)
+
+  @happy
+  Scenario: [INV-H-022] de drie statusstappen filteren de factuurlijst en lichten op
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given de administrator het factuurscherm met de drie statusstappen opent
+    When de administrator op de stap Klaar voor controle klikt
+    Then staat de factuurlijst op Factuur klaar en licht die stap op
+    And nog een keer op dezelfde stap klikken zet het filter terug op Alle

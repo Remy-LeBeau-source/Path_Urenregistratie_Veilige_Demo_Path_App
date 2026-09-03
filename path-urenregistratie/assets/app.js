@@ -2876,6 +2876,8 @@ function invoiceApiRowsForPeriod(periodKey) {
     customerTimesheetStatus: String(item && item.customer_timesheet_status || "missing"),
     customerTimesheetFileName: String(item && item.customer_timesheet_file_name || ""),
     customerTimesheetNote: String(item && item.customer_timesheet_note || ""),
+    customerTimesheetReviewedAt: String(item && item.customer_timesheet_reviewed_at || ""),
+    customerTimesheetReviewedBy: String(item && item.customer_timesheet_reviewed_by || ""),
     customerTimesheetDownloadUrl: String(item && item.customer_timesheet_download_url || "")
   })).filter(item => item.periodKey === periodKey);
 }
@@ -2890,6 +2892,23 @@ function invoiceCustomerTimesheetExternallyConfirmed(item) {
 
 function invoiceExternalConfirmationReason(item) {
   return String(item && item.customerTimesheetNote || "").replace(/^Extern bevestigd:\s*/, "");
+}
+
+// "door Marc de Roon · 3 september 2026 20:05". De beheerder kon eerder alleen
+// zien dat een klanturenstaat buiten de app was afgehandeld, niet door wie of
+// wanneer -- en dat is precies wat je wilt weten als je het navraagt.
+function invoiceDocumentActorLine(item) {
+  const wie = String(item && item.customerTimesheetReviewedBy || "").trim();
+  const wanneer = String(item && item.customerTimesheetReviewedAt || "").trim();
+  const delen = [];
+  if (wie) delen.push("door " + wie);
+  if (wanneer) {
+    const moment = new Date(wanneer.replace(" ", "T") + (/[zZ]|[+-]\d\d:?\d\d$/.test(wanneer) ? "" : "Z"));
+    delen.push(Number.isNaN(moment.getTime())
+      ? wanneer
+      : new Intl.DateTimeFormat("nl-NL", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(moment));
+  }
+  return delen.join(" · ");
 }
 
 function invoiceDocumentsComplete(item) {
@@ -3022,12 +3041,15 @@ function showInvoiceDocuments(invoiceId, focusKind = "") {
     ? '<div class="invoice-document-links"><button type="button" class="small-button" data-document-kind="customer-timesheet" data-doc-open="' + escapeHtml(item.customerTimesheetDownloadUrl) + '">Openen</button><button type="button" class="text-button" data-doc-download="' + escapeHtml(item.customerTimesheetDownloadUrl) + '" data-doc-name="Klanturenstaat-' + escapeHtml(safeFilename(String(item.periodKey || "document"))) + '.pdf">Downloaden</button></div>'
     : customerExternallyConfirmed
       ? '<div class="document-note-flagged"><span class="document-note-flag">Extern bevestigd</span>' +
-        '<p>Geen bestand in de app. ' + (invoiceExternalConfirmationReason(item) ? 'Reden: ' + escapeHtml(invoiceExternalConfirmationReason(item)) + '.' : 'De klanturenstaat is buiten de app afgehandeld.') + '</p></div>' +
+        '<p>Geen bestand in de app. ' + (invoiceExternalConfirmationReason(item) ? 'Reden: ' + escapeHtml(invoiceExternalConfirmationReason(item)) + '.' : 'De klanturenstaat is buiten de app afgehandeld.') +
+        (invoiceDocumentActorLine(item) ? '<br><span class="document-note-actor">Geregistreerd ' + escapeHtml(invoiceDocumentActorLine(item)) + '</span>' : '') + '</p></div>' +
         '<div class="invoice-document-restore"><button type="button" class="small-button document-restore-action" data-restore-external-timesheet>Externe bevestiging intrekken</button>' +
         '<small>De urenstaat wordt daarna weer als ontbrekend gemarkeerd.</small></div>'
       : String(item.customerTimesheetStatus || "") === "skipped"
         ? '<div class="document-note-flagged"><span class="document-note-flag">Rechtstreeks gemaild</span>' +
-          '<p>Geen bestand in de app. De medewerker heeft de klanturenstaat rechtstreeks naar Backoffice gemaild.</p></div>'
+          '<p>Geen bestand in de app. De medewerker heeft de klanturenstaat rechtstreeks naar Backoffice gemaild.' +
+          (String(item.customerTimesheetNote || "").trim() ? '<br>Reden: ' + escapeHtml(String(item.customerTimesheetNote).trim()) : '') +
+          (invoiceDocumentActorLine(item) ? '<br><span class="document-note-actor">Geregistreerd ' + escapeHtml(invoiceDocumentActorLine(item)) + '</span>' : '') + '</p></div>'
         : '<p class="invoice-document-missing-note">Geen klanturenstaatbestand bewaard.</p>';
   const upload = !item.customerTimesheetDownloadUrl
     ? '<div class="form-field invoice-document-upload"><label for="invoice-customer-timesheet-file">Urenstaat toevoegen</label><input id="invoice-customer-timesheet-file" type="file" accept="application/pdf,image/jpeg,image/png"><small>PDF, JPG of PNG. Afbeeldingen worden veilig als PDF opgeslagen.</small>' +
@@ -4713,7 +4735,12 @@ function renderModalTaskNavigation(taskId) {
   }
   adminTaskWorkflow.activeTaskId = taskId;
   navigation.hidden = false;
-  document.querySelector("#modal-queue-progress").textContent = "Actie " + (index + 1) + " van " + tasks.length + " bij Backoffice";
+  // De rij loopt over alle maanden, terwijl je hem meestal opent vanuit een lijst
+  // die op een maand staat. "Actie 8 van 8" las daardoor alsof die maand acht
+  // acties had. Benoem het bereik dus, zodra er meer dan een maand in zit.
+  const maanden = new Set(tasks.map(task => String(task.periodKey || "")).filter(Boolean));
+  const bereik = maanden.size > 1 ? " · alle maanden" : "";
+  document.querySelector("#modal-queue-progress").textContent = "Actie " + (index + 1) + " van " + tasks.length + " bij Backoffice" + bereik;
   const dirty = modalTaskFormIsDirty();
   document.querySelector("#modal-queue-note").textContent = dirty
     ? "Rond de wijziging af of annuleer eerst."
@@ -5965,6 +5992,9 @@ function renderInvoiceStatusSummary(readiness) {
     card.classList.toggle("is-current", value > 0);
     card.classList.toggle("is-blocked", key === "blocked" && value > 0);
   });
+  // Houdt de opgelichte stap gelijk aan het actieve filter, ook wanneer dat
+  // filter ergens anders is gezet dan met deze kaarten.
+  if (typeof syncInvoiceFilterControls === "function") syncInvoiceFilterControls(state.invoiceFilter);
 }
 
 function renderInvoiceDetailVisibility() {
@@ -11168,11 +11198,32 @@ document.querySelector("#approve-all").addEventListener("click", () => {
   });
 });
 
-document.querySelectorAll("[data-invoice-filter]").forEach(button => button.addEventListener("click", () => {
+// De knoppenrij en de drie stapkaarten erboven zetten hetzelfde filter. Ze
+// moeten elkaar dus volgen: klik je een stapkaart, dan hoort de bijbehorende
+// knop op te lichten en andersom.
+function syncInvoiceFilterControls(waarde) {
+  document.querySelectorAll("[data-invoice-filter]").forEach(item => {
+    item.classList.toggle("is-active", item.dataset.invoiceFilter === waarde);
+  });
+  document.querySelectorAll("[data-invoice-status-filter]").forEach(kaart => {
+    kaart.setAttribute("aria-pressed", kaart.dataset.invoiceStatusFilter === waarde ? "true" : "false");
+  });
+}
+
+function applyInvoiceFilter(waarde) {
   readApiRuntime.invoicePage = 1;
-  state.invoiceFilter = button.dataset.invoiceFilter;
-  document.querySelectorAll("[data-invoice-filter]").forEach(item => item.classList.toggle("is-active", item === button));
+  state.invoiceFilter = waarde;
+  syncInvoiceFilterControls(waarde);
   renderInvoices();
+}
+
+document.querySelectorAll("[data-invoice-filter]").forEach(button => button.addEventListener("click", () => {
+  applyInvoiceFilter(button.dataset.invoiceFilter);
+}));
+document.querySelectorAll("[data-invoice-status-filter]").forEach(kaart => kaart.addEventListener("click", () => {
+  // Nog een keer op dezelfde stap klikken haalt het filter er weer af.
+  const gekozen = kaart.dataset.invoiceStatusFilter;
+  applyInvoiceFilter(state.invoiceFilter === gekozen ? "all" : gekozen);
 }));
 document.querySelectorAll("[data-invoice-document-filter]").forEach(button => button.addEventListener("click", () => {
   readApiRuntime.invoicePage = 1;
@@ -11320,7 +11371,7 @@ function setPeriod(periodKey) {
   state.invoiceFilter = "all";
   readApiRuntime.invoiceDocumentFilter = "all";
   readApiRuntime.invoicePage = 1;
-  document.querySelectorAll("[data-invoice-filter]").forEach(button => button.classList.toggle("is-active", button.dataset.invoiceFilter === "all"));
+  syncInvoiceFilterControls("all");
   document.querySelectorAll("[data-invoice-document-filter]").forEach(button => button.classList.toggle("is-active", button.dataset.invoiceDocumentFilter === "all"));
   persistState();
   renderAll();

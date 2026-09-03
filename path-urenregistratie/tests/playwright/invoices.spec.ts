@@ -744,3 +744,39 @@ test('[INV-H-012] gesloten factuur PDF bevat alle content sections (recipient, p
   });
 });
 
+
+test('[INV-H-022] de drie statusstappen filteren de factuurlijst en lichten op', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  const invoicesPage = new InvoicesPage(page);
+  const stapKlaar = page.locator('#invoice-status-ready');
+  const filterKlaar = page.locator('[data-invoice-filter="ready"]');
+  const filterAlle = page.locator('[data-invoice-filter="all"]');
+
+  await test.step('Given de administrator het factuurscherm met de drie statusstappen opent', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await invoicesPage.open();
+    // Het maanddetail staat standaard ingeklapt; de statusstappen horen daarbij.
+    const detailToggle = page.locator('#invoice-detail-toggle');
+    if ((await detailToggle.getAttribute('aria-expanded')) !== 'true') await detailToggle.click();
+    await expect(page.locator('#invoice-status-guide')).toBeVisible();
+    await expect(stapKlaar).toHaveAttribute('aria-pressed', 'false');
+    await expect(filterAlle).toHaveClass(/is-active/);
+  });
+
+  await test.step('When de administrator op de stap Klaar voor controle klikt', async () => {
+    await stapKlaar.click();
+  });
+
+  await test.step('Then staat de factuurlijst op Factuur klaar en licht die stap op', async () => {
+    await expect(stapKlaar).toHaveAttribute('aria-pressed', 'true');
+    await expect(filterKlaar).toHaveClass(/is-active/);
+    await expect(filterAlle).not.toHaveClass(/is-active/);
+  });
+
+  await test.step('And nog een keer op dezelfde stap klikken zet het filter terug op Alle', async () => {
+    await stapKlaar.click();
+    await expect(stapKlaar).toHaveAttribute('aria-pressed', 'false');
+    await expect(filterAlle).toHaveClass(/is-active/);
+  });
+});

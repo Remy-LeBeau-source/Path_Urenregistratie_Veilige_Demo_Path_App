@@ -581,6 +581,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .document-note-flagged { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; border: 1px solid var(--line); border-left: 4px solid var(--warning); border-radius: 12px; background: color-mix(in srgb, var(--warning-bg) 55%, var(--surface)); padding: 11px 13px; }
 .document-note-flag { flex: 0 0 auto; border: 1px solid color-mix(in srgb, var(--warning) 55%, transparent); border-radius: 999px; background: var(--warning-bg); color: var(--warning-tekst); font-size: 9px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; padding: 4px 9px; }
 .document-note-flagged p { margin: 0; color: var(--warning-tekst); font-size: 10.5px; line-height: 1.5; }
+.document-note-actor { display: inline-block; margin-top: 3px; opacity: .85; font-weight: 700; }
 .invoice-document-restore { display: grid; gap: 7px; }
 .small-button.document-restore-action { width: 100%; min-height: 44px; border: 2px solid var(--warning); border-left-width: 6px; background: var(--warning-bg); color: var(--warning-tekst); font-size: 11px; font-weight: 900; box-shadow: 0 6px 16px rgba(187,118,35,.18); }
 .small-button.document-restore-action::before { content: "\21B6"; margin-right: 7px; font-size: 15px; line-height: 0; }
@@ -640,12 +641,18 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .month-batch-blocker-copy small, .month-batch-blocker-owner small { margin-top: 3px; color: var(--muted); font-size: 9px; line-height: 1.4; }
 .month-batch-blocker .small-button { min-width: 126px; }
 .invoice-status-guide { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-bottom: 17px; }
-.invoice-status-guide > div { display: flex; align-items: center; gap: 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--vlak); padding: 14px 16px; box-shadow: 0 5px 18px rgba(13,27,56,.025); }
-.invoice-status-guide > div.is-current { border-color: #9edccb; background: var(--green-light); box-shadow: 0 6px 20px rgba(58,189,157,.09); }
-.invoice-status-guide > div.is-blocked { border-color: #f0d2a8; background: var(--warning-bg); }
-.invoice-status-guide > div > span { display: grid; width: 30px; height: 30px; flex: 0 0 30px; place-items: center; border-radius: 9px; background: var(--green-light); color: var(--teal); font-size: 11px; font-weight: 900; }
-.invoice-status-guide > div.is-current > span { background: var(--mint); color: var(--navy); }
-.invoice-status-guide > div.is-blocked > span { background: var(--warning); color: var(--navy); }
+/* Waren <div>'s; nu knoppen die de factuurlijst eronder filteren. Vandaar de
+   font/text-align/width-reset: zonder die drie regels erft een knop de
+   browserstijl en staat de tekst gecentreerd in een te smal vlak. */
+.invoice-status-guide > button { display: flex; width: 100%; align-items: center; gap: 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--vlak); cursor: pointer; font: inherit; padding: 14px 16px; text-align: left; box-shadow: 0 5px 18px rgba(13,27,56,.025); transition: border-color .15s ease, box-shadow .15s ease; }
+.invoice-status-guide > button:hover { border-color: var(--mint-dark); }
+.invoice-status-guide > button:focus-visible { outline: 3px solid rgba(58,189,157,.32); outline-offset: 2px; }
+.invoice-status-guide > button[aria-pressed="true"] { border-color: var(--mint-dark); box-shadow: 0 0 0 2px rgba(58,189,157,.28), 0 6px 20px rgba(58,189,157,.12); }
+.invoice-status-guide > button.is-current { border-color: #9edccb; background: var(--green-light); box-shadow: 0 6px 20px rgba(58,189,157,.09); }
+.invoice-status-guide > button.is-blocked { border-color: #f0d2a8; background: var(--warning-bg); }
+.invoice-status-guide > button > span { display: grid; width: 30px; height: 30px; flex: 0 0 30px; place-items: center; border-radius: 9px; background: var(--green-light); color: var(--teal); font-size: 11px; font-weight: 900; }
+.invoice-status-guide > button.is-current > span { background: var(--mint); color: var(--navy); }
+.invoice-status-guide > button.is-blocked > span { background: var(--warning); color: var(--navy); }
 .invoice-status-guide p, .invoice-status-guide strong, .invoice-status-guide small { display: block; margin: 0; }
 .invoice-status-guide strong { color: var(--navy-tekst); font-size: 11px; }
 .invoice-status-guide small { margin-top: 3px; color: var(--muted); font-size: 9px; line-height: 1.4; }
@@ -1495,7 +1502,7 @@ html[data-theme="dark"] .login-screen { background: radial-gradient(circle at 15
 html[data-theme="dark"] .login-panel,
 html[data-theme="dark"] .approval-card,
 html[data-theme="dark"] .invoice-month-overview,
-html[data-theme="dark"] .invoice-status-guide > div,
+html[data-theme="dark"] .invoice-status-guide > button,
 html[data-theme="dark"] .month-batch-card,
 html[data-theme="dark"] .month-batch-card[data-state="blocked"],
 html[data-theme="dark"] .month-batch-card[data-state="ready"],
@@ -1894,7 +1901,7 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
     gap: 9px;
   }
 
-  .invoice-status-guide > div {
+  .invoice-status-guide > button {
     min-height: 58px;
     padding: 12px;
   }
@@ -2763,7 +2770,7 @@ body.toont-installatieaanbod .main-content {
   .invoice-source-intro { font-size: 13px; }
   .invoice-source-payment { font-size: 13px; }
   .invoice-source-totals { font-size: 13px; }
-  .invoice-status-guide > div > span { font-size: 13px; }
+  .invoice-status-guide > button > span { font-size: 13px; }
   .invoice-status-guide small { font-size: 11px; }
   .invoice-status-guide strong { font-size: 13px; }
   .login-avatar { font-size: 14px; }
