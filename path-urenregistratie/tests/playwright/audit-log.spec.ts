@@ -176,4 +176,75 @@ test.describe('audit log api', () => {
     expect(body.error).toBe('method-not-allowed');
     await ctx.dispose();
   });
+
+  test('[AUD-H-011] elke schrijfactie belandt in het auditlog met de juiste actor', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    const suffix = Date.now().toString().slice(-7);
+
+    const post = async (path: string, data: Record<string, unknown>) => {
+      const csrf = await ctx.get('/server/auth/csrf.php');
+      const token = String((await csrf.json()).csrf_token || '');
+      const r = await ctx.post(path, { headers: { 'X-CSRF-Token': token }, data });
+      return { status: r.status(), body: await r.json() };
+    };
+    const auditHas = async (query: string, match: (row: { event_type: string; actor_id: number | null; actor_name: string | null }) => boolean) => {
+      const r = await ctx.get(`/server/api/audit-log.php?${query}&limit=50`);
+      expect(r.status()).toBe(200);
+      const items = (await r.json()).items as Array<{ event_type: string; actor_id: number | null; actor_name: string | null }>;
+      return items.some(match);
+    };
+
+    await test.step('Given de beheerder maakt een medewerker aan', async () => {
+      const admin = await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+      const created = await post('/server/api/staff.php', {
+        action: 'upsert_employee', sendInvitation: false,
+        employee: {
+          name: `Audittest ${suffix}`, email: `audit-${suffix}@example.invalid`, role: 'Consultant',
+          startDate: '2026-08-01', active: true, client: 'Auditklant', broker: 'Auditbroker',
+          brokerEmail: 'broker@example.invalid', projectCode: `AUD-${suffix}`,
+        },
+        mailRecipients: [],
+      });
+      expect(created.status, JSON.stringify(created.body)).toBe(200);
+
+      expect(await auditHas('entity_type=employee', row =>
+        (row.event_type === 'employee.upsert' || row.event_type.startsWith('employee.'))
+        && row.actor_id === Number(admin.user.id))).toBe(true);
+    });
+
+    await test.step('When de beheerder de bedrijfsinstellingen opslaat', async () => {
+      const bootstrap = await ctx.get('/server/api/bootstrap.php');
+      const settings = (await bootstrap.json()).settings ?? {};
+      const saved = await post('/server/api/settings.php', {
+        settings: { ...settings, supportName: `Backoffice ${suffix}` },
+      });
+      expect(saved.status, JSON.stringify(saved.body)).toBe(200);
+      expect(await auditHas('entity_type=company', row => row.event_type.startsWith('company.') || row.event_type.startsWith('settings.'))).toBe(true);
+    });
+
+    await test.step('Then registreert een medewerker-schrijfactie de medewerker als actor', async () => {
+      await authApi.logout();
+      const employee = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      // Een save_draft op een verre lege periode: puur om een geauditeerde
+      // medewerker-schrijfactie te forceren.
+      const periode = '3300-06';
+      const draft = await post('/server/api/timesheets.php', {
+        action: 'save_draft', period: periode,
+        contractual_hours: 160, billable_hours: 8, leave_hours: 0, sickness_hours: 0,
+        day_entries: [{ work_date: `${periode}-02`, hours: 8, description: 'audit' }],
+      });
+      expect(draft.status, JSON.stringify(draft.body)).toBe(200);
+      await authApi.logout();
+
+      // Het auditlog is alleen voor de beheerder leesbaar; log terug in om de
+      // door de medewerker geschreven regel te controleren.
+      await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+      expect(await auditHas('entity_type=timesheet', row =>
+        row.event_type.startsWith('timesheet.') && row.actor_id === Number(employee.user.id))).toBe(true);
+      await authApi.logout();
+    });
+
+    await ctx.dispose();
+  });
 });
