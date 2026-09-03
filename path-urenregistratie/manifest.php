@@ -22,22 +22,23 @@ if (is_file($configPath)) {
     }
 }
 
+// Alleen de naam verschilt per omgeving. De statusbalkkleur (theme_color) is
+// overal navy -- gelijk aan de web-app en aan productie. Dat de TEST-app zichtbaar
+// TEST is, blijft aan de naam ("Path TEST") en aan het oranje TESTOMGEVING-label
+// in de app zelf.
 $naming = [
     'test' => [
         'name' => 'Path Uren — TESTOMGEVING',
         'short_name' => 'Path TEST',
-        'theme_color' => '#BB7623',
     ],
     'development' => [
         'name' => 'Path Uren — DEV',
         'short_name' => 'Path DEV',
-        'theme_color' => '#0D1B38',
     ],
 ];
 $pick = $naming[$environment] ?? [
     'name' => 'Path Uren & Facturatie',
     'short_name' => 'Path Uren',
-    'theme_color' => '#0D1B38',
 ];
 
 echo json_encode([
@@ -50,7 +51,7 @@ echo json_encode([
     'display' => 'standalone',
     'orientation' => 'portrait-primary',
     'background_color' => '#0D1B38',
-    'theme_color' => $pick['theme_color'],
+    'theme_color' => '#0D1B38',
     'lang' => 'nl',
     'dir' => 'ltr',
     'prefer_related_applications' => false,
