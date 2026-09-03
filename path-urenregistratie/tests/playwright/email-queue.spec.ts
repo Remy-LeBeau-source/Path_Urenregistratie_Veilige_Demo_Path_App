@@ -676,7 +676,7 @@ test.describe('email queue api', () => {
       const attachmentPreviews = page.locator('#modal-summary .mail-acceptance-attachment');
       await expect(attachmentPreviews).toHaveCount(1);
       await expect(attachmentPreviews.nth(0)).toHaveText('Factuur-PDF bekijken');
-      await expect(attachmentPreviews.nth(0)).toHaveAttribute('href', /preview_scenario=broker_bundle&attachment=0$/);
+      await expect(attachmentPreviews.nth(0)).toHaveAttribute('data-doc-open', /preview_scenario=broker_bundle&attachment=0$/);
       await expect(page.locator('#modal-confirm')).toHaveText('1 acceptatiemail versturen');
       await page.locator('#modal-confirm').click();
     });

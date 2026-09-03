@@ -7154,7 +7154,7 @@ function mailAcceptanceAttachmentLinks(scenario, compact = false) {
     const index = Number.isInteger(Number(attachment && attachment.index)) ? Number(attachment.index) : fallbackIndex;
     const filename = String(attachment && attachment.filename || "PDF-bijlage");
     const label = filename.includes("Klanturenstaat") ? "Klanturenstaat-PDF bekijken" : "Factuur-PDF bekijken";
-    return '<a class="small-button mail-acceptance-attachment" target="path-document" rel="noopener" href="' + MAIL_ACCEPTANCE_API_PATH + '?preview_scenario=' + key + '&amp;attachment=' + encodeURIComponent(String(index)) + '" title="' + escapeHtml(filename) + '">' + escapeHtml(compact ? label.replace(" bekijken", "") : label) + '</a>';
+    return '<button type="button" class="small-button mail-acceptance-attachment" data-doc-open="' + escapeHtml(MAIL_ACCEPTANCE_API_PATH + '?preview_scenario=' + key + '&attachment=' + encodeURIComponent(String(index))) + '" title="' + escapeHtml(filename) + '">' + escapeHtml(compact ? label.replace(" bekijken", "") : label) + '</button>';
   }).join("") + '</div>';
 }
 
