@@ -30,3 +30,11 @@ Feature: Toegankelijkheid en toetsenbordbediening
     Given toegankelijkheid en toetsenbordbediening is voorbereid
     When de flow voor A11Y-H-003 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat lopende tekst blijft op een breed scherm leesbaar van regellengte
+
+  @happy
+  Scenario: [A11Y-H-004] een geopende dialoog is met het toetsenbord te bedienen en te sluiten
+    # Testtechniek: Toestandsovergang + toetsenbordbediening
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given de administrator opent de voorbeeld-herstel-dialoog
+    When Escape wordt ingedrukt
+    Then sluit de dialoog met een gelabelde sluitknop en blijft de focus behouden

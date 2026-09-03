@@ -1042,6 +1042,9 @@ function ensureSeedDataIntegrity(candidateState, fallbackState, sourceLabel) {
 
 let state = loadState();
 let modalAction = null;
+// Het element dat de dialoog opende. Bij sluiten gaat de focus daar naartoe
+// terug; anders viel hij op de kale body en was de toetsenbordpositie kwijt.
+let modalOpenerElement = null;
 let modalSecondaryAction = null;
 let modalCloseAction = null;
 let adminTaskWorkflow = null;
@@ -8550,6 +8553,8 @@ function toast(message) {
 
 function showModal(options) {
   const settings = Object.assign({ label: "Controle", title: "", message: "", summary: "", confirm: "Bevestigen", action: null, secondary: "", secondaryAction: null, closeAction: null, wide: false, danger: false, adminTaskId: "", taskNavigation: true, initialFocus: "" }, options);
+  const opener = document.activeElement;
+  modalOpenerElement = opener && opener !== document.body && !document.querySelector("#modal").contains(opener) ? opener : null;
   document.querySelector("#modal-label").textContent = settings.label;
   document.querySelector("#modal-title").textContent = settings.title;
   document.querySelector("#modal-message").textContent = settings.message;
@@ -8600,6 +8605,14 @@ function closeModal(runCloseAction = false) {
   modalSecondaryAction = null;
   modalCloseAction = null;
   adminTaskWorkflow = null;
+  // Focus terug naar de knop die de dialoog opende, zodat de toetsenbord- en
+  // schermlezerpositie niet op de body valt. Een eventuele closeAction hierna
+  // mag de focus alsnog ergens anders neerzetten.
+  const opener = modalOpenerElement;
+  modalOpenerElement = null;
+  if (opener && document.body.contains(opener) && typeof opener.focus === "function" && opener.offsetParent !== null) {
+    opener.focus({ preventScroll: true });
+  }
   if (runCloseAction && typeof afterClose === "function") afterClose();
 }
 

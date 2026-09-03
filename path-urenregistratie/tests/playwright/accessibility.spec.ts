@@ -106,3 +106,34 @@ test('[A11Y-H-003] lopende tekst blijft op een breed scherm leesbaar van regelle
     });
   }
 });
+
+test('[A11Y-H-004] een geopende dialoog is met het toetsenbord te bedienen en te sluiten', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given de administrator opent de voorbeeld-herstel-dialoog', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect(page.locator('#app-shell')).toBeVisible();
+    await page.locator('#quick-reset-demo').click();
+    await expect(page.locator('#modal')).toBeVisible();
+  });
+
+  await test.step('Then is de sluitknop bereikbaar en gelabeld, en ligt de focus in de dialoog', async () => {
+    const sluit = page.locator('#modal-close');
+    await expect(sluit).toBeVisible();
+    const naam = (await sluit.getAttribute('aria-label')) || (await sluit.textContent()) || '';
+    expect(naam.trim().length, 'de sluitknop hoort een toegankelijke naam te hebben').toBeGreaterThan(0);
+    const focusInModal = await page.evaluate(() => !!document.activeElement?.closest('#modal'));
+    expect(focusInModal, 'na openen hoort de focus in de dialoog te liggen').toBe(true);
+  });
+
+  await test.step('When Escape wordt ingedrukt', async () => {
+    await page.keyboard.press('Escape');
+  });
+
+  await test.step('Then sluit de dialoog en gaat de focus niet verloren op de body', async () => {
+    await expect(page.locator('#modal')).toBeHidden();
+    const focusOpBody = await page.evaluate(() => document.activeElement === document.body || document.activeElement === null);
+    expect(focusOpBody, 'na sluiten mag de focus niet op de kale body vallen').toBe(false);
+  });
+});
