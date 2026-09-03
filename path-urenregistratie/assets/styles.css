@@ -72,9 +72,16 @@ body.auth-booting .app-shell {
 button, input, select { font: inherit; }
 button { color: inherit; }
 
+/* Eén zichtbare focusring voor alles wat met het toetsenbord te bereiken is.
+   Links en elementen die via tabindex/role focusbaar zijn gemaakt hadden er
+   geen -- daardoor was met Tab niet te zien waar je stond. */
 button:focus-visible,
 input:focus-visible,
-select:focus-visible {
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
   outline: 3px solid rgba(58, 189, 157, 0.28);
   outline-offset: 2px;
 }

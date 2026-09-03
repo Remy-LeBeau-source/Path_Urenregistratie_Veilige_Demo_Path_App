@@ -137,3 +137,36 @@ test('[A11Y-H-004] een geopende dialoog is met het toetsenbord te bedienen en te
     expect(focusOpBody, 'na sluiten mag de focus niet op de kale body vallen').toBe(false);
   });
 });
+
+test('[A11Y-H-005] elke interactieve elementsoort krijgt een zichtbare focusring', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsAdmin();
+  await expect(page.locator('#app-shell')).toBeVisible();
+
+  await test.step('Then geeft de basisregel een outline aan button, input, select, textarea, a, summary en tabindex', async () => {
+    const css = await page.evaluate(async () => {
+      const link = document.querySelector('link[rel="stylesheet"]') as HTMLLinkElement | null;
+      if (!link) return '';
+      const res = await fetch(link.href);
+      return res.text();
+    });
+    expect(css).toMatch(/a:focus-visible/);
+    expect(css).toMatch(/\[tabindex\]:focus-visible/);
+    expect(css).toMatch(/summary:focus-visible/);
+  });
+
+  await test.step('And een via het toetsenbord gefocuste navigatieknop toont echt een outline', async () => {
+    const knop = page.locator('nav [data-view]').first();
+    await knop.evaluate(el => (el as HTMLElement).focus());
+    // Tab vanaf de knop en terug: de browser markeert het element dan als
+    // toetsenbord-gefocust zodat :focus-visible aanslaat.
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Shift+Tab');
+    const zichtbaar = await knop.evaluate(el => {
+      const s = getComputedStyle(el);
+      return el.matches(':focus-visible') && s.outlineStyle !== 'none' && parseFloat(s.outlineWidth) > 0;
+    });
+    expect(zichtbaar, 'een toetsenbord-gefocuste knop hoort een zichtbare outline te hebben').toBe(true);
+  });
+});

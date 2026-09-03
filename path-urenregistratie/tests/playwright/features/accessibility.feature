@@ -38,3 +38,11 @@ Feature: Toegankelijkheid en toetsenbordbediening
     Given de administrator opent de voorbeeld-herstel-dialoog
     When Escape wordt ingedrukt
     Then sluit de dialoog met een gelabelde sluitknop en blijft de focus behouden
+
+  @happy
+  Scenario: [A11Y-H-005] elke interactieve elementsoort krijgt een zichtbare focusring
+    # Testtechniek: Broncontract + gerenderde stijl
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given de administrator is ingelogd
+    When de focusregels worden gelezen en een navigatieknop wordt gefocust
+    Then dekt de basisregel button, input, select, textarea, a, summary en tabindex, en toont een gefocuste knop een outline
