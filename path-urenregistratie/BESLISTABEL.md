@@ -67,7 +67,17 @@ Losse regressiestatus staat in `MASTERCHECKLIST.md`; livegang-checklist in `PROD
 | R4 | Hybride-richting (voor later): warm crème vlak, Roboto Slab serif-koppen, Path-groen (`#3abd9d`/`#169276`, géén teal), navy sidebar. Overnemen: "Actuele maand bij inloggen"-pill, groen/oranje/grijs-legenda, KPI-rij (aantal + %), zoeken + paginering, Documentarchief-modal met stepper bovenaan + Factuur/Urenstaat-kaarten naast elkaar + omkaderde "Externe bevestiging terugdraaien". Niet overnemen: verzonnen modules (Declaraties, Periodieke verloning, Werkgevers). | Synthese van 3 mockups. | vast |
 | R5 | Ruwe schatting implementatie: visuele refresh ~3–5 werkdagen; volledige hybride ~8–15 werkdagen; grootste kost = ~380 E2E-cases groen houden bij DOM-verschuivingen. | — | referentie |
 
-## 7. Omgeving & techniek (feiten, geen keuzes)
+## 7. Mobiel & documentafhandeling
+
+| # | Keuze | Reden | Status |
+|---|---|---|---|
+| MO1 | **Bekijken en downloaden van documenten lopen altijd via `fetch` → blob** (`openDocumentInTab` / `downloadDocument` / `deliverBlobDownload`). De `Content-Disposition` van de server (soms `inline`, soms `attachment`) bepaalt niet meer of Chrome toont of ophaalt. | "Soms wel soms niet" na downloaden op mobiel. Commit `ef6e684`. | vast |
+| MO2 | **Bekijken** hergebruikt één vast tabblad `target="path-document"` (nooit `_blank`, nooit navigatie in het app-tabblad). **Downloaden** navigeert nooit. Zo neemt de PDF-viewer de web-app/PWA-sessie niet meer over. `downloadInvoicePdf` gebruikt `deliverBlobDownload` i.p.v. `doc.save()`. | jsPDF `doc.save()` viel op Android/PWA terug op navigatie naar de blob-URL. | vast |
+| MO3 | `.modal-close` is **sticky** (was absolute) → het kruisje blijft in beeld ook als een lang formulier of toetsenbord-focus de modal omhoog scrolt. Donkere modus kreeg een expliciete achtergrond/kleur (was een bijna onzichtbaar wit blok). **Lichte modus ongewijzigd.** | Gebruiker kon "alleen F5" om eruit te komen. | vast |
+| MO4 | Het mobiele **Hulp & contact**-paneel is boven én onder verankerd met `dvh` → de koptekst met het kruisje blijft zichtbaar nadat een FAQ-antwoord het paneel laat groeien. | Kruisje schoof achter de adresbalk. `MOB-H-019`. | vast |
+| MO5 | Openstaand: bij een klanturenstaat die als "rechtstreeks gemaild" of "extern bevestigd" is geregistreerd wil de gebruiker een duidelijker (niet per se rode) indicator, zodat de beheerder er niet overheen leest. Nog niet gedaan — na de downloadflow. | — | open |
+
+## 8. Omgeving & techniek (feiten, geen keuzes)
 
 | # | Feit |
 |---|---|
