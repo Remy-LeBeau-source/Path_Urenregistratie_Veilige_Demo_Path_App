@@ -1550,6 +1550,10 @@ function requestLocalLoginHints() {
 
 function prefillAuthCredentialsFromSelection(role, showFeedback = true) {
   if (authRuntime.mode !== "auth") return;
+  // Voorvullen is een test-/lokale hulp. In productie is de meegeleverde
+  // accountcatalogus nog de demolijst (@example.invalid); die mag nooit in het
+  // inlog- of wachtwoord-resetveld verschijnen. Een echte gebruiker typt zelf.
+  if (!isLocalAuthHintsHost()) return;
   const account = selectedLoginAccount(role);
   if (!account) return;
 
