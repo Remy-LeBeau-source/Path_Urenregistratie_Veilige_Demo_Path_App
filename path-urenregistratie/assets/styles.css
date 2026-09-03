@@ -381,10 +381,6 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .text-button.danger-text { color: var(--danger); }
 .text-button.danger-text:hover { color: #7f3030; }
 
-.close-card { position: relative; z-index: 1; display: flex; align-items: center; gap: 18px; border: 1px solid rgba(255,255,255,.12); border-radius: 17px; background: rgba(255,255,255,.06); padding: 20px; }
-.close-card strong, .close-card small { display: block; }
-.close-card strong { font-size: 13px; }
-.close-card small { max-width: 150px; margin-top: 5px; color: #9eb0c1; font-size: 11px; line-height: 1.45; }
 .progress-ring { --size: 70px; display: grid; flex: 0 0 auto; width: var(--size); height: var(--size); place-items: center; border-radius: 50%; background: conic-gradient(var(--mint) calc(var(--progress) * 1%), rgba(255,255,255,.11) 0); }
 .progress-ring::before { grid-area: 1/1; width: 53px; height: 53px; border-radius: 50%; background: var(--navy-soft); content: ""; }
 .progress-ring span { z-index: 1; grid-area: 1/1; font-size: 13px; font-weight: 800; }
@@ -466,7 +462,6 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .dashboard-team-table .person-cell strong { color: var(--navy-tekst); font-size: 12px; }
 .dashboard-team-table .dashboard-team-row.status-submitted td { border-color: #cbdcf0; background: var(--vlak-zacht); }
 .dashboard-team-table .dashboard-team-row.status-correction td,
-.dashboard-team-table .dashboard-team-row.status-draft td { border-color: #edc58f; background: var(--vlak-warm); }
 .dashboard-team-action { min-width: 116px; }
 
 .correction-banner { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 14px; align-items: start; margin: 0 0 18px; border: 1px solid #edc58f; border-radius: 16px; background: var(--warning-bg); color: var(--ink); padding: 17px 19px; }
@@ -606,8 +601,6 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .invoice-month-overview-item:hover, .invoice-month-overview-item.is-current { border-color: #9edccb; background: var(--green-light); box-shadow: 0 8px 18px rgba(13,27,56,.07); transform: translateY(-1px); }
 .invoice-month-overview[data-state="blocked"] .invoice-month-overview-item.is-blocked,
 .invoice-month-overview-item.is-blocked.is-current { border-color: #f0d2a8; background: var(--warning-bg); }
-.invoice-month-overview-item.is-controlled { border-color: #cfe8e0; background: #f7fffc; }
-.invoice-month-overview-item.is-controlled.is-current { border-color: var(--mint-dark); background: var(--green-light); }
 .invoice-month-overview-item strong, .invoice-month-overview-item small { display: block; }
 .invoice-month-overview-item strong { overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .invoice-month-overview-item small { margin-top: 3px; color: var(--muted); font-size: 9px; line-height: 1.4; }
@@ -659,11 +652,9 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .mail-route-guide { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-bottom: 17px; }
 .mail-route-guide article { display: flex; align-items: center; gap: 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 15px 16px; box-shadow: 0 5px 18px rgba(13,27,56,.025); }
 .mail-route-guide article > span { display: grid; width: 32px; height: 32px; flex: 0 0 32px; place-items: center; border-radius: 9px; background: var(--green-light); color: var(--teal); font-size: 11px; font-weight: 900; }
-.mail-route-guide article.is-payroll { border-color: #a9d8cc; background: var(--vlak-zacht); }
 .mail-route-guide strong, .mail-route-guide small { display: block; }
 .mail-route-guide strong { color: var(--navy-tekst); font-size: 11px; }
 .mail-route-guide small { margin-top: 3px; color: var(--muted); font-size: 9px; line-height: 1.4; }
-.payroll-table td:nth-child(4) { min-width: 235px; }
 .segmented-control { display: flex; gap: 4px; border-radius: 10px; background: #f0f4f4; padding: 3px; }
 .segmented-control button { border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; font-size: 10px; font-weight: 700; padding: 7px 12px; }
 .segmented-control button.is-active { background: var(--vlak); color: var(--navy-tekst); box-shadow: 0 3px 9px rgba(13,27,56,.08); }
@@ -760,38 +751,12 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .team-account-local-notice strong { color: #7a4d0a; }
 .team-account-local-notice .text-button { justify-self: start; margin-top: 2px; color: #7a4d0a; font-weight: 800; text-decoration: underline; }
 .email-template-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
-.email-preview { margin-top: 18px; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: var(--vlak); }
-.email-preview > div { display: grid; grid-template-columns: 95px 1fr; gap: 15px; border-bottom: 1px solid #e9eeee; padding: 10px 14px; }
-.email-preview span { color: var(--muted); font-size: 10px; }
-.email-preview strong { color: var(--navy-tekst); font-size: 11px; overflow-wrap: anywhere; }
-.email-preview strong small { color: var(--warning-tekst); font-size: 9px; }
-.email-preview p { margin: 0; background: var(--vlak); color: var(--ink); font-size: 12px; line-height: 1.55; padding: 20px 14px; }
 .template-list { display: grid; gap: 10px; margin-top: 18px; }
 .template-item { display: grid; grid-template-columns: minmax(220px, .8fr) minmax(300px, 1.4fr) auto; align-items: center; gap: 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--vlak); padding: 14px; }
 .template-person { display: flex; align-items: center; gap: 11px; min-width: 0; }
 .template-person strong, .template-person small, .template-subject strong, .template-subject small { display: block; }
 .template-person strong, .template-subject strong { overflow: hidden; color: var(--navy-tekst); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .template-person small, .template-subject small { margin-top: 3px; overflow: hidden; color: var(--muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
-.route-list { display: grid; }
-.route-list > div { display: flex; min-height: 58px; align-items: center; gap: 11px; border-bottom: 1px solid #edf1f2; }
-.route-list > div:last-child { border-bottom: 0; }
-.route-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--mint); }
-.route-dot.gmail { background: #d45c55; }
-.route-list p { flex: 1; margin: 0; }
-.route-list strong, .route-list small { display: block; }
-.route-list strong { font-size: 11px; }
-.route-list small { margin-top: 3px; color: var(--muted); font-size: 9px; }
-.toggle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.toggle-grid label { position: relative; display: flex; gap: 11px; border: 1px solid var(--line); border-radius: 13px; cursor: pointer; padding: 15px; }
-.toggle-grid input { position: absolute; opacity: 0; }
-.toggle-grid label > span { position: relative; flex: 0 0 auto; width: 31px; height: 18px; border-radius: 999px; background: #cbd3d6; transition: background .2s ease; }
-.toggle-grid label > span::after { position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--vlak); content: ""; transition: transform .2s ease; }
-.toggle-grid input:checked + span { background: var(--mint); }
-.toggle-grid input:checked + span::after { transform: translateX(13px); }
-.toggle-grid p { margin: 0; }
-.toggle-grid strong, .toggle-grid small { display: block; }
-.toggle-grid strong { font-size: 10px; }
-.toggle-grid small { margin-top: 4px; color: var(--muted); font-size: 9px; line-height: 1.4; }
 /* Rules that always apply and are deliberately not switchable: same card shape as
    the toggles they replaced, minus the control that suggested a choice. */
 .settings-rule-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 0; padding: 0; list-style: none; }
@@ -840,7 +805,6 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 @media (max-width: 1100px) {
   .metric-grid { grid-template-columns: repeat(2, 1fr); }
   .hero-card { grid-template-columns: minmax(0, 1fr); }
-  .close-card { max-width: 370px; }
   .timesheet-layout { grid-template-columns: minmax(0, 1fr); }
   .summary-card { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
   .summary-card .section-label, .summary-card h3 { grid-column: 1/-1; }
@@ -889,7 +853,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .month-batch-blockers { grid-column: auto; }
   .invoice-status-guide { grid-template-columns: minmax(0, 1fr); }
   .employee-grid, .settings-grid { grid-template-columns: minmax(0, 1fr); }
-  .toggle-grid, .settings-rule-list { grid-template-columns: minmax(0, 1fr); }
+  .settings-rule-list { grid-template-columns: minmax(0, 1fr); }
   .settings-card.full-width { grid-column: auto; }
   .template-item { grid-template-columns: 1fr auto; }
   .template-subject { grid-column: 1/-1; grid-row: 2; }
@@ -920,7 +884,6 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .month-batch-blocker .small-button { width: 100%; }
   .reminder-schedule-footer { align-items: stretch; flex-direction: column; }
   .reminder-schedule-footer .small-button { width: 100%; }
-  .close-card { align-items: flex-start; padding: 15px; }
   .progress-ring { --size: 60px; }
   .progress-ring::before { width: 45px; height: 45px; }
   .metric-grid { grid-template-columns: minmax(0, 1fr); gap: 8px; }
@@ -1002,12 +965,6 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .notification-item span { margin-top: 4px; color: var(--muted); font-size: 10px; line-height: 1.45; }
 .notification-item small { margin-top: 6px; color: var(--teal); font-size: 9px; }
 .notification-empty { color: var(--muted); font-size: 11px; line-height: 1.5; padding: 26px 18px; text-align: center; }
-.popover-footer-button { width: 100%; border: 0; background: var(--vlak-zacht); color: var(--teal); cursor: pointer; font-size: 10px; font-weight: 800; padding: 13px; }
-.notification-test-actions { border-top: 1px solid var(--line); background: var(--vlak-zacht); padding: 11px 13px; }
-.notification-test-actions > small { display: block; margin-bottom: 7px; color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-.notification-test-actions > p { margin: -2px 0 8px; color: var(--muted); font-size: 9px; line-height: 1.4; }
-.notification-test-actions > div { display: flex; flex-wrap: wrap; gap: 6px; }
-.notification-test-actions button { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--teal); cursor: pointer; font-size: 9px; font-weight: 800; padding: 6px 8px; }
 .profile-menu { width: 270px; padding: 8px; }
 .profile-menu-person { display: flex; align-items: center; gap: 11px; margin-bottom: 5px; border-radius: 12px; background: var(--green-light); padding: 12px; }
 .profile-menu-person strong, .profile-menu-person small { display: block; }
@@ -1028,11 +985,6 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .employee-all-actions-button { border-color: rgba(255,255,255,.32); background: rgba(255,255,255,.08); color: #fff; }
 .employee-all-actions-button:hover { background: rgba(255,255,255,.15); }
 .employee-all-actions-button[hidden] { display: none; }
-.employee-month-progress { border: 1px solid rgba(255,255,255,.13); border-radius: 17px; background: rgba(255,255,255,.07); padding: 21px; }
-.employee-month-progress small, .employee-month-progress strong, .employee-month-progress span { display: block; }
-.employee-month-progress small { color: #9eb0c1; font-size: 10px; }
-.employee-month-progress strong { margin-top: 7px; font-family: "Roboto Slab", Georgia, serif; font-size: 28px; }
-.employee-month-progress > span { margin-top: 3px; color: #b9c7d4; font-size: 10px; }
 .linear-progress { height: 8px; margin-top: 18px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.12); }
 .linear-progress span { height: 100%; border-radius: inherit; background: var(--mint); }
 .employee-customer-timesheet-card { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 24px; align-items: center; margin: 0 0 18px; border: 1px solid var(--line); border-left: 4px solid var(--mint-dark); border-radius: 16px; background: var(--surface); padding: 19px 22px; box-shadow: 0 10px 28px rgba(13,27,56,.07); }
@@ -1313,8 +1265,6 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
   .employee-customer-timesheet-card { grid-template-columns: minmax(0, 1fr); }
   .employee-customer-timesheet-actions { display: grid; grid-template-columns: minmax(0, 1fr); justify-content: stretch; }
   .employee-customer-timesheet-actions .button { width: 100%; }
-  .employee-open-month-body-copy { flex-direction: column; align-items: stretch; }
-  .employee-open-month-body-copy .small-button { width: 100%; }
   .customer-timesheet-template-grid { grid-template-columns: minmax(0, 1fr); }
   .customer-timesheet-flow { grid-template-columns: minmax(0, 1fr); }
   .customer-timesheet-upload-grid { grid-template-columns: minmax(0, 1fr); }
@@ -1349,31 +1299,12 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 /* Papier blijft papier: dit voorbeeld laat zien wat er straks uit de printer
    komt, dus het wisselt bewust niet mee met de donkere modus. */
 .invoice-document-preview { padding: 28px; border: 1px solid var(--line); border-radius: 14px; background: #ffffff; color: #122034; }
-.invoice-source-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; }
-.invoice-source-columns section h4 { margin: 0 0 10px; padding: 6px 8px; background: #eee; font-size: 13px; }
 .invoice-source-field { display: grid; grid-template-columns: minmax(120px,.9fr) minmax(0,1.3fr); gap: 12px; min-height: 25px; font-size: 11px; line-height: 1.45; }
 .invoice-source-field strong { font-weight: 500; white-space: pre-line; }
-.invoice-source-spacer { height: 12px; }
-.invoice-source-spacer.small { height: 5px; }
-.invoice-source-intro { margin-top: 58px; font-size: 11px; }
-.invoice-source-intro p { margin: 0 0 8px; }
-.invoice-source-intro .invoice-source-field { grid-template-columns: 120px 1fr; }
-.invoice-source-totals { display: grid; grid-template-columns: 1fr auto; gap: 8px 20px; margin: 55px 0 0; font-size: 11px; }
-.invoice-source-payment { margin: 58px 0 0; font-size: 11px; line-height: 1.65; }
-.invoice-source-closing { margin-top: 50px; font-size: 11px; }
-.invoice-source-closing p + p { margin-top: 28px; }
-.invoice-preview-head, .invoice-preview-parties, .invoice-preview-totals { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-.invoice-preview-head { padding-bottom: 22px; border-bottom: 2px solid #39bda4; }
-.invoice-preview-head h3 { margin: 0 0 8px; font-size: 30px; }
-.invoice-preview-meta { text-align: right; }
-.invoice-preview-parties { margin: 22px 0; }
-.invoice-preview-parties p, .invoice-preview-head p { margin: 5px 0; white-space: pre-line; }
 .invoice-preview-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
 .invoice-preview-table th, .invoice-preview-table td { padding: 11px 8px; border-bottom: 1px solid #dfe7e5; text-align: right; }
 .invoice-preview-table th:first-child, .invoice-preview-table td:first-child { text-align: left; }
-.invoice-preview-totals > div:last-child { display: grid; grid-template-columns: 1fr auto; gap: 8px 20px; }
 .invoice-preview-total { padding-top: 8px; border-top: 2px solid #122034; font-size: 18px; font-weight: 800; }
-.invoice-preview-watermark { margin-top: 24px; padding: 10px; border-radius: 9px; background: #fffaf4; color: #9b5e13; text-align: center; font-weight: 800; }
 .invoice-branded-template { overflow: hidden; padding: 0; border: 0; border-radius: 16px; box-shadow: 0 14px 40px rgba(13,27,56,.12); }
 .invoice-brand-header { display: grid; grid-template-columns: 1fr 1.25fr; align-items: center; min-height: 174px; background: var(--navy); color: #fff; padding: 28px 34px; }
 .invoice-brand-logo img { display: block; width: 155px; max-width: 100%; }
@@ -1566,7 +1497,6 @@ html[data-theme="dark"] .help-faq-heading strong { color: var(--ink); }
 html[data-theme="dark"] .metric-card.attention { border-color: #5f4327; background: linear-gradient(150deg,#111d2b,#211a12); }
 html[data-theme="dark"] .modal { background: var(--surface); color: var(--ink); }
 html[data-theme="dark"] .correction-banner { border-color: #60482a; }
-html[data-theme="dark"] .mail-route-guide article.is-payroll { border-color: #28584d; background: #0e201d; }
 html[data-theme="dark"] .hours-view-toolbar,
 html[data-theme="dark"] .reminder-rule { border-color: var(--line); background: #0d1825; }
 html[data-theme="dark"] .reminder-choice-trigger, html[data-theme="dark"] .reminder-choice-panel { border-color: var(--line); background: #101d2d; color: var(--ink); }
@@ -1585,10 +1515,7 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
   .employee-history-head { display: none; }
   .administrator-row { grid-template-columns: 1fr auto; }
   .mail-recipient-setting, .mail-route-choice { grid-template-columns: 1fr auto; }
-  .invoice-preview-head, .invoice-preview-parties, .invoice-preview-totals, .invoice-source-columns { grid-template-columns: minmax(0, 1fr); }
-  .invoice-preview-meta { text-align: left; }
   .invoice-source-field { grid-template-columns: minmax(0, 1fr); gap: 2px; }
-  .invoice-source-intro { margin-top: 30px; }
   body[data-role="employee"] .nav-list { grid-template-columns: repeat(3,1fr); }
   .mail-route-guide { grid-template-columns: minmax(0, 1fr); }
   .announcement-meta { grid-template-columns: minmax(0, 1fr); }
@@ -2223,11 +2150,9 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
      het tikgebied, zodat de hele regel werkt in plaats van alleen het vierkantje. */
   .check-row,
   .route-toggle,
-  .toggle-grid label { min-height: 44px; align-items: center; }
 
   .check-row input[type="checkbox"],
   .route-toggle input[type="checkbox"],
-  .toggle-grid input[type="checkbox"] { width: 22px; height: 22px; }
 
   /* iOS zoomt in op een veld met tekst onder 16px en verspringt dan het scherm.
      16px voorkomt dat; de veldhoogte gaat mee naar de tikdoelnorm. */
@@ -2280,7 +2205,6 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
 @media (max-width: 700px) {
   .metric-link,
   .month-picker,
-  .month-picker-button,
   #customer-timesheet-month,
   #customer-timesheet-year { min-height: 44px; }
 
@@ -2335,7 +2259,6 @@ button,
 
 /* Doorschieten van een scrollend paneel mag de hele pagina niet meeslepen. */
 .table-wrap,
-.modal-body,
 .help-panel {
   -webkit-overflow-scrolling: touch;
 }
@@ -2346,7 +2269,6 @@ button,
   overscroll-behavior-x: contain;
   overscroll-behavior-y: auto;
 }
-.modal-body,
 .help-panel { overscroll-behavior: contain; }
 
 /* Let op: geef body hier GEEN overscroll-behavior. Onder 720px staat er al
@@ -2630,8 +2552,6 @@ body.toont-installatieaanbod .main-content {
   .assignment-bar strong { font-size: 14px; }
   .brand span { font-size: 13px; }
   .button { font-size: 15px; }
-  .close-card small { font-size: 13px; }
-  .close-card strong { font-size: 15px; }
   .correction-banner p { font-size: 14px; }
   .correction-banner small { font-size: 11px; }
   .correction-banner strong { font-size: 14px; }
@@ -2666,10 +2586,6 @@ body.toont-installatieaanbod .main-content {
   .demo-badge { font-size: 12px; }
   .demo-employee-picker label { font-size: 13px; }
   .demo-employee-picker small { font-size: 12px; }
-  .email-preview p { font-size: 14px; }
-  .email-preview span { font-size: 12px; }
-  .email-preview strong { font-size: 13px; }
-  .email-preview strong small { font-size: 11px; }
   .employee-announcement-card > p { font-size: 14px; }
   .employee-announcement-card footer { font-size: 11px; }
   .employee-announcement-card header > small { font-size: 11px; }
@@ -2687,8 +2603,6 @@ body.toont-installatieaanbod .main-content {
   .employee-history-row strong { font-size: 13px; }
   .employee-identity small { font-size: 12px; }
   .employee-identity strong { font-size: 15px; }
-  .employee-month-progress > span { font-size: 12px; }
-  .employee-month-progress small { font-size: 12px; }
   .employee-next-action-label { font-size: 11px; }
   .employee-next-action-meta { font-size: 12px; }
   .employee-open-action-copy small { font-size: 12px; }
@@ -2764,12 +2678,7 @@ body.toont-installatieaanbod .main-content {
   .invoice-month-overview-empty { font-size: 12px; }
   .invoice-month-overview-item small { font-size: 11px; }
   .invoice-month-overview-item strong { font-size: 13px; }
-  .invoice-source-closing { font-size: 13px; }
-  .invoice-source-columns section h4 { font-size: 15px; }
   .invoice-source-field { font-size: 13px; }
-  .invoice-source-intro { font-size: 13px; }
-  .invoice-source-payment { font-size: 13px; }
-  .invoice-source-totals { font-size: 13px; }
   .invoice-status-guide > button > span { font-size: 13px; }
   .invoice-status-guide small { font-size: 11px; }
   .invoice-status-guide strong { font-size: 13px; }
@@ -2819,14 +2728,10 @@ body.toont-installatieaanbod .main-content {
   .notification-item small { font-size: 11px; }
   .notification-item span { font-size: 12px; }
   .notification-item strong { font-size: 13px; }
-  .notification-test-actions > p { font-size: 11px; }
-  .notification-test-actions > small { font-size: 11px; }
-  .notification-test-actions button { font-size: 11px; }
   .period-control .month-choice-panel button { font-size: 13px; }
   .period-control .month-picker-trigger { font-size: 14px; }
   .period-picker-caption { font-size: 11px; }
   .period-picker-fields input { font-size: 14px; }
-  .popover-footer-button { font-size: 12px; }
   .popover-heading small { font-size: 11px; }
   .popover-heading strong { font-size: 15px; }
   .preference-row small { font-size: 11px; }
@@ -2852,8 +2757,6 @@ body.toont-installatieaanbod .main-content {
   .reminder-rule .check-row strong { font-size: 12px; }
   .reminder-schedule-summary > strong { font-size: 12px; }
   .reminder-schedule-summary span { font-size: 11px; }
-  .route-list small { font-size: 11px; }
-  .route-list strong { font-size: 13px; }
   .route-template small { font-size: 13px; }
   .safe-domain-note { font-size: 12px; }
   .safety-badge { font-size: 11px; }
@@ -2885,8 +2788,6 @@ body.toont-installatieaanbod .main-content {
   .timesheet-actions strong { font-size: 14px; }
   .timesheet-submit-note { font-size: 13px; }
   .toast { font-size: 14px; }
-  .toggle-grid small { font-size: 11px; }
-  .toggle-grid strong { font-size: 12px; }
   .topbar-avatar { font-size: 13px; }
   .topbar-quick-reset { font-size: 12px; }
   .updated-label { font-size: 13px; }

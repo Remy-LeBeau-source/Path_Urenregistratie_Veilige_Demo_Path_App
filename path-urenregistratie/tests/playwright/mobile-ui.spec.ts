@@ -371,7 +371,7 @@ test('[MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikba
     await expect(page.locator('.mobile-brand-home')).toBeVisible();
     await expect(page.locator('#mobile-switch-role')).toBeVisible();
     await expect(page.locator('.mobile-version-badge')).toBeVisible();
-    await expect(page.locator('.mobile-version-badge')).toHaveText(/Versie 0\.9\.\d+/);
+    await expect(page.locator('.mobile-version-badge')).toHaveText(/Versie \d+\.\d+\.\d+/);
     await expect(page.locator('#quick-reset-demo')).toBeVisible();
     const resetBox = await page.locator('#quick-reset-demo').boundingBox();
     expect(resetBox?.height || 0).toBeGreaterThanOrEqual(42);
