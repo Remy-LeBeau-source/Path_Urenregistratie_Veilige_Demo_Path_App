@@ -295,7 +295,7 @@ select:focus-visible {
 .period-control button { width: 34px; height: 34px; border: 0; border-radius: 9px; background: transparent; cursor: pointer; font-size: 22px; line-height: 1; }
 .period-control button:hover { background: var(--green-light); }
 .period-picker-wrap { display: grid; min-width: 184px; gap: 1px; padding: 4px 3px; }
-.period-picker-caption { color: var(--muted); font-size: 8px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.period-picker-caption { color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
 .period-picker-fields { display: grid; grid-template-columns: minmax(96px,1fr) 72px; gap: 4px; align-items: center; }
 .period-picker-fields input { width: 100%; height: 26px; border: 0; outline: 0; background: transparent; color: var(--navy-tekst); cursor: pointer; font: inherit; font-size: 11px; font-weight: 800; }
 .period-picker-fields input { cursor: text; }
@@ -492,7 +492,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .hours-week-filter button { white-space: nowrap; }
 .hours-visible-total { text-align: right; }
 .hours-visible-total span, .hours-visible-total strong { display: block; }
-.hours-visible-total span { color: var(--muted); font-size: 8px; text-transform: uppercase; }
+.hours-visible-total span { color: var(--muted); font-size: 9px; text-transform: uppercase; }
 .hours-visible-total strong { margin-top: 3px; color: var(--navy-tekst); font-size: 13px; }
 .hours-table th, .hours-table td { min-width: 88px; border-bottom: 1px solid #edf1f2; padding: 11px 10px; text-align: center; vertical-align: middle; }
 .hours-table th { background: var(--vlak); color: var(--tabelkop); font-size: 10px; }
@@ -500,7 +500,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .hours-table tbody tr:hover { background: var(--vlak); }
 .hours-table td:first-child { min-width: 100px; color: var(--teal); font-size: 11px; font-weight: 800; }
 .hours-day-entry { display: grid; justify-items: center; gap: 7px; width: fit-content; margin: 0 auto; cursor: text; }
-.hours-table .date-number { display: inline-flex; min-width: 46px; min-height: 19px; align-items: center; justify-content: center; border-radius: 999px; background: var(--green-light); color: var(--teal); font-size: 8px; font-weight: 900; letter-spacing: .02em; text-transform: lowercase; }
+.hours-table .date-number { display: inline-flex; min-width: 46px; min-height: 19px; align-items: center; justify-content: center; border-radius: 999px; background: var(--green-light); color: var(--teal); font-size: 9px; font-weight: 900; letter-spacing: .02em; text-transform: lowercase; }
 .hours-table input { width: 64px; height: 42px; border: 1px solid var(--line); border-radius: 11px; background: var(--vlak); color: var(--navy-tekst); font-size: 14px; font-weight: 700; text-align: center; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
 .hours-table input:hover { border-color: #b9d9d1; }
 .hours-table input:focus { outline: 0; border-color: var(--mint); box-shadow: 0 0 0 4px rgba(58,189,157,.14); transform: translateY(-1px); }
@@ -677,7 +677,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .employee-details { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 20px; }
 .employee-details div { border-radius: 11px; background: var(--vlak-zacht); padding: 12px; }
 .employee-details small, .employee-details strong { display: block; }
-.employee-details small { color: var(--muted); font-size: 8px; letter-spacing: .05em; text-transform: uppercase; }
+.employee-details small { color: var(--muted); font-size: 9px; letter-spacing: .05em; text-transform: uppercase; }
 .employee-details strong { margin-top: 5px; font-size: 10px; }
 
 .settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 17px; }
@@ -850,7 +850,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .brand, .sidebar-footer { display: none; }
   .nav-list { display: grid; grid-template-columns: repeat(6,1fr); gap: 3px; margin: 0; }
   .nav-item { min-width: 0; min-height: 54px; flex-direction: column; justify-content: center; gap: 5px; padding: 3px; text-align: center; }
-  .nav-item span:nth-child(2) { overflow: hidden; width: 100%; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+  .nav-item span:nth-child(2) { overflow: hidden; width: 100%; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
   .nav-count { position: absolute; top: 3px; right: 8px; }
   .nav-count-group { position: absolute; top: 3px; right: 4px; gap: 2px; }
   .nav-count-group .nav-count { position: static; padding: 1px 5px; }
@@ -859,7 +859,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .topbar { min-height: 82px; gap: 8px; }
   .eyebrow { display: none; }
   .notification-button { display: none; }
-  .safety-badge { display: inline-flex; font-size: 8px; padding: 6px 8px; }
+  .safety-badge { display: inline-flex; font-size: 9px; padding: 6px 8px; }
   .topbar-quick-reset { display: none; }
   .hero-card { margin-top: 20px; padding: 28px; }
   .workflow-track { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -997,10 +997,10 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .notification-empty { color: var(--muted); font-size: 11px; line-height: 1.5; padding: 26px 18px; text-align: center; }
 .popover-footer-button { width: 100%; border: 0; background: var(--vlak-zacht); color: var(--teal); cursor: pointer; font-size: 10px; font-weight: 800; padding: 13px; }
 .notification-test-actions { border-top: 1px solid var(--line); background: var(--vlak-zacht); padding: 11px 13px; }
-.notification-test-actions > small { display: block; margin-bottom: 7px; color: var(--muted); font-size: 8px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-.notification-test-actions > p { margin: -2px 0 8px; color: var(--muted); font-size: 8px; line-height: 1.4; }
+.notification-test-actions > small { display: block; margin-bottom: 7px; color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.notification-test-actions > p { margin: -2px 0 8px; color: var(--muted); font-size: 9px; line-height: 1.4; }
 .notification-test-actions > div { display: flex; flex-wrap: wrap; gap: 6px; }
-.notification-test-actions button { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--teal); cursor: pointer; font-size: 8px; font-weight: 800; padding: 6px 8px; }
+.notification-test-actions button { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--teal); cursor: pointer; font-size: 9px; font-weight: 800; padding: 6px 8px; }
 .profile-menu { width: 270px; padding: 8px; }
 .profile-menu-person { display: flex; align-items: center; gap: 11px; margin-bottom: 5px; border-radius: 12px; background: var(--green-light); padding: 12px; }
 .profile-menu-person strong, .profile-menu-person small { display: block; }
@@ -1055,17 +1055,17 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .employee-open-action-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 18px; align-items: center; padding: 14px 16px; }
 .employee-open-action-row + .employee-open-action-row { border-top: 1px solid var(--line); }
 .employee-open-action-copy span, .employee-open-action-copy strong, .employee-open-action-copy small { display: block; }
-.employee-open-action-copy span { color: var(--mint-dark-tekst); font-size: 8px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.employee-open-action-copy span { color: var(--mint-dark-tekst); font-size: 9px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
 .employee-open-action-copy strong { margin-top: 4px; color: var(--navy-tekst); font-size: 12px; }
 .employee-open-action-copy small { margin-top: 3px; color: var(--muted); font-size: 10px; line-height: 1.5; }
 .employee-open-month-heading .status-pill { min-width: 138px; justify-content: center; }
 .employee-history { display: grid; }
-.employee-history-head { display: grid; grid-template-columns: 1fr .8fr .8fr auto; gap: 18px; align-items: center; border-top: 1px solid var(--line); background: var(--surface-muted); color: var(--muted); font-size: 8px; font-weight: 900; letter-spacing: .08em; padding: 10px 24px; text-transform: uppercase; }
+.employee-history-head { display: grid; grid-template-columns: 1fr .8fr .8fr auto; gap: 18px; align-items: center; border-top: 1px solid var(--line); background: var(--surface-muted); color: var(--muted); font-size: 9px; font-weight: 900; letter-spacing: .08em; padding: 10px 24px; text-transform: uppercase; }
 .employee-history-row { display: grid; grid-template-columns: 1fr .8fr .8fr auto; gap: 18px; align-items: center; border-top: 1px solid var(--line); padding: 15px 24px; }
 .employee-history-row strong, .employee-history-row small { display: block; }
 .employee-history-row strong { font-size: 11px; }
 .employee-history-row small { margin-top: 3px; color: var(--muted); font-size: 9px; }
-.employee-history-current { display: inline-flex; margin-left: 8px; border-radius: 999px; background: var(--green-light); color: var(--mint-dark-tekst); font-size: 8px; font-weight: 900; padding: 4px 7px; vertical-align: middle; }
+.employee-history-current { display: inline-flex; margin-left: 8px; border-radius: 999px; background: var(--green-light); color: var(--mint-dark-tekst); font-size: 9px; font-weight: 900; padding: 4px 7px; vertical-align: middle; }
 
 .timesheet-submit-note { margin: 0; color: var(--muted); font-size: 11px; font-style: italic; }
 .admin-task-panel { margin-bottom: 18px; overflow: hidden; }
@@ -1101,7 +1101,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .admin-task-row.is-actionable { box-shadow: inset 4px 0 0 var(--mint-dark); }
 .admin-task-row.is-waiting { box-shadow: inset 4px 0 0 var(--warning); background: color-mix(in srgb, var(--warning-bg) 26%, var(--surface)); }
 .admin-task-kind span, .admin-task-kind strong, .admin-task-person strong, .admin-task-person small, .admin-task-note small { display: block; }
-.admin-task-kind span { color: var(--mint-dark-tekst); font-size: 8px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.admin-task-kind span { color: var(--mint-dark-tekst); font-size: 9px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
 .admin-task-kind strong { margin-top: 4px; color: var(--navy-tekst); font-size: 11px; }
 .admin-task-person strong { font-size: 11px; }
 .admin-task-person small, .admin-task-note small { margin-top: 3px; color: var(--muted); font-size: 9px; line-height: 1.4; }
@@ -1121,7 +1121,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .team-account-group strong, .team-account-group small { display: block; }
 .team-account-group strong { font-size: 11px; }
 .team-account-avatars { display: flex; min-width: 48px; padding-left: 8px; }
-.team-account-avatar { display: grid; place-items: center; width: 30px; height: 30px; margin-left: -8px; border: 2px solid var(--surface); border-radius: 50%; background: var(--green-light); color: var(--teal); font-size: 8px; font-weight: 900; }
+.team-account-avatar { display: grid; place-items: center; width: 30px; height: 30px; margin-left: -8px; border: 2px solid var(--surface); border-radius: 50%; background: var(--green-light); color: var(--teal); font-size: 9px; font-weight: 900; }
 .team-account-avatar.admins { background: var(--navy); color: #fff; }
 .employee-card.is-inactive { opacity: .72; }
 .employee-card-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 13px; }
@@ -1280,7 +1280,7 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 .customer-timesheet-admin-person strong { color: var(--navy-tekst); font-size: 13px; }
 .customer-timesheet-admin-meta { display: grid; grid-template-columns: minmax(90px,.35fr) minmax(0,1fr); gap: 8px; }
 .customer-timesheet-admin-meta > span { min-width: 0; border-radius: 9px; background: var(--surface); padding: 9px 10px; }
-.customer-timesheet-admin-meta small { margin: 0 0 4px; font-size: 8px; letter-spacing: .05em; text-transform: uppercase; }
+.customer-timesheet-admin-meta small { margin: 0 0 4px; font-size: 9px; letter-spacing: .05em; text-transform: uppercase; }
 .customer-timesheet-admin-meta strong { overflow-wrap: anywhere; font-size: 10px; }
 .customer-timesheet-admin-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .customer-timesheet-admin-row-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
@@ -1428,7 +1428,7 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 .recipient-choice input { width: 17px !important; height: 17px !important; margin: 0 !important; accent-color: var(--mint-dark); }
 .recipient-choice strong, .recipient-choice small { display: block; }
 .recipient-choice strong { color: var(--ink); font-size: 10px; }
-.recipient-choice small { margin-top: 2px; color: var(--muted); font-size: 8px; }
+.recipient-choice small { margin-top: 2px; color: var(--muted); font-size: 9px; }
 .fixed-audience { border: 1px solid var(--line); border-radius: 10px; background: var(--background); padding: 12px; }
 .fixed-audience strong, .fixed-audience span { display: block; }
 .fixed-audience strong { color: var(--ink); font-size: 10px; }
@@ -1457,7 +1457,7 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 .help-faq { border-top: 1px solid var(--line); background: var(--surface); padding: 12px; }
 .help-faq-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .help-faq-heading strong { color: var(--navy-tekst); font-size: 11px; }
-.help-faq-heading small { color: var(--muted); font-size: 8px; }
+.help-faq-heading small { color: var(--muted); font-size: 9px; }
 .help-suggestions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; margin-top: 9px; max-height: 150px; overflow-y: auto; }
 .help-suggestions button { display: flex; min-height: 36px; align-items: center; justify-content: space-between; gap: 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--teal); cursor: pointer; font-size: 9px; font-weight: 700; padding: 8px 10px; text-align: left; }
 .help-suggestions button::after { content: "›"; font-size: 14px; line-height: 1; }
@@ -1470,14 +1470,14 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 .help-inline-topics button { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--navy-tekst); cursor: pointer; font-size: 10px; font-weight: 900; padding: 8px 11px; text-align: left; }
 .help-inline-topics button:hover { border-color: var(--mint); background: var(--green-light); }
 
-html[data-theme="dark"] { color-scheme: dark; --ink: #e7eef4; --muted: #9aaab7; --line: #2a3a4a; --surface: #111d2b; --background: #09131f; --green-light: #15352f; --teal: #64d7bd; --mint-dark: #51caae; --warning-bg: #332618; --warning: #efb76f; --shadow: 0 14px 35px rgba(0,0,0,.35);
+html[data-theme="dark"] { color-scheme: dark; --ink: #e7eef4; --muted: #b1bfcb; --line: #2a3a4a; --surface: #111d2b; --background: #09131f; --green-light: #15352f; --teal: #64d7bd; --mint-dark: #51caae; --warning-bg: #332618; --warning: #efb76f; --shadow: 0 14px 35px rgba(0,0,0,.35);
   /* Tekstvarianten omgekeerd: in donkere modus moeten ze juist licht zijn.
      Zonder deze drie regels was 119 keer tekst onleesbaar, waarvan de helft
      op 1,00:1 -- dezelfde kleur als de achtergrond. */
   --navy-tekst: #dbe6f2;
   --mint-dark-tekst: #5fd7ba;
   --warning-tekst: #f0bd7a;
-  --tabelkop: #9aaab7;
+  --tabelkop: #b1bfcb;
   /* En de vlakken zelf. Deze drie ontbraken hier, en dat was geen detail: de
      tekstkleuren hierboven werden wel licht, de vlakken bleven wit. Zo kreeg je
      een witte knop met witte tekst -- "Open detail" en "Alle openstaande" waren
@@ -1752,7 +1752,7 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
   }
 
   .period-picker-caption {
-    font-size: 7px;
+    font-size: 9px;
     text-align: center;
   }
 
