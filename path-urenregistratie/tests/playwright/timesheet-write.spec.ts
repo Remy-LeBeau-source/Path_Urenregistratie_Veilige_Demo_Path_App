@@ -273,5 +273,59 @@ test.describe('timesheet write api', () => {
       await authApi.logout();
     });
   });
+
+  test('[TS-API-N-012] een tweede schrijfactie met een verouderde versie wordt geweigerd en verandert niets in de database', async ({ request }) => {
+    const authApi = new AuthApi(request);
+    const timesheetApi = new TimesheetApi(request);
+    let period = '';
+
+    await test.step('Given een medewerker met een opgeslagen concept-urenstaat', async () => {
+      const login = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      expect(login.user.role).toBe('employee');
+      period = await findWritablePeriod(timesheetApi);
+
+      const eerste = await timesheetApi.write({
+        action: 'save_draft', period,
+        contractualHours: 160, billableHours: 16, leaveHours: 0, sicknessHours: 0,
+        dayEntries: buildDayEntries(period, 8, 8),
+      });
+      expect(eerste.status).toBe(200);
+      expect(eerste.body.timesheet.status).toBe('draft');
+    });
+
+    await test.step('When een tweede save_draft dezelfde versie gebruikt nadat de eerste die al heeft opgehoogd', async () => {
+      const stand = await timesheetApi.read(period);
+      const verouderdeVersie = Number(stand.body.timesheet.version);
+
+      // Eerste concurrent schrijver: hoogt de versie op en zet 5 + 5.
+      const winnaar = await timesheetApi.write({
+        action: 'save_draft', period, expectedVersion: verouderdeVersie,
+        contractualHours: 160, billableHours: 10, leaveHours: 0, sicknessHours: 0,
+        dayEntries: buildDayEntries(period, 5, 5),
+      });
+      expect(winnaar.status).toBe(200);
+      expect(Number(winnaar.body.timesheet.version)).toBeGreaterThan(verouderdeVersie);
+
+      // Tweede schrijver gebruikt nog de oude versie en probeert 1 + 1 te zetten.
+      const verliezer = await timesheetApi.write({
+        action: 'save_draft', period, expectedVersion: verouderdeVersie,
+        contractualHours: 160, billableHours: 2, leaveHours: 0, sicknessHours: 0,
+        dayEntries: buildDayEntries(period, 1, 1),
+      });
+      expect(verliezer.status).toBe(409);
+      expect(verliezer.body.ok).toBe(false);
+      expect(verliezer.body.error).toBe('stale-version');
+    });
+
+    await test.step('Then houdt de opgeslagen rij de eerste waarden', async () => {
+      const na = await timesheetApi.read(period);
+      expect(na.body.timesheet.status).toBe('draft');
+      expect(Number(na.body.timesheet.billable_hours)).toBe(10);
+      const uren = (na.body.timesheet.day_entries as Array<{ hours: number }>).map(entry => Number(entry.hours)).sort();
+      expect(uren).toEqual([5, 5]);
+      expect(na.body.last_audit.event_type).toBe('timesheet.draft_saved');
+      await authApi.logout();
+    });
+  });
 });
 

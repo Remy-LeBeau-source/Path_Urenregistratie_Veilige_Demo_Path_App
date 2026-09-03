@@ -52,3 +52,11 @@ Feature: Urenregistratie verwerken
     When de medewerker een ongeldige payload verstuurt
     And cleanup: sessie sluiten voor testisolatie
     Then wordt met Playwright-assertions bevestigd dat ongeldige payload geeft 400
+
+  @negative
+  Scenario: [TS-API-N-012] een tweede schrijfactie met een verouderde versie wordt geweigerd en verandert niets in de database
+    # Testtechniek: Toestandsovergang + optimistische vergrendeling
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given een medewerker met een opgeslagen concept-urenstaat
+    When een tweede save_draft dezelfde versie gebruikt nadat de eerste die al heeft opgehoogd
+    Then geeft de server 409 stale-version en houdt de opgeslagen rij de eerste waarden
