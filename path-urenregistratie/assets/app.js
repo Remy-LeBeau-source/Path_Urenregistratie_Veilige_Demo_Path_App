@@ -3403,6 +3403,10 @@ function refreshAdminWorkflowReadApi(force = false) {
     .then(() => {
       readApiRuntime.lastAdminWorkflowAt = Date.now();
       readApiRuntime.adminWorkflowHydrated = true;
+      // Zelfde reden als op het medewerkerdashboard: deze hertekening vervangt de
+      // laadtoestand en verandert de paginahoogte, en het scroll-event dat daarop
+      // volgt mag een geopend topbalkmenu niet sluiten.
+      markLayoutRender();
       renderAll();
       return true;
     })
@@ -4314,7 +4318,13 @@ function renderEmployeeDashboard() {
       const stillEmployee = state.currentRole === "employee";
       const stillSameEmployee = Number(currentEmployee().id) === employeeId;
       const stillSamePeriod = currentPeriod().key === selectedPeriodAtRender;
-      if (stillEmployee && stillSameEmployee && stillSamePeriod) renderEmployeeDashboard();
+      if (stillEmployee && stillSameEmployee && stillSamePeriod) {
+        // Deze hertekening vervangt de laadtekst door de echte werkvoorraad en
+        // verandert dus de paginahoogte. Meld dat, zodat het scroll-event dat
+        // daarop volgt niet het zojuist geopende profielmenu dichtklapt.
+        markLayoutRender();
+        renderEmployeeDashboard();
+      }
     };
     // Vangnet: een verzoek dat blijft hangen mag de laadtekst niet eindeloos
     // laten staan. De normale sync is ruim binnen een seconde klaar; blijft hij
@@ -8152,6 +8162,16 @@ function createTestNotification(type) {
   if (!definition) return;
   addNotification(definition, true);
   toast("Voorbeeldmelding lokaal toegevoegd; urenstatus en e-mail blijven ongewijzigd.");
+}
+
+// Hoe lang na een hertekening een scroll-event nog als "niet van de gebruiker"
+// wordt gezien. Ruim genoeg voor de reflow die erop volgt, kort genoeg om een
+// echte scroll van de gebruiker niet te missen.
+const LAYOUT_SCROLL_GRACE_MS = 300;
+let laatsteHertekeningAt = 0;
+
+function markLayoutRender() {
+  laatsteHertekeningAt = Date.now();
 }
 
 function closeTopbarPopovers() {
@@ -12200,6 +12220,12 @@ document.addEventListener("keydown", event => {
 });
 
 window.addEventListener("scroll", () => {
+  // Niet elke scroll komt van de gebruiker. Een hertekening die de pagina langer
+  // of korter maakt -- bijvoorbeeld de werkvoorraad die binnenkomt en de laadtekst
+  // vervangt -- geeft ook een scroll-event. Dat sloot het profiel- of
+  // meldingenmenu dat je net had geopend, vlak na inloggen. Alleen sluiten bij een
+  // scroll die niet direct op een hertekening volgt.
+  if (Date.now() - laatsteHertekeningAt < LAYOUT_SCROLL_GRACE_MS) return;
   closeTopbarPopovers();
   // Choice panels stay anchored to their controls while scrolling. Closing them
   // here races with browsers that scroll an option into view before dispatching
