@@ -84,6 +84,29 @@ test('[TEST-E2E-26] de deploy levert de veiligheidsheaders en PWA-assets die de 
   expect(mf.start_url, 'het manifest hoort een start_url te hebben').toBeTruthy();
   expect(Array.isArray(mf.icons) && mf.icons.length, 'het manifest hoort iconen te noemen').toBeTruthy();
 
+  // Het live gelinkte manifest is manifest.php: dat benoemt de app per omgeving,
+  // zodat een op het beginscherm geplaatste TEST-installatie "Path TEST" heet en
+  // niet botst met de productie-app. Vite hashte dit bestand ooit naar
+  // assets/manifest-XXXX.php, waardoor __DIR__ verkeerd wees en de naam altijd
+  // op productie terugviel -- deze case bewaakt dat op de echte deploy.
+  const indexHtml = await index.text();
+  const gelinkt = (indexHtml.match(/<link[^>]+rel="manifest"[^>]+href="([^"]+)"/i) || [])[1] || '';
+  expect(gelinkt, 'index.html hoort manifest.php te linken, niet een gehashte kopie')
+    .toBe('manifest.php');
+  const dynamisch = await request.get('/manifest.php');
+  expect(dynamisch.status(), 'manifest.php hoort 200 te geven').toBe(200);
+  expect(dynamisch.headers()['content-type'] || '', 'manifest.php hoort een manifest-mediatype te hebben')
+    .toMatch(/manifest\+json|application\/json/i);
+  const dyn = JSON.parse(await dynamisch.text());
+  expect(dyn.display, 'standalone opent zonder browserbalk').toBe('standalone');
+  const host = new URL(index.url()).host;
+  if (host.includes('uren-test.')) {
+    expect(dyn.short_name, 'op TEST hoort de installatienaam "Path TEST" te zijn').toBe('Path TEST');
+    expect(dyn.name, 'op TEST hoort de volledige naam de TESTOMGEVING te noemen').toContain('TESTOMGEVING');
+  } else if (host === 'uren.pathconsultancy.nl') {
+    expect(dyn.short_name, 'op productie hoort de installatienaam "Path Uren" te zijn').toBe('Path Uren');
+  }
+
   const icon = await request.get('/assets/icon-192.png');
   expect(icon.status(), 'het 192px-icoon hoort te bestaan').toBe(200);
   expect(icon.headers()['content-type'] || '', 'het icoon hoort een afbeelding te zijn').toMatch(/image\//);
