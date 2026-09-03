@@ -274,6 +274,48 @@ test.describe('timesheet write api', () => {
     });
   });
 
+  test('[TS-API-N-013] elke grenswaarde in een dagregel wordt geweigerd en niets ervan komt in de database', async ({ request }) => {
+    const authApi = new AuthApi(request);
+    const timesheetApi = new TimesheetApi(request);
+    let period = '';
+
+    await test.step('Given een ingelogde medewerker met een schrijfbare periode', async () => {
+      const login = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      expect(login.user.role).toBe('employee');
+      period = await findWritablePeriod(timesheetApi);
+    });
+
+    const buiten = period.startsWith('3000-12') ? '3001-01-05' : `${period.slice(0, 4)}-12-31`;
+    const gevallen: Array<[string, Record<string, unknown>]> = [
+      ['meer dan 24 uur op een dag', { dayEntries: [{ workDate: `${period}-01`, hours: 25 }], billableHours: 25 }],
+      ['negatieve uren op een dag', { dayEntries: [{ workDate: `${period}-01`, hours: -1 }], billableHours: 0 }],
+      ['datum buiten de gekozen maand', { dayEntries: [{ workDate: buiten, hours: 8 }], billableHours: 8 }],
+      ['niet-bestaande datum', { dayEntries: [{ workDate: `${period}-31`, hours: 8 }], billableHours: 8 }],
+      ['billable telt niet op tot de dagregels', { dayEntries: [{ workDate: `${period}-01`, hours: 8 }], billableHours: 40 }],
+      ['negatief verlof', { dayEntries: [{ workDate: `${period}-01`, hours: 8 }], billableHours: 8, leaveHours: -4 }],
+    ];
+
+    await test.step('When elke ongeldige dagregel wordt verstuurd', async () => {
+      for (const [label, override] of gevallen) {
+        const res = await timesheetApi.write({
+          action: 'save_draft', period,
+          contractualHours: 160, billableHours: 8, leaveHours: 0, sicknessHours: 0,
+          dayEntries: [{ workDate: `${period}-01`, hours: 8 }],
+          ...override,
+        });
+        expect(res.status, `${label}: status`).toBe(400);
+        expect(res.body.error, `${label}: error`).toBe('invalid-payload');
+      }
+    });
+
+    await test.step('Then bestaat er nog geen urenstaat voor die periode', async () => {
+      const na = await timesheetApi.read(period);
+      expect(na.status).toBe(200);
+      expect(na.body.found, 'een reeks geweigerde schrijfacties mag geen rij aanmaken').toBe(false);
+      await authApi.logout();
+    });
+  });
+
   test('[TS-API-N-012] een tweede schrijfactie met een verouderde versie wordt geweigerd en verandert niets in de database', async ({ request }) => {
     const authApi = new AuthApi(request);
     const timesheetApi = new TimesheetApi(request);

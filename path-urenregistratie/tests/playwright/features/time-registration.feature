@@ -60,3 +60,11 @@ Feature: Urenregistratie verwerken
     Given een medewerker met een opgeslagen concept-urenstaat
     When een tweede save_draft dezelfde versie gebruikt nadat de eerste die al heeft opgehoogd
     Then geeft de server 409 stale-version en houdt de opgeslagen rij de eerste waarden
+
+  @negative
+  Scenario: [TS-API-N-013] elke grenswaarde in een dagregel wordt geweigerd en niets ervan komt in de database
+    # Testtechniek: Grenswaardenanalyse
+    # Aantoonbare Playwright-assertions in deze case: 13
+    Given een ingelogde medewerker met een schrijfbare periode
+    When elke ongeldige dagregel wordt verstuurd (>24u, negatief, datum buiten de maand, niet-bestaande datum, billable-mismatch, negatief verlof)
+    Then geeft de server steeds 400 invalid-payload en blijft er geen urenstaat achter
