@@ -575,6 +575,12 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .invoice-document-metadata dt { color: var(--muted); font-size: 9px; font-weight: 800; }
 .invoice-document-metadata dd { min-width: 0; margin: 0; overflow-wrap: anywhere; color: var(--navy-tekst); font-size: 10px; font-weight: 800; }
 .invoice-document-missing-note { min-height: 32px; margin: 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+/* "Extern bevestigd" / "Rechtstreeks gemaild" is geen fout (dus niet rood), maar
+   mag ook niet wegvallen als grijze notitie -- de beheerder moet in één oogopslag
+   zien dat er bewust geen bestand in de app staat. */
+.document-note-flagged { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; border: 1px solid var(--line); border-left: 4px solid var(--warning); border-radius: 12px; background: color-mix(in srgb, var(--warning-bg) 55%, var(--surface)); padding: 11px 13px; }
+.document-note-flag { flex: 0 0 auto; border: 1px solid color-mix(in srgb, var(--warning) 55%, transparent); border-radius: 999px; background: var(--warning-bg); color: var(--warning-tekst); font-size: 9px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; padding: 4px 9px; }
+.document-note-flagged p { margin: 0; color: var(--warning-tekst); font-size: 10.5px; line-height: 1.5; }
 .invoice-document-restore { display: grid; gap: 7px; }
 .small-button.document-restore-action { width: 100%; min-height: 44px; border: 2px solid var(--warning); border-left-width: 6px; background: var(--warning-bg); color: var(--warning-tekst); font-size: 11px; font-weight: 900; box-shadow: 0 6px 16px rgba(187,118,35,.18); }
 .small-button.document-restore-action::before { content: "\21B6"; margin-right: 7px; font-size: 15px; line-height: 0; }
@@ -1063,10 +1069,14 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 
 .timesheet-submit-note { margin: 0; color: var(--muted); font-size: 11px; font-style: italic; }
 .admin-task-panel { margin-bottom: 18px; overflow: hidden; }
-.admin-task-heading { align-items: flex-start; }
+.admin-task-heading { align-items: flex-start; cursor: pointer; border-radius: var(--radius) var(--radius) 0 0; transition: background .15s ease; }
+.admin-task-heading:hover { background: color-mix(in srgb, var(--surface) 85%, var(--green-light)); }
 .admin-task-heading h3 { margin-bottom: 4px; }
 .admin-task-heading p { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
 .admin-task-heading > .small-button { flex: 0 0 auto; }
+.admin-task-toggle { display: inline-flex; align-items: center; gap: 9px; flex: 0 0 auto; white-space: nowrap; }
+.admin-task-toggle-chevron { width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); transition: transform .18s ease; }
+.admin-task-toggle[aria-expanded="true"] .admin-task-toggle-chevron { transform: rotate(-135deg); }
 .admin-task-filters { display: flex; flex-wrap: wrap; gap: 7px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--surface-muted); padding: 11px 24px; }
 .admin-task-filters button { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); cursor: pointer; font-size: 9px; font-weight: 800; padding: 8px 11px; }
 .admin-task-filters button.is-active { border-color: var(--mint-dark); background: var(--green-light); color: var(--mint-dark-tekst); }

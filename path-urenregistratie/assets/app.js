@@ -3013,10 +3013,14 @@ function showInvoiceDocuments(invoiceId, focusKind = "") {
   const customerDocument = item.customerTimesheetDownloadUrl
     ? '<div class="invoice-document-links"><button type="button" class="small-button" data-document-kind="customer-timesheet" data-doc-open="' + escapeHtml(item.customerTimesheetDownloadUrl) + '">Openen</button><button type="button" class="text-button" data-doc-download="' + escapeHtml(item.customerTimesheetDownloadUrl) + '" data-doc-name="Klanturenstaat-' + escapeHtml(safeFilename(String(item.periodKey || "document"))) + '.pdf">Downloaden</button></div>'
     : customerExternallyConfirmed
-      ? '<p class="invoice-document-missing-note">Extern bevestigd' + (invoiceExternalConfirmationReason(item) ? ': ' + escapeHtml(invoiceExternalConfirmationReason(item)) : '') + '.</p>' +
+      ? '<div class="document-note-flagged"><span class="document-note-flag">Extern bevestigd</span>' +
+        '<p>Geen bestand in de app. ' + (invoiceExternalConfirmationReason(item) ? 'Reden: ' + escapeHtml(invoiceExternalConfirmationReason(item)) + '.' : 'De klanturenstaat is buiten de app afgehandeld.') + '</p></div>' +
         '<div class="invoice-document-restore"><button type="button" class="small-button document-restore-action" data-restore-external-timesheet>Externe bevestiging intrekken</button>' +
         '<small>De urenstaat wordt daarna weer als ontbrekend gemarkeerd.</small></div>'
-      : '<p class="invoice-document-missing-note">Geen klanturenstaatbestand bewaard.</p>';
+      : String(item.customerTimesheetStatus || "") === "skipped"
+        ? '<div class="document-note-flagged"><span class="document-note-flag">Rechtstreeks gemaild</span>' +
+          '<p>Geen bestand in de app. De medewerker heeft de klanturenstaat rechtstreeks naar Backoffice gemaild.</p></div>'
+        : '<p class="invoice-document-missing-note">Geen klanturenstaatbestand bewaard.</p>';
   const upload = !item.customerTimesheetDownloadUrl
     ? '<div class="form-field invoice-document-upload"><label for="invoice-customer-timesheet-file">Urenstaat toevoegen</label><input id="invoice-customer-timesheet-file" type="file" accept="application/pdf,image/jpeg,image/png"><small>PDF, JPG of PNG. Afbeeldingen worden veilig als PDF opgeslagen.</small>' +
       (!customerExternallyConfirmed ? '<button type="button" class="small-button" data-confirm-external-timesheet>Geen bestand? Extern bevestigen</button>' : '') + '</div>'
@@ -4570,8 +4574,12 @@ function renderAdminTaskQueue() {
   if (content) content.hidden = !expanded;
   if (toggle) {
     toggle.setAttribute("aria-expanded", String(expanded));
-    toggle.textContent = expanded ? "Overzicht inklappen" : "Overzicht openen";
+    const toggleLabel = document.querySelector("#admin-task-panel-toggle-label");
+    if (toggleLabel) toggleLabel.textContent = expanded ? "Overzicht inklappen" : "Overzicht openen";
+    else toggle.textContent = expanded ? "Overzicht inklappen" : "Overzicht openen";
   }
+  const heading = panel.querySelector(".admin-task-heading");
+  if (heading) heading.setAttribute("aria-expanded", String(expanded));
   const filtered = filter === "all" ? tasks : filter === "waiting" ? waiting : actionable;
   const filteredMonthGroups = groupAdminTasksByMonth(filtered);
   const taskMonths = new Set(tasks.map(task => task.periodKey)).size;
@@ -10592,7 +10600,7 @@ function toonInstallatieAanbod() {
     renderAdminTaskQueue();
   }
 
-  const adminTaskPanelToggle = event.target.closest("#admin-task-panel-toggle");
+  const adminTaskPanelToggle = event.target.closest("#admin-task-panel-toggle") || event.target.closest("[data-admin-task-panel-toggle]");
   if (adminTaskPanelToggle) {
     const nextExpanded = !state.adminTaskPanelExpanded;
     if (!nextExpanded) {

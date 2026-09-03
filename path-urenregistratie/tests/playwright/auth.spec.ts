@@ -304,7 +304,7 @@ test('[AUTH-H-009] lokale login benoemt de veilige testomgeving en productnaam',
     await expect(page.locator('#auth-login-email')).toHaveAttribute('placeholder', 'naam@pathconsultancy.nl');
     await expect(page.locator('#auth-login-submit')).toBeVisible();
     await expect(page.locator('.login-footer')).toContainText('© 2026 Path Consultancy');
-    await expect(page.locator('.login-footer')).toContainText('Versie 0.9.159');
+    await expect(page.locator('.login-footer')).toContainText('Versie 0.9.160');
   });
 
   await test.step('And kan het wachtwoord toegankelijk worden getoond en weer verborgen', async () => {
