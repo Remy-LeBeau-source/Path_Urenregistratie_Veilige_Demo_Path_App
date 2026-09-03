@@ -167,3 +167,11 @@ Feature: Facturen bekijken en beheren
     When de administrator op de stap Klaar voor controle klikt
     Then staat de factuurlijst op Factuur klaar en licht die stap op
     And nog een keer op dezelfde stap klikken zet het filter terug op Alle
+
+  @happy
+  Scenario: [INV-H-023] documentarchief noemt wie de klanturenstaat buiten de app afhandelde en wanneer
+    # Testtechniek: Equivalentieklassen
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given een factuur waarvan de klanturenstaat rechtstreeks is gemaild met reden en registratiegegevens
+    When Backoffice het documentarchief opent
+    Then staan de reden en de naam met datum van de registratie in beeld

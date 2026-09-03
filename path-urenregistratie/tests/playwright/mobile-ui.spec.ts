@@ -1413,3 +1413,30 @@ test('[MOB-H-018] na installatie verdwijnt het installatieaanbod uit de balk en 
       'het menu-item hoort weg te zijn zodra de app geinstalleerd is').toBeHidden();
   });
 });
+
+test('[MOB-H-020] het manifest gebruikt overal dezelfde navy statusbalkkleur', async ({ page }) => {
+  // manifest.php benoemt de app per omgeving, maar theme_color hoort overal navy
+  // te zijn -- gelijk aan de web-app en aan productie. Op TEST was die ooit oranje
+  // (#BB7623), waardoor de Android-statusbalk van de PWA afweek van de browser.
+  await page.goto('/');
+
+  const manifestHref = await test.step('Given het manifest per omgeving een eigen naam kan hebben', async () => {
+    const link = page.locator('link[rel="manifest"]');
+    await expect(link).toHaveCount(1);
+    return (await link.getAttribute('href')) || '';
+  });
+
+  const manifest = await test.step('When het manifest wordt opgehaald', async () => {
+    const antwoord = await page.request.get('/' + manifestHref);
+    expect(antwoord.status(), 'het manifest moet opvraagbaar zijn').toBe(200);
+    return antwoord.json();
+  });
+
+  await test.step('Then is theme_color overal navy en verschilt alleen de naam', async () => {
+    expect(String(manifest.theme_color).toUpperCase(), 'de statusbalkkleur hoort navy te zijn, niet oranje').toBe('#0D1B38');
+    expect(String(manifest.background_color).toUpperCase()).toBe('#0D1B38');
+    expect(String(manifest.name || ''), 'de app moet een naam hebben').not.toBe('');
+    expect(String(manifest.name).toUpperCase(), 'de oranje-oorzaak zat in de test-tak van manifest.php')
+      .not.toContain('#BB7623');
+  });
+});

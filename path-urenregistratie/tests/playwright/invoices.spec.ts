@@ -780,3 +780,47 @@ test('[INV-H-022] de drie statusstappen filteren de factuurlijst en lichten op',
     await expect(filterAlle).toHaveClass(/is-active/);
   });
 });
+
+test('[INV-H-023] documentarchief noemt wie de klanturenstaat buiten de app afhandelde en wanneer', async ({ page }) => {
+  // Het archief toonde wel dat een klanturenstaat rechtstreeks was gemaild, maar
+  // niet door wie, wanneer of met welke reden. Backoffice kon er dus niets over
+  // navragen zonder in de database te kijken.
+  const loginPage = new LoginPage(page);
+  const invoicesPage = new InvoicesPage(page);
+
+  await page.route('**/server/api/invoices.php?period=*', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ ok: true, items: [{
+      id: 930, timesheet_id: 830, employee_id: 4, assignment_id: 4,
+      invoice_number: 'TEST-HERKOMST-001', employee_name: 'Shawn-Douglas Nahar', period_key: '2026-08',
+      status: 'ready', timesheet_status: 'invoiced', total: 1210, locked: true,
+      invoice_download_url: '/server/api/invoices.php?action=download&invoice_id=930',
+      customer_timesheet_status: 'skipped',
+      customer_timesheet_note: 'Klant stuurde de urenstaat rechtstreeks door.',
+      customer_timesheet_reviewed_at: '2026-08-14 09:30:00',
+      customer_timesheet_reviewed_by: 'Shawn-Douglas Nahar',
+      customer_timesheet_download_url: null,
+    }] }),
+  }));
+
+  await test.step('Given een factuur waarvan de klanturenstaat rechtstreeks is gemaild met reden en registratiegegevens', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await invoicesPage.open();
+    await invoicesPage.selectPeriod('2026-08');
+  });
+
+  await test.step('When Backoffice het documentarchief opent', async () => {
+    await page.locator('[data-document-focus="customer-timesheet"]').click();
+    await expect(page.locator('#modal-title')).toHaveText('TEST-HERKOMST-001');
+  });
+
+  await test.step('Then staan de reden en de naam met datum van de registratie in beeld', async () => {
+    const blok = page.locator('.document-note-flagged');
+    await expect(blok).toBeVisible();
+    await expect(blok.locator('.document-note-flag')).toHaveText('Rechtstreeks gemaild');
+    await expect(blok).toContainText('Klant stuurde de urenstaat rechtstreeks door.');
+    await expect(blok.locator('.document-note-actor')).toContainText('door Shawn-Douglas Nahar');
+    await expect(blok.locator('.document-note-actor')).toContainText('14 augustus 2026');
+  });
+});

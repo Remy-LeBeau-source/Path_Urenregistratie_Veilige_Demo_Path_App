@@ -117,3 +117,11 @@ Feature: Klanturenstaten en documentverwerking
     Then worden tekstbytes met alleen een PDF-bestandsnaam ook geweigerd
     Then blijft het bestaande document ongewijzigd
     And cleanup: sessie sluiten voor testisolatie
+
+  @happy
+  Scenario: [CTS-API-H-014] een serverschrijfactie heft de lokale herstelvoorrang op zodat de status niet uit de pas loopt
+    # Testtechniek: Toestandsovergang + foutinjectie
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given de lokale herstelvoorrang aanstaat en de klanturenstaat nog open is
+    When de medewerker de klanturenstaat als rechtstreeks gemaild registreert
+    Then is de herstelvoorrang opgeheven en toont het scherm de serverstand

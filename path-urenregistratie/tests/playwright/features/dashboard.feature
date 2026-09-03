@@ -203,3 +203,19 @@ Feature: Dashboard en open werkvoorraad
     When de flow voor DASH-H-019 wordt uitgevoerd
     Then toekomstperioden veroorzaken geen workflowreads
     And de gedeelde leeswachtrij voert maximaal vier taken tegelijk uit
+
+  @happy
+  Scenario: [DASH-H-020] de actieteller benoemt dat de rij over alle maanden loopt
+    # Testtechniek: Grenswaarde
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given Backoffice openstaande acties in meer dan een maand heeft
+    When Backoffice een actie vanuit de maandlijst opent
+    Then vermeldt de teller dat de rij over alle maanden loopt
+
+  @negative
+  Scenario: [DASH-N-019] een achtergrond-hertekening sluit het geopende profielmenu niet
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given de beheerder het profielmenu net heeft geopend
+    When een hertekening op de achtergrond een scroll-event veroorzaakt
+    Then blijft het profielmenu open en sluit een echte scroll het alsnog

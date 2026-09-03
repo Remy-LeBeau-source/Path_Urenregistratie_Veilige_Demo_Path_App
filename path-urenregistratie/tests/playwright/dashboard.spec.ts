@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { expect, test } from '@playwright/test';
 import { captureConsoleErrors, clearConsoleErrors } from './fixtures/consoleErrors';
 import { useFixedDemoClock } from './fixtures/fixedDemoClock';
@@ -1493,5 +1495,71 @@ test('[DASH-H-019] werkvoorraadhydratatie negeert toekomstperioden en begrenst p
     expect(concurrency.maximum).toBe(4);
     expect(concurrency.resultCount).toBe(12);
     expect(concurrency.allSettled).toBe(true);
+  });
+});
+
+test('[DASH-H-020] de actieteller benoemt dat de rij over alle maanden loopt', async ({ page }) => {
+  // "Actie 8 van 8" telde over alle maanden terwijl je het venster opent vanuit
+  // een lijst die op een maand staat. Dat las alsof die ene maand acht acties had.
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given Backoffice openstaande acties in meer dan een maand heeft', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
+    await page.locator('#admin-task-panel-toggle').click();
+    await expect(page.locator('#admin-task-content')).toBeVisible();
+    const maanden = page.locator('[data-admin-task-month-toggle]');
+    expect(await maanden.count(), 'deze case heeft meer dan een maand met taken nodig').toBeGreaterThan(1);
+  });
+
+  await test.step('When Backoffice een actie vanuit de maandlijst opent', async () => {
+    await page.locator('[data-admin-task-month-toggle]').first().click();
+    const actie = page.locator('#admin-task-list .admin-task-row.is-actionable .admin-task-action button').first();
+    await expect(actie).toBeVisible();
+    await actie.click();
+  });
+
+  await test.step('Then vermeldt de teller dat de rij over alle maanden loopt', async () => {
+    const teller = page.locator('#modal-queue-progress');
+    await expect(teller).toBeVisible();
+    await expect(teller).toContainText(/Actie \d+ van \d+ bij Backoffice/);
+    await expect(teller, 'zonder deze toevoeging lijkt de teller over de gekozen maand te gaan')
+      .toContainText('alle maanden');
+  });
+});
+
+test('[DASH-N-019] een achtergrond-hertekening sluit het geopende profielmenu niet', async ({ page }) => {
+  // Elke scroll sloot de topbalkmenu's, ook een scroll-event dat de gebruiker niet
+  // zelf veroorzaakte: een hertekening die de paginahoogte verandert geeft er ook een.
+  const loginPage = new LoginPage(page);
+  const profielmenu = page.locator('#profile-menu');
+  const bron = readFileSync(join(process.cwd(), 'assets', 'app.js'), 'utf8');
+
+  await test.step('Given de scroll-handler het respijtvenster na een hertekening respecteert', async () => {
+    const handler = bron.slice(bron.indexOf('window.addEventListener("scroll"'));
+    expect(handler).toContain('Date.now() - laatsteHertekeningAt < LAYOUT_SCROLL_GRACE_MS');
+    // markLayoutRender() moet worden aangeroepen op de twee plekken waar de
+    // laadtoestand door de echte werkvoorraad wordt vervangen.
+    expect((bron.match(/markLayoutRender\(\);/g) || []).length).toBeGreaterThanOrEqual(2);
+  });
+
+  await test.step('When de beheerder het profielmenu opent en er een hertekening plaatsvindt', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect(page.locator('#hero-task-total')).not.toHaveText(/laden/i, { timeout: 15_000 });
+    await openProfielmenu(page);
+    await expect(profielmenu).toBeVisible();
+    await page.evaluate(() => {
+      (window as unknown as { markLayoutRender: () => void }).markLayoutRender();
+      window.dispatchEvent(new Event('scroll'));
+    });
+  });
+
+  await test.step('Then blijft het profielmenu open', async () => {
+    // Kort de tijd geven dat een verkeerde afhandeling het alsnog zou sluiten.
+    await page.waitForTimeout(200);
+    await expect(profielmenu, 'een hertekening mag het menu niet dichtklappen').toBeVisible();
+    await expect(page.locator('#profile-menu-button')).toHaveAttribute('aria-expanded', 'true');
   });
 });

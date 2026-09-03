@@ -767,3 +767,56 @@ test.describe('customer timesheet api', () => {
   });
 });
 
+
+test('[CTS-API-H-014] een serverschrijfactie heft de lokale herstelvoorrang op zodat de status niet uit de pas loopt', async ({ page }) => {
+  // Zonder deze opheffing werden alle serverlezingen genegeerd: de klanturenstaat
+  // stond op de server al als rechtstreeks gemaild geregistreerd terwijl de app
+  // hem als open taak bleef tonen, en een tweede poging liep tegen een 409 aan.
+  const loginPage = new LoginPage(page);
+  const period = '2198-04';
+  let employeeId = 0;
+
+  await test.step('Given de lokale herstelvoorrang aanstaat en de klanturenstaat nog open is', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    employeeId = await page.evaluate(() => Number((window as unknown as { currentEmployee: () => { id: number } }).currentEmployee().id));
+    expect(employeeId).toBeGreaterThan(0);
+
+    // LOCAL_RESET_GUARD_KEY is een top-level const en komt daardoor niet op window
+    // te staan; de sleutel wordt hier dus letterlijk opgebouwd zoals app.js hem maakt.
+    await page.evaluate(() => {
+      window.localStorage.setItem('path-uren-demo-v07-final:local-reset-authoritative', '1');
+    });
+    const actief = await page.evaluate(() => (window as unknown as { isLocalResetAuthoritative: () => boolean }).isLocalResetAuthoritative());
+    expect(actief, 'de herstelvoorrang hoort voor deze case aan te staan').toBe(true);
+  });
+
+  await test.step('When de medewerker de klanturenstaat als rechtstreeks gemaild registreert', async () => {
+    const uitkomst = await page.evaluate(async ([periodKey, id]) => {
+      const schrijf = (window as unknown as {
+        writeCustomerTimesheetToApi: (actie: string, opties: Record<string, unknown>) => Promise<{ customer_timesheet?: { status?: string } }>;
+      }).writeCustomerTimesheetToApi;
+      const antwoord = await schrijf('mark_skipped', {
+        employeeId: Number(id),
+        periodKey: String(periodKey),
+        reviewNote: 'Rechtstreeks naar Backoffice gemaild vanuit de regressietest.',
+      });
+      return String(antwoord?.customer_timesheet?.status || '');
+    }, [period, String(employeeId)]);
+    expect(uitkomst, 'de server hoort de klanturenstaat als skipped terug te geven').toBe('skipped');
+  });
+
+  await test.step('Then is de herstelvoorrang opgeheven en toont het scherm de serverstand', async () => {
+    const nogActief = await page.evaluate(() => (window as unknown as { isLocalResetAuthoritative: () => boolean }).isLocalResetAuthoritative());
+    expect(nogActief, 'na een serverschrijfactie mogen serverlezingen niet meer genegeerd worden').toBe(false);
+
+    const status = await page.evaluate(([periodKey, id]) => {
+      const record = (window as unknown as {
+        customerTimesheetFor: (r: unknown) => { status: string };
+        recordFor: (employee: number, period: string) => unknown;
+      });
+      return record.customerTimesheetFor(record.recordFor(Number(id), String(periodKey))).status;
+    }, [period, String(employeeId)]);
+    expect(status, 'de lokale stand hoort de serverstand te volgen').toBe('skipped');
+  });
+});

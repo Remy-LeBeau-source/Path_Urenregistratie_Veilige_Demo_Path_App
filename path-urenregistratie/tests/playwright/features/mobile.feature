@@ -169,3 +169,11 @@ Feature: Mobiele gebruikerservaring
     Given mobiele gebruikerservaring is voorbereid
     When de flow voor MOB-H-018 wordt uitgevoerd
     Then blijft de balk weg, ook na een melding van de browser en de eigen timer
+
+  @happy
+  Scenario: [MOB-H-020] het manifest gebruikt overal dezelfde navy statusbalkkleur
+    # Testtechniek: Broncontract
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given het manifest per omgeving een eigen naam kan hebben
+    When het manifest wordt opgehaald
+    Then is theme_color overal navy en verschilt alleen de naam
