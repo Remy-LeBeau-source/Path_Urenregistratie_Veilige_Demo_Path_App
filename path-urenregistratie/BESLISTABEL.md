@@ -18,6 +18,8 @@ Losse regressiestatus staat in `MASTERCHECKLIST.md`; livegang-checklist in `PROD
 | W8 | Geen `--no-verify`, geen forced clicks, geen timeout verhogen om een test groen te krijgen. | Vertrouwen in de suite. | vast |
 | W9 | **Bekende flakes in de volle seriële regressie** (`workers:1`, ~39 min, geen retries lokaal): `TS-REV-UI-H-008` en `ADM-WR-N-006`. Beide slagen los én per bestand; ze vallen alleen om na ~340 voorgaande tests door opgebouwde DB-state (o.a. gewijzigde `employment_start_date` van medewerker 2, of een trage save bij een enorme accountlijst). `TS-REV-UI-H-008` viel al vóór deze sessie in CI om. Geen codewijziging van deze sessie raakt deze paden. CI `retries: 1` vangt ze doorgaans. Echte fix = die twee tests hermetisch maken (ook `bootstrap.php`/start-datum mocken) — apart traject, niet mid-pilot. | Testhygiëne, geen app-bug. | open |
 
+| W10 | **Versieschema.** Tot go-live blijven we `0.9.x` ophogen per release. Op het moment dat de gebruiker Promote Prod doet gaat alles in één keer naar **`1.0.0`**. Daarna alleen bij een echte **productierelease** ophogen: `1.0.1` voor fixes, `1.1.0` voor nieuwe functies — niet meer per commit. Het nummer staat op 13 plekken in 5 bestanden; zet het nooit met de hand maar met **`npm run version:set <versie>`**. `npm run version:check` (draait mee in `npm run check`) faalt zodra ergens een ander nummer staat dan in `package.json`. | "0.9.166" leest voor een echte gebruiker als onaf; handmatig gelijkzetten was foutgevoelig. | vast |
+
 ## 2. Productie & pilot
 
 | # | Keuze | Reden | Status |

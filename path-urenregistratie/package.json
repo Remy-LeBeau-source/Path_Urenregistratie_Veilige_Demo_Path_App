@@ -1,11 +1,13 @@
 {
   "name": "path-urenregistratie",
-  "version": "0.9.166",
+  "version": "0.9.167",
   "private": true,
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "check": "node --check assets/app.js && node scripts/smoke-test.mjs && node scripts/server-message-language-check.mjs && node scripts/contrast-licht-donker.mjs && npm run test:design && npm run test:bdd:design && npm run test:db:config && npm run test:ops",
+    "check": "npm run version:check && node --check assets/app.js && node scripts/smoke-test.mjs && node scripts/server-message-language-check.mjs && node scripts/contrast-licht-donker.mjs && npm run test:design && npm run test:bdd:design && npm run test:db:config && npm run test:ops",
+    "version:set": "node scripts/set-version.mjs",
+    "version:check": "node scripts/set-version.mjs --check",
     "test:design": "node scripts/test-design-audit.mjs",
     "test:ops": "php server/scripts/production-preflight.php --config=server/config.example.php && php server/scripts/test-preflight.php --config=server/config.test.example.php && php server/scripts/mail-preflight.php --config=server/config.example.php && php server/scripts/mail-environment-policy-check.php && php server/scripts/mail-acceptance-policy-check.php && php server/scripts/test-reset-policy-check.php && php server/scripts/reset-test-baseline.php && php server/scripts/database-backup.php --config=server/config.example.php && php server/scripts/database-restore.php --config=server/config.example.php --file=database/schema.sql && php server/scripts/rotate-logs.php --config=server/config.example.php && php server/scripts/configure-production.php && php server/scripts/configure-production-mail-pilot.php --config=server/config.example.php && php server/scripts/configure-test.php && php server/scripts/configure-test-mail-sandbox.php && php server/scripts/provision-company.php --config=server/config.example.php && php server/scripts/provision-account.php --config=server/config.example.php && node scripts/deployment-contract-check.mjs",
     "test:configure": "php server/scripts/configure-test.php",
