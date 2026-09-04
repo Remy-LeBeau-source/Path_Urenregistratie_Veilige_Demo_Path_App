@@ -66,3 +66,11 @@ Feature: Correcties en goedkeuringen behandelen
     Given de beheerder opent Goedkeuringen terwijl de eerste serverwerkvoorraad-sync nog loopt
     When de sync binnenkomt
     Then toont Goedkeuringen eerst een neutrale laadtekst zonder voorlopige kaarten of teller en daarna de echte controlestand
+
+  @negative
+  Scenario: [TS-REV-UI-N-014] verlof en ziekte staan uit met een duidelijke uitleg
+    # Testtechniek: Broncontract
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given de medewerker is ingelogd
+    When de medewerker Mijn uren opent
+    Then staan verlof en ziekte uitgeschakeld met een zichtbare reden

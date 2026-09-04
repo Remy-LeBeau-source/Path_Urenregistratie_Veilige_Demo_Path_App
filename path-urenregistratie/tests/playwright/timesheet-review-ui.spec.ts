@@ -702,3 +702,21 @@ test('[TS-REV-UI-N-013] Goedkeuringen toont een laadtoestand tot de serverwerkvo
   await loginPage.logout();
 });
 
+test('[TS-REV-UI-N-014] verlof en ziekte staan uit met een duidelijke uitleg', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given de medewerker opent Mijn uren', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await openView(page, 'timesheet');
+  });
+
+  await test.step('Then staan verlof en ziekte uitgeschakeld met een zichtbare reden', async () => {
+    await expect(page.locator('#summary-leave')).toBeDisabled();
+    await expect(page.locator('#summary-sick')).toBeDisabled();
+    await expect(page.locator('#payroll-privacy-note')).toContainText('salarisadministratie');
+  });
+
+  await loginPage.logout();
+});
+

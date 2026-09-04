@@ -459,11 +459,11 @@ function freshState() {
       sender: "backoffice@example.invalid",
       bookkeeperName: "Boekhouder",
       bookkeeper: "boekhouder@example.invalid",
-      payrollName: "Salarisadministratie (EasySalary)",
+      payrollName: "Salarisadministratie",
       payroll: "salaris@example.invalid",
       mailRecipients: [
         { id: "bookkeeper", category: "accounting", name: "Boekhouder", email: "boekhouder@example.invalid", active: true },
-        { id: "payroll", category: "payroll", name: "Salarisadministratie (EasySalary)", email: "salaris@example.invalid", active: true }
+        { id: "payroll", category: "payroll", name: "Salarisadministratie", email: "salaris@example.invalid", active: true }
       ],
       weeklyReminderEnabled: true,
       weeklyReminderDay: "friday",
@@ -697,7 +697,7 @@ function loadState() {
     if (!Array.isArray(saved.settings.mailRecipients) || !saved.settings.mailRecipients.length) {
       saved.settings.mailRecipients = [
         { id: "bookkeeper", category: "accounting", name: saved.settings.bookkeeperName || "Boekhouder", email: saved.settings.bookkeeper || fallback.settings.bookkeeper, active: true },
-        { id: "payroll", category: "payroll", name: saved.settings.payrollName || "Salarisadministratie (EasySalary)", email: saved.settings.payroll || fallback.settings.payroll, active: true }
+        { id: "payroll", category: "payroll", name: saved.settings.payrollName || "Salarisadministratie", email: saved.settings.payroll || fallback.settings.payroll, active: true }
       ];
     }
     saved.settings.mailRecipients = saved.settings.mailRecipients.map((recipient, index) => Object.assign({
@@ -719,6 +719,17 @@ function loadState() {
         else if (recipient.id === "payroll") recipient.category = "payroll";
         else if (!recipient.category) recipient.category = "other";
       });
+    }
+    if (previousSchemaVersion < 27) {
+      // De standaardnaam voor de salarisadministratie noemde tot nu toe een
+      // fictieve leverancier ("EasySalary"). De boekhouder-standaard heette
+      // altijd al gewoon "Boekhouder"; dit trekt de salarisadministratie
+      // daarmee gelijk. Wie zelf een naam heeft ingevuld die niet exact een
+      // van deze twee historische standaardwaardes is, blijft ongewijzigd.
+      const payrollRecipient27 = saved.settings.mailRecipients.find(recipient => recipient.id === "payroll");
+      if (payrollRecipient27 && ["EasySalary", "Salarisadministratie (EasySalary)"].includes(String(payrollRecipient27.name || "").trim())) {
+        payrollRecipient27.name = "Salarisadministratie";
+      }
     }
     const savedBookkeeper = saved.settings.mailRecipients.find(recipient => recipient.id === "bookkeeper");
     const savedPayroll = saved.settings.mailRecipients.find(recipient => recipient.id === "payroll");
@@ -777,7 +788,7 @@ function loadState() {
         }
       });
     });
-    saved.schemaVersion = 26;
+    saved.schemaVersion = 27;
     saved.employees = Array.isArray(saved.employees) && saved.employees.length ? saved.employees : fallback.employees;
     saved.admins = saved.admins.map((admin, index) => Object.assign({
       id: "admin-" + (index + 1),
@@ -6250,9 +6261,16 @@ function renderInvoices() {
       tbody.innerHTML = '<tr><td colspan="6" style="padding:40px;text-align:center;color:#6c7886">Geen facturen binnen dit filter.</td></tr>';
     }
   }
-  const payrollRecipient = mailRecipientById("payroll") || { name: "Salarisadministratie", email: state.settings.payroll || "", active: true };
-  const payrollName = payrollRecipient.name || "Salarisadministratie";
-  document.querySelector("#payroll-privacy-note").textContent = payrollName + " krijgt alleen de toegestane ureninformatie en standaard geen factuurgegevens.";
+  // Deze tekst staat op de eigen urenstaat van de medewerker. Die hoeft de
+  // specifieke leverancier van de salarisadministratie niet te kennen (net zo
+  // min als broker- of klantnamen die niet direct relevant zijn); daarom altijd
+  // de generieke rolnaam, ongeacht welke eigen naam de beheerder in
+  // Instellingen aan deze ontvanger heeft gegeven. De beheerder ziet die eigen
+  // naam wel, in Instellingen en in de verzendbevestiging. De eigen
+  // organisatienaam (Handelsnaam/merk uit Instellingen) mag wel genoemd worden
+  // -- dat is geen externe leverancier maar de werkgever van de medewerker zelf.
+  const payrollNoteOrganizationName = String(state.settings.organizationName || state.settings.companyName || "").trim() || "je organisatie";
+  document.querySelector("#payroll-privacy-note").textContent = "Verlof en ziekte geef je voorlopig door via de salarisadministratie en " + payrollNoteOrganizationName + "; dat gaat nu niet via deze app. De salarisadministratie krijgt hier alleen de toegestane ureninformatie en standaard geen factuurgegevens.";
   renderMonthBatchReadiness(monthBatchReadiness(currentPeriod().key));
   renderInvoiceMonthOverview();
   renderInvoiceBatchBadge();
@@ -6972,9 +6990,13 @@ function renderHoursGrid() {
   document.querySelector("#summary-contract").textContent = hoursFormat.format(record.contractHours) + " uur";
   document.querySelector("#summary-leave").value = Number(record.leave) || 0;
   document.querySelector("#summary-sick").value = Number(record.sick) || 0;
+  // Verlof en ziekte lopen voorlopig extern via de salarisadministratie, niet
+  // via deze app. De velden blijven zichtbaar (bestaande waarden gaan niet
+  // verloren) maar zijn bewust altijd uitgeschakeld, los van of de urenstaat
+  // verder bewerkbaar is.
+  document.querySelector("#summary-leave").disabled = true;
+  document.querySelector("#summary-sick").disabled = true;
   const editable = isTimesheetEditableForEmployee(record);
-  document.querySelector("#summary-leave").disabled = !editable;
-  document.querySelector("#summary-sick").disabled = !editable;
   const correction = activeCorrection(record);
   const correctionBanner = document.querySelector("#timesheet-correction-banner");
   correctionBanner.hidden = !correction;
@@ -7599,7 +7621,7 @@ function showMailRecipientEditor(recipientId) {
   const recipient = existing || { id: nextMailRecipientId(), category: "other", name: "", email: "nieuw-adres@example.invalid", active: true };
   const summary = '<div class="modal-form">' +
     '<label>Type ontvanger<select id="edit-mail-recipient-category" aria-label="Type ontvanger"><option value="accounting"' + (recipient.category === "accounting" ? " selected" : "") + '>Boekhouding</option><option value="payroll"' + (recipient.category === "payroll" ? " selected" : "") + '>Salarisadministratie</option><option value="other"' + (recipient.category === "other" ? " selected" : "") + '>Overig</option></select></label>' +
-    '<label>Eigen naam / kopje<input id="edit-mail-recipient-name" value="' + escapeHtml(recipient.name) + '" placeholder="Bijvoorbeeld: EasySalary of Salarisadmin"></label>' +
+    '<label>Eigen naam / kopje<input id="edit-mail-recipient-name" value="' + escapeHtml(recipient.name) + '" placeholder="Bijvoorbeeld: Salarisadministratie"></label>' +
     '<label>E-mailadres<input id="edit-mail-recipient-email" type="email" value="' + escapeHtml(recipient.email) + '"></label>' +
     '<p class="full form-help">Deze ontvanger wordt centraal opgeslagen. Daarna kun je hem bij iedere medewerker aanvinken en apart kiezen of de factuur meegaat.</p>' +
   '</div>';
@@ -9709,7 +9731,7 @@ function showEmployeeEditor(employeeId, prefill) {
         '</article>' + routeChoices + '</div>' +
     '<p class="full form-help">Nieuwe vaste ontvanger toevoegen (optioneel). Hij komt bij elke medewerker in de lijst te staan, maar ongevinkt: alleen waar je hem aanvinkt gaat er mail heen.</p>' +
     '<label>Type ontvanger<select id="edit-new-recipient-category" aria-label="Type nieuwe ontvanger"><option value="accounting">Boekhouding</option><option value="payroll">Salarisadministratie</option><option value="other" selected>Overig</option></select></label>' +
-    '<label>Naam / kopje<input id="edit-new-recipient-name" placeholder="Bijvoorbeeld: Salarisadministratie of EasySalary"></label>' +
+    '<label>Naam / kopje<input id="edit-new-recipient-name" placeholder="Bijvoorbeeld: Salarisadministratie"></label>' +
     '<label>E-mailadres<input id="edit-new-recipient-email" type="email" placeholder="naam@example.invalid"></label>' +
     '<label class="check-row"><input id="edit-new-recipient-enabled" type="checkbox" checked><span>Deze medewerker ontvangt via deze ontvanger mail</span></label>' +
     '<label class="check-row"><input id="edit-new-recipient-invoice" type="checkbox"><span>Factuur als PDF meesturen</span></label>' +

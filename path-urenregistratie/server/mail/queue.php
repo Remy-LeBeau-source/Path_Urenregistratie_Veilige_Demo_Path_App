@@ -309,7 +309,7 @@ function mail_enqueue_for_invoice(
 
         // Map category to channel name and attachment policy.
         if ($category === 'payroll') {
-            // EasySalary NEVER receives invoice attachment.
+            // Salarisadministratie ontvangt nooit een factuurbijlage.
             $channel       = 'payroll';
             $attachPolicy  = 'none';
             $hasPayrollChannel = true;

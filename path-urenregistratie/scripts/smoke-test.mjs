@@ -241,7 +241,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("1.0.25"), "Het zichtbare versienummer moet 1.0.25 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("1.0.26"), "Het zichtbare versienummer moet 1.0.26 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -652,9 +652,8 @@ firstHoursInput.value = "7.5";
 pressEnter(".hours-input");
 assert(document.querySelector("#toast").textContent.includes("tussentijds opgeslagen"), "Enter in een urenveld moet het werk zichtbaar opslaan");
 assert(document.activeElement === nextHoursInput, "Enter in een urenveld moet naar het volgende veld gaan");
-document.querySelector("#summary-leave").value = "8";
-pressEnter("#summary-leave");
-assert(document.querySelector("#toast").textContent.includes("Verlof en ziekte"), "Verlof en ziekte moeten met Enter opgeslagen kunnen worden");
+assert(document.querySelector("#summary-leave").disabled && document.querySelector("#summary-sick").disabled, "Verlof en ziekte lopen voorlopig via de salarisadministratie en horen hier uitgeschakeld te zijn");
+assert(document.querySelector("#payroll-privacy-note").textContent.includes("salarisadministratie"), "De reden waarom verlof/ziekte hier uit staan moet zichtbaar zijn uitgelegd");
 
 document.querySelectorAll(".hours-input").forEach(input => { input.value = "8"; });
 document.querySelector(".hours-input").dispatchEvent(new Event("input", { bubbles: true }));
@@ -1155,7 +1154,7 @@ click('[data-view="settings"]');
 assert(document.querySelectorAll(".settings-section-nav [data-scroll-target]").length === 6 && document.querySelector("#settings-reminders") && document.querySelector("#settings-safety"), "Instellingen moet een compact inhoudsmenu met zes duidelijke onderdelen hebben");
 assert(document.querySelector("#view-settings").textContent.includes("Afzonderlijke routes") && !document.querySelector("#view-settings").textContent.includes("Proces samen of apart nog bevestigen"), "Instellingen mag geen reeds genomen procesbesluit meer als open vraag tonen");
 assert(document.querySelector("#mail-template-list").textContent.includes("augustus"), "Brokerteksten moeten de gekozen periode gebruiken");
-assert(document.querySelector("#mail-recipient-settings-list").textContent.includes("Boekhouder") && document.querySelector("#mail-recipient-settings-list").textContent.includes("EasySalary"), "Vaste ontvangers moeten één keer centraal beheerd worden");
+assert(document.querySelector("#mail-recipient-settings-list").textContent.includes("Boekhouder") && document.querySelector("#mail-recipient-settings-list").textContent.includes("Salarisadministratie"), "Vaste ontvangers moeten één keer centraal beheerd worden");
 assert(document.querySelector("#setting-organization-name").value === "Path Consultancy" && document.querySelector("#setting-app-name").value === "Uren & Facturatie", "De eerste organisatieconfiguratie moet Path en de eigen appnaam bevatten");
 assert(document.querySelector("#setting-brand-logo") && document.querySelector("#setting-brand-primary") && document.querySelector("#setting-brand-accent"), "Een organisatie moet eigen logo en merkkleuren kunnen instellen");
 assert(document.querySelector("#setting-weekly-reminder-day").value === "friday" && document.querySelector("#setting-weekly-reminder-time").value === "15:00", "Instellingen moeten de standaard weekherinnering vrijdag 15:00 tonen");
@@ -1427,7 +1426,7 @@ click('[data-simulate-invoice="3"]');
 assert(document.querySelector("#modal-message").textContent.includes("ieder afzonderlijk bericht"), "Iedere aangevinkte ontvanger moet een apart bericht krijgen");
 assert(document.querySelector("#modal-message").textContent.includes("Daadwerkelijk gewerkte uren"), "De gemeenschappelijke tekst moet het daadwerkelijke urenaantal bevatten");
 assert(document.querySelector("#modal-message").textContent.includes("ItaQ Consultancy: factuur als PDF") && document.querySelector("#modal-message").textContent.includes("Boekhouder: factuur als PDF"), "Broker en boekhouder moeten standaard de factuur ontvangen");
-assert(document.querySelector("#modal-message").textContent.includes("Salarisadministratie (EasySalary): geen bijlage"), "De salarisadministratie moet standaard alleen de tekst ontvangen");
+assert(document.querySelector("#modal-message").textContent.includes("Salarisadministratie: geen bijlage"), "De salarisadministratie moet standaard alleen de tekst ontvangen");
 assert(document.querySelector("#modal-message").textContent.includes("Salarisverwerking test: geen bijlage"), "Een aangevinkte extra ontvanger moet de gekozen bijlage-instelling volgen");
 assert(document.querySelector("#modal-message").textContent.includes("eigen upload-, controle- en brokerroute"), "De officiële klanturenstaat moet een zichtbaar apart proces hebben");
 assert(document.querySelector("#modal-summary").textContent.includes("BCCNiet gebruikt"), "De factuurroute mag geen BCC gebruiken");
@@ -1472,7 +1471,7 @@ assert(document.querySelector("#modal-title").textContent.includes("Maandverzend
 assert(document.querySelector("#modal-confirm").textContent === "Controle afronden", "De maandactie moet als controle worden benoemd en niet als echte verzending");
 assert(document.querySelector("#modal-summary").textContent.includes("Circle8") && document.querySelector("#modal-summary").textContent.includes("met factuur"), "De maandknop moet de instelbare brokerbijlage tonen");
 assert(document.querySelector("#modal-summary").textContent.includes("Boekhouder"), "De maandknop moet de boekhouderroute apart benoemen");
-assert(document.querySelector("#modal-summary").textContent.includes("EasySalary") && document.querySelector("#modal-summary").textContent.includes("0 met factuur"), "De maandknop moet tonen dat EasySalary standaard geen factuur krijgt");
+assert(document.querySelector("#modal-summary").textContent.includes("Salarisadministratie") && document.querySelector("#modal-summary").textContent.includes("0 met factuur"), "De maandknop moet tonen dat de salarisadministratie standaard geen factuur krijgt");
 assert(document.querySelector("#modal-summary").textContent.includes("Klanturenstaten") && document.querySelector("#modal-summary").textContent.includes("klaar voor brokerroute"), "De maandknop moet de aparte klanturenstaatstatussen tonen");
 assert(document.querySelector("#modal-message").textContent.includes("geen CC of BCC"), "De maandknop mag ontvangers niet in één CC- of BCC-mail combineren");
 click("#modal-confirm");
@@ -1748,7 +1747,7 @@ const migrationPicker = migrationDom.window.document.querySelector("#login-admin
 migrationPicker.value = "joyce";
 migrationPicker.dispatchEvent(new migrationDom.window.Event("change", { bubbles: true }));
 const migratedState = JSON.parse(migrationDom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(migratedState.schemaVersion === 26, "Bestaande browsergegevens moeten ook in v0.9.81 veilig behouden blijven");
+assert(migratedState.schemaVersion === 27, "Bestaande browsergegevens moeten ook in v0.9.81 veilig behouden blijven");
 assert(migratedState.settings.companyName === "QSI Consultancy B.V." && migratedState.settings.invoiceNameDisplay === "trade_and_legal", "Migratie moet QSI als B.V. en de gecombineerde factuurweergave veilig aanvullen");
 assert(migratedState.settings.mailRecipients.find(recipient => recipient.id === "payroll").name.includes("Salarisadministratie"), "Migratie moet EasySalary als duidelijke salarisadministratieroute benoemen");
 assert(migratedState.records["2026-07"]["4"].invoiceNumber === "Bel-Shawn-2026-juli", "Migratie moet ook bestaande factuurnummers omzetten naar de afgesproken koppeltekens");
@@ -2074,7 +2073,7 @@ assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Pla
 }
 
 dom.window.close();
-console.log("Path v1.0.25 volledige smoke test: geslaagd");
+console.log("Path v1.0.26 volledige smoke test: geslaagd");
 // app.js schedules browser refresh timers. In JSDOM those timers can keep Node
 // alive after every assertion has completed, which made the release check look
 // stuck. End explicitly only after the complete smoke contract is green.

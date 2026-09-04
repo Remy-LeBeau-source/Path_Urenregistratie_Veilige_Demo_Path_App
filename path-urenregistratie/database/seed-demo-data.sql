@@ -74,7 +74,7 @@ INSERT INTO counterparties (
   (10, 1, 'broker', 'ItaQ Consultancy', 'Itaq', 'Laan van ZuidHoorn 165', '2289 DD', 'Rijswijk', 'facturen-itaq@example.invalid', FALSE, TRUE),
   (11, 1, 'broker', 'Circle8', 'circle8', 'Plettenburg-West, Fultonbaan 6', '3439 NE', 'Nieuwegein', 'facturen-circle8@example.invalid', TRUE, TRUE),
   (20, 1, 'accountant', 'Boekhouder', 'Boekhouder', NULL, NULL, NULL, 'boekhouder@example.invalid', FALSE, TRUE),
-  (21, 1, 'payroll', 'Salarisadministratie (EasySalary)', 'EasySalary', NULL, NULL, NULL, 'salaris@example.invalid', FALSE, TRUE);
+  (21, 1, 'payroll', 'Salarisadministratie', 'Salarisadministratie', NULL, NULL, NULL, 'salaris@example.invalid', FALSE, TRUE);
 
 INSERT INTO assignments (
   id, company_id, employee_id, client_id, broker_id, assignment_name,
@@ -94,7 +94,7 @@ INSERT INTO assignments (
 
 INSERT INTO mail_recipients (id, company_id, recipient_key, recipient_category, display_name, email, active) VALUES
   (1, 1, 'bookkeeper', 'accounting', 'Boekhouder', 'boekhouder@example.invalid', TRUE),
-  (2, 1, 'payroll', 'payroll', 'Salarisadministratie (EasySalary)', 'salaris@example.invalid', TRUE);
+  (2, 1, 'payroll', 'payroll', 'Salarisadministratie', 'salaris@example.invalid', TRUE);
 
 INSERT INTO assignment_mail_routes (assignment_id, mail_recipient_id, enabled, include_invoice_pdf) VALUES
   (1, 1, TRUE, TRUE), (1, 2, TRUE, FALSE),
