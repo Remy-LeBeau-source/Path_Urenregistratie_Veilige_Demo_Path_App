@@ -290,7 +290,7 @@ test.describe('timesheet write api', () => {
       ['meer dan 24 uur op een dag', { dayEntries: [{ workDate: `${period}-01`, hours: 25 }], billableHours: 25 }],
       ['negatieve uren op een dag', { dayEntries: [{ workDate: `${period}-01`, hours: -1 }], billableHours: 0 }],
       ['datum buiten de gekozen maand', { dayEntries: [{ workDate: buiten, hours: 8 }], billableHours: 8 }],
-      ['niet-bestaande datum', { dayEntries: [{ workDate: `${period}-31`, hours: 8 }], billableHours: 8 }],
+      ['niet-bestaande datum', { dayEntries: [{ workDate: `${period}-32`, hours: 8 }], billableHours: 8 }],
       ['billable telt niet op tot de dagregels', { dayEntries: [{ workDate: `${period}-01`, hours: 8 }], billableHours: 40 }],
       ['negatief verlof', { dayEntries: [{ workDate: `${period}-01`, hours: 8 }], billableHours: 8, leaveHours: -4 }],
     ];

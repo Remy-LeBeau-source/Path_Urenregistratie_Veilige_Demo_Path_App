@@ -181,6 +181,7 @@ test.describe('audit log api', () => {
     const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
     const authApi = new AuthApi(ctx);
     const suffix = Date.now().toString().slice(-7);
+    let audittestUserId = 0;
 
     const post = async (path: string, data: Record<string, unknown>) => {
       const csrf = await ctx.get('/server/auth/csrf.php');
@@ -207,13 +208,14 @@ test.describe('audit log api', () => {
         mailRecipients: [],
       });
       expect(created.status, JSON.stringify(created.body)).toBe(200);
+      audittestUserId = Number(created.body.user_id || 0);
 
       expect(await auditHas('entity_type=employee', row =>
         (row.event_type === 'employee.upsert' || row.event_type.startsWith('employee.'))
         && row.actor_id === Number(admin.user.id))).toBe(true);
     });
 
-    await test.step('When de beheerder de bedrijfsinstellingen opslaat', async () => {
+    await test.step('When de beheerder de bedrijfsinstellingen opslaat en meteen weer herstelt', async () => {
       const bootstrap = await ctx.get('/server/api/bootstrap.php');
       const settings = (await bootstrap.json()).settings ?? {};
       const saved = await post('/server/api/settings.php', {
@@ -221,6 +223,10 @@ test.describe('audit log api', () => {
       });
       expect(saved.status, JSON.stringify(saved.body)).toBe(200);
       expect(await auditHas('entity_type=company', row => row.event_type.startsWith('company.') || row.event_type.startsWith('settings.'))).toBe(true);
+      // Gedeelde bedrijfsrij: meteen terugzetten zodat latere factuur- en
+      // mailcases niet tegen een testwaarde asserten.
+      const herstel = await post('/server/api/settings.php', { settings });
+      expect(herstel.status).toBe(200);
     });
 
     await test.step('Then registreert een medewerker-schrijfactie de medewerker als actor', async () => {
@@ -242,6 +248,12 @@ test.describe('audit log api', () => {
       await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
       expect(await auditHas('entity_type=timesheet', row =>
         row.event_type.startsWith('timesheet.') && row.actor_id === Number(employee.user.id))).toBe(true);
+
+      // De aangemaakte testmedewerker weer weg: latere cases tellen medewerkers.
+      if (audittestUserId > 0) {
+        await post('/server/api/users.php', { action: 'deactivate', user_id: audittestUserId });
+        await post('/server/api/users.php', { action: 'delete', user_id: audittestUserId });
+      }
       await authApi.logout();
     });
 
