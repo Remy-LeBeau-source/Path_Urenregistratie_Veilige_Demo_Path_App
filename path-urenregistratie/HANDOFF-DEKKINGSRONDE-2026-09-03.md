@@ -1,8 +1,8 @@
 # Handoff — dekkingsronde 3 september 2026
 
-**Stand:** TEST draait **1.0.1**. PROD niet aangeraakt (staat op 0.9.156, wacht
-op jouw Promote Prod). Alle commits op `main`, elke commit groen op
-`npm run check`. Versieschema sinds nu: `1.0.x` (BESLISTABEL W10).
+**Stand:** TEST draait **1.0.18** (na `Deploy Test`). PROD niet aangeraakt
+(staat op 0.9.156, wacht op jouw Promote Prod). Alle commits op `main`, elke
+commit groen op `npm run check`. Versieschema sinds nu: `1.0.x` (BESLISTABEL W10).
 
 De volledige procedure en gebiedenlijst staat in **`DEKKINGSRONDE.md`**. Elke
 sessie kan die oppakken. Trigger: de gebruiker zegt **"dekkingsronde"**.
@@ -65,8 +65,16 @@ zoeken) **plus twee echte a11y-bugs gefixt** (dialoog gaf focus niet terug;
 links/tabindex hadden geen focusring).
 
 Design-polish: na code-check bleek de app al gedisciplineerd (button-
-hiërarchie klopt, mobiel tabel→kaart bestaat al). Alleen "laadtoestand op
-Facturen/Goedkeuringen" is een echte, optionele verbetering — geparkeerd.
+hiërarchie klopt, mobiel tabel→kaart bestaat al).
+
+## Vervolg 4 sep 2026 (1.0.16 → 1.0.18)
+
+| Versie | Wat |
+|---|---|
+| 1.0.16 | Living Docs stabiel: `TS-REV-UI-H-008` hermetisch gemaakt (mockt `bootstrap.php` + `timesheets.php` + `customer-timesheets.php`), `ADM-WR-N-006` mag trager (`test.slow()` + 20s setup-asserties). BESLISTABEL W9 → vast. |
+| 1.0.17 | **D1 aangepast**: Dashboard/Home-knop zet de maandkiezer terug op de actuele kalendermaand (beide rollen). Handmatige maand blijft alleen op andere schermen. Regressie `DASH-H-018` (herschreven), `DASH-H-021`, `MOB-H-022`. |
+| 1.0.18 | **Laadtoestand op Facturen + Goedkeuringen** (advies #2): geen verspringende seed-tellers meer bij het openen. Vlag `invoicesHydrated` + gate op `adminWorkflowHydrated`. Regressie `INV-N-020`, `TS-REV-UI-N-013`. |
+| 1.0.19 | **Fantoom-open-acties gefixt**: `employeeOpenMonthSummaries` gebruikte de *geselecteerde* maand i.p.v. de kalendermaand. Wie handmatig een lege historische maand opende (bv. april) kreeg daar "uren indienen"/"klanturenstaat uploaden" als open actie, terwijl de echte kalendermaand uit de lijst verdween. Nu is de lijst stabiel, los van welke maand je bekijkt. Regressie `DASH-N-021`. |
 
 **Volgende sessie:** de suite is op orde. Nieuw werk gaat mee per
 [[new-work-ships-with-regression-tests]]; een volledige dekkingsronde

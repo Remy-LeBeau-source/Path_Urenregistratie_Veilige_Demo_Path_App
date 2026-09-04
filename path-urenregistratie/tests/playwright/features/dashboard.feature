@@ -195,6 +195,14 @@ Feature: Dashboard en open werkvoorraad
     When de medewerker op Dashboard klikt
     Then staat de maandkiezer weer op de actuele kalendermaand augustus, ook op de andere schermen
 
+  @negative
+  Scenario: [DASH-N-021] een lege oudere maand openen voegt geen fantoom-open-acties toe en houdt de kalendermaand in beeld
+    # Testtechniek: Grenswaardenanalyse
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given de medewerker ziet zijn open acties in de actuele kalendermaand augustus
+    When de medewerker handmatig een lege oudere maand (april 2026) opent
+    Then verschijnt april niet als open-actiemaand en blijven het totaal en de kalendermaand ongewijzigd
+
   @happy
   Scenario: [DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels
     # Testtechniek: Equivalentieklassen

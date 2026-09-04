@@ -4539,15 +4539,21 @@ function employeeOpenMonthSummaries(employeeId, currentPeriodKey) {
   const employee = employeeById(employeeId);
   if (!employee) return [];
 
+  // Alléén de echte kalendermaand is ook zonder geboekte uren een werkmaand.
+  // Voorheen werd hier de geselecteerde maand gebruikt: wie handmatig een lege
+  // historische maand opende (bv. april) kreeg daar fantoomacties ("uren
+  // indienen", "klanturenstaat uploaden") én zag de echte kalendermaand uit de
+  // lijst verdwijnen. De open-actielijst hoort stabiel te zijn, los van welke
+  // maand je bekijkt.
+  const calendarMonthKey = parsePeriodKey(currentCalendarPeriodKey()) ? currentCalendarPeriodKey() : currentPeriodKey;
+
   return Object.keys(state.records)
     .filter(key => parsePeriodKey(key))
     .sort()
     .map(key => {
       const historyRecord = recordFor(employee.id, key);
       if (!employeeStartedByPeriodEnd(employee, key)) return null;
-      // De actuele kalendermaand is ook zonder geboekte uren een echte
-      // werkmaand. Historische en toekomstige lege maanden blijven verborgen.
-      if (key !== currentPeriodKey && !recordHasPeriodActivity(historyRecord)) return null;
+      if (key !== calendarMonthKey && !recordHasPeriodActivity(historyRecord)) return null;
       const customerRecord = customerTimesheetFor(historyRecord);
       const actions = [];
 

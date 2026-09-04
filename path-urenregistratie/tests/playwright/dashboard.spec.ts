@@ -268,6 +268,36 @@ test('[DASH-H-021] de medewerker keert met de Dashboard-knop terug naar de actue
   });
 });
 
+test('[DASH-N-021] een lege oudere maand openen voegt geen fantoom-open-acties toe en houdt de kalendermaand in beeld', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  let totalOnCalendarMonth = '';
+
+  await test.step('Given de medewerker ziet zijn open acties in de actuele kalendermaand augustus', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i, { timeout: 15_000 });
+    await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
+    totalOnCalendarMonth = (await page.locator('#employee-open-task-total').textContent() || '').trim();
+    expect(totalOnCalendarMonth).toMatch(/^\d+ open acties$/);
+    await expect(page.locator('[data-employee-open-month="2026-04"]')).toHaveCount(0);
+  });
+
+  await test.step('When de medewerker handmatig een lege oudere maand (april 2026) opent', async () => {
+    await openPaneel(page, '#period-month-picker', '#period-month-panel');
+    await page.locator('#period-month-panel [data-period-month="04"][data-month-control="#period-month-picker"]').click();
+    await expect(page.locator('#period-label')).toHaveText('April 2026');
+    await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i, { timeout: 15_000 });
+  });
+
+  await test.step('Then verschijnt april niet als open-actiemaand en blijven het totaal en de kalendermaand ongewijzigd', async () => {
+    await expect(page.locator('[data-employee-open-month="2026-04"]')).toHaveCount(0);
+    await expect(page.locator('[data-employee-open-month="2026-08"]').first()).toBeVisible();
+    await expect(page.locator('#employee-open-task-total')).toHaveText(totalOnCalendarMonth);
+    await expect(page.locator('#employee-dashboard-next')).not.toContainText('April 2026');
+  });
+});
+
 test('[DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad niet', async ({ page }) => {
   const loginPage = new LoginPage(page);
 
