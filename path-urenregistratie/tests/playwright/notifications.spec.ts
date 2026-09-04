@@ -262,13 +262,16 @@ test.describe('notifications api', () => {
     holdNextGet = true;
     await page.evaluate(() => { void window.refreshNotificationsReadApi(true); });
     await expect.poll(() => staleCaptured).toBe(true);
-    // Een achtergrond-scroll (bijvoorbeeld door late layout-hydratatie) mag het
-    // popover sluiten. Deze case test de stale-responsebeveiliging, dus open het
-    // meldingenmenu vlak voor de gebruikersactie opnieuw wanneer dat nodig is.
-    if (await page.locator('#notification-panel').isHidden()) {
-      await page.locator('#notification-button').click();
-    }
-    await expect(page.locator('#mark-notifications-read')).toBeVisible();
+    // Een achtergrond-scroll (bijvoorbeeld door late layout-hydratatie) kan het
+    // popover sluiten. Deze case test de stale-responsebeveiliging, niet het
+    // menugedrag, dus heropen het meldingenmenu net zolang tot het openblijft en
+    // de knop klikbaar is.
+    await expect(async () => {
+      if (await page.locator('#notification-panel').isHidden()) {
+        await page.locator('#notification-button').click();
+      }
+      await expect(page.locator('#mark-notifications-read')).toBeVisible({ timeout: 1500 });
+    }).toPass({ timeout: 20_000 });
     await page.locator('#mark-notifications-read').click();
     await expect(page.locator('#notification-title')).toHaveText('Geen ongelezen meldingen');
     await expect(page.locator('#notification-count')).toBeHidden();

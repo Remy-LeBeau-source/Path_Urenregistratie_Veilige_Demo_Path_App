@@ -2368,6 +2368,10 @@ function refreshNotificationsReadApi(force = false) {
       const applied = applyNotificationsApiPayload(data);
       setReadApiSource("notifications", applied ? "api" : "fallback");
       if (applied) {
+        // Deze hertekening kan de paginahoogte veranderen; het scroll-event dat
+        // daarop volgt mag het geopende meldingen- of profielmenu niet sluiten
+        // (zelfde reden als bij de werkvoorraad-hydratie, W11).
+        markLayoutRender();
         renderNotifications();
         renderEmployeeAnnouncementArchive();
       }
