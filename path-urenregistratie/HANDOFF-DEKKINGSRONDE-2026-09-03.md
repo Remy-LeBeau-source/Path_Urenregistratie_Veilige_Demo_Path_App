@@ -50,7 +50,29 @@ Nieuwe cases daarbij: `DASH-N-018`, `DASH-N-019`, `DASH-H-020`, `INV-H-022`,
 
 ---
 
-## Nog te doen — resterende plan
+## Conclusie van de sweep (4 sep 2026)
+
+Na ~15 commits (0.9.173 → 1.0.14) en een systematische rondgang langs elk
+gebied: **de app was al sterk gedekt** (371 scenario's, ~4000 assertions).
+De "dunne" feature-bestanden (correction-approval 3 scenario's) bleken
+dicht-per-case — `TS-REV-API-H-005` alleen heeft 65 assertions over de hele
+correctie→herindiening→goedkeuring→heropening-keten.
+
+Wat de sweep opleverde: de echte gaten dicht (expliciete optimistische
+lock, DB-weesrijen/CASCADE/verwijderen, dagregel-grenswaarden, auditlog-
+actor-cross-check, PWA sw.js + iOS-meta, autorisatiematrix, substring-
+zoeken) **plus twee echte a11y-bugs gefixt** (dialoog gaf focus niet terug;
+links/tabindex hadden geen focusring).
+
+Design-polish: na code-check bleek de app al gedisciplineerd (button-
+hiërarchie klopt, mobiel tabel→kaart bestaat al). Alleen "laadtoestand op
+Facturen/Goedkeuringen" is een echte, optionele verbetering — geparkeerd.
+
+**Volgende sessie:** de suite is op orde. Nieuw werk gaat mee per
+[[new-work-ships-with-regression-tests]]; een volledige dekkingsronde
+opnieuw draaien heeft pas zin ná grotere functiewijzigingen.
+
+## Resterend plan (optioneel, laag)
 
 | # | Gebied | Wat nog | Grofweg |
 |---|---|---|---|
