@@ -1022,10 +1022,18 @@ Uren: {uren} uur.`;
   });
 
   test('[ADM-WR-N-006] dubbele naam is toegestaan, maar een al gebruikt e-mailadres wordt hard geblokkeerd', async ({ page }) => {
+    // In de volle seriële regressie staan na ~340 voorgaande cases honderden
+    // accounts op de gedeelde TEST-database. De echte serverwrites in de Given
+    // (beheerder + medewerker aanmaken) doen er dan langer over dan de
+    // standaard expect-timeout van 5s, terwijl het resultaat wél klopt. We
+    // rekken de test-timeout en geven de setup-asserties expliciet 20s; de
+    // eigenlijke blokkade-assertie hieronder blijft ongewijzigd.
+    test.slow();
     const loginPage = new LoginPage(page);
     const suffix = Date.now().toString().slice(-7);
     const sharedName = `Botsnaam ${suffix}`;
     const employeeEmail = `botsadres-${suffix}@example.invalid`;
+    const SETUP_TIMEOUT = 20_000;
 
     await test.step('Given er al een beheerder én een medewerker bestaan met verschillende namen', async () => {
       await loginPage.open();
@@ -1036,8 +1044,8 @@ Uren: {uren} uur.`;
       await page.locator('#edit-admin-name').fill(sharedName);
       await page.locator('#edit-admin-email').fill(`admin-${suffix}@example.invalid`);
       await page.locator('#modal-confirm').click();
-      await expect(page.locator('#modal')).toBeHidden();
-      await expect(page.locator('#administrator-list')).toContainText(sharedName);
+      await expect(page.locator('#modal')).toBeHidden({ timeout: SETUP_TIMEOUT });
+      await expect(page.locator('#administrator-list')).toContainText(sharedName, { timeout: SETUP_TIMEOUT });
 
       await page.locator('#add-employee').click();
       await page.locator('#edit-name').fill(`Andere naam ${suffix}`);
@@ -1048,7 +1056,7 @@ Uren: {uren} uur.`;
       await page.locator('#edit-broker').fill('Botsbroker');
       await page.locator('#edit-broker-email').fill('broker@example.invalid');
       await page.locator('#modal-confirm').click();
-      await expect(page.locator('#modal')).toBeHidden();
+      await expect(page.locator('#modal')).toBeHidden({ timeout: SETUP_TIMEOUT });
     });
 
     await test.step('When een nieuwe beheerder met dezelfde naam én het e-mailadres van de medewerker wordt opgeslagen', async () => {

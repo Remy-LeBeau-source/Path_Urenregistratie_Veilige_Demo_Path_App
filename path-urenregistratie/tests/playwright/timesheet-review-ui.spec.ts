@@ -45,6 +45,48 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
     resubmitted_at: string | null;
   }> = [];
 
+  // Hermetisch maken: in de volle seriële run hebben eerdere cases de
+  // employment_start_date van medewerker 2 verzet, waardoor de gemockte
+  // januari-periode buiten het dienstverband viel en het dashboard "Open uren"
+  // toonde in plaats van "Open correctie". We forceren die startdatum hier terug
+  // naar ruim vóór PERIOD_KEY; de rest van bootstrap blijft echt.
+  await page.route('**/server/api/bootstrap.php', async (route) => {
+    const response = await route.fetch();
+    const body = await response.json();
+    if (Array.isArray(body?.employees)) {
+      for (const employee of body.employees) {
+        if (Number(employee.id) === 2) {
+          employee.employment_start_date = '2025-01-01';
+          employee.employment_end_date = null;
+          employee.active = 1;
+        }
+      }
+    }
+    await route.fulfill({ response, json: body });
+  });
+
+  // Deze case gaat over de urenstaat-reviewketen. Klanturenstaten mogen de
+  // dashboardprioriteit niet vertroebelen met een openstaande actie die een
+  // eerdere case op de gedeelde TEST heeft achtergelaten.
+  await page.route('**/server/api/customer-timesheets.php**', async (route) => {
+    if (route.request().method().toUpperCase() !== 'GET') {
+      await route.continue();
+      return;
+    }
+    const url = new URL(route.request().url());
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        found: false,
+        period: url.searchParams.get('period') || '',
+        employee_id: Number(url.searchParams.get('employee_id') || 0),
+        customer_timesheet: null,
+      }),
+    });
+  });
+
   await page.route('**/server/api/timesheets.php**', async (route) => {
     const request = route.request();
     const method = request.method().toUpperCase();
