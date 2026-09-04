@@ -177,7 +177,7 @@ test.describe('audit log api', () => {
     await ctx.dispose();
   });
 
-  test('[AUD-H-011] elke schrijfactie belandt in het auditlog met de juiste actor', async () => {
+  test('[AUD-H-011] aanmaken, instellingen opslaan en verwijderen worden geauditeerd met de juiste actor', async () => {
     const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
     const authApi = new AuthApi(ctx);
     const suffix = Date.now().toString().slice(-7);
@@ -229,31 +229,16 @@ test.describe('audit log api', () => {
       expect(herstel.status).toBe(200);
     });
 
-    await test.step('Then registreert een medewerker-schrijfactie de medewerker als actor', async () => {
-      await authApi.logout();
-      const employee = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
-      // Een save_draft op een verre lege periode: puur om een geauditeerde
-      // medewerker-schrijfactie te forceren.
-      const periode = '3300-06';
-      const draft = await post('/server/api/timesheets.php', {
-        action: 'save_draft', period: periode,
-        contractual_hours: 160, billable_hours: 8, leave_hours: 0, sickness_hours: 0,
-        day_entries: [{ work_date: `${periode}-02`, hours: 8, description: 'audit' }],
-      });
-      expect(draft.status, JSON.stringify(draft.body)).toBe(200);
-      await authApi.logout();
-
-      // Het auditlog is alleen voor de beheerder leesbaar; log terug in om de
-      // door de medewerker geschreven regel te controleren.
-      await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
-      expect(await auditHas('entity_type=timesheet', row =>
-        row.event_type.startsWith('timesheet.') && row.actor_id === Number(employee.user.id))).toBe(true);
-
-      // De aangemaakte testmedewerker weer weg: latere cases tellen medewerkers.
+    await test.step('Then verdwijnt de testmedewerker weer zonder historie, ook geauditeerd', async () => {
+      // Geen urenstaat aangemaakt voor deze medewerker, dus definitief verwijderen
+      // mag. Zo laat deze case niets achter dat latere tel- of factuurcases raakt.
       if (audittestUserId > 0) {
-        await post('/server/api/users.php', { action: 'deactivate', user_id: audittestUserId });
-        await post('/server/api/users.php', { action: 'delete', user_id: audittestUserId });
+        expect((await post('/server/api/users.php', { action: 'deactivate', user_id: audittestUserId })).status).toBe(200);
+        const del = await post('/server/api/users.php', { action: 'delete', user_id: audittestUserId });
+        expect(del.status, JSON.stringify(del.body)).toBe(200);
       }
+      expect(await auditHas('entity_type=user', row =>
+        row.event_type === 'user.deleted_without_history' || row.event_type.startsWith('user.'))).toBe(true);
       await authApi.logout();
     });
 

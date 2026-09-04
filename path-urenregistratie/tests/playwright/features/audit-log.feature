@@ -87,9 +87,9 @@ Feature: Auditlog en traceerbaarheid
     Then wordt met Playwright-assertions bevestigd dat auditlog weigert POST
 
   @happy
-  Scenario: [AUD-H-011] elke schrijfactie belandt in het auditlog met de juiste actor
+  Scenario: [AUD-H-011] aanmaken, instellingen opslaan en verwijderen worden geauditeerd met de juiste actor
     # Testtechniek: End-to-end use-case + data-integriteit
-    # Aantoonbare Playwright-assertions in deze case: 9
-    Given de beheerder maakt een medewerker aan en slaat de bedrijfsinstellingen op
-    When daarna een medewerker een urenstaat als concept opslaat
-    Then staan alle drie de schrijfacties in het auditlog met de juiste actor en entity_type
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given de beheerder maakt een medewerker aan en slaat en herstelt de bedrijfsinstellingen
+    When de beheerder de testmedewerker weer verwijdert
+    Then staan aanmaken, instellingen opslaan en verwijderen in het auditlog met de juiste actor

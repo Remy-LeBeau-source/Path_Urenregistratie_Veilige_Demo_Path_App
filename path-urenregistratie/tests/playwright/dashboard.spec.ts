@@ -810,6 +810,10 @@ test('[DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakie
   await test.step('Given een medewerker die een urenstaat vult en het thema wisselt', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
+    // Wacht tot de eerste werkvoorraad-sync (hier een geblokte 503) is afgerond:
+    // die hertekening geeft een scroll-event dat anders het net geopende
+    // profielmenu weer sluit.
+    await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i, { timeout: 15_000 });
     await openProfielmenu(page);
     await page.locator('[data-profile-action="preferences"]').click();
     await page.locator('#pref-theme-trigger').click();
@@ -899,6 +903,7 @@ test('[DASH-H-004] terugkeren naar medewerkerdashboard ververst de uren en behou
   await test.step('Given een medewerker op donker thema die vanuit dashboard naar uren gaat', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
+    await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i, { timeout: 15_000 });
     await openProfielmenu(page);
     await page.locator('[data-profile-action="preferences"]').click();
     await page.locator('#pref-theme-trigger').click();
