@@ -9656,7 +9656,7 @@ function showEmployeeEditor(employeeId, prefill) {
     '<label>Voor- en achternaam<input id="edit-name" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" value="' + escapeHtml(employee.name) + '"></label>' +
     '<label>Zakelijk accountadres<input id="edit-account-email" type="email" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" value="' + escapeHtml(employee.email || (serverAccountMode ? "" : "nieuwe-medewerker@example.invalid")) + '"></label>' +
     '<label>Functie<input id="edit-role" value="' + escapeHtml(employee.role) + '"></label>' +
-    '<label>Startdatum<input id="edit-start-date" type="date" value="' + escapeHtml(employee.startDate || "2026-08-01") + '"></label>' +
+    '<label>Startdatum<input id="edit-start-date" type="date" value="' + escapeHtml(employee.startDate || (currentCalendarPeriodKey() + "-01")) + '"></label>' +
     '<label>Contract<input id="edit-contract" value="' + escapeHtml(employee.contract) + '"></label>' +
     '<label>Uren per week<input id="edit-weekly-hours" type="number" min="0" step="0.5" value="' + weeklyHoursFor(employee) + '"></label>' +
     '<p class="full form-help">Opdracht en factuurroute</p>' +

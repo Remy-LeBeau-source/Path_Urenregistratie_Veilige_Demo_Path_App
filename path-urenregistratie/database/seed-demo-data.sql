@@ -59,9 +59,9 @@ INSERT INTO employees (
   id, company_id, user_id, employee_number, full_name, job_title,
   employment_type, weekly_contract_hours, employment_start_date, active
 ) VALUES
-  (1, 1, 3, 'EMP-001', 'Marc de Roon', 'Testconsultant', 'midlance_70_30', 40.00, '2026-01-01', TRUE),
-  (2, 1, 4, 'EMP-002', 'Stasjo van Bakel', 'Test Engineer', 'fixed', 36.00, '2026-01-01', TRUE),
-  (3, 1, 5, 'EMP-003', 'Brian Hek', 'Test Engineer', 'fixed', 36.00, '2026-01-01', TRUE),
+  (1, 1, 3, 'EMP-001', 'Marc de Roon', 'Testconsultant', 'midlance_70_30', 40.00, '2026-05-01', TRUE),
+  (2, 1, 4, 'EMP-002', 'Stasjo van Bakel', 'Test Engineer', 'fixed', 36.00, '2026-05-01', TRUE),
+  (3, 1, 5, 'EMP-003', 'Brian Hek', 'Test Engineer', 'fixed', 36.00, '2026-05-01', TRUE),
   (4, 1, 6, 'EMP-004', 'Shawn-Douglas Nahar', 'Test Automation Engineer', 'midlance_75_25', 40.00, '2026-07-01', TRUE);
 
 INSERT INTO counterparties (
