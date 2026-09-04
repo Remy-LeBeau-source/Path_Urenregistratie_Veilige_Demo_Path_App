@@ -1472,3 +1472,29 @@ test('[MOB-H-021] de service worker en de iOS-beginschermmeta vormen een geldig 
     expect(icon.headers()['content-type'] || '').toMatch(/image\//);
   });
 });
+
+test('[MOB-H-022] de mobiele Home-knop zet de maandkiezer terug op de actuele maand', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await isolateFrontendState(page);
+
+  await test.step('Given een mobiele beheerder heeft een eerdere maand gekozen', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
+    await setPeriod(page, '2026-07');
+    await expect(page.locator('#period-label')).toHaveText('Juli 2026');
+    await openView(page, 'invoices');
+    await expect(page.locator('#period-label')).toHaveText('Juli 2026');
+  });
+
+  await test.step('When de beheerder op de mobiele Home-knop tikt', async () => {
+    await page.locator('.mobile-brand-home').click();
+    await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
+  });
+
+  await test.step('Then staat de maandkiezer weer op de actuele kalendermaand', async () => {
+    await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
+    await expect(page.locator('#period-picker')).toHaveValue('2026-08');
+    await assertNoHorizontalOverflow(page);
+  });
+});

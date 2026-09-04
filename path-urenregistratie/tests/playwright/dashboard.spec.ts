@@ -156,7 +156,7 @@ test('[DASH-H-002] employee dashboard opent zonder console errors', async ({ pag
   });
 });
 
-test('[DASH-H-018] iedere login opent de actuele maand en bewaart daarna de handmatige keuze', async ({ page }) => {
+test('[DASH-H-018] elke login en elke Dashboard-klik opent de actuele maand; een handmatige maand blijft alleen op andere schermen', async ({ page }) => {
   const loginPage = new LoginPage(page);
   await page.clock.setFixedTime(new Date('2026-09-02T10:00:00.000Z'));
 
@@ -195,16 +195,31 @@ test('[DASH-H-018] iedere login opent de actuele maand en bewaart daarna de hand
     await expect(page.locator('#period-label')).toHaveText('September 2026');
   });
 
-  await test.step('When Backoffice augustus kiest en binnen de app navigeert', async () => {
+  await test.step('When Backoffice augustus kiest en naar Facturen navigeert', async () => {
     await page.locator('#period-prev').click();
     await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
     await page.locator('button[data-view="invoices"]').click();
     await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
-    await page.locator('button[data-view="dashboard"]').click();
   });
 
-  await test.step('Then blijft augustus binnen de sessie gekozen', async () => {
+  await test.step('Then blijft augustus gekozen op de andere schermen', async () => {
+    await page.locator('button[data-view="approvals"]').click();
     await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
+    await page.locator('button[data-view="invoices"]').click();
+    await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
+  });
+
+  await test.step('When Backoffice daarna op Dashboard klikt', async () => {
+    await page.locator('button[data-view="dashboard"]').click();
+    await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
+  });
+
+  await test.step('Then springt de maandkiezer terug naar de actuele kalendermaand september', async () => {
+    await expect(page.locator('#period-label')).toHaveText('September 2026');
+    await expect(page.locator('#period-picker')).toHaveValue('2026-09');
+    // en die terugsprong houdt stand zodra Backoffice weer een ander scherm opent
+    await page.locator('button[data-view="invoices"]').click();
+    await expect(page.locator('#period-label')).toHaveText('September 2026');
   });
 
   await test.step('And een nieuwe medewerkerlogin begint opnieuw in september', async () => {
@@ -223,6 +238,33 @@ test('[DASH-H-018] iedere login opent de actuele maand en bewaart daarna de hand
     await expect(page.locator('#customer-timesheet-period')).toHaveValue('2026-09');
     await page.locator('button[data-view="employee-dashboard"]').click();
     await expect(page.locator('#period-label')).toHaveText('September 2026');
+  });
+});
+
+test('[DASH-H-021] de medewerker keert met de Dashboard-knop terug naar de actuele maand na een blik op een oudere maand', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given de medewerker heeft een eerdere maand geopend en is doorgelopen naar Mijn uren', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
+    await page.locator('#period-prev').click();
+    await expect(page.locator('#period-label')).toHaveText('Juli 2026');
+    await page.locator('button[data-view="timesheet"]').click();
+    await expect(page.locator('#timesheet-period-title')).toHaveText('Juli 2026');
+  });
+
+  await test.step('When de medewerker op Dashboard klikt', async () => {
+    await page.locator('button[data-view="employee-dashboard"]').click();
+    await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
+  });
+
+  await test.step('Then staat de maandkiezer weer op de actuele kalendermaand augustus, ook op de andere schermen', async () => {
+    await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
+    await expect(page.locator('#period-picker')).toHaveValue('2026-08');
+    await expect(page.locator('#employee-dashboard-period')).toHaveText('Augustus 2026');
+    await page.locator('button[data-view="timesheet"]').click();
+    await expect(page.locator('#timesheet-period-title')).toHaveText('Augustus 2026');
   });
 });
 

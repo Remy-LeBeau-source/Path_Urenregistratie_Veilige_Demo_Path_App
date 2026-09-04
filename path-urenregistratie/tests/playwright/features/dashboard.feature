@@ -24,14 +24,16 @@ Feature: Dashboard en open werkvoorraad
     Then alleen medewerkersinformatie wordt getoond zonder consolefouten
 
   @happy
-  Scenario: [DASH-H-018] iedere login opent de actuele maand en bewaart daarna de handmatige keuze
+  Scenario: [DASH-H-018] elke login en elke Dashboard-klik opent de actuele maand; een handmatige maand blijft alleen op andere schermen
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 24
+    # Aantoonbare Playwright-assertions in deze case: 27
     Given Backoffice in september inlogt met een eerder bewaarde maand
     Then opent de actuele kalendermaand voor Backoffice
     And Goedkeuringen en Facturen tonen de juiste septemberbeginstand
-    When Backoffice augustus kiest en binnen de app navigeert
-    Then blijft augustus binnen de sessie gekozen
+    When Backoffice augustus kiest en naar Facturen navigeert
+    Then blijft augustus gekozen op de andere schermen
+    When Backoffice daarna op Dashboard klikt
+    Then springt de maandkiezer terug naar de actuele kalendermaand september
     And een nieuwe medewerkerlogin begint opnieuw in september
 
   @negative
@@ -184,6 +186,14 @@ Feature: Dashboard en open werkvoorraad
     Given een medewerker die een toekomstige maand probeert te openen
     When de medewerker teruggaat naar het dashboard
     Then staat de periode op augustus en toont het overzicht geen toekomstige maanden
+
+  @happy
+  Scenario: [DASH-H-021] de medewerker keert met de Dashboard-knop terug naar de actuele maand na een blik op een oudere maand
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given de medewerker heeft een eerdere maand geopend en is doorgelopen naar Mijn uren
+    When de medewerker op Dashboard klikt
+    Then staat de maandkiezer weer op de actuele kalendermaand augustus, ook op de andere schermen
 
   @happy
   Scenario: [DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels

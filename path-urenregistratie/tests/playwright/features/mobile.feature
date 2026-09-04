@@ -185,3 +185,11 @@ Feature: Mobiele gebruikerservaring
     Given de pagina registreert een service worker
     When sw.js wordt opgehaald
     Then is sw.js geldig JavaScript zonder fetch-handler en staan de iOS-beginschermmeta compleet in de pagina
+
+  @happy
+  Scenario: [MOB-H-022] de mobiele Home-knop zet de maandkiezer terug op de actuele maand
+    # Testtechniek: Responsive viewport + toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given een mobiele beheerder heeft een eerdere maand gekozen
+    When de beheerder op de mobiele Home-knop tikt
+    Then staat de maandkiezer weer op de actuele kalendermaand

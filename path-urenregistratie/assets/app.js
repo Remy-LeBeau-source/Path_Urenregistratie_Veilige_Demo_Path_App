@@ -5018,13 +5018,32 @@ function recordHasPeriodActivity(record) {
 
 
 function resetHomeDashboardState(role = state.currentRole) {
-  // Terugkeren naar het startscherm is gewone navigatie binnen dezelfde
-  // sessie. Alleen een nieuwe login kiest opnieuw de actuele kalendermaand;
-  // een maand die de gebruiker daarna bewust kiest blijft app-breed actief.
+  // Terugkeren naar het startscherm zet de app terug in de "nu"-stand: de
+  // maandkiezer springt naar de actuele kalendermaand (Europe/Amsterdam),
+  // net als bij een verse login. Zo betekent "Dashboard" altijd "overzicht
+  // van deze maand" en blijft een eerder gekozen maand niet onzichtbaar
+  // hangen wanneer je naar een ander scherm navigeert.
+  const currentMonthKey = currentCalendarPeriodKey();
+  const monthChanged = Boolean(parsePeriodKey(currentMonthKey)) && state.selectedPeriodKey !== currentMonthKey;
+  if (monthChanged) {
+    state.selectedPeriodKey = currentMonthKey;
+    ensurePeriodRecords(currentMonthKey);
+    state.invoiceDetailCollapsed = false;
+    readApiRuntime.invoiceDocumentFilter = "all";
+    readApiRuntime.invoicePage = 1;
+    syncInvoiceFilterControls("all");
+  }
   state.invoiceFilter = "all";
   state.adminTaskFilter = "all";
   persistState();
-  renderPeriodHeadings();
+  // Bij een maandwissel moet elk scherm de nieuwe periode tonen, niet alleen
+  // het dashboard; anders staat "Mijn uren" of "Facturen" nog op de oude maand
+  // zodra je er heen navigeert.
+  if (monthChanged) {
+    renderAll();
+  } else {
+    renderPeriodHeadings();
+  }
 }
 
 function openPeriodSummaries() {
