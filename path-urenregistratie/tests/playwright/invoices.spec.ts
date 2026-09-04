@@ -824,3 +824,47 @@ test('[INV-H-023] documentarchief noemt wie de klanturenstaat buiten de app afha
     await expect(blok.locator('.document-note-actor')).toContainText('14 augustus 2026');
   });
 });
+
+test('[INV-H-024] het factuurzoekveld matcht op een paar letters, niet alleen op de volledige naam', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  const invoicesPage = new InvoicesPage(page);
+  const items = Array.from({ length: 12 }, (_, index) => ({
+    id: 4000 + index, timesheet_id: 5000 + index, employee_id: 4 + (index % 4), assignment_id: 4 + (index % 4),
+    invoice_number: `ZOEK-${String(index + 1).padStart(3, '0')}`,
+    employee_name: index % 2 === 0 ? 'Marloes Bergkamp' : 'Ivar de Wilde',
+    period_key: '2026-08', status: 'ready', timesheet_status: 'invoiced', total: 1000 + index, locked: true,
+    invoice_download_url: `/server/api/invoices.php?action=download&invoice_id=${4000 + index}`,
+    customer_timesheet_status: 'approved',
+    customer_timesheet_download_url: `/server/api/customer-timesheets.php?action=download&employee_id=${4 + (index % 4)}&period=2026-08`,
+  }));
+  await page.route('**/server/api/invoices.php?period=*', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items }) }));
+  await loginPage.open();
+  await loginPage.loginAsAdmin();
+  await invoicesPage.open();
+  await invoicesPage.selectPeriod('2026-08');
+  await expect(page.locator('#invoice-rows tr')).toHaveCount(12);
+
+  await test.step('Een paar letters van de voornaam filtert al', async () => {
+    await page.locator('#invoice-search').fill('mar');
+    await expect(page.locator('#invoice-rows tr')).toHaveCount(6);
+    await expect(page.locator('#invoice-rows')).toContainText('Marloes Bergkamp');
+    await expect(page.locator('#invoice-rows')).not.toContainText('Ivar de Wilde');
+  });
+
+  await test.step('Een deel van het factuurnummer werkt ook', async () => {
+    await page.locator('#invoice-search').fill('zoek-003');
+    await expect(page.locator('#invoice-rows tr')).toHaveCount(1);
+    await expect(page.locator('#invoice-rows')).toContainText('ZOEK-003');
+  });
+
+  await test.step('Een middenstuk van de achternaam matcht ook (substring, geen prefix)', async () => {
+    await page.locator('#invoice-search').fill('kamp');
+    await expect(page.locator('#invoice-rows tr')).toHaveCount(6);
+    await expect(page.locator('#invoice-rows')).toContainText('Marloes Bergkamp');
+  });
+
+  await test.step('Leegmaken toont alles weer', async () => {
+    await page.locator('#invoice-search').fill('');
+    await expect(page.locator('#invoice-rows tr')).toHaveCount(12);
+  });
+});

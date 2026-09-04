@@ -175,3 +175,11 @@ Feature: Facturen bekijken en beheren
     Given een factuur waarvan de klanturenstaat rechtstreeks is gemaild met reden en registratiegegevens
     When Backoffice het documentarchief opent
     Then staan de reden en de naam met datum van de registratie in beeld
+
+  @happy
+  Scenario: [INV-H-024] het factuurzoekveld matcht op een paar letters, niet alleen op de volledige naam
+    # Testtechniek: Equivalentieklassen
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given een factuurlijst met twee medewerkers
+    When de beheerder een paar letters, een deel van het factuurnummer of een middenstuk van de naam typt
+    Then filtert de lijst live op die substring en toont leegmaken alles weer
