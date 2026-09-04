@@ -298,6 +298,47 @@ test('[DASH-N-021] een lege oudere maand openen voegt geen fantoom-open-acties t
   });
 });
 
+test('[DASH-N-022] een medewerker met een toekomstige startdatum verschijnt niet in Teamstatus of Klanturenstaten vóór indiensttreding', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  const suffix = Date.now().toString().slice(-7);
+  const futureName = `Toekomst Medewerker ${suffix}`;
+
+  await test.step('Given de beheerder een nieuwe medewerker aanmaakt die pas volgende maand start', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
+    await page.locator('[data-view="employees"]').click();
+    await page.locator('#add-employee').click();
+    await page.locator('#edit-name').fill(futureName);
+    await page.locator('#edit-account-email').fill(`toekomst-${suffix}@example.invalid`);
+    await page.locator('#edit-role').fill('Consultant');
+    await page.locator('#edit-client').fill('Toekomstklant');
+    await page.locator('#edit-project').fill(`TOEK-${suffix}`);
+    await page.locator('#edit-broker').fill('Toekomstbroker');
+    await page.locator('#edit-broker-email').fill('broker@example.invalid');
+    await page.locator('#edit-start-date').fill('2026-09-01');
+    await page.locator('#modal-confirm').click();
+    await expect(page.locator('#modal')).toBeHidden();
+  });
+
+  await test.step('Then blijft de nieuwe medewerker weg uit augustus (vóór indiensttreding)', async () => {
+    await page.locator('button[data-view="dashboard"]').click();
+    await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
+    await expect(page.locator('#dashboard-employee-rows')).not.toContainText(futureName);
+    await expect(page.locator('#customer-timesheet-admin-list')).not.toContainText(futureName);
+  });
+
+  await test.step('When de beheerder naar september bladert (de startmaand)', async () => {
+    await page.locator('#period-next').click();
+    await expect(page.locator('#period-label')).toHaveText('September 2026');
+  });
+
+  await test.step('Then verschijnt de medewerker wél in Teamstatus en Klanturenstaten voor september', async () => {
+    await expect(page.locator('#dashboard-employee-rows')).toContainText(futureName);
+    await expect(page.locator('#customer-timesheet-admin-list')).toContainText(futureName);
+  });
+});
+
 test('[DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad niet', async ({ page }) => {
   const loginPage = new LoginPage(page);
 

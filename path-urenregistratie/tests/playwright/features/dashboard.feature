@@ -37,6 +37,15 @@ Feature: Dashboard en open werkvoorraad
     And een nieuwe medewerkerlogin begint opnieuw in september
 
   @negative
+  Scenario: [DASH-N-022] een medewerker met een toekomstige startdatum verschijnt niet in Teamstatus of Klanturenstaten vóór indiensttreding
+    # Testtechniek: Grenswaardenanalyse
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given de beheerder een nieuwe medewerker aanmaakt die pas volgende maand start
+    Then blijft de nieuwe medewerker weg uit augustus (vóór indiensttreding)
+    When de beheerder naar september bladert (de startmaand)
+    Then verschijnt de medewerker wél in Teamstatus en Klanturenstaten voor september
+
+  @negative
   Scenario: [DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad niet
     # Testtechniek: Negatieve equivalentieklasse + error guessing
     # Aantoonbare Playwright-assertions in deze case: 1

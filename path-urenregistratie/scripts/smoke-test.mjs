@@ -241,7 +241,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("1.0.21"), "Het zichtbare versienummer moet 1.0.21 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("1.0.22"), "Het zichtbare versienummer moet 1.0.22 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -1529,7 +1529,12 @@ assert(document.querySelector("#dashboard-next-action-card") && document.querySe
 assert(document.querySelector('[data-admin-task-month="2026-07"]') && document.querySelector('[data-admin-task-month="2026-08"]'), "Een lege gekozen maand mag de echte open maandblokken niet verbergen");
 choosePeriod("#period-month-picker", "#period-year-picker", "2026-07");
 assert(document.querySelector("#period-label").textContent === "Juli 2026" && document.querySelector("#customer-timesheet-admin-title").textContent.includes("Juli 2026") && document.querySelector("#view-dashboard").classList.contains("is-active"), "De maandkiezer moet alleen de detailpanelen wijzigen; de globale werkvoorraad blijft staan");
-assert(document.querySelector("#close-progress-title").textContent === "Procesmeter juli · 0 van 4 fasen" && document.querySelector("#close-progress-note").textContent.includes("Geen taakteller") && document.querySelector("#close-progress-note").textContent.includes("klanturensta") && document.querySelector("#close-progress-note").textContent.includes("daarnaast open"), "Het voortgangsblok moet expliciet van de één-op-één taaktelling worden onderscheiden");
+// Sinds de startdatumfix telt de Teamstatus/procesmeter alleen medewerkers mee die
+// in juli al in dienst waren. "Nieuwe Testmedewerker" (hierboven aangemaakt, start
+// pas deze kalendermaand) telde voorheen ten onrechte mee tegen juli en hield de
+// procesmeter kunstmatig op "0 van 4 fasen" -- ook al hadden alle 4 échte
+// juli-medewerkers hun maand allang afgerond. Juli is dus terecht 4 van 4.
+assert(document.querySelector("#close-progress-title").textContent === "Procesmeter juli · 4 van 4 fasen" && document.querySelector("#close-progress-note").textContent.includes("Geen taakteller") && document.querySelector("#close-progress-note").textContent.includes("klanturensta") && document.querySelector("#close-progress-note").textContent.includes("daarnaast open"), "Het voortgangsblok moet expliciet van de één-op-één taaktelling worden onderscheiden");
 assert(document.querySelector(".workflow-panel .workflow-progress-card #close-progress-ring") && !document.querySelector(".hero-card #close-progress-ring"), "De procesmeter moet bij de maanddetails staan en niet meer in de globale hoofdsamenvatting");
 
 click('[data-view="settings"]');
@@ -2059,7 +2064,7 @@ assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Pla
 }
 
 dom.window.close();
-console.log("Path v1.0.21 volledige smoke test: geslaagd");
+console.log("Path v1.0.22 volledige smoke test: geslaagd");
 // app.js schedules browser refresh timers. In JSDOM those timers can keep Node
 // alive after every assertion has completed, which made the release check look
 // stuck. End explicitly only after the complete smoke contract is green.

@@ -5206,7 +5206,9 @@ function renderCustomerTimesheetAdmin() {
   if (!list) return;
   const period = currentPeriod();
   document.querySelector("#customer-timesheet-admin-title").textContent = "Klanturenstaten · " + period.label;
-  const rows = activeEmployees().filter(employee => employee.customerTimesheetExpected !== false).map(employee => ({ employee, record: recordFor(employee.id, period.key) }));
+  const rows = activeEmployees()
+    .filter(employee => employee.customerTimesheetExpected !== false && employeeStartedByPeriodEnd(employee, period.key))
+    .map(employee => ({ employee, record: recordFor(employee.id, period.key) }));
   const reviewCount = rows.filter(item => customerTimesheetFor(item.record).status === "received").length;
   const employeeCount = rows.filter(item => ["missing", "draft", "resubmit"].includes(customerTimesheetFor(item.record).status)).length;
   document.querySelector("#customer-timesheet-admin-summary").textContent = rows.length + " verwacht · " + reviewCount + " te controleren · " + employeeCount + " wacht op medewerker" + (employeeCount === 1 ? "" : "s");
@@ -5646,7 +5648,12 @@ function renderDashboard() {
   const now = new Date();
   const currentMonthKey = makePeriodKey(now.getFullYear(), now.getMonth());
   const isFuturePeriod = period.key > currentMonthKey;
-  const rows = activeEmployees().map(employee => ({ employee, record: recordFor(employee.id) }));
+  // activeEmployees() checkt alleen het active-vinkje, niet de startdatum. Zonder
+  // deze filter verscheen een medewerker die pas volgende maand begint al als
+  // "Nog invullen" in een maand vóór indiensttreding.
+  const rows = activeEmployees()
+    .filter(employee => employeeStartedByPeriodEnd(employee, period.key))
+    .map(employee => ({ employee, record: recordFor(employee.id) }));
   const attentionRows = rows.filter(item => ["draft", "correction"].includes(item.record.timesheetStatus));
   const submittedRows = rows.filter(item => item.record.timesheetStatus === "submitted");
   document.querySelector("#dashboard-team-title").textContent = "Teamstatus · " + period.label;
