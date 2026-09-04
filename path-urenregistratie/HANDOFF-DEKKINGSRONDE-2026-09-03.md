@@ -23,6 +23,21 @@ sessie kan die oppakken. Trigger: de gebruiker zegt **"dekkingsronde"**.
 | 1.0.6 | Dekkingsronde 7 | `[A11Y-H-004]` + fix: dialoog geeft focus terug naar de opener i.p.v. de body |
 | 1.0.7 | Design 1 | `[A11Y-H-005]` + fix: één focus-visible-ring voor a/summary/[tabindex]/textarea |
 | 1.0.8 | Opschonen | 5 ongebruikte functies + dode `.invoice-source-field` weg (~120 regels) |
+| 1.0.9 | Handoff | dit document bijgewerkt |
+| 1.0.10 | Dekkingsronde 8 | `[ROLE-N-004]` autorisatiematrix: medewerker krijgt 401/403 op elke beheerder-only schrijfactie + leesbron |
+
+**Bevindingen tijdens de sweep (nog niet als case, wél noteren):**
+- De app is al sterk gedekt (370 scenario's). Veel gebieden die ik nakeek
+  (invoice-company-identity, customer-timesheet-api, notifications, mail-delivery)
+  bleken al grondig.
+- `[INV-ID-H-011]` (betalingstermijn uit instellingen → factuur-PDF) geprobeerd
+  maar de `#save-settings`-POST vuurde niet betrouwbaar na een `<select>`-wijziging
+  in de testcontext → teruggedraaid. Follow-up: uitzoeken of de settings-form de
+  `#setting-payment-term`-select als "dirty" markeert; anders een kleine fix daar
+  plus de case.
+- `send_to_broker` dedup (commit 8fb340f) is alleen via een echte race te
+  raken (statusguard `=== 'approved'` blokkeert een simpele tweede call).
+  Geen deterministische case mogelijk zonder concurrency-harnas.
 
 **Direct hiervoor in dezelfde sessie (0.9.157 → 0.9.172):** mobiele
 document-flow, kruisjes, PWA-naam + navy statusbalk per omgeving, leesbaarheid,
