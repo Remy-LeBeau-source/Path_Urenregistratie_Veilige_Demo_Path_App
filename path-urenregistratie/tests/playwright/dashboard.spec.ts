@@ -241,16 +241,15 @@ test('[DASH-H-018] elke login en elke Dashboard-klik opent de actuele maand; een
   });
 });
 
-test('[DASH-H-021] de medewerker keert met de Dashboard-knop terug naar de actuele maand na een blik op een oudere maand', async ({ page }) => {
+test('[DASH-H-021] de medewerker keert zowel via Dashboard als via Mijn uren terug naar de actuele maand na een blik op een oudere maand', async ({ page }) => {
   const loginPage = new LoginPage(page);
 
-  await test.step('Given de medewerker heeft een eerdere maand geopend en is doorgelopen naar Mijn uren', async () => {
+  await test.step('Given de medewerker heeft op Mijn uren zelf een eerdere maand geopend', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
     await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
-    await page.locator('#period-prev').click();
-    await expect(page.locator('#period-label')).toHaveText('Juli 2026');
     await page.locator('button[data-view="timesheet"]').click();
+    await page.locator('#period-prev').click();
     await expect(page.locator('#timesheet-period-title')).toHaveText('Juli 2026');
   });
 
@@ -259,12 +258,76 @@ test('[DASH-H-021] de medewerker keert met de Dashboard-knop terug naar de actue
     await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
   });
 
-  await test.step('Then staat de maandkiezer weer op de actuele kalendermaand augustus, ook op de andere schermen', async () => {
+  await test.step('Then staat de maandkiezer weer op de actuele kalendermaand augustus', async () => {
     await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
     await expect(page.locator('#period-picker')).toHaveValue('2026-08');
     await expect(page.locator('#employee-dashboard-period')).toHaveText('Augustus 2026');
+  });
+
+  await test.step('When de medewerker opnieuw juli opent, via Mededelingen navigeert en dan zélf op Mijn uren klikt (niet op Dashboard)', async () => {
     await page.locator('button[data-view="timesheet"]').click();
+    await page.locator('#period-prev').click();
+    await expect(page.locator('#timesheet-period-title')).toHaveText('Juli 2026');
+    await page.locator('button[data-view="employee-announcements"]').click();
+    await expect(page.locator('#period-picker')).toHaveValue('2026-07');
+    await page.locator('button[data-view="timesheet"]').click();
+  });
+
+  await test.step('Then zet ook de Mijn uren-tab zelf de maand terug op augustus, zonder via Dashboard te gaan', async () => {
     await expect(page.locator('#timesheet-period-title')).toHaveText('Augustus 2026');
+    await expect(page.locator('#period-picker')).toHaveValue('2026-08');
+  });
+});
+
+test('[DASH-N-023] een medewerker kan niet naar een maand vóór de eigen indiensttreding bladeren', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given de medewerker (in dienst sinds mei 2026) op de actuele kalendermaand staat', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
+  });
+
+  await test.step('When de medewerker probeert een maand vóór de startdatum te openen', async () => {
+    await openPaneel(page, '#period-month-picker', '#period-month-panel');
+    await page.locator('#period-month-panel [data-period-month="04"][data-month-control="#period-month-picker"]').click();
+  });
+
+  await test.step('Then blijft de maand op augustus staan en verschijnt een duidelijke melding', async () => {
+    await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
+    await expect(page.locator('#toast')).toContainText('vóór je indiensttreding');
+    await expect(page.locator('#toast')).toContainText('Mei 2026');
+  });
+});
+
+test('[DASH-N-024] een lokaal record van vóór indiensttreding verschijnt niet in Mijn maanden', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given de medewerker is ingelogd en er bestaat lokaal een record van vóór de startdatum', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await expect(page.locator('#employee-history')).toBeVisible();
+    await page.evaluate(() => {
+      const runtime = window as typeof window & {
+        currentEmployee: () => { id: number };
+        recordFor: (employeeId: number, periodKey: string) => { entries: number[][]; timesheetStatus: string };
+        persistState: () => void;
+        renderAll: () => void;
+      };
+      const employeeId = runtime.currentEmployee().id;
+      // April 2026 ligt vóór de indiensttreding (mei 2026) van deze medewerker op
+      // TEST, maar krijgt hier toch declarabele uren -- exact het scenario waarbij
+      // een lokaal record kan bestaan van vóór de startdatum.
+      const april = runtime.recordFor(employeeId, '2026-04');
+      april.entries = [[8, 0, 0, 0, 0]];
+      april.timesheetStatus = 'approved';
+      runtime.persistState();
+      runtime.renderAll();
+    });
+  });
+
+  await test.step('Then blijft april 2026 weg uit de historie, ook al heeft het record uren', async () => {
+    await expect(page.locator('#employee-history')).not.toContainText('April 2026');
   });
 });
 
@@ -273,28 +336,78 @@ test('[DASH-N-021] een lege oudere maand openen voegt geen fantoom-open-acties t
 
   let totalOnCalendarMonth = '';
 
+  // Juni 2026 valt binnen het dienstverband van deze medewerker (start mei
+  // 2026), maar de gedeelde TEST-seed kan er restdata van eerdere testruns in
+  // hebben staan. We mocken de leesroutes voor precies deze medewerker+maand
+  // zodat juni gegarandeerd leeg is, ongeacht wat er al in de database staat.
+  await page.route('**/server/api/timesheets.php**', async route => {
+    const url = new URL(route.request().url());
+    if (route.request().method().toUpperCase() !== 'GET' || url.searchParams.get('period') !== '2026-06' || url.searchParams.get('employee_id') !== '2') {
+      await route.continue();
+      return;
+    }
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, found: false, period: '2026-06', employee_id: 2, timesheet: null }) });
+  });
+  await page.route('**/server/api/customer-timesheets.php**', async route => {
+    const url = new URL(route.request().url());
+    if (route.request().method().toUpperCase() !== 'GET' || url.searchParams.get('period') !== '2026-06' || url.searchParams.get('employee_id') !== '2') {
+      await route.continue();
+      return;
+    }
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, found: false, period: '2026-06', employee_id: 2, customer_timesheet: null }) });
+  });
+
   await test.step('Given de medewerker ziet zijn open acties in de actuele kalendermaand augustus', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
     await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i, { timeout: 15_000 });
     await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
+    // De gedeelde TEST-seed heeft juni al met echte activiteit (een concept met
+    // geboekte uren); de eerste hydratie haalt die dus terecht op vóórdat onze
+    // route-mock hierboven kan ingrijpen. Zet juni na die hydratie lokaal leeg,
+    // zodat deze case een écht leeg-maar-in-dienst scenario test i.p.v. te
+    // vertrouwen op wat er toevallig al in de seed staat.
+    await page.evaluate(() => {
+      const runtime = window as typeof window & {
+        currentEmployee: () => { id: number };
+        recordFor: (employeeId: number, periodKey: string) => {
+          entries: number[][]; leave: number; sick: number; timesheetStatus: string;
+          invoiceStatus: string; payrollStatus: string; correctionHistory: unknown[];
+          customerTimesheet: { status: string };
+        };
+        persistState: () => void;
+        renderAll: () => void;
+      };
+      const employeeId = runtime.currentEmployee().id;
+      const june = runtime.recordFor(employeeId, '2026-06');
+      june.entries = [];
+      june.leave = 0;
+      june.sick = 0;
+      june.timesheetStatus = 'draft';
+      june.invoiceStatus = 'concept';
+      june.payrollStatus = 'concept';
+      june.correctionHistory = [];
+      june.customerTimesheet.status = 'missing';
+      runtime.persistState();
+      runtime.renderAll();
+    });
     totalOnCalendarMonth = (await page.locator('#employee-open-task-total').textContent() || '').trim();
     expect(totalOnCalendarMonth).toMatch(/^\d+ open acties$/);
-    await expect(page.locator('[data-employee-open-month="2026-04"]')).toHaveCount(0);
+    await expect(page.locator('[data-employee-open-month="2026-06"]')).toHaveCount(0);
   });
 
-  await test.step('When de medewerker handmatig een lege oudere maand (april 2026) opent', async () => {
+  await test.step('When de medewerker handmatig een lege oudere maand (juni 2026) opent', async () => {
     await openPaneel(page, '#period-month-picker', '#period-month-panel');
-    await page.locator('#period-month-panel [data-period-month="04"][data-month-control="#period-month-picker"]').click();
-    await expect(page.locator('#period-label')).toHaveText('April 2026');
+    await page.locator('#period-month-panel [data-period-month="06"][data-month-control="#period-month-picker"]').click();
+    await expect(page.locator('#period-label')).toHaveText('Juni 2026');
     await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i, { timeout: 15_000 });
   });
 
-  await test.step('Then verschijnt april niet als open-actiemaand en blijven het totaal en de kalendermaand ongewijzigd', async () => {
-    await expect(page.locator('[data-employee-open-month="2026-04"]')).toHaveCount(0);
+  await test.step('Then verschijnt juni niet als open-actiemaand en blijven het totaal en de kalendermaand ongewijzigd', async () => {
+    await expect(page.locator('[data-employee-open-month="2026-06"]')).toHaveCount(0);
     await expect(page.locator('[data-employee-open-month="2026-08"]').first()).toBeVisible();
     await expect(page.locator('#employee-open-task-total')).toHaveText(totalOnCalendarMonth);
-    await expect(page.locator('#employee-dashboard-next')).not.toContainText('April 2026');
+    await expect(page.locator('#employee-dashboard-next')).not.toContainText('Juni 2026');
   });
 });
 
@@ -698,31 +811,33 @@ test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker e
   });
 
   await test.step('When medewerkers alle vijf wachtende acties via de zichtbare interface afronden', async () => {
+    // Mijn uren zet de maand terug op nu (net als Dashboard/Home) -- dus eerst
+    // de tab openen en dán pas de maand kiezen, niet andersom.
     await openDemoEmployee(2);
-    await chooseMonth('06');
     await page.locator('button[data-view="timesheet"]').click();
+    await chooseMonth('06');
     await page.locator('#submit-timesheet').click();
 
-    await chooseMonth('07');
     await page.locator('button[data-view="timesheet"]').click();
+    await chooseMonth('07');
     await page.locator('#customer-timesheet-file').setInputFiles(demoPdf);
     await page.locator('#customer-timesheet-submit').click();
     await expect(page.locator('#toast')).toContainText('ingediend bij Backoffice');
 
-    await chooseMonth('08');
     await page.locator('button[data-view="timesheet"]').click();
+    await chooseMonth('08');
     await page.locator('#submit-timesheet').click();
     await expect(page.locator('#employee-open-task-total')).toHaveText('0 open acties');
 
     await openDemoEmployee(3);
-    await chooseMonth('06');
     await page.locator('button[data-view="timesheet"]').click();
+    await chooseMonth('06');
     await page.locator('#customer-timesheet-file').setInputFiles(demoPdf);
     await page.locator('#customer-timesheet-submit').click();
     await expect(page.locator('#toast')).toContainText('ingediend bij Backoffice');
 
-    await chooseMonth('07');
     await page.locator('button[data-view="timesheet"]').click();
+    await chooseMonth('07');
     await page.locator('#submit-timesheet').click();
     await expect(page.locator('#employee-open-task-total')).toHaveText('0 open acties');
   });

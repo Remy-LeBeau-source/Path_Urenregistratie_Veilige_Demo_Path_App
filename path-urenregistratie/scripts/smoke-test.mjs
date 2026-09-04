@@ -241,7 +241,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("1.0.23"), "Het zichtbare versienummer moet 1.0.23 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("1.0.24"), "Het zichtbare versienummer moet 1.0.24 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -563,6 +563,15 @@ assert(document.querySelector("#customer-timesheet-save-draft").disabled && docu
 click("#customer-timesheet-month");
 const _origCalendarKey = dom.window.currentCalendarPeriodKey;
 dom.window.currentCalendarPeriodKey = () => "9999-12";
+// setPeriod() blokkeert voor medewerkers nu ook periodes vóór hun eigen
+// employment_start_date. Dit blok test bewust onbegrensde vrije navigatie
+// (jaargrenzen, verre toekomst/verleden), dus die realistische ondergrens
+// zetten we hier net zo tijdelijk buiten werking als currentCalendarPeriodKey --
+// currentEmployee() geeft de echte, gedeelde state-referentie terug, dus deze
+// mutatie werkt door in elke volgende setPeriod()-aanroep in dit blok.
+const _employeeUnderTest = dom.window.currentEmployee();
+const _origEmployeeStartDate = _employeeUnderTest.startDate;
+_employeeUnderTest.startDate = null;
 choosePeriod("#customer-timesheet-month", "#customer-timesheet-year", "2026-09");
 assert(document.querySelector("#customer-timesheet-subject").textContent === "Klanturenstaat Stasjo van Bakel – september 2026 ter controle", "De onderwerpregel moet na de periodekeuze automatisch worden ingevuld");
 assert(document.querySelector("#customer-timesheet-mail-route").textContent.includes("Van Stasjo van Bakel aan Path Backoffice") && document.querySelector("#customer-timesheet-mail-route").textContent.includes("backoffice@pathconsultancy.nl"), "De medewerker moet duidelijk zien dat zijn bericht eerst bij de beheerder van Backoffice komt");
@@ -664,6 +673,7 @@ assert(document.querySelector("#period-label").textContent === "Januari 2024", "
 choosePeriod("#period-month-picker", "#period-year-picker", "2037-12");
 assert(document.querySelector("#period-label").textContent === "December 2037", "Ook een verre toekomstige periode moet werken");
 dom.window.currentCalendarPeriodKey = _origCalendarKey;
+_employeeUnderTest.startDate = _origEmployeeStartDate;
 
 click("#switch-role");
 const adminPicker = document.querySelector("#login-admin");
@@ -2064,7 +2074,7 @@ assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Pla
 }
 
 dom.window.close();
-console.log("Path v1.0.23 volledige smoke test: geslaagd");
+console.log("Path v1.0.24 volledige smoke test: geslaagd");
 // app.js schedules browser refresh timers. In JSDOM those timers can keep Node
 // alive after every assertion has completed, which made the release check look
 // stuck. End explicitly only after the complete smoke contract is green.

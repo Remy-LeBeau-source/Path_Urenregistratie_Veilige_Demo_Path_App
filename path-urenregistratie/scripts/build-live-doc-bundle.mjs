@@ -30,6 +30,28 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;');
 }
 
+// CI-runners draaien in UTC. Een kale toISOString() toonde die UTC-tijd
+// zonder toelichting, waardoor "gegenereerd op" een paar uur leek af te
+// wijken van de werkelijke lokale tijd. Formatteer daarom expliciet naar
+// Europe/Amsterdam, net als de app zelf overal doet.
+function formatGeneratedAt(date) {
+  const formatter = new Intl.DateTimeFormat('nl-NL', {
+    timeZone: 'Europe/Amsterdam',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+  const parts = formatter.formatToParts(date).reduce((acc, part) => {
+    acc[part.type] = part.value;
+    return acc;
+  }, {});
+  return `${parts.day} ${parts.month} ${parts.year}, ${parts.hour}:${parts.minute}:${parts.second} (Europe/Amsterdam)`;
+}
+
 function renderInline(text) {
   return escapeHtml(text)
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
@@ -1073,7 +1095,7 @@ async function main() {
   await cp(join(root, 'playwright-report'), join(outDir, 'playwright-report'), { recursive: true });
   await cp(join(root, 'allure-report'), join(outDir, 'allure-report'), { recursive: true });
 
-  const generatedAt = new Date().toISOString();
+  const generatedAt = formatGeneratedAt(new Date());
   const packageMetadata = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
   const releaseMetadata = {
     version: String(packageMetadata.version || 'onbekend'),

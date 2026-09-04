@@ -28,6 +28,29 @@ async function fillFirstTwoHours(page: Page, first: string, second: string) {
   await inputs.nth(1).fill(second);
 }
 
+// Deze specs gebruiken PERIOD_KEY (januari 2026) voor medewerker 2, wat nu vóór
+// diens echte TEST-indiensttreding (mei 2026) ligt. Zonder deze mock blokkeert
+// setPeriod() de gemockte periode als "vóór indiensttreding". We forceren de
+// startdatum hier terug naar ruim vóór PERIOD_KEY; de rest van bootstrap blijft
+// echt. Was voorheen ook al nodig voor hermetische stabiliteit in de volle
+// seriële run (zie TS-REV-UI-H-008).
+async function mockEmploymentStartDate(page: Page) {
+  await page.route('**/server/api/bootstrap.php', async (route) => {
+    const response = await route.fetch();
+    const body = await response.json();
+    if (Array.isArray(body?.employees)) {
+      for (const employee of body.employees) {
+        if (Number(employee.id) === 2) {
+          employee.employment_start_date = '2025-01-01';
+          employee.employment_end_date = null;
+          employee.active = 1;
+        }
+      }
+    }
+    await route.fulfill({ response, json: body });
+  });
+}
+
 test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en heropening blijven servergestuurd', async ({ page }) => {
   test.setTimeout(90_000);
   const loginPage = new LoginPage(page);
@@ -45,25 +68,7 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
     resubmitted_at: string | null;
   }> = [];
 
-  // Hermetisch maken: in de volle seriële run hebben eerdere cases de
-  // employment_start_date van medewerker 2 verzet, waardoor de gemockte
-  // januari-periode buiten het dienstverband viel en het dashboard "Open uren"
-  // toonde in plaats van "Open correctie". We forceren die startdatum hier terug
-  // naar ruim vóór PERIOD_KEY; de rest van bootstrap blijft echt.
-  await page.route('**/server/api/bootstrap.php', async (route) => {
-    const response = await route.fetch();
-    const body = await response.json();
-    if (Array.isArray(body?.employees)) {
-      for (const employee of body.employees) {
-        if (Number(employee.id) === 2) {
-          employee.employment_start_date = '2025-01-01';
-          employee.employment_end_date = null;
-          employee.active = 1;
-        }
-      }
-    }
-    await route.fulfill({ response, json: body });
-  });
+  await mockEmploymentStartDate(page);
 
   // Deze case gaat over de urenstaat-reviewketen. Klanturenstaten mogen de
   // dashboardprioriteit niet vertroebelen met een openstaande actie die een
@@ -425,6 +430,7 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
 
 test('[TS-REV-UI-H-009] ingediende urenstaat blijft vergrendeld tot Backoffice een correctie vraagt', async ({ page }) => {
   const loginPage = new LoginPage(page);
+  await mockEmploymentStartDate(page);
 
   await page.route('**/server/api/timesheets.php**', async (route) => {
     if (route.request().method().toUpperCase() !== 'GET') { await route.continue(); return; }
@@ -455,6 +461,7 @@ test('[TS-REV-UI-H-009] ingediende urenstaat blijft vergrendeld tot Backoffice e
 
 test('[TS-REV-UI-H-010] submitknop is verborgen bij goedgekeurde urenstaat', async ({ page }) => {
   const loginPage = new LoginPage(page);
+  await mockEmploymentStartDate(page);
 
   await page.route('**/server/api/timesheets.php**', async (route) => {
     if (route.request().method().toUpperCase() !== 'GET') { await route.continue(); return; }
@@ -600,6 +607,7 @@ test('[TS-REV-UI-N-012] gefactureerde goedkeuring blijft bij serverweigering ver
 
 test('[TS-REV-UI-H-011] urencontrole toont dag/week-uitsplitsing vóór goedkeuren', async ({ page }) => {
   const loginPage = new LoginPage(page);
+  await mockEmploymentStartDate(page);
 
   await page.route('**/server/api/timesheets.php**', async (route) => {
     if (route.request().method().toUpperCase() !== 'GET') { await route.continue(); return; }

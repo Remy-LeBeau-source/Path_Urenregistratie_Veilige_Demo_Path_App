@@ -205,6 +205,22 @@ Feature: Dashboard en open werkvoorraad
     Then staat de maandkiezer weer op de actuele kalendermaand augustus, ook op de andere schermen
 
   @negative
+  Scenario: [DASH-N-023] een medewerker kan niet naar een maand vóór de eigen indiensttreding bladeren
+    # Testtechniek: Grenswaardenanalyse
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given de medewerker (in dienst sinds mei 2026) op de actuele kalendermaand staat
+    When de medewerker probeert een maand vóór de startdatum te openen
+    Then blijft de maand op augustus staan en verschijnt een duidelijke melding
+
+  @negative
+  Scenario: [DASH-N-024] een lokaal record van vóór indiensttreding verschijnt niet in Mijn maanden
+    # Testtechniek: Grenswaardenanalyse
+    # Aantoonbare Playwright-assertions in deze case: 1
+    Given de medewerker is ingelogd
+    When er lokaal een record van vóór de startdatum wordt neergezet
+    Then blijft april 2026 weg uit de historie, ook al heeft het record uren
+
+  @negative
   Scenario: [DASH-N-021] een lege oudere maand openen voegt geen fantoom-open-acties toe en houdt de kalendermaand in beeld
     # Testtechniek: Grenswaardenanalyse
     # Aantoonbare Playwright-assertions in deze case: 8

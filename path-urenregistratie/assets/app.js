@@ -4170,9 +4170,16 @@ function toggleMonthChoicePanel(trigger) {
 function applyPeriodControls(monthSelector, yearSelector, customerTimesheet = false) {
   const periodKey = periodKeyFromControls(monthSelector, yearSelector);
   if (customerTimesheet) document.querySelector("#customer-timesheet-file").value = "";
-  if (!periodKey || !setPeriod(periodKey)) {
+  if (!periodKey) {
     syncPeriodControls(monthSelector, yearSelector, currentPeriod().key);
     toast(customerTimesheet ? "Kies eerst een geldige maand en een viercijferig jaar." : "Kies een geldige maand en een viercijferig jaar.");
+    return;
+  }
+  if (!setPeriod(periodKey)) {
+    // setPeriod() toont bij een geweigerde maand (toekomst, of vóór
+    // indiensttreding) al een eigen, specifieke melding. Die mag hier niet
+    // worden overschreven door de generieke "kies een geldige maand"-tekst.
+    syncPeriodControls(monthSelector, yearSelector, currentPeriod().key);
   }
 }
 
@@ -4482,10 +4489,25 @@ function renderEmployeeDashboard() {
     }).join('');
   }
 
-  const history = Object.keys(state.records)
-    .sort((left, right) => right.localeCompare(left))
-    .filter(key => state.records[key] && state.records[key][String(employee.id)])
-    .slice(0, 6);
+  // Historie mag niet afhangen van of er toevallig al een lokaal record
+  // bestaat: een maand die de medewerker nooit heeft geopend (dus nooit
+  // aangeraakt, ook niet automatisch) hoort hier gewoon te staan zolang hij
+  // binnen het dienstverband valt -- anders is er geen weg terug naar een
+  // vergeten maand. We bouwen daarom zelf de reeks vanaf de startdatum (of
+  // vanaf 3 jaar terug als er geen geldige startdatum bekend is) tot en met
+  // de actuele kalendermaand, meest recent eerst, en tonen daarvan de 6
+  // meest recente. recordFor() maakt een ontbrekend record vanzelf leeg aan.
+  const calendarMonthKeyForHistory = currentCalendarPeriodKey();
+  const employmentStartKey = /^\d{4}-\d{2}-\d{2}$/.test(employee.startDate || "") ? employee.startDate.slice(0, 7) : null;
+  const history = [];
+  if (parsePeriodKey(calendarMonthKeyForHistory)) {
+    let cursor = calendarMonthKeyForHistory;
+    for (let i = 0; i < 36 && (!employmentStartKey || cursor >= employmentStartKey); i++) {
+      history.push(cursor);
+      cursor = shiftPeriodKey(cursor, -1);
+    }
+  }
+  history.splice(6);
   const historyRows = history.map(key => {
     const historyRecord = recordFor(employee.id, key);
     const historyTotal = totalEntries(historyRecord.entries) + Number(historyRecord.leave || 0) + Number(historyRecord.sick || 0);
@@ -10726,7 +10748,13 @@ function toonInstallatieAanbod() {
       persistState();
       renderApprovals();
     }
-    if (["dashboard", "employee-dashboard"].includes(nav.dataset.view)) {
+    // "Mijn uren" krijgt dezelfde reset als Dashboard/Home: gewoon in het menu
+    // op de tab klikken zet de medewerker terug op de actuele kalendermaand.
+    // Een specifieke taak (correctie/klanturenstaat van een oudere maand)
+    // loopt via data-go/data-history-period/data-employee-open-action, niet
+    // via deze generieke tabklik, en zet daar zelf al de juiste maand -- dit
+    // raakt die knoppen dus niet.
+    if (["dashboard", "employee-dashboard", "timesheet"].includes(nav.dataset.view)) {
       resetHomeDashboardState(state.currentRole);
     }
     if (nav.dataset.view === "dashboard") {
@@ -11453,6 +11481,12 @@ function setPeriod(periodKey) {
     const maxEmployeePeriodKey = currentCalendarPeriodKey();
     if (next > maxEmployeePeriodKey) {
       toast("Medewerkers kunnen geen toekomstige maand openen. Beschikbaar tot en met " + periodFromKey(maxEmployeePeriodKey).label + ".");
+      return false;
+    }
+    const employee = currentEmployee();
+    const minEmployeePeriodKey = employee && /^\d{4}-\d{2}-\d{2}$/.test(employee.startDate || "") ? employee.startDate.slice(0, 7) : null;
+    if (minEmployeePeriodKey && next < minEmployeePeriodKey) {
+      toast("Deze maand ligt vóór je indiensttreding. Beschikbaar vanaf " + periodFromKey(minEmployeePeriodKey).label + ".");
       return false;
     }
   }
