@@ -285,7 +285,14 @@ test.describe('timesheet write api', () => {
       period = await findWritablePeriod(timesheetApi);
     });
 
-    const buiten = period.startsWith('3000-12') ? '3001-01-05' : `${period.slice(0, 4)}-12-31`;
+    // "buiten" moet een datum zijn die zeker buiten de gekozen maand valt. Voor
+    // elke december (niet alleen de hardcoded 3000-12 die hier eerder stond)
+    // ligt {jaar}-12-31 juist ín de gekozen maand -- dan pakken we januari van
+    // het volgende jaar. candidatePeriods() kiest willekeurig uit 7000 jaar, dus
+    // ~1 op 12 runs treft een december; zonder deze algemene guard faalde de
+    // case daar met een fout-positieve 200 i.p.v. de verwachte 400.
+    const [buitenYear, buitenMonth] = period.split('-').map(Number);
+    const buiten = buitenMonth === 12 ? `${buitenYear + 1}-01-05` : `${period.slice(0, 4)}-12-31`;
     const gevallen: Array<[string, Record<string, unknown>]> = [
       ['meer dan 24 uur op een dag', { dayEntries: [{ workDate: `${period}-01`, hours: 25 }], billableHours: 25 }],
       ['negatieve uren op een dag', { dayEntries: [{ workDate: `${period}-01`, hours: -1 }], billableHours: 0 }],
