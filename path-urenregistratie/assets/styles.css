@@ -453,6 +453,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .view-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 25px; margin: 35px 0 22px; }
 .view-heading h2 { margin: 5px 0 7px; font-family: "Roboto Slab", Georgia, serif; font-size: clamp(27px, 3.5vw, 37px); letter-spacing: -.025em; }
 .view-heading p { max-width: 680px; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+.view-loading { margin: 4px 0 18px; padding: 16px 18px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--vlak-zacht); color: var(--muted); font-size: 13px; font-weight: 600; }
 .heading-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 9px; }
 .approval-heading-actions { align-items: center; }
 .approval-period-filters { max-width: min(650px, 62vw); flex-wrap: wrap; justify-content: flex-end; }

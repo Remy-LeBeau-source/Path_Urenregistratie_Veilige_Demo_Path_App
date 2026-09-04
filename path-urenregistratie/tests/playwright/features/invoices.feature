@@ -183,3 +183,11 @@ Feature: Facturen bekijken en beheren
     Given een factuurlijst met twee medewerkers
     When de beheerder een paar letters, een deel van het factuurnummer of een middenstuk van de naam typt
     Then filtert de lijst live op die substring en toont leegmaken alles weer
+
+  @negative
+  Scenario: [INV-N-020] Facturen toont een laadtoestand tot de eerste factuur-serverread en springt daarna niet
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given een beheerder opent Facturen terwijl de eerste factuur-serverread nog loopt
+    When de serverread binnenkomt
+    Then toont Facturen eerst een neutrale laadtekst zonder voorlopige maandcijfers en daarna de echte maandstand

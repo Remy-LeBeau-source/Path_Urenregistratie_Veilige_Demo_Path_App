@@ -652,3 +652,45 @@ test('[TS-REV-UI-H-011] urencontrole toont dag/week-uitsplitsing vóór goedkeur
   });
 });
 
+test('[TS-REV-UI-N-013] Goedkeuringen toont een laadtoestand tot de serverwerkvoorraad binnen is', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  let releaseWorkflow = false;
+
+  // De openstaande urencontroles komen uit de serverwerkvoorraad-sync
+  // (timesheets + klanturenstaten). Tot die binnen is mag Goedkeuringen geen
+  // voorlopige kaarten of zijbalkteller tonen die daarna verspringen.
+  const hangUntilReleased = async (route: import('@playwright/test').Route) => {
+    if (route.request().method().toUpperCase() !== 'GET') { await route.continue(); return; }
+    while (!releaseWorkflow) {
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
+    await route.continue();
+  };
+  await page.route('**/server/api/timesheets.php**', hangUntilReleased);
+  await page.route('**/server/api/customer-timesheets.php**', hangUntilReleased);
+
+  await test.step('Given de beheerder opent Goedkeuringen terwijl de eerste serverwerkvoorraad-sync nog loopt', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await openView(page, 'approvals');
+    await expect(page.locator('#view-approvals')).toHaveClass(/is-active/);
+  });
+
+  await test.step('Then toont Goedkeuringen een neutrale laadtekst en geen voorlopige kaarten of teller', async () => {
+    await expect(page.locator('#approval-loading')).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('#approval-period-title')).toHaveText(/laden/i);
+    await expect(page.locator('#approval-list article.approval-card')).toHaveCount(0);
+    await expect(page.locator('#approve-all')).toBeHidden();
+    await expect(page.locator('#approval-count')).toBeHidden();
+  });
+
+  await test.step('When de sync binnenkomt, verdwijnt de laadtekst en verschijnt de echte controlestand', async () => {
+    releaseWorkflow = true;
+    await expect(page.locator('#approval-loading')).toBeHidden({ timeout: 20_000 });
+    await expect(page.locator('#approval-period-title')).not.toHaveText(/laden/i);
+    await expect(page.locator('#approval-scope-note')).not.toHaveText(/opgehaald/i);
+  });
+
+  await loginPage.logout();
+});
+

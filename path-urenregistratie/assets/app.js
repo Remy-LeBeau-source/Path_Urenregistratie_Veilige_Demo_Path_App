@@ -987,6 +987,7 @@ function resetReadApiCaches() {
   readApiRuntime.employeeOpenTasksHydrated = false;
   readApiRuntime.employeeOpenTasksHydrationStarted = false;
   readApiRuntime.adminWorkflowHydrated = false;
+  readApiRuntime.invoicesHydrated = false;
 }
 
 function hasRequiredSeedData(candidate) {
@@ -1268,6 +1269,7 @@ const readApiRuntime = {
   lastAdminWorkflowAt: 0,
   adminWorkflowPeriodKeys: []
   ,adminWorkflowHydrated: false
+  ,invoicesHydrated: false
   ,invoicePage: 1
   ,invoicePageSize: 25
   ,invoiceSearch: ""
@@ -3399,7 +3401,12 @@ function refreshInvoicesReadApi(periodKey, force) {
   const period = parsePeriodKey(periodKey) ? periodKey : "";
   const now = Date.now();
   const lastAt = period ? Number(readApiRuntime.lastInvoicesByPeriod[period] || 0) : readApiRuntime.lastInvoicesAt;
-  if (!force && (readApiRuntime.invoicesInFlight || (now - lastAt) < 15000)) return Promise.resolve(null);
+  if (!force && (readApiRuntime.invoicesInFlight || (now - lastAt) < 15000)) {
+    // Al recent opgehaald: de facturenweergave heeft echte servercijfers en
+    // hoeft geen laadtoestand meer te tonen.
+    if (lastAt > 0) readApiRuntime.invoicesHydrated = true;
+    return Promise.resolve(null);
+  }
   readApiRuntime.invoicesInFlight = true;
   const endpoint = period
     ? READ_API_INVOICES_PATH + "?period=" + encodeURIComponent(period)
@@ -3428,6 +3435,13 @@ function refreshInvoicesReadApi(periodKey, force) {
     })
     .finally(() => {
       readApiRuntime.invoicesInFlight = false;
+      // Na de eerste poging (gelukt of niet) is de facturenweergave "gehydrateerd":
+      // vanaf nu tonen we echte cijfers of de nette leegstand, geen laadtekst meer.
+      const wasHydrated = readApiRuntime.invoicesHydrated;
+      readApiRuntime.invoicesHydrated = true;
+      if (!wasHydrated && document.querySelector("#view-invoices")?.classList.contains("is-active")) {
+        renderInvoices();
+      }
     });
 }
 
@@ -4917,6 +4931,16 @@ function awaitingAdminWorkflowHydration() {
     && !isLocalResetAuthoritative();
 }
 
+// Zelfde reden als op het dashboard (zie renderDashboardActionsLoading): zolang
+// de eerste factuur-serverread niet binnen is, toont de lokale seed cijfers
+// (blokkades, "klaar voor controle") die daarna alsnog corrigeren. Tot die
+// eerste sync tonen we op Facturen een neutrale laadtoestand.
+function awaitingInvoicesHydration() {
+  return API_ENABLED && authRuntime.mode === "auth" && authRuntime.authenticated
+    && state.currentRole === "admin" && !readApiRuntime.invoicesHydrated
+    && !isLocalResetAuthoritative();
+}
+
 // On a fresh load the locally persisted seed shows a task count that the first
 // admin-workflow read then corrects (often downward). Rendering that provisional
 // number as if it were final made the dashboard visibly jump a second or two
@@ -5697,6 +5721,14 @@ function renderDashboard() {
 function renderApprovalNavBadge(openFromSelectedPeriod) {
   const badge = document.querySelector("#approval-count");
   if (!badge) return;
+  if (awaitingAdminWorkflowHydration()) {
+    // Tot de serverwerkvoorraad binnen is geen voorlopig getal in de zijbalk
+    // dat daarna verspringt; het echte aantal verschijnt na de eerste sync.
+    badge.hidden = true;
+    badge.removeAttribute("aria-label");
+    badge.removeAttribute("title");
+    return;
+  }
   const explicitOpen = Number(openFromSelectedPeriod);
   const dashboardOpenTotal = API_ENABLED && authRuntime.mode === "auth" && readApiDebug.dashboard && Array.isArray(readApiDebug.dashboard.per_maand)
     ? readApiDebug.dashboard.per_maand.reduce((sum, item) => sum + Math.max(0, Number(item && item.klaar_voor_controle || 0)), 0)
@@ -5731,6 +5763,29 @@ function allOpenApprovals() {
 }
 
 function renderApprovals() {
+  const approvalLoading = document.querySelector("#approval-loading");
+  if (awaitingAdminWorkflowHydration()) {
+    // De openstaande urencontroles komen uit dezelfde serverwerkvoorraad-sync
+    // als het dashboard. Tot die binnen is, geen voorlopige kaarten of tellers
+    // die daarna verspringen — alleen een neutrale laadtekst.
+    if (approvalLoading) approvalLoading.hidden = false;
+    const list = document.querySelector("#approval-list");
+    if (list) list.innerHTML = "";
+    const empty = document.querySelector("#approval-empty");
+    if (empty) empty.hidden = true;
+    const approveAll = document.querySelector("#approve-all");
+    if (approveAll) approveAll.hidden = true;
+    const filters = document.querySelector("#approval-period-filters");
+    if (filters) filters.innerHTML = "";
+    const title = document.querySelector("#approval-period-title");
+    if (title) title.textContent = "Goedkeuringen laden…";
+    const note = document.querySelector("#approval-scope-note");
+    if (note) note.textContent = "De openstaande urencontroles worden opgehaald…";
+    const badge = document.querySelector("#approval-count");
+    if (badge) { badge.hidden = true; badge.removeAttribute("aria-label"); }
+    return;
+  }
+  if (approvalLoading) approvalLoading.hidden = true;
   const allApprovals = allOpenApprovals();
   const period = currentPeriod();
   const monthApprovals = allApprovals.filter(item => item.periodKey === period.key);
@@ -6081,6 +6136,16 @@ function renderInvoices() {
   const periodKey = currentPeriod().key;
   refreshInvoicesReadApi(periodKey, false);
   refreshEmailQueueReadApi(false);
+  const invoiceLoading = document.querySelector("#invoice-loading");
+  if (awaitingInvoicesHydration()) {
+    if (invoiceLoading) invoiceLoading.hidden = false;
+    ["#invoice-month-overview", "#month-batch-card", "#invoice-status-guide", "#invoice-detail-panel"]
+      .forEach(selector => { const node = document.querySelector(selector); if (node) node.hidden = true; });
+    const batchBadge = document.querySelector("#invoice-batch-count");
+    if (batchBadge) batchBadge.hidden = true;
+    return;
+  }
+  if (invoiceLoading) invoiceLoading.hidden = true;
   syncInvoiceStatusesFromApi(periodKey);
   const apiRows = invoiceApiRowsForPeriod(periodKey);
   setReadApiSource("invoices", apiRows ? "api" : "fallback");
@@ -8460,6 +8525,7 @@ function login(role) {
     const selectedAdmin = document.querySelector("#login-admin").value;
     if (adminById(selectedAdmin) && adminById(selectedAdmin).active !== false) state.currentAdminId = selectedAdmin;
     readApiRuntime.adminWorkflowHydrated = !(API_ENABLED && authRuntime.mode === "auth");
+    readApiRuntime.invoicesHydrated = !(API_ENABLED && authRuntime.mode === "auth");
   }
   if (role === "employee") {
     const selectedEmployee = Number(document.querySelector("#login-employee").value);
@@ -8493,6 +8559,7 @@ function logoutLocal() {
   readApiRuntime.employeeOpenTasksHydrated = false;
   readApiRuntime.employeeOpenTasksHydrationStarted = false;
   readApiRuntime.adminWorkflowHydrated = false;
+  readApiRuntime.invoicesHydrated = false;
   unresolvedHelpQuestion = "";
   closeLoginAccountPanels();
   delete document.body.dataset.role;

@@ -868,3 +868,47 @@ test('[INV-H-024] het factuurzoekveld matcht op een paar letters, niet alleen op
     await expect(page.locator('#invoice-rows tr')).toHaveCount(12);
   });
 });
+
+test('[INV-N-020] Facturen toont een laadtoestand tot de eerste factuur-serverread en springt daarna niet', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  const invoicesPage = new InvoicesPage(page);
+  let releaseInvoices = false;
+
+  // Zonder de eerste factuur-serverread toont de lokale seed cijfers
+  // (blokkades, "klaar voor controle") die daarna alsnog corrigeren. De
+  // facturenweergave hoort in die tussentijd een neutrale laadtekst te tonen,
+  // geen voorlopige aantallen.
+  await page.route('**/server/api/invoices.php**', async route => {
+    if (route.request().method().toUpperCase() !== 'GET') {
+      await route.continue();
+      return;
+    }
+    while (!releaseInvoices) {
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
+    await route.continue();
+  });
+
+  await test.step('Given een beheerder opent Facturen terwijl de eerste factuur-serverread nog loopt', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await invoicesPage.open();
+    await expect(page.locator('#view-invoices')).toHaveClass(/is-active/);
+  });
+
+  await test.step('Then toont Facturen een neutrale laadtoestand en geen voorlopige maandcijfers', async () => {
+    await expect(page.locator('#invoice-loading')).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('#invoice-loading')).toHaveText(/laden/i);
+    await expect(page.locator('#month-batch-card')).toBeHidden();
+    await expect(page.locator('#invoice-status-guide')).toBeHidden();
+    await expect(page.locator('#invoice-batch-count')).toBeHidden();
+  });
+
+  await test.step('When de serverread binnenkomt, verdwijnt de laadtekst en verschijnt de echte maandstand', async () => {
+    releaseInvoices = true;
+    await expect(page.locator('#invoice-loading')).toBeHidden({ timeout: 15_000 });
+    await expect(page.locator('#invoice-month-overview')).toBeVisible();
+  });
+
+  await loginPage.logout();
+});

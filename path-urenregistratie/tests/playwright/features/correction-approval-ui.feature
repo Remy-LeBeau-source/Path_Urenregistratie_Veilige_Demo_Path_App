@@ -58,3 +58,11 @@ Feature: Correcties en goedkeuringen behandelen
     Given medewerker opent een ingediende urenstaat
     When de administrator de urencontrole opent
     Then ziet de administrator de exacte dag- en weektotalen van de medewerker
+
+  @negative
+  Scenario: [TS-REV-UI-N-013] Goedkeuringen toont een laadtoestand tot de serverwerkvoorraad binnen is
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given de beheerder opent Goedkeuringen terwijl de eerste serverwerkvoorraad-sync nog loopt
+    When de sync binnenkomt
+    Then toont Goedkeuringen eerst een neutrale laadtekst zonder voorlopige kaarten of teller en daarna de echte controlestand
