@@ -358,7 +358,8 @@ function mail_dispatch_delivery(PDO $pdo, array $delivery, array $config): strin
             $effective['body'],
             (string)$relay['from_email'],
             (string)($relay['from_name'] ?? 'Path Consultancy'),
-            $attachments
+            $attachments,
+            $effective['html'] !== '' ? $effective['html'] : null
         );
         $smtpAccepted = true;
 
@@ -366,7 +367,9 @@ function mail_dispatch_delivery(PDO $pdo, array $delivery, array $config): strin
             'UPDATE email_deliveries
              SET status = "sent", sent_at = NOW(), last_error = NULL,
                  body_snapshot = CASE WHEN channel = "password_reset"
-                    THEN "[beveiligingslink verwijderd na verzending]" ELSE body_snapshot END
+                    THEN "[beveiligingslink verwijderd na verzending]" ELSE body_snapshot END,
+                 html_snapshot = CASE WHEN channel = "password_reset"
+                    THEN "[beveiligingslink verwijderd na verzending]" ELSE html_snapshot END
              WHERE id = :id AND status = "processing" AND dry_run = 0'
         )->execute([':id' => $deliveryId]);
         return 'sent';
@@ -385,10 +388,13 @@ function mail_dispatch_delivery(PDO $pdo, array $delivery, array $config): strin
              SET status = :status, attempt_count = :attempts, last_error = :error
                  , body_snapshot = CASE WHEN channel = "password_reset" AND :scrub_secret = 1
                     THEN "[beveiligingslink verwijderd na mislukte aflevering]" ELSE body_snapshot END
+                 , html_snapshot = CASE WHEN channel = "password_reset" AND :scrub_secret_html = 1
+                    THEN "[beveiligingslink verwijderd na mislukte aflevering]" ELSE html_snapshot END
              WHERE id = :id AND dry_run = 0'
         )->execute([
             ':status' => $status,
             ':scrub_secret' => $status === 'failed' ? 1 : 0,
+            ':scrub_secret_html' => $status === 'failed' ? 1 : 0,
             ':attempts' => $retryState['attempt_count'],
             ':error' => substr($error->getMessage(), 0, 500),
             ':id' => $deliveryId,
@@ -411,7 +417,8 @@ function mail_dispatch_queued(PDO $pdo, int $companyId, array $config, int $limi
         'UPDATE email_deliveries ed
          JOIN users u ON u.id = ed.user_id
          SET ed.status = "failed", ed.last_error = "password-reset-link-expired",
-             ed.body_snapshot = "[verlopen beveiligingslink verwijderd]"
+             ed.body_snapshot = "[verlopen beveiligingslink verwijderd]",
+             ed.html_snapshot = "[verlopen beveiligingslink verwijderd]"
          WHERE ed.channel = "password_reset" AND ed.status = "queued" AND ed.dry_run = 0
            AND u.company_id = :company_id
            AND ed.created_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 HOUR)'

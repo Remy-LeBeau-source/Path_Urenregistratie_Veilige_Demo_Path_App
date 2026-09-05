@@ -137,6 +137,38 @@ Feature: Wachtwoordherstel en misbruikbeveiliging
     And de nieuwe medewerker kan daarna echt inloggen met dat wachtwoord
 
   @happy
+  Scenario: [PWD-H-020] de accountuitnodiging krijgt een opgemaakte HTML-tegenhanger met logo en dezelfde link als de platte tekst
+    # Testtechniek: Broncontract
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given wachtwoordherstel en misbruikbeveiliging is voorbereid
+    When de flow voor PWD-H-020 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat de accountuitnodiging een opgemaakte HTML-tegenhanger met logo en dezelfde link als de platte tekst krijgt
+
+  @happy
+  Scenario: [PWD-H-021] "wachtwoord vergeten" krijgt dezelfde opgemaakte handtekening als de uitnodiging
+    # Testtechniek: Broncontract
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given wachtwoordherstel en misbruikbeveiliging is voorbereid
+    When de flow voor PWD-H-021 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat "wachtwoord vergeten" dezelfde opgemaakte handtekening krijgt als de uitnodiging
+
+  @happy
+  Scenario: [PWD-H-022] website en slogan komen, als ze zijn ingevuld, terug in zowel de platte als de HTML-handtekening
+    # Testtechniek: Broncontract
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given de beheerder een website en slogan instelt
+    When de flow voor PWD-H-022 wordt uitgevoerd
+    Then staan website en slogan in de platte tekst en als eigen regels in de HTML
+
+  @negative
+  Scenario: [PWD-N-017] elk ander mailkanaal dan wachtwoordherstel blijft platte tekst, zonder html_snapshot
+    # Testtechniek: Beslissingstabel
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given wachtwoordherstel en misbruikbeveiliging is voorbereid
+    When de flow voor PWD-N-017 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat elk ander mailkanaal dan wachtwoordherstel platte tekst blijft, zonder html_snapshot
+
+  @happy
   Scenario: [PWD-H-014] wachtwoord-vergeten op het inlogscherm verraadt niet welke e-mailadressen bestaan
     # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 11

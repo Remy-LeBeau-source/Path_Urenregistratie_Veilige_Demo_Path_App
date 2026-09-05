@@ -164,6 +164,10 @@ function migration_plan(bool $allowDemoMigrations): array
         'id' => '026_company_invoice_phone_fix.sql',
         'path' => __DIR__ . '/migrations/026_company_invoice_phone_fix.sql',
     ];
+    $plan[] = [
+        'id' => '027_password_reset_html_signature.sql',
+        'path' => __DIR__ . '/migrations/027_password_reset_html_signature.sql',
+    ];
     return $plan;
 }
 

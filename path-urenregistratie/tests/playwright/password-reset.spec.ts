@@ -479,6 +479,128 @@ test.describe('password reset api', () => {
       });
     });
   }
+
+  // auth_password_reset_delivery_available() vereist een HTTPS app_origin; lokaal
+  // (en op de meeste CI-runs) is dat http://127.0.0.1:8000, dus wordt er hier
+  // nooit een echte email_deliveries-rij voor dit kanaal aangemaakt om op te
+  // lezen -- dat is een bestaand, omgevingsgebonden gat, geen nieuw probleem.
+  // render-password-reset-mail-preview.php roept auth_invitation_message() /
+  // auth_password_reset_message() rechtstreeks aan met een synthetische HTTPS-
+  // config, en toetst zo de echte functie zonder dat gat te hoeven omzeilen.
+  test('[PWD-H-020] de accountuitnodiging krijgt een opgemaakte HTML-tegenhanger met logo en dezelfde link als de platte tekst', async () => {
+    const uitvoer = await execFileAsync('php', ['server/scripts/render-password-reset-mail-preview.php', '1', 'invitation'], {
+      cwd: process.cwd(), windowsHide: true,
+    });
+    const preview = JSON.parse(uitvoer.stdout) as { link: string; plain: string; html: string };
+
+    expect(preview.plain, 'de platte tekst hoort de eenmalige link te bevatten').toContain(preview.link);
+    expect(preview.html).toContain('/assets/path-logo.png');
+    expect(preview.html).toContain('Robot Path IT');
+    expect(preview.html).toContain('Automatisering &amp; accountbeheer');
+    expect(preview.html).toContain('backoffice@pathconsultancy.nl');
+    expect(preview.html, 'de HTML-knop hoort exact dezelfde eenmalige link te gebruiken als de platte tekst').toContain(preview.link);
+    expect(preview.html).toContain('Wachtwoord instellen');
+  });
+
+  test('[PWD-H-021] "wachtwoord vergeten" krijgt dezelfde opgemaakte handtekening als de uitnodiging', async () => {
+    const uitvoer = await execFileAsync('php', ['server/scripts/render-password-reset-mail-preview.php', '1', 'password_reset'], {
+      cwd: process.cwd(), windowsHide: true,
+    });
+    const preview = JSON.parse(uitvoer.stdout) as { link: string; plain: string; html: string };
+
+    expect(preview.plain, 'de platte tekst hoort de eenmalige link te bevatten').toContain(preview.link);
+    expect(preview.plain, 'de kale reset hoort dezelfde afzender te tonen als de uitnodiging').toContain('Robot Path IT');
+    expect(preview.html).toContain('/assets/path-logo.png');
+    expect(preview.html).toContain('Robot Path IT');
+    expect(preview.html, 'de HTML-knop hoort exact dezelfde eenmalige link te gebruiken als de platte tekst').toContain(preview.link);
+  });
+
+  test('[PWD-H-022] website en slogan komen, als ze zijn ingevuld, terug in zowel de platte als de HTML-handtekening', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const website = 'www.pathconsultancy.nl';
+    const slogan = 'De specialist van morgen, vandaag onderweg!';
+
+    await test.step('Given de beheerder een website en slogan instelt', async () => {
+      await postAuth(ctx, '/server/auth/login.php', {
+        email: appConfig.adminEmail,
+        password: requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'),
+      });
+      const before = await (await ctx.get('/server/api/bootstrap.php')).json();
+      const company = before.companies[0];
+      const csrfResponse = await ctx.get('/server/auth/csrf.php');
+      const csrf = await csrfResponse.json();
+      const save = await ctx.post('/server/api/settings.php', {
+        headers: { 'X-CSRF-Token': String(csrf.csrf_token || '') },
+        data: {
+          settings: {
+            organizationName: company.trade_name || 'Path Consultancy',
+            companyName: company.legal_name || company.trade_name || 'Path Consultancy',
+            invoiceNameDisplay: company.invoice_name_display || 'trade_and_legal',
+            appName: company.app_name || 'Uren & Facturatie',
+            supportName: company.support_name || 'Path Backoffice',
+            supportEmail: company.support_email || 'backoffice@pathconsultancy.nl',
+            brandPrimary: company.brand_primary || '#0d1b38',
+            brandAccent: company.brand_accent || '#3abd9d',
+            website,
+            tagline: slogan,
+            kvk: company.chamber_of_commerce_number || '89320018',
+            vat: company.vat_number || 'NL001622017B32',
+            iban: company.iban || 'NL95INGB0006947972',
+            address: company.address_line || 'Du Perronstraat 12',
+            postalCity: '3067 HN Rotterdam',
+            phone: '0646328286',
+            invoiceEmail: 'backoffice@pathconsultancy.nl',
+            paymentTerm: Number(company.payment_term_days || 30),
+            customerTimesheetReminderEnabled: true,
+            customerTimesheetReminderTime: '15:00',
+            customerTimesheetOverdueWorkdays: 2,
+          },
+          mailRecipients: before.mail_recipients,
+        },
+      });
+      expect(save.status(), await save.text()).toBe(200);
+      await postAuth(ctx, '/server/auth/logout.php', {});
+    });
+
+    await test.step('Then staan website en slogan in de platte tekst en als eigen regels in de HTML', async () => {
+      const uitvoer = await execFileAsync('php', ['server/scripts/render-password-reset-mail-preview.php', '1', 'invitation'], {
+        cwd: process.cwd(), windowsHide: true,
+      });
+      const preview = JSON.parse(uitvoer.stdout) as { plain: string; html: string };
+
+      expect(preview.plain).toContain(website);
+      expect(preview.plain).toContain(slogan);
+      expect(preview.html).toContain(website);
+      expect(preview.html).toContain(slogan);
+    });
+  });
+
+  test('[PWD-N-017] elk ander mailkanaal dan wachtwoordherstel blijft platte tekst, zonder html_snapshot', async () => {
+    // Decision table: html_snapshot bestaat alleen voor channel = "password_reset"
+    // (migratie 027). Migratie 022 koos bewust tegen een opgemaakte factuurmail
+    // om de bewezen platte-tekst-verzendlaag niet te raken; dat risico blijft
+    // gelden voor elk ander kanaal. Elke INSERT INTO email_deliveries in de
+    // codebase op dit moment wordt hier opgesomd, zodat een toekomstige nieuwe
+    // schrijfplek niet per ongeluk buiten deze toets valt.
+    const acceptance = await readFile(join(process.cwd(), 'server', 'mail', 'acceptance.php'), 'utf8');
+    const queue = await readFile(join(process.cwd(), 'server', 'mail', 'queue.php'), 'utf8');
+    const service = await readFile(join(process.cwd(), 'server', 'auth', 'password-reset-service.php'), 'utf8');
+
+    for (const [naam, bron] of [['acceptance.php', acceptance], ['queue.php', queue]] as const) {
+      const inserts = bron.match(/INSERT INTO email_deliveries[\s\S]*?VALUES[\s\S]*?\)'/g) || [];
+      expect(inserts.length, `${naam} hoort minstens één INSERT te bevatten om te toetsen`).toBeGreaterThan(0);
+      for (const insert of inserts) {
+        expect(insert, `${naam} mag geen html_snapshot invoegen`).not.toContain('html_snapshot');
+      }
+    }
+
+    const serviceInserts = service.match(/INSERT INTO email_deliveries[\s\S]*?VALUES[\s\S]*?\)'/g) || [];
+    expect(serviceInserts.length).toBeGreaterThan(0);
+    for (const insert of serviceInserts) {
+      expect(insert, 'de wachtwoordherstel-INSERT hoort html_snapshot juist wél in te voegen').toContain('html_snapshot');
+    }
+  });
+
   test('[PWD-H-014] wachtwoord-vergeten op het inlogscherm verraadt niet welke e-mailadressen bestaan', async ({ page }) => {
     // The self-service route a locked-out person actually takes. The server
     // already answers identically for known and unknown addresses to prevent

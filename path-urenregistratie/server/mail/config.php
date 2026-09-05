@@ -197,13 +197,14 @@ function mail_test_invitation_recipient(array $config): ?string
     return mail_recipient_is_allowed($config, $recipient) ? $recipient : null;
 }
 
-/** @return array{recipient:string,cc:?string,subject:string,body:string,redirected:bool} */
+/** @return array{recipient:string,cc:?string,subject:string,body:string,html:string,redirected:bool} */
 function mail_effective_delivery(array $config, array $delivery): array
 {
     $recipient = trim((string)($delivery['recipient_email'] ?? ''));
     $cc = !empty($delivery['cc_email']) ? trim((string)$delivery['cc_email']) : null;
     $subject = (string)($delivery['subject_snapshot'] ?? '');
     $body = (string)($delivery['body_snapshot'] ?? '');
+    $html = (string)($delivery['html_snapshot'] ?? '');
     $fixedInvitationRecipient = mail_test_invitation_recipient($config);
     $isFixedTestInvitation = strtolower(trim((string)($delivery['channel'] ?? ''))) === 'password_reset'
         && $fixedInvitationRecipient !== null
@@ -212,8 +213,16 @@ function mail_effective_delivery(array $config, array $delivery): array
         ? null
         : mail_test_sink_recipient($config);
     if ($sink === null) {
-        return compact('recipient', 'cc', 'subject', 'body') + ['redirected' => false];
+        return compact('recipient', 'cc', 'subject', 'body', 'html') + ['redirected' => false];
     }
+
+    $redirectNoteHtml = $html !== ''
+        ? '<p style="margin:0 0 14px;font:bold 13px/1.4 Arial,Helvetica,sans-serif;color:#bb7623;">'
+            . 'TESTOMLEIDING — niet doorsturen of boeken.<br>Oorspronkelijke ontvanger: '
+            . htmlspecialchars($recipient, ENT_QUOTES)
+            . ($cc ? '<br>Oorspronkelijke CC: ' . htmlspecialchars($cc, ENT_QUOTES) : '')
+            . '</p>' . $html
+        : '';
 
     return [
         'recipient' => $sink,
@@ -221,6 +230,7 @@ function mail_effective_delivery(array $config, array $delivery): array
         'subject' => '[TEST voor ' . $recipient . '] ' . $subject,
         'body' => "TESTOMLEIDING — niet doorsturen of boeken.\nOorspronkelijke ontvanger: " . $recipient
             . ($cc ? "\nOorspronkelijke CC: " . $cc : '') . "\n\n" . $body,
+        'html' => $redirectNoteHtml,
         'redirected' => true,
     ];
 }

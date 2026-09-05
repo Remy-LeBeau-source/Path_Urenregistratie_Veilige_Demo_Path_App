@@ -80,6 +80,9 @@ function smtp_expect(array $acceptedCodes, string $response, string $context): v
 /**
  * @param array{host?:string,port?:int,encryption?:string,timeout?:int} $smtpConfig
  * @param list<array{filename:string,mime:string,data:string}> $attachments
+ * @param string|null $htmlBody Optionele text/html-tegenhanger (bijv. de gestylede
+ *        afzenderhandtekening met logo). Blijft null voor elk kanaal dat dit niet
+ *        opgeeft, dan verandert er niets aan de bestaande platte-tekstmail.
  */
 function smtp_relay_send(
     array $smtpConfig,
@@ -89,7 +92,8 @@ function smtp_relay_send(
     string $body,
     string $fromEmail,
     string $fromName,
-    array $attachments = []
+    array $attachments = [],
+    ?string $htmlBody = null
 ): void {
     $host = strtolower(trim((string)($smtpConfig['host'] ?? '')));
     $port = (int)($smtpConfig['port'] ?? 0);
@@ -163,7 +167,7 @@ function smtp_relay_send(
 
         smtp_write_all($socket, "DATA\r\n");
         smtp_expect(['354'], smtp_read_response($socket, 'DATA'), 'DATA');
-        $message = smtp_build_message($fromEmail, $fromName, $to, $cc, $subject, $body, $attachments);
+        $message = smtp_build_message($fromEmail, $fromName, $to, $cc, $subject, $body, $attachments, $htmlBody);
         $message = smtp_normalize_newlines($message);
         $stuffed = preg_replace('/^\./m', '..', $message) ?? $message;
         smtp_write_all($socket, rtrim($stuffed, "\r\n") . "\r\n.\r\n");
@@ -179,7 +183,12 @@ function smtp_relay_send(
     }
 }
 
-/** @param list<array{filename:string,mime:string,data:string}> $attachments */
+/**
+ * @param list<array{filename:string,mime:string,data:string}> $attachments
+ * @param string|null $htmlBody Zie smtp_relay_send(). Zonder bijlagen wordt de hele
+ *        mail multipart/alternative (plat + html); mét bijlagen wordt de
+ *        alternative-tak genest in de bestaande multipart/mixed-structuur.
+ */
 function smtp_build_message(
     string $fromEmail,
     string $fromName,
@@ -187,7 +196,8 @@ function smtp_build_message(
     ?string $cc,
     string $subject,
     string $body,
-    array $attachments
+    array $attachments,
+    ?string $htmlBody = null
 ): string {
     smtp_assert_email($fromEmail, 'from address');
     smtp_assert_email($to, 'recipient address');
@@ -208,18 +218,40 @@ function smtp_build_message(
     $headers .= "MIME-Version: 1.0\r\n";
     $encodedBody = quoted_printable_encode(smtp_normalize_newlines($body));
 
-    if ($attachments === []) {
+    $alternativePart = null;
+    if ($htmlBody !== null && trim($htmlBody) !== '') {
+        $altBoundary = '----=_PathAlt_' . bin2hex(random_bytes(12));
+        $encodedHtml = quoted_printable_encode(smtp_normalize_newlines($htmlBody));
+        $alternativePart = 'Content-Type: multipart/alternative; boundary="' . $altBoundary . "\"\r\n\r\n"
+            . '--' . $altBoundary . "\r\n"
+            . "Content-Type: text/plain; charset=UTF-8\r\n"
+            . "Content-Transfer-Encoding: quoted-printable\r\n\r\n" . $encodedBody . "\r\n"
+            . '--' . $altBoundary . "\r\n"
+            . "Content-Type: text/html; charset=UTF-8\r\n"
+            . "Content-Transfer-Encoding: quoted-printable\r\n\r\n" . $encodedHtml . "\r\n"
+            . '--' . $altBoundary . "--\r\n";
+    }
+
+    if ($attachments === [] && $alternativePart === null) {
         return $headers
             . "Content-Type: text/plain; charset=UTF-8\r\n"
             . "Content-Transfer-Encoding: quoted-printable\r\n\r\n"
             . $encodedBody;
     }
 
+    if ($attachments === []) {
+        return $headers . $alternativePart;
+    }
+
     $boundary = '----=_Path_' . bin2hex(random_bytes(12));
     $message = $headers . 'Content-Type: multipart/mixed; boundary="' . $boundary . "\"\r\n\r\n";
     $message .= '--' . $boundary . "\r\n";
-    $message .= "Content-Type: text/plain; charset=UTF-8\r\n";
-    $message .= "Content-Transfer-Encoding: quoted-printable\r\n\r\n" . $encodedBody . "\r\n";
+    if ($alternativePart !== null) {
+        $message .= $alternativePart;
+    } else {
+        $message .= "Content-Type: text/plain; charset=UTF-8\r\n";
+        $message .= "Content-Transfer-Encoding: quoted-printable\r\n\r\n" . $encodedBody . "\r\n";
+    }
 
     foreach ($attachments as $attachment) {
         $filename = preg_replace('/[^A-Za-z0-9._-]/', '_', (string)($attachment['filename'] ?? 'attachment.pdf')) ?: 'attachment.pdf';
