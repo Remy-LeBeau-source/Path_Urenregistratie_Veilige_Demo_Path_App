@@ -770,10 +770,30 @@ test('[TS-REV-UI-H-012] beheerder zet verlof en ziekte aan; de medewerker kan ze
   await mockEmploymentStartDate(page);
 
   try {
-    await test.step('Given de beheerder verlof en ziekte handmatig invullen aanzet', async () => {
+    await test.step('Given de beheerder verlof en ziekte handmatig invullen aanzet via de instellingen-schakelaar', async () => {
       await loginPage.open();
       await loginPage.loginAsAdmin();
-      await setLeaveSickEntryEnabled(page, true);
+      await page.locator('button[data-view="settings"]').click();
+      await expect(page.locator('#page-title')).toHaveText('Instellingen');
+      const toggle = page.locator('#setting-leave-sick-entry-enabled');
+      const track = page.locator('.leave-sick-toggle .switch-track');
+      await expect(toggle).not.toBeChecked();
+      // Regression: dit veld stond eerder als kaal <label class="full check-row">
+      // in een 2-koloms .form-grid, waar de generieke .form-grid input-regel
+      // (width:100%; height:42px) er een gigantische blauwe knop van maakte in
+      // plaats van een compacte schakelaar. Nu een eigen toggle-component; deze
+      // toets pint dat de knop klein en naast de tekst blijft, niet de hele rij.
+      const trackBox = await track.boundingBox();
+      expect(trackBox?.width, 'de schakelaar hoort een compacte knop te zijn, geen volle-breedte veld').toBeLessThan(60);
+      await toggle.click();
+      await expect(toggle).toBeChecked();
+      const thumbTransform = await page.locator('.leave-sick-toggle .switch-thumb').evaluate(el => getComputedStyle(el, '::before').transform);
+      expect(thumbTransform, 'de knop hoort zichtbaar naar rechts te schuiven zodra hij aan staat').not.toBe('none');
+      const responsePromise = page.waitForResponse(response => response.url().includes('/server/api/settings.php') && response.request().method() === 'POST');
+      await page.locator('#save-settings').click();
+      const response = await responsePromise;
+      expect(response.status()).toBe(200);
+      await expect(page.locator('#toast')).toContainText('Instellingen zijn op de server opgeslagen');
       await loginPage.logout();
     });
 

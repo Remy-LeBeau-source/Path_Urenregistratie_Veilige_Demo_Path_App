@@ -78,9 +78,9 @@ Feature: Correcties en goedkeuringen behandelen
 
   @happy
   Scenario: [TS-REV-UI-H-012] beheerder zet verlof en ziekte aan; de medewerker kan ze dan zelf invullen en het blijft na F5 staan
-    # Testtechniek: Beslissingstabel + toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 7
-    Given de beheerder verlof en ziekte handmatig invullen aanzet
+    # Testtechniek: Beslissingstabel + toestandsovergang + gerenderde stijl
+    # Aantoonbare Playwright-assertions in deze case: 14
+    Given de beheerder verlof en ziekte handmatig invullen aanzet via de instellingen-schakelaar
     When de medewerker Mijn uren opent
     Then staan verlof en ziekte niet meer uitgeschakeld en is de uitleg verdwenen
     When de medewerker verlof en ziekte zelf invult
