@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pilot — 1919 Path Storyline — medewerker</title>
+<style>
+  /* ------------------------------------------------------------------
+     PILOT-PAGINA. Losstaande statische voorbeeldpagina van richting
+     1919 "Path Storyline" (medewerker-dashboard). Raakt de echte app
+     niet: geen gedeelde JS/CSS, geen routing, geen data. Bereikbaar
+     als eigen URL naast /.
+     CSP op TEST verbiedt externe fonts/scripts/afbeeldingen -> serif =
+     Georgia (systeem), de twee "foto"-vlakken zijn inline SVG-illustraties
+     in dezelfde compositie/sfeer als de mockup (geen echte fotografie).
+     ------------------------------------------------------------------ */
+  :root{
+    --navy:#0e2233; --navy-2:#0c1f2e; --forest:#16362b; --forest-2:#122c24;
+    --cream:#f4f1e8; --paper:#faf7ef;
+    --ink:#20303a; --ink-serif:#22302b;
+    --line-dark:rgba(255,255,255,.14); --line-cream:#e7e1d3;
+    --text-dark:#cdd8dd; --text-dark-soft:#93a4ad;
+    --green:#6bbf95; --green-deep:#2f6a4c;
+    --amber:#e0a13c; --amber-strong:#d68f24;
+    --serif:Georgia,"Times New Roman",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--navy);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;}
+  .pilot-flag{
+    background:#1b1b1b;color:#f3e6c8;font-size:12px;letter-spacing:.04em;
+    padding:8px 18px;text-align:center;border-bottom:1px solid #333;
+  }
+  .pilot-flag b{color:#fff;}
+
+  .shell{display:grid;grid-template-columns:264px 1fr;min-height:100vh;}
+
+  /* ---------------- Rail ---------------- */
+  .rail{background:var(--navy);color:var(--text-dark);padding:26px 22px 22px;position:relative;}
+  .rail .brand{display:flex;align-items:center;gap:11px;margin-bottom:34px;}
+  .rail .brand .mark{width:32px;height:32px;border:2px solid var(--green);border-radius:8px;display:grid;place-items:center;color:var(--green);font-family:var(--serif);font-weight:700;font-size:15px;}
+  .rail .brand span{font-size:15px;color:#fff;font-weight:600;letter-spacing:.2px;}
+  .timeline{position:relative;padding-left:6px;}
+  .timeline::before{content:"";position:absolute;left:19px;top:16px;bottom:64px;width:1.5px;background:var(--line-dark);}
+  .stop{position:relative;padding:0 0 30px 44px;}
+  .stop .node{position:absolute;left:0;top:0;width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line-dark);display:grid;place-items:center;background:var(--navy);}
+  .stop .node svg{width:15px;height:15px;stroke:var(--text-dark-soft);fill:none;stroke-width:1.7;}
+  .stop.active .node{border-color:var(--amber);box-shadow:0 0 0 4px rgba(224,161,60,.15);}
+  .stop.active .node svg{stroke:var(--amber);}
+  .stop .eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--green);font-weight:700;}
+  .stop.active .eyebrow{color:var(--amber);}
+  .stop .ttl{font-family:var(--serif);font-size:15px;color:#fff;margin:3px 0 3px;line-height:1.25;}
+  .stop .sub{font-size:11.5px;color:var(--text-dark-soft);line-height:1.45;}
+  .stop.active .sub{color:var(--amber);}
+  .rail .ask{position:absolute;left:22px;right:22px;bottom:20px;display:flex;gap:11px;border-top:1px solid var(--line-dark);padding-top:16px;}
+  .rail .ask svg{width:16px;height:16px;stroke:var(--text-dark-soft);fill:none;stroke-width:1.7;flex:0 0 auto;margin-top:2px;}
+  .rail .ask p{margin:0;font-size:11px;color:var(--text-dark-soft);line-height:1.5;}
+
+  /* ---------------- Main ---------------- */
+  .main{background:var(--cream);}
+  .topbar{display:flex;align-items:center;gap:16px;padding:20px 44px;background:var(--cream);}
+  .topbar .pkg{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink);opacity:.55;}
+  .topbar .pkg b{color:var(--green-deep);opacity:1;}
+  .topbar .grow{flex:1;}
+  .chip{display:flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--line-cream);border-radius:11px;padding:9px 14px;font-size:13px;font-weight:600;color:var(--ink);}
+  .chip svg{width:15px;height:15px;stroke:#7a7f7c;fill:none;stroke-width:1.7;}
+  .topbar .sep{width:1px;height:26px;background:var(--line-cream);}
+  .who{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--ink);}
+  .who .av{width:34px;height:34px;border-radius:50%;background:#d8e2da;display:grid;place-items:center;font-family:var(--serif);font-size:12px;color:var(--green-deep);}
+  .who svg{width:14px;height:14px;stroke:#7a7f7c;fill:none;stroke-width:1.8;}
+
+  /* Chapter 1 — hero */
+  .hero{display:grid;grid-template-columns:1fr 1.15fr;align-items:stretch;background:var(--cream);}
+  .hero .copy{padding:44px 10px 64px 44px;align-self:center;max-width:560px;}
+  .eyebrow-c{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--green-deep);font-weight:700;}
+  .hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(40px,5vw,58px);line-height:1.02;color:var(--ink-serif);margin:12px 0 16px;letter-spacing:.4px;}
+  .hero p{font-size:15px;line-height:1.6;color:#5b6560;margin:0 0 26px;}
+  .mini{display:flex;gap:26px;flex-wrap:wrap;}
+  .mini > div{display:flex;gap:11px;max-width:180px;}
+  .mini .ic{width:34px;height:34px;border-radius:9px;border:1px solid var(--line-cream);display:grid;place-items:center;flex:0 0 auto;background:#fff;}
+  .mini .ic svg{width:16px;height:16px;stroke:var(--green-deep);fill:none;stroke-width:1.6;}
+  .mini b{display:block;font-size:12.5px;color:var(--ink);}
+  .mini span{display:block;font-size:11.5px;color:#7f8883;margin-top:2px;line-height:1.4;}
+  .hero .scene{position:relative;min-height:460px;margin-top:-64px;overflow:hidden;}
+  .hero .scene svg{position:absolute;inset:0;width:100%;height:100%;}
+
+  /* Chapter 2 — invullen (navy) */
+  .chapter{padding:60px 44px;}
+  .chapter.navy{background:var(--navy);color:var(--text-dark);}
+  .chapter.forest{background:var(--forest);color:var(--text-dark);}
+  .chapter.dark{background:var(--navy-2);color:var(--text-dark);}
+  .ch-grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:44px;align-items:center;}
+  .ch-eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;}
+  .chapter.navy .ch-eyebrow{color:var(--amber);}
+  .chapter.forest .ch-eyebrow,.chapter.dark .ch-eyebrow{color:var(--green);}
+  .ch-grid h2{font-family:var(--serif);font-weight:400;font-size:clamp(30px,3.6vw,44px);line-height:1.08;color:#fff;margin:12px 0 14px;letter-spacing:.3px;}
+  .ch-grid .lead{font-size:14px;line-height:1.6;color:var(--text-dark-soft);margin:0 0 22px;max-width:420px;}
+  .btn-amber{display:inline-flex;align-items:center;gap:10px;background:var(--amber-strong);color:#241a06;border:0;border-radius:10px;padding:13px 22px;font-size:13.5px;font-weight:700;font-family:inherit;cursor:pointer;}
+  .btn-amber svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;}
+
+  .week{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;}
+  .day .dh{display:flex;flex-direction:column;gap:2px;margin-bottom:10px;}
+  .day .dh b{font-size:13px;letter-spacing:.08em;color:#fff;}
+  .day .dh span{font-size:10.5px;letter-spacing:.06em;color:var(--text-dark-soft);}
+  .day .cell{border:1px solid var(--line-dark);border-radius:11px;padding:22px 12px 24px;text-align:left;background:rgba(255,255,255,.02);}
+  .day .cell .h{font-family:var(--serif);font-size:24px;color:var(--green);}
+  .day .cell.empty .h{color:var(--amber);}
+  .day .cell .u{font-size:9.5px;letter-spacing:.12em;color:var(--text-dark-soft);margin-top:2px;}
+  .day .add{display:flex;align-items:center;gap:6px;justify-content:center;margin-top:10px;font-size:10px;letter-spacing:.1em;color:var(--text-dark-soft);}
+  .day .add svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;}
+  .day.total .cell{background:transparent;border-color:transparent;padding-left:0;}
+  .day.total .cell .h{color:#fff;}
+
+  /* Chapter 3 — flow */
+  .flow{display:flex;align-items:flex-start;gap:14px;}
+  .flow .step{display:flex;gap:13px;flex:1;min-width:0;}
+  .flow .step .ic{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--line-dark);display:grid;place-items:center;flex:0 0 auto;}
+  .flow .step .ic svg{width:18px;height:18px;stroke:var(--green);fill:none;stroke-width:1.6;}
+  .flow .step b{display:block;font-size:13px;color:#fff;}
+  .flow .step span{display:block;font-size:11.5px;color:var(--text-dark-soft);margin-top:3px;line-height:1.45;}
+  .flow .arrow{align-self:center;color:var(--text-dark-soft);font-size:16px;flex:0 0 auto;white-space:nowrap;}
+
+  /* Chapter 4 — document scene */
+  .doc-grid{display:grid;grid-template-columns:.8fr 1.2fr;gap:44px;align-items:center;}
+  .doc-scene{position:relative;min-height:280px;}
+  .doc-scene svg{width:100%;height:100%;}
+
+  @media (max-width:1080px){
+    .shell{grid-template-columns:1fr;}
+    .rail{display:none;}
+    .hero,.ch-grid,.doc-grid{grid-template-columns:1fr;}
+    .week{grid-template-columns:repeat(3,1fr);}
+    .flow{flex-direction:column;}
+    .flow .arrow{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="pilot-flag"><b>PILOT</b> &nbsp;·&nbsp; 1919 Path Storyline — medewerker &nbsp;·&nbsp; losstaande voorbeeldpagina, niet de echte app &nbsp;·&nbsp; <a href="/" style="color:#8fd0b0">terug naar de app</a></div>
+
+<div class="shell">
+
+  <!-- ===================== Rail ===================== -->
+  <aside class="rail">
+    <div class="brand"><span class="mark">P</span><span>Path Consultancy</span></div>
+    <div class="timeline">
+      <div class="stop">
+        <span class="node"><svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg></span>
+        <div class="eyebrow">Start</div><div class="ttl">Je maand begint</div><div class="sub">Een frisse start.</div>
+      </div>
+      <div class="stop active">
+        <span class="node"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+        <div class="eyebrow">Week 1</div><div class="ttl">31 aug – 6 sep</div><div class="sub">Vul 20 uur aan</div>
+      </div>
+      <div class="stop">
+        <span class="node"><svg viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-8z"/></svg></span>
+        <div class="eyebrow">Indienen</div><div class="ttl">Je uren indienen</div><div class="sub">Klaar voor controle.</div>
+      </div>
+      <div class="stop">
+        <span class="node"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 5-3 7-7 9-4-2-7-4-7-9V6z"/></svg></span>
+        <div class="eyebrow">Backoffice</div><div class="ttl">Na indienen neemt Backoffice het over</div><div class="sub">Wij zorgen voor de rest.</div>
+      </div>
+      <div class="stop">
+        <span class="node"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
+        <div class="eyebrow">Klanturenstaat</div><div class="ttl">Direct naar de klant</div><div class="sub">Transparant en rechtstreeks gemaild.</div>
+      </div>
+    </div>
+    <div class="ask">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 015 .2c0 1.8-2.5 2-2.5 3.8"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg>
+      <p>Vragen over je uren?<br>Neem contact op met Backoffice.</p>
+    </div>
+  </aside>
+
+  <!-- ===================== Main ===================== -->
+  <div class="main">
+
+    <div class="topbar">
+      <span class="pkg"><b>Package 1919</b> · Path Storyline — Employee</span>
+      <span class="grow"></span>
+      <span class="chip"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>September 2026 <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
+      <span class="sep"></span>
+      <span class="who"><span class="av">SB</span>Stasjo van Bakel <svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6"/></svg></span>
+    </div>
+
+    <!-- Chapter 1 — hero -->
+    <section class="hero">
+      <div class="copy">
+        <div class="eyebrow-c">September 2026</div>
+        <h1>Je maand begint</h1>
+        <p>Welkom bij je urenregistratie. Registreer je uren per dag, dien ze in en wij doen de rest.</p>
+        <div class="mini">
+          <div><span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span><span><b>Registreer dagelijks</b><span>Houd je uren actueel.</span></span></div>
+          <div><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-8z"/></svg></span><span><b>Dien wekelijks in</b><span>Eenvoudig en snel.</span></span></div>
+          <div><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 5-3 7-7 9-4-2-7-4-7-9V6z"/><path d="M9 12l2 2 4-5"/></svg></span><span><b>Wij regelen de rest</b><span>Backoffice neemt het over.</span></span></div>
+        </div>
+      </div>
+      <div class="scene" aria-hidden="true">
+        <svg viewBox="0 0 720 460" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#aac3d1"/><stop offset="0.5" stop-color="#d9d2bf"/><stop offset="1" stop-color="#f2e3c4"/>
+            </linearGradient>
+            <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+              <stop offset="0" stop-color="#fff4d6"/><stop offset="0.4" stop-color="#f4d79b"/><stop offset="1" stop-color="#f4d79b" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <rect width="720" height="460" fill="url(#sky)"/>
+          <circle cx="520" cy="210" r="140" fill="url(#sun)"/>
+          <circle cx="520" cy="210" r="34" fill="#fdeec4"/>
+          <path d="M0 250 Q160 210 340 245 T720 235 V460 H0 Z" fill="#c9c4a6" opacity="0.6"/>
+          <path d="M0 300 Q180 250 400 300 T720 290 V460 H0 Z" fill="#8fa07a"/>
+          <path d="M0 350 Q220 300 460 355 T720 345 V460 H0 Z" fill="#5d7355"/>
+          <path d="M0 400 Q240 360 720 405 V460 H0 Z" fill="#3c4c3b"/>
+          <path d="M330 460 C 360 380 430 330 470 250 C 452 330 400 380 386 460 Z" fill="#e8dcbb" opacity="0.9"/>
+          <g fill="#3c4c3b" opacity="0.8">
+            <path d="M40 420 q6 -26 2 -40 q10 12 12 30 q6 -18 16 -26 q-4 20 -14 40 z"/>
+            <path d="M690 300 q4 -20 0 -34 q10 12 12 26 q6 -14 14 -20 q-4 18 -12 34 z"/>
+          </g>
+        </svg>
+      </div>
+    </section>
+
+    <!-- Chapter 2 — invullen -->
+    <section class="chapter navy">
+      <div class="ch-grid">
+        <div>
+          <div class="ch-eyebrow">Week 1 · 31 aug – 6 sep 2026</div>
+          <h2>Vul je uren in</h2>
+          <p class="lead">Registreer je uren per dag. Zo houd je grip en blijft alles kloppend.</p>
+          <button class="btn-amber"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Vul 20 uur aan</button>
+        </div>
+        <div class="week">
+          <div class="day"><div class="dh"><b>MA</b><span>31 AUG</span></div><div class="cell"><div class="h">8:00</div><div class="u">UREN</div></div><div class="add"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>TOEVOEGEN</div></div>
+          <div class="day"><div class="dh"><b>DI</b><span>1 SEP</span></div><div class="cell"><div class="h">8:00</div><div class="u">UREN</div></div><div class="add"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>TOEVOEGEN</div></div>
+          <div class="day"><div class="dh"><b>WO</b><span>2 SEP</span></div><div class="cell"><div class="h">4:00</div><div class="u">UREN</div></div><div class="add"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>TOEVOEGEN</div></div>
+          <div class="day"><div class="dh"><b>DO</b><span>3 SEP</span></div><div class="cell empty"><div class="h">0:00</div><div class="u">UREN</div></div><div class="add"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>TOEVOEGEN</div></div>
+          <div class="day"><div class="dh"><b>VR</b><span>4 SEP</span></div><div class="cell empty"><div class="h">0:00</div><div class="u">UREN</div></div><div class="add"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>TOEVOEGEN</div></div>
+          <div class="day total"><div class="dh"><b>TOTAAL</b><span>&nbsp;</span></div><div class="cell"><div class="h">20:00</div><div class="u">UREN</div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Chapter 3 — na indienen -->
+    <section class="chapter forest">
+      <div class="ch-grid">
+        <div>
+          <div class="ch-eyebrow">Na indienen</div>
+          <h2>Na indienen neemt<br>Backoffice het over</h2>
+          <p class="lead">Wij controleren je uren en verzorgen de communicatie. Jij hoeft verder niets te doen.</p>
+        </div>
+        <div class="flow">
+          <div class="step"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 5-3 7-7 9-4-2-7-4-7-9V6z"/><path d="M9 12l2 2 4-5"/></svg></span><span><b>Controle</b><span>We controleren je uren.</span></span></div>
+          <span class="arrow">&rarr;</span>
+          <div class="step"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-8z"/></svg></span><span><b>Klanturenstaat</b><span>Rechtstreeks gemaild naar de klant.</span></span></div>
+          <span class="arrow">&rarr;</span>
+          <div class="step"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg></span><span><b>Gereed</b><span>Jouw uren zijn afgerond.</span></span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Chapter 4 — direct naar de klant -->
+    <section class="chapter dark">
+      <div class="doc-grid">
+        <div>
+          <div class="ch-eyebrow">Klanturenstaat</div>
+          <h2>Direct naar de klant</h2>
+          <p class="lead">De klanturenstaat wordt na controle direct per e-mail verzonden naar de klant.</p>
+        </div>
+        <div class="doc-scene" aria-hidden="true">
+          <svg viewBox="0 0 560 300" preserveAspectRatio="xMidYMid meet">
+            <defs><linearGradient id="pap" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#efece2"/></linearGradient></defs>
+            <g transform="rotate(-7 300 150)">
+              <rect x="130" y="30" width="300" height="240" rx="4" fill="url(#pap)"/>
+              <rect x="130" y="30" width="300" height="240" rx="4" fill="none" stroke="#d8d3c4"/>
+              <text x="160" y="78" font-family="Georgia, serif" font-size="20" fill="#2a3a30">Klanturenstaat</text>
+              <text x="160" y="100" font-family="Georgia, serif" font-size="11" fill="#7c7f79">September 2026</text>
+              <g transform="translate(372 60)"><rect x="0" y="0" width="17" height="17" rx="4" fill="none" stroke="#2f6a4c" stroke-width="1.6"/><text x="4" y="13" font-family="Georgia, serif" font-size="12" fill="#2f6a4c">P</text></g>
+              <text x="396" y="73" font-family="Georgia, serif" font-size="10" fill="#2a3a30">Path Consultancy</text>
+              <g font-family="Georgia, serif" font-size="10" fill="#6c6f69">
+                <text x="160" y="140">Klant</text><text x="260" y="140">Path Consultancy</text>
+                <text x="160" y="162">Opdracht</text><text x="260" y="162">Path Storyline</text>
+                <text x="160" y="184">Periode</text><text x="260" y="184">31 aug – 6 sep 2026</text>
+              </g>
+              <line x1="160" y1="205" x2="400" y2="205" stroke="#e0dccf"/>
+              <line x1="160" y1="225" x2="400" y2="225" stroke="#e0dccf"/>
+              <line x1="160" y1="245" x2="400" y2="245" stroke="#e0dccf"/>
+            </g>
+            <g fill="#1f3a2c">
+              <path d="M470 300 q4 -46 -4 -70 q18 18 22 44 q10 -26 28 -38 q-6 34 -24 64 z"/>
+              <path d="M498 300 q10 -34 6 -54 q16 14 16 34 q10 -18 22 -24 q-6 26 -22 44 z"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+</body>
+</html>
