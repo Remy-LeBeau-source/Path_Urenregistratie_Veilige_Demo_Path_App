@@ -118,6 +118,42 @@ Feature: Klanturenstaten en documentverwerking
     Then blijft het bestaande document ongewijzigd
     And cleanup: sessie sluiten voor testisolatie
 
+  @negative
+  Scenario: [CTS-API-N-010] bestand van precies 2 MB wordt geaccepteerd, 2 MB + 1 byte wordt geweigerd
+    # Testtechniek: Grenswaardeanalyse
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given de medewerker is ingelogd
+    When de medewerker een geldige PDF van precies 2 MB uploadt
+    Then wordt dezelfde geldige PDF van 2 MB + 1 byte geweigerd
+    And cleanup: sessie sluiten voor testisolatie
+
+  @negative
+  Scenario: [CTS-API-N-012] een leeg bestand (0 bytes) wordt geweigerd zonder een bestaand concept te vervangen
+    # Testtechniek: Equivalentieklassen + foutinjectie
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given de medewerker is ingelogd en de bestaande klanturenstaat is vastgelegd
+    When de medewerker een leeg bestand van 0 bytes uploadt
+    Then blijft het bestaande document ongewijzigd
+    And cleanup: sessie sluiten voor testisolatie
+
+  @negative
+  Scenario: [CTS-API-N-011] "vervangen" van een reeds goedgekeurde klanturenstaat wordt door de server geweigerd
+    # Testtechniek: Beslissingstabel
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given een medewerker een klanturenstaat heeft ingediend die is goedgekeurd
+    When de medewerker via save_draft alsnog probeert te vervangen
+    Then blijft de klanturenstaat gewoon goedgekeurd
+    And cleanup: sessie sluiten voor testisolatie
+
+  @happy
+  Scenario: [CTS-API-H-015] "Concept vervangen" na een afkeuring (resubmit) wist het oude beoordelingsbericht
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 13
+    Given Backoffice om een nieuwe versie heeft gevraagd met een afkeurreden
+    When de medewerker via "Concept vervangen" een nieuwe versie uploadt
+    Then is het oude beoordelingsbericht van Backoffice gewist
+    And cleanup: sessie sluiten voor testisolatie
+
   @happy
   Scenario: [CTS-API-H-014] een serverschrijfactie heft de lokale herstelvoorrang op zodat de status niet uit de pas loopt
     # Testtechniek: Toestandsovergang + foutinjectie
@@ -125,3 +161,14 @@ Feature: Klanturenstaten en documentverwerking
     Given de lokale herstelvoorrang aanstaat en de klanturenstaat nog open is
     When de medewerker de klanturenstaat als rechtstreeks gemaild registreert
     Then is de herstelvoorrang opgeheven en toont het scherm de serverstand
+
+  @happy
+  Scenario: [CTS-API-H-016] de knop wisselt zichtbaar tussen "Concept opslaan" en "Concept vervangen" en vervangt het bestand echt
+    # Testtechniek: Toestandsovergang + UI-verificatie
+    # Aantoonbare Playwright-assertions in deze case: 14
+    Given de medewerker opent een maand zonder klanturenstaat
+    When de medewerker een eerste PDF opslaat als concept
+    Then toont de knop nu "Concept vervangen" in plaats van "Concept opslaan"
+    When de medewerker via diezelfde knop een tweede, ander bestand kiest
+    Then is het eerste bestand echt vervangen door het tweede, niet ernaast bewaard
+    And cleanup: zet de geïsoleerde toekomstcase terug naar ontbrekend en log uit

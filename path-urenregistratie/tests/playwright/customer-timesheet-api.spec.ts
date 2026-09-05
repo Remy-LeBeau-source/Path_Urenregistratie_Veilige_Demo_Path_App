@@ -74,6 +74,47 @@ readablePdf.setFontSize(11);
 readablePdf.text('Volledige leesbare PDF-fixture met paginaboom en xref-tabel.', 20, 38);
 const TINY_PDF_BUFFER = Buffer.from(readablePdf.output('arraybuffer'));
 
+// Bouwt een structureel geldige PDF (catalogus, paginaboom, klassieke xref-tabel
+// die op de echte byte-offsets wijst) van precies het gevraagde aantal bytes, voor
+// grenswaardeanalyse rond de 2 MB-uploadlimiet. De vulling zit als PDF-commentaar
+// vóór de objecten, zodat elke objectoffset simpelweg met de vullengte meeschuift;
+// een korte na-correctie compenseert het enkele-bytes-effect van een groeiend
+// aantal cijfers in de xref-offset zodra de vulling richting de MB's loopt.
+function buildValidPdfOfExactSize(targetBytes: number): Buffer {
+  const header = '%PDF-1.4\n';
+  const objects = [
+    '1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n',
+    '2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n',
+    '3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] >>\nendobj\n',
+  ];
+
+  function assemble(fillerLength: number): string {
+    const filler = fillerLength > 0 ? '%' + 'A'.repeat(Math.max(0, fillerLength - 2)) + '\n' : '';
+    let body = header + filler;
+    const offsets: number[] = [];
+    for (const object of objects) {
+      offsets.push(body.length);
+      body += object;
+    }
+    const xrefOffset = body.length;
+    let xref = `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+    for (const offset of offsets) {
+      xref += String(offset).padStart(10, '0') + ' 00000 n \n';
+    }
+    body += xref;
+    body += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+    return body;
+  }
+
+  let fillerLength = Math.max(0, targetBytes - assemble(0).length);
+  let result = assemble(fillerLength);
+  while (result.length !== targetBytes) {
+    fillerLength += targetBytes - result.length;
+    result = assemble(fillerLength);
+  }
+  return Buffer.from(result, 'latin1');
+}
+
 async function findWritablePeriod(api: CustomerTimesheetApi): Promise<string> {
   for (const period of CANDIDATE_PERIODS) {
     const read = await api.read(period, undefined, undefined, { attach: false });
@@ -765,6 +806,247 @@ test.describe('customer timesheet api', () => {
       await authApi.logout();
     });
   });
+
+  // Grenswaardeanalyse (BVA) op de 2 MB-uploadlimiet: tot nu toe testte alleen
+  // een bestand ver bóven de grens (CTS-API-N-008, 3 MB). Precies op de grens
+  // (client én server toetsen "> 2 MB", dus exact 2 MB hoort te slagen) en
+  // precies 1 byte erover ontbraken.
+  test('[CTS-API-N-010] bestand van precies 2 MB wordt geaccepteerd, 2 MB + 1 byte wordt geweigerd', async ({ request }) => {
+    const authApi = new AuthApi(request);
+    const customerApi = new CustomerTimesheetApi(request);
+    const TWO_MB = 2 * 1024 * 1024;
+
+    let period = '';
+
+    await test.step('Given de medewerker is ingelogd', async () => {
+      const employeeLogin = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      expect(employeeLogin.user.role).toBe('employee');
+      period = await findWritablePeriod(customerApi);
+    });
+
+    await test.step('When de medewerker een geldige PDF van precies 2 MB uploadt', async () => {
+      const exactBuffer = buildValidPdfOfExactSize(TWO_MB);
+      expect(exactBuffer.byteLength).toBe(TWO_MB);
+
+      const draft = await customerApi.write({
+        action: 'save_draft',
+        period,
+        file: {
+          name: 'klanturenstaat-exact-2mb.pdf',
+          mimeType: 'application/pdf',
+          buffer: exactBuffer,
+        },
+      });
+
+      expect(draft.status).toBe(200);
+      expect(draft.body.ok).toBe(true);
+      expect(draft.body.customer_timesheet.status).toBe('draft');
+    });
+
+    await test.step('Then wordt dezelfde geldige PDF van 2 MB + 1 byte geweigerd', async () => {
+      const overBuffer = buildValidPdfOfExactSize(TWO_MB + 1);
+      expect(overBuffer.byteLength).toBe(TWO_MB + 1);
+
+      const rejected = await customerApi.write({
+        action: 'save_draft',
+        period,
+        file: {
+          name: 'klanturenstaat-2mb-plus-1.pdf',
+          mimeType: 'application/pdf',
+          buffer: overBuffer,
+        },
+      });
+
+      // 1 byte boven de grens strandt soms al op de php.ini upload_max_filesize
+      // (UPLOAD_ERR_INI_SIZE, "Het uploaden... is mislukt") in plaats van op de
+      // eigen grootte-check van de app ("maximaal 2 MB"); beide zijn een terechte
+      // weigering van hetzelfde bestand, dus de test toetst alleen het resultaat
+      // dat voor de medewerker telt: geweigerd, niet de interne foutbron.
+      expect(rejected.status).toBe(400);
+      expect(rejected.body.ok).toBe(false);
+      expect(rejected.body.error).toBe('invalid-upload');
+    });
+
+    await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {
+      await authApi.logout();
+    });
+  });
+
+  test('[CTS-API-N-012] een leeg bestand (0 bytes) wordt geweigerd zonder een bestaand concept te vervangen', async ({ request }) => {
+    const authApi = new AuthApi(request);
+    const customerApi = new CustomerTimesheetApi(request);
+
+    let period = '';
+    let before: Awaited<ReturnType<CustomerTimesheetApi['read']>>;
+
+    await test.step('Given de medewerker is ingelogd en de bestaande klanturenstaat is vastgelegd', async () => {
+      const employeeLogin = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      expect(employeeLogin.user.role).toBe('employee');
+      period = await findWritablePeriod(customerApi);
+      before = await customerApi.read(period);
+      expect(before.status).toBe(200);
+    });
+
+    await test.step('When de medewerker een leeg bestand van 0 bytes uploadt', async () => {
+      const empty = await customerApi.write({
+        action: 'save_draft',
+        period,
+        file: {
+          name: 'leeg-bestand.pdf',
+          mimeType: 'application/pdf',
+          buffer: Buffer.alloc(0),
+        },
+      });
+
+      expect(empty.status).toBe(400);
+      expect(empty.body.ok).toBe(false);
+      expect(empty.body.error).toBe('invalid-upload');
+    });
+
+    await test.step('Then blijft het bestaande document ongewijzigd', async () => {
+      const after = await customerApi.read(period);
+      expect(after.status).toBe(200);
+      expect(after.body.found).toBe(before.body.found);
+      expect(after.body.customer_timesheet?.storage_key || '').toBe(before.body.customer_timesheet?.storage_key || '');
+    });
+
+    await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {
+      await authApi.logout();
+    });
+  });
+
+  // Decision table: de server weigert "vervangen" (save_draft) expliciet met een
+  // duidelijke 409 zodra een klanturenstaat al is goedgekeurd. Dit pad bestond al
+  // in de serverlogica (naast sent/sent_to_broker) maar had nog geen eigen test —
+  // zonder deze test kan een toekomstige wijziging deze vergrendeling per ongeluk
+  // weglaten zonder dat een testrun dat opmerkt.
+  test('[CTS-API-N-011] "vervangen" van een reeds goedgekeurde klanturenstaat wordt door de server geweigerd', async ({ request }) => {
+    const authApi = new AuthApi(request);
+    const customerApi = new CustomerTimesheetApi(request);
+
+    let period = '';
+    let employeeId = 0;
+    let assignmentId = 0;
+
+    await test.step('Given een medewerker een klanturenstaat heeft ingediend die is goedgekeurd', async () => {
+      const employeeLogin = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      expect(employeeLogin.user.role).toBe('employee');
+      period = await findWritablePeriod(customerApi);
+
+      const draft = await customerApi.write({
+        action: 'save_draft',
+        period,
+        file: { name: 'klanturenstaat.pdf', mimeType: 'application/pdf', buffer: TINY_PDF_BUFFER },
+      });
+      expect(draft.status).toBe(200);
+
+      const submit = await customerApi.write({ action: 'submit', period });
+      expect(submit.status).toBe(200);
+      employeeId = Number(submit.body.employee_id || 0);
+      assignmentId = Number(submit.body.assignment_id || 0);
+
+      await authApi.logout();
+      await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+      const approve = await customerApi.write({ action: 'approve', period, employeeId, assignmentId });
+      expect(approve.status).toBe(200);
+      expect(approve.body.customer_timesheet.status).toBe('approved');
+      await authApi.logout();
+    });
+
+    await test.step('When de medewerker via save_draft alsnog probeert te vervangen', async () => {
+      await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      const blocked = await customerApi.write({
+        action: 'save_draft',
+        period,
+        file: { name: 'nieuwe-versie.pdf', mimeType: 'application/pdf', buffer: TINY_PDF_BUFFER },
+      });
+
+      expect(blocked.status).toBe(409);
+      expect(blocked.body.ok).toBe(false);
+      expect(blocked.body.error).toBe('customer-timesheet-locked');
+    });
+
+    await test.step('Then blijft de klanturenstaat gewoon goedgekeurd', async () => {
+      const after = await customerApi.read(period);
+      expect(after.body.customer_timesheet.status).toBe('approved');
+    });
+
+    await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {
+      await authApi.logout();
+    });
+  });
+
+  // State transition: de enige weg terug uit "resubmit" (afgekeurd, om een nieuwe
+  // versie gevraagd) is een nieuwe upload via "Concept vervangen". CTS-API-H-001
+  // toont alleen dat request_resubmit een reviewNote wegschrijft; er was nog geen
+  // test die controleert dat een daaropvolgende vervanging die oude afkeurreden
+  // ook weer wist — zonder die wissing zou Backoffice bij de volgende controle nog
+  // het oude, inmiddels opgeloste commentaar te zien krijgen.
+  test('[CTS-API-H-015] "Concept vervangen" na een afkeuring (resubmit) wist het oude beoordelingsbericht', async ({ request }) => {
+    const authApi = new AuthApi(request);
+    const customerApi = new CustomerTimesheetApi(request);
+
+    let period = '';
+    let employeeId = 0;
+    let assignmentId = 0;
+
+    await test.step('Given Backoffice om een nieuwe versie heeft gevraagd met een afkeurreden', async () => {
+      const employeeLogin = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      expect(employeeLogin.user.role).toBe('employee');
+      period = await findWritablePeriod(customerApi);
+
+      const draft = await customerApi.write({
+        action: 'save_draft',
+        period,
+        file: { name: 'klanturenstaat-eerste-versie.pdf', mimeType: 'application/pdf', buffer: TINY_PDF_BUFFER },
+      });
+      expect(draft.status).toBe(200);
+
+      const submit = await customerApi.write({ action: 'submit', period });
+      expect(submit.status).toBe(200);
+      employeeId = Number(submit.body.employee_id || 0);
+      assignmentId = Number(submit.body.assignment_id || 0);
+
+      await authApi.logout();
+      await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+      const resubmit = await customerApi.write({
+        action: 'request_resubmit',
+        period,
+        employeeId,
+        assignmentId,
+        reviewNote: 'De scan is onleesbaar, upload een scherpere foto.',
+      });
+      expect(resubmit.status).toBe(200);
+      expect(resubmit.body.customer_timesheet.status).toBe('resubmit');
+      await authApi.logout();
+    });
+
+    await test.step('When de medewerker via "Concept vervangen" een nieuwe versie uploadt', async () => {
+      await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      const replaced = await customerApi.write({
+        action: 'save_draft',
+        period,
+        file: { name: 'klanturenstaat-scherpere-foto.pdf', mimeType: 'application/pdf', buffer: TINY_PDF_BUFFER },
+      });
+
+      expect(replaced.status).toBe(200);
+      expect(replaced.body.ok).toBe(true);
+      expect(replaced.body.customer_timesheet.status).toBe('draft');
+    });
+
+    await test.step('Then is het oude beoordelingsbericht van Backoffice gewist', async () => {
+      const after = await customerApi.read(period);
+      expect(after.status).toBe(200);
+      expect(after.body.customer_timesheet.status).toBe('draft');
+      expect(after.body.customer_timesheet.review_note || '').toBe('');
+      expect(after.body.customer_timesheet.reviewed_at || '').toBeFalsy();
+      expect(after.body.customer_timesheet.reviewed_by || '').toBeFalsy();
+    });
+
+    await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {
+      await authApi.logout();
+    });
+  });
 });
 
 
@@ -818,5 +1100,66 @@ test('[CTS-API-H-014] een serverschrijfactie heft de lokale herstelvoorrang op z
       return record.customerTimesheetFor(record.recordFor(Number(id), String(periodKey))).status;
     }, [period, String(employeeId)]);
     expect(status, 'de lokale stand hoort de serverstand te volgen').toBe('skipped');
+  });
+});
+
+test('[CTS-API-H-016] de knop wisselt zichtbaar tussen "Concept opslaan" en "Concept vervangen" en vervangt het bestand echt', async ({ page }) => {
+  const customerApi = new CustomerTimesheetApi(page.request);
+  const loginPage = new LoginPage(page);
+  const period = '2153-03';
+
+  await test.step('Given de medewerker opent een maand zonder klanturenstaat', async () => {
+    await page.clock.setFixedTime(new Date('2153-03-15T12:00:00Z'));
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('#period-year-picker').fill('2153');
+    await page.locator('#period-month-picker').click();
+    await page.locator('[data-period-month="03"][data-month-control="#period-month-picker"]').click();
+    await expect(page.locator('#period-picker')).toHaveValue(period);
+    await page.locator('button[data-view="timesheet"]').click();
+    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+    await expect(page.locator('#customer-timesheet-save-draft')).toHaveText('Concept opslaan');
+  });
+
+  await test.step('When de medewerker een eerste PDF opslaat als concept', async () => {
+    await page.locator('#customer-timesheet-file').setInputFiles({
+      name: 'klanturenstaat-versie-1.pdf', mimeType: 'application/pdf', buffer: Buffer.from(TINY_PDF_BUFFER),
+    });
+    await page.locator('#customer-timesheet-save-draft').click();
+    await expect(page.locator('#toast')).toContainText('Concept opgeslagen');
+    await expect(page.locator('#customer-timesheet-current')).toContainText('klanturenstaat-versie-1.pdf');
+  });
+
+  await test.step('Then toont de knop nu "Concept vervangen" in plaats van "Concept opslaan"', async () => {
+    await expect(page.locator('#customer-timesheet-save-draft')).toHaveText('Concept vervangen');
+  });
+
+  await test.step('When de medewerker via diezelfde knop een tweede, ander bestand kiest', async () => {
+    await page.locator('#customer-timesheet-file').setInputFiles({
+      name: 'klanturenstaat-versie-2.pdf', mimeType: 'application/pdf', buffer: Buffer.from(TINY_PDF_BUFFER),
+    });
+    await page.locator('#customer-timesheet-save-draft').click();
+    await expect(page.locator('#toast')).toContainText('Concept opgeslagen');
+  });
+
+  await test.step('Then is het eerste bestand echt vervangen door het tweede, niet ernaast bewaard', async () => {
+    await expect(page.locator('#customer-timesheet-current')).toContainText('klanturenstaat-versie-2.pdf');
+    await expect(page.locator('#customer-timesheet-current')).not.toContainText('klanturenstaat-versie-1.pdf');
+    const readBack = await customerApi.read(period);
+    expect(readBack.body.customer_timesheet.status).toBe('draft');
+    expect(readBack.body.customer_timesheet.original_file_name).toBe('klanturenstaat-versie-2.pdf');
+  });
+
+  await test.step('And cleanup: zet de geïsoleerde toekomstcase terug naar ontbrekend en log uit', async () => {
+    const skipped = await customerApi.write({
+      action: 'mark_skipped',
+      period,
+      reviewNote: 'Automatische testcleanup voor geïsoleerde toekomstperiode.',
+    });
+    expect(skipped.status).toBe(200);
+    const restored = await customerApi.write({ action: 'restore_missing', period });
+    expect(restored.status).toBe(200);
+    expect(restored.body.customer_timesheet.status).toBe('missing');
+    await loginPage.logout();
   });
 });
