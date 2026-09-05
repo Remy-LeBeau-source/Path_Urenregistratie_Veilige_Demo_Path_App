@@ -34,6 +34,14 @@ Feature: Hulp en contact
     Then staat er precies één mailto-knop en één kopieerknop, geen los Gmail-alternatief
 
   @happy
+  Scenario: [HELP-H-004] het hulpantwoord over verlof/ziekte volgt de beheerderschakelaar
+    # Testtechniek: Beslissingstabel (schakelaar aan/uit)
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given de schakelaar staat uit (standaard) en de medewerker vraagt naar verlof
+    When de beheerder verlof/ziekte handmatig invullen aanzet
+    Then krijgt de medewerker nu het antwoord dat wél naar de maandsamenvatting verwijst
+
+  @happy
   Scenario: [HELP-H-002] het paneel opent en sluit met een vloeiende overgang, en meteen zonder animatievoorkeur
     # Testtechniek: Toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 4

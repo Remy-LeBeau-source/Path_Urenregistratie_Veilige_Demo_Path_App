@@ -8528,9 +8528,17 @@ function answerHelpQuestion(question, explicitTopicId) {
       options.contact = true;
       options.question = topic.contactQuestion || question || "Ik wil contact opnemen over de urenapp.";
     }
-    const answer = topic.contact
-      ? "Je kunt " + supportName() + " bereiken via " + supportEmail() + ". Kies hieronder hoe je een vooraf ingevuld bericht wilt openen of kopiëren. Er wordt niets automatisch verzonden."
-      : topic.answer;
+    let answer = topic.answer;
+    if (topic.contact) {
+      answer = "Je kunt " + supportName() + " bereiken via " + supportEmail() + ". Kies hieronder hoe je een vooraf ingevuld bericht wilt openen of kopiëren. Er wordt niets automatisch verzonden.";
+    } else if (topic.id === "absence") {
+      // Het antwoord hangt af van de beheerderschakelaar: met verlof/ziekte uit
+      // (standaard) mag de medewerker de velden niet invullen, dus dan de echte
+      // route noemen in plaats van "vul rechts in".
+      answer = state.settings.leaveSickEntryEnabled
+        ? "Verlof en ziekte vul je rechts bij de maandsamenvatting in. Ze blijven apart van je declarabele klanturen; de salarisadministratie krijgt alleen het goedgekeurde gewerkte urentotaal."
+        : "Verlof en ziekte staan hier uit: verlof regel je via de salarisadministratie, ziekte meld je bij de Backoffice. In je urenstaat vul je alleen je gewerkte klanturen in.";
+    }
     addHelpMessage(answer, "bot", Object.keys(options).length ? options : null);
     return;
   }

@@ -1,4 +1,7 @@
 import { expect, test } from '@playwright/test';
+import { AuthApi } from './api/AuthApi';
+import { appConfig, requirePassword } from './fixtures/appConfig';
+import { setLeaveSickEntryEnabled } from './helpers/companySettings';
 import { LoginPage } from './pages/LoginPage';
 
 // Dekkingsronde: "Hulp & contact" had alleen een dunne mobile-only check
@@ -29,7 +32,9 @@ test('[HELP-H-001] medewerker zoekt een bekende vraag en krijgt het juiste antwo
     await expect(messages).toHaveCount(3); // begroeting + eigen vraag + antwoord
     await expect(messages.nth(1)).toHaveClass(/user/);
     await expect(messages.nth(1)).toContainText('verlof');
-    await expect(messages.nth(2)).toContainText('Vul verlof en ziekte rechts bij de maandsamenvatting in');
+    // Standaard staat de verlof/ziekte-schakelaar uit; het hulpantwoord noemt
+    // dan de echte route (salarisadministratie / Backoffice), niet "vul rechts in".
+    await expect(messages.nth(2)).toContainText('Verlof en ziekte staan hier uit');
     await expect(page.locator('#help-input')).toHaveValue(''); // het veld wordt na versturen geleegd
     await expect(messages.nth(2).locator('button[data-help-view="timesheet"]')).toHaveText('Open Mijn uren');
   });
@@ -117,6 +122,58 @@ test('[HELP-H-003] contact opnemen toont precies één mailknop en een kopieer-v
   });
 
   await loginPage.logout();
+});
+
+// Regression: het hulpantwoord bij "Verlof of ziekte" was een vaste tekst
+// ("vul rechts bij de maandsamenvatting in") terwijl het echte gedrag afhangt
+// van de beheerderschakelaar. Met de schakelaar uit kreeg de medewerker dus
+// een instructie voor velden die uitstaan. Het antwoord is nu dynamisch.
+test('[HELP-H-004] het hulpantwoord over verlof/ziekte volgt de beheerderschakelaar', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  const vraagVerlofAntwoord = async () => {
+    await page.locator('#help-launcher').click();
+    await page.locator('#help-input').fill('verlof');
+    await page.locator('#help-form').locator('button[type="submit"]').click();
+    return page.locator('#help-messages .help-message').last();
+  };
+
+  try {
+    await test.step('Given de schakelaar staat uit (standaard) en de medewerker vraagt naar verlof', async () => {
+      await loginPage.open();
+      await loginPage.loginAsEmployee();
+      await expect(await vraagVerlofAntwoord()).toContainText('Verlof en ziekte staan hier uit');
+      await loginPage.logout();
+    });
+
+    await test.step('When de beheerder verlof/ziekte handmatig invullen aanzet', async () => {
+      await loginPage.loginAsAdmin();
+      await page.locator('button[data-view="settings"]').click();
+      const toggle = page.locator('#setting-leave-sick-entry-enabled');
+      await expect(toggle).not.toBeChecked();
+      await toggle.click();
+      const saved = page.waitForResponse(r => r.url().includes('/server/api/settings.php') && r.request().method() === 'POST');
+      await page.locator('#save-settings').click();
+      expect((await saved).status()).toBe(200);
+      await loginPage.logout();
+    });
+
+    await test.step('Then krijgt de medewerker nu het antwoord dat wél naar de maandsamenvatting verwijst', async () => {
+      await loginPage.loginAsEmployee();
+      const antwoord = await vraagVerlofAntwoord();
+      await expect(antwoord).toContainText('vul je rechts bij de maandsamenvatting in');
+      await expect(antwoord).not.toContainText('staan hier uit');
+      await loginPage.logout();
+    });
+  } finally {
+    // Company-brede instelling in de gedeelde TEST-database weer op standaard
+    // (uit), via de auth-API zodat dit ook opruimt als de try halverwege faalt.
+    const authApi = new AuthApi(page.request);
+    await authApi.logout().catch(() => null);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+    await setLeaveSickEntryEnabled(page, false);
+    await authApi.logout().catch(() => null);
+  }
 });
 
 test('[HELP-H-002] het paneel opent en sluit met een vloeiende overgang, en meteen zonder animatievoorkeur', async ({ page }) => {
