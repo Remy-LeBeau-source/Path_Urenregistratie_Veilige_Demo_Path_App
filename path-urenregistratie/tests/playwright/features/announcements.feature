@@ -42,6 +42,15 @@ Feature: Mededelingen versturen, intrekken en verbergen
     Then is het bericht bij de medewerker volledig verdwenen, ook na een herlading
     Then blijft de mededeling in het interne beheeroverzicht van Backoffice staan
 
+  @happy
+  Scenario: [ANN-H-008] een correctie laat de medewerker alleen de nieuwste tekst zien, niet de oorspronkelijke
+    # Testtechniek: Toestandsovergang + data-integriteit
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given de beheerder verstuurt een origineel bericht naar de vaste testmedewerker
+    When de beheerder een correctie verstuurt met nieuwe tekst
+    Then ziet de medewerker alleen de gecorrigeerde tekst, niet de oude
+    And de gecorrigeerde mededeling wordt opgeruimd via intrekken en verbergen
+
   @negative
   Scenario: [ANN-N-004] intrekken zonder reden wordt geweigerd
     # Testtechniek: Negatieve equivalentieklasse + error guessing

@@ -106,6 +106,14 @@ summary:focus-visible,
   background: var(--vlak);
   box-shadow: 0 28px 80px rgba(0,0,0,.25);
   padding: 42px;
+  animation: login-panel-in .5s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes login-panel-in {
+  from { opacity: 0; transform: translateY(16px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-panel { animation: none; }
 }
 
 .login-brand { display: flex; align-items: center; gap: 14px; margin-bottom: 40px; }
@@ -142,8 +150,19 @@ summary:focus-visible,
   padding: 16px;
   text-align: left;
   transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+  animation: login-option-in .45s ease both;
+}
+.login-option:nth-of-type(1) { animation-delay: .08s; }
+.login-option:nth-of-type(2) { animation-delay: .16s; }
+@keyframes login-option-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-option { animation: none; }
 }
 .login-option:hover { border-color: var(--mint); box-shadow: 0 10px 30px rgba(13,27,56,.09); transform: translateY(-2px); }
+.login-option:active { transform: translateY(0); box-shadow: 0 4px 12px rgba(13,27,56,.08); }
 .login-option strong, .login-option small { display: block; }
 .login-option strong { color: var(--navy-tekst); font-size: 15px; }
 .login-option small { margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.45; }
@@ -356,6 +375,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 @media (hover: hover) and (pointer: fine) {
   .button:hover { transform: translateY(-1px); }
 }
+.button:active:not(:disabled) { transform: translateY(0); filter: brightness(.97); }
 .button:disabled { cursor: not-allowed; filter: grayscale(.25); opacity: .48; transform: none; }
 .button-primary { background: var(--mint); color: var(--navy); box-shadow: 0 8px 18px rgba(58,189,157,.2); }
 .button-primary:hover { background: #48caa9; box-shadow: 0 11px 23px rgba(58,189,157,.25); }

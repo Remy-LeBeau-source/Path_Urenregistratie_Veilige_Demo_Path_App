@@ -269,6 +269,14 @@ if ($action === 'send' || $action === 'save_draft') {
         if ($status === 'sent' && $correctionOfId !== null) {
             $pdo->prepare('UPDATE announcements SET superseded_by_id = :new_id WHERE id = :old_id AND company_id = :cid')
                 ->execute([':new_id' => $announcementId, ':old_id' => $correctionOfId, ':cid' => $companyId]);
+            // De medewerker hoort alleen de nieuwste tekst te zien, niet dat er
+            // een eerdere versie was (zie de eigen hulptekst hierover). De oude
+            // notificatie bleef hiervoor gewoon naast de nieuwe staan -- beide
+            // als eigen, losse ongelezen mededeling. De announcements-rij zelf
+            // blijft bestaan (superseded_by_id hierboven), alleen de bel-/
+            // lijstinvoer van de oude versie verdwijnt.
+            $pdo->prepare('DELETE FROM notifications WHERE announcement_id = :aid AND company_id = :cid')
+                ->execute([':aid' => $correctionOfId, ':cid' => $companyId]);
         }
 
         // If sending and withdrawal_of_id, mark original as withdrawn

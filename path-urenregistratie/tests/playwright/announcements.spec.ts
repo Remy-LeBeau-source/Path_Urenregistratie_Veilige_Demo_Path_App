@@ -257,6 +257,80 @@ test.describe('announcements api', () => {
     });
   });
 
+  // Regression: een correctie voegt een nieuwe announcements-rij + eigen
+  // notificaties toe en zet alleen superseded_by_id op het origineel -- de
+  // oorspronkelijke notificatie zelf werd nergens opgeruimd. De medewerker
+  // zag daardoor zowel de oude als de nieuwe tekst in Mijn mededelingen,
+  // terwijl de hulptekst ("Eerdere mededelingen") expliciet belooft dat een
+  // gecorrigeerd bericht alleen de nieuwste versie toont.
+  test('[ANN-H-008] een correctie laat de medewerker alleen de nieuwste tekst zien, niet de oorspronkelijke', async ({ page }) => {
+    const ctx = page.request;
+    const authApi = new AuthApi(ctx);
+    const loginPage = new LoginPage(page);
+    const suffix = Date.now().toString().slice(-7);
+    const title = `Correctietest ${suffix}`;
+    const oldMessage = `Oude tekst met een fout (${suffix}).`;
+    const newMessage = `Gecorrigeerde tekst zonder fout (${suffix}).`;
+    let originalId = 0;
+    let correctedId = 0;
+
+    await test.step('Given de beheerder verstuurt een origineel bericht naar de vaste testmedewerker', async () => {
+      await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+      const recipientId = await standardEmployeeUserId(ctx);
+      const sent = await postAnnouncement(ctx, {
+        action: 'send',
+        title,
+        message: oldMessage,
+        recipient_user_ids: [recipientId],
+      });
+      expect(sent.status, JSON.stringify(sent.body)).toBe(200);
+      originalId = Number(sent.body.announcement_id ?? sent.body.id ?? 0);
+      expect(originalId).toBeGreaterThan(0);
+    });
+
+    await test.step('When de beheerder een correctie verstuurt met nieuwe tekst', async () => {
+      const corrected = await postAnnouncement(ctx, {
+        action: 'send',
+        title,
+        message: newMessage,
+        correction_of_id: originalId,
+      });
+      expect(corrected.status, JSON.stringify(corrected.body)).toBe(200);
+      correctedId = Number(corrected.body.announcement_id ?? corrected.body.id ?? 0);
+      expect(correctedId).toBeGreaterThan(0);
+      await authApi.logout();
+    });
+
+    await test.step('Then ziet de medewerker alleen de gecorrigeerde tekst, niet de oude', async () => {
+      await loginPage.open();
+      await loginPage.loginAsEmployee();
+      await page.locator('button[data-view="employee-announcements"]').click();
+      const list = page.locator('#employee-announcement-list');
+      await expect(list).toContainText(newMessage);
+      await expect(list).not.toContainText(oldMessage);
+      await loginPage.logout();
+    });
+
+    // Cleanup via dezelfde intrekken+verbergen-route als ANN-H-007: dat
+    // verwijdert de notificatie-rij echt (niet alleen "gelezen"), zodat de
+    // vaste testmedewerker (gedeelde DB) geen permanente extra kaart
+    // overhoudt -- NOT-H-011 rekent op een exact totaalaantal mededelingen
+    // voor dit account.
+    await test.step('And cleanup: trek de gecorrigeerde mededeling in en verberg deze bij medewerkers', async () => {
+      await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+      const withdrawn = await postAnnouncement(ctx, {
+        action: 'withdraw',
+        announcement_id: correctedId,
+        withdrawal_reason: `Testreden opruimen (${suffix}).`,
+      });
+      expect(withdrawn.status, JSON.stringify(withdrawn.body)).toBe(200);
+      const hidden = await postAnnouncement(ctx, { action: 'hide', announcement_id: correctedId });
+      expect(hidden.status, JSON.stringify(hidden.body)).toBe(200);
+      expect(hidden.body.ok).toBe(true);
+      await authApi.logout();
+    });
+  });
+
   test('[ANN-N-004] intrekken zonder reden wordt geweigerd', async () => {
     const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
     const authApi = new AuthApi(ctx);
