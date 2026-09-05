@@ -350,7 +350,7 @@ test('[AUTH-H-009] lokale login benoemt de veilige testomgeving en productnaam',
     await expect(page.locator('#auth-login-email')).toHaveAttribute('placeholder', 'naam@pathconsultancy.nl');
     await expect(page.locator('#auth-login-submit')).toBeVisible();
     await expect(page.locator('.login-footer')).toContainText('© 2026 Path Consultancy');
-    await expect(page.locator('.login-footer')).toContainText('Versie 1.0.47');
+    await expect(page.locator('.login-footer')).toContainText('Versie 1.0.48');
   });
 
   await test.step('And kan het wachtwoord toegankelijk worden getoond en weer verborgen', async () => {
@@ -448,6 +448,56 @@ test('[AUTH-H-021] elke beheerder ziet na inloggen de eigen naam, nooit die van 
     const namen = [...seen.values()];
     expect(new Set(namen).size, 'meerdere accounts toonden dezelfde naam: ' + namen.join(', ')).toBe(namen.length);
   });
+});
+
+// Regression: initialen namen simpelweg de eerste twee woorden -- "Stasjo van
+// Bakel" werd zo "SV" in plaats van "SB", en "Joyce van der Steenhoven" werd
+// "JV" in plaats van "JS". Nederlandse tussenvoegsels horen niet mee te tellen:
+// eerste echte naam + achternaam.
+test('[AUTH-H-024] avatar-initialen slaan Nederlandse tussenvoegsels over', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  const employeePassword = requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD');
+
+  await test.step('Given Stasjo van Bakel bestaat als testmedewerker met een tussenvoegsel in de naam', async () => {
+    await loginPage.open();
+  });
+
+  await test.step('When Stasjo van Bakel inlogt en de app de avatar tekent', async () => {
+    await loginPage.login('stasjo@example.invalid', employeePassword);
+  });
+
+  await test.step('Then tonen beide avatars SB, niet SV', async () => {
+    await expect(page.locator('#workspace-avatar')).toHaveText('SB', { timeout: 15000 });
+    await expect(page.locator('#topbar-avatar')).toHaveText('SB');
+  });
+
+  await test.step('And de initialen-functie klopt over de klassen namen heen', async () => {
+    const cases = await page.evaluate(() => {
+      const fn = (window as unknown as { initials?: (name: string) => string }).initials;
+      if (typeof fn !== 'function') return null;
+      return {
+        tussenvoegsel: fn('Stasjo van Bakel'),
+        dubbelTussenvoegsel: fn('Joyce van der Steenhoven'),
+        losTussenvoegsel: fn('Marc de Roon'),
+        geenTussenvoegsel: fn('Brian Hek'),
+        koppelteken: fn('Shawn-Douglas Nahar'),
+        eenNaam: fn('Cher'),
+        leeg: fn(''),
+      };
+    });
+    expect(cases, 'window.initials hoort bereikbaar te zijn voor deze toets').not.toBeNull();
+    expect(cases).toEqual({
+      tussenvoegsel: 'SB',
+      dubbelTussenvoegsel: 'JS',
+      losTussenvoegsel: 'MR',
+      geenTussenvoegsel: 'BH',
+      koppelteken: 'SN',
+      eenNaam: 'C',
+      leeg: 'P',
+    });
+  });
+
+  await loginPage.logout();
 });
 
 test('[AUTH-H-022] in productiemodus toont de app de naam van de ingelogde gebruiker', async ({ page }) => {

@@ -3942,13 +3942,21 @@ function correctionTimestamp() {
   return { iso: now.toISOString(), label };
 }
 
+// Nederlandse tussenvoegsels tellen niet mee voor initialen: "Stasjo van
+// Bakel" hoort SB te geven, niet SV. We nemen de eerste echte naam plus de
+// laatste echte naam (achternaam), met de tussenvoegsels ertussenuit.
+const NAAM_TUSSENVOEGSELS = new Set([
+  "van", "de", "der", "den", "ter", "ten", "te", "het", "'t", "d'",
+  "op", "aan", "bij", "in", "onder", "over", "tot", "uit", "voor", "à"
+]);
 function initials(name) {
-  return String(name || "P").split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map(part => part[0])
-    .join("")
-    .toUpperCase();
+  const parts = String(name || "P").split(/\s+/).filter(Boolean);
+  const kern = parts.filter(part => !NAAM_TUSSENVOEGSELS.has(part.toLowerCase()));
+  const bruikbaar = kern.length ? kern : parts;
+  const keuze = bruikbaar.length === 1
+    ? [bruikbaar[0]]
+    : [bruikbaar[0], bruikbaar[bruikbaar.length - 1]];
+  return keuze.map(part => part[0]).join("").toUpperCase();
 }
 
 function applyAvatar(element, name, photo) {

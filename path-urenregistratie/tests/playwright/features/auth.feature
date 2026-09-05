@@ -129,6 +129,15 @@ Feature: Inloggen, uitloggen en sessiebeheer
     Then wordt met Playwright-assertions bevestigd dat elke beheerder ziet na inloggen de eigen naam, nooit die van een collega
 
   @happy
+  Scenario: [AUTH-H-024] avatar-initialen slaan Nederlandse tussenvoegsels over
+    # Testtechniek: Equivalentieklassen + grenswaarden
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given Stasjo van Bakel bestaat als testmedewerker met een tussenvoegsel in de naam
+    When Stasjo van Bakel inlogt en de app de avatar tekent
+    Then tonen beide avatars SB, niet SV
+    And de initialen-functie klopt over de klassen namen heen
+
+  @happy
   Scenario: [AUTH-H-022] in productiemodus toont de app de naam van de ingelogde gebruiker
     # Testtechniek: End-to-end use-case + visuele contractasserties
     # Aantoonbare Playwright-assertions in deze case: 2
