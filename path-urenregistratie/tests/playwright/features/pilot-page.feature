@@ -8,7 +8,7 @@ Feature: Losstaande designpilots naast de app
   @happy
   Scenario: [PILOT-H-001] de 1919-pilot leeft als losse URL naast een ongewijzigde app
     # Testtechniek: Toestandsovergang + data-integriteit
-    # Aantoonbare Playwright-assertions in deze case: 14
+    # Aantoonbare Playwright-assertions in deze case: 9
     Given de webroot met de app op /
     When de losstaande pilot-URL wordt opgevraagd
     Then toont hij de 1919-storyline-inhoud met de pilot-vlag

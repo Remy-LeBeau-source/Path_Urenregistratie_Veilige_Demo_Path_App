@@ -3,1350 +3,301 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Losstaande designpilot voor de 1919 Path Storyline-medewerkerervaring.">
 <title>Pilot — 1919 Path Storyline — medewerker</title>
 <style>
-  /*
-    Losstaande statische pilot. De pagina importeert geen app-code, data of
-    routing. Alle runtime-assets staan in pilot/assets/1919/ en zijn daardoor
-    compatibel met de CSP op TEST.
-  */
-  @font-face {
-    font-family: "Storyline Serif";
-    src: url("assets/1919/serif.woff2") format("woff2");
-    font-style: normal;
-    font-weight: 100 900;
-    font-display: swap;
-  }
-
-  :root {
-    --navy: #0e2233;
-    --navy-deep: #0a1b28;
-    --navy-2: #0c1f2e;
-    --forest: #16362b;
-    --cream: #f4f1e8;
-    --paper: #faf7ef;
-    --ink: #20303a;
-    --ink-serif: #22302b;
-    --muted: #93a4ad;
-    --green: #6bbf95;
-    --green-deep: #2f6a4c;
-    --amber: #e0a13c;
-    --amber-strong: #d68f24;
-    --line-dark: rgba(255, 255, 255, 0.14);
-    --line-cream: #e7e1d3;
-    --serif: "Storyline Serif", Georgia, "Times New Roman", serif;
-    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  }
-
-  * {
-    box-sizing: border-box;
-  }
-
-  html {
-    scroll-behavior: smooth;
-  }
-
-  body {
-    margin: 0;
-    min-width: 320px;
-    overflow-x: hidden;
-    background: var(--navy);
-    color: var(--ink);
-    font-family: var(--sans);
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-  }
-
-  a {
-    color: inherit;
-  }
-
-  a:focus-visible,
-  button:focus-visible {
-    outline: 3px solid #f4bd5b;
-    outline-offset: 3px;
-  }
-
-  .pilot-flag {
-    min-height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    padding: 5px 18px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    background: #171b1d;
-    color: #cbd2ce;
-    font-size: 11px;
-    line-height: 1.45;
-    letter-spacing: 0.055em;
-    text-align: center;
-  }
-
-  .pilot-flag strong {
-    color: #fff;
-    letter-spacing: 0.16em;
-  }
-
-  .pilot-flag a {
-    color: #8fd0b0;
-    font-weight: 700;
-    text-underline-offset: 3px;
-  }
-
-  .shell {
-    display: grid;
-    grid-template-columns: 264px minmax(0, 1fr);
-    min-height: calc(100vh - 28px);
-  }
-
-  /* Verhaalrail */
-  .rail {
-    position: relative;
-    z-index: 3;
-    min-width: 0;
-    background:
-      radial-gradient(circle at 30px 215px, rgba(31, 104, 78, 0.13), transparent 220px),
-      linear-gradient(180deg, #071b29 0%, #09202d 53%, #081c29 100%);
-    color: #d3dde0;
-  }
-
-  .rail-inner {
-    position: sticky;
-    top: 0;
-    min-height: calc(100vh - 28px);
-    display: flex;
-    flex-direction: column;
-    padding: 24px 26px 18px 28px;
-  }
-
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 44px;
-    margin-bottom: 28px;
-    color: #fff;
-  }
-
-  .brand-mark {
-    width: 28px;
-    height: 40px;
-    flex: 0 0 auto;
-  }
-
-  .brand-mark path {
-    fill: none;
-    stroke: #5aca8c;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 2.1;
-  }
-
-  .brand-name {
-    font-family: var(--serif);
-    font-size: 18px;
-    font-weight: 420;
-    letter-spacing: -0.015em;
-  }
-
-  .timeline {
-    position: relative;
-    display: grid;
-    grid-template-rows: 120px 150px 158px 170px minmax(132px, 1fr);
-    flex: 1 1 auto;
-    min-height: 700px;
-    padding: 2px 0 0;
-  }
-
-  .timeline::before {
-    position: absolute;
-    top: 24px;
-    bottom: 42px;
-    left: 23px;
-    width: 1px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.25), rgba(107, 191, 149, 0.66));
-    content: "";
-  }
-
-  .stop {
-    position: relative;
-    display: block;
-    min-width: 0;
-    padding: 3px 0 16px 72px;
-    color: inherit;
-    text-decoration: none;
-  }
-
-  .node {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 48px;
-    height: 48px;
-    display: grid;
-    place-items: center;
-    border: 1px solid rgba(178, 203, 187, 0.62);
-    border-radius: 50%;
-    background: #0a1d2a;
-  }
-
-  .node svg {
-    width: 21px;
-    height: 21px;
-    fill: none;
-    stroke: #f5f7f5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 1.55;
-  }
-
-  .stop.active .node {
-    border-color: var(--amber);
-    box-shadow:
-      0 0 0 3px rgba(224, 161, 60, 0.2),
-      0 0 18px rgba(224, 161, 60, 0.42);
-  }
-
-  .stop.active .node svg {
-    stroke: var(--amber);
-  }
-
-  .stop.active::after {
-    position: absolute;
-    top: 57px;
-    left: 20px;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #7ec56f;
-    box-shadow: 0 0 0 2px #0a1d2a;
-    content: "";
-  }
-
-  .stop-eyebrow {
-    display: block;
-    margin: 0 0 6px;
-    color: #79b878;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.13em;
-    line-height: 1;
-    text-transform: uppercase;
-  }
-
-  .stop.active .stop-eyebrow,
-  .stop.active .stop-sub {
-    color: var(--amber);
-  }
-
-  .stop-title {
-    display: block;
-    color: #fff;
-    font-family: var(--serif);
-    font-size: 17px;
-    font-weight: 420;
-    letter-spacing: -0.012em;
-    line-height: 1.18;
-  }
-
-  .stop-sub {
-    display: block;
-    margin-top: 7px;
-    color: var(--muted);
-    font-size: 11px;
-    line-height: 1.45;
-  }
-
-  .branch-line {
-    position: absolute;
-    top: 24px;
-    right: -26px;
-    width: 26px;
-    height: 1px;
-    background: rgba(107, 191, 149, 0.72);
-  }
-
-  .branch-line::after {
-    position: absolute;
-    top: -3px;
-    right: -4px;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #76bd70;
-    content: "";
-  }
-
-  .rail-help {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-    margin-top: 8px;
-    padding-top: 16px;
-    border-top: 1px solid var(--line-dark);
-    color: var(--muted);
-  }
-
-  .rail-help svg {
-    width: 21px;
-    height: 21px;
-    flex: 0 0 auto;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.5;
-  }
-
-  .rail-help p {
-    margin: 0;
-    font-size: 10.5px;
-    line-height: 1.55;
-  }
-
-  /* Hoofdvlak */
-  .main {
-    min-width: 0;
-    background: var(--cream);
-  }
-
-  .topbar {
-    min-height: 58px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 0 42px;
-    border-bottom: 1px solid rgba(32, 48, 58, 0.08);
-    background: rgba(250, 247, 239, 0.96);
-  }
-
-  .package-label {
-    color: #60706b;
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-
-  .package-label strong {
-    color: var(--green-deep);
-    font-weight: 800;
-  }
-
-  .topbar-spacer {
-    flex: 1 1 auto;
-  }
-
-  .month-chip,
-  .profile {
-    min-height: 38px;
-    display: inline-flex;
-    align-items: center;
-    gap: 9px;
-    color: #243139;
-    font-size: 12px;
-    white-space: nowrap;
-  }
-
-  .month-chip {
-    padding: 0 12px;
-    border: 1px solid var(--line-cream);
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.66);
-  }
-
-  .topbar-icon {
-    width: 17px;
-    height: 17px;
-    fill: none;
-    stroke: currentColor;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 1.65;
-  }
-
-  .chevron {
-    width: 13px;
-    height: 13px;
-  }
-
-  .topbar-separator {
-    width: 1px;
-    height: 28px;
-    background: #ddd8cc;
-  }
-
-  .avatar {
-    width: 36px;
-    height: 36px;
-    display: grid;
-    place-items: center;
-    border: 1px solid rgba(47, 106, 76, 0.22);
-    border-radius: 50%;
-    background:
-      radial-gradient(circle at 36% 28%, #f1bd66 0 13%, transparent 14%),
-      linear-gradient(145deg, #dfe8dc 0%, #9bb48d 100%);
-    color: #173e31;
-    font-family: var(--serif);
-    font-size: 11px;
-    font-weight: 750;
-  }
-
-  /* Hoofdstuk 1 */
-  .hero {
-    min-height: 298px;
-    display: grid;
-    grid-template-columns: minmax(450px, 0.88fr) 1.12fr;
-    overflow: hidden;
-    background: var(--cream);
-  }
-
-  .hero-copy {
-    position: relative;
-    z-index: 2;
-    align-self: center;
-    padding: 30px 8px 32px 42px;
-  }
-
-  .section-eyebrow {
-    color: var(--green-deep);
-    font-size: 10.5px;
-    font-weight: 800;
-    letter-spacing: 0.11em;
-    line-height: 1;
-    text-transform: uppercase;
-  }
-
-  .hero h1,
-  .chapter h2 {
-    font-family: var(--serif);
-    font-variation-settings: "opsz" 50;
-    font-weight: 420;
-    letter-spacing: -0.035em;
-  }
-
-  .hero h1 {
-    margin: 12px 0 10px;
-    color: var(--ink-serif);
-    font-size: clamp(44px, 4vw, 58px);
-    line-height: 0.98;
-  }
-
-  .hero-intro {
-    max-width: 470px;
-    margin: 0;
-    color: #45534f;
-    font-size: 12.5px;
-    line-height: 1.5;
-  }
-
-  .mini-steps {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 15px;
-    max-width: 540px;
-    margin-top: 26px;
-  }
-
-  .mini-step {
-    min-width: 0;
-    display: grid;
-    grid-template-columns: 38px minmax(0, 1fr);
-    gap: 9px;
-    align-items: center;
-  }
-
-  .mini-icon {
-    width: 38px;
-    height: 38px;
-    display: grid;
-    place-items: center;
-    border: 1px solid #d7d2c5;
-    border-radius: 50%;
-    background: rgba(250, 247, 239, 0.8);
-  }
-
-  .mini-icon svg {
-    width: 19px;
-    height: 19px;
-    fill: none;
-    stroke: var(--green-deep);
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 1.55;
-  }
-
-  .mini-step strong,
-  .mini-step small {
-    display: block;
-  }
-
-  .mini-step strong {
-    color: #27352f;
-    font-family: var(--serif);
-    font-size: 11.5px;
-    font-weight: 620;
-    line-height: 1.2;
-  }
-
-  .mini-step small {
-    margin-top: 3px;
-    color: #69736f;
-    font-size: 9.5px;
-    line-height: 1.3;
-  }
-
-  .hero-media {
-    position: relative;
-    min-width: 0;
-    overflow: hidden;
-  }
-
-  .hero-media::after {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, var(--cream) 0%, rgba(244, 241, 232, 0.83) 9%, rgba(244, 241, 232, 0) 34%);
-    content: "";
-    pointer-events: none;
-  }
-
-  .hero-image {
-    width: 100%;
-    height: 100%;
-    display: block;
-    object-fit: cover;
-    object-position: 52% 44%;
-  }
-
-  /* Gedeelde hoofdstukken */
-  .chapter {
-    color: #d9e1e2;
-  }
-
-  .chapter-inner {
-    width: 100%;
-    min-height: inherit;
-    display: grid;
-    align-items: center;
-  }
-
-  .chapter h2 {
-    margin: 10px 0 10px;
-    color: #fff;
-    font-size: clamp(34px, 3.05vw, 47px);
-    line-height: 0.99;
-  }
-
-  .chapter-lead {
-    max-width: 360px;
-    margin: 0;
-    color: #c4d0d2;
-    font-size: 11.5px;
-    line-height: 1.58;
-  }
-
-  .hours-section {
-    min-height: 252px;
-    padding: 30px 42px;
-    background:
-      radial-gradient(circle at 80% 40%, rgba(27, 75, 84, 0.15), transparent 420px),
-      linear-gradient(108deg, #0c2131, #0b1f2e 72%);
-  }
-
-  .hours-layout {
-    grid-template-columns: 282px minmax(0, 1fr);
-    gap: 42px;
-  }
-
-  .hours-section .section-eyebrow {
-    color: var(--amber);
-  }
-
-  .hours-section h2 {
-    font-size: clamp(39px, 3.35vw, 51px);
-  }
-
-  .hours-button {
-    min-height: 42px;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 18px;
-    padding: 0 18px;
-    border: 1px solid #eeaf42;
-    border-radius: 7px;
-    box-shadow: 0 5px 16px rgba(0, 0, 0, 0.22);
-    background: linear-gradient(180deg, #e09a20, #ce8107);
-    color: #fff9ed;
-    font-family: var(--serif);
-    font-size: 13px;
-    font-weight: 520;
-  }
-
-  .hours-button svg {
-    width: 18px;
-    height: 18px;
-    fill: none;
-    stroke: currentColor;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 1.55;
-  }
-
-  .week {
-    min-width: 0;
-    display: grid;
-    grid-template-columns: repeat(5, minmax(78px, 1fr)) minmax(88px, 0.9fr);
-    gap: 0;
-    align-items: stretch;
-  }
-
-  .day {
-    min-width: 0;
-    padding: 0 11px;
-    border-left: 1px solid var(--line-dark);
-  }
-
-  .day:first-child {
-    border-left: 0;
-  }
-
-  .day-heading {
-    min-height: 40px;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    padding-left: 4px;
-  }
-
-  .day-heading strong {
-    color: #fff;
-    font-family: var(--serif);
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-  }
-
-  .day-heading small {
-    color: #a6b5bc;
-    font-size: 9px;
-    letter-spacing: 0.04em;
-  }
-
-  .hours-cell {
-    min-height: 69px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 7px 12px;
-    border: 1px solid rgba(169, 192, 189, 0.36);
-    border-radius: 5px;
-    background: rgba(255, 255, 255, 0.018);
-  }
-
-  .hours-value {
-    color: var(--green);
-    font-family: var(--serif);
-    font-size: 25px;
-    font-weight: 450;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
-    line-height: 1;
-  }
-
-  .day.empty .hours-value {
-    color: var(--amber-strong);
-  }
-
-  .hours-unit {
-    margin-top: 7px;
-    color: #73ad83;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-  }
-
-  .day.empty .hours-unit {
-    color: #bb8535;
-  }
-
-  .add-hours {
-    min-height: 45px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    margin-top: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.035);
-    border-radius: 5px;
-    color: #aebbc0;
-    font-size: 8px;
-    letter-spacing: 0.07em;
-  }
-
-  .add-hours b {
-    color: #fff;
-    font-size: 20px;
-    font-weight: 300;
-    line-height: 0.8;
-  }
-
-  .day.total {
-    padding-right: 0;
-  }
-
-  .day.total .hours-cell {
-    border-color: transparent;
-    background: transparent;
-  }
-
-  .day.total .hours-value {
-    color: #fff;
-  }
-
-  .day.total .hours-unit {
-    color: #7fc493;
-  }
-
-  .process-section {
-    min-height: 190px;
-    padding: 27px 42px;
-    background:
-      radial-gradient(circle at 65% 50%, rgba(63, 120, 83, 0.11), transparent 390px),
-      linear-gradient(100deg, #14352a, #122f27);
-  }
-
-  .process-layout {
-    grid-template-columns: 330px minmax(0, 1fr);
-    gap: 38px;
-  }
-
-  .process-section .section-eyebrow {
-    color: #75b673;
-  }
-
-  .process-section h2 {
-    max-width: 330px;
-    font-size: clamp(34px, 2.8vw, 43px);
-  }
-
-  .process-flow {
-    min-width: 0;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 42px minmax(0, 1fr) 42px minmax(0, 0.9fr);
-    align-items: center;
-  }
-
-  .flow-step {
-    min-width: 0;
-    display: grid;
-    grid-template-columns: 52px minmax(0, 1fr);
-    gap: 12px;
-    align-items: center;
-  }
-
-  .flow-icon {
-    width: 52px;
-    height: 52px;
-    display: grid;
-    place-items: center;
-    border: 1px solid rgba(115, 190, 123, 0.58);
-    border-radius: 50%;
-  }
-
-  .flow-icon svg {
-    width: 26px;
-    height: 26px;
-    fill: none;
-    stroke: #f1f5f1;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 1.4;
-  }
-
-  .flow-step strong {
-    display: block;
-    color: #fff;
-    font-family: var(--serif);
-    font-size: 14px;
-    font-weight: 520;
-  }
-
-  .flow-step small {
-    display: block;
-    margin-top: 4px;
-    color: #b7c6c3;
-    font-size: 10px;
-    line-height: 1.45;
-  }
-
-  .flow-arrow {
-    height: 1px;
-    position: relative;
-    margin: 0 8px;
-    background: repeating-linear-gradient(90deg, rgba(208, 202, 166, 0.65) 0 4px, transparent 4px 8px);
-  }
-
-  .flow-arrow::after {
-    position: absolute;
-    top: -3px;
-    right: -1px;
-    width: 6px;
-    height: 6px;
-    border-top: 1px solid rgba(208, 202, 166, 0.8);
-    border-right: 1px solid rgba(208, 202, 166, 0.8);
-    transform: rotate(45deg);
-    content: "";
-  }
-
-  .document-section {
-    position: relative;
-    min-height: 220px;
-    display: grid;
-    grid-template-columns: 41% 59%;
-    overflow: hidden;
-    background: var(--navy-2);
-  }
-
-  .document-copy {
-    position: relative;
-    z-index: 2;
-    align-self: center;
-    padding: 30px 16px 30px 42px;
-  }
-
-  .document-section .section-eyebrow {
-    color: #75b673;
-  }
-
-  .document-section h2 {
-    max-width: 370px;
-    font-size: clamp(37px, 3.1vw, 47px);
-  }
-
-  .document-media {
-    position: relative;
-    min-width: 0;
-    min-height: 220px;
-  }
-
-  .document-media::after {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, var(--navy-2) 0%, rgba(12, 31, 46, 0.82) 10%, rgba(12, 31, 46, 0) 38%);
-    content: "";
-    pointer-events: none;
-  }
-
-  .document-image {
-    width: 100%;
-    height: 100%;
-    display: block;
-    object-fit: cover;
-    object-position: 52% 26%;
-  }
-
-  @media (max-width: 1180px) {
-    .shell {
-      grid-template-columns: 238px minmax(0, 1fr);
-    }
-
-    .rail-inner {
-      padding-right: 22px;
-      padding-left: 24px;
-    }
-
-    .stop {
-      padding-left: 62px;
-    }
-
-    .hours-layout {
-      grid-template-columns: 240px minmax(0, 1fr);
-      gap: 26px;
-    }
-
-    .hours-section,
-    .process-section {
-      padding-right: 28px;
-      padding-left: 32px;
-    }
-
-    .process-layout {
-      grid-template-columns: 290px minmax(0, 1fr);
-      gap: 24px;
-    }
-
-    .flow-step {
-      grid-template-columns: 44px minmax(0, 1fr);
-      gap: 9px;
-    }
-
-    .flow-icon {
-      width: 44px;
-      height: 44px;
-    }
-  }
-
-  @media (max-width: 1020px) {
-    .shell {
-      grid-template-columns: 1fr;
-    }
-
-    .rail-inner {
-      position: static;
-      min-height: 0;
-      padding: 18px 24px 22px;
-    }
-
-    .brand {
-      margin-bottom: 18px;
-    }
-
-    .timeline {
-      grid-template: 1fr / repeat(5, minmax(0, 1fr));
-      min-height: 0;
-      gap: 8px;
-    }
-
-    .timeline::before,
-    .stop.active::after,
-    .branch-line {
-      display: none;
-    }
-
-    .stop {
-      min-height: 132px;
-      padding: 56px 8px 12px 0;
-    }
-
-    .node {
-      width: 44px;
-      height: 44px;
-    }
-
-    .stop-title {
-      font-size: 15px;
-    }
-
-    .rail-help {
-      display: none;
-    }
-
-    .hero {
-      grid-template-columns: minmax(400px, 0.85fr) 1.15fr;
-    }
-
-    .topbar,
-    .hero-copy,
-    .document-copy {
-      padding-right: 28px;
-      padding-left: 28px;
-    }
-
-    .hours-layout,
-    .process-layout {
-      grid-template-columns: 1fr;
-    }
-
-    .hours-copy,
-    .process-copy {
-      max-width: 560px;
-    }
-
-    .week {
-      margin-top: 8px;
-    }
-
-    .process-flow {
-      margin-top: 8px;
-    }
-  }
-
-  @media (max-width: 760px) {
-    .pilot-flag {
-      flex-wrap: wrap;
-    }
-
-    .timeline {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .stop {
-      min-height: 116px;
-    }
-
-    .topbar {
-      min-height: 72px;
-      flex-wrap: wrap;
-      gap: 8px 12px;
-      padding-top: 10px;
-      padding-bottom: 10px;
-    }
-
-    .package-label {
-      width: 100%;
-    }
-
-    .topbar-spacer,
-    .topbar-separator {
-      display: none;
-    }
-
-    .hero {
-      grid-template-columns: 1fr;
-    }
-
-    .hero-copy {
-      padding-top: 36px;
-      padding-bottom: 38px;
-    }
-
-    .hero-media {
-      min-height: 310px;
-    }
-
-    .hero-media::after {
-      background: linear-gradient(180deg, var(--cream) 0%, rgba(244, 241, 232, 0) 24%);
-    }
-
-    .hours-section,
-    .process-section {
-      padding: 36px 24px;
-    }
-
-    .week {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      row-gap: 22px;
-    }
-
-    .day:nth-child(4) {
-      border-left: 0;
-    }
-
-    .process-flow {
-      grid-template-columns: 1fr;
-      gap: 18px;
-    }
-
-    .flow-arrow {
-      display: none;
-    }
-
-    .document-section {
-      grid-template-columns: 1fr;
-    }
-
-    .document-copy {
-      padding-top: 38px;
-      padding-bottom: 36px;
-    }
-
-    .document-media {
-      min-height: 290px;
-    }
-
-    .document-media::after {
-      background: linear-gradient(180deg, var(--navy-2) 0%, rgba(12, 31, 46, 0) 28%);
-    }
-  }
-
-  @media (max-width: 520px) {
-    .rail-inner {
-      padding-right: 20px;
-      padding-left: 20px;
-    }
-
-    .timeline {
-      grid-template-columns: 1fr;
-    }
-
-    .stop {
-      min-height: 88px;
-      padding: 3px 0 12px 62px;
-    }
-
-    .mini-steps {
-      grid-template-columns: 1fr;
-    }
-
-    .mini-step {
-      grid-template-columns: 42px minmax(0, 1fr);
-    }
-
-    .mini-step strong {
-      font-size: 13px;
-    }
-
-    .mini-step small {
-      font-size: 11px;
-    }
-
-    .month-chip,
-    .profile {
-      font-size: 11px;
-    }
-
-    .avatar {
-      width: 34px;
-      height: 34px;
-    }
-
-    .hero h1 {
-      font-size: 45px;
-    }
-
-    .week {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .day:nth-child(odd) {
-      border-left: 0;
-    }
-
-    .day:nth-child(4) {
-      border-left: 1px solid var(--line-dark);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    html {
-      scroll-behavior: auto;
-    }
+  /* ------------------------------------------------------------------
+     PILOT-PAGINA. Losstaande statische voorbeeldpagina van richting
+     1919 "Path Storyline" (medewerker-dashboard). Raakt de echte app
+     niet: geen gedeelde JS/CSS, geen routing, geen data. Bereikbaar
+     als eigen URL naast /.
+     CSP op TEST verbiedt externe fonts/scripts/afbeeldingen -> serif =
+     Georgia (systeem), de twee "foto"-vlakken zijn inline SVG-illustraties
+     in dezelfde compositie/sfeer als de mockup (geen echte fotografie).
+     ------------------------------------------------------------------ */
+  :root{
+    --navy:#0e2233; --navy-2:#0c1f2e; --forest:#16362b; --forest-2:#122c24;
+    --cream:#f4f1e8; --paper:#faf7ef;
+    --ink:#20303a; --ink-serif:#22302b;
+    --line-dark:rgba(255,255,255,.14); --line-cream:#e7e1d3;
+    --text-dark:#cdd8dd; --text-dark-soft:#93a4ad;
+    --green:#6bbf95; --green-deep:#2f6a4c;
+    --amber:#e0a13c; --amber-strong:#d68f24;
+    --serif:Georgia,"Times New Roman",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--navy);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;}
+  .pilot-flag{
+    background:#1b1b1b;color:#f3e6c8;font-size:12px;letter-spacing:.04em;
+    padding:8px 18px;text-align:center;border-bottom:1px solid #333;
+  }
+  .pilot-flag b{color:#fff;}
+
+  .shell{display:grid;grid-template-columns:264px 1fr;min-height:100vh;}
+
+  /* ---------------- Rail ---------------- */
+  .rail{background:var(--navy);color:var(--text-dark);padding:26px 22px 22px;position:relative;}
+  .rail .brand{display:flex;align-items:center;gap:11px;margin-bottom:34px;}
+  .rail .brand .mark{width:32px;height:32px;border:2px solid var(--green);border-radius:8px;display:grid;place-items:center;color:var(--green);font-family:var(--serif);font-weight:700;font-size:15px;}
+  .rail .brand span{font-size:15px;color:#fff;font-weight:600;letter-spacing:.2px;}
+  .timeline{position:relative;padding-left:6px;}
+  .timeline::before{content:"";position:absolute;left:19px;top:16px;bottom:64px;width:1.5px;background:var(--line-dark);}
+  .stop{position:relative;padding:0 0 30px 44px;}
+  .stop .node{position:absolute;left:0;top:0;width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line-dark);display:grid;place-items:center;background:var(--navy);}
+  .stop .node svg{width:15px;height:15px;stroke:var(--text-dark-soft);fill:none;stroke-width:1.7;}
+  .stop.active .node{border-color:var(--amber);box-shadow:0 0 0 4px rgba(224,161,60,.15);}
+  .stop.active .node svg{stroke:var(--amber);}
+  .stop .eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--green);font-weight:700;}
+  .stop.active .eyebrow{color:var(--amber);}
+  .stop .ttl{font-family:var(--serif);font-size:15px;color:#fff;margin:3px 0 3px;line-height:1.25;}
+  .stop .sub{font-size:11.5px;color:var(--text-dark-soft);line-height:1.45;}
+  .stop.active .sub{color:var(--amber);}
+  .rail .ask{position:absolute;left:22px;right:22px;bottom:20px;display:flex;gap:11px;border-top:1px solid var(--line-dark);padding-top:16px;}
+  .rail .ask svg{width:16px;height:16px;stroke:var(--text-dark-soft);fill:none;stroke-width:1.7;flex:0 0 auto;margin-top:2px;}
+  .rail .ask p{margin:0;font-size:11px;color:var(--text-dark-soft);line-height:1.5;}
+
+  /* ---------------- Main ---------------- */
+  .main{background:var(--cream);}
+  .topbar{display:flex;align-items:center;gap:16px;padding:20px 44px;background:var(--cream);}
+  .topbar .pkg{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink);opacity:.55;}
+  .topbar .pkg b{color:var(--green-deep);opacity:1;}
+  .topbar .grow{flex:1;}
+  .chip{display:flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--line-cream);border-radius:11px;padding:9px 14px;font-size:13px;font-weight:600;color:var(--ink);}
+  .chip svg{width:15px;height:15px;stroke:#7a7f7c;fill:none;stroke-width:1.7;}
+  .topbar .sep{width:1px;height:26px;background:var(--line-cream);}
+  .who{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--ink);}
+  .who .av{width:34px;height:34px;border-radius:50%;background:#d8e2da;display:grid;place-items:center;font-family:var(--serif);font-size:12px;color:var(--green-deep);}
+  .who svg{width:14px;height:14px;stroke:#7a7f7c;fill:none;stroke-width:1.8;}
+
+  /* Chapter 1 — hero */
+  .hero{display:grid;grid-template-columns:1fr 1.15fr;align-items:stretch;background:var(--cream);}
+  .hero .copy{padding:44px 10px 64px 44px;align-self:center;max-width:560px;}
+  .eyebrow-c{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--green-deep);font-weight:700;}
+  .hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(40px,5vw,58px);line-height:1.02;color:var(--ink-serif);margin:12px 0 16px;letter-spacing:.4px;}
+  .hero p{font-size:15px;line-height:1.6;color:#5b6560;margin:0 0 26px;}
+  .mini{display:flex;gap:26px;flex-wrap:wrap;}
+  .mini > div{display:flex;gap:11px;max-width:180px;}
+  .mini .ic{width:34px;height:34px;border-radius:9px;border:1px solid var(--line-cream);display:grid;place-items:center;flex:0 0 auto;background:#fff;}
+  .mini .ic svg{width:16px;height:16px;stroke:var(--green-deep);fill:none;stroke-width:1.6;}
+  .mini b{display:block;font-size:12.5px;color:var(--ink);}
+  .mini span{display:block;font-size:11.5px;color:#7f8883;margin-top:2px;line-height:1.4;}
+  .hero .scene{position:relative;min-height:460px;margin-top:-64px;overflow:hidden;}
+  .hero .scene svg{position:absolute;inset:0;width:100%;height:100%;}
+
+  /* Chapter 2 — invullen (navy) */
+  .chapter{padding:60px 44px;}
+  .chapter.navy{background:var(--navy);color:var(--text-dark);}
+  .chapter.forest{background:var(--forest);color:var(--text-dark);}
+  .chapter.dark{background:var(--navy-2);color:var(--text-dark);}
+  .ch-grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:44px;align-items:center;}
+  .ch-eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;}
+  .chapter.navy .ch-eyebrow{color:var(--amber);}
+  .chapter.forest .ch-eyebrow,.chapter.dark .ch-eyebrow{color:var(--green);}
+  .ch-grid h2{font-family:var(--serif);font-weight:400;font-size:clamp(30px,3.6vw,44px);line-height:1.08;color:#fff;margin:12px 0 14px;letter-spacing:.3px;}
+  .ch-grid .lead{font-size:14px;line-height:1.6;color:var(--text-dark-soft);margin:0 0 22px;max-width:420px;}
+  .btn-amber{display:inline-flex;align-items:center;gap:10px;background:var(--amber-strong);color:#241a06;border:0;border-radius:10px;padding:13px 22px;font-size:13.5px;font-weight:700;font-family:inherit;cursor:pointer;}
+  .btn-amber svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;}
+
+  .week{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;}
+  .day .dh{display:flex;flex-direction:column;gap:2px;margin-bottom:10px;}
+  .day .dh b{font-size:13px;letter-spacing:.08em;color:#fff;}
+  .day .dh span{font-size:10.5px;letter-spacing:.06em;color:var(--text-dark-soft);}
+  .day .cell{border:1px solid var(--line-dark);border-radius:11px;padding:22px 12px 24px;text-align:left;background:rgba(255,255,255,.02);}
+  .day .cell .h{font-family:var(--serif);font-size:24px;color:var(--green);}
+  .day .cell.empty .h{color:var(--amber);}
+  .day .cell .u{font-size:9.5px;letter-spacing:.12em;color:var(--text-dark-soft);margin-top:2px;}
+  .day .add{display:flex;align-items:center;gap:6px;justify-content:center;margin-top:10px;font-size:10px;letter-spacing:.1em;color:var(--text-dark-soft);}
+  .day .add svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;}
+  .day.total .cell{background:transparent;border-color:transparent;padding-left:0;}
+  .day.total .cell .h{color:#fff;}
+
+  /* Chapter 3 — flow */
+  .flow{display:flex;align-items:flex-start;gap:14px;}
+  .flow .step{display:flex;gap:13px;flex:1;min-width:0;}
+  .flow .step .ic{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--line-dark);display:grid;place-items:center;flex:0 0 auto;}
+  .flow .step .ic svg{width:18px;height:18px;stroke:var(--green);fill:none;stroke-width:1.6;}
+  .flow .step b{display:block;font-size:13px;color:#fff;}
+  .flow .step span{display:block;font-size:11.5px;color:var(--text-dark-soft);margin-top:3px;line-height:1.45;}
+  .flow .arrow{align-self:center;color:var(--text-dark-soft);font-size:16px;flex:0 0 auto;white-space:nowrap;}
+
+  /* Chapter 4 — document scene */
+  .doc-grid{display:grid;grid-template-columns:.8fr 1.2fr;gap:44px;align-items:center;}
+  .doc-scene{position:relative;min-height:280px;}
+  .doc-scene svg{width:100%;height:100%;}
+
+  @media (max-width:1080px){
+    .shell{grid-template-columns:1fr;}
+    .rail{display:none;}
+    .hero,.ch-grid,.doc-grid{grid-template-columns:1fr;}
+    .week{grid-template-columns:repeat(3,1fr);}
+    .flow{flex-direction:column;}
+    .flow .arrow{display:none;}
   }
 </style>
 </head>
 <body>
-  <div class="pilot-flag" role="note">
-    <strong>PILOT</strong>
-    <span>1919 Path Storyline — medewerker — losstaande voorbeeldpagina, niet de echte app</span>
-    <span aria-hidden="true">·</span>
-    <a href="/">Terug naar de app</a>
-  </div>
 
-  <div class="shell">
-    <aside class="rail" aria-label="Verhaallijn van de urenregistratie">
-      <div class="rail-inner">
-        <div class="brand" aria-label="Path Consultancy">
-          <svg class="brand-mark" viewBox="0 0 32 44" aria-hidden="true">
-            <path d="M5 40V4h13.5C25.5 4 29 7.8 29 14s-3.5 10-10.5 10H10"/>
-          </svg>
-          <span class="brand-name">Path Consultancy</span>
-        </div>
+<div class="pilot-flag"><b>PILOT</b> &nbsp;·&nbsp; 1919 Path Storyline — medewerker &nbsp;·&nbsp; losstaande voorbeeldpagina, niet de echte app &nbsp;·&nbsp; <a href="/" style="color:#8fd0b0">terug naar de app</a></div>
 
-        <nav class="timeline" aria-label="Hoofdstukken">
-          <a class="stop" href="#start">
-            <span class="node" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="m8 5 11 7-11 7Z"/></svg>
-            </span>
-            <span class="stop-eyebrow">Start</span>
-            <span class="stop-title">Je maand begint</span>
-            <span class="stop-sub">Een frisse start.</span>
-          </a>
+<div class="shell">
 
-          <a class="stop active" href="#week" aria-current="step">
-            <span class="node" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
-            </span>
-            <span class="stop-eyebrow">Week 1</span>
-            <span class="stop-title">31 aug – 6 sep</span>
-            <span class="stop-sub">Vul 20 uur aan</span>
-          </a>
+  <!-- ===================== Rail ===================== -->
+  <aside class="rail">
+    <div class="brand"><span class="mark">P</span><span>Path Consultancy</span></div>
+    <div class="timeline">
+      <div class="stop">
+        <span class="node"><svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg></span>
+        <div class="eyebrow">Start</div><div class="ttl">Je maand begint</div><div class="sub">Een frisse start.</div>
+      </div>
+      <div class="stop active">
+        <span class="node"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+        <div class="eyebrow">Week 1</div><div class="ttl">31 aug – 6 sep</div><div class="sub">Vul 20 uur aan</div>
+      </div>
+      <div class="stop">
+        <span class="node"><svg viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-8z"/></svg></span>
+        <div class="eyebrow">Indienen</div><div class="ttl">Je uren indienen</div><div class="sub">Klaar voor controle.</div>
+      </div>
+      <div class="stop">
+        <span class="node"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 5-3 7-7 9-4-2-7-4-7-9V6z"/></svg></span>
+        <div class="eyebrow">Backoffice</div><div class="ttl">Na indienen neemt Backoffice het over</div><div class="sub">Wij zorgen voor de rest.</div>
+      </div>
+      <div class="stop">
+        <span class="node"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
+        <div class="eyebrow">Klanturenstaat</div><div class="ttl">Direct naar de klant</div><div class="sub">Transparant en rechtstreeks gemaild.</div>
+      </div>
+    </div>
+    <div class="ask">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 015 .2c0 1.8-2.5 2-2.5 3.8"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg>
+      <p>Vragen over je uren?<br>Neem contact op met Backoffice.</p>
+    </div>
+  </aside>
 
-          <a class="stop" href="#indienen">
-            <span class="node" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="m3 11 18-8-8 18-2-8Z"/></svg>
-            </span>
-            <span class="stop-eyebrow">Indienen</span>
-            <span class="stop-title">Je uren indienen</span>
-            <span class="stop-sub">Klaar voor controle.</span>
-            <span class="branch-line" aria-hidden="true"></span>
-          </a>
+  <!-- ===================== Main ===================== -->
+  <div class="main">
 
-          <a class="stop" href="#indienen">
-            <span class="node" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M12 3 19 6v6c0 5-3 7-7 9-4-2-7-4-7-9V6Z"/><path d="m9 12 2 2 4-5"/></svg>
-            </span>
-            <span class="stop-eyebrow">Backoffice</span>
-            <span class="stop-title">Na indienen neemt Backoffice het over</span>
-            <span class="stop-sub">Wij zorgen voor de rest.</span>
-            <span class="branch-line" aria-hidden="true"></span>
-          </a>
+    <div class="topbar">
+      <span class="pkg"><b>Package 1919</b> · Path Storyline — Employee</span>
+      <span class="grow"></span>
+      <span class="chip"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>September 2026 <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
+      <span class="sep"></span>
+      <span class="who"><span class="av">SB</span>Stasjo van Bakel <svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6"/></svg></span>
+    </div>
 
-          <a class="stop" href="#klanturenstaat">
-            <span class="node" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
-            </span>
-            <span class="stop-eyebrow">Klanturenstaat</span>
-            <span class="stop-title">Direct naar de klant</span>
-            <span class="stop-sub">Transparant en rechtstreeks gemaild.</span>
-            <span class="branch-line" aria-hidden="true"></span>
-          </a>
-        </nav>
-
-        <div class="rail-help">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 10.5V17M12 7.3h.01"/></svg>
-          <p>Vragen over je uren?<br>Neem contact op met Backoffice.</p>
+    <!-- Chapter 1 — hero -->
+    <section class="hero">
+      <div class="copy">
+        <div class="eyebrow-c">September 2026</div>
+        <h1>Je maand begint</h1>
+        <p>Welkom bij je urenregistratie. Registreer je uren per dag, dien ze in en wij doen de rest.</p>
+        <div class="mini">
+          <div><span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span><span><b>Registreer dagelijks</b><span>Houd je uren actueel.</span></span></div>
+          <div><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-8z"/></svg></span><span><b>Dien wekelijks in</b><span>Eenvoudig en snel.</span></span></div>
+          <div><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 5-3 7-7 9-4-2-7-4-7-9V6z"/><path d="M9 12l2 2 4-5"/></svg></span><span><b>Wij regelen de rest</b><span>Backoffice neemt het over.</span></span></div>
         </div>
       </div>
-    </aside>
+      <div class="scene" aria-hidden="true">
+        <svg viewBox="0 0 720 460" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#aac3d1"/><stop offset="0.5" stop-color="#d9d2bf"/><stop offset="1" stop-color="#f2e3c4"/>
+            </linearGradient>
+            <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+              <stop offset="0" stop-color="#fff4d6"/><stop offset="0.4" stop-color="#f4d79b"/><stop offset="1" stop-color="#f4d79b" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <rect width="720" height="460" fill="url(#sky)"/>
+          <circle cx="520" cy="210" r="140" fill="url(#sun)"/>
+          <circle cx="520" cy="210" r="34" fill="#fdeec4"/>
+          <path d="M0 250 Q160 210 340 245 T720 235 V460 H0 Z" fill="#c9c4a6" opacity="0.6"/>
+          <path d="M0 300 Q180 250 400 300 T720 290 V460 H0 Z" fill="#8fa07a"/>
+          <path d="M0 350 Q220 300 460 355 T720 345 V460 H0 Z" fill="#5d7355"/>
+          <path d="M0 400 Q240 360 720 405 V460 H0 Z" fill="#3c4c3b"/>
+          <path d="M330 460 C 360 380 430 330 470 250 C 452 330 400 380 386 460 Z" fill="#e8dcbb" opacity="0.9"/>
+          <g fill="#3c4c3b" opacity="0.8">
+            <path d="M40 420 q6 -26 2 -40 q10 12 12 30 q6 -18 16 -26 q-4 20 -14 40 z"/>
+            <path d="M690 300 q4 -20 0 -34 q10 12 12 26 q6 -14 14 -20 q-4 18 -12 34 z"/>
+          </g>
+        </svg>
+      </div>
+    </section>
 
-    <main class="main">
-      <header class="topbar">
-        <span class="package-label"><strong>Package 1919</strong> &nbsp;·&nbsp; Path Storyline — Employee</span>
-        <span class="topbar-spacer"></span>
-        <span class="month-chip">
-          <svg class="topbar-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
-          September 2026
-          <svg class="topbar-icon chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-        </span>
-        <span class="topbar-separator" aria-hidden="true"></span>
-        <span class="profile">
-          <span class="avatar" aria-hidden="true">SB</span>
-          Stasjo van Bakel
-          <svg class="topbar-icon chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-        </span>
-      </header>
-
-      <section class="hero" id="start" aria-labelledby="start-title">
-        <div class="hero-copy">
-          <div class="section-eyebrow">September 2026</div>
-          <h1 id="start-title">Je maand begint</h1>
-          <p class="hero-intro">Welkom bij je urenregistratie. Registreer je uren per dag,<br>dien ze in en wij doen de rest.</p>
-
-          <div class="mini-steps">
-            <div class="mini-step">
-              <span class="mini-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
-              </span>
-              <span><strong>Registreer dagelijks</strong><small>Houd je uren actueel.</small></span>
-            </div>
-            <div class="mini-step">
-              <span class="mini-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="m3 11 18-8-8 18-2-8Z"/></svg>
-              </span>
-              <span><strong>Dien wekelijks in</strong><small>Eenvoudig en snel.</small></span>
-            </div>
-            <div class="mini-step">
-              <span class="mini-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M12 3 19 6v6c0 5-3 7-7 9-4-2-7-4-7-9V6Z"/><path d="m9 12 2 2 4-5"/></svg>
-              </span>
-              <span><strong>Wij regelen de rest</strong><small>Backoffice neemt het over.</small></span>
-            </div>
-          </div>
+    <!-- Chapter 2 — invullen -->
+    <section class="chapter navy">
+      <div class="ch-grid">
+        <div>
+          <div class="ch-eyebrow">Week 1 · 31 aug – 6 sep 2026</div>
+          <h2>Vul je uren in</h2>
+          <p class="lead">Registreer je uren per dag. Zo houd je grip en blijft alles kloppend.</p>
+          <button class="btn-amber"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Vul 20 uur aan</button>
         </div>
-
-        <div class="hero-media">
-          <img
-            class="hero-image"
-            data-testid="1919-hero-image"
-            src="assets/1919/hero.jpg"
-            width="1448"
-            height="1086"
-            alt="Een slingerend pad door de duinen bij zonsopgang"
-            decoding="async"
-            fetchpriority="high">
+        <div class="week">
+          <div class="day"><div class="dh"><b>MA</b><span>31 AUG</span></div><div class="cell"><div class="h">8:00</div><div class="u">UREN</div></div><div class="add"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>TOEVOEGEN</div></div>
+          <div class="day"><div class="dh"><b>DI</b><span>1 SEP</span></div><div class="cell"><div class="h">8:00</div><div class="u">UREN</div></div><div class="add"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>TOEVOEGEN</div></div>
+          <div class="day"><div class="dh"><b>WO</b><span>2 SEP</span></div><div class="cell"><div class="h">4:00</div><div class="u">UREN</div></div><div class="add"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>TOEVOEGEN</div></div>
+          <div class="day"><div class="dh"><b>DO</b><span>3 SEP</span></div><div class="cell empty"><div class="h">0:00</div><div class="u">UREN</div></div><div class="add"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>TOEVOEGEN</div></div>
+          <div class="day"><div class="dh"><b>VR</b><span>4 SEP</span></div><div class="cell empty"><div class="h">0:00</div><div class="u">UREN</div></div><div class="add"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>TOEVOEGEN</div></div>
+          <div class="day total"><div class="dh"><b>TOTAAL</b><span>&nbsp;</span></div><div class="cell"><div class="h">20:00</div><div class="u">UREN</div></div></div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section class="chapter hours-section" id="week" aria-labelledby="week-title">
-        <div class="chapter-inner hours-layout">
-          <div class="hours-copy">
-            <div class="section-eyebrow">Week 1 &nbsp;·&nbsp; 31 aug – 6 sep 2026</div>
-            <h2 id="week-title">Vul je uren in</h2>
-            <p class="chapter-lead">Registreer je uren per dag. Zo houd je grip en blijft alles kloppend.</p>
-            <button class="hours-button" type="button">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
-              Vul 20 uur aan
-            </button>
-          </div>
-
-          <div class="week" aria-label="Uren van week 1">
-            <div class="day">
-              <div class="day-heading"><strong>MA</strong><small>31 AUG</small></div>
-              <div class="hours-cell"><span class="hours-value">8:00</span><span class="hours-unit">UREN</span></div>
-              <div class="add-hours"><b aria-hidden="true">+</b><span>TOEVOEGEN</span></div>
-            </div>
-            <div class="day">
-              <div class="day-heading"><strong>DI</strong><small>1 SEP</small></div>
-              <div class="hours-cell"><span class="hours-value">8:00</span><span class="hours-unit">UREN</span></div>
-              <div class="add-hours"><b aria-hidden="true">+</b><span>TOEVOEGEN</span></div>
-            </div>
-            <div class="day">
-              <div class="day-heading"><strong>WO</strong><small>2 SEP</small></div>
-              <div class="hours-cell"><span class="hours-value">4:00</span><span class="hours-unit">UREN</span></div>
-              <div class="add-hours"><b aria-hidden="true">+</b><span>TOEVOEGEN</span></div>
-            </div>
-            <div class="day empty">
-              <div class="day-heading"><strong>DO</strong><small>3 SEP</small></div>
-              <div class="hours-cell"><span class="hours-value">0:00</span><span class="hours-unit">UREN</span></div>
-              <div class="add-hours"><b aria-hidden="true">+</b><span>TOEVOEGEN</span></div>
-            </div>
-            <div class="day empty">
-              <div class="day-heading"><strong>VR</strong><small>4 SEP</small></div>
-              <div class="hours-cell"><span class="hours-value">0:00</span><span class="hours-unit">UREN</span></div>
-              <div class="add-hours"><b aria-hidden="true">+</b><span>TOEVOEGEN</span></div>
-            </div>
-            <div class="day total">
-              <div class="day-heading"><strong>TOTAAL</strong><small>&nbsp;</small></div>
-              <div class="hours-cell"><span class="hours-value">20:00</span><span class="hours-unit">UREN</span></div>
-            </div>
-          </div>
+    <!-- Chapter 3 — na indienen -->
+    <section class="chapter forest">
+      <div class="ch-grid">
+        <div>
+          <div class="ch-eyebrow">Na indienen</div>
+          <h2>Na indienen neemt<br>Backoffice het over</h2>
+          <p class="lead">Wij controleren je uren en verzorgen de communicatie. Jij hoeft verder niets te doen.</p>
         </div>
-      </section>
-
-      <section class="chapter process-section" id="indienen" aria-labelledby="process-title">
-        <div class="chapter-inner process-layout">
-          <div class="process-copy">
-            <div class="section-eyebrow">Na indienen</div>
-            <h2 id="process-title">Na indienen neemt Backoffice het over</h2>
-            <p class="chapter-lead">Wij controleren je uren en verzorgen de communicatie. Jij hoeft verder niets te doen.</p>
-          </div>
-
-          <div class="process-flow" aria-label="Proces na indienen">
-            <div class="flow-step">
-              <span class="flow-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M12 3 19 6v6c0 5-3 7-7 9-4-2-7-4-7-9V6Z"/><path d="m9 12 2 2 4-5"/></svg>
-              </span>
-              <span><strong>Controle</strong><small>We controleren<br>je uren.</small></span>
-            </div>
-            <span class="flow-arrow" aria-hidden="true"></span>
-            <div class="flow-step">
-              <span class="flow-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="m3 11 18-8-8 18-2-8Z"/></svg>
-              </span>
-              <span><strong>Klanturenstaat</strong><small>Rechtstreeks gemaild<br>naar de klant.</small></span>
-            </div>
-            <span class="flow-arrow" aria-hidden="true"></span>
-            <div class="flow-step">
-              <span class="flow-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>
-              </span>
-              <span><strong>Gereed</strong><small>Jouw uren zijn<br>afgerond.</small></span>
-            </div>
-          </div>
+        <div class="flow">
+          <div class="step"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 5-3 7-7 9-4-2-7-4-7-9V6z"/><path d="M9 12l2 2 4-5"/></svg></span><span><b>Controle</b><span>We controleren je uren.</span></span></div>
+          <span class="arrow">&rarr;</span>
+          <div class="step"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-8z"/></svg></span><span><b>Klanturenstaat</b><span>Rechtstreeks gemaild naar de klant.</span></span></div>
+          <span class="arrow">&rarr;</span>
+          <div class="step"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg></span><span><b>Gereed</b><span>Jouw uren zijn afgerond.</span></span></div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section class="chapter document-section" id="klanturenstaat" aria-labelledby="document-title">
-        <div class="document-copy">
-          <div class="section-eyebrow">Klanturenstaat</div>
-          <h2 id="document-title">Direct naar de klant</h2>
-          <p class="chapter-lead">De klanturenstaat wordt na controle direct per e-mail verzonden naar de klant.</p>
+    <!-- Chapter 4 — direct naar de klant -->
+    <section class="chapter dark">
+      <div class="doc-grid">
+        <div>
+          <div class="ch-eyebrow">Klanturenstaat</div>
+          <h2>Direct naar de klant</h2>
+          <p class="lead">De klanturenstaat wordt na controle direct per e-mail verzonden naar de klant.</p>
         </div>
-        <div class="document-media">
-          <img
-            class="document-image"
-            data-testid="1919-document-image"
-            src="assets/1919/document.jpg"
-            width="1536"
-            height="1024"
-            alt="Een geprinte klanturenstaat op een donkere tafel met een groene plant"
-            decoding="async"
-            loading="lazy">
+        <div class="doc-scene" aria-hidden="true">
+          <svg viewBox="0 0 560 300" preserveAspectRatio="xMidYMid meet">
+            <defs><linearGradient id="pap" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#efece2"/></linearGradient></defs>
+            <g transform="rotate(-7 300 150)">
+              <rect x="130" y="30" width="300" height="240" rx="4" fill="url(#pap)"/>
+              <rect x="130" y="30" width="300" height="240" rx="4" fill="none" stroke="#d8d3c4"/>
+              <text x="160" y="78" font-family="Georgia, serif" font-size="20" fill="#2a3a30">Klanturenstaat</text>
+              <text x="160" y="100" font-family="Georgia, serif" font-size="11" fill="#7c7f79">September 2026</text>
+              <g transform="translate(372 60)"><rect x="0" y="0" width="17" height="17" rx="4" fill="none" stroke="#2f6a4c" stroke-width="1.6"/><text x="4" y="13" font-family="Georgia, serif" font-size="12" fill="#2f6a4c">P</text></g>
+              <text x="396" y="73" font-family="Georgia, serif" font-size="10" fill="#2a3a30">Path Consultancy</text>
+              <g font-family="Georgia, serif" font-size="10" fill="#6c6f69">
+                <text x="160" y="140">Klant</text><text x="260" y="140">Path Consultancy</text>
+                <text x="160" y="162">Opdracht</text><text x="260" y="162">Path Storyline</text>
+                <text x="160" y="184">Periode</text><text x="260" y="184">31 aug – 6 sep 2026</text>
+              </g>
+              <line x1="160" y1="205" x2="400" y2="205" stroke="#e0dccf"/>
+              <line x1="160" y1="225" x2="400" y2="225" stroke="#e0dccf"/>
+              <line x1="160" y1="245" x2="400" y2="245" stroke="#e0dccf"/>
+            </g>
+            <g fill="#1f3a2c">
+              <path d="M470 300 q4 -46 -4 -70 q18 18 22 44 q10 -26 28 -38 q-6 34 -24 64 z"/>
+              <path d="M498 300 q10 -34 6 -54 q16 14 16 34 q10 -18 22 -24 q-6 26 -22 44 z"/>
+            </g>
+          </svg>
         </div>
-      </section>
-    </main>
+      </div>
+    </section>
+
   </div>
+</div>
+
 </body>
 </html>

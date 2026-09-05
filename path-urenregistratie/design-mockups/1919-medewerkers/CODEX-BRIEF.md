@@ -47,19 +47,14 @@ aangeleverd zijn (zie "Beeld & font").
    geen versienummer in de subjectregel.
 
 ## Beeld & font (dit is het "1:1"-knelpunt)
-Deze Codex-omgeving kan met de ingebouwde imagegen-functie nieuwe foto-assets
-maken. Gebruik de mockup uitsluitend als stijl- en compositiereferentie en
-plaats de geoptimaliseerde uitvoer in
-`path-urenregistratie/pilot/assets/1919/`:
+Codex kan net als elke code-agent **geen foto's genereren**. Aanpak:
 
-- Vereiste bestanden:
+- De gebruiker levert aan in `path-urenregistratie/pilot/assets/1919/`:
   - `hero.jpg` — de duin/zonsopgang-hero uit de mockup. Verhouding ± **4:3**, minstens 1200×900, geoptimaliseerd (< 300 KB).
   - `document.jpg` — de geprinte klanturenstaat op donkere ondergrond met plant. Verhouding ± **3:2**, minstens 1000×700, < 300 KB.
   - `serif.woff2` — de display-serif uit de mockup (of, als onbekend, een OFL-serif die er dicht bij ligt: **Fraunces**, **Spectral** of **Source Serif 4**; subset latin, `font-display: swap`).
-- Als imagegen in een andere uitvoeromgeving niet beschikbaar is, levert de
-  gebruiker de bestanden aan; gebruik tot die tijd de bestaande
-  inline-SVG-benadering als placeholder en zet de `<img>`/`@font-face` al
-  klaar zodat het wisselen één regel is.
+- Zolang die er niet zijn: gebruik de bestaande inline-SVG-benadering als placeholder,
+  maar zet de `<img>`/`@font-face` al klaar zodat het wisselen één regel is.
 - Portret-avatars: geen fotobron → gestileerde initialen-cirkel (SB), passend bij de stijl.
 
 ## Layout-spec (uit de JPG)
@@ -125,7 +120,7 @@ losstaande voorbeeldpagina, niet de echte app" met link terug naar `/`.
 ## Oplevering
 1. `pilot/1919-medewerker.html` bijgewerkt (+ evt. `pilot/1919-medewerker.js` voor
    scroll-sync van de rail — als losse same-origin `.js`, geen inline).
-2. `pilot/assets/1919/` met de gegenereerde/aangeleverde beelden + font (of placeholders klaar
+2. `pilot/assets/1919/` met de aangeleverde beelden + font (of placeholders klaar
    voor wissel).
 3. `pilot/README.md` bijgewerkt.
 4. `PILOT-H-001` groen + feature-scenario in sync + `npm run check` groen.
