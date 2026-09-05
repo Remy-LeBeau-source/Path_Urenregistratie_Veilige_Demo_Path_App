@@ -8371,19 +8371,19 @@ function addHelpMessage(text, type, options) {
     const body = "Hallo " + contactName + ",\n\nIk heb een vraag over de urenapp.\n\nMijn vraag:\n" + (options.question || "Schrijf hier je vraag") + "\n\nNaam: " + profile.name + "\nPeriode: " + currentPeriod().label;
     const actions = document.createElement("div");
     actions.className = "help-contact-actions";
-    const gmail = document.createElement("a");
-    gmail.href = "https://mail.google.com/mail/?view=cm&fs=1&to=" + encodeURIComponent(contactEmail) + "&su=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
-    gmail.target = "_blank";
-    gmail.rel = "noopener noreferrer";
-    gmail.textContent = "Open in Gmail";
+    // Regression: hier stonden twee aparte "open mail"-knoppen (Gmail-web en
+    // mailto), wat oogde als een keuze die niemand hoeft te maken -- een
+    // mailto-koppeling opent toch al wat de gebruiker zelf als e-mailapp
+    // heeft ingesteld, Gmail incluis. Eén duidelijke knop, plus kopiëren als
+    // vangnet voor wie geen gekoppelde e-mailapp heeft.
     const mailApp = document.createElement("a");
     mailApp.href = "mailto:" + contactEmail + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
-    mailApp.textContent = "Open in Outlook / mailapp";
+    mailApp.textContent = "Open e-mailapp";
     const copy = document.createElement("button");
     copy.type = "button";
     copy.dataset.copySupport = subject + "\n\nAan: " + contactEmail + "\n\n" + body;
     copy.textContent = "Kopieer bericht";
-    actions.append(gmail, mailApp, copy);
+    actions.append(mailApp, copy);
     item.append(actions);
   }
   target.append(item);
@@ -8446,7 +8446,7 @@ async function copyText(value) {
     }
     toast("E-mailtekst gekopieerd. Er is niets verzonden.");
   } catch {
-    toast("Kopiëren is in deze browser geblokkeerd. Open Gmail of je standaard mailapp.");
+    toast("Kopiëren is in deze browser geblokkeerd. Open je standaard mailapp.");
   }
 }
 
@@ -8533,7 +8533,7 @@ function answerHelpQuestion(question, explicitTopicId) {
   }
   const combinedQuestion = "Eerste formulering: " + unresolvedHelpQuestion + "\nTweede formulering: " + question;
   unresolvedHelpQuestion = "";
-  addHelpMessage("Ook na je tweede formulering heb ik geen betrouwbaar standaardantwoord. Kies hieronder Gmail, Outlook / je standaard mailapp of kopieer het bericht voor " + supportName() + ". Er wordt niets automatisch verzonden.", "bot", { contact: true, question: combinedQuestion });
+  addHelpMessage("Ook na je tweede formulering heb ik geen betrouwbaar standaardantwoord. Open hieronder je e-mailapp of kopieer het bericht voor " + supportName() + ". Er wordt niets automatisch verzonden.", "bot", { contact: true, question: combinedQuestion });
 }
 
 function renderAll() {

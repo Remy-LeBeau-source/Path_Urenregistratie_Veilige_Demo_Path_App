@@ -85,6 +85,40 @@ test('[HELP-N-001] het hulpgesprek overleeft geen paginaherlading, alleen "Gespr
   await loginPage.logout();
 });
 
+// Regression: "Contact opnemen" bood eerst drie knoppen naast elkaar ("Open in
+// Gmail", "Open in Outlook / mailapp", "Kopieer bericht") voor feitelijk één
+// bedoeling -- een mailto-koppeling opent toch al wat de gebruiker zelf als
+// e-mailapp heeft ingesteld. Nu nog maar één duidelijke mailknop plus kopiëren
+// als vangnet.
+test('[HELP-H-003] contact opnemen toont precies één mailknop en een kopieer-vangnet, geen dubbele keuze', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given de medewerker opent Hulp & contact', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('#help-launcher').click();
+  });
+
+  await test.step('When de medewerker het onderwerp Contact opnemen kiest', async () => {
+    await page.locator('#help-suggestions button[data-help-topic="contact"]').click();
+  });
+
+  await test.step('Then staat er precies één mailto-knop en één kopieerknop, geen los Gmail-alternatief', async () => {
+    const actions = page.locator('#help-messages .help-message').last().locator('.help-contact-actions');
+    await expect(actions.locator('a, button')).toHaveCount(2);
+    const mailLink = actions.locator('a');
+    await expect(mailLink).toHaveCount(1);
+    await expect(mailLink).toHaveText('Open e-mailapp');
+    await expect(mailLink).toHaveAttribute('href', /^mailto:backoffice@pathconsultancy\.nl\?subject=/);
+    const copyButton = actions.locator('button');
+    await expect(copyButton).toHaveCount(1);
+    await expect(copyButton).toHaveText('Kopieer bericht');
+    await expect(page.locator('#help-messages')).not.toContainText('Gmail');
+  });
+
+  await loginPage.logout();
+});
+
 test('[HELP-H-002] het paneel opent en sluit met een vloeiende overgang, en meteen zonder animatievoorkeur', async ({ page }) => {
   const loginPage = new LoginPage(page);
 

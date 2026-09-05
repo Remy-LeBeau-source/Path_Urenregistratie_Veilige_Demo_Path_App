@@ -241,7 +241,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("1.0.46"), "Het zichtbare versienummer moet 1.0.46 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("1.0.47"), "Het zichtbare versienummer moet 1.0.47 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -529,19 +529,22 @@ assert(document.querySelector("#help-messages").textContent.includes("uitsluiten
 document.querySelector("#help-input").value = "Kan ik hier mijn fietsband plakken?";
 document.querySelector("#help-form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
 assert(document.querySelector("#help-messages").textContent.includes("één keer anders"), "Bij de eerste onbekende vraag moet de bot om een duidelijkere formulering vragen");
-assert(!document.querySelector('#help-messages a[href^="https://mail.google.com/mail/"]'), "Na één onbekende vraag mag de bot nog geen e-mailkeuzes tonen");
+assert(!document.querySelector('#help-messages a[href^="mailto:"]'), "Na één onbekende vraag mag de bot nog geen e-mailkeuzes tonen");
 document.querySelector("#help-input").value = "Kan deze app ook mijn fiets repareren?";
 document.querySelector("#help-form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-assert(document.querySelector('#help-messages a[href^="https://mail.google.com/mail/"]'), "Een onbekende vraag moet een vooraf ingevuld Gmail-concept aanbieden");
-assert(document.querySelector('#help-messages a[href^="mailto:backoffice@pathconsultancy.nl"]'), "Een onbekende vraag moet ook de standaard mailapp of Outlook kunnen openen");
+// Regression: hier stonden vroeger twee aparte mailknoppen naast elkaar
+// (Gmail-web en mailto) voor feitelijk één bedoeling; nu nog maar één
+// duidelijke mailknop plus kopiëren als vangnet.
+assert(document.querySelector('#help-messages a[href^="mailto:backoffice@pathconsultancy.nl"]'), "Een onbekende vraag moet de standaard mailapp kunnen openen");
+assert(!document.querySelector('#help-messages a[href^="https://mail.google.com/mail/"]'), "Er hoort geen apart Gmail-alternatief meer naast de mailapp-knop te staan");
 assert(document.querySelector('#help-messages [data-copy-support]'), "Een onbekende vraag moet ook als e-mailtekst gekopieerd kunnen worden");
 const messageCountBeforeContact = document.querySelectorAll("#help-messages .help-message").length;
 document.querySelector("#help-input").value = "contact";
 document.querySelector("#help-form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
 const directContactMessage = document.querySelectorAll("#help-messages .help-message")[messageCountBeforeContact + 1];
 assert(directContactMessage.textContent.includes("backoffice@pathconsultancy.nl"), "De vraag contact moet direct het juiste Path Backoffice-adres tonen");
-assert(directContactMessage.querySelector('a[href^="https://mail.google.com/mail/"]'), "Contact moet direct een Gmail-knop tonen");
-assert(directContactMessage.querySelector('a[href^="mailto:backoffice@pathconsultancy.nl"]'), "Contact moet direct een Outlook- of mailappknop tonen");
+assert(directContactMessage.querySelector('a[href^="mailto:backoffice@pathconsultancy.nl"]'), "Contact moet direct een mailapp-knop tonen");
+assert(!directContactMessage.querySelector('a[href^="https://mail.google.com/mail/"]'), "Contact mag geen apart Gmail-alternatief meer tonen");
 assert(directContactMessage.querySelector("[data-copy-support]"), "Contact moet direct een kopieerknop tonen");
 click("#help-clear");
 assert(document.querySelectorAll("#help-messages .help-message").length === 1 && document.querySelector("#help-messages").textContent.includes("alleen tijdens deze sessie"), "De hulpgeschiedenis moet handmatig wisbaar zijn en niet als blijvend dossier worden gepresenteerd");
@@ -2073,7 +2076,7 @@ assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Pla
 }
 
 dom.window.close();
-console.log("Path v1.0.46 volledige smoke test: geslaagd");
+console.log("Path v1.0.47 volledige smoke test: geslaagd");
 // app.js schedules browser refresh timers. In JSDOM those timers can keep Node
 // alive after every assertion has completed, which made the release check look
 // stuck. End explicitly only after the complete smoke contract is green.

@@ -1445,9 +1445,17 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 .help-message p { margin: 0; white-space: pre-line; }
 .help-message a { display: inline-block; margin-top: 9px; color: var(--teal); font-weight: 800; }
 .help-message .small-button { margin-top: 9px; }
-.help-contact-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 9px; }
-.help-contact-actions a, .help-contact-actions button { display: inline-flex; align-items: center; width: auto; margin: 0; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--teal); cursor: pointer; font: inherit; font-size: 9px; font-weight: 800; padding: 7px 9px; text-decoration: none; }
+.help-contact-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.help-contact-actions a, .help-contact-actions button { display: inline-flex; align-items: center; gap: 6px; width: auto; margin: 0; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--teal); cursor: pointer; font: inherit; font-size: 11px; font-weight: 800; padding: 9px 14px; text-decoration: none; transition: transform .15s ease, box-shadow .15s ease; }
 .help-contact-actions a:hover, .help-contact-actions button:hover { border-color: var(--teal); }
+.help-contact-actions a:active, .help-contact-actions button:active { transform: translateY(1px); }
+/* Eén duidelijke hoofdactie (mailapp openen) in merkkleur, kopiëren als
+   rustige, minder opvallende tweede optie -- zodat er niet twee gelijkwaardig
+   ogende keuzes naast elkaar staan voor wat feitelijk één bedoeling is. */
+.help-contact-actions a { border-color: transparent; background: var(--mint); color: var(--navy); box-shadow: 0 6px 16px rgba(58,189,157,.24); }
+.help-contact-actions a:hover { background: #48caa9; border-color: transparent; }
+.help-contact-actions a::before { content: "✉"; }
+.help-contact-actions button::before { content: "⧉"; }
 .help-faq { border-top: 1px solid var(--line); background: var(--surface); padding: 12px; }
 .help-faq-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .help-faq-heading strong { color: var(--navy-tekst); font-size: 11px; }

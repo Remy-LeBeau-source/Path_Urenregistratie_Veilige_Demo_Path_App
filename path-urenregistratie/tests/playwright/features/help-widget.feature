@@ -26,6 +26,14 @@ Feature: Hulp en contact
     Then is het gesprek net zo leeg als bij een eerste opening, niet ergens onthouden
 
   @happy
+  Scenario: [HELP-H-003] contact opnemen toont precies één mailknop en een kopieer-vangnet, geen dubbele keuze
+    # Testtechniek: Equivalentieklassen
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given de medewerker opent Hulp & contact
+    When de medewerker het onderwerp Contact opnemen kiest
+    Then staat er precies één mailto-knop en één kopieerknop, geen los Gmail-alternatief
+
+  @happy
   Scenario: [HELP-H-002] het paneel opent en sluit met een vloeiende overgang, en meteen zonder animatievoorkeur
     # Testtechniek: Toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 4
