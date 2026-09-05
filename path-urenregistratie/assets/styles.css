@@ -1252,10 +1252,16 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 }
 
 .customer-timesheet-upload-panel { margin-top: 22px; }
-.customer-timesheet-flow { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; margin: 16px 0 0; padding: 0; list-style: none; }
-.customer-timesheet-flow li { display: grid; gap: 4px; align-content: start; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-muted); padding: 12px 14px; }
+/* Drie stappen als echte reeks: genummerde muntjes in merkkleur, een
+   verbindingslijn ertussen en een zachtere kaart -- in plaats van drie losse
+   bordjes met "1." / "2." / "3." in de tekst. */
+.customer-timesheet-flow { counter-reset: klantstap; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; margin: 18px 0 0; padding: 0; list-style: none; }
+.customer-timesheet-flow li { position: relative; display: grid; gap: 5px; align-content: start; border: 1px solid var(--line); border-radius: 14px; background: var(--vlak-zacht); padding: 30px 15px 14px; box-shadow: 0 6px 18px rgba(13,27,56,.04); }
+.customer-timesheet-flow li::before { counter-increment: klantstap; content: counter(klantstap); position: absolute; top: -14px; left: 15px; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--mint); color: var(--navy); font-size: 12px; font-weight: 800; box-shadow: 0 4px 12px rgba(58,189,157,.3); }
+.customer-timesheet-flow li:not(:first-child)::after { content: ""; position: absolute; top: 0; left: -14px; width: 14px; height: 1px; background: var(--line); }
 .customer-timesheet-flow strong, .customer-timesheet-flow span { display: block; }
-.customer-timesheet-flow span { color: var(--muted); font-size: 11px; line-height: 1.5; }
+.customer-timesheet-flow strong { color: var(--navy-tekst); font-size: 12px; }
+.customer-timesheet-flow span { color: var(--muted); font-size: 11px; line-height: 1.55; }
 .customer-timesheet-upload-grid { display: grid; grid-template-columns: minmax(180px,.65fr) minmax(240px,1fr) minmax(300px,auto); gap: 14px; align-items: end; margin-top: 18px; }
 .customer-timesheet-upload-grid label { display: grid; gap: 7px; color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
 .customer-timesheet-upload-grid input { width: 100%; min-height: 42px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); padding: 9px 11px; }
@@ -1308,7 +1314,8 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
   .employee-customer-timesheet-actions { display: grid; grid-template-columns: minmax(0, 1fr); justify-content: stretch; }
   .employee-customer-timesheet-actions .button { width: 100%; }
   .customer-timesheet-template-grid { grid-template-columns: minmax(0, 1fr); }
-  .customer-timesheet-flow { grid-template-columns: minmax(0, 1fr); }
+  .customer-timesheet-flow { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+  .customer-timesheet-flow li:not(:first-child)::after { display: none; }
   .customer-timesheet-upload-grid { grid-template-columns: minmax(0, 1fr); }
   .customer-timesheet-upload-grid .button { width: 100%; }
   .customer-timesheet-period-fields { grid-template-columns: minmax(0,1fr) 92px; }
