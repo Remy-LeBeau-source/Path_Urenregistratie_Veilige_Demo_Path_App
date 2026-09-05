@@ -1,4 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
+import { AuthApi } from './api/AuthApi';
+import { appConfig, requirePassword } from './fixtures/appConfig';
 import { LoginPage } from './pages/LoginPage';
 import { attachBusinessScreenshot } from './reporting/uiAttachments';
 
@@ -832,14 +834,20 @@ test('[TS-REV-UI-H-012] beheerder zet verlof en ziekte aan; de medewerker kan ze
     await loginPage.logout();
   } finally {
     // Dit is een company-brede instelling in de gedeelde TEST-database: andere
-    // cases (zoals TS-REV-UI-N-014) gaan uit van de standaardstand (uit).
-    // loginAsAdmin() verwacht zelf al het login-scherm (LoginPage.login()); een
-    // verse open() ervoor is nodig omdat deze finally ook aanslaat als de try
-    // hierboven halverwege faalt, dus zonder de eigen afsluitende logout().
-    await loginPage.open();
-    await loginPage.loginAsAdmin();
+    // cases (zoals TS-REV-UI-N-014) gaan uit van de standaardstand (uit). Dit
+    // gaat rechtstreeks via de auth-/instellingen-API (niet via de inlog-UI):
+    // deze finally moet ook werken als de try hierboven halverwege faalde
+    // (dus zonder eigen afsluitende logout(), sessie in onbekende staat), en
+    // een verse open()+loginAsAdmin() via de UI bleek onder zware
+    // gelijktijdige belasting soms nog een geldige sessie van eerder in deze
+    // test aan te treffen bij een verse paginalading (zie AUTH-H-023 voor de
+    // losse logout-hardening). Rechtstreeks via de API omzeilt die
+    // kwetsbaarheid volledig voor deze zuivere opruimstap.
+    const authApi = new AuthApi(page.request);
+    await authApi.logout().catch(() => null);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
     await setLeaveSickEntryEnabled(page, false);
-    await loginPage.logout();
+    await authApi.logout().catch(() => null);
   }
 });
 
