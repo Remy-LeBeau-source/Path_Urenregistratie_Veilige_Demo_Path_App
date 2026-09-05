@@ -120,7 +120,7 @@ Feature: Klanturenstaten en documentverwerking
 
   @negative
   Scenario: [CTS-API-N-010] bestand van precies 2 MB wordt geaccepteerd, 2 MB + 1 byte wordt geweigerd
-    # Testtechniek: Grenswaardeanalyse
+    # Testtechniek: Grenswaardenanalyse
     # Aantoonbare Playwright-assertions in deze case: 9
     Given de medewerker is ingelogd
     When de medewerker een geldige PDF van precies 2 MB uploadt

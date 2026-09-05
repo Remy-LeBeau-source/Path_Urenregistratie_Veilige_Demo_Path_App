@@ -47,14 +47,18 @@ for (const file of featureFiles) {
   }
 }
 
+// De aanhalingsteken-groep staat ook een backtick toe: een geparametriseerde
+// case (bijv. eenzelfde flow per rol) heeft een template-literal testnaam met
+// een vaste ID vóór de interpolatie, zoals `[PWD-H-013] nieuwe ${role} ...`.
+// Zonder backtick miste dit script zo'n case stilzwijgend als "niet-uitvoerbaar".
 const specIds = [];
 for (const file of specFiles) {
   const source = readFileSync(path.join(playwrightDir, file), 'utf8');
-  for (const match of source.matchAll(/test\(\s*(['"])\[([^\]]+)]/g)) specIds.push(match[2].trim());
+  for (const match of source.matchAll(/test\(\s*(['"`])\[([^\]]+)]/g)) specIds.push(match[2].trim());
 }
 for (const file of remoteSpecFiles) {
   const source = readFileSync(path.join(remoteDir, file), 'utf8');
-  for (const match of source.matchAll(/test\(\s*(['"])\[([^\]]+)]/g)) specIds.push(match[2].trim());
+  for (const match of source.matchAll(/test\(\s*(['"`])\[([^\]]+)]/g)) specIds.push(match[2].trim());
 }
 specIds.push('DB-H-001');
 
