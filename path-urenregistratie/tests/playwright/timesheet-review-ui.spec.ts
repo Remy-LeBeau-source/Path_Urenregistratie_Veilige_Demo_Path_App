@@ -730,3 +730,92 @@ test('[TS-REV-UI-N-014] verlof en ziekte staan uit met een duidelijke uitleg', a
   await loginPage.logout();
 });
 
+async function setLeaveSickEntryEnabled(page: Page, enabled: boolean): Promise<void> {
+  const csrf = await (await page.request.get('/server/auth/csrf.php')).json();
+  const before = await (await page.request.get('/server/api/bootstrap.php')).json();
+  const company = before.companies[0];
+  const save = await page.request.post('/server/api/settings.php', {
+    headers: { 'X-CSRF-Token': String(csrf.csrf_token || '') },
+    data: {
+      settings: {
+        organizationName: company.trade_name || 'Path Consultancy',
+        companyName: company.legal_name || company.trade_name || 'Path Consultancy',
+        invoiceNameDisplay: company.invoice_name_display || 'trade_and_legal',
+        appName: company.app_name || 'Uren & Facturatie',
+        supportName: company.support_name || 'Path Backoffice',
+        supportEmail: company.support_email || 'backoffice@pathconsultancy.nl',
+        brandPrimary: company.brand_primary || '#0d1b38',
+        brandAccent: company.brand_accent || '#3abd9d',
+        kvk: company.chamber_of_commerce_number || '89320018',
+        vat: company.vat_number || 'NL001622017B32',
+        iban: company.iban || 'NL95INGB0006947972',
+        address: company.address_line || 'Du Perronstraat 12',
+        postalCity: '3067 HN Rotterdam',
+        phone: '0646328286',
+        invoiceEmail: 'backoffice@pathconsultancy.nl',
+        paymentTerm: Number(company.payment_term_days || 30),
+        customerTimesheetReminderEnabled: true,
+        customerTimesheetReminderTime: '15:00',
+        customerTimesheetOverdueWorkdays: 2,
+        leaveSickEntryEnabled: enabled,
+      },
+      mailRecipients: before.mail_recipients,
+    },
+  });
+  expect(save.status(), await save.text()).toBe(200);
+}
+
+test('[TS-REV-UI-H-012] beheerder zet verlof en ziekte aan; de medewerker kan ze dan zelf invullen en het blijft na F5 staan', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await mockEmploymentStartDate(page);
+
+  try {
+    await test.step('Given de beheerder verlof en ziekte handmatig invullen aanzet', async () => {
+      await loginPage.open();
+      await loginPage.loginAsAdmin();
+      await setLeaveSickEntryEnabled(page, true);
+      await loginPage.logout();
+    });
+
+    await test.step('When de medewerker Mijn uren opent', async () => {
+      await loginPage.loginAsEmployee();
+      await setPeriod(page, PERIOD_KEY);
+      await openView(page, 'timesheet');
+    });
+
+    await test.step('Then staan verlof en ziekte niet meer uitgeschakeld en is de uitleg verdwenen', async () => {
+      await expect(page.locator('#summary-leave')).toBeEnabled();
+      await expect(page.locator('#summary-sick')).toBeEnabled();
+      await expect(page.locator('#payroll-privacy-note').locator('xpath=ancestor::div[contains(@class,"summary-note")]')).toBeHidden();
+    });
+
+    await test.step('When de medewerker verlof en ziekte zelf invult', async () => {
+      // .fill() vuurt een echt "input"-event, waar updateHoursTotal(true) op
+      // luistert (de listener op .summary-hours-input) om de conceptschrijf te
+      // plannen.
+      await page.locator('#summary-leave').fill('4');
+      await page.locator('#summary-sick').fill('2');
+    });
+
+    await test.step('Then blijven de ingevulde waarden staan na een herlaad', async () => {
+      // scheduleDraftTimesheetWrite() debouncet 700ms; wacht op de bevestiging
+      // in plaats van een vaste sleep, dat is minder gevoelig voor een trage run.
+      await expect(page.locator('#hours-autosave-status')).toContainText('Gesynchroniseerd', { timeout: 5000 });
+      await page.reload();
+      await expect(page.locator('#app-shell')).toBeVisible();
+      await setPeriod(page, PERIOD_KEY);
+      await openView(page, 'timesheet');
+      await expect(page.locator('#summary-leave')).toHaveValue('4');
+      await expect(page.locator('#summary-sick')).toHaveValue('2');
+    });
+
+    await loginPage.logout();
+  } finally {
+    // Dit is een company-brede instelling in de gedeelde TEST-database: andere
+    // cases (zoals TS-REV-UI-N-014) gaan uit van de standaardstand (uit).
+    await loginPage.loginAsAdmin();
+    await setLeaveSickEntryEnabled(page, false);
+    await loginPage.logout();
+  }
+});
+

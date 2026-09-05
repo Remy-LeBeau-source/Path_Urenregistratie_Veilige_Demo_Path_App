@@ -15,7 +15,7 @@ $companyId = (int)$currentUser['company_id'];
 
 try {
     $companiesStmt = $pdo->prepare(
-        'SELECT id, slug, legal_name, trade_name, invoice_name_display, app_name, support_name, support_email, website, tagline, brand_primary, brand_accent, chamber_of_commerce_number, vat_number, iban, address_line, postal_code, city, invoice_phone, invoice_email, country_code, invoice_prefix, payment_term_days, customer_timesheet_reminder_enabled, customer_timesheet_reminder_time, customer_timesheet_overdue_workdays, customer_timesheet_submission_subject, customer_timesheet_submission_body, customer_timesheet_broker_subject, customer_timesheet_broker_body, created_at, updated_at FROM companies WHERE id = :company_id ORDER BY id'
+        'SELECT id, slug, legal_name, trade_name, invoice_name_display, app_name, support_name, support_email, website, tagline, brand_primary, brand_accent, chamber_of_commerce_number, vat_number, iban, address_line, postal_code, city, invoice_phone, invoice_email, country_code, invoice_prefix, payment_term_days, customer_timesheet_reminder_enabled, customer_timesheet_reminder_time, customer_timesheet_overdue_workdays, customer_timesheet_submission_subject, customer_timesheet_submission_body, customer_timesheet_broker_subject, customer_timesheet_broker_body, leave_sick_entry_enabled, created_at, updated_at FROM companies WHERE id = :company_id ORDER BY id'
     );
     $companiesStmt->execute([':company_id' => $companyId]);
     $companies = $companiesStmt->fetchAll();

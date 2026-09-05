@@ -168,6 +168,10 @@ function migration_plan(bool $allowDemoMigrations): array
         'id' => '027_password_reset_html_signature.sql',
         'path' => __DIR__ . '/migrations/027_password_reset_html_signature.sql',
     ];
+    $plan[] = [
+        'id' => '028_leave_sick_entry_toggle.sql',
+        'path' => __DIR__ . '/migrations/028_leave_sick_entry_toggle.sql',
+    ];
     return $plan;
 }
 

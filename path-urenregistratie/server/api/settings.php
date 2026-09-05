@@ -142,7 +142,8 @@ try {
              customer_timesheet_submission_subject = :customer_timesheet_submission_subject,
              customer_timesheet_submission_body = :customer_timesheet_submission_body,
              customer_timesheet_broker_subject = :customer_timesheet_broker_subject,
-             customer_timesheet_broker_body = :customer_timesheet_broker_body
+             customer_timesheet_broker_body = :customer_timesheet_broker_body,
+             leave_sick_entry_enabled = :leave_sick_entry_enabled
          WHERE id = :company_id'
     );
 
@@ -207,6 +208,7 @@ try {
         ':customer_timesheet_submission_body' => settings_text($settings['customerTimesheetSubmissionBody'] ?? '', 4000) ?: null,
         ':customer_timesheet_broker_subject' => settings_string($settings['customerTimesheetBrokerSubject'] ?? '', 250) ?: null,
         ':customer_timesheet_broker_body' => settings_text($settings['customerTimesheetBrokerBody'] ?? '', 4000) ?: null,
+        ':leave_sick_entry_enabled' => settings_bool($settings['leaveSickEntryEnabled'] ?? false, false) ? 1 : 0,
         ':company_id' => $companyId,
     ]);
 

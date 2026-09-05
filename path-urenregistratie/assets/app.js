@@ -481,7 +481,8 @@ function freshState() {
       customerTimesheetSubmissionSubject: DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_SUBJECT,
       customerTimesheetSubmissionBody: DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_BODY,
       customerTimesheetBrokerSubject: DEFAULT_CUSTOMER_TIMESHEET_BROKER_SUBJECT,
-      customerTimesheetBrokerBody: DEFAULT_CUSTOMER_TIMESHEET_BROKER_BODY
+      customerTimesheetBrokerBody: DEFAULT_CUSTOMER_TIMESHEET_BROKER_BODY,
+      leaveSickEntryEnabled: false
     },
     employees: [
       {
@@ -1211,7 +1212,8 @@ function persistState() {
             approvalReminderTime: state.settings.approvalReminderTime,
             customerTimesheetReminderEnabled: state.settings.customerTimesheetReminderEnabled,
             customerTimesheetReminderTime: state.settings.customerTimesheetReminderTime,
-            customerTimesheetOverdueWorkdays: state.settings.customerTimesheetOverdueWorkdays
+            customerTimesheetOverdueWorkdays: state.settings.customerTimesheetOverdueWorkdays,
+            leaveSickEntryEnabled: state.settings.leaveSickEntryEnabled
           }
         };
         window.localStorage.setItem(STORAGE_KEY, JSON.stringify(uiState));
@@ -2557,6 +2559,9 @@ function mergeBootstrapIntoState(data) {
   }
   if (company.customer_timesheet_overdue_workdays !== undefined && company.customer_timesheet_overdue_workdays !== null) {
     state.settings.customerTimesheetOverdueWorkdays = Number(company.customer_timesheet_overdue_workdays) || state.settings.customerTimesheetOverdueWorkdays;
+  }
+  if (company.leave_sick_entry_enabled !== undefined && company.leave_sick_entry_enabled !== null) {
+    state.settings.leaveSickEntryEnabled = Number(company.leave_sick_entry_enabled) === 1;
   }
   // The four klanturenstaat mail texts are server-side now. Empty means "never
   // changed": keep the built-in default rather than blanking the field.
@@ -6278,7 +6283,7 @@ function renderInvoices() {
   // organisatienaam (Handelsnaam/merk uit Instellingen) mag wel genoemd worden
   // -- dat is geen externe leverancier maar de werkgever van de medewerker zelf.
   const payrollNoteOrganizationName = String(state.settings.organizationName || state.settings.companyName || "").trim() || "je organisatie";
-  document.querySelector("#payroll-privacy-note").textContent = "Verlof en ziekte geef je voorlopig door via de salarisadministratie en " + payrollNoteOrganizationName + "; dat gaat nu niet via deze app. De salarisadministratie krijgt hier alleen de toegestane ureninformatie en standaard geen factuurgegevens.";
+  document.querySelector("#payroll-privacy-note").textContent = "Verlof wordt verwerkt via de salarisadministratie van " + payrollNoteOrganizationName + " en ziekte meld je bij Backoffice; beide lopen vooralsnog niet via deze applicatie. De salarisadministratie ontvangt daarbij uitsluitend de daarvoor bestemde urengegevens en standaard geen factuurinformatie.";
   renderMonthBatchReadiness(monthBatchReadiness(currentPeriod().key));
   renderInvoiceMonthOverview();
   renderInvoiceBatchBadge();
@@ -6998,13 +7003,19 @@ function renderHoursGrid() {
   document.querySelector("#summary-contract").textContent = hoursFormat.format(record.contractHours) + " uur";
   document.querySelector("#summary-leave").value = Number(record.leave) || 0;
   document.querySelector("#summary-sick").value = Number(record.sick) || 0;
-  // Verlof en ziekte lopen voorlopig extern via de salarisadministratie, niet
-  // via deze app. De velden blijven zichtbaar (bestaande waarden gaan niet
-  // verloren) maar zijn bewust altijd uitgeschakeld, los van of de urenstaat
-  // verder bewerkbaar is.
-  document.querySelector("#summary-leave").disabled = true;
-  document.querySelector("#summary-sick").disabled = true;
   const editable = isTimesheetEditableForEmployee(record);
+  // Verlof en ziekte lopen standaard extern via de salarisadministratie, niet
+  // via deze app -- de velden blijven zichtbaar (bestaande waarden gaan niet
+  // verloren) maar zijn dan bewust altijd uitgeschakeld. Een beheerder kan dit
+  // per organisatie aanzetten (Instellingen); zodra dat aan staat gelden voor
+  // deze twee velden dezelfde regels als voor de rest van de urenstaat.
+  const leaveSickEntryEnabled = state.settings.leaveSickEntryEnabled === true;
+  document.querySelector("#summary-leave").disabled = !leaveSickEntryEnabled || !editable;
+  document.querySelector("#summary-sick").disabled = !leaveSickEntryEnabled || !editable;
+  document.querySelector("#summary-leave").title = leaveSickEntryEnabled ? "" : "Verlof wordt verwerkt via de salarisadministratie.";
+  document.querySelector("#summary-sick").title = leaveSickEntryEnabled ? "" : "Ziekte meld je bij Backoffice.";
+  // "Waarom staat dit uit?" heeft alleen zin zolang het ook echt uit staat.
+  document.querySelector("#payroll-privacy-note")?.closest(".summary-note")?.toggleAttribute("hidden", leaveSickEntryEnabled);
   const correction = activeCorrection(record);
   const correctionBanner = document.querySelector("#timesheet-correction-banner");
   correctionBanner.hidden = !correction;
@@ -8112,6 +8123,7 @@ function populateSettings() {
   zetInstelling("setting-customer-timesheet-submission-body", settings.customerTimesheetSubmissionBody || DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_BODY);
   zetInstelling("setting-customer-timesheet-broker-subject", settings.customerTimesheetBrokerSubject || DEFAULT_CUSTOMER_TIMESHEET_BROKER_SUBJECT);
   zetInstelling("setting-customer-timesheet-broker-body", settings.customerTimesheetBrokerBody || DEFAULT_CUSTOMER_TIMESHEET_BROKER_BODY);
+  zetInstellingAangevinkt("setting-leave-sick-entry-enabled", settings.leaveSickEntryEnabled === true);
   updateInvoiceIdentityPreview();
   syncReminderControls();
   renderMailRecipientSettings();
@@ -8163,7 +8175,8 @@ function saveSettings() {
     customerTimesheetSubmissionSubject: document.querySelector("#setting-customer-timesheet-submission-subject").value.trim() || DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_SUBJECT,
     customerTimesheetSubmissionBody: document.querySelector("#setting-customer-timesheet-submission-body").value.trim() || DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_BODY,
     customerTimesheetBrokerSubject: document.querySelector("#setting-customer-timesheet-broker-subject").value.trim() || DEFAULT_CUSTOMER_TIMESHEET_BROKER_SUBJECT,
-    customerTimesheetBrokerBody: document.querySelector("#setting-customer-timesheet-broker-body").value.trim() || DEFAULT_CUSTOMER_TIMESHEET_BROKER_BODY
+    customerTimesheetBrokerBody: document.querySelector("#setting-customer-timesheet-broker-body").value.trim() || DEFAULT_CUSTOMER_TIMESHEET_BROKER_BODY,
+    leaveSickEntryEnabled: document.querySelector("#setting-leave-sick-entry-enabled").checked
   });
 
   if (API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative() && state.currentRole === "admin") {

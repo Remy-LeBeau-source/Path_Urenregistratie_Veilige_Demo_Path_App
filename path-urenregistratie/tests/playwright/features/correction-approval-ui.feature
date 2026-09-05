@@ -70,7 +70,18 @@ Feature: Correcties en goedkeuringen behandelen
   @negative
   Scenario: [TS-REV-UI-N-014] verlof en ziekte staan uit met een duidelijke uitleg
     # Testtechniek: Broncontract
-    # Aantoonbare Playwright-assertions in deze case: 3
+    # Aantoonbare Playwright-assertions in deze case: 6
     Given de medewerker is ingelogd
     When de medewerker Mijn uren opent
     Then staan verlof en ziekte uitgeschakeld met een zichtbare reden
+    Then oogt het cijfer ook echt grijs, niet als een gewoon invulbaar zwart veld
+
+  @happy
+  Scenario: [TS-REV-UI-H-012] beheerder zet verlof en ziekte aan; de medewerker kan ze dan zelf invullen en het blijft na F5 staan
+    # Testtechniek: Beslissingstabel + toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given de beheerder verlof en ziekte handmatig invullen aanzet
+    When de medewerker Mijn uren opent
+    Then staan verlof en ziekte niet meer uitgeschakeld en is de uitleg verdwenen
+    When de medewerker verlof en ziekte zelf invult
+    Then blijven de ingevulde waarden staan na een herlaad
