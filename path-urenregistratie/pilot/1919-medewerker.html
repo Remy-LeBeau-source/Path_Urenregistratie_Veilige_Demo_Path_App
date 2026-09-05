@@ -77,8 +77,8 @@
   .who svg{width:14px;height:14px;stroke:#7a7f7c;fill:none;stroke-width:1.8;}
 
   /* Chapter 1 — hero */
-  .hero{display:grid;grid-template-columns:1fr 1.15fr;align-items:stretch;background:var(--cream);}
-  .hero .copy{padding:44px 10px 64px 44px;align-self:center;max-width:560px;}
+  .hero{display:grid;grid-template-columns:1fr 1.05fr;align-items:stretch;background:var(--cream);}
+  .hero .copy{padding:44px 10px 64px 44px;align-self:center;max-width:560px;position:relative;z-index:2;}
   .eyebrow-c{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--green-deep);font-weight:700;}
   .hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(40px,5vw,58px);line-height:1.02;color:var(--ink-serif);margin:12px 0 16px;letter-spacing:.4px;}
   .hero p{font-size:15px;line-height:1.6;color:#5b6560;margin:0 0 26px;}
@@ -88,8 +88,11 @@
   .mini .ic svg{width:16px;height:16px;stroke:var(--green-deep);fill:none;stroke-width:1.6;}
   .mini b{display:block;font-size:12.5px;color:var(--ink);}
   .mini span{display:block;font-size:11.5px;color:#7f8883;margin-top:2px;line-height:1.4;}
-  .hero .scene{position:relative;min-height:460px;margin-top:-64px;overflow:hidden;}
-  .hero .scene img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center right;}
+  .hero .scene{position:relative;min-height:460px;margin-top:-64px;margin-left:-90px;overflow:hidden;}
+  .hero .scene img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center right;
+    /* zachte overgang: linkerrand van de foto lost op in de cream i.p.v. een harde kolomrand */
+    -webkit-mask-image:linear-gradient(to right, transparent 0, rgba(0,0,0,.35) 14%, #000 32%);
+    mask-image:linear-gradient(to right, transparent 0, rgba(0,0,0,.35) 14%, #000 32%);}
 
   /* Chapter 2 — invullen (navy) */
   .chapter{padding:60px 44px;}
