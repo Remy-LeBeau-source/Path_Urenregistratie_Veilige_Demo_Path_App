@@ -1663,7 +1663,14 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
   .mobile-brand-home {
     max-width: min(190px, 58vw);
     gap: 9px;
+    /* Regression: met de standaard var(--line)-rand en een schaduw van 4%
+       dekking viel deze knop tegen de bijna-identiek gekleurde topbalk
+       (rgba(243,247,246,.91)) niet te onderscheiden van platte tekst -- hij
+       werkt wel (zie [data-home] in app.js), maar oogde niet klikbaar. */
+    border-color: rgba(58,189,157,.45);
+    box-shadow: 0 5px 18px rgba(13,27,56,.08);
   }
+  .mobile-brand-home:active { transform: translateY(1px); background: var(--vlak-zacht); }
 
   .mobile-brand-home img {
     width: 72px;
