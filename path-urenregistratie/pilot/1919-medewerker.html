@@ -10,10 +10,16 @@
      1919 "Path Storyline" (medewerker-dashboard). Raakt de echte app
      niet: geen gedeelde JS/CSS, geen routing, geen data. Bereikbaar
      als eigen URL naast /.
-     CSP op TEST verbiedt externe fonts/scripts/afbeeldingen -> serif =
-     Georgia (systeem), de twee "foto"-vlakken zijn inline SVG-illustraties
-     in dezelfde compositie/sfeer als de mockup (geen echte fotografie).
+     CSP op TEST verbiedt EXTERNE fonts/scripts/afbeeldingen. Alles hier is
+     daarom same-origin: serif als lokale @font-face (assets/1919/serif.woff2),
+     de twee foto-vlakken als lokale <img> (assets/1919/hero.jpg,
+     assets/1919/document.jpg). Zie assets/1919/IMAGEGEN-PROMPTS.md + OFL.txt.
      ------------------------------------------------------------------ */
+  @font-face{
+    font-family:"Pilot Serif";
+    src:url("assets/1919/serif.woff2") format("woff2");
+    font-weight:400 700; font-style:normal; font-display:swap;
+  }
   :root{
     --navy:#0e2233; --navy-2:#0c1f2e; --forest:#16362b; --forest-2:#122c24;
     --cream:#f4f1e8; --paper:#faf7ef;
@@ -22,7 +28,7 @@
     --text-dark:#cdd8dd; --text-dark-soft:#93a4ad;
     --green:#6bbf95; --green-deep:#2f6a4c;
     --amber:#e0a13c; --amber-strong:#d68f24;
-    --serif:Georgia,"Times New Roman",serif;
+    --serif:"Pilot Serif",Georgia,"Times New Roman",serif;
     --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,sans-serif;
   }
   *{box-sizing:border-box;}
@@ -83,7 +89,7 @@
   .mini b{display:block;font-size:12.5px;color:var(--ink);}
   .mini span{display:block;font-size:11.5px;color:#7f8883;margin-top:2px;line-height:1.4;}
   .hero .scene{position:relative;min-height:460px;margin-top:-64px;overflow:hidden;}
-  .hero .scene svg{position:absolute;inset:0;width:100%;height:100%;}
+  .hero .scene img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center right;}
 
   /* Chapter 2 — invullen (navy) */
   .chapter{padding:60px 44px;}
@@ -123,8 +129,8 @@
 
   /* Chapter 4 — document scene */
   .doc-grid{display:grid;grid-template-columns:.8fr 1.2fr;gap:44px;align-items:center;}
-  .doc-scene{position:relative;min-height:280px;}
-  .doc-scene svg{width:100%;height:100%;}
+  .doc-scene{position:relative;min-height:300px;border-radius:14px;overflow:hidden;}
+  .doc-scene img{display:block;width:100%;height:100%;min-height:300px;object-fit:cover;}
 
   @media (max-width:1080px){
     .shell{grid-template-columns:1fr;}
@@ -196,29 +202,8 @@
           <div><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 5-3 7-7 9-4-2-7-4-7-9V6z"/><path d="M9 12l2 2 4-5"/></svg></span><span><b>Wij regelen de rest</b><span>Backoffice neemt het over.</span></span></div>
         </div>
       </div>
-      <div class="scene" aria-hidden="true">
-        <svg viewBox="0 0 720 460" preserveAspectRatio="xMidYMid slice">
-          <defs>
-            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#aac3d1"/><stop offset="0.5" stop-color="#d9d2bf"/><stop offset="1" stop-color="#f2e3c4"/>
-            </linearGradient>
-            <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
-              <stop offset="0" stop-color="#fff4d6"/><stop offset="0.4" stop-color="#f4d79b"/><stop offset="1" stop-color="#f4d79b" stop-opacity="0"/>
-            </radialGradient>
-          </defs>
-          <rect width="720" height="460" fill="url(#sky)"/>
-          <circle cx="520" cy="210" r="140" fill="url(#sun)"/>
-          <circle cx="520" cy="210" r="34" fill="#fdeec4"/>
-          <path d="M0 250 Q160 210 340 245 T720 235 V460 H0 Z" fill="#c9c4a6" opacity="0.6"/>
-          <path d="M0 300 Q180 250 400 300 T720 290 V460 H0 Z" fill="#8fa07a"/>
-          <path d="M0 350 Q220 300 460 355 T720 345 V460 H0 Z" fill="#5d7355"/>
-          <path d="M0 400 Q240 360 720 405 V460 H0 Z" fill="#3c4c3b"/>
-          <path d="M330 460 C 360 380 430 330 470 250 C 452 330 400 380 386 460 Z" fill="#e8dcbb" opacity="0.9"/>
-          <g fill="#3c4c3b" opacity="0.8">
-            <path d="M40 420 q6 -26 2 -40 q10 12 12 30 q6 -18 16 -26 q-4 20 -14 40 z"/>
-            <path d="M690 300 q4 -20 0 -34 q10 12 12 26 q6 -14 14 -20 q-4 18 -12 34 z"/>
-          </g>
-        </svg>
+      <div class="scene">
+        <img src="assets/1919/hero.jpg" alt="Zonsopgang boven een slingerend duinpad langs de kust">
       </div>
     </section>
 
@@ -268,30 +253,8 @@
           <h2>Direct naar de klant</h2>
           <p class="lead">De klanturenstaat wordt na controle direct per e-mail verzonden naar de klant.</p>
         </div>
-        <div class="doc-scene" aria-hidden="true">
-          <svg viewBox="0 0 560 300" preserveAspectRatio="xMidYMid meet">
-            <defs><linearGradient id="pap" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#efece2"/></linearGradient></defs>
-            <g transform="rotate(-7 300 150)">
-              <rect x="130" y="30" width="300" height="240" rx="4" fill="url(#pap)"/>
-              <rect x="130" y="30" width="300" height="240" rx="4" fill="none" stroke="#d8d3c4"/>
-              <text x="160" y="78" font-family="Georgia, serif" font-size="20" fill="#2a3a30">Klanturenstaat</text>
-              <text x="160" y="100" font-family="Georgia, serif" font-size="11" fill="#7c7f79">September 2026</text>
-              <g transform="translate(372 60)"><rect x="0" y="0" width="17" height="17" rx="4" fill="none" stroke="#2f6a4c" stroke-width="1.6"/><text x="4" y="13" font-family="Georgia, serif" font-size="12" fill="#2f6a4c">P</text></g>
-              <text x="396" y="73" font-family="Georgia, serif" font-size="10" fill="#2a3a30">Path Consultancy</text>
-              <g font-family="Georgia, serif" font-size="10" fill="#6c6f69">
-                <text x="160" y="140">Klant</text><text x="260" y="140">Path Consultancy</text>
-                <text x="160" y="162">Opdracht</text><text x="260" y="162">Path Storyline</text>
-                <text x="160" y="184">Periode</text><text x="260" y="184">31 aug – 6 sep 2026</text>
-              </g>
-              <line x1="160" y1="205" x2="400" y2="205" stroke="#e0dccf"/>
-              <line x1="160" y1="225" x2="400" y2="225" stroke="#e0dccf"/>
-              <line x1="160" y1="245" x2="400" y2="245" stroke="#e0dccf"/>
-            </g>
-            <g fill="#1f3a2c">
-              <path d="M470 300 q4 -46 -4 -70 q18 18 22 44 q10 -26 28 -38 q-6 34 -24 64 z"/>
-              <path d="M498 300 q10 -34 6 -54 q16 14 16 34 q10 -18 22 -24 q-6 26 -22 44 z"/>
-            </g>
-          </svg>
+        <div class="doc-scene">
+          <img src="assets/1919/document.jpg" alt="Gedrukte klanturenstaat op een donker bureau met een plant">
         </div>
       </div>
     </section>
