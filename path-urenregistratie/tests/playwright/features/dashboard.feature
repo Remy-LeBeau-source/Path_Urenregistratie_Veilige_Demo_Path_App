@@ -270,3 +270,22 @@ Feature: Dashboard en open werkvoorraad
     Given de beheerder het profielmenu net heeft geopend
     When een hertekening op de achtergrond een scroll-event veroorzaakt
     Then blijft het profielmenu open en sluit een echte scroll het alsnog
+
+  @happy
+  Scenario: [DASH-H-022] beheerder kan met de browser-terug/-vooruit-knop door alle eigen schermen navigeren
+    # Testtechniek: Toestandsovergang, volledige end-to-end doorloop van elk beheerdersscherm
+    # Aantoonbare Playwright-assertions in deze case: 176
+    Given de beheerder is ingelogd op Urenoverzicht
+    When de beheerder achtereenvolgens elk scherm opent
+    Then brengt browser-terug telkens het vorige scherm terug, in exact omgekeerde volgorde
+    Then brengt browser-vooruit telkens het volgende scherm terug, in dezelfde volgorde als daarnet geopend
+
+  @happy
+  Scenario: [DASH-H-023] medewerker kan met de browser-terug/-vooruit-knop door alle eigen schermen navigeren
+    # Testtechniek: Toestandsovergang, volledige end-to-end doorloop van elk medewerkersscherm
+    # Aantoonbare Playwright-assertions in deze case: 88
+    Given de medewerker is ingelogd op Mijn overzicht
+    When de medewerker achtereenvolgens elk scherm opent
+    Then brengt browser-terug telkens het vorige scherm terug
+    Then brengt browser-vooruit telkens het volgende scherm terug
+    Then een paginaherlading op een teruggenavigeerd scherm blijft daar staan, springt niet terug naar het beginscherm

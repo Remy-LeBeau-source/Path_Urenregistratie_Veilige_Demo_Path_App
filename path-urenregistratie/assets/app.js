@@ -12392,6 +12392,22 @@ window.addEventListener("scroll", () => {
   // its click, leaving the option hidden during actionability checks.
 }, { passive: true });
 
+// showView() al zet altijd window.location.hash, dus de browser legt bij elke
+// schermwissel al een geschiedenisregel aan. Zonder deze listener bleef de
+// terug/vooruit-knop van de browser puur cosmetisch: de URL veranderde wel,
+// maar het scherm zelf niet -- er luisterde nergens iets naar een handmatige
+// hash-wijziging. showView() zet dezelfde hash aan het eind meteen weer terug,
+// wat geen nieuwe geschiedenisregel aanmaakt (de waarde is al gelijk), dus dit
+// veroorzaakt geen lus of dubbele entries.
+window.addEventListener("hashchange", () => {
+  const view = String(window.location.hash || "").replace(/^#/, "");
+  // De reset-wachtwoordlink gebruikt dezelfde hash-plek voor een eenmalig
+  // token, geen scherm; die wordt al apart afgehandeld bij het opstarten.
+  if (!view || view.startsWith("reset-password=")) return;
+  if (!state.currentRole) return;
+  showView(view);
+});
+
 initializeReminderChoiceMenus();
 initializeStandardChoiceMenus();
 populateSettings();

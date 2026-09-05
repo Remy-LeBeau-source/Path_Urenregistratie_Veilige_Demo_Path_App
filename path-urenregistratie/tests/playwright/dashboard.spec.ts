@@ -1819,3 +1819,120 @@ test('[DASH-N-019] een achtergrond-hertekening sluit het geopende profielmenu ni
     await expect(page.locator('#profile-menu-button')).toHaveAttribute('aria-expanded', 'true');
   });
 });
+
+const ALLE_SCHERMEN = [
+  'dashboard', 'employee-dashboard', 'timesheet', 'approvals', 'invoices',
+  'announcements', 'employee-announcements', 'employees', 'settings',
+] as const;
+const SCHERMTITELS: Record<(typeof ALLE_SCHERMEN)[number], string> = {
+  dashboard: 'Urenoverzicht',
+  'employee-dashboard': 'Mijn overzicht',
+  timesheet: 'Mijn uren',
+  approvals: 'Goedkeuringen',
+  invoices: 'Facturen',
+  announcements: 'Mededelingen',
+  'employee-announcements': 'Mijn mededelingen',
+  employees: 'Medewerkers',
+  settings: 'Instellingen',
+};
+
+// Precies één scherm hoort .is-active te dragen en de URL-hash en #page-title
+// horen daarbij te passen -- dit toetst dat expliciet voor alle negen
+// schermsecties, niet alleen het scherm dat net geopend werd, zodat een
+// browser-terug/-vooruit die per ongeluk twee schermen tegelijk actief laat
+// (of geen enkel) hier meteen opvalt.
+async function verwachtAlleenSchermActief(page: import('@playwright/test').Page, scherm: (typeof ALLE_SCHERMEN)[number]) {
+  for (const kandidaat of ALLE_SCHERMEN) {
+    if (kandidaat === scherm) {
+      await expect(page.locator(`#view-${kandidaat}`), `#view-${kandidaat} hoort actief te zijn`).toHaveClass(/is-active/);
+    } else {
+      await expect(page.locator(`#view-${kandidaat}`), `#view-${kandidaat} hoort niet actief te zijn`).not.toHaveClass(/is-active/);
+    }
+  }
+  await expect(page.locator('#page-title')).toHaveText(SCHERMTITELS[scherm]);
+  await expect(page).toHaveURL(new RegExp('#' + scherm + '$'));
+}
+
+test('[DASH-H-022] beheerder kan met de browser-terug/-vooruit-knop door alle eigen schermen navigeren', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  // Beheerderschermen (zie adminViews in app.js): dashboard, approvals,
+  // invoices, announcements, employees, settings -- medewerker-only schermen
+  // (timesheet, employee-dashboard, employee-announcements) wijken voor een
+  // beheerder automatisch uit naar dashboard, dus die horen hier niet in de
+  // volgorde.
+  const volgorde = ['dashboard', 'approvals', 'invoices', 'announcements', 'employees', 'settings'] as const;
+
+  await test.step('Given de beheerder is ingelogd op Urenoverzicht', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await verwachtAlleenSchermActief(page, 'dashboard');
+  });
+
+  await test.step('When de beheerder achtereenvolgens elk scherm opent', async () => {
+    for (const scherm of volgorde.slice(1)) {
+      await page.locator(`button[data-view="${scherm}"]:visible`).first().click();
+      await verwachtAlleenSchermActief(page, scherm);
+    }
+  });
+
+  await test.step('Then brengt browser-terug telkens het vorige scherm terug, in exact omgekeerde volgorde', async () => {
+    for (let i = volgorde.length - 2; i >= 0; i--) {
+      await page.goBack();
+      await verwachtAlleenSchermActief(page, volgorde[i]);
+    }
+  });
+
+  await test.step('Then brengt browser-vooruit telkens het volgende scherm terug, in dezelfde volgorde als daarnet geopend', async () => {
+    for (let i = 1; i < volgorde.length; i++) {
+      await page.goForward();
+      await verwachtAlleenSchermActief(page, volgorde[i]);
+    }
+  });
+
+  await loginPage.logout();
+});
+
+test('[DASH-H-023] medewerker kan met de browser-terug/-vooruit-knop door alle eigen schermen navigeren', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  const volgorde = ['employee-dashboard', 'timesheet', 'employee-announcements'] as const;
+
+  await test.step('Given de medewerker is ingelogd op Mijn overzicht', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await verwachtAlleenSchermActief(page, 'employee-dashboard');
+  });
+
+  await test.step('When de medewerker achtereenvolgens elk scherm opent', async () => {
+    for (const scherm of volgorde.slice(1)) {
+      await page.locator(`button[data-view="${scherm}"]:visible`).first().click();
+      await verwachtAlleenSchermActief(page, scherm);
+    }
+  });
+
+  await test.step('Then brengt browser-terug telkens het vorige scherm terug', async () => {
+    for (let i = volgorde.length - 2; i >= 0; i--) {
+      await page.goBack();
+      await verwachtAlleenSchermActief(page, volgorde[i]);
+    }
+  });
+
+  await test.step('Then brengt browser-vooruit telkens het volgende scherm terug', async () => {
+    for (let i = 1; i < volgorde.length; i++) {
+      await page.goForward();
+      await verwachtAlleenSchermActief(page, volgorde[i]);
+    }
+  });
+
+  await test.step('Then een paginaherlading op een teruggenavigeerd scherm blijft daar staan, springt niet terug naar het beginscherm', async () => {
+    // Regression-vangnet: het opstartpad leest de hash ook maar één keer (zie
+    // hashViewOnLoad in app.js); dit bevestigt dat een herlading na terug-
+    // navigeren consistent blijft met wat de hash op dat moment zegt.
+    await page.goBack();
+    const huidigeHash = new URL(page.url()).hash.replace(/^#/, '') as (typeof ALLE_SCHERMEN)[number];
+    await page.reload();
+    await expect(page.locator('#app-shell')).toBeVisible();
+    await verwachtAlleenSchermActief(page, huidigeHash);
+  });
+
+  await loginPage.logout();
+});
