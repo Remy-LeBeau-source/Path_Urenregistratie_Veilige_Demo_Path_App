@@ -206,3 +206,62 @@ test('[SEC-H-007] config voorbeeld bevat voorbereide CSP/CORS/HSTS flags', async
   expect(src).toContain("'content_security_policy'");
   expect(src).toContain("'hsts_enabled' => false");
 });
+
+// Dekkingsronde: SEC-H-007 hierboven pint alleen dat config.example.php de
+// juiste sleutels noemt -- geen enkele case controleerde ooit dat de
+// draaiende server deze headers ook echt op een responsheader zet. Broncode
+// vs. draaiend gedrag is precies het gat dat een broncontract-toets kan
+// verbergen; deze twee cases meten het echte HTTP-antwoord.
+test('[SEC-H-008] draaiende server zet de vaste beveiligingsheaders echt op elk antwoord', async ({ request }) => {
+  let response: APIResponse | null = null;
+
+  await test.step('Given een willekeurig, niet-geauthenticeerd endpoint', async () => {
+    // csrf.php is bewust gekozen: vereist geen sessie, dus dit toetst alleen
+    // auth_apply_security_headers(), niets van de authenticatielogica zelf.
+  });
+
+  await test.step('When de client dat endpoint bevraagt', async () => {
+    response = await request.get('/server/auth/csrf.php');
+    expect(response.ok()).toBeTruthy();
+  });
+
+  await test.step('Then staan de vaste beveiligingsheaders echt op het antwoord', async () => {
+    const headers = response!.headers();
+    expect(headers['x-content-type-options']).toBe('nosniff');
+    expect(headers['x-frame-options']).toBe('SAMEORIGIN');
+    expect(headers['referrer-policy']).toBe('no-referrer');
+    expect(headers['permissions-policy']).toContain('geolocation=()');
+  });
+});
+
+test('[SEC-N-008] cors weerspiegelt alleen een toegestane origin, nooit een onbekende', async ({ request }) => {
+  let allowed: APIResponse | null = null;
+  let untrusted: APIResponse | null = null;
+
+  await test.step('Given een verzoek met een toegestane origin uit de lokale/test-allowlist', async () => {
+    allowed = await request.get('/server/auth/csrf.php', {
+      headers: { Origin: 'http://localhost:8000' },
+    });
+    expect(allowed.ok()).toBeTruthy();
+  });
+
+  await test.step('Then weerspiegelt de server precies die origin met credentials toegestaan', async () => {
+    const headers = allowed!.headers();
+    expect(headers['access-control-allow-origin']).toBe('http://localhost:8000');
+    expect(headers['access-control-allow-credentials']).toBe('true');
+    expect(headers['vary']).toContain('Origin');
+  });
+
+  await test.step('When hetzelfde verzoek een niet-vertrouwde origin meestuurt', async () => {
+    untrusted = await request.get('/server/auth/csrf.php', {
+      headers: { Origin: 'https://kwaadaardig.voorbeeld.invalid' },
+    });
+    expect(untrusted.ok()).toBeTruthy();
+  });
+
+  await test.step('Then geeft de server geen Access-Control-Allow-Origin voor die origin terug', async () => {
+    const headers = untrusted!.headers();
+    expect(headers['access-control-allow-origin']).toBeUndefined();
+    expect(headers['access-control-allow-credentials']).toBeUndefined();
+  });
+});
