@@ -84,3 +84,63 @@ test('[HELP-N-001] het hulpgesprek overleeft geen paginaherlading, alleen "Gespr
 
   await loginPage.logout();
 });
+
+test('[HELP-H-002] het paneel opent en sluit met een vloeiende overgang, en meteen zonder animatievoorkeur', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given de medewerker heeft geen voorkeur voor verminderde beweging ingesteld', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+  });
+
+  await test.step('When de medewerker Hulp & contact opent', async () => {
+    await page.locator('#help-launcher').click();
+  });
+
+  await test.step('Then krijgt het paneel de is-open-klasse en telt op als daadwerkelijk zichtbaar', async () => {
+    const panel = page.locator('#help-panel');
+    await expect(panel).toHaveClass(/is-open/);
+    await expect(panel).toBeVisible();
+    // De overgang duurt 180ms; pollen in plaats van één keer meten voorkomt dat
+    // deze toets het paneel halverwege de overgang betrapt.
+    await expect.poll(() => panel.evaluate(el => Number(getComputedStyle(el).opacity)), { timeout: 2000 }).toBeGreaterThan(0.9);
+  });
+
+  await test.step('When de medewerker het paneel sluit', async () => {
+    await page.locator('#help-close').click();
+  });
+
+  await test.step('Then verdwijnt het paneel weer volledig, ook na de sluitovergang', async () => {
+    await expect(page.locator('#help-panel')).toBeHidden();
+    await expect(page.locator('#help-panel')).not.toHaveClass(/is-open/);
+  });
+
+  await loginPage.logout();
+});
+
+test('[HELP-N-002] met een voorkeur voor verminderde beweging sluit het paneel direct, zonder op een animatie te wachten', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given de medewerker heeft verminderde beweging ingesteld en het paneel staat open', async () => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('#help-launcher').click();
+    await expect(page.locator('#help-panel')).toBeVisible();
+  });
+
+  await test.step('When de medewerker het paneel sluit', async () => {
+    await page.locator('#help-close').click();
+  });
+
+  await test.step('Then is het paneel direct verborgen, niet pas na de normale overgangsduur', async () => {
+    // Regression: closeHelp() plant zonder reduced-motion een setTimeout van
+    // 180ms voordat hidden echt gezet wordt. Met reduced-motion hoort dat
+    // synchroon te gebeuren; deze toets zou bij een regressie nog correkt
+    // "verborgen" zien binnen Playwright's eigen retry-venster maar toont het
+    // verschil door het element direct, zonder wachttijd, te controleren.
+    await expect(page.locator('#help-panel')).toBeHidden({ timeout: 50 });
+  });
+
+  await loginPage.logout();
+});

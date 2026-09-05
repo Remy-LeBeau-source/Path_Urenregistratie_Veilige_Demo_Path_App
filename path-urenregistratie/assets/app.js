@@ -8392,6 +8392,11 @@ function addHelpMessage(text, type, options) {
 function openHelp() {
   const panel = document.querySelector("#help-panel");
   panel.hidden = false;
+  // panel.hidden moet eerst weg (anders blijft display:none staan en heeft de
+  // browser niets om vanaf te animeren); de is-open-klasse gaat er pas in de
+  // volgende frame bij, zodat de overgang naar zichtbaar echt wordt getekend
+  // in plaats van meteen op de eindstand te staan.
+  requestAnimationFrame(() => panel.classList.add("is-open"));
   document.querySelector("#help-launcher").setAttribute("aria-expanded", "true");
   const profile = currentProfileData();
   document.querySelector("#help-greeting").textContent = "Waarmee kan ik helpen, " + profile.name.split(/\s+/)[0] + "?";
@@ -8411,8 +8416,17 @@ function clearHelpConversation() {
 }
 
 function closeHelp() {
-  document.querySelector("#help-panel").hidden = true;
+  const panel = document.querySelector("#help-panel");
+  panel.classList.remove("is-open");
   document.querySelector("#help-launcher").setAttribute("aria-expanded", "false");
+  // Pas na de sluitovergang echt verbergen (anders springt het paneel meteen
+  // weg zonder de omgekeerde animatie te laten zien). Zonder animatievoorkeur
+  // gebeurt de overgang in 0ms, dus meteen verbergen is dan correct.
+  if (prefersReducedMotion()) {
+    panel.hidden = true;
+    return;
+  }
+  window.setTimeout(() => { panel.hidden = true; }, 180);
 }
 
 async function copyText(value) {

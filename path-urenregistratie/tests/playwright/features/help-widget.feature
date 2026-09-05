@@ -24,3 +24,21 @@ Feature: Hulp en contact
     Then blijft alleen de begroeting over, met een melding dat het is gewist
     When de medewerker opnieuw een vraag stelt en de pagina daarna echt herlaadt
     Then is het gesprek net zo leeg als bij een eerste opening, niet ergens onthouden
+
+  @happy
+  Scenario: [HELP-H-002] het paneel opent en sluit met een vloeiende overgang, en meteen zonder animatievoorkeur
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given de medewerker heeft geen voorkeur voor verminderde beweging ingesteld
+    When de medewerker Hulp & contact opent
+    Then krijgt het paneel de is-open-klasse en telt op als daadwerkelijk zichtbaar
+    When de medewerker het paneel sluit
+    Then verdwijnt het paneel weer volledig, ook na de sluitovergang
+
+  @negative
+  Scenario: [HELP-N-002] met een voorkeur voor verminderde beweging sluit het paneel direct, zonder op een animatie te wachten
+    # Testtechniek: Negatieve equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given de medewerker heeft verminderde beweging ingesteld en het paneel staat open
+    When de medewerker het paneel sluit
+    Then is het paneel direct verborgen, niet pas na de normale overgangsduur
