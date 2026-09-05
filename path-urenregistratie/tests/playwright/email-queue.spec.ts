@@ -1114,6 +1114,47 @@ test.describe('email queue api', () => {
     await expect(page.locator('#toast')).toContainText('Klanturenstaat verzonden via TEST naar giovanno.maatsen@pathconsultancy.nl');
   });
 
+  test('[EQ-N-034] ontbrekende factuurroute geeft een actiegerichte melding i.p.v. de kale servertekst', async ({ page }) => {
+    // De server zoekt de brokerroute op via de factuur (factuur -> urenstaat ->
+    // opdracht). Bestaat die factuur nog niet voor deze medewerker/maand -- bv.
+    // omdat Backoffice de factuurstap heeft overgeslagen -- dan weigert de
+    // server met een technische melding. De medewerker/beheerder hoort een
+    // duidelijke, actiegerichte tekst te zien, niet de kale servertekst.
+    await page.route('**/server/api/customer-timesheets.php', async route => {
+      if (route.request().method() !== 'POST') {
+        await route.continue();
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: false, message: 'Voor deze medewerker en periode ontbreekt de gekoppelde factuurroute.' }),
+      });
+    });
+
+    const login = new LoginPage(page);
+    await login.open();
+    await login.loginAsAdmin();
+    await page.evaluate(() => {
+      const record = window.recordFor(1, '2026-07');
+      const documentRecord = window.customerTimesheetFor(record);
+      documentRecord.status = 'approved';
+      documentRecord.fileName = 'Klanturenstaat_Marc_de_Roon_2026-07.pdf';
+      documentRecord.fileData = '/server/api/customer-timesheets.php?action=download&period=2026-07&employee_id=1';
+      window.renderAll();
+      window.showCustomerTimesheetBrokerCheck(1, '2026-07');
+    });
+
+    await page.locator('#customer-timesheet-broker-subject').fill('Klanturenstaat Marc de Roon - juli 2026');
+    await page.locator('#customer-timesheet-broker-body').fill('Bijgevoegd staat de officiële klanturenstaat van Marc de Roon.');
+    await page.locator('#modal-confirm').click();
+
+    await expect(page.locator('#toast')).toContainText('bestaat nog geen factuur');
+    await expect(page.locator('#toast')).toContainText('Marc de Roon');
+    await expect(page.locator('#toast')).toContainText('Juli 2026');
+    await expect(page.locator('#toast')).not.toContainText('gekoppelde factuurroute');
+  });
+
   test('[EQ-N-021] factuurverzending blijft dicht zolang de serveruren niet zijn goedgekeurd', async ({ page }) => {
     let invoiceLocks = 0;
 

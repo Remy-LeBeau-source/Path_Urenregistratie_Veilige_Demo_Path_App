@@ -5598,6 +5598,14 @@ function showCustomerTimesheetBrokerCheck(employeeId, periodKey, adminTaskId = "
               });
             return;
           }
+          // De server zoekt de brokerroute op via de factuur (factuur -> urenstaat
+          // -> opdracht); bestaat die factuur nog niet voor deze medewerker/maand,
+          // dan is de technische foutmelding onduidelijk over wat je moet doen.
+          // Vertel expliciet welke stap eerst moet.
+          if (/ontbreekt de gekoppelde factuurroute/i.test(message)) {
+            toast("Voor " + employee.name + " · " + periodFromKey(periodKey).label + " bestaat nog geen factuur. Maak eerst de factuur aan voordat je de klanturenstaat naar de broker doorstuurt.");
+            return;
+          }
           toast(message);
         });
         return;
@@ -11516,6 +11524,15 @@ function setPeriod(periodKey) {
     return true;
   }
   state.selectedPeriodKey = next;
+  // Een gekozen klanturenstaat-bestand hoort bij één specifieke maand. Zonder
+  // deze reset bleef een net gekozen PDF/JPG/PNG in het bestandsveld staan
+  // nadat je via de gewone maandnavigatie (pijltjes, kop-datumkiezer) naar een
+  // andere maand ging -- ook naar een maand die al lang via de brokerroute of
+  // rechtstreeks was afgehandeld. applyPeriodControls deed dit al voor de
+  // eigen maand/jaar-kiezer van het klanturenstaatpaneel zelf; hier geldt het
+  // voor elke manier waarop de periode wijzigt.
+  const customerTimesheetFileInput = document.querySelector("#customer-timesheet-file");
+  if (customerTimesheetFileInput) customerTimesheetFileInput.value = "";
   if (document.querySelector("#view-invoices")?.classList.contains("is-active")) state.invoiceDetailCollapsed = false;
   ensurePeriodRecords(next);
   state.invoiceFilter = "all";

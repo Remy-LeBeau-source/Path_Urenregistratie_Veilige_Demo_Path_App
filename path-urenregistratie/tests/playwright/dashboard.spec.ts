@@ -331,6 +331,29 @@ test('[DASH-N-024] een lokaal record van vóór indiensttreding verschijnt niet 
   });
 });
 
+test('[DASH-N-025] een gekozen klanturenstaat-bestand blijft niet hangen na een gewone maandwissel', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given de medewerker heeft een bestand gekozen voor de huidige maand', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('button[data-view="timesheet"]').click();
+    await page.locator('#customer-timesheet-file').setInputFiles({
+      name: 'klantdocument.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4 test'),
+    });
+    await expect(page.locator('#customer-timesheet-file')).toHaveValue(/klantdocument\.pdf/);
+  });
+
+  await test.step('When de medewerker via de gewone pijltjesnavigatie naar een andere maand gaat', async () => {
+    await page.locator('#period-prev').click();
+    await expect(page.locator('#timesheet-period-title')).toHaveText('Juli 2026');
+  });
+
+  await test.step('Then staat het bestandsveld weer leeg, want het gekozen bestand hoorde bij de vorige maand', async () => {
+    await expect(page.locator('#customer-timesheet-file')).toHaveValue('');
+  });
+});
+
 test('[DASH-N-021] een lege oudere maand openen voegt geen fantoom-open-acties toe en houdt de kalendermaand in beeld', async ({ page }) => {
   const loginPage = new LoginPage(page);
 

@@ -151,6 +151,14 @@ Feature: Mailroutering en aflevering
     Then wordt met Playwright-assertions bevestigd dat backoffice verzendt de juiste officiële klanturenstaat via TEST naar Giovanno
 
   @negative
+  Scenario: [EQ-N-034] ontbrekende factuurroute geeft een actiegerichte melding i.p.v. de kale servertekst
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given een goedgekeurde klanturenstaat zonder gekoppelde factuur
+    When de beheerder de klanturenstaat naar de broker probeert door te sturen
+    Then toont de melding welke medewerker en maand het betreft en wat te doen, niet de kale servertekst
+
+  @negative
   Scenario: [EQ-N-021] factuurverzending blijft dicht zolang de serveruren niet zijn goedgekeurd
     # Testtechniek: Negatieve equivalentieklasse + error guessing
     # Aantoonbare Playwright-assertions in deze case: 2

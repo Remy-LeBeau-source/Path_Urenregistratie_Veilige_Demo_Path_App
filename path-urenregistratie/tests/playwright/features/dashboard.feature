@@ -221,6 +221,14 @@ Feature: Dashboard en open werkvoorraad
     Then blijft april 2026 weg uit de historie, ook al heeft het record uren
 
   @negative
+  Scenario: [DASH-N-025] een gekozen klanturenstaat-bestand blijft niet hangen na een gewone maandwissel
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given de medewerker heeft een bestand gekozen voor de huidige maand
+    When de medewerker via de gewone pijltjesnavigatie naar een andere maand gaat
+    Then staat het bestandsveld weer leeg, want het gekozen bestand hoorde bij de vorige maand
+
+  @negative
   Scenario: [DASH-N-021] een lege oudere maand openen voegt geen fantoom-open-acties toe en houdt de kalendermaand in beeld
     # Testtechniek: Grenswaardenanalyse
     # Aantoonbare Playwright-assertions in deze case: 8
