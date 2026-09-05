@@ -490,3 +490,58 @@ test('[INV-ID-H-010] instellingen tonen de standaardtekst die de ontvanger werke
     expect(getoond.trim(), 'de brokertekst moet van de server komen').toBe(standaarden.broker.body.trim());
   });
 });
+
+// Dekkingsronde: merkkleuren werden overal alleen als opslag-payloadveld
+// getoetst (bijv. hierboven en in andere specs), nooit of een gekozen kleur
+// ook echt ergens zichtbaar wordt. applyOrganizationBranding() zet ze als
+// --navy/--mint op document.documentElement, waar de rest van de opmaak
+// (waaronder de eigen opslaanknop, .button-primary) ze via var(--mint) direct
+// gebruikt -- dat gaf een concreet, zichtbaar element om op te toetsen.
+test('[INV-ID-H-011] een gekozen merkkleur wordt echt zichtbaar toegepast en overleeft een herlading', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  const primair = '#123456';
+  const accent = '#abcdef';
+
+  await test.step('Given de beheerder is ingelogd en opent Instellingen', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await openSettings(page);
+  });
+
+  await test.step('When de beheerder een eigen primaire kleur en accentkleur instelt en opslaat', async () => {
+    await page.locator('#setting-brand-primary').fill(primair);
+    await page.locator('#setting-brand-accent').fill(accent);
+    const response = page.waitForResponse(item => item.url().includes('/server/api/settings.php') && item.request().method() === 'POST');
+    await page.locator('#save-settings').click();
+    expect((await response).status()).toBe(200);
+    await expect(page.locator('#toast')).toContainText('Instellingen zijn op de server opgeslagen');
+  });
+
+  await test.step('Then staan de kleuren als CSS-variabelen op de pagina en oogt de opslaanknop er echt naar', async () => {
+    const root = page.locator('html');
+    await expect.poll(() => root.evaluate(el => getComputedStyle(el).getPropertyValue('--navy').trim())).toBe(primair);
+    await expect.poll(() => root.evaluate(el => getComputedStyle(el).getPropertyValue('--mint').trim())).toBe(accent);
+    // #save-settings is .button-primary, met background: var(--mint) -- dit
+    // bewijst dat de variabele ook echt ergens zichtbaar wordt gebruikt, niet
+    // alleen inert op :root staat.
+    await expect(page.locator('#save-settings')).toHaveCSS('background-color', 'rgb(171, 205, 239)');
+  });
+
+  await test.step('Then blijven de kleuren staan na een echte paginaherlading', async () => {
+    await page.reload();
+    await expect(page.locator('#app-shell')).toBeVisible();
+    const root = page.locator('html');
+    await expect.poll(() => root.evaluate(el => getComputedStyle(el).getPropertyValue('--navy').trim())).toBe(primair);
+    await expect.poll(() => root.evaluate(el => getComputedStyle(el).getPropertyValue('--mint').trim())).toBe(accent);
+  });
+
+  await test.step('And cleanup: kleuren terugzetten op de standaardwaarden', async () => {
+    await openSettings(page);
+    await page.locator('#setting-brand-primary').fill('#0d1b38');
+    await page.locator('#setting-brand-accent').fill('#3abd9d');
+    const response = page.waitForResponse(item => item.url().includes('/server/api/settings.php') && item.request().method() === 'POST');
+    await page.locator('#save-settings').click();
+    await response;
+    await loginPage.logout();
+  });
+});

@@ -89,3 +89,12 @@ Feature: Facturerende onderneming en handelsnaam
     And geeft elke ontvanger dezelfde uitleg
     And heeft de boekhouder werkelijk de soort boekhouding
     And staat de broker er ook bij, ook al is hij geen vaste ontvanger
+
+  @happy
+  Scenario: [INV-ID-H-011] een gekozen merkkleur wordt echt zichtbaar toegepast en overleeft een herlading
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given de beheerder is ingelogd en opent Instellingen
+    When de beheerder een eigen primaire kleur en accentkleur instelt en opslaat
+    Then staan de kleuren als CSS-variabelen op de pagina en oogt de opslaanknop er echt naar
+    Then blijven de kleuren staan na een echte paginaherlading
