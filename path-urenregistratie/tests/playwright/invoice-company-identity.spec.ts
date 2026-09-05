@@ -545,3 +545,42 @@ test('[INV-ID-H-011] een gekozen merkkleur wordt echt zichtbaar toegepast en ove
     await loginPage.logout();
   });
 });
+
+// Dekkingsronde: betalingstermijn werd overal alleen als opslag-payloadveld
+// getoetst. computeInvoiceDetails() gebruikt hem wél echt (de "binnen X
+// dagen"-tekst op de factuurpreview), maar dat stond nergens gepind -- een
+// wijziging die de tekst zou breken, zou alleen opvallen bij handmatig kijken.
+test('[INV-ID-H-012] een gekozen betalingstermijn komt echt terug in de betalingstekst op de factuurpreview', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given de beheerder wijzigt de betalingstermijn naar 14 dagen', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await openSettings(page);
+    // #setting-payment-term is een gewone <select>, maar initializeStandardChoiceMenus()
+    // verbergt die en zet er een eigen knop + paneel voor in de plaats.
+    await openPaneel(page, '#setting-payment-term-trigger', '#setting-payment-term-choices');
+    await page.locator('[data-standard-choice-target="setting-payment-term"][data-standard-choice-value="14"]').click();
+    const response = page.waitForResponse(item => item.url().includes('/server/api/settings.php') && item.request().method() === 'POST');
+    await page.locator('#save-settings').click();
+    await response;
+    await expect(page.locator('#toast')).toContainText('Instellingen zijn op de server opgeslagen');
+  });
+
+  await test.step('Then noemt de factuurpreview 14 dagen, niet de standaard 30', async () => {
+    await openFirstInvoicePreview(page);
+    await expect(page.locator('.invoice-brand-payment p')).toContainText('binnen 14 dagen van de factuurdatum');
+    await expect(page.locator('.invoice-brand-payment p')).not.toContainText('binnen 30 dagen');
+    await page.locator('#modal-close').click();
+  });
+
+  await test.step('And cleanup: betalingstermijn terugzetten op 30 dagen', async () => {
+    await openSettings(page);
+    await openPaneel(page, '#setting-payment-term-trigger', '#setting-payment-term-choices');
+    await page.locator('[data-standard-choice-target="setting-payment-term"][data-standard-choice-value="30"]').click();
+    const response = page.waitForResponse(item => item.url().includes('/server/api/settings.php') && item.request().method() === 'POST');
+    await page.locator('#save-settings').click();
+    await response;
+    await loginPage.logout();
+  });
+});

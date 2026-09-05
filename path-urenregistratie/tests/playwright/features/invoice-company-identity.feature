@@ -98,3 +98,11 @@ Feature: Facturerende onderneming en handelsnaam
     When de beheerder een eigen primaire kleur en accentkleur instelt en opslaat
     Then staan de kleuren als CSS-variabelen op de pagina en oogt de opslaanknop er echt naar
     Then blijven de kleuren staan na een echte paginaherlading
+
+  @happy
+  Scenario: [INV-ID-H-012] een gekozen betalingstermijn komt echt terug in de betalingstekst op de factuurpreview
+    # Testtechniek: Equivalentieklassen
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given de beheerder wijzigt de betalingstermijn naar 14 dagen
+    When de flow voor INV-ID-H-012 wordt uitgevoerd
+    Then noemt de factuurpreview 14 dagen, niet de standaard 30
