@@ -717,6 +717,16 @@ test('[TS-REV-UI-N-014] verlof en ziekte staan uit met een duidelijke uitleg', a
     await expect(page.locator('#payroll-privacy-note')).toContainText('salarisadministratie');
   });
 
+  await test.step('Then oogt het cijfer ook echt grijs, niet als een gewoon invulbaar zwart veld', async () => {
+    // Regression: zonder een eigen :disabled-regel erfde het veld gewoon de
+    // vetgedrukte --ink-tekstkleur, waardoor "0" er even actief uitzag als een
+    // normaal invoerveld, terwijl je er niets in kan wijzigen.
+    const leaveColor = await page.locator('#summary-leave').evaluate(el => getComputedStyle(el).color);
+    const sickColor = await page.locator('#summary-sick').evaluate(el => getComputedStyle(el).color);
+    expect(leaveColor).not.toBe('rgb(23, 35, 50)'); // --ink (zwart)
+    expect(sickColor).not.toBe('rgb(23, 35, 50)');
+  });
+
   await loginPage.logout();
 });
 
