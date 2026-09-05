@@ -1,6 +1,7 @@
 import { expect, request as playwrightRequest, test } from '@playwright/test';
 import { AuthApi } from './api/AuthApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
+import { LoginPage } from './pages/LoginPage';
 
 async function getCSRF(ctx: Awaited<ReturnType<typeof playwrightRequest.newContext>>) {
   const r = await ctx.get('/server/auth/csrf.php');
@@ -30,6 +31,18 @@ async function firstEmployeeUserId(ctx: Awaited<ReturnType<typeof playwrightRequ
   const employee = (body.users as Array<{ id: number; role: string; active: number }>)
     .find(user => user.role === 'employee' && Number(user.active) === 1);
   expect(employee, 'er moet minstens één actieve medewerker zijn').toBeTruthy();
+  return Number(employee!.id);
+}
+
+// De vaste testmedewerker (appConfig.employeeEmail), zodat de mededeling
+// terechtkomt bij precies het account waar de test daarna als medewerker op
+// inlogt -- firstEmployeeUserId() geeft geen garantie welke medewerker dat is.
+async function standardEmployeeUserId(ctx: Awaited<ReturnType<typeof playwrightRequest.newContext>>) {
+  const bootstrap = await ctx.get('/server/api/bootstrap.php');
+  const body = await bootstrap.json();
+  const employee = (body.users as Array<{ id: number; email: string }>)
+    .find(user => String(user.email).toLowerCase() === appConfig.employeeEmail.toLowerCase());
+  expect(employee, 'de vaste testmedewerker moet bestaan').toBeTruthy();
   return Number(employee!.id);
 }
 
@@ -166,6 +179,82 @@ test.describe('announcements api', () => {
 
     await authApi.logout();
     await ctx.dispose();
+  });
+
+  // Regression: de server zette bij "hide" alleen de bijbehorende notificaties
+  // op gelezen. Dat verwijderde de mededeling nooit echt uit de bel/lijst van
+  // de medewerker -- ANN-H-003 hierboven toetste alleen dat de server 200/ok
+  // teruggaf, nooit het waargenomen effect bij de medewerker zelf. Deze case
+  // pint het volledige contract: weg bij de medewerker (bel + Mijn
+  // mededelingen), maar de rij zelf blijft in Backoffice' eigen overzicht.
+  test('[ANN-H-007] "Bij medewerkers verwijderen" laat het bericht echt verdwijnen bij de medewerker, maar blijft intern zichtbaar', async ({ page }) => {
+    const ctx = page.request;
+    const authApi = new AuthApi(ctx);
+    const loginPage = new LoginPage(page);
+    const suffix = Date.now().toString().slice(-7);
+    const title = `Verbergtest ${suffix}`;
+    let announcementId = 0;
+    let recipientId = 0;
+
+    await test.step('Given de beheerder stuurt een mededeling naar de vaste testmedewerker', async () => {
+      await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+      recipientId = await standardEmployeeUserId(ctx);
+      const sent = await postAnnouncement(ctx, {
+        action: 'send',
+        title,
+        message: `Bericht dat straks verborgen wordt (${suffix}).`,
+        recipient_user_ids: [recipientId],
+      });
+      expect(sent.status, JSON.stringify(sent.body)).toBe(200);
+      announcementId = Number(sent.body.announcement_id ?? sent.body.id ?? 0);
+      expect(announcementId).toBeGreaterThan(0);
+      await authApi.logout();
+    });
+
+    await test.step('Then ziet de medewerker het bericht in Mijn mededelingen', async () => {
+      await loginPage.open();
+      await loginPage.loginAsEmployee();
+      await page.locator('button[data-view="employee-announcements"]').click();
+      await expect(page.locator('#employee-announcement-list')).toContainText(title);
+      await loginPage.logout();
+    });
+
+    await test.step('When de beheerder intrekt en daarna bij medewerkers verwijdert', async () => {
+      await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+      const withdrawn = await postAnnouncement(ctx, {
+        action: 'withdraw',
+        announcement_id: announcementId,
+        withdrawal_reason: `Testreden (${suffix}).`,
+      });
+      expect(withdrawn.status, JSON.stringify(withdrawn.body)).toBe(200);
+      const hidden = await postAnnouncement(ctx, { action: 'hide', announcement_id: announcementId });
+      expect(hidden.status, JSON.stringify(hidden.body)).toBe(200);
+      expect(hidden.body.ok).toBe(true);
+      await authApi.logout();
+    });
+
+    await test.step('Then is het bericht bij de medewerker volledig verdwenen, ook na een herlading', async () => {
+      await loginPage.loginAsEmployee();
+      await page.locator('button[data-view="employee-announcements"]').click();
+      await expect(page.locator('#employee-announcement-list')).not.toContainText(title);
+      await page.reload();
+      await expect(page.locator('#app-shell')).toBeVisible();
+      await page.locator('button[data-view="employee-announcements"]').click();
+      await expect(page.locator('#employee-announcement-list')).not.toContainText(title);
+      await loginPage.logout();
+    });
+
+    await test.step('Then blijft de mededeling in het interne beheeroverzicht van Backoffice staan', async () => {
+      await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+      const list = await listAnnouncements(ctx);
+      const found = (list.body.items as Array<{ id: number; status: string; hidden_from_employees: boolean; title: string }>)
+        .find(item => Number(item.id) === announcementId);
+      expect(found, 'de rij hoort voor Backoffice bewaard te blijven').toBeDefined();
+      expect(found?.status).toBe('withdrawn');
+      expect(found?.hidden_from_employees).toBe(true);
+      expect(found?.title).toBe(title);
+      await authApi.logout();
+    });
   });
 
   test('[ANN-N-004] intrekken zonder reden wordt geweigerd', async () => {

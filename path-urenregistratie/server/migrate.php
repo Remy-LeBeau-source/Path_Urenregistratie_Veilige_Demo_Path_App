@@ -172,6 +172,10 @@ function migration_plan(bool $allowDemoMigrations): array
         'id' => '028_leave_sick_entry_toggle.sql',
         'path' => __DIR__ . '/migrations/028_leave_sick_entry_toggle.sql',
     ];
+    $plan[] = [
+        'id' => '029_announcement_hidden_from_employees.sql',
+        'path' => __DIR__ . '/migrations/029_announcement_hidden_from_employees.sql',
+    ];
     return $plan;
 }
 

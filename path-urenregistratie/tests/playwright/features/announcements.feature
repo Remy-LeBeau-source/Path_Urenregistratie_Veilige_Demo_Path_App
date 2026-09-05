@@ -32,6 +32,16 @@ Feature: Mededelingen versturen, intrekken en verbergen
     Then staat het bericht als ingetrokken in de interne historie
     And alleen een ingetrokken bericht mag bij medewerkers worden verborgen
 
+  @happy
+  Scenario: [ANN-H-007] "Bij medewerkers verwijderen" laat het bericht echt verdwijnen bij de medewerker, maar blijft intern zichtbaar
+    # Testtechniek: Toestandsovergang + data-integriteit
+    # Aantoonbare Playwright-assertions in deze case: 13
+    Given de beheerder stuurt een mededeling naar de vaste testmedewerker
+    Then ziet de medewerker het bericht in Mijn mededelingen
+    When de beheerder intrekt en daarna bij medewerkers verwijdert
+    Then is het bericht bij de medewerker volledig verdwenen, ook na een herlading
+    Then blijft de mededeling in het interne beheeroverzicht van Backoffice staan
+
   @negative
   Scenario: [ANN-N-004] intrekken zonder reden wordt geweigerd
     # Testtechniek: Negatieve equivalentieklasse + error guessing

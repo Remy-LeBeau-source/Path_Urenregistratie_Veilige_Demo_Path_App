@@ -53,7 +53,7 @@ if ($method === 'GET') {
     if ($isAdmin) {
         // Admin sees all announcements for their company
         $sql = "
-            SELECT a.id, a.kind, a.status, a.title, a.message, a.audience_label,
+            SELECT a.id, a.kind, a.status, a.hidden_from_employees, a.title, a.message, a.audience_label,
                    a.email_requested, a.correction_of_id, a.superseded_by_id,
                    a.withdrawal_of_id, a.withdrawal_reason, a.withdrawn_at,
                    a.created_at, a.updated_at,
@@ -88,6 +88,7 @@ if ($method === 'GET') {
                 'id'               => $id,
                 'kind'             => (string)$r['kind'],
                 'status'           => (string)$r['status'],
+                'hidden_from_employees' => (bool)$r['hidden_from_employees'],
                 'title'            => (string)$r['title'],
                 'message'          => (string)$r['message'],
                 'audience_label'   => (string)$r['audience_label'],
@@ -116,6 +117,7 @@ if ($method === 'GET') {
             LEFT JOIN users u ON u.id = a.created_by
             WHERE a.company_id = :company_id
               AND a.status IN ('sent', 'withdrawn')
+              AND a.hidden_from_employees = 0
             ORDER BY a.created_at DESC
             LIMIT :lim
         ";
@@ -363,8 +365,15 @@ if ($action === 'hide') {
         auth_send_json(['ok' => false, 'error' => 'invalid-status', 'message' => 'Alleen een ingetrokken mededeling kan worden verborgen.'], 409);
     }
 
-    // Mark all notifications for this announcement read so they disappear from employee bell
-    $pdo->prepare("UPDATE notifications SET read_at = CURRENT_TIMESTAMP WHERE announcement_id = :aid AND company_id = :cid AND read_at IS NULL")
+    // hidden_from_employees sluit de rij zelf uit van de employee-select
+    // hierboven. Puur de notificaties op gelezen zetten (de vorige aanpak) liet
+    // de mededeling gewoon in Mijn mededelingen staan, alleen niet meer als
+    // ongelezen -- de bel- en lijstinvoer horen echt te verdwijnen. De
+    // announcements-rij zelf (met audience/intrekkingsgegevens) blijft bestaan
+    // voor de interne Backoffice-geschiedenis.
+    $pdo->prepare("UPDATE announcements SET hidden_from_employees = 1 WHERE id = :id AND company_id = :cid")
+        ->execute([':id' => $announcementId, ':cid' => $companyId]);
+    $pdo->prepare("DELETE FROM notifications WHERE announcement_id = :aid AND company_id = :cid")
         ->execute([':aid' => $announcementId, ':cid' => $companyId]);
 
     auth_send_json(['ok' => true, 'action' => 'hide', 'updated' => 1]);

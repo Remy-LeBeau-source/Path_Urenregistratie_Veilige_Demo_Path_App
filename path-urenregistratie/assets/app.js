@@ -2403,6 +2403,7 @@ function applyAnnouncementsApiPayload(data) {
       id: Number(item.id || 0),
       kind: String(item.kind || "standard"),
       status: String(item.status || "sent"),
+      hiddenFromEmployees: Boolean(item.hidden_from_employees),
       title: String(item.title || ""),
       message: String(item.message || ""),
       createdBy: String(item.created_by || "Beheerder"),
