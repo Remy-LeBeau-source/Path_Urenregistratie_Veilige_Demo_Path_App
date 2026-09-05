@@ -21,8 +21,27 @@ test('[PILOT-H-001] de 1919-pilot leeft als losse URL naast een ongewijzigde app
     await expect(page.locator('.pilot-flag')).toContainText('PILOT');
     await expect(page.locator('.pilot-flag')).toContainText('niet de echte app');
     await expect(page.locator('.hero h1')).toHaveText('Je maand begint');
-    await expect(page.locator('.chapter.navy h2')).toHaveText('Vul je uren in');
+    await expect(page.locator('.hours-section h2')).toHaveText('Vul je uren in');
     await expect(page.locator('.week .day')).toHaveCount(6);
+    const heroImage = page.getByTestId('1919-hero-image');
+    await expect(heroImage).toBeVisible();
+    await heroImage.evaluate((image: HTMLImageElement) => image.decode());
+    expect(await heroImage.evaluate((image: HTMLImageElement) => ({
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+    }))).toEqual({ width: 1448, height: 1086 });
+
+    const documentImage = page.getByTestId('1919-document-image');
+    await documentImage.scrollIntoViewIfNeeded();
+    await expect(documentImage).toBeVisible();
+    await documentImage.evaluate((image: HTMLImageElement) => image.decode());
+    expect(await documentImage.evaluate((image: HTMLImageElement) => ({
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+    }))).toEqual({ width: 1536, height: 1024 });
+
+    await page.evaluate(() => document.fonts.ready);
+    expect(await page.evaluate(() => document.fonts.check('48px "Storyline Serif"'))).toBe(true);
     // Geen enkele verwijzing naar de app-bundels: de pilot staat echt los.
     await expect(page.locator('link[href*="assets/styles.css"], script[src*="assets/app.js"]')).toHaveCount(0);
   });
