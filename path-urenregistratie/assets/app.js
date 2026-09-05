@@ -8680,8 +8680,14 @@ function logout() {
     return;
   }
 
+  // Regression: een eerste poging die netwerkmatig mislukt (trage server,
+  // verbroken verbinding) werd stil weggeslikt en toch als "uitgelogd"
+  // behandeld -- de sessie zelf bleef dan gewoon geldig op de server, terwijl
+  // dit scherm alvast het inlogscherm toonde. Een volgende paginalading zag
+  // die nog-geldige sessie en logde de gebruiker automatisch weer in. Eén
+  // nieuwe poging voordat we lokaal opgeven vangt precies die tijdelijke hik op.
   requestAuthLogout()
-    .catch(() => null)
+    .catch(() => requestAuthLogout().catch(() => null))
     .finally(() => {
       setAuthDebug({ authenticated: false, role: "", user_id: null, mode: "auth", available: true, error: "" });
       logoutLocal();

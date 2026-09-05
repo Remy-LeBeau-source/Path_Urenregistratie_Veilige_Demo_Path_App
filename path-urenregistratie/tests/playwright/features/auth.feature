@@ -33,6 +33,15 @@ Feature: Inloggen, uitloggen en sessiebeheer
     Then auth/me geeft authenticated false en geen actieve user
 
   @happy
+  Scenario: [AUTH-H-023] logout herstelt van een mislukte eerste serveraanvraag door het opnieuw te proberen
+    # Testtechniek: Foutinjectie + toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given een ingelogde beheerder
+    When de eerste uitlogaanvraag netwerkmatig mislukt
+    Then heeft de client het opnieuw geprobeerd en is de sessie echt beëindigd
+    And een verse paginalading logt niet automatisch weer in als de vorige gebruiker
+
+  @happy
   Scenario: [AUTH-H-004] Lokale beheeraccount wordt automatisch ingevuld en opent na een klik
     # Testtechniek: End-to-end use-case + visuele contractasserties
     # Aantoonbare Playwright-assertions in deze case: 3

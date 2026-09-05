@@ -78,6 +78,52 @@ test('[AUTH-H-003] Gebruiker logt uit en auth/me geeft authenticated false terug
   });
 });
 
+// Regression: een eerste uitlogaanvraag die netwerkmatig mislukt (fetch()
+// verwerpt) werd stil weggeslikt -- het scherm toonde alvast het inlogscherm
+// terwijl de sessie op de server gewoon geldig bleef. Een volgende verse
+// paginalading zag die nog-geldige sessie en logde de browser automatisch
+// weer in als dezelfde gebruiker, met het inlogscherm verborgen. Dit werd
+// ontdekt doordat TS-REV-UI-H-012 precies dit patroon liet zien in een volle
+// suite-run (nooit los): server/api/announcements.php was niet de oorzaak,
+// een mislukte-en-nooit-herhaalde uitlogaanvraag wel.
+test('[AUTH-H-023] logout herstelt van een mislukte eerste serveraanvraag door het opnieuw te proberen', async ({ page }) => {
+  const authApi = new AuthApi(page.context().request);
+  const loginPage = new LoginPage(page);
+  let logoutAttempts = 0;
+
+  await test.step('Given een ingelogde beheerder', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+  });
+
+  await test.step('When de eerste uitlogaanvraag netwerkmatig mislukt', async () => {
+    await page.route('**/server/auth/logout.php*', async route => {
+      logoutAttempts += 1;
+      if (logoutAttempts === 1) {
+        await route.abort('failed');
+        return;
+      }
+      await route.continue();
+    });
+    await loginPage.logout();
+  });
+
+  await test.step('Then heeft de client het opnieuw geprobeerd en is de sessie echt beëindigd', async () => {
+    expect(logoutAttempts).toBeGreaterThanOrEqual(2);
+    await loginPage.assertLoggedOut();
+    const meAfterLogout = await authApi.me();
+    expect(meAfterLogout.status).toBe(200);
+    expect(meAfterLogout.body.authenticated).toBe(false);
+  });
+
+  await test.step('And een verse paginalading logt niet automatisch weer in als de vorige gebruiker', async () => {
+    await page.unroute('**/server/auth/logout.php*');
+    await loginPage.open();
+    await expect(page.locator('#login-screen')).toBeVisible();
+    await expect(page.locator('#app-shell')).toBeHidden();
+  });
+});
+
 test('[AUTH-H-004] Lokale beheeraccount wordt automatisch ingevuld en opent na een klik', async ({ page }) => {
   const loginPage = new LoginPage(page);
 
@@ -304,7 +350,7 @@ test('[AUTH-H-009] lokale login benoemt de veilige testomgeving en productnaam',
     await expect(page.locator('#auth-login-email')).toHaveAttribute('placeholder', 'naam@pathconsultancy.nl');
     await expect(page.locator('#auth-login-submit')).toBeVisible();
     await expect(page.locator('.login-footer')).toContainText('© 2026 Path Consultancy');
-    await expect(page.locator('.login-footer')).toContainText('Versie 1.0.41');
+    await expect(page.locator('.login-footer')).toContainText('Versie 1.0.42');
   });
 
   await test.step('And kan het wachtwoord toegankelijk worden getoond en weer verborgen', async () => {

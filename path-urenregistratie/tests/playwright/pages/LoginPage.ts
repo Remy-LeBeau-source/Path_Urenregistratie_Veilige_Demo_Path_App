@@ -7,6 +7,13 @@ export class LoginPage {
   async open(): Promise<void> {
     await this.page.goto(appConfig.baseUrl);
     await this.waitForAuthModeReady();
+    // waitForAuthModeReady() only checks that the auth backend answered, not
+    // who it says is logged in. Under heavy load a session from a step just
+    // before this one can still resolve as valid for a moment, auto-logging
+    // the browser straight back into the app shell instead of the login
+    // screen -- login() then fails confusingly deep inside itself. Assert the
+    // actual destination here, with room for a slow-but-correct check.
+    await expect(this.page.locator('#login-screen')).toBeVisible({ timeout: 15_000 });
   }
 
   async loginAsAdmin(): Promise<void> {
