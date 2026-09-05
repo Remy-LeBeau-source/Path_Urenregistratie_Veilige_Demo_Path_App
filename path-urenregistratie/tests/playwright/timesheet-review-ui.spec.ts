@@ -833,6 +833,10 @@ test('[TS-REV-UI-H-012] beheerder zet verlof en ziekte aan; de medewerker kan ze
   } finally {
     // Dit is een company-brede instelling in de gedeelde TEST-database: andere
     // cases (zoals TS-REV-UI-N-014) gaan uit van de standaardstand (uit).
+    // loginAsAdmin() verwacht zelf al het login-scherm (LoginPage.login()); een
+    // verse open() ervoor is nodig omdat deze finally ook aanslaat als de try
+    // hierboven halverwege faalt, dus zonder de eigen afsluitende logout().
+    await loginPage.open();
     await loginPage.loginAsAdmin();
     await setLeaveSickEntryEnabled(page, false);
     await loginPage.logout();

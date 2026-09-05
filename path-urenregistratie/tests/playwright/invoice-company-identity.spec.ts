@@ -1,4 +1,6 @@
 import { expect, request as playwrightRequest, test } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { AuthApi } from './api/AuthApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
 import { LoginPage } from './pages/LoginPage';
@@ -515,6 +517,11 @@ test('[INV-ID-H-011] een gekozen merkkleur wordt echt zichtbaar toegepast en ove
     await page.locator('#save-settings').click();
     expect((await response).status()).toBe(200);
     await expect(page.locator('#toast')).toContainText('Instellingen zijn op de server opgeslagen');
+    // .button-primary:hover heeft een eigen vaste kleur (#48caa9) die anders
+    // over var(--mint) heen wint: de muis staat na click() nog op de knop.
+    // Wegbewegen voordat de achtergrondkleur wordt getoetst voorkomt dat de
+    // toets per ongeluk de hover-kleur leest in plaats van de echte --mint.
+    await page.mouse.move(0, 0);
   });
 
   await test.step('Then staan de kleuren als CSS-variabelen op de pagina en oogt de opslaanknop er echt naar', async () => {
@@ -544,6 +551,20 @@ test('[INV-ID-H-011] een gekozen merkkleur wordt echt zichtbaar toegepast en ove
     await response;
     await loginPage.logout();
   });
+});
+
+// Bewust een sourcecontrole naast de live H-011 hierboven: die bewijst dat de
+// opgeslagen kleur ook echt uit de database terugkomt (via bootstrap na een
+// herlading), dit pint los daarvan dat settings.php het veld ook daadwerkelijk
+// in de UPDATE-statement opneemt, zodat een toekomstige refactor die per
+// ongeluk een kolom laat vallen meteen opvalt zonder van de live rij afhankelijk
+// te zijn.
+test('[INV-ID-H-013] settings API leest en bewaart brandPrimary/brandAccent daadwerkelijk in de database-kolommen', async () => {
+  const settingsSource = await readFile(join(process.cwd(), 'server', 'api', 'settings.php'), 'utf8');
+  expect(settingsSource, 'brand_primary hoort in de UPDATE-statement te staan').toContain('brand_primary = :brand_primary');
+  expect(settingsSource, 'brand_accent hoort in de UPDATE-statement te staan').toContain('brand_accent = :brand_accent');
+  expect(settingsSource, 'brandPrimary hoort uit de payload gelezen te worden').toContain("settings['brandPrimary']");
+  expect(settingsSource, 'brandAccent hoort uit de payload gelezen te worden').toContain("settings['brandAccent']");
 });
 
 // Dekkingsronde: betalingstermijn werd overal alleen als opslag-payloadveld

@@ -100,6 +100,14 @@ Feature: Facturerende onderneming en handelsnaam
     Then blijven de kleuren staan na een echte paginaherlading
 
   @happy
+  Scenario: [INV-ID-H-013] settings API leest en bewaart brandPrimary/brandAccent daadwerkelijk in de database-kolommen
+    # Testtechniek: Broncontract
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given facturerende onderneming en handelsnaam is voorbereid
+    When de flow voor INV-ID-H-013 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat settings API brandPrimary en brandAccent echt leest en bewaart
+
+  @happy
   Scenario: [INV-ID-H-012] een gekozen betalingstermijn komt echt terug in de betalingstekst op de factuurpreview
     # Testtechniek: Equivalentieklassen
     # Aantoonbare Playwright-assertions in deze case: 3
