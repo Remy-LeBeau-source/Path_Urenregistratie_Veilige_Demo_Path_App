@@ -51,10 +51,10 @@ test('[PILOT-H-002] medewerker-pilot toont de 1414-look met werkende maand en in
     await expect(days).toHaveCount(7);
     await expect(days.nth(0).locator('.hin')).toHaveValue('8,00');
     await expect(days.nth(2)).toHaveClass(/on/);
-    await expect(days.nth(3).locator('.hin')).toHaveValue('7,30');
+    await expect(days.nth(3).locator('.hin')).toHaveValue('7,50');
     await expect(days.nth(4).locator('.hin')).toHaveValue('');
     await expect(days.nth(4).locator('.hin')).toHaveAttribute('placeholder', '0,00');
-    await expect(page.locator('.week .total .tval')).toHaveText('30,30');
+    await expect(page.locator('.week .total .tval')).toHaveText('30,50');
     // Voortgangsmeter telt ingediende weken; nog geen enkele week ingediend.
     await expect(page.locator('.gauge .ring .num')).toHaveText('0');
     await expect(page.locator('.gauge .ring .of')).toContainText('/ 5');
@@ -62,10 +62,12 @@ test('[PILOT-H-002] medewerker-pilot toont de 1414-look met werkende maand en in
     // Klanturenstaatkaart: september is nog niet verstuurd, dus geen vinkje.
     await expect(page.locator('.kt')).toHaveAttribute('data-state', 'pending');
     await expect(page.locator('.kt .txt p')).toContainText('Nog niet verstuurd');
-    // Vier-stappen-strook.
+    // Vier-stappen-strook: status volgt de voortgang, stap 1 is de huidige.
     await expect(page.locator('.steps li b')).toHaveText([
       'Uren invullen', 'Indienen', 'Controle Backoffice', 'Klanturenstaat',
     ]);
+    await expect(page.locator('.steps li').first()).toHaveClass(/is-current/);
+    await expect(page.locator('.steps li.is-done')).toHaveCount(0);
   });
 });
 
@@ -82,7 +84,7 @@ test('[PILOT-H-006] medewerker-pilot: uren invullen zonder voorgevulde nul, week
     await vr.locator('.hin').pressSequentially('6');
     await vr.locator('.hin').blur();
     await expect(vr.locator('.hin')).toHaveValue('6,00');
-    await expect(page.locator('.week .total .tval')).toHaveText('36,30');
+    await expect(page.locator('.week .total .tval')).toHaveText('36,50');
     await vr.locator('.st.pls').click();
     await expect(vr.locator('.hin')).toHaveValue('6,50');
     await page.getByRole('button', { name: 'Indienen ter controle' }).click();
@@ -104,9 +106,8 @@ test('[PILOT-H-007] medewerker-pilot: afgeronde maand toont vergrendelde weken e
     await expect(page.locator('.monthpick .mlabel')).toHaveText('September 2026');
   });
 
-  await test.step('When augustus wordt gekozen in de maandkeuze', async () => {
-    await page.locator('.monthpick').click();
-    await page.locator('.monthmenu li[data-key="2026-08"]').click();
+  await test.step('When met het pijltje een maand terug wordt gebladerd naar augustus', async () => {
+    await page.locator('.monthwrap .mprev').click();
   });
 
   await test.step('Then staan alle weken vast en toont de klanturenstaat het verzonden-vinkje', async () => {
@@ -120,6 +121,48 @@ test('[PILOT-H-007] medewerker-pilot: afgeronde maand toont vergrendelde weken e
     await expect(page.locator('.kt')).toHaveAttribute('data-state', 'sent');
     await expect(page.locator('.kt .txt p')).toHaveText('Gereed en verzonden via e-mail.');
     await expect(page.locator('.kt .check')).toBeVisible();
+  });
+});
+
+test('[PILOT-H-008] medewerker-pilot: snelkeuze zet uren in één tik, Opslaan bevestigt zonder in te dienen', async ({ page }) => {
+  await test.step('Given de medewerker-pilot met september open', async () => {
+    await page.goto('/pilot/1919-medewerker.html');
+  });
+
+  const vr = page.locator('.week li').nth(4);
+
+  await test.step('When een lege dag via de snelkeuze op 8 wordt gezet en de week wordt opgeslagen', async () => {
+    await vr.locator('.hin').click();
+    await expect(vr.locator('.quick')).toBeVisible();
+    await vr.locator('.q[data-v="8"]').click();
+    await expect(vr.locator('.hin')).toHaveValue('8,00');
+    await expect(page.locator('.week .total .tval')).toHaveText('38,50');
+    await page.getByRole('button', { name: 'Opslaan' }).click();
+  });
+
+  await test.step('Then bevestigt de pilot het opslaan maar blijft de week bewerkbaar en ongewijzigd ingediend', async () => {
+    await expect(page.locator('.week .actions')).toContainText('Opgeslagen');
+    await expect(page.locator('.week .hin')).toHaveCount(7);
+    await expect(page.locator('.gauge .pct')).toHaveText('0%');
+  });
+});
+
+test('[PILOT-H-009] Backoffice-pilot: een medewerkerrij aanklikken wisselt het verhaalpaneel', async ({ page }) => {
+  await test.step('Given de Backoffice-pilot met Shawn geselecteerd', async () => {
+    await page.goto('/pilot/1919-beheerder.html');
+    await expect(page.locator('.emp-row.is-selected')).toHaveCount(1);
+    await expect(page.locator('.story .story-head')).toContainText('Shawn–Douglas Nahar');
+  });
+
+  await test.step('When de rij van Marc de Roon wordt aangeklikt', async () => {
+    await page.locator('.emp-row[data-emp="marc"]').click();
+  });
+
+  await test.step('Then verspringt de markering en toont het verhaalpaneel het verhaal van Marc', async () => {
+    await expect(page.locator('.emp-row.is-selected')).toHaveAttribute('data-emp', 'marc');
+    await expect(page.locator('.story .story-head')).toContainText('Marc de Roon');
+    await expect(page.locator('.story .card')).toHaveCount(4);
+    await expect(page.locator('.story-cta button')).toContainText('herinnering sturen');
   });
 });
 

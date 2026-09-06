@@ -47,6 +47,8 @@
   .pilot-flag{background:#161616;color:#f0e4c8;font-size:12px;letter-spacing:.03em;padding:7px 18px;text-align:center;}
   .pilot-flag b{color:#fff;}
   .wrap{max-width:1560px;margin:0 auto;padding:20px 34px 34px;}
+  /* Statische pilot: knoppen zijn illustratief, geen echte acties */
+  .navlinks a,.who,.bell,.st-label,.story-cta button,.card .reason select{cursor:default;}
 
   /* ---------- topbar ---------- */
   .topbar{display:flex;align-items:center;gap:22px;padding-bottom:20px;border-bottom:1px solid var(--ink-line);}
@@ -62,7 +64,9 @@
   .pkg span{font-size:11px;letter-spacing:.13em;color:var(--text-dim);text-transform:uppercase;white-space:nowrap;}
   .topbar .grow{flex:1;}
   .mstep{flex:0 0 auto;display:flex;align-items:center;gap:14px;}
-  .mstep .nav{width:24px;height:24px;display:grid;place-items:center;color:var(--text-soft);}
+  .mstep .nav{width:26px;height:26px;display:grid;place-items:center;color:var(--text-soft);background:none;border:0;padding:0;border-radius:7px;cursor:pointer;font:inherit;}
+  .mstep .nav:hover{color:#e4edf1;background:rgba(255,255,255,.05);}
+  .mstep .nav[aria-disabled="true"]{opacity:.32;cursor:default;pointer-events:none;}
   .mstep .nav svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;}
   .mbox{white-space:nowrap;display:flex;align-items:center;gap:12px;background:#0a1826;border:1px solid var(--ink-line);border-radius:12px;padding:12px 20px;font-size:13.5px;font-weight:600;color:#fff;letter-spacing:.1em;text-transform:uppercase;}
   .mbox svg{width:16px;height:16px;stroke:var(--text-soft);fill:none;stroke-width:1.7;}
@@ -101,8 +105,10 @@
 
   /* ---------- medewerkerwachtrij ---------- */
   .queue{background:var(--navy-card);border:1px solid var(--ink-line);border-radius:var(--r);padding:8px;}
-  .emp-row{display:grid;grid-template-columns:258px 1fr 160px;align-items:center;gap:22px;padding:17px 18px;border-radius:13px;}
+  .emp-row{display:grid;grid-template-columns:258px 1fr 160px;align-items:center;gap:22px;padding:17px 18px;border-radius:13px;cursor:pointer;}
   .emp-row + .emp-row{border-top:1px solid var(--ink-line);border-radius:0;}
+  .emp-row:hover:not(.is-selected){background:rgba(255,255,255,.02);}
+  .emp-row:focus-visible{outline:2px solid var(--green);outline-offset:-2px;}
   /* Subtiele markering: lichte vulling + fijne rand. GEEN verticale balk links. */
   .emp-row.is-selected{background:rgba(255,255,255,.032);box-shadow:inset 0 0 0 1px rgba(95,185,141,.2);border-radius:13px;border-top-color:transparent;}
   .emp-row.is-selected + .emp-row{border-top-color:transparent;}
@@ -218,7 +224,7 @@
 </head>
 <body data-pilot-design="combo-1414-1919">
 
-<div class="pilot-flag"><b>PILOT</b> &nbsp;·&nbsp; nieuwe Backofficeportal &nbsp;·&nbsp; 1414 / 1919 Path Storyline &nbsp;·&nbsp; statische 1:1-voorbeeldpagina, niet de echte app</div>
+<div class="pilot-flag"><b>PILOT</b> &nbsp;·&nbsp; nieuwe Backofficeportal &nbsp;·&nbsp; 1414 / 1919 Path Storyline &nbsp;·&nbsp; statische 1:1-voorbeeldpagina, niet de echte app &nbsp;·&nbsp; knoppen zijn illustratief</div>
 
 <div class="wrap">
 
@@ -227,13 +233,13 @@
     <div class="pkg"><b>Package 1919</b><span>Path Storyline — Admin</span></div>
     <span class="grow"></span>
     <div class="mstep">
-      <span class="nav"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></span>
+      <button class="nav mprev" type="button" aria-label="Vorige maand"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
       <span class="mbox">
         <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
-        September 2026
+        <span class="mlabel">September 2026</span>
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
       </span>
-      <span class="nav"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+      <button class="nav mnext" type="button" aria-label="Volgende maand"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
     </div>
     <span class="grow"></span>
     <nav class="navlinks">
@@ -279,7 +285,7 @@
 
   <div class="queue">
 
-    <div class="emp-row is-selected">
+    <div class="emp-row is-selected" data-emp="shawn" role="button" tabindex="0" aria-label="Verhaal van Shawn–Douglas Nahar">
       <div class="emp">
         <span class="av">SN</span>
         <span class="nm">Shawn–Douglas Nahar<span>Consultant</span></span>
@@ -298,7 +304,7 @@
       <div class="st-label amber">In behandeling <span class="cv">˅</span></div>
     </div>
 
-    <div class="emp-row">
+    <div class="emp-row" data-emp="marc" role="button" tabindex="0" aria-label="Verhaal van Marc de Roon">
       <div class="emp">
         <span class="av">MR</span>
         <span class="nm">Marc de Roon<span>Finance</span></span>
@@ -317,7 +323,7 @@
       <div class="st-label muted">Wachten op extern <span class="cv">˅</span></div>
     </div>
 
-    <div class="emp-row">
+    <div class="emp-row" data-emp="brian" role="button" tabindex="0" aria-label="Verhaal van Brian Hek">
       <div class="emp">
         <span class="av">BH</span>
         <span class="nm">Brian Hek<span>Consultancy</span></span>
@@ -336,7 +342,7 @@
       <div class="st-label muted">Concept gereed <span class="cv">˅</span></div>
     </div>
 
-    <div class="emp-row">
+    <div class="emp-row" data-emp="stasjo" role="button" tabindex="0" aria-label="Verhaal van Stasjo van Bakel">
       <div class="emp">
         <span class="av">SB</span>
         <span class="nm">Stasjo van Bakel<span>IT</span></span>
@@ -425,5 +431,6 @@
 
 </div>
 
+<script src="1919-beheerder-ui.js"></script>
 </body>
 </html>

@@ -6,9 +6,10 @@
 Feature: 1414/1919-pilotpagina's naast de bestaande app
 
   # Native Playwright-uitvoering: tests/playwright/pilot-page.spec.ts
-  # Beide pilots = statische 1-op-1 reproducties van de 1414/1919-mockups.
-  # Medewerker-pilot heeft een lichte interactielaag (1919-medewerker-ui.js):
-  # maandkeuze en uren invullen. Backoffice-pilot is volledig statisch.
+  # Beide pilots = statische 1-op-1 reproducties van de 1414/1919-mockups met
+  # een lichte interactielaag: 1919-medewerker-ui.js (maandkeuze ‹ ›,
+  # weeknavigatie, uren invullen, snelkeuze, opslaan/indienen) en
+  # 1919-beheerder-ui.js (rij aanklikken -> verhaalpaneel, maand ‹ ›).
 
   @happy
   Scenario: [PILOT-H-001] beide pilotpagina's leven naast een ongewijzigde app
@@ -21,10 +22,10 @@ Feature: 1414/1919-pilotpagina's naast de bestaande app
   @happy
   Scenario: [PILOT-H-002] medewerker-pilot toont de 1414-look met werkende maand en weekinvoer
     # Testtechniek: Visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 16
+    # Aantoonbare Playwright-assertions in deze case: 18
     Given de medewerker-pilot
     When de pagina is geladen
-    Then staat september met week 36 klaar om in te vullen en de wekenmeter op nul
+    Then staat september met week 36 klaar om in te vullen, de wekenmeter op nul en de stappenlijn op stap 1
 
   @happy
   Scenario: [PILOT-H-006] medewerker-pilot: uren invullen zonder voorgevulde nul, week indienen opent de volgende week
@@ -39,8 +40,24 @@ Feature: 1414/1919-pilotpagina's naast de bestaande app
     # Testtechniek: Toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 10
     Given de medewerker-pilot
-    When augustus wordt gekozen in de maandkeuze
+    When met het maandpijltje een maand terug wordt gebladerd naar augustus
     Then staan alle weken vast en toont de klanturenstaat het verzonden-vinkje
+
+  @happy
+  Scenario: [PILOT-H-008] medewerker-pilot: snelkeuze zet uren in één tik, Opslaan bevestigt zonder in te dienen
+    # Testtechniek: Equivalentieklassen
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given de medewerker-pilot met september open
+    When een lege dag via de snelkeuze op 8 wordt gezet en de week wordt opgeslagen
+    Then bevestigt de pilot het opslaan maar blijft de week bewerkbaar en niet ingediend
+
+  @happy
+  Scenario: [PILOT-H-009] Backoffice-pilot: een medewerkerrij aanklikken wisselt het verhaalpaneel
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given de Backoffice-pilot met Shawn geselecteerd
+    When de rij van Marc de Roon wordt aangeklikt
+    Then verspringt de markering en toont het verhaalpaneel het verhaal van Marc
 
   @happy
   Scenario: [PILOT-H-003] Backoffice-pilot reproduceert de 1414/1919-ADMIN-mockup 1-op-1

@@ -48,7 +48,7 @@
       week('Week 36', '31 aug – 6 sep', row(31, 1, 2, 3, 4, 5, 6), row(8, 8, 4, null, null, null, null), -1, true)
     ] },
     { key: '2026-09', label: 'September 2026', kt: 'pending', past: false, weeks: [
-      week('Week 36', '31 aug – 6 sep', row(31, 1, 2, 3, 4, 5, 6), row(8, 8, 7, 7.3, null, null, null), 2, false),
+      week('Week 36', '31 aug – 6 sep', row(31, 1, 2, 3, 4, 5, 6), row(8, 8, 7, 7.5, null, null, null), 2, false),
       week('Week 37', '7 – 13 sep', row(7, 8, 9, 10, 11, 12, 13), empty(), -1, false),
       week('Week 38', '14 – 20 sep', row(14, 15, 16, 17, 18, 19, 20), empty(), -1, false),
       week('Week 39', '21 – 27 sep', row(21, 22, 23, 24, 25, 26, 27), empty(), -1, false),
@@ -64,6 +64,7 @@
   ];
   var DOW = ['MA', 'DI', 'WO', 'DO', 'VR', 'ZA', 'ZO'];
   var DOW_LONG = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'];
+  var QUICK = ['8', '9']; // snelkeuze voor de twee veelgebruikte urenwaarden
 
   var state = { monthKey: '2026-09', weekIndex: 0 };
 
@@ -97,57 +98,35 @@
     return t;
   }
 
-  /* ---------- maandkeuze ---------- */
-  function buildMonthPicker() {
+  /* ---------- maandkeuze: vorige / volgende met pijltjes ---------- */
+  function monthIndex() {
+    for (var i = 0; i < MONTHS.length; i++) { if (MONTHS[i].key === state.monthKey) return i; }
+    return 0;
+  }
+  function goMonth(delta) {
+    var i = monthIndex() + delta;
+    if (i < 0 || i > MONTHS.length - 1) return;
+    state.monthKey = MONTHS[i].key;
+    state.weekIndex = firstOpen(month());
+    render();
+  }
+  function buildMonthNav() {
     var wrap = document.querySelector('.monthwrap');
     if (!wrap) return;
-    var btn = wrap.querySelector('.monthpick');
-    var menu = wrap.querySelector('.monthmenu');
-    if (!btn || !menu) return;
-
-    menu.innerHTML = MONTHS.map(function (m) {
-      return '<li role="option" data-key="' + m.key + '" aria-selected="' +
-        (m.key === state.monthKey) + '">' + m.label + '</li>';
-    }).join('');
-
-    function close() {
-      menu.setAttribute('hidden', '');
-      btn.setAttribute('aria-expanded', 'false');
-    }
-    btn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      if (menu.hasAttribute('hidden')) {
-        menu.removeAttribute('hidden');
-        btn.setAttribute('aria-expanded', 'true');
-      } else {
-        close();
-      }
-    });
-    menu.addEventListener('click', function (e) {
-      var li = e.target.closest('li[data-key]');
-      if (!li) return;
-      state.monthKey = li.getAttribute('data-key');
-      state.weekIndex = firstOpen(month());
-      close();
-      render();
-    });
-    document.addEventListener('click', function () {
-      if (!menu.hasAttribute('hidden')) close();
-    });
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && !menu.hasAttribute('hidden')) close();
-    });
+    var prev = wrap.querySelector('.mprev');
+    var next = wrap.querySelector('.mnext');
+    if (prev) prev.addEventListener('click', function () { goMonth(-1); });
+    if (next) next.addEventListener('click', function () { goMonth(1); });
   }
 
   function renderMonthLabel() {
     var lbl = document.querySelector('.monthpick .mlabel');
     if (lbl) lbl.textContent = month().label;
-    var menu = document.querySelector('.monthmenu');
-    if (menu) {
-      Array.prototype.forEach.call(menu.querySelectorAll('li'), function (li) {
-        li.setAttribute('aria-selected', String(li.getAttribute('data-key') === state.monthKey));
-      });
-    }
+    var i = monthIndex();
+    var prev = document.querySelector('.monthwrap .mprev');
+    var next = document.querySelector('.monthwrap .mnext');
+    if (prev) prev.disabled = i === 0;
+    if (next) next.disabled = i === MONTHS.length - 1;
   }
 
   /* ---------- weekkaart ---------- */
@@ -172,7 +151,7 @@
       ul.innerHTML = w.days.map(function (v, i) {
         var cls = i === w.onIndex ? ' class="on"' : (v == null ? ' class="off"' : '');
         var left = '<span class="d">' + DOW[i] + ' <b>' + w.dates[i] + '</b></span>';
-        var right;
+        var right, quick = '';
         if (ro) {
           right = '<span class="h">' + (v == null ? '—' : fmt(v)) + '</span>';
         } else {
@@ -182,8 +161,11 @@
             'aria-label="Uren ' + DOW_LONG[i] + ' ' + w.dates[i] + '" value="' + fmt(v) + '">' +
             '<button type="button" class="st pls" data-i="' + i + '" aria-label="30 minuten erbij voor ' + DOW_LONG[i] + '">+</button>' +
             '</span>';
+          quick = '<span class="quick">' + QUICK.map(function (qv) {
+            return '<button type="button" class="q" data-i="' + i + '" data-v="' + qv + '" tabindex="-1" aria-label="' + qv + ' uur voor ' + DOW_LONG[i] + '">' + qv + '</button>';
+          }).join('') + '</span>';
         }
-        return '<li' + cls + '>' + left + right + '</li>';
+        return '<li' + cls + '>' + left + right + quick + '</li>';
       }).join('');
     }
 
@@ -200,6 +182,7 @@
         actions.innerHTML =
           '<button class="overview" type="button">' +
           '<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Weekoverzicht</button>' +
+          '<button class="save" type="button">Opslaan</button>' +
           '<button class="submit" type="button">Indienen ter controle</button>';
       }
     }
@@ -248,6 +231,31 @@
         updateTotal();
       });
     });
+
+    // Snelkeuze: veelgebruikte urenwaarden in één tik (focus blijft op het veld)
+    Array.prototype.forEach.call(document.querySelectorAll('.week .q'), function (q) {
+      q.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+        var i = +q.getAttribute('data-i');
+        w.days[i] = parse(q.getAttribute('data-v'));
+        var inp = document.querySelector('.week .hin[data-i="' + i + '"]');
+        if (inp) { inp.value = fmt(w.days[i]); try { inp.focus(); } catch (e2) {} }
+        updateTotal();
+      });
+    });
+
+    var save = document.querySelector('.week .save');
+    if (save) {
+      save.addEventListener('click', function () {
+        var box = document.querySelector('.week .actions');
+        if (!box) return;
+        box.innerHTML = '<div class="done" tabindex="-1">✓ Opgeslagen — je kunt later verder</div>';
+        try { box.querySelector('.done').focus(); } catch (e) {}
+        setTimeout(function () {
+          if (!month().past && !curWeek().submitted) renderWeek();
+        }, 1600);
+      });
+    }
 
     var sub = document.querySelector('.week .submit');
     if (sub) {
@@ -304,19 +312,54 @@
     var p = kt.querySelector('.txt p');
     var check = kt.querySelector('.check');
     var cta = kt.querySelector('.cta .lbl');
+    var icon = kt.querySelector('.cta .send');
+    var PLANE = '<path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/>';
+    var UPLOAD = '<path d="M12 16V4M7 9l5-5 5 5M5 20h14"/>';
 
     if (m.kt === 'sent') {
       if (p) p.textContent = 'Gereed en verzonden via e-mail.';
       if (check) check.hidden = false;
       if (cta) cta.textContent = 'Bekijk klanturenstaat';
+      if (icon) icon.innerHTML = PLANE;
     } else if (m.kt === 'review') {
       if (p) p.textContent = 'Ingediend — Backoffice controleert je uren.';
       if (check) check.hidden = true;
       if (cta) cta.textContent = 'Voorbeeld klanturenstaat';
+      if (icon) icon.innerHTML = PLANE;
     } else {
-      if (p) p.textContent = 'Nog niet verstuurd — volgt na je indiening.';
+      if (p) p.textContent = 'Nog niet verstuurd — voeg de klanturenstaat toe of wacht op Backoffice.';
       if (check) check.hidden = true;
-      if (cta) cta.textContent = 'Voorbeeld klanturenstaat';
+      if (cta) cta.textContent = 'Klanturenstaat toevoegen';
+      if (icon) icon.innerHTML = UPLOAD;
+    }
+  }
+
+  /* ---------- 4-stappenstrip: status volgt de voortgang ---------- */
+  var STEP_ICONS = null;
+  var STEP_CHECK = '<svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>';
+  function renderSteps() {
+    var m = month();
+    var filled = filledCount(m);
+    var complete, current;
+    if (m.kt === 'sent') { complete = 4; current = -1; }              // maand afgerond
+    else if (filled >= m.weeks.length) { complete = 2; current = 2; } // alle weken ingediend -> wacht op Backoffice-controle
+    else if (m.kt === 'review' || filled > 0) { complete = 1; current = 1; } // eerste week ingediend
+    else { complete = 0; current = 0; }                               // nog aan het invullen
+
+    var lis = document.querySelectorAll('.steps li');
+    if (!STEP_ICONS && lis.length) {
+      STEP_ICONS = [];
+      for (var k = 0; k < lis.length; k++) {
+        var ic0 = lis[k].querySelector('.ic');
+        STEP_ICONS[k] = ic0 ? ic0.innerHTML : '';
+      }
+    }
+    for (var i = 0; i < lis.length; i++) {
+      var done = i < complete;
+      lis[i].classList.toggle('is-done', done);
+      lis[i].classList.toggle('is-current', i === current);
+      var ic = lis[i].querySelector('.ic');
+      if (ic && STEP_ICONS) ic.innerHTML = done ? STEP_CHECK : STEP_ICONS[i];
     }
   }
 
@@ -325,6 +368,7 @@
     renderWeek();
     renderGauge();
     renderKt();
+    renderSteps();
   }
 
   function wireHero() {
@@ -339,7 +383,7 @@
   }
 
   function init() {
-    buildMonthPicker();
+    buildMonthNav();
     wireHero();
     render();
   }
