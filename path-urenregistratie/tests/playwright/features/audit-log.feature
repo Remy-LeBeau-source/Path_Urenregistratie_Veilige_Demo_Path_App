@@ -88,8 +88,8 @@ Feature: Auditlog en traceerbaarheid
 
   @happy
   Scenario: [AUD-H-011] aanmaken, instellingen opslaan en verwijderen worden geauditeerd met de juiste actor
-    # Testtechniek: End-to-end use-case + data-integriteit
-    # Aantoonbare Playwright-assertions in deze case: 7
-    Given de beheerder maakt een medewerker aan en slaat en herstelt de bedrijfsinstellingen
-    When de beheerder de testmedewerker weer verwijdert
-    Then staan aanmaken, instellingen opslaan en verwijderen in het auditlog met de juiste actor
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given de beheerder maakt een medewerker aan
+    When de beheerder de bedrijfsinstellingen opslaat en meteen weer herstelt
+    Then verdwijnt de testmedewerker weer zonder historie, ook geauditeerd

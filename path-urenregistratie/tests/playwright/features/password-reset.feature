@@ -127,34 +127,33 @@ Feature: Wachtwoordherstel en misbruikbeveiliging
     Then wordt een gequeuede reset direct gedispatcht, na de commit en zonder de token ongeldig te maken
 
   @happy
-  Scenario: [PWD-H-013] nieuwe beheerder of medewerker wordt aangemaakt, krijgt een verzonden uitnodiging, stelt een wachtwoord in en kan inloggen
-    # Testtechniek: Toestandsovergang (doorlopen voor beide rollen: beheerder en medewerker)
+  Scenario: [PWD-H-013] nieuwe ${role} wordt aangemaakt, krijgt een verzonden uitnodiging, stelt een wachtwoord in en kan inloggen
+    # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 19
-    Given de administrator een nieuwe medewerker aanmaakt met uitnodiging
+    Given wachtwoordherstel en misbruikbeveiliging is voorbereid
     When de uitgenodigde persoon de eenmalige link opent en een wachtwoord instelt
     Then verschijnt een duidelijke bevestiging met een knop om in te loggen
     And die knop brengt de persoon naar het inlogscherm
-    And de nieuwe medewerker kan daarna echt inloggen met dat wachtwoord
 
   @happy
   Scenario: [PWD-H-020] de accountuitnodiging krijgt een opgemaakte HTML-tegenhanger met logo en dezelfde link als de platte tekst
-    # Testtechniek: Broncontract
+    # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 7
     Given wachtwoordherstel en misbruikbeveiliging is voorbereid
     When de flow voor PWD-H-020 wordt uitgevoerd
-    Then wordt met Playwright-assertions bevestigd dat de accountuitnodiging een opgemaakte HTML-tegenhanger met logo en dezelfde link als de platte tekst krijgt
+    Then wordt met Playwright-assertions bevestigd dat de accountuitnodiging krijgt een opgemaakte HTML-tegenhanger met logo en dezelfde link als de platte tekst
 
   @happy
   Scenario: [PWD-H-021] "wachtwoord vergeten" krijgt dezelfde opgemaakte handtekening als de uitnodiging
-    # Testtechniek: Broncontract
+    # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 5
     Given wachtwoordherstel en misbruikbeveiliging is voorbereid
     When de flow voor PWD-H-021 wordt uitgevoerd
-    Then wordt met Playwright-assertions bevestigd dat "wachtwoord vergeten" dezelfde opgemaakte handtekening krijgt als de uitnodiging
+    Then wordt met Playwright-assertions bevestigd dat "wachtwoord vergeten" krijgt dezelfde opgemaakte handtekening als de uitnodiging
 
   @happy
   Scenario: [PWD-H-022] website en slogan komen, als ze zijn ingevuld, terug in zowel de platte als de HTML-handtekening
-    # Testtechniek: Broncontract
+    # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 5
     Given de beheerder een website en slogan instelt
     When de flow voor PWD-H-022 wordt uitgevoerd
@@ -162,11 +161,11 @@ Feature: Wachtwoordherstel en misbruikbeveiliging
 
   @negative
   Scenario: [PWD-N-017] elk ander mailkanaal dan wachtwoordherstel blijft platte tekst, zonder html_snapshot
-    # Testtechniek: Beslissingstabel
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
     # Aantoonbare Playwright-assertions in deze case: 4
     Given wachtwoordherstel en misbruikbeveiliging is voorbereid
     When de flow voor PWD-N-017 wordt uitgevoerd
-    Then wordt met Playwright-assertions bevestigd dat elk ander mailkanaal dan wachtwoordherstel platte tekst blijft, zonder html_snapshot
+    Then wordt met Playwright-assertions bevestigd dat elk ander mailkanaal dan wachtwoordherstel blijft platte tekst, zonder html_snapshot
 
   @happy
   Scenario: [PWD-H-014] wachtwoord-vergeten op het inlogscherm verraadt niet welke e-mailadressen bestaan
@@ -206,16 +205,16 @@ Feature: Wachtwoordherstel en misbruikbeveiliging
 
   @happy
   Scenario: [PWD-H-018] de accountuitnodiging gebruikt een aanpasbare welkomsttekst met een vaste afzender-handtekening
-    # Testtechniek: broncontract
-    # Aantoonbare Playwright-assertions in deze case: 6
-    Given de uitnodigingstekst als kanaalsjabloon "account_invitation" bestaat
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given wachtwoordherstel en misbruikbeveiliging is voorbereid
     When een beheerder de tekst bij Instellingen wil aanpassen
-    Then staat de meegeleverde welkomsttekst met de link erin klaar en wordt de handtekening "Robot Path IT" altijd toegevoegd
+    Then wordt met Playwright-assertions bevestigd dat de accountuitnodiging gebruikt een aanpasbare welkomsttekst met een vaste afzender-handtekening
 
   @happy
   Scenario: [PWD-H-019] een beheerder mag dezelfde persoon meerdere keren achter elkaar uitnodigen, de publieke wachtwoord-vergeten blijft begrensd
-    # Testtechniek: grenswaarde + broncontract
+    # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 6
     Given een nieuwe medewerker met een verstuurde uitnodiging
     When de beheerder de uitnodiging vier keer achter elkaar opnieuw verstuurt
-    Then lukt elke poging en blijft de misbruikbegrenzing alleen op de publieke aanvraag staan
+    Then blijft de misbruikbegrenzing alleen op de publieke aanvraag staan

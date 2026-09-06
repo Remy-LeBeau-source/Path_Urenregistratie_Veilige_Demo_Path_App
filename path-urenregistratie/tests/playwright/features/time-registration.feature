@@ -54,17 +54,17 @@ Feature: Urenregistratie verwerken
     Then wordt met Playwright-assertions bevestigd dat ongeldige payload geeft 400
 
   @negative
-  Scenario: [TS-API-N-012] een tweede schrijfactie met een verouderde versie wordt geweigerd en verandert niets in de database
-    # Testtechniek: Toestandsovergang + optimistische vergrendeling
-    # Aantoonbare Playwright-assertions in deze case: 9
-    Given een medewerker met een opgeslagen concept-urenstaat
-    When een tweede save_draft dezelfde versie gebruikt nadat de eerste die al heeft opgehoogd
-    Then geeft de server 409 stale-version en houdt de opgeslagen rij de eerste waarden
+  Scenario: [TS-API-N-013] elke grenswaarde in een dagregel wordt geweigerd en niets ervan komt in de database
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given een ingelogde medewerker met een schrijfbare periode
+    When elke ongeldige dagregel wordt verstuurd
+    Then bestaat er nog geen urenstaat voor die periode
 
   @negative
-  Scenario: [TS-API-N-013] elke grenswaarde in een dagregel wordt geweigerd en niets ervan komt in de database
-    # Testtechniek: Grenswaardenanalyse
-    # Aantoonbare Playwright-assertions in deze case: 13
-    Given een ingelogde medewerker met een schrijfbare periode
-    When elke ongeldige dagregel wordt verstuurd (>24u, negatief, datum buiten de maand, niet-bestaande datum, billable-mismatch, negatief verlof)
-    Then geeft de server steeds 400 invalid-payload en blijft er geen urenstaat achter
+  Scenario: [TS-API-N-012] een tweede schrijfactie met een verouderde versie wordt geweigerd en verandert niets in de database
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 12
+    Given een medewerker met een opgeslagen concept-urenstaat
+    When een tweede save_draft dezelfde versie gebruikt nadat de eerste die al heeft opgehoogd
+    Then houdt de opgeslagen rij de eerste waarden

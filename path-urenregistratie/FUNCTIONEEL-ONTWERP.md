@@ -311,6 +311,9 @@ Minimaal de volgende ketens zijn releaseblokkerend:
 | één factuuractie maakt drie gescheiden mailroutes met het juiste bijlagenbeleid | `email-queue.spec.ts` (`EQ-H-022`) |
 | een uitgenodigde collega kan op de telefoon een wachtwoord instellen en ziet de bevestiging | `mobile-ui.spec.ts` (`MOB-H-006`) |
 | een lange mededeling is op de telefoon volledig leesbaar zonder zijwaarts scrollen | `mobile-ui.spec.ts` (`MOB-H-007`) |
+| 1919-medewerker en 1919-beheer draaien naast `/` op dezelfde servergegevens, zonder facturen voor medewerkers | `pilot-page.spec.ts` (`PILOT-H-001`, `PILOT-H-002`, `PILOT-N-001`) |
+| rechtstreeks gemaild blijft oranje; alleen een Backoffice-bevestiging met reden maakt hem groen en terugdraaien is mogelijk | `pilot-page.spec.ts` (`PILOT-H-003`) |
+| de medewerkerpilot blijft op 390 px zonder horizontale overflow bedienbaar | `pilot-page.spec.ts` (`PILOT-N-002`) |
 
 Nieuwe productlogica krijgt in dezelfde wijziging een rij in deze tabel of een aantoonbare koppeling
 naar een bestaande ketentest.
@@ -319,6 +322,30 @@ De leesbare overkoepelende specificatie staat in
 `tests/playwright/features/end-to-end-workflows.feature`. De uitvoerbare bron blijft
 `tests/playwright/business-workflows-e2e.spec.ts`; zo is de bedrijfsketen snel te controleren zonder
 een tweede, afwijkende implementatie van dezelfde stappen te onderhouden.
+
+## 13. Parallelle 1919-pilotportals
+
+De 1919-richting wordt op TEST functioneel naast de bestaande app aangeboden. De medewerker opent
+`/pilot/1919-medewerker.html`; Backoffice opent `/pilot/1919-beheerder.html`. De app op `/` blijft
+beschikbaar en blijft tijdens de pilot de route voor de volledige factuur-, PDF- en mailcontrole.
+
+Beide pilots gebruiken dezelfde ingelogde sessie en dezelfde servergegevens. Daardoor ziet
+Backoffice een medewerkeractie na opnieuw laden direct terug, ongeacht of de actie in de bestaande
+of nieuwe medewerkerportal is uitgevoerd. Andersom ziet de medewerker een correctie, goedkeuring
+of externe bevestiging na opnieuw laden terug. Omdat één browserprofiel één same-origin sessiecookie
+deelt, gebruikt een gelijktijdige medewerker/beheeracceptatie twee browserprofielen of een normaal
+en incognitovenster.
+
+De bestaande bevoegdheden veranderen niet: een medewerker ziet geen facturen en kan geen
+Backoffice-acties uitvoeren. `Al rechtstreeks gemaild` is alleen een medewerkerregistratie en blijft
+oranje. Backoffice kiest daarna `Extern bevestigen`, vult een verplichte standaardreden of vrije
+toelichting in en maakt de status daarmee groen. `Bevestiging terugdraaien` vraagt nogmaals expliciete
+bevestiging en zet de klanturenstaat terug naar ontbrekend.
+
+Een nieuwe inlogsessie start in de actuele maand van `Europe/Amsterdam`. Een handmatige maandkeuze
+blijft alleen binnen de sessie bewaard; uitloggen wist die keuze. De medewerkerweergave toont het
+geregistreerde totaal en het aantal werkdagen met uren, niet een misleidend hard doel zoals
+`20 / 160 uur`.
 # E-mailstatus per omgeving
 
 - LOCAL blijft altijd controlemodus/dry-run en kan geen echte e-mail activeren. De statusbadge is

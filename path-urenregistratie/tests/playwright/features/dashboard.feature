@@ -26,7 +26,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-018] elke login en elke Dashboard-klik opent de actuele maand; een handmatige maand blijft alleen op andere schermen
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 27
+    # Aantoonbare Playwright-assertions in deze case: 29
     Given Backoffice in september inlogt met een eerder bewaarde maand
     Then opent de actuele kalendermaand voor Backoffice
     And Goedkeuringen en Facturen tonen de juiste septemberbeginstand
@@ -36,10 +36,52 @@ Feature: Dashboard en open werkvoorraad
     Then springt de maandkiezer terug naar de actuele kalendermaand september
     And een nieuwe medewerkerlogin begint opnieuw in september
 
+  @happy
+  Scenario: [DASH-H-021] de medewerker keert zowel via Dashboard als via Mijn uren terug naar de actuele maand na een blik op een oudere maand
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 10
+    Given de medewerker heeft op Mijn uren zelf een eerdere maand geopend
+    When de medewerker op Dashboard klikt
+    Then staat de maandkiezer weer op de actuele kalendermaand augustus
+    When de medewerker opnieuw juli opent, via Mededelingen navigeert en dan zélf op Mijn uren klikt (niet op Dashboard)
+    Then zet ook de Mijn uren-tab zelf de maand terug op augustus, zonder via Dashboard te gaan
+
+  @negative
+  Scenario: [DASH-N-023] een medewerker kan niet naar een maand vóór de eigen indiensttreding bladeren
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given de medewerker (in dienst sinds mei 2026) op de actuele kalendermaand staat
+    When de medewerker probeert een maand vóór de startdatum te openen
+    Then blijft de maand op augustus staan en verschijnt een duidelijke melding
+
+  @negative
+  Scenario: [DASH-N-024] een lokaal record van vóór indiensttreding verschijnt niet in Mijn maanden
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given de medewerker is ingelogd en er bestaat lokaal een record van vóór de startdatum
+    When de flow voor DASH-N-024 wordt uitgevoerd
+    Then blijft april 2026 weg uit de historie, ook al heeft het record uren
+
+  @negative
+  Scenario: [DASH-N-025] een gekozen klanturenstaat-bestand blijft niet hangen na een gewone maandwissel
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given de medewerker heeft een bestand gekozen voor de huidige maand
+    When de medewerker via de gewone pijltjesnavigatie naar een andere maand gaat
+    Then staat het bestandsveld weer leeg, want het gekozen bestand hoorde bij de vorige maand
+
+  @negative
+  Scenario: [DASH-N-021] een lege oudere maand openen voegt geen fantoom-open-acties toe en houdt de kalendermaand in beeld
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 10
+    Given de medewerker ziet zijn open acties in de actuele kalendermaand augustus
+    When de medewerker handmatig een lege oudere maand (juni 2026) opent
+    Then verschijnt juni niet als open-actiemaand en blijven het totaal en de kalendermaand ongewijzigd
+
   @negative
   Scenario: [DASH-N-022] een medewerker met een toekomstige startdatum verschijnt niet in Teamstatus of Klanturenstaten vóór indiensttreding
-    # Testtechniek: Grenswaardenanalyse
-    # Aantoonbare Playwright-assertions in deze case: 6
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 8
     Given de beheerder een nieuwe medewerker aanmaakt die pas volgende maand start
     Then blijft de nieuwe medewerker weg uit augustus (vóór indiensttreding)
     When de beheerder naar september bladert (de startmaand)
@@ -118,7 +160,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakiezer blijft leesbaar
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 10
+    # Aantoonbare Playwright-assertions in deze case: 12
     Given een medewerker die een urenstaat vult en het thema wisselt
     When de medewerker uren invult en terug naar het medewerkerdashboard gaat
     Then blijven de maandnamen zichtbaar in donkere modus
@@ -126,7 +168,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-004] terugkeren naar medewerkerdashboard ververst de uren en behoudt maandlabels bij themawissel
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 5
+    # Aantoonbare Playwright-assertions in deze case: 6
     Given een medewerker op donker thema die vanuit dashboard naar uren gaat
     When de medewerker uren wijzigt en terug navigeert via de zichtbare medewerkerroute
     Then zijn de maandlabels nog zichtbaar in de maandkiezer
@@ -174,7 +216,7 @@ Feature: Dashboard en open werkvoorraad
 
   @negative
   Scenario: [DASH-N-018] medewerkerdashboard toont een laadtoestand tot de eerste werkvoorraad-sync
-    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 6
     Given de eerste werkvoorraad-sync van de medewerker nog niet terug is
     Then toont het dashboard een neutrale laadtoestand en geen stellige afgerond-tekst
@@ -183,7 +225,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-006] vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 7
+    # Aantoonbare Playwright-assertions in deze case: 8
     Given een medewerker zonder open acties in een lege toekomstmaand
     When de medewerker een toekomstige maand probeert te openen
     Then verschijnt september niet als open medewerkermaand
@@ -195,46 +237,6 @@ Feature: Dashboard en open werkvoorraad
     Given een medewerker die een toekomstige maand probeert te openen
     When de medewerker teruggaat naar het dashboard
     Then staat de periode op augustus en toont het overzicht geen toekomstige maanden
-
-  @happy
-  Scenario: [DASH-H-021] de medewerker keert met de Dashboard-knop terug naar de actuele maand na een blik op een oudere maand
-    # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 9
-    Given de medewerker heeft een eerdere maand geopend en is doorgelopen naar Mijn uren
-    When de medewerker op Dashboard klikt
-    Then staat de maandkiezer weer op de actuele kalendermaand augustus, ook op de andere schermen
-
-  @negative
-  Scenario: [DASH-N-023] een medewerker kan niet naar een maand vóór de eigen indiensttreding bladeren
-    # Testtechniek: Grenswaardenanalyse
-    # Aantoonbare Playwright-assertions in deze case: 3
-    Given de medewerker (in dienst sinds mei 2026) op de actuele kalendermaand staat
-    When de medewerker probeert een maand vóór de startdatum te openen
-    Then blijft de maand op augustus staan en verschijnt een duidelijke melding
-
-  @negative
-  Scenario: [DASH-N-024] een lokaal record van vóór indiensttreding verschijnt niet in Mijn maanden
-    # Testtechniek: Grenswaardenanalyse
-    # Aantoonbare Playwright-assertions in deze case: 1
-    Given de medewerker is ingelogd
-    When er lokaal een record van vóór de startdatum wordt neergezet
-    Then blijft april 2026 weg uit de historie, ook al heeft het record uren
-
-  @negative
-  Scenario: [DASH-N-025] een gekozen klanturenstaat-bestand blijft niet hangen na een gewone maandwissel
-    # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 3
-    Given de medewerker heeft een bestand gekozen voor de huidige maand
-    When de medewerker via de gewone pijltjesnavigatie naar een andere maand gaat
-    Then staat het bestandsveld weer leeg, want het gekozen bestand hoorde bij de vorige maand
-
-  @negative
-  Scenario: [DASH-N-021] een lege oudere maand openen voegt geen fantoom-open-acties toe en houdt de kalendermaand in beeld
-    # Testtechniek: Grenswaardenanalyse
-    # Aantoonbare Playwright-assertions in deze case: 8
-    Given de medewerker ziet zijn open acties in de actuele kalendermaand augustus
-    When de medewerker handmatig een lege oudere maand (april 2026) opent
-    Then verschijnt april niet als open-actiemaand en blijven het totaal en de kalendermaand ongewijzigd
 
   @happy
   Scenario: [DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels
@@ -257,24 +259,24 @@ Feature: Dashboard en open werkvoorraad
 
   @happy
   Scenario: [DASH-H-020] de actieteller benoemt dat de rij over alle maanden loopt
-    # Testtechniek: Grenswaarde
-    # Aantoonbare Playwright-assertions in deze case: 4
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 7
     Given Backoffice openstaande acties in meer dan een maand heeft
     When Backoffice een actie vanuit de maandlijst opent
     Then vermeldt de teller dat de rij over alle maanden loopt
 
   @negative
   Scenario: [DASH-N-019] een achtergrond-hertekening sluit het geopende profielmenu niet
-    # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 5
-    Given de beheerder het profielmenu net heeft geopend
-    When een hertekening op de achtergrond een scroll-event veroorzaakt
-    Then blijft het profielmenu open en sluit een echte scroll het alsnog
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 10
+    Given de scroll-handler het respijtvenster na een hertekening respecteert
+    When de beheerder het profielmenu opent en er een hertekening plaatsvindt
+    Then blijft het profielmenu open
 
   @happy
   Scenario: [DASH-H-022] beheerder kan met de browser-terug/-vooruit-knop door alle eigen schermen navigeren
-    # Testtechniek: Toestandsovergang, volledige end-to-end doorloop van elk beheerdersscherm
-    # Aantoonbare Playwright-assertions in deze case: 176
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 1
     Given de beheerder is ingelogd op Urenoverzicht
     When de beheerder achtereenvolgens elk scherm opent
     Then brengt browser-terug telkens het vorige scherm terug, in exact omgekeerde volgorde
@@ -282,8 +284,8 @@ Feature: Dashboard en open werkvoorraad
 
   @happy
   Scenario: [DASH-H-023] medewerker kan met de browser-terug/-vooruit-knop door alle eigen schermen navigeren
-    # Testtechniek: Toestandsovergang, volledige end-to-end doorloop van elk medewerkersscherm
-    # Aantoonbare Playwright-assertions in deze case: 88
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 1
     Given de medewerker is ingelogd op Mijn overzicht
     When de medewerker achtereenvolgens elk scherm opent
     Then brengt browser-terug telkens het vorige scherm terug

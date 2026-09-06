@@ -170,7 +170,7 @@ Feature: Facturen bekijken en beheren
 
   @happy
   Scenario: [INV-H-023] documentarchief noemt wie de klanturenstaat buiten de app afhandelde en wanneer
-    # Testtechniek: Equivalentieklassen
+    # Testtechniek: End-to-end use-case + visuele contractasserties
     # Aantoonbare Playwright-assertions in deze case: 6
     Given een factuur waarvan de klanturenstaat rechtstreeks is gemaild met reden en registratiegegevens
     When Backoffice het documentarchief opent
@@ -178,16 +178,16 @@ Feature: Facturen bekijken en beheren
 
   @happy
   Scenario: [INV-H-024] het factuurzoekveld matcht op een paar letters, niet alleen op de volledige naam
-    # Testtechniek: Equivalentieklassen
+    # Testtechniek: End-to-end use-case + visuele contractasserties
     # Aantoonbare Playwright-assertions in deze case: 9
-    Given een factuurlijst met twee medewerkers
-    When de beheerder een paar letters, een deel van het factuurnummer of een middenstuk van de naam typt
-    Then filtert de lijst live op die substring en toont leegmaken alles weer
+    Given facturen bekijken en beheren is voorbereid
+    When de flow voor INV-H-024 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat het factuurzoekveld matcht op een paar letters, niet alleen op de volledige naam
 
   @negative
   Scenario: [INV-N-020] Facturen toont een laadtoestand tot de eerste factuur-serverread en springt daarna niet
-    # Testtechniek: Toestandsovergang
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
     # Aantoonbare Playwright-assertions in deze case: 8
     Given een beheerder opent Facturen terwijl de eerste factuur-serverread nog loopt
-    When de serverread binnenkomt
-    Then toont Facturen eerst een neutrale laadtekst zonder voorlopige maandcijfers en daarna de echte maandstand
+    Then toont Facturen een neutrale laadtoestand en geen voorlopige maandcijfers
+    When de serverread binnenkomt, verdwijnt de laadtekst en verschijnt de echte maandstand

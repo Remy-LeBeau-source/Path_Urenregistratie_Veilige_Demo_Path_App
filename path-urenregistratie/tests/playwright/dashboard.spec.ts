@@ -1889,6 +1889,10 @@ test('[DASH-H-022] beheerder kan met de browser-terug/-vooruit-knop door alle ei
     }
   });
 
+  // Ook direct in deze case één assertion houden: de living-doc extractor telt
+  // helper-assertions bewust niet mee en moet deze regressie als uitvoerbaar zien.
+  await expect(page.locator('#view-settings')).toHaveClass(/is-active/);
+
   await loginPage.logout();
 });
 

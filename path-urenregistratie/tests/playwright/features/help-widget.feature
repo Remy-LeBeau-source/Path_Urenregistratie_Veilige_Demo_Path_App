@@ -1,23 +1,24 @@
 @regressie
-@gui
+@ui
+@desktop
 @fase:17
 Feature: Hulp en contact
 
   # Native Playwright-uitvoering: tests/playwright/help-widget.spec.ts
+  # Navigatiemapping: tests/playwright/steps/help-widget.steps.ts
 
   @happy
   Scenario: [HELP-H-001] medewerker zoekt een bekende vraag en krijgt het juiste antwoord met werkende knop
-    # Testtechniek: Equivalentieklassen
+    # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 9
     Given de medewerker opent Hulp & contact
-    When de medewerker "verlof" intypt en verstuurt
     Then verschijnt de eigen vraag en het juiste standaardantwoord met een knop naar Mijn uren
     When de medewerker op de knop klikt
     Then opent daadwerkelijk Mijn uren
 
   @negative
   Scenario: [HELP-N-001] het hulpgesprek overleeft geen paginaherlading, alleen "Gesprek wissen" binnen de sessie
-    # Testtechniek: Toestandsovergang
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
     # Aantoonbare Playwright-assertions in deze case: 9
     Given de medewerker heeft binnen het gesprek een vraag gesteld
     When de medewerker Gesprek wissen gebruikt
@@ -27,7 +28,7 @@ Feature: Hulp en contact
 
   @happy
   Scenario: [HELP-H-003] contact opnemen toont precies één mailknop en een kopieer-vangnet, geen dubbele keuze
-    # Testtechniek: Equivalentieklassen
+    # Testtechniek: End-to-end use-case + visuele contractasserties
     # Aantoonbare Playwright-assertions in deze case: 7
     Given de medewerker opent Hulp & contact
     When de medewerker het onderwerp Contact opnemen kiest
@@ -35,7 +36,7 @@ Feature: Hulp en contact
 
   @happy
   Scenario: [HELP-H-004] het hulpantwoord over verlof/ziekte volgt de beheerderschakelaar
-    # Testtechniek: Beslissingstabel (schakelaar aan/uit)
+    # Testtechniek: End-to-end use-case + visuele contractasserties
     # Aantoonbare Playwright-assertions in deze case: 5
     Given de schakelaar staat uit (standaard) en de medewerker vraagt naar verlof
     When de beheerder verlof/ziekte handmatig invullen aanzet
@@ -53,7 +54,7 @@ Feature: Hulp en contact
 
   @negative
   Scenario: [HELP-N-002] met een voorkeur voor verminderde beweging sluit het paneel direct, zonder op een animatie te wachten
-    # Testtechniek: Negatieve equivalentieklasse
+    # Testtechniek: Toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 2
     Given de medewerker heeft verminderde beweging ingesteld en het paneel staat open
     When de medewerker het paneel sluit

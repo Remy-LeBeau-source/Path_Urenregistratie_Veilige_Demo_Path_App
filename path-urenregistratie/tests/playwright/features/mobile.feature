@@ -172,24 +172,24 @@ Feature: Mobiele gebruikerservaring
 
   @happy
   Scenario: [MOB-H-020] het manifest gebruikt overal dezelfde navy statusbalkkleur
-    # Testtechniek: Broncontract
-    # Aantoonbare Playwright-assertions in deze case: 4
+    # Testtechniek: Responsive viewport + end-to-end use-case
+    # Aantoonbare Playwright-assertions in deze case: 6
     Given het manifest per omgeving een eigen naam kan hebben
     When het manifest wordt opgehaald
     Then is theme_color overal navy en verschilt alleen de naam
 
   @happy
   Scenario: [MOB-H-021] de service worker en de iOS-beginschermmeta vormen een geldig installatiecontract
-    # Testtechniek: Broncontract
+    # Testtechniek: Responsive viewport + end-to-end use-case
     # Aantoonbare Playwright-assertions in deze case: 11
     Given de pagina registreert een service worker
     When sw.js wordt opgehaald
-    Then is sw.js geldig JavaScript zonder fetch-handler en staan de iOS-beginschermmeta compleet in de pagina
+    Then staan de iOS-beginschermmeta compleet in de pagina
 
   @happy
   Scenario: [MOB-H-022] de mobiele Home-knop zet de maandkiezer terug op de actuele maand
-    # Testtechniek: Responsive viewport + toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 5
+    # Testtechniek: Responsive viewport + end-to-end use-case
+    # Aantoonbare Playwright-assertions in deze case: 6
     Given een mobiele beheerder heeft een eerdere maand gekozen
     When de beheerder op de mobiele Home-knop tikt
     Then staat de maandkiezer weer op de actuele kalendermaand

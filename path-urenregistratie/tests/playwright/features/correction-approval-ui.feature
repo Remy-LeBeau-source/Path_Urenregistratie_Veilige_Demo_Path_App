@@ -62,23 +62,23 @@ Feature: Correcties en goedkeuringen behandelen
   @negative
   Scenario: [TS-REV-UI-N-013] Goedkeuringen toont een laadtoestand tot de serverwerkvoorraad binnen is
     # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 8
+    # Aantoonbare Playwright-assertions in deze case: 9
     Given de beheerder opent Goedkeuringen terwijl de eerste serverwerkvoorraad-sync nog loopt
-    When de sync binnenkomt
-    Then toont Goedkeuringen eerst een neutrale laadtekst zonder voorlopige kaarten of teller en daarna de echte controlestand
+    Then toont Goedkeuringen een neutrale laadtekst en geen voorlopige kaarten of teller
+    When de sync binnenkomt, verdwijnt de laadtekst en verschijnt de echte controlestand
 
   @negative
   Scenario: [TS-REV-UI-N-014] verlof en ziekte staan uit met een duidelijke uitleg
-    # Testtechniek: Broncontract
-    # Aantoonbare Playwright-assertions in deze case: 6
-    Given de medewerker is ingelogd
-    When de medewerker Mijn uren opent
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given de medewerker opent Mijn uren
+    When de flow voor TS-REV-UI-N-014 wordt uitgevoerd
     Then staan verlof en ziekte uitgeschakeld met een zichtbare reden
     Then oogt het cijfer ook echt grijs, niet als een gewoon invulbaar zwart veld
 
   @happy
   Scenario: [TS-REV-UI-H-012] beheerder zet verlof en ziekte aan; de medewerker kan ze dan zelf invullen en het blijft na F5 staan
-    # Testtechniek: Beslissingstabel + toestandsovergang + gerenderde stijl
+    # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 14
     Given de beheerder verlof en ziekte handmatig invullen aanzet via de instellingen-schakelaar
     When de medewerker Mijn uren opent

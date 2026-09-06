@@ -270,7 +270,7 @@ Feature: Live TEST-regressie en deployacceptatie
   @happy
   Scenario: [TEST-E2E-26] de deploy levert de veiligheidsheaders en PWA-assets die de app nodig heeft
     # Testtechniek: API-contract + equivalentieklasse
-    # Aantoonbare Playwright-assertions in deze case: 20
+    # Aantoonbare Playwright-assertions in deze case: 27
     Given live TEST-regressie en deployacceptatie is voorbereid
     When de flow voor TEST-E2E-26 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat de deploy levert de veiligheidsheaders en PWA-assets die de app nodig heeft

@@ -34,7 +34,7 @@ Feature: Mededelingen versturen, intrekken en verbergen
 
   @happy
   Scenario: [ANN-H-007] "Bij medewerkers verwijderen" laat het bericht echt verdwijnen bij de medewerker, maar blijft intern zichtbaar
-    # Testtechniek: Toestandsovergang + data-integriteit
+    # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 13
     Given de beheerder stuurt een mededeling naar de vaste testmedewerker
     Then ziet de medewerker het bericht in Mijn mededelingen
@@ -44,12 +44,12 @@ Feature: Mededelingen versturen, intrekken en verbergen
 
   @happy
   Scenario: [ANN-H-008] een correctie laat de medewerker alleen de nieuwste tekst zien, niet de oorspronkelijke
-    # Testtechniek: Toestandsovergang + data-integriteit
+    # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 9
     Given de beheerder verstuurt een origineel bericht naar de vaste testmedewerker
     When de beheerder een correctie verstuurt met nieuwe tekst
     Then ziet de medewerker alleen de gecorrigeerde tekst, niet de oude
-    And de gecorrigeerde mededeling wordt opgeruimd via intrekken en verbergen
+    And cleanup: trek de gecorrigeerde mededeling in en verberg deze bij medewerkers
 
   @negative
   Scenario: [ANN-N-004] intrekken zonder reden wordt geweigerd

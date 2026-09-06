@@ -120,8 +120,8 @@ Feature: Authenticatie- en API-beveiliging
 
   @happy
   Scenario: [SEC-H-008] draaiende server zet de vaste beveiligingsheaders echt op elk antwoord
-    # Testtechniek: Broncontract vs. draaiend gedrag
-    # Aantoonbare Playwright-assertions in deze case: 4
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 5
     Given een willekeurig, niet-geauthenticeerd endpoint
     When de client dat endpoint bevraagt
     Then staan de vaste beveiligingsheaders echt op het antwoord
@@ -129,7 +129,7 @@ Feature: Authenticatie- en API-beveiliging
   @negative
   Scenario: [SEC-N-008] cors weerspiegelt alleen een toegestane origin, nooit een onbekende
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 5
+    # Aantoonbare Playwright-assertions in deze case: 7
     Given een verzoek met een toegestane origin uit de lokale/test-allowlist
     Then weerspiegelt de server precies die origin met credentials toegestaan
     When hetzelfde verzoek een niet-vertrouwde origin meestuurt

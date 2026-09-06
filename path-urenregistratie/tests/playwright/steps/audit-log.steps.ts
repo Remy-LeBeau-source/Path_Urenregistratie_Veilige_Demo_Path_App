@@ -38,3 +38,6 @@ When("de flow voor AUD-H-009 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat auditlog begrenst een hoge limiet op tweehonderd records");
 When("de flow voor AUD-N-010 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat auditlog weigert POST");
+Given("de beheerder maakt een medewerker aan");
+When("de beheerder de bedrijfsinstellingen opslaat en meteen weer herstelt");
+Then("verdwijnt de testmedewerker weer zonder historie, ook geauditeerd");

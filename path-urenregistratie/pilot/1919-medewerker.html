@@ -43,17 +43,26 @@
   .shell{display:grid;grid-template-columns:264px 1fr;min-height:100vh;}
 
   /* ---------------- Rail ---------------- */
-  .rail{background:var(--navy);color:var(--text-dark);padding:26px 22px 22px;position:relative;}
+  .rail{background:var(--navy);color:var(--text-dark);padding:26px 22px 22px;position:sticky;top:0;align-self:start;height:100vh;z-index:4;overflow:visible;}
   .rail .brand{display:flex;align-items:center;gap:11px;margin-bottom:34px;}
   .rail .brand .mark{width:32px;height:32px;border:2px solid var(--green);border-radius:8px;display:grid;place-items:center;color:var(--green);font-family:var(--serif);font-weight:700;font-size:15px;}
   .rail .brand span{font-size:15px;color:#fff;font-weight:600;letter-spacing:.2px;}
   .timeline{position:relative;padding-left:6px;}
   .timeline::before{content:"";position:absolute;left:19px;top:16px;bottom:64px;width:1.5px;background:var(--line-dark);}
-  .stop{position:relative;padding:0 0 30px 44px;}
+  .stop{position:relative;padding:0 0 30px 44px;--connector-color:rgba(107,191,149,.5);}
+  .rail-curve{
+    position:absolute;z-index:0;left:0;right:-27px;top:calc(100% - 25px);width:calc(100% + 27px);height:72px;
+    overflow:visible;color:var(--connector-color);pointer-events:none;opacity:.72;
+    transition:color .28s ease,opacity .28s ease,filter .28s ease;
+  }
+  .rail-curve path{fill:none;stroke:currentColor;stroke-width:1.55;vector-effect:non-scaling-stroke;}
+  .rail-curve circle{fill:currentColor;stroke:var(--navy);stroke-width:2;vector-effect:non-scaling-stroke;}
   .stop .node{position:absolute;left:0;top:0;width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line-dark);display:grid;place-items:center;background:var(--navy);}
   .stop .node svg{width:15px;height:15px;stroke:var(--text-dark-soft);fill:none;stroke-width:1.7;}
   .stop.active .node{border-color:var(--amber);box-shadow:0 0 0 4px rgba(224,161,60,.15);}
   .stop.active .node svg{stroke:var(--amber);}
+  .stop.active{--connector-color:var(--amber);}
+  .stop.active .rail-curve{opacity:1;filter:drop-shadow(0 0 5px rgba(224,161,60,.48));}
   .stop .eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--green);font-weight:700;}
   .stop.active .eyebrow{color:var(--amber);}
   .stop .ttl{font-family:var(--serif);font-size:15px;color:#fff;margin:3px 0 3px;line-height:1.25;}
@@ -65,7 +74,7 @@
 
   /* ---------------- Main ---------------- */
   .main{background:var(--cream);}
-  .topbar{display:flex;align-items:center;gap:16px;padding:20px 44px;background:var(--cream);}
+  .topbar{display:flex;align-items:center;gap:16px;padding:16px 44px;background:var(--cream);}
   .topbar .pkg{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink);opacity:.55;}
   .topbar .pkg b{color:var(--green-deep);opacity:1;}
   .topbar .grow{flex:1;}
@@ -77,34 +86,45 @@
   .who svg{width:14px;height:14px;stroke:#7a7f7c;fill:none;stroke-width:1.8;}
 
   /* Chapter 1 — hero */
-  .hero{display:grid;grid-template-columns:1fr 1.05fr;align-items:stretch;background:var(--cream);}
-  .hero .copy{padding:44px 10px 64px 44px;align-self:center;max-width:560px;position:relative;z-index:2;}
+  [data-story-chapter]{scroll-margin-top:22px;}
+  .hero{display:grid;grid-template-columns:1.08fr 1fr;align-items:stretch;background:var(--cream);position:relative;}
+  .hero .copy{padding:24px 0 34px 44px;align-self:center;min-width:0;position:relative;z-index:2;}
   .eyebrow-c{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--green-deep);font-weight:700;}
-  .hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(40px,5vw,58px);line-height:1.02;color:var(--ink-serif);margin:12px 0 16px;letter-spacing:.4px;}
-  .hero p{font-size:15px;line-height:1.6;color:#5b6560;margin:0 0 26px;}
-  .mini{display:flex;gap:26px;flex-wrap:wrap;}
-  .mini > div{display:flex;gap:11px;max-width:180px;}
+  .hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(38px,4.2vw,52px);line-height:1.02;color:var(--ink-serif);margin:9px 0 12px;letter-spacing:.4px;}
+  .hero p{font-size:14px;line-height:1.55;color:#5b6560;margin:0 0 18px;max-width:520px;}
+  .mini{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;padding-right:4px;}
+  .mini > div{display:flex;gap:9px;min-width:0;}
   .mini .ic{width:34px;height:34px;border-radius:9px;border:1px solid var(--line-cream);display:grid;place-items:center;flex:0 0 auto;background:#fff;}
   .mini .ic svg{width:16px;height:16px;stroke:var(--green-deep);fill:none;stroke-width:1.6;}
   .mini b{display:block;font-size:12.5px;color:var(--ink);}
   .mini span{display:block;font-size:11.5px;color:#7f8883;margin-top:2px;line-height:1.4;}
-  .hero .scene{position:relative;min-height:460px;margin-top:-64px;margin-left:-90px;overflow:hidden;}
+  .hero .scene{position:relative;min-height:340px;margin-top:-60px;margin-left:-72px;overflow:hidden;}
   .hero .scene img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center right;
     /* zachte overgang: linkerrand van de foto lost op in de cream i.p.v. een harde kolomrand */
     -webkit-mask-image:linear-gradient(to right, transparent 0, rgba(0,0,0,.35) 14%, #000 32%);
     mask-image:linear-gradient(to right, transparent 0, rgba(0,0,0,.35) 14%, #000 32%);}
 
   /* Chapter 2 — invullen (navy) */
-  .chapter{padding:60px 44px;}
+  .chapter{padding:46px 44px;position:relative;isolation:isolate;}
+  .chapter::before{
+    content:"";position:absolute;z-index:0;left:0;right:0;top:-36px;height:36px;pointer-events:none;
+  }
+  .chapter > *{position:relative;z-index:1;}
   .chapter.navy{background:var(--navy);color:var(--text-dark);}
   .chapter.forest{background:var(--forest);color:var(--text-dark);}
-  .chapter.dark{background:var(--navy-2);color:var(--text-dark);}
-  .ch-grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:44px;align-items:center;}
+  .chapter.forest{padding-block:22px;}
+  .chapter.dark{background:var(--navy-2);color:var(--text-dark);padding-block:18px;overflow:hidden;}
+  .chapter.navy::before{background:linear-gradient(to bottom,rgba(244,241,232,0),var(--navy));}
+  .chapter.forest::before{background:linear-gradient(to bottom,rgba(14,34,51,0),var(--forest));}
+  .chapter.dark::before{background:linear-gradient(to bottom,rgba(22,54,43,0),var(--navy-2));}
+  .ch-grid{display:grid;grid-template-columns:minmax(280px,.78fr) minmax(0,1.22fr);gap:34px;align-items:center;}
   .ch-eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;}
   .chapter.navy .ch-eyebrow{color:var(--amber);}
   .chapter.forest .ch-eyebrow,.chapter.dark .ch-eyebrow{color:var(--green);}
   .ch-grid h2{font-family:var(--serif);font-weight:400;font-size:clamp(30px,3.6vw,44px);line-height:1.08;color:#fff;margin:12px 0 14px;letter-spacing:.3px;}
   .ch-grid .lead{font-size:14px;line-height:1.6;color:var(--text-dark-soft);margin:0 0 22px;max-width:420px;}
+  .chapter.forest .ch-grid h2{font-size:clamp(30px,2.8vw,36px);margin:7px 0 9px;}
+  .chapter.forest .ch-grid .lead{font-size:12.5px;line-height:1.45;margin-bottom:0;}
   .btn-amber{display:inline-flex;align-items:center;gap:10px;background:var(--amber-strong);color:#241a06;border:0;border-radius:10px;padding:13px 22px;font-size:13.5px;font-weight:700;font-family:inherit;cursor:pointer;}
   .btn-amber svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;}
 
@@ -131,9 +151,22 @@
   .flow .arrow{align-self:center;color:var(--text-dark-soft);font-size:16px;flex:0 0 auto;white-space:nowrap;}
 
   /* Chapter 4 — document scene */
-  .doc-grid{display:grid;grid-template-columns:.8fr 1.2fr;gap:44px;align-items:center;}
-  .doc-scene{position:relative;min-height:300px;border-radius:14px;overflow:hidden;}
-  .doc-scene img{display:block;width:100%;height:100%;min-height:300px;object-fit:cover;}
+  .doc-grid{display:grid;grid-template-columns:minmax(280px,.72fr) minmax(0,1.28fr);gap:38px;align-items:center;height:172px;}
+  .doc-scene{position:relative;height:172px;min-height:0;border-radius:14px;overflow:hidden;}
+  .doc-scene img{display:block;width:100%;height:100%;min-height:0;object-fit:cover;object-position:center 20%;transform:scale(1.015);}
+
+  .story-enhanced .stop .node,.story-enhanced .stop .eyebrow,.story-enhanced .stop .ttl,.story-enhanced .stop .sub{
+    transition:color .28s ease,border-color .28s ease,box-shadow .28s ease,transform .28s ease;
+  }
+  .story-enhanced .stop.active .node{transform:scale(1.04);}
+  .story-enhanced [data-story-chapter] > *{transition:opacity .42s ease,transform .42s ease;}
+  .story-enhanced [data-story-chapter]:not(.chapter-visible) > *{opacity:.82;transform:translateY(8px);}
+
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto;}
+    .stop,.rail-curve,.stop .node,.stop .eyebrow,.stop .ttl,.stop .sub,
+    .story-enhanced [data-story-chapter] > *{transition:none!important;transform:none!important;}
+  }
 
   @media (max-width:1080px){
     .shell{grid-template-columns:1fr;}
@@ -144,10 +177,11 @@
     .flow .arrow{display:none;}
   }
 </style>
+<link rel="stylesheet" href="1919-portal.css">
 </head>
 <body>
 
-<div class="pilot-flag"><b>PILOT</b> &nbsp;·&nbsp; 1919 Path Storyline — medewerker &nbsp;·&nbsp; losstaande voorbeeldpagina, niet de echte app &nbsp;·&nbsp; <a href="/" style="color:#8fd0b0">terug naar de app</a></div>
+<div class="pilot-flag"><b>PILOT</b> &nbsp;·&nbsp; nieuwe medewerkerportal &nbsp;·&nbsp; gekoppeld aan dezelfde TEST-gegevens als Backoffice &nbsp;·&nbsp; <a href="/" style="color:#8fd0b0">open de bestaande app</a></div>
 
 <div class="shell">
 
@@ -155,25 +189,28 @@
   <aside class="rail">
     <div class="brand"><span class="mark">P</span><span>Path Consultancy</span></div>
     <div class="timeline">
-      <div class="stop">
+      <div class="stop" data-chapter="chapter-start">
         <span class="node"><svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg></span>
         <div class="eyebrow">Start</div><div class="ttl">Je maand begint</div><div class="sub">Een frisse start.</div>
       </div>
-      <div class="stop active">
+      <div class="stop active" data-chapter="chapter-hours" aria-current="step">
         <span class="node"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
         <div class="eyebrow">Week 1</div><div class="ttl">31 aug – 6 sep</div><div class="sub">Vul 20 uur aan</div>
+        <svg class="rail-curve" viewBox="0 0 230 72" preserveAspectRatio="none" aria-hidden="true"><path d="M17 0 V14 C17 26 27 32 40 32 H178 C192 32 199 40 199 53 V55 C199 66 209 70 230 70"/><circle cx="230" cy="70" r="4"/></svg>
       </div>
       <div class="stop">
         <span class="node"><svg viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-8z"/></svg></span>
         <div class="eyebrow">Indienen</div><div class="ttl">Je uren indienen</div><div class="sub">Klaar voor controle.</div>
       </div>
-      <div class="stop">
+      <div class="stop" data-chapter="chapter-backoffice">
         <span class="node"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 5-3 7-7 9-4-2-7-4-7-9V6z"/></svg></span>
         <div class="eyebrow">Backoffice</div><div class="ttl">Na indienen neemt Backoffice het over</div><div class="sub">Wij zorgen voor de rest.</div>
+        <svg class="rail-curve" viewBox="0 0 230 72" preserveAspectRatio="none" aria-hidden="true"><path d="M17 0 V14 C17 26 27 32 40 32 H178 C192 32 199 40 199 53 V55 C199 66 209 70 230 70"/><circle cx="230" cy="70" r="4"/></svg>
       </div>
-      <div class="stop">
+      <div class="stop" data-chapter="chapter-customer">
         <span class="node"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
         <div class="eyebrow">Klanturenstaat</div><div class="ttl">Direct naar de klant</div><div class="sub">Transparant en rechtstreeks gemaild.</div>
+        <svg class="rail-curve" viewBox="0 0 230 72" preserveAspectRatio="none" aria-hidden="true"><path d="M17 0 V14 C17 26 27 32 40 32 H178 C192 32 199 40 199 53 V55 C199 66 209 70 230 70"/><circle cx="230" cy="70" r="4"/></svg>
       </div>
     </div>
     <div class="ask">
@@ -194,7 +231,7 @@
     </div>
 
     <!-- Chapter 1 — hero -->
-    <section class="hero">
+    <section class="hero chapter-visible" id="chapter-start" data-story-chapter="chapter-start">
       <div class="copy">
         <div class="eyebrow-c">September 2026</div>
         <h1>Je maand begint</h1>
@@ -211,7 +248,7 @@
     </section>
 
     <!-- Chapter 2 — invullen -->
-    <section class="chapter navy">
+    <section class="chapter navy chapter-visible" id="chapter-hours" data-story-chapter="chapter-hours">
       <div class="ch-grid">
         <div>
           <div class="ch-eyebrow">Week 1 · 31 aug – 6 sep 2026</div>
@@ -231,7 +268,7 @@
     </section>
 
     <!-- Chapter 3 — na indienen -->
-    <section class="chapter forest">
+    <section class="chapter forest" id="chapter-backoffice" data-story-chapter="chapter-backoffice">
       <div class="ch-grid">
         <div>
           <div class="ch-eyebrow">Na indienen</div>
@@ -249,7 +286,7 @@
     </section>
 
     <!-- Chapter 4 — direct naar de klant -->
-    <section class="chapter dark">
+    <section class="chapter dark" id="chapter-customer" data-story-chapter="chapter-customer">
       <div class="doc-grid">
         <div>
           <div class="ch-eyebrow">Klanturenstaat</div>
@@ -264,6 +301,9 @@
 
   </div>
 </div>
+
+<script src="1919-medewerker.js" defer></script>
+<script src="1919-portal.js" defer></script>
 
 </body>
 </html>

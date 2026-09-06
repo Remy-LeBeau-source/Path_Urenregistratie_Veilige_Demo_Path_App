@@ -364,6 +364,41 @@ Een release mag pas door wanneer:
 
 Wijzigingen aan bedrijfslogica vereisen in dezelfde commit een update van FO/TO, featurecase en uitvoerbare assertion.
 
+## 9. Parallelle 1919-pilotarchitectuur
+
+De pilot bestaat uit twee aparte, same-origin pagina's onder `pilot/`:
+
+- `1919-medewerker.html` + `1919-portal.css` + `1919-portal.js`;
+- `1919-beheerder.html` + `1919-beheerder.css` + `1919-beheerder.js`.
+
+Zij importeren `assets/app.js` en `assets/styles.css` niet. Daardoor kan de bestaande SPA op `/`
+ongewijzigd naast de pilot blijven draaien. De pilots hebben echter geen eigen database of
+client-authoritatieve statusmachine: `auth/me.php`, `auth/csrf.php`, `auth/logout.php`,
+`api/bootstrap.php`, `api/timesheets.php`, `api/customer-timesheets.php` en voor beheer
+`api/invoices.php` blijven de enige bron van waarheid. Alle fetches gebruiken
+`credentials: same-origin`; bestaande CSRF-, rol-, company- en employee-scoping blijft server-side
+afdwingend.
+
+De gekozen periode staat per gebruiker in `sessionStorage`. Een gebruikersmarker zet de periode bij
+de eerste page-load van iedere nieuwe sessie naar de actuele `Europe/Amsterdam`-maand. Uitloggen
+wist marker en maand. Er wordt geen status of bedrijfsdata in localStorage opgeslagen.
+
+De visuele lijnstatus is een projectie van serverstatussen: gereed is groen, actief is blauw,
+actie vereist is amber en niet gestart is neutraal. Een `skipped` klanturenstaat is uitsluitend
+groen wanneer `review_note` met de door de server aangebrachte prefix `Extern bevestigd:` begint.
+Zonder die prefix blijft de status amber. Het beheerpad `confirm_external` vereist een reden;
+`restore_missing` is de expliciet bevestigde omkeeractie. Factuurfinalisatie en verzending linken
+vanuit de beheerpilot terug naar `/`, zodat die gevoelige bestaande keten tijdens de pilot niet wordt
+gedupliceerd.
+
+`prefers-reduced-motion` schakelt lijn-, pulseer-, hoofdstuk- en overdrachtsanimaties uit of verkort
+ze. De fotografie en het serif-font zijn lokale CSP-veilige assets; hun gebruik en SHA-256 staan in
+`pilot/assets/1919/ASSET-MANIFEST.md`.
+
+De regressie in `pilot-page.spec.ts` gebruikt een deterministische API-projectie en de technieken
+toestandsovergang, beslissingstabel, rollenmatrix en 390px-grenswaarde. De bestaande endpointtests
+blijven apart de echte serverautorisatie en statusovergangen bewaken.
+
 # Medewerkerwerkvoorraad volgt thema-oppervlakken (0.9.154)
 
 De open-maandenkaart gebruikte vaste witte gradients en vaste lichte randkleuren. In donkere modus

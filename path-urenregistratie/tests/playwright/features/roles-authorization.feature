@@ -34,7 +34,8 @@ Feature: Rollen, rechten en gegevensafscherming
   @negative
   Scenario: [ROLE-N-004] een medewerker krijgt 403 op elke beheerder-only schrijfactie
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 8
+    # Aantoonbare Playwright-assertions in deze case: 3
     Given een ingelogde medewerker
-    When elke beheerder-only schrijfactie en beheerdersbron wordt aangeroepen
-    Then weigert de server steeds met 401 of 403
+    When de flow voor ROLE-N-004 wordt uitgevoerd
+    Then weigert elke beheerder-only actie met 403 en verandert er niets
+    And ook de leesbare beheerdersbronnen blijven dicht

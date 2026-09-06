@@ -34,8 +34,8 @@ Feature: Inloggen, uitloggen en sessiebeheer
 
   @happy
   Scenario: [AUTH-H-023] logout herstelt van een mislukte eerste serveraanvraag door het opnieuw te proberen
-    # Testtechniek: Foutinjectie + toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 7
+    # Testtechniek: Herstelbaarheid + toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 5
     Given een ingelogde beheerder
     When de eerste uitlogaanvraag netwerkmatig mislukt
     Then heeft de client het opnieuw geprobeerd en is de sessie echt beëindigd
@@ -130,7 +130,7 @@ Feature: Inloggen, uitloggen en sessiebeheer
 
   @happy
   Scenario: [AUTH-H-024] avatar-initialen slaan Nederlandse tussenvoegsels over
-    # Testtechniek: Equivalentieklassen + grenswaarden
+    # Testtechniek: End-to-end use-case + visuele contractasserties
     # Aantoonbare Playwright-assertions in deze case: 4
     Given Stasjo van Bakel bestaat als testmedewerker met een tussenvoegsel in de naam
     When Stasjo van Bakel inlogt en de app de avatar tekent

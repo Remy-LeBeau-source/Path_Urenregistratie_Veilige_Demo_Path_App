@@ -14,7 +14,9 @@ const definitions = [
   { kind: 'playwright', spec: 'business-workflows-*.spec.ts', specs: readdirSync(playwrightDir).filter((file) => file.startsWith('business-workflows-') && file.endsWith('.spec.ts')).sort(), feature: 'end-to-end-workflows.feature', steps: 'end-to-end-workflows.steps.ts', name: 'Bedrijfsketens van medewerker tot Backoffice', tags: ['regressie', 'integration', 'ui', 'desktop', 'fase:16'], parentSuite: 'DB / Integratie', suite: 'End-to-end Workflows', allureFeature: 'Bedrijfsketens', phase: 16 },
   { kind: 'playwright', spec: 'customer-timesheet-api.spec.ts', feature: 'customer-timesheets.feature', steps: 'customer-timesheets.steps.ts', name: 'Klanturenstaten en documentverwerking', tags: ['regressie', 'api', 'fase:10'], parentSuite: 'API', suite: 'Customer Timesheets', allureFeature: 'Klanturenstaten', phase: 10 },
   { kind: 'playwright', spec: 'dashboard.spec.ts', feature: 'dashboard.feature', steps: 'dashboard.steps.ts', name: 'Dashboard en open werkvoorraad', tags: ['regressie', 'ui', 'desktop', 'fase:15'], parentSuite: 'UI Desktop', suite: 'Dashboard', allureFeature: 'Dashboard', phase: 15 },
+  { kind: 'playwright', spec: 'database-integrity.spec.ts', feature: 'database-relations.feature', steps: 'database-relations.steps.ts', name: 'Relationele database-integriteit', tags: ['regressie', 'integration', 'db', 'fase:16'], parentSuite: 'DB / Integratie', suite: 'Database Integrity', allureFeature: 'Database & Infrastructure', phase: 16 },
   { kind: 'playwright', spec: 'email-queue.spec.ts', feature: 'mail-delivery.feature', steps: 'email-queue.steps.ts', name: 'Mailroutering en aflevering', tags: ['regressie', 'api', 'fase:12'], parentSuite: 'API', suite: 'Email Queue', allureFeature: 'E-mailverwerking', phase: 12 },
+  { kind: 'playwright', spec: 'help-widget.spec.ts', feature: 'help-widget.feature', steps: 'help-widget.steps.ts', name: 'Hulp en contact', tags: ['regressie', 'ui', 'desktop', 'fase:17'], parentSuite: 'UI Desktop', suite: 'Help Widget', allureFeature: 'Hulp & Contact', phase: 17 },
   { kind: 'playwright', spec: 'invoice-lock.spec.ts', feature: 'invoice-locking.feature', steps: 'invoice-locking.steps.ts', name: 'Facturen definitief maken en vergrendelen', tags: ['regressie', 'integration', 'fase:11'], parentSuite: 'DB / Integratie', suite: 'Invoice Locking', allureFeature: 'Facturatie', phase: 11 },
   { kind: 'playwright', spec: 'invoice-company-identity.spec.ts', feature: 'invoice-company-identity.feature', steps: 'invoice-company-identity.steps.ts', name: 'Facturerende onderneming en handelsnaam', tags: ['regressie', 'integration', 'fase:11'], parentSuite: 'DB / Integratie', suite: 'Invoice Identity', allureFeature: 'Facturatie', phase: 11 },
   { kind: 'playwright', spec: 'invoices.spec.ts', feature: 'invoices.feature', steps: 'invoices-ui.steps.ts', name: 'Facturen bekijken en beheren', tags: ['regressie', 'ui', 'desktop', 'fase:11'], parentSuite: 'UI Desktop', suite: 'Facturen', allureFeature: 'Facturatie', phase: 11 },
@@ -22,6 +24,7 @@ const definitions = [
   { kind: 'playwright', spec: 'notifications.spec.ts', feature: 'notifications.feature', steps: 'notifications.steps.ts', name: 'Meldingen beheren', tags: ['regressie', 'api', 'fase:15'], parentSuite: 'API', suite: 'Notifications', allureFeature: 'Notificaties', phase: 15 },
   { kind: 'playwright', spec: 'announcements.spec.ts', feature: 'announcements.feature', steps: 'announcements.steps.ts', name: 'Mededelingen versturen, intrekken en verbergen', tags: ['regressie', 'api', 'fase:15'], parentSuite: 'API', suite: 'Announcements', allureFeature: 'Mededelingen', phase: 15 },
   { kind: 'playwright', spec: 'password-reset.spec.ts', feature: 'password-reset.feature', steps: 'password-reset.steps.ts', name: 'Wachtwoordherstel en misbruikbeveiliging', tags: ['regressie', 'security', 'fase:13'], parentSuite: 'Security', suite: 'Password Reset / Rate Limiting', allureFeature: 'Audit & Security', phase: 13 },
+  { kind: 'playwright', spec: 'pilot-page.spec.ts', feature: 'pilot-page.feature', steps: 'pilot-page.steps.ts', name: 'Functionele 1919-pilotportals naast de bestaande app', tags: ['regressie', 'ui', 'desktop', 'mobile', 'fase:18'], parentSuite: 'UI Desktop', suite: '1919 Pilot', allureFeature: '1919 Pilot', phase: 18 },
   { kind: 'playwright', spec: 'period-management.spec.ts', feature: 'period-management.feature', steps: 'period-management.steps.ts', name: 'Maandperiodes beheren', tags: ['regressie', 'api', 'fase:15'], parentSuite: 'API', suite: 'Period Management', allureFeature: 'Periodebeheer', phase: 15 },
   { kind: 'playwright', spec: 'production-safety.spec.ts', feature: 'production-safety.feature', steps: 'production-safety.steps.ts', name: 'Veilige productieconfiguratie en deployment', tags: ['regressie', 'security', 'fase:14'], parentSuite: 'Security', suite: 'Production Safety', allureFeature: 'Audit & Security', phase: 14 },
   { kind: 'playwright', spec: 'roles-api.spec.ts', feature: 'roles-authorization.feature', steps: 'roles-api.steps.ts', name: 'Rollen, rechten en gegevensafscherming', tags: ['regressie', 'security', 'fase:4'], parentSuite: 'Security', suite: 'Role Scope', allureFeature: 'Audit & Security', phase: 4 },
@@ -46,7 +49,11 @@ function extractCases(definition) {
   const specDir = definition.specDir || playwrightDir;
   const specFiles = definition.specs || [definition.spec];
   const source = specFiles.map((file) => readFileSync(path.join(specDir, file), 'utf8')).join('\n\n');
-  const pattern = /test\(\s*(['"])\[([^\]]+)\]\s*([^'"\r\n]+)\1\s*,/g;
+  // De titel mag gewone aanhalingstekens bevatten wanneer de buitenste JS-string
+  // een ander teken gebruikt, en geparametriseerde cases gebruiken template-
+  // literals. Stop daarom alleen bij hetzelfde afsluitteken als waarmee de
+  // testtitel begon, niet bij ieder willekeurig quote-teken in de leesbare titel.
+  const pattern = /test\(\s*(['"`])\[([^\]]+)\]\s*((?:(?!\1)[^\r\n])*)\1\s*,/g;
   const matches = [...source.matchAll(pattern)];
   const cases = matches.map((match, index) => {
     const block = source.slice(match.index, matches[index + 1]?.index ?? source.length);

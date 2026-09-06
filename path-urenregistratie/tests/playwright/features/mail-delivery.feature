@@ -154,9 +154,9 @@ Feature: Mailroutering en aflevering
   Scenario: [EQ-N-034] ontbrekende factuurroute geeft een actiegerichte melding i.p.v. de kale servertekst
     # Testtechniek: Negatieve equivalentieklasse + error guessing
     # Aantoonbare Playwright-assertions in deze case: 4
-    Given een goedgekeurde klanturenstaat zonder gekoppelde factuur
-    When de beheerder de klanturenstaat naar de broker probeert door te sturen
-    Then toont de melding welke medewerker en maand het betreft en wat te doen, niet de kale servertekst
+    Given mailroutering en aflevering is voorbereid
+    When de flow voor EQ-N-034 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat ontbrekende factuurroute geeft een actiegerichte melding i.p.v. de kale servertekst
 
   @negative
   Scenario: [EQ-N-021] factuurverzending blijft dicht zolang de serveruren niet zijn goedgekeurd

@@ -24,3 +24,7 @@ Then("de administrator ziet volledige invoice-data");
 Given("de medewerker is ingelogd");
 When("de medewerker bootstrapdata opvraagt");
 Then("de medewerker ziet alleen eigen invoice-data");
+Given("een ingelogde medewerker");
+When("de flow voor ROLE-N-004 wordt uitgevoerd");
+Then("weigert elke beheerder-only actie met 403 en verandert er niets");
+And("ook de leesbare beheerdersbronnen blijven dicht");

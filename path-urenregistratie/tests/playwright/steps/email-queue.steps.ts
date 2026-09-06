@@ -60,6 +60,8 @@ When("Backoffice de verzending één keer afrondt");
 Then("wordt eerst gelockt, niet te vroeg gequeued en verdwijnt de afgeronde vervolgtaak");
 When("de flow voor EQ-H-026 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat backoffice verzendt de juiste officiële klanturenstaat via TEST naar Giovanno");
+When("de flow voor EQ-N-034 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat ontbrekende factuurroute geeft een actiegerichte melding i.p.v. de kale servertekst");
 Given("de lokale status verouderd is maar de serveruren nog ingediend zijn");
 When("de flow voor EQ-N-021 wordt uitgevoerd");
 Then("verschijnt geen factuurverzendtaak en wordt geen lock-write uitgevoerd");

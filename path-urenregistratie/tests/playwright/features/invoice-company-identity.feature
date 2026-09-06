@@ -92,25 +92,27 @@ Feature: Facturerende onderneming en handelsnaam
 
   @happy
   Scenario: [INV-ID-H-011] een gekozen merkkleur wordt echt zichtbaar toegepast en overleeft een herlading
-    # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 8
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 4
     Given de beheerder is ingelogd en opent Instellingen
     When de beheerder een eigen primaire kleur en accentkleur instelt en opslaat
     Then staan de kleuren als CSS-variabelen op de pagina en oogt de opslaanknop er echt naar
     Then blijven de kleuren staan na een echte paginaherlading
+    And cleanup: kleuren terugzetten op de standaardwaarden
 
   @happy
   Scenario: [INV-ID-H-013] settings API leest en bewaart brandPrimary/brandAccent daadwerkelijk in de database-kolommen
-    # Testtechniek: Broncontract
+    # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 4
     Given facturerende onderneming en handelsnaam is voorbereid
     When de flow voor INV-ID-H-013 wordt uitgevoerd
-    Then wordt met Playwright-assertions bevestigd dat settings API brandPrimary en brandAccent echt leest en bewaart
+    Then wordt met Playwright-assertions bevestigd dat settings API leest en bewaart brandPrimary/brandAccent daadwerkelijk in de database-kolommen
 
   @happy
   Scenario: [INV-ID-H-012] een gekozen betalingstermijn komt echt terug in de betalingstekst op de factuurpreview
-    # Testtechniek: Equivalentieklassen
+    # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 3
     Given de beheerder wijzigt de betalingstermijn naar 14 dagen
     When de flow voor INV-ID-H-012 wordt uitgevoerd
     Then noemt de factuurpreview 14 dagen, niet de standaard 30
+    And cleanup: betalingstermijn terugzetten op 30 dagen

@@ -33,16 +33,18 @@ Feature: Toegankelijkheid en toetsenbordbediening
 
   @happy
   Scenario: [A11Y-H-004] een geopende dialoog is met het toetsenbord te bedienen en te sluiten
-    # Testtechniek: Toestandsovergang + toetsenbordbediening
-    # Aantoonbare Playwright-assertions in deze case: 6
+    # Testtechniek: Toegankelijkheidsinspectie + toetsenbord-use-case
+    # Aantoonbare Playwright-assertions in deze case: 7
     Given de administrator opent de voorbeeld-herstel-dialoog
+    Then is de sluitknop bereikbaar en gelabeld, en ligt de focus in de dialoog
     When Escape wordt ingedrukt
-    Then sluit de dialoog met een gelabelde sluitknop en blijft de focus behouden
+    Then sluit de dialoog en gaat de focus niet verloren op de body
 
   @happy
   Scenario: [A11Y-H-005] elke interactieve elementsoort krijgt een zichtbare focusring
-    # Testtechniek: Broncontract + gerenderde stijl
-    # Aantoonbare Playwright-assertions in deze case: 4
-    Given de administrator is ingelogd
-    When de focusregels worden gelezen en een navigatieknop wordt gefocust
-    Then dekt de basisregel button, input, select, textarea, a, summary en tabindex, en toont een gefocuste knop een outline
+    # Testtechniek: Toegankelijkheidsinspectie + toetsenbord-use-case
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given toegankelijkheid en toetsenbordbediening is voorbereid
+    When de flow voor A11Y-H-005 wordt uitgevoerd
+    Then geeft de basisregel een outline aan button, input, select, textarea, a, summary en tabindex
+    And een via het toetsenbord gefocuste navigatieknop toont echt een outline

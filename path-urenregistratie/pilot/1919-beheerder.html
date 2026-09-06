@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pilot — 1919 Path Storyline — beheer</title>
+  <link rel="stylesheet" href="1919-beheerder.css">
+</head>
+<body>
+  <div class="pilot-flag"><b>PILOT</b> · nieuwe Backofficeportal · dezelfde TEST-gegevens als medewerker en bestaande app · <a href="/">open bestaande app</a></div>
+  <div class="boot" id="admin-boot"><span></span><strong>Werkvoorraad veilig laden…</strong></div>
+  <div class="gate" id="admin-gate" hidden><section><small>Path Backoffice</small><h1></h1><p></p><a href="/">Naar veilig inloggen</a></section></div>
+
+  <main class="admin-app" id="admin-app" hidden>
+    <header class="topbar">
+      <a class="brand" href="/pilot/1919-beheerder.html" aria-label="Path beheerpilot"><i>P</i><span>Path <em>Consultancy</em></span></a>
+      <span class="package">Nieuwe portal · Path Storyline — beheer <b>TEST PILOT</b></span>
+      <nav><a href="#workflow">Procesoverzicht</a><a href="#team">Medewerkers</a><a href="/">Bestaande app</a></nav>
+      <button class="month-button" id="admin-month-button" type="button">September 2026⌄</button>
+      <button class="profile-button" id="admin-profile-button" type="button"><span>AV</span><b>Beheerder</b>⌄</button>
+    </header>
+
+    <section class="summary" aria-label="Maandoverzicht">
+      <article><i>◎</i><div><small>Medewerkers</small><strong id="stat-employees">0</strong><span>actief</span></div></article>
+      <article><i>◇</i><div><small>Nog te controleren</small><strong id="stat-review">0</strong><span id="stat-review-note">in deze maand</span></div></article>
+      <article><i>✓</i><div><small>Goedgekeurde uren</small><strong id="stat-hours">0</strong><span>uur</span></div></article>
+      <article><i>▤</i><div><small>Factuurdossiers</small><strong id="stat-invoices">0</strong><span>zichtbaar</span></div></article>
+      <div class="legend"><span class="done">Gereed</span><span class="action">Actie vereist</span><span class="open">Nog niet gestart</span></div>
+    </section>
+
+    <section class="workspace" id="workflow">
+      <aside class="queue" id="team">
+        <div class="panel-title"><div><small>Medewerkerwachtrij</small><h2>September 2026</h2></div><select id="admin-sort" aria-label="Sorteer medewerkers"><option value="urgency">Urgentie</option><option value="name">Naam</option></select></div>
+        <div class="employee-list" id="admin-employee-list"></div>
+      </aside>
+
+      <section class="story-panel">
+        <div class="story-head"><div><small id="story-period">September 2026</small><h1 id="story-name">Selecteer een medewerker</h1><p id="story-role"></p></div><div class="story-badges"><span id="badge-hours">Uren —</span><span id="badge-customer">Urenstaat —</span><span id="badge-invoice">Factuur —</span></div></div>
+        <div class="constellation" id="admin-constellation">
+          <svg viewBox="0 0 760 420" preserveAspectRatio="none" aria-hidden="true">
+            <path class="orbit" d="M380 212 C250 82 156 79 86 135 M380 212 C510 82 605 79 674 135 M380 212 C232 232 172 300 115 344 M380 212 C528 232 588 300 645 344"/>
+            <path class="live live-a" pathLength="1" d="M380 212 C250 82 156 79 86 135"/><path class="live live-b" pathLength="1" d="M380 212 C510 82 605 79 674 135"/>
+            <path class="live live-c" pathLength="1" d="M380 212 C232 232 172 300 115 344"/><path class="live live-d" pathLength="1" d="M380 212 C528 232 588 300 645 344"/>
+          </svg>
+          <button class="node node-hours" data-node="hours"><i>◷</i><b>Urenregistratie</b><span>—</span></button>
+          <button class="node node-project" data-node="project"><i>▰</i><b>Opdracht</b><span>—</span></button>
+          <button class="node node-customer" data-node="customer"><i>◇</i><b>Klanturenstaat</b><span>—</span></button>
+          <button class="node node-external" data-node="external"><i>➤</i><b>Extern bevestigd</b><span>—</span></button>
+          <div class="person"><span id="story-avatar">?</span><strong id="story-person">—</strong><small id="story-total">0 uur geregistreerd</small></div>
+        </div>
+        <section class="next-action" id="admin-next-action"><div><small>Volgende actie</small><h2 id="next-title">Kies een medewerker</h2><p id="next-note">De serverstatus bepaalt welke actie hier verschijnt.</p></div><div id="next-controls"></div></section>
+      </section>
+
+      <aside class="details">
+        <div class="panel-title"><div><small>Details</small><h2 id="detail-name">—</h2></div><button id="admin-refresh" type="button" aria-label="Verversen">↻</button></div>
+        <dl id="admin-details"></dl>
+        <section class="audit"><small>Actuele keten</small><div id="admin-timeline"></div></section>
+      </aside>
+    </section>
+  </main>
+
+  <div class="popover" id="admin-month-popover" hidden></div>
+  <div class="popover profile-popover" id="admin-profile-popover" hidden></div>
+  <div class="backdrop" id="admin-backdrop"></div>
+  <section class="dialog" id="admin-dialog" role="dialog" aria-modal="true" aria-hidden="true"></section>
+  <div class="toast" id="admin-toast" role="status" aria-live="polite"></div>
+  <script src="1919-beheerder.js" defer></script>
+</body>
+</html>
