@@ -215,6 +215,56 @@ html[data-skin="new"] .app-footer-version {
   padding: 5px 10px;
 }
 
+/* Loginscherm — de kaart, de rolkeuzes en het merk op de nieuwe tokens.
+   De koptekst pakt de serif al via de gedeelde :is()-regel bovenin. */
+html[data-skin="new"] .login-panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+html[data-skin="new"] .login-brand > span {
+  border-color: var(--line);
+  color: var(--mint-dark-tekst);
+}
+
+html[data-skin="new"] .login-option {
+  border-radius: 16px;
+  border-color: color-mix(in srgb, var(--line) 88%, transparent);
+  background: var(--vlak);
+}
+
+html[data-skin="new"] .login-option:hover {
+  border-color: var(--path-green);
+  box-shadow: 0 12px 30px rgba(8, 23, 38, .12);
+}
+
+html[data-skin="new"] .login-avatar {
+  border-radius: 12px;
+  background: var(--path-night);
+}
+
+html[data-skin="new"] .login-avatar.employee {
+  background: var(--path-green);
+  color: var(--path-night);
+}
+
+html[data-skin="new"] .login-arrow {
+  color: var(--mint-dark-tekst);
+}
+
+html[data-skin="new"] .login-panel .login-note {
+  border-radius: 12px;
+  background: var(--green-light);
+  color: var(--mint-dark-tekst);
+}
+
+html[data-skin="new"] .login-footer {
+  border-color: var(--line);
+  color: var(--muted);
+}
+
 /* Echte 1919-medewerkerroute: dezelfde bento-indeling als de gekozen pilot,
    maar met de bestaande maanddata en schrijfstromen van de applicatie. */
 html[data-skin="new"] .app-shell:has(#view-employee-dashboard.is-active) .sidebar {
