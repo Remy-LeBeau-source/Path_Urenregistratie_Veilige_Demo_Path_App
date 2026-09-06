@@ -233,6 +233,11 @@ Elk scherm moet in `styles-new.css` (of per-view) de nieuwe vormgeving krijgen
   `timesheet-review-flow`-cases en alle achttien `customer-timesheet-api`-cases.
   Neem voor de overdracht de nieuwste `main`-pipeline als definitief bewijs;
   alleen een volledig groene TEST-deploy is overdraagbaar.
+- De eerste herstelrun legde nog twee testcontracten bloot. De pilot gebruikt nu
+  een browser-native `<details>` voor de zichtbare Opslaan-bevestiging, zodat die
+  ook in Linux/CI stabiel is. Mailroutecases `[E2E-H-009]` en `[E2E-H-012]`
+  behouden bij hun volledige medewerker-upsert expliciet de bestaande
+  `employment_start_date`; anders activeert terecht de nieuwe historie-waarschuwing.
 
 ## Regels
 

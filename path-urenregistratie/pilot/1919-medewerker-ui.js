@@ -182,7 +182,8 @@
         actions.innerHTML =
           '<button class="overview" type="button">' +
           '<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Weekoverzicht</button>' +
-          '<button class="save" type="button" title="Bewaar deze week als concept">↓ Opslaan</button>' +
+          '<details class="save-confirm"><summary class="save" title="Bewaar deze week als concept">↓ Opslaan</summary>' +
+          '<div class="done saved-note">✓ Opgeslagen — je kunt later verder</div></details>' +
           '<button class="submit" type="button" title="Dien deze week in bij Backoffice">✓ Indienen ter controle</button>';
       }
     }
@@ -243,21 +244,6 @@
         updateTotal();
       });
     });
-
-    var save = document.querySelector('.week .save');
-    if (save) {
-      save.addEventListener('click', function () {
-        var box = document.querySelector('.week .actions');
-        if (!box || box.querySelector('.saved-note')) return;
-        // Persistente bevestiging bóven de knoppen. De knoppen blijven staan
-        // (geen focus-verstoring), de melding verdwijnt bij de volgende
-        // hertekening van de weekkaart (week/maand wisselen).
-        var note = document.createElement('div');
-        note.className = 'done saved-note';
-        note.textContent = '✓ Opgeslagen — je kunt later verder';
-        box.insertBefore(note, box.firstChild);
-      });
-    }
 
     var sub = document.querySelector('.week .submit');
     if (sub) {
