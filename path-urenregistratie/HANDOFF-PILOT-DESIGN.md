@@ -238,6 +238,8 @@ Elk scherm moet in `styles-new.css` (of per-view) de nieuwe vormgeving krijgen
   ook in Linux/CI stabiel is. Mailroutecases `[E2E-H-009]` en `[E2E-H-012]`
   behouden bij hun volledige medewerker-upsert expliciet de bestaande
   `employment_start_date`; anders activeert terecht de nieuwe historie-waarschuwing.
+  Hetzelfde geldt voor ontvangerstest `[ADM-WR-H-018]`; zowel de write als de
+  cleanup behouden nu de startdatum. Alle vier gerichte regressies zijn lokaal groen.
 
 ## Regels
 
