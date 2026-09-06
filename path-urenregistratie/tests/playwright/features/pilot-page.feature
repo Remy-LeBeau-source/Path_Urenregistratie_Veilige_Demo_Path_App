@@ -6,9 +6,9 @@
 Feature: 1414/1919-pilotpagina's naast de bestaande app
 
   # Native Playwright-uitvoering: tests/playwright/pilot-page.spec.ts
-  # Medewerker-pilot = 1414-look met vaste mockup-data, plus een lichte
-  # interactielaag (1919-medewerker-ui.js): maandkeuze en uren invullen.
-  # Backoffice-pilot = nog servergestuurd; flows met gemockte endpoints.
+  # Beide pilots = statische 1-op-1 reproducties van de 1414/1919-mockups.
+  # Medewerker-pilot heeft een lichte interactielaag (1919-medewerker-ui.js):
+  # maandkeuze en uren invullen. Backoffice-pilot is volledig statisch.
 
   @happy
   Scenario: [PILOT-H-001] beide pilotpagina's leven naast een ongewijzigde app
@@ -43,41 +43,41 @@ Feature: 1414/1919-pilotpagina's naast de bestaande app
     Then staan alle weken vast en toont de klanturenstaat het verzonden-vinkje
 
   @happy
-  Scenario: [PILOT-H-003] Backoffice: rechtstreeks gemaild blijft oranje tot externe bevestiging, terugdraaien vraagt bevestiging
-    # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 7
-    Given een dossier waarvan de klanturenstaat rechtstreeks is gemaild
-    When Backoffice extern bevestigt met een verplichte reden
-    Then wordt de stap groen en kan de bevestiging alleen na een tweede bevestiging terug
+  Scenario: [PILOT-H-003] Backoffice-pilot reproduceert de 1414/1919-ADMIN-mockup 1-op-1
+    # Testtechniek: Visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given de statische Backoffice-pilot
+    When de pagina is geladen
+    Then staan de mockup-onderdelen in beeld met de vaste mockup-data
 
   @happy
-  Scenario: [PILOT-H-004] Backoffice: geuploade PDF komt ter controle en kan worden goedgekeurd
-    # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 4
-    Given een dossier met een ontvangen klanturenstaat-PDF
-    When Backoffice het document beoordeelt en goedkeurt
-    Then staat de klanturenstaat-stap op gereed
+  Scenario: [PILOT-H-004] Backoffice-pilot: geselecteerde rij krijgt een subtiele markering, geen groene balk links
+    # Testtechniek: Visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given de Backoffice-pilot
+    When de wachtrij wordt getoond
+    Then is precies één rij gemarkeerd zonder verticale groene balk, met opgelichte horizontale proceslijn
 
   @happy
-  Scenario: [PILOT-H-005] Backoffice: correctie vragen zet de ingediende maand terug in de wachtrij
-    # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 3
-    Given een ingediende maand die Backoffice beoordeelt
-    When Backoffice een correctie vraagt zonder reden en daarna met reden
-    Then wacht het dossier zichtbaar op gecorrigeerde uren
+  Scenario: [PILOT-H-005] Backoffice-pilot: verhaalpaneel toont de vier story-kaarten met statuspillen en de vervolgknop
+    # Testtechniek: Visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given de Backoffice-pilot met een geselecteerde medewerker
+    When het verhaalpaneel wordt getoond
+    Then dragen de kaarten de mockup-status en staat de vervolgknop klaar
 
   @negative
-  Scenario: [PILOT-N-001] rollen blijven ook op de pilot-URLs strikt gescheiden
+  Scenario: [PILOT-N-001] elke pilot-URL toont alleen de onderdelen van zijn eigen rol
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 5
-    Given een medewerkersessie
-    When de Backoffice-pilot met die sessie wordt geopend
-    Then blokkeert de Backoffice-pilot en toont de medewerker-pilot geen Backoffice-onderdelen
+    Given de medewerker-pilot
+    When medewerker- en Backoffice-pilot naast elkaar worden bekeken
+    Then heeft de medewerker geen Backoffice-pijplijn en is de Backoffice-pilot als zodanig gemarkeerd
 
   @negative
   Scenario: [PILOT-N-002] beide pilots blijven zonder horizontale overflow op telefoon
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 5
+    # Aantoonbare Playwright-assertions in deze case: 4
     Given een telefoonviewport
     When beide pilots worden geopend
     Then past alles binnen de breedte en zijn tapdoelen minimaal 42px

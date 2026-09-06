@@ -1,70 +1,400 @@
 <!doctype html>
 <html lang="nl">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Pilot — 1919 Path Storyline — beheer</title>
-  <link rel="stylesheet" href="1919-beheerder.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pilot — 1414 / 1919 — Backoffice</title>
+<style>
+  /* ------------------------------------------------------------------
+     PILOT-PAGINA. Losstaande, statische 1-op-1 reproductie van
+     design-mockups/1414-path-bento-space/beheerder-maandoverzicht.jpg
+     ("PATH STORYLINE — ADMIN"). Raakt de app op / niet: geen gedeelde
+     JS/CSS, geen routing, geen schrijfacties. CSP op TEST verbiedt
+     EXTERNE fonts/scripts/afbeeldingen; alles hier is same-origin:
+     serif via lokale @font-face, geen <script>. Data is bewust vast
+     (mockup-1:1), geen live server.
+     ------------------------------------------------------------------ */
+  @font-face{
+    font-family:"Pilot Serif";
+    src:url("assets/1919/serif.woff2") format("woff2");
+    font-weight:400 700; font-style:normal; font-display:swap;
+  }
+  :root{
+    --navy:#0a1a29; --navy-card:#0f2536; --navy-tile:#122b3e;
+    --ink-line:rgba(255,255,255,.09);
+    --text:#c9d5da; --text-soft:#8595a0; --text-dim:#5f707c;
+    --green:#5fb98d; --green-deep:#2f6a4c; --green-line:#3f8f68;
+    --amber:#d9a13c; --amber-deep:#8a5c1c;
+    --blue:#5b86b3;
+    --cream:#efe9dc;
+    --serif:"Pilot Serif",Georgia,"Times New Roman",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,sans-serif;
+    --r:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--navy);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased;}
+  svg{display:block;}
+  .pilot-flag{background:#161616;color:#f0e4c8;font-size:12px;letter-spacing:.03em;padding:7px 18px;text-align:center;}
+  .pilot-flag b{color:#fff;}
+  .wrap{max-width:1560px;margin:0 auto;padding:20px 34px 34px;}
+
+  /* ---------- topbar ---------- */
+  .topbar{display:flex;align-items:center;gap:22px;padding-bottom:20px;border-bottom:1px solid var(--ink-line);}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand .mark{width:32px;height:32px;border:2px solid var(--green);border-radius:8px;display:grid;place-items:center;color:var(--green);font-family:var(--serif);font-weight:700;font-size:15px;}
+  .brand .nm{font-size:16px;color:#fff;font-weight:600;}
+  .brand .nm i{font-style:italic;font-weight:400;color:var(--text-soft);}
+  .pkg{display:flex;flex-direction:column;line-height:1.35;border-left:1px solid var(--ink-line);padding-left:20px;}
+  .pkg b{font-size:11px;letter-spacing:.14em;color:var(--green);text-transform:uppercase;}
+  .pkg span{font-size:11px;letter-spacing:.12em;color:var(--text-dim);text-transform:uppercase;}
+  .topbar .grow{flex:1;}
+  .mstep{display:flex;align-items:center;gap:12px;}
+  .mstep .nav{width:26px;height:26px;border:1px solid var(--ink-line);border-radius:8px;display:grid;place-items:center;color:var(--text-soft);}
+  .mstep .nav svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;}
+  .mbox{display:flex;align-items:center;gap:10px;background:#0a1622;border:1px solid var(--ink-line);border-radius:11px;padding:10px 16px;font-size:13px;font-weight:600;color:#fff;letter-spacing:.08em;text-transform:uppercase;}
+  .mbox svg{width:15px;height:15px;stroke:var(--text-soft);fill:none;stroke-width:1.7;}
+  .navlinks{display:flex;align-items:center;gap:20px;font-size:13px;color:var(--text-soft);}
+  .navlinks a{display:flex;align-items:center;gap:7px;color:inherit;text-decoration:none;}
+  .navlinks svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.7;}
+  .bell{position:relative;width:20px;height:20px;stroke:var(--text-soft);fill:none;stroke-width:1.7;}
+  .bell b{position:absolute;top:-6px;right:-6px;min-width:15px;height:15px;border-radius:8px;background:var(--green);color:#08130d;font-size:9px;font-weight:800;display:grid;place-items:center;border:2px solid var(--navy);}
+  .who{display:flex;align-items:center;gap:10px;}
+  .who .av{width:34px;height:34px;border-radius:50%;background:#2b4a3c;display:grid;place-items:center;font-family:var(--serif);color:var(--green);font-size:12px;}
+  .who .nm{font-size:13px;color:#fff;font-weight:600;line-height:1.3;}
+  .who .nm span{display:block;font-size:11px;color:var(--text-dim);font-weight:400;}
+
+  /* ---------- lede ---------- */
+  .lede{margin:26px 0 20px;}
+  .lede h1{font-family:var(--serif);font-weight:400;font-size:34px;color:var(--cream);margin:0 0 4px;}
+  .lede p{margin:0;font-size:13.5px;color:var(--text-soft);}
+
+  /* ---------- pipeline ---------- */
+  .pipeline{list-style:none;margin:0 0 22px;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:0;}
+  .stage{position:relative;padding-right:30px;}
+  .stage:not(:last-child)::after{content:"";position:absolute;top:14px;right:12px;width:16px;height:1px;background:var(--ink-line);}
+  .stage:not(:last-child)::before{content:"";position:absolute;top:11px;right:9px;width:6px;height:6px;border-top:1px solid var(--text-dim);border-right:1px solid var(--text-dim);transform:rotate(45deg);}
+  .stage .top{display:flex;align-items:center;gap:10px;}
+  .stage .pno{width:26px;height:26px;flex:0 0 auto;border:1px solid var(--ink-line);border-radius:50%;display:grid;place-items:center;font-size:11px;color:var(--text-soft);}
+  .stage b{display:block;font-size:12px;letter-spacing:.12em;color:#fff;text-transform:uppercase;}
+  .stage .sub{display:block;font-size:11px;color:var(--text-dim);margin-top:2px;}
+  .stage .pic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;margin-top:12px;margin-left:2px;}
+  .stage .pic svg{width:15px;height:15px;fill:none;stroke-width:2;}
+  .pic.ok{background:rgba(95,185,141,.14);}
+  .pic.ok svg{stroke:var(--green);}
+  .pic.warn{background:rgba(217,161,60,.16);}
+  .pic.warn svg{stroke:var(--amber);}
+
+  /* ---------- medewerkerwachtrij ---------- */
+  .queue{background:var(--navy-card);border:1px solid var(--ink-line);border-radius:var(--r);padding:8px;}
+  .emp-row{display:grid;grid-template-columns:250px 1fr 150px;align-items:center;gap:20px;padding:16px 18px;border-radius:12px;}
+  .emp-row + .emp-row{border-top:1px solid var(--ink-line);border-radius:0;}
+  .emp-row.is-selected{background:rgba(95,185,141,.06);box-shadow:inset 0 0 0 1px rgba(95,185,141,.24);border-top-color:transparent;}
+  .emp{display:flex;align-items:center;gap:12px;}
+  .emp .av{width:38px;height:38px;flex:0 0 auto;border-radius:50%;background:#22333f;display:grid;place-items:center;font-family:var(--serif);font-size:12px;color:var(--text-soft);}
+  .emp .nm{font-size:14px;color:#fff;font-weight:600;line-height:1.35;}
+  .emp .nm span{display:block;font-size:11.5px;color:var(--text-dim);font-weight:400;}
+  .track{display:flex;align-items:center;}
+  .track .node{width:26px;height:26px;flex:0 0 auto;border-radius:50%;display:grid;place-items:center;border:1px solid var(--text-dim);}
+  .track .node svg{width:13px;height:13px;fill:none;stroke-width:2.2;}
+  .track .node.done{border-color:var(--green);background:rgba(95,185,141,.12);}
+  .track .node.done svg{stroke:var(--green);}
+  .track .node.warn{border-color:var(--amber);background:rgba(217,161,60,.14);}
+  .track .node.warn svg{stroke:var(--amber);}
+  .track .node.pause{border-color:var(--amber);background:rgba(217,161,60,.14);}
+  .track .node.pause svg{stroke:var(--amber);}
+  .track .seg{flex:1;height:2px;background:var(--ink-line);border-radius:2px;}
+  .track .seg.on{background:var(--green-line);}
+  .st-label{font-size:12.5px;font-weight:600;text-align:right;}
+  .st-label.amber{color:var(--amber);}
+  .st-label.green{color:var(--green);}
+  .st-label.muted{color:var(--text-soft);}
+  .st-label .cv{display:inline-block;margin-left:8px;color:var(--text-dim);}
+
+  /* ---------- verhaalpaneel ---------- */
+  .story{background:var(--navy-card);border:1px solid var(--ink-line);border-radius:var(--r);padding:24px 24px 26px;margin-top:18px;}
+  .story-head{display:flex;align-items:center;gap:26px;flex-wrap:wrap;padding-bottom:20px;border-bottom:1px solid var(--ink-line);}
+  .story-head .who2{display:flex;align-items:center;gap:12px;}
+  .story-head .av{width:44px;height:44px;border-radius:50%;background:#22333f;display:grid;place-items:center;font-family:var(--serif);color:var(--text-soft);font-size:13px;}
+  .story-head .who2 b{font-family:var(--serif);font-size:18px;color:#fff;font-weight:400;}
+  .story-head .who2 span{display:block;font-size:12px;color:var(--text-dim);}
+  .story-head .meta{font-size:12px;color:var(--text-dim);}
+  .story-head .meta b{display:block;color:var(--text-soft);font-weight:600;margin-bottom:2px;}
+  .story-head .grow{flex:1;}
+  .story-head .status{text-align:right;font-size:12px;color:var(--text-dim);}
+  .story-head .status b{display:block;color:var(--amber);font-size:13px;margin-top:2px;}
+
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:22px;}
+  .card{position:relative;background:var(--navy-tile);border:1px solid var(--ink-line);border-radius:13px;padding:18px;margin-right:26px;display:flex;flex-direction:column;min-height:230px;}
+  .cards .card:last-child{margin-right:0;}
+  .card:not(:last-child)::after{content:"";position:absolute;top:34px;right:-19px;width:12px;height:1px;border-top:1.5px dashed var(--text-dim);}
+  .card.paused{border-color:rgba(217,161,60,.5);box-shadow:0 0 0 1px rgba(217,161,60,.18);}
+  .card .ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;margin-bottom:12px;}
+  .card .ic svg{width:15px;height:15px;fill:none;stroke-width:2.2;}
+  .card.done .ic{background:rgba(95,185,141,.14);}
+  .card.done .ic svg{stroke:var(--green);}
+  .card.warn .ic,.card.paused .ic{background:rgba(217,161,60,.16);}
+  .card.warn .ic svg,.card.paused .ic svg{stroke:var(--amber);}
+  .card h3{font-family:var(--serif);font-weight:400;font-size:16px;color:#fff;margin:0 0 6px;}
+  .card .wk{font-size:11px;color:var(--text-soft);margin-bottom:8px;}
+  .card p{margin:0;font-size:12px;line-height:1.55;color:var(--text-soft);}
+  .card .reason{margin-top:12px;}
+  .card .reason label{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:5px;}
+  .card .reason select{width:100%;background:#0a1622;border:1px solid var(--ink-line);border-radius:8px;color:var(--text);font-size:11.5px;padding:8px 9px;font-family:inherit;}
+  .card .foot{margin-top:auto;padding-top:14px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .card .ts{font-size:10.5px;color:var(--text-dim);}
+  .pill{font-size:10.5px;font-weight:700;border-radius:20px;padding:4px 10px;}
+  .pill.ok{background:rgba(95,185,141,.16);color:var(--green);}
+  .pill.warn{background:rgba(217,161,60,.18);color:var(--amber);}
+  .story-cta{grid-column:1 / -1;margin-top:6px;}
+  .story-cta button{display:flex;align-items:center;gap:12px;width:100%;justify-content:center;background:var(--amber);color:#241804;border:0;border-radius:12px;padding:15px;font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;font-family:inherit;}
+  .story-cta svg{width:16px;height:16px;stroke:#241804;fill:none;stroke-width:2.4;}
+
+  /* ---------- footer ---------- */
+  .pagefoot{margin-top:20px;padding-top:18px;border-top:1px solid var(--ink-line);display:flex;align-items:center;gap:30px;flex-wrap:wrap;font-size:11.5px;color:var(--text-dim);}
+  .pagefoot b{color:var(--text-soft);font-weight:600;}
+  .pagefoot .blk{display:flex;flex-direction:column;line-height:1.4;}
+  .pagefoot .grow{flex:1;}
+  .pagefoot .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:6px;}
+  .legend{display:flex;align-items:center;gap:14px;}
+  .legend i{display:inline-flex;align-items:center;gap:5px;font-style:normal;}
+  .legend i::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--text-dim);}
+  .legend i.g::before{background:var(--green);}
+  .legend i.a::before{background:var(--amber);}
+  .ffilter{display:inline-flex;gap:8px;}
+  .ffilter span{background:#0a1622;border:1px solid var(--ink-line);border-radius:8px;padding:6px 10px;color:var(--text-soft);}
+
+  @media (max-width:1180px){
+    .navlinks{display:none;}
+    .pipeline{grid-template-columns:repeat(2,1fr);gap:16px 0;}
+    .stage:not(:last-child)::after,.stage:not(:last-child)::before{display:none;}
+    .emp-row{grid-template-columns:1fr;gap:14px;}
+    .st-label{text-align:left;}
+    .cards{grid-template-columns:1fr 1fr;}
+    .card{margin-right:0;margin-bottom:22px;}
+    .card:not(:last-child)::after{display:none;}
+  }
+  @media (max-width:720px){
+    .wrap{padding:16px 14px 26px;}
+    .topbar{flex-wrap:wrap;gap:12px;}
+    .pkg{display:none;}
+    .topbar .grow{display:none;}
+    .pipeline{grid-template-columns:1fr;}
+    .cards{grid-template-columns:1fr;}
+    .track{flex-wrap:wrap;gap:6px;}
+    .track .seg{min-width:16px;}
+  }
+</style>
 </head>
 <body data-pilot-design="combo-1414-1919">
-  <div class="pilot-flag"><b>PILOT</b> · nieuwe Backofficeportal · Procesverhalen × Bento · dezelfde TEST-gegevens als medewerker</div>
-  <div class="boot" id="admin-boot"><span></span><strong>Werkvoorraad veilig laden…</strong></div>
-  <div class="gate" id="admin-gate" hidden><section><small>Path Backoffice</small><h1></h1><p></p><a href="/">Naar veilig inloggen</a></section></div>
 
-  <main class="admin-app" id="admin-app" hidden>
-    <header class="topbar">
-      <a class="brand" href="/pilot/1919-beheerder.html" aria-label="Path beheerpilot"><i>P</i><span>Path <em>Consultancy</em></span></a>
-      <span class="package">Nieuwe portal · Path Storyline — beheer <b>TEST PILOT</b></span>
-      <nav><a href="#workflow">Procesoverzicht</a><a href="#team">Medewerkers</a></nav>
-      <button class="month-button" id="admin-month-button" type="button">September 2026⌄</button>
-      <button class="profile-button" id="admin-profile-button" type="button"><span>AV</span><b>Beheerder</b>⌄</button>
-    </header>
+<div class="pilot-flag"><b>PILOT</b> &nbsp;·&nbsp; nieuwe Backofficeportal &nbsp;·&nbsp; 1414 / 1919 Path Storyline &nbsp;·&nbsp; statische 1:1-voorbeeldpagina, niet de echte app</div>
 
-    <section class="summary" aria-label="Maandoverzicht">
-      <article><i>◎</i><div><small>Medewerkers</small><strong id="stat-employees">0</strong><span>actief</span></div></article>
-      <article><i>◇</i><div><small>Nog te controleren</small><strong id="stat-review">0</strong><span id="stat-review-note">in deze maand</span></div></article>
-      <article><i>✓</i><div><small>Goedgekeurde uren</small><strong id="stat-hours">0</strong><span>uur</span></div></article>
-      <article><i>▤</i><div><small>Factuurdossiers</small><strong id="stat-invoices">0</strong><span>zichtbaar</span></div></article>
-      <div class="legend"><span class="done">Gereed</span><span class="action">Actie vereist</span><span class="open">Nog niet gestart</span></div>
-    </section>
+<div class="wrap">
 
-    <section class="workspace" id="workflow">
-      <aside class="queue" id="team">
-        <div class="panel-title"><div><small>Medewerkerwachtrij</small><h2>September 2026</h2></div><select id="admin-sort" aria-label="Sorteer medewerkers"><option value="urgency">Urgentie</option><option value="name">Naam</option></select></div>
-        <div class="employee-list" id="admin-employee-list"></div>
-      </aside>
+  <header class="topbar">
+    <div class="brand"><span class="mark">P</span><span class="nm">Path <i>Consultancy</i></span></div>
+    <div class="pkg"><b>Package 1919</b><span>Path Storyline — Admin</span></div>
+    <span class="grow"></span>
+    <div class="mstep">
+      <span class="nav"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></span>
+      <span class="mbox">
+        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+        September 2026
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </span>
+      <span class="nav"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+    </div>
+    <span class="grow"></span>
+    <nav class="navlinks">
+      <a href="#cockpit"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Cockpit</a>
+      <a href="#rapportages"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M20 20H2"/></svg>Rapportages</a>
+      <a href="#instellingen"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1l2-1.6-2-3.4-2.3 1a7 7 0 00-1.7-1L14 2h-4l-.5 2.6a7 7 0 00-1.7 1l-2.3-1-2 3.4L3.6 11a7 7 0 000 2l-2 1.6 2 3.4 2.3-1a7 7 0 001.7 1L10 22h4l.5-2.6a7 7 0 001.7-1l2.3 1 2-3.4-2-1.6a7 7 0 00.1-1z"/></svg>Instellingen</a>
+    </nav>
+    <span class="bell"><svg viewBox="0 0 24 24"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 21h4"/></svg><b>3</b></span>
+    <div class="who">
+      <span class="av">AV</span>
+      <span class="nm">Anne Verbeek<span>Administrator</span></span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+  </header>
 
-      <section class="story-panel">
-        <div class="story-head"><div><small id="story-period">September 2026</small><h1 id="story-name">Selecteer een medewerker</h1><p id="story-role"></p></div><div class="story-badges"><span id="badge-hours">Uren —</span><span id="badge-customer">Urenstaat —</span><span id="badge-invoice">Factuur —</span></div></div>
-        <div class="constellation" id="admin-constellation">
-          <svg viewBox="0 0 760 420" preserveAspectRatio="none" aria-hidden="true">
-            <path class="orbit" d="M380 212 C250 82 156 79 86 135 M380 212 C510 82 605 79 674 135 M380 212 C232 232 172 300 115 344 M380 212 C528 232 588 300 645 344"/>
-            <path class="live live-a" pathLength="1" d="M380 212 C250 82 156 79 86 135"/><path class="live live-b" pathLength="1" d="M380 212 C510 82 605 79 674 135"/>
-            <path class="live live-c" pathLength="1" d="M380 212 C232 232 172 300 115 344"/><path class="live live-d" pathLength="1" d="M380 212 C528 232 588 300 645 344"/>
-          </svg>
-          <button class="node node-hours" data-node="hours"><i>◷</i><b>Urenregistratie</b><span>—</span></button>
-          <button class="node node-project" data-node="project"><i>▰</i><b>Opdracht</b><span>—</span></button>
-          <button class="node node-customer" data-node="customer"><i>◇</i><b>Klanturenstaat</b><span>—</span></button>
-          <button class="node node-external" data-node="external"><i>➤</i><b>Extern bevestigd</b><span>—</span></button>
-          <button class="node node-invoice" data-node="invoice"><i>▤</i><b>Factuur</b><span>—</span></button>
-          <div class="person"><span id="story-avatar">?</span><strong id="story-person">—</strong><small id="story-total">0 uur geregistreerd</small></div>
+  <div class="lede">
+    <h1>Verhalen per medewerker</h1>
+    <p>Van urenregistratie tot factuur.</p>
+  </div>
+
+  <ol class="pipeline">
+    <li class="stage">
+      <div class="top"><span class="pno">01</span><div><b>Uren</b><span class="sub">Registratie &amp; goedkeuring</span></div></div>
+      <span class="pic ok"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
+    </li>
+    <li class="stage">
+      <div class="top"><span class="pno">02</span><div><b>Klanturenstaat</b><span class="sub">Gereed voor direct verzenden</span></div></div>
+      <span class="pic ok"><svg viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/></svg></span>
+    </li>
+    <li class="stage">
+      <div class="top"><span class="pno">03</span><div><b>Extern bevestigen</b><span class="sub">Actie vereist door Backoffice</span></div></div>
+      <span class="pic warn"><svg viewBox="0 0 24 24"><path d="M12 3l10 18H2L12 3z"/><path d="M12 10v5M12 18h.01"/></svg></span>
+    </li>
+    <li class="stage">
+      <div class="top"><span class="pno">04</span><div><b>Factuur</b><span class="sub">Concept &amp; verzending</span></div></div>
+      <span class="pic warn"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z"/><path d="M15 2v5h5M9 13h6M9 17h6"/></svg></span>
+    </li>
+    <li class="stage">
+      <div class="top"><span class="pno">05</span><div><b>Voltooid</b><span class="sub">Betaald</span></div></div>
+      <span class="pic ok"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
+    </li>
+  </ol>
+
+  <div class="queue">
+
+    <div class="emp-row is-selected">
+      <div class="emp">
+        <span class="av">SN</span>
+        <span class="nm">Shawn–Douglas Nahar<span>Consultant</span></span>
+      </div>
+      <div class="track">
+        <span class="node done"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span class="seg on"></span>
+        <span class="node done"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span class="seg on"></span>
+        <span class="node warn"><svg viewBox="0 0 24 24"><path d="M12 8v5M12 16h.01"/></svg></span>
+        <span class="seg on"></span>
+        <span class="node pause"><svg viewBox="0 0 24 24"><path d="M9 5v14M15 5v14"/></svg></span>
+        <span class="seg"></span>
+        <span class="node"></span>
+      </div>
+      <div class="st-label amber">In behandeling <span class="cv">˅</span></div>
+    </div>
+
+    <div class="emp-row">
+      <div class="emp">
+        <span class="av">MR</span>
+        <span class="nm">Marc de Roon<span>Finance</span></span>
+      </div>
+      <div class="track">
+        <span class="node done"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span class="seg on"></span>
+        <span class="node done"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span class="seg on"></span>
+        <span class="node warn"><svg viewBox="0 0 24 24"><path d="M12 8v5M12 16h.01"/></svg></span>
+        <span class="seg"></span>
+        <span class="node"></span>
+        <span class="seg"></span>
+        <span class="node"></span>
+      </div>
+      <div class="st-label muted">Wachten op extern <span class="cv">˅</span></div>
+    </div>
+
+    <div class="emp-row">
+      <div class="emp">
+        <span class="av">BH</span>
+        <span class="nm">Brian Hek<span>Consultancy</span></span>
+      </div>
+      <div class="track">
+        <span class="node done"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span class="seg on"></span>
+        <span class="node done"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span class="seg"></span>
+        <span class="node"></span>
+        <span class="seg"></span>
+        <span class="node"></span>
+        <span class="seg"></span>
+        <span class="node"></span>
+      </div>
+      <div class="st-label muted">Concept gereed <span class="cv">˅</span></div>
+    </div>
+
+    <div class="emp-row">
+      <div class="emp">
+        <span class="av">SB</span>
+        <span class="nm">Stasjo van Bakel<span>IT</span></span>
+      </div>
+      <div class="track">
+        <span class="node done"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
+        <span class="seg"></span>
+        <span class="node"></span>
+        <span class="seg"></span>
+        <span class="node"></span>
+        <span class="seg"></span>
+        <span class="node"></span>
+        <span class="seg"></span>
+        <span class="node"></span>
+      </div>
+      <div class="st-label green">Registratie actief <span class="cv">˅</span></div>
+    </div>
+
+  </div>
+
+  <section class="story">
+    <div class="story-head">
+      <div class="who2">
+        <span class="av">SN</span>
+        <span><b>Shawn–Douglas Nahar</b><span>Consultant</span></span>
+      </div>
+      <div class="meta"><b>Verhaal gestart</b>31 aug 2026</div>
+      <span class="grow"></span>
+      <div class="status">Huidige status<b>In behandeling</b></div>
+    </div>
+
+    <div class="cards">
+
+      <article class="card done">
+        <span class="ic"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
+        <h3>Uren goedgekeurd</h3>
+        <div class="wk">Week 36 · 31 aug – 6 sep 2026</div>
+        <p>Alle uren zijn geregistreerd en goedgekeurd door Shawn–Douglas Nahar.</p>
+        <div class="foot"><span class="ts">02 sep 2026 · 09:12</span><span class="pill ok">Gereed</span></div>
+      </article>
+
+      <article class="card done">
+        <span class="ic"><svg viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/></svg></span>
+        <h3>Klanturenstaat direct gemaild</h3>
+        <p>De klanturenstaat is rechtstreeks per e-mail naar de klant verzonden.</p>
+        <div class="foot"><span class="ts">02 sep 2026 · 09:17</span><span class="pill ok">Gereed</span></div>
+      </article>
+
+      <article class="card warn">
+        <span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l10 18H2L12 3z"/><path d="M12 10v5M12 18h.01"/></svg></span>
+        <h3>Extern bevestigen ontbreekt</h3>
+        <p>Backoffice wacht op externe bevestiging van de klanturenstaat door de klant.</p>
+        <div class="foot"><span class="ts">02 sep 2026 · 09:27</span><span class="pill warn">Actie vereist</span></div>
+      </article>
+
+      <article class="card paused">
+        <span class="ic"><svg viewBox="0 0 24 24"><path d="M9 5v14M15 5v14"/></svg></span>
+        <h3>Factuurconcept gepauzeerd</h3>
+        <p>Het factuurconcept is aangemaakt, maar in de wacht gezet totdat de externe bevestiging is ontvangen.</p>
+        <div class="reason">
+          <label>Vereiste reden</label>
+          <select disabled aria-label="Vereiste reden">
+            <option>Klanturenstaat niet rechtstreeks gemaild</option>
+          </select>
         </div>
-        <section class="next-action" id="admin-next-action"><div><small>Volgende actie</small><h2 id="next-title">Kies een medewerker</h2><p id="next-note">De serverstatus bepaalt welke actie hier verschijnt.</p></div><div id="next-controls"></div></section>
-      </section>
+        <div class="foot"><span class="ts">02 sep 2026 · 09:35</span><span class="pill warn">In behandeling</span></div>
+      </article>
 
-      <aside class="details">
-        <div class="panel-title"><div><small>Details</small><h2 id="detail-name">—</h2></div><button id="admin-refresh" type="button" aria-label="Verversen">↻</button></div>
-        <dl id="admin-details"></dl>
-        <section class="audit"><small>Actuele keten</small><div id="admin-timeline"></div></section>
-      </aside>
-    </section>
-  </main>
+      <div class="story-cta">
+        <button type="button">
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          Verhaal vervolgen: extern bevestigen
+        </button>
+      </div>
 
-  <div class="popover" id="admin-month-popover" hidden></div>
-  <div class="popover profile-popover" id="admin-profile-popover" hidden></div>
-  <div class="backdrop" id="admin-backdrop"></div>
-  <section class="dialog" id="admin-dialog" role="dialog" aria-modal="true" aria-hidden="true"></section>
-  <div class="toast" id="admin-toast" role="status" aria-live="polite"></div>
-  <script src="1919-beheerder.js" defer></script>
+    </div>
+  </section>
+
+  <footer class="pagefoot">
+    <span class="blk"><b>Laatste synchronisatie</b>02 sep 2026 · 09:42</span>
+    <span class="blk"><b>Automatische update</b><span><span class="dot"></span>Actief</span></span>
+    <span class="blk"><b>Filters</b><span class="ffilter"><span>September 2026</span><span>Alle medewerkers</span></span></span>
+    <span class="grow"></span>
+    <span class="legend"><b>Legenda</b><i class="g">Gereed</i><i class="a">Actie vereist</i><i>Nog niet gestart</i></span>
+    <span class="blk"><b>Verhaal exporteren</b>CSV / PDF</span>
+  </footer>
+
+</div>
+
 </body>
 </html>
