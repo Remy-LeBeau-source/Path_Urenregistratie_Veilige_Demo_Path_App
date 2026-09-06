@@ -6,7 +6,8 @@
 Feature: 1414/1919-pilotpagina's naast de bestaande app
 
   # Native Playwright-uitvoering: tests/playwright/pilot-page.spec.ts
-  # Medewerker-pilot = statische 1-op-1 reproductie van de 1414-mockup.
+  # Medewerker-pilot = 1414-look met vaste mockup-data, plus een lichte
+  # interactielaag (1919-medewerker-ui.js): maandkeuze en uren invullen.
   # Backoffice-pilot = nog servergestuurd; flows met gemockte endpoints.
 
   @happy
@@ -18,12 +19,28 @@ Feature: 1414/1919-pilotpagina's naast de bestaande app
     Then dragen ze de pilot-vlag/marker, delen ze geen code met de app en blijft / onaangeroerd
 
   @happy
-  Scenario: [PILOT-H-002] medewerker-pilot toont de 1414-mockup 1-op-1
+  Scenario: [PILOT-H-002] medewerker-pilot toont de 1414-look met werkende maand en invoer
     # Testtechniek: Visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 14
-    Given de statische medewerker-pilot
+    # Aantoonbare Playwright-assertions in deze case: 13
+    Given de medewerker-pilot
     When de pagina is geladen
-    Then staan alle mockup-onderdelen met de vaste mockup-data in beeld
+    Then staat september klaar met de mockup-uren, invoervelden en de wekenmeter
+
+  @happy
+  Scenario: [PILOT-H-006] medewerker-pilot: uren invullen zonder voorgevulde nul, plusknop stapt met 30 minuten
+    # Testtechniek: Grenswaardenanalyse
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given de medewerker-pilot met september open
+    When een lege dag wordt ingevuld en met de knoppen bijgesteld en daarna ingediend
+    Then vergrendelt "Indienen ter controle" de maand en loopt het totaal en de meter mee
+
+  @happy
+  Scenario: [PILOT-H-007] medewerker-pilot: afgeronde maand toont vergrendelde uren en verzonden klanturenstaat
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given de medewerker-pilot
+    When augustus wordt gekozen in de maandkeuze
+    Then staan de uren vast en toont de klanturenstaat het verzonden-vinkje
 
   @happy
   Scenario: [PILOT-H-003] Backoffice: rechtstreeks gemaild blijft oranje tot externe bevestiging, terugdraaien vraagt bevestiging

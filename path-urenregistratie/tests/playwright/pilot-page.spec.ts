@@ -105,8 +105,8 @@ test('[PILOT-H-001] beide pilotpagina’s leven naast een ongewijzigde app', asy
   });
 });
 
-test('[PILOT-H-002] medewerker-pilot toont de 1414-mockup 1-op-1', async ({ page }) => {
-  await test.step('Given de statische medewerker-pilot', async () => {
+test('[PILOT-H-002] medewerker-pilot toont de 1414-look met werkende maand en invoer', async ({ page }) => {
+  await test.step('Given de medewerker-pilot', async () => {
     await page.goto('/pilot/1919-medewerker.html');
   });
 
@@ -114,27 +114,79 @@ test('[PILOT-H-002] medewerker-pilot toont de 1414-mockup 1-op-1', async ({ page
     await expect(page.locator('.hero h1')).toHaveText('Begin met je uren');
   });
 
-  await test.step('Then staan alle mockup-onderdelen met de vaste mockup-data in beeld', async () => {
-    // Weekstrook: 7 dagen met exact de mockup-uren, woensdag actief.
+  await test.step('Then staat september klaar met de mockup-uren, invoervelden en de wekenmeter', async () => {
+    await expect(page.locator('.monthpick .mlabel')).toHaveText('September 2026');
+    // Weekstrook: 7 dagen; ma/di/wo/do gevuld met de mockup-uren, wo actief, vr–zo leeg (zonder voorgevulde nul).
     const days = page.locator('.week li');
     await expect(days).toHaveCount(7);
-    await expect(days.nth(0)).toContainText('8,00');
+    await expect(days.nth(0).locator('.hin')).toHaveValue('8,00');
     await expect(days.nth(2)).toHaveClass(/on/);
-    await expect(days.nth(2)).toContainText('7,00');
-    await expect(days.nth(3)).toContainText('7,30');
-    await expect(days.nth(6)).toContainText('—');
-    await expect(page.locator('.week .overview')).toContainText('Weekoverzicht');
-    // Voortgangsmeter in weken (mockup-1:1 met de afgesproken aanpassing).
+    await expect(days.nth(3).locator('.hin')).toHaveValue('7,30');
+    await expect(days.nth(4).locator('.hin')).toHaveValue('');
+    await expect(days.nth(4).locator('.hin')).toHaveAttribute('placeholder', '0,00');
+    await expect(page.locator('.week .total .tval')).toHaveText('30,30');
+    // Voortgangsmeter in weken (mockup met de afgesproken aanpassing).
     await expect(page.locator('.gauge .ring .num')).toHaveText('1');
-    await expect(page.locator('.gauge .ring .of')).toContainText('/ 5');
-    await expect(page.locator('.gauge .rest')).toContainText('Nog 4 weken te gaan');
     await expect(page.locator('.gauge .pct')).toHaveText('20%');
-    // Klanturenstaatkaart in de mockup-eindstaat.
-    await expect(page.locator('.kt .txt p')).toHaveText('Gereed en verzonden via e-mail.');
+    // Klanturenstaatkaart: september is nog niet verstuurd, dus geen vinkje.
+    await expect(page.locator('.kt')).toHaveAttribute('data-state', 'pending');
+    await expect(page.locator('.kt .txt p')).toContainText('Nog niet verstuurd');
     // Vier-stappen-strook.
     await expect(page.locator('.steps li b')).toHaveText([
       'Uren invullen', 'Indienen', 'Controle Backoffice', 'Klanturenstaat',
     ]);
+  });
+});
+
+test('[PILOT-H-006] medewerker-pilot: uren invullen zonder voorgevulde nul, + stapt met 30 minuten', async ({ page }) => {
+  await test.step('Given de medewerker-pilot met september open', async () => {
+    await page.goto('/pilot/1919-medewerker.html');
+  });
+
+  const vr = page.locator('.week li').nth(4);
+
+  await test.step('When een lege dag wordt ingevuld en met de knoppen bijgesteld', async () => {
+    await expect(vr.locator('.hin')).toHaveValue('');
+    await vr.locator('.hin').click();
+    await vr.locator('.hin').pressSequentially('6');
+    await vr.locator('.hin').blur();
+    await expect(vr.locator('.hin')).toHaveValue('6,00');
+    await expect(page.locator('.week .total .tval')).toHaveText('36,30');
+    await vr.locator('.st.pls').click();
+    await expect(vr.locator('.hin')).toHaveValue('6,50');
+    await vr.locator('.st.mns').click();
+    await vr.locator('.st.mns').click();
+    await expect(vr.locator('.hin')).toHaveValue('5,50');
+  });
+
+  await test.step('Then vergrendelt "Indienen ter controle" de maand', async () => {
+    await page.getByRole('button', { name: 'Indienen ter controle' }).click();
+    await expect(page.locator('.week .done')).toContainText('Backoffice controleert');
+    await expect(page.locator('.week .hin')).toHaveCount(0);
+    await expect(page.locator('.gauge .pct')).toHaveText('100%');
+  });
+});
+
+test('[PILOT-H-007] medewerker-pilot: afgeronde maand toont vergrendelde uren en verzonden klanturenstaat', async ({ page }) => {
+  await test.step('Given de medewerker-pilot', async () => {
+    await page.goto('/pilot/1919-medewerker.html');
+    await expect(page.locator('.monthpick .mlabel')).toHaveText('September 2026');
+  });
+
+  await test.step('When augustus wordt gekozen in de maandkeuze', async () => {
+    await page.locator('.monthpick').click();
+    await page.locator('.monthmenu li[data-key="2026-08"]').click();
+  });
+
+  await test.step('Then staan de uren vast en is de klanturenstaat verzonden', async () => {
+    await expect(page.locator('.monthpick .mlabel')).toHaveText('Augustus 2026');
+    await expect(page.locator('.week .hin')).toHaveCount(0);
+    await expect(page.locator('.week li').nth(0).locator('.h')).toHaveText('8,00');
+    await expect(page.locator('.gauge .ring .num')).toHaveText('5');
+    await expect(page.locator('.gauge .pct')).toHaveText('100%');
+    await expect(page.locator('.kt')).toHaveAttribute('data-state', 'sent');
+    await expect(page.locator('.kt .txt p')).toHaveText('Gereed en verzonden via e-mail.');
+    await expect(page.locator('.kt .check')).toBeVisible();
   });
 });
 

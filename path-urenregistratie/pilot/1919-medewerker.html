@@ -46,8 +46,14 @@
   .brand .name{font-size:17px;color:#fff;font-weight:600;}
   .brand .name i{font-style:italic;font-weight:400;color:var(--text-dark-soft);}
   .topbar .grow{flex:1;}
-  .monthpick{display:flex;align-items:center;gap:11px;background:#0a1a29;border:1px solid var(--line-dark);border-radius:13px;padding:11px 18px;font-size:14px;font-weight:600;color:#fff;}
+  .monthwrap{position:relative;}
+  .monthpick{display:flex;align-items:center;gap:11px;background:#0a1a29;border:1px solid var(--line-dark);border-radius:13px;padding:11px 18px;font-size:14px;font-weight:600;color:#fff;font-family:inherit;cursor:pointer;}
   .monthpick svg{width:16px;height:16px;stroke:var(--text-dark-soft);fill:none;stroke-width:1.7;}
+  .monthpick[aria-expanded="true"]{border-color:var(--green);}
+  .monthmenu{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:30;list-style:none;margin:0;padding:6px;background:#0a1a29;border:1px solid var(--line-dark);border-radius:12px;box-shadow:0 20px 44px rgba(0,0,0,.45);}
+  .monthmenu li{padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;}
+  .monthmenu li:hover{background:#12293e;}
+  .monthmenu li[aria-selected="true"]{background:#12293e;color:var(--green-ring);}
   .who{display:flex;align-items:center;gap:12px;}
   .who .av{width:40px;height:40px;border-radius:50%;background:#2b4a3c;display:grid;place-items:center;font-family:var(--serif);color:var(--green);font-size:13px;}
   .who b{font-size:14px;color:#fff;font-weight:600;}
@@ -92,8 +98,23 @@
   .week li.on .d,.week li.on .d b{color:#cdd8dd;}
   .week li.on .h{color:#fff;}
   .week li.off .h{color:#b7bab2;}
-  .week .overview{margin-top:8px;display:flex;align-items:center;justify-content:center;gap:9px;background:#fff;border:1px solid #e4ddcd;border-radius:12px;padding:12px;font-size:12.5px;font-weight:700;color:var(--ink);}
+  .week .overview{display:flex;align-items:center;justify-content:center;gap:9px;background:#fff;border:1px solid #e4ddcd;border-radius:12px;padding:12px;font-size:12.5px;font-weight:700;color:var(--ink);font-family:inherit;cursor:pointer;}
   .week .overview svg{width:15px;height:15px;stroke:var(--green-deep);fill:none;stroke-width:1.8;}
+  .week .ctrl{display:flex;align-items:center;gap:6px;}
+  .week .st{width:26px;height:26px;flex:0 0 auto;border:1px solid #d9d0bd;background:#fff;border-radius:8px;color:var(--ink);font-size:15px;line-height:1;display:grid;place-items:center;padding:0;cursor:pointer;font-family:inherit;}
+  .week .st:hover{background:#f2ecdc;}
+  .week .hin{width:54px;text-align:right;border:1px solid #e2d9c6;border-radius:8px;padding:6px 7px;background:#fff;font-family:var(--serif);font-size:15px;color:var(--ink);}
+  .week .hin::placeholder{color:#b9b3a1;font-family:var(--sans);font-size:12.5px;}
+  .week .hin:focus{outline:2px solid var(--green-deep);outline-offset:1px;border-color:var(--green-deep);}
+  .week li.on .st{background:#16324a;border-color:rgba(255,255,255,.18);color:#fff;}
+  .week li.on .hin{background:#16324a;border-color:rgba(255,255,255,.22);color:#fff;}
+  .week li.on .hin::placeholder{color:#9fb1bb;}
+  .week .total{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 6px;font-size:12px;color:var(--ink-soft);}
+  .week .total b{font-family:var(--serif);font-size:16px;color:var(--ink);}
+  .week .actions{margin-top:6px;display:flex;flex-direction:column;gap:8px;}
+  .week .submit{background:var(--green-deep);color:#fff;border:0;border-radius:12px;padding:12px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .week .submit:hover{background:#27583f;}
+  .week .done{background:#e9f2ea;border:1px solid #cfe6d5;border-radius:12px;padding:12px;font-size:12px;font-weight:700;color:var(--green-deep);text-align:center;}
 
   /* Gauge (navy) */
   .gauge{grid-column:3;grid-row:1;background:var(--navy-card);border:1px solid var(--line-dark);border-radius:var(--r);padding:30px 34px 26px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
@@ -112,15 +133,16 @@
   .gauge .pct{align-self:flex-end;margin-top:7px;font-size:12px;font-weight:700;color:var(--green-ring);}
 
   /* Klanturenstaat (full-bleed foto met tekst erover, zoals mockup) */
-  .kt{grid-column:3;grid-row:2;position:relative;isolation:isolate;background:var(--cream-2);border-radius:var(--r);overflow:hidden;color:var(--ink);min-height:320px;}
+  .kt{grid-column:3;grid-row:2 / span 2;position:relative;isolation:isolate;background:var(--cream-2);border-radius:var(--r);overflow:hidden;color:var(--ink);min-height:320px;}
   .kt .bg{position:absolute;inset:0;z-index:0;}
   .kt .bg img{width:100%;height:100%;object-fit:cover;object-position:58% 38%;}
   .kt .scrim{position:absolute;inset:0;z-index:1;pointer-events:none;
     background:radial-gradient(135% 95% at 0% 0%,rgba(244,239,228,.97) 0%,rgba(244,239,228,.86) 24%,rgba(244,239,228,.32) 41%,rgba(244,239,228,0) 58%);}
   .kt .txt{position:relative;z-index:2;padding:26px 26px 0;}
   .kt .txt h3{font-family:var(--serif);font-weight:400;font-size:28px;margin:0 0 6px;color:#22302b;}
-  .kt .txt p{margin:0 0 16px;font-size:13.5px;color:var(--ink-soft);}
+  .kt .txt p{margin:0 0 16px;font-size:13.5px;color:var(--ink-soft);max-width:64%;}
   .kt .check{width:36px;height:36px;border-radius:50%;background:var(--green-deep);display:grid;place-items:center;box-shadow:0 8px 20px rgba(47,106,76,.4);}
+  .kt .check[hidden]{display:none;}
   .kt .check svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2.6;}
   .kt .cta{position:absolute;left:18px;right:18px;bottom:18px;z-index:3;display:flex;align-items:center;gap:12px;
     background:rgba(255,255,255,.84);-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
@@ -130,8 +152,8 @@
   .kt .cta .lbl{flex:1;}
   .kt .cta .arw{width:16px;height:16px;stroke:var(--ink-soft);fill:none;stroke-width:1.9;flex:0 0 auto;}
 
-  /* 4-step strip */
-  .steps{grid-column:1 / -1;grid-row:3;background:var(--navy-card);border:1px solid var(--line-dark);border-radius:var(--r);padding:24px 30px 26px;}
+  /* 4-step strip — loopt tot kolom 2, niet onder de Klanturenstaat-kaart (zoals mockup) */
+  .steps{grid-column:1 / 3;grid-row:3;background:var(--navy-card);border:1px solid var(--line-dark);border-radius:var(--r);padding:24px 30px 26px;}
   .steps .lead{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-dark-soft);font-weight:700;margin-bottom:18px;}
   .steps ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:0;}
   .steps li{position:relative;padding-right:22px;}
@@ -176,10 +198,13 @@
   <div class="topbar">
     <div class="brand"><span class="mark">P</span><span class="name">Path <i>Consultancy</i></span></div>
     <span class="grow"></span>
-    <div class="monthpick">
-      <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
-      September 2026
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    <div class="monthwrap">
+      <button class="monthpick" type="button" aria-haspopup="listbox" aria-expanded="false">
+        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+        <span class="mlabel">September 2026</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <ul class="monthmenu" role="listbox" aria-label="Kies een maand" hidden></ul>
     </div>
     <span class="grow"></span>
     <div class="who">
@@ -205,22 +230,12 @@
       </div>
     </section>
 
-    <!-- Week strip -->
+    <!-- Week strip — dagen + weektotaal worden door 1919-medewerker-ui.js gevuld -->
     <section class="week">
       <div class="wh"><b>Week 36</b><span>31 aug – 6 sep</span></div>
-      <ul>
-        <li><span class="d">MA <b>31</b></span><span class="h">8,00</span></li>
-        <li><span class="d">DI <b>1</b></span><span class="h">8,00</span></li>
-        <li class="on"><span class="d">WO <b>2</b></span><span class="h">7,00</span></li>
-        <li><span class="d">DO <b>3</b></span><span class="h">7,30</span></li>
-        <li class="off"><span class="d">VR <b>4</b></span><span class="h">—</span></li>
-        <li class="off"><span class="d">ZA <b>5</b></span><span class="h">—</span></li>
-        <li class="off"><span class="d">ZO <b>6</b></span><span class="h">—</span></li>
-      </ul>
-      <button class="overview" type="button">
-        <svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
-        Weekoverzicht
-      </button>
+      <ul></ul>
+      <div class="total"><span>Totaal deze week</span><b class="tval">0,00</b></div>
+      <div class="actions"></div>
     </section>
 
     <!-- Gauge: voortgang in weken i.p.v. contracturen -->
@@ -268,5 +283,6 @@
   </div>
 </div>
 
+<script src="1919-medewerker-ui.js"></script>
 </body>
 </html>
