@@ -34,3 +34,11 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     Given de app staat in de nieuwe skin
     When Vormgeving weer op "Klassiek" wordt gezet
     Then is de klassieke vormgeving terug, ook na herladen
+
+  @happy
+  Scenario: [SKIN-H-004] de nieuwe skin activeert uitsluitend zijn eigen visuele fundament
+    # Testtechniek: Equivalentieklassen classic/new + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 10
+    Given een ingelogde administrator in de klassieke vormgeving
+    When de gebruiker de nieuwe vormgeving activeert
+    Then zijn de 1414/1919-tokens, grotere radius en lokale serif alleen daar actief

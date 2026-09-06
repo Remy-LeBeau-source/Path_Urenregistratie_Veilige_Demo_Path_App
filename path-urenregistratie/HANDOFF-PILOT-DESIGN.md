@@ -1,60 +1,51 @@
 # HANDOFF — 1414/1919 pilot-herontwerp
 
 **Evergreen doc. Wordt tijdens het werk telkens bijgewerkt.**
-Laatst bijgewerkt: 2026-09-06 — **Fase D increment 1 gecommit als 1.0.65**.
+Laatst bijgewerkt: 2026-09-06 — **Fase D increment 2 lokaal afgerond voor 0.10.1**.
 
 ## → VOOR CODEX / de volgende sessie (usage-overdracht)
 
 **Direct oppakken:**
 1. Check CI van de laatste push (`gh run list --branch main --limit 1`). Groen =
    Deploy Test + Publish Live Docs. Als rood: los dat eerst op.
-2. ~~Versie omzetten~~ **GEDAAN** — staat nu op **`0.10.0`**, vanaf hier `0.10.x`
+2. ~~Versie omzetten~~ **GEDAAN** — increment 2 staat op **`0.10.1`**, vanaf hier `0.10.x`
    per commit. (`0.0.1` bleek onbruikbaar: `set-version.mjs` verving het óók
    binnen `127.0.0.1` → `127.0.0.2`. Hersteld in `f909632`. `BESLISTABEL.md`
    W10 bijgewerkt; **TODO daar**: `set-version.mjs` hardenen met een
    token-grens.)
-3. **Fase D increment 2 — fundament in `assets/styles-new.css`.** Zie
-   "Stappenplan" en "Schermen-inventaris" onderaan. Werkwijze: elke regel
-   gescoped onder `html[data-skin="new"]`; layout blijft klassiek, alleen palet/
-   typografie/vorm/schaduw wisselen. Lokaal eerst de VOLLEDIGE desktop-e2e-suite
-   (`node scripts/run-playwright-e2e.mjs --project=desktop-chromium`) — moet in
-   beide skins 100% groen; dan pas pushen. Handoff elke increment bijwerken.
+3. **Fase D increment 3 — gedeelde shell/componenten.** Sluit eerst topbar,
+   zijbalk, knoppen, kaarten, formulieren, tabellen, badges, modals en toasts aan
+   op de tokens uit `assets/styles-new.css`. Daarna pas de afzonderlijke
+   medewerker- en beheerschermen. Elke regel blijft gescoped onder
+   `html[data-skin="new"]`; de klassieke skin blijft exact intact. Draai voor
+   iedere push de relevante tests, `npm run check` en de VOLLEDIGE desktop-e2e-
+   suite (`node scripts/run-playwright-e2e.mjs --project=desktop-chromium`).
 
 **Regels:** alleen LOCAL + TEST, nooit PROD. NL-commits met
 `Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>`. Versie via
 `npm run version:set`. `git add` met expliciete paden, nooit `-A` (Codex/Claude
 delen de werktree). `handoff/` (repo-root) is design-levering, untracked laten.
 
-Pilot Fase C = 1.0.63 + 1.0.64. Fase D increment 1 = 1.0.65.
+Pilot Fase C = 1.0.63 + 1.0.64. Fase D increment 1 = 0.10.0.
+Fase D increment 2 = 0.10.1.
 
-## ⚠️ Onvastgelegd nu in de working tree — Fase D increment 1
+## Fase D increment 2 — visueel fundament
 
-**De skin-schakelaar** (`state.preferences.skin` = `"classic"` | `"new"`).
-Nog niet gecommit; wacht op de volledige desktop-e2e-suite (draait lokaal).
-`npm run check` groen, `test-design-audit` ok (424 cases), 3/3 `SKIN-*` groen.
+Lokaal afgerond en klaar om als versie `0.10.1` vast te leggen:
 
-Gewijzigd:
-- `assets/app.js` — `preferences.skin: "classic"` default; `applySkin()` (zet
-  `html[data-skin]`); vroege set direct na `loadState()` tegen flits; call in
-  de init-sequence en in het opslaan van Voorkeuren; `showPreferences()` krijgt
-  een "Vormgeving"-rij (`#pref-skin`, Klassiek/Nieuw).
-- `index.html` — `<link rel="stylesheet" href="assets/styles-new.css">` (zonder
-  `?v=`, dus buiten `set-version.mjs` om).
-- `assets/styles-new.css` — **NIEUW.** Altijd geladen, elke regel gescoped
-  onder `html[data-skin="new"]`. Increment 1: leeg (geen visuele wijziging).
-- `assets/styles.css` — één regel toegevoegd:
-  `.modal-summary > .preference-list { display:grid; grid-template-columns:1fr; }`
-  (anders won `.modal-summary > div { display:flex }` op specificiteit en
-  vielen de voorkeurenrijen naast elkaar buiten de dialoog).
-- `tests/playwright/skin.spec.ts` + `features/skin.feature` — **NIEUW.**
-  `[SKIN-H-001/002/003]`: default classic, wisselen naar new + persistentie,
-  terug naar classic. Bedienen via de keuzemenu-widget (`#pref-skin-trigger`
-  + `[data-standard-choice-target="pref-skin"][data-standard-choice-value=...]`),
-  net als `#pref-theme` in `dashboard.spec.ts`.
-
-Zodra de volle suite groen is: `npm run version:set` (1.0.65), NL-commit, push,
-CI volgen. Daarna increment 2 = de vormgeving in `styles-new.css` gaan vullen
-(tokens/palet/typografie app-breed via `[data-skin="new"]`-overrides).
+- `assets/styles-new.css`: 1414/1919 licht- en donkerpalet, semantische
+  componenttokens, grotere radius/schaduw, lokale `Path Editorial`-serif en
+  app-canvas. Alles uitsluitend onder `html[data-skin="new"]`.
+- `[SKIN-H-004]`: bewijst dat de nieuwe tokens, radius, achtergrond en serif
+  alleen in de nieuwe skin actief zijn en Classic niet lekken.
+- Gerichte skin-suite: **4/4 groen**. `npm run check`: **groen**; designaudit
+  **425 cases**. Volledige desktop-suite: **365/366 groen**; alleen
+  `[TS-REV-UI-H-012]` faalde eenmaal onder de 24-minutenrun doordat ziekte na
+  F5 tijdelijk `0` las. Gerichte herhaling direct erna: **1/1 groen**. Dit is
+  als timingfluctuatie vastgelegd, niet als geaccepteerde regressie.
+- Visuele desktopcontrole op het admin-dashboard uitgevoerd: canvas, contrast,
+  lokale serif, navigatie en kaarten renderen coherent; geen horizontale
+  overflow waargenomen.
 
 ## Waar we staan
 
@@ -93,6 +84,35 @@ Screenshot-scriptje: chromium via `path-urenregistratie/node_modules/@playwright
   nooit PROD.
 - **Fase D — look → in de app**: klassiek↔nieuw-schakelaar (`data-skin`), alle menu's per rol nalopen, regressietest per scherm.
 - **Fase E — dekkingsronde** op `skin=new` (desktop + iOS + Android + DB). Gebruiker test → gebruiker promoveert PROD.
+
+### Functionele acceptatie voor de uiteindelijke nieuwe skin
+
+- Medewerker en beheer blijven op dezelfde bestaande API/database werken; de
+  nieuwe skin mag nooit naar een statische pilot of oude/verkeerde pagina
+  navigeren.
+- Uren zijn rechtstreeks en snel handmatig invoerbaar, per dag én voor alle
+  weken van de gekozen maand; de primaire knop voor week/maand indienen is
+  onmiskenbaar.
+- `0` uur is een geldige ingevulde waarde en moet visueel te onderscheiden zijn
+  van “nog niet ingevuld”. Er wordt geen fictief maandmaximum zoals `160 uur`
+  geïntroduceerd wanneer de applicatie dat contract niet kent.
+- Maand wisselen gebruikt het bestaande servergedrag en ververst alle relevante
+  week-, uren-, status- en klanturenstaatgegevens.
+- Verlof/ziekte **uit** bij beheer: medewerker kan dit niet kiezen. **Aan**:
+  medewerker kan het snel invoeren zonder een trage popup per dag; opslag en F5-
+  persistentie blijven aantoonbaar werken.
+- Klanturenstaat toont de echte status: geen groen vinkje vóór ontvangst. De
+  medewerker kan een PDF/JPG/PNG toevoegen of expliciet “reeds per e-mail
+  verstuurd” kiezen; beheer ziet en verwerkt vervolgens de correcte status.
+- Proceslijnen zijn statusgedreven: alleen afgeronde stappen en het lijnstuk tot
+  de actuele stap zijn groen; toekomststappen blijven neutraal en wacht/actie is
+  amber. Animaties visualiseren de echte statuswijziging en respecteren
+  `prefers-reduced-motion`.
+- Alle huidige beheerfuncties blijven bereikbaar: dashboard, goedkeuringen,
+  facturen, mededelingen, medewerkers, instellingen, maanddetail, herstel,
+  meldingen, profiel/rol en hulp/contact.
+- Na iedere TEST-deploy worden de volledige klikbare TEST-URL's plus concrete
+  teststappen aan de gebruiker gegeven. Nooit automatisch naar PROD promoveren.
 
 ## Schermen-inventaris voor Fase D (niks vergeten)
 

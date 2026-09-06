@@ -82,3 +82,42 @@ test('[SKIN-H-003] terug naar "Klassiek" herstelt de klassieke vormgeving en bew
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
   });
 });
+
+test('[SKIN-H-004] de nieuwe skin activeert uitsluitend zijn eigen visuele fundament', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given een ingelogde administrator in de klassieke vormgeving', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect(page.locator('#app-shell')).toBeVisible();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+  });
+
+  const classic = await page.evaluate(() => ({
+    pathCanvas: getComputedStyle(document.documentElement).getPropertyValue('--path-canvas').trim(),
+    radius: getComputedStyle(document.documentElement).getPropertyValue('--radius').trim(),
+    headingFont: getComputedStyle(document.querySelector('.topbar h1') as Element).fontFamily,
+  }));
+
+  await test.step('When de gebruiker de nieuwe vormgeving activeert', async () => {
+    await kiesVormgeving(page, 'new');
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+  });
+
+  await test.step('Then zijn de 1414/1919-tokens en lokale serif alleen daar actief', async () => {
+    const vernieuwd = await page.evaluate(() => ({
+      pathCanvas: getComputedStyle(document.documentElement).getPropertyValue('--path-canvas').trim(),
+      radius: getComputedStyle(document.documentElement).getPropertyValue('--radius').trim(),
+      headingFont: getComputedStyle(document.querySelector('.topbar h1') as Element).fontFamily,
+      bodyBackground: getComputedStyle(document.body).backgroundImage,
+    }));
+
+    expect(classic.pathCanvas).toBe('');
+    expect(classic.radius).toBe('18px');
+    expect(classic.headingFont).not.toContain('Path Editorial');
+    expect(vernieuwd.pathCanvas).toBe('#eae3d4');
+    expect(vernieuwd.radius).toBe('22px');
+    expect(vernieuwd.headingFont).toContain('Path Editorial');
+    expect(vernieuwd.bodyBackground).toContain('radial-gradient');
+  });
+});

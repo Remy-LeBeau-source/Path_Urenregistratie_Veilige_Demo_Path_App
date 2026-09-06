@@ -6,12 +6,113 @@
    ongemoeid blijft. Wisselen gebeurt via Voorkeuren → Vormgeving
    (state.preferences.skin, toegepast door applySkin() in app.js).
 
-   Increment 1: alleen de schakelaar staat. Nog geen visuele regels —
-   de app ziet er in beide standen identiek uit. De vormgeving wordt
-   hierna stap voor stap ingevuld, telkens met de volledige caseset
-   als controle.
+   Increment 2: het visuele fundament. De semantische tokens, lokale
+   serif-koppen en het app-canvas staan hier. Componenten worden hierna
+   één voor één op deze tokens aangesloten.
    ================================================================== */
 
+@font-face {
+  font-family: "Path Editorial";
+  src: url("../pilot/assets/1919/serif.woff2") format("woff2");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400 700;
+}
+
 html[data-skin="new"] {
-  /* nog geen overrides */
+  color-scheme: light;
+
+  /* 1414 Bento × 1919 Storyline: één betekenis per kleur. */
+  --navy: #081726;
+  --navy-soft: #0d2033;
+  --mint: #5fb98d;
+  --mint-dark: #2f6a4c;
+  --teal: #255f4b;
+  --green-light: #e7efe7;
+  --ink: #1e2c34;
+  --muted: #66726d;
+  --line: #d8d1c3;
+  --surface: #f6f1e7;
+  --background: #eae3d4;
+  --warning: #d99a3c;
+  --warning-bg: #f8ead1;
+  --navy-tekst: #102235;
+  --tabelkop: #66726d;
+  --vlak: #f8f4eb;
+  --vlak-zacht: #efe9dc;
+  --vlak-warm: #fbf6ec;
+  --mint-dark-tekst: #255f4b;
+  --warning-tekst: #8a5c1c;
+  --danger: #a4514f;
+  --shadow: 0 22px 55px rgba(8, 23, 38, .13);
+  --radius: 22px;
+
+  /* Eigen skin-tokens maken latere componentincrements voorspelbaar. */
+  --path-canvas: #eae3d4;
+  --path-panel: #f6f1e7;
+  --path-panel-strong: #efe9dc;
+  --path-night: #081726;
+  --path-night-panel: #0f2639;
+  --path-night-tile: #12293e;
+  --path-forest: #1e4032;
+  --path-green: #5fb98d;
+  --path-amber: #d99a3c;
+  --path-cream: #f4f1e6;
+  --path-serif: "Path Editorial", Georgia, "Times New Roman", serif;
+  --path-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+html[data-skin="new"][data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #d8e1e3;
+  --muted: #93a2a8;
+  --line: rgba(255, 255, 255, .11);
+  --surface: #0f2639;
+  --background: #081726;
+  --green-light: #17382d;
+  --teal: #75c99e;
+  --navy-tekst: #f4f1e6;
+  --tabelkop: #93a2a8;
+  --vlak: #0f2639;
+  --vlak-zacht: #0b2031;
+  --vlak-warm: #173428;
+  --mint-dark-tekst: #75c99e;
+  --warning-bg: #352916;
+  --warning-tekst: #e2ab4c;
+  --shadow: 0 24px 65px rgba(0, 0, 0, .34);
+}
+
+html[data-skin="new"] body {
+  background:
+    radial-gradient(circle at 86% 8%, rgba(95, 185, 141, .13), transparent 27rem),
+    var(--background);
+  font-family: var(--path-sans);
+}
+
+html[data-skin="new"] :is(
+  .login-panel h1,
+  .topbar h1,
+  .view-heading h2,
+  .panel-heading h3,
+  .settings-card h3,
+  .summary-card h3,
+  .modal h2
+) {
+  font-family: var(--path-serif);
+  font-weight: 400;
+  letter-spacing: -.015em;
+}
+
+html[data-skin="new"] .section-label,
+html[data-skin="new"] .eyebrow {
+  color: var(--mint-dark-tekst);
+  letter-spacing: .12em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="new"] *,
+  html[data-skin="new"] *::before,
+  html[data-skin="new"] *::after {
+    scroll-behavior: auto !important;
+  }
 }
