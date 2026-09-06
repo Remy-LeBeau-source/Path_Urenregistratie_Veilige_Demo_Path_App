@@ -214,14 +214,14 @@
   .steps .lead{font-size:11.5px;letter-spacing:.17em;text-transform:uppercase;color:#9fb0b8;font-weight:400;margin-bottom:22px;}
   .steps ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:0;}
   .steps li{position:relative;padding-right:26px;}
-  .steps li:not(:last-child)::after{content:"";position:absolute;top:20px;left:52px;right:12px;border-top:1.5px dotted rgba(255,255,255,.22);transition:border-color .3s ease;}
-  .steps .ic{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;margin-bottom:16px;transition:box-shadow .3s ease,opacity .3s ease;}
+  .steps li:not(:last-child)::after{content:"";position:absolute;top:20px;left:20px;width:100%;height:2px;background:rgba(255,255,255,.14);z-index:0;transition:background .3s ease;}
+  .steps .ic{position:relative;z-index:1;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;margin-bottom:16px;transition:box-shadow .3s ease,opacity .3s ease;}
   .steps .ic svg{width:17px;height:17px;stroke:#fff;fill:none;stroke-width:1.7;}
   .steps .ic.g{background:#2f6a4c;}.steps .ic.b{background:#3a5f83;}.steps .ic.a{background:#a5711f;}
   .steps b{display:block;font-size:14.5px;color:#fff;font-weight:400;margin-bottom:7px;}
   .steps span{display:block;font-size:13px;color:#9fb0b8;line-height:1.55;max-width:168px;}
   /* Status volgt de voortgang: groene lijn + ✓ t/m de huidige stap, gestippeld daarna */
-  .steps li.is-done:not(:last-child)::after{border-top-style:solid;border-top-width:2px;border-top-color:var(--green-ring);}
+  .steps li.is-done:not(:last-child)::after{background:var(--green-ring);}
   .steps li.is-done .ic{background:#2f7a54;box-shadow:0 0 0 4px rgba(102,193,151,.14), 0 0 20px rgba(102,193,151,.3);}
   .steps li.is-done .ic svg{stroke-width:2.6;}
   .steps li.is-current .ic{box-shadow:0 0 0 5px rgba(102,193,151,.18), 0 0 18px rgba(102,193,151,.24);}
