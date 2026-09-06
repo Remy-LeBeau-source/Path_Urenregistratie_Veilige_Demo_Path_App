@@ -1,58 +1,97 @@
 'use strict';
 /* ------------------------------------------------------------------
-   PILOT-interactielaag voor de statische 1414-medewerkerpagina.
+   PILOT-interactielaag voor de 1414-medewerkerpagina.
    Losstaand: geen import, geen fetch, geen gedeelde app-code. Alle
    data is vast (mockup-1:1) en leeft alleen in het geheugen van deze
    tab. CSP op TEST staat een same-origin <script src> toe; inline
    script niet, vandaar dit bestand.
+
    Wat het toevoegt aan de mockup-look:
    - maandkeuze in de topbar (Juli/Augustus = afgerond, September =
      lopend, Oktober = leeg);
-   - uren invullen per dag met + / - (stappen van 30 min) en een vrij
+   - per maand ALLE weken, met een ‹ › weeknavigatie in de weekkaart;
+   - uren invullen per dag met - / + (stappen van 30 min) en een vrij
      invoerveld; geen voorgevulde "0" die je eerst moet weghalen
      (leeg veld + placeholder, selecteert bij focus);
    - weektotaal dat meeloopt;
-   - "Indienen ter controle" vergrendelt de maand;
-   - Klanturenstaat-kaart toont het vinkje alleen als de staat echt
-     is verzonden (afgeronde maanden), anders "wacht op Backoffice".
+   - "Indienen ter controle" dient de getoonde week in en springt naar
+     de volgende open week; de wekenmeter telt de ingediende weken;
+   - Klanturenstaat-kaart toont het vinkje alleen als de staat echt is
+     verzonden (afgeronde maanden), anders "wacht op Backoffice".
    ------------------------------------------------------------------ */
 (function () {
   var C = 659.7; // omtrek ring: 2 * pi * 105
 
+  function row(a, b, c, d, e, f, g) { return [a, b, c, d, e, f, g]; }
+  function empty() { return [null, null, null, null, null, null, null]; }
+
+  function week(label, range, dates, days, onIndex, submitted) {
+    return {
+      label: label, range: range, dates: dates, days: days,
+      onIndex: (onIndex == null ? -1 : onIndex), submitted: !!submitted
+    };
+  }
+
   var MONTHS = [
-    { key: '2026-07', label: 'Juli 2026', weekLabel: 'Week 27', weekRange: '29 jun – 5 jul',
-      dates: [29, 30, 1, 2, 3, 4, 5], days: [8, 8, 8, 8, 4, null, null], onIndex: -1,
-      weeksFilled: 5, weeksTotal: 5, locked: true, kt: 'sent' },
-    { key: '2026-08', label: 'Augustus 2026', weekLabel: 'Week 32', weekRange: '3 – 9 aug',
-      dates: [3, 4, 5, 6, 7, 8, 9], days: [8, 8, 7.5, 8, 6, null, null], onIndex: -1,
-      weeksFilled: 5, weeksTotal: 5, locked: true, kt: 'sent' },
-    { key: '2026-09', label: 'September 2026', weekLabel: 'Week 36', weekRange: '31 aug – 6 sep',
-      dates: [31, 1, 2, 3, 4, 5, 6], days: [8, 8, 7, 7.3, null, null, null], onIndex: 2,
-      weeksFilled: 1, weeksTotal: 5, locked: false, kt: 'pending' },
-    { key: '2026-10', label: 'Oktober 2026', weekLabel: 'Week 40', weekRange: '28 sep – 4 okt',
-      dates: [28, 29, 30, 1, 2, 3, 4], days: [null, null, null, null, null, null, null], onIndex: -1,
-      weeksFilled: 0, weeksTotal: 5, locked: false, kt: 'pending' }
+    { key: '2026-07', label: 'Juli 2026', kt: 'sent', past: true, weeks: [
+      week('Week 27', '29 jun – 5 jul', row(29, 30, 1, 2, 3, 4, 5), row(8, 8, 8, 8, 8, null, null), -1, true),
+      week('Week 28', '6 – 12 jul', row(6, 7, 8, 9, 10, 11, 12), row(8, 8, 8, 8, 4, null, null), -1, true),
+      week('Week 29', '13 – 19 jul', row(13, 14, 15, 16, 17, 18, 19), row(8, 8, 8, 8, 8, null, null), -1, true),
+      week('Week 30', '20 – 26 jul', row(20, 21, 22, 23, 24, 25, 26), row(8, 8, 8, 8, 6, null, null), -1, true),
+      week('Week 31', '27 jul – 2 aug', row(27, 28, 29, 30, 31, 1, 2), row(8, 8, 8, 8, 8, null, null), -1, true)
+    ] },
+    { key: '2026-08', label: 'Augustus 2026', kt: 'sent', past: true, weeks: [
+      week('Week 32', '3 – 9 aug', row(3, 4, 5, 6, 7, 8, 9), row(8, 8, 8, 8, 8, null, null), -1, true),
+      week('Week 33', '10 – 16 aug', row(10, 11, 12, 13, 14, 15, 16), row(8, 8, 8, 8, 6, null, null), -1, true),
+      week('Week 34', '17 – 23 aug', row(17, 18, 19, 20, 21, 22, 23), row(8, 8, 8, 8, 8, null, null), -1, true),
+      week('Week 35', '24 – 30 aug', row(24, 25, 26, 27, 28, 29, 30), row(8, 8, 8, 8, 4, null, null), -1, true),
+      week('Week 36', '31 aug – 6 sep', row(31, 1, 2, 3, 4, 5, 6), row(8, 8, 4, null, null, null, null), -1, true)
+    ] },
+    { key: '2026-09', label: 'September 2026', kt: 'pending', past: false, weeks: [
+      week('Week 36', '31 aug – 6 sep', row(31, 1, 2, 3, 4, 5, 6), row(8, 8, 7, 7.3, null, null, null), 2, false),
+      week('Week 37', '7 – 13 sep', row(7, 8, 9, 10, 11, 12, 13), empty(), -1, false),
+      week('Week 38', '14 – 20 sep', row(14, 15, 16, 17, 18, 19, 20), empty(), -1, false),
+      week('Week 39', '21 – 27 sep', row(21, 22, 23, 24, 25, 26, 27), empty(), -1, false),
+      week('Week 40', '28 sep – 4 okt', row(28, 29, 30, 1, 2, 3, 4), empty(), -1, false)
+    ] },
+    { key: '2026-10', label: 'Oktober 2026', kt: 'pending', past: false, weeks: [
+      week('Week 40', '28 sep – 4 okt', row(28, 29, 30, 1, 2, 3, 4), empty(), -1, false),
+      week('Week 41', '5 – 11 okt', row(5, 6, 7, 8, 9, 10, 11), empty(), -1, false),
+      week('Week 42', '12 – 18 okt', row(12, 13, 14, 15, 16, 17, 18), empty(), -1, false),
+      week('Week 43', '19 – 25 okt', row(19, 20, 21, 22, 23, 24, 25), empty(), -1, false),
+      week('Week 44', '26 okt – 1 nov', row(26, 27, 28, 29, 30, 31, 1), empty(), -1, false)
+    ] }
   ];
   var DOW = ['MA', 'DI', 'WO', 'DO', 'VR', 'ZA', 'ZO'];
   var DOW_LONG = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'];
 
-  var state = { monthKey: '2026-09' };
+  var state = { monthKey: '2026-09', weekIndex: 0 };
 
   function month() {
     for (var i = 0; i < MONTHS.length; i++) { if (MONTHS[i].key === state.monthKey) return MONTHS[i]; }
     return MONTHS[2];
   }
+  function curWeek() { return month().weeks[state.weekIndex]; }
+  function filledCount(m) {
+    var n = 0;
+    for (var i = 0; i < m.weeks.length; i++) { if (m.weeks[i].submitted) n++; }
+    return n;
+  }
+  function firstOpen(m) {
+    for (var i = 0; i < m.weeks.length; i++) { if (!m.weeks[i].submitted) return i; }
+    return 0;
+  }
+  function weekReadOnly() { return month().past || curWeek().submitted; }
   function clamp(v) { return Math.max(0, Math.min(24, v)); }
-  function parse(str) {
-    if (str == null) return null;
-    var s = String(str).trim().replace(',', '.');
+  function parse(s) {
+    if (s == null) return null;
+    s = String(s).trim().replace(',', '.');
     if (s === '') return null;
     var n = parseFloat(s);
-    if (isNaN(n)) return null;
-    return clamp(n);
+    return isNaN(n) ? null : clamp(n);
   }
   function fmt(v) { return v == null ? '' : v.toFixed(2).replace('.', ','); }
-  function total(days) {
+  function sum(days) {
     var t = 0;
     for (var i = 0; i < days.length; i++) { t += (days[i] == null ? 0 : days[i]); }
     return t;
@@ -88,6 +127,7 @@
       var li = e.target.closest('li[data-key]');
       if (!li) return;
       state.monthKey = li.getAttribute('data-key');
+      state.weekIndex = firstOpen(month());
       close();
       render();
     });
@@ -113,23 +153,33 @@
   /* ---------- weekkaart ---------- */
   function renderWeek() {
     var m = month();
+    var w = curWeek();
+    var last = m.weeks.length - 1;
+    var ro = weekReadOnly();
 
     var wh = document.querySelector('.week .wh');
-    if (wh) wh.innerHTML = '<b>' + m.weekLabel + '</b><span>' + m.weekRange + '</span>';
+    if (wh) {
+      wh.innerHTML =
+        '<div class="wknav">' +
+        '<button type="button" class="wnav-btn wprev" aria-label="Vorige week"' + (state.weekIndex === 0 ? ' disabled' : '') + '>‹</button>' +
+        '<div><b>' + w.label + '</b><span>' + w.range + '</span></div>' +
+        '<button type="button" class="wnav-btn wnext" aria-label="Volgende week"' + (state.weekIndex === last ? ' disabled' : '') + '>›</button>' +
+        '</div>';
+    }
 
     var ul = document.querySelector('.week ul');
     if (ul) {
-      ul.innerHTML = m.days.map(function (v, i) {
-        var cls = i === m.onIndex ? ' class="on"' : (v == null ? ' class="off"' : '');
-        var left = '<span class="d">' + DOW[i] + ' <b>' + m.dates[i] + '</b></span>';
+      ul.innerHTML = w.days.map(function (v, i) {
+        var cls = i === w.onIndex ? ' class="on"' : (v == null ? ' class="off"' : '');
+        var left = '<span class="d">' + DOW[i] + ' <b>' + w.dates[i] + '</b></span>';
         var right;
-        if (m.locked) {
+        if (ro) {
           right = '<span class="h">' + (v == null ? '—' : fmt(v)) + '</span>';
         } else {
           right = '<span class="ctrl">' +
             '<button type="button" class="st mns" data-i="' + i + '" aria-label="30 minuten eraf voor ' + DOW_LONG[i] + '">–</button>' +
             '<input class="hin" type="text" inputmode="decimal" data-i="' + i + '" placeholder="0,00" ' +
-            'aria-label="Uren ' + DOW_LONG[i] + ' ' + m.dates[i] + '" value="' + fmt(v) + '">' +
+            'aria-label="Uren ' + DOW_LONG[i] + ' ' + w.dates[i] + '" value="' + fmt(v) + '">' +
             '<button type="button" class="st pls" data-i="' + i + '" aria-label="30 minuten erbij voor ' + DOW_LONG[i] + '">+</button>' +
             '</span>';
         }
@@ -138,12 +188,14 @@
     }
 
     var tval = document.querySelector('.week .total .tval');
-    if (tval) tval.textContent = fmt(total(m.days));
+    if (tval) tval.textContent = fmt(sum(w.days));
 
     var actions = document.querySelector('.week .actions');
     if (actions) {
-      if (m.locked) {
-        actions.innerHTML = '<div class="done" tabindex="-1">✓ Ingediend · Backoffice controleert je uren</div>';
+      if (m.past) {
+        actions.innerHTML = '<div class="done" tabindex="-1">✓ Maand afgerond · klanturenstaat verzonden</div>';
+      } else if (w.submitted) {
+        actions.innerHTML = '<div class="done" tabindex="-1">✓ Week ingediend · Backoffice controleert je uren</div>';
       } else {
         actions.innerHTML =
           '<button class="overview" type="button">' +
@@ -151,36 +203,46 @@
           '<button class="submit" type="button">Indienen ter controle</button>';
       }
     }
+
     wireWeek();
   }
 
   function updateTotal() {
     var t = document.querySelector('.week .total .tval');
-    if (t) t.textContent = fmt(total(month().days));
+    if (t) t.textContent = fmt(sum(curWeek().days));
   }
 
   function wireWeek() {
-    var m = month();
-    if (m.locked) return;
+    var prev = document.querySelector('.week .wprev');
+    if (prev) prev.addEventListener('click', function () {
+      if (state.weekIndex > 0) { state.weekIndex--; render(); }
+    });
+    var next = document.querySelector('.week .wnext');
+    if (next) next.addEventListener('click', function () {
+      if (state.weekIndex < month().weeks.length - 1) { state.weekIndex++; render(); }
+    });
+
+    if (weekReadOnly()) return;
+    var w = curWeek();
 
     Array.prototype.forEach.call(document.querySelectorAll('.week .hin'), function (inp) {
       inp.addEventListener('focus', function () { try { inp.select(); } catch (e) {} });
       inp.addEventListener('input', function () {
-        m.days[+inp.getAttribute('data-i')] = parse(inp.value);
+        w.days[+inp.getAttribute('data-i')] = parse(inp.value);
         updateTotal();
       });
       inp.addEventListener('blur', function () {
-        inp.value = fmt(m.days[+inp.getAttribute('data-i')]);
+        inp.value = fmt(w.days[+inp.getAttribute('data-i')]);
       });
     });
 
     Array.prototype.forEach.call(document.querySelectorAll('.week .st'), function (b) {
       b.addEventListener('click', function () {
         var i = +b.getAttribute('data-i');
-        var cur = m.days[i] == null ? 0 : m.days[i];
+        var cur = w.days[i] == null ? 0 : w.days[i];
         var step = b.classList.contains('pls') ? 0.5 : -0.5;
         cur = clamp(Math.round((cur + step) * 100) / 100);
-        m.days[i] = cur;
+        w.days[i] = cur;
         var inp = document.querySelector('.week .hin[data-i="' + i + '"]');
         if (inp) inp.value = fmt(cur);
         updateTotal();
@@ -190,9 +252,11 @@
     var sub = document.querySelector('.week .submit');
     if (sub) {
       sub.addEventListener('click', function () {
-        m.locked = true;
-        m.weeksFilled = m.weeksTotal;
-        m.kt = 'review';
+        var m = month();
+        w.submitted = true;
+        if (filledCount(m) > 0 && m.kt === 'pending') m.kt = 'review';
+        var open = firstOpen(m);
+        if (!m.weeks[open].submitted) state.weekIndex = open;
         render();
         var note = document.querySelector('.week .done');
         if (note) { try { note.focus(); } catch (e) {} }
@@ -203,22 +267,24 @@
   /* ---------- voortgangsmeter (in weken) ---------- */
   function renderGauge() {
     var m = month();
-    var frac = m.weeksTotal ? m.weeksFilled / m.weeksTotal : 0;
+    var filled = filledCount(m);
+    var totalWeeks = m.weeks.length;
+    var frac = totalWeeks ? filled / totalWeeks : 0;
 
     var val = document.querySelector('.gauge .ring .val');
     if (val) val.style.strokeDashoffset = String(Math.round(C * (1 - frac) * 10) / 10);
 
     var num = document.querySelector('.gauge .ring .num');
-    if (num) num.textContent = String(m.weeksFilled);
+    if (num) num.textContent = String(filled);
 
     var of = document.querySelector('.gauge .ring .of');
-    if (of) of.innerHTML = '/ ' + m.weeksTotal + ' <span class="g">weken</span>';
+    if (of) of.innerHTML = '/ ' + totalWeeks + ' <span class="g">weken</span>';
 
     var rest = document.querySelector('.gauge .rest');
     if (rest) {
-      rest.textContent = m.weeksFilled >= m.weeksTotal
-        ? 'Alle weken van deze maand zijn ingevuld'
-        : 'Nog ' + (m.weeksTotal - m.weeksFilled) + ' weken te gaan deze maand';
+      rest.textContent = filled >= totalWeeks
+        ? 'Alle weken van deze maand zijn ingediend'
+        : 'Nog ' + (totalWeeks - filled) + ' weken te gaan deze maand';
     }
 
     var bar = document.querySelector('.gauge .bar i');
@@ -265,8 +331,8 @@
     var go = document.querySelector('.hero .go');
     if (!go) return;
     go.addEventListener('click', function () {
-      var week = document.querySelector('.week');
-      if (week && week.scrollIntoView) week.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      var wk = document.querySelector('.week');
+      if (wk && wk.scrollIntoView) wk.scrollIntoView({ behavior: 'smooth', block: 'start' });
       var first = document.querySelector('.week .hin');
       if (first) { try { first.focus(); first.select(); } catch (e) {} }
     });

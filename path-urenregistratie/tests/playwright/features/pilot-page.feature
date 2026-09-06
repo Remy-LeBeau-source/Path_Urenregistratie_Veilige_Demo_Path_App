@@ -19,28 +19,28 @@ Feature: 1414/1919-pilotpagina's naast de bestaande app
     Then dragen ze de pilot-vlag/marker, delen ze geen code met de app en blijft / onaangeroerd
 
   @happy
-  Scenario: [PILOT-H-002] medewerker-pilot toont de 1414-look met werkende maand en invoer
+  Scenario: [PILOT-H-002] medewerker-pilot toont de 1414-look met werkende maand en weekinvoer
     # Testtechniek: Visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 13
+    # Aantoonbare Playwright-assertions in deze case: 16
     Given de medewerker-pilot
     When de pagina is geladen
-    Then staat september klaar met de mockup-uren, invoervelden en de wekenmeter
+    Then staat september met week 36 klaar om in te vullen en de wekenmeter op nul
 
   @happy
-  Scenario: [PILOT-H-006] medewerker-pilot: uren invullen zonder voorgevulde nul, plusknop stapt met 30 minuten
+  Scenario: [PILOT-H-006] medewerker-pilot: uren invullen zonder voorgevulde nul, week indienen opent de volgende week
     # Testtechniek: Grenswaardenanalyse
-    # Aantoonbare Playwright-assertions in deze case: 8
+    # Aantoonbare Playwright-assertions in deze case: 9
     Given de medewerker-pilot met september open
-    When een lege dag wordt ingevuld en met de knoppen bijgesteld en daarna ingediend
-    Then vergrendelt "Indienen ter controle" de maand en loopt het totaal en de meter mee
+    When een lege dag wordt ingevuld, bijgesteld en de week wordt ingediend
+    Then springt de pilot naar week 37, die weer invulbaar is, en telt de wekenmeter mee
 
   @happy
-  Scenario: [PILOT-H-007] medewerker-pilot: afgeronde maand toont vergrendelde uren en verzonden klanturenstaat
+  Scenario: [PILOT-H-007] medewerker-pilot: afgeronde maand toont vergrendelde weken en verzonden klanturenstaat
     # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 9
+    # Aantoonbare Playwright-assertions in deze case: 10
     Given de medewerker-pilot
     When augustus wordt gekozen in de maandkeuze
-    Then staan de uren vast en toont de klanturenstaat het verzonden-vinkje
+    Then staan alle weken vast en toont de klanturenstaat het verzonden-vinkje
 
   @happy
   Scenario: [PILOT-H-003] Backoffice: rechtstreeks gemaild blijft oranje tot externe bevestiging, terugdraaien vraagt bevestiging

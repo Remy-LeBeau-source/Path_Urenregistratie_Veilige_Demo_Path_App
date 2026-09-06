@@ -85,9 +85,14 @@
 
   /* Week strip (cream) */
   .week{grid-column:2;grid-row:1 / span 2;background:var(--cream);border-radius:var(--r);padding:20px 18px 16px;color:var(--ink);display:flex;flex-direction:column;}
-  .week .wh{margin-bottom:8px;}
-  .week .wh b{display:block;font-family:var(--serif);font-size:16px;color:var(--green-deep);}
-  .week .wh span{font-size:11px;color:var(--ink-soft);}
+  .week .wh{margin-bottom:10px;}
+  .week .wknav{display:flex;align-items:center;gap:8px;}
+  .week .wknav > div{flex:1;text-align:center;}
+  .week .wknav b{display:block;font-family:var(--serif);font-size:16px;color:var(--green-deep);}
+  .week .wknav span{font-size:11px;color:var(--ink-soft);}
+  .week .wnav-btn{width:28px;height:28px;flex:0 0 auto;border:1px solid #e0d7c4;background:#fff;border-radius:9px;color:var(--ink);font-size:16px;line-height:1;display:grid;place-items:center;padding:0;cursor:pointer;font-family:inherit;}
+  .week .wnav-btn:hover:not([disabled]){background:#f2ecdc;}
+  .week .wnav-btn[disabled]{opacity:.32;cursor:default;}
   .week ul{list-style:none;margin:8px 0 0;padding:0;flex:1;}
   .week li{display:flex;align-items:center;justify-content:space-between;padding:13px 12px;font-size:13px;border-bottom:1px solid #e6dfcf;}
   .week li:last-of-type{border-bottom:0;}
@@ -232,7 +237,7 @@
 
     <!-- Week strip — dagen + weektotaal worden door 1919-medewerker-ui.js gevuld -->
     <section class="week">
-      <div class="wh"><b>Week 36</b><span>31 aug – 6 sep</span></div>
+      <div class="wh"></div>
       <ul></ul>
       <div class="total"><span>Totaal deze week</span><b class="tval">0,00</b></div>
       <div class="actions"></div>
