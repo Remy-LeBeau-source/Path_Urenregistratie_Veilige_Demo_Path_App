@@ -197,9 +197,25 @@ function timesheet_employee_from_payload(PDO $pdo, array $currentUser, array $pa
     ];
 }
 
-function timesheet_require_employee_period_access(array $currentUser, array $employee, array $period): void
+function timesheet_e2e_period_override_allowed(array $config): bool
+{
+    if (auth_environment_from_config($config) !== 'test') {
+        return false;
+    }
+    $expected = trim((string)(getenv('PATH_APP_E2E_RUN_ID') ?: ''));
+    $provided = trim((string)($_SERVER['HTTP_X_PATH_E2E_RUN_ID'] ?? ''));
+    return $expected !== '' && $provided !== '' && hash_equals($expected, $provided);
+}
+
+function timesheet_require_employee_period_access(array $config, array $currentUser, array $employee, array $period): void
 {
     if ((string)$currentUser['role'] !== 'employee') {
+        return;
+    }
+    // Alleen de geïsoleerde Playwright-runner kent deze vluchtige run-ID. De
+    // publieke TEST-omgeving en PROD hebben PATH_APP_E2E_RUN_ID niet en blijven
+    // daarom fail-closed. ROLE-N-005 wist de header bewust en bewijst dat.
+    if (timesheet_e2e_period_override_allowed($config)) {
         return;
     }
     $periodKey = (string)$period['period_key'];
@@ -529,7 +545,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
     $period = timesheet_parse_period_key($periodKey);
 
     $employee = timesheet_employee_from_payload($pdo, $currentUser, $_GET);
-    timesheet_require_employee_period_access($currentUser, $employee, $period);
+    timesheet_require_employee_period_access($config, $currentUser, $employee, $period);
     $assignmentId = timesheet_assignment_id($pdo, (int)$currentUser['company_id'], (int)$employee['id']);
 
     $periodStmt = $pdo->prepare('SELECT id FROM periods WHERE company_id = :company_id AND year = :year AND month = :month LIMIT 1');
@@ -586,7 +602,7 @@ $payload = security_read_json_body();
 $action = security_require_enum_field($payload, 'action', ['save_draft', 'submit', 'request_correction', 'approve'], 'Invalid timesheet action.');
 $period = timesheet_parse_period_key(security_require_string_field($payload, 'period', 'Period is required.', 7));
 $employee = timesheet_employee_from_payload($pdo, $currentUser, $payload);
-timesheet_require_employee_period_access($currentUser, $employee, $period);
+timesheet_require_employee_period_access($config, $currentUser, $employee, $period);
 
 $expectedVersion = null;
 $correctionMessage = '';

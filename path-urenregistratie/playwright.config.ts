@@ -19,6 +19,8 @@ if (existsSync('.env.local')) {
   loadDotEnv({ path: '.env.local', override: false });
 }
 
+const e2eRunId = String(process.env.PATH_APP_E2E_RUN_ID || '').trim();
+
 export default defineConfig({
   testDir: './tests/playwright',
   workers: 1,
@@ -41,6 +43,7 @@ export default defineConfig({
     // App CSS zeroes out transitions/animations under prefers-reduced-motion; enabling it here removes
     // animation-driven visibility/stability delays (view switches, dropdown panels) from every test.
     reducedMotion: 'reduce',
+    extraHTTPHeaders: e2eRunId ? { 'X-Path-E2E-Run-Id': e2eRunId } : undefined,
   },
   reporter: [
     ['list'],

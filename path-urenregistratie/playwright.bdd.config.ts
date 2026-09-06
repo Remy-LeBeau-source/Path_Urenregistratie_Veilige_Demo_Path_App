@@ -1,6 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 import { defineBddConfig } from 'playwright-bdd';
 
+const e2eRunId = String(process.env.PATH_APP_E2E_RUN_ID || '').trim();
+
 const testDir = defineBddConfig({
   features: 'tests/bdd/features/*.feature',
   featuresRoot: 'tests/bdd/features',
@@ -24,6 +26,7 @@ export default defineConfig({
     video: 'retain-on-failure',
     serviceWorkers: 'block',
     reducedMotion: 'reduce',
+    extraHTTPHeaders: e2eRunId ? { 'X-Path-E2E-Run-Id': e2eRunId } : undefined,
   },
   reporter: [
     ['list'],

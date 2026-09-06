@@ -37,6 +37,11 @@ Belangrijke regels:
 - dezelfde grens is server-side fail-closed afgedwongen in `timesheets.php` en
   `customer-timesheets.php`: een medewerker krijgt vóór de startmaand en na de actuele
   Amsterdamse kalendermaand `403 period-not-accessible`, voor GET én POST;
+- alleen de geïsoleerde Playwright-runner kan voor bestaande synthetische
+  jaargrens-/concurrencydata een periodeoverride gebruiken: server en testproces moeten
+  dezelfde vluchtige `PATH_APP_E2E_RUN_ID` voeren én de omgeving moet `test` zijn.
+  Publieke TEST en PROD hebben deze variabele niet. `ROLE-N-005` wist de header expliciet
+  en bewijst daardoor het normale fail-closed contract;
 - `staff.php` berekent bij een latere startdatum eerst de echte impact over urenregistraties,
   klanturenstaten, facturen en perioden. Bij impact antwoordt de eerste poging met
   `409 employment-start-hides-history`; alleen een herhaling met

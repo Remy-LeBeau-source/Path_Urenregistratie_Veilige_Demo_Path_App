@@ -137,7 +137,7 @@ test('[PILOT-H-008] medewerker-pilot: snelkeuze zet uren in één tik, Opslaan b
     await vr.locator('.q[data-v="8"]').click();
     await expect(vr.locator('.hin')).toHaveValue('8,00');
     await expect(page.locator('.week .total .tval')).toHaveText('38,50');
-    await page.getByRole('button', { name: 'Opslaan' }).click();
+    await page.locator('.week .save').click();
   });
 
   await test.step('Then bevestigt de pilot het opslaan maar blijft de week bewerkbaar en niet ingediend', async () => {

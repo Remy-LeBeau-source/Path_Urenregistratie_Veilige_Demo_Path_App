@@ -152,7 +152,9 @@ test('[ROLE-N-005] medewerker kan maanden voor de startdatum en na de huidige ma
 
     for (const period of [beforeStart, afterCurrent]) {
       for (const endpoint of ['timesheets.php', 'customer-timesheets.php']) {
-        const response = await request.get(`/server/api/${endpoint}?period=${period}&employee_id=${employeeId}`);
+        const response = await request.get(`/server/api/${endpoint}?period=${period}&employee_id=${employeeId}`, {
+          headers: { 'X-Path-E2E-Run-Id': '' },
+        });
         expect(response.status(), `${endpoint} hoort ${period} te weigeren`).toBe(403);
         expect((await response.json()).error).toBe('period-not-accessible');
       }
@@ -160,7 +162,7 @@ test('[ROLE-N-005] medewerker kan maanden voor de startdatum en na de huidige ma
 
     const csrf = String((await (await request.get('/server/auth/csrf.php')).json()).csrf_token || '');
     const writeResponse = await request.post('/server/api/timesheets.php', {
-      headers: { 'X-CSRF-Token': csrf },
+      headers: { 'X-CSRF-Token': csrf, 'X-Path-E2E-Run-Id': '' },
       data: { action: 'save_draft', period: beforeStart, employee_id: employeeId },
     });
     expect(writeResponse.status()).toBe(403);

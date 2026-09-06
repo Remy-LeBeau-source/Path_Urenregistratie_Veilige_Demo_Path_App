@@ -215,6 +215,25 @@ Elk scherm moet in `styles-new.css` (of per-view) de nieuwe vormgeving krijgen
 - Losse look-punten van de gebruiker per iteratie.
 - Getekende avatars: nu initialen. Zodra portret-bestanden in `assets/1919/` staan → `.emp .av` / `.story-head .av` / medewerker-topbar naar `<img>`.
 
+## Pipeline-opvolging release 0.10.2
+
+- Releasecommit `0543424` bracht de functionele periodegrenzen, startdatum-
+  waarschuwing, verlof/ziekte-helpteksten, klanturenstaatstatus en pilot naar
+  `main`.
+- De eerste Actions-run vond vijf regressies in teststeigers: vier API-tests
+  gebruikten opzettelijk unieke jaartallen ver in de toekomst en één pilottest
+  klikte op een te brede knopselector.
+- De herstelcommit laat synthetische periodes uitsluitend toe wanneer de server
+  in `test` draait én server en Playwright-runner dezelfde tijdelijke
+  `PATH_APP_E2E_RUN_ID` delen via `X-Path-E2E-Run-Id`. Publieke TEST en PROD
+  krijgen die servervariabele niet en kunnen deze route dus niet gebruiken.
+  `[ROLE-N-005]` wist de header bewust en bewijst dat normale verzoeken vóór de
+  startdatum en na de huidige maand `403` blijven geven.
+- Lokaal opnieuw groen vóór push: `[PILOT-H-008]`, `[SAFE-H-002]`, alle drie
+  `timesheet-review-flow`-cases en alle achttien `customer-timesheet-api`-cases.
+  Neem voor de overdracht de nieuwste `main`-pipeline als definitief bewijs;
+  alleen een volledig groene TEST-deploy is overdraagbaar.
+
 ## Regels
 
 - Alleen LOCAL en TEST. Nooit PROD (geen deploy, geen SQL, geen promotie).
