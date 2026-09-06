@@ -427,6 +427,7 @@ function freshState() {
     preferences: {
       theme: "light",
       themeDefaultVersion: 1,
+      skin: "classic",
       hourReminders: true,
       statusNotifications: true,
       approvalNotifications: true,
@@ -1054,6 +1055,12 @@ function ensureSeedDataIntegrity(candidateState, fallbackState, sourceLabel) {
 }
 
 let state = loadState();
+// Vormgeving ("skin") zo vroeg mogelijk zetten -- vóór de eerste hertekening --
+// zodat styles-new.css meteen aanslaat en er geen flits van de klassieke stijl is.
+// "classic" laat de app volledig ongemoeid; "new" is de vernieuwde weergave.
+try {
+  document.documentElement.dataset.skin = state.preferences && state.preferences.skin === "new" ? "new" : "classic";
+} catch (_) { /* geen document: niets te doen */ }
 let modalAction = null;
 // Het element dat de dialoog opende. Bij sluiten gaat de focus daar naartoe
 // terug; anders viel hij op de kale body en was de toetsenbordpositie kwijt.
@@ -4245,6 +4252,14 @@ function applyTheme() {
   }
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = resolved === "dark" ? "#09131f" : normalizedBrandColor(state.settings.brandPrimary, "#0d1b38");
+}
+
+// Vormgeving. "classic" = de bestaande app zonder wijziging; "new" activeert de
+// regels in styles-new.css (allemaal gescoped onder html[data-skin="new"]).
+// Draait naast applyTheme(); de twee staan los van elkaar.
+function applySkin() {
+  const choice = state.preferences && state.preferences.skin === "new" ? "new" : "classic";
+  document.documentElement.dataset.skin = choice;
 }
 
 function greetingForNow() {
@@ -8590,6 +8605,7 @@ function renderAll() {
   renderNotifications();
   renderHelpSuggestions();
   applyTheme();
+  applySkin();
 }
 
 function prefersReducedMotion() {
@@ -10637,7 +10653,8 @@ function showPreferences() {
       + '<div class="preference-row"><span><strong>Klanturenstaten</strong><small>Ontbreekt, opnieuw uploaden, of goedgekeurd</small></span>' + '<input id="pref-customer-timesheets" aria-label="Berichten over klanturenstaten" type="checkbox"' + (state.preferences.customerTimesheetNotifications ? " checked" : "") + '></div>'
   ;
   const emailRow = '<div class="preference-row"><span><strong>Aanvullende e-mailmeldingen</strong><small>Zet je dit uit, dan blijven meldingen in de app wel zichtbaar</small></span><input id="pref-email-notifications" aria-label="Aanvullende e-mailmeldingen" type="checkbox"' + (profile.source.emailNotificationsEnabled !== false ? " checked" : "") + '></div>';
-  const summary = '<div class="preference-list"><div class="preference-row"><span><strong>Uiterlijk</strong><small>Licht is standaard; Automatisch volgt je apparaat</small></span><select id="pref-theme" aria-label="Uiterlijk"><option value="light"' + (state.preferences.theme === "light" ? " selected" : "") + '>Licht</option><option value="system"' + (state.preferences.theme === "system" ? " selected" : "") + '>Automatisch</option><option value="dark"' + (state.preferences.theme === "dark" ? " selected" : "") + '>Donker</option></select></div>' + adminRows + emailRow + '</div>';
+  const skinRow = '<div class="preference-row"><span><strong>Vormgeving</strong><small>Klassiek is de huidige stijl; Nieuw is de vernieuwde weergave</small></span><select id="pref-skin" aria-label="Vormgeving"><option value="classic"' + (state.preferences.skin !== "new" ? " selected" : "") + '>Klassiek</option><option value="new"' + (state.preferences.skin === "new" ? " selected" : "") + '>Nieuw</option></select></div>';
+  const summary = '<div class="preference-list"><div class="preference-row"><span><strong>Uiterlijk</strong><small>Licht is standaard; Automatisch volgt je apparaat</small></span><select id="pref-theme" aria-label="Uiterlijk"><option value="light"' + (state.preferences.theme === "light" ? " selected" : "") + '>Licht</option><option value="system"' + (state.preferences.theme === "system" ? " selected" : "") + '>Automatisch</option><option value="dark"' + (state.preferences.theme === "dark" ? " selected" : "") + '>Donker</option></select></div>' + skinRow + adminRows + emailRow + '</div>';
   showModal({
     label: "Voorkeuren",
     title: "Uiterlijk en meldingen",
@@ -10646,6 +10663,8 @@ function showPreferences() {
     confirm: "Voorkeuren opslaan",
     action: () => {
       state.preferences.theme = document.querySelector("#pref-theme").value;
+      const skinField = document.querySelector("#pref-skin");
+      if (skinField) state.preferences.skin = skinField.value === "new" ? "new" : "classic";
       profile.source.emailNotificationsEnabled = document.querySelector("#pref-email-notifications").checked;
       if (state.currentRole === "admin") {
         state.preferences.approvalNotifications = document.querySelector("#pref-approvals").checked;
@@ -10658,11 +10677,14 @@ function showPreferences() {
       persistState();
       closeModal();
       applyTheme();
+      applySkin();
       renderNotifications();
       toast("Voorkeuren zijn opgeslagen.");
     }
   });
   document.querySelector("#pref-theme").value = state.preferences.theme;
+  const skinField = document.querySelector("#pref-skin");
+  if (skinField) skinField.value = state.preferences.skin === "new" ? "new" : "classic";
 }
 
 function downloadCsv(filename, rows) {

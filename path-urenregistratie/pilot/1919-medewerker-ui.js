@@ -249,11 +249,18 @@
       save.addEventListener('click', function () {
         var box = document.querySelector('.week .actions');
         if (!box) return;
+        // Bevestiging blijft staan tot de gebruiker weer een dagveld aanraakt.
+        // (Een korte time-out was op tragere machines al weg voordat je 'm zag.)
         box.innerHTML = '<div class="done" tabindex="-1">✓ Opgeslagen — je kunt later verder</div>';
         try { box.querySelector('.done').focus(); } catch (e) {}
-        setTimeout(function () {
-          if (!month().past && !curWeek().submitted) renderWeek();
-        }, 1600);
+        var ul = document.querySelector('.week ul');
+        if (ul) {
+          var restore = function () {
+            ul.removeEventListener('focusin', restore);
+            if (!month().past && !curWeek().submitted) renderWeek();
+          };
+          ul.addEventListener('focusin', restore);
+        }
       });
     }
 

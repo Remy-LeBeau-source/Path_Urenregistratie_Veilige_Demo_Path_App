@@ -1152,6 +1152,10 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .profile-photo-control { margin-top: 9px; }
 .profile-photo-control input { width: 100%; font-size: 10px; }
 .preference-list { display: grid; gap: 11px; }
+/* Binnen een modal wint anders ".modal-summary > div { display:flex }" op
+   specificiteit, waardoor de voorkeurenrijen naast elkaar komen te staan en
+   buiten de dialoog vallen. Deze regel houdt ze onder elkaar. */
+.modal-summary > .preference-list { display: grid; grid-template-columns: 1fr; }
 .preference-row { display: grid; grid-template-columns: 1fr auto; gap: 15px; align-items: center; border: 1px solid var(--line); border-radius: 12px; padding: 13px; }
 .preference-row strong, .preference-row small { display: block; }
 .preference-row strong { font-size: 11px; }

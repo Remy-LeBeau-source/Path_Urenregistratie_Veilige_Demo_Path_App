@@ -1,0 +1,17 @@
+/* ==================================================================
+   "Nieuw" — de vernieuwde 1414/1919-vormgeving bovenop de bestaande app.
+
+   Deze stylesheet wordt altijd geladen, maar ELKE regel is gescoped
+   onder  html[data-skin="new"]  zodat de klassieke weergave volledig
+   ongemoeid blijft. Wisselen gebeurt via Voorkeuren → Vormgeving
+   (state.preferences.skin, toegepast door applySkin() in app.js).
+
+   Increment 1: alleen de schakelaar staat. Nog geen visuele regels —
+   de app ziet er in beide standen identiek uit. De vormgeving wordt
+   hierna stap voor stap ingevuld, telkens met de volledige caseset
+   als controle.
+   ================================================================== */
+
+html[data-skin="new"] {
+  /* nog geen overrides */
+}
