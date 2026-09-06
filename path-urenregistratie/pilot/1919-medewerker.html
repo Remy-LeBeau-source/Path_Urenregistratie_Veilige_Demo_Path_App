@@ -3,17 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pilot — 1919 Path Storyline — medewerker</title>
+<title>Pilot — 1414 Bento — medewerker</title>
 <style>
   /* ------------------------------------------------------------------
-     PILOT-PAGINA. Losstaande statische voorbeeldpagina van richting
-     1919 "Path Storyline" (medewerker-dashboard). Raakt de echte app
-     niet: geen gedeelde JS/CSS, geen routing, geen data. Bereikbaar
-     als eigen URL naast /.
-     CSP op TEST verbiedt EXTERNE fonts/scripts/afbeeldingen. Alles hier is
-     daarom same-origin: serif als lokale @font-face (assets/1919/serif.woff2),
-     de twee foto-vlakken als lokale <img> (assets/1919/hero.jpg,
-     assets/1919/document.jpg). Zie assets/1919/IMAGEGEN-PROMPTS.md + OFL.txt.
+     PILOT-PAGINA. Losstaande, statische 1-op-1 reproductie van
+     design-mockups/1414-path-bento-space/medewerker-dashboard.jpg.
+     Raakt de app op / niet: geen gedeelde JS/CSS, geen routing, geen
+     schrijfacties. CSP op TEST verbiedt EXTERNE fonts/scripts/afbeeldingen;
+     alles hier is same-origin: serif via lokale @font-face, foto's als
+     lokale <img>. Data is bewust vast (mockup-1:1), geen live server.
      ------------------------------------------------------------------ */
   @font-face{
     font-family:"Pilot Serif";
@@ -21,289 +19,246 @@
     font-weight:400 700; font-style:normal; font-display:swap;
   }
   :root{
-    --navy:#0e2233; --navy-2:#0c1f2e; --forest:#16362b; --forest-2:#122c24;
-    --cream:#f4f1e8; --paper:#faf7ef;
-    --ink:#20303a; --ink-serif:#22302b;
-    --line-dark:rgba(255,255,255,.14); --line-cream:#e7e1d3;
-    --text-dark:#cdd8dd; --text-dark-soft:#93a4ad;
-    --green:#6bbf95; --green-deep:#2f6a4c;
-    --amber:#e0a13c; --amber-strong:#d68f24;
+    --navy:#0b1c2c; --navy-card:#12293e; --navy-tile:#12293e;
+    --forest:#1e4032; --forest-2:#173428;
+    --cream:#efe9dc; --cream-2:#f4efe4;
+    --ink:#1e2c34; --ink-soft:#5c6660;
+    --text-dark:#c9d5da; --text-dark-soft:#8b9aa2;
+    --line-dark:rgba(255,255,255,.10);
+    --green:#5fb98d; --green-deep:#2f6a4c; --green-ring:#66c197;
+    --amber:#d99a3c; --blue:#4d7fb0;
     --serif:"Pilot Serif",Georgia,"Times New Roman",serif;
     --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,system-ui,sans-serif;
+    --r:22px;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
-  body{background:var(--navy);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;}
-  .pilot-flag{
-    background:#1b1b1b;color:#f3e6c8;font-size:12px;letter-spacing:.04em;
-    padding:8px 18px;text-align:center;border-bottom:1px solid #333;
-  }
+  img{max-width:100%;display:block;}
+  body{background:var(--navy);color:var(--text-dark);font-family:var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+  .pilot-flag{background:#161616;color:#f0e4c8;font-size:12px;letter-spacing:.03em;padding:7px 18px;text-align:center;}
   .pilot-flag b{color:#fff;}
+  .wrap{max-width:1560px;margin:0 auto;padding:22px 40px 40px;}
 
-  .shell{display:grid;grid-template-columns:264px 1fr;min-height:100vh;}
-
-  /* ---------------- Rail ---------------- */
-  .rail{background:var(--navy);color:var(--text-dark);padding:26px 22px 22px;position:sticky;top:0;align-self:start;height:100vh;z-index:4;overflow:visible;}
-  .rail .brand{display:flex;align-items:center;gap:11px;margin-bottom:34px;}
-  .rail .brand .mark{width:32px;height:32px;border:2px solid var(--green);border-radius:8px;display:grid;place-items:center;color:var(--green);font-family:var(--serif);font-weight:700;font-size:15px;}
-  .rail .brand span{font-size:15px;color:#fff;font-weight:600;letter-spacing:.2px;}
-  .timeline{position:relative;padding-left:6px;}
-  .timeline::before{content:"";position:absolute;left:19px;top:16px;bottom:64px;width:1.5px;background:var(--line-dark);}
-  .stop{position:relative;padding:0 0 30px 44px;--connector-color:rgba(107,191,149,.5);}
-  .rail-curve{
-    position:absolute;z-index:0;left:0;right:-27px;top:calc(100% - 25px);width:calc(100% + 27px);height:72px;
-    overflow:visible;color:var(--connector-color);pointer-events:none;opacity:.72;
-    transition:color .28s ease,opacity .28s ease,filter .28s ease;
-  }
-  .rail-curve path{fill:none;stroke:currentColor;stroke-width:1.55;vector-effect:non-scaling-stroke;}
-  .rail-curve circle{fill:currentColor;stroke:var(--navy);stroke-width:2;vector-effect:non-scaling-stroke;}
-  .stop .node{position:absolute;left:0;top:0;width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line-dark);display:grid;place-items:center;background:var(--navy);}
-  .stop .node svg{width:15px;height:15px;stroke:var(--text-dark-soft);fill:none;stroke-width:1.7;}
-  .stop.active .node{border-color:var(--amber);box-shadow:0 0 0 4px rgba(224,161,60,.15);}
-  .stop.active .node svg{stroke:var(--amber);}
-  .stop.active{--connector-color:var(--amber);}
-  .stop.active .rail-curve{opacity:1;filter:drop-shadow(0 0 5px rgba(224,161,60,.48));}
-  .stop .eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--green);font-weight:700;}
-  .stop.active .eyebrow{color:var(--amber);}
-  .stop .ttl{font-family:var(--serif);font-size:15px;color:#fff;margin:3px 0 3px;line-height:1.25;}
-  .stop .sub{font-size:11.5px;color:var(--text-dark-soft);line-height:1.45;}
-  .stop.active .sub{color:var(--amber);}
-  .rail .ask{position:absolute;left:22px;right:22px;bottom:20px;display:flex;gap:11px;border-top:1px solid var(--line-dark);padding-top:16px;}
-  .rail .ask svg{width:16px;height:16px;stroke:var(--text-dark-soft);fill:none;stroke-width:1.7;flex:0 0 auto;margin-top:2px;}
-  .rail .ask p{margin:0;font-size:11px;color:var(--text-dark-soft);line-height:1.5;}
-
-  /* ---------------- Main ---------------- */
-  .main{background:var(--cream);}
-  .topbar{display:flex;align-items:center;gap:16px;padding:16px 44px;background:var(--cream);}
-  .topbar .pkg{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink);opacity:.55;}
-  .topbar .pkg b{color:var(--green-deep);opacity:1;}
+  /* Topbar */
+  .topbar{display:flex;align-items:center;gap:20px;margin-bottom:26px;}
+  .brand{display:flex;align-items:center;gap:11px;}
+  .brand .mark{width:34px;height:34px;border:2px solid var(--green);border-radius:9px;display:grid;place-items:center;color:var(--green);font-family:var(--serif);font-weight:700;font-size:16px;}
+  .brand .name{font-size:17px;color:#fff;font-weight:600;}
+  .brand .name i{font-style:italic;font-weight:400;color:var(--text-dark-soft);}
   .topbar .grow{flex:1;}
-  .chip{display:flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--line-cream);border-radius:11px;padding:9px 14px;font-size:13px;font-weight:600;color:var(--ink);}
-  .chip svg{width:15px;height:15px;stroke:#7a7f7c;fill:none;stroke-width:1.7;}
-  .topbar .sep{width:1px;height:26px;background:var(--line-cream);}
-  .who{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--ink);}
-  .who .av{width:34px;height:34px;border-radius:50%;background:#d8e2da;display:grid;place-items:center;font-family:var(--serif);font-size:12px;color:var(--green-deep);}
-  .who svg{width:14px;height:14px;stroke:#7a7f7c;fill:none;stroke-width:1.8;}
+  .monthpick{display:flex;align-items:center;gap:11px;background:#0a1a29;border:1px solid var(--line-dark);border-radius:13px;padding:11px 18px;font-size:14px;font-weight:600;color:#fff;}
+  .monthpick svg{width:16px;height:16px;stroke:var(--text-dark-soft);fill:none;stroke-width:1.7;}
+  .who{display:flex;align-items:center;gap:12px;}
+  .who .av{width:40px;height:40px;border-radius:50%;background:#2b4a3c;display:grid;place-items:center;font-family:var(--serif);color:var(--green);font-size:13px;}
+  .who b{font-size:14px;color:#fff;font-weight:600;}
+  .who svg{width:15px;height:15px;stroke:var(--text-dark-soft);fill:none;stroke-width:1.8;}
+  .bell{position:relative;width:22px;height:22px;stroke:var(--text-dark-soft);fill:none;stroke-width:1.7;}
+  .bell b{position:absolute;top:-5px;right:-5px;min-width:15px;height:15px;border-radius:8px;background:var(--green);color:#08130d;font-size:9px;font-weight:800;display:grid;place-items:center;border:2px solid var(--navy);}
 
-  /* Chapter 1 — hero */
-  [data-story-chapter]{scroll-margin-top:22px;}
-  .hero{display:grid;grid-template-columns:1.08fr 1fr;align-items:stretch;background:var(--cream);position:relative;}
-  .hero .copy{padding:24px 0 34px 44px;align-self:center;min-width:0;position:relative;z-index:2;}
-  .eyebrow-c{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--green-deep);font-weight:700;}
-  .hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(38px,4.2vw,52px);line-height:1.02;color:var(--ink-serif);margin:9px 0 12px;letter-spacing:.4px;}
-  .hero p{font-size:14px;line-height:1.55;color:#5b6560;margin:0 0 18px;max-width:520px;}
-  .mini{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;padding-right:4px;}
-  .mini > div{display:flex;gap:9px;min-width:0;}
-  .mini .ic{width:34px;height:34px;border-radius:9px;border:1px solid var(--line-cream);display:grid;place-items:center;flex:0 0 auto;background:#fff;}
-  .mini .ic svg{width:16px;height:16px;stroke:var(--green-deep);fill:none;stroke-width:1.6;}
-  .mini b{display:block;font-size:12.5px;color:var(--ink);}
-  .mini span{display:block;font-size:11.5px;color:#7f8883;margin-top:2px;line-height:1.4;}
-  .hero .scene{position:relative;min-height:340px;margin-top:-60px;margin-left:-72px;overflow:hidden;}
-  .hero .scene img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center right;
-    /* zachte overgang: linkerrand van de foto lost op in de cream i.p.v. een harde kolomrand */
-    -webkit-mask-image:linear-gradient(to right, transparent 0, rgba(0,0,0,.35) 14%, #000 32%);
-    mask-image:linear-gradient(to right, transparent 0, rgba(0,0,0,.35) 14%, #000 32%);}
+  /* Bento grid */
+  .bento{display:grid;grid-template-columns:1.18fr .62fr 1.05fr;gap:20px;align-items:stretch;}
 
-  /* Chapter 2 — invullen (navy) */
-  .chapter{padding:46px 44px;position:relative;isolation:isolate;}
-  .chapter::before{
-    content:"";position:absolute;z-index:0;left:0;right:0;top:-36px;height:36px;pointer-events:none;
+  /* Hero (green) */
+  .hero{grid-column:1;grid-row:1 / span 2;position:relative;overflow:hidden;border-radius:var(--r);
+    background:linear-gradient(150deg,#204435 0%,#1a3a2c 60%,#163326 100%);padding:44px 44px 34px;min-height:520px;display:flex;flex-direction:column;}
+  .hero .foliage{position:absolute;left:-26px;bottom:-26px;width:190px;opacity:.55;z-index:0;pointer-events:none;-webkit-mask-image:radial-gradient(circle at 20% 85%,#000 40%,transparent 78%);mask-image:radial-gradient(circle at 20% 85%,#000 40%,transparent 78%);}
+  .hero > *{position:relative;z-index:1;}
+  .hero .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9bd3b4;font-weight:700;}
+  .hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(42px,4.4vw,62px);line-height:1.0;color:#f3efe3;margin:14px 0 16px;letter-spacing:.5px;}
+  .hero p{font-size:15px;line-height:1.55;color:#cfe0d3;margin:0;max-width:340px;}
+  .hero .go{position:absolute;right:52px;top:calc(50% + 14px);transform:translateY(-50%);width:150px;height:150px;border-radius:50%;
+    background:radial-gradient(circle at 38% 32%,#63985f,#3d6a41 72%);
+    border:10px solid rgba(255,255,255,.05);
+    display:grid;place-items:center;box-shadow:0 26px 55px rgba(0,0,0,.4), inset 0 3px 8px rgba(255,255,255,.16);}
+  .hero .go svg{width:38px;height:38px;stroke:#f3efe3;fill:none;stroke-width:2.2;}
+  .hero .foot{margin-top:auto;display:flex;align-items:center;gap:12px;color:#bcd2c1;font-size:12.5px;}
+  .hero .foot .ic{width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.16);display:grid;place-items:center;flex:0 0 auto;}
+  .hero .foot .ic svg{width:14px;height:14px;stroke:#bcd2c1;fill:none;stroke-width:1.7;}
+
+  /* Week strip (cream) */
+  .week{grid-column:2;grid-row:1 / span 2;background:var(--cream);border-radius:var(--r);padding:20px 18px 16px;color:var(--ink);display:flex;flex-direction:column;}
+  .week .wh{margin-bottom:8px;}
+  .week .wh b{display:block;font-family:var(--serif);font-size:16px;color:var(--green-deep);}
+  .week .wh span{font-size:11px;color:var(--ink-soft);}
+  .week ul{list-style:none;margin:8px 0 0;padding:0;flex:1;}
+  .week li{display:flex;align-items:center;justify-content:space-between;padding:13px 12px;font-size:13px;border-bottom:1px solid #e6dfcf;}
+  .week li:last-of-type{border-bottom:0;}
+  .week li .d{color:var(--ink-soft);}
+  .week li .d b{display:block;color:var(--ink);font-size:12px;letter-spacing:.04em;}
+  .week li .h{font-family:var(--serif);font-size:17px;color:var(--ink);}
+  .week li.on{background:#0f2439;color:#fff;border-radius:12px;border-bottom-color:transparent;margin:2px -6px;padding-left:18px;padding-right:18px;}
+  .week li.on .d,.week li.on .d b{color:#cdd8dd;}
+  .week li.on .h{color:#fff;}
+  .week li.off .h{color:#b7bab2;}
+  .week .overview{margin-top:8px;display:flex;align-items:center;justify-content:center;gap:9px;background:#fff;border:1px solid #e4ddcd;border-radius:12px;padding:12px;font-size:12.5px;font-weight:700;color:var(--ink);}
+  .week .overview svg{width:15px;height:15px;stroke:var(--green-deep);fill:none;stroke-width:1.8;}
+
+  /* Gauge (navy) */
+  .gauge{grid-column:3;grid-row:1;background:var(--navy-card);border:1px solid var(--line-dark);border-radius:var(--r);padding:30px 34px 26px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .gauge .ring{position:relative;width:240px;height:240px;}
+  .gauge .ring svg{transform:rotate(-90deg);width:100%;height:100%;}
+  .gauge .ring .track{stroke:#22405a;stroke-width:15;fill:none;}
+  .gauge .ring .val{stroke:var(--green-ring);stroke-width:15;fill:none;stroke-linecap:round;stroke-dasharray:659.7;stroke-dashoffset:528;}
+  .gauge .ring .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+  .gauge .ring .mid small{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-dark-soft);}
+  .gauge .ring .mid .num{font-family:var(--serif);font-size:62px;line-height:1;color:#fff;margin:4px 0 2px;}
+  .gauge .ring .mid .of{font-size:15px;color:var(--text-dark-soft);}
+  .gauge .of .g{color:var(--green-ring);}
+  .gauge .rest{margin:20px 0 14px;font-size:13.5px;color:var(--text-dark-soft);}
+  .gauge .bar{width:100%;height:8px;border-radius:6px;background:#1c364b;overflow:hidden;}
+  .gauge .bar i{display:block;height:100%;width:20%;background:var(--green-ring);border-radius:6px;}
+  .gauge .pct{align-self:flex-end;margin-top:7px;font-size:12px;font-weight:700;color:var(--green-ring);}
+
+  /* Klanturenstaat (cream photo) */
+  .kt{grid-column:3;grid-row:2;background:var(--cream-2);border-radius:var(--r);overflow:hidden;color:var(--ink);display:flex;flex-direction:column;}
+  .kt .body{padding:24px 0 8px 26px;display:grid;grid-template-columns:1fr 200px;gap:16px;align-items:start;}
+  .kt .txt{padding-bottom:14px;}
+  .kt .txt h3{font-family:var(--serif);font-weight:400;font-size:26px;margin:12px 0 6px;color:#22302b;}
+  .kt .txt p{margin:0;font-size:13px;color:var(--ink-soft);}
+  .kt .check{width:34px;height:34px;border-radius:50%;background:var(--green-deep);display:grid;place-items:center;}
+  .kt .check svg{width:17px;height:17px;stroke:#fff;fill:none;stroke-width:2.4;}
+  .kt .photo{align-self:stretch;}
+  .kt .photo img{width:100%;height:100%;min-height:180px;object-fit:cover;object-position:72% 6%;}
+  .kt .cta{margin:14px 26px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1px solid #e4ddcd;border-radius:13px;padding:14px 18px;font-size:13.5px;font-weight:700;color:var(--ink);}
+  .kt .cta svg{width:16px;height:16px;stroke:var(--green-deep);fill:none;stroke-width:1.9;}
+
+  /* 4-step strip */
+  .steps{grid-column:1 / -1;grid-row:3;background:var(--navy-card);border:1px solid var(--line-dark);border-radius:var(--r);padding:24px 30px 26px;}
+  .steps .lead{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-dark-soft);font-weight:700;margin-bottom:18px;}
+  .steps ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:0;}
+  .steps li{position:relative;padding-right:22px;}
+  .steps li:not(:last-child)::after{content:"";position:absolute;top:22px;left:52px;right:8px;border-top:1.5px dashed var(--line-dark);}
+  .steps .ic{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;margin-bottom:12px;}
+  .steps .ic svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:1.8;}
+  .steps .ic.g{background:#2f6a4c;}.steps .ic.b{background:#3a5f83;}.steps .ic.a{background:#a5711f;}
+  .steps b{display:block;font-size:13.5px;color:#fff;margin-bottom:4px;}
+  .steps span{display:block;font-size:12px;color:var(--text-dark-soft);line-height:1.5;max-width:180px;}
+
+  @media (max-width:1180px){
+    .bento{grid-template-columns:1fr 1fr;}
+    .hero{grid-column:1 / -1;grid-row:auto;min-height:340px;}
+    .week{grid-column:1;grid-row:auto;}
+    .gauge{grid-column:2;grid-row:auto;}
+    .kt{grid-column:1 / -1;grid-row:auto;}
+    .steps ol{grid-template-columns:1fr 1fr;gap:22px;}
+    .steps li:not(:last-child)::after{display:none;}
   }
-  .chapter > *{position:relative;z-index:1;}
-  .chapter.navy{background:var(--navy);color:var(--text-dark);}
-  .chapter.forest{background:var(--forest);color:var(--text-dark);}
-  .chapter.forest{padding-block:22px;}
-  .chapter.dark{background:var(--navy-2);color:var(--text-dark);padding-block:18px;overflow:hidden;}
-  .chapter.navy::before{background:linear-gradient(to bottom,rgba(244,241,232,0),var(--navy));}
-  .chapter.forest::before{background:linear-gradient(to bottom,rgba(14,34,51,0),var(--forest));}
-  .chapter.dark::before{background:linear-gradient(to bottom,rgba(22,54,43,0),var(--navy-2));}
-  .ch-grid{display:grid;grid-template-columns:minmax(280px,.78fr) minmax(0,1.22fr);gap:34px;align-items:center;}
-  .ch-eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;}
-  .chapter.navy .ch-eyebrow{color:var(--amber);}
-  .chapter.forest .ch-eyebrow,.chapter.dark .ch-eyebrow{color:var(--green);}
-  .ch-grid h2{font-family:var(--serif);font-weight:400;font-size:clamp(30px,3.6vw,44px);line-height:1.08;color:#fff;margin:12px 0 14px;letter-spacing:.3px;}
-  .ch-grid .lead{font-size:14px;line-height:1.6;color:var(--text-dark-soft);margin:0 0 22px;max-width:420px;}
-  .chapter.forest .ch-grid h2{font-size:clamp(30px,2.8vw,36px);margin:7px 0 9px;}
-  .chapter.forest .ch-grid .lead{font-size:12.5px;line-height:1.45;margin-bottom:0;}
-  .btn-amber{display:inline-flex;align-items:center;gap:10px;background:var(--amber-strong);color:#241a06;border:0;border-radius:10px;padding:13px 22px;font-size:13.5px;font-weight:700;font-family:inherit;cursor:pointer;}
-  .btn-amber svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;}
-
-  .week{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;}
-  .day .dh{display:flex;flex-direction:column;gap:2px;margin-bottom:10px;}
-  .day .dh b{font-size:13px;letter-spacing:.08em;color:#fff;}
-  .day .dh span{font-size:10.5px;letter-spacing:.06em;color:var(--text-dark-soft);}
-  .day .cell{border:1px solid var(--line-dark);border-radius:11px;padding:22px 12px 24px;text-align:left;background:rgba(255,255,255,.02);}
-  .day .cell .h{font-family:var(--serif);font-size:24px;color:var(--green);}
-  .day .cell.empty .h{color:var(--amber);}
-  .day .cell .u{font-size:9.5px;letter-spacing:.12em;color:var(--text-dark-soft);margin-top:2px;}
-  .day .add{display:flex;align-items:center;gap:6px;justify-content:center;margin-top:10px;font-size:10px;letter-spacing:.1em;color:var(--text-dark-soft);}
-  .day .add svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;}
-  .day.total .cell{background:transparent;border-color:transparent;padding-left:0;}
-  .day.total .cell .h{color:#fff;}
-
-  /* Chapter 3 — flow */
-  .flow{display:flex;align-items:flex-start;gap:14px;}
-  .flow .step{display:flex;gap:13px;flex:1;min-width:0;}
-  .flow .step .ic{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--line-dark);display:grid;place-items:center;flex:0 0 auto;}
-  .flow .step .ic svg{width:18px;height:18px;stroke:var(--green);fill:none;stroke-width:1.6;}
-  .flow .step b{display:block;font-size:13px;color:#fff;}
-  .flow .step span{display:block;font-size:11.5px;color:var(--text-dark-soft);margin-top:3px;line-height:1.45;}
-  .flow .arrow{align-self:center;color:var(--text-dark-soft);font-size:16px;flex:0 0 auto;white-space:nowrap;}
-
-  /* Chapter 4 — document scene */
-  .doc-grid{display:grid;grid-template-columns:minmax(280px,.72fr) minmax(0,1.28fr);gap:38px;align-items:center;height:172px;}
-  .doc-scene{position:relative;height:172px;min-height:0;border-radius:14px;overflow:hidden;}
-  .doc-scene img{display:block;width:100%;height:100%;min-height:0;object-fit:cover;object-position:center 20%;transform:scale(1.015);}
-
-  .story-enhanced .stop .node,.story-enhanced .stop .eyebrow,.story-enhanced .stop .ttl,.story-enhanced .stop .sub{
-    transition:color .28s ease,border-color .28s ease,box-shadow .28s ease,transform .28s ease;
-  }
-  .story-enhanced .stop.active .node{transform:scale(1.04);}
-  .story-enhanced [data-story-chapter] > *{transition:opacity .42s ease,transform .42s ease;}
-  .story-enhanced [data-story-chapter]:not(.chapter-visible) > *{opacity:.82;transform:translateY(8px);}
-
-  @media (prefers-reduced-motion:reduce){
-    html{scroll-behavior:auto;}
-    .stop,.rail-curve,.stop .node,.stop .eyebrow,.stop .ttl,.stop .sub,
-    .story-enhanced [data-story-chapter] > *{transition:none!important;transform:none!important;}
-  }
-
-  @media (max-width:1080px){
-    .shell{grid-template-columns:1fr;}
-    .rail{display:none;}
-    .hero,.ch-grid,.doc-grid{grid-template-columns:1fr;}
-    .week{grid-template-columns:repeat(3,1fr);}
-    .flow{flex-direction:column;}
-    .flow .arrow{display:none;}
+  @media (max-width:720px){
+    .wrap{padding:16px 16px 28px;}
+    .topbar{flex-wrap:wrap;gap:12px;}
+    .topbar .grow{display:none;}
+    .bento{grid-template-columns:1fr;}
+    .hero,.week{grid-row:auto;}
+    .gauge,.kt,.steps{grid-column:1;grid-row:auto;}
+    .hero .go{position:static;transform:none;margin-top:22px;width:96px;height:96px;border-width:6px;}
+    .hero .foliage{max-width:50%;}
+    .week li.on{margin:2px 0;padding-left:12px;padding-right:12px;}
+    .gauge .ring{width:min(220px,72vw);height:min(220px,72vw);}
+    .steps ol{grid-template-columns:1fr;}
   }
 </style>
-<link rel="stylesheet" href="1919-portal.css">
 </head>
 <body data-pilot-design="combo-1414-1919">
 
-<div class="pilot-flag"><b>PILOT</b> &nbsp;·&nbsp; nieuwe medewerkerportal &nbsp;·&nbsp; Bento × Storyline &nbsp;·&nbsp; gekoppeld aan dezelfde TEST-gegevens als Backoffice</div>
+<div class="pilot-flag"><b>PILOT</b> &nbsp;·&nbsp; nieuwe medewerkerportal &nbsp;·&nbsp; 1414 Bento Space &nbsp;·&nbsp; statische 1:1-voorbeeldpagina, niet de echte app</div>
 
-<div class="shell">
+<div class="wrap">
 
-  <!-- ===================== Rail ===================== -->
-  <aside class="rail">
-    <div class="brand"><span class="mark">P</span><span>Path Consultancy</span></div>
-    <div class="timeline">
-      <div class="stop" data-chapter="chapter-start">
-        <span class="node"><svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg></span>
-        <div class="eyebrow">Start</div><div class="ttl">Je maand begint</div><div class="sub">Een frisse start.</div>
-      </div>
-      <div class="stop active" data-chapter="chapter-hours" aria-current="step">
-        <span class="node"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
-        <div class="eyebrow">Week 1</div><div class="ttl">31 aug – 6 sep</div><div class="sub">Vul 20 uur aan</div>
-        <svg class="rail-curve" viewBox="0 0 230 72" preserveAspectRatio="none" aria-hidden="true"><path d="M17 0 V14 C17 26 27 32 40 32 H178 C192 32 199 40 199 53 V55 C199 66 209 70 230 70"/><circle cx="230" cy="70" r="4"/></svg>
-      </div>
-      <div class="stop">
-        <span class="node"><svg viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-8z"/></svg></span>
-        <div class="eyebrow">Indienen</div><div class="ttl">Je uren indienen</div><div class="sub">Klaar voor controle.</div>
-      </div>
-      <div class="stop" data-chapter="chapter-backoffice">
-        <span class="node"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 5-3 7-7 9-4-2-7-4-7-9V6z"/></svg></span>
-        <div class="eyebrow">Backoffice</div><div class="ttl">Na indienen neemt Backoffice het over</div><div class="sub">Wij zorgen voor de rest.</div>
-        <svg class="rail-curve" viewBox="0 0 230 72" preserveAspectRatio="none" aria-hidden="true"><path d="M17 0 V14 C17 26 27 32 40 32 H178 C192 32 199 40 199 53 V55 C199 66 209 70 230 70"/><circle cx="230" cy="70" r="4"/></svg>
-      </div>
-      <div class="stop" data-chapter="chapter-customer">
-        <span class="node"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
-        <div class="eyebrow">Klanturenstaat</div><div class="ttl">Direct naar de klant</div><div class="sub">Transparant en rechtstreeks gemaild.</div>
-        <svg class="rail-curve" viewBox="0 0 230 72" preserveAspectRatio="none" aria-hidden="true"><path d="M17 0 V14 C17 26 27 32 40 32 H178 C192 32 199 40 199 53 V55 C199 66 209 70 230 70"/><circle cx="230" cy="70" r="4"/></svg>
-      </div>
+  <div class="topbar">
+    <div class="brand"><span class="mark">P</span><span class="name">Path <i>Consultancy</i></span></div>
+    <span class="grow"></span>
+    <div class="monthpick">
+      <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+      September 2026
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
     </div>
-    <div class="ask">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 015 .2c0 1.8-2.5 2-2.5 3.8"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg>
-      <p>Vragen over je uren?<br>Neem contact op met Backoffice.</p>
+    <span class="grow"></span>
+    <div class="who">
+      <span class="av">SV</span><b>Stasjo</b>
+      <svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6"/></svg>
+      <span class="bell"><svg viewBox="0 0 24 24"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 21h4"/></svg><b>3</b></span>
     </div>
-  </aside>
+  </div>
 
-  <!-- ===================== Main ===================== -->
-  <div class="main">
+  <div class="bento">
 
-    <div class="topbar">
-      <span class="pkg"><b>Package 1919</b> · Path Storyline — Employee</span>
-      <span class="grow"></span>
-      <span class="chip"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>September 2026 <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
-      <span class="sep"></span>
-      <span class="who"><span class="av">SB</span>Stasjo van Bakel <svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6"/></svg></span>
-    </div>
-
-    <!-- Chapter 1 — hero -->
-    <section class="hero chapter-visible" id="chapter-start" data-story-chapter="chapter-start">
-      <div class="copy">
-        <div class="eyebrow-c">September 2026</div>
-        <h1>Je maand begint</h1>
-        <p>Welkom bij je urenregistratie. Registreer je uren per dag, dien ze in en wij doen de rest.</p>
-        <div class="mini">
-          <div><span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span><span><b>Registreer dagelijks</b><span>Houd je uren actueel.</span></span></div>
-          <div><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-8z"/></svg></span><span><b>Dien wekelijks in</b><span>Eenvoudig en snel.</span></span></div>
-          <div><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 5-3 7-7 9-4-2-7-4-7-9V6z"/><path d="M9 12l2 2 4-5"/></svg></span><span><b>Wij regelen de rest</b><span>Backoffice neemt het over.</span></span></div>
-        </div>
-      </div>
-      <div class="scene">
-        <img src="assets/1919/bento-foliage-v2.png" alt="Groene bladeren tegen een rustige donkergroene achtergrond">
+    <!-- Hero -->
+    <section class="hero">
+      <img class="foliage" src="assets/1919/bento-foliage-v2.png" alt="Groene bladeren tegen een rustige donkergroene achtergrond">
+      <div class="eyebrow">September 2026</div>
+      <h1>Begin met <br>je uren</h1>
+      <p>Registreer je uren voor deze week. Het kost maar een paar minuten.</p>
+      <button class="go" type="button" aria-label="Begin met je uren">
+        <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+      <div class="foot">
+        <span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 5-3 7-7 9-4-2-7-4-7-9V6z"/></svg></span>
+        Na indienen neemt Backoffice het over.
       </div>
     </section>
 
-    <!-- Chapter 2 — invullen -->
-    <section class="chapter navy chapter-visible" id="chapter-hours" data-story-chapter="chapter-hours">
-      <div class="ch-grid">
-        <div>
-          <div class="ch-eyebrow">Week 1 · 31 aug – 6 sep 2026</div>
-          <h2>Vul je uren in</h2>
-          <p class="lead">Registreer je uren per dag. Zo houd je grip en blijft alles kloppend.</p>
-          <button class="btn-amber"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Vul 20 uur aan</button>
-        </div>
-        <div class="week">
-          <div class="day"><div class="dh"><b>MA</b><span>31 AUG</span></div><div class="cell"><div class="h">8:00</div><div class="u">UREN</div></div><div class="add"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>TOEVOEGEN</div></div>
-          <div class="day"><div class="dh"><b>DI</b><span>1 SEP</span></div><div class="cell"><div class="h">8:00</div><div class="u">UREN</div></div><div class="add"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>TOEVOEGEN</div></div>
-          <div class="day"><div class="dh"><b>WO</b><span>2 SEP</span></div><div class="cell"><div class="h">4:00</div><div class="u">UREN</div></div><div class="add"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>TOEVOEGEN</div></div>
-          <div class="day"><div class="dh"><b>DO</b><span>3 SEP</span></div><div class="cell empty"><div class="h">0:00</div><div class="u">UREN</div></div><div class="add"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>TOEVOEGEN</div></div>
-          <div class="day"><div class="dh"><b>VR</b><span>4 SEP</span></div><div class="cell empty"><div class="h">0:00</div><div class="u">UREN</div></div><div class="add"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>TOEVOEGEN</div></div>
-          <div class="day total"><div class="dh"><b>TOTAAL</b><span>&nbsp;</span></div><div class="cell"><div class="h">20:00</div><div class="u">UREN</div></div></div>
-        </div>
-      </div>
+    <!-- Week strip -->
+    <section class="week">
+      <div class="wh"><b>Week 36</b><span>31 aug – 6 sep</span></div>
+      <ul>
+        <li><span class="d">MA <b>31</b></span><span class="h">8,00</span></li>
+        <li><span class="d">DI <b>1</b></span><span class="h">8,00</span></li>
+        <li class="on"><span class="d">WO <b>2</b></span><span class="h">7,00</span></li>
+        <li><span class="d">DO <b>3</b></span><span class="h">7,30</span></li>
+        <li class="off"><span class="d">VR <b>4</b></span><span class="h">—</span></li>
+        <li class="off"><span class="d">ZA <b>5</b></span><span class="h">—</span></li>
+        <li class="off"><span class="d">ZO <b>6</b></span><span class="h">—</span></li>
+      </ul>
+      <button class="overview" type="button">
+        <svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+        Weekoverzicht
+      </button>
     </section>
 
-    <!-- Chapter 3 — na indienen -->
-    <section class="chapter forest" id="chapter-backoffice" data-story-chapter="chapter-backoffice">
-      <div class="ch-grid">
-        <div>
-          <div class="ch-eyebrow">Na indienen</div>
-          <h2>Na indienen neemt<br>Backoffice het over</h2>
-          <p class="lead">Wij controleren je uren en verzorgen de communicatie. Jij hoeft verder niets te doen.</p>
-        </div>
-        <div class="flow">
-          <div class="step"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 5-3 7-7 9-4-2-7-4-7-9V6z"/><path d="M9 12l2 2 4-5"/></svg></span><span><b>Controle</b><span>We controleren je uren.</span></span></div>
-          <span class="arrow">&rarr;</span>
-          <div class="step"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-8z"/></svg></span><span><b>Klanturenstaat</b><span>Rechtstreeks gemaild naar de klant.</span></span></div>
-          <span class="arrow">&rarr;</span>
-          <div class="step"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg></span><span><b>Gereed</b><span>Jouw uren zijn afgerond.</span></span></div>
+    <!-- Gauge: voortgang in weken i.p.v. contracturen -->
+    <section class="gauge">
+      <div class="ring">
+        <svg viewBox="0 0 240 240"><circle class="track" cx="120" cy="120" r="105"/><circle class="val" cx="120" cy="120" r="105"/></svg>
+        <div class="mid">
+          <small>Ingevuld</small>
+          <span class="num">1</span>
+          <span class="of">/ 5 <span class="g">weken</span></span>
         </div>
       </div>
+      <div class="rest">Nog 4 weken te gaan deze maand</div>
+      <div class="bar"><i></i></div>
+      <div class="pct">20%</div>
     </section>
 
-    <!-- Chapter 4 — direct naar de klant -->
-    <section class="chapter dark" id="chapter-customer" data-story-chapter="chapter-customer">
-      <div class="doc-grid">
-        <div>
-          <div class="ch-eyebrow">Klanturenstaat</div>
-          <h2>Direct naar de klant</h2>
-          <p class="lead">De klanturenstaat wordt na controle direct per e-mail verzonden naar de klant.</p>
+    <!-- Klanturenstaat -->
+    <section class="kt">
+      <div class="body">
+        <div class="txt">
+          <span class="check"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
+          <h3>Klanturenstaat</h3>
+          <p>Gereed en verzonden via e-mail.</p>
         </div>
-        <div class="doc-scene">
-          <img src="assets/1919/bento-timesheet-v2.png" alt="Klanturenstaat in een groene map op een warm bureau">
-        </div>
+        <div class="photo"><img src="assets/1919/bento-timesheet-v2.png" alt="Klanturenstaat in een groene map op een warm bureau"></div>
       </div>
+      <button class="cta" type="button">
+        Bekijk voorbeeld klanturenstaat
+        <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </section>
+
+    <!-- 4 steps -->
+    <section class="steps">
+      <div class="lead">Jouw uren in 4 stappen</div>
+      <ol>
+        <li><span class="ic g"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><b>Uren invullen</b><span>Vul je uren in en houd je overzicht compleet.</span></li>
+        <li><span class="ic g"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 5-3 7-7 9-4-2-7-4-7-9V6z"/><path d="M9 12l2 2 4-5"/></svg></span><b>Indienen</b><span>Dien je maand in ter controle door Backoffice.</span></li>
+        <li><span class="ic b"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></span><b>Controle Backoffice</b><span>Backoffice controleert je uren zorgvuldig.</span></li>
+        <li><span class="ic a"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span><b>Klanturenstaat</b><span>De klanturenstaat is gereed en verzonden via e-mail.</span></li>
+      </ol>
     </section>
 
   </div>
 </div>
-
-<script src="1919-medewerker.js" defer></script>
-<script src="1919-portal.js" defer></script>
 
 </body>
 </html>

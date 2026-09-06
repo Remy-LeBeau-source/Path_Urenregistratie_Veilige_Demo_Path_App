@@ -1,5 +1,11 @@
 import { expect, Page, test } from '@playwright/test';
 
+// De medewerker-pilot (pilot/1919-medewerker.html) is bewust een STATISCHE
+// 1-op-1 reproductie van design-mockups/1414-path-bento-space/medewerker-
+// dashboard.jpg: vaste mockup-data, geen live server, geen schrijfacties.
+// De Backoffice-pilot (pilot/1919-beheerder.html) is nog wel functioneel en
+// servergestuurd; die flows worden hieronder met gemockte endpoints getoetst.
+
 type Role = 'employee' | 'administrator';
 type PilotState = {
   role: Role;
@@ -74,176 +80,188 @@ const draftTimesheet = () => ({
   billable_hours: 0, leave_hours: 0, sickness_hours: 0, day_entries: [], version: 1,
 });
 
-test('[PILOT-H-001] beide 1919-portals leven naast de bestaande app', async ({ page }) => {
-  await expect((await page.goto('/pilot/1919-medewerker.html'))?.status()).toBe(200);
-  await expect(page.locator('.pilot-flag')).toContainText('nieuwe medewerkerportal');
-  await expect(page.locator('body')).toHaveAttribute('data-pilot-design', 'combo-1414-1919');
-  await expect(page.locator('.main a[href="/"]')).toHaveCount(0);
-  await expect(page.locator('script[src="1919-portal.js"]')).toHaveCount(1);
-  await expect(page.locator('script[src*="assets/app.js"]')).toHaveCount(0);
+test('[PILOT-H-001] beide pilotpagina’s leven naast een ongewijzigde app', async ({ page }) => {
+  await test.step('Given de webroot met de app op /', async () => { /* de app blijft de baseline */ });
 
-  await expect((await page.goto('/pilot/1919-beheerder.html'))?.status()).toBe(200);
-  await expect(page.locator('.pilot-flag')).toContainText('nieuwe Backofficeportal');
-  await expect(page.locator('body')).toHaveAttribute('data-pilot-design', 'combo-1414-1919');
-  await expect(page.locator('#admin-app a[href="/"]')).toHaveCount(0);
-  await expect(page.locator('script[src="1919-beheerder.js"]')).toHaveCount(1);
-  await expect(page.locator('script[src*="assets/app.js"]')).toHaveCount(0);
+  await test.step('When de medewerker- en Backoffice-pilot als eigen URL worden opgevraagd', async () => {
+    expect((await page.goto('/pilot/1919-medewerker.html'))?.status()).toBe(200);
+  });
 
-  await page.goto('/');
-  await expect(page.locator('#login-screen')).toBeVisible();
+  await test.step('Then dragen ze de pilot-vlag/marker en delen ze geen code met de app', async () => {
+    await expect(page.locator('.pilot-flag')).toContainText('nieuwe medewerkerportal');
+    await expect(page.locator('body')).toHaveAttribute('data-pilot-design', 'combo-1414-1919');
+    await expect(page.locator('a[href="/"]')).toHaveCount(0);
+    await expect(page.locator('script[src*="assets/app.js"], link[href*="assets/styles.css"]')).toHaveCount(0);
+
+    expect((await page.goto('/pilot/1919-beheerder.html'))?.status()).toBe(200);
+    await expect(page.locator('.pilot-flag')).toContainText('nieuwe Backofficeportal');
+    await expect(page.locator('body')).toHaveAttribute('data-pilot-design', 'combo-1414-1919');
+    await expect(page.locator('script[src*="assets/app.js"]')).toHaveCount(0);
+  });
+
+  await test.step('And de bestaande app blijft er onaangeroerd naast draaien', async () => {
+    await page.goto('/');
+    await expect(page.locator('#login-screen')).toBeVisible();
+  });
 });
 
-test('[PILOT-H-002] medewerker schrijft uren via dezelfde API en draagt de maand over', async ({ page }) => {
-  const state: PilotState = { role: 'employee', timesheet: draftTimesheet(), customer: null, timesheetActions: [], customerActions: [] };
-  await mockPilotApi(page, state);
-  await page.goto('/pilot/1919-medewerker.html');
+test('[PILOT-H-002] medewerker-pilot toont de 1414-mockup 1-op-1', async ({ page }) => {
+  await test.step('Given de statische medewerker-pilot', async () => {
+    await page.goto('/pilot/1919-medewerker.html');
+  });
 
-  await expect(page.locator('#pilot-month-button')).toContainText('September 2026');
-  await expect(page.getByText('/ 160 uur')).toHaveCount(0);
-  await expect(page.getByText('Facturen', { exact: true })).toHaveCount(0);
-  await page.locator('[data-inline-hours]:not([disabled])').first().fill('8');
-  await page.getByRole('button', { name: 'Week opslaan' }).click();
-  await expect(page.locator('.portal-summary')).toContainText('8 uur');
+  await test.step('When de pagina is geladen', async () => {
+    await expect(page.locator('.hero h1')).toHaveText('Begin met je uren');
+  });
 
-  await page.getByRole('button', { name: 'Volgende week' }).click();
-  await expect(page.locator('.portal-week-tools')).toContainText('Week 2 van 5');
-  await expect(page.locator('[data-inline-hours]:not([disabled])').first()).toBeVisible();
-  await page.getByRole('button', { name: 'Vorige week' }).click();
-
-  await page.getByRole('button', { name: 'Uren indienen' }).click();
-  await expect(page.getByRole('heading', { name: 'Weet je het zeker?' })).toBeVisible();
-  await page.getByRole('button', { name: 'Ja, uren indienen' }).click();
-  await expect(page.locator('.portal-handoff')).toHaveClass(/show/);
-  await expect(page.locator('.portal-status-banner')).toContainText('Backoffice controleert');
-  expect(state.timesheetActions).toEqual(['save_draft', 'submit']);
+  await test.step('Then staan alle mockup-onderdelen met de vaste mockup-data in beeld', async () => {
+    // Weekstrook: 7 dagen met exact de mockup-uren, woensdag actief.
+    const days = page.locator('.week li');
+    await expect(days).toHaveCount(7);
+    await expect(days.nth(0)).toContainText('8,00');
+    await expect(days.nth(2)).toHaveClass(/on/);
+    await expect(days.nth(2)).toContainText('7,00');
+    await expect(days.nth(3)).toContainText('7,30');
+    await expect(days.nth(6)).toContainText('—');
+    await expect(page.locator('.week .overview')).toContainText('Weekoverzicht');
+    // Voortgangsmeter in weken (mockup-1:1 met de afgesproken aanpassing).
+    await expect(page.locator('.gauge .ring .num')).toHaveText('1');
+    await expect(page.locator('.gauge .ring .of')).toContainText('/ 5');
+    await expect(page.locator('.gauge .rest')).toContainText('Nog 4 weken te gaan');
+    await expect(page.locator('.gauge .pct')).toHaveText('20%');
+    // Klanturenstaatkaart in de mockup-eindstaat.
+    await expect(page.locator('.kt .txt p')).toHaveText('Gereed en verzonden via e-mail.');
+    // Vier-stappen-strook.
+    await expect(page.locator('.steps li b')).toHaveText([
+      'Uren invullen', 'Indienen', 'Controle Backoffice', 'Klanturenstaat',
+    ]);
+  });
 });
 
-test('[PILOT-H-003] rechtstreeks gemaild blijft oranje tot Backoffice extern bevestigt', async ({ page }) => {
+test('[PILOT-H-003] Backoffice: rechtstreeks gemaild blijft oranje tot externe bevestiging, en terugdraaien vraagt bevestiging', async ({ page }) => {
   const state: PilotState = {
-    role: 'employee', timesheet: { ...draftTimesheet(), status: 'approved', billable_hours: 40, version: 3 },
-    customer: null, timesheetActions: [], customerActions: [],
+    role: 'administrator',
+    timesheet: { ...draftTimesheet(), status: 'approved', billable_hours: 40, version: 3 },
+    customer: { id: 81, status: 'skipped', review_note: 'Goedkeuring van de uren rechtstreeks per e-mail ontvangen' },
+    timesheetActions: [], customerActions: [],
   };
   await mockPilotApi(page, state);
-  await page.goto('/pilot/1919-medewerker.html');
-  await page.getByRole('button', { name: 'Urenstaat aanleveren' }).click();
-  await page.getByRole('button', { name: /Al rechtstreeks gemaild/ }).click();
-  await expect(page.locator('.portal-help')).toContainText('blijft oranje en blokkerend');
-  await page.locator('#pilot-mailed-reason').selectOption({ label: 'Goedkeuring van de uren rechtstreeks per e-mail ontvangen' });
-  await page.getByRole('button', { name: 'Registreren' }).click();
-  await expect(page.locator('.portal-document-status')).toContainText('bevestiging nodig');
-  await expect(page.locator('.portal-document-status')).toHaveClass(/waiting/);
-  expect(state.customerActions).toEqual(['mark_skipped']);
 
-  state.role = 'administrator';
-  await page.goto('/pilot/1919-beheerder.html');
-  await expect(page.locator('#next-title')).toHaveText('Externe bevestiging vereist');
-  await expect(page.locator('.node-external')).toHaveClass(/waiting/);
-  await page.locator('[data-action="confirm-external"]').click();
-  await page.getByRole('button', { name: 'Extern bevestigd vastleggen' }).click();
-  await expect(page.locator('#admin-dialog .error')).toContainText('Kies een reden');
-  await page.locator('#external-reason').selectOption({ label: 'Goedkeuring van de uren ontvangen van de klant' });
-  await page.getByRole('button', { name: 'Extern bevestigd vastleggen' }).click();
-  await expect(page.locator('.node-external')).toHaveClass(/done/);
-  await expect(page.getByRole('button', { name: 'Bevestiging terugdraaien' })).toBeVisible();
+  await test.step('Given een dossier waarvan de klanturenstaat rechtstreeks is gemaild', async () => {
+    await page.goto('/pilot/1919-beheerder.html');
+    await expect(page.locator('#next-title')).toHaveText('Externe bevestiging vereist');
+    await expect(page.locator('.node-external')).toHaveClass(/waiting/);
+  });
 
-  await page.getByRole('button', { name: 'Bevestiging terugdraaien' }).click();
-  await expect(page.locator('#admin-dialog')).toBeVisible();
-  await expect(page.locator('#admin-dialog')).toContainText('Weet je het zeker?');
-  await page.getByRole('button', { name: 'Ja, bevestiging terugdraaien' }).click();
-  await expect(page.locator('.node-external')).not.toHaveClass(/done/);
-  expect(state.customerActions).toEqual(['mark_skipped', 'confirm_external', 'restore_missing']);
+  await test.step('When Backoffice extern bevestigt met een verplichte reden', async () => {
+    await page.locator('[data-action="confirm-external"]').click();
+    await page.getByRole('button', { name: 'Extern bevestigd vastleggen' }).click();
+    await expect(page.locator('#admin-dialog .error')).toContainText('Kies een reden');
+    await page.locator('#external-reason').selectOption({ label: 'Goedkeuring van de uren ontvangen van de klant' });
+    await page.getByRole('button', { name: 'Extern bevestigd vastleggen' }).click();
+  });
+
+  await test.step('Then wordt de stap groen en kan de bevestiging alleen na een tweede bevestiging terug', async () => {
+    await expect(page.locator('.node-external')).toHaveClass(/done/);
+    await page.getByRole('button', { name: 'Bevestiging terugdraaien' }).click();
+    await expect(page.locator('#admin-dialog')).toContainText('Weet je het zeker?');
+    await page.getByRole('button', { name: 'Ja, bevestiging terugdraaien' }).click();
+    await expect(page.locator('.node-external')).not.toHaveClass(/done/);
+    expect(state.customerActions).toEqual(['confirm_external', 'restore_missing']);
+  });
 });
 
-test('[PILOT-H-004] PDF-aanlevering komt bij Backoffice ter controle en kan worden goedgekeurd', async ({ page }) => {
+test('[PILOT-H-004] Backoffice: geuploade PDF komt ter controle en kan worden goedgekeurd', async ({ page }) => {
   const state: PilotState = {
-    role: 'employee', timesheet: { ...draftTimesheet(), status: 'approved', billable_hours: 40, version: 3 },
-    customer: null, timesheetActions: [], customerActions: [],
+    role: 'administrator',
+    timesheet: { ...draftTimesheet(), status: 'approved', billable_hours: 40, version: 3 },
+    customer: { id: 81, status: 'received', review_note: '', storage_key: 'pilot/test.pdf', download_url: '/server/api/customer-timesheets.php?action=download' },
+    timesheetActions: [], customerActions: [],
   };
   await mockPilotApi(page, state);
-  await page.goto('/pilot/1919-medewerker.html');
-  await page.getByRole('button', { name: 'Urenstaat aanleveren' }).click();
-  await page.getByRole('button', { name: /PDF of afbeelding uploaden/ }).click();
-  await page.locator('#pilot-customer-file').setInputFiles({ name: 'urenstaat-september.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4 pilot') });
-  await page.getByRole('button', { name: 'Indienen bij Backoffice' }).click();
-  await expect(page.locator('.portal-document-status')).toHaveText('Bij Backoffice');
 
-  state.role = 'administrator';
-  await page.goto('/pilot/1919-beheerder.html');
-  await expect(page.locator('#next-title')).toHaveText('Klanturenstaat controleren');
-  await page.getByRole('button', { name: 'Document beoordelen' }).click();
-  await expect(page.getByRole('link', { name: 'PDF eerst openen' })).toBeVisible();
-  await page.getByRole('button', { name: 'Goedkeuren', exact: true }).click();
-  await expect(page.locator('.node-customer')).toHaveClass(/done/);
-  expect(state.customerActions).toEqual(['submit', 'approve']);
+  await test.step('Given een dossier met een ontvangen klanturenstaat-PDF', async () => {
+    await page.goto('/pilot/1919-beheerder.html');
+    await expect(page.locator('#next-title')).toHaveText('Klanturenstaat controleren');
+  });
+
+  await test.step('When Backoffice het document beoordeelt en goedkeurt', async () => {
+    await page.getByRole('button', { name: 'Document beoordelen' }).click();
+    await expect(page.getByRole('link', { name: 'PDF eerst openen' })).toBeVisible();
+    await page.getByRole('button', { name: 'Goedkeuren', exact: true }).click();
+  });
+
+  await test.step('Then staat de klanturenstaat-stap op gereed', async () => {
+    await expect(page.locator('.node-customer')).toHaveClass(/done/);
+    expect(state.customerActions).toEqual(['approve']);
+  });
 });
 
-test('[PILOT-H-005] Backoffice-correctie maakt de ingediende maand weer bewerkbaar', async ({ page }) => {
+test('[PILOT-H-005] Backoffice: correctie vragen zet de ingediende maand terug in de wachtrij', async ({ page }) => {
   const state: PilotState = {
     role: 'administrator',
     timesheet: { ...draftTimesheet(), status: 'submitted', billable_hours: 8, day_entries: [{ work_date: '2026-09-01', hours: 8, description: 'Analyse' }], version: 2 },
     customer: null, timesheetActions: [], customerActions: [],
   };
   await mockPilotApi(page, state);
-  await page.goto('/pilot/1919-beheerder.html');
-  await page.getByRole('button', { name: 'Uren beoordelen' }).click();
-  await page.getByRole('button', { name: 'Correctie vragen' }).click();
-  await expect(page.locator('#admin-dialog .error')).toContainText('correctiereden');
-  await page.locator('#hours-correction-note').fill('Controleer dinsdag 1 september');
-  await page.getByRole('button', { name: 'Correctie vragen' }).click();
-  await expect(page.locator('#next-title')).toHaveText('Wacht op gecorrigeerde uren');
 
-  state.role = 'employee';
-  await page.goto('/pilot/1919-medewerker.html');
-  await expect(page.locator('.portal-summary')).toContainText('Correctie gevraagd');
-  await expect(page.locator('[data-inline-hours]:not([disabled])').first()).toBeEnabled();
-  expect(state.timesheetActions).toEqual(['request_correction']);
-});
+  await test.step('Given een ingediende maand die Backoffice beoordeelt', async () => {
+    await page.goto('/pilot/1919-beheerder.html');
+    await page.getByRole('button', { name: 'Uren beoordelen' }).click();
+  });
 
-test('[PILOT-H-006] maandkeuze blijft in de sessie en uitloggen herstelt de actuele maand', async ({ page }) => {
-  const state: PilotState = { role: 'employee', timesheet: draftTimesheet(), customer: null, timesheetActions: [], customerActions: [] };
-  await mockPilotApi(page, state);
-  await page.goto('/pilot/1919-medewerker.html');
-  await page.locator('#pilot-month-button').click();
-  await page.getByRole('menuitem').filter({ hasText: 'Augustus 2026' }).click();
-  await expect(page.locator('#pilot-month-button')).toContainText('Augustus 2026');
-  await page.reload();
-  await expect(page.locator('#pilot-month-button')).toContainText('Augustus 2026');
+  await test.step('When Backoffice een correctie vraagt zonder reden en daarna met reden', async () => {
+    await page.getByRole('button', { name: 'Correctie vragen' }).click();
+    await expect(page.locator('#admin-dialog .error')).toContainText('correctiereden');
+    await page.locator('#hours-correction-note').fill('Controleer dinsdag 1 september');
+    await page.getByRole('button', { name: 'Correctie vragen' }).click();
+  });
 
-  await page.locator('#pilot-profile-button').click();
-  await page.getByRole('button', { name: 'Uitloggen' }).click();
-  await expect(page).toHaveURL(/\/$/);
-  expect(await page.evaluate(() => sessionStorage.getItem('path-1919-session-user'))).toBeNull();
-  await page.goto('/pilot/1919-medewerker.html');
-  await expect(page.locator('#pilot-month-button')).toContainText('September 2026');
+  await test.step('Then wacht het dossier zichtbaar op gecorrigeerde uren', async () => {
+    await expect(page.locator('#next-title')).toHaveText('Wacht op gecorrigeerde uren');
+    expect(state.timesheetActions).toEqual(['request_correction']);
+  });
 });
 
 test('[PILOT-N-001] rollen blijven ook op de pilot-URLs strikt gescheiden', async ({ page }) => {
   const state: PilotState = { role: 'employee', timesheet: draftTimesheet(), customer: null, timesheetActions: [], customerActions: [] };
   await mockPilotApi(page, state);
-  await page.goto('/pilot/1919-beheerder.html');
-  await expect(page.locator('#admin-gate')).toBeVisible();
-  await expect(page.locator('#admin-gate')).toContainText('Alleen voor Backoffice');
 
-  state.role = 'administrator';
-  await page.goto('/pilot/1919-medewerker.html');
-  await expect(page.locator('.portal-gate')).toBeVisible();
-  await expect(page.locator('.portal-gate')).toContainText('Alleen voor medewerkers');
+  await test.step('Given een medewerkersessie', async () => { /* state.role = employee */ });
+
+  await test.step('When de Backoffice-pilot met die sessie wordt geopend', async () => {
+    await page.goto('/pilot/1919-beheerder.html');
+  });
+
+  await test.step('Then blokkeert de Backoffice-pilot en toont de medewerker-pilot geen Backoffice-onderdelen', async () => {
+    await expect(page.locator('#admin-gate')).toBeVisible();
+    await expect(page.locator('#admin-gate')).toContainText('Alleen voor Backoffice');
+
+    await page.goto('/pilot/1919-medewerker.html');
+    await expect(page.locator('.hero h1')).toHaveText('Begin met je uren');
+    await expect(page.getByText('Facturen', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('Goedkeuringen', { exact: true })).toHaveCount(0);
+  });
 });
 
-test('[PILOT-N-002] beide pilots blijven bedienbaar zonder horizontale overflow op telefoon', async ({ page }) => {
-  const state: PilotState = { role: 'employee', timesheet: draftTimesheet(), customer: null, timesheetActions: [], customerActions: [] };
+test('[PILOT-N-002] beide pilots blijven zonder horizontale overflow op telefoon', async ({ page }) => {
+  const state: PilotState = { role: 'administrator', timesheet: draftTimesheet(), customer: null, timesheetActions: [], customerActions: [] };
   await mockPilotApi(page, state);
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/pilot/1919-medewerker.html');
-  await expect(page.locator('.portal-loading')).toBeHidden();
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
-  const dayInput = page.locator('[data-inline-hours]:not([disabled])').first();
-  await expect(dayInput).toBeVisible();
-  expect((await dayInput.boundingBox())?.height || 0).toBeGreaterThanOrEqual(42);
 
-  state.role = 'administrator';
-  await page.goto('/pilot/1919-beheerder.html');
-  await expect(page.locator('#admin-app')).toBeVisible();
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
-  expect((await page.locator('.employee-card').first().boundingBox())?.height || 0).toBeGreaterThanOrEqual(42);
+  await test.step('Given een telefoonviewport', async () => { /* 390 x 844 */ });
+
+  await test.step('When beide pilots worden geopend', async () => {
+    await page.goto('/pilot/1919-medewerker.html');
+  });
+
+  await test.step('Then past alles binnen de breedte en zijn tapdoelen minimaal 42px', async () => {
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+    expect((await page.locator('.hero .go').boundingBox())?.height || 0).toBeGreaterThanOrEqual(42);
+
+    await page.goto('/pilot/1919-beheerder.html');
+    await expect(page.locator('#admin-app')).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+    expect((await page.locator('.employee-card').first().boundingBox())?.height || 0).toBeGreaterThanOrEqual(42);
+  });
 });
