@@ -8,10 +8,8 @@ Laatst bijgewerkt: 2026-09-06 — **Fase D increment 1 gecommit als 1.0.65**.
 **Direct oppakken:**
 1. Check CI van de laatste push (`gh run list --branch main --limit 1`). Groen =
    Deploy Test + Publish Live Docs. Als rood: los dat eerst op.
-2. **Versie omzetten naar `0.0.1`** (gebruiker koos optie A). Losse commit:
-   `npm run version:set 0.0.1` (13 plekken) + `BESLISTABEL.md` W10 aanpassen
-   (`0.0.x` per commit; echte productieversie later) + controleer dat geen
-   test/veiligheidscontrole een versiedrempel hanteert. Daarna teller `0.0.2`, …
+2. ~~Versie omzetten naar `0.0.1`~~ **GEDAAN** — vanaf hier teller `0.0.2`, `0.0.3`, …
+   (`BESLISTABEL.md` W10 is bijgewerkt).
 3. **Fase D increment 2 — fundament in `assets/styles-new.css`.** Zie
    "Stappenplan" en "Schermen-inventaris" onderaan. Werkwijze: elke regel
    gescoped onder `html[data-skin="new"]`; layout blijft klassiek, alleen palet/
