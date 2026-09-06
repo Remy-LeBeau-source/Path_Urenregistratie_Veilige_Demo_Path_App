@@ -8,8 +8,11 @@ Laatst bijgewerkt: 2026-09-06 — **Fase D increment 1 gecommit als 1.0.65**.
 **Direct oppakken:**
 1. Check CI van de laatste push (`gh run list --branch main --limit 1`). Groen =
    Deploy Test + Publish Live Docs. Als rood: los dat eerst op.
-2. ~~Versie omzetten naar `0.0.1`~~ **GEDAAN** — vanaf hier teller `0.0.2`, `0.0.3`, …
-   (`BESLISTABEL.md` W10 is bijgewerkt).
+2. ~~Versie omzetten~~ **GEDAAN** — staat nu op **`0.10.0`**, vanaf hier `0.10.x`
+   per commit. (`0.0.1` bleek onbruikbaar: `set-version.mjs` verving het óók
+   binnen `127.0.0.1` → `127.0.0.2`. Hersteld in `f909632`. `BESLISTABEL.md`
+   W10 bijgewerkt; **TODO daar**: `set-version.mjs` hardenen met een
+   token-grens.)
 3. **Fase D increment 2 — fundament in `assets/styles-new.css`.** Zie
    "Stappenplan" en "Schermen-inventaris" onderaan. Werkwijze: elke regel
    gescoped onder `html[data-skin="new"]`; layout blijft klassiek, alleen palet/
