@@ -62,6 +62,9 @@ assert.doesNotMatch(remote, /rm\s+-rf/, 'The remote deploy must never recursivel
 assert.match(remote, /move_directory_contents "\$live_root" "\$rollback_root"/, 'PROD document-root contents must move into rollback');
 assert.match(remote, /move_directory_contents "\$app_root" "\$live_root"/, 'PROD release contents must move into the stable document root');
 assert.doesNotMatch(remote, /mv "\$live_root" "\$rollback_root"/, 'PROD document-root inode must remain stable during cutover');
+assert.match(runner, /':\(exclude\)pilot'/, 'PROD archive must exclude the TEST-only pilot directory');
+assert.match(runner, /tar -tzf "\$archive"[\s\S]*\^path-urenregistratie\/pilot\//, 'PROD archive must verify that no pilot path slipped through');
+assert.doesNotMatch(testRunner, /:\(exclude\)pilot/, 'TEST archive must continue to publish the pilot pages');
 
 assert.match(workflow, /deploy-test:\s*[\s\S]*needs:\s*test/, 'TEST deployment must wait for TEST regression');
 assert.match(workflow, /deploy-test:\s*[\s\S]*environment:\s*test/, 'TEST deployment must use the test environment');

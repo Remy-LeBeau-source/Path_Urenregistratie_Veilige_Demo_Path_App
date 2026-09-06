@@ -82,5 +82,9 @@ Then("vereist de bootstrap productie, expliciete bevestiging en geldige bedrijfs
 And("maakt hij alleen een lege database aan, logt de handeling en overschrijft nooit afwijkende data");
 Given("het automatische TransIP-deploycontract wordt ingelezen");
 When("validatie, TEST, PROD-regressie en Living Docs groen zijn");
-Then("wordt alleen main met checksum, backup, migratie en live-smoke uitgerold");
+Then("wordt alleen main met checksum, backup, migratie en live-smoke uitgerold, zonder de TEST-only pilotmap");
 And("blijft mail gesloten en wordt bij een fout automatisch teruggerold");
+Given("de eerste productiebaseline en het deployscript worden ingelezen");
+When("versie 1.0.0 vóór backup en migratie wordt vrijgegeven");
+Then("zijn accounts, septemberstart, dummy-routes en lege transactietabellen fail-closed gecontroleerd");
+And("latere releases gebruiken dezelfde read-only preflight zonder de eenmalige nulmeting");

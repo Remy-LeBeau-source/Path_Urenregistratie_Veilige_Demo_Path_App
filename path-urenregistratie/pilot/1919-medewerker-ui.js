@@ -182,8 +182,8 @@
         actions.innerHTML =
           '<button class="overview" type="button">' +
           '<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Weekoverzicht</button>' +
-          '<button class="save" type="button">Opslaan</button>' +
-          '<button class="submit" type="button">Indienen ter controle</button>';
+          '<button class="save" type="button" title="Bewaar deze week als concept">↓ Opslaan</button>' +
+          '<button class="submit" type="button" title="Dien deze week in bij Backoffice">✓ Indienen ter controle</button>';
       }
     }
 

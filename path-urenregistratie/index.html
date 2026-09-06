@@ -19,7 +19,7 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <title>Uren & Facturatie</title>
-  <link rel="stylesheet" href="assets/styles.css?v=0.10.1">
+  <link rel="stylesheet" href="assets/styles.css?v=0.10.2">
   <link rel="stylesheet" href="assets/styles-new.css">
 </head>
 <body class="auth-booting">
@@ -98,7 +98,7 @@
       </form>
       <p class="login-note" id="auth-mode-indicator">Controle van auth-sessie wordt uitgevoerd.</p>
       <p class="login-note" id="local-login-note">De standaardgegevens gebruiken veilige voorbeeldadressen. Je mag zelf echte gegevens invoeren; deze lokale versie bewaart ze alleen in deze browser en e-mailverzending is uitgeschakeld.</p>
-      <footer class="login-footer"><span>© 2026 Path Consultancy</span><span>Versie 0.10.1</span></footer>
+      <footer class="login-footer"><span>© 2026 Path Consultancy IT · Ontwikkeld en beheerd door Team Path.</span><span>Versie 0.10.2</span></footer>
     </div>
   </section>
 
@@ -155,7 +155,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 0.10.1</span>
+      <span class="demo-badge">Versie 0.10.2</span>
       </div>
     </aside>
 
@@ -171,11 +171,15 @@
         <div class="topbar-title">
           <p class="eyebrow" id="organization-name">Path Consultancy</p>
           <h1 id="page-title">Urenoverzicht</h1>
-          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 0.10.1</span><span class="environment-badge" id="environment-badge" hidden></span></span>
+          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 0.10.2</span><span class="environment-badge" id="environment-badge" hidden></span></span>
         </div>
         <div class="topbar-actions">
           <span class="safety-badge" id="mail-safety-badge" title="De verzendstatus wordt beveiligd door de serverconfiguratie">E-mailstatus laden…</span>
-          <button class="topbar-quick-reset" id="quick-reset-demo" type="button">Herstel</button>
+          <button class="topbar-quick-reset" id="quick-reset-demo" type="button" title="Herstel de veilige demodata"><span aria-hidden="true">↶</span> Herstel demo</button>
+          <div class="appearance-switches" aria-label="Vormgeving snel wisselen">
+            <button class="appearance-switch" id="quick-theme-toggle" type="button" aria-pressed="false"><span aria-hidden="true">☀</span><strong>Licht</strong></button>
+            <button class="appearance-switch" id="quick-skin-toggle" type="button" aria-pressed="false"><span aria-hidden="true">◫</span><strong>Klassiek</strong></button>
+          </div>
           <div class="period-control" id="global-period-control" aria-label="Maanddetail openen">
             <button id="period-prev" aria-label="Vorige maand">‹</button>
             <div class="period-picker-wrap">
@@ -218,6 +222,59 @@
       </header>
 
       <section class="view role-employee-only" id="view-employee-dashboard" data-title="Mijn overzicht">
+        <section class="new-employee-bento" id="new-employee-bento" aria-label="Nieuw medewerkeroverzicht">
+          <article class="new-bento-hero">
+            <img src="pilot/assets/1919/bento-foliage-v2.png" alt="" aria-hidden="true">
+            <div class="new-bento-hero-copy">
+              <span class="section-label" id="new-bento-period-label">Deze maand</span>
+              <h2>Begin met<br>je uren</h2>
+              <p>Registreer je uren voor deze week. Je wijzigingen worden veilig als concept bewaard.</p>
+            </div>
+            <button class="new-bento-go" type="button" data-new-bento-open-hours aria-label="Open de volledige maandinvoer">→</button>
+            <p class="new-bento-handoff">◈ Na indienen neemt Backoffice het over.</p>
+          </article>
+
+          <article class="new-bento-week">
+            <header>
+              <button type="button" data-new-bento-week="previous" aria-label="Vorige week">‹</button>
+              <div><strong id="new-bento-week-title">Week</strong><small id="new-bento-week-range"></small></div>
+              <button type="button" data-new-bento-week="next" aria-label="Volgende week">›</button>
+            </header>
+            <div class="new-bento-days" id="new-bento-days"></div>
+            <div class="new-bento-week-total"><span id="new-bento-week-total-label">Totaal deze week</span><strong id="new-bento-week-total">0,00</strong></div>
+            <div class="new-bento-week-actions">
+              <button class="button button-ghost" type="button" data-new-bento-save title="Bewaar je wijzigingen zonder in te dienen"><span aria-hidden="true">↓</span> Concept opslaan</button>
+              <button class="button button-primary" type="button" data-new-bento-submit title="Dien alle weken van deze maand in"><span aria-hidden="true">✓</span> Hele maand indienen</button>
+            </div>
+          </article>
+
+          <article class="new-bento-gauge">
+            <div class="new-bento-ring" id="new-bento-ring"><div><small>WERKDAGEN MET UREN</small><strong id="new-bento-days-filled">0</strong><span id="new-bento-days-total">van 0 werkdagen</span></div></div>
+            <p id="new-bento-days-note">Nog geen werkdagen ingevuld.</p>
+            <div class="linear-progress"><span id="new-bento-progress"></span></div>
+            <strong class="new-bento-percentage" id="new-bento-percentage">0%</strong>
+          </article>
+
+          <article class="new-bento-customer" id="new-bento-customer">
+            <img src="pilot/assets/1919/bento-timesheet-v2.png" alt="Klanturenstaat in een groene map op een bureau">
+            <div class="new-bento-customer-copy">
+              <span class="status-pill status-concept" id="new-bento-customer-status">Open</span>
+              <h3>Klanturenstaat</h3>
+              <p id="new-bento-customer-note">Mag later binnenkomen en blijft apart zichtbaar.</p>
+            </div>
+            <button type="button" data-new-bento-customer title="Upload een klanturenstaat of meld dat deze rechtstreeks is gemaild"><span><span aria-hidden="true">⇧</span> Klanturenstaat openen</span><span aria-hidden="true">→</span></button>
+          </article>
+
+          <article class="new-bento-steps">
+            <span class="section-label">Jouw uren in 4 stappen</span>
+            <ol id="new-bento-steps">
+              <li data-step="fill"><i>◷</i><strong>Uren invullen</strong><span>Vul alle weken makkelijk in.</span></li>
+              <li data-step="submit"><i>✓</i><strong>Indienen</strong><span>Dien de hele maand één keer in.</span></li>
+              <li data-step="review"><i>⌕</i><strong>Controle Backoffice</strong><span>Backoffice controleert de uren.</span></li>
+              <li data-step="done"><i>✓</i><strong>Uren afgerond</strong><span>Facturatie kan worden verwerkt.</span></li>
+            </ol>
+          </article>
+        </section>
         <div class="employee-hero">
           <div>
             <span class="section-label">Mijn werkvoorraad</span>
@@ -783,6 +840,11 @@
           </section>
         </div>
       </section>
+      <footer class="app-footer" aria-label="Applicatie-informatie">
+        <span>© 2026 Path Consultancy IT</span>
+        <span>Ontwikkeld en beheerd door Team Path.</span>
+        <span class="app-footer-version">Versie 0.10.2</span>
+      </footer>
     </main>
   </div>
 
@@ -839,7 +901,7 @@
   </div>
   <script vite-ignore defer src="assets/jspdf.umd.min.js"></script>
   <script vite-ignore defer src="assets/invoice-fonts.js"></script>
-  <script vite-ignore defer src="assets/app.js?v=0.10.1"></script>
-  <script vite-ignore defer src="assets/pwa-install.js?v=0.10.1"></script>
+  <script vite-ignore defer src="assets/app.js?v=0.10.2"></script>
+  <script vite-ignore defer src="assets/pwa-install.js?v=0.10.2"></script>
 </body>
 </html>

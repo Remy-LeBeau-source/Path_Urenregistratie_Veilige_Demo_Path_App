@@ -1059,7 +1059,10 @@ let state = loadState();
 // zodat styles-new.css meteen aanslaat en er geen flits van de klassieke stijl is.
 // "classic" laat de app volledig ongemoeid; "new" is de vernieuwde weergave.
 try {
-  document.documentElement.dataset.skin = state.preferences && state.preferences.skin === "new" ? "new" : "classic";
+  // De redesign is voorlopig uitsluitend een LOCAL/TEST-pilot. Een eerder
+  // opgeslagen voorkeur mag productie nooit in de onvoltooide skin openen.
+  const redesignAllowed = testAccountToolsAllowed(window.location.hostname);
+  document.documentElement.dataset.skin = redesignAllowed && state.preferences && state.preferences.skin === "new" ? "new" : "classic";
 } catch (_) { /* geen document: niets te doen */ }
 let modalAction = null;
 // Het element dat de dialoog opende. Bij sluiten gaat de focus daar naartoe
@@ -1347,6 +1350,7 @@ const writeRuntime = {
   draftTimer: null,
   lastDraftSignature: "",
   pendingDraftSignature: "",
+  pendingDraftPayload: null,
   draftInFlight: false,
   draftPromise: null,
   submitInFlight: false,
@@ -2032,9 +2036,9 @@ function refreshEmployeeOpenTasksReadApi(force = false) {
     });
 }
 
-function writeTimesheetToApi(action) {
+function writeTimesheetToApi(action, suppliedPayload = null, applyResponse = true) {
   if (!API_ENABLED || authRuntime.mode !== "auth" || state.currentRole !== "employee") return Promise.resolve(null);
-  const payload = buildTimesheetWritePayload(action);
+  const payload = suppliedPayload || buildTimesheetWritePayload(action);
   const mutationKey = String(payload.period) + ":" + Number(payload.employee_id);
   readApiRuntime.timesheetMutationEpochByKey[mutationKey] = Number(readApiRuntime.timesheetMutationEpochByKey[mutationKey] || 0) + 1;
 
@@ -2069,7 +2073,7 @@ function writeTimesheetToApi(action) {
       const periodKey = String(payload.period || currentPeriod().key);
       readApiRuntime.timesheetMutationEpochByKey[mutationKey] = Number(readApiRuntime.timesheetMutationEpochByKey[mutationKey] || 0) + 1;
       readApiRuntime.lastTimesheetsByKey[mutationKey] = Date.now();
-      applyTimesheetApiPayload(employee.id, periodKey, result.data && result.data.timesheet);
+      if (applyResponse) applyTimesheetApiPayload(employee.id, periodKey, result.data && result.data.timesheet);
       return result.data;
     });
 }
@@ -2175,15 +2179,16 @@ function writeCustomerTimesheetToApi(action, options = {}) {
     });
 }
 
-function scheduleDraftTimesheetWrite() {
+function scheduleDraftTimesheetWrite(suppliedPayload = null) {
   if (!API_ENABLED || authRuntime.mode !== "auth" || state.currentRole !== "employee") return;
   if (writeRuntime.submitInFlight) return;
-  const payload = buildTimesheetWritePayload("save_draft");
+  const payload = suppliedPayload || buildTimesheetWritePayload("save_draft");
   const signature = JSON.stringify(payload);
   if (signature === writeRuntime.lastDraftSignature) return;
 
   if (writeRuntime.draftInFlight) {
     writeRuntime.pendingDraftSignature = signature;
+    writeRuntime.pendingDraftPayload = payload;
     return;
   }
 
@@ -2192,10 +2197,24 @@ function scheduleDraftTimesheetWrite() {
     writeRuntime.draftTimer = null;
     writeRuntime.draftInFlight = true;
     writeRuntime.pendingDraftSignature = "";
-    writeRuntime.draftPromise = writeTimesheetToApi("save_draft").then(() => {
+    writeRuntime.pendingDraftPayload = null;
+    writeRuntime.draftPromise = writeTimesheetToApi("save_draft", payload, false).then(data => {
       writeRuntime.lastDraftSignature = signature;
-      const autosaveStatus = document.querySelector("#hours-autosave-status");
-      if (autosaveStatus) autosaveStatus.textContent = "Gesynchroniseerd met server om " + new Intl.DateTimeFormat("nl-NL", { hour: "2-digit", minute: "2-digit" }).format(new Date());
+      const queuedPayload = writeRuntime.pendingDraftPayload;
+      const serverTimesheet = data && data.timesheet;
+      if (queuedPayload) {
+        // Een tweede invoer kan binnenkomen terwijl de eerste conceptwrite al
+        // onderweg is. Pas de oudere response dan niet over de nieuwere lokale
+        // invoer toe; neem alleen de nieuwe serverversie mee voor de volgende
+        // geserialiseerde write. Dit voorkomt dat bijvoorbeeld Ziekte terugvalt
+        // naar 0 nadat Verlof net iets eerder werd opgeslagen.
+        const version = Number(serverTimesheet && serverTimesheet.version || 0);
+        if (version > 0) queuedPayload.expected_version = version;
+      } else {
+        applyTimesheetApiPayload(Number(payload.employee_id), String(payload.period), serverTimesheet);
+        const autosaveStatus = document.querySelector("#hours-autosave-status");
+        if (autosaveStatus) autosaveStatus.textContent = "Gesynchroniseerd met server om " + new Intl.DateTimeFormat("nl-NL", { hour: "2-digit", minute: "2-digit" }).format(new Date());
+      }
     }).catch(error => {
       writeRuntime.lastDraftSignature = "";
       const now = Date.now();
@@ -2210,8 +2229,12 @@ function scheduleDraftTimesheetWrite() {
     }).finally(() => {
       writeRuntime.draftInFlight = false;
       writeRuntime.draftPromise = null;
-      if (!writeRuntime.submitInFlight && writeRuntime.pendingDraftSignature && writeRuntime.pendingDraftSignature !== writeRuntime.lastDraftSignature) {
-        scheduleDraftTimesheetWrite();
+      const queuedPayload = writeRuntime.pendingDraftPayload;
+      const queuedSignature = writeRuntime.pendingDraftSignature;
+      writeRuntime.pendingDraftPayload = null;
+      writeRuntime.pendingDraftSignature = "";
+      if (!writeRuntime.submitInFlight && queuedPayload && queuedSignature && queuedSignature !== writeRuntime.lastDraftSignature) {
+        scheduleDraftTimesheetWrite(queuedPayload);
       }
     });
   }, 700);
@@ -2891,6 +2914,14 @@ function invoiceApiRowsForPeriod(periodKey) {
   })).filter(item => item.periodKey === periodKey);
 }
 
+function customerTimesheetExternallyConfirmed(documentRecord) {
+  return Boolean(
+    documentRecord &&
+    documentRecord.status === "skipped" &&
+    String(documentRecord.reviewNote || "").startsWith("Extern bevestigd:")
+  );
+}
+
 function invoiceCustomerTimesheetExternallyConfirmed(item) {
   return Boolean(
     item &&
@@ -2940,17 +2971,40 @@ function invoiceDocumentBadgesHtml(item) {
 function persistExternalCustomerTimesheetConfirmation(item, reviewNote) {
   const button = document.querySelector("#modal-confirm");
   button.disabled = true;
-  writeCustomerTimesheetToApi("confirm_external", {
+  const finish = () => {
+    if (item.source === "customer-timesheet") {
+      const message = "De klanturenstaat van " + item.employeeName + " staat groen als extern bevestigd.";
+      if (item.adminTaskId) {
+        finishAdminTaskAndContinue(item.adminTaskId, () => {}, message);
+        return;
+      }
+      closeModal();
+      renderAll();
+      toast(message);
+      return;
+    }
+    closeModal();
+    renderInvoices();
+    toast("De urenstaat staat groen als extern bevestigd.");
+  };
+  const write = isCustomerTimesheetApiMode()
+    ? writeCustomerTimesheetToApi("confirm_external", {
     employeeId: item.employeeId,
     assignmentId: item.assignmentId,
     periodKey: item.periodKey,
     reviewNote
-  }).then(() => refreshInvoicesReadApi(item.periodKey, true))
-    .then(() => {
-      closeModal();
-      renderInvoices();
-      toast("De urenstaat staat groen als extern bevestigd.");
-    })
+  })
+    : Promise.resolve().then(() => {
+      const documentRecord = customerTimesheetFor(recordFor(item.employeeId, item.periodKey));
+      const timestamp = correctionTimestamp();
+      documentRecord.status = "skipped";
+      documentRecord.reviewNote = "Extern bevestigd: " + reviewNote;
+      documentRecord.reviewedAt = timestamp.label;
+      documentRecord.reviewedBy = currentAdmin().name;
+      persistState();
+    });
+  write.then(() => item.source === "customer-timesheet" ? null : refreshInvoicesReadApi(item.periodKey, true))
+    .then(finish)
     .catch(error => {
       button.disabled = false;
       toast(String(error && error.message || "Extern bevestigen is mislukt."));
@@ -3002,6 +3056,25 @@ function showExternalCustomerTimesheetConfirmation(item) {
   });
 }
 
+function customerTimesheetConfirmationItem(employeeId, periodKey, adminTaskId = "") {
+  const employee = employeeById(employeeId);
+  const invoiceRows = invoiceApiRowsForPeriod(periodKey) || [];
+  const invoiceItem = invoiceRows.find(item => Number(item.employeeId) === Number(employeeId));
+  return Object.assign({}, invoiceItem || {}, {
+    employeeId: Number(employeeId),
+    assignmentId: Number(invoiceItem && invoiceItem.assignmentId || 0),
+    employeeName: employee ? employee.name : "Onbekende medewerker",
+    periodKey,
+    source: "customer-timesheet",
+    adminTaskId
+  });
+}
+
+function showAdminExternalCustomerTimesheetConfirmation(employeeId, periodKey, adminTaskId = "") {
+  showExternalCustomerTimesheetConfirmation(customerTimesheetConfirmationItem(employeeId, periodKey, adminTaskId));
+  return true;
+}
+
 function restoreExternalCustomerTimesheet(item) {
   showModal({
     label: "Urenstaat herstellen",
@@ -3013,14 +3086,22 @@ function restoreExternalCustomerTimesheet(item) {
     action: () => {
       const button = document.querySelector("#modal-confirm");
       button.disabled = true;
-      writeCustomerTimesheetToApi("restore_missing", {
+      const write = isCustomerTimesheetApiMode()
+        ? writeCustomerTimesheetToApi("restore_missing", {
         employeeId: item.employeeId,
         assignmentId: item.assignmentId,
         periodKey: item.periodKey
-      }).then(() => refreshInvoicesReadApi(item.periodKey, true))
+      })
+        : Promise.resolve().then(() => {
+          const documentRecord = customerTimesheetFor(recordFor(item.employeeId, item.periodKey));
+          Object.assign(documentRecord, blankCustomerTimesheet());
+          persistState();
+        });
+      write.then(() => item.source === "customer-timesheet" ? null : refreshInvoicesReadApi(item.periodKey, true))
         .then(() => {
           closeModal();
-          renderInvoices();
+          if (item.source === "customer-timesheet") renderAll();
+          else renderInvoices();
           toast("De urenstaat staat weer als ontbrekend.");
         })
         .catch(error => {
@@ -3836,7 +3917,10 @@ function customerTimesheetFor(record) {
 }
 
 function customerTimesheetStatusPill(documentRecord) {
-  const status = customerTimesheetStatusLabels[customerTimesheetFor(documentRecord).status] || customerTimesheetStatusLabels.missing;
+  const current = customerTimesheetFor(documentRecord);
+  const status = customerTimesheetExternallyConfirmed(current)
+    ? ["Extern bevestigd", "status-success"]
+    : customerTimesheetStatusLabels[current.status] || customerTimesheetStatusLabels.missing;
   return '<span class="status-pill ' + status[1] + '">' + status[0] + '</span>';
 }
 
@@ -4252,14 +4336,54 @@ function applyTheme() {
   }
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = resolved === "dark" ? "#09131f" : normalizedBrandColor(state.settings.brandPrimary, "#0d1b38");
+  syncAppearanceSwitches();
 }
 
 // Vormgeving. "classic" = de bestaande app zonder wijziging; "new" activeert de
 // regels in styles-new.css (allemaal gescoped onder html[data-skin="new"]).
 // Draait naast applyTheme(); de twee staan los van elkaar.
-function applySkin() {
-  const choice = state.preferences && state.preferences.skin === "new" ? "new" : "classic";
+function applySkin(hostname = window.location.hostname) {
+  const redesignAllowed = testAccountToolsAllowed(hostname);
+  const choice = redesignAllowed && state.preferences && state.preferences.skin === "new" ? "new" : "classic";
   document.documentElement.dataset.skin = choice;
+  syncAppearanceSwitches(hostname);
+}
+
+function syncAppearanceSwitches(hostname = window.location.hostname) {
+  const themeButton = document.querySelector("#quick-theme-toggle");
+  const skinButton = document.querySelector("#quick-skin-toggle");
+  const dark = document.documentElement.dataset.theme === "dark";
+  const vernieuwd = document.documentElement.dataset.skin === "new";
+  const redesignAllowed = testAccountToolsAllowed(hostname);
+  if (themeButton) {
+    themeButton.setAttribute("aria-pressed", String(dark));
+    themeButton.setAttribute("aria-label", dark ? "Schakel naar lichte modus" : "Schakel naar donkere modus");
+    themeButton.title = dark ? "Naar licht" : "Naar donker";
+    themeButton.innerHTML = '<span aria-hidden="true">' + (dark ? "☾" : "☀") + "</span><strong>" + (dark ? "Donker" : "Licht") + "</strong>";
+  }
+  if (skinButton) {
+    skinButton.hidden = !redesignAllowed;
+    skinButton.setAttribute("aria-pressed", String(vernieuwd));
+    skinButton.setAttribute("aria-label", vernieuwd ? "Schakel naar klassieke vormgeving" : "Schakel naar nieuwe vormgeving");
+    skinButton.title = vernieuwd ? "Naar klassiek" : "Naar nieuw";
+    skinButton.innerHTML = '<span aria-hidden="true">◫</span><strong>' + (vernieuwd ? "Nieuw" : "Klassiek") + "</strong>";
+  }
+}
+
+function toggleQuickTheme() {
+  state.preferences.theme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  persistState();
+  applyTheme();
+}
+
+function toggleQuickSkin() {
+  if (!testAccountToolsAllowed(window.location.hostname)) {
+    document.documentElement.dataset.skin = "classic";
+    return;
+  }
+  state.preferences.skin = document.documentElement.dataset.skin === "new" ? "classic" : "new";
+  persistState();
+  applySkin();
 }
 
 function greetingForNow() {
@@ -4333,6 +4457,101 @@ function renderEmployeeCustomerTimesheet(record, employee, period) {
   openButton.textContent = needsAction ? "Klanturenstaat openen" : "Details bekijken";
   skipButton.hidden = !needsAction && documentRecord.status !== "skipped";
   skipButton.textContent = documentRecord.status === "skipped" ? "Alsnog uploaden" : "Al rechtstreeks gemaild";
+}
+
+function newEmployeeBentoWeekIndex(period) {
+  const selected = /^week-(\d+)$/.exec(String(state.hoursWeekScope || ""));
+  const selectedIndex = selected ? Number(selected[1]) : -1;
+  if (selectedIndex >= 0 && period.weekRows[selectedIndex]) return selectedIndex;
+  const suggested = /^week-(\d+)$/.exec(mobileWeekScope(period));
+  return suggested && period.weekRows[Number(suggested[1])] ? Number(suggested[1]) : 0;
+}
+
+function renderNewEmployeeBento(record, employee, period) {
+  const bento = document.querySelector("#new-employee-bento");
+  if (!bento) return;
+  const editable = isTimesheetEditableForEmployee(record);
+  const weekIndex = newEmployeeBentoWeekIndex(period);
+  const week = period.weekRows[weekIndex];
+  if (!week) return;
+  state.hoursWeekScope = "week-" + weekIndex;
+  document.querySelector("#new-bento-period-label").textContent = period.label;
+  document.querySelector("#new-bento-week-title").textContent = "Week " + week.number;
+  const actualDays = week.days.filter(Boolean);
+  document.querySelector("#new-bento-week-range").textContent = actualDays.length
+    ? actualDays[0].label + " – " + actualDays[actualDays.length - 1].label
+    : period.label;
+  const today = new Date();
+  const selectedIsCurrentMonth = period.key === currentCalendarPeriodKey();
+  document.querySelector("#new-bento-days").innerHTML = week.days.map((day, dayIndex) => {
+    if (!day) return "";
+    const value = Number(record.entries[weekIndex][dayIndex] || 0);
+    const isToday = selectedIsCurrentMonth && day.day === today.getDate();
+    return '<label class="new-bento-day' + (isToday ? " is-active" : "") + '"><span><small>' + escapeHtml(WEEKDAY_SHORT[dayIndex]) + '</small><b>' + day.day + '</b></span><input class="new-bento-hours-input" data-week-index="' + weekIndex + '" data-day-index="' + dayIndex + '" type="number" min="0" max="24" step="0.5" inputmode="decimal" value="' + (value > 0 ? String(value) : "") + '" placeholder="0,00" aria-label="Uren op ' + escapeHtml(day.label) + '"' + (editable ? "" : " disabled") + '></label>';
+  }).join("");
+  const weekTotal = record.entries[weekIndex].reduce((sum, value) => sum + Number(value || 0), 0);
+  const weekBusinessDays = actualDays.length;
+  document.querySelector("#new-bento-week-total-label").textContent = "Totaal · " + weekBusinessDays + " werkdag" + (weekBusinessDays === 1 ? "" : "en") + " in deze maand";
+  document.querySelector("#new-bento-week-total").textContent = hoursFormat.format(weekTotal) + " uur";
+  const previous = document.querySelector('[data-new-bento-week="previous"]');
+  const next = document.querySelector('[data-new-bento-week="next"]');
+  previous.disabled = weekIndex === 0;
+  next.disabled = weekIndex >= period.weekRows.length - 1;
+  const submit = document.querySelector("[data-new-bento-submit]");
+  submit.disabled = !editable;
+  submit.innerHTML = '<span aria-hidden="true">✓</span> ' + (record.timesheetStatus === "correction" ? "Hele maand opnieuw indienen" : "Hele maand indienen");
+
+  const filledDays = record.entries.reduce((count, row) => count + row.filter(value => Number(value || 0) > 0).length, 0);
+  const totalDays = period.businessDays;
+  const progress = totalDays > 0 ? Math.round(filledDays / totalDays * 100) : 0;
+  document.querySelector("#new-bento-days-filled").textContent = String(filledDays);
+  document.querySelector("#new-bento-days-total").textContent = "van " + totalDays + " werkdagen";
+  document.querySelector("#new-bento-days-note").textContent = filledDays === totalDays
+    ? "Alle werkdagen van deze maand hebben uren."
+    : "Nog " + (totalDays - filledDays) + " werkdagen zonder uren.";
+  document.querySelector("#new-bento-progress").style.width = progress + "%";
+  document.querySelector("#new-bento-percentage").textContent = progress + "%";
+  document.querySelector("#new-bento-ring").style.setProperty("--bento-progress", progress + "%");
+
+  const customerDocument = customerTimesheetFor(record);
+  const customerStatus = document.querySelector("#new-bento-customer-status");
+  const customerNote = document.querySelector("#new-bento-customer-note");
+  let customerLabel = "Nog aanleveren";
+  let customerTone = "status-warning";
+  let customerMessage = "De verplichte klanturenstaat mag later binnenkomen en blijft apart openstaan.";
+  if (customerDocument.status === "skipped" && !customerTimesheetExternallyConfirmed(customerDocument)) {
+    customerLabel = "Gemeld · controle nodig";
+    customerMessage = "Je hebt rechtstreeks gemaild gemeld. Backoffice moet de ontvangst nog bevestigen.";
+  } else if (customerTimesheetExternallyConfirmed(customerDocument)) {
+    customerLabel = "Extern bevestigd";
+    customerTone = "status-success";
+    customerMessage = "Backoffice heeft de externe ontvangst bevestigd.";
+  } else if (["received"].includes(customerDocument.status)) {
+    customerLabel = "Bij Backoffice";
+    customerTone = "status-ready";
+    customerMessage = "Het document is ontvangen en wacht op controle.";
+  } else if (["approved", "sent", "sent_to_broker"].includes(customerDocument.status)) {
+    customerLabel = "Afgerond";
+    customerTone = "status-success";
+    customerMessage = "De klanturenstaat is gecontroleerd en voor deze maand afgerond.";
+  }
+  customerStatus.className = "status-pill " + customerTone;
+  customerStatus.textContent = customerLabel;
+  customerNote.textContent = customerMessage;
+
+  const submitted = ["submitted", "approved", "invoiced"].includes(record.timesheetStatus);
+  const reviewed = ["approved", "invoiced"].includes(record.timesheetStatus);
+  const done = record.invoiceStatus === "simulated" || record.timesheetStatus === "invoiced";
+  const stepState = {
+    fill: totalEntries(record.entries) > 0 ? "is-done" : "is-current",
+    submit: submitted ? "is-done" : totalEntries(record.entries) > 0 ? "is-current" : "",
+    review: reviewed ? "is-done" : record.timesheetStatus === "submitted" ? "is-current" : "",
+    done: done ? "is-done" : reviewed ? "is-current" : ""
+  };
+  document.querySelectorAll("#new-bento-steps [data-step]").forEach(item => {
+    item.classList.remove("is-done", "is-current");
+    if (stepState[item.dataset.step]) item.classList.add(stepState[item.dataset.step]);
+  });
 }
 
 function renderEmployeeDashboard() {
@@ -4561,6 +4780,7 @@ function renderEmployeeDashboard() {
   document.querySelector("#employee-history").innerHTML = historyRows
     ? '<div class="employee-history-head" aria-hidden="true"><span>Maand</span><span>Uren</span><span>Status</span><span>Actie</span></div>' + historyRows
     : '<div class="dashboard-action-empty">Er zijn nog geen maanden beschikbaar.</div>';
+  renderNewEmployeeBento(record, employee, period);
 }
 
 function adminOpenTasks() {
@@ -4584,6 +4804,8 @@ function adminOpenTasks() {
         if (employee.customerTimesheetExpected !== false) {
           if (documentRecord.status === "received") {
             tasks.push(Object.assign({}, base, { id: "customer-review-" + periodKey + "-" + employee.id, type: "customer-review", category: "Klanturenstaat", actionable: true, priority: 2, title: "Klanturenstaat controleren", note: "Het ontvangen document wacht op controle door Backoffice." }));
+          } else if (documentRecord.status === "skipped" && !customerTimesheetExternallyConfirmed(documentRecord)) {
+            tasks.push(Object.assign({}, base, { id: "customer-external-confirm-" + periodKey + "-" + employee.id, type: "customer-external-confirm", category: "Klanturenstaat", actionable: true, priority: 2, title: "Rechtstreeks gemaild controleren", note: "De medewerker meldt dat de klanturenstaat rechtstreeks is gemaild. Backoffice moet de externe ontvangst nog bevestigen." }));
           } else if (documentRecord.status === "approved" && employee.customerTimesheetBrokerEnabled !== false) {
             tasks.push(Object.assign({}, base, { id: "customer-broker-" + periodKey + "-" + employee.id, type: "customer-broker", category: "Klanturenstaat", actionable: true, priority: 3, title: "Brokerroute controleren", note: "De klanturenstaat is goedgekeurd en staat klaar voor de brokerroute." }));
           } else if (["missing", "draft", "resubmit"].includes(documentRecord.status)) {
@@ -4617,6 +4839,7 @@ function employeeOpenMonthSummaries(employeeId, currentPeriodKey) {
     .filter(key => parsePeriodKey(key))
     .sort()
     .map(key => {
+      if (key > calendarMonthKey) return null;
       const historyRecord = recordFor(employee.id, key);
       if (!employeeStartedByPeriodEnd(employee, key)) return null;
       if (key !== calendarMonthKey && !recordHasPeriodActivity(historyRecord)) return null;
@@ -4933,6 +5156,7 @@ function openAdminTask(taskId, options = {}) {
   let opened = false;
   if (task.type === "hours-review") opened = showHoursReview(task.employee.id, task.periodKey, task.id);
   if (task.type === "customer-review") opened = showCustomerTimesheetDetails(task.employee.id, task.periodKey, true, task.id);
+  if (task.type === "customer-external-confirm") opened = showAdminExternalCustomerTimesheetConfirmation(task.employee.id, task.periodKey, task.id);
   if (task.type === "customer-broker") opened = showCustomerTimesheetBrokerCheck(task.employee.id, task.periodKey, task.id);
   if (task.type === "invoice-delivery") opened = showInvoiceDeliveryCheck(task.employee.id, task.periodKey, task.id);
   if (!opened) {
@@ -5157,7 +5381,13 @@ function openPeriodSummaries() {
       const corrections = items.filter(item => item.record.timesheetStatus === "correction").length;
       const approvals = items.filter(item => item.record.timesheetStatus === "submitted").length;
       const deliveries = items.filter(item => item.record.timesheetStatus === "approved" && (item.record.invoiceStatus === "ready" || item.record.payrollStatus === "ready")).length;
-      const customerDocuments = items.filter(item => item.employee.customerTimesheetExpected !== false && (["missing", "draft", "received", "resubmit"].includes(customerTimesheetFor(item.record).status) || (customerTimesheetFor(item.record).status === "approved" && item.employee.customerTimesheetBrokerEnabled !== false))).length;
+      const customerDocuments = items.filter(item => {
+        if (item.employee.customerTimesheetExpected === false) return false;
+        const documentRecord = customerTimesheetFor(item.record);
+        return ["missing", "draft", "received", "resubmit"].includes(documentRecord.status)
+          || (documentRecord.status === "skipped" && !customerTimesheetExternallyConfirmed(documentRecord))
+          || (documentRecord.status === "approved" && item.employee.customerTimesheetBrokerEnabled !== false);
+      }).length;
       if (drafts + corrections + approvals + deliveries + customerDocuments === 0) return null;
       const parts = [];
       if (drafts) parts.push(drafts + " urenregistratie" + (drafts === 1 ? "" : "s") + " niet ingediend");
@@ -5272,8 +5502,12 @@ function renderCustomerTimesheetAdmin() {
     .filter(employee => employee.customerTimesheetExpected !== false && employeeStartedByPeriodEnd(employee, period.key))
     .map(employee => ({ employee, record: recordFor(employee.id, period.key) }));
   const reviewCount = rows.filter(item => customerTimesheetFor(item.record).status === "received").length;
+  const externalCount = rows.filter(item => {
+    const documentRecord = customerTimesheetFor(item.record);
+    return documentRecord.status === "skipped" && !customerTimesheetExternallyConfirmed(documentRecord);
+  }).length;
   const employeeCount = rows.filter(item => ["missing", "draft", "resubmit"].includes(customerTimesheetFor(item.record).status)).length;
-  document.querySelector("#customer-timesheet-admin-summary").textContent = rows.length + " verwacht · " + reviewCount + " te controleren · " + employeeCount + " wacht op medewerker" + (employeeCount === 1 ? "" : "s");
+  document.querySelector("#customer-timesheet-admin-summary").textContent = rows.length + " verwacht · " + reviewCount + " document" + (reviewCount === 1 ? "" : "en") + " te controleren · " + externalCount + " extern te bevestigen · " + employeeCount + " wacht op medewerker" + (employeeCount === 1 ? "" : "s");
 
   if (isCustomerTimesheetAdminApiMode()) {
     rows.forEach(item => refreshCustomerTimesheetReadApi(period.key, item.employee.id));
@@ -5283,6 +5517,7 @@ function renderCustomerTimesheetAdmin() {
     const documentRecord = customerTimesheetFor(record);
     let action = '<button class="small-button" data-customer-timesheet-details="' + employee.id + '" data-period-key="' + period.key + '">Details</button>';
     if (documentRecord.status === "received") action = '<button class="small-button" data-review-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">Controleren</button>';
+    if (documentRecord.status === "skipped" && !customerTimesheetExternallyConfirmed(documentRecord)) action = '<button class="small-button" data-confirm-customer-timesheet-external="' + employee.id + '" data-period-key="' + period.key + '">Extern bevestigen</button>';
     if (["missing", "draft", "resubmit"].includes(documentRecord.status)) action = '<button class="small-button" data-remind-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">Herinnering sturen</button>';
     if (documentRecord.status === "approved" && employee.customerTimesheetBrokerEnabled !== false) action = '<button class="small-button" data-send-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">Brokerroute controleren</button>';
     const route = employee.customerTimesheetBrokerEnabled === false ? "Geen brokerroute" : customerTimesheetBrokerEmail(employee);
@@ -5295,19 +5530,23 @@ function showCustomerTimesheetDetails(employeeId, periodKey, reviewMode, adminTa
   const period = periodFromKey(periodKey);
   const record = recordFor(employeeId, period.key);
   const documentRecord = customerTimesheetFor(record);
-  const status = customerTimesheetStatusLabels[documentRecord.status] || customerTimesheetStatusLabels.missing;
+  const externallyConfirmed = customerTimesheetExternallyConfirmed(documentRecord);
+  const status = externallyConfirmed ? ["Extern bevestigd", "status-success"] : customerTimesheetStatusLabels[documentRecord.status] || customerTimesheetStatusLabels.missing;
   const submissionMail = customerTimesheetSubmissionMail(employee, period.key);
   const brokerMail = customerTimesheetBrokerMail(employee, period.key);
   const route = employee.customerTimesheetBrokerEnabled === false
     ? "Geen brokerverzending ingesteld"
     : customerTimesheetBrokerEmail(employee) + " · alleen na goedkeuring";
   const skippedSummary = documentRecord.status === "skipped"
-    ? '<div><span>Reden</span><strong>' + escapeHtml(documentRecord.skippedReason || "De klanturenstaat is al rechtstreeks naar Path Backoffice gemaild.") + '</strong></div><div><span>Geregistreerd door</span><strong>' + escapeHtml(documentRecord.skippedBy || employee.name) + '</strong></div><div><span>Geregistreerd op</span><strong>' + escapeHtml(documentRecord.skippedAt || "Datum onbekend") + '</strong></div>'
+    ? '<div><span>Reden</span><strong>' + escapeHtml(externallyConfirmed ? documentRecord.reviewNote.replace(/^Extern bevestigd:\s*/, "") : documentRecord.skippedReason || documentRecord.reviewNote || "De klanturenstaat is al rechtstreeks naar Path Backoffice gemaild.") + '</strong></div><div><span>' + (externallyConfirmed ? "Bevestigd door" : "Geregistreerd door") + '</span><strong>' + escapeHtml(documentRecord.reviewedBy || documentRecord.skippedBy || employee.name) + '</strong></div><div><span>' + (externallyConfirmed ? "Bevestigd op" : "Geregistreerd op") + '</span><strong>' + escapeHtml(documentRecord.reviewedAt || documentRecord.skippedAt || "Datum onbekend") + '</strong></div>'
     : '';
   const submissionSummary = documentRecord.status === "skipped"
     ? ''
     : '<div class="customer-timesheet-submission-review"><span>Van ' + escapeHtml(employee.name) + ' aan ' + escapeHtml(state.settings.supportName || "Path Backoffice") + '</span><strong>' + escapeHtml(submissionMail.subject) + '</strong><pre>' + escapeHtml(submissionMail.body) + '</pre></div>';
-  const summary = '<div><span>Status</span><strong>' + escapeHtml(status[0]) + '</strong></div><div><span>Bestand</span><strong>' + escapeHtml(documentRecord.fileName || (documentRecord.status === "skipped" ? "Niet via de app ontvangen" : "Nog niet ontvangen")) + '</strong></div>' + skippedSummary + (documentRecord.fileData ? '<div><span>Document controleren</span><button class="small-button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">Klanturenstaat bekijken</button></div>' : '') + submissionSummary + '<div><span>Deadline</span><strong>Werkdag ' + Number(employee.customerTimesheetDueWorkday || 5) + '</strong></div><div><span>Brokerroute na goedkeuring</span><strong>' + escapeHtml(route) + '</strong></div><div><span>Factuur zonder klanturenstaat</span><strong>' + (employee.invoiceWithoutCustomerTimesheetAllowed === false ? "Niet toegestaan" : "Toegestaan") + '</strong></div><div><span>Onderwerp naar broker</span><strong>' + escapeHtml(brokerMail.subject) + '</strong></div>';
+  const externalAction = documentRecord.status === "skipped"
+    ? '<div><span>Externe controle</span><button class="small-button" ' + (externallyConfirmed ? 'data-restore-customer-timesheet-external="' + employee.id + '"' : 'data-confirm-customer-timesheet-external="' + employee.id + '"') + ' data-period-key="' + period.key + '">' + (externallyConfirmed ? "Externe bevestiging intrekken" : "Extern bevestigen") + '</button></div>'
+    : '';
+  const summary = '<div><span>Status</span><strong>' + escapeHtml(status[0]) + '</strong></div><div><span>Bestand</span><strong>' + escapeHtml(documentRecord.fileName || (documentRecord.status === "skipped" ? "Niet via de app ontvangen" : "Nog niet ontvangen")) + '</strong></div>' + skippedSummary + externalAction + (documentRecord.fileData ? '<div><span>Document controleren</span><button class="small-button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">Klanturenstaat bekijken</button></div>' : '') + submissionSummary + '<div><span>Deadline</span><strong>Werkdag ' + Number(employee.customerTimesheetDueWorkday || 5) + '</strong></div><div><span>Brokerroute na goedkeuring</span><strong>' + escapeHtml(route) + '</strong></div><div><span>Factuur zonder klanturenstaat</span><strong>' + (employee.invoiceWithoutCustomerTimesheetAllowed === false ? "Niet toegestaan" : "Toegestaan") + '</strong></div><div><span>Onderwerp naar broker</span><strong>' + escapeHtml(brokerMail.subject) + '</strong></div>';
   if (reviewMode && documentRecord.status === "received") {
     showModal({
       label: "Klanturenstaat controleren",
@@ -9119,6 +9358,17 @@ function applyLoginPresentation(accountToolsAllowed, resetToolsAllowed = localAc
   if (tools) tools.hidden = !accountToolsAllowed;
   if (panel) panel.classList.toggle("is-production-login", !accountToolsAllowed);
   if (localNote) localNote.hidden = !accountToolsAllowed;
+  if (!accountToolsAllowed) {
+    const emailInput = document.querySelector("#auth-login-email");
+    const passwordInput = document.querySelector("#auth-login-password");
+    const currentEmail = String(emailInput?.value || "").trim().toLowerCase();
+    // Verwijder uitsluitend meegeleverde demo-inloggegevens. Een door de
+    // browser of gebruiker ingevuld echt zakelijk adres blijft behouden.
+    if (currentEmail.endsWith(DEMO_DOMAIN)) {
+      emailInput.value = "";
+      if (passwordInput) passwordInput.value = "";
+    }
+  }
   syncResetControlVisibility(resetToolsAllowed);
   if (!resetToolsAllowed) {
     try { window.localStorage.removeItem(LOCAL_RESET_GUARD_KEY); } catch (_error) { /* production remains server-authoritative */ }
@@ -9935,10 +10185,11 @@ function showEmployeeEditor(employeeId, prefill) {
         const addAnother = !existing && document.querySelector("#edit-add-another").checked;
         const inviteInput = document.querySelector("#edit-invite");
         let writeResult = null;
-        writeStaffToApi("upsert_employee", {
+        const saveEmployeeToServer = (confirmStartDateHistoryHide = false) => writeStaffToApi("upsert_employee", {
           employee: updated,
           mailRecipients: effectiveMailRecipients,
-          sendInvitation: Boolean(inviteInput && inviteInput.checked)
+          sendInvitation: Boolean(inviteInput && inviteInput.checked),
+          confirmStartDateHistoryHide
         })
           .then(result => {
             writeResult = result;
@@ -9962,11 +10213,15 @@ function showEmployeeEditor(employeeId, prefill) {
             }
             if (addAnother) showEmployeeEditor(null);
           })
-          .catch(error => handleStaffWriteError(
-            error,
-            "Medewerker opslaan op server mislukt.",
-            () => showEmployeeEditor(employeeId, updated)
-          ));
+          .catch(error => {
+            const reopen = () => showEmployeeEditor(employeeId, updated);
+            if (error && error.code === "employment-start-hides-history") {
+              showEmployeeStartDateHistoryWarning(error, () => saveEmployeeToServer(true), reopen);
+              return null;
+            }
+            return handleStaffWriteError(error, "Medewerker opslaan op server mislukt.", reopen);
+          });
+        saveEmployeeToServer();
         return;
       }
 
@@ -10294,6 +10549,38 @@ function handleStaffWriteError(error, fallbackMessage, reopenForm) {
   }
   toast(message);
   return null;
+}
+
+function showEmployeeStartDateHistoryWarning(error, confirmSave, reopenForm) {
+  const details = error && error.details && error.details.impact ? error.details.impact : {};
+  const periods = Number(details.period_count || 0);
+  const timesheets = Number(details.timesheet_count || 0);
+  const customerTimesheets = Number(details.customer_timesheet_count || 0);
+  const invoices = Number(details.invoice_count || 0);
+  const first = String(details.first_period || "");
+  const last = String(details.last_period || "");
+  const range = first && last
+    ? (first === last ? periodFromKey(first).label : periodFromKey(first).label + " t/m " + periodFromKey(last).label)
+    : "de eerdere maanden";
+  const summary = '<div><span>Wordt verborgen</span><strong>' + periods + ' ' + (periods === 1 ? 'maand' : 'maanden') + ' · ' + escapeHtml(range) + '</strong></div>' +
+    '<div><span>Opgeslagen urenregistraties</span><strong>' + timesheets + '</strong></div>' +
+    '<div><span>Klanturenstaten</span><strong>' + customerTimesheets + '</strong></div>' +
+    '<div><span>Facturen</span><strong>' + invoices + '</strong></div>' +
+    '<p class="form-help">Ook open acties uit deze maanden verdwijnen uit de werkvoorraad. Er wordt niets verwijderd: zet de startdatum later weer terug om alle gegevens en statussen opnieuw zichtbaar te maken.</p>';
+  showModal({
+    label: "Impact startdatum",
+    title: "Eerdere historie verbergen?",
+    message: "De nieuwe startdatum ligt na maanden waarin al is gewerkt. Bevestig alleen als die maanden niet meer voor de medewerker beschikbaar mogen zijn.",
+    summary,
+    secondary: "Startdatum aanpassen",
+    secondaryAction: reopenForm,
+    confirm: "Verbergen en opslaan",
+    danger: true,
+    action: () => {
+      closeModal();
+      confirmSave();
+    }
+  });
 }
 
 // Leeg opslaan betekent: terug naar de meegeleverde tekst. De server verwijdert
@@ -10653,7 +10940,9 @@ function showPreferences() {
       + '<div class="preference-row"><span><strong>Klanturenstaten</strong><small>Ontbreekt, opnieuw uploaden, of goedgekeurd</small></span>' + '<input id="pref-customer-timesheets" aria-label="Berichten over klanturenstaten" type="checkbox"' + (state.preferences.customerTimesheetNotifications ? " checked" : "") + '></div>'
   ;
   const emailRow = '<div class="preference-row"><span><strong>Aanvullende e-mailmeldingen</strong><small>Zet je dit uit, dan blijven meldingen in de app wel zichtbaar</small></span><input id="pref-email-notifications" aria-label="Aanvullende e-mailmeldingen" type="checkbox"' + (profile.source.emailNotificationsEnabled !== false ? " checked" : "") + '></div>';
-  const skinRow = '<div class="preference-row"><span><strong>Vormgeving</strong><small>Klassiek is de huidige stijl; Nieuw is de vernieuwde weergave</small></span><select id="pref-skin" aria-label="Vormgeving"><option value="classic"' + (state.preferences.skin !== "new" ? " selected" : "") + '>Klassiek</option><option value="new"' + (state.preferences.skin === "new" ? " selected" : "") + '>Nieuw</option></select></div>';
+  const skinRow = testAccountToolsAllowed(window.location.hostname)
+    ? '<div class="preference-row"><span><strong>Vormgeving</strong><small>Klassiek is de huidige stijl; Nieuw is de vernieuwde TEST-weergave</small></span><select id="pref-skin" aria-label="Vormgeving"><option value="classic"' + (state.preferences.skin !== "new" ? " selected" : "") + '>Klassiek</option><option value="new"' + (state.preferences.skin === "new" ? " selected" : "") + '>Nieuw (pilot)</option></select></div>'
+    : '';
   const summary = '<div class="preference-list"><div class="preference-row"><span><strong>Uiterlijk</strong><small>Licht is standaard; Automatisch volgt je apparaat</small></span><select id="pref-theme" aria-label="Uiterlijk"><option value="light"' + (state.preferences.theme === "light" ? " selected" : "") + '>Licht</option><option value="system"' + (state.preferences.theme === "system" ? " selected" : "") + '>Automatisch</option><option value="dark"' + (state.preferences.theme === "dark" ? " selected" : "") + '>Donker</option></select></div>' + skinRow + adminRows + emailRow + '</div>';
   showModal({
     label: "Voorkeuren",
@@ -11008,6 +11297,12 @@ function toonInstallatieAanbod() {
   const customerTimesheetDetails = event.target.closest("[data-customer-timesheet-details]");
   if (customerTimesheetDetails) showCustomerTimesheetDetails(Number(customerTimesheetDetails.dataset.customerTimesheetDetails), customerTimesheetDetails.dataset.periodKey, false);
 
+  const customerTimesheetExternalConfirm = event.target.closest("[data-confirm-customer-timesheet-external]");
+  if (customerTimesheetExternalConfirm) showAdminExternalCustomerTimesheetConfirmation(Number(customerTimesheetExternalConfirm.dataset.confirmCustomerTimesheetExternal), customerTimesheetExternalConfirm.dataset.periodKey);
+
+  const customerTimesheetExternalRestore = event.target.closest("[data-restore-customer-timesheet-external]");
+  if (customerTimesheetExternalRestore) restoreExternalCustomerTimesheet(customerTimesheetConfirmationItem(Number(customerTimesheetExternalRestore.dataset.restoreCustomerTimesheetExternal), customerTimesheetExternalRestore.dataset.periodKey));
+
   const customerTimesheetReminder = event.target.closest("[data-remind-customer-timesheet]");
   if (customerTimesheetReminder) remindCustomerTimesheet(Number(customerTimesheetReminder.dataset.remindCustomerTimesheet), customerTimesheetReminder.dataset.periodKey);
 
@@ -11080,6 +11375,47 @@ function toonInstallatieAanbod() {
     state.hoursWeekScopeTouched = true;
     persistState();
     renderHoursGrid();
+  }
+
+  const newBentoWeek = event.target.closest("[data-new-bento-week]");
+  if (newBentoWeek) {
+    const period = currentPeriod();
+    const currentIndex = newEmployeeBentoWeekIndex(period);
+    const delta = newBentoWeek.dataset.newBentoWeek === "previous" ? -1 : 1;
+    const nextIndex = Math.max(0, Math.min(period.weekRows.length - 1, currentIndex + delta));
+    state.hoursWeekScope = "week-" + nextIndex;
+    state.hoursWeekScopeTouched = true;
+    persistState();
+    renderNewEmployeeBento(recordFor(currentEmployee().id), currentEmployee(), period);
+    return;
+  }
+
+  const newBentoOpenHours = event.target.closest("[data-new-bento-open-hours]");
+  if (newBentoOpenHours) {
+    showView("timesheet");
+    return;
+  }
+
+  const newBentoSave = event.target.closest("[data-new-bento-save]");
+  if (newBentoSave) {
+    persistState();
+    scheduleDraftTimesheetWrite();
+    toast("Concepturen voor " + currentPeriod().label + " zijn opgeslagen.");
+    return;
+  }
+
+  const newBentoSubmit = event.target.closest("[data-new-bento-submit]");
+  if (newBentoSubmit) {
+    document.querySelector("#submit-timesheet").click();
+    return;
+  }
+
+  const newBentoCustomer = event.target.closest("[data-new-bento-customer]");
+  if (newBentoCustomer) {
+    showView("timesheet");
+    const customerPanel = document.querySelector("#customer-timesheet-upload-panel");
+    if (customerPanel && typeof customerPanel.scrollIntoView === "function") customerPanel.scrollIntoView({ behavior: smoothScrollBehavior(), block: "start" });
+    return;
   }
 
   const scrollTarget = event.target.closest("[data-scroll-target]");
@@ -11264,6 +11600,40 @@ function toonInstallatieAanbod() {
 
 document.querySelector("#hours-grid").addEventListener("input", () => updateHoursTotal(true));
 
+document.querySelector("#new-employee-bento").addEventListener("change", event => {
+  const input = event.target.closest(".new-bento-hours-input");
+  if (!input) return;
+  const record = recordFor(currentEmployee().id);
+  if (!isTimesheetEditableForEmployee(record)) {
+    renderNewEmployeeBento(record, currentEmployee(), currentPeriod());
+    toast("Deze maand is vergrendeld en alleen-lezen.");
+    return;
+  }
+  const weekIndex = Number(input.dataset.weekIndex);
+  const dayIndex = Number(input.dataset.dayIndex);
+  const value = Math.min(24, Math.max(0, Number(String(input.value).replace(",", ".")) || 0));
+  record.entries[weekIndex][dayIndex] = value;
+  if (record.timesheetStatus !== "correction") record.timesheetStatus = "draft";
+  record.invoiceStatus = "concept";
+  record.payrollStatus = "concept";
+  persistState();
+  scheduleDraftTimesheetWrite();
+  renderNewEmployeeBento(record, currentEmployee(), currentPeriod());
+});
+
+document.querySelector("#new-employee-bento").addEventListener("keydown", event => {
+  const input = event.target.closest(".new-bento-hours-input");
+  if (!input || event.key !== "Enter" || event.isComposing || event.repeat) return;
+  event.preventDefault();
+  const inputs = [...document.querySelectorAll("#new-bento-days .new-bento-hours-input:not([disabled])")];
+  const next = inputs[inputs.indexOf(input) + 1];
+  input.blur();
+  if (next) {
+    next.focus();
+    next.select();
+  }
+});
+
 function handleEnterSave(event) {
   if (event.key !== "Enter" || event.isComposing || event.repeat) return;
   const target = event.target;
@@ -11333,13 +11703,16 @@ document.querySelector("#submit-timesheet").addEventListener("click", async () =
   const submitButton = document.querySelector("#submit-timesheet");
 
   const serverSubmit = API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative() && state.currentRole === "employee";
+  let submitPayload = null;
   if (serverSubmit) {
+    submitPayload = buildTimesheetWritePayload("submit");
     writeRuntime.submitInFlight = true;
     if (writeRuntime.draftTimer) {
       window.clearTimeout(writeRuntime.draftTimer);
       writeRuntime.draftTimer = null;
     }
     writeRuntime.pendingDraftSignature = "";
+    writeRuntime.pendingDraftPayload = null;
 
     // A debounced conceptwrite may already have left the browser when the
     // employee clicks Submit. Serialize both writes so that the older draft
@@ -11347,6 +11720,7 @@ document.querySelector("#submit-timesheet").addEventListener("click", async () =
     if (writeRuntime.draftPromise) {
       await writeRuntime.draftPromise.catch(() => null);
       writeRuntime.pendingDraftSignature = "";
+      writeRuntime.pendingDraftPayload = null;
       // The completed draft may have scheduled the latest pending edit in its
       // finally-handler. Submit already contains that latest form state.
       if (writeRuntime.draftTimer) {
@@ -11355,11 +11729,14 @@ document.querySelector("#submit-timesheet").addEventListener("click", async () =
       }
     }
 
+    const latestVersion = Number(recordFor(employee.id).serverVersion || 0);
+    if (latestVersion > 0) submitPayload.expected_version = latestVersion;
+
     submitButton.disabled = true;
     const originalText = submitButton.textContent;
     submitButton.textContent = "Indienen...";
     try {
-      await writeTimesheetToApi("submit");
+      await writeTimesheetToApi("submit", submitPayload);
     } catch (error) {
       writeRuntime.submitInFlight = false;
       submitButton.disabled = false;
@@ -11582,7 +11959,7 @@ function setPeriod(periodKey) {
   if (state.currentRole === "employee") {
     const maxEmployeePeriodKey = currentCalendarPeriodKey();
     if (next > maxEmployeePeriodKey) {
-      toast("Medewerkers kunnen geen toekomstige maand openen. Beschikbaar tot en met " + periodFromKey(maxEmployeePeriodKey).label + ".");
+      toast("Je kunt geen toekomstige maand openen. Beschikbaar tot en met " + periodFromKey(maxEmployeePeriodKey).label + ".");
       return false;
     }
     const employee = currentEmployee();
@@ -12415,6 +12792,8 @@ document.querySelector("#auth-reset-complete-form")?.addEventListener("submit", 
 });
 document.querySelector("#switch-role").addEventListener("click", logout);
 document.querySelector("#mobile-switch-role").addEventListener("click", logout);
+document.querySelector("#quick-theme-toggle")?.addEventListener("click", toggleQuickTheme);
+document.querySelector("#quick-skin-toggle")?.addEventListener("click", toggleQuickSkin);
 document.querySelector("#modal-close").addEventListener("click", closeModal);
 document.querySelector("#modal-cancel").addEventListener("click", () => closeModal(true));
 document.querySelector("#modal-secondary").addEventListener("click", () => modalSecondaryAction ? modalSecondaryAction() : closeModal());

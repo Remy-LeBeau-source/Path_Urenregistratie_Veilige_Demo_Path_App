@@ -114,10 +114,10 @@ Feature: Veilige productieconfiguratie en deployment
   @negative
   Scenario: [SAFE-N-005] live login verbergt lokale accountkeuze en valt gesloten uit zonder authservice
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 11
+    # Aantoonbare Playwright-assertions in deze case: 13
     Given de loginpagina als productiepresentatie wordt opgebouwd
     When de flow voor SAFE-N-005 wordt uitgevoerd
-    Then zijn demoaccounts en lokale uitleg niet zichtbaar
+    Then zijn demoaccounts, demo-inlogwaarden en lokale uitleg niet zichtbaar
     And zonder authservice blijft productie fail-closed
 
   @negative
@@ -178,5 +178,14 @@ Feature: Veilige productieconfiguratie en deployment
     # Aantoonbare Playwright-assertions in deze case: 23
     Given het automatische TransIP-deploycontract wordt ingelezen
     When validatie, TEST, PROD-regressie en Living Docs groen zijn
-    Then wordt alleen main met checksum, backup, migratie en live-smoke uitgerold
+    Then wordt alleen main met checksum, backup, migratie en live-smoke uitgerold, zonder de TEST-only pilotmap
     And blijft mail gesloten en wordt bij een fout automatisch teruggerold
+
+  @happy
+  Scenario: [SAFE-H-016] de eerste 1.0.0-uitrol vereist exact de afgesproken lege PROD-baseline
+    # Testtechniek: Beslissingstabel + herstelbaarheid + toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 18
+    Given de eerste productiebaseline en het deployscript worden ingelezen
+    When versie 1.0.0 vóór backup en migratie wordt vrijgegeven
+    Then zijn accounts, septemberstart, dummy-routes en lege transactietabellen fail-closed gecontroleerd
+    And latere releases gebruiken dezelfde read-only preflight zonder de eenmalige nulmeting

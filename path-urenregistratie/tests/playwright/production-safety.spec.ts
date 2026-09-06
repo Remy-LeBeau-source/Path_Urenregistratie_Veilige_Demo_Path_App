@@ -481,6 +481,8 @@ test('[SAFE-N-005] live login verbergt lokale accountkeuze en valt gesloten uit 
   await test.step('Then zijn demoaccounts en lokale uitleg niet zichtbaar', async () => {
     await expect(page.locator('#local-account-login-tools')).toBeHidden();
     await expect(page.locator('#local-login-note')).toBeHidden();
+    await expect(page.locator('#auth-login-email')).toHaveValue('');
+    await expect(page.locator('#auth-login-password')).toHaveValue('');
     await expect(page.locator('#login-environment-label')).toHaveText('Beveiligde omgeving');
     await expect(page.locator('#login-title')).toHaveText('Inloggen');
     await expect(page.locator('#login-intro')).toContainText('zakelijke e-mailadres');
@@ -750,6 +752,8 @@ test('[SAFE-H-011] groene main-pipeline rolt exact dezelfde release veilig uit n
     expect(remote).toContain('production-preflight.php --config=server/config.local.php --live');
     expect(remote).toContain('server/health.php');
     expect(workflow).toContain('secrets.TRANSIP_SSH_PRIVATE_KEY');
+    expect(runner).toContain("':(exclude)pilot'");
+    expect(runner).toContain('^path-urenregistratie/pilot/');
   });
 
   await test.step('And blijft mail gesloten en wordt bij een fout automatisch teruggerold', async () => {
@@ -763,5 +767,48 @@ test('[SAFE-H-011] groene main-pipeline rolt exact dezelfde release veilig uit n
     expect(remote).toContain('rm -f -- "$helper_path"');
     expect(remote).toContain('curl_status');
     expect(remote).not.toContain('rm -rf');
+    const testRunner = await readFile(join(process.cwd(), 'scripts', 'deploy-test-transip.sh'), 'utf8');
+    expect(testRunner).not.toContain(':(exclude)pilot');
+  });
+});
+
+test('[SAFE-H-016] de eerste 1.0.0-uitrol vereist exact de afgesproken lege PROD-baseline', async () => {
+  let preflight = '';
+  let deploy = '';
+
+  await test.step('Given de eerste productiebaseline en het deployscript worden ingelezen', async () => {
+    preflight = await readFile(join(process.cwd(), 'server', 'scripts', 'production-preflight.php'), 'utf8');
+    deploy = await readFile(join(process.cwd(), 'scripts', 'deploy-production-remote.sh'), 'utf8');
+  });
+
+  await test.step('When versie 1.0.0 vóór backup en migratie wordt vrijgegeven', async () => {
+    const baselineIndex = deploy.indexOf('production-preflight.php --config=server/config.local.php --live --initial-baseline');
+    const backupIndex = deploy.indexOf('database-backup.php --config=server/config.local.php --execute');
+    const migrateIndex = deploy.indexOf('php server/migrate.php');
+    expect(deploy).toContain('if [[ "$version" == "1.0.0" ]]');
+    expect(baselineIndex).toBeGreaterThanOrEqual(0);
+    expect(backupIndex).toBeGreaterThan(baselineIndex);
+    expect(migrateIndex).toBeGreaterThan(backupIndex);
+  });
+
+  await test.step('Then zijn accounts, septemberstart, dummy-routes en lege transactietabellen fail-closed gecontroleerd', async () => {
+    expect(preflight).toContain("($options['initial-baseline'] ?? false) === true");
+    expect(preflight).toContain("'production_baseline_has_two_admins_and_five_employees'");
+    expect(preflight).toContain("'production_baseline_employee_set_exact'");
+    expect(preflight).toContain("'production_baseline_starts_in_september'");
+    expect(preflight).toContain("'production_pilot_identity_and_broker_exact'");
+    expect(preflight).toContain("'production_pilot_recipient_routes_exact'");
+    expect(preflight).toContain("'production_operational_tables_empty'");
+    expect(preflight).toContain("'joycesteenhoven@gmail.com'");
+    expect(preflight).toContain("'gambitizanagi@gmail.com'");
+    expect(preflight).toContain("'gambitizanagi+prod-boekhouder@gmail.com'");
+    expect(preflight).toContain("'gambitizanagi+prod-salaris@gmail.com'");
+    expect(preflight).toContain("'periods', 'timesheets', 'time_entries', 'timesheet_corrections', 'customer_timesheets'");
+    expect(preflight).toContain("'writes_performed' => false");
+  });
+
+  await test.step('And latere releases gebruiken dezelfde read-only preflight zonder de eenmalige nulmeting', async () => {
+    expect(deploy).toMatch(/else\s+php server\/scripts\/production-preflight\.php --config=server\/config\.local\.php --live\s+fi/);
+    expect(deploy).not.toContain('migrate-test-masterdata-to-production.php');
   });
 });

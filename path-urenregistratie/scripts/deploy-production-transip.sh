@@ -64,7 +64,12 @@ trap cleanup EXIT
 archive="$temp_root/path-uren-${short_sha}.tar.gz"
 remote_script_local="$repo_root/path-urenregistratie/scripts/deploy-production-remote.sh"
 git -C "$repo_root" archive --format=tar.gz --prefix=path-urenregistratie/ \
-  -o "$archive" "${DEPLOY_SOURCE_SHA}:path-urenregistratie"
+  -o "$archive" "${DEPLOY_SOURCE_SHA}:path-urenregistratie" -- . ':(exclude)pilot'
+
+if tar -tzf "$archive" | grep -q '^path-urenregistratie/pilot/'; then
+  echo 'Production archive unexpectedly contains TEST-only pilot pages.' >&2
+  exit 1
+fi
 
 archive_sha="$(sha256sum "$archive" | awk '{print $1}')"
 archive_bytes="$(wc -c < "$archive" | tr -d '[:space:]')"

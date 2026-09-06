@@ -42,3 +42,27 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     Given een ingelogde administrator in de klassieke vormgeving
     When de gebruiker de nieuwe vormgeving activeert
     Then zijn de 1414/1919-tokens, grotere radius en lokale serif alleen daar actief
+
+  @happy
+  Scenario: [SKIN-H-005] de topbar wisselt licht/donker en klassiek/nieuw direct en persistent
+    # Testtechniek: Toestandsovergang + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 16
+    Given een ingelogde administrator met de standaardvoorkeuren
+    When beide directe schakelaars eenmaal worden gebruikt
+    Then zijn donker en nieuw actief en blijven beide na herladen bewaard
+
+  @happy @mobile
+  Scenario: [SKIN-H-006] de echte medewerkerroute toont de live bento en blijft mobiel bedienbaar
+    # Testtechniek: Responsive equivalentieklassen + end-to-end UI-contract
+    # Aantoonbare Playwright-assertions in deze case: 12
+    Given de medewerker de nieuwe vormgeving opent
+    When het echte dashboard de bento met live invoervelden en gezamenlijke versie-footer tekent
+    Then blijven op telefoon weekinvoer, klanturenstaat en stappen binnen het scherm
+
+  @negative @security
+  Scenario: [SKIN-N-007] productie forceert Klassiek en verbergt de redesignschakelaar
+    # Testtechniek: Beslissingstabel LOCAL / TEST / PROD + negatieve equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given een gebruiker heeft de nieuwe vormgeving in een pilotomgeving gekozen
+    When dezelfde voorkeur onder het productiebeleid wordt toegepast
+    Then blijft productie klassiek zonder zichtbare pilotschakelaar en blijft TEST wel beschikbaar

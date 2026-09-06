@@ -29,14 +29,24 @@ Belangrijke regels:
 
 - `selectedPeriodKey` bestuurt alleen detailweergaven;
 - `login(role)` zet `selectedPeriodKey` voor iedere rol op de actuele maand volgens
-  `Europe/Amsterdam`; daarna blijft de handmatige keuze app-breed behouden tot de volgende login;
-- dashboard- en schermnavigatie wijzigen `selectedPeriodKey` niet;
+  `Europe/Amsterdam`; een expliciete Dashboard/Home- of Mijn uren-actie roept eveneens
+  `resetHomeDashboardState()` aan;
+- `setPeriod()` begrenst medewerkers onderaan op `currentEmployee().startDate.slice(0, 7)` en
+  bovenaan op `currentCalendarPeriodKey()`: medewerkers kunnen geen toekomstige maand openen. Een door Beheer opgeslagen eerdere
+  startdatum verruimt de ondergrens zonder code- of datamigratie;
+- dezelfde grens is server-side fail-closed afgedwongen in `timesheets.php` en
+  `customer-timesheets.php`: een medewerker krijgt vóór de startmaand en na de actuele
+  Amsterdamse kalendermaand `403 period-not-accessible`, voor GET én POST;
+- `staff.php` berekent bij een latere startdatum eerst de echte impact over urenregistraties,
+  klanturenstaten, facturen en perioden. Bij impact antwoordt de eerste poging met
+  `409 employment-start-hides-history`; alleen een herhaling met
+  `confirmStartDateHistoryHide=true` schrijft de datum. Er wordt geen procesrecord verwijderd;
 - `monthBatchReadiness()` houdt een ingediende urenstaat die nog op Backoffice wacht als harde
   blokkade; daarna kan een controleerbare levering de maand op `ready` zetten ondanks een
   medewerkerscorrectie. Zonder controleerbare levering en met resterende actuele urenstatussen is
   de maand `blocked`; alleen nul relevante blockers en nul pending deliveries is `controlled`;
 - het alle-maanden-factuuroverzicht projecteert uitsluitend perioden tot en met de actuele
-  Amsterdamse kalendermaand; alleen openen van een toekomstige maand maakt geen factuurblokkade;
+  Amsterdamse kalendermaand;
 - `adminOpenTasks()` gebruikt alle gehydrateerde perioden;
 - zolang `readApiRuntime.adminWorkflowHydrated` nog `false` is, toont het beheerderdashboard een
   neutrale "Werkvoorraad laden…"-toestand (`renderDashboardActionsLoading()`) in plaats van de
@@ -47,6 +57,10 @@ Belangrijke regels:
 - `adminTaskPanelExpanded` is uitsluitend UI-status;
 - rolwissel in TEST behoudt de volledige democatalogus; productie gebruikt uitsluitend serveraccounts;
 - resetbediening wordt na iedere render opnieuw gekoppeld aan omgeving én rol.
+- `applySkin(hostname)` staat `new` alleen toe op loopbackhosts en exact
+  `uren-test.pathconsultancy.nl`; op `uren.pathconsultancy.nl` wordt `classic` geforceerd en zijn
+  zowel de snelle schakelaar als de vormgevingskeuze in Voorkeuren afwezig. Een bewaarde
+  `preferences.skin = new` kan daardoor niet doorlekken naar productie.
 
 ## 4. Taakprojectie
 
@@ -113,6 +127,12 @@ Taak-ID's zijn stabiel opgebouwd uit type, periode en medewerker. Hierdoor kunne
   beheerprefix geldt voor documentcompleetheid als groen alternatief; een medewerkerregistratie
   **Al rechtstreeks gemaild** blijft oranje en blokkerend. `restore_missing` zet de beheerbevestiging
   voor medewerker of beheerder expliciet terug naar ontbrekend.
+
+De eerste release met exact versienummer `1.0.0` voert vóór backup en migratie aanvullend
+`production-preflight.php --live --initial-baseline` uit. Die read-only gate vereist de afgesproken
+2 beheerders, 5 medewerkers, september-startdatums, exacte dummy-sinks en lege operationele
+tabellen. Andere versies gebruiken de gewone live-preflight, zodat echte productiegegevens en later
+door Beheer gewijzigde startdatums volgende deployments niet blokkeren.
 
 ### Render- en schrijfvolgorde
 

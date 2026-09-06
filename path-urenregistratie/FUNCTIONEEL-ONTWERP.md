@@ -16,6 +16,11 @@ De applicatie ondersteunt de maandketen van urenregistratie tot gecontroleerde f
 
 In de applicatiekop staat in LOCAL `LOKAAL`, in TEST `TESTOMGEVING` en in PROD geen testlabel. Productie toont nooit demoaccounts, testwachtwoorden of herstel van testgegevens.
 
+De schakelaar **Klassiek / Nieuw** is tijdens de redesign uitsluitend beschikbaar in LOCAL en TEST.
+PROD forceert de klassieke, geaccepteerde vormgeving — ook als een browser eerder `Nieuw` heeft
+onthouden. Daardoor kan de huidige applicatie veilig live blijven terwijl de redesign naast de
+productieflow wordt gebouwd en geaccepteerd.
+
 ## 3. Rollen en bevoegdheden
 
 ### Medewerker
@@ -49,11 +54,18 @@ De volgende invarianten gelden altijd:
 6. de werkvoorraad opent standaard ingeklapt en kan gericht op `alle`, `Backoffice` of `medewerkers` worden geopend.
 
 Bij iedere nieuwe login opent de maandkiezer voor iedere rol op de actuele kalendermaand in
-`Europe/Amsterdam`. Een maand die de gebruiker daarna kiest blijft in alle maandgebonden schermen
-actief zolang die ingelogde sessie duurt. Gewone scherm- of dashboardnavigatie verandert die keuze
-niet; na uitloggen en opnieuw inloggen wordt opnieuw de dan actuele maand gekozen. Ook een nog lege
-actuele maand telt bij de medewerker als open werkmaand: uren indienen en, indien vereist, de
-klanturenstaat aanleveren staan in dezelfde persoonlijke actielijst.
+`Europe/Amsterdam`. Een handmatig gekozen maand blijft actief tussen maandgebonden detailschermen;
+een expliciete klik op Dashboard/Home of Mijn uren zet de keuze terug naar de actuele maand. Een
+medewerker kan niet naar een toekomstige maand navigeren. Historie is beschikbaar vanaf de opgeslagen
+persoonlijke startmaand tot en met de actuele kalendermaand. In oktober ziet een medewerker met
+startdatum 1 september dus september en oktober, maar niet augustus of november. Past Beheer de
+startdatum aan en slaat die op, dan volgt de ondergrens direct de nieuwe startmaand. Ook een nog lege actuele maand telt bij de medewerker als open werkmaand: uren
+indienen en, indien vereist, de klanturenstaat aanleveren staan in dezelfde persoonlijke actielijst.
+Verplaatst Beheer de startdatum later terwijl in de te verbergen maanden uren, klanturenstaten,
+facturen of open acties bestaan, dan toont de app vóór opslaan een impactsamenvatting en is een
+tweede expliciete bevestiging vereist. De gegevens worden niet verwijderd: ze worden alleen voor de
+medewerker en uit de actuele actielijsten verborgen. Zet Beheer de startdatum later weer terug, dan
+komen dezelfde historie, statussen en acties ongewijzigd terug.
 
 ### Vaste demonstratiebasis na Herstel
 
@@ -276,6 +288,8 @@ Minimaal de volgende ketens zijn releaseblokkerend:
 | wachtwoord instellen via eenmalige link en hergebruik blokkeren | `business-workflows-e2e.spec.ts` (`E2E-H-006`) |
 | globale sommen en maandinvariant | `dashboard.spec.ts` (`DASH-H-012`, `DASH-H-017`) |
 | iedere rol start bij login in de actuele maand; handmatige maandkeuze blijft tot de volgende login behouden | `dashboard.spec.ts` (`DASH-H-018`) |
+| medewerker ziet nooit een toekomstmaand en historie nooit vóór de persoonlijke startmaand, ook niet via de API | `dashboard.spec.ts` (`DASH-H-006`, `DASH-H-007`, `DASH-N-023`), `roles-api.spec.ts` (`ROLE-N-005`) |
+| latere startdatum waarschuwt bij bestaande uren/klanturenstaat en verbergt zonder verwijderen; terugzetten herstelt exact | `admin-writes.spec.ts` (`ADM-WR-H-019`, `ADM-WR-H-020`), `dashboard.spec.ts` (`DASH-H-024`) |
 | een actuele maand met niet-ingediende uren is geblokkeerd en wordt nooit als afgeronde maandcontrole getoond | `invoices.spec.ts` (`INV-N-019`) |
 | Backoffice kan een ontbrekende urenstaat met reden extern bevestigen, groen laten meetellen en terugdraaien | `invoices.spec.ts` (`INV-H-020`) |
 | goedgekeurde uren zonder bestaande factuurrij worden bij `Controle afronden` server-side tot factuur verwerkt | `invoices.spec.ts` (`INV-H-021`) |
@@ -313,6 +327,7 @@ Minimaal de volgende ketens zijn releaseblokkerend:
 | een lange mededeling is op de telefoon volledig leesbaar zonder zijwaarts scrollen | `mobile-ui.spec.ts` (`MOB-H-007`) |
 | 1919-medewerker en 1919-beheer draaien naast `/` op dezelfde servergegevens, zonder facturen voor medewerkers | `pilot-page.spec.ts` (`PILOT-H-001`, `PILOT-H-002`, `PILOT-N-001`) |
 | rechtstreeks gemaild blijft oranje; alleen een Backoffice-bevestiging met reden maakt hem groen en terugdraaien is mogelijk | `pilot-page.spec.ts` (`PILOT-H-003`) |
+| de redesignschakelaar bestaat alleen in LOCAL/TEST en PROD forceert Klassiek | `skin.spec.ts` (`SKIN-N-007`) |
 | de medewerkerpilot blijft op 390 px zonder horizontale overflow bedienbaar | `pilot-page.spec.ts` (`PILOT-N-002`) |
 
 Nieuwe productlogica krijgt in dezelfde wijziging een rij in deze tabel of een aantoonbare koppeling

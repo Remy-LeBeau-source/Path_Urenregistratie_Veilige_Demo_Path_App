@@ -7,6 +7,41 @@ Deze productiechecklist blijft de functionele/livegang-checklist.
 
 Dit is een levende checklist. Bevestigde punten worden uit **Nog te beslissen** gehaald, zodat Gio en Joyce niet steeds dezelfde vragen krijgen. Secrets blijven buiten de broncode; de expliciet bevestigde acceptatie-ontvangers staan wel in de offline preflight.
 
+## Releasepad voor de eerste 1.0.0
+
+1. Bouw en test versie 0.10.2 volledig lokaal.
+2. Push naar `main`; de pipeline valideert en rolt exact die commit naar TEST uit.
+3. Test op `https://uren-test.pathconsultancy.nl/` de echte app in beide rollen,
+   desktop en mobiel. Test daarnaast het herontwerp op
+   `https://uren-test.pathconsultancy.nl/pilot/1919-medewerker.html` en
+   `https://uren-test.pathconsultancy.nl/pilot/1919-beheerder.html`.
+4. Controleer dat PROD vóór livegang nog exact het afgesproken nulpunt bevat:
+   2 beheerders, 4 echte medewerkers, 1 `PROD Pilot Medewerker`, alle vijf met
+   startdatum 1 september 2026, de afgesproken dummy-routes en nul operationele
+   uren/klanturenstaten/facturen/verzendingen.
+5. Zet na schriftelijke TEST-acceptatie dezelfde code met `npm run version:set 1.0.0`
+   klaar. De beschermde PROD-job voert eerst de read-only nulmeting uit, maakt
+   daarna een databasebackup, draait alleen de normale idempotente schema-
+   migraties en doet de atomische cutover met automatische rollback bij een
+   mislukte live-smoke. Controleer vóór goedkeuring aantoonbaar dat de PROD-
+   releasebundel de volledige map `pilot/` niet bevat; die twee pilot-URL's zijn
+   uitsluitend voor TEST.
+
+De eenmalige `migrate-test-masterdata-to-production.php` hoort nadrukkelijk niet
+bij stap 5 en mag nooit opnieuw op PROD worden uitgevoerd. Een gewone deploy kan
+wel veilig opnieuw worden gestart: het schema is idempotent en iedere poging maakt
+een nieuwe backup vóór de cutover.
+
+Na livegang mag Beheer een individuele startdatum eerder zetten. Zodra die
+wijziging is opgeslagen, kan die medewerker terug tot die nieuwe startmaand; de
+eenmalige 1.0.0-nulmeting geldt niet bij latere releases.
+Zet Beheer een startdatum daarna weer later en vallen bestaande uren,
+klanturenstaten, facturen of open acties buiten beeld, dan moet vóór opslaan een
+impactwaarschuwing verschijnen. Na bevestiging blijft alle data bewaard maar
+onzichtbaar; na terugzetten naar de eerdere startdatum moet exact dezelfde historie
+met dezelfde status terugkomen. Controleer daarnaast dat directe medewerker-API-calls
+vóór de startmaand en na de actuele maand met `403 period-not-accessible` stoppen.
+
 ## Al bevestigd of aangeleverd
 
 - KvK-nummer, btw-nummer, IBAN, adres en betalingstermijn zijn uit de aangeleverde facturen overgenomen.

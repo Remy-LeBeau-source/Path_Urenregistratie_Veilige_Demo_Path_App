@@ -271,6 +271,9 @@ summary:focus-visible,
 .nav-count.is-employee { background: var(--mint); }
 
 .sidebar-footer { display: grid; gap: 16px; }
+.new-employee-bento { display: none; }
+.app-footer { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; margin-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 9px; padding: 16px 2px 4px; }
+.app-footer-version { margin-left: auto; }
 .workspace-user { display: flex; align-items: center; gap: 10px; }
 .workspace-user .avatar { display: grid; width: 36px; height: 36px; place-items: center; overflow: hidden; border-radius: 10px; background: var(--mint); color: var(--navy); font-size: 12px; font-weight: 800; background-position: center; background-size: cover; }
 .workspace-user strong, .workspace-user small { display: block; }
@@ -316,6 +319,11 @@ summary:focus-visible,
 .mail-acceptance-controls { display: flex; align-items: center; gap: 8px; }
 .topbar-quick-reset { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); cursor: pointer; font-size: 10px; font-weight: 700; letter-spacing: .04em; padding: 7px 12px; text-transform: uppercase; }
 .topbar-quick-reset:hover { border-color: var(--mint); color: var(--mint-dark-tekst); }
+.appearance-switches { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 4px; }
+.appearance-switch { display: inline-flex; min-height: 34px; align-items: center; gap: 6px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; font: inherit; font-size: 10px; padding: 0 9px; }
+.appearance-switch strong { color: inherit; font-size: inherit; }
+.appearance-switch:hover, .appearance-switch[aria-pressed="true"] { background: var(--green-light); color: var(--mint-dark-tekst); }
+.appearance-switch:focus-visible { outline: 3px solid rgba(58,189,157,.3); outline-offset: 2px; }
 
 .period-control { display: flex; min-height: 48px; align-items: center; gap: 3px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: 0 5px 18px rgba(13,27,56,.04); padding: 0 4px; }
 .period-control button { width: 34px; height: 34px; border: 0; border-radius: 9px; background: transparent; cursor: pointer; font-size: 22px; line-height: 1; }
@@ -907,6 +915,8 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .login-option { gap: 11px; padding: 14px 12px; }
   .login-avatar { width: 39px; height: 39px; }
   .login-footer { align-items: center; flex-direction: column; gap: 4px; }
+  .app-footer { justify-content: center; text-align: center; padding: 16px 10px 8px; }
+  .app-footer-version { flex-basis: 100%; margin-left: 0; }
   .main-content { padding-inline: 12px; }
   .topbar h1 { font-size: 21px; }
   .period-picker-wrap { min-width: 166px; }
@@ -1732,6 +1742,18 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
     grid-template-columns: minmax(0,1fr) auto auto;
     gap: 8px;
     align-items: center;
+  }
+
+  .appearance-switches {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .appearance-switch {
+    min-height: 44px;
+    flex: 1;
+    justify-content: center;
+    font-size: 12px;
   }
 
   .topbar-quick-reset:not([hidden]) {

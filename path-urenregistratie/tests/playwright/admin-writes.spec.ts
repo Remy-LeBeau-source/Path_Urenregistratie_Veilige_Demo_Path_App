@@ -27,6 +27,132 @@ async function postJson(
 }
 
 test.describe('admin write endpoints', () => {
+  test('[ADM-WR-H-019] latere startdatum vraagt bevestiging en vermeldt dat historie bewaard blijft', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    let writeCount = 0;
+    let confirmedPayload: Record<string, unknown> | null = null;
+
+    await page.route('**/server/api/staff.php', async route => {
+      if (route.request().method() !== 'POST') {
+        await route.continue();
+        return;
+      }
+      writeCount += 1;
+      const payload = route.request().postDataJSON() as Record<string, unknown>;
+      if (writeCount === 1) {
+        await route.fulfill({
+          status: 409,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            ok: false,
+            error: 'employment-start-hides-history',
+            message: 'Deze latere startdatum verbergt bestaande historie en open acties.',
+            data_will_be_deleted: false,
+            impact: {
+              period_count: 1,
+              timesheet_count: 1,
+              customer_timesheet_count: 0,
+              invoice_count: 0,
+              first_period: '2026-08',
+              last_period: '2026-08',
+            },
+          }),
+        });
+        return;
+      }
+      confirmedPayload = payload;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true, user_id: 2, employee_id: 2, assignment_id: 2 }),
+      });
+    });
+
+    await test.step('Given een medewerker al uren en een open klanturenstaatactie in augustus heeft', async () => {
+      await loginPage.open();
+      await loginPage.loginAsAdmin();
+      await page.locator('[data-view="employees"]').click();
+      await page.locator('[data-edit-routing]').first().click();
+      await expect(page.locator('#edit-start-date')).toBeVisible();
+    });
+
+    await test.step('When Beheer de startdatum naar september verplaatst', async () => {
+      await page.locator('#edit-start-date').fill('2026-09-01');
+      await page.locator('#modal-confirm').click();
+    });
+
+    await test.step('Then waarschuwt de app vóór opslaan over maand, uren en open acties zonder verwijdering', async () => {
+      await expect(page.locator('#modal-title')).toHaveText('Eerdere historie verbergen?');
+      await expect(page.locator('#modal-summary')).toContainText('1 maand');
+      await expect(page.locator('#modal-summary')).toContainText('Augustus 2026');
+      await expect(page.locator('#modal-summary')).toContainText('Opgeslagen urenregistraties');
+      await expect(page.locator('#modal-summary')).toContainText('Ook open acties');
+      await expect(page.locator('#modal-summary')).toContainText('Er wordt niets verwijderd');
+    });
+
+    await test.step('And pas expliciete bevestiging verstuurt de tweede, gemarkeerde write', async () => {
+      await page.locator('#modal-confirm').click();
+      await expect.poll(() => writeCount).toBe(2);
+      expect(confirmedPayload?.confirmStartDateHistoryHide).toBe(true);
+      expect((confirmedPayload?.employee as Record<string, unknown>)?.startDate).toBe('2026-09-01');
+    });
+  });
+
+  test('[ADM-WR-H-020] server berekent echte historische impact vóór een latere startdatum wordt opgeslagen', async ({ request }) => {
+    const authApi = new AuthApi(request);
+    let selectedEmployeeId = 0;
+    let originalStartDate = '';
+
+    await test.step('Given de administrator is ingelogd en een medewerker heeft proceshistorie vóór september', async () => {
+      const login = await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+      expect(login.user.role).toBe('administrator');
+    });
+
+    await test.step('When de startdatum zonder bevestiging naar september wordt verplaatst', async () => {
+      const bootstrapResponse = await request.get('/server/api/bootstrap.php');
+      expect(bootstrapResponse.status()).toBe(200);
+      const bootstrap = await bootstrapResponse.json();
+      const employee = (bootstrap.employees as Array<Record<string, unknown>>).find(item =>
+        String(item.employment_start_date || '') < '2026-09-01'
+      );
+      expect(employee).toBeTruthy();
+      selectedEmployeeId = Number(employee?.id || 0);
+      originalStartDate = String(employee?.employment_start_date || '');
+      const user = (bootstrap.users as Array<Record<string, unknown>>).find(item => Number(item.id) === Number(employee?.user_id));
+      expect(user).toBeTruthy();
+
+      const response = await postJson(request, '/server/api/staff.php', {
+        action: 'upsert_employee',
+        sendInvitation: false,
+        employee: {
+          dbEmployeeId: Number(employee?.id),
+          dbUserId: Number(employee?.user_id),
+          name: String(employee?.full_name || ''),
+          email: String(user?.email || ''),
+          role: String(employee?.job_title || 'Consultant'),
+          startDate: '2026-09-01',
+          active: true,
+        },
+        mailRecipients: [],
+      });
+
+      expect(response.status, JSON.stringify(response.body)).toBe(409);
+      expect(response.body.error).toBe('employment-start-hides-history');
+      expect(response.body.data_will_be_deleted).toBe(false);
+      expect(Number(response.body.impact?.period_count || 0)).toBeGreaterThan(0);
+      expect(Number(response.body.impact?.timesheet_count || 0)).toBeGreaterThan(0);
+      expect(String(response.body.impact?.last_period || '').localeCompare('2026-09')).toBeLessThan(0);
+    });
+
+    await test.step('Then de geweigerde eerste poging heeft de startdatum niet gewijzigd', async () => {
+      const after = await (await request.get('/server/api/bootstrap.php')).json();
+      const employee = (after.employees as Array<Record<string, unknown>>).find(item => Number(item.id) === selectedEmployeeId);
+      expect(employee).toBeTruthy();
+      expect(String(employee?.employment_start_date || '')).toBe(originalStartDate);
+      await authApi.logout();
+    });
+  });
+
   test('[ADM-WR-H-001] admin kan company/settings server-led opslaan', async () => {
     const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
     const authApi = new AuthApi(ctx);

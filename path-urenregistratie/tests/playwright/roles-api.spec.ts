@@ -122,3 +122,56 @@ test('[ROLE-N-004] een medewerker krijgt 403 op elke beheerder-only schrijfactie
     await authApi.logout();
   });
 });
+
+test('[ROLE-N-005] medewerker kan maanden voor de startdatum en na de huidige maand ook niet via de API openen', async ({ request }) => {
+  const authApi = new AuthApi(request);
+  let employeeId = 0;
+  let startPeriod = '';
+
+  const shiftPeriod = (period: string, delta: number) => {
+    const [year, month] = period.split('-').map(Number);
+    const shifted = new Date(Date.UTC(year, month - 1 + delta, 1));
+    return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth() + 1).padStart(2, '0')}`;
+  };
+
+  await test.step('Given een medewerker met een persoonlijke startmaand is ingelogd', async () => {
+    const login = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+    expect(login.user.role).toBe('employee');
+    const bootstrap = await (await request.get('/server/api/bootstrap.php')).json();
+    employeeId = Number(bootstrap.employees?.[0]?.id || 0);
+    startPeriod = String(bootstrap.employees?.[0]?.employment_start_date || '').slice(0, 7);
+    expect(employeeId).toBeGreaterThan(0);
+    expect(startPeriod).toMatch(/^\d{4}-\d{2}$/);
+  });
+
+  await test.step('When de medewerker buiten de toegestane maandgrenzen rechtstreeks de API benadert', async () => {
+    const beforeStart = shiftPeriod(startPeriod, -1);
+    const now = new Date();
+    const currentPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const afterCurrent = shiftPeriod(currentPeriod, 1);
+
+    for (const period of [beforeStart, afterCurrent]) {
+      for (const endpoint of ['timesheets.php', 'customer-timesheets.php']) {
+        const response = await request.get(`/server/api/${endpoint}?period=${period}&employee_id=${employeeId}`);
+        expect(response.status(), `${endpoint} hoort ${period} te weigeren`).toBe(403);
+        expect((await response.json()).error).toBe('period-not-accessible');
+      }
+    }
+
+    const csrf = String((await (await request.get('/server/auth/csrf.php')).json()).csrf_token || '');
+    const writeResponse = await request.post('/server/api/timesheets.php', {
+      headers: { 'X-CSRF-Token': csrf },
+      data: { action: 'save_draft', period: beforeStart, employee_id: employeeId },
+    });
+    expect(writeResponse.status()).toBe(403);
+    expect((await writeResponse.json()).error).toBe('period-not-accessible');
+  });
+
+  await test.step('Then blijft de eigen huidige maand wel bereikbaar', async () => {
+    const now = new Date();
+    const currentPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const response = await request.get(`/server/api/timesheets.php?period=${currentPeriod}&employee_id=${employeeId}`);
+    expect(response.status()).toBe(200);
+    await authApi.logout();
+  });
+});

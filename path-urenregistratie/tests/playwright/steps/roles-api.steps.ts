@@ -28,3 +28,7 @@ Given("een ingelogde medewerker");
 When("de flow voor ROLE-N-004 wordt uitgevoerd");
 Then("weigert elke beheerder-only actie met 403 en verandert er niets");
 And("ook de leesbare beheerdersbronnen blijven dicht");
+Given("een medewerker met een persoonlijke startmaand is ingelogd");
+When("de medewerker buiten de toegestane maandgrenzen rechtstreeks de API benadert");
+Then("blijven uren, klanturenstaat en een directe schrijfpoging buiten die grenzen geblokkeerd");
+And("blijft de eigen huidige maand wel bereikbaar");

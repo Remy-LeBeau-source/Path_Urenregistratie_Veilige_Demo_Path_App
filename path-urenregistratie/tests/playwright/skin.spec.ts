@@ -12,8 +12,13 @@ import { openProfielmenu } from './pages/TopbarMenu';
 // De <select> wordt in de modal opgewaardeerd naar een keuzemenu-widget
 // (zoals #pref-theme). Bedienen gaat via #pref-skin-trigger + de optieknoppen.
 async function kiesVormgeving(page: import('@playwright/test').Page, waarde: 'classic' | 'new'): Promise<void> {
-  await openProfielmenu(page);
-  await page.locator('[data-profile-action="preferences"]').click();
+  await expect(async () => {
+    await openProfielmenu(page);
+    const preferences = page.locator('[data-profile-action="preferences"]');
+    await expect(preferences).toBeVisible({ timeout: 1_000 });
+    await preferences.click();
+    await expect(page.locator('#pref-skin-trigger')).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 15_000, intervals: [250, 500, 1_000] });
   await expect(page.locator('#pref-skin-trigger')).toBeVisible();
   await page.locator('#pref-skin-trigger').click();
   await page.locator(`[data-standard-choice-target="pref-skin"][data-standard-choice-value="${waarde}"]`).click();
@@ -119,5 +124,105 @@ test('[SKIN-H-004] de nieuwe skin activeert uitsluitend zijn eigen visuele funda
     expect(vernieuwd.radius).toBe('22px');
     expect(vernieuwd.headingFont).toContain('Path Editorial');
     expect(vernieuwd.bodyBackground).toContain('radial-gradient');
+  });
+});
+
+test('[SKIN-H-005] de topbar wisselt licht/donker en klassiek/nieuw direct en persistent', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given een ingelogde administrator met de standaardvoorkeuren', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect(page.locator('#app-shell')).toBeVisible();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+  });
+
+  await test.step('When beide directe schakelaars eenmaal worden gebruikt', async () => {
+    await page.locator('#quick-theme-toggle').click();
+    await page.locator('#quick-skin-toggle').click();
+  });
+
+  await test.step('Then zijn donker en nieuw actief en blijven beide na herladen bewaard', async () => {
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await expect(page.locator('#quick-theme-toggle')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#quick-skin-toggle')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#quick-theme-toggle')).toContainText('Donker');
+    await expect(page.locator('#quick-skin-toggle')).toContainText('Nieuw');
+    await page.reload();
+    await expect(page.locator('#app-shell')).toBeVisible();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+  });
+});
+
+test('[SKIN-H-006] de echte medewerkerroute toont de live bento en blijft mobiel bedienbaar', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await page.clock.setFixedTime(new Date('2026-09-06T12:00:00.000Z'));
+  await page.route('**/server/api/timesheets.php', async route => {
+    if (route.request().method() === 'POST') {
+      await route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ ok: false, message: 'Alleen visuele test' }) });
+      return;
+    }
+    await route.fallback();
+  });
+
+  await test.step('Given de medewerker de nieuwe vormgeving opent', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+  });
+
+  await test.step('When het echte dashboard de bento met live invoervelden en gezamenlijke versie-footer tekent', async () => {
+    await expect(page.locator('#new-employee-bento')).toBeVisible();
+    await expect(page.locator('.new-bento-hero')).toContainText('Begin met');
+    await expect(page.locator('#new-bento-days .new-bento-hours-input')).toHaveCount(4);
+    await expect(page.locator('#new-bento-week-total-label')).toContainText('4 werkdagen in deze maand');
+    await expect(page.locator('[data-new-bento-submit]')).toContainText('Hele maand indienen');
+    await expect(page.locator('[data-new-bento-save]')).toHaveAttribute('title', /Bewaar/);
+    await expect(page.locator('[data-new-bento-submit]')).toHaveAttribute('title', /alle weken/);
+    await expect(page.locator('[data-new-bento-customer]')).toHaveAttribute('title', /Upload/);
+    await expect(page.locator('.app-footer')).toContainText('Ontwikkeld en beheerd door Team Path');
+    await expect(page.locator('.app-footer-version')).toHaveText(/Versie \d+\.\d+\.\d+/);
+  });
+
+  await test.step('Then blijven op telefoon weekinvoer, klanturenstaat en stappen binnen het scherm', async () => {
+    await page.setViewportSize({ width: 412, height: 915 });
+    await expect(page.locator('#new-employee-bento')).toBeVisible();
+    await expect(page.locator('[data-new-bento-save]')).toBeVisible();
+    await expect(page.locator('[data-new-bento-customer]')).toBeVisible();
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(1);
+  });
+});
+
+test('[SKIN-N-007] productie forceert Klassiek en verbergt de redesignschakelaar', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given een gebruiker heeft de nieuwe vormgeving in een pilotomgeving gekozen', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+  });
+
+  await test.step('When dezelfde voorkeur onder het productiebeleid wordt toegepast', async () => {
+    await page.evaluate(() => {
+      const runtime = window as typeof window & { applySkin: (hostname?: string) => void };
+      runtime.applySkin('uren.pathconsultancy.nl');
+    });
+  });
+
+  await test.step('Then blijft productie klassiek zonder zichtbare pilotschakelaar en blijft TEST wel beschikbaar', async () => {
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+    await expect(page.locator('#quick-skin-toggle')).toBeHidden();
+    await page.evaluate(() => {
+      const runtime = window as typeof window & { applySkin: (hostname?: string) => void };
+      runtime.applySkin('uren-test.pathconsultancy.nl');
+    });
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await expect(page.locator('#quick-skin-toggle')).toBeVisible();
   });
 });

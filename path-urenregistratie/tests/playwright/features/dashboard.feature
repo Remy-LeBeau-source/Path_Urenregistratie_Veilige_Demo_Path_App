@@ -223,20 +223,29 @@ Feature: Dashboard en open werkvoorraad
     When de sync binnenkomt, verschijnt de gezaghebbende stand
 
   @happy
-  Scenario: [DASH-H-006] vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie
+  Scenario: [DASH-H-006] medewerker kan geen toekomstige maand openen of als werkactie creëren
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 8
-    Given een medewerker zonder open acties in een lege toekomstmaand
-    When de medewerker een toekomstige maand probeert te openen
-    Then verschijnt september niet als open medewerkermaand
+    Given een medewerker op de actuele kalendermaand zonder toekomstige werkactie
+    When de medewerker de volgende maand probeert te openen
+    Then blijft september buiten de selectie en medewerkerwerkvoorraad
 
   @happy
-  Scenario: [DASH-H-007] dashboardknop behoudt de geldige maand en medewerkeroverzichten
+  Scenario: [DASH-H-007] september toont alleen historie vanaf de persoonlijke startmaand en nooit oktober
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 4
-    Given een medewerker die een toekomstige maand probeert te openen
-    When de medewerker teruggaat naar het dashboard
-    Then staat de periode op augustus en toont het overzicht geen toekomstige maanden
+    Given een medewerker die in september sinds augustus in dienst is
+    When de medewerker augustus opent en daarna juli en oktober probeert
+    Then blijven juli en oktober dicht en is oktober geen werkactie
+
+  @happy @regression
+  Scenario: [DASH-H-024] startdatum verbergt procesmaand zonder uren of klanturenstaatactie te wissen
+    # Testtechniek: ISTQB-toestandsovergang + grenswaardeanalyse rond de persoonlijke startmaand
+    # Aantoonbare Playwright-assertions in deze case: 14
+    Given Beheer de startdatum eerder heeft gezet en juli nog leeg was
+    When de medewerker uren invult terwijl de klanturenstaat nog openstaat
+    Then een latere startdatum verbergt de maand en beide acties maar wist niets
+    And opnieuw vervroegen herstelt exact dezelfde uren- en klanturenstaatflow
 
   @happy
   Scenario: [DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels

@@ -67,6 +67,11 @@ php -r '
   }
   echo "mail_window=closed pending_mail=0\n";
 ' "$app_root"
+if [[ "$version" == "1.0.0" ]]; then
+  php server/scripts/production-preflight.php --config=server/config.local.php --live --initial-baseline
+else
+  php server/scripts/production-preflight.php --config=server/config.local.php --live
+fi
 php server/scripts/database-backup.php --config=server/config.local.php --execute
 php server/migrate.php
 php server/scripts/production-preflight.php --config=server/config.local.php --live

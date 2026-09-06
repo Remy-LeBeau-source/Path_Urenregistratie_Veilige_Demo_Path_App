@@ -92,7 +92,7 @@ function customer_timesheet_employee_from_payload(PDO $pdo, array $currentUser, 
     $requestedEmployeeId = customer_timesheet_optional_positive_int($payload, 'employee_id');
 
     if ((string)$currentUser['role'] === 'employee') {
-        $stmt = $pdo->prepare('SELECT id, company_id, user_id, full_name, active FROM employees WHERE company_id = :company_id AND user_id = :user_id LIMIT 1');
+        $stmt = $pdo->prepare('SELECT id, company_id, user_id, full_name, employment_start_date, active FROM employees WHERE company_id = :company_id AND user_id = :user_id LIMIT 1');
         $stmt->execute([
             ':company_id' => (int)$currentUser['company_id'],
             ':user_id' => (int)$currentUser['id'],
@@ -119,6 +119,7 @@ function customer_timesheet_employee_from_payload(PDO $pdo, array $currentUser, 
             'id' => (int)$employee['id'],
             'company_id' => (int)$employee['company_id'],
             'full_name' => (string)$employee['full_name'],
+            'employment_start_date' => (string)($employee['employment_start_date'] ?? ''),
         ];
     }
 
@@ -150,6 +151,24 @@ function customer_timesheet_employee_from_payload(PDO $pdo, array $currentUser, 
         'company_id' => (int)$employee['company_id'],
         'full_name' => (string)$employee['full_name'],
     ];
+}
+
+function customer_timesheet_require_employee_period_access(array $currentUser, array $employee, array $period): void
+{
+    if ((string)$currentUser['role'] !== 'employee') {
+        return;
+    }
+    $periodKey = (string)$period['period_key'];
+    $startDate = (string)($employee['employment_start_date'] ?? '');
+    $startPeriod = preg_match('/^\d{4}-\d{2}-\d{2}$/', $startDate) ? substr($startDate, 0, 7) : '';
+    $currentPeriod = (new DateTimeImmutable('now', new DateTimeZone('Europe/Amsterdam')))->format('Y-m');
+    if (($startPeriod !== '' && $periodKey < $startPeriod) || $periodKey > $currentPeriod) {
+        customer_timesheet_json([
+            'ok' => false,
+            'error' => 'period-not-accessible',
+            'message' => 'Deze maand valt buiten de toegestane periode van dit medewerkersaccount.',
+        ], 403);
+    }
 }
 
 function customer_timesheet_assignment_id(PDO $pdo, int $companyId, int $employeeId, ?int $requestedAssignmentId): int
@@ -569,6 +588,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
 
     $period = customer_timesheet_parse_period_key($periodRaw);
     $employee = customer_timesheet_employee_from_payload($pdo, $currentUser, $query);
+    customer_timesheet_require_employee_period_access($currentUser, $employee, $period);
     $assignmentId = customer_timesheet_assignment_id(
         $pdo,
         (int)$currentUser['company_id'],
@@ -664,6 +684,7 @@ $action = security_require_enum_field(
 );
 $period = customer_timesheet_parse_period_key(security_require_string_field($payload, 'period', 'period is required.', 7));
 $employee = customer_timesheet_employee_from_payload($pdo, $currentUser, $payload);
+customer_timesheet_require_employee_period_access($currentUser, $employee, $period);
 $companyId = (int)$currentUser['company_id'];
 $employeeId = (int)$employee['id'];
 $assignmentId = customer_timesheet_assignment_id($pdo, $companyId, $employeeId, customer_timesheet_optional_positive_int($payload, 'assignment_id'));

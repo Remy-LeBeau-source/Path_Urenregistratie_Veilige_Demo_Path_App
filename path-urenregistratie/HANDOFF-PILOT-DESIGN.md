@@ -1,33 +1,84 @@
 # HANDOFF — 1414/1919 pilot-herontwerp
 
 **Evergreen doc. Wordt tijdens het werk telkens bijgewerkt.**
-Laatst bijgewerkt: 2026-09-06 — **Fase D increment 2 lokaal afgerond voor 0.10.1**.
+Laatst bijgewerkt: 2026-09-06 — **overdracht aan Claude na afronding van de
+0.10.2-fixes; TEST-pipeline is de volgende gezaghebbende volledige run**.
 
-## → VOOR CODEX / de volgende sessie (usage-overdracht)
+## → VOOR CLAUDE / direct verdergaan
 
-**Direct oppakken:**
-1. Check CI van de laatste push (`gh run list --branch main --limit 1`). Groen =
-   Deploy Test + Publish Live Docs. Als rood: los dat eerst op.
-2. ~~Versie omzetten~~ **GEDAAN** — increment 2 staat op **`0.10.1`**, vanaf hier `0.10.x`
-   per commit. (`0.0.1` bleek onbruikbaar: `set-version.mjs` verving het óók
-   binnen `127.0.0.1` → `127.0.0.2`. Hersteld in `f909632`. `BESLISTABEL.md`
-   W10 bijgewerkt; **TODO daar**: `set-version.mjs` hardenen met een
-   token-grens.)
-3. **Fase D increment 3 — gedeelde shell/componenten.** Sluit eerst topbar,
-   zijbalk, knoppen, kaarten, formulieren, tabellen, badges, modals en toasts aan
-   op de tokens uit `assets/styles-new.css`. Daarna pas de afzonderlijke
-   medewerker- en beheerschermen. Elke regel blijft gescoped onder
-   `html[data-skin="new"]`; de klassieke skin blijft exact intact. Draai voor
-   iedere push de relevante tests, `npm run check` en de VOLLEDIGE desktop-e2e-
-   suite (`node scripts/run-playwright-e2e.mjs --project=desktop-chromium`).
+De releasewijzigingen staan op `main`. Laat het losstaande, untracked
+`HANDOFF-CODEX.md` ongemoeid: dat bestand hoort niet in Git.
 
-**Regels:** alleen LOCAL + TEST, nooit PROD. NL-commits met
+**Bewezen in de laatste lokale ronde:**
+
+1. De vier fouten uit de eerdere 460-case regressierun zijn opgelost en gericht
+   opnieuw groen: `DASH-H-013`, `SKIN-H-002`, `SKIN-H-003` en
+   `TS-REV-UI-H-012`. De laatste case bewaart verlof `4` én ziekte `2` na F5.
+2. `HELP-H-004` is opnieuw groen: de Hulp & contact-tekst volgt beide standen
+   van de beheerdertoggle voor handmatige verlof-/ziekte-invoer.
+3. Maandgrenzen zijn zowel in de UI als server-side gesloten. `DASH-H-006` en
+   `DASH-H-007` bewijzen huidige maand, geen toekomst en historie alleen vanaf de
+   persoonlijke startdatum. `ROLE-N-005` bewijst dat ook directe GET/POST-calls
+   voor uren en klanturenstaten buiten die grens `403 period-not-accessible` geven.
+4. De beheerder mag de startdatum eerder zetten. `DASH-H-024` bewijst de volledige
+   toestandsovergang: een eerder beschikbare maand krijgt uren plus een open
+   klanturenstaatactie; een latere startdatum verbergt maand en acties zonder data
+   te wissen; terugzetten herstelt waarden, statussen en acties exact.
+   `ADM-WR-H-019` bewijst de zichtbare waarschuwing en expliciete tweede write;
+   `ADM-WR-H-020` gebruikt de echte server en echte seeded historie voor de
+   `409 employment-start-hides-history`-impactberekening.
+5. De volledige inhoud van `npm run check` is na de laatste wijzigingen groen:
+   433 uitvoerbare én gemapte cases (293 happy, 140 negative), BDD-ontwerp,
+   DB-config en alle operationele/deploymentcontracten. Ook `npm run build`,
+   `npm run test:db:crud` en `npm run security:deps` zijn groen (0 kwetsbaarheden).
+   De volledige lokale
+   Playwright-run is niet nogmaals uitgevoerd; de push/TEST-pipeline is daarvoor
+   de gezaghebbende eindrun.
+6. TEST publiceert de pilotpagina's; de productie-archieven sluiten `pilot/`
+   aantoonbaar uit via deployment-contracttests. PROD blijft Classic-only en mag
+   uitsluitend na handmatige environment-goedkeuring worden uitgerold.
+7. Geef na groen TEST altijd alle drie URL's:
+   - `https://uren-test.pathconsultancy.nl/` — echte app, beide rollen;
+   - `https://uren-test.pathconsultancy.nl/pilot/1919-medewerker.html`;
+   - `https://uren-test.pathconsultancy.nl/pilot/1919-beheerder.html`.
+8. Na expliciete TEST-acceptatie: alleen via `npm run version:set 1.0.0`
+   verhogen, opnieuw volledig valideren en pushen. De gebruiker keurt daarna
+   zelf de beschermde PROD-environment goed. Nooit de eenmalige
+   `migrate-test-masterdata-to-production.php` opnieuw draaien.
+9. PROD is Classic-only. Nieuw/pilot blijven verborgen/afwezig. Echte mail is
+   pas releaseklaar als de live relay/config expliciet actief én door preflight
+   en smoke bevestigd is; zet geen secrets in Git en noem alleen TEST-groen
+   nooit bewijs dat de externe relay werkelijk verzendt.
+
+**Werkregels:** NL-commits met
 `Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>`. Versie via
 `npm run version:set`. `git add` met expliciete paden, nooit `-A` (Codex/Claude
 delen de werktree). `handoff/` (repo-root) is design-levering, untracked laten.
 
 Pilot Fase C = 1.0.63 + 1.0.64. Fase D increment 1 = 0.10.0.
-Fase D increment 2 = 0.10.1.
+Fase D increment 2 = 0.10.1. Echte medewerkerbento + releasebeveiliging = 0.10.2.
+
+## Wat 0.10.2 toevoegt
+
+- De echte medewerkerroute gebruikt in `skin=new` het 1919-bentodashboard met
+  directe weekinvoer, weekwissel, concept opslaan, hele maand indienen, een
+  werkdagenmeter zonder fictieve `/160` en een afzonderlijke klanturenstaatkaart.
+- De urenhoofdlijn is vier stappen; de klanturenstaat is bewust geen vaste stap
+  2 en mag apart oranje openblijven.
+- Rechtstreeks gemaild door de medewerker blijft oranje. De nieuwe zichtbare
+  Backoffice-taak **Extern bevestigen** maakt hem pas met reden/acteur/tijd groen;
+  intrekken heropent de taak. Dit is afgedekt door `INV-H-020`.
+- Medewerkers kunnen geen toekomstmaand openen en geen maand vóór de persoonlijke
+  startdatum. Een door Beheer opgeslagen eerdere startdatum verruimt die historie;
+  een latere datum met bestaande data vereist impactwaarschuwing plus bevestiging
+  en verbergt zonder te verwijderen.
+- Snelle Licht/Donker- en Klassiek/Nieuw-knoppen zijn herkenbaar en persistent.
+  Nieuw is fail-closed verborgen op PROD (`SKIN-N-007`).
+- De gedeelde footer toont copyright, Team Path en het actuele versienummer.
+- De eerste 1.0.0-PROD-run heeft een eenmalige read-only baselinegate:
+  2 beheerders, 5 medewerkers, start 1 september, exacte pilotsinks en lege
+  operationele tabellen. Afwijking stopt vóór backup/migratie/cutover. Latere
+  releases gebruiken de gewone preflight, zodat echte data niet wordt geblokkeerd.
 
 ## Fase D increment 2 — visueel fundament
 
@@ -90,6 +141,8 @@ Screenshot-scriptje: chromium via `path-urenregistratie/node_modules/@playwright
 - Medewerker en beheer blijven op dezelfde bestaande API/database werken; de
   nieuwe skin mag nooit naar een statische pilot of oude/verkeerde pagina
   navigeren.
+- De topbar geeft twee directe, persistente schakelaars: Licht/Donker en
+  Klassiek/Nieuw. Dezelfde keuzes blijven ook onder Voorkeuren beschikbaar.
 - Uren zijn rechtstreeks en snel handmatig invoerbaar, per dag én voor alle
   weken van de gekozen maand; de primaire knop voor week/maand indienen is
   onmiskenbaar.
@@ -101,9 +154,19 @@ Screenshot-scriptje: chromium via `path-urenregistratie/node_modules/@playwright
 - Verlof/ziekte **uit** bij beheer: medewerker kan dit niet kiezen. **Aan**:
   medewerker kan het snel invoeren zonder een trage popup per dag; opslag en F5-
   persistentie blijven aantoonbaar werken.
-- Klanturenstaat toont de echte status: geen groen vinkje vóór ontvangst. De
-  medewerker kan een PDF/JPG/PNG toevoegen of expliciet “reeds per e-mail
-  verstuurd” kiezen; beheer ziet en verwerkt vervolgens de correcte status.
+- De klanturenstaat is verplicht, maar geen vaste stap 2: urencontrole en — als
+  de opdracht dit toestaat — factuur/verzending mogen al afgerond zijn terwijl
+  het document later komt. Het dossier blijft dan wel open/oranje.
+- De klanturenstaat heeft een eigen statusspoor: verwacht → ontvangen of door de
+  medewerker als rechtstreeks gemaild geregistreerd → door Backoffice
+  goedgekeurd/extern bevestigd → eventuele brokerroute gecontroleerd. Een
+  medewerkerregistratie “rechtstreeks gemaild” blijft oranje en blokkerend; pas
+  de aparte beheeractie **Extern bevestigen**, met verplichte reden, acteur en
+  tijdstip, maakt het document groen. Dit bevestigen verzendt de factuur niet
+  opnieuw.
+- Dit statusgat is in 0.10.2 gesloten: `skipped` zonder het serverprefix
+  `Extern bevestigd:` staat in `adminOpenTasks()` en `openPeriodSummaries()` als
+  zichtbare beheeractie; bevestigen en intrekken blijven beide beschikbaar.
 - Proceslijnen zijn statusgedreven: alleen afgeronde stappen en het lijnstuk tot
   de actuele stap zijn groen; toekomststappen blijven neutraal en wacht/actie is
   amber. Animaties visualiseren de echte statuswijziging en respecteren
@@ -131,7 +194,7 @@ Elk scherm moet in `styles-new.css` (of per-view) de nieuwe vormgeving krijgen
       Mailroutes · Teksten · Herinneringen · Veiligheid
 
 **Medewerker (`role-employee-only`):**
-- [ ] `employee-dashboard` — "Mijn overzicht"
+- [x] `employee-dashboard` — "Mijn overzicht" (eerste echte 1919-bento; verdere polish na 1.0.0)
 - [ ] `timesheet` — "Mijn uren" (week/maand-invoer — vergelijk met de pilot)
 - [ ] `employee-announcements` — "Mijn mededelingen"
 

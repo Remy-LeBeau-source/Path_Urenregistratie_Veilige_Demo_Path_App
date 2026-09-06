@@ -120,8 +120,28 @@ test('[INV-H-020] Backoffice kan een ontbrekende urenstaat extern bevestigen en 
   await page.route('**/server/api/invoices.php?period=*', route => route.fulfill({
     status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, items: [item] }),
   }));
-  await page.route('**/server/api/customer-timesheets.php', async route => {
-    if (route.request().method() !== 'POST') return route.fallback();
+  // De GET-readback heeft queryparameters; de trailing * is bewust nodig zodat
+  // zowel die read als de queryloze POST onder exact dezelfde mock vallen.
+  await page.route('**/server/api/customer-timesheets.php*', async route => {
+    if (route.request().method() !== 'POST') {
+      const url = new URL(route.request().url());
+      if (url.searchParams.get('employee_id') === '4' && url.searchParams.get('period') === '2026-09') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            ok: true,
+            found: true,
+            period: '2026-09',
+            employee_id: 4,
+            assignment_id: 4,
+            customer_timesheet: { status: item.customer_timesheet_status, review_note: item.customer_timesheet_note },
+          }),
+        });
+        return;
+      }
+      return route.fallback();
+    }
     customerTimesheetWrites += 1;
     const body = route.request().postData() || '';
     const confirming = body.includes('confirm_external');
@@ -143,6 +163,8 @@ test('[INV-H-020] Backoffice kan een ontbrekende urenstaat extern bevestigen en 
   await test.step('Given Backoffice de door Shawn rechtstreeks gemailde urenstaat in september opent', async () => {
     await loginPage.open();
     await loginPage.loginAsAdmin();
+    await expect.poll(() => page.evaluate(() => window.adminOpenTasks().some(task => task.type === 'customer-external-confirm' && Number(task.employee.id) === 4))).toBe(true);
+    await expect(page.locator('[data-confirm-customer-timesheet-external="4"]')).toBeVisible();
     await invoicesPage.open();
     await invoicesPage.selectPeriod('2026-09');
     await expect(page.locator('[data-document-focus="customer-timesheet"]')).toContainText('Urenstaat ontbreekt');
@@ -176,6 +198,7 @@ test('[INV-H-020] Backoffice kan een ontbrekende urenstaat extern bevestigen en 
     expect(request.postData()).toContain('confirm_external');
     expect(request.postData()).toContain('Uren per e-mail goedgekeurd');
     expect(customerTimesheetWrites).toBe(1);
+    await expect.poll(() => page.evaluate(() => window.adminOpenTasks().some(task => task.type === 'customer-external-confirm' && Number(task.employee.id) === 4))).toBe(false);
   });
 
   await test.step('Then telt de urenstaat groen mee en kan Backoffice de bevestiging terugdraaien', async () => {

@@ -653,7 +653,6 @@ test('[DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus', as
   await test.step('When Stasjo daarna een open urenactie indient', async () => {
     await expect(page.locator('#quick-reset-demo')).toBeVisible();
     await expect(page.locator('#employee-open-task-total')).toHaveText('3 open acties');
-    await page.locator('#period-next').click();
     await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
     await page.locator('button[data-view="timesheet"]').click();
     await expect(page.locator('#submit-timesheet')).toBeVisible();
@@ -1030,7 +1029,7 @@ test('[DASH-H-013] dashboardmodules tonen compacte documenten, procesfasen en te
   });
 
   await test.step('Then toont klanturenstaten een verkoopklaar kaartenoverzicht', async () => {
-    await expect(page.locator('#customer-timesheet-admin-summary')).toHaveText('4 verwacht · 1 te controleren · 0 wacht op medewerkers');
+    await expect(page.locator('#customer-timesheet-admin-summary')).toHaveText('4 verwacht · 1 document te controleren · 0 extern te bevestigen · 0 wacht op medewerkers');
     await expect(page.locator('#customer-timesheet-admin-list .customer-timesheet-admin-row')).toHaveCount(4);
     await expect(page.locator('#customer-timesheet-admin-list .customer-timesheet-admin-meta')).toHaveCount(4);
     await expect(page.locator('#customer-timesheet-admin-list')).toContainText('Deadline');
@@ -1532,12 +1531,11 @@ test('[DASH-N-018] medewerkerdashboard toont een laadtoestand tot de eerste werk
   await loginPage.logout();
 });
 
-test('[DASH-H-006] vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie', async ({ page }) => {
+test('[DASH-H-006] medewerker kan geen toekomstige maand openen of als werkactie creëren', async ({ page }) => {
   const loginPage = new LoginPage(page);
   let openOverviewVisible = false;
-  let baselinePeriod = '';
 
-  await test.step('Given een medewerker zonder open acties in een lege toekomstmaand', async () => {
+  await test.step('Given een medewerker op de actuele kalendermaand zonder toekomstige werkactie', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
     await page.locator('button[data-view="employee-dashboard"]').click();
@@ -1547,17 +1545,17 @@ test('[DASH-H-006] vooruit bladeren maakt geen lege toekomstmaand zichtbaar als 
     // vast die na de sync alsnog verandert.
     await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i);
     openOverviewVisible = await page.locator('#employee-open-overview').isVisible();
-    baselinePeriod = (await page.locator('#period-label').textContent()) || '';
     await expect(page.locator('#employee-open-overview-list')).not.toContainText('September 2026');
   });
 
-  await test.step('When de medewerker een toekomstige maand probeert te openen', async () => {
+  await test.step('When de medewerker de volgende maand probeert te openen', async () => {
     await page.locator('#period-next').click();
-    await expect(page.locator('#period-label')).toHaveText(baselinePeriod);
-    await expect(page.locator('#toast')).toContainText('Medewerkers kunnen geen toekomstige maand openen');
+    await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
+    await expect(page.locator('#toast')).toContainText('geen toekomstige maand');
+    await expect(page.locator('#toast')).toContainText('Augustus 2026');
   });
 
-  await test.step('Then verschijnt september niet als open medewerkermaand', async () => {
+  await test.step('Then blijft september buiten de selectie en medewerkerwerkvoorraad', async () => {
     if (openOverviewVisible) {
       await expect(page.locator('#employee-open-overview')).toBeVisible();
     } else {
@@ -1567,24 +1565,112 @@ test('[DASH-H-006] vooruit bladeren maakt geen lege toekomstmaand zichtbaar als 
   });
 });
 
-test('[DASH-H-007] dashboardknop behoudt de geldige maand en medewerkeroverzichten', async ({ page }) => {
+test('[DASH-H-007] september toont alleen historie vanaf de persoonlijke startmaand en nooit oktober', async ({ page }) => {
   const loginPage = new LoginPage(page);
+  await page.clock.setFixedTime(new Date('2026-09-15T10:00:00.000Z'));
 
-  await test.step('Given een medewerker die een toekomstige maand probeert te openen', async () => {
+  await test.step('Given een medewerker die in september sinds augustus in dienst is', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
+    await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i);
+    await page.evaluate(() => {
+      const runtime = window as typeof window & {
+        currentEmployee: () => { startDate: string };
+        persistState: () => void;
+        renderAll: () => void;
+      };
+      runtime.currentEmployee().startDate = '2026-08-01';
+      runtime.persistState();
+      runtime.renderAll();
+    });
+    await expect(page.locator('#period-label')).toHaveText('September 2026');
+  });
+
+  await test.step('When de medewerker augustus opent en daarna juli en oktober probeert', async () => {
+    await page.locator('#period-prev').click();
+    await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
+    await page.locator('#period-prev').click();
+    await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
+    await expect(page.locator('#toast')).toContainText('vóór je indiensttreding');
     await page.locator('#period-next').click();
-    await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
+    await expect(page.locator('#period-label')).toHaveText('September 2026');
+    await page.locator('#period-next').click();
   });
 
-  await test.step('When de medewerker teruggaat naar het dashboard', async () => {
-    await page.locator('button[data-view="employee-dashboard"]').click();
+  await test.step('Then blijven juli en oktober dicht en is oktober geen werkactie', async () => {
+    await expect(page.locator('#period-label')).toHaveText('September 2026');
+    await expect(page.locator('#toast')).toContainText('geen toekomstige maand');
+    await expect(page.locator('#employee-open-overview-list')).not.toContainText('Oktober 2026');
+  });
+});
+
+test('[DASH-H-024] startdatum verbergt procesmaand zonder uren of klanturenstaatactie te wissen', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+
+  const result = await page.evaluate(() => {
+    const runtime = window as typeof window & {
+      currentEmployee: () => { id: number; startDate: string; customerTimesheetExpected: boolean };
+      recordFor: (employeeId: number, periodKey: string) => MutableRecord;
+      entriesFromTotal: (total: number, periodKey: string) => number[][];
+      totalEntries: (entries: number[][]) => number;
+      employeeOpenMonthSummaries: (employeeId: number, periodKey: string) => Array<{ periodKey: string; actions: Array<{ type: string }> }>;
+      employeeOpenTasks: (employeeId: number) => Array<{ periodKey: string; type: string }>;
+    };
+    const employee = runtime.currentEmployee();
+    employee.customerTimesheetExpected = true;
+    employee.startDate = '2026-07-01';
+    const july = runtime.recordFor(employee.id, '2026-07');
+    july.entries = july.entries.map(week => week.map(() => 0));
+    july.leave = 0;
+    july.sick = 0;
+    july.timesheetStatus = 'draft';
+    july.invoiceStatus = 'concept';
+    july.payrollStatus = 'concept';
+    july.customerTimesheet.status = 'missing';
+    const initialTotal = runtime.totalEntries(july.entries);
+    july.entries = runtime.entriesFromTotal(8, '2026-07');
+
+    const snapshot = () => ({
+      employeeActions: runtime.employeeOpenMonthSummaries(employee.id, '2026-08')
+        .filter(item => item.periodKey === '2026-07')
+        .flatMap(item => item.actions.map(action => action.type)),
+      adminActions: runtime.employeeOpenTasks(employee.id)
+        .filter(task => task.periodKey === '2026-07')
+        .map(task => task.type),
+      total: runtime.totalEntries(runtime.recordFor(employee.id, '2026-07').entries),
+      customerStatus: runtime.recordFor(employee.id, '2026-07').customerTimesheet.status,
+    });
+
+    const afterEntry = snapshot();
+    employee.startDate = '2026-08-01';
+    const hidden = snapshot();
+    employee.startDate = '2026-07-01';
+    const restored = snapshot();
+    return { initialTotal, afterEntry, hidden, restored };
   });
 
-  await test.step('Then staat de periode op augustus en toont het overzicht geen toekomstige maanden', async () => {
-    await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
-    await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
-    await expect(page.locator('#employee-open-overview-list')).not.toContainText('September 2026');
+  await test.step('Given Beheer de startdatum eerder heeft gezet en juli nog leeg was', async () => {
+    expect(result.initialTotal).toBe(0);
+  });
+  await test.step('When de medewerker uren invult terwijl de klanturenstaat nog openstaat', async () => {
+    expect(result.afterEntry.total).toBe(8);
+    expect(result.afterEntry.customerStatus).toBe('missing');
+    expect(result.afterEntry.employeeActions).toEqual(['hours', 'customer']);
+    expect(result.afterEntry.adminActions).toEqual(expect.arrayContaining(['hours-draft', 'customer-waiting']));
+  });
+  await test.step('Then een latere startdatum verbergt de maand en beide acties maar wist niets', async () => {
+    expect(result.hidden.employeeActions).toEqual([]);
+    expect(result.hidden.adminActions).toEqual([]);
+    expect(result.hidden.total).toBe(8);
+    expect(result.hidden.customerStatus).toBe('missing');
+  });
+  await test.step('And opnieuw vervroegen herstelt exact dezelfde uren- en klanturenstaatflow', async () => {
+    expect(result.restored.total).toBe(8);
+    expect(result.restored.customerStatus).toBe('missing');
+    expect(result.restored.employeeActions).toEqual(['hours', 'customer']);
+    expect(result.restored.adminActions).toEqual(expect.arrayContaining(['hours-draft', 'customer-waiting']));
   });
 });
 

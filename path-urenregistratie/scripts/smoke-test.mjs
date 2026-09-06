@@ -244,9 +244,9 @@ dom.window.setPeriod("2026-08");
 assert(document.querySelectorAll("#dashboard-employee-rows tr").length === 4, "Dashboard moet vier demo-medewerkers tonen");
 assert(document.querySelector("#dashboard-team-title").textContent === "Teamstatus · Augustus 2026" && document.querySelector("#dashboard-team-summary").textContent === "4 medewerkers · 2 te controleren · 1 wacht op medewerker", "Het teamoverzicht moet maand, controles en wachttaken compact samenvatten");
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
-assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
+assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 document te controleren · 0 extern te bevestigen · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, externe bevestiging, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.10.1"), "Het zichtbare versienummer moet 0.10.1 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.10.2"), "Het zichtbare versienummer moet 0.10.2 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -468,7 +468,7 @@ const skippedCustomerDocument = skippedCustomerState.records["2026-06"]["3"].cus
 assert(skippedCustomerDocument.status === "skipped" && skippedCustomerDocument.skippedBy === "Brian Hek" && skippedCustomerDocument.skippedAt && skippedCustomerDocument.skippedReason.includes("rechtstreeks naar Path Backoffice"), "Overslaan moet reden, medewerker en tijdstip blijvend opslaan");
 assert(document.querySelector("#employee-customer-timesheet-status").textContent === "Al rechtstreeks gemaild" && document.querySelector("#employee-customer-timesheet-skip").textContent === "Alsnog uploaden", "De medewerker moet de eigen rechtstreekse verzending kunnen zien en terugdraaien");
 const juneAfterCustomerSkipTasks = dom.window.adminOpenTasks().filter(task => task.periodKey === "2026-06");
-assert(juneAfterCustomerSkipTasks.length === 2, "Na Brians juni-skip verdwijnt de klanturenstaat-taak; Marc en Stasjo blijven voor juni zichtbaar");
+assert(juneAfterCustomerSkipTasks.length === 3 && juneAfterCustomerSkipTasks.some(task => task.type === "customer-external-confirm" && task.employee.id === 3 && task.actionable), "Na Brians melding blijft de klanturenstaat als concrete externe bevestigingsactie voor Backoffice zichtbaar");
 dom.window.showCustomerTimesheetDetails(3, "2026-06", false);
 assert(document.querySelector("#modal-summary").textContent.includes("Brian Hek") && document.querySelector("#modal-summary").textContent.includes("rechtstreeks naar Path Backoffice") && document.querySelector("#modal-summary").textContent.includes("Geregistreerd op"), "Backoffice moet in de details zien wie de klanturenstaat heeft overgeslagen, wanneer en waarom");
 click("#modal-confirm");
@@ -2081,7 +2081,7 @@ assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Pla
 }
 
 dom.window.close();
-console.log("Path v0.10.1 volledige smoke test: geslaagd");
+console.log("Path v0.10.2 volledige smoke test: geslaagd");
 // app.js schedules browser refresh timers. In JSDOM those timers can keep Node
 // alive after every assertion has completed, which made the release check look
 // stuck. End explicitly only after the complete smoke contract is green.

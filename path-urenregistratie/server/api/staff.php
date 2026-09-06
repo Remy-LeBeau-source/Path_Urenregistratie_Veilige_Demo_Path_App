@@ -103,6 +103,80 @@ function staff_find_email_conflict(PDO $pdo, string $email, int $excludeUserId =
     return is_array($row) ? $row : null;
 }
 
+/**
+ * Bepaal welke echte procesdata door een latere startmaand uit de schermen en
+ * werkvoorraad zou verdwijnen. Een leeg concept zonder geboekte uren is geen
+ * historie; ingevoerde uren, een documentstatus of een factuur zijn dat wel.
+ * De gegevens worden nooit verwijderd: deze samenvatting is alleen de
+ * fail-closed bevestiging voordat de zichtbaarheid wordt begrensd.
+ */
+function staff_history_impact_before_start(PDO $pdo, int $companyId, int $employeeId, string $oldStartDate, string $newStartDate): array
+{
+    $oldPeriod = substr($oldStartDate, 0, 7);
+    $newPeriod = substr($newStartDate, 0, 7);
+    $empty = [
+        'period_count' => 0,
+        'timesheet_count' => 0,
+        'customer_timesheet_count' => 0,
+        'invoice_count' => 0,
+        'first_period' => null,
+        'last_period' => null,
+    ];
+    if ($employeeId <= 0 || $newPeriod <= $oldPeriod) {
+        return $empty;
+    }
+
+    $stmt = $pdo->prepare(
+        "SELECT CONCAT(p.year, '-', LPAD(p.month, 2, '0')) AS period_key,
+                COUNT(DISTINCT CASE
+                    WHEN t.id IS NOT NULL AND (
+                        t.status <> 'draft'
+                        OR t.billable_hours > 0
+                        OR t.leave_hours > 0
+                        OR t.sickness_hours > 0
+                        OR te.id IS NOT NULL
+                    ) THEN t.id END) AS timesheet_count,
+                COUNT(DISTINCT CASE
+                    WHEN ct.id IS NOT NULL AND ct.status <> 'missing' THEN ct.id END) AS customer_timesheet_count,
+                COUNT(DISTINCT i.id) AS invoice_count
+         FROM periods p
+         LEFT JOIN timesheets t
+           ON t.period_id = p.id AND t.employee_id = :employee_id
+         LEFT JOIN time_entries te ON te.timesheet_id = t.id
+         LEFT JOIN customer_timesheets ct
+           ON ct.period_id = p.id AND ct.employee_id = :employee_id_customer
+         LEFT JOIN invoices i
+           ON i.company_id = :company_id_invoice AND i.timesheet_id = t.id
+         WHERE p.company_id = :company_id
+           AND CONCAT(p.year, '-', LPAD(p.month, 2, '0')) >= :old_period
+           AND CONCAT(p.year, '-', LPAD(p.month, 2, '0')) < :new_period
+         GROUP BY p.id, p.year, p.month
+         HAVING timesheet_count > 0 OR customer_timesheet_count > 0 OR invoice_count > 0
+         ORDER BY p.year, p.month"
+    );
+    $stmt->execute([
+        ':employee_id' => $employeeId,
+        ':employee_id_customer' => $employeeId,
+        ':company_id_invoice' => $companyId,
+        ':company_id' => $companyId,
+        ':old_period' => $oldPeriod,
+        ':new_period' => $newPeriod,
+    ]);
+    $rows = $stmt->fetchAll();
+    if (!is_array($rows) || $rows === []) {
+        return $empty;
+    }
+
+    return [
+        'period_count' => count($rows),
+        'timesheet_count' => array_sum(array_map(static fn(array $row): int => (int)$row['timesheet_count'], $rows)),
+        'customer_timesheet_count' => array_sum(array_map(static fn(array $row): int => (int)$row['customer_timesheet_count'], $rows)),
+        'invoice_count' => array_sum(array_map(static fn(array $row): int => (int)$row['invoice_count'], $rows)),
+        'first_period' => (string)$rows[0]['period_key'],
+        'last_period' => (string)$rows[count($rows) - 1]['period_key'],
+    ];
+}
+
 function staff_send_email_conflict(?array $existing = null, int $companyId = 0): never
 {
     $response = [
@@ -393,6 +467,28 @@ if ($action === 'upsert_employee') {
 
     $employeeDbUserId = (int)($employee['dbUserId'] ?? 0);
     $employeeDbId = (int)($employee['dbEmployeeId'] ?? 0);
+    $confirmStartDateHistoryHide = staff_bool($payload['confirmStartDateHistoryHide'] ?? false, false);
+    if ($employeeDbId > 0) {
+        $currentStartStmt = $pdo->prepare(
+            'SELECT employment_start_date FROM employees WHERE id = :id AND company_id = :company_id LIMIT 1'
+        );
+        $currentStartStmt->execute([':id' => $employeeDbId, ':company_id' => $companyId]);
+        $currentStartDate = (string)($currentStartStmt->fetchColumn() ?: '');
+        if ($currentStartDate !== '') {
+            $historyImpact = staff_history_impact_before_start($pdo, $companyId, $employeeDbId, $currentStartDate, $startDate);
+            if ((int)$historyImpact['period_count'] > 0 && !$confirmStartDateHistoryHide) {
+                auth_send_json([
+                    'ok' => false,
+                    'error' => 'employment-start-hides-history',
+                    'message' => 'Deze latere startdatum verbergt bestaande historie en open acties. Controleer de impact en bevestig opnieuw.',
+                    'impact' => $historyImpact,
+                    'old_start_date' => $currentStartDate,
+                    'new_start_date' => $startDate,
+                    'data_will_be_deleted' => false,
+                ], 409);
+            }
+        }
+    }
     $emailConflict = staff_find_email_conflict($pdo, $email, $employeeDbUserId);
     if ($emailConflict !== null) {
         staff_send_email_conflict($emailConflict, $companyId);
@@ -568,6 +664,7 @@ if ($action === 'upsert_employee') {
                      invoice_body_template = :invoice_body_template,
                      hourly_rate = :hourly_rate,
                      contract_label = :contract_label,
+                     start_date = :start_date,
                      broker_mail_enabled = :broker_mail_enabled,
                      broker_invoice_attachment = :broker_invoice_attachment,
                      customer_timesheet_expected = :customer_timesheet_expected,
@@ -596,6 +693,7 @@ if ($action === 'upsert_employee') {
                 ':invoice_body_template' => staff_text($employee['mailBody'] ?? '', 4000),
                 ':hourly_rate' => $rate,
                 ':contract_label' => staff_string($employee['contract'] ?? '', 120),
+                ':start_date' => $startDate,
                 ':broker_mail_enabled' => staff_bool($employee['brokerMailEnabled'] ?? true, true) ? 1 : 0,
                 ':broker_invoice_attachment' => staff_bool($employee['brokerInvoiceAttachment'] ?? true, true) ? 1 : 0,
                 ':customer_timesheet_expected' => staff_bool($employee['customerTimesheetExpected'] ?? true, true) ? 1 : 0,
@@ -724,6 +822,8 @@ if ($action === 'upsert_employee') {
                 'full_name' => $name,
                 'email' => $email,
                 'assignment_id' => $assignmentId,
+                'employment_start_date' => $startDate,
+                'history_visibility_confirmed' => $confirmStartDateHistoryHide,
             ], JSON_UNESCAPED_UNICODE),
         ]);
 
