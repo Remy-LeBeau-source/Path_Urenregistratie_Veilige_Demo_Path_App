@@ -165,6 +165,7 @@ await toggle('.employee .focus-customer', true); await toggle('.customer-modal',
 await cursor(1040, 718); await cursor(1040, 718, true); await wait(450);
 await cursor(1310, 718); await cursor(1310, 718, true); await page.locator('.choice').nth(1).evaluate((el) => el.classList.add('selected')); await wait(550);
 await page.locator('.choices').evaluate((el) => { el.style.display = 'none'; }); await toggle('.waiting', true);
+await page.locator('.flow-live').evaluate((el) => { el.classList.remove('two'); el.classList.add('all'); });
 await toast('Rechtstreeks gemaild · Backoffice bevestigt extern', 1200);
 
 // 36–40 s — visual handoff between employee and Backoffice.
