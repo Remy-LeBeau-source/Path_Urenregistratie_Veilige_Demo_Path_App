@@ -11,7 +11,7 @@ Feature: Functionele 1919-pilotportals naast de bestaande app
   @happy
   Scenario: [PILOT-H-001] beide 1919-portals leven naast de bestaande app
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 9
+    # Aantoonbare Playwright-assertions in deze case: 13
     Given functionele 1919-pilotportals naast de bestaande app is voorbereid
     When de flow voor PILOT-H-001 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat beide 1919-portals leven naast de bestaande app
@@ -19,7 +19,7 @@ Feature: Functionele 1919-pilotportals naast de bestaande app
   @happy
   Scenario: [PILOT-H-002] medewerker schrijft uren via dezelfde API en draagt de maand over
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 8
+    # Aantoonbare Playwright-assertions in deze case: 10
     Given functionele 1919-pilotportals naast de bestaande app is voorbereid
     When de flow voor PILOT-H-002 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat medewerker schrijft uren via dezelfde API en draagt de maand over

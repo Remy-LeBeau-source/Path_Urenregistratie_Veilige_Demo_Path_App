@@ -387,13 +387,15 @@ De visuele lijnstatus is een projectie van serverstatussen: gereed is groen, act
 actie vereist is amber en niet gestart is neutraal. Een `skipped` klanturenstaat is uitsluitend
 groen wanneer `review_note` met de door de server aangebrachte prefix `Extern bevestigd:` begint.
 Zonder die prefix blijft de status amber. Het beheerpad `confirm_external` vereist een reden;
-`restore_missing` is de expliciet bevestigde omkeeractie. Factuurfinalisatie en verzending linken
-vanuit de beheerpilot terug naar `/`, zodat die gevoelige bestaande keten tijdens de pilot niet wordt
-gedupliceerd.
+`restore_missing` is de expliciet bevestigde omkeeractie. De gecombineerde Bento × Storyline-pilot
+navigereert vanuit gewone bediening niet naar `/`. De nog niet gedupliceerde factuurfinalisatie
+wordt als niet-schrijvende pilotactie getoond; uitloggen blijft bewust naar de gedeelde loginroute
+gaan. Daardoor ontstaat geen verborgen tweede factuur- of mailstatusmachine.
 
 `prefers-reduced-motion` schakelt lijn-, pulseer-, hoofdstuk- en overdrachtsanimaties uit of verkort
 ze. De fotografie en het serif-font zijn lokale CSP-veilige assets; hun gebruik en SHA-256 staan in
-`pilot/assets/1919/ASSET-MANIFEST.md`.
+`pilot/assets/1919/ASSET-MANIFEST.md`. De medewerker-Bento gebruikt de nieuwe lokale
+`bento-foliage-v2.png` en `bento-timesheet-v2.png`; er zijn geen externe beeldrequests.
 
 De regressie in `pilot-page.spec.ts` gebruikt een deterministische API-projectie en de technieken
 toestandsovergang, beslissingstabel, rollenmatrix en 390px-grenswaarde. De bestaande endpointtests

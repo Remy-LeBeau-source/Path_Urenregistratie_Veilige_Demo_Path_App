@@ -325,9 +325,12 @@ een tweede, afwijkende implementatie van dezelfde stappen te onderhouden.
 
 ## 13. Parallelle 1919-pilotportals
 
-De 1919-richting wordt op TEST functioneel naast de bestaande app aangeboden. De medewerker opent
+De gecombineerde 1414 Bento × 1919 Storyline-richting wordt op TEST functioneel naast de bestaande app aangeboden. De medewerker opent
 `/pilot/1919-medewerker.html`; Backoffice opent `/pilot/1919-beheerder.html`. De app op `/` blijft
-beschikbaar en blijft tijdens de pilot de route voor de volledige factuur-, PDF- en mailcontrole.
+beschikbaar, maar gewone pilotbedieningen navigeren daar niet onverwacht naartoe. Uitloggen gaat wel
+naar de gedeelde loginroute. De factuurstap blijft in de beheerpilot zichtbaar als vervolgactie en
+wordt pas als pilotwrite aangesloten wanneer dezelfde beveiligde PDF- en mailcontrole volledig is
+overgenomen; tot dat moment toont de knop een pilotmelding en schrijft hij niets.
 
 Beide pilots gebruiken dezelfde ingelogde sessie en dezelfde servergegevens. Daardoor ziet
 Backoffice een medewerkeractie na opnieuw laden direct terug, ongeacht of de actie in de bestaande
@@ -346,6 +349,13 @@ Een nieuwe inlogsessie start in de actuele maand van `Europe/Amsterdam`. Een han
 blijft alleen binnen de sessie bewaard; uitloggen wist die keuze. De medewerkerweergave toont het
 geregistreerde totaal en het aantal werkdagen met uren, niet een misleidend hard doel zoals
 `20 / 160 uur`.
+
+De medewerker kan alle weken van de gekozen maand met vorige/volgende week openen. Iedere dag in
+de maand opent hetzelfde grote urenveld en optionele toelichting; `0 uur` is geldig. Dagen buiten de
+maand en ingediende/goedgekeurde maanden zijn niet bewerkbaar. De Backofficepilot toont dezelfde
+serverstatus als proceslijn per medewerker en werkt de detailkaarten bij zodra een medewerker wordt
+gekozen. Groen betekent uitsluitend werkelijk afgerond, amber vereist actie, blauw is actief en
+neutraal is nog niet gestart.
 # E-mailstatus per omgeving
 
 - LOCAL blijft altijd controlemodus/dry-run en kan geen echte e-mail activeren. De statusbadge is

@@ -127,19 +127,20 @@
   const renderList = () => {
     document.querySelector('.queue h2').textContent = periodLabel(state.period);
     document.querySelector('#admin-employee-list').innerHTML = sortedDossiers().map((d) => {
-      const view = statusTone(d); return `<button class="employee-card ${Number(d.employee.id) === Number(state.selectedId) ? 'selected' : ''}" type="button" data-employee="${d.employee.id}">
+      const view = statusTone(d); const ts = String(d.timesheet?.status || 'draft'); const ht = hoursTone(ts); const ct = customerTone(d.customer); const it = invoiceTone(d.invoice); return `<button class="employee-card ${Number(d.employee.id) === Number(state.selectedId) ? 'selected' : ''}" type="button" data-employee="${d.employee.id}">
         <span class="avatar">${escapeHtml(initials(d.employee.full_name))}</span><span><b>${escapeHtml(d.employee.full_name)}</b><small>${escapeHtml(d.employee.job_title || d.assignment?.assignment_name || 'Medewerker')}</small></span>
+        <span class="process-track" aria-label="Processtatus"><i class="${ht}">✓<small>Uren</small></i><em></em><i class="${['approved','invoiced'].includes(ts) ? 'done' : ts === 'submitted' ? 'active' : 'neutral'}">✓<small>Controle</small></i><em></em><i class="${ct}">◇<small>Urenstaat</small></i><em></em><i class="${it}">▤<small>Factuur</small></i></span>
         <span class="meta">${numFmt.format(Number(d.timesheet?.billable_hours || 0))} uur<b class="tone-${view.tone}">${escapeHtml(view.label)}</b></span></button>`;
     }).join('') || '<p>Geen actieve medewerkers gevonden.</p>';
   };
-  const setNode = (name, tone, label) => { const node = document.querySelector(`.node-${name}`); node.className = `node node-${name} ${tone}`; node.querySelector('span').textContent = label; const live = document.querySelector(`.live-${({ hours: 'a', project: 'b', customer: 'c', external: 'd' })[name]}`); if (live) live.setAttribute('class', `live live-${({ hours: 'a', project: 'b', customer: 'c', external: 'd' })[name]} ${tone}`); };
+  const setNode = (name, tone, label) => { const node = document.querySelector(`.node-${name}`); if (!node) return; node.className = `node node-${name} ${tone}`; node.querySelector('span').textContent = label; const suffix = ({ hours: 'a', project: 'b', customer: 'c', external: 'd' })[name]; const live = suffix ? document.querySelector(`.live-${suffix}`) : null; if (live) live.setAttribute('class', `live live-${suffix} ${tone}`); };
 
   const nextAction = (d) => {
     const ts = String(d.timesheet?.status || 'draft'); const cs = String(d.customer?.status || 'missing');
     if (ts === 'submitted') return { title: 'Uren controleren', note: 'Controleer dag- en maandtotalen en kies goedkeuren of correctie.', controls: `<button type="button" data-action="review-hours">Uren beoordelen →</button>` };
     if (cs === 'received') return { title: 'Klanturenstaat controleren', note: 'Open het PDF-document vóór je een besluit vastlegt.', controls: `<button type="button" data-action="review-customer">Document beoordelen →</button>` };
     if (cs === 'skipped' && !customerExternallyConfirmed(d.customer)) return { title: 'Externe bevestiging vereist', note: 'Rechtstreeks gemaild is nog niet groen. Controleer bewijs en leg een reden vast.', controls: `<button type="button" data-action="confirm-external">Extern bevestigen →</button>` };
-    if (['approved', 'invoiced'].includes(ts) && (['approved', 'sent', 'sent_to_broker'].includes(cs) || customerExternallyConfirmed(d.customer))) return { title: d.invoice ? 'Factuur controleren' : 'Factuur aanmaken', note: 'De beveiligde factuur- en mailcontrole blijft tijdens deze pilot in de bestaande Backoffice.', controls: `${customerExternallyConfirmed(d.customer) ? '<button type="button" class="secondary" data-action="restore-external">Bevestiging terugdraaien</button>' : ''}<a href="/">Open facturatie →</a>` };
+    if (['approved', 'invoiced'].includes(ts) && (['approved', 'sent', 'sent_to_broker'].includes(cs) || customerExternallyConfirmed(d.customer))) return { title: d.invoice ? 'Factuur controleren' : 'Factuur aanmaken', note: 'Dit dossier is klaar voor de beveiligde factuur- en mailcontrole.', controls: `${customerExternallyConfirmed(d.customer) ? '<button type="button" class="secondary" data-action="restore-external">Bevestiging terugdraaien</button>' : ''}<button type="button" data-action="pilot-facturation">Facturatie in pilot →</button>` };
     if (ts === 'correction') return { title: 'Wacht op gecorrigeerde uren', note: String(d.timesheet?.review_note || 'De medewerker verwerkt het correctieverzoek.'), controls: '' };
     if (cs === 'resubmit') return { title: 'Wacht op nieuw document', note: String(d.customer?.review_note || 'De medewerker levert een nieuwe klanturenstaat aan.'), controls: '' };
     return { title: 'Wacht op medewerker', note: 'De medewerker vult de uren of klanturenstaat verder aan.', controls: '' };
@@ -156,8 +157,9 @@
     const badgeCustomer = document.querySelector('#badge-customer'); badgeCustomer.textContent = `Urenstaat · ${labelCustomer(d.customer)}`; badgeCustomer.className = `tone-${ct}`;
     const badgeInvoice = document.querySelector('#badge-invoice'); badgeInvoice.textContent = `Factuur · ${labelInvoice(d.invoice)}`; badgeInvoice.className = `tone-${it}`;
     setNode('hours', ht, `${numFmt.format(Number(d.timesheet?.billable_hours || 0))} uur · ${labelHours(ts)}`);
-    setNode('project', d.assignment ? 'done' : 'neutral', d.assignment?.assignment_name || 'Niet gekoppeld');
+    setNode('project', ['approved', 'invoiced'].includes(ts) ? 'done' : ts === 'submitted' ? 'active' : 'neutral', ['approved', 'invoiced'].includes(ts) ? 'Goedgekeurd' : ts === 'submitted' ? 'Te controleren' : 'Nog niet gestart');
     setNode('customer', ct, labelCustomer(d.customer)); setNode('external', customerExternallyConfirmed(d.customer) ? 'done' : (String(d.customer?.status) === 'skipped' ? 'waiting' : 'neutral'), customerExternallyConfirmed(d.customer) ? 'Vastgelegd' : String(d.customer?.status) === 'skipped' ? 'Reden vereist' : 'Niet van toepassing');
+    setNode('invoice', it, labelInvoice(d.invoice));
     const action = nextAction(d); document.querySelector('#next-title').textContent = action.title; document.querySelector('#next-note').textContent = action.note; document.querySelector('#next-controls').innerHTML = action.controls;
     document.querySelector('#detail-name').textContent = d.employee.full_name;
     document.querySelector('#admin-details').innerHTML = `<dt>Periode</dt><dd>${escapeHtml(periodLabel(state.period))}</dd><dt>Functie</dt><dd>${escapeHtml(d.employee.job_title || '—')}</dd><dt>Opdracht</dt><dd>${escapeHtml(d.assignment?.assignment_name || '—')}</dd><dt>Uren</dt><dd class="tone-${ht}">${escapeHtml(labelHours(ts))} · ${numFmt.format(Number(d.timesheet?.billable_hours || 0))} uur</dd><dt>Klanturenstaat</dt><dd class="tone-${ct}">${escapeHtml(labelCustomer(d.customer))}</dd><dt>Factuur</dt><dd class="tone-${it}">${escapeHtml(labelInvoice(d.invoice))}</dd>`;
@@ -197,6 +199,7 @@
         else if (target.matches('#admin-profile-button')) { const pop = document.querySelector('#admin-profile-popover'); const open = pop.hidden; closePopovers(); pop.hidden = !open; if (open) placePopover(pop, target); }
         else if (target.matches('[data-period]')) { closePopovers(); state.period = String(target.dataset.period); sessionStorage.setItem(`path-1919-admin-period:${state.user.id}`, state.period); await loadAll({ retainSelection: false }); }
         else if (target.matches('[data-employee]')) { state.selectedId = Number(target.dataset.employee); renderList(); renderSelected(); document.querySelector('.story-panel').animate([{ opacity: .72, transform: 'translateY(5px)' }, { opacity: 1, transform: 'none' }], { duration: 320, easing: 'ease-out' }); }
+        else if (target.matches('[data-action="pilot-facturation"]')) { toast('Facturatie blijft binnen deze pilot. De volledige pilotstap wordt in de volgende ontwerpiteratie aangesloten.'); }
         else if (target.matches('#admin-refresh')) { await loadAll(); toast('Werkvoorraad opnieuw gelezen uit de server.'); }
         else if (target.matches('[data-action="review-hours"]')) reviewHoursDialog(selected());
         else if (target.matches('[data-action="review-customer"]')) reviewCustomerDialog(selected());
@@ -244,7 +247,7 @@
       if (sessionStorage.getItem(marker) !== userKey) { sessionStorage.setItem(marker, userKey); sessionStorage.setItem(periodKey, currentPeriod()); }
       const storedPeriod = String(sessionStorage.getItem(periodKey) || ''); state.period = /^\d{4}-\d{2}$/.test(storedPeriod) && storedPeriod <= currentPeriod() ? storedPeriod : currentPeriod();
       document.querySelector('#admin-profile-button span').textContent = initials(state.user.display_name); document.querySelector('#admin-profile-button b').textContent = state.user.display_name;
-      document.querySelector('#admin-profile-popover').innerHTML = `<strong>${escapeHtml(state.user.display_name)}</strong><small>${escapeHtml(state.user.email)}</small><hr><a href="/">Bestaande app openen</a><button type="button" id="admin-logout">Uitloggen</button>`;
+      document.querySelector('#admin-profile-popover').innerHTML = `<strong>${escapeHtml(state.user.display_name)}</strong><small>${escapeHtml(state.user.email)}</small><hr><button type="button" id="admin-logout">Uitloggen</button>`;
       document.querySelector('#admin-app').hidden = false; await loadAll({ retainSelection: false }); document.querySelector('#admin-boot').hidden = true;
     } catch (error) { gate('Beheerpilot kon niet starten', error.message || 'De werkvoorraad kon niet veilig worden geladen.', 'Terug naar bestaande app'); }
   };

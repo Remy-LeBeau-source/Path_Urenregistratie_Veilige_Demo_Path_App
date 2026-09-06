@@ -77,11 +77,15 @@ const draftTimesheet = () => ({
 test('[PILOT-H-001] beide 1919-portals leven naast de bestaande app', async ({ page }) => {
   await expect((await page.goto('/pilot/1919-medewerker.html'))?.status()).toBe(200);
   await expect(page.locator('.pilot-flag')).toContainText('nieuwe medewerkerportal');
+  await expect(page.locator('body')).toHaveAttribute('data-pilot-design', 'combo-1414-1919');
+  await expect(page.locator('.main a[href="/"]')).toHaveCount(0);
   await expect(page.locator('script[src="1919-portal.js"]')).toHaveCount(1);
   await expect(page.locator('script[src*="assets/app.js"]')).toHaveCount(0);
 
   await expect((await page.goto('/pilot/1919-beheerder.html'))?.status()).toBe(200);
   await expect(page.locator('.pilot-flag')).toContainText('nieuwe Backofficeportal');
+  await expect(page.locator('body')).toHaveAttribute('data-pilot-design', 'combo-1414-1919');
+  await expect(page.locator('#admin-app a[href="/"]')).toHaveCount(0);
   await expect(page.locator('script[src="1919-beheerder.js"]')).toHaveCount(1);
   await expect(page.locator('script[src*="assets/app.js"]')).toHaveCount(0);
 
@@ -97,11 +101,14 @@ test('[PILOT-H-002] medewerker schrijft uren via dezelfde API en draagt de maand
   await expect(page.locator('#pilot-month-button')).toContainText('September 2026');
   await expect(page.getByText('/ 160 uur')).toHaveCount(0);
   await expect(page.getByText('Facturen', { exact: true })).toHaveCount(0);
-  await page.locator('[data-open-day]:not([disabled])').first().click();
-  await page.locator('#pilot-day-hours').fill('8');
-  await page.locator('#pilot-day-description').fill('Analyse en advies');
-  await page.getByRole('button', { name: 'Dag opslaan' }).click();
+  await page.locator('[data-inline-hours]:not([disabled])').first().fill('8');
+  await page.getByRole('button', { name: 'Week opslaan' }).click();
   await expect(page.locator('.portal-summary')).toContainText('8 uur');
+
+  await page.getByRole('button', { name: 'Volgende week' }).click();
+  await expect(page.locator('.portal-week-tools')).toContainText('Week 2 van 5');
+  await expect(page.locator('[data-inline-hours]:not([disabled])').first()).toBeVisible();
+  await page.getByRole('button', { name: 'Vorige week' }).click();
 
   await page.getByRole('button', { name: 'Uren indienen' }).click();
   await expect(page.getByRole('heading', { name: 'Weet je het zeker?' })).toBeVisible();
@@ -188,7 +195,7 @@ test('[PILOT-H-005] Backoffice-correctie maakt de ingediende maand weer bewerkba
   state.role = 'employee';
   await page.goto('/pilot/1919-medewerker.html');
   await expect(page.locator('.portal-summary')).toContainText('Correctie gevraagd');
-  await expect(page.locator('[data-open-day]:not([disabled])').first()).toBeEnabled();
+  await expect(page.locator('[data-inline-hours]:not([disabled])').first()).toBeEnabled();
   expect(state.timesheetActions).toEqual(['request_correction']);
 });
 
@@ -230,9 +237,9 @@ test('[PILOT-N-002] beide pilots blijven bedienbaar zonder horizontale overflow 
   await page.goto('/pilot/1919-medewerker.html');
   await expect(page.locator('.portal-loading')).toBeHidden();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
-  const dayButton = page.locator('[data-open-day]:not([disabled])').first();
-  await expect(dayButton).toBeVisible();
-  expect((await dayButton.boundingBox())?.height || 0).toBeGreaterThanOrEqual(42);
+  const dayInput = page.locator('[data-inline-hours]:not([disabled])').first();
+  await expect(dayInput).toBeVisible();
+  expect((await dayInput.boundingBox())?.height || 0).toBeGreaterThanOrEqual(42);
 
   state.role = 'administrator';
   await page.goto('/pilot/1919-beheerder.html');

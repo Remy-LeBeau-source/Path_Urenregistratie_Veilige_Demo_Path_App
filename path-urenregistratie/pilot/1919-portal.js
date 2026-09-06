@@ -272,7 +272,7 @@
 
   const renderTopbar = () => {
     const topbar = document.querySelector('.topbar');
-    topbar.querySelector('.pkg').innerHTML = '<b>Nieuwe portal</b> · Path Storyline — medewerker <span class="portal-env">TEST PILOT</span>';
+    topbar.querySelector('.pkg').innerHTML = '<b>Nieuwe portal</b> · Path Bento × Storyline — medewerker <span class="portal-env">TEST PILOT</span>';
     const oldChip = topbar.querySelector('.chip');
     const monthButton = document.createElement('button');
     monthButton.type = 'button';
@@ -292,7 +292,7 @@
 
     const profile = document.querySelector('.portal-profile-popover');
     profile.innerHTML = `<strong>${escapeHtml(state.user.display_name)}</strong><small>${escapeHtml(state.user.email)}</small><hr>
-      <a href="/">Bestaande app openen</a><button type="button" id="pilot-logout">Uitloggen</button>`;
+      <button type="button" id="pilot-logout">Uitloggen</button>`;
   };
 
   const renderMonthMenu = () => {
@@ -329,9 +329,9 @@
       : 'Deze maand staat op slot. Backoffice controleert de ingediende uren.';
     const primary = section.querySelector('.btn-amber');
     primary.type = 'button';
-    primary.dataset.openDay = week.find((day) => day.inPeriod && !entryFor(day.iso))?.iso || week.find((day) => day.inPeriod)?.iso || '';
+    primary.dataset.focusFirstHours = 'true';
     primary.disabled = !hoursEditable();
-    primary.innerHTML = `${primary.querySelector('svg')?.outerHTML || ''}${hoursEditable() ? 'Werkdag invullen' : 'Ingediend bij Backoffice'}`;
+    primary.innerHTML = `${primary.querySelector('svg')?.outerHTML || ''}${hoursEditable() ? 'Uren direct invullen' : 'Ingediend bij Backoffice'}`;
 
     const weekElement = section.querySelector('.week');
     weekElement.innerHTML = week.map((day) => {
@@ -344,10 +344,11 @@
       const empty = !entry || hours <= 0;
       const disabled = !day.inPeriod || !hoursEditable();
       return `<div class="day${day.inPeriod ? '' : ' outside'}"><div class="dh"><b>${escapeHtml(weekday.toUpperCase())}</b><span>${escapeHtml(`${dayNumber} ${month}`.toUpperCase())}</span></div>
-        <button type="button" class="cell ${empty ? 'empty' : ''} ${disabled ? 'locked' : ''}" data-open-day="${day.iso}" ${disabled ? 'disabled' : ''}>
-          <div class="h">${empty ? (day.inPeriod ? 'Nog leeg' : 'Andere maand') : `${numberFormatter.format(hours)} uur`}</div>
-          <div class="u">${entry?.description ? escapeHtml(entry.description) : (day.inPeriod ? 'WERKDAG' : 'NIET IN DEZE MAAND')}</div>
-        </button><div class="add">${disabled ? '' : '+ BEWERKEN'}</div></div>`;
+        <label class="cell inline-cell ${empty ? 'empty' : ''} ${disabled ? 'locked' : ''}">
+          <span class="portal-sr-only">Uren ${escapeHtml(`${weekday} ${dayNumber} ${month}`)}</span>
+          <span class="inline-hours"><input type="number" inputmode="decimal" min="0" max="24" step="0.25" value="${day.inPeriod && entry ? hours : ''}" data-inline-hours="${day.iso}" aria-label="Uren ${escapeHtml(`${weekday} ${dayNumber} ${month}`)}" ${disabled ? 'disabled' : ''}><b>uur</b></span>
+          <span class="u">${entry?.description ? escapeHtml(entry.description) : (day.inPeriod ? 'DIRECT INVULLEN' : 'NIET IN DEZE MAAND')}</span>
+        </label></div>`;
     }).join('') + `<div class="day total"><div class="dh"><b>TOTAAL</b><span>&nbsp;</span></div><div class="cell"><div class="h">${numberFormatter.format(totalHours())}</div><div class="u">UREN</div></div></div>`;
 
     let tools = section.querySelector('.portal-week-tools');
@@ -358,7 +359,8 @@
     }
     tools.innerHTML = `<button type="button" data-week-delta="-1" aria-label="Vorige week" ${state.weekIndex === 0 ? 'disabled' : ''}>←</button>
       <span>Week ${state.weekIndex + 1} van ${state.weeks.length}</span>
-      <button type="button" data-week-delta="1" aria-label="Volgende week" ${state.weekIndex >= state.weeks.length - 1 ? 'disabled' : ''}>→</button>`;
+      <button type="button" data-week-delta="1" aria-label="Volgende week" ${state.weekIndex >= state.weeks.length - 1 ? 'disabled' : ''}>→</button>
+      ${hoursEditable() ? '<button type="button" class="portal-week-save" data-save-week data-portal-write>Week opslaan</button>' : ''}`;
 
     let summary = section.querySelector('.portal-summary');
     if (!summary) {
@@ -371,8 +373,8 @@
     const correction = timesheetStatus() === 'correction' ? String(state.timesheet?.review_note || state.timesheet?.latest_correction?.correction_message || '') : '';
     summary.innerHTML = `
       <div class="portal-summary-card"><small>Geregistreerd</small><strong>${numberFormatter.format(totalHours())} uur</strong><span>${filledDays()} werkdagen met uren</span></div>
-      <div class="portal-summary-card"><label>Verlof <input id="pilot-leave" type="number" min="0" step="0.25" value="${Number(state.timesheet?.leave_hours || 0)}" ${enabled && hoursEditable() ? '' : 'disabled'}></label><span>${enabled ? 'Apart van klanturen' : 'Loopt buiten deze app'}</span></div>
-      <div class="portal-summary-card"><label>Ziekte <input id="pilot-sick" type="number" min="0" step="0.25" value="${Number(state.timesheet?.sickness_hours || 0)}" ${enabled && hoursEditable() ? '' : 'disabled'}></label><span>${enabled ? 'Apart van klanturen' : 'Meld dit bij Backoffice'}</span></div>
+      <div class="portal-summary-card ${enabled ? '' : 'entry-disabled'}"><label>Verlof <input id="pilot-leave" type="number" min="0" step="0.25" value="${Number(state.timesheet?.leave_hours || 0)}" ${enabled && hoursEditable() ? '' : 'disabled'}></label><span>${enabled ? 'Invoer staat aan · apart van klanturen' : 'Door Backoffice uitgezet'}</span></div>
+      <div class="portal-summary-card ${enabled ? '' : 'entry-disabled'}"><label>Ziekte <input id="pilot-sick" type="number" min="0" step="0.25" value="${Number(state.timesheet?.sickness_hours || 0)}" ${enabled && hoursEditable() ? '' : 'disabled'}></label><span>${enabled ? 'Invoer staat aan · apart van klanturen' : 'Door Backoffice uitgezet'}</span></div>
       <div class="portal-summary-card wide"><div><small>Status uren</small><strong>${escapeHtml(tsStatus.label)}</strong>${correction ? `<span>${escapeHtml(correction)}</span>` : ''}</div><div class="portal-summary-actions">
         ${hoursEditable() ? '<button type="button" class="portal-secondary" data-portal-write="draft">Concept opslaan</button><button type="button" class="portal-primary" data-open-submit>Uren indienen</button>' : ''}
       </div></div>`;
@@ -403,7 +405,9 @@
       progress.className = 'portal-flow-progress';
       flow.prepend(progress);
     }
-    progress.style.width = approved && documentDone ? 'calc(100% - 44px)' : (approved ? '48%' : (submitted ? '24%' : '0'));
+    const flowProgress = approved && documentDone ? 'calc(100% - 44px)' : (approved ? '48%' : (submitted ? '24%' : '0'));
+    progress.style.width = flowProgress;
+    progress.style.setProperty('--flow-progress', flowProgress);
     if (flowSteps[0]) flowSteps[0].dataset.state = approved ? 'done' : (submitted ? 'active' : 'neutral');
     if (flowSteps[1]) flowSteps[1].dataset.state = documentDone ? 'done' : (doc.tone === 'active' ? 'active' : 'waiting');
     if (flowSteps[2]) flowSteps[2].dataset.state = approved && documentDone ? 'done' : 'neutral';
@@ -586,6 +590,20 @@
         } else if (target.matches('[data-week-delta]')) {
           state.weekIndex = Math.max(0, Math.min(state.weeks.length - 1, state.weekIndex + Number(target.dataset.weekDelta)));
           renderWeek();
+        } else if (target.matches('[data-focus-first-hours]')) {
+          document.querySelector('[data-inline-hours]:not([disabled])')?.focus();
+        } else if (target.matches('[data-save-week]')) {
+          const values = [...document.querySelectorAll('[data-inline-hours]:not([disabled])')].map((input) => ({ iso: String(input.dataset.inlineHours), hours: Number(input.value) }));
+          if (values.some((entry) => !Number.isFinite(entry.hours) || entry.hours < 0 || entry.hours > 24)) throw new Error('Vul per dag tussen 0 en 24 uur in.');
+          await writeTimesheet('save_draft', () => {
+            const weekDates = new Set(values.map((entry) => entry.iso));
+            const previous = new Map(entries().map((entry) => [String(entry.work_date), entry]));
+            const list = entries().filter((entry) => !weekDates.has(String(entry.work_date)));
+            values.filter((entry) => entry.hours > 0).forEach((entry) => list.push({ work_date: entry.iso, hours: Math.round(entry.hours * 100) / 100, description: String(previous.get(entry.iso)?.description || 'Directe weekinvoer') }));
+            if (!state.timesheet) state.timesheet = { status: 'draft', day_entries: [], leave_hours: 0, sickness_hours: 0 };
+            state.timesheet.day_entries = list.sort((a, b) => String(a.work_date).localeCompare(String(b.work_date)));
+          });
+          toast(`Week ${state.weekIndex + 1} opgeslagen.`);
         } else if (target.matches('[data-open-day]') && !target.disabled) {
           dayDialog(String(target.dataset.openDay));
         } else if (target.matches('[data-open-submit]')) {

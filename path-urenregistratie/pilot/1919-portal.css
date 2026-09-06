@@ -180,3 +180,81 @@ body.portal-ready .day .cell.locked{cursor:default}
   .portal-loader-mark{animation:none;border-color:var(--green)}
   .portal-dialog,.portal-backdrop,.portal-toast,.flow .step .ic,body.portal-ready .day,.rail-curve path,.rail-curve circle,.portal-flow-progress,.portal-handoff,.portal-handoff-live,.portal-handoff-packet{transition:none!important;animation:none!important}
 }
+
+/* 1414 Bento × 1919 Storyline — functionele pilotcombinatie. */
+body[data-pilot-design="combo-1414-1919"]{
+  min-height:100vh;background:#041728;color:#f6f1e8;
+  background-image:radial-gradient(circle at 12% 15%,rgba(40,111,74,.17),transparent 31%),radial-gradient(circle at 86% 40%,rgba(38,95,129,.14),transparent 28%)
+}
+body[data-pilot-design="combo-1414-1919"] .pilot-flag{background:#07131e;color:#aab9bf;border-color:rgba(255,255,255,.08)}
+body[data-pilot-design="combo-1414-1919"] .shell{display:block;min-height:auto;padding:0 20px 24px}
+body[data-pilot-design="combo-1414-1919"] .rail{display:none}
+body[data-pilot-design="combo-1414-1919"] .main{
+  display:grid;grid-template-columns:minmax(320px,.95fr) minmax(520px,1.45fr);grid-template-areas:"top top" "hero hours" "flow hours" "flow customer";
+  gap:18px;width:min(1480px,100%);margin:0 auto;background:transparent
+}
+body[data-pilot-design="combo-1414-1919"] .topbar{grid-area:top;position:sticky;top:0;min-height:72px;padding:12px 2px;background:rgba(4,23,40,.91);border-bottom:1px solid rgba(255,255,255,.1);backdrop-filter:blur(18px);box-shadow:none}
+body[data-pilot-design="combo-1414-1919"] .topbar .pkg{color:#b7c6ca;opacity:1}
+body[data-pilot-design="combo-1414-1919"] .topbar .pkg b{color:#65ce89}
+body[data-pilot-design="combo-1414-1919"] .topbar .chip,
+body[data-pilot-design="combo-1414-1919"] .topbar .who{background:#081e31;border-color:rgba(255,255,255,.15);color:#fff}
+body[data-pilot-design="combo-1414-1919"] .topbar .sep{background:rgba(255,255,255,.13)}
+body[data-pilot-design="combo-1414-1919"] .hero{grid-area:hero;display:block;min-height:470px;border:1px solid rgba(129,193,151,.42);border-radius:28px;overflow:hidden;background:linear-gradient(145deg,rgba(22,83,50,.97),rgba(14,55,38,.96));box-shadow:0 22px 70px rgba(0,0,0,.2)}
+body[data-pilot-design="combo-1414-1919"] .hero .copy{padding:58px 52px 44px}
+body[data-pilot-design="combo-1414-1919"] .hero h1{max-width:520px;margin:12px 0 22px;color:#fff9ee;font-size:clamp(48px,5.3vw,78px);line-height:.98}
+body[data-pilot-design="combo-1414-1919"] .hero p{max-width:470px;color:#e3eee6;font-size:16px}
+body[data-pilot-design="combo-1414-1919"] .hero .scene{position:absolute;inset:auto 0 0 0;height:48%;min-height:0;margin:0;opacity:.28;mix-blend-mode:screen}
+body[data-pilot-design="combo-1414-1919"] .hero .scene img{mask-image:linear-gradient(to bottom,transparent,#000);-webkit-mask-image:linear-gradient(to bottom,transparent,#000);object-position:center 75%}
+body[data-pilot-design="combo-1414-1919"] .mini{position:absolute;left:52px;right:52px;bottom:34px;z-index:3;grid-template-columns:1fr!important;padding-top:18px;border-top:1px solid rgba(255,255,255,.2)}
+body[data-pilot-design="combo-1414-1919"] .mini>div:not(:last-child){display:none}
+body[data-pilot-design="combo-1414-1919"] .mini .ic{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.32)}
+body[data-pilot-design="combo-1414-1919"] .mini .ic svg{stroke:#a7dfba}
+body[data-pilot-design="combo-1414-1919"] .mini b{color:#fff}body[data-pilot-design="combo-1414-1919"] .mini span{color:#c4d5cb}
+body[data-pilot-design="combo-1414-1919"] .chapter{border:1px solid rgba(255,255,255,.13);border-radius:28px;padding:30px;overflow:hidden;box-shadow:0 22px 70px rgba(0,0,0,.16)}
+body[data-pilot-design="combo-1414-1919"] .chapter::before{display:none}
+body[data-pilot-design="combo-1414-1919"] .chapter.navy{grid-area:hours;background:linear-gradient(145deg,#0a263b,#071c2f)}
+body[data-pilot-design="combo-1414-1919"] .chapter.forest{grid-area:flow;background:linear-gradient(150deg,#0a263b,#0b3040);padding:28px}
+body[data-pilot-design="combo-1414-1919"] .chapter.dark{grid-area:customer;background:#f5f0e7;color:#071c2f;padding:28px}
+body[data-pilot-design="combo-1414-1919"] .ch-grid{grid-template-columns:1fr;gap:20px}
+body[data-pilot-design="combo-1414-1919"] .ch-grid h2{font-size:36px}
+body[data-pilot-design="combo-1414-1919"] .week{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+body[data-pilot-design="combo-1414-1919"] .day .cell{padding:14px 10px;background:rgba(255,255,255,.025)}
+body[data-pilot-design="combo-1414-1919"] .inline-cell{display:grid;gap:8px;min-height:88px}
+body[data-pilot-design="combo-1414-1919"] .inline-hours{display:flex;align-items:center;gap:6px}
+body[data-pilot-design="combo-1414-1919"] .inline-hours input{width:100%;min-width:0;height:44px;padding:7px 8px;border:1px solid rgba(107,191,149,.38);border-radius:9px;background:#061a2a;color:#fff;font:23px var(--serif)}
+body[data-pilot-design="combo-1414-1919"] .inline-hours input:focus{outline:3px solid rgba(224,161,60,.32);border-color:var(--amber)}
+body[data-pilot-design="combo-1414-1919"] .inline-hours b{color:#9fbbb0;font-size:11px}
+body[data-pilot-design="combo-1414-1919"] .portal-week-tools{flex-wrap:wrap}
+body[data-pilot-design="combo-1414-1919"] .portal-week-tools .portal-week-save{width:auto;margin-left:auto;padding:0 16px;border-radius:10px;background:linear-gradient(105deg,#d48400,#eda318);border-color:#eda318;font-weight:800}
+body[data-pilot-design="combo-1414-1919"] .portal-summary-card.entry-disabled{opacity:.62;background:repeating-linear-gradient(135deg,rgba(255,255,255,.018) 0 8px,transparent 8px 16px)}
+body[data-pilot-design="combo-1414-1919"] [data-open-submit]{min-width:170px;box-shadow:0 0 0 4px rgba(224,161,60,.09),0 14px 34px rgba(222,143,9,.25)}
+body[data-pilot-design="combo-1414-1919"] .portal-summary{grid-template-columns:repeat(3,minmax(0,1fr))}
+body[data-pilot-design="combo-1414-1919"] .portal-summary-card.wide{grid-column:1/-1}
+body[data-pilot-design="combo-1414-1919"] .chapter.forest .ch-grid{display:block}
+body[data-pilot-design="combo-1414-1919"] .chapter.forest .ch-grid>div:first-child{margin-bottom:27px}
+body[data-pilot-design="combo-1414-1919"] .flow{display:grid;grid-template-columns:1fr;gap:20px}
+body[data-pilot-design="combo-1414-1919"] .flow::before{left:21px;right:auto;top:22px;bottom:22px;width:2px;height:auto;background:rgba(255,255,255,.15)}
+body[data-pilot-design="combo-1414-1919"] .portal-flow-progress{left:20px;top:22px;width:4px!important;height:var(--flow-progress,0);max-height:calc(100% - 44px);transition:height 1s cubic-bezier(.2,.8,.2,1)}
+body[data-pilot-design="combo-1414-1919"] .flow .arrow{display:none}
+body[data-pilot-design="combo-1414-1919"] .flow .step{z-index:1}
+body[data-pilot-design="combo-1414-1919"] .doc-grid{grid-template-columns:.8fr 1.2fr;height:220px}
+body[data-pilot-design="combo-1414-1919"] .chapter.dark h2{color:#071c2f;font-size:38px}
+body[data-pilot-design="combo-1414-1919"] .chapter.dark .lead{color:#42515a}
+body[data-pilot-design="combo-1414-1919"] .chapter.dark .portal-secondary{border-color:#a9a79f;color:#183128;text-decoration:none;padding:11px 17px;border-radius:11px}
+body[data-pilot-design="combo-1414-1919"] .chapter.dark .portal-document-status{color:#286846;border-color:#6fa080}
+
+@media(max-width:980px){
+  body[data-pilot-design="combo-1414-1919"] .main{grid-template-columns:1fr;grid-template-areas:"top" "hero" "hours" "flow" "customer"}
+  body[data-pilot-design="combo-1414-1919"] .hero{min-height:410px}
+}
+@media(max-width:680px){
+  body[data-pilot-design="combo-1414-1919"] .shell{padding:0 10px 16px}
+  body[data-pilot-design="combo-1414-1919"] .main{gap:12px}
+  body[data-pilot-design="combo-1414-1919"] .hero,body[data-pilot-design="combo-1414-1919"] .chapter{border-radius:20px}
+  body[data-pilot-design="combo-1414-1919"] .hero .copy{padding:35px 25px 30px}
+  body[data-pilot-design="combo-1414-1919"] .hero h1{font-size:49px}
+  body[data-pilot-design="combo-1414-1919"] .mini{left:25px;right:25px;bottom:24px}
+  body[data-pilot-design="combo-1414-1919"] .chapter{padding:22px 18px}
+  body[data-pilot-design="combo-1414-1919"] .week{grid-template-columns:1fr 1fr}
+  body[data-pilot-design="combo-1414-1919"] .doc-grid{grid-template-columns:1fr;height:auto}
+}
