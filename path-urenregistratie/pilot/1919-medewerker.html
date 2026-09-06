@@ -59,17 +59,19 @@
   .bento{display:grid;grid-template-columns:1.18fr .62fr 1.05fr;gap:20px;align-items:stretch;}
 
   /* Hero (green) */
-  .hero{grid-column:1;grid-row:1 / span 2;position:relative;overflow:hidden;border-radius:var(--r);
+  .hero{grid-column:1;grid-row:1 / span 2;position:relative;overflow:hidden;isolation:isolate;border-radius:var(--r);
     background:linear-gradient(150deg,#204435 0%,#1a3a2c 60%,#163326 100%);padding:44px 44px 34px;min-height:520px;display:flex;flex-direction:column;}
-  .hero .foliage{position:absolute;left:-26px;bottom:-26px;width:190px;opacity:.55;z-index:0;pointer-events:none;-webkit-mask-image:radial-gradient(circle at 20% 85%,#000 40%,transparent 78%);mask-image:radial-gradient(circle at 20% 85%,#000 40%,transparent 78%);}
+  .hero .foliage{position:absolute;left:-24px;bottom:-10px;width:232px;opacity:.9;z-index:0;pointer-events:none;mix-blend-mode:lighten;-webkit-mask-image:radial-gradient(150% 135% at 10% 92%,#000 36%,transparent 74%);mask-image:radial-gradient(150% 135% at 10% 92%,#000 36%,transparent 74%);}
   .hero > *{position:relative;z-index:1;}
   .hero .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9bd3b4;font-weight:700;}
   .hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(42px,4.4vw,62px);line-height:1.0;color:#f3efe3;margin:14px 0 16px;letter-spacing:.5px;}
   .hero p{font-size:15px;line-height:1.55;color:#cfe0d3;margin:0;max-width:340px;}
-  .hero .go{position:absolute;right:52px;top:calc(50% + 14px);transform:translateY(-50%);width:150px;height:150px;border-radius:50%;
-    background:radial-gradient(circle at 38% 32%,#63985f,#3d6a41 72%);
-    border:10px solid rgba(255,255,255,.05);
-    display:grid;place-items:center;box-shadow:0 26px 55px rgba(0,0,0,.4), inset 0 3px 8px rgba(255,255,255,.16);}
+  .hero .go{position:absolute;right:70px;top:50%;transform:translateY(-50%);width:152px;height:152px;border-radius:50%;border:0;
+    background:radial-gradient(circle at 38% 30%,#6ba066,#3f6d43 74%);
+    display:grid;place-items:center;box-shadow:0 26px 55px rgba(0,0,0,.42), inset 0 3px 10px rgba(255,255,255,.18);}
+  .hero .go::before,.hero .go::after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%;z-index:-1;}
+  .hero .go::before{width:196px;height:196px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);}
+  .hero .go::after{width:244px;height:244px;background:rgba(255,255,255,.03);}
   .hero .go svg{width:38px;height:38px;stroke:#f3efe3;fill:none;stroke-width:2.2;}
   .hero .foot{margin-top:auto;display:flex;align-items:center;gap:12px;color:#bcd2c1;font-size:12.5px;}
   .hero .foot .ic{width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.16);display:grid;place-items:center;flex:0 0 auto;}
@@ -109,18 +111,24 @@
   .gauge .bar i{display:block;height:100%;width:20%;background:var(--green-ring);border-radius:6px;}
   .gauge .pct{align-self:flex-end;margin-top:7px;font-size:12px;font-weight:700;color:var(--green-ring);}
 
-  /* Klanturenstaat (cream photo) */
-  .kt{grid-column:3;grid-row:2;background:var(--cream-2);border-radius:var(--r);overflow:hidden;color:var(--ink);display:flex;flex-direction:column;}
-  .kt .body{padding:24px 0 8px 26px;display:grid;grid-template-columns:1fr 200px;gap:16px;align-items:start;}
-  .kt .txt{padding-bottom:14px;}
-  .kt .txt h3{font-family:var(--serif);font-weight:400;font-size:26px;margin:12px 0 6px;color:#22302b;}
-  .kt .txt p{margin:0;font-size:13px;color:var(--ink-soft);}
-  .kt .check{width:34px;height:34px;border-radius:50%;background:var(--green-deep);display:grid;place-items:center;}
-  .kt .check svg{width:17px;height:17px;stroke:#fff;fill:none;stroke-width:2.4;}
-  .kt .photo{align-self:stretch;}
-  .kt .photo img{width:100%;height:100%;min-height:180px;object-fit:cover;object-position:72% 6%;}
-  .kt .cta{margin:14px 26px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1px solid #e4ddcd;border-radius:13px;padding:14px 18px;font-size:13.5px;font-weight:700;color:var(--ink);}
-  .kt .cta svg{width:16px;height:16px;stroke:var(--green-deep);fill:none;stroke-width:1.9;}
+  /* Klanturenstaat (full-bleed foto met tekst erover, zoals mockup) */
+  .kt{grid-column:3;grid-row:2;position:relative;isolation:isolate;background:var(--cream-2);border-radius:var(--r);overflow:hidden;color:var(--ink);min-height:320px;}
+  .kt .bg{position:absolute;inset:0;z-index:0;}
+  .kt .bg img{width:100%;height:100%;object-fit:cover;object-position:58% 38%;}
+  .kt .scrim{position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:radial-gradient(135% 95% at 0% 0%,rgba(244,239,228,.97) 0%,rgba(244,239,228,.86) 24%,rgba(244,239,228,.32) 41%,rgba(244,239,228,0) 58%);}
+  .kt .txt{position:relative;z-index:2;padding:26px 26px 0;}
+  .kt .txt h3{font-family:var(--serif);font-weight:400;font-size:28px;margin:0 0 6px;color:#22302b;}
+  .kt .txt p{margin:0 0 16px;font-size:13.5px;color:var(--ink-soft);}
+  .kt .check{width:36px;height:36px;border-radius:50%;background:var(--green-deep);display:grid;place-items:center;box-shadow:0 8px 20px rgba(47,106,76,.4);}
+  .kt .check svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2.6;}
+  .kt .cta{position:absolute;left:18px;right:18px;bottom:18px;z-index:3;display:flex;align-items:center;gap:12px;
+    background:rgba(255,255,255,.84);-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
+    border:1px solid rgba(255,255,255,.65);border-radius:14px;padding:14px 18px;font-size:13.5px;font-weight:700;color:var(--ink);
+    box-shadow:0 12px 32px rgba(10,20,30,.22);}
+  .kt .cta .send{width:16px;height:16px;stroke:var(--green-deep);fill:none;stroke-width:1.8;flex:0 0 auto;}
+  .kt .cta .lbl{flex:1;}
+  .kt .cta .arw{width:16px;height:16px;stroke:var(--ink-soft);fill:none;stroke-width:1.9;flex:0 0 auto;}
 
   /* 4-step strip */
   .steps{grid-column:1 / -1;grid-row:3;background:var(--navy-card);border:1px solid var(--line-dark);border-radius:var(--r);padding:24px 30px 26px;}
@@ -150,7 +158,8 @@
     .bento{grid-template-columns:1fr;}
     .hero,.week{grid-row:auto;}
     .gauge,.kt,.steps{grid-column:1;grid-row:auto;}
-    .hero .go{position:static;transform:none;margin-top:22px;width:96px;height:96px;border-width:6px;}
+    .hero .go{position:static;transform:none;margin-top:22px;width:96px;height:96px;}
+    .hero .go::before,.hero .go::after{display:none;}
     .hero .foliage{max-width:50%;}
     .week li.on{margin:2px 0;padding-left:12px;padding-right:12px;}
     .gauge .ring{width:min(220px,72vw);height:min(220px,72vw);}
@@ -185,7 +194,6 @@
     <!-- Hero -->
     <section class="hero">
       <img class="foliage" src="assets/1919/bento-foliage-v2.png" alt="Groene bladeren tegen een rustige donkergroene achtergrond">
-      <div class="eyebrow">September 2026</div>
       <h1>Begin met <br>je uren</h1>
       <p>Registreer je uren voor deze week. Het kost maar een paar minuten.</p>
       <button class="go" type="button" aria-label="Begin met je uren">
@@ -232,17 +240,17 @@
 
     <!-- Klanturenstaat -->
     <section class="kt">
-      <div class="body">
-        <div class="txt">
-          <span class="check"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
-          <h3>Klanturenstaat</h3>
-          <p>Gereed en verzonden via e-mail.</p>
-        </div>
-        <div class="photo"><img src="assets/1919/bento-timesheet-v2.png" alt="Klanturenstaat in een groene map op een warm bureau"></div>
+      <div class="bg"><img src="assets/1919/bento-timesheet-v2.png" alt="Klanturenstaat in een groene map op een warm bureau met koffie"></div>
+      <div class="scrim"></div>
+      <div class="txt">
+        <h3>Klanturenstaat</h3>
+        <p>Gereed en verzonden via e-mail.</p>
+        <span class="check"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
       </div>
       <button class="cta" type="button">
-        Bekijk voorbeeld klanturenstaat
-        <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <svg class="send" viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/></svg>
+        <span class="lbl">Bekijk voorbeeld klanturenstaat</span>
+        <svg class="arw" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </button>
     </section>
 
