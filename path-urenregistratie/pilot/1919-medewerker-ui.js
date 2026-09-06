@@ -248,19 +248,14 @@
     if (save) {
       save.addEventListener('click', function () {
         var box = document.querySelector('.week .actions');
-        if (!box) return;
-        // Bevestiging blijft staan tot de gebruiker weer een dagveld aanraakt.
-        // (Een korte time-out was op tragere machines al weg voordat je 'm zag.)
-        box.innerHTML = '<div class="done" tabindex="-1">✓ Opgeslagen — je kunt later verder</div>';
-        try { box.querySelector('.done').focus(); } catch (e) {}
-        var ul = document.querySelector('.week ul');
-        if (ul) {
-          var restore = function () {
-            ul.removeEventListener('focusin', restore);
-            if (!month().past && !curWeek().submitted) renderWeek();
-          };
-          ul.addEventListener('focusin', restore);
-        }
+        if (!box || box.querySelector('.saved-note')) return;
+        // Persistente bevestiging bóven de knoppen. De knoppen blijven staan
+        // (geen focus-verstoring), de melding verdwijnt bij de volgende
+        // hertekening van de weekkaart (week/maand wisselen).
+        var note = document.createElement('div');
+        note.className = 'done saved-note';
+        note.textContent = '✓ Opgeslagen — je kunt later verder';
+        box.insertBefore(note, box.firstChild);
       });
     }
 

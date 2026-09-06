@@ -46,7 +46,7 @@ Feature: 1414/1919-pilotpagina's naast de bestaande app
   @happy
   Scenario: [PILOT-H-008] medewerker-pilot: snelkeuze zet uren in één tik, Opslaan bevestigt zonder in te dienen
     # Testtechniek: Equivalentieklassen
-    # Aantoonbare Playwright-assertions in deze case: 6
+    # Aantoonbare Playwright-assertions in deze case: 8
     Given de medewerker-pilot met september open
     When een lege dag via de snelkeuze op 8 wordt gezet en de week wordt opgeslagen
     Then bevestigt de pilot het opslaan maar blijft de week bewerkbaar en niet ingediend

@@ -36,7 +36,7 @@ if (typeof dom.window.applyAuthUiMode === "function") {
   dom.window.applyAuthUiMode("demo");
 }
 
-assert(dom.window.localAccountToolsAllowed("localhost") && dom.window.localAccountToolsAllowed("127.0.0.1") && !dom.window.localAccountToolsAllowed("uren-test.pathconsultancy.nl"), "Lokale browserreset mag alleen op loopbackhosts beschikbaar zijn");
+assert(dom.window.localAccountToolsAllowed("localhost") && dom.window.localAccountToolsAllowed("127.0.0.2") && !dom.window.localAccountToolsAllowed("uren-test.pathconsultancy.nl"), "Lokale browserreset mag alleen op loopbackhosts beschikbaar zijn");
 assert(dom.window.isLocalAuthHintsHost("localhost") && dom.window.isLocalAuthHintsHost("uren-test.pathconsultancy.nl") && !dom.window.isLocalAuthHintsHost("uren.pathconsultancy.nl"), "Automatisch invullen mag alleen lokaal en op de exacte TEST-host beschikbaar zijn");
 assert(dom.window.testAccountToolsAllowed("localhost") && dom.window.testAccountToolsAllowed("uren-test.pathconsultancy.nl") && !dom.window.testAccountToolsAllowed("uren.pathconsultancy.nl"), "Snelle accountkeuze mag alleen lokaal en op de exacte TEST-host beschikbaar zijn");
 dom.window.applyLoginPresentation(false);
@@ -246,7 +246,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 te controleren · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("0.0.1"), "Het zichtbare versienummer moet 0.0.1 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("0.0.2"), "Het zichtbare versienummer moet 0.0.2 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -2048,7 +2048,7 @@ assert(rootHtaccessSrc.includes("Content-Security-Policy") && rootHtaccessSrc.in
   assert(accept && /\bbutton-(primary|ghost|danger)\b/.test(accept.className),
     "#install-banner-accept moet een gevulde knopvariant (button-primary/ghost/danger) hebben, anders is hij onzichtbaar op de balk");
 }
-assert(playwrightRunnerSrc.includes("url.hostname === 'localhost'") && playwrightRunnerSrc.includes("url.hostname = '127.0.0.1'") && playwrightRunnerSrc.includes("PATH_APP_BASE_URL: baseUrl"), "De Playwright-runner moet browsers en de beheerde PHP-server op dezelfde IPv4-origin houden");
+assert(playwrightRunnerSrc.includes("url.hostname === 'localhost'") && playwrightRunnerSrc.includes("url.hostname = '127.0.0.2'") && playwrightRunnerSrc.includes("PATH_APP_BASE_URL: baseUrl"), "De Playwright-runner moet browsers en de beheerde PHP-server op dezelfde IPv4-origin houden");
 assert(playwrightDbBootstrapSrc.includes("namedTestDatabase") && playwrightDbBootstrapSrc.includes("isolatedCiDatabase") && playwrightDbBootstrapSrc.includes("Refusing destructive Playwright database bootstrap"), "De Playwright DB-bootstrap mag uitsluitend een herkenbare test- of geïsoleerde CI-database opnieuw opbouwen");
 assert(dbCrudSmokeSrc.includes("namedTestDatabase") && dbCrudSmokeSrc.includes("isolatedCiDatabase") && dbCrudSmokeSrc.includes("DB CRUD smoke is not allowed"), "De DB CRUD-smoke moet fail-closed buiten een test- of geïsoleerde CI-database");
 assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Playwright stage- en lokale env-bestanden mogen expliciete runner/CI-variabelen niet overschrijven");
@@ -2081,7 +2081,7 @@ assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Pla
 }
 
 dom.window.close();
-console.log("Path v0.0.1 volledige smoke test: geslaagd");
+console.log("Path v0.0.2 volledige smoke test: geslaagd");
 // app.js schedules browser refresh timers. In JSDOM those timers can keep Node
 // alive after every assertion has completed, which made the release check look
 // stuck. End explicitly only after the complete smoke contract is green.

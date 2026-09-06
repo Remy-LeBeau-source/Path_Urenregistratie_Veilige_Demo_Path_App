@@ -140,10 +140,12 @@ test('[PILOT-H-008] medewerker-pilot: snelkeuze zet uren in één tik, Opslaan b
     await page.getByRole('button', { name: 'Opslaan' }).click();
   });
 
-  await test.step('Then bevestigt de pilot het opslaan maar blijft de week bewerkbaar en ongewijzigd ingediend', async () => {
-    await expect(page.locator('.week .actions')).toContainText('Opgeslagen');
+  await test.step('Then bevestigt de pilot het opslaan maar blijft de week bewerkbaar en niet ingediend', async () => {
+    await expect(page.locator('.week .saved-note')).toHaveText('✓ Opgeslagen — je kunt later verder');
+    await expect(vr.locator('.hin')).toHaveValue('8,00');
     await expect(page.locator('.week .hin')).toHaveCount(7);
     await expect(page.locator('.gauge .pct')).toHaveText('0%');
+    await expect(page.locator('.week .wknav b')).toHaveText('Week 36');
   });
 });
 
