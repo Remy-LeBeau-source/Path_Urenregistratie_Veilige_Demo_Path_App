@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>0202 Path Ledger — proof: beheerder-maandoverzicht</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Kleuren uit de mockup-JPG gepipetteerd. Serif = Lora (dichtstbijzijnde
+     gratis match voor de mockup-serif), sans = Inter. */
+  :root{
+    --sidebar:#0e2536; --sidebar-active:#1f4034; --sidebar-text:#c7d2d8; --sidebar-muted:#8ea0aa;
+    --cream:#f4f1e8; --card:#fbf9f3; --card-2:#fcfaf5;
+    --border:#e7e1d3; --border-soft:#efe9dc;
+    --ink:#22303a; --ink-serif:#233229; --muted:#767b78;
+    --green:#2f6a4c; --green-line:#3a7a58; --green-soft:#e7efe8; --green-ring:#d9e6dc;
+    --amber:#c2781e; --amber-strong:#bd7317; --amber-bg:#f5e7cf; --amber-card:#fbf3e3; --amber-border:#ecd9b6;
+    --icon-circle:#ebe7db;
+    --shadow:0 10px 30px rgba(31,42,32,.05);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--cream); color:var(--ink);
+    font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{display:grid; grid-template-columns:256px 1fr; min-height:100vh;}
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    background:var(--sidebar); color:var(--sidebar-text);
+    display:flex; flex-direction:column; padding:26px 18px 20px;
+  }
+  .brand{display:flex; align-items:center; gap:11px; padding:4px 8px 0; margin-bottom:34px;}
+  .brand .mark{
+    width:34px;height:34px;border:2px solid #7fc9a3;border-radius:9px;
+    display:grid;place-items:center;color:#7fc9a3;font-family:Lora,serif;font-weight:700;font-size:17px;
+  }
+  .brand b{font-weight:700;font-size:17px;color:#fff;letter-spacing:.2px;}
+  .brand span{display:block;font-size:11px;color:var(--sidebar-muted);margin-top:1px;}
+  nav{display:flex;flex-direction:column;gap:3px;}
+  nav a{
+    display:flex;align-items:center;gap:12px;
+    padding:11px 12px;border-radius:11px;text-decoration:none;
+    color:var(--sidebar-text);font-size:13.5px;font-weight:500;
+  }
+  nav a svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;flex:0 0 auto;opacity:.85;}
+  nav a.active{background:var(--sidebar-active);color:#fff;font-weight:600;}
+  nav a.active svg{color:#7fc9a3;opacity:1;}
+  .sidebar .spacer{flex:1;}
+  .sidebar .foot{border-top:1px solid rgba(255,255,255,.09);padding-top:16px;margin-top:14px;}
+  .sidebar .foot a{color:var(--sidebar-muted);font-size:13px;}
+
+  /* ---------- Main ---------- */
+  .main{padding:34px 40px 44px;}
+  .topbar{display:flex;align-items:center;gap:18px;margin-bottom:30px;}
+  .page-title{font-family:Lora,serif;font-weight:600;font-size:30px;color:var(--ink-serif);margin:0;letter-spacing:.2px;}
+  .pkg-pill{
+    background:var(--amber-card);border:1px solid var(--amber-border);color:var(--amber);
+    font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+    padding:6px 12px;border-radius:999px;
+  }
+  .topbar .grow{flex:1;}
+  .month-pick{
+    display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);
+    border-radius:12px;padding:11px 16px;font-size:14px;font-weight:600;color:var(--ink);box-shadow:var(--shadow);
+  }
+  .month-pick svg{width:17px;height:17px;stroke:var(--muted);fill:none;stroke-width:1.7;}
+  .month-pick .chev{width:15px;height:15px;stroke:var(--muted);}
+  .bell{position:relative;width:22px;height:22px;stroke:var(--ink);fill:none;stroke-width:1.7;}
+  .bell .dot{position:absolute;top:-2px;right:-2px;width:8px;height:8px;background:var(--green);border-radius:50%;border:2px solid var(--cream);}
+  .who{display:flex;align-items:center;gap:11px;}
+  .who .av{width:40px;height:40px;border-radius:50%;background:#dfe6dc;display:grid;place-items:center;
+    font-family:Lora,serif;font-weight:600;color:var(--green);font-size:13px;border:2px solid #fff;box-shadow:var(--shadow);}
+  .who b{font-size:14px;font-weight:600;}
+  .who .chev{width:15px;height:15px;stroke:var(--muted);fill:none;stroke-width:1.8;}
+
+  /* KPI row */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:24px;}
+  .kpi{
+    background:var(--card);border:1px solid var(--border);border-radius:16px;
+    padding:20px;display:flex;align-items:center;gap:16px;box-shadow:var(--shadow);
+  }
+  .kpi .circ{width:54px;height:54px;border-radius:50%;background:var(--icon-circle);display:grid;place-items:center;flex:0 0 auto;}
+  .kpi .circ svg{width:24px;height:24px;stroke:var(--ink-serif);fill:none;stroke-width:1.6;opacity:.75;}
+  .kpi.amber .circ{background:var(--amber-bg);}
+  .kpi.amber .circ svg{stroke:var(--amber);opacity:1;}
+  .kpi.green .circ{background:var(--green-soft);}
+  .kpi.green .circ svg{stroke:var(--green);opacity:1;}
+  .kpi .num{font-family:Lora,serif;font-weight:600;font-size:30px;line-height:1;color:var(--ink-serif);}
+  .kpi .lab{font-size:13.5px;font-weight:600;margin-top:5px;}
+  .kpi .sub{font-size:12px;color:var(--muted);margin-top:2px;}
+
+  /* Table card */
+  .tablecard{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:8px 10px 10px;box-shadow:var(--shadow);}
+  .trow{
+    display:grid;grid-template-columns:1.35fr 1fr 1fr 1fr 1.15fr 26px;
+    align-items:center;gap:16px;padding:16px 18px;
+  }
+  .thead{color:var(--muted);font-size:12.5px;font-weight:600;padding-bottom:6px;padding-top:14px;}
+  .trow.body{border-top:1px solid var(--border-soft);}
+  .emp{display:flex;align-items:center;gap:14px;}
+  .emp .av{width:44px;height:44px;border-radius:12px;background:#dfe6dc;display:grid;place-items:center;
+    font-family:Lora,serif;font-weight:600;color:var(--green);font-size:14px;flex:0 0 auto;}
+  .emp b{font-family:Lora,serif;font-weight:600;font-size:15.5px;color:var(--ink-serif);}
+  .pill{
+    display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:999px;
+    font-size:12.5px;font-weight:600;background:#efece4;color:#5f665f;white-space:nowrap;
+  }
+  .pill svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;}
+  .pill.green{background:var(--green-soft);color:#2c6047;}
+  .pill.amber{background:var(--amber-bg);color:var(--amber);}
+  .chevcell svg{width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;}
+  .exp-wrap{border:1px solid var(--border);border-radius:14px;margin:6px 8px 10px;overflow:hidden;}
+  .exp-wrap .trow.body{border-top:0;}
+  .exp{display:grid;grid-template-columns:1fr 1fr;gap:22px;padding:6px 22px 22px;}
+  .infobox{background:#f1eee6;border:1px solid var(--border-soft);border-radius:12px;padding:16px 18px;display:flex;gap:13px;}
+  .infobox .i{width:26px;height:26px;border-radius:50%;background:#e3ded2;display:grid;place-items:center;flex:0 0 auto;
+    font-family:Lora,serif;font-style:italic;font-weight:600;color:var(--muted);}
+  .infobox p{margin:0;font-size:13px;line-height:1.6;color:#555b54;}
+  .field label{display:block;font-size:13px;font-weight:600;margin-bottom:8px;}
+  .field .select{
+    display:flex;align-items:center;justify-content:space-between;
+    background:#fff;border:1px solid var(--border);border-radius:11px;padding:12px 14px;font-size:13.5px;color:var(--muted);
+  }
+  .field .select svg{width:15px;height:15px;stroke:var(--muted);fill:none;stroke-width:1.8;}
+  .field .hint{font-size:12px;color:var(--muted);margin:8px 0 16px;}
+  .btn-amber{
+    display:inline-flex;align-items:center;gap:9px;background:var(--amber-strong);color:#fff;border:0;
+    border-radius:11px;padding:12px 20px;font-size:13.5px;font-weight:600;font-family:inherit;cursor:pointer;
+    box-shadow:0 8px 18px rgba(190,115,23,.24);float:right;
+  }
+  .footnote{
+    display:flex;align-items:center;gap:12px;margin-top:20px;
+    background:#efece4;border:1px solid var(--border-soft);border-radius:12px;padding:14px 18px;
+    font-size:13px;color:var(--muted);
+  }
+  .footnote svg{width:15px;height:15px;stroke:var(--muted);fill:none;stroke-width:1.7;}
+
+  .note{max-width:1400px;margin:0 auto 14px;padding:10px 14px;font-size:12.5px;color:var(--muted);
+    background:#fff;border:1px dashed var(--border);border-radius:10px;}
+</style>
+</head>
+<body>
+
+<p class="note" style="margin-top:16px;">Statische reproductie van <b>0202-path-ledger / beheerder-maandoverzicht.jpg</b> — leg dit naast de JPG. Serif = Lora (gratis benadering), avatars = initialen-cirkels. Verder 1:1 bedoeld: kleuren, indeling, componenten, witruimte.</p>
+
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="mark">P</span>
+      <div><b>Path</b><span>Consultancy</span></div>
+    </div>
+    <nav>
+      <a href="#"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Dashboard</a>
+      <a href="#" class="active"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>Goedkeuringen</a>
+      <a href="#"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>Facturen</a>
+      <a href="#"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5"/><path d="M17 7a3 3 0 010 6"/></svg>Medewerkers</a>
+      <a href="#"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg>Mededelingen</a>
+      <a href="#"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1l2-1.5-2-3.4-2.3 1a7 7 0 00-1.7-1L14.5 2h-4l-.4 2.6a7 7 0 00-1.7 1l-2.3-1-2 3.4L4.1 11a7 7 0 000 2l-2 1.5 2 3.4 2.3-1a7 7 0 001.7 1l.4 2.6h4l.4-2.6a7 7 0 001.7-1l2.3 1 2-3.4-2-1.5a7 7 0 00.1-1z"/></svg>Instellingen</a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="foot">
+      <a href="#"><svg style="width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.7;vertical-align:-3px;margin-right:9px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 015 .2c0 1.8-2.5 2-2.5 3.8"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg>Help &amp; support</a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="topbar">
+      <h1 class="page-title">Maandoverzicht</h1>
+      <span class="pkg-pill">Pakket 0202 · Path Ledger</span>
+      <span class="grow"></span>
+      <div class="month-pick">
+        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+        September 2026
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <span class="bell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 21h4"/></svg><span class="dot"></span></span>
+      <div class="who">
+        <span class="av">AV</span><b>Anne Verbeek</b>
+        <svg class="chev" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi">
+        <span class="circ"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5"/><path d="M17 7a3 3 0 010 6"/></svg></span>
+        <div><div class="num">4</div><div class="lab">medewerkers</div><div class="sub">Totaal in overzicht</div></div>
+      </div>
+      <div class="kpi">
+        <span class="circ"><svg viewBox="0 0 24 24"><path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/></svg></span>
+        <div><div class="num">2</div><div class="lab">bij Backoffice</div><div class="sub">Bezig met controle</div></div>
+      </div>
+      <div class="kpi amber">
+        <span class="circ"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+        <div><div class="num">1</div><div class="lab">wacht op medewerker</div><div class="sub">Actie vanuit medewerker</div></div>
+      </div>
+      <div class="kpi green">
+        <span class="circ"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg></span>
+        <div><div class="num">1</div><div class="lab">gereed</div><div class="sub">Extern bevestigd</div></div>
+      </div>
+    </div>
+
+    <div class="tablecard">
+      <div class="trow thead">
+        <span>Medewerker</span><span>Eigen uren</span><span>Klanturenstaat</span><span>Factuur</span><span>Volgende actie</span><span></span>
+      </div>
+
+      <div class="trow body">
+        <span class="emp"><span class="av">MR</span><b>Marc de Roon</b></span>
+        <span><span class="pill"><svg viewBox="0 0 24 24"><path d="M4 20l4-1L18 9l-3-3L5 16z"/></svg>Concept</span></span>
+        <span><span class="pill"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg>Ontbreekt</span></span>
+        <span><span class="pill"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h6M9 16h4"/></svg>Concept</span></span>
+        <span><span class="pill amber"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Wacht op medewerker</span></span>
+        <span class="chevcell"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6"/></svg></span>
+      </div>
+
+      <div class="trow body">
+        <span class="emp"><span class="av">BH</span><b>Brian Hek</b></span>
+        <span><span class="pill green"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>Ingediend</span></span>
+        <span><span class="pill green"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 5-3 7-7 9-4-2-7-4-7-9V6z"/><path d="M9 12l2 2 4-5"/></svg>Extern bevestigd</span></span>
+        <span><span class="pill"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h6M9 16h4"/></svg>Concept</span></span>
+        <span><span class="pill amber"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Uren controleren</span></span>
+        <span class="chevcell"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6"/></svg></span>
+      </div>
+
+      <div class="trow body">
+        <span class="emp"><span class="av">SB</span><b>Stasjo van Bakel</b></span>
+        <span><span class="pill green"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>Goedgekeurd</span></span>
+        <span><span class="pill green"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 5-3 7-7 9-4-2-7-4-7-9V6z"/><path d="M9 12l2 2 4-5"/></svg>Extern bevestigd</span></span>
+        <span><span class="pill"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h6M9 16h4"/></svg>Concept</span></span>
+        <span><span class="pill amber"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Factuur controleren</span></span>
+        <span class="chevcell"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6"/></svg></span>
+      </div>
+
+      <div class="exp-wrap">
+        <div class="trow body">
+          <span class="emp"><span class="av">SN</span><b>Shawn-Douglas Nahar</b></span>
+          <span><span class="pill green"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>Goedgekeurd</span></span>
+          <span><span class="pill amber"><svg viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-8z"/></svg>Rechtstreeks gemaild</span></span>
+          <span><span class="pill"><svg viewBox="0 0 24 24"><path d="M4 20l4-1L18 9l-3-3L5 16z"/></svg>Concept</span></span>
+          <span><span class="pill amber"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Extern bevestigen</span></span>
+          <span class="chevcell"><svg viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6"/></svg></span>
+        </div>
+        <div class="exp">
+          <div class="infobox">
+            <span class="i">i</span>
+            <p>Klanturenstaat rechtstreeks gemaild naar de klant.<br>Backoffice heeft nog geen externe bevestiging ontvangen.<br>Bevestig zodra de klant de uren heeft goedgekeurd.</p>
+          </div>
+          <div class="field">
+            <label>Reden bevestiging</label>
+            <div class="select">Selecteer reden <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+            <p class="hint">Kies een reden voor de bevestiging.</p>
+            <button class="btn-amber">Bevestiging registreren</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footnote">
+      <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>
+      Gefactureerd en verdere financiële verwerking is alleen toegankelijk voor Backoffice.
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

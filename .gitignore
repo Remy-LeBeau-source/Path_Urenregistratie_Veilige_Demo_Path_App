@@ -1,5 +1,6 @@
 
 .vscode/
+desktop.ini
 # Runtime-only private storage: generated documents, logs and backups never belong in Git.
 path-private/
 # ERD.svg/JPG and ERD-detail.svg/JPG are maintained; PNG/Mermaid exports are temporary previews.
