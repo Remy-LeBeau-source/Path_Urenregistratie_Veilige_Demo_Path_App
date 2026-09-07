@@ -584,6 +584,143 @@ html[data-skin="new"] .hours-table tfoot th {
   color: var(--mint-dark-tekst);
 }
 
+/* Facturen — de maandkaart, de statuswegwijzer, de tabel en de detailpreview
+   op de nieuwe tokens. Zachte crème-panelen, groene accenten, serif-koppen,
+   groene focus. Statuskleuren blijven semantisch. Alleen html[data-skin="new"]. */
+html[data-skin="new"] .invoice-month-overview {
+  border-color: var(--line);
+  border-left-color: var(--path-green);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+html[data-skin="new"] .invoice-month-overview[data-state="blocked"] {
+  border-left-color: var(--warning);
+  background: var(--surface);
+}
+
+html[data-skin="new"] .invoice-month-overview[data-state="ready"] {
+  border-left-color: var(--path-green);
+  background: var(--surface);
+}
+
+html[data-skin="new"] .invoice-month-overview-copy h3 {
+  font-family: var(--path-serif);
+  font-weight: 400;
+}
+
+html[data-skin="new"] .invoice-month-overview-item {
+  border-radius: 14px;
+  border-color: var(--line);
+  background: var(--vlak);
+}
+
+html[data-skin="new"] .invoice-month-overview-item:hover,
+html[data-skin="new"] .invoice-month-overview-item.is-current {
+  border-color: color-mix(in srgb, var(--path-green) 45%, var(--line));
+  background: var(--green-light);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--path-night) 10%, transparent);
+}
+
+html[data-skin="new"] .invoice-month-overview-action small {
+  border-radius: 999px;
+  border-color: var(--line);
+  background: var(--vlak);
+}
+
+/* Statuswegwijzer: kaarten in crème, actieve/huidige kaart met groene ring. */
+html[data-skin="new"] .invoice-status-guide > button {
+  border-radius: 16px;
+  border-color: var(--line);
+  background: var(--surface);
+  box-shadow: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+html[data-skin="new"] .invoice-status-guide > button:hover {
+  border-color: color-mix(in srgb, var(--path-green) 45%, var(--line));
+}
+
+html[data-skin="new"] .invoice-status-guide > button[aria-pressed="true"],
+html[data-skin="new"] .invoice-status-guide > button.is-current {
+  border-color: var(--path-green);
+  background: var(--green-light);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--path-green) 20%, transparent);
+}
+
+html[data-skin="new"] .invoice-status-guide > button.is-blocked {
+  border-color: color-mix(in srgb, var(--warning) 55%, var(--line));
+  background: var(--warning-bg);
+}
+
+html[data-skin="new"] .invoice-status-guide > button > span {
+  border-radius: 12px;
+  background: var(--green-light);
+  color: var(--mint-dark-tekst);
+}
+
+html[data-skin="new"] .invoice-status-guide > button.is-current > span {
+  background: var(--path-green);
+  color: var(--path-night);
+}
+
+/* Chips met een hairline zoals de 1919-mockup, kleur blijft semantisch. */
+html[data-skin="new"] .status-pill {
+  border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
+  font-weight: 700;
+}
+
+html[data-skin="new"] .document-status-pill.is-present {
+  border-color: color-mix(in srgb, var(--path-green) 40%, transparent);
+  background: var(--green-light);
+  color: var(--mint-dark-tekst);
+}
+
+/* Zoekveld en segmentschakelaar in de factuurwerkbalk. */
+html[data-skin="new"] .invoice-search input {
+  border-radius: 12px;
+  border-color: var(--line);
+  background: var(--vlak);
+}
+
+html[data-skin="new"] .invoice-search input:focus {
+  border-color: var(--path-green);
+  outline: none;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--path-green) 18%, transparent);
+}
+
+html[data-skin="new"] .invoice-pagination {
+  border-top-color: var(--line);
+}
+
+html[data-skin="new"] .segmented-control {
+  border-radius: 12px;
+  background: var(--vlak-zacht);
+}
+
+html[data-skin="new"] .segmented-control button.is-active {
+  background: var(--surface);
+  color: var(--navy-tekst);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--path-night) 12%, transparent);
+}
+
+/* Factuuridentiteit-preview: crème-groen blok met serif-bedrijfsnaam. */
+html[data-skin="new"] .invoice-identity-preview {
+  border-radius: 14px;
+  border-color: color-mix(in srgb, var(--path-green) 34%, transparent);
+  background: var(--green-light);
+}
+
+html[data-skin="new"] .invoice-identity-preview span {
+  color: var(--mint-dark-tekst);
+}
+
+html[data-skin="new"] .invoice-identity-preview strong {
+  font-family: var(--path-serif);
+  font-weight: 400;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html[data-skin="new"] *,
   html[data-skin="new"] *::before,

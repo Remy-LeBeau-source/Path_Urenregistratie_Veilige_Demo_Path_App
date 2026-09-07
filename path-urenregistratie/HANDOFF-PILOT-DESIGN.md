@@ -90,6 +90,12 @@ Classic blijft exact intact. Al gedaan:
   uurwaarden in de serif, groene focus, zachtere lijnen/kopcel. `npm run check`
   groen (taak `b3f6fuqdk`, exit 0). Volledige desktop-e2e over 3–6 nog te doen
   (zie EERSTE TAAK).
+- **Increment 7** (`herontwerp`): Facturen — `.invoice-month-overview` als crème-
+  paneel met groene rail, `.invoice-status-guide`-kaarten met groene ring op
+  actief/huidig, nummerbadge in het groen, `.status-pill` met hairline (kleur
+  blijft semantisch), zoekveld + segmentschakelaar op de tokens,
+  `.invoice-identity-preview` als crème-groen blok met serif-bedrijfsnaam.
+  `[SKIN-*]` 7/7 groen lokaal.
 
 ### 4. Wat er nog moet (schermen-inventaris)
 
@@ -101,8 +107,9 @@ door de eigen `[*-*]`-cases blijven. Volgorde-suggestie:
 - [x] `announcements` + `employee-announcements` — "Mededelingen" / "Mijn mededelingen"
 - [x] `approvals` — "Goedkeuringen" (4-fasen-proceslijn; verdere lijst-polish kan)
 - [x] `timesheet` — "Mijn uren" (urentabel op tokens; week/maand-layout-polish kan)
-- [ ] `invoices` — "Facturen" (lijst + badges, factuurdetail, finaliseren,
-      PDF, klanturenstaat controleren, extern bevestigen)
+- [x] `invoices` — "Facturen" (maandkaart, statuswegwijzer, chips, zoekbalk,
+      identiteitspreview op de tokens; factuurdetail-modal + PDF-preview kunnen
+      nog polish gebruiken)
 - [ ] `employees` — "Medewerkers" (grotendeels al gedekt door de gedeelde
       `.panel`/`.employee-card`-tokens; alleen serif-kop + `--shadow` resteren)
 - [ ] `settings` — "Instellingen" (6 subsecties: Organisatie · Facturatie ·
