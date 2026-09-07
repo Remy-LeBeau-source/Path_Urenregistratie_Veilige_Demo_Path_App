@@ -54,6 +54,9 @@ Classic blijft exact intact. Al gedaan:
   de directe topbar-schakelaars `#quick-theme-toggle` / `#quick-skin-toggle`.
 - **Increment 3** (`herontwerp` `ccad481`): loginscherm op de tokens.
   `[SKIN-*]` 7/7 groen, `npm run check` groen.
+- **Increment 4** (`herontwerp` `f86b59d`): Mededelingen (admin + medewerker) —
+  lijst als kaartenstapel, koppen op de serif, "ingetrokken" als zachte ring
+  i.p.v. balk links. `npm run check` groen.
 
 ### 4. Wat er nog moet (schermen-inventaris)
 
@@ -62,15 +65,14 @@ door de eigen `[*-*]`-cases blijven. Volgorde-suggestie:
 
 - [x] `employee-dashboard` — "Mijn overzicht" (bento; verdere polish kan)
 - [x] Loginscherm
+- [x] `announcements` + `employee-announcements` — "Mededelingen" / "Mijn mededelingen"
 - [ ] `timesheet` — "Mijn uren" (week/maand-invoer — vergelijk met de pilot)
 - [ ] `approvals` — "Goedkeuringen"
 - [ ] `invoices` — "Facturen" (lijst + badges, factuurdetail, finaliseren,
       PDF, klanturenstaat controleren, extern bevestigen)
-- [ ] `announcements` — "Mededelingen"
 - [ ] `employees` — "Medewerkers"
 - [ ] `settings` — "Instellingen" (6 subsecties: Organisatie · Facturatie ·
       Mailroutes · Teksten · Herinneringen · Veiligheid)
-- [ ] `employee-announcements` — "Mijn mededelingen"
 - [ ] Modal-detailschermen (goedkeuring-detail, factuurdetail, correctie,
       klanturenstaat-review, extern bevestigen, medewerker toevoegen/bewerken)
 - [ ] Mobiel (iOS/Android PWA) — elk bovenstaand scherm op telefoonbreedte
