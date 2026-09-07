@@ -6043,6 +6043,18 @@ function renderNewAdminStoryline(rows, period) {
   const heading = document.querySelector("#new-admin-story-heading");
   const cards = document.querySelector("#new-admin-story-cards");
   if (!queue || !heading || !cards) return;
+  // Puur een visuele bijlage bij skin=new (styles-new.css houdt de sectie
+  // zelf al display:none in Classic). Niet vullen buiten skin=new: anders
+  // staat elke medewerkersactie hier dubbel in de DOM naast de echte
+  // werkvoorraadkaart, met identieke data-attributen (data-review-customer-
+  // timesheet, data-admin-hours-detail, data-go, ...) -- dat brak bestaande
+  // Playwright-locators voor die knoppen, ook terwijl de sectie onzichtbaar was.
+  if (document.documentElement.dataset.skin !== "new") {
+    queue.innerHTML = "";
+    heading.innerHTML = "";
+    cards.innerHTML = "";
+    return;
+  }
   if (!rows.length) {
     queue.innerHTML = '<p class="new-admin-story-empty">Geen medewerkers actief in ' + escapeHtml(period.label) + '.</p>';
     heading.innerHTML = "";
@@ -11308,9 +11320,16 @@ function toonInstallatieAanbod() {
     showView(profile ? profile.home : "dashboard");
   }
 
-  const nav = event.target.closest("[data-view]");
+  // De pilot-topbar in skin=new (.new-admin-topnav) tekent dezelfde zes
+  // tabs nog eens als visuele snelkeuze naast het cockpit-dashboard, maar
+  // met data-pilot-view i.p.v. data-view: zo blijft elke bestaande
+  // [data-view="..."]-locator (app en tests) eenduidig naar de ene echte
+  // sidebar-knop wijzen, ook als de pilot-tab in de DOM aanwezig maar
+  // (in Classic, of buiten skin=new) onzichtbaar is.
+  const nav = event.target.closest("[data-view], [data-pilot-view]");
   if (nav) {
-    if (nav.dataset.view === "approvals") {
+    const targetView = nav.dataset.view || nav.dataset.pilotView;
+    if (targetView === "approvals") {
       state.approvalScope = "all";
       persistState();
       renderApprovals();
@@ -11321,16 +11340,16 @@ function toonInstallatieAanbod() {
     // loopt via data-go/data-history-period/data-employee-open-action, niet
     // via deze generieke tabklik, en zet daar zelf al de juiste maand -- dit
     // raakt die knoppen dus niet.
-    if (["dashboard", "employee-dashboard", "timesheet"].includes(nav.dataset.view)) {
+    if (["dashboard", "employee-dashboard", "timesheet"].includes(targetView)) {
       resetHomeDashboardState(state.currentRole);
     }
-    if (nav.dataset.view === "dashboard") {
+    if (targetView === "dashboard") {
       renderDashboard();
     }
-    if (nav.dataset.view === "employee-dashboard") {
+    if (targetView === "employee-dashboard") {
       renderEmployeeDashboard();
     }
-    showView(nav.dataset.view);
+    showView(targetView);
   }
 
   const go = event.target.closest("[data-go]");

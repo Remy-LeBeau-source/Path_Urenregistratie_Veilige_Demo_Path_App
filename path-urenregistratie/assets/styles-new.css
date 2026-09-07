@@ -932,7 +932,7 @@ html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .new-admin-topna
   color: #f2ecdf;
 }
 
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .new-admin-topnav button[data-view="dashboard"] {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .new-admin-topnav button[data-pilot-view="dashboard"] {
   color: #6dcc7e;
 }
 
