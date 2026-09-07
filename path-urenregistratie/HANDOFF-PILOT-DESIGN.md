@@ -30,6 +30,12 @@ heeft `1.0.3` erin gemerged. **De schermen-inventaris in §4 is compleet
 **Mocht Claude wegvallen:** `git fetch && git checkout herontwerp`, dan stap 1
 hierboven, daarna de rest van deze lijst.
 
+**2026-09-07 — overdracht aan Codex.** Fase D-fijnslijping (stap 1–3 hierboven)
+gaat vanaf nu verder via Codex; zie `HANDOFF-CODEX-FASE-D.md` voor de exacte
+stand, werkregels en valkuilen. Stap 1 (volledige desktop-e2e) is gestart maar
+niet afgerond bevestigd — ~80/375 tests liepen zonder mislukking voordat de
+sessie afbrak; Codex draait 'm opnieuw als eerste actie.
+
 ## → VOOR CODEX / de volgende sessie
 
 ### 1. Releasestand (`main`)
