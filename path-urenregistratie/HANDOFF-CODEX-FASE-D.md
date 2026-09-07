@@ -3,6 +3,15 @@
 **Voor Codex. Geschreven door Claude, 2026-09-07, vanuit `C:\Path-herontwerp`.**
 Evergreen doc zoals `HANDOFF-PILOT-DESIGN.md` — bijwerken per increment.
 
+## 0. Actuele voortgang 7 september 2026
+
+De basisregressie is afgerond: desktop 375/375, Android/Chrome 45/45 en
+iPhone/WebKit 45/45 groen; `npm run build`, `npm run check` en GitHub CI-run
+`34118945695` zijn groen. De actuele main-kop `c37fd23` is daarna zonder
+conflict in `herontwerp` opgenomen. Nu volgen controles op deze gecombineerde
+stand, een groene branch-CI en de merge naar main voor deployment op TEST.
+PROD blijft Classic-only en achter de verplichte reviewerpoort.
+
 ## 1. Waar je bent / wat je NIET aanraakt
 
 Je werkt in een **git worktree**: `C:\Path-herontwerp`, vast op branch

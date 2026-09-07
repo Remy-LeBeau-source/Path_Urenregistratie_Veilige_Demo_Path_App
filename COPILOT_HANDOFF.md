@@ -2,6 +2,39 @@
 
 Dit bestand is de gedeelde brug tussen GitHub Copilot en Codex. Chatvensters zijn niet onderling zichtbaar, maar beide assistenten kunnen dit bestand in de werkmap lezen.
 
+## ACTUELE COORDINATIE 7 september 2026 - `main` + `herontwerp`
+
+Doel: beide werkstromen gaan zelfstandig door; de gebruiker hoeft alleen bij
+een echte productkeuze, een onoplosbaar conflict of PROD-goedkeuring
+tussenbeide te komen.
+
+- `main` blijft eigenaar van hotfixes, releases en de gewone Release Pipeline.
+  Een push naar `main` mag TEST bijwerken; PROD blijft achter de verplichte
+  GitHub-reviewerpoort.
+- `herontwerp` blijft eigenaar van de nieuwe skin. Iedere push draait de
+  workflow `CI`, zonder deployment.
+- De gedeelde TEST-URL blijft `https://uren-test.pathconsultancy.nl/`. Na de
+  pilotmerge bevat de volledige app daar de skins Klassiek en Nieuw.
+- Voor iedere pilotmerge: haal `origin/main` op, merge die in `herontwerp`, los
+  conflicten op de pilotbranch op en test de combinatie. Merge pas terug als
+  de actuele main-kop in de groene pilotbranch zit. Verschuift main intussen,
+  synchroniseer en controleer opnieuw.
+- De pilotmerge mag de normale main-release naar TEST starten. PROD blijft
+  Classic-only: `skin=new` blijft fail-closed, de toggle is verborgen en
+  `pilot/` blijft uit het productiearchief.
+- De PROD-toggle wordt pas na TEST-acceptatie en controle op echte iOS- en
+  Android-toestellen als afzonderlijke wijziging vrijgegeven, standaard op
+  Klassiek. Een agent keurt de PROD-environment nooit zelf goed.
+- Langdurig parallel testen kan later via een eigen `uren-pilot`-omgeving met
+  aparte database; de bestaande GitHub-environment `dev` is nu leeg en is
+  geen deploymentdoel.
+
+Bewijs voor de pilotstand vóór integratie: desktop 375/375 groen, Android
+Chrome 45/45 groen, iPhone/WebKit 45/45 groen, `npm run build` groen en
+`npm run check` groen. CI-run `34118945695` op `18bff33` is groen. De laatste
+main-release vóór integratie, inclusief TEST en PROD, is eveneens groen; main
+kop `c37fd23` is op 7 september zonder conflict in `herontwerp` opgenomen.
+
 ## Stand 28 augustus 2026 (Claude Code)
 
 Volledige context: `CLAUDE_CODE_HANDOFF.md` bovenaan. Kort:

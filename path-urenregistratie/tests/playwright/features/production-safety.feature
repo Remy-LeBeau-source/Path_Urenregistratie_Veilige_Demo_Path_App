@@ -175,11 +175,11 @@ Feature: Veilige productieconfiguratie en deployment
   @happy
   Scenario: [SAFE-H-011] groene main-pipeline rolt exact dezelfde release veilig uit naar productie
     # Testtechniek: Toestandsovergang + foutinjectie + beslissingstabel
-    # Aantoonbare Playwright-assertions in deze case: 23
+    # Aantoonbare Playwright-assertions in deze case: 24
     Given het automatische TransIP-deploycontract wordt ingelezen
     When validatie, TEST, PROD-regressie en Living Docs groen zijn
     Then wordt alleen main met checksum, backup, migratie en live-smoke uitgerold, zonder de TEST-only pilotmap
-    And blijft mail gesloten en wordt bij een fout automatisch teruggerold
+    And blokkeert de deploy alleen het TEST-acceptatievenster en een niet-lege mailwachtrij (productiemail mag aan blijven), en rolt bij een fout automatisch terug
 
   @happy
   Scenario: [SAFE-H-016] de eerste 1.x-uitrol normaliseert PROD naar de afgesproken baseline en controleert die streng

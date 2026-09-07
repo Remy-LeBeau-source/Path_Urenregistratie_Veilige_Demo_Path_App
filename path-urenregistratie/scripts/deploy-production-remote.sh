@@ -55,8 +55,12 @@ php -r '
   $config = require $argv[1] . "/server/config.local.php";
   $mail = is_array($config["mail"] ?? null) ? $config["mail"] : [];
   $acceptance = is_array($mail["acceptance_test"] ?? null) ? $mail["acceptance_test"] : [];
-  if (($mail["enabled"] ?? false) === true || ($acceptance["enabled"] ?? false) === true) {
-      fwrite(STDERR, "Production mail or acceptance window is still enabled.\n");
+  // Productiemail MAG aan blijven staan tussen releases door -- anders zou elke
+  // volgende deploy hier stoppen zodra het team echt mail ontvangt. Wat nooit
+  // aan mag tijdens een cutover is het TEST-acceptatievenster (redirect-all naar
+  // een sink), en er mag geen mail in de wachtrij hangen terwijl de DB migreert.
+  if (($acceptance["enabled"] ?? false) === true) {
+      fwrite(STDERR, "Production acceptance-test mail window is still enabled.\n");
       exit(1);
   }
   $pdo = ops_pdo($config);
@@ -65,7 +69,7 @@ php -r '
       fwrite(STDERR, "Pending production mail prevents deployment: " . $pending . "\n");
       exit(1);
   }
-  echo "mail_window=closed pending_mail=0\n";
+  echo "acceptance_window=closed pending_mail=0\n";
 ' "$app_root"
 prod_current_major="$(php -r '$p=json_decode(file_get_contents($argv[1]), true); echo (int)explode(".", (string)($p["version"] ?? "0"))[0];' "$live_root/package.json")"
 if [[ "$prod_current_major" -lt 1 ]]; then

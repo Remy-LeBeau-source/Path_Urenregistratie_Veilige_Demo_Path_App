@@ -42,7 +42,7 @@ for (const required of [
   'server/migrate.php',
   'production-preflight.php --config=server/config.local.php --live',
   'Pending production mail prevents deployment',
-  'Production mail or acceptance window is still enabled',
+  'Production acceptance-test mail window is still enabled',
   'rollback_on_error',
   'opcache_reset',
   'chmod 644 "$helper_path"',

@@ -7,16 +7,18 @@ Laatst bijgewerkt: 2026-09-07 — **status.** Twee vaste branches: `main`
 blijft op `main`. Werk aan de pilot in de worktree-map; `npm ci` is daar al
 gedraaid. Eén chat per baan (go-live vs pilot). Wie stopt: commit + push + dit
 doc bijwerken. Worktree weghalen: `git worktree remove ../Path-herontwerp`.
-Release `1.0.1`–`1.0.3` staan op `main` (kruisje-fix, PROD-normalisatiescript,
-zelf-normaliserende cutover); Promote Prod wacht op de gebruiker. `herontwerp`
-heeft `1.0.3` erin gemerged. **De schermen-inventaris in §4 is compleet
+Release `1.0.1`–`1.0.4` staan op `main` (kruisje-fixes, PROD-normalisatiescript,
+zelf-normaliserende cutover). `herontwerp` heeft de actuele main-kop `c37fd23`
+op 7 september zonder conflict opgenomen. **De schermen-inventaris in §4 is compleet
 (increment 1–11).**
 
 **Controle en uitrolafspraak 2026-09-07.** De volledige desktopset is lokaal
-uitgevoerd: 375 tests, waarvan 368 direct groen en 7 time-outs onder vier
-gelijktijdige lokale testservers. Alle 7 zijn daarna afzonderlijk groen
-herhaald; de belast geraakte shards worden nog eenmaal serieel bevestigd.
-Na volledig groen mag `herontwerp` bewust naar `main` worden gemerged zodat de
+serieel bevestigd: **375/375 groen**. De mobiele Playwright-set is eveneens
+volledig groen: **Android/Chrome 45/45** en **iPhone/WebKit 45/45**; een eenmalige
+laad-time-out is afzonderlijk groen herhaald. `npm run build` en `npm run check`
+zijn groen. GitHub CI-run `34118945695` op `18bff33` is volledig groen.
+Na groen op de met actuele main gecombineerde branch mag `herontwerp` bewust
+naar `main` worden gemerged zodat de
 gecombineerde app op `https://uren-test.pathconsultancy.nl/` kan worden getest.
 PROD blijft daarbij fail-closed op Klassiek en zonder `pilot/`; de PROD-toggle
 wordt pas na acceptatie als afzonderlijke wijziging vrijgegeven, standaard op
@@ -24,11 +26,11 @@ Klassiek. De GitHub-environment `prod` heeft verplichte reviewergoedkeuring.
 
 ## → WAT ER NOG MOET (Fase D)
 
-1. **Volledige desktop-e2e over increment 3–11 in beide skins** —
-   `node scripts/run-playwright-e2e.mjs --project=desktop-chromium`, moet 100%
-   groen. Alles is puur additieve CSS onder `html[data-skin="new"]`, Classic kan
-   er niet door raken, maar bevestig het. Per increment draaide `[SKIN-*]` 7/7
-   groen lokaal en `npm run check` groen op de hele stack.
+1. **Gecombineerde branch na main-sync bevestigen** — de pilotbasis is lokaal
+   volledig groen (desktop 375/375, Android 45/45, iPhone/WebKit 45/45). Draai
+   na iedere nieuwe main-sync build/check, gerichte skin- en mobiele regressie
+   en laat de volledige GitHub-CI groen worden voordat terug naar main wordt
+   gemerged.
 2. **Handmatige mobiele doorloop** op een echt toestel (iOS + Android PWA) van
    elk scherm in `skin=new`.
 3. Verdere fijnslijping per scherm waar de mockups dat vragen (blijft additief,
@@ -41,11 +43,11 @@ Klassiek. De GitHub-environment `prod` heeft verplichte reviewergoedkeuring.
 **Mocht Claude wegvallen:** `git fetch && git checkout herontwerp`, dan stap 1
 hierboven, daarna de rest van deze lijst.
 
-**2026-09-07 — overdracht aan Codex.** Fase D-fijnslijping (stap 1–3 hierboven)
-gaat vanaf nu verder via Codex; zie `HANDOFF-CODEX-FASE-D.md` voor de exacte
-stand, werkregels en valkuilen. Stap 1 (volledige desktop-e2e) is gestart maar
-niet afgerond bevestigd — ~80/375 tests liepen zonder mislukking voordat de
-sessie afbrak; Codex draait 'm opnieuw als eerste actie.
+**2026-09-07 — uitvoering door Codex.** De volledige lokale regressie is
+afgerond: desktop 375/375, Android 45/45 en iPhone/WebKit 45/45 groen. Daarna is
+main-kop `c37fd23` zonder conflict in `herontwerp` opgenomen. Volgende poort is
+build/check plus gerichte regressie op deze combinatie, gevolgd door groene
+GitHub-CI en de bewuste merge naar main voor TEST.
 
 ## → VOOR CODEX / de volgende sessie
 
