@@ -835,6 +835,37 @@ html[data-skin="new"] .correction-banner strong {
   color: var(--warning-tekst);
 }
 
+/* Mobiel (telefoonbreedte) — de token-restyling van increment 3–10 loopt op
+   elke breedte door; hier alleen de correcties die een telefoon nodig heeft:
+   de grote bureaubladschaduw is te zwaar en de ruime radius te bol op een
+   smal scherm. Alleen html[data-skin="new"]. */
+@media (max-width: 720px) {
+  html[data-skin="new"] :is(
+    .panel,
+    .metric-card,
+    .summary-card,
+    .settings-card,
+    .employee-card,
+    .invoice-month-overview,
+    .settings-section-nav
+  ) {
+    border-radius: 16px;
+    box-shadow: 0 10px 26px color-mix(in srgb, var(--path-night) 12%, transparent);
+  }
+
+  html[data-skin="new"] .announcement-item {
+    padding: 16px 16px;
+  }
+
+  html[data-skin="new"] .invoice-status-guide {
+    gap: 8px;
+  }
+
+  html[data-skin="new"] .hours-table input {
+    font-size: 15px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html[data-skin="new"] *,
   html[data-skin="new"] *::before,

@@ -1,34 +1,33 @@
 # HANDOFF — 1414/1919 herontwerp
 
 **Evergreen doc. Wordt tijdens het werk telkens bijgewerkt.**
-Laatst bijgewerkt: 2026-09-07 — **overdracht aan Codex: rond Fase D / de pilot
-volledig af.** Release `1.0.0` staat groen op TEST (Promote Prod wacht op de
-gebruiker). Fase D loopt op branch `herontwerp` t/m increment 6 (`6ff56b5`).
+Laatst bijgewerkt: 2026-09-07 — **overdracht aan Codex: Fase D / de pilot.**
+Release `1.0.1`–`1.0.3` staan op `main` (kruisje-fix, PROD-normalisatiescript,
+zelf-normaliserende cutover); Promote Prod wacht op de gebruiker. **De schermen-
+inventaris in §4 is compleet (increment 1–11).** Fase D loopt op branch
+`herontwerp`, HEAD is de mobiel-increment.
 
-## → OPDRACHT VOOR CODEX: pilot afronden
+## → OPDRACHT VOOR CODEX: pilot afronden / bewaken
 
-De gebruiker draagt het herontwerp aan jou over met de opdracht om het **helemaal
-af te maken** — niet "zo ver als het budget reikt", maar de **hele schermen-
-inventaris in §4 tot elke checkbox `[x]`**. Per increment: alleen additieve CSS
-onder `html[data-skin="new"]`, in **beide** skins 100% groen, NL-commit, dit doc
-bijwerken. Als de inventaris helemaal `[x]` is en de gebruiker het herontwerp
-accepteert, is de volgende stap één bewuste merge `herontwerp` → `main` = de
-`1.1.0`-release — dat blijft een expliciete promote-beslissing van de gebruiker,
-jij doet die merge/promote niet zelf.
+De schermen-inventaris is helemaal `[x]`. Wat resteert:
+1. **Volledige desktop-e2e over increment 3–11 in beide skins** —
+   `node scripts/run-playwright-e2e.mjs --project=desktop-chromium`, moet 100%
+   groen. Alles is puur additieve CSS onder `html[data-skin="new"]`, Classic kan
+   er niet door raken, maar bevestig het.
+2. **Handmatige mobiele doorloop** op een echt toestel (iOS + Android PWA) van
+   elk scherm in `skin=new`.
+3. Verdere fijnslijping per scherm waar de mockups dat vragen (blijft additief,
+   blijft gescoped, blijft beide skins groen, NL-commit, dit doc bijwerken).
+4. Als de gebruiker het herontwerp accepteert: één bewuste merge
+   `herontwerp` → `main` = de `1.1.0`-release — expliciete promote-beslissing
+   van de gebruiker, jij doet die merge/promote niet zelf.
 
 ## → EERSTE TAAK VOOR CODEX
 
-`git fetch && git checkout herontwerp`. Increments **3, 4, 5 en 6** (login,
-Mededelingen, Goedkeuringen-proceslijn, Mijn uren-urentabel) zijn gecommit. De
-`npm run check` staat er inmiddels **groen** overheen (increment 6: taak
-`b3f6fuqdk`, exit 0 — "7 passed", deployment-contractcheck geslaagd). Wat nog
-mist is de **volledige desktop-e2e over increment 3–6 in beide skins**. Doe dus
-eerst:
-`node scripts/run-playwright-e2e.mjs --project=desktop-chromium`
-(volledig, beide skins moeten 100% groen). Alle vier increments zijn puur
-additieve CSS in `assets/styles-new.css` gescoped onder `html[data-skin="new"]`
-— Classic kan er niet door raken — maar bevestig het. Pas daarna verder met de
-schermen-inventaris.
+`git fetch && git checkout herontwerp`, dan stap 1 hierboven (volledige
+desktop-e2e in beide skins). Increment 1–11 zijn gecommit; per increment draaide
+`[SKIN-*]` 7/7 groen lokaal en (t/m 6) `npm run check` groen. De autoritatieve
+eindcontrole is de volledige suite + de push/TEST-pipeline ná de merge.
 
 ## → VOOR CODEX / de volgende sessie
 
@@ -106,10 +105,16 @@ Classic blijft exact intact. Al gedaan:
   trigger` + `.reminder-choice-panel` op de tokens met groene focus,
   `.template-item` en `.mail-recipient-setting`/`.mail-route-choice` met zachtere
   radius/lijn. `[SKIN-*]` 7/7 groen lokaal.
-- **Increment 10** (`herontwerp`): Modal-detailschermen — `.modal-summary` met
-  hairline + zachtere radius, `.correction-banner` op tokengrenzen i.p.v. harde
-  hex, `.correction-banner-icon` ronde tegel. De dialoog zelf stond al op het
-  fundament. `[SKIN-*]` + `[A11Y-*]` 12/12 groen lokaal.
+- **Increment 10** (`herontwerp` `3f2322d`): Modal-detailschermen —
+  `.modal-summary` met hairline + zachtere radius, `.correction-banner` op
+  tokengrenzen i.p.v. harde hex, `.correction-banner-icon` ronde tegel. De
+  dialoog zelf stond al op het fundament. `[SKIN-*]` + `[A11Y-*]` 12/12 groen
+  lokaal.
+- **Increment 11** (`herontwerp`): Mobiel — `@media (max-width: 720px)`-blok
+  onder `html[data-skin="new"]`: de zware bureaubladschaduw en de ruime radius
+  op panelen/kaarten worden op telefoonbreedte lichter/strakker, `.announcement-
+  item`-padding en `.hours-table input`-grootte iets kleiner. De token-restyling
+  van 3–10 loopt zelf al op elke breedte door. `[SKIN-*]` 7/7 groen lokaal.
 
 ### 4. Wat er nog moet (schermen-inventaris)
 
@@ -131,7 +136,13 @@ door de eigen `[*-*]`-cases blijven. Volgorde-suggestie:
       fijnslijpen kan nog)
 - [x] Modal-detailschermen (`.modal-summary` + `.correction-banner` op de
       tokens; dialoog-shell al gedekt in increment 2)
-- [ ] Mobiel (iOS/Android PWA) — elk bovenstaand scherm op telefoonbreedte
+- [x] Mobiel (iOS/Android PWA) — telefoon-`@media`-blok voor de nieuwe skin;
+      handmatige doorloop op een echt toestel is nog aan te raden
+
+**De schermen-inventaris is compleet.** Volgende stap: de volledige
+desktop-e2e over increment 3–11 in beide skins (zie EERSTE TAAK), een
+handmatige mobiele doorloop, en dan de bewuste merge `herontwerp` → `main`
+= `1.1.0` (beslissing van de gebruiker).
 
 ### 5. Werkwijze per increment
 
