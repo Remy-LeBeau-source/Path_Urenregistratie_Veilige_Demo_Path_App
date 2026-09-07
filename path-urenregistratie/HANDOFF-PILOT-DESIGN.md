@@ -1,12 +1,16 @@
 # HANDOFF — 1414/1919 herontwerp
 
 **Evergreen doc. Wordt tijdens het werk telkens bijgewerkt.**
-Laatst bijgewerkt: 2026-09-07 — **status.** Claude doet zowel de go-live-lijn
-(`main`) als de pilot (`herontwerp`), turn-based op één repo; Codex werkt niet
-apart. Dit doc is een vangnet + statusoverzicht, geen actieve opdracht.
+Laatst bijgewerkt: 2026-09-07 — **status.** Twee vaste branches: `main`
+(go-live) en `herontwerp` (deze — Fase D). Er is een **git worktree**:
+`C:\Path-herontwerp` = deze branch, `C:\Path_Urenregistratie_Veilige_Demo_Path_App`
+blijft op `main`. Werk aan de pilot in de worktree-map; `npm ci` is daar al
+gedraaid. Eén chat per baan (go-live vs pilot). Wie stopt: commit + push + dit
+doc bijwerken. Worktree weghalen: `git worktree remove ../Path-herontwerp`.
 Release `1.0.1`–`1.0.3` staan op `main` (kruisje-fix, PROD-normalisatiescript,
-zelf-normaliserende cutover); Promote Prod wacht op de gebruiker. **De schermen-
-inventaris in §4 is compleet (increment 1–11).**
+zelf-normaliserende cutover); Promote Prod wacht op de gebruiker. `herontwerp`
+heeft `1.0.3` erin gemerged. **De schermen-inventaris in §4 is compleet
+(increment 1–11).**
 
 ## → WAT ER NOG MOET (Fase D)
 
