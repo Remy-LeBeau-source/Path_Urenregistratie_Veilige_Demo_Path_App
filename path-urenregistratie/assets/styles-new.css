@@ -541,6 +541,49 @@ html[data-skin="new"] .approval-period-heading h3 {
   color: var(--navy-tekst);
 }
 
+/* Mijn uren — de urentabel op de nieuwe tokens; uurwaarden in de serif,
+   focus in het groen, lijnen en kopcel zachter. Alleen html[data-skin="new"]. */
+html[data-skin="new"] .hours-table th,
+html[data-skin="new"] .hours-table td {
+  border-bottom-color: color-mix(in srgb, var(--line) 85%, transparent);
+}
+
+html[data-skin="new"] .hours-table th {
+  background: var(--vlak-zacht);
+}
+
+html[data-skin="new"] .hours-table td:first-child {
+  color: var(--mint-dark-tekst);
+}
+
+html[data-skin="new"] .hours-table .date-number {
+  background: var(--green-light);
+  color: var(--mint-dark-tekst);
+}
+
+html[data-skin="new"] .hours-table input {
+  border-radius: 12px;
+  border-color: var(--line);
+  background: var(--vlak);
+  font-family: var(--path-serif);
+  font-weight: 400;
+  font-size: 16px;
+}
+
+html[data-skin="new"] .hours-table input:hover {
+  border-color: color-mix(in srgb, var(--path-green) 45%, var(--line));
+}
+
+html[data-skin="new"] .hours-table input:focus {
+  border-color: var(--path-green);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--path-green) 18%, transparent);
+}
+
+html[data-skin="new"] .hours-table tfoot th {
+  background: var(--green-light);
+  color: var(--mint-dark-tekst);
+}
+
 @media (prefers-reduced-motion: reduce) {
   html[data-skin="new"] *,
   html[data-skin="new"] *::before,
