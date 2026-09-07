@@ -47,3 +47,8 @@ When("de medewerker Mijn uren opent");
 Then("staan verlof en ziekte niet meer uitgeschakeld en is de uitleg verdwenen");
 When("de medewerker verlof en ziekte zelf invult");
 Then("blijven de ingevulde waarden staan na een herlaad");
+Given("de medewerker Mijn uren met een bewerkbare maand opent");
+When("de medewerker één week kiest en Week opslaan gebruikt");
+Then("is Maand indienen verborgen en wordt alleen het concept opgeslagen");
+When("de medewerker Hele maand kiest");
+Then("worden Maand opslaan en Maand indienen zichtbaar");

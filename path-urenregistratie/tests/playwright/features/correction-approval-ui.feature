@@ -85,3 +85,13 @@ Feature: Correcties en goedkeuringen behandelen
     Then staan verlof en ziekte niet meer uitgeschakeld en is de uitleg verdwenen
     When de medewerker verlof en ziekte zelf invult
     Then blijven de ingevulde waarden staan na een herlaad
+
+  @happy
+  Scenario: [TS-REV-UI-H-013] een week kan alleen worden opgeslagen en de hele maand kan worden ingediend
+    # Testtechniek: Beslissingstabel weergave × toegestane actie
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given de medewerker Mijn uren met een bewerkbare maand opent
+    When de medewerker één week kiest en Week opslaan gebruikt
+    Then is Maand indienen verborgen en wordt alleen het concept opgeslagen
+    When de medewerker Hele maand kiest
+    Then worden Maand opslaan en Maand indienen zichtbaar

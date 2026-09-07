@@ -850,3 +850,82 @@ test('[TS-REV-UI-H-012] beheerder zet verlof en ziekte aan; de medewerker kan ze
   }
 });
 
+test('[TS-REV-UI-H-013] een week kan alleen worden opgeslagen en de hele maand kan worden ingediend', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  let saveWrites = 0;
+
+  await page.route('**/server/api/timesheets.php**', async (route) => {
+    const request = route.request();
+    if (request.method().toUpperCase() === 'GET') {
+      const url = new URL(request.url());
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ok: true,
+          found: false,
+          period: url.searchParams.get('period') || '',
+          employee_id: Number(url.searchParams.get('employee_id') || 0),
+        }),
+      });
+      return;
+    }
+
+    const payload = request.postDataJSON() as {
+      action?: string;
+      period?: string;
+      employee_id?: number;
+      contractual_hours?: number;
+      billable_hours?: number;
+      leave_hours?: number;
+      sickness_hours?: number;
+      day_entries?: unknown[];
+    };
+    if (payload.action === 'save_draft') saveWrites += 1;
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        period: payload.period,
+        employee_id: payload.employee_id,
+        timesheet: {
+          id: 9913,
+          status: 'draft',
+          contractual_hours: payload.contractual_hours || 0,
+          billable_hours: payload.billable_hours || 0,
+          leave_hours: payload.leave_hours || 0,
+          sickness_hours: payload.sickness_hours || 0,
+          employee_note: null,
+          review_note: null,
+          day_entries: payload.day_entries || [],
+          submitted_at: null,
+          approved_at: null,
+          approved_by: null,
+          version: saveWrites + 1,
+          latest_correction: null,
+          correction_history: [],
+        },
+      }),
+    });
+  });
+
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await openView(page, 'timesheet');
+
+  await page.locator('#hours-week-filter [data-hours-week-scope^="week-"]').first().click();
+  await expect(page.locator('#save-timesheet')).toBeVisible();
+  await expect(page.locator('#save-timesheet')).toHaveText(/Week \d+ opslaan/);
+  await expect(page.locator('#submit-timesheet')).toBeHidden();
+  await expect(page.locator('#submit-timesheet-note')).toContainText('Maand indienen staat onder Hele maand');
+
+  await page.locator('#save-timesheet').click();
+  await expect.poll(() => saveWrites).toBe(1);
+
+  await page.locator('#hours-week-filter [data-hours-week-scope="all"]').click();
+  await expect(page.locator('#save-timesheet')).toHaveText('Maand opslaan');
+  await expect(page.locator('#submit-timesheet')).toBeVisible();
+  await expect(page.locator('#submit-timesheet')).toContainText(/indienen/i);
+});
+
