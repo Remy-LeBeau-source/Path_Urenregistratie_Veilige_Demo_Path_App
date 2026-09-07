@@ -1362,6 +1362,7 @@ click("#submit-timesheet");
 assert(!document.querySelector("#modal").hidden, "Opnieuw indienen moet eerst een duidelijke bevestiging tonen");
 assert(document.querySelector("#modal-confirm").textContent.includes("Opnieuw indienen"), "De bevestiging moet herkenbaar maken dat dit een herindiening is");
 click("#modal-confirm");
+await new Promise(resolve => setTimeout(resolve, 0));
 correctionState = JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final"));
 assert(correctionState.records["2026-07"]["3"].timesheetStatus === "submitted", "Na aanpassen moet de medewerker opnieuw kunnen indienen");
 assert(correctionState.records["2026-07"]["3"].correctionHistory.at(-1).resubmittedAt, "Opnieuw indienen moet in de correctiehistorie worden vastgelegd");

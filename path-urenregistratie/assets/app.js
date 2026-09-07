@@ -1879,6 +1879,28 @@ function applyTimesheetApiPayload(employeeId, periodKey, timesheet) {
   if (!employee) return null;
 
   const record = recordFor(Number(employeeId), key);
+  const incomingVersion = Number(timesheet.version || 0);
+  const localVersion = Number(record.serverVersion || 0);
+  const incomingStatus = String(timesheet.status || "").trim().toLowerCase();
+  const localStatus = String(record.timesheetStatus || "").trim().toLowerCase();
+  const approvedLocalState = ["approved", "invoiced"].includes(localStatus);
+  const staleVersion = Number.isFinite(incomingVersion) && incomingVersion > 0
+    && Number.isFinite(localVersion) && localVersion > 0
+    && incomingVersion < localVersion;
+  const newerVersion = Number.isFinite(incomingVersion) && incomingVersion > 0
+    && Number.isFinite(localVersion) && localVersion > 0
+    && incomingVersion > localVersion;
+  const staleCorrection = ["submitted", "approved", "invoiced"].includes(localStatus)
+    && incomingStatus === "correction"
+    && !newerVersion;
+  const staleReversion = approvedLocalState && incomingStatus && !["approved", "invoiced"].includes(incomingStatus) && !newerVersion;
+  if (staleVersion || staleCorrection || staleReversion) {
+    // Een oudere snapshot mag een net goedgekeurde urenstaat niet terugzetten naar
+    // submitted/correction, zelfs als dezelfde read-endpoint iets later met een
+    // lagging status antwoordt.
+    return record;
+  }
+
   const period = periodFromKey(key);
   const nextEntries = emptyEntries(period.key);
   const dayEntryMap = new Map();
@@ -3322,25 +3344,40 @@ function syncInvoiceStatusesFromApi(periodKey) {
       const serverTimesheetStatus = ["draft", "submitted", "correction", "approved", "invoiced"].includes(row.timesheetStatus)
         ? row.timesheetStatus
         : "";
+      const statusRank = value => ({
+        draft: 0,
+        submitted: 1,
+        correction: 2,
+        approved: 3,
+        invoiced: 4
+      }[String(value || "").toLowerCase()] ?? null);
+      const localStatusRank = statusRank(record.timesheetStatus);
+      const serverStatusRank = statusRank(serverTimesheetStatus);
+      const serverStatusMayReclaimReadModel = Number.isFinite(serverStatusRank)
+        && (!Number.isFinite(localStatusRank) || serverStatusRank >= localStatusRank);
       const serverTimesheetApproved = ["approved", "invoiced"].includes(serverTimesheetStatus);
       const localTimesheetApproved = ["approved", "invoiced"].includes(record.timesheetStatus);
       // A direct timesheet read/write carries its own optimistic-lock version and is newer and
       // more authoritative than the denormalized status embedded in the invoice projection.
       // Without this precedence, a briefly lagging invoice row can hide the invoice task that
-      // was created by the approval response we just received.
+      // was created by the approval response we just received. A stale invoice projection can
+      // also momentarily show `correction` even though the local approval already succeeded.
       const hasVersionedTimesheetState = Number(record.serverVersion || 0) > 0;
       const effectiveTimesheetApproved = hasVersionedTimesheetState
         ? localTimesheetApproved
         : (serverTimesheetStatus ? serverTimesheetApproved : localTimesheetApproved);
+      // Once an approval has landed locally, never let a stale invoice projection regress it back
+      // to a prior state while the follow-up invoice read is still catching up.
+      const isFreshlyApproved = localTimesheetApproved && !serverTimesheetApproved && record.invoiceStatus === "ready";
       // Timesheet approval is the business transition that opens the invoice task. The invoice
       // read model can briefly remain `concept` after that write; it must not hide the newly
       // created Backoffice action. Delivery proof (or an already locked invoice row) remains
       // authoritative and closes the task.
       const nextInvoiceStatus = hasDeliveryProof || row.status === "simulated"
         ? "simulated"
-        : !hasVersionedTimesheetState && serverTimesheetStatus && !serverTimesheetApproved
+        : !hasVersionedTimesheetState && serverTimesheetStatus && !serverTimesheetApproved && !isFreshlyApproved
           ? "concept"
-          : effectiveTimesheetApproved
+          : effectiveTimesheetApproved || isFreshlyApproved
             ? "ready"
             : row.status;
       const nextPayrollStatus = hasDeliveryProof
@@ -3351,10 +3388,12 @@ function syncInvoiceStatusesFromApi(periodKey) {
         record.invoiceNumber = row.invoiceNumber;
         changed = true;
       }
-      const invoiceReadMayAdvanceTimesheet = serverTimesheetApproved || !localTimesheetApproved;
+      const invoiceReadMayAdvanceTimesheet = serverStatusMayReclaimReadModel && (serverTimesheetApproved || !localTimesheetApproved || serverStatusRank >= localStatusRank);
       if (serverTimesheetStatus && invoiceReadMayAdvanceTimesheet && record.timesheetStatus !== serverTimesheetStatus) {
-        record.timesheetStatus = serverTimesheetStatus;
-        changed = true;
+        if (!(localTimesheetApproved && !serverTimesheetApproved && serverStatusRank < localStatusRank)) {
+          record.timesheetStatus = serverTimesheetStatus;
+          changed = true;
+        }
       }
       if (record.invoiceStatus !== nextInvoiceStatus) {
         record.invoiceStatus = nextInvoiceStatus;
@@ -9367,13 +9406,19 @@ function approveEmployee(id, periodKey, options = {}) {
       ]).catch(() => null).then(() => {
         // Merge the invoice read first. The successful timesheet approval response is newer than
         // a possibly lagging invoice projection, so the local follow-up must end in ready state.
-        syncInvoiceStatusesFromApi(key);
         const refreshed = recordFor(id, key);
         if (refreshed.timesheetStatus !== "approved") {
           refreshed.timesheetStatus = "approved";
         }
         if (refreshed.invoiceStatus !== "simulated") refreshed.invoiceStatus = "ready";
         if (refreshed.payrollStatus !== "simulated") refreshed.payrollStatus = "ready";
+        syncInvoiceStatusesFromApi(key);
+        const finalized = recordFor(id, key);
+        if (finalized.timesheetStatus !== "approved") {
+          finalized.timesheetStatus = "approved";
+        }
+        if (finalized.invoiceStatus !== "simulated") finalized.invoiceStatus = "ready";
+        if (finalized.payrollStatus !== "simulated") finalized.payrollStatus = "ready";
         addNotification({ audience: "employee", type: "approved", employeeId: Number(id), title: "Uren goedgekeurd", message: "Je uren voor " + periodFromKey(key).label + " zijn goedgekeurd.", periodKey: key, view: "employee-dashboard" });
         addNotification({ audience: "admin", type: "invoice", employeeId: Number(id), title: "Factuur klaar", message: "De factuur voor " + employeeById(id).name + " staat klaar.", periodKey: key, view: "invoices" });
         finishApproval();

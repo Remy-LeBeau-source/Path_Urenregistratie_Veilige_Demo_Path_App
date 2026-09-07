@@ -272,6 +272,43 @@ Verwijder eerdere relevante bevindingen niet. Noteer geen wachtwoorden, tokens o
 
 ## Actuele overdracht
 
+### 2026-09-07 · Instructie aan Claude Code — merge-queue bestaat al op `main`
+
+De merge-queue hoeft niet opnieuw gebouwd te worden. Hij staat al op `main` in
+`.github/workflows/pilot-merge-queue.yml` (commit `5376f95`). De `herontwerp`-
+checkout mist vier commits van `main`, waardoor hij daar nog niet zichtbaar is.
+
+Werk op `herontwerp`, verwijder of stage nooit `node_modules`, en voer uit:
+
+```text
+git fetch origin
+git switch herontwerp
+git merge origin/main
+```
+
+Los daarna alleen echte conflicts/testfouten op, commit en push naar
+`origin/herontwerp`. Zodra CI op de gepushte herontwerp-SHA volledig groen is,
+start Pilot naar main (wachtrij) automatisch. Die controleert of de SHA de
+actuele `main` bevat, wacht tot geen Release Pipeline op `main` draait en doet
+daarna automatisch een fast-forward push naar `main`. Vervolgens draait de
+gewone Release Pipeline naar TEST. PROD blijft achter de handmatige
+reviewerpoort.
+
+Als de automatische push rechten weigert: controleer in GitHub bij Settings →
+Actions → General of Workflow permissions op Read and write permissions staat,
+en controleer of de branchregels GitHub Actions deze fast-forward toestaan.
+Bouw geen tweede queue-workflow.
+
+### 2026-09-07 21:55 · Copilot — E2E-N-019 approval-flow diagnose en herstel
+
+- Conclusie: de resterende rode E2E kwam niet uit de servertransitie of de stale-read guard. De augustus-baseline zet Stasjo bewust op `correction`, terwijl `#submit-timesheet` alleen de bevestigingsmodal opent; de test wachtte daardoor op een autosave-POST en klikte nooit op de echte modalbevestiging.
+- Bewijs: in de eerste run eindigde de directe API-read op `correction`; de baseline-migratie `server/migrations/009_demo_seed_august_correction_alignment.sql` zet precies die medewerker/maand op correctie. Na de testfix zijn twee `POST /server/api/timesheets.php`-requests zichtbaar (submit en approve) en is E2E-N-019 groen.
+- Gewijzigd: `path-urenregistratie/tests/playwright/business-workflows-failure.spec.ts` klikt nu na `#submit-timesheet` expliciet op `#modal-confirm`.
+- Tests: `node scripts/run-playwright-e2e.mjs --project=desktop-chromium --grep "E2E-N-019"` — 1 passed (1.2m), inclusief DB-nacontrole; `node scripts/run-playwright-e2e.mjs --project=desktop-chromium tests/playwright/timesheet-review-flow.spec.ts` — 3 passed (12.1s), inclusief DB-nacontrole.
+- Aanvullend opgelost: alle drie browser-indienmomenten in `tests/playwright/timesheet-review-ui.spec.ts` bevestigen nu de modal en wachten specifiek op `action: submit`; de stale-statusguard laat alleen een correctie met een hogere serverversie door.
+- Test: `node scripts/run-playwright-e2e.mjs --project=desktop-chromium --grep "TS-REV-UI-H-008"` — 1 passed (33.7s).
+- Volgende stap: volledige suite/CI blijft de integratiepoort; PR #41 heeft wel een head-ref maar geen merge-ref en is dus niet aantoonbaar gemerged.
+
 ### 2026-08-24 · Claude Code — v0.9.133 t/m v0.9.138: mailteksten, aanpasbare standaarden, E2E-laag
 
 Werk gedaan door Claude Code, rechtstreeks op `main` (geen PR's in deze periode). TEST draait

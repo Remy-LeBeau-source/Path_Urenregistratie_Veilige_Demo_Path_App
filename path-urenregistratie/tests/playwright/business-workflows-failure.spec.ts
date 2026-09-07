@@ -80,6 +80,7 @@ test('[E2E-N-019] een mislukte factuurpoging laat niets half achter en opnieuw p
       const schrijf = page.waitForResponse(response =>
         response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
       await page.locator('#submit-timesheet').click();
+      await expect(page.locator('#modal-confirm')).toBeVisible();
       await page.locator('#modal-confirm').click();
       await schrijf;
     }

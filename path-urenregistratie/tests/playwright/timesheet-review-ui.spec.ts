@@ -195,7 +195,6 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
       mockApprovedAt = null;
       mockApprovedBy = null;
     }
-
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -255,9 +254,16 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
     );
     {
       // Indienen is een serverwrite; de zichtbare status volgt pas daarna.
-      const indienen = page.waitForResponse(response =>
-        response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
+      const indienen = page.waitForResponse(response => {
+        if (!response.url().includes('/server/api/timesheets.php') || response.request().method() !== 'POST') return false;
+        try {
+          return String((response.request().postDataJSON() as { action?: string } | null)?.action || '') === 'submit';
+        } catch {
+          return false;
+        }
+      });
       await page.locator('#submit-timesheet').click();
+      await expect(page.locator('#modal-confirm')).toBeVisible();
       await page.locator('#modal-confirm').click();
       await indienen;
     }
@@ -330,12 +336,26 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
     await fillFirstTwoHours(page, '8', '4');
     {
       // Indienen is een serverwrite; de zichtbare status volgt pas daarna.
-      const indienen = page.waitForResponse(response =>
-        response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
+      const indienen = page.waitForResponse(response => {
+        if (!response.url().includes('/server/api/timesheets.php') || response.request().method() !== 'POST') return false;
+        try {
+          return String((response.request().postDataJSON() as { action?: string } | null)?.action || '') === 'submit';
+        } catch {
+          return false;
+        }
+      });
       await page.locator('#submit-timesheet').click();
+      await expect(page.locator('#modal-confirm')).toBeVisible();
       await page.locator('#modal-confirm').click();
       await indienen;
     }
+    await expect.poll(() => page.evaluate(() => {
+      const runtime = window as typeof window & {
+        currentEmployee: () => { id: number };
+        recordFor: (employeeId: number) => { timesheetStatus: string };
+      };
+      return runtime.recordFor(runtime.currentEmployee().id).timesheetStatus;
+    })).toBe('submitted');
     await expect(page.locator('#timesheet-status')).toHaveText('Ingediend', { timeout: 15_000 });
     await expect(page.locator('#timesheet-correction-banner')).toBeHidden();
   });
@@ -423,9 +443,16 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
     await fillFirstTwoHours(page, '8', '3');
     {
       // Indienen is een serverwrite; de zichtbare status volgt pas daarna.
-      const indienen = page.waitForResponse(response =>
-        response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
+      const indienen = page.waitForResponse(response => {
+        if (!response.url().includes('/server/api/timesheets.php') || response.request().method() !== 'POST') return false;
+        try {
+          return String((response.request().postDataJSON() as { action?: string } | null)?.action || '') === 'submit';
+        } catch {
+          return false;
+        }
+      });
       await page.locator('#submit-timesheet').click();
+      await expect(page.locator('#modal-confirm')).toBeVisible();
       await page.locator('#modal-confirm').click();
       await indienen;
     }
