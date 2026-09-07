@@ -4575,18 +4575,32 @@ function renderEmployeeDashboard() {
     const rondAf = () => {
       if (readApiRuntime.employeeOpenTasksHydrated) return;
       readApiRuntime.employeeOpenTasksHydrated = true;
-      // Ook opnieuw tekenen als het medewerkerdashboard niet de actieve view is:
-      // de laadtekst moet weg zijn tegen de tijd dat de medewerker er heen
-      // navigeert (bv. na F5 op de urenstaat).
-      const stillEmployee = state.currentRole === "employee";
-      const stillSameEmployee = Number(currentEmployee().id) === employeeId;
-      const stillSamePeriod = currentPeriod().key === selectedPeriodAtRender;
-      if (stillEmployee && stillSameEmployee && stillSamePeriod) {
-        // Deze hertekening vervangt de laadtekst door de echte werkvoorraad en
-        // verandert dus de paginahoogte. Meld dat, zodat het scroll-event dat
-        // daarop volgt niet het zojuist geopende profielmenu dichtklapt.
-        markLayoutRender();
-        renderEmployeeDashboard();
+      try {
+        // Bij een verse eerste login kan currentEmployee() heel even null zijn
+        // terwijl de serverdata nog binnenkomt. Eerder gooide
+        // `Number(currentEmployee().id)` dan een TypeError midden in deze
+        // callback: de vlag stond al op true, maar er volgde geen hertekening,
+        // dus de "Werkvoorraad laden…"-tekst bleef eindeloos staan (op de
+        // telefoon-PWA zonder handmatige F5 permanent).
+        const stillEmployee = state.currentRole === "employee";
+        const dashboardActive = document.querySelector("#view-employee-dashboard")?.classList.contains("is-active") === true;
+        const emp = typeof currentEmployee === "function" ? currentEmployee() : null;
+        const stillSameEmployee = emp ? Number(emp.id) === employeeId : false;
+        const stillSamePeriod = currentPeriod().key === selectedPeriodAtRender;
+        // Als het medewerkerdashboard nu zichtbaar is, moet de laadtekst hoe dan
+        // ook weg — ook als de medewerker/periode-referentie tussendoor is
+        // verschoven. Anders geldt de strengere match zodat een andere view niet
+        // onnodig hertekent.
+        if (stillEmployee && (dashboardActive || (stillSameEmployee && stillSamePeriod))) {
+          // Deze hertekening vervangt de laadtekst door de echte werkvoorraad en
+          // verandert dus de paginahoogte. Meld dat, zodat het scroll-event dat
+          // daarop volgt niet het zojuist geopende profielmenu dichtklapt.
+          markLayoutRender();
+          renderEmployeeDashboard();
+        }
+      } catch (_) {
+        // Een fout in deze hertekening mag de laadtekst niet permanent laten
+        // staan; een volgende navigatie of tekening haalt de echte stand alsnog op.
       }
     };
     // Vangnet: een verzoek dat blijft hangen mag de laadtekst niet eindeloos

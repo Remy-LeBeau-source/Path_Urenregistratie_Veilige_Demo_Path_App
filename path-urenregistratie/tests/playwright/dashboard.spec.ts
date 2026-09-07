@@ -2026,3 +2026,48 @@ test('[DASH-H-023] medewerker kan met de browser-terug/-vooruit-knop door alle e
 
   await loginPage.logout();
 });
+
+// Regressie: bij de allereerste login als medewerker kon currentEmployee() heel
+// even null zijn terwijl de serverdata nog binnenkwam. `Number(currentEmployee().id)`
+// gooide dan een TypeError midden in de hydratie-afronding (`rondAf`): de
+// hydratievlag stond al op true, maar er volgde geen hertekening. In een gewone
+// browser loste een F5 het op; in de geïnstalleerde PWA bleef "Werkvoorraad
+// laden…" permanent staan. De fix maakt rondAf defensief en hertekent altijd
+// zolang het medewerkerdashboard zichtbaar is.
+test('[DASH-N-026] het medewerkerdashboard blijft nooit op "Werkvoorraad laden" hangen, ook niet als de eerste serversync faalt', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  // Forceer een falende/hangende eerste leessync: de hydratie moet dan via het
+  // vangnet alsnog netjes afronden en de laadtekst weghalen.
+  await page.route('**/server/api/timesheets.php**', async route => {
+    if (route.request().method().toUpperCase() === 'GET') {
+      await route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ ok: false, error: 'forced-test-failure' }) });
+      return;
+    }
+    await route.continue();
+  });
+  await page.route('**/server/api/customer-timesheets.php**', async route => {
+    if (route.request().method().toUpperCase() === 'GET') {
+      await route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ ok: false, error: 'forced-test-failure' }) });
+      return;
+    }
+    await route.continue();
+  });
+
+  await test.step('Given de medewerker logt voor het eerst in terwijl de eerste werkvoorraad-sync mislukt', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
+  });
+
+  await test.step('When de hydratie via het vangnet afrondt', async () => {
+    // Het vangnet in de app staat op 4s; ruim binnen 12s moet de laadtekst weg zijn.
+    await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i, { timeout: 12_000 });
+  });
+
+  await test.step('Then toont geen enkele werkvoorraadplek nog een laadtekst', async () => {
+    await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i);
+    await expect(page.locator('#employee-dashboard-next-meta')).not.toContainText('wordt opgehaald');
+    await expect(page.locator('#employee-dashboard-next-label')).not.toHaveText('Bezig');
+  });
+});
