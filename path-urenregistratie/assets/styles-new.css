@@ -456,6 +456,44 @@ html[data-skin="new"] .toast {
   background: var(--path-night);
 }
 
+/* Mededelingen (admin + medewerker) — lijstregels worden kaarten,
+   koppen op de serif, de "ingetrokken"-markering een zachte ring
+   i.p.v. een balk links. Alleen onder html[data-skin="new"]. */
+html[data-skin="new"] .announcement-list,
+html[data-skin="new"] .employee-announcement-list {
+  gap: 12px;
+  padding: 12px;
+}
+
+html[data-skin="new"] .announcement-item {
+  border-top: 0;
+  border: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
+  border-radius: 16px;
+  background: var(--surface);
+  padding: 20px 22px;
+}
+
+html[data-skin="new"] .announcement-item.is-draft {
+  border-style: dashed;
+  background: var(--vlak-zacht);
+}
+
+html[data-skin="new"] .announcement-item.is-withdrawn {
+  border-left-width: 1px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warning) 45%, transparent);
+  background: color-mix(in srgb, var(--warning-bg) 40%, var(--surface));
+}
+
+html[data-skin="new"] .announcement-item-head h3 {
+  font-family: var(--path-serif);
+  font-weight: 400;
+}
+
+html[data-skin="new"] .announcement-meta span {
+  border-radius: 12px;
+  background: var(--vlak);
+}
+
 @media (prefers-reduced-motion: reduce) {
   html[data-skin="new"] *,
   html[data-skin="new"] *::before,
