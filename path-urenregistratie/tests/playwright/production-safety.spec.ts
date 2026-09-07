@@ -756,9 +756,12 @@ test('[SAFE-H-011] groene main-pipeline rolt exact dezelfde release veilig uit n
     expect(runner).toContain('^path-urenregistratie/pilot/');
   });
 
-  await test.step('And blijft mail gesloten en wordt bij een fout automatisch teruggerold', async () => {
-    expect(remote).toContain('Production mail or acceptance window is still enabled.');
+  await test.step('And blokkeert alleen het TEST-acceptatievenster en een niet-lege mailwachtrij (productiemail mag aan blijven), en rolt bij een fout automatisch terug', async () => {
+    expect(remote).toContain('Production acceptance-test mail window is still enabled.');
     expect(remote).toContain('Pending production mail prevents deployment');
+    // Productiemail die gewoon aan staat mag een volgende deploy niet meer blokkeren.
+    expect(remote).not.toContain('Production mail or acceptance window is still enabled');
+    expect(remote).not.toMatch(/\$mail\["enabled"\]\s*\?\?\s*false\)\s*===\s*true/);
     expect(remote).toContain('move_directory_contents "$live_root" "$failed_root"');
     expect(remote).toContain('move_directory_contents "$rollback_root" "$live_root"');
     expect(remote).toContain('opcache_reset');
