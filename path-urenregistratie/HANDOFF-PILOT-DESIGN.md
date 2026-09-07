@@ -57,6 +57,9 @@ Classic blijft exact intact. Al gedaan:
 - **Increment 4** (`herontwerp` `f86b59d`): Mededelingen (admin + medewerker) —
   lijst als kaartenstapel, koppen op de serif, "ingetrokken" als zachte ring
   i.p.v. balk links. `npm run check` groen.
+- **Increment 5** (`herontwerp` `79f591a`): Goedkeuringen — de 4-fasen-track
+  (`.workflow-step`/`.workflow-line`) als doorlopende groene lijn met gloed op
+  afgeronde/huidige stap, zoals de pilot. `npm run check` groen.
 
 ### 4. Wat er nog moet (schermen-inventaris)
 
@@ -66,8 +69,8 @@ door de eigen `[*-*]`-cases blijven. Volgorde-suggestie:
 - [x] `employee-dashboard` — "Mijn overzicht" (bento; verdere polish kan)
 - [x] Loginscherm
 - [x] `announcements` + `employee-announcements` — "Mededelingen" / "Mijn mededelingen"
+- [x] `approvals` — "Goedkeuringen" (4-fasen-proceslijn; verdere lijst-polish kan)
 - [ ] `timesheet` — "Mijn uren" (week/maand-invoer — vergelijk met de pilot)
-- [ ] `approvals` — "Goedkeuringen"
 - [ ] `invoices` — "Facturen" (lijst + badges, factuurdetail, finaliseren,
       PDF, klanturenstaat controleren, extern bevestigen)
 - [ ] `employees` — "Medewerkers"
