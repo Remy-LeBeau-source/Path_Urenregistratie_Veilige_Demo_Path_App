@@ -1,8 +1,21 @@
 # HANDOFF — 1414/1919 herontwerp
 
 **Evergreen doc. Wordt tijdens het werk telkens bijgewerkt.**
-Laatst bijgewerkt: 2026-09-07 — **release `1.0.0` staat groen op TEST; Fase D
-gaat verder op branch `herontwerp`, niet op `main`.**
+Laatst bijgewerkt: 2026-09-07 — **overdracht aan Codex.** Release `1.0.0` staat
+groen op TEST (Promote Prod wacht op de gebruiker). Fase D loopt op branch
+`herontwerp` t/m increment 6 (`6ff56b5`).
+
+## → EERSTE TAAK VOOR CODEX
+
+`git fetch && git checkout herontwerp`. Increments **3, 4, 5 en 6** (login,
+Mededelingen, Goedkeuringen-proceslijn, Mijn uren-urentabel) zijn gecommit maar
+de **volledige regressie is er nog niet overheen geweest** — de laatste
+`npm run check` liep nog toen de sessie eindigde. Doe daarom eerst:
+`npm run check` + `node scripts/run-playwright-e2e.mjs --project=desktop-chromium`
+(volledig, beide skins moeten 100% groen). Alle vier increments zijn puur
+additieve CSS in `assets/styles-new.css` gescoped onder `html[data-skin="new"]`
+— Classic kan er niet door raken — maar bevestig het. Pas daarna verder met de
+schermen-inventaris.
 
 ## → VOOR CODEX / de volgende sessie
 
@@ -60,6 +73,9 @@ Classic blijft exact intact. Al gedaan:
 - **Increment 5** (`herontwerp` `79f591a`): Goedkeuringen — de 4-fasen-track
   (`.workflow-step`/`.workflow-line`) als doorlopende groene lijn met gloed op
   afgeronde/huidige stap, zoals de pilot. `npm run check` groen.
+- **Increment 6** (`herontwerp` `6ff56b5`): Mijn uren — `.hours-table`
+  uurwaarden in de serif, groene focus, zachtere lijnen/kopcel. **Nog niet
+  volledig geverifieerd** (zie EERSTE TAAK).
 
 ### 4. Wat er nog moet (schermen-inventaris)
 
@@ -70,10 +86,11 @@ door de eigen `[*-*]`-cases blijven. Volgorde-suggestie:
 - [x] Loginscherm
 - [x] `announcements` + `employee-announcements` — "Mededelingen" / "Mijn mededelingen"
 - [x] `approvals` — "Goedkeuringen" (4-fasen-proceslijn; verdere lijst-polish kan)
-- [ ] `timesheet` — "Mijn uren" (week/maand-invoer — vergelijk met de pilot)
+- [x] `timesheet` — "Mijn uren" (urentabel op tokens; week/maand-layout-polish kan)
 - [ ] `invoices` — "Facturen" (lijst + badges, factuurdetail, finaliseren,
       PDF, klanturenstaat controleren, extern bevestigen)
-- [ ] `employees` — "Medewerkers"
+- [ ] `employees` — "Medewerkers" (grotendeels al gedekt door de gedeelde
+      `.panel`/`.employee-card`-tokens; alleen serif-kop + `--shadow` resteren)
 - [ ] `settings` — "Instellingen" (6 subsecties: Organisatie · Facturatie ·
       Mailroutes · Teksten · Herinneringen · Veiligheid)
 - [ ] Modal-detailschermen (goedkeuring-detail, factuurdetail, correctie,
