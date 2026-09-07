@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator } from '@playwright/test';
 import { LoginPage } from './pages/LoginPage';
 import { openProfielmenu } from './pages/TopbarMenu';
 
@@ -23,6 +23,10 @@ async function kiesVormgeving(page: import('@playwright/test').Page, waarde: 'cl
   await page.locator('#pref-skin-trigger').click();
   await page.locator(`[data-standard-choice-target="pref-skin"][data-standard-choice-value="${waarde}"]`).click();
   await page.getByRole('button', { name: 'Voorkeuren opslaan' }).click();
+}
+
+async function genormaliseerdeTekst(locator: Locator): Promise<string> {
+  return locator.evaluate(element => String(element.textContent || '').replace(/\s+/g, ' ').trim());
 }
 
 test('[SKIN-H-001] de app start standaard in de klassieke vormgeving', async ({ page }) => {
@@ -195,6 +199,81 @@ test('[SKIN-H-006] de echte medewerkerroute toont de live bento en blijft mobiel
     await expect(page.locator('[data-new-bento-customer]')).toBeVisible();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(1);
+  });
+});
+
+test('[SKIN-H-008] Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en terugschakelen', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given Backoffice is ingelogd en de dashboardgegevens zijn geladen', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect(page.locator('#dashboard-employee-rows tr')).toHaveCount(4);
+  });
+
+  const dashboardVoor = await genormaliseerdeTekst(page.locator('#dashboard-employee-rows'));
+  const teamTitelVoor = await genormaliseerdeTekst(page.locator('#dashboard-team-title'));
+
+  await test.step('When Nieuw wordt geactiveerd en Backoffice alle hoofdschermen bezoekt', async () => {
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+
+    for (const [view, titel] of [
+      ['approvals', 'Goedkeuringen'],
+      ['invoices', 'Facturen'],
+      ['announcements', 'Mededelingen'],
+      ['employees', 'Medewerkers'],
+      ['settings', 'Instellingen'],
+    ] as const) {
+      await page.locator(`.nav-item[data-view="${view}"]`).click();
+      await expect(page.locator(`#view-${view}`)).toHaveClass(/is-active/);
+      await expect(page.locator('#page-title')).toHaveText(titel);
+      await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    }
+  });
+
+  await test.step('Then dezelfde gegevens blijven staan in Nieuw en na terugschakelen naar Klassiek', async () => {
+    await page.locator('.nav-item[data-view="dashboard"]').click();
+    expect(await genormaliseerdeTekst(page.locator('#dashboard-employee-rows'))).toBe(dashboardVoor);
+    expect(await genormaliseerdeTekst(page.locator('#dashboard-team-title'))).toBe(teamTitelVoor);
+
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+    expect(await genormaliseerdeTekst(page.locator('#dashboard-employee-rows'))).toBe(dashboardVoor);
+    expect(await genormaliseerdeTekst(page.locator('#dashboard-team-title'))).toBe(teamTitelVoor);
+  });
+});
+
+test('[SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en Klassiek', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given een medewerkerdashboard met geladen urenstatus', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await expect(page.locator('#employee-dashboard-hours')).toBeVisible();
+  });
+
+  const medewerker = await page.locator('#workspace-name').innerText();
+  const urenVoor = await page.locator('#employee-dashboard-hours').innerText();
+  const statusVoor = await page.locator('#employee-dashboard-status').innerText();
+
+  await test.step('When de medewerker Nieuw activeert en via de bento naar Mijn uren navigeert', async () => {
+    await page.locator('#quick-skin-toggle').click();
+    await page.locator('[data-new-bento-open-hours]').click();
+    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await expect(page.locator('#timesheet-employee')).toHaveText(medewerker);
+  });
+
+  await test.step('Then de dashboardstatus gelijk blijft en Klassiek dezelfde gegevens toont', async () => {
+    await page.locator('.nav-item[data-view="employee-dashboard"]').click();
+    await expect(page.locator('#employee-dashboard-hours')).toHaveText(urenVoor);
+    await expect(page.locator('#employee-dashboard-status')).toHaveText(statusVoor);
+
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+    await expect(page.locator('#employee-dashboard-hours')).toHaveText(urenVoor);
+    await expect(page.locator('#employee-dashboard-status')).toHaveText(statusVoor);
   });
 });
 

@@ -38,8 +38,6 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const commitSha = context.sha;
-            const actor = String(context.actor || '').trim().toLowerCase();
-
             const fallbackUsers = ['giovannomaatsen-dev', 'kenrichlieveld'];
             const configured = [process.env.NOTIFY_USER_1, process.env.NOTIFY_USER_2]
               .filter(Boolean)
@@ -50,10 +48,10 @@ jobs:
               .map(u => u.trim().replace(/^@/, '').toLowerCase())
               .filter(Boolean);
 
-            const users = [...new Set((configured.length ? configured : fallbackUsers).filter(Boolean))]
+            const users = [...new Set([owner, ...(configured.length ? configured : fallbackUsers)].filter(Boolean))]
               .filter(u => {
                 const normalized = String(u).toLowerCase();
-                return normalized !== actor && !excluded.includes(normalized);
+                return !excluded.includes(normalized);
               });
 
             if (users.length === 0) {
@@ -91,10 +89,50 @@ jobs:
           NOTIFY_USER_2: ${{ vars.NOTIFY_USER_2 }}
           NOTIFY_EXCLUDE_USERS: ${{ vars.NOTIFY_EXCLUDE_USERS }}
 
-  validate:
-    name: Validate
+  pilot-awareness:
+    name: Inspect pilot branch
     needs: notify-team
     if: ${{ always() && (needs.notify-team.result == 'success' || needs.notify-team.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout selected ref
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TARGET_REF }}
+          fetch-depth: 0
+
+      - name: Rapporteer verschil met herontwerp
+        shell: bash
+        run: |
+          if ! git ls-remote --exit-code --heads origin herontwerp >/dev/null 2>&1; then
+            echo "## Pilot branch" >> "$GITHUB_STEP_SUMMARY"
+            echo "Branch \`herontwerp\` bestaat nog niet." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          git fetch --no-tags origin herontwerp:refs/remotes/origin/herontwerp
+          pilot_ahead=$(git rev-list --count HEAD..origin/herontwerp)
+          main_ahead=$(git rev-list --count origin/herontwerp..HEAD)
+
+          {
+            echo "## Pilot branch"
+            echo
+            echo "| Controle | Aantal commits |"
+            echo "| --- | ---: |"
+            echo "| Alleen op herontwerp | $pilot_ahead |"
+            echo "| Alleen op deze releasekop | $main_ahead |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$pilot_ahead" -gt 0 ]; then
+            echo "::notice::Er staan $pilot_ahead pilot-commit(s) op herontwerp die nog niet in deze release zitten."
+          else
+            echo "Pilot en releasekop bevatten geen onbehandelde pilot-commits."
+          fi
+
+  validate:
+    name: Validate
+    needs: [notify-team, pilot-awareness]
+    if: ${{ always() && (needs.notify-team.result == 'success' || needs.notify-team.result == 'skipped') && needs.pilot-awareness.result == 'success' }}
     runs-on: ubuntu-latest
     # De Playwright-suite draait serieel (workers: 1, gedeelde DB + PHP-dev-server
     # met de fingerprint-isolatiefixture). We versnellen zonder dekking te

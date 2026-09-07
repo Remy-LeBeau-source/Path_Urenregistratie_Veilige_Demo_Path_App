@@ -7,10 +7,19 @@ Evergreen doc zoals `HANDOFF-PILOT-DESIGN.md` — bijwerken per increment.
 
 De basisregressie is afgerond: desktop 375/375, Android/Chrome 45/45 en
 iPhone/WebKit 45/45 groen; `npm run build`, `npm run check` en GitHub CI-run
-`34118945695` zijn groen. De actuele main-kop `c37fd23` is daarna zonder
-conflict in `herontwerp` opgenomen. Nu volgen controles op deze gecombineerde
-stand, een groene branch-CI en de merge naar main voor deployment op TEST.
+`34118945695` zijn groen. De combinatie met main-kop `c37fd23` is daarna zonder
+conflict opgenomen en door CI-run `34126046882` groen bevestigd. Tijdens die
+run verschoof main met een PWA-hydratiefix; de herstelde kop `ac7ca6c` is
+vervolgens zonder conflict opgenomen. Nu volgen gerichte controles en opnieuw
+groene branch-CI vóór de merge naar main voor deployment op TEST. Gerichte
+controle is groen voor `DASH-N-010`, `DASH-N-026`, `MOB-H-024` en alle negen
+`SKIN-*`-cases, inclusief functionele parity van beide skins voor beide rollen.
 PROD blijft Classic-only en achter de verplichte reviewerpoort.
+
+De pilot-CI draait vanaf deze integratie in vier parallelle shards en faalt als
+`herontwerp` commits van `main` mist. De main-release bevat daarnaast het
+zichtbare, informerende blok `Inspect pilot branch`, zodat beide werkstromen
+bij iedere release worden vergeleken zonder een gewone hotfix te blokkeren.
 
 ## 1. Waar je bent / wat je NIET aanraakt
 

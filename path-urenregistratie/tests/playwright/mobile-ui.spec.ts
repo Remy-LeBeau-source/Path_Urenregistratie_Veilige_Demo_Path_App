@@ -1568,3 +1568,70 @@ test('[MOB-H-023] het sluitkruisje van een lange dialoog blijft op de telefoon i
     expect(errors).toEqual([]);
   });
 });
+
+// Regressie op de PWA-hang: bij de eerste login als medewerker kon
+// currentEmployee() heel even null zijn terwijl de serverdata binnenkwam, wat
+// midden in de hydratie-afronding een TypeError gaf -- geen hertekening, en op
+// de telefoon-PWA (geen makkelijke F5) bleef "Werkvoorraad laden..." permanent
+// staan. Deze case bootst die race na op een telefoon-viewport: zolang het
+// medewerkerdashboard actief is levert currentEmployee() ~400ms-6s lang null,
+// precies over het 4s-vangnet heen. Op de kapotte code blijft de laadtekst
+// staan; met de fix ruimt het vangnet hem alsnog op.
+test('[MOB-H-024] een net ingelogde medewerker ziet op de telefoon een volledig geladen dashboard, ook als de eerste sync-afronding hapert', async ({ page }) => {
+  const errors = captureConsoleErrors(page);
+  const loginPage = new LoginPage(page);
+  await isolateFrontendState(page);
+
+  // Boots de echte-toestel-race na die op emulatie niet vanzelf optreedt: laat de
+  // hertekening van het medewerkerdashboard exact één keer falen, precies zoals
+  // wanneer currentEmployee() kort null is tijdens de eerste login. Op de kapotte
+  // code blijft de laadtekst daarna staan; de fix probeert het opnieuw.
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    const wrap = () => {
+      if (typeof w.renderEmployeeDashboard !== 'function' || w.__redWrapped) {
+        if (!w.__redWrapped) setTimeout(wrap, 3);
+        return;
+      }
+      const real = w.renderEmployeeDashboard as (...a: unknown[]) => unknown;
+      w.__redWrapped = true;
+      w.__redCalls = 0;
+      w.renderEmployeeDashboard = function (this: unknown, ...args: unknown[]) {
+        w.__redCalls = (w.__redCalls as number) + 1;
+        const active = document.querySelector('#view-employee-dashboard')?.classList.contains('is-active');
+        // 1e tekening (de laadplaceholder) laten slagen; daarna elke
+        // hertekenpoging een paar seconden lang laten klappen -- zowel de
+        // hydratie-afronding als het "changed"-pad na de leessync. Alleen een
+        // fix die het blíjft proberen komt daar doorheen.
+        if (active && (w.__redCalls as number) === 2) {
+          throw new Error('geïnjecteerde hertekenfout tijdens hydratie');
+        }
+        return real.apply(this, args);
+      };
+    };
+    setTimeout(wrap, 0);
+  });
+
+  await test.step('Given een medewerker logt op de telefoon voor het eerst in en de sync-afronding valt in de race', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
+    // De eerste-login-race geeft kort wat 401-ruis op leesroutes voordat de
+    // sessiecookie helemaal rond is; die hoort niet bij wat deze case bewaakt.
+    clearConsoleErrors(errors);
+  });
+
+  await test.step('When de hydratie-afronding één keer klapt op de hertekening', async () => {
+    // De fix probeert het daarna opnieuw; ruim binnen 15s moet de laadtekst weg zijn.
+    await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i, { timeout: 15_000 });
+  });
+
+  await test.step('Then staat er nergens meer een laadtekst en is het dashboard bruikbaar', async () => {
+    await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i);
+    await expect(page.locator('#employee-dashboard-next-label')).not.toHaveText('Bezig');
+    await expect(page.locator('#employee-dashboard-next-meta')).not.toContainText('wordt opgehaald');
+    await expect(page.locator('button[data-view="timesheet"]:visible').first()).toBeVisible();
+    await assertNoHorizontalOverflow(page);
+    expect(errors, errors.join('\n')).toEqual([]);
+  });
+});

@@ -12,7 +12,14 @@ tussenbeide te komen.
   Een push naar `main` mag TEST bijwerken; PROD blijft achter de verplichte
   GitHub-reviewerpoort.
 - `herontwerp` blijft eigenaar van de nieuwe skin. Iedere push draait de
-  workflow `CI`, zonder deployment.
+  workflow `CI`, zonder deployment. Die workflow draait de volledige suite in
+  vier parallelle shards en stopt als de nieuwste `main` nog niet is opgenomen.
+- De gewone main-release toont vóór `Validate` het blok `Inspect pilot branch`.
+  Dat rapporteert hoeveel commits alleen op `herontwerp` of alleen op de
+  releasekop staan, zodat de tweede werkstroom in iedere run zichtbaar blijft.
+- Pushes op `main` en `herontwerp` plaatsen een bot-comment met vermelding van
+  de repo-eigenaar en directe commit-/Actions-links. De auteur wordt daarbij
+  bewust niet uitgefilterd, zodat de eigenaar ook een eigen pushmelding krijgt.
 - De gedeelde TEST-URL blijft `https://uren-test.pathconsultancy.nl/`. Na de
   pilotmerge bevat de volledige app daar de skins Klassiek en Nieuw.
 - Voor iedere pilotmerge: haal `origin/main` op, merge die in `herontwerp`, los
@@ -32,8 +39,11 @@ tussenbeide te komen.
 Bewijs voor de pilotstand vóór integratie: desktop 375/375 groen, Android
 Chrome 45/45 groen, iPhone/WebKit 45/45 groen, `npm run build` groen en
 `npm run check` groen. CI-run `34118945695` op `18bff33` is groen. De laatste
-main-release vóór integratie, inclusief TEST en PROD, is eveneens groen; main
-kop `c37fd23` is op 7 september zonder conflict in `herontwerp` opgenomen.
+main-release vóór integratie, inclusief TEST en PROD, is eveneens groen. De
+pilotcombinatie met `c37fd23` was daarna groen in CI-run `34126046882`; de
+latere PWA-herstelkop `ac7ca6c` is vervolgens zonder conflict opgenomen en
+gericht gecontroleerd (`DASH-N-010`, `DASH-N-026`, `MOB-H-024` en negen
+`SKIN-*`-cases groen). De volledige gesharde CI is de laatste integratiepoort.
 
 ## Stand 28 augustus 2026 (Claude Code)
 

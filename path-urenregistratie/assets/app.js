@@ -4575,19 +4575,39 @@ function renderEmployeeDashboard() {
     const rondAf = () => {
       if (readApiRuntime.employeeOpenTasksHydrated) return;
       readApiRuntime.employeeOpenTasksHydrated = true;
-      // Ook opnieuw tekenen als het medewerkerdashboard niet de actieve view is:
-      // de laadtekst moet weg zijn tegen de tijd dat de medewerker er heen
-      // navigeert (bv. na F5 op de urenstaat).
-      const stillEmployee = state.currentRole === "employee";
-      const stillSameEmployee = Number(currentEmployee().id) === employeeId;
-      const stillSamePeriod = currentPeriod().key === selectedPeriodAtRender;
-      if (stillEmployee && stillSameEmployee && stillSamePeriod) {
-        // Deze hertekening vervangt de laadtekst door de echte werkvoorraad en
-        // verandert dus de paginahoogte. Meld dat, zodat het scroll-event dat
-        // daarop volgt niet het zojuist geopende profielmenu dichtklapt.
-        markLayoutRender();
-        renderEmployeeDashboard();
-      }
+      // Bij een verse eerste login (vooral in de geïnstalleerde PWA) kan de
+      // hertekening hier nog even mislukken -- currentEmployee() is dan kort null
+      // terwijl de serverdata binnenkomt, wat eerder een TypeError gaf midden in
+      // deze callback. De vlag stond dan al op true maar er volgde geen
+      // hertekening meer, dus "Werkvoorraad laden…" bleef permanent staan (geen
+      // F5 in de PWA). Nu proberen we het een paar seconden lang opnieuw, tot de
+      // laadtekst echt weg is.
+      let pogingen = 0;
+      const laadtekstNogZichtbaar = () => {
+        const el = document.querySelector("#employee-open-task-total");
+        return /laden|opgehaald/i.test((el && el.textContent) || "");
+      };
+      const teken = () => {
+        pogingen += 1;
+        // Ook hertekenen als het medewerkerdashboard niet de actieve view is:
+        // de laadtekst in #employee-open-task-total moet weg zijn tegen de tijd
+        // dat de medewerker er heen navigeert (bv. na F5 op de urenstaat).
+        if (state.currentRole !== "employee") return;
+        try {
+          // Deze hertekening vervangt de laadtekst door de echte werkvoorraad en
+          // verandert dus de paginahoogte. Meld dat, zodat het scroll-event dat
+          // daarop volgt niet het zojuist geopende profielmenu dichtklapt.
+          markLayoutRender();
+          renderEmployeeDashboard();
+        } catch (_) {
+          // Mislukt de tekening (bv. currentEmployee() nog null), dan volgt
+          // hieronder gewoon een nieuwe poging.
+        }
+        if (laadtekstNogZichtbaar() && pogingen < 16) {
+          setTimeout(teken, 500);
+        }
+      };
+      teken();
     };
     // Vangnet: een verzoek dat blijft hangen mag de laadtekst niet eindeloos
     // laten staan. De normale sync is ruim binnen een seconde klaar; blijft hij

@@ -9,9 +9,20 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate-and-test:
+    name: Validate and test (${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
+    # Iedere shard heeft een eigen runner, MySQL-service en PHP-server. Zo blijft
+    # de volledige suite draaien, maar wachten de vier delen niet op elkaar.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     defaults:
       run:
         working-directory: path-urenregistratie
@@ -32,6 +43,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Controleer of de nieuwste main is meegenomen
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/herontwerp' }}
+        shell: bash
+        run: |
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          missing_main=$(git rev-list --count HEAD..origin/main)
+          if [ "$missing_main" -ne 0 ]; then
+            echo "::error::herontwerp mist $missing_main commit(s) van main. Merge eerst origin/main."
+            git log --oneline --max-count=10 HEAD..origin/main
+            exit 1
+          fi
+          echo "herontwerp bevat de actuele main-kop."
 
       - name: Setup Node
         uses: actions/setup-node@v7
@@ -145,7 +171,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: ci-install-diagnostics
+          name: ci-install-diagnostics-${{ matrix.shard }}
           retention-days: 7
           path: |
             /tmp/health.json
@@ -181,9 +207,11 @@ jobs:
         run: npm run build
 
       - name: Smoke check
+        if: ${{ matrix.shard == 1 }}
         run: npm run check
 
       - name: Run DB CRUD smoke
+        if: ${{ matrix.shard == 1 }}
         env:
           PATH_APP_ENVIRONMENT: test
           PLAYWRIGHT_STAGE: test
@@ -195,6 +223,7 @@ jobs:
         run: npm run test:db:crud
 
       - name: Dependency security audit (runtime)
+        if: ${{ matrix.shard == 1 }}
         run: npm run security:deps
 
       - name: Stop setup PHP server before managed E2E runners
@@ -205,6 +234,7 @@ jobs:
           fi
 
       - name: Run executable BDD pilot
+        if: ${{ matrix.shard == 1 }}
         env:
           PATH_APP_BASE_URL: http://127.0.0.1:8000
         run: npm run test:bdd
@@ -212,13 +242,13 @@ jobs:
       - name: Run E2E tests
         env:
           PATH_APP_BASE_URL: http://127.0.0.1:8000
-        run: npm run test:e2e
+        run: npm run test:e2e -- --shard=${{ matrix.shard }}/4
 
       - name: Upload Playwright report artifact
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: ci-playwright-report
+          name: ci-playwright-report-${{ matrix.shard }}
           retention-days: 7
           path: path-urenregistratie/playwright-report/
 

@@ -202,3 +202,11 @@ Feature: Mobiele gebruikerservaring
     Then valt de dialoog volledig binnen het zichtbare scherm en staat het kruisje rechtsboven in beeld
     When de inhoud van de dialoog helemaal naar onderen wordt gescrold
     Then blijft het kruisje in beeld en sluit het de dialoog nog steeds
+
+  @happy
+  Scenario: [MOB-H-024] een net ingelogde medewerker ziet op de telefoon een volledig geladen dashboard, ook als de eerste sync-afronding hapert
+    # Testtechniek: Foutinjectie + tijdgebonden herstel op telefoon-viewport
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given een medewerker logt op de telefoon voor het eerst in en de sync-afronding valt in de race
+    When de hydratie-afronding één keer klapt op de hertekening
+    Then staat er nergens meer een laadtekst en is het dashboard bruikbaar

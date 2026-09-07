@@ -2,6 +2,9 @@ name: Commit Team Notification
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - herontwerp
 
 permissions:
   contents: write
@@ -19,8 +22,6 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const commitSha = context.sha;
-            const actor = String(context.actor || '').trim().toLowerCase();
-
             const fallbackUsers = ['giovannomaatsen-dev', 'kenrichlieveld'];
             const configured = [process.env.NOTIFY_USER_1, process.env.NOTIFY_USER_2]
               .filter(Boolean)
@@ -31,10 +32,10 @@ jobs:
               .map(u => u.trim().replace(/^@/, '').toLowerCase())
               .filter(Boolean);
 
-            const users = [...new Set((configured.length ? configured : fallbackUsers).filter(Boolean))]
+            const users = [...new Set([owner, ...(configured.length ? configured : fallbackUsers)].filter(Boolean))]
               .filter(u => {
                 const normalized = String(u).toLowerCase();
-                return normalized !== actor && !excluded.includes(normalized);
+                return !excluded.includes(normalized);
               });
 
             if (users.length === 0) {
@@ -46,6 +47,7 @@ jobs:
             const branch = String(context.ref || '').replace('refs/heads/', '');
             const historyUrl = `${context.serverUrl}/${owner}/${repo}/commits/${branch}`;
             const commitUrl = context.payload.head_commit?.url || `${context.serverUrl}/${owner}/${repo}/commit/${commitSha}`;
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
 
             const body = [
               'Commit notificatie',
@@ -56,6 +58,7 @@ jobs:
               `Auteur: @${context.actor}`,
               `Commit: ${commitSha}`,
               `Commit link: ${commitUrl}`,
+              `Workflow run: ${runUrl}`,
               `History: ${historyUrl}`
             ].join('\n');
 

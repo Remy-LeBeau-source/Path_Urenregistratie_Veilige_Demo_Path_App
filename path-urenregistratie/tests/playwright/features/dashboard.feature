@@ -300,3 +300,11 @@ Feature: Dashboard en open werkvoorraad
     Then brengt browser-terug telkens het vorige scherm terug
     Then brengt browser-vooruit telkens het volgende scherm terug
     Then een paginaherlading op een teruggenavigeerd scherm blijft daar staan, springt niet terug naar het beginscherm
+
+  @negative
+  Scenario: [DASH-N-026] het medewerkerdashboard blijft nooit op "Werkvoorraad laden" hangen, ook niet als de eerste serversync faalt
+    # Testtechniek: Foutinjectie + tijdgebonden herstel
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given de medewerker logt voor het eerst in terwijl de eerste werkvoorraad-sync mislukt
+    When de hydratie via het vangnet afrondt
+    Then toont geen enkele werkvoorraadplek nog een laadtekst

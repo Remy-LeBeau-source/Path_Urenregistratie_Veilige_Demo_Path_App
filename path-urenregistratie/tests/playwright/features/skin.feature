@@ -59,6 +59,22 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     When het echte dashboard de bento met live invoervelden en gezamenlijke versie-footer tekent
     Then blijven op telefoon weekinvoer, klanturenstaat en stappen binnen het scherm
 
+  @happy @regressie
+  Scenario: [SKIN-H-008] Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en terugschakelen
+    # Testtechniek: Toestandsovergang + functionele equivalentie Klassiek/Nieuw
+    # Aantoonbare Playwright-assertions in deze case: 24
+    Given Backoffice is ingelogd en de dashboardgegevens zijn geladen
+    When Nieuw wordt geactiveerd en Backoffice alle hoofdschermen bezoekt
+    Then dezelfde gegevens blijven staan in Nieuw en na terugschakelen naar Klassiek
+
+  @happy @regressie
+  Scenario: [SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en Klassiek
+    # Testtechniek: Toestandsovergang + functionele equivalentie Klassiek/Nieuw
+    # Aantoonbare Playwright-assertions in deze case: 11
+    Given een medewerkerdashboard met geladen urenstatus
+    When de medewerker Nieuw activeert en via de bento naar Mijn uren navigeert
+    Then de dashboardstatus gelijk blijft en Klassiek dezelfde gegevens toont
+
   @negative @security
   Scenario: [SKIN-N-007] productie forceert Klassiek en verbergt de redesignschakelaar
     # Testtechniek: Beslissingstabel LOCAL / TEST / PROD + negatieve equivalentieklasse

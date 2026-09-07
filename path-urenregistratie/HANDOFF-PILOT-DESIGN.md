@@ -7,8 +7,9 @@ Laatst bijgewerkt: 2026-09-07 — **status.** Twee vaste branches: `main`
 blijft op `main`. Werk aan de pilot in de worktree-map; `npm ci` is daar al
 gedraaid. Eén chat per baan (go-live vs pilot). Wie stopt: commit + push + dit
 doc bijwerken. Worktree weghalen: `git worktree remove ../Path-herontwerp`.
-Release `1.0.1`–`1.0.4` staan op `main` (kruisje-fixes, PROD-normalisatiescript,
-zelf-normaliserende cutover). `herontwerp` heeft de actuele main-kop `c37fd23`
+Release `1.0.1`–`1.0.9` staan op `main` (kruisje- en PWA-fixes,
+PROD-normalisatiescript en zelf-normaliserende cutover). `herontwerp` heeft de
+actuele main-kop `ac7ca6c`
 op 7 september zonder conflict opgenomen. **De schermen-inventaris in §4 is compleet
 (increment 1–11).**
 
@@ -17,6 +18,9 @@ serieel bevestigd: **375/375 groen**. De mobiele Playwright-set is eveneens
 volledig groen: **Android/Chrome 45/45** en **iPhone/WebKit 45/45**; een eenmalige
 laad-time-out is afzonderlijk groen herhaald. `npm run build` en `npm run check`
 zijn groen. GitHub CI-run `34118945695` op `18bff33` is volledig groen.
+De pilot-CI is vanaf de volgende push vierdelig gesharded en controleert eerst
+dat de actuele `main` in `herontwerp` zit. De main-release toont voortaan het
+niet-blokkerende blok `Inspect pilot branch` met de onderlinge commitstand.
 Na groen op de met actuele main gecombineerde branch mag `herontwerp` bewust
 naar `main` worden gemerged zodat de
 gecombineerde app op `https://uren-test.pathconsultancy.nl/` kan worden getest.
@@ -45,9 +49,13 @@ hierboven, daarna de rest van deze lijst.
 
 **2026-09-07 — uitvoering door Codex.** De volledige lokale regressie is
 afgerond: desktop 375/375, Android 45/45 en iPhone/WebKit 45/45 groen. Daarna is
-main-kop `c37fd23` zonder conflict in `herontwerp` opgenomen. Volgende poort is
-build/check plus gerichte regressie op deze combinatie, gevolgd door groene
-GitHub-CI en de bewuste merge naar main voor TEST.
+main-kop `c37fd23` zonder conflict in `herontwerp` opgenomen en door CI-run
+`34126046882` groen bevestigd. Main verschoof tijdens die run met een PWA-fix;
+de herstelde kop `ac7ca6c` is daarna eveneens zonder conflict opgenomen.
+Daarop zijn `DASH-N-010`, `DASH-N-026`, `MOB-H-024` en alle negen
+`SKIN-*`-cases groen; `SKIN-H-008/009` bewaken expliciet de functionele
+gelijkheid van Klassiek en Nieuw voor Backoffice en medewerker. Volgende poort
+is groene GitHub-CI en de bewuste merge naar main voor TEST.
 
 ## → VOOR CODEX / de volgende sessie
 
