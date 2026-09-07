@@ -1,5 +1,14 @@
 # HANDOFF — 1414/1919 herontwerp
 
+**2026-09-07 avond — actuele overdracht staat in `HANDOFF-CODEX-FASE-D.md`
+(volledig herschreven, geen tegenstrijdige oudere secties meer).** Kort: de
+automatische merge-wachtrij naar `main` (`pilot-merge-queue.yml`) is live;
+`herontwerp`-CI staat rood door 18 functionele testfouten (status-/proces-
+regressie in de "beveilig indienen"-logica van commit `6e763b4`, gedeeltelijk
+al gefixt in `cf3da25`) — dat oplossen is de eerste taak voor wie hierna
+verder werkt. Lees dat bestand vóór je verder gaat; de rest van dit document
+blijft de historische increment-voor-increment log.
+
 **Evergreen doc. Wordt tijdens het werk telkens bijgewerkt.**
 Laatst bijgewerkt: 2026-09-07 — **status.** Twee vaste branches: `main`
 (go-live) en `herontwerp` (deze — Fase D). Er is een **git worktree**:
