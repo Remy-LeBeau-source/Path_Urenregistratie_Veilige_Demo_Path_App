@@ -1,6 +1,9 @@
 name: CI
 
 on:
+  push:
+    branches:
+      - herontwerp
   pull_request:
 
 permissions:
