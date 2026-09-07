@@ -494,6 +494,53 @@ html[data-skin="new"] .announcement-meta span {
   background: var(--vlak);
 }
 
+/* Goedkeuringen + procesvoortgang — de 4-fasen-track als doorlopende
+   groene lijn met gloed op afgeronde/huidige stap (zoals de pilot),
+   groepskoppen op de serif. Alleen onder html[data-skin="new"]. */
+html[data-skin="new"] .workflow-overview {
+  border-color: var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+}
+
+html[data-skin="new"] .workflow-progress-card {
+  border-right-color: var(--line);
+}
+
+html[data-skin="new"] .workflow-step > span {
+  border-radius: 999px;
+  border-color: var(--line);
+  background: var(--vlak);
+  transition: box-shadow .3s ease, background .3s ease;
+}
+
+html[data-skin="new"] .workflow-step.is-done > span {
+  border-color: var(--mint-dark);
+  background: var(--mint-dark);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--path-green) 16%, transparent);
+}
+
+html[data-skin="new"] .workflow-step.is-current > span {
+  border-color: var(--path-green);
+  background: var(--green-light);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--path-green) 18%, transparent);
+}
+
+html[data-skin="new"] .workflow-line {
+  height: 2px;
+  background: color-mix(in srgb, var(--line) 90%, transparent);
+}
+
+html[data-skin="new"] .workflow-line.is-done {
+  background: var(--path-green);
+}
+
+html[data-skin="new"] .approval-period-heading h3 {
+  font-family: var(--path-serif);
+  font-weight: 400;
+  color: var(--navy-tekst);
+}
+
 @media (prefers-reduced-motion: reduce) {
   html[data-skin="new"] *,
   html[data-skin="new"] *::before,
