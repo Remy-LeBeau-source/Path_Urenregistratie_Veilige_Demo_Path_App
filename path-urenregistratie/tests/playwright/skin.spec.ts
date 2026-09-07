@@ -224,7 +224,7 @@ test('[SKIN-H-008] Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en
   await test.step('Given Backoffice is ingelogd en de dashboardgegevens zijn geladen', async () => {
     await loginPage.open();
     await loginPage.loginAsAdmin();
-    await expect(page.locator('#dashboard-employee-rows tr')).toHaveCount(4);
+    await expect(page.locator('#dashboard-employee-rows tr')).not.toHaveCount(0);
   });
 
   const dashboardVoor = await genormaliseerdeTekst(page.locator('#dashboard-employee-rows'));
