@@ -813,7 +813,11 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 
 .modal-backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: rgba(5,13,27,.58); padding: 20px; backdrop-filter: blur(5px); }
 .modal-backdrop[hidden] { display: none; }
-.modal { position: relative; display: flex; flex-direction: column; width: min(470px, 100%); max-height: calc(100vh - 40px); overflow: hidden; border-radius: 22px; background: var(--vlak); box-shadow: 0 30px 80px rgba(0,0,0,.26); animation: modalIn .2s ease; }
+/* `dvh` i.p.v. `vh`: op mobiel is 100vh de grote viewport (adresbalk weg), groter
+   dan wat je ziet als de adresbalk er is. Met `vh` werd de dialoog hoger dan het
+   zichtbare scherm en verdween de bovenrand -- met het kruisje erin -- achter de
+   browserchrome. `dvh` volgt het zichtbare gebied. `vh` blijft als fallback. */
+.modal { position: relative; display: flex; flex-direction: column; width: min(470px, 100%); max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px); overflow: hidden; border-radius: 22px; background: var(--vlak); box-shadow: 0 30px 80px rgba(0,0,0,.26); animation: modalIn .2s ease; }
 .modal.is-wide { width: min(780px, 100%); }
 @keyframes modalIn { from { opacity: 0; transform: scale(.97) translateY(8px); } to { opacity: 1; transform: none; } }
 /* Alleen deze binnenlaag scrollt; de dialoogrampartij (.modal) staat stil,
@@ -2128,6 +2132,7 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
   .modal {
     width: 100%;
     max-height: calc(100vh - 20px);
+    max-height: calc(100dvh - 20px);
     border-radius: 20px 20px 16px 16px;
   }
 

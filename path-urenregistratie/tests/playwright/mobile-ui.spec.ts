@@ -1498,3 +1498,73 @@ test('[MOB-H-022] de mobiele Home-knop zet de maandkiezer terug op de actuele ma
     await assertNoHorizontalOverflow(page);
   });
 });
+
+// Regressie: op de telefoon verdween het sluitkruisje van een lange dialoog
+// (Medewerker aanpassen) boven de schermrand. Oorzaak 1: `position: sticky` op
+// de knop hield op mobiel niet. Oorzaak 2: `.modal` max-height op `100vh` (de
+// grote viewport) maakte de dialoog hoger dan het zichtbare scherm, zodat de
+// bovenrand met het kruisje achter de adresbalk verdween. Fix: aparte
+// scroll-laag + absoluut kruisje + `100dvh`. Deze case draait op mobile-chrome
+// en mobile-safari en zou op de kapotte versie falen.
+test('[MOB-H-023] het sluitkruisje van een lange dialoog blijft op de telefoon in beeld', async ({ page }) => {
+  const errors = captureConsoleErrors(page);
+  const loginPage = new LoginPage(page);
+  await isolateFrontendState(page);
+
+  await test.step('Given een administrator opent op de telefoon een medewerker om aan te passen', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    clearConsoleErrors(errors);
+    await openView(page, 'employees');
+    await expect(page.locator('#view-employees')).toHaveClass(/is-active/);
+    await page.locator('[data-edit-routing]').first().click();
+    await expect(page.locator('#modal')).toBeVisible();
+    await expect(page.locator('#modal-label')).toContainText('Medewerker aanpassen');
+    await expect(page.locator('#modal-title')).not.toHaveText('');
+  });
+
+  await test.step('Then valt de dialoog volledig binnen het zichtbare scherm en staat het kruisje rechtsboven in beeld', async () => {
+    const start = await page.evaluate(() => {
+      const modal = document.querySelector('.modal') as HTMLElement;
+      const close = document.querySelector('#modal-close') as HTMLElement;
+      const scroller = document.querySelector('#modal-scroll') as HTMLElement;
+      const m = modal.getBoundingClientRect();
+      const c = close.getBoundingClientRect();
+      return {
+        modalTop: m.top, modalBottom: m.bottom, vh: window.innerHeight,
+        closeTop: c.top, closeBottom: c.bottom, closeRight: c.right, vw: window.innerWidth,
+        canScroll: scroller.scrollHeight - scroller.clientHeight,
+        closePosition: getComputedStyle(close).position,
+        modalScrolls: getComputedStyle(modal).overflowY,
+      };
+    });
+    // Structuurcontract: het kruisje staat absoluut op de STILSTAANDE dialoograar
+    // (niet sticky/static op de scrollende inhoud). Terugval hierop betekent de bug.
+    expect(start.closePosition, 'het kruisje hoort absoluut op de dialoogrand te staan').toBe('absolute');
+    expect(start.modalScrolls, '.modal zelf hoort niet te scrollen; alleen #modal-scroll').not.toBe('auto');
+    expect(start.canScroll, 'de medewerkerdialoog hoort op telefoonhoogte te scrollen').toBeGreaterThan(20);
+    expect(start.modalTop, 'de dialoogbovenrand hoort binnen het scherm te vallen').toBeGreaterThanOrEqual(-1);
+    expect(start.modalBottom, 'de dialoogonderrand hoort binnen het scherm te vallen').toBeLessThanOrEqual(start.vh + 1);
+    expect(start.closeTop, 'het kruisje hoort binnen het scherm te vallen').toBeGreaterThanOrEqual(0);
+    expect(start.closeBottom, 'het kruisje hoort volledig zichtbaar te zijn').toBeLessThanOrEqual(start.vh);
+    expect(start.closeRight, 'het kruisje hoort binnen de schermbreedte te vallen').toBeLessThanOrEqual(start.vw + 1);
+    await expect(page.locator('#modal-close')).toBeVisible();
+  });
+
+  await test.step('And blijft het kruisje in beeld nadat de inhoud helemaal naar onderen is gescrold', async () => {
+    const after = await page.evaluate(() => {
+      const scroller = document.querySelector('#modal-scroll') as HTMLElement;
+      scroller.scrollTo(0, scroller.scrollHeight);
+      const close = document.querySelector('#modal-close') as HTMLElement;
+      const c = close.getBoundingClientRect();
+      return { closeTop: c.top, closeBottom: c.bottom, vh: window.innerHeight, scrolled: scroller.scrollTop };
+    });
+    expect(after.scrolled, 'de binnenlaag hoort echt gescrold te zijn').toBeGreaterThan(20);
+    expect(after.closeTop, 'het kruisje hoort na scrollen nog in beeld te zijn').toBeGreaterThanOrEqual(0);
+    expect(after.closeBottom, 'het kruisje hoort na scrollen volledig zichtbaar te blijven').toBeLessThanOrEqual(after.vh);
+    await expect(page.locator('#modal-close')).toBeVisible();
+    await page.locator('#modal-close').click();
+    await expect(page.locator('#modal')).toBeHidden();
+    expect(errors).toEqual([]);
+  });
+});

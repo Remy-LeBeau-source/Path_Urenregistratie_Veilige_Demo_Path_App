@@ -193,3 +193,12 @@ Feature: Mobiele gebruikerservaring
     Given een mobiele beheerder heeft een eerdere maand gekozen
     When de beheerder op de mobiele Home-knop tikt
     Then staat de maandkiezer weer op de actuele kalendermaand
+
+  @happy
+  Scenario: [MOB-H-023] het sluitkruisje van een lange dialoog blijft op de telefoon in beeld
+    # Testtechniek: Responsive viewport + regressie op zichtbaarheid
+    # Aantoonbare Playwright-assertions in deze case: 14
+    Given een administrator opent op de telefoon een medewerker om aan te passen
+    Then valt de dialoog volledig binnen het zichtbare scherm en staat het kruisje rechtsboven in beeld
+    When de inhoud van de dialoog helemaal naar onderen wordt gescrold
+    Then blijft het kruisje in beeld en sluit het de dialoog nog steeds
