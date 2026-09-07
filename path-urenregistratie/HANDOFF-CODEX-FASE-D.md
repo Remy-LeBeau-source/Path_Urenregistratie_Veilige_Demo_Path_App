@@ -3,6 +3,31 @@
 **Voor Codex. Geschreven door Claude, 2026-09-07, vanuit `C:\Path-herontwerp`.**
 Evergreen doc zoals `HANDOFF-PILOT-DESIGN.md` — bijwerken per increment.
 
+## Actuele gezamenlijke werkafspraak (Claude en Codex)
+
+Deze paragraaf gaat vóór oudere, beperktere overdrachtsregels verderop in dit
+document. Claude en Codex lezen vóór ieder nieuw increment zowel `origin/main`
+als `herontwerp`, nemen de nieuwste `main` eerst op in `herontwerp` en bewaren
+de werkende klassieke app. De PWA-, hydratie- en dialoogfixes horen bij de
+gedeelde klassieke code; de verdere visuele uitwerking van 1414/1919 hoort bij
+`skin=new`. Functionele pilotbediening mag gedeelde HTML/JavaScript gebruiken
+als beide skins en beide rollen aantoonbaar blijven werken.
+
+**Beide agents kijken per wijziging kritisch naar ontwerp én gedrag.** Ze vullen
+zelf ontbrekende positieve, negatieve, mobiele en regressiecases aan waar het
+risico dat vraagt. Bestaande tests worden niet alleen passend gemaakt aan de
+implementatie: iedere case moet het bedoelde gebruikersgedrag bewijzen. Minimaal
+worden bij de huidige pilot bewaakt: Classic start licht, Nieuw start donker,
+thema's worden per skin onthouden, weekinvoer en presets schrijven echte data,
+alleen de laatste week kan de maand indienen, indienen vraagt een bewuste
+bevestiging, de beheerderstoryline houdt alle hoofdschermen bereikbaar en
+`SKIN-N-007` houdt Nieuw op PROD fail-closed verborgen.
+
+Werk in korte Nederlandse commits zonder `Co-Authored-By`. Stage uitsluitend
+expliciete paden en gebruik nooit `git add -A`. Een agent mag na groene controle
+zelfstandig `herontwerp` bijwerken en naar TEST integreren volgens
+`COPILOT_HANDOFF.md`; PROD blijft altijd achter de handmatige reviewerpoort.
+
 ## 0. Actuele voortgang 7 september 2026
 
 De basisregressie is afgerond: desktop 375/375, Android/Chrome 45/45 en
@@ -20,6 +45,45 @@ De pilot-CI draait vanaf deze integratie in vier parallelle shards en faalt als
 `herontwerp` commits van `main` mist. De main-release bevat daarnaast het
 zichtbare, informerende blok `Inspect pilot branch`, zodat beide werkstromen
 bij iedere release worden vergeleken zonder een gewone hotfix te blokkeren.
+
+## 0a. Nieuw 7 september 2026 (avond) — automatische merge-wachtrij naar `main`
+
+Er is een GitHub Actions-workflow gebouwd die de merge `herontwerp` → `main`
+**zelf** doet, zodat niemand dat nog handmatig hoeft te pushen. Status en
+regel hieronder — dit vervangt **niet** de regel "raak `main` niet aan" in
+§1: die blijft gelden voor mensen/agents zelf; dit is de ene bewuste
+automatisering die de gebruiker hiervoor heeft goedgekeurd.
+
+**Bestand:** `.github/workflows/pilot-merge-queue.yml`, moet op de default
+branch (`main`) staan om te kunnen reageren op de `workflow_run`-event van
+`CI` (die op `herontwerp` draait) — dat is een GitHub-beperking, geen keuze.
+**Stand bij schrijven:** het bestand staat klaar in PR
+[#41](https://github.com/Remy-LeBeau-source/Path_Urenregistratie_Veilige_Demo_Path_App/pull/41)
+op een losse branch `ci/pilot-merge-queue`; de gebruiker merget die PR zelf
+(agents mogen niet naar `main` pushen of daar een PR op mergen — dat wordt
+door de omgeving zelf geblokkeerd, niet alleen door afspraak). Controleer of
+PR #41 gemerged is voordat je op de automatische wachtrij rekent; zo niet,
+blijft de oude regel gelden dat de gebruiker de uiteindelijke merge doet.
+
+**Wat de workflow doet, exact:**
+
+1. Draait bij elke afronding van de `CI`-workflow op `herontwerp`.
+2. Gaat alleen verder als die CI-run **groen** eindigde.
+3. Controleert of `herontwerp` de actuele `main` al bevat (dezelfde check als
+   `ci.yml` al doet). Zo niet: geen merge, alleen een waarschuwing — dan moet
+   eerst iemand `main` in `herontwerp` opnemen (dat blijft mensen-/agentwerk,
+   zie §1 vierde bullet).
+4. Zo ja: wacht (poll elke 60s, max 3 uur) tot `main` **geen actieve** Release
+   Pipeline-run meer heeft — **ongeacht of die rood of groen eindigde**, alleen
+   de status (`in_progress`/`queued` vs. `completed`) telt.
+5. Zodra `main` vrij is: fast-forwardt `main` naar de groene `herontwerp`-commit.
+
+**Wat dit niet doet:** PROD promoten. Die stap blijft achter de handmatige
+GitHub-environment-reviewerpoort op `prod`, ongeacht deze workflow.
+
+**Enige resterende voorwaarde voor een storingsvrije, volautomatische
+doorstroom:** houd `herontwerp` synchroon met `main`. Zolang dat zo is en de
+CI groen is, gebeurt de rest zonder tussenkomst.
 
 ## 1. Waar je bent / wat je NIET aanraakt
 
@@ -134,10 +198,8 @@ Uit `HANDOFF-PILOT-DESIGN.md` §→WAT ER NOG MOET, in volgorde:
    bekijk met `skin=new` (Voorkeuren → Vormgeving of `localStorage`). Draai
    `npm run check` + de relevante specs; vóór een grotere wijziging de
    volledige suite (§4) in **beide** skins 100% groen.
-4. **NL-commit**, eindig met:
-   `Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>`
-   (deze trailer is een harnas-eis van de huidige sessie-instructies — dit
-   overschrijft de oudere "geen trailer"-afspraak voor commits vanaf nu).
+4. Gebruik een korte Nederlandse commitboodschap zonder
+   `Co-Authored-By`-trailer.
 5. `git add` met **expliciete paden**, **nooit** `-A` (sweept anders
    halfklaar werk van andere agents/sessies mee).
 6. `git push origin herontwerp` na elke increment.

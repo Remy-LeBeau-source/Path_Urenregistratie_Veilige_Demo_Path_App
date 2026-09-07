@@ -59,6 +59,7 @@ test('[SKIN-H-002] Vormgeving op "Nieuw" zetten schakelt de skin en blijft na he
   await test.step('When Voorkeuren -> Vormgeving op "Nieuw" wordt gezet en opgeslagen', async () => {
     await kiesVormgeving(page, 'new');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   });
 
   await test.step('Then draait de app door in de nieuwe skin en overleeft die een herlading', async () => {
@@ -131,7 +132,7 @@ test('[SKIN-H-004] de nieuwe skin activeert uitsluitend zijn eigen visuele funda
   });
 });
 
-test('[SKIN-H-005] de topbar wisselt licht/donker en klassiek/nieuw direct en persistent', async ({ page }) => {
+test('[SKIN-H-005] Klassiek start licht en Nieuw donker en onthoudt daarna elk eigen thema', async ({ page }) => {
   const loginPage = new LoginPage(page);
 
   await test.step('Given een ingelogde administrator met de standaardvoorkeuren', async () => {
@@ -142,21 +143,24 @@ test('[SKIN-H-005] de topbar wisselt licht/donker en klassiek/nieuw direct en pe
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
   });
 
-  await test.step('When beide directe schakelaars eenmaal worden gebruikt', async () => {
-    await page.locator('#quick-theme-toggle').click();
+  await test.step('When Nieuw voor het eerst direct wordt geopend', async () => {
     await page.locator('#quick-skin-toggle').click();
-  });
-
-  await test.step('Then zijn donker en nieuw actief en blijven beide na herladen bewaard', async () => {
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
-    await expect(page.locator('#quick-theme-toggle')).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator('#quick-skin-toggle')).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator('#quick-theme-toggle')).toContainText('Donker');
-    await expect(page.locator('#quick-skin-toggle')).toContainText('Nieuw');
+  });
+
+  await test.step('Then bewaart iedere skin zijn eigen keuze bij heen en weer schakelen', async () => {
+    await page.locator('#quick-theme-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
     await page.reload();
     await expect(page.locator('#app-shell')).toBeVisible();
-    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
   });
 });
@@ -184,12 +188,24 @@ test('[SKIN-H-006] de echte medewerkerroute toont de live bento en blijft mobiel
     await expect(page.locator('.new-bento-hero')).toContainText('Begin met');
     await expect(page.locator('#new-bento-days .new-bento-hours-input')).toHaveCount(4);
     await expect(page.locator('#new-bento-week-total-label')).toContainText('4 werkdagen in deze maand');
-    await expect(page.locator('[data-new-bento-submit]')).toContainText('Hele maand indienen');
+    await expect(page.locator('#new-bento-days-total')).toHaveText(/\/ \d+ weken/);
+    await expect(page.locator('[data-new-bento-submit]')).toContainText('Naar laatste week en controleren');
     await expect(page.locator('[data-new-bento-save]')).toHaveAttribute('title', /Bewaar/);
-    await expect(page.locator('[data-new-bento-submit]')).toHaveAttribute('title', /alle weken/);
+    await expect(page.locator('[data-new-bento-submit]')).toHaveAttribute('title', /laatste week|hele maand/i);
     await expect(page.locator('[data-new-bento-customer]')).toHaveAttribute('title', /Upload/);
     await expect(page.locator('.app-footer')).toContainText('Ontwikkeld en beheerd door Team Path');
     await expect(page.locator('.app-footer-version')).toHaveText(/Versie \d+\.\d+\.\d+/);
+  });
+
+  await test.step('And eerdere weken niet indienen en de laatste week eerst bevestiging vraagt', async () => {
+    await page.locator('[data-new-bento-submit]').click();
+    await expect(page.locator('#modal')).toBeHidden();
+    await expect(page.locator('[data-new-bento-submit]')).toContainText('Indienen ter controle');
+    await page.locator('[data-new-bento-submit]').click();
+    await expect(page.locator('#modal')).toBeVisible();
+    await expect(page.locator('#modal-title')).toContainText('indienen?');
+    await expect(page.locator('#modal-summary')).toContainText('Alle uren worden vergrendeld');
+    await page.locator('#modal-close').click();
   });
 
   await test.step('Then blijven op telefoon weekinvoer, klanturenstaat en stappen binnen het scherm', async () => {
@@ -217,6 +233,7 @@ test('[SKIN-H-008] Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en
   await test.step('When Nieuw wordt geactiveerd en Backoffice alle hoofdschermen bezoekt', async () => {
     await page.locator('#quick-skin-toggle').click();
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await expect(page.locator('.new-admin-topnav')).toBeVisible();
 
     for (const [view, titel] of [
       ['approvals', 'Goedkeuringen'],
@@ -225,7 +242,7 @@ test('[SKIN-H-008] Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en
       ['employees', 'Medewerkers'],
       ['settings', 'Instellingen'],
     ] as const) {
-      await page.locator(`.nav-item[data-view="${view}"]`).click();
+      await page.locator(`[data-view="${view}"]:visible`).first().click();
       await expect(page.locator(`#view-${view}`)).toHaveClass(/is-active/);
       await expect(page.locator('#page-title')).toHaveText(titel);
       await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
@@ -233,7 +250,7 @@ test('[SKIN-H-008] Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en
   });
 
   await test.step('Then dezelfde gegevens blijven staan in Nieuw en na terugschakelen naar Klassiek', async () => {
-    await page.locator('.nav-item[data-view="dashboard"]').click();
+    await page.locator('[data-view="dashboard"]:visible').first().click();
     expect(await genormaliseerdeTekst(page.locator('#dashboard-employee-rows'))).toBe(dashboardVoor);
     expect(await genormaliseerdeTekst(page.locator('#dashboard-team-title'))).toBe(teamTitelVoor);
 
