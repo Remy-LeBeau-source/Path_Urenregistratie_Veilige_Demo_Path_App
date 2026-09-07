@@ -7541,11 +7541,20 @@ function isTimesheetEditableForEmployee(record) {
 function updateTimesheetSubmitUi(record) {
   const normalizedStatus = record && record.timesheetStatus ? String(record.timesheetStatus) : "draft";
   const submit = document.querySelector("#submit-timesheet");
+  const save = document.querySelector("#save-timesheet");
   // A submitted month belongs to Backoffice and must stay read-only until an
   // explicit correction request returns ownership to the employee.
   const canSubmit = normalizedStatus === "draft" || normalizedStatus === "correction";
   const hasAnyInput = totalEntries(record.entries) > 0 || Number(record.leave || 0) > 0 || Number(record.sick || 0) > 0;
-  const showSubmit = canSubmit;
+  const wholeMonthSelected = state.hoursWeekScope === "all";
+  const showSubmit = canSubmit && wholeMonthSelected;
+  if (save) {
+    save.hidden = !canSubmit;
+    save.disabled = !canSubmit;
+    const weekMatch = /^week-(\d+)$/.exec(String(state.hoursWeekScope || ""));
+    const week = weekMatch ? currentPeriod().weekRows[Number(weekMatch[1])] : null;
+    save.textContent = week ? "Week " + week.number + " opslaan" : "Maand opslaan";
+  }
   if (submit) {
     submit.hidden = !showSubmit;
     submit.disabled = !showSubmit;
@@ -7555,14 +7564,18 @@ function updateTimesheetSubmitUi(record) {
   }
   const submitNote = document.querySelector("#submit-timesheet-note");
   if (submitNote) {
-    submitNote.hidden = showSubmit;
+    const weekOnlyMessage = canSubmit && !wholeMonthSelected;
+    submitNote.hidden = showSubmit || (canSubmit && wholeMonthSelected);
     submitNote.textContent = normalizedStatus === "submitted"
       ? "Je uren zijn al ingediend en wachten op controle."
       : normalizedStatus === "approved"
         ? "Je uren zijn goedgekeurd. Indienen is niet meer nodig."
+        : weekOnlyMessage
+          ? "Sla deze week op. De definitieve knop Maand indienen staat onder Hele maand."
         : canSubmit && !hasAnyInput
           ? "Je kunt ook met 0 uren indienen als dat klopt voor deze maand."
         : "";
+    submitNote.hidden = !submitNote.textContent;
   }
   const statusEl = document.querySelector("#timesheet-status");
   if (statusEl) {
@@ -12097,6 +12110,12 @@ function showTimesheetSubmitConfirmation() {
 }
 
 document.querySelector("#submit-timesheet").addEventListener("click", showTimesheetSubmitConfirmation);
+document.querySelector("#save-timesheet").addEventListener("click", () => {
+  updateHoursTotal(true);
+  const weekMatch = /^week-(\d+)$/.exec(String(state.hoursWeekScope || ""));
+  const week = weekMatch ? currentPeriod().weekRows[Number(weekMatch[1])] : null;
+  toast((week ? "Week " + week.number : currentPeriod().label) + " is opgeslagen.");
+});
 
 document.querySelector("#approve-all").addEventListener("click", () => {
   const open = allOpenApprovals().filter(item => state.approvalScope === "all" || item.periodKey === currentPeriod().key);

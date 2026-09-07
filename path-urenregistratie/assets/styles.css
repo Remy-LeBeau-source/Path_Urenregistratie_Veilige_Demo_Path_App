@@ -560,6 +560,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .timesheet-actions strong, .timesheet-actions small { display: block; }
 .timesheet-actions strong { font-size: 12px; }
 .timesheet-actions small { margin-top: 4px; color: var(--muted); font-size: 10px; }
+.timesheet-action-buttons { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
 .summary-card { align-self: start; padding: 24px; }
 .summary-card dl { margin: 22px 0; }
 .summary-card dl div { display: flex; justify-content: space-between; gap: 20px; border-bottom: 1px solid #edf1f2; padding: 12px 0; }
@@ -970,6 +971,8 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .approval-heading-actions .segmented-control { width: 100%; }
   .approval-heading-actions .segmented-control button { flex: 1; }
   .timesheet-actions { align-items: stretch; flex-direction: column; }
+  .timesheet-action-buttons { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .timesheet-action-buttons .button { width: 100%; }
   .summary-card { display: block; }
   .approval-card { grid-template-columns: minmax(0, 1fr); }
   .approval-actions { justify-content: stretch; }
