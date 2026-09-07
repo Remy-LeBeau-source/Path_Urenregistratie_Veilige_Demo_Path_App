@@ -4589,8 +4589,10 @@ function renderEmployeeDashboard() {
       };
       const teken = () => {
         pogingen += 1;
-        const dashboardActief = document.querySelector("#view-employee-dashboard")?.classList.contains("is-active") === true;
-        if (state.currentRole !== "employee" || !dashboardActief) return;
+        // Ook hertekenen als het medewerkerdashboard niet de actieve view is:
+        // de laadtekst in #employee-open-task-total moet weg zijn tegen de tijd
+        // dat de medewerker er heen navigeert (bv. na F5 op de urenstaat).
+        if (state.currentRole !== "employee") return;
         try {
           // Deze hertekening vervangt de laadtekst door de echte werkvoorraad en
           // verandert dus de paginahoogte. Meld dat, zodat het scroll-event dat
