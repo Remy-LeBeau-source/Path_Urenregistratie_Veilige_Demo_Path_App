@@ -90,12 +90,16 @@ Classic blijft exact intact. Al gedaan:
   uurwaarden in de serif, groene focus, zachtere lijnen/kopcel. `npm run check`
   groen (taak `b3f6fuqdk`, exit 0). Volledige desktop-e2e over 3–6 nog te doen
   (zie EERSTE TAAK).
-- **Increment 7** (`herontwerp`): Facturen — `.invoice-month-overview` als crème-
-  paneel met groene rail, `.invoice-status-guide`-kaarten met groene ring op
-  actief/huidig, nummerbadge in het groen, `.status-pill` met hairline (kleur
-  blijft semantisch), zoekveld + segmentschakelaar op de tokens,
+- **Increment 7** (`herontwerp` `32cac1a`): Facturen — `.invoice-month-overview`
+  als crème-paneel met groene rail, `.invoice-status-guide`-kaarten met groene
+  ring op actief/huidig, nummerbadge in het groen, `.status-pill` met hairline
+  (kleur blijft semantisch), zoekveld + segmentschakelaar op de tokens,
   `.invoice-identity-preview` als crème-groen blok met serif-bedrijfsnaam.
   `[SKIN-*]` 7/7 groen lokaal.
+- **Increment 8** (`herontwerp`): Medewerkers/Teambeheer — `.employee-card` op
+  crème + `--shadow`, naam in de serif, `.employee-details`-tegels met hairline,
+  `.mini-avatar` als ronde tegel in `--mint-dark-tekst`, `.team-account-overview`
+  -kop serif, `.team-account-group` op de tokens. `[SKIN-*]` 7/7 groen lokaal.
 
 ### 4. Wat er nog moet (schermen-inventaris)
 
@@ -110,8 +114,8 @@ door de eigen `[*-*]`-cases blijven. Volgorde-suggestie:
 - [x] `invoices` — "Facturen" (maandkaart, statuswegwijzer, chips, zoekbalk,
       identiteitspreview op de tokens; factuurdetail-modal + PDF-preview kunnen
       nog polish gebruiken)
-- [ ] `employees` — "Medewerkers" (grotendeels al gedekt door de gedeelde
-      `.panel`/`.employee-card`-tokens; alleen serif-kop + `--shadow` resteren)
+- [x] `employees` — "Medewerkers" (kaarten op crème + `--shadow`, serif-namen,
+      ronde avatartegels, accountoverzicht-strook op de tokens)
 - [ ] `settings` — "Instellingen" (6 subsecties: Organisatie · Facturatie ·
       Mailroutes · Teksten · Herinneringen · Veiligheid)
 - [ ] Modal-detailschermen (goedkeuring-detail, factuurdetail, correctie,

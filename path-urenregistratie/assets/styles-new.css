@@ -721,6 +721,42 @@ html[data-skin="new"] .invoice-identity-preview strong {
   font-weight: 400;
 }
 
+/* Medewerkers (Teambeheer) — de kaarten en de accountoverzicht-strook op het
+   fundament: crème-panelen met de zachte schaduw, namen in de serif, ronde
+   avatartegels. Alleen html[data-skin="new"]. */
+html[data-skin="new"] .employee-card {
+  border-color: var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+html[data-skin="new"] .employee-card-head .employee-identity strong {
+  font-family: var(--path-serif);
+  font-weight: 400;
+  font-size: 15px;
+}
+
+html[data-skin="new"] .employee-details div {
+  border: 1px solid var(--line);
+}
+
+html[data-skin="new"] .mini-avatar {
+  border-radius: 12px;
+  color: var(--mint-dark-tekst);
+}
+
+html[data-skin="new"] .team-account-overview-copy h3 {
+  font-family: var(--path-serif);
+  font-weight: 400;
+  color: var(--navy-tekst);
+}
+
+html[data-skin="new"] .team-account-group {
+  border-radius: 14px;
+  border-color: var(--line);
+  background: var(--vlak);
+}
+
 @media (prefers-reduced-motion: reduce) {
   html[data-skin="new"] *,
   html[data-skin="new"] *::before,
