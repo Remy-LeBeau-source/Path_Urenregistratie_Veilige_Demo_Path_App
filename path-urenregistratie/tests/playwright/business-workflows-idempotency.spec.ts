@@ -83,10 +83,11 @@ test('[E2E-H-019] dubbel klikken maakt nooit dubbele statussen, facturen of mail
       await invoer.press('Tab');
 
       const knop = page.locator('#submit-timesheet');
-      // Twee klikken zonder ertussen te wachten. force omdat de knop na de eerste
-      // klik uitgeschakeld kan raken -- juist dat wil ik hier omzeilen, want de
-      // vraag is wat de server doet als er tóch twee verzoeken komen.
+      // De eerste klik opent bewust de indienbevestiging. Bevestigen start de
+      // echte schrijfactie; daarna proberen we nogmaals te klikken om ook de
+      // browserbeveiliging tegen een ongeduldige dubbelklik te bewijzen.
       await knop.click();
+      await page.locator('#modal-confirm').click();
       await knop.click({ force: true, timeout: 2_000 }).catch(() => null);
     }
     await expect(page.locator('#timesheet-status'),

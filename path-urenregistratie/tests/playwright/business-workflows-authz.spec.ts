@@ -70,6 +70,7 @@ test('[E2E-N-020] een medewerker kan de Backoffice-keten niet uitvoeren en een w
       const schrijf = page.waitForResponse(response =>
         response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
       await page.locator('#submit-timesheet').click();
+      await page.locator('#modal-confirm').click();
       await schrijf;
     }
     await expect(page.locator('#timesheet-status'),

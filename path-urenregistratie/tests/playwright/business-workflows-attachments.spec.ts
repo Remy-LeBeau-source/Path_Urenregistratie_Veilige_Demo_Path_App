@@ -74,6 +74,7 @@ test('[E2E-H-018] iedere beloofde factuurbijlage bestaat werkelijk als geldige e
       const schrijf = page.waitForResponse(response =>
         response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
       await page.locator('#submit-timesheet').click();
+      await page.locator('#modal-confirm').click();
       await schrijf;
     }
     urenstaatId = Number((await leesUrenstaat(page, periodeSleutel, medewerkerId)).id || 0);

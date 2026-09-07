@@ -519,8 +519,20 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .hours-view-toolbar > div:first-child strong, .hours-view-toolbar > div:first-child small { display: block; }
 .hours-view-toolbar > div:first-child strong { color: var(--navy-tekst); font-size: 11px; }
 .hours-view-toolbar > div:first-child small { margin-top: 3px; color: var(--muted); font-size: 9px; }
-.hours-week-filter { width: fit-content; max-width: 100%; overflow-x: auto; }
-.hours-week-filter button { white-space: nowrap; }
+.hours-week-filter-wrap { min-width: 0; }
+.hours-week-filter {
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-color: var(--mint) rgba(13, 27, 56, .14);
+  scrollbar-width: thin;
+}
+.hours-week-filter::-webkit-scrollbar { height: 7px; }
+.hours-week-filter::-webkit-scrollbar-track { border-radius: 999px; background: rgba(13, 27, 56, .14); }
+.hours-week-filter::-webkit-scrollbar-thumb { border-radius: 999px; background: var(--mint); }
+.hours-week-filter button { flex: 0 0 auto; white-space: nowrap; }
+.hours-week-scroll-hint { display: none; }
 .hours-visible-total { text-align: right; }
 .hours-visible-total span, .hours-visible-total strong { display: block; }
 .hours-visible-total span { color: var(--muted); font-size: 9px; text-transform: uppercase; }
@@ -931,8 +943,8 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .hero-card { border-radius: 18px; padding: 24px 20px; }
   .hero-copy h2 { font-size: 29px; }
   .hero-actions, .hero-actions .button { width: 100%; }
-  .hours-week-filter { width: 100%; }
-  .hours-week-filter button { flex: 0 0 auto; }
+  .hours-week-filter { width: 100%; padding-bottom: 9px; }
+  .hours-week-scroll-hint { display: block; margin: 5px 4px 0; color: var(--muted); font-size: 10px; font-weight: 700; }
   .reminder-rule { grid-template-columns: minmax(0, 1fr); }
   .reminder-rule .check-row { grid-column: auto; }
   .month-batch-blocker { grid-template-columns: minmax(0, 1fr); }

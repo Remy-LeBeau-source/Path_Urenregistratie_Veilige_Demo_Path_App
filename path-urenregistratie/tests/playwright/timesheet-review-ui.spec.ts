@@ -258,6 +258,7 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
       const indienen = page.waitForResponse(response =>
         response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
       await page.locator('#submit-timesheet').click();
+      await page.locator('#modal-confirm').click();
       await indienen;
     }
     await submitWrite;
@@ -332,6 +333,7 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
       const indienen = page.waitForResponse(response =>
         response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
       await page.locator('#submit-timesheet').click();
+      await page.locator('#modal-confirm').click();
       await indienen;
     }
     await expect(page.locator('#timesheet-status')).toHaveText('Ingediend', { timeout: 15_000 });
@@ -424,6 +426,7 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
       const indienen = page.waitForResponse(response =>
         response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
       await page.locator('#submit-timesheet').click();
+      await page.locator('#modal-confirm').click();
       await indienen;
     }
     await expect(page.locator('#timesheet-status')).toHaveText('Ingediend', { timeout: 15_000 });

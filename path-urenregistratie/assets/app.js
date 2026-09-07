@@ -4945,11 +4945,16 @@ function employeeOpenMonthSummaries(employeeId, currentPeriodKey) {
 
 function employeeOpenMonthEquation(openMonthSummaries) {
   if (!openMonthSummaries.length) return 'Alles afgerond';
+  if (openMonthSummaries.length === 1) {
+    const item = openMonthSummaries[0];
+    const count = item.actions.length;
+    return item.period.label.split(' ')[0] + ': ' + count + ' open ' + (count === 1 ? 'actie' : 'acties');
+  }
   const equation = openMonthSummaries
     .map(item => item.period.label.split(' ')[0] + ' ' + item.actions.length)
     .join(' + ');
   const total = openMonthSummaries.reduce((sum, item) => sum + item.actions.length, 0);
-  return equation + ' = ' + total;
+  return equation + ' = ' + total + ' open acties';
 }
 
 function adminTaskAction(task) {
@@ -6049,6 +6054,12 @@ function renderNewAdminStoryline(rows, period) {
   const heading = document.querySelector("#new-admin-story-heading");
   const cards = document.querySelector("#new-admin-story-cards");
   if (!queue || !heading || !cards) return;
+  if (document.documentElement.dataset.skin !== "new") {
+    queue.innerHTML = "";
+    heading.innerHTML = "";
+    cards.innerHTML = "";
+    return;
+  }
   if (!rows.length) {
     queue.innerHTML = '<p class="new-admin-story-empty">Geen medewerkers actief in ' + escapeHtml(period.label) + '.</p>';
     heading.innerHTML = "";
@@ -11329,9 +11340,10 @@ function toonInstallatieAanbod() {
     showView(profile ? profile.home : "dashboard");
   }
 
-  const nav = event.target.closest("[data-view]");
+  const nav = event.target.closest("[data-view], [data-pilot-view]");
   if (nav) {
-    if (nav.dataset.view === "approvals") {
+    const targetView = nav.dataset.view || nav.dataset.pilotView;
+    if (targetView === "approvals") {
       state.approvalScope = "all";
       persistState();
       renderApprovals();
@@ -11342,16 +11354,16 @@ function toonInstallatieAanbod() {
     // loopt via data-go/data-history-period/data-employee-open-action, niet
     // via deze generieke tabklik, en zet daar zelf al de juiste maand -- dit
     // raakt die knoppen dus niet.
-    if (["dashboard", "employee-dashboard", "timesheet"].includes(nav.dataset.view)) {
+    if (["dashboard", "employee-dashboard", "timesheet"].includes(targetView)) {
       resetHomeDashboardState(state.currentRole);
     }
-    if (nav.dataset.view === "dashboard") {
+    if (targetView === "dashboard") {
       renderDashboard();
     }
-    if (nav.dataset.view === "employee-dashboard") {
+    if (targetView === "employee-dashboard") {
       renderEmployeeDashboard();
     }
-    showView(nav.dataset.view);
+    showView(targetView);
   }
 
   const go = event.target.closest("[data-go]");

@@ -57,6 +57,7 @@ test('[E2E-H-017] de volledige toegestane urenstatusketen bewaakt na iedere writ
     const schrijf = page.waitForResponse(response =>
       response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
     await page.locator('#submit-timesheet').click();
+    await page.locator('#modal-confirm').click();
     await schrijf;
     await expect(page.locator('#timesheet-status'), 'na indienen hoort de status te wisselen').toHaveText('Ingediend');
   });
