@@ -40,6 +40,34 @@ tussenbeide te komen.
   aparte database; de bestaande GitHub-environment `dev` is nu leeg en is
   geen deploymentdoel.
 
+**Automatische merge-wachtrij (7 september 2026, avond, Claude Code).** Er is
+een workflow `.github/workflows/pilot-merge-queue.yml` gebouwd die de merge
+`herontwerp` → `main` zelf uitvoert, zonder dat iemand nog handmatig hoeft te
+pushen. Hij moet op de default branch (`main`) staan om te reageren op de
+`workflow_run`-event van `CI`; dat bestand staat klaar in PR
+[#41](https://github.com/Remy-LeBeau-source/Path_Urenregistratie_Veilige_Demo_Path_App/pull/41)
+op branch `ci/pilot-merge-queue` — de gebruiker moet die PR zelf mergen, want
+een agent kan niet naar `main` pushen of daar mergen (de omgeving blokkeert
+dat zelf, niet alleen een afspraak). **Controleer of PR #41 gemerged is**
+voordat je op deze automatisering rekent.
+
+Werking zodra hij op `main` staat: bij elke groene `CI`-run op `herontwerp`
+controleert de workflow of `herontwerp` de actuele `main` al bevat; zo ja,
+wacht hij tot `main` géén actieve Release Pipeline-run meer heeft (rood of
+groen bij afronding maakt niet uit, alleen de status telt) en fast-forwardt
+hij `main` dan naar die groene commit. Zo niet (herontwerp mist main-commits):
+geen merge, alleen een waarschuwing — dat sync-moment (main in herontwerp
+opnemen) blijft mensen-/agentwerk. PROD blijft in alle gevallen achter de
+handmatige reviewerpoort; deze workflow raakt die nooit.
+
+Direct na het bouwen van deze workflow bleek `herontwerp`-CI op commit
+`6e763b4` ("beveilig indienen en bouw beheerstoryline") echt rood: meerdere
+e2e-cases rond facturatie/autorisatie/documentflows faalden (bv. "de
+urenstaat hoort goedgekeurd te zijn voordat er gefactureerd wordt"). Dat commit
+zou dus sowieso niet zijn doorgestroomd — precies het gedrag dat de
+groene-CI-eis moet geven. Eerst die regressie oplossen voordat verder werk op
+`herontwerp` erop vertrouwt dat het automatisch naar `main`/TEST doorstroomt.
+
 Bewijs voor de pilotstand vóór integratie: desktop 375/375 groen, Android
 Chrome 45/45 groen, iPhone/WebKit 45/45 groen, `npm run build` groen en
 `npm run check` groen. CI-run `34118945695` op `18bff33` is groen. De laatste

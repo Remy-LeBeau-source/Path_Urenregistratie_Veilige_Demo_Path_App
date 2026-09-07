@@ -57,6 +57,24 @@ Daarop zijn `DASH-N-010`, `DASH-N-026`, `MOB-H-024` en alle negen
 gelijkheid van Klassiek en Nieuw voor Backoffice en medewerker. Volgende poort
 is groene GitHub-CI en de bewuste merge naar main voor TEST.
 
+**2026-09-07 avond — automatische merge-wachtrij naar `main` (Claude Code).**
+Nieuwe workflow `.github/workflows/pilot-merge-queue.yml`: zodra `herontwerp`'s
+eigen `CI` groen is én `herontwerp` de actuele `main` al bevat, wacht hij tot
+`main` géén actieve Release Pipeline-run meer heeft (rood of groen bij
+afronding maakt niet uit, alleen de status telt) en fast-forwardt `main` dan
+zelf naar die groene commit. Geen "bewuste merge" van een mens meer nodig voor
+de TEST-integratie zelf — wél blijft het main-in-herontwerp-syncmoment
+mensen-/agentwerk zodra `herontwerp` achterloopt. PROD blijft ongemoeid, altijd
+achter de handmatige reviewerpoort. **Moet nog geactiveerd worden:** het
+bestand staat op een losse branch in PR
+[#41](https://github.com/Remy-LeBeau-source/Path_Urenregistratie_Veilige_Demo_Path_App/pull/41)
+— pas na het mergen daarvan (door de gebruiker; agents kunnen niet naar `main`
+pushen/mergen) draait de wachtrij echt. Vlak na het bouwen bleek
+`herontwerp`-CI op `6e763b4` trouwens echt rood (e2e-regressies rond
+facturatie/autorisatie) — precies zo'n commit zou dus terecht niet zijn
+doorgestroomd. Zie `HANDOFF-CODEX-FASE-D.md` §0a en `../COPILOT_HANDOFF.md`
+voor het volledige verhaal.
+
 ## → VOOR CODEX / de volgende sessie
 
 ### 1. Releasestand (`main`)

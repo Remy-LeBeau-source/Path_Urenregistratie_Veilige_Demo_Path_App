@@ -46,6 +46,45 @@ De pilot-CI draait vanaf deze integratie in vier parallelle shards en faalt als
 zichtbare, informerende blok `Inspect pilot branch`, zodat beide werkstromen
 bij iedere release worden vergeleken zonder een gewone hotfix te blokkeren.
 
+## 0a. Nieuw 7 september 2026 (avond) — automatische merge-wachtrij naar `main`
+
+Er is een GitHub Actions-workflow gebouwd die de merge `herontwerp` → `main`
+**zelf** doet, zodat niemand dat nog handmatig hoeft te pushen. Status en
+regel hieronder — dit vervangt **niet** de regel "raak `main` niet aan" in
+§1: die blijft gelden voor mensen/agents zelf; dit is de ene bewuste
+automatisering die de gebruiker hiervoor heeft goedgekeurd.
+
+**Bestand:** `.github/workflows/pilot-merge-queue.yml`, moet op de default
+branch (`main`) staan om te kunnen reageren op de `workflow_run`-event van
+`CI` (die op `herontwerp` draait) — dat is een GitHub-beperking, geen keuze.
+**Stand bij schrijven:** het bestand staat klaar in PR
+[#41](https://github.com/Remy-LeBeau-source/Path_Urenregistratie_Veilige_Demo_Path_App/pull/41)
+op een losse branch `ci/pilot-merge-queue`; de gebruiker merget die PR zelf
+(agents mogen niet naar `main` pushen of daar een PR op mergen — dat wordt
+door de omgeving zelf geblokkeerd, niet alleen door afspraak). Controleer of
+PR #41 gemerged is voordat je op de automatische wachtrij rekent; zo niet,
+blijft de oude regel gelden dat de gebruiker de uiteindelijke merge doet.
+
+**Wat de workflow doet, exact:**
+
+1. Draait bij elke afronding van de `CI`-workflow op `herontwerp`.
+2. Gaat alleen verder als die CI-run **groen** eindigde.
+3. Controleert of `herontwerp` de actuele `main` al bevat (dezelfde check als
+   `ci.yml` al doet). Zo niet: geen merge, alleen een waarschuwing — dan moet
+   eerst iemand `main` in `herontwerp` opnemen (dat blijft mensen-/agentwerk,
+   zie §1 vierde bullet).
+4. Zo ja: wacht (poll elke 60s, max 3 uur) tot `main` **geen actieve** Release
+   Pipeline-run meer heeft — **ongeacht of die rood of groen eindigde**, alleen
+   de status (`in_progress`/`queued` vs. `completed`) telt.
+5. Zodra `main` vrij is: fast-forwardt `main` naar de groene `herontwerp`-commit.
+
+**Wat dit niet doet:** PROD promoten. Die stap blijft achter de handmatige
+GitHub-environment-reviewerpoort op `prod`, ongeacht deze workflow.
+
+**Enige resterende voorwaarde voor een storingsvrije, volautomatische
+doorstroom:** houd `herontwerp` synchroon met `main`. Zolang dat zo is en de
+CI groen is, gebeurt de rest zonder tussenkomst.
+
 ## 1. Waar je bent / wat je NIET aanraakt
 
 Je werkt in een **git worktree**: `C:\Path-herontwerp`, vast op branch
