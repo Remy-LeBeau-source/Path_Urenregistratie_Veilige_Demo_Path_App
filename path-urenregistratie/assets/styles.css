@@ -820,9 +820,11 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .modal > p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; white-space: pre-line; }
 /* Sticky i.p.v. absolute: bij een lang formulier of nadat de toetsenbord-focus
    het venster omhoog scrolde, verdween het kruisje boven de rand. Nu blijft het
-   in beeld boven de scrollende modalinhoud; float houdt het rechtsboven zonder
-   een eigen regel op te eisen. */
-.modal-close { position: sticky; top: 0; z-index: 3; float: right; display: grid; place-items: center; width: 34px; height: 34px; margin: -14px -14px 4px 12px; border: 0; border-radius: 10px; background: #f1f4f4; cursor: pointer; font-size: 21px; line-height: 1; }
+   in beeld boven de scrollende modalinhoud. Geen float: `position: sticky` op een
+   gefloat element wordt door meerdere browsers halverwege het scrollen losgelaten
+   waardoor het kruisje verdween. `margin-left: auto` houdt het rechtsboven zonder
+   een eigen zichtbare regel op te eisen (negatieve marges trekken het in de rand). */
+.modal-close { position: sticky; top: 0; z-index: 3; display: grid; place-items: center; width: 34px; height: 34px; margin: -14px -14px 4px auto; border: 0; border-radius: 10px; background: #f1f4f4; cursor: pointer; font-size: 21px; line-height: 1; }
 .modal-close:hover { background: #e6ebeb; }
 .modal-close:focus-visible { outline: 3px solid rgba(58,189,157,.32); outline-offset: 2px; }
 .modal-summary { display: grid; gap: 8px; margin: 20px 0; border-radius: 14px; background: var(--vlak-zacht); padding: 15px; }
