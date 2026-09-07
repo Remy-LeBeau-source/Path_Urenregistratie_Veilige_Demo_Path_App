@@ -16,7 +16,7 @@ on:
 
 permissions:
   contents: write
-  actions: read
+  actions: write
 
 concurrency:
   group: pilot-merge-queue
@@ -100,3 +100,17 @@ jobs:
         run: |
           git push origin "${{ github.event.workflow_run.head_sha }}:refs/heads/main"
           echo "main staat nu op ${{ github.event.workflow_run.head_sha }} (herontwerp, groene CI)."
+
+      - name: Start de Release Pipeline voor de nieuwe main-kop
+        if: ${{ steps.precheck.outputs.contains_main == 'true' && steps.precheck.outputs.already_merged == 'false' }}
+        uses: actions/github-script@v9
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'release-pipeline.yml',
+              ref: 'main',
+              inputs: { ref: 'main' },
+            });
+            core.info('Release Pipeline gestart voor de nieuwe main-kop.');
