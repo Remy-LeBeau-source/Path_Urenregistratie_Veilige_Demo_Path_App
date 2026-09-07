@@ -48,3 +48,11 @@ Feature: Toegankelijkheid en toetsenbordbediening
     When de flow voor A11Y-H-005 wordt uitgevoerd
     Then geeft de basisregel een outline aan button, input, select, textarea, a, summary en tabindex
     And een via het toetsenbord gefocuste navigatieknop toont echt een outline
+
+  @happy
+  Scenario: [A11Y-H-006] de sluitknop van een scrollende dialoog blijft in beide skins in beeld
+    # Testtechniek: Toegankelijkheidsinspectie + toetsenbord-use-case
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given de administrator is ingelogd op een korte viewport
+    When in de klassieke en de nieuwe skin een dialoog wordt geopend die langer is dan het scherm en naar onderen wordt gescrold
+    Then blijft het kruisje bovenin de dialoog plakken, volledig binnen de dialoog, en sluit het de dialoog nog steeds

@@ -182,10 +182,11 @@ Feature: Veilige productieconfiguratie en deployment
     And blijft mail gesloten en wordt bij een fout automatisch teruggerold
 
   @happy
-  Scenario: [SAFE-H-016] de eerste 1.0.0-uitrol vereist exact de afgesproken lege PROD-baseline
+  Scenario: [SAFE-H-016] de eerste 1.x-uitrol normaliseert PROD naar de afgesproken baseline en controleert die streng
     # Testtechniek: Beslissingstabel + herstelbaarheid + toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 18
-    Given de eerste productiebaseline en het deployscript worden ingelezen
-    When versie 1.0.0 vóór backup en migratie wordt vrijgegeven
-    Then zijn accounts, septemberstart, dummy-routes en lege transactietabellen fail-closed gecontroleerd
-    And latere releases gebruiken dezelfde read-only preflight zonder de eenmalige nulmeting
+    # Aantoonbare Playwright-assertions in deze case: 28
+    Given de eerste productiebaseline, het normalisatiescript en het deployscript worden ingelezen
+    When PROD nog op 0.x draait, wordt vóór de strenge gate eerst een backup gemaakt en daarna genormaliseerd
+    Then blijft de strenge nulmeting accounts, septemberstart, dummy-routes en lege transactietabellen fail-closed controleren
+    And het normalisatiescript is fail-closed: alleen productie, exacte bevestiging, weigert bij echte data, transactie met rollback
+    And latere releases (PROD al op 1.x) gebruiken dezelfde read-only preflight zonder de eenmalige nulmeting

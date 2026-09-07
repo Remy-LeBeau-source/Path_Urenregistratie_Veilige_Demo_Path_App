@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { LoginPage } from './pages/LoginPage';
+import { openProfielmenu } from './pages/TopbarMenu';
 
 // Basic keyboard/accessibility smoke coverage (Fase 15: "Basiscontrole op
 // toetsenbordbediening en leesbaarheid"). Deliberately scoped: this checks that
@@ -169,4 +170,73 @@ test('[A11Y-H-005] elke interactieve elementsoort krijgt een zichtbare focusring
     });
     expect(zichtbaar, 'een toetsenbord-gefocuste knop hoort een zichtbare outline te hebben').toBe(true);
   });
+});
+
+// Regressie: .modal-close was `position: sticky` + `float: right`. Die combinatie
+// laat het sticky-gedrag in meerdere browsers halverwege het scrollen los,
+// waardoor het kruisje uit beeld verdween in een lang formulier (Teambeheer /
+// Voorkeuren op een korte viewport). De fix haalt de float weg. Deze case
+// bewijst in beide skins dat het kruisje bij een scrollende dialoog bovenin
+// blijft plakken en klikbaar blijft.
+test('[A11Y-H-006] de sluitknop van een scrollende dialoog blijft in beide skins in beeld', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given de administrator is ingelogd op een korte viewport', async () => {
+    await page.setViewportSize({ width: 380, height: 520 });
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect(page.locator('#app-shell')).toBeVisible();
+  });
+
+  for (const skin of ['classic', 'new'] as const) {
+    await test.step(`In de ${skin}-skin blijft het kruisje van een lange dialoog bovenin plakken`, async () => {
+      // Zet de skin via Voorkeuren -> Vormgeving (de <select> is een keuzemenu-widget).
+      await expect(async () => {
+        await openProfielmenu(page);
+        const voorkeuren = page.locator('[data-profile-action="preferences"]');
+        await expect(voorkeuren).toBeVisible({ timeout: 1_000 });
+        await voorkeuren.click();
+        await expect(page.locator('#pref-skin-trigger')).toBeVisible({ timeout: 1_000 });
+      }).toPass({ timeout: 15_000, intervals: [250, 500, 1_000] });
+      await page.locator('#pref-skin-trigger').click();
+      await page.locator(`[data-standard-choice-target="pref-skin"][data-standard-choice-value="${skin}"]`).click();
+      await page.getByRole('button', { name: 'Voorkeuren opslaan' }).click();
+      await expect(page.locator('#modal')).toBeHidden();
+      await expect(page.locator('html')).toHaveAttribute('data-skin', skin);
+
+      // Heropen de Voorkeuren-dialoog: op deze viewport is die langer dan het scherm.
+      await expect(async () => {
+        await openProfielmenu(page);
+        const voorkeuren = page.locator('[data-profile-action="preferences"]');
+        await expect(voorkeuren).toBeVisible({ timeout: 1_000 });
+        await voorkeuren.click();
+        await expect(page.locator('#pref-skin-trigger')).toBeVisible({ timeout: 1_000 });
+      }).toPass({ timeout: 15_000, intervals: [250, 500, 1_000] });
+
+      const dialoog = page.locator('#modal .modal');
+      const kruisje = page.locator('#modal-close');
+      await expect(dialoog).toBeVisible();
+      await expect(kruisje).toBeVisible();
+
+      // De dialoog moet echt overlopen, anders bewijst deze case niets.
+      const overloop = await dialoog.evaluate(el => el.scrollHeight - el.clientHeight);
+      expect(overloop, 'de Voorkeuren-dialoog hoort op 380x520 te scrollen').toBeGreaterThan(20);
+
+      // Scroll de dialoog naar onderen.
+      await dialoog.evaluate(el => el.scrollTo(0, el.scrollHeight));
+      await expect(kruisje).toBeVisible();
+
+      // Het kruisje is bovenin de dialoog blijven plakken i.p.v. mee weg te scrollen.
+      const kb = await kruisje.boundingBox();
+      const db = await dialoog.boundingBox();
+      expect(kb, 'het kruisje hoort een zichtbare box te hebben').not.toBeNull();
+      expect(db, 'de dialoog hoort een zichtbare box te hebben').not.toBeNull();
+      expect(kb!.y, 'het kruisje hoort binnen ~80px van de dialoogbovenrand te blijven').toBeLessThan(db!.y + 80);
+      expect(kb!.y + kb!.height, 'het kruisje hoort volledig binnen de dialoog te vallen').toBeLessThan(db!.y + db!.height);
+
+      // En het sluit de dialoog nog steeds.
+      await kruisje.click();
+      await expect(page.locator('#modal')).toBeHidden();
+    });
+  }
 });

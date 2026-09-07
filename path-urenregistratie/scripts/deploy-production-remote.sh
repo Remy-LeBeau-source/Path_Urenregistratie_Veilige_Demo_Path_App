@@ -67,12 +67,22 @@ php -r '
   }
   echo "mail_window=closed pending_mail=0\n";
 ' "$app_root"
-if [[ "$version" == "1.0.0" ]]; then
+prod_current_major="$(php -r '$p=json_decode(file_get_contents($argv[1]), true); echo (int)explode(".", (string)($p["version"] ?? "0"))[0];' "$live_root/package.json")"
+if [[ "$prod_current_major" -lt 1 ]]; then
+  # Eerste 1.x-uitrol terwijl PROD nog op 0.x draait: de eenmalige nulmeting.
+  # Eerst een backup, dan de database naar de afgesproken go-live-baseline
+  # brengen (alle medewerkers starten in de go-live-maand, operationele
+  # tabellen leeg), en die daarna streng controleren. Het normalisatiescript
+  # weigert zelf bij echte operationele data of onverwachte accounts en draait
+  # in één transactie met rollback; de --initial-baseline preflight erna is
+  # read-only en stopt fail-closed als er alsnog iets niet klopt.
+  php server/scripts/database-backup.php --config=server/config.local.php --execute
+  php server/scripts/normalize-production-golive-baseline.php --config=server/config.local.php --execute --confirm=NORMALIZE_PRODUCTION_GOLIVE_BASELINE
   php server/scripts/production-preflight.php --config=server/config.local.php --live --initial-baseline
 else
   php server/scripts/production-preflight.php --config=server/config.local.php --live
+  php server/scripts/database-backup.php --config=server/config.local.php --execute
 fi
-php server/scripts/database-backup.php --config=server/config.local.php --execute
 php server/migrate.php
 php server/scripts/production-preflight.php --config=server/config.local.php --live
 
