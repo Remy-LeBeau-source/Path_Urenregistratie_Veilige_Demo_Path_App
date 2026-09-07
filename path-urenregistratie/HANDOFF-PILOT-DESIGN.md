@@ -1,33 +1,30 @@
 # HANDOFF — 1414/1919 herontwerp
 
 **Evergreen doc. Wordt tijdens het werk telkens bijgewerkt.**
-Laatst bijgewerkt: 2026-09-07 — **overdracht aan Codex: Fase D / de pilot.**
+Laatst bijgewerkt: 2026-09-07 — **status.** Claude doet zowel de go-live-lijn
+(`main`) als de pilot (`herontwerp`), turn-based op één repo; Codex werkt niet
+apart. Dit doc is een vangnet + statusoverzicht, geen actieve opdracht.
 Release `1.0.1`–`1.0.3` staan op `main` (kruisje-fix, PROD-normalisatiescript,
 zelf-normaliserende cutover); Promote Prod wacht op de gebruiker. **De schermen-
-inventaris in §4 is compleet (increment 1–11).** Fase D loopt op branch
-`herontwerp`, HEAD is de mobiel-increment.
+inventaris in §4 is compleet (increment 1–11).**
 
-## → OPDRACHT VOOR CODEX: pilot afronden / bewaken
+## → WAT ER NOG MOET (Fase D)
 
-De schermen-inventaris is helemaal `[x]`. Wat resteert:
 1. **Volledige desktop-e2e over increment 3–11 in beide skins** —
    `node scripts/run-playwright-e2e.mjs --project=desktop-chromium`, moet 100%
    groen. Alles is puur additieve CSS onder `html[data-skin="new"]`, Classic kan
-   er niet door raken, maar bevestig het.
+   er niet door raken, maar bevestig het. Per increment draaide `[SKIN-*]` 7/7
+   groen lokaal en `npm run check` groen op de hele stack.
 2. **Handmatige mobiele doorloop** op een echt toestel (iOS + Android PWA) van
    elk scherm in `skin=new`.
 3. Verdere fijnslijping per scherm waar de mockups dat vragen (blijft additief,
    blijft gescoped, blijft beide skins groen, NL-commit, dit doc bijwerken).
 4. Als de gebruiker het herontwerp accepteert: één bewuste merge
    `herontwerp` → `main` = de `1.1.0`-release — expliciete promote-beslissing
-   van de gebruiker, jij doet die merge/promote niet zelf.
+   van de gebruiker.
 
-## → EERSTE TAAK VOOR CODEX
-
-`git fetch && git checkout herontwerp`, dan stap 1 hierboven (volledige
-desktop-e2e in beide skins). Increment 1–11 zijn gecommit; per increment draaide
-`[SKIN-*]` 7/7 groen lokaal en (t/m 6) `npm run check` groen. De autoritatieve
-eindcontrole is de volledige suite + de push/TEST-pipeline ná de merge.
+**Mocht Claude wegvallen:** `git fetch && git checkout herontwerp`, dan stap 1
+hierboven, daarna de rest van deze lijst.
 
 ## → VOOR CODEX / de volgende sessie
 
