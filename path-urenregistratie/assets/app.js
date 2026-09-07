@@ -4409,6 +4409,12 @@ function renderProfileChrome() {
   document.querySelector("#workspace-role").textContent = profile.label;
   document.querySelector("#profile-menu-name").textContent = profile.name;
   document.querySelector("#profile-menu-role").textContent = profile.label;
+  // "Ander account of rol" is alleen zinvol in de demomodus met vrije
+  // rolwissel. Bij een echte login doet die knop hetzelfde als Uitloggen en
+  // wekt hij ten onrechte de indruk dat een medewerker een andere rol kan
+  // kiezen -- daarom verborgen buiten de demomodus.
+  const switchButton = document.querySelector('[data-profile-action="switch"]');
+  if (switchButton) switchButton.hidden = authRuntime.mode === "auth";
 }
 
 function customerTimesheetNeedsEmployeeAction(status) {
@@ -7616,6 +7622,21 @@ function renderMailRuntimeStatus() {
       toggle.dataset.mailToggleMode = "local-preview";
       toggle.dataset.testMailEnabled = enabled ? "true" : "false";
       toggle.textContent = enabled ? "Mailpreview uitschakelen" : "Mailpreview inschakelen";
+    }
+    return;
+  }
+  // Zolang de mailstatus nog niet is opgehaald tonen we een neutrale
+  // laadstand -- niet meteen "E-mail uitgeschakeld", want dat flitste vlak na
+  // een login als een vals alarm terwijl productiemail gewoon aan stond.
+  if (!data || typeof data.mail_mode === "undefined") {
+    if (badge) {
+      badge.textContent = "E-mailstatus laden…";
+      badge.classList.remove("is-active", "is-paused", "is-toggleable");
+      badge.removeAttribute("role");
+      badge.removeAttribute("tabindex");
+      badge.removeAttribute("aria-label");
+      badge.dataset.mailToggleAvailable = "false";
+      badge.title = "De e-mailstatus wordt opgehaald.";
     }
     return;
   }

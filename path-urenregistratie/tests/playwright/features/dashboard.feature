@@ -308,3 +308,11 @@ Feature: Dashboard en open werkvoorraad
     Given de medewerker logt voor het eerst in terwijl de eerste werkvoorraad-sync mislukt
     When de hydratie via het vangnet afrondt
     Then toont geen enkele werkvoorraadplek nog een laadtekst
+
+  @negative
+  Scenario: [DASH-N-027] het profielmenu verbergt "Ander account of rol" bij een echte login
+    # Testtechniek: Productiepresentatie + equivalentieklasse demo/echt
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given een echt ingelogde medewerker
+    When de medewerker het profielmenu opent
+    Then is er geen "Ander account of rol" en wel gewoon Uitloggen

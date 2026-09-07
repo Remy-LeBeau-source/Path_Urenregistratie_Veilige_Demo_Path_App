@@ -2071,3 +2071,29 @@ test('[DASH-N-026] het medewerkerdashboard blijft nooit op "Werkvoorraad laden" 
     await expect(page.locator('#employee-dashboard-next-label')).not.toHaveText('Bezig');
   });
 });
+
+// Regressie: "Ander account of rol" in het profielmenu is demo-cruft dat bij
+// een echte login niets anders doet dan uitloggen -- het wekt ten onrechte de
+// indruk dat een medewerker een andere rol kan kiezen en hoort verborgen te
+// zijn buiten de demomodus. (De mail-badge kreeg tegelijk een neutrale
+// "laden"-stand i.p.v. meteen "E-mail uitgeschakeld" te flitsen; dat pad draait
+// alleen op echte prod/test-hosts, niet in deze e2e.)
+test('[DASH-N-027] het profielmenu verbergt "Ander account of rol" bij een echte login', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given een echt ingelogde medewerker', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await expect(page.locator('#app-shell')).toBeVisible();
+  });
+
+  await test.step('When de medewerker het profielmenu opent', async () => {
+    await openProfielmenu(page);
+  });
+
+  await test.step('Then is er geen "Ander account of rol" en wel gewoon Uitloggen', async () => {
+    await expect(page.locator('[data-profile-action="switch"]')).toBeHidden();
+    await expect(page.locator('[data-profile-action="logout"]')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Ander account of rol' })).toHaveCount(0);
+  });
+});
