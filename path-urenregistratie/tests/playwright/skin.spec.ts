@@ -242,7 +242,7 @@ test('[SKIN-H-008] Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en
       ['employees', 'Medewerkers'],
       ['settings', 'Instellingen'],
     ] as const) {
-      await page.locator(`[data-view="${view}"]:visible`).first().click();
+        await page.locator(`[data-view="${view}"]:visible, [data-pilot-view="${view}"]:visible`).first().click();
       await expect(page.locator(`#view-${view}`)).toHaveClass(/is-active/);
       await expect(page.locator('#page-title')).toHaveText(titel);
       await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
@@ -250,7 +250,7 @@ test('[SKIN-H-008] Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en
   });
 
   await test.step('Then dezelfde gegevens blijven staan in Nieuw en na terugschakelen naar Klassiek', async () => {
-    await page.locator('[data-view="dashboard"]:visible').first().click();
+    await page.locator('[data-view="dashboard"]:visible, [data-pilot-view="dashboard"]:visible').first().click();
     expect(await genormaliseerdeTekst(page.locator('#dashboard-employee-rows'))).toBe(dashboardVoor);
     expect(await genormaliseerdeTekst(page.locator('#dashboard-team-title'))).toBe(teamTitelVoor);
 
