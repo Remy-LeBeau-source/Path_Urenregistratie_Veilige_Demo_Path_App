@@ -85,6 +85,53 @@ GitHub-environment-reviewerpoort op `prod`, ongeacht deze workflow.
 doorstroom:** houd `herontwerp` synchroon met `main`. Zolang dat zo is en de
 CI groen is, gebeurt de rest zonder tussenkomst.
 
+## 0b. 7 september 2026, avond (later) — selector-fix gedaan, functionele bug staat nog open (Claude Code)
+
+`herontwerp`-CI op `6e763b4` stond rood: 3 van de 4 shards faalden breed
+(facturatie/autorisatie/documentflows/employees/settings). Root cause deels
+gevonden en gefixt in commit `cf3da25`:
+
+- `.new-admin-topnav` (pilot-topbar) en `.new-admin-storyline`
+  (beheerverhaallijn) — beide toegevoegd in `6e763b4` — hertekenden dezelfde
+  `data-view`/actie-attributen (`data-view="employees"`, `data-review-
+  customer-timesheet`, `data-admin-hours-detail`, `data-go`, ...) als de
+  echte sidebar-navigatie en werkvoorraadkaarten. `display:none` verbergt ze
+  visueel, maar de elementen bestaan wél in de DOM — ook in Classic. Elke
+  bestaande Playwright-`[data-view="..."]`-locator werd daardoor dubbelzinnig
+  (strict-mode violation) of klikte het verkeerde, onzichtbare element.
+- Fix: de pilot-topnav gebruikt nu `data-pilot-view` i.p.v. `data-view` (app.js
+  luistert naar beide, `showView()`-gedrag ongewijzigd); `renderNewAdminStoryline()`
+  vult zijn containers alleen nog als `skin=new` actief is.
+- Bevestigd: de employees/settings-strict-mode-fouten en `user-management.spec.ts`
+  zijn weg.
+
+**Nog open, dit is voor jou (Codex), niet iets wat ik blind wilde fixen:**
+na de selector-fix faalden bij een volledige hertest nog **18 tests**, verspreid
+over facturatie, autorisatie, mail, idempotentie en documentflows — geen
+selector-issues meer, maar een echte status-/procesfout. Voorbeeld, `E2E-N-019`:
+
+```
+Error: de urenstaat hoort goedgekeurd te zijn
+Expected: "approved"   Received: "correction"
+```
+
+Dit wijst op een gedragswijziging in de "beveilig indienen"-logica die je in
+`6e763b4` aan `app.js` hebt toegevoegd (257 regels) — een urenstaat komt op
+`correction` te staan waar de bestaande keten `approved` verwacht. Andere
+gefaalde cases in dezelfde run: `E2E-N-020` (autorisatie), `E2E-N-018`
+(documentlinks), `E2E-H-003` (herindiening), `E2E-H-017/019` (statusketen/
+idempotentie), `E2E-H-023/024/025/026/027` (mail/facturen), `E2E-N-017/021`
+(lock/deactivatie), `DASH-N-010`/`DASH-H-008` (F5-herstel/GUI-closeout),
+`SKIN-H-008` (navigatie in skin=new), `TS-REV-UI-H-008` (browserflow). Draai
+`node scripts/run-playwright-e2e.mjs --project=desktop-chromium` opnieuw om de
+actuele lijst te zien, en start bij `E2E-N-019` — die geeft de duidelijkste
+foutmelding.
+
+**Herinnering wachtrij:** zolang deze cases rood staan, fast-forwardt
+`pilot-merge-queue.yml` (nu live op `main`, zie §0a) `main` niet — precies
+zoals bedoeld. Pas als `herontwerp`'s CI hier weer 100% groen is, stroomt dit
+door.
+
 ## 1. Waar je bent / wat je NIET aanraakt
 
 Je werkt in een **git worktree**: `C:\Path-herontwerp`, vast op branch
