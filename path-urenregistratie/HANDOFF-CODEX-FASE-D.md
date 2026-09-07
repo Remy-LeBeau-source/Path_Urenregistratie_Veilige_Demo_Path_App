@@ -3,6 +3,31 @@
 **Voor Codex. Geschreven door Claude, 2026-09-07, vanuit `C:\Path-herontwerp`.**
 Evergreen doc zoals `HANDOFF-PILOT-DESIGN.md` — bijwerken per increment.
 
+## Actuele gezamenlijke werkafspraak (Claude en Codex)
+
+Deze paragraaf gaat vóór oudere, beperktere overdrachtsregels verderop in dit
+document. Claude en Codex lezen vóór ieder nieuw increment zowel `origin/main`
+als `herontwerp`, nemen de nieuwste `main` eerst op in `herontwerp` en bewaren
+de werkende klassieke app. De PWA-, hydratie- en dialoogfixes horen bij de
+gedeelde klassieke code; de verdere visuele uitwerking van 1414/1919 hoort bij
+`skin=new`. Functionele pilotbediening mag gedeelde HTML/JavaScript gebruiken
+als beide skins en beide rollen aantoonbaar blijven werken.
+
+**Beide agents kijken per wijziging kritisch naar ontwerp én gedrag.** Ze vullen
+zelf ontbrekende positieve, negatieve, mobiele en regressiecases aan waar het
+risico dat vraagt. Bestaande tests worden niet alleen passend gemaakt aan de
+implementatie: iedere case moet het bedoelde gebruikersgedrag bewijzen. Minimaal
+worden bij de huidige pilot bewaakt: Classic start licht, Nieuw start donker,
+thema's worden per skin onthouden, weekinvoer en presets schrijven echte data,
+alleen de laatste week kan de maand indienen, indienen vraagt een bewuste
+bevestiging, de beheerderstoryline houdt alle hoofdschermen bereikbaar en
+`SKIN-N-007` houdt Nieuw op PROD fail-closed verborgen.
+
+Werk in korte Nederlandse commits zonder `Co-Authored-By`. Stage uitsluitend
+expliciete paden en gebruik nooit `git add -A`. Een agent mag na groene controle
+zelfstandig `herontwerp` bijwerken en naar TEST integreren volgens
+`COPILOT_HANDOFF.md`; PROD blijft altijd achter de handmatige reviewerpoort.
+
 ## 0. Actuele voortgang 7 september 2026
 
 De basisregressie is afgerond: desktop 375/375, Android/Chrome 45/45 en

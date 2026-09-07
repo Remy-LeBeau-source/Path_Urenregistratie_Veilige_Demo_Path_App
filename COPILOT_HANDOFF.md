@@ -26,6 +26,10 @@ tussenbeide te komen.
   conflicten op de pilotbranch op en test de combinatie. Merge pas terug als
   de actuele main-kop in de groene pilotbranch zit. Verschuift main intussen,
   synchroniseer en controleer opnieuw.
+- Controleer vóór iedere push naar `main` of de Release Pipeline nog draait.
+  Wacht een lopende release volledig af, zeker zodra PROD wordt gepromoveerd.
+  De workflow gebruikt `cancel-in-progress: false`, zodat een nieuwe push in de
+  wachtrij komt en de actieve TEST/PROD-run niet opnieuw begint.
 - De pilotmerge mag de normale main-release naar TEST starten. PROD blijft
   Classic-only: `skin=new` blijft fail-closed, de toggle is verborgen en
   `pilot/` blijft uit het productiearchief.

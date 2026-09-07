@@ -428,6 +428,9 @@ function freshState() {
       theme: "light",
       themeDefaultVersion: 1,
       skin: "classic",
+      classicTheme: "light",
+      newTheme: "dark",
+      skinThemeDefaultVersion: 1,
       hourReminders: true,
       statusNotifications: true,
       approvalNotifications: true,
@@ -677,11 +680,20 @@ function loadState() {
         return ["all", "actionable", "waiting"].includes(scope) && parsePeriodKey(periodKey) && monthState && typeof monthState.expanded === "boolean" && typeof monthState.signature === "string";
       }))
       : {};
-    const hadLightDefault = saved.preferences && saved.preferences.themeDefaultVersion === 1;
-    saved.preferences = Object.assign({}, fallback.preferences, saved.preferences || {});
+    const previousPreferences = saved.preferences && typeof saved.preferences === "object" ? saved.preferences : {};
+    const hadLightDefault = previousPreferences.themeDefaultVersion === 1;
+    const hadSkinThemeDefault = previousPreferences.skinThemeDefaultVersion === 1;
+    const previousTheme = ["light", "dark", "system"].includes(previousPreferences.theme) ? previousPreferences.theme : "light";
+    saved.preferences = Object.assign({}, fallback.preferences, previousPreferences);
     if (!hadLightDefault) {
       saved.preferences.theme = "light";
       saved.preferences.themeDefaultVersion = 1;
+    }
+    if (!hadSkinThemeDefault) {
+      saved.preferences.classicTheme = previousTheme;
+      saved.preferences.newTheme = "dark";
+      saved.preferences.skinThemeDefaultVersion = 1;
+      saved.preferences.theme = saved.preferences.skin === "new" ? "dark" : previousTheme;
     }
     const previousSettings = saved.settings || {};
     saved.settings = Object.assign({}, fallback.settings, previousSettings);
@@ -1071,6 +1083,7 @@ let modalOpenerElement = null;
 let modalSecondaryAction = null;
 let modalCloseAction = null;
 let adminTaskWorkflow = null;
+let newAdminStoryEmployeeId = null;
 let pendingProfilePhoto = "";
 let pendingBrandLogo = "";
 let unresolvedHelpQuestion = "";
@@ -4372,6 +4385,7 @@ function syncAppearanceSwitches(hostname = window.location.hostname) {
 
 function toggleQuickTheme() {
   state.preferences.theme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  state.preferences[document.documentElement.dataset.skin === "new" ? "newTheme" : "classicTheme"] = state.preferences.theme;
   persistState();
   applyTheme();
 }
@@ -4381,9 +4395,14 @@ function toggleQuickSkin() {
     document.documentElement.dataset.skin = "classic";
     return;
   }
-  state.preferences.skin = document.documentElement.dataset.skin === "new" ? "classic" : "new";
+  const currentSkin = document.documentElement.dataset.skin === "new" ? "new" : "classic";
+  const nextSkin = currentSkin === "new" ? "classic" : "new";
+  state.preferences[currentSkin === "new" ? "newTheme" : "classicTheme"] = state.preferences.theme;
+  state.preferences.skin = nextSkin;
+  state.preferences.theme = state.preferences[nextSkin === "new" ? "newTheme" : "classicTheme"] || (nextSkin === "new" ? "dark" : "light");
   persistState();
   applySkin();
+  applyTheme();
 }
 
 function greetingForNow() {
@@ -4467,6 +4486,14 @@ function newEmployeeBentoWeekIndex(period) {
   return suggested && period.weekRows[Number(suggested[1])] ? Number(suggested[1]) : 0;
 }
 
+function completedTimesheetWeeks(record, period) {
+  return period.weekRows.reduce((count, periodWeek, index) => {
+    const businessDayIndexes = periodWeek.days.map((day, dayIndex) => day ? dayIndex : -1).filter(dayIndex => dayIndex >= 0);
+    const weekComplete = businessDayIndexes.length > 0 && businessDayIndexes.every(dayIndex => Number(record.entries[index] && record.entries[index][dayIndex] || 0) > 0);
+    return count + (weekComplete ? 1 : 0);
+  }, 0);
+}
+
 function renderNewEmployeeBento(record, employee, period) {
   const bento = document.querySelector("#new-employee-bento");
   if (!bento) return;
@@ -4487,7 +4514,8 @@ function renderNewEmployeeBento(record, employee, period) {
     if (!day) return "";
     const value = Number(record.entries[weekIndex][dayIndex] || 0);
     const isToday = selectedIsCurrentMonth && day.day === today.getDate();
-    return '<label class="new-bento-day' + (isToday ? " is-active" : "") + '"><span><small>' + escapeHtml(WEEKDAY_SHORT[dayIndex]) + '</small><b>' + day.day + '</b></span><input class="new-bento-hours-input" data-week-index="' + weekIndex + '" data-day-index="' + dayIndex + '" type="number" min="0" max="24" step="0.5" inputmode="decimal" value="' + (value > 0 ? String(value) : "") + '" placeholder="0,00" aria-label="Uren op ' + escapeHtml(day.label) + '"' + (editable ? "" : " disabled") + '></label>';
+    const disabled = editable ? "" : " disabled";
+    return '<div class="new-bento-day' + (isToday ? " is-active" : "") + '"><span><small>' + escapeHtml(WEEKDAY_SHORT[dayIndex]) + '</small><b>' + day.day + '</b></span><div class="new-bento-day-control"><button type="button" data-new-bento-adjust="-0.5" aria-label="Een half uur minder op ' + escapeHtml(day.label) + '"' + disabled + '>−</button><input class="new-bento-hours-input" data-week-index="' + weekIndex + '" data-day-index="' + dayIndex + '" type="number" min="0" max="24" step="0.5" inputmode="decimal" value="' + (value > 0 ? String(value) : "") + '" placeholder="0,00" aria-label="Uren op ' + escapeHtml(day.label) + '"' + disabled + '><button type="button" data-new-bento-adjust="0.5" aria-label="Een half uur meer op ' + escapeHtml(day.label) + '"' + disabled + '>+</button></div><div class="new-bento-presets" aria-label="Snelle urenkeuze"><button type="button" data-new-bento-set="8"' + disabled + '>8</button><button type="button" data-new-bento-set="9"' + disabled + '>9</button></div></div>';
   }).join("");
   const weekTotal = record.entries[weekIndex].reduce((sum, value) => sum + Number(value || 0), 0);
   const weekBusinessDays = actualDays.length;
@@ -4499,16 +4527,21 @@ function renderNewEmployeeBento(record, employee, period) {
   next.disabled = weekIndex >= period.weekRows.length - 1;
   const submit = document.querySelector("[data-new-bento-submit]");
   submit.disabled = !editable;
-  submit.innerHTML = '<span aria-hidden="true">✓</span> ' + (record.timesheetStatus === "correction" ? "Hele maand opnieuw indienen" : "Hele maand indienen");
+  const finalWeekSelected = weekIndex === period.weekRows.length - 1;
+  submit.dataset.submitReady = String(finalWeekSelected);
+  submit.title = finalWeekSelected ? "Controleer en dien de hele maand bewust in" : "Ga eerst naar de laatste week; er wordt nog niets ingediend";
+  submit.innerHTML = finalWeekSelected
+    ? '<span aria-hidden="true">✓</span> ' + (record.timesheetStatus === "correction" ? "Controleer en dien opnieuw in" : "Indienen ter controle")
+    : '<span aria-hidden="true">→</span> Naar laatste week en controleren';
 
-  const filledDays = record.entries.reduce((count, row) => count + row.filter(value => Number(value || 0) > 0).length, 0);
-  const totalDays = period.businessDays;
-  const progress = totalDays > 0 ? Math.round(filledDays / totalDays * 100) : 0;
-  document.querySelector("#new-bento-days-filled").textContent = String(filledDays);
-  document.querySelector("#new-bento-days-total").textContent = "van " + totalDays + " werkdagen";
-  document.querySelector("#new-bento-days-note").textContent = filledDays === totalDays
-    ? "Alle werkdagen van deze maand hebben uren."
-    : "Nog " + (totalDays - filledDays) + " werkdagen zonder uren.";
+  const totalWeeks = period.weekRows.length;
+  const filledWeeks = completedTimesheetWeeks(record, period);
+  const progress = totalWeeks > 0 ? Math.round(filledWeeks / totalWeeks * 100) : 0;
+  document.querySelector("#new-bento-days-filled").textContent = String(filledWeeks);
+  document.querySelector("#new-bento-days-total").textContent = "/ " + totalWeeks + " weken";
+  document.querySelector("#new-bento-days-note").textContent = filledWeeks === totalWeeks
+    ? "Alle weken van deze maand zijn ingevuld."
+    : "Nog " + (totalWeeks - filledWeeks) + " " + (totalWeeks - filledWeeks === 1 ? "week" : "weken") + " te gaan deze maand.";
   document.querySelector("#new-bento-progress").style.width = progress + "%";
   document.querySelector("#new-bento-percentage").textContent = progress + "%";
   document.querySelector("#new-bento-ring").style.setProperty("--bento-progress", progress + "%");
@@ -5427,6 +5460,14 @@ function setWorkflowStep(id, visualState) {
   if (visualState) element.classList.add(visualState);
 }
 
+function setNewAdminStage(id, text, visualState = "") {
+  const note = document.querySelector(id);
+  if (!note) return;
+  note.textContent = text;
+  const stage = note.closest("li");
+  if (stage) stage.dataset.stageState = visualState;
+}
+
 function renderCustomerTimesheetPanel() {
   const panel = document.querySelector("#customer-timesheet-upload-panel");
   if (!panel) return;
@@ -5967,6 +6008,102 @@ function showReopenApprovedHours(employeeId, periodKey) {
   document.querySelector("#reopen-hours-reason").focus();
 }
 
+function newAdminStoryStages(employee, record) {
+  const customer = customerTimesheetFor(record);
+  const hoursDone = record.timesheetStatus === "approved";
+  const hoursCurrent = ["submitted", "correction"].includes(record.timesheetStatus);
+  const customerDone = ["approved", "sent", "sent_to_broker"].includes(customer.status)
+    || (customer.status === "skipped" && customerTimesheetExternallyConfirmed(customer));
+  const customerCurrent = ["received", "resubmit", "skipped"].includes(customer.status) && !customerDone;
+  const externalDone = customerDone;
+  const externalCurrent = customer.status === "skipped" && !customerTimesheetExternallyConfirmed(customer);
+  const invoiceDone = record.invoiceStatus === "simulated";
+  const invoiceCurrent = record.invoiceStatus === "ready";
+  const completed = hoursDone && invoiceDone && (employee.customerTimesheetExpected === false || customerDone);
+  return [
+    { key: "hours", state: hoursDone ? "done" : hoursCurrent ? "current" : "pending", icon: hoursDone ? "✓" : "◷" },
+    { key: "customer", state: customerDone ? "done" : customerCurrent ? "current" : "pending", icon: customerDone ? "✓" : "➤" },
+    { key: "external", state: externalDone ? "done" : externalCurrent ? "current" : "pending", icon: externalDone ? "✓" : "△" },
+    { key: "invoice", state: invoiceDone ? "done" : invoiceCurrent ? "current" : "pending", icon: invoiceDone ? "✓" : invoiceCurrent ? "Ⅱ" : "□" },
+    { key: "complete", state: completed ? "done" : "pending", icon: completed ? "✓" : "○" }
+  ];
+}
+
+function newAdminCustomerAction(employee, record, periodKey) {
+  const customer = customerTimesheetFor(record);
+  if (customer.status === "received") return '<button class="small-button" data-review-customer-timesheet="' + employee.id + '" data-period-key="' + periodKey + '">Document controleren</button>';
+  if (customer.status === "skipped" && !customerTimesheetExternallyConfirmed(customer)) return '<button class="small-button" data-confirm-customer-timesheet-external="' + employee.id + '" data-period-key="' + periodKey + '">Extern bevestigen</button>';
+  if (["missing", "draft", "resubmit"].includes(customer.status)) return '<button class="small-button" data-remind-customer-timesheet="' + employee.id + '" data-period-key="' + periodKey + '">Medewerker herinneren</button>';
+  if (customer.status === "approved" && employee.customerTimesheetBrokerEnabled !== false) return '<button class="small-button" data-send-customer-timesheet="' + employee.id + '" data-period-key="' + periodKey + '">Brokerroute controleren</button>';
+  return '<button class="small-button" data-customer-timesheet-details="' + employee.id + '" data-period-key="' + periodKey + '">Details openen</button>';
+}
+
+function renderNewAdminStoryline(rows, period) {
+  const queue = document.querySelector("#new-admin-employee-queue");
+  const heading = document.querySelector("#new-admin-story-heading");
+  const cards = document.querySelector("#new-admin-story-cards");
+  if (!queue || !heading || !cards) return;
+  if (!rows.length) {
+    queue.innerHTML = '<p class="new-admin-story-empty">Geen medewerkers actief in ' + escapeHtml(period.label) + '.</p>';
+    heading.innerHTML = "";
+    cards.innerHTML = "";
+    return;
+  }
+
+  const selectedExists = rows.some(item => String(item.employee.id) === String(newAdminStoryEmployeeId));
+  if (!selectedExists) {
+    const attention = rows.find(item => ["submitted", "correction"].includes(item.record.timesheetStatus)
+      || customerTimesheetFor(item.record).status === "received") || rows[0];
+    newAdminStoryEmployeeId = attention.employee.id;
+  }
+
+  queue.innerHTML = rows.map(item => {
+    const employee = item.employee;
+    const record = item.record;
+    const stages = newAdminStoryStages(employee, record);
+    const selected = String(employee.id) === String(newAdminStoryEmployeeId);
+    const track = stages.map(stage => '<i class="is-' + stage.state + '" aria-hidden="true">' + stage.icon + '</i>').join("");
+    const status = record.invoiceStatus === "simulated"
+      ? "Voltooid"
+      : record.invoiceStatus === "ready"
+        ? "Factuur gereed"
+        : record.timesheetStatus === "submitted"
+          ? "Controle nodig"
+          : record.timesheetStatus === "correction"
+            ? "Correctie nodig"
+            : customerTimesheetFor(record).status === "received"
+              ? "Document controleren"
+              : "Registratie actief";
+    return '<button class="new-admin-employee-row' + (selected ? ' is-selected' : '') + '" type="button" data-new-admin-story-employee="' + employee.id + '" aria-pressed="' + String(selected) + '">' +
+      '<span class="new-admin-employee-person"><span class="mini-avatar">' + initials(employee.name) + '</span><span><strong>' + escapeHtml(employee.name) + '</strong><small>' + escapeHtml(employee.role || employee.client || "Medewerker") + '</small></span></span>' +
+      '<span class="new-admin-employee-track">' + track + '</span>' +
+      '<span class="new-admin-employee-status">' + escapeHtml(status) + '</span><span class="new-admin-employee-chevron">⌄</span></button>';
+  }).join("");
+
+  const selected = rows.find(item => String(item.employee.id) === String(newAdminStoryEmployeeId)) || rows[0];
+  const employee = selected.employee;
+  const record = selected.record;
+  const customer = customerTimesheetFor(record);
+  const stages = newAdminStoryStages(employee, record);
+  const hoursTotal = totalEntries(record.entries);
+  const status = statusLabels[record.timesheetStatus] || statusLabels.draft;
+  const customerStatus = customerTimesheetStatusLabels[customer.status] || customerTimesheetStatusLabels.missing;
+  const hoursAction = record.timesheetStatus === "submitted"
+    ? '<button class="small-button" data-review="' + employee.id + '" data-period-key="' + period.key + '">Uren controleren</button>'
+    : '<button class="small-button" data-admin-hours-detail="' + employee.id + '" data-period-key="' + period.key + '">Uren bekijken</button>';
+  const tasks = adminOpenTasks().filter(task => String(task.employee.id) === String(employee.id) && task.periodKey === period.key);
+  const nextTask = tasks.find(task => task.actionable) || tasks[0] || null;
+  const nextAction = nextTask ? adminTaskAction(nextTask) : '<button class="small-button" data-go="invoices">Facturen openen</button>';
+
+  heading.innerHTML = '<span class="new-admin-story-person"><span class="mini-avatar">' + initials(employee.name) + '</span><span><strong>' + escapeHtml(employee.name) + '</strong><small>' + escapeHtml(employee.role || employee.client || "Medewerker") + '</small></span></span>' +
+    '<span><small>Verhaal gestart</small><strong>' + escapeHtml(period.label) + '</strong></span>' +
+    '<span class="new-admin-story-current"><small>Huidige status</small><strong>' + escapeHtml(nextTask ? nextTask.title : "Geen open actie") + '</strong></span>';
+  cards.innerHTML = '<article class="is-' + stages[0].state + '"><i>' + stages[0].icon + '</i><h3>Uren ' + escapeHtml(status[0].toLowerCase()) + '</h3><strong>' + hoursFormat.format(hoursTotal) + ' uur · ' + escapeHtml(period.label) + '</strong><p>Registratie en controle blijven gekoppeld aan het bestaande urendossier.</p>' + hoursAction + '</article>' +
+    '<article class="is-' + stages[1].state + '"><i>' + stages[1].icon + '</i><h3>Klanturenstaat</h3><strong>' + escapeHtml(customerStatus[0]) + '</strong><p>' + escapeHtml(customer.fileName || "Het officiële klantdocument blijft een aparte route.") + '</p>' + newAdminCustomerAction(employee, record, period.key) + '</article>' +
+    '<article class="is-' + stages[2].state + '"><i>' + stages[2].icon + '</i><h3>Externe bevestiging</h3><strong>' + (customerTimesheetExternallyConfirmed(customer) ? "Bevestigd" : "Controleer de route") + '</strong><p>Backoffice bewaakt dat het klantdocument aantoonbaar is ontvangen of extern bevestigd.</p>' + newAdminCustomerAction(employee, record, period.key) + '</article>' +
+    '<article class="is-' + stages[3].state + '"><i>' + stages[3].icon + '</i><h3>Factuur &amp; vervolg</h3><strong>' + escapeHtml(record.invoiceStatus === "simulated" ? "Verzending gecontroleerd" : record.invoiceStatus === "ready" ? "Klaar voor controle" : "Nog geblokkeerd") + '</strong><p>Facturatie volgt pas nadat uren en verplichte documenten zijn afgehandeld.</p><div class="new-admin-story-cta">' + nextAction + '</div></article>';
+}
+
 function renderDashboard() {
   refreshDashboardReadApi(false);
   const period = currentPeriod();
@@ -6042,6 +6179,14 @@ function renderDashboard() {
   const completedPhases = [submitted === dashboardRowsTotal, approved === dashboardRowsTotal, ready + simulated === rows.length, simulated === rows.length].filter(Boolean).length;
   const progress = Math.round(completedPhases / 4 * 100);
   const openCustomerDocuments = isFuturePeriod ? 0 : rows.filter(item => item.employee.customerTimesheetExpected !== false && (["missing", "draft", "received", "resubmit"].includes(customerTimesheetFor(item.record).status) || (customerTimesheetFor(item.record).status === "approved" && item.employee.customerTimesheetBrokerEnabled !== false))).length;
+  const resolvedCustomerDocuments = Math.max(0, rows.length - openCustomerDocuments);
+  const newAdminPeriod = document.querySelector("#new-admin-storyline-period");
+  if (newAdminPeriod) newAdminPeriod.textContent = period.label + " · van urenregistratie tot factuur.";
+  setNewAdminStage("#new-admin-stage-hours", submitted + " van " + dashboardRowsTotal + " ingediend", dashboardRowsTotal > 0 && submitted === dashboardRowsTotal ? "done" : submitted > 0 ? "current" : "");
+  setNewAdminStage("#new-admin-stage-customer", openCustomerDocuments ? openCustomerDocuments + " open" : "Alles ontvangen", openCustomerDocuments === 0 ? "done" : resolvedCustomerDocuments > 0 ? "current" : "");
+  setNewAdminStage("#new-admin-stage-approval", open ? open + " te controleren" : approved + " gecontroleerd", dashboardRowsTotal > 0 && approved === dashboardRowsTotal ? "done" : open > 0 ? "current" : "");
+  setNewAdminStage("#new-admin-stage-invoice", ready + simulated + " van " + rows.length + " klaar", rows.length > 0 && ready + simulated === rows.length ? "done" : ready + simulated > 0 ? "current" : "");
+  setNewAdminStage("#new-admin-stage-delivery", simulated + " van " + rows.length + " gecontroleerd", rows.length > 0 && simulated === rows.length ? "done" : simulated > 0 ? "current" : "");
   document.querySelector("#close-progress-ring").style.setProperty("--progress", progress);
   document.querySelector("#close-progress-value").textContent = progress + "%";
   document.querySelector("#close-progress-title").textContent = "Procesmeter " + period.month + " · " + completedPhases + " van 4 fasen";
@@ -6059,6 +6204,7 @@ function renderDashboard() {
   setWorkflowStep("#workflow-approval", approved === dashboardRowsTotal ? "is-done" : open ? "is-current" : "");
   setWorkflowStep("#workflow-invoices", ready + simulated === rows.length ? "is-done" : ready ? "is-current" : "");
   setWorkflowStep("#workflow-send", simulated === rows.length ? "is-done" : simulated ? "is-current" : "");
+  renderNewAdminStoryline(rows, period);
   renderDashboardActions();
   renderAdminTaskQueue();
   renderCustomerTimesheetAdmin();
@@ -10964,7 +11110,7 @@ function showPreferences() {
   const skinRow = testAccountToolsAllowed(window.location.hostname)
     ? '<div class="preference-row"><span><strong>Vormgeving</strong><small>Klassiek is de huidige stijl; Nieuw is de vernieuwde TEST-weergave</small></span><select id="pref-skin" aria-label="Vormgeving"><option value="classic"' + (state.preferences.skin !== "new" ? " selected" : "") + '>Klassiek</option><option value="new"' + (state.preferences.skin === "new" ? " selected" : "") + '>Nieuw (pilot)</option></select></div>'
     : '';
-  const summary = '<div class="preference-list"><div class="preference-row"><span><strong>Uiterlijk</strong><small>Licht is standaard; Automatisch volgt je apparaat</small></span><select id="pref-theme" aria-label="Uiterlijk"><option value="light"' + (state.preferences.theme === "light" ? " selected" : "") + '>Licht</option><option value="system"' + (state.preferences.theme === "system" ? " selected" : "") + '>Automatisch</option><option value="dark"' + (state.preferences.theme === "dark" ? " selected" : "") + '>Donker</option></select></div>' + skinRow + adminRows + emailRow + '</div>';
+  const summary = '<div class="preference-list"><div class="preference-row"><span><strong>Uiterlijk</strong><small>Nieuw begint standaard donker; je keuze wordt per vormgeving onthouden</small></span><select id="pref-theme" aria-label="Uiterlijk"><option value="light"' + (state.preferences.theme === "light" ? " selected" : "") + '>Licht</option><option value="system"' + (state.preferences.theme === "system" ? " selected" : "") + '>Automatisch</option><option value="dark"' + (state.preferences.theme === "dark" ? " selected" : "") + '>Donker</option></select></div>' + skinRow + adminRows + emailRow + '</div>';
   showModal({
     label: "Voorkeuren",
     title: "Uiterlijk en meldingen",
@@ -10972,9 +11118,18 @@ function showPreferences() {
     summary,
     confirm: "Voorkeuren opslaan",
     action: () => {
-      state.preferences.theme = document.querySelector("#pref-theme").value;
+      const currentSkin = document.documentElement.dataset.skin === "new" ? "new" : "classic";
+      const selectedTheme = document.querySelector("#pref-theme").value;
       const skinField = document.querySelector("#pref-skin");
-      if (skinField) state.preferences.skin = skinField.value === "new" ? "new" : "classic";
+      const selectedSkin = skinField && skinField.value === "new" ? "new" : "classic";
+      state.preferences[currentSkin === "new" ? "newTheme" : "classicTheme"] = state.preferences.theme;
+      state.preferences.skin = selectedSkin;
+      if (selectedSkin === currentSkin) {
+        state.preferences.theme = selectedTheme;
+        state.preferences[selectedSkin === "new" ? "newTheme" : "classicTheme"] = selectedTheme;
+      } else {
+        state.preferences.theme = state.preferences[selectedSkin === "new" ? "newTheme" : "classicTheme"] || (selectedSkin === "new" ? "dark" : "light");
+      }
       profile.source.emailNotificationsEnabled = document.querySelector("#pref-email-notifications").checked;
       if (state.currentRole === "admin") {
         state.preferences.approvalNotifications = document.querySelector("#pref-approvals").checked;
@@ -11207,6 +11362,13 @@ function toonInstallatieAanbod() {
   const dashboardView = event.target.closest("[data-dashboard-view]");
   if (dashboardView) showView(dashboardView.dataset.dashboardView);
 
+  const newAdminStoryEmployee = event.target.closest("[data-new-admin-story-employee]");
+  if (newAdminStoryEmployee) {
+    newAdminStoryEmployeeId = newAdminStoryEmployee.dataset.newAdminStoryEmployee;
+    renderDashboard();
+    document.querySelector("#new-admin-story")?.scrollIntoView({ behavior: smoothScrollBehavior(), block: "nearest" });
+  }
+
   const openWorkQueue = event.target.closest("[data-open-work-filter]");
   if (openWorkQueue) {
     state.adminTaskFilter = openWorkQueue.dataset.openWorkFilter || "all";
@@ -11411,6 +11573,19 @@ function toonInstallatieAanbod() {
     return;
   }
 
+  const newBentoHourControl = event.target.closest("[data-new-bento-adjust], [data-new-bento-set]");
+  if (newBentoHourControl) {
+    const input = newBentoHourControl.closest(".new-bento-day")?.querySelector(".new-bento-hours-input");
+    if (!input || input.disabled) return;
+    const currentValue = Number(String(input.value || "0").replace(",", ".")) || 0;
+    const nextValue = newBentoHourControl.dataset.newBentoSet !== undefined
+      ? Number(newBentoHourControl.dataset.newBentoSet)
+      : currentValue + Number(newBentoHourControl.dataset.newBentoAdjust || 0);
+    input.value = String(Math.min(24, Math.max(0, nextValue)));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    return;
+  }
+
   const newBentoOpenHours = event.target.closest("[data-new-bento-open-hours]");
   if (newBentoOpenHours) {
     showView("timesheet");
@@ -11427,6 +11602,15 @@ function toonInstallatieAanbod() {
 
   const newBentoSubmit = event.target.closest("[data-new-bento-submit]");
   if (newBentoSubmit) {
+    if (newBentoSubmit.dataset.submitReady !== "true") {
+      const period = currentPeriod();
+      state.hoursWeekScope = "week-" + Math.max(0, period.weekRows.length - 1);
+      state.hoursWeekScopeTouched = true;
+      persistState();
+      renderNewEmployeeBento(recordFor(currentEmployee().id), currentEmployee(), period);
+      toast("Laatste week geopend. Controleer de maand voordat je indient.");
+      return;
+    }
     document.querySelector("#submit-timesheet").click();
     return;
   }
@@ -11718,7 +11902,7 @@ function handleEnterSave(event) {
   }
 }
 
-document.querySelector("#submit-timesheet").addEventListener("click", async () => {
+async function submitCurrentTimesheet() {
   const employee = currentEmployee();
   const record = recordFor(employee.id);
   const submitButton = document.querySelector("#submit-timesheet");
@@ -11787,7 +11971,42 @@ document.querySelector("#submit-timesheet").addEventListener("click", async () =
   persistState();
   renderAll();
   toast("Uren zijn ingediend voor " + currentPeriod().label + ".");
-});
+}
+
+function showTimesheetSubmitConfirmation() {
+  const employee = currentEmployee();
+  const record = recordFor(employee.id);
+  const period = currentPeriod();
+  const totalWeeks = period.weekRows.length;
+  const completedWeeks = completedTimesheetWeeks(record, period);
+  const remainingWeeks = Math.max(0, totalWeeks - completedWeeks);
+  const hours = totalEntries(record.entries);
+  const correction = record.timesheetStatus === "correction";
+  const remainingLabel = remainingWeeks === 1 ? "1 week" : remainingWeeks + " weken";
+
+  showModal({
+    label: correction ? "Opnieuw indienen" : "Definitief indienen",
+    title: period.label + " indienen?",
+    message: "Controleer de hele maand. Na indienen kan alleen Backoffice de uren teruggeven voor een correctie.",
+    summary: '<dl class="invoice-document-metadata">' +
+      '<div><dt>Maand</dt><dd>' + escapeHtml(period.label) + '</dd></div>' +
+      '<div><dt>Totaal uren</dt><dd>' + hoursFormat.format(hours) + ' uur</dd></div>' +
+      '<div><dt>Volledig ingevuld</dt><dd>' + completedWeeks + ' van ' + totalWeeks + ' weken</dd></div>' +
+      '<div><dt>Nog controleren</dt><dd>' + (remainingWeeks ? remainingLabel : "Geen") + '</dd></div>' +
+      '<div><dt>Na indienen</dt><dd>Alle uren worden vergrendeld</dd></div>' +
+      '</dl>' +
+      (remainingWeeks
+        ? '<div class="external-timesheet-warning" role="alert"><strong>Er zijn nog ' + remainingLabel + ' niet volledig ingevuld.</strong><p>Ga alleen verder wanneer nuluren voor die dagen bewust kloppen.</p></div>'
+        : ''),
+    confirm: correction ? "Opnieuw indienen en vergrendelen" : "Indienen en vergrendelen",
+    action: async () => {
+      closeModal();
+      await submitCurrentTimesheet();
+    }
+  });
+}
+
+document.querySelector("#submit-timesheet").addEventListener("click", showTimesheetSubmitConfirmation);
 
 document.querySelector("#approve-all").addEventListener("click", () => {
   const open = allOpenApprovals().filter(item => state.approvalScope === "all" || item.periodKey === currentPeriod().key);

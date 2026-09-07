@@ -174,6 +174,14 @@
           <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 1.0.9</span><span class="environment-badge" id="environment-badge" hidden></span></span>
         </div>
         <div class="topbar-actions">
+          <nav class="new-admin-topnav role-admin-only" aria-label="Pilot hoofdnavigatie">
+            <button type="button" data-view="dashboard">Cockpit</button>
+            <button type="button" data-view="approvals">Goedkeuringen</button>
+            <button type="button" data-view="invoices">Facturen</button>
+            <button type="button" data-view="announcements">Mededelingen</button>
+            <button type="button" data-view="employees">Medewerkers</button>
+            <button type="button" data-view="settings">Instellingen</button>
+          </nav>
           <span class="safety-badge" id="mail-safety-badge" title="De verzendstatus wordt beveiligd door de serverconfiguratie">E-mailstatus laden…</span>
           <button class="topbar-quick-reset" id="quick-reset-demo" type="button" title="Herstel de veilige demodata"><span aria-hidden="true">↶</span> Herstel demo</button>
           <div class="appearance-switches" aria-label="Vormgeving snel wisselen">
@@ -249,8 +257,8 @@
           </article>
 
           <article class="new-bento-gauge">
-            <div class="new-bento-ring" id="new-bento-ring"><div><small>WERKDAGEN MET UREN</small><strong id="new-bento-days-filled">0</strong><span id="new-bento-days-total">van 0 werkdagen</span></div></div>
-            <p id="new-bento-days-note">Nog geen werkdagen ingevuld.</p>
+            <div class="new-bento-ring" id="new-bento-ring"><div><small>INGEVULD</small><strong id="new-bento-days-filled">0</strong><span id="new-bento-days-total">/ 0 weken</span></div></div>
+            <p id="new-bento-days-note">Nog geen complete week ingevuld.</p>
             <div class="linear-progress"><span id="new-bento-progress"></span></div>
             <strong class="new-bento-percentage" id="new-bento-percentage">0%</strong>
           </article>
@@ -328,6 +336,25 @@
       </section>
 
       <section class="view is-active" id="view-dashboard" data-title="Urenoverzicht">
+        <section class="new-admin-storyline" aria-labelledby="new-admin-storyline-title">
+          <div class="new-admin-storyline-heading">
+            <span class="section-label">Package 1919 · Path Storyline — Admin</span>
+            <h2 id="new-admin-storyline-title">Verhalen per medewerker</h2>
+            <p id="new-admin-storyline-period">Van urenregistratie tot factuur.</p>
+          </div>
+          <ol class="new-admin-pipeline" aria-label="Proces van urenregistratie tot verzending">
+            <li><span>01</span><div><strong>Uren</strong><small id="new-admin-stage-hours">Registratie &amp; goedkeuring</small></div></li>
+            <li><span>02</span><div><strong>Klanturenstaat</strong><small id="new-admin-stage-customer">Gereed voor verzenden</small></div></li>
+            <li><span>03</span><div><strong>Extern bevestigen</strong><small id="new-admin-stage-approval">Actie door Backoffice</small></div></li>
+            <li><span>04</span><div><strong>Factuur</strong><small id="new-admin-stage-invoice">Concept &amp; verzending</small></div></li>
+            <li><span>05</span><div><strong>Voltooid</strong><small id="new-admin-stage-delivery">Administratie afgerond</small></div></li>
+          </ol>
+          <div class="new-admin-employee-queue" id="new-admin-employee-queue" aria-label="Voortgang per medewerker"></div>
+          <article class="new-admin-story" id="new-admin-story" aria-live="polite">
+            <header class="new-admin-story-heading" id="new-admin-story-heading"></header>
+            <div class="new-admin-story-cards" id="new-admin-story-cards"></div>
+          </article>
+        </section>
         <div class="hero-card">
           <div class="hero-copy">
             <span class="section-label">Maandafsluiting</span>

@@ -19,7 +19,9 @@ permissions:
 
 concurrency:
   group: release-pipeline
-  cancel-in-progress: true
+  # Een nieuwe main-push wacht op de lopende release. Zo kan een bijna afgeronde
+  # TEST/PROD-run niet door een parallelle hotfix- of pilotmerge worden afgebroken.
+  cancel-in-progress: false
 
 env:
   TARGET_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.sha }}
