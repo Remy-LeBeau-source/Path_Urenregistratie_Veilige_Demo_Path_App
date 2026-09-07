@@ -1,0 +1,102 @@
+name: Pilot naar main (wachtrij)
+
+# Zodra de CI-workflow op `herontwerp` groen wordt, mag de pilot naar `main`
+# doorschuiven — maar pas als er op dit moment geen Release Pipeline-run op
+# `main` bezig is. Dit bestand moet op de default branch (`main`) staan: een
+# `workflow_run`-trigger wordt alleen opgepikt vanaf daar, ook als de
+# workflow die hem afvuurt (`CI`) alleen op `herontwerp` draait.
+#
+# Wat dit NIET doet: PROD promoten. Die stap blijft achter de handmatige
+# GitHub-environment-reviewerpoort op `prod`, ongeacht wat hier gebeurt.
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: pilot-merge-queue
+  # Nooit een lopende wachtbeurt afbreken; een volgende groene herontwerp-CI
+  # komt gewoon achteraan in de rij van deze workflow zelf.
+  cancel-in-progress: false
+
+jobs:
+  queue-and-merge:
+    name: Wacht op main, merge dan herontwerp
+    runs-on: ubuntu-latest
+    if: >-
+      ${{ github.event.workflow_run.conclusion == 'success'
+          && github.event.workflow_run.head_branch == 'herontwerp' }}
+    timeout-minutes: 240
+    steps:
+      - name: Checkout op de geteste herontwerp-commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: Vooraf checken — bevat herontwerp de actuele main, en is dit al gemerged?
+        id: precheck
+        shell: bash
+        run: |
+          git fetch --no-tags origin main:refs/remotes/origin/main
+
+          if git merge-base --is-ancestor origin/main HEAD; then
+            echo "contains_main=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "contains_main=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::herontwerp (${{ github.event.workflow_run.head_sha }}) mist commits van main. Geen auto-merge; eerst main in herontwerp opnemen."
+          fi
+
+          if git merge-base --is-ancestor HEAD origin/main; then
+            echo "already_merged=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "already_merged=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Wacht tot main geen actieve Release Pipeline-run heeft
+        if: ${{ steps.precheck.outputs.contains_main == 'true' && steps.precheck.outputs.already_merged == 'false' }}
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const maxWaitMs = 3 * 60 * 60 * 1000; // 3 uur
+            const pollMs = 60 * 1000;
+            const startedAt = Date.now();
+
+            while (true) {
+              const { data } = await github.rest.actions.listWorkflowRuns({
+                owner,
+                repo,
+                workflow_id: 'release-pipeline.yml',
+                branch: 'main',
+                per_page: 20,
+              });
+              const active = data.workflow_runs.filter((r) => r.status !== 'completed');
+
+              if (active.length === 0) {
+                core.info('Geen actieve Release Pipeline-run op main. Pilot mag mergen.');
+                return;
+              }
+
+              core.info(`Main heeft nog actieve run(s): ${active.map((r) => `${r.id}:${r.status}`).join(', ')}. Opnieuw checken over ${pollMs / 1000}s.`);
+
+              if (Date.now() - startedAt > maxWaitMs) {
+                core.setFailed('Timeout: main-pipeline bleef langer dan 3 uur actief. Niet gemerged; herstart deze wachtrij vanaf de volgende groene herontwerp-CI.');
+                return;
+              }
+
+              await new Promise((resolve) => setTimeout(resolve, pollMs));
+            }
+
+      - name: Fast-forward main naar de groene herontwerp-commit
+        if: ${{ steps.precheck.outputs.contains_main == 'true' && steps.precheck.outputs.already_merged == 'false' }}
+        shell: bash
+        run: |
+          git push origin "${{ github.event.workflow_run.head_sha }}:refs/heads/main"
+          echo "main staat nu op ${{ github.event.workflow_run.head_sha }} (herontwerp, groene CI)."
