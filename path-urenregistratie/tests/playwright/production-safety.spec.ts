@@ -772,26 +772,34 @@ test('[SAFE-H-011] groene main-pipeline rolt exact dezelfde release veilig uit n
   });
 });
 
-test('[SAFE-H-016] de eerste 1.0.0-uitrol vereist exact de afgesproken lege PROD-baseline', async () => {
+test('[SAFE-H-016] de eerste 1.x-uitrol normaliseert PROD naar de afgesproken baseline en controleert die streng', async () => {
   let preflight = '';
   let deploy = '';
+  let normalize = '';
 
-  await test.step('Given de eerste productiebaseline en het deployscript worden ingelezen', async () => {
+  await test.step('Given de eerste productiebaseline, het normalisatiescript en het deployscript worden ingelezen', async () => {
     preflight = await readFile(join(process.cwd(), 'server', 'scripts', 'production-preflight.php'), 'utf8');
     deploy = await readFile(join(process.cwd(), 'scripts', 'deploy-production-remote.sh'), 'utf8');
+    normalize = await readFile(join(process.cwd(), 'server', 'scripts', 'normalize-production-golive-baseline.php'), 'utf8');
   });
 
-  await test.step('When versie 1.0.0 vóór backup en migratie wordt vrijgegeven', async () => {
-    const baselineIndex = deploy.indexOf('production-preflight.php --config=server/config.local.php --live --initial-baseline');
+  await test.step('When PROD nog op 0.x draait, wordt vóór de strenge gate eerst een backup gemaakt en daarna genormaliseerd', async () => {
+    // De trigger is niet langer een letterlijke versiestring maar "PROD draait nog geen 1.x".
+    expect(deploy).toContain('prod_current_major');
+    expect(deploy).toContain('"$prod_current_major" -lt 1');
+    expect(deploy).not.toContain('if [[ "$version" == "1.0.0" ]]');
+
     const backupIndex = deploy.indexOf('database-backup.php --config=server/config.local.php --execute');
+    const normalizeIndex = deploy.indexOf('normalize-production-golive-baseline.php --config=server/config.local.php --execute --confirm=NORMALIZE_PRODUCTION_GOLIVE_BASELINE');
+    const baselineIndex = deploy.indexOf('production-preflight.php --config=server/config.local.php --live --initial-baseline');
     const migrateIndex = deploy.indexOf('php server/migrate.php');
-    expect(deploy).toContain('if [[ "$version" == "1.0.0" ]]');
-    expect(baselineIndex).toBeGreaterThanOrEqual(0);
-    expect(backupIndex).toBeGreaterThan(baselineIndex);
-    expect(migrateIndex).toBeGreaterThan(backupIndex);
+    expect(backupIndex).toBeGreaterThanOrEqual(0);
+    expect(normalizeIndex).toBeGreaterThan(backupIndex);
+    expect(baselineIndex).toBeGreaterThan(normalizeIndex);
+    expect(migrateIndex).toBeGreaterThan(baselineIndex);
   });
 
-  await test.step('Then zijn accounts, septemberstart, dummy-routes en lege transactietabellen fail-closed gecontroleerd', async () => {
+  await test.step('Then blijft de strenge nulmeting accounts, septemberstart, dummy-routes en lege transactietabellen fail-closed controleren', async () => {
     expect(preflight).toContain("($options['initial-baseline'] ?? false) === true");
     expect(preflight).toContain("'production_baseline_has_two_admins_and_five_employees'");
     expect(preflight).toContain("'production_baseline_employee_set_exact'");
@@ -807,8 +815,21 @@ test('[SAFE-H-016] de eerste 1.0.0-uitrol vereist exact de afgesproken lege PROD
     expect(preflight).toContain("'writes_performed' => false");
   });
 
-  await test.step('And latere releases gebruiken dezelfde read-only preflight zonder de eenmalige nulmeting', async () => {
-    expect(deploy).toMatch(/else\s+php server\/scripts\/production-preflight\.php --config=server\/config\.local\.php --live\s+fi/);
+  await test.step('And het normalisatiescript is fail-closed: alleen productie, exacte bevestiging, weigert bij echte data, transactie met rollback', async () => {
+    expect(normalize).toContain("PROD_GOLIVE_START_DATE = '2026-09-01'");
+    expect(normalize).toContain("$environment !== 'production'");
+    expect(normalize).toContain("https://uren.pathconsultancy.nl");
+    expect(normalize).toContain('--confirm=NORMALIZE_PRODUCTION_GOLIVE_BASELINE');
+    expect(normalize).toContain("!== 'NORMALIZE_PRODUCTION_GOLIVE_BASELINE'");
+    expect(normalize).toContain('MUST_BE_EMPTY_BEFORE');
+    expect(normalize).toContain('PROD bevat echte operationele data');
+    expect(normalize).toContain('beginTransaction()');
+    expect(normalize).toContain('rollBack()');
+    expect(normalize).toContain("'writes_performed' => false");
+  });
+
+  await test.step('And latere releases (PROD al op 1.x) gebruiken dezelfde read-only preflight zonder de eenmalige nulmeting', async () => {
+    expect(deploy).toMatch(/else\s+php server\/scripts\/production-preflight\.php --config=server\/config\.local\.php --live\s+php server\/scripts\/database-backup\.php --config=server\/config\.local\.php --execute\s+fi/);
     expect(deploy).not.toContain('migrate-test-masterdata-to-production.php');
   });
 });
