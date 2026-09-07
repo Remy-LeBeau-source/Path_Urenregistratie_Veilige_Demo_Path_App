@@ -657,6 +657,7 @@ test('[DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus', as
     await page.locator('button[data-view="timesheet"]').click();
     await expect(page.locator('#submit-timesheet')).toBeVisible();
     await page.locator('#submit-timesheet').click();
+    await page.locator('#modal-confirm').click();
     await expect(page.locator('#employee-open-task-total')).toHaveText('2 open acties');
   });
 
@@ -839,6 +840,7 @@ test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker e
     await page.locator('button[data-view="timesheet"]').click();
     await chooseMonth('06');
     await page.locator('#submit-timesheet').click();
+    await page.locator('#modal-confirm').click();
 
     await page.locator('button[data-view="timesheet"]').click();
     await chooseMonth('07');
@@ -849,6 +851,7 @@ test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker e
     await page.locator('button[data-view="timesheet"]').click();
     await chooseMonth('08');
     await page.locator('#submit-timesheet').click();
+    await page.locator('#modal-confirm').click();
     await expect(page.locator('#employee-open-task-total')).toHaveText('0 open acties');
 
     await openDemoEmployee(3);
@@ -861,6 +864,7 @@ test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker e
     await page.locator('button[data-view="timesheet"]').click();
     await chooseMonth('07');
     await page.locator('#submit-timesheet').click();
+    await page.locator('#modal-confirm').click();
     await expect(page.locator('#employee-open-task-total')).toHaveText('0 open acties');
   });
 
@@ -1309,6 +1313,7 @@ test('[DASH-N-015] medewerkerprioriteit kiest correctie boven document en toont 
 
   await test.step('Then staat de urencorrectie vóór het document en kloppen de totalen', async () => {
     await expect(page.locator('#employee-open-task-total')).toHaveText('2 open acties');
+    await expect(page.locator('#employee-open-task-months')).toHaveText('Augustus: 2 open acties');
     await expect(page.locator('#employee-dashboard-action')).toHaveAttribute('data-employee-action-period', '2026-08');
     await expect(page.locator('#employee-dashboard-action')).toHaveAttribute('data-employee-action-type', 'hours');
     const rows = page.locator('[data-employee-open-month="2026-08"] [data-employee-action-row]');
@@ -2069,5 +2074,31 @@ test('[DASH-N-026] het medewerkerdashboard blijft nooit op "Werkvoorraad laden" 
     await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i);
     await expect(page.locator('#employee-dashboard-next-meta')).not.toContainText('wordt opgehaald');
     await expect(page.locator('#employee-dashboard-next-label')).not.toHaveText('Bezig');
+  });
+});
+
+// Regressie: "Ander account of rol" in het profielmenu is demo-cruft dat bij
+// een echte login niets anders doet dan uitloggen -- het wekt ten onrechte de
+// indruk dat een medewerker een andere rol kan kiezen en hoort verborgen te
+// zijn buiten de demomodus. (De mail-badge kreeg tegelijk een neutrale
+// "laden"-stand i.p.v. meteen "E-mail uitgeschakeld" te flitsen; dat pad draait
+// alleen op echte prod/test-hosts, niet in deze e2e.)
+test('[DASH-N-027] het profielmenu verbergt "Ander account of rol" bij een echte login', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given een echt ingelogde medewerker', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await expect(page.locator('#app-shell')).toBeVisible();
+  });
+
+  await test.step('When de medewerker het profielmenu opent', async () => {
+    await openProfielmenu(page);
+  });
+
+  await test.step('Then is er geen "Ander account of rol" en wel gewoon Uitloggen', async () => {
+    await expect(page.locator('[data-profile-action="switch"]')).toBeHidden();
+    await expect(page.locator('[data-profile-action="logout"]')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Ander account of rol' })).toHaveCount(0);
   });
 });

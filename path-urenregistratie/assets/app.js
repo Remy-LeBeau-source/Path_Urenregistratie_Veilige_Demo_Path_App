@@ -4428,6 +4428,12 @@ function renderProfileChrome() {
   document.querySelector("#workspace-role").textContent = profile.label;
   document.querySelector("#profile-menu-name").textContent = profile.name;
   document.querySelector("#profile-menu-role").textContent = profile.label;
+  // "Ander account of rol" is alleen zinvol in de demomodus met vrije
+  // rolwissel. Bij een echte login doet die knop hetzelfde als Uitloggen en
+  // wekt hij ten onrechte de indruk dat een medewerker een andere rol kan
+  // kiezen -- daarom verborgen buiten de demomodus.
+  const switchButton = document.querySelector('[data-profile-action="switch"]');
+  if (switchButton) switchButton.hidden = authRuntime.mode === "auth";
 }
 
 function customerTimesheetNeedsEmployeeAction(status) {
@@ -4939,11 +4945,16 @@ function employeeOpenMonthSummaries(employeeId, currentPeriodKey) {
 
 function employeeOpenMonthEquation(openMonthSummaries) {
   if (!openMonthSummaries.length) return 'Alles afgerond';
+  if (openMonthSummaries.length === 1) {
+    const item = openMonthSummaries[0];
+    const count = item.actions.length;
+    return item.period.label.split(' ')[0] + ': ' + count + ' open ' + (count === 1 ? 'actie' : 'acties');
+  }
   const equation = openMonthSummaries
     .map(item => item.period.label.split(' ')[0] + ' ' + item.actions.length)
     .join(' + ');
   const total = openMonthSummaries.reduce((sum, item) => sum + item.actions.length, 0);
-  return equation + ' = ' + total;
+  return equation + ' = ' + total + ' open acties';
 }
 
 function adminTaskAction(task) {
@@ -7774,6 +7785,21 @@ function renderMailRuntimeStatus() {
       toggle.dataset.mailToggleMode = "local-preview";
       toggle.dataset.testMailEnabled = enabled ? "true" : "false";
       toggle.textContent = enabled ? "Mailpreview uitschakelen" : "Mailpreview inschakelen";
+    }
+    return;
+  }
+  // Zolang de mailstatus nog niet is opgehaald tonen we een neutrale
+  // laadstand -- niet meteen "E-mail uitgeschakeld", want dat flitste vlak na
+  // een login als een vals alarm terwijl productiemail gewoon aan stond.
+  if (!data || typeof data.mail_mode === "undefined") {
+    if (badge) {
+      badge.textContent = "E-mailstatus laden…";
+      badge.classList.remove("is-active", "is-paused", "is-toggleable");
+      badge.removeAttribute("role");
+      badge.removeAttribute("tabindex");
+      badge.removeAttribute("aria-label");
+      badge.dataset.mailToggleAvailable = "false";
+      badge.title = "De e-mailstatus wordt opgehaald.";
     }
     return;
   }

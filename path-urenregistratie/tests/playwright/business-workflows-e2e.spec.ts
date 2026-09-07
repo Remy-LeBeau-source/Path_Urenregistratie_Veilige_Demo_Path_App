@@ -157,6 +157,7 @@ test('[E2E-H-003] herindiening verplaatst dezelfde actie van medewerker naar Bac
     await expect(page.locator('#hours-grid .hours-input:not([disabled])').first()).toBeVisible();
     await expect(page.locator('#submit-timesheet')).toContainText('opnieuw indienen');
     await page.locator('#submit-timesheet').click();
+    await page.locator('#modal-confirm').click();
     await expect(page.locator('#timesheet-status')).toHaveText('Ingediend');
   });
 

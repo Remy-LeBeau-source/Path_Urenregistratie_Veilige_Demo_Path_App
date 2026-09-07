@@ -115,6 +115,7 @@ async function ketenTotFactuur(page: Page, loginPage: LoginPage): Promise<{ fact
     const schrijf = page.waitForResponse(response =>
       response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
     await page.locator('#submit-timesheet').click();
+    await page.locator('#modal-confirm').click();
     await schrijf;
   }
   const urenstaatId = Number((await leesUrenstaat(page, periodeSleutel, medewerkerId)).id || 0);

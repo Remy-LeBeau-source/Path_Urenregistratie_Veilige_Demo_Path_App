@@ -134,6 +134,7 @@ test('[E2E-N-017] submitted, approved en invoiced blokkeren iedere verboden mede
       const schrijf = page.waitForResponse(response =>
         response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
       await page.locator('#submit-timesheet').click();
+      await page.locator('#modal-confirm').click();
       await schrijf;
     }
     await expect(page.locator('#timesheet-status')).toHaveText('Ingediend');

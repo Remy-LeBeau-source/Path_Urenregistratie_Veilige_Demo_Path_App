@@ -69,6 +69,7 @@ async function ketenTotFactuur(page: Page, loginPage: LoginPage): Promise<{ fact
     const schrijf = page.waitForResponse(response =>
       response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
     await page.locator('#submit-timesheet').click();
+    await page.locator('#modal-confirm').click();
     await schrijf;
   }
   const urenstaatId = Number((await leesUrenstaat(page, periodeSleutel, medewerkerId)).id || 0);
@@ -330,6 +331,7 @@ test('[E2E-H-024] een nieuw account krijgt via de GUI toegang en zijn eigen teks
     const schrijf = page.waitForResponse(response =>
       response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
     await page.locator('#submit-timesheet').click();
+    await page.locator('#modal-confirm').click();
     await schrijf;
     await expect(page.locator('#timesheet-status')).toHaveText('Ingediend');
   });

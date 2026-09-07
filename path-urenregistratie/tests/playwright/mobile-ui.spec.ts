@@ -342,6 +342,7 @@ async function submitTimesheetAndWaitForServer(page: Page): Promise<void> {
   });
 
   await page.locator('#submit-timesheet').click();
+  await page.locator('#modal-confirm').click();
   expect((await submitResponse).ok()).toBe(true);
   await expect(page.locator('#timesheet-status')).toHaveText('Ingediend', { timeout: 15_000 });
 }
@@ -440,6 +441,8 @@ test('[MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documen
     await assertNoHorizontalOverflow(page);
     await openView(page, 'timesheet');
     await setPeriod(page, MOBILE_PERIOD);
+    await expect(page.locator('.hours-week-scroll-hint')).toBeVisible();
+    await expect(page.locator('#hours-week-filter')).toHaveCSS('overflow-x', 'auto');
   });
 
   await test.step('When uren als concept worden gewijzigd en daarna ingediend', async () => {

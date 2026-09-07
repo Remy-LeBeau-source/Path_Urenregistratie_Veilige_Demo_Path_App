@@ -86,6 +86,7 @@ test('[E2E-N-018] documentlinks accepteren geen ongeautoriseerde gebruiker, clie
       const schrijf = page.waitForResponse(response =>
         response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
       await page.locator('#submit-timesheet').click();
+      await page.locator('#modal-confirm').click();
       await schrijf;
     }
     const urenstaatId = Number((await leesUrenstaat(page, periodeSleutel, medewerkerId)).id || 0);

@@ -91,6 +91,7 @@ test('[E2E-N-021] een gedeactiveerd account met historie blijft veilig bewaard e
       const schrijf = page.waitForResponse(response =>
         response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
       await page.locator('#submit-timesheet').click();
+      await page.locator('#modal-confirm').click();
       await schrijf;
       await expect(page.locator('#timesheet-status')).toHaveText('Ingediend');
     }
