@@ -134,10 +134,8 @@ Uit `HANDOFF-PILOT-DESIGN.md` §→WAT ER NOG MOET, in volgorde:
    bekijk met `skin=new` (Voorkeuren → Vormgeving of `localStorage`). Draai
    `npm run check` + de relevante specs; vóór een grotere wijziging de
    volledige suite (§4) in **beide** skins 100% groen.
-4. **NL-commit**, eindig met:
-   `Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>`
-   (deze trailer is een harnas-eis van de huidige sessie-instructies — dit
-   overschrijft de oudere "geen trailer"-afspraak voor commits vanaf nu).
+4. Gebruik een korte Nederlandse commitboodschap zonder
+   `Co-Authored-By`-trailer.
 5. `git add` met **expliciete paden**, **nooit** `-A` (sweept anders
    halfklaar werk van andere agents/sessies mee).
 6. `git push origin herontwerp` na elke increment.

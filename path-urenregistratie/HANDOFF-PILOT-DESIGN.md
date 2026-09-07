@@ -187,8 +187,7 @@ handmatige mobiele doorloop, en dan de bewuste merge `herontwerp` → `main`
    — moet in **beide** skins 100% groen.
 4. Versie via `npm run version:set`. Op `herontwerp` een eigen `0.11.x`-lijn
    of het nummer met rust laten tot de merge — spreek dit met de gebruiker af.
-5. NL-commit, eindig met
-   `Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>`.
+5. Gebruik een korte Nederlandse commitboodschap zonder `Co-Authored-By`-trailer.
 6. `git add` met **expliciete paden**, nooit `-A`.
 7. Werk dit doc bij per increment.
 8. `handoff/` (repo-root) = design-levering, untracked laten. De losse
