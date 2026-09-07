@@ -4575,33 +4575,37 @@ function renderEmployeeDashboard() {
     const rondAf = () => {
       if (readApiRuntime.employeeOpenTasksHydrated) return;
       readApiRuntime.employeeOpenTasksHydrated = true;
-      try {
-        // Bij een verse eerste login kan currentEmployee() heel even null zijn
-        // terwijl de serverdata nog binnenkomt. Eerder gooide
-        // `Number(currentEmployee().id)` dan een TypeError midden in deze
-        // callback: de vlag stond al op true, maar er volgde geen hertekening,
-        // dus de "Werkvoorraad laden…"-tekst bleef eindeloos staan (op de
-        // telefoon-PWA zonder handmatige F5 permanent).
-        const stillEmployee = state.currentRole === "employee";
-        const dashboardActive = document.querySelector("#view-employee-dashboard")?.classList.contains("is-active") === true;
-        const emp = typeof currentEmployee === "function" ? currentEmployee() : null;
-        const stillSameEmployee = emp ? Number(emp.id) === employeeId : false;
-        const stillSamePeriod = currentPeriod().key === selectedPeriodAtRender;
-        // Als het medewerkerdashboard nu zichtbaar is, moet de laadtekst hoe dan
-        // ook weg — ook als de medewerker/periode-referentie tussendoor is
-        // verschoven. Anders geldt de strengere match zodat een andere view niet
-        // onnodig hertekent.
-        if (stillEmployee && (dashboardActive || (stillSameEmployee && stillSamePeriod))) {
+      // Bij een verse eerste login (vooral in de geïnstalleerde PWA) kan de
+      // hertekening hier nog even mislukken -- currentEmployee() is dan kort null
+      // terwijl de serverdata binnenkomt, wat eerder een TypeError gaf midden in
+      // deze callback. De vlag stond dan al op true maar er volgde geen
+      // hertekening meer, dus "Werkvoorraad laden…" bleef permanent staan (geen
+      // F5 in de PWA). Nu proberen we het een paar seconden lang opnieuw, tot de
+      // laadtekst echt weg is.
+      let pogingen = 0;
+      const laadtekstNogZichtbaar = () => {
+        const el = document.querySelector("#employee-open-task-total");
+        return /laden|opgehaald/i.test((el && el.textContent) || "");
+      };
+      const teken = () => {
+        pogingen += 1;
+        const dashboardActief = document.querySelector("#view-employee-dashboard")?.classList.contains("is-active") === true;
+        if (state.currentRole !== "employee" || !dashboardActief) return;
+        try {
           // Deze hertekening vervangt de laadtekst door de echte werkvoorraad en
           // verandert dus de paginahoogte. Meld dat, zodat het scroll-event dat
           // daarop volgt niet het zojuist geopende profielmenu dichtklapt.
           markLayoutRender();
           renderEmployeeDashboard();
+        } catch (_) {
+          // Mislukt de tekening (bv. currentEmployee() nog null), dan volgt
+          // hieronder gewoon een nieuwe poging.
         }
-      } catch (_) {
-        // Een fout in deze hertekening mag de laadtekst niet permanent laten
-        // staan; een volgende navigatie of tekening haalt de echte stand alsnog op.
-      }
+        if (laadtekstNogZichtbaar() && pogingen < 16) {
+          setTimeout(teken, 500);
+        }
+      };
+      teken();
     };
     // Vangnet: een verzoek dat blijft hangen mag de laadtekst niet eindeloos
     // laten staan. De normale sync is ruim binnen een seconde klaar; blijft hij
