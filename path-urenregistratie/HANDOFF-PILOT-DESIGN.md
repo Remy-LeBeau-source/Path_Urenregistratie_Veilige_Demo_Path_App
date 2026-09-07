@@ -96,10 +96,16 @@ Classic blijft exact intact. Al gedaan:
   (kleur blijft semantisch), zoekveld + segmentschakelaar op de tokens,
   `.invoice-identity-preview` als crème-groen blok met serif-bedrijfsnaam.
   `[SKIN-*]` 7/7 groen lokaal.
-- **Increment 8** (`herontwerp`): Medewerkers/Teambeheer — `.employee-card` op
-  crème + `--shadow`, naam in de serif, `.employee-details`-tegels met hairline,
-  `.mini-avatar` als ronde tegel in `--mint-dark-tekst`, `.team-account-overview`
-  -kop serif, `.team-account-group` op de tokens. `[SKIN-*]` 7/7 groen lokaal.
+- **Increment 8** (`herontwerp` `20f6118`): Medewerkers/Teambeheer —
+  `.employee-card` op crème + `--shadow`, naam in de serif, `.employee-details`-
+  tegels met hairline, `.mini-avatar` als ronde tegel in `--mint-dark-tekst`,
+  `.team-account-overview`-kop serif, `.team-account-group` op de tokens.
+  `[SKIN-*]` 7/7 groen lokaal.
+- **Increment 9** (`herontwerp`): Instellingen — `.settings-section-nav`-knoppen
+  met groene focus/hover-ring, `.reminder-rule` + `.reminder-choice-trigger` +
+  `.reminder-choice-panel` op de tokens met groene focus, `.template-item` en
+  `.mail-recipient-setting`/`.mail-route-choice` met zachtere radius/lijn.
+  `[SKIN-*]` 7/7 groen lokaal.
 
 ### 4. Wat er nog moet (schermen-inventaris)
 
@@ -116,8 +122,9 @@ door de eigen `[*-*]`-cases blijven. Volgorde-suggestie:
       nog polish gebruiken)
 - [x] `employees` — "Medewerkers" (kaarten op crème + `--shadow`, serif-namen,
       ronde avatartegels, accountoverzicht-strook op de tokens)
-- [ ] `settings` — "Instellingen" (6 subsecties: Organisatie · Facturatie ·
-      Mailroutes · Teksten · Herinneringen · Veiligheid)
+- [x] `settings` — "Instellingen" (onderdelennavigatie, herinneringsregels,
+      keuzemenu's, sjabloon- en mailroute-rijen op de tokens; per-subsectie
+      fijnslijpen kan nog)
 - [ ] Modal-detailschermen (goedkeuring-detail, factuurdetail, correctie,
       klanturenstaat-review, extern bevestigen, medewerker toevoegen/bewerken)
 - [ ] Mobiel (iOS/Android PWA) — elk bovenstaand scherm op telefoonbreedte

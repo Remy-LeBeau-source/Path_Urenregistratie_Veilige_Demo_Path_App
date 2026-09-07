@@ -757,6 +757,56 @@ html[data-skin="new"] .team-account-group {
   background: var(--vlak);
 }
 
+/* Instellingen — de zes subsecties: onderdelennavigatie, herinneringsregels,
+   sjabloonrijen en mailroute-rijen op de tokens. Groene focus/hover in plaats
+   van de teal-tekst. Alleen html[data-skin="new"]. */
+html[data-skin="new"] .settings-section-nav button:hover,
+html[data-skin="new"] .settings-section-nav button:focus-visible {
+  border-color: var(--path-green);
+  background: var(--green-light);
+  color: var(--mint-dark-tekst);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--path-green) 16%, transparent);
+}
+
+html[data-skin="new"] .reminder-rule {
+  border-radius: 14px;
+  border-color: var(--line);
+}
+
+html[data-skin="new"] .reminder-choice-trigger:hover,
+html[data-skin="new"] .reminder-choice-trigger[aria-expanded="true"] {
+  border-color: var(--path-green);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--path-green) 16%, transparent);
+}
+
+html[data-skin="new"] .reminder-choice-trigger:focus-visible,
+html[data-skin="new"] .reminder-choice-panel button:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--path-green) 22%, transparent);
+}
+
+html[data-skin="new"] .reminder-choice-panel button:hover,
+html[data-skin="new"] .reminder-choice-panel button.is-active {
+  background: var(--green-light);
+  color: var(--mint-dark-tekst);
+}
+
+html[data-skin="new"] .reminder-schedule-footer {
+  border-radius: 14px;
+}
+
+html[data-skin="new"] .template-item {
+  border-radius: 16px;
+  border-color: var(--line);
+  background: var(--vlak);
+}
+
+html[data-skin="new"] .mail-recipient-setting,
+html[data-skin="new"] .mail-route-choice {
+  border-radius: 14px;
+  border-color: var(--line);
+}
+
 @media (prefers-reduced-motion: reduce) {
   html[data-skin="new"] *,
   html[data-skin="new"] *::before,
