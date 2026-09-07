@@ -807,6 +807,34 @@ html[data-skin="new"] .mail-route-choice {
   border-color: var(--line);
 }
 
+/* Modal-detailschermen — de samenvattingsblokken en de correctiebanner in de
+   dialogen (goedkeuring-detail, factuurdetail, correctie, klanturenstaat-review,
+   extern bevestigen, medewerker bewerken). De dialoog zelf staat al op het
+   fundament (increment 2). Alleen html[data-skin="new"]. */
+html[data-skin="new"] .modal-summary {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--vlak-zacht);
+}
+
+html[data-skin="new"] .modal-summary strong {
+  color: var(--navy-tekst);
+}
+
+html[data-skin="new"] .correction-banner {
+  border-radius: 16px;
+  border-color: color-mix(in srgb, var(--warning) 45%, var(--line));
+  background: var(--warning-bg);
+}
+
+html[data-skin="new"] .correction-banner-icon {
+  border-radius: 12px;
+}
+
+html[data-skin="new"] .correction-banner strong {
+  color: var(--warning-tekst);
+}
+
 @media (prefers-reduced-motion: reduce) {
   html[data-skin="new"] *,
   html[data-skin="new"] *::before,

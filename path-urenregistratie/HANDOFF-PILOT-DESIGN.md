@@ -101,11 +101,15 @@ Classic blijft exact intact. Al gedaan:
   tegels met hairline, `.mini-avatar` als ronde tegel in `--mint-dark-tekst`,
   `.team-account-overview`-kop serif, `.team-account-group` op de tokens.
   `[SKIN-*]` 7/7 groen lokaal.
-- **Increment 9** (`herontwerp`): Instellingen — `.settings-section-nav`-knoppen
-  met groene focus/hover-ring, `.reminder-rule` + `.reminder-choice-trigger` +
-  `.reminder-choice-panel` op de tokens met groene focus, `.template-item` en
-  `.mail-recipient-setting`/`.mail-route-choice` met zachtere radius/lijn.
-  `[SKIN-*]` 7/7 groen lokaal.
+- **Increment 9** (`herontwerp` `afa8de0`): Instellingen — `.settings-section-nav`
+  -knoppen met groene focus/hover-ring, `.reminder-rule` + `.reminder-choice-
+  trigger` + `.reminder-choice-panel` op de tokens met groene focus,
+  `.template-item` en `.mail-recipient-setting`/`.mail-route-choice` met zachtere
+  radius/lijn. `[SKIN-*]` 7/7 groen lokaal.
+- **Increment 10** (`herontwerp`): Modal-detailschermen — `.modal-summary` met
+  hairline + zachtere radius, `.correction-banner` op tokengrenzen i.p.v. harde
+  hex, `.correction-banner-icon` ronde tegel. De dialoog zelf stond al op het
+  fundament. `[SKIN-*]` + `[A11Y-*]` 12/12 groen lokaal.
 
 ### 4. Wat er nog moet (schermen-inventaris)
 
@@ -125,8 +129,8 @@ door de eigen `[*-*]`-cases blijven. Volgorde-suggestie:
 - [x] `settings` — "Instellingen" (onderdelennavigatie, herinneringsregels,
       keuzemenu's, sjabloon- en mailroute-rijen op de tokens; per-subsectie
       fijnslijpen kan nog)
-- [ ] Modal-detailschermen (goedkeuring-detail, factuurdetail, correctie,
-      klanturenstaat-review, extern bevestigen, medewerker toevoegen/bewerken)
+- [x] Modal-detailschermen (`.modal-summary` + `.correction-banner` op de
+      tokens; dialoog-shell al gedekt in increment 2)
 - [ ] Mobiel (iOS/Android PWA) — elk bovenstaand scherm op telefoonbreedte
 
 ### 5. Werkwijze per increment
