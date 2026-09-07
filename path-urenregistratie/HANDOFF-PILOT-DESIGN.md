@@ -12,6 +12,16 @@ zelf-normaliserende cutover); Promote Prod wacht op de gebruiker. `herontwerp`
 heeft `1.0.3` erin gemerged. **De schermen-inventaris in §4 is compleet
 (increment 1–11).**
 
+**Controle en uitrolafspraak 2026-09-07.** De volledige desktopset is lokaal
+uitgevoerd: 375 tests, waarvan 368 direct groen en 7 time-outs onder vier
+gelijktijdige lokale testservers. Alle 7 zijn daarna afzonderlijk groen
+herhaald; de belast geraakte shards worden nog eenmaal serieel bevestigd.
+Na volledig groen mag `herontwerp` bewust naar `main` worden gemerged zodat de
+gecombineerde app op `https://uren-test.pathconsultancy.nl/` kan worden getest.
+PROD blijft daarbij fail-closed op Klassiek en zonder `pilot/`; de PROD-toggle
+wordt pas na acceptatie als afzonderlijke wijziging vrijgegeven, standaard op
+Klassiek. De GitHub-environment `prod` heeft verplichte reviewergoedkeuring.
+
 ## → WAT ER NOG MOET (Fase D)
 
 1. **Volledige desktop-e2e over increment 3–11 in beide skins** —
@@ -23,9 +33,10 @@ heeft `1.0.3` erin gemerged. **De schermen-inventaris in §4 is compleet
    elk scherm in `skin=new`.
 3. Verdere fijnslijping per scherm waar de mockups dat vragen (blijft additief,
    blijft gescoped, blijft beide skins groen, NL-commit, dit doc bijwerken).
-4. Als de gebruiker het herontwerp accepteert: één bewuste merge
-   `herontwerp` → `main` = de `1.1.0`-release — expliciete promote-beslissing
-   van de gebruiker.
+4. Na volledig groene lokale controles: één bewuste merge `herontwerp` →
+   `main`, zodat beide skins op dezelfde TEST-URL kunnen worden geaccepteerd.
+   De PROD-toggle blijft tot die acceptatie geblokkeerd; vrijgave daarvan is
+   een aparte wijziging en promote-beslissing van de gebruiker.
 
 **Mocht Claude wegvallen:** `git fetch && git checkout herontwerp`, dan stap 1
 hierboven, daarna de rest van deze lijst.
@@ -55,8 +66,10 @@ sessie afbrak; Codex draait 'm opnieuw als eerste actie.
   (echte app, beide rollen), `.../pilot/1919-medewerker.html`,
   `.../pilot/1919-beheerder.html`.
 
-**`main` blijft met rust.** Geen Fase D-werk op `main`. Alleen een echte,
-bewuste hotfix hoort daar nog thuis, en dan als aparte `1.0.x`.
+**`main` blijft met rust tot de lokale poorten groen zijn.** Daarna mag de
+gecontroleerde Fase D-merge naar `main` om de volledige app via de bestaande
+releasepipeline op TEST te zetten. Los werk blijft eerst op de eigen branch;
+`herontwerp` haalt nieuwe `main`-wijzigingen binnen vóór een volgende merge.
 
 ### 2. Fase D gaat verder op branch `herontwerp`
 
@@ -67,9 +80,9 @@ bewuste hotfix hoort daar nog thuis, en dan als aparte `1.0.x`.
   `herontwerp` start géén Release Pipeline (die is `main`-getriggerd). PROD
   blijft bevroren op `1.0.0` tot de gebruiker een expliciete merge +
   promote doet.
-- Als het herontwerp af en geaccepteerd is: één bewuste merge
-  `herontwerp` → `main` = de `1.1.0`-release, en dat is weer een aparte
-  promote-beslissing van de gebruiker.
+- Na volledig groene lokale controles: één bewuste merge `herontwerp` →
+  `main` voor acceptatie van beide skins op TEST. PROD blijft dan Classic-only;
+  de toggle op PROD wordt pas na acceptatie apart vrijgegeven.
 
 ### 3. Waar Fase D staat
 
