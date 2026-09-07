@@ -1,17 +1,30 @@
 # HANDOFF — 1414/1919 herontwerp
 
 **Evergreen doc. Wordt tijdens het werk telkens bijgewerkt.**
-Laatst bijgewerkt: 2026-09-07 — **overdracht aan Codex.** Release `1.0.0` staat
-groen op TEST (Promote Prod wacht op de gebruiker). Fase D loopt op branch
-`herontwerp` t/m increment 6 (`6ff56b5`).
+Laatst bijgewerkt: 2026-09-07 — **overdracht aan Codex: rond Fase D / de pilot
+volledig af.** Release `1.0.0` staat groen op TEST (Promote Prod wacht op de
+gebruiker). Fase D loopt op branch `herontwerp` t/m increment 6 (`6ff56b5`).
+
+## → OPDRACHT VOOR CODEX: pilot afronden
+
+De gebruiker draagt het herontwerp aan jou over met de opdracht om het **helemaal
+af te maken** — niet "zo ver als het budget reikt", maar de **hele schermen-
+inventaris in §4 tot elke checkbox `[x]`**. Per increment: alleen additieve CSS
+onder `html[data-skin="new"]`, in **beide** skins 100% groen, NL-commit, dit doc
+bijwerken. Als de inventaris helemaal `[x]` is en de gebruiker het herontwerp
+accepteert, is de volgende stap één bewuste merge `herontwerp` → `main` = de
+`1.1.0`-release — dat blijft een expliciete promote-beslissing van de gebruiker,
+jij doet die merge/promote niet zelf.
 
 ## → EERSTE TAAK VOOR CODEX
 
 `git fetch && git checkout herontwerp`. Increments **3, 4, 5 en 6** (login,
-Mededelingen, Goedkeuringen-proceslijn, Mijn uren-urentabel) zijn gecommit maar
-de **volledige regressie is er nog niet overheen geweest** — de laatste
-`npm run check` liep nog toen de sessie eindigde. Doe daarom eerst:
-`npm run check` + `node scripts/run-playwright-e2e.mjs --project=desktop-chromium`
+Mededelingen, Goedkeuringen-proceslijn, Mijn uren-urentabel) zijn gecommit. De
+`npm run check` staat er inmiddels **groen** overheen (increment 6: taak
+`b3f6fuqdk`, exit 0 — "7 passed", deployment-contractcheck geslaagd). Wat nog
+mist is de **volledige desktop-e2e over increment 3–6 in beide skins**. Doe dus
+eerst:
+`node scripts/run-playwright-e2e.mjs --project=desktop-chromium`
 (volledig, beide skins moeten 100% groen). Alle vier increments zijn puur
 additieve CSS in `assets/styles-new.css` gescoped onder `html[data-skin="new"]`
 — Classic kan er niet door raken — maar bevestig het. Pas daarna verder met de
@@ -74,8 +87,9 @@ Classic blijft exact intact. Al gedaan:
   (`.workflow-step`/`.workflow-line`) als doorlopende groene lijn met gloed op
   afgeronde/huidige stap, zoals de pilot. `npm run check` groen.
 - **Increment 6** (`herontwerp` `6ff56b5`): Mijn uren — `.hours-table`
-  uurwaarden in de serif, groene focus, zachtere lijnen/kopcel. **Nog niet
-  volledig geverifieerd** (zie EERSTE TAAK).
+  uurwaarden in de serif, groene focus, zachtere lijnen/kopcel. `npm run check`
+  groen (taak `b3f6fuqdk`, exit 0). Volledige desktop-e2e over 3–6 nog te doen
+  (zie EERSTE TAAK).
 
 ### 4. Wat er nog moet (schermen-inventaris)
 
