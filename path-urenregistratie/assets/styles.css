@@ -813,18 +813,18 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 
 .modal-backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: rgba(5,13,27,.58); padding: 20px; backdrop-filter: blur(5px); }
 .modal-backdrop[hidden] { display: none; }
-.modal { position: relative; width: min(470px, 100%); max-height: calc(100vh - 40px); overflow-y: auto; border-radius: 22px; background: var(--vlak); padding: 30px; box-shadow: 0 30px 80px rgba(0,0,0,.26); animation: modalIn .2s ease; }
-.modal.is-wide { width: min(780px, 100%); max-height: calc(100vh - 40px); overflow-y: auto; }
+.modal { position: relative; display: flex; flex-direction: column; width: min(470px, 100%); max-height: calc(100vh - 40px); overflow: hidden; border-radius: 22px; background: var(--vlak); box-shadow: 0 30px 80px rgba(0,0,0,.26); animation: modalIn .2s ease; }
+.modal.is-wide { width: min(780px, 100%); }
 @keyframes modalIn { from { opacity: 0; transform: scale(.97) translateY(8px); } to { opacity: 1; transform: none; } }
+/* Alleen deze binnenlaag scrollt; de dialoogrampartij (.modal) staat stil,
+   zodat het kruisje er absoluut op vastgezet kan worden en nooit meewegscrolt.
+   `position: sticky` op de knop was op mobiele browsers onbetrouwbaar in een
+   lange dialoog -- de knop verdween alsnog boven de rand. */
+.modal-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 30px; }
+.modal-scroll > .section-label { padding-right: 34px; }
 .modal h2 { margin: 8px 0; font-family: "Roboto Slab", Georgia, serif; }
-.modal > p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; white-space: pre-line; }
-/* Sticky i.p.v. absolute: bij een lang formulier of nadat de toetsenbord-focus
-   het venster omhoog scrolde, verdween het kruisje boven de rand. Nu blijft het
-   in beeld boven de scrollende modalinhoud. Geen float: `position: sticky` op een
-   gefloat element wordt door meerdere browsers halverwege het scrollen losgelaten
-   waardoor het kruisje verdween. `margin-left: auto` houdt het rechtsboven zonder
-   een eigen zichtbare regel op te eisen (negatieve marges trekken het in de rand). */
-.modal-close { position: sticky; top: 0; z-index: 3; display: grid; place-items: center; width: 34px; height: 34px; margin: -14px -14px 4px auto; border: 0; border-radius: 10px; background: #f1f4f4; cursor: pointer; font-size: 21px; line-height: 1; }
+#modal-message { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; white-space: pre-line; }
+.modal-close { position: absolute; top: 14px; right: 14px; z-index: 3; display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 10px; background: #f1f4f4; cursor: pointer; font-size: 21px; line-height: 1; }
 .modal-close:hover { background: #e6ebeb; }
 .modal-close:focus-visible { outline: 3px solid rgba(58,189,157,.32); outline-offset: 2px; }
 .modal-summary { display: grid; gap: 8px; margin: 20px 0; border-radius: 14px; background: var(--vlak-zacht); padding: 15px; }
@@ -967,7 +967,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .template-person { min-width: 0; }
   .template-subject { grid-column: auto; grid-row: auto; }
   .announcement-meta { gap: 8px; }
-  .modal { padding: 25px 20px; }
+  .modal-scroll { padding: 25px 20px; }
   .modal-form { grid-template-columns: minmax(0, 1fr); }
   .modal-form label.full, .modal-form .full { grid-column: auto; }
   .modal-queue { grid-template-columns: 1fr 1fr; }
@@ -2128,8 +2128,10 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
   .modal {
     width: 100%;
     max-height: calc(100vh - 20px);
-    overflow-y: auto;
     border-radius: 20px 20px 16px 16px;
+  }
+
+  .modal-scroll {
     padding: 24px 18px 18px;
   }
 
@@ -2805,7 +2807,7 @@ body.toont-installatieaanbod .main-content {
   .mobile-brand-home { font-size: 13px; }
   .mobile-brand-home span { font-size: 12px; }
   .mobile-role-switch { font-size: 13px; }
-  .modal > p { font-size: 14px; }
+  #modal-message { font-size: 14px; }
   .modal-form .form-help { font-size: 11px; }
   .modal-form input { font-size: 14px; }
   .modal-form label { font-size: 12px; }

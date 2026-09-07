@@ -214,29 +214,44 @@ test('[A11Y-H-006] de sluitknop van een scrollende dialoog blijft in beide skins
       }).toPass({ timeout: 15_000, intervals: [250, 500, 1_000] });
 
       const dialoog = page.locator('#modal .modal');
+      const scroller = page.locator('#modal-scroll');
       const kruisje = page.locator('#modal-close');
       await expect(dialoog).toBeVisible();
+      await expect(scroller).toBeVisible();
       await expect(kruisje).toBeVisible();
 
-      // De dialoog moet echt overlopen, anders bewijst deze case niets.
-      const overloop = await dialoog.evaluate(el => el.scrollHeight - el.clientHeight);
+      // Alleen de binnenlaag scrollt; die moet echt overlopen anders bewijst
+      // deze case niets. De dialoogrand (.modal) staat zelf stil.
+      const overloop = await scroller.evaluate(el => el.scrollHeight - el.clientHeight);
       expect(overloop, 'de Voorkeuren-dialoog hoort op 380x520 te scrollen').toBeGreaterThan(20);
 
-      // Scroll de dialoog naar onderen.
-      await dialoog.evaluate(el => el.scrollTo(0, el.scrollHeight));
+      // Laat de open-animatie (transform translateY) uitlopen voordat we meten.
+      await page.waitForTimeout(300);
+      const voorScroll = await kruisje.boundingBox();
+      expect(voorScroll, 'het kruisje hoort een zichtbare box te hebben').not.toBeNull();
+
+      // Scroll de binnenlaag helemaal naar onderen (honderden pixels).
+      await scroller.evaluate(el => el.scrollTo(0, el.scrollHeight));
       await expect(kruisje).toBeVisible();
 
-      // Het kruisje is bovenin de dialoog blijven plakken i.p.v. mee weg te scrollen.
-      const kb = await kruisje.boundingBox();
+      // Het kruisje zit absoluut op de stilstaande dialoogrand: het scrollt NIET
+      // mee met de inhoud en blijft volledig binnen de dialoog.
+      const naScroll = await kruisje.boundingBox();
       const db = await dialoog.boundingBox();
-      expect(kb, 'het kruisje hoort een zichtbare box te hebben').not.toBeNull();
+      expect(naScroll, 'het kruisje hoort zichtbaar te blijven na scrollen').not.toBeNull();
       expect(db, 'de dialoog hoort een zichtbare box te hebben').not.toBeNull();
-      expect(kb!.y, 'het kruisje hoort binnen ~80px van de dialoogbovenrand te blijven').toBeLessThan(db!.y + 80);
-      expect(kb!.y + kb!.height, 'het kruisje hoort volledig binnen de dialoog te vallen').toBeLessThan(db!.y + db!.height);
+      expect(Math.abs(naScroll!.y - voorScroll!.y), 'het kruisje mag niet meescrollen met de inhoud').toBeLessThan(6);
+      expect(naScroll!.y, 'het kruisje hoort bovenin de dialoog te zitten').toBeLessThan(db!.y + 70);
+      expect(naScroll!.y + naScroll!.height, 'het kruisje hoort volledig binnen de dialoog te vallen').toBeLessThan(db!.y + db!.height);
 
       // En het sluit de dialoog nog steeds.
       await kruisje.click();
       await expect(page.locator('#modal')).toBeHidden();
     });
   }
+
+  await test.step('Ruim op: wis de opgeslagen voorkeur (skin) en herstel de standaardviewport', async () => {
+    await page.evaluate(() => { try { localStorage.clear(); } catch (_) { /* storage kan onbeschikbaar zijn */ } });
+    await page.setViewportSize({ width: 1280, height: 900 });
+  });
 });

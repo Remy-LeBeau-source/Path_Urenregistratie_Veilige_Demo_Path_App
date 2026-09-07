@@ -9005,10 +9005,11 @@ function showModal(options) {
   } else {
     taskNavigation.hidden = true;
   }
-  dialog.scrollTop = 0;
+  const modalScroll = document.querySelector("#modal-scroll");
+  if (modalScroll) modalScroll.scrollTop = 0;
   const initialFocus = settings.initialFocus ? dialog.querySelector(settings.initialFocus) : null;
   (initialFocus || document.querySelector("#modal-confirm")).focus({ preventScroll: true });
-  dialog.scrollTop = 0;
+  if (modalScroll) modalScroll.scrollTop = 0;
 }
 
 function closeModal(runCloseAction = false) {
