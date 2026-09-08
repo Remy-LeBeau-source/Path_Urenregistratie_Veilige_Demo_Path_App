@@ -607,6 +607,13 @@ html[data-skin="new"] .hours-table tfoot th {
   color: var(--mint-dark-tekst);
 }
 
+/* Klanturenstaat-stappenblok onderaan "Mijn uren": kleuren komen al
+   automatisch mee via de tokens, hier alleen de radius zachter zoals de
+   rest van het fundament. Alleen html[data-skin="new"]. */
+html[data-skin="new"] .customer-timesheet-flow li {
+  border-radius: 16px;
+}
+
 /* Facturen — de maandkaart, de statuswegwijzer, de tabel en de detailpreview
    op de nieuwe tokens. Zachte crème-panelen, groene accenten, serif-koppen,
    groene focus. Statuskleuren blijven semantisch. Alleen html[data-skin="new"]. */
@@ -853,6 +860,10 @@ html[data-skin="new"] .mail-recipient-setting,
 html[data-skin="new"] .mail-route-choice {
   border-radius: 14px;
   border-color: var(--line);
+}
+
+html[data-skin="new"] .settings-rule-list li {
+  border-radius: 16px;
 }
 
 /* Modal-detailschermen — de samenvattingsblokken en de correctiebanner in de
