@@ -3,6 +3,73 @@
 **Voor Codex. Geschreven door Claude, 2026-09-07, vanuit `C:\Path-herontwerp`.**
 Evergreen doc zoals `HANDOFF-PILOT-DESIGN.md` — bijwerken per increment.
 
+## 02:04 8 september — CI rood op `7c52e23`, root cause gevonden (Claude)
+
+`herontwerp`-CI faalt breed (shards 1/2/4 rood) met overal dezelfde kern:
+
+```
+Error: definitief maken hoort te slagen: {"ok":false,"error":"customer-timesheet-required",
+"message":"De klanturenstaat moet eerst zijn ingediend of als rechtstreeks gemaild
+geregistreerd voordat de factuur kan worden afgerond."}
+```
+
+Komt rechtstreeks uit `6e2543d` ("verplicht klanturenstaat en veilig
+maandindienen"): die nieuwe regel wordt nu overal afgedwongen bij het
+afronden van een factuur, maar veel bestaande testopstellingen
+(business-workflows-failure/idempotency/mail*, invoice-lock, email-queue,
+INV-*, EQ-*) zetten nog geen klanturenstaat klaar voordat ze een factuur
+proberen af te ronden. Raakt geen van Claude's CSS/test-commits — puur
+gevolg van de nieuwe regel zelf, nog niet doorgevoerd naar de testfixtures.
+
+**Niet zelf gepatcht** — dit is Codex' eigen nieuwe business-regel; welke
+testopstellingen bewust een uitzondering horen te zijn (bv. AVI/salaris-only
+routes zonder klanturenstaat) weet ik niet zeker genoeg om blind te wijzigen.
+De wachtrij (§0a) laat dit terecht niet naar `main` doorstromen zolang het
+rood staat — dat is precies de bedoelde bescherming.
+
+## Nacht 7→8 september 2026 — Claude's kant van de nacht, kort
+
+Codex en Claude werkten deze nacht gelijktijdig op `herontwerp`; hieronder
+alleen Claude's kant, in commitvolgorde met de laatste bovenaan bij het lezen
+van `git log`. Elke sync met Codex' commits ging schoon, zonder conflicten.
+
+- `0c581eb` — nieuwe regressietest `[SKIN-H-010]` (`tests/playwright/
+  skin.spec.ts` + `features/skin.feature`): bewijst dat de admin-verhaallijn
+  (`.new-admin-employee-row`, al verbonden aan echte medewerker-/periodedata)
+  daadwerkelijk van medewerker wisselt — geselecteerde rij, verhaalkop-naam en
+  vier statuskaarten kloppen na een klik. Dit was letterlijk een van de 7
+  openstaande punten in Codex' eigen portal-lijst ("nieuwe Playwright-cases
+  voor de storyline en de acties"). Design-audit groen.
+- `2dea2dd`/`4a015e5`/`1c74c64` — drie kleine CSS-only polish-increments,
+  puur additief onder `html[data-skin="new"]`, classic ongewijzigd:
+  factuurdetail-modal + PDF-preview (radius/schaduw/serif op koppen en
+  eindbedrag), goedkeuringenkaarten (schaduw + groene hover-ring),
+  klanturenstaat-stappenblok en veiligheidsregel-kaarten (radius naar 16px/
+  14px, in lijn met de rest van het fundament). Gerichte hertest 202/0 en
+  350/31 gedraaid (die 31 faalden op dat moment op ongerelateerde email-
+  queue/invoice-lock-cases tijdens Codex' eigen tussentijdse commits — geen
+  van de CSS-wijzigingen zelf raakte die bestanden).
+- `8900100` — `origin/main` (`6a8dffc`) teruggehaald in `herontwerp` nadat de
+  automatische merge-wachtrij (zie hieronder) een main-commit had gemist;
+  standaard sync-onderhoud, geen inhoudelijke wijziging.
+
+**Belangrijke observatie over de CI-cyclus vannacht:** bij snel na elkaar
+pushen (van beide agents) annuleert elke nieuwe push de vorige lopende
+`CI`-run (`cancel-in-progress: true` in `ci.yml`). Een "failure"/"cancelled"
+in de Actions-lijst hoeft dus geen echte testfout te zijn — check altijd de
+laatste run op de laatste commit voor je concludeert dat iets rood staat.
+
+**De automatische merge-wachtrij (`pilot-merge-queue.yml`, zie eerdere sectie
+hieronder) werkt intussen echt**: hij heeft vannacht zelfstandig `herontwerp`
+naar `main` gemerged (o.a. via `40ad8b1`) en de Release Pipeline gestart. PROD
+is niet aangeraakt.
+
+**Wat ik bewust niet heb opgepakt:** de grote functionele portal-uitbreiding
+(storyline als volwaardige route verder afmaken, overige hoofdschermen in de
+nieuwe stijl) — dat is precies waar Codex al middenin zat (`6e2543d` "verplicht
+klanturenstaat en veilig maandindienen" e.v.). Tegelijk aan dezelfde
+functionele kern werken zonder overleg zou onnodig conflictrisico geven.
+
 ## Actuele gezamenlijke werkafspraak (Claude en Codex)
 
 Deze paragraaf gaat vóór oudere, beperktere overdrachtsregels verderop in dit

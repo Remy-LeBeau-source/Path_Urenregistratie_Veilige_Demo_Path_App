@@ -116,6 +116,17 @@ test('[E2E-H-019] dubbel klikken maakt nooit dubbele statussen, facturen of mail
   });
 
   await test.step('And levert dubbel goedkeuren en dubbel factureren één factuur op', async () => {
+    // Sinds de verplichte klanturenstaat-check (server/api/invoices.php,
+    // customer-timesheet-required) moet die er staan voor er iets kan worden
+    // gefactureerd; alleen de medewerker zelf mag hem als rechtstreeks gemaild
+    // registreren, dus dat hoort hier, nog in zijn eigen sessie, vóór de
+    // rolwissel naar Backoffice.
+    const klanturenstaat = await page.request.post('/server/api/customer-timesheets.php', {
+      headers: { 'X-CSRF-Token': await csrf(page) },
+      data: { action: 'mark_skipped', period: periodeSleutel, review_note: 'E2E-H-019: rechtstreeks gemaild.' },
+    });
+    expect(klanturenstaat.ok(), `klanturenstaat registreren hoort te slagen: ${await klanturenstaat.text()}`).toBe(true);
+
     await page.request.post('/server/auth/logout.php', { headers: { 'X-CSRF-Token': await csrf(page) } });
     await loginPage.open();
     await loginPage.loginAsAdmin();

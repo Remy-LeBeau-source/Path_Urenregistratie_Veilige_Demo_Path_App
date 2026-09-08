@@ -2,6 +2,7 @@ import { expect, request as playwrightRequest, test, type Page } from '@playwrig
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { AuthApi } from './api/AuthApi';
+import { CustomerTimesheetApi } from './api/CustomerTimesheetApi';
 import { EmailQueueApi } from './api/EmailQueueApi';
 import { InvoiceApi } from './api/InvoiceApi';
 import { TimesheetApi } from './api/TimesheetApi';
@@ -157,6 +158,7 @@ async function createLockedInvoice() {
   const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
   const authApi      = new AuthApi(ctx);
   const timesheetApi = new TimesheetApi(ctx);
+  const customerTimesheetApi = new CustomerTimesheetApi(ctx);
   const invoiceApi   = new InvoiceApi(ctx);
   const queueApi     = new EmailQueueApi(ctx);
 
@@ -177,6 +179,15 @@ async function createLockedInvoice() {
   const employeeId    = Number(submitted.body.employee_id || 0);
   const timesheetId   = Number(submitted.body.timesheet?.id || 0);
   const submittedVer  = Number(submitted.body.timesheet?.version || 0);
+
+  // Employee: registreer de klanturenstaat als rechtstreeks gemaild, zodat
+  // het factureren hierna niet meer vastloopt op de sinds vannacht verplichte
+  // klanturenstaat-check (server/api/invoices.php, customer-timesheet-required).
+  const customerTimesheetSkipped = await customerTimesheetApi.write({
+    action: 'mark_skipped', period,
+    reviewNote: 'EQ spec: rechtstreeks gemaild, geen apart klantdocument nodig voor deze case.',
+  });
+  expect(customerTimesheetSkipped.status).toBe(200);
 
   // Admin: approve + lock
   await authApi.logout();
@@ -2366,6 +2377,18 @@ test.describe('nieuw account door de volledige keten', () => {
         expect(ingediend.status, JSON.stringify(ingediend.body)).toBe(200);
         expect(String(ingediend.body.timesheet?.status), 'de urenstaat hoort ingediend te zijn').toBe('submitted');
 
+        // Sinds de verplichte klanturenstaat-check (server/api/invoices.php,
+        // customer-timesheet-required) moet die er staan voor er iets kan
+        // worden gefactureerd; alleen de medewerker zelf mag hem als
+        // rechtstreeks gemaild registreren, dus dat hoort hier, in zijn eigen
+        // sessie, vóór de logout.
+        const eigenCustomerTimesheetApi = new CustomerTimesheetApi(eigenCtx);
+        const klanturenstaat = await eigenCustomerTimesheetApi.write({
+          action: 'mark_skipped', period: periode,
+          reviewNote: 'E2E-H-013: rechtstreeks gemaild, geen apart klantdocument nodig voor deze case.',
+        });
+        expect(klanturenstaat.status, JSON.stringify(klanturenstaat.body)).toBe(200);
+
         await eigenAuth.logout();
         await eigenCtx.dispose();
       });
@@ -2538,6 +2561,17 @@ test.describe('nieuw account door de volledige keten', () => {
         });
         expect(ingediend.status, JSON.stringify(ingediend.body)).toBe(200);
         const medewerkerDbId = Number(ingediend.body.employee_id || 0);
+
+        // Zie E2E-H-013 hierboven: alleen de medewerker zelf mag de
+        // klanturenstaat als rechtstreeks gemaild registreren, dus dat moet
+        // in zijn eigen sessie gebeuren, vóór de logout.
+        const werknemerCustomerTimesheetApi = new CustomerTimesheetApi(werknemerCtx);
+        const klanturenstaat = await werknemerCustomerTimesheetApi.write({
+          action: 'mark_skipped', period: periode,
+          reviewNote: 'E2E-H-014: rechtstreeks gemaild, geen apart klantdocument nodig voor deze case.',
+        });
+        expect(klanturenstaat.status, JSON.stringify(klanturenstaat.body)).toBe(200);
+
         await werknemerAuth.logout();
         await werknemerCtx.dispose();
 

@@ -122,6 +122,16 @@ async function ketenTotFactuur(page: Page, loginPage: LoginPage): Promise<{ fact
   const urenstaatId = Number((await leesUrenstaat(page, periodeSleutel, medewerkerId)).id || 0);
   expect(urenstaatId, 'de urenstaat hoort te bestaan').toBeGreaterThan(0);
 
+  // Sinds de verplichte klanturenstaat-check (server/api/invoices.php,
+  // customer-timesheet-required) moet die er staan voor er iets kan worden
+  // gefactureerd; alleen de medewerker zelf mag hem als rechtstreeks gemaild
+  // registreren, dus dat hoort hier, in zijn eigen sessie, vóór de rolwissel.
+  const klanturenstaat = await page.request.post('/server/api/customer-timesheets.php', {
+    headers: { 'X-CSRF-Token': await csrf(page) },
+    data: { action: 'mark_skipped', period: periodeSleutel, review_note: 'ketenTotFactuur: rechtstreeks gemaild.' },
+  });
+  expect(klanturenstaat.ok(), `klanturenstaat registreren hoort te slagen: ${await klanturenstaat.text()}`).toBe(true);
+
   await page.request.post('/server/auth/logout.php', { headers: { 'X-CSRF-Token': await csrf(page) } });
   await loginPage.open();
   await loginPage.loginAsAdmin();
