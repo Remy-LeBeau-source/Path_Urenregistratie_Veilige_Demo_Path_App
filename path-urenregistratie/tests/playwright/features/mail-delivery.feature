@@ -34,6 +34,14 @@ Feature: Mailroutering en aflevering
     And cleanup
 
   @happy
+  Scenario: [EQ-H-035] submit maakt exact één medewerker-ontvangstmail
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given mailroutering en aflevering is voorbereid
+    When de flow voor EQ-H-035 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat submit maakt exact één medewerker-ontvangstmail
+
+  @happy
   Scenario: [EQ-H-022] één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie
     # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 14

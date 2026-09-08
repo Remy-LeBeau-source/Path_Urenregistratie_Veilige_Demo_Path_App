@@ -43,7 +43,7 @@ if ($method === 'GET') {
 
     $sql = '
         SELECT
-            ed.id, ed.user_id, ed.invoice_id, ed.channel, ed.recipient_email, ed.cc_email,
+            ed.id, ed.user_id, ed.invoice_id, ed.timesheet_id, ed.channel, ed.recipient_email, ed.cc_email,
             ed.subject_snapshot, ed.attachment_policy, ed.status,
             ed.attempt_count, ed.dry_run, ed.acceptance_test, ed.last_error, ed.sent_at, ed.created_at,
             i.invoice_number, e.full_name AS employee_name,
@@ -53,8 +53,9 @@ if ($method === 'GET') {
         FROM email_deliveries ed
         LEFT JOIN invoices i ON i.id = ed.invoice_id
         LEFT JOIN users u ON u.id = ed.user_id
-        LEFT JOIN timesheets t ON t.id = i.timesheet_id
-        LEFT JOIN employees e ON e.id = t.employee_id
+        LEFT JOIN timesheets invoice_timesheet ON invoice_timesheet.id = i.timesheet_id
+        LEFT JOIN timesheets delivery_timesheet ON delivery_timesheet.id = ed.timesheet_id
+        LEFT JOIN employees e ON e.id = COALESCE(invoice_timesheet.employee_id, delivery_timesheet.employee_id)
         WHERE COALESCE(i.company_id, u.company_id) = :company_id
     ';
     $params = [':company_id' => $companyId];
@@ -97,6 +98,7 @@ if ($method === 'GET') {
             'id'               => (int)$r['id'],
             'user_id'          => $r['user_id'] !== null ? (int)$r['user_id'] : null,
             'invoice_id'       => $r['invoice_id'] !== null ? (int)$r['invoice_id'] : null,
+            'timesheet_id'     => $r['timesheet_id'] !== null ? (int)$r['timesheet_id'] : null,
             'invoice_number'   => $r['invoice_number'] !== null ? (string)$r['invoice_number'] : null,
             'employee_name'    => $r['employee_name'] !== null ? (string)$r['employee_name'] : null,
             'channel'          => (string)$r['channel'],

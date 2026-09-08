@@ -176,6 +176,10 @@ function migration_plan(bool $allowDemoMigrations): array
         'id' => '029_announcement_hidden_from_employees.sql',
         'path' => __DIR__ . '/migrations/029_announcement_hidden_from_employees.sql',
     ];
+    $plan[] = [
+        'id' => '030_timesheet_receipt_channels.sql',
+        'path' => __DIR__ . '/migrations/030_timesheet_receipt_channels.sql',
+    ];
     return $plan;
 }
 

@@ -278,6 +278,57 @@ test.describe('email queue api', () => {
     await test.step('And cleanup', async () => { await authApi.logout(); await ctx.dispose(); });
   });
 
+  test('[EQ-H-035] submit maakt exact één medewerker-ontvangstmail', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    const timesheetApi = new TimesheetApi(ctx);
+    const queueApi = new EmailQueueApi(ctx);
+
+    await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+
+    const period = await findWritablePeriod(timesheetApi);
+    const draft = await timesheetApi.write({
+      action: 'save_draft',
+      period,
+      contractualHours: 160,
+      billableHours: 8,
+      leaveHours: 0,
+      dayEntries: [{ workDate: `${period}-01`, hours: 8, description: 'EQ-H-035' }],
+    });
+    expect(draft.status).toBe(200);
+
+    const submitted = await timesheetApi.write({
+      action: 'submit',
+      period,
+      contractualHours: 160,
+      billableHours: 8,
+      leaveHours: 0,
+      dayEntries: [{ workDate: `${period}-01`, hours: 8, description: 'EQ-H-035' }],
+      expectedVersion: draft.body.timesheet?.version as number,
+    });
+    expect(submitted.status).toBe(200);
+    await authApi.logout();
+
+    const adminCtx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const adminAuthApi = new AuthApi(adminCtx);
+    const adminQueueApi = new EmailQueueApi(adminCtx);
+    await adminAuthApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const list = await adminQueueApi.list();
+    const receiptItems = (list.body.items as Array<Record<string, unknown>>)
+      .filter(item => String(item.channel || '') === 'timesheet_submission_receipt'
+        && Number(item.timesheet_id || 0) === Number(submitted.body.timesheet?.id || 0));
+
+    expect(receiptItems).toHaveLength(1);
+    expect(receiptItems[0].recipient_email).toBe(appConfig.employeeEmail);
+    expect(receiptItems[0].status).toBe('queued');
+    expect(String(receiptItems[0].subject_snapshot || '')).toMatch(/uren/i);
+
+    await adminAuthApi.logout();
+    await adminCtx.dispose();
+    await ctx.dispose();
+  });
+
   test('[EQ-H-022] één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie', async () => {
     const { ctx, authApi, queueApi, invoiceId } = await createLockedInvoice();
 

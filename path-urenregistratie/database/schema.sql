@@ -346,9 +346,10 @@ CREATE TABLE email_deliveries (
   user_id BIGINT UNSIGNED NULL,
   invoice_id BIGINT UNSIGNED NULL,
   timesheet_id BIGINT UNSIGNED NULL,
+  timesheet_version INT UNSIGNED NULL,
   customer_timesheet_id BIGINT UNSIGNED NULL,
   announcement_id BIGINT UNSIGNED NULL,
-  channel ENUM('broker', 'accountant', 'payroll', 'other', 'reminder', 'customer_timesheet', 'announcement', 'password_reset') NOT NULL,
+  channel ENUM('broker', 'accountant', 'payroll', 'other', 'reminder', 'customer_timesheet', 'timesheet_submission_receipt', 'timesheet_final_approval', 'announcement', 'password_reset') NOT NULL,
   recipient_email VARCHAR(190) NOT NULL,
   cc_email VARCHAR(190) NULL,
   subject_snapshot VARCHAR(255) NOT NULL,
@@ -369,7 +370,8 @@ CREATE TABLE email_deliveries (
   CONSTRAINT fk_email_deliveries_customer_timesheet FOREIGN KEY (customer_timesheet_id) REFERENCES customer_timesheets(id),
   CONSTRAINT fk_email_deliveries_announcement FOREIGN KEY (announcement_id) REFERENCES announcements(id),
   INDEX idx_delivery_queue (status, created_at),
-  INDEX idx_delivery_user (user_id, created_at)
+  INDEX idx_delivery_user (user_id, created_at),
+  INDEX idx_delivery_timesheet_version (timesheet_id, timesheet_version, channel)
 );
 
 CREATE TABLE notifications (
