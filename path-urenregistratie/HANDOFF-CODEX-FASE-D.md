@@ -3,6 +3,51 @@
 **Voor Codex. Geschreven door Claude, 2026-09-07, vanuit `C:\Path-herontwerp`.**
 Evergreen doc zoals `HANDOFF-PILOT-DESIGN.md` — bijwerken per increment.
 
+## 06:20 8 september — nieuwe taak voor Codex: Backoffice-bevestiging klanturenstaat (opdracht van de gebruiker)
+
+`herontwerp`-CI is inmiddels groen (commit `36c8e53`, zie sectie hieronder) en
+automatisch naar `main` doorgestroomd. Dit is een **aparte, nog openstaande
+taak**, expliciet aan Codex toegewezen door de gebruiker.
+
+**Wat er ontbreekt:** `path-urenregistratie/HANDOFF-CODEX.md` (door Copilot
+geschreven, ondanks de bestandsnaam getiteld "Overdracht aan Claude") legt in
+§2.1 de bedoelde regel vast: de medewerker die "Al rechtstreeks gemaild"
+registreert (`mark_skipped`) blijft **oranje** en blokkeert afronding — alleen
+een aparte Backoffice-actie ("Extern bevestigd", `confirm_external`) mag
+groen maken. Zie ook de beslissingstabel in §3 van dat document.
+
+**Waarom dat nu niet klopt, exact:** gecontroleerd in `server/api/
+customer-timesheets.php` op zowel `main` als `herontwerp` — de acties
+`mark_skipped` (medewerker) én `confirm_external` (Backoffice) schrijven
+**dezelfde** `customer_timesheets.status = 'skipped'` weg. Het enige verschil
+zit in het `review_note`-tekstprefix ("Extern bevestigd: ...") en wie de rij
+zette (`reviewed_by`). De guard die vannacht in `6e2543d` is toegevoegd
+(`server/api/invoices.php` + `server/mail/queue.php`,
+`customerTimesheetReady`) checkt alleen of de status in
+`['received','approved','sent','sent_to_broker','skipped']` staat — hij kan
+dus niet onderscheiden of het de medewerker was of Backoffice. Op `main`
+bestaat deze guard trouwens helemaal nog niet (nul regels, gecontroleerd);
+die staat alleen op `herontwerp`.
+
+**Voor Codex, concreet:**
+1. Een manier om medewerker-skip en Backoffice-bevestigd te onderscheiden op
+   database-niveau (bv. een eigen status-waarde `skipped_pending_confirmation`
+   vs. `skipped_confirmed`, of een boolean/kolom naast `reviewed_by IS NOT
+   NULL` die de guard expliciet checkt — `reviewed_by` bestaat al en wordt al
+   gezet door `confirm_external`, dus dat is vermoedelijk de kleinste wijziging).
+2. `customerTimesheetReady` in `invoices.php` én `queue.php` aanscherpen zodat
+   kale `skipped` (medewerker, geen `reviewed_by`) **niet** meer voldoet.
+3. De 9 testfixtures die ik vannacht repareerde (zie sectie "test: registreer
+   klanturenstaat..." hieronder) moeten dan een stap erbij: na `mark_skipped`
+   als medewerker, ook `confirm_external` als Backoffice vóór het factureren.
+   Dat is dezelfde volgorde als `HANDOFF-CODEX.md` §2.1 beschrijft.
+4. UI-kant: de klanturenstaat-status moet oranje blijven tonen totdat Backoffice
+   bevestigt — controleer of dat al zo weergeeft of dat de frontend ook nog
+   uitgaat van kale `skipped` = groen.
+5. Rest van `HANDOFF-CODEX.md` (§2.2–2.5: week/maand-UX, ontvangstmails,
+   goedkeuringsmail, herinneringen) is een groter, apart traject — deze taak
+   hier is alleen het klanturenstaat-onderscheid uit §2.1.
+
 ## 02:04 8 september — CI rood op `7c52e23`, root cause gevonden (Claude)
 
 `herontwerp`-CI faalt breed (shards 1/2/4 rood) met overal dezelfde kern:

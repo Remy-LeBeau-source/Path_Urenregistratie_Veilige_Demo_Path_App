@@ -4,6 +4,19 @@ Dit bestand is de gedeelde brug tussen GitHub Copilot en Codex. Chatvensters zij
 
 ## ACTUELE COORDINATIE 7 september 2026 - `main` + `herontwerp`
 
+## Toewijzing 8 september 2026, 06:20 (beslissing gebruiker): Backoffice-bevestiging klanturenstaat → Codex
+
+`HANDOFF-CODEX.md` (ondanks de bestandsnaam getiteld "Overdracht aan Claude",
+door Copilot geschreven) beschrijft in §2.1 dat een medewerker die "Al
+rechtstreeks gemaild" registreert oranje moet blijven totdat Backoffice dat
+apart bevestigt ("Extern bevestigd"). De gebruiker heeft besloten: **dit bouwt
+Codex**, niet Claude. Volledige technische bevinding (root cause: `mark_skipped`
+en `confirm_external` schrijven vandaag dezelfde `status='skipped'` weg, de
+guard in `invoices.php`/`queue.php` kan ze niet onderscheiden; op `main`
+bestaat de guard zelf nog helemaal niet) staat in `path-urenregistratie/
+HANDOFF-CODEX-FASE-D.md`, sectie "nieuwe taak voor Codex: Backoffice-bevestiging
+klanturenstaat". Codex: lees die sectie voor de concrete stappen.
+
 ## Actuele overdracht 8 september 2026
 
 ### Huidige stand
