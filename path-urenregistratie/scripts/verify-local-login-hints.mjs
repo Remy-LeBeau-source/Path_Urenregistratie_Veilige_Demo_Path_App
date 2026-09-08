@@ -1,6 +1,7 @@
 const baseUrl = String(process.env.PATH_APP_BASE_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
 const expectedAdminPassword = String(process.env.PLAYWRIGHT_ADMIN_PASSWORD || '');
 const expectedEmployeePassword = String(process.env.PLAYWRIGHT_EMPLOYEE_PASSWORD || '');
+const guardedTestHost = new URL(baseUrl).hostname === 'uren-test.pathconsultancy.nl';
 
 function fail(message) {
   console.error(`Login hints preflight failed: ${message}`);
@@ -34,14 +35,15 @@ try {
 if (body?.ok !== true || body?.enabled !== true) {
   fail('endpoint is not enabled.');
 }
-if (typeof body.adminPassword !== 'string' || body.adminPassword.length === 0) {
-  fail('admin hint is missing.');
+if (typeof body.adminPassword !== 'string') {
+  fail('admin hint has an invalid shape.');
 }
 if (typeof body.employeePassword !== 'string' || body.employeePassword.length === 0) {
   fail('employee hint is missing.');
 }
-if (body.adminPassword !== expectedAdminPassword || body.employeePassword !== expectedEmployeePassword) {
+const expectedAdminHint = guardedTestHost ? '' : expectedAdminPassword;
+if (body.adminPassword !== expectedAdminHint || body.employeePassword !== expectedEmployeePassword) {
   fail('hints do not match the test environment.');
 }
 
-console.log('Login hints preflight passed: endpoint enabled and both hints match the test environment.');
+console.log('Login hints preflight passed: employee autofill matches and guarded TEST keeps the admin password empty.');

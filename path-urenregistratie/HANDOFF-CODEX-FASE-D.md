@@ -1,5 +1,15 @@
 # HANDOFF — Codex, Fase D vervolg (herontwerp)
 
+## 8 september — TEST-login beheer handmatig, medewerker ongewijzigd
+
+Alleen het beheeraccount op TEST gebruikt voortaan het door de gebruiker
+gekozen TEST-environment-wachtwoord. De beheer-login kiest nog wel het
+e-mailadres, maar toont en vult geen beheerwachtwoord meer automatisch in.
+De medewerker houdt het bestaande repository-secret én de bestaande
+automatische invulling ongewijzigd. De publieke smoke logt beide rollen echt
+in, maar vereist expliciet dat de beheerhint leeg blijft. PROD is niet
+gewijzigd.
+
 ## 15:25 8 september — stand van zaken: pijplijn werkt, visueel bevestigd op TEST
 
 **De volledige keten is nu aantoonbaar rond, van commit tot echte TEST-deploy:**

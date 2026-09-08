@@ -94,7 +94,7 @@ if ((!local_login_hints_is_loopback_host() || !local_login_hints_is_loopback_cli
 $envMap = local_login_hints_load_env_map();
 $guardedTest = local_login_hints_is_guarded_test_host();
 $adminPassword = $guardedTest
-    ? 'LocalDemoAdmin2026'
+    ? ''
     : trim((string)(getenv('PLAYWRIGHT_ADMIN_PASSWORD') ?: ($envMap['PLAYWRIGHT_ADMIN_PASSWORD'] ?? '')));
 $employeePassword = $guardedTest
     ? 'LocalDemoEmployee2026'

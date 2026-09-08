@@ -144,6 +144,8 @@ test('[SAFE-H-012] TEST toont accountkeuze met autofill en een afgeschermde gede
     expect(appSource).toContain('RESET_SHARED_TEST_BASELINE');
     expect(hintsSource).toContain("auth_environment_from_config($config) === 'test'");
     expect(hintsSource).toContain("auth_app_origin_from_config($config) === 'https://uren-test.pathconsultancy.nl'");
+    expect(hintsSource).toMatch(/\$adminPassword = \$guardedTest\s*\? ''/);
+    expect(hintsSource).toMatch(/\$employeePassword = \$guardedTest\s*\? 'LocalDemoEmployee2026'/);
     expect(resetApi).toContain("auth_require_role(['administrator', 'employee']");
     expect(resetApi).toContain('security_require_csrf_token()');
     expect(resetApi).toContain('RESET_SHARED_TEST_BASELINE');

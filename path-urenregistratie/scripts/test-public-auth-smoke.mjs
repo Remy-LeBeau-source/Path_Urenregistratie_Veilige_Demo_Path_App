@@ -115,9 +115,9 @@ assert.equal(hintsResponse.status, 200, 'Public TEST login hints are unavailable
 const hints = await hintsResponse.json();
 assert.equal(hints.ok, true, 'Public TEST login hints did not confirm success');
 assert.equal(hints.enabled, true, 'Public TEST automatic login fill is disabled');
-assert.equal(hints.adminPassword, accounts[0].password, 'Public TEST admin autofill differs from the protected credential');
+assert.equal(hints.adminPassword, '', 'Public TEST must not expose or autofill the administrator password');
 assert.equal(hints.employeePassword, accounts[1].password, 'Public TEST employee autofill differs from the protected credential');
-console.log('Public TEST automatic login fill verified');
+console.log('Public TEST employee autofill and manual administrator password entry verified');
 
 const initialAdminSession = await loginAccount(accounts[0]);
 await resetSharedBaseline(initialAdminSession);
