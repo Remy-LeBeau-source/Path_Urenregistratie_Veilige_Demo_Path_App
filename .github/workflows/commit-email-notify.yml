@@ -1,10 +1,16 @@
 name: Commit Team Notification
 
+# Notificeert pas ná een geslaagde CI-run op herontwerp, niet bij elke losse
+# push — dat gaf voorheen twee losse regels/meldingen per commit (CI +
+# deze), ook als CI daarna rood bleek. Zoals pilot-merge-queue.yml moet
+# dit bestand op de default branch (main) staan om de workflow_run-trigger
+# ook echt opgepikt te krijgen (GitHub-beperking, geen keuze) — tot die tijd
+# blijft dit bestand op herontwerp inactief en verandert er niets.
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - herontwerp
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
 
 permissions:
   contents: write
@@ -13,6 +19,7 @@ jobs:
   notify-team:
     name: Notify team on commit push
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'herontwerp')
 
     steps:
       - name: Post commit mention notification
@@ -21,7 +28,7 @@ jobs:
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            const commitSha = context.sha;
+            const commitSha = context.payload.workflow_run?.head_sha || context.sha;
             const fallbackUsers = ['giovannomaatsen-dev', 'kenrichlieveld'];
             const configured = [process.env.NOTIFY_USER_1, process.env.NOTIFY_USER_2]
               .filter(Boolean)
@@ -44,10 +51,11 @@ jobs:
             }
 
             const mentions = users.map(u => `@${u}`).join(' ');
-            const branch = String(context.ref || '').replace('refs/heads/', '');
+            const branch = context.payload.workflow_run?.head_branch || String(context.ref || '').replace('refs/heads/', '');
+            const author = context.payload.workflow_run?.actor?.login || context.actor;
             const historyUrl = `${context.serverUrl}/${owner}/${repo}/commits/${branch}`;
             const commitUrl = context.payload.head_commit?.url || `${context.serverUrl}/${owner}/${repo}/commit/${commitSha}`;
-            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            const runUrl = context.payload.workflow_run?.html_url || `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
 
             const body = [
               'Commit notificatie',
@@ -55,7 +63,7 @@ jobs:
               mentions,
               '',
               `Branch: ${branch}`,
-              `Auteur: @${context.actor}`,
+              `Auteur: @${author}`,
               `Commit: ${commitSha}`,
               `Commit link: ${commitUrl}`,
               `Workflow run: ${runUrl}`,
