@@ -306,6 +306,346 @@ html[data-skin="new"] .app-shell:has(#view-employee-dashboard.is-active) .topbar
   display: none;
 }
 
+/* Medewerkerroute: Mijn uren krijgt dezelfde eigen werkruimte als de bento.
+   De bestaande velden en handlers blijven de bron van waarheid. */
+html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) {
+  background: #081726;
+}
+
+html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .sidebar {
+  display: none;
+}
+
+html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .main-content {
+  margin-left: 0;
+  padding: 0 clamp(18px, 3vw, 48px) 52px;
+  background: #081726;
+}
+
+html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .topbar {
+  border-bottom-color: rgba(255, 255, 255, .09);
+  background: #081726;
+  box-shadow: none;
+}
+
+html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .topbar-title {
+  display: block;
+}
+
+html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .mobile-topbar-home {
+  display: flex;
+  min-width: 190px;
+}
+
+html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .mobile-brand-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 14px;
+  background: #0e2334;
+  color: #efe9dc;
+  font: 700 16px var(--path-serif);
+  padding: 9px 14px;
+}
+
+html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .mobile-brand-home img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+
+html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .topbar-title h1 {
+  color: #efe9dc;
+  font: 400 clamp(32px, 4vw, 52px)/1.05 var(--path-serif);
+}
+
+html[data-skin="new"] #view-timesheet {
+  width: min(100%, 1440px);
+  margin: 0 auto;
+  color: #c9d5da;
+}
+
+html[data-skin="new"] #view-timesheet > .view-heading {
+  display: flex;
+  align-items: end;
+  min-height: 138px;
+  margin: 0;
+  padding: 34px 0 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, .09);
+}
+
+html[data-skin="new"] #view-timesheet > .view-heading h2 {
+  margin: 8px 0 0;
+  color: #efe9dc;
+  font: 400 clamp(34px, 4vw, 58px)/1.02 var(--path-serif);
+}
+
+html[data-skin="new"] #view-timesheet > .view-heading p {
+  color: #8595a0;
+}
+
+html[data-skin="new"] #view-timesheet > .view-heading .status-pill {
+  margin-left: auto;
+  border-color: rgba(217, 161, 60, .5);
+  background: rgba(217, 161, 60, .14);
+  color: #e7b25d;
+}
+
+html[data-skin="new"] #view-timesheet .timesheet-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(250px, .3fr);
+  gap: 18px;
+  margin-top: 22px;
+}
+
+html[data-skin="new"] #view-timesheet .timesheet-panel,
+html[data-skin="new"] #view-timesheet .summary-card,
+html[data-skin="new"] #view-timesheet .customer-timesheet-upload-panel {
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 22px;
+  background: rgba(15, 38, 57, .96);
+  box-shadow: 0 22px 55px rgba(2, 12, 22, .22);
+}
+
+html[data-skin="new"] #view-timesheet .timesheet-panel {
+  overflow: hidden;
+}
+
+html[data-skin="new"] #view-timesheet .assignment-bar {
+  border-bottom-color: rgba(255, 255, 255, .1);
+  background: linear-gradient(180deg, rgba(21, 47, 67, .94), rgba(9, 24, 35, .94));
+  color: #c9d5da;
+}
+
+html[data-skin="new"] #view-timesheet .hours-view-toolbar {
+  padding: 16px 20px;
+  background: rgba(9, 24, 35, .76);
+}
+
+html[data-skin="new"] #view-timesheet .summary-card {
+  padding: 18px 16px 14px;
+  background: linear-gradient(180deg, rgba(8, 22, 34, .96), rgba(12, 30, 45, .96));
+}
+
+html[data-skin="new"] #view-timesheet .assignment-bar small,
+html[data-skin="new"] #view-timesheet .hours-view-toolbar small,
+html[data-skin="new"] #view-timesheet .hours-visible-total span {
+  color: #8595a0;
+}
+
+html[data-skin="new"] #view-timesheet .hours-view-toolbar {
+  border-bottom-color: rgba(255, 255, 255, .1);
+}
+
+html[data-skin="new"] #view-timesheet .hours-view-toolbar strong,
+html[data-skin="new"] #view-timesheet .hours-visible-total strong,
+html[data-skin="new"] #view-timesheet .summary-card h3 {
+  color: #efe9dc;
+}
+
+html[data-skin="new"] #view-timesheet .segmented-control {
+  border-color: rgba(255, 255, 255, .12);
+  background: #0b2031;
+}
+
+html[data-skin="new"] #view-timesheet .segmented-control button {
+  color: #aab8bf;
+}
+
+html[data-skin="new"] #view-timesheet .segmented-control button.is-active {
+  background: #2f6a4c;
+  color: #fff;
+}
+
+html[data-skin="new"] #view-timesheet .hours-table {
+  color: #c9d5da;
+}
+
+html[data-skin="new"] #view-timesheet .hours-table th {
+  background: #0b2031;
+  color: #93a2a8;
+}
+
+html[data-skin="new"] #view-timesheet .hours-table td:first-child,
+html[data-skin="new"] #view-timesheet .hours-table .date-number {
+  color: #9bd3b4;
+}
+
+html[data-skin="new"] #view-timesheet .hours-table input {
+  border-color: rgba(255, 255, 255, .13);
+  background: #102b40;
+  color: #f4f1e6;
+}
+
+html[data-skin="new"] #view-timesheet .hours-table input:focus {
+  border-color: #5fb98d;
+  box-shadow: 0 0 0 4px rgba(95, 185, 141, .18);
+}
+
+html[data-skin="new"] #view-timesheet .timesheet-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-top-color: rgba(255, 255, 255, .1);
+  padding-top: 18px;
+}
+
+html[data-skin="new"] #view-timesheet .timesheet-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-left: auto;
+}
+
+html[data-skin="new"] #view-timesheet .timesheet-actions p,
+html[data-skin="new"] #view-timesheet .summary-card dt,
+html[data-skin="new"] #view-timesheet .summary-note p {
+  color: #93a2a8;
+}
+
+html[data-skin="new"] #view-timesheet .summary-card dd {
+  color: #efe9dc;
+}
+
+html[data-skin="new"] #view-timesheet .summary-card input {
+  border-color: rgba(255, 255, 255, .13);
+  background: #102b40;
+  color: #f4f1e6;
+}
+
+html[data-skin="new"] #view-timesheet .customer-timesheet-upload-panel {
+  margin-top: 18px;
+  padding: 28px;
+  background: linear-gradient(180deg, rgba(11, 29, 41, .96), rgba(13, 35, 52, .96));
+}
+
+html[data-skin="new"] #view-timesheet .customer-timesheet-flow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0 22px;
+}
+
+html[data-skin="new"] #view-timesheet .customer-timesheet-flow li {
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 16px;
+  background: rgba(14, 35, 52, .9);
+  padding: 18px 16px;
+}
+
+html[data-skin="new"] #view-timesheet .customer-timesheet-upload-grid {
+  display: grid;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+html[data-skin="new"] #view-timesheet .customer-timesheet-period-control,
+html[data-skin="new"] #view-timesheet .customer-timesheet-upload-grid label,
+html[data-skin="new"] #view-timesheet .customer-timesheet-mail-preview {
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 16px;
+  background: rgba(11, 24, 35, .72);
+}
+
+html[data-skin="new"] #view-timesheet .customer-timesheet-period-control {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+}
+
+html[data-skin="new"] #view-timesheet .customer-timesheet-period-fields {
+  display: flex;
+  gap: 10px;
+}
+
+html[data-skin="new"] #view-timesheet .customer-timesheet-period-fields .month-picker-trigger,
+html[data-skin="new"] #view-timesheet .customer-timesheet-period-fields input,
+html[data-skin="new"] #view-timesheet .customer-timesheet-upload-grid input[type="file"] {
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 12px;
+  background: #102b40;
+  color: #f4f1e6;
+}
+
+html[data-skin="new"] #view-timesheet .customer-timesheet-upload-grid label {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+}
+
+html[data-skin="new"] #view-timesheet .customer-timesheet-upload-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+html[data-skin="new"] #view-timesheet .customer-timesheet-upload-actions .button,
+html[data-skin="new"] #view-timesheet .timesheet-action-buttons .button {
+  min-width: 140px;
+}
+
+html[data-skin="new"] #view-timesheet .customer-timesheet-upload-panel > p,
+html[data-skin="new"] #view-timesheet .customer-timesheet-flow span,
+html[data-skin="new"] #view-timesheet .customer-timesheet-action-help,
+html[data-skin="new"] #view-timesheet .customer-timesheet-current {
+  color: #93a2a8;
+}
+
+html[data-skin="new"] #view-timesheet .customer-timesheet-flow strong,
+html[data-skin="new"] #view-timesheet .customer-timesheet-upload-panel h3,
+html[data-skin="new"] #view-timesheet .customer-timesheet-mail-preview strong,
+html[data-skin="new"] #view-timesheet .customer-timesheet-field-label {
+  color: #efe9dc;
+}
+
+html[data-skin="new"] #view-timesheet .customer-timesheet-current {
+  margin-top: 18px;
+  padding: 12px 14px;
+  border: 1px solid rgba(95, 185, 141, .18);
+  border-radius: 12px;
+  background: rgba(95, 185, 141, .06);
+}
+
+html[data-skin="new"] #view-timesheet .customer-timesheet-mail-preview {
+  margin-top: 18px;
+  border-color: rgba(95, 185, 141, .28);
+  background: linear-gradient(180deg, rgba(9, 39, 32, .96), rgba(7, 25, 28, .96));
+  color: #d8e8df;
+  padding: 16px 18px 18px;
+}
+
+html[data-skin="new"] #view-timesheet .customer-timesheet-mail-preview-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+html[data-skin="new"] #view-timesheet .customer-timesheet-mail-preview pre {
+  color: #c9d5da;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 800px) {
+  html[data-skin="new"] #view-timesheet .customer-timesheet-flow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 800px) {
+  html[data-skin="new"] #view-timesheet .timesheet-layout {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-skin="new"] #view-timesheet .customer-timesheet-upload-panel {
+    padding: 20px 16px;
+  }
+}
+
 html[data-skin="new"] #view-employee-dashboard > :not(.new-employee-bento) {
   display: none !important;
 }
@@ -348,6 +688,7 @@ html[data-skin="new"] .new-bento-hero-copy,
 html[data-skin="new"] .new-bento-handoff,
 html[data-skin="new"] .new-bento-go { position: relative; z-index: 1; }
 html[data-skin="new"] .new-bento-hero .section-label { color: #9bd4ae; }
+html[data-skin="new"] .new-bento-greeting { display: block; margin-bottom: 10px; color: #9bd4ae; font-size: 14px; font-weight: 700; letter-spacing: .04em; }
 html[data-skin="new"] .new-bento-hero h2 { margin: 22px 0; color: #f4eee3; font: 400 clamp(58px, 6vw, 92px)/.94 var(--path-serif); letter-spacing: -.035em; }
 html[data-skin="new"] .new-bento-hero p { max-width: 440px; color: rgba(244, 241, 230, .86); font-size: 16px; line-height: 1.6; }
 
@@ -380,15 +721,19 @@ html[data-skin="new"] .new-bento-week header strong { display: block; color: #2f
 html[data-skin="new"] .new-bento-week header small { display: block; margin-top: 3px; color: #65706b; }
 html[data-skin="new"] .new-bento-days { margin: 14px -4px 0; }
 html[data-skin="new"] .new-bento-day { display: grid; grid-template-columns: 42px 1fr; align-items: center; gap: 9px; min-height: 72px; border-top: 1px solid #d7cebe; padding: 9px 8px; }
-html[data-skin="new"] .new-bento-day.is-active { margin-inline: -10px; border-color: #18354c; border-radius: 12px; background: #10273d; color: white; padding-inline: 18px; }
+html[data-skin="new"] .new-bento-day.is-active { position: relative; margin-inline: -10px; border-color: #18354c; border-radius: 12px; background: #10273d; color: white; padding-inline: 18px; }
+html[data-skin="new"] .new-bento-day.is-active::before { content: ""; position: absolute; left: -13px; top: 50%; width: 8px; height: 8px; border-radius: 50%; background: #5fb98d; box-shadow: 0 0 0 3px rgba(95, 185, 141, .16); transform: translateY(-50%); }
 html[data-skin="new"] .new-bento-day span { display: grid; gap: 2px; color: inherit; text-transform: uppercase; }
 html[data-skin="new"] .new-bento-day small { font-size: 9px; opacity: .68; }
 html[data-skin="new"] .new-bento-day b { font: 400 18px var(--path-serif); }
 html[data-skin="new"] .new-bento-day-control { display: grid; min-width: 0; grid-template-columns: 24px minmax(0, 1fr) 24px; align-items: center; gap: 3px; }
 html[data-skin="new"] .new-bento-day-control button { display: grid; width: 24px; height: 34px; place-items: center; border: 0; border-radius: 8px; background: transparent; color: #7c817c; cursor: pointer; font-size: 16px; }
 html[data-skin="new"] .new-bento-day-control button:hover { background: rgba(47, 106, 76, .1); color: #2f6a4c; }
-html[data-skin="new"] .new-bento-day input { width: 100%; min-width: 0; border: 1px solid #c7bdab; border-radius: 10px; background: #fbf8f2; color: #102235; font: 700 17px var(--path-sans); padding: 9px 6px; text-align: right; }
-html[data-skin="new"] .new-bento-day.is-active input { border-color: #5fb98d; background: rgba(255,255,255,.08); color: white; }
+html[data-skin="new"] .new-bento-day input { width: 100%; min-width: 0; border: 1px solid #c7bdab; border-radius: 10px; background: #fbf8f2; color: #102235; font: 700 17px var(--path-sans); padding: 9px 6px; text-align: right; transition: border-color .2s ease, box-shadow .2s ease, background .2s ease; }
+html[data-skin="new"] .new-bento-day input:focus { border-color: #5fb98d; box-shadow: 0 0 0 2px rgba(95, 185, 141, .26); outline: none; }
+html[data-skin="new"] .new-bento-day.is-active input { border-color: #5fb98d; background: rgba(255,255,255,.08); color: white; box-shadow: 0 0 0 2px rgba(95, 185, 141, .2); }
+html[data-skin="new"] .new-bento-day input:disabled { border-color: transparent; background: #f1ece2; color: #b8b0a1; opacity: 1; }
+html[data-skin="new"] .new-bento-day.is-active input:disabled { background: rgba(255,255,255,.08); color: #91a69d; }
 html[data-skin="new"] .new-bento-day.is-active .new-bento-day-control button { color: #d9e2dd; }
 html[data-skin="new"] .new-bento-day input:disabled { opacity: .55; }
 html[data-skin="new"] .new-bento-presets { display: none; grid-column: 2; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 3px 27px 2px; }
@@ -994,7 +1339,7 @@ html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .new-admin-topna
   color: #6dcc7e;
 }
 
-html[data-skin="new"] #view-dashboard {
+html[data-skin="new"] #view-dashboard.is-active {
   display: flex;
   width: min(100%, 1560px);
   flex-direction: column;
@@ -1184,13 +1529,31 @@ html[data-skin="new"] .new-admin-employee-track {
   justify-content: space-between;
 }
 
-html[data-skin="new"] .new-admin-employee-track::before {
-  content: "";
-  position: absolute;
-  right: 12px;
-  left: 12px;
+html[data-skin="new"] .new-admin-track-segment {
+  position: relative;
+  z-index: 0;
+  display: block;
+  height: 1px;
+  flex: 1 1 auto;
+  min-width: 12px;
+  margin: 0 7px;
   height: 1px;
   background: rgba(255, 255, 255, .15);
+}
+
+html[data-skin="new"] .new-admin-track-segment.is-done {
+  background: #5fb98d;
+  box-shadow: 0 0 8px rgba(95, 185, 141, .32);
+}
+
+html[data-skin="new"] .new-admin-employee-track.is-first-render .new-admin-track-segment.is-done {
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: new-admin-track-draw 1.25s cubic-bezier(.2, .75, .25, 1) .2s forwards;
+}
+
+@keyframes new-admin-track-draw {
+  to { transform: scaleX(1); }
 }
 
 html[data-skin="new"] .new-admin-employee-track i {
@@ -1484,6 +1847,18 @@ html[data-skin="new"] #view-dashboard .customer-timesheet-admin-panel {
 
   html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .mobile-topbar-home {
     min-width: 0;
+  }
+
+  html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .new-admin-topnav {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .new-admin-topnav button {
+    flex: 0 0 auto;
   }
 
   html[data-skin="new"] .new-admin-pipeline {

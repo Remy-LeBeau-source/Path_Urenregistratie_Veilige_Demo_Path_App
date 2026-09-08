@@ -168,6 +168,9 @@ test('[SKIN-H-005] Klassiek start licht en Nieuw donker en onthoudt daarna elk e
 test('[SKIN-H-006] de echte medewerkerroute toont de live bento en blijft mobiel bedienbaar', async ({ page }) => {
   const loginPage = new LoginPage(page);
   await page.clock.setFixedTime(new Date('2026-09-06T12:00:00.000Z'));
+  await page.addInitScript(() => {
+    localStorage.setItem('path-install-afgewezen', String(Date.now()));
+  });
   await page.route('**/server/api/timesheets.php', async route => {
     if (route.request().method() === 'POST') {
       await route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ ok: false, message: 'Alleen visuele test' }) });
@@ -283,10 +286,13 @@ test('[SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en K
     await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     await expect(page.locator('#timesheet-employee')).toHaveText(medewerker);
+    await expect(page.locator('#view-dashboard')).toBeHidden();
   });
 
   await test.step('Then de dashboardstatus gelijk blijft en Klassiek dezelfde gegevens toont', async () => {
-    await page.locator('.nav-item[data-view="employee-dashboard"]').click();
+    await expect(page.locator('.mobile-brand-home')).toBeVisible();
+    await page.locator('.mobile-brand-home').click();
+    await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
     await expect(page.locator('#employee-dashboard-hours')).toHaveText(urenVoor);
     await expect(page.locator('#employee-dashboard-status')).toHaveText(statusVoor);
 
