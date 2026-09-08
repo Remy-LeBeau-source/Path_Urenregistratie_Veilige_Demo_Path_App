@@ -276,6 +276,10 @@ test('[SAFE-H-015] TEST-deploy herstelt en verifieert de vaste accountbaseline v
     expect(publicAuthSmoke).toMatch(/loginAccount\(accounts\[0\]\)[\s\S]*resetSharedBaseline/);
     expect(publicAuthSmoke).toMatch(/for \(const account of accounts\)[\s\S]*loginAccount\(account\)/);
     expect(publicAuthSmoke).toContain("reset.reset?.verified_demo_accounts, 6");
+    expect(publicAuthSmoke).toContain('MAX_VERBINDINGSPGINGEN = 4');
+    expect(publicAuthSmoke).toContain('HERKANSING_BASIS_MS = 10_000');
+    expect(publicAuthSmoke).toMatch(/for \(let poging = 1; poging <= MAX_VERBINDINGSPGINGEN; poging \+= 1\)/);
+    expect(publicAuthSmoke).toContain('poging === MAX_VERBINDINGSPGINGEN');
     expect(publicAuthSmoke).not.toMatch(/LocalDemo(?:Admin|Employee)2026/);
   });
 });

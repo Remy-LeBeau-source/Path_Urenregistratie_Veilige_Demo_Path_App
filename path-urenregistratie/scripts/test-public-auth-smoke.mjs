@@ -17,17 +17,30 @@ const accounts = [
 ];
 
 let herkansingenGebruikt = 0;
+const MAX_VERBINDINGSPGINGEN = 4;
+const HERKANSING_BASIS_MS = 10_000;
 
 async function haalOp(url, opties = {}) {
-  try {
-    return await fetch(url, opties);
-  } catch (eerste) {
-    const reden = String(eerste?.cause?.code || eerste?.code || eerste?.message || eerste);
-    console.warn(`Verbinding met ${url} mislukte (${reden}). Nog een poging over 20 seconden.`);
-    await new Promise((klaar) => setTimeout(klaar, 20_000));
-    herkansingenGebruikt += 1;
-    return await fetch(url, opties);
+  for (let poging = 1; poging <= MAX_VERBINDINGSPGINGEN; poging += 1) {
+    try {
+      return await fetch(url, opties);
+    } catch (fout) {
+      if (poging === MAX_VERBINDINGSPGINGEN) {
+        throw fout;
+      }
+
+      const reden = String(fout?.cause?.code || fout?.code || fout?.message || fout);
+      const wachttijdMs = HERKANSING_BASIS_MS * poging;
+      console.warn(
+        `Verbinding met ${url} mislukte (${reden}; poging ${poging}/${MAX_VERBINDINGSPGINGEN}). `
+        + `Nieuwe poging over ${wachttijdMs / 1000} seconden.`
+      );
+      await new Promise((klaar) => setTimeout(klaar, wachttijdMs));
+      herkansingenGebruikt += 1;
+    }
   }
+
+  throw new Error('Onbereikbare retry-status');
 }
 
 function sessionCookie(response) {
@@ -118,7 +131,7 @@ for (const account of accounts) {
 // Zichtbaar houden dat het gebeurde. Een herkansing die niemand opmerkt is een
 // probleem dat langzaam groeit.
 if (herkansingenGebruikt > 0) {
-  console.warn(`LET OP: ${herkansingenGebruikt} verbinding(en) lukten pas bij de tweede poging.`);
+  console.warn(`LET OP: ${herkansingenGebruikt} netwerkherkansing(en) waren nodig.`);
   console.warn(
     'De controle is geslaagd, maar de TEST-host was even niet bereikbaar vanaf deze runner. '
     + 'Gebeurt dit vaker, kijk dan naar snelheidsbegrenzing of firewallregels bij TransIP.'

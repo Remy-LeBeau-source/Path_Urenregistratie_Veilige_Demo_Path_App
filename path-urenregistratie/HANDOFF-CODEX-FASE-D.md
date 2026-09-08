@@ -1,5 +1,15 @@
 # HANDOFF — Codex, Fase D vervolg (herontwerp)
 
+## 8 september — TEST-deploysmoke bestand tegen korte netwerkuitval
+
+Release-run `34222747174` heeft TEST zelf succesvol gedeployed, inclusief
+migraties, baselineherstel, preflight, cutover en healthcheck. Alleen de
+publieke login-smoke erna faalde doordat de GitHub-runner tweemaal een
+`ETIMEDOUT` naar `uren-test.pathconsultancy.nl:443` kreeg. De smoke gebruikt
+nu maximaal vier begrensde verbindingspogingen met oplopende wachttijden van
+10, 20 en 30 seconden. Functionele HTTP-fouten worden niet verborgen. PROD is
+niet aangeraakt en blijft achter de handmatige reviewerpoort.
+
 ## 8 september — herstel automatische releasehandoff naar TEST
 
 Run `34217114031` valideerde vier shards groen, maar sloeg TEST en PROD over.
