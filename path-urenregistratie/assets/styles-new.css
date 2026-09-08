@@ -553,6 +553,17 @@ html[data-skin="new"] .approval-period-heading h3 {
   color: var(--navy-tekst);
 }
 
+/* Goedkeuringenlijst: kaarten krijgen de zachte fundament-schaduw en een
+   groene ring bij hover, zoals de andere lijstitems in dit fundament
+   (facturen, medewerkers). Alleen html[data-skin="new"]. */
+html[data-skin="new"] .approval-card {
+  box-shadow: var(--shadow);
+}
+
+html[data-skin="new"] .approval-card:hover {
+  border-color: color-mix(in srgb, var(--path-green) 40%, var(--line));
+}
+
 /* Mijn uren — de urentabel op de nieuwe tokens; uurwaarden in de serif,
    focus in het groen, lijnen en kopcel zachter. Alleen html[data-skin="new"]. */
 html[data-skin="new"] .hours-table th,
@@ -594,6 +605,13 @@ html[data-skin="new"] .hours-table input:focus {
 html[data-skin="new"] .hours-table tfoot th {
   background: var(--green-light);
   color: var(--mint-dark-tekst);
+}
+
+/* Klanturenstaat-stappenblok onderaan "Mijn uren": kleuren komen al
+   automatisch mee via de tokens, hier alleen de radius zachter zoals de
+   rest van het fundament. Alleen html[data-skin="new"]. */
+html[data-skin="new"] .customer-timesheet-flow li {
+  border-radius: 16px;
 }
 
 /* Facturen — de maandkaart, de statuswegwijzer, de tabel en de detailpreview
@@ -733,6 +751,31 @@ html[data-skin="new"] .invoice-identity-preview strong {
   font-weight: 400;
 }
 
+/* Factuurdetail-modal + PDF-preview — de gebrande factuurvoorbeeld-preview
+   (het "papieren" voorbeeld in de documentenmodal) gebruikt de gedeelde
+   --navy/--mint/--vlak/--line-tokens al automatisch (die zijn hierboven al
+   naar het 1414/1919-palet herschreven); hier alleen radius/schaduw op het
+   fundament en de koppen/eindbedrag op de serif. Alleen html[data-skin="new"]. */
+html[data-skin="new"] .invoice-branded-template {
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+html[data-skin="new"] .invoice-brand-title h3,
+html[data-skin="new"] .invoice-brand-party h4 {
+  font-family: var(--path-serif);
+  font-weight: 400;
+}
+
+html[data-skin="new"] .invoice-brand-totals .invoice-preview-total {
+  font-family: var(--path-serif);
+  font-weight: 400;
+}
+
+html[data-skin="new"] .invoice-document-card {
+  border-radius: 16px;
+}
+
 /* Medewerkers (Teambeheer) — de kaarten en de accountoverzicht-strook op het
    fundament: crème-panelen met de zachte schaduw, namen in de serif, ronde
    avatartegels. Alleen html[data-skin="new"]. */
@@ -817,6 +860,14 @@ html[data-skin="new"] .mail-recipient-setting,
 html[data-skin="new"] .mail-route-choice {
   border-radius: 14px;
   border-color: var(--line);
+}
+
+html[data-skin="new"] .settings-rule-list li {
+  border-radius: 16px;
+}
+
+html[data-skin="new"] .settings-warning {
+  border-radius: 14px;
 }
 
 /* Modal-detailschermen — de samenvattingsblokken en de correctiebanner in de

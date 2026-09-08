@@ -4,6 +4,58 @@ Dit bestand is de gedeelde brug tussen GitHub Copilot en Codex. Chatvensters zij
 
 ## ACTUELE COORDINATIE 7 september 2026 - `main` + `herontwerp`
 
+## Actuele overdracht 8 september 2026
+
+### Huidige stand
+
+- De clientstatusregressie is opgelost: oudere timesheet/invoice-payloads mogen
+  een nieuwere ingediende of goedgekeurde status niet terugzetten. Een echte
+  correctie met een hogere serverversie blijft toegestaan.
+- De indieningsflow is getest met de echte bevestigingsmodal en met wachten op
+  de echte `action: submit`, zodat autosaves niet als submit worden aangezien.
+- De skin-navigatietest is hersteld voor beide navigatiemodellen:
+  `data-view` in Classic en `data-pilot-view` in Nieuw. De test hardcodeert ook
+  niet meer dat er exact vier medewerkers zijn.
+- Gevalideerd: smoke-test groen; `E2E-N-019` groen; `TS-REV-UI-H-008` groen;
+  `SKIN-H-008` groen; volledige CI-shards groen.
+- `herontwerp` en `main` staan op commit `40ad8b1` (`Maak skin test
+  onafhankelijk van medewerkerstotaal`). Release Pipeline #407 is groen en
+  TEST is bijgewerkt. PROD is niet gepromoveerd.
+- De merge-queue staat op `main` en voert na een fast-forward expliciet een
+  `workflow_dispatch` uit voor `release-pipeline.yml`, omdat een push met
+  `GITHUB_TOKEN` geen nieuwe push-workflow start.
+
+### Belangrijk productverschil
+
+De huidige TEST-app bevat de werkende **Nieuw-skin** van de bestaande app. Dat
+is nog niet hetzelfde als het volledige nieuwe Backoffice-portal uit de
+1414/1919-mockup met de storyline **Verhalen per medewerker**. De losse
+`pilot/`-pagina's zijn statische mockups en mogen niet als live app worden
+beschouwd.
+
+### Nog open voor het volledige nieuwe portal
+
+1. De storylinepagina als echte Backoffice-route bouwen.
+2. De vijf stappen koppelen aan echte statusdata: Uren, Klanturenstaat,
+   Extern bevestigen, Factuur en Voltooid.
+3. Medewerkerkaarten, voortgangslijnen en acties interactief maken.
+4. De hoofdschermen in dezelfde nieuwe productstijl afwerken:
+   Goedkeuringen, Facturen, Mededelingen, Medewerkers en Instellingen.
+5. Mobiele weergave en rolpariteit controleren.
+6. Nieuwe Playwright-cases schrijven voor de storyline en de acties.
+7. Na groene CI opnieuw naar TEST brengen; PROD blijft een aparte handmatige
+   vrijgave.
+
+### Werkafspraak voor vervolg
+
+- Werk op `herontwerp`; `main` blijft beschikbaar voor urgente hotfixes.
+- Voor iedere nieuwe pilotpush: `git fetch origin`, actuele `origin/main` in
+  `herontwerp` mergen, technische conflicts zelf oplossen, relevante tests
+  draaien en pas daarna pushen.
+- Stage nooit `node_modules` of testartefacten. Gebruik expliciete paden.
+- Een inhoudelijke productkeuze wordt aan de gebruiker voorgelegd; technische
+  mergeconflicts en testreparaties worden zelfstandig opgelost en gevalideerd.
+
 Doel: beide werkstromen gaan zelfstandig door; de gebruiker hoeft alleen bij
 een echte productkeuze, een onoplosbaar conflict of PROD-goedkeuring
 tussenbeide te komen.
