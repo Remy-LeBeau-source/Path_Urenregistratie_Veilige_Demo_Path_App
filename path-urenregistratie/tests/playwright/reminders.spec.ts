@@ -20,6 +20,30 @@ async function runReminders(nowIso: string): Promise<ReminderRunResult> {
 const weekdayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
 /**
+ * send-due-reminders.php interpreteert --now altijd expliciet in
+ * Europe/Amsterdam (server/scripts/send-due-reminders.php regel ~294). Op
+ * de eigen machine (al in die tijdzone) valt Date#toTimeString()/getDay()
+ * daarmee toevallig samen, maar op een CI-runner in UTC scheelt dat het
+ * volledige DST-verschil (2 uur in de zomer) — de scheduler ziet dan nooit
+ * "nu" als het geconfigureerde moment. Bereken dag en tijd daarom altijd
+ * expliciet in Europe/Amsterdam, ongeacht de tijdzone van de testmachine.
+ */
+function amsterdamWeekdayAndTime(moment: Date): { day: string; time: string } {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Europe/Amsterdam',
+    weekday: 'long',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(moment);
+  const lookup = (type: string) => parts.find(part => part.type === type)?.value ?? '';
+  return {
+    day: lookup('weekday').toLowerCase(),
+    time: `${lookup('hour')}:${lookup('minute')}`,
+  };
+}
+
+/**
  * settings.php slaat altijd het complete settings-object op (zo werkt ook de
  * echte instellingenpagina, die nooit een gedeeltelijk formulier stuurt). Om
  * andere bedrijfsvelden niet stil terug te zetten naar hun standaardwaarde,
@@ -79,6 +103,7 @@ test.describe('serverplanning herinneringen', () => {
 
     const now = new Date();
     const nowIso = now.toISOString();
+    const { day: nowDayAmsterdam, time: nowTimeAmsterdam } = amsterdamWeekdayAndTime(now);
 
     await test.step('Given de wekelijkse herinnering staat aan voor nu (vandaag, huidige tijd)', async () => {
       const csrf = await ctx.get('/server/auth/csrf.php');
@@ -90,8 +115,8 @@ test.describe('serverplanning herinneringen', () => {
           settings: {
             ...settings,
             weeklyReminderEnabled: true,
-            weeklyReminderDay: weekdayNames[now.getDay()],
-            weeklyReminderTime: now.toTimeString().slice(0, 5),
+            weeklyReminderDay: nowDayAmsterdam,
+            weeklyReminderTime: nowTimeAmsterdam,
           },
         },
       });
