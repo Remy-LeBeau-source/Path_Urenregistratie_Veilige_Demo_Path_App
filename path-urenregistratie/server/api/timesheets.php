@@ -320,9 +320,11 @@ function timesheet_parse_day_entries(array $payload, int $year, int $month, floa
             ], 400);
         }
 
-        if ($hours <= 0.0) {
-            continue;
-        }
+        // Een dagregel met 0 uur wordt bewust bewaard: de webapp stuurt 0-uur
+        // dagen alleen mee voor de week die op dat moment daadwerkelijk wordt
+        // opgeslagen, zodat "bewust 0 uur ingevuld" op de server onderscheidbaar
+        // blijft van "deze dag is nog nooit bekeken" (geen rij in time_entries).
+        // Andere weken sturen zoals voorheen alleen dagen met uren > 0 mee.
 
         $description = trim((string)($entry['description'] ?? ''));
         if (strlen($description) > 200) {

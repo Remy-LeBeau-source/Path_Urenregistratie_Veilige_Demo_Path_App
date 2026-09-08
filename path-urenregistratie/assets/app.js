@@ -159,6 +159,12 @@ function emptyEntries(periodKey) {
   return Array.from({ length: periodFromKey(periodKey).weekRows.length }, () => Array(5).fill(0));
 }
 
+// Los van de uren zelf: welke dagen zijn bewust opgeslagen (ook als dat 0 uur
+// was), zodat "0 uur ingevuld" te onderscheiden is van "nog nooit bekeken".
+function emptyConfirmedEntries(periodKey) {
+  return Array.from({ length: periodFromKey(periodKey).weekRows.length }, () => Array(5).fill(false));
+}
+
 function entriesFromTotal(total, periodKey) {
   const period = periodFromKey(periodKey);
   const entries = emptyEntries(period.key);
@@ -1819,17 +1825,26 @@ function buildTimesheetWritePayload(action) {
   const period = currentPeriod();
   const dayEntries = [];
 
+  // De week die de medewerker nu daadwerkelijk bekijkt/opslaat stuurt al haar
+  // werkdagen mee, ook een lege dag als expliciete 0 uur — dat maakt "bewust
+  // 0 uur ingevuld" onderscheidbaar van "nog nooit bekeken" voor de
+  // weekvoortgang. Andere weken sturen zoals voorheen alleen uren > 0 mee.
+  const activeWeekMatch = /^week-(\d+)$/.exec(String(state.hoursWeekScope || ""));
+  const activeWeekIndex = activeWeekMatch ? Number(activeWeekMatch[1]) : -1;
+
   period.weekRows.forEach((week, weekIndex) => {
+    const isActiveWeek = weekIndex === activeWeekIndex;
     week.days.forEach((day, dayIndex) => {
       if (!day) return;
       const raw = Number(record.entries?.[weekIndex]?.[dayIndex] || 0);
       const hours = Math.round(Math.max(0, raw) * 100) / 100;
-      if (hours <= 0) return;
+      if (hours <= 0 && !isActiveWeek) return;
       dayEntries.push({
         work_date: String(period.year).padStart(4, "0") + "-" + String(period.monthIndex + 1).padStart(2, "0") + "-" + String(day.day).padStart(2, "0"),
         hours,
         description: "Webapp daginvoer"
       });
+      if (isActiveWeek && record.confirmedEntries?.[weekIndex]) record.confirmedEntries[weekIndex][dayIndex] = true;
     });
   });
 
@@ -1923,15 +1938,21 @@ function applyTimesheetApiPayload(employeeId, periodKey, timesheet) {
     });
   }
 
+  const nextConfirmed = emptyConfirmedEntries(period.key);
   period.weekRows.forEach((week, weekIndex) => {
     week.days.forEach((day, dayIndex) => {
       if (!day) return;
       const dateKey = String(period.year).padStart(4, "0") + "-" + String(period.monthIndex + 1).padStart(2, "0") + "-" + String(day.day).padStart(2, "0");
       nextEntries[weekIndex][dayIndex] = Number(dayEntryMap.get(dateKey) || 0);
+      // Een dag telt als bewust ingevuld zodra de server er een rij voor
+      // heeft (ook bij 0 uur) — dat is precies wat een opgeslagen leeg veld
+      // onderscheidt van een dag die nog nooit is opgeslagen.
+      nextConfirmed[weekIndex][dayIndex] = dayEntryMap.has(dateKey);
     });
   });
 
   record.entries = nextEntries;
+  record.confirmedEntries = nextConfirmed;
   if (timesheet.contractual_hours !== undefined) record.contractHours = Number(timesheet.contractual_hours) || 0;
   if (timesheet.leave_hours !== undefined) record.leave = Number(timesheet.leave_hours) || 0;
   if (timesheet.sickness_hours !== undefined) record.sick = Number(timesheet.sickness_hours) || 0;
@@ -3951,6 +3972,16 @@ function normalizeRecord(record, employee, periodKey) {
     });
   }
   record.entries = entries;
+  const confirmedEntries = emptyConfirmedEntries(period.key);
+  if (Array.isArray(record.confirmedEntries)) {
+    period.weekRows.forEach((week, weekIndex) => {
+      week.days.forEach((day, dayIndex) => {
+        if (!day) return;
+        confirmedEntries[weekIndex][dayIndex] = Boolean(record.confirmedEntries[weekIndex] && record.confirmedEntries[weekIndex][dayIndex]);
+      });
+    });
+  }
+  record.confirmedEntries = confirmedEntries;
   if (!Number.isFinite(Number(record.contractHours))) record.contractHours = defaultContractHours(employee, period.key);
   record.contractHours = Number(record.contractHours) || 0;
   record.leave = Number(record.leave) || 0;
@@ -4564,7 +4595,13 @@ function newEmployeeBentoWeekIndex(period) {
 function completedTimesheetWeeks(record, period) {
   return period.weekRows.reduce((count, periodWeek, index) => {
     const businessDayIndexes = periodWeek.days.map((day, dayIndex) => day ? dayIndex : -1).filter(dayIndex => dayIndex >= 0);
-    const weekComplete = businessDayIndexes.length > 0 && businessDayIndexes.every(dayIndex => Number(record.entries[index] && record.entries[index][dayIndex] || 0) > 0);
+    // Een werkdag telt mee zodra er uren > 0 op staan, óf zodra de dag bewust
+    // is opgeslagen (ook als dat toen leeg/0 uur was) — zo telt een expliciet
+    // opgeslagen 0 uur wél mee, terwijl een dag die nooit is bekeken dat niet doet.
+    const weekComplete = businessDayIndexes.length > 0 && businessDayIndexes.every(dayIndex =>
+      Number(record.entries[index] && record.entries[index][dayIndex] || 0) > 0
+      || Boolean(record.confirmedEntries && record.confirmedEntries[index] && record.confirmedEntries[index][dayIndex])
+    );
     return count + (weekComplete ? 1 : 0);
   }, 0);
 }
