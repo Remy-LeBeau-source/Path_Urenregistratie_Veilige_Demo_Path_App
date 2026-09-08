@@ -1,5 +1,22 @@
 # HANDOFF — Codex, Fase D vervolg (herontwerp)
 
+## Geleerde les (voor Claude én Codex): nooit "gelukt" melden zonder jobstatus te checken
+
+Vannacht is twee keer ten onrechte gemeld dat een automatische merge "TEST
+heeft bijgewerkt", puur op basis van de algehele run-conclusie ("Success") van
+een `workflow_dispatch`-run. Die conclusie zegt alleen iets over de jobs die
+wél draaiden (hier: `Validate`) — een job die stil `skipped` wordt telt niet
+mee in dat oordeel en verandert niets aan de algehele "Success"-status. Pas
+een screenshot van de gebruiker maakte zichtbaar dat `Promote Test`/
+`Deploy Test to TransIP` steeds waren overgeslagen.
+
+**Regel vanaf nu, voor iedere melding over een deploy/release-uitkomst:**
+controleer altijd de status van de **individuele jobs** die er echt toe doen
+(`gh run view <id> --json jobs --jq '.jobs[] | {name, conclusion}'`), niet
+alleen de algehele run-conclusie. Meld een deploy pas als "gelukt" als de
+concrete job (bv. `Deploy Test to TransIP`) zelf `success` toont — nooit op
+basis van "de run was groen".
+
 ## 8 september — herstel automatische releasehandoff naar TEST
 
 Run `34217114031` valideerde vier shards groen, maar sloeg TEST en PROD over.
