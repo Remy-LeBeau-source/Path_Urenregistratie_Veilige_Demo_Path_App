@@ -1,5 +1,19 @@
 # HANDOFF — Codex, Fase D vervolg (herontwerp)
 
+## 12:15 8 september — Backoffice-bevestiging klanturenstaat afgerond
+
+De taak uit de sectie hieronder is uitgevoerd. `mark_skipped` door de
+medewerker blijft oranje en blokkeert factuurafronding en mailqueue. Alleen een
+goedgekeurd document, of `confirm_external` door Backoffice met reden, maakt de
+klanturenstaat gereed. Browser, invoice-API en mailqueue hanteren hetzelfde
+contract. Bewijs: `invoice-lock.spec.ts` 10/10 groen; zes geraakte
+business-workflows 27/27 groen op desktop, mobile-chrome en mobile-safari;
+living docs 446 unieke cases; design-, BDD-, DB-config- en operationele gates
+groen. Nieuwe regressiecase: `INV-N-026`.
+
+Volgende stap: CI op `herontwerp`; bij groen verzorgt de merge-queue de
+fast-forward naar `main` en de release-handoff naar TEST. PROD blijft handmatig.
+
 **Voor Codex. Geschreven door Claude, 2026-09-07, vanuit `C:\Path-herontwerp`.**
 Evergreen doc zoals `HANDOFF-PILOT-DESIGN.md` — bijwerken per increment.
 
