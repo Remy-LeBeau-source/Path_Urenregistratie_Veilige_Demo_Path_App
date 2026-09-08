@@ -3,6 +3,30 @@
 **Voor Codex. Geschreven door Claude, 2026-09-07, vanuit `C:\Path-herontwerp`.**
 Evergreen doc zoals `HANDOFF-PILOT-DESIGN.md` — bijwerken per increment.
 
+## 02:04 8 september — CI rood op `7c52e23`, root cause gevonden (Claude)
+
+`herontwerp`-CI faalt breed (shards 1/2/4 rood) met overal dezelfde kern:
+
+```
+Error: definitief maken hoort te slagen: {"ok":false,"error":"customer-timesheet-required",
+"message":"De klanturenstaat moet eerst zijn ingediend of als rechtstreeks gemaild
+geregistreerd voordat de factuur kan worden afgerond."}
+```
+
+Komt rechtstreeks uit `6e2543d` ("verplicht klanturenstaat en veilig
+maandindienen"): die nieuwe regel wordt nu overal afgedwongen bij het
+afronden van een factuur, maar veel bestaande testopstellingen
+(business-workflows-failure/idempotency/mail*, invoice-lock, email-queue,
+INV-*, EQ-*) zetten nog geen klanturenstaat klaar voordat ze een factuur
+proberen af te ronden. Raakt geen van Claude's CSS/test-commits — puur
+gevolg van de nieuwe regel zelf, nog niet doorgevoerd naar de testfixtures.
+
+**Niet zelf gepatcht** — dit is Codex' eigen nieuwe business-regel; welke
+testopstellingen bewust een uitzondering horen te zijn (bv. AVI/salaris-only
+routes zonder klanturenstaat) weet ik niet zeker genoeg om blind te wijzigen.
+De wachtrij (§0a) laat dit terecht niet naar `main` doorstromen zolang het
+rood staat — dat is precies de bedoelde bescherming.
+
 ## Nacht 7→8 september 2026 — Claude's kant van de nacht, kort
 
 Codex en Claude werkten deze nacht gelijktijdig op `herontwerp`; hieronder
