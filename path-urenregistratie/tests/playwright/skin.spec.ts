@@ -194,7 +194,10 @@ test('[SKIN-H-006] de echte medewerkerroute toont de live bento en blijft mobiel
     await expect(page.locator('[data-new-bento-submit]')).toHaveAttribute('title', /laatste week|hele maand/i);
     await expect(page.locator('[data-new-bento-customer]')).toHaveAttribute('title', /Upload/);
     await expect(page.locator('.app-footer')).toContainText('Ontwikkeld en beheerd door Team Path');
-    await expect(page.locator('.app-footer-version')).toHaveText(/Versie \d+\.\d+\.\d+/);
+    const versionBadge = page.locator('.app-footer-version');
+    await expect(versionBadge).toBeVisible();
+    await expect(versionBadge).toHaveText(/Versie \d+\.\d+\.\d+/);
+    await expect(versionBadge).toHaveCSS('margin-left', '0px');
   });
 
   await test.step('And eerdere weken niet indienen en de laatste week eerst bevestiging vraagt', async () => {

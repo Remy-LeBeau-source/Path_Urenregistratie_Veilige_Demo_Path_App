@@ -1,5 +1,14 @@
 # HANDOFF — Codex, Fase D vervolg (herontwerp)
 
+## 8 september — versienummer zichtbaar in New-footer
+
+Het versienummer stond al in de gezamenlijke footer, maar werd in de nieuwe
+desktopweergave door `margin-left:auto` naar de uiterste rechterrand geduwd,
+waar de zwevende hulpknop het aan het zicht kon onttrekken. De New-skin zet de
+versiebadge nu direct naast copyright en beheercredit. De skintest vereist
+voortaan dat de badge zichtbaar is, een semantisch versienummer toont en niet
+meer automatisch naar rechts wordt geduwd.
+
 ## 8 september — Living Docs-hang begrensd
 
 Release-run `34228064646`, job `102083259574`, bleef meer dan twee uur hangen

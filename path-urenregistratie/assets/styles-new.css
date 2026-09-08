@@ -209,9 +209,11 @@ html[data-skin="new"] .app-footer {
 }
 
 html[data-skin="new"] .app-footer-version {
+  margin-left: 0;
   border: 1px solid var(--line);
   border-radius: 999px;
   color: var(--tekst);
+  font-weight: 700;
   padding: 5px 10px;
 }
 
