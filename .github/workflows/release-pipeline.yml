@@ -722,6 +722,9 @@ jobs:
     needs: test
     if: ${{ always() && needs.test.result == 'success' }}
     runs-on: ubuntu-latest
+    # Een vastgelopen browserproces mag de releasewachtrij nooit uren blokkeren.
+    # De vier gesharde TEST-gates zijn al groen voordat deze rapportagejob start.
+    timeout-minutes: 35
     env:
       PATH_REPORT_STAGE: CI release regression
       PATH_REPORT_TARGET: TEST -> PROD

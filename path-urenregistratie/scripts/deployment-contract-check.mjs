@@ -98,6 +98,7 @@ for (const required of [
   assert.ok(testCombined.includes(required), `Missing TEST deployment safeguard: ${required}`);
 }
 assert.match(workflow, /Verify public TEST account logins[\s\S]*test-public-auth-smoke\.mjs/, 'TEST deployment must verify both public login roles');
+assert.match(workflow, /live-docs:\s*[\s\S]*?name:\s*Publish Live Docs[\s\S]*?timeout-minutes:\s*35/, 'Release Living Docs job must have a bounded runtime');
 assert.match(workflow, /TEST_PUBLIC_ADMIN_PASSWORD:\s*\$\{\{ secrets\.PLAYWRIGHT_ADMIN_PASSWORD \}\}/, 'Public TEST admin password must come from a protected environment secret');
 assert.match(workflow, /TEST_PUBLIC_EMPLOYEE_PASSWORD:\s*\$\{\{ secrets\.PLAYWRIGHT_EMPLOYEE_PASSWORD \}\}/, 'Public TEST employee password must come from a protected environment secret');
 assert.match(

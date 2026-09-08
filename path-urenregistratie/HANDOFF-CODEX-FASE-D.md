@@ -1,5 +1,16 @@
 # HANDOFF — Codex, Fase D vervolg (herontwerp)
 
+## 8 september — Living Docs-hang begrensd
+
+Release-run `34228064646`, job `102083259574`, bleef meer dan twee uur hangen
+in `Run E2E tests for docs`. De laatste PHP-regels waren succesvolle requests
+en dus geen foutdiagnose; het browserproces gaf alleen geen einde terug. De
+oude run is geannuleerd om de releaseconcurrency vrij te maken. Zowel de
+ingebouwde `Publish Live Docs`-releasejob als de los handmatig startbare Living
+Docs-workflow hebben nu een harde jobgrens van 35 minuten. Daardoor kan een
+browserhang de wachtrij niet opnieuw uren blokkeren. De vier gesharde TEST-
+validaties blijven de functionele releasepoort; PROD blijft handmatig.
+
 ## 8 september — TEST-login beheer handmatig, medewerker ongewijzigd
 
 Alleen het beheeraccount op TEST gebruikt voortaan het door de gebruiker
