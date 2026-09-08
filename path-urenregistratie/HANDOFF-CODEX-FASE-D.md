@@ -10,6 +10,85 @@ groene `needs.*.result`-voorwaarden voor TEST, TEST-deploy, Living Docs en de
 handmatige PROD-poort. Gewenste keten blijft: automatische uitrol tot TEST;
 alleen de gebruiker keurt daarna PROD goed.
 
+De onderstaande notitie werd gelijktijdig geschreven. De daarin genoemde
+PAT-route is niet nodig zolang de expliciete `always()`-voorwaarden de echte
+run bevestigen; de hierboven beschreven contractfix is de primaire oplossing.
+
+## 13:00 8 september — wachtrij bereikte TEST niet echt (Codex lost dit al op)
+
+**Ontdekt via een screenshot van de gebruiker van GitHub Actions-run #413**
+(`https://github.com/Remy-LeBeau-source/Path_Urenregistratie_Veilige_Demo_Path_App/actions/runs/34217114031`).
+Claude had dit vannacht **verkeerd gerapporteerd als geslaagde TEST-deploys** —
+dat klopt niet, zie hieronder. **Codex is dit al aan het oplossen** (bevestigd
+door de gebruiker, live gezien in de Codex-sessie) met een preciezere diagnose
+dan Claude's eerste hypothese: de skip ontstaat via GitHub Actions'
+"skipped dependency"-doorgifte in de dependency-graph — `Notify team on
+commit push` wordt bij een `workflow_dispatch`-run bewust overgeslagen,
+`pilot-awareness` en `Validate` vangen dat al expliciet op met `always()`,
+maar `Promote Test` (en alles erna) nog niet. Codex voegt daar dezelfde
+expliciete "groene voorganger"-voorwaarde aan toe en dekt dit in een
+workflow-contracttest. **Volg die aanpak; onderstaande PAT-route is alleen
+een terugvaloptie als Codex' fix het probleem niet volledig oplost.**
+
+Claude's oorspronkelijke (bredere) hypothese, voor de volledigheid:
+
+**Het probleem, exact:** `pilot-merge-queue.yml` start de Release Pipeline na
+de fast-forward met `actions.createWorkflowDispatch` (`workflow_dispatch`),
+omdat een push met het standaard `GITHUB_TOKEN` geen nieuwe workflow-run
+triggert (bekende, bewuste GitHub-anti-loopbescherming). Maar
+`workflow_dispatch`-runs slaan de jobs die een GitHub Environment met
+deployment-branch-policy gebruiken (`environment: test`, `environment: prod`
+in `release-pipeline.yml`) stil **over** — geen foutmelding, gewoon
+`conclusion: "skipped"`, terwijl de totale run toch "Success" toont omdat
+`validate` wel slaagt. Geverifieerd met `gh run view <id> --json jobs` op
+**alle vier** de wachtrij-runs van vannacht (`40ad8b1`, `6b859d6`, `87c5e86`,
+`cae3a42`): overal identiek — `Promote Test`, `Deploy Test to TransIP`,
+`Promote Prod`, `Deploy Prod to TransIP` allemaal `skipped`. **Er is dus
+vannacht geen enkele keer echt naar TEST gedeployed via de wachtrij**, ondanks
+dat Claude dat meermaals ten onrechte meldde als gelukt.
+
+Dit gedrag stond overigens al in een oudere handoff-notitie (28 augustus,
+Claude Code): *"Pipeline-trigger: alleen een push naar main draait de
+deploy-jobs. `gh workflow run` (workflow_dispatch) laat Promote Test / Deploy
+Test skippen."* — een bekend, bestaand GitHub-gedrag; de wachtrij-workflow
+van vannacht liep er gewoon opnieuw tegenaan omdat hij noodgedwongen
+`workflow_dispatch` gebruikt voor de trigger.
+
+**Gevraagde oplossing (expliciet zo besloten door de gebruiker):** laat de
+fast-forward-push gebeuren met een **Personal Access Token (PAT)** in plaats
+van het standaard `GITHUB_TOKEN`. Een push die geauthenticeerd is met een PAT
+(geen Actions-intern token) triggert wél gewoon de normale `push`-workflow-run
+op `main` — dan is de `workflow_dispatch`-omweg in `pilot-merge-queue.yml`
+niet meer nodig en verdwijnt het skip-probleem vanzelf, want dan draait
+`release-pipeline.yml` weer via zijn eigen `on: push: branches: [main]`-pad
+zoals vroeger.
+
+**Concreet voor Codex:**
+1. Een PAT kan alleen de gebruiker zelf aanmaken (GitHub staat dat niet via
+   API toe) — Claude heeft de gebruiker hierover al twee opties voorgelegd
+   (nieuwe smal-geschoolde fine-grained PAT met alleen "Contents: Read and
+   write" op deze ene repo, of het bestaande `gh`-CLI-sessietoken hergebruiken).
+   De gebruiker koos ervoor dit door **Codex** te laten inregelen — stem dus
+   zelf met de gebruiker af welke PAT-variant en vraag 'm aan te maken.
+2. Zet de PAT als repository-secret (bv. `PILOT_MERGE_PUSH_TOKEN`).
+3. In `.github/workflows/pilot-merge-queue.yml`: de fast-forward-pushstap
+   (`git push origin "<sha>:refs/heads/main"`) moet die PAT gebruiken i.p.v.
+   het standaard checkout-token — bv. via een tweede remote-URL met de PAT
+   erin (`https://x-access-token:${PAT}@github.com/...`) of
+   `actions/checkout` met `token: ${{ secrets.PILOT_MERGE_PUSH_TOKEN }}` bij
+   de checkout-stap zodat de latere `git push` die credentials hergebruikt.
+4. De losse `createWorkflowDispatch`-stap voor `release-pipeline.yml` kan dan
+   weg — een PAT-geauthenticeerde push triggert de bestaande
+   `on: push: branches: [main]` vanzelf.
+5. Test dit expliciet: push via de wachtrij en controleer met
+   `gh run view <id> --json jobs -q '.jobs[] | {name, conclusion}'` dat
+   `Promote Test` en `Deploy Test to TransIP` nu écht `success` tonen, niet
+   `skipped`. Herhaal dat op minstens één echte wachtrij-run voor je dit als
+   opgelost meldt.
+6. PROD blijft ongewijzigd: die gate hoort een aparte, bewuste handeling van
+   de gebruiker te blijven (reviewer-approval op de `prod`-environment). Deze
+   fix mag dat niet raken of omzeilen.
+
 ## 12:15 8 september — Backoffice-bevestiging klanturenstaat afgerond
 
 De taak uit de sectie hieronder is uitgevoerd. `mark_skipped` door de
