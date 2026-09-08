@@ -160,6 +160,29 @@ test('[SAFE-H-012] TEST toont accountkeuze met autofill en een afgeschermde gede
   });
 });
 
+test('[SAFE-H-013] loopback-auto-allow blijft beperkt tot veilige lokale/test-hosts', async ({ page }) => {
+  await page.goto(appConfig.baseUrl);
+
+  await test.step('Given het lokale hostfilter alleen loopback- en TEST-varianten accepteert', async () => {
+    const permissions = await page.evaluate(() => {
+      const runtime = window as typeof window & {
+        localAccountToolsAllowed: (hostname: string) => boolean;
+        testAccountToolsAllowed: (hostname: string) => boolean;
+      };
+      return {
+        loopbackAliasAllowed: runtime.localAccountToolsAllowed('127.0.0.2'),
+        mappedLoopbackAllowed: runtime.localAccountToolsAllowed('[::ffff:127.0.0.1]'),
+        testHostAllowed: runtime.testAccountToolsAllowed('uren-test.pathconsultancy.nl'),
+        productionBlocked: runtime.testAccountToolsAllowed('uren.pathconsultancy.nl'),
+      };
+    });
+    expect(permissions.loopbackAliasAllowed).toBe(true);
+    expect(permissions.mappedLoopbackAllowed).toBe(true);
+    expect(permissions.testHostAllowed).toBe(true);
+    expect(permissions.productionBlocked).toBe(false);
+  });
+});
+
 test('[SAFE-H-014] gedeelde TEST-reset herstelt alleen de exacte veilige 12-actiebaseline', async () => {
   let result: { ok?: boolean; writes_performed?: boolean; checks?: Record<string, boolean> } = {};
 
