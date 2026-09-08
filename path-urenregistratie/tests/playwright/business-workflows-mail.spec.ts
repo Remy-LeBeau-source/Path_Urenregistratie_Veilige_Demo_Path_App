@@ -322,6 +322,7 @@ test('[E2E-H-024] een nieuw account krijgt via de GUI toegang en zijn eigen teks
 
     await page.request.post('/server/auth/logout.php', { headers: { 'X-CSRF-Token': await csrf(page) } });
     await page.goto(`/index.html#reset-password=${token}`);
+    await expect(page.locator('html')).toHaveAttribute('data-app-interactive', 'true', { timeout: 20_000 });
     await expect(page.locator('#auth-reset-complete-form')).toBeVisible();
     await page.locator('#auth-reset-new-password').fill(wachtwoord);
     await page.locator('#auth-reset-confirm-password').fill(wachtwoord);

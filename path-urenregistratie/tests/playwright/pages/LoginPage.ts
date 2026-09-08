@@ -79,6 +79,12 @@ export class LoginPage {
     const indicator = this.page.locator('#auth-mode-indicator');
     const submit = this.page.locator('#auth-login-submit');
 
+    await expect(this.page.locator('html')).toHaveAttribute(
+      'data-app-interactive',
+      'true',
+      { timeout: 20_000 }
+    );
+
     // Klaar zijn betekent: je kunt inloggen. Dat is de knop, niet het tekstje
     // ernaast. Hier stond eerst een eis dat de indicator zichtbaar moest zijn
     // voordat er verder werd gekeken, en die viel af en toe om op een trage

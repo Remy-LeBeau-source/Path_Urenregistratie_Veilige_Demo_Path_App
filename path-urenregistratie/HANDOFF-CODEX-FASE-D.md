@@ -1,5 +1,15 @@
 # HANDOFF — Codex, Fase D vervolg (herontwerp)
 
+## 8 september — expliciete app-readiness voor Mobile Safari
+
+CI-run `34246396130` bewees dat de eerdere deactivatiefout opgelost was, maar
+shard 4 vond een tweede race: zichtbare statische login/resetknoppen konden op
+een trage WebKit-run al worden aangeklikt voordat `app.js` de handlers had
+gekoppeld. `E2E-H-024` faalde definitief en drie andere loginchecks slaagden
+pas bij retry. De app publiceert nu na het registreren van de handlers
+`data-app-interactive=true`; de LoginPage en de GUI-resetflow wachten daarop.
+Dit verandert geen bedrijfslogica en voorkomt klikken in de korte laadkloof.
+
 ## 8 september — Mobile Safari-flake bij medewerker deactiveren
 
 Release-run `34241982684` faalde uitsluitend op `E2E-N-021` in de
