@@ -5,6 +5,11 @@ scherm wordt gerepareerd terwijl een eerdere of latere stap in dezelfde bedrijfs
 
 ## 1. Eerst het contract lezen
 
+- Fetch vóór ieder nieuw werkblok `origin/main` en `origin/herontwerp`, controleer de
+  recente commits en lees de actuele herontwerp-handoff volledig. Voor pilotwerk zijn
+  minimaal `HANDOFF-CODEX-FASE-D.md` en `HANDOFF-PILOT-DESIGN.md` verplicht; lees daarnaast
+  de meest recent bijgewerkte handoff waarnaar zij verwijzen. Controleer daarna pas de
+  werkboom, zodat parallel werk van Claude/Codex niet wordt overschreven of dubbel gebouwd.
 - Lees het Functioneel Ontwerp voor rollen, eigenaar, statussen en vervolgacties.
 - Lees het Technisch Ontwerp voor servergezag, synchronisatie, opslag en beveiliging.
 - Zoek de bestaande featurecase, Playwright-test, API en database-relaties.
