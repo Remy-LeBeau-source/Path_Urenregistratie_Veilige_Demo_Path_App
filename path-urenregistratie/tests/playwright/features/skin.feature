@@ -75,6 +75,14 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     When de medewerker Nieuw activeert en via de bento naar Mijn uren navigeert
     Then de dashboardstatus gelijk blijft en Klassiek dezelfde gegevens toont
 
+  @happy @regressie
+  Scenario: [SKIN-H-010] de admin-verhaallijn wisselt van medewerker en toont bijbehorende status
+    # Testtechniek: Toestandsovergang + equivalentieklassen (eerste/tweede medewerker)
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given Backoffice in de nieuwe skin met minstens twee medewerkers in de verhaallijn
+    When Backoffice de tweede medewerker in de wachtrij aanklikt
+    Then wordt die medewerker geselecteerd en toont het verhaal zijn naam en vier statuskaarten
+
   @negative @security
   Scenario: [SKIN-N-007] productie forceert Klassiek en verbergt de redesignschakelaar
     # Testtechniek: Beslissingstabel LOCAL / TEST / PROD + negatieve equivalentieklasse

@@ -294,6 +294,38 @@ test('[SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en K
   });
 });
 
+test('[SKIN-H-010] de admin-verhaallijn wisselt van medewerker en toont bijbehorende status', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given Backoffice in de nieuwe skin met minstens twee medewerkers in de verhaallijn', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await expect(page.locator('.new-admin-employee-row')).not.toHaveCount(0);
+  });
+
+  const rijen = page.locator('.new-admin-employee-row');
+  test.skip(await rijen.count() < 2, 'Minder dan twee actieve medewerkers deze periode; wisselen valt niet te bewijzen.');
+
+  const eersteNaam = await genormaliseerdeTekst(rijen.nth(0).locator('.new-admin-employee-person strong'));
+  const tweedeNaam = await genormaliseerdeTekst(rijen.nth(1).locator('.new-admin-employee-person strong'));
+
+  await test.step('When Backoffice de tweede medewerker in de wachtrij aanklikt', async () => {
+    await rijen.nth(1).click();
+  });
+
+  await test.step('Then wordt die medewerker geselecteerd en toont het verhaal zijn naam en vier statuskaarten', async () => {
+    await expect(rijen.nth(1)).toHaveClass(/is-selected/);
+    await expect(rijen.nth(1)).toHaveAttribute('aria-pressed', 'true');
+    await expect(rijen.nth(0)).not.toHaveClass(/is-selected/);
+    const verhaalKop = await genormaliseerdeTekst(page.locator('#new-admin-story-heading'));
+    expect(verhaalKop).toContain(tweedeNaam);
+    expect(verhaalKop).not.toContain(eersteNaam);
+    await expect(page.locator('#new-admin-story-cards article')).toHaveCount(4);
+  });
+});
+
 test('[SKIN-N-007] productie forceert Klassiek en verbergt de redesignschakelaar', async ({ page }) => {
   const loginPage = new LoginPage(page);
 
