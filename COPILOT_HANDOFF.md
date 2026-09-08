@@ -4,6 +4,175 @@ Dit bestand is de gedeelde brug tussen GitHub Copilot en Codex. Chatvensters zij
 
 ## ACTUELE COORDINATIE 7 september 2026 - `main` + `herontwerp`
 
+## Actuele overdracht 8 september 2026 — parallel werken op `main` en `herontwerp`
+
+### Gezamenlijke afspraak
+
+De gebruiker wil dat beide werkstromen tegelijk kunnen doorwerken. Dat kan veilig
+zolang iedere taak één eigenaar en één bestandsscope heeft. `main` blijft de lijn
+voor functionele/releasewijzigingen; `herontwerp` blijft de lijn voor de New-skin
+en de medewerkerweergave. Geen agent werkt tegelijk aan dezelfde bronbestanden.
+
+### Open acties voor `main`
+
+1. **Functionele medewerker-mailflow afronden:** receipt-PDF na indienen en
+  herindienen, definitieve goedkeuringsmail en configureerbare templates. Houd de
+  servercontracten, mailqueue, migraties en gerichte E2E-/privacytests bij elkaar.
+2. **Herinneringen/scheduler afronden:** servergestuurde, persistente en
+  idempotente in-appmeldingen volgens de vastgelegde planning. Geen OS-push in
+  deze stap.
+3. **Releasepoort bewaken:** eerst lokale gerichte tests, `npm run check`,
+  `docs:sync` na testwijzigingen en daarna de relevante brede gate. Bij een
+  release altijd de individuele GitHub-jobs controleren; een groene workflow-run
+  met overgeslagen deployjobs geldt niet als TEST-deploy.
+4. **Open functionele regressies alleen reproduceerbaar oppakken:** Herstel/F5,
+  nieuwe medewerker direct zichtbaar en verkeerde ontvangersvinkjes eerst met
+  een concrete reproductie. Geen speculatieve patch.
+
+Eigenaarschap: functionele servercode, klassieke UI, featurecases, API-/E2E-tests
+en releaseworkflow. `main` raakt niet aan `assets/styles-new.css` voor uitsluitend
+visuele New-polish en raakt geen lopende medewerkerdesignslice van `herontwerp`.
+
+### Open acties voor `herontwerp`
+
+1. **Medewerkerroute afronden als één New-shell:** `Mijn uren`, klanturenstaat,
+  dashboard, mededelingen en profiel/menu moeten visueel coherent blijven en niet
+  terugvallen naar een legacy-scherm met alleen nieuwe kleuren.
+2. **Visuele browsercontrole uitvoeren:** desktop en mobiel controleren met echte
+  screenshots/walkthroughs zodra de lokale config en testdatabase beschikbaar
+  zijn. Browserchecks zijn leidend naast syntaxis- en designchecks.
+3. **Kleine polish-slices blijven additief:** uitsluitend onder
+  `html[data-skin="new"]`, Classic ongemoeid. Geen nieuwe businesslogica in de
+  New-skin.
+4. **Pilot/regressie bewaken:** gerichte `SKIN-*`/mobiele cases draaien en vóór
+  integratie de branch- en CI-status controleren. De echte iPhone/Android-check
+  blijft mensenwerk.
+
+Eigenaarschap: `assets/styles-new.css`, New-skin visuele regressies en de
+medewerkerdesignroute. De losse `pilot/`-pagina's blijven buiten deze slice.
+
+### Integratieregels
+
+- Werk op de eigen branch/worktree; niet rechtstreeks op `main` integreren.
+- Haal vóór een integratiemoment `origin/main` en `origin/herontwerp` op. Neem
+  nieuwe `main`-commits eerst op in `herontwerp`, los echte conflicts zelf op en
+  laat daarna CI beslissen.
+- Stage nooit `node_modules` of testartefacten. De huidige `node_modules`-
+  wijzigingen zijn bestaand lokaal artefact en mogen niet worden teruggedraaid.
+- Push functionele wijzigingen alleen naar `herontwerp` wanneer zij daar bewust
+  thuishoren; de bestaande merge-queue/releasepipeline verzorgt de route naar
+  `main` en TEST. PROD blijft achter de handmatige reviewerpoort.
+- Huidige lokale blokkade: in deze werkboom ontbreekt
+  `path-urenregistratie/server/config.local.php`; daardoor kan de echte lokale
+  browsercontrole nog niet als groen worden gemeld.
+
+## Prioriteitslijst kleine fixes eerst — 8 september 2026
+
+De gebruiker wil de korte, lage-risico fixes eerst afwerken en de grootste productwensen daarna. De lijst is hier vastgelegd in prioriteitsvolgorde en wordt in opvolgende sprints uitgewerkt.
+
+1. E-mail na Maand indienen met een duidelijk urenoverzicht/PDF, inclusief ontbrekende of op `0 uur` geregistreerde dagen.
+2. Nieuwe e-mail na iedere herindiening na een correctie.
+3. Bevestigingsmail na Goedkeuren door Backoffice, met Path-opmaak en Robot Path-handtekening.
+4. Aanpasbare standaardteksten voor deze twee medewerker-mails bij Instellingen.
+5. Automatische herinneringen volgens de ingestelde momenten. De instellingen bestaan, maar de planner verstuurt ze nog niet automatisch.
+6. Echte telefoon-/PWA-pushmeldingen buiten de app. Meldingen in de app bestaan wel.
+7. De overige beheerschermen volledig naar de nieuwe vormgeving brengen; dashboard en kernflow zijn verder dan onder meer Instellingen, Medewerkers en enkele detailvensters.
+8. Instellingen en lange dashboards compacter maken met inklapbare onderdelen.
+9. Volledige handmatige test op echte iPhone, Android en geïnstalleerde PWA.
+10. Enkele oude, niet betrouwbaar gereproduceerde meldingen nalopen: medewerker die na Herstel blijft staan, eerst F5 nodig na aanmaken en verkeerde ontvangersvinkjes.
+
+### Actuele overdracht 8 september 2026, submit-ontvangstmail
+
+- **Taak/conclusie:** item 1 is lokaal gestart. De submit-flow maakt nu een
+  idempotente `timesheet_submission_receipt`-delivery met medewerker, periode,
+  totaaluren en dagregels, inclusief niet-ingevulde dagen en expliciete `0,00 uur`.
+- **Diagnose/bewijs:** vóór de wijziging zette `server/api/timesheets.php` wel
+  status en audit weg, maar riep nergens mailqueue-code aan. De bestaande
+  `email_deliveries.timesheet_id`-kolom was al aanwezig; alleen enum/queue/API-
+  koppeling ontbrak.
+- **Gewijzigde bestanden:** `path-urenregistratie/server/api/timesheets.php`,
+  `server/mail/queue.php`, `server/mail/templates.php`,
+  `server/api/email-queue.php`, `database/schema.sql`,
+  `server/migrations/030_timesheet_receipt_channels.sql` en de gerichte test in
+  `tests/playwright/email-queue.spec.ts`.
+- **Verificatie:** `php -l` op de drie PHP-bestanden is groen. `npm ci` is groen;
+  de gerichte Playwright-test bereikt de applicatie maar stopt vóór de test door
+  ontbrekende `PLAYWRIGHT_EMPLOYEE_PASSWORD`. Geen runtime-featureclaim gedaan.
+- **Open punt/volgende stap:** PDF-bijlage en volledige template-rendering zijn nog
+  niet afgerond; daarna opnieuw de gerichte test draaien met de bestaande lokale
+  testcredential-configuratie. Er is niets gecommit of gedeployed.
+
+### Actuele overdracht 8 september 2026, receipt-vervolgf fixes
+
+- Timesheet-deliveries tonen in de queue nu de medewerker, ook zonder factuurrelatie,
+  en gebruiken het configureerbare `timesheet_submission_receipt`-template met de
+  vaste Robot Path IT-signatuur.
+- Idempotency is versiegebonden via `timesheet_id + timesheet_version`: een retry
+  van dezelfde submit dupliceert niet; een resubmit na correctie kan een nieuwe
+  receipt maken. De gekoppelde medewerker-user wordt als delivery-user opgeslagen.
+- Gewijzigd: `server/api/email-queue.php`, `server/mail/queue.php`,
+  `server/api/timesheets.php`, `database/schema.sql` en migratie 030.
+- `get_errors` en `php -l` zijn groen. Playwright is nog niet uitvoerbaar zonder
+  `PLAYWRIGHT_EMPLOYEE_PASSWORD`. PDF-bijlage en de echte resubmit-runtimetest
+  staan nog open; niets is gecommit, gepusht of gedeployed.
+- De vaste Robot Path IT-signatuur is uit de standaardtemplates gehaald en blijft
+  alleen in de afzendershell staan; de template kan daardoor geen dubbele
+  handtekening meer veroorzaken. PHP-lint na deze laatste wijziging is groen.
+
+### Actuele overdracht 8 september 2026, New-skin statusvisualisatie
+
+- De mobiele/New urenkaart volgt nu de aangeleverde visuele richting: actieve
+  dag donker navy met mint marker en focusrand; nuluren zijn gedempt op de crème
+  achtergrond; de actieve invoer gebruikt een zachte mint focusring.
+- De beheerdersrij gebruikt nu losse connectorsegmenten. Alleen een segment
+  tussen twee afgeronde stappen wordt groen; die groene lijn tekent eenmalig
+  rustig in bij de eerste storyline-render.
+- Gewijzigd: `path-urenregistratie/assets/styles-new.css`,
+  `path-urenregistratie/assets/app.js` en de mail-featuremapping voor `EQ-H-035`.
+- Verificatie: `node --check assets/app.js`, `npm run test:design` (`447/447`)
+  en `git diff --check` zijn groen. Browser-screenshotcheck nog open; niets
+  gecommit, gepusht of gedeployed.
+
+### Actuele overdracht 8 september 2026, medewerker-New-slice
+
+- **Scope:** alleen de medewerkerervaring. De New `Mijn uren`-route gebruikt nu
+  dezelfde donkere medewerker-shell als de bento: geen oude sidebar, ureninvoer
+  als hoofdwerkruimte, samenvatting naast de invoer en klanturenstaat als aparte
+  vervolgstap. Backoffice-schermen zijn niet gewijzigd.
+- **Gewijzigd:** `path-urenregistratie/assets/styles-new.css`.
+- **Validatie:** editorfouten, `node --check assets/app.js`, `npm run test:design`
+  (`447/447`) en `git diff --check` groen. Gerichte `SKIN-H-006` kon niet draaien:
+  lokale `server/config.local.php` ontbreekt en de testdatabase heeft geen `users`
+  tabel. Geen commit, push of deploy.
+- **Volgende stap:** lokale config/testdatabase herstellen en daarna de zichtbare
+  medewerkerflow op desktop en mobiel controleren. Backoffice blijft buiten scope.
+
+### Actuele overdracht 8 september 2026, medewerker-New-slice – kleine polish
+
+- **Taak/conclusie:** de employee route krijgt nog een kleine, lage-risico polish
+  om de `Mijn uren`- en klanturenstaat-views visueel als één New-shell te laten
+  werken zonder de legacy layout terug te laten doorklinken.
+- **Diagnose/bewijs:** de onderliggende DOM is nog legacy, maar de New-skin
+  moet deze components als één medewerker-werkruimte tonen. Het laatste verschil
+  zat in tabellen, action-buttons en mail-preview-blocks die nog te "klassiek"
+  waren in plaats van de dark New-employee-shell te volgen.
+- **Gewijzigde bestanden:** `path-urenregistratie/assets/styles-new.css`.
+- **Verificatie:** `node --check assets/app.js` en `git diff --check` zijn groen;
+  de app zelf kan nog niet volledig visueel worden getest omdat
+  `server/config.local.php` nog ontbreekt. Er is niets gecommit, gepusht of
+  gedeployed.
+- **Volgende stap:** zodra de lokale config / testdatabase staan, de medewerkerflow
+  op desktop en mobiel met de echte browsercheck verifiëren en daarna pas de
+  volgende kleine slice in dezelfde scope doorlopen.
+
+Gereed:
+- Weekweergave heeft alleen opslaan; definitief indienen gebeurt vanuit de maandcontrole.
+- Klanturenstaat is verplicht vóór factuurafronding.
+- `Al rechtstreeks gemaild` blijft oranje totdat Backoffice extern bevestigt.
+- Light/dark en Classic/New-switch bestaan op TEST.
+- Versienummer in de New-footer is zojuist hersteld en zit in de pipeline.
+- Beheerwachtwoord op TEST wordt niet voorgevuld; medewerkerlogin blijft ongewijzigd.
+
 ## Toewijzing 8 september 2026, 06:20 (beslissing gebruiker): Backoffice-bevestiging klanturenstaat → Codex
 
 `HANDOFF-CODEX.md` (ondanks de bestandsnaam getiteld "Overdracht aan Claude",

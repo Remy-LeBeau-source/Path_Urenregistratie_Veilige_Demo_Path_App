@@ -2,6 +2,40 @@
 
 ## Documentenkaart
 
+## Actuele parallelle werkafspraak — 8 september 2026
+
+`main` en `herontwerp` mogen tegelijk doorwerken, maar niet aan dezelfde
+bestanden. `main` bezit functionele server-/mail-/releasewijzigingen en klassieke
+regressies. `herontwerp` bezit de New-skin en de visuele medewerkerroute.
+
+### Open voor `main`
+
+- receipt-PDF en herindieningsmail volledig afronden en gericht bewijzen;
+- definitieve medewerkergoedkeuringsmail en configureerbare templates afronden;
+- servergestuurde, idempotente herinneringen/scheduler bouwen;
+- reproduceerbare oude UI-meldingen alleen na concrete reproductie oppakken;
+- lokale gate, individuele GitHub-jobstatussen en TEST-deploy controleren.
+
+### Open voor `herontwerp`
+
+- `Mijn uren` en klanturenstaat visueel als één New-medewerkerroute afwerken;
+- resterende dashboard-/mededelingen-/profielpolish klein en uitsluitend onder
+  `html[data-skin="new"]` houden;
+- desktop- en mobiele screenshots/walkthroughs uitvoeren zodra de lokale runtime
+  beschikbaar is;
+- New-skin cases en mobiele regressie groen houden; Classic en PROD fail-closed
+  niet aanraken.
+
+### Niet vergeten bij samenwerking
+
+- Nieuwe `main` eerst opnemen in `herontwerp` vóór CI/integratie.
+- Geen `node_modules` of testartefacten stagen; de huidige lokale wijzigingen
+  daarin zijn bestaand en worden niet teruggedraaid.
+- Geen PROD-promotie door een agent.
+- Lokale browservalidatie is momenteel geblokkeerd door ontbrekende
+  `server/config.local.php` in deze werkboom; syntax- en diffchecks zijn wel
+  uitgevoerd.
+
 - **Centrale actuele checklist:** `MASTERCHECKLIST.md` — wat klaar, open of
   geblokkeerd is en welke releasepoort nog ontbreekt.
 - **Besluiten:** `BESLISTABEL.md` — vastgelegde productkeuzes zoals MO5b.
@@ -67,6 +101,44 @@ volgorde leidend: `BESLISTABEL.md`, daarna de actuele sectie in
   2. push uitsluitend naar `herontwerp` en laat CI plus merge-queue beslissen;
   3. controleer na groene CI de automatische handoff naar `main` en TEST.
      PROD blijft achter de handmatige reviewerpoort.
+
+### Actuele overdracht 8 september 2026 — receipt-vervolgf fixes
+
+- Timesheet-deliveries tonen in de queue nu de medewerker, ook zonder factuurrelatie,
+  en gebruiken het configureerbare `timesheet_submission_receipt`-template met de
+  vaste Robot Path IT-signatuur.
+- Idempotency is versiegebonden via `timesheet_id + timesheet_version`: dezelfde
+  submit dupliceert niet; resubmit na correctie kan een nieuwe receipt maken.
+- Gewijzigd: `server/api/email-queue.php`, `server/mail/queue.php`,
+  `server/api/timesheets.php`, `database/schema.sql` en migratie 030.
+- `get_errors` en `php -l` zijn groen. Playwright blijft geblokkeerd door
+  `PLAYWRIGHT_EMPLOYEE_PASSWORD`. PDF-bijlage en runtime-resubmit-test staan nog
+  open; niets is gecommit, gepusht of gedeployed.
+- De vaste Robot Path IT-signatuur staat alleen nog in de afzendershell, zodat
+  standaardtemplates geen dubbele handtekening opleveren. PHP-lint is daarna
+  opnieuw groen uitgevoerd.
+
+### Actuele overdracht 8 september 2026 — New-skin statusvisualisatie
+
+- De mobiele/New urenkaart heeft nu de gewenste kleuren: actieve dag donker
+  navy met mint marker en focusring; nuluren zijn gedempt; focus is duidelijker.
+- De admin-storyline heeft losse statussegmenten: alleen afgeronde buursegmenten
+  worden groen en die lijn tekent eenmalig rustig in bij de eerste render.
+- `node --check`, `npm run test:design` (`447/447`) en `git diff --check` zijn
+  groen. Browser-screenshotcheck staat nog open; niets is gecommit, gepusht of
+  gedeployed.
+
+### Actuele overdracht 8 september 2026 — medewerker-New-slice
+
+- Alleen de medewerkerroute is verder gebracht: New `Mijn uren` heeft nu een
+  eigen donkere medewerker-shell zonder oude sidebar, met ureninvoer als primaire
+  werkruimte en klanturenstaat als aparte vervolgstap. Backoffice is ongemoeid.
+- Gewijzigd: `assets/styles-new.css`.
+- Syntax, editorvalidatie, design-audit (`447/447`) en diff-check zijn groen.
+  De gerichte browsercase `SKIN-H-006` kon niet starten door ontbrekende lokale
+  `server/config.local.php` en een testdatabase zonder `users`-tabel.
+- Volgende stap: lokale testomgeving herstellen en desktop/mobile screenshot- en
+  gedragscontrole uitvoeren; niets is gecommit, gepusht of gedeployed.
 
 ### Mijlpaal 8 september 2026 — documentatieconsistentie
 

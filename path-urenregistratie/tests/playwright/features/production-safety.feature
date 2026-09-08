@@ -17,7 +17,7 @@ Feature: Veilige productieconfiguratie en deployment
   @happy
   Scenario: [SAFE-H-012] TEST toont accountkeuze met autofill en een afgeschermde gedeelde reset
     # Testtechniek: Beslissingstabel + equivalentieklassen + toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 19
+    # Aantoonbare Playwright-assertions in deze case: 21
     Given lokale, TEST- en PROD-hosts als aparte equivalentieklassen worden beoordeeld
     When de exacte TEST-presentatie zonder lokale resetrechten wordt getoond
     Then blijven TEST-bediening en presentatie zichtbaar zonder PROD-rechten te verruimen
@@ -41,7 +41,7 @@ Feature: Veilige productieconfiguratie en deployment
   @happy
   Scenario: [SAFE-H-015] TEST-deploy herstelt en verifieert de vaste accountbaseline vóór cutover
     # Testtechniek: Herstelbaarheid + toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 23
+    # Aantoonbare Playwright-assertions in deze case: 27
     Given de bewaakte TEST-baseline-CLI en deploybron zijn ingelezen
     When backup, migratie, baselineherstel, live-preflight en cutover in vaste volgorde staan
     Then zijn TEST-database, private opslag en beide loginrollen vóór vrijgave bewezen

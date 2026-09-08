@@ -21,6 +21,22 @@ declare(strict_types=1);
 // aan de verkeerde persoon.
 
 const MAIL_CHANNEL_TEMPLATES = [
+    'timesheet_submission_receipt' => [
+        'subject' => 'Urenoverzicht {medewerker} – {periode}',
+        'body' =>
+            "Beste {medewerker},\n\n"
+            . "Je hebt je uren voor {periode} ingediend. Hieronder staat een compact overzicht van de geregistreerde dagen.\n\n"
+            . "Totaal: {uren} uur\n\n"
+            . "Overzicht per dag:\n"
+            . "{overzicht}",
+    ],
+    'timesheet_final_approval' => [
+        'subject' => 'Je uren zijn goedgekeurd – {periode}',
+        'body' =>
+            "Beste {medewerker},\n\n"
+            . "Je uren voor {periode} zijn goedgekeurd door Backoffice.\n\n"
+            . "Totaal: {uren} uur",
+    ],
     'broker' => [
         'subject' => 'Factuur {factuurnummer} – {periode}',
         'body' =>

@@ -72,14 +72,17 @@ function mail_audit(
 
 function mail_insert_delivery(
     PDO    $pdo,
-    int    $invoiceId,
+    ?int   $invoiceId,
     string $channel,
     string $recipientEmail,
     ?string $ccEmail,
     string $subject,
     string $body,
     string $attachmentPolicy,
-    bool   $dryRun
+    bool   $dryRun,
+    ?int   $timesheetId = null,
+    ?int   $userId = null,
+    ?int   $timesheetVersion = null
 ): int {
     $ccEmail = $ccEmail !== null && trim($ccEmail) !== '' ? trim($ccEmail) : null;
     $recipientEmail = trim($recipientEmail);
@@ -91,14 +94,17 @@ function mail_insert_delivery(
     }
     $stmt = $pdo->prepare(
         'INSERT INTO email_deliveries
-         (invoice_id, channel, recipient_email, cc_email, subject_snapshot, body_snapshot,
+         (invoice_id, timesheet_id, timesheet_version, user_id, channel, recipient_email, cc_email, subject_snapshot, body_snapshot,
           attachment_policy, dry_run, status)
          VALUES
-         (:invoice_id, :channel, :recipient_email, :cc_email, :subject, :body,
+         (:invoice_id, :timesheet_id, :timesheet_version, :user_id, :channel, :recipient_email, :cc_email, :subject, :body,
           :attachment_policy, :dry_run, :status)'
     );
     $stmt->execute([
         ':invoice_id'       => $invoiceId,
+        ':timesheet_id'     => $timesheetId,
+        ':timesheet_version'=> $timesheetVersion,
+        ':user_id'          => $userId,
         ':channel'          => $channel,
         ':recipient_email'  => $recipientEmail,
         ':cc_email'         => $ccEmail,
@@ -109,6 +115,113 @@ function mail_insert_delivery(
         ':status'           => 'queued',
     ]);
     return (int)$pdo->lastInsertId();
+}
+
+function mail_enqueue_timesheet_submission_receipt(
+    PDO $pdo,
+    int $companyId,
+    int $actorUserId,
+    int $timesheetId,
+    int $timesheetVersion,
+    string $periodKey,
+    array $dayEntries,
+    float $totalHours,
+    bool $dryRun,
+    ?string $employeeName = null,
+    ?string $employeeEmail = null
+): ?array {
+    $existing = $pdo->prepare(
+                'SELECT id FROM email_deliveries
+                 WHERE timesheet_id = :timesheet_id AND timesheet_version = :timesheet_version
+                     AND channel = "timesheet_submission_receipt"
+           AND status IN ("queued", "processing", "sent")
+         ORDER BY id DESC LIMIT 1'
+    );
+    $existing->execute([':timesheet_id' => $timesheetId, ':timesheet_version' => $timesheetVersion]);
+    if ($existing->fetch()) {
+        return null;
+    }
+
+    $employeeStmt = $pdo->prepare(
+        'SELECT e.full_name AS employee_name, e.user_id, u.email AS employee_email
+         FROM timesheets t
+         JOIN employees e ON e.id = t.employee_id
+         LEFT JOIN users u ON u.id = e.user_id
+            WHERE t.id = :timesheet_id
+         LIMIT 1'
+    );
+        $employeeStmt->execute([':timesheet_id' => $timesheetId]);
+    $employee = $employeeStmt->fetch();
+
+    $recipientEmail = trim((string)($employeeEmail ?: ($employee['employee_email'] ?? '')));
+    $recipientName = trim((string)($employeeName ?? ($employee['employee_name'] ?? '')));
+    if ($recipientEmail === '') {
+        return null;
+    }
+
+    $daySummary = [];
+    $dateMap = [];
+    foreach ($dayEntries as $entry) {
+        $rawDate = (string)($entry['work_date'] ?? $entry['date'] ?? '');
+        $dateMap[$rawDate] = (float)($entry['hours'] ?? 0.0);
+    }
+
+    preg_match('/^(\d{4})-(\d{2})$/', $periodKey, $periodMatches);
+    $year = (int)($periodMatches[1] ?? date('Y'));
+    $month = (int)($periodMatches[2] ?? date('n'));
+    $daysInMonth = (int)cal_days_in_month(CAL_GREGORIAN, $month, $year);
+
+    for ($day = 1; $day <= $daysInMonth; $day++) {
+        $dateKey = sprintf('%04d-%02d-%02d', $year, $month, $day);
+        $hours = (float)($dateMap[$dateKey] ?? 0.0);
+        if (array_key_exists($dateKey, $dateMap)) {
+            $value = $hours === 0.0 ? '0,00 uur' : number_format($hours, 2, ',', '.') . ' uur';
+            $daySummary[] = sprintf('Dag %02d: %s', $day, $value);
+        } else {
+            $daySummary[] = sprintf('Dag %02d: Niet ingevuld', $day);
+        }
+    }
+
+    $templates = mail_channel_templates_for($pdo, $companyId);
+    $template = $templates['timesheet_submission_receipt'];
+    $vars = [
+        'medewerker' => $recipientName,
+        'periode' => $periodKey,
+        'maand' => $periodKey,
+        'jaar' => (string)$year,
+        'uren' => number_format($totalHours, 2, ',', '.'),
+        'overzicht' => implode("\n", $daySummary),
+    ];
+    mail_assert_vars($template['subject'], $vars, 'timesheet_submission_receipt.subject');
+    mail_assert_vars($template['body'], $vars, 'timesheet_submission_receipt.body');
+    $subject = mail_render($template['subject'], $vars);
+    $body = rtrim(mail_render($template['body'], $vars)) . "\n\nMet vriendelijke groet,\n\nRobot Path IT";
+
+    $id = mail_insert_delivery(
+        $pdo,
+        null,
+        'timesheet_submission_receipt',
+        $recipientEmail,
+        null,
+        $subject,
+        $body,
+        'none',
+        $dryRun,
+        $timesheetId,
+        (int)($employee['user_id'] ?? $actorUserId),
+        $timesheetVersion
+    );
+
+    mail_audit($pdo, $companyId, $actorUserId,
+        $dryRun ? 'email.dry_run' : 'email.queued', $id,
+        [
+            'channel' => 'timesheet_submission_receipt',
+            'timesheet_id' => $timesheetId,
+            'period' => $periodKey,
+        ]
+    );
+
+    return ['id' => $id, 'channel' => 'timesheet_submission_receipt', 'recipient_email' => $recipientEmail, 'status' => 'queued'];
 }
 
 // ---------------------------------------------------------------------------

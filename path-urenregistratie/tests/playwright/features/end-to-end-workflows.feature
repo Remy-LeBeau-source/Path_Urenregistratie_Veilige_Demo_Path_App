@@ -191,7 +191,7 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
   @happy
   Scenario: [E2E-H-024] een nieuw account krijgt via de GUI toegang en zijn eigen tekst komt letterlijk in de verzonden mail
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 20
+    # Aantoonbare Playwright-assertions in deze case: 21
     Given Backoffice via de GUI een nieuw account met eigen onderwerp en tekst aanmaakt
     When de nieuwe medewerker via de eenmalige link zelf inlogt en uren indient
     Then staat zijn eigen tekst letterlijk en eenmaal in de brokermail

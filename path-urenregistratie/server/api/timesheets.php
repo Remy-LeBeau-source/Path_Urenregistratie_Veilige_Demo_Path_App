@@ -1006,6 +1006,31 @@ try {
     $latestCorrectionHistory = timesheet_correction_history($pdo, (int)$latest['id']);
     $latestAudit = timesheet_last_audit($pdo, $companyId, (int)$latest['id']);
 
+    if ($action === 'submit') {
+        require_once __DIR__ . '/../mail/queue.php';
+        try {
+            $employeeName = trim((string)($employee['full_name'] ?? ''));
+            $mailReceipt = mail_enqueue_timesheet_submission_receipt(
+                $pdo,
+                $companyId,
+                (int)$currentUser['id'],
+                (int)$latest['id'],
+                (int)($latest['version'] ?? 0),
+                $period['period_key'],
+                $latestDayEntries,
+                (float)($latest['billable_hours'] ?? 0.0),
+                mail_is_dry_run($config),
+                $employeeName
+            );
+            if ($mailReceipt !== null && !mail_is_dry_run($config)) {
+                mail_dispatch_created($pdo, [['id' => (int)$mailReceipt['id']]], $config);
+            }
+        } catch (Throwable $mailException) {
+            // Geen blokkerende fout voor de indiening zelf: de tijdstaat is al
+            // opgeslagen, en de e-mail is een bijbehorende serviceactie.
+        }
+    }
+
     $pdo->commit();
 
     auth_send_json([
