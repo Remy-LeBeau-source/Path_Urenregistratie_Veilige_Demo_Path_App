@@ -17,6 +17,7 @@ jobs:
   validate-and-test:
     name: Validate and test (${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     # Iedere shard heeft een eigen runner, MySQL-service en PHP-server. Zo blijft
     # de volledige suite draaien, maar wachten de vier delen niet op elkaar.
     strategy:
@@ -208,6 +209,7 @@ jobs:
 
       - name: Smoke check
         if: ${{ matrix.shard == 1 }}
+        timeout-minutes: 12
         run: npm run check
 
       - name: Run DB CRUD smoke

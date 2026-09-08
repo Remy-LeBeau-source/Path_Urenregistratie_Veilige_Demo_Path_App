@@ -321,6 +321,7 @@ jobs:
       - name: Smoke check
         # Statische controle: één keer per commit volstaat, niet op elke shard.
         if: ${{ matrix.shard == 1 }}
+        timeout-minutes: 12
         run: npm run check
 
       - name: Stop CI PHP server before Playwright
@@ -451,6 +452,7 @@ jobs:
         run: npm run build
 
       - name: Smoke check
+        timeout-minutes: 12
         run: npm run check
 
       - name: Resolve stage regression target
@@ -602,6 +604,7 @@ jobs:
       - name: Smoke check
         # Statische controle: één keer per commit volstaat, niet op elke shard.
         if: ${{ matrix.shard == 1 }}
+        timeout-minutes: 12
         run: npm run check
 
       - name: Resolve stage regression target
@@ -973,6 +976,7 @@ jobs:
         run: npm run build
 
       - name: Smoke check
+        timeout-minutes: 12
         run: npm run check
 
       - name: Resolve stage regression target
@@ -1116,6 +1120,7 @@ jobs:
         run: npm run build
 
       - name: Smoke check
+        timeout-minutes: 12
         run: npm run check
 
       - name: Resolve stage regression target
