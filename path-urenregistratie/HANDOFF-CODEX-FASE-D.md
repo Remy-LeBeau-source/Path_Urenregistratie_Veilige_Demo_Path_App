@@ -1,5 +1,34 @@
 # HANDOFF — Codex, Fase D vervolg (herontwerp)
 
+## 15:25 8 september — stand van zaken: pijplijn werkt, visueel bevestigd op TEST
+
+**De volledige keten is nu aantoonbaar rond, van commit tot echte TEST-deploy:**
+groene `herontwerp`-CI → automatische fast-forward naar `main` → Promote Test
+(4/4) → Deploy Test to TransIP (incl. retry op transiënte netwerkuitval) →
+live. Geverifieerd op jobniveau (niet alleen de algehele run-conclusie, zie de
+les hieronder), en **visueel bevestigd door de gebruiker** met een incognito-
+screenshot van `uren-test.pathconsultancy.nl` in `skin=new`: de admin-
+verhaallijn ("Verhalen per medewerker") rendert volledig zoals bedoeld —
+donkere Storyline-look, medewerkerrijen met avatars en statustracks,
+verhaalkaarten per geselecteerde medewerker. Twee eerdere screenshots van de
+gebruiker die er kapot/ongestileerd uitzagen (losse pilot-topnav-knoppen,
+kale stappenlijst zonder medewerkerdata) bleken een **verouderde PWA-cache**
+in de gewone browser te zijn, geen echte bug — in incognito (dus zonder
+cache) was alles meteen correct. Les: bij een "ziet er kapot uit"-melding op
+TEST eerst een incognito-/hard-refresh-check laten doen voor je in code gaat
+zoeken.
+
+**Laatste kleine commit:** `98f2846` — de +/-knoppen en de 8/9-snelkeuze in de
+mobiele Mijn-uren-bento iets compacter gemaakt op verzoek van de gebruiker
+(puur maatvoering binnen de bestaande `@media (max-width: 720px)`-regels;
+de layout zelf — min/plus naast het veld, snelkeuze eronder — stond al
+goed). Mobiele skin-suite 47/47 groen.
+
+**Openstaand:** zie de secties hieronder voor de nog niet afgeronde/optionele
+punten (handmatige mobiele doorloop op een echt toestel, verdere
+portal-restyling van de overige hoofdschermen). Niets daarvan blokkeert op
+dit moment iets.
+
 ## 8 september — TEST-deploysmoke bestand tegen korte netwerkuitval
 
 Release-run `34222747174` heeft TEST zelf succesvol gedeployed, inclusief
