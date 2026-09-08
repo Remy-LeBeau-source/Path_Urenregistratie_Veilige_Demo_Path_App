@@ -195,7 +195,7 @@ try {
     $weekdayNames = ['monday' => 1, 'tuesday' => 2, 'wednesday' => 3, 'thursday' => 4, 'friday' => 5, 'saturday' => 6, 'sunday' => 7];
     $weeklyReminderDay = $weekdayNames[strtolower(settings_string($settings['weeklyReminderDay'] ?? 'friday', 16))] ?? 5;
 
-    $weeklyReminderTime = $reminderTimeField($settings, 'weeklyReminderTime', '15:00');
+    $weeklyReminderTime = $reminderTimeField($settings, 'weeklyReminderTime', '14:00');
     $monthEndReminderTime = $reminderTimeField($settings, 'monthEndReminderTime', '15:00');
     $overdueReminderTime = $reminderTimeField($settings, 'overdueReminderTime', '09:00');
     $approvalReminderTime = $reminderTimeField($settings, 'approvalReminderTime', '10:00');

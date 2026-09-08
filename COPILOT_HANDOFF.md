@@ -1,5 +1,24 @@
 # Copilot ↔ Codex overdracht
 
+## ACTUELE INTEGRATIE — 9 september 2026, 00:55
+
+- `origin/herontwerp` t/m `e6b49e6` en lokale `main` t/m `f09bb2a` zijn
+  samengevoegd; de andere VS Code-sessie blijft tijdens deze release gepauzeerd.
+- `REM-H-001` behoudt de gedeelde-DB-skip én Amsterdam-tijdzone;
+  `SKIN-H-006` behoudt de actuele 24 assertions.
+- De wekelijkse herinnering staat conform de actuele afspraak overal op
+  vrijdag 14:00. Living Docs is report-only: geen tweede MySQL/PHP/browser-
+  omgeving of Playwright-run, maar samenvoegen van de groene shardrapporten
+  met een harde joblimiet van 10 minuten.
+- Groen lokaal: versie 1.0.17, productiebuild, PHP-syntax, docs-sync (449
+  cases), deploymentcontract, `REM-H-001` en `SKIN-H-006`.
+- De monolithische smoke is na ruim vijf minuten zonder uitvoer gestopt; de
+  begrensde 8-shard-CI beslist over de brede regressie. Oude rode run
+  `34285742217` op `e6b49e6` is als achterhaald geannuleerd.
+- Volgende stap: expliciet stagen zonder `node_modules`, committen en alleen
+  `herontwerp` pushen. Groen leidt via de queue naar `main` en TEST. PROD niet
+  aanraken.
+
 Dit bestand is de gedeelde brug tussen GitHub Copilot en Codex. Chatvensters zijn niet onderling zichtbaar, maar beide assistenten kunnen dit bestand in de werkmap lezen.
 
 ## VASTE BRANCHREGEL — altijd eerst lezen

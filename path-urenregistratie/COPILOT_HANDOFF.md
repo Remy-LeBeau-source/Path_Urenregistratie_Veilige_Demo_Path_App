@@ -1,5 +1,20 @@
 # Copilot handoff — lokale mailpreview en regressieherstel
 
+## Actuele gecombineerde oplevering — 9 september 2026, 00:55
+
+`origin/herontwerp` (`e6b49e6`) en lokale `main` (`f09bb2a`) zijn samengevoegd
+op `herontwerp`. De release bevat samen: ontvangstmail na uren indienen,
+servergestuurde herinneringen, TEST-beheerwachtwoordcorrectie, 8 CI-shards,
+harde test-time-outs, branch-hygiëne en de bestaande New-skin. De standaard
+weekherinnering is vrijdag 14:00. Living Docs hergebruikt uitsluitend de reeds
+gemaakte shardrapporten en start geen eigen database/browser-suite.
+
+Bewezen groen: build, versiecheck 1.0.17, PHP-lint, docs-sync (449 cases),
+deploymentcontract, `REM-H-001` en `SKIN-H-006`. De brede lokale smoke gaf
+ruim vijf minuten geen uitvoer en is beëindigd; de begrensde 8-shard-CI is de
+brede releasepoort. Stage nooit `node_modules`. Push alleen `herontwerp`;
+groene CI mag via de queue naar `main` en TEST. PROD blijft handmatig geblokkeerd.
+
 ## VASTE BRANCHREGEL — altijd eerst lezen
 
 `main` draagt functionele wijzigingen en releases; `herontwerp` draagt de

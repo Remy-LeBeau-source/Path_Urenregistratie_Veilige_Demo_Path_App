@@ -123,7 +123,7 @@ De huidige serverlijst ondersteunt blijvende meldingen, maar de herinneringsinst
 
 Eerste voorgestelde standaardmomenten:
 
-- onvolledige week: vrijdag 15:00;
+- onvolledige week: vrijdag 14:00;
 - onvolledige maand: laatste werkdag 15:00;
 - achterstallige maand: eerste werkdag van de volgende maand 09:00;
 - klanturenstaat: één werkdag vóór de persoonlijke deadline om 15:00, op de deadline om 10:00 en daarna volgens de ingestelde herhaaltermijn.
@@ -165,7 +165,7 @@ Onderstaande ID's zijn gereserveerd als implementatie-opdracht. Voeg ze pas als 
 | `E2E-H-028` | end-to-end use-case | complete maand → ontvangstmail → uren goedkeuren → klanturenstaat goedkeuren → afronden → broker/boekhouder/salaris plus aparte medewerkergoedkeuringsmail |
 | `E2E-H-029` | alternatief pad | rechtstreeks gemaild blijft oranje → Backoffice extern bevestigd → afronden en juiste vier functionele deliveries |
 | `E2E-N-030` | beslissingstabel + herstelbaarheid | uren goedgekeurd maar klanturenstaat niet groen: geen factuurfinalisatie en geen eindmails |
-| `NOT-H-012` | tijdgrens + toestandsovergang | eerste urenherinnering verschijnt vrijdag 15:00, blijft na F5 en navigeert naar de juiste maand/dag |
+| `NOT-H-012` | tijdgrens + toestandsovergang | eerste urenherinnering verschijnt vrijdag 14:00, blijft na F5 en navigeert naar de juiste maand/dag |
 | `NOT-H-013` | tijdgrens | klanturenstaatherinneringen ontstaan vóór/op/na persoonlijke deadline volgens werkdagregels |
 | `NOT-N-014` | idempotentie + concurrency | twee scheduler-runs voor dezelfde instantie maken exact één melding |
 | `NOT-N-015` | beslissingstabel | complete/inactieve/niet-toegankelijke maand krijgt geen herinnering; e-mail uit laat in-appmelding bestaan |

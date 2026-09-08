@@ -477,7 +477,7 @@ function freshState() {
       ],
       weeklyReminderEnabled: true,
       weeklyReminderDay: "friday",
-      weeklyReminderTime: "15:00",
+      weeklyReminderTime: "14:00",
       monthEndReminderEnabled: true,
       monthEndReminderTime: "15:00",
       overdueReminderEnabled: true,
@@ -8773,7 +8773,7 @@ function populateSettings() {
   zetInstelling("setting-sender", settings.sender);
   zetInstellingAangevinkt("setting-weekly-reminder-enabled", settings.weeklyReminderEnabled !== false);
   zetInstelling("setting-weekly-reminder-day", settings.weeklyReminderDay || "friday");
-  zetInstelling("setting-weekly-reminder-time", settings.weeklyReminderTime || "15:00");
+  zetInstelling("setting-weekly-reminder-time", settings.weeklyReminderTime || "14:00");
   zetInstellingAangevinkt("setting-month-end-reminder-enabled", settings.monthEndReminderEnabled !== false);
   zetInstelling("setting-month-end-reminder-time", settings.monthEndReminderTime || "15:00");
   zetInstellingAangevinkt("setting-overdue-reminder-enabled", settings.overdueReminderEnabled !== false);

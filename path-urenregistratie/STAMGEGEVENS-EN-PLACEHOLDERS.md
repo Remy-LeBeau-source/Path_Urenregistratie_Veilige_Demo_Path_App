@@ -78,7 +78,7 @@ Op iedere open urenkaart staat direct **Correctie vragen**. Een beheerder kan in
 - **Alle openstaande uren** combineert de controles uit verschillende maanden in één beheerderslijst; het maandfilter toont alleen de gekozen periode.
 - **Mijn open taken** combineert alle direct afhandelbare controles over de maanden heen. **Wacht op medewerker** staat apart; de maandsamenvatting is alleen aanvullend overzicht.
 - Mijn uren bevat **Hele maand** en afzonderlijke weekfilters. Op mobiel opent één week, terwijl week- en maandtotalen zichtbaar blijven. Iedere wijziging wordt tussentijds opgeslagen en alleen de volledige maand wordt ingediend.
-- De herinneringsplanning is instelbaar. De standaard is vrijdag 15:00 voor een onvolledige week, laatste werkdag 15:00 voor maandafsluiting, eerste werkdag 09:00 voor achterstand en eerste werkdag 10:00 voor wachtende goedkeuring.
+- De herinneringsplanning is instelbaar. De standaard is vrijdag 14:00 voor een onvolledige week, laatste werkdag 15:00 voor maandafsluiting, eerste werkdag 09:00 voor achterstand en eerste werkdag 10:00 voor wachtende goedkeuring.
 - Dag, tijdstip en het moment van de laatste klanturenstaatherinnering worden gekozen via eigen uitklapmenu's; native browserdropdowns zijn voor dit blok niet zichtbaar. De samenvatting onder de regels wordt direct bijgewerkt. **Voorbeeldmelding maken** plant of verstuurt lokaal niets automatisch.
 - Dezelfde browseronafhankelijke keuzebediening wordt gebruikt voor betalingstermijn, voorkeuren, doelgroepen, ontvangertypen en klanturenstaatdeadlines. Het instellingenmenu springt rechtstreeks naar de zes hoofdonderdelen.
 

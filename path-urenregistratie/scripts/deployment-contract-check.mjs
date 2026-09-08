@@ -13,6 +13,7 @@ const testRemote = await readFile(join(root, 'scripts', 'deploy-test-remote.sh')
 const testResetCli = await readFile(join(root, 'server', 'scripts', 'reset-test-baseline.php'), 'utf8');
 const testResetLibrary = await readFile(join(root, 'server', 'lib', 'test-reset.php'), 'utf8');
 const testCombined = `${testRunner}\n${testRemote}`;
+const liveDocsJob = workflow.match(/\n  live-docs:[\s\S]*?(?=\n  acc:)/)?.[0] ?? '';
 
 function runBaselineCli(args) {
   const result = spawnSync('php', ['server/scripts/reset-test-baseline.php', ...args], {
@@ -31,7 +32,7 @@ assert.match(workflow, /secrets\.TRANSIP_SSH_KNOWN_HOSTS/, 'Pinned host keys mus
 assert.match(workflow, /github\.ref == 'refs\/heads\/main'/, 'Only main may deploy automatically');
 assert.equal(
   (workflow.match(/extensions:\s*pdo_mysql, gd, fileinfo/g) || []).length,
-  6,
+  5,
   'Every PHP regression job must provide the image-to-PDF runtime extensions',
 );
 
@@ -72,6 +73,7 @@ assert.match(workflow, /prod:\s*[\s\S]*needs:\s*\[test, deploy-test\]/, 'PROD pr
 assert.match(workflow, /test:\s*[\s\S]*?if:\s*\$\{\{ always\(\) && needs\.validate\.result == 'success' \}\}/, 'A dispatched main release must continue to TEST after the push notification is skipped');
 assert.match(workflow, /live-docs:\s*[\s\S]*?Download mergeable release reports[\s\S]*?playwright merge-reports/, 'Living Docs must reuse mergeable release artifacts instead of starting another browser suite');
 assert.doesNotMatch(workflow, /live-docs:\s*[\s\S]*?Run E2E tests for docs/, 'Living Docs may not repeat the complete Playwright suite');
+assert.doesNotMatch(liveDocsJob, /services:\s*\n|setup-php|playwright install|Start PHP server|config\.local\.php/, 'Living Docs must remain report-only and may not provision a database, PHP runtime or browsers');
 assert.match(workflow, /prod:\s*[\s\S]*?needs:\s*\[test, deploy-test\][\s\S]*?always\(\)[\s\S]*?needs\.deploy-test\.result == 'success'/, 'Manual PROD promotion must remain available only after successful TEST deployment');
 for (const required of [
   '/data/sites/web/pathconsultancynl/private/path-uren-test-deployments',
