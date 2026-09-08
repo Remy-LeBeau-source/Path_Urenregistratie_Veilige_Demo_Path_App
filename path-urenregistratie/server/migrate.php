@@ -184,6 +184,10 @@ function migration_plan(bool $allowDemoMigrations): array
         'id' => '031_reminder_scheduler.sql',
         'path' => __DIR__ . '/migrations/031_reminder_scheduler.sql',
     ];
+    $plan[] = [
+        'id' => '032_demo_admin_password_reset.sql',
+        'path' => __DIR__ . '/migrations/032_demo_admin_password_reset.sql',
+    ];
     return $plan;
 }
 
