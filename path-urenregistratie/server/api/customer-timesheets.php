@@ -1040,14 +1040,13 @@ try {
                 'UPDATE customer_timesheets
                  SET status = :status,
                      review_note = :review_note,
-                     reviewed_at = CURRENT_TIMESTAMP,
-                     reviewed_by = :reviewed_by
+                     reviewed_at = NULL,
+                     reviewed_by = NULL
                  WHERE id = :id'
             );
             $update->execute([
                 ':status' => $statusToPersist,
                 ':review_note' => $reviewNote,
-                ':reviewed_by' => (int)$currentUser['id'],
                 ':id' => (int)$existing['id'],
             ]);
             $timesheetId = (int)$existing['id'];
@@ -1057,9 +1056,9 @@ try {
             // here instead of requiring a dummy upload before it can be skipped.
             $insert = $pdo->prepare(
                 'INSERT INTO customer_timesheets
-                 (period_id, employee_id, assignment_id, status, review_note, reviewed_at, reviewed_by)
+                 (period_id, employee_id, assignment_id, status, review_note)
                  VALUES
-                 (:period_id, :employee_id, :assignment_id, :status, :review_note, CURRENT_TIMESTAMP, :reviewed_by)'
+                 (:period_id, :employee_id, :assignment_id, :status, :review_note)'
             );
             $insert->execute([
                 ':period_id' => $periodId,
@@ -1067,7 +1066,6 @@ try {
                 ':assignment_id' => $assignmentId,
                 ':status' => $statusToPersist,
                 ':review_note' => $reviewNote,
-                ':reviewed_by' => (int)$currentUser['id'],
             ]);
             $timesheetId = (int)$pdo->lastInsertId();
         }
