@@ -17,7 +17,42 @@ bestaat de guard zelf nog helemaal niet) staat in `path-urenregistratie/
 HANDOFF-CODEX-FASE-D.md`, sectie "nieuwe taak voor Codex: Backoffice-bevestiging
 klanturenstaat". Codex: lees die sectie voor de concrete stappen.
 
+## Actuele overdracht 8 september 2026, 08:15:54
+
+- **Taak/conclusie:** De gevraagde lokale auto-allow is afgerond. Lokale
+  accountkeuze en testhints werken nu voor echte loopbackhosts, zonder de
+  productieomgeving vrij te geven.
+- **Bewijs:** `SAFE-H-012` en de nieuwe `SAFE-H-013` zijn groen; de gecombineerde
+  Playwright-run eindigde met `3 passed (8.3s)`.
+- **Gewijzigde bestanden:**
+  `path-urenregistratie/assets/app.js` en
+  `path-urenregistratie/tests/playwright/production-safety.spec.ts`.
+- **Beveiligingsgrens:** TEST blijft alleen op de exacte TEST-host toegestaan;
+  productie (`uren.pathconsultancy.nl`) blijft geblokkeerd voor lokale accounttools.
+  Er is niets gecommit, gepusht of gedeployed.
+- **Volgende stap voor Codex:** voer de resterende releasechecks uit zoals
+  hieronder beschreven: `npm run docs:sync`, `npm run check`, GUI-smoke en de
+  brede regressiesuite. De inhoudelijke MO5b-gates zijn al runtime-gevalideerd.
+
 ## Actuele overdracht 8 september 2026
+
+### Huidige diagnose en fix
+
+- De lokale auto-allow voor demo-/testknoppen was te strikt: alleen exact
+  `127.0.0.1` en `::1` werden toegestaan, terwijl veilige loopbackvarianten
+  zoals `127.0.0.2`, `::ffff:127.0.0.1` en `.localhost` in dezelfde lokale
+  omgeving ook correct moeten werken.
+- Oplossing: de hostcontrole is vereenvoudigd naar een expliciete loopbackcheck
+  die alleen echte lokale loopbackhosts accepteert, terwijl TEST-host en
+  productiehost apart blijven gecontroleerd.
+- Bewijs: de nieuwe veiligheidstest `SAFE-H-013` en de bestaande
+  `SAFE-H-012`-controle zijn beide groen.
+- Gewijzigde bestanden: [path-urenregistratie/assets/app.js](path-urenregistratie/assets/app.js),
+  [path-urenregistratie/tests/playwright/production-safety.spec.ts](path-urenregistratie/tests/playwright/production-safety.spec.ts).
+- Verificatie: `cd /c/Path_Urenregistratie_Veilige_Demo_Path_App/path-urenregistratie ; npx playwright test tests/playwright/production-safety.spec.ts --grep "SAFE-H-013|SAFE-H-012"`
+  => `3 passed (8.3s)`.
+- Status: lokaal veilig, zonder productie-uitbreiding of vrijgave van echte
+  prod-allowlist-beslissingen.
 
 ### Huidige stand
 

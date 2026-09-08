@@ -1500,6 +1500,18 @@ function setDemoLoginEnabled(enabled) {
   });
 }
 
+function isLoopbackHost(hostname = window.location.hostname) {
+  const normalized = String(hostname || "").trim().toLowerCase().replace(/^\[|\]$/g, "");
+  if (!normalized) return false;
+  if (normalized === "localhost" || normalized.endsWith(".localhost")) return true;
+  if (normalized === "::1" || normalized === "0:0:0:0:0:0:0:1") return true;
+  if (normalized.startsWith("::ffff:")) {
+    const mapped = normalized.slice("::ffff:".length);
+    if (/^127\.\d+\.\d+\.\d+$/.test(mapped)) return true;
+  }
+  return /^127\.\d+\.\d+\.\d+$/.test(normalized);
+}
+
 function setLoginAccountPickerEnabled(enabled) {
   document.querySelectorAll("[data-account-picker-trigger]").forEach(button => {
     button.disabled = !enabled;
@@ -1529,8 +1541,7 @@ function selectedLoginAccount(role) {
 
 function isLocalAuthHintsHost(hostname = window.location.hostname) {
   hostname = String(hostname || "").trim().toLowerCase().replace(/^\[|\]$/g, "");
-  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1"
-    || hostname.endsWith(".localhost") || hostname === "uren-test.pathconsultancy.nl";
+  return isLoopbackHost(hostname) || hostname === "uren-test.pathconsultancy.nl";
 }
 
 function requestLocalLoginHints() {
@@ -9623,8 +9634,7 @@ function updateInvoiceIdentityPreview() {
 }
 
 function localAccountToolsAllowed(hostname = window.location.hostname) {
-  const normalized = String(hostname || "").trim().toLowerCase().replace(/^\[|\]$/g, "");
-  return normalized === "localhost" || normalized === "127.0.0.1" || normalized === "::1" || normalized.endsWith(".localhost");
+  return isLoopbackHost(hostname);
 }
 
 function testAccountToolsAllowed(hostname = window.location.hostname) {
