@@ -136,6 +136,7 @@ jobs:
     needs: [notify-team, pilot-awareness]
     if: ${{ always() && (needs.notify-team.result == 'success' || needs.notify-team.result == 'skipped') && needs.pilot-awareness.result == 'success' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     # De Playwright-suite draait serieel (workers: 1, gedeelde DB + PHP-dev-server
     # met de fingerprint-isolatiefixture). We versnellen zonder dekking te
     # verliezen door de suite over vier parallelle jobs te shard-en: elke shard
@@ -490,6 +491,7 @@ jobs:
     name: Promote Test
     needs: validate
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     environment: test
     # Zelfde shard-aanpak als Validate: de volledige suite draait, verdeeld over
     # vier parallelle jobs met elk een eigen mysql-service en php -S.

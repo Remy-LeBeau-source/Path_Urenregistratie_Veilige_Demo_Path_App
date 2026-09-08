@@ -81,6 +81,7 @@ test('[E2E-H-019] dubbel klikken maakt nooit dubbele statussen, facturen of mail
     if (await invoer.count()) {
       await invoer.fill('8');
       await invoer.press('Tab');
+      await page.locator('[data-hours-week-scope="all"]').click();
 
       const knop = page.locator('#submit-timesheet');
       // De eerste klik opent bewust de indienbevestiging. Bevestigen start de

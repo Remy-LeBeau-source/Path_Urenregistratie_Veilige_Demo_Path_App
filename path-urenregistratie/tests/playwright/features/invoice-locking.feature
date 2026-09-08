@@ -62,6 +62,14 @@ Feature: Facturen definitief maken en vergrendelen
     And cleanup de administrator-sessie wordt afgesloten
 
   @negative
+  Scenario: [INV-N-016] goedgekeurde uren zonder gereed klanturenstaat kunnen niet worden gelockt
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given facturen definitief maken en vergrendelen is voorbereid
+    When de flow voor INV-N-016 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat goedgekeurde uren zonder gereed klanturenstaat kunnen niet worden gelockt
+
+  @negative
   Scenario: [INV-N-012] gelijktijdige lock-requests leveren exact één winnaar
     # Testtechniek: Concurrency + toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 1

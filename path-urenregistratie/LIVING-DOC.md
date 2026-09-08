@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 417 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 433 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 417 unieke case-ID's
+- Playwright executable cases: 433 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 418 unieke case-ID's
+- Totaal executable cases: 434 unieke case-ID's
 - Playwright features: 27
 - Database features: 1
 - Playwright steps mappings: 27
 - Database steps mappings: 1
-- Uitvoeringen: 447
-- Niet-mobile projectuitvoeringen: 387
-- Mobile functionele cases: 30
-- Pixel 7 / Chromium-uitvoeringen: 30
-- iPhone 13 / WebKit-uitvoeringen: 30
+- Uitvoeringen: 468
+- Niet-mobile projectuitvoeringen: 398
+- Mobile functionele cases: 35
+- Pixel 7 / Chromium-uitvoeringen: 35
+- iPhone 13 / WebKit-uitvoeringen: 35
 
-De 30 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 417 Playwright-functionele cases in totaal 447 resultaten op: 387 + (30 x 2) = 447.
+De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 433 Playwright-functionele cases in totaal 468 resultaten op: 398 + (35 x 2) = 468.
 
 ## Documentatieketen
 
@@ -33,20 +33,23 @@ De 30 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 417 Playwri
 
 - Feature: `tests/playwright/features/accessibility.feature`
 - Source: `tests/playwright/accessibility.spec.ts`
-- Cases: 5
+- Cases: 6
 
 - [A11Y-H-001] loginformulier is volledig met het toetsenbord bruikbaar en correct gelabeld — Techniek: Toegankelijkheidsinspectie + toetsenbord-use-case · Assertions: 7
 - [A11Y-H-002] admin-dashboard hoofdnavigatie is toetsenbordbereikbaar met herkenbare namen — Techniek: Toegankelijkheidsinspectie + toetsenbord-use-case · Assertions: 4
 - [A11Y-H-003] lopende tekst blijft op een breed scherm leesbaar van regellengte — Techniek: Toegankelijkheidsinspectie + toetsenbord-use-case · Assertions: 2
 - [A11Y-H-004] een geopende dialoog is met het toetsenbord te bedienen en te sluiten — Techniek: Toegankelijkheidsinspectie + toetsenbord-use-case · Assertions: 7
 - [A11Y-H-005] elke interactieve elementsoort krijgt een zichtbare focusring — Techniek: Toegankelijkheidsinspectie + toetsenbord-use-case · Assertions: 5
+- [A11Y-H-006] de sluitknop van een scrollende dialoog blijft in beide skins in beeld — Techniek: Toegankelijkheidsinspectie + toetsenbord-use-case · Assertions: 21
 
 ### Organisatie-instellingen beheren
 
 - Feature: `tests/playwright/features/organization-settings.feature`
 - Source: `tests/playwright/admin-writes.spec.ts`
-- Cases: 25
+- Cases: 27
 
+- [ADM-WR-H-019] latere startdatum vraagt bevestiging en vermeldt dat historie bewaard blijft — Techniek: API-contract + equivalentieklasse · Assertions: 9
+- [ADM-WR-H-020] server berekent echte historische impact vóór een latere startdatum wordt opgeslagen — Techniek: API-contract + equivalentieklasse · Assertions: 12
 - [ADM-WR-H-001] admin kan company/settings server-led opslaan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 - [ADM-WR-H-002] admin kan beheerder server-led aanmaken en wijzigen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
 - [ADM-WR-H-014] een eigen tekst per ontvanger wordt bewaard en een leeg veld blijft erven — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
@@ -120,9 +123,9 @@ De 30 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 417 Playwri
 - Source: `tests/playwright/business-workflows-*.spec.ts`
 - Cases: 23
 
-- [E2E-H-018] iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF — Techniek: Equivalentieklassen · Assertions: 25
+- [E2E-H-018] iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF — Techniek: Equivalentieklassen · Assertions: 26
 - [E2E-N-020] een medewerker kan de Backoffice-keten niet uitvoeren en een weigering verandert niets — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 26
-- [E2E-N-018] documentlinks accepteren geen ongeautoriseerde gebruiker, clientpad of vrije bestandsnaam — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 19
+- [E2E-N-018] documentlinks accepteren geen ongeautoriseerde gebruiker, clientpad of vrije bestandsnaam — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 20
 - [E2E-H-001] herstelbasis houdt globale werkvoorraad stabiel bij maand- en filterwissels — Techniek: Equivalentieklassen · Assertions: 11
 - [E2E-H-002] rolwissel werkt zonder F5 en herstel blijft beschikbaar voor iedere rol op LOCAL/TEST — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
 - [E2E-H-003] herindiening verplaatst dezelfde actie van medewerker naar Backoffice — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 18
@@ -131,7 +134,7 @@ De 30 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 417 Playwri
 - [E2E-H-006] eenmalige wachtwoordlink geeft toegang en blokkeert hergebruik — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
 - [E2E-H-007] taakgestuurde goedkeuring blijft na serververversing afgerond — Techniek: Toestandsovergang · Assertions: 5
 - [E2E-H-008] urencontrole vraagt na oude versie opnieuw op en maakt daarna toch goedkeuren af — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
-- [E2E-N-019] een mislukte factuurpoging laat niets half achter en opnieuw proberen levert één factuur — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 19
+- [E2E-N-019] een mislukte factuurpoging laat niets half achter en opnieuw proberen levert één factuur — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 20
 - [E2E-H-016] ieder wijzigbaar Teambeheerveld heeft een aantoonbaar opslag- of uitzonderingscontract — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 32
 - [E2E-H-019] dubbel klikken maakt nooit dubbele statussen, facturen of mails — Techniek: Toestandsovergang · Assertions: 23
 - [E2E-H-022] iedere case laat database en private opslag aantoonbaar schoon achter — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 20
@@ -173,7 +176,7 @@ De 30 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 417 Playwri
 
 - Feature: `tests/playwright/features/dashboard.feature`
 - Source: `tests/playwright/dashboard.spec.ts`
-- Cases: 33
+- Cases: 36
 
 - [DASH-H-001] admin dashboard opent zonder console errors — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [DASH-H-002] employee dashboard opent zonder console errors — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 1
@@ -196,18 +199,21 @@ De 30 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 417 Playwri
 - [DASH-H-004] terugkeren naar medewerkerdashboard ververst de uren en behoudt maandlabels bij themawissel — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 - [DASH-H-005] medewerker ziet open maanden compact en kan direct naar de juiste maand springen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [DASH-H-014] medewerker krijgt de eerstvolgende concrete actie met juiste maand en taakroute — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 22
-- [DASH-N-015] medewerkerprioriteit kiest correctie boven document en toont niets als alles klaar is — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 14
+- [DASH-N-015] medewerkerprioriteit kiest correctie boven document en toont niets als alles klaar is — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 15
 - [DASH-N-016] correctieactie ververst een verborgen rooster uit een eerdere maand — Techniek: Toestandsovergang · Assertions: 11
 - [DASH-N-017] beheerderdashboard toont een laadtoestand tot de eerste werkvoorraad-sync — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 7
 - [DASH-N-018] medewerkerdashboard toont een laadtoestand tot de eerste werkvoorraad-sync — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
-- [DASH-H-006] vooruit bladeren maakt geen lege toekomstmaand zichtbaar als medewerkeractie — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
-- [DASH-H-007] dashboardknop behoudt de geldige maand en medewerkeroverzichten — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
+- [DASH-H-006] medewerker kan geen toekomstige maand openen of als werkactie creëren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 9
+- [DASH-H-007] september toont alleen historie vanaf de persoonlijke startmaand en nooit oktober — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 9
+- [DASH-H-024] startdatum verbergt procesmaand zonder uren of klanturenstaatactie te wissen — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 13
 - [DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels — Techniek: Equivalentieklassen · Assertions: 30
 - [DASH-H-019] werkvoorraadhydratatie negeert toekomstperioden en begrenst parallelle reads — Techniek: Equivalentieklassen · Assertions: 6
 - [DASH-H-020] de actieteller benoemt dat de rij over alle maanden loopt — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 7
 - [DASH-N-019] een achtergrond-hertekening sluit het geopende profielmenu niet — Techniek: Toestandsovergang · Assertions: 10
 - [DASH-H-022] beheerder kan met de browser-terug/-vooruit-knop door alle eigen schermen navigeren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [DASH-H-023] medewerker kan met de browser-terug/-vooruit-knop door alle eigen schermen navigeren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
+- [DASH-N-026] het medewerkerdashboard blijft nooit op "Werkvoorraad laden" hangen, ook niet als de eerste serversync faalt — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
+- [DASH-N-027] het profielmenu verbergt "Ander account of rol" bij een echte login — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 
 ### Relationele database-integriteit
 
@@ -283,7 +289,7 @@ De 30 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 417 Playwri
 
 - Feature: `tests/playwright/features/invoice-locking.feature`
 - Source: `tests/playwright/invoice-lock.spec.ts`
-- Cases: 8
+- Cases: 9
 
 - [INV-H-004] admin lockt approved timesheet naar definitieve immutable factuur — Techniek: Concurrency + toestandsovergang · Assertions: 26
 - [INV-N-015] definitief gefactureerde uren kunnen niet voor correctie worden heropend — Techniek: Toestandsovergang · Assertions: 9
@@ -291,6 +297,7 @@ De 30 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 417 Playwri
 - [INV-N-009] medewerker mag factuur niet finaliseren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
 - [INV-N-010] niet-goedgekeurde urenstaat kan niet worden gelockt — Techniek: Toestandsovergang · Assertions: 3
 - [INV-N-011] tweede lock-oproep op dezelfde factuur wordt geblokkeerd — Techniek: Concurrency + toestandsovergang · Assertions: 5
+- [INV-N-016] goedgekeurde uren zonder gereed klanturenstaat kunnen niet worden gelockt — Techniek: Toestandsovergang · Assertions: 4
 - [INV-N-012] gelijktijdige lock-requests leveren exact één winnaar — Techniek: Concurrency + toestandsovergang · Assertions: 1
 - [INV-N-013] anonieme gebruiker kan factuur-PDF niet downloaden — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2
 
@@ -318,12 +325,13 @@ De 30 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 417 Playwri
 
 - Feature: `tests/playwright/features/invoices.feature`
 - Source: `tests/playwright/invoices.spec.ts`
-- Cases: 23
+- Cases: 24
 
 - [INV-H-001] admin facturen zichtbaar en console errors 0 — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [INV-H-013] documentarchief toont factuur en klanturenstaat zonder bestanden vooraf te laden — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 11
 - [INV-N-014] ontbrekende klanturenstaat accepteert uitsluitend PDF JPG of PNG — Techniek: Toestandsovergang · Assertions: 5
-- [INV-H-020] Backoffice kan een ontbrekende urenstaat extern bevestigen en terugdraaien — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 23
+- [INV-N-025] factuurcontrole blokkeert zolang de klanturenstaat ontbreekt — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
+- [INV-H-020] Backoffice kan een ontbrekende urenstaat extern bevestigen en terugdraaien — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 24
 - [INV-H-021] goedgekeurde septemberuren maken de ontbrekende serverfactuur bij afronden aan — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
 - [INV-H-018] externe factuur slaat PDF JPG en PNG via de factuur-API op — Techniek: Equivalentieklassen · Assertions: 5
 - [INV-N-017] medewerker mag geen externe factuur uploaden — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
@@ -348,10 +356,10 @@ De 30 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 417 Playwri
 
 - Feature: `tests/playwright/features/mobile.feature`
 - Source: `tests/playwright/mobile-ui.spec.ts`
-- Cases: 22
+- Cases: 24
 
 - [MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikbaar — Techniek: Responsive viewport + end-to-end use-case · Assertions: 31
-- [MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documentupload bereiken — Techniek: Responsive viewport + end-to-end use-case · Assertions: 14
+- [MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documentupload bereiken — Techniek: Responsive viewport + end-to-end use-case · Assertions: 16
 - [MOB-H-003] mobiele correctie herindiening en administratieve goedkeuring zijn bereikbaar — Techniek: Responsive viewport + end-to-end use-case · Assertions: 10
 - [MOB-N-004] mobiele facturen touch targets en modals blijven binnen viewport — Techniek: Responsive viewport + end-to-end use-case · Assertions: 13
 - [MOB-H-005] mobiele verzendadministratie blijft leesbaar en toont geen geheime inhoud — Techniek: Responsive viewport + end-to-end use-case · Assertions: 15
@@ -372,6 +380,8 @@ De 30 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 417 Playwri
 - [MOB-H-020] het manifest gebruikt overal dezelfde navy statusbalkkleur — Techniek: Responsive viewport + end-to-end use-case · Assertions: 6
 - [MOB-H-021] de service worker en de iOS-beginschermmeta vormen een geldig installatiecontract — Techniek: Responsive viewport + end-to-end use-case · Assertions: 11
 - [MOB-H-022] de mobiele Home-knop zet de maandkiezer terug op de actuele maand — Techniek: Responsive viewport + end-to-end use-case · Assertions: 6
+- [MOB-H-023] het sluitkruisje van een lange dialoog blijft op de telefoon in beeld — Techniek: Responsive viewport + end-to-end use-case · Assertions: 19
+- [MOB-H-024] een net ingelogde medewerker ziet op de telefoon een volledig geladen dashboard, ook als de eerste sync-afronding hapert — Techniek: Responsive viewport + end-to-end use-case · Assertions: 7
 
 ### Meldingen beheren
 
@@ -443,16 +453,19 @@ De 30 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 417 Playwri
 
 - Feature: `tests/playwright/features/pilot-page.feature`
 - Source: `tests/playwright/pilot-page.spec.ts`
-- Cases: 8
+- Cases: 11
 
-- [PILOT-H-001] beide 1919-portals leven naast de bestaande app — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 9
-- [PILOT-H-002] medewerker schrijft uren via dezelfde API en draagt de maand over — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
-- [PILOT-H-003] rechtstreeks gemaild blijft oranje tot Backoffice extern bevestigt — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 13
-- [PILOT-H-004] PDF-aanlevering komt bij Backoffice ter controle en kan worden goedgekeurd — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
-- [PILOT-H-005] Backoffice-correctie maakt de ingediende maand weer bewerkbaar — Techniek: Toestandsovergang · Assertions: 5
-- [PILOT-H-006] maandkeuze blijft in de sessie en uitloggen herstelt de actuele maand — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 5
-- [PILOT-N-001] rollen blijven ook op de pilot-URLs strikt gescheiden — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
-- [PILOT-N-002] beide pilots blijven bedienbaar zonder horizontale overflow op telefoon — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 7
+- [PILOT-H-001] beide pilotpagina’s leven naast een ongewijzigde app — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 10
+- [PILOT-H-002] medewerker-pilot toont de 1414-look met werkende maand en invoer — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 18
+- [PILOT-H-006] medewerker-pilot: uren invullen zonder voorgevulde nul, week indienen opent de volgende week — Techniek: Grenswaardenanalyse · Assertions: 9
+- [PILOT-H-007] medewerker-pilot: afgeronde maand toont vergrendelde weken en verzonden klanturenstaat — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 10
+- [PILOT-H-008] medewerker-pilot: snelkeuze zet uren in één tik, Opslaan bevestigt zonder in te dienen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
+- [PILOT-H-009] Backoffice-pilot: een medewerkerrij aanklikken wisselt het verhaalpaneel — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
+- [PILOT-H-003] Backoffice-pilot reproduceert de 1414/1919-ADMIN-mockup 1-op-1 — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
+- [PILOT-H-004] Backoffice-pilot: geselecteerde rij krijgt een subtiele markering, geen groene balk links — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 5
+- [PILOT-H-005] Backoffice-pilot: verhaalpaneel toont de vier story-kaarten met statuspillen en de vervolgknop — Techniek: Toestandsovergang · Assertions: 6
+- [PILOT-N-001] elke pilot-URL toont alleen de onderdelen van zijn eigen rol — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
+- [PILOT-N-002] beide pilots blijven zonder horizontale overflow op telefoon — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
 
 ### Maandperiodes beheren
 
@@ -475,7 +488,7 @@ De 30 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 417 Playwri
 
 - Feature: `tests/playwright/features/production-safety.feature`
 - Source: `tests/playwright/production-safety.spec.ts`
-- Cases: 21
+- Cases: 22
 
 - [SAFE-H-001] login picker vult alleen lokaal demo-wachtwoord in wanneer hints beschikbaar zijn — Techniek: API-contract + equivalentieklasse · Assertions: 9
 - [SAFE-H-012] TEST toont accountkeuze met autofill en een afgeschermde gedeelde reset — Techniek: Beslissingstabel + equivalentieklassen + toestandsovergang · Assertions: 19
@@ -490,25 +503,27 @@ De 30 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 417 Playwri
 - [SAFE-N-004] install.php en migrate.php bevatten productieguards — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [SAFE-N-008] lokale productieconfig is via HTTP expliciet geblokkeerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
 - [SAFE-H-004] config.example.php bevat mail.enabled=false als standaard — Techniek: API-contract + equivalentieklasse · Assertions: 5
-- [SAFE-N-005] live login verbergt lokale accountkeuze en valt gesloten uit zonder authservice — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 11
+- [SAFE-N-005] live login verbergt lokale accountkeuze en valt gesloten uit zonder authservice — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 13
 - [SAFE-N-006] destructieve DB-testsetup weigert productie en niet-testdatabases — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 15
 - [SAFE-N-007] productieconfigurator verwerkt DB-secret uitsluitend interactief en fail-closed — Techniek: Toestandsovergang · Assertions: 14
 - [SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 25
 - [SAFE-H-010] echte TEST-mail vereist opt-in en een ontvangers-whitelist — Techniek: API-contract + equivalentieklasse · Assertions: 16
 - [SAFE-H-013] TEST-mailsandbox opent atomisch voor twee toegestane TEST-ontvangers (sink + CC) — Techniek: API-contract + equivalentieklasse · Assertions: 27
 - [SAFE-H-006] eerste productieorganisatie wordt gevalideerd en zonder overschrijven ingericht — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 18
-- [SAFE-H-011] groene main-pipeline rolt exact dezelfde release veilig uit naar productie — Techniek: Toestandsovergang + foutinjectie + beslissingstabel · Assertions: 23
+- [SAFE-H-011] groene main-pipeline rolt exact dezelfde release veilig uit naar productie — Techniek: Toestandsovergang + foutinjectie + beslissingstabel · Assertions: 28
+- [SAFE-H-016] de eerste 1.x-uitrol normaliseert PROD naar de afgesproken baseline en controleert die streng — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 32
 
 ### Rollen, rechten en gegevensafscherming
 
 - Feature: `tests/playwright/features/roles-authorization.feature`
 - Source: `tests/playwright/roles-api.spec.ts`
-- Cases: 4
+- Cases: 5
 
 - [ROLE-N-003] zonder sessie geeft protected API 401 — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2
 - [ROLE-H-001] admin ziet volledige data — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [ROLE-H-002] employee ziet alleen eigen data — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [ROLE-N-004] een medewerker krijgt 403 op elke beheerder-only schrijfactie — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
+- [ROLE-N-005] medewerker kan maanden voor de startdatum en na de huidige maand ook niet via de API openen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 
 ### Authenticatie- en API-beveiliging
 
@@ -547,9 +562,9 @@ De 30 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 417 Playwri
 
 - Feature: `tests/playwright/features/correction-approval-ui.feature`
 - Source: `tests/playwright/timesheet-review-ui.spec.ts`
-- Cases: 9
+- Cases: 10
 
-- [TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en heropening blijven servergestuurd — Techniek: Toestandsovergang · Assertions: 29
+- [TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en heropening blijven servergestuurd — Techniek: Toestandsovergang · Assertions: 32
 - [TS-REV-UI-H-009] ingediende urenstaat blijft vergrendeld tot Backoffice een correctie vraagt — Techniek: Toestandsovergang · Assertions: 5
 - [TS-REV-UI-H-010] submitknop is verborgen bij goedgekeurde urenstaat — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
 - [TS-REV-UI-N-011] localhost kan demo-uren zonder serverversie voor correctie terugsturen — Techniek: Toestandsovergang · Assertions: 4
@@ -558,6 +573,7 @@ De 30 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 417 Playwri
 - [TS-REV-UI-N-013] Goedkeuringen toont een laadtoestand tot de serverwerkvoorraad binnen is — Techniek: Toestandsovergang · Assertions: 9
 - [TS-REV-UI-N-014] verlof en ziekte staan uit met een duidelijke uitleg — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
 - [TS-REV-UI-H-012] beheerder zet verlof en ziekte aan; de medewerker kan ze dan zelf invullen en het blijft na F5 staan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 14
+- [TS-REV-UI-H-013] een week kan alleen worden opgeslagen en de hele maand kan worden ingediend — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 7
 
 ### Urenregistratie verwerken
 

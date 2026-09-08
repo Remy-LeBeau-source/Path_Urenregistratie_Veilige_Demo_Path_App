@@ -1,6 +1,7 @@
 import { expect, request as playwrightRequest, test, type APIRequestContext } from '@playwright/test';
 import { AuthApi } from './api/AuthApi';
 import { InvoiceApi } from './api/InvoiceApi';
+import { CustomerTimesheetApi } from './api/CustomerTimesheetApi';
 import { TimesheetApi } from './api/TimesheetApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
 
@@ -53,8 +54,9 @@ type SubmittedTimesheet = {
   billableHours: number;
 };
 
-async function createSubmittedTimesheet(request: APIRequestContext, billableHours: number): Promise<SubmittedTimesheet> {
+async function createSubmittedTimesheet(request: APIRequestContext, billableHours: number, customerTimesheetReady = true): Promise<SubmittedTimesheet> {
   const authApi = new AuthApi(request);
+  const customerTimesheetApi = new CustomerTimesheetApi(request);
   const timesheetApi = new TimesheetApi(request);
 
   await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
@@ -98,6 +100,18 @@ async function createSubmittedTimesheet(request: APIRequestContext, billableHour
   expect(employeeId).toBeGreaterThan(0);
   expect(timesheetId).toBeGreaterThan(0);
   expect(version).toBeGreaterThan(0);
+
+  if (customerTimesheetReady) {
+    const customerTimesheet = await customerTimesheetApi.write({
+      action: 'mark_skipped',
+      period,
+      employeeId,
+      reviewNote: 'De klanturenstaat is al rechtstreeks naar Path Backoffice gemaild.',
+    });
+    expect(customerTimesheet.status).toBe(200);
+    expect(customerTimesheet.body.ok).toBe(true);
+    expect(customerTimesheet.body.customer_timesheet.status).toBe('skipped');
+  }
 
   await authApi.logout();
 
@@ -332,6 +346,21 @@ test('[INV-N-011] tweede lock-oproep op dezelfde factuur wordt geblokkeerd', asy
   await test.step('And cleanup de administrator-sessie wordt afgesloten', async () => {
     await authApi.logout();
   });
+});
+
+test('[INV-N-016] goedgekeurde uren zonder gereed klanturenstaat kunnen niet worden gelockt', async ({ request }) => {
+  const authApi = new AuthApi(request);
+  const invoiceApi = new InvoiceApi(request);
+  const submitted = await createSubmittedTimesheet(request, 12, false);
+  const approved = await approveTimesheet(request, submitted);
+
+  await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+  const response = await invoiceApi.lock({ action: 'lock', timesheetId: approved.timesheetId });
+  expect(response.status).toBe(409);
+  expect(response.body.ok).toBe(false);
+  expect(response.body.error).toBe('customer-timesheet-required');
+  expect(response.body.message).toContain('klanturenstaat');
+  await authApi.logout();
 });
 
 test('[INV-N-012] gelijktijdige lock-requests leveren exact één winnaar', async () => {

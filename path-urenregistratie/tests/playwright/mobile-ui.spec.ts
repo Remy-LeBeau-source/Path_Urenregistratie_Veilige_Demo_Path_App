@@ -341,6 +341,7 @@ async function submitTimesheetAndWaitForServer(page: Page): Promise<void> {
     }
   });
 
+  await page.locator('[data-hours-week-scope="all"]').click();
   await page.locator('#submit-timesheet').click();
   await page.locator('#modal-confirm').click();
   expect((await submitResponse).ok()).toBe(true);

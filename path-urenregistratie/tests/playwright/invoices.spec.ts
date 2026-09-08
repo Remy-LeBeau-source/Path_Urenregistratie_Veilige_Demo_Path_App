@@ -104,6 +104,44 @@ test('[INV-N-014] ontbrekende klanturenstaat accepteert uitsluitend PDF JPG of P
   await expect(page.locator('#modal')).toBeVisible();
 });
 
+test('[INV-N-025] factuurcontrole blokkeert zolang de klanturenstaat ontbreekt', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  const invoicesPage = new InvoicesPage(page);
+  await page.route('**/server/api/invoices.php?period=*', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ ok: true, items: [{
+      id: 925, timesheet_id: 825, employee_id: 4, assignment_id: 4,
+      invoice_number: 'TEST-MO5B-001', employee_name: 'Shawn-Douglas Nahar', period_key: '2026-09',
+      status: 'ready', timesheet_status: 'invoiced', total: 1210, billable_hours: 10,
+      hourly_rate: 100, vat_percentage: 21, locked: true,
+      invoice_download_url: '/server/api/invoices.php?action=download&invoice_id=925',
+      customer_timesheet_status: 'missing', customer_timesheet_note: null,
+      customer_timesheet_download_url: null,
+    }] }),
+  }));
+  await page.route('**/server/api/customer-timesheets.php*', async route => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true, found: false, period: '2026-09', employee_id: 4, assignment_id: 4, customer_timesheet: null }),
+      });
+      return;
+    }
+    await route.fallback();
+  });
+
+  await loginPage.open();
+  await loginPage.loginAsAdmin();
+  await invoicesPage.open();
+  await invoicesPage.selectPeriod('2026-09');
+  await expect(page.locator('[data-simulate-invoice="4"]')).toBeVisible();
+  await page.locator('[data-simulate-invoice="4"]').click();
+  await expect(page.locator('#toast')).toContainText('Verzending geblokkeerd');
+  await expect(page.locator('#modal')).toBeHidden();
+});
+
 test('[INV-H-020] Backoffice kan een ontbrekende urenstaat extern bevestigen en terugdraaien', async ({ page }) => {
   const loginPage = new LoginPage(page);
   const invoicesPage = new InvoicesPage(page);
@@ -266,10 +304,12 @@ test('[INV-H-021] goedgekeurde septemberuren maken de ontbrekende serverfactuur 
     await loginPage.loginAsAdmin();
     await page.evaluate(() => {
       const appWindow = window as unknown as {
-        applyTimesheetApiPayload: (employeeId: number, period: string, payload: unknown) => unknown;
+        applyTimesheetApiPayload: (employeeId: number, period: string, payload: unknown) => {
+          customerTimesheet?: { status?: string; reviewNote?: string };
+        } | null;
         showInvoiceDeliveryCheck: (employeeId: number, period: string) => boolean;
       };
-      appWindow.applyTimesheetApiPayload(1, '2026-09', {
+      const record = appWindow.applyTimesheetApiPayload(1, '2026-09', {
         id: 820,
         status: 'approved',
         version: 3,
@@ -279,6 +319,12 @@ test('[INV-H-021] goedgekeurde septemberuren maken de ontbrekende serverfactuur 
         sickness_hours: 0,
         day_entries: [{ work_date: '2026-09-01', hours: 8 }, { work_date: '2026-09-02', hours: 8 }, { work_date: '2026-09-03', hours: 4 }],
       });
+      if (record) {
+        record.customerTimesheet = {
+          status: 'skipped',
+          reviewNote: 'Extern bevestigd: Uren per e-mail goedgekeurd',
+        };
+      }
       appWindow.showInvoiceDeliveryCheck(1, '2026-09');
     });
     await expect(page.locator('#modal-title')).toContainText('September 2026');

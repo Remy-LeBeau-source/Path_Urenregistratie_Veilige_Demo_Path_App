@@ -10,7 +10,7 @@ Feature: Correcties en goedkeuringen behandelen
   @happy
   Scenario: [TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en heropening blijven servergestuurd
     # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 29
+    # Aantoonbare Playwright-assertions in deze case: 32
     Given de medewerker een urenstaat indient in de browser
     When de administrator een correctieverzoek plaatst
     Then ziet de medewerker het correctieverzoek en dient opnieuw in
@@ -88,10 +88,8 @@ Feature: Correcties en goedkeuringen behandelen
 
   @happy
   Scenario: [TS-REV-UI-H-013] een week kan alleen worden opgeslagen en de hele maand kan worden ingediend
-    # Testtechniek: Beslissingstabel weergave × toegestane actie
-    # Aantoonbare Playwright-assertions in deze case: 9
-    Given de medewerker Mijn uren met een bewerkbare maand opent
-    When de medewerker één week kiest en Week opslaan gebruikt
-    Then is Maand indienen verborgen en wordt alleen het concept opgeslagen
-    When de medewerker Hele maand kiest
-    Then worden Maand opslaan en Maand indienen zichtbaar
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given correcties en goedkeuringen behandelen is voorbereid
+    When de flow voor TS-REV-UI-H-013 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat een week kan alleen worden opgeslagen en de hele maand kan worden ingediend

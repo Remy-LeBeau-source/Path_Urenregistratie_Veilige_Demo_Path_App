@@ -20,7 +20,7 @@ Then("waarschuwt de app vóór opslaan over maand, uren en open acties zonder ve
 And("pas expliciete bevestiging verstuurt de tweede, gemarkeerde write");
 Given("de administrator is ingelogd en een medewerker heeft proceshistorie vóór september");
 When("de startdatum zonder bevestiging naar september wordt verplaatst");
-Then("antwoordt de echte server met impact, nul verwijdering en blijft de startdatum ongewijzigd");
+Then("de geweigerde eerste poging heeft de startdatum niet gewijzigd");
 Given("organisatie-instellingen beheren is voorbereid");
 When("de flow voor ADM-WR-H-001 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat admin kan company/settings server-led opslaan");

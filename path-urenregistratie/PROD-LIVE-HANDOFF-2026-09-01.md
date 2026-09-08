@@ -1,5 +1,9 @@
 # Handoff — PROD-livevoorbereiding 1 september 2026
 
+> Historisch draaiboek. De actuele release- en MO5b-status staat in
+> `MASTERCHECKLIST.md` en `COPILOT_HANDOFF.md`. Dit document blijft alleen
+> geldig voor de expliciete PROD-grenzen en productieacceptatiestappen.
+
 ## Doel
 
 Rond versie `0.9.156` gecontroleerd af op TEST en bereid daarna de productiepilot voor. Commit en

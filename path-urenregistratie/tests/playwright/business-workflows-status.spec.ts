@@ -54,6 +54,7 @@ test('[E2E-H-017] de volledige toegestane urenstatusketen bewaakt na iedere writ
     await eersteInvoer.fill('8');
     await eersteInvoer.press('Tab');
 
+    await page.locator('[data-hours-week-scope="all"]').click();
     const schrijf = page.waitForResponse(response =>
       response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
     await page.locator('#submit-timesheet').click();

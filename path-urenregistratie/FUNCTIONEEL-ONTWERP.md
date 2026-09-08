@@ -112,7 +112,7 @@ een vertraagde eerdere read mag een nieuwere status niet terugzetten.
 | opnieuw aanleveren | medewerker dient nieuw document in | ontvangen/received | Backoffice |
 | ontvangen | beheerder keurt goed | goedgekeurd/approved | Backoffice voor brokerroute |
 | goedgekeurd | brokerroute gecontroleerd | verzonden/sent | afgerond |
-| toegestaan alternatief | document wordt gemotiveerd overgeslagen | overgeslagen/skipped | volgens factuurbeleid |
+| toegestaan alternatief | medewerker registreert rechtstreeks gemaild met reden | overgeslagen/skipped | gereed voor factuur; optionele externe controle blijft Backoffice |
 | ontbreekt/concept | Backoffice legt externe goedkeuring met verplichte reden vast | extern bevestigd/skipped | afgerond voor documentcontrole |
 
 Een geldige PDF blijft ongewijzigd; een geldige JPG of PNG wordt bij upload server-side naar PDF
@@ -122,17 +122,19 @@ dan ongewijzigd. Het opgeslagen document blijft voor de medewerker en Backoffice
 **Klanturenstaat bekijken** inline als PDF controleerbaar, met een effectieve `.pdf`-bestandsnaam —
 ook na herladen, opnieuw inloggen of wisselen van maand. Een historisch rauw afbeeldingsbestand kan
 nog worden bekeken, maar moet opnieuw als PDF/JPG/PNG worden aangeleverd voordat Backoffice het kan
-goedkeuren of mailen. Een factuur mag alleen zonder klanturenstaat verder als de opdracht dit
-expliciet toestaat.
+goedkeuren of mailen. Een klanturenstaat is verplicht vóór **Controle afronden**. `received`,
+`approved`, `sent`, `sent_to_broker` en `skipped` met reden zijn gereed voor de factuurblokkade;
+`missing`, `draft` en `resubmit` blokkeren de factuur. Externe bevestiging is een aparte,
+optionele Backoffice-actie.
 
 Als de klant geen apart urenstaatbestand levert maar de uren wel aantoonbaar per e-mail, in een
 klantportaal of rechtstreeks aan Backoffice goedkeurt, kan Backoffice in het Documentarchief
 **Extern bevestigd** kiezen. Een verplichte standaardreden of gemotiveerde optie **Anders** wordt
 met gebruiker en tijdstip bewaard. De urenstaat telt daarna groen mee in de maandcontrole; Backoffice
 kan de bevestiging terugdraaien, waarna het document opnieuw als ontbrekend blokkeert.
-De registratie **Al rechtstreeks gemaild** door een medewerker is nadrukkelijk nog geen
-Backoffice-bevestiging: die blijft oranje en blokkerend totdat Backoffice het bewijs controleert en
-zelf **Extern bevestigd** vastlegt.
+De registratie **Al rechtstreeks gemaild** door een medewerker is nog geen Backoffice-bevestiging,
+maar maakt de klanturenstaat wel gereed voor factuurafronding. De aparte externe controle blijft
+zichtbaar als optionele Backoffice-actie en kan later worden teruggedraaid.
 
 ## 7. Factuur- en mailketen
 

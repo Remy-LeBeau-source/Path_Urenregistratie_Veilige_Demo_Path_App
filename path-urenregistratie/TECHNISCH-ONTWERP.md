@@ -74,10 +74,17 @@ Per medewerker/periode worden taken deterministisch afgeleid:
 - `draft` → `hours-draft`, eigenaar medewerker;
 - `correction` → `hours-correction`, eigenaar medewerker;
 - `submitted` → `hours-review`, eigenaar Backoffice;
-- klanturenstaat `missing|draft|resubmit` → eigenaar medewerker;
-- klanturenstaat `received` → controle door Backoffice;
-- klanturenstaat `approved` met brokerroute → brokercontrole door Backoffice;
+- klanturenstaat `missing|draft|resubmit` → eigenaar medewerker en harde factuurblokkade;
+- klanturenstaat `received` → documentcontrole door Backoffice, maar factuurafronding is toegestaan;
+- klanturenstaat `skipped` met een vastgelegde reden → document is gereed voor factuurafronding;
+- klanturenstaat `approved` met brokerroute → aparte brokercontrole door Backoffice;
 - goedgekeurde/gefactureerde uren zonder volledig verzendbewijs → factuur-/verzendcontrole door Backoffice.
+
+Een klanturenstaat is verplicht voor iedere medewerker waarvoor dit document wordt verwacht.
+`received`, `approved`, `sent`, `sent_to_broker` en `skipped` gelden als gereed voor de
+factuurblokkade; `missing`, `draft` en `resubmit` blokkeren `Controle afronden` zowel in de
+browser als in de server-API. Externe bevestiging is een afzonderlijke, optionele Backoffice-
+actie en is geen voorwaarde om de factuur vrij te geven.
 
 Een goedgekeurde urenstaat hoeft nog geen rij in `invoices` te hebben. De frontend bewaart daarom
 het server-`timesheet_id` uit de urenstaatreadback. Als `Controle afronden` nog geen factuurrij
@@ -128,10 +135,10 @@ Taak-ID's zijn stabiel opgebouwd uit type, periode en medewerker. Hierdoor kunne
 - De beheeractie `confirm_external` is alleen voor `administrator`, vereist `review_note` en schrijft
   auditbaar status `skipped`, `reviewed_by` en `reviewed_at`. De server markeert deze beheerbevestiging
   met het vaste prefix `Extern bevestigd:`. Als nog geen klanturenstaatrecord bestaat, maakt de endpoint
-  exact één record onder de unieke sleutel periode + medewerker + opdracht. Alleen `skipped` mét dat
-  beheerprefix geldt voor documentcompleetheid als groen alternatief; een medewerkerregistratie
-  **Al rechtstreeks gemaild** blijft oranje en blokkerend. `restore_missing` zet de beheerbevestiging
-  voor medewerker of beheerder expliciet terug naar ontbrekend.
+  exact één record onder de unieke sleutel periode + medewerker + opdracht. Zowel de medewerkerkeuze
+  **Al rechtstreeks gemaild** als de beheerbevestiging geldt met vastgelegde reden als gereed voor de
+  factuurblokkade; de externe controle blijft daarna afzonderlijk zichtbaar. `restore_missing` zet de
+  registratie voor medewerker of beheerder expliciet terug naar ontbrekend.
 
 De eerste release met exact versienummer `1.0.0` voert vóór backup en migratie aanvullend
 `production-preflight.php --live --initial-baseline` uit. Die read-only gate vereist de afgesproken

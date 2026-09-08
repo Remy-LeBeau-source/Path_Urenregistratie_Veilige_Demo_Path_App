@@ -192,7 +192,7 @@ Feature: Dashboard en open werkvoorraad
   @negative
   Scenario: [DASH-N-015] medewerkerprioriteit kiest correctie boven document en toont niets als alles klaar is
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 14
+    # Aantoonbare Playwright-assertions in deze case: 15
     Given alleen augustus zowel een urencorrectie als documentherindiening vraagt
     When de flow voor DASH-N-015 wordt uitgevoerd
     Then staat de urencorrectie vóór het document en kloppen de totalen
@@ -225,23 +225,23 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-006] medewerker kan geen toekomstige maand openen of als werkactie creëren
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 8
+    # Aantoonbare Playwright-assertions in deze case: 9
     Given een medewerker op de actuele kalendermaand zonder toekomstige werkactie
     When de medewerker de volgende maand probeert te openen
     Then blijft september buiten de selectie en medewerkerwerkvoorraad
 
   @happy
   Scenario: [DASH-H-007] september toont alleen historie vanaf de persoonlijke startmaand en nooit oktober
-    # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 4
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 9
     Given een medewerker die in september sinds augustus in dienst is
     When de medewerker augustus opent en daarna juli en oktober probeert
     Then blijven juli en oktober dicht en is oktober geen werkactie
 
-  @happy @regression
+  @happy
   Scenario: [DASH-H-024] startdatum verbergt procesmaand zonder uren of klanturenstaatactie te wissen
-    # Testtechniek: ISTQB-toestandsovergang + grenswaardeanalyse rond de persoonlijke startmaand
-    # Aantoonbare Playwright-assertions in deze case: 14
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 13
     Given Beheer de startdatum eerder heeft gezet en juli nog leeg was
     When de medewerker uren invult terwijl de klanturenstaat nog openstaat
     Then een latere startdatum verbergt de maand en beide acties maar wist niets
@@ -303,7 +303,7 @@ Feature: Dashboard en open werkvoorraad
 
   @negative
   Scenario: [DASH-N-026] het medewerkerdashboard blijft nooit op "Werkvoorraad laden" hangen, ook niet als de eerste serversync faalt
-    # Testtechniek: Foutinjectie + tijdgebonden herstel
+    # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 5
     Given de medewerker logt voor het eerst in terwijl de eerste werkvoorraad-sync mislukt
     When de hydratie via het vangnet afrondt
@@ -311,8 +311,8 @@ Feature: Dashboard en open werkvoorraad
 
   @negative
   Scenario: [DASH-N-027] het profielmenu verbergt "Ander account of rol" bij een echte login
-    # Testtechniek: Productiepresentatie + equivalentieklasse demo/echt
-    # Aantoonbare Playwright-assertions in deze case: 3
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 4
     Given een echt ingelogde medewerker
     When de medewerker het profielmenu opent
-    Then is er geen "Ander account of rol" en wel gewoon Uitloggen
+    Then wordt met Playwright-assertions bevestigd dat het profielmenu verbergt "Ander account of rol" bij een echte login

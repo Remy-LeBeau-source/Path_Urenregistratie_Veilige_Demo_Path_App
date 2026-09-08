@@ -11,7 +11,7 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
   @happy
   Scenario: [E2E-H-018] iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF
     # Testtechniek: Equivalentieklassen
-    # Aantoonbare Playwright-assertions in deze case: 25
+    # Aantoonbare Playwright-assertions in deze case: 26
     Given een goedgekeurde urenstaat klaarstaat voor facturatie
     When Backoffice de factuur definitief maakt
     Then levert de factuurbijlage een echte, geldige PDF met veilige headers
@@ -32,7 +32,7 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
   @negative
   Scenario: [E2E-N-018] documentlinks accepteren geen ongeautoriseerde gebruiker, clientpad of vrije bestandsnaam
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 19
+    # Aantoonbare Playwright-assertions in deze case: 20
     Given een geldige factuurbijlage voor Backoffice bestaat
     When een uitgelogde browser dezelfde documentroute probeert
     And kan geen clientpad of vrije bestandsnaam worden afgedwongen
@@ -110,7 +110,7 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
   @negative
   Scenario: [E2E-N-019] een mislukte factuurpoging laat niets half achter en opnieuw proberen levert één factuur
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 19
+    # Aantoonbare Playwright-assertions in deze case: 20
     Given een goedgekeurde urenstaat en de voorstatus is vastgelegd
     When de eerste factuurpoging gecontroleerd faalt
     Then blijven taak, status, versie, factuur en deliveries onaangeroerd

@@ -65,14 +65,14 @@ vóór de startmaand en na de actuele maand met `403 period-not-accessible` stop
 - Boekhouder, EasySalary en extra ontvangers worden centraal beheerd en per medewerker aangevinkt.
 - Zelf aangemaakte extra ontvangers kunnen na waarschuwing worden verwijderd; Boekhouder en EasySalary blijven beschermde systeemrollen en kunnen worden gedeactiveerd.
 - **Ontvangt mail** en **Factuur meesturen** zijn per medewerker voor de broker en iedere centrale ontvanger afzonderlijk instelbaar.
-- De app maakt zelf geen klanturenstaat. Een medewerker kan het officiële klantdocument later en los van de urenregistratie als PDF, JPG of PNG toevoegen. JPG en PNG worden automatisch als PDF opgeslagen.
+- De app maakt zelf geen klanturenstaat. Een medewerker kan het officiële klantdocument los van de urenregistratie als PDF, JPG of PNG toevoegen; vóór factuurafronding moet het document gereed zijn. JPG en PNG worden automatisch als PDF opgeslagen.
 - Een klanturenstaat kan eerst als privéconcept worden opgeslagen. Pas **Indienen bij Backoffice** maakt een in-app melding voor Backoffice.
 - Medewerker en Backoffice openen het opgeslagen document via **Klanturenstaat bekijken**. Na goedkeuring kan Backoffice onderwerp en begeleidende tekst van de aparte brokerroute nog aanpassen.
-- Per medewerker zijn klanturenstaatdeadline, standaard of afwijkend brokeradres, brokerroute en **factuur mag zonder klanturenstaat** instelbaar.
+- Per medewerker zijn klanturenstaatdeadline, standaard of afwijkend brokeradres en brokerroute instelbaar. Een ontbrekende klanturenstaat blokkeert factuurafronding; `received` of rechtstreeks gemaild met reden deblokkeert, externe bevestiging blijft apart.
 - Een klanturenstaat gaat pas na Backoffice-controle naar de broker. De bevestigde eerste productiebundel bevat voor de broker factuur + goedgekeurde klanturenstaat; boekhouder krijgt alleen de factuur en salarisadministratie krijgt geen bijlage.
 - De standaard begeleidende tekst begint met `Middag,` en bevat `{medewerker}`, `{maand}` en `{uren}`.
 - De beheerder start de maandverzending met één knop; alle aangevinkte ontvangers blijven intern gescheiden berichten.
-- De maandverzending wordt geblokkeerd zolang minimaal één relevante urenregistratie van die maand niet is goedgekeurd. Een ontbrekende klanturenstaat blokkeert alleen wanneer dit per medewerker expliciet is ingesteld.
+- De maandverzending wordt geblokkeerd zolang minimaal één relevante urenregistratie niet is goedgekeurd of een verwachte klanturenstaat niet gereed is.
 - De app toont en downloadt conceptfacturen als PDF. Definitieve productie-PDF's moeten server-side worden gemaakt, opgeslagen en vergrendeld.
 - Iedere factuur gebruikt dezelfde Path-vormgeving met logo en huisstijlkleuren; de juridische facturerende onderneming blijft afzonderlijk zichtbaar. De drie extra Circle8-referenties worden uitsluitend op Shawns factuur geplaatst.
 - De boekhouder krijgt binnen die actie per medewerker een afzonderlijk bericht; alleen naam en e-mailadres ontbreken nog.
@@ -137,7 +137,7 @@ Afwijkende brokerteksten hoeven alleen te worden aangeleverd wanneer een broker 
 - Een officiële klanturenstaat als PDF, JPG en PNG toevoegen met expliciete maand/jaar-keuze; controleren dat JPG/PNG als PDF worden opgeslagen en dat onderwerp, tekst en bestandsnaam ook bij januari 2027 correct zijn.
 - Concept opslaan en controleren dat Backoffice nog geen melding krijgt; daarna indienen en controleren dat de in-app melding, PDF-weergave, controle, opnieuw-uploaden, herinnering en afwijkende brokerroute werken.
 - Bij de brokercontrole onderwerp en begeleidende tekst aanpassen en controleren dat deze wijziging wordt bewaard.
-- Controleren dat een klanturenstaat later mag komen, niet door de app wordt gegenereerd en alleen na goedkeuring via de aparte brokerroute gaat.
+- Controleren dat een ontbrekende klanturenstaat factuurafronding blokkeert, dat uploaden of rechtstreeks gemaild registreren deblokkeert, en dat de aparte brokerroute pas na Backoffice-controle werkt.
 - Goedgekeurde uren met een verplichte reden vrijgeven en controleren dat status, correctiehistorie en factuurblokkade teruggezet worden. Na afgeronde verzendcontrole moet vrijgeven geblokkeerd zijn.
 - Eén maandknop testen en controleren dat een open urenstaat de actie blokkeert. Daarna alles goedkeuren en controleren dat alle gekozen ontvangers ondanks die ene actie gescheiden routes blijven.
 - Een conceptfactuur bekijken, als PDF downloaden en bedragen, btw, watermerk en bestandsnaam controleren.

@@ -6,22 +6,22 @@ Feature: Organisatie-instellingen beheren
   # Native Playwright-uitvoering: tests/playwright/admin-writes.spec.ts
   # Navigatiemapping: tests/playwright/steps/admin-writes.steps.ts
 
-  @happy @regression
-  Scenario: [ADM-WR-H-019] latere startdatum vraagt bevestiging en verwijdert geen historie
-    # Testtechniek: ISTQB-toestandsovergang + beslissingstabel (eerder/later × wel/geen procesdata × wel/geen bevestiging)
+  @happy
+  Scenario: [ADM-WR-H-019] latere startdatum vraagt bevestiging en vermeldt dat historie bewaard blijft
+    # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 9
     Given een medewerker al uren en een open klanturenstaatactie in augustus heeft
     When Beheer de startdatum naar september verplaatst
     Then waarschuwt de app vóór opslaan over maand, uren en open acties zonder verwijdering
     And pas expliciete bevestiging verstuurt de tweede, gemarkeerde write
 
-  @happy @regression
+  @happy
   Scenario: [ADM-WR-H-020] server berekent echte historische impact vóór een latere startdatum wordt opgeslagen
-    # Testtechniek: ISTQB-toestandsovergang + beslissingstabel (procesdata aanwezig × bevestiging ontbreekt)
+    # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 12
     Given de administrator is ingelogd en een medewerker heeft proceshistorie vóór september
     When de startdatum zonder bevestiging naar september wordt verplaatst
-    Then antwoordt de echte server met impact, nul verwijdering en blijft de startdatum ongewijzigd
+    Then de geweigerde eerste poging heeft de startdatum niet gewijzigd
 
   @happy
   Scenario: [ADM-WR-H-001] admin kan company/settings server-led opslaan

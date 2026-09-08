@@ -136,6 +136,8 @@ function mail_enqueue_for_invoice(
             t.id AS timesheet_id, t.billable_hours, t.assignment_id,
             e.full_name AS employee_name,
             a.broker_id, a.broker_mail_enabled, a.broker_invoice_attachment,
+            a.customer_timesheet_expected,
+            ct.status AS customer_timesheet_status,
             a.bookkeeper_invoice_attachment, a.payroll_invoice_attachment,
             a.invoice_subject_template, a.invoice_body_template,
             a.agreement_number, a.contractor_number,
@@ -154,6 +156,8 @@ function mail_enqueue_for_invoice(
          LEFT JOIN counterparties cp_client ON cp_client.id = a.client_id AND cp_client.company_id = :company_id
          LEFT JOIN counterparties cp_broker ON cp_broker.id = a.broker_id AND cp_broker.company_id = :company_id3
          JOIN periods p ON p.id = t.period_id
+                 LEFT JOIN customer_timesheets ct
+                     ON ct.period_id = t.period_id AND ct.employee_id = t.employee_id AND ct.assignment_id = t.assignment_id
          JOIN companies c ON c.id = i.company_id
          WHERE i.id = :invoice_id AND i.company_id = :company_id2
          LIMIT 1'
@@ -174,6 +178,11 @@ function mail_enqueue_for_invoice(
     }
     if ($inv['locked_at'] === null) {
         throw new \RuntimeException('invoice-not-locked');
+    }
+    $customerTimesheetReady = (int)$inv['customer_timesheet_expected'] !== 1
+        || in_array((string)($inv['customer_timesheet_status'] ?? ''), ['received', 'approved', 'sent', 'sent_to_broker', 'skipped'], true);
+    if (!$customerTimesheetReady) {
+        throw new \RuntimeException('customer-timesheet-required');
     }
 
     $year  = (int)$inv['year'];

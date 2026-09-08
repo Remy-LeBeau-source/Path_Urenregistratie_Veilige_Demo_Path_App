@@ -66,6 +66,7 @@ async function ketenTotFactuur(page: Page, loginPage: LoginPage): Promise<{ fact
   if (await invoer.count()) {
     await invoer.fill('8');
     await invoer.press('Tab');
+    await page.locator('[data-hours-week-scope="all"]').click();
     const schrijf = page.waitForResponse(response =>
       response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
     await page.locator('#submit-timesheet').click();
@@ -328,6 +329,7 @@ test('[E2E-H-024] een nieuw account krijgt via de GUI toegang en zijn eigen teks
     await expect(invoer, 'een nieuwe medewerker hoort zijn uren te kunnen invullen').toBeVisible();
     await invoer.fill('8');
     await invoer.press('Tab');
+    await page.locator('[data-hours-week-scope="all"]').click();
     const schrijf = page.waitForResponse(response =>
       response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
     await page.locator('#submit-timesheet').click();

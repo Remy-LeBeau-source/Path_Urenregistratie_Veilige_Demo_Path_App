@@ -117,7 +117,7 @@ Feature: Veilige productieconfiguratie en deployment
     # Aantoonbare Playwright-assertions in deze case: 13
     Given de loginpagina als productiepresentatie wordt opgebouwd
     When de flow voor SAFE-N-005 wordt uitgevoerd
-    Then zijn demoaccounts, demo-inlogwaarden en lokale uitleg niet zichtbaar
+    Then zijn demoaccounts en lokale uitleg niet zichtbaar
     And zonder authservice blijft productie fail-closed
 
   @negative
@@ -175,16 +175,16 @@ Feature: Veilige productieconfiguratie en deployment
   @happy
   Scenario: [SAFE-H-011] groene main-pipeline rolt exact dezelfde release veilig uit naar productie
     # Testtechniek: Toestandsovergang + foutinjectie + beslissingstabel
-    # Aantoonbare Playwright-assertions in deze case: 24
+    # Aantoonbare Playwright-assertions in deze case: 28
     Given het automatische TransIP-deploycontract wordt ingelezen
     When validatie, TEST, PROD-regressie en Living Docs groen zijn
-    Then wordt alleen main met checksum, backup, migratie en live-smoke uitgerold, zonder de TEST-only pilotmap
-    And blokkeert de deploy alleen het TEST-acceptatievenster en een niet-lege mailwachtrij (productiemail mag aan blijven), en rolt bij een fout automatisch terug
+    Then wordt alleen main met checksum, backup, migratie en live-smoke uitgerold
+    And blokkeert alleen het TEST-acceptatievenster en een niet-lege mailwachtrij (productiemail mag aan blijven), en rolt bij een fout automatisch terug
 
   @happy
   Scenario: [SAFE-H-016] de eerste 1.x-uitrol normaliseert PROD naar de afgesproken baseline en controleert die streng
-    # Testtechniek: Beslissingstabel + herstelbaarheid + toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 28
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 32
     Given de eerste productiebaseline, het normalisatiescript en het deployscript worden ingelezen
     When PROD nog op 0.x draait, wordt vóór de strenge gate eerst een backup gemaakt en daarna genormaliseerd
     Then blijft de strenge nulmeting accounts, septemberstart, dummy-routes en lege transactietabellen fail-closed controleren

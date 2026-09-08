@@ -725,6 +725,7 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
                 a.invoice_number_template,
                 a.client_id,
                 a.broker_id,
+                a.customer_timesheet_expected,
                 COALESCE(NULLIF(cl.trade_name, \'\'), cl.legal_name) AS client_name,
                 c.payment_term_days,
                 i.id AS invoice_id,
@@ -735,12 +736,15 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
                 i.subtotal,
                 i.vat_amount,
                 i.total,
-                i.vat_percentage AS invoice_vat_percentage
+                i.vat_percentage AS invoice_vat_percentage,
+                ct.status AS customer_timesheet_status
              FROM timesheets t
              JOIN periods p ON p.id = t.period_id
              JOIN assignments a ON a.id = t.assignment_id
              JOIN companies c ON c.id = p.company_id
              LEFT JOIN counterparties cl ON cl.id = a.client_id AND cl.company_id = p.company_id
+                         LEFT JOIN customer_timesheets ct
+                             ON ct.period_id = t.period_id AND ct.employee_id = t.employee_id AND ct.assignment_id = t.assignment_id
              LEFT JOIN invoices i ON i.timesheet_id = t.id
              WHERE t.id = :timesheet_id AND p.company_id = :company_id
              FOR UPDATE'
@@ -760,6 +764,19 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
                 'error' => 'timesheet-not-found',
                 'message' => 'De urenstaat is niet gevonden binnen jouw bedrijfsomgeving.',
             ], 404);
+        }
+
+        $customerTimesheetReady = (int)$row['customer_timesheet_expected'] !== 1
+            || in_array((string)($row['customer_timesheet_status'] ?? ''), ['received', 'approved', 'sent', 'sent_to_broker', 'skipped'], true);
+        if (!$customerTimesheetReady) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            auth_send_json([
+                'ok' => false,
+                'error' => 'customer-timesheet-required',
+                'message' => 'De klanturenstaat moet eerst zijn ingediend of als rechtstreeks gemaild geregistreerd voordat de factuur kan worden afgerond.',
+            ], 409);
         }
 
         if ($row['invoice_id'] !== null && $row['locked_at'] !== null) {

@@ -22,6 +22,8 @@ When("de flow voor INV-H-013 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat documentarchief toont factuur en klanturenstaat zonder bestanden vooraf te laden");
 When("de flow voor INV-N-014 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat ontbrekende klanturenstaat accepteert uitsluitend PDF JPG of PNG");
+When("de flow voor INV-N-025 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat factuurcontrole blokkeert zolang de klanturenstaat ontbreekt");
 Given("Backoffice de door Shawn rechtstreeks gemailde urenstaat in september opent");
 When("Backoffice de ontvangen urenbevestiging met een standaardreden vastlegt");
 Then("telt de urenstaat groen mee en kan Backoffice de bevestiging terugdraaien");

@@ -254,7 +254,6 @@ assert(document.querySelector("#dashboard-employee-rows").textContent.includes("
 
 // Navigate to the next fixed demo month for the remaining assertions.
 dom.window.setPeriod("2026-07");
-dom.window.renderAll();
 
 assert(document.querySelector("#metric-submitted-note").textContent.includes("Juli 2026"), "Dashboardstatussen moeten de betreffende maand noemen");
 assert(document.querySelector("#metric-approved-note").textContent.includes("Geen openstaande controles") && (document.querySelector("#metric-approved-action").hidden || document.querySelector("#metric-approved-action").textContent.includes("Bekijk alle openstaande")), "Een afgeronde urenmaand toont geen directe actie, alleen een doorlink naar andere open maanden");
@@ -439,7 +438,7 @@ assert(document.querySelector("#employee-dashboard-greeting").textContent.includ
 // Brian juni: approved uren + ontbrekende klanturenstaat — ideale periode voor de skip-test
 choosePeriod("#period-month-picker", "#period-year-picker", "2026-06");
 dom.window.renderAll();
-assert(document.querySelector("#employee-dashboard-next").textContent.includes("officiële klanturenstaat") && document.querySelector("#employee-dashboard-status-note").textContent.includes("klanturenstaat open"), "Goedgekeurde uren mogen een ontbrekende klanturenstaat niet meer als volledig afgerond tonen");
+assert(document.querySelector("#employee-dashboard-next").textContent.includes("officiële klanturenstaat") && document.querySelector("#employee-dashboard-status").textContent === "Wacht op klanturenstaat" && document.querySelector("#employee-dashboard-status-note").textContent.includes("klanturenstaat open"), "Goedgekeurde uren mogen een ontbrekende klanturenstaat niet meer als volledig afgerond tonen");
 const brianOpenSummaries = dom.window.employeeOpenMonthSummaries(3, "2026-06");
 const brianOpenActions = brianOpenSummaries.flatMap(item => item.actions);
 assert(brianOpenActions.length > 0 && document.querySelectorAll("#employee-open-overview-list [data-employee-action-row]").length === brianOpenActions.length, "Het medewerkersdashboard moet iedere open taak als concrete actieregel tonen");
@@ -1849,6 +1848,14 @@ const requestResetSrc = readFileSync_(new URL("../server/auth/request-reset.php"
 }
 
 const appJsSrc = readFileSync_(new URL("../assets/app.js", import.meta.url), "utf8");
+const invoiceApiSrc = readFileSync_(new URL("../server/api/invoices.php", import.meta.url), "utf8");
+const emailQueueApiSrc = readFileSync_(new URL("../server/api/email-queue.php", import.meta.url), "utf8");
+
+// MO5b: een verwachte klanturenstaat is gereed vóór factuurafronding. Deze
+// statische guard voorkomt dat de server- of browsergate later stil verdwijnt.
+assert(appJsSrc.includes("customerTimesheetReadyForInvoice") && appJsSrc.includes("Wacht op klanturenstaat") && appJsSrc.includes("Verzending geblokkeerd"), "MO5b-browsergate moet klanturenstaatstatus en factuurblokkade bewaken");
+assert(invoiceApiSrc.includes("customer-timesheet-required") && invoiceApiSrc.includes("customer_timesheet_status") && invoiceApiSrc.includes("received"), "MO5b-invoice-API moet ontbrekende klanturenstaat server-side blokkeren");
+assert(emailQueueApiSrc.includes("customer-timesheet-required"), "MO5b-mailqueue moet herhaalde enqueue zonder gereed klanturenstaat blokkeren");
 
 // Het logo stond als losse base64 uit 2023 in app.js, naast assets/path-logo.png.
 // Die twee liepen uit elkaar: het bestand had een donker woordmerk, de code een wit

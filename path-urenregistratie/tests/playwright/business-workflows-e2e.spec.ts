@@ -155,6 +155,7 @@ test('[E2E-H-003] herindiening verplaatst dezelfde actie van medewerker naar Bac
     await action.click();
     await expect(page.locator('#timesheet-status')).toHaveText('Correctie nodig');
     await expect(page.locator('#hours-grid .hours-input:not([disabled])').first()).toBeVisible();
+    await page.locator('[data-hours-week-scope="all"]').click();
     await expect(page.locator('#submit-timesheet')).toContainText('opnieuw indienen');
     await page.locator('#submit-timesheet').click();
     await page.locator('#modal-confirm').click();

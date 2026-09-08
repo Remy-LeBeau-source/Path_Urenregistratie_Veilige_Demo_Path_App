@@ -31,10 +31,18 @@ Feature: Facturen bekijken en beheren
     When de flow voor INV-N-014 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat ontbrekende klanturenstaat accepteert uitsluitend PDF JPG of PNG
 
+  @negative
+  Scenario: [INV-N-025] factuurcontrole blokkeert zolang de klanturenstaat ontbreekt
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given facturen bekijken en beheren is voorbereid
+    When de flow voor INV-N-025 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat factuurcontrole blokkeert zolang de klanturenstaat ontbreekt
+
   @happy
   Scenario: [INV-H-020] Backoffice kan een ontbrekende urenstaat extern bevestigen en terugdraaien
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 23
+    # Aantoonbare Playwright-assertions in deze case: 24
     Given Backoffice de door Shawn rechtstreeks gemailde urenstaat in september opent
     When Backoffice de ontvangen urenbevestiging met een standaardreden vastlegt
     Then telt de urenstaat groen mee en kan Backoffice de bevestiging terugdraaien

@@ -1,5 +1,83 @@
 # Copilot handoff — lokale mailpreview en regressieherstel
 
+## Documentenkaart
+
+- **Centrale actuele checklist:** `MASTERCHECKLIST.md` — wat klaar, open of
+  geblokkeerd is en welke releasepoort nog ontbreekt.
+- **Besluiten:** `BESLISTABEL.md` — vastgelegde productkeuzes zoals MO5b.
+- **Technisch contract:** `TECHNISCH-ONTWERP.md` — statusmachine, taakprojectie,
+  API- en synchronisatieregels.
+- **Functioneel contract:** `FUNCTIONEEL-ONTWERP.md` — gebruikersgedrag en
+  acceptatieregels.
+- **Deze handoff:** actuele Copilot/Codex-overdracht met diagnose, gewijzigde
+  bestanden, bewijs en eerstvolgende stap.
+- **Herontwerp:** `HANDOFF-CODEX-FASE-D.md` en `HANDOFF-PILOT-DESIGN.md` — alleen
+  voor branch `herontwerp`; PROD blijft daar los van.
+
+Bij verschil tussen oudere historische tekst en de actuele stand zijn in deze
+volgorde leidend: `BESLISTABEL.md`, daarna de actuele sectie in
+`MASTERCHECKLIST.md`, daarna de laatste actuele handoff.
+
+## Actuele overdracht — MO5b, 8 september 2026
+
+- **Taak/conclusie:** MO5b is in `main` geïmplementeerd en op runtime-gedrag
+  bevestigd: een klanturenstaat is blokkerend voor factuurafronding zolang de
+  status niet `received`, `skipped` of een latere gereedstatus is. Externe
+  bevestiging blijft optioneel en staat los van de deblokkade.
+- **Diagnose/bewijs:** `showInvoiceDeliveryCheck()` controleerde eerder alleen
+  uren- en factuurstatus. `server/api/invoices.php` zette een goedgekeurde
+  urenstaat zonder klanturenstaatcontrole door naar `invoiced`. De UI-, server-
+  en mailqueue-gates zijn als één contract vereenvoudigd: `customer-timesheet-required`
+  met HTTP 409 zodra de klanturenstaat ontbreekt.
+- **Gewijzigde bestanden:** `assets/app.js`, `server/api/invoices.php`,
+  `server/api/email-queue.php`, `server/mail/queue.php`,
+  `index.html`, `README.md`, `FUNCTIONEEL-ONTWERP.md`,
+  `TECHNISCH-ONTWERP.md`, `PRODUCTIE-CHECKLIST.md`,
+  `WERKWIJZE-PATROON.md`, `MASTERCHECKLIST.md`,
+  `tests/playwright/invoices.spec.ts`,
+  `tests/playwright/features/invoices.feature` en
+  `tests/playwright/steps/invoices-ui.steps.ts`, plus de lock-fixtures in
+  `tests/playwright/invoice-lock.spec.ts`,
+  `tests/playwright/business-workflows-attachments.spec.ts` en
+  `tests/playwright/business-workflows-documents.spec.ts`.
+- **Gedrag:** dashboard, teamstatus, urenstaat, maandhistorie en New-storyline
+  tonen `Wacht op klanturenstaat` voor goedgekeurde uren zonder gereed document.
+  De factuurcontrole toont dan geen modal. De server weigert de lock met
+  `customer-timesheet-required` en HTTP 409. Ook herhaalde mailqueue-enqueue
+  wordt met hetzelfde contract geweigerd. `received` en `skipped` laten de
+  factuur wel door; `send_to_broker` blijft een aparte actie.
+- **Tests/bewijs:**
+  - `node scripts/run-playwright-e2e.mjs --grep=INV-N-025 tests/playwright/invoices.spec.ts`
+    exited met status `0`.
+  - `get_errors` op de aangepaste bestanden gaf geen fouten.
+  - `INV-N-016` en de volgende MO5b-case(s) zijn de eerstvolgende Codex-actie
+    omdat de snelle UI-gate nu bewezen is, maar nog niet afgerond als volledige
+    releasecheck.
+- **Volgende stap voor Codex:**
+  1. draai `INV-N-016` en de lock-/business-workflowcases;
+  2. draai `INV-H-020` en `INV-H-021`;
+  3. run `npm run docs:sync` en controleer de mapping/feature-sync;
+  4. run `npm run check` en daarna de GUI-smoke/brede regressie;
+  5. pas de checklist en release-status aan op basis van de werkelijke resultaten.
+     Nog niet gecommit, gepusht of gedeployed.
+
+### Mijlpaal 8 september 2026 — documentatieconsistentie
+
+- FO, TO, README, productiechecklist, werkwijze en stamgegevens beschrijven nu
+  dezelfde MO5b-regel; oude uitzonderingen “factuur mag zonder klanturenstaat”
+  zijn verwijderd.
+- Historische `CLAUDE_CODE_HANDOFF.md` bevat nu bovenaan een actuele verwijzing
+  naar de centrale checklist en deze Copilot-handoff.
+- Historische root-README en TEST/PROD-handoffs verwijzen nu expliciet naar de
+  actuele checklist, zodat oude demo- of acceptatieregels niet als bronwaarheid
+  worden gebruikt.
+- Statische mockup-/video-pilotbestanden zijn bewust niet aangepast; zij zijn
+  illustratief en vallen onder apart pilot-eigenaarschap.
+- `scripts/smoke-test.mjs` bewaakt nu statisch dat de MO5b-gates in browser,
+  invoice-API en mailqueue aanwezig blijven.
+- Resterende releasepoort: lokale server starten, gerichte MO5b/locktests,
+  `docs:sync`, `npm run check`, GUI-smoke en brede regressie.
+
 Bijgewerkt: 28 augustus 2026
 
 ## Stand 28 augustus 2026 (Claude Code)

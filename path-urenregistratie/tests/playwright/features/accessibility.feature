@@ -52,7 +52,7 @@ Feature: Toegankelijkheid en toetsenbordbediening
   @happy
   Scenario: [A11Y-H-006] de sluitknop van een scrollende dialoog blijft in beide skins in beeld
     # Testtechniek: Toegankelijkheidsinspectie + toetsenbord-use-case
-    # Aantoonbare Playwright-assertions in deze case: 10
+    # Aantoonbare Playwright-assertions in deze case: 21
     Given de administrator is ingelogd op een korte viewport
-    When in de klassieke en de nieuwe skin een dialoog wordt geopend die langer is dan het scherm en de binnenlaag naar onderen wordt gescrold
-    Then scrollt het kruisje niet mee met de inhoud, blijft het volledig binnen de dialoog, en sluit het de dialoog nog steeds
+    When de flow voor A11Y-H-006 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat de sluitknop van een scrollende dialoog blijft in beide skins in beeld

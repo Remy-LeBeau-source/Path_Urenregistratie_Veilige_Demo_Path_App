@@ -36,6 +36,9 @@ export default defineConfig({
   use: {
     baseURL: process.env.PATH_APP_BASE_URL || 'http://localhost:8000',
     headless: true,
+    // Een verborgen of uitgeschakelde knop is een product-/testfout, geen reden
+    // om de volledige (soms bewust ruime) testtimeout uit te zitten.
+    actionTimeout: 15_000,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',

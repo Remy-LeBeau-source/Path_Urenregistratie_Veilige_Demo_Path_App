@@ -3968,6 +3968,23 @@ function customerTimesheetFor(record) {
   return record.customerTimesheet;
 }
 
+function customerTimesheetReadyForInvoice(employee, record) {
+  if (!employee || employee.customerTimesheetExpected === false) return true;
+  return ["received", "approved", "sent", "sent_to_broker", "skipped"].includes(customerTimesheetFor(record).status);
+}
+
+function timesheetStatusInfo(employee, record) {
+  if (record && ["approved", "invoiced"].includes(record.timesheetStatus) && !customerTimesheetReadyForInvoice(employee, record)) {
+    return ["Wacht op klanturenstaat", "status-warning"];
+  }
+  return statusLabels[record?.timesheetStatus] || statusLabels.draft;
+}
+
+function timesheetStatusPill(employee, record) {
+  const info = timesheetStatusInfo(employee, record);
+  return '<span class="status-pill ' + info[1] + '">' + escapeHtml(info[0]) + "</span>";
+}
+
 function customerTimesheetStatusPill(documentRecord) {
   const current = customerTimesheetFor(documentRecord);
   const status = customerTimesheetExternallyConfirmed(current)
@@ -4596,7 +4613,7 @@ function renderNewEmployeeBento(record, employee, period) {
   const customerNote = document.querySelector("#new-bento-customer-note");
   let customerLabel = "Nog aanleveren";
   let customerTone = "status-warning";
-  let customerMessage = "De verplichte klanturenstaat mag later binnenkomen en blijft apart openstaan.";
+  let customerMessage = "De klanturenstaat staat nog open en blokkeert de factuurafronding totdat hij is aangeleverd of als rechtstreeks gemaild is geregistreerd.";
   if (customerDocument.status === "skipped" && !customerTimesheetExternallyConfirmed(customerDocument)) {
     customerLabel = "Gemeld · controle nodig";
     customerMessage = "Je hebt rechtstreeks gemaild gemeld. Backoffice moet de ontvangst nog bevestigen.";
@@ -4715,7 +4732,7 @@ function renderEmployeeDashboard() {
   const difference = Math.round((accounted - record.contractHours) * 10) / 10;
   const progress = record.contractHours > 0 ? Math.min(100, Math.round(accounted / record.contractHours * 100)) : 0;
   const firstName = employee.name.split(/\s+/)[0];
-  const status = statusLabels[record.timesheetStatus] || statusLabels.draft;
+  const status = timesheetStatusInfo(employee, record);
   const customerDocument = customerTimesheetFor(record);
   const customerTimesheetOpen = employee.customerTimesheetExpected !== false && customerTimesheetNeedsEmployeeAction(customerDocument.status);
   let next = "Vul je uren in en dien alleen deze maand in.";
@@ -4873,7 +4890,7 @@ function renderEmployeeDashboard() {
       ? "Correctie door " + correction.requestedBy + " · " + correction.requestedAt
       : "Eigen urenregistratie";
     const currentLabel = key === currentCalendarPeriodKey() ? '<span class="employee-history-current">Huidige maand</span>' : '';
-    return '<div class="employee-history-row"><div><strong>' + escapeHtml(periodFromKey(key).label) + currentLabel + '</strong><small>' + escapeHtml(historyNote) + '</small></div><div><strong>' + hoursFormat.format(historyTotal) + ' uur</strong><small>totaal verantwoord</small></div><div>' + statusPill(historyRecord.timesheetStatus) + '</div><button class="small-button" data-history-period="' + key + '">Open maand</button></div>';
+    return '<div class="employee-history-row"><div><strong>' + escapeHtml(periodFromKey(key).label) + currentLabel + '</strong><small>' + escapeHtml(historyNote) + '</small></div><div><strong>' + hoursFormat.format(historyTotal) + ' uur</strong><small>totaal verantwoord</small></div><div>' + timesheetStatusPill(employee, historyRecord) + '</div><button class="small-button" data-history-period="' + key + '">Open maand</button></div>';
   }).join("");
   document.querySelector("#employee-history").innerHTML = historyRows
     ? '<div class="employee-history-head" aria-hidden="true"><span>Maand</span><span>Uren</span><span>Status</span><span>Actie</span></div>' + historyRows
@@ -5657,7 +5674,7 @@ function showCustomerTimesheetDetails(employeeId, periodKey, reviewMode, adminTa
   const externalAction = documentRecord.status === "skipped"
     ? '<div><span>Externe controle</span><button class="small-button" ' + (externallyConfirmed ? 'data-restore-customer-timesheet-external="' + employee.id + '"' : 'data-confirm-customer-timesheet-external="' + employee.id + '"') + ' data-period-key="' + period.key + '">' + (externallyConfirmed ? "Externe bevestiging intrekken" : "Extern bevestigen") + '</button></div>'
     : '';
-  const summary = '<div><span>Status</span><strong>' + escapeHtml(status[0]) + '</strong></div><div><span>Bestand</span><strong>' + escapeHtml(documentRecord.fileName || (documentRecord.status === "skipped" ? "Niet via de app ontvangen" : "Nog niet ontvangen")) + '</strong></div>' + skippedSummary + externalAction + (documentRecord.fileData ? '<div><span>Document controleren</span><button class="small-button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">Klanturenstaat bekijken</button></div>' : '') + submissionSummary + '<div><span>Deadline</span><strong>Werkdag ' + Number(employee.customerTimesheetDueWorkday || 5) + '</strong></div><div><span>Brokerroute na goedkeuring</span><strong>' + escapeHtml(route) + '</strong></div><div><span>Factuur zonder klanturenstaat</span><strong>' + (employee.invoiceWithoutCustomerTimesheetAllowed === false ? "Niet toegestaan" : "Toegestaan") + '</strong></div><div><span>Onderwerp naar broker</span><strong>' + escapeHtml(brokerMail.subject) + '</strong></div>';
+  const summary = '<div><span>Status</span><strong>' + escapeHtml(status[0]) + '</strong></div><div><span>Bestand</span><strong>' + escapeHtml(documentRecord.fileName || (documentRecord.status === "skipped" ? "Niet via de app ontvangen" : "Nog niet ontvangen")) + '</strong></div>' + skippedSummary + externalAction + (documentRecord.fileData ? '<div><span>Document controleren</span><button class="small-button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">Klanturenstaat bekijken</button></div>' : '') + submissionSummary + '<div><span>Deadline</span><strong>Werkdag ' + Number(employee.customerTimesheetDueWorkday || 5) + '</strong></div><div><span>Brokerroute na goedkeuring</span><strong>' + escapeHtml(route) + '</strong></div><div><span>Factuurblokkade</span><strong>Actief tot de klanturenstaat gereed is</strong></div><div><span>Onderwerp naar broker</span><strong>' + escapeHtml(brokerMail.subject) + '</strong></div>';
   if (reviewMode && documentRecord.status === "received") {
     showModal({
       label: "Klanturenstaat controleren",
@@ -6062,10 +6079,10 @@ function newAdminStoryStages(employee, record) {
   const customer = customerTimesheetFor(record);
   const hoursDone = record.timesheetStatus === "approved";
   const hoursCurrent = ["submitted", "correction"].includes(record.timesheetStatus);
-  const customerDone = ["approved", "sent", "sent_to_broker"].includes(customer.status)
-    || (customer.status === "skipped" && customerTimesheetExternallyConfirmed(customer));
+  const customerDone = customerTimesheetReadyForInvoice(employee, record);
   const customerCurrent = ["received", "resubmit", "skipped"].includes(customer.status) && !customerDone;
-  const externalDone = customerDone;
+  const externalDone = ["approved", "sent", "sent_to_broker"].includes(customer.status)
+    || (customer.status === "skipped" && customerTimesheetExternallyConfirmed(customer));
   const externalCurrent = customer.status === "skipped" && !customerTimesheetExternallyConfirmed(customer);
   const invoiceDone = record.invoiceStatus === "simulated";
   const invoiceCurrent = record.invoiceStatus === "ready";
@@ -6133,9 +6150,11 @@ function renderNewAdminStoryline(rows, period) {
           ? "Controle nodig"
           : record.timesheetStatus === "correction"
             ? "Correctie nodig"
-            : customerTimesheetFor(record).status === "received"
-              ? "Document controleren"
-              : "Registratie actief";
+              : customerTimesheetFor(record).status === "received"
+                ? "Document controleren"
+                : record.timesheetStatus === "approved" && !customerTimesheetReadyForInvoice(employee, record)
+                  ? "Wacht op klanturenstaat"
+                  : "Registratie actief";
     return '<button class="new-admin-employee-row' + (selected ? ' is-selected' : '') + '" type="button" data-new-admin-story-employee="' + employee.id + '" aria-pressed="' + String(selected) + '">' +
       '<span class="new-admin-employee-person"><span class="mini-avatar">' + initials(employee.name) + '</span><span><strong>' + escapeHtml(employee.name) + '</strong><small>' + escapeHtml(employee.role || employee.client || "Medewerker") + '</small></span></span>' +
       '<span class="new-admin-employee-track">' + track + '</span>' +
@@ -6148,7 +6167,7 @@ function renderNewAdminStoryline(rows, period) {
   const customer = customerTimesheetFor(record);
   const stages = newAdminStoryStages(employee, record);
   const hoursTotal = totalEntries(record.entries);
-  const status = statusLabels[record.timesheetStatus] || statusLabels.draft;
+  const status = timesheetStatusInfo(employee, record);
   const customerStatus = customerTimesheetStatusLabels[customer.status] || customerTimesheetStatusLabels.missing;
   const hoursAction = record.timesheetStatus === "submitted"
     ? '<button class="small-button" data-review="' + employee.id + '" data-period-key="' + period.key + '">Uren controleren</button>'
@@ -6198,7 +6217,7 @@ function renderDashboard() {
       '<td data-label="Klant / opdracht"><strong>' + escapeHtml(employee.client) + "</strong><small>" + escapeHtml(employee.broker) + "</small></td>" +
       '<td data-label="Geregistreerd"><strong>' + hoursFormat.format(total) + "</strong><small>uur</small></td>" +
       '<td data-label="Omzetindicatie"><strong>' + currency.format(total * employee.rate) + "</strong><small>exclusief btw</small></td>" +
-      '<td data-label="Urenstatus">' + statusPill(record.timesheetStatus) + "</td>" +
+      '<td data-label="Urenstatus">' + timesheetStatusPill(employee, record) + "</td>" +
       '<td data-label="Vervolgactie">' + action + "</td>" +
       "</tr>";
   }).join("") || '<tr><td colspan="6"><div class="dashboard-action-empty">Voor ' + escapeHtml(period.label) + ' hoeft niemand meer uren aan te vullen of te corrigeren.</div></td></tr>';
@@ -6240,7 +6259,7 @@ function renderDashboard() {
 
   const completedPhases = [submitted === dashboardRowsTotal, approved === dashboardRowsTotal, ready + simulated === rows.length, simulated === rows.length].filter(Boolean).length;
   const progress = Math.round(completedPhases / 4 * 100);
-  const openCustomerDocuments = isFuturePeriod ? 0 : rows.filter(item => item.employee.customerTimesheetExpected !== false && (["missing", "draft", "received", "resubmit"].includes(customerTimesheetFor(item.record).status) || (customerTimesheetFor(item.record).status === "approved" && item.employee.customerTimesheetBrokerEnabled !== false))).length;
+  const openCustomerDocuments = isFuturePeriod ? 0 : rows.filter(item => !customerTimesheetReadyForInvoice(item.employee, item.record)).length;
   const resolvedCustomerDocuments = Math.max(0, rows.length - openCustomerDocuments);
   const newAdminPeriod = document.querySelector("#new-admin-storyline-period");
   if (newAdminPeriod) newAdminPeriod.textContent = period.label + " · van urenregistratie tot factuur.";
@@ -6731,7 +6750,9 @@ function renderInvoices() {
         "<td>" + invoiceDocumentBadgesHtml(item) + "</td>" +
         "<td><strong>" + currency.format(item.total) + "</strong><small>" + escapeHtml(amountNote) + "</small></td>" +
         "<td><span class=\"status-pill " + (item.status === "ready" ? "status-ready" : item.status === "concept" ? "status-concept" : "status-sent") + "\">" + escapeHtml(item.statusRaw || item.status) + "</span></td>" +
-        '<td><div class="invoice-action"><button class="small-button" data-invoice-documents="' + item.id + '">Documenten bekijken</button></div></td>' +
+        '<td><div class="invoice-action"><button class="small-button" data-invoice-documents="' + item.id + '">Documenten bekijken</button>' +
+          (item.status === "ready" ? '<button class="small-button send" data-simulate-invoice="' + item.employeeId + '" data-period-key="' + escapeHtml(item.periodKey) + '">Mailvoorbeeld</button>' : '') +
+          '</div></td>' +
         "</tr>";
     }).join("");
     if (!filteredApiRows.length) {
@@ -7489,8 +7510,8 @@ function renderHoursGrid() {
   document.querySelector("#timesheet-assignment").textContent = employee.client + " · " + employee.role;
   document.querySelector("#timesheet-employee").textContent = employee.name;
   document.querySelector("#timesheet-project").textContent = employee.projectCode;
-  document.querySelector("#timesheet-status").className = "status-pill " + (statusLabels[record.timesheetStatus] || statusLabels.draft)[1];
-  document.querySelector("#timesheet-status").textContent = (statusLabels[record.timesheetStatus] || statusLabels.draft)[0];
+  document.querySelector("#timesheet-status").className = "status-pill " + timesheetStatusInfo(employee, record)[1];
+  document.querySelector("#timesheet-status").textContent = timesheetStatusInfo(employee, record)[0];
   document.querySelector("#summary-contract").textContent = hoursFormat.format(record.contractHours) + " uur";
   document.querySelector("#summary-leave").value = Number(record.leave) || 0;
   document.querySelector("#summary-sick").value = Number(record.sick) || 0;
@@ -9734,6 +9755,11 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
   const period = periodFromKey(key);
   const info = invoiceSummary(employeeId, key);
   const serverInvoice = serverInvoiceFor(employeeId, key);
+  if (!customerTimesheetReadyForInvoice(info.employee, info.record)) {
+    toast("Verzending geblokkeerd: de klanturenstaat moet eerst worden ingediend of als rechtstreeks gemaild geregistreerd.");
+    renderAll();
+    return false;
+  }
   const serverTimesheetStatus = String(serverInvoice && serverInvoice.timesheetStatus || "");
   if (serverInvoice && serverTimesheetStatus && !["approved", "invoiced"].includes(serverTimesheetStatus)) {
     info.record.timesheetStatus = serverTimesheetStatus;
@@ -11879,7 +11905,7 @@ function toonInstallatieAanbod() {
   if (approve) approveEmployee(Number(approve.dataset.approve), approve.dataset.periodKey);
 
   const simulate = event.target.closest("[data-simulate-invoice]");
-  if (simulate) showInvoiceDeliveryCheck(Number(simulate.dataset.simulateInvoice), currentPeriod().key);
+  if (simulate) showInvoiceDeliveryCheck(Number(simulate.dataset.simulateInvoice), simulate.dataset.periodKey || currentPeriod().key);
 
   const previewInvoicePdf = event.target.closest("[data-preview-invoice-pdf]");
   if (previewInvoicePdf) showInvoiceDocumentPreview(Number(previewInvoicePdf.dataset.previewInvoicePdf));

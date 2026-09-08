@@ -209,6 +209,10 @@ if ($action === 'enqueue') {
             auth_send_json(['ok' => false, 'error' => 'invoice-not-locked',
                 'message' => 'Maak de factuur eerst definitief voordat je de mail klaarzet.'], 409);
         }
+        if ($code === 'customer-timesheet-required') {
+            auth_send_json(['ok' => false, 'error' => 'customer-timesheet-required',
+                'message' => 'De klanturenstaat moet eerst zijn ingediend of als rechtstreeks gemaild geregistreerd voordat de factuur kan worden verzonden.'], 409);
+        }
         auth_send_json(['ok' => false, 'error' => 'enqueue-failed', 'message' => $code], 500);
     }
 

@@ -1,5 +1,10 @@
 # TEST-acceptatielijst — 3 september 2026
 
+> Historische acceptatielijst. Voor de actuele stand en actuele klanturenstaatregel
+> geldt `MASTERCHECKLIST.md` plus `COPILOT_HANDOFF.md` van 8 september 2026.
+> MO5b vervangt de oude niet-blokkerende klanturenstaatregel: vóór
+> factuurafronding moet de staat gereed zijn; externe bevestiging blijft apart.
+
 Alles staat op TEST (`uren-test.pathconsultancy.nl`, versie 0.9.159). PROD is niet aangeraakt.
 Volgorde van commits onderaan. Loop de blokken door en vink af.
 

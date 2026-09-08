@@ -234,6 +234,7 @@ test('[DASH-H-018] elke login en elke Dashboard-klik opent de actuele maand; een
     await expect(page.locator('#employee-history')).toContainText('September 2026');
     await page.locator('button[data-view="timesheet"]').click();
     await expect(page.locator('#timesheet-period-title')).toHaveText('September 2026');
+    await page.locator('[data-hours-week-scope="all"]').click();
     await expect(page.locator('#submit-timesheet')).toBeVisible();
     await expect(page.locator('#customer-timesheet-period')).toHaveValue('2026-09');
     await page.locator('button[data-view="employee-dashboard"]').click();
@@ -655,6 +656,7 @@ test('[DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus', as
     await expect(page.locator('#employee-open-task-total')).toHaveText('3 open acties');
     await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
     await page.locator('button[data-view="timesheet"]').click();
+    await page.locator('[data-hours-week-scope="all"]').click();
     await expect(page.locator('#submit-timesheet')).toBeVisible();
     await page.locator('#submit-timesheet').click();
     await page.locator('#modal-confirm').click();
@@ -839,6 +841,7 @@ test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker e
     await openDemoEmployee(2);
     await page.locator('button[data-view="timesheet"]').click();
     await chooseMonth('06');
+    await page.locator('[data-hours-week-scope="all"]').click();
     await page.locator('#submit-timesheet').click();
     await page.locator('#modal-confirm').click();
 
@@ -850,6 +853,7 @@ test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker e
 
     await page.locator('button[data-view="timesheet"]').click();
     await chooseMonth('08');
+    await page.locator('[data-hours-week-scope="all"]').click();
     await page.locator('#submit-timesheet').click();
     await page.locator('#modal-confirm').click();
     await expect(page.locator('#employee-open-task-total')).toHaveText('0 open acties');
@@ -863,6 +867,7 @@ test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker e
 
     await page.locator('button[data-view="timesheet"]').click();
     await chooseMonth('07');
+    await page.locator('[data-hours-week-scope="all"]').click();
     await page.locator('#submit-timesheet').click();
     await page.locator('#modal-confirm').click();
     await expect(page.locator('#employee-open-task-total')).toHaveText('0 open acties');
@@ -1461,6 +1466,7 @@ test('[DASH-N-016] correctieactie ververst een verborgen rooster uit een eerdere
     await expect(page.locator('#timesheet-status')).toHaveText('Correctie nodig');
     await expect(page.locator('#timesheet-correction-banner')).toBeVisible();
     await expect(page.locator('#hours-grid .hours-input:not([disabled])').first()).toBeVisible();
+    await page.locator('[data-hours-week-scope="all"]').click();
     await expect(page.locator('#submit-timesheet')).toBeVisible();
     await expect(page.locator('#submit-timesheet')).toContainText('opnieuw indienen');
   });

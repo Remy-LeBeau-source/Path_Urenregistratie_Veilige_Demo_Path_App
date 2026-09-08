@@ -196,17 +196,17 @@ Feature: Mobiele gebruikerservaring
 
   @happy
   Scenario: [MOB-H-023] het sluitkruisje van een lange dialoog blijft op de telefoon in beeld
-    # Testtechniek: Responsive viewport + regressie op zichtbaarheid
-    # Aantoonbare Playwright-assertions in deze case: 14
+    # Testtechniek: Responsive viewport + end-to-end use-case
+    # Aantoonbare Playwright-assertions in deze case: 19
     Given een administrator opent op de telefoon een medewerker om aan te passen
+    When de flow voor MOB-H-023 wordt uitgevoerd
     Then valt de dialoog volledig binnen het zichtbare scherm en staat het kruisje rechtsboven in beeld
-    When de inhoud van de dialoog helemaal naar onderen wordt gescrold
-    Then blijft het kruisje in beeld en sluit het de dialoog nog steeds
+    And blijft het kruisje in beeld nadat de inhoud helemaal naar onderen is gescrold
 
   @happy
   Scenario: [MOB-H-024] een net ingelogde medewerker ziet op de telefoon een volledig geladen dashboard, ook als de eerste sync-afronding hapert
-    # Testtechniek: Foutinjectie + tijdgebonden herstel op telefoon-viewport
-    # Aantoonbare Playwright-assertions in deze case: 8
+    # Testtechniek: Responsive viewport + end-to-end use-case
+    # Aantoonbare Playwright-assertions in deze case: 7
     Given een medewerker logt op de telefoon voor het eerst in en de sync-afronding valt in de race
     When de hydratie-afronding één keer klapt op de hertekening
     Then staat er nergens meer een laadtekst en is het dashboard bruikbaar

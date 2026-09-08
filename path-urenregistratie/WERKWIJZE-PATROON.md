@@ -52,7 +52,7 @@ Eén afgeronde standaardfactuuractie maakt exact drie gescheiden queue-items:
 
 | Route | Bericht | Bijlagen |
 |---|---|---|
-| Broker | factuurbericht | factuur + goedgekeurde klanturenstaat |
+| Broker | factuurbericht; klanturenstaat via aparte brokeractie | factuur; klanturenstaat pas na die controle |
 | Boekhouding | factuuradministratie | alleen factuur |
 | Salarisadministratie | ureninformatie | geen bijlage |
 
@@ -60,6 +60,10 @@ In TEST gaan de drie SMTP-afleveringen fysiek naar `giovanno.maatsen@pathconsult
 `kenrich.lieveld@pathconsultancy.nl` als vaste CC. De bedoelde productieontvanger, route, onderwerp
 en attachment policy blijven zichtbaar en auditbaar. Iedere functionele route blijft een eigen
 bericht; CC wordt uitsluitend gebruikt om beide TEST-beoordelaars dezelfde sandboxmail te geven.
+
+Een klanturenstaat moet vóór **Controle afronden** gereed zijn: `received` of
+`Al rechtstreeks gemaild` met reden is voldoende. Externe bevestiging is daarna een aparte,
+optionele Backoffice-actie en geen voorwaarde voor de factuurblokkade.
 
 ## 5. Uitvoeringsvolgorde
 
@@ -73,7 +77,26 @@ bericht; CC wordt uitsluitend gebruikt om beide TEST-beoordelaars dezelfde sandb
 8. Bij een fout: bewijs de oorzaak, voeg eerst de ontbrekende regressie toe, repareer en herhaal
    vanaf de kleinst falende laag. Verhoog geen timeout en gebruik geen forced click als maskering.
 
-## 6. Geen vraaglus bij oplevering
+## 6. Overdracht en documentatie vastleggen
+
+Werk na iedere betekenisvolle diagnose, codewijziging of test de overdracht bij:
+
+1. Leg een nieuwe productkeuze vast in `BESLISTABEL.md`.
+2. Beschrijf gebruikersgedrag in `FUNCTIONEEL-ONTWERP.md` en status/API/DB-contracten in
+  `TECHNISCH-ONTWERP.md`.
+3. Wijzig de kleinste coherente code-slice.
+4. Voeg een unieke featurecase, Playwright-test, step-mapping en waar nodig smoke-/GUI-regel toe.
+5. Draai syntax/smoke, gerichte positieve en negatieve tests, GUI-smoke en daarna de brede gate.
+6. Draai `npm run docs:sync` na testwijzigingen en controleer `LIVING-DOC.md` en
+  `TEST-BDD-MAPPING.md`.
+7. Werk `COPILOT_HANDOFF.md` bij met datum, conclusie, bewijs, bestanden, tests, blokkade en
+  volgende stap. Voor `herontwerp` hoort dit ook in de Fase-D-handoff.
+8. Versioneer, commit en push alleen na groene controles; PROD blijft achter de reviewerpoort.
+
+De actuele taakstatus staat in `MASTERCHECKLIST.md`. De handoff beschrijft de overdracht, maar
+vervangt de checklist, ontwerpdocumenten of uitvoerbare tests niet.
+
+## 7. Geen vraaglus bij oplevering
 
 - Vertaal iedere zichtbare gebruikersmelding eerst naar één concrete browserketen met beginstand,
   actie en zichtbaar eindresultaat; vraag niet opnieuw naar informatie die al in chat, screenshot of
@@ -88,7 +111,7 @@ bericht; CC wordt uitsluitend gebruikt om beide TEST-beoordelaars dezelfde sandb
 - Zeg pas `Je kunt nu testen op localhost` nadat de gerichte browsercase, GUI-smoke en vereiste
   regressie zelf zijn uitgevoerd en groen zijn. Meld tussendoor actief diagnose, wijziging en tests.
 
-## 7. Klaarcriteria
+## 8. Klaarcriteria
 
 Een wijziging is pas klaar wanneer:
 

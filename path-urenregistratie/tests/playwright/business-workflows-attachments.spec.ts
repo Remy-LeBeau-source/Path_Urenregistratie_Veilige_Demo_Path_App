@@ -71,6 +71,7 @@ test('[E2E-H-018] iedere beloofde factuurbijlage bestaat werkelijk als geldige e
     if (await invoer.count()) {
       await invoer.fill('8');
       await invoer.press('Tab');
+      await page.locator('[data-hours-week-scope="all"]').click();
       const schrijf = page.waitForResponse(response =>
         response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
       await page.locator('#submit-timesheet').click();
@@ -79,6 +80,17 @@ test('[E2E-H-018] iedere beloofde factuurbijlage bestaat werkelijk als geldige e
     }
     urenstaatId = Number((await leesUrenstaat(page, periodeSleutel, medewerkerId)).id || 0);
     expect(urenstaatId, 'de urenstaat hoort te bestaan').toBeGreaterThan(0);
+
+    const customerTimesheet = await page.request.post('/server/api/customer-timesheets.php', {
+      headers: { 'X-CSRF-Token': await csrf(page) },
+      data: {
+        action: 'mark_skipped',
+        period: periodeSleutel,
+        employee_id: medewerkerId,
+        review_note: 'De klanturenstaat is al rechtstreeks naar Path Backoffice gemaild.',
+      },
+    });
+    expect(customerTimesheet.ok(), `de klanturenstaat-route hoort gereed te zijn: ${await customerTimesheet.text()}`).toBe(true);
 
     await page.request.post('/server/auth/logout.php', { headers: { 'X-CSRF-Token': await csrf(page) } });
     await loginPage.open();

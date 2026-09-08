@@ -39,6 +39,25 @@ staan onder de genummerde fases verderop in dit document.
 | Fase 15 — Release-hardening | ✅ VS Code-scope klaar | Concurrency, jaarwisseling, uploads, accessibility en PWA-manifest/service worker gebouwd en getest |
 | **Fase 16 — Operationeel/live** | 🛠️ Productie en TEST live; mailacceptatie loopt | Google Relay accepteert het bewezen TransIP-IP en een echte TEST-mail is ontvangen; de vijf complete mailroutes en bijlagen moeten nog volledig worden afgetekend |
 
+### 2026-09-08 · MO5b klanturenstaat als factuurblokkade
+
+- [x] Besluit MO5b vastgelegd in `BESLISTABEL.md`: `received` of een registratie
+  van rechtstreeks gemaild zijn voldoende voor factuurafronding; externe bevestiging
+  blijft een aparte optionele taak.
+- [x] Frontendstatus en New-storyline tonen `Wacht op klanturenstaat` wanneer
+  goedgekeurde uren nog geen gereed klantdocument hebben; de stap blijft oranje.
+- [x] Factuur-lock en herhaalde mailqueue-enqueue blokkeren server-side met
+  `customer-timesheet-required` en HTTP 409.
+- [x] Gerichte regressies `INV-N-025` (UI) en `INV-N-016` (echte server-lock)
+  met BDD-mapping toegevoegd; bestaande lock-happy-path fixtures registreren
+  nu expliciet een gereed klanturenstaatdocument.
+- [x] `smoke-test.mjs` bewaakt nu statisch de MO5b-gates in browser, invoice-API
+  en mailqueue.
+- [!] Validatie nog geblokkeerd: de lokale Playwright-run kon niet starten omdat
+  `localhost:8000` niet actief was. Eerst PHP-server starten, daarna
+  `INV-N-025`, `INV-H-020`, `INV-H-021` en de geraakte dashboard-/skin-tests
+  draaien. Pas daarna MO5b als volledig afgerond markeren.
+
 ### Technische eindsprint (in VS Code afgerond deze sessie)
 
 ```

@@ -77,6 +77,7 @@ test('[E2E-N-019] een mislukte factuurpoging laat niets half achter en opnieuw p
     if (await invoer.count()) {
       await invoer.fill('8');
       await invoer.press('Tab');
+      await page.locator('[data-hours-week-scope="all"]').click();
       const schrijf = page.waitForResponse(response =>
         response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
       await page.locator('#submit-timesheet').click();

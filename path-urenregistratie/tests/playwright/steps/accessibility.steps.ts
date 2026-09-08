@@ -30,3 +30,6 @@ Then("sluit de dialoog en gaat de focus niet verloren op de body");
 When("de flow voor A11Y-H-005 wordt uitgevoerd");
 Then("geeft de basisregel een outline aan button, input, select, textarea, a, summary en tabindex");
 And("een via het toetsenbord gefocuste navigatieknop toont echt een outline");
+Given("de administrator is ingelogd op een korte viewport");
+When("de flow voor A11Y-H-006 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat de sluitknop van een scrollende dialoog blijft in beide skins in beeld");

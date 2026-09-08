@@ -1,5 +1,12 @@
 # Handoff voor Claude Code
 
+> **Actuele stand 8 september 2026:** gebruik voor de huidige taak eerst
+> `path-urenregistratie/MASTERCHECKLIST.md` en
+> `path-urenregistratie/COPILOT_HANDOFF.md`. De historische secties hieronder
+> dateren uit augustus. MO5b is inmiddels de geldende klanturenstaatregel:
+> vóór factuurafronding moet het document `received` zijn of rechtstreeks
+> gemaild met reden; externe bevestiging blijft een aparte optionele actie.
+
 Bijgewerkt: 28 augustus 2026, Europe/Amsterdam.
 
 ## Sessie 28 aug 2026 — Claude Code (nieuwe machine, native MySQL)

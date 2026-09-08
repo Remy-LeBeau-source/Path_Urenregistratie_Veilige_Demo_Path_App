@@ -1,6 +1,11 @@
 [README.md](https://github.com/user-attachments/files/30806288/README.md)
 # Path Uren & Facturatie
 
+> Dit bestand beschrijft een historische demo-export. De actuele applicatie,
+> checklist, tests en productieafspraken staan onder `path-urenregistratie/`.
+> Start voor de huidige stand bij `path-urenregistratie/MASTERCHECKLIST.md` en
+> `path-urenregistratie/COPILOT_HANDOFF.md`.
+
 Interactieve veilige demo v0.8.7 van de uren- en facturatieapp voor Path Consultancy B.V.
 
 ## Wat deze versie laat zien

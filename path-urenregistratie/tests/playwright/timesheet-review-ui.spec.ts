@@ -262,6 +262,7 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
           return false;
         }
       });
+      await page.locator('[data-hours-week-scope="all"]').click();
       await page.locator('#submit-timesheet').click();
       await expect(page.locator('#modal-confirm')).toBeVisible();
       await page.locator('#modal-confirm').click();
@@ -344,6 +345,7 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
           return false;
         }
       });
+      await page.locator('[data-hours-week-scope="all"]').click();
       await page.locator('#submit-timesheet').click();
       await expect(page.locator('#modal-confirm')).toBeVisible();
       await page.locator('#modal-confirm').click();
@@ -437,6 +439,7 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
     await expect(page.locator('#timesheet-correction-banner')).toBeVisible();
     await expect(page.locator('#timesheet-correction-message')).toContainText('na goedkeuring');
     await expect(page.locator('#hours-grid .hours-input:not([disabled])').first()).toBeVisible();
+    await page.locator('[data-hours-week-scope="all"]').click();
     await expect(page.locator('#submit-timesheet')).toBeVisible();
     await expect(page.locator('#submit-timesheet')).toContainText('opnieuw indienen');
 
