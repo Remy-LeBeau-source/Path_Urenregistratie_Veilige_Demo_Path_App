@@ -772,9 +772,11 @@ html[data-skin="new"] .new-bento-steps li { position: relative; display: grid; g
 html[data-skin="new"] .new-bento-steps li:not(:last-child)::after { display: none; }
 html[data-skin="new"] .new-bento-steps i { position: relative; z-index: 1; display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid #4b6b82; border-radius: 50%; background: #163048; font-style: normal; box-shadow: 0 0 0 5px #0f293d; }
 html[data-skin="new"] .new-bento-steps li.is-done { color: #cfe5d7; }
-html[data-skin="new"] .new-bento-steps li.is-done i,
-html[data-skin="new"] .new-bento-steps li.is-current i { border-color: #8dd2a0; background: #2f6a4c; color: white; box-shadow: 0 0 0 5px rgba(47,106,76,.5), 0 0 20px rgba(95,185,141,.42); }
-html[data-skin="new"] .new-bento-steps li.is-current { color: white; }
+html[data-skin="new"] .new-bento-steps li.is-done i { border-color: #8dd2a0; background: #2f6a4c; color: white; box-shadow: 0 0 0 5px rgba(47,106,76,.5), 0 0 20px rgba(95,185,141,.42); }
+/* is-current = wacht nog op een actie van iemand anders (bv. Backoffice-controle);
+   bewust een andere kleur dan is-done, zodat "klaar" en "wacht nog" niet identiek ogen. */
+html[data-skin="new"] .new-bento-steps li.is-current i { border-color: var(--path-amber); background: color-mix(in srgb, var(--path-amber) 55%, #163048); color: white; box-shadow: 0 0 0 5px rgba(217,154,60,.35), 0 0 20px rgba(217,154,60,.35); }
+html[data-skin="new"] .new-bento-steps li.is-current { color: #f1d8ab; }
 html[data-skin="new"] .new-bento-steps strong { color: inherit; font-size: 15px; }
 html[data-skin="new"] .new-bento-steps span { font-size: 12px; line-height: 1.45; }
 
