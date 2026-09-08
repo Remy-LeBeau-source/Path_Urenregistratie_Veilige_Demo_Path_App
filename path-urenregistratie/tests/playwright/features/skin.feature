@@ -80,6 +80,14 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     When Backoffice de tweede medewerker in de wachtrij aanklikt
     Then wordt die medewerker geselecteerd en toont het verhaal zijn naam en vier statuskaarten
 
+  @happy
+  Scenario: [SKIN-H-011] een bewust opgeslagen 0 uur telt mee voor de weekvoortgang in Mijn uren
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given de medewerker de nieuwe vormgeving opent op de huidige week
+    When alle werkdagen op deze week uren krijgen behalve de laatste, die bewust leeg blijft, en de week wordt opgeslagen
+    Then heeft de server na een herlaad een eigen dagregel voor de laatste dag bewaard, ook al bleef die op 0 uur
+
   @negative
   Scenario: [SKIN-N-007] productie forceert Klassiek en verbergt de redesignschakelaar
     # Testtechniek: Negatieve equivalentieklasse + error guessing
