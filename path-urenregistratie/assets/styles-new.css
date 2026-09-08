@@ -866,6 +866,10 @@ html[data-skin="new"] .settings-rule-list li {
   border-radius: 16px;
 }
 
+html[data-skin="new"] .settings-warning {
+  border-radius: 14px;
+}
+
 /* Modal-detailschermen — de samenvattingsblokken en de correctiebanner in de
    dialogen (goedkeuring-detail, factuurdetail, correctie, klanturenstaat-review,
    extern bevestigen, medewerker bewerken). De dialoog zelf staat al op het
