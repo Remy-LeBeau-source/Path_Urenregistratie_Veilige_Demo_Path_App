@@ -4593,18 +4593,36 @@ function newEmployeeBentoWeekIndex(period) {
   return suggested && period.weekRows[Number(suggested[1])] ? Number(suggested[1]) : 0;
 }
 
+function isTimesheetWeekComplete(record, periodWeek, weekIndex) {
+  const businessDayIndexes = periodWeek.days.map((day, dayIndex) => day ? dayIndex : -1).filter(dayIndex => dayIndex >= 0);
+  // Een werkdag telt mee zodra er uren > 0 op staan, óf zodra de dag bewust
+  // is opgeslagen (ook als dat toen leeg/0 uur was) — zo telt een expliciet
+  // opgeslagen 0 uur wél mee, terwijl een dag die nooit is bekeken dat niet doet.
+  return businessDayIndexes.length > 0 && businessDayIndexes.every(dayIndex =>
+    Number(record.entries[weekIndex] && record.entries[weekIndex][dayIndex] || 0) > 0
+    || Boolean(record.confirmedEntries && record.confirmedEntries[weekIndex] && record.confirmedEntries[weekIndex][dayIndex])
+  );
+}
+
 function completedTimesheetWeeks(record, period) {
-  return period.weekRows.reduce((count, periodWeek, index) => {
-    const businessDayIndexes = periodWeek.days.map((day, dayIndex) => day ? dayIndex : -1).filter(dayIndex => dayIndex >= 0);
-    // Een werkdag telt mee zodra er uren > 0 op staan, óf zodra de dag bewust
-    // is opgeslagen (ook als dat toen leeg/0 uur was) — zo telt een expliciet
-    // opgeslagen 0 uur wél mee, terwijl een dag die nooit is bekeken dat niet doet.
-    const weekComplete = businessDayIndexes.length > 0 && businessDayIndexes.every(dayIndex =>
-      Number(record.entries[index] && record.entries[index][dayIndex] || 0) > 0
-      || Boolean(record.confirmedEntries && record.confirmedEntries[index] && record.confirmedEntries[index][dayIndex])
-    );
-    return count + (weekComplete ? 1 : 0);
-  }, 0);
+  return period.weekRows.reduce((count, periodWeek, index) =>
+    count + (isTimesheetWeekComplete(record, periodWeek, index) ? 1 : 0), 0);
+}
+
+// Leesbare labels ("Week 39 (21-25 sep)") van de weken die nog niet als
+// ingevuld tellen, zodat een bevestigingsdialoog concreet kan zeggen wélke
+// week(en) nog aandacht nodig hebben in plaats van alleen een aantal.
+function incompleteTimesheetWeekLabels(record, period) {
+  return period.weekRows.reduce((labels, periodWeek, index) => {
+    if (isTimesheetWeekComplete(record, periodWeek, index)) return labels;
+    const actualDays = periodWeek.days.filter(Boolean);
+    if (!actualDays.length) return labels;
+    const range = actualDays.length > 1
+      ? actualDays[0].label + " – " + actualDays[actualDays.length - 1].label
+      : actualDays[0].label;
+    labels.push("Week " + periodWeek.number + " (" + range + ")");
+    return labels;
+  }, []);
 }
 
 function renderNewEmployeeBento(record, employee, period) {
@@ -12189,6 +12207,7 @@ function showTimesheetSubmitConfirmation() {
   const hours = totalEntries(record.entries);
   const correction = record.timesheetStatus === "correction";
   const remainingLabel = remainingWeeks === 1 ? "1 week" : remainingWeeks + " weken";
+  const incompleteWeekLabels = incompleteTimesheetWeekLabels(record, period);
 
   showModal({
     label: correction ? "Opnieuw indienen" : "Definitief indienen",
@@ -12202,7 +12221,9 @@ function showTimesheetSubmitConfirmation() {
       '<div><dt>Na indienen</dt><dd>Alle uren worden vergrendeld</dd></div>' +
       '</dl>' +
       (remainingWeeks
-        ? '<div class="external-timesheet-warning" role="alert"><strong>Er zijn nog ' + remainingLabel + ' niet volledig ingevuld.</strong><p>Ga alleen verder wanneer nuluren voor die dagen bewust kloppen.</p></div>'
+        ? '<div class="external-timesheet-warning" role="alert"><strong>Er zijn nog ' + remainingLabel + ' niet volledig ingevuld:</strong>'
+          + '<ul>' + incompleteWeekLabels.map(label => '<li>' + escapeHtml(label) + '</li>').join('') + '</ul>'
+          + '<p>Ga alleen verder wanneer nuluren voor die dagen bewust kloppen.</p></div>'
         : ''),
     confirm: correction ? "Opnieuw indienen en vergrendelen" : "Indienen en vergrendelen",
     action: async () => {

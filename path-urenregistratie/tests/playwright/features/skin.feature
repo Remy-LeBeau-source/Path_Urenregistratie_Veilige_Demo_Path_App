@@ -50,7 +50,7 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
   @happy
   Scenario: [SKIN-H-006] de echte medewerkerroute toont de live bento en blijft mobiel bedienbaar
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 23
+    # Aantoonbare Playwright-assertions in deze case: 24
     Given de medewerker de nieuwe vormgeving opent
     When het echte dashboard de bento met live invoervelden en gezamenlijke versie-footer tekent
     And eerdere weken niet indienen en de laatste week eerst bevestiging vraagt

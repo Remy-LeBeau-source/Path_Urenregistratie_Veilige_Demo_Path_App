@@ -211,6 +211,9 @@ test('[SKIN-H-006] de echte medewerkerroute toont de live bento en blijft mobiel
     await expect(page.locator('#modal')).toBeVisible();
     await expect(page.locator('#modal-title')).toContainText('indienen?');
     await expect(page.locator('#modal-summary')).toContainText('Alle uren worden vergrendeld');
+    // Niet alleen een aantal: de bevestiging noemt de niet-ingevulde weken
+    // met naam, zodat je precies weet waar je nog moet kijken.
+    await expect(page.locator('.external-timesheet-warning li').first()).toContainText(/Week \d+/);
     await page.locator('#modal-close').click();
   });
 
