@@ -192,6 +192,10 @@ function migration_plan(bool $allowDemoMigrations): array
         'id' => '031_reminder_scheduler.sql',
         'path' => __DIR__ . '/migrations/031_reminder_scheduler.sql',
     ];
+    $plan[] = [
+        'id' => '034_timesheet_receipt_pdf_attachment.sql',
+        'path' => __DIR__ . '/migrations/034_timesheet_receipt_pdf_attachment.sql',
+    ];
     return $plan;
 }
 

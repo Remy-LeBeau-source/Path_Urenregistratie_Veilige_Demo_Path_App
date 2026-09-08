@@ -14,7 +14,7 @@ const And = navigate;
 const But = navigate;
 
 // Eenvoudige F12-navigatie; de echte acties en assertions staan in het specbestand hierboven.
-Given("de wekelijkse herinnering staat aan voor nu (vandaag, huidige tijd)");
+Given("de wekelijkse herinnering staat aan voor nu (vandaag, huidige tijd, Europe/Amsterdam)");
 When("de scheduler voor het eerst draait");
 Then("staat er minstens één reminder-mail in de queue voor de medewerker");
 And("een tweede run binnen dezelfde week verstuurt niets extra (idempotent)");

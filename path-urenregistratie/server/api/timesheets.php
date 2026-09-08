@@ -1008,6 +1008,16 @@ try {
         require_once __DIR__ . '/../mail/queue.php';
         try {
             $employeeName = trim((string)($employee['full_name'] ?? ''));
+            $receiptPdfBase64 = null;
+            if (isset($payload['receipt_pdf_base64']) && is_string($payload['receipt_pdf_base64'])) {
+                $candidate = $payload['receipt_pdf_base64'];
+                // Zelfde bovengrens als de factuur-conceptbijlage: groot genoeg
+                // voor een meermaandelijkse urenstaat, klein genoeg om geen
+                // onbedoelde upload te accepteren.
+                if ($candidate !== '' && strlen($candidate) <= 4_000_000) {
+                    $receiptPdfBase64 = $candidate;
+                }
+            }
             $mailReceipt = mail_enqueue_timesheet_submission_receipt(
                 $pdo,
                 $companyId,
@@ -1018,7 +1028,10 @@ try {
                 $latestDayEntries,
                 (float)($latest['billable_hours'] ?? 0.0),
                 mail_is_dry_run($config),
-                $employeeName
+                $employeeName,
+                null,
+                $receiptPdfBase64,
+                $config
             );
             if ($mailReceipt !== null && !mail_is_dry_run($config)) {
                 mail_dispatch_created($pdo, [['id' => (int)$mailReceipt['id']]], $config);
