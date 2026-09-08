@@ -20,6 +20,29 @@ async function runReminders(nowIso: string): Promise<ReminderRunResult> {
 const weekdayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
 /**
+ * De server bepaalt due-momenten expliciet in Europe/Amsterdam
+ * (send-due-reminders.php). De testrunner's systeemtijdzone verschilt per
+ * omgeving (lokaal Windows toevallig Amsterdam, GitHub Actions-runners UTC)
+ * -- `Date#getDay()`/`toTimeString()` gebruiken die systeemtijdzone en gaven
+ * daardoor op CI een andere weekdag/tijd dan wat de server verwachtte.
+ * Expliciet naar Europe/Amsterdam formatteren, ongeacht de runner-tijdzone.
+ */
+function amsterdamWeekdayAndTime(date: Date): { weekday: string; time: string } {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Europe/Amsterdam',
+    weekday: 'long',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
+  const lookup = Object.fromEntries(parts.map(p => [p.type, p.value]));
+  return {
+    weekday: String(lookup.weekday || '').toLowerCase(),
+    time: `${lookup.hour}:${lookup.minute}`,
+  };
+}
+
+/**
  * settings.php slaat altijd het complete settings-object op (zo werkt ook de
  * echte instellingenpagina, die nooit een gedeeltelijk formulier stuurt). Om
  * andere bedrijfsvelden niet stil terug te zetten naar hun standaardwaarde,
@@ -79,8 +102,9 @@ test.describe('serverplanning herinneringen', () => {
 
     const now = new Date();
     const nowIso = now.toISOString();
+    const { weekday: amsterdamWeekday, time: amsterdamTime } = amsterdamWeekdayAndTime(now);
 
-    await test.step('Given de wekelijkse herinnering staat aan voor nu (vandaag, huidige tijd)', async () => {
+    await test.step('Given de wekelijkse herinnering staat aan voor nu (vandaag, huidige tijd, Europe/Amsterdam)', async () => {
       const csrf = await ctx.get('/server/auth/csrf.php');
       const token = String(((await csrf.json()) as { csrf_token?: string }).csrf_token ?? '');
       const settings = await currentSettingsPayload(ctx);
@@ -90,8 +114,8 @@ test.describe('serverplanning herinneringen', () => {
           settings: {
             ...settings,
             weeklyReminderEnabled: true,
-            weeklyReminderDay: weekdayNames[now.getDay()],
-            weeklyReminderTime: now.toTimeString().slice(0, 5),
+            weeklyReminderDay: amsterdamWeekday,
+            weeklyReminderTime: amsterdamTime,
           },
         },
       });
