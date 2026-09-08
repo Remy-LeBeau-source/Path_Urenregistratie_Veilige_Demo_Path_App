@@ -3,7 +3,6 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { AuthApi } from './api/AuthApi';
 import { EmailQueueApi } from './api/EmailQueueApi';
-import { TimesheetApi } from './api/TimesheetApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
 
 const execFileAsync = promisify(execFile);
@@ -41,65 +40,6 @@ function amsterdamWeekdayAndTime(date: Date): { weekday: string; time: string } 
     weekday: String(lookup.weekday || '').toLowerCase(),
     time: `${lookup.hour}:${lookup.minute}`,
   };
-}
-
-/**
- * Kalenderdatum (YYYY-MM-DD) van $date zoals die in Europe/Amsterdam valt.
- */
-function amsterdamDateKey(date: Date): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Amsterdam', year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
-}
-
-/**
- * De zeven kalenderdata (YYYY-MM-DD) van de ISO-week (maandag t/m zondag)
- * waarin $date in Europe/Amsterdam valt.
- *
- * Bewust niet met Date#getUTCDay()/getUTCDate(): rond middernacht UTC is het
- * in de zomer al 01:00-02:00 in Amsterdam, dus een UTC-gebaseerde weekgrens
- * kan een andere week aanwijzen dan de server (die altijd expliciet
- * Europe/Amsterdam gebruikt, zie send-due-reminders.php). Ankeren op 12:00
- * UTC van de Amsterdamse kalenderdag voorkomt dat dagrekenen zelf weer over
- * een DST-grens heen springt.
- */
-const isoWeekdayByShortName: Record<string, number> = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 7 };
-
-function amsterdamWeekDates(date: Date): string[] {
-  const todayKey = amsterdamDateKey(date);
-  const shortName = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Amsterdam', weekday: 'short' }).format(date);
-  const isoWeekday = isoWeekdayByShortName[shortName] ?? 1;
-  const anchor = new Date(`${todayKey}T12:00:00Z`);
-  const monday = new Date(anchor);
-  monday.setUTCDate(anchor.getUTCDate() - (isoWeekday - 1));
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday);
-    d.setUTCDate(monday.getUTCDate() + i);
-    return d.toISOString().slice(0, 10);
-  });
-}
-
-/**
- * De hele suite deelt één demodatabase; eerdere cases in dezelfde shard
- * kunnen toevallig alle actieve medewerkers al uren voor de huidige week
- * hebben laten invullen. Dat is geen regressie van de reminder-scheduler
- * zelf -- checkt daarom onafhankelijk (los van send-due-reminders.php) of er
- * nog minstens één medewerker met hour_reminders zonder uren deze week over
- * is, zodat het scenario zichzelf skipt i.p.v. vals-rood te gaan wanneer dat
- * toevallig niet zo is.
- */
-async function hasEmployeeWithoutHoursThisWeek(ctx: Awaited<ReturnType<typeof playwrightRequest.newContext>>, now: Date): Promise<boolean> {
-  const timesheetApi = new TimesheetApi(ctx);
-  const bootstrap = await (await ctx.get('/server/api/bootstrap.php')).json();
-  const employees = (bootstrap.employees as Array<Record<string, unknown>>).filter(employee => Number(employee.active) === 1);
-  const periodKey = amsterdamDateKey(now).slice(0, 7);
-  const weekDates = amsterdamWeekDates(now);
-
-  for (const employee of employees) {
-    const result = await timesheetApi.read(periodKey, Number(employee.id), { attach: false });
-    const entries = (result.body?.timesheet?.day_entries as Array<{ work_date: string; hours: number }> | undefined) ?? [];
-    const hasHoursThisWeek = entries.some(entry => weekDates.includes(entry.work_date) && Number(entry.hours) > 0);
-    if (!hasHoursThisWeek) return true;
-  }
-  return false;
 }
 
 /**
@@ -164,7 +104,35 @@ test.describe('serverplanning herinneringen', () => {
     const nowIso = now.toISOString();
     const { weekday: amsterdamWeekday, time: amsterdamTime } = amsterdamWeekdayAndTime(now);
 
-    test.skip(!(await hasEmployeeWithoutHoursThisWeek(ctx, now)), 'Alle actieve medewerkers hebben deze week al uren staan door eerdere cases in dezelfde gedeelde demodatabase; dit scenario valt nu niet te bewijzen.');
+    // De hele suite deelt één demodatabase; andere cases kunnen intussen alle
+    // bestaande medewerkers al uren voor de huidige (echte) week hebben laten
+    // invullen. In plaats van te gissen welke bestaande medewerker toevallig
+    // nog niets heeft, maken we een eigen, verse medewerker aan die per
+    // definitie nooit uren heeft gehad -- deterministisch, ongeacht wat
+    // andere tests intussen aan de gedeelde data doen.
+    const unique = Date.now().toString().slice(-8);
+    const freshEmail = `rem-h-001-${unique}@example.invalid`;
+    const csrfForEmployee = await ctx.get('/server/auth/csrf.php');
+    const employeeToken = String(((await csrfForEmployee.json()) as { csrf_token?: string }).csrf_token ?? '');
+    const createEmployee = await ctx.post('/server/api/staff.php', {
+      headers: { 'X-CSRF-Token': employeeToken },
+      data: {
+        action: 'upsert_employee',
+        sendInvitation: false,
+        employee: {
+          name: `REM-H-001 Medewerker ${unique}`,
+          email: freshEmail,
+          role: 'Tester',
+          startDate: '2020-01-01',
+          active: true,
+          weeklyHours: 36,
+          rate: 0,
+        },
+      },
+    });
+    expect(createEmployee.status()).toBe(200);
+    const createdEmployeeBody = await createEmployee.json();
+    expect(createdEmployeeBody.ok).toBe(true);
 
     await test.step('Given de wekelijkse herinnering staat aan voor nu (vandaag, huidige tijd, Europe/Amsterdam)', async () => {
       const csrf = await ctx.get('/server/auth/csrf.php');
@@ -190,12 +158,12 @@ test.describe('serverplanning herinneringen', () => {
       expect(firstRun.ok).toBe(true);
     });
 
-    await test.step('Then staat er minstens één reminder-mail in de queue voor de medewerker', async () => {
+    await test.step('Then staat er een reminder-mail in de queue voor de nieuwe medewerker', async () => {
       expect(firstRun.sent.weekly).toBeGreaterThan(0);
       const list = await queueApi.list();
       const reminders = (list.body.items as Array<Record<string, unknown>>)
-        .filter(item => String(item.channel || '') === 'reminder');
-      expect(reminders.length).toBeGreaterThan(0);
+        .filter(item => String(item.channel || '') === 'reminder' && item.recipient_email === freshEmail);
+      expect(reminders).toHaveLength(1);
       expect(reminders[0].status).toBe('queued');
       expect(String(reminders[0].subject_snapshot || '')).toMatch(/uren/i);
     });

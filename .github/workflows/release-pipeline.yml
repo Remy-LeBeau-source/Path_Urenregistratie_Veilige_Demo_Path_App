@@ -139,12 +139,13 @@ jobs:
     timeout-minutes: 35
     # De Playwright-suite draait serieel (workers: 1, gedeelde DB + PHP-dev-server
     # met de fingerprint-isolatiefixture). We versnellen zonder dekking te
-    # verliezen door de suite over vier parallelle jobs te shard-en: elke shard
-    # heeft zijn eigen mysql-service en php -S, en draait 1/4 van de tests.
+    # verliezen door de suite over acht parallelle jobs te shard-en: elke shard
+    # heeft zijn eigen mysql-service en php -S, en draait 1/8 van de tests.
     strategy:
       fail-fast: false
+      max-parallel: 8
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     defaults:
       run:
         working-directory: path-urenregistratie
@@ -338,7 +339,7 @@ jobs:
           PLAYWRIGHT_ADMIN_EMAIL: gio@example.invalid
           PLAYWRIGHT_EMPLOYEE_EMAIL: stasjo@example.invalid
           PLAYWRIGHT_BLOB_REPORT: '1'
-        run: timeout --signal=TERM --kill-after=30s 14m npm run test:e2e -- --shard=${{ matrix.shard }}/4
+        run: timeout --signal=TERM --kill-after=30s 14m npm run test:e2e -- --shard=${{ matrix.shard }}/8
 
       - name: Upload mergeable release reports
         if: always()
@@ -513,11 +514,12 @@ jobs:
     timeout-minutes: 35
     environment: test
     # Zelfde shard-aanpak als Validate: de volledige suite draait, verdeeld over
-    # vier parallelle jobs met elk een eigen mysql-service en php -S.
+    # acht parallelle jobs met elk een eigen mysql-service en php -S.
     strategy:
       fail-fast: false
+      max-parallel: 8
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     defaults:
       run:
         working-directory: path-urenregistratie
@@ -640,7 +642,7 @@ jobs:
             echo "Using configured test stage target."
           else
             echo "PATH_APP_BASE_URL=http://127.0.0.1:8000" >> $GITHUB_ENV
-            echo "E2E_SHARD_ARG=--shard=${{ matrix.shard }}/4" >> $GITHUB_ENV
+            echo "E2E_SHARD_ARG=--shard=${{ matrix.shard }}/8" >> $GITHUB_ENV
             echo "Using local fallback regression target for test."
           fi
 

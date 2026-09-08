@@ -126,8 +126,9 @@ function send_weekly_reminders(PDO $pdo, array $config, array $company, DateTime
         'SELECT e.id AS employee_id, e.full_name, u.id AS user_id, u.email
          FROM employees e
          JOIN users u ON u.id = e.user_id
-         JOIN user_preferences up ON up.user_id = u.id
-         WHERE e.company_id = :company_id AND e.active = 1 AND u.active = 1 AND up.hour_reminders = 1
+         LEFT JOIN user_preferences up ON up.user_id = u.id
+         WHERE e.company_id = :company_id AND e.active = 1 AND u.active = 1
+           AND COALESCE(up.hour_reminders, 1) = 1
            AND NOT EXISTS (
              SELECT 1 FROM time_entries te
              JOIN timesheets t ON t.id = te.timesheet_id
@@ -165,10 +166,11 @@ function send_month_end_reminders(PDO $pdo, array $config, array $company, DateT
         "SELECT e.id AS employee_id, e.full_name, u.id AS user_id, u.email
          FROM employees e
          JOIN users u ON u.id = e.user_id
-         JOIN user_preferences up ON up.user_id = u.id
+         LEFT JOIN user_preferences up ON up.user_id = u.id
          JOIN periods p ON p.company_id = e.company_id AND p.year = :year AND p.month = :month
          JOIN timesheets t ON t.employee_id = e.id AND t.period_id = p.id
-         WHERE e.company_id = :company_id AND e.active = 1 AND u.active = 1 AND up.hour_reminders = 1
+         WHERE e.company_id = :company_id AND e.active = 1 AND u.active = 1
+           AND COALESCE(up.hour_reminders, 1) = 1
            AND t.status IN ('draft', 'correction')"
     );
     $stmt->execute([':company_id' => $companyId, ':year' => $year, ':month' => $month]);
@@ -204,10 +206,11 @@ function send_overdue_reminders(PDO $pdo, array $config, array $company, DateTim
         "SELECT e.id AS employee_id, e.full_name, u.id AS user_id, u.email
          FROM employees e
          JOIN users u ON u.id = e.user_id
-         JOIN user_preferences up ON up.user_id = u.id
+         LEFT JOIN user_preferences up ON up.user_id = u.id
          JOIN periods p ON p.company_id = e.company_id AND p.year = :year AND p.month = :month
          JOIN timesheets t ON t.employee_id = e.id AND t.period_id = p.id
-         WHERE e.company_id = :company_id AND e.active = 1 AND u.active = 1 AND up.hour_reminders = 1
+         WHERE e.company_id = :company_id AND e.active = 1 AND u.active = 1
+           AND COALESCE(up.hour_reminders, 1) = 1
            AND t.status IN ('draft', 'correction')"
     );
     $stmt->execute([':company_id' => $companyId, ':year' => $year, ':month' => $month]);
@@ -250,8 +253,9 @@ function send_approval_reminders(PDO $pdo, array $config, array $company, DateTi
     $approvers = $pdo->prepare(
         "SELECT u.id AS user_id, u.email, u.display_name
          FROM users u
-         JOIN user_preferences up ON up.user_id = u.id
-         WHERE u.company_id = :company_id AND u.active = 1 AND u.role IN ('administrator', 'approver') AND up.approval_notifications = 1"
+         LEFT JOIN user_preferences up ON up.user_id = u.id
+         WHERE u.company_id = :company_id AND u.active = 1 AND u.role IN ('administrator', 'approver')
+           AND COALESCE(up.approval_notifications, 1) = 1"
     );
     $approvers->execute([':company_id' => $companyId]);
 
