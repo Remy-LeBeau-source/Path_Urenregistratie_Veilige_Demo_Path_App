@@ -1084,7 +1084,6 @@ let modalSecondaryAction = null;
 let modalCloseAction = null;
 let adminTaskWorkflow = null;
 let newAdminStoryEmployeeId = null;
-let newAdminStorylineHasRendered = false;
 let pendingProfilePhoto = "";
 let pendingBrandLogo = "";
 let unresolvedHelpQuestion = "";
@@ -4578,27 +4577,6 @@ function renderNewEmployeeBento(record, employee, period) {
   const week = period.weekRows[weekIndex];
   if (!week) return;
   state.hoursWeekScope = "week-" + weekIndex;
-  const customerDocument = customerTimesheetFor(record);
-  const heroGreeting = document.querySelector("#new-bento-greeting");
-  const heroTitle = document.querySelector("#new-bento-hero-title");
-  const heroCopy = document.querySelector("#new-bento-hero-copy");
-  const firstName = String(employee.name || "").trim().split(/\s+/)[0] || "daar";
-  const needsHours = ["draft", "correction"].includes(record.timesheetStatus);
-  const needsCustomerTimesheet = employee.customerTimesheetExpected !== false
-    && ["missing", "draft", "resubmit"].includes(customerDocument.status);
-  if (heroGreeting) heroGreeting.textContent = greetingForNow() + ", " + firstName;
-  if (heroTitle && heroCopy) {
-    if (needsHours) {
-      heroTitle.innerHTML = "Begin met<br>je uren";
-      heroCopy.textContent = "Registreer je uren voor deze week. Je wijzigingen worden veilig als concept bewaard.";
-    } else if (needsCustomerTimesheet) {
-      heroTitle.innerHTML = "Regel je<br>klanturenstaat";
-      heroCopy.textContent = "Lever het document aan of registreer dat het al rechtstreeks is gemaild.";
-    } else {
-      heroTitle.innerHTML = "Backoffice neemt<br>het over";
-      heroCopy.textContent = "Je uren zijn ingediend. Backoffice controleert de maand en verzorgt de volgende stap.";
-    }
-  }
   document.querySelector("#new-bento-period-label").textContent = period.label;
   document.querySelector("#new-bento-week-title").textContent = "Week " + week.number;
   const actualDays = week.days.filter(Boolean);
@@ -4643,6 +4621,7 @@ function renderNewEmployeeBento(record, employee, period) {
   document.querySelector("#new-bento-percentage").textContent = progress + "%";
   document.querySelector("#new-bento-ring").style.setProperty("--bento-progress", progress + "%");
 
+  const customerDocument = customerTimesheetFor(record);
   const customerStatus = document.querySelector("#new-bento-customer-status");
   const customerNote = document.querySelector("#new-bento-customer-note");
   let customerLabel = "Nog aanleveren";
@@ -6170,18 +6149,12 @@ function renderNewAdminStoryline(rows, period) {
     newAdminStoryEmployeeId = attention.employee.id;
   }
 
-  const animateTrack = !newAdminStorylineHasRendered;
   queue.innerHTML = rows.map(item => {
     const employee = item.employee;
     const record = item.record;
     const stages = newAdminStoryStages(employee, record);
     const selected = String(employee.id) === String(newAdminStoryEmployeeId);
-    const track = stages.map((stage, index) => {
-      const node = '<i class="is-' + stage.state + '" aria-hidden="true">' + stage.icon + '</i>';
-      if (index === stages.length - 1) return node;
-      const segmentDone = stage.state === "done" && stages[index + 1].state === "done";
-      return node + '<span class="new-admin-track-segment' + (segmentDone ? ' is-done' : '') + '" aria-hidden="true"></span>';
-    }).join("");
+    const track = stages.map(stage => '<i class="is-' + stage.state + '" aria-hidden="true">' + stage.icon + '</i>').join("");
     const status = record.invoiceStatus === "simulated"
       ? "Voltooid"
       : record.invoiceStatus === "ready"
@@ -6197,10 +6170,9 @@ function renderNewAdminStoryline(rows, period) {
                   : "Registratie actief";
     return '<button class="new-admin-employee-row' + (selected ? ' is-selected' : '') + '" type="button" data-new-admin-story-employee="' + employee.id + '" aria-pressed="' + String(selected) + '">' +
       '<span class="new-admin-employee-person"><span class="mini-avatar">' + initials(employee.name) + '</span><span><strong>' + escapeHtml(employee.name) + '</strong><small>' + escapeHtml(employee.role || employee.client || "Medewerker") + '</small></span></span>' +
-      '<span class="new-admin-employee-track' + (animateTrack ? ' is-first-render' : '') + '">' + track + '</span>' +
+      '<span class="new-admin-employee-track">' + track + '</span>' +
       '<span class="new-admin-employee-status">' + escapeHtml(status) + '</span><span class="new-admin-employee-chevron">⌄</span></button>';
   }).join("");
-  newAdminStorylineHasRendered = true;
 
   const selected = rows.find(item => String(item.employee.id) === String(newAdminStoryEmployeeId)) || rows[0];
   const employee = selected.employee;
