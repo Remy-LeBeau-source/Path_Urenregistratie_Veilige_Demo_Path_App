@@ -10823,7 +10823,7 @@ function revealExistingStaffAccount(existing, message, reopenForm) {
     action: canReopen
       ? () => {
         reopenForm();
-        modalCloseAction = focusExistingAccount;
+        window.setTimeout(() => { modalCloseAction = focusExistingAccount; }, 0);
       }
       : () => closeModal(true)
   });
