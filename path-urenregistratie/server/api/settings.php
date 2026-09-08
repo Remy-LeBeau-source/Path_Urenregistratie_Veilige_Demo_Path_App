@@ -139,6 +139,15 @@ try {
              customer_timesheet_reminder_enabled = :customer_timesheet_reminder_enabled,
              customer_timesheet_reminder_time = :customer_timesheet_reminder_time,
              customer_timesheet_overdue_workdays = :customer_timesheet_overdue_workdays,
+             weekly_reminder_enabled = :weekly_reminder_enabled,
+             weekly_reminder_day = :weekly_reminder_day,
+             weekly_reminder_time = :weekly_reminder_time,
+             month_end_reminder_enabled = :month_end_reminder_enabled,
+             month_end_reminder_time = :month_end_reminder_time,
+             overdue_reminder_enabled = :overdue_reminder_enabled,
+             overdue_reminder_time = :overdue_reminder_time,
+             approval_reminder_enabled = :approval_reminder_enabled,
+             approval_reminder_time = :approval_reminder_time,
              customer_timesheet_submission_subject = :customer_timesheet_submission_subject,
              customer_timesheet_submission_body = :customer_timesheet_submission_body,
              customer_timesheet_broker_subject = :customer_timesheet_broker_subject,
@@ -179,6 +188,18 @@ try {
 
     $overdueWorkdays = max(1, min(23, (int)($settings['customerTimesheetOverdueWorkdays'] ?? 2)));
 
+    $reminderTimeField = static function (array $settings, string $key, string $default): string {
+        $value = settings_string($settings[$key] ?? $default, 8);
+        return preg_match('/^\d{2}:\d{2}$/', $value) ? $value : $default;
+    };
+    $weekdayNames = ['monday' => 1, 'tuesday' => 2, 'wednesday' => 3, 'thursday' => 4, 'friday' => 5, 'saturday' => 6, 'sunday' => 7];
+    $weeklyReminderDay = $weekdayNames[strtolower(settings_string($settings['weeklyReminderDay'] ?? 'friday', 16))] ?? 5;
+
+    $weeklyReminderTime = $reminderTimeField($settings, 'weeklyReminderTime', '14:00');
+    $monthEndReminderTime = $reminderTimeField($settings, 'monthEndReminderTime', '15:00');
+    $overdueReminderTime = $reminderTimeField($settings, 'overdueReminderTime', '09:00');
+    $approvalReminderTime = $reminderTimeField($settings, 'approvalReminderTime', '10:00');
+
     $updateCompany->execute([
         ':trade_name' => $tradeName !== '' ? $tradeName : 'Organisatie',
         ':invoice_name_display' => $invoiceNameDisplay,
@@ -202,6 +223,15 @@ try {
         ':customer_timesheet_reminder_enabled' => settings_bool($settings['customerTimesheetReminderEnabled'] ?? true, true) ? 1 : 0,
         ':customer_timesheet_reminder_time' => $reminderTime . ':00',
         ':customer_timesheet_overdue_workdays' => $overdueWorkdays,
+        ':weekly_reminder_enabled' => settings_bool($settings['weeklyReminderEnabled'] ?? true, true) ? 1 : 0,
+        ':weekly_reminder_day' => $weeklyReminderDay,
+        ':weekly_reminder_time' => $weeklyReminderTime . ':00',
+        ':month_end_reminder_enabled' => settings_bool($settings['monthEndReminderEnabled'] ?? true, true) ? 1 : 0,
+        ':month_end_reminder_time' => $monthEndReminderTime . ':00',
+        ':overdue_reminder_enabled' => settings_bool($settings['overdueReminderEnabled'] ?? true, true) ? 1 : 0,
+        ':overdue_reminder_time' => $overdueReminderTime . ':00',
+        ':approval_reminder_enabled' => settings_bool($settings['approvalReminderEnabled'] ?? true, true) ? 1 : 0,
+        ':approval_reminder_time' => $approvalReminderTime . ':00',
         // These four were collected by the form but never stored: the texts lived
         // only in the browser of whoever typed them, so F5 lost the change.
         ':customer_timesheet_submission_subject' => settings_string($settings['customerTimesheetSubmissionSubject'] ?? '', 250) ?: null,

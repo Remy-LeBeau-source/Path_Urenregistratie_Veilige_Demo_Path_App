@@ -180,6 +180,10 @@ function migration_plan(bool $allowDemoMigrations): array
         'id' => '030_timesheet_receipt_channels.sql',
         'path' => __DIR__ . '/migrations/030_timesheet_receipt_channels.sql',
     ];
+    $plan[] = [
+        'id' => '031_reminder_scheduler.sql',
+        'path' => __DIR__ . '/migrations/031_reminder_scheduler.sql',
+    ];
     return $plan;
 }
 

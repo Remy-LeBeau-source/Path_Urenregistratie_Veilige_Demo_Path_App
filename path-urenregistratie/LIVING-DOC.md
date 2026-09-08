@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 447 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 448 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 447 unieke case-ID's
+- Playwright executable cases: 448 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 448 unieke case-ID's
-- Playwright features: 28
+- Totaal executable cases: 449 unieke case-ID's
+- Playwright features: 29
 - Database features: 1
-- Playwright steps mappings: 28
+- Playwright steps mappings: 29
 - Database steps mappings: 1
-- Uitvoeringen: 482
-- Niet-mobile projectuitvoeringen: 412
+- Uitvoeringen: 483
+- Niet-mobile projectuitvoeringen: 413
 - Mobile functionele cases: 35
 - Pixel 7 / Chromium-uitvoeringen: 35
 - iPhone 13 / WebKit-uitvoeringen: 35
 
-De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 447 Playwright-functionele cases in totaal 482 resultaten op: 412 + (35 x 2) = 482.
+De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 448 Playwright-functionele cases in totaal 483 resultaten op: 413 + (35 x 2) = 483.
 
 ## Documentatieketen
 
@@ -515,6 +515,14 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 447 Playwri
 - [SAFE-H-006] eerste productieorganisatie wordt gevalideerd en zonder overschrijven ingericht — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 18
 - [SAFE-H-011] groene main-pipeline rolt exact dezelfde release veilig uit naar productie — Techniek: Toestandsovergang + foutinjectie + beslissingstabel · Assertions: 28
 - [SAFE-H-016] de eerste 1.x-uitrol normaliseert PROD naar de afgesproken baseline en controleert die streng — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 32
+
+### Serverplanning herinneringen
+
+- Feature: `tests/playwright/features/reminders.feature`
+- Source: `tests/playwright/reminders.spec.ts`
+- Cases: 1
+
+- [REM-H-001] wekelijkse herinnering verstuurt eenmalig een reminder-mail aan medewerkers zonder uren deze week — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 
 ### Rollen, rechten en gegevensafscherming
 
