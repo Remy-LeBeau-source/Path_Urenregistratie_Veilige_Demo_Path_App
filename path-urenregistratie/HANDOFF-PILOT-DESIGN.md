@@ -1,13 +1,22 @@
 # HANDOFF — 1414/1919 herontwerp
 
-**2026-09-07 avond — actuele overdracht staat in `HANDOFF-CODEX-FASE-D.md`
-(volledig herschreven, geen tegenstrijdige oudere secties meer).** Kort: de
-automatische merge-wachtrij naar `main` (`pilot-merge-queue.yml`) is live;
-`herontwerp`-CI staat rood door 18 functionele testfouten (status-/proces-
-regressie in de "beveilig indienen"-logica van commit `6e763b4`, gedeeltelijk
-al gefixt in `cf3da25`) — dat oplossen is de eerste taak voor wie hierna
-verder werkt. Lees dat bestand vóór je verder gaat; de rest van dit document
-blijft de historische increment-voor-increment log.
+**2026-09-08 ochtend — actuele overdracht staat in `HANDOFF-CODEX-FASE-D.md`.**
+Lees dat bestand eerst; dit document blijft de historische increment-voor-
+increment log. Kort de huidige stand:
+
+- De automatische merge-wachtrij naar `main` (`pilot-merge-queue.yml`) is live
+  en heeft zichzelf vannacht meerdere keren bewezen: groene `herontwerp`-CI →
+  automatische fast-forward naar `main` → nieuwe Release Pipeline naar TEST,
+  zonder tussenkomst. `main` en `herontwerp` liepen elkaar de hele nacht bij.
+- De brede CI-regressie van gisteravond (`customer-timesheet-required` — een
+  factuur kon niet meer definitief zonder klanturenstaat) is gevonden en
+  opgelost in 9 testfixtures; groen bevestigd en via de wachtrij naar `main`
+  doorgestroomd.
+- **Nieuwe, expliciet toegewezen taak voor Codex:** de klanturenstaat-regel
+  moet nog onderscheid maken tussen "medewerker claimt rechtstreeks gemaild"
+  (blijft oranje) en "Backoffice bevestigt dat extern" (pas dan groen/
+  afrondbaar) — zie `HANDOFF-CODEX-FASE-D.md` en `COPILOT_HANDOFF.md` voor de
+  volledige technische bevinding en de bron `HANDOFF-CODEX.md` (§2.1).
 
 **Evergreen doc. Wordt tijdens het werk telkens bijgewerkt.**
 Laatst bijgewerkt: 2026-09-07 — **status.** Twee vaste branches: `main`
