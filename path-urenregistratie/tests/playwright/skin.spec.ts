@@ -211,6 +211,9 @@ test('[SKIN-H-006] de echte medewerkerroute toont de live bento en blijft mobiel
     await expect(page.locator('#modal')).toBeVisible();
     await expect(page.locator('#modal-title')).toContainText('indienen?');
     await expect(page.locator('#modal-summary')).toContainText('Alle uren worden vergrendeld');
+    // Niet alleen een aantal: de bevestiging noemt de niet-ingevulde weken
+    // met naam, zodat je precies weet waar je nog moet kijken.
+    await expect(page.locator('.external-timesheet-warning li').first()).toContainText(/Week \d+/);
     await page.locator('#modal-close').click();
   });
 
@@ -336,6 +339,61 @@ test('[SKIN-H-010] de admin-verhaallijn wisselt van medewerker en toont bijbehor
     expect(verhaalKop).toContain(tweedeNaam);
     expect(verhaalKop).not.toContain(eersteNaam);
     await expect(page.locator('#new-admin-story-cards article')).toHaveCount(4);
+  });
+});
+
+test('[SKIN-H-011] een bewust opgeslagen 0 uur telt mee voor de weekvoortgang in Mijn uren', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await page.clock.setFixedTime(new Date('2026-09-06T12:00:00.000Z'));
+  await page.addInitScript(() => {
+    localStorage.setItem('path-install-afgewezen', String(Date.now()));
+  });
+
+  await test.step('Given de medewerker de nieuwe vormgeving opent op de huidige week', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await expect(page.locator('#new-employee-bento')).toBeVisible();
+  });
+
+  const inputs = page.locator('#new-bento-days .new-bento-hours-input');
+  const aantalDagen = await inputs.count();
+  test.skip(aantalDagen < 2, 'Minder dan twee werkdagen deze week; het scenario (één dag bewust op 0 laten) valt niet te bewijzen.');
+  // De precieze dagdatum van de laatst getoonde werkdag, om na te gaan of de
+  // server er straks een eigen (0-uur) dagregel voor heeft — los van hoeveel
+  // andere weken toevallig al gevuld zijn door eerdere cases in dezelfde
+  // gedeelde demodatabase (zie ook [SKIN-H-010] hierboven).
+  const laatsteDagLabel = await inputs.nth(aantalDagen - 1).locator('xpath=../..').locator('b').first().textContent();
+
+  await test.step('When alle werkdagen op deze week uren krijgen behalve de laatste, die bewust leeg blijft, en de week wordt opgeslagen', async () => {
+    for (let i = 0; i < aantalDagen - 1; i += 1) {
+      await inputs.nth(i).fill('8');
+      await inputs.nth(i).blur();
+    }
+    await expect(inputs.nth(aantalDagen - 1)).toHaveValue('');
+    await page.locator('[data-new-bento-save]').click();
+    // De conceptwrite is gedebounced (700ms) en asynchroon; geef de server de
+    // kans om de expliciete 0-uur dagregel voor de actieve week te bewaren
+    // voordat de pagina herlaadt.
+    await page.waitForTimeout(1_500);
+  });
+
+  await test.step('Then heeft de server na een herlaad een eigen dagregel voor de laatste dag bewaard, ook al bleef die op 0 uur', async () => {
+    const [response] = await Promise.all([
+      page.waitForResponse(res => res.url().includes('/server/api/timesheets.php') && res.request().method() === 'GET'),
+      page.reload(),
+    ]);
+    await expect(page.locator('#new-employee-bento')).toBeVisible();
+    await expect(inputs.nth(0)).toHaveValue('8', { timeout: 10_000 });
+    await expect(inputs.nth(aantalDagen - 1)).toHaveValue('');
+
+    const data = await response.json();
+    const dayEntries: Array<{ work_date: string; hours: number }> = data?.timesheet?.day_entries || [];
+    const laatsteDagNummer = String(Number(laatsteDagLabel)).padStart(2, '0');
+    const laatsteDagRij = dayEntries.find(entry => entry.work_date.endsWith('-' + laatsteDagNummer));
+    expect(laatsteDagRij, 'de server moet een eigen dagregel bewaren voor de bewust op 0 gelaten dag').toBeTruthy();
+    expect(Number(laatsteDagRij?.hours)).toBe(0);
   });
 });
 

@@ -1185,7 +1185,7 @@ jobs:
     if: >-
       ${{ always()
           && needs.prod.result == 'success'
-          && needs.live-docs.result == 'success'
+          && (needs.live-docs.result == 'success' || needs.live-docs.result == 'skipped')
           && ((github.event_name == 'push' && github.ref == 'refs/heads/main')
               || (github.event_name == 'workflow_dispatch'
                   && (inputs.ref == 'main' || inputs.ref == 'refs/heads/main'))) }}

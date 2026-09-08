@@ -1,0 +1,77 @@
+name: Send Due Reminders
+
+# Draait de serverplanning voor de vier herinneringstypen uit Instellingen
+# (wekelijks/maandeinde/achterstand/goedkeuring). Elke ~15 minuten via SSH op
+# zowel TEST als PROD; het script zelf bepaalt per bedrijf of er op dit
+# moment iets due is (zie server/scripts/send-due-reminders.php) en is
+# idempotent (reminder_log), dus vaker draaien dan nodig is onschadelijk.
+# Handmatig draaien kan via workflow_dispatch, ook voor alleen TEST of PROD.
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Welke omgeving(en)'
+        type: choice
+        options: [both, test, prod]
+        default: both
+
+permissions:
+  contents: read
+
+jobs:
+  send-reminders:
+    name: Send due reminders (TEST + PROD)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Install pinned TransIP SSH identity
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.TRANSIP_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.TRANSIP_SSH_KNOWN_HOSTS }}
+        run: |
+          test -n "$SSH_PRIVATE_KEY"
+          test -n "$SSH_KNOWN_HOSTS"
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/path_uren_reminders_ed25519"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/path_uren_reminders_ed25519" "$HOME/.ssh/known_hosts"
+          ssh-keygen -y -f "$HOME/.ssh/path_uren_reminders_ed25519" > /dev/null
+
+      - name: Run scheduler on TEST
+        id: test
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.target == 'both' || inputs.target == 'test' }}
+        continue-on-error: true
+        shell: bash
+        env:
+          TRANSIP_SSH_HOST: ${{ vars.TRANSIP_SSH_HOST }}
+          TRANSIP_SSH_USER: ${{ vars.TRANSIP_SSH_USER }}
+          TRANSIP_TEST_LIVE_ROOT: /data/sites/web/pathconsultancynl/subsites/uren-test.pathconsultancy.nl
+        run: |
+          ssh -i "$HOME/.ssh/path_uren_reminders_ed25519" -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            "${TRANSIP_SSH_USER}@${TRANSIP_SSH_HOST}" \
+            "cd '${TRANSIP_TEST_LIVE_ROOT}' && php server/scripts/send-due-reminders.php"
+
+      - name: Run scheduler on PROD
+        id: prod
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.target == 'both' || inputs.target == 'prod' }}
+        continue-on-error: true
+        shell: bash
+        env:
+          TRANSIP_SSH_HOST: ${{ vars.TRANSIP_SSH_HOST }}
+          TRANSIP_SSH_USER: ${{ vars.TRANSIP_SSH_USER }}
+          TRANSIP_LIVE_ROOT: /data/sites/web/pathconsultancynl/subsites/uren.pathconsultancy.nl
+        run: |
+          ssh -i "$HOME/.ssh/path_uren_reminders_ed25519" -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            "${TRANSIP_SSH_USER}@${TRANSIP_SSH_HOST}" \
+            "cd '${TRANSIP_LIVE_ROOT}' && php server/scripts/send-due-reminders.php"
+
+      - name: Fail job if either environment failed
+        if: ${{ steps.test.outcome == 'failure' || steps.prod.outcome == 'failure' }}
+        run: |
+          echo "TEST: ${{ steps.test.outcome }}"
+          echo "PROD: ${{ steps.prod.outcome }}"
+          exit 1

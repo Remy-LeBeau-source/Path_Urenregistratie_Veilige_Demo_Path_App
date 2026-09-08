@@ -365,6 +365,7 @@
 | SAFE-H-006 | security | production-safety.feature | eerste productieorganisatie wordt gevalideerd en zonder overschrijven ingericht | Negatieve equivalentieklasse + error guessing | 18 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | eerste productieorganisatie wordt gevalideerd en zonder overschrijven ingericht | Happy | 14 | Actueel |
 | SAFE-H-011 | security | production-safety.feature | groene main-pipeline rolt exact dezelfde release veilig uit naar productie | Toestandsovergang + foutinjectie + beslissingstabel | 28 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | groene main-pipeline rolt exact dezelfde release veilig uit naar productie | Happy | 14 | Actueel |
 | SAFE-H-016 | security | production-safety.feature | de eerste 1.x-uitrol normaliseert PROD naar de afgesproken baseline en controleert die streng | Beslissingstabel rollen en autorisatie | 32 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | de eerste 1.x-uitrol normaliseert PROD naar de afgesproken baseline en controleert die streng | Happy | 14 | Actueel |
+| REM-H-001 | api | reminders.feature | wekelijkse herinnering verstuurt eenmalig een reminder-mail aan medewerkers zonder uren deze week | Beslissingstabel rollen en autorisatie | 8 | reminders.steps.ts | reminders.spec.ts | API | Herinneringen | wekelijkse herinnering verstuurt eenmalig een reminder-mail aan medewerkers zonder uren deze week | Happy | 15 | Actueel |
 | ROLE-N-003 | security | roles-authorization.feature | zonder sessie geeft protected API 401 | Beslissingstabel rollen en autorisatie | 2 | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | zonder sessie geeft protected API 401 | Negative | 4 | Actueel |
 | ROLE-H-001 | security | roles-authorization.feature | admin ziet volledige data | Beslissingstabel rollen en autorisatie | 7 | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | admin ziet volledige data | Happy | 4 | Actueel |
 | ROLE-H-002 | security | roles-authorization.feature | employee ziet alleen eigen data | Beslissingstabel rollen en autorisatie | 8 | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | employee ziet alleen eigen data | Happy | 4 | Actueel |
@@ -391,10 +392,11 @@
 | SKIN-H-003 | ui | skin.feature | terug naar "Klassiek" herstelt de klassieke vormgeving en bewaart die | Herstelbaarheid + toestandsovergang | 5 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | terug naar "Klassiek" herstelt de klassieke vormgeving en bewaart die | Happy | 19 | Actueel |
 | SKIN-H-004 | ui | skin.feature | de nieuwe skin activeert uitsluitend zijn eigen visuele fundament | Beslissingstabel rollen en autorisatie | 10 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de nieuwe skin activeert uitsluitend zijn eigen visuele fundament | Happy | 19 | Actueel |
 | SKIN-H-005 | ui | skin.feature | Klassiek start licht en Nieuw donker en onthoudt daarna elk eigen thema | Beslissingstabel rollen en autorisatie | 13 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | Klassiek start licht en Nieuw donker en onthoudt daarna elk eigen thema | Happy | 19 | Actueel |
-| SKIN-H-006 | ui | skin.feature | de echte medewerkerroute toont de live bento en blijft mobiel bedienbaar | Beslissingstabel rollen en autorisatie | 23 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de echte medewerkerroute toont de live bento en blijft mobiel bedienbaar | Happy | 19 | Actueel |
+| SKIN-H-006 | ui | skin.feature | de echte medewerkerroute toont de live bento en blijft mobiel bedienbaar | Beslissingstabel rollen en autorisatie | 24 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de echte medewerkerroute toont de live bento en blijft mobiel bedienbaar | Happy | 19 | Actueel |
 | SKIN-H-008 | ui | skin.feature | Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en terugschakelen | End-to-end use-case + visuele contractasserties | 11 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en terugschakelen | Happy | 19 | Actueel |
 | SKIN-H-009 | ui | skin.feature | medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en Klassiek | Beslissingstabel rollen en autorisatie | 12 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en Klassiek | Happy | 19 | Actueel |
 | SKIN-H-010 | ui | skin.feature | de admin-verhaallijn wisselt van medewerker en toont bijbehorende status | Beslissingstabel rollen en autorisatie | 7 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de admin-verhaallijn wisselt van medewerker en toont bijbehorende status | Happy | 19 | Actueel |
+| SKIN-H-011 | ui | skin.feature | een bewust opgeslagen 0 uur telt mee voor de weekvoortgang in Mijn uren | End-to-end use-case + visuele contractasserties | 8 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | een bewust opgeslagen 0 uur telt mee voor de weekvoortgang in Mijn uren | Happy | 19 | Actueel |
 | SKIN-N-007 | ui | skin.feature | productie forceert Klassiek en verbergt de redesignschakelaar | Negatieve equivalentieklasse + error guessing | 5 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | productie forceert Klassiek en verbergt de redesignschakelaar | Negative | 19 | Actueel |
 | TS-REV-API-H-005 | integration | correction-approval-workflow.feature | admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking | Concurrency + toestandsovergang | 65 | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
 | TS-REV-API-H-006 | integration | correction-approval-workflow.feature | gelijktijdige approve-requests door twee beheerders leveren exact één winnaar | Concurrency + toestandsovergang | 7 | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
@@ -468,10 +470,10 @@
 
 ## Totalen
 
-- Playwright executable cases: 446
+- Playwright executable cases: 448
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 447
-- Playwright features: 28
+- Totaal unieke executable cases: 449
+- Playwright features: 29
 - Database features: 1
-- Playwright steps mappings: 28
+- Playwright steps mappings: 29
 - Database steps mappings: 1

@@ -2659,6 +2659,34 @@ function mergeBootstrapIntoState(data) {
   if (company.customer_timesheet_overdue_workdays !== undefined && company.customer_timesheet_overdue_workdays !== null) {
     state.settings.customerTimesheetOverdueWorkdays = Number(company.customer_timesheet_overdue_workdays) || state.settings.customerTimesheetOverdueWorkdays;
   }
+  const weekdayNumbers = { 1: "monday", 2: "tuesday", 3: "wednesday", 4: "thursday", 5: "friday", 6: "saturday", 7: "sunday" };
+  if (company.weekly_reminder_enabled !== undefined && company.weekly_reminder_enabled !== null) {
+    state.settings.weeklyReminderEnabled = Number(company.weekly_reminder_enabled) === 1;
+  }
+  if (company.weekly_reminder_day !== undefined && company.weekly_reminder_day !== null) {
+    state.settings.weeklyReminderDay = weekdayNumbers[Number(company.weekly_reminder_day)] || state.settings.weeklyReminderDay;
+  }
+  if (company.weekly_reminder_time) {
+    state.settings.weeklyReminderTime = String(company.weekly_reminder_time).slice(0, 5);
+  }
+  if (company.month_end_reminder_enabled !== undefined && company.month_end_reminder_enabled !== null) {
+    state.settings.monthEndReminderEnabled = Number(company.month_end_reminder_enabled) === 1;
+  }
+  if (company.month_end_reminder_time) {
+    state.settings.monthEndReminderTime = String(company.month_end_reminder_time).slice(0, 5);
+  }
+  if (company.overdue_reminder_enabled !== undefined && company.overdue_reminder_enabled !== null) {
+    state.settings.overdueReminderEnabled = Number(company.overdue_reminder_enabled) === 1;
+  }
+  if (company.overdue_reminder_time) {
+    state.settings.overdueReminderTime = String(company.overdue_reminder_time).slice(0, 5);
+  }
+  if (company.approval_reminder_enabled !== undefined && company.approval_reminder_enabled !== null) {
+    state.settings.approvalReminderEnabled = Number(company.approval_reminder_enabled) === 1;
+  }
+  if (company.approval_reminder_time) {
+    state.settings.approvalReminderTime = String(company.approval_reminder_time).slice(0, 5);
+  }
   if (company.leave_sick_entry_enabled !== undefined && company.leave_sick_entry_enabled !== null) {
     state.settings.leaveSickEntryEnabled = Number(company.leave_sick_entry_enabled) === 1;
   }
@@ -4593,18 +4621,36 @@ function newEmployeeBentoWeekIndex(period) {
   return suggested && period.weekRows[Number(suggested[1])] ? Number(suggested[1]) : 0;
 }
 
+function isTimesheetWeekComplete(record, periodWeek, weekIndex) {
+  const businessDayIndexes = periodWeek.days.map((day, dayIndex) => day ? dayIndex : -1).filter(dayIndex => dayIndex >= 0);
+  // Een werkdag telt mee zodra er uren > 0 op staan, óf zodra de dag bewust
+  // is opgeslagen (ook als dat toen leeg/0 uur was) — zo telt een expliciet
+  // opgeslagen 0 uur wél mee, terwijl een dag die nooit is bekeken dat niet doet.
+  return businessDayIndexes.length > 0 && businessDayIndexes.every(dayIndex =>
+    Number(record.entries[weekIndex] && record.entries[weekIndex][dayIndex] || 0) > 0
+    || Boolean(record.confirmedEntries && record.confirmedEntries[weekIndex] && record.confirmedEntries[weekIndex][dayIndex])
+  );
+}
+
 function completedTimesheetWeeks(record, period) {
-  return period.weekRows.reduce((count, periodWeek, index) => {
-    const businessDayIndexes = periodWeek.days.map((day, dayIndex) => day ? dayIndex : -1).filter(dayIndex => dayIndex >= 0);
-    // Een werkdag telt mee zodra er uren > 0 op staan, óf zodra de dag bewust
-    // is opgeslagen (ook als dat toen leeg/0 uur was) — zo telt een expliciet
-    // opgeslagen 0 uur wél mee, terwijl een dag die nooit is bekeken dat niet doet.
-    const weekComplete = businessDayIndexes.length > 0 && businessDayIndexes.every(dayIndex =>
-      Number(record.entries[index] && record.entries[index][dayIndex] || 0) > 0
-      || Boolean(record.confirmedEntries && record.confirmedEntries[index] && record.confirmedEntries[index][dayIndex])
-    );
-    return count + (weekComplete ? 1 : 0);
-  }, 0);
+  return period.weekRows.reduce((count, periodWeek, index) =>
+    count + (isTimesheetWeekComplete(record, periodWeek, index) ? 1 : 0), 0);
+}
+
+// Leesbare labels ("Week 39 (21-25 sep)") van de weken die nog niet als
+// ingevuld tellen, zodat een bevestigingsdialoog concreet kan zeggen wélke
+// week(en) nog aandacht nodig hebben in plaats van alleen een aantal.
+function incompleteTimesheetWeekLabels(record, period) {
+  return period.weekRows.reduce((labels, periodWeek, index) => {
+    if (isTimesheetWeekComplete(record, periodWeek, index)) return labels;
+    const actualDays = periodWeek.days.filter(Boolean);
+    if (!actualDays.length) return labels;
+    const range = actualDays.length > 1
+      ? actualDays[0].label + " – " + actualDays[actualDays.length - 1].label
+      : actualDays[0].label;
+    labels.push("Week " + periodWeek.number + " (" + range + ")");
+    return labels;
+  }, []);
 }
 
 function renderNewEmployeeBento(record, employee, period) {
@@ -12189,6 +12235,7 @@ function showTimesheetSubmitConfirmation() {
   const hours = totalEntries(record.entries);
   const correction = record.timesheetStatus === "correction";
   const remainingLabel = remainingWeeks === 1 ? "1 week" : remainingWeeks + " weken";
+  const incompleteWeekLabels = incompleteTimesheetWeekLabels(record, period);
 
   showModal({
     label: correction ? "Opnieuw indienen" : "Definitief indienen",
@@ -12202,7 +12249,9 @@ function showTimesheetSubmitConfirmation() {
       '<div><dt>Na indienen</dt><dd>Alle uren worden vergrendeld</dd></div>' +
       '</dl>' +
       (remainingWeeks
-        ? '<div class="external-timesheet-warning" role="alert"><strong>Er zijn nog ' + remainingLabel + ' niet volledig ingevuld.</strong><p>Ga alleen verder wanneer nuluren voor die dagen bewust kloppen.</p></div>'
+        ? '<div class="external-timesheet-warning" role="alert"><strong>Er zijn nog ' + remainingLabel + ' niet volledig ingevuld:</strong>'
+          + '<ul>' + incompleteWeekLabels.map(label => '<li>' + escapeHtml(label) + '</li>').join('') + '</ul>'
+          + '<p>Ga alleen verder wanneer nuluren voor die dagen bewust kloppen.</p></div>'
         : ''),
     confirm: correction ? "Opnieuw indienen en vergrendelen" : "Indienen en vergrendelen",
     action: async () => {

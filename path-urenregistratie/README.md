@@ -201,7 +201,7 @@ Eenmalige lokale e2e setup (aanrader):
 
 ```dotenv
 PATH_APP_BASE_URL=http://localhost:8000
-PLAYWRIGHT_ADMIN_PASSWORD=LocalDemoAdmin2026
+PLAYWRIGHT_ADMIN_PASSWORD=888888888888
 PLAYWRIGHT_EMPLOYEE_PASSWORD=LocalDemoEmployee2026
 ```
 

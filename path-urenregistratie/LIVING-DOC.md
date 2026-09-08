@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 446 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 448 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 446 unieke case-ID's
+- Playwright executable cases: 448 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 447 unieke case-ID's
-- Playwright features: 28
+- Totaal executable cases: 449 unieke case-ID's
+- Playwright features: 29
 - Database features: 1
-- Playwright steps mappings: 28
+- Playwright steps mappings: 29
 - Database steps mappings: 1
-- Uitvoeringen: 481
-- Niet-mobile projectuitvoeringen: 411
+- Uitvoeringen: 483
+- Niet-mobile projectuitvoeringen: 413
 - Mobile functionele cases: 35
 - Pixel 7 / Chromium-uitvoeringen: 35
 - iPhone 13 / WebKit-uitvoeringen: 35
 
-De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 446 Playwright-functionele cases in totaal 481 resultaten op: 411 + (35 x 2) = 481.
+De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 448 Playwright-functionele cases in totaal 483 resultaten op: 413 + (35 x 2) = 483.
 
 ## Documentatieketen
 
@@ -516,6 +516,14 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 446 Playwri
 - [SAFE-H-011] groene main-pipeline rolt exact dezelfde release veilig uit naar productie — Techniek: Toestandsovergang + foutinjectie + beslissingstabel · Assertions: 28
 - [SAFE-H-016] de eerste 1.x-uitrol normaliseert PROD naar de afgesproken baseline en controleert die streng — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 32
 
+### Serverplanning herinneringen
+
+- Feature: `tests/playwright/features/reminders.feature`
+- Source: `tests/playwright/reminders.spec.ts`
+- Cases: 1
+
+- [REM-H-001] wekelijkse herinnering verstuurt eenmalig een reminder-mail aan medewerkers zonder uren deze week — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
+
 ### Rollen, rechten en gegevensafscherming
 
 - Feature: `tests/playwright/features/roles-authorization.feature`
@@ -555,17 +563,18 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 446 Playwri
 
 - Feature: `tests/playwright/features/skin.feature`
 - Source: `tests/playwright/skin.spec.ts`
-- Cases: 10
+- Cases: 11
 
 - [SKIN-H-001] de app start standaard in de klassieke vormgeving — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
 - [SKIN-H-002] Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
 - [SKIN-H-003] terug naar "Klassiek" herstelt de klassieke vormgeving en bewaart die — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 5
 - [SKIN-H-004] de nieuwe skin activeert uitsluitend zijn eigen visuele fundament — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 10
 - [SKIN-H-005] Klassiek start licht en Nieuw donker en onthoudt daarna elk eigen thema — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
-- [SKIN-H-006] de echte medewerkerroute toont de live bento en blijft mobiel bedienbaar — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 23
+- [SKIN-H-006] de echte medewerkerroute toont de live bento en blijft mobiel bedienbaar — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 24
 - [SKIN-H-008] Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en terugschakelen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
 - [SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en Klassiek — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
 - [SKIN-H-010] de admin-verhaallijn wisselt van medewerker en toont bijbehorende status — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
+- [SKIN-H-011] een bewust opgeslagen 0 uur telt mee voor de weekvoortgang in Mijn uren — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 8
 - [SKIN-N-007] productie forceert Klassiek en verbergt de redesignschakelaar — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
 
 ### Correctie- en goedkeuringsproces
