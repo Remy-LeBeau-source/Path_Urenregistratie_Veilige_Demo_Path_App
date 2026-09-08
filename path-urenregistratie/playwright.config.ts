@@ -20,6 +20,7 @@ if (existsSync('.env.local')) {
 }
 
 const e2eRunId = String(process.env.PATH_APP_E2E_RUN_ID || '').trim();
+const blobReport = String(process.env.PLAYWRIGHT_BLOB_REPORT || '').trim() === '1';
 
 export default defineConfig({
   testDir: './tests/playwright',
@@ -48,12 +49,19 @@ export default defineConfig({
     reducedMotion: 'reduce',
     extraHTTPHeaders: e2eRunId ? { 'X-Path-E2E-Run-Id': e2eRunId } : undefined,
   },
-  reporter: [
-    ['list'],
-    ['html', { outputFolder: 'playwright-report', open: 'never' }],
-    ['./tests/playwright/reporting/FunctionalAllureReporter.ts'],
-    ['allure-playwright', { outputFolder: 'allure-results', detail: false, suiteTitle: false }],
-  ],
+  reporter: blobReport
+    ? [
+        ['list'],
+        ['blob', { outputDir: 'blob-report' }],
+        ['./tests/playwright/reporting/FunctionalAllureReporter.ts'],
+        ['allure-playwright', { outputFolder: 'allure-results', detail: false, suiteTitle: false }],
+      ]
+    : [
+        ['list'],
+        ['html', { outputFolder: 'playwright-report', open: 'never' }],
+        ['./tests/playwright/reporting/FunctionalAllureReporter.ts'],
+        ['allure-playwright', { outputFolder: 'allure-results', detail: false, suiteTitle: false }],
+      ],
   projects: [
     {
       name: 'desktop-chromium',

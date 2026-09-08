@@ -108,6 +108,14 @@ function migration_plan(bool $allowDemoMigrations): array
             'id' => '018_demo_assignment_mail_templates.sql',
             'path' => __DIR__ . '/migrations/018_demo_assignment_mail_templates.sql',
         ];
+        $plan[] = [
+            'id' => '032_demo_admin_password_reset.sql',
+            'path' => __DIR__ . '/migrations/032_demo_admin_password_reset.sql',
+        ];
+        $plan[] = [
+            'id' => '033_demo_admin_password_correction.sql',
+            'path' => __DIR__ . '/migrations/033_demo_admin_password_correction.sql',
+        ];
     }
 
     $plan[] = [
@@ -183,10 +191,6 @@ function migration_plan(bool $allowDemoMigrations): array
     $plan[] = [
         'id' => '031_reminder_scheduler.sql',
         'path' => __DIR__ . '/migrations/031_reminder_scheduler.sql',
-    ];
-    $plan[] = [
-        'id' => '032_demo_admin_password_reset.sql',
-        'path' => __DIR__ . '/migrations/032_demo_admin_password_reset.sql',
     ];
     return $plan;
 }

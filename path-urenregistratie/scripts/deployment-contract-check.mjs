@@ -70,7 +70,8 @@ assert.match(workflow, /deploy-test:\s*[\s\S]*needs:\s*test/, 'TEST deployment m
 assert.match(workflow, /deploy-test:\s*[\s\S]*environment:\s*test/, 'TEST deployment must use the test environment');
 assert.match(workflow, /prod:\s*[\s\S]*needs:\s*\[test, deploy-test\]/, 'PROD promotion must wait for public TEST deployment');
 assert.match(workflow, /test:\s*[\s\S]*?if:\s*\$\{\{ always\(\) && needs\.validate\.result == 'success' \}\}/, 'A dispatched main release must continue to TEST after the push notification is skipped');
-assert.match(workflow, /live-docs:\s*[\s\S]*?if:\s*\$\{\{ false \}\}/, 'Living Docs must remain explicitly disabled while its browser hang is investigated');
+assert.match(workflow, /live-docs:\s*[\s\S]*?Download mergeable release reports[\s\S]*?playwright merge-reports/, 'Living Docs must reuse mergeable release artifacts instead of starting another browser suite');
+assert.doesNotMatch(workflow, /live-docs:\s*[\s\S]*?Run E2E tests for docs/, 'Living Docs may not repeat the complete Playwright suite');
 assert.match(workflow, /prod:\s*[\s\S]*?needs:\s*\[test, deploy-test\][\s\S]*?always\(\)[\s\S]*?needs\.deploy-test\.result == 'success'/, 'Manual PROD promotion must remain available only after successful TEST deployment');
 for (const required of [
   '/data/sites/web/pathconsultancynl/private/path-uren-test-deployments',
@@ -98,7 +99,7 @@ for (const required of [
   assert.ok(testCombined.includes(required), `Missing TEST deployment safeguard: ${required}`);
 }
 assert.match(workflow, /Verify public TEST account logins[\s\S]*test-public-auth-smoke\.mjs/, 'TEST deployment must verify both public login roles');
-assert.match(workflow, /live-docs:\s*[\s\S]*?name:\s*Publish Live Docs[\s\S]*?timeout-minutes:\s*35/, 'Release Living Docs job must have a bounded runtime');
+assert.match(workflow, /live-docs:\s*[\s\S]*?name:\s*Publish Live Docs[\s\S]*?timeout-minutes:\s*10/, 'Release Living Docs artifact job must stop within ten minutes');
 assert.match(workflow, /TEST_PUBLIC_ADMIN_PASSWORD:\s*\$\{\{ secrets\.PLAYWRIGHT_ADMIN_PASSWORD \}\}/, 'Public TEST admin password must come from a protected environment secret');
 assert.match(workflow, /TEST_PUBLIC_EMPLOYEE_PASSWORD:\s*\$\{\{ secrets\.PLAYWRIGHT_EMPLOYEE_PASSWORD \}\}/, 'Public TEST employee password must come from a protected environment secret');
 assert.match(

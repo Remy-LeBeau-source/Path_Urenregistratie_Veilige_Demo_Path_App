@@ -1,0 +1,73 @@
+name: Tijdelijke branches opruimen
+
+on:
+  schedule:
+    - cron: '23 3 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Alleen tonen wat verwijderd zou worden
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: branch-hygiene
+  cancel-in-progress: true
+
+jobs:
+  prune-merged-temporary-branches:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout alle branches
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Verwijder alleen oude, volledig gemergede tijdelijke branches
+        shell: bash
+        env:
+          MANUAL_DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          git fetch --prune origin '+refs/heads/*:refs/remotes/origin/*'
+
+          now_epoch=$(date +%s)
+          minimum_age_seconds=$((2 * 24 * 60 * 60))
+          dry_run=false
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" && "${MANUAL_DRY_RUN:-true}" == "true" ]]; then
+            dry_run=true
+          fi
+
+          while IFS= read -r remote_ref; do
+            branch=${remote_ref#origin/}
+            case "$branch" in
+              main|herontwerp|HEAD) continue ;;
+              tmp/*|temp/*|hotfix/*|fix/*|test/*|ci/*|docs/*) ;;
+              *) continue ;;
+            esac
+
+            commit_epoch=$(git show -s --format=%ct "$remote_ref")
+            age_seconds=$((now_epoch - commit_epoch))
+            if (( age_seconds < minimum_age_seconds )); then
+              echo "BEHOUD recent: $branch"
+              continue
+            fi
+
+            if ! git merge-base --is-ancestor "$remote_ref" origin/main \
+              && ! git merge-base --is-ancestor "$remote_ref" origin/herontwerp; then
+              echo "BEHOUD niet gemerged: $branch"
+              continue
+            fi
+
+            if [[ "$dry_run" == "true" ]]; then
+              echo "DRY-RUN verwijderen: $branch"
+            else
+              echo "VERWIJDER gemergde tijdelijke branch: $branch"
+              git push origin --delete "$branch"
+            fi
+          done < <(git for-each-ref --format='%(refname:short)' refs/remotes/origin/)

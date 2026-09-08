@@ -332,11 +332,24 @@ jobs:
           fi
 
       - name: Run E2E tests
+        timeout-minutes: 15
         env:
           PATH_APP_BASE_URL: http://127.0.0.1:8000
           PLAYWRIGHT_ADMIN_EMAIL: gio@example.invalid
           PLAYWRIGHT_EMPLOYEE_EMAIL: stasjo@example.invalid
-        run: npm run test:e2e -- --shard=${{ matrix.shard }}/4
+          PLAYWRIGHT_BLOB_REPORT: '1'
+        run: timeout --signal=TERM --kill-after=30s 14m npm run test:e2e -- --shard=${{ matrix.shard }}/4
+
+      - name: Upload mergeable release reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-validate-results-${{ matrix.shard }}
+          retention-days: 7
+          path: |
+            path-urenregistratie/blob-report/
+            path-urenregistratie/allure-results/
+          if-no-files-found: warn
 
       - name: Stop PHP server
         if: always()
@@ -479,6 +492,7 @@ jobs:
           fi
 
       - name: Run stage E2E
+        timeout-minutes: 25
         run: |
           npm run test:e2e
 
@@ -643,7 +657,7 @@ jobs:
             echo "Externe stage-target: shard ${{ matrix.shard }} wordt overgeslagen (shard 1 draait de volledige suite)."
             exit 0
           fi
-          npm run test:e2e -- ${E2E_SHARD_ARG:-}
+          timeout --signal=TERM --kill-after=30s 24m npm run test:e2e -- ${E2E_SHARD_ARG:-}
 
       - name: Stop fallback PHP server
         if: always()
@@ -719,15 +733,13 @@ jobs:
 
   live-docs:
     name: Publish Live Docs
-    needs: test
-    # Tijdelijk uitgeschakeld: deze rapportagejob bleef releases blokkeren.
-    # TEST-validatie en TEST-deployment blijven actief. Voor een PROD-release
-    # moet deze job eerst bewust worden hersteld en opnieuw groen zijn.
-    if: ${{ false }}
+    needs: [validate, test]
+    # Hergebruik de rapportartefacts van de al groene Validate-shards. Deze job
+    # start geen tweede Playwright-suite en kan daardoor niet meer op een
+    # achtergebleven browserproces blijven hangen.
+    if: ${{ always() && needs.validate.result == 'success' && needs.test.result == 'success' }}
     runs-on: ubuntu-latest
-    # Een vastgelopen browserproces mag de releasewachtrij nooit uren blokkeren.
-    # De vier gesharde TEST-gates zijn al groen voordat deze rapportagejob start.
-    timeout-minutes: 35
+    timeout-minutes: 10
     env:
       PATH_REPORT_STAGE: CI release regression
       PATH_REPORT_TARGET: TEST -> PROD
@@ -835,15 +847,17 @@ jobs:
             rm -f /tmp/php-server.pid
           fi
 
-      - name: Run E2E tests for docs
-        env:
-          PATH_APP_BASE_URL: http://127.0.0.1:8000
-          PLAYWRIGHT_ADMIN_EMAIL: gio@example.invalid
-          PLAYWRIGHT_EMPLOYEE_EMAIL: stasjo@example.invalid
-        run: npm run test:e2e
+      - name: Download mergeable release reports
+        uses: actions/download-artifact@v8
+        with:
+          pattern: release-validate-results-*
+          path: path-urenregistratie
+          merge-multiple: true
 
       - name: Build reports and live docs bundle
         run: |
+          npm run docs:sync
+          npx playwright merge-reports --reporter=html blob-report
           npm run allure:generate
           npm run docs:bundle
 

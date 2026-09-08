@@ -246,7 +246,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 document te controleren · 0 extern te bevestigen · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, externe bevestiging, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("1.0.15"), "Het zichtbare versienummer moet 1.0.15 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("1.0.17"), "Het zichtbare versienummer moet 1.0.17 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -333,7 +333,7 @@ assert(document.querySelector('[data-admin-task-month-toggle="2026-07"]').getAtt
 assert(document.querySelector("#dashboard-next-action-label").textContent === "Volgende actie \u00B7 1 van 7 bij Backoffice" && document.querySelector("#dashboard-next-action-title").textContent === "Klanturenstaat controleren", "De vaste prioriteitenkaart moet de eerste van zeven concrete Backoffice-acties tonen");
 assert(document.querySelector("#dashboard-next-action-person").textContent === "Marc de Roon" && document.querySelector("#dashboard-next-action-period").textContent.includes("Juni 2026") && document.querySelector("#dashboard-next-action-button"), "De volgende actie moet medewerker, maand en een directe startknop tonen");
 assert(document.querySelector("#metric-actions").textContent === "7" && document.querySelector("#metric-actions-note").textContent === "5 acties wachten op medewerkers" && document.querySelector("#metric-actions-link").textContent === "Bekijk alle 12 acties", "De vierde KPI moet directe Backoffice-acties tonen en naar alle twaalf acties verwijzen");
-assert(demoScenarioState.settings.weeklyReminderDay === "friday" && demoScenarioState.settings.weeklyReminderTime === "15:00", "De standaard weekherinnering moet vrijdag om 15:00 zijn");
+assert(demoScenarioState.settings.weeklyReminderDay === "friday" && demoScenarioState.settings.weeklyReminderTime === "14:00", "De standaard weekherinnering moet vrijdag om 14:00 zijn");
 assert(demoScenarioState.settings.monthEndReminderTime === "15:00" && demoScenarioState.settings.overdueReminderTime === "09:00" && demoScenarioState.settings.approvalReminderTime === "10:00", "De maand-, achterstands- en goedkeuringsherinneringen moeten veilige standaardmomenten hebben");
 assert(demoScenarioState.settings.customerTimesheetReminderEnabled && demoScenarioState.settings.customerTimesheetReminderTime === "15:00" && demoScenarioState.settings.customerTimesheetOverdueWorkdays === 2, "Klanturenstaten moeten een eigen instelbare herinneringsplanning hebben");
 assert(demoScenarioState.records["2026-07"]["1"].customerTimesheet.status === "approved" && demoScenarioState.records["2026-07"]["2"].customerTimesheet.status === "resubmit" && demoScenarioState.records["2026-07"]["3"].customerTimesheet.status === "sent", "Juli kent een brokercontrole, een medewerker die opnieuw moet insturen en een al verzonden klanturenstaat");
@@ -1162,9 +1162,9 @@ assert(document.querySelector("#mail-template-list").textContent.includes("augus
 assert(document.querySelector("#mail-recipient-settings-list").textContent.includes("Boekhouder") && document.querySelector("#mail-recipient-settings-list").textContent.includes("Salarisadministratie"), "Vaste ontvangers moeten één keer centraal beheerd worden");
 assert(document.querySelector("#setting-organization-name").value === "Path Consultancy" && document.querySelector("#setting-app-name").value === "Uren & Facturatie", "De eerste organisatieconfiguratie moet Path en de eigen appnaam bevatten");
 assert(document.querySelector("#setting-brand-logo") && document.querySelector("#setting-brand-primary") && document.querySelector("#setting-brand-accent"), "Een organisatie moet eigen logo en merkkleuren kunnen instellen");
-assert(document.querySelector("#setting-weekly-reminder-day").value === "friday" && document.querySelector("#setting-weekly-reminder-time").value === "15:00", "Instellingen moeten de standaard weekherinnering vrijdag 15:00 tonen");
+assert(document.querySelector("#setting-weekly-reminder-day").value === "friday" && document.querySelector("#setting-weekly-reminder-time").value === "14:00", "Instellingen moeten de standaard weekherinnering vrijdag 14:00 tonen");
 assert(document.querySelectorAll(".reminder-choice-field select[hidden]").length === 7 && document.querySelectorAll("[data-reminder-choice-trigger]").length === 7, "Alle herinneringskeuzes moeten eigen uitklapmenu's gebruiken in plaats van zichtbare browserdropdowns");
-assert(document.querySelector("#setting-weekly-reminder-day-trigger").textContent.includes("Vrijdag") && document.querySelector("#setting-weekly-reminder-time-trigger").textContent.includes("15:00"), "De eigen herinneringsmenu's moeten de actuele keuze direct op de knop tonen");
+assert(document.querySelector("#setting-weekly-reminder-day-trigger").textContent.includes("Vrijdag") && document.querySelector("#setting-weekly-reminder-time-trigger").textContent.includes("14:00"), "De eigen herinneringsmenu's moeten de actuele keuze direct op de knop tonen");
 assert(document.querySelector("#setting-customer-timesheet-reminder-enabled").checked && document.querySelector("#setting-customer-timesheet-overdue-days").value === "2", "Instellingen moeten klanturenstaatherinneringen apart tonen");
 assert(document.querySelector("#setting-customer-timesheet-submission-subject").value === "Klanturenstaat {medewerker} – {maand} {jaar} ter controle" && document.querySelector("#setting-customer-timesheet-submission-body").value.includes("mijn klanturenstaat"), "Instellingen moeten een apart standaardsjabloon voor medewerker naar Backoffice tonen");
 assert(document.querySelector("#setting-customer-timesheet-broker-subject").value === "Klanturenstaat {medewerker} – {maand} {jaar} voor dossier" && document.querySelector("#setting-customer-timesheet-broker-body").value.includes("Path Backoffice") && document.querySelector("#setting-customer-timesheet-broker-body").value.includes("{organisatie}"), "Instellingen moeten een apart standaardsjabloon voor Backoffice naar broker tonen");
@@ -1193,7 +1193,7 @@ reminderSettingsState = JSON.parse(dom.window.localStorage.getItem("path-uren-de
 assert(reminderSettingsState.notifications.length === notificationCountBeforeReminderExample + 1, "De herinneringsplanning moet een veilige voorbeeldmelding kunnen maken");
 assert(document.querySelector("#toast").textContent.includes("niets gepland of verstuurd"), "De demo moet expliciet zeggen dat de voorbeeldmelding niets verstuurt");
 document.querySelector("#setting-weekly-reminder-day").value = "friday";
-document.querySelector("#setting-weekly-reminder-time").value = "15:00";
+document.querySelector("#setting-weekly-reminder-time").value = "14:00";
 click("#save-settings");
 document.querySelector("#setting-organization-name").value = "Voorbeeld Organisatie";
 document.querySelector("#setting-app-name").value = "Eigen Urenportaal";
@@ -1792,6 +1792,8 @@ assert(dom.window.document.title.length > 0, "Document moet geladen zijn");
 const installSrc  = readFileSync_(new URL("../server/install.php", import.meta.url), "utf8");
 const apiPhpSrc   = readFileSync_(new URL("../server/api.php", import.meta.url), "utf8");
 const migrateSrc  = readFileSync_(new URL("../server/migrate.php", import.meta.url), "utf8");
+const demoAdminPasswordResetSrc = readFileSync_(new URL("../server/migrations/032_demo_admin_password_reset.sql", import.meta.url), "utf8");
+const demoAdminPasswordCorrectionSrc = readFileSync_(new URL("../server/migrations/033_demo_admin_password_correction.sql", import.meta.url), "utf8");
 const healthSrc   = readFileSync_(new URL("../server/health.php", import.meta.url), "utf8");
 const healthPolicySrc = readFileSync_(new URL("../server/lib/health_policy.php", import.meta.url), "utf8");
 const configExSrc = readFileSync_(new URL("../server/config.example.php", import.meta.url), "utf8");
@@ -1893,6 +1895,8 @@ const dbCrudSmokeSrc = readFileSync_(new URL("./run-db-crud-smoke.mjs", import.m
 const playwrightConfigSrc = readFileSync_(new URL("../playwright.config.ts", import.meta.url), "utf8");
 assert(installSrc.includes("'production'") && installSrc.includes("403") && installSrc.includes("PHP_SAPI"), "install.php moet een productieguard bevatten die HTTP-toegang blokkeert");
 assert(migrateSrc.includes("'production'") && migrateSrc.includes("403") && migrateSrc.includes("PHP_SAPI"), "migrate.php moet een productieguard bevatten die HTTP-toegang blokkeert");
+assert(/if \(\$allowDemoMigrations\) \{[\s\S]*?032_demo_admin_password_reset\.sql[\s\S]*?033_demo_admin_password_correction\.sql[\s\S]*?\n\s*\}/.test(migrateSrc), "Demo-beheerwachtwoordmigraties mogen alleen in het demo-/TEST-migratieplan staan");
+assert(demoAdminPasswordResetSrc.includes("gio@example.invalid") && demoAdminPasswordCorrectionSrc.includes("gio@example.invalid"), "De gedeelde TEST-beheerders moeten door de corrigerende demo-migratie worden geraakt");
 assert(healthSrc.includes("'production'") && (healthSrc.includes("ob_clean") || healthSrc.includes("['ok'")), "health.php moet technische details onderdrukken in productiemodus");
 assert(healthSrc.includes("path_health_requires_demo_seed($healthEnv)") && healthPolicySrc.includes("!== 'production'"), "Productie-health mag een schone database zonder demo-seed niet afkeuren");
 assert(serverHtaccessSrc.includes('config(?:\\.local|\\.example)?\\.php') && serverHtaccessSrc.includes('Require all denied'), "server/.htaccess moet config.local.php en alle overige configvarianten expliciet blokkeren");
@@ -2089,7 +2093,7 @@ assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Pla
 }
 
 dom.window.close();
-console.log("Path v1.0.15 volledige smoke test: geslaagd");
+console.log("Path v1.0.17 volledige smoke test: geslaagd");
 // app.js schedules browser refresh timers. In JSDOM those timers can keep Node
 // alive after every assertion has completed, which made the release check look
 // stuck. End explicitly only after the complete smoke contract is green.

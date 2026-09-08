@@ -2,6 +2,35 @@
 
 Dit bestand is de gedeelde brug tussen GitHub Copilot en Codex. Chatvensters zijn niet onderling zichtbaar, maar beide assistenten kunnen dit bestand in de werkmap lezen.
 
+## VASTE BRANCHREGEL — altijd eerst lezen
+
+`main` draagt functionele wijzigingen en releases; `herontwerp` draagt de
+New-skin. Na iedere nieuwe `main`-commit wordt die actuele `main` eerst in
+`herontwerp` opgenomen. Pas daarna wordt nieuw design gepusht. Alleen een
+herontwerp-kop die actuele `main` bevat en volledig groene CI heeft, mag via de
+merge-queue naar `main` fast-forwarden. Werk nooit tegelijk aan hetzelfde
+bestand in beide worktrees. PROD blijft achter de handmatige reviewerpoort.
+
+Een melding "nog niet pushen" is uitsluitend tijdelijk tijdens een actieve
+main-hotfix; daarna geldt weer bovenstaande vaste volgorde.
+
+De workflow `branch-hygiene.yml` controleert dagelijks en verwijdert alleen
+tijdelijke branches met een bekende prefix die minimaal twee dagen oud én
+volledig in `main` of `herontwerp` gemerged zijn. Niet-gemergde branches en de
+twee vaste branches worden nooit automatisch verwijderd.
+
+## Actuele overdracht — main, 8 september 2026 avond (Claude Code)
+
+Volledige overdracht met alle detail staat in
+`path-urenregistratie/COPILOT_HANDOFF.md` (zelfde datum, bovenaan). Kort:
+v1.0.12 t/m v1.0.16 gebouwd op `main` (medewerker-ontvangstmail,
+herinneringen-scheduler, demo-beheerwachtwoord-fix, Living Docs uitgeschakeld
+op main net als eerder al op herontwerp, smoke-test 14:00-fix). Laatste
+v1.0.16 + deze handoff staan lokaal klaar, **nog niet gepusht** — wacht
+op een herontwerp-CI-run. Repo-brede `release-pipeline`-concurrency-group
+blokkeerde meerdere keren de wachtrij door een vastgelopen job; controleer
+`gh run list` op `in_progress` vóór je pusht.
+
 ## ACTUELE COORDINATIE 7 september 2026 - `main` + `herontwerp`
 
 ## Actuele overdracht 8 september 2026 — parallel werken op `main` en `herontwerp`

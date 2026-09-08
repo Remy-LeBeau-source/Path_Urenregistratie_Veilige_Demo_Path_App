@@ -15,15 +15,16 @@ concurrency:
 
 jobs:
   validate-and-test:
-    name: Validate and test (${{ matrix.shard }}/4)
+    name: Validate and test (${{ matrix.shard }}/8)
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 25
     # Iedere shard heeft een eigen runner, MySQL-service en PHP-server. Zo blijft
-    # de volledige suite draaien, maar wachten de vier delen niet op elkaar.
+    # de volledige suite draaien, maar wachten de acht delen niet op elkaar.
     strategy:
       fail-fast: false
+      max-parallel: 8
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     defaults:
       run:
         working-directory: path-urenregistratie
@@ -242,9 +243,12 @@ jobs:
         run: npm run test:bdd
 
       - name: Run E2E tests
+        timeout-minutes: 15
         env:
           PATH_APP_BASE_URL: http://127.0.0.1:8000
-        run: npm run test:e2e -- --shard=${{ matrix.shard }}/4
+        # GitHub-cancel kan bij een vastgelopen browser traag reageren. GNU
+        # timeout stuurt eerst TERM en forceert uiterlijk 30 seconden later KILL.
+        run: timeout --signal=TERM --kill-after=30s 14m npm run test:e2e -- --shard=${{ matrix.shard }}/8
 
       - name: Upload Playwright report artifact
         if: always()

@@ -140,7 +140,7 @@ test.describe('serverplanning herinneringen', () => {
 
     test.skip(!(await hasEmployeeWithoutHoursThisWeek(ctx, now)), 'Alle actieve medewerkers hebben deze week al uren staan door eerdere cases in dezelfde gedeelde demodatabase; dit scenario valt nu niet te bewijzen.');
 
-    await test.step('Given de wekelijkse herinnering staat aan voor nu (vandaag, huidige tijd)', async () => {
+    await test.step('Given de wekelijkse herinnering staat aan voor nu (vandaag, huidige tijd, Europe/Amsterdam)', async () => {
       const csrf = await ctx.get('/server/auth/csrf.php');
       const token = String(((await csrf.json()) as { csrf_token?: string }).csrf_token ?? '');
       const settings = await currentSettingsPayload(ctx);
