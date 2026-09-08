@@ -143,6 +143,17 @@ test('[E2E-N-017] submitted, approved en invoiced blokkeren iedere verboden mede
     const urenstaat = await leesUrenstaat(page, periodeSleutel, medewerkerId);
     urenstaatId = Number(urenstaat.id || 0);
     expect(urenstaatId, 'de urenstaat hoort een id te hebben').toBeGreaterThan(0);
+
+    // Sinds de verplichte klanturenstaat-check (server/api/invoices.php,
+    // customer-timesheet-required) moet die er staan voor de factuur verderop
+    // in deze case kan worden vergrendeld; alleen de medewerker zelf mag hem
+    // als rechtstreeks gemaild registreren, dus dat hoort hier, nog in zijn
+    // eigen sessie.
+    const klanturenstaat = await page.request.post('/server/api/customer-timesheets.php', {
+      headers: { 'X-CSRF-Token': await csrf(page) },
+      data: { action: 'mark_skipped', period: periodeSleutel, review_note: 'E2E-N-017: rechtstreeks gemaild.' },
+    });
+    expect(klanturenstaat.ok(), `klanturenstaat registreren hoort te slagen: ${await klanturenstaat.text()}`).toBe(true);
   });
 
   await test.step('Then blokkeert submitted iedere medewerkerwrite', async () => {

@@ -75,6 +75,16 @@ async function ketenTotFactuur(page: Page, loginPage: LoginPage): Promise<{ fact
   }
   const urenstaatId = Number((await leesUrenstaat(page, periodeSleutel, medewerkerId)).id || 0);
 
+  // Sinds de verplichte klanturenstaat-check (server/api/invoices.php,
+  // customer-timesheet-required) moet die er staan voor er iets kan worden
+  // gefactureerd; alleen de medewerker zelf mag hem als rechtstreeks gemaild
+  // registreren, dus dat hoort hier, in zijn eigen sessie, vóór de rolwissel.
+  const klanturenstaat = await page.request.post('/server/api/customer-timesheets.php', {
+    headers: { 'X-CSRF-Token': await csrf(page) },
+    data: { action: 'mark_skipped', period: periodeSleutel, review_note: 'ketenTotFactuur: rechtstreeks gemaild.' },
+  });
+  expect(klanturenstaat.ok(), `klanturenstaat registreren hoort te slagen: ${await klanturenstaat.text()}`).toBe(true);
+
   await page.request.post('/server/auth/logout.php', { headers: { 'X-CSRF-Token': await csrf(page) } });
   await loginPage.open();
   await loginPage.loginAsAdmin();
@@ -336,6 +346,15 @@ test('[E2E-H-024] een nieuw account krijgt via de GUI toegang en zijn eigen teks
     await page.locator('#modal-confirm').click();
     await schrijf;
     await expect(page.locator('#timesheet-status')).toHaveText('Ingediend');
+
+    // Zie ketenTotFactuur hierboven: alleen de medewerker zelf mag de
+    // klanturenstaat als rechtstreeks gemaild registreren, dus dat hoort hier,
+    // in zijn eigen sessie, vóór de rolwissel naar Backoffice.
+    const klanturenstaat = await page.request.post('/server/api/customer-timesheets.php', {
+      headers: { 'X-CSRF-Token': await csrf(page) },
+      data: { action: 'mark_skipped', period: periodeSleutel, review_note: 'E2E-H-025: rechtstreeks gemaild.' },
+    });
+    expect(klanturenstaat.ok(), `klanturenstaat registreren hoort te slagen: ${await klanturenstaat.text()}`).toBe(true);
   });
 
   await test.step('Then staat zijn eigen tekst letterlijk en eenmaal in de brokermail', async () => {

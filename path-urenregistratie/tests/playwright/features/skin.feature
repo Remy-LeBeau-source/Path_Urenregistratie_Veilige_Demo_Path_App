@@ -78,7 +78,7 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
   @happy @regressie
   Scenario: [SKIN-H-010] de admin-verhaallijn wisselt van medewerker en toont bijbehorende status
     # Testtechniek: Toestandsovergang + equivalentieklassen (eerste/tweede medewerker)
-    # Aantoonbare Playwright-assertions in deze case: 8
+    # Aantoonbare Playwright-assertions in deze case: 7
     Given Backoffice in de nieuwe skin met minstens twee medewerkers in de verhaallijn
     When Backoffice de tweede medewerker in de wachtrij aanklikt
     Then wordt die medewerker geselecteerd en toont het verhaal zijn naam en vier statuskaarten
