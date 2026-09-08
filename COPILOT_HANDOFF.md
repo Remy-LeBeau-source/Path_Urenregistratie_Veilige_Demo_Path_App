@@ -2,6 +2,18 @@
 
 Dit bestand is de gedeelde brug tussen GitHub Copilot en Codex. Chatvensters zijn niet onderling zichtbaar, maar beide assistenten kunnen dit bestand in de werkmap lezen.
 
+## Actuele overdracht — main, 8 september 2026 avond (Claude Code)
+
+Volledige overdracht met alle detail staat in
+`path-urenregistratie/COPILOT_HANDOFF.md` (zelfde datum, bovenaan). Kort:
+v1.0.12 t/m v1.0.16 gebouwd op `main` (medewerker-ontvangstmail,
+herinneringen-scheduler, demo-beheerwachtwoord-fix, Living Docs uitgeschakeld
+op main net als eerder al op herontwerp, smoke-test 14:00-fix). Laatste
+v1.0.16 + deze handoff staan lokaal klaar, **nog niet gepusht** — wacht
+op een herontwerp-CI-run. Repo-brede `release-pipeline`-concurrency-group
+blokkeerde meerdere keren de wachtrij door een vastgelopen job; controleer
+`gh run list` op `in_progress` vóór je pusht.
+
 ## ACTUELE COORDINATIE 7 september 2026 - `main` + `herontwerp`
 
 ## Toewijzing 8 september 2026, 06:20 (beslissing gebruiker): Backoffice-bevestiging klanturenstaat → Codex

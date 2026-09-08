@@ -18,6 +18,119 @@ Bij verschil tussen oudere historische tekst en de actuele stand zijn in deze
 volgorde leidend: `BESLISTABEL.md`, daarna de actuele sectie in
 `MASTERCHECKLIST.md`, daarna de laatste actuele handoff.
 
+## Actuele overdracht — main, 8 september 2026 avond (Claude Code)
+
+### Wat is gedaan (v1.0.11 → v1.0.16, allemaal op `main`)
+
+1. **v1.0.12 — medewerker-ontvangstmail na indienen.** Submit maakt een
+   idempotente `timesheet_submission_receipt`-delivery (medewerker, periode,
+   totaaluren, dagregels incl. `0,00 uur`). Idempotency via
+   `timesheet_id + timesheet_version` (migratie 030). PDF-bijlage en
+   herindienings-/definitieve goedkeuringsmail **bewust nog niet gebouwd**.
+2. **v1.0.13 — serverplanning voor de vier herinneringstypen.** Wekelijks
+   (vrijdag 14:00 — **op verzoek gewijzigd van 15:00 naar 14:00**),
+   maandeinde (laatste werkdag), achterstand en goedkeuring (beide eerste
+   werkdag van de nieuwe maand). Migratie 031 (`reminder_log` voor
+   idempotency + companies-kolommen), `server/scripts/send-due-reminders.php`,
+   cron-workflow `.github/workflows/send-reminders.yml` (elke 15 min, SSH
+   naar zowel TEST als PROD). Afzendertekst "Robot Path IT" staat **hard
+   gecodeerd**, nog niet aanpasbaar via Instellingen (bewust, zelfde lijn als
+   de ontvangstmail).
+3. **v1.0.14 — demo-beheerwachtwoord TEST/lokaal hersteld.** De publieke
+   TEST-smoke ("Verify public TEST account logins") faalde omdat het
+   handmatig beheerde TEST-beheerwachtwoord uit de pas liep met het
+   GitHub-secret `PLAYWRIGHT_ADMIN_PASSWORD`. Op expliciet verzoek van de
+   gebruiker is het gedeelde demo-beheerwachtwoord (`gio@`/`joyce@`/
+   `admin@example.invalid`) overal naar `888888888888` gezet: migratie 032
+   (`_demo_` in bestandsnaam ⇒ **nooit op productie**, PROD gebruikt sowieso
+   persoonlijke accounts), secret bijgewerkt, README/.env.local gesynchroniseerd.
+   Medewerkerwachtwoord ongewijzigd.
+4. **v1.0.15 — Living Docs uitgeschakeld op main.** Zelfde fix als eerder al
+   op `herontwerp` (commit `0ad42aa`): de "Publish Live Docs"-job liep
+   herhaaldelijk vast op een browserproces en blokkeerde daarmee de hele
+   releasewachtrij (concurrency-group `release-pipeline` is repo-breed, niet
+   per branch/ref!). `if: ${{ false }}` op de job. **Extra fix t.o.v.
+   herontwerp:** "Deploy Prod to TransIP" vereiste
+   `needs.live-docs.result == 'success'`, wat met de job uit altijd
+   `'skipped'` oplevert — dat had PROD-deploys permanent geblokkeerd.
+   Geaccepteerd nu ook `'skipped'`. `deployment-contract-check.mjs`
+   meegewerkt.
+5. **v1.0.16 — smoke-test bijgewerkt naar 14:00.** Drie bestaande
+   asserties in `smoke-test.mjs` verwachtten nog de oude 15:00-default voor
+   de wekelijkse herinnering; CI faalde daarop (`Validate (1)`).
+
+### Actuele stand (bij overdracht, 21:55 UTC)
+
+- Laatste lokale commit: v1.0.16 + deze handoff (2 commits bovenop
+  origin/main). **Nog niet gepusht** — de gebruiker wilde bewust eerst een
+  `herontwerp`-CI-run laten doorlopen voordat er weer naar `main` gepusht
+  wordt.
+- **`herontwerp`-CI (`34282855047`) draait nu gezond**, alle 4 shards
+  `in_progress`, geen ingrijpen nodig — laat deze gewoon doorlopen.
+- **`main`-run `34281353301` (de vórige, nog vóór v1.0.16) staat na meerdere
+  cancel-verzoeken nog steeds vast** op stap "Run E2E tests" (Validate-shard),
+  gestart 21:42:10 UTC. Die stap heeft een eigen 12-min steptimeout, dus hij
+  zou rond 21:54 UTC vanzelf moeten falen/stoppen — controleer dit bij
+  hervatten (`gh run view 34281353301 --json status,conclusion`) vóór je iets
+  naar `main` pusht.
+- Eerder liep ook run `34275122342` vast (een echt vastgelopen Live-Docs-job,
+  vóór de v1.0.15-fix) en is geannuleerd.
+- **Belangrijke les herbevestigd (tweemaal vandaag gezien):** de
+  `release-pipeline`-concurrency-group is **repo-breed**, niet per branch.
+  Eén vastgelopen job op één run blokkeert daarmee elke volgende push naar
+  `main`, ook via `workflow_dispatch` — GitHub's `gh run cancel` werkt niet
+  altijd direct op een echt vastgelopen/lang lopend proces, alleen een
+  step-timeout is dan betrouwbaar. `ci.yml` (herontwerp) heeft wél een eigen
+  per-ref concurrency-group (`ci-${{ github.workflow }}-${{ github.ref }}`),
+  dus die twee blokkeren elkaar niet. Bij een hangende `main`-run: eerst de
+  job zelf identificeren (`gh api .../jobs/<id>` → `.steps[] | select(status=="in_progress")`)
+  en diens steptimeout afwachten i.p.v. blind te blijven cancelen.
+
+### Volgende stap
+
+1. Bevestig dat er niets meer `in_progress` staat
+   (`gh run list --limit 10 --json status -q '.[] | select(.status != "completed")'`).
+2. `git push origin main` (laatste lokale commit staat al klaar, versie
+   1.0.16 + deze handoff).
+3. Volg de nieuwe run t/m minimaal "Deploy Test to TransIP" groen.
+
+### Openstaande issues (voor Codex om op te pakken)
+
+1. **PDF-bijlage bij de medewerker-ontvangstmail.** `mail_enqueue_timesheet_submission_receipt()`
+   in `server/mail/queue.php` stuurt nu platte tekst zonder bijlage. Kijk naar
+   hoe `downloadInvoicePdf(..., "base64")` in `assets/app.js` en
+   `server/api/invoices.php` de browser-gegenereerde PDF als bijlage
+   meesturen bij factuurmails; hetzelfde patroon toepassen voor een
+   "Urenoverzicht"-PDF bij submit.
+2. **Herindieningsmail na correctie.** Na een `mark_skipped`/correctie-cyclus
+   en een resubmit is er nog geen aparte mail; alleen de eerste submit
+   triggert vandaag `timesheet_submission_receipt` (idempotency is al
+   versiegebonden via `timesheet_id + timesheet_version`, dus een resubmit
+   ná correctie *kan* al een nieuwe receipt-rij maken — check of dat
+   voldoende is of dat er een eigen kanaal/tekst moet komen).
+3. **Definitieve goedkeuringsmail.** Kanaal `timesheet_final_approval` bestaat
+   al in `email_deliveries` (migratie 030) en heeft al een default-template in
+   `server/mail/templates.php`, maar wordt nergens aangeroepen. Triggerpunt:
+   waar `timesheets.status` naar `approved` gaat (zoek `approved_at`/
+   `approved_by` in `server/api/timesheets.php`).
+4. **Aanpasbare standaardteksten.** Zowel de ontvangstmail als de vier
+   reminder-mails hebben "Robot Path IT" hard gecodeerd i.p.v. via
+   `mail_channel_templates_for()` / Instellingen aanpasbaar, zoals de
+   bestaande broker/accountant/payroll-teksten al werken.
+5. **CI-shard-opschaling 4→8** — al voorbereide analyse in
+   `docs/ci-scaling-review`-branch (`agents/shard-strategy.md`,
+   `agents/provision-runners.md`). Gebruiker koos voor "gewoon meer
+   GitHub-hosted shards", geen self-hosted runners nodig. Nog niet
+   doorgevoerd.
+6. **Repo-brede `release-pipeline`-concurrency-lock.** Zag vandaag twee keer
+   dat één vastgelopen job (Live Docs, en losstaand een lang lopende
+   Validate-shard) elke volgende push naar `main` blokkeerde, ook via
+   `workflow_dispatch`, omdat `concurrency: group: release-pipeline` (in
+   `.github/workflows/release-pipeline.yml`) repo-breed is i.p.v. per ref.
+   Overwegen: group-naam met `${{ github.ref }}` suffixen zodat een hangende
+   `main`-run een latere `herontwerp`-gerelateerde dispatch niet blokkeert
+   (en andersom) — nu blokkeert alles elkaar.
+
 ## Actuele overdracht — MO5b, 8 september 2026
 
 - **Taak/conclusie (aangescherpt 8 sep):** MO5b blokkeert factuurafronding totdat
