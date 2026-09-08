@@ -17,6 +17,72 @@ tijdelijke branches met een bekende prefix die minimaal twee dagen oud én
 volledig in `main` of `herontwerp` gemerged zijn. Niet-gemergde branches en de
 twee vaste branches worden nooit automatisch verwijderd.
 
+## Actuele overdracht — main, 9 september 2026 nacht (Claude Code) — voor Codex
+
+### Wat is klaar op main (t/m v1.0.18, commit `4e3f974`)
+
+- Medewerker-ontvangstmail (v1.0.12) inclusief PDF-bijlage (v1.0.18):
+  `buildTimesheetReceiptPdfBase64()` in `assets/app.js` genereert bij
+  submit een urenoverzicht-PDF, server valideert/slaat op
+  (`timesheet_receipt_store_pdf()` in `server/mail/queue.php`,
+  `private-root/timesheet-receipts/`), `attachment_policy=timesheet_receipt`
+  in `server/mail/dispatch.php`. Migratie 034.
+- Serverplanning herinneringen (v1.0.13): vier types, cron
+  `.github/workflows/send-reminders.yml` — **alleen TEST**, `environment: test`
+  (geen protection rules). PROD bewust nog niet aangesloten: `environment: prod`
+  heeft een verplichte `required_reviewers`-poort (3 reviewers), dus een
+  15-minuten-cron zou daar telkens handmatige goedkeuring vragen. PROD-
+  herinneringen zijn een aparte, bewuste vervolgstap.
+- Demo-beheerwachtwoord (v1.0.14) en Living Docs uitgeschakeld op main
+  (v1.0.15, zelfde als eerder al op herontwerp, `0ad42aa`) — nu vervangen
+  door Codex' herontwerp van Live Docs die bestaande blob-reports
+  hergebruikt (`playwright merge-reports`) i.p.v. de suite nogmaals te
+  draaien; dat patroon staat nu ook op main.
+- **main naar 8 shards** (`release-pipeline.yml`), zelfde gratis
+  GitHub-hosted opschaling als op herontwerp's `ci.yml`.
+- **Echte bug gefixt in `send-due-reminders.php`**: alle vier queries
+  gebruikten `INNER JOIN user_preferences`. Nieuwe medewerkers (via
+  `server/api/staff.php`) krijgen **nergens in de API** een
+  `user_preferences`-rij — ze werden daardoor altijd stilzwijgend
+  uitgesloten van elke herinnering. Nu `LEFT JOIN` + `COALESCE(..., 1)`,
+  zodat de bedoelde default (aan) geldt zoals het schema al zegt.
+
+### Openstaand voor Codex: REM-H-001 faalt in combinatie, root cause onbekend
+
+`[REM-H-001]` in `tests/playwright/reminders.spec.ts` **slaagt losstaand**
+(`--grep REM-H-001`), maar **faalt** wanneer het in dezelfde Playwright-worker
+ná `admin-writes.spec.ts` draait (bv.
+`node scripts/run-playwright-e2e.mjs --project=desktop-chromium tests/playwright/admin-writes.spec.ts tests/playwright/reminders.spec.ts`):
+
+```
+Error: expect(received).toHaveLength(expected)
+Received length: 0
+> expect(reminders).toHaveLength(1);
+```
+
+De test maakt sinds vandaag een eigen verse medewerker aan (garandeert nooit
+uren te hebben gehad — dat deel is dus niet de oorzaak) en zet daarna de
+company-settings (`weeklyReminderEnabled`/`Day`/`Time`) op "nu". Bij deze
+combinatie levert de scheduler-run daarna 0 reminders op voor die verse
+medewerker. Nog niet onderzocht:
+
+- Doet `admin-writes.spec.ts` ergens een eigen `settings.php`-save die de
+  net gezette `weekly_reminder_*`-velden weer overschrijft/anders zet vóór
+  de scheduler draait? (`currentSettingsPayload()` in `reminders.spec.ts`
+  leest de company-rij opnieuw op vóór het posten, dus een race lijkt
+  onwaarschijnlijk, maar niet uitgesloten.)
+- Wordt de net aangemaakte medewerker/company_id door een eerdere
+  admin-writes-actie op een andere manier geraakt (bv. een
+  bedrijfs-/scope-wissel, of een tweede company_id die inmiddels bestaat)?
+- Print voor de zekerheid `firstRun` (het volledige JSON-antwoord van
+  `send-due-reminders.php`, niet alleen `.sent.weekly`) en de opgeslagen
+  company-rij vlak vóór de scheduler-aanroep, om te zien of de instelling
+  zelf al fout staat vóór het PHP-script draait.
+
+Dit blokkeert niets op main zelf (de losstaande case is het bewijs dat de
+functionaliteit werkt), maar de volledige regressie kan hierdoor rood
+uitslaan als deze twee bestanden toevallig in dezelfde shard/worker vallen.
+
 ## Documentenkaart
 
 - **Centrale actuele checklist:** `MASTERCHECKLIST.md` — wat klaar, open of
