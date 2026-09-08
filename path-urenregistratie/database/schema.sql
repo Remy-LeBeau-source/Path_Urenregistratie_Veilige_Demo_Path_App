@@ -32,7 +32,7 @@ CREATE TABLE companies (
   customer_timesheet_overdue_workdays TINYINT UNSIGNED NOT NULL DEFAULT 2,
   weekly_reminder_enabled BOOLEAN NOT NULL DEFAULT TRUE,
   weekly_reminder_day TINYINT UNSIGNED NOT NULL DEFAULT 5,
-  weekly_reminder_time TIME NOT NULL DEFAULT '14:00:00',
+  weekly_reminder_time TIME NOT NULL DEFAULT '15:00:00',
   month_end_reminder_enabled BOOLEAN NOT NULL DEFAULT TRUE,
   month_end_reminder_time TIME NOT NULL DEFAULT '15:00:00',
   overdue_reminder_enabled BOOLEAN NOT NULL DEFAULT TRUE,

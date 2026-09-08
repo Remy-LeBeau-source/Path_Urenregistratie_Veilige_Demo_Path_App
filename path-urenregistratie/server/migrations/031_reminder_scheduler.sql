@@ -5,7 +5,7 @@
 ALTER TABLE companies
   ADD COLUMN weekly_reminder_enabled BOOLEAN NOT NULL DEFAULT TRUE,
   ADD COLUMN weekly_reminder_day TINYINT UNSIGNED NOT NULL DEFAULT 5,
-  ADD COLUMN weekly_reminder_time TIME NOT NULL DEFAULT '14:00:00',
+  ADD COLUMN weekly_reminder_time TIME NOT NULL DEFAULT '15:00:00',
   ADD COLUMN month_end_reminder_enabled BOOLEAN NOT NULL DEFAULT TRUE,
   ADD COLUMN month_end_reminder_time TIME NOT NULL DEFAULT '15:00:00',
   ADD COLUMN overdue_reminder_enabled BOOLEAN NOT NULL DEFAULT TRUE,
