@@ -6,6 +6,6 @@
 -- in de bestandsnaam zorgt dat dit nooit op productie draait
 -- (allow_demo_migrations staat daar uit).
 UPDATE users
-SET password_hash = '$2y$12$B0VmVcIhCYhTr4LiuT5z4OcpyXpugsX5wlURHqB8pKNtlfghtPN3u'
+SET password_hash = '$2y$12$NXfWuBvBWwTwNoyFb.MKXeVNlWXceY/PpaHJYYfBOROefhsut3dvu'
 WHERE email IN ('gio@example.invalid', 'joyce@example.invalid', 'admin@example.invalid')
   AND role = 'administrator';

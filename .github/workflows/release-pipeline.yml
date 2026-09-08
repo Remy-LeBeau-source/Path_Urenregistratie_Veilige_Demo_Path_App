@@ -332,11 +332,12 @@ jobs:
           fi
 
       - name: Run E2E tests
+        timeout-minutes: 15
         env:
           PATH_APP_BASE_URL: http://127.0.0.1:8000
           PLAYWRIGHT_ADMIN_EMAIL: gio@example.invalid
           PLAYWRIGHT_EMPLOYEE_EMAIL: stasjo@example.invalid
-        run: npm run test:e2e -- --shard=${{ matrix.shard }}/4
+        run: timeout --signal=TERM --kill-after=30s 14m npm run test:e2e -- --shard=${{ matrix.shard }}/4
 
       - name: Stop PHP server
         if: always()
@@ -479,6 +480,7 @@ jobs:
           fi
 
       - name: Run stage E2E
+        timeout-minutes: 25
         run: |
           npm run test:e2e
 
@@ -643,7 +645,7 @@ jobs:
             echo "Externe stage-target: shard ${{ matrix.shard }} wordt overgeslagen (shard 1 draait de volledige suite)."
             exit 0
           fi
-          npm run test:e2e -- ${E2E_SHARD_ARG:-}
+          timeout --signal=TERM --kill-after=30s 24m npm run test:e2e -- ${E2E_SHARD_ARG:-}
 
       - name: Stop fallback PHP server
         if: always()

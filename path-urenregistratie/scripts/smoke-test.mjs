@@ -246,7 +246,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 document te controleren · 0 extern te bevestigen · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, externe bevestiging, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("1.0.16"), "Het zichtbare versienummer moet 1.0.16 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("1.0.17"), "Het zichtbare versienummer moet 1.0.17 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -1792,6 +1792,8 @@ assert(dom.window.document.title.length > 0, "Document moet geladen zijn");
 const installSrc  = readFileSync_(new URL("../server/install.php", import.meta.url), "utf8");
 const apiPhpSrc   = readFileSync_(new URL("../server/api.php", import.meta.url), "utf8");
 const migrateSrc  = readFileSync_(new URL("../server/migrate.php", import.meta.url), "utf8");
+const demoAdminPasswordResetSrc = readFileSync_(new URL("../server/migrations/032_demo_admin_password_reset.sql", import.meta.url), "utf8");
+const demoAdminPasswordCorrectionSrc = readFileSync_(new URL("../server/migrations/033_demo_admin_password_correction.sql", import.meta.url), "utf8");
 const healthSrc   = readFileSync_(new URL("../server/health.php", import.meta.url), "utf8");
 const healthPolicySrc = readFileSync_(new URL("../server/lib/health_policy.php", import.meta.url), "utf8");
 const configExSrc = readFileSync_(new URL("../server/config.example.php", import.meta.url), "utf8");
@@ -1893,6 +1895,8 @@ const dbCrudSmokeSrc = readFileSync_(new URL("./run-db-crud-smoke.mjs", import.m
 const playwrightConfigSrc = readFileSync_(new URL("../playwright.config.ts", import.meta.url), "utf8");
 assert(installSrc.includes("'production'") && installSrc.includes("403") && installSrc.includes("PHP_SAPI"), "install.php moet een productieguard bevatten die HTTP-toegang blokkeert");
 assert(migrateSrc.includes("'production'") && migrateSrc.includes("403") && migrateSrc.includes("PHP_SAPI"), "migrate.php moet een productieguard bevatten die HTTP-toegang blokkeert");
+assert(/if \(\$allowDemoMigrations\) \{[\s\S]*?032_demo_admin_password_reset\.sql[\s\S]*?033_demo_admin_password_correction\.sql[\s\S]*?\n\s*\}/.test(migrateSrc), "Demo-beheerwachtwoordmigraties mogen alleen in het demo-/TEST-migratieplan staan");
+assert(demoAdminPasswordResetSrc.includes("gio@example.invalid") && demoAdminPasswordCorrectionSrc.includes("gio@example.invalid"), "De gedeelde TEST-beheerders moeten door de corrigerende demo-migratie worden geraakt");
 assert(healthSrc.includes("'production'") && (healthSrc.includes("ob_clean") || healthSrc.includes("['ok'")), "health.php moet technische details onderdrukken in productiemodus");
 assert(healthSrc.includes("path_health_requires_demo_seed($healthEnv)") && healthPolicySrc.includes("!== 'production'"), "Productie-health mag een schone database zonder demo-seed niet afkeuren");
 assert(serverHtaccessSrc.includes('config(?:\\.local|\\.example)?\\.php') && serverHtaccessSrc.includes('Require all denied'), "server/.htaccess moet config.local.php en alle overige configvarianten expliciet blokkeren");
@@ -2089,7 +2093,7 @@ assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Pla
 }
 
 dom.window.close();
-console.log("Path v1.0.16 volledige smoke test: geslaagd");
+console.log("Path v1.0.17 volledige smoke test: geslaagd");
 // app.js schedules browser refresh timers. In JSDOM those timers can keep Node
 // alive after every assertion has completed, which made the release check look
 // stuck. End explicitly only after the complete smoke contract is green.

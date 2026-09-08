@@ -2,6 +2,23 @@
 
 Dit bestand is de gedeelde brug tussen GitHub Copilot en Codex. Chatvensters zijn niet onderling zichtbaar, maar beide assistenten kunnen dit bestand in de werkmap lezen.
 
+## VASTE BRANCHREGEL — altijd eerst lezen
+
+`main` draagt functionele wijzigingen en releases; `herontwerp` draagt de
+New-skin. Na iedere nieuwe `main`-commit wordt die actuele `main` eerst in
+`herontwerp` opgenomen. Pas daarna wordt nieuw design gepusht. Alleen een
+herontwerp-kop die actuele `main` bevat en volledig groene CI heeft, mag via de
+merge-queue naar `main` fast-forwarden. Werk nooit tegelijk aan hetzelfde
+bestand in beide worktrees. PROD blijft achter de handmatige reviewerpoort.
+
+Een melding "nog niet pushen" is uitsluitend tijdelijk tijdens een actieve
+main-hotfix; daarna geldt weer bovenstaande vaste volgorde.
+
+De workflow `branch-hygiene.yml` controleert dagelijks en verwijdert alleen
+tijdelijke branches met een bekende prefix die minimaal twee dagen oud én
+volledig in `main` of `herontwerp` gemerged zijn. Niet-gemergde branches en de
+twee vaste branches worden nooit automatisch verwijderd.
+
 ## Actuele overdracht — main, 8 september 2026 avond (Claude Code)
 
 Volledige overdracht met alle detail staat in
