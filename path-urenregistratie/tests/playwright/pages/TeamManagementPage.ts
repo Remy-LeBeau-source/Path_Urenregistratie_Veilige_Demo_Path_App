@@ -301,14 +301,20 @@ export class TeamManagementPage {
 
   async deactivateEmployee(name: string): Promise<StaffWrite> {
     const card = this.employeeCard(name);
+    const modal = this.page.locator('#modal');
+    const confirm = modal.locator('#modal-confirm');
     await expect(card).toHaveCount(1);
+    await expect(modal).toBeHidden();
     await card.locator('[data-toggle-employee]').click();
-    await expect(this.page.locator('#modal-confirm')).toHaveText('Deactiveren');
+    // Mobile Safari can expose the modal's default, hidden button label for a
+    // frame before showModal() has applied the deactivation configuration.
+    await expect(modal).toBeVisible();
+    await expect(confirm).toHaveText('Deactiveren');
     // Ook deactiveren loopt via users.php. staff.php doet alleen aanmaken en wijzigen.
     const responsePromise = this.page.waitForResponse(response => (
       response.url().includes('/server/api/users.php') && response.request().method() === 'POST'
     ));
-    await this.page.locator('#modal-confirm').click();
+    await confirm.click();
     const response = await responsePromise;
     const request = response.request().postDataJSON() as Record<string, unknown>;
     const body = await response.json() as Record<string, unknown>;

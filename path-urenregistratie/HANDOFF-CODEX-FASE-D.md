@@ -1,5 +1,18 @@
 # HANDOFF — Codex, Fase D vervolg (herontwerp)
 
+## 8 september — Mobile Safari-flake bij medewerker deactiveren
+
+Release-run `34241982684` faalde uitsluitend op `E2E-N-021` in de
+Mobile-Safari-shard: de test las kort het standaardlabel `Bevestigen` voordat
+het bevestigingsvenster als deactiveringsdialoog was geconfigureerd. Dezelfde
+case was lokaal op alle drie browserprojecten 3/3 groen. De page object wacht
+nu eerst expliciet op een verborgen beginsituatie, daarna op een zichtbaar
+venster en pas dan op het label `Deactiveren`. Dit wijzigt geen productgedrag.
+Een gerichte run vanuit het actieve herontwerp-worktree werd lokaal geblokkeerd
+doordat dat worktree geen eigen `server/config.local.php` en opgebouwde
+testdatabase heeft; CI is daarom de beslissende verificatie. PROD blijft
+onaangeraakt.
+
 ## 8 september — versienummer zichtbaar in New-footer
 
 Het versienummer stond al in de gezamenlijke footer, maar werd in de nieuwe
