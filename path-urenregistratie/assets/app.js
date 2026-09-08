@@ -471,7 +471,7 @@ function freshState() {
       ],
       weeklyReminderEnabled: true,
       weeklyReminderDay: "friday",
-      weeklyReminderTime: "15:00",
+      weeklyReminderTime: "14:00",
       monthEndReminderEnabled: true,
       monthEndReminderTime: "15:00",
       overdueReminderEnabled: true,
@@ -2636,6 +2636,34 @@ function mergeBootstrapIntoState(data) {
   }
   if (company.customer_timesheet_overdue_workdays !== undefined && company.customer_timesheet_overdue_workdays !== null) {
     state.settings.customerTimesheetOverdueWorkdays = Number(company.customer_timesheet_overdue_workdays) || state.settings.customerTimesheetOverdueWorkdays;
+  }
+  const weekdayNumbers = { 1: "monday", 2: "tuesday", 3: "wednesday", 4: "thursday", 5: "friday", 6: "saturday", 7: "sunday" };
+  if (company.weekly_reminder_enabled !== undefined && company.weekly_reminder_enabled !== null) {
+    state.settings.weeklyReminderEnabled = Number(company.weekly_reminder_enabled) === 1;
+  }
+  if (company.weekly_reminder_day !== undefined && company.weekly_reminder_day !== null) {
+    state.settings.weeklyReminderDay = weekdayNumbers[Number(company.weekly_reminder_day)] || state.settings.weeklyReminderDay;
+  }
+  if (company.weekly_reminder_time) {
+    state.settings.weeklyReminderTime = String(company.weekly_reminder_time).slice(0, 5);
+  }
+  if (company.month_end_reminder_enabled !== undefined && company.month_end_reminder_enabled !== null) {
+    state.settings.monthEndReminderEnabled = Number(company.month_end_reminder_enabled) === 1;
+  }
+  if (company.month_end_reminder_time) {
+    state.settings.monthEndReminderTime = String(company.month_end_reminder_time).slice(0, 5);
+  }
+  if (company.overdue_reminder_enabled !== undefined && company.overdue_reminder_enabled !== null) {
+    state.settings.overdueReminderEnabled = Number(company.overdue_reminder_enabled) === 1;
+  }
+  if (company.overdue_reminder_time) {
+    state.settings.overdueReminderTime = String(company.overdue_reminder_time).slice(0, 5);
+  }
+  if (company.approval_reminder_enabled !== undefined && company.approval_reminder_enabled !== null) {
+    state.settings.approvalReminderEnabled = Number(company.approval_reminder_enabled) === 1;
+  }
+  if (company.approval_reminder_time) {
+    state.settings.approvalReminderTime = String(company.approval_reminder_time).slice(0, 5);
   }
   if (company.leave_sick_entry_enabled !== undefined && company.leave_sick_entry_enabled !== null) {
     state.settings.leaveSickEntryEnabled = Number(company.leave_sick_entry_enabled) === 1;
@@ -8662,7 +8690,7 @@ function populateSettings() {
   zetInstelling("setting-sender", settings.sender);
   zetInstellingAangevinkt("setting-weekly-reminder-enabled", settings.weeklyReminderEnabled !== false);
   zetInstelling("setting-weekly-reminder-day", settings.weeklyReminderDay || "friday");
-  zetInstelling("setting-weekly-reminder-time", settings.weeklyReminderTime || "15:00");
+  zetInstelling("setting-weekly-reminder-time", settings.weeklyReminderTime || "14:00");
   zetInstellingAangevinkt("setting-month-end-reminder-enabled", settings.monthEndReminderEnabled !== false);
   zetInstelling("setting-month-end-reminder-time", settings.monthEndReminderTime || "15:00");
   zetInstellingAangevinkt("setting-overdue-reminder-enabled", settings.overdueReminderEnabled !== false);

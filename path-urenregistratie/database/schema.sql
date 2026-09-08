@@ -30,6 +30,15 @@ CREATE TABLE companies (
   customer_timesheet_reminder_enabled BOOLEAN NOT NULL DEFAULT TRUE,
   customer_timesheet_reminder_time TIME NOT NULL DEFAULT '15:00:00',
   customer_timesheet_overdue_workdays TINYINT UNSIGNED NOT NULL DEFAULT 2,
+  weekly_reminder_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  weekly_reminder_day TINYINT UNSIGNED NOT NULL DEFAULT 5,
+  weekly_reminder_time TIME NOT NULL DEFAULT '14:00:00',
+  month_end_reminder_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  month_end_reminder_time TIME NOT NULL DEFAULT '15:00:00',
+  overdue_reminder_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  overdue_reminder_time TIME NOT NULL DEFAULT '09:00:00',
+  approval_reminder_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  approval_reminder_time TIME NOT NULL DEFAULT '10:00:00',
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -62,6 +71,23 @@ CREATE TABLE user_preferences (
   email_notifications BOOLEAN NOT NULL DEFAULT TRUE,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_user_preferences_user FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Idempotency voor de serverplanning: per medewerker/type/periode maximaal
+-- één verstuurde herinnering. period_key is een vrije string (ISO-week voor
+-- wekelijks, jaar-maand voor maandeinde, jaar-maand+datum voor achterstand
+-- zodat die kan herhalen totdat de urenstaat alsnog is ingediend, datum voor
+-- de dagelijkse goedkeuringsherinnering aan Backoffice).
+CREATE TABLE reminder_log (
+  id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  company_id BIGINT UNSIGNED NOT NULL,
+  user_id BIGINT UNSIGNED NOT NULL,
+  reminder_type ENUM('weekly', 'month_end', 'overdue', 'approval') NOT NULL,
+  period_key VARCHAR(32) NOT NULL,
+  sent_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_reminder_log_company FOREIGN KEY (company_id) REFERENCES companies(id),
+  CONSTRAINT fk_reminder_log_user FOREIGN KEY (user_id) REFERENCES users(id),
+  CONSTRAINT uq_reminder_log UNIQUE (user_id, reminder_type, period_key)
 );
 
 CREATE TABLE employees (
