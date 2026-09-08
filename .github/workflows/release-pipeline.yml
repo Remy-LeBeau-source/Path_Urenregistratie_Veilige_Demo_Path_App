@@ -492,6 +492,9 @@ jobs:
   test:
     name: Promote Test
     needs: validate
+    # workflow_dispatch slaat de push-notificatie bewust over. `always()`
+    # voorkomt dat die overgeslagen voorouder de groene releaseketen afbreekt.
+    if: ${{ always() && needs.validate.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 35
     environment: test
@@ -657,9 +660,11 @@ jobs:
     permissions:
       contents: read
     if: >-
-      ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main')
+      ${{ always()
+          && needs.test.result == 'success'
+          && ((github.event_name == 'push' && github.ref == 'refs/heads/main')
           || (github.event_name == 'workflow_dispatch'
-              && (inputs.ref == 'main' || inputs.ref == 'refs/heads/main')) }}
+              && (inputs.ref == 'main' || inputs.ref == 'refs/heads/main'))) }}
 
     steps:
       - name: Checkout exact main release
@@ -715,6 +720,7 @@ jobs:
   live-docs:
     name: Publish Live Docs
     needs: test
+    if: ${{ always() && needs.test.result == 'success' }}
     runs-on: ubuntu-latest
     env:
       PATH_REPORT_STAGE: CI release regression
@@ -1018,7 +1024,13 @@ jobs:
     needs: [test, deploy-test]
     runs-on: ubuntu-latest
     environment: prod
-    if: ${{ github.event_name == 'push' || inputs.ref == 'main' || inputs.ref == 'refs/heads/main' }}
+    if: >-
+      ${{ always()
+          && needs.test.result == 'success'
+          && needs.deploy-test.result == 'success'
+          && (github.event_name == 'push'
+              || inputs.ref == 'main'
+              || inputs.ref == 'refs/heads/main') }}
     defaults:
       run:
         working-directory: path-urenregistratie

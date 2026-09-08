@@ -69,6 +69,9 @@ assert.doesNotMatch(testRunner, /:\(exclude\)pilot/, 'TEST archive must continue
 assert.match(workflow, /deploy-test:\s*[\s\S]*needs:\s*test/, 'TEST deployment must wait for TEST regression');
 assert.match(workflow, /deploy-test:\s*[\s\S]*environment:\s*test/, 'TEST deployment must use the test environment');
 assert.match(workflow, /prod:\s*[\s\S]*needs:\s*\[test, deploy-test\]/, 'PROD promotion must wait for public TEST deployment');
+assert.match(workflow, /test:\s*[\s\S]*?if:\s*\$\{\{ always\(\) && needs\.validate\.result == 'success' \}\}/, 'A dispatched main release must continue to TEST after the push notification is skipped');
+assert.match(workflow, /live-docs:\s*[\s\S]*?if:\s*\$\{\{ always\(\) && needs\.test\.result == 'success' \}\}/, 'Living Docs must continue after a successful dispatched TEST gate');
+assert.match(workflow, /prod:\s*[\s\S]*?needs:\s*\[test, deploy-test\][\s\S]*?always\(\)[\s\S]*?needs\.deploy-test\.result == 'success'/, 'Manual PROD promotion must remain available only after successful TEST deployment');
 for (const required of [
   '/data/sites/web/pathconsultancynl/private/path-uren-test-deployments',
   '/data/sites/web/pathconsultancynl/private/path-uren-test',

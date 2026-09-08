@@ -1,5 +1,15 @@
 # HANDOFF — Codex, Fase D vervolg (herontwerp)
 
+## 8 september — herstel automatische releasehandoff naar TEST
+
+Run `34217114031` valideerde vier shards groen, maar sloeg TEST en PROD over.
+De queue gaf `inputs.ref=main` correct mee; de oorzaak was GitHub Actions'
+skip-doorgifte vanaf de bij `workflow_dispatch` bewust overgeslagen pushmelding.
+De releaseworkflow gebruikt daarom vanaf deze fix expliciet `always()` plus
+groene `needs.*.result`-voorwaarden voor TEST, TEST-deploy, Living Docs en de
+handmatige PROD-poort. Gewenste keten blijft: automatische uitrol tot TEST;
+alleen de gebruiker keurt daarna PROD goed.
+
 ## 12:15 8 september — Backoffice-bevestiging klanturenstaat afgerond
 
 De taak uit de sectie hieronder is uitgevoerd. `mark_skipped` door de
