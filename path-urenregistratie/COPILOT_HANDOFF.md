@@ -20,10 +20,10 @@ volgorde leidend: `BESLISTABEL.md`, daarna de actuele sectie in
 
 ## Actuele overdracht — MO5b, 8 september 2026
 
-- **Taak/conclusie:** MO5b is in `main` geïmplementeerd en op runtime-gedrag
-  bevestigd: een klanturenstaat is blokkerend voor factuurafronding zolang de
-  status niet `received`, `skipped` of een latere gereedstatus is. Externe
-  bevestiging blijft optioneel en staat los van de deblokkade.
+- **Taak/conclusie (aangescherpt 8 sep):** MO5b blokkeert factuurafronding totdat
+  Backoffice de klanturenstaat echt heeft gecontroleerd. Een ontvangen document
+  moet `approved` zijn. `Al rechtstreeks gemaild` blijft oranje totdat Backoffice
+  de aparte actie `confirm_external` met verplichte reden uitvoert.
 - **Diagnose/bewijs:** `showInvoiceDeliveryCheck()` controleerde eerder alleen
   uren- en factuurstatus. `server/api/invoices.php` zette een goedgekeurde
   urenstaat zonder klanturenstaatcontrole door naar `invoiced`. De UI-, server-
@@ -44,22 +44,29 @@ volgorde leidend: `BESLISTABEL.md`, daarna de actuele sectie in
   tonen `Wacht op klanturenstaat` voor goedgekeurde uren zonder gereed document.
   De factuurcontrole toont dan geen modal. De server weigert de lock met
   `customer-timesheet-required` en HTTP 409. Ook herhaalde mailqueue-enqueue
-  wordt met hetzelfde contract geweigerd. `received` en `skipped` laten de
-  factuur wel door; `send_to_broker` blijft een aparte actie.
+  wordt met hetzelfde contract geweigerd. Alleen `approved`/verzonden of een
+  aantoonbare Backoffice-`confirm_external` laten de factuur door;
+  `send_to_broker` blijft een aparte actie.
 - **Tests/bewijs:**
   - `node scripts/run-playwright-e2e.mjs --grep=INV-N-025 tests/playwright/invoices.spec.ts`
     exited met status `0`.
-  - `get_errors` op de aangepaste bestanden gaf geen fouten.
-  - `INV-N-016` en de volgende MO5b-case(s) zijn de eerstvolgende Codex-actie
-    omdat de snelle UI-gate nu bewezen is, maar nog niet afgerond als volledige
-    releasecheck.
+  - `invoice-lock.spec.ts`: 10/10 groen, inclusief `INV-N-016`, `INV-H-020`
+    en de nieuwe `INV-N-026` (rechtstreeks gemaild blokkeert vóór en deblokkeert
+    pas ná Backoffice-`confirm_external`).
+  - Zes geraakte business-workflowbestanden: 27/27 groen over desktop,
+    mobile-chrome en mobile-safari.
+  - `docs:sync`: groen, 446 unieke uitvoerbare cases; `test:design` en
+    `test:bdd:design` groen. `test:db:config` en `test:ops` groen.
+  - De volledige smoke-test en taal-/contrastcontroles binnen `npm run check`
+    zijn groen. De aanvankelijke design-auditfout bleek een ontbrekende
+    `skin.spec.ts`-definitie in de documentatiesynchronisatie en een dubbele
+    `SAFE-H-013`; beide zijn hersteld en de losse designgates zijn groen.
 - **Volgende stap voor Codex:**
-  1. draai `INV-N-016` en de lock-/business-workflowcases;
-  2. draai `INV-H-020` en `INV-H-021`;
-  3. run `npm run docs:sync` en controleer de mapping/feature-sync;
-  4. run `npm run check` en daarna de GUI-smoke/brede regressie;
-  5. pas de checklist en release-status aan op basis van de werkelijke resultaten.
-     Nog niet gecommit, gepusht of gedeployed.
+  1. commit deze bewezen increment en synchroniseer hem met de actuele
+     `origin/herontwerp`;
+  2. push uitsluitend naar `herontwerp` en laat CI plus merge-queue beslissen;
+  3. controleer na groene CI de automatische handoff naar `main` en TEST.
+     PROD blijft achter de handmatige reviewerpoort.
 
 ### Mijlpaal 8 september 2026 — documentatieconsistentie
 

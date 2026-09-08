@@ -106,6 +106,11 @@ test('[E2E-N-018] documentlinks accepteren geen ongeautoriseerde gebruiker, clie
     await page.request.post('/server/auth/logout.php', { headers: { 'X-CSRF-Token': await csrf(page) } });
     await loginPage.open();
     await loginPage.loginAsAdmin();
+    const confirmation = await page.request.post('/server/api/customer-timesheets.php', {
+      headers: { 'X-CSRF-Token': await csrf(page) },
+      data: { action: 'confirm_external', period: periodeSleutel, employee_id: medewerkerId, review_note: 'Ontvangst extern gecontroleerd.' },
+    });
+    expect(confirmation.ok(), `extern bevestigen hoort te slagen: ${await confirmation.text()}`).toBe(true);
 
     const statusVoorGoedkeuren = String((await leesUrenstaat(page, periodeSleutel, medewerkerId)).status);
     if (statusVoorGoedkeuren === 'submitted') {

@@ -138,6 +138,8 @@ function mail_enqueue_for_invoice(
             a.broker_id, a.broker_mail_enabled, a.broker_invoice_attachment,
             a.customer_timesheet_expected,
             ct.status AS customer_timesheet_status,
+            ct.review_note AS customer_timesheet_review_note,
+            ct.reviewed_by AS customer_timesheet_reviewed_by,
             a.bookkeeper_invoice_attachment, a.payroll_invoice_attachment,
             a.invoice_subject_template, a.invoice_body_template,
             a.agreement_number, a.contractor_number,
@@ -179,8 +181,13 @@ function mail_enqueue_for_invoice(
     if ($inv['locked_at'] === null) {
         throw new \RuntimeException('invoice-not-locked');
     }
+    $customerTimesheetStatus = (string)($inv['customer_timesheet_status'] ?? '');
+    $customerTimesheetExternallyConfirmed = $customerTimesheetStatus === 'skipped'
+        && (int)($inv['customer_timesheet_reviewed_by'] ?? 0) > 0
+        && str_starts_with((string)($inv['customer_timesheet_review_note'] ?? ''), 'Extern bevestigd:');
     $customerTimesheetReady = (int)$inv['customer_timesheet_expected'] !== 1
-        || in_array((string)($inv['customer_timesheet_status'] ?? ''), ['received', 'approved', 'sent', 'sent_to_broker', 'skipped'], true);
+        || in_array($customerTimesheetStatus, ['approved', 'sent', 'sent_to_broker'], true)
+        || $customerTimesheetExternallyConfirmed;
     if (!$customerTimesheetReady) {
         throw new \RuntimeException('customer-timesheet-required');
     }

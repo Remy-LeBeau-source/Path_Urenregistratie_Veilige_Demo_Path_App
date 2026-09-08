@@ -23,6 +23,14 @@ Feature: Veilige productieconfiguratie en deployment
     Then blijven TEST-bediening en presentatie zichtbaar zonder PROD-rechten te verruimen
 
   @happy
+  Scenario: [SAFE-H-017] loopback-auto-allow blijft beperkt tot veilige lokale/test-hosts
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given het lokale hostfilter alleen loopback- en TEST-varianten accepteert
+    When de flow voor SAFE-H-017 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat loopback-auto-allow blijft beperkt tot veilige lokale/test-hosts
+
+  @happy
   Scenario: [SAFE-H-014] gedeelde TEST-reset herstelt alleen de exacte veilige 12-actiebaseline
     # Testtechniek: Beslissingstabel + equivalentieklassen + toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 29

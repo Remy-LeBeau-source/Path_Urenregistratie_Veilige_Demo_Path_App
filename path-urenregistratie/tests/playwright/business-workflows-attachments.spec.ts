@@ -95,6 +95,11 @@ test('[E2E-H-018] iedere beloofde factuurbijlage bestaat werkelijk als geldige e
     await page.request.post('/server/auth/logout.php', { headers: { 'X-CSRF-Token': await csrf(page) } });
     await loginPage.open();
     await loginPage.loginAsAdmin();
+    const confirmation = await page.request.post('/server/api/customer-timesheets.php', {
+      headers: { 'X-CSRF-Token': await csrf(page) },
+      data: { action: 'confirm_external', period: periodeSleutel, employee_id: medewerkerId, review_note: 'Ontvangst extern gecontroleerd.' },
+    });
+    expect(confirmation.ok(), `extern bevestigen hoort te slagen: ${await confirmation.text()}`).toBe(true);
 
     const status = String((await leesUrenstaat(page, periodeSleutel, medewerkerId)).status);
     if (status === 'submitted') {

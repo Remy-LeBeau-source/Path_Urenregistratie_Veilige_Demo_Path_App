@@ -88,6 +88,11 @@ async function ketenTotFactuur(page: Page, loginPage: LoginPage): Promise<{ fact
   await page.request.post('/server/auth/logout.php', { headers: { 'X-CSRF-Token': await csrf(page) } });
   await loginPage.open();
   await loginPage.loginAsAdmin();
+  const confirmation = await page.request.post('/server/api/customer-timesheets.php', {
+    headers: { 'X-CSRF-Token': await csrf(page) },
+    data: { action: 'confirm_external', period: periodeSleutel, employee_id: medewerkerId, review_note: 'Ontvangst extern gecontroleerd.' },
+  });
+  expect(confirmation.ok(), `extern bevestigen hoort te slagen: ${await confirmation.text()}`).toBe(true);
 
   const naSubmit = await leesUrenstaat(page, periodeSleutel, medewerkerId);
   if (String(naSubmit.status) === 'submitted') {
@@ -361,6 +366,11 @@ test('[E2E-H-024] een nieuw account krijgt via de GUI toegang en zijn eigen teks
     await page.request.post('/server/auth/logout.php', { headers: { 'X-CSRF-Token': await csrf(page) } });
     await loginPage.open();
     await loginPage.loginAsAdmin();
+    const confirmation = await page.request.post('/server/api/customer-timesheets.php', {
+      headers: { 'X-CSRF-Token': await csrf(page) },
+      data: { action: 'confirm_external', period: periodeSleutel, employee_id: medewerkerId, review_note: 'Ontvangst extern gecontroleerd.' },
+    });
+    expect(confirmation.ok(), `extern bevestigen hoort te slagen: ${await confirmation.text()}`).toBe(true);
 
     const urenstaatId = Number((await leesUrenstaat(page, periodeSleutel, medewerkerId)).id || 0);
     await page.locator('button[data-view="approvals"]').click();

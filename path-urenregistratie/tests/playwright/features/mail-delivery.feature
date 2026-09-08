@@ -325,7 +325,7 @@ Feature: Mailroutering en aflevering
   @happy
   Scenario: [E2E-H-013] een nieuwe medewerker houdt zijn gegevens en komt tot een factuur met de juiste mail
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 36
+    # Aantoonbare Playwright-assertions in deze case: 38
     Given een nieuwe medewerker met klant, broker, contract en een eigen ontvanger
     Then blijven zijn gegevens staan, ook het contract
     And krijgt hij toegang via de eenmalige link
@@ -338,7 +338,7 @@ Feature: Mailroutering en aflevering
   @happy
   Scenario: [E2E-H-014] een nieuwe beheerder logt zelf in en kan de keten afmaken
     # Testtechniek: API-contract + equivalentieklasse
-    # Aantoonbare Playwright-assertions in deze case: 17
+    # Aantoonbare Playwright-assertions in deze case: 19
     Given een nieuwe beheerder met een eigen wachtwoord
     When hij zelf inlogt
     Then ziet hij dezelfde werkvoorraad als de bestaande beheerder

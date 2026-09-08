@@ -737,7 +737,9 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
                 i.vat_amount,
                 i.total,
                 i.vat_percentage AS invoice_vat_percentage,
-                ct.status AS customer_timesheet_status
+                ct.status AS customer_timesheet_status,
+                ct.review_note AS customer_timesheet_review_note,
+                ct.reviewed_by AS customer_timesheet_reviewed_by_id
              FROM timesheets t
              JOIN periods p ON p.id = t.period_id
              JOIN assignments a ON a.id = t.assignment_id
@@ -766,8 +768,13 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
             ], 404);
         }
 
+        $customerTimesheetStatus = (string)($row['customer_timesheet_status'] ?? '');
+        $customerTimesheetExternallyConfirmed = $customerTimesheetStatus === 'skipped'
+            && (int)($row['customer_timesheet_reviewed_by_id'] ?? 0) > 0
+            && str_starts_with((string)($row['customer_timesheet_review_note'] ?? ''), 'Extern bevestigd:');
         $customerTimesheetReady = (int)$row['customer_timesheet_expected'] !== 1
-            || in_array((string)($row['customer_timesheet_status'] ?? ''), ['received', 'approved', 'sent', 'sent_to_broker', 'skipped'], true);
+            || in_array($customerTimesheetStatus, ['approved', 'sent', 'sent_to_broker'], true)
+            || $customerTimesheetExternallyConfirmed;
         if (!$customerTimesheetReady) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
@@ -775,7 +782,7 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
             auth_send_json([
                 'ok' => false,
                 'error' => 'customer-timesheet-required',
-                'message' => 'De klanturenstaat moet eerst zijn ingediend of als rechtstreeks gemaild geregistreerd voordat de factuur kan worden afgerond.',
+                'message' => 'De klanturenstaat moet eerst zijn ingediend of door Backoffice als extern bevestigd zijn vastgelegd voordat de factuur kan worden afgerond.',
             ], 409);
         }
 

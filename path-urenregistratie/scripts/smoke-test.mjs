@@ -1851,7 +1851,7 @@ const emailQueueApiSrc = readFileSync_(new URL("../server/api/email-queue.php", 
 // MO5b: een verwachte klanturenstaat is gereed vóór factuurafronding. Deze
 // statische guard voorkomt dat de server- of browsergate later stil verdwijnt.
 assert(appJsSrc.includes("customerTimesheetReadyForInvoice") && appJsSrc.includes("Wacht op klanturenstaat") && appJsSrc.includes("Verzending geblokkeerd"), "MO5b-browsergate moet klanturenstaatstatus en factuurblokkade bewaken");
-assert(invoiceApiSrc.includes("customer-timesheet-required") && invoiceApiSrc.includes("customer_timesheet_status") && invoiceApiSrc.includes("received"), "MO5b-invoice-API moet ontbrekende klanturenstaat server-side blokkeren");
+assert(invoiceApiSrc.includes("customer-timesheet-required") && invoiceApiSrc.includes("customer_timesheet_status") && invoiceApiSrc.includes("customerTimesheetExternallyConfirmed") && invoiceApiSrc.includes("['approved', 'sent', 'sent_to_broker']"), "MO5b-invoice-API moet ontbrekende of nog niet gecontroleerde klanturenstaat server-side blokkeren");
 assert(emailQueueApiSrc.includes("customer-timesheet-required"), "MO5b-mailqueue moet herhaalde enqueue zonder gereed klanturenstaat blokkeren");
 
 // Het logo stond als losse base64 uit 2023 in app.js, naast assets/path-logo.png.

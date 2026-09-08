@@ -192,6 +192,11 @@ async function createLockedInvoice() {
   // Admin: approve + lock
   await authApi.logout();
   await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+  const customerTimesheetConfirmed = await customerTimesheetApi.write({
+    action: 'confirm_external', period, employeeId,
+    reviewNote: 'Ontvangst extern gecontroleerd.',
+  });
+  expect(customerTimesheetConfirmed.status).toBe(200);
   const approved = await timesheetApi.approve({ period, employeeId, expectedVersion: submittedVer });
   expect(approved.status).toBe(200);
 
@@ -2420,6 +2425,12 @@ test.describe('nieuw account door de volledige keten', () => {
         // factuur heeft.
         const timesheetApi = new TimesheetApi(ctx);
         const invoiceApi = new InvoiceApi(ctx);
+        const customerTimesheetApi = new CustomerTimesheetApi(ctx);
+        const confirmation = await customerTimesheetApi.write({
+          action: 'confirm_external', period: periode, employeeId: medewerkerId,
+          reviewNote: 'Ontvangst extern gecontroleerd.',
+        });
+        expect(confirmation.status, JSON.stringify(confirmation.body)).toBe(200);
 
         const huidig = await (await ctx.get(`/server/api/timesheets.php?period=${periode}&employee_id=${medewerkerId}`)).json();
         const versie = Number(huidig.timesheet?.version || huidig.timesheets?.[0]?.version || 0);
@@ -2574,6 +2585,13 @@ test.describe('nieuw account door de volledige keten', () => {
 
         await werknemerAuth.logout();
         await werknemerCtx.dispose();
+
+        const beheerCustomerTimesheetApi = new CustomerTimesheetApi(nieuweCtx);
+        const confirmation = await beheerCustomerTimesheetApi.write({
+          action: 'confirm_external', period: periode, employeeId: medewerkerDbId,
+          reviewNote: 'Ontvangst extern gecontroleerd.',
+        });
+        expect(confirmation.status, JSON.stringify(confirmation.body)).toBe(200);
 
         const goedgekeurd = await timesheetApi.approve({
           period: periode, employeeId: medewerkerDbId,

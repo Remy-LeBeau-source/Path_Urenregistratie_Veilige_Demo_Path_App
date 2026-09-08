@@ -11,7 +11,7 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
   @happy
   Scenario: [E2E-H-018] iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF
     # Testtechniek: Equivalentieklassen
-    # Aantoonbare Playwright-assertions in deze case: 26
+    # Aantoonbare Playwright-assertions in deze case: 27
     Given een goedgekeurde urenstaat klaarstaat voor facturatie
     When Backoffice de factuur definitief maakt
     Then levert de factuurbijlage een echte, geldige PDF met veilige headers
@@ -32,7 +32,7 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
   @negative
   Scenario: [E2E-N-018] documentlinks accepteren geen ongeautoriseerde gebruiker, clientpad of vrije bestandsnaam
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 20
+    # Aantoonbare Playwright-assertions in deze case: 21
     Given een geldige factuurbijlage voor Backoffice bestaat
     When een uitgelogde browser dezelfde documentroute probeert
     And kan geen clientpad of vrije bestandsnaam worden afgedwongen
@@ -132,7 +132,7 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
   @happy
   Scenario: [E2E-H-019] dubbel klikken maakt nooit dubbele statussen, facturen of mails
     # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 23
+    # Aantoonbare Playwright-assertions in deze case: 25
     Given de eerste submitwrite gecontroleerd wordt vertraagd
     When de medewerker twee keer snel achter elkaar indient
     Then bestaat er precies één urenstaat met één statusmutatie
@@ -152,7 +152,7 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
   @negative
   Scenario: [E2E-N-017] submitted, approved en invoiced blokkeren iedere verboden medewerkerwrite
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 30
+    # Aantoonbare Playwright-assertions in deze case: 34
     Given een medewerker zijn urenstaat indient
     Then blokkeert submitted iedere medewerkerwrite
     When Backoffice goedkeurt, blokkeert approved die write opnieuw
@@ -172,7 +172,7 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
   @happy
   Scenario: [E2E-H-027] elk kanaal krijgt de standaardtekst van de server en geen enkele mail verlaat de machine
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 19
+    # Aantoonbare Playwright-assertions in deze case: 21
     Given bedrijfsketens van medewerker tot Backoffice is voorbereid
     When de flow voor E2E-H-027 wordt uitgevoerd
     Then draagt geen enkele delivery een onvervangen veld of lege tekst
@@ -191,7 +191,7 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
   @happy
   Scenario: [E2E-H-024] een nieuw account krijgt via de GUI toegang en zijn eigen tekst komt letterlijk in de verzonden mail
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 18
+    # Aantoonbare Playwright-assertions in deze case: 20
     Given Backoffice via de GUI een nieuw account met eigen onderwerp en tekst aanmaakt
     When de nieuwe medewerker via de eenmalige link zelf inlogt en uren indient
     Then staat zijn eigen tekst letterlijk en eenmaal in de brokermail

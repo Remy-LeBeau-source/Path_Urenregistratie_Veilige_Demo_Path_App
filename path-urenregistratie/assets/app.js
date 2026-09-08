@@ -3981,7 +3981,9 @@ function customerTimesheetFor(record) {
 
 function customerTimesheetReadyForInvoice(employee, record) {
   if (!employee || employee.customerTimesheetExpected === false) return true;
-  return ["received", "approved", "sent", "sent_to_broker", "skipped"].includes(customerTimesheetFor(record).status);
+  const customerTimesheet = customerTimesheetFor(record);
+  return ["approved", "sent", "sent_to_broker"].includes(customerTimesheet.status)
+    || customerTimesheetExternallyConfirmed(customerTimesheet);
 }
 
 function timesheetStatusInfo(employee, record) {

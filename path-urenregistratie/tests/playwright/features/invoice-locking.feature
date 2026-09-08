@@ -70,6 +70,14 @@ Feature: Facturen definitief maken en vergrendelen
     Then wordt met Playwright-assertions bevestigd dat goedgekeurde uren zonder gereed klanturenstaat kunnen niet worden gelockt
 
   @negative
+  Scenario: [INV-N-026] rechtstreeks gemaild blijft geblokkeerd tot Backoffice extern bevestigt
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given facturen definitief maken en vergrendelen is voorbereid
+    When de flow voor INV-N-026 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat rechtstreeks gemaild blijft geblokkeerd tot Backoffice extern bevestigt
+
+  @negative
   Scenario: [INV-N-012] gelijktijdige lock-requests leveren exact één winnaar
     # Testtechniek: Concurrency + toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 1

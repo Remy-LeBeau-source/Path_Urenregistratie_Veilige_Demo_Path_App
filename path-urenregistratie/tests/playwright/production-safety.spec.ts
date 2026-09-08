@@ -160,7 +160,7 @@ test('[SAFE-H-012] TEST toont accountkeuze met autofill en een afgeschermde gede
   });
 });
 
-test('[SAFE-H-013] loopback-auto-allow blijft beperkt tot veilige lokale/test-hosts', async ({ page }) => {
+test('[SAFE-H-017] loopback-auto-allow blijft beperkt tot veilige lokale/test-hosts', async ({ page }) => {
   await page.goto(appConfig.baseUrl);
 
   await test.step('Given het lokale hostfilter alleen loopback- en TEST-varianten accepteert', async () => {

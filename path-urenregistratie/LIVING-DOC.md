@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 433 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 445 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 433 unieke case-ID's
+- Playwright executable cases: 445 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 434 unieke case-ID's
-- Playwright features: 27
+- Totaal executable cases: 446 unieke case-ID's
+- Playwright features: 28
 - Database features: 1
-- Playwright steps mappings: 27
+- Playwright steps mappings: 28
 - Database steps mappings: 1
-- Uitvoeringen: 468
-- Niet-mobile projectuitvoeringen: 398
+- Uitvoeringen: 480
+- Niet-mobile projectuitvoeringen: 410
 - Mobile functionele cases: 35
 - Pixel 7 / Chromium-uitvoeringen: 35
 - iPhone 13 / WebKit-uitvoeringen: 35
 
-De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 433 Playwright-functionele cases in totaal 468 resultaten op: 398 + (35 x 2) = 468.
+De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 445 Playwright-functionele cases in totaal 480 resultaten op: 410 + (35 x 2) = 480.
 
 ## Documentatieketen
 
@@ -123,9 +123,9 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 433 Playwri
 - Source: `tests/playwright/business-workflows-*.spec.ts`
 - Cases: 23
 
-- [E2E-H-018] iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF — Techniek: Equivalentieklassen · Assertions: 26
+- [E2E-H-018] iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF — Techniek: Equivalentieklassen · Assertions: 27
 - [E2E-N-020] een medewerker kan de Backoffice-keten niet uitvoeren en een weigering verandert niets — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 26
-- [E2E-N-018] documentlinks accepteren geen ongeautoriseerde gebruiker, clientpad of vrije bestandsnaam — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 20
+- [E2E-N-018] documentlinks accepteren geen ongeautoriseerde gebruiker, clientpad of vrije bestandsnaam — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 21
 - [E2E-H-001] herstelbasis houdt globale werkvoorraad stabiel bij maand- en filterwissels — Techniek: Equivalentieklassen · Assertions: 11
 - [E2E-H-002] rolwissel werkt zonder F5 en herstel blijft beschikbaar voor iedere rol op LOCAL/TEST — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
 - [E2E-H-003] herindiening verplaatst dezelfde actie van medewerker naar Backoffice — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 18
@@ -136,13 +136,13 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 433 Playwri
 - [E2E-H-008] urencontrole vraagt na oude versie opnieuw op en maakt daarna toch goedkeuren af — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [E2E-N-019] een mislukte factuurpoging laat niets half achter en opnieuw proberen levert één factuur — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 20
 - [E2E-H-016] ieder wijzigbaar Teambeheerveld heeft een aantoonbaar opslag- of uitzonderingscontract — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 32
-- [E2E-H-019] dubbel klikken maakt nooit dubbele statussen, facturen of mails — Techniek: Toestandsovergang · Assertions: 23
+- [E2E-H-019] dubbel klikken maakt nooit dubbele statussen, facturen of mails — Techniek: Toestandsovergang · Assertions: 25
 - [E2E-H-022] iedere case laat database en private opslag aantoonbaar schoon achter — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 20
-- [E2E-N-017] submitted, approved en invoiced blokkeren iedere verboden medewerkerwrite — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 30
+- [E2E-N-017] submitted, approved en invoiced blokkeren iedere verboden medewerkerwrite — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 34
 - [E2E-H-026] de definitieve factuur-PDF bevat de juiste bedragen en identiteit en geen conceptwatermerk — Techniek: Equivalentieklassen · Assertions: 16
-- [E2E-H-027] elk kanaal krijgt de standaardtekst van de server en geen enkele mail verlaat de machine — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 19
+- [E2E-H-027] elk kanaal krijgt de standaardtekst van de server en geen enkele mail verlaat de machine — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 21
 - [E2E-H-023] twee nieuw toegevoegde ontvangers krijgen via de volledige GUI-keten ieder hun eigen factuurmail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
-- [E2E-H-024] een nieuw account krijgt via de GUI toegang en zijn eigen tekst komt letterlijk in de verzonden mail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 18
+- [E2E-H-024] een nieuw account krijgt via de GUI toegang en zijn eigen tekst komt letterlijk in de verzonden mail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 20
 - [E2E-H-025] een aangepaste standaardtekst werkt in de echte mail en is via de GUI terug te zetten — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 15
 - [E2E-N-021] een gedeactiveerd account met historie blijft veilig bewaard en legt de blokkeerreden uit — Techniek: Toestandsovergang · Assertions: 20
 - [E2E-H-017] de volledige toegestane urenstatusketen bewaakt na iedere write status, eigenaar en taak — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 18
@@ -268,8 +268,8 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 433 Playwri
 - [EQ-H-029] elke ontvanger krijgt de handtekening, ook onder een eigen tekst — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [E2E-H-011] een aangepaste standaardtekst komt werkelijk in de mail en is terug te zetten — Techniek: API-contract + equivalentieklasse · Assertions: 15
 - [E2E-H-012] het vinkje Factuur meesturen bepaalt werkelijk of de bijlage meegaat — Techniek: API-contract + equivalentieklasse · Assertions: 6
-- [E2E-H-013] een nieuwe medewerker houdt zijn gegevens en komt tot een factuur met de juiste mail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 36
-- [E2E-H-014] een nieuwe beheerder logt zelf in en kan de keten afmaken — Techniek: API-contract + equivalentieklasse · Assertions: 17
+- [E2E-H-013] een nieuwe medewerker houdt zijn gegevens en komt tot een factuur met de juiste mail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 38
+- [E2E-H-014] een nieuwe beheerder logt zelf in en kan de keten afmaken — Techniek: API-contract + equivalentieklasse · Assertions: 19
 - [E2E-H-015] aanmaken, lezen, wijzigen en verwijderen van een medewerker houdt stand — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 18
 
 ### Hulp en contact
@@ -289,7 +289,7 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 433 Playwri
 
 - Feature: `tests/playwright/features/invoice-locking.feature`
 - Source: `tests/playwright/invoice-lock.spec.ts`
-- Cases: 9
+- Cases: 10
 
 - [INV-H-004] admin lockt approved timesheet naar definitieve immutable factuur — Techniek: Concurrency + toestandsovergang · Assertions: 26
 - [INV-N-015] definitief gefactureerde uren kunnen niet voor correctie worden heropend — Techniek: Toestandsovergang · Assertions: 9
@@ -298,6 +298,7 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 433 Playwri
 - [INV-N-010] niet-goedgekeurde urenstaat kan niet worden gelockt — Techniek: Toestandsovergang · Assertions: 3
 - [INV-N-011] tweede lock-oproep op dezelfde factuur wordt geblokkeerd — Techniek: Concurrency + toestandsovergang · Assertions: 5
 - [INV-N-016] goedgekeurde uren zonder gereed klanturenstaat kunnen niet worden gelockt — Techniek: Toestandsovergang · Assertions: 4
+- [INV-N-026] rechtstreeks gemaild blijft geblokkeerd tot Backoffice extern bevestigt — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [INV-N-012] gelijktijdige lock-requests leveren exact één winnaar — Techniek: Concurrency + toestandsovergang · Assertions: 1
 - [INV-N-013] anonieme gebruiker kan factuur-PDF niet downloaden — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2
 
@@ -488,10 +489,11 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 433 Playwri
 
 - Feature: `tests/playwright/features/production-safety.feature`
 - Source: `tests/playwright/production-safety.spec.ts`
-- Cases: 22
+- Cases: 23
 
 - [SAFE-H-001] login picker vult alleen lokaal demo-wachtwoord in wanneer hints beschikbaar zijn — Techniek: API-contract + equivalentieklasse · Assertions: 9
 - [SAFE-H-012] TEST toont accountkeuze met autofill en een afgeschermde gedeelde reset — Techniek: Beslissingstabel + equivalentieklassen + toestandsovergang · Assertions: 19
+- [SAFE-H-017] loopback-auto-allow blijft beperkt tot veilige lokale/test-hosts — Techniek: API-contract + equivalentieklasse · Assertions: 4
 - [SAFE-H-014] gedeelde TEST-reset herstelt alleen de exacte veilige 12-actiebaseline — Techniek: Beslissingstabel + equivalentieklassen + toestandsovergang · Assertions: 29
 - [SAFE-H-015] TEST-deploy herstelt en verifieert de vaste accountbaseline vóór cutover — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 23
 - [SAFE-N-001] frontend source bevat geen plaintext demo-credentials — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 3
@@ -547,6 +549,23 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 433 Playwri
 - [SEC-H-007] config voorbeeld bevat voorbereide CSP/CORS/HSTS flags — Techniek: API-contract + equivalentieklasse · Assertions: 3
 - [SEC-H-008] draaiende server zet de vaste beveiligingsheaders echt op elk antwoord — Techniek: API-contract + equivalentieklasse · Assertions: 5
 - [SEC-N-008] cors weerspiegelt alleen een toegestane origin, nooit een onbekende — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 7
+
+### Vormgevingsschakelaar (klassiek / nieuw)
+
+- Feature: `tests/playwright/features/skin.feature`
+- Source: `tests/playwright/skin.spec.ts`
+- Cases: 10
+
+- [SKIN-H-001] de app start standaard in de klassieke vormgeving — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
+- [SKIN-H-002] Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
+- [SKIN-H-003] terug naar "Klassiek" herstelt de klassieke vormgeving en bewaart die — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 5
+- [SKIN-H-004] de nieuwe skin activeert uitsluitend zijn eigen visuele fundament — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 10
+- [SKIN-H-005] Klassiek start licht en Nieuw donker en onthoudt daarna elk eigen thema — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
+- [SKIN-H-006] de echte medewerkerroute toont de live bento en blijft mobiel bedienbaar — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 21
+- [SKIN-H-008] Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en terugschakelen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
+- [SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en Klassiek — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 9
+- [SKIN-H-010] de admin-verhaallijn wisselt van medewerker en toont bijbehorende status — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
+- [SKIN-N-007] productie forceert Klassiek en verbergt de redesignschakelaar — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
 
 ### Correctie- en goedkeuringsproces
 

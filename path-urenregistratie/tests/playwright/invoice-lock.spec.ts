@@ -111,6 +111,17 @@ async function createSubmittedTimesheet(request: APIRequestContext, billableHour
     expect(customerTimesheet.status).toBe(200);
     expect(customerTimesheet.body.ok).toBe(true);
     expect(customerTimesheet.body.customer_timesheet.status).toBe('skipped');
+
+    await authApi.logout();
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+    const confirmation = await customerTimesheetApi.write({
+      action: 'confirm_external',
+      period,
+      employeeId,
+      reviewNote: 'Extern ontvangen en door Backoffice gecontroleerd.',
+    });
+    expect(confirmation.status).toBe(200);
+    expect(confirmation.body.ok).toBe(true);
   }
 
   await authApi.logout();
@@ -360,6 +371,42 @@ test('[INV-N-016] goedgekeurde uren zonder gereed klanturenstaat kunnen niet wor
   expect(response.body.ok).toBe(false);
   expect(response.body.error).toBe('customer-timesheet-required');
   expect(response.body.message).toContain('klanturenstaat');
+  await authApi.logout();
+});
+
+test('[INV-N-026] rechtstreeks gemaild blijft geblokkeerd tot Backoffice extern bevestigt', async ({ request }) => {
+  const authApi = new AuthApi(request);
+  const customerTimesheetApi = new CustomerTimesheetApi(request);
+  const invoiceApi = new InvoiceApi(request);
+  const submitted = await createSubmittedTimesheet(request, 12, false);
+
+  await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+  const marked = await customerTimesheetApi.write({
+    action: 'mark_skipped',
+    period: submitted.period,
+    employeeId: submitted.employeeId,
+    reviewNote: 'Al rechtstreeks naar Path Backoffice gemaild.',
+  });
+  expect(marked.status).toBe(200);
+  await authApi.logout();
+
+  const approved = await approveTimesheet(request, submitted);
+  await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+  const blocked = await invoiceApi.lock({ action: 'lock', timesheetId: approved.timesheetId });
+  expect(blocked.status).toBe(409);
+  expect(blocked.body.error).toBe('customer-timesheet-required');
+
+  const confirmed = await customerTimesheetApi.write({
+    action: 'confirm_external',
+    period: submitted.period,
+    employeeId: submitted.employeeId,
+    reviewNote: 'Ontvangst buiten de app gecontroleerd.',
+  });
+  expect(confirmed.status).toBe(200);
+
+  const released = await invoiceApi.lock({ action: 'lock', timesheetId: approved.timesheetId });
+  expect(released.status).toBe(200);
+  expect(released.body.ok).toBe(true);
   await authApi.logout();
 });
 

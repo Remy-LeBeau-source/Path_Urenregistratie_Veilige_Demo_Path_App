@@ -66,9 +66,10 @@ In TEST gaan de drie SMTP-afleveringen fysiek naar `giovanno.maatsen@pathconsult
 en attachment policy blijven zichtbaar en auditbaar. Iedere functionele route blijft een eigen
 bericht; CC wordt uitsluitend gebruikt om beide TEST-beoordelaars dezelfde sandboxmail te geven.
 
-Een klanturenstaat moet vóór **Controle afronden** gereed zijn: `received` of
-`Al rechtstreeks gemaild` met reden is voldoende. Externe bevestiging is daarna een aparte,
-optionele Backoffice-actie en geen voorwaarde voor de factuurblokkade.
+Een klanturenstaat moet vóór **Controle afronden** door Backoffice zijn gecontroleerd.
+Er zijn twee geldige paden: een ontvangen document krijgt status `approved`, of een
+medewerker kiest **Al rechtstreeks gemaild** waarna Backoffice met verplichte reden
+**Extern bevestigen** uitvoert. Alleen melden of alleen ontvangen blijft oranje en blokkerend.
 
 ## 5. Uitvoeringsvolgorde
 

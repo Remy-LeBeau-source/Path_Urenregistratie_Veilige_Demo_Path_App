@@ -40,6 +40,8 @@ Then("wordt een tweede lock-oproep geweigerd en ontstaat geen duplicaat");
 Given("facturen definitief maken en vergrendelen is voorbereid");
 When("de flow voor INV-N-016 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat goedgekeurde uren zonder gereed klanturenstaat kunnen niet worden gelockt");
+When("de flow voor INV-N-026 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat rechtstreeks gemaild blijft geblokkeerd tot Backoffice extern bevestigt");
 When("de flow voor INV-N-012 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat gelijktijdige lock-requests leveren exact één winnaar");
 Given("een administrator een factuur heeft gefinaliseerd");

@@ -135,6 +135,11 @@ async function ketenTotFactuur(page: Page, loginPage: LoginPage): Promise<{ fact
   await page.request.post('/server/auth/logout.php', { headers: { 'X-CSRF-Token': await csrf(page) } });
   await loginPage.open();
   await loginPage.loginAsAdmin();
+  const confirmation = await page.request.post('/server/api/customer-timesheets.php', {
+    headers: { 'X-CSRF-Token': await csrf(page) },
+    data: { action: 'confirm_external', period: periodeSleutel, employee_id: medewerkerId, review_note: 'Ontvangst extern gecontroleerd.' },
+  });
+  expect(confirmation.ok(), `extern bevestigen hoort te slagen: ${await confirmation.text()}`).toBe(true);
 
   if (String((await leesUrenstaat(page, periodeSleutel, medewerkerId)).status) === 'submitted') {
     await page.locator('button[data-view="approvals"]').click();
