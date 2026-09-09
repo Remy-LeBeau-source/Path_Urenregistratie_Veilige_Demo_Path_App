@@ -58,7 +58,18 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium webkit
+        # Zie release-pipeline.yml/ci.yml: apt-get update binnen --with-deps
+        # raadpleegt altijd ook Google's eigen, hier ongebruikte
+        # dl.google.com/linux/chrome-stable-bron. Bij een tijdelijke
+        # inconsistentie daar ("Hash Sum mismatch") faalt de hele stap
+        # onnodig hard; een paar pogingen met korte pauze lost dat op.
+        run: |
+          for poging in 1 2 3; do
+            npx playwright install --with-deps chromium webkit && exit 0
+            echo "Poging $poging mislukt, probeer opnieuw na een korte pauze..."
+            sleep 15
+          done
+          exit 1
 
       - name: Write CI config.local.php
         run: |

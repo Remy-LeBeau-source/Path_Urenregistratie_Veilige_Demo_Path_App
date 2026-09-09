@@ -186,7 +186,21 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium webkit
+        # apt-get update binnen --with-deps raadpleegt altijd ook Google's
+        # eigen, hier ongebruikte dl.google.com/linux/chrome-stable-bron (we
+        # installeren nooit echte Chrome, alleen chromium/webkit) -- een
+        # verwijderpoging vooraf bleek geen effect te hebben, playwright
+        # voegt 'm blijkbaar zelf weer toe. Bij een tijdelijke inconsistentie
+        # in díe bron ("Hash Sum mismatch") faalt de hele stap onnodig hard;
+        # een paar pogingen met korte pauze lost dat op zonder dat we moeten
+        # weten waar of waarom Google's CDN net inconsistent antwoordt.
+        run: |
+          for poging in 1 2 3; do
+            npx playwright install --with-deps chromium webkit && exit 0
+            echo "Poging $poging mislukt, probeer opnieuw na een korte pauze..."
+            sleep 15
+          done
+          exit 1
 
       - name: Write CI config.local.php
         run: |
@@ -405,7 +419,21 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium webkit
+        # apt-get update binnen --with-deps raadpleegt altijd ook Google's
+        # eigen, hier ongebruikte dl.google.com/linux/chrome-stable-bron (we
+        # installeren nooit echte Chrome, alleen chromium/webkit) -- een
+        # verwijderpoging vooraf bleek geen effect te hebben, playwright
+        # voegt 'm blijkbaar zelf weer toe. Bij een tijdelijke inconsistentie
+        # in díe bron ("Hash Sum mismatch") faalt de hele stap onnodig hard;
+        # een paar pogingen met korte pauze lost dat op zonder dat we moeten
+        # weten waar of waarom Google's CDN net inconsistent antwoordt.
+        run: |
+          for poging in 1 2 3; do
+            npx playwright install --with-deps chromium webkit && exit 0
+            echo "Poging $poging mislukt, probeer opnieuw na een korte pauze..."
+            sleep 15
+          done
+          exit 1
 
       - name: Write fallback config.local.php
         run: |
@@ -560,7 +588,21 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium webkit
+        # apt-get update binnen --with-deps raadpleegt altijd ook Google's
+        # eigen, hier ongebruikte dl.google.com/linux/chrome-stable-bron (we
+        # installeren nooit echte Chrome, alleen chromium/webkit) -- een
+        # verwijderpoging vooraf bleek geen effect te hebben, playwright
+        # voegt 'm blijkbaar zelf weer toe. Bij een tijdelijke inconsistentie
+        # in díe bron ("Hash Sum mismatch") faalt de hele stap onnodig hard;
+        # een paar pogingen met korte pauze lost dat op zonder dat we moeten
+        # weten waar of waarom Google's CDN net inconsistent antwoordt.
+        run: |
+          for poging in 1 2 3; do
+            npx playwright install --with-deps chromium webkit && exit 0
+            echo "Poging $poging mislukt, probeer opnieuw na een korte pauze..."
+            sleep 15
+          done
+          exit 1
 
       - name: Write fallback config.local.php
         run: |
@@ -852,7 +894,21 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium webkit
+        # apt-get update binnen --with-deps raadpleegt altijd ook Google's
+        # eigen, hier ongebruikte dl.google.com/linux/chrome-stable-bron (we
+        # installeren nooit echte Chrome, alleen chromium/webkit) -- een
+        # verwijderpoging vooraf bleek geen effect te hebben, playwright
+        # voegt 'm blijkbaar zelf weer toe. Bij een tijdelijke inconsistentie
+        # in díe bron ("Hash Sum mismatch") faalt de hele stap onnodig hard;
+        # een paar pogingen met korte pauze lost dat op zonder dat we moeten
+        # weten waar of waarom Google's CDN net inconsistent antwoordt.
+        run: |
+          for poging in 1 2 3; do
+            npx playwright install --with-deps chromium webkit && exit 0
+            echo "Poging $poging mislukt, probeer opnieuw na een korte pauze..."
+            sleep 15
+          done
+          exit 1
 
       - name: Write fallback config.local.php
         run: |
@@ -1014,7 +1070,21 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium webkit
+        # apt-get update binnen --with-deps raadpleegt altijd ook Google's
+        # eigen, hier ongebruikte dl.google.com/linux/chrome-stable-bron (we
+        # installeren nooit echte Chrome, alleen chromium/webkit) -- een
+        # verwijderpoging vooraf bleek geen effect te hebben, playwright
+        # voegt 'm blijkbaar zelf weer toe. Bij een tijdelijke inconsistentie
+        # in díe bron ("Hash Sum mismatch") faalt de hele stap onnodig hard;
+        # een paar pogingen met korte pauze lost dat op zonder dat we moeten
+        # weten waar of waarom Google's CDN net inconsistent antwoordt.
+        run: |
+          for poging in 1 2 3; do
+            npx playwright install --with-deps chromium webkit && exit 0
+            echo "Poging $poging mislukt, probeer opnieuw na een korte pauze..."
+            sleep 15
+          done
+          exit 1
 
       - name: Write fallback config.local.php
         run: |
