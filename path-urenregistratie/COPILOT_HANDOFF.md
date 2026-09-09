@@ -1,5 +1,58 @@
 # Copilot handoff — lokale mailpreview en regressieherstel
 
+## Vervolgsessie op main, 9/10 september 2026, nacht — na de 20:46-sessie
+
+Alles hieronder bouwt voort op de 20:46-sessie (direct hieronder). Alles staat
+op `main`, v1.0.46, commit `2d96ca4`, CI-run `34414073007` loopt.
+
+1. **Kristel's punt 1-3 (tekstinkortingen) alsnog gecommit** — stonden nog
+   open aan het eind van de 20:46-sessie, zijn afgerond in v1.0.41.
+2. **Kristel's punt 4 (klanturenstaat-statuslijst per maand) gebouwd.**
+   "Mijn maanden" (de historietabel) heeft nu een eigen kolom "Klanturenstaat"
+   naast "Status", met een eigen statuspil per rij
+   (`customerTimesheetStatusPill`) — niet gelijk aan de urenstatus. CSS-
+   valkuil: de nieuwe kolomregel op `#employee-history.has-...-column` heeft
+   hogere specificiteit dan de bestaande mobiele breakpoint-regels op
+   `.employee-history-row`, dus die kregen een even specifieke tegenregel in
+   alle 3 breakpoints. Regressietest `DASH-H-025`.
+3. **Stasjo (echte tester) mag tot 2 jaar vooruitkijken.** Was hard
+   afgekapt op de kalendermaand van nu (server + client) om fantoom-
+   opentaken te voorkomen; `employeeOpenMonthSummaries()` is daar
+   onafhankelijk van al hard op de échte kalendermaand gekapt, dus veilig
+   los te trekken. `maxEmployeeFuturePeriodKey()` (client) + `+2 years`
+   (server, `timesheet_require_employee_period_access()`). Terugkijken
+   (startdatum-grens) blijft ongewijzigd. Bijgevonden bug tijdens het bouwen:
+   een ongeclipte `+2 jaar` overflowt de 4-cijferige periodesleutel-
+   stringvergelijking bij een gemockt jaar 9999 (`smoke-test.mjs`) —
+   `Math.min(jaar + 2, 9999)` verhelpt dat structureel voor elke aanroeper.
+   Regressietests `DASH-H-006`/`DASH-H-007` (herschreven, waren datum-drift-
+   gevoelig) + `ROLE-N-005`.
+4. **Stasjo mag op TEST écht zijn eigen wachtwoordreset ontvangen, alléén
+   dat kanaal.** Zie BESLISTABEL.md R15 voor het volledige ontwerp en de
+   bekende beperking (zijn echte adres overleeft geen TEST-deploy-reseed).
+   Kostte drie deploy-iteraties om alle **drie** losstaande hardcoded
+   "exact N ontvangers"-checks te vinden die met de nieuwe 3e ontvanger in
+   lockstep moesten: `production-safety.spec.ts` (SAFE-H-013, v1.0.43),
+   `server/scripts/test-preflight.php` (alleen zichtbaar tijdens een échte
+   TEST-deploy, v1.0.45), en — pas gevonden via de daadwerkelijke faalregel
+   in de deploy-log, niet geraden — een inline PHP-validatie in
+   `scripts/deploy-test-remote.sh` zelf, met een eigen lockstep-regex in
+   `scripts/deployment-contract-check.mjs` (v1.0.46). Bij een volgende
+   uitbreiding van de TEST-mailallowlist: zoek op
+   `kenrich.lieveld@pathconsultancy.nl` om alle plekken in één keer te
+   vinden.
+5. **Regressie van de peer-sessie (herontwerp) opgepakt:** het oude
+   klassieke hero-blok (`.employee-hero`, "Mijn werkvoorraad" /
+   "Uren verder invullen"-knop) was weer zichtbaar op het Dashboard in
+   Nieuw skin, door een eerdere main-commit (`3dba199`) die het aan de
+   zichtbare uitzonderingen toevoegde zonder te checken dat de al bestaande
+   `#employee-open-overview`-kaart exact dezelfde "welke maanden staan
+   open"-behoefte al in bento-stijl dekte. Teruggedraaid (v1.0.46);
+   `SKIN-H-021` bijgewerkt naar `.employee-hero` = verborgen.
+
+Geen andere onafgeronde code-wijzigingen op main op dit moment; CI-run
+`34414073007` volgen tot groen is de eerstvolgende stap voor wie dit oppakt.
+
 ## Vervolgsessie op main, 9 september 2026, 20:46 — na REM-H-001-fix
 
 Onderstaande bouwt voort op de REM-H-001-sessie hieronder (06:00). Alles hier
