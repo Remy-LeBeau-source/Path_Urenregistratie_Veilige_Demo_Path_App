@@ -302,6 +302,21 @@ function timesheet_parse_day_entries(array $payload, int $year, int $month, floa
             ], 400);
         }
 
+        // De client genereert het weekraster structureel zonder weekenddagen
+        // (periodFromKey() in assets/app.js), maar dat is geen serverdekking --
+        // een rechtstreekse API-aanroep kon nog steeds een zaterdag/zondag als
+        // work_date meesturen en die werd zonder controle opgeslagen. Zelfde
+        // ISO-weekdagcheck als reminder_is_workday() in
+        // server/scripts/send-due-reminders.php (N <= 5 is ma-vr).
+        $entryWeekday = (int)(new DateTimeImmutable($workDate))->format('N');
+        if ($entryWeekday > 5) {
+            auth_send_json([
+                'ok' => false,
+                'error' => 'invalid-payload',
+                'message' => 'Uren kunnen alleen op een werkdag (ma-vr) worden geboekt.',
+            ], 400);
+        }
+
         $rawHours = $entry['hours'] ?? null;
         if (!is_numeric($rawHours)) {
             auth_send_json([

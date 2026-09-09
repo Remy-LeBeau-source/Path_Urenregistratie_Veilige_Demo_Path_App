@@ -9,10 +9,30 @@ const CANDIDATE_PERIODS = Array.from({ length: 240 }, (_, index) => {
   return `${year}-${String(month).padStart(2, '0')}`;
 });
 
+function firstWeekdayDatesInPeriod(period: string, count: number): string[] {
+  const [year, month] = period.split('-').map(Number);
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const dates: string[] = [];
+  for (let day = 1; day <= daysInMonth && dates.length < count; day += 1) {
+    const dow = new Date(Date.UTC(year, month - 1, day)).getUTCDay(); // 0 = zondag, 6 = zaterdag
+    if (dow !== 0 && dow !== 6) {
+      dates.push(`${period}-${String(day).padStart(2, '0')}`);
+    }
+  }
+  if (dates.length < count) {
+    throw new Error(`Niet genoeg werkdagen gevonden in periode ${period}.`);
+  }
+  return dates;
+}
+
 function buildDayEntries(period: string, first: number, second: number) {
+  // De server accepteert sinds de weekendvalidatie (TS-REV-API-N-001) geen
+  // zaterdag/zondag meer als work_date, dus de testdata moet altijd op
+  // werkdagen binnen de periode vallen i.p.v. de vaste 1e/2e van de maand.
+  const [firstDate, secondDate] = firstWeekdayDatesInPeriod(period, 2);
   return [
-    { workDate: `${period}-01`, hours: first, description: 'Reviewflow dag 1' },
-    { workDate: `${period}-02`, hours: second, description: 'Reviewflow dag 2' },
+    { workDate: firstDate, hours: first, description: 'Reviewflow dag 1' },
+    { workDate: secondDate, hours: second, description: 'Reviewflow dag 2' },
   ];
 }
 
@@ -34,6 +54,18 @@ async function findWritablePeriod(timesheetApi: TimesheetApi): Promise<string> {
   }
 
   throw new Error('No writable review-flow period found in 240 candidate months.');
+}
+
+function firstWeekendDateInPeriod(period: string): string {
+  const [year, month] = period.split('-').map(Number);
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    const dow = new Date(Date.UTC(year, month - 1, day)).getUTCDay(); // 0 = zondag, 6 = zaterdag
+    if (dow === 0 || dow === 6) {
+      return `${period}-${String(day).padStart(2, '0')}`;
+    }
+  }
+  throw new Error(`Geen weekenddag gevonden in periode ${period}.`);
 }
 
 test.describe('timesheet review flow api', () => {
@@ -368,6 +400,49 @@ test.describe('timesheet review flow api', () => {
         expect(readBack.body.found).toBe(true);
         expect(readBack.body.timesheet.day_entries.length).toBeGreaterThan(0);
       }
+    });
+
+    await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {
+      await authApi.logout();
+    });
+  });
+
+  test('[TS-REV-API-N-001] server weigert een dagregel op zaterdag of zondag, ook als de aanroep de client omzeilt', async ({ request }) => {
+    const authApi = new AuthApi(request);
+    const timesheetApi = new TimesheetApi(request);
+    let period = '';
+    let weekendDate = '';
+
+    await test.step('Given de medewerker is ingelogd en heeft een schrijfbare testperiode', async () => {
+      const employeeLogin = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      expect(employeeLogin.user.role).toBe('employee');
+
+      period = await findWritablePeriod(timesheetApi);
+      expect(period).toMatch(/^\d{4}-\d{2}$/);
+      weekendDate = firstWeekendDateInPeriod(period);
+    });
+
+    await test.step('When de medewerker rechtstreeks via de API een dagregel op een weekenddag probeert op te slaan', async () => {
+      // De UI genereert het weekraster structureel zonder weekenddagen
+      // (periodFromKey() in assets/app.js), dus dit pad kan een gebruiker
+      // via het scherm niet bereiken -- de test omzeilt de client bewust
+      // om de servervalidatie in timesheet_parse_day_entries() te bewijzen.
+      const attempt = await timesheetApi.write({
+        action: 'save_draft',
+        period,
+        contractualHours: 160,
+        billableHours: 4,
+        leaveHours: 0,
+        sicknessHours: 0,
+        dayEntries: [{ workDate: weekendDate, hours: 4, description: 'Weekend mag niet' }],
+      });
+
+      await test.step('Then wijst de server het verzoek af met een duidelijke foutmelding', async () => {
+        expect(attempt.status).toBe(400);
+        expect(attempt.body.ok).toBe(false);
+        expect(attempt.body.error).toBe('invalid-payload');
+        expect(attempt.body.message).toBe('Uren kunnen alleen op een werkdag (ma-vr) worden geboekt.');
+      });
     });
 
     await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {

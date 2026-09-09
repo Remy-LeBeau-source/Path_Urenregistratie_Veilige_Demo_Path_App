@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 455 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 456 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 455 unieke case-ID's
+- Playwright executable cases: 456 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 456 unieke case-ID's
+- Totaal executable cases: 457 unieke case-ID's
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29
 - Database steps mappings: 1
-- Uitvoeringen: 490
-- Niet-mobile projectuitvoeringen: 420
+- Uitvoeringen: 491
+- Niet-mobile projectuitvoeringen: 421
 - Mobile functionele cases: 35
 - Pixel 7 / Chromium-uitvoeringen: 35
 - iPhone 13 / WebKit-uitvoeringen: 35
 
-De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 455 Playwright-functionele cases in totaal 490 resultaten op: 420 + (35 x 2) = 490.
+De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 456 Playwright-functionele cases in totaal 491 resultaten op: 421 + (35 x 2) = 491.
 
 ## Documentatieketen
 
@@ -588,11 +588,12 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 455 Playwri
 
 - Feature: `tests/playwright/features/correction-approval-workflow.feature`
 - Source: `tests/playwright/timesheet-review-flow.spec.ts`
-- Cases: 3
+- Cases: 4
 
 - [TS-REV-API-H-005] admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking — Techniek: Concurrency + toestandsovergang · Assertions: 65
 - [TS-REV-API-H-006] gelijktijdige approve-requests door twee beheerders leveren exact één winnaar — Techniek: Concurrency + toestandsovergang · Assertions: 7
 - [TS-REV-API-H-007] jaarwisseling december naar januari verwerkt urenstaten correct over de jaargrens — Techniek: API-contract + equivalentieklasse · Assertions: 7
+- [TS-REV-API-N-001] server weigert een dagregel op zaterdag of zondag, ook als de aanroep de client omzeilt — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 
 ### Correcties en goedkeuringen behandelen
 
