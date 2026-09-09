@@ -4261,18 +4261,26 @@ function customerTimesheetBrokerEmail(employee) {
     : employee.customerTimesheetBrokerEmail;
 }
 
-// Vult, voor de week die newEmployeeBentoWeekIndex als "nu" aanwijst, elke
-// nog niet bevestigde en nog niet ingevulde dag met het eigen werkpatroon
-// van de medewerker (bv. vrijdag altijd 0 uur). Gedeeld door twee plekken:
-// een gloednieuwe, nog nooit opgeslagen periode (ensurePeriodRecords) en een
+// Vult, voor de week van vandaag (todaysWeekIndexInPeriod -- los van welke
+// week de medewerker toevallig aan het bekijken is), elke nog niet
+// bevestigde en nog niet ingevulde dag met het eigen werkpatroon van de
+// medewerker (bv. vrijdag altijd 0 uur). Gedeeld door twee plekken: een
+// gloednieuwe, nog nooit opgeslagen periode (ensurePeriodRecords) en een
 // periode die al wel eerder is opgeslagen (applyTimesheetApiPayload) --
 // zonder deze twijeede plek zou een medewerker die deze maand nog nooit iets
 // heeft ingevuld (data.found === false, dus geen server-sync) nooit een
 // beginwaarde zien.
+//
+// Bewust todaysWeekIndexInPeriod i.p.v. newEmployeeBentoWeekIndex: die
+// laatste volgt hoursWeekScope (welke week de medewerker nu bekijkt), en
+// recordFor() -> ensurePeriodRecords() roept deze functie bij elke aanroep
+// opnieuw aan. Met de scope-volgende index vulde het bekijken van een andere
+// week die week meteen zelf ook voor -- dan had de "Standaardweek vullen"-
+// knop daar niets meer te doen voor iedereen met een eigen werkpatroon.
 function applyDayHoursDefaultsToRecord(record, employee, periodKey) {
   if (!employee.dayHours || !isTimesheetEditableForEmployee(record)) return;
   const period = periodFromKey(periodKey);
-  const activeWeekIndex = newEmployeeBentoWeekIndex(period);
+  const activeWeekIndex = todaysWeekIndexInPeriod(period);
   const week = period.weekRows[activeWeekIndex];
   if (!week || !record.entries || !record.entries[activeWeekIndex]) return;
   week.days.forEach((day, dayIndex) => {
@@ -4311,8 +4319,15 @@ function fillDefaultPatternForWeek(record, employee, period, weekIndex) {
   week.days.forEach((day, dayIndex) => {
     if (!day) return;
     if (record.confirmedEntries?.[weekIndex]?.[dayIndex]) return;
-    if (Number(record.entries[weekIndex][dayIndex] || 0) > 0) return;
-    record.entries[weekIndex][dayIndex] = fillPatternHoursForDay(employee, dayIndex);
+    const current = Number(record.entries[weekIndex][dayIndex] || 0);
+    if (current > 0) return;
+    const next = fillPatternHoursForDay(employee, dayIndex);
+    // Een patroondag van 0 uur (bv. "vrijdag altijd vrij") op een dag die al
+    // 0 is, verandert niets -- dan ook niet meetellen, anders meldt de knop
+    // "1 dag ingevuld" bij een tweede klik terwijl er niets is gebeurd (en
+    // zet hij onnodig de status op concept met een autosave erachteraan).
+    if (current === next) return;
+    record.entries[weekIndex][dayIndex] = next;
     filled += 1;
   });
   return filled;
@@ -4320,6 +4335,30 @@ function fillDefaultPatternForWeek(record, employee, period, weekIndex) {
 
 function fillDefaultPatternForMonth(record, employee, period) {
   return period.weekRows.reduce((total, week, weekIndex) => total + fillDefaultPatternForWeek(record, employee, period, weekIndex), 0);
+}
+
+// Gedeeld door de bento-knop op het Dashboard en de knop op Mijn uren:
+// dezelfde vulling, dezelfde statusreset, dezelfde opslag en dezelfde toast.
+// weekIndex null = de hele maand. rerender krijgt (record, employee, period)
+// zodat elke plek zijn eigen scherm kan hertekenen.
+function applyFillDefaultPattern(weekIndex, rerender) {
+  const employee = currentEmployee();
+  const record = recordFor(employee.id);
+  const period = currentPeriod();
+  const filled = weekIndex === null
+    ? fillDefaultPatternForMonth(record, employee, period)
+    : fillDefaultPatternForWeek(record, employee, period, weekIndex);
+  if (filled === 0) {
+    toast("Alle dagen waren al ingevuld -- er is niets aangepast.");
+    return;
+  }
+  if (record.timesheetStatus !== "correction") record.timesheetStatus = "draft";
+  record.invoiceStatus = "concept";
+  record.payrollStatus = "concept";
+  persistState();
+  scheduleDraftTimesheetWrite();
+  rerender(record, employee, period);
+  toast((filled === 1 ? "1 dag" : filled + " dagen") + " ingevuld met je standaardpatroon.");
 }
 
 // Leesbare beschrijving van het patroon dat de knop toepast (bv. "Ma-do 9
@@ -12364,24 +12403,10 @@ function toonInstallatieAanbod() {
 
   const fillDefaultPattern = event.target.closest("[data-fill-default-pattern]");
   if (fillDefaultPattern) {
-    const employee = currentEmployee();
-    const record = recordFor(employee.id);
-    const period = currentPeriod();
-    const weekIndex = newEmployeeBentoWeekIndex(period);
-    const filled = fillDefaultPattern.dataset.fillDefaultPattern === "month"
-      ? fillDefaultPatternForMonth(record, employee, period)
-      : fillDefaultPatternForWeek(record, employee, period, weekIndex);
-    if (filled === 0) {
-      toast("Alle dagen waren al ingevuld -- er is niets aangepast.");
-      return;
-    }
-    if (record.timesheetStatus !== "correction") record.timesheetStatus = "draft";
-    record.invoiceStatus = "concept";
-    record.payrollStatus = "concept";
-    persistState();
-    scheduleDraftTimesheetWrite();
-    renderNewEmployeeBento(record, employee, period);
-    toast((filled === 1 ? "1 dag" : filled + " dagen") + " ingevuld met je standaardpatroon.");
+    applyFillDefaultPattern(
+      fillDefaultPattern.dataset.fillDefaultPattern === "month" ? null : newEmployeeBentoWeekIndex(currentPeriod()),
+      renderNewEmployeeBento
+    );
     return;
   }
 
@@ -12839,24 +12864,8 @@ document.querySelector("#save-timesheet").addEventListener("click", () => {
 });
 
 document.querySelector("#fill-default-pattern").addEventListener("click", () => {
-  const employee = currentEmployee();
-  const record = recordFor(employee.id);
-  const period = currentPeriod();
   const weekMatch = /^week-(\d+)$/.exec(String(state.hoursWeekScope || ""));
-  const filled = weekMatch
-    ? fillDefaultPatternForWeek(record, employee, period, Number(weekMatch[1]))
-    : fillDefaultPatternForMonth(record, employee, period);
-  if (filled === 0) {
-    toast("Alle dagen waren al ingevuld -- er is niets aangepast.");
-    return;
-  }
-  if (record.timesheetStatus !== "correction") record.timesheetStatus = "draft";
-  record.invoiceStatus = "concept";
-  record.payrollStatus = "concept";
-  persistState();
-  scheduleDraftTimesheetWrite();
-  rerenderActiveTimesheetView();
-  toast((filled === 1 ? "1 dag" : filled + " dagen") + " ingevuld met je standaardpatroon.");
+  applyFillDefaultPattern(weekMatch ? Number(weekMatch[1]) : null, () => rerenderActiveTimesheetView());
 });
 
 document.querySelector("#approve-all").addEventListener("click", () => {

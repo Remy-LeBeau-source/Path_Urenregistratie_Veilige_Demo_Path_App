@@ -1186,7 +1186,19 @@ test('[SKIN-H-023] "Standaardweek/-maand vullen" vult alleen lege dagen met het 
       });
       await expect(page.locator('#new-bento-week-title')).toHaveText('Week 37');
       await expect(inputs.first()).toHaveValue('12');
-      await page.locator('[data-fill-default-pattern="week"]').click();
+      // Een achtergrond-sync (server-refresh na inloggen) kan dinsdag t/m
+      // vrijdag intussen ook al hebben voorgevuld -- zodra week 1 de actieve
+      // week is geworden, doet applyDayHoursDefaultsToRecord daar hetzelfde
+      // mee als bij week 0. Zonder herbevestiging vlak vóór de klik is de
+      // startwaarde dan niet deterministisch, dus forceer 'm nogmaals en klik
+      // in dezelfde evaluate, zonder gat waarin die sync ertussen kan komen.
+      await page.evaluate(() => {
+        // @ts-expect-error debug-only voor deze directe controle
+        const record = recordFor(currentEmployee().id);
+        record.entries[1] = [12, 0, 0, 0, 0];
+        record.confirmedEntries[1] = [false, false, false, false, false];
+        (document.querySelector('[data-fill-default-pattern="week"]') as HTMLElement | null)?.click();
+      });
       await page.waitForTimeout(300);
     });
 
