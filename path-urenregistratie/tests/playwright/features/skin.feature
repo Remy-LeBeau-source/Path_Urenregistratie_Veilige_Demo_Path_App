@@ -96,6 +96,15 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     When de medewerker naar Mededelingen navigeert
     Then blijft Nieuw actief en blijft de klassieke sidebar verborgen
 
+  @happy
+  Scenario: [SKIN-H-013] de medewerkerroute blijft op elk scherm consequent Nieuw, ook op telefoonbreedte
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given de medewerker inlogt en Nieuw activeert
+    When de medewerker naar Mijn uren gaat
+    And de medewerker naar Mededelingen gaat (bereikbaar via de bel)
+    Then brengt de eigen Home-knop terug naar het dashboard, nog altijd in Nieuw
+
   @negative
   Scenario: [SKIN-N-007] productie forceert Klassiek en verbergt de redesignschakelaar
     # Testtechniek: Negatieve equivalentieklasse + error guessing

@@ -423,6 +423,48 @@ test('[SKIN-H-012] Mededelingen valt niet terug op de klassieke sidebar in Nieuw
   });
 });
 
+test('[SKIN-H-013] de medewerkerroute blijft op elk scherm consequent Nieuw, ook op telefoonbreedte', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await page.setViewportSize({ width: 412, height: 915 });
+
+  // Elk scherm dat de medewerker daadwerkelijk kan bereiken (sidebar is in
+  // Nieuw bewust verborgen op deze routes) moet zichzelf op dezelfde manier
+  // presenteren: Nieuw blijft actief, de klassieke sidebar duikt nergens
+  // stiekem weer op, en de eigen terugknop ("Home") blijft het vaste anker
+  // i.p.v. dat je terugvalt op klassieke navigatie.
+  const assertConsistentNewSkin = async (verwachteView: string) => {
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await expect(page.locator(`#${verwachteView}`)).toBeVisible();
+    await expect(page.locator('.sidebar')).toBeHidden();
+    await expect(page.locator('.mobile-brand-home')).toBeVisible();
+    await expect(page.locator('.mobile-brand-home')).toContainText('Home');
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow, `horizontale scroll op ${verwachteView}`).toBeLessThanOrEqual(1);
+  };
+
+  await test.step('Given de medewerker inlogt en Nieuw activeert', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('#quick-skin-toggle').click();
+    await assertConsistentNewSkin('view-employee-dashboard');
+  });
+
+  await test.step('When de medewerker naar Mijn uren gaat', async () => {
+    await page.evaluate(() => { window.location.hash = 'timesheet'; });
+    await assertConsistentNewSkin('view-timesheet');
+  });
+
+  await test.step('And de medewerker naar Mededelingen gaat (bereikbaar via de bel)', async () => {
+    await page.evaluate(() => { window.location.hash = 'employee-announcements'; });
+    await assertConsistentNewSkin('view-employee-announcements');
+  });
+
+  await test.step('Then brengt de eigen Home-knop terug naar het dashboard, nog altijd in Nieuw', async () => {
+    await page.locator('.mobile-brand-home').click();
+    await assertConsistentNewSkin('view-employee-dashboard');
+  });
+});
+
 test('[SKIN-N-007] productie forceert Klassiek en verbergt de redesignschakelaar', async ({ page }) => {
   const loginPage = new LoginPage(page);
 

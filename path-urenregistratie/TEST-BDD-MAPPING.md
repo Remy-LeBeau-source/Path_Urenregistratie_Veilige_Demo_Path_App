@@ -402,6 +402,7 @@
 | SKIN-H-010 | ui | skin.feature | de admin-verhaallijn wisselt van medewerker en toont bijbehorende status | Beslissingstabel rollen en autorisatie | 7 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de admin-verhaallijn wisselt van medewerker en toont bijbehorende status | Happy | 19 | Actueel |
 | SKIN-H-011 | ui | skin.feature | een bewust opgeslagen 0 uur telt mee voor de weekvoortgang in Mijn uren | End-to-end use-case + visuele contractasserties | 8 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | een bewust opgeslagen 0 uur telt mee voor de weekvoortgang in Mijn uren | Happy | 19 | Actueel |
 | SKIN-H-012 | ui | skin.feature | Mededelingen valt niet terug op de klassieke sidebar in Nieuw | End-to-end use-case + visuele contractasserties | 5 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | Mededelingen valt niet terug op de klassieke sidebar in Nieuw | Happy | 19 | Actueel |
+| SKIN-H-013 | ui | skin.feature | de medewerkerroute blijft op elk scherm consequent Nieuw, ook op telefoonbreedte | Beslissingstabel rollen en autorisatie | 6 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de medewerkerroute blijft op elk scherm consequent Nieuw, ook op telefoonbreedte | Happy | 19 | Actueel |
 | SKIN-N-007 | ui | skin.feature | productie forceert Klassiek en verbergt de redesignschakelaar | Negatieve equivalentieklasse + error guessing | 5 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | productie forceert Klassiek en verbergt de redesignschakelaar | Negative | 19 | Actueel |
 | TS-REV-API-H-005 | integration | correction-approval-workflow.feature | admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking | Concurrency + toestandsovergang | 65 | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
 | TS-REV-API-H-006 | integration | correction-approval-workflow.feature | gelijktijdige approve-requests door twee beheerders leveren exact één winnaar | Concurrency + toestandsovergang | 7 | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
@@ -475,9 +476,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 453
+- Playwright executable cases: 454
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 454
+- Totaal unieke executable cases: 455
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29
