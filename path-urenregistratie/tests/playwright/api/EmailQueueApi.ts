@@ -2,7 +2,7 @@ import { type APIRequestContext } from '@playwright/test';
 import { appConfig } from '../fixtures/appConfig';
 import { attachApiExchange } from '../reporting/apiAttachments';
 
-type ListParams = { status?: 'queued' | 'processing' | 'sent' | 'failed'; limit?: number };
+type ListParams = { status?: 'queued' | 'processing' | 'sent' | 'failed'; limit?: number; query?: string };
 
 export class EmailQueueApi {
   constructor(private readonly request: APIRequestContext) {}
@@ -11,6 +11,7 @@ export class EmailQueueApi {
     const qs = new URLSearchParams();
     if (params.status) qs.set('status', params.status);
     if (params.limit)  qs.set('limit', String(params.limit));
+    if (params.query)  qs.set('q', params.query);
     const url = `/server/api/email-queue.php${qs.toString() ? '?' + qs.toString() : ''}`;
     const response = await this.request.get(url);
     const body = await response.json();

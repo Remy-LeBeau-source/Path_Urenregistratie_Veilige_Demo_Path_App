@@ -112,7 +112,7 @@ function mail_expected_attachment_count(string $policy): int
 {
     return match ($policy) {
         'none' => 0,
-        'invoice', 'customer_timesheet' => 1,
+        'invoice', 'customer_timesheet', 'timesheet_receipt' => 1,
         'invoice_and_customer_timesheet' => 2,
         default => throw new RuntimeException('Unsupported attachment policy.'),
     };
@@ -250,6 +250,19 @@ function mail_resolve_attachments(PDO $pdo, array $delivery, array $config): arr
 
     if ((bool)($delivery['acceptance_test'] ?? false)) {
         return mail_acceptance_test_attachments($pdo, $policy, $config);
+    }
+
+    if ($policy === 'timesheet_receipt') {
+        $storageKey = (string)($delivery['pdf_storage_key'] ?? '');
+        $path = $storageKey !== '' ? mail_storage_path($config, 'timesheet-receipts', $storageKey) : null;
+        if ($path === null) {
+            throw new RuntimeException('Timesheet receipt PDF is unavailable.');
+        }
+        return [[
+            'filename' => 'Urenoverzicht.pdf',
+            'mime' => 'application/pdf',
+            'data' => base64_encode((string)file_get_contents($path)),
+        ]];
     }
 
     $invoiceId = (int)($delivery['invoice_id'] ?? 0);

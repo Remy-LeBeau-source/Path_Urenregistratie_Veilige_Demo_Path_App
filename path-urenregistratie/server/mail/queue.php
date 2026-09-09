@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../lib/simple_pdf.php';
+require_once __DIR__ . '/dispatch.php';
 
 // ---------------------------------------------------------------------------
 // Template definitions
@@ -82,7 +84,8 @@ function mail_insert_delivery(
     bool   $dryRun,
     ?int   $timesheetId = null,
     ?int   $userId = null,
-    ?int   $timesheetVersion = null
+    ?int   $timesheetVersion = null,
+    ?string $pdfStorageKey = null
 ): int {
     $ccEmail = $ccEmail !== null && trim($ccEmail) !== '' ? trim($ccEmail) : null;
     $recipientEmail = trim($recipientEmail);
@@ -95,10 +98,10 @@ function mail_insert_delivery(
     $stmt = $pdo->prepare(
         'INSERT INTO email_deliveries
          (invoice_id, timesheet_id, timesheet_version, user_id, channel, recipient_email, cc_email, subject_snapshot, body_snapshot,
-          attachment_policy, dry_run, status)
+          attachment_policy, pdf_storage_key, dry_run, status)
          VALUES
          (:invoice_id, :timesheet_id, :timesheet_version, :user_id, :channel, :recipient_email, :cc_email, :subject, :body,
-          :attachment_policy, :dry_run, :status)'
+          :attachment_policy, :pdf_storage_key, :dry_run, :status)'
     );
     $stmt->execute([
         ':invoice_id'       => $invoiceId,
@@ -111,10 +114,38 @@ function mail_insert_delivery(
         ':subject'          => $subject,
         ':body'             => $body,
         ':attachment_policy'=> $attachmentPolicy,
+        ':pdf_storage_key'  => $pdfStorageKey,
         ':dry_run'          => $dryRun ? 1 : 0,
         ':status'           => 'queued',
     ]);
     return (int)$pdo->lastInsertId();
+}
+
+/**
+ * Slaat de door de browser gegenereerde urenoverzicht-PDF op en levert de
+ * relatieve opslagsleutel op die mail_resolve_attachments() later gebruikt
+ * (zelfde 'private-root/bucket/sleutel'-patroon als invoices_store_pdf_bytes
+ * in server/api/invoices.php). Retourneert null bij een ongeldige of te grote
+ * bijlage -- de aanroeper stuurt de mail dan gewoon zonder PDF.
+ */
+function timesheet_receipt_store_pdf(array $config, int $timesheetId, int $timesheetVersion, string $pdfBytes): ?string
+{
+    if ($pdfBytes === '' || strlen($pdfBytes) > 3_000_000 || !simple_pdf_looks_valid($pdfBytes)) {
+        return null;
+    }
+
+    $relative = (string)$timesheetId . '/' . (string)$timesheetVersion . '_' . bin2hex(random_bytes(8)) . '.pdf';
+    $root = rtrim(mail_private_storage_root($config), '/\\') . DIRECTORY_SEPARATOR . 'timesheet-receipts';
+    $absolute = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+    $dir = dirname($absolute);
+    if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
+        return null;
+    }
+    if (file_put_contents($absolute, $pdfBytes) === false) {
+        return null;
+    }
+
+    return $relative;
 }
 
 function mail_enqueue_timesheet_submission_receipt(
@@ -128,7 +159,9 @@ function mail_enqueue_timesheet_submission_receipt(
     float $totalHours,
     bool $dryRun,
     ?string $employeeName = null,
-    ?string $employeeEmail = null
+    ?string $employeeEmail = null,
+    ?string $receiptPdfBase64 = null,
+    array $config = []
 ): ?array {
     $existing = $pdo->prepare(
                 'SELECT id FROM email_deliveries
@@ -197,6 +230,22 @@ function mail_enqueue_timesheet_submission_receipt(
     $subject = mail_render($template['subject'], $vars);
     $body = rtrim(mail_render($template['body'], $vars)) . "\n\nMet vriendelijke groet,\n\nRobot Path IT";
 
+    $attachmentPolicy = 'none';
+    $pdfStorageKey = null;
+    if ($receiptPdfBase64 !== null && trim($receiptPdfBase64) !== '') {
+        $pdfStorageKey = timesheet_receipt_store_pdf(
+            $config,
+            $timesheetId,
+            $timesheetVersion,
+            (string)base64_decode($receiptPdfBase64, true)
+        );
+        if ($pdfStorageKey !== null) {
+            $attachmentPolicy = 'timesheet_receipt';
+        }
+        // Een onbruikbare of te grote bijlage blokkeert de ontvangstmail niet:
+        // die gaat dan gewoon zonder PDF, net als vóór deze bijlage bestond.
+    }
+
     $id = mail_insert_delivery(
         $pdo,
         null,
@@ -205,11 +254,12 @@ function mail_enqueue_timesheet_submission_receipt(
         null,
         $subject,
         $body,
-        'none',
+        $attachmentPolicy,
         $dryRun,
         $timesheetId,
         (int)($employee['user_id'] ?? $actorUserId),
-        $timesheetVersion
+        $timesheetVersion,
+        $pdfStorageKey
     );
 
     mail_audit($pdo, $companyId, $actorUserId,

@@ -42,6 +42,14 @@ Feature: Mailroutering en aflevering
     Then wordt met Playwright-assertions bevestigd dat submit maakt exact één medewerker-ontvangstmail
 
   @happy
+  Scenario: [EQ-H-036] submit met een geldige urenoverzicht-PDF krijgt attachment_policy=timesheet_receipt
+    # Testtechniek: Equivalentieklassen
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given mailroutering en aflevering is voorbereid
+    When de flow voor EQ-H-036 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat submit met een geldige urenoverzicht-PDF krijgt attachment_policy=timesheet_receipt
+
+  @happy
   Scenario: [EQ-H-022] één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie
     # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 14

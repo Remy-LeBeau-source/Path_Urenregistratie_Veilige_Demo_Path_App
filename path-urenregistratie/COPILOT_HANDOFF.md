@@ -27,10 +27,93 @@ bestand in beide worktrees. PROD blijft achter de handmatige reviewerpoort.
 Een melding "nog niet pushen" is uitsluitend tijdelijk tijdens een actieve
 main-hotfix; daarna geldt weer bovenstaande vaste volgorde.
 
+### Actieve werkstromen / agents
+
+**Doorwerkopdracht voor Claude en Codex:** ga zelfstandig door op zowel
+`main` als `herontwerp`, onderzoek en herstel iedere regressie en blijf de
+pipeline volgen totdat de actuele combinatie volledig groen op TEST staat.
+Stop niet bij een eerste rode run: lees de fout, herstel de oorzaak en start
+opnieuw. Raak PROD niet aan; promotie naar PROD blijft uitsluitend een
+handmatige beslissing van de eigenaar.
+
+**Vaste opdracht "pollen en fixen" (expliciet vastgelegd, 9 sept nacht):**
+elke ~10 minuten de laatste CI-run checken (`gh run list`/`gh run view`),
+bij rood de exacte falende stap/test opzoeken (niet aannemen, echt de log
+lezen), root cause fixen, gericht lokaal testen, committen en pushen — en
+daarna weer pollen. Blijf dit herhalen, ook na een sessie-onderbreking
+(bv. een usage-limiet), totdat de actuele combinatie op main én herontwerp
+volledig groen is. Elke nieuwe regressie die zo gevonden wordt, hoort een
+eigen testcase te krijgen, niet alleen een losse code-fix.
+
+- **Codex op `main`:** REM-H-001-testisolatie is opgelost en 28/28 groen;
+  commit en push volgen direct na deze handoff-update.
+- **Claude/herontwerp-sessie:** mag daarna weer verder, maar moet eerst de
+  nieuwe `origin/main` in `herontwerp` opnemen en de combinatie testen. Niet
+  dezelfde vier bestanden tegelijk wijzigen.
+- **GitHub CI:** `main` en `herontwerp` gebruiken acht testshards. Dit zijn
+  parallelle CI-jobs, geen acht lokale assistenten. Een oudere run mag worden
+  geannuleerd zodra de nieuwe commit hem aantoonbaar vervangt.
+- **Integratie:** alleen groene actuele `herontwerp` mag via de bestaande
+  merge-queue fast-forward naar `main`; daarna automatisch naar TEST. PROD
+  blijft handmatig.
+
 De workflow `branch-hygiene.yml` controleert dagelijks en verwijdert alleen
 tijdelijke branches met een bekende prefix die minimaal twee dagen oud én
 volledig in `main` of `herontwerp` gemerged zijn. Niet-gemergde branches en de
 twee vaste branches worden nooit automatisch verwijderd.
+
+## Actuele fix — main, 9 september 2026 (Codex) — ook voor Claude
+
+Claude heeft de productbug in de reminder-scheduler correct opgelost. De
+resterende `REM-H-001`-combinatiefout zat niet in de scheduler, maar in de
+test: `EmailQueueApi.list()` bekeek standaard slechts de eerste tien mails.
+Na `admin-writes.spec.ts` bevat de gedeelde testdatabase meer deliveries en
+items met dezelfde timestamp hebben geen vaste onderlinge volgorde. Daardoor
+kon de correct aangemaakte mail buiten die pagina vallen. De test zoekt nu
+server-side op het unieke medewerkeradres (`q`) met limiet 100. Dit verzwakt
+geen productassertie en vereist geen reset van gedeelde testdata.
+
+Bewijs: 28/28 groen met
+`node scripts/run-playwright-e2e.mjs --project=desktop-chromium tests/playwright/admin-writes.spec.ts tests/playwright/reminders.spec.ts`
+(3,2 minuten, exitcode 0).
+
+## Actuele overdracht — main, 9 september 2026 nacht (Claude Code) — voor Codex
+
+### Wat is klaar op main (t/m v1.0.18, commit `4e3f974`)
+
+- Medewerker-ontvangstmail (v1.0.12) inclusief PDF-bijlage (v1.0.18):
+  `buildTimesheetReceiptPdfBase64()` in `assets/app.js` genereert bij
+  submit een urenoverzicht-PDF, server valideert/slaat op
+  (`timesheet_receipt_store_pdf()` in `server/mail/queue.php`,
+  `private-root/timesheet-receipts/`), `attachment_policy=timesheet_receipt`
+  in `server/mail/dispatch.php`. Migratie 034.
+- Serverplanning herinneringen (v1.0.13): vier types, cron
+  `.github/workflows/send-reminders.yml` — **alleen TEST**, `environment: test`
+  (geen protection rules). PROD bewust nog niet aangesloten: `environment: prod`
+  heeft een verplichte `required_reviewers`-poort (3 reviewers), dus een
+  15-minuten-cron zou daar telkens handmatige goedkeuring vragen. PROD-
+  herinneringen zijn een aparte, bewuste vervolgstap.
+- Demo-beheerwachtwoord (v1.0.14) en Living Docs uitgeschakeld op main
+  (v1.0.15, zelfde als eerder al op herontwerp, `0ad42aa`) — nu vervangen
+  door Codex' herontwerp van Live Docs die bestaande blob-reports
+  hergebruikt (`playwright merge-reports`) i.p.v. de suite nogmaals te
+  draaien; dat patroon staat nu ook op main.
+- **main naar 8 shards** (`release-pipeline.yml`), zelfde gratis
+  GitHub-hosted opschaling als op herontwerp's `ci.yml`.
+- **Echte bug gefixt in `send-due-reminders.php`**: alle vier queries
+  gebruikten `INNER JOIN user_preferences`. Nieuwe medewerkers (via
+  `server/api/staff.php`) krijgen **nergens in de API** een
+  `user_preferences`-rij — ze werden daardoor altijd stilzwijgend
+  uitgesloten van elke herinnering. Nu `LEFT JOIN` + `COALESCE(..., 1)`,
+  zodat de bedoelde default (aan) geldt zoals het schema al zegt.
+
+### Opgelost door Codex: REM-H-001-combinatiefout
+
+De scheduler maakte de mail correct aan. De test bekeek alleen de standaard-
+pagina van tien queue-items; na `admin-writes.spec.ts` kon de nieuwe mail door
+gelijke timestamps buiten die pagina vallen. `EmailQueueApi.list()` ondersteunt
+nu `query`, en REM-H-001 zoekt server-side op het unieke medewerkeradres.
+De eerder falende combinatie is opnieuw gedraaid: **28/28 groen**, exitcode 0.
 
 ## Documentenkaart
 

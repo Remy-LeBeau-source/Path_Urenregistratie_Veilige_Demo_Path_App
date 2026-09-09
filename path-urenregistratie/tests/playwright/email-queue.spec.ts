@@ -329,6 +329,65 @@ test.describe('email queue api', () => {
     await ctx.dispose();
   });
 
+  test('[EQ-H-036] submit met een geldige urenoverzicht-PDF krijgt attachment_policy=timesheet_receipt', async () => {
+    // Kleine, geldige minimale PDF (jsPDF-output in de browser is groter maar
+    // dezelfde vorm: %PDF-header, xref-tabel, startxref + %%EOF).
+    const minimalPdfBase64 = 'JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4KZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDEgPj4KZW5kb2JqCjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAgMCAyMDAgMjAwXSAvUmVzb3VyY2VzIDw8IC9Gb250IDw8IC9GMSA0IDAgUiA+PiA+PiAvQ29udGVudHMgNSAwIFIgPj4KZW5kb2JqCjQgMCBvYmoKPDwgL1R5cGUgL0ZvbnQgL1N1YnR5cGUgL1R5cGUxIC9CYXNlRm9udCAvSGVsdmV0aWNhID4+CmVuZG9iago1IDAgb2JqCjw8IC9MZW5ndGggNDQgPj4Kc3RyZWFtCkJUIC9GMSAxMiBUZiAyMCAxMDAgVGQgKFRlc3QgUERGKSBUaiBFVAplbmRzdHJlYW0KZW5kb2JqCnhyZWYKMCA2CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAwOSAwMDAwMCBuIAowMDAwMDAwMDU4IDAwMDAwIG4gCjAwMDAwMDAxMTUgMDAwMDAgbiAKMDAwMDAwMDI0MSAwMDAwMCBuIAowMDAwMDAwMzExIDAwMDAwIG4gCnRyYWlsZXIKPDwgL1NpemUgNiAvUm9vdCAxIDAgUiA+PgpzdGFydHhyZWYKNDAwCiUlRU9G';
+
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    const timesheetApi = new TimesheetApi(ctx);
+
+    await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+
+    const period = await findWritablePeriod(timesheetApi);
+    const draft = await timesheetApi.write({
+      action: 'save_draft',
+      period,
+      contractualHours: 160,
+      billableHours: 8,
+      leaveHours: 0,
+      dayEntries: [{ workDate: `${period}-01`, hours: 8, description: 'EQ-H-036' }],
+    });
+    expect(draft.status).toBe(200);
+
+    const csrf = await ctx.get('/server/auth/csrf.php');
+    const token = String(((await csrf.json()) as { csrf_token?: string }).csrf_token ?? '');
+    const submitResponse = await ctx.post('/server/api/timesheets.php', {
+      headers: { 'X-CSRF-Token': token },
+      data: {
+        action: 'submit',
+        period,
+        contractual_hours: 160,
+        billable_hours: 8,
+        leave_hours: 0,
+        day_entries: [{ work_date: `${period}-01`, hours: 8, description: 'EQ-H-036' }],
+        expected_version: draft.body.timesheet?.version,
+        receipt_pdf_base64: minimalPdfBase64,
+      },
+    });
+    expect(submitResponse.status()).toBe(200);
+    const submittedBody = await submitResponse.json();
+    await authApi.logout();
+
+    const adminCtx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const adminAuthApi = new AuthApi(adminCtx);
+    const adminQueueApi = new EmailQueueApi(adminCtx);
+    await adminAuthApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const list = await adminQueueApi.list();
+    const receiptItems = (list.body.items as Array<Record<string, unknown>>)
+      .filter(item => String(item.channel || '') === 'timesheet_submission_receipt'
+        && Number(item.timesheet_id || 0) === Number(submittedBody.timesheet?.id || 0));
+
+    expect(receiptItems).toHaveLength(1);
+    expect(receiptItems[0].attachment_policy).toBe('timesheet_receipt');
+
+    await adminAuthApi.logout();
+    await adminCtx.dispose();
+    await ctx.dispose();
+  });
+
   test('[EQ-H-022] één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie', async () => {
     const { ctx, authApi, queueApi, invoiceId } = await createLockedInvoice();
 

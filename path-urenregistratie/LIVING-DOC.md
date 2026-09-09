@@ -229,12 +229,13 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 448 Playwri
 
 - Feature: `tests/playwright/features/mail-delivery.feature`
 - Source: `tests/playwright/email-queue.spec.ts`
-- Cases: 41
+- Cases: 42
 
 - [EQ-H-001] factuurlock maakt queue-items aan met dry_run=true — Techniek: Toestandsovergang · Assertions: 5
 - [EQ-H-002] broker-channel stuurt alleen de factuur — Techniek: API-contract + equivalentieklasse · Assertions: 2
 - [EQ-H-003] EasySalary-channel heeft attachment_policy none — Techniek: Equivalentieklassen · Assertions: 2
 - [EQ-H-035] submit maakt exact één medewerker-ontvangstmail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
+- [EQ-H-036] submit met een geldige urenoverzicht-PDF krijgt attachment_policy=timesheet_receipt — Techniek: Equivalentieklassen · Assertions: 4
 - [EQ-H-022] één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie — Techniek: API-contract + equivalentieklasse · Assertions: 14
 - [EQ-H-004] action=enqueue voor gelockte factuur maakt nieuwe items aan — Techniek: Toestandsovergang · Assertions: 6
 - [EQ-H-005] action=list response bevat verplichte velden — Techniek: API-contract + equivalentieklasse · Assertions: 15

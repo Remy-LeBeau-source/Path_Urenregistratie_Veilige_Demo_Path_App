@@ -1867,6 +1867,84 @@ function buildTimesheetWritePayload(action) {
   return payload;
 }
 
+/**
+ * Compacte, ongebrande PDF met het urenoverzicht dat bij het indienen hoort.
+ * Bewust eenvoudiger dan downloadInvoicePdf: dit is een bijlage bij de
+ * automatische ontvangstmail, geen factuur. Gegenereerd in de browser op het
+ * moment van indienen, zodat de bijlage exact overeenkomt met wat net is
+ * verstuurd, en meegestuurd als base64 in de submit-payload.
+ */
+function buildTimesheetReceiptPdfBase64(employee, period, record) {
+  const jspdf = window.jspdf;
+  if (!jspdf || typeof jspdf.jsPDF !== "function") return null;
+
+  const doc = new jspdf.jsPDF({ unit: "mm", format: "a4" });
+  const navy = hexColorToRgb(state.settings.brandPrimary, "#0d1b38");
+  const mint = hexColorToRgb(state.settings.brandAccent, "#3abd9d");
+  const ink = [23, 35, 50];
+  const muted = [108, 120, 134];
+
+  doc.setFillColor(...navy);
+  doc.rect(0, 0, 210, 32, "F");
+  doc.setFillColor(...mint);
+  doc.rect(0, 32, 210, 1.2, "F");
+  try {
+    doc.addImage(brandLogoUrl("donker"), "PNG", 15, 8, 32, 14.8);
+  } catch (_error) {
+    // Geen logo beschikbaar (bv. lokale demo zonder assets): de tekstkop
+    // hieronder blijft leesbaar zonder logo.
+  }
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(15);
+  doc.text("UREN OVERZICHT", 195, 15, { align: "right" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.text(String(employee.name || ""), 195, 22, { align: "right" });
+  doc.text(String(period.label || ""), 195, 27, { align: "right" });
+
+  let y = 44;
+  doc.setTextColor(...ink);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.text("Dag", 15, y);
+  doc.text("Uren", 195, y, { align: "right" });
+  y += 4;
+  doc.setDrawColor(...muted);
+  doc.line(15, y, 195, y);
+  y += 5.5;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+
+  period.weekRows.forEach((week, weekIndex) => {
+    week.days.forEach((day, dayIndex) => {
+      if (!day) return;
+      if (y > 280) {
+        doc.addPage();
+        y = 20;
+      }
+      const raw = Number(record.entries?.[weekIndex]?.[dayIndex] || 0);
+      const hours = Math.round(Math.max(0, raw) * 100) / 100;
+      doc.text("Dag " + String(day.day).padStart(2, "0"), 15, y);
+      doc.text(hoursFormat.format(hours) + " uur", 195, y, { align: "right" });
+      y += 5.2;
+    });
+  });
+
+  y += 2.5;
+  doc.setDrawColor(...muted);
+  doc.line(15, y, 195, y);
+  y += 6.5;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10.5);
+  doc.text("Totaal", 15, y);
+  doc.text(hoursFormat.format(totalEntries(record.entries)) + " uur", 195, y, { align: "right" });
+
+  const dataUri = doc.output("datauristring");
+  const base64 = String(dataUri || "").split(",")[1];
+  return base64 || null;
+}
+
 function timesheetHistoryLabel(value) {
   if (!value) return "";
   const date = new Date(String(value));
@@ -12188,6 +12266,14 @@ async function submitCurrentTimesheet() {
 
     const latestVersion = Number(recordFor(employee.id).serverVersion || 0);
     if (latestVersion > 0) submitPayload.expected_version = latestVersion;
+
+    try {
+      const receiptPdfBase64 = buildTimesheetReceiptPdfBase64(employee, currentPeriod(), record);
+      if (receiptPdfBase64) submitPayload.receipt_pdf_base64 = receiptPdfBase64;
+    } catch (_error) {
+      // Geen bijlage is geen reden om het indienen zelf te blokkeren; de
+      // ontvangstmail gaat dan zonder PDF, net als vóór deze bijlage bestond.
+    }
 
     submitButton.disabled = true;
     const originalText = submitButton.textContent;
