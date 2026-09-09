@@ -105,6 +105,15 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     And de medewerker naar Mededelingen gaat (bereikbaar via de bel)
     Then brengt de eigen Home-knop terug naar het dashboard, nog altijd in Nieuw
 
+  @happy
+  Scenario: [SKIN-H-015] de theme-snelknop staat niet meer op de medewerker-startpagina, Voorkeuren blijft werken
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given de medewerker Nieuw activeert
+    When de flow voor SKIN-H-015 wordt uitgevoerd
+    Then staat de theme-snelknop niet meer op het dashboard
+    And blijft de onderliggende voorkeur bereikbaar en werkend via Voorkeuren
+
   @negative
   Scenario: [SKIN-N-007] productie forceert Klassiek en verbergt de redesignschakelaar
     # Testtechniek: Negatieve equivalentieklasse + error guessing

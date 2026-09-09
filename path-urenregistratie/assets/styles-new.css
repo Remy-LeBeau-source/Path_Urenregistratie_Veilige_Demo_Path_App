@@ -318,6 +318,17 @@ html[data-skin="new"] .app-shell:has(#view-employee-announcements.is-active) .to
   display: none;
 }
 
+/* Testfeedback (Stasjo, medewerker): de licht/donker-snelknop bovenaan het
+   scherm was niet duidelijk en hoort niet prominent op de homepage thuis.
+   De onderliggende voorkeur blijft gewoon werken via Voorkeuren -> Uiterlijk
+   (#pref-theme, bereikbaar voor elke rol) — hier verdwijnt alleen de
+   redundante snelknop uit de topbar op de medewerkerschermen. */
+html[data-skin="new"] .app-shell:has(#view-employee-dashboard.is-active) #quick-theme-toggle,
+html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) #quick-theme-toggle,
+html[data-skin="new"] .app-shell:has(#view-employee-announcements.is-active) #quick-theme-toggle {
+  display: none;
+}
+
 /* Medewerkerroute: Mijn uren krijgt dezelfde eigen werkruimte als de bento.
    De bestaande velden en handlers blijven de bron van waarheid. */
 html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) {

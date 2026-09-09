@@ -465,6 +465,34 @@ test('[SKIN-H-013] de medewerkerroute blijft op elk scherm consequent Nieuw, ook
   });
 });
 
+test('[SKIN-H-015] de theme-snelknop staat niet meer op de medewerker-startpagina, Voorkeuren blijft werken', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  // Testfeedback (Stasjo, medewerker): de licht/donker-snelknop bovenaan het
+  // scherm was niet duidelijk en hoort niet prominent op de homepage.
+  await test.step('Given de medewerker Nieuw activeert', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+  });
+
+  await test.step('Then staat de theme-snelknop niet meer op het dashboard', async () => {
+    await expect(page.locator('#quick-theme-toggle')).toBeHidden();
+    await expect(page.locator('#quick-skin-toggle')).toBeVisible();
+  });
+
+  await test.step('And blijft de onderliggende voorkeur bereikbaar en werkend via Voorkeuren', async () => {
+    await openProfielmenu(page);
+    await page.locator('[data-profile-action="preferences"]').click();
+    await expect(page.locator('#pref-theme-trigger')).toBeVisible();
+    await page.locator('#pref-theme-trigger').click();
+    await page.locator('[data-standard-choice-target="pref-theme"][data-standard-choice-value="dark"]').click();
+    await page.getByRole('button', { name: 'Voorkeuren opslaan' }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  });
+});
+
 test('[SKIN-N-007] productie forceert Klassiek en verbergt de redesignschakelaar', async ({ page }) => {
   const loginPage = new LoginPage(page);
 
