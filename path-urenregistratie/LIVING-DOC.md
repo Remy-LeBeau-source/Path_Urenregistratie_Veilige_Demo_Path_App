@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 451 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 452 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 451 unieke case-ID's
+- Playwright executable cases: 452 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 452 unieke case-ID's
+- Totaal executable cases: 453 unieke case-ID's
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29
 - Database steps mappings: 1
-- Uitvoeringen: 486
-- Niet-mobile projectuitvoeringen: 416
+- Uitvoeringen: 487
+- Niet-mobile projectuitvoeringen: 417
 - Mobile functionele cases: 35
 - Pixel 7 / Chromium-uitvoeringen: 35
 - iPhone 13 / WebKit-uitvoeringen: 35
 
-De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 451 Playwright-functionele cases in totaal 486 resultaten op: 416 + (35 x 2) = 486.
+De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 452 Playwright-functionele cases in totaal 487 resultaten op: 417 + (35 x 2) = 487.
 
 ## Documentatieketen
 
@@ -229,7 +229,7 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 451 Playwri
 
 - Feature: `tests/playwright/features/mail-delivery.feature`
 - Source: `tests/playwright/email-queue.spec.ts`
-- Cases: 44
+- Cases: 45
 
 - [EQ-H-001] factuurlock maakt queue-items aan met dry_run=true — Techniek: Toestandsovergang · Assertions: 5
 - [EQ-H-002] broker-channel stuurt alleen de factuur — Techniek: API-contract + equivalentieklasse · Assertions: 2
@@ -271,6 +271,7 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 451 Playwri
 - [E2E-H-010] nieuw account, eigen tekst, en die tekst komt terug in de verzonden mail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 28
 - [EQ-H-029] elke ontvanger krijgt de handtekening, ook onder een eigen tekst — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [E2E-H-011] een aangepaste standaardtekst komt werkelijk in de mail en is terug te zetten — Techniek: API-contract + equivalentieklasse · Assertions: 15
+- [EQ-H-039] een eigen ondertekening komt werkelijk onder de ontvangstmail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [E2E-H-012] het vinkje Factuur meesturen bepaalt werkelijk of de bijlage meegaat — Techniek: API-contract + equivalentieklasse · Assertions: 6
 - [E2E-H-013] een nieuwe medewerker houdt zijn gegevens en komt tot een factuur met de juiste mail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 38
 - [E2E-H-014] een nieuwe beheerder logt zelf in en kan de keten afmaken — Techniek: API-contract + equivalentieklasse · Assertions: 19

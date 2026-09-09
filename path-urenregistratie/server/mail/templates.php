@@ -142,6 +142,26 @@ function mail_channel_templates_for(PDO $pdo, int $companyId): array
 }
 
 /**
+ * De ondertekening onder de ontvangst-, goedkeurings- en reminder-mails.
+ * Aanpasbaar via Instellingen (companies.mail_signature, migratie 036);
+ * 'Robot Path IT' is de meegeleverde standaardwaarde, niet een hard
+ * gecodeerde tekst in de mailcode zelf.
+ */
+function mail_signature_for(PDO $pdo, int $companyId): string
+{
+    try {
+        $stmt = $pdo->prepare('SELECT mail_signature FROM companies WHERE id = :company_id');
+        $stmt->execute([':company_id' => $companyId]);
+        $signature = trim((string)($stmt->fetchColumn() ?: ''));
+        return $signature !== '' ? $signature : 'Robot Path IT';
+    } catch (Throwable $e) {
+        // De kolom komt met migratie 036. Draait die nog niet, dan is de
+        // meegeleverde tekst het antwoord -- geen reden om de mail te stoppen.
+        return 'Robot Path IT';
+    }
+}
+
+/**
  * Welke kanalen een eigen tekst hebben staan.
  *
  * Dit is niet hetzelfde als 'wijkt af van de meegeleverde tekst'. Een opgeslagen

@@ -228,7 +228,7 @@ function mail_enqueue_timesheet_submission_receipt(
     mail_assert_vars($template['subject'], $vars, 'timesheet_submission_receipt.subject');
     mail_assert_vars($template['body'], $vars, 'timesheet_submission_receipt.body');
     $subject = mail_render($template['subject'], $vars);
-    $body = rtrim(mail_render($template['body'], $vars)) . "\n\nMet vriendelijke groet,\n\nRobot Path IT";
+    $body = rtrim(mail_render($template['body'], $vars)) . "\n\nMet vriendelijke groet,\n\n" . mail_signature_for($pdo, $companyId);
 
     $attachmentPolicy = 'none';
     $pdfStorageKey = null;
@@ -332,7 +332,7 @@ function mail_enqueue_timesheet_final_approval(
     mail_assert_vars($template['subject'], $vars, 'timesheet_final_approval.subject');
     mail_assert_vars($template['body'], $vars, 'timesheet_final_approval.body');
     $subject = mail_render($template['subject'], $vars);
-    $body = rtrim(mail_render($template['body'], $vars)) . "\n\nMet vriendelijke groet,\n\nRobot Path IT";
+    $body = rtrim(mail_render($template['body'], $vars)) . "\n\nMet vriendelijke groet,\n\n" . mail_signature_for($pdo, $companyId);
 
     $id = mail_insert_delivery(
         $pdo,

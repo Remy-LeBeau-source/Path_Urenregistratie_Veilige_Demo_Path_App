@@ -48,6 +48,25 @@ async function forceDeliveryToFinalFailure(deliveryId: number): Promise<void> {
   await execFileAsync('php', ['-r', php, String(deliveryId)], { cwd: process.cwd(), windowsHide: true });
 }
 
+/**
+ * Leest body_snapshot rechtstreeks uit de DB voor een timesheet-gebonden
+ * delivery. De queue-API laat dit bewust weg (zie mail-delivery-inspect.php),
+ * dus voor een test die de daadwerkelijke ondertekening moet zien is dit de
+ * kortste weg -- zelfde env-aware auth_pdo() als de webserver zelf gebruikt.
+ */
+async function laatsteMailBody(timesheetId: number, channel: string): Promise<string> {
+  const php = [
+    'require "server/auth/session.php";',
+    '$config=require "server/config.local.php";',
+    '$pdo=auth_pdo($config);',
+    '$stmt=$pdo->prepare("SELECT body_snapshot FROM email_deliveries WHERE timesheet_id=:tid AND channel=:channel ORDER BY id DESC LIMIT 1");',
+    '$stmt->execute([":tid"=>(int)$argv[1],":channel"=>$argv[2]]);',
+    'echo (string)($stmt->fetchColumn() ?: "");',
+  ].join(' ');
+  const uitvoer = await execFileAsync('php', ['-r', php, String(timesheetId), channel], { cwd: process.cwd(), windowsHide: true });
+  return uitvoer.stdout;
+}
+
 async function postJson(
   ctx: Awaited<ReturnType<typeof playwrightRequest.newContext>>,
   path: string,
@@ -2415,6 +2434,102 @@ test.describe('eigen standaardtekst per soort ontvanger', () => {
           .toBe(meegeleverd.accountant.body);
         expect(geldt.accountant.subject, 'ook het onderwerp hoort terug te vallen')
           .toBe(meegeleverd.accountant.subject);
+      });
+      await authApi.logout();
+      await ctx.dispose();
+    }
+  });
+});
+
+test.describe('aanpasbare mailondertekening', () => {
+  test('[EQ-H-039] een eigen ondertekening komt werkelijk onder de ontvangstmail', async () => {
+    // "Robot Path IT" stond hard gecodeerd in de mailcode i.p.v. via
+    // Instellingen aanpasbaar (companies.mail_signature, migratie 036, zelfde
+    // patroon als de per-kanaal standaardteksten hierboven).
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    const timesheetApi = new TimesheetApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const uniek = Date.now().toString().slice(-6);
+    const eigenOndertekening = `EQ-H-039 Testondertekening ${uniek}`;
+
+    const before = await (await ctx.get('/server/api/bootstrap.php')).json();
+    const bedrijf = before.companies[0];
+    const zetOndertekening = async (waarde: string) => {
+      const antwoord = await postJson(ctx, '/server/api/settings.php', {
+        settings: {
+          organizationName: String(bedrijf.trade_name || bedrijf.legal_name || ''),
+          companyName: String(bedrijf.legal_name || ''),
+          invoiceNameDisplay: String(bedrijf.invoice_name_display || 'trade_and_legal'),
+          appName: String(bedrijf.app_name || ''),
+          supportName: String(bedrijf.support_name || ''),
+          supportEmail: String(bedrijf.support_email || ''),
+          website: String(bedrijf.website || ''),
+          tagline: String(bedrijf.tagline || ''),
+          mailSignature: waarde,
+          brandPrimary: String(bedrijf.brand_primary || '#0d1b38'),
+          brandAccent: String(bedrijf.brand_accent || '#3abd9d'),
+          kvk: String(bedrijf.chamber_of_commerce_number || ''),
+          vat: String(bedrijf.vat_number || ''),
+          iban: String(bedrijf.iban || ''),
+          address: String(bedrijf.address_line || ''),
+          postalCity: [bedrijf.postal_code || '', bedrijf.city || ''].join(' ').trim(),
+          phone: String(bedrijf.invoice_phone || ''),
+          invoiceEmail: String(bedrijf.invoice_email || ''),
+          paymentTerm: Number(bedrijf.payment_term_days || 30),
+          customerTimesheetReminderEnabled: Boolean(bedrijf.customer_timesheet_reminder_enabled),
+          customerTimesheetReminderTime: String(bedrijf.customer_timesheet_reminder_time || '15:00').slice(0, 5),
+          customerTimesheetOverdueWorkdays: Number(bedrijf.customer_timesheet_overdue_workdays || 2),
+          customerTimesheetSubmissionSubject: String(bedrijf.customer_timesheet_submission_subject || ''),
+          customerTimesheetSubmissionBody: String(bedrijf.customer_timesheet_submission_body || ''),
+          customerTimesheetBrokerSubject: String(bedrijf.customer_timesheet_broker_subject || ''),
+          customerTimesheetBrokerBody: String(bedrijf.customer_timesheet_broker_body || ''),
+        },
+        mailRecipients: before.mail_recipients,
+      });
+      expect(antwoord.status, JSON.stringify(antwoord.body)).toBe(200);
+    };
+
+    try {
+      await test.step('When de beheerder een eigen ondertekening instelt', async () => {
+        await zetOndertekening(eigenOndertekening);
+        const na = await (await ctx.get('/server/api/bootstrap.php')).json();
+        expect(String(na.companies[0].mail_signature || '')).toBe(eigenOndertekening);
+      });
+
+      let timesheetId = 0;
+      await test.step('And een medewerker uren indient', async () => {
+        await authApi.logout();
+        await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+        const period = await findWritablePeriod(timesheetApi);
+        const draft = await timesheetApi.write({
+          action: 'save_draft', period, contractualHours: 160, billableHours: 8, leaveHours: 0,
+          dayEntries: [{ workDate: `${period}-01`, hours: 8, description: 'EQ-H-039' }],
+        });
+        expect(draft.status).toBe(200);
+        const submitted = await timesheetApi.write({
+          action: 'submit', period, contractualHours: 160, billableHours: 8, leaveHours: 0,
+          dayEntries: [{ workDate: `${period}-01`, hours: 8, description: 'EQ-H-039' }],
+          expectedVersion: draft.body.timesheet?.version as number,
+        });
+        expect(submitted.status).toBe(200);
+        timesheetId = Number(submitted.body.timesheet?.id || 0);
+        await authApi.logout();
+        await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+      });
+
+      await test.step('Then staat die eigen ondertekening werkelijk onder de ontvangstmail', async () => {
+        const body = await laatsteMailBody(timesheetId, 'timesheet_submission_receipt');
+        expect(body).toContain('Met vriendelijke groet');
+        expect(body).toContain(eigenOndertekening);
+        expect(body).not.toContain('Robot Path IT');
+      });
+    } finally {
+      await test.step('And terugzetten naar de meegeleverde ondertekening', async () => {
+        await zetOndertekening('Robot Path IT');
+        const na = await (await ctx.get('/server/api/bootstrap.php')).json();
+        expect(String(na.companies[0].mail_signature || '')).toBe('Robot Path IT');
       });
       await authApi.logout();
       await ctx.dispose();

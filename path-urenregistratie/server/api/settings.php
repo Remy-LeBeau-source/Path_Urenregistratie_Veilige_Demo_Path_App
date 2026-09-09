@@ -148,6 +148,7 @@ try {
              overdue_reminder_time = :overdue_reminder_time,
              approval_reminder_enabled = :approval_reminder_enabled,
              approval_reminder_time = :approval_reminder_time,
+             mail_signature = :mail_signature,
              customer_timesheet_submission_subject = :customer_timesheet_submission_subject,
              customer_timesheet_submission_body = :customer_timesheet_submission_body,
              customer_timesheet_broker_subject = :customer_timesheet_broker_subject,
@@ -199,6 +200,7 @@ try {
     $monthEndReminderTime = $reminderTimeField($settings, 'monthEndReminderTime', '15:00');
     $overdueReminderTime = $reminderTimeField($settings, 'overdueReminderTime', '09:00');
     $approvalReminderTime = $reminderTimeField($settings, 'approvalReminderTime', '10:00');
+    $mailSignature = settings_string($settings['mailSignature'] ?? '', 120);
 
     $updateCompany->execute([
         ':trade_name' => $tradeName !== '' ? $tradeName : 'Organisatie',
@@ -232,6 +234,7 @@ try {
         ':overdue_reminder_time' => $overdueReminderTime . ':00',
         ':approval_reminder_enabled' => settings_bool($settings['approvalReminderEnabled'] ?? true, true) ? 1 : 0,
         ':approval_reminder_time' => $approvalReminderTime . ':00',
+        ':mail_signature' => $mailSignature !== '' ? $mailSignature : 'Robot Path IT',
         // These four were collected by the form but never stored: the texts lived
         // only in the browser of whoever typed them, so F5 lost the change.
         ':customer_timesheet_submission_subject' => settings_string($settings['customerTimesheetSubmissionSubject'] ?? '', 250) ?: null,

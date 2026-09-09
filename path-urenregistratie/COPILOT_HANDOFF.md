@@ -307,10 +307,16 @@ volgorde leidend: `BESLISTABEL.md`, daarna de actuele sectie in
    `server/api/timesheets.php`. Kanaal `timesheet_final_approval` bestond al
    (migratie 030) en had al een default-template in `server/mail/templates.php`,
    werd alleen nergens aangeroepen. Bewezen met nieuwe case **EQ-H-037**.
-4. **Aanpasbare standaardteksten.** Zowel de ontvangstmail als de vier
-   reminder-mails hebben "Robot Path IT" hard gecodeerd i.p.v. via
-   `mail_channel_templates_for()` / Instellingen aanpasbaar, zoals de
-   bestaande broker/accountant/payroll-teksten al werken.
+4. ~~**Aanpasbare standaardteksten.**~~ **Opgelost (9 sept) voor de
+   ondertekening:** "Robot Path IT" stond hard gecodeerd op drie plekken
+   (ontvangstmail, definitieve goedkeuringsmail, de vier reminder-mails).
+   Nieuwe kolom `companies.mail_signature` (migratie 036, default 'Robot Path
+   IT'), helper `mail_signature_for()` in `server/mail/templates.php`,
+   gebruikt op alle drie plekken i.p.v. de letterlijke string. Aanpasbaar via
+   Instellingen → Organisatie ("Ondertekening automatische mails"). Bewezen
+   met nieuwe case **EQ-H-039**. De per-kanaal onderwerp/tekst zelf (broker/
+   accountant/payroll/klanturenstaat) waren al aanpasbaar via
+   `mail_channel_templates_for()` — dat deel van dit punt was al klaar.
 5. **CI-shard-opschaling 4→8** — al voorbereide analyse in
    `docs/ci-scaling-review`-branch (`agents/shard-strategy.md`,
    `agents/provision-runners.md`). Gebruiker koos voor "gewoon meer

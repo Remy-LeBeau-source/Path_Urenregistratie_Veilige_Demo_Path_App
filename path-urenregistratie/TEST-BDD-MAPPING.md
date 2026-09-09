@@ -198,6 +198,7 @@
 | E2E-H-010 | api | mail-delivery.feature | nieuw account, eigen tekst, en die tekst komt terug in de verzonden mail | Beslissingstabel rollen en autorisatie | 28 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | nieuw account, eigen tekst, en die tekst komt terug in de verzonden mail | Happy | 12 | Actueel |
 | EQ-H-029 | api | mail-delivery.feature | elke ontvanger krijgt de handtekening, ook onder een eigen tekst | Beslissingstabel rollen en autorisatie | 8 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | elke ontvanger krijgt de handtekening, ook onder een eigen tekst | Happy | 12 | Actueel |
 | E2E-H-011 | api | mail-delivery.feature | een aangepaste standaardtekst komt werkelijk in de mail en is terug te zetten | API-contract + equivalentieklasse | 15 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | een aangepaste standaardtekst komt werkelijk in de mail en is terug te zetten | Happy | 12 | Actueel |
+| EQ-H-039 | api | mail-delivery.feature | een eigen ondertekening komt werkelijk onder de ontvangstmail | Beslissingstabel rollen en autorisatie | 8 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | een eigen ondertekening komt werkelijk onder de ontvangstmail | Happy | 12 | Actueel |
 | E2E-H-012 | api | mail-delivery.feature | het vinkje Factuur meesturen bepaalt werkelijk of de bijlage meegaat | API-contract + equivalentieklasse | 6 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | het vinkje Factuur meesturen bepaalt werkelijk of de bijlage meegaat | Happy | 12 | Actueel |
 | E2E-H-013 | api | mail-delivery.feature | een nieuwe medewerker houdt zijn gegevens en komt tot een factuur met de juiste mail | Beslissingstabel rollen en autorisatie | 38 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | een nieuwe medewerker houdt zijn gegevens en komt tot een factuur met de juiste mail | Happy | 12 | Actueel |
 | E2E-H-014 | api | mail-delivery.feature | een nieuwe beheerder logt zelf in en kan de keten afmaken | API-contract + equivalentieklasse | 19 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | een nieuwe beheerder logt zelf in en kan de keten afmaken | Happy | 12 | Actueel |
@@ -473,9 +474,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 451
+- Playwright executable cases: 452
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 452
+- Totaal unieke executable cases: 453
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29

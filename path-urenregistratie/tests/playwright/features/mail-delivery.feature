@@ -347,6 +347,16 @@ Feature: Mailroutering en aflevering
     And leeg opslaan zet de meegeleverde tekst terug
 
   @happy
+  Scenario: [EQ-H-039] een eigen ondertekening komt werkelijk onder de ontvangstmail
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given mailroutering en aflevering is voorbereid
+    When de beheerder een eigen ondertekening instelt
+    And een medewerker uren indient
+    Then staat die eigen ondertekening werkelijk onder de ontvangstmail
+    And terugzetten naar de meegeleverde ondertekening
+
+  @happy
   Scenario: [E2E-H-012] het vinkje Factuur meesturen bepaalt werkelijk of de bijlage meegaat
     # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 6

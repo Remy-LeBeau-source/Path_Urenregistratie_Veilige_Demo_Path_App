@@ -95,7 +95,7 @@ function reminder_send(PDO $pdo, array $config, int $companyId, int $userId, str
         $email,
         null,
         $mailSubject,
-        rtrim($mailBody) . "\n\nMet vriendelijke groet,\n\nRobot Path IT",
+        rtrim($mailBody) . "\n\nMet vriendelijke groet,\n\n" . mail_signature_for($pdo, $companyId),
         'none',
         mail_is_dry_run($config),
         null,

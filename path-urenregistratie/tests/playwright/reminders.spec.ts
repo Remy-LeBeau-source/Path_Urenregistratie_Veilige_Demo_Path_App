@@ -86,6 +86,7 @@ async function currentSettingsPayload(ctx: Awaited<ReturnType<typeof playwrightR
     overdueReminderTime: String(company.overdue_reminder_time || '09:00:00').slice(0, 5),
     approvalReminderEnabled: Number(company.approval_reminder_enabled) === 1,
     approvalReminderTime: String(company.approval_reminder_time || '10:00:00').slice(0, 5),
+    mailSignature: company.mail_signature ?? 'Robot Path IT',
     customerTimesheetSubmissionSubject: company.customer_timesheet_submission_subject ?? '',
     customerTimesheetSubmissionBody: company.customer_timesheet_submission_body ?? '',
     customerTimesheetBrokerSubject: company.customer_timesheet_broker_subject ?? '',

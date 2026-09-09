@@ -453,6 +453,7 @@ function freshState() {
       supportEmail: "backoffice@pathconsultancy.nl",
       website: "www.pathconsultancy.nl",
       tagline: "De specialist van morgen, vandaag onderweg!",
+      mailSignature: "Robot Path IT",
       brandPrimary: "#0d1b38",
       brandAccent: "#3abd9d",
       brandLogo: "",
@@ -2672,6 +2673,7 @@ function mergeBootstrapIntoState(data) {
   // Leeg betekent hier "nooit ingevuld": dan blijft de ingebouwde tekst staan.
   if (company.website) state.settings.website = String(company.website);
   if (company.tagline) state.settings.tagline = String(company.tagline);
+  if (company.mail_signature) state.settings.mailSignature = String(company.mail_signature);
   state.settings.companyName = String(company.legal_name || state.settings.companyName || "");
   state.settings.invoiceNameDisplay = ["trade_and_legal", "legal_only"].includes(String(company.invoice_name_display || ""))
     ? String(company.invoice_name_display)
@@ -8834,6 +8836,7 @@ function populateSettings() {
   zetInstelling("setting-support-email", settings.supportEmail);
   zetInstelling("setting-website", settings.website || "");
   zetInstelling("setting-tagline", settings.tagline || "");
+  zetInstelling("setting-mail-signature", settings.mailSignature || "Robot Path IT");
   zetInstelling("setting-brand-primary", normalizedBrandColor(settings.brandPrimary, "#0d1b38"));
   zetInstelling("setting-brand-accent", normalizedBrandColor(settings.brandAccent, "#3abd9d"));
   pendingBrandLogo = String(settings.brandLogo || "");
@@ -8888,6 +8891,7 @@ function saveSettings() {
     supportEmail: document.querySelector("#setting-support-email").value.trim(),
     website: document.querySelector("#setting-website").value.trim(),
     tagline: document.querySelector("#setting-tagline").value.trim(),
+    mailSignature: document.querySelector("#setting-mail-signature").value.trim() || "Robot Path IT",
     brandPrimary: normalizedBrandColor(document.querySelector("#setting-brand-primary").value, "#0d1b38"),
     brandAccent: normalizedBrandColor(document.querySelector("#setting-brand-accent").value, "#3abd9d"),
     brandLogo: pendingBrandLogo,
