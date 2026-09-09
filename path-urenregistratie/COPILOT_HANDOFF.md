@@ -21,6 +21,15 @@ Stop niet bij een eerste rode run: lees de fout, herstel de oorzaak en start
 opnieuw. Raak PROD niet aan; promotie naar PROD blijft uitsluitend een
 handmatige beslissing van de eigenaar.
 
+**Vaste opdracht "pollen en fixen" (expliciet vastgelegd, 9 sept nacht):**
+elke ~10 minuten de laatste CI-run checken (`gh run list`/`gh run view`),
+bij rood de exacte falende stap/test opzoeken (niet aannemen, echt de log
+lezen), root cause fixen, gericht lokaal testen, committen en pushen — en
+daarna weer pollen. Blijf dit herhalen, ook na een sessie-onderbreking
+(bv. een usage-limiet), totdat de actuele combinatie op main én herontwerp
+volledig groen is. Elke nieuwe regressie die zo gevonden wordt, hoort een
+eigen testcase te krijgen, niet alleen een losse code-fix.
+
 - **Codex op `main`:** REM-H-001-testisolatie is opgelost en 28/28 groen;
   commit en push volgen direct na deze handoff-update.
 - **Claude/herontwerp-sessie:** mag daarna weer verder, maar moet eerst de
