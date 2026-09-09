@@ -666,19 +666,24 @@ test('[SAFE-H-010] echte TEST-mail vereist opt-in en een ontvangers-whitelist', 
   });
 });
 
-test('[SAFE-H-013] TEST-mailsandbox opent atomisch voor twee toegestane TEST-ontvangers (sink + CC)', async () => {
+test('[SAFE-H-013] TEST-mailsandbox opent atomisch voor twee toegestane TEST-ontvangers (sink + CC), plus met naam genoemde wachtwoordreset-testers', async () => {
   let result: { ok?: boolean; mode?: string; writes_performed?: boolean; allowed_recipients?: string[]; test_accounts?: string[] } = {};
   const expectedRecipients = [
     'giovanno.maatsen@pathconsultancy.nl',
     'kenrich.lieveld@pathconsultancy.nl',
+    // Met naam genoemde testers krijgen alleen echte levering voor hun eigen
+    // wachtwoordreset (zie mail_test_extra_password_reset_recipients() in
+    // server/mail/config.php) -- ze staan hier wel bij, want die functie
+    // controleert ook lidmaatschap van de algemene allowlist.
+    'stasjovanbakel@pathconsultancy.nl',
   ];
   const expectedAccounts = [
     'giovanno.maatsen@pathconsultancy.nl',
     'kenrich.lieveld@pathconsultancy.nl',
   ];
 
-  await test.step('Given twee toegestane TEST-ontvangers (primaire sink + CC) en twee bijbehorende accounts zijn gedefinieerd', async () => {
-    expect(expectedRecipients).toHaveLength(2);
+  await test.step('Given twee toegestane TEST-ontvangers (primaire sink + CC), een genoemde wachtwoordreset-tester, en twee bijbehorende accounts zijn gedefinieerd', async () => {
+    expect(expectedRecipients).toHaveLength(3);
     expect(expectedAccounts).toHaveLength(2);
   });
 
@@ -710,6 +715,8 @@ test('[SAFE-H-013] TEST-mailsandbox opent atomisch voor twee toegestane TEST-ont
     expect(configurator).toContain("$config['mail']['test_redirect_all'] = true");
     expect(configurator).toContain("$config['mail']['test_sink_recipient'] = $businessRecipient");
     expect(configurator).toContain("$config['mail']['test_sink_cc_recipient'] = $secondaryTestAccount");
+    expect(configurator).toContain('extra_password_reset_recipients');
+    expect(configurator).toContain('$namedPasswordResetTesters');
     expect(configurator).toContain('$pdo->beginTransaction()');
     expect(configurator).toContain('password_hash(bin2hex(random_bytes(32)), PASSWORD_DEFAULT)');
     expect(configurator).toContain('$pdo->rollBack()');

@@ -12893,7 +12893,12 @@ document.querySelector("#new-admin-story-export").addEventListener("click", () =
 function maxEmployeeFuturePeriodKey() {
   const parsed = parsePeriodKey(currentCalendarPeriodKey());
   if (!parsed) return currentCalendarPeriodKey();
-  return makePeriodKey(parsed.year + 2, parsed.monthIndex);
+  // Periodesleutels worden overal als string vergeleken uitgaande van een
+  // 4-cijferig jaar (makePeriodKey() padStart(4) doet niets meer zodra het
+  // jaar 5 cijfers heeft) -- geclipt op 9999 zodat +2 jaar dicht bij die
+  // grens (bv. een test die "nu" bewust op 9999 zet) geen jaartal van 5
+  // cijfers produceert dat de vergelijking omdraait.
+  return makePeriodKey(Math.min(parsed.year + 2, 9999), parsed.monthIndex);
 }
 
 function setPeriod(periodKey) {
