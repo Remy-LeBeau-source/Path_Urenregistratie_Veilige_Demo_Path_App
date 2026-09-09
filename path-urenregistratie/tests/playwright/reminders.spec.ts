@@ -203,6 +203,24 @@ test.describe('serverplanning herinneringen', () => {
         firstRun = await runReminders(nowIso);
         expect(firstRun.ok).toBe(true);
       }
+      if (firstRun.sent.weekly === 0) {
+        // Tijdelijke diagnose (te verwijderen zodra de oorzaak bekend is):
+        // dump de ruwe company/employee/reminder-staat naar de testlog zodat
+        // we op CI kunnen zien welke voorwaarde niet klopt, in plaats van
+        // alleen te weten DAT het faalt.
+        try {
+          const debugOut = await execFileAsync(
+            'php',
+            ['server/scripts/debug-reminder-state.php', `--email=${freshEmail}`, `--now=${nowIso}`],
+            { cwd: process.cwd(), windowsHide: true },
+          );
+          // eslint-disable-next-line no-console
+          console.log('[REM-H-001 diagnose]', debugOut.stdout);
+        } catch (debugError) {
+          // eslint-disable-next-line no-console
+          console.log('[REM-H-001 diagnose] mislukt', debugError);
+        }
+      }
     });
 
     await test.step('Then staat er een reminder-mail in de queue voor de nieuwe medewerker', async () => {
