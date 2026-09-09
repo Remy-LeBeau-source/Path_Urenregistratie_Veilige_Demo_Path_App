@@ -1008,9 +1008,16 @@ test('[SKIN-H-021] de medewerker blijft op het Dashboard: de pijl springt naar v
   });
 
   await test.step('And staat het overzicht van open maanden zichtbaar op het Dashboard, en een actie erin blijft op het Dashboard', async () => {
+    // Gio wees op de rustigere kaartstijl van dit maand-overzicht; de
+    // samenvatting erboven hoort in New zichtbaar te blijven en visueel als
+    // dezelfde compacte werkvoorraadroute te voelen.
+    await expect(page.locator('.employee-hero')).toBeVisible();
+    await expect(page.locator('#employee-open-task-total')).toHaveText(/\d+ open acties?/);
     const overview = page.locator('#employee-open-overview');
     await expect(overview).toBeVisible();
     await expect(page.locator('#employee-open-overview-count')).toHaveText(/\d+ open maand/);
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow, 'werkvoorraadkaarten blijven binnen het mobiele scherm').toBeLessThanOrEqual(1);
     await page.locator('[data-employee-open-month-toggle]').first().click();
     await page.locator('[data-employee-open-action]').first().click();
     await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);

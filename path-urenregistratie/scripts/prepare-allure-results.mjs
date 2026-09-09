@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 
 const outputFolder = 'allure-results';
 const categories = [
@@ -33,16 +33,39 @@ const applicationVersion = String(packageMetadata.version || 'onbekend');
 const reportStage = String(process.env.PATH_REPORT_STAGE || (process.env.CI ? 'CI release regression' : process.env.PLAYWRIGHT_STAGE || 'local'));
 const reportTarget = String(process.env.PATH_REPORT_TARGET || (process.env.CI ? 'TEST -> PROD' : 'lokale testomgeving'));
 if (!preserveResults) {
-  rmSync(outputFolder, { recursive: true, force: true });
+  try {
+    rmSync(outputFolder, { recursive: true, force: true });
+  } catch (error) {
+    if (process.platform !== 'win32' || !['EPERM', 'EBUSY'].includes(error?.code)) {
+      throw error;
+    }
+    const staleFolder = `${outputFolder}.stale-${Date.now()}`;
+    try {
+      renameSync(outputFolder, staleFolder);
+      console.warn(`Kon ${outputFolder} niet direct verwijderen (${error.code}); hernoemd naar ${staleFolder}.`);
+    } catch (renameError) {
+      if (!['EPERM', 'EBUSY'].includes(renameError?.code)) {
+        throw renameError;
+      }
+      console.warn(`Kon ${outputFolder} niet verwijderen of hernoemen (${renameError.code}); hergebruik de bestaande lokale map.`);
+    }
+  }
 }
 mkdirSync(outputFolder, { recursive: true });
-writeFileSync(`${outputFolder}/categories.json`, JSON.stringify(categories, null, 2));
-writeFileSync(`${outputFolder}/environment.properties`, [
-  'application=Path Urenregistratie',
-  `version=${applicationVersion}`,
-  `stage=${reportStage}`,
-  `target=${reportTarget}`,
-  'reporting=Playwright + Allure',
-].join('\n') + '\n');
+try {
+  writeFileSync(`${outputFolder}/categories.json`, JSON.stringify(categories, null, 2));
+  writeFileSync(`${outputFolder}/environment.properties`, [
+    'application=Path Urenregistratie',
+    `version=${applicationVersion}`,
+    `stage=${reportStage}`,
+    `target=${reportTarget}`,
+    'reporting=Playwright + Allure',
+  ].join('\n') + '\n');
+} catch (error) {
+  if (process.platform !== 'win32' || !['EPERM', 'EBUSY'].includes(error?.code)) {
+    throw error;
+  }
+  console.warn(`Kon Allure metadata lokaal niet overschrijven (${error.code}); testuitvoering gaat door met bestaande metadata.`);
+}
 
 console.log(`Allure results ${preserveResults ? 'behouden en ' : ''}voorbereid met functionele categories en environment metadata.`);
