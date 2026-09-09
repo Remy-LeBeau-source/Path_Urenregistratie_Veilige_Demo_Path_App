@@ -50,7 +50,7 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
   @happy
   Scenario: [SKIN-H-006] de echte medewerkerroute toont de live bento en blijft mobiel bedienbaar
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 23
+    # Aantoonbare Playwright-assertions in deze case: 24
     Given de medewerker de nieuwe vormgeving opent
     When het echte dashboard de bento met live invoervelden en gezamenlijke versie-footer tekent
     And eerdere weken niet indienen en de laatste week eerst bevestiging vraagt
@@ -67,7 +67,7 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
   @happy
   Scenario: [SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en Klassiek
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 9
+    # Aantoonbare Playwright-assertions in deze case: 12
     Given een medewerkerdashboard met geladen urenstatus
     When de medewerker Nieuw activeert en via de bento naar Mijn uren navigeert
     Then de dashboardstatus gelijk blijft en Klassiek dezelfde gegevens toont
@@ -79,6 +79,14 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     Given Backoffice in de nieuwe skin met minstens twee medewerkers in de verhaallijn
     When Backoffice de tweede medewerker in de wachtrij aanklikt
     Then wordt die medewerker geselecteerd en toont het verhaal zijn naam en vier statuskaarten
+
+  @happy
+  Scenario: [SKIN-H-011] een bewust opgeslagen 0 uur telt mee voor de weekvoortgang in Mijn uren
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given de medewerker de nieuwe vormgeving opent op de huidige week
+    When alle werkdagen op deze week uren krijgen behalve de laatste, die bewust leeg blijft, en de week wordt opgeslagen
+    Then heeft de server na een herlaad een eigen dagregel voor de laatste dag bewaard, ook al bleef die op 0 uur
 
   @negative
   Scenario: [SKIN-N-007] productie forceert Klassiek en verbergt de redesignschakelaar

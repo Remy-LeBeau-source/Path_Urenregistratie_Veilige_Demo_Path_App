@@ -3,6 +3,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { AuthApi } from './api/AuthApi';
 import { EmailQueueApi } from './api/EmailQueueApi';
+import { TimesheetApi } from './api/TimesheetApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
 
 const execFileAsync = promisify(execFile);
@@ -20,25 +21,26 @@ async function runReminders(nowIso: string): Promise<ReminderRunResult> {
 const weekdayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
 /**
- * De server bepaalt due-momenten expliciet in Europe/Amsterdam
- * (send-due-reminders.php). De testrunner's systeemtijdzone verschilt per
- * omgeving (lokaal Windows toevallig Amsterdam, GitHub Actions-runners UTC)
- * -- `Date#getDay()`/`toTimeString()` gebruiken die systeemtijdzone en gaven
- * daardoor op CI een andere weekdag/tijd dan wat de server verwachtte.
- * Expliciet naar Europe/Amsterdam formatteren, ongeacht de runner-tijdzone.
+ * send-due-reminders.php interpreteert --now altijd expliciet in
+ * Europe/Amsterdam (server/scripts/send-due-reminders.php regel ~294). Op
+ * de eigen machine (al in die tijdzone) valt Date#toTimeString()/getDay()
+ * daarmee toevallig samen, maar op een CI-runner in UTC scheelt dat het
+ * volledige DST-verschil (2 uur in de zomer) — de scheduler ziet dan nooit
+ * "nu" als het geconfigureerde moment. Bereken dag en tijd daarom altijd
+ * expliciet in Europe/Amsterdam, ongeacht de tijdzone van de testmachine.
  */
-function amsterdamWeekdayAndTime(date: Date): { weekday: string; time: string } {
+function amsterdamWeekdayAndTime(moment: Date): { day: string; time: string } {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone: 'Europe/Amsterdam',
     weekday: 'long',
     hour: '2-digit',
     minute: '2-digit',
-    hour12: false,
-  }).formatToParts(date);
-  const lookup = Object.fromEntries(parts.map(p => [p.type, p.value]));
+    hourCycle: 'h23',
+  }).formatToParts(moment);
+  const lookup = (type: string) => parts.find(part => part.type === type)?.value ?? '';
   return {
-    weekday: String(lookup.weekday || '').toLowerCase(),
-    time: `${lookup.hour}:${lookup.minute}`,
+    day: lookup('weekday').toLowerCase(),
+    time: `${lookup('hour')}:${lookup('minute')}`,
   };
 }
 
@@ -92,6 +94,38 @@ async function currentSettingsPayload(ctx: Awaited<ReturnType<typeof playwrightR
   };
 }
 
+/**
+ * De hele suite deelt één demodatabase; eerdere cases in dezelfde shard
+ * (bv. timesheet-writeflow- of pilot-cases) kunnen toevallig alle actieve
+ * medewerkers al uren voor de huidige week hebben laten invullen. Dat is
+ * geen regressie van de reminder-scheduler zelf — checkt daarom onafhankelijk
+ * (los van send-due-reminders.php) of er nog minstens één medewerker met
+ * hour_reminders zonder uren deze week over is, zodat het scenario
+ * zichzelf skipt i.p.v. vals-rood te gaan wanneer dat toevallig niet zo is.
+ */
+async function hasEmployeeWithoutHoursThisWeek(ctx: Awaited<ReturnType<typeof playwrightRequest.newContext>>, now: Date): Promise<boolean> {
+  const timesheetApi = new TimesheetApi(ctx);
+  const bootstrap = await (await ctx.get('/server/api/bootstrap.php')).json();
+  const employees = (bootstrap.employees as Array<Record<string, unknown>>).filter(employee => Number(employee.active) === 1);
+  const periodKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Amsterdam', year: 'numeric', month: '2-digit' }).format(now).slice(0, 7);
+  const weekStart = new Date(now);
+  const isoDay = (now.getUTCDay() + 6) % 7;
+  weekStart.setUTCDate(now.getUTCDate() - isoDay);
+  const weekDates = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(weekStart);
+    d.setUTCDate(weekStart.getUTCDate() + i);
+    return d.toISOString().slice(0, 10);
+  });
+
+  for (const employee of employees) {
+    const result = await timesheetApi.read(periodKey, Number(employee.id), { attach: false });
+    const entries = (result.body?.timesheet?.day_entries as Array<{ work_date: string; hours: number }> | undefined) ?? [];
+    const hasHoursThisWeek = entries.some(entry => weekDates.includes(entry.work_date) && Number(entry.hours) > 0);
+    if (!hasHoursThisWeek) return true;
+  }
+  return false;
+}
+
 test.describe('serverplanning herinneringen', () => {
   test('[REM-H-001] wekelijkse herinnering verstuurt eenmalig een reminder-mail aan medewerkers zonder uren deze week', async () => {
     const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
@@ -102,7 +136,9 @@ test.describe('serverplanning herinneringen', () => {
 
     const now = new Date();
     const nowIso = now.toISOString();
-    const { weekday: amsterdamWeekday, time: amsterdamTime } = amsterdamWeekdayAndTime(now);
+    const { day: nowDayAmsterdam, time: nowTimeAmsterdam } = amsterdamWeekdayAndTime(now);
+
+    test.skip(!(await hasEmployeeWithoutHoursThisWeek(ctx, now)), 'Alle actieve medewerkers hebben deze week al uren staan door eerdere cases in dezelfde gedeelde demodatabase; dit scenario valt nu niet te bewijzen.');
 
     // De hele suite deelt één demodatabase; andere cases kunnen intussen alle
     // bestaande medewerkers al uren voor de huidige (echte) week hebben laten
@@ -144,8 +180,8 @@ test.describe('serverplanning herinneringen', () => {
           settings: {
             ...settings,
             weeklyReminderEnabled: true,
-            weeklyReminderDay: amsterdamWeekday,
-            weeklyReminderTime: amsterdamTime,
+            weeklyReminderDay: nowDayAmsterdam,
+            weeklyReminderTime: nowTimeAmsterdam,
           },
         },
       });

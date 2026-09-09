@@ -1,5 +1,36 @@
 # HANDOFF — Codex, Fase D vervolg (herontwerp)
 
+## 8 september — New-medewerkerroute lokaal hersteld en driebrowserdekking
+
+De ontbrekende lokale runtime is hersteld met de bestaande, genegeerde
+`config.local.php` en `.env.local` uit de main-werkboom; de geïsoleerde database
+`path_urenregistratie_test` is opnieuw opgebouwd. De eerste echte run vond dat
+de nieuwe `#view-dashboard`-flexregel ook gold wanneer het dashboard niet actief
+was. Daardoor stond onder `Mijn uren` de volledige beheerder-storyline zichtbaar
+voor een medewerker. De selector geldt nu uitsluitend voor
+`#view-dashboard.is-active`. Omdat de New-route de klassieke sidebar verbergt,
+toont `Mijn uren` daarnaast de bestaande homeknop als zichtbare terugweg.
+
+`SKIN-H-009` bewaakt nu beide punten en navigeert via die zichtbare knop. De
+skin-suite is aan de twee mobiele Playwright-projecten toegevoegd. `SKIN-H-006`
+onderdrukt het onafhankelijke PWA-installatieaanbod tijdens zijn urenflow, zodat
+die case alleen de bento en indienbevestiging meet. Gericht bewijs:
+`SKIN-H-006` en `SKIN-H-009` zijn 6/6 groen op desktop Chromium, mobiel Chrome
+en mobiel Safari.
+
+De eerste volledige driebrowserrun vond daarnaast dat de lokale mailstatusbadge
+op telefoon over de New-hoofdnavigatie lag. De navigatie heeft nu een eigen
+volledige gridrij met horizontale bediening. `SKIN-H-008` is daarna 2/2 groen
+op mobiel Chrome en mobiel Safari. De volledige 30-uitvoeringenmatrix is na de
+reparatie met de CI-achtige projectrunner herhaald: **27 groen, 3 bewust
+datagedreven skips en 0 fouten** op desktop Chromium, mobiel Chrome en mobiel
+Safari. `docs:sync`, JavaScript-syntax, taalcontrole, licht/donker-contrast,
+`test:design` (447/447), `test:bdd:design`, DB-configprecedence en
+`git diff --check` zijn groen. `npm run check` komt niet voorbij de bestaande
+`smoke-test.mjs`: die blijft lokaal zonder uitvoer lopen en is na een begrensde
+poging gestopt; de losse vervolggates zijn wel groen. Niets is gecommit, gepusht
+of gedeployed; PROD is ongemoeid.
+
 ## 8 september — expliciete app-readiness voor Mobile Safari
 
 CI-run `34246396130` bewees dat de eerdere deactivatiefout opgelost was, maar
