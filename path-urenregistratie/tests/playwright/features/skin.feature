@@ -149,3 +149,31 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     When Hele maand wordt gekozen
     Then staat de compacte tabel weer terug, geen kaartjes
     And in Klassiek blijft Mijn uren altijd de tabel, zonder kaartjes of pijlen
+
+  @happy
+  Scenario: [SKIN-H-018] Klanturenstaat-blok klapt inline open op het Dashboard, zonder weg te navigeren, en keert terug naar Mijn uren
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 18
+    Given de medewerker Nieuw activeert op het Dashboard
+    When op het Klanturenstaat-blok wordt geklikt
+    Then klapt het blok open, blijft het Dashboard actief en verhuist het echte paneel erin
+    When er nogmaals op wordt geklikt
+    Then klapt het blok weer dicht en staat het paneel terug op zijn vaste plek
+    When het blok weer wordt geopend en daarna naar Mijn uren wordt genavigeerd
+    Then staat het paneel weer op zijn vaste plek op Mijn uren en is het daar gewoon zichtbaar
+
+  @happy
+  Scenario: [SKIN-H-019] de beheerroute blijft op elk van de 6 pilot-tabs consequent Nieuw, zonder terug te vallen op de klassieke zijbalk
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given een ingelogde administrator Nieuw activeert
+    When de flow voor SKIN-H-019 wordt uitgevoerd
+    Then brengt de eigen Home-knop terug naar Cockpit, nog altijd in Nieuw
+
+  @happy
+  Scenario: [SKIN-H-020] de voetstrip onder Verhalen per medewerker toont de echte periode en tijd, en het verhaaloverzicht is te exporteren
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 11
+    Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid
+    When de flow voor SKIN-H-020 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat de voetstrip onder Verhalen per medewerker toont de echte periode en tijd, en het verhaaloverzicht is te exporteren

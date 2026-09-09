@@ -71,3 +71,16 @@ Then("toont Mijn uren dezelfde kaartjesstijl als de bento, met werkende week-pij
 When("Hele maand wordt gekozen");
 Then("staat de compacte tabel weer terug, geen kaartjes");
 And("in Klassiek blijft Mijn uren altijd de tabel, zonder kaartjes of pijlen");
+Given("de medewerker Nieuw activeert op het Dashboard");
+When("op het Klanturenstaat-blok wordt geklikt");
+Then("klapt het blok open, blijft het Dashboard actief en verhuist het echte paneel erin");
+When("er nogmaals op wordt geklikt");
+Then("klapt het blok weer dicht en staat het paneel terug op zijn vaste plek");
+When("het blok weer wordt geopend en daarna naar Mijn uren wordt genavigeerd");
+Then("staat het paneel weer op zijn vaste plek op Mijn uren en is het daar gewoon zichtbaar");
+Given("een ingelogde administrator Nieuw activeert");
+When("de flow voor SKIN-H-019 wordt uitgevoerd");
+Then("brengt de eigen Home-knop terug naar Cockpit, nog altijd in Nieuw");
+Given("vormgevingsschakelaar (klassiek / nieuw) is voorbereid");
+When("de flow voor SKIN-H-020 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat de voetstrip onder Verhalen per medewerker toont de echte periode en tijd, en het verhaaloverzicht is te exporteren");

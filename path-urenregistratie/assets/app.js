@@ -1121,6 +1121,11 @@ let modalCloseAction = null;
 let adminTaskWorkflow = null;
 let newAdminStoryEmployeeId = null;
 let newAdminStorylineHasRendered = false;
+let newAdminStoryExportRows = [];
+
+function newAdminStageLabel(state) {
+  return state === "done" ? "Gereed" : state === "current" ? "Actie vereist" : "Nog niet gestart";
+}
 let pendingProfilePhoto = "";
 let pendingBrandLogo = "";
 let unresolvedHelpQuestion = "";
@@ -5852,6 +5857,54 @@ function setNewAdminStage(id, text, visualState = "") {
   if (stage) stage.dataset.stageState = visualState;
 }
 
+// Klapt het Klanturenstaat-blok op het Dashboard (Nieuw) open of dicht. Het
+// ECHTE #customer-timesheet-upload-panel (van Mijn uren) verhuist daarbij
+// letterlijk in de DOM naar het blokje en weer terug -- geen kopie, dus geen
+// dubbele ids en geen tweede plek om dezelfde logica te onderhouden.
+function handleNewBentoCustomerToggle() {
+  const card = document.querySelector("#new-bento-customer");
+  const expand = document.querySelector("#new-bento-customer-expand");
+  const button = card?.querySelector("[data-new-bento-customer]");
+  const label = button?.querySelector("[data-new-bento-customer-label]");
+  if (!card || !expand || !button) return;
+  const opening = card.getAttribute("data-open") !== "true";
+  if (opening) {
+    const panel = document.querySelector("#customer-timesheet-upload-panel");
+    if (panel) {
+      expand.appendChild(panel);
+      panel.hidden = false;
+      renderCustomerTimesheetPanel();
+    }
+    expand.hidden = false;
+    card.setAttribute("data-open", "true");
+    button.setAttribute("aria-expanded", "true");
+    if (label) label.textContent = "Klanturenstaat sluiten";
+  } else {
+    restoreCustomerTimesheetPanelHome();
+  }
+}
+
+// Zet #customer-timesheet-upload-panel terug op zijn vaste plek op Mijn uren
+// en klapt het Dashboard-blok weer dicht. Wordt zowel aangeroepen door de
+// sluitknop zelf als (defensief) door showView zodra je naar een ander
+// scherm dan het Dashboard gaat -- zonder dat zou Mijn uren het paneel
+// missen als je het Dashboard verliet terwijl het daar openstond.
+function restoreCustomerTimesheetPanelHome() {
+  const card = document.querySelector("#new-bento-customer");
+  const expand = document.querySelector("#new-bento-customer-expand");
+  const button = card?.querySelector("[data-new-bento-customer]");
+  const label = button?.querySelector("[data-new-bento-customer-label]");
+  const anchor = document.querySelector("#customer-timesheet-upload-panel-anchor");
+  const panel = document.querySelector("#customer-timesheet-upload-panel");
+  if (anchor && panel && panel.parentElement !== anchor.parentElement) {
+    anchor.after(panel);
+  }
+  if (card) card.setAttribute("data-open", "false");
+  if (expand) expand.hidden = true;
+  if (button) button.setAttribute("aria-expanded", "false");
+  if (label) label.textContent = "Klanturenstaat openen";
+}
+
 function renderCustomerTimesheetPanel() {
   const panel = document.querySelector("#customer-timesheet-upload-panel");
   if (!panel) return;
@@ -6426,7 +6479,11 @@ function renderNewAdminStoryline(rows, period) {
   const queue = document.querySelector("#new-admin-employee-queue");
   const heading = document.querySelector("#new-admin-story-heading");
   const cards = document.querySelector("#new-admin-story-cards");
+  const footPeriod = document.querySelector("#new-admin-foot-period");
+  const footRefreshed = document.querySelector("#new-admin-foot-refreshed");
   if (!queue || !heading || !cards) return;
+  if (footPeriod) footPeriod.textContent = period.label;
+  if (footRefreshed) footRefreshed.textContent = new Date().toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
   // Puur een visuele bijlage bij skin=new (styles-new.css houdt de sectie
   // zelf al display:none in Classic). Niet vullen buiten skin=new: anders
   // staat elke medewerkersactie hier dubbel in de DOM naast de echte
@@ -6437,12 +6494,14 @@ function renderNewAdminStoryline(rows, period) {
     queue.innerHTML = "";
     heading.innerHTML = "";
     cards.innerHTML = "";
+    newAdminStoryExportRows = [];
     return;
   }
   if (!rows.length) {
     queue.innerHTML = '<p class="new-admin-story-empty">Geen medewerkers actief in ' + escapeHtml(period.label) + '.</p>';
     heading.innerHTML = "";
     cards.innerHTML = "";
+    newAdminStoryExportRows = [];
     return;
   }
 
@@ -6454,6 +6513,7 @@ function renderNewAdminStoryline(rows, period) {
   }
 
   const animateTrack = !newAdminStorylineHasRendered;
+  const exportRows = [];
   queue.innerHTML = rows.map(item => {
     const employee = item.employee;
     const record = item.record;
@@ -6478,11 +6538,25 @@ function renderNewAdminStoryline(rows, period) {
                 : record.timesheetStatus === "approved" && !customerTimesheetReadyForInvoice(employee, record)
                   ? "Wacht op klanturenstaat"
                   : "Registratie actief";
+    // Dezelfde vier fasen als de legenda-bolletjes in de voetstrip
+    // (new-admin-foot-legend), zodat "Verhaaloverzicht exporteren" letterlijk
+    // exporteert wat de Storyline hier al toont, in plaats van een losstaand
+    // rapport te verzinnen.
+    exportRows.push([
+      employee.name,
+      employee.role || employee.client || "Medewerker",
+      newAdminStageLabel(stages[0].state),
+      newAdminStageLabel(stages[1].state),
+      newAdminStageLabel(stages[2].state),
+      newAdminStageLabel(stages[3].state),
+      status
+    ]);
     return '<button class="new-admin-employee-row' + (selected ? ' is-selected' : '') + '" type="button" data-new-admin-story-employee="' + employee.id + '" aria-pressed="' + String(selected) + '">' +
       '<span class="new-admin-employee-person"><span class="mini-avatar">' + initials(employee.name) + '</span><span><strong>' + escapeHtml(employee.name) + '</strong><small>' + escapeHtml(employee.role || employee.client || "Medewerker") + '</small></span></span>' +
       '<span class="new-admin-employee-track' + (animateTrack ? ' is-first-render' : '') + '">' + track + '</span>' +
       '<span class="new-admin-employee-status">' + escapeHtml(status) + '</span><span class="new-admin-employee-chevron">⌄</span></button>';
   }).join("");
+  newAdminStoryExportRows = exportRows;
   newAdminStorylineHasRendered = true;
 
   const selected = rows.find(item => String(item.employee.id) === String(newAdminStoryEmployeeId)) || rows[0];
@@ -9508,6 +9582,11 @@ function smoothScrollBehavior() {
 }
 
 function showView(view, options = {}) {
+  // Het Klanturenstaat-panel kan tijdelijk in het Dashboard-blok zitten (zie
+  // handleNewBentoCustomerToggle); zodra je ergens anders heen navigeert
+  // hoort het weer op zijn vaste plek op Mijn uren te staan, anders mist die
+  // pagina het straks gewoon.
+  if (view !== "employee-dashboard") restoreCustomerTimesheetPanelHome();
   if (state.currentRole === "employee" && adminViews.has(view)) view = "employee-dashboard";
   if (state.currentRole === "admin" && view === "timesheet") view = "dashboard";
   if (state.currentRole === "admin" && view === "employee-dashboard") view = "dashboard";
@@ -9531,6 +9610,10 @@ function showView(view, options = {}) {
   document.querySelector("#global-period-control").hidden = ["approvals", "announcements", "employee-announcements", "settings"].includes(view);
   document.querySelectorAll(".view").forEach(item => item.classList.toggle("is-active", item === target));
   document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("is-active", item.dataset.view === view));
+  // De pilot-topbar (.new-admin-topnav, skin=new) markeert zijn eigen tab
+  // apart -- die staat los van .nav-item (zie de toelichting hierboven bij
+  // [data-view], [data-pilot-view]).
+  document.querySelectorAll(".new-admin-topnav button").forEach(item => item.classList.toggle("is-active", item.dataset.pilotView === view));
   document.querySelector("#page-title").textContent = pageTitles[view];
   // A dashboard can select another action month while the hidden hours grid still
   // contains the previously opened month. Always render after the timesheet view
@@ -12143,9 +12226,7 @@ function toonInstallatieAanbod() {
 
   const newBentoCustomer = event.target.closest("[data-new-bento-customer]");
   if (newBentoCustomer) {
-    showView("timesheet");
-    const customerPanel = document.querySelector("#customer-timesheet-upload-panel");
-    if (customerPanel && typeof customerPanel.scrollIntoView === "function") customerPanel.scrollIntoView({ behavior: smoothScrollBehavior(), block: "start" });
+    handleNewBentoCustomerToggle();
     return;
   }
 
@@ -12755,6 +12836,15 @@ document.querySelector("#download-invoice-list").addEventListener("click", () =>
     })
   ]);
   toast("Het factuuroverzicht is gedownload.");
+});
+
+document.querySelector("#new-admin-story-export").addEventListener("click", () => {
+  const period = currentPeriod();
+  downloadCsv("Path_verhaaloverzicht_" + period.key + ".csv", [
+    ["Medewerker", "Rol / klant", "Uren", "Klanturenstaat", "Externe bevestiging", "Factuur en vervolg", "Actuele status"],
+    ...newAdminStoryExportRows
+  ]);
+  toast("Het verhaaloverzicht is gedownload.");
 });
 
 function setPeriod(periodKey) {
