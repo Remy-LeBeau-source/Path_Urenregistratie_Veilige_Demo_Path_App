@@ -16,6 +16,11 @@ main-hotfix; daarna geldt weer bovenstaande vaste volgorde.
 
 ### Actieve werkstromen / agents
 
+**Doorwerkopdracht voor Claude en Codex:** werk zelfstandig door op `main`
+en `herontwerp`, los rode checks bij de oorzaak op en blijf volgen tot de
+actuele combinatie volledig groen op TEST staat. PROD nooit automatisch
+promoten; dat blijft uitsluitend de handmatige keuze van de eigenaar.
+
 - Codex rondt op `main` de REM-H-001-testisolatie af (28/28 lokaal groen).
 - Claude/herontwerp mag na de nieuwe main-push hervatten: eerst `origin/main`
   synchroniseren, dan gecombineerd testen en pas bij groen pushen.

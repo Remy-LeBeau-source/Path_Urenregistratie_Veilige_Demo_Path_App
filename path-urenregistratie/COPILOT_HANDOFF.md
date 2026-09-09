@@ -14,6 +14,13 @@ main-hotfix; daarna geldt weer bovenstaande vaste volgorde.
 
 ### Actieve werkstromen / agents
 
+**Doorwerkopdracht voor Claude en Codex:** ga zelfstandig door op zowel
+`main` als `herontwerp`, onderzoek en herstel iedere regressie en blijf de
+pipeline volgen totdat de actuele combinatie volledig groen op TEST staat.
+Stop niet bij een eerste rode run: lees de fout, herstel de oorzaak en start
+opnieuw. Raak PROD niet aan; promotie naar PROD blijft uitsluitend een
+handmatige beslissing van de eigenaar.
+
 - **Codex op `main`:** REM-H-001-testisolatie is opgelost en 28/28 groen;
   commit en push volgen direct na deze handoff-update.
 - **Claude/herontwerp-sessie:** mag daarna weer verder, maar moet eerst de
