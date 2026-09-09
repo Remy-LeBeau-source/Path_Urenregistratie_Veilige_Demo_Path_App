@@ -397,6 +397,32 @@ test('[SKIN-H-011] een bewust opgeslagen 0 uur telt mee voor de weekvoortgang in
   });
 });
 
+test('[SKIN-H-012] Mededelingen valt niet terug op de klassieke sidebar in Nieuw', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given de medewerker de nieuwe vormgeving opent', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+  });
+
+  // Mededelingen is voor een medewerker alleen bereikbaar via de bel (een
+  // klik op een mededeling-notificatie), niet via de klassieke sidebar die
+  // in Nieuw juist verborgen is voor de medewerkerroutes. Navigeren via de
+  // hash raakt dezelfde showView()-code als die klik.
+  await test.step('When de medewerker naar Mededelingen navigeert', async () => {
+    await page.evaluate(() => { window.location.hash = 'employee-announcements'; });
+    await expect(page.locator('#view-employee-announcements')).toBeVisible();
+  });
+
+  await test.step('Then blijft Nieuw actief en blijft de klassieke sidebar verborgen', async () => {
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await expect(page.locator('.sidebar')).toBeHidden();
+    await expect(page.locator('.mobile-brand-home')).toBeVisible();
+  });
+});
+
 test('[SKIN-N-007] productie forceert Klassiek en verbergt de redesignschakelaar', async ({ page }) => {
   const loginPage = new LoginPage(page);
 

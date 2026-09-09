@@ -88,6 +88,14 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     When alle werkdagen op deze week uren krijgen behalve de laatste, die bewust leeg blijft, en de week wordt opgeslagen
     Then heeft de server na een herlaad een eigen dagregel voor de laatste dag bewaard, ook al bleef die op 0 uur
 
+  @happy
+  Scenario: [SKIN-H-012] Mededelingen valt niet terug op de klassieke sidebar in Nieuw
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given de medewerker de nieuwe vormgeving opent
+    When de medewerker naar Mededelingen navigeert
+    Then blijft Nieuw actief en blijft de klassieke sidebar verborgen
+
   @negative
   Scenario: [SKIN-N-007] productie forceert Klassiek en verbergt de redesignschakelaar
     # Testtechniek: Negatieve equivalentieklasse + error guessing
