@@ -164,6 +164,7 @@
 | EQ-H-035 | api | mail-delivery.feature | submit maakt exact één medewerker-ontvangstmail | Beslissingstabel rollen en autorisatie | 6 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | submit maakt exact één medewerker-ontvangstmail | Happy | 12 | Actueel |
 | EQ-H-036 | api | mail-delivery.feature | submit met een geldige urenoverzicht-PDF krijgt attachment_policy=timesheet_receipt | Equivalentieklassen | 4 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | submit met een geldige urenoverzicht-PDF krijgt attachment_policy=timesheet_receipt | Happy | 12 | Actueel |
 | EQ-H-037 | api | mail-delivery.feature | goedkeuren maakt exact één definitieve-goedkeuringsmail | Toestandsovergang | 7 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | goedkeuren maakt exact één definitieve-goedkeuringsmail | Happy | 12 | Actueel |
+| EQ-H-038 | api | mail-delivery.feature | herindienen na correctie maakt een eigen, tweede ontvangstmail | Beslissingstabel rollen en autorisatie | 8 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | herindienen na correctie maakt een eigen, tweede ontvangstmail | Happy | 12 | Actueel |
 | EQ-H-022 | api | mail-delivery.feature | één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie | API-contract + equivalentieklasse | 14 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie | Happy | 12 | Actueel |
 | EQ-H-004 | api | mail-delivery.feature | action=enqueue voor gelockte factuur maakt nieuwe items aan | Toestandsovergang | 6 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | action=enqueue voor gelockte factuur maakt nieuwe items aan | Happy | 12 | Actueel |
 | EQ-H-005 | api | mail-delivery.feature | action=list response bevat verplichte velden | API-contract + equivalentieklasse | 15 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | action=list response bevat verplichte velden | Happy | 12 | Actueel |
@@ -472,9 +473,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 450
+- Playwright executable cases: 451
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 451
+- Totaal unieke executable cases: 452
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29

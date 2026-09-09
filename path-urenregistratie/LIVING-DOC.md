@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 450 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 451 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 450 unieke case-ID's
+- Playwright executable cases: 451 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 451 unieke case-ID's
+- Totaal executable cases: 452 unieke case-ID's
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29
 - Database steps mappings: 1
-- Uitvoeringen: 485
-- Niet-mobile projectuitvoeringen: 415
+- Uitvoeringen: 486
+- Niet-mobile projectuitvoeringen: 416
 - Mobile functionele cases: 35
 - Pixel 7 / Chromium-uitvoeringen: 35
 - iPhone 13 / WebKit-uitvoeringen: 35
 
-De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 450 Playwright-functionele cases in totaal 485 resultaten op: 415 + (35 x 2) = 485.
+De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 451 Playwright-functionele cases in totaal 486 resultaten op: 416 + (35 x 2) = 486.
 
 ## Documentatieketen
 
@@ -229,7 +229,7 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 450 Playwri
 
 - Feature: `tests/playwright/features/mail-delivery.feature`
 - Source: `tests/playwright/email-queue.spec.ts`
-- Cases: 43
+- Cases: 44
 
 - [EQ-H-001] factuurlock maakt queue-items aan met dry_run=true — Techniek: Toestandsovergang · Assertions: 5
 - [EQ-H-002] broker-channel stuurt alleen de factuur — Techniek: API-contract + equivalentieklasse · Assertions: 2
@@ -237,6 +237,7 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 450 Playwri
 - [EQ-H-035] submit maakt exact één medewerker-ontvangstmail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 - [EQ-H-036] submit met een geldige urenoverzicht-PDF krijgt attachment_policy=timesheet_receipt — Techniek: Equivalentieklassen · Assertions: 4
 - [EQ-H-037] goedkeuren maakt exact één definitieve-goedkeuringsmail — Techniek: Toestandsovergang · Assertions: 7
+- [EQ-H-038] herindienen na correctie maakt een eigen, tweede ontvangstmail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [EQ-H-022] één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie — Techniek: API-contract + equivalentieklasse · Assertions: 14
 - [EQ-H-004] action=enqueue voor gelockte factuur maakt nieuwe items aan — Techniek: Toestandsovergang · Assertions: 6
 - [EQ-H-005] action=list response bevat verplichte velden — Techniek: API-contract + equivalentieklasse · Assertions: 15

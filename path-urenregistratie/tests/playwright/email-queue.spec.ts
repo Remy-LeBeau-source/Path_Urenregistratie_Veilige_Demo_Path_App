@@ -446,6 +446,96 @@ test.describe('email queue api', () => {
     await ctx.dispose();
   });
 
+  test('[EQ-H-038] herindienen na correctie maakt een eigen, tweede ontvangstmail', async () => {
+    // De ontvangstmail is idempotent per timesheet_id + timesheet_version
+    // (niet per timesheet_id alleen). Een correctie verhoogt de versie, dus
+    // een herindiening daarna hoort gewoon opnieuw door dezelfde 'submit'-
+    // aanroep te lopen en een eigen, tweede ontvangstmail te krijgen -- geen
+    // apart kanaal of eigen tekst nodig.
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    const timesheetApi = new TimesheetApi(ctx);
+    const queueApi = new EmailQueueApi(ctx);
+
+    await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+
+    const period = await findWritablePeriod(timesheetApi);
+    const draft = await timesheetApi.write({
+      action: 'save_draft',
+      period,
+      contractualHours: 160,
+      billableHours: 8,
+      leaveHours: 0,
+      dayEntries: [{ workDate: `${period}-01`, hours: 8, description: 'EQ-H-038' }],
+    });
+    expect(draft.status).toBe(200);
+
+    const firstSubmit = await timesheetApi.write({
+      action: 'submit',
+      period,
+      contractualHours: 160,
+      billableHours: 8,
+      leaveHours: 0,
+      dayEntries: [{ workDate: `${period}-01`, hours: 8, description: 'EQ-H-038' }],
+      expectedVersion: draft.body.timesheet?.version as number,
+    });
+    expect(firstSubmit.status).toBe(200);
+    const employeeId = Number(firstSubmit.body.employee_id || 0);
+    const timesheetId = Number(firstSubmit.body.timesheet?.id || 0);
+    const firstVersion = Number(firstSubmit.body.timesheet?.version || 0);
+    await authApi.logout();
+
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+    const correction = await timesheetApi.requestCorrection({
+      action: 'request_correction',
+      period,
+      employeeId,
+      expectedVersion: firstVersion,
+      correctionMessage: 'EQ-H-038: controleer dag 1 nog eens.',
+    });
+    expect(correction.status).toBe(200);
+    const correctionVersion = Number(correction.body.timesheet?.version || 0);
+    expect(correctionVersion).toBeGreaterThan(firstVersion);
+    await authApi.logout();
+
+    await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+    const resubmit = await timesheetApi.write({
+      action: 'submit',
+      period,
+      contractualHours: 160,
+      billableHours: 8,
+      leaveHours: 0,
+      dayEntries: [{ workDate: `${period}-01`, hours: 8, description: 'EQ-H-038' }],
+      expectedVersion: correctionVersion,
+    });
+    expect(resubmit.status).toBe(200);
+    const resubmitVersion = Number(resubmit.body.timesheet?.version || 0);
+    expect(resubmitVersion).toBeGreaterThan(correctionVersion);
+    await authApi.logout();
+
+    const adminCtx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const adminAuthApi = new AuthApi(adminCtx);
+    const adminQueueApi = new EmailQueueApi(adminCtx);
+    await adminAuthApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const list = await adminQueueApi.list();
+    const receiptItems = (list.body.items as Array<Record<string, unknown>>)
+      .filter(item => String(item.channel || '') === 'timesheet_submission_receipt'
+        && Number(item.timesheet_id || 0) === timesheetId);
+
+    // De queue-lijst geeft geen timesheet_version terug (bewust minimale
+    // velden, zie server/api/email-queue.php); het aantal en de status van
+    // de items bewijst de idempotency-per-versie voldoende, samen met de
+    // hierboven al bewezen versiesprongen (firstVersion < correctionVersion
+    // < resubmitVersion) uit de timesheet-writes zelf.
+    expect(receiptItems).toHaveLength(2);
+    expect(receiptItems.every(item => item.status === 'queued')).toBe(true);
+
+    await adminAuthApi.logout();
+    await adminCtx.dispose();
+    await ctx.dispose();
+  });
+
   test('[EQ-H-022] één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie', async () => {
     const { ctx, authApi, queueApi, invoiceId } = await createLockedInvoice();
 

@@ -58,6 +58,14 @@ Feature: Mailroutering en aflevering
     Then wordt met Playwright-assertions bevestigd dat goedkeuren maakt exact één definitieve-goedkeuringsmail
 
   @happy
+  Scenario: [EQ-H-038] herindienen na correctie maakt een eigen, tweede ontvangstmail
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given mailroutering en aflevering is voorbereid
+    When de flow voor EQ-H-038 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat herindienen na correctie maakt een eigen, tweede ontvangstmail
+
+  @happy
   Scenario: [EQ-H-022] één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie
     # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 14

@@ -292,17 +292,21 @@ volgorde leidend: `BESLISTABEL.md`, daarna de actuele sectie in
    `server/api/invoices.php` de browser-gegenereerde PDF als bijlage
    meesturen bij factuurmails; hetzelfde patroon toepassen voor een
    "Urenoverzicht"-PDF bij submit.
-2. **Herindieningsmail na correctie.** Na een `mark_skipped`/correctie-cyclus
-   en een resubmit is er nog geen aparte mail; alleen de eerste submit
-   triggert vandaag `timesheet_submission_receipt` (idempotency is al
-   versiegebonden via `timesheet_id + timesheet_version`, dus een resubmit
-   ná correctie *kan* al een nieuwe receipt-rij maken — check of dat
-   voldoende is of dat er een eigen kanaal/tekst moet komen).
-3. **Definitieve goedkeuringsmail.** Kanaal `timesheet_final_approval` bestaat
-   al in `email_deliveries` (migratie 030) en heeft al een default-template in
-   `server/mail/templates.php`, maar wordt nergens aangeroepen. Triggerpunt:
-   waar `timesheets.status` naar `approved` gaat (zoek `approved_at`/
-   `approved_by` in `server/api/timesheets.php`).
+2. ~~**Herindieningsmail na correctie.**~~ **Opgelost (9 sept, geen code-fix
+   nodig):** al gecontroleerd — `submit` na een `request_correction`-cyclus
+   loopt gewoon opnieuw door de bestaande `if ($action === 'submit')`-tak in
+   `server/api/timesheets.php`, en de idempotency-check in
+   `mail_enqueue_timesheet_submission_receipt()` is versiegebonden
+   (`timesheet_id + timesheet_version`). Omdat een correctie de versie
+   verhoogt, maakt een herindiening vanzelf een eigen, tweede
+   `timesheet_submission_receipt`-rij aan. Bewezen met nieuwe case
+   **EQ-H-038** (submit → correctie → herindienen → 2 aparte queue-items).
+3. ~~**Definitieve goedkeuringsmail.**~~ **Opgelost (9 sept, MO5c):**
+   `mail_enqueue_timesheet_final_approval()` toegevoegd aan
+   `server/mail/queue.php`, gehaakt in de `approve`-actie van
+   `server/api/timesheets.php`. Kanaal `timesheet_final_approval` bestond al
+   (migratie 030) en had al een default-template in `server/mail/templates.php`,
+   werd alleen nergens aangeroepen. Bewezen met nieuwe case **EQ-H-037**.
 4. **Aanpasbare standaardteksten.** Zowel de ontvangstmail als de vier
    reminder-mails hebben "Robot Path IT" hard gecodeerd i.p.v. via
    `mail_channel_templates_for()` / Instellingen aanpasbaar, zoals de
