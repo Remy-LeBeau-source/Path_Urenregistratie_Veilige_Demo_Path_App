@@ -265,13 +265,16 @@
           </article>
 
           <article class="new-bento-customer" id="new-bento-customer">
-            <img src="pilot/assets/1919/bento-timesheet-v2.png" alt="Klanturenstaat in een groene map op een bureau">
-            <div class="new-bento-customer-copy">
-              <span class="status-pill status-concept" id="new-bento-customer-status">Open</span>
-              <h3>Klanturenstaat</h3>
-              <p id="new-bento-customer-note">Nodig voor facturatie: dien het document in of registreer dat het rechtstreeks is gemaild.</p>
+            <div class="new-bento-customer-head">
+              <img src="pilot/assets/1919/bento-timesheet-v2.png" alt="Klanturenstaat in een groene map op een bureau">
+              <div class="new-bento-customer-copy">
+                <span class="status-pill status-concept" id="new-bento-customer-status">Open</span>
+                <h3>Klanturenstaat</h3>
+                <p id="new-bento-customer-note">Nodig voor facturatie: dien het document in of registreer dat het rechtstreeks is gemaild.</p>
+              </div>
+              <button type="button" data-new-bento-customer title="Upload een klanturenstaat, of meld dat deze al rechtstreeks is gemaild -- rechtstreeks hier op het Dashboard" aria-expanded="false" aria-controls="new-bento-customer-expand"><span><span aria-hidden="true">⇧</span> <span data-new-bento-customer-label>Klanturenstaat openen</span></span><span class="new-bento-customer-chevron" aria-hidden="true">→</span></button>
             </div>
-            <button type="button" data-new-bento-customer title="Upload een klanturenstaat of meld dat deze rechtstreeks is gemaild"><span><span aria-hidden="true">⇧</span> Klanturenstaat openen</span><span aria-hidden="true">→</span></button>
+            <div class="new-bento-customer-expand" id="new-bento-customer-expand" hidden></div>
           </article>
 
           <article class="new-bento-steps">
@@ -537,6 +540,12 @@
           </aside>
         </div>
 
+        <!-- In Nieuw kan dit hele panel tijdelijk naar het Klanturenstaat-blok op
+             het Dashboard verhuizen (zie handleNewBentoCustomerToggle in app.js),
+             zodat de medewerker niet hoeft weg te navigeren. Dit ankerpunt blijft
+             hier staan zodat het panel bij het inklappen weer exact hier terugkomt,
+             ook in Klassiek waar dit nooit gebeurt. -->
+        <div id="customer-timesheet-upload-panel-anchor" hidden></div>
         <section class="panel customer-timesheet-upload-panel" id="customer-timesheet-upload-panel">
           <div class="panel-heading">
             <div><span class="section-label">Apart klantdocument</span><h3>Klanturenstaat uploaden</h3></div>

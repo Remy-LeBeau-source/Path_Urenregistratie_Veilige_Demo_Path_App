@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 461 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 462 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 461 unieke case-ID's
+- Playwright executable cases: 462 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 462 unieke case-ID's
+- Totaal executable cases: 463 unieke case-ID's
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29
 - Database steps mappings: 1
-- Uitvoeringen: 496
-- Niet-mobile projectuitvoeringen: 426
+- Uitvoeringen: 497
+- Niet-mobile projectuitvoeringen: 427
 - Mobile functionele cases: 35
 - Pixel 7 / Chromium-uitvoeringen: 35
 - iPhone 13 / WebKit-uitvoeringen: 35
 
-De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 461 Playwright-functionele cases in totaal 496 resultaten op: 426 + (35 x 2) = 496.
+De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 462 Playwright-functionele cases in totaal 497 resultaten op: 427 + (35 x 2) = 497.
 
 ## Documentatieketen
 
@@ -569,7 +569,7 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 461 Playwri
 
 - Feature: `tests/playwright/features/skin.feature`
 - Source: `tests/playwright/skin.spec.ts`
-- Cases: 17
+- Cases: 18
 
 - [SKIN-H-001] de app start standaard in de klassieke vormgeving — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
 - [SKIN-H-002] Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
@@ -588,6 +588,7 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 461 Playwri
 - [SKIN-H-014] snelkeuze in Mijn uren-bento heeft ook een 0-optie naast 8 en 9 — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 10
 - [SKIN-H-016] een eigen werkpatroon per weekdag vult Mijn uren voor en telt zo mee in de contracturen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 21
 - [SKIN-H-017] Mijn uren toont bij een enkele week dezelfde bento-kaartjes als het Dashboard, Klassiek blijft de tabel — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 14
+- [SKIN-H-018] Klanturenstaat-blok klapt inline open op het Dashboard, zonder weg te navigeren, en keert terug naar Mijn uren — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 18
 
 ### Correctie- en goedkeuringsproces
 

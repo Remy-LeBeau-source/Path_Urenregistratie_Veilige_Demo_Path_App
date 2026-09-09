@@ -794,3 +794,67 @@ test('[SKIN-H-017] Mijn uren toont bij een enkele week dezelfde bento-kaartjes a
     await expect(page.locator('#hours-grid-cards')).toBeHidden();
   });
 });
+
+test('[SKIN-H-018] Klanturenstaat-blok klapt inline open op het Dashboard, zonder weg te navigeren, en keert terug naar Mijn uren', async ({ page }) => {
+  // "ik wil zoveel mogelijk in 1 menu blijven" -- het Klanturenstaat-blok
+  // navigeerde altijd weg naar de volledige Mijn uren-pagina. Het klikt nu
+  // inline open op het Dashboard zelf: het ECHTE #customer-timesheet-upload-
+  // panel (van Mijn uren) verhuist in de DOM naar het blokje en weer terug,
+  // dus geen dubbele logica en geen dubbele ids.
+  const loginPage = new LoginPage(page);
+  await page.clock.setFixedTime(new Date('2026-09-06T12:00:00.000Z'));
+
+  await test.step('Given de medewerker Nieuw activeert op het Dashboard', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await expect(page.locator('#new-employee-bento')).toBeVisible();
+  });
+
+  const card = page.locator('#new-bento-customer');
+  const toggle = page.locator('[data-new-bento-customer]');
+  const panel = page.locator('#customer-timesheet-upload-panel');
+
+  await test.step('When op het Klanturenstaat-blok wordt geklikt', async () => {
+    await toggle.click();
+  });
+
+  await test.step('Then klapt het blok open, blijft het Dashboard actief en verhuist het echte paneel erin', async () => {
+    await expect(card).toHaveAttribute('data-open', 'true');
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(toggle).toContainText('Klanturenstaat sluiten');
+    await expect(panel).toBeVisible();
+    await expect(page.locator('#customer-timesheet-file')).toBeVisible();
+    expect(await panel.evaluate((el, expandId) => el.parentElement?.id === expandId, 'new-bento-customer-expand')).toBe(true);
+    await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    // De maand/bestand-velden en knoppen moeten in één kolom passen -- geen
+    // horizontale overflow van het brede grid dat op de volle pagina wordt
+    // gebruikt.
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow, 'geen horizontale scroll door het ingeklemde uploadgrid').toBeLessThanOrEqual(1);
+  });
+
+  await test.step('When er nogmaals op wordt geklikt', async () => {
+    await toggle.click();
+  });
+
+  await test.step('Then klapt het blok weer dicht en staat het paneel terug op zijn vaste plek', async () => {
+    await expect(card).toHaveAttribute('data-open', 'false');
+    await expect(toggle).toContainText('Klanturenstaat openen');
+    expect(await panel.evaluate(el => el.parentElement?.id)).not.toBe('new-bento-customer-expand');
+  });
+
+  await test.step('When het blok weer wordt geopend en daarna naar Mijn uren wordt genavigeerd', async () => {
+    await toggle.click();
+    await expect(card).toHaveAttribute('data-open', 'true');
+    await page.locator('[data-new-bento-open-hours]').click();
+  });
+
+  await test.step('Then staat het paneel weer op zijn vaste plek op Mijn uren en is het daar gewoon zichtbaar', async () => {
+    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+    await expect(panel).toBeVisible();
+    expect(await panel.evaluate(el => el.parentElement?.id)).not.toBe('new-bento-customer-expand');
+  });
+});

@@ -149,3 +149,15 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     When Hele maand wordt gekozen
     Then staat de compacte tabel weer terug, geen kaartjes
     And in Klassiek blijft Mijn uren altijd de tabel, zonder kaartjes of pijlen
+
+  @happy
+  Scenario: [SKIN-H-018] Klanturenstaat-blok klapt inline open op het Dashboard, zonder weg te navigeren, en keert terug naar Mijn uren
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 18
+    Given de medewerker Nieuw activeert op het Dashboard
+    When op het Klanturenstaat-blok wordt geklikt
+    Then klapt het blok open, blijft het Dashboard actief en verhuist het echte paneel erin
+    When er nogmaals op wordt geklikt
+    Then klapt het blok weer dicht en staat het paneel terug op zijn vaste plek
+    When het blok weer wordt geopend en daarna naar Mijn uren wordt genavigeerd
+    Then staat het paneel weer op zijn vaste plek op Mijn uren en is het daar gewoon zichtbaar

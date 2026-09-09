@@ -5852,6 +5852,54 @@ function setNewAdminStage(id, text, visualState = "") {
   if (stage) stage.dataset.stageState = visualState;
 }
 
+// Klapt het Klanturenstaat-blok op het Dashboard (Nieuw) open of dicht. Het
+// ECHTE #customer-timesheet-upload-panel (van Mijn uren) verhuist daarbij
+// letterlijk in de DOM naar het blokje en weer terug -- geen kopie, dus geen
+// dubbele ids en geen tweede plek om dezelfde logica te onderhouden.
+function handleNewBentoCustomerToggle() {
+  const card = document.querySelector("#new-bento-customer");
+  const expand = document.querySelector("#new-bento-customer-expand");
+  const button = card?.querySelector("[data-new-bento-customer]");
+  const label = button?.querySelector("[data-new-bento-customer-label]");
+  if (!card || !expand || !button) return;
+  const opening = card.getAttribute("data-open") !== "true";
+  if (opening) {
+    const panel = document.querySelector("#customer-timesheet-upload-panel");
+    if (panel) {
+      expand.appendChild(panel);
+      panel.hidden = false;
+      renderCustomerTimesheetPanel();
+    }
+    expand.hidden = false;
+    card.setAttribute("data-open", "true");
+    button.setAttribute("aria-expanded", "true");
+    if (label) label.textContent = "Klanturenstaat sluiten";
+  } else {
+    restoreCustomerTimesheetPanelHome();
+  }
+}
+
+// Zet #customer-timesheet-upload-panel terug op zijn vaste plek op Mijn uren
+// en klapt het Dashboard-blok weer dicht. Wordt zowel aangeroepen door de
+// sluitknop zelf als (defensief) door showView zodra je naar een ander
+// scherm dan het Dashboard gaat -- zonder dat zou Mijn uren het paneel
+// missen als je het Dashboard verliet terwijl het daar openstond.
+function restoreCustomerTimesheetPanelHome() {
+  const card = document.querySelector("#new-bento-customer");
+  const expand = document.querySelector("#new-bento-customer-expand");
+  const button = card?.querySelector("[data-new-bento-customer]");
+  const label = button?.querySelector("[data-new-bento-customer-label]");
+  const anchor = document.querySelector("#customer-timesheet-upload-panel-anchor");
+  const panel = document.querySelector("#customer-timesheet-upload-panel");
+  if (anchor && panel && panel.parentElement !== anchor.parentElement) {
+    anchor.after(panel);
+  }
+  if (card) card.setAttribute("data-open", "false");
+  if (expand) expand.hidden = true;
+  if (button) button.setAttribute("aria-expanded", "false");
+  if (label) label.textContent = "Klanturenstaat openen";
+}
+
 function renderCustomerTimesheetPanel() {
   const panel = document.querySelector("#customer-timesheet-upload-panel");
   if (!panel) return;
@@ -9508,6 +9556,11 @@ function smoothScrollBehavior() {
 }
 
 function showView(view, options = {}) {
+  // Het Klanturenstaat-panel kan tijdelijk in het Dashboard-blok zitten (zie
+  // handleNewBentoCustomerToggle); zodra je ergens anders heen navigeert
+  // hoort het weer op zijn vaste plek op Mijn uren te staan, anders mist die
+  // pagina het straks gewoon.
+  if (view !== "employee-dashboard") restoreCustomerTimesheetPanelHome();
   if (state.currentRole === "employee" && adminViews.has(view)) view = "employee-dashboard";
   if (state.currentRole === "admin" && view === "timesheet") view = "dashboard";
   if (state.currentRole === "admin" && view === "employee-dashboard") view = "dashboard";
@@ -12143,9 +12196,7 @@ function toonInstallatieAanbod() {
 
   const newBentoCustomer = event.target.closest("[data-new-bento-customer]");
   if (newBentoCustomer) {
-    showView("timesheet");
-    const customerPanel = document.querySelector("#customer-timesheet-upload-panel");
-    if (customerPanel && typeof customerPanel.scrollIntoView === "function") customerPanel.scrollIntoView({ behavior: smoothScrollBehavior(), block: "start" });
+    handleNewBentoCustomerToggle();
     return;
   }
 

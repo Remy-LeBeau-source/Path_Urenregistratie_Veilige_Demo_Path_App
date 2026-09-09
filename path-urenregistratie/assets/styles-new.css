@@ -779,13 +779,42 @@ html[data-skin="new"] .new-bento-gauge p { margin: 18px 0 10px; color: #c2cbc8; 
 html[data-skin="new"] .new-bento-gauge .linear-progress { width: min(280px, 100%); background: rgba(255,255,255,.08); }
 html[data-skin="new"] .new-bento-percentage { color: #70c98a; }
 
-html[data-skin="new"] .new-bento-customer { min-height: 330px; grid-column: 3; grid-row: 2; background: #eee8dc !important; color: #102235; }
-html[data-skin="new"] .new-bento-customer > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-html[data-skin="new"] .new-bento-customer::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(246,241,231,.98) 0 48%, rgba(246,241,231,.1) 78%); }
+html[data-skin="new"] .new-bento-customer { grid-column: 3; grid-row: 2; background: #eee8dc !important; color: #102235; padding: 0; overflow: hidden; }
+html[data-skin="new"] .new-bento-customer-head { position: relative; min-height: 330px; }
+html[data-skin="new"] .new-bento-customer-head > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+html[data-skin="new"] .new-bento-customer-head::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(246,241,231,.98) 0 48%, rgba(246,241,231,.1) 78%); }
 html[data-skin="new"] .new-bento-customer-copy { position: relative; z-index: 1; max-width: 58%; padding: 34px; }
 html[data-skin="new"] .new-bento-customer h3 { margin: 18px 0 7px; font: 400 38px var(--path-serif); }
 html[data-skin="new"] .new-bento-customer p { color: #4b5859; line-height: 1.5; }
-html[data-skin="new"] .new-bento-customer > button { position: absolute; z-index: 2; right: 18px; bottom: 18px; left: 18px; display: flex; justify-content: space-between; border: 1px solid #cfc5b5; border-radius: 14px; background: rgba(249,246,239,.94); color: #102235; cursor: pointer; font: 700 13px var(--path-sans); padding: 15px 17px; }
+html[data-skin="new"] .new-bento-customer-head > button { position: absolute; z-index: 2; right: 18px; bottom: 18px; left: 18px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #cfc5b5; border-radius: 14px; background: rgba(249,246,239,.94); color: #102235; cursor: pointer; font: 700 13px var(--path-sans); padding: 15px 17px; transition: background .15s ease; }
+html[data-skin="new"] .new-bento-customer-head > button:hover { background: #fff; }
+html[data-skin="new"] .new-bento-customer-chevron { transition: transform .25s ease; }
+html[data-skin="new"] .new-bento-customer[data-open="true"] .new-bento-customer-chevron { transform: rotate(90deg); }
+
+/* Uitgeklapte staat: het echte #customer-timesheet-upload-panel (van Mijn
+   uren) verhuist hierheen via JS, zodat de medewerker niet hoeft weg te
+   navigeren. Zie handleNewBentoCustomerToggle in app.js. */
+html[data-skin="new"] .new-bento-customer-expand { padding: 0 22px 22px; }
+html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-upload-panel {
+  border: none; box-shadow: none; background: transparent; border-radius: 0; margin: 0; padding: 0;
+}
+html[data-skin="new"] .new-bento-customer-expand .panel-heading,
+html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-flow,
+html[data-skin="new"] .new-bento-customer-expand > .customer-timesheet-upload-panel > p:first-of-type {
+  display: none;
+}
+html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-current,
+html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-mail-preview { margin-top: 16px; }
+/* Het blokje is altijd smal (bento-kolombreedte), ongeacht viewport -- de
+   normale @media (max-width: 820px)-inklapregels van dit grid gelden hier
+   dus onvoorwaardelijk, niet pas op een smalle telefoon. */
+html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-upload-grid { grid-template-columns: minmax(0, 1fr); margin-top: 0; }
+html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-upload-grid .button { width: 100%; }
+html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-period-fields { grid-template-columns: minmax(0,1fr) 92px; }
+html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-upload-actions { display: grid; grid-template-columns: minmax(0, 1fr); }
+html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-current > div { grid-template-columns: minmax(0, 1fr); }
+html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-mail-preview-heading { align-items: stretch; flex-direction: column; }
+html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-mail-preview-heading .small-button { width: 100%; }
 
 html[data-skin="new"] .new-bento-steps { grid-column: 1 / span 2; grid-row: 2; padding: 28px 30px; }
 html[data-skin="new"] .new-bento-steps .section-label { color: #86c89e; }
@@ -828,9 +857,9 @@ html[data-skin="new"] .new-bento-steps span { font-size: 12px; line-height: 1.45
   html[data-skin="new"] .new-bento-presets { gap: 5px; padding: 2px 24px 0; }
   html[data-skin="new"] .new-bento-presets button { min-height: 28px; font-size: 12px; }
   html[data-skin="new"] .new-bento-gauge { min-height: 330px; }
-  html[data-skin="new"] .new-bento-customer { min-height: 380px; }
+  html[data-skin="new"] .new-bento-customer-head { min-height: 380px; }
   html[data-skin="new"] .new-bento-customer-copy { max-width: 78%; padding: 28px 22px; }
-  html[data-skin="new"] .new-bento-customer::after { background: linear-gradient(180deg, rgba(246,241,231,.98) 0 48%, rgba(246,241,231,.08) 78%); }
+  html[data-skin="new"] .new-bento-customer-head::after { background: linear-gradient(180deg, rgba(246,241,231,.98) 0 48%, rgba(246,241,231,.08) 78%); }
   html[data-skin="new"] .new-bento-steps { padding: 24px 20px; }
   html[data-skin="new"] .new-bento-steps ol { grid-template-columns: 1fr; gap: 18px; }
   html[data-skin="new"] .new-bento-steps ol::before { display: none; }
