@@ -173,6 +173,88 @@ test.describe('timesheet write api', () => {
     });
   });
 
+  test('[TS-API-H-017] een opslag die een bewuste 0-uur-dag van een niet-actieve week weglaat, wist die dag niet uit de database', async ({ request }) => {
+    // De nieuwe-skin bento stuurt bij elke opslag alle dagen met uren > 0
+    // over de hele maand mee, plus alle dagen (ook 0 uur) van de week die de
+    // medewerker daadwerkelijk bekijkt. Een bewust opgeslagen 0-uur-dag in
+    // een andere, niet-actieve week wordt dus bij een volgende opslag NIET
+    // meer meegestuurd -- server/api/timesheets.php deed voorheen een blinde
+    // delete-then-insert over de hele maand bij élke opslag, dus zo'n
+    // volgende opslag wiste die eerder opgeslagen 0-uur-dag stilletjes uit de
+    // database (zichtbaar in de nieuwe-skin bento als een wegvallende
+    // week-voortgang -- "1 week ingevuld" werd "2", en bij het aanraken van
+    // een andere week weer "1"). Dit bewijst dat een upsert per dag die
+    // eerder opgeslagen dagen intact laat.
+    const authApi = new AuthApi(request);
+    const timesheetApi = new TimesheetApi(request);
+
+    await test.step('Given de medewerker is ingelogd', async () => {
+      const login = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      expect(login.user.role).toBe('employee');
+    });
+
+    const period = await test.step('When een herhaalbare schrijfbare testperiode is geselecteerd', async () => findWritablePeriod(timesheetApi));
+
+    await test.step('Then slaat een eerste opslag dag 1 (8 uur) en dag 2 (bewust 0 uur) op (week A)', async () => {
+      const firstWrite = await timesheetApi.write({
+        action: 'save_draft',
+        period,
+        contractualHours: 160,
+        billableHours: 8,
+        leaveHours: 0,
+        sicknessHours: 0,
+        dayEntries: buildDayEntries(period, 8, 0),
+      });
+      expect(firstWrite.status).toBe(200);
+      expect(firstWrite.body.ok).toBe(true);
+
+      const readBack = await timesheetApi.read(period);
+      expect(readBack.body.timesheet.day_entries).toHaveLength(2);
+    });
+
+    await test.step('When een tweede opslag alleen dag 1 (opnieuw, uren > 0) en dag 8 (nieuwe week B) meestuurt, dag 2 blijft nu weg', async () => {
+      // Dag 8 valt op dezelfde weekdag als dag 1 (7 dagen verder), dus nooit
+      // in het weekend als dag 1 dat ook niet is (candidatePeriods garandeert
+      // dat al voor dag 1/2). Dag 2 (0 uur, hoort nu bij een niet-actieve
+      // week) stuurt de echte client niet meer mee -- exact het scenario dat
+      // eerder tot dataverlies leidde.
+      const beforeSecond = await timesheetApi.read(period);
+      const secondWrite = await timesheetApi.write({
+        action: 'save_draft',
+        period,
+        expectedVersion: Number(beforeSecond.body?.timesheet?.version || 0),
+        contractualHours: 160,
+        billableHours: 14,
+        leaveHours: 0,
+        sicknessHours: 0,
+        dayEntries: [
+          { workDate: `${period}-01`, hours: 8, description: 'Playwright dag 1 (opnieuw)' },
+          { workDate: `${period}-08`, hours: 6, description: 'Playwright dag 8 (week B)' },
+        ],
+      });
+      expect(secondWrite.status).toBe(200);
+      expect(secondWrite.body.ok).toBe(true);
+    });
+
+    await test.step('Then bevat de opgeslagen urenstaat alle drie de dagen, de bewuste 0-uur-dag 2 uit week A is niet gewist', async () => {
+      const readBack = await timesheetApi.read(period);
+      expect(readBack.status).toBe(200);
+      const byDate = new Map(
+        (readBack.body.timesheet.day_entries as Array<{ work_date: string; hours: number | string }>)
+          .map((entry) => [String(entry.work_date).slice(0, 10), Number(entry.hours)])
+      );
+      expect(readBack.body.timesheet.day_entries).toHaveLength(3);
+      expect(byDate.get(`${period}-01`)).toBe(8);
+      expect(byDate.has(`${period}-02`)).toBe(true);
+      expect(byDate.get(`${period}-02`)).toBe(0);
+      expect(byDate.get(`${period}-08`)).toBe(6);
+    });
+
+    await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {
+      await authApi.logout();
+    });
+  });
+
   test('[TS-API-N-010] employee mag geen andere medewerker schrijven', async ({ request }) => {
     const authApi = new AuthApi(request);
     const timesheetApi = new TimesheetApi(request);

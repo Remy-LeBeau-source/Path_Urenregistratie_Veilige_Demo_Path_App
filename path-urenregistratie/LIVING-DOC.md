@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 466 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 467 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 466 unieke case-ID's
+- Playwright executable cases: 467 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 467 unieke case-ID's
+- Totaal executable cases: 468 unieke case-ID's
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29
 - Database steps mappings: 1
-- Uitvoeringen: 501
-- Niet-mobile projectuitvoeringen: 431
+- Uitvoeringen: 502
+- Niet-mobile projectuitvoeringen: 432
 - Mobile functionele cases: 35
 - Pixel 7 / Chromium-uitvoeringen: 35
 - iPhone 13 / WebKit-uitvoeringen: 35
 
-De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 466 Playwright-functionele cases in totaal 501 resultaten op: 431 + (35 x 2) = 501.
+De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 467 Playwright-functionele cases in totaal 502 resultaten op: 432 + (35 x 2) = 502.
 
 ## Documentatieketen
 
@@ -626,9 +626,10 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 466 Playwri
 
 - Feature: `tests/playwright/features/time-registration.feature`
 - Source: `tests/playwright/timesheet-write.spec.ts`
-- Cases: 7
+- Cases: 8
 
 - [TS-API-H-001] employee save draft, read back, submit; daarna zit de urenstaat op slot — Techniek: API-contract + equivalentieklasse · Assertions: 32
+- [TS-API-H-017] een opslag die een bewuste 0-uur-dag van een niet-actieve week weglaat, wist die dag niet uit de database — Techniek: API-contract + equivalentieklasse · Assertions: 12
 - [TS-API-N-010] employee mag geen andere medewerker schrijven — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [TS-API-N-011] write zonder csrf geeft 403 — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
 - [TS-API-N-003] write zonder sessie geeft 401 — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3

@@ -420,37 +420,54 @@ function timesheet_find(PDO $pdo, int $companyId, int $periodId, int $employeeId
 
 function timesheet_write_entries(PDO $pdo, int $timesheetId, array $dayEntries, float $leaveHours, float $sicknessHours, int $year, int $month): void
 {
-    $delete = $pdo->prepare('DELETE FROM time_entries WHERE timesheet_id = :timesheet_id AND entry_type IN (\'billable\', \'leave\', \'sickness\')');
-    $delete->execute([':timesheet_id' => $timesheetId]);
+    // Verlof/ziekte zijn in élke save altijd een volledig, actueel
+    // maandtotaal (nooit een deelverzameling van de maand) -- delete-then-
+    // insert blijft hier veilig en eenvoudig.
+    $deleteSummary = $pdo->prepare('DELETE FROM time_entries WHERE timesheet_id = :timesheet_id AND entry_type IN (\'leave\', \'sickness\')');
+    $deleteSummary->execute([':timesheet_id' => $timesheetId]);
 
-    $workDate = (new DateTimeImmutable(sprintf('%04d-%02d-01', $year, $month)))->format('Y-m-t');
-
-    $insert = $pdo->prepare(
+    // Declarabele daginvoer kan wél een deelverzameling van de maand zijn: de
+    // nieuwe-skin bento stuurt bij elke opslag alleen de week die de
+    // medewerker daadwerkelijk bekijkt volledig mee (inclusief bewuste
+    // 0-uur-dagen om "bewust leeg" te onderscheiden van "nog nooit bekeken"),
+    // en van andere weken alleen dagen met uren > 0. Een blinde
+    // delete-then-insert voor de hele maand zou dan bij elke opslag de al
+    // eerder opgeslagen dagen van niet-meegestuurde weken alsnog wissen.
+    // Upsert per dag (op de unieke (timesheet_id, work_date, entry_type))
+    // laat dagen die deze keer niet meekomen intact.
+    $upsert = $pdo->prepare(
         'INSERT INTO time_entries (timesheet_id, work_date, entry_type, hours, description)
-         VALUES (:timesheet_id, :work_date, :entry_type, :hours, :description)'
+         VALUES (:timesheet_id, :work_date, \'billable\', :hours, :description)
+         ON DUPLICATE KEY UPDATE hours = VALUES(hours), description = VALUES(description)'
     );
 
     foreach ($dayEntries as $row) {
-        $insert->execute([
+        $upsert->execute([
             ':timesheet_id' => $timesheetId,
             ':work_date' => $row['work_date'],
-            ':entry_type' => 'billable',
             ':hours' => $row['hours'],
             ':description' => $row['description'],
         ]);
     }
+
+    $workDate = (new DateTimeImmutable(sprintf('%04d-%02d-01', $year, $month)))->format('Y-m-t');
 
     $summaryRows = [
         ['type' => 'leave', 'hours' => $leaveHours],
         ['type' => 'sickness', 'hours' => $sicknessHours],
     ];
 
+    $insertSummary = $pdo->prepare(
+        'INSERT INTO time_entries (timesheet_id, work_date, entry_type, hours, description)
+         VALUES (:timesheet_id, :work_date, :entry_type, :hours, :description)'
+    );
+
     foreach ($summaryRows as $row) {
         if ((float)$row['hours'] <= 0.0) {
             continue;
         }
 
-        $insert->execute([
+        $insertSummary->execute([
             ':timesheet_id' => $timesheetId,
             ':work_date' => $workDate,
             ':entry_type' => $row['type'],

@@ -18,6 +18,17 @@ Feature: Urenregistratie verwerken
     Then is een ingediende urenstaat op slot en blijft hij ongewijzigd
     And cleanup: sessie sluiten voor testisolatie
 
+  @happy
+  Scenario: [TS-API-H-017] een opslag die een bewuste 0-uur-dag van een niet-actieve week weglaat, wist die dag niet uit de database
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 12
+    Given de medewerker is ingelogd
+    When een herhaalbare schrijfbare testperiode is geselecteerd
+    Then slaat een eerste opslag dag 1 (8 uur) en dag 2 (bewust 0 uur) op (week A)
+    When een tweede opslag alleen dag 1 (opnieuw, uren > 0) en dag 8 (nieuwe week B) meestuurt, dag 2 blijft nu weg
+    Then bevat de opgeslagen urenstaat alle drie de dagen, de bewuste 0-uur-dag 2 uit week A is niet gewist
+    And cleanup: sessie sluiten voor testisolatie
+
   @negative
   Scenario: [TS-API-N-010] employee mag geen andere medewerker schrijven
     # Testtechniek: Beslissingstabel rollen en autorisatie

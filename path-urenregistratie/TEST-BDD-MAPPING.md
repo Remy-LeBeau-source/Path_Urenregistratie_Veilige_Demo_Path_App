@@ -430,6 +430,7 @@
 | TS-REV-UI-H-012 | ui | correction-approval-ui.feature | beheerder zet verlof en ziekte aan; de medewerker kan ze dan zelf invullen en het blijft na F5 staan | Beslissingstabel rollen en autorisatie | 14 | timesheets-review-ui.steps.ts | timesheet-review-ui.spec.ts | UI Desktop | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
 | TS-REV-UI-H-013 | ui | correction-approval-ui.feature | een week kan alleen worden opgeslagen en de hele maand kan worden ingediend | End-to-end use-case + visuele contractasserties | 7 | timesheets-review-ui.steps.ts | timesheet-review-ui.spec.ts | UI Desktop | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
 | TS-API-H-001 | api | time-registration.feature | employee save draft, read back, submit; daarna zit de urenstaat op slot | API-contract + equivalentieklasse | 32 | timesheets-api.steps.ts | timesheet-write.spec.ts | API | Urenregistratie | Uren registreren en indienen | Happy | 8 | Actueel |
+| TS-API-H-017 | api | time-registration.feature | een opslag die een bewuste 0-uur-dag van een niet-actieve week weglaat, wist die dag niet uit de database | API-contract + equivalentieklasse | 12 | timesheets-api.steps.ts | timesheet-write.spec.ts | API | Urenregistratie | Uren registreren en indienen | Happy | 8 | Actueel |
 | TS-API-N-010 | api | time-registration.feature | employee mag geen andere medewerker schrijven | Beslissingstabel rollen en autorisatie | 4 | timesheets-api.steps.ts | timesheet-write.spec.ts | API | Urenregistratie | Uren registreren en indienen | Negative | 8 | Actueel |
 | TS-API-N-011 | api | time-registration.feature | write zonder csrf geeft 403 | Beslissingstabel rollen en autorisatie | 3 | timesheets-api.steps.ts | timesheet-write.spec.ts | API | Urenregistratie | Uren registreren en indienen | Negative | 8 | Actueel |
 | TS-API-N-003 | api | time-registration.feature | write zonder sessie geeft 401 | Beslissingstabel rollen en autorisatie | 3 | timesheets-api.steps.ts | timesheet-write.spec.ts | API | Urenregistratie | Uren registreren en indienen | Negative | 8 | Actueel |
@@ -488,9 +489,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 466
+- Playwright executable cases: 467
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 467
+- Totaal unieke executable cases: 468
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29
