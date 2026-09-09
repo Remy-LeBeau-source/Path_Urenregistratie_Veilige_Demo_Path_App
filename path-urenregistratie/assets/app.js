@@ -5174,10 +5174,6 @@ function renderEmployeeDashboard() {
   if (openOverview && openOverviewCount && openOverviewList) {
     openOverview.hidden = awaitingOpenTasks || openMonthSummaries.length === 0;
     openOverviewCount.textContent = openMonthSummaries.length + ' open maand' + (openMonthSummaries.length === 1 ? '' : 'en');
-    const openOverviewNote = document.querySelector('#employee-open-overview-note');
-    if (openOverviewNote && nextOpenMonth && nextOpenAction) {
-      openOverviewNote.textContent = 'Begin met ' + nextOpenAction.label.toLowerCase() + ' voor ' + nextOpenMonth.period.label + '.';
-    }
     openOverviewList.innerHTML = openMonthSummaries.map((item) => {
       const monthBodyId = 'employee-open-month-body-' + item.periodKey;
       const actionCount = item.actions.length;
@@ -8110,7 +8106,7 @@ function updateHoursTotal(markDraft) {
   // 40, ...), geen harde norm om aan te voldoen -- alleen het gedrag van de
   // knoppen blijft hier uitgelegd.
   document.querySelector("#hours-target-help").textContent = isTimesheetEditableForEmployee(record)
-    ? "Dit blokkeert indienen nooit. Alleen " + currentPeriod().label + " wordt ingediend. Enter slaat tussentijds op en gaat verder."
+    ? "Dit blokkeert indienen nooit -- alleen " + currentPeriod().label + " wordt ingediend."
     : "Deze maand is vergrendeld (ingediend, goedgekeurd of gefactureerd) en kan niet meer worden aangepast.";
   updateTimesheetSubmitUi(record);
   if (markDraft) {

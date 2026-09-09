@@ -1,5 +1,110 @@
 # Copilot handoff — lokale mailpreview en regressieherstel
 
+## Vervolgsessie op main, 9 september 2026, 20:46 — na REM-H-001-fix
+
+Onderstaande bouwt voort op de REM-H-001-sessie hieronder (06:00). Alles hier
+staat op `main`. `herontwerp` is via de bestaande merge-queue steeds
+bijgewerkt en zit tijdens het schrijven synchroon met `main`.
+
+### Gepusht en groen (Validate + Promote Test) op main
+
+1. **Weekend-uren-weigering (v1.0.34, commit 44c49d3).** De client sluit
+   weekenddagen al structureel uit van het weekraster
+   (`periodFromKey()` in `assets/app.js`), maar de server controleerde de
+   weekdag van `work_date` nooit. `timesheet_parse_day_entries()` in
+   `server/api/timesheets.php` weigert nu za/zo met HTTP 400
+   `invalid-payload`. Regressietest `TS-REV-API-N-001`.
+2. **Collaterale testdata-fix (v1.0.36, commit 74cab7d).** Bovenstaande fix
+   brak testdata in 6 bestanden die toevallig een za/zo als `work_date`
+   konden kiezen (willekeurige toekomstmaand + vaste dag 1/2, of de echte
+   huidige periode zonder werkdagcheck). `candidatePeriods()` filtert nu op
+   ma-do voor dag 1; twee losse bestanden (`business-workflows-lock/
+   status.spec.ts`) kregen een `eersteWerkdagInPeriode()`-helper omdat ze de
+   échte lopende periode gebruiken i.p.v. een toekomstmaand.
+3. **Sticky-topbar-scroll-margin-fix (v1.0.37, commit b501f1c).** De
+   settings-section-nav-sprongknoppen (Instellingen) en de
+   dashboard-werkvoorraadknoppen sprongen naar een kop die vervolgens
+   verstopt zat achter de 88px hoge sticky `.topbar` (`scroll-margin-top:
+   18px` was veel te weinig). Nu 104px (desktop) / 300px (mobiel, topbar
+   daar ~292px gemeten). Regressietests `ADM-WR-H-021`/`ADM-WR-H-022`. **Let
+   op:** twee andere kandidaten (`employee-open-overview`,
+   `dashboard-team-title`) leken op hetzelfde probleem maar bleken bij
+   screenshotcontrole geen bug (topbar is op die scrolldiepte zelf al
+   voorbij beeld) — niet blind hetzelfde patroon toepassen zonder eerst te
+   verifiëren.
+4. **CI-installatiefix voor een Google-storing (v1.0.39→v1.0.40, commits
+   218dfd5 → 96a1d10).** Alle 8 Validate-shards faalden identiek op `Install
+   Playwright browser` door een "Hash Sum mismatch" in Google's eigen,
+   ongebruikte `dl.google.com/linux/chrome-stable`-apt-bron (wij
+   installeren nooit echte Chrome, alleen chromium/webkit). Eerste poging
+   (de bron vooraf verwijderen) werkte niet — playwright's `--with-deps`
+   voegt 'm zelf weer toe. **Definitieve fix:** een retry-lus (3 pogingen,
+   15s pauze) rond de hele installatiestap, in `release-pipeline.yml` (5x),
+   `ci.yml` en `live-docs.yml`. Bevestigd werkend: run 34387943271 liep
+   daarna 0 mislukte jobs door Validate + Promote Test heen.
+5. **Dataverlies-fix, gevonden door de herontwerp-sessie, binnengehaald via
+   de merge-queue (commit b953b5c).** `timesheet_write_entries()` deed een
+   blinde delete-then-reinsert van alle `time_entries` van de maand bij elke
+   opslag. De nieuwe-skin bento stuurt per opslag alleen de actief bekeken
+   week volledig (incl. bewuste 0-uur-dagen), andere weken alleen uren > 0
+   — een bewust opgeslagen 0-uur-dag in een niet-actieve week werd zo bij de
+   volgende opslag stilletjes gewist. Fix: upsert per dag (unique key
+   `timesheet_id+work_date+entry_type`) voor billable-regels; verlof/ziekte
+   blijven delete-then-insert (altijd een volledig maandtotaal, dus veilig).
+   Regressietest `TS-API-H-017`.
+6. **PROD-herinneringen alsnog geactiveerd.** Nieuwe environment
+   `prod-cron` (géén `required_reviewers`) met eigen SSH-secrets +
+   `TRANSIP_SSH_HOST`/`USER`-variabelen. Eerste tick faalde op een lege
+   `TRANSIP_SSH_KNOWN_HOSTS`-secret (PowerShell + `ssh-keyscan` gaf stil
+   niks terug) — gecorrigeerd door de host-regel uit Gio's eigen
+   `~/.ssh/known_hosts` te hergebruiken. **Nog niet opnieuw succesvol
+   getikt** op het moment van schrijven — GitHub's `schedule`-trigger is
+   bekend vertraagd/onbetrouwbaar op publieke repo's, dit is geen
+   codeprobleem. Volgende sessie: check `gh run list --workflow=
+   send-reminders.yml --limit 3` voor de eerste echte groene PROD-tick.
+7. **Belangrijke ontdekking, geen code-actie nodig:** PROD-mail staat al op
+   `production_mode: live` (niet `pilot`/`disabled` zoals het go-live-plan
+   beschreef) — dus al open voor alle echte adressen, bevestigd met echte
+   `sent`-regels uit `email_deliveries` voor twee echte accounts. Zie
+   BESLISTABEL.md R10.
+
+### Vastgelegd, bewust niet (verder) gefixt — zie BESLISTABEL.md R11-R14
+
+- PWA-installatiebanner-overlap op korte mobiele pagina's: bewust laten
+  staan (al goed ingeperkt: 12s auto-hide, één tik weg, 30 dagen stil
+  daarna; een sluitende fix kost blijvend scrollruimte voor iedereen).
+- `SKIN-H-008` is een bekende, zeldzame flake (~1 op 10 lokale runs). Root
+  cause niet gevonden ondanks 10 reproductiepogingen — geen foutdetail
+  kunnen vastleggen. Niet blokkerend (CI `retries: 1` vangt het op). Een
+  volgende sessie met een gevangen failing run (screenshot/trace) kan dit
+  sneller afmaken dan blind verder proberen.
+
+### Openstaand bij het schrijven van deze handoff
+
+- **Tekstinkortingen n.a.v. echte testerfeedback (WhatsApp, Kristel/Path
+  Testteam).** Drie stukken uitlegtekst ingekort omdat ze "onoverzichtelijk"
+  werden gevonden (te veel tekst die vanzelf spreekt):
+  1. `#hours-target-help` (Mijn uren): "Enter slaat tussentijds op en gaat
+     verder" eruit, kernboodschap ("blokkeert indienen nooit... alleen
+     {periode} wordt ingediend") blijft.
+  2. `#employee-open-overview-note` (dashboard "Open acties per maand"):
+     volledig verwijderd — dupliceerde de `N open acties`-tekst die al in
+     de kaart eronder staat (element + de JS die 'm vulde beide weg).
+  3. Mededelingen-archief-intro: laatste zin over wijzigen/intrekken-gedrag
+     eruit, kern (waar vind je urenstatussen/correcties/herinneringen wél)
+     blijft.
+  `scripts/smoke-test.mjs` had een exacte-tekst-assertie op punt 1,
+  bijgewerkt naar de nieuwe kortere tekst. **Nog niet gecommit** —
+  `node scripts/smoke-test.mjs` en de gerichte specs (`dashboard.spec.ts`,
+  `announcements.spec.ts`) liepen nog op het moment van schrijven. Los
+  daarna alsnog `npm run docs:sync`, versiebump, commit, push.
+  - Kristel's vierde punt (aparte klanturenstaat-statuslijst over meerdere
+    maanden, zoals "Sept - ingediend, Okt - open") bestaat nog niet en is
+    een apart, klein feature-idee — niet opgepakt, alleen bevestigd dat het
+    geen duplicaat is van de bestaande per-maand-urenstatus in "Mijn
+    maanden".
+- Geen andere onafgeronde code-wijzigingen op main op dit moment.
+
 ## REM-H-001 en TEST-inlog structureel opgelost — 9 september 2026, 06:00
 
 Na een hele nacht symptomen bestrijden (retries, extra isolatie) is de échte
