@@ -8,18 +8,18 @@ const PERIOD_RANGE_MONTHS = 7000 * 12;
 
 function candidatePeriods(): string[] {
   const startIndex = Date.now() % PERIOD_RANGE_MONTHS;
-
   const periods: string[] = [];
-  for (let offset = 0; periods.length < 240 && offset < PERIOD_RANGE_MONTHS; offset += 1) {
+  for (let offset = 0; periods.length < 240; offset += 1) {
     const index = (startIndex + offset) % PERIOD_RANGE_MONTHS;
     const year = PERIOD_RANGE_START_YEAR + Math.floor(index / 12);
     const month = (index % 12) + 1;
-    // Dag 1 én dag 2 van de maand moeten allebei een werkdag zijn: de server
-    // weigert sinds de server-side weekend-validatie (uren.parse_day_entries)
-    // uren op za/zo. Dag 1 op ma-do garandeert dat dag 2 di-vr is.
-    const dayOneWeekday = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
-    if (dayOneWeekday < 1 || dayOneWeekday > 4) continue;
-    periods.push(`${year}-${String(month).padStart(2, '0')}`);
+    // Dag 1 en dag 2 (buildDayEntries) moeten ma-do/di-vr zijn: de server
+    // weigert sinds de weekendvalidatie (TS-REV-API-N-001, server/api/timesheets.php)
+    // een work_date op za/zo. Dag 1 op ma-do garandeert dat dag 2 nooit op za valt.
+    const weekday = new Date(Date.UTC(year, month - 1, 1)).getUTCDay(); // 0=zo..6=za
+    if (weekday >= 1 && weekday <= 4) {
+      periods.push(`${year}-${String(month).padStart(2, '0')}`);
+    }
   }
   return periods;
 }
