@@ -661,14 +661,17 @@ assert(document.activeElement === nextHoursInput, "Enter in een urenveld moet na
 assert(document.querySelector("#summary-leave").disabled && document.querySelector("#summary-sick").disabled, "Verlof en ziekte lopen voorlopig via de salarisadministratie en horen hier uitgeschakeld te zijn");
 assert(document.querySelector("#payroll-privacy-note").textContent.includes("salarisadministratie"), "De reden waarom verlof/ziekte hier uit staan moet zichtbaar zijn uitgelegd");
 
+// De vergelijkingsmelding ("X uur meer/minder dan de contracturen") is
+// weggehaald: maanduren zijn een richtgetal op basis van wat Backoffice
+// invult, geen harde norm om aan te voldoen. Het gedrag dat hier écht toe
+// doet -- meer of minder uren dan de maanduren blokkeert nooit -- blijft
+// gecontroleerd.
 document.querySelectorAll(".hours-input").forEach(input => { input.value = "8"; });
 document.querySelector(".hours-input").dispatchEvent(new Event("input", { bubbles: true }));
-assert(document.querySelector("#hours-target-message").textContent.includes("meer"), "Meer uren dan het contract moet alleen een melding geven");
-assert(!document.querySelector("#submit-timesheet").disabled, "Meer uren dan het contract mag niet blokkeren");
+assert(!document.querySelector("#submit-timesheet").disabled, "Meer uren dan de maanduren mag niet blokkeren");
 document.querySelectorAll(".hours-input").forEach(input => { input.value = "0"; });
 document.querySelector(".hours-input").dispatchEvent(new Event("input", { bubbles: true }));
-assert(document.querySelector("#hours-target-message").textContent.includes("minder"), "Minder uren dan het contract moet alleen een melding geven");
-assert(!document.querySelector("#submit-timesheet").disabled, "Minder uren dan het contract mag niet blokkeren");
+assert(!document.querySelector("#submit-timesheet").disabled, "Minder uren dan de maanduren mag niet blokkeren");
 
 click("#period-prev");
 assert(document.querySelector("#period-label").textContent === "December 2023", "De pijl moet over een jaargrens terug kunnen");
