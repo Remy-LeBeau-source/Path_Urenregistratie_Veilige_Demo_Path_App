@@ -61,6 +61,8 @@ When("de flow voor EQ-H-023 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat beheerder pauzeert en hervat uitsluitend de beveiligde TEST-mail");
 When("de flow voor EQ-N-024 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat buiten de beveiligde TEST-sandbox is geen mailschakelaar beschikbaar");
+When("de flow voor EQ-N-035 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat medewerker ziet de mailstatus-badge niet permanent op \"laden\" hangen");
 When("de flow voor EQ-N-017 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat niet-beschikbare acceptatieconsole blijft volledig uit beeld");
 Given("een goedgekeurde maar nog niet definitieve serverfactuur als Backoffice-taak klaarstaat");

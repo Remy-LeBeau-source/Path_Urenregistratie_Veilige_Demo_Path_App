@@ -177,6 +177,7 @@
 | EQ-H-025 | api | mail-delivery.feature | localhost schakelt een veilige mailpreview in en controleert inhoud en PDF’s zonder SMTP | Beslissingstabel rollen en autorisatie | 33 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | localhost schakelt een veilige mailpreview in en controleert inhoud en PDF’s zonder SMTP | Happy | 12 | Actueel |
 | EQ-H-023 | api | mail-delivery.feature | beheerder pauzeert en hervat uitsluitend de beveiligde TEST-mail | Toestandsovergang | 9 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | beheerder pauzeert en hervat uitsluitend de beveiligde TEST-mail | Happy | 12 | Actueel |
 | EQ-N-024 | api | mail-delivery.feature | buiten de beveiligde TEST-sandbox is geen mailschakelaar beschikbaar | Negatieve equivalentieklasse + error guessing | 4 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | buiten de beveiligde TEST-sandbox is geen mailschakelaar beschikbaar | Negative | 12 | Actueel |
+| EQ-N-035 | api | mail-delivery.feature | medewerker ziet de mailstatus-badge niet permanent op "laden" hangen | Beslissingstabel rollen en autorisatie | 2 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | medewerker ziet de mailstatus-badge niet permanent op "laden" hangen | Negative | 12 | Actueel |
 | EQ-N-017 | api | mail-delivery.feature | niet-beschikbare acceptatieconsole blijft volledig uit beeld | Negatieve equivalentieklasse + error guessing | 4 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | niet-beschikbare acceptatieconsole blijft volledig uit beeld | Negative | 12 | Actueel |
 | EQ-H-020 | api | mail-delivery.feature | Backoffice finaliseert de branded serverfactuur en verzendt drie echte TEST-mails | API-contract + equivalentieklasse | 18 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | Backoffice finaliseert de branded serverfactuur en verzendt drie echte TEST-mails | Happy | 12 | Actueel |
 | EQ-H-026 | api | mail-delivery.feature | Backoffice verzendt de juiste officiële klanturenstaat via TEST naar Giovanno | API-contract + equivalentieklasse | 8 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | Backoffice verzendt de juiste officiële klanturenstaat via TEST naar Giovanno | Happy | 12 | Actueel |
@@ -480,9 +481,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 458
+- Playwright executable cases: 459
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 459
+- Totaal unieke executable cases: 460
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29

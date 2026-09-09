@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 458 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 459 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 458 unieke case-ID's
+- Playwright executable cases: 459 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 459 unieke case-ID's
+- Totaal executable cases: 460 unieke case-ID's
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29
 - Database steps mappings: 1
-- Uitvoeringen: 493
-- Niet-mobile projectuitvoeringen: 423
+- Uitvoeringen: 494
+- Niet-mobile projectuitvoeringen: 424
 - Mobile functionele cases: 35
 - Pixel 7 / Chromium-uitvoeringen: 35
 - iPhone 13 / WebKit-uitvoeringen: 35
 
-De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 458 Playwright-functionele cases in totaal 493 resultaten op: 423 + (35 x 2) = 493.
+De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 459 Playwright-functionele cases in totaal 494 resultaten op: 424 + (35 x 2) = 494.
 
 ## Documentatieketen
 
@@ -230,7 +230,7 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 458 Playwri
 
 - Feature: `tests/playwright/features/mail-delivery.feature`
 - Source: `tests/playwright/email-queue.spec.ts`
-- Cases: 45
+- Cases: 46
 
 - [EQ-H-001] factuurlock maakt queue-items aan met dry_run=true — Techniek: Toestandsovergang · Assertions: 5
 - [EQ-H-002] broker-channel stuurt alleen de factuur — Techniek: API-contract + equivalentieklasse · Assertions: 2
@@ -250,6 +250,7 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 458 Playwri
 - [EQ-H-025] localhost schakelt een veilige mailpreview in en controleert inhoud en PDF’s zonder SMTP — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 33
 - [EQ-H-023] beheerder pauzeert en hervat uitsluitend de beveiligde TEST-mail — Techniek: Toestandsovergang · Assertions: 9
 - [EQ-N-024] buiten de beveiligde TEST-sandbox is geen mailschakelaar beschikbaar — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
+- [EQ-N-035] medewerker ziet de mailstatus-badge niet permanent op "laden" hangen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2
 - [EQ-N-017] niet-beschikbare acceptatieconsole blijft volledig uit beeld — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
 - [EQ-H-020] Backoffice finaliseert de branded serverfactuur en verzendt drie echte TEST-mails — Techniek: API-contract + equivalentieklasse · Assertions: 18
 - [EQ-H-026] Backoffice verzendt de juiste officiële klanturenstaat via TEST naar Giovanno — Techniek: API-contract + equivalentieklasse · Assertions: 8

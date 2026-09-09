@@ -962,6 +962,18 @@ jobs:
           && (github.event_name == 'push'
               || inputs.ref == 'main'
               || inputs.ref == 'refs/heads/main') }}
+    # Zelfde shard-aanpak als Validate/Promote Test: de niet-gesharde volledige
+    # suite op één runner liep herhaaldelijk vast op brede, verspreide timeouts
+    # (46 mislukkingen, allemaal ongerelateerd aan de daadwerkelijke wijziging)
+    # terwijl exact dezelfde code op de 8-gesharde Validate/Promote Test-runs
+    # foutloos doorliep -- resource-overbelasting van één runner, geen echte
+    # regressie. GitHub bundelt de prod-reviewerpoort per workflow-run, niet
+    # per job, dus sharden betekent nog steeds één goedkeuringsverzoek.
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     defaults:
       run:
         working-directory: path-urenregistratie
@@ -1063,6 +1075,8 @@ jobs:
         run: npm run build
 
       - name: Smoke check
+        # Statische controle: één keer per commit volstaat, niet op elke shard.
+        if: ${{ matrix.shard == 1 }}
         timeout-minutes: 12
         run: npm run check
 
@@ -1076,9 +1090,13 @@ jobs:
             echo "PATH_APP_BASE_URL=${STAGE_PATH_APP_BASE_URL}" >> $GITHUB_ENV
             echo "PLAYWRIGHT_ADMIN_PASSWORD=${STAGE_PLAYWRIGHT_ADMIN_PASSWORD}" >> $GITHUB_ENV
             echo "PLAYWRIGHT_EMPLOYEE_PASSWORD=${STAGE_PLAYWRIGHT_EMPLOYEE_PASSWORD}" >> $GITHUB_ENV
+            # Een externe stage-URL deelt één database: dan mogen de shards elkaar
+            # niet in de weg zitten, dus draait alleen shard 1 de volledige suite.
+            if [ "${{ matrix.shard }}" = "1" ]; then echo "E2E_SHARD_ARG=" >> $GITHUB_ENV; else echo "E2E_SHARD_ARG=SKIP" >> $GITHUB_ENV; fi
             echo "Using configured prod stage target."
           else
             echo "PATH_APP_BASE_URL=http://127.0.0.1:8000" >> $GITHUB_ENV
+            echo "E2E_SHARD_ARG=--shard=${{ matrix.shard }}/8" >> $GITHUB_ENV
             echo "Using local fallback regression target for prod."
           fi
 
@@ -1091,7 +1109,11 @@ jobs:
 
       - name: Run prod E2E
         run: |
-          npm run test:e2e
+          if [ "${E2E_SHARD_ARG:-}" = "SKIP" ]; then
+            echo "Externe stage-target: shard ${{ matrix.shard }} wordt overgeslagen (shard 1 draait de volledige suite)."
+            exit 0
+          fi
+          timeout --signal=TERM --kill-after=30s 24m npm run test:e2e -- ${E2E_SHARD_ARG:-}
 
       - name: Stop fallback PHP server
         if: always()
