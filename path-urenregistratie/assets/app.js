@@ -12912,11 +12912,11 @@ document.querySelector("#new-admin-story-export").addEventListener("click", () =
 function maxEmployeeFuturePeriodKey() {
   const parsed = parsePeriodKey(currentCalendarPeriodKey());
   if (!parsed) return currentCalendarPeriodKey();
-  // Geklemd op 9999: periodesleutels zijn "JJJJ-MM"-strings en worden overal
-  // lexicografisch vergeleken, wat aanneemt dat het jaartal altijd 4 cijfers
-  // blijft. Zonder deze klem werd een jaartal boven de 9997 een 5-cijferig
-  // jaartal (+2 jaar), waardoor die vergelijking omdraaide en elke
-  // periodekeuze stil geweigerd werd.
+  // Periodesleutels worden overal als string vergeleken uitgaande van een
+  // 4-cijferig jaar (makePeriodKey() padStart(4) doet niets meer zodra het
+  // jaar 5 cijfers heeft) -- geclipt op 9999 zodat +2 jaar dicht bij die
+  // grens (bv. een test die "nu" bewust op 9999 zet) geen jaartal van 5
+  // cijfers produceert dat de vergelijking omdraait.
   return makePeriodKey(Math.min(parsed.year + 2, 9999), parsed.monthIndex);
 }
 
