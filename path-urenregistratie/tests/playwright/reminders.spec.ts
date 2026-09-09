@@ -169,9 +169,22 @@ test.describe('serverplanning herinneringen', () => {
       }
       if (firstRun.sent.weekly === 0) {
         // Tijdelijke diagnose (te verwijderen zodra de oorzaak bekend is):
-        // dump de ruwe company/employee/reminder-staat naar de testlog zodat
-        // we op CI kunnen zien welke voorwaarde niet klopt, in plaats van
-        // alleen te weten DAT het faalt.
+        // vergelijk wat de LEVENDE webserver-verbinding ziet (via bootstrap.php,
+        // dezelfde PDO-verbinding als de rest van de suite) met wat een losse
+        // PHP-CLI-aanroep ziet. Als deze uiteenlopen, is het een verbinding/
+        // config-verschil tussen webserver en CLI-scripts; zien ze allebei
+        // niets, dan is de employee/user-insert zelf het probleem.
+        try {
+          const bootstrapAfter = await ctx.get('/server/api/bootstrap.php');
+          const bootstrapBody = await bootstrapAfter.json();
+          const usersViaWebserver = (bootstrapBody.users as Array<Record<string, unknown>> | undefined) ?? [];
+          const matchViaWebserver = usersViaWebserver.find(u => u.email === freshEmail);
+          // eslint-disable-next-line no-console
+          console.log('[REM-H-001 diagnose] webserver-users.length=', usersViaWebserver.length, 'match=', JSON.stringify(matchViaWebserver ?? null));
+        } catch (webserverDebugError) {
+          // eslint-disable-next-line no-console
+          console.log('[REM-H-001 diagnose] webserver-check mislukt', webserverDebugError);
+        }
         try {
           const debugOut = await execFileAsync(
             'php',
