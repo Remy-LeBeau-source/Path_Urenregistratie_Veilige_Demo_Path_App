@@ -42,3 +42,12 @@ Feature: Correctie- en goedkeuringsproces
     When de medewerker concepten opslaat voor december en de daaropvolgende januari
     And cleanup: sessie sluiten voor testisolatie
     Then wordt met Playwright-assertions bevestigd dat jaarwisseling december naar januari verwerkt urenstaten correct over de jaargrens
+
+  @negative
+  Scenario: [TS-REV-API-N-001] server weigert een dagregel op zaterdag of zondag, ook als de aanroep de client omzeilt
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given de medewerker is ingelogd en heeft een schrijfbare testperiode
+    When de medewerker rechtstreeks via de API een dagregel op een weekenddag probeert op te slaan
+    Then wijst de server het verzoek af met een duidelijke foutmelding
+    And cleanup: sessie sluiten voor testisolatie

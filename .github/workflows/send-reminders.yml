@@ -1,16 +1,20 @@
 name: Send Due Reminders
 
 # Draait de serverplanning voor de vier herinneringstypen uit Instellingen
-# (wekelijks/maandeinde/achterstand/goedkeuring). Elke ~15 minuten via SSH op
-# TEST; het script zelf bepaalt per bedrijf of er op dit moment iets due is
+# (wekelijks/maandeinde/achterstand/goedkeuring). Elke ~15 minuten via SSH;
+# het script zelf bepaalt per bedrijf of er op dit moment iets due is
 # (zie server/scripts/send-due-reminders.php) en is idempotent
 # (reminder_log), dus vaker draaien dan nodig is onschadelijk.
 #
-# Bewust nog geen PROD hier: de prod-environment heeft een verplichte
-# reviewer-poort (required_reviewers), dus elke 15-minutenrun zou handmatige
-# goedkeuring vragen -- dat is geen automatisering meer. PROD-herinneringen
-# zijn een aparte, bewuste vervolgstap zodra dat expliciet wordt besloten
-# (zelfde lijn als andere PROD-mailfuncties in dit project).
+# PROD draait via een eigen environment "prod-cron" (géén required_reviewers)
+# i.p.v. de bestaande "prod"-environment: die laatste heeft een verplichte
+# reviewer-poort voor échte deployments, en elke 15-minutenrun zou daar
+# telkens handmatige goedkeuring vragen -- dat is geen automatisering meer.
+# "prod-cron" is bewust smal: alleen deze ene, veilige, idempotente, niet-
+# destructieve actie (verstuurt herinneringen, deployt of wijzigt geen code)
+# leunt erop. Vereist eigen secrets TRANSIP_SSH_PRIVATE_KEY/KNOWN_HOSTS in
+# die environment (kunnen niet automatisch overgenomen worden uit "prod" --
+# GitHub secrets zijn write-only, ook voor de eigenaar zelf).
 
 on:
   schedule:
@@ -51,3 +55,34 @@ jobs:
           ssh -i "$HOME/.ssh/path_uren_reminders_ed25519" -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
             "${TRANSIP_SSH_USER}@${TRANSIP_SSH_HOST}" \
             "cd '${TRANSIP_TEST_LIVE_ROOT}' && php server/scripts/send-due-reminders.php"
+
+  send-reminders-prod:
+    name: Send due reminders (PROD)
+    runs-on: ubuntu-latest
+    environment: prod-cron
+    timeout-minutes: 10
+    steps:
+      - name: Install pinned TransIP SSH identity
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.TRANSIP_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.TRANSIP_SSH_KNOWN_HOSTS }}
+        run: |
+          test -n "$SSH_PRIVATE_KEY"
+          test -n "$SSH_KNOWN_HOSTS"
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/path_uren_reminders_prod_ed25519"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/path_uren_reminders_prod_ed25519" "$HOME/.ssh/known_hosts"
+          ssh-keygen -y -f "$HOME/.ssh/path_uren_reminders_prod_ed25519" > /dev/null
+
+      - name: Run scheduler on PROD
+        shell: bash
+        env:
+          TRANSIP_SSH_HOST: ${{ vars.TRANSIP_SSH_HOST }}
+          TRANSIP_SSH_USER: ${{ vars.TRANSIP_SSH_USER }}
+          TRANSIP_LIVE_ROOT: /data/sites/web/pathconsultancynl/subsites/uren.pathconsultancy.nl
+        run: |
+          ssh -i "$HOME/.ssh/path_uren_reminders_prod_ed25519" -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            "${TRANSIP_SSH_USER}@${TRANSIP_SSH_HOST}" \
+            "cd '${TRANSIP_LIVE_ROOT}' && php server/scripts/send-due-reminders.php"
