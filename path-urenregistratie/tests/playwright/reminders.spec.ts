@@ -154,54 +154,16 @@ test.describe('serverplanning herinneringen', () => {
 
     let firstRun!: ReminderRunResult;
     await test.step('When de scheduler voor het eerst draait', async () => {
+      // Root cause van de vroegere CI-only flakiness (nooit lokaal
+      // reproduceerbaar): de Playwright-harness stuurt de webserver via
+      // PATH_APP_DB_NAME/PLAYWRIGHT_DB_NAME naar een geisoleerde testdatabase,
+      // maar server/scripts/cli-bootstrap.php (waar deze scheduler op leunt)
+      // las alleen het statische server/config.local.php en keek zo naar een
+      // andere, grotendeels lege database dan de webserver die de medewerker
+      // net had aangemaakt. Gefixt door ops_database_config() dezelfde env-
+      // var-precedentie te geven als auth_db_from_config() in session.php.
       firstRun = await runReminders(nowIso);
       expect(firstRun.ok).toBe(true);
-      // Waargenomen op CI (nooit lokaal reproduceerbaar): incidenteel meldt
-      // de eerste aanroep sent.weekly=0 terwijl dezelfde opzet los en in
-      // andere combinaties wel slaagt -- wijst op een race rond het moment
-      // van opslaan/lezen van de company-instelling, niet op de kernlogica
-      // (die is los bewezen). Eén herhaalde aanroep als vangnet i.p.v. de
-      // hele case onnodig rood te laten gaan; als ook de herhaling 0
-      // oplevert, is dat een echte regressie en moet de test alsnog falen.
-      if (firstRun.sent.weekly === 0) {
-        firstRun = await runReminders(nowIso);
-        expect(firstRun.ok).toBe(true);
-      }
-      if (firstRun.sent.weekly === 0) {
-        // Tijdelijke diagnose (te verwijderen zodra de oorzaak bekend is):
-        // vergelijk wat de LEVENDE webserver-verbinding ziet (via bootstrap.php,
-        // dezelfde PDO-verbinding als de rest van de suite) met wat een losse
-        // PHP-CLI-aanroep ziet. Als deze uiteenlopen, is het een verbinding/
-        // config-verschil tussen webserver en CLI-scripts; zien ze allebei
-        // niets, dan is de employee/user-insert zelf het probleem.
-        try {
-          const bootstrapAfter = await ctx.get('/server/api/bootstrap.php');
-          const bootstrapBody = await bootstrapAfter.json();
-          const usersViaWebserver = (bootstrapBody.users as Array<Record<string, unknown>> | undefined) ?? [];
-          const matchViaWebserver = usersViaWebserver.find(u => u.email === freshEmail);
-          // eslint-disable-next-line no-console
-          console.log('[REM-H-001 diagnose] webserver-users.length=', usersViaWebserver.length, 'match=', JSON.stringify(matchViaWebserver ?? null));
-          const health = await ctx.get('/server/health.php');
-          const healthBody = await health.json();
-          // eslint-disable-next-line no-console
-          console.log('[REM-H-001 diagnose] health.database_connection=', JSON.stringify(healthBody?.checks?.database_connection ?? null));
-        } catch (webserverDebugError) {
-          // eslint-disable-next-line no-console
-          console.log('[REM-H-001 diagnose] webserver-check mislukt', webserverDebugError);
-        }
-        try {
-          const debugOut = await execFileAsync(
-            'php',
-            ['server/scripts/debug-reminder-state.php', `--email=${freshEmail}`, `--now=${nowIso}`],
-            { cwd: process.cwd(), windowsHide: true },
-          );
-          // eslint-disable-next-line no-console
-          console.log('[REM-H-001 diagnose]', debugOut.stdout);
-        } catch (debugError) {
-          // eslint-disable-next-line no-console
-          console.log('[REM-H-001 diagnose] mislukt', debugError);
-        }
-      }
     });
 
     await test.step('Then staat er een reminder-mail in de queue voor de nieuwe medewerker', async () => {
