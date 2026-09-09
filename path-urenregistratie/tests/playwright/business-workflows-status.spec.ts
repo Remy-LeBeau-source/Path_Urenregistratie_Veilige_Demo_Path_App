@@ -12,6 +12,24 @@ import { LoginPage } from './pages/LoginPage';
 
 type Json = Record<string, unknown>;
 
+// De server weigert sinds de weekendvalidatie (TS-REV-API-N-001,
+// server/api/timesheets.php) een work_date op za/zo. Deze case gebruikt de
+// echte, huidige periode (uit het scherm) i.p.v. een verre toekomstmaand, dus
+// "dag 1" kan best in het weekend vallen -- dan zou de write om de verkeerde
+// reden geweigerd worden (invoercontrole i.p.v. het slot dat hier bewezen moet
+// worden). Deze helper kiest altijd de eerste werkdag binnen de periode.
+function eersteWerkdagInPeriode(periodeSleutel: string): string {
+  const [jaar, maand] = periodeSleutel.split('-').map(Number);
+  const dagenInMaand = new Date(Date.UTC(jaar, maand, 0)).getUTCDate();
+  for (let dag = 1; dag <= dagenInMaand; dag += 1) {
+    const weekdag = new Date(Date.UTC(jaar, maand - 1, dag)).getUTCDay(); // 0=zo..6=za
+    if (weekdag >= 1 && weekdag <= 5) {
+      return `${periodeSleutel}-${String(dag).padStart(2, '0')}`;
+    }
+  }
+  throw new Error(`Geen werkdag gevonden in periode ${periodeSleutel}.`);
+}
+
 async function openView(page: import('@playwright/test').Page, view: string) {
   await page.locator(`button[data-view="${view}"]`).click();
 }
@@ -95,7 +113,7 @@ test('[E2E-H-017] de volledige toegestane urenstatusketen bewaakt na iedere writ
         billable_hours: 8,
         leave_hours: 0,
         sickness_hours: 0,
-        day_entries: [{ work_date: `${periodeKey(periode)}-01`, hours: 8, description: 'Webapp daginvoer' }],
+        day_entries: [{ work_date: eersteWerkdagInPeriode(periodeKey(periode)), hours: 8, description: 'Webapp daginvoer' }],
         expected_version: versieBijIndienen,
       },
     });

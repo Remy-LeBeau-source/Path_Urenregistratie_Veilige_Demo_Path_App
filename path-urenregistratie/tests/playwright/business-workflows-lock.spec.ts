@@ -17,6 +17,24 @@ type Json = Record<string, unknown>;
 
 const GELDIGE_STATUSSEN = ['submitted', 'approved', 'invoiced'] as const;
 
+// De server weigert sinds de weekendvalidatie (TS-REV-API-N-001,
+// server/api/timesheets.php) een work_date op za/zo. Deze case gebruikt de
+// echte, huidige periode (uit het scherm) i.p.v. een verre toekomstmaand, dus
+// "dag 1" kan best in het weekend vallen -- dan zou de write om de verkeerde
+// reden geweigerd worden (invoercontrole i.p.v. het slot dat hier bewezen moet
+// worden). Deze helper kiest altijd de eerste werkdag binnen de periode.
+function eersteWerkdagInPeriode(periodeSleutel: string): string {
+  const [jaar, maand] = periodeSleutel.split('-').map(Number);
+  const dagenInMaand = new Date(Date.UTC(jaar, maand, 0)).getUTCDate();
+  for (let dag = 1; dag <= dagenInMaand; dag += 1) {
+    const weekdag = new Date(Date.UTC(jaar, maand - 1, dag)).getUTCDay(); // 0=zo..6=za
+    if (weekdag >= 1 && weekdag <= 5) {
+      return `${periodeSleutel}-${String(dag).padStart(2, '0')}`;
+    }
+  }
+  throw new Error(`Geen werkdag gevonden in periode ${periodeSleutel}.`);
+}
+
 async function csrf(page: Page): Promise<string> {
   const body = await (await page.request.get('/server/auth/csrf.php')).json() as Json;
   return String(body.csrf_token || '');
@@ -69,7 +87,7 @@ test('[E2E-N-017] submitted, approved en invoiced blokkeren iedere verboden mede
         billable_hours: 8,
         leave_hours: 0,
         sickness_hours: 0,
-        day_entries: [{ work_date: `${periodeSleutel}-01`, hours: 8, description: 'Webapp daginvoer' }],
+        day_entries: [{ work_date: eersteWerkdagInPeriode(periodeSleutel), hours: 8, description: 'Webapp daginvoer' }],
         expected_version: verwachteVersie,
       },
     });

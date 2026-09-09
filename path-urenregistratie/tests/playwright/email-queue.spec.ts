@@ -87,13 +87,20 @@ const execFileAsync = promisify(execFile);
 
 function candidatePeriods(): string[] {
   const startIndex = Date.now() % PERIOD_RANGE_MONTHS;
-
-  return Array.from({ length: 240 }, (_, offset) => {
+  const periods: string[] = [];
+  for (let offset = 0; periods.length < 240; offset += 1) {
     const index = (startIndex + offset) % PERIOD_RANGE_MONTHS;
     const year = PERIOD_RANGE_START_YEAR + Math.floor(index / 12);
     const month = (index % 12) + 1;
-    return `${year}-${String(month).padStart(2, '0')}`;
-  });
+    // Dag 1 moet ma-do zijn: de server weigert sinds de weekendvalidatie
+    // (TS-REV-API-N-001, server/api/timesheets.php) een work_date op za/zo.
+    // Dit bestand boekt overal op dag 1 van de gekozen periode.
+    const weekday = new Date(Date.UTC(year, month - 1, 1)).getUTCDay(); // 0=zo..6=za
+    if (weekday >= 1 && weekday <= 4) {
+      periods.push(`${year}-${String(month).padStart(2, '0')}`);
+    }
+  }
+  return periods;
 }
 
 async function findWritablePeriod(timesheetApi: TimesheetApi): Promise<string> {
