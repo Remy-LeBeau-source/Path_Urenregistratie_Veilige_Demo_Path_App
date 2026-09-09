@@ -14,10 +14,12 @@ require_once __DIR__ . '/cli-bootstrap.php';
 $options = ops_options($argv);
 try {
     $config = ops_load_config($options);
+    $dbConfig = ops_database_config($config);
     $pdo = ops_pdo($config);
     $email = (string)($options['email'] ?? '');
 
-    $dbInfo = $pdo->query('SELECT DATABASE() AS db_name')->fetch();
+    $connInfo = $pdo->query("SELECT DATABASE() AS db_name, @@hostname AS server_hostname, @@port AS server_port, CONNECTION_ID() AS connection_id, NOW() AS db_now")->fetch();
+    $dbInfo = $connInfo;
     $userCount = (int)($pdo->query('SELECT COUNT(*) AS n FROM users')->fetch()['n'] ?? -1);
     $likeStmt = $pdo->prepare("SELECT id, email FROM users WHERE email LIKE :pattern ORDER BY id DESC LIMIT 5");
     $likeStmt->execute([':pattern' => 'rem-h-001-%']);
@@ -86,6 +88,11 @@ try {
 
     ops_print([
         'ok' => true,
+        'connected_via' => ['host' => $dbConfig['host'], 'port' => $dbConfig['port'], 'name' => $dbConfig['name'], 'user' => $dbConfig['user']],
+        'server_hostname' => $connInfo['server_hostname'] ?? null,
+        'server_port' => $connInfo['server_port'] ?? null,
+        'connection_id' => $connInfo['connection_id'] ?? null,
+        'db_now' => $connInfo['db_now'] ?? null,
         'db_name' => $dbInfo['db_name'] ?? null,
         'user_count' => $userCount,
         'recent_rem_users' => $recentRemUsers,

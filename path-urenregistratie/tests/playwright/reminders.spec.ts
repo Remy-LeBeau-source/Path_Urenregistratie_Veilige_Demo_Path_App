@@ -181,6 +181,10 @@ test.describe('serverplanning herinneringen', () => {
           const matchViaWebserver = usersViaWebserver.find(u => u.email === freshEmail);
           // eslint-disable-next-line no-console
           console.log('[REM-H-001 diagnose] webserver-users.length=', usersViaWebserver.length, 'match=', JSON.stringify(matchViaWebserver ?? null));
+          const health = await ctx.get('/server/health.php');
+          const healthBody = await health.json();
+          // eslint-disable-next-line no-console
+          console.log('[REM-H-001 diagnose] health.database_connection=', JSON.stringify(healthBody?.checks?.database_connection ?? null));
         } catch (webserverDebugError) {
           // eslint-disable-next-line no-console
           console.log('[REM-H-001 diagnose] webserver-check mislukt', webserverDebugError);
