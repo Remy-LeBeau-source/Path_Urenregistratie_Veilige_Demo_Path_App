@@ -1042,6 +1042,29 @@ try {
             // Geen blokkerende fout voor de indiening zelf: de tijdstaat is al
             // opgeslagen, en de e-mail is een bijbehorende serviceactie.
         }
+    } elseif ($action === 'approve') {
+        require_once __DIR__ . '/../mail/queue.php';
+        try {
+            $employeeName = trim((string)($employee['full_name'] ?? ''));
+            $mailApproval = mail_enqueue_timesheet_final_approval(
+                $pdo,
+                $companyId,
+                (int)$currentUser['id'],
+                (int)$latest['id'],
+                (int)($latest['version'] ?? 0),
+                $period['period_key'],
+                (float)($latest['billable_hours'] ?? 0.0),
+                mail_is_dry_run($config),
+                $employeeName,
+                null
+            );
+            if ($mailApproval !== null && !mail_is_dry_run($config)) {
+                mail_dispatch_created($pdo, [['id' => (int)$mailApproval['id']]], $config);
+            }
+        } catch (Throwable $mailException) {
+            // Geen blokkerende fout voor de goedkeuring zelf: de status is al
+            // opgeslagen, en de e-mail is een bijbehorende serviceactie.
+        }
     }
 
     $pdo->commit();

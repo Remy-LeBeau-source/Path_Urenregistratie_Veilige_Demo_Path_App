@@ -50,6 +50,14 @@ Feature: Mailroutering en aflevering
     Then wordt met Playwright-assertions bevestigd dat submit met een geldige urenoverzicht-PDF krijgt attachment_policy=timesheet_receipt
 
   @happy
+  Scenario: [EQ-H-037] goedkeuren maakt exact één definitieve-goedkeuringsmail
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given mailroutering en aflevering is voorbereid
+    When de flow voor EQ-H-037 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat goedkeuren maakt exact één definitieve-goedkeuringsmail
+
+  @happy
   Scenario: [EQ-H-022] één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie
     # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 14

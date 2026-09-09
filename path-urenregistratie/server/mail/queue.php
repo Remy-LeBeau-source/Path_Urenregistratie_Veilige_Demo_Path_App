@@ -274,6 +274,94 @@ function mail_enqueue_timesheet_submission_receipt(
     return ['id' => $id, 'channel' => 'timesheet_submission_receipt', 'recipient_email' => $recipientEmail, 'status' => 'queued'];
 }
 
+/**
+ * Definitieve goedkeuringsmail: laat de medewerker weten dat Backoffice de
+ * urenstaat voor deze periode heeft goedgekeurd. Zelfde idempotency-opzet als
+ * de ontvangstmail (per timesheet_id + timesheet_version maximaal één keer),
+ * zodat een dubbele aanroep (of een heropende en opnieuw goedgekeurde staat)
+ * nooit twee keer dezelfde bevestiging stuurt.
+ */
+function mail_enqueue_timesheet_final_approval(
+    PDO $pdo,
+    int $companyId,
+    int $actorUserId,
+    int $timesheetId,
+    int $timesheetVersion,
+    string $periodKey,
+    float $totalHours,
+    bool $dryRun,
+    ?string $employeeName = null,
+    ?string $employeeEmail = null
+): ?array {
+    $existing = $pdo->prepare(
+        'SELECT id FROM email_deliveries
+         WHERE timesheet_id = :timesheet_id AND timesheet_version = :timesheet_version
+             AND channel = "timesheet_final_approval"
+           AND status IN ("queued", "processing", "sent")
+         ORDER BY id DESC LIMIT 1'
+    );
+    $existing->execute([':timesheet_id' => $timesheetId, ':timesheet_version' => $timesheetVersion]);
+    if ($existing->fetch()) {
+        return null;
+    }
+
+    $employeeStmt = $pdo->prepare(
+        'SELECT e.full_name AS employee_name, e.user_id, u.email AS employee_email
+         FROM timesheets t
+         JOIN employees e ON e.id = t.employee_id
+         LEFT JOIN users u ON u.id = e.user_id
+         WHERE t.id = :timesheet_id
+         LIMIT 1'
+    );
+    $employeeStmt->execute([':timesheet_id' => $timesheetId]);
+    $employee = $employeeStmt->fetch();
+
+    $recipientEmail = trim((string)($employeeEmail ?: ($employee['employee_email'] ?? '')));
+    $recipientName = trim((string)($employeeName ?? ($employee['employee_name'] ?? '')));
+    if ($recipientEmail === '') {
+        return null;
+    }
+
+    $templates = mail_channel_templates_for($pdo, $companyId);
+    $template = $templates['timesheet_final_approval'];
+    $vars = [
+        'medewerker' => $recipientName,
+        'periode' => $periodKey,
+        'uren' => number_format($totalHours, 2, ',', '.'),
+    ];
+    mail_assert_vars($template['subject'], $vars, 'timesheet_final_approval.subject');
+    mail_assert_vars($template['body'], $vars, 'timesheet_final_approval.body');
+    $subject = mail_render($template['subject'], $vars);
+    $body = rtrim(mail_render($template['body'], $vars)) . "\n\nMet vriendelijke groet,\n\nRobot Path IT";
+
+    $id = mail_insert_delivery(
+        $pdo,
+        null,
+        'timesheet_final_approval',
+        $recipientEmail,
+        null,
+        $subject,
+        $body,
+        'none',
+        $dryRun,
+        $timesheetId,
+        (int)($employee['user_id'] ?? $actorUserId),
+        $timesheetVersion,
+        null
+    );
+
+    mail_audit($pdo, $companyId, $actorUserId,
+        $dryRun ? 'email.dry_run' : 'email.queued', $id,
+        [
+            'channel' => 'timesheet_final_approval',
+            'timesheet_id' => $timesheetId,
+            'period' => $periodKey,
+        ]
+    );
+
+    return ['id' => $id, 'channel' => 'timesheet_final_approval', 'recipient_email' => $recipientEmail, 'status' => 'queued'];
+}
+
 // ---------------------------------------------------------------------------
 // Main enqueue function
 // ---------------------------------------------------------------------------

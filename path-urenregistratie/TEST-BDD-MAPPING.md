@@ -163,6 +163,7 @@
 | EQ-H-003 | api | mail-delivery.feature | EasySalary-channel heeft attachment_policy none | Equivalentieklassen | 2 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | EasySalary-channel heeft attachment_policy none | Happy | 12 | Actueel |
 | EQ-H-035 | api | mail-delivery.feature | submit maakt exact één medewerker-ontvangstmail | Beslissingstabel rollen en autorisatie | 6 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | submit maakt exact één medewerker-ontvangstmail | Happy | 12 | Actueel |
 | EQ-H-036 | api | mail-delivery.feature | submit met een geldige urenoverzicht-PDF krijgt attachment_policy=timesheet_receipt | Equivalentieklassen | 4 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | submit met een geldige urenoverzicht-PDF krijgt attachment_policy=timesheet_receipt | Happy | 12 | Actueel |
+| EQ-H-037 | api | mail-delivery.feature | goedkeuren maakt exact één definitieve-goedkeuringsmail | Toestandsovergang | 7 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | goedkeuren maakt exact één definitieve-goedkeuringsmail | Happy | 12 | Actueel |
 | EQ-H-022 | api | mail-delivery.feature | één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie | API-contract + equivalentieklasse | 14 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie | Happy | 12 | Actueel |
 | EQ-H-004 | api | mail-delivery.feature | action=enqueue voor gelockte factuur maakt nieuwe items aan | Toestandsovergang | 6 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | action=enqueue voor gelockte factuur maakt nieuwe items aan | Happy | 12 | Actueel |
 | EQ-H-005 | api | mail-delivery.feature | action=list response bevat verplichte velden | API-contract + equivalentieklasse | 15 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | action=list response bevat verplichte velden | Happy | 12 | Actueel |
@@ -366,7 +367,7 @@
 | SAFE-H-006 | security | production-safety.feature | eerste productieorganisatie wordt gevalideerd en zonder overschrijven ingericht | Negatieve equivalentieklasse + error guessing | 18 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | eerste productieorganisatie wordt gevalideerd en zonder overschrijven ingericht | Happy | 14 | Actueel |
 | SAFE-H-011 | security | production-safety.feature | groene main-pipeline rolt exact dezelfde release veilig uit naar productie | Toestandsovergang + foutinjectie + beslissingstabel | 28 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | groene main-pipeline rolt exact dezelfde release veilig uit naar productie | Happy | 14 | Actueel |
 | SAFE-H-016 | security | production-safety.feature | de eerste 1.x-uitrol normaliseert PROD naar de afgesproken baseline en controleert die streng | Beslissingstabel rollen en autorisatie | 32 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | de eerste 1.x-uitrol normaliseert PROD naar de afgesproken baseline en controleert die streng | Happy | 14 | Actueel |
-| REM-H-001 | api | reminders.feature | wekelijkse herinnering verstuurt eenmalig een reminder-mail aan medewerkers zonder uren deze week | Beslissingstabel rollen en autorisatie | 8 | reminders.steps.ts | reminders.spec.ts | API | Herinneringen | wekelijkse herinnering verstuurt eenmalig een reminder-mail aan medewerkers zonder uren deze week | Happy | 15 | Actueel |
+| REM-H-001 | api | reminders.feature | wekelijkse herinnering verstuurt eenmalig een reminder-mail aan medewerkers zonder uren deze week | Beslissingstabel rollen en autorisatie | 10 | reminders.steps.ts | reminders.spec.ts | API | Herinneringen | wekelijkse herinnering verstuurt eenmalig een reminder-mail aan medewerkers zonder uren deze week | Happy | 15 | Actueel |
 | ROLE-N-003 | security | roles-authorization.feature | zonder sessie geeft protected API 401 | Beslissingstabel rollen en autorisatie | 2 | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | zonder sessie geeft protected API 401 | Negative | 4 | Actueel |
 | ROLE-H-001 | security | roles-authorization.feature | admin ziet volledige data | Beslissingstabel rollen en autorisatie | 7 | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | admin ziet volledige data | Happy | 4 | Actueel |
 | ROLE-H-002 | security | roles-authorization.feature | employee ziet alleen eigen data | Beslissingstabel rollen en autorisatie | 8 | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | employee ziet alleen eigen data | Happy | 4 | Actueel |
@@ -471,9 +472,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 448
+- Playwright executable cases: 450
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 449
+- Totaal unieke executable cases: 451
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29

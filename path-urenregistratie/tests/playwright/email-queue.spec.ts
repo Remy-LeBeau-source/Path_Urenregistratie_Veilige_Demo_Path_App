@@ -388,6 +388,64 @@ test.describe('email queue api', () => {
     await ctx.dispose();
   });
 
+  test('[EQ-H-037] goedkeuren maakt exact één definitieve-goedkeuringsmail', async () => {
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    const timesheetApi = new TimesheetApi(ctx);
+    const queueApi = new EmailQueueApi(ctx);
+
+    await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+
+    const period = await findWritablePeriod(timesheetApi);
+    const draft = await timesheetApi.write({
+      action: 'save_draft',
+      period,
+      contractualHours: 160,
+      billableHours: 8,
+      leaveHours: 0,
+      dayEntries: [{ workDate: `${period}-01`, hours: 8, description: 'EQ-H-037' }],
+    });
+    expect(draft.status).toBe(200);
+
+    const submitted = await timesheetApi.write({
+      action: 'submit',
+      period,
+      contractualHours: 160,
+      billableHours: 8,
+      leaveHours: 0,
+      dayEntries: [{ workDate: `${period}-01`, hours: 8, description: 'EQ-H-037' }],
+      expectedVersion: draft.body.timesheet?.version as number,
+    });
+    expect(submitted.status).toBe(200);
+    const employeeId = Number(submitted.body.employee_id || 0);
+    const timesheetId = Number(submitted.body.timesheet?.id || 0);
+    const submittedVersion = Number(submitted.body.timesheet?.version || 0);
+    await authApi.logout();
+
+    const adminCtx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const adminAuthApi = new AuthApi(adminCtx);
+    const adminTimesheetApi = new TimesheetApi(adminCtx);
+    const adminQueueApi = new EmailQueueApi(adminCtx);
+    await adminAuthApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const approved = await adminTimesheetApi.approve({ period, employeeId, expectedVersion: submittedVersion });
+    expect(approved.status).toBe(200);
+
+    const list = await adminQueueApi.list();
+    const approvalItems = (list.body.items as Array<Record<string, unknown>>)
+      .filter(item => String(item.channel || '') === 'timesheet_final_approval'
+        && Number(item.timesheet_id || 0) === timesheetId);
+
+    expect(approvalItems).toHaveLength(1);
+    expect(approvalItems[0].recipient_email).toBe(appConfig.employeeEmail);
+    expect(approvalItems[0].status).toBe('queued');
+    expect(String(approvalItems[0].subject_snapshot || '')).toMatch(/goedgekeurd/i);
+
+    await adminAuthApi.logout();
+    await adminCtx.dispose();
+    await ctx.dispose();
+  });
+
   test('[EQ-H-022] één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie', async () => {
     const { ctx, authApi, queueApi, invoiceId } = await createLockedInvoice();
 
