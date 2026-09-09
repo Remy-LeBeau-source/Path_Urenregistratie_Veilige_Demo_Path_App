@@ -413,6 +413,7 @@
 | TS-REV-API-H-005 | integration | correction-approval-workflow.feature | admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking | Concurrency + toestandsovergang | 65 | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
 | TS-REV-API-H-006 | integration | correction-approval-workflow.feature | gelijktijdige approve-requests door twee beheerders leveren exact één winnaar | Concurrency + toestandsovergang | 7 | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
 | TS-REV-API-H-007 | integration | correction-approval-workflow.feature | jaarwisseling december naar januari verwerkt urenstaten correct over de jaargrens | API-contract + equivalentieklasse | 7 | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
+| TS-REV-API-N-001 | integration | correction-approval-workflow.feature | server weigert een dagregel op zaterdag of zondag, ook als de aanroep de client omzeilt | Negatieve equivalentieklasse + error guessing | 6 | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Negative | 9 | Actueel |
 | TS-REV-UI-H-008 | ui | correction-approval-ui.feature | browserflow: correctie, herindiening, goedkeuring en heropening blijven servergestuurd | Toestandsovergang | 32 | timesheets-review-ui.steps.ts | timesheet-review-ui.spec.ts | UI Desktop | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
 | TS-REV-UI-H-009 | ui | correction-approval-ui.feature | ingediende urenstaat blijft vergrendeld tot Backoffice een correctie vraagt | Toestandsovergang | 5 | timesheets-review-ui.steps.ts | timesheet-review-ui.spec.ts | UI Desktop | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
 | TS-REV-UI-H-010 | ui | correction-approval-ui.feature | submitknop is verborgen bij goedgekeurde urenstaat | End-to-end use-case + visuele contractasserties | 3 | timesheets-review-ui.steps.ts | timesheet-review-ui.spec.ts | UI Desktop | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
@@ -482,9 +483,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 460
+- Playwright executable cases: 461
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 461
+- Totaal unieke executable cases: 462
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29
