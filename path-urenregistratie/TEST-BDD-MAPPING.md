@@ -51,6 +51,8 @@
 | ADM-WR-H-018 | api | organization-settings.feature | een nieuwe ontvanger komt bij andere medewerkers ongevinkt binnen | Beslissingstabel rollen en autorisatie | 11 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | een nieuwe ontvanger komt bij andere medewerkers ongevinkt binnen | Happy | 2 | Actueel |
 | ADM-WR-H-015 | api | organization-settings.feature | onderwerp, tekst en een eigen tekst per ontvanger blijven na F5 in het scherm staan | Beslissingstabel rollen en autorisatie | 7 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | onderwerp, tekst en een eigen tekst per ontvanger blijven na F5 in het scherm staan | Happy | 2 | Actueel |
 | ADM-WR-H-016 | api | organization-settings.feature | de routevinkjes van een opdracht blijven na opslaan en F5 staan zoals gezet | Herstelbaarheid + toestandsovergang | 3 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | de routevinkjes van een opdracht blijven na opslaan en F5 staan zoals gezet | Happy | 2 | Actueel |
+| ADM-WR-H-021 | api | organization-settings.feature | een sprong via de Instellingen-sectienavigatie laat de kop van die sectie echt zien, niet verstopt onder de topbalk | API-contract + equivalentieklasse | 3 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | een sprong via de Instellingen-sectienavigatie laat de kop van die sectie echt zien, niet verstopt onder de topbalk | Happy | 2 | Actueel |
+| ADM-WR-H-022 | api | organization-settings.feature | "Open werkvoorraad" op het dashboard springt naar een paneel dat niet verstopt onder de topbalk | API-contract + equivalentieklasse | 3 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | "Open werkvoorraad" op het dashboard springt naar een paneel dat niet verstopt onder de topbalk | Happy | 2 | Actueel |
 | AUD-H-001 | api | audit-log.feature | admin kan auditlog ophalen | Beslissingstabel rollen en autorisatie | 7 | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | admin kan auditlog ophalen | Happy | 16 | Actueel |
 | AUD-H-002 | api | audit-log.feature | auditlog filtert op entity_type | Equivalentieklassen | 3 | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | auditlog filtert op entity_type | Happy | 16 | Actueel |
 | AUD-H-003 | api | audit-log.feature | auditlog filtert op event_type | Equivalentieklassen | 3 | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | auditlog filtert op event_type | Happy | 16 | Actueel |
@@ -410,7 +412,6 @@
 | SKIN-H-014 | ui | skin.feature | snelkeuze in Mijn uren-bento heeft ook een 0-optie naast 8 en 9 | End-to-end use-case + visuele contractasserties | 10 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | snelkeuze in Mijn uren-bento heeft ook een 0-optie naast 8 en 9 | Happy | 19 | Actueel |
 | SKIN-H-016 | ui | skin.feature | een eigen werkpatroon per weekdag vult Mijn uren voor en telt zo mee in de contracturen | Beslissingstabel rollen en autorisatie | 21 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | een eigen werkpatroon per weekdag vult Mijn uren voor en telt zo mee in de contracturen | Happy | 19 | Actueel |
 | SKIN-H-017 | ui | skin.feature | Mijn uren toont bij een enkele week dezelfde bento-kaartjes als het Dashboard, Klassiek blijft de tabel | End-to-end use-case + visuele contractasserties | 14 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | Mijn uren toont bij een enkele week dezelfde bento-kaartjes als het Dashboard, Klassiek blijft de tabel | Happy | 19 | Actueel |
-| SKIN-H-018 | ui | skin.feature | Klanturenstaat-blok klapt inline open op het Dashboard, zonder weg te navigeren, en keert terug naar Mijn uren | Negatieve equivalentieklasse + error guessing | 18 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | Klanturenstaat-blok klapt inline open op het Dashboard, zonder weg te navigeren, en keert terug naar Mijn uren | Happy | 19 | Actueel |
 | TS-REV-API-H-005 | integration | correction-approval-workflow.feature | admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking | Concurrency + toestandsovergang | 65 | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
 | TS-REV-API-H-006 | integration | correction-approval-workflow.feature | gelijktijdige approve-requests door twee beheerders leveren exact één winnaar | Concurrency + toestandsovergang | 7 | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
 | TS-REV-API-H-007 | integration | correction-approval-workflow.feature | jaarwisseling december naar januari verwerkt urenstaten correct over de jaargrens | API-contract + equivalentieklasse | 7 | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
@@ -484,9 +485,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 462
+- Playwright executable cases: 463
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 463
+- Totaal unieke executable cases: 464
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29

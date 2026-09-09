@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 462 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 463 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 462 unieke case-ID's
+- Playwright executable cases: 463 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 463 unieke case-ID's
+- Totaal executable cases: 464 unieke case-ID's
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29
 - Database steps mappings: 1
-- Uitvoeringen: 497
-- Niet-mobile projectuitvoeringen: 427
+- Uitvoeringen: 498
+- Niet-mobile projectuitvoeringen: 428
 - Mobile functionele cases: 35
 - Pixel 7 / Chromium-uitvoeringen: 35
 - iPhone 13 / WebKit-uitvoeringen: 35
 
-De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 462 Playwright-functionele cases in totaal 497 resultaten op: 427 + (35 x 2) = 497.
+De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 463 Playwright-functionele cases in totaal 498 resultaten op: 428 + (35 x 2) = 498.
 
 ## Documentatieketen
 
@@ -46,7 +46,7 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 462 Playwri
 
 - Feature: `tests/playwright/features/organization-settings.feature`
 - Source: `tests/playwright/admin-writes.spec.ts`
-- Cases: 27
+- Cases: 29
 
 - [ADM-WR-H-019] latere startdatum vraagt bevestiging en vermeldt dat historie bewaard blijft — Techniek: API-contract + equivalentieklasse · Assertions: 9
 - [ADM-WR-H-020] server berekent echte historische impact vóór een latere startdatum wordt opgeslagen — Techniek: API-contract + equivalentieklasse · Assertions: 12
@@ -75,6 +75,8 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 462 Playwri
 - [ADM-WR-H-018] een nieuwe ontvanger komt bij andere medewerkers ongevinkt binnen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
 - [ADM-WR-H-015] onderwerp, tekst en een eigen tekst per ontvanger blijven na F5 in het scherm staan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [ADM-WR-H-016] de routevinkjes van een opdracht blijven na opslaan en F5 staan zoals gezet — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 3
+- [ADM-WR-H-021] een sprong via de Instellingen-sectienavigatie laat de kop van die sectie echt zien, niet verstopt onder de topbalk — Techniek: API-contract + equivalentieklasse · Assertions: 3
+- [ADM-WR-H-022] "Open werkvoorraad" op het dashboard springt naar een paneel dat niet verstopt onder de topbalk — Techniek: API-contract + equivalentieklasse · Assertions: 3
 
 ### Auditlog en traceerbaarheid
 
@@ -569,7 +571,7 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 462 Playwri
 
 - Feature: `tests/playwright/features/skin.feature`
 - Source: `tests/playwright/skin.spec.ts`
-- Cases: 18
+- Cases: 17
 
 - [SKIN-H-001] de app start standaard in de klassieke vormgeving — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
 - [SKIN-H-002] Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
@@ -588,7 +590,6 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 462 Playwri
 - [SKIN-H-014] snelkeuze in Mijn uren-bento heeft ook een 0-optie naast 8 en 9 — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 10
 - [SKIN-H-016] een eigen werkpatroon per weekdag vult Mijn uren voor en telt zo mee in de contracturen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 21
 - [SKIN-H-017] Mijn uren toont bij een enkele week dezelfde bento-kaartjes als het Dashboard, Klassiek blijft de tabel — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 14
-- [SKIN-H-018] Klanturenstaat-blok klapt inline open op het Dashboard, zonder weg te navigeren, en keert terug naar Mijn uren — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 18
 
 ### Correctie- en goedkeuringsproces
 
