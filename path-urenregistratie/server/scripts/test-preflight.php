@@ -45,12 +45,17 @@ try {
 
     $normalizedAllowedRecipients = mail_allowed_recipients($config);
     sort($normalizedAllowedRecipients);
-    // Both guarded TEST inboxes: the primary sink and the CC copy. Keep this in
-    // exact lockstep with configure-test-mail-sandbox.php -- the whole point of
-    // the allowlist is that no third address can ever slip in.
+    // The two guarded TEST inboxes (primary sink + CC copy), plus any named
+    // testers who may receive their own real password-reset mail (and only
+    // that one channel -- see mail_test_extra_password_reset_recipients() in
+    // server/mail/config.php). Keep this in exact lockstep with
+    // configure-test-mail-sandbox.php -- the whole point of the allowlist is
+    // that no address slips in that the sandbox configurator did not put
+    // there itself.
     $expectedSandboxRecipients = [
         'giovanno.maatsen@pathconsultancy.nl',
         'kenrich.lieveld@pathconsultancy.nl',
+        'stasjovanbakel@pathconsultancy.nl',
     ];
     sort($expectedSandboxRecipients);
     $mailClosed = ($mail['enabled'] ?? null) === false
