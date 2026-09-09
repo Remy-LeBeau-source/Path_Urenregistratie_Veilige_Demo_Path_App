@@ -288,7 +288,9 @@ test('[SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en K
 
   await test.step('When de medewerker Nieuw activeert en via de bento naar Mijn uren navigeert', async () => {
     await page.locator('#quick-skin-toggle').click();
-    await page.locator('[data-new-bento-open-hours]').click();
+    // De pijl in de bento blijft sinds SKIN-H-021 op het Dashboard; de
+    // volledige Mijn uren-pagina is nog steeds bereikbaar via de route zelf.
+    await page.evaluate(() => { window.location.hash = 'timesheet'; });
     await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     await expect(page.locator('#timesheet-employee')).toHaveText(medewerker);
@@ -755,7 +757,10 @@ test('[SKIN-H-017] Mijn uren toont bij een enkele week dezelfde bento-kaartjes a
     await loginPage.loginAsEmployee();
     await page.locator('#quick-skin-toggle').click();
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
-    await page.locator('[data-new-bento-open-hours]').click();
+    // De pijl in de bento blijft sinds SKIN-H-021 op het Dashboard; Mijn uren
+    // wordt hier via de route zelf geopend.
+    await page.evaluate(() => { window.location.hash = 'timesheet'; });
+    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
     await page.locator('[data-hours-week-scope="week-0"]').click();
   });
 
@@ -849,7 +854,9 @@ test('[SKIN-H-018] Klanturenstaat-blok klapt inline open op het Dashboard, zonde
   await test.step('When het blok weer wordt geopend en daarna naar Mijn uren wordt genavigeerd', async () => {
     await toggle.click();
     await expect(card).toHaveAttribute('data-open', 'true');
-    await page.locator('[data-new-bento-open-hours]').click();
+    // De pijl in de bento blijft sinds SKIN-H-021 op het Dashboard; de
+    // navigatie weg van het Dashboard loopt hier via de route zelf.
+    await page.evaluate(() => { window.location.hash = 'timesheet'; });
   });
 
   await test.step('Then staat het paneel weer op zijn vaste plek op Mijn uren en is het daar gewoon zichtbaar', async () => {
@@ -952,5 +959,76 @@ test('[SKIN-H-020] de voetstrip onder Verhalen per medewerker toont de echte per
     ]);
     expect(download.suggestedFilename()).toMatch(/^Path_verhaaloverzicht_.*\.csv$/);
     await expect(page.locator('#toast')).toContainText('verhaaloverzicht is gedownload');
+  });
+});
+
+test('[SKIN-H-021] de medewerker blijft op het Dashboard: de pijl springt naar vandaag in het weekkaartje, open maanden staan er zichtbaar bij, en een skinwissel hertekent Mijn uren direct', async ({ page }) => {
+  // Drie dingen die Gio tijdens handmatig testen aanwees:
+  // 1. "bij drukken op de pijl kom je nu hier [Mijn uren] en dat moet niet"
+  //    -- de pijl navigeerde weg naar de losse Mijn uren-pagina, terwijl het
+  //    weekkaartje de week al inline toont. Hij blijft nu op het Dashboard,
+  //    springt naar de week van vandaag en zet de cursor in de dag van
+  //    vandaag.
+  // 2. "stel je hebt 2 maanden openstaan, waar staat het dan?" -- het al
+  //    bestaande "Open acties per maand"-overzicht was in Nieuw onbedoeld
+  //    verborgen achter de blanket-regel die de rest van het klassieke
+  //    Dashboard verbergt. Het is nu zichtbaar, en een actie erin blijft ook
+  //    op het Dashboard (wisselt alleen de maand).
+  // 3. "fout bij switchen nog steeds" -- skin wisselen terwijl Mijn uren open
+  //    stond, liet de bento-kaartjes ongestyled staan tot een F5, omdat
+  //    applySkin() alleen het data-skin-attribuut zette en niets hertekende.
+  //    SKIN-H-017 verhulde dat per ongeluk door na de wissel nog een
+  //    weekscope-klik te doen; hier wordt direct na de wissel gecontroleerd.
+  const loginPage = new LoginPage(page);
+  await page.clock.setFixedTime(new Date('2026-09-09T12:00:00.000Z'));
+
+  await test.step('Given de medewerker Nieuw activeert op het Dashboard', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
+  });
+
+  await test.step('When op de pijl-knop wordt gedrukt', async () => {
+    // Eerst weg van de week van vandaag navigeren, om te bewijzen dat de
+    // pijl altijd terugspringt naar vandaag, ongeacht welke week toevallig
+    // openstond (1 september 2026 is een dinsdag, dus "vorige week" staat
+    // al uit op week 0 -- "volgende week" bewijst hetzelfde).
+    await page.locator('#new-employee-bento [data-new-bento-week="next"]').click();
+    await page.locator('[data-new-bento-open-hours]').click();
+  });
+
+  await test.step('Then blijft het Dashboard actief, staat het weekkaartje op de week van vandaag en heeft de dag van vandaag focus', async () => {
+    await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
+    await expect(page.locator('#view-timesheet')).not.toHaveClass(/is-active/);
+    await expect(page.locator('#new-bento-week-title')).toHaveText('Week 37');
+    const focusInToday = await page.evaluate(() => Boolean(document.activeElement?.closest('.new-bento-day')?.classList.contains('is-active')));
+    expect(focusInToday).toBe(true);
+  });
+
+  await test.step('And staat het overzicht van open maanden zichtbaar op het Dashboard, en een actie erin blijft op het Dashboard', async () => {
+    const overview = page.locator('#employee-open-overview');
+    await expect(overview).toBeVisible();
+    await expect(page.locator('#employee-open-overview-count')).toHaveText(/\d+ open maand/);
+    await page.locator('[data-employee-open-month-toggle]').first().click();
+    await page.locator('[data-employee-open-action]').first().click();
+    await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
+    await expect(page.locator('#view-timesheet')).not.toHaveClass(/is-active/);
+  });
+
+  await test.step('When Mijn uren open staat op een enkele week en de skin naar Klassiek wisselt', async () => {
+    await page.evaluate(() => { window.location.hash = 'timesheet'; });
+    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+    await page.locator('[data-hours-week-scope="week-1"]').click();
+    await expect(page.locator('#hours-grid-cards .new-bento-day').first()).toBeVisible();
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+  });
+
+  await test.step('Then staat de klassieke tabel er meteen, zonder extra klik of F5', async () => {
+    await expect(page.locator('#hours-table-wrap')).toBeVisible();
+    await expect(page.locator('#hours-grid-cards')).toBeHidden();
+    await expect(page.locator('#hours-week-nav')).toBeHidden();
   });
 });

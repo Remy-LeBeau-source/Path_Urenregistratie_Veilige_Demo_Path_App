@@ -1,5 +1,74 @@
 # HANDOFF — Codex, Fase D vervolg (herontwerp)
 
+## 9 september (avond) — beheer-New-skin, Storyline-voetstrip, een echte databug, en drie UX-fixes op de medewerker-bento
+
+Gepusht naar `herontwerp` en CI-groen (8/8), commits `73104c9..97bd3b1`:
+
+1. **Klanturenstaat klapt inline open op het Dashboard** (`73104c9`) — het
+   bestaande paneel van Mijn uren verhuist (echte DOM-node, niet gedupliceerd)
+   naar het Klanturenstaat-blokje en weer terug, i.p.v. wegnavigeren.
+2. **Pijl "uren invullen" sprong altijd naar vandaag** (`69e39b3`).
+3. **Beheer (fase 1)**: alle 6 beheerschermen (Cockpit/Goedkeuringen/
+   Facturen/Mededelingen/Medewerkers/Instellingen) consequent in Nieuw —
+   bleek grotendeels een kwestie van de bestaande `:has(#view-dashboard...)`-
+   selectors uit te breiden naar de andere 5 views, plus een
+   `.topbar`/`.topbar-actions`-wrap-fix voor de overflow die daardoor ontstond
+   (geen sidebar meer die ruimte reserveerde). Nieuwe test `SKIN-H-019`.
+4. **Storyline-voetstrip** (`a24b2ca`) onder "Verhalen per medewerker":
+   periode, "laatst vernieuwd", een legenda die dezelfde kleuren hergebruikt
+   als de statusbolletjes ernaast, en een echte csv-export van de zichtbare
+   wachtrij. Bewust géén verzonnen "synchronisatie actief"-status uit de
+   1919-beheerderpilot overgenomen — deze app pollt niet. `SKIN-H-020`.
+5. **Echte databug gevonden en gefixt** (`b953b5c`, belangrijkste van de
+   sessie): `server/api/timesheets.php::timesheet_write_entries()` deed bij
+   élke opslag een blinde "verwijder alle uren van de hele maand, zet dan
+   alleen terug wat in déze opslag zit". Onschadelijk zolang Klassiek altijd
+   de hele maand ineens opsloeg, maar de nieuwe bento slaat per week op en
+   stuurt van niet-actieve weken alleen dagen met uren > 0 mee — een bewust
+   opgeslagen 0-uur-dag in een andere week werd zo bij de eerstvolgende
+   opslag stilletjes gewist. Zichtbaar als een flikkerende "weken
+   ingevuld"-teller; gemeld door Gio tijdens handmatig testen op
+   `localhost:8000`. Fix: upsert per dag i.p.v. delete-then-insert.
+   Regressietest `TS-API-H-017` bewijst het met een echte tweede-opslag.
+
+Daarna nog **drie bevindingen uit dezelfde handmatige testronde, lokaal
+geverifieerd maar op moment van schrijven nog niet gecommit/gepusht** (zit in
+de werkboom, zie `git status` voordat je verdergaat):
+
+6. **Skin wisselen terwijl Mijn uren open staat, liet de bento-kaartjes
+   ongestyled staan tot een F5.** Oorzaak: `applySkin()` zette alleen het
+   `data-skin`-attribuut en hertekende niets; Mijn uren bouwt bij één week
+   ofwel bento-kaartjes ofwel de klassieke tabel in dezelfde container, dus
+   zonder hertekening bleef de oude markup staan zonder dat een van beide
+   stylesheets er nog regels voor had. `SKIN-H-017`'s laatste stap verhulde
+   dit toevallig door na de wissel nog een weekscope-klik te doen. Fix:
+   `applySkin()` roept nu `renderHoursGrid()` als Mijn uren actief is.
+7. **De pijl-knop in de bento navigeerde weg naar de losse Mijn uren-pagina**
+   — Gio wil zoveel mogelijk in 1 menu blijven, en het weekkaartje toont de
+   week al inline. De pijl blijft nu op het Dashboard, springt naar de week
+   van vandaag en zet de cursor in de dag van vandaag.
+8. **"Stel je hebt 2 maanden open, waar staat het dan?"** — het bestaande
+   "Open acties per maand"-overzicht (`#employee-open-overview`,
+   `employeeOpenMonthSummaries` in app.js) stond er al helemaal, maar viel in
+   Nieuw onbedoeld onder de blanket-regel die de rest van het klassieke
+   Dashboard verbergt. Nu expliciet uitgezonderd en zichtbaar; leunt al op
+   `--vlak`/`--line`/`--navy-tekst` die het donkere thema (standaard in
+   Nieuw) al passend herdefinieert, dus geen aparte Nieuw-CSS nodig. Een
+   actie erin blijft nu ook op het Dashboard i.p.v. wegnavigeren (skin-aware:
+   Klassiek navigeert nog gewoon zoals voorheen). Nieuwe test `SKIN-H-021`
+   dekt alle drie punten 6–8 in één scenario.
+
+Kleine bijkomstige styling-fixes uit dezelfde ronde: de knopkleuren in het
+inline-geopende Klanturenstaat-blok leunden op donkere-thema-tokens die op
+het crème kaartje raar oogden (nu expliciet lichte kleuren), en de
+"Goedenavond, Stasjo / SEPTEMBER 2026"-tekst bovenin de hero was te klein.
+
+**Volgende stap voor wie dit oppakt**: commit + push punt 6–8 als
+`npm run check` en de skin-suite lokaal groen zijn (was aan het draaien op
+het moment van schrijven), dan CI bevestigen. Peer-sessie
+(`path-urenregistratie-veilige-demo-path-a-40`, werkt parallel op `main`/
+klassiek) is op de hoogte van punt 5 en trekt 'm zelf binnen op main.
+
 ## 8 september — New-medewerkerroute lokaal hersteld en driebrowserdekking
 
 De ontbrekende lokale runtime is hersteld met de bestaande, genegeerde
