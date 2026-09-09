@@ -5,6 +5,7 @@ import { join } from 'node:path';
 
 const root = process.cwd();
 const workflow = await readFile(join(root, '..', '.github', 'workflows', 'release-pipeline.yml'), 'utf8');
+const pilotMergeQueue = await readFile(join(root, '..', '.github', 'workflows', 'pilot-merge-queue.yml'), 'utf8');
 const runner = await readFile(join(root, 'scripts', 'deploy-production-transip.sh'), 'utf8');
 const remote = await readFile(join(root, 'scripts', 'deploy-production-remote.sh'), 'utf8');
 const combined = `${runner}\n${remote}`;
@@ -75,6 +76,9 @@ assert.match(workflow, /live-docs:\s*[\s\S]*?Download mergeable release reports[
 assert.doesNotMatch(workflow, /live-docs:\s*[\s\S]*?Run E2E tests for docs/, 'Living Docs may not repeat the complete Playwright suite');
 assert.doesNotMatch(liveDocsJob, /services:\s*\n|setup-php|playwright install|Start PHP server|config\.local\.php/, 'Living Docs must remain report-only and may not provision a database, PHP runtime or browsers');
 assert.match(workflow, /prod:\s*[\s\S]*?needs:\s*\[test, deploy-test\][\s\S]*?always\(\)[\s\S]*?needs\.deploy-test\.result == 'success'/, 'Manual PROD promotion must remain available only after successful TEST deployment');
+assert.match(pilotMergeQueue, /listJobsForWorkflowRun/, 'Pilot merge queue must inspect active release jobs, not only workflow status');
+assert.match(pilotMergeQueue, /Deploy Test to TransIP[\s\S]*conclusion === 'success'/, 'Pilot merge queue may ignore a waiting production gate only after TEST deploy succeeded');
+assert.match(pilotMergeQueue, /openJobs\.every\(\(job\) => job\.name\.startsWith\('Promote Prod'\)\)/, 'Pilot merge queue must only ignore manual Promote Prod waits, not active validation or TEST deploy jobs');
 for (const required of [
   '/data/sites/web/pathconsultancynl/private/path-uren-test-deployments',
   '/data/sites/web/pathconsultancynl/private/path-uren-test',

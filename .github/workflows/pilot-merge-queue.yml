@@ -77,10 +77,32 @@ jobs:
                 branch: 'main',
                 per_page: 20,
               });
-              const active = data.workflow_runs.filter((r) => r.status !== 'completed');
+              const active = [];
+              for (const run of data.workflow_runs.filter((r) => r.status !== 'completed')) {
+                const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun, {
+                  owner,
+                  repo,
+                  run_id: run.id,
+                  per_page: 100,
+                });
+                const openJobs = jobs.filter((job) => job.status !== 'completed');
+                const deployTestDone = jobs.some((job) =>
+                  job.name === 'Deploy Test to TransIP'
+                  && job.status === 'completed'
+                  && job.conclusion === 'success'
+                );
+                const onlyManualProdGateOpen = deployTestDone
+                  && openJobs.length > 0
+                  && openJobs.every((job) => job.name.startsWith('Promote Prod'));
+                if (onlyManualProdGateOpen) {
+                  core.info(`Release Pipeline ${run.id} wacht alleen nog op handmatige PROD-promotie; TEST is al gedeployed, dus deze run blokkeert pilot-merge niet.`);
+                  continue;
+                }
+                active.push(run);
+              }
 
               if (active.length === 0) {
-                core.info('Geen actieve Release Pipeline-run op main. Pilot mag mergen.');
+                core.info('Geen blokkerende Release Pipeline-run op main. Pilot mag mergen.');
                 return;
               }
 
