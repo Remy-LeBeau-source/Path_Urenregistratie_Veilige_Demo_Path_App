@@ -139,3 +139,13 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     Then staat dinsdag al op 6 uur en vrijdag op leeg (0 uur), zonder dat er iets is getypt
     When de week wordt opgeslagen zonder verder iets aan te passen
     Then heeft de server het patroon zelf bewaard: dinsdag 6 uur, vrijdag expliciet 0 uur
+
+  @happy
+  Scenario: [SKIN-H-017] Mijn uren toont bij een enkele week dezelfde bento-kaartjes als het Dashboard, Klassiek blijft de tabel
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 14
+    Given de medewerker Nieuw activeert en Mijn uren opent op een enkele week
+    Then toont Mijn uren dezelfde kaartjesstijl als de bento, met werkende week-pijlen
+    When Hele maand wordt gekozen
+    Then staat de compacte tabel weer terug, geen kaartjes
+    And in Klassiek blijft Mijn uren altijd de tabel, zonder kaartjes of pijlen

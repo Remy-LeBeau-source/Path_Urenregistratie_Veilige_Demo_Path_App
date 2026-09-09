@@ -66,3 +66,8 @@ When("de medewerker inlogt, Nieuw activeert en Mijn uren opent");
 Then("staat dinsdag al op 6 uur en vrijdag op leeg (0 uur), zonder dat er iets is getypt");
 When("de week wordt opgeslagen zonder verder iets aan te passen");
 Then("heeft de server het patroon zelf bewaard: dinsdag 6 uur, vrijdag expliciet 0 uur");
+Given("de medewerker Nieuw activeert en Mijn uren opent op een enkele week");
+Then("toont Mijn uren dezelfde kaartjesstijl als de bento, met werkende week-pijlen");
+When("Hele maand wordt gekozen");
+Then("staat de compacte tabel weer terug, geen kaartjes");
+And("in Klassiek blijft Mijn uren altijd de tabel, zonder kaartjes of pijlen");

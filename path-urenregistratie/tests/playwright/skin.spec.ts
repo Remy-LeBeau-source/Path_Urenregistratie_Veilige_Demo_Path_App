@@ -608,6 +608,8 @@ test('[SKIN-H-016] een eigen werkpatroon per weekdag vult Mijn uren voor en telt
   const eigenAdres = `patroonproef-${uniek}@example.invalid`;
   const eigenNaam = `Patroonproef ${uniek}`;
   const nieuwWachtwoord = `PatroonE2e!${uniek}`;
+  let gebruikerId = 0;
+  let medewerkerId = 0;
 
   const beheer = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
   const beheerPost = async (pad: string, data: JsonBody) => {
@@ -643,7 +645,9 @@ test('[SKIN-H-016] een eigen werkpatroon per weekdag vult Mijn uren voor en telt
         },
       });
       expect(aangemaakt.status, JSON.stringify(aangemaakt.body)).toBe(200);
-      expect(Number(aangemaakt.body.user_id || 0), 'de nieuwe medewerker hoort een account te krijgen').toBeGreaterThan(0);
+      gebruikerId = Number(aangemaakt.body.user_id || 0);
+      medewerkerId = Number(aangemaakt.body.employee_id || 0);
+      expect(gebruikerId, 'de nieuwe medewerker hoort een account te krijgen').toBeGreaterThan(0);
 
       const resetAangevraagd = await beheerPost('/server/auth/request-reset.php', { email: eigenAdres });
       expect(resetAangevraagd.status).toBe(200);
@@ -713,6 +717,80 @@ test('[SKIN-H-016] een eigen werkpatroon per weekdag vult Mijn uren voor en telt
       expect(Number(vrijdagRij?.hours)).toBe(0);
     });
   } finally {
+    // Zonder dit blijft de wegwerpmedewerker actief in de gedeelde demo-data
+    // staan -- dat verstoort de isolatiecontrole (orphans/marker-checks) van
+    // alle ándere tests die dezelfde CI-database delen, ook lang na deze
+    // case. Zelfde opruimpatroon als business-workflows-e2e.spec.ts: eerst
+    // deactiveren, dan het account echt verwijderen.
+    const csrfLogout = await (await page.request.get('/server/auth/csrf.php')).json() as { csrf_token?: string };
+    await page.request.post('/server/auth/logout.php', {
+      headers: { 'X-CSRF-Token': String(csrfLogout.csrf_token || '') },
+    }).catch(() => null);
+    if (gebruikerId > 0) {
+      await beheerPost('/server/api/staff.php', {
+        action: 'upsert_employee',
+        sendInvitation: false,
+        employee: { name: eigenNaam, email: eigenAdres, dbEmployeeId: medewerkerId, dbUserId: gebruikerId, role: 'Consultant', active: false },
+      }).catch(() => null);
+      await beheerPost('/server/api/users.php', { action: 'delete', user_id: gebruikerId }).catch(() => null);
+    }
     await beheer.dispose();
   }
+});
+
+test('[SKIN-H-017] Mijn uren toont bij een enkele week dezelfde bento-kaartjes als het Dashboard, Klassiek blijft de tabel', async ({ page }) => {
+  // "we willen toch vanuit hier blijven werken in new design? je springt
+  // ineens naar dit bij pijl kiezen. 0 8 9 hier wel maar bij oude niet?" --
+  // de volledige Mijn uren-weergave gebruikte bij een enkele week nog de
+  // klassieke tabelrij-layout, ook al was de kleurstelling al Nieuw. Een
+  // enkele week toont nu dezelfde kaartjes (met dezelfde -/+ en 0/8/9-
+  // knoppen) als de bento, met dezelfde vorige/volgende-week-pijlen erboven.
+  // "Hele maand" blijft de compacte tabel voor een totaaloverzicht. Klassiek
+  // raakt hier niets van: geen kaartjes, geen pijlen, gewoon de tabel.
+  const loginPage = new LoginPage(page);
+  await page.clock.setFixedTime(new Date('2026-09-06T12:00:00.000Z'));
+
+  await test.step('Given de medewerker Nieuw activeert en Mijn uren opent op een enkele week', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await page.locator('[data-new-bento-open-hours]').click();
+    await page.locator('[data-hours-week-scope="week-0"]').click();
+  });
+
+  await test.step('Then toont Mijn uren dezelfde kaartjesstijl als de bento, met werkende week-pijlen', async () => {
+    await expect(page.locator('#hours-table-wrap')).toBeHidden();
+    await expect(page.locator('#hours-week-nav')).toBeVisible();
+    const cards = page.locator('#hours-grid-cards .new-bento-day');
+    await expect(cards.first()).toBeVisible();
+    await expect(page.locator('#hours-week-nav-title')).toHaveText('Week 36');
+
+    const dinsdag = cards.first();
+    await dinsdag.locator('.new-bento-hours-input').focus();
+    await expect(dinsdag.locator('[data-new-bento-set="8"]')).toBeVisible();
+    await dinsdag.locator('[data-new-bento-set="8"]').click();
+    await expect(dinsdag.locator('.new-bento-hours-input')).toHaveValue('8', { timeout: 5_000 });
+
+    await page.locator('#hours-week-nav [data-new-bento-week="next"]').click();
+    await expect(page.locator('#hours-week-nav-title')).toHaveText('Week 37');
+  });
+
+  await test.step('When Hele maand wordt gekozen', async () => {
+    await page.locator('[data-hours-week-scope="all"]').click();
+  });
+
+  await test.step('Then staat de compacte tabel weer terug, geen kaartjes', async () => {
+    await expect(page.locator('#hours-table-wrap')).toBeVisible();
+    await expect(page.locator('#hours-week-nav')).toBeHidden();
+  });
+
+  await test.step('And in Klassiek blijft Mijn uren altijd de tabel, zonder kaartjes of pijlen', async () => {
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+    await page.locator('[data-hours-week-scope="week-0"]').click();
+    await expect(page.locator('#hours-table-wrap')).toBeVisible();
+    await expect(page.locator('#hours-week-nav')).toBeHidden();
+    await expect(page.locator('#hours-grid-cards')).toBeHidden();
+  });
 });
