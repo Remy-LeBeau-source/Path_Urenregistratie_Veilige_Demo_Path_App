@@ -1175,6 +1175,18 @@ test.describe('email queue api', () => {
     await expect(page.locator('#mail-safety-badge')).toHaveClass(/is-active/);
   });
 
+  test('[EQ-N-035] medewerker ziet de mailstatus-badge niet permanent op "laden" hangen', async ({ page }) => {
+    // refreshEmailQueueReadApi() haalt de mailstatus alleen op voor state.currentRole
+    // === "admin" (server/api/email-queue.php is admin-only). De badge stond
+    // universeel in de topbar, dus een medewerker zag "E-mailstatus laden…" voor
+    // altijd -- de data waar die tekst op wacht komt er voor die rol nooit.
+    const login = new LoginPage(page);
+    await login.open();
+    await login.loginAsEmployee();
+    await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
+    await expect(page.locator('#mail-safety-badge')).toBeHidden();
+  });
+
   test('[EQ-N-017] niet-beschikbare acceptatieconsole blijft volledig uit beeld', async ({ page }) => {
     await page.route('**/server/api/mail-acceptance.php', route => route.fulfill({
       status: 503,
