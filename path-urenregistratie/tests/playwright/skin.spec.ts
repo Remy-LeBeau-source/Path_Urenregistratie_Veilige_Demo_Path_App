@@ -1,6 +1,9 @@
-import { expect, test, type Locator } from '@playwright/test';
+import { expect, test, request as playwrightRequest, type Locator } from '@playwright/test';
 import { LoginPage } from './pages/LoginPage';
 import { openProfielmenu } from './pages/TopbarMenu';
+import { appConfig, requirePassword } from './fixtures/appConfig';
+
+type JsonBody = Record<string, unknown>;
 
 // Fase D — increment 1: de vormgevingsschakelaar ("skin").
 // "classic" laat de bestaande app volledig ongemoeid; "new" activeert de
@@ -397,6 +400,102 @@ test('[SKIN-H-011] een bewust opgeslagen 0 uur telt mee voor de weekvoortgang in
   });
 });
 
+test('[SKIN-H-012] Mededelingen valt niet terug op de klassieke sidebar in Nieuw', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given de medewerker de nieuwe vormgeving opent', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+  });
+
+  // Mededelingen is voor een medewerker alleen bereikbaar via de bel (een
+  // klik op een mededeling-notificatie), niet via de klassieke sidebar die
+  // in Nieuw juist verborgen is voor de medewerkerroutes. Navigeren via de
+  // hash raakt dezelfde showView()-code als die klik.
+  await test.step('When de medewerker naar Mededelingen navigeert', async () => {
+    await page.evaluate(() => { window.location.hash = 'employee-announcements'; });
+    await expect(page.locator('#view-employee-announcements')).toBeVisible();
+  });
+
+  await test.step('Then blijft Nieuw actief en blijft de klassieke sidebar verborgen', async () => {
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await expect(page.locator('.sidebar')).toBeHidden();
+    await expect(page.locator('.mobile-brand-home')).toBeVisible();
+  });
+});
+
+test('[SKIN-H-013] de medewerkerroute blijft op elk scherm consequent Nieuw, ook op telefoonbreedte', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await page.setViewportSize({ width: 412, height: 915 });
+
+  // Elk scherm dat de medewerker daadwerkelijk kan bereiken (sidebar is in
+  // Nieuw bewust verborgen op deze routes) moet zichzelf op dezelfde manier
+  // presenteren: Nieuw blijft actief, de klassieke sidebar duikt nergens
+  // stiekem weer op, en de eigen terugknop ("Home") blijft het vaste anker
+  // i.p.v. dat je terugvalt op klassieke navigatie.
+  const assertConsistentNewSkin = async (verwachteView: string) => {
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await expect(page.locator(`#${verwachteView}`)).toBeVisible();
+    await expect(page.locator('.sidebar')).toBeHidden();
+    await expect(page.locator('.mobile-brand-home')).toBeVisible();
+    await expect(page.locator('.mobile-brand-home')).toContainText('Home');
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow, `horizontale scroll op ${verwachteView}`).toBeLessThanOrEqual(1);
+  };
+
+  await test.step('Given de medewerker inlogt en Nieuw activeert', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('#quick-skin-toggle').click();
+    await assertConsistentNewSkin('view-employee-dashboard');
+  });
+
+  await test.step('When de medewerker naar Mijn uren gaat', async () => {
+    await page.evaluate(() => { window.location.hash = 'timesheet'; });
+    await assertConsistentNewSkin('view-timesheet');
+  });
+
+  await test.step('And de medewerker naar Mededelingen gaat (bereikbaar via de bel)', async () => {
+    await page.evaluate(() => { window.location.hash = 'employee-announcements'; });
+    await assertConsistentNewSkin('view-employee-announcements');
+  });
+
+  await test.step('Then brengt de eigen Home-knop terug naar het dashboard, nog altijd in Nieuw', async () => {
+    await page.locator('.mobile-brand-home').click();
+    await assertConsistentNewSkin('view-employee-dashboard');
+  });
+});
+
+test('[SKIN-H-015] de theme-snelknop staat niet meer op de medewerker-startpagina, Voorkeuren blijft werken', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  // Testfeedback (Stasjo, medewerker): de licht/donker-snelknop bovenaan het
+  // scherm was niet duidelijk en hoort niet prominent op de homepage.
+  await test.step('Given de medewerker Nieuw activeert', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+  });
+
+  await test.step('Then staat de theme-snelknop niet meer op het dashboard', async () => {
+    await expect(page.locator('#quick-theme-toggle')).toBeHidden();
+    await expect(page.locator('#quick-skin-toggle')).toBeVisible();
+  });
+
+  await test.step('And blijft de onderliggende voorkeur bereikbaar en werkend via Voorkeuren', async () => {
+    await openProfielmenu(page);
+    await page.locator('[data-profile-action="preferences"]').click();
+    await expect(page.locator('#pref-theme-trigger')).toBeVisible();
+    await page.locator('#pref-theme-trigger').click();
+    await page.locator('[data-standard-choice-target="pref-theme"][data-standard-choice-value="dark"]').click();
+    await page.getByRole('button', { name: 'Voorkeuren opslaan' }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  });
+});
+
 test('[SKIN-N-007] productie forceert Klassiek en verbergt de redesignschakelaar', async ({ page }) => {
   const loginPage = new LoginPage(page);
 
@@ -482,11 +581,216 @@ test('[SKIN-H-014] snelkeuze in Mijn uren-bento heeft ook een 0-optie naast 8 en
       await input.focus();
       await eersteDag.locator('[data-new-bento-set="0"]').click();
       // Bewust: 0 uur wordt net als bij handmatige invoer als LEEG veld getoond
-      // (placeholder "0,00"), niet als letterlijke "0" -- zelfde renderregel
+      // (placeholder "0"), niet als letterlijke "0" -- zelfde renderregel
       // die [SKIN-H-011] al bewijst voor bewust op 0 gelaten dagen. De knop
       // zet de waarde intern wel degelijk naar 0 (vandaar de lege weergave
       // i.p.v. de vorige "8"), dit bewijst alleen dat de knop-actie werkt.
       await expect(input).toHaveValue('');
     }).toPass({ timeout: 10_000, intervals: [250, 500, 1_000] });
+  });
+});
+
+test('[SKIN-H-016] een eigen werkpatroon per weekdag vult Mijn uren voor en telt zo mee in de contracturen', async ({ page }) => {
+  // Wens van medewerker Stasjo: "mijn vrijdag is altijd 0, dat zou ik graag
+  // als standaard willen zodat ik het alleen hoef aan te passen wanneer dat
+  // nodig is." Een eigen werkpatroon per weekdag (ingesteld door Backoffice,
+  // want het raakt ook de contracturen-vergelijking) vult een nog niet
+  // aangeraakte dag voor met die waarde -- gewoon aanpasbaar, en Opslaan
+  // bewaart hem net zoals elke andere getypte waarde. Werkt gelijk in Nieuw
+  // en Klassiek, want de vulling zit in de data (applyTimesheetApiPayload),
+  // niet in een van de twee vormgevingen.
+  await page.clock.setFixedTime(new Date('2026-09-06T12:00:00.000Z'));
+  await page.addInitScript(() => {
+    localStorage.setItem('path-install-afgewezen', String(Date.now()));
+  });
+
+  const uniek = `${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 900 + 100)}`;
+  const eigenAdres = `patroonproef-${uniek}@example.invalid`;
+  const eigenNaam = `Patroonproef ${uniek}`;
+  const nieuwWachtwoord = `PatroonE2e!${uniek}`;
+  let gebruikerId = 0;
+  let medewerkerId = 0;
+
+  const beheer = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+  const beheerPost = async (pad: string, data: JsonBody) => {
+    const csrf = await (await beheer.get('/server/auth/csrf.php')).json() as { csrf_token?: string };
+    const res = await beheer.post(pad, { headers: { 'X-CSRF-Token': String(csrf.csrf_token || '') }, data });
+    return { status: res.status(), body: await res.json() as JsonBody };
+  };
+
+  try {
+    await test.step('Given Backoffice een medewerker met een eigen werkpatroon aanmaakt (dinsdag 6 uur, vrijdag 0 uur)', async () => {
+      const csrfLogin = await (await beheer.get('/server/auth/csrf.php')).json() as { csrf_token?: string };
+      const loginResponse = await beheer.post('/server/auth/login.php', {
+        headers: { 'X-CSRF-Token': String(csrfLogin.csrf_token || '') },
+        data: {
+          email: appConfig.adminEmail,
+          password: requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'),
+        },
+      });
+      expect(loginResponse.status(), 'Backoffice moet kunnen inloggen om de medewerker aan te maken').toBe(200);
+
+      const aangemaakt = await beheerPost('/server/api/staff.php', {
+        action: 'upsert_employee',
+        sendInvitation: false,
+        employee: {
+          name: eigenNaam,
+          email: eigenAdres,
+          role: 'Consultant',
+          active: true,
+          startDate: '2020-01-01',
+          weeklyHours: 32,
+          hoursTuesday: 6,
+          hoursFriday: 0,
+        },
+      });
+      expect(aangemaakt.status, JSON.stringify(aangemaakt.body)).toBe(200);
+      gebruikerId = Number(aangemaakt.body.user_id || 0);
+      medewerkerId = Number(aangemaakt.body.employee_id || 0);
+      expect(gebruikerId, 'de nieuwe medewerker hoort een account te krijgen').toBeGreaterThan(0);
+
+      const resetAangevraagd = await beheerPost('/server/auth/request-reset.php', { email: eigenAdres });
+      expect(resetAangevraagd.status).toBe(200);
+      const token = String(resetAangevraagd.body.token || '');
+      expect(token).toMatch(/^[a-f0-9]{64}$/);
+
+      await page.goto(`${appConfig.baseUrl}/index.html#reset-password=${token}`);
+      await expect(page.locator('#auth-reset-complete-form')).toBeVisible();
+      await page.locator('#auth-reset-new-password').fill(nieuwWachtwoord);
+      await page.locator('#auth-reset-confirm-password').fill(nieuwWachtwoord);
+      await page.locator('#auth-reset-complete-submit').click();
+      await expect(page.locator('#auth-reset-complete-feedback')).toContainText('Je wachtwoord is ingesteld');
+      await page.locator('#auth-reset-goto-login').click();
+    });
+
+    const loginPage = new LoginPage(page);
+    await test.step('When de medewerker inlogt, Nieuw activeert en Mijn uren opent', async () => {
+      await expect(page.locator('#auth-login-form')).toBeVisible();
+      await loginPage.login(eigenAdres, nieuwWachtwoord);
+      await expect(page.locator('#app-shell')).toBeVisible();
+      await page.locator('#quick-skin-toggle').click();
+      await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+      await expect(page.locator('#new-employee-bento')).toBeVisible();
+    });
+
+    // Week 0 van september 2026 begint met dinsdag 1 sep (maandag valt buiten
+    // de maand) -- de eerste getoonde dag is dus dinsdag, de laatste vrijdag.
+    const inputs = page.locator('#new-bento-days .new-bento-hours-input');
+
+    await test.step('Then staat dinsdag al op 6 uur en vrijdag op leeg (0 uur), zonder dat er iets is getypt', async () => {
+      // De eerste render gebeurt synchroon met een nog lege record (voor de
+      // server-fetch is opgehaald); de standaardwaarden verschijnen pas
+      // zodra die fetch is verwerkt. Poll dus in plaats van één momentopname.
+      await expect(inputs.first()).toHaveValue('6', { timeout: 15_000 });
+      await expect(inputs.last()).toHaveValue('');
+    });
+
+    await test.step('When de week wordt opgeslagen zonder verder iets aan te passen', async () => {
+      await page.locator('[data-new-bento-save]').click();
+      await page.waitForTimeout(1_500);
+    });
+
+    await test.step('Then heeft de server het patroon zelf bewaard: dinsdag 6 uur, vrijdag expliciet 0 uur', async () => {
+      await page.reload();
+      await expect(page.locator('#new-employee-bento')).toBeVisible();
+      await expect(inputs.first()).toHaveValue('6', { timeout: 10_000 });
+      await expect(inputs.last()).toHaveValue('');
+
+      // Rechtstreeks bij de server nagaan i.p.v. op de herlaad-request zelf te
+      // wachten -- die race is bij deze zwaardere setup (nieuwe medewerker +
+      // wachtwoordreset in dezelfde test) een paar keer nooit gematcht,
+      // terwijl de knop-actie en de UI-assertie hierboven al lieten zien dat
+      // het patroon goed staat.
+      const eigenMedewerkerId = await page.evaluate(() => {
+        // @ts-expect-error debug-only, alleen voor deze directe controle-call
+        return currentEmployee().id;
+      });
+      const response = await page.request.get(`/server/api/timesheets.php?period=2026-09&employee_id=${encodeURIComponent(String(eigenMedewerkerId))}`);
+      expect(response.status()).toBe(200);
+      const data = await response.json();
+      const dayEntries: Array<{ work_date: string; hours: number }> = data?.timesheet?.day_entries || [];
+      const dinsdagRij = dayEntries.find(entry => entry.work_date.endsWith('-01'));
+      const vrijdagRij = dayEntries.find(entry => entry.work_date.endsWith('-04'));
+      expect(dinsdagRij, 'dinsdag 1 sep hoort als 6 uur bewaard te zijn').toBeTruthy();
+      expect(Number(dinsdagRij?.hours)).toBe(6);
+      expect(vrijdagRij, 'vrijdag 4 sep hoort als expliciete 0 uur bewaard te zijn').toBeTruthy();
+      expect(Number(vrijdagRij?.hours)).toBe(0);
+    });
+  } finally {
+    // Zonder dit blijft de wegwerpmedewerker actief in de gedeelde demo-data
+    // staan -- dat verstoort de isolatiecontrole (orphans/marker-checks) van
+    // alle ándere tests die dezelfde CI-database delen, ook lang na deze
+    // case. Zelfde opruimpatroon als business-workflows-e2e.spec.ts: eerst
+    // deactiveren, dan het account echt verwijderen.
+    const csrfLogout = await (await page.request.get('/server/auth/csrf.php')).json() as { csrf_token?: string };
+    await page.request.post('/server/auth/logout.php', {
+      headers: { 'X-CSRF-Token': String(csrfLogout.csrf_token || '') },
+    }).catch(() => null);
+    if (gebruikerId > 0) {
+      await beheerPost('/server/api/staff.php', {
+        action: 'upsert_employee',
+        sendInvitation: false,
+        employee: { name: eigenNaam, email: eigenAdres, dbEmployeeId: medewerkerId, dbUserId: gebruikerId, role: 'Consultant', active: false },
+      }).catch(() => null);
+      await beheerPost('/server/api/users.php', { action: 'delete', user_id: gebruikerId }).catch(() => null);
+    }
+    await beheer.dispose();
+  }
+});
+
+test('[SKIN-H-017] Mijn uren toont bij een enkele week dezelfde bento-kaartjes als het Dashboard, Klassiek blijft de tabel', async ({ page }) => {
+  // "we willen toch vanuit hier blijven werken in new design? je springt
+  // ineens naar dit bij pijl kiezen. 0 8 9 hier wel maar bij oude niet?" --
+  // de volledige Mijn uren-weergave gebruikte bij een enkele week nog de
+  // klassieke tabelrij-layout, ook al was de kleurstelling al Nieuw. Een
+  // enkele week toont nu dezelfde kaartjes (met dezelfde -/+ en 0/8/9-
+  // knoppen) als de bento, met dezelfde vorige/volgende-week-pijlen erboven.
+  // "Hele maand" blijft de compacte tabel voor een totaaloverzicht. Klassiek
+  // raakt hier niets van: geen kaartjes, geen pijlen, gewoon de tabel.
+  const loginPage = new LoginPage(page);
+  await page.clock.setFixedTime(new Date('2026-09-06T12:00:00.000Z'));
+
+  await test.step('Given de medewerker Nieuw activeert en Mijn uren opent op een enkele week', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await page.locator('[data-new-bento-open-hours]').click();
+    await page.locator('[data-hours-week-scope="week-0"]').click();
+  });
+
+  await test.step('Then toont Mijn uren dezelfde kaartjesstijl als de bento, met werkende week-pijlen', async () => {
+    await expect(page.locator('#hours-table-wrap')).toBeHidden();
+    await expect(page.locator('#hours-week-nav')).toBeVisible();
+    const cards = page.locator('#hours-grid-cards .new-bento-day');
+    await expect(cards.first()).toBeVisible();
+    await expect(page.locator('#hours-week-nav-title')).toHaveText('Week 36');
+
+    const dinsdag = cards.first();
+    await dinsdag.locator('.new-bento-hours-input').focus();
+    await expect(dinsdag.locator('[data-new-bento-set="8"]')).toBeVisible();
+    await dinsdag.locator('[data-new-bento-set="8"]').click();
+    await expect(dinsdag.locator('.new-bento-hours-input')).toHaveValue('8', { timeout: 5_000 });
+
+    await page.locator('#hours-week-nav [data-new-bento-week="next"]').click();
+    await expect(page.locator('#hours-week-nav-title')).toHaveText('Week 37');
+  });
+
+  await test.step('When Hele maand wordt gekozen', async () => {
+    await page.locator('[data-hours-week-scope="all"]').click();
+  });
+
+  await test.step('Then staat de compacte tabel weer terug, geen kaartjes', async () => {
+    await expect(page.locator('#hours-table-wrap')).toBeVisible();
+    await expect(page.locator('#hours-week-nav')).toBeHidden();
+  });
+
+  await test.step('And in Klassiek blijft Mijn uren altijd de tabel, zonder kaartjes of pijlen', async () => {
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+    await page.locator('[data-hours-week-scope="week-0"]').click();
+    await expect(page.locator('#hours-table-wrap')).toBeVisible();
+    await expect(page.locator('#hours-week-nav')).toBeHidden();
+    await expect(page.locator('#hours-grid-cards')).toBeHidden();
   });
 });

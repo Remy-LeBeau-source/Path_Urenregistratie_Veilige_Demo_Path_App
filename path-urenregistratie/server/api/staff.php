@@ -460,6 +460,28 @@ if ($action === 'upsert_employee') {
         $weeklyHours = 0;
     }
 
+    // Optioneel werkpatroon per weekdag (bv. vrijdag altijd 0 uur). Leeg/niet
+    // ingevuld blijft NULL: dan verdeelt de contracturen-berekening de
+    // weekuren zoals voorheen gelijk over alle werkdagen in de maand.
+    $dayHoursField = static function (mixed $value): ?float {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        $number = (float)$value;
+        if ($number < 0) {
+            $number = 0;
+        }
+        if ($number > 24) {
+            $number = 24;
+        }
+        return $number;
+    };
+    $hoursMonday = $dayHoursField($employee['hoursMonday'] ?? null);
+    $hoursTuesday = $dayHoursField($employee['hoursTuesday'] ?? null);
+    $hoursWednesday = $dayHoursField($employee['hoursWednesday'] ?? null);
+    $hoursThursday = $dayHoursField($employee['hoursThursday'] ?? null);
+    $hoursFriday = $dayHoursField($employee['hoursFriday'] ?? null);
+
     $rate = (float)($employee['rate'] ?? 0);
     if ($rate < 0) {
         $rate = 0;
@@ -578,6 +600,11 @@ if ($action === 'upsert_employee') {
                      full_name = :full_name,
                      job_title = :job_title,
                      weekly_contract_hours = :weekly_contract_hours,
+                     hours_monday = :hours_monday,
+                     hours_tuesday = :hours_tuesday,
+                     hours_wednesday = :hours_wednesday,
+                     hours_thursday = :hours_thursday,
+                     hours_friday = :hours_friday,
                      employment_start_date = :employment_start_date,
                      active = :active
                  WHERE id = :id AND company_id = :company_id'
@@ -587,6 +614,11 @@ if ($action === 'upsert_employee') {
                 ':full_name' => $name,
                 ':job_title' => $role !== '' ? $role : null,
                 ':weekly_contract_hours' => $weeklyHours,
+                ':hours_monday' => $hoursMonday,
+                ':hours_tuesday' => $hoursTuesday,
+                ':hours_wednesday' => $hoursWednesday,
+                ':hours_thursday' => $hoursThursday,
+                ':hours_friday' => $hoursFriday,
                 ':employment_start_date' => $startDate,
                 ':active' => staff_bool($employee['active'] ?? true, true) ? 1 : 0,
                 ':id' => $employeeDbId,
@@ -604,8 +636,8 @@ if ($action === 'upsert_employee') {
             }
         } else {
             $insertEmployee = $pdo->prepare(
-                'INSERT INTO employees (company_id, user_id, full_name, job_title, weekly_contract_hours, employment_start_date, active)
-                 VALUES (:company_id, :user_id, :full_name, :job_title, :weekly_contract_hours, :employment_start_date, :active)'
+                'INSERT INTO employees (company_id, user_id, full_name, job_title, weekly_contract_hours, hours_monday, hours_tuesday, hours_wednesday, hours_thursday, hours_friday, employment_start_date, active)
+                 VALUES (:company_id, :user_id, :full_name, :job_title, :weekly_contract_hours, :hours_monday, :hours_tuesday, :hours_wednesday, :hours_thursday, :hours_friday, :employment_start_date, :active)'
             );
             $insertEmployee->execute([
                 ':company_id' => $companyId,
@@ -613,6 +645,11 @@ if ($action === 'upsert_employee') {
                 ':full_name' => $name,
                 ':job_title' => $role !== '' ? $role : null,
                 ':weekly_contract_hours' => $weeklyHours,
+                ':hours_monday' => $hoursMonday,
+                ':hours_tuesday' => $hoursTuesday,
+                ':hours_wednesday' => $hoursWednesday,
+                ':hours_thursday' => $hoursThursday,
+                ':hours_friday' => $hoursFriday,
                 ':employment_start_date' => $startDate,
                 ':active' => staff_bool($employee['active'] ?? true, true) ? 1 : 0,
             ]);

@@ -324,7 +324,7 @@
           </div>
         </section>
         <div class="metric-grid employee-metrics">
-          <article class="metric-card"><span class="metric-label">Deze maand</span><strong id="employee-dashboard-hours">153,0</strong><span class="metric-note" id="employee-dashboard-contract">van 153,0 contracturen</span><div class="linear-progress"><span id="employee-dashboard-progress" style="width:100%"></span></div><small id="employee-dashboard-period">Juli 2026</small></article>
+          <article class="metric-card"><span class="metric-label">Deze maand</span><strong id="employee-dashboard-hours">153,0</strong><span class="metric-note" id="employee-dashboard-contract">van 153,0 maanduren</span><div class="linear-progress"><span id="employee-dashboard-progress" style="width:100%"></span></div><small id="employee-dashboard-period">Juli 2026</small></article>
           <article class="metric-card"><span class="metric-label">Status</span><strong class="compact-metric" id="employee-dashboard-status">Ingediend</strong><span class="metric-note" id="employee-dashboard-status-note">Wacht op controle</span></article>
           <article class="metric-card"><span class="metric-label">Declarabel</span><strong id="employee-dashboard-billable">153,0</strong><span class="metric-note">uur in deze maand</span></article>
           <article class="metric-card"><span class="metric-label">Verlof en ziekte</span><strong id="employee-dashboard-absence">0,0</strong><span class="metric-note">uur verantwoord</span></article>
@@ -499,7 +499,15 @@
               </div>
               <div class="hours-visible-total"><span id="hours-visible-total-label">Hele maand</span><strong id="hours-visible-total">0,0 uur</strong></div>
             </div>
-            <div class="table-wrap">
+            <div class="new-bento-week" id="hours-week-nav" hidden>
+              <header>
+                <button type="button" data-new-bento-week="previous" aria-label="Vorige week">‹</button>
+                <div><strong id="hours-week-nav-title">Week</strong><small id="hours-week-nav-range"></small></div>
+                <button type="button" data-new-bento-week="next" aria-label="Volgende week">›</button>
+              </header>
+              <div class="new-bento-days" id="hours-grid-cards"></div>
+            </div>
+            <div class="table-wrap" id="hours-table-wrap">
               <table class="hours-table">
                 <thead><tr><th>Week</th><th>Ma</th><th>Di</th><th>Wo</th><th>Do</th><th>Vr</th><th>Totaal</th></tr></thead>
                 <tbody id="hours-grid"></tbody>
@@ -507,7 +515,7 @@
               </table>
             </div>
             <div class="timesheet-actions">
-              <p><strong id="hours-target-message">Declarabele uren worden met contracturen vergeleken.</strong><small id="hours-target-help">Dit is alleen een controlebericht en blokkeert indienen nooit.</small></p>
+              <p><small id="hours-target-help">Dit blokkeert indienen nooit. Enter slaat tussentijds op en gaat verder.</small></p>
               <div class="timesheet-action-buttons">
                 <button class="button button-ghost" id="save-timesheet" type="button">Week opslaan</button>
                 <button class="button button-primary" id="submit-timesheet" type="button">Maand indienen</button>
@@ -523,7 +531,7 @@
               <div><dt>Declarabel</dt><dd id="summary-billable">0,0 uur</dd></div>
               <div><dt><label for="summary-leave">Verlof</label></dt><dd><input class="summary-hours-input" id="summary-leave" type="number" min="0" step="0.5" value="0" aria-label="Verlofuren" title="Verlof wordt verwerkt via de salarisadministratie."></dd></div>
               <div><dt><label for="summary-sick">Ziekte</label></dt><dd><input class="summary-hours-input" id="summary-sick" type="number" min="0" step="0.5" value="0" aria-label="Ziekte-uren" title="Ziekte meld je bij Backoffice."></dd></div>
-              <div><dt>Contracturen</dt><dd id="summary-contract">144,0 uur</dd></div>
+              <div><dt>Maanduren</dt><dd id="summary-contract">144,0 uur</dd></div>
             </dl>
             <div class="summary-note"><strong>Waarom staat dit uit?</strong><p id="payroll-privacy-note">Verlof wordt verwerkt via de salarisadministratie en ziekte meld je bij Backoffice; beide lopen vooralsnog niet via deze applicatie. De salarisadministratie ontvangt daarbij uitsluitend de daarvoor bestemde urengegevens en standaard geen factuurinformatie.</p></div>
           </aside>

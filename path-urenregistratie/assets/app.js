@@ -55,6 +55,35 @@ const MONTH_NAMES = [
 ];
 const WEEKDAY_SHORT = ["Ma", "Di", "Wo", "Do", "Vr"];
 
+// Eigen werkpatroon per weekdag (optioneel, per medewerker). iso is de
+// ISO-weekdagnummering (1 = maandag .. 5 = vrijdag) zoals ook elders in de
+// app gebruikt wordt voor dagindexering; key/field koppelen dat aan de
+// bijbehorende admin-forminput en het server-veld.
+const WEEKDAY_HOURS_FIELDS = [
+  { iso: 1, key: "mon", field: "hoursMonday", dbColumn: "hours_monday", label: "Maandag" },
+  { iso: 2, key: "tue", field: "hoursTuesday", dbColumn: "hours_tuesday", label: "Dinsdag" },
+  { iso: 3, key: "wed", field: "hoursWednesday", dbColumn: "hours_wednesday", label: "Woensdag" },
+  { iso: 4, key: "thu", field: "hoursThursday", dbColumn: "hours_thursday", label: "Donderdag" },
+  { iso: 5, key: "fri", field: "hoursFriday", dbColumn: "hours_friday", label: "Vrijdag" }
+];
+
+// Bouwt { 1: uren, ..., 5: uren } (ISO-weekdag) uit de kolommen van de server,
+// en laat weekdagen zonder eigen waarde gewoon weg. Geeft null terug als er
+// geen enkele weekdag een eigen waarde heeft: dan blijft het oude, gelijk
+// verdeelde gedrag gelden.
+function employeeDayHoursFromDb(dbEmployee) {
+  const result = {};
+  let any = false;
+  WEEKDAY_HOURS_FIELDS.forEach(field => {
+    const value = dbEmployee[field.dbColumn];
+    if (value !== undefined && value !== null && value !== "") {
+      result[field.iso] = Number(value);
+      any = true;
+    }
+  });
+  return any ? result : null;
+}
+
 function defaultMailRecipientRoutes() {
   return {
     bookkeeper: { enabled: true, invoiceAttachment: true },
@@ -2038,6 +2067,13 @@ function applyTimesheetApiPayload(employeeId, periodKey, timesheet) {
   if (timesheet.sickness_hours !== undefined) record.sick = Number(timesheet.sickness_hours) || 0;
 
   record.timesheetStatus = String(timesheet.status || record.timesheetStatus || "draft");
+
+  // Een eigen werkpatroon (bv. vrijdag altijd 0 uur) vult dagen zonder
+  // server-rij voor met die standaardwaarde, zodat opslaan zonder aanpassen
+  // hem meteen echt bewaart -- precies zoals bij elke andere getypte waarde.
+  // Zie applyDayHoursDefaultsToRecord: dit gebeurt na elke server-sync (niet
+  // eenmalig bij aanmaken) en raakt alleen de dag die nog niet bevestigd is.
+  applyDayHoursDefaultsToRecord(record, employee, key);
   const timesheetId = Number(timesheet.id || 0);
   record.serverTimesheetId = Number.isFinite(timesheetId) && timesheetId > 0 ? timesheetId : (Number(record.serverTimesheetId || 0) || null);
   record.reviewNote = String(timesheet.review_note || "");
@@ -2845,6 +2881,7 @@ function mergeBootstrapIntoState(data) {
     if (match.weekly_contract_hours !== undefined && match.weekly_contract_hours !== null) {
       localEmployee.weeklyHours = Number(match.weekly_contract_hours);
     }
+    localEmployee.dayHours = employeeDayHoursFromDb(match);
     if (linkedUser && linkedUser.email) localEmployee.email = String(linkedUser.email);
     if (linkedUser) localEmployee.invitationPending = Number(linkedUser.password_ready || 0) !== 1;
   });
@@ -2879,6 +2916,7 @@ function mergeBootstrapIntoState(data) {
       rate: 0,
       contract: "",
       weeklyHours: Number(dbEmployee.weekly_contract_hours || 0),
+      dayHours: employeeDayHoursFromDb(dbEmployee),
       projectCode: "",
       // Gelijk aan de serverstandaard (invoices.php). Een {klant}-token wordt
       // in formatInvoiceNumber niet ingevuld en belandde zo letterlijk op de PDF.
@@ -4040,7 +4078,23 @@ function weeklyHoursFor(employee) {
 
 function defaultContractHours(employee, periodKey) {
   const period = periodFromKey(periodKey);
-  return Math.round((period.businessDays * weeklyHoursFor(employee) / 5) * 10) / 10;
+  // Zonder eigen werkpatroon blijft dit de oude, gelijk verdeelde berekening.
+  // Zodra een medewerker een eigen patroon heeft (bv. vrijdag altijd 0 uur),
+  // telt elke werkdag in de maand mee met zijn eigen weekdag-waarde in plaats
+  // van het gemiddelde -- anders klopt de vergelijking met de contracturen
+  // structureel niet voor wie niet vijf gelijke dagen werkt (of voor iedereen
+  // zodra de maand niet op maandag begint).
+  const average = weeklyHoursFor(employee) / 5;
+  let total = 0;
+  period.weekRows.forEach(row => {
+    row.days.forEach((day, dayIndex) => {
+      if (!day) return;
+      const iso = dayIndex + 1;
+      const override = employee.dayHours ? employee.dayHours[iso] : undefined;
+      total += override !== undefined && override !== null ? Number(override) : average;
+    });
+  });
+  return Math.round(total * 10) / 10;
 }
 
 // Een {klant}-token in het nummer wordt de klantnaam, gestript tot letters en
@@ -4191,6 +4245,31 @@ function customerTimesheetBrokerEmail(employee) {
     : employee.customerTimesheetBrokerEmail;
 }
 
+// Vult, voor de week die newEmployeeBentoWeekIndex als "nu" aanwijst, elke
+// nog niet bevestigde en nog niet ingevulde dag met het eigen werkpatroon
+// van de medewerker (bv. vrijdag altijd 0 uur). Gedeeld door twee plekken:
+// een gloednieuwe, nog nooit opgeslagen periode (ensurePeriodRecords) en een
+// periode die al wel eerder is opgeslagen (applyTimesheetApiPayload) --
+// zonder deze twijeede plek zou een medewerker die deze maand nog nooit iets
+// heeft ingevuld (data.found === false, dus geen server-sync) nooit een
+// beginwaarde zien.
+function applyDayHoursDefaultsToRecord(record, employee, periodKey) {
+  if (!employee.dayHours || !isTimesheetEditableForEmployee(record)) return;
+  const period = periodFromKey(periodKey);
+  const activeWeekIndex = newEmployeeBentoWeekIndex(period);
+  const week = period.weekRows[activeWeekIndex];
+  if (!week || !record.entries || !record.entries[activeWeekIndex]) return;
+  week.days.forEach((day, dayIndex) => {
+    if (!day) return;
+    if (record.confirmedEntries?.[activeWeekIndex]?.[dayIndex]) return;
+    if (Number(record.entries[activeWeekIndex][dayIndex] || 0) > 0) return;
+    const override = employee.dayHours[dayIndex + 1];
+    if (override !== undefined && override !== null) {
+      record.entries[activeWeekIndex][dayIndex] = Number(override);
+    }
+  });
+}
+
 function ensurePeriodRecords(periodKey) {
   const period = periodFromKey(periodKey);
   if (!state.records || typeof state.records !== "object") state.records = {};
@@ -4209,6 +4288,11 @@ function ensurePeriodRecords(periodKey) {
     } else {
       normalizeRecord(state.records[period.key][id], employee, period.key);
     }
+    // Los van aanmaken of normaliseren: employee.dayHours kan pas ná deze
+    // record al bestaan (bv. de bootstrap-data met het patroon komt later
+    // binnen dan de eerste render). Dit blijft veilig om steeds opnieuw te
+    // proberen -- het vult alleen een dag die nog leeg èn onbevestigd is.
+    applyDayHoursDefaultsToRecord(state.records[period.key][id], employee, period.key);
   });
   return state.records[period.key];
 }
@@ -4693,6 +4777,20 @@ function renderEmployeeCustomerTimesheet(record, employee, period) {
   skipButton.textContent = documentRecord.status === "skipped" ? "Alsnog uploaden" : "Al rechtstreeks gemaild";
 }
 
+// Vindt de weekindex van vandaag binnen period, los van viewport (in
+// tegenstelling tot mobileWeekScope, die alleen op telefoonbreedte een
+// specifieke week teruggeeft). Gebruikt door de "Open uren"-pijl: die moet
+// altijd naar de dag van vandaag springen, ook als de medewerker toevallig
+// al een andere week of maand had openstaan.
+function todaysWeekIndexInPeriod(period) {
+  const now = new Date();
+  if (now.getFullYear() === period.year && now.getMonth() === period.monthIndex) {
+    const index = period.weekRows.findIndex(week => week.days.some(day => day && day.day === now.getDate()));
+    if (index >= 0) return index;
+  }
+  return 0;
+}
+
 function newEmployeeBentoWeekIndex(period) {
   const selected = /^week-(\d+)$/.exec(String(state.hoursWeekScope || ""));
   const selectedIndex = selected ? Number(selected[1]) : -1;
@@ -4733,6 +4831,39 @@ function incompleteTimesheetWeekLabels(record, period) {
   }, []);
 }
 
+// Bouwt de bento-dagkaartjes-HTML voor één week. Gedeeld tussen het
+// Dashboard (#new-bento-days) en, sinds Mijn uren in Nieuw dezelfde stijl
+// kreeg bij een enkele week, ook #hours-grid-cards -- zo blijven beide
+// schermen visueel en functioneel identiek in plaats van twee losse
+// implementaties die uit elkaar kunnen groeien.
+function renderBentoDayCards(week, weekIndex, record, editable, period) {
+  const today = new Date();
+  const selectedIsCurrentMonth = period.key === currentCalendarPeriodKey();
+  return week.days.map((day, dayIndex) => {
+    if (!day) return "";
+    // Een eigen werkpatroon (bv. vrijdag altijd 0 uur) staat hier al in
+    // record.entries als beginwaarde -- zie applyTimesheetApiPayload -- dus
+    // dit blijft de gewone weergave, zonder aparte prefill-logica.
+    const value = Number(record.entries[weekIndex][dayIndex] || 0);
+    const displayValue = value > 0 ? value : "";
+    const isToday = selectedIsCurrentMonth && day.day === today.getDate();
+    const disabled = editable ? "" : " disabled";
+    return '<div class="new-bento-day' + (isToday ? " is-active" : "") + '"><span><small>' + escapeHtml(WEEKDAY_SHORT[dayIndex]) + '</small><b>' + day.day + '</b></span><div class="new-bento-day-control"><button type="button" data-new-bento-adjust="-0.5" aria-label="Een half uur minder op ' + escapeHtml(day.label) + '"' + disabled + '>−</button><input class="new-bento-hours-input" data-week-index="' + weekIndex + '" data-day-index="' + dayIndex + '" type="number" min="0" max="24" step="0.5" inputmode="decimal" value="' + displayValue + '" placeholder="0" aria-label="Uren op ' + escapeHtml(day.label) + '"' + disabled + '><button type="button" data-new-bento-adjust="0.5" aria-label="Een half uur meer op ' + escapeHtml(day.label) + '"' + disabled + '>+</button></div><div class="new-bento-presets" aria-label="Snelle urenkeuze"><button type="button" data-new-bento-set="0"' + disabled + '>0</button><button type="button" data-new-bento-set="8"' + disabled + '>8</button><button type="button" data-new-bento-set="9"' + disabled + '>9</button></div></div>';
+  }).join("");
+}
+
+// Zet de disabled-status van een vorige/volgende-week-pijlpaar, gescopeerd
+// binnen containerSelector -- nodig omdat dezelfde data-new-bento-week
+// knoppen nu op twee plekken staan (Dashboard-bento en Mijn uren).
+function updateWeekNavButtons(containerSelector, weekIndex, period) {
+  const container = document.querySelector(containerSelector);
+  if (!container) return;
+  const previous = container.querySelector('[data-new-bento-week="previous"]');
+  const next = container.querySelector('[data-new-bento-week="next"]');
+  if (previous) previous.disabled = weekIndex === 0;
+  if (next) next.disabled = weekIndex >= period.weekRows.length - 1;
+}
+
 function renderNewEmployeeBento(record, employee, period) {
   const bento = document.querySelector("#new-employee-bento");
   if (!bento) return;
@@ -4768,23 +4899,12 @@ function renderNewEmployeeBento(record, employee, period) {
   document.querySelector("#new-bento-week-range").textContent = actualDays.length
     ? actualDays[0].label + " – " + actualDays[actualDays.length - 1].label
     : period.label;
-  const today = new Date();
-  const selectedIsCurrentMonth = period.key === currentCalendarPeriodKey();
-  document.querySelector("#new-bento-days").innerHTML = week.days.map((day, dayIndex) => {
-    if (!day) return "";
-    const value = Number(record.entries[weekIndex][dayIndex] || 0);
-    const isToday = selectedIsCurrentMonth && day.day === today.getDate();
-    const disabled = editable ? "" : " disabled";
-    return '<div class="new-bento-day' + (isToday ? " is-active" : "") + '"><span><small>' + escapeHtml(WEEKDAY_SHORT[dayIndex]) + '</small><b>' + day.day + '</b></span><div class="new-bento-day-control"><button type="button" data-new-bento-adjust="-0.5" aria-label="Een half uur minder op ' + escapeHtml(day.label) + '"' + disabled + '>−</button><input class="new-bento-hours-input" data-week-index="' + weekIndex + '" data-day-index="' + dayIndex + '" type="number" min="0" max="24" step="0.5" inputmode="decimal" value="' + (value > 0 ? String(value) : "") + '" placeholder="0,00" aria-label="Uren op ' + escapeHtml(day.label) + '"' + disabled + '><button type="button" data-new-bento-adjust="0.5" aria-label="Een half uur meer op ' + escapeHtml(day.label) + '"' + disabled + '>+</button></div><div class="new-bento-presets" aria-label="Snelle urenkeuze"><button type="button" data-new-bento-set="0"' + disabled + '>0</button><button type="button" data-new-bento-set="8"' + disabled + '>8</button><button type="button" data-new-bento-set="9"' + disabled + '>9</button></div></div>';
-  }).join("");
+  document.querySelector("#new-bento-days").innerHTML = renderBentoDayCards(week, weekIndex, record, editable, period);
   const weekTotal = record.entries[weekIndex].reduce((sum, value) => sum + Number(value || 0), 0);
   const weekBusinessDays = actualDays.length;
   document.querySelector("#new-bento-week-total-label").textContent = "Totaal · " + weekBusinessDays + " werkdag" + (weekBusinessDays === 1 ? "" : "en") + " in deze maand";
   document.querySelector("#new-bento-week-total").textContent = hoursFormat.format(weekTotal) + " uur";
-  const previous = document.querySelector('[data-new-bento-week="previous"]');
-  const next = document.querySelector('[data-new-bento-week="next"]');
-  previous.disabled = weekIndex === 0;
-  next.disabled = weekIndex >= period.weekRows.length - 1;
+  updateWeekNavButtons("#new-employee-bento", weekIndex, period);
   const submit = document.querySelector("[data-new-bento-submit]");
   submit.disabled = !editable;
   const finalWeekSelected = weekIndex === period.weekRows.length - 1;
@@ -5010,7 +5130,7 @@ function renderEmployeeDashboard() {
   document.querySelector(".employee-hero").classList.toggle("is-complete", !awaitingOpenTasks && employeeOpenActions.length === 0);
   document.querySelector("#employee-dashboard-period").textContent = period.label;
   document.querySelector("#employee-dashboard-hours").textContent = hoursFormat.format(accounted) + " uur";
-  document.querySelector("#employee-dashboard-contract").textContent = "van " + hoursFormat.format(record.contractHours) + " contracturen";
+  document.querySelector("#employee-dashboard-contract").textContent = "van " + hoursFormat.format(record.contractHours) + " maanduren";
   document.querySelector("#employee-dashboard-progress").style.width = progress + "%";
   document.querySelector("#employee-open-task-total").textContent = awaitingOpenTasks ? "Werkvoorraad laden…" : (employeeOpenActions.length + " open " + (employeeOpenActions.length === 1 ? "actie" : "acties"));
   document.querySelector("#employee-open-task-months").textContent = awaitingOpenTasks ? "" : (employeeOpenActions.length ? employeeOpenMonthEquation(openMonthSummaries) : "Alles afgerond");
@@ -7674,12 +7794,27 @@ function mobileWeekScope(period) {
   return period.weekRows.length ? "week-0" : "all";
 }
 
-function normalizedHoursWeekScope(period) {
+// allowReset staat de terugval op mobileWeekScope() alleen toe als Mijn uren
+// ook echt het scherm is dat de gebruiker ziet. renderAll() roept
+// renderHoursGrid() namelijk ook aan terwijl Mijn uren niet actief is (zodat
+// de -- verborgen -- tabel niet stiekem een oude maand toont zodra je er wél
+// naartoe gaat); zonder deze voorwaarde overschreef die achtergrondaanroep
+// een net door de bento gekozen week-scope stilletjes terug naar "Hele
+// maand" op desktopbreedte, nog vóór de medewerker had opgeslagen -- met als
+// zichtbaar gevolg dat een bewust op 0 gelaten dag op de actieve week niet
+// meer als expliciete dagregel werd meegestuurd (zie [SKIN-H-016]).
+function normalizedHoursWeekScope(period, allowReset = true) {
   let scope = state.hoursWeekScope || "all";
-  if (!state.hoursWeekScopeTouched) scope = mobileWeekScope(period);
+  if (!state.hoursWeekScopeTouched) {
+    if (!allowReset) return scope !== "all" && period.weekRows[Number(/^week-(\d+)$/.exec(scope)?.[1])] ? scope : "all";
+    scope = mobileWeekScope(period);
+  }
   if (scope !== "all") {
     const match = /^week-(\d+)$/.exec(scope);
-    if (!match || !period.weekRows[Number(match[1])]) scope = mobileWeekScope(period);
+    if (!match || !period.weekRows[Number(match[1])]) {
+      if (!allowReset) return "all";
+      scope = mobileWeekScope(period);
+    }
   }
   state.hoursWeekScope = scope;
   return scope;
@@ -7739,12 +7874,47 @@ function renderHoursGrid() {
     document.querySelector("#timesheet-correction-message").textContent = correction.message;
     document.querySelector("#timesheet-correction-meta").textContent = "Teruggestuurd door " + correction.requestedBy + " · " + correction.requestedAt;
   }
-  const weekScope = normalizedHoursWeekScope(period);
+  const weekScope = normalizedHoursWeekScope(period, timesheetViewActive);
   renderHoursWeekFilter(period, weekScope);
+
+  // In Nieuw krijgt een enkele week (niet Hele maand) dezelfde
+  // bento-kaartjesstijl als het Dashboard, met dezelfde vorige/volgende-week-
+  // pijlen -- Mijn uren en de bento horen er niet meer verschillend uit te
+  // zien. Hele maand blijft de compacte tabel: een tegel per dag voor een
+  // volledig maandoverzicht zou onwerkbaar lang worden.
+  const isNewSkin = document.documentElement.dataset.skin === "new";
+  const weekMatchForCards = /^week-(\d+)$/.exec(weekScope);
+  const cardsWeekIndex = isNewSkin && weekMatchForCards ? Number(weekMatchForCards[1]) : -1;
+  const cardsWeek = cardsWeekIndex >= 0 ? period.weekRows[cardsWeekIndex] : null;
+  const tableWrap = document.querySelector("#hours-table-wrap");
+  const cardsContainer = document.querySelector("#hours-grid-cards");
+  const weekNav = document.querySelector("#hours-week-nav");
+  if (cardsWeek) {
+    if (tableWrap) tableWrap.hidden = true;
+    if (weekNav) weekNav.hidden = false;
+    if (cardsContainer) {
+      cardsContainer.hidden = false;
+      cardsContainer.innerHTML = renderBentoDayCards(cardsWeek, cardsWeekIndex, record, editable, period);
+    }
+    const actualDays = cardsWeek.days.filter(Boolean);
+    const weekTitle = document.querySelector("#hours-week-nav-title");
+    const weekRange = document.querySelector("#hours-week-nav-range");
+    if (weekTitle) weekTitle.textContent = "Week " + cardsWeek.number;
+    if (weekRange) weekRange.textContent = actualDays.length ? actualDays[0].label + " – " + actualDays[actualDays.length - 1].label : period.label;
+    updateWeekNavButtons("#hours-week-nav", cardsWeekIndex, period);
+  } else {
+    if (tableWrap) tableWrap.hidden = false;
+    if (weekNav) weekNav.hidden = true;
+    if (cardsContainer) { cardsContainer.hidden = true; cardsContainer.innerHTML = ""; }
+  }
+
   document.querySelector("#hours-grid").innerHTML = period.weekRows.map((week, weekIndex) => {
     if (weekScope !== "all" && weekScope !== "week-" + weekIndex) return "";
     const cells = week.days.map((day, dayIndex) => {
       if (!day) return '<td class="outside-month"><span class="outside-month-mark" aria-hidden="true">—</span></td>';
+      // Een eigen werkpatroon (bv. vrijdag altijd 0 uur) staat hier al in
+      // record.entries als beginwaarde -- zie applyTimesheetApiPayload --
+      // zodat Nieuw en Klassiek dezelfde functionaliteit bieden.
       const value = Number(record.entries[weekIndex][dayIndex] || 0);
       const displayValue = value > 0 ? String(value) : "";
       return '<td class="workday-cell"><label class="hours-day-entry"><span class="date-number">' + WEEKDAY_SHORT[dayIndex] + ' ' + day.day + ' ' + escapeHtml(period.month.slice(0, 3)) + '</span><input class="hours-input" data-week-index="' + weekIndex + '" data-day-index="' + dayIndex + '" type="number" min="0" max="24" step="0.5" value="' + displayValue + '" placeholder="0" aria-label="' + escapeHtml(WEEKDAY_SHORT[dayIndex] + ' ' + day.label) + '"' + (editable ? "" : " disabled") + '></label></td>';
@@ -7849,11 +8019,10 @@ function updateHoursTotal(markDraft) {
   document.querySelector("#hours-visible-total").textContent = hoursFormat.format(state.hoursWeekScope === "all" ? total : visibleTotal) + " uur";
   document.querySelector("#hours-total").textContent = hoursFormat.format(total);
   document.querySelector("#summary-billable").textContent = hoursFormat.format(total) + " uur";
-  const difference = Math.round((total - record.contractHours) * 10) / 10;
-  let comparison = "Declarabele uren zijn gelijk aan de contracturen.";
-  if (difference < 0) comparison = hoursFormat.format(Math.abs(difference)) + " uur minder dan de contracturen.";
-  if (difference > 0) comparison = hoursFormat.format(difference) + " uur meer dan de contracturen.";
-  document.querySelector("#hours-target-message").textContent = comparison;
+  // Geen vergelijkingsbericht meer ("X uur minder/meer dan de contracturen"):
+  // de maanduren zijn een richtgetal op basis van wat Backoffice invult (36,
+  // 40, ...), geen harde norm om aan te voldoen -- alleen het gedrag van de
+  // knoppen blijft hier uitgelegd.
   document.querySelector("#hours-target-help").textContent = isTimesheetEditableForEmployee(record)
     ? "Dit blokkeert indienen nooit. Alleen " + currentPeriod().label + " wordt ingediend. Enter slaat tussentijds op en gaat verder."
     : "Deze maand is vergrendeld (ingediend, goedgekeurd of gefactureerd) en kan niet meer worden aangepast.";
@@ -10537,6 +10706,8 @@ function showEmployeeEditor(employeeId, prefill) {
     '<label>Startdatum<input id="edit-start-date" type="date" value="' + escapeHtml(employee.startDate || (currentCalendarPeriodKey() + "-01")) + '"></label>' +
     '<label>Contract<input id="edit-contract" value="' + escapeHtml(employee.contract) + '"></label>' +
     '<label>Uren per week<input id="edit-weekly-hours" type="number" min="0" step="0.5" value="' + weeklyHoursFor(employee) + '"></label>' +
+    '<p class="full form-help">Eigen werkpatroon per weekdag (optioneel). Leeg = gelijk verdeeld over alle werkdagen, zoals nu. Ingevuld (bv. vrijdag 0) telt voortaan zo mee in de contracturen en staat als beginwaarde klaar in Mijn uren.</p>' +
+    WEEKDAY_HOURS_FIELDS.map(field => '<label>' + field.label + '<input id="edit-hours-' + field.key + '" type="number" min="0" max="24" step="0.5" placeholder="gelijk verdeeld" value="' + (employee.dayHours && employee.dayHours[field.iso] !== undefined && employee.dayHours[field.iso] !== null ? employee.dayHours[field.iso] : "") + '"></label>').join("") +
     '<p class="full form-help">Opdracht en factuurroute</p>' +
     '<label>Klant<input id="edit-client" value="' + escapeHtml(employee.client) + '"></label>' +
     '<label>Projectcode<input id="edit-project" value="' + escapeHtml(employee.projectCode) + '"></label>' +
@@ -10670,6 +10841,10 @@ function showEmployeeEditor(employeeId, prefill) {
         rate: Number(document.querySelector("#edit-rate").value) || 0,
         contract: document.querySelector("#edit-contract").value.trim(),
         weeklyHours: Number(document.querySelector("#edit-weekly-hours").value) || 0,
+        ...Object.fromEntries(WEEKDAY_HOURS_FIELDS.map(field => {
+          const raw = document.querySelector("#edit-hours-" + field.key).value.trim();
+          return [field.field, raw === "" ? null : Number(raw)];
+        })),
         mailSubject: document.querySelector("#edit-subject").value.trim(),
         mailBody: document.querySelector("#edit-body").value,
         brokerInvoiceAttachment: document.querySelector("#edit-broker-enabled").checked && document.querySelector("#edit-broker-invoice").checked,
@@ -11912,7 +12087,7 @@ function toonInstallatieAanbod() {
     state.hoursWeekScope = "week-" + nextIndex;
     state.hoursWeekScopeTouched = true;
     persistState();
-    renderNewEmployeeBento(recordFor(currentEmployee().id), currentEmployee(), period);
+    rerenderActiveTimesheetView();
     return;
   }
 
@@ -11931,6 +12106,14 @@ function toonInstallatieAanbod() {
 
   const newBentoOpenHours = event.target.closest("[data-new-bento-open-hours]");
   if (newBentoOpenHours) {
+    // Altijd naar de dag van vandaag springen, ongeacht welke maand/week
+    // net toevallig openstond -- de pijl is bedoeld om meteen uren te
+    // kunnen invullen, niet om terug te vallen op een oudere navigatiekeuze.
+    setPeriod(currentCalendarPeriodKey());
+    const period = currentPeriod();
+    state.hoursWeekScope = "week-" + todaysWeekIndexInPeriod(period);
+    state.hoursWeekScopeTouched = true;
+    persistState();
     showView("timesheet");
     return;
   }
@@ -12148,12 +12331,26 @@ function toonInstallatieAanbod() {
 
 document.querySelector("#hours-grid").addEventListener("input", () => updateHoursTotal(true));
 
-document.querySelector("#new-employee-bento").addEventListener("change", event => {
+// De bento-kaartjes-dagcellen komen op twee plekken voor: het Dashboard
+// (#new-employee-bento) en, sinds de Nieuw-skin Mijn uren dezelfde
+// kaartjesstijl kreeg, ook in Mijn uren zelf (#hours-grid-cards, alleen
+// zichtbaar bij een enkele week, niet bij Hele maand). Beide containers
+// delen dezelfde .new-bento-*-klassen, dus dezelfde handlers werken op
+// allebei -- alleen de hertekening moet weten welk scherm nu actief is.
+function rerenderActiveTimesheetView() {
+  if (document.querySelector("#view-timesheet")?.classList.contains("is-active")) {
+    renderHoursGrid();
+  } else {
+    renderNewEmployeeBento(recordFor(currentEmployee().id), currentEmployee(), currentPeriod());
+  }
+}
+
+function handleBentoDayCardChange(event) {
   const input = event.target.closest(".new-bento-hours-input");
   if (!input) return;
   const record = recordFor(currentEmployee().id);
   if (!isTimesheetEditableForEmployee(record)) {
-    renderNewEmployeeBento(record, currentEmployee(), currentPeriod());
+    rerenderActiveTimesheetView();
     toast("Deze maand is vergrendeld en alleen-lezen.");
     return;
   }
@@ -12166,20 +12363,28 @@ document.querySelector("#new-employee-bento").addEventListener("change", event =
   record.payrollStatus = "concept";
   persistState();
   scheduleDraftTimesheetWrite();
-  renderNewEmployeeBento(record, currentEmployee(), currentPeriod());
-});
+  rerenderActiveTimesheetView();
+}
 
-document.querySelector("#new-employee-bento").addEventListener("keydown", event => {
+function handleBentoDayCardKeydown(event) {
   const input = event.target.closest(".new-bento-hours-input");
   if (!input || event.key !== "Enter" || event.isComposing || event.repeat) return;
   event.preventDefault();
-  const inputs = [...document.querySelectorAll("#new-bento-days .new-bento-hours-input:not([disabled])")];
+  const container = input.closest(".new-bento-days");
+  const inputs = [...(container ? container.querySelectorAll(".new-bento-hours-input:not([disabled])") : [])];
   const next = inputs[inputs.indexOf(input) + 1];
   input.blur();
   if (next) {
     next.focus();
     next.select();
   }
+}
+
+["#new-employee-bento", "#hours-grid-cards"].forEach(selector => {
+  const container = document.querySelector(selector);
+  if (!container) return;
+  container.addEventListener("change", handleBentoDayCardChange);
+  container.addEventListener("keydown", handleBentoDayCardKeydown);
 });
 
 function handleEnterSave(event) {

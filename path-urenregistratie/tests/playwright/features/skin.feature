@@ -88,6 +88,32 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     When alle werkdagen op deze week uren krijgen behalve de laatste, die bewust leeg blijft, en de week wordt opgeslagen
     Then heeft de server na een herlaad een eigen dagregel voor de laatste dag bewaard, ook al bleef die op 0 uur
 
+  @happy
+  Scenario: [SKIN-H-012] Mededelingen valt niet terug op de klassieke sidebar in Nieuw
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given de medewerker de nieuwe vormgeving opent
+    When de medewerker naar Mededelingen navigeert
+    Then blijft Nieuw actief en blijft de klassieke sidebar verborgen
+
+  @happy
+  Scenario: [SKIN-H-013] de medewerkerroute blijft op elk scherm consequent Nieuw, ook op telefoonbreedte
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given de medewerker inlogt en Nieuw activeert
+    When de medewerker naar Mijn uren gaat
+    And de medewerker naar Mededelingen gaat (bereikbaar via de bel)
+    Then brengt de eigen Home-knop terug naar het dashboard, nog altijd in Nieuw
+
+  @happy
+  Scenario: [SKIN-H-015] de theme-snelknop staat niet meer op de medewerker-startpagina, Voorkeuren blijft werken
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given de medewerker Nieuw activeert
+    When de flow voor SKIN-H-015 wordt uitgevoerd
+    Then staat de theme-snelknop niet meer op het dashboard
+    And blijft de onderliggende voorkeur bereikbaar en werkend via Voorkeuren
+
   @negative
   Scenario: [SKIN-N-007] productie forceert Klassiek en verbergt de redesignschakelaar
     # Testtechniek: Negatieve equivalentieklasse + error guessing
@@ -103,3 +129,23 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     Given de medewerker de nieuwe vormgeving opent op Mijn uren
     Then heeft de eerste dag drie snelkeuzeknoppen: 0, 8 en 9
     When op 8 gevolgd door 0 wordt geklikt
+
+  @happy
+  Scenario: [SKIN-H-016] een eigen werkpatroon per weekdag vult Mijn uren voor en telt zo mee in de contracturen
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 21
+    Given Backoffice een medewerker met een eigen werkpatroon aanmaakt (dinsdag 6 uur, vrijdag 0 uur)
+    When de medewerker inlogt, Nieuw activeert en Mijn uren opent
+    Then staat dinsdag al op 6 uur en vrijdag op leeg (0 uur), zonder dat er iets is getypt
+    When de week wordt opgeslagen zonder verder iets aan te passen
+    Then heeft de server het patroon zelf bewaard: dinsdag 6 uur, vrijdag expliciet 0 uur
+
+  @happy
+  Scenario: [SKIN-H-017] Mijn uren toont bij een enkele week dezelfde bento-kaartjes als het Dashboard, Klassiek blijft de tabel
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 14
+    Given de medewerker Nieuw activeert en Mijn uren opent op een enkele week
+    Then toont Mijn uren dezelfde kaartjesstijl als de bento, met werkende week-pijlen
+    When Hele maand wordt gekozen
+    Then staat de compacte tabel weer terug, geen kaartjes
+    And in Klassiek blijft Mijn uren altijd de tabel, zonder kaartjes of pijlen

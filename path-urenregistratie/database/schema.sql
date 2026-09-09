@@ -100,6 +100,14 @@ CREATE TABLE employees (
   job_title VARCHAR(160) NULL,
   employment_type ENUM('fixed', 'midlance_70_30', 'midlance_75_25', 'other') NOT NULL DEFAULT 'fixed',
   weekly_contract_hours DECIMAL(5,2) NOT NULL DEFAULT 36.00,
+  -- Optioneel eigen werkpatroon per weekdag (bv. vrijdag altijd 0 uur). NULL
+  -- betekent: geen afwijkend patroon, dan blijft de contracturen-berekening
+  -- de weekuren gelijk verdelen over alle werkdagen in de maand zoals voorheen.
+  hours_monday DECIMAL(4,2) NULL,
+  hours_tuesday DECIMAL(4,2) NULL,
+  hours_wednesday DECIMAL(4,2) NULL,
+  hours_thursday DECIMAL(4,2) NULL,
+  hours_friday DECIMAL(4,2) NULL,
   employment_start_date DATE NOT NULL,
   employment_end_date DATE NULL,
   active BOOLEAN NOT NULL DEFAULT TRUE,

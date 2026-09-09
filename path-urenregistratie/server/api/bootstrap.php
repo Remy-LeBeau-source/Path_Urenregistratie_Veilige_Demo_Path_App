@@ -34,7 +34,7 @@ try {
     $usersStmt->execute($usersParams);
     $users = $usersStmt->fetchAll();
 
-    $employeesSql = 'SELECT id, company_id, user_id, employee_number, full_name, job_title, employment_type, weekly_contract_hours, employment_start_date, employment_end_date, active, created_at, updated_at FROM employees WHERE company_id = :company_id';
+    $employeesSql = 'SELECT id, company_id, user_id, employee_number, full_name, job_title, employment_type, weekly_contract_hours, hours_monday, hours_tuesday, hours_wednesday, hours_thursday, hours_friday, employment_start_date, employment_end_date, active, created_at, updated_at FROM employees WHERE company_id = :company_id';
     $employeesParams = [':company_id' => $companyId];
     if ($isEmployee && $employee) {
         $employeesSql .= ' AND id = :employee_id';

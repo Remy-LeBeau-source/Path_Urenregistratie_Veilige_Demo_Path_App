@@ -268,22 +268,31 @@ html[data-skin="new"] .login-footer {
 }
 
 /* Echte 1919-medewerkerroute: dezelfde bento-indeling als de gekozen pilot,
-   maar met de bestaande maanddata en schrijfstromen van de applicatie. */
-html[data-skin="new"] .app-shell:has(#view-employee-dashboard.is-active) .sidebar {
+   maar met de bestaande maanddata en schrijfstromen van de applicatie.
+   Mededelingen (view-employee-announcements) krijgt bewust dezelfde
+   volledige-breedte behandeling als het dashboard: zonder deze regels bleef
+   de klassieke sidebar zichtbaar zodra een medewerker via de bel naar zijn
+   berichtenarchief navigeerde — een zichtbare terugval naar Klassiek
+   middenin een verder volledig Nieuw scherm. */
+html[data-skin="new"] .app-shell:has(#view-employee-dashboard.is-active) .sidebar,
+html[data-skin="new"] .app-shell:has(#view-employee-announcements.is-active) .sidebar {
   display: none;
 }
 
-html[data-skin="new"] .app-shell:has(#view-employee-dashboard.is-active) .main-content {
+html[data-skin="new"] .app-shell:has(#view-employee-dashboard.is-active) .main-content,
+html[data-skin="new"] .app-shell:has(#view-employee-announcements.is-active) .main-content {
   margin-left: 0;
   padding-inline: clamp(18px, 3vw, 48px);
 }
 
-html[data-skin="new"] .app-shell:has(#view-employee-dashboard.is-active) .mobile-topbar-home {
+html[data-skin="new"] .app-shell:has(#view-employee-dashboard.is-active) .mobile-topbar-home,
+html[data-skin="new"] .app-shell:has(#view-employee-announcements.is-active) .mobile-topbar-home {
   display: flex;
   min-width: 190px;
 }
 
-html[data-skin="new"] .app-shell:has(#view-employee-dashboard.is-active) .mobile-brand-home {
+html[data-skin="new"] .app-shell:has(#view-employee-dashboard.is-active) .mobile-brand-home,
+html[data-skin="new"] .app-shell:has(#view-employee-announcements.is-active) .mobile-brand-home {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -295,14 +304,28 @@ html[data-skin="new"] .app-shell:has(#view-employee-dashboard.is-active) .mobile
   padding: 9px 14px;
 }
 
-html[data-skin="new"] .app-shell:has(#view-employee-dashboard.is-active) .mobile-brand-home img {
+html[data-skin="new"] .app-shell:has(#view-employee-dashboard.is-active) .mobile-brand-home img,
+html[data-skin="new"] .app-shell:has(#view-employee-announcements.is-active) .mobile-brand-home img {
   width: 34px;
   height: 34px;
   object-fit: contain;
 }
 
 html[data-skin="new"] .app-shell:has(#view-employee-dashboard.is-active) .mobile-role-switch,
-html[data-skin="new"] .app-shell:has(#view-employee-dashboard.is-active) .topbar-title {
+html[data-skin="new"] .app-shell:has(#view-employee-dashboard.is-active) .topbar-title,
+html[data-skin="new"] .app-shell:has(#view-employee-announcements.is-active) .mobile-role-switch,
+html[data-skin="new"] .app-shell:has(#view-employee-announcements.is-active) .topbar-title {
+  display: none;
+}
+
+/* Testfeedback (Stasjo, medewerker): de licht/donker-snelknop bovenaan het
+   scherm was niet duidelijk en hoort niet prominent op de homepage thuis.
+   De onderliggende voorkeur blijft gewoon werken via Voorkeuren -> Uiterlijk
+   (#pref-theme, bereikbaar voor elke rol) — hier verdwijnt alleen de
+   redundante snelknop uit de topbar op de medewerkerschermen. */
+html[data-skin="new"] .app-shell:has(#view-employee-dashboard.is-active) #quick-theme-toggle,
+html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) #quick-theme-toggle,
+html[data-skin="new"] .app-shell:has(#view-employee-announcements.is-active) #quick-theme-toggle {
   display: none;
 }
 
