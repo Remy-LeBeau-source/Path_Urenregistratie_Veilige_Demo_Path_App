@@ -14,10 +14,29 @@ bestand in beide worktrees. PROD blijft achter de handmatige reviewerpoort.
 Een melding "nog niet pushen" is uitsluitend tijdelijk tijdens een actieve
 main-hotfix; daarna geldt weer bovenstaande vaste volgorde.
 
+### Actieve werkstromen / agents
+
+- Codex rondt op `main` de REM-H-001-testisolatie af (28/28 lokaal groen).
+- Claude/herontwerp mag na de nieuwe main-push hervatten: eerst `origin/main`
+  synchroniseren, dan gecombineerd testen en pas bij groen pushen.
+- GitHub draait acht parallelle CI-shards; dit zijn CI-jobs, geen lokale agents.
+- Daarna: merge-queue naar `main` -> TEST; PROD blijft handmatig.
+
 De workflow `branch-hygiene.yml` controleert dagelijks en verwijdert alleen
 tijdelijke branches met een bekende prefix die minimaal twee dagen oud én
 volledig in `main` of `herontwerp` gemerged zijn. Niet-gemergde branches en de
 twee vaste branches worden nooit automatisch verwijderd.
+
+## Actuele fix — main, 9 september 2026 (Codex) — ook voor Claude
+
+Claude heeft de reminder-scheduler correct gerepareerd. De resterende
+`REM-H-001`-combinatiefout was testpaginering: de test bekeek alleen de eerste
+tien wachtrijmails na een spec die al veel deliveries had aangemaakt. De test
+zoekt nu server-side op het unieke medewerkeradres (`q`, limiet 100). Er is
+geen productgedrag afgezwakt en geen gedeelde testdata verwijderd. Details en
+het bewijs staan in `path-urenregistratie/COPILOT_HANDOFF.md`.
+Combinatiebewijs: `admin-writes.spec.ts` + `reminders.spec.ts` is 28/28 groen
+(3,2 minuten, exitcode 0).
 
 ## Actuele overdracht — main, 8 september 2026 avond (Claude Code)
 

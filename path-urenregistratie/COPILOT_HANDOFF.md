@@ -12,10 +12,39 @@ bestand in beide worktrees. PROD blijft achter de handmatige reviewerpoort.
 Een melding "nog niet pushen" is uitsluitend tijdelijk tijdens een actieve
 main-hotfix; daarna geldt weer bovenstaande vaste volgorde.
 
+### Actieve werkstromen / agents
+
+- **Codex op `main`:** REM-H-001-testisolatie is opgelost en 28/28 groen;
+  commit en push volgen direct na deze handoff-update.
+- **Claude/herontwerp-sessie:** mag daarna weer verder, maar moet eerst de
+  nieuwe `origin/main` in `herontwerp` opnemen en de combinatie testen. Niet
+  dezelfde vier bestanden tegelijk wijzigen.
+- **GitHub CI:** `main` en `herontwerp` gebruiken acht testshards. Dit zijn
+  parallelle CI-jobs, geen acht lokale assistenten. Een oudere run mag worden
+  geannuleerd zodra de nieuwe commit hem aantoonbaar vervangt.
+- **Integratie:** alleen groene actuele `herontwerp` mag via de bestaande
+  merge-queue fast-forward naar `main`; daarna automatisch naar TEST. PROD
+  blijft handmatig.
+
 De workflow `branch-hygiene.yml` controleert dagelijks en verwijdert alleen
 tijdelijke branches met een bekende prefix die minimaal twee dagen oud én
 volledig in `main` of `herontwerp` gemerged zijn. Niet-gemergde branches en de
 twee vaste branches worden nooit automatisch verwijderd.
+
+## Actuele fix — main, 9 september 2026 (Codex) — ook voor Claude
+
+Claude heeft de productbug in de reminder-scheduler correct opgelost. De
+resterende `REM-H-001`-combinatiefout zat niet in de scheduler, maar in de
+test: `EmailQueueApi.list()` bekeek standaard slechts de eerste tien mails.
+Na `admin-writes.spec.ts` bevat de gedeelde testdatabase meer deliveries en
+items met dezelfde timestamp hebben geen vaste onderlinge volgorde. Daardoor
+kon de correct aangemaakte mail buiten die pagina vallen. De test zoekt nu
+server-side op het unieke medewerkeradres (`q`) met limiet 100. Dit verzwakt
+geen productassertie en vereist geen reset van gedeelde testdata.
+
+Bewijs: 28/28 groen met
+`node scripts/run-playwright-e2e.mjs --project=desktop-chromium tests/playwright/admin-writes.spec.ts tests/playwright/reminders.spec.ts`
+(3,2 minuten, exitcode 0).
 
 ## Actuele overdracht — main, 9 september 2026 nacht (Claude Code) — voor Codex
 
@@ -47,41 +76,13 @@ twee vaste branches worden nooit automatisch verwijderd.
   uitgesloten van elke herinnering. Nu `LEFT JOIN` + `COALESCE(..., 1)`,
   zodat de bedoelde default (aan) geldt zoals het schema al zegt.
 
-### Openstaand voor Codex: REM-H-001 faalt in combinatie, root cause onbekend
+### Opgelost door Codex: REM-H-001-combinatiefout
 
-`[REM-H-001]` in `tests/playwright/reminders.spec.ts` **slaagt losstaand**
-(`--grep REM-H-001`), maar **faalt** wanneer het in dezelfde Playwright-worker
-ná `admin-writes.spec.ts` draait (bv.
-`node scripts/run-playwright-e2e.mjs --project=desktop-chromium tests/playwright/admin-writes.spec.ts tests/playwright/reminders.spec.ts`):
-
-```
-Error: expect(received).toHaveLength(expected)
-Received length: 0
-> expect(reminders).toHaveLength(1);
-```
-
-De test maakt sinds vandaag een eigen verse medewerker aan (garandeert nooit
-uren te hebben gehad — dat deel is dus niet de oorzaak) en zet daarna de
-company-settings (`weeklyReminderEnabled`/`Day`/`Time`) op "nu". Bij deze
-combinatie levert de scheduler-run daarna 0 reminders op voor die verse
-medewerker. Nog niet onderzocht:
-
-- Doet `admin-writes.spec.ts` ergens een eigen `settings.php`-save die de
-  net gezette `weekly_reminder_*`-velden weer overschrijft/anders zet vóór
-  de scheduler draait? (`currentSettingsPayload()` in `reminders.spec.ts`
-  leest de company-rij opnieuw op vóór het posten, dus een race lijkt
-  onwaarschijnlijk, maar niet uitgesloten.)
-- Wordt de net aangemaakte medewerker/company_id door een eerdere
-  admin-writes-actie op een andere manier geraakt (bv. een
-  bedrijfs-/scope-wissel, of een tweede company_id die inmiddels bestaat)?
-- Print voor de zekerheid `firstRun` (het volledige JSON-antwoord van
-  `send-due-reminders.php`, niet alleen `.sent.weekly`) en de opgeslagen
-  company-rij vlak vóór de scheduler-aanroep, om te zien of de instelling
-  zelf al fout staat vóór het PHP-script draait.
-
-Dit blokkeert niets op main zelf (de losstaande case is het bewijs dat de
-functionaliteit werkt), maar de volledige regressie kan hierdoor rood
-uitslaan als deze twee bestanden toevallig in dezelfde shard/worker vallen.
+De scheduler maakte de mail correct aan. De test bekeek alleen de standaard-
+pagina van tien queue-items; na `admin-writes.spec.ts` kon de nieuwe mail door
+gelijke timestamps buiten die pagina vallen. `EmailQueueApi.list()` ondersteunt
+nu `query`, en REM-H-001 zoekt server-side op het unieke medewerkeradres.
+De eerder falende combinatie is opnieuw gedraaid: **28/28 groen**, exitcode 0.
 
 ## Documentenkaart
 

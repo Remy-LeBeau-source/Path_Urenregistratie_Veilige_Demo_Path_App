@@ -160,7 +160,10 @@ test.describe('serverplanning herinneringen', () => {
 
     await test.step('Then staat er een reminder-mail in de queue voor de nieuwe medewerker', async () => {
       expect(firstRun.sent.weekly).toBeGreaterThan(0);
-      const list = await queueApi.list();
+      // Zoek gericht: eerdere specs kunnen meer dan de standaardpagina van
+      // tien deliveries hebben aangemaakt en items met gelijke timestamps
+      // hebben geen gegarandeerde onderlinge volgorde.
+      const list = await queueApi.list({ query: freshEmail, limit: 100 });
       const reminders = (list.body.items as Array<Record<string, unknown>>)
         .filter(item => String(item.channel || '') === 'reminder' && item.recipient_email === freshEmail);
       expect(reminders).toHaveLength(1);
