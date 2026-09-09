@@ -95,3 +95,11 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     Given een gebruiker heeft de nieuwe vormgeving in een pilotomgeving gekozen
     When dezelfde voorkeur onder het productiebeleid wordt toegepast
     Then blijft productie klassiek zonder zichtbare pilotschakelaar en blijft TEST wel beschikbaar
+
+  @happy
+  Scenario: [SKIN-H-014] snelkeuze in Mijn uren-bento heeft ook een 0-optie naast 8 en 9
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 10
+    Given de medewerker de nieuwe vormgeving opent op Mijn uren
+    Then heeft de eerste dag drie snelkeuzeknoppen: 0, 8 en 9
+    When op 8 gevolgd door 0 wordt geklikt

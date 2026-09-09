@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 453 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 455 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 453 unieke case-ID's
+- Playwright executable cases: 455 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 454 unieke case-ID's
+- Totaal executable cases: 456 unieke case-ID's
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29
 - Database steps mappings: 1
-- Uitvoeringen: 488
-- Niet-mobile projectuitvoeringen: 418
+- Uitvoeringen: 490
+- Niet-mobile projectuitvoeringen: 420
 - Mobile functionele cases: 35
 - Pixel 7 / Chromium-uitvoeringen: 35
 - iPhone 13 / WebKit-uitvoeringen: 35
 
-De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 453 Playwright-functionele cases in totaal 488 resultaten op: 418 + (35 x 2) = 488.
+De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 455 Playwright-functionele cases in totaal 490 resultaten op: 420 + (35 x 2) = 490.
 
 ## Documentatieketen
 
@@ -230,7 +230,7 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 453 Playwri
 
 - Feature: `tests/playwright/features/mail-delivery.feature`
 - Source: `tests/playwright/email-queue.spec.ts`
-- Cases: 45
+- Cases: 46
 
 - [EQ-H-001] factuurlock maakt queue-items aan met dry_run=true — Techniek: Toestandsovergang · Assertions: 5
 - [EQ-H-002] broker-channel stuurt alleen de factuur — Techniek: API-contract + equivalentieklasse · Assertions: 2
@@ -250,6 +250,7 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 453 Playwri
 - [EQ-H-025] localhost schakelt een veilige mailpreview in en controleert inhoud en PDF’s zonder SMTP — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 33
 - [EQ-H-023] beheerder pauzeert en hervat uitsluitend de beveiligde TEST-mail — Techniek: Toestandsovergang · Assertions: 9
 - [EQ-N-024] buiten de beveiligde TEST-sandbox is geen mailschakelaar beschikbaar — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
+- [EQ-N-035] medewerker ziet de mailstatus-badge niet permanent op "laden" hangen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2
 - [EQ-N-017] niet-beschikbare acceptatieconsole blijft volledig uit beeld — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
 - [EQ-H-020] Backoffice finaliseert de branded serverfactuur en verzendt drie echte TEST-mails — Techniek: API-contract + equivalentieklasse · Assertions: 18
 - [EQ-H-026] Backoffice verzendt de juiste officiële klanturenstaat via TEST naar Giovanno — Techniek: API-contract + equivalentieklasse · Assertions: 8
@@ -568,7 +569,7 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 453 Playwri
 
 - Feature: `tests/playwright/features/skin.feature`
 - Source: `tests/playwright/skin.spec.ts`
-- Cases: 11
+- Cases: 12
 
 - [SKIN-H-001] de app start standaard in de klassieke vormgeving — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
 - [SKIN-H-002] Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
@@ -581,6 +582,7 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 453 Playwri
 - [SKIN-H-010] de admin-verhaallijn wisselt van medewerker en toont bijbehorende status — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [SKIN-H-011] een bewust opgeslagen 0 uur telt mee voor de weekvoortgang in Mijn uren — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 8
 - [SKIN-N-007] productie forceert Klassiek en verbergt de redesignschakelaar — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
+- [SKIN-H-014] snelkeuze in Mijn uren-bento heeft ook een 0-optie naast 8 en 9 — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 10
 
 ### Correctie- en goedkeuringsproces
 

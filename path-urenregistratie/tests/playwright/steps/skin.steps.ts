@@ -48,3 +48,6 @@ Then("heeft de server na een herlaad een eigen dagregel voor de laatste dag bewa
 Given("een gebruiker heeft de nieuwe vormgeving in een pilotomgeving gekozen");
 When("dezelfde voorkeur onder het productiebeleid wordt toegepast");
 Then("blijft productie klassiek zonder zichtbare pilotschakelaar en blijft TEST wel beschikbaar");
+Given("de medewerker de nieuwe vormgeving opent op Mijn uren");
+Then("heeft de eerste dag drie snelkeuzeknoppen: 0, 8 en 9");
+When("op 8 gevolgd door 0 wordt geklikt");

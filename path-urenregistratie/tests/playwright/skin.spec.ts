@@ -425,3 +425,68 @@ test('[SKIN-N-007] productie forceert Klassiek en verbergt de redesignschakelaar
     await expect(page.locator('#quick-skin-toggle')).toBeVisible();
   });
 });
+
+test('[SKIN-H-014] snelkeuze in Mijn uren-bento heeft ook een 0-optie naast 8 en 9', async ({ page }) => {
+  // Feedback eerste testronde (Stasjo): 8/9 als snelkeuze is handig, maar een
+  // dag die je bewust niet werkt (bv. altijd vrije vrijdag) heeft geen
+  // snelkeuze voor 0 uur -- je moet dan handmatig wissen of het veld leeg
+  // laten. Derde knop naast 8/9 lost dat op zonder de bestaande twee te raken.
+  const loginPage = new LoginPage(page);
+  // Zelfde vaste datum als SKIN-H-011: garandeert een editable, huidige week
+  // i.p.v. een willekeurige (mogelijk vergrendelde) periode op basis van de
+  // echte systeemklok -- anders vindt de knop wel plaats maar doet niets,
+  // omdat de handler stilzwijgend teruggaat bij een disabled invoerveld.
+  await page.clock.setFixedTime(new Date('2026-09-06T12:00:00.000Z'));
+  await page.addInitScript(() => {
+    localStorage.setItem('path-install-afgewezen', String(Date.now()));
+  });
+
+  await test.step('Given de medewerker de nieuwe vormgeving opent op Mijn uren', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await expect(page.locator('#new-employee-bento')).toBeVisible();
+  });
+
+  await test.step('Then heeft de eerste dag drie snelkeuzeknoppen: 0, 8 en 9', async () => {
+    const eersteDag = page.locator('#new-bento-days .new-bento-day').first();
+    await eersteDag.locator('.new-bento-hours-input').focus();
+    const presets = eersteDag.locator('.new-bento-presets button');
+    await expect(presets).toHaveCount(3);
+    await expect(presets.nth(0)).toHaveText('0');
+    await expect(presets.nth(1)).toHaveText('8');
+    await expect(presets.nth(2)).toHaveText('9');
+  });
+
+  await test.step('When op 8 gevolgd door 0 wordt geklikt', async () => {
+    const eersteDag = page.locator('#new-bento-days .new-bento-day').first();
+    const input = eersteDag.locator('.new-bento-hours-input');
+    // De snelkeuzeknoppen tonen alleen bij :focus-within op de dag, en een
+    // preset-klik herbouwt de hele daglijst (dezelfde innerHTML-render als
+    // een handmatige invoer) -- de focus op het oude inputelement overleeft
+    // dat niet. Voor elke klik dus opnieuw focussen op het (ververste) veld.
+    // WebKit past :focus-within soms met vertraging toe t.o.v. Chromium; een
+    // enkele herhaling (focus + klik) i.p.v. één poging voorkomt een race
+    // tegen die vertraging zonder de assertie zelf te verzwakken.
+    await input.focus();
+    const focusWithinActief = await eersteDag.evaluate(el => el.matches(':focus-within'));
+    const actEl = await page.evaluate(() => document.activeElement?.className || '(geen)');
+    console.log('[SKIN-H-014 diagnose] focus-within=', focusWithinActief, 'activeElement=', actEl);
+    await expect(async () => {
+      await input.focus();
+      await eersteDag.locator('[data-new-bento-set="8"]').click();
+      await expect(input).toHaveValue('8', { timeout: 2_000 });
+    }).toPass({ timeout: 30_000, intervals: [250, 500, 1_000, 2_000] });
+    await expect(async () => {
+      await input.focus();
+      await eersteDag.locator('[data-new-bento-set="0"]').click();
+      // Bewust: 0 uur wordt net als bij handmatige invoer als LEEG veld getoond
+      // (placeholder "0,00"), niet als letterlijke "0" -- zelfde renderregel
+      // die [SKIN-H-011] al bewijst voor bewust op 0 gelaten dagen. De knop
+      // zet de waarde intern wel degelijk naar 0 (vandaar de lege weergave
+      // i.p.v. de vorige "8"), dit bewijst alleen dat de knop-actie werkt.
+      await expect(input).toHaveValue('');
+    }).toPass({ timeout: 10_000, intervals: [250, 500, 1_000] });
+  });
+});

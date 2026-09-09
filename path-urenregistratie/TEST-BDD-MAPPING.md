@@ -177,6 +177,7 @@
 | EQ-H-025 | api | mail-delivery.feature | localhost schakelt een veilige mailpreview in en controleert inhoud en PDF’s zonder SMTP | Beslissingstabel rollen en autorisatie | 33 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | localhost schakelt een veilige mailpreview in en controleert inhoud en PDF’s zonder SMTP | Happy | 12 | Actueel |
 | EQ-H-023 | api | mail-delivery.feature | beheerder pauzeert en hervat uitsluitend de beveiligde TEST-mail | Toestandsovergang | 9 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | beheerder pauzeert en hervat uitsluitend de beveiligde TEST-mail | Happy | 12 | Actueel |
 | EQ-N-024 | api | mail-delivery.feature | buiten de beveiligde TEST-sandbox is geen mailschakelaar beschikbaar | Negatieve equivalentieklasse + error guessing | 4 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | buiten de beveiligde TEST-sandbox is geen mailschakelaar beschikbaar | Negative | 12 | Actueel |
+| EQ-N-035 | api | mail-delivery.feature | medewerker ziet de mailstatus-badge niet permanent op "laden" hangen | Beslissingstabel rollen en autorisatie | 2 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | medewerker ziet de mailstatus-badge niet permanent op "laden" hangen | Negative | 12 | Actueel |
 | EQ-N-017 | api | mail-delivery.feature | niet-beschikbare acceptatieconsole blijft volledig uit beeld | Negatieve equivalentieklasse + error guessing | 4 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | niet-beschikbare acceptatieconsole blijft volledig uit beeld | Negative | 12 | Actueel |
 | EQ-H-020 | api | mail-delivery.feature | Backoffice finaliseert de branded serverfactuur en verzendt drie echte TEST-mails | API-contract + equivalentieklasse | 18 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | Backoffice finaliseert de branded serverfactuur en verzendt drie echte TEST-mails | Happy | 12 | Actueel |
 | EQ-H-026 | api | mail-delivery.feature | Backoffice verzendt de juiste officiële klanturenstaat via TEST naar Giovanno | API-contract + equivalentieklasse | 8 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | Backoffice verzendt de juiste officiële klanturenstaat via TEST naar Giovanno | Happy | 12 | Actueel |
@@ -403,6 +404,7 @@
 | SKIN-H-010 | ui | skin.feature | de admin-verhaallijn wisselt van medewerker en toont bijbehorende status | Beslissingstabel rollen en autorisatie | 7 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de admin-verhaallijn wisselt van medewerker en toont bijbehorende status | Happy | 19 | Actueel |
 | SKIN-H-011 | ui | skin.feature | een bewust opgeslagen 0 uur telt mee voor de weekvoortgang in Mijn uren | End-to-end use-case + visuele contractasserties | 8 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | een bewust opgeslagen 0 uur telt mee voor de weekvoortgang in Mijn uren | Happy | 19 | Actueel |
 | SKIN-N-007 | ui | skin.feature | productie forceert Klassiek en verbergt de redesignschakelaar | Negatieve equivalentieklasse + error guessing | 5 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | productie forceert Klassiek en verbergt de redesignschakelaar | Negative | 19 | Actueel |
+| SKIN-H-014 | ui | skin.feature | snelkeuze in Mijn uren-bento heeft ook een 0-optie naast 8 en 9 | End-to-end use-case + visuele contractasserties | 10 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | snelkeuze in Mijn uren-bento heeft ook een 0-optie naast 8 en 9 | Happy | 19 | Actueel |
 | TS-REV-API-H-005 | integration | correction-approval-workflow.feature | admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking | Concurrency + toestandsovergang | 65 | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
 | TS-REV-API-H-006 | integration | correction-approval-workflow.feature | gelijktijdige approve-requests door twee beheerders leveren exact één winnaar | Concurrency + toestandsovergang | 7 | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
 | TS-REV-API-H-007 | integration | correction-approval-workflow.feature | jaarwisseling december naar januari verwerkt urenstaten correct over de jaargrens | API-contract + equivalentieklasse | 7 | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
@@ -475,9 +477,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 453
+- Playwright executable cases: 455
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 454
+- Totaal unieke executable cases: 456
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29

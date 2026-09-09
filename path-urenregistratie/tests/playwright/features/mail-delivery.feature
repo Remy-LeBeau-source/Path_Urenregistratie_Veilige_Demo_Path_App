@@ -159,6 +159,14 @@ Feature: Mailroutering en aflevering
     Then wordt met Playwright-assertions bevestigd dat buiten de beveiligde TEST-sandbox is geen mailschakelaar beschikbaar
 
   @negative
+  Scenario: [EQ-N-035] medewerker ziet de mailstatus-badge niet permanent op "laden" hangen
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given mailroutering en aflevering is voorbereid
+    When de flow voor EQ-N-035 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat medewerker ziet de mailstatus-badge niet permanent op "laden" hangen
+
+  @negative
   Scenario: [EQ-N-017] niet-beschikbare acceptatieconsole blijft volledig uit beeld
     # Testtechniek: Negatieve equivalentieklasse + error guessing
     # Aantoonbare Playwright-assertions in deze case: 4
