@@ -7,7 +7,7 @@ import { test, expect, type Page, type ConsoleMessage } from '@playwright/test';
 // verkeerde versie, gebroken views.
 
 const VERWACHTE_VERSIE = process.env.TEST_REMOTE_EXPECTED_VERSION || '0.9.159';
-const ADMIN = { email: 'gio@example.invalid', password: 'LocalDemoAdmin2026' };
+const ADMIN = { email: 'gio@example.invalid', password: '888888888888' };
 const EMPLOYEE = { email: 'stasjo@example.invalid', password: 'LocalDemoEmployee2026' };
 
 function vangConsoleFouten(page: Page): string[] {

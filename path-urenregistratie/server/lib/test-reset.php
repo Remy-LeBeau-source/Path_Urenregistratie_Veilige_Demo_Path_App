@@ -167,8 +167,8 @@ function test_reset_verify_remote_demo_credentials(PDO $pdo, array $config): int
     }
 
     $expected = [
-        'gio@example.invalid' => ['role' => 'administrator', 'password' => 'LocalDemoAdmin2026'],
-        'joyce@example.invalid' => ['role' => 'administrator', 'password' => 'LocalDemoAdmin2026'],
+        'gio@example.invalid' => ['role' => 'administrator', 'password' => '888888888888'],
+        'joyce@example.invalid' => ['role' => 'administrator', 'password' => '888888888888'],
         'marc@example.invalid' => ['role' => 'employee', 'password' => 'LocalDemoEmployee2026'],
         'stasjo@example.invalid' => ['role' => 'employee', 'password' => 'LocalDemoEmployee2026'],
         'brian@example.invalid' => ['role' => 'employee', 'password' => 'LocalDemoEmployee2026'],

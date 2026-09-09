@@ -18,7 +18,7 @@ import mysql from 'mysql2/promise';
 
 const BASE_URL = process.env.VERIFY_BASE_URL || 'http://localhost:8080';
 const ADMIN_EMAIL = process.env.VERIFY_ADMIN_EMAIL || 'gio@example.invalid';
-const ADMIN_PASSWORD = process.env.VERIFY_ADMIN_PASSWORD || 'LocalDemoAdmin2026';
+const ADMIN_PASSWORD = process.env.VERIFY_ADMIN_PASSWORD || '888888888888';
 const MARKER = 'verify-localhost';
 
 const dbConfig = {

@@ -5,7 +5,7 @@
 -- Never use demo credentials in production.
 
 UPDATE users
-SET password_hash = '$2y$12$d9YdUVSap69WDPkl7/NsE.hvfNG7.Id08L6FuBFs.qTPXvz7BBj.C'
+SET password_hash = '$2y$12$NXfWuBvBWwTwNoyFb.MKXeVNlWXceY/PpaHJYYfBOROefhsut3dvu'
 WHERE email IN (
   'gio@example.invalid',
   'joyce@example.invalid',
