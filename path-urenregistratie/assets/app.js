@@ -10013,7 +10013,16 @@ function showInvoiceDeliveryCheck(employeeId, periodKey, adminTaskId = "") {
     action: () => {
       const baseMsg = "Verzending voor " + info.employee.name + " · " + period.label + " klaargezet";
       const invId = Number(serverInvoice && serverInvoice.id || 0);
-      const serverDelivery = API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin";
+      // approveEmployee() valt al terug op een lokale simulatie zodra een medewerker/
+      // periode geen echte serverurenstaat heeft (demo-only data zonder DB-rij) --
+      // die urenstaat komt hier dus als "approved"/"ready" binnen zonder
+      // serverTimesheetId. Zonder deze voorwaarde probeert de verzendcontrole voor
+      // zo'n taak alsnog de echte serverflow, en die faalt hard op "De goedgekeurde
+      // serverurenstaat kon niet worden gevonden" -- de taak blijft dan openstaan
+      // (of komt na een ververste projectie weer terug) zonder dat er iets fout
+      // leek te gaan in de bevestigingsmodal zelf.
+      const serverDelivery = API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin"
+        && (invId > 0 || Number(info.record.serverTimesheetId || 0) > 0);
       const finishLocalDryRun = (messageSuffix = "") => {
         const mutate = () => {
           info.record.invoiceStatus = "simulated";

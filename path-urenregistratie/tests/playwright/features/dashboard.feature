@@ -131,6 +131,14 @@ Feature: Dashboard en open werkvoorraad
     Then wordt met Playwright-assertions bevestigd dat gUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker en Backoffice
 
   @negative
+  Scenario: [DASH-N-012] afgeronde verzendcontrole blijft na F5 weg, ongeacht het beginaantal
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 12
+    Given de administrator is ingelogd, reset naar vaste baseline en keurt een ingediende urenstaat goed
+    When de nieuwe verzendcontrole (invoice-delivery) wordt afgerond
+    Then blijft de afgeronde verzendcontrole weg en de teller stabiel na F5
+
+  @negative
   Scenario: [DASH-N-009] medewerker teller blijft stabiel bij aug-juli-aug en dashboard triggert geen verborgen timesheet-read
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 5

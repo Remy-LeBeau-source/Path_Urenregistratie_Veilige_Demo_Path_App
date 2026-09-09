@@ -896,6 +896,95 @@ test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker e
   });
 });
 
+test('[DASH-N-012] afgeronde verzendcontrole blijft na F5 weg, ongeacht het beginaantal', async ({ page }) => {
+  // Regression guard voor de "0 bij Backoffice -> F5 -> 1 bij Backoffice"-klasse bug:
+  // een invoice-delivery-taak ("Verzending controleren") die via de zichtbare
+  // interface wordt afgerond, mag na een reload niet terugkomen. DASH-N-011 bewijst
+  // dit al voor hours-review; deze case bewijst hetzelfde voor invoice-delivery,
+  // waarvan "afgerond" afhangt van een async server-bevestigde mail-verzending
+  // (finalizeInvoiceAndQueueToApi) i.p.v. een directe statuswijziging.
+  const loginPage = new LoginPage(page);
+  let totalAfterAction = '';
+  let completedEmployeeId = 0;
+  let completedPeriodKey = '';
+
+  await test.step('Given de administrator is ingelogd, reset naar vaste baseline en keurt een ingediende urenstaat goed', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await page.locator('#quick-reset-demo').click();
+    await page.locator('#modal-confirm').click();
+    await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
+    await expect(page.locator('#hero-task-total')).toHaveText('12 open acties');
+
+    // Een verse, echt server-gekoppelde invoice-delivery-taak: het baseline-exemplaar
+    // kan een puur lokaal gesimuleerde staat zijn zonder serverTimesheetId, en dan
+    // faalt "Controle afronden" meteen op "serverurenstaat niet gevonden" -- dat is
+    // een ander probleem dan waar deze case voor bedoeld is. Goedkeuren via de
+    // zichtbare Goedkeuringen-flow (zelfde pad als E2E-H-004) maakt er altijd een.
+    const review = await page.evaluate(() => {
+      const task = window.adminOpenTasks().find(item => item.type === 'hours-review');
+      return task ? { employeeId: task.employee.id, employeeName: task.employee.name, periodKey: task.periodKey } : null;
+    });
+    expect(review).not.toBeNull();
+    completedEmployeeId = review!.employeeId;
+    completedPeriodKey = review!.periodKey;
+
+    await page.locator('button[data-view="approvals"]').click();
+    const card = page
+      .locator(`article.approval-card[data-approval-period="${completedPeriodKey}"]`)
+      .filter({ hasText: review!.employeeName });
+    await expect(card).toBeVisible();
+    await card.locator('[data-approve]').click();
+    await expect(card).toHaveCount(0);
+
+    await expect.poll(() => page.evaluate(
+      ({ employeeId, periodKey }) => window.adminOpenTasks().some(
+        task => task.type === 'invoice-delivery' && task.employee.id === employeeId && task.periodKey === periodKey
+      ),
+      { employeeId: completedEmployeeId, periodKey: completedPeriodKey }
+    ), { timeout: 10_000 }).toBe(true);
+  });
+
+  await test.step('When de nieuwe verzendcontrole (invoice-delivery) wordt afgerond', async () => {
+    await page.locator('button[data-view="dashboard"]').click();
+    await page.locator('#hero-backoffice-filter').click();
+    const openMonthToggle = page.locator(`[data-admin-task-month-toggle="${completedPeriodKey}"]`);
+    if (await openMonthToggle.getAttribute('aria-expanded') !== 'true') {
+      await openMonthToggle.click();
+    }
+    const invoiceButton = page.locator(`[data-admin-task-invoice="${completedEmployeeId}"][data-period-key="${completedPeriodKey}"]`);
+    await expect(invoiceButton).toBeVisible();
+    await invoiceButton.click();
+    await expect(page.locator('#modal-confirm')).toHaveText('Controle afronden');
+    await page.locator('#modal-confirm').click();
+    await expect(page.locator('#toast')).toContainText('klaargezet', { timeout: 15_000 });
+
+    await expect.poll(() => page.evaluate(
+      ({ employeeId, periodKey }) => window.adminOpenTasks().some(
+        task => task.type === 'invoice-delivery' && task.employee.id === employeeId && task.periodKey === periodKey
+      ),
+      { employeeId: completedEmployeeId, periodKey: completedPeriodKey }
+    ), { timeout: 10_000 }).toBe(false);
+
+    totalAfterAction = (await page.locator('#hero-task-total').innerText()).trim();
+    expect(totalAfterAction).toMatch(/^\d+ open acties$/);
+  });
+
+  await test.step('Then blijft de afgeronde verzendcontrole weg en de teller stabiel na F5', async () => {
+    await page.reload();
+    await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
+    await expect(page.locator('#hero-task-total')).toHaveText(totalAfterAction, { timeout: 15_000 });
+
+    const stillCompletedAway = await page.evaluate(
+      ({ employeeId, periodKey }) => !window.adminOpenTasks().some(
+        task => task.type === 'invoice-delivery' && task.employee.id === employeeId && task.periodKey === periodKey
+      ),
+      { employeeId: completedEmployeeId, periodKey: completedPeriodKey }
+    );
+    expect(stillCompletedAway, 'de afgeronde verzendcontrole mag na F5 niet terugkeren').toBe(true);
+  });
+});
+
 test('[DASH-N-009] medewerker teller blijft stabiel bij aug-juli-aug en dashboard triggert geen verborgen timesheet-read', async ({ page }) => {
   const loginPage = new LoginPage(page);
   let timesheetReadHits = 0;
