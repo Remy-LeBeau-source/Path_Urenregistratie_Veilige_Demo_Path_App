@@ -1,5 +1,46 @@
 # Copilot handoff — lokale mailpreview en regressieherstel
 
+## REM-H-001 en TEST-inlog structureel opgelost — 9 september 2026, 06:00
+
+Na een hele nacht symptomen bestrijden (retries, extra isolatie) is de échte
+oorzaak van REM-H-001's alleen-op-CI flakiness gevonden en gefixt, plus twee
+losstaande problemen die pas zichtbaar werden zodra Validate weer groen ging.
+Zie BESLISTABEL.md sectie 9, regels R7–R9 voor de volledige analyse. Kort:
+
+1. **REM-H-001 (R7):** `server/scripts/cli-bootstrap.php` las voor losse
+   CLI-scripts (o.a. de herinneringen-scheduler) alleen het statische
+   `server/config.local.php`, terwijl de Playwright-harness de webserver via
+   `PATH_APP_DB_NAME`/`PLAYWRIGHT_DB_NAME` naar een geïsoleerde testdatabase
+   stuurt. `ops_database_config()` volgt nu dezelfde env-var/dotenv-
+   precedentie als `auth_db_from_config()` in `session.php`. Gevonden via een
+   tijdelijk debug-script (weer verwijderd) dat db-naam/host/poort/
+   connection-id vergeleek tussen webserver en CLI-aanroep.
+2. **Publieke TEST-inlogsmoke faalde daarna apart (R8):** een verouderde
+   `test`-environment-scoped GitHub-secret `PLAYWRIGHT_ADMIN_PASSWORD`
+   (voorrang op de recentere repo-brede secret) en migraties 032/033 die op
+   TEST al als "applied" stonden gemarkeerd met oude inhoud (migratierunner
+   trackt op bestands-id, niet op inhoud) — gecorrigeerd resp. met
+   `gh secret set --env test` en een verse migratie 035.
+3. **De écht persistente bron (R9):** `server/scripts/reset-test-baseline.php`
+   draait op élke TEST-deploy na `migrate.php`, doet `TRUNCATE TABLE users`
+   en herzaait; migratie `005_demo_auth_hashes_for_existing_seed_users.sql`
+   (guarded op een lege hash, dus altijd van toepassing na een truncate) had
+   nog de oude `LocalDemoAdmin2026`-hash. Dát bestand (en
+   `test_reset_verify_remote_demo_credentials()` in `server/lib/test-reset.php`)
+   zijn nu de bron van waarheid voor het gedeelde TEST-beheerwachtwoord
+   (`888888888888`) en zijn bijgewerkt. **Belangrijk voor de toekomst:** een
+   volgende wijziging van dit wachtwoord hoort in 005/test-reset.php, niet
+   (alleen) in een losse correctiemigratie — anders overleeft hij de
+   eerstvolgende TEST-deploy niet.
+
+Onafhankelijk geverifieerd: directe curl-login tegen
+`https://uren-test.pathconsultancy.nl` met `gio@example.invalid` /
+`888888888888` geeft HTTP 200. Validate (alle 8 shards, incl. REM-H-001) en
+Deploy Test to TransIP zijn groen op zowel `main` als `herontwerp` (beide op
+dezelfde commit na de merge-queue). `Send Due Reminders`-cron zou vanaf nu
+ook moeten slagen, aangezien `server/scripts/send-due-reminders.php` nu
+eindelijk live staat op TEST.
+
 ## Actuele gecombineerde oplevering — 9 september 2026, 00:55
 
 `origin/herontwerp` (`e6b49e6`) en lokale `main` (`f09bb2a`) zijn samengevoegd
