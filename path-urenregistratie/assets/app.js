@@ -4777,6 +4777,20 @@ function renderEmployeeCustomerTimesheet(record, employee, period) {
   skipButton.textContent = documentRecord.status === "skipped" ? "Alsnog uploaden" : "Al rechtstreeks gemaild";
 }
 
+// Vindt de weekindex van vandaag binnen period, los van viewport (in
+// tegenstelling tot mobileWeekScope, die alleen op telefoonbreedte een
+// specifieke week teruggeeft). Gebruikt door de "Open uren"-pijl: die moet
+// altijd naar de dag van vandaag springen, ook als de medewerker toevallig
+// al een andere week of maand had openstaan.
+function todaysWeekIndexInPeriod(period) {
+  const now = new Date();
+  if (now.getFullYear() === period.year && now.getMonth() === period.monthIndex) {
+    const index = period.weekRows.findIndex(week => week.days.some(day => day && day.day === now.getDate()));
+    if (index >= 0) return index;
+  }
+  return 0;
+}
+
 function newEmployeeBentoWeekIndex(period) {
   const selected = /^week-(\d+)$/.exec(String(state.hoursWeekScope || ""));
   const selectedIndex = selected ? Number(selected[1]) : -1;
@@ -12092,6 +12106,14 @@ function toonInstallatieAanbod() {
 
   const newBentoOpenHours = event.target.closest("[data-new-bento-open-hours]");
   if (newBentoOpenHours) {
+    // Altijd naar de dag van vandaag springen, ongeacht welke maand/week
+    // net toevallig openstond -- de pijl is bedoeld om meteen uren te
+    // kunnen invullen, niet om terug te vallen op een oudere navigatiekeuze.
+    setPeriod(currentCalendarPeriodKey());
+    const period = currentPeriod();
+    state.hoursWeekScope = "week-" + todaysWeekIndexInPeriod(period);
+    state.hoursWeekScopeTouched = true;
+    persistState();
     showView("timesheet");
     return;
   }
