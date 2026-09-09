@@ -161,3 +161,19 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     Then klapt het blok weer dicht en staat het paneel terug op zijn vaste plek
     When het blok weer wordt geopend en daarna naar Mijn uren wordt genavigeerd
     Then staat het paneel weer op zijn vaste plek op Mijn uren en is het daar gewoon zichtbaar
+
+  @happy
+  Scenario: [SKIN-H-019] de beheerroute blijft op elk van de 6 pilot-tabs consequent Nieuw, zonder terug te vallen op de klassieke zijbalk
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given een ingelogde administrator Nieuw activeert
+    When de flow voor SKIN-H-019 wordt uitgevoerd
+    Then brengt de eigen Home-knop terug naar Cockpit, nog altijd in Nieuw
+
+  @happy
+  Scenario: [SKIN-H-020] de voetstrip onder Verhalen per medewerker toont de echte periode en tijd, en het verhaaloverzicht is te exporteren
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 11
+    Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid
+    When de flow voor SKIN-H-020 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat de voetstrip onder Verhalen per medewerker toont de echte periode en tijd, en het verhaaloverzicht is te exporteren

@@ -1315,36 +1315,48 @@ html[data-skin="new"] .correction-banner strong {
   display: none;
 }
 
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) {
   background: #081726;
 }
 
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .sidebar {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .sidebar {
   display: none;
 }
 
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .main-content {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .main-content {
   margin-left: 0;
   padding: 0 clamp(18px, 3vw, 48px) 48px;
   background: #081726;
 }
 
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .topbar {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .topbar {
   border-bottom: 1px solid rgba(255, 255, 255, .09);
   background: #081726;
   box-shadow: none;
+  flex-wrap: wrap;
+  row-gap: 8px;
 }
 
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .topbar-title {
+/* Zonder de zijbalk (die de sidebar-breedte anders reserveerde) past de hele
+   rij topbar-knoppen (thema/skin, maanddetail, melding, profiel, plus de
+   pilot-tabs) niet altijd op 1280px breedte. Laat de knoppenrij liever naar
+   een tweede regel wrappen dan horizontaal buiten het scherm laten lopen. */
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .topbar-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  row-gap: 8px;
+}
+
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .topbar-title {
   display: none;
 }
 
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .mobile-topbar-home {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .mobile-topbar-home {
   display: flex;
   min-width: 210px;
 }
 
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .mobile-brand-home {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .mobile-brand-home {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -1356,24 +1368,24 @@ html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .mobile-brand-ho
   padding: 9px 14px;
 }
 
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .mobile-brand-home img {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .mobile-brand-home img {
   width: 34px;
   height: 34px;
   object-fit: contain;
 }
 
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .mobile-role-switch {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .mobile-role-switch {
   display: none;
 }
 
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .new-admin-topnav {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .new-admin-topnav {
   display: flex;
   align-items: center;
   gap: 3px;
   margin-right: auto;
 }
 
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .new-admin-topnav button {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .new-admin-topnav button {
   border: 0;
   border-radius: 10px;
   background: transparent;
@@ -1383,13 +1395,13 @@ html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .new-admin-topna
   cursor: pointer;
 }
 
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .new-admin-topnav button:hover,
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .new-admin-topnav button:focus-visible {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .new-admin-topnav button:hover,
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .new-admin-topnav button:focus-visible {
   background: rgba(255, 255, 255, .07);
   color: #f2ecdf;
 }
 
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .new-admin-topnav button[data-pilot-view="dashboard"] {
+html[data-skin="new"] .new-admin-topnav button.is-active {
   color: #6dcc7e;
 }
 
@@ -1785,6 +1797,83 @@ html[data-skin="new"] .new-admin-story-cards .new-admin-story-cta .small-button 
   color: #241804;
 }
 
+/* Voetstrip van de Storyline, 1-op-1 overgenomen van de 1919-beheerderpilot
+   (.pagefoot in pilot/1919-beheerder.html) maar met alleen echte inhoud: geen
+   verzonnen "synchronisatie actief"-status (deze app pollt niet), wel de
+   werkelijke laatst-vernieuwd-tijd, de actuele periode, de legenda die de
+   status-bolletjes elders op deze sectie al gebruikt, en een echte csv-export. */
+html[data-skin="new"] .new-admin-storyline-foot {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, .09);
+  padding-top: 16px;
+  color: #61717d;
+  font-size: 12px;
+}
+
+html[data-skin="new"] .new-admin-foot-block {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.45;
+}
+
+html[data-skin="new"] .new-admin-storyline-foot b {
+  color: #8595a0;
+  font-weight: 600;
+}
+
+html[data-skin="new"] .new-admin-foot-grow {
+  flex: 1;
+}
+
+html[data-skin="new"] .new-admin-foot-legend {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+html[data-skin="new"] .new-admin-foot-legend i {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-style: normal;
+}
+
+html[data-skin="new"] .new-admin-foot-legend i::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #61717d;
+}
+
+html[data-skin="new"] .new-admin-foot-legend i.is-done::before {
+  background: #68b47a;
+}
+
+html[data-skin="new"] .new-admin-foot-legend i.is-current::before {
+  background: #d9a13c;
+}
+
+html[data-skin="new"] .new-admin-foot-export {
+  border: 1px solid rgba(255, 255, 255, .13);
+  border-radius: 10px;
+  background: #0a1826;
+  color: #d7e1e4;
+  cursor: pointer;
+  font: 700 12px var(--path-sans);
+  padding: 9px 14px;
+  transition: background .15s ease;
+}
+
+html[data-skin="new"] .new-admin-foot-export:hover,
+html[data-skin="new"] .new-admin-foot-export:focus-visible {
+  background: #112a3c;
+}
+
 html[data-skin="new"] #view-dashboard :is(
   .dashboard-team-panel,
   .dashboard-next-action-card,
@@ -1895,15 +1984,15 @@ html[data-skin="new"] #view-dashboard .customer-timesheet-admin-panel {
 }
 
 @media (max-width: 720px) {
-  html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .main-content {
+  html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .main-content {
     padding: 0 12px 84px;
   }
 
-  html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .mobile-topbar-home {
+  html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .mobile-topbar-home {
     min-width: 0;
   }
 
-  html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .new-admin-topnav {
+  html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .new-admin-topnav {
     grid-column: 1 / -1;
     width: 100%;
     min-width: 0;
@@ -1911,7 +2000,7 @@ html[data-skin="new"] #view-dashboard .customer-timesheet-admin-panel {
     scrollbar-width: thin;
   }
 
-  html[data-skin="new"] .app-shell:has(#view-dashboard.is-active) .new-admin-topnav button {
+  html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .new-admin-topnav button {
     flex: 0 0 auto;
   }
 
@@ -1950,6 +2039,19 @@ html[data-skin="new"] #view-dashboard .customer-timesheet-admin-panel {
 
   html[data-skin="new"] .new-admin-story-cards {
     grid-template-columns: 1fr;
+  }
+
+  html[data-skin="new"] .new-admin-storyline-foot {
+    gap: 14px;
+  }
+
+  html[data-skin="new"] .new-admin-foot-grow {
+    flex-basis: 100%;
+    height: 0;
+  }
+
+  html[data-skin="new"] .new-admin-foot-export {
+    width: 100%;
   }
 
   html[data-skin="new"] #view-dashboard .dashboard-team-table td:first-child,

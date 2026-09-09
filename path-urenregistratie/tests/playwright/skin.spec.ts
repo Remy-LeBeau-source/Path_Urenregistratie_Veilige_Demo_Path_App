@@ -858,3 +858,99 @@ test('[SKIN-H-018] Klanturenstaat-blok klapt inline open op het Dashboard, zonde
     expect(await panel.evaluate(el => el.parentElement?.id)).not.toBe('new-bento-customer-expand');
   });
 });
+
+test('[SKIN-H-019] de beheerroute blijft op elk van de 6 pilot-tabs consequent Nieuw, zonder terug te vallen op de klassieke zijbalk', async ({ page }) => {
+  // De pilot-topbar (.new-admin-topnav) tekende al zes tabs (Cockpit,
+  // Goedkeuringen, Facturen, Mededelingen, Medewerkers, Instellingen), maar
+  // alleen Cockpit had de zijbalk-verborgen/Nieuw-behandeling: de andere vijf
+  // vielen terug op de klassieke zijbalk zodra je erheen klikte -- exact
+  // hetzelfde "springt naar oud menu"-patroon dat eerder bij de medewerker-
+  // schermen is opgelost. Deze case loopt alle zes tabs langs en bewijst dat
+  // ze nu consequent hetzelfde beheerscherm (zijbalk weg, pilot-topnav met
+  // eigen actieve tab, geen horizontale overflow) tonen.
+  const loginPage = new LoginPage(page);
+  const views: Array<{ id: string; view: string }> = [
+    { id: 'dashboard', view: 'view-dashboard' },
+    { id: 'approvals', view: 'view-approvals' },
+    { id: 'invoices', view: 'view-invoices' },
+    { id: 'announcements', view: 'view-announcements' },
+    { id: 'employees', view: 'view-employees' },
+    { id: 'settings', view: 'view-settings' },
+  ];
+
+  const assertConsistentNewAdminSkin = async (pilotId: string, verwachteView: string) => {
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await expect(page.locator(`#${verwachteView}`)).toHaveClass(/is-active/);
+    await expect(page.locator('.sidebar')).toBeHidden();
+    await expect(page.locator('.new-admin-topnav')).toBeVisible();
+    await expect(page.locator(`.new-admin-topnav button[data-pilot-view="${pilotId}"]`)).toHaveClass(/is-active/);
+    await expect(page.locator('.mobile-brand-home')).toBeVisible();
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow, `horizontale scroll op ${verwachteView}`).toBeLessThanOrEqual(1);
+  };
+
+  await test.step('Given een ingelogde administrator Nieuw activeert', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect(page.locator('#app-shell')).toBeVisible();
+    await page.locator('#quick-skin-toggle').click();
+    await assertConsistentNewAdminSkin('dashboard', 'view-dashboard');
+  });
+
+  for (const { id, view } of views.slice(1)) {
+    await test.step(`When de administrator via de pilot-tab naar ${id} navigeert`, async () => {
+      await page.locator(`[data-pilot-view="${id}"]`).click();
+      await assertConsistentNewAdminSkin(id, view);
+    });
+  }
+
+  await test.step('Then brengt de eigen Home-knop terug naar Cockpit, nog altijd in Nieuw', async () => {
+    await page.locator('.mobile-brand-home').click();
+    await assertConsistentNewAdminSkin('dashboard', 'view-dashboard');
+  });
+});
+
+test('[SKIN-H-020] de voetstrip onder Verhalen per medewerker toont de echte periode en tijd, en het verhaaloverzicht is te exporteren', async ({ page }) => {
+  // Overgenomen uit de 1919-beheerderpilot (.pagefoot), maar zonder de
+  // verzonnen "synchronisatie actief"-status uit die statische mockup: deze
+  // app pollt niet, dus de voetstrip toont alleen wat echt is -- de
+  // weergaveperiode, het moment van de laatste render, de legenda die de
+  // status-bolletjes in de rest van de sectie al gebruikt, en een csv-export
+  // die exact de zichtbare rijen exporteert.
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsAdmin();
+  await expect(page.locator('#app-shell')).toBeVisible();
+  await page.locator('#quick-skin-toggle').click();
+  await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
+
+  const foot = page.locator('.new-admin-storyline-foot');
+  await expect(foot).toBeVisible();
+
+  await test.step('De weergaveperiode in de voetstrip komt overeen met de rest van de Storyline', async () => {
+    const storylinePeriod = (await page.locator('#new-admin-storyline-period').textContent()) || '';
+    const [expectedPeriod] = storylinePeriod.split(' · ');
+    await expect(page.locator('#new-admin-foot-period')).toHaveText(expectedPeriod);
+  });
+
+  await test.step('"Laatst vernieuwd" toont een echt tijdstip, geen verzonnen synchronisatiestatus', async () => {
+    await expect(page.locator('#new-admin-foot-refreshed')).toHaveText(/^\d{1,2}:\d{2}$/);
+  });
+
+  await test.step('De legenda benoemt dezelfde drie statussen als de voortgangsbolletjes ernaast', async () => {
+    const legendItems = foot.locator('.new-admin-foot-legend i');
+    await expect(legendItems).toHaveCount(3);
+    await expect(legendItems.nth(0)).toHaveText('Gereed');
+    await expect(legendItems.nth(1)).toHaveText('Actie vereist');
+    await expect(legendItems.nth(2)).toHaveText('Nog niet gestart');
+  });
+
+  await test.step('Verhaaloverzicht exporteren levert een echte csv-download op', async () => {
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      page.locator('#new-admin-story-export').click()
+    ]);
+    expect(download.suggestedFilename()).toMatch(/^Path_verhaaloverzicht_.*\.csv$/);
+    await expect(page.locator('#toast')).toContainText('verhaaloverzicht is gedownload');
+  });
+});
