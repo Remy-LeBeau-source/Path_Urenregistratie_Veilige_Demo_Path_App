@@ -110,8 +110,8 @@ assert.match(workflow, /TEST_PUBLIC_ADMIN_PASSWORD:\s*\$\{\{ secrets\.PLAYWRIGHT
 assert.match(workflow, /TEST_PUBLIC_EMPLOYEE_PASSWORD:\s*\$\{\{ secrets\.PLAYWRIGHT_EMPLOYEE_PASSWORD \}\}/, 'Public TEST employee password must come from a protected environment secret');
 assert.match(
   testRemote,
-  /\$expected = \["giovanno\.maatsen@pathconsultancy\.nl", "kenrich\.lieveld@pathconsultancy\.nl"\];/,
-  'Guarded TEST delivery must use exactly the primary sink and its acceptance CC recipient',
+  /\$expected = \["giovanno\.maatsen@pathconsultancy\.nl", "kenrich\.lieveld@pathconsultancy\.nl", "stasjovanbakel@pathconsultancy\.nl"\];/,
+  'Guarded TEST delivery must use exactly the primary sink, its acceptance CC recipient and the named password-reset tester',
 );
 assert.doesNotMatch(
   testRemote,

@@ -677,8 +677,12 @@ html[data-skin="new"] #view-timesheet .customer-timesheet-mail-preview pre {
    correctie heeft teruggestuurd -- beide leunen al op --vlak/--line/
    --navy-tekst e.d., die het donkere thema (de standaard in Nieuw) al
    passend herdefinieert, dus geen aparte Nieuw-stijl nodig, alleen zichtbaar
-   maken. */
-html[data-skin="new"] #view-employee-dashboard > :not(.new-employee-bento):not(.employee-hero):not(#employee-open-overview):not(#employee-dashboard-correction) {
+   maken. Het oude hero-blok zelf (.employee-hero, "Mijn werkvoorraad" met de
+   "Uren verder invullen"/"Bekijk alle open acties"-knoppen) stond hier eerder
+   ook even uitgezonderd, maar dat gaf dubbele/inconsistente info naast de
+   nieuwe #employee-open-overview-kaart die dezelfde "welke maanden staan
+   open"-behoefte al in de bento-stijl dekt -- blijft dus weer verborgen. */
+html[data-skin="new"] #view-employee-dashboard > :not(.new-employee-bento):not(#employee-open-overview):not(#employee-dashboard-correction) {
   display: none !important;
 }
 
@@ -689,80 +693,12 @@ html[data-skin="new"] #view-employee-dashboard {
 }
 
 html[data-skin="new"] #employee-open-overview {
-  order: 2;
-  margin: 0;
-}
-
-html[data-skin="new"] #view-employee-dashboard .employee-hero {
   order: 1;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 18px;
-  align-items: stretch;
   margin: 0;
-  border: 1px solid rgba(95, 185, 141, .46);
-  border-radius: 22px;
-  background:
-    linear-gradient(145deg, rgba(40, 113, 83, .40), rgba(16, 39, 61, .78)),
-    var(--path-night-panel);
-  color: var(--path-cream);
-  padding: 22px 18px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .035), 0 16px 36px rgba(2, 12, 22, .20);
-}
-
-html[data-skin="new"] #view-employee-dashboard .employee-hero h2 {
-  margin: 6px 0 4px;
-  color: var(--path-cream);
-  font: 400 clamp(28px, 8vw, 42px)/1.05 var(--path-serif);
-  letter-spacing: -.025em;
-}
-
-html[data-skin="new"] #view-employee-dashboard .employee-hero p {
-  color: rgba(244, 238, 227, .82);
-  font-weight: 500;
-}
-
-html[data-skin="new"] #view-employee-dashboard .employee-hero .section-label {
-  color: #65d6ac;
-}
-
-html[data-skin="new"] #view-employee-dashboard .employee-hero-actions {
-  display: grid;
-  gap: 10px;
-}
-
-html[data-skin="new"] #view-employee-dashboard .employee-hero-actions .button {
-  width: 100%;
-  justify-content: center;
-}
-
-html[data-skin="new"] #view-employee-dashboard .employee-hero .hero-task-math {
-  display: grid;
-  gap: 14px;
-  border: 1px solid rgba(244, 238, 227, .14);
-  border-radius: 18px;
-  background: rgba(8, 27, 44, .48);
-  padding: 16px;
-}
-
-html[data-skin="new"] #view-employee-dashboard .employee-hero .hero-task-math > strong {
-  color: var(--path-cream);
-  font: 400 clamp(28px, 8vw, 42px)/1 var(--path-serif);
-}
-
-html[data-skin="new"] #view-employee-dashboard .employee-hero .hero-task-math small {
-  display: block;
-  margin-bottom: 3px;
-  color: rgba(244, 238, 227, .68);
-  font-size: 11px;
-}
-
-html[data-skin="new"] #view-employee-dashboard .employee-hero .hero-task-math b {
-  color: var(--path-cream);
-  font-size: 13px;
 }
 
 html[data-skin="new"] #employee-dashboard-correction {
-  order: 3;
+  order: 2;
 }
 
 html[data-skin="new"] #view-employee-dashboard .new-employee-bento {

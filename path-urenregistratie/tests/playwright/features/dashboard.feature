@@ -37,6 +37,15 @@ Feature: Dashboard en open werkvoorraad
     And een nieuwe medewerkerlogin begint opnieuw in september
 
   @happy
+  Scenario: [DASH-H-025] "Mijn maanden" toont naast de urenstatus ook de klanturenstaat-status per maand
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given dashboard en open werkvoorraad is voorbereid
+    When de flow voor DASH-H-025 wordt uitgevoerd
+    Then heeft de historietabel een eigen Klanturenstaat-kolom naast Status
+    And toont elke maandrij een eigen klanturenstaat-statuspil, niet gelijk aan de urenstatus
+
+  @happy
   Scenario: [DASH-H-021] de medewerker keert zowel via Dashboard als via Mijn uren terug naar de actuele maand na een blik op een oudere maand
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 10

@@ -1099,6 +1099,11 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .employee-history { display: grid; }
 .employee-history-head { display: grid; grid-template-columns: 1fr .8fr .8fr auto; gap: 18px; align-items: center; border-top: 1px solid var(--line); background: var(--surface-muted); color: var(--muted); font-size: 9px; font-weight: 900; letter-spacing: .08em; padding: 10px 24px; text-transform: uppercase; }
 .employee-history-row { display: grid; grid-template-columns: 1fr .8fr .8fr auto; gap: 18px; align-items: center; border-top: 1px solid var(--line); padding: 15px 24px; }
+/* Met een aparte klanturenstaat-kolom (alleen als de medewerker er een moet
+   aanleveren) een extra statuskolom erbij, zonder de knopkolom smaller te
+   maken dan haar inhoud. */
+#employee-history.has-customer-timesheet-column .employee-history-head,
+#employee-history.has-customer-timesheet-column .employee-history-row { grid-template-columns: 1fr .8fr .8fr .8fr auto; }
 .employee-history-row strong, .employee-history-row small { display: block; }
 .employee-history-row strong { font-size: 11px; }
 .employee-history-row small { margin-top: 3px; color: var(--muted); font-size: 9px; }
@@ -1622,6 +1627,9 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
   .topbar-actions { gap: 6px; }
   .employee-history-row { grid-template-columns: 1fr 1fr; }
   .employee-history-head { display: none; }
+  /* Zelfde specificiteit als de basisregel hierboven (id + 2 klassen),
+     anders wint die op smalle schermen alsnog van deze collapse. */
+  #employee-history.has-customer-timesheet-column .employee-history-row { grid-template-columns: 1fr 1fr; }
   .administrator-row { grid-template-columns: 1fr auto; }
   .mail-recipient-setting, .mail-route-choice { grid-template-columns: 1fr auto; }
   body[data-role="employee"] .nav-list { grid-template-columns: repeat(3,1fr); }
@@ -1641,6 +1649,7 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
   .employee-open-action-row .small-button { width: 100%; }
   .employee-hero-actions .button { width: 100%; }
   .employee-history-row { grid-template-columns: minmax(0, 1fr); }
+  #employee-history.has-customer-timesheet-column .employee-history-row { grid-template-columns: minmax(0, 1fr); }
   .admin-task-month-heading, .admin-task-owner-heading, .admin-task-row { padding-inline: 18px; }
   .correction-banner.dashboard-correction { grid-template-columns: auto 1fr; }
   .correction-banner.dashboard-correction .button { grid-column: 1/-1; width: 100%; }
@@ -2146,6 +2155,10 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
 
   .employee-customer-timesheet-card,
   .employee-history-row {
+    grid-template-columns: 1fr;
+  }
+
+  #employee-history.has-customer-timesheet-column .employee-history-row {
     grid-template-columns: 1fr;
   }
 
