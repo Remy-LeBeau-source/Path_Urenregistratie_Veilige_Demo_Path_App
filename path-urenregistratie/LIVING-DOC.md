@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 456 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 458 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 456 unieke case-ID's
+- Playwright executable cases: 458 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 457 unieke case-ID's
+- Totaal executable cases: 459 unieke case-ID's
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29
 - Database steps mappings: 1
-- Uitvoeringen: 491
-- Niet-mobile projectuitvoeringen: 421
+- Uitvoeringen: 493
+- Niet-mobile projectuitvoeringen: 423
 - Mobile functionele cases: 35
 - Pixel 7 / Chromium-uitvoeringen: 35
 - iPhone 13 / WebKit-uitvoeringen: 35
 
-De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 456 Playwright-functionele cases in totaal 491 resultaten op: 421 + (35 x 2) = 491.
+De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 458 Playwright-functionele cases in totaal 493 resultaten op: 423 + (35 x 2) = 493.
 
 ## Documentatieketen
 
@@ -46,7 +46,7 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 456 Playwri
 
 - Feature: `tests/playwright/features/organization-settings.feature`
 - Source: `tests/playwright/admin-writes.spec.ts`
-- Cases: 27
+- Cases: 29
 
 - [ADM-WR-H-019] latere startdatum vraagt bevestiging en vermeldt dat historie bewaard blijft — Techniek: API-contract + equivalentieklasse · Assertions: 9
 - [ADM-WR-H-020] server berekent echte historische impact vóór een latere startdatum wordt opgeslagen — Techniek: API-contract + equivalentieklasse · Assertions: 12
@@ -75,6 +75,8 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 456 Playwri
 - [ADM-WR-H-018] een nieuwe ontvanger komt bij andere medewerkers ongevinkt binnen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
 - [ADM-WR-H-015] onderwerp, tekst en een eigen tekst per ontvanger blijven na F5 in het scherm staan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [ADM-WR-H-016] de routevinkjes van een opdracht blijven na opslaan en F5 staan zoals gezet — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 3
+- [ADM-WR-H-021] een sprong via de Instellingen-sectienavigatie laat de kop van die sectie echt zien, niet verstopt onder de topbalk — Techniek: API-contract + equivalentieklasse · Assertions: 3
+- [ADM-WR-H-022] "Open werkvoorraad" op het dashboard springt naar een paneel dat niet verstopt onder de topbalk — Techniek: API-contract + equivalentieklasse · Assertions: 3
 
 ### Auditlog en traceerbaarheid
 

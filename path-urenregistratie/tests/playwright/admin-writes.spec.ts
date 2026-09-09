@@ -1718,3 +1718,48 @@ test('[ADM-WR-H-016] de routevinkjes van een opdracht blijven na opslaan en F5 s
     await opslaan();
   }
 });
+
+test('[ADM-WR-H-021] een sprong via de Instellingen-sectienavigatie laat de kop van die sectie echt zien, niet verstopt onder de topbalk', async ({ page }) => {
+  // De sticky .topbar (z-index 8) overlapt de bovenkant van het scherm. De
+  // settings-section-nav-knoppen sprongen naar een sectie met scroll-margin-top:
+  // 18px, ver te weinig om onder de balk uit te komen -- de kop van de
+  // bestemming landde zo verstopt achter de topbalk in plaats van erin beeld.
+  const loginPage = new LoginPage(page);
+  // De klik-handler gebruikt smoothScrollBehavior(), een geanimeerde scroll.
+  // Verminderde beweging maakt 'm direct (auto), zodat de positie meteen na
+  // de klik al de eindstand is -- geen race met een lopende scrollanimatie.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await loginPage.open();
+  await loginPage.loginAsAdmin();
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.locator('[data-view="settings"]').click();
+  await expect(page.locator('.settings-section-nav')).toBeVisible();
+
+  await page.locator('.settings-section-nav button', { hasText: 'Mailroutes' }).click();
+
+  const kop = page.locator('#settings-routing h3', { hasText: 'E-mail & ontvangers' });
+  await expect(kop).toBeInViewport();
+
+  const topbarBottom = await page.locator('.topbar').first().evaluate(el => el.getBoundingClientRect().bottom);
+  const kopTop = await kop.evaluate(el => el.getBoundingClientRect().top);
+  expect(kopTop, 'de sectiekop hoort volledig onder de sticky topbalk te staan, niet erachter').toBeGreaterThanOrEqual(topbarBottom);
+});
+
+test('[ADM-WR-H-022] "Open werkvoorraad" op het dashboard springt naar een paneel dat niet verstopt onder de topbalk', async ({ page }) => {
+  // Zelfde klasse bug als ADM-WR-H-021, maar dan voor #admin-task-panel: de
+  // knoppen "Open werkvoorraad", "N bij Backoffice", "N wachten op
+  // medewerkers" en "Bekijk alle acties" springen er allemaal naartoe.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsAdmin();
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await expect(page.locator('#open-work-queue')).toBeVisible();
+
+  await page.locator('#open-work-queue').click();
+  await expect(page.locator('#admin-task-panel')).toBeInViewport();
+
+  const topbarBottom = await page.locator('.topbar').first().evaluate(el => el.getBoundingClientRect().bottom);
+  const panelTop = await page.locator('#admin-task-panel').evaluate(el => el.getBoundingClientRect().top);
+  expect(panelTop, 'het werkvoorraadpaneel hoort volledig onder de sticky topbalk te staan, niet erachter').toBeGreaterThanOrEqual(topbarBottom);
+});

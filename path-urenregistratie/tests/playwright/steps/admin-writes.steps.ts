@@ -89,3 +89,7 @@ Then("staat alles er na een F5 nog steeds");
 And("opslaan werkt ook als er verder niets aan het account verandert");
 When("het brokervinkje wordt omgezet en opgeslagen");
 Then("staat het na een herlaad nog steeds zo");
+When("de flow voor ADM-WR-H-021 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat een sprong via de Instellingen-sectienavigatie laat de kop van die sectie echt zien, niet verstopt onder de topbalk");
+When("de flow voor ADM-WR-H-022 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat \"Open werkvoorraad\" op het dashboard springt naar een paneel dat niet verstopt onder de topbalk");

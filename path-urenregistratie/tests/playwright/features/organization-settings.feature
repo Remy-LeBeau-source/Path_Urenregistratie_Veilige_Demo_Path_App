@@ -230,3 +230,19 @@ Feature: Organisatie-instellingen beheren
     Given organisatie-instellingen beheren is voorbereid
     When het brokervinkje wordt omgezet en opgeslagen
     Then staat het na een herlaad nog steeds zo
+
+  @happy
+  Scenario: [ADM-WR-H-021] een sprong via de Instellingen-sectienavigatie laat de kop van die sectie echt zien, niet verstopt onder de topbalk
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given organisatie-instellingen beheren is voorbereid
+    When de flow voor ADM-WR-H-021 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat een sprong via de Instellingen-sectienavigatie laat de kop van die sectie echt zien, niet verstopt onder de topbalk
+
+  @happy
+  Scenario: [ADM-WR-H-022] "Open werkvoorraad" op het dashboard springt naar een paneel dat niet verstopt onder de topbalk
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given organisatie-instellingen beheren is voorbereid
+    When de flow voor ADM-WR-H-022 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat "Open werkvoorraad" op het dashboard springt naar een paneel dat niet verstopt onder de topbalk

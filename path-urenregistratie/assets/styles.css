@@ -432,6 +432,9 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .metric-note.positive { color: var(--mint-dark-tekst); }
 
 .panel { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: 0 8px 28px rgba(13,27,56,.035); }
+/* Zelfde sticky-topbar-overlap als .settings-card[id] hierboven: de knoppen
+   "Bekijk alle ... acties" / "N bij Backoffice" / "N wachten op medewerkers"
+   springen hierheen en verstopten de kop van dit paneel achter de topbalk. */
 #admin-task-panel { scroll-margin-top: 104px; }
 .workflow-panel { margin-bottom: 18px; padding: 24px; }
 .panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px 24px 17px; }
@@ -732,7 +735,11 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .settings-section-nav { display: flex; flex-wrap: wrap; gap: 7px; margin: -6px 0 18px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); box-shadow: var(--shadow); padding: 8px; }
 .settings-section-nav button { border: 1px solid transparent; border-radius: 999px; background: var(--surface-muted); color: var(--muted); cursor: pointer; padding: 8px 12px; font-size: 10px; font-weight: 800; }
 .settings-section-nav button:hover, .settings-section-nav button:focus-visible { border-color: var(--mint-dark); outline: 0; background: var(--green-light); color: var(--teal); }
-.settings-card[id] { scroll-margin-top: 18px; }
+/* De sticky .topbar (min-height 88px, z-index 8) verborg de kop van elke
+   sectie waarnaar de settings-section-nav-knoppen springen -- 18px was veel
+   te weinig om eronderuit te komen, dus de bestemming landde onder de balk
+   in plaats van eronder. */
+.settings-card[id] { scroll-margin-top: 104px; }
 .settings-card { padding: 24px; }
 .settings-card.full-width { grid-column: 1/-1; }
 .settings-card h3 { margin-bottom: 20px; }
@@ -1676,6 +1683,12 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
     width: 100%;
     padding: 0 14px 96px;
   }
+
+  /* De mobiele .topbar stapelt (logo, titel, badges, knoppen, bel, avatar)
+     en is daardoor veel hoger dan op desktop -- de settings-section-nav-
+     sprong heeft hier dus een ruimere marge nodig dan de 104px hierboven. */
+  .settings-card[id] { scroll-margin-top: 300px; }
+  #admin-task-panel { scroll-margin-top: 300px; }
 
   .topbar {
     display: grid;
