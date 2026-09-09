@@ -4286,6 +4286,62 @@ function applyDayHoursDefaultsToRecord(record, employee, periodKey) {
   });
 }
 
+// Standaardpatroon: 8 uur op elke werkdag als een medewerker geen eigen
+// werkpatroon per weekdag heeft ingesteld (zie WEEKDAY_HOURS_FIELDS). Bewust
+// een vast, makkelijk te begrijpen getal i.p.v. iets afgeleid van de (per
+// maand wisselende) maanduren -- dat zou de knop onvoorspelbaar maken.
+const DEFAULT_FILL_PATTERN_HOURS = 8;
+
+function fillPatternHoursForDay(employee, dayIndex) {
+  const override = employee.dayHours ? employee.dayHours[dayIndex + 1] : undefined;
+  return override !== undefined && override !== null ? Number(override) : DEFAULT_FILL_PATTERN_HOURS;
+}
+
+// "Standaardweek/-maand vullen": vult alleen dagen die nog nooit zijn
+// aangeraakt (0 uur, niet bevestigd) met het eigen werkpatroon van de
+// medewerker, of anders 8 uur op elke werkdag. Een dag die al uren heeft, of
+// die bewust op 0 is bevestigd (bv. "vrijdag altijd vrij"), blijft
+// ongemoeid -- deze knop mag nooit iets overschrijven dat de medewerker zelf
+// al heeft ingevuld of expliciet heeft leeggelaten. Geeft het aantal
+// daadwerkelijk gevulde dagen terug.
+function fillDefaultPatternForWeek(record, employee, period, weekIndex) {
+  const week = period.weekRows[weekIndex];
+  if (!week || !record.entries || !record.entries[weekIndex]) return 0;
+  let filled = 0;
+  week.days.forEach((day, dayIndex) => {
+    if (!day) return;
+    if (record.confirmedEntries?.[weekIndex]?.[dayIndex]) return;
+    if (Number(record.entries[weekIndex][dayIndex] || 0) > 0) return;
+    record.entries[weekIndex][dayIndex] = fillPatternHoursForDay(employee, dayIndex);
+    filled += 1;
+  });
+  return filled;
+}
+
+function fillDefaultPatternForMonth(record, employee, period) {
+  return period.weekRows.reduce((total, week, weekIndex) => total + fillDefaultPatternForWeek(record, employee, period, weekIndex), 0);
+}
+
+// Leesbare beschrijving van het patroon dat de knop toepast (bv. "Ma-do 9
+// uur · vr vrij"), voor de uitlegtekst eronder. Groepeert opeenvolgende
+// dagen met hetzelfde aantal uren, zodat het geen vijf losse getallen wordt.
+function fillPatternDescription(employee) {
+  const groups = [];
+  for (let dayIndex = 0; dayIndex < 5; dayIndex += 1) {
+    const hours = fillPatternHoursForDay(employee, dayIndex);
+    const last = groups[groups.length - 1];
+    if (last && last.hours === hours) {
+      last.to = WEEKDAY_SHORT[dayIndex];
+    } else {
+      groups.push({ from: WEEKDAY_SHORT[dayIndex], to: WEEKDAY_SHORT[dayIndex], hours });
+    }
+  }
+  return groups.map(group => {
+    const range = group.from === group.to ? group.from : group.from + "–" + group.to;
+    return range + " " + (group.hours > 0 ? hoursFormat.format(group.hours) + " uur" : "vrij");
+  }).join(" · ");
+}
+
 function ensurePeriodRecords(periodKey) {
   const period = periodFromKey(periodKey);
   if (!state.records || typeof state.records !== "object") state.records = {};
@@ -4933,6 +4989,16 @@ function renderNewEmployeeBento(record, employee, period) {
   document.querySelector("#new-bento-week-total-label").textContent = "Totaal · " + weekBusinessDays + " werkdag" + (weekBusinessDays === 1 ? "" : "en") + " in deze maand";
   document.querySelector("#new-bento-week-total").textContent = hoursFormat.format(weekTotal) + " uur";
   updateWeekNavButtons("#new-employee-bento", weekIndex, period);
+  const fillPatternButton = document.querySelector('[data-fill-default-pattern="week"]');
+  const fillPatternNote = document.querySelector("#new-bento-fill-pattern-note");
+  if (fillPatternButton) {
+    fillPatternButton.disabled = !editable;
+    fillPatternButton.hidden = !editable;
+  }
+  if (fillPatternNote) {
+    fillPatternNote.hidden = !editable;
+    fillPatternNote.textContent = "Vult lege dagen met " + fillPatternDescription(employee) + ". Ziek of vrij kun je daarna zelf aanpassen.";
+  }
   const submit = document.querySelector("[data-new-bento-submit]");
   submit.disabled = !editable;
   const finalWeekSelected = weekIndex === period.weekRows.length - 1;
@@ -8050,6 +8116,14 @@ function updateTimesheetSubmitUi(record) {
     const weekMatch = /^week-(\d+)$/.exec(String(state.hoursWeekScope || ""));
     const week = weekMatch ? currentPeriod().weekRows[Number(weekMatch[1])] : null;
     save.textContent = week ? "Week " + week.number + " opslaan" : "Maand opslaan";
+  }
+  const fillDefault = document.querySelector("#fill-default-pattern");
+  if (fillDefault) {
+    fillDefault.hidden = !canSubmit;
+    fillDefault.disabled = !canSubmit;
+    fillDefault.textContent = wholeMonthSelected ? "Standaardmaand vullen" : "Standaardweek vullen";
+    fillDefault.title = "Vult de lege dagen van " + (wholeMonthSelected ? "deze maand" : "deze week")
+      + " met je normale patroon (" + fillPatternDescription(currentEmployee()) + "). Ziek of vrij kun je daarna zelf aanpassen.";
   }
   if (submit) {
     submit.hidden = !showSubmit;
@@ -12257,6 +12331,29 @@ function toonInstallatieAanbod() {
     return;
   }
 
+  const fillDefaultPattern = event.target.closest("[data-fill-default-pattern]");
+  if (fillDefaultPattern) {
+    const employee = currentEmployee();
+    const record = recordFor(employee.id);
+    const period = currentPeriod();
+    const weekIndex = newEmployeeBentoWeekIndex(period);
+    const filled = fillDefaultPattern.dataset.fillDefaultPattern === "month"
+      ? fillDefaultPatternForMonth(record, employee, period)
+      : fillDefaultPatternForWeek(record, employee, period, weekIndex);
+    if (filled === 0) {
+      toast("Alle dagen waren al ingevuld -- er is niets aangepast.");
+      return;
+    }
+    if (record.timesheetStatus !== "correction") record.timesheetStatus = "draft";
+    record.invoiceStatus = "concept";
+    record.payrollStatus = "concept";
+    persistState();
+    scheduleDraftTimesheetWrite();
+    renderNewEmployeeBento(record, employee, period);
+    toast((filled === 1 ? "1 dag" : filled + " dagen") + " ingevuld met je standaardpatroon.");
+    return;
+  }
+
   const newBentoSave = event.target.closest("[data-new-bento-save]");
   if (newBentoSave) {
     persistState();
@@ -12708,6 +12805,27 @@ document.querySelector("#save-timesheet").addEventListener("click", () => {
   const weekMatch = /^week-(\d+)$/.exec(String(state.hoursWeekScope || ""));
   const week = weekMatch ? currentPeriod().weekRows[Number(weekMatch[1])] : null;
   toast((week ? "Week " + week.number : currentPeriod().label) + " is opgeslagen.");
+});
+
+document.querySelector("#fill-default-pattern").addEventListener("click", () => {
+  const employee = currentEmployee();
+  const record = recordFor(employee.id);
+  const period = currentPeriod();
+  const weekMatch = /^week-(\d+)$/.exec(String(state.hoursWeekScope || ""));
+  const filled = weekMatch
+    ? fillDefaultPatternForWeek(record, employee, period, Number(weekMatch[1]))
+    : fillDefaultPatternForMonth(record, employee, period);
+  if (filled === 0) {
+    toast("Alle dagen waren al ingevuld -- er is niets aangepast.");
+    return;
+  }
+  if (record.timesheetStatus !== "correction") record.timesheetStatus = "draft";
+  record.invoiceStatus = "concept";
+  record.payrollStatus = "concept";
+  persistState();
+  scheduleDraftTimesheetWrite();
+  rerenderActiveTimesheetView();
+  toast((filled === 1 ? "1 dag" : filled + " dagen") + " ingevuld met je standaardpatroon.");
 });
 
 document.querySelector("#approve-all").addEventListener("click", () => {

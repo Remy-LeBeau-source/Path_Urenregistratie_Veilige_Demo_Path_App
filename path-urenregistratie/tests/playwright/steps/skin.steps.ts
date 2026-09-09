@@ -89,5 +89,12 @@ Then("blijft het Dashboard actief, staat het weekkaartje op de week van vandaag 
 And("staat het overzicht van open maanden zichtbaar op het Dashboard, en een actie erin blijft op het Dashboard");
 When("Mijn uren open staat op een enkele week en de skin naar Klassiek wisselt");
 Then("staat de klassieke tabel er meteen, zonder extra klik of F5");
-When("de flow voor SKIN-H-022 wordt uitgevoerd");
-Then("wordt met Playwright-assertions bevestigd dat een tweede herlading zet de skin/thema-voorkeur niet terug naar standaard");
+Given("een ingelogde administrator zet Nieuw en donker aan");
+When("de pagina twee keer ververst");
+Then("blijft de skin- en themavoorkeur na beide herladingen bewaard");
+Given("Backoffice een medewerker met een eigen werkpatroon aanmaakt (ma-do 9 uur, vrijdag 0 uur)");
+When("de medewerker inlogt en Nieuw activeert op het Dashboard");
+When("de medewerker maandag van week 37 zelf al op 12 uur zet en daarna Standaardweek vullen klikt");
+Then("blijft maandag op 12 (niet overschreven), en zijn dinsdag/woensdag/donderdag/vrijdag gevuld met het patroon");
+And("toont Mijn uren dezelfde knop, die van naam wisselt tussen week en hele maand");
+And("blijft de knop ook in Klassiek werken");

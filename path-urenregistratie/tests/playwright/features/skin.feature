@@ -193,6 +193,17 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
   Scenario: [SKIN-H-022] een tweede herlading zet de skin/thema-voorkeur niet terug naar standaard
     # Testtechniek: End-to-end use-case + visuele contractasserties
     # Aantoonbare Playwright-assertions in deze case: 8
-    Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid
-    When de flow voor SKIN-H-022 wordt uitgevoerd
-    Then wordt met Playwright-assertions bevestigd dat een tweede herlading zet de skin/thema-voorkeur niet terug naar standaard
+    Given een ingelogde administrator zet Nieuw en donker aan
+    When de pagina twee keer ververst
+    Then blijft de skin- en themavoorkeur na beide herladingen bewaard
+
+  @happy
+  Scenario: [SKIN-H-023] "Standaardweek/-maand vullen" vult alleen lege dagen met het eigen werkpatroon, in Nieuw en Klassiek
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 26
+    Given Backoffice een medewerker met een eigen werkpatroon aanmaakt (ma-do 9 uur, vrijdag 0 uur)
+    When de medewerker inlogt en Nieuw activeert op het Dashboard
+    When de medewerker maandag van week 37 zelf al op 12 uur zet en daarna Standaardweek vullen klikt
+    Then blijft maandag op 12 (niet overschreven), en zijn dinsdag/woensdag/donderdag/vrijdag gevuld met het patroon
+    And toont Mijn uren dezelfde knop, die van naam wisselt tussen week en hele maand
+    And blijft de knop ook in Klassiek werken

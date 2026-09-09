@@ -1050,19 +1050,196 @@ test('[SKIN-H-022] een tweede herlading zet de skin/thema-voorkeur niet terug na
   // verse standaardstaat. Pas zichtbaar na twee herladingen; Gio meldde dit
   // na een avond lang F5'en tijdens het testen.
   const loginPage = new LoginPage(page);
-  await loginPage.open();
-  await loginPage.loginAsAdmin();
-  await expect(page.locator('#app-shell')).toBeVisible();
-  await page.locator('#quick-skin-toggle').click();
-  await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await test.step('Given een ingelogde administrator zet Nieuw en donker aan', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect(page.locator('#app-shell')).toBeVisible();
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  });
 
-  await page.reload();
-  await expect(page.locator('#app-shell')).toBeVisible();
-  await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+  await test.step('When de pagina twee keer ververst', async () => {
+    await page.reload();
+    await expect(page.locator('#app-shell')).toBeVisible();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
 
-  await page.reload();
-  await expect(page.locator('#app-shell')).toBeVisible();
-  await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await page.reload();
+    await expect(page.locator('#app-shell')).toBeVisible();
+  });
+
+  await test.step('Then blijft de skin- en themavoorkeur na beide herladingen bewaard', async () => {
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  });
+});
+
+test('[SKIN-H-023] "Standaardweek/-maand vullen" vult alleen lege dagen met het eigen werkpatroon, in Nieuw en Klassiek', async ({ page }) => {
+  // WhatsApp-wens van medewerker Stasjo: "mijn vrijdag is altijd 0, de andere
+  // dagen 9 uur -- zou je met 1 knop een standaardweek kunnen vullen?" en "als
+  // ik ziek of vrij ben moet ik ze eruit kunnen halen" (dus nooit iets
+  // overschrijven dat al is ingevuld). Hergebruikt hetzelfde eigen-werkpatroon
+  // dat SKIN-H-016 al bewijst (dinsdag/vrijdag daar; hier een vol Ma-do/vr-
+  // patroon zoals Stasjo's eigen voorbeeld), en toont dat "Standaardweek
+  // vullen" op het Dashboard een al getypte dag ongemoeid laat, terwijl
+  // "Standaardweek/-maand vullen" op Mijn uren in beide skins werkt.
+  await page.clock.setFixedTime(new Date('2026-09-06T12:00:00.000Z'));
+  await page.addInitScript(() => {
+    localStorage.setItem('path-install-afgewezen', String(Date.now()));
+  });
+
+  const uniek = `${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 900 + 100)}`;
+  const eigenAdres = `standaardweek-${uniek}@example.invalid`;
+  const eigenNaam = `Standaardweekproef ${uniek}`;
+  const nieuwWachtwoord = `StdWeekE2e!${uniek}`;
+  let gebruikerId = 0;
+  let medewerkerId = 0;
+
+  const beheer = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+  const beheerPost = async (pad: string, data: JsonBody) => {
+    const csrf = await (await beheer.get('/server/auth/csrf.php')).json() as { csrf_token?: string };
+    const res = await beheer.post(pad, { headers: { 'X-CSRF-Token': String(csrf.csrf_token || '') }, data });
+    return { status: res.status(), body: await res.json() as JsonBody };
+  };
+
+  try {
+    await test.step('Given Backoffice een medewerker met een eigen werkpatroon aanmaakt (ma-do 9 uur, vrijdag 0 uur)', async () => {
+      const csrfLogin = await (await beheer.get('/server/auth/csrf.php')).json() as { csrf_token?: string };
+      const loginResponse = await beheer.post('/server/auth/login.php', {
+        headers: { 'X-CSRF-Token': String(csrfLogin.csrf_token || '') },
+        data: { email: appConfig.adminEmail, password: requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD') },
+      });
+      expect(loginResponse.status(), 'Backoffice moet kunnen inloggen om de medewerker aan te maken').toBe(200);
+
+      const aangemaakt = await beheerPost('/server/api/staff.php', {
+        action: 'upsert_employee',
+        sendInvitation: false,
+        employee: {
+          name: eigenNaam,
+          email: eigenAdres,
+          role: 'Consultant',
+          active: true,
+          startDate: '2020-01-01',
+          weeklyHours: 36,
+          hoursMonday: 9,
+          hoursTuesday: 9,
+          hoursWednesday: 9,
+          hoursThursday: 9,
+          hoursFriday: 0,
+        },
+      });
+      expect(aangemaakt.status, JSON.stringify(aangemaakt.body)).toBe(200);
+      gebruikerId = Number(aangemaakt.body.user_id || 0);
+      medewerkerId = Number(aangemaakt.body.employee_id || 0);
+      expect(gebruikerId).toBeGreaterThan(0);
+
+      const resetAangevraagd = await beheerPost('/server/auth/request-reset.php', { email: eigenAdres });
+      const token = String(resetAangevraagd.body.token || '');
+      expect(token).toMatch(/^[a-f0-9]{64}$/);
+      await page.goto(`${appConfig.baseUrl}/index.html#reset-password=${token}`);
+      await expect(page.locator('#auth-reset-complete-form')).toBeVisible();
+      await page.locator('#auth-reset-new-password').fill(nieuwWachtwoord);
+      await page.locator('#auth-reset-confirm-password').fill(nieuwWachtwoord);
+      await page.locator('#auth-reset-complete-submit').click();
+      await expect(page.locator('#auth-reset-complete-feedback')).toContainText('Je wachtwoord is ingesteld');
+      await page.locator('#auth-reset-goto-login').click();
+    });
+
+    const loginPage = new LoginPage(page);
+    await test.step('When de medewerker inlogt en Nieuw activeert op het Dashboard', async () => {
+      await expect(page.locator('#auth-login-form')).toBeVisible();
+      await loginPage.login(eigenAdres, nieuwWachtwoord);
+      await expect(page.locator('#app-shell')).toBeVisible();
+      await page.locator('#quick-skin-toggle').click();
+      await expect(page.locator('#new-employee-bento')).toBeVisible();
+    });
+
+    const inputs = page.locator('#new-bento-days .new-bento-hours-input');
+
+    await test.step('And staat de patroonuitleg er correct bij ("ma-do 9,0 uur · vr vrij")', async () => {
+      await expect(page.locator('#new-bento-fill-pattern-note')).toContainText('9,0 uur');
+      await expect(page.locator('#new-bento-fill-pattern-note')).toContainText('vrij');
+    });
+
+    await test.step('When de medewerker maandag van week 37 zelf al op 12 uur zet en daarna Standaardweek vullen klikt', async () => {
+      // Week 0 (de standaard-actieve week) wordt al automatisch voorgevuld
+      // door het bestaande applyDayHoursDefaultsToRecord (SKIN-H-016) --
+      // logisch, maar geen goede plek om "een al ingevulde dag blijft staan"
+      // te bewijzen. Week 1 (7-11 september, een volledige ma-vr week) is dat
+      // nog niet, dus die schakelen we hier expliciet in. Rechtstreeks in de
+      // staat gezet i.p.v. via het invoerveld: elke wijziging via het veld
+      // zelf bevestigt synchroon meteen de hele actieve week (zie
+      // handleBentoDayCardChange -> scheduleDraftTimesheetWrite ->
+      // buildTimesheetWritePayload, hetzelfde mechanisme dat SKIN-H-011
+      // bewijst) -- dan zou er voor deze stap niets meer te vullen overblijven.
+      await page.evaluate(() => {
+        // @ts-expect-error debug-only voor deze directe controle
+        state.hoursWeekScope = 'week-1';
+        // @ts-expect-error debug-only voor deze directe controle
+        state.hoursWeekScopeTouched = true;
+        // @ts-expect-error debug-only voor deze directe controle
+        const record = recordFor(currentEmployee().id);
+        record.entries[1][0] = 12;
+        // @ts-expect-error debug-only voor deze directe controle
+        renderNewEmployeeBento(record, currentEmployee(), currentPeriod());
+      });
+      await expect(page.locator('#new-bento-week-title')).toHaveText('Week 37');
+      await expect(inputs.first()).toHaveValue('12');
+      await page.locator('[data-fill-default-pattern="week"]').click();
+      await page.waitForTimeout(300);
+    });
+
+    await test.step('Then blijft maandag op 12 (niet overschreven), en zijn dinsdag/woensdag/donderdag/vrijdag gevuld met het patroon', async () => {
+      await expect(page.locator('#toast')).toContainText('ingevuld met je standaardpatroon');
+      const entries = await page.evaluate(() => {
+        // @ts-expect-error debug-only voor deze directe controle
+        const record = recordFor(currentEmployee().id);
+        return record.entries[1];
+      });
+      expect(entries[0]).toBe(12); // maandag: eigen invoer blijft staan
+      expect(entries[1]).toBe(9); // dinsdag: patroon
+      expect(entries[2]).toBe(9); // woensdag: patroon
+      expect(entries[3]).toBe(9); // donderdag: patroon
+      expect(entries[4]).toBe(0); // vrijdag: patroon (bewust 0)
+    });
+
+    await test.step('And toont Mijn uren dezelfde knop, die van naam wisselt tussen week en hele maand', async () => {
+      await page.evaluate(() => { window.location.hash = 'timesheet'; });
+      await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+      await page.locator('[data-hours-week-scope="week-1"]').click();
+      await expect(page.locator('#fill-default-pattern')).toHaveText('Standaardweek vullen');
+      await page.locator('[data-hours-week-scope="all"]').click();
+      await expect(page.locator('#fill-default-pattern')).toHaveText('Standaardmaand vullen');
+      await page.locator('#fill-default-pattern').click();
+      await page.waitForTimeout(600);
+      await expect(page.locator('#toast')).toContainText('ingevuld met je standaardpatroon');
+    });
+
+    await test.step('And blijft de knop ook in Klassiek werken', async () => {
+      await page.locator('#quick-skin-toggle').click();
+      await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+      await expect(page.locator('#fill-default-pattern')).toBeVisible();
+      const entriesNaVulling = await page.evaluate(() => {
+        // @ts-expect-error debug-only voor deze directe controle
+        const record = recordFor(currentEmployee().id);
+        return record.entries;
+      });
+      const totaalGevuld = entriesNaVulling.flat().filter((uur: number) => uur > 0 || uur === 0).length;
+      expect(totaalGevuld).toBeGreaterThan(0);
+    });
+  } finally {
+    const csrfLogout = await (await page.request.get('/server/auth/csrf.php')).json() as { csrf_token?: string };
+    await page.request.post('/server/auth/logout.php', {
+      headers: { 'X-CSRF-Token': String(csrfLogout.csrf_token || '') },
+    }).catch(() => null);
+    if (gebruikerId > 0) {
+      await beheerPost('/server/api/staff.php', {
+        action: 'upsert_employee',
+        sendInvitation: false,
+        employee: { name: eigenNaam, email: eigenAdres, dbEmployeeId: medewerkerId, dbUserId: gebruikerId, role: 'Consultant', active: false },
+      }).catch(() => null);
+      await beheerPost('/server/api/users.php', { action: 'delete', user_id: gebruikerId }).catch(() => null);
+    }
+    await beheer.dispose();
+  }
 });

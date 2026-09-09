@@ -857,6 +857,7 @@ html[data-skin="new"] .new-bento-presets button { min-height: 34px; border: 1px 
 html[data-skin="new"] .new-bento-presets button:hover { border-color: #5f9e78; background: #e6efe7; }
 html[data-skin="new"] .new-bento-week-total { display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid #cfc4b2; padding: 15px 5px 10px; }
 html[data-skin="new"] .new-bento-week-total strong { font: 400 22px var(--path-serif); }
+html[data-skin="new"] .new-bento-fill-pattern-note { margin: 4px 5px 10px; color: #9aa8ad; font-size: 11px; line-height: 1.5; }
 html[data-skin="new"] .new-bento-week-actions { display: grid; gap: 8px; }
 html[data-skin="new"] .new-bento-week-actions .button { width: 100%; }
 

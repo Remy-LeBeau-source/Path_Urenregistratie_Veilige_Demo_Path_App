@@ -251,7 +251,9 @@
             </header>
             <div class="new-bento-days" id="new-bento-days"></div>
             <div class="new-bento-week-total"><span id="new-bento-week-total-label">Totaal deze week</span><strong id="new-bento-week-total">0,00</strong></div>
+            <p class="new-bento-fill-pattern-note" id="new-bento-fill-pattern-note" hidden></p>
             <div class="new-bento-week-actions">
+              <button class="button button-ghost" type="button" data-fill-default-pattern="week" title="Vult de lege dagen van deze week met je normale patroon. Ziek of vrij kun je daarna zelf aanpassen."><span aria-hidden="true">◷</span> Standaardweek vullen</button>
               <button class="button button-ghost" type="button" data-new-bento-save title="Bewaar je wijzigingen zonder in te dienen"><span aria-hidden="true">↓</span> Concept opslaan</button>
               <button class="button button-primary" type="button" data-new-bento-submit title="Dien alle weken van deze maand in"><span aria-hidden="true">✓</span> Hele maand indienen</button>
             </div>
@@ -530,6 +532,7 @@
             <div class="timesheet-actions">
               <p><small id="hours-target-help">Dit blokkeert indienen nooit.</small></p>
               <div class="timesheet-action-buttons">
+                <button class="button button-ghost" id="fill-default-pattern" type="button">Standaardweek vullen</button>
                 <button class="button button-ghost" id="save-timesheet" type="button">Week opslaan</button>
                 <button class="button button-primary" id="submit-timesheet" type="button">Maand indienen</button>
               </div>
