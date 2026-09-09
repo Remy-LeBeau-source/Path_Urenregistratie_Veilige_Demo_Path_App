@@ -133,6 +133,7 @@
 | DASH-N-010 | ui | dashboard.feature | herstel blijft na F5 leidend boven een oude serverstatus | Toestandsovergang | 18 | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | herstel blijft na F5 leidend boven een oude serverstatus | Negative | 15 | Actueel |
 | DASH-N-011 | ui | dashboard.feature | afgeronde Backoffice-taak en teller blijven na F5 stabiel, ongeacht het beginaantal | Negatieve equivalentieklasse + error guessing | 9 | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | afgeronde Backoffice-taak en teller blijven na F5 stabiel, ongeacht het beginaantal | Negative | 15 | Actueel |
 | DASH-H-008 | ui | dashboard.feature | GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker en Backoffice | Beslissingstabel rollen en autorisatie | 24 | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker en Backoffice | Happy | 15 | Actueel |
+| DASH-N-012 | ui | dashboard.feature | afgeronde verzendcontrole blijft na F5 weg, ongeacht het beginaantal | Beslissingstabel rollen en autorisatie | 12 | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | afgeronde verzendcontrole blijft na F5 weg, ongeacht het beginaantal | Negative | 15 | Actueel |
 | DASH-N-009 | ui | dashboard.feature | medewerker teller blijft stabiel bij aug-juli-aug en dashboard triggert geen verborgen timesheet-read | Beslissingstabel rollen en autorisatie | 5 | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | medewerker teller blijft stabiel bij aug-juli-aug en dashboard triggert geen verborgen timesheet-read | Negative | 15 | Actueel |
 | DASH-H-012 | ui | dashboard.feature | GUI-smoke scheidt werkacties van medewerkers- en beheerdersaccounts | Beslissingstabel rollen en autorisatie | 35 | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | GUI-smoke scheidt werkacties van medewerkers- en beheerdersaccounts | Happy | 15 | Actueel |
 | DASH-H-013 | ui | dashboard.feature | dashboardmodules tonen compacte documenten, procesfasen en teamacties | End-to-end use-case + visuele contractasserties | 11 | dashboard.steps.ts | dashboard.spec.ts | UI Desktop | Dashboard | dashboardmodules tonen compacte documenten, procesfasen en teamacties | Happy | 15 | Actueel |
@@ -476,9 +477,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 454
+- Playwright executable cases: 455
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 455
+- Totaal unieke executable cases: 456
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29

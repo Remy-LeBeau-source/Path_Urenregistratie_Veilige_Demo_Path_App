@@ -45,6 +45,12 @@ Then("wordt die medewerker geselecteerd en toont het verhaal zijn naam en vier s
 Given("de medewerker de nieuwe vormgeving opent op de huidige week");
 When("alle werkdagen op deze week uren krijgen behalve de laatste, die bewust leeg blijft, en de week wordt opgeslagen");
 Then("heeft de server na een herlaad een eigen dagregel voor de laatste dag bewaard, ook al bleef die op 0 uur");
+When("de medewerker naar Mededelingen navigeert");
+Then("blijft Nieuw actief en blijft de klassieke sidebar verborgen");
+Given("de medewerker inlogt en Nieuw activeert");
+When("de medewerker naar Mijn uren gaat");
+And("de medewerker naar Mededelingen gaat (bereikbaar via de bel)");
+Then("brengt de eigen Home-knop terug naar het dashboard, nog altijd in Nieuw");
 Given("een gebruiker heeft de nieuwe vormgeving in een pilotomgeving gekozen");
 When("dezelfde voorkeur onder het productiebeleid wordt toegepast");
 Then("blijft productie klassiek zonder zichtbare pilotschakelaar en blijft TEST wel beschikbaar");
