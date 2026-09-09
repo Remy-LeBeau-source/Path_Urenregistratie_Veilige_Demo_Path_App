@@ -17,6 +17,12 @@ try {
     $pdo = ops_pdo($config);
     $email = (string)($options['email'] ?? '');
 
+    $dbInfo = $pdo->query('SELECT DATABASE() AS db_name')->fetch();
+    $userCount = (int)($pdo->query('SELECT COUNT(*) AS n FROM users')->fetch()['n'] ?? -1);
+    $likeStmt = $pdo->prepare("SELECT id, email FROM users WHERE email LIKE :pattern ORDER BY id DESC LIMIT 5");
+    $likeStmt->execute([':pattern' => 'rem-h-001-%']);
+    $recentRemUsers = $likeStmt->fetchAll();
+
     $userRow = null;
     $employeeRow = null;
     $companyRow = null;
@@ -78,7 +84,16 @@ try {
         ]);
     }
 
-    ops_print(['ok' => true, 'user' => $userRow, 'employee' => $employeeRow, 'company' => $companyRow, 'select_match' => $selectMatch]);
+    ops_print([
+        'ok' => true,
+        'db_name' => $dbInfo['db_name'] ?? null,
+        'user_count' => $userCount,
+        'recent_rem_users' => $recentRemUsers,
+        'user' => $userRow,
+        'employee' => $employeeRow,
+        'company' => $companyRow,
+        'select_match' => $selectMatch,
+    ]);
 } catch (Throwable $error) {
     ops_print(['ok' => false, 'error' => $error->getMessage()], 1);
 }
