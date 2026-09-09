@@ -1008,10 +1008,11 @@ test('[SKIN-H-021] de medewerker blijft op het Dashboard: de pijl springt naar v
   });
 
   await test.step('And staat het overzicht van open maanden zichtbaar op het Dashboard, en een actie erin blijft op het Dashboard', async () => {
-    // Gio wees op de rustigere kaartstijl van dit maand-overzicht; de
-    // samenvatting erboven hoort in New zichtbaar te blijven en visueel als
-    // dezelfde compacte werkvoorraadroute te voelen.
-    await expect(page.locator('.employee-hero')).toBeVisible();
+    // Gio wees op de rustigere kaartstijl van dit maand-overzicht. Het oude
+    // hero-blok (.employee-hero) zelf blijft in Nieuw verborgen -- dat gaf
+    // dubbele/inconsistente info naast deze kaart, die dezelfde "welke
+    // maanden staan open"-behoefte al dekt.
+    await expect(page.locator('.employee-hero')).toBeHidden();
     await expect(page.locator('#employee-open-task-total')).toHaveText(/\d+ open acties?/);
     const overview = page.locator('#employee-open-overview');
     await expect(overview).toBeVisible();

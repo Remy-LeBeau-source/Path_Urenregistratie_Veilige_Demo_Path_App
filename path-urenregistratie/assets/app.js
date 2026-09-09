@@ -5297,6 +5297,12 @@ function renderEmployeeDashboard() {
     }
   }
   history.splice(6);
+  // Op verzoek (testerfeedback): naast de urenstatus ook de
+  // klanturenstaat-status per maand tonen, i.p.v. die alleen voor de ene
+  // geselecteerde maand zichtbaar te maken. Geen duplicaat van iets
+  // bestaands -- customerTimesheetStatusPill() bestond al voor de huidige
+  // maand, hier hergebruikt over de hele historie.
+  const showsCustomerTimesheetColumn = employee.customerTimesheetExpected !== false;
   const historyRows = history.map(key => {
     const historyRecord = recordFor(employee.id, key);
     const historyTotal = totalEntries(historyRecord.entries) + Number(historyRecord.leave || 0) + Number(historyRecord.sick || 0);
@@ -5305,10 +5311,15 @@ function renderEmployeeDashboard() {
       ? "Correctie door " + correction.requestedBy + " · " + correction.requestedAt
       : "Eigen urenregistratie";
     const currentLabel = key === currentCalendarPeriodKey() ? '<span class="employee-history-current">Huidige maand</span>' : '';
-    return '<div class="employee-history-row"><div><strong>' + escapeHtml(periodFromKey(key).label) + currentLabel + '</strong><small>' + escapeHtml(historyNote) + '</small></div><div><strong>' + hoursFormat.format(historyTotal) + ' uur</strong><small>totaal verantwoord</small></div><div>' + timesheetStatusPill(employee, historyRecord) + '</div><button class="small-button" data-history-period="' + key + '">Open maand</button></div>';
+    const customerCell = showsCustomerTimesheetColumn
+      ? '<div>' + customerTimesheetStatusPill(historyRecord) + '</div>'
+      : '';
+    return '<div class="employee-history-row"><div><strong>' + escapeHtml(periodFromKey(key).label) + currentLabel + '</strong><small>' + escapeHtml(historyNote) + '</small></div><div><strong>' + hoursFormat.format(historyTotal) + ' uur</strong><small>totaal verantwoord</small></div><div>' + timesheetStatusPill(employee, historyRecord) + '</div>' + customerCell + '<button class="small-button" data-history-period="' + key + '">Open maand</button></div>';
   }).join("");
+  const historyHeadCustomerColumn = showsCustomerTimesheetColumn ? '<span>Klanturenstaat</span>' : '';
+  document.querySelector("#employee-history").classList.toggle("has-customer-timesheet-column", showsCustomerTimesheetColumn);
   document.querySelector("#employee-history").innerHTML = historyRows
-    ? '<div class="employee-history-head" aria-hidden="true"><span>Maand</span><span>Uren</span><span>Status</span><span>Actie</span></div>' + historyRows
+    ? '<div class="employee-history-head" aria-hidden="true"><span>Maand</span><span>Uren</span><span>Status</span>' + historyHeadCustomerColumn + '<span>Actie</span></div>' + historyRows
     : '<div class="dashboard-action-empty">Er zijn nog geen maanden beschikbaar.</div>';
   renderNewEmployeeBento(record, employee, period);
 }

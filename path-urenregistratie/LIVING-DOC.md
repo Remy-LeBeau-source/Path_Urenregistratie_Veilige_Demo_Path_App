@@ -178,11 +178,12 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 470 Playwri
 
 - Feature: `tests/playwright/features/dashboard.feature`
 - Source: `tests/playwright/dashboard.spec.ts`
-- Cases: 37
+- Cases: 38
 
 - [DASH-H-001] admin dashboard opent zonder console errors — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [DASH-H-002] employee dashboard opent zonder console errors — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 1
 - [DASH-H-018] elke login en elke Dashboard-klik opent de actuele maand; een handmatige maand blijft alleen op andere schermen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 29
+- [DASH-H-025] "Mijn maanden" toont naast de urenstatus ook de klanturenstaat-status per maand — Techniek: Toestandsovergang · Assertions: 7
 - [DASH-H-021] de medewerker keert zowel via Dashboard als via Mijn uren terug naar de actuele maand na een blik op een oudere maand — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 10
 - [DASH-N-023] een medewerker kan niet naar een maand vóór de eigen indiensttreding bladeren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [DASH-N-024] een lokaal record van vóór indiensttreding verschijnt niet in Mijn maanden — Techniek: Toestandsovergang · Assertions: 2

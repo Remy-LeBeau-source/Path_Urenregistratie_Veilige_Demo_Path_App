@@ -242,6 +242,35 @@ test('[DASH-H-018] elke login en elke Dashboard-klik opent de actuele maand; een
   });
 });
 
+test('[DASH-H-025] "Mijn maanden" toont naast de urenstatus ook de klanturenstaat-status per maand', async ({ page }) => {
+  // Testerfeedback (WhatsApp, Kristel/Stasjo): een compact statuslijstje per
+  // maand voor de klanturenstaat ("Sept - ingediend, Okt - open") bestond nog
+  // niet -- alleen de urenstatus stond al per maand in "Mijn maanden", de
+  // klanturenstaat-status alleen voor de ene geselecteerde maand. Nu een
+  // eigen kolom, hergebruikt customerTimesheetStatusPill() die al bestond
+  // voor de huidige maand.
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i);
+
+  await test.step('Then heeft de historietabel een eigen Klanturenstaat-kolom naast Status', async () => {
+    const head = page.locator('#employee-history .employee-history-head');
+    await expect(head).toContainText('Status');
+    await expect(head).toContainText('Klanturenstaat');
+  });
+
+  await test.step('And toont elke maandrij een eigen klanturenstaat-statuspil, niet gelijk aan de urenstatus', async () => {
+    const augustusRow = page.locator('#employee-history .employee-history-row', { hasText: 'Augustus 2026' });
+    await expect(augustusRow).toContainText('Correctie nodig');
+    await expect(augustusRow).toContainText('Naar broker gecontroleerd');
+
+    const juliRow = page.locator('#employee-history .employee-history-row', { hasText: 'Juli 2026' });
+    await expect(juliRow).toContainText('Wacht op klanturenstaat');
+    await expect(juliRow).toContainText('Opnieuw uploaden');
+  });
+});
+
 test('[DASH-H-021] de medewerker keert zowel via Dashboard als via Mijn uren terug naar de actuele maand na een blik op een oudere maand', async ({ page }) => {
   const loginPage = new LoginPage(page);
 
