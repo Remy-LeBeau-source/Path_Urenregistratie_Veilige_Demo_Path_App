@@ -181,10 +181,18 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
   @happy
   Scenario: [SKIN-H-021] de medewerker blijft op het Dashboard: de pijl springt naar vandaag in het weekkaartje, open maanden staan er zichtbaar bij, en een skinwissel hertekent Mijn uren direct
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 16
+    # Aantoonbare Playwright-assertions in deze case: 19
     Given de medewerker Nieuw activeert op het Dashboard
     When op de pijl-knop wordt gedrukt
     Then blijft het Dashboard actief, staat het weekkaartje op de week van vandaag en heeft de dag van vandaag focus
     And staat het overzicht van open maanden zichtbaar op het Dashboard, en een actie erin blijft op het Dashboard
     When Mijn uren open staat op een enkele week en de skin naar Klassiek wisselt
     Then staat de klassieke tabel er meteen, zonder extra klik of F5
+
+  @happy
+  Scenario: [SKIN-H-022] een tweede herlading zet de skin/thema-voorkeur niet terug naar standaard
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid
+    When de flow voor SKIN-H-022 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat een tweede herlading zet de skin/thema-voorkeur niet terug naar standaard
