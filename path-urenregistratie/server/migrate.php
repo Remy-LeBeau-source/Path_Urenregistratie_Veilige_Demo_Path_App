@@ -116,6 +116,10 @@ function migration_plan(bool $allowDemoMigrations): array
             'id' => '033_demo_admin_password_correction.sql',
             'path' => __DIR__ . '/migrations/033_demo_admin_password_correction.sql',
         ];
+        $plan[] = [
+            'id' => '035_demo_admin_password_final_correction.sql',
+            'path' => __DIR__ . '/migrations/035_demo_admin_password_final_correction.sql',
+        ];
     }
 
     $plan[] = [
