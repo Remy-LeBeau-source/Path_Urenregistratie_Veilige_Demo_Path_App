@@ -7780,12 +7780,27 @@ function mobileWeekScope(period) {
   return period.weekRows.length ? "week-0" : "all";
 }
 
-function normalizedHoursWeekScope(period) {
+// allowReset staat de terugval op mobileWeekScope() alleen toe als Mijn uren
+// ook echt het scherm is dat de gebruiker ziet. renderAll() roept
+// renderHoursGrid() namelijk ook aan terwijl Mijn uren niet actief is (zodat
+// de -- verborgen -- tabel niet stiekem een oude maand toont zodra je er wél
+// naartoe gaat); zonder deze voorwaarde overschreef die achtergrondaanroep
+// een net door de bento gekozen week-scope stilletjes terug naar "Hele
+// maand" op desktopbreedte, nog vóór de medewerker had opgeslagen -- met als
+// zichtbaar gevolg dat een bewust op 0 gelaten dag op de actieve week niet
+// meer als expliciete dagregel werd meegestuurd (zie [SKIN-H-016]).
+function normalizedHoursWeekScope(period, allowReset = true) {
   let scope = state.hoursWeekScope || "all";
-  if (!state.hoursWeekScopeTouched) scope = mobileWeekScope(period);
+  if (!state.hoursWeekScopeTouched) {
+    if (!allowReset) return scope !== "all" && period.weekRows[Number(/^week-(\d+)$/.exec(scope)?.[1])] ? scope : "all";
+    scope = mobileWeekScope(period);
+  }
   if (scope !== "all") {
     const match = /^week-(\d+)$/.exec(scope);
-    if (!match || !period.weekRows[Number(match[1])]) scope = mobileWeekScope(period);
+    if (!match || !period.weekRows[Number(match[1])]) {
+      if (!allowReset) return "all";
+      scope = mobileWeekScope(period);
+    }
   }
   state.hoursWeekScope = scope;
   return scope;
@@ -7845,7 +7860,7 @@ function renderHoursGrid() {
     document.querySelector("#timesheet-correction-message").textContent = correction.message;
     document.querySelector("#timesheet-correction-meta").textContent = "Teruggestuurd door " + correction.requestedBy + " · " + correction.requestedAt;
   }
-  const weekScope = normalizedHoursWeekScope(period);
+  const weekScope = normalizedHoursWeekScope(period, timesheetViewActive);
   renderHoursWeekFilter(period, weekScope);
 
   // In Nieuw krijgt een enkele week (niet Hele maand) dezelfde

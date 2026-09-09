@@ -14,12 +14,19 @@ const execFileAsync = promisify(execFile);
 function candidatePeriods(): string[] {
   const startIndex = Date.now() % PERIOD_RANGE_MONTHS;
 
-  return Array.from({ length: 240 }, (_, offset) => {
+  const periods: string[] = [];
+  for (let offset = 0; periods.length < 240 && offset < PERIOD_RANGE_MONTHS; offset += 1) {
     const index = (startIndex + offset) % PERIOD_RANGE_MONTHS;
     const year = PERIOD_RANGE_START_YEAR + Math.floor(index / 12);
     const month = (index % 12) + 1;
-    return `${year}-${String(month).padStart(2, '0')}`;
-  });
+    // Dag 1 én dag 2 van de maand moeten allebei een werkdag zijn: de server
+    // weigert sinds de server-side weekend-validatie (uren.parse_day_entries)
+    // uren op za/zo. Dag 1 op ma-do garandeert dat dag 2 di-vr is.
+    const dayOneWeekday = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
+    if (dayOneWeekday < 1 || dayOneWeekday > 4) continue;
+    periods.push(`${year}-${String(month).padStart(2, '0')}`);
+  }
+  return periods;
 }
 
 function buildDayEntries(period: string, first: number, second: number) {
