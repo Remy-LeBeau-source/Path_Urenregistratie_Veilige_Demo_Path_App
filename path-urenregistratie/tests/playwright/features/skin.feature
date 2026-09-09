@@ -121,3 +121,21 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     Given een gebruiker heeft de nieuwe vormgeving in een pilotomgeving gekozen
     When dezelfde voorkeur onder het productiebeleid wordt toegepast
     Then blijft productie klassiek zonder zichtbare pilotschakelaar en blijft TEST wel beschikbaar
+
+  @happy
+  Scenario: [SKIN-H-014] snelkeuze in Mijn uren-bento heeft ook een 0-optie naast 8 en 9
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 10
+    Given de medewerker de nieuwe vormgeving opent op Mijn uren
+    Then heeft de eerste dag drie snelkeuzeknoppen: 0, 8 en 9
+    When op 8 gevolgd door 0 wordt geklikt
+
+  @happy
+  Scenario: [SKIN-H-016] een eigen werkpatroon per weekdag vult Mijn uren voor en telt zo mee in de contracturen
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 21
+    Given Backoffice een medewerker met een eigen werkpatroon aanmaakt (dinsdag 6 uur, vrijdag 0 uur)
+    When de medewerker inlogt, Nieuw activeert en Mijn uren opent
+    Then staat dinsdag al op 6 uur en vrijdag op leeg (0 uur), zonder dat er iets is getypt
+    When de week wordt opgeslagen zonder verder iets aan te passen
+    Then heeft de server het patroon zelf bewaard: dinsdag 6 uur, vrijdag expliciet 0 uur

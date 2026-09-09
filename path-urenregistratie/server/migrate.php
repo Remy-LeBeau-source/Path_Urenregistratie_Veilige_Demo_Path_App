@@ -204,6 +204,10 @@ function migration_plan(bool $allowDemoMigrations): array
         'id' => '036_mail_signature.sql',
         'path' => __DIR__ . '/migrations/036_mail_signature.sql',
     ];
+    $plan[] = [
+        'id' => '037_employee_day_hours.sql',
+        'path' => __DIR__ . '/migrations/037_employee_day_hours.sql',
+    ];
     return $plan;
 }
 

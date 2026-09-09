@@ -406,6 +406,8 @@
 | SKIN-H-013 | ui | skin.feature | de medewerkerroute blijft op elk scherm consequent Nieuw, ook op telefoonbreedte | Beslissingstabel rollen en autorisatie | 6 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de medewerkerroute blijft op elk scherm consequent Nieuw, ook op telefoonbreedte | Happy | 19 | Actueel |
 | SKIN-H-015 | ui | skin.feature | de theme-snelknop staat niet meer op de medewerker-startpagina, Voorkeuren blijft werken | Beslissingstabel rollen en autorisatie | 5 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de theme-snelknop staat niet meer op de medewerker-startpagina, Voorkeuren blijft werken | Happy | 19 | Actueel |
 | SKIN-N-007 | ui | skin.feature | productie forceert Klassiek en verbergt de redesignschakelaar | Negatieve equivalentieklasse + error guessing | 5 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | productie forceert Klassiek en verbergt de redesignschakelaar | Negative | 19 | Actueel |
+| SKIN-H-014 | ui | skin.feature | snelkeuze in Mijn uren-bento heeft ook een 0-optie naast 8 en 9 | End-to-end use-case + visuele contractasserties | 10 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | snelkeuze in Mijn uren-bento heeft ook een 0-optie naast 8 en 9 | Happy | 19 | Actueel |
+| SKIN-H-016 | ui | skin.feature | een eigen werkpatroon per weekdag vult Mijn uren voor en telt zo mee in de contracturen | Beslissingstabel rollen en autorisatie | 21 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | een eigen werkpatroon per weekdag vult Mijn uren voor en telt zo mee in de contracturen | Happy | 19 | Actueel |
 | TS-REV-API-H-005 | integration | correction-approval-workflow.feature | admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking | Concurrency + toestandsovergang | 65 | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
 | TS-REV-API-H-006 | integration | correction-approval-workflow.feature | gelijktijdige approve-requests door twee beheerders leveren exact één winnaar | Concurrency + toestandsovergang | 7 | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
 | TS-REV-API-H-007 | integration | correction-approval-workflow.feature | jaarwisseling december naar januari verwerkt urenstaten correct over de jaargrens | API-contract + equivalentieklasse | 7 | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
@@ -478,9 +480,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 456
+- Playwright executable cases: 458
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 457
+- Totaal unieke executable cases: 459
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29

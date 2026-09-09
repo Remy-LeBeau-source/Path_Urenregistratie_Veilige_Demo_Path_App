@@ -1,6 +1,9 @@
-import { expect, test, type Locator } from '@playwright/test';
+import { expect, test, request as playwrightRequest, type Locator } from '@playwright/test';
 import { LoginPage } from './pages/LoginPage';
 import { openProfielmenu } from './pages/TopbarMenu';
+import { appConfig, requirePassword } from './fixtures/appConfig';
+
+type JsonBody = Record<string, unknown>;
 
 // Fase D — increment 1: de vormgevingsschakelaar ("skin").
 // "classic" laat de bestaande app volledig ongemoeid; "new" activeert de
@@ -520,4 +523,196 @@ test('[SKIN-N-007] productie forceert Klassiek en verbergt de redesignschakelaar
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     await expect(page.locator('#quick-skin-toggle')).toBeVisible();
   });
+});
+
+test('[SKIN-H-014] snelkeuze in Mijn uren-bento heeft ook een 0-optie naast 8 en 9', async ({ page }) => {
+  // Feedback eerste testronde (Stasjo): 8/9 als snelkeuze is handig, maar een
+  // dag die je bewust niet werkt (bv. altijd vrije vrijdag) heeft geen
+  // snelkeuze voor 0 uur -- je moet dan handmatig wissen of het veld leeg
+  // laten. Derde knop naast 8/9 lost dat op zonder de bestaande twee te raken.
+  const loginPage = new LoginPage(page);
+  // Zelfde vaste datum als SKIN-H-011: garandeert een editable, huidige week
+  // i.p.v. een willekeurige (mogelijk vergrendelde) periode op basis van de
+  // echte systeemklok -- anders vindt de knop wel plaats maar doet niets,
+  // omdat de handler stilzwijgend teruggaat bij een disabled invoerveld.
+  await page.clock.setFixedTime(new Date('2026-09-06T12:00:00.000Z'));
+  await page.addInitScript(() => {
+    localStorage.setItem('path-install-afgewezen', String(Date.now()));
+  });
+
+  await test.step('Given de medewerker de nieuwe vormgeving opent op Mijn uren', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await expect(page.locator('#new-employee-bento')).toBeVisible();
+  });
+
+  await test.step('Then heeft de eerste dag drie snelkeuzeknoppen: 0, 8 en 9', async () => {
+    const eersteDag = page.locator('#new-bento-days .new-bento-day').first();
+    await eersteDag.locator('.new-bento-hours-input').focus();
+    const presets = eersteDag.locator('.new-bento-presets button');
+    await expect(presets).toHaveCount(3);
+    await expect(presets.nth(0)).toHaveText('0');
+    await expect(presets.nth(1)).toHaveText('8');
+    await expect(presets.nth(2)).toHaveText('9');
+  });
+
+  await test.step('When op 8 gevolgd door 0 wordt geklikt', async () => {
+    const eersteDag = page.locator('#new-bento-days .new-bento-day').first();
+    const input = eersteDag.locator('.new-bento-hours-input');
+    // De snelkeuzeknoppen tonen alleen bij :focus-within op de dag, en een
+    // preset-klik herbouwt de hele daglijst (dezelfde innerHTML-render als
+    // een handmatige invoer) -- de focus op het oude inputelement overleeft
+    // dat niet. Voor elke klik dus opnieuw focussen op het (ververste) veld.
+    // WebKit past :focus-within soms met vertraging toe t.o.v. Chromium; een
+    // enkele herhaling (focus + klik) i.p.v. één poging voorkomt een race
+    // tegen die vertraging zonder de assertie zelf te verzwakken.
+    await input.focus();
+    const focusWithinActief = await eersteDag.evaluate(el => el.matches(':focus-within'));
+    const actEl = await page.evaluate(() => document.activeElement?.className || '(geen)');
+    console.log('[SKIN-H-014 diagnose] focus-within=', focusWithinActief, 'activeElement=', actEl);
+    await expect(async () => {
+      await input.focus();
+      await eersteDag.locator('[data-new-bento-set="8"]').click();
+      await expect(input).toHaveValue('8', { timeout: 2_000 });
+    }).toPass({ timeout: 30_000, intervals: [250, 500, 1_000, 2_000] });
+    await expect(async () => {
+      await input.focus();
+      await eersteDag.locator('[data-new-bento-set="0"]').click();
+      // Bewust: 0 uur wordt net als bij handmatige invoer als LEEG veld getoond
+      // (placeholder "0"), niet als letterlijke "0" -- zelfde renderregel
+      // die [SKIN-H-011] al bewijst voor bewust op 0 gelaten dagen. De knop
+      // zet de waarde intern wel degelijk naar 0 (vandaar de lege weergave
+      // i.p.v. de vorige "8"), dit bewijst alleen dat de knop-actie werkt.
+      await expect(input).toHaveValue('');
+    }).toPass({ timeout: 10_000, intervals: [250, 500, 1_000] });
+  });
+});
+
+test('[SKIN-H-016] een eigen werkpatroon per weekdag vult Mijn uren voor en telt zo mee in de contracturen', async ({ page }) => {
+  // Wens van medewerker Stasjo: "mijn vrijdag is altijd 0, dat zou ik graag
+  // als standaard willen zodat ik het alleen hoef aan te passen wanneer dat
+  // nodig is." Een eigen werkpatroon per weekdag (ingesteld door Backoffice,
+  // want het raakt ook de contracturen-vergelijking) vult een nog niet
+  // aangeraakte dag voor met die waarde -- gewoon aanpasbaar, en Opslaan
+  // bewaart hem net zoals elke andere getypte waarde. Werkt gelijk in Nieuw
+  // en Klassiek, want de vulling zit in de data (applyTimesheetApiPayload),
+  // niet in een van de twee vormgevingen.
+  await page.clock.setFixedTime(new Date('2026-09-06T12:00:00.000Z'));
+  await page.addInitScript(() => {
+    localStorage.setItem('path-install-afgewezen', String(Date.now()));
+  });
+
+  const uniek = `${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 900 + 100)}`;
+  const eigenAdres = `patroonproef-${uniek}@example.invalid`;
+  const eigenNaam = `Patroonproef ${uniek}`;
+  const nieuwWachtwoord = `PatroonE2e!${uniek}`;
+
+  const beheer = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+  const beheerPost = async (pad: string, data: JsonBody) => {
+    const csrf = await (await beheer.get('/server/auth/csrf.php')).json() as { csrf_token?: string };
+    const res = await beheer.post(pad, { headers: { 'X-CSRF-Token': String(csrf.csrf_token || '') }, data });
+    return { status: res.status(), body: await res.json() as JsonBody };
+  };
+
+  try {
+    await test.step('Given Backoffice een medewerker met een eigen werkpatroon aanmaakt (dinsdag 6 uur, vrijdag 0 uur)', async () => {
+      const csrfLogin = await (await beheer.get('/server/auth/csrf.php')).json() as { csrf_token?: string };
+      const loginResponse = await beheer.post('/server/auth/login.php', {
+        headers: { 'X-CSRF-Token': String(csrfLogin.csrf_token || '') },
+        data: {
+          email: appConfig.adminEmail,
+          password: requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'),
+        },
+      });
+      expect(loginResponse.status(), 'Backoffice moet kunnen inloggen om de medewerker aan te maken').toBe(200);
+
+      const aangemaakt = await beheerPost('/server/api/staff.php', {
+        action: 'upsert_employee',
+        sendInvitation: false,
+        employee: {
+          name: eigenNaam,
+          email: eigenAdres,
+          role: 'Consultant',
+          active: true,
+          startDate: '2020-01-01',
+          weeklyHours: 32,
+          hoursTuesday: 6,
+          hoursFriday: 0,
+        },
+      });
+      expect(aangemaakt.status, JSON.stringify(aangemaakt.body)).toBe(200);
+      expect(Number(aangemaakt.body.user_id || 0), 'de nieuwe medewerker hoort een account te krijgen').toBeGreaterThan(0);
+
+      const resetAangevraagd = await beheerPost('/server/auth/request-reset.php', { email: eigenAdres });
+      expect(resetAangevraagd.status).toBe(200);
+      const token = String(resetAangevraagd.body.token || '');
+      expect(token).toMatch(/^[a-f0-9]{64}$/);
+
+      await page.goto(`${appConfig.baseUrl}/index.html#reset-password=${token}`);
+      await expect(page.locator('#auth-reset-complete-form')).toBeVisible();
+      await page.locator('#auth-reset-new-password').fill(nieuwWachtwoord);
+      await page.locator('#auth-reset-confirm-password').fill(nieuwWachtwoord);
+      await page.locator('#auth-reset-complete-submit').click();
+      await expect(page.locator('#auth-reset-complete-feedback')).toContainText('Je wachtwoord is ingesteld');
+      await page.locator('#auth-reset-goto-login').click();
+    });
+
+    const loginPage = new LoginPage(page);
+    await test.step('When de medewerker inlogt, Nieuw activeert en Mijn uren opent', async () => {
+      await expect(page.locator('#auth-login-form')).toBeVisible();
+      await loginPage.login(eigenAdres, nieuwWachtwoord);
+      await expect(page.locator('#app-shell')).toBeVisible();
+      await page.locator('#quick-skin-toggle').click();
+      await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+      await expect(page.locator('#new-employee-bento')).toBeVisible();
+    });
+
+    // Week 0 van september 2026 begint met dinsdag 1 sep (maandag valt buiten
+    // de maand) -- de eerste getoonde dag is dus dinsdag, de laatste vrijdag.
+    const inputs = page.locator('#new-bento-days .new-bento-hours-input');
+
+    await test.step('Then staat dinsdag al op 6 uur en vrijdag op leeg (0 uur), zonder dat er iets is getypt', async () => {
+      // De eerste render gebeurt synchroon met een nog lege record (voor de
+      // server-fetch is opgehaald); de standaardwaarden verschijnen pas
+      // zodra die fetch is verwerkt. Poll dus in plaats van één momentopname.
+      await expect(inputs.first()).toHaveValue('6', { timeout: 15_000 });
+      await expect(inputs.last()).toHaveValue('');
+    });
+
+    await test.step('When de week wordt opgeslagen zonder verder iets aan te passen', async () => {
+      await page.locator('[data-new-bento-save]').click();
+      await page.waitForTimeout(1_500);
+    });
+
+    await test.step('Then heeft de server het patroon zelf bewaard: dinsdag 6 uur, vrijdag expliciet 0 uur', async () => {
+      await page.reload();
+      await expect(page.locator('#new-employee-bento')).toBeVisible();
+      await expect(inputs.first()).toHaveValue('6', { timeout: 10_000 });
+      await expect(inputs.last()).toHaveValue('');
+
+      // Rechtstreeks bij de server nagaan i.p.v. op de herlaad-request zelf te
+      // wachten -- die race is bij deze zwaardere setup (nieuwe medewerker +
+      // wachtwoordreset in dezelfde test) een paar keer nooit gematcht,
+      // terwijl de knop-actie en de UI-assertie hierboven al lieten zien dat
+      // het patroon goed staat.
+      const eigenMedewerkerId = await page.evaluate(() => {
+        // @ts-expect-error debug-only, alleen voor deze directe controle-call
+        return currentEmployee().id;
+      });
+      const response = await page.request.get(`/server/api/timesheets.php?period=2026-09&employee_id=${encodeURIComponent(String(eigenMedewerkerId))}`);
+      expect(response.status()).toBe(200);
+      const data = await response.json();
+      const dayEntries: Array<{ work_date: string; hours: number }> = data?.timesheet?.day_entries || [];
+      const dinsdagRij = dayEntries.find(entry => entry.work_date.endsWith('-01'));
+      const vrijdagRij = dayEntries.find(entry => entry.work_date.endsWith('-04'));
+      expect(dinsdagRij, 'dinsdag 1 sep hoort als 6 uur bewaard te zijn').toBeTruthy();
+      expect(Number(dinsdagRij?.hours)).toBe(6);
+      expect(vrijdagRij, 'vrijdag 4 sep hoort als expliciete 0 uur bewaard te zijn').toBeTruthy();
+      expect(Number(vrijdagRij?.hours)).toBe(0);
+    });
+  } finally {
+    await beheer.dispose();
+  }
 });
