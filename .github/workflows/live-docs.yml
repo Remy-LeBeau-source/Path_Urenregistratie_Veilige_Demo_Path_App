@@ -57,15 +57,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Remove unused Google Chrome apt source
-        # Zie release-pipeline.yml/ci.yml: dl.google.com/linux/chrome-stable
-        # staat altijd voorgeconfigureerd op de runner maar wordt hier nooit
-        # gebruikt (alleen chromium/webkit) -- een storing in díe bron mag de
-        # apt-get update van playwright install --with-deps niet blokkeren.
-        run: sudo rm -f /etc/apt/sources.list.d/google-chrome.list
-
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium webkit
+        # Zie release-pipeline.yml/ci.yml: apt-get update binnen --with-deps
+        # raadpleegt altijd ook Google's eigen, hier ongebruikte
+        # dl.google.com/linux/chrome-stable-bron. Bij een tijdelijke
+        # inconsistentie daar ("Hash Sum mismatch") faalt de hele stap
+        # onnodig hard; een paar pogingen met korte pauze lost dat op.
+        run: |
+          for poging in 1 2 3; do
+            npx playwright install --with-deps chromium webkit && exit 0
+            echo "Poging $poging mislukt, probeer opnieuw na een korte pauze..."
+            sleep 15
+          done
+          exit 1
 
       - name: Write CI config.local.php
         run: |

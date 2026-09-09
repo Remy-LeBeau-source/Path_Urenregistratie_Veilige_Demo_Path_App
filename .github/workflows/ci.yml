@@ -77,18 +77,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Remove unused Google Chrome apt source
-        # We installeren nooit echte Google Chrome (alleen Playwright's eigen
-        # chromium/webkit); de runner-image heeft dl.google.com/linux/chrome-stable
-        # wel altijd al voorgeconfigureerd. Een storing/inconsistentie in díe
-        # ene, ongebruikte bron (bv. "Hash Sum mismatch") laat apt-get update
-        # -- en dus de hele installatiestap -- onnodig hard falen. Verwijderen
-        # voordat playwright install --with-deps zijn eigen apt-get update
-        # draait maakt deze stap onafhankelijk van Google's eigen repo-status.
-        run: sudo rm -f /etc/apt/sources.list.d/google-chrome.list
-
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium webkit
+        # apt-get update binnen --with-deps raadpleegt altijd ook Google's
+        # eigen, hier ongebruikte dl.google.com/linux/chrome-stable-bron (we
+        # installeren nooit echte Chrome, alleen chromium/webkit) -- een
+        # verwijderpoging vooraf bleek geen effect te hebben, playwright
+        # voegt 'm blijkbaar zelf weer toe. Bij een tijdelijke inconsistentie
+        # in díe bron ("Hash Sum mismatch") faalt de hele stap onnodig hard;
+        # een paar pogingen met korte pauze lost dat op zonder dat we moeten
+        # weten waar of waarom Google's CDN net inconsistent antwoordt.
+        run: |
+          for poging in 1 2 3; do
+            npx playwright install --with-deps chromium webkit && exit 0
+            echo "Poging $poging mislukt, probeer opnieuw na een korte pauze..."
+            sleep 15
+          done
+          exit 1
 
       - name: Write CI config.local.php
         run: |
