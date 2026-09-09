@@ -206,8 +206,8 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 467 Playwri
 - [DASH-N-016] correctieactie ververst een verborgen rooster uit een eerdere maand — Techniek: Toestandsovergang · Assertions: 11
 - [DASH-N-017] beheerderdashboard toont een laadtoestand tot de eerste werkvoorraad-sync — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 7
 - [DASH-N-018] medewerkerdashboard toont een laadtoestand tot de eerste werkvoorraad-sync — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
-- [DASH-H-006] medewerker kan geen toekomstige maand openen of als werkactie creëren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 9
-- [DASH-H-007] september toont alleen historie vanaf de persoonlijke startmaand en nooit oktober — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 9
+- [DASH-H-006] medewerker mag tot 2 jaar vooruitkijken zonder fantoom-werkactie, maar niet verder — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
+- [DASH-H-007] september toont alleen historie vanaf de persoonlijke startmaand, en oktober blijft geen werkactie ondanks dat vooruitkijken nu mag — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 9
 - [DASH-H-024] startdatum verbergt procesmaand zonder uren of klanturenstaatactie te wissen — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 13
 - [DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels — Techniek: Equivalentieklassen · Assertions: 30
 - [DASH-H-019] werkvoorraadhydratatie negeert toekomstperioden en begrenst parallelle reads — Techniek: Equivalentieklassen · Assertions: 6

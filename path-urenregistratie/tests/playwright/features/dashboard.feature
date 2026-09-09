@@ -231,20 +231,21 @@ Feature: Dashboard en open werkvoorraad
     When de sync binnenkomt, verschijnt de gezaghebbende stand
 
   @happy
-  Scenario: [DASH-H-006] medewerker kan geen toekomstige maand openen of als werkactie creëren
+  Scenario: [DASH-H-006] medewerker mag tot 2 jaar vooruitkijken zonder fantoom-werkactie, maar niet verder
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 9
+    # Aantoonbare Playwright-assertions in deze case: 11
     Given een medewerker op de actuele kalendermaand zonder toekomstige werkactie
-    When de medewerker de volgende maand probeert te openen
-    Then blijft september buiten de selectie en medewerkerwerkvoorraad
+    When de medewerker de volgende maand opent (binnen 2 jaar)
+    Then blijft oktober buiten de medewerkerwerkvoorraad (geen fantoom-actie)
+    When de medewerker meer dan 2 jaar vooruit probeert te springen
 
   @happy
-  Scenario: [DASH-H-007] september toont alleen historie vanaf de persoonlijke startmaand en nooit oktober
+  Scenario: [DASH-H-007] september toont alleen historie vanaf de persoonlijke startmaand, en oktober blijft geen werkactie ondanks dat vooruitkijken nu mag
     # Testtechniek: End-to-end use-case + visuele contractasserties
     # Aantoonbare Playwright-assertions in deze case: 9
     Given een medewerker die in september sinds augustus in dienst is
     When de medewerker augustus opent en daarna juli en oktober probeert
-    Then blijven juli en oktober dicht en is oktober geen werkactie
+    Then blijft juli dicht, en oktober opent wel (binnen 2 jaar) maar is geen werkactie
 
   @happy
   Scenario: [DASH-H-024] startdatum verbergt procesmaand zonder uren of klanturenstaatactie te wissen

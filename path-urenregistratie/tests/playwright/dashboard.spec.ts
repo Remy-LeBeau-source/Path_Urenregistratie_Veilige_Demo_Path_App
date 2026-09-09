@@ -1631,8 +1631,16 @@ test('[DASH-N-018] medewerkerdashboard toont een laadtoestand tot de eerste werk
   await loginPage.logout();
 });
 
-test('[DASH-H-006] medewerker kan geen toekomstige maand openen of als werkactie creëren', async ({ page }) => {
+test('[DASH-H-006] medewerker mag tot 2 jaar vooruitkijken zonder fantoom-werkactie, maar niet verder', async ({ page }) => {
+  // Vooruitkijken was ooit volledig dicht (elke toekomstmaand geweigerd),
+  // op verzoek verruimd naar 2 jaar zodat een medewerker vooruit kan plannen
+  // -- de oorspronkelijke zorg (fantoom-"open acties" voor een maand die nog
+  // niet begonnen is) blijft afgedekt doordat employeeOpenMonthSummaries()
+  // altijd al hard op de échte kalendermaand is begrensd, los van welke
+  // periode je bekijkt. Vaste klok (zoals DASH-H-007), zodat "volgende
+  // maand" en "meer dan 2 jaar vooruit" niet meedrijven met de echte datum.
   const loginPage = new LoginPage(page);
+  await page.clock.setFixedTime(new Date('2026-09-15T10:00:00.000Z'));
   let openOverviewVisible = false;
 
   await test.step('Given een medewerker op de actuele kalendermaand zonder toekomstige werkactie', async () => {
@@ -1645,27 +1653,35 @@ test('[DASH-H-006] medewerker kan geen toekomstige maand openen of als werkactie
     // vast die na de sync alsnog verandert.
     await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i);
     openOverviewVisible = await page.locator('#employee-open-overview').isVisible();
-    await expect(page.locator('#employee-open-overview-list')).not.toContainText('September 2026');
+    await expect(page.locator('#period-label')).toHaveText('September 2026');
+    await expect(page.locator('#employee-open-overview-list')).not.toContainText('Oktober 2026');
   });
 
-  await test.step('When de medewerker de volgende maand probeert te openen', async () => {
+  await test.step('When de medewerker de volgende maand opent (binnen 2 jaar)', async () => {
     await page.locator('#period-next').click();
-    await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
-    await expect(page.locator('#toast')).toContainText('geen toekomstige maand');
-    await expect(page.locator('#toast')).toContainText('Augustus 2026');
+    await expect(page.locator('#period-label')).toHaveText('Oktober 2026');
+    // Een gewone bevestigingstoast bij een geslaagde periodewissel hoort er
+    // te zijn; alleen de weigeringstekst mag niet verschijnen.
+    await expect(page.locator('#toast')).not.toContainText('vooruitkijken');
   });
 
-  await test.step('Then blijft september buiten de selectie en medewerkerwerkvoorraad', async () => {
+  await test.step('Then blijft oktober buiten de medewerkerwerkvoorraad (geen fantoom-actie)', async () => {
     if (openOverviewVisible) {
       await expect(page.locator('#employee-open-overview')).toBeVisible();
     } else {
       await expect(page.locator('#employee-open-overview')).toBeHidden();
     }
-    await expect(page.locator('#employee-open-overview-list')).not.toContainText('September 2026');
+    await expect(page.locator('#employee-open-overview-list')).not.toContainText('Oktober 2026');
+  });
+
+  await test.step('When de medewerker meer dan 2 jaar vooruit probeert te springen', async () => {
+    await page.evaluate(() => (window as unknown as { setPeriod: (key: string) => boolean }).setPeriod('2029-01'));
+    await expect(page.locator('#period-label')).toHaveText('Oktober 2026');
+    await expect(page.locator('#toast')).toContainText('niet verder dan 2 jaar vooruitkijken');
   });
 });
 
-test('[DASH-H-007] september toont alleen historie vanaf de persoonlijke startmaand en nooit oktober', async ({ page }) => {
+test('[DASH-H-007] september toont alleen historie vanaf de persoonlijke startmaand, en oktober blijft geen werkactie ondanks dat vooruitkijken nu mag', async ({ page }) => {
   const loginPage = new LoginPage(page);
   await page.clock.setFixedTime(new Date('2026-09-15T10:00:00.000Z'));
 
@@ -1697,9 +1713,13 @@ test('[DASH-H-007] september toont alleen historie vanaf de persoonlijke startma
     await page.locator('#period-next').click();
   });
 
-  await test.step('Then blijven juli en oktober dicht en is oktober geen werkactie', async () => {
-    await expect(page.locator('#period-label')).toHaveText('September 2026');
-    await expect(page.locator('#toast')).toContainText('geen toekomstige maand');
+  await test.step('Then blijft juli dicht, en oktober opent wel (binnen 2 jaar) maar is geen werkactie', async () => {
+    // Oktober ligt maar 1 maand vooruit, dus binnen de sinds kort toegestane
+    // 2 jaar -- de navigatie zelf slaagt nu. De oorspronkelijke zorg van deze
+    // case blijft overeind: oktober mag geen fantoom-"open actie" worden,
+    // want dat blijft hard begrensd op de échte kalendermaand.
+    await expect(page.locator('#period-label')).toHaveText('Oktober 2026');
+    await expect(page.locator('#toast')).not.toContainText('vooruitkijken');
     await expect(page.locator('#employee-open-overview-list')).not.toContainText('Oktober 2026');
   });
 });

@@ -221,8 +221,14 @@ function timesheet_require_employee_period_access(array $config, array $currentU
     $periodKey = (string)$period['period_key'];
     $startDate = (string)($employee['employment_start_date'] ?? '');
     $startPeriod = preg_match('/^\d{4}-\d{2}-\d{2}$/', $startDate) ? substr($startDate, 0, 7) : '';
-    $currentPeriod = (new DateTimeImmutable('now', new DateTimeZone('Europe/Amsterdam')))->format('Y-m');
-    if (($startPeriod !== '' && $periodKey < $startPeriod) || $periodKey > $currentPeriod) {
+    $now = new DateTimeImmutable('now', new DateTimeZone('Europe/Amsterdam'));
+    // Vooruitkijken mag tot 2 jaar, zodat een medewerker een verre maand kan
+    // plannen/bekijken. De dashboardwerkvoorraad ("open acties") blijft
+    // hier los van staan -- die is altijd al hard begrensd op de échte
+    // kalendermaand (employeeOpenMonthSummaries() in assets/app.js), dus
+    // vooruitkijken levert geen fantoom-opentaken op.
+    $maxFuturePeriod = $now->modify('+2 years')->format('Y-m');
+    if (($startPeriod !== '' && $periodKey < $startPeriod) || $periodKey > $maxFuturePeriod) {
         auth_send_json([
             'ok' => false,
             'error' => 'period-not-accessible',
