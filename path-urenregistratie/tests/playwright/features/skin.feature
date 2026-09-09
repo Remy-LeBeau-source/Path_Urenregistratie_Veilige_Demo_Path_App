@@ -207,3 +207,11 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     Then blijft maandag op 12 (niet overschreven), en zijn dinsdag/woensdag/donderdag/vrijdag gevuld met het patroon
     And toont Mijn uren dezelfde knop, die van naam wisselt tussen week en hele maand
     And blijft de knop ook in Klassiek werken
+
+  @happy
+  Scenario: [SKIN-H-024] "Volgende actie" bovenaan Open acties per maand toont de eerstvolgende stap en blijft op het Dashboard
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given de medewerker Nieuw activeert op het Dashboard
+    When op de knop van de Volgende actie wordt geklikt
+    Then blijft het Dashboard actief, net als bij de losse maandregels eronder

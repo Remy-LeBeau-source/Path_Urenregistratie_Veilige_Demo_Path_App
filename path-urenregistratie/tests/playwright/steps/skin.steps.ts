@@ -98,3 +98,5 @@ When("de medewerker maandag van week 37 zelf al op 12 uur zet en daarna Standaar
 Then("blijft maandag op 12 (niet overschreven), en zijn dinsdag/woensdag/donderdag/vrijdag gevuld met het patroon");
 And("toont Mijn uren dezelfde knop, die van naam wisselt tussen week en hele maand");
 And("blijft de knop ook in Klassiek werken");
+When("op de knop van de Volgende actie wordt geklikt");
+Then("blijft het Dashboard actief, net als bij de losse maandregels eronder");

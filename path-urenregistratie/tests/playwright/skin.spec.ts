@@ -1244,3 +1244,40 @@ test('[SKIN-H-023] "Standaardweek/-maand vullen" vult alleen lege dagen met het 
     await beheer.dispose();
   }
 });
+
+test('[SKIN-H-024] "Volgende actie" bovenaan Open acties per maand toont de eerstvolgende stap en blijft op het Dashboard', async ({ page }) => {
+  // Vervangt wat het oude klassieke hero-blok deed (één duidelijke
+  // eerstvolgende stap met knop) door dezelfde bento-kaarttaal te gebruiken
+  // als de rest van deze sectie, i.p.v. het hero-blok zelf terug te zetten
+  // (dat gaf dubbele/inconsistente info -- zie de toelichting bij
+  // #employee-open-overview in styles-new.css). De knop hergebruikt dezelfde
+  // skin-bewuste data-employee-open-action-handler als de losse
+  // maandregels eronder, dus blijft ook hier op het Dashboard staan.
+  const loginPage = new LoginPage(page);
+  await test.step('Given de medewerker Nieuw activeert op het Dashboard', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await expect(page.locator('#employee-dashboard-hours')).toBeVisible();
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+  });
+
+  const overview = page.locator('#employee-open-overview');
+  const next = page.locator('#employee-open-overview-next');
+  await test.step('Then staat bovenaan Open acties per maand een "Volgende actie"-kaart met titel, periode en knop', async () => {
+    await expect(overview).toBeVisible();
+    await expect(next).toBeVisible();
+    await expect(page.locator('#employee-open-overview-next-title')).not.toBeEmpty();
+    await expect(page.locator('#employee-open-overview-next-meta')).toContainText('actie 1 van');
+    await expect(page.locator('#employee-open-overview-next-action')).not.toBeEmpty();
+  });
+
+  await test.step('When op de knop van de Volgende actie wordt geklikt', async () => {
+    await page.locator('#employee-open-overview-next-action').click();
+  });
+
+  await test.step('Then blijft het Dashboard actief, net als bij de losse maandregels eronder', async () => {
+    await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
+    await expect(page.locator('#view-timesheet')).not.toHaveClass(/is-active/);
+  });
+});

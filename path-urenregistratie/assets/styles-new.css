@@ -701,6 +701,58 @@ html[data-skin="new"] #employee-dashboard-correction {
   order: 2;
 }
 
+/* "Volgende actie": het idee van het oude hero-blok (één duidelijke
+   eerstvolgende stap, met knop) teruggebracht in de kaart-taal van deze
+   sectie -- amber accent zoals de rest van de bento, i.p.v. los ernaast in
+   een andere stijl zoals het hero-blok deed. */
+html[data-skin="new"] .employee-open-overview-next {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 24px 18px;
+  border: 1px solid rgba(217, 161, 60, .35);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--path-amber) 10%, #112a3c);
+  padding: 16px 18px;
+}
+
+html[data-skin="new"] .employee-open-overview-next .section-label {
+  color: #d9a13c;
+}
+
+html[data-skin="new"] .employee-open-overview-next strong {
+  display: block;
+  margin-top: 5px;
+  color: #fff;
+  font: 400 19px var(--path-serif);
+}
+
+html[data-skin="new"] .employee-open-overview-next small {
+  display: block;
+  margin-top: 4px;
+  color: #b8c3c9;
+  font-size: 11px;
+}
+
+html[data-skin="new"] .employee-open-overview-next .button-primary {
+  flex: 0 0 auto;
+  background: var(--path-amber);
+  color: #241804;
+}
+
+@media (max-width: 720px) {
+  html[data-skin="new"] .employee-open-overview-next {
+    flex-direction: column;
+    align-items: stretch;
+    margin: 0 16px 16px;
+  }
+
+  html[data-skin="new"] .employee-open-overview-next .button-primary {
+    width: 100%;
+  }
+}
+
 html[data-skin="new"] #view-employee-dashboard .new-employee-bento {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(245px, .42fr) minmax(330px, .95fr);

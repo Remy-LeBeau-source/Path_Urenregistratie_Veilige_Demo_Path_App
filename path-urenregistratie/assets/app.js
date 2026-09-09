@@ -5259,6 +5259,26 @@ function renderEmployeeDashboard() {
   if (openOverview && openOverviewCount && openOverviewList) {
     openOverview.hidden = awaitingOpenTasks || openMonthSummaries.length === 0;
     openOverviewCount.textContent = openMonthSummaries.length + ' open maand' + (openMonthSummaries.length === 1 ? '' : 'en');
+    // "Volgende actie": hetzelfde idee als het oude, klassieke hero-blok
+    // (één duidelijke eerstvolgende stap met knop), maar in de kaart-taal
+    // van deze sectie in plaats van los ernaast in een andere stijl -- geen
+    // dubbele info, alleen deze ene plek toont "waar begin ik".
+    const openOverviewNext = document.querySelector('#employee-open-overview-next');
+    const openOverviewNextTitle = document.querySelector('#employee-open-overview-next-title');
+    const openOverviewNextMeta = document.querySelector('#employee-open-overview-next-meta');
+    const openOverviewNextAction = document.querySelector('#employee-open-overview-next-action');
+    if (openOverviewNext && openOverviewNextTitle && openOverviewNextMeta && openOverviewNextAction) {
+      if (nextOpenMonth && nextOpenAction) {
+        openOverviewNext.hidden = false;
+        openOverviewNextTitle.textContent = nextOpenAction.label + ' voor ' + nextOpenMonth.period.label;
+        openOverviewNextMeta.textContent = nextOpenMonth.period.label + ' · actie 1 van ' + employeeOpenActions.length;
+        openOverviewNextAction.textContent = nextOpenAction.button;
+        openOverviewNextAction.dataset.employeeOpenAction = nextOpenAction.type;
+        openOverviewNextAction.dataset.periodKey = nextOpenMonth.periodKey;
+      } else {
+        openOverviewNext.hidden = true;
+      }
+    }
     openOverviewList.innerHTML = openMonthSummaries.map((item) => {
       const monthBodyId = 'employee-open-month-body-' + item.periodKey;
       const actionCount = item.actions.length;
