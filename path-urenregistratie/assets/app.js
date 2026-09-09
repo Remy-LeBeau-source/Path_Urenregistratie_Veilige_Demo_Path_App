@@ -12884,14 +12884,26 @@ document.querySelector("#new-admin-story-export").addEventListener("click", () =
   toast("Het verhaaloverzicht is gedownload.");
 });
 
+// Vooruitkijken mag tot 2 jaar na de échte kalendermaand, zodat een
+// medewerker een verre maand kan plannen/bekijken. De dashboardwerkvoorraad
+// ("open acties") blijft hier los van staan -- die is in
+// employeeOpenMonthSummaries() altijd al hard begrensd op de échte
+// kalendermaand, dus vooruitkijken levert geen fantoom-opentaken op.
+// Terugkijken (voor indiensttreding) blijft ongewijzigd geblokkeerd.
+function maxEmployeeFuturePeriodKey() {
+  const parsed = parsePeriodKey(currentCalendarPeriodKey());
+  if (!parsed) return currentCalendarPeriodKey();
+  return makePeriodKey(parsed.year + 2, parsed.monthIndex);
+}
+
 function setPeriod(periodKey) {
   const parsed = parsePeriodKey(periodKey);
   if (!parsed || parsed.year < 1 || parsed.year > 9999) return false;
   const next = makePeriodKey(parsed.year, parsed.monthIndex);
   if (state.currentRole === "employee") {
-    const maxEmployeePeriodKey = currentCalendarPeriodKey();
+    const maxEmployeePeriodKey = maxEmployeeFuturePeriodKey();
     if (next > maxEmployeePeriodKey) {
-      toast("Je kunt geen toekomstige maand openen. Beschikbaar tot en met " + periodFromKey(maxEmployeePeriodKey).label + ".");
+      toast("Je kunt niet verder dan 2 jaar vooruitkijken. Beschikbaar tot en met " + periodFromKey(maxEmployeePeriodKey).label + ".");
       return false;
     }
     const employee = currentEmployee();

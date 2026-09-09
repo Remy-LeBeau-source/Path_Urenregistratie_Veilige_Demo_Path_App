@@ -197,6 +197,37 @@ function mail_test_invitation_recipient(array $config): ?string
     return mail_recipient_is_allowed($config, $recipient) ? $recipient : null;
 }
 
+/**
+ * Naast de ene vaste testmailbox (mail_test_invitation_recipient) mogen op
+ * TEST losse, met naam genoemde testers hun eigen echte wachtwoordreset
+ * ontvangen -- bewust smal: alleen dit ene kanaal, niet elk TEST-mailtype.
+ * Zonder dit kan een tester de reset-flow op zijn eigen account niet
+ * uitproberen zonder ook al zijn overige TEST-mail te ontvangen.
+ *
+ * @return list<string>
+ */
+function mail_test_extra_password_reset_recipients(array $config): array
+{
+    if (mail_environment($config) !== 'test') {
+        return [];
+    }
+    $mail = isset($config['mail']) && is_array($config['mail']) ? $config['mail'] : [];
+    $acceptance = isset($mail['acceptance_test']) && is_array($mail['acceptance_test'])
+        ? $mail['acceptance_test']
+        : [];
+    $raw = isset($acceptance['extra_password_reset_recipients']) && is_array($acceptance['extra_password_reset_recipients'])
+        ? $acceptance['extra_password_reset_recipients']
+        : [];
+    $recipients = [];
+    foreach ($raw as $candidate) {
+        $recipient = strtolower(trim((string)$candidate));
+        if (filter_var($recipient, FILTER_VALIDATE_EMAIL) && mail_recipient_is_allowed($config, $recipient)) {
+            $recipients[] = $recipient;
+        }
+    }
+    return $recipients;
+}
+
 /** @return array{recipient:string,cc:?string,subject:string,body:string,html:string,redirected:bool} */
 function mail_effective_delivery(array $config, array $delivery): array
 {
@@ -206,9 +237,13 @@ function mail_effective_delivery(array $config, array $delivery): array
     $body = (string)($delivery['body_snapshot'] ?? '');
     $html = (string)($delivery['html_snapshot'] ?? '');
     $fixedInvitationRecipient = mail_test_invitation_recipient($config);
-    $isFixedTestInvitation = strtolower(trim((string)($delivery['channel'] ?? ''))) === 'password_reset'
+    $isPasswordResetChannel = strtolower(trim((string)($delivery['channel'] ?? ''))) === 'password_reset';
+    $isFixedTestInvitation = $isPasswordResetChannel
         && $fixedInvitationRecipient !== null
         && strtolower($recipient) === $fixedInvitationRecipient;
+    $isNamedTesterPasswordReset = $isPasswordResetChannel
+        && in_array(strtolower($recipient), mail_test_extra_password_reset_recipients($config), true);
+    $isFixedTestInvitation = $isFixedTestInvitation || $isNamedTesterPasswordReset;
     $sink = (bool)($delivery['acceptance_test'] ?? false) || $isFixedTestInvitation
         ? null
         : mail_test_sink_recipient($config);

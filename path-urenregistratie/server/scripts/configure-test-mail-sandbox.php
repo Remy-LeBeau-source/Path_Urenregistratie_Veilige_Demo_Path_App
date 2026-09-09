@@ -11,6 +11,15 @@ $expectedPath = '/data/sites/web/pathconsultancynl/private/path-uren-test/config
 $businessRecipient = 'giovanno.maatsen@pathconsultancy.nl';
 $invitationRecipient = $businessRecipient;
 $secondaryTestAccount = 'kenrich.lieveld@pathconsultancy.nl';
+// Losse, met naam genoemde testers die hun eigen echte wachtwoordreset op
+// TEST moeten kunnen ontvangen (en alléén dat kanaal -- zie
+// mail_test_extra_password_reset_recipients() in server/mail/config.php).
+// Staan hier apart van $acceptanceAccounts: dit zijn geen extra
+// beheerderaccounts voor de acceptatietest-harness, maar bestaande
+// medewerkeraccounts die hun eigen reset-flow moeten kunnen beproeven.
+$namedPasswordResetTesters = [
+    'stasjovanbakel@pathconsultancy.nl',
+];
 $acceptanceAccounts = [
     ['email' => $businessRecipient, 'name' => 'Giovanno Maatsen'],
     ['email' => $secondaryTestAccount, 'name' => 'Kenrich Lieveld'],
@@ -27,7 +36,7 @@ try {
             'mode' => 'check',
             'writes_performed' => false,
             'config_path' => $expectedPath,
-            'allowed_recipients' => [$businessRecipient, $secondaryTestAccount],
+            'allowed_recipients' => [$businessRecipient, $secondaryTestAccount, ...$namedPasswordResetTesters],
             'test_sink_cc_recipient' => $secondaryTestAccount,
             'test_accounts' => array_column($acceptanceAccounts, 'email'),
             'message' => 'Use --execute --confirm=ENABLE_TEST_MAIL_SANDBOX on TransIP to open only the guarded TEST mail sandbox.',
@@ -54,7 +63,7 @@ try {
     $config['mail'] = is_array($config['mail'] ?? null) ? $config['mail'] : [];
     $config['mail']['enabled'] = true;
     $config['mail']['test_delivery_enabled'] = true;
-    $config['mail']['allowed_recipients'] = [$businessRecipient, $secondaryTestAccount];
+    $config['mail']['allowed_recipients'] = [$businessRecipient, $secondaryTestAccount, ...$namedPasswordResetTesters];
     $config['mail']['test_redirect_all'] = true;
     $config['mail']['test_sink_recipient'] = $businessRecipient;
     $config['mail']['test_sink_cc_recipient'] = $secondaryTestAccount;
@@ -63,13 +72,14 @@ try {
         'business_recipient' => $businessRecipient,
         'password_reset_recipient' => $businessRecipient,
         'invitation_recipient' => $invitationRecipient,
+        'extra_password_reset_recipients' => $namedPasswordResetTesters,
     ];
 
     $relayErrors = mail_validate_relay_config($config);
     if ($relayErrors !== [] || !mail_real_delivery_allowed_for_environment($config)) {
         throw new RuntimeException('Guarded TEST relay configuration is invalid: ' . implode('; ', $relayErrors));
     }
-    foreach ([$businessRecipient, $secondaryTestAccount] as $recipient) {
+    foreach ([$businessRecipient, $secondaryTestAccount, ...$namedPasswordResetTesters] as $recipient) {
         if (!mail_recipient_is_allowed($config, $recipient)) {
             throw new RuntimeException('TEST recipient is not protected by the exact allowlist.');
         }
@@ -134,10 +144,11 @@ try {
         'writes_performed' => true,
         'mail_enabled' => true,
         'test_delivery_enabled' => true,
-        'allowed_recipients' => [$businessRecipient, $secondaryTestAccount],
+        'allowed_recipients' => [$businessRecipient, $secondaryTestAccount, ...$namedPasswordResetTesters],
         'test_sink_recipient' => $businessRecipient,
         'test_sink_cc_recipient' => $secondaryTestAccount,
         'test_accounts' => array_column($acceptanceAccounts, 'email'),
+        'named_password_reset_testers' => $namedPasswordResetTesters,
         'backup_path' => $backupPath,
         'message' => 'Guarded TEST mail sandbox enabled. No message was sent.',
     ]);

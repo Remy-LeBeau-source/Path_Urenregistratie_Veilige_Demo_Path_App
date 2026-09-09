@@ -43,6 +43,31 @@ $development = policy_config('development', true, true, [$allowedAddress]);
 $guardedResponse = auth_password_reset_public_response($testGuarded, str_repeat('a', 64), '2099-01-01 00:00:00');
 $closedResponse = auth_password_reset_public_response($testClosed, str_repeat('b', 64), '2099-01-01 00:00:00');
 
+// Een met naam genoemde tester (bv. een echte medewerker die zijn eigen
+// wachtwoordreset wil kunnen beproeven) mag dat ene kanaal rechtstreeks
+// ontvangen, zonder dat andere TEST-mail aan hem ook meteen ongefilterd
+// doorgaat -- zie mail_test_extra_password_reset_recipients().
+$namedTester = 'stasjovanbakel@pathconsultancy.nl';
+$testGuardedWithNamedTester = $testGuarded;
+$testGuardedWithNamedTester['mail']['allowed_recipients'][] = $namedTester;
+$testGuardedWithNamedTester['mail']['test_sink_recipient'] = $allowedAddress;
+$testGuardedWithNamedTester['mail']['test_redirect_all'] = true;
+$testGuardedWithNamedTester['mail']['acceptance_test'] = [
+    'extra_password_reset_recipients' => [$namedTester],
+];
+$namedTesterResetDelivery = mail_effective_delivery($testGuardedWithNamedTester, [
+    'recipient_email' => $namedTester,
+    'channel' => 'password_reset',
+    'subject_snapshot' => 'Wachtwoord resetten',
+    'body_snapshot' => 'Link.',
+]);
+$namedTesterOtherChannelDelivery = mail_effective_delivery($testGuardedWithNamedTester, [
+    'recipient_email' => $namedTester,
+    'channel' => 'broker',
+    'subject_snapshot' => 'Factuur',
+    'body_snapshot' => 'Bijlage.',
+]);
+
 $checks = [
     'production_enabled_without_mode_is_blocked' => !mail_real_delivery_allowed_for_environment($productionClosed),
     'production_disabled_mode_has_config_error' => mail_validate_relay_config($productionClosed) !== [],
@@ -70,6 +95,10 @@ $checks = [
     'closed_test_reset_returns_local_token' => ($closedResponse['dry_run'] ?? false) === true
         && ($closedResponse['delivery_available'] ?? true) === false
         && ($closedResponse['token'] ?? '') === str_repeat('b', 64),
+    'named_tester_password_reset_is_not_redirected' => $namedTesterResetDelivery['redirected'] === false
+        && $namedTesterResetDelivery['recipient'] === $namedTester,
+    'named_tester_other_channel_still_redirects_to_sink' => $namedTesterOtherChannelDelivery['redirected'] === true
+        && $namedTesterOtherChannelDelivery['recipient'] === $allowedAddress,
 ];
 
 $ok = !in_array(false, $checks, true);

@@ -148,7 +148,11 @@ test('[ROLE-N-005] medewerker kan maanden voor de startdatum en na de huidige ma
     const beforeStart = shiftPeriod(startPeriod, -1);
     const now = new Date();
     const currentPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const afterCurrent = shiftPeriod(currentPeriod, 1);
+    // Vooruitkijken mag sindsdien tot 2 jaar (zie setPeriod()/
+    // timesheet_require_employee_period_access()); 1 maand vooruit is dus
+    // geen goede grens meer om te testen. 25 maanden ligt net voorbij de
+    // toegestane 24.
+    const afterCurrent = shiftPeriod(currentPeriod, 25);
 
     for (const period of [beforeStart, afterCurrent]) {
       for (const endpoint of ['timesheets.php', 'customer-timesheets.php']) {
