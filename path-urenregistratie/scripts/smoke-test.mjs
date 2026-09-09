@@ -301,7 +301,7 @@ const employeePicker = document.querySelector("#login-employee");
 employeePicker.value = "1";
 employeePicker.dispatchEvent(new Event("change", { bubbles: true }));
 const demoScenarioState = JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final"));
-assert(demoScenarioState.schemaVersion === 26, "Versie 0.9.81 moet wijzigingen onder de juiste gegevensversie bewaren");
+assert(demoScenarioState.schemaVersion === 27, "Versie 0.9.81 moet wijzigingen onder de juiste gegevensversie bewaren");
 assert(demoScenarioState.settings.companyName === "QSI Consultancy B.V." && demoScenarioState.settings.invoiceNameDisplay === "trade_and_legal", "De standaardfactuuridentiteit moet Path als handelsnaam aan QSI Consultancy B.V. koppelen");
 const freshOpenActions = dom.window.adminOpenTasks();
 const freshJuneActions = freshOpenActions.filter(task => task.periodKey === "2026-06");

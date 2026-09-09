@@ -1,5 +1,26 @@
 # HANDOFF — Codex, Fase D vervolg (herontwerp)
 
+## 9 september — merge-wachtrij blokkeerde op handmatige PROD-poort
+
+Na overname vanaf de avondhandoff is een schone worktree op de actuele
+`origin/herontwerp` (`89190ea`) gemaakt, omdat de oude lokale worktree nog een
+stale diff en `node_modules`-ruis had. `SKIN-H-008` is op de actuele kop 12 keer
+gericht herhaald op desktop Chromium en bleef 12/12 groen; zonder faalbeeld is
+geen productfix gedaan.
+
+De CI-monitoring vond wel een echte wachtrijbug: de nieuwste main Release
+Pipeline (`34392011626`) had Validate 8/8, Promote Test 8/8, Publish Live Docs
+en Deploy Test to TransIP groen, maar stond daarna bewust te wachten op de
+handmatige `Promote Prod`-environmentpoort. `pilot-merge-queue.yml` keek alleen
+naar `r.status !== 'completed'` en bleef daardoor nieuwe groene
+`herontwerp`-promoties blokkeren tot maximaal drie uur, ook al was TEST al
+afgerond en PROD juist bedoeld handmatig.
+
+De wachtrij inspecteert nu de jobs van actieve Release Pipeline-runs. Een run
+blokkeert niet meer wanneer `Deploy Test to TransIP` succesvol is en alle nog
+open jobs `Promote Prod*` zijn. Actieve Validate/TEST/Live Docs/deploy-stappen
+blijven wel blokkeren. `deployment-contract-check.mjs` bewaakt dit patroon.
+
 ## 9 september (avond) — beheer-New-skin, Storyline-voetstrip, een echte databug, en drie UX-fixes op de medewerker-bento
 
 Gepusht naar `herontwerp` en CI-groen (8/8), commits `73104c9..97bd3b1`:

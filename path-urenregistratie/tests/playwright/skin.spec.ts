@@ -1008,9 +1008,16 @@ test('[SKIN-H-021] de medewerker blijft op het Dashboard: de pijl springt naar v
   });
 
   await test.step('And staat het overzicht van open maanden zichtbaar op het Dashboard, en een actie erin blijft op het Dashboard', async () => {
+    // Gio wees op de rustigere kaartstijl van dit maand-overzicht; de
+    // samenvatting erboven hoort in New zichtbaar te blijven en visueel als
+    // dezelfde compacte werkvoorraadroute te voelen.
+    await expect(page.locator('.employee-hero')).toBeVisible();
+    await expect(page.locator('#employee-open-task-total')).toHaveText(/\d+ open acties?/);
     const overview = page.locator('#employee-open-overview');
     await expect(overview).toBeVisible();
     await expect(page.locator('#employee-open-overview-count')).toHaveText(/\d+ open maand/);
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow, 'werkvoorraadkaarten blijven binnen het mobiele scherm').toBeLessThanOrEqual(1);
     await page.locator('[data-employee-open-month-toggle]').first().click();
     await page.locator('[data-employee-open-action]').first().click();
     await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
@@ -1031,4 +1038,31 @@ test('[SKIN-H-021] de medewerker blijft op het Dashboard: de pijl springt naar v
     await expect(page.locator('#hours-grid-cards')).toBeHidden();
     await expect(page.locator('#hours-week-nav')).toBeHidden();
   });
+});
+
+test('[SKIN-H-022] een tweede herlading zet de skin/thema-voorkeur niet terug naar standaard', async ({ page }) => {
+  // loadState() stempelt een geladen (bestaande) staat altijd op
+  // schemaVersion 27, ook als hij als schemaVersion 26 binnenkwam. De
+  // acceptatie-check herkende historisch alleen [7..26] -- prima bij de
+  // éérste herlading (leest nog 26 terug), maar de tweede herlading leest
+  // dan 27 terug, viel buiten die lijst, en de hele opgeslagen staat
+  // (inclusief skin- en themavoorkeur) werd stilletjes weggegooid voor een
+  // verse standaardstaat. Pas zichtbaar na twee herladingen; Gio meldde dit
+  // na een avond lang F5'en tijdens het testen.
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsAdmin();
+  await expect(page.locator('#app-shell')).toBeVisible();
+  await page.locator('#quick-skin-toggle').click();
+  await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+
+  await page.reload();
+  await expect(page.locator('#app-shell')).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+
+  await page.reload();
+  await expect(page.locator('#app-shell')).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 });

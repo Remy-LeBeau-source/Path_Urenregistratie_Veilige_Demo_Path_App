@@ -415,7 +415,8 @@
 | SKIN-H-018 | ui | skin.feature | Klanturenstaat-blok klapt inline open op het Dashboard, zonder weg te navigeren, en keert terug naar Mijn uren | Negatieve equivalentieklasse + error guessing | 18 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | Klanturenstaat-blok klapt inline open op het Dashboard, zonder weg te navigeren, en keert terug naar Mijn uren | Happy | 19 | Actueel |
 | SKIN-H-019 | ui | skin.feature | de beheerroute blijft op elk van de 6 pilot-tabs consequent Nieuw, zonder terug te vallen op de klassieke zijbalk | Negatieve equivalentieklasse + error guessing | 8 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de beheerroute blijft op elk van de 6 pilot-tabs consequent Nieuw, zonder terug te vallen op de klassieke zijbalk | Happy | 19 | Actueel |
 | SKIN-H-020 | ui | skin.feature | de voetstrip onder Verhalen per medewerker toont de echte periode en tijd, en het verhaaloverzicht is te exporteren | Beslissingstabel rollen en autorisatie | 11 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de voetstrip onder Verhalen per medewerker toont de echte periode en tijd, en het verhaaloverzicht is te exporteren | Happy | 19 | Actueel |
-| SKIN-H-021 | ui | skin.feature | de medewerker blijft op het Dashboard: de pijl springt naar vandaag in het weekkaartje, open maanden staan er zichtbaar bij, en een skinwissel hertekent Mijn uren direct | Beslissingstabel rollen en autorisatie | 16 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de medewerker blijft op het Dashboard: de pijl springt naar vandaag in het weekkaartje, open maanden staan er zichtbaar bij, en een skinwissel hertekent Mijn uren direct | Happy | 19 | Actueel |
+| SKIN-H-021 | ui | skin.feature | de medewerker blijft op het Dashboard: de pijl springt naar vandaag in het weekkaartje, open maanden staan er zichtbaar bij, en een skinwissel hertekent Mijn uren direct | Beslissingstabel rollen en autorisatie | 19 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de medewerker blijft op het Dashboard: de pijl springt naar vandaag in het weekkaartje, open maanden staan er zichtbaar bij, en een skinwissel hertekent Mijn uren direct | Happy | 19 | Actueel |
+| SKIN-H-022 | ui | skin.feature | een tweede herlading zet de skin/thema-voorkeur niet terug naar standaard | End-to-end use-case + visuele contractasserties | 8 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | een tweede herlading zet de skin/thema-voorkeur niet terug naar standaard | Happy | 19 | Actueel |
 | TS-REV-API-H-005 | integration | correction-approval-workflow.feature | admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking | Concurrency + toestandsovergang | 65 | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
 | TS-REV-API-H-006 | integration | correction-approval-workflow.feature | gelijktijdige approve-requests door twee beheerders leveren exact één winnaar | Concurrency + toestandsovergang | 7 | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
 | TS-REV-API-H-007 | integration | correction-approval-workflow.feature | jaarwisseling december naar januari verwerkt urenstaten correct over de jaargrens | API-contract + equivalentieklasse | 7 | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
@@ -490,9 +491,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 468
+- Playwright executable cases: 469
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 469
+- Totaal unieke executable cases: 470
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29

@@ -444,7 +444,9 @@ function demoNotifications() {
 
 function freshState() {
   return {
-    schemaVersion: 26,
+    // Moet gelijk blijven aan de "saved.schemaVersion = 27"-stempel aan het
+    // eind van loadState()'s migratiepad -- zie de toelichting daar.
+    schemaVersion: 27,
     currentRole: null,
     currentAdminId: "gio",
     currentEmployeeId: 2,
@@ -704,7 +706,16 @@ function loadState() {
   const fallback = freshState();
   try {
     const saved = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
-    if (!saved || ![7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26].includes(saved.schemaVersion) || !parsePeriodKey(saved.selectedPeriodKey)) return fallback;
+    // Geen bovengrens meer: de migratie hieronder stempelt elke geladen staat
+    // aan het eind altijd op schemaVersion 27 (zie "saved.schemaVersion = 27"
+    // verderop), dus na de eerste herlading van een sessie stond schemaVersion
+    // al op 27 -- een tweede herlading viel dan buiten de oude vaste lijst
+    // [7..26] en gooide de héle opgeslagen staat weg, incl. skin/thema-
+    // voorkeur. De migratieblokken hieronder zijn zelf al incrementeel
+    // (elk "if (previousSchemaVersion < N)") en dus veilig voor elke waarde
+    // >= 7, dus een bovengrens beschermt hier niets en breekt bij de
+    // eerstvolgende versiebump opnieuw op precies dezelfde manier.
+    if (!saved || !Number.isInteger(saved.schemaVersion) || saved.schemaVersion < 7 || !parsePeriodKey(saved.selectedPeriodKey)) return fallback;
     const previousSchemaVersion = Number(saved.schemaVersion || 0);
     saved.hoursWeekScope = typeof saved.hoursWeekScope === "string" ? saved.hoursWeekScope : "all";
     saved.hoursWeekScopeTouched = saved.hoursWeekScopeTouched === true;
@@ -4980,6 +4991,14 @@ function renderNewEmployeeBento(record, employee, period) {
   document.querySelectorAll("#new-bento-steps [data-step]").forEach(item => {
     item.classList.remove("is-done", "is-current");
     if (stepState[item.dataset.step]) item.classList.add(stepState[item.dataset.step]);
+  });
+  // Het lijnstukje ná een stap volgt dezelfde staat als die stap zelf: pas
+  // groen zodra de stap écht is afgerond, amber zolang die stap nu bezig is,
+  // anders gedempt -- nooit vooruit groen op een stap die nog moet gebeuren.
+  document.querySelectorAll("#new-bento-steps [data-step-segment]").forEach(segment => {
+    segment.classList.remove("is-done", "is-current");
+    const state = stepState[segment.dataset.stepSegment];
+    if (state) segment.classList.add(state);
   });
 }
 

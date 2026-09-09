@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 468 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 469 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 468 unieke case-ID's
+- Playwright executable cases: 469 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 469 unieke case-ID's
+- Totaal executable cases: 470 unieke case-ID's
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29
 - Database steps mappings: 1
-- Uitvoeringen: 503
-- Niet-mobile projectuitvoeringen: 433
+- Uitvoeringen: 504
+- Niet-mobile projectuitvoeringen: 434
 - Mobile functionele cases: 35
 - Pixel 7 / Chromium-uitvoeringen: 35
 - iPhone 13 / WebKit-uitvoeringen: 35
 
-De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 468 Playwright-functionele cases in totaal 503 resultaten op: 433 + (35 x 2) = 503.
+De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 469 Playwright-functionele cases in totaal 504 resultaten op: 434 + (35 x 2) = 504.
 
 ## Documentatieketen
 
@@ -571,7 +571,7 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 468 Playwri
 
 - Feature: `tests/playwright/features/skin.feature`
 - Source: `tests/playwright/skin.spec.ts`
-- Cases: 21
+- Cases: 22
 
 - [SKIN-H-001] de app start standaard in de klassieke vormgeving — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
 - [SKIN-H-002] Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
@@ -593,7 +593,8 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 468 Playwri
 - [SKIN-H-018] Klanturenstaat-blok klapt inline open op het Dashboard, zonder weg te navigeren, en keert terug naar Mijn uren — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 18
 - [SKIN-H-019] de beheerroute blijft op elk van de 6 pilot-tabs consequent Nieuw, zonder terug te vallen op de klassieke zijbalk — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 8
 - [SKIN-H-020] de voetstrip onder Verhalen per medewerker toont de echte periode en tijd, en het verhaaloverzicht is te exporteren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
-- [SKIN-H-021] de medewerker blijft op het Dashboard: de pijl springt naar vandaag in het weekkaartje, open maanden staan er zichtbaar bij, en een skinwissel hertekent Mijn uren direct — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 16
+- [SKIN-H-021] de medewerker blijft op het Dashboard: de pijl springt naar vandaag in het weekkaartje, open maanden staan er zichtbaar bij, en een skinwissel hertekent Mijn uren direct — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 19
+- [SKIN-H-022] een tweede herlading zet de skin/thema-voorkeur niet terug naar standaard — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 8
 
 ### Correctie- en goedkeuringsproces
 

@@ -678,7 +678,7 @@ html[data-skin="new"] #view-timesheet .customer-timesheet-mail-preview pre {
    --navy-tekst e.d., die het donkere thema (de standaard in Nieuw) al
    passend herdefinieert, dus geen aparte Nieuw-stijl nodig, alleen zichtbaar
    maken. */
-html[data-skin="new"] #view-employee-dashboard > :not(.new-employee-bento):not(#employee-open-overview):not(#employee-dashboard-correction) {
+html[data-skin="new"] #view-employee-dashboard > :not(.new-employee-bento):not(.employee-hero):not(#employee-open-overview):not(#employee-dashboard-correction) {
   display: none !important;
 }
 
@@ -689,12 +689,80 @@ html[data-skin="new"] #view-employee-dashboard {
 }
 
 html[data-skin="new"] #employee-open-overview {
-  order: 1;
+  order: 2;
   margin: 0;
 }
 
+html[data-skin="new"] #view-employee-dashboard .employee-hero {
+  order: 1;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+  margin: 0;
+  border: 1px solid rgba(95, 185, 141, .46);
+  border-radius: 22px;
+  background:
+    linear-gradient(145deg, rgba(40, 113, 83, .40), rgba(16, 39, 61, .78)),
+    var(--path-night-panel);
+  color: var(--path-cream);
+  padding: 22px 18px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .035), 0 16px 36px rgba(2, 12, 22, .20);
+}
+
+html[data-skin="new"] #view-employee-dashboard .employee-hero h2 {
+  margin: 6px 0 4px;
+  color: var(--path-cream);
+  font: 400 clamp(28px, 8vw, 42px)/1.05 var(--path-serif);
+  letter-spacing: -.025em;
+}
+
+html[data-skin="new"] #view-employee-dashboard .employee-hero p {
+  color: rgba(244, 238, 227, .82);
+  font-weight: 500;
+}
+
+html[data-skin="new"] #view-employee-dashboard .employee-hero .section-label {
+  color: #65d6ac;
+}
+
+html[data-skin="new"] #view-employee-dashboard .employee-hero-actions {
+  display: grid;
+  gap: 10px;
+}
+
+html[data-skin="new"] #view-employee-dashboard .employee-hero-actions .button {
+  width: 100%;
+  justify-content: center;
+}
+
+html[data-skin="new"] #view-employee-dashboard .employee-hero .hero-task-math {
+  display: grid;
+  gap: 14px;
+  border: 1px solid rgba(244, 238, 227, .14);
+  border-radius: 18px;
+  background: rgba(8, 27, 44, .48);
+  padding: 16px;
+}
+
+html[data-skin="new"] #view-employee-dashboard .employee-hero .hero-task-math > strong {
+  color: var(--path-cream);
+  font: 400 clamp(28px, 8vw, 42px)/1 var(--path-serif);
+}
+
+html[data-skin="new"] #view-employee-dashboard .employee-hero .hero-task-math small {
+  display: block;
+  margin-bottom: 3px;
+  color: rgba(244, 238, 227, .68);
+  font-size: 11px;
+}
+
+html[data-skin="new"] #view-employee-dashboard .employee-hero .hero-task-math b {
+  color: var(--path-cream);
+  font-size: 13px;
+}
+
 html[data-skin="new"] #employee-dashboard-correction {
-  order: 2;
+  order: 3;
 }
 
 html[data-skin="new"] #view-employee-dashboard .new-employee-bento {
@@ -872,10 +940,18 @@ html[data-skin="new"] .new-bento-customer-expand .button-primary {
 
 html[data-skin="new"] .new-bento-steps { grid-column: 1 / span 2; grid-row: 2; padding: 28px 30px; }
 html[data-skin="new"] .new-bento-steps .section-label { color: #86c89e; }
-html[data-skin="new"] .new-bento-steps ol { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin: 25px 0 0; padding: 0; list-style: none; }
-html[data-skin="new"] .new-bento-steps ol::before { content: ""; position: absolute; z-index: 0; top: 20px; right: calc(12.5% - 21px); left: 21px; height: 2px; border-radius: 2px; background: #68b47a; box-shadow: 0 0 12px rgba(95,185,141,.24); }
-html[data-skin="new"] .new-bento-steps li { position: relative; display: grid; gap: 8px; color: #9aa8ad; padding-right: 20px; }
-html[data-skin="new"] .new-bento-steps li:not(:last-child)::after { display: none; }
+/* Echte segment-elementen tussen de stappen (i.p.v. één blinde ::before-lijn
+   over de hele breedte): zo sluit elk stukje lijn precies aan op de bolletjes
+   ernaast (flex-volgorde, geen los-berekende absolute positie), en kan elk
+   segment zijn eigen kleur krijgen op basis van de stap ervóór -- groen pas
+   als die stap echt is afgerond, amber zolang die stap nu bezig is, anders
+   gedempt. Voorheen was de hele lijn altijd groen, ook als er nog niets was
+   gedaan. */
+html[data-skin="new"] .new-bento-steps ol { position: relative; display: flex; align-items: flex-start; gap: 0; margin: 25px 0 0; padding: 0; list-style: none; }
+html[data-skin="new"] .new-bento-steps li { position: relative; display: grid; flex: 1 1 0; min-width: 0; gap: 8px; color: #9aa8ad; }
+html[data-skin="new"] .new-bento-step-segment { display: block; flex: 0 1 44px; min-width: 14px; margin-top: 20px; height: 2px; border-radius: 2px; background: rgba(255, 255, 255, .14); }
+html[data-skin="new"] .new-bento-step-segment.is-done { background: #68b47a; box-shadow: 0 0 12px rgba(95, 185, 141, .24); }
+html[data-skin="new"] .new-bento-step-segment.is-current { background: var(--path-amber); box-shadow: 0 0 12px rgba(217, 154, 60, .28); }
 html[data-skin="new"] .new-bento-steps i { position: relative; z-index: 1; display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid #4b6b82; border-radius: 50%; background: #163048; font-style: normal; box-shadow: 0 0 0 5px #0f293d; }
 html[data-skin="new"] .new-bento-steps li.is-done { color: #cfe5d7; }
 html[data-skin="new"] .new-bento-steps li.is-done i { border-color: #8dd2a0; background: #2f6a4c; color: white; box-shadow: 0 0 0 5px rgba(47,106,76,.5), 0 0 20px rgba(95,185,141,.42); }
@@ -915,11 +991,10 @@ html[data-skin="new"] .new-bento-steps span { font-size: 12px; line-height: 1.45
   html[data-skin="new"] .new-bento-customer-copy { max-width: 78%; padding: 28px 22px; }
   html[data-skin="new"] .new-bento-customer-head::after { background: linear-gradient(180deg, rgba(246,241,231,.98) 0 48%, rgba(246,241,231,.08) 78%); }
   html[data-skin="new"] .new-bento-steps { padding: 24px 20px; }
-  html[data-skin="new"] .new-bento-steps ol { grid-template-columns: 1fr; gap: 18px; }
-  html[data-skin="new"] .new-bento-steps ol::before { display: none; }
+  html[data-skin="new"] .new-bento-steps ol { flex-direction: column; gap: 18px; }
+  html[data-skin="new"] .new-bento-step-segment { display: none; }
   html[data-skin="new"] .new-bento-steps li { grid-template-columns: 45px 1fr; align-items: center; padding: 0; }
   html[data-skin="new"] .new-bento-steps li span { grid-column: 2; }
-  html[data-skin="new"] .new-bento-steps li::after { display: none; }
 }
 
 html[data-skin="new"] .toast {
