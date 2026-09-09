@@ -669,8 +669,32 @@ html[data-skin="new"] #view-timesheet .customer-timesheet-mail-preview pre {
   }
 }
 
-html[data-skin="new"] #view-employee-dashboard > :not(.new-employee-bento) {
+/* De rest van de klassieke Dashboard-inhoud (het oude hero-blok, de
+   maandhistorie...) blijft verborgen: de bento vervangt die volledig. Twee
+   secties blijven wel bestaan en zijn hier bewust uitgezonderd, want zonder
+   ze was er geen enkele plek meer waar een medewerker kon zien dat er
+   bijvoorbeeld 2 maanden tegelijk open staan, of dat Backoffice een
+   correctie heeft teruggestuurd -- beide leunen al op --vlak/--line/
+   --navy-tekst e.d., die het donkere thema (de standaard in Nieuw) al
+   passend herdefinieert, dus geen aparte Nieuw-stijl nodig, alleen zichtbaar
+   maken. */
+html[data-skin="new"] #view-employee-dashboard > :not(.new-employee-bento):not(#employee-open-overview):not(#employee-dashboard-correction) {
   display: none !important;
+}
+
+html[data-skin="new"] #view-employee-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+html[data-skin="new"] #employee-open-overview {
+  order: 1;
+  margin: 0;
+}
+
+html[data-skin="new"] #employee-dashboard-correction {
+  order: 2;
 }
 
 html[data-skin="new"] #view-employee-dashboard .new-employee-bento {
@@ -710,8 +734,8 @@ html[data-skin="new"] .new-bento-hero > img {
 html[data-skin="new"] .new-bento-hero-copy,
 html[data-skin="new"] .new-bento-handoff,
 html[data-skin="new"] .new-bento-go { position: relative; z-index: 1; }
-html[data-skin="new"] .new-bento-hero .section-label { color: #9bd4ae; }
-html[data-skin="new"] .new-bento-greeting { display: block; margin-bottom: 10px; color: #9bd4ae; font-size: 14px; font-weight: 700; letter-spacing: .04em; }
+html[data-skin="new"] .new-bento-hero .section-label { color: #9bd4ae; font-size: 13px; }
+html[data-skin="new"] .new-bento-greeting { display: block; margin-bottom: 10px; color: #9bd4ae; font-size: 18px; font-weight: 700; letter-spacing: .04em; }
 html[data-skin="new"] .new-bento-hero h2 { margin: 22px 0; color: #f4eee3; font: 400 clamp(58px, 6vw, 92px)/.94 var(--path-serif); letter-spacing: -.035em; }
 html[data-skin="new"] .new-bento-hero p { max-width: 440px; color: rgba(244, 241, 230, .86); font-size: 16px; line-height: 1.6; }
 
@@ -783,7 +807,10 @@ html[data-skin="new"] .new-bento-customer { grid-column: 3; grid-row: 2; backgro
 html[data-skin="new"] .new-bento-customer-head { position: relative; min-height: 330px; }
 html[data-skin="new"] .new-bento-customer-head > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 html[data-skin="new"] .new-bento-customer-head::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(246,241,231,.98) 0 48%, rgba(246,241,231,.1) 78%); }
-html[data-skin="new"] .new-bento-customer-copy { position: relative; z-index: 1; max-width: 58%; padding: 34px; }
+/* Onderaan ruimte vrijhouden voor de absoluut gepositioneerde open/dicht-
+   knop: op een smaller kaartje (3-koloms bento op ~1440px) wikkelt de
+   intro over meer regels en liep de laatste regel anders achter die knop. */
+html[data-skin="new"] .new-bento-customer-copy { position: relative; z-index: 1; max-width: 58%; padding: 34px 34px 96px; }
 html[data-skin="new"] .new-bento-customer h3 { margin: 18px 0 7px; font: 400 38px var(--path-serif); }
 html[data-skin="new"] .new-bento-customer p { color: #4b5859; line-height: 1.5; }
 html[data-skin="new"] .new-bento-customer-head > button { position: absolute; z-index: 2; right: 18px; bottom: 18px; left: 18px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #cfc5b5; border-radius: 14px; background: rgba(249,246,239,.94); color: #102235; cursor: pointer; font: 700 13px var(--path-sans); padding: 15px 17px; transition: background .15s ease; }
@@ -815,6 +842,33 @@ html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-upload-acti
 html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-current > div { grid-template-columns: minmax(0, 1fr); }
 html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-mail-preview-heading { align-items: stretch; flex-direction: column; }
 html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-mail-preview-heading .small-button { width: 100%; }
+
+/* De actieknoppen ("Al rechtstreeks gemaild", "Concept opslaan", "Indienen
+   bij Backoffice") erven zonder deze regels de kleuren van het donkere
+   thema (.button-ghost leunt op --surface/--ink, getuned voor de donkere
+   navy-achtergrond elders in de app) -- op dit crème kaartje gaf dat een te
+   grauwe, onsamenhangende knoppenrij. Hier expliciet op het kaartje zelf
+   getunede kleuren, zodat alle drie knoppen er als één bewust setje
+   uitzien in plaats van drie losse toevalstreffers. */
+html[data-skin="new"] .new-bento-customer-expand .button-ghost {
+  border-color: #cfc5b5;
+  background: #f9f6ef;
+  color: #102235;
+}
+
+html[data-skin="new"] .new-bento-customer-expand .button-ghost:hover {
+  background: #fff;
+}
+
+html[data-skin="new"] .new-bento-customer-expand .button-ghost:disabled {
+  border-color: #ddd5c6;
+  background: #efe9dc;
+  color: #8a8375;
+}
+
+html[data-skin="new"] .new-bento-customer-expand .button-primary {
+  box-shadow: none;
+}
 
 html[data-skin="new"] .new-bento-steps { grid-column: 1 / span 2; grid-row: 2; padding: 28px 30px; }
 html[data-skin="new"] .new-bento-steps .section-label { color: #86c89e; }

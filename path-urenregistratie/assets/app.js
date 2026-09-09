@@ -4656,8 +4656,20 @@ function applyTheme() {
 function applySkin(hostname = window.location.hostname) {
   const redesignAllowed = testAccountToolsAllowed(hostname);
   const choice = redesignAllowed && state.preferences && state.preferences.skin === "new" ? "new" : "classic";
+  const changed = document.documentElement.dataset.skin !== choice;
   document.documentElement.dataset.skin = choice;
   syncAppearanceSwitches(hostname);
+  // Mijn uren bouwt bij een enkele week ofwel de bento-kaartjes (Nieuw) ofwel
+  // de klassieke tabel (Klassiek) in dezelfde container (#hours-grid-cards /
+  // #hours-table-wrap): één skin z'n opmaak, geen twee parallel aanwezige
+  // structuren die CSS alleen maar toont/verbergt zoals elders in de app. Wie
+  // de skin wisselt terwijl Mijn uren al open staat, hield daardoor tot nu
+  // toe de oude markup vast -- onzichtbaar gestyled, want geen van beide
+  // stylesheets heeft regels voor de klassen van de andere skin -- totdat een
+  // volgende, toevallige herrender (of een handmatige F5) het rechttrok.
+  if (changed && document.querySelector("#view-timesheet")?.classList.contains("is-active")) {
+    renderHoursGrid();
+  }
 }
 
 function syncAppearanceSwitches(hostname = window.location.hostname) {
@@ -12141,8 +12153,25 @@ function toonInstallatieAanbod() {
   const employeeOpenAction = event.target.closest("[data-employee-open-action]");
   if (employeeOpenAction) {
     setPeriod(employeeOpenAction.dataset.periodKey);
+    const actionType = employeeOpenAction.dataset.employeeOpenAction;
+    if (document.documentElement.dataset.skin === "new") {
+      // Blijft op het Dashboard: dezelfde reden als bij de pijl-knop
+      // (data-new-bento-open-hours) hierboven. Een urenactie krijgt gewoon
+      // het weekkaartje van de nu geselecteerde maand; een klanturenstaat-
+      // actie klapt hetzelfde blok open dat ook via het Klanturenstaat-
+      // kaartje bereikbaar is, in plaats van naar Mijn uren te springen.
+      renderNewEmployeeBento(recordFor(currentEmployee().id), currentEmployee(), currentPeriod());
+      if (actionType === "customer") {
+        const customerCard = document.querySelector("#new-bento-customer");
+        if (customerCard?.getAttribute("data-open") !== "true") handleNewBentoCustomerToggle();
+        customerCard?.scrollIntoView({ behavior: smoothScrollBehavior(), block: "start" });
+      } else {
+        document.querySelector("#new-employee-bento .new-bento-week")?.scrollIntoView({ behavior: smoothScrollBehavior(), block: "nearest" });
+      }
+      return;
+    }
     showView("timesheet");
-    if (employeeOpenAction.dataset.employeeOpenAction === "customer") {
+    if (actionType === "customer") {
       const customerPanel = document.querySelector("#customer-timesheet-upload-panel");
       if (customerPanel && typeof customerPanel.scrollIntoView === "function") customerPanel.scrollIntoView({ behavior: smoothScrollBehavior(), block: "start" });
     }
@@ -12185,15 +12214,27 @@ function toonInstallatieAanbod() {
 
   const newBentoOpenHours = event.target.closest("[data-new-bento-open-hours]");
   if (newBentoOpenHours) {
-    // Altijd naar de dag van vandaag springen, ongeacht welke maand/week
-    // net toevallig openstond -- de pijl is bedoeld om meteen uren te
-    // kunnen invullen, niet om terug te vallen op een oudere navigatiekeuze.
+    // Altijd naar de dag van vandaag springen, ongeacht welke maand/week net
+    // toevallig openstond -- de pijl is bedoeld om meteen uren te kunnen
+    // invullen. Blijft daarbij op het Dashboard: het weekkaartje toont de
+    // ingevulde week al inline, dus wegnavigeren naar de losse Mijn-uren-
+    // pagina zou precies het "je springt uit het scherm"-patroon herhalen
+    // dat bij Klanturenstaat al is opgelost.
     setPeriod(currentCalendarPeriodKey());
     const period = currentPeriod();
     state.hoursWeekScope = "week-" + todaysWeekIndexInPeriod(period);
     state.hoursWeekScopeTouched = true;
     persistState();
-    showView("timesheet");
+    // setPeriod() rendert zelf alleen als de periode ook echt wijzigde; stond
+    // je al op de huidige maand, dan moet het weekkaartje hier alsnog zelf
+    // hertekenen om de nieuwe weekscope te tonen. Een extra hertekening is
+    // onschadelijk als setPeriod() dat al deed.
+    renderNewEmployeeBento(recordFor(currentEmployee().id), currentEmployee(), period);
+    const activeDay = document.querySelector("#new-bento-days .new-bento-day.is-active .new-bento-hours-input")
+      || document.querySelector("#new-bento-days .new-bento-hours-input");
+    document.querySelector("#new-employee-bento .new-bento-week")?.scrollIntoView({ behavior: smoothScrollBehavior(), block: "nearest" });
+    activeDay?.focus();
+    activeDay?.select();
     return;
   }
 
