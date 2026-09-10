@@ -208,6 +208,10 @@ function migration_plan(bool $allowDemoMigrations): array
         'id' => '037_employee_day_hours.sql',
         'path' => __DIR__ . '/migrations/037_employee_day_hours.sql',
     ];
+    $plan[] = [
+        'id' => '038_demo_employee_day_hours_pattern.sql',
+        'path' => __DIR__ . '/migrations/038_demo_employee_day_hours_pattern.sql',
+    ];
     return $plan;
 }
 

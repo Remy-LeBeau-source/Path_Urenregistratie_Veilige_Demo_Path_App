@@ -41,10 +41,23 @@ try {
   const localConfigPath = path.join(root, 'server', 'config.local.php');
   if (fs.existsSync(localConfigPath)) {
     const localConfigContent = fs.readFileSync(localConfigPath, 'utf8');
-    const match = localConfigContent.match(/'host'\s*=>\s*'([^']+)'/);
-    const dbMatch = localConfigContent.match(/'database'\s*=>\s*'([^']+)'/);
-    const userMatch = localConfigContent.match(/'username'\s*=>\s*'([^']+)'/);
-    const passMatch = localConfigContent.match(/'password'\s*=>\s*'([^']+)'/);
+    // config.local.php.example -- de door het project voorgeschreven vorm --
+    // nest deze vier velden altijd onder 'database' => [ ... ], met 'name'
+    // (niet 'database') en 'user' (niet 'username') als sleutels. De oude
+    // platte regexes hieronder matchten dat nooit, dus dit blok las in de
+    // praktijk altijd de env-var-fallback/standaardnaam uit, zelfs als
+    // config.local.php een andere databasenaam voorschreef -- precies zo
+    // ontdekt: een migratie kwam terecht in de verkeerde, stille database
+    // terwijl de draaiende PHP-server (die config.local.php wél rechtstreeks
+    // leest) een andere, ongemigreerde database gebruikte. Eerst het
+    // 'database'-subblok isoleren, en daarbinnen zoeken; met een fallback op
+    // het hele bestand voor een eventuele platte, oudere configvorm.
+    const blockMatch = localConfigContent.match(/'database'\s*=>\s*\[([\s\S]*?)\]/);
+    const scope = blockMatch ? blockMatch[1] : localConfigContent;
+    const match = scope.match(/'host'\s*=>\s*'([^']+)'/) || localConfigContent.match(/'host'\s*=>\s*'([^']+)'/);
+    const dbMatch = scope.match(/'name'\s*=>\s*'([^']+)'/) || localConfigContent.match(/'database'\s*=>\s*'([^']+)'/);
+    const userMatch = scope.match(/'user'\s*=>\s*'([^']+)'/) || localConfigContent.match(/'username'\s*=>\s*'([^']+)'/);
+    const passMatch = scope.match(/'password'\s*=>\s*'([^']+)'/) || localConfigContent.match(/'password'\s*=>\s*'([^']+)'/);
     if (match && !process.env.PATH_APP_DB_HOST && !process.env.PLAYWRIGHT_DB_HOST && !process.env.DB_HOST) {
       config.host = match[1];
     }

@@ -288,6 +288,14 @@ function test_reset_shared_baseline(PDO $pdo, array $config, string $actorEmail)
         $root . '/server/migrations/009_demo_seed_august_correction_alignment.sql',
         $root . '/server/migrations/016_demo_task_baseline_alignment.sql',
         $root . '/server/migrations/018_demo_assignment_mail_templates.sql',
+        // 038 past het werkpatroon (contracturen + dagverdeling) van Stasjo/Shawn
+        // aan bovenop de kale seed. Zonder deze regel hier zette elke gedeelde
+        // reset (dus ook elke Playwright-testrun) dat weer terug naar de oude
+        // seedwaarden, ontdekt via ADM-WR-H-022/EQ-H-020 die faalden -- niet
+        // door de migratie zelf, maar omdat de reset 'm meteen weer ongedaan
+        // maakte. Zelfde reden als 008/009/016/018 hierboven al in deze lijst
+        // staan: baseline-uitlijning die na de kale seed moet blijven gelden.
+        $root . '/server/migrations/038_demo_employee_day_hours_pattern.sql',
     ];
 
     $verifiedDemoAccounts = 0;
