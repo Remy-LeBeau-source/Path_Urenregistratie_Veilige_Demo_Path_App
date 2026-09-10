@@ -380,6 +380,12 @@ expliciet als post-commit mutatie gerapporteerd.
 
 ## 8. Releasecontract
 
+Het versiescript vervangt alleen een volledig numeriek versietoken, nooit een
+deel van een IP-adres of langer nummer. Het controleert eerst alle doelbestanden
+voordat een bestand wordt geschreven. De geïsoleerde CLI-check
+`scripts/set-version-check.mjs` bewaakt de tokengrenzen, dependencyversies buiten
+het toegestane regelbereik, CRLF-behoud en nul wijzigingen bij ontbrekende tokens.
+
 Een release mag pas door wanneer:
 
 1. syntax/static checks groen zijn;

@@ -1,5 +1,80 @@
 # Copilot handoff — lokale mailpreview en regressieherstel
 
+## 10 september 2026 — vervolg door Codex: main en alle schermen
+
+- Gebruiker vraagt main en herontwerp gezamenlijk af te werken, inclusief alle
+  beheer- en medewerkersschermen. Actief eigenaarschap in deze sessie:
+  `scripts/set-version.mjs`, de bijbehorende CLI-regressie en schermdiagnostiek.
+- De oude werkboom `C:/Path-herontwerp-actief` bevat een omvangrijke stale dirty
+  diff. Die is intact gelaten. Actuele remote herontwerp heeft dezelfde
+  `assets/app.js` en `assets/styles-new.css` als main; extra commits zijn docs/merges.
+- W10 gerepareerd: versie-vervanging raakt geen IP-adressen of langere getallen
+  meer, en alle bestanden worden gevalideerd vóór de eerste write.
+  `scripts/set-version-check.mjs` bewijst dit via de echte CLI in tijdelijke
+  fixtures, inclusief behoud van dependencyversies en CRLF. Gerichte check groen.
+- R18: `E2E-H-024` op desktop Chromium 3/3 groen (2,1 minuten) en Safari 3/3
+  groen (2,7 minuten), zonder authwijziging. `npm run check` en build groen.
+- Run `34420611936`: Validate 8/8, Promote Test 8/8 en TEST-deploy groen.
+  Alleen de handmatige PROD-promotiejobs eindigden zonder deployment.
+- Volgende stappen: Safari afronden, alle schermen fotograferen/controleren,
+  bevindingen herstellen met regressie, lokale gates afronden, daarna branchsync
+  en CI/TEST. Nog geen commit of push vanuit deze vervolgsessie.
+
+## Vervolgsessie op main, 10 september 2026, nacht — na de 20:46/23:xx-sessie
+
+Bouwt voort op de sessie direct hieronder (die tot commit `2d96ca4`/v1.0.46,
+run `34414073007` kwam). Alles op `main`, laatste stand v1.0.47, commit
+`b35d427` (Promote Test loopt op moment van schrijven; Validate volledig
+groen, incl. shard 8/mobile-safari in één keer).
+
+1. **Nog een vierde losstaande "exact N ontvangers"-plek gevonden en
+   gefixt** in dezelfde `deploy-test-remote.sh`/`deployment-contract-check.mjs`-
+   lockstep als hierboven al genoemd (item 4 van de vorige sessie) — bevestigd
+   werkend: de live TEST-deploy die eerder faalde op
+   `"TEST mail is neither closed nor protected by the exact sandbox allowlist"`
+   liep hierna door.
+2. **BESLISTABEL R17-R19 toegevoegd**, deels via cross-sessie-samenwerking met
+   de herontwerp-peer (`path-herontwerp-actief-2b`):
+   - **R17**: Validate-shard 8 se instabiliteit is nu *hard bevestigd* (niet
+     langer een vermoeden) via `npx playwright test --list --shard=N/8`:
+     shard 8 = 100% `mobile-safari`, shard 1 = 100% `desktop-chromium`, shard 7
+     = vrijwel volledig `mobile-chrome`. Playwright's `--shard` knipt gewoon de
+     `projects`-declaratievolgorde in gelijke stukken, zonder te wegen naar
+     snelheid/betrouwbaarheid — vandaar dat shard 8 stelselmatig het langst
+     duurt en het vaakst een andere, ongerelateerde test laat flakeren. Een
+     structurele verbetering (projects-volgorde interleaven) is bewust *niet*
+     doorgevoerd — raakt `playwright.config.ts` + sharding-aannames in alle 3
+     workflows, te risicovol zonder overleg.
+   - **R18**: `E2E-H-024` (wachtwoordreset via GUI) faalde hard (2/2, niet
+     "flaky") met een leeg + verborgen feedback-element. Concreet, tweelaags
+     mechanisme gevonden in `assets/app.js` (`showPasswordResetForm()` wordt
+     twee keer aangeroepen rond de asynchrone `initializeAuthSession()`, en
+     kan zelf nogmaals `logoutLocal()` triggeren als die async check een
+     resterende sessie aantreft) — **niet bevestigd als dé oorzaak** zonder een
+     gevangen trace, en bewust niet blind gefixt (raakt auth-opstartcode voor
+     elke login/reset-pagina). Zie BESLISTABEL voor het volledige spoor.
+   - **R19**: Stasjo's screenshot-feedback ("knop om Classic/Nieuw te
+     wisselen") bleek al te bestaan en al te werken (`#quick-skin-toggle`,
+     `toggleQuickSkin()`) — probleem was puur herkenbaarheid op mobiel (geen
+     hover-tooltip, pictogram zei niets over "wisselen"). Rasterpictogram (◫)
+     vervangen door wisselpictogram (⇄) in `assets/app.js` én `index.html`,
+     v1.0.47/commit `b35d427`. Andere icoon-only knoppen in de app nagelopen
+     (☀/☾ voor licht/donker, ↶ voor Herstel demo, ✓/↓/⇧ met werkwoordlabels) —
+     geen vergelijkbaar probleem gevonden, dus verder niets aangepast.
+3. **R16 uitgebreid**: een Release Pipeline-run die verder groen is en alleen
+   nog op de handmatige `Promote Prod*`-poort wacht, is een *afgeronde*
+   toestand, geen "nog bezig" — nooit op blijven pollen. Een later
+   overschreven wachtende PROD-poort (door een nieuwere push, via de
+   concurrency-lock) kan bovendien als `failure` tonen zonder dat er iets
+   misging. Onafhankelijk hetzelfde ontdekt door de herontwerp-peer (hun
+   `HANDOFF-CODEX-FASE-D.md` §8b) — via `SendMessage` cross-sessie
+   uitgewisseld en op beide takken vastgelegd.
+4. **Geen andere onafgeronde code-wijzigingen op main.** Eerstvolgende stap
+   voor wie dit oppakt: CI-run `34420611936` (v1.0.47) volgen tot Promote
+   Test/Deploy Test to TransIP groen zijn (Validate stond al volledig groen);
+   daarna gewoon door met de volgende openstaande melding/feedback als die
+   er is — er lag op het moment van schrijven niets concreets meer open.
+
 ## Vervolgsessie op main, 9/10 september 2026, nacht — na de 20:46-sessie
 
 Alles hieronder bouwt voort op de 20:46-sessie (direct hieronder). Alles staat
