@@ -40,6 +40,20 @@ CI-status bij overdracht:
 - Eerstvolgende stap voor Claude: CI volgen tot eindstatus. Bij rood: joblog van de falende shard openen en alleen root-cause fixen. Bij groen: normale herontwerp -> main/TEST route volgen volgens branchregel; PROD niet aanraken.
 
 
+
+### CI-correctie na handoff-push — 10 september 2026, 11:02
+
+Belangrijk voor Claude: na de codepush `86b579d` werd CI-run `34456038566` rood. Niet door build/install; alle setup/build/smoke-stappen liepen door. Rood zat in E2E:
+
+- Shard 6 desktop: `SKIN-H-023` faalde op `expect(locator).toContainText(expected)`.
+- Shard 7 mobile-chrome: `SKIN-H-023` faalde op dezelfde assert. `SKIN-H-015` had ook een eerste fail, maar jobrapport eindigde met 1 failed; behandel eerst `SKIN-H-023`.
+- Shard 8 mobile-safari: `SKIN-H-023` faalde op dezelfde assert. `MOB-N-004`, `SKIN-H-008`, `SKIN-H-020` hadden losse eerste fails/flakes; `SKIN-H-008` retryde groen. Ook hier eerst `SKIN-H-023`.
+
+Waarschijnlijke oorzaak: tijdens de rebase bestond er al remote werk met `fill-default-pattern`/`SKIN-H-023` rond standaardweek. Codex heeft bewust één standaarduren-flow behouden (`data-standard-hours-fill` + `#fill-standard-hours`) en de oude `fill-default-pattern`-ID verwijderd om dubbele standaardweeksystemen te vermijden. De nieuwe remote test `SKIN-H-023` verwacht waarschijnlijk nog tekst/selector van die remote implementatie. Eerstvolgende taak: testverwachting en producttekst op elkaar leggen. Productkeuze die nu in code zit: knop heet `Standaardweek vullen` / `Standaardmaand vullen`, tooltip noemt persoonlijke standaardweek en toont patroon via `formatStandardHoursPattern()`.
+
+Er is daarna een docs-only handoff-commit gepusht:
+- `c47cc7e docs: draag standaardurenwerk over aan claude`
+- Nieuwe CI-run daarop: `34457893505`, queued bij laatste check.
 ## Actuele herontwerp-doorwerknotitie — 10 september 2026, 10:20
 
 Codex werkt in `C:\Path-herontwerp-current` op detached `herontwerp`-HEAD, gerebased op `origin/herontwerp` `5d5241a` en pusht straks met `git push origin HEAD:herontwerp`.
