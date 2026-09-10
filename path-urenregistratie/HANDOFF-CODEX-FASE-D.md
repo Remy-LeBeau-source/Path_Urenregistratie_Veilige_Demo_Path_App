@@ -1,5 +1,34 @@
 # HANDOFF — Codex, Fase D vervolg (herontwerp)
 
+## 10 september (nacht) — codereview van de avond ervoor: "Standaardweek vullen" deed stiekem niets
+
+Op verzoek ("kijk weer naar de code") een codereviewpas gedaan op de twee
+commits van de avond ervoor (`d04de7c` Standaardweek/-maand vullen, `b36f202`
+Volgende actie). Twee dingen gevonden en gefixt in `7c54af2`, zie §8a
+hieronder voor de aanpak die daarbij is vastgelegd:
+
+1. Cosmetisch: `fillDefaultPatternForWeek` telde het herschrijven van een
+   al-0-dag met de patroonwaarde 0 (bv. "vrijdag altijd vrij") mee als
+   "gevuld". Nu telt alleen een echte waardewijziging mee.
+2. Een echte bug die dat cosmetische verschil blootlegde:
+   `applyDayHoursDefaultsToRecord` gebruikte `newEmployeeBentoWeekIndex` (de
+   week die de medewerker toevallig bekijkt) i.p.v. `todaysWeekIndexInPeriod`
+   (de week van vandaag) als doelweek voor de auto-voorvulling. Omdat
+   `recordFor()` deze functie bij elke aanroep opnieuw uitvoert, vulde het
+   enkel bekijken van een andere week die week al zelf voor voor iedereen met
+   een eigen werkpatroon (dayHours) — de "Standaardweek vullen"-knop had dan
+   niets meer te doen, ongeacht welke week. Nu volgt de auto-voorvulling
+   altijd de echte week van vandaag, net als de "spring naar vandaag"-pijl.
+
+Ook de drie aanroepplekken van "Standaardweek/-maand vullen" samengevoegd tot
+één `applyFillDefaultPattern(weekIndex, rerender)`. SKIN-H-023 kreeg dezelfde
+race als de bug zelf (achtergrond-sync kon de teststartwaarden alvast
+voorvullen); de teststap zet de startwaarden nu opnieuw vlak vóór de klik, in
+dezelfde `page.evaluate` als de klik zelf.
+
+CI-run [34419044888](https://github.com/Remy-LeBeau-source/Path_Urenregistratie_Veilige_Demo_Path_App/actions/runs/34419044888)
+op `7c54af2` volledig groen (8/8).
+
 ## 9 september — merge-wachtrij blokkeerde op handmatige PROD-poort
 
 Na overname vanaf de avondhandoff is een schone worktree op de actuele
@@ -675,3 +704,52 @@ Uit `HANDOFF-PILOT-DESIGN.md` §→WAT ER NOG MOET, in volgorde:
 `git fetch && git checkout herontwerp` (of werk gewoon door in
 `C:\Path-herontwerp`, die staat er al op), lees `HANDOFF-PILOT-DESIGN.md`
 vanaf het begin, dan dit bestand, dan §4 hierboven als eerste actie.
+
+### 8a. Walkthrough: een test die "toevallig" slaagt/faalt grondig uitzoeken
+
+Vastgezet na de nacht van 9→10 september (SKIN-H-023 faalde na een puur
+cosmetische opschoning van `fillDefaultPatternForWeek`, zonder dat de echte
+functionaliteit veranderd leek). Gebruik deze stappen zodra een test omslaat
+na een wijziging die er zelf onschuldig uitziet — niet meteen de test
+aanpassen om hem weer groen te krijgen, en niet meteen de wijziging
+terugdraaien:
+
+1. **Isoleer de wijziging.** `git stash` de eigen diff, draai de falende
+   test opnieuw tegen de ongewijzigde code. Slaagt hij daar wél? Dan is de
+   wijziging niet zomaar "toevallig" fout — er zat een aanname in de oude
+   code (of test) die nu wordt blootgelegd. `git stash pop` daarna meteen
+   terug; nooit een test-run draaien terwijl de working tree niet overeenkomt
+   met wat je denkt dat er staat.
+2. **Injecteer gerichte debug-logging in de test zelf**, niet in de
+   app-code: een `page.evaluate(() => ({...}))` die de relevante state
+   (record.entries, confirmedEntries, employee.dayHours, weekIndex, …)
+   teruggeeft vlak vóór en vlak ná de actie, geprint met `console.log` zodat
+   het in de Playwright-output verschijnt. Dat laat in één run zien wat de
+   state écht is, i.p.v. te gokken.
+3. **Volg elke functie-aanroep terug tot zijn bijwerkingen.** Een
+   "read-only" ogende getter (`recordFor`, `currentPeriod`, …) kan zelf weer
+   functies aanroepen die state muteren (`ensurePeriodRecords` ->
+   `applyDayHoursDefaultsToRecord`). Grep op de aanroepende functienaam door
+   het hele bestand, niet alleen op de plek waar je zelf iets wijzigde.
+4. **Vergelijk het doel van twee soortgelijke helpers** als er twee bestaan
+   die net iets anders lijken te doen (hier: `newEmployeeBentoWeekIndex`,
+   wat de gebruiker toevallig bekijkt, vs. `todaysWeekIndexInPeriod`, de
+   week van vandaag). Lees hun eigen commentaar/herkomst — vaak verraadt dat
+   welke van de twee semantisch bedoeld was op de plek waar de bug zit.
+5. **Verwijder de debug-logging weer** zodra de oorzaak vaststaat, en fix de
+   oorzaak (niet het symptoom) tenzij de test zelf een race bevat — corrigeer
+   dan de test zodat de setup deterministisch is (bv. state direct zetten
+   én de actie triggeren in dezelfde `page.evaluate`, zonder async gat
+   waarin een achtergrondproces ertussen kan komen).
+6. **Verifieer breed voor je committeert**: de specifiek geraakte tests
+   los, dan het hele bestand waar ze in staan. Losse `TimeoutError`s op
+   `#quick-skin-toggle` over veel ongerelateerde tests tegelijk zijn de
+   bekende lokale hangende-click-flake (zombie `chrome.exe`'s, killen met
+   `Get-Process chrome | Stop-Process -Force`) — niet een regressie; laat CI
+   daar het laatste woord over hebben, met concrete assertion-failures op de
+   geraakte tests als het echte signaal.
+
+Dit is geen eenmalige aanpak voor deze ene bug: gebruik 'm standaard zodra
+een wijziging die er onschuldig uitziet een test omslaat, in plaats van de
+makkelijkste route (test versoepelen of wijziging terugdraaien) te nemen
+zonder te snappen waarom.
