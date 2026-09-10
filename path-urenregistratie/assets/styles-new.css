@@ -984,8 +984,18 @@ html[data-skin="new"] .new-bento-steps .section-label { color: #86c89e; }
    gedempt. Voorheen was de hele lijn altijd groen, ook als er nog niets was
    gedaan. */
 html[data-skin="new"] .new-bento-steps ol { position: relative; display: flex; align-items: flex-start; gap: 0; margin: 25px 0 0; padding: 0; list-style: none; }
-html[data-skin="new"] .new-bento-steps li { position: relative; display: grid; flex: 1 1 0; min-width: 0; gap: 8px; color: #9aa8ad; }
-html[data-skin="new"] .new-bento-step-segment { display: block; flex: 0 1 44px; min-width: 14px; margin-top: 20px; height: 2px; border-radius: 2px; background: rgba(255, 255, 255, .14); }
+html[data-skin="new"] .new-bento-steps li { position: relative; display: grid; flex: 6 1 0; min-width: 0; gap: 8px; color: #9aa8ad; }
+/* Was flex: 1 1 0 op de li's en een vaste flex: 0 1 44px op het lijnstuk --
+   de li's groeiden dan mee met de beschikbare breedte terwijl het lijnstuk
+   nooit meer dan 44px werd, waardoor de lijn bij een brede rij (dit blok
+   beslaat 2 kolommen breed) allang niet meer van cirkel tot cirkel reikte
+   en grotendeels onzichtbaar in het midden van de tussenruimte bleef hangen
+   (gemeld: "de lijn is weer weg"). Nu groeien beide mee met de beschikbare
+   breedte (flex-grow op allebei i.p.v. een vaste px-waarde op het lijnstuk),
+   met de li's als grootste aandeel zodat de tekstblokken ruim blijven --
+   zelfde aanpak als bij de stap-tracker hierboven in het beheerdersdashboard,
+   die geen los groeiend contentblok naast de lijn had. */
+html[data-skin="new"] .new-bento-step-segment { display: block; flex: 1 1 20px; min-width: 20px; margin-top: 20px; height: 2px; border-radius: 2px; background: rgba(255, 255, 255, .14); }
 html[data-skin="new"] .new-bento-step-segment.is-done { background: #68b47a; box-shadow: 0 0 12px rgba(75, 177, 136, .24); }
 html[data-skin="new"] .new-bento-step-segment.is-current { background: var(--path-amber); box-shadow: 0 0 12px rgba(217, 154, 60, .28); }
 html[data-skin="new"] .new-bento-steps i { position: relative; z-index: 1; display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid #4b6b82; border-radius: 50%; background: #163048; font-style: normal; box-shadow: 0 0 0 5px #0f293d; }
