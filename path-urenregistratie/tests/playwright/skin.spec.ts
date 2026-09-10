@@ -1189,8 +1189,8 @@ test('[SKIN-H-023] "Standaardweek/-maand vullen" vult alleen lege dagen met het 
 
     const inputs = page.locator('#new-bento-days .new-bento-hours-input');
 
-    await test.step('And staat de patroonuitleg er correct bij ("ma-do 9,0 uur · vr vrij")', async () => {
-      await expect(page.locator('#new-bento-fill-pattern-note')).toContainText('9,0 uur');
+    await test.step('And staat de patroonuitleg er correct bij ("Ma 9,0u · ... · Vr vrij")', async () => {
+      await expect(page.locator('#new-bento-fill-pattern-note')).toContainText('9,0u');
       await expect(page.locator('#new-bento-fill-pattern-note')).toContainText('vrij');
     });
 
@@ -1229,13 +1229,13 @@ test('[SKIN-H-023] "Standaardweek/-maand vullen" vult alleen lege dagen met het 
         const record = recordFor(currentEmployee().id);
         record.entries[1] = [12, 0, 0, 0, 0];
         record.confirmedEntries[1] = [false, false, false, false, false];
-        (document.querySelector('[data-fill-default-pattern="week"]') as HTMLElement | null)?.click();
+        (document.querySelector('#new-employee-bento [data-standard-hours-fill]') as HTMLElement | null)?.click();
       });
       await page.waitForTimeout(300);
     });
 
     await test.step('Then blijft maandag op 12 (niet overschreven), en zijn dinsdag/woensdag/donderdag/vrijdag gevuld met het patroon', async () => {
-      await expect(page.locator('#toast')).toContainText('ingevuld met je standaardpatroon');
+      await expect(page.locator('#toast')).toContainText('Standaardweek vullen');
       const entries = await page.evaluate(() => {
         // @ts-expect-error debug-only voor deze directe controle
         const record = recordFor(currentEmployee().id);
@@ -1252,18 +1252,18 @@ test('[SKIN-H-023] "Standaardweek/-maand vullen" vult alleen lege dagen met het 
       await page.evaluate(() => { window.location.hash = 'timesheet'; });
       await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
       await page.locator('[data-hours-week-scope="week-1"]').click();
-      await expect(page.locator('#fill-default-pattern')).toHaveText('Standaardweek vullen');
+      await expect(page.locator('#fill-standard-hours')).toHaveText('Standaardweek vullen');
       await page.locator('[data-hours-week-scope="all"]').click();
-      await expect(page.locator('#fill-default-pattern')).toHaveText('Standaardmaand vullen');
-      await page.locator('#fill-default-pattern').click();
+      await expect(page.locator('#fill-standard-hours')).toHaveText('Standaardmaand vullen');
+      await page.locator('#fill-standard-hours').click();
       await page.waitForTimeout(600);
-      await expect(page.locator('#toast')).toContainText('ingevuld met je standaardpatroon');
+      await expect(page.locator('#toast')).toContainText('Standaardmaand vullen');
     });
 
     await test.step('And blijft de knop ook in Klassiek werken', async () => {
       await page.locator('#quick-skin-toggle').click();
       await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
-      await expect(page.locator('#fill-default-pattern')).toBeVisible();
+      await expect(page.locator('#fill-standard-hours')).toBeVisible();
       const entriesNaVulling = await page.evaluate(() => {
         // @ts-expect-error debug-only voor deze directe controle
         const record = recordFor(currentEmployee().id);
