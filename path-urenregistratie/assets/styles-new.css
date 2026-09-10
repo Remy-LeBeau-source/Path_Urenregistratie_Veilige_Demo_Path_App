@@ -1737,8 +1737,9 @@ html[data-skin="new"] .new-admin-track-segment {
   height: 1px;
   flex: 1 1 auto;
   min-width: 12px;
-  margin: 0 7px;
-  height: 1px;
+  /* Geen margin: het lijnstuk moet de bolletjes ernaast raken (gemeld:
+     "groene lijn en bolletjes mogen elkaar aanraken"), niet er los van
+     zweven. */
   background: rgba(255, 255, 255, .15);
 }
 

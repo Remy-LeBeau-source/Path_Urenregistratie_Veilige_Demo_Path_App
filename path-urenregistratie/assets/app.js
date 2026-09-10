@@ -6694,7 +6694,17 @@ function renderNewAdminStoryline(rows, period) {
       const segmentDone = stage.state === "done" && stages[index + 1].state === "done";
       return node + '<span class="new-admin-track-segment' + (segmentDone ? ' is-done' : '') + '" aria-hidden="true"></span>';
     }).join("");
-    const status = record.invoiceStatus === "simulated"
+    // "Voltooid" moet hetzelfde "klaar" betekenen als het gevulde bolletje
+    // bij de laatste stap hierboven (stages[4], "complete" -- vereist
+    // hoursDone EN invoiceDone EN customerDone). Los ervan alleen op
+    // record.invoiceStatus === "simulated" controleren liet de rij
+    // "Voltooid" tonen terwijl de UREN-stap zelf nog niet als gedaan
+    // getekend werd: invoiceStatus kan "simulated" worden zodra er
+    // leverbewijs is (een mail is echt verstuurd), onafhankelijk van of
+    // record.timesheetStatus in dezelfde sync-ronde al naar "approved" is
+    // bijgewerkt (gemeld: Marc de Roons rij toonde "Voltooid" terwijl de
+    // eerste en laatste stap-bolletjes nog open stonden).
+    const status = stages[stages.length - 1].state === "done"
       ? "Voltooid"
       : record.invoiceStatus === "ready"
         ? "Factuur gereed"
