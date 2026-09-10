@@ -19,13 +19,16 @@ en er een echte samenvatting voor komt.
    overlapt op een lange pagina soms een statuslabel eronder (bv. een rij in
    Verhalen per medewerker) -- normaal gedrag voor een fixed-position widget,
    geen regressie, geen actie ondernomen.
-2. **Fijnslijpen uit §5, in volgorde van impact**, één voor één, elk met
-   lokale verificatie (§4-recept) + push + CI-check ertussen, nooit alles
-   tegelijk:
-   - factuurdetail-modal + PDF-preview polish.
-   - week/maand-layout van "Mijn uren" verder verfijnen.
-   - lijst-polish in Goedkeuringen.
-   - per-subsectie fijnslijpen in Instellingen.
+2. ~~Fijnslijpen uit §5~~ — bij het oppakken bleek 3 van de 4 genoemde
+   punten al eerder gedaan (`2dea2dd`/`4a015e5`/`1c74c64`, zie §5 hieronder
+   voor de geverifieerde details): factuurdetail-modal + PDF-preview,
+   Goedkeuringen-lijst, en het klanturenstaat-/veiligheidsregel-deel van
+   Instellingen. Alleen "Mijn uren"-layout en de resterende Instellingen-
+   tabs (Organisatie/Facturatie/Mailroutes/Teksten/Herinneringen) zijn nog
+   niet expliciet tegen de mockups gelegd, en de screenshot-audit liet daar
+   niets stuk zien -- dus geen bekende concrete fout om blind te "fixen".
+   Geen tijd verspild aan dubbel werk; verder gegaan met de resterende
+   punten hieronder.
 3. Tussen elke stap: herontwerp/main-divergentie en CI-status checken (§8b:
    nooit wachten op de handmatige PROD-poort, wel op echte rode shards
    reageren).
@@ -691,11 +694,21 @@ Uit `HANDOFF-PILOT-DESIGN.md` §→WAT ER NOG MOET, in volgorde:
 3. **Verdere fijnslijping per scherm** waar de 1414/1919-mockups
    (`design-mockups/1414-path-bento-space/*.jpg`) dat nog vragen. Puur
    voorbeelden, geen uitputtende lijst — vergelijk zelf tegen de mockups:
-   - factuurdetail-modal + PDF-preview kunnen nog polish (genoemd in de
-     schermeninventaris als "kan nog").
-   - week/maand-layout van "Mijn uren" kan verder verfijnd.
-   - lijst-polish in Goedkeuringen.
-   - per-subsectie fijnslijpen in Instellingen.
+   - ✅ factuurdetail-modal + PDF-preview (`2dea2dd`/`4a015e5`/`1c74c64`,
+     zie de nacht-van-7→8-september-episode hieronder) -- geverifieerd
+     10 september: `.invoice-document-card`/`.invoice-branded-template`/
+     serif koppen/`.invoice-preview-total` staan nog in `styles-new.css`.
+   - ✅ lijst-polish in Goedkeuringen (zelfde commits, `.approval-card` +
+     hover-ring) -- geverifieerd 10 september, staat nog in `styles-new.css`.
+   - ✅ (deels) Instellingen: klanturenstaat-stappenblok en
+     veiligheidsregel-kaarten al gedaan (zelfde commits). Niet expliciet
+     nagelopen: de overige tabs (Organisatie, Facturatie, Mailroutes,
+     Teksten, Herinneringen) — vergelijk die zelf nog tegen de mockups voor
+     je ze afvinkt.
+   - week/maand-layout van "Mijn uren" — geen aparte polish-commit voor
+     gevonden. De screenshot-audit van 10 september (zie hierboven) liet in
+     de huidige bento-opzet niets stuk zien, dus dit is optioneel verder
+     fijnslijpen, geen bekende fout.
 4. Als de gebruiker het herontwerp accepteert: **de gebruiker** beslist over
    de merge `herontwerp` → `main` (= `1.1.0`). Dat doe jij niet zelf.
 
