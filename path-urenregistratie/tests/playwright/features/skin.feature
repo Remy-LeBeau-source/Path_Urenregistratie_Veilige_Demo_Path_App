@@ -59,7 +59,7 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
   @happy
   Scenario: [SKIN-H-008] Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en terugschakelen
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 12
+    # Aantoonbare Playwright-assertions in deze case: 13
     Given Backoffice is ingelogd en de dashboardgegevens zijn geladen
     When Nieuw wordt geactiveerd en Backoffice alle hoofdschermen bezoekt
     Then dezelfde gegevens blijven staan in Nieuw en na terugschakelen naar Klassiek
@@ -79,6 +79,14 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     Given Backoffice in de nieuwe skin met minstens twee medewerkers in de verhaallijn
     When Backoffice de tweede medewerker in de wachtrij aanklikt
     Then wordt die medewerker geselecteerd en toont het verhaal zijn naam en vier statuskaarten
+
+  @happy
+  Scenario: [SKIN-H-026] tab-navigatie tussen uren-invoervelden in Nieuw springt niet terug naar het begin
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid
+    When het eerste veld wordt ingevuld en met Tab wordt doorgegaan naar het volgende
+    Then staat de focus meteen op het tweede uren-invoerveld, niet op de kale pagina
 
   @happy
   Scenario: [SKIN-H-011] een bewust opgeslagen 0 uur telt mee voor de weekvoortgang in Mijn uren
@@ -108,7 +116,7 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
   @happy
   Scenario: [SKIN-H-015] de theme-snelknop staat niet meer op de medewerker-startpagina, Voorkeuren blijft werken
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 5
+    # Aantoonbare Playwright-assertions in deze case: 7
     Given de medewerker Nieuw activeert
     When de flow voor SKIN-H-015 wordt uitgevoerd
     Then staat de theme-snelknop niet meer op het dashboard
@@ -213,7 +221,7 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
   @happy
   Scenario: [SKIN-H-024] "Volgende actie" bovenaan Open acties per maand toont de eerstvolgende stap en blijft op het Dashboard
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 9
+    # Aantoonbare Playwright-assertions in deze case: 11
     Given de medewerker Nieuw activeert op het Dashboard
     When op de knop van de Volgende actie wordt geklikt
     Then blijft het Dashboard actief, net als bij de losse maandregels eronder
