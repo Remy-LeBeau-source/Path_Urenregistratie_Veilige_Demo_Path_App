@@ -1,5 +1,34 @@
 # HANDOFF — Codex, Fase D vervolg (herontwerp)
 
+## (tijdelijk) 10 september — plan voor de komende ~8 uur, zonder de gebruiker
+
+Vastgelegd zodat er een concrete, verifieerbare volgorde is i.p.v. losjes
+"iets oppakken" -- wordt hierboven vervangen/verwijderd zodra de nacht om is
+en er een echte samenvatting voor komt.
+
+1. **Screenshot-audit New-skin vs. mockups.** Met Playwright (of de lokale
+   `127.0.0.1:8011`-server) een screenshot per hoofdscherm maken (Dashboard,
+   Mijn uren, Goedkeuringen, Instellingen, factuurdetail-modal) en naast de
+   bijbehorende `design-mockups/1414-path-bento-space/*.jpg` /
+   `pilot/1919-beheerder.html` leggen. Doel: een concrete lijst met echte
+   verschillen, niet giswerk.
+2. **Fijnslijpen uit §5, in volgorde van impact**, één voor één, elk met
+   lokale verificatie (§4-recept) + push + CI-check ertussen, nooit alles
+   tegelijk:
+   - factuurdetail-modal + PDF-preview polish.
+   - week/maand-layout van "Mijn uren" verder verfijnen.
+   - lijst-polish in Goedkeuringen.
+   - per-subsectie fijnslijpen in Instellingen.
+3. Tussen elke stap: herontwerp/main-divergentie en CI-status checken (§8b:
+   nooit wachten op de handmatige PROD-poort, wel op echte rode shards
+   reageren).
+4. Bij twijfel over een visuele keuze die de gebruiker zelf zou moeten zien:
+   niet gokken en niet blokkeren -- kort noteren in dit bestand en
+   doorgaan met het volgende punt.
+
+Buiten scope zonder de gebruiker: mobiele doorloop op een echt toestel (§5
+punt 2) en de merge naar `main` (§5 punt 4, beslist de gebruiker).
+
 ## 10 september (nacht) — codereview van de avond ervoor: "Standaardweek vullen" deed stiekem niets
 
 Op verzoek ("kijk weer naar de code") een codereviewpas gedaan op de twee
