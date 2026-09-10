@@ -1,5 +1,45 @@
 # Copilot handoff — lokale mailpreview en regressieherstel
 
+## Claude handoff — 10 september 2026, 2026-09-10 10:56
+
+Codex heeft de gebruikerswens voor standaarduren afgerond en gepusht naar herontwerp.
+
+Laatste commit op herontwerp:
+- 86b579d feat: vul standaarduren in urenstaat
+
+Wat erin zit:
+- Medewerkers kunnen hun persoonlijke standaardweek/-maand met één knop invullen.
+- Knop staat in Nieuw Dashboard-weekkaartje, Nieuw Mijn uren en Klassiek Mijn uren.
+- Vult alleen lege, bewerkbare werkdagen; bestaande handmatige uren, expliciete 0-uur-dagen en bevestigde dagen blijven intact.
+- Nieuw design is rustiger gemaakt rond dagkaartjes/focus/hover en de standaarduren-actie is herkenbaar groen.
+- Klassiek behoudt de nieuw binnengekomen 0/8/9-snelkeuzes per dag en kreeg dezelfde standaarduren-flow.
+- App/PWA-scan gedaan: manifest, service worker, iOS home-screen-meta, safe-area-padding, 44px touch targets en installbanner waren al aanwezig; uren/verlof/ziekte-invoer kreeg ontbrekende inputmode="decimal".
+
+Rebase/remote-context:
+- Tijdens push bewoog origin/herontwerp twee keer.
+- Eerste rebase conflictte met remote werk rond standaardpatroon/klassieke snelknoppen; opgelost door remote 0/8/9-dagknoppen te behouden en Codex' bredere illStandardHours*-flow als enige standaardweekactie te gebruiken.
+- Tweede rebase op 2fe181 was schoon.
+- Werkboom na push: schoon.
+
+Lokaal bewijs:
+-
+ode --check path-urenregistratie/assets/app.js groen.
+- git diff --check groen.
+-
+ode scripts/run-playwright-e2e.mjs --project=desktop-chromium --grep "SKIN-H-016" groen vóór en ná rebase.
+-
+ode scripts/run-playwright-e2e.mjs --project=desktop-chromium --grep "SKIN-H-0" groen: 19 passed, 1 skipped.
+- Niet-smoke onderdelen uit
+pm run check los groen: ersion:check, server-message-language-check, contrast-licht-donker, 	est:design, 	est:bdd:design, 	est:db:config, 	est:ops.
+-
+pm run check als keten is niet volledig groen geclaimd: scripts/smoke-test.mjs bleef lokaal opnieuw >90s volledig stil en is afgebroken, conform eerdere handoff-observatie over de monolithische smoke.
+
+CI-status bij overdracht:
+- Run 34456038566 op commit 86b579d was bij laatste poll nog in_progress.
+- Link: https://github.com/Remy-LeBeau-source/Path_Urenregistratie_Veilige_Demo_Path_App/actions/runs/34456038566
+- Eerstvolgende stap voor Claude: CI volgen tot eindstatus. Bij rood: joblog van de falende shard openen en alleen root-cause fixen. Bij groen: normale herontwerp -> main/TEST route volgen volgens branchregel; PROD niet aanraken.
+
+
 ## Herontwerp-doorwerknotitie — 10 september 2026, 10:20
 
 Deze notitie hoort bij de schone worktree `C:\Path-herontwerp-current` op detached `herontwerp`-HEAD, gerebased op `origin/herontwerp` `5d5241a`.
