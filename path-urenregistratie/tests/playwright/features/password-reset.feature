@@ -198,10 +198,11 @@ Feature: Wachtwoordherstel en misbruikbeveiliging
   @happy
   Scenario: [PWD-H-017] een uitnodigingslink opent het wachtwoordscherm, ook als er al iemand is ingelogd
     # Testtechniek: API-contract + equivalentieklasse
-    # Aantoonbare Playwright-assertions in deze case: 8
+    # Aantoonbare Playwright-assertions in deze case: 10
     Given een uitgenodigde collega met een geldige eenmalige link
     When de beheerder ingelogd blijft en de link in dezelfde browser opent
     Then verschijnt het wachtwoordscherm en niet het dashboard
+    And het formulier daadwerkelijk invullen en versturen lukt, ondanks de nog lopende sessiecheck
 
   @happy
   Scenario: [PWD-H-018] de accountuitnodiging gebruikt een aanpasbare welkomsttekst met een vaste afzender-handtekening

@@ -29,6 +29,8 @@ When("de flow voor EQ-H-035 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat submit maakt exact één medewerker-ontvangstmail");
 When("de flow voor EQ-H-036 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat submit met een geldige urenoverzicht-PDF krijgt attachment_policy=timesheet_receipt");
+When("de flow voor EQ-H-040 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat de urenoverzicht-PDF blijft compact: een volledige maand op één pagina");
 When("de flow voor EQ-H-037 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat goedkeuren maakt exact één definitieve-goedkeuringsmail");
 When("de flow voor EQ-H-038 wordt uitgevoerd");
