@@ -144,10 +144,21 @@ main `97f3168`). Gebruiker vroeg mij het over te nemen.
    `refreshSegmentedControlScrollIndicators()` (`assets/app.js`),
    aangeroepen aan het eind van `renderAll()` en direct na elke
    dynamische filter-herbouw. Nieuwe regressie `[MOB-H-025]` bewijst het
-   mechanisme zelf los van app-data. Zie BESLISTABEL R24. Nog niet
-   gecommit/gepusht op moment van schrijven; volgt na de lokale
-   verificatieronde (`npm run check`-onderdelen + gerichte E2E, allemaal
-   al groen op het moment van schrijven).
+   mechanisme zelf los van app-data. Zie BESLISTABEL R24. Gecommit en
+   gepusht (v1.0.52/`0c2efb7`), CI Validate+Promote Test+Deploy Test
+   volledig groen.
+9. **Mobiele testdekking (main→herontwerp-taakverdeling, v1.0.53):**
+   gebruiker vroeg mij naar hetzelfde mobiel/desktop-testdekkingsgat te
+   kijken als waar de herontwerp-peer al mee bezig was. Overlegd via
+   `SendMessage`, gebruiker koos expliciet "laat herontwerp dit afmaken,
+   ik wacht/verifieer" — geen dubbel werk gedaan. Peer maakte
+   `playwright.config.ts` + `dashboard.spec.ts`/`help-widget.spec.ts`
+   (88 cases) af, meldde het klaar en droeg de main-merge expliciet aan
+   mij over. Commit `46e400c` via `git cherry-pick -x` binnengehaald op
+   main, opnieuw lokaal geverifieerd (niet blind vertrouwd op hun eigen
+   testresultaten): 38/38 + 6/6 groen op zowel mobile-chrome als
+   mobile-safari. Zie BESLISTABEL R25. Nog 5 "UI Desktop"-bestanden
+   ongedekt op mobiel, bewust nog open (geen van beide kanten opgepakt).
 
 ## 10 september 2026 — vervolg door Codex: main en alle schermen
 
