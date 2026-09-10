@@ -1105,6 +1105,25 @@ html[data-skin="new"] .approval-card:hover {
   border-color: color-mix(in srgb, var(--path-green) 40%, var(--line));
 }
 
+/* Eigen identiteit per scherm (gebruikersverzoek: de New-schermen lijken nu
+   te veel op elkaar). Goedkeuringen is het scherm waar iets op je wacht --
+   amber is in de rest van de app al de kleur van "wachten op actie"
+   (status-warning, de patroonwaarschuwing). Hier wordt dat het dominante
+   accent: een amber kop en een amber streep aan de linkerkant van elke
+   kaart, in plaats van amber alleen op de knop. Puur additief bovenop de
+   bestaande kaartstijl -- de schaduw/hover-ring/lay-out blijven gelijk. */
+html[data-skin="new"] #view-approvals .section-label {
+  color: var(--path-amber);
+}
+
+html[data-skin="new"] #view-approvals .approval-card {
+  border-left: 3px solid color-mix(in srgb, var(--path-amber) 55%, var(--line));
+}
+
+html[data-skin="new"] #view-approvals .approval-card:hover {
+  border-left-color: var(--path-amber);
+}
+
 /* Mijn uren — de urentabel op de nieuwe tokens; uurwaarden in de serif,
    focus in het groen, lijnen en kopcel zachter. Alleen html[data-skin="new"]. */
 html[data-skin="new"] .hours-table th,
