@@ -70,12 +70,13 @@ assert.doesNotMatch(testRunner, /:\(exclude\)pilot/, 'TEST archive must continue
 
 assert.match(workflow, /deploy-test:\s*[\s\S]*needs:\s*test/, 'TEST deployment must wait for TEST regression');
 assert.match(workflow, /deploy-test:\s*[\s\S]*environment:\s*test/, 'TEST deployment must use the test environment');
-assert.match(workflow, /prod:\s*[\s\S]*needs:\s*\[test, deploy-test\]/, 'PROD promotion must wait for public TEST deployment');
+assert.match(workflow, /prod-gate:\s*[\s\S]*needs:\s*\[test, deploy-test\]/, 'PROD approval gate must wait for public TEST deployment');
+assert.match(workflow, /\n  prod:\s*[\s\S]*needs:\s*\[test, deploy-test, prod-gate\]/, 'PROD promotion must wait for the single approval gate');
 assert.match(workflow, /test:\s*[\s\S]*?if:\s*\$\{\{ always\(\) && needs\.validate\.result == 'success' \}\}/, 'A dispatched main release must continue to TEST after the push notification is skipped');
 assert.match(workflow, /live-docs:\s*[\s\S]*?Download mergeable release reports[\s\S]*?playwright merge-reports/, 'Living Docs must reuse mergeable release artifacts instead of starting another browser suite');
 assert.doesNotMatch(workflow, /live-docs:\s*[\s\S]*?Run E2E tests for docs/, 'Living Docs may not repeat the complete Playwright suite');
 assert.doesNotMatch(liveDocsJob, /services:\s*\n|setup-php|playwright install|Start PHP server|config\.local\.php/, 'Living Docs must remain report-only and may not provision a database, PHP runtime or browsers');
-assert.match(workflow, /prod:\s*[\s\S]*?needs:\s*\[test, deploy-test\][\s\S]*?always\(\)[\s\S]*?needs\.deploy-test\.result == 'success'/, 'Manual PROD promotion must remain available only after successful TEST deployment');
+assert.match(workflow, /prod-gate:\s*[\s\S]*?needs:\s*\[test, deploy-test\][\s\S]*?always\(\)[\s\S]*?needs\.deploy-test\.result == 'success'/, 'Manual PROD promotion must remain available only after successful TEST deployment');
 assert.match(pilotMergeQueue, /listJobsForWorkflowRun/, 'Pilot merge queue must inspect active release jobs, not only workflow status');
 assert.match(pilotMergeQueue, /Deploy Test to TransIP[\s\S]*conclusion === 'success'/, 'Pilot merge queue may ignore a waiting production gate only after TEST deploy succeeded');
 assert.match(pilotMergeQueue, /openJobs\.every\(\(job\) => job\.name\.startsWith\('Promote Prod'\)\)/, 'Pilot merge queue must only ignore manual Promote Prod waits, not active validation or TEST deploy jobs');

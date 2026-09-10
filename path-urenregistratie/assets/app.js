@@ -5300,9 +5300,6 @@ function renderNewEmployeeBento(record, employee, period) {
   const progress = totalWeeks > 0 ? Math.round(filledWeeks / totalWeeks * 100) : 0;
   document.querySelector("#new-bento-days-filled").textContent = String(filledWeeks);
   document.querySelector("#new-bento-days-total").textContent = "/ " + totalWeeks + " weken";
-  document.querySelector("#new-bento-days-note").textContent = filledWeeks === totalWeeks
-    ? "Alle weken van deze maand zijn ingevuld."
-    : "Nog " + (totalWeeks - filledWeeks) + " " + (totalWeeks - filledWeeks === 1 ? "week" : "weken") + " te gaan deze maand.";
   document.querySelector("#new-bento-progress").style.width = progress + "%";
   document.querySelector("#new-bento-percentage").textContent = progress + "%";
   document.querySelector("#new-bento-ring").style.setProperty("--bento-progress", progress + "%");
@@ -5311,7 +5308,7 @@ function renderNewEmployeeBento(record, employee, period) {
   const customerNote = document.querySelector("#new-bento-customer-note");
   let customerLabel = "Nog aanleveren";
   let customerTone = "status-warning";
-  let customerMessage = "De klanturenstaat staat nog open en blokkeert de factuurafronding totdat hij is aangeleverd of als rechtstreeks gemaild is geregistreerd.";
+  let customerMessage = "Blokkeert de factuurafronding totdat je 'm aanlevert of als rechtstreeks gemaild meldt.";
   if (customerDocument.status === "skipped" && !customerTimesheetExternallyConfirmed(customerDocument)) {
     customerLabel = "Gemeld · controle nodig";
     customerMessage = "Je hebt rechtstreeks gemaild gemeld. Backoffice moet de ontvangst nog bevestigen.";
@@ -13055,7 +13052,25 @@ function handleBentoDayCardChange(event) {
   record.payrollStatus = "concept";
   persistState();
   scheduleDraftTimesheetWrite();
+  // rerenderActiveTimesheetView() vervangt #new-bento-days'/#hours-grid-cards'
+  // innerHTML volledig, dus ook het element waar de browser via Tab net naartoe
+  // onderweg was. "change" vuurt bij het verlaten van dit veld, vóórdat die
+  // toetsenbordnavigatie is afgerond -- daardoor bestaat de node niet meer op
+  // het moment dat Tab 'm probeert te focussen, en valt de focus terug op
+  // <body>. Vanaf daar telt de browser bij de volgende Tab weer vooraan de
+  // pagina, wat leek alsof je steeds terug naar maandag sprong (gemeld door
+  // TEST-tester Shawn-Douglas, 10 sep). De opgeslagen waarde zelf was altijd
+  // al goed; alleen de focus na de herbouw ging verloren.
   rerenderActiveTimesheetView();
+  // Alleen herstellen als de focus daadwerkelijk kwijtraakte aan <body> --
+  // een muisklik op iets buiten deze herbouwde sectie (bv. de "Standaardweek
+  // vullen"-knop) behoudt gewoon zijn eigen focus en moet met rust blijven.
+  if (document.activeElement === document.body || !document.activeElement) {
+    const selector = '.new-bento-hours-input[data-week-index="' + weekIndex + '"]';
+    const refreshed = [...document.querySelectorAll(selector)];
+    const next = refreshed.find(el => Number(el.dataset.dayIndex) === dayIndex + 1) || refreshed.find(el => Number(el.dataset.dayIndex) === dayIndex);
+    if (next && !next.disabled) next.focus();
+  }
 }
 
 function handleBentoDayCardKeydown(event) {

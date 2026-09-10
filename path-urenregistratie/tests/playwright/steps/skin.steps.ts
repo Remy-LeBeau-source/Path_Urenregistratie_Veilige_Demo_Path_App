@@ -42,6 +42,9 @@ Then("de dashboardstatus gelijk blijft en Klassiek dezelfde gegevens toont");
 Given("Backoffice in de nieuwe skin met minstens twee medewerkers in de verhaallijn");
 When("Backoffice de tweede medewerker in de wachtrij aanklikt");
 Then("wordt die medewerker geselecteerd en toont het verhaal zijn naam en vier statuskaarten");
+Given("vormgevingsschakelaar (klassiek / nieuw) is voorbereid");
+When("het eerste veld wordt ingevuld en met Tab wordt doorgegaan naar het volgende");
+Then("staat de focus meteen op het tweede uren-invoerveld, niet op de kale pagina");
 Given("de medewerker de nieuwe vormgeving opent op de huidige week");
 When("alle werkdagen op deze week uren krijgen behalve de laatste, die bewust leeg blijft, en de week wordt opgeslagen");
 Then("heeft de server na een herlaad een eigen dagregel voor de laatste dag bewaard, ook al bleef die op 0 uur");
@@ -83,7 +86,6 @@ Then("staat het paneel weer op zijn vaste plek op Mijn uren en is het daar gewoo
 Given("een ingelogde administrator Nieuw activeert");
 When("de flow voor SKIN-H-019 wordt uitgevoerd");
 Then("brengt de eigen Home-knop terug naar Cockpit, nog altijd in Nieuw");
-Given("vormgevingsschakelaar (klassiek / nieuw) is voorbereid");
 When("de flow voor SKIN-H-020 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat de voetstrip onder Verhalen per medewerker toont de echte periode en tijd, en het verhaaloverzicht is te exporteren");
 When("op de pijl-knop wordt gedrukt");

@@ -384,6 +384,36 @@ test('[SKIN-H-010] de admin-verhaallijn wisselt van medewerker en toont bijbehor
   });
 });
 
+test('[SKIN-H-026] tab-navigatie tussen uren-invoervelden in Nieuw springt niet terug naar het begin', async ({ page }) => {
+  // Gemeld door TEST-tester Shawn-Douglas (10 sep): elke waardewijziging
+  // herbouwde het hele urenblok (rerenderActiveTimesheetView -> innerHTML),
+  // wat de browser's eigen Tab-navigatie liet verdwalen naar <body> -- de
+  // volgende Tab telde daardoor weer vooraan de pagina, alsof je steeds naar
+  // maandag terugsprong in plaats van door te gaan naar de volgende dag.
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await page.locator('#quick-skin-toggle').click();
+  await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+  await expect(page.locator('#new-employee-bento')).toBeVisible();
+
+  const inputs = page.locator('#new-bento-days .new-bento-hours-input');
+  const aantalDagen = await inputs.count();
+  test.skip(aantalDagen < 2, 'Minder dan twee werkdagen deze week; tab-volgorde valt niet te bewijzen.');
+
+  await test.step('When het eerste veld wordt ingevuld en met Tab wordt doorgegaan naar het volgende', async () => {
+    await inputs.nth(0).focus();
+    await inputs.nth(0).fill('6');
+    await page.keyboard.press('Tab');
+  });
+
+  await test.step('Then staat de focus meteen op het tweede uren-invoerveld, niet op de kale pagina', async () => {
+    const nogSteedsBody = await page.evaluate(() => document.activeElement === document.body);
+    expect(nogSteedsBody, 'na Tab hoort de focus niet op <body> te vallen').toBe(false);
+    await expect(inputs.nth(1)).toBeFocused();
+  });
+});
+
 test('[SKIN-H-011] een bewust opgeslagen 0 uur telt mee voor de weekvoortgang in Mijn uren', async ({ page }) => {
   const loginPage = new LoginPage(page);
   await page.clock.setFixedTime(new Date('2026-09-06T12:00:00.000Z'));
@@ -1351,6 +1381,14 @@ test('[SKIN-H-024] "Volgende actie" bovenaan Open acties per maand toont de eers
     await expect(page.locator('#employee-open-overview-next-title')).not.toBeEmpty();
     await expect(page.locator('#employee-open-overview-next-meta')).toContainText('actie 1 van');
     await expect(page.locator('#employee-open-overview-next-action')).not.toBeEmpty();
+    // Regressie (10 sep, TEST-tester Shawn-Douglas): titel en periodedetail
+    // liepen zonder regeleinde in elkaar over ("...September 2026September
+    // 2026 · actie 1 van 2"), want strong/small stonden zonder display:block
+    // los tegen elkaar aan. Elk moet dus op een eigen regel (andere y) staan.
+    const titleBox = await page.locator('#employee-open-overview-next-title').boundingBox();
+    const metaBox = await page.locator('#employee-open-overview-next-meta').boundingBox();
+    expect(titleBox && metaBox, 'titel en periodedetail horen allebei een zichtbare bounding box te hebben').toBeTruthy();
+    expect(metaBox.y, 'periodedetail hoort op een eigen regel onder de titel te staan, niet ernaast').toBeGreaterThan(titleBox.y + titleBox.height - 2);
   });
 
   await test.step('When op de knop van de Volgende actie wordt geklikt', async () => {
