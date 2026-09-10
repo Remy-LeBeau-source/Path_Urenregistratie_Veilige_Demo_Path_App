@@ -87,6 +87,13 @@ test('[PILOT-H-006] medewerker-pilot: uren invullen zonder voorgevulde nul, week
     await expect(page.locator('.week .total .tval')).toHaveText('36,50');
     await vr.locator('.st.pls').click();
     await expect(vr.locator('.hin')).toHaveValue('6,50');
+    // De snelkeuzestrook (".quick") van deze regel staat open zolang de zojuist
+    // aangeklikte stapperknop nog focus heeft (":focus-within"). Die focus expliciet
+    // opheffen vóór de volgende klik voorkomt dat de kaart op smallere (mobiele)
+    // viewports halverwege Playwrights klikreeks inklapt: zonder deze regel wordt de
+    // knop verplaatst tussen het bepalen van het klikpunt en het daadwerkelijke
+    // klikmoment, waardoor de klik ernaast in plaats van op de knop landt.
+    await page.evaluate(() => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); });
     await page.getByRole('button', { name: 'Indienen ter controle' }).click();
   });
 

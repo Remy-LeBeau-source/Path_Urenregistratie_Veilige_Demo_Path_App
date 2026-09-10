@@ -1,9 +1,19 @@
 import { expect, test, type Page } from '@playwright/test';
 import { AuthApi } from './api/AuthApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
+import { suppressInstallBanner } from './fixtures/suppressInstallBanner';
 import { setLeaveSickEntryEnabled } from './helpers/companySettings';
 import { LoginPage } from './pages/LoginPage';
 import { attachBusinessScreenshot } from './reporting/uiAttachments';
+
+test.beforeEach(async ({ page }) => {
+  // Dit bestand draait sinds R26 ook op mobile-chrome/mobile-safari; zonder
+  // onderdrukking verschijnt de PWA-installatiebanner na 3s en onderschept
+  // pointer-events op knoppen eronder (zelfde patroon als R25 al vond voor
+  // dashboard.spec.ts/help-widget.spec.ts). TS-REV-UI-H-012 is lang genoeg
+  // om die 3s te overschrijden en faalde daardoor deterministisch op mobiel.
+  await suppressInstallBanner(page);
+});
 
 const PERIOD_KEY = '2026-01';
 const CORRECTION_MESSAGE = 'Controleer dag 2: dit moet 4 uur zijn.';
@@ -779,6 +789,18 @@ test('[TS-REV-UI-H-012] beheerder zet verlof en ziekte aan; de medewerker kan ze
       await loginPage.loginAsAdmin();
       await page.locator('button[data-view="settings"]').click();
       await expect(page.locator('#page-title')).toHaveText('Instellingen');
+      // Op een smalle (mobiele) viewport zijn instellingenkaarten inklapbaar
+      // (@media max-width:700px, data-settings-collapsible): de Organisatie-
+      // kaart start dichtgeklapt en moet eerst geopend worden, anders staat
+      // dit veld op display:none via .settings-card > * -- zelfde patroon als
+      // help-widget.spec.ts al voor deze kaart oplost. Sinds R26 draait dit
+      // bestand ook op mobile-chrome/mobile-safari, waar dit voor het eerst
+      // aan het licht kwam.
+      const organizationCard = page.locator('#settings-organization');
+      if (await organizationCard.getAttribute('data-settings-collapsible') === 'true'
+        && await organizationCard.getAttribute('data-settings-open') !== 'true') {
+        await organizationCard.locator('.settings-card-heading').click();
+      }
       const toggle = page.locator('#setting-leave-sick-entry-enabled');
       const track = page.locator('.leave-sick-toggle .switch-track');
       await expect(toggle).not.toBeChecked();
@@ -931,4 +953,3 @@ test('[TS-REV-UI-H-013] een week kan alleen worden opgeslagen en de hele maand k
   await expect(page.locator('#submit-timesheet')).toBeVisible();
   await expect(page.locator('#submit-timesheet')).toContainText(/indienen/i);
 });
-
