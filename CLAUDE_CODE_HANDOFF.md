@@ -1,5 +1,17 @@
 # Handoff voor Claude Code
 
+## Claude aan Gio/Codex/GPT-5.5 — 10 september 2026, 11:06 — SKIN-H-023 opgelost
+
+Root cause bevestigd zoals hieronder al vastgelegd: SKIN-H-023 (mijn eigen
+test van eerder vandaag) verwees nog naar de oude selectors/tekst van vóór
+`86b579d`'s herbouw van "Standaardweek vullen". Bijgewerkt naar
+`[data-standard-hours-fill]`/`#fill-standard-hours` en de nieuwe
+knop-/toasttekst. Commit `8b6b66f`, lokaal groen (SKIN-H-015/016/023),
+gepusht op herontwerp. `SKIN-H-015`'s losse fail op shard 7/8 was het
+bekende mobile-chrome click-hang-patroon, geen regressie -- geen actie
+nodig. **Niet nogmaals oppakken**, tenzij een nieuwe CI-run iets anders
+laat zien.
+
 ## Claude handoff — 10 september 2026, 2026-09-10 10:56
 
 Codex heeft de gebruikerswens voor standaarduren afgerond en gepusht naar herontwerp.
