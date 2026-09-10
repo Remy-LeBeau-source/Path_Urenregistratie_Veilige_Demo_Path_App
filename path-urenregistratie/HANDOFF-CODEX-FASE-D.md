@@ -1,5 +1,67 @@
 # HANDOFF — Codex, Fase D vervolg (herontwerp)
 
+## 10 september (ochtend) — overdracht: gebruiker live meegekeken op TEST (mobiel)
+
+De gebruiker testte live mee op TEST (mobiel, Chrome) en gaf vier stuks
+directe feedback. Klaar/gefixt (herontwerp, `a438525`/`8169a8d`):
+
+1. **Logo bijna onzichtbaar in donker** — `.mobile-brand-home` heeft
+   overal een hardcoded donkere achtergrond (ongeacht licht/donker-
+   thema); het "Path"-woordmerk in `assets/path-logo.png` is zelf ook
+   donkernavy en versmolt ermee. Lichte chip achter het logobeeld
+   toegevoegd (`8169a8d`).
+2. **Groene lijn raakte de stap-bolletjes niet** in de admin-storyline
+   ("Verhalen per medewerker") — `.new-admin-track-segment` had
+   `margin: 0 7px`. Margin weg (`a438525`).
+3. **"Voltooid"-label klopte niet met de stap-bolletjes** (Marc de Roon
+   toonde "Voltooid" terwijl UREN- en laatste bolletje nog open stonden;
+   vergeleken met Shawn-Douglas Nahar, wiens rij wél overal consistent
+   groen was). Root cause: het label checkte alleen
+   `record.invoiceStatus === "simulated"`, het bolletje (juist) de volle
+   `hoursDone && invoiceDone && customerDone`. Label gebruikt nu
+   dezelfde bron (`a438525`).
+
+**Nog niet opgepakt, expliciet door de gebruiker gevraagd:**
+
+4. **"Maak elk menu qua design unieker"** — de gebruiker vindt dat de
+   New-skin-schermen (Cockpit/Goedkeuringen/Facturen/Instellingen/...)
+   nu te veel op elkaar lijken (1-op-1), en wil zowel meer onderlinge
+   variatie in New als een duidelijker verschil met Classic. Groot,
+   smaakgevoelig ontwerptraject -- niet blind aangepakt zonder
+   richting/goedkeuring. Voorstel: per scherm één kenmerkend visueel
+   accent (kleur/icoon/heldere kop) bedenken en dat als plan voorleggen
+   voor er wordt gebouwd.
+5. **PWA/"webapp"-criteria check** (installability) voor zowel Classic
+   als New — nog niet gedaan. Concreet: manifest.json (name, short_name,
+   icons incl. maskable, start_url, display, theme_color,
+   background_color), service worker, apple-touch-icon, viewport-meta
+   nalopen tegen de standaardcriteria en gaten dichten in beide skins.
+6. **Diepere datadesync onder de "Mailvoorbeeld"-toast**
+   ("Deze verzending staat niet meer als beheeractie open" bij een rij
+   die zelf status "ready" toont) -- zelfde soort bug als punt 3, maar
+   dieper: in `syncInvoiceStatusesFromApi()` (assets/app.js, rond regel
+   3508) kan `record.invoiceStatus` naar "simulated" gaan zodra er
+   leverbewijs is, onafhankelijk van of `record.timesheetStatus` in
+   dezelfde ronde al "approved" volgde -- de knop-render (`item.status`,
+   serverbron) en de klik-guard (`info.record`, lokale state) kunnen dan
+   uit de pas lopen. NIET aangepast: financiële/facturatielogica, met
+   veel bestaande edge-case-commentaar -- eerst dieper begrijpen/testen
+   voor een gerichte fix, niet blind patchen.
+7. **UI Desktop (159) vs. UI Mobile (24) in Living Docs** -- de
+   gebruiker wees op het grote verschil. Root cause: `playwright.config.ts`
+   se `mobile-chrome`/`mobile-safari`-projects hebben een testMatch-
+   allowlist van maar 3 patronen (mobile-ui/skin/business-workflows-*);
+   de overige 8 "UI Desktop"-bestanden draaien nooit op mobiel.
+   Feasibility-experiment (ongewijzigd `dashboard.spec.ts` +
+   `help-widget.spec.ts` tegen `mobile-chrome`): **41/44 (93%) slaagt al
+   zonder aanpassing** -- de overgebleven 3 falen allemaal op hetzelfde
+   patroon (een element dat op smalle viewport niet zichtbaar is, bv.
+   een instellingen-toggle). Dit is dus grotendeels haalbaar, maar een
+   volledige uitrol over alle 8 bestanden (~159 cases × 2 extra browser-
+   projects) is een forse CI-tijdimpact en vraagt een besluit van de
+   gebruiker: in één keer alles uitrollen, gefaseerd per bestand, of
+   hierbij laten. Niet zelf doorgezet zonder die keuze.
+
 ## 10 september — volledige schermcontrole en dubbele medewerkerweergave
 
 - Gebruiker heeft main plus alle beheer- en medewerkersschermen toegewezen.
