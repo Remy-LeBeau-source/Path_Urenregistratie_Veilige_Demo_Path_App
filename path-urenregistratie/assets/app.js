@@ -2609,6 +2609,20 @@ function initializeAuthSession() {
           error: ""
         });
 
+        // Een eenmalige reset-link moet altijd winnen van een sessie die deze
+        // asynchrone check toevallig nog aantreft. Zonder deze guard zet de
+        // regel hierboven state.currentRole/authRuntime.authenticated alsnog,
+        // waardoor de latere showPasswordResetForm()-aanroep (in de .finally()
+        // van de aanroeper) zichzelf weer via logoutLocal() ondermijnt --
+        // precies op het moment dat het net getoonde resetformulier gebruikt
+        // wordt (R18, E2E-H-024). Gewoon de gevonden sessie stil opruimen en
+        // niets van de inlogflow hieronder doorlopen.
+        if (pendingPasswordResetToken) {
+          setAuthDebug({ authenticated: false, role: "", user_id: null, mode: "auth", available: true, error: "reset-link-overrides-session" });
+          logoutLocal();
+          return;
+        }
+
         if (AUTH_ALWAYS_SHOW_LOGIN_PICKER) {
           applyAuthUserToState(data.user, { loginUser: false });
           return requestAuthLogout()
