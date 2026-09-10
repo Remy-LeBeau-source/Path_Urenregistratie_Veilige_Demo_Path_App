@@ -75,14 +75,14 @@ export default defineConfig({
       use: {
         ...devices['Pixel 7'],
       },
-      testMatch: ['**/mobile-ui.spec.ts', '**/skin.spec.ts', '**/business-workflows-*.spec.ts', '**/dashboard.spec.ts', '**/help-widget.spec.ts'],
+      testMatch: ['**/mobile-ui.spec.ts', '**/skin.spec.ts', '**/business-workflows-*.spec.ts', '**/dashboard.spec.ts', '**/help-widget.spec.ts', '**/accessibility.spec.ts', '**/auth.spec.ts', '**/invoices.spec.ts', '**/pilot-page.spec.ts', '**/timesheet-review-ui.spec.ts'],
     },
     {
       name: 'mobile-safari',
       use: {
         ...devices['iPhone 13'],
       },
-      testMatch: ['**/mobile-ui.spec.ts', '**/skin.spec.ts', '**/business-workflows-*.spec.ts', '**/dashboard.spec.ts', '**/help-widget.spec.ts'],
+      testMatch: ['**/mobile-ui.spec.ts', '**/skin.spec.ts', '**/business-workflows-*.spec.ts', '**/dashboard.spec.ts', '**/help-widget.spec.ts', '**/accessibility.spec.ts', '**/auth.spec.ts', '**/invoices.spec.ts', '**/pilot-page.spec.ts', '**/timesheet-review-ui.spec.ts'],
     },
   ],
 });

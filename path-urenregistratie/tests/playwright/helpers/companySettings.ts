@@ -12,7 +12,13 @@ import { expect, type Page } from '@playwright/test';
 export async function setLeaveSickEntryEnabled(page: Page, enabled: boolean): Promise<void> {
   const csrf = await (await page.request.get('/server/auth/csrf.php')).json();
   const before = await (await page.request.get('/server/api/bootstrap.php')).json();
-  const company = before.companies[0];
+  const company = before.companies?.[0];
+  if (!company) {
+    // Een cryptische "Cannot read properties of undefined" hier wijst bijna
+    // altijd op geen (of een verlopen) beheerderssessie op deze `page` --
+    // deze helper vereist dat vooraf. Een duidelijke fout scheelt uitzoekwerk.
+    throw new Error('[setLeaveSickEntryEnabled] bootstrap.php gaf geen companies terug -- is er wel een ingelogde beheerder op deze page?');
+  }
   const save = await page.request.post('/server/api/settings.php', {
     headers: { 'X-CSRF-Token': String(csrf.csrf_token || '') },
     data: {
