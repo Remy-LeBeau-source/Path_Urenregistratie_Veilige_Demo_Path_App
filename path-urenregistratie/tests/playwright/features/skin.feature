@@ -131,13 +131,15 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     When op 8 gevolgd door 0 wordt geklikt
 
   @happy
-  Scenario: [SKIN-H-016] een eigen werkpatroon per weekdag vult Mijn uren voor en kan met één knop opnieuw worden toegepast
+  Scenario: [SKIN-H-016] een eigen werkpatroon per weekdag vult Mijn uren voor en telt zo mee in de contracturen
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 21
+    # Aantoonbare Playwright-assertions in deze case: 28
     Given Backoffice een medewerker met een eigen werkpatroon aanmaakt (dinsdag 6 uur, vrijdag 0 uur)
     When de medewerker inlogt, Nieuw activeert en Mijn uren opent
     Then staat dinsdag al op 6 uur en vrijdag op leeg (0 uur), zonder dat er iets is getypt
-    When de week wordt opgeslagen zonder verder iets aan te passen
+    And de standaardweekknop is zichtbaar op het Dashboard
+    And dezelfde knop vult nog lege weken in Mijn uren in Nieuw en Klassiek
+    When de uren vanuit Mijn uren worden opgeslagen
     Then heeft de server het patroon zelf bewaard: dinsdag 6 uur, vrijdag expliciet 0 uur
 
   @happy

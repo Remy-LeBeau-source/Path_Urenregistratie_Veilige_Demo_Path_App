@@ -193,7 +193,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 475 Playwri
 - [DASH-N-022] een medewerker met een toekomstige startdatum verschijnt niet in Teamstatus of Klanturenstaten vóór indiensttreding — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad niet — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 1
 - [DASH-N-008] voorbeeldgegevens herstellen houdt alle werkvoorraadtellers gelijk — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
-- [DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus — Techniek: Toestandsovergang · Assertions: 18
+- [DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus — Techniek: Toestandsovergang · Assertions: 17
 - [DASH-N-011] afgeronde Backoffice-taak en teller blijven na F5 stabiel, ongeacht het beginaantal — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 9
 - [DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker en Backoffice — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 24
 - [DASH-N-012] afgeronde verzendcontrole blijft na F5 weg, ongeacht het beginaantal — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
@@ -591,7 +591,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 475 Playwri
 - [SKIN-H-015] de theme-snelknop staat niet meer op de medewerker-startpagina, Voorkeuren blijft werken — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
 - [SKIN-N-007] productie forceert Klassiek en verbergt de redesignschakelaar — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
 - [SKIN-H-014] snelkeuze in Mijn uren-bento heeft ook een 0-optie naast 8 en 9 — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 10
-- [SKIN-H-016] een eigen werkpatroon per weekdag vult Mijn uren voor en telt zo mee in de contracturen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 21
+- [SKIN-H-016] een eigen werkpatroon per weekdag vult Mijn uren voor en telt zo mee in de contracturen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 28
 - [SKIN-H-017] Mijn uren toont bij een enkele week dezelfde bento-kaartjes als het Dashboard, Klassiek blijft de tabel — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 15
 - [SKIN-H-018] Klanturenstaat-blok klapt inline open op het Dashboard, zonder weg te navigeren, en keert terug naar Mijn uren — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 18
 - [SKIN-H-019] de beheerroute blijft op elk van de 6 pilot-tabs consequent Nieuw, zonder terug te vallen op de klassieke zijbalk — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 8

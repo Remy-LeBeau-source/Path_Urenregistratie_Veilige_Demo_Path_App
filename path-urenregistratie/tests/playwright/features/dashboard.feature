@@ -115,7 +115,7 @@ Feature: Dashboard en open werkvoorraad
   @negative
   Scenario: [DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus
     # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 18
+    # Aantoonbare Playwright-assertions in deze case: 17
     Given Backoffice de voorbeeldomgeving herstelt en daarna naar Stasjo wisselt
     When Stasjo daarna een open urenactie indient
     And Stasjo voert daarna F5 uit
