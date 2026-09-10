@@ -4795,7 +4795,13 @@ function syncAppearanceSwitches(hostname = window.location.hostname) {
     skinButton.setAttribute("aria-pressed", String(vernieuwd));
     skinButton.setAttribute("aria-label", vernieuwd ? "Schakel naar klassieke vormgeving" : "Schakel naar nieuwe vormgeving");
     skinButton.title = vernieuwd ? "Naar klassiek" : "Naar nieuw";
-    skinButton.innerHTML = '<span aria-hidden="true">◫</span><strong>' + (vernieuwd ? "Nieuw" : "Klassiek") + "</strong>";
+    // Testfeedback (Stasjo, medewerker, via screenshot): de knop toonde alleen de
+    // huidige stand ("Nieuw") zonder enige hint dat een tik hem omschakelt -- op
+    // mobiel is er geen hover-tooltip om dat te ontdekken, dus las de pil eerder
+    // als statuslabel dan als knop. Het rasterpictogram (◫) is vervangen door een
+    // wisselpictogram (⇄) dat "omschakelen" communiceert, ongeacht welke stand
+    // actief is; het gedrag (beide kanten op tikken) was al goed.
+    skinButton.innerHTML = '<span aria-hidden="true">⇄</span><strong>' + (vernieuwd ? "Nieuw" : "Klassiek") + "</strong>";
   }
 }
 
