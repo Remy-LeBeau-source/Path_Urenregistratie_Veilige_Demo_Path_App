@@ -423,6 +423,16 @@ html[data-skin="new"] #view-timesheet {
   color: #c9d5da;
 }
 
+/* #view-customer-timesheet is een Klassiek-only scherm (zie index.html):
+   New-skin gebruikt voor dezelfde taak al het eigen inklapmechanisme op het
+   Dashboard (#new-bento-customer). De enige knop die hiernaartoe zou kunnen
+   linken (#employee-customer-timesheet-open) zit op een kaart die New-skin
+   toch al verbergt, maar dit is een expliciete tweede garantie mocht iemand
+   via de hash rechtstreeks naar #customer-timesheet navigeren. */
+html[data-skin="new"] #view-customer-timesheet {
+  display: none !important;
+}
+
 html[data-skin="new"] #view-timesheet > .view-heading {
   display: flex;
   align-items: end;
@@ -1766,7 +1776,12 @@ html[data-skin="new"] .new-admin-employee-track {
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* Was justify-content: space-between -- dat voegt ZELF ook ruimte toe
+     tussen alle flex-children, bovenop de ruimte die .new-admin-track-segment
+     al met flex: 1 1 auto opeist. Het resultaat: bolletje + ruimte + lijn +
+     ruimte + bolletje, terwijl de lijn juist de bolletjes moest raken (zie
+     de toelichting bij .new-admin-track-segment hieronder). De segmenten
+     vullen de rij zelf al volledig; geen extra space-between nodig. */
 }
 
 html[data-skin="new"] .new-admin-track-segment {

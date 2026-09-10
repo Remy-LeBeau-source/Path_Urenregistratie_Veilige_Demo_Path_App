@@ -1185,6 +1185,7 @@ const pageTitles = {
   dashboard: "Urenoverzicht",
   "employee-dashboard": "Mijn overzicht",
   timesheet: "Mijn uren",
+  "customer-timesheet": "Klanturenstaat",
   approvals: "Goedkeuringen",
   invoices: "Facturen",
   announcements: "Mededelingen",
@@ -2044,11 +2045,29 @@ function buildTimesheetReceiptPdfBase64(employee, period, record) {
   period.weekRows.forEach((week, weekIndex) => {
     const actualDays = week.days.filter(Boolean);
     if (!actualDays.length) return;
+
+    // Een week zonder één ingevulde of bevestigde dag hoeft niet dag voor
+    // dag met "Niet ingevuld" te worden opgesomd -- dat kostte in de
+    // praktijk al snel een halve pagina voor niets (bv. een volledig lege
+    // maand-staart). Eén samenvattende regel volstaat; een week mét
+    // uren blijft wel volledig dag voor dag staan, daar zit de controlewaarde.
+    const weekIsEmpty = actualDays.every((day, dayIndex) => {
+      const raw = Number(record.entries?.[weekIndex]?.[dayIndex] || 0);
+      const confirmed = Boolean(record.confirmedEntries?.[weekIndex]?.[dayIndex]);
+      return raw === 0 && !confirmed;
+    });
+
     ensureSpace(5.2);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8.5);
     doc.setTextColor(...muted);
     doc.text("Week " + week.number + " · " + week.year, 15, y);
+    if (weekIsEmpty) {
+      doc.setFont("helvetica", "normal");
+      doc.text("Nog niet ingevuld", 195, y, { align: "right" });
+      y += 7;
+      return;
+    }
     y += 5.2;
 
     let weekTotal = 0;
@@ -4450,6 +4469,15 @@ function applyDayHoursDefaultsToRecord(record, employee, periodKey) {
   if (!employee.dayHours || !isTimesheetEditableForEmployee(record)) return;
   if (state.currentRole !== "employee" || String(currentEmployee()?.id) !== String(employee.id)) return;
   const period = periodFromKey(periodKey);
+  // todaysWeekIndexInPeriod() valt terug op week 0 zodra period niet de
+  // huidige kalendermaand is (bewust zo voor de week-tab-selectie op Mijn
+  // uren, zie de andere aanroep verderop). Hier zou diezelfde terugval een
+  // willekeurige oudere/toekomstige maand alsnog automatisch invullen zodra
+  // een medewerker een eigen werkpatroon heeft -- vóór dat patroon bestond
+  // viel dit nooit op, want !employee.dayHours brak dan al eerder af.
+  // Alleen doorzetten als period ook echt de huidige kalendermaand is.
+  const now = new Date();
+  if (now.getFullYear() !== period.year || now.getMonth() !== period.monthIndex) return;
   const activeWeekIndex = todaysWeekIndexInPeriod(period);
   fillStandardHoursInRecord(record, employee, period, [activeWeekIndex], { persistStatus: false });
 }
@@ -6286,6 +6314,20 @@ function restoreCustomerTimesheetPanelHome() {
   if (expand) expand.hidden = true;
   if (button) button.setAttribute("aria-expanded", "false");
   if (label) label.textContent = "Klanturenstaat openen";
+}
+
+// Verhuist #customer-timesheet-upload-panel naar zijn eigen scherm
+// (#view-customer-timesheet, Klassiek-only) zodra dat scherm actief wordt --
+// zelfde soort verhuis-truc als restoreCustomerTimesheetPanelHome() hierboven,
+// alleen naar een andere bestemming. showView() roept deze aan vóórdat de
+// restore-naar-Mijn-uren-aanroep hierboven de kans krijgt het weer weg te
+// trekken (zie de guard daar op view === "customer-timesheet").
+function moveCustomerTimesheetPanelToOwnView() {
+  const anchor = document.querySelector("#customer-timesheet-view-anchor");
+  const panel = document.querySelector("#customer-timesheet-upload-panel");
+  if (anchor && panel && panel.parentElement !== anchor.parentElement) {
+    anchor.after(panel);
+  }
 }
 
 function renderCustomerTimesheetPanel() {
@@ -10035,12 +10077,17 @@ function smoothScrollBehavior() {
 
 function showView(view, options = {}) {
   // Het Klanturenstaat-panel kan tijdelijk in het Dashboard-blok zitten (zie
-  // handleNewBentoCustomerToggle); zodra je ergens anders heen navigeert
-  // hoort het weer op zijn vaste plek op Mijn uren te staan, anders mist die
-  // pagina het straks gewoon.
-  if (view !== "employee-dashboard") restoreCustomerTimesheetPanelHome();
+  // handleNewBentoCustomerToggle) of, in Klassiek, op zijn eigen scherm (zie
+  // moveCustomerTimesheetPanelToOwnView hieronder); zodra je ergens anders
+  // heen navigeert hoort het weer op zijn vaste plek op Mijn uren te staan,
+  // anders mist die pagina het straks gewoon. Bij navigatie NAAR het eigen
+  // scherm zelf niet eerst terug naar Mijn uren verhuizen -- dat zou het
+  // meteen weer wegtrekken voordat de eigen-scherm-verhuizing kan plaatsvinden.
+  if (view !== "employee-dashboard" && view !== "customer-timesheet") restoreCustomerTimesheetPanelHome();
+  if (view === "customer-timesheet") moveCustomerTimesheetPanelToOwnView();
   if (state.currentRole === "employee" && adminViews.has(view)) view = "employee-dashboard";
   if (state.currentRole === "admin" && view === "timesheet") view = "dashboard";
+  if (state.currentRole === "admin" && view === "customer-timesheet") view = "dashboard";
   if (state.currentRole === "admin" && view === "employee-dashboard") view = "dashboard";
   if (state.currentRole === "admin" && view === "employee-announcements") view = "dashboard";
   if (view === "dashboard") renderDashboard();
@@ -10392,15 +10439,35 @@ function approveEmployee(id, periodKey, options = {}) {
   finishApproval();
 }
 
+// Standaardredenen: knopjes met veelvoorkomende correctieredenen, puur om
+// het typewerk te schelen. Klikken VULT het veld (overschrijft de huidige
+// inhoud), het blijft daarna gewoon een normaal bewerkbaar tekstveld -- de
+// beheerder kan de tekst nog aanpassen of aanvullen voor het versturen.
+// Bewust geen automatische voorinvulling bij het openen van de modal zelf:
+// dan zou "Terugsturen" gelijk actief staan en kon een beheerder die niet
+// oplet een generieke tekst naar de medewerker sturen zonder er zelf naar
+// te kijken. Met knopjes is het kiezen altijd een bewuste actie.
+const CORRECTION_REASON_PRESETS = [
+  "Controleer de uren van [datum]; het aantal klopt niet.",
+  "Klanturenstaat ontbreekt of is onleesbaar.",
+  "Verkeerde maand of week ingevuld.",
+  "Totaal komt niet overeen met het aantal gewerkte dagen."
+];
+
 function showCorrectionEditor(id, periodKey, adminTaskId = "") {
   const key = periodKey || currentPeriod().key;
   const employee = employeeById(id);
   const period = periodFromKey(key);
+  const presetButtons = CORRECTION_REASON_PRESETS.map(reason =>
+    '<button type="button" class="chip-button" data-correction-preset="' + escapeHtml(reason) + '">' + escapeHtml(reason) + "</button>"
+  ).join("");
   showModal({
     label: "Correctie aanvragen",
     title: "Wat moet " + employee.name + " aanpassen?",
     message: "Schrijf concreet wat er niet klopt. De medewerker ziet deze tekst bij de melding en de urenstaat.",
-    summary: '<div class="modal-form"><label class="full" for="correction-reason">Reden voor correctie<textarea id="correction-reason" maxlength="1000" placeholder="Bijvoorbeeld: controleer de uren van 14 juli; daar staat 8 uur in plaats van 4 uur."></textarea></label><p class="full form-help" id="correction-reason-help">Verplicht veld · maximaal 1000 tekens · Enter maakt een nieuwe regel · Ctrl+Enter verstuurt.</p></div>',
+    summary: '<div class="modal-form">' +
+      '<div class="full correction-reason-presets" role="group" aria-label="Standaardredenen, klik om over te nemen">' + presetButtons + "</div>" +
+      '<label class="full" for="correction-reason">Reden voor correctie<textarea id="correction-reason" maxlength="1000" placeholder="Bijvoorbeeld: controleer de uren van 14 juli; daar staat 8 uur in plaats van 4 uur."></textarea></label><p class="full form-help" id="correction-reason-help">Verplicht veld · maximaal 1000 tekens · Enter maakt een nieuwe regel · Ctrl+Enter verstuurt.</p></div>',
     confirm: "Terugsturen",
     secondary: adminTaskId ? "Terug naar controle" : "",
     secondaryAction: adminTaskId ? () => showHoursReview(employee.id, key, adminTaskId) : null,
@@ -10424,6 +10491,17 @@ function showCorrectionEditor(id, periodKey, adminTaskId = "") {
   textarea.addEventListener("input", () => {
     textarea.dataset.touched = "true";
     validate();
+  });
+  document.querySelectorAll("[data-correction-preset]").forEach(chip => {
+    chip.addEventListener("click", () => {
+      textarea.value = chip.dataset.correctionPreset;
+      textarea.dataset.touched = "true";
+      validate();
+      textarea.focus();
+      // Cursor achteraan zetten, handig als de preset een [datum]-plek bevat
+      // die de beheerder nog moet invullen.
+      textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+    });
   });
   textarea.focus();
 }
@@ -13729,6 +13807,13 @@ function openResetDemoModal() {
     confirm: "Voorbeeldgegevens herstellen",
     action: () => {
       const role = state.currentRole || "admin";
+      // Zelfde reden als bij de TEST-reset hierboven (resetSharedTestEnvironment
+      // via een echte reload): "Herstel demo" moet je op het scherm laten staan
+      // waar je mee bezig was, niet altijd terug naar de startpagina springen.
+      // Alleen als de huidige view voor deze rol niet meer bestaat (bv. een
+      // beheerdersscherm terwijl de reset je op medewerker zet) valt het terug
+      // op de startpagina van die rol.
+      const currentView = String(window.location.hash || "").replace(/^#/, "") || profileForRole(role).home;
       const resetState = freshState();
       resetState.currentRole = role;
       resetState.currentAdminId = "gio";
@@ -13743,7 +13828,8 @@ function openResetDemoModal() {
       closeModal();
       populateSettings();
       renderAll();
-      showView(profileForRole(role).home);
+      const targetView = document.querySelector("#view-" + currentView) ? currentView : profileForRole(role).home;
+      showView(targetView);
       toast("De lokale voorbeeldgegevens zijn hersteld.");
     }
   });

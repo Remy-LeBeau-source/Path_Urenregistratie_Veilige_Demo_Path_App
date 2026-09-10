@@ -19,7 +19,7 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <title>Uren & Facturatie</title>
-  <link rel="stylesheet" href="assets/styles.css?v=1.0.57">
+  <link rel="stylesheet" href="assets/styles.css?v=1.0.58">
   <link rel="stylesheet" href="assets/styles-new.css">
 </head>
 <body class="auth-booting">
@@ -98,7 +98,7 @@
       </form>
       <p class="login-note" id="auth-mode-indicator">Controle van auth-sessie wordt uitgevoerd.</p>
       <p class="login-note" id="local-login-note">De standaardgegevens gebruiken veilige voorbeeldadressen. Je mag zelf echte gegevens invoeren; deze lokale versie bewaart ze alleen in deze browser en e-mailverzending is uitgeschakeld.</p>
-      <footer class="login-footer"><span>© 2026 Path Consultancy IT · Ontwikkeld en beheerd door Team Path.</span><span>Versie 1.0.57</span></footer>
+      <footer class="login-footer"><span>© 2026 Path Consultancy IT · Ontwikkeld en beheerd door Team Path.</span><span>Versie 1.0.58</span></footer>
     </div>
   </section>
 
@@ -155,7 +155,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 1.0.57</span>
+      <span class="demo-badge">Versie 1.0.58</span>
       </div>
     </aside>
 
@@ -171,7 +171,7 @@
         <div class="topbar-title">
           <p class="eyebrow" id="organization-name">Path Consultancy</p>
           <h1 id="page-title">Urenoverzicht</h1>
-          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 1.0.57</span><span class="environment-badge" id="environment-badge" hidden></span></span>
+          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 1.0.58</span><span class="environment-badge" id="environment-badge" hidden></span></span>
         </div>
         <div class="topbar-actions">
           <nav class="new-admin-topnav role-admin-only" aria-label="Pilot hoofdnavigatie">
@@ -331,7 +331,7 @@
             <p id="employee-customer-timesheet-note">Upload de officiële klanturenstaat of registreer dat je deze al rechtstreeks hebt gemaild.</p>
           </div>
           <div class="employee-customer-timesheet-actions">
-            <button class="button button-primary" data-go="timesheet" id="employee-customer-timesheet-open">Klanturenstaat openen</button>
+            <button class="button button-primary" data-go="customer-timesheet" id="employee-customer-timesheet-open">Klanturenstaat openen</button>
             <button class="button button-ghost" id="employee-customer-timesheet-skip" type="button">Al rechtstreeks gemaild</button>
           </div>
         </section>
@@ -601,6 +601,24 @@
             <pre id="customer-timesheet-body"></pre>
           </div>
         </section>
+      </section>
+
+      <!-- Klassiek-only, medewerkers: de klanturenstaat-upload leefde tot nu toe
+           altijd onderaan Mijn uren (lange scrollpagina voor twee losse taken).
+           #customer-timesheet-upload-panel verhuist hier fysiek naartoe zodra
+           deze view actief wordt (zie moveCustomerTimesheetPanelToOwnView() in
+           app.js) en gaat terug naar zijn anker in #view-timesheet zodra je
+           ergens anders naartoe navigeert -- zelfde verhuis-truc als New-skin
+           al langer gebruikt voor het Dashboard-inklapblok. In New blijft dit
+           scherm ongebruikt: de knop die hiernaartoe linkt
+           (#employee-customer-timesheet-open) zit op een kaart die New-skin
+           toch al verbergt ten gunste van zijn eigen bento-inklapmechanisme. -->
+      <section class="view role-employee-only" id="view-customer-timesheet" data-title="Klanturenstaat">
+        <div class="view-heading">
+          <div><span class="section-label">Apart klantdocument</span><h2>Klanturenstaat</h2><p>Los van je dagelijkse uren, maar vóór factuurafronding verplicht gereed.</p></div>
+          <button class="text-button" data-go="timesheet">&larr; Naar Mijn uren</button>
+        </div>
+        <div id="customer-timesheet-view-anchor" hidden></div>
       </section>
 
       <section class="view" id="view-approvals" data-title="Goedkeuringen">
@@ -914,7 +932,7 @@
       <footer class="app-footer" aria-label="Applicatie-informatie">
         <span>© 2026 Path Consultancy IT</span>
         <span>Ontwikkeld en beheerd door Team Path.</span>
-        <span class="app-footer-version">Versie 1.0.57</span>
+        <span class="app-footer-version">Versie 1.0.58</span>
       </footer>
     </main>
   </div>
@@ -974,7 +992,7 @@
   </div>
   <script vite-ignore defer src="assets/jspdf.umd.min.js"></script>
   <script vite-ignore defer src="assets/invoice-fonts.js"></script>
-  <script vite-ignore defer src="assets/app.js?v=1.0.57"></script>
-  <script vite-ignore defer src="assets/pwa-install.js?v=1.0.57"></script>
+  <script vite-ignore defer src="assets/app.js?v=1.0.58"></script>
+  <script vite-ignore defer src="assets/pwa-install.js?v=1.0.58"></script>
 </body>
 </html>
