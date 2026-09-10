@@ -6591,9 +6591,25 @@ function remindCustomerTimesheet(employeeId, periodKey) {
   persistState(); renderAll(); toast("Herinnering in de app klaargezet voor " + employee.name + "; e-mailverzending is uitgeschakeld.");
 }
 
+// Het klanturenstaat-paneel heeft een eigen maand/jaar-picker
+// (#customer-timesheet-month/-year, gespiegeld in #customer-timesheet-period)
+// waarmee je een andere maand kunt bekijken dan globaal geselecteerd staat --
+// customerTimesheetUploadContext()/syncCustomerTimesheetUploadActions() lezen
+// die eigen periode al correct, maar showSkipCustomerTimesheet(),
+// restoreSkippedCustomerTimesheet() en showCustomerTimesheetSubmissionMailEditor()
+// gebruikten in plaats daarvan currentPeriod() (de globale app-periode) en
+// werkten dan stilzwijgend op de verkeerde maand terwijl het zichtbare paneel
+// een andere maand toonde -- gemeld als "de knop werkt niet" in Klassiek,
+// waar je binnen dit scherm vrij door maanden kunt navigeren. Eén helper i.p.v.
+// drie keer dezelfde fallback-logica, om herhaling van deze bug te voorkomen.
+function currentCustomerTimesheetPanelPeriod() {
+  const periodKey = document.querySelector("#customer-timesheet-period")?.value || currentPeriod().key;
+  return periodFromKey(periodKey);
+}
+
 function showSkipCustomerTimesheet() {
   const employee = currentEmployee();
-  const period = currentPeriod();
+  const period = currentCustomerTimesheetPanelPeriod();
   const documentRecord = customerTimesheetFor(recordFor(employee.id, period.key));
   if (!customerTimesheetNeedsEmployeeAction(documentRecord.status)) {
     toast("Deze klanturenstaat kan niet meer als rechtstreeks gemaild worden geregistreerd.");
@@ -6651,7 +6667,7 @@ function showSkipCustomerTimesheet() {
 
 function restoreSkippedCustomerTimesheet() {
   const employee = currentEmployee();
-  const period = currentPeriod();
+  const period = currentCustomerTimesheetPanelPeriod();
   const documentRecord = customerTimesheetFor(recordFor(employee.id, period.key));
   if (documentRecord.status !== "skipped") return;
 
@@ -6676,7 +6692,7 @@ function restoreSkippedCustomerTimesheet() {
 
 function showCustomerTimesheetSubmissionMailEditor() {
   const employee = currentEmployee();
-  const period = currentPeriod();
+  const period = currentCustomerTimesheetPanelPeriod();
   const documentRecord = customerTimesheetFor(recordFor(employee.id, period.key));
   if (["received", "approved", "sent", "sent_to_broker", "skipped"].includes(documentRecord.status)) {
     toast("Dit bericht is al ingediend en kan niet meer worden aangepast.");
@@ -13704,7 +13720,10 @@ document.querySelector("#employee-customer-timesheet-skip").addEventListener("cl
   else showSkipCustomerTimesheet();
 });
 document.querySelector("#customer-timesheet-skip").addEventListener("click", () => {
-  const documentRecord = customerTimesheetFor(recordFor(currentEmployee().id, currentPeriod().key));
+  // Zelfde reden als de toelichting bij currentCustomerTimesheetPanelPeriod():
+  // dit knopje hoort bij het paneel met zijn eigen maand/jaar-picker, niet bij
+  // de globale periode.
+  const documentRecord = customerTimesheetFor(recordFor(currentEmployee().id, currentCustomerTimesheetPanelPeriod().key));
   if (documentRecord.status === "skipped") restoreSkippedCustomerTimesheet();
   else showSkipCustomerTimesheet();
 });
