@@ -897,6 +897,23 @@ html[data-skin="new"] .new-bento-week-actions { display: grid; gap: 8px; }
 html[data-skin="new"] .new-bento-week-actions .button { width: 100%; }
 
 html[data-skin="new"] .new-bento-gauge { display: grid; min-height: 315px; grid-column: 3; grid-row: 1; place-items: center; padding: 28px; text-align: center; }
+/* Zelfde reden als in styles.css: cijfers die onder elkaar of naast elkaar
+   staan moeten dezelfde breedte houden, anders verspringt de kolom zodra een
+   1 een 8 wordt. Raakt alleen cijfers, niet de seriffen koppen zelf. */
+html[data-skin="new"] .new-bento-day input,
+html[data-skin="new"] .new-bento-ring,
+html[data-skin="new"] .new-bento-total,
+html[data-skin="new"] .new-bento-steps,
+html[data-skin="new"] .new-admin-pipeline,
+html[data-skin="new"] .new-admin-employee-track,
+html[data-skin="new"] .data-table,
+html[data-skin="new"] .hours-table,
+html[data-skin="new"] .status-pill,
+html[data-skin="new"] .nav-count,
+html[data-skin="new"] .nav-count-group {
+  font-variant-numeric: tabular-nums;
+}
+
 html[data-skin="new"] .new-bento-ring { display: grid; width: 220px; height: 220px; place-items: center; border-radius: 50%; background: conic-gradient(#68b47a var(--bento-progress, 0%), rgba(255,255,255,.08) 0); }
 html[data-skin="new"] .new-bento-ring::before { content: ""; position: absolute; width: 190px; height: 190px; border-radius: 50%; background: #0d2235; }
 html[data-skin="new"] .new-bento-ring > div { position: relative; z-index: 1; }
@@ -2161,6 +2178,32 @@ html[data-skin="new"] #view-dashboard :is(.metric-link, .text-button) {
 html[data-skin="new"] #view-dashboard .admin-task-panel,
 html[data-skin="new"] #view-dashboard .customer-timesheet-admin-panel {
   overflow: hidden;
+}
+
+/* Maandverdeling (zie .admin-task-months in styles.css) in de donkere
+   New-opmaak: geen witte kaartjes maar verdiepte vlakken, mint-accent voor
+   het aandeel. Zelfde structuur, eigen karakter. */
+html[data-skin="new"] .admin-task-month {
+  border-color: rgba(255, 255, 255, .1);
+  background: rgba(255, 255, 255, .04);
+}
+
+html[data-skin="new"] .admin-task-month b {
+  color: #8ea3ad;
+}
+
+html[data-skin="new"] .admin-task-month i {
+  background: rgba(255, 255, 255, .12);
+}
+
+html[data-skin="new"] .admin-task-month i::before {
+  background: #4bb188;
+}
+
+html[data-skin="new"] .admin-task-month u {
+  color: #eef3ee;
+  font-family: var(--path-serif);
+  font-size: 15px;
 }
 
 @media (max-width: 980px) {

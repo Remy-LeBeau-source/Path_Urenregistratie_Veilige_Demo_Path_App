@@ -464,6 +464,30 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .workflow-line.is-done { background: var(--mint); }
 
 .table-wrap { overflow-x: auto; }
+/* Cijfers die onder elkaar staan horen ook onder elkaar uit te lijnen.
+   Zonder tabular-nums is een "1" smaller dan een "8", waardoor urenkolommen,
+   bedragen en tellers subtiel gaan dansen zodra het cijfer verandert. Dit
+   raakt alleen cijferbreedtes, letters blijven ongemoeid -- daarom kan het
+   ruim worden toegepast op alles waar getallen in kolommen of naast elkaar
+   staan. */
+.data-table,
+.hours-table,
+.metric-card > strong,
+.hero-task-math,
+.summary-card dd,
+.employee-history,
+.admin-task-row,
+.progress-ring,
+.hero-owner-badge,
+.status-pill,
+.nav-count,
+.nav-count-group,
+#hours-total,
+#hours-visible-total,
+#close-progress-value {
+  font-variant-numeric: tabular-nums;
+}
+
 .data-table, .hours-table { width: 100%; border-collapse: collapse; }
 .data-table th, .data-table td { padding: 14px 22px; border-top: 1px solid #edf1f2; text-align: left; white-space: nowrap; }
 .data-table th { color: var(--tabelkop); font-size: 9px; letter-spacing: .07em; text-transform: uppercase; }
@@ -1155,6 +1179,20 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
    en links uitgelijnde tekst las hij als een half getekend kader met veel lege
    ruimte ernaast. Een gevuld mintvlak met gecentreerde tekst leest als een echte
    knop. */
+/* Maandverdeling als tegels i.p.v. een rekensom in de samenvattingszin.
+   Elke tegel: maandnaam, een balkje dat het aandeel toont t.o.v. de drukste
+   maand, en het getal zelf -- dat getal blijft leidend, het balkje is alleen
+   om in één oogopslag te zien waar het zwaartepunt ligt. */
+.admin-task-months { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+/* Vaste kolombreedtes: anders krijgt "AUGUSTUS" een smallere balkbaan dan
+   "JULI" en zijn de balkjes onderling niet meer te vergelijken -- precies
+   wat zo'n verdeling juist zichtbaar moet maken. */
+.admin-task-month { display: grid; grid-template-columns: 68px 1fr 22px; align-items: center; gap: 8px; flex: 0 0 auto; border: 1px solid var(--line); border-radius: 10px; padding: 7px 11px; background: var(--vlak); }
+.admin-task-month b { overflow: hidden; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .04em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.admin-task-month i { display: block; width: 56px; height: 4px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.admin-task-month i::before { content: ""; display: block; width: var(--aandeel, 0%); height: 100%; border-radius: 999px; background: var(--mint); }
+.admin-task-month u { color: var(--navy-tekst); font-size: 13px; font-weight: 800; text-decoration: none; font-variant-numeric: tabular-nums; }
+
 .admin-task-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 9px; flex: 0 0 auto; white-space: nowrap; border-color: transparent; background: var(--green-light); color: var(--mint-dark-tekst); font-weight: 800; }
 .admin-task-toggle:hover { background: color-mix(in srgb, var(--green-light) 76%, var(--mint)); }
 .admin-task-toggle-chevron { width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); transition: transform .18s ease; }

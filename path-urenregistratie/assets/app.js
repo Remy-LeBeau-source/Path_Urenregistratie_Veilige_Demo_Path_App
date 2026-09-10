@@ -5771,6 +5771,42 @@ function adminTaskMonthEquation(tasks, includeTotal = true) {
   return includeTotal ? equation + " = " + tasks.length : equation;
 }
 
+// De open acties per maand als uitgelijnde tegels in plaats van een rekensom
+// in een volzin. Zelfde cijfers, zelfde totaal, maar in één oogopslag te zien
+// welke maand het zwaarst is -- een verdeling hoort een verdeling te zijn.
+// De balkjes zijn puur relatief t.o.v. de drukste maand; het getal ernaast
+// blijft leidend, zodat het totaal narekenbaar blijft (dat was de reden dat
+// de rekensom er ooit kwam, zie de tests bij "bewijsbaar").
+function renderAdminTaskMonthChips(tasks, filter) {
+  const host = document.querySelector("#admin-task-months");
+  if (!host) return;
+  const groups = groupAdminTasksByMonth(tasks);
+  // Alleen bij het volledige overzicht: bij een filter ("Bij Backoffice" /
+  // "Bij medewerkers") vertelt de samenvattingsregel het aantal maanden al,
+  // en zouden de tegels een tweede, afwijkende telling suggereren.
+  if (filter !== "all" || groups.length < 2) {
+    host.hidden = true;
+    host.innerHTML = "";
+    return;
+  }
+  const hoogste = groups.reduce((max, group) => Math.max(max, group.tasks.length), 0) || 1;
+  host.hidden = false;
+  host.innerHTML = groups.map(group => {
+    const aantal = group.tasks.length;
+    const maand = group.period.label.split(" ")[0];
+    const breedte = Math.max(6, Math.round((aantal / hoogste) * 100));
+    // Bewust data-admin-task-month-chip en niet data-admin-task-month: dat
+    // laatste is al in gebruik voor de maandgroepen in de takenlijst zelf
+    // (met [data-admin-task-row]-kinderen). Hetzelfde attribuut hier zou die
+    // selector kapen -- precies wat de smoke test terecht opmerkte.
+    return '<span class="admin-task-month" data-admin-task-month-chip="' + escapeHtml(group.period.key) + '">' +
+      '<b>' + escapeHtml(maand) + '</b>' +
+      '<i style="--aandeel:' + breedte + '%"></i>' +
+      '<u>' + aantal + '</u>' +
+    '</span>';
+  }).join("");
+}
+
 function renderAdminTaskQueue() {
   const panel = document.querySelector("#admin-task-panel");
   if (!panel) return;
@@ -5802,7 +5838,14 @@ function renderAdminTaskQueue() {
       ? actionable.length + " acties die Backoffice nu kan oppakken, verdeeld over " + filteredMonthGroups.length + " " + (filteredMonthGroups.length === 1 ? "maand" : "maanden") + "."
       : filter === "waiting"
         ? waiting.length + " acties waarvoor medewerkers eerst iets moeten indienen of corrigeren, verdeeld over " + filteredMonthGroups.length + " " + (filteredMonthGroups.length === 1 ? "maand" : "maanden") + "."
-        : tasks.length + " open " + (tasks.length === 1 ? "actie" : "acties") + " in " + taskDossiers + " " + (taskDossiers === 1 ? "dossier" : "dossiers") + ": " + adminTaskMonthEquation(tasks) + ". Backoffice kan " + actionable.length + " oppakken; " + waiting.length + " " + (waiting.length === 1 ? "wacht" : "wachten") + " op medewerkers. Iedere regel hieronder is één actie.";
+        // De maandverdeling stond hier tot nu toe als rekensom middenin de zin
+        // ("... in 14 dossiers: Juni 3 + Juli 5 + Augustus 4 = 20. Backoffice
+        // kan ..."). Diezelfde som staat in Klassiek al in het blok bovenaan,
+        // en als lopende tekst leest een verdeling nu eenmaal slecht. De cijfers
+        // zelf blijven volledig zichtbaar en narekenbaar, maar staan nu als
+        // uitgelijnde maandtegels onder deze regel (zie #admin-task-months).
+        : tasks.length + " open " + (tasks.length === 1 ? "actie" : "acties") + " in " + taskDossiers + " " + (taskDossiers === 1 ? "dossier" : "dossiers") + ". Backoffice kan " + actionable.length + " oppakken; " + waiting.length + " " + (waiting.length === 1 ? "wacht" : "wachten") + " op medewerkers. Iedere regel hieronder is één actie.";
+  renderAdminTaskMonthChips(tasks, filter);
   document.querySelector("#admin-task-filters").innerHTML = [
     ["all", "Alle acties", tasks.length],
     ["actionable", "Bij Backoffice", actionable.length],
