@@ -6,12 +6,19 @@ Vastgelegd zodat er een concrete, verifieerbare volgorde is i.p.v. losjes
 "iets oppakken" -- wordt hierboven vervangen/verwijderd zodra de nacht om is
 en er een echte samenvatting voor komt.
 
-1. **Screenshot-audit New-skin vs. mockups.** Met Playwright (of de lokale
-   `127.0.0.1:8011`-server) een screenshot per hoofdscherm maken (Dashboard,
-   Mijn uren, Goedkeuringen, Instellingen, factuurdetail-modal) en naast de
-   bijbehorende `design-mockups/1414-path-bento-space/*.jpg` /
-   `pilot/1919-beheerder.html` leggen. Doel: een concrete lijst met echte
-   verschillen, niet giswerk.
+1. ✅ **Screenshot-audit New-skin vs. mockups** (10 september, nacht).
+   Wegwerpscript (niet meegecommit) maakte screenshots van Dashboard, Mijn
+   uren, Goedkeuringen, Instellingen en Facturen in `skin=new`, met
+   `animations: 'disabled'` nodig om de fullPage-screenshots niet te laten
+   hangen op een lopende CSS-animatie. Geen concrete visuele fouten
+   gevonden -- alle vijf schermen zien er consistent en op stijl uit; de
+   "Open detail"-knop op Facturen leidde in dit scenario (alle maanden
+   geblokkeerd) niet ergens zichtbaars heen, verder onderzoek daarvan is
+   losstaand van deze audit blijven liggen. Kleine losse observatie (niet
+   aangeraakt, buiten scope): de vaste "Hulp & contact"-bubble rechtsonder
+   overlapt op een lange pagina soms een statuslabel eronder (bv. een rij in
+   Verhalen per medewerker) -- normaal gedrag voor een fixed-position widget,
+   geen regressie, geen actie ondernomen.
 2. **Fijnslijpen uit §5, in volgorde van impact**, één voor één, elk met
    lokale verificatie (§4-recept) + push + CI-check ertussen, nooit alles
    tegelijk:
