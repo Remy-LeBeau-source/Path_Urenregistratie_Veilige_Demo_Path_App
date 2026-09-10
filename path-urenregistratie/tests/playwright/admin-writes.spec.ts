@@ -1754,6 +1754,10 @@ test('[ADM-WR-H-022] "Open werkvoorraad" op het dashboard springt naar een panee
   await loginPage.open();
   await loginPage.loginAsAdmin();
   await page.setViewportSize({ width: 1440, height: 1000 });
+  // Zonder deze wachtstap kon de klik soms vallen tijdens de asynchrone
+  // werkvoorraad-sync, waarin de pagina nog herschikt -- zelfde patroon als
+  // SKIN-H-008 in skin.spec.ts.
+  await expect(page.locator('#dashboard-next-action-label')).not.toHaveText(/laden/i, { timeout: 20_000 });
   await expect(page.locator('#open-work-queue')).toBeVisible();
 
   await page.locator('#open-work-queue').click();

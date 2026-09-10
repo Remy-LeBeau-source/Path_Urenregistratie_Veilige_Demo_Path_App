@@ -1316,6 +1316,10 @@ test.describe('email queue api', () => {
     await test.step('Given een goedgekeurde maar nog niet definitieve serverfactuur als Backoffice-taak klaarstaat', async () => {
       await login.open();
       await login.loginAsAdmin();
+      // Zonder deze wachtstap kon de klik soms vallen tijdens de asynchrone
+      // werkvoorraad-sync, waarin de pagina nog herschikt -- zelfde patroon
+      // als SKIN-H-008 in skin.spec.ts.
+      await expect(page.locator('#dashboard-next-action-label')).not.toHaveText(/laden/i, { timeout: 20_000 });
       await page.locator('#hero-backoffice-filter').click();
       await expect(page.locator('[data-admin-task-filter="actionable"]')).toHaveClass(/is-active/);
       const task = page.locator('[data-admin-task-invoice="4"][data-period-key="2026-08"]');

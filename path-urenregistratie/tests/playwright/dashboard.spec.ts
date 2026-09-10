@@ -649,7 +649,12 @@ test('[DASH-N-008] voorbeeldgegevens herstellen houdt alle werkvoorraadtellers g
   });
 
   await test.step('Then blijven de concrete taakregels leidend en verschijnt geen oude teller', async () => {
-    await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
+    // "Herstel demo" laat je sindsdien op het scherm staan waar je was
+    // (op verzoek van de gebruiker: "als ik druk op demo herstel dan wil ik
+    // blijven op de pagina waar ik werkte") in plaats van altijd terug naar
+    // het Dashboard te springen -- deze test opende eerst Instellingen, dus
+    // daar hoort de admin ook te blijven na de reset.
+    await expect(page.locator('#view-settings')).toHaveClass(/is-active/);
     // After reset, isLocalResetAuthoritative() intentionally blocks re-syncing server/API
     // state (that's the fixed v0.9.44 behavior guarding against stale-state leakage), so the
     // counter must fall back to the static local demo baseline — a fixed, code-defined value,
