@@ -536,6 +536,17 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .hours-week-filter::-webkit-scrollbar-thumb { border-radius: 999px; background: var(--mint); }
 .hours-week-filter button { flex: 0 0 auto; white-space: nowrap; }
 .hours-week-scroll-hint { display: none; }
+/* Testfeedback: de native scrollbar op .hours-week-filter (hierboven) blijft
+   op mobiel onzichtbaar tot je actief aan het schuiven bent -- veel mobiele
+   browsers verbergen overlay-scrollbars zolang er niets aangeraakt wordt,
+   dus een stilstaand scherm liet nergens zien dat er meer weken te vinden
+   waren. Deze eigen balk is altijd zichtbaar (geen overlay-gedrag), werkt
+   identiek in licht en donker (token-kleuren), en toont via JS (setHoursWeekScrollThumb
+   in app.js) hoeveel er te zien is en hoever al geschoven is.
+   #hours-week-scroll-track staat hidden totdat JS vaststelt dat er
+   daadwerkelijk meer te schuiven valt dan het zichtbare deel. */
+.hours-week-scroll-track { position: relative; height: 4px; margin: 6px 4px 0; border-radius: 999px; background: var(--line); overflow: hidden; }
+.hours-week-scroll-thumb { position: absolute; top: 0; left: 0; height: 100%; min-width: 18px; border-radius: 999px; background: var(--mint); }
 .hours-visible-total { text-align: right; }
 .hours-visible-total span, .hours-visible-total strong { display: block; }
 .hours-visible-total span { color: var(--muted); font-size: 9px; text-transform: uppercase; }
@@ -545,11 +556,18 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .hours-table tbody tr { transition: background .15s ease; }
 .hours-table tbody tr:hover { background: var(--vlak); }
 .hours-table td:first-child { min-width: 100px; color: var(--teal); font-size: 11px; font-weight: 800; }
-.hours-day-entry { display: grid; justify-items: center; gap: 7px; width: fit-content; margin: 0 auto; cursor: text; }
+.hours-day-entry { display: grid; justify-items: center; gap: 7px; width: fit-content; margin: 0 auto; }
 .hours-table .date-number { display: inline-flex; min-width: 46px; min-height: 19px; align-items: center; justify-content: center; border-radius: 999px; background: var(--green-light); color: var(--teal); font-size: 9px; font-weight: 900; letter-spacing: .02em; text-transform: lowercase; }
 .hours-table input { width: 64px; height: 42px; border: 1px solid var(--line); border-radius: 11px; background: var(--vlak); color: var(--navy-tekst); font-size: 14px; font-weight: 700; text-align: center; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
 .hours-table input:hover { border-color: #b9d9d1; }
 .hours-table input:focus { outline: 0; border-color: var(--mint); box-shadow: 0 0 0 4px rgba(58,189,157,.14); transform: translateY(-1px); }
+/* Testfeedback: 0/8/9-snelkeuze bestond alleen in Nieuw se bento-kaartjes;
+   Klassiek had helemaal geen snelkeuze. Compact onder het uurveld, altijd
+   zichtbaar per dag (net als in Nieuw, na dezelfde feedback daar). */
+.hours-day-presets { display: flex; gap: 3px; width: 64px; }
+.hours-day-presets button { flex: 1 1 0; min-height: 22px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--vlak); color: var(--navy-tekst); font-size: 10px; font-weight: 700; cursor: pointer; }
+.hours-day-presets button:hover { border-color: var(--mint); background: var(--green-light); color: var(--teal); }
+.hours-day-presets button:disabled { cursor: default; opacity: .5; }
 .hours-table .outside-month { background: var(--vlak); color: var(--muted); }
 .outside-month-mark { display: grid; width: 64px; height: 42px; place-items: center; margin: 26px auto 0; border-radius: 11px; background: var(--vlak-zacht); color: var(--muted); }
 .hours-table .week-total { color: var(--navy-tekst); font-size: 12px; font-weight: 800; }

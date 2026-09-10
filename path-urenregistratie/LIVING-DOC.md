@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 473 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 474 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 473 unieke case-ID's
+- Playwright executable cases: 474 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 474 unieke case-ID's
+- Totaal executable cases: 475 unieke case-ID's
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29
 - Database steps mappings: 1
-- Uitvoeringen: 508
-- Niet-mobile projectuitvoeringen: 438
+- Uitvoeringen: 509
+- Niet-mobile projectuitvoeringen: 439
 - Mobile functionele cases: 35
 - Pixel 7 / Chromium-uitvoeringen: 35
 - iPhone 13 / WebKit-uitvoeringen: 35
 
-De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 473 Playwright-functionele cases in totaal 508 resultaten op: 438 + (35 x 2) = 508.
+De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 474 Playwright-functionele cases in totaal 509 resultaten op: 439 + (35 x 2) = 509.
 
 ## Documentatieketen
 
@@ -371,7 +371,7 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 473 Playwri
 - Cases: 24
 
 - [MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikbaar — Techniek: Responsive viewport + end-to-end use-case · Assertions: 31
-- [MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documentupload bereiken — Techniek: Responsive viewport + end-to-end use-case · Assertions: 16
+- [MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documentupload bereiken — Techniek: Responsive viewport + end-to-end use-case · Assertions: 18
 - [MOB-H-003] mobiele correctie herindiening en administratieve goedkeuring zijn bereikbaar — Techniek: Responsive viewport + end-to-end use-case · Assertions: 10
 - [MOB-N-004] mobiele facturen touch targets en modals blijven binnen viewport — Techniek: Responsive viewport + end-to-end use-case · Assertions: 13
 - [MOB-H-005] mobiele verzendadministratie blijft leesbaar en toont geen geheime inhoud — Techniek: Responsive viewport + end-to-end use-case · Assertions: 15
@@ -573,7 +573,7 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 473 Playwri
 
 - Feature: `tests/playwright/features/skin.feature`
 - Source: `tests/playwright/skin.spec.ts`
-- Cases: 24
+- Cases: 25
 
 - [SKIN-H-001] de app start standaard in de klassieke vormgeving — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
 - [SKIN-H-002] Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
@@ -599,6 +599,7 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 473 Playwri
 - [SKIN-H-022] een tweede herlading zet de skin/thema-voorkeur niet terug naar standaard — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 8
 - [SKIN-H-023] "Standaardweek/-maand vullen" vult alleen lege dagen met het eigen werkpatroon, in Nieuw en Klassiek — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 26
 - [SKIN-H-024] "Volgende actie" bovenaan Open acties per maand toont de eerstvolgende stap en blijft op het Dashboard — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 9
+- [SKIN-H-025] de 0/8/9-snelkeuze bij elke dag staat altijd zichtbaar, in Klassiek en in Nieuw — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
 
 ### Correctie- en goedkeuringsproces
 

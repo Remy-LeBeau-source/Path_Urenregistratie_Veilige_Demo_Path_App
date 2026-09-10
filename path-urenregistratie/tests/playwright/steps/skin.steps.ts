@@ -100,3 +100,6 @@ And("toont Mijn uren dezelfde knop, die van naam wisselt tussen week en hele maa
 And("blijft de knop ook in Klassiek werken");
 When("op de knop van de Volgende actie wordt geklikt");
 Then("blijft het Dashboard actief, net als bij de losse maandregels eronder");
+Given("Klassiek: minstens twee losse dagcellen tonen allebei hun eigen 0/8/9, zonder te focussen");
+When("naar Nieuw wordt gewisseld op dezelfde week");
+Then("tonen minstens twee bento-dagkaartjes allebei hun eigen 0/8/9, zonder te focussen");

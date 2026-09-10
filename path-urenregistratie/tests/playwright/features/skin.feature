@@ -215,3 +215,11 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     Given de medewerker Nieuw activeert op het Dashboard
     When op de knop van de Volgende actie wordt geklikt
     Then blijft het Dashboard actief, net als bij de losse maandregels eronder
+
+  @happy
+  Scenario: [SKIN-H-025] de 0/8/9-snelkeuze bij elke dag staat altijd zichtbaar, in Klassiek en in Nieuw
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 11
+    Given Klassiek: minstens twee losse dagcellen tonen allebei hun eigen 0/8/9, zonder te focussen
+    When naar Nieuw wordt gewisseld op dezelfde week
+    Then tonen minstens twee bento-dagkaartjes allebei hun eigen 0/8/9, zonder te focussen
