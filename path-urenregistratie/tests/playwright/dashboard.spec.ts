@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { expect, test } from '@playwright/test';
 import { captureConsoleErrors, clearConsoleErrors } from './fixtures/consoleErrors';
 import { useFixedDemoClock } from './fixtures/fixedDemoClock';
+import { suppressInstallBanner } from './fixtures/suppressInstallBanner';
 import { DashboardPage } from './pages/DashboardPage';
 import { LoginPage } from './pages/LoginPage';
 import { attachBusinessScreenshot } from './reporting/uiAttachments';
@@ -10,6 +11,7 @@ import { openPaneel, openProfielmenu } from './pages/TopbarMenu';
 
 test.beforeEach(async ({ page }) => {
   await useFixedDemoClock(page);
+  await suppressInstallBanner(page);
 });
 
 type MutableRecord = {
@@ -709,8 +711,9 @@ test('[DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus', as
   });
 
   await test.step('And Backoffice kan Marc zijn klanturenstaat goedkeuren zonder statusrace', async () => {
-    await page.locator('#switch-role').click();
-    await expect(page.locator('#login-screen')).toBeVisible();
+    // #switch-role is de desktop-knop; op mobiel zit dezelfde actie achter
+    // #mobile-switch-role. loginPage.logout() kent dat onderscheid al.
+    await loginPage.logout();
     await loginPage.loginAsAdmin();
     await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
     await page.locator('#hero-backoffice-filter').click();
@@ -807,8 +810,18 @@ test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker e
     buffer: Buffer.from('%PDF-1.4\n% GUI closeout test', 'utf8'),
   };
 
+  // #switch-role is de desktop-topbar-knop; op mobiel zit dezelfde actie
+  // achter #mobile-switch-role (zie LoginPage.logout()).
+  async function switchRoleIfNeeded(): Promise<void> {
+    if (!(await page.locator('#app-shell').isVisible())) return;
+    const desktop = page.locator('#switch-role');
+    const mobile = page.locator('#mobile-switch-role');
+    if (await desktop.isVisible()) await desktop.click();
+    else if (await mobile.isVisible()) await mobile.click();
+  }
+
   async function openDemoEmployee(employeeId: number): Promise<void> {
-    if (await page.locator('#app-shell').isVisible()) await page.locator('#switch-role').click();
+    await switchRoleIfNeeded();
     await expect(page.locator('#login-screen')).toBeVisible();
     await page.locator('#login-employee-trigger').click();
     const choices = page.locator('#login-employee-choices');
@@ -820,7 +833,7 @@ test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker e
   }
 
   async function openDemoAdmin(): Promise<void> {
-    if (await page.locator('#app-shell').isVisible()) await page.locator('#switch-role').click();
+    await switchRoleIfNeeded();
     await expect(page.locator('#login-screen')).toBeVisible();
     await page.locator('#login-admin-trigger').click();
     const choices = page.locator('#login-admin-choices');

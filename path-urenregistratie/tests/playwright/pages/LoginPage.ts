@@ -25,6 +25,16 @@ export class LoginPage {
   }
 
   async logout(): Promise<void> {
+    // Een open hulp-paneel overlapt op een smalle (mobiele) viewport de
+    // header en onderschept daarmee de klik op de uitlogknop hieronder.
+    // Kort en falend-stil: tussen deze check en de klik kan het paneel al
+    // vanzelf gesloten zijn (bv. na een navigatie-knop erin) -- dan is er
+    // niets meer te sluiten, en een lange actionability-wait op een element
+    // dat nooit meer stabiel wordt, mag de test niet laten vastlopen.
+    if (await this.page.locator('#help-panel.is-open').count()) {
+      await this.page.locator('#help-close').click({ timeout: 3_000 }).catch(() => {});
+    }
+
     const desktop = this.page.locator('#switch-role');
     const mobile = this.page.locator('#mobile-switch-role');
 

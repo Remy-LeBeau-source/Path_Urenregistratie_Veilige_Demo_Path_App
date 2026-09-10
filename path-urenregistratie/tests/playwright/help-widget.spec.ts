@@ -1,8 +1,13 @@
 import { expect, test } from '@playwright/test';
 import { AuthApi } from './api/AuthApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
+import { suppressInstallBanner } from './fixtures/suppressInstallBanner';
 import { setLeaveSickEntryEnabled } from './helpers/companySettings';
 import { LoginPage } from './pages/LoginPage';
+
+test.beforeEach(async ({ page }) => {
+  await suppressInstallBanner(page);
+});
 
 // Dekkingsronde: "Hulp & contact" had alleen een dunne mobile-only check
 // (openen/topic-klik/sluiten in mobile-ui.spec.ts) en verder uitsluitend
@@ -143,12 +148,23 @@ test('[HELP-H-004] het hulpantwoord over verlof/ziekte volgt de beheerderschakel
       await loginPage.open();
       await loginPage.loginAsEmployee();
       await expect(await vraagVerlofAntwoord()).toContainText('Verlof en ziekte staan hier uit');
+      // LoginPage.logout() sluit een open hulp-paneel zelf al eerst.
       await loginPage.logout();
     });
 
     await test.step('When de beheerder verlof/ziekte handmatig invullen aanzet', async () => {
       await loginPage.loginAsAdmin();
       await page.locator('button[data-view="settings"]').click();
+      // Op een smalle (mobiele) viewport zijn instellingenkaarten inklapbaar
+      // (@media max-width:700px, data-settings-collapsible): de Organisatie-
+      // kaart start dichtgeklapt en moet eerst geopend worden, anders staat
+      // dit veld op display:none via .settings-card > * -- niet gewoon een
+      // kwestie van scrollen.
+      const organizationCard = page.locator('#settings-organization');
+      if (await organizationCard.getAttribute('data-settings-collapsible') === 'true'
+        && await organizationCard.getAttribute('data-settings-open') !== 'true') {
+        await organizationCard.locator('.settings-card-heading').click();
+      }
       const toggle = page.locator('#setting-leave-sick-entry-enabled');
       await expect(toggle).not.toBeChecked();
       await toggle.click();
