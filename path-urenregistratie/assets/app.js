@@ -1920,6 +1920,31 @@ function buildTimesheetWritePayload(action) {
  * moment van indienen, zodat de bijlage exact overeenkomt met wat net is
  * verstuurd, en meegestuurd als base64 in de submit-payload.
  */
+// Wat hier op de pagina moet zodra er een nieuwe begint (kop is alleen op
+// pagina 1; vervolgpagina's krijgen alleen de tabelkop terug).
+function drawTimesheetReceiptContinuationHeader(doc, ink, muted, period) {
+  doc.setTextColor(...muted);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.text(String(period.label || "") + " (vervolg)", 15, 14);
+  let y = 22;
+  doc.setTextColor(...ink);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.text("Dag", 15, y);
+  doc.text("Uren", 195, y, { align: "right" });
+  y += 4;
+  doc.setDrawColor(...muted);
+  doc.line(15, y, 195, y);
+  return y + 5.5;
+}
+
+// Uitgebreide kwitantie: volledige datum (dag, maand, jaar) per regel i.p.v.
+// alleen een dagnummer, gegroepeerd per week met een weeknummer en
+// subtotaal, een infoblok (klant/opdracht, rol, contracturen, periode) en
+// een ondertekenblok met het logo nogmaals onderaan -- op verzoek van de
+// gebruiker ("mag de pdf voller, meer inhoud, maand dag jaar etc" /
+// "logo bij handtekening?").
 function buildTimesheetReceiptPdfBase64(employee, period, record) {
   const jspdf = window.jspdf;
   if (!jspdf || typeof jspdf.jsPDF !== "function") return null;
@@ -1949,7 +1974,38 @@ function buildTimesheetReceiptPdfBase64(employee, period, record) {
   doc.text(String(employee.name || ""), 195, 22, { align: "right" });
   doc.text(String(period.label || ""), 195, 27, { align: "right" });
 
-  let y = 44;
+  // Infoblok: alles wat de ontvanger nodig heeft om de staat te duiden
+  // zonder terug te hoeven bladeren naar de app -- klant/opdracht, rol,
+  // contracturen per week en de volledige periode-range.
+  let y = 42;
+  const firstDay = period.weekRows.flatMap(week => week.days).find(Boolean);
+  const lastDay = period.weekRows.flatMap(week => week.days).filter(Boolean).pop();
+  const periodRange = firstDay && lastDay
+    ? (firstDay === lastDay ? firstDay.label : firstDay.label + " – " + lastDay.label)
+    : period.label;
+  const infoRows = [
+    ["Klant / opdracht", String(employee.client || "—")],
+    ["Rol", String(employee.role || "—")],
+    ["Contracturen", hoursFormat.format(weeklyHoursFor(employee)) + " uur/week"],
+    ["Periode", periodRange]
+  ];
+  doc.setFontSize(8.5);
+  infoRows.forEach((row, index) => {
+    const columnX = index % 2 === 0 ? 15 : 108;
+    const rowY = y + Math.floor(index / 2) * 8;
+    doc.setTextColor(...muted);
+    doc.setFont("helvetica", "normal");
+    doc.text(row[0], columnX, rowY);
+    doc.setTextColor(...ink);
+    doc.setFont("helvetica", "bold");
+    doc.text(row[1], columnX, rowY + 4.2);
+  });
+  y += Math.ceil(infoRows.length / 2) * 8 + 6;
+
+  doc.setDrawColor(...muted);
+  doc.line(15, y, 195, y);
+  y += 7;
+
   doc.setTextColor(...ink);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
@@ -1959,32 +2015,83 @@ function buildTimesheetReceiptPdfBase64(employee, period, record) {
   doc.setDrawColor(...muted);
   doc.line(15, y, 195, y);
   y += 5.5;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
+
+  const ensureSpace = neededMm => {
+    if (y <= 280 - neededMm) return;
+    doc.addPage();
+    y = drawTimesheetReceiptContinuationHeader(doc, ink, muted, period);
+  };
 
   period.weekRows.forEach((week, weekIndex) => {
+    const actualDays = week.days.filter(Boolean);
+    if (!actualDays.length) return;
+    ensureSpace(5.2);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8.5);
+    doc.setTextColor(...muted);
+    doc.text("Week " + week.number + " · " + week.year, 15, y);
+    y += 5.2;
+
+    let weekTotal = 0;
     week.days.forEach((day, dayIndex) => {
       if (!day) return;
-      if (y > 280) {
-        doc.addPage();
-        y = 20;
-      }
+      ensureSpace(5.2);
       const raw = Number(record.entries?.[weekIndex]?.[dayIndex] || 0);
       const hours = Math.round(Math.max(0, raw) * 100) / 100;
-      doc.text("Dag " + String(day.day).padStart(2, "0"), 15, y);
-      doc.text(hoursFormat.format(hours) + " uur", 195, y, { align: "right" });
+      const confirmed = Boolean(record.confirmedEntries?.[weekIndex]?.[dayIndex]);
+      weekTotal += hours;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(...ink);
+      doc.text(WEEKDAY_SHORT[dayIndex] + " " + day.label, 15, y);
+      if (hours === 0 && !confirmed) {
+        doc.setTextColor(...muted);
+        doc.text("Niet ingevuld", 195, y, { align: "right" });
+      } else {
+        doc.text(hoursFormat.format(hours) + " uur", 195, y, { align: "right" });
+      }
       y += 5.2;
     });
+
+    ensureSpace(6);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8.5);
+    doc.setTextColor(...muted);
+    doc.text("Subtotaal week " + week.number, 15, y);
+    doc.text(hoursFormat.format(weekTotal) + " uur", 195, y, { align: "right" });
+    y += 7;
   });
 
-  y += 2.5;
+  ensureSpace(14);
   doc.setDrawColor(...muted);
   doc.line(15, y, 195, y);
   y += 6.5;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10.5);
+  doc.setTextColor(...ink);
   doc.text("Totaal", 15, y);
   doc.text(hoursFormat.format(totalEntries(record.entries)) + " uur", 195, y, { align: "right" });
+
+  // Ondertekenblok: dezelfde afzendtekst als de begeleidende mail
+  // (state.settings.mailSignature), met het logo er nogmaals bij -- niet
+  // alleen bovenaan, ook bij de afsluiting van het document zelf.
+  y += 16;
+  ensureSpace(20);
+  doc.setDrawColor(...muted);
+  doc.line(15, y, 90, y);
+  y += 6;
+  try {
+    doc.addImage(brandLogoUrl("licht"), "PNG", 15, y - 4.5, 20, 9.2);
+  } catch (_error) {
+    // Zonder logo blijft de tekst hieronder als ondertekening staan.
+  }
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...muted);
+  doc.text("Met vriendelijke groet,", 40, y - 1.5);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...ink);
+  doc.text(String(state.settings.mailSignature || "Robot Path IT"), 40, y + 3);
 
   const dataUri = doc.output("datauristring");
   const base64 = String(dataUri || "").split(",")[1];
