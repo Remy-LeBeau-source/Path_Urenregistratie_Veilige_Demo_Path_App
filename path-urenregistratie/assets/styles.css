@@ -1085,6 +1085,17 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .employee-open-overview { scroll-margin-top: 110px; margin: 0 0 22px; overflow: hidden; border-radius: 22px; background-color: var(--vlak); background-image: linear-gradient(180deg, var(--vlak), var(--vlak-zacht)); box-shadow: 0 16px 34px rgba(13,27,56,.06); }
 .employee-open-overview .panel-heading { align-items: flex-start; }
 .employee-open-overview-list { display: grid; gap: 12px; padding: 0 24px 24px; }
+.employee-open-overview-next { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 24px 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); padding: 16px 18px; }
+.employee-open-overview-next > div { min-width: 0; }
+/* Zonder display:block liepen label/titel/detail (drie los tegen elkaar aan
+   staande inline-elementen: span.section-label + strong + small) zonder
+   spatie of regeleinde in elkaar over, bv. "...voor September 2026September
+   2026 · actie 1 van 2" -- gemeld door een TEST-tester (10 sep). */
+.employee-open-overview-next .section-label,
+.employee-open-overview-next strong,
+.employee-open-overview-next small { display: block; }
+.employee-open-overview-next strong { margin-top: 4px; color: var(--navy-tekst); font-size: 15px; }
+.employee-open-overview-next small { margin-top: 3px; color: var(--muted); font-size: 11px; }
 .employee-open-month { border: 1px solid var(--line); border-radius: 18px; background-color: var(--vlak); background-image: linear-gradient(135deg, var(--vlak), var(--vlak-zacht)); overflow: hidden; }
 .employee-open-month.is-current { border-color: var(--mint-dark); box-shadow: 0 0 0 2px rgba(37,150,124,.08), 0 12px 24px rgba(13,27,56,.08); }
 .employee-open-month-heading { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 14px; border: 0; background: transparent; color: inherit; cursor: pointer; font: inherit; padding: 15px 16px; text-align: left; transition: background .16s ease; }

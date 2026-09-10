@@ -1351,6 +1351,14 @@ test('[SKIN-H-024] "Volgende actie" bovenaan Open acties per maand toont de eers
     await expect(page.locator('#employee-open-overview-next-title')).not.toBeEmpty();
     await expect(page.locator('#employee-open-overview-next-meta')).toContainText('actie 1 van');
     await expect(page.locator('#employee-open-overview-next-action')).not.toBeEmpty();
+    // Regressie (10 sep, TEST-tester Shawn-Douglas): titel en periodedetail
+    // liepen zonder regeleinde in elkaar over ("...September 2026September
+    // 2026 · actie 1 van 2"), want strong/small stonden zonder display:block
+    // los tegen elkaar aan. Elk moet dus op een eigen regel (andere y) staan.
+    const titleBox = await page.locator('#employee-open-overview-next-title').boundingBox();
+    const metaBox = await page.locator('#employee-open-overview-next-meta').boundingBox();
+    expect(titleBox && metaBox, 'titel en periodedetail horen allebei een zichtbare bounding box te hebben').toBeTruthy();
+    expect(metaBox.y, 'periodedetail hoort op een eigen regel onder de titel te staan, niet ernaast').toBeGreaterThan(titleBox.y + titleBox.height - 2);
   });
 
   await test.step('When op de knop van de Volgende actie wordt geklikt', async () => {
