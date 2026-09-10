@@ -31,11 +31,26 @@ directe feedback. Klaar/gefixt (herontwerp, `a438525`/`8169a8d`):
    richting/goedkeuring. Voorstel: per scherm één kenmerkend visueel
    accent (kleur/icoon/heldere kop) bedenken en dat als plan voorleggen
    voor er wordt gebouwd.
-5. **PWA/"webapp"-criteria check** (installability) voor zowel Classic
-   als New — nog niet gedaan. Concreet: manifest.json (name, short_name,
-   icons incl. maskable, start_url, display, theme_color,
-   background_color), service worker, apple-touch-icon, viewport-meta
-   nalopen tegen de standaardcriteria en gaten dichten in beide skins.
+5. ✅ **PWA/"webapp"-criteria check** (installability) — nagelopen (10
+   september) en bleek al volledig aanwezig, voor beide skins (globale
+   `<head>`/scripts, skin-onafhankelijk): `manifest.php` (dynamische
+   naam per omgeving) + `manifest.webmanifest` (statische fallback) met
+   name/short_name/description/start_url/scope/display=standalone/
+   orientation/background_color/theme_color/lang/dir, iconen 192x192,
+   512x512 en een maskable-512-variant (allemaal aanwezig in
+   `assets/`), `sw.js` geregistreerd via `assets/pwa-install.js`
+   (bewust zonder fetch-handler -- zie hieronder), `apple-touch-icon`,
+   favicon, en alle iOS/Android-metatags (`mobile-web-app-capable`,
+   `apple-mobile-web-app-*`, `viewport-fit=cover`). Plus een eigen
+   install-banner met `beforeinstallprompt`-afhandeling, iOS-uitleg via
+   het deelmenu, een "al afgewezen"-cooldown van 30 dagen, en detectie
+   van een al geïnstalleerde app via `getInstalledRelatedApps`. Staat
+   ook al afgevinkt in `MASTERCHECKLIST.md` (Fase 15, regel 50 en
+   244-253) -- inclusief de eerdere fix van een fout-afgemeten icoon.
+   Enige bewust openstaande stuk is offline-gedrag/caching (Fase 16,
+   met reden uitgesteld tot een go-live-beslissing, zie `sw.js`'s eigen
+   commentaar) -- dat is geen installability-gat, dat is een
+   product/risico-beslissing voor de gebruiker.
 6. **Diepere datadesync onder de "Mailvoorbeeld"-toast**
    ("Deze verzending staat niet meer als beheeractie open" bij een rij
    die zelf status "ready" toont) -- zelfde soort bug als punt 3, maar
