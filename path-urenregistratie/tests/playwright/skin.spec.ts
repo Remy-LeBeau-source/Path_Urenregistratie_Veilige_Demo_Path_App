@@ -1300,3 +1300,51 @@ test('[SKIN-H-024] "Volgende actie" bovenaan Open acties per maand toont de eers
     await expect(page.locator('#view-timesheet')).not.toHaveClass(/is-active/);
   });
 });
+
+test('[SKIN-H-025] de 0/8/9-snelkeuze bij elke dag staat altijd zichtbaar, in Klassiek en in Nieuw', async ({ page }) => {
+  // Testfeedback: de snelkeuze bestond al in Nieuw se bento-kaartjes, maar
+  // verscheen alleen bij de actief geselecteerde/gefocuste dag -- bij de
+  // andere dagen (het merendeel van de week) was hij onvindbaar zonder eerst
+  // te tikken. Klassiek had de knoppen daarnaast helemaal niet. Beide nu
+  // gelijk: elke dag toont zijn eigen 0/8/9 zonder eerst te hoeven focussen.
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await page.locator('button[data-view="timesheet"]').click();
+  await expect(page.locator('#timesheet-status')).toBeVisible();
+
+  await test.step('Given Klassiek: minstens twee losse dagcellen tonen allebei hun eigen 0/8/9, zonder te focussen', async () => {
+    await expect(page.locator('#hours-grid .hours-input').first()).toBeVisible({ timeout: 10_000 });
+    const cellen = page.locator('#hours-grid .hours-day-entry:has(.hours-input:not([disabled]))');
+    await expect(cellen.first()).toBeVisible();
+    const aantal = await cellen.count();
+    test.skip(aantal < 2, 'Minder dan twee bewerkbare dagcellen deze periode.');
+    for (const index of [0, 1]) {
+      const presets = cellen.nth(index).locator('.hours-day-presets button');
+      await expect(presets).toHaveCount(3);
+      await expect(presets.first()).toBeVisible();
+    }
+    await cellen.first().locator('[data-hours-set="8"]').click();
+    await expect(cellen.first().locator('.hours-input')).toHaveValue('8');
+  });
+
+  await test.step('When naar Nieuw wordt gewisseld op dezelfde week', async () => {
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await page.locator('[data-hours-week-scope="week-0"]').click();
+  });
+
+  await test.step('Then tonen minstens twee bento-dagkaartjes allebei hun eigen 0/8/9, zonder te focussen', async () => {
+    const dagen = page.locator('#hours-grid-cards .new-bento-day:has(.new-bento-hours-input:not([disabled]))');
+    await expect(dagen.first()).toBeVisible();
+    const aantal = await dagen.count();
+    test.skip(aantal < 2, 'Minder dan twee bewerkbare dagkaartjes deze week.');
+    for (const index of [0, 1]) {
+      const presets = dagen.nth(index).locator('.new-bento-presets button');
+      await expect(presets).toHaveCount(3);
+      await expect(presets.first()).toBeVisible();
+    }
+    await dagen.first().locator('[data-new-bento-set="9"]').click();
+    await expect(dagen.first().locator('.new-bento-hours-input')).toHaveValue('9');
+  });
+});

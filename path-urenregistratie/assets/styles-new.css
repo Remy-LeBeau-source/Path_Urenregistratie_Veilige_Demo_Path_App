@@ -853,8 +853,11 @@ html[data-skin="new"] .new-bento-day input:disabled { border-color: transparent;
 html[data-skin="new"] .new-bento-day.is-active input:disabled { background: rgba(255,255,255,.08); color: #91a69d; }
 html[data-skin="new"] .new-bento-day.is-active .new-bento-day-control button { color: #d9e2dd; }
 html[data-skin="new"] .new-bento-day input:disabled { opacity: .55; }
-html[data-skin="new"] .new-bento-presets { display: none; grid-column: 2; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 3px 27px 2px; }
-html[data-skin="new"] .new-bento-day:is(.is-active, :focus-within) .new-bento-presets { display: grid; }
+/* Testfeedback: de 0/8/9-snelkeuze verscheen alleen bij de actief
+   geselecteerde/gefocuste dag -- bij alle andere dagen (het merendeel van de
+   week) was de knap onvindbaar zonder eerst het veld aan te tikken. Nu altijd
+   zichtbaar per dag, net als in Klassiek. */
+html[data-skin="new"] .new-bento-presets { display: grid; grid-column: 2; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 3px 27px 2px; }
 html[data-skin="new"] .new-bento-presets button { min-height: 34px; border: 1px solid #d5cab8; border-radius: 9px; background: #fbf8f2; color: #102235; cursor: pointer; font: 600 14px var(--path-sans); }
 html[data-skin="new"] .new-bento-presets button:hover { border-color: #5f9e78; background: #e6efe7; }
 html[data-skin="new"] .new-bento-week-total { display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid #cfc4b2; padding: 15px 5px 10px; }

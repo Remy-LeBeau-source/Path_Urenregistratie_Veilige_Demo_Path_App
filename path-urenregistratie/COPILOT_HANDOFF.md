@@ -29,6 +29,18 @@ main `97f3168`). Gebruiker vroeg mij het over te nemen.
    schrijven (volgt via de normale merge, gedeelde code dus geen apart risico).
 4. Cross-sessie samengewerkt met de herontwerp-peer (`path-herontwerp-actief-2b`)
    via `SendMessage` — geen overlap, beide kanten bevestigd.
+5. **Twee UI-testfeedback-items met screenshots opgepakt (v1.0.50):** (a) de
+   week-knoppenrij in Mijn uren toonde op mobiel geen betrouwbare "je kunt
+   hier schuiven"-hint — de native overlay-scrollbar bleef onzichtbaar tot
+   actief aanraken; eigen altijd-zichtbare balk toegevoegd
+   (`#hours-week-scroll-track`/`-thumb`). (b) de 0/8/9-snelkeuzeknoppen
+   bestonden al in Nieuw se bento-kaartjes maar alleen bij de actief
+   gefocuste dag, en in Klassiek helemaal niet; nu in beide skins altijd
+   zichtbaar per dag (gebruiker koos expliciet voor "altijd zichtbaar" bij
+   een tussenvraag). Zie `BESLISTABEL.md` R21/R22 voor het volledige verhaal,
+   inclusief een bijkomstige `<label>`→`<div>`-correctie in de klassieke
+   celmarkup om een dubbele klik-doorzetting naar het inputveld te voorkomen.
+   Nieuwe regressies `[MOB-H-002]` (uitgebreid) en `[SKIN-H-025]`.
 
 ## 10 september 2026 — vervolg door Codex: main en alle schermen
 

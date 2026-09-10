@@ -8071,6 +8071,29 @@ function renderHoursWeekFilter(period, scope) {
   document.querySelector("#hours-week-filter").innerHTML = buttons.map(button =>
     '<button type="button" class="' + (button.value === scope ? "is-active" : "") + '" data-hours-week-scope="' + button.value + '">' + escapeHtml(button.label) + '</button>'
   ).join("");
+  updateHoursWeekScrollThumb();
+}
+
+// Testfeedback: op mobiel is niet altijd duidelijk dat je langs de week-
+// knoppen kunt schuiven -- de native overlay-scrollbar blijft daar
+// onzichtbaar tot je er actief op raakt. Deze balk (#hours-week-scroll-track)
+// is altijd zichtbaar zodra er meer te schuiven valt dan het scherm toont,
+// en beweegt mee met de echte scrollpositie.
+function updateHoursWeekScrollThumb() {
+  const filter = document.querySelector("#hours-week-filter");
+  const track = document.querySelector("#hours-week-scroll-track");
+  const thumb = document.querySelector("#hours-week-scroll-thumb");
+  if (!filter || !track || !thumb) return;
+  const overflow = filter.scrollWidth - filter.clientWidth;
+  if (overflow <= 1) {
+    track.hidden = true;
+    return;
+  }
+  track.hidden = false;
+  const zichtbaarAandeel = Math.max(0.08, Math.min(1, filter.clientWidth / filter.scrollWidth));
+  const geschovenAandeel = Math.max(0, Math.min(1, filter.scrollLeft / overflow));
+  thumb.style.width = (zichtbaarAandeel * 100) + "%";
+  thumb.style.left = (geschovenAandeel * (1 - zichtbaarAandeel) * 100) + "%";
 }
 
 function renderHoursGrid() {
@@ -8160,7 +8183,13 @@ function renderHoursGrid() {
       // zodat Nieuw en Klassiek dezelfde functionaliteit bieden.
       const value = Number(record.entries[weekIndex][dayIndex] || 0);
       const displayValue = value > 0 ? String(value) : "";
-      return '<td class="workday-cell"><label class="hours-day-entry"><span class="date-number">' + WEEKDAY_SHORT[dayIndex] + ' ' + day.day + ' ' + escapeHtml(period.month.slice(0, 3)) + '</span><input class="hours-input" data-week-index="' + weekIndex + '" data-day-index="' + dayIndex + '" type="number" min="0" max="24" step="0.5" value="' + displayValue + '" placeholder="0" aria-label="' + escapeHtml(WEEKDAY_SHORT[dayIndex] + ' ' + day.label) + '"' + (editable ? "" : " disabled") + '></label></td>';
+      const cellDisabled = editable ? "" : " disabled";
+      // .hours-day-entry was een <label> (klikken waar dan ook in de cel
+      // focust het veld, cursor: text). Nu er ook knoppen in staan, kan een
+      // <label> een klik op een geneste knop ongewenst nogmaals doorzetten
+      // naar het input-element als impliciete label-associatie -- daarom nu
+      // een <div>; het veld heeft zijn eigen aria-label al voor toegankelijkheid.
+      return '<td class="workday-cell"><div class="hours-day-entry"><span class="date-number">' + WEEKDAY_SHORT[dayIndex] + ' ' + day.day + ' ' + escapeHtml(period.month.slice(0, 3)) + '</span><input class="hours-input" data-week-index="' + weekIndex + '" data-day-index="' + dayIndex + '" type="number" min="0" max="24" step="0.5" value="' + displayValue + '" placeholder="0" aria-label="' + escapeHtml(WEEKDAY_SHORT[dayIndex] + ' ' + day.label) + '"' + cellDisabled + '><span class="hours-day-presets" aria-label="Snelle urenkeuze"><button type="button" data-hours-set="0"' + cellDisabled + '>0</button><button type="button" data-hours-set="8"' + cellDisabled + '>8</button><button type="button" data-hours-set="9"' + cellDisabled + '>9</button></span></div></td>';
     }).join("");
     const yearNote = week.year === period.year ? "" : " · " + week.year;
     return '<tr data-week-index="' + weekIndex + '"><td>Week ' + week.number + yearNote + "</td>" + cells + '<td class="week-total">0,0</td></tr>';
@@ -12381,6 +12410,21 @@ function toonInstallatieAanbod() {
     return;
   }
 
+  // Testfeedback: de 0/8/9-snelkeuze bestond alleen in Nieuw se bento-
+  // kaartjes; Klassiek had helemaal geen snelkeuze, altijd zelf typen. Zelfde
+  // knoppen nu ook per dag in de klassieke tabel (.hours-day-entry), maar
+  // gekoppeld aan het "input"-event -- dat is wat #hours-grid's eigen
+  // delegated listener leest (zie updateHoursTotal-aanroep verderop), anders
+  // dan het bento-uurveld dat op "change" opslaat.
+  const hoursSetControl = event.target.closest("[data-hours-set]");
+  if (hoursSetControl) {
+    const input = hoursSetControl.closest(".hours-day-entry")?.querySelector(".hours-input");
+    if (!input || input.disabled) return;
+    input.value = String(Math.min(24, Math.max(0, Number(hoursSetControl.dataset.hoursSet))));
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    return;
+  }
+
   const newBentoOpenHours = event.target.closest("[data-new-bento-open-hours]");
   if (newBentoOpenHours) {
     // Altijd naar de dag van vandaag springen, ongeacht welke maand/week net
@@ -13487,6 +13531,11 @@ function resetSharedTestEnvironment() {
 
 document.querySelector("#reset-demo")?.addEventListener("click", openResetDemoModal);
 document.querySelector("#quick-reset-demo")?.addEventListener("click", openResetDemoModal);
+
+// De container zelf wordt nooit vervangen (alleen zijn innerHTML bij elke
+// renderHoursWeekFilter()), dus deze twee listeners hoeven maar één keer.
+document.querySelector("#hours-week-filter")?.addEventListener("scroll", updateHoursWeekScrollThumb, { passive: true });
+window.addEventListener("resize", updateHoursWeekScrollThumb, { passive: true });
 
 document.querySelector("#connect-gmail").addEventListener("click", () => showModal({
   label: "Verzendbeveiliging",

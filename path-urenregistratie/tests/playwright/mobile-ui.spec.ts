@@ -444,6 +444,14 @@ test('[MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documen
     await setPeriod(page, MOBILE_PERIOD);
     await expect(page.locator('.hours-week-scroll-hint')).toBeVisible();
     await expect(page.locator('#hours-week-filter')).toHaveCSS('overflow-x', 'auto');
+    // Testfeedback: de native overlay-scrollbar op #hours-week-filter blijft op
+    // mobiel onzichtbaar tot je er actief op raakt, dus een stilstaand scherm
+    // liet nergens zien dat er meer weken te vinden waren. Deze eigen balk moet
+    // daarom altijd zichtbaar zijn zodra de weekknoppen breder zijn dan het
+    // scherm -- ongeacht licht/donker, want beide gebruiken dezelfde tokens.
+    await expect(page.locator('#hours-week-scroll-track')).toBeVisible();
+    const duimBreedte = await page.locator('#hours-week-scroll-thumb').evaluate(el => parseFloat(getComputedStyle(el).width));
+    expect(duimBreedte, 'de schuifbalk hoort een echte, meetbare breedte te hebben').toBeGreaterThan(0);
   });
 
   await test.step('When uren als concept worden gewijzigd en daarna ingediend', async () => {
