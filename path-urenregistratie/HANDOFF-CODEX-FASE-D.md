@@ -809,3 +809,10 @@ is en alleen die poort nog open staat, is dat een afgeronde toestand — niet
 zoals het is als niemand ernaar vraagt) en ga gewoon door met de volgende
 openstaande taak. Dit geldt voor elke pipeline-run, niet alleen voor
 `herontwerp` zelf.
+
+Aanvulling vanuit main's kant (Codex, 10 september): een wachtende
+`Promote Prod*`-job kan ook als **"failure"** in de run-status verschijnen,
+niet alleen als eeuwig "in_progress" — namelijk zodra een latere push de
+wachtende poort overschrijft via de concurrency-lock. Ook dát is geen echte
+fout: check of de eerdere, overschreven run zelf tot aan de PROD-poort groen
+was voor je een "failure" als regressie behandelt.
