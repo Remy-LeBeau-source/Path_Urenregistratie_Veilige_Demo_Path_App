@@ -179,6 +179,10 @@ test('[A11Y-H-005] elke interactieve elementsoort krijgt een zichtbare focusring
 // bewijst in beide skins dat het kruisje bij een scrollende dialoog bovenin
 // blijft plakken en klikbaar blijft.
 test('[A11Y-H-006] de sluitknop van een scrollende dialoog blijft in beide skins in beeld', async ({ page }) => {
+  // Twee skin-iteraties x twee keer Voorkeuren openen, elk met het volle
+  // toPass-budget van openPaneel() als vangnet: de standaard 45s testlimiet
+  // ligt te dicht op wat dit bij tegenzit nodig heeft (10 sep).
+  test.setTimeout(90_000);
   const loginPage = new LoginPage(page);
 
   await test.step('Given de administrator is ingelogd op een korte viewport', async () => {

@@ -9735,7 +9735,7 @@ function createTestNotification(type) {
 // Hoe lang na een hertekening een scroll-event nog als "niet van de gebruiker"
 // wordt gezien. Ruim genoeg voor de reflow die erop volgt, kort genoeg om een
 // echte scroll van de gebruiker niet te missen.
-const LAYOUT_SCROLL_GRACE_MS = 300;
+const LAYOUT_SCROLL_GRACE_MS = 1500;
 let laatsteHertekeningAt = 0;
 
 function markLayoutRender() {
@@ -9757,6 +9757,13 @@ function toggleTopbarPopover(id, buttonId) {
   closeTopbarPopovers();
   panel.hidden = !open;
   document.querySelector("#" + buttonId).setAttribute("aria-expanded", String(open));
+  // Net als bij een hertekening (zie LAYOUT_SCROLL_GRACE_MS hierboven) kan het
+  // openen van een paneel zelf al een scroll-event opleveren -- vooral op
+  // mobile-safari, waar het uitklappen van dit paneel de paginahoogte net genoeg
+  // verandert om de dynamische adresbalk te laten meebewegen. Zonder deze markering
+  // sloot dat scroll-event het paneel meteen weer, vóór een klik op iets erin kon
+  // landen (A11Y-H-006/SKIN-H-015, 10 sep).
+  if (!open) markLayoutRender();
 }
 
 function helpRoleTopics() {
