@@ -794,9 +794,13 @@ pas verder met fijnslijpen.
 Uit `HANDOFF-PILOT-DESIGN.md` §→WAT ER NOG MOET, in volgorde:
 
 1. ✅ (deze sessie, deels) volledige desktop-e2e — **rond dit af, zie §4**.
-2. **Handmatige mobiele doorloop** op een echt toestel (iOS + Android PWA)
+2. 🟡 **Handmatige mobiele doorloop** op een echt toestel (iOS + Android PWA)
    van elk scherm in `skin=new`. Kan niet door een agent alleen — vraag de
-   gebruiker om mee te testen of terugkoppeling te geven.
+   gebruiker om mee te testen of terugkoppeling te geven. **In gang**: de
+   gebruiker test 10 september live mee op TEST (mobiel Chrome, Android) en
+   gaf al vier stuks directe feedback, zie de sectie "10 september
+   (ochtend)" bovenaan. Nog niet compleet doorlopen — geen iOS-feedback, en
+   niet elk scherm is al langsgekomen.
 3. **Verdere fijnslijping per scherm** waar de 1414/1919-mockups
    (`design-mockups/1414-path-bento-space/*.jpg`) dat nog vragen. Puur
    voorbeelden, geen uitputtende lijst — vergelijk zelf tegen de mockups:
