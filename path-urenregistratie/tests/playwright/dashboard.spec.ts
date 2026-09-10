@@ -338,6 +338,11 @@ test('[DASH-N-024] een lokaal record van vóór indiensttreding verschijnt niet 
   await test.step('Given de medewerker is ingelogd en er bestaat lokaal een record van vóór de startdatum', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
+    // Mijn maanden staat sinds v1.0.73 op een eigen scherm i.p.v. altijd
+    // uitgeklapt onderaan het Dashboard. Deze case gaat over wát er in die
+    // tabel staat, dus wordt hier eerst naar dat scherm genavigeerd; de
+    // inhoudelijke controles verderop blijven ongewijzigd.
+    await page.locator('#employee-history-teaser [data-go="historie"]').click();
     await expect(page.locator('#employee-history')).toBeVisible();
     await page.evaluate(() => {
       const runtime = window as typeof window & {
@@ -1184,16 +1189,25 @@ test('[DASH-H-013] dashboardmodules tonen compacte documenten, procesfasen en te
   });
 
   await test.step('And proces en team tonen zonder lege tussenruimte duidelijke kerninformatie en acties', async () => {
-    await expect(page.locator('.workflow-overview')).toBeVisible();
-    await expect(page.locator('.workflow-overview .workflow-step')).toHaveCount(4);
+    // Team blijft op het Dashboard: "wie loopt achter en wat is de
+    // vervolgactie" is dagelijkse bediening. De procesmeter verhuisde in
+    // v1.0.73 naar een eigen scherm -- het is naslag over de maand en zegt
+    // zelf al "geen taaktelling". Op het Dashboard staat nog wel de stand.
     await expect(page.locator('#dashboard-team-title')).toHaveText('Teamstatus · Augustus 2026');
     await expect(page.locator('#dashboard-team-summary')).toHaveText('4 medewerkers · 2 te controleren · 1 wacht op medewerker');
     await expect(page.locator('#dashboard-employee-rows .dashboard-team-action')).toHaveCount(4);
     await expect(page.locator('#dashboard-employee-rows .dashboard-team-action.send')).toHaveCount(2);
-    await page.locator('.workflow-overview').scrollIntoViewIfNeeded();
-    await attachBusinessScreenshot(page, 'GUI smoke · Procesfasen als compact overzicht');
+    await expect(page.locator('#workflow-teaser-text')).toContainText('van 4 fasen');
     await page.locator('.dashboard-team-panel').scrollIntoViewIfNeeded();
     await attachBusinessScreenshot(page, 'GUI smoke · Teamstatus met vervolgacties');
+
+    await page.locator('#workflow-teaser [data-go="teamstatus"]').click();
+    await expect(page.locator('#view-teamstatus')).toHaveClass(/is-active/);
+    await expect(page.locator('.workflow-overview')).toBeVisible();
+    await expect(page.locator('.workflow-overview .workflow-step')).toHaveCount(4);
+    await attachBusinessScreenshot(page, 'GUI smoke · Procesfasen als compact overzicht');
+    await page.locator('[data-go="dashboard"]').first().click();
+    await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
   });
 });
 

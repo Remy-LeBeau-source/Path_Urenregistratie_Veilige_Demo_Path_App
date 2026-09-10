@@ -437,7 +437,9 @@ html[data-skin="new"] #view-timesheet {
    linken (#employee-customer-timesheet-open) zit op een kaart die New-skin
    toch al verbergt, maar dit is een expliciete tweede garantie mocht iemand
    via de hash rechtstreeks naar #customer-timesheet navigeren. */
-html[data-skin="new"] #view-customer-timesheet {
+html[data-skin="new"] #view-customer-timesheet,
+html[data-skin="new"] #view-historie,
+html[data-skin="new"] #view-teamstatus {
   display: none !important;
 }
 
@@ -1722,6 +1724,7 @@ html[data-skin="new"] .new-admin-pipeline li[data-stage-state="current"] > span 
 }
 
 html[data-skin="new"] #view-dashboard > .hero-card,
+html[data-skin="new"] #view-dashboard > .workflow-teaser,
 html[data-skin="new"] #view-dashboard > .workflow-panel {
   display: none;
 }

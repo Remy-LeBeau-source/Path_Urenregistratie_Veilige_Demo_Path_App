@@ -19,7 +19,7 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <title>Uren & Facturatie</title>
-  <link rel="stylesheet" href="assets/styles.css?v=1.0.72">
+  <link rel="stylesheet" href="assets/styles.css?v=1.0.73">
   <link rel="stylesheet" href="assets/styles-new.css">
 </head>
 <body class="auth-booting">
@@ -98,7 +98,7 @@
       </form>
       <p class="login-note" id="auth-mode-indicator">Controle van auth-sessie wordt uitgevoerd.</p>
       <p class="login-note" id="local-login-note">De standaardgegevens gebruiken veilige voorbeeldadressen. Je mag zelf echte gegevens invoeren; deze lokale versie bewaart ze alleen in deze browser en e-mailverzending is uitgeschakeld.</p>
-      <footer class="login-footer"><span>© 2026 Path Consultancy IT · Ontwikkeld en beheerd door Team Path.</span><span>Versie 1.0.72</span></footer>
+      <footer class="login-footer"><span>© 2026 Path Consultancy IT · Ontwikkeld en beheerd door Team Path.</span><span>Versie 1.0.73</span></footer>
     </div>
   </section>
 
@@ -155,7 +155,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 1.0.72</span>
+      <span class="demo-badge">Versie 1.0.73</span>
       </div>
     </aside>
 
@@ -171,7 +171,7 @@
         <div class="topbar-title">
           <p class="eyebrow" id="organization-name">Path Consultancy</p>
           <h1 id="page-title">Urenoverzicht</h1>
-          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 1.0.72</span><span class="environment-badge" id="environment-badge" hidden></span></span>
+          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 1.0.73</span><span class="environment-badge" id="environment-badge" hidden></span></span>
         </div>
         <div class="topbar-actions">
           <nav class="new-admin-topnav role-admin-only" aria-label="Pilot hoofdnavigatie">
@@ -341,8 +341,31 @@
           <article class="metric-card"><span class="metric-label">Verlof en ziekte</span><strong id="employee-dashboard-absence">0,0</strong><span class="metric-note">uur verantwoord</span></article>
           <article class="metric-card"><span class="metric-label">Verschil</span><strong id="employee-dashboard-difference">0,0</strong><span class="metric-note">blokkeert indienen niet</span></article>
         </div>
+        <!-- De volledige historietabel stond hier altijd uitgeklapt onderaan
+             het Dashboard. Dat is een naslagwerk, geen dagelijkse taak: het
+             maakte de pagina lang terwijl je er zelden iets mee doet. Staat nu
+             op een eigen scherm (#view-historie), hier alleen nog een regel met
+             het aantal maanden en een link ernaartoe. Alle gegevens blijven
+             gelijk, alleen niet meer standaard opengeklapt. -->
+        <section class="panel employee-history-teaser" id="employee-history-teaser">
+          <div>
+            <span class="section-label">Historie</span>
+            <strong id="employee-history-teaser-count">Mijn maanden</strong>
+          </div>
+          <button class="text-button" data-go="historie">Bekijk historie &rarr;</button>
+        </section>
+      </section>
+
+      <!-- Klassiek-only, medewerkers: naslag van eerdere urenstaten. In New
+           was dit blok al verborgen (zie de :not()-regel op
+           #view-employee-dashboard in styles-new.css), dus daar verandert
+           niets. -->
+      <section class="view role-employee-only" id="view-historie" data-title="Mijn maanden">
+        <div class="view-heading">
+          <div><span class="section-label">Historie</span><h2>Mijn maanden</h2><p>Huidige en eerdere urenstaten met hun laatste status.</p></div>
+          <button class="text-button" data-go="employee-dashboard">&larr; Naar Dashboard</button>
+        </div>
         <section class="panel">
-          <div class="panel-heading"><div><span class="section-label">Historie</span><h3>Mijn maanden</h3><p>Huidige en eerdere urenstaten met hun laatste status.</p></div><button class="text-button" data-go="timesheet">Naar Mijn uren</button></div>
           <div class="employee-history" id="employee-history"></div>
         </section>
       </section>
@@ -453,6 +476,49 @@
           <div class="customer-timesheet-admin-list" id="customer-timesheet-admin-list"></div>
         </section>
 
+        <!-- Ingang naar de procesmeter, die sinds v1.0.73 op een eigen scherm
+             staat. Het percentage blijft hier zichtbaar, zodat je de stand nog
+             steeds in één blik hebt zonder het hele paneel op het Dashboard. -->
+        <section class="panel workflow-teaser" id="workflow-teaser">
+          <div>
+            <span class="section-label">Maandafsluiting</span>
+            <strong id="workflow-teaser-text">Procesvoortgang</strong>
+          </div>
+          <button class="text-button" data-go="teamstatus">Bekijk voortgang &rarr;</button>
+        </section>
+
+        <section class="panel dashboard-team-panel">
+          <div class="panel-heading">
+            <div><span class="section-label">Team</span><h3 id="dashboard-team-title">Teamstatus · Juli 2026</h3><p id="dashboard-team-summary">4 medewerkers · actuele urenstatus en omzetindicatie</p></div>
+            <div class="heading-actions dashboard-team-actions">
+              <button class="text-button" data-go="employees">Medewerkers beheren</button>
+            </div>
+          </div>
+          <div class="table-wrap dashboard-team-table-wrap">
+            <table class="data-table dashboard-team-table">
+              <thead><tr><th>Medewerker</th><th>Klant / opdracht</th><th>Geregistreerd</th><th>Omzetindicatie</th><th>Urenstatus</th><th>Vervolgactie</th></tr></thead>
+              <tbody id="dashboard-employee-rows"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <!-- Klassiek-only, beheerders: de procesmeter is naslag over de maand,
+           geen dagelijkse actie -- het paneel zegt zelf al "geen taaktelling".
+           Stond onderaan het Dashboard, dat daardoor onnodig lang werd.
+           New verbergt dit paneel al (zie styles-new.css) en toont in plaats
+           daarvan de storyline, dus daar verandert niets.
+
+           De teamtabel is hier bewust NIET naartoe verhuisd, al leek dat
+           eerst logisch: "wie loopt achter en wat is de vervolgactie" is juist
+           het meest operationele blok voor een beheerder, geen naslag. Dat de
+           tabel in 28 testverwijzingen als dé dashboardgegevens wordt
+           behandeld, bevestigde dat. Hij blijft dus op het Dashboard staan. -->
+      <section class="view role-admin-only" id="view-teamstatus" data-title="Procesvoortgang">
+        <div class="view-heading">
+          <div><span class="section-label">Maandafsluiting</span><h2>Procesvoortgang</h2><p>De vier procesfasen van deze maand. Dit is geen taakteller: open acties staan op het Dashboard.</p></div>
+          <button class="text-button" data-go="dashboard">&larr; Naar Dashboard</button>
+        </div>
         <section class="panel workflow-panel">
           <div class="panel-heading">
             <div><span class="section-label">Procesvoortgang · geen taaktelling</span><h3 id="workflow-period-title">Vier procesfasen voor juli 2026</h3></div>
@@ -475,20 +541,6 @@
           </div>
         </section>
 
-        <section class="panel dashboard-team-panel">
-          <div class="panel-heading">
-            <div><span class="section-label">Team</span><h3 id="dashboard-team-title">Teamstatus · Juli 2026</h3><p id="dashboard-team-summary">4 medewerkers · actuele urenstatus en omzetindicatie</p></div>
-            <div class="heading-actions dashboard-team-actions">
-              <button class="text-button" data-go="employees">Medewerkers beheren</button>
-            </div>
-          </div>
-          <div class="table-wrap dashboard-team-table-wrap">
-            <table class="data-table dashboard-team-table">
-              <thead><tr><th>Medewerker</th><th>Klant / opdracht</th><th>Geregistreerd</th><th>Omzetindicatie</th><th>Urenstatus</th><th>Vervolgactie</th></tr></thead>
-              <tbody id="dashboard-employee-rows"></tbody>
-            </table>
-          </div>
-        </section>
       </section>
 
       <section class="view role-employee-only" id="view-timesheet" data-title="Mijn uren">
@@ -926,7 +978,7 @@
       <footer class="app-footer" aria-label="Applicatie-informatie">
         <span>© 2026 Path Consultancy IT</span>
         <span>Ontwikkeld en beheerd door Team Path.</span>
-        <span class="app-footer-version">Versie 1.0.72</span>
+        <span class="app-footer-version">Versie 1.0.73</span>
       </footer>
     </main>
   </div>
@@ -986,7 +1038,7 @@
   </div>
   <script vite-ignore defer src="assets/jspdf.umd.min.js"></script>
   <script vite-ignore defer src="assets/invoice-fonts.js"></script>
-  <script vite-ignore defer src="assets/app.js?v=1.0.72"></script>
-  <script vite-ignore defer src="assets/pwa-install.js?v=1.0.72"></script>
+  <script vite-ignore defer src="assets/app.js?v=1.0.73"></script>
+  <script vite-ignore defer src="assets/pwa-install.js?v=1.0.73"></script>
 </body>
 </html>

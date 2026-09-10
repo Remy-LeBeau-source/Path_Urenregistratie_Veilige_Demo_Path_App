@@ -1194,6 +1194,14 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
    Elke tegel: maandnaam, een balkje dat het aandeel toont t.o.v. de drukste
    maand, en het getal zelf -- dat getal blijft leidend, het balkje is alleen
    om in één oogopslag te zien waar het zwaartepunt ligt. */
+/* Historie-teaser op het Dashboard: één regel met de omvang plus een link,
+   in plaats van de volledige tabel die er altijd uitgeklapt onder hing. */
+.workflow-teaser { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.workflow-teaser strong { display: block; margin-top: 3px; color: var(--navy-tekst); font-family: "Roboto Slab", Georgia, serif; font-size: var(--kop-paneel); font-variant-numeric: tabular-nums; }
+
+.employee-history-teaser { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.employee-history-teaser strong { display: block; margin-top: 3px; color: var(--navy-tekst); font-family: "Roboto Slab", Georgia, serif; font-size: var(--kop-paneel); }
+
 .admin-task-months { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 /* Vaste kolombreedtes: anders krijgt "AUGUSTUS" een smallere balkbaan dan
    "JULI" en zijn de balkjes onderling niet meer te vergelijken -- precies

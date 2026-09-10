@@ -1158,7 +1158,7 @@ const roleProfiles = {
   employee: { label: "Medewerker", home: "employee-dashboard" }
 };
 
-const adminViews = new Set(["dashboard", "approvals", "invoices", "announcements", "employees", "settings"]);
+const adminViews = new Set(["dashboard", "approvals", "invoices", "announcements", "employees", "settings", "teamstatus"]);
 const statusLabels = {
   draft: ["Nog invullen", "status-concept"],
   correction: ["Correctie nodig", "status-warning"],
@@ -1186,6 +1186,8 @@ const pageTitles = {
   "employee-dashboard": "Mijn overzicht",
   timesheet: "Mijn uren",
   "customer-timesheet": "Klanturenstaat",
+  historie: "Mijn maanden",
+  teamstatus: "Procesvoortgang",
   approvals: "Goedkeuringen",
   invoices: "Facturen",
   announcements: "Mededelingen",
@@ -5625,6 +5627,14 @@ function renderEmployeeDashboard() {
   document.querySelector("#employee-history").innerHTML = historyRows
     ? '<div class="employee-history-head" aria-hidden="true"><span>Maand</span><span>Uren</span><span>Status</span>' + historyHeadCustomerColumn + '<span>Actie</span></div>' + historyRows
     : '<div class="dashboard-action-empty">Er zijn nog geen maanden beschikbaar.</div>';
+  // De historietabel staat sinds v1.0.73 op een eigen scherm; op het Dashboard
+  // blijft alleen deze regel staan die zegt hoeveel er te zien is.
+  const historyTeaserCount = document.querySelector("#employee-history-teaser-count");
+  if (historyTeaserCount) {
+    historyTeaserCount.textContent = history.length
+      ? "Mijn maanden · " + history.length + " " + (history.length === 1 ? "urenstaat" : "urenstaten")
+      : "Mijn maanden · nog geen maanden";
+  }
   renderNewEmployeeBento(record, employee, period);
 }
 
@@ -7160,6 +7170,12 @@ function renderDashboard() {
   document.querySelector("#close-progress-ring").style.setProperty("--progress", progress);
   document.querySelector("#close-progress-value").textContent = progress + "%";
   document.querySelector("#close-progress-title").textContent = "Procesmeter " + period.month + " · " + completedPhases + " van 4 fasen";
+  // De procesmeter zelf staat sinds v1.0.73 op een eigen scherm; op het
+  // Dashboard blijft alleen deze regel met de stand en een link ernaartoe.
+  const workflowTeaser = document.querySelector("#workflow-teaser-text");
+  if (workflowTeaser) {
+    workflowTeaser.textContent = "Procesvoortgang " + period.month + " · " + completedPhases + " van 4 fasen (" + progress + "%)";
+  }
   document.querySelector("#close-progress-note").textContent = isFuturePeriod
     ? "Nog geen maandafsluiting verwacht"
     : openCustomerDocuments
@@ -10151,6 +10167,7 @@ function showView(view, options = {}) {
   if (state.currentRole === "employee" && adminViews.has(view)) view = "employee-dashboard";
   if (state.currentRole === "admin" && view === "timesheet") view = "dashboard";
   if (state.currentRole === "admin" && view === "customer-timesheet") view = "dashboard";
+  if (state.currentRole === "admin" && view === "historie") view = "dashboard";
   if (state.currentRole === "admin" && view === "employee-dashboard") view = "dashboard";
   if (state.currentRole === "admin" && view === "employee-announcements") view = "dashboard";
   if (view === "dashboard") renderDashboard();
