@@ -1,5 +1,37 @@
 # HANDOFF — Codex, Fase D vervolg (herontwerp)
 
+## (mogelijke taak, nog geen opdracht) 10 september — designstijl app vs. marketingwebsite
+
+Gebruiker vroeg naar het verschil in opmaak tussen www.pathconsultancy.nl
+(repo `Remy-LeBeau-source/pathconsultancy-site`, privé, WordPress/Astra-
+child-thema, `astra-child/style.css`) en onze app (Oud + Nieuw). Gevonden:
+
+- **Website**: navy `#16273A` als tekstkleur, maar een **koele, groen-
+  getinte lichte achtergrond** (`--pc-paper: #F3F6F5`, `--pc-surface: #FFF`),
+  mint-accent `#2FB48C`, koppen in **sans-serif** "Archivo" (zwaar, 800,
+  strak), body "IBM Plex Sans", cijfers in "IBM Plex Mono".
+- **App New-skin**: navy `#081726` (donkerder), maar een **warme crème/
+  zand-achtergrond** (`--surface: #f6f1e7`, `--background: #eae3d4`),
+  mint-accent `#5fb98d` (net iets anders groen), koppen in **serif**
+  "Path Editorial"/Georgia (redactioneel), body Inter (sans).
+- **Classic**: staat er nog verder vanaf, geen serif/crème-warmte, puur
+  functionele sans-serif admin-look.
+
+Conclusie: New deelt de kleurfamilie (navy+mint) met de website, maar kiest
+bewust een andere sfeer (warm/redactioneel i.p.v. koel/zakelijk) via
+warmere achtergrondtonen en serif-koppen. Geen toevallige afwijking, een
+designkeuze -- maar wel een keuze die de gebruiker nog niet expliciet had
+bevestigd.
+
+Gebruiker vroeg om eerst zelf te kunnen vergelijken (URL's gegeven:
+www.pathconsultancy.nl vs. TEST met skin-toggle) voor een besluit. **Niet
+gebouwd, geen opdracht** -- alleen vastgelegd als mogelijke vervolgtaak:
+als de gebruiker besluit dat New dichter bij de site-stijl moet komen
+(koeler palet en/of sans-serif koppen), is dat een herontwerp-brede
+tokenwijziging in `styles-new.css`, met impact op praktisch elk scherm --
+groot genoeg om eerst een concreet voorstel/schets te maken voor te bouwen,
+niet blind doorvoeren.
+
 ## 10 september (ochtend) — overdracht: gebruiker live meegekeken op TEST (mobiel)
 
 De gebruiker testte live mee op TEST (mobiel, Chrome) en gaf vier stuks
