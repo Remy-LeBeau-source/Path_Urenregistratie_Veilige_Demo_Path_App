@@ -5272,9 +5272,6 @@ function renderNewEmployeeBento(record, employee, period) {
   const progress = totalWeeks > 0 ? Math.round(filledWeeks / totalWeeks * 100) : 0;
   document.querySelector("#new-bento-days-filled").textContent = String(filledWeeks);
   document.querySelector("#new-bento-days-total").textContent = "/ " + totalWeeks + " weken";
-  document.querySelector("#new-bento-days-note").textContent = filledWeeks === totalWeeks
-    ? "Alle weken van deze maand zijn ingevuld."
-    : "Nog " + (totalWeeks - filledWeeks) + " " + (totalWeeks - filledWeeks === 1 ? "week" : "weken") + " te gaan deze maand.";
   document.querySelector("#new-bento-progress").style.width = progress + "%";
   document.querySelector("#new-bento-percentage").textContent = progress + "%";
   document.querySelector("#new-bento-ring").style.setProperty("--bento-progress", progress + "%");
