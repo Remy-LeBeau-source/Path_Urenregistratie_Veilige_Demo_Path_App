@@ -41,6 +41,27 @@ main `97f3168`). Gebruiker vroeg mij het over te nemen.
    inclusief een bijkomstige `<label>`→`<div>`-correctie in de klassieke
    celmarkup om een dubbele klik-doorzetting naar het inputveld te voorkomen.
    Nieuwe regressies `[MOB-H-002]` (uitgebreid) en `[SKIN-H-025]`.
+6. **D4 (BESLISTABEL) afgerond, op expliciet verzoek gebruiker (v1.0.51):**
+   de sub-seconde inlogscherm-flits bij een al-ingelogde gebruiker (F5 of
+   eerste bezoek). `applyAuthUiMode()` ontgrendelde `#login-screen` altijd
+   meteen zodra `mode` van `"checking"` naar `"auth"` omsloeg — óók vlak
+   vóórdat bleek dat er al een geldige sessie was, wat het scherm heel kort
+   liet flitsen vóór `login()` alsnog het dashboard toonde. Nu blijft
+   `#login-screen` verborgen voor `mode === "auth"` totdat `login()`/
+   `logoutLocal()` (beide synchroon in dezelfde auth-callback) expliciet
+   bepalen wat zichtbaar wordt. Bestaande regressie `AUTH-N-009` dekt dit
+   al en bleef groen in isolatie (bevestigd 2x); in de volle `auth.spec.ts`-
+   batch op deze machine faalden zowel deze als een wisselende reeks
+   ongerelateerde auth-tests herhaaldelijk door lokale omgevingsdruk (stale
+   PHP-server op poort 8000, `Unknown database`-fouten) na uren aaneen
+   Playwright draaien — niet door de wijziging zelf, telkens ontkracht via
+   isolatie. Zie BESLISTABEL.md D4.
+7. **Cross-sessie:** herontwerp-peer vond een gedeelde-code databug
+   (`syncInvoiceStatusesFromApi()`, `assets/app.js:3508`) — `invoiceStatus`
+   kan los van `timesheetStatus` naar `"simulated"` springen. Financiële
+   logica, bewust niet blind gepatcht door beide kanten; vastgelegd als
+   BESLISTABEL R23 (cross-branch, zodat main dit niet mist), wacht op een
+   concrete falende testcase voor iemand er verder induikt.
 
 ## 10 september 2026 — vervolg door Codex: main en alle schermen
 
