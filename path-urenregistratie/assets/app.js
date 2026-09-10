@@ -5283,7 +5283,7 @@ function renderNewEmployeeBento(record, employee, period) {
   const customerNote = document.querySelector("#new-bento-customer-note");
   let customerLabel = "Nog aanleveren";
   let customerTone = "status-warning";
-  let customerMessage = "De klanturenstaat staat nog open en blokkeert de factuurafronding totdat hij is aangeleverd of als rechtstreeks gemaild is geregistreerd.";
+  let customerMessage = "Blokkeert de factuurafronding totdat je 'm aanlevert of als rechtstreeks gemaild meldt.";
   if (customerDocument.status === "skipped" && !customerTimesheetExternallyConfirmed(customerDocument)) {
     customerLabel = "Gemeld · controle nodig";
     customerMessage = "Je hebt rechtstreeks gemaild gemeld. Backoffice moet de ontvangst nog bevestigen.";
