@@ -23,12 +23,13 @@ declare(strict_types=1);
 const MAIL_CHANNEL_TEMPLATES = [
     'timesheet_submission_receipt' => [
         'subject' => 'Urenoverzicht {medewerker} – {periode}',
+        // Bewust kort: het volledige overzicht per dag/week staat al compact in de
+        // PDF-bijlage (buildTimesheetReceiptPdfBase64() in assets/app.js), dus de
+        // body hoeft dat niet nogmaals te herhalen (gebruikersfeedback 11 sep).
         'body' =>
             "Beste {medewerker},\n\n"
-            . "Je hebt je uren voor {periode} ingediend. Hieronder staat een compact overzicht van de geregistreerde dagen.\n\n"
-            . "Totaal: {uren} uur\n\n"
-            . "Overzicht per dag:\n"
-            . "{overzicht}",
+            . "Je hebt je uren voor {periode} ingediend. Totaal: {uren} uur.\n\n"
+            . "Het volledige overzicht per dag en per week staat in de bijgevoegde PDF.",
     ],
     'timesheet_final_approval' => [
         'subject' => 'Je uren zijn goedgekeurd – {periode}',

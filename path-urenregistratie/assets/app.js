@@ -1939,23 +1939,38 @@ function buildTimesheetWritePayload(action) {
  * moment van indienen, zodat de bijlage exact overeenkomt met wat net is
  * verstuurd, en meegestuurd als base64 in de submit-payload.
  */
+// Twee kolommen naast elkaar (week-"blokken") i.p.v. één lange lijst, zodat een
+// normale maand (4-5 weken) op één pagina past i.p.v. twee (gebruikersfeedback
+// 11 sep: "compact, alle weken erin, probeer één pagina"). Kolom 0 links,
+// kolom 1 rechts; een week gaat naar de kolom die op dat moment het minst
+// gevuld is, zodat beide kolommen ongeveer even lang blijven.
+const RECEIPT_COL_X = [15, 108];
+const RECEIPT_COL_RIGHT = [97, 190];
+
+function drawTimesheetReceiptColumnHeaders(doc, ink, muted, y) {
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  RECEIPT_COL_X.forEach((x, index) => {
+    doc.setTextColor(...ink);
+    doc.text("Dag", x, y);
+    doc.text("Uren", RECEIPT_COL_RIGHT[index], y, { align: "right" });
+  });
+  const lineY = y + 3;
+  doc.setDrawColor(...muted);
+  doc.line(15, lineY, 190, lineY);
+  return lineY + 4.3;
+}
+
 // Wat hier op de pagina moet zodra er een nieuwe begint (kop is alleen op
-// pagina 1; vervolgpagina's krijgen alleen de tabelkop terug).
+// pagina 1; vervolgpagina's krijgen alleen de kolomkop terug). Geeft voor
+// beide kolommen dezelfde startpositie terug.
 function drawTimesheetReceiptContinuationHeader(doc, ink, muted, period) {
   doc.setTextColor(...muted);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.text(String(period.label || "") + " (vervolg)", 15, 14);
-  let y = 22;
-  doc.setTextColor(...ink);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.text("Dag", 15, y);
-  doc.text("Uren", 195, y, { align: "right" });
-  y += 4;
-  doc.setDrawColor(...muted);
-  doc.line(15, y, 195, y);
-  return y + 5.5;
+  const y = drawTimesheetReceiptColumnHeaders(doc, ink, muted, 22);
+  return [y, y];
 }
 
 // Uitgebreide kwitantie: volledige datum (dag, maand, jaar) per regel i.p.v.
@@ -1963,7 +1978,9 @@ function drawTimesheetReceiptContinuationHeader(doc, ink, muted, period) {
 // subtotaal, een infoblok (klant/opdracht, rol, contracturen, periode) en
 // een ondertekenblok met het logo nogmaals onderaan -- op verzoek van de
 // gebruiker ("mag de pdf voller, meer inhoud, maand dag jaar etc" /
-// "logo bij handtekening?").
+// "logo bij handtekening?"). Compacter gemaakt (11 sep, gebruikersfeedback)
+// via de twee-kolommen-weekblokken hierboven plus krappere regelhoogtes, zodat
+// een volledige maand op één pagina past i.p.v. twee.
 function buildTimesheetReceiptPdfBase64(employee, period, record) {
   const jspdf = window.jspdf;
   if (!jspdf || typeof jspdf.jsPDF !== "function") return null;
@@ -1975,28 +1992,28 @@ function buildTimesheetReceiptPdfBase64(employee, period, record) {
   const muted = [108, 120, 134];
 
   doc.setFillColor(...navy);
-  doc.rect(0, 0, 210, 32, "F");
+  doc.rect(0, 0, 210, 26, "F");
   doc.setFillColor(...mint);
-  doc.rect(0, 32, 210, 1.2, "F");
+  doc.rect(0, 26, 210, 1.2, "F");
   try {
-    doc.addImage(brandLogoUrl("donker"), "PNG", 15, 8, 32, 14.8);
+    doc.addImage(brandLogoUrl("donker"), "PNG", 15, 6, 28, 13);
   } catch (_error) {
     // Geen logo beschikbaar (bv. lokale demo zonder assets): de tekstkop
     // hieronder blijft leesbaar zonder logo.
   }
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(15);
-  doc.text("UREN OVERZICHT", 195, 15, { align: "right" });
+  doc.setFontSize(13);
+  doc.text("UREN OVERZICHT", 195, 12, { align: "right" });
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.text(String(employee.name || ""), 195, 22, { align: "right" });
-  doc.text(String(period.label || ""), 195, 27, { align: "right" });
+  doc.setFontSize(8.5);
+  doc.text(String(employee.name || ""), 195, 18, { align: "right" });
+  doc.text(String(period.label || ""), 195, 22.5, { align: "right" });
 
   // Infoblok: alles wat de ontvanger nodig heeft om de staat te duiden
   // zonder terug te hoeven bladeren naar de app -- klant/opdracht, rol,
   // contracturen per week en de volledige periode-range.
-  let y = 42;
+  let y = 34;
   const firstDay = period.weekRows.flatMap(week => week.days).find(Boolean);
   const lastDay = period.weekRows.flatMap(week => week.days).filter(Boolean).pop();
   const periodRange = firstDay && lastDay
@@ -2008,109 +2025,115 @@ function buildTimesheetReceiptPdfBase64(employee, period, record) {
     ["Contracturen", hoursFormat.format(weeklyHoursFor(employee)) + " uur/week"],
     ["Periode", periodRange]
   ];
-  doc.setFontSize(8.5);
+  doc.setFontSize(8);
   infoRows.forEach((row, index) => {
-    const columnX = index % 2 === 0 ? 15 : 108;
-    const rowY = y + Math.floor(index / 2) * 8;
+    const columnX = RECEIPT_COL_X[index % 2];
+    const rowY = y + Math.floor(index / 2) * 7;
     doc.setTextColor(...muted);
     doc.setFont("helvetica", "normal");
     doc.text(row[0], columnX, rowY);
     doc.setTextColor(...ink);
     doc.setFont("helvetica", "bold");
-    doc.text(row[1], columnX, rowY + 4.2);
+    doc.text(row[1], columnX, rowY + 3.8);
   });
-  y += Math.ceil(infoRows.length / 2) * 8 + 6;
+  y += Math.ceil(infoRows.length / 2) * 7 + 5;
 
   doc.setDrawColor(...muted);
-  doc.line(15, y, 195, y);
-  y += 7;
+  doc.line(15, y, 190, y);
+  y += 5;
 
-  doc.setTextColor(...ink);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.text("Dag", 15, y);
-  doc.text("Uren", 195, y, { align: "right" });
-  y += 4;
-  doc.setDrawColor(...muted);
-  doc.line(15, y, 195, y);
-  y += 5.5;
+  y = drawTimesheetReceiptColumnHeaders(doc, ink, muted, y);
+  let colY = [y, y];
 
-  const ensureSpace = neededMm => {
-    if (y <= 280 - neededMm) return;
+  const ensureSpace = (col, neededMm) => {
+    if (colY[col] <= 280 - neededMm) return;
     doc.addPage();
-    y = drawTimesheetReceiptContinuationHeader(doc, ink, muted, period);
+    colY = drawTimesheetReceiptContinuationHeader(doc, ink, muted, period);
   };
 
   period.weekRows.forEach((week, weekIndex) => {
     const actualDays = week.days.filter(Boolean);
     if (!actualDays.length) return;
-    ensureSpace(5.2);
+    // Naar de kolom die op dit moment het minst gevuld is, zodat beide
+    // kolommen ongeveer gelijk blijven i.p.v. links-eerst-vol.
+    const col = colY[0] <= colY[1] ? 0 : 1;
+    const x = RECEIPT_COL_X[col];
+    const right = RECEIPT_COL_RIGHT[col];
+
+    ensureSpace(col, 4.3);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(8.5);
+    doc.setFontSize(7.5);
     doc.setTextColor(...muted);
-    doc.text("Week " + week.number + " · " + week.year, 15, y);
-    y += 5.2;
+    doc.text("Week " + week.number + " · " + week.year, x, colY[col]);
+    colY[col] += 4.3;
 
     let weekTotal = 0;
     week.days.forEach((day, dayIndex) => {
       if (!day) return;
-      ensureSpace(5.2);
+      ensureSpace(col, 4.3);
       const raw = Number(record.entries?.[weekIndex]?.[dayIndex] || 0);
       const hours = Math.round(Math.max(0, raw) * 100) / 100;
       const confirmed = Boolean(record.confirmedEntries?.[weekIndex]?.[dayIndex]);
       weekTotal += hours;
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
+      doc.setFontSize(8);
       doc.setTextColor(...ink);
-      doc.text(WEEKDAY_SHORT[dayIndex] + " " + day.label, 15, y);
+      doc.text(WEEKDAY_SHORT[dayIndex] + " " + day.label, x, colY[col]);
       if (hours === 0 && !confirmed) {
         doc.setTextColor(...muted);
-        doc.text("Niet ingevuld", 195, y, { align: "right" });
+        doc.text("Niet ingevuld", right, colY[col], { align: "right" });
       } else {
-        doc.text(hoursFormat.format(hours) + " uur", 195, y, { align: "right" });
+        doc.text(hoursFormat.format(hours) + " uur", right, colY[col], { align: "right" });
       }
-      y += 5.2;
+      colY[col] += 4.3;
     });
 
-    ensureSpace(6);
+    ensureSpace(col, 4.6);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(8.5);
+    doc.setFontSize(7.5);
     doc.setTextColor(...muted);
-    doc.text("Subtotaal week " + week.number, 15, y);
-    doc.text(hoursFormat.format(weekTotal) + " uur", 195, y, { align: "right" });
-    y += 7;
+    doc.text("Subtotaal", x, colY[col]);
+    doc.text(hoursFormat.format(weekTotal) + " uur", right, colY[col], { align: "right" });
+    colY[col] += 6.5;
   });
 
-  ensureSpace(14);
+  y = Math.max(colY[0], colY[1]) + 2;
+  const ensureSpaceFull = neededMm => {
+    if (y <= 280 - neededMm) return;
+    doc.addPage();
+    y = 22;
+  };
+
+  ensureSpaceFull(12);
   doc.setDrawColor(...muted);
-  doc.line(15, y, 195, y);
-  y += 6.5;
+  doc.line(15, y, 190, y);
+  y += 5.5;
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(10.5);
+  doc.setFontSize(10);
   doc.setTextColor(...ink);
   doc.text("Totaal", 15, y);
-  doc.text(hoursFormat.format(totalEntries(record.entries)) + " uur", 195, y, { align: "right" });
+  doc.text(hoursFormat.format(totalEntries(record.entries)) + " uur", 190, y, { align: "right" });
 
   // Ondertekenblok: dezelfde afzendtekst als de begeleidende mail
   // (state.settings.mailSignature), met het logo er nogmaals bij -- niet
   // alleen bovenaan, ook bij de afsluiting van het document zelf.
-  y += 16;
-  ensureSpace(20);
+  y += 13;
+  ensureSpaceFull(18);
   doc.setDrawColor(...muted);
-  doc.line(15, y, 90, y);
-  y += 6;
+  doc.line(15, y, 85, y);
+  y += 5.5;
   try {
-    doc.addImage(brandLogoUrl("licht"), "PNG", 15, y - 4.5, 20, 9.2);
+    doc.addImage(brandLogoUrl("licht"), "PNG", 15, y - 4, 18, 8.3);
   } catch (_error) {
     // Zonder logo blijft de tekst hieronder als ondertekening staan.
   }
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
+  doc.setFontSize(8);
   doc.setTextColor(...muted);
-  doc.text("Met vriendelijke groet,", 40, y - 1.5);
+  doc.text("Met vriendelijke groet,", 38, y - 1.5);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...ink);
-  doc.text(String(state.settings.mailSignature || "Robot Path IT"), 40, y + 3);
+  doc.text(String(state.settings.mailSignature || "Robot Path IT"), 38, y + 2.8);
 
   const dataUri = doc.output("datauristring");
   const base64 = String(dataUri || "").split(",")[1];
