@@ -192,7 +192,13 @@ function mail_enqueue_timesheet_submission_receipt(
         return null;
     }
 
-    $daySummary = [];
+    // Per week samenvatten i.p.v. per dag: de bijgevoegde PDF (sinds
+    // 034_timesheet_receipt_pdf_attachment.sql) toont het volledige
+    // dagoverzicht al, dus een even gedetailleerde lijst hier in de
+    // mailtekst herhaalde exact dezelfde informatie, alleen als platte
+    // tekst. Vijf weekregels lezen sneller dan dertig dagregels, en blijven
+    // ook bruikbaar als er onverhoopt geen PDF is bijgevoegd (zie
+    // attachmentPolicy hieronder).
     $dateMap = [];
     foreach ($dayEntries as $entry) {
         $rawDate = (string)($entry['work_date'] ?? $entry['date'] ?? '');
@@ -204,15 +210,26 @@ function mail_enqueue_timesheet_submission_receipt(
     $month = (int)($periodMatches[2] ?? date('n'));
     $daysInMonth = (int)cal_days_in_month(CAL_GREGORIAN, $month, $year);
 
+    $weekTotals = [];
+    $weekOrder = [];
     for ($day = 1; $day <= $daysInMonth; $day++) {
         $dateKey = sprintf('%04d-%02d-%02d', $year, $month, $day);
-        $hours = (float)($dateMap[$dateKey] ?? 0.0);
-        if (array_key_exists($dateKey, $dateMap)) {
-            $value = $hours === 0.0 ? '0,00 uur' : number_format($hours, 2, ',', '.') . ' uur';
-            $daySummary[] = sprintf('Dag %02d: %s', $day, $value);
-        } else {
-            $daySummary[] = sprintf('Dag %02d: Niet ingevuld', $day);
+        $timestamp = mktime(0, 0, 0, $month, $day, $year);
+        $weekNumber = (int)date('W', $timestamp);
+        $weekYear = (int)date('o', $timestamp);
+        $bucketKey = $weekYear . '-' . $weekNumber;
+        if (!isset($weekTotals[$bucketKey])) {
+            $weekTotals[$bucketKey] = ['number' => $weekNumber, 'total' => 0.0];
+            $weekOrder[] = $bucketKey;
         }
+        if (array_key_exists($dateKey, $dateMap)) {
+            $weekTotals[$bucketKey]['total'] += (float)$dateMap[$dateKey];
+        }
+    }
+    $daySummary = [];
+    foreach ($weekOrder as $bucketKey) {
+        $week = $weekTotals[$bucketKey];
+        $daySummary[] = sprintf('Week %d: %s uur', $week['number'], number_format($week['total'], 2, ',', '.'));
     }
 
     $templates = mail_channel_templates_for($pdo, $companyId);

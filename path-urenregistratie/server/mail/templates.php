@@ -25,9 +25,10 @@ const MAIL_CHANNEL_TEMPLATES = [
         'subject' => 'Urenoverzicht {medewerker} – {periode}',
         'body' =>
             "Beste {medewerker},\n\n"
-            . "Je hebt je uren voor {periode} ingediend. Hieronder staat een compact overzicht van de geregistreerde dagen.\n\n"
+            . "Je hebt je uren voor {periode} ingediend. Hieronder staat een compact overzicht per week; "
+            . "het volledige dagoverzicht staat in de bijgevoegde PDF.\n\n"
             . "Totaal: {uren} uur\n\n"
-            . "Overzicht per dag:\n"
+            . "Overzicht per week:\n"
             . "{overzicht}",
     ],
     'timesheet_final_approval' => [
