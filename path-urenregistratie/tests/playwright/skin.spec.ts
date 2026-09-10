@@ -128,8 +128,8 @@ test('[SKIN-H-004] de nieuwe skin activeert uitsluitend zijn eigen visuele funda
     expect(classic.pathCanvas).toBe('');
     expect(classic.radius).toBe('18px');
     expect(classic.headingFont).not.toContain('Path Editorial');
-    expect(vernieuwd.pathCanvas).toBe('#eae3d4');
-    expect(vernieuwd.radius).toBe('22px');
+    expect(vernieuwd.pathCanvas).toBe('#e9ede6');
+    expect(vernieuwd.radius).toBe('18px');
     expect(vernieuwd.headingFont).toContain('Path Editorial');
     expect(vernieuwd.bodyBackground).toContain('radial-gradient');
   });
@@ -231,12 +231,36 @@ test('[SKIN-H-006] de echte medewerkerroute toont de live bento en blijft mobiel
 });
 
 test('[SKIN-H-008] Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en terugschakelen', async ({ page }) => {
+  // Root cause van de al lang bekende "zeldzame flake (~1 op 10)", grondig
+  // uitgezocht (10 september): geen productbug, een test-timingprobleem.
+  // dashboardVoor werd gemeten zodra er ÉÉN medewerkersrij stond, niet
+  // zodra de volledige, asynchrone server-hydratatie (readApiRuntime.
+  // adminWorkflowHydrated) was afgerond. Bij een medewerker wiens
+  // seed-uren pas via die hydratatie binnenkomen (bv. Stasjo, 24u in
+  // september volgens de huidige demo-seed) zag de eerste meting dus nog
+  // de voorlopige 0-staat, en de latere (na de navigatieronde, die de
+  // hydratatie de tijd gaf af te ronden) wél de echte waarde -- vandaar
+  // de "wijziging" die er nooit een was. Eerst overwogen root causes die
+  // het niet bleken te zijn, ter documentatie: (1) todaysWeekIndexInPeriod
+  // zonder vaste klok -- uitgesloten, faalde ook met een vaste datum;
+  // (2) applyDayHoursDefaultsToRecord/ensurePeriodRecords die andermans
+  // record muteert bij loutere admin-navigatie -- een reëel, apart risico
+  // (nu los daarvan verholpen, alleen nog actief voor de ingelogde
+  // medewerker zelf), maar niet de oorzaak van déze test: Stasjo's
+  // dayHours staat niet eens ingesteld in de seed. Bevestigd met de
+  // server-API rechtstreeks: dezelfde 24u staat er al vóór alle navigatie,
+  // direct na een verse database-bootstrap.
+  await page.clock.setFixedTime(new Date('2026-09-06T12:00:00.000Z'));
   const loginPage = new LoginPage(page);
 
   await test.step('Given Backoffice is ingelogd en de dashboardgegevens zijn geladen', async () => {
     await loginPage.open();
     await loginPage.loginAsAdmin();
     await expect(page.locator('#dashboard-employee-rows tr')).not.toHaveCount(0);
+    // Wacht tot de asynchrone serverwerkvoorraad-sync (adminWorkflowHydrated)
+    // is afgerond, anders meet dashboardVoor hieronder de voorlopige staat
+    // i.p.v. de uiteindelijke -- zie de root-cause toelichting hierboven.
+    await expect(page.locator('#dashboard-next-action-label')).not.toHaveText(/laden/i, { timeout: 10_000 });
   });
 
   const dashboardVoor = await genormaliseerdeTekst(page.locator('#dashboard-employee-rows'));

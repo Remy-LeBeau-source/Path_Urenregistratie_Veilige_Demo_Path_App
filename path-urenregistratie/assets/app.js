@@ -2203,6 +2203,7 @@ function applyTimesheetApiPayload(employeeId, periodKey, timesheet) {
   // hem meteen echt bewaart -- precies zoals bij elke andere getypte waarde.
   // Zie applyDayHoursDefaultsToRecord: dit gebeurt na elke server-sync (niet
   // eenmalig bij aanmaken) en raakt alleen de dag die nog niet bevestigd is.
+  // (De eigen-medewerker-check zit binnen applyDayHoursDefaultsToRecord zelf.)
   applyDayHoursDefaultsToRecord(record, employee, key);
   const timesheetId = Number(timesheet.id || 0);
   record.serverTimesheetId = Number.isFinite(timesheetId) && timesheetId > 0 ? timesheetId : (Number(record.serverTimesheetId || 0) || null);
@@ -4420,8 +4421,22 @@ function customerTimesheetBrokerEmail(employee) {
 // opnieuw aan. Met de scope-volgende index vulde het bekijken van een andere
 // week die week meteen zelf ook voor -- dan had de "Standaardweek vullen"-
 // knop daar niets meer te doen voor iedereen met een eigen werkpatroon.
+//
+// Alleen voor de ingelogde medewerker die naar zijn EIGEN record kijkt.
+// Deze check zit hier centraal (niet losjes bij elke aanroeper) omdat
+// nieuwe aanroepplekken er anders zomaar weer onderuit glippen: zonder
+// deze voorwaarde vulde elke plek die ooit voor een ANDERE medewerker
+// (bv. een admin die Facturen/Goedkeuringen bekijkt of de server-status
+// van iemand anders ophaalt voor weergave) dit record aanraakte,
+// stilzwijgend diens huidige week met het eigen werkpatroon -- puur een
+// weergavefout in de kijkende sessie (persistState() bewaart in auth-modus
+// alleen UI-state, dus dit ging nooit naar de server), maar wel
+// verwarrende, foute getallen op schermen waar iemand bedragen/uren op
+// vertrouwt. Gemeld via SKIN-H-008, die na loutere admin-navigatie (geen
+// enkele knop ingedrukt) plots 24u voor Stasjo toonde.
 function applyDayHoursDefaultsToRecord(record, employee, periodKey) {
   if (!employee.dayHours || !isTimesheetEditableForEmployee(record)) return;
+  if (state.currentRole !== "employee" || String(currentEmployee()?.id) !== String(employee.id)) return;
   const period = periodFromKey(periodKey);
   const activeWeekIndex = todaysWeekIndexInPeriod(period);
   fillStandardHoursInRecord(record, employee, period, [activeWeekIndex], { persistStatus: false });
@@ -4585,6 +4600,10 @@ function ensurePeriodRecords(periodKey) {
     // record al bestaan (bv. de bootstrap-data met het patroon komt later
     // binnen dan de eerste render). Dit blijft veilig om steeds opnieuw te
     // proberen -- het vult alleen een dag die nog leeg èn onbevestigd is.
+    // (Deze forEach initialiseert bewust álle medewerkersrecords in één keer
+    // -- allOpenApprovals()/Facturen-overzicht hebben de volledige lijst
+    // nodig; de eigen-medewerker-check zit binnen applyDayHoursDefaultsToRecord
+    // zelf, dus batch-initialiseren voor een admin-overzicht blijft veilig.)
     applyDayHoursDefaultsToRecord(state.records[period.key][id], employee, period.key);
   });
   return state.records[period.key];

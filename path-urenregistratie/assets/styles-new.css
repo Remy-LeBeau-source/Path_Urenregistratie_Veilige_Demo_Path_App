@@ -22,40 +22,52 @@
 html[data-skin="new"] {
   color-scheme: light;
 
-  /* 1414 Bento × 1919 Storyline: één betekenis per kleur. */
-  --navy: #081726;
+  /* 1414 Bento × 1919 Storyline: één betekenis per kleur.
+     Verfijning (10 september): kouder/strakker richting de huisstijl van
+     pathconsultancy.nl (navy + mint, licht/koel palet), maar bewust geen
+     kopie -- de warme ondertoon en de serif-koppen (--path-serif hieronder)
+     blijven het eigen, redactionele karakter van New. Het achtergrondpalet
+     ging van een verzadigd zand-beige naar een lichtere, groen-getinte
+     crème; het mint-accent van #5fb98d naar #4bb188 (frisser, dichter bij
+     het merk #2FB48C van de site, zonder identiek te zijn); schaduw en
+     radius iets kleiner voor een gedefinieerder, minder "bollend" silhouet.
+     Alle losse hardcoded verwijzingen naar #5fb98d/rgba(95,185,141,...)
+     verderop in dit bestand zijn in dezelfde stap meeverplaatst naar
+     #4bb188/rgba(75,177,136,...), anders had de app twee mint-tinten door
+     elkaar getoond. */
+  --navy: #0a1c2f;
   --navy-soft: #0d2033;
-  --mint: #5fb98d;
-  --mint-dark: #2f6a4c;
-  --teal: #255f4b;
-  --green-light: #e7efe7;
+  --mint: #4bb188;
+  --mint-dark: #2a5f45;
+  --teal: #235644;
+  --green-light: #e6efe9;
   --ink: #1e2c34;
   --muted: #66726d;
-  --line: #d8d1c3;
-  --surface: #f6f1e7;
-  --background: #eae3d4;
+  --line: #d7ddd3;
+  --surface: #f4f6f2;
+  --background: #e9ede6;
   --warning: #d99a3c;
   --warning-bg: #f8ead1;
   --navy-tekst: #102235;
   --tabelkop: #66726d;
-  --vlak: #f8f4eb;
-  --vlak-zacht: #efe9dc;
-  --vlak-warm: #fbf6ec;
-  --mint-dark-tekst: #255f4b;
+  --vlak: #f7f9f5;
+  --vlak-zacht: #eef1ea;
+  --vlak-warm: #f9f5ec;
+  --mint-dark-tekst: #235644;
   --warning-tekst: #8a5c1c;
   --danger: #a4514f;
-  --shadow: 0 22px 55px rgba(8, 23, 38, .13);
-  --radius: 22px;
+  --shadow: 0 16px 40px rgba(8, 23, 38, .12);
+  --radius: 18px;
 
   /* Eigen skin-tokens maken latere componentincrements voorspelbaar. */
-  --path-canvas: #eae3d4;
-  --path-panel: #f6f1e7;
-  --path-panel-strong: #efe9dc;
-  --path-night: #081726;
+  --path-canvas: #e9ede6;
+  --path-panel: #f4f6f2;
+  --path-panel-strong: #eef1ea;
+  --path-night: #0a1c2f;
   --path-night-panel: #0f2639;
   --path-night-tile: #12293e;
   --path-forest: #1e4032;
-  --path-green: #5fb98d;
+  --path-green: #4bb188;
   --path-amber: #d99a3c;
   --path-cream: #f4f1e6;
   --path-serif: "Path Editorial", Georgia, "Times New Roman", serif;
@@ -79,12 +91,12 @@ html[data-skin="new"][data-theme="dark"] {
   --mint-dark-tekst: #75c99e;
   --warning-bg: #352916;
   --warning-tekst: #e2ab4c;
-  --shadow: 0 24px 65px rgba(0, 0, 0, .34);
+  --shadow: 0 18px 48px rgba(0, 0, 0, .32);
 }
 
 html[data-skin="new"] body {
   background:
-    radial-gradient(circle at 86% 8%, rgba(95, 185, 141, .13), transparent 27rem),
+    radial-gradient(circle at 86% 8%, rgba(75, 177, 136, .13), transparent 27rem),
     var(--background);
   font-family: var(--path-sans);
 }
@@ -100,7 +112,7 @@ html[data-skin="new"] :is(
 ) {
   font-family: var(--path-serif);
   font-weight: 400;
-  letter-spacing: -.015em;
+  letter-spacing: -.02em;
 }
 
 html[data-skin="new"] .section-label,
@@ -112,20 +124,28 @@ html[data-skin="new"] .eyebrow {
 /* Het "Path"-woordmerk in assets/path-logo.png is zelf donkernavy -- op de
    navy "Home"-pil (.mobile-brand-home, in élke rol/skin-combinatie hier
    hardcoded donker) versmelt de tekst met de achtergrond en blijft alleen
-   het icoon over (gemeld: "logo linksboven bijna niet te zien"). Een klein
-   lichte chip achter het beeld zelf lost dat overal op, ongeacht welke van
-   de drie .mobile-brand-home-varianten (medewerker/Mijn uren/beheer) of
-   welk thema actief is -- zonder het brondbestand aan te passen. */
+   het icoon over (gemeld: "logo linksboven bijna niet te zien"). Er bestaat
+   een witte variant van het logo (assets/path-logo-wit.png, ook gebruikt
+   door brandLogoUrl("donker") in de PDF-kop) die precies voor deze situatie
+   is gemaakt, maar dit ene <img>-element wordt in New hergebruikt voor zowel
+   donkere als lichte .mobile-brand-home-varianten (bv. het medewerker-
+   dashboard heeft een lichte pil via var(--surface)) -- het bronbestand
+   wisselen zou de lichte variant juist onleesbaar maken. Een chip achter het
+   beeld lost het dus overal op zonder het brondbestand aan te passen. Eerste
+   versie (10 september) was een rechthoekig blok met scherpe hoeken en oogde
+   lomp naast de ronde pil eromheen (gemeld: "logo is niet lekker zo") -- nu
+   een volledig afgeronde badge, dichter om het beeld heen, die meegaat met
+   de pil-vorm in plaats van ertegenin te gaan. */
 html[data-skin="new"] .mobile-brand-home img[data-brand-logo] {
   background: #f4f1e6;
-  border-radius: 8px;
-  padding: 3px 5px;
+  border-radius: 10px;
+  padding: 3px 6px;
   box-sizing: content-box;
 }
 
 html[data-skin="new"] .sidebar {
   background:
-    radial-gradient(circle at 18% 10%, rgba(95, 185, 141, .18), transparent 16rem),
+    radial-gradient(circle at 18% 10%, rgba(75, 177, 136, .18), transparent 16rem),
     linear-gradient(180deg, #071a2d, var(--path-night));
   border-right: 1px solid rgba(126, 201, 156, .15);
 }
@@ -137,7 +157,7 @@ html[data-skin="new"] .nav-item {
 
 html[data-skin="new"] .nav-item:hover,
 html[data-skin="new"] .nav-item.is-active {
-  background: rgba(95, 185, 141, .14);
+  background: rgba(75, 177, 136, .14);
   color: var(--path-cream);
 }
 
@@ -516,8 +536,8 @@ html[data-skin="new"] #view-timesheet .hours-table input {
 }
 
 html[data-skin="new"] #view-timesheet .hours-table input:focus {
-  border-color: #5fb98d;
-  box-shadow: 0 0 0 4px rgba(95, 185, 141, .18);
+  border-color: #4bb188;
+  box-shadow: 0 0 0 4px rgba(75, 177, 136, .18);
 }
 
 html[data-skin="new"] #view-timesheet .timesheet-actions {
@@ -641,14 +661,14 @@ html[data-skin="new"] #view-timesheet .customer-timesheet-field-label {
 html[data-skin="new"] #view-timesheet .customer-timesheet-current {
   margin-top: 18px;
   padding: 12px 14px;
-  border: 1px solid rgba(95, 185, 141, .18);
+  border: 1px solid rgba(75, 177, 136, .18);
   border-radius: 12px;
-  background: rgba(95, 185, 141, .06);
+  background: rgba(75, 177, 136, .06);
 }
 
 html[data-skin="new"] #view-timesheet .customer-timesheet-mail-preview {
   margin-top: 18px;
-  border-color: rgba(95, 185, 141, .28);
+  border-color: rgba(75, 177, 136, .28);
   background: linear-gradient(180deg, rgba(9, 39, 32, .96), rgba(7, 25, 28, .96));
   color: #d8e8df;
   padding: 16px 18px 18px;
@@ -825,8 +845,8 @@ html[data-skin="new"] .new-bento-go {
   font: 300 clamp(66px, 5.5vw, 82px)/1 var(--path-sans);
   box-shadow:
     inset 0 0 28px rgba(255, 255, 255, .05),
-    0 0 0 20px rgba(95, 185, 141, .09),
-    0 0 0 38px rgba(95, 185, 141, .045);
+    0 0 0 20px rgba(75, 177, 136, .09),
+    0 0 0 38px rgba(75, 177, 136, .045);
 }
 
 html[data-skin="new"] .new-bento-handoff { position: absolute; right: 8%; bottom: 35px; left: 8%; margin: 0; border-top: 1px solid rgba(255,255,255,.18); padding-top: 22px; }
@@ -839,7 +859,7 @@ html[data-skin="new"] .new-bento-week header small { display: block; margin-top:
 html[data-skin="new"] .new-bento-days { margin: 14px -4px 0; }
 html[data-skin="new"] .new-bento-day { display: grid; grid-template-columns: 42px 1fr; align-items: center; gap: 9px; min-height: 72px; border-top: 1px solid #d7cebe; padding: 9px 8px; }
 html[data-skin="new"] .new-bento-day.is-active { position: relative; margin-inline: -10px; border-color: #18354c; border-radius: 12px; background: #10273d; color: white; padding-inline: 18px; }
-html[data-skin="new"] .new-bento-day.is-active::before { content: ""; position: absolute; left: -13px; top: 50%; width: 8px; height: 8px; border-radius: 50%; background: #5fb98d; box-shadow: 0 0 0 3px rgba(95, 185, 141, .16); transform: translateY(-50%); }
+html[data-skin="new"] .new-bento-day.is-active::before { content: ""; position: absolute; left: -13px; top: 50%; width: 8px; height: 8px; border-radius: 50%; background: #4bb188; box-shadow: 0 0 0 3px rgba(75, 177, 136, .16); transform: translateY(-50%); }
 html[data-skin="new"] .new-bento-day span { display: grid; gap: 2px; color: inherit; text-transform: uppercase; }
 html[data-skin="new"] .new-bento-day small { font-size: 9px; opacity: .68; }
 html[data-skin="new"] .new-bento-day b { font: 400 18px var(--path-serif); }
@@ -847,8 +867,8 @@ html[data-skin="new"] .new-bento-day-control { display: grid; min-width: 0; grid
 html[data-skin="new"] .new-bento-day-control button { display: grid; width: 24px; height: 34px; place-items: center; border: 0; border-radius: 8px; background: transparent; color: #7c817c; cursor: pointer; font-size: 16px; }
 html[data-skin="new"] .new-bento-day-control button:hover { background: rgba(47, 106, 76, .1); color: #2f6a4c; }
 html[data-skin="new"] .new-bento-day input { width: 100%; min-width: 0; border: 1px solid #c7bdab; border-radius: 10px; background: #fbf8f2; color: #102235; font: 700 17px var(--path-sans); padding: 9px 6px; text-align: right; transition: border-color .2s ease, box-shadow .2s ease, background .2s ease; }
-html[data-skin="new"] .new-bento-day input:focus { border-color: #5fb98d; box-shadow: 0 0 0 2px rgba(95, 185, 141, .26); outline: none; }
-html[data-skin="new"] .new-bento-day.is-active input { border-color: #5fb98d; background: rgba(255,255,255,.08); color: white; box-shadow: 0 0 0 2px rgba(95, 185, 141, .2); }
+html[data-skin="new"] .new-bento-day input:focus { border-color: #4bb188; box-shadow: 0 0 0 2px rgba(75, 177, 136, .26); outline: none; }
+html[data-skin="new"] .new-bento-day.is-active input { border-color: #4bb188; background: rgba(255,255,255,.08); color: white; box-shadow: 0 0 0 2px rgba(75, 177, 136, .2); }
 html[data-skin="new"] .new-bento-day input:disabled { border-color: transparent; background: #f1ece2; color: #b8b0a1; opacity: 1; }
 html[data-skin="new"] .new-bento-day.is-active input:disabled { background: rgba(255,255,255,.08); color: #91a69d; }
 html[data-skin="new"] .new-bento-day.is-active .new-bento-day-control button { color: #d9e2dd; }
@@ -956,11 +976,11 @@ html[data-skin="new"] .new-bento-steps .section-label { color: #86c89e; }
 html[data-skin="new"] .new-bento-steps ol { position: relative; display: flex; align-items: flex-start; gap: 0; margin: 25px 0 0; padding: 0; list-style: none; }
 html[data-skin="new"] .new-bento-steps li { position: relative; display: grid; flex: 1 1 0; min-width: 0; gap: 8px; color: #9aa8ad; }
 html[data-skin="new"] .new-bento-step-segment { display: block; flex: 0 1 44px; min-width: 14px; margin-top: 20px; height: 2px; border-radius: 2px; background: rgba(255, 255, 255, .14); }
-html[data-skin="new"] .new-bento-step-segment.is-done { background: #68b47a; box-shadow: 0 0 12px rgba(95, 185, 141, .24); }
+html[data-skin="new"] .new-bento-step-segment.is-done { background: #68b47a; box-shadow: 0 0 12px rgba(75, 177, 136, .24); }
 html[data-skin="new"] .new-bento-step-segment.is-current { background: var(--path-amber); box-shadow: 0 0 12px rgba(217, 154, 60, .28); }
 html[data-skin="new"] .new-bento-steps i { position: relative; z-index: 1; display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid #4b6b82; border-radius: 50%; background: #163048; font-style: normal; box-shadow: 0 0 0 5px #0f293d; }
 html[data-skin="new"] .new-bento-steps li.is-done { color: #cfe5d7; }
-html[data-skin="new"] .new-bento-steps li.is-done i { border-color: #8dd2a0; background: #2f6a4c; color: white; box-shadow: 0 0 0 5px rgba(47,106,76,.5), 0 0 20px rgba(95,185,141,.42); }
+html[data-skin="new"] .new-bento-steps li.is-done i { border-color: #8dd2a0; background: #2f6a4c; color: white; box-shadow: 0 0 0 5px rgba(47,106,76,.5), 0 0 20px rgba(75,177,136,.42); }
 /* is-current = wacht nog op een actie van iemand anders (bv. Backoffice-controle);
    bewust een andere kleur dan is-done, zodat "klaar" en "wacht nog" niet identiek ogen. */
 html[data-skin="new"] .new-bento-steps li.is-current i { border-color: var(--path-amber); background: color-mix(in srgb, var(--path-amber) 55%, #163048); color: white; box-shadow: 0 0 0 5px rgba(217,154,60,.35), 0 0 20px rgba(217,154,60,.35); }
@@ -1004,7 +1024,7 @@ html[data-skin="new"] .new-bento-steps span { font-size: 12px; line-height: 1.45
 }
 
 html[data-skin="new"] .toast {
-  border: 1px solid rgba(95, 185, 141, .22);
+  border: 1px solid rgba(75, 177, 136, .22);
   border-radius: 16px;
   background: var(--path-night);
 }
@@ -1647,9 +1667,9 @@ html[data-skin="new"] .new-admin-pipeline small {
 }
 
 html[data-skin="new"] .new-admin-pipeline li[data-stage-state="done"] > span {
-  border-color: #5fb98d;
-  background: rgba(95, 185, 141, .14);
-  color: #5fb98d;
+  border-color: #4bb188;
+  background: rgba(75, 177, 136, .14);
+  color: #4bb188;
 }
 
 html[data-skin="new"] .new-admin-pipeline li[data-stage-state="current"] > span {
@@ -1763,8 +1783,8 @@ html[data-skin="new"] .new-admin-track-segment {
 }
 
 html[data-skin="new"] .new-admin-track-segment.is-done {
-  background: #5fb98d;
-  box-shadow: 0 0 8px rgba(95, 185, 141, .32);
+  background: #4bb188;
+  box-shadow: 0 0 8px rgba(75, 177, 136, .32);
 }
 
 html[data-skin="new"] .new-admin-employee-track.is-first-render .new-admin-track-segment.is-done {
@@ -1794,7 +1814,7 @@ html[data-skin="new"] .new-admin-employee-track i {
 html[data-skin="new"] .new-admin-employee-track i.is-done {
   border-color: #68b47a;
   color: #68b47a;
-  box-shadow: 0 0 0 3px rgba(95, 185, 141, .08);
+  box-shadow: 0 0 0 3px rgba(75, 177, 136, .08);
 }
 
 html[data-skin="new"] .new-admin-employee-track i.is-current {
@@ -2053,7 +2073,7 @@ html[data-skin="new"] #view-dashboard :is(p, small, .metric-label, .metric-note)
 }
 
 html[data-skin="new"] #view-dashboard .section-label {
-  color: #5fb98d;
+  color: #4bb188;
 }
 
 html[data-skin="new"] #view-dashboard .dashboard-team-panel {
@@ -2259,7 +2279,7 @@ html[data-skin="new"] #view-dashboard .customer-timesheet-admin-panel {
 html[data-skin="new"] [data-standard-hours-fill],
 html[data-skin="new"] #fill-standard-hours {
   border-color: rgba(47, 106, 76, .28);
-  background: linear-gradient(135deg, rgba(95, 185, 141, .18), rgba(238, 232, 220, .72));
+  background: linear-gradient(135deg, rgba(75, 177, 136, .18), rgba(238, 232, 220, .72));
   color: #163c2d;
   font-weight: 800;
 }
@@ -2267,7 +2287,7 @@ html[data-skin="new"] #fill-standard-hours {
 html[data-skin="new"] [data-standard-hours-fill]:hover,
 html[data-skin="new"] #fill-standard-hours:hover {
   border-color: rgba(47, 106, 76, .45);
-  background: linear-gradient(135deg, rgba(95, 185, 141, .26), rgba(255, 251, 244, .9));
+  background: linear-gradient(135deg, rgba(75, 177, 136, .26), rgba(255, 251, 244, .9));
   transform: translateY(-1px);
 }
 
@@ -2283,7 +2303,7 @@ html[data-skin="new"] .new-bento-day + .new-bento-day {
 }
 
 html[data-skin="new"] .new-bento-day:not(.is-active):focus-within {
-  border-color: rgba(95, 185, 141, .55);
+  border-color: rgba(75, 177, 136, .55);
   box-shadow: 0 10px 24px rgba(16, 34, 53, .09);
   background: rgba(255, 251, 244, .9);
 }
