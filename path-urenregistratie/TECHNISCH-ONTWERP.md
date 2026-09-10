@@ -23,6 +23,12 @@
 
 ## 3. Frontend-statusmodel
 
+De `.view.is-active`-klasse bepaalt welke hoofdweergave zichtbaar is. Een
+skinregel die de display-layout van een hoofdweergave wijzigt, moet ook op
+`.is-active` zijn begrensd. De flex-layout van het medewerkersdashboard geldt
+daarom alleen voor `#view-employee-dashboard.is-active`; anders overrulet zijn
+ID-specificiteit de algemene `.view { display: none }` op andere routes.
+
 `state.records[periode][medewerker]` bevat de geprojecteerde uren-, document-, factuur- en salarisstatus. In servermodus wordt na bootstrap voor een beheerder de volledige bekende combinatie van perioden en actieve medewerkers gehydrateerd voordat de globale werkvoorraad als gezaghebbend geldt.
 
 Belangrijke regels:

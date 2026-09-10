@@ -686,7 +686,7 @@ html[data-skin="new"] #view-employee-dashboard > :not(.new-employee-bento):not(#
   display: none !important;
 }
 
-html[data-skin="new"] #view-employee-dashboard {
+html[data-skin="new"] #view-employee-dashboard.is-active {
   display: flex;
   flex-direction: column;
   gap: 20px;

@@ -256,6 +256,7 @@ test('[SKIN-H-008] Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en
     ] as const) {
         await page.locator(`[data-view="${view}"]:visible, [data-pilot-view="${view}"]:visible`).first().click();
       await expect(page.locator(`#view-${view}`)).toHaveClass(/is-active/);
+      await expect(page.locator('.view:visible')).toHaveCount(1);
       await expect(page.locator('#page-title')).toHaveText(titel);
       await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     }
@@ -295,6 +296,12 @@ test('[SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en K
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     await expect(page.locator('#timesheet-employee')).toHaveText(medewerker);
     await expect(page.locator('#view-dashboard')).toBeHidden();
+    await expect(page.locator('#view-employee-dashboard')).toBeHidden();
+    await expect(page.locator('.view:visible')).toHaveCount(1);
+    await page.evaluate(() => { window.location.hash = 'employee-announcements'; });
+    await expect(page.locator('#view-employee-announcements')).toBeVisible();
+    await expect(page.locator('#view-employee-dashboard')).toBeHidden();
+    await expect(page.locator('.view:visible')).toHaveCount(1);
   });
 
   await test.step('Then de dashboardstatus gelijk blijft en Klassiek dezelfde gegevens toont', async () => {

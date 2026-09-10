@@ -580,8 +580,8 @@ De 35 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 472 Playwri
 - [SKIN-H-004] de nieuwe skin activeert uitsluitend zijn eigen visuele fundament — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 10
 - [SKIN-H-005] Klassiek start licht en Nieuw donker en onthoudt daarna elk eigen thema — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
 - [SKIN-H-006] de echte medewerkerroute toont de live bento en blijft mobiel bedienbaar — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 24
-- [SKIN-H-008] Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en terugschakelen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
-- [SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en Klassiek — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
+- [SKIN-H-008] Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en terugschakelen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 12
+- [SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en Klassiek — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 17
 - [SKIN-H-010] de admin-verhaallijn wisselt van medewerker en toont bijbehorende status — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [SKIN-H-011] een bewust opgeslagen 0 uur telt mee voor de weekvoortgang in Mijn uren — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 8
 - [SKIN-H-012] Mededelingen valt niet terug op de klassieke sidebar in Nieuw — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 5

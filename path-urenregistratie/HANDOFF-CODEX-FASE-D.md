@@ -1,5 +1,19 @@
 # HANDOFF — Codex, Fase D vervolg (herontwerp)
 
+## 10 september — volledige schermcontrole en dubbele medewerkerweergave
+
+- Gebruiker heeft main plus alle beheer- en medewerkersschermen toegewezen.
+  Schone werkkopie: `tmp/schermherstel`, gebaseerd op remote `37905e8` en daarna
+  met main `97f3168` samengevoegd. De oude dirty herontwerpwerkboom is intact.
+- Schermaudit van 9 hoofdschermen × 2 skins × 2 breedtes leverde 36 screenshots.
+  Echte fout: Nieuw zette `#view-employee-dashboard` onvoorwaardelijk op flex,
+  waardoor het hele dashboard ook boven Mijn uren en Mededelingen verscheen.
+- `SKIN-H-009` eerst rood bewezen (dashboard verwacht verborgen, was zichtbaar).
+  Selector beperkt tot `.is-active`; daarna desktop/Chrome/Safari 3/3 groen.
+  `SKIN-H-008/009` eisen nu precies één zichtbare hoofdweergave bij navigatie.
+- Main-versiescriptfix is opgenomen. Brede regressie, screenshothercontrole en
+  CI/TEST voor de nieuwe kop volgen nog. Geen PROD-promotie uitvoeren.
+
 ## (tijdelijk) 10 september — plan voor de komende ~8 uur, zonder de gebruiker
 
 Vastgelegd zodat er een concrete, verifieerbare volgorde is i.p.v. losjes

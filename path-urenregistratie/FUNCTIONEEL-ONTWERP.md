@@ -262,6 +262,10 @@ Minimaal de volgende ketens zijn releaseblokkerend:
 
 ## 11. Fout- en herstelgedrag
 
+- Iedere route toont precies één hoofdscherm. In Nieuw blijft het
+  medewerkersdashboard verborgen zodra Mijn uren of Mijn mededelingen actief is;
+  Home toont het dashboard weer. Dit geldt op desktop en telefoon en bij skinwissel.
+
 - Validatiefouten blijven in het actieve formulier zichtbaar en sluiten de modal niet.
 - Een unieke-emailconflict toont een begrijpelijke melding en opent waar mogelijk het bestaande
   account; ruwe SQL-fouten worden nooit aan de gebruiker getoond. De blokkadepopup licht het
@@ -323,6 +327,7 @@ Minimaal de volgende ketens zijn releaseblokkerend:
 | een nieuwe ontvanger komt bij andere medewerkers ongevinkt binnen | `admin-writes.spec.ts` (`ADM-WR-H-018`) |
 | het instellingenscherm toont de tekst die de ontvanger werkelijk krijgt | `invoice-company-identity.spec.ts` (`INV-ID-H-010`) |
 | mobiele hoofdketen | `mobile-ui.spec.ts` |
+| precies één zichtbaar hoofdscherm bij beheer- en medewerkernavigatie in Nieuw | `skin.spec.ts` (`SKIN-H-008`, `SKIN-H-009`) |
 | iedere medewerker en beheerder ziet na inloggen de eigen naam, nooit die van een collega | `auth.spec.ts` (`AUTH-H-020`, `AUTH-H-021`) |
 | één factuuractie maakt drie gescheiden mailroutes met het juiste bijlagenbeleid | `email-queue.spec.ts` (`EQ-H-022`) |
 | een uitgenodigde collega kan op de telefoon een wachtwoord instellen en ziet de bevestiging | `mobile-ui.spec.ts` (`MOB-H-006`) |

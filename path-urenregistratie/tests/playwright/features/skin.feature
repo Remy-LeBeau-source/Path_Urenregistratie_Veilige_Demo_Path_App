@@ -59,7 +59,7 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
   @happy
   Scenario: [SKIN-H-008] Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en terugschakelen
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 11
+    # Aantoonbare Playwright-assertions in deze case: 12
     Given Backoffice is ingelogd en de dashboardgegevens zijn geladen
     When Nieuw wordt geactiveerd en Backoffice alle hoofdschermen bezoekt
     Then dezelfde gegevens blijven staan in Nieuw en na terugschakelen naar Klassiek
@@ -67,7 +67,7 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
   @happy
   Scenario: [SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en Klassiek
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 12
+    # Aantoonbare Playwright-assertions in deze case: 17
     Given een medewerkerdashboard met geladen urenstatus
     When de medewerker Nieuw activeert en via de bento naar Mijn uren navigeert
     Then de dashboardstatus gelijk blijft en Klassiek dezelfde gegevens toont
