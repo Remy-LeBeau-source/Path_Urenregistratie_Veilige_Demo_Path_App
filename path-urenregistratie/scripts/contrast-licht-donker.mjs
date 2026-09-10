@@ -4,16 +4,22 @@ import { readFileSync } from 'node:fs';
 // rekent het contrast uit in de lichte en de donkere modus. Een vaste lichte
 // achtergrond die niet meebeweegt met de modus is de gevaarlijkste vorm: de tekst
 // wisselt wel mee, de achtergrond niet, en dan verdwijnt de tekst.
+//
+// Draait over beide skins: styles.css (Klassiek, tokens in :root /
+// html[data-theme="dark"]) en styles-new.css (New, tokens genest onder
+// html[data-skin="new"] / html[data-skin="new"][data-theme="dark"]).
+// Regels op :disabled-elementen worden overgeslagen: WCAG 1.4.3 (contrast van
+// tekst) geldt niet voor inactieve UI-onderdelen, en de uitgeschakelde
+// velden/knoppen in beide skins zijn bewust gedempt om "niet aanklikbaar" te
+// laten aanvoelen -- dat zou hier anders elke keer als vals-positief opduiken.
 
-const css = readFileSync('assets/styles.css', 'utf8');
-
-function tokensUit(blok) {
+function tokensUit(css, blok) {
   const uit = {};
   for (const m of blok.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;]+);/gi)) uit[m[1]] = m[2].trim();
   return uit;
 }
 
-function blokNa(zoek) {
+function blokNa(css, zoek) {
   const i = css.indexOf(zoek);
   if (i < 0) return '';
   const start = css.indexOf('{', i);
@@ -24,9 +30,6 @@ function blokNa(zoek) {
   }
   return '';
 }
-
-const licht = tokensUit(blokNa(':root {'));
-const donker = Object.assign({}, licht, tokensUit(blokNa('html[data-theme=\"dark\"] {')));
 
 function los(waarde, tokens, diep = 0) {
   if (diep > 6) return null;
@@ -66,40 +69,57 @@ function contrast(a, b) {
   return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
 }
 
-// Elke regel met selector + declaraties, media-blokken meegenomen.
-const regels = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
-  .map(m => ({ selector: m[1].trim().replace(/\s+/g, ' '), body: m[2] }))
-  .filter(r => r.selector && !r.selector.startsWith('@') && !r.selector.startsWith(':root'));
+function controleerBestand(pad, lichtSelector, donkerSelector) {
+  const css = readFileSync(pad, 'utf8');
+  const licht = tokensUit(css, blokNa(css, lichtSelector));
+  const donker = Object.assign({}, licht, tokensUit(css, blokNa(css, donkerSelector)));
 
-const problemen = [];
-for (const regel of regels) {
-  const kleurM = /(?:^|;)\s*color\s*:\s*([^;]+)/i.exec(regel.body);
-  const achterM = /(?:^|;)\s*background(?:-color)?\s*:\s*([^;]+)/i.exec(regel.body);
-  if (!kleurM || !achterM) continue;
+  // Elke regel met selector + declaraties, media-blokken meegenomen.
+  const regels = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .map(m => ({ selector: m[1].trim().replace(/\s+/g, ' '), body: m[2] }))
+    .filter(r => r.selector
+      && !r.selector.startsWith('@')
+      && !r.selector.startsWith(':root')
+      && r.selector !== lichtSelector.replace(/\s*\{$/, '')
+      && r.selector !== donkerSelector.replace(/\s*\{$/, '')
+      && !r.selector.includes(':disabled'));
 
-  const achterRuw = achterM[1].trim().split(/\s+/)[0];
-  const alleenDonker = regel.selector.includes('[data-theme="dark"]');
-  const modi = alleenDonker ? [['donker', donker]] : [['licht', licht], ['donker', donker]];
-  for (const [modus, tokens] of modi) {
-    const voor = rgb(los(kleurM[1], tokens));
-    const achter = rgb(los(achterRuw, tokens));
-    if (!voor || !achter) continue;
-    // Een doorzichtige achtergrond hangt af van wat eronder ligt; die kan deze
-    // scan niet beoordelen.
-    if (String(los(achterRuw, tokens)).toLowerCase().includes('rgba')) continue;
-    const c = contrast(voor, achter);
-    if (c < 4.5) {
-      problemen.push({ modus, selector: regel.selector, contrast: c.toFixed(2), voor: kleurM[1].trim(), achter: achterRuw });
+  const problemen = [];
+  for (const regel of regels) {
+    const kleurM = /(?:^|;)\s*color\s*:\s*([^;]+)/i.exec(regel.body);
+    const achterM = /(?:^|;)\s*background(?:-color)?\s*:\s*([^;]+)/i.exec(regel.body);
+    if (!kleurM || !achterM) continue;
+
+    const achterRuw = achterM[1].trim().split(/\s+/)[0];
+    const alleenDonker = regel.selector.includes('[data-theme="dark"]');
+    const modi = alleenDonker ? [['donker', donker]] : [['licht', licht], ['donker', donker]];
+    for (const [modus, tokens] of modi) {
+      const voor = rgb(los(kleurM[1], tokens));
+      const achter = rgb(los(achterRuw, tokens));
+      if (!voor || !achter) continue;
+      // Een doorzichtige achtergrond hangt af van wat eronder ligt; die kan deze
+      // scan niet beoordelen.
+      if (String(los(achterRuw, tokens)).toLowerCase().includes('rgba')) continue;
+      const c = contrast(voor, achter);
+      if (c < 4.5) {
+        problemen.push({ bestand: pad, modus, selector: regel.selector, contrast: c.toFixed(2), voor: kleurM[1].trim(), achter: achterRuw });
+      }
     }
   }
+  return problemen;
 }
 
+const problemen = [
+  ...controleerBestand('assets/styles.css', ':root {', 'html[data-theme="dark"] {'),
+  ...controleerBestand('assets/styles-new.css', 'html[data-skin="new"] {', 'html[data-skin="new"][data-theme="dark"] {'),
+];
+
 if (problemen.length === 0) {
-  console.log('Contrast lichte en donkere modus: geslaagd, geen regel onder 4,5:1.');
+  console.log('Contrast lichte en donkere modus, Klassiek en New: geslaagd, geen regel onder 4,5:1.');
 } else {
   console.log(problemen.length + ' regel(s) met te weinig contrast (grens 4.5):');
   for (const p of problemen.sort((a, b) => a.contrast - b.contrast)) {
-    console.log('  [' + p.modus + '] ' + p.contrast + ':1  ' + p.selector);
+    console.log('  [' + p.bestand + ' / ' + p.modus + '] ' + p.contrast + ':1  ' + p.selector);
     console.log('        tekst ' + p.voor + '  op  ' + p.achter);
   }
 }
