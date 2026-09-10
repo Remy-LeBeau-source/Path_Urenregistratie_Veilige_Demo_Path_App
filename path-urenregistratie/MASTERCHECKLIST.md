@@ -5,6 +5,17 @@ Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, op
 
 ## Betekenis van de statussen
 
+### Vervolg 10 september 2026
+
+- [x] W10: versiescript beschermt IP-adressen/langere getallen en valideert alle
+  doelen vóór schrijven; geïsoleerde CLI-regressie en build groen.
+- [x] `npm run check` groen: 473 cataloguscases, BDD en operationele contracten.
+- [x] R18 onderzocht: `E2E-H-024` desktop 3/3 en Safari 3/3 groen, geen authfix
+  zonder reproduceerbaar faalbeeld.
+- [-] Schermaudit: 36 combinaties vastgelegd. Nieuw toont het medewerkersdashboard
+  ten onrechte ook op Mijn uren/Mededelingen; herstel op schone herontwerpkopie loopt.
+- [-] Commit/push, gecombineerde regressie en CI van deze wijzigingen volgen.
+
 - [x] afgerond, getest en waar nodig gecommit/gepusht
 - [-] nog niet afgerond of nog open
 - [!] geblokkeerd of test mislukt

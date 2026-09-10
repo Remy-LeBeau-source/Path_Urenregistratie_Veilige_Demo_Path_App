@@ -47,7 +47,9 @@ function ontsnap(tekst) {
 // Telt en vervangt alleen binnen de toegestane regels, zodat het bereik van een
 // bestand met een begrenzing niet stilzwijgend groter wordt.
 function verwerk(inhoud, oud, nieuw, maxRegel) {
-  const patroon = new RegExp(ontsnap(oud), "g");
+  // Een versie mag niet onderdeel zijn van een IP-adres of langer getal.
+  // De optionele zichtbare prefix `v` blijft toegestaan (bijvoorbeeld v1.0.0).
+  const patroon = new RegExp(`(?<![\\d.])${ontsnap(oud)}(?![\\d.])`, "g");
   let treffers = 0;
   const regels = inhoud.split(/\r?\n/).map((regel, index) => {
     if (maxRegel && index + 1 > maxRegel) return regel;
@@ -80,6 +82,7 @@ if (!controleren && nieuw === oud) {
 }
 
 const rapport = [];
+const wijzigingen = [];
 let fouten = 0;
 
 for (const bestand of BESTANDEN) {
@@ -93,8 +96,13 @@ for (const bestand of BESTANDEN) {
     continue;
   }
   rapport.push({ pad: bestand.pad, treffers: gevonden.treffers });
-  if (!controleren) writeFileSync(volledig, gevonden.inhoud);
+  if (!controleren) wijzigingen.push({ volledig, inhoud: gevonden.inhoud });
 }
+
+// Valideer eerst alle bestanden. Een ontbrekende versie mag nooit een half
+// bijgewerkte release achterlaten.
+if (fouten > 0) process.exit(1);
+for (const wijziging of wijzigingen) writeFileSync(wijziging.volledig, wijziging.inhoud);
 
 // Na het schrijven mag het oude nummer nergens meer staan. Zonder deze ronde
 // zou een plek buiten de bekende bestanden ongemerkt achterblijven.

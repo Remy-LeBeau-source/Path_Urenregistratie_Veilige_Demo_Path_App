@@ -6,6 +6,12 @@ Losse regressiestatus staat in `MASTERCHECKLIST.md`; livegang-checklist in `PROD
 
 ## 1. Werkwijze & release
 
+**W10 bijgewerkt op 10 september 2026:** de hieronder historisch beschreven
+substringfout is opgelost. `set-version.mjs` sluit cijfers en punten direct vóór
+en ná de versie uit. `0.0.1` mag weer als versietoken worden verwerkt zonder
+`127.0.0.1` te raken. Het script valideert alle bestanden vóór het schrijven;
+de echte CLI-regressie `set-version-check.mjs` draait mee in `version:check`.
+
 | # | Keuze | Reden | Status |
 |---|---|---|---|
 | W1 | Werk rechtstreeks vanuit `main`. | Kleine solo-stroom, geen PR-overhead. | vast |

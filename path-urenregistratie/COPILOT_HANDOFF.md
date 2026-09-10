@@ -1,5 +1,25 @@
 # Copilot handoff — lokale mailpreview en regressieherstel
 
+## 10 september 2026 — vervolg door Codex: main en alle schermen
+
+- Gebruiker vraagt main en herontwerp gezamenlijk af te werken, inclusief alle
+  beheer- en medewerkersschermen. Actief eigenaarschap in deze sessie:
+  `scripts/set-version.mjs`, de bijbehorende CLI-regressie en schermdiagnostiek.
+- De oude werkboom `C:/Path-herontwerp-actief` bevat een omvangrijke stale dirty
+  diff. Die is intact gelaten. Actuele remote herontwerp heeft dezelfde
+  `assets/app.js` en `assets/styles-new.css` als main; extra commits zijn docs/merges.
+- W10 gerepareerd: versie-vervanging raakt geen IP-adressen of langere getallen
+  meer, en alle bestanden worden gevalideerd vóór de eerste write.
+  `scripts/set-version-check.mjs` bewijst dit via de echte CLI in tijdelijke
+  fixtures, inclusief behoud van dependencyversies en CRLF. Gerichte check groen.
+- R18: `E2E-H-024` op desktop Chromium 3/3 groen (2,1 minuten) en Safari 3/3
+  groen (2,7 minuten), zonder authwijziging. `npm run check` en build groen.
+- Run `34420611936`: Validate 8/8, Promote Test 8/8 en TEST-deploy groen.
+  Alleen de handmatige PROD-promotiejobs eindigden zonder deployment.
+- Volgende stappen: Safari afronden, alle schermen fotograferen/controleren,
+  bevindingen herstellen met regressie, lokale gates afronden, daarna branchsync
+  en CI/TEST. Nog geen commit of push vanuit deze vervolgsessie.
+
 ## Vervolgsessie op main, 10 september 2026, nacht — na de 20:46/23:xx-sessie
 
 Bouwt voort op de sessie direct hieronder (die tot commit `2d96ca4`/v1.0.46,
