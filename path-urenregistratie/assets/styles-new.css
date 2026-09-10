@@ -1807,7 +1807,10 @@ html[data-skin="new"] .new-admin-employee-track i {
   border: 1px solid #52636e;
   border-radius: 50%;
   background: #0e2334;
-  color: #61717d;
+  /* #61717d gaf hier maar 3.18:1 op #0e2334 -- te weinig voor de 10px-cijfers
+     erin (AA vraagt >=4.5:1 voor normale tekst). #7f8ea0 haalt 4.80:1 en
+     blijft duidelijk gedempter dan de groene/oranje is-done/is-current-status. */
+  color: #7f8ea0;
   font: 400 10px/1 var(--path-sans);
 }
 
