@@ -12961,7 +12961,25 @@ function handleBentoDayCardChange(event) {
   record.payrollStatus = "concept";
   persistState();
   scheduleDraftTimesheetWrite();
+  // rerenderActiveTimesheetView() vervangt #new-bento-days'/#hours-grid-cards'
+  // innerHTML volledig, dus ook het element waar de browser via Tab net naartoe
+  // onderweg was. "change" vuurt bij het verlaten van dit veld, vóórdat die
+  // toetsenbordnavigatie is afgerond -- daardoor bestaat de node niet meer op
+  // het moment dat Tab 'm probeert te focussen, en valt de focus terug op
+  // <body>. Vanaf daar telt de browser bij de volgende Tab weer vooraan de
+  // pagina, wat leek alsof je steeds terug naar maandag sprong (gemeld door
+  // TEST-tester Shawn-Douglas, 10 sep). De opgeslagen waarde zelf was altijd
+  // al goed; alleen de focus na de herbouw ging verloren.
   rerenderActiveTimesheetView();
+  // Alleen herstellen als de focus daadwerkelijk kwijtraakte aan <body> --
+  // een muisklik op iets buiten deze herbouwde sectie (bv. de "Standaardweek
+  // vullen"-knop) behoudt gewoon zijn eigen focus en moet met rust blijven.
+  if (document.activeElement === document.body || !document.activeElement) {
+    const selector = '.new-bento-hours-input[data-week-index="' + weekIndex + '"]';
+    const refreshed = [...document.querySelectorAll(selector)];
+    const next = refreshed.find(el => Number(el.dataset.dayIndex) === dayIndex + 1) || refreshed.find(el => Number(el.dataset.dayIndex) === dayIndex);
+    if (next && !next.disabled) next.focus();
+  }
 }
 
 function handleBentoDayCardKeydown(event) {
