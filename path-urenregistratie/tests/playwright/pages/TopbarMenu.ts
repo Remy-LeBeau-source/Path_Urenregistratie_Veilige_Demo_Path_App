@@ -13,6 +13,12 @@ import { expect, type Page } from '@playwright/test';
  * open, klik dan nog eens. Dit verzwakt geen enkele controle -- is het paneel
  * werkelijk kapot, dan gaat het ook na herhaald klikken niet open en valt de case
  * alsnog om, alleen sneller en met een duidelijker verhaal.
+ *
+ * 10 sep: op mobile-safari (CI, `A11Y-H-006`/`SKIN-H-015`) bleek het per-poging
+ * budget van 1s soms te krap -- WebKit's aanraak-naar-klik-vertaling kan iets
+ * later landen dan Playwrights eigen `.click()`-belofte al oplost. Beide
+ * budgetten verruimd (zelfde conventie als de 20s-hydratatiewachttijd in
+ * skin.spec.ts, SKIN-H-008).
  */
 export async function openPaneel(page: Page, opener: string, paneel: string): Promise<void> {
   const knop = page.locator(opener);
@@ -25,8 +31,8 @@ export async function openPaneel(page: Page, opener: string, paneel: string): Pr
       await knop.click();
     }
     await expect(doel, paneel + ' hoort open te gaan na een klik op ' + opener)
-      .toBeVisible({ timeout: 1_000 });
-  }).toPass({ timeout: 15_000, intervals: [250, 500, 1_000] });
+      .toBeVisible({ timeout: 2_500 });
+  }).toPass({ timeout: 20_000, intervals: [250, 500, 1_000, 2_000] });
 }
 
 /** Het profielmenu in de topbalk. */

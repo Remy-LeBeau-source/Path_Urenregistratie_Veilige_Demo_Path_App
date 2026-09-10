@@ -15,13 +15,15 @@ type JsonBody = Record<string, unknown>;
 // De <select> wordt in de modal opgewaardeerd naar een keuzemenu-widget
 // (zoals #pref-theme). Bedienen gaat via #pref-skin-trigger + de optieknoppen.
 async function kiesVormgeving(page: import('@playwright/test').Page, waarde: 'classic' | 'new'): Promise<void> {
+  // 15s -> 25s (10 sep, mobile-safari), zelfde reden als accessibility.spec.ts:
+  // moet boven openProfielmenu()/openPaneel()'s eigen 20s-budget blijven.
   await expect(async () => {
     await openProfielmenu(page);
     const preferences = page.locator('[data-profile-action="preferences"]');
-    await expect(preferences).toBeVisible({ timeout: 1_000 });
+    await expect(preferences).toBeVisible({ timeout: 2_500 });
     await preferences.click();
-    await expect(page.locator('#pref-skin-trigger')).toBeVisible({ timeout: 1_000 });
-  }).toPass({ timeout: 15_000, intervals: [250, 500, 1_000] });
+    await expect(page.locator('#pref-skin-trigger')).toBeVisible({ timeout: 2_500 });
+  }).toPass({ timeout: 25_000, intervals: [250, 500, 1_000, 2_000] });
   await expect(page.locator('#pref-skin-trigger')).toBeVisible();
   await page.locator('#pref-skin-trigger').click();
   await page.locator(`[data-standard-choice-target="pref-skin"][data-standard-choice-value="${waarde}"]`).click();
@@ -523,9 +525,16 @@ test('[SKIN-H-015] de theme-snelknop staat niet meer op de medewerker-startpagin
   });
 
   await test.step('And blijft de onderliggende voorkeur bereikbaar en werkend via Voorkeuren', async () => {
-    await openProfielmenu(page);
-    await page.locator('[data-profile-action="preferences"]').click();
-    await expect(page.locator('#pref-theme-trigger')).toBeVisible();
+    // Zelfde toPass-vangnet als kiesVormgeving() hierboven (10 sep): een kale
+    // klik direct na openProfielmenu() bleek op mobile-safari soms te vroeg,
+    // nog vóór het profielmenu daadwerkelijk interactief was.
+    await expect(async () => {
+      await openProfielmenu(page);
+      const voorkeuren = page.locator('[data-profile-action="preferences"]');
+      await expect(voorkeuren).toBeVisible({ timeout: 2_500 });
+      await voorkeuren.click();
+      await expect(page.locator('#pref-theme-trigger')).toBeVisible({ timeout: 2_500 });
+    }).toPass({ timeout: 25_000, intervals: [250, 500, 1_000, 2_000] });
     await page.locator('#pref-theme-trigger').click();
     await page.locator('[data-standard-choice-target="pref-theme"][data-standard-choice-value="dark"]').click();
     await page.getByRole('button', { name: 'Voorkeuren opslaan' }).click();
