@@ -1,5 +1,33 @@
 # Copilot handoff — lokale mailpreview en regressieherstel
 
+## Claude handoff — 10 september 2026, 2026-09-10 14:52
+
+Vervolgsessie op main. Kort samengevat:
+
+- **SKIN-H-008-mysterie definitief afgesloten**: de herontwerp-peer vond de echte
+  oorzaak (testmeetmoment vóór volledige hydratatie, geen productbug) en verklaarde
+  daarmee ook waarom main's Validate-shard 8 los daarvan gewoon groen bleef.
+  BESLISTABEL R13 bijgewerkt naar "vast".
+- **R26**: de resterende 5 "UI Desktop"-testbestanden (accessibility, auth,
+  invoices, pilot-page, timesheet-review-ui) draaien nu ook op mobile-chrome/
+  mobile-safari. Twee echte viewport-bugs gevonden en gefixt: PILOT-H-006
+  (Playwright-klikrace door een inklappende snelkeuzestrook) en TS-REV-UI-H-012
+  (dichtgeklapte Organisatie-instellingenkaart op smalle viewports).
+- **R28, de belangrijkste vondst**: `showModal()`'s focus-restore werkte op
+  WebKit/Safari nooit — Safari geeft een `<button>` bij een muis-/touchklik geen
+  focus (i.t.t. Chromium), dus `document.activeElement` was er altijd `<body>`.
+  Trof elke dialoogsluiting op elk echt iPhone/iPad. Gefixt met een
+  `pointerdown`-capture-fallback (`lastPointerActivatedElement`) in `assets/app.js`.
+- Twee cherry-picks van de herontwerp-peer naar main verwerkt: de gecentraliseerde
+  `applyDayHoursDefaultsToRecord()`-eigen-medewerker-guard + SKIN-H-008-testfix
+  (3628343, b82a334), en de contrastcheck-uitbreiding naar New-skin (4637d52,
+  vond en fixte een echt AA-contrastprobleem op de admin-stap-tracker).
+- Versie: 1.0.53 → 1.0.56. Alle wijzigingen gepusht naar main; CI volgt.
+- Nieuw open, bewust niet blind gefixt: R29 (A11Y-H-006 lokaal niet-reproduceerbare
+  flake, los van eigen wijzigingen bevestigd via `git stash`) en het reeds bekende
+  R23 (invoiceStatus/timesheetStatus-atomiciteit, financiële reconciliatiecode,
+  wacht op een concrete falende testcase voor iemand het aandurft).
+
 ## Claude handoff — 10 september 2026, 2026-09-10 10:56
 
 Codex heeft de gebruikerswens voor standaarduren afgerond en gepusht naar herontwerp.
