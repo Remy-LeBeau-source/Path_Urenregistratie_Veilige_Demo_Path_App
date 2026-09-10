@@ -50,6 +50,36 @@ en er een echte samenvatting voor komt.
    niet gokken en niet blokkeren -- kort noteren in dit bestand en
    doorgaan met het volgende punt.
 
+**Vervolg (10 september, later die nacht): de twee resterende punten uit
+stap 2 bekeken, geen concrete fout gevonden om te fixen.**
+
+- **Instellingen, resterende tabs.** Het zijn geen losse tabbladen die
+  wisselen (`data-scroll-target`-ankers naar secties op één doorlopende
+  pagina, geen tab-switch). De Organisatie-sectie (al eerder gescreenshot)
+  zag er consistent uit; een tweede poging om de hele pagina te
+  screenshotten liep vast op dezelfde bekende lokale hangende-click-flake op
+  `#quick-skin-toggle` (§8a-patroon, twee keer geprobeerd inclusief
+  zombie-`chrome.exe`'s killen, beide keren dezelfde timeout) -- geen
+  productcode aangeraakt op basis van een vermoeden. Er is ook geen
+  Instellingen-mockup in `design-mockups/` om tegenaan te leggen (alleen
+  `medewerker-dashboard.jpg` en `beheerder-maandoverzicht.jpg` bestaan).
+- **"Mijn uren"-layout vs. `medewerker-dashboard.jpg`.** Hero-kaart
+  ("Begin met je uren" + pijl) en weekkaart komen overeen. Getoonde dagen
+  wijken af van de mockup (Di-Vr i.p.v. Ma-Zo), maar dat is databepaald: de
+  eerste week van september 2026 begint midden in de week, en het weekend
+  toont sowieso geen werkdagen -- geen layoutfout. Eén echt verschil: de
+  mockup toont een **urengauge** ("20 / 160 uur"), de app een
+  **wekengauge** ("5 / 5 weken", `isTimesheetWeekComplete`). Dat is geen
+  bug maar een eerder bewust genomen productbeslissing waar de hele
+  Standaardweek-vullen/voltooiingslogica van vanavond op leunt (zie
+  hierboven) -- niet blind "terugzetten" naar de mockup zonder de
+  gebruiker, wél hier vastgelegd zodat het een bewuste keuze blijft i.p.v.
+  een vergeten afwijking.
+
+Conclusie: geen van beide punten leverde een concrete, verifieerbare fout
+op om te fixen. Niet geforceerd iets bedacht om "iets" te doen -- verder
+met de standaard CI/divergentie-bewaking.
+
 Buiten scope zonder de gebruiker: mobiele doorloop op een echt toestel (§5
 punt 2) en de merge naar `main` (§5 punt 4, beslist de gebruiker).
 
