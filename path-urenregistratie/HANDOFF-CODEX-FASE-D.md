@@ -753,3 +753,23 @@ Dit is geen eenmalige aanpak voor deze ene bug: gebruik 'm standaard zodra
 een wijziging die er onschuldig uitziet een test omslaat, in plaats van de
 makkelijkste route (test versoepelen of wijziging terugdraaien) te nemen
 zonder te snappen waarom.
+
+### 8b. De handmatige PROD-poort is geen blokkade om op te wachten
+
+Een Release Pipeline-run die verder overal groen is (Validate, Promote Test,
+Publish Live Docs, Deploy Test to TransIP) en daarna blijft "hangen" op de
+handmatige `Promote Prod*`-environmentpoort is **geen fout en geen taak om
+op te wachten**. Die poort is bewust handmatig — alleen de gebruiker beslist
+over promotie naar PROD (zie §1 hierboven en de standaardregel "nooit PROD
+aanraken"). Zie ook de episode van 9 september bovenaan: `pilot-merge-queue`
+liep hier eerder wél op vast doordat hij zulke runs als "nog bezig"
+beschouwde en nieuwe groene `herontwerp`-promoties tot drie uur blokkeerde;
+dat is gerepareerd, maar het onderliggende gedrag (de poort staat gewoon
+open te wachten) is bedoeld en blijft zo.
+
+Dus: zodra een pipeline-check laat zien dat alles vóór de PROD-poort groen
+is en alleen die poort nog open staat, is dat een afgeronde toestand — niet
+"nog bezig". Niet blijven pollen of erop wachten; meld het kort (of laat het
+zoals het is als niemand ernaar vraagt) en ga gewoon door met de volgende
+openstaande taak. Dit geldt voor elke pipeline-run, niet alleen voor
+`herontwerp` zelf.
