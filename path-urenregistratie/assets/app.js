@@ -11398,7 +11398,7 @@ function showEmployeeEditor(employeeId, prefill) {
     '</article>';
   }).join("");
   const summary = '<div class="modal-form">' +
-    '<p class="full form-help">Account en contract</p>' +
+    '<p class="full modal-form-sectie">Account en contract</p>' +
     '<label>Voor- en achternaam<input id="edit-name" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" value="' + escapeHtml(employee.name) + '"></label>' +
     '<label>Zakelijk accountadres<input id="edit-account-email" type="email" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" value="' + escapeHtml(employee.email || (serverAccountMode ? "" : "nieuwe-medewerker@example.invalid")) + '"></label>' +
     '<label>Functie<input id="edit-role" value="' + escapeHtml(employee.role) + '"></label>' +
@@ -11407,7 +11407,7 @@ function showEmployeeEditor(employeeId, prefill) {
     '<label>Uren per week<input id="edit-weekly-hours" type="number" min="0" step="0.5" value="' + weeklyHoursFor(employee) + '"></label>' +
     '<p class="full form-help">Eigen werkpatroon per weekdag (optioneel). Leeg = gelijk verdeeld over alle werkdagen, zoals nu. Ingevuld (bv. vrijdag 0) telt voortaan zo mee in de contracturen en staat als beginwaarde klaar in Mijn uren.</p>' +
     WEEKDAY_HOURS_FIELDS.map(field => '<label>' + field.label + '<input id="edit-hours-' + field.key + '" type="number" min="0" max="24" step="0.5" placeholder="gelijk verdeeld" value="' + (employee.dayHours && employee.dayHours[field.iso] !== undefined && employee.dayHours[field.iso] !== null ? employee.dayHours[field.iso] : "") + '"></label>').join("") +
-    '<p class="full form-help">Opdracht en factuurroute</p>' +
+    '<p class="full modal-form-sectie">Opdracht en factuurroute</p>' +
     '<label>Klant<input id="edit-client" value="' + escapeHtml(employee.client) + '"></label>' +
     '<label>Projectcode<input id="edit-project" value="' + escapeHtml(employee.projectCode) + '"></label>' +
     '<label>Broker<input id="edit-broker" value="' + escapeHtml(employee.broker) + '"></label>' +
@@ -11416,6 +11416,7 @@ function showEmployeeEditor(employeeId, prefill) {
     '<label>Factuuradres broker<textarea id="edit-broker-invoice-address" rows="2" placeholder="Straat en huisnummer&#10;Postcode en plaats">' + escapeHtml(employee.brokerInvoiceAddress || "") + '</textarea></label>' +
     '<label>Project op factuur<input id="edit-invoice-project" value="' + escapeHtml(employee.invoiceProject || employee.client || "") + '"></label>' +
     '<label>Factuurtarief<input id="edit-rate" type="number" min="0" step="0.5" value="' + employee.rate + '"></label>' +
+    '<p class="full modal-form-sectie">Mail en routering</p>' +
     '<p class="full form-help">Elke ontvanger hieronder krijgt zijn eigen mail. Laat een tekstveld leeg, dan gaat de standaardtekst voor dat soort ontvanger mee. Een urenstaat wordt nergens toegevoegd.</p>' +
     '<p class="full form-help">Beschikbare velden: {medewerker}, {klant}, {broker}, {maand}, {jaar}, {uren}, {factuurnummer}, {overeenkomstnummer}</p>' +
     '<div class="mail-route-choice-list full"><article class="mail-route-choice">' +

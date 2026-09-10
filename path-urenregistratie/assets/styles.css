@@ -923,6 +923,14 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .chip-button { border: 1px solid var(--line); background: var(--vlak-zacht); color: var(--navy-tekst); font-size: 10.5px; font-weight: 700; line-height: 1.3; padding: 7px 11px; border-radius: 999px; cursor: pointer; text-align: left; }
 .chip-button:hover { background: var(--green-light); border-color: var(--mint); color: var(--mint-dark-tekst); }
 .chip-button:focus-visible { outline: 2px solid var(--mint); outline-offset: 1px; }
+/* Sectiekop in een lang formulier. De groepering bestond al, maar de
+   kopjes hadden dezelfde groene help-opmaak als de uitlegteksten eronder,
+   waardoor je in één lange scroll niet zag waar een blok begon. Nu een
+   echte kop met een scheidingslijn erboven; .form-help blijft voor
+   werkelijke uitleg. */
+.modal-form-sectie { margin: 6px 0 0; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.modal-form > .modal-form-sectie:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+
 .modal-actions { display: flex; justify-content: flex-end; gap: 9px; }
 .toast { position: fixed; right: 24px; bottom: 24px; z-index: 150; max-width: 350px; border-radius: 12px; background: var(--navy); color: #fff; box-shadow: var(--shadow); font-size: 12px; opacity: 0; padding: 14px 18px; pointer-events: none; transform: translateY(12px); transition: opacity .2s ease, transform .2s ease; }
 .toast.is-visible { opacity: 1; transform: none; }

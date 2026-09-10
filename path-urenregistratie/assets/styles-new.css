@@ -233,6 +233,12 @@ html[data-skin="new"] :is(.data-table th, .data-table td, .hours-table th, .hour
   border-color: var(--line);
 }
 
+/* Zelfde sectiekop in de donkere New-opmaak. */
+html[data-skin="new"] .modal-form-sectie {
+  border-top-color: rgba(255, 255, 255, .12);
+  color: #8ea3ad;
+}
+
 html[data-skin="new"] .modal {
   border: 1px solid var(--line);
   background: var(--surface);
