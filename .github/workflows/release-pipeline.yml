@@ -1012,8 +1012,8 @@ jobs:
             kill "$(cat /tmp/php-server.pid)" || true
           fi
 
-  prod:
-    name: Promote Prod
+  prod-gate:
+    name: Promote Prod (goedkeuring)
     needs: [test, deploy-test]
     runs-on: ubuntu-latest
     environment: prod
@@ -1024,14 +1024,35 @@ jobs:
           && (github.event_name == 'push'
               || inputs.ref == 'main'
               || inputs.ref == 'refs/heads/main') }}
+    # Eén losse, ongesharde job die als enige `environment: prod` draagt. Tot 10
+    # sep declareerde elke individuele Promote-Prod-shard (en de deploy-job)
+    # zelf `environment: prod` -- de aanname dat GitHub de reviewerpoort per
+    # workflow-run bundelt bleek onjuist: elke job met een beschermde omgeving
+    # opent zijn EIGEN deployment-review-verzoek, dus 10-11 losse
+    # goedkeuringsmails per run in plaats van één. Nu vraagt alleen deze job
+    # goedkeuring; de gesharde Promote-Prod-jobs en de TransIP-deploy hangen
+    # eraan via `needs` zonder zelf een omgeving te declareren, en lopen na
+    # één klik op "Approve" allemaal automatisch door.
+    steps:
+      - name: Eén gezamenlijke prod-goedkeuringspoort
+        run: echo "Prod-omgeving goedgekeurd; de gesharde Promote Prod-jobs en de TransIP-deploy mogen door."
+
+  prod:
+    name: Promote Prod
+    needs: [test, deploy-test, prod-gate]
+    runs-on: ubuntu-latest
+    if: >-
+      ${{ always()
+          && needs.prod-gate.result == 'success'
+          && (github.event_name == 'push'
+              || inputs.ref == 'main'
+              || inputs.ref == 'refs/heads/main') }}
     # Zelfde shard-aanpak als Validate/Promote Test: de niet-gesharde volledige
     # suite op één runner liep herhaaldelijk vast op brede, verspreide timeouts
     # (46 mislukkingen, allemaal ongerelateerd aan de daadwerkelijke wijziging)
     # terwijl exact dezelfde code op de gesharde Validate/Promote Test-runs
     # foutloos doorliep -- resource-overbelasting van één runner, geen echte
-    # regressie. GitHub bundelt de prod-reviewerpoort per workflow-run, niet
-    # per job, dus sharden betekent nog steeds één goedkeuringsverzoek. Ook
-    # naar 10 shards (10 sep, zelfde reden als Validate hierboven).
+    # regressie. Naar 10 shards (10 sep, zelfde reden als Validate hierboven).
     strategy:
       fail-fast: false
       max-parallel: 10
@@ -1203,9 +1224,16 @@ jobs:
     name: Deploy Prod to TransIP
     needs: [prod, live-docs]
     runs-on: ubuntu-latest
-    environment: prod
+    # Houdt WEL zijn eigen `environment: prod`, in tegenstelling tot `prod`
+    # hierboven: TRANSIP_SSH_PRIVATE_KEY/TRANSIP_SSH_KNOWN_HOSTS (secrets) en
+    # TRANSIP_SSH_HOST/TRANSIP_SSH_USER (vars) zijn geverifieerd
+    # environment-gebonden aan prod (gh api .../environments/prod/secrets|
+    # variables, 10 sep) -- zonder deze declaratie zou deze job ze niet
+    # kunnen lezen. Dit blijft dus een tweede, eigen goedkeuringsverzoek;
+    # prod-gate verlaagt het totaal van 11 naar 2 losse mails, niet naar 1.
     permissions:
       contents: read
+    environment: prod
     if: >-
       ${{ always()
           && needs.prod.result == 'success'
