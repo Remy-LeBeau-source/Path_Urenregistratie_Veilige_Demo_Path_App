@@ -131,7 +131,7 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     When op 8 gevolgd door 0 wordt geklikt
 
   @happy
-  Scenario: [SKIN-H-016] een eigen werkpatroon per weekdag vult Mijn uren voor en telt zo mee in de contracturen
+  Scenario: [SKIN-H-016] een eigen werkpatroon per weekdag vult Mijn uren voor en kan met één knop opnieuw worden toegepast
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 21
     Given Backoffice een medewerker met een eigen werkpatroon aanmaakt (dinsdag 6 uur, vrijdag 0 uur)

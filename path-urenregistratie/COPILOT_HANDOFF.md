@@ -1,5 +1,23 @@
 # Copilot handoff — lokale mailpreview en regressieherstel
 
+## Herontwerp-doorwerknotitie — 10 september 2026, 10:20
+
+Deze notitie hoort bij de schone worktree `C:\Path-herontwerp-current` op detached `herontwerp`-HEAD, gerebased op `origin/herontwerp` `5d5241a`.
+
+Gebouwd:
+- Persoonlijke standaardweek/standaardmaand voor medewerkers: één knop vult lege, bewerkbare werkdagen volgens `employee.dayHours` of contracturen. Bestaande handmatige uren, 0-uur-dagen en bevestigde dagen worden niet overschreven.
+- Knop staat breed: Nieuw Dashboard-weekkaartje, Nieuw Mijn uren en Klassiek Mijn uren.
+- Nieuw design opgepoetst: rustigere dagkaartjes, duidelijkere focus/hover en een groen herkenbare standaarduren-actie. Klassiek kreeg dezelfde actie visueel passend in de oude stijl.
+- App/PWA-check gedaan: manifest + service worker + iOS home-screen + safe-area + 44px touch targets waren aanwezig; uren/verlof/ziektevelden kregen ontbrekende `inputmode="decimal"` zodat mobiel direct het goede toetsenbord opent.
+
+Lokaal groen:
+- `node --check path-urenregistratie/assets/app.js`
+- `git diff --check`
+- `node scripts/run-playwright-e2e.mjs --project=desktop-chromium --grep "SKIN-H-016"` → 1/1 groen vóór en ná rebase
+- `node scripts/run-playwright-e2e.mjs --project=desktop-chromium --grep "SKIN-H-0"` → 19 passed, 1 skipped
+
+Nog doen: commit, `git push origin HEAD:herontwerp`, CI volgen. Let op: `npm run check` is afgebroken omdat `scripts/smoke-test.mjs` opnieuw >90s volledig stil bleef; alle overige check-onderdelen uit de keten zijn los groen gedraaid.
+
 ## 10 september 2026, nacht — Claude Code neemt over van Codex (gebruikslimiet)
 
 Codex liep tegen zijn gebruikslimiet aan (zie sectie hieronder) met de

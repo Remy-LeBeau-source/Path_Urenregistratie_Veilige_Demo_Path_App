@@ -4206,6 +4206,38 @@ function weeklyHoursFor(employee) {
   return match ? Number(match[1].replace(",", ".")) : 40;
 }
 
+function standardHoursForDay(employee, dayIndex) {
+  const iso = dayIndex + 1;
+  const override = employee && employee.dayHours ? employee.dayHours[iso] : undefined;
+  const source = override !== undefined && override !== null && override !== "" ? override : weeklyHoursFor(employee) / 5;
+  const value = Number(String(source).replace(",", "."));
+  return Number.isFinite(value) && value >= 0 ? Math.min(24, Math.round(value * 10) / 10) : 0;
+}
+
+function standardHoursPattern(employee) {
+  return WEEKDAY_SHORT.map((label, dayIndex) => ({
+    label,
+    hours: standardHoursForDay(employee, dayIndex)
+  }));
+}
+
+function formatStandardHoursPattern(employee) {
+  return standardHoursPattern(employee).map(day => day.label + " " + (day.hours > 0 ? hoursFormat.format(day.hours) + "u" : "vrij")).join(" · ");
+}
+
+function standardHoursScopeLabel() {
+  return state.hoursWeekScope === "all" ? "maand" : "week";
+}
+
+function standardHoursButtonLabel() {
+  return state.hoursWeekScope === "all" ? "Standaardmaand vullen" : "Standaardweek vullen";
+}
+
+function standardHoursWeekIndexes(period) {
+  if (state.hoursWeekScope === "all") return period.weekRows.map((_, index) => index);
+  return [newEmployeeBentoWeekIndex(period)];
+}
+
 function defaultContractHours(employee, periodKey) {
   const period = periodFromKey(periodKey);
   // Zonder eigen werkpatroon blijft dit de oude, gelijk verdeelde berekening.
@@ -4214,14 +4246,11 @@ function defaultContractHours(employee, periodKey) {
   // van het gemiddelde -- anders klopt de vergelijking met de contracturen
   // structureel niet voor wie niet vijf gelijke dagen werkt (of voor iedereen
   // zodra de maand niet op maandag begint).
-  const average = weeklyHoursFor(employee) / 5;
   let total = 0;
   period.weekRows.forEach(row => {
     row.days.forEach((day, dayIndex) => {
       if (!day) return;
-      const iso = dayIndex + 1;
-      const override = employee.dayHours ? employee.dayHours[iso] : undefined;
-      total += override !== undefined && override !== null ? Number(override) : average;
+      total += standardHoursForDay(employee, dayIndex);
     });
   });
   return Math.round(total * 10) / 10;
@@ -4395,17 +4424,56 @@ function applyDayHoursDefaultsToRecord(record, employee, periodKey) {
   if (!employee.dayHours || !isTimesheetEditableForEmployee(record)) return;
   const period = periodFromKey(periodKey);
   const activeWeekIndex = todaysWeekIndexInPeriod(period);
-  const week = period.weekRows[activeWeekIndex];
-  if (!week || !record.entries || !record.entries[activeWeekIndex]) return;
-  week.days.forEach((day, dayIndex) => {
-    if (!day) return;
-    if (record.confirmedEntries?.[activeWeekIndex]?.[dayIndex]) return;
-    if (Number(record.entries[activeWeekIndex][dayIndex] || 0) > 0) return;
-    const override = employee.dayHours[dayIndex + 1];
-    if (override !== undefined && override !== null) {
-      record.entries[activeWeekIndex][dayIndex] = Number(override);
-    }
+  fillStandardHoursInRecord(record, employee, period, [activeWeekIndex], { persistStatus: false });
+}
+
+function fillStandardHoursInRecord(record, employee, period, weekIndexes, options = {}) {
+  if (!record || !isTimesheetEditableForEmployee(record)) return 0;
+  let changed = 0;
+  weekIndexes.forEach(weekIndex => {
+    const week = period.weekRows[weekIndex];
+    if (!week || !record.entries || !record.entries[weekIndex]) return;
+    week.days.forEach((day, dayIndex) => {
+      if (!day) return;
+      if (record.confirmedEntries?.[weekIndex]?.[dayIndex]) return;
+      if (Number(record.entries[weekIndex][dayIndex] || 0) > 0) return;
+      const nextValue = standardHoursForDay(employee, dayIndex);
+      if (Number(record.entries[weekIndex][dayIndex] || 0) === nextValue) return;
+      record.entries[weekIndex][dayIndex] = nextValue;
+      changed += 1;
+    });
   });
+  if (changed && options.persistStatus !== false) {
+    if (record.timesheetStatus !== "correction") record.timesheetStatus = "draft";
+    record.invoiceStatus = "concept";
+    record.payrollStatus = "concept";
+  }
+  return changed;
+}
+
+function fillStandardHoursForCurrentScope() {
+  const employee = currentEmployee();
+  const period = currentPeriod();
+  const record = recordFor(employee.id, period.key);
+  if (!isTimesheetEditableForEmployee(record)) {
+    toast("Deze maand is vergrendeld en alleen-lezen.");
+    return;
+  }
+  if (document.querySelector("#view-timesheet")?.classList.contains("is-active")) {
+    updateHoursTotal(false);
+  }
+  const changed = fillStandardHoursInRecord(record, employee, period, standardHoursWeekIndexes(period));
+  rerenderActiveTimesheetView();
+  if (!changed) {
+    toast("Alles stond al volgens je standaard" + standardHoursScopeLabel() + ".");
+    return;
+  }
+  persistState();
+  scheduleDraftTimesheetWrite();
+  renderDashboard();
+  renderApprovals();
+  renderInvoices();
+  toast(standardHoursButtonLabel() + ": " + formatStandardHoursPattern(employee) + ". Pas vrij, ziek of afwijkend werk daarna handmatig aan.");
 }
 
 // Standaardpatroon: 8 uur op elke werkdag als een medewerker geen eigen
@@ -5148,15 +5216,16 @@ function renderNewEmployeeBento(record, employee, period) {
   document.querySelector("#new-bento-week-total-label").textContent = "Totaal · " + weekBusinessDays + " werkdag" + (weekBusinessDays === 1 ? "" : "en") + " in deze maand";
   document.querySelector("#new-bento-week-total").textContent = hoursFormat.format(weekTotal) + " uur";
   updateWeekNavButtons("#new-employee-bento", weekIndex, period);
-  const fillPatternButton = document.querySelector('[data-fill-default-pattern="week"]');
   const fillPatternNote = document.querySelector("#new-bento-fill-pattern-note");
-  if (fillPatternButton) {
-    fillPatternButton.disabled = !editable;
-    fillPatternButton.hidden = !editable;
+  const standardFill = document.querySelector("#new-employee-bento [data-standard-hours-fill]");
+  if (standardFill) {
+    standardFill.disabled = !editable;
+    standardFill.title = "Vul 0- en lege dagen met je persoonlijke standaardweek: " + formatStandardHoursPattern(employee);
+    standardFill.innerHTML = '<span aria-hidden="true">↺</span> ' + standardHoursButtonLabel();
   }
   if (fillPatternNote) {
     fillPatternNote.hidden = !editable;
-    fillPatternNote.textContent = "Vult lege dagen met " + fillPatternDescription(employee) + ". Ziek of vrij kun je daarna zelf aanpassen.";
+    fillPatternNote.textContent = "Vult lege dagen met " + formatStandardHoursPattern(employee) + ". Ziek of vrij kun je daarna zelf aanpassen.";
   }
   const submit = document.querySelector("[data-new-bento-submit]");
   submit.disabled = !editable;
@@ -8313,7 +8382,7 @@ function renderHoursGrid() {
       // <label> een klik op een geneste knop ongewenst nogmaals doorzetten
       // naar het input-element als impliciete label-associatie -- daarom nu
       // een <div>; het veld heeft zijn eigen aria-label al voor toegankelijkheid.
-      return '<td class="workday-cell"><div class="hours-day-entry"><span class="date-number">' + WEEKDAY_SHORT[dayIndex] + ' ' + day.day + ' ' + escapeHtml(period.month.slice(0, 3)) + '</span><input class="hours-input" data-week-index="' + weekIndex + '" data-day-index="' + dayIndex + '" type="number" min="0" max="24" step="0.5" value="' + displayValue + '" placeholder="0" aria-label="' + escapeHtml(WEEKDAY_SHORT[dayIndex] + ' ' + day.label) + '"' + cellDisabled + '><span class="hours-day-presets" aria-label="Snelle urenkeuze"><button type="button" data-hours-set="0"' + cellDisabled + '>0</button><button type="button" data-hours-set="8"' + cellDisabled + '>8</button><button type="button" data-hours-set="9"' + cellDisabled + '>9</button></span></div></td>';
+      return '<td class="workday-cell"><div class="hours-day-entry"><span class="date-number">' + WEEKDAY_SHORT[dayIndex] + ' ' + day.day + ' ' + escapeHtml(period.month.slice(0, 3)) + '</span><input class="hours-input" data-week-index="' + weekIndex + '" data-day-index="' + dayIndex + '" type="number" min="0" max="24" step="0.5" inputmode="decimal" value="' + displayValue + '" placeholder="0" aria-label="' + escapeHtml(WEEKDAY_SHORT[dayIndex] + ' ' + day.label) + '"' + cellDisabled + '><span class="hours-day-presets" aria-label="Snelle urenkeuze"><button type="button" data-hours-set="0"' + cellDisabled + '>0</button><button type="button" data-hours-set="8"' + cellDisabled + '>8</button><button type="button" data-hours-set="9"' + cellDisabled + '>9</button></span></div></td>';
     }).join("");
     const yearNote = week.year === period.year ? "" : " · " + week.year;
     return '<tr data-week-index="' + weekIndex + '"><td>Week ' + week.number + yearNote + "</td>" + cells + '<td class="week-total">0,0</td></tr>';
@@ -8333,6 +8402,7 @@ function updateTimesheetSubmitUi(record) {
   const normalizedStatus = record && record.timesheetStatus ? String(record.timesheetStatus) : "draft";
   const submit = document.querySelector("#submit-timesheet");
   const save = document.querySelector("#save-timesheet");
+  const standardFill = document.querySelector("#fill-standard-hours");
   // A submitted month belongs to Backoffice and must stay read-only until an
   // explicit correction request returns ownership to the employee.
   const canSubmit = normalizedStatus === "draft" || normalizedStatus === "correction";
@@ -8346,13 +8416,11 @@ function updateTimesheetSubmitUi(record) {
     const week = weekMatch ? currentPeriod().weekRows[Number(weekMatch[1])] : null;
     save.textContent = week ? "Week " + week.number + " opslaan" : "Maand opslaan";
   }
-  const fillDefault = document.querySelector("#fill-default-pattern");
-  if (fillDefault) {
-    fillDefault.hidden = !canSubmit;
-    fillDefault.disabled = !canSubmit;
-    fillDefault.textContent = wholeMonthSelected ? "Standaardmaand vullen" : "Standaardweek vullen";
-    fillDefault.title = "Vult de lege dagen van " + (wholeMonthSelected ? "deze maand" : "deze week")
-      + " met je normale patroon (" + fillPatternDescription(currentEmployee()) + "). Ziek of vrij kun je daarna zelf aanpassen.";
+  if (standardFill) {
+    standardFill.hidden = !canSubmit;
+    standardFill.disabled = !canSubmit;
+    standardFill.textContent = standardHoursButtonLabel();
+    standardFill.title = "Vul 0- en lege dagen met je persoonlijke standaardweek: " + formatStandardHoursPattern(currentEmployee());
   }
   if (submit) {
     submit.hidden = !showSubmit;
@@ -12575,14 +12643,13 @@ function toonInstallatieAanbod() {
     return;
   }
 
-  const fillDefaultPattern = event.target.closest("[data-fill-default-pattern]");
-  if (fillDefaultPattern) {
-    applyFillDefaultPattern(
-      fillDefaultPattern.dataset.fillDefaultPattern === "month" ? null : newEmployeeBentoWeekIndex(currentPeriod()),
-      renderNewEmployeeBento
-    );
+  const standardHoursFill = event.target.closest("[data-standard-hours-fill]");
+  if (standardHoursFill && !standardHoursFill.disabled) {
+    fillStandardHoursForCurrentScope();
     return;
   }
+
+
 
   const newBentoSave = event.target.closest("[data-new-bento-save]");
   if (newBentoSave) {
@@ -13030,6 +13097,7 @@ function showTimesheetSubmitConfirmation() {
 }
 
 document.querySelector("#submit-timesheet").addEventListener("click", showTimesheetSubmitConfirmation);
+document.querySelector("#fill-standard-hours").addEventListener("click", fillStandardHoursForCurrentScope);
 document.querySelector("#save-timesheet").addEventListener("click", () => {
   updateHoursTotal(true);
   const weekMatch = /^week-(\d+)$/.exec(String(state.hoursWeekScope || ""));
@@ -13037,10 +13105,6 @@ document.querySelector("#save-timesheet").addEventListener("click", () => {
   toast((week ? "Week " + week.number : currentPeriod().label) + " is opgeslagen.");
 });
 
-document.querySelector("#fill-default-pattern").addEventListener("click", () => {
-  const weekMatch = /^week-(\d+)$/.exec(String(state.hoursWeekScope || ""));
-  applyFillDefaultPattern(weekMatch ? Number(weekMatch[1]) : null, () => rerenderActiveTimesheetView());
-});
 
 document.querySelector("#approve-all").addEventListener("click", () => {
   const open = allOpenApprovals().filter(item => state.approvalScope === "all" || item.periodKey === currentPeriod().key);

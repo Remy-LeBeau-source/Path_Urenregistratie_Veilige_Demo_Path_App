@@ -2253,3 +2253,37 @@ html[data-skin="new"] #view-dashboard .customer-timesheet-admin-panel {
     scroll-behavior: auto !important;
   }
 }
+
+
+/* Standaarduren-flow: één herkenbare handeling voor Dashboard en Mijn uren. */
+html[data-skin="new"] [data-standard-hours-fill],
+html[data-skin="new"] #fill-standard-hours {
+  border-color: rgba(47, 106, 76, .28);
+  background: linear-gradient(135deg, rgba(95, 185, 141, .18), rgba(238, 232, 220, .72));
+  color: #163c2d;
+  font-weight: 800;
+}
+
+html[data-skin="new"] [data-standard-hours-fill]:hover,
+html[data-skin="new"] #fill-standard-hours:hover {
+  border-color: rgba(47, 106, 76, .45);
+  background: linear-gradient(135deg, rgba(95, 185, 141, .26), rgba(255, 251, 244, .9));
+  transform: translateY(-1px);
+}
+
+html[data-skin="new"] .new-bento-day {
+  border-radius: 14px;
+  border: 1px solid rgba(215, 206, 190, .82);
+  background: rgba(255, 251, 244, .46);
+  margin-top: 7px;
+}
+
+html[data-skin="new"] .new-bento-day + .new-bento-day {
+  border-top-color: rgba(215, 206, 190, .82);
+}
+
+html[data-skin="new"] .new-bento-day:not(.is-active):focus-within {
+  border-color: rgba(95, 185, 141, .55);
+  box-shadow: 0 10px 24px rgba(16, 34, 53, .09);
+  background: rgba(255, 251, 244, .9);
+}

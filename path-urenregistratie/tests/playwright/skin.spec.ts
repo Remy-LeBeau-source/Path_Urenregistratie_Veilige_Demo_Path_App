@@ -694,17 +694,39 @@ test('[SKIN-H-016] een eigen werkpatroon per weekdag vult Mijn uren voor en telt
       await expect(inputs.last()).toHaveValue('');
     });
 
-    await test.step('When de week wordt opgeslagen zonder verder iets aan te passen', async () => {
-      await page.locator('[data-new-bento-save]').click();
+    await test.step('And de standaardweekknop is zichtbaar op het Dashboard', async () => {
+      await expect(page.locator('#new-employee-bento [data-standard-hours-fill]')).toContainText('Standaardweek vullen');
+    });
+
+    await test.step('And dezelfde knop vult nog lege weken in Mijn uren in Nieuw en Klassiek', async () => {
+      await page.evaluate(() => { window.location.hash = 'timesheet'; });
+      await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+      await page.locator('[data-hours-week-scope="week-1"]').click();
+      await expect(page.locator('#hours-week-nav')).toBeVisible();
+      await expect(page.locator('#fill-standard-hours')).toContainText('Standaardweek vullen');
+      const newCardsInput = page.locator('#hours-grid-cards .new-bento-hours-input').nth(1);
+      await expect(newCardsInput).toHaveValue('');
+      await page.locator('#fill-standard-hours').click();
+      await expect(newCardsInput).toHaveValue('6', { timeout: 5_000 });
+
+      await page.locator('#quick-skin-toggle').click();
+      await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+      await page.locator('[data-hours-week-scope="week-2"]').click();
+      await expect(page.locator('#hours-table-wrap')).toBeVisible();
+      const classicInput = page.locator('#hours-grid .hours-input').nth(1);
+      await expect(classicInput).toHaveValue('');
+      await page.locator('#fill-standard-hours').click();
+      await expect(classicInput).toHaveValue('6', { timeout: 5_000 });
+
+      await page.locator('[data-hours-week-scope="week-0"]').click();
+    });
+
+    await test.step('When de uren vanuit Mijn uren worden opgeslagen', async () => {
+      await page.locator('#save-timesheet').click();
       await page.waitForTimeout(1_500);
     });
 
     await test.step('Then heeft de server het patroon zelf bewaard: dinsdag 6 uur, vrijdag expliciet 0 uur', async () => {
-      await page.reload();
-      await expect(page.locator('#new-employee-bento')).toBeVisible();
-      await expect(inputs.first()).toHaveValue('6', { timeout: 10_000 });
-      await expect(inputs.last()).toHaveValue('');
-
       // Rechtstreeks bij de server nagaan i.p.v. op de herlaad-request zelf te
       // wachten -- die race is bij deze zwaardere setup (nieuwe medewerker +
       // wachtwoordreset in dezelfde test) een paar keer nooit gematcht,
@@ -731,10 +753,13 @@ test('[SKIN-H-016] een eigen werkpatroon per weekdag vult Mijn uren voor en telt
     // alle ándere tests die dezelfde CI-database delen, ook lang na deze
     // case. Zelfde opruimpatroon als business-workflows-e2e.spec.ts: eerst
     // deactiveren, dan het account echt verwijderen.
-    const csrfLogout = await (await page.request.get('/server/auth/csrf.php')).json() as { csrf_token?: string };
-    await page.request.post('/server/auth/logout.php', {
-      headers: { 'X-CSRF-Token': String(csrfLogout.csrf_token || '') },
-    }).catch(() => null);
+    const csrfLogout = await page.request.get('/server/auth/csrf.php').catch(() => null);
+    if (csrfLogout && csrfLogout.ok()) {
+      const csrfBody = await csrfLogout.json() as { csrf_token?: string };
+      await page.request.post('/server/auth/logout.php', {
+        headers: { 'X-CSRF-Token': String(csrfBody.csrf_token || '') },
+      }).catch(() => null);
+    }
     if (gebruikerId > 0) {
       await beheerPost('/server/api/staff.php', {
         action: 'upsert_employee',

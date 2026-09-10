@@ -2980,3 +2980,17 @@ body.toont-installatieaanbod .main-content {
   .hours-table th { font-size: 14px; }
   #auth-reset-complete-feedback.is-success { font-size: 15px; }
 }
+
+
+/* Klassiek: standaardurenknop subtiel herkenbaar naast opslaan/indienen. */
+#fill-standard-hours {
+  border-color: rgba(58, 189, 157, .38);
+  background: var(--green-light);
+  color: var(--teal);
+  font-weight: 700;
+}
+
+#fill-standard-hours:hover {
+  border-color: rgba(22, 146, 118, .58);
+  background: #dff5ee;
+}

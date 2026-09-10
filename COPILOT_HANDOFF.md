@@ -1,5 +1,23 @@
 # Copilot ↔ Codex overdracht
 
+## Actuele herontwerp-doorwerknotitie — 10 september 2026, 10:20
+
+Codex werkt in `C:\Path-herontwerp-current` op detached `herontwerp`-HEAD, gerebased op `origin/herontwerp` `5d5241a` en pusht straks met `git push origin HEAD:herontwerp`.
+
+Gebouwd in deze sessie:
+- De wens uit de handoff/WhatsApp is nu concreet: medewerkers kunnen een persoonlijk standaardpatroon opnieuw toepassen met één knop. De knop staat in Nieuw op het Dashboard-weekkaartje én in Mijn uren; in Klassiek staat dezelfde actie in Mijn uren.
+- De actie vult alleen lege, bewerkbare werkdagen in de gekozen week/maand, respecteert bevestigde dagen en laat bestaande afwijkingen zoals ziek/vrij of handmatig ingevulde uren staan.
+- Nieuw heeft extra visuele rust gekregen rond de dagkaartjes en een herkenbare groene standaarduren-actie. Klassiek kreeg dezelfde actie zonder de oude stijl te breken.
+- App/PWA-criteria opnieuw bekeken: manifest, service worker, iOS home-screen-meta, safe-area-padding, 44px touch targets en installbanner zijn aanwezig. Kleine app-verbetering toegevoegd: uren/verlof/ziekte-invoer gebruikt nu mobiele decimale invoer waar dat nog ontbrak.
+
+Lokaal bewijs tot nu:
+- `node --check path-urenregistratie/assets/app.js`
+- `git diff --check`
+- `node scripts/run-playwright-e2e.mjs --project=desktop-chromium --grep "SKIN-H-016"` → 1/1 groen vóór en ná rebase
+- `node scripts/run-playwright-e2e.mjs --project=desktop-chromium --grep "SKIN-H-0"` → 19 passed, 1 skipped
+
+Nog doen vóór push: commit, `git push origin HEAD:herontwerp`, daarna CI volgen. Let op: `npm run check` is in deze worktree afgebroken omdat `scripts/smoke-test.mjs` opnieuw >90s volledig stil bleef; alle overige check-onderdelen uit de keten zijn los groen gedraaid.
+
 ## ACTUELE INTEGRATIE — 9 september 2026, 00:55
 
 - `origin/herontwerp` t/m `e6b49e6` en lokale `main` t/m `f09bb2a` zijn
