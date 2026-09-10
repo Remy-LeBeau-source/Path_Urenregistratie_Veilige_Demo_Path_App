@@ -523,30 +523,8 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .hours-view-toolbar > div:first-child strong { color: var(--navy-tekst); font-size: 11px; }
 .hours-view-toolbar > div:first-child small { margin-top: 3px; color: var(--muted); font-size: 9px; }
 .hours-week-filter-wrap { min-width: 0; }
-.hours-week-filter {
-  width: fit-content;
-  max-width: 100%;
-  overflow-x: auto;
-  overscroll-behavior-inline: contain;
-  scrollbar-color: var(--mint) rgba(13, 27, 56, .14);
-  scrollbar-width: thin;
-}
-.hours-week-filter::-webkit-scrollbar { height: 7px; }
-.hours-week-filter::-webkit-scrollbar-track { border-radius: 999px; background: rgba(13, 27, 56, .14); }
-.hours-week-filter::-webkit-scrollbar-thumb { border-radius: 999px; background: var(--mint); }
-.hours-week-filter button { flex: 0 0 auto; white-space: nowrap; }
+.hours-week-filter { width: fit-content; }
 .hours-week-scroll-hint { display: none; }
-/* Testfeedback: de native scrollbar op .hours-week-filter (hierboven) blijft
-   op mobiel onzichtbaar tot je actief aan het schuiven bent -- veel mobiele
-   browsers verbergen overlay-scrollbars zolang er niets aangeraakt wordt,
-   dus een stilstaand scherm liet nergens zien dat er meer weken te vinden
-   waren. Deze eigen balk is altijd zichtbaar (geen overlay-gedrag), werkt
-   identiek in licht en donker (token-kleuren), en toont via JS (setHoursWeekScrollThumb
-   in app.js) hoeveel er te zien is en hoever al geschoven is.
-   #hours-week-scroll-track staat hidden totdat JS vaststelt dat er
-   daadwerkelijk meer te schuiven valt dan het zichtbare deel. */
-.hours-week-scroll-track { position: relative; height: 4px; margin: 6px 4px 0; border-radius: 999px; background: var(--line); overflow: hidden; }
-.hours-week-scroll-thumb { position: absolute; top: 0; left: 0; height: 100%; min-width: 18px; border-radius: 999px; background: var(--mint); }
 .hours-visible-total { text-align: right; }
 .hours-visible-total span, .hours-visible-total strong { display: block; }
 .hours-visible-total span { color: var(--muted); font-size: 9px; text-transform: uppercase; }
@@ -726,9 +704,22 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .mail-route-guide strong, .mail-route-guide small { display: block; }
 .mail-route-guide strong { color: var(--navy-tekst); font-size: 11px; }
 .mail-route-guide small { margin-top: 3px; color: var(--muted); font-size: 9px; line-height: 1.4; }
-.segmented-control { display: flex; gap: 4px; border-radius: 10px; background: #f0f4f4; padding: 3px; }
-.segmented-control button { border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; font-size: 10px; font-weight: 700; padding: 7px 12px; }
+/* Testfeedback: alleen .hours-week-filter kon zelf schuiven bij te veel
+   knoppen; de andere .segmented-control-rijen (Goedkeuringen, Facturen,
+   Mededelingen, Medewerkers) hadden geen overflow-x en liepen dus gewoon uit
+   hun bak bij genoeg knoppen op een smal scherm. Nu generiek op de basis-
+   klasse, plus dezelfde altijd-zichtbare schuifbalk-indicator (zie
+   .segmented-control-scroll-track/-thumb en
+   refreshSegmentedControlScrollIndicators() in app.js) i.p.v. alleen de
+   overlay-scrollbar die op mobiel onzichtbaar blijft tot je 'm aanraakt. */
+.segmented-control { display: flex; gap: 4px; border-radius: 10px; background: #f0f4f4; padding: 3px; max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-color: var(--mint) rgba(13, 27, 56, .14); scrollbar-width: thin; }
+.segmented-control::-webkit-scrollbar { height: 7px; }
+.segmented-control::-webkit-scrollbar-track { border-radius: 999px; background: rgba(13, 27, 56, .14); }
+.segmented-control::-webkit-scrollbar-thumb { border-radius: 999px; background: var(--mint); }
+.segmented-control button { flex: 0 0 auto; white-space: nowrap; border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; font-size: 10px; font-weight: 700; padding: 7px 12px; }
 .segmented-control button.is-active { background: var(--vlak); color: var(--navy-tekst); box-shadow: 0 3px 9px rgba(13,27,56,.08); }
+.segmented-control-scroll-track { position: relative; height: 4px; margin: 6px 4px 0; border-radius: 999px; background: var(--line); overflow: hidden; }
+.segmented-control-scroll-thumb { position: absolute; top: 0; left: 0; height: 100%; min-width: 18px; border-radius: 999px; background: var(--mint); }
 .invoice-action { display: flex; align-items: center; gap: 6px; }
 .invoice-action-note { color: var(--muted); font-size: 9px; font-weight: 700; }
 .small-button { border: 1px solid var(--line); border-radius: 9px; background: var(--vlak); color: var(--teal); cursor: pointer; font-size: 10px; font-weight: 800; padding: 7px 10px; }

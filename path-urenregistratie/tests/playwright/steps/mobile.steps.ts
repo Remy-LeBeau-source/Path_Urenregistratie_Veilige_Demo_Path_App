@@ -96,3 +96,5 @@ And("blijft het kruisje in beeld nadat de inhoud helemaal naar onderen is gescro
 Given("een medewerker logt op de telefoon voor het eerst in en de sync-afronding valt in de race");
 When("de hydratie-afronding één keer klapt op de hertekening");
 Then("staat er nergens meer een laadtekst en is het dashboard bruikbaar");
+When("de flow voor MOB-H-025 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat elke .segmented-control krijgt een schuifbalk-indicator zodra hij écht overloopt, generiek voor de hele app");
