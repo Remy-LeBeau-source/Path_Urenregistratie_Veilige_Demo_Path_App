@@ -33,6 +33,17 @@
   --danger: #a34b4b;
   --shadow: 0 14px 35px rgba(13, 27, 56, 0.08);
   --radius: 18px;
+  /* Koptypeschaal. Hiervoor stonden er zeven verschillende clamp()-waarden
+     door het bestand voor wat in feite twee koptypes zijn: 28/40, 28/38,
+     28/38, 27/37 voor schermkoppen en 25/33, 27/34 als mobiele varianten.
+     Onderling nauwelijks te onderscheiden, maar samen zorgen ze ervoor dat
+     koppen net niet gelijk aanvoelen van scherm tot scherm. Eén token per
+     rol; dezelfde bedoeling, zonder de willekeur. */
+  --kop-scherm: clamp(28px, 4vw, 38px);
+  --kop-scherm-mobiel: clamp(26px, 8.5vw, 34px);
+  --kop-topbalk: clamp(24px, 3vw, 31px);
+  --kop-sectie: 20px;
+  --kop-paneel: 19px;
 }
 
 * { box-sizing: border-box; }
@@ -119,7 +130,7 @@ summary:focus-visible,
 .login-brand { display: flex; align-items: center; gap: 14px; margin-bottom: 40px; }
 .login-brand img { width: 130px; height: auto; }
 .login-brand > span { border-left: 1px solid var(--line); color: var(--teal); font-size: 12px; font-weight: 700; padding-left: 14px; }
-.login-panel h1 { margin: 9px 0 10px; color: var(--navy-tekst); font-family: "Roboto Slab", Georgia, serif; font-size: clamp(28px, 5vw, 38px); letter-spacing: -.025em; }
+.login-panel h1 { margin: 9px 0 10px; color: var(--navy-tekst); font-family: "Roboto Slab", Georgia, serif; font-size: var(--kop-scherm); letter-spacing: -.025em; }
 .login-panel > p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
 .demo-employee-picker { margin-top: 22px; border-radius: 14px; background: #f4f8f7; padding: 14px; }
 .demo-employee-picker label, .demo-employee-picker small { display: block; }
@@ -306,7 +317,7 @@ summary:focus-visible,
   backdrop-filter: blur(12px);
 }
 
-.topbar h1 { margin: 2px 0 0; font-family: "Roboto Slab", Georgia, serif; font-size: clamp(24px, 3vw, 31px); letter-spacing: 0; }
+.topbar h1 { margin: 2px 0 0; font-family: "Roboto Slab", Georgia, serif; font-size: var(--kop-topbalk); letter-spacing: 0; }
 .mobile-topbar-home { display: none; }
 .eyebrow, .section-label { margin: 0; color: var(--mint-dark-tekst); font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
 .topbar-actions { display: flex; align-items: center; gap: 12px; }
@@ -375,7 +386,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 
 .hero-card::after { display: none; }
 .hero-copy { position: relative; z-index: 1; }
-.hero-copy h2 { max-width: 670px; margin: 9px 0 10px; font-family: "Roboto Slab", Georgia, serif; font-size: clamp(28px, 4vw, 38px); letter-spacing: 0; line-height: 1.12; }
+.hero-copy h2 { max-width: 670px; margin: 9px 0 10px; font-family: "Roboto Slab", Georgia, serif; font-size: var(--kop-scherm); letter-spacing: 0; line-height: 1.12; }
 .hero-copy p { max-width: 680px; margin: 0; color: #d2dce4; font-size: 14px; line-height: 1.55; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
 
@@ -402,7 +413,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .dashboard-next-action-card { display: grid; grid-template-columns: minmax(0,1fr) minmax(260px,auto); gap: 28px; align-items: center; margin-bottom: 16px; border: 1px solid var(--line); border-left: 4px solid var(--mint-dark); border-radius: 10px; background: var(--surface); padding: 18px 24px; box-shadow: 0 4px 14px rgba(13,27,56,.035); }
 .dashboard-next-action-card.is-waiting { border-left-color: var(--warning); background: linear-gradient(135deg,var(--surface),var(--warning-bg)); }
 .dashboard-next-action-card.is-complete { border-left-color: var(--mint-dark); background: linear-gradient(135deg,var(--surface),var(--green-light)); }
-.dashboard-next-action-copy h3 { margin: 5px 0 7px; color: var(--navy-tekst); font-family: "Roboto Slab", Georgia, serif; font-size: 20px; }
+.dashboard-next-action-copy h3 { margin: 5px 0 7px; color: var(--navy-tekst); font-family: "Roboto Slab", Georgia, serif; font-size: var(--kop-sectie); }
 .dashboard-next-action-copy p { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; color: var(--ink); font-size: 11px; }
 .dashboard-next-action-copy p span::before { margin-right: 8px; color: var(--muted); content: "·"; }
 .dashboard-next-action-copy > small { display: block; margin-top: 7px; color: var(--muted); font-size: 11px; line-height: 1.5; }
@@ -449,7 +460,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .workflow-heading-meta { display: grid; justify-items: end; gap: 3px; text-align: right; }
 .workflow-heading-meta strong { color: var(--navy-tekst); font-size: 12px; }
 .workflow-heading-meta small { color: var(--muted); font-size: 10px; }
-.panel-heading h3, .settings-card h3, .summary-card h3 { margin: 4px 0 0; font-family: "Roboto Slab", Georgia, serif; font-size: 19px; }
+.panel-heading h3, .settings-card h3, .summary-card h3 { margin: 4px 0 0; font-family: "Roboto Slab", Georgia, serif; font-size: var(--kop-paneel); }
 .updated-label { color: var(--muted); font-size: 10px; }
 .workflow-track { display: flex; align-items: center; justify-content: space-between; }
 .workflow-step { display: flex; min-width: 126px; align-items: center; gap: 11px; color: #99a4ae; }
@@ -506,7 +517,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .status-warning { background: var(--warning-bg); color: var(--warning-tekst); }
 
 .view-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 25px; margin: 35px 0 22px; }
-.view-heading h2 { margin: 5px 0 7px; font-family: "Roboto Slab", Georgia, serif; font-size: clamp(27px, 3.5vw, 37px); letter-spacing: -.025em; }
+.view-heading h2 { margin: 5px 0 7px; font-family: "Roboto Slab", Georgia, serif; font-size: var(--kop-scherm); letter-spacing: -.025em; }
 .view-heading p { max-width: 680px; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
 .view-loading { margin: 4px 0 18px; padding: 16px 18px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--vlak-zacht); color: var(--muted); font-size: 13px; font-weight: 600; }
 .heading-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 9px; }
@@ -596,7 +607,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .approval-list { display: grid; gap: 20px; }
 .approval-period-group { display: grid; gap: 11px; }
 .approval-period-heading { display: flex; align-items: end; justify-content: space-between; gap: 15px; padding: 0 4px; }
-.approval-period-heading h3 { margin: 4px 0 0; color: var(--navy-tekst); font-family: "Roboto Slab", Georgia, serif; font-size: 20px; }
+.approval-period-heading h3 { margin: 4px 0 0; color: var(--navy-tekst); font-family: "Roboto Slab", Georgia, serif; font-size: var(--kop-sectie); }
 .approval-card { display: grid; grid-template-columns: 1.2fr .8fr .75fr auto; gap: 22px; align-items: center; border: 1px solid var(--line); border-radius: var(--radius); background: var(--vlak); padding: 20px 22px; box-shadow: 0 7px 22px rgba(13,27,56,.03); }
 .approval-person { display: flex; align-items: center; gap: 12px; }
 .approval-person .mini-avatar { width: 42px; height: 42px; }
@@ -667,7 +678,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .invoice-month-overview[data-state="blocked"] { border-left-color: var(--warning); background: linear-gradient(135deg,#fff,#fffaf4); }
 .invoice-month-overview[data-state="ready"] { border-left-color: var(--mint); background: linear-gradient(135deg,#fff,#f7fffc); }
 .invoice-month-overview-head { display: grid; grid-template-columns: minmax(0,.7fr) minmax(360px,1.3fr); gap: 16px; align-items: center; }
-.invoice-month-overview-copy h3 { margin: 5px 0 0; color: var(--navy-tekst); font-family: "Roboto Slab", Georgia, serif; font-size: 18px; }
+.invoice-month-overview-copy h3 { margin: 5px 0 0; color: var(--navy-tekst); font-family: "Roboto Slab", Georgia, serif; font-size: var(--kop-paneel); }
 .invoice-month-overview-copy p { margin: 6px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
 .invoice-month-overview-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 8px; }
 .invoice-month-overview-item { display: grid; min-height: 62px; grid-template-columns: minmax(0,1fr) auto; gap: 12px; align-items: center; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.82); color: var(--navy-tekst); cursor: pointer; padding: 10px 12px; text-align: left; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
@@ -691,7 +702,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .month-batch-card[data-state="empty"] { border-left-color: var(--line); }
 .month-batch-summary { min-width: 0; }
 .month-batch-title-row { display: flex; flex-wrap: wrap; align-items: center; gap: 9px 12px; margin-top: 5px; }
-.month-batch-title-row h3 { margin: 0; color: var(--navy-tekst); font-family: "Roboto Slab", Georgia, serif; font-size: 19px; }
+.month-batch-title-row h3 { margin: 0; color: var(--navy-tekst); font-family: "Roboto Slab", Georgia, serif; font-size: var(--kop-paneel); }
 .month-batch-summary > p { margin: 7px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
 .month-batch-progress { position: relative; display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 11px; align-items: center; min-width: 0; }
 .month-batch-progress::before { grid-area: 1/1; height: 9px; border-radius: 999px; background: #e5ecea; content: ""; }
@@ -1103,7 +1114,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
    verbergen, de kolomindeling van .employee-hero (voorheen alleen bij
    .is-complete) is daarom nu altijd de enkele-kolom-variant. */
 .employee-hero .hero-task-math { display: none; }
-.employee-hero h2 { margin: 9px 0 8px; color: #fff; font-family: "Roboto Slab", Georgia, serif; font-size: clamp(28px,4vw,40px); }
+.employee-hero h2 { margin: 9px 0 8px; color: #fff; font-family: "Roboto Slab", Georgia, serif; font-size: var(--kop-scherm); }
 .employee-hero p { margin: 6px 0 4px; color: #fff; font-size: 14px; font-weight: 700; line-height: 1.5; }
 .employee-next-action-label { display: block; margin-top: 22px; color: var(--mint); font-size: 9px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
 .employee-next-action-meta { display: block; margin-bottom: 17px; color: #b9c7d4; font-size: 10px; }
@@ -1117,7 +1128,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .employee-customer-timesheet-card.is-open { border-color: #e7d4a8; border-left-color: var(--warning); background: var(--warning-bg); }
 .employee-customer-timesheet-card.is-complete { border-left-color: var(--mint-dark); }
 .employee-customer-timesheet-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 7px; }
-.employee-customer-timesheet-heading h3 { margin: 0; color: var(--navy-tekst); font-family: "Roboto Slab", Georgia, serif; font-size: 20px; }
+.employee-customer-timesheet-heading h3 { margin: 0; color: var(--navy-tekst); font-family: "Roboto Slab", Georgia, serif; font-size: var(--kop-sectie); }
 .employee-customer-timesheet-card p { margin: 7px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
 .employee-customer-timesheet-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .employee-metrics .compact-metric { font-size: 20px; }
@@ -1289,7 +1300,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .announcement-item.is-withdrawn { border-left: 4px solid var(--warning); background: color-mix(in srgb, var(--warning-bg) 42%, var(--surface)); }
 .announcement-item:first-child { border-top: 0; }
 .announcement-item-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
-.announcement-item-head h3 { margin: 8px 0 0; font-family: "Roboto Slab", Georgia, serif; font-size: 18px; }
+.announcement-item-head h3 { margin: 8px 0 0; font-family: "Roboto Slab", Georgia, serif; font-size: var(--kop-paneel); }
 .announcement-item-head > small { color: var(--muted); font-size: 9px; white-space: nowrap; }
 .announcement-item > p { margin: 13px 0; color: var(--ink); font-size: 12px; line-height: 1.6; white-space: pre-line; }
 .announcement-meta { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
@@ -1530,7 +1541,7 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 .employee-announcement-card.is-unread { box-shadow: inset 4px 0 0 var(--mint-dark); }
 .employee-announcement-card.is-withdrawn { background: color-mix(in srgb, var(--warning-bg) 40%, var(--surface)); }
 .employee-announcement-card header { display: flex; align-items: flex-start; justify-content: space-between; gap: 15px; }
-.employee-announcement-card h3 { margin: 8px 0 0; font-family: "Roboto Slab", Georgia, serif; font-size: 18px; }
+.employee-announcement-card h3 { margin: 8px 0 0; font-family: "Roboto Slab", Georgia, serif; font-size: var(--kop-paneel); }
 .employee-announcement-card header > small { color: var(--muted); font-size: 9px; white-space: nowrap; }
 .employee-announcement-card > p { color: var(--ink); font-size: 12px; line-height: 1.65; margin: 13px 0; white-space: pre-line; }
 .employee-announcement-card footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 9px; }
@@ -1959,7 +1970,7 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
   }
 
   .view-heading h2 {
-    font-size: clamp(25px, 8vw, 33px);
+    font-size: var(--kop-scherm-mobiel);
     line-height: 1.08;
   }
 
@@ -2223,7 +2234,7 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
 
   .hero-copy h2,
   .employee-hero h2 {
-    font-size: clamp(27px, 9vw, 34px);
+    font-size: var(--kop-scherm-mobiel);
   }
 
   .employee-customer-timesheet-card,

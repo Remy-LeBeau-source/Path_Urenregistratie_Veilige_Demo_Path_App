@@ -72,6 +72,14 @@ html[data-skin="new"] {
   --path-cream: #f4f1e6;
   --path-serif: "Path Editorial", Georgia, "Times New Roman", serif;
   --path-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* Koptypeschaal voor New. Deze skin bleek al een stuk consequenter opgezet
+     dan Klassiek -- er was maar één echte dubbeling (34/58 naast 38/58 voor
+     dezelfde rol: de grote schermkop). Als token vastgelegd zodat het zo
+     blijft. De extra grote hero-kop en het ringcijfer houden hun eigen,
+     bewust afwijkende formaat: dat zijn geen koppen maar beeldelementen. */
+  --n-kop-scherm: clamp(36px, 4vw, 58px);
+  --n-kop-topbalk: clamp(32px, 4vw, 52px);
+  --n-kop-hero: clamp(58px, 6vw, 92px);
 }
 
 html[data-skin="new"][data-theme="dark"] {
@@ -414,7 +422,7 @@ html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .mobile-brand-ho
 
 html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .topbar-title h1 {
   color: #efe9dc;
-  font: 400 clamp(32px, 4vw, 52px)/1.05 var(--path-serif);
+  font: 400 var(--n-kop-topbalk)/1.05 var(--path-serif);
 }
 
 html[data-skin="new"] #view-timesheet {
@@ -445,7 +453,7 @@ html[data-skin="new"] #view-timesheet > .view-heading {
 html[data-skin="new"] #view-timesheet > .view-heading h2 {
   margin: 8px 0 0;
   color: #efe9dc;
-  font: 400 clamp(34px, 4vw, 58px)/1.02 var(--path-serif);
+  font: 400 var(--n-kop-scherm)/1.02 var(--path-serif);
 }
 
 html[data-skin="new"] #view-timesheet > .view-heading p {
@@ -836,7 +844,7 @@ html[data-skin="new"] .new-bento-handoff,
 html[data-skin="new"] .new-bento-go { position: relative; z-index: 1; }
 html[data-skin="new"] .new-bento-hero .section-label { color: #9bd4ae; font-size: 13px; }
 html[data-skin="new"] .new-bento-greeting { display: block; margin-bottom: 10px; color: #9bd4ae; font-size: 18px; font-weight: 700; letter-spacing: .04em; }
-html[data-skin="new"] .new-bento-hero h2 { margin: 22px 0; color: #f4eee3; font: 400 clamp(58px, 6vw, 92px)/.94 var(--path-serif); letter-spacing: -.035em; }
+html[data-skin="new"] .new-bento-hero h2 { margin: 22px 0; color: #f4eee3; font: 400 var(--n-kop-hero)/.94 var(--path-serif); letter-spacing: -.035em; }
 html[data-skin="new"] .new-bento-hero p { max-width: 440px; color: rgba(244, 241, 230, .86); font-size: 16px; line-height: 1.6; }
 
 html[data-skin="new"] .new-bento-go {
@@ -1634,7 +1642,7 @@ html[data-skin="new"] #view-dashboard .new-admin-storyline {
 html[data-skin="new"] .new-admin-storyline-heading h2 {
   margin: 7px 0 5px;
   color: #efe9dc;
-  font: 400 clamp(38px, 4vw, 58px)/1.02 var(--path-serif);
+  font: 400 var(--n-kop-scherm)/1.02 var(--path-serif);
   letter-spacing: -.02em;
 }
 
