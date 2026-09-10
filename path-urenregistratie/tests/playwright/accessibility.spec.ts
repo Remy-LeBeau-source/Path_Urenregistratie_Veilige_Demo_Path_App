@@ -179,6 +179,10 @@ test('[A11Y-H-005] elke interactieve elementsoort krijgt een zichtbare focusring
 // bewijst in beide skins dat het kruisje bij een scrollende dialoog bovenin
 // blijft plakken en klikbaar blijft.
 test('[A11Y-H-006] de sluitknop van een scrollende dialoog blijft in beide skins in beeld', async ({ page }) => {
+  // Twee skin-iteraties x twee keer Voorkeuren openen, elk met het volle
+  // toPass-budget van openPaneel() als vangnet: de standaard 45s testlimiet
+  // ligt te dicht op wat dit bij tegenzit nodig heeft (10 sep).
+  test.setTimeout(90_000);
   const loginPage = new LoginPage(page);
 
   await test.step('Given de administrator is ingelogd op een korte viewport', async () => {
@@ -191,13 +195,16 @@ test('[A11Y-H-006] de sluitknop van een scrollende dialoog blijft in beide skins
   for (const skin of ['classic', 'new'] as const) {
     await test.step(`In de ${skin}-skin blijft het kruisje van een lange dialoog bovenin plakken`, async () => {
       // Zet de skin via Voorkeuren -> Vormgeving (de <select> is een keuzemenu-widget).
+      // 15s -> 25s (10 sep, mobile-safari): moet ruimschoots boven het eigen
+      // interne budget van openProfielmenu()/openPaneel() (20s) blijven, anders
+      // geeft deze buitenste toPass het op vóórdat de binnenste kans kreeg.
       await expect(async () => {
         await openProfielmenu(page);
         const voorkeuren = page.locator('[data-profile-action="preferences"]');
-        await expect(voorkeuren).toBeVisible({ timeout: 1_000 });
+        await expect(voorkeuren).toBeVisible({ timeout: 2_500 });
         await voorkeuren.click();
-        await expect(page.locator('#pref-skin-trigger')).toBeVisible({ timeout: 1_000 });
-      }).toPass({ timeout: 15_000, intervals: [250, 500, 1_000] });
+        await expect(page.locator('#pref-skin-trigger')).toBeVisible({ timeout: 2_500 });
+      }).toPass({ timeout: 25_000, intervals: [250, 500, 1_000, 2_000] });
       await page.locator('#pref-skin-trigger').click();
       await page.locator(`[data-standard-choice-target="pref-skin"][data-standard-choice-value="${skin}"]`).click();
       await page.getByRole('button', { name: 'Voorkeuren opslaan' }).click();
@@ -205,13 +212,16 @@ test('[A11Y-H-006] de sluitknop van een scrollende dialoog blijft in beide skins
       await expect(page.locator('html')).toHaveAttribute('data-skin', skin);
 
       // Heropen de Voorkeuren-dialoog: op deze viewport is die langer dan het scherm.
+      // 15s -> 25s (10 sep, mobile-safari): moet ruimschoots boven het eigen
+      // interne budget van openProfielmenu()/openPaneel() (20s) blijven, anders
+      // geeft deze buitenste toPass het op vóórdat de binnenste kans kreeg.
       await expect(async () => {
         await openProfielmenu(page);
         const voorkeuren = page.locator('[data-profile-action="preferences"]');
-        await expect(voorkeuren).toBeVisible({ timeout: 1_000 });
+        await expect(voorkeuren).toBeVisible({ timeout: 2_500 });
         await voorkeuren.click();
-        await expect(page.locator('#pref-skin-trigger')).toBeVisible({ timeout: 1_000 });
-      }).toPass({ timeout: 15_000, intervals: [250, 500, 1_000] });
+        await expect(page.locator('#pref-skin-trigger')).toBeVisible({ timeout: 2_500 });
+      }).toPass({ timeout: 25_000, intervals: [250, 500, 1_000, 2_000] });
 
       const dialoog = page.locator('#modal .modal');
       const scroller = page.locator('#modal-scroll');

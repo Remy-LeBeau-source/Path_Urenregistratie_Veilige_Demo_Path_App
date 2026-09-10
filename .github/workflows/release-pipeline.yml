@@ -139,13 +139,18 @@ jobs:
     timeout-minutes: 35
     # De Playwright-suite draait serieel (workers: 1, gedeelde DB + PHP-dev-server
     # met de fingerprint-isolatiefixture). We versnellen zonder dekking te
-    # verliezen door de suite over acht parallelle jobs te shard-en: elke shard
-    # heeft zijn eigen mysql-service en php -S, en draait 1/8 van de tests.
+    # verliezen door de suite over parallelle jobs te shard-en: elke shard
+    # heeft zijn eigen mysql-service en php -S. Van 8 naar 10 shards (10 sep):
+    # de mobiele dekkingsuitbreiding deze sessie (dashboard.spec.ts, help-
+    # widget.spec.ts en 5 verdere "UI Desktop"-bestanden nu ook op mobile-
+    # chrome/mobile-safari) duwde shard 7 net over de 14m-veiligheidslimiet
+    # hieronder (98/100 tests klaar toen de klok afliep) -- geen kapotte test,
+    # gewoon meer werk per shard dan de vaste tijdslimiet toeliet.
     strategy:
       fail-fast: false
-      max-parallel: 8
+      max-parallel: 10
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     defaults:
       run:
         working-directory: path-urenregistratie
@@ -353,7 +358,7 @@ jobs:
           PLAYWRIGHT_ADMIN_EMAIL: gio@example.invalid
           PLAYWRIGHT_EMPLOYEE_EMAIL: stasjo@example.invalid
           PLAYWRIGHT_BLOB_REPORT: '1'
-        run: timeout --signal=TERM --kill-after=30s 14m npm run test:e2e -- --shard=${{ matrix.shard }}/8
+        run: timeout --signal=TERM --kill-after=30s 14m npm run test:e2e -- --shard=${{ matrix.shard }}/10
 
       - name: Upload mergeable release reports
         if: always()
@@ -541,13 +546,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     environment: test
-    # Zelfde shard-aanpak als Validate: de volledige suite draait, verdeeld over
-    # acht parallelle jobs met elk een eigen mysql-service en php -S.
+    # Zelfde shard-aanpak als Validate (ook naar 10 shards gebracht, 10 sep --
+    # zie de toelichting daar): de volledige suite draait, verdeeld over
+    # parallelle jobs met elk een eigen mysql-service en php -S.
     strategy:
       fail-fast: false
-      max-parallel: 8
+      max-parallel: 10
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     defaults:
       run:
         working-directory: path-urenregistratie
@@ -684,7 +690,7 @@ jobs:
             echo "Using configured test stage target."
           else
             echo "PATH_APP_BASE_URL=http://127.0.0.1:8000" >> $GITHUB_ENV
-            echo "E2E_SHARD_ARG=--shard=${{ matrix.shard }}/8" >> $GITHUB_ENV
+            echo "E2E_SHARD_ARG=--shard=${{ matrix.shard }}/10" >> $GITHUB_ENV
             echo "Using local fallback regression target for test."
           fi
 
@@ -1021,15 +1027,16 @@ jobs:
     # Zelfde shard-aanpak als Validate/Promote Test: de niet-gesharde volledige
     # suite op één runner liep herhaaldelijk vast op brede, verspreide timeouts
     # (46 mislukkingen, allemaal ongerelateerd aan de daadwerkelijke wijziging)
-    # terwijl exact dezelfde code op de 8-gesharde Validate/Promote Test-runs
+    # terwijl exact dezelfde code op de gesharde Validate/Promote Test-runs
     # foutloos doorliep -- resource-overbelasting van één runner, geen echte
     # regressie. GitHub bundelt de prod-reviewerpoort per workflow-run, niet
-    # per job, dus sharden betekent nog steeds één goedkeuringsverzoek.
+    # per job, dus sharden betekent nog steeds één goedkeuringsverzoek. Ook
+    # naar 10 shards (10 sep, zelfde reden als Validate hierboven).
     strategy:
       fail-fast: false
-      max-parallel: 8
+      max-parallel: 10
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     defaults:
       run:
         working-directory: path-urenregistratie
@@ -1166,7 +1173,7 @@ jobs:
             echo "Using configured prod stage target."
           else
             echo "PATH_APP_BASE_URL=http://127.0.0.1:8000" >> $GITHUB_ENV
-            echo "E2E_SHARD_ARG=--shard=${{ matrix.shard }}/8" >> $GITHUB_ENV
+            echo "E2E_SHARD_ARG=--shard=${{ matrix.shard }}/10" >> $GITHUB_ENV
             echo "Using local fallback regression target for prod."
           fi
 
