@@ -260,7 +260,11 @@ test('[SKIN-H-008] Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en
     // Wacht tot de asynchrone serverwerkvoorraad-sync (adminWorkflowHydrated)
     // is afgerond, anders meet dashboardVoor hieronder de voorlopige staat
     // i.p.v. de uiteindelijke -- zie de root-cause toelichting hierboven.
-    await expect(page.locator('#dashboard-next-action-label')).not.toHaveText(/laden/i, { timeout: 10_000 });
+    // 20s i.p.v. de gebruikelijke 15s (zie dashboard.spec.ts): deze hydratatie
+    // haalt timesheets + customer-timesheets op voor élke periode/medewerker-
+    // combinatie t/m de huidige maand, dus met 4 medewerkers over meerdere
+    // maanden zijn dat aanmerkelijk meer verzoeken dan de medewerker-variant.
+    await expect(page.locator('#dashboard-next-action-label')).not.toHaveText(/laden/i, { timeout: 20_000 });
   });
 
   const dashboardVoor = await genormaliseerdeTekst(page.locator('#dashboard-employee-rows'));
