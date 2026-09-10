@@ -109,6 +109,20 @@ html[data-skin="new"] .eyebrow {
   letter-spacing: .12em;
 }
 
+/* Het "Path"-woordmerk in assets/path-logo.png is zelf donkernavy -- op de
+   navy "Home"-pil (.mobile-brand-home, in élke rol/skin-combinatie hier
+   hardcoded donker) versmelt de tekst met de achtergrond en blijft alleen
+   het icoon over (gemeld: "logo linksboven bijna niet te zien"). Een klein
+   lichte chip achter het beeld zelf lost dat overal op, ongeacht welke van
+   de drie .mobile-brand-home-varianten (medewerker/Mijn uren/beheer) of
+   welk thema actief is -- zonder het brondbestand aan te passen. */
+html[data-skin="new"] .mobile-brand-home img[data-brand-logo] {
+  background: #f4f1e6;
+  border-radius: 8px;
+  padding: 3px 5px;
+  box-sizing: content-box;
+}
+
 html[data-skin="new"] .sidebar {
   background:
     radial-gradient(circle at 18% 10%, rgba(95, 185, 141, .18), transparent 16rem),
