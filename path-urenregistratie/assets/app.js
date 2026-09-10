@@ -13978,6 +13978,21 @@ window.addEventListener("hashchange", () => {
   showView(view);
 });
 
+// Testfeedback: uren invullen en meteen F5 drukken verloor de zojuist
+// getypte waarde. scheduleDraftTimesheetWrite() vertraagt het opslaan 700ms
+// (debounce) om niet bij elke toets een verzoek te sturen; F5/sluiten binnen
+// dat venster annuleerde de aflopende timer/lopende fetch zonder waarschuwing --
+// zowel Klassiek als Nieuw delen dezelfde writeRuntime, dus dit trof beide
+// skins gelijk. Waarschuw de gebruiker native (browser-dialoog, niet
+// overschrijfbaar met een eigen tekst) zolang er een concept-opslag nog
+// moet starten of onderweg is; de gebruiker kan dan zelf annuleren en
+// wachten in plaats van de invoer stilzwijgend te verliezen.
+window.addEventListener("beforeunload", event => {
+  if (!writeRuntime.draftTimer && !writeRuntime.draftInFlight) return;
+  event.preventDefault();
+  event.returnValue = "";
+});
+
 // Static HTML controls can already be visible while a deferred script is still
 // wiring its event listeners. Expose one explicit readiness contract so slower
 // browsers and end-to-end checks never click a control during that short gap.

@@ -231,3 +231,71 @@ test('[E2E-H-019] dubbel klikken maakt nooit dubbele statussen, facturen of mail
       'een geweigerde gelijktijdige poging mag de versie niet ophogen').toBe(versieVooraf);
   });
 });
+
+test('[E2E-H-028] uren invullen en meteen verversen wordt native afgeraden zolang het concept nog niet is opgeslagen, in beide skins', async ({ page }) => {
+  // Testfeedback: uren invullen en meteen F5 drukken verloor de zojuist
+  // getypte waarde. scheduleDraftTimesheetWrite() (assets/app.js) vertraagt het
+  // opslaan bewust 700ms (debounce) om niet bij elke toets een verzoek te
+  // sturen -- verversen/sluiten binnen dat venster annuleerde de aflopende
+  // timer of lopende fetch zonder enige waarschuwing, in Klassiek én Nieuw
+  // (beide skins delen dezelfde writeRuntime). Vast te leggen via een echte
+  // page.reload()-dialoog is niet betrouwbaar (Playwright dismist een
+  // beforeunload-dialoog standaard); deze case bewijst daarom het mechanisme
+  // zelf: vlak na een wijziging moet een beforeunload-event preventDefault
+  // krijgen, en zodra de server bevestigd heeft dat het concept is
+  // opgeslagen, mag hetzelfde event weer ongehinderd doorgaan.
+  const loginPage = new LoginPage(page);
+
+  const beforeUnloadIsGeblokkeerd = () => page.evaluate(() => {
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    return event.defaultPrevented;
+  });
+
+  await test.step('Given de medewerker in Klassiek op Mijn uren staat', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('button[data-view="timesheet"]').click();
+    await expect(page.locator('#timesheet-status')).toBeVisible();
+    expect(await beforeUnloadIsGeblokkeerd(), 'zonder enige wijziging mag verversen gewoon doorgaan').toBe(false);
+  });
+
+  await test.step('When een uurwaarde net is getypt, vóór de 700ms-debounce is verlopen', async () => {
+    const invoer = page.locator('#hours-grid .hours-input:not([disabled])').first();
+    await invoer.fill('6');
+    await invoer.dispatchEvent('input');
+    expect(await beforeUnloadIsGeblokkeerd(),
+      'binnen het debounce-venster hoort verversen native afgeraden te worden').toBe(true);
+  });
+
+  await test.step('Then mag verversen weer ongehinderd zodra de server het concept bevestigd heeft', async () => {
+    await expect(page.locator('#hours-autosave-status')).toHaveText(/Gesynchroniseerd met server/, { timeout: 5_000 });
+    await expect.poll(beforeUnloadIsGeblokkeerd, { timeout: 2_000 }).toBe(false);
+  });
+
+  await test.step('And hetzelfde geldt in Nieuw, via het bento-uurveld', async () => {
+    // Mijn uren staat al actief (vorige stap); de skin-wissel zelf navigeert
+    // nergens heen, dus geen nieuwe klik nodig om er te blijven.
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    // De bento-kaartjes tonen alleen bij een enkele weekweergave, niet bij
+    // "Hele maand" (die toont ook in Nieuw de compacte tabel). Alle weken
+    // staan in de DOM, maar alleen de gekozen week is zichtbaar -- :visible
+    // is dus nodig, :not([disabled]) alleen filtert daar niet op.
+    await page.locator('[data-hours-week-scope="week-0"]').click();
+    const bentoInvoer = page.locator('.new-bento-hours-input:visible:not([disabled])').first();
+    await expect(bentoInvoer).toBeVisible();
+    await bentoInvoer.fill('7');
+    // Het bento-uurveld slaat op "change" op (bij blur/Enter), niet op elke
+    // toets zoals het klassieke rooster -- vandaar het andere event hier.
+    await bentoInvoer.dispatchEvent('change');
+    expect(await beforeUnloadIsGeblokkeerd(),
+      'ook in Nieuw hoort verversen binnen het debounce-venster afgeraden te worden').toBe(true);
+    await expect(page.locator('#hours-autosave-status')).toHaveText(/Gesynchroniseerd met server/, { timeout: 5_000 });
+    // De statustekst wordt al gezet in de .then()-callback, vlak vóór de
+    // .finally() die draftInFlight terugzet -- op de tekst wachten is dus geen
+    // garantie dat de guard zelf ook al ontgrendeld is. Poll rechtstreeks op de
+    // guardvoorwaarde om die ene microtaak-race niet als test-flake te erven.
+    await expect.poll(beforeUnloadIsGeblokkeerd, { timeout: 2_000 }).toBe(false);
+  });
+});

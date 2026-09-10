@@ -1,5 +1,35 @@
 # Copilot handoff — lokale mailpreview en regressieherstel
 
+## 10 september 2026, nacht — Claude Code neemt over van Codex (gebruikslimiet)
+
+Codex liep tegen zijn gebruikslimiet aan (zie sectie hieronder) met de
+dashboard-zichtbaarheidsfix al klaar maar niet gecommit/gepusht, in een
+tijdelijke worktree `tmp/schermherstel` (gebaseerd op herontwerp `37905e8` +
+main `97f3168`). Gebruiker vroeg mij het over te nemen.
+
+1. **Codex' dashboardfix afgemaakt, geverifieerd en gepusht naar herontwerp**
+   (`0ddd580`): `html[data-skin="new"] #view-employee-dashboard` zette
+   `display:flex` onvoorwaardelijk, ook als een andere view actief was.
+   Beperkt tot `.is-active`. `SKIN-H-008`/`SKIN-H-009` eisen nu `.view:visible`
+   === 1 op elk bezocht scherm. Doorgezocht op hetzelfde patroon elders: geen
+   andere schermen troffen dit.
+2. **Eigen fout gevonden en gefixt** (`77486d0`): bij het samenstellen van
+   commit `0ddd580` sloot ik `tests/playwright/auth.spec.ts` ten onrechte uit
+   als "CRLF-ruis" (samen met echt-ruis `.feature`/`.steps.ts`-bestanden),
+   zonder te checken dat dit specifieke bestand een van de 5 versie-dragende
+   bestanden is. Veroorzaakte een 2x-identieke shard-1-fail op herontwerp-CI
+   (`set-version-check.mjs`, Codex' eigen main-fix, draait bewust alleen op
+   shard 1) — leek eerst op een flake, bleek dat niet te zijn. Herontwerp-CI
+   nu volledig groen (8/8).
+3. **Nieuwe, losstaande bug gevonden n.a.v. gebruikersmelding** ("uren boeken
+   en refresh F5 gaat fout, ook bij oud design"): bevestigd, root cause en fix
+   in `BESLISTABEL.md` R20. Kort: `scheduleDraftTimesheetWrite()` had geen
+   `beforeunload`-bescherming tegen zijn eigen 700ms-debounce. Fix + regressie
+   `[E2E-H-028]` op **main**, nog niet naar herontwerp gemerged op moment van
+   schrijven (volgt via de normale merge, gedeelde code dus geen apart risico).
+4. Cross-sessie samengewerkt met de herontwerp-peer (`path-herontwerp-actief-2b`)
+   via `SendMessage` — geen overlap, beide kanten bevestigd.
+
 ## 10 september 2026 — vervolg door Codex: main en alle schermen
 
 - Gebruiker vraagt main en herontwerp gezamenlijk af te werken, inclusief alle

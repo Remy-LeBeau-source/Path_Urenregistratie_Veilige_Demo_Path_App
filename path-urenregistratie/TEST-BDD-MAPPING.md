@@ -93,7 +93,8 @@
 | E2E-H-008 | integration | end-to-end-workflows.feature | urencontrole vraagt na oude versie opnieuw op en maakt daarna toch goedkeuren af | Beslissingstabel rollen en autorisatie | 4 | end-to-end-workflows.steps.ts | business-workflows-*.spec.ts | DB / Integratie | Bedrijfsketens | urencontrole vraagt na oude versie opnieuw op en maakt daarna toch goedkeuren af | Happy | 16 | Actueel |
 | E2E-N-019 | integration | end-to-end-workflows.feature | een mislukte factuurpoging laat niets half achter en opnieuw proberen levert één factuur | Negatieve equivalentieklasse + error guessing | 20 | end-to-end-workflows.steps.ts | business-workflows-*.spec.ts | DB / Integratie | Bedrijfsketens | een mislukte factuurpoging laat niets half achter en opnieuw proberen levert één factuur | Negative | 16 | Actueel |
 | E2E-H-016 | integration | end-to-end-workflows.feature | ieder wijzigbaar Teambeheerveld heeft een aantoonbaar opslag- of uitzonderingscontract | Negatieve equivalentieklasse + error guessing | 32 | end-to-end-workflows.steps.ts | business-workflows-*.spec.ts | DB / Integratie | Bedrijfsketens | ieder wijzigbaar Teambeheerveld heeft een aantoonbaar opslag- of uitzonderingscontract | Happy | 16 | Actueel |
-| E2E-H-019 | integration | end-to-end-workflows.feature | dubbel klikken maakt nooit dubbele statussen, facturen of mails | Toestandsovergang | 25 | end-to-end-workflows.steps.ts | business-workflows-*.spec.ts | DB / Integratie | Bedrijfsketens | dubbel klikken maakt nooit dubbele statussen, facturen of mails | Happy | 16 | Actueel |
+| E2E-H-019 | integration | end-to-end-workflows.feature | dubbel klikken maakt nooit dubbele statussen, facturen of mails | Toestandsovergang | 24 | end-to-end-workflows.steps.ts | business-workflows-*.spec.ts | DB / Integratie | Bedrijfsketens | dubbel klikken maakt nooit dubbele statussen, facturen of mails | Happy | 16 | Actueel |
+| E2E-H-028 | integration | end-to-end-workflows.feature | uren invullen en meteen verversen wordt native afgeraden zolang het concept nog niet is opgeslagen, in beide skins | End-to-end use-case + visuele contractasserties | 9 | end-to-end-workflows.steps.ts | business-workflows-*.spec.ts | DB / Integratie | Bedrijfsketens | uren invullen en meteen verversen wordt native afgeraden zolang het concept nog niet is opgeslagen, in beide skins | Happy | 16 | Actueel |
 | E2E-H-022 | integration | end-to-end-workflows.feature | iedere case laat database en private opslag aantoonbaar schoon achter | End-to-end use-case + visuele contractasserties | 20 | end-to-end-workflows.steps.ts | business-workflows-*.spec.ts | DB / Integratie | Bedrijfsketens | iedere case laat database en private opslag aantoonbaar schoon achter | Happy | 16 | Actueel |
 | E2E-N-017 | integration | end-to-end-workflows.feature | submitted, approved en invoiced blokkeren iedere verboden medewerkerwrite | Beslissingstabel rollen en autorisatie | 34 | end-to-end-workflows.steps.ts | business-workflows-*.spec.ts | DB / Integratie | Bedrijfsketens | submitted, approved en invoiced blokkeren iedere verboden medewerkerwrite | Negative | 16 | Actueel |
 | E2E-H-026 | integration | end-to-end-workflows.feature | de definitieve factuur-PDF bevat de juiste bedragen en identiteit en geen conceptwatermerk | Equivalentieklassen | 16 | end-to-end-workflows.steps.ts | business-workflows-*.spec.ts | DB / Integratie | Bedrijfsketens | de definitieve factuur-PDF bevat de juiste bedragen en identiteit en geen conceptwatermerk | Happy | 16 | Actueel |
@@ -494,9 +495,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 472
+- Playwright executable cases: 473
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 473
+- Totaal unieke executable cases: 474
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29

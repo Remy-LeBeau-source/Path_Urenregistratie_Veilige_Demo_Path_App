@@ -132,13 +132,22 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
   @happy
   Scenario: [E2E-H-019] dubbel klikken maakt nooit dubbele statussen, facturen of mails
     # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 25
+    # Aantoonbare Playwright-assertions in deze case: 24
     Given de eerste submitwrite gecontroleerd wordt vertraagd
     When de medewerker twee keer snel achter elkaar indient
     Then bestaat er precies één urenstaat met één statusmutatie
     And levert dubbel goedkeuren en dubbel factureren één factuur op
     And bestaat per ontvanger precies één delivery zonder dubbele mail
     And is de dubbele klik werkelijk uitgevoerd
+
+  @happy
+  Scenario: [E2E-H-028] uren invullen en meteen verversen wordt native afgeraden zolang het concept nog niet is opgeslagen, in beide skins
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given de medewerker in Klassiek op Mijn uren staat
+    When een uurwaarde net is getypt, vóór de 700ms-debounce is verlopen
+    Then mag verversen weer ongehinderd zodra de server het concept bevestigd heeft
+    And hetzelfde geldt in Nieuw, via het bento-uurveld
 
   @happy
   Scenario: [E2E-H-022] iedere case laat database en private opslag aantoonbaar schoon achter
