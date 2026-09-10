@@ -449,8 +449,11 @@ test('[MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documen
     // liet nergens zien dat er meer weken te vinden waren. Deze eigen balk moet
     // daarom altijd zichtbaar zijn zodra de weekknoppen breder zijn dan het
     // scherm -- ongeacht licht/donker, want beide gebruiken dezelfde tokens.
-    await expect(page.locator('#hours-week-scroll-track')).toBeVisible();
-    const duimBreedte = await page.locator('#hours-week-scroll-thumb').evaluate(el => parseFloat(getComputedStyle(el).width));
+    // Generiek gemaakt voor elke .segmented-control (niet alleen deze), dus de
+    // balk verschijnt als sibling i.p.v. op een vast id.
+    const schuifbalk = page.locator('#hours-week-filter + .segmented-control-scroll-track');
+    await expect(schuifbalk).toBeVisible();
+    const duimBreedte = await schuifbalk.locator('.segmented-control-scroll-thumb').evaluate(el => parseFloat(getComputedStyle(el).width));
     expect(duimBreedte, 'de schuifbalk hoort een echte, meetbare breedte te hebben').toBeGreaterThan(0);
   });
 
@@ -1646,4 +1649,63 @@ test('[MOB-H-024] een net ingelogde medewerker ziet op de telefoon een volledig 
     await assertNoHorizontalOverflow(page);
     expect(errors, errors.join('\n')).toEqual([]);
   });
+});
+
+test('[MOB-H-025] elke .segmented-control krijgt een schuifbalk-indicator zodra hij écht overloopt, generiek voor de hele app', async ({ page }) => {
+  // MOB-H-002 bewijst dit al voor Mijn uren specifiek. Deze case bewijst het
+  // generieke mechanisme zelf (refreshSegmentedControlScrollIndicators() in
+  // app.js) los van app-data: een synthetische rij knoppen die gegarandeerd
+  // overloopt, en een die dat gegarandeerd niet doet -- inclusief dat de
+  // balk weer verdwijnt zodra een eerder overlopende rij weer past (bv. na
+  // het wijzigen van een filterselectie met minder knoppen).
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsAdmin();
+  await expect(page.locator('#app-shell')).toBeVisible();
+
+  const uitkomst = await page.evaluate(() => {
+    const w = window as unknown as { refreshSegmentedControlScrollIndicators: () => void };
+    const maakRij = (aantalKnoppen: number) => {
+      const rij = document.createElement('div');
+      rij.className = 'segmented-control';
+      rij.style.width = '200px'; // vast, smal genoeg om bij veel knoppen te overlopen
+      for (let i = 0; i < aantalKnoppen; i++) {
+        const knop = document.createElement('button');
+        knop.textContent = 'Optie ' + i;
+        rij.appendChild(knop);
+      }
+      document.body.appendChild(rij);
+      return rij;
+    };
+
+    const overlopend = maakRij(12);
+    const passend = maakRij(1);
+    w.refreshSegmentedControlScrollIndicators();
+
+    const balkOverlopend = overlopend.nextElementSibling;
+    const balkPassend = passend.nextElementSibling;
+    const na1e = {
+      overlopendHeeftBalk: !!balkOverlopend?.classList.contains('segmented-control-scroll-track'),
+      overlopendBalkVerborgen: (balkOverlopend as HTMLElement | null)?.hidden,
+      passendGeenBalk: !balkPassend || !balkPassend.classList.contains('segmented-control-scroll-track') || (balkPassend as HTMLElement).hidden,
+    };
+
+    // Simuleer dat de overlopende rij daarna smal genoeg wordt (bv. minder
+    // knoppen na een filterwissel) -- de balk hoort dan weer te verdwijnen.
+    while (overlopend.children.length > 1) overlopend.lastElementChild!.remove();
+    w.refreshSegmentedControlScrollIndicators();
+    const naKrimpen = (overlopend.nextElementSibling as HTMLElement | null)?.hidden;
+
+    overlopend.remove();
+    passend.remove();
+    balkOverlopend?.remove();
+    balkPassend?.remove();
+
+    return { na1e, naKrimpen };
+  });
+
+  expect(uitkomst.na1e.overlopendHeeftBalk, 'een overlopende rij hoort een schuifbalk-indicator te krijgen').toBe(true);
+  expect(uitkomst.na1e.overlopendBalkVerborgen, 'de balk van een overlopende rij mag niet verborgen zijn').toBe(false);
+  expect(uitkomst.na1e.passendGeenBalk, 'een rij die past hoort geen zichtbare balk te krijgen').toBe(true);
+  expect(uitkomst.naKrimpen, 'de balk hoort weer te verdwijnen zodra de rij niet meer overloopt').toBe(true);
 });

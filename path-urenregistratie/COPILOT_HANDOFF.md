@@ -134,6 +134,20 @@ main `97f3168`). Gebruiker vroeg mij het over te nemen.
    logica, bewust niet blind gepatcht door beide kanten; vastgelegd als
    BESLISTABEL R23 (cross-branch, zodat main dit niet mist), wacht op een
    concrete falende testcase voor iemand er verder induikt.
+8. **R21's schuifbalk-indicator gegeneraliseerd (op verzoek "kijk voor
+   verbeteringen", v1.0.51/9327ae1, zelfde commit als D4 nog niet
+   verwerkt op moment van schrijven):** zat hardgecodeerd aan
+   `#hours-week-filter` vast; `.segmented-control` bleek een gedeeld
+   patroon op 6 plekken in de app, waarvan er 5 zelfs geen `overflow-x`
+   hadden (liepen dus uit hun bak i.p.v. te schuiven). Beide nu generiek
+   op de basisklasse (`assets/styles.css`) + één herbruikbare
+   `refreshSegmentedControlScrollIndicators()` (`assets/app.js`),
+   aangeroepen aan het eind van `renderAll()` en direct na elke
+   dynamische filter-herbouw. Nieuwe regressie `[MOB-H-025]` bewijst het
+   mechanisme zelf los van app-data. Zie BESLISTABEL R24. Nog niet
+   gecommit/gepusht op moment van schrijven; volgt na de lokale
+   verificatieronde (`npm run check`-onderdelen + gerichte E2E, allemaal
+   al groen op het moment van schrijven).
 
 ## 10 september 2026 — vervolg door Codex: main en alle schermen
 

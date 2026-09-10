@@ -210,3 +210,11 @@ Feature: Mobiele gebruikerservaring
     Given een medewerker logt op de telefoon voor het eerst in en de sync-afronding valt in de race
     When de hydratie-afronding één keer klapt op de hertekening
     Then staat er nergens meer een laadtekst en is het dashboard bruikbaar
+
+  @happy
+  Scenario: [MOB-H-025] elke .segmented-control krijgt een schuifbalk-indicator zodra hij écht overloopt, generiek voor de hele app
+    # Testtechniek: Responsive viewport + end-to-end use-case
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given mobiele gebruikerservaring is voorbereid
+    When de flow voor MOB-H-025 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat elke .segmented-control krijgt een schuifbalk-indicator zodra hij écht overloopt, generiek voor de hele app

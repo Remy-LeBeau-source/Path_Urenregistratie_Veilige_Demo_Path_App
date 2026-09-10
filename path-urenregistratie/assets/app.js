@@ -7136,6 +7136,7 @@ function renderApprovals() {
       const selected = state.approvalScope === "month" && period.key === periodKey;
       return '<button class="' + (selected ? "is-active" : "") + '" data-approval-filter-period="' + periodKey + '">' + escapeHtml(periodFromKey(periodKey).label) + " · " + count + "</button>";
     }).join("");
+  refreshSegmentedControlScrollIndicators();
   const groups = approvals.reduce((result, item) => {
     if (!result.has(item.periodKey)) result.set(item.periodKey, []);
     result.get(item.periodKey).push(item);
@@ -8264,29 +8265,47 @@ function renderHoursWeekFilter(period, scope) {
   document.querySelector("#hours-week-filter").innerHTML = buttons.map(button =>
     '<button type="button" class="' + (button.value === scope ? "is-active" : "") + '" data-hours-week-scope="' + button.value + '">' + escapeHtml(button.label) + '</button>'
   ).join("");
-  updateHoursWeekScrollThumb();
+  refreshSegmentedControlScrollIndicators();
 }
 
-// Testfeedback: op mobiel is niet altijd duidelijk dat je langs de week-
-// knoppen kunt schuiven -- de native overlay-scrollbar blijft daar
-// onzichtbaar tot je er actief op raakt. Deze balk (#hours-week-scroll-track)
-// is altijd zichtbaar zodra er meer te schuiven valt dan het scherm toont,
-// en beweegt mee met de echte scrollpositie.
-function updateHoursWeekScrollThumb() {
-  const filter = document.querySelector("#hours-week-filter");
-  const track = document.querySelector("#hours-week-scroll-track");
-  const thumb = document.querySelector("#hours-week-scroll-thumb");
-  if (!filter || !track || !thumb) return;
-  const overflow = filter.scrollWidth - filter.clientWidth;
-  if (overflow <= 1) {
-    track.hidden = true;
-    return;
-  }
-  track.hidden = false;
-  const zichtbaarAandeel = Math.max(0.08, Math.min(1, filter.clientWidth / filter.scrollWidth));
-  const geschovenAandeel = Math.max(0, Math.min(1, filter.scrollLeft / overflow));
-  thumb.style.width = (zichtbaarAandeel * 100) + "%";
-  thumb.style.left = (geschovenAandeel * (1 - zichtbaarAandeel) * 100) + "%";
+// Testfeedback: op mobiel is niet altijd duidelijk dat je langs een rij
+// filterknoppen kunt schuiven -- de native overlay-scrollbar blijft
+// onzichtbaar tot je er actief op raakt (eerst ontdekt bij Mijn uren se
+// weekknoppen, maar .segmented-control is een gedeeld patroon: ook
+// Goedkeuringen, Facturen, Mededelingen en Medewerkers gebruiken 'm, en
+// groeien net zo makkelijk breder dan het scherm). Generiek voor elke
+// .segmented-control i.p.v. hardgecodeerd voor één toolbar: een balk wordt
+// als sibling toegevoegd zodra er echt iets te schuiven valt, en verwijderd
+// zodra dat niet meer zo is (een filterlijst kan tussen renders krimpen).
+function refreshSegmentedControlScrollIndicators() {
+  document.querySelectorAll(".segmented-control").forEach(control => {
+    const overflow = control.scrollWidth - control.clientWidth;
+    let track = control.nextElementSibling;
+    if (!track || !track.classList.contains("segmented-control-scroll-track")) track = null;
+    if (overflow <= 1) {
+      if (track) track.hidden = true;
+      return;
+    }
+    if (!track) {
+      track = document.createElement("div");
+      track.className = "segmented-control-scroll-track";
+      track.setAttribute("aria-hidden", "true");
+      const thumb = document.createElement("span");
+      thumb.className = "segmented-control-scroll-thumb";
+      track.appendChild(thumb);
+      control.insertAdjacentElement("afterend", track);
+      if (!control.dataset.scrollIndicatorBound) {
+        control.dataset.scrollIndicatorBound = "true";
+        control.addEventListener("scroll", refreshSegmentedControlScrollIndicators, { passive: true });
+      }
+    }
+    track.hidden = false;
+    const thumb = track.firstElementChild;
+    const zichtbaarAandeel = Math.max(0.08, Math.min(1, control.clientWidth / control.scrollWidth));
+    const geschovenAandeel = Math.max(0, Math.min(1, control.scrollLeft / overflow));
+    thumb.style.width = (zichtbaarAandeel * 100) + "%";
+    thumb.style.left = (geschovenAandeel * (1 - zichtbaarAandeel) * 100) + "%";
+  });
 }
 
 function renderHoursGrid() {
@@ -9969,6 +9988,10 @@ function renderAll() {
   renderHelpSuggestions();
   applyTheme();
   applySkin();
+  // Laatste stap: alle rijen filterknoppen (.segmented-control) kunnen net
+  // andere content hebben gekregen, dus opnieuw checken welke een
+  // schuifbalk-indicator nodig hebben.
+  refreshSegmentedControlScrollIndicators();
 }
 
 function prefersReducedMotion() {
@@ -13722,8 +13745,11 @@ document.querySelector("#quick-reset-demo")?.addEventListener("click", openReset
 
 // De container zelf wordt nooit vervangen (alleen zijn innerHTML bij elke
 // renderHoursWeekFilter()), dus deze twee listeners hoeven maar één keer.
-document.querySelector("#hours-week-filter")?.addEventListener("scroll", updateHoursWeekScrollThumb, { passive: true });
-window.addEventListener("resize", updateHoursWeekScrollThumb, { passive: true });
+// Scroll-luisteraars per .segmented-control worden dynamisch toegevoegd
+// zodra de balk voor die specifieke rij ontstaat (zie
+// refreshSegmentedControlScrollIndicators). Alleen resize is hier nodig:
+// dat raakt alle rijen tegelijk, ongeacht welke er al een balk hebben.
+window.addEventListener("resize", refreshSegmentedControlScrollIndicators, { passive: true });
 
 document.querySelector("#connect-gmail").addEventListener("click", () => showModal({
   label: "Verzendbeveiliging",
