@@ -1727,7 +1727,14 @@ function applyAuthUiMode(mode) {
     if (appShell) appShell.hidden = true;
   } else {
     document.body.classList.remove("auth-booting");
-    if (loginScreen) loginScreen.hidden = false;
+    // "auth" betekent alleen dat de backend bereikbaar is -- nog niet of er al
+    // een geldige sessie is. Die vraag wordt asynchroon beantwoord (verderop
+    // in initializeAuthSession()), en login()/logoutLocal() zetten hidden
+    // daarna zelf expliciet. Het inlogscherm hier al tonen gaf een sub-
+    // seconde flits vóór een al-ingelogde gebruiker meteen op zijn dashboard
+    // landde. "demo"/"unavailable" hebben geen sessie om op te wachten, dus
+    // daar mag het meteen.
+    if (loginScreen && mode !== "auth") loginScreen.hidden = false;
     if (appShell) appShell.hidden = true;
   }
   if (authForm) authForm.hidden = mode === "demo";
