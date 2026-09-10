@@ -1127,6 +1127,18 @@ let modalAction = null;
 // Het element dat de dialoog opende. Bij sluiten gaat de focus daar naartoe
 // terug; anders viel hij op de kale body en was de toetsenbordpositie kwijt.
 let modalOpenerElement = null;
+// WebKit/Safari geeft een <button> bij een muis-/touchklik GEEN focus (in
+// tegenstelling tot Chromium/Firefox) -- showModal()'s document.activeElement
+// is daar dus vrijwel altijd nog gewoon <body>, waardoor de focus-terugzet-
+// logica in closeModal() stilzwijgend niets doet. Deze capture-listener volgt
+// daarom apart welk klikbaar element het laatst werd aangeraakt, als fallback
+// wanneer document.activeElement niets bruikbaars is. Gevonden via A11Y-H-004
+// op mobile-safari.
+let lastPointerActivatedElement = null;
+document.addEventListener("pointerdown", event => {
+  const target = event.target instanceof Element ? event.target.closest("button, [role='button'], a[href], summary") : null;
+  if (target) lastPointerActivatedElement = target;
+}, true);
 let modalSecondaryAction = null;
 let modalCloseAction = null;
 let adminTaskWorkflow = null;
@@ -10150,7 +10162,13 @@ function toast(message) {
 
 function showModal(options) {
   const settings = Object.assign({ label: "Controle", title: "", message: "", summary: "", confirm: "Bevestigen", action: null, secondary: "", secondaryAction: null, closeAction: null, wide: false, danger: false, adminTaskId: "", taskNavigation: true, initialFocus: "" }, options);
-  const opener = document.activeElement;
+  // document.activeElement is op WebKit/Safari na een muis-/touchklik op een
+  // <button> vrijwel altijd nog <body> (zie de toelichting bij
+  // lastPointerActivatedElement hierboven); val in dat geval terug op het
+  // laatst aangeraakte klikbare element.
+  const opener = document.activeElement && document.activeElement !== document.body
+    ? document.activeElement
+    : lastPointerActivatedElement;
   modalOpenerElement = opener && opener !== document.body && !document.querySelector("#modal").contains(opener) ? opener : null;
   document.querySelector("#modal-label").textContent = settings.label;
   document.querySelector("#modal-title").textContent = settings.title;
