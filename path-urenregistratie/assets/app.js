@@ -4222,12 +4222,16 @@ function applyOrganizationBranding() {
     // De desktopzijbalk heeft ook in de lichte modus een donkere ondergrond.
     // Kies daarom per logopositie het contrast, niet alleen op basis van het thema.
     //
-    // De "Home"-pil in Nieuw hoort in dezelfde categorie. Die is in élke
-    // weergave van die skin donker (gemeten: rgb(14,35,52) tot rgb(15,38,57));
-    // de aanname in de oude toelichting dat het medewerkerdashboard daar een
-    // lichte pil had, gaat niet meer op. Er stond daarom een lichte chip achter
-    // het beeld om het donkere woordmerk leesbaar te houden -- maar daardoor
-    // zag je vooral die chip en nauwelijks het logo (twee keer gemeld).
+    // De "Home"-pil in Nieuw hoort in dezelfde categorie: die is in élke
+    // weergave van die skin donker (#0e2334). Dat gold eerst alleen in de
+    // donkere modus -- op het medewerkerdashboard en Mededelingen stond de pil
+    // op var(--surface) en was daar in de lichte modus juist licht, waardoor
+    // het witte woordmerk dat hier wordt gekozen onleesbaar werd. Sindsdien
+    // staat die pil in styles-new.css vast op dezelfde donkere ondergrond, en
+    // is deze keuze in beide thema's de juiste. Er stond eerder een lichte chip
+    // achter het beeld om het donkere woordmerk leesbaar te houden -- maar
+    // daardoor zag je vooral die chip en nauwelijks het logo (twee keer
+    // gemeld).
     const opMerkpilInNieuw = document.documentElement.dataset.skin === "new"
       && Boolean(image.closest(".mobile-brand-home"));
     const onDarkSurface = Boolean(image.closest("#sidebar-brand")) || opMerkpilInNieuw;
@@ -5105,6 +5109,17 @@ function applySkin(hostname = window.location.hostname) {
   if (changed && document.querySelector("#view-timesheet")?.classList.contains("is-active")) {
     renderHoursGrid();
   }
+  // De merkopmaak kijkt naar de actieve skin (de "Home"-pil is in Nieuw altijd
+  // donker en heeft dus de witte logovariant nodig). In renderAll() draait
+  // applyOrganizationBranding() als eerste en applySkin() als laatste, dus bij
+  // de eerste tekening stond data-skin nog op "classic" toen de logokeuze werd
+  // gemaakt: in de lichte modus koos die dan het donkere woordmerk, dat
+  // vervolgens op de donkere pil onleesbaar werd. In de donkere modus viel het
+  // niet op, omdat daar toch al de witte variant werd gekozen. Zodra de skin
+  // wisselt moet die keuze dus opnieuw worden gemaakt.
+  if (changed && typeof applyOrganizationBranding === "function") {
+    applyOrganizationBranding();
+  }
 }
 
 function syncAppearanceSwitches(hostname = window.location.hostname) {
@@ -5706,12 +5721,15 @@ function renderEmployeeDashboard() {
     const customerCell = showsCustomerTimesheetColumn
       ? '<div>' + customerTimesheetStatusPill(historyRecord) + '</div>'
       : '';
-    return '<div class="employee-history-row"><div><strong>' + escapeHtml(periodFromKey(key).label) + currentLabel + '</strong><small>' + escapeHtml(historyNote) + '</small></div><div><strong>' + hoursFormat.format(historyTotal) + ' uur</strong><small>totaal verantwoord</small></div><div>' + timesheetStatusPill(employee, historyRecord) + '</div>' + customerCell + '<button class="small-button" data-history-period="' + key + '">Open maand</button></div>';
+    // "totaal verantwoord" stond hier eerder onder elk uurtotaal. Dat is geen
+    // gegeven per maand maar de betekenis van de kolom, en zes keer dezelfde
+    // regel onder elkaar leest als ruis. Staat nu één keer in de kolomkop.
+    return '<div class="employee-history-row"><div><strong>' + escapeHtml(periodFromKey(key).label) + currentLabel + '</strong><small>' + escapeHtml(historyNote) + '</small></div><div><strong>' + hoursFormat.format(historyTotal) + ' uur</strong></div><div>' + timesheetStatusPill(employee, historyRecord) + '</div>' + customerCell + '<button class="small-button" data-history-period="' + key + '">Open maand</button></div>';
   }).join("");
   const historyHeadCustomerColumn = showsCustomerTimesheetColumn ? '<span>Klanturenstaat</span>' : '';
   document.querySelector("#employee-history").classList.toggle("has-customer-timesheet-column", showsCustomerTimesheetColumn);
   document.querySelector("#employee-history").innerHTML = historyRows
-    ? '<div class="employee-history-head" aria-hidden="true"><span>Maand</span><span>Uren</span><span>Status</span>' + historyHeadCustomerColumn + '<span>Actie</span></div>' + historyRows
+    ? '<div class="employee-history-head" aria-hidden="true"><span>Maand</span><span>Uren verantwoord</span><span>Status</span>' + historyHeadCustomerColumn + '<span>Actie</span></div>' + historyRows
     : '<div class="dashboard-action-empty">Er zijn nog geen maanden beschikbaar.</div>';
   // De historietabel staat sinds v1.0.73 op een eigen scherm; op het Dashboard
   // blijft alleen deze regel staan die zegt hoeveel er te zien is.
