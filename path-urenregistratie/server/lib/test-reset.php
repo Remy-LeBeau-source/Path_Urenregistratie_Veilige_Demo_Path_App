@@ -223,6 +223,125 @@ function test_reset_restore_baseline_credentials(PDO $pdo, array $credentials): 
     }
 }
 
+/**
+ * Sinds 11 sep kunnen genoemde testers (Marc/Stasjo/Brian/Shawn) hun eigen
+ * echte wachtwoord zetten via een echte resetmail (zie
+ * mail_test_named_tester_timesheet_channels() en de reset-uitzondering in
+ * server/mail/config.php). De gedeelde baseline-reset TRUNCATE't de hele
+ * users-tabel en zaait 'm opnieuw (database/seed-demo-data.sql), dus zonder
+ * bescherming verdwijnt dat eigen wachtwoord bij elke reset -- de bestaande
+ * test_reset_capture_baseline_credentials() vangt dit al voor hun oude
+ * @example.invalid-adres, maar niet meer zodra test_reset_apply_named_tester_emails()
+ * hun adres naar het echte adres heeft omgezet: de volgende reset zoekt dan
+ * nog steeds op het oude adres en vindt de rij niet. Deze functie vangt
+ * hetzelfde op, maar op het vaste seed-id (3/4/5/6) i.p.v. e-mailadres --
+ * een id verandert nooit, dus dit blijft werken ongeacht welk adres er op
+ * dat moment op de rij staat.
+ *
+ * @return array<int,array{password_hash:string,force_password_change:int}>
+ */
+function test_reset_capture_named_tester_credentials(PDO $pdo, array $employeeUserIds): array
+{
+    if ($employeeUserIds === []) {
+        return [];
+    }
+    $placeholders = implode(', ', array_fill(0, count($employeeUserIds), '?'));
+    $statement = $pdo->prepare(
+        'SELECT id, password_hash, force_password_change
+         FROM users
+         WHERE id IN (' . $placeholders . ')
+           AND password_hash IS NOT NULL
+           AND password_hash <> ""
+         FOR UPDATE'
+    );
+    $statement->execute($employeeUserIds);
+
+    $credentials = [];
+    foreach ($statement->fetchAll() as $row) {
+        $credentials[(int)$row['id']] = [
+            'password_hash' => (string)$row['password_hash'],
+            'force_password_change' => (int)$row['force_password_change'],
+        ];
+    }
+    return $credentials;
+}
+
+/** @param array<int,array{password_hash:string,force_password_change:int}> $credentials */
+function test_reset_restore_named_tester_credentials(PDO $pdo, array $credentials): void
+{
+    $update = $pdo->prepare(
+        'UPDATE users
+         SET password_hash = :password_hash,
+             force_password_change = :force_password_change
+         WHERE id = :id'
+    );
+    foreach ($credentials as $userId => $credential) {
+        $update->execute([
+            ':password_hash' => $credential['password_hash'],
+            ':force_password_change' => $credential['force_password_change'],
+            ':id' => $userId,
+        ]);
+    }
+}
+
+/**
+ * De toewijzing user-id -> echt e-mailadres voor genoemde testers, uit
+ * $config (server/mail/acceptance_test.named_tester_employee_emails, gezet
+ * door server/scripts/configure-test-mail-sandbox.php). Eigen functie zodat
+ * zowel het herstellen van hun wachtwoord als het terugzetten van hun adres
+ * (hieronder) dezelfde, enige bron gebruiken -- twee losse plekken die
+ * onafhankelijk de config zouden parsen konden uiteen gaan lopen.
+ *
+ * @return list<array{id:int,email:string}>
+ */
+function test_reset_named_tester_employee_email_mapping(array $config): array
+{
+    $mail = isset($config['mail']) && is_array($config['mail']) ? $config['mail'] : [];
+    $acceptance = isset($mail['acceptance_test']) && is_array($mail['acceptance_test'])
+        ? $mail['acceptance_test']
+        : [];
+    $raw = isset($acceptance['named_tester_employee_emails']) && is_array($acceptance['named_tester_employee_emails'])
+        ? $acceptance['named_tester_employee_emails']
+        : [];
+
+    $mapping = [];
+    foreach ($raw as $entry) {
+        if (!is_array($entry)) {
+            continue;
+        }
+        $userId = (int)($entry['id'] ?? 0);
+        $email = strtolower(trim((string)($entry['email'] ?? '')));
+        if ($userId <= 0 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            continue;
+        }
+        $mapping[] = ['id' => $userId, 'email' => $email];
+    }
+    return $mapping;
+}
+
+/**
+ * Zet de echte e-mailadressen van genoemde testers terug op hun vaste
+ * seed-gebruikersrij, na elke gedeelde baseline-reset (die de hele
+ * users-tabel truncate en opnieuw zaait met de @example.invalid-adressen uit
+ * database/seed-demo-data.sql -- die seed zelf blijft bewust ongemoeid,
+ * tientallen andere testen leunen op die adressen). Zonder deze herstap zou
+ * elke reset (elke Playwright-run, elke handmatige "Baseline herstellen")
+ * het echte adres van Marc/Stasjo/Brian/Shawn stilletjes terugzetten naar
+ * het onbestaande demo-adres, en daarmee hun mailrouting breken.
+ *
+ * @return list<int> de user-id's die zijn overgezet, voor logging/tests
+ */
+function test_reset_apply_named_tester_emails(PDO $pdo, array $config): array
+{
+    $applied = [];
+    $update = $pdo->prepare('UPDATE users SET email = :email WHERE id = :id');
+    foreach (test_reset_named_tester_employee_email_mapping($config) as $entry) {
+        $update->execute([':email' => $entry['email'], ':id' => $entry['id']]);
+        $applied[] = $entry['id'];
+    }
+    return $applied;
+}
+
 function test_reset_document_path(string $root, string $bucket, string $storageKey): string
 {
     $key = trim(str_replace('\\', '/', $storageKey), '/');
@@ -395,6 +514,12 @@ function test_reset_shared_baseline(PDO $pdo, array $config, string $actorEmail)
     try {
         $preserveDemoCredentials = test_reset_should_preserve_demo_credentials($config);
         $credentials = test_reset_capture_baseline_credentials($pdo, $preserveDemoCredentials);
+        // Op id, niet e-mailadres: zodra test_reset_apply_named_tester_emails()
+        // hierna een tester op zijn echte adres heeft gezet, zou de bovenstaande
+        // e-mail-gebaseerde vangst 'm bij de volgende reset niet meer vinden --
+        // zie test_reset_capture_named_tester_credentials() voor de toelichting.
+        $namedTesterEmployeeIds = array_column(test_reset_named_tester_employee_email_mapping($config), 'id');
+        $namedTesterCredentials = test_reset_capture_named_tester_credentials($pdo, $namedTesterEmployeeIds);
         if (!$preserveDemoCredentials) {
             $requiredCredentialEmails = test_reset_baseline_credential_emails(false);
             $capturedCredentialEmails = array_keys($credentials);
@@ -437,6 +562,8 @@ function test_reset_shared_baseline(PDO $pdo, array $config, string $actorEmail)
         }
         test_reset_acceptance_accounts($pdo, $companyId);
         test_reset_restore_baseline_credentials($pdo, $credentials);
+        test_reset_restore_named_tester_credentials($pdo, $namedTesterCredentials);
+        test_reset_apply_named_tester_emails($pdo, $config);
         $audit = $pdo->prepare(
             'INSERT INTO audit_log (company_id, actor_user_id, event_type, entity_type, entity_id, event_data)
              VALUES (:company_id, NULL, "test.baseline_reset", "database", "pathco_Urentest", :data)'

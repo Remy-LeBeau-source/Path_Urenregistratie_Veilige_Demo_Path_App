@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/cli-bootstrap.php';
 require_once __DIR__ . '/../mail/config.php';
+require_once __DIR__ . '/../lib/test-reset.php';
 
 $options = ops_options($argv);
 $configPath = (string)($options['config'] ?? '/data/sites/web/pathconsultancynl/private/path-uren-test/config.local.php');
@@ -11,15 +12,28 @@ $expectedPath = '/data/sites/web/pathconsultancynl/private/path-uren-test/config
 $businessRecipient = 'giovanno.maatsen@pathconsultancy.nl';
 $invitationRecipient = $businessRecipient;
 $secondaryTestAccount = 'kenrich.lieveld@pathconsultancy.nl';
-// Losse, met naam genoemde testers die hun eigen echte wachtwoordreset op
-// TEST moeten kunnen ontvangen (en alléén dat kanaal -- zie
-// mail_test_extra_password_reset_recipients() in server/mail/config.php).
+// Losse, met naam genoemde testers die op TEST hun eigen echte mail moeten
+// kunnen ontvangen -- eerst alleen wachtwoordreset, sinds 11 sep (gebruikers-
+// verzoek) ook het urenoverzicht en de goedkeuringsmail, zie
+// $namedTesterTimesheetChannels hieronder en mail_test_extra_password_reset_recipients()/
+// mail_test_named_tester_timesheet_channels() in server/mail/config.php.
 // Staan hier apart van $acceptanceAccounts: dit zijn geen extra
 // beheerderaccounts voor de acceptatietest-harness, maar bestaande
-// medewerkeraccounts die hun eigen reset-flow moeten kunnen beproeven.
-$namedPasswordResetTesters = [
-    'stasjovanbakel@pathconsultancy.nl',
+// medewerkeraccounts (vaste seed-id's 3/4/5/6, database/seed-demo-data.sql)
+// die hun eigen mail moeten kunnen beproeven. De omleidingsmailbox
+// ($businessRecipient) blijft via cc op de hoogte van alles wat zij sturen
+// (server/mail/config.php, mail_effective_delivery()).
+$namedTesterEmployeeEmails = [
+    ['id' => 3, 'email' => 'marcderoon@pathconsultancy.nl'],
+    ['id' => 4, 'email' => 'stasjovanbakel@pathconsultancy.nl'],
+    ['id' => 5, 'email' => 'brian.hek@pathconsultancy.nl'],
+    ['id' => 6, 'email' => 'shawn.nahar@pathconsultancy.nl'],
 ];
+$namedPasswordResetTesters = array_column($namedTesterEmployeeEmails, 'email');
+// Bewust smal: alleen deze twee, niet elk kanaal. Beheerdersaccounts
+// (gio/joyce) blijven volledig omgeleid, net als elk ander kanaal voor deze
+// vier medewerkers zelf (facturen, broker-mail, etc.).
+$namedTesterTimesheetChannels = ['timesheet_submission_receipt', 'timesheet_final_approval'];
 $acceptanceAccounts = [
     ['email' => $businessRecipient, 'name' => 'Giovanno Maatsen'],
     ['email' => $secondaryTestAccount, 'name' => 'Kenrich Lieveld'],
@@ -39,6 +53,8 @@ try {
             'allowed_recipients' => [$businessRecipient, $secondaryTestAccount, ...$namedPasswordResetTesters],
             'test_sink_cc_recipient' => $secondaryTestAccount,
             'test_accounts' => array_column($acceptanceAccounts, 'email'),
+            'named_tester_timesheet_channels' => $namedTesterTimesheetChannels,
+            'named_tester_employee_emails' => $namedTesterEmployeeEmails,
             'message' => 'Use --execute --confirm=ENABLE_TEST_MAIL_SANDBOX on TransIP to open only the guarded TEST mail sandbox.',
         ]);
     }
@@ -73,6 +89,8 @@ try {
         'password_reset_recipient' => $businessRecipient,
         'invitation_recipient' => $invitationRecipient,
         'extra_password_reset_recipients' => $namedPasswordResetTesters,
+        'named_tester_timesheet_channels' => $namedTesterTimesheetChannels,
+        'named_tester_employee_emails' => $namedTesterEmployeeEmails,
     ];
 
     $relayErrors = mail_validate_relay_config($config);
@@ -117,6 +135,13 @@ try {
         ]);
     }
 
+    // Onmiddellijk effect: de vier medewerkeraccounts krijgen hier meteen hun
+    // echte adres (raakt alleen de e-mailkolom, het wachtwoord blijft
+    // ongemoeid). Dezelfde functie draait ook automatisch na elke gedeelde
+    // baseline-reset (server/lib/test-reset.php), zodat het adres niet
+    // verloren gaat bij de eerstvolgende reset.
+    $appliedNamedTesterEmails = test_reset_apply_named_tester_emails($pdo, $config);
+
     umask(0077);
     $backupPath = $configPath . '.before-mail-sandbox-' . gmdate('Ymd-His');
     if (!copy($configPath, $backupPath)) {
@@ -149,6 +174,8 @@ try {
         'test_sink_cc_recipient' => $secondaryTestAccount,
         'test_accounts' => array_column($acceptanceAccounts, 'email'),
         'named_password_reset_testers' => $namedPasswordResetTesters,
+        'named_tester_timesheet_channels' => $namedTesterTimesheetChannels,
+        'named_tester_employee_emails_applied' => $appliedNamedTesterEmails,
         'backup_path' => $backupPath,
         'message' => 'Guarded TEST mail sandbox enabled. No message was sent.',
     ]);

@@ -75,6 +75,14 @@ Feature: Mailroutering en aflevering
     Then wordt met Playwright-assertions bevestigd dat het logo verschijnt in de urenoverzicht-handtekening zodra de app-origin https is
 
   @happy
+  Scenario: [EQ-H-043] een genoemde tester houdt zijn echte wachtwoord vast, ook nadat zijn adres is teruggezet na een reset-cyclus
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given mailroutering en aflevering is voorbereid
+    When de flow voor EQ-H-043 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat een genoemde tester houdt zijn echte wachtwoord vast, ook nadat zijn adres is teruggezet na een reset-cyclus
+
+  @happy
   Scenario: [EQ-H-037] goedkeuren maakt exact één definitieve-goedkeuringsmail
     # Testtechniek: Toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 7

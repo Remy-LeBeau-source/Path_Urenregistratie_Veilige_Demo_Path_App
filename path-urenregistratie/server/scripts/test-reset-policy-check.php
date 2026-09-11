@@ -115,6 +115,23 @@ $checks = [
         && str_contains($cliSource, 'RESET_SHARED_TEST_BASELINE')
         && str_contains($cliSource, "test_reset_is_available(\$config, 'uren-test.pathconsultancy.nl')")
         && str_contains($cliSource, "\$reset['verified_demo_accounts']"),
+    // 11 sep: named-tester e-mailoverschrijving (R38-vervolg) moet elke
+    // gedeelde reset overleven, anders verliest een genoemde tester zijn
+    // echte adres/wachtwoord bij de eerstvolgende Playwright-run.
+    'named_tester_email_reapplied_after_seed' => strpos($source, 'test_reset_apply_named_tester_emails($pdo, $config)')
+        > strpos($source, 'test_reset_restore_baseline_credentials($pdo, $credentials)'),
+    'named_tester_credentials_captured_before_seed' => strpos($source, '$namedTesterCredentials = test_reset_capture_named_tester_credentials')
+        < strpos($source, 'foreach ($scripts as $script)'),
+    'named_tester_mapping_ignores_malformed_entries' => test_reset_named_tester_employee_email_mapping([
+        'mail' => ['acceptance_test' => ['named_tester_employee_emails' => [
+            ['id' => 4, 'email' => 'stasjovanbakel@pathconsultancy.nl'],
+            ['id' => 0, 'email' => 'nul-id@pathconsultancy.nl'],
+            ['id' => 5, 'email' => 'geen-geldig-adres'],
+            ['id' => 6],
+            'geen-array',
+        ]]],
+    ]) === [['id' => 4, 'email' => 'stasjovanbakel@pathconsultancy.nl']],
+    'named_tester_mapping_empty_without_config' => test_reset_named_tester_employee_email_mapping($test) === [],
 ];
 foreach ($databaseOverrideValues as $key => $value) {
     $value === false ? putenv($key) : putenv($key . '=' . $value);

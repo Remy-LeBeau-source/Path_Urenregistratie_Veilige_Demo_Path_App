@@ -552,6 +552,42 @@ test.describe('email queue api', () => {
     expect(uitvoer.stdout).toContain('https://uren-test.pathconsultancy.nl/assets/path-logo.png');
   });
 
+  test('[EQ-H-043] een genoemde tester houdt zijn echte wachtwoord vast, ook nadat zijn adres is teruggezet na een reset-cyclus', async () => {
+    // R37/R38-vervolg (11 sep): de gedeelde TEST-baseline-reset truncate de
+    // hele users-tabel en zaait 'm opnieuw -- zonder id-gebaseerde bescherming
+    // (i.p.v. e-mailgebaseerd) zou een genoemde tester die zijn eigen
+    // wachtwoord heeft gezet dat kwijtraken zodra test_reset_apply_named_tester_emails()
+    // zijn adres terugzet: de e-mailgebaseerde vangst zoekt dan nog op het
+    // oude @example.invalid-adres en vindt de rij niet meer. Alles in één
+    // transactie die aan het eind wordt teruggedraaid -- geen blijvend effect
+    // op de gedeelde TEST-database, ook niet als andere shards gelijktijdig
+    // tegen dezelfde database draaien.
+    const php = [
+      'require "server/auth/session.php";',
+      'require_once "server/lib/test-reset.php";',
+      '$config=require "server/config.local.php";',
+      '$pdo=auth_pdo($config);',
+      '$pdo->beginTransaction();',
+      '$userId=(int)$pdo->query("SELECT id FROM users WHERE role=\'employee\' ORDER BY id LIMIT 1")->fetchColumn();',
+      '$knownHash=password_hash("EQ-H-043-wachtwoord", PASSWORD_DEFAULT);',
+      '$pdo->prepare("UPDATE users SET password_hash=:h WHERE id=:id")->execute([":h"=>$knownHash, ":id"=>$userId]);',
+      '$captured=test_reset_capture_named_tester_credentials($pdo, [$userId]);',
+      '$config["mail"]["acceptance_test"]["named_tester_employee_emails"]=[["id"=>$userId,"email"=>"eq-h-043-test@pathconsultancy.nl"]];',
+      '$applied=test_reset_apply_named_tester_emails($pdo, $config);',
+      // Simuleert wat een TRUNCATE+reseed van de users-tabel doet met het wachtwoord.
+      '$pdo->prepare("UPDATE users SET password_hash=\'\' WHERE id=:id")->execute([":id"=>$userId]);',
+      'test_reset_restore_named_tester_credentials($pdo, $captured);',
+      '$stmt=$pdo->prepare("SELECT email, password_hash FROM users WHERE id=:id"); $stmt->execute([":id"=>$userId]); $row=$stmt->fetch();',
+      'echo json_encode(["applied"=>$applied, "email"=>$row["email"], "password_matches"=>password_verify("EQ-H-043-wachtwoord", (string)$row["password_hash"])]);',
+      '$pdo->rollBack();',
+    ].join(' ');
+    const uitvoer = await execFileAsync('php', ['-r', php], { cwd: process.cwd(), windowsHide: true });
+    const result = JSON.parse(uitvoer.stdout) as { applied: number[]; email: string; password_matches: boolean };
+    expect(result.email).toBe('eq-h-043-test@pathconsultancy.nl');
+    expect(result.password_matches, 'het echte, zelf gezette wachtwoord moet de reset-cyclus overleven').toBe(true);
+    expect(result.applied.length).toBe(1);
+  });
+
   test('[EQ-H-037] goedkeuren maakt exact één definitieve-goedkeuringsmail', async () => {
     const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
     const authApi = new AuthApi(ctx);
