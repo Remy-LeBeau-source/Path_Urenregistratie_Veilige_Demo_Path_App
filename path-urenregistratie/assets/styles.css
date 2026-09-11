@@ -1309,6 +1309,30 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 }
 
 /* v0.7: accounts, notifications, employee dashboard and help */
+/* Het inlogscherm bood drie manieren om binnen te komen -- twee
+   accountkiezers, twee snelknoppen en het e-mailformulier -- allemaal op
+   gelijke sterkte onder elkaar. Wie hier voor het eerst komt weet niet welke
+   de echte is, en het formulier (de enige die ook in productie bestaat) staat
+   onderaan.
+   De snelkeuzes zitten al in een eigen container die in productie verborgen
+   wordt; die grens is nu ook te zien. Eén omkaderd blok "dit zijn de
+   demo-ingangen", en daaronder staat het echte formulier vrij op het paneel.
+   Omdat de lijn bij het blok zelf hoort, verdwijnt hij vanzelf mee zodra de
+   demo-ingangen weg zijn. */
+#local-account-login-tools:not([hidden]) {
+  display: block;
+  margin: 20px 0 22px;
+  border: 1px solid var(--line-zacht);
+  border-radius: 16px;
+  background: var(--vlak-zacht);
+  padding: 4px 16px 18px;
+}
+#local-account-login-tools .login-options { margin-bottom: 0; }
+/* Het blok levert nu het vlak; de twee kiezers hoeven er niet nóg een vlak
+   binnenin te tekenen. Doos in doos leest als twee niveaus waar er maar één
+   is. */
+#local-account-login-tools .demo-employee-picker { background: transparent; padding: 0; }
+
 .demo-account-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px; }
 .demo-account-grid .demo-employee-picker { margin-top: 0; }
 
