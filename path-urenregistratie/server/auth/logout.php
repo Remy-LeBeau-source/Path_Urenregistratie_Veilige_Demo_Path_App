@@ -29,5 +29,5 @@ auth_clear_session();
 
 auth_send_json([
     'ok' => true,
-    'message' => 'Logged out.',
+    'message' => 'Uitgelogd.',
 ]);

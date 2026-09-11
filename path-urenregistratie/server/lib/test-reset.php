@@ -233,6 +233,98 @@ function test_reset_document_path(string $root, string $bucket, string $storageK
         . str_replace('/', DIRECTORY_SEPARATOR, $key);
 }
 
+/**
+ * Zet een NIET-vergrendelde conceptfactuur neer voor een urenstaat, zodat
+ * TEST-E2E-27 (heropen-beslistabel) bewijsbaar is i.p.v. alleen beredeneerd.
+ *
+ * De echte app kent geen pad dat dit oplevert: de enige INSERT INTO invoices
+ * (server/api/invoices.php, actie 'lock') zet locked_at altijd meteen mee.
+ * Een conceptfactuur zonder locked_at komt in de praktijk dus alleen voor via
+ * oude demodata -- exact het scenario dat request_correction (timesheets.php)
+ * sindsdien bewust NIET meer blokkeert (zie de toelichting daar, 11 sep).
+ * Deze functie bootst diezelfde toestand na, TEST-only, voor een gerichte
+ * regressietest op die versoepeling.
+ *
+ * @return array{invoice_id:int,invoice_number:string}
+ */
+function test_seed_unlocked_invoice_concept(PDO $pdo, int $timesheetId): array
+{
+    $stmt = $pdo->prepare(
+        'SELECT
+            t.id AS timesheet_id,
+            t.billable_hours,
+            p.company_id,
+            p.year,
+            p.month,
+            a.hourly_rate,
+            a.vat_percentage,
+            a.client_id,
+            a.broker_id,
+            c.payment_term_days
+         FROM timesheets t
+         JOIN periods p ON p.id = t.period_id
+         JOIN assignments a ON a.id = t.assignment_id
+         JOIN companies c ON c.id = p.company_id
+         WHERE t.id = :timesheet_id
+         LIMIT 1'
+    );
+    $stmt->execute([':timesheet_id' => $timesheetId]);
+    $row = $stmt->fetch();
+    if (!$row) {
+        throw new RuntimeException('De urenstaat voor deze TEST-seed is niet gevonden.');
+    }
+
+    $existing = $pdo->prepare('SELECT id FROM invoices WHERE timesheet_id = :timesheet_id LIMIT 1');
+    $existing->execute([':timesheet_id' => $timesheetId]);
+    if ($existing->fetch()) {
+        throw new RuntimeException('Er bestaat al een factuurrij voor deze urenstaat.');
+    }
+
+    $recipientId = (int)($row['client_id'] ?? 0);
+    if ($recipientId <= 0) {
+        $recipientId = (int)($row['broker_id'] ?? 0);
+    }
+    if ($recipientId <= 0) {
+        throw new RuntimeException('Voor deze plaatsing kon geen factuurontvanger worden bepaald.');
+    }
+
+    $subtotal = round((float)$row['billable_hours'] * (float)$row['hourly_rate'], 2);
+    $vatAmount = round($subtotal * ((float)$row['vat_percentage'] / 100), 2);
+    $total = round($subtotal + $vatAmount, 2);
+    $invoiceDate = (new DateTimeImmutable('now'))->format('Y-m-d');
+    $paymentTermDays = max(1, (int)$row['payment_term_days']);
+    $dueDate = (new DateTimeImmutable($invoiceDate))->modify('+' . $paymentTermDays . ' days')->format('Y-m-d');
+    // Duidelijk gemarkeerd als TEST-seed, nooit een sjabloon van een echt
+    // bedrijf -- dit nummer hoort nooit op een echte factuur te verschijnen.
+    $invoiceNumber = 'TEST-CONCEPT-' . $timesheetId . '-' . bin2hex(random_bytes(3));
+
+    $insert = $pdo->prepare(
+        'INSERT INTO invoices
+         (company_id, timesheet_id, invoice_number, invoice_date, due_date, recipient_id,
+          subtotal, vat_percentage, vat_amount, total, status, locked_at, created_by)
+         VALUES
+         (:company_id, :timesheet_id, :invoice_number, :invoice_date, :due_date, :recipient_id,
+          :subtotal, :vat_percentage, :vat_amount, :total, "concept", NULL, :created_by)'
+    );
+    $insert->execute([
+        ':company_id' => (int)$row['company_id'],
+        ':timesheet_id' => $timesheetId,
+        ':invoice_number' => $invoiceNumber,
+        ':invoice_date' => $invoiceDate,
+        ':due_date' => $dueDate,
+        ':recipient_id' => $recipientId,
+        ':subtotal' => $subtotal,
+        ':vat_percentage' => (float)$row['vat_percentage'],
+        ':vat_amount' => $vatAmount,
+        ':total' => $total,
+        // created_by verwijst naar een echte gebruiker via de FK; de vaste
+        // TEST-beheerder (id 1) bestaat altijd in de gedeelde baseline.
+        ':created_by' => 1,
+    ]);
+
+    return ['invoice_id' => (int)$pdo->lastInsertId(), 'invoice_number' => $invoiceNumber];
+}
+
 /** @return array{invoices:int,customer_timesheets:int} */
 function test_reset_seed_documents(PDO $pdo, array $config): array
 {

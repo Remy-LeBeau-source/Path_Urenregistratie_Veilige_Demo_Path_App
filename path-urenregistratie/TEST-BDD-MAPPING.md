@@ -221,6 +221,7 @@
 | HELP-N-002 | ui | help-widget.feature | met een voorkeur voor verminderde beweging sluit het paneel direct, zonder op een animatie te wachten | Toestandsovergang | 2 | help-widget.steps.ts | help-widget.spec.ts | UI Desktop | Hulp & Contact | met een voorkeur voor verminderde beweging sluit het paneel direct, zonder op een animatie te wachten | Negative | 17 | Actueel |
 | INV-H-004 | integration | invoice-locking.feature | admin lockt approved timesheet naar definitieve immutable factuur | Concurrency + toestandsovergang | 26 | invoice-locking.steps.ts | invoice-lock.spec.ts | DB / Integratie | Facturatie | Factuur definitief maken | Happy | 11 | Actueel |
 | INV-N-015 | integration | invoice-locking.feature | definitief gefactureerde uren kunnen niet voor correctie worden heropend | Toestandsovergang | 9 | invoice-locking.steps.ts | invoice-lock.spec.ts | DB / Integratie | Facturatie | definitief gefactureerde uren kunnen niet voor correctie worden heropend | Negative | 11 | Actueel |
+| INV-H-025 | integration | invoice-locking.feature | een goedgekeurde urenstaat mag terug naar correctie zolang er alleen een niet-vergrendelde conceptfactuur ligt | Toestandsovergang | 8 | invoice-locking.steps.ts | invoice-lock.spec.ts | DB / Integratie | Facturatie | een goedgekeurde urenstaat mag terug naar correctie zolang er alleen een niet-vergrendelde conceptfactuur ligt | Happy | 11 | Actueel |
 | INV-N-008 | integration | invoice-locking.feature | anonieme gebruiker kan factuur niet locken | Beslissingstabel rollen en autorisatie | 3 | invoice-locking.steps.ts | invoice-lock.spec.ts | DB / Integratie | Facturatie | Factuur definitief maken | Negative | 11 | Actueel |
 | INV-N-009 | integration | invoice-locking.feature | medewerker mag factuur niet finaliseren | Beslissingstabel rollen en autorisatie | 3 | invoice-locking.steps.ts | invoice-lock.spec.ts | DB / Integratie | Facturatie | medewerker mag factuur niet finaliseren | Negative | 11 | Actueel |
 | INV-N-010 | integration | invoice-locking.feature | niet-goedgekeurde urenstaat kan niet worden gelockt | Toestandsovergang | 3 | invoice-locking.steps.ts | invoice-lock.spec.ts | DB / Integratie | Facturatie | Factuur definitief maken | Negative | 11 | Actueel |
@@ -502,9 +503,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 480
+- Playwright executable cases: 481
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 481
+- Totaal unieke executable cases: 482
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29

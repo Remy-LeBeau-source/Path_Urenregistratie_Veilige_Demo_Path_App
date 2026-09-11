@@ -48,7 +48,7 @@ function security_require_csrf_token(): void
         auth_send_json([
             'ok' => false,
             'error' => 'csrf-invalid',
-            'message' => 'Missing or invalid CSRF token.',
+            'message' => 'CSRF-token ontbreekt of is ongeldig.',
         ], 403);
     }
 }

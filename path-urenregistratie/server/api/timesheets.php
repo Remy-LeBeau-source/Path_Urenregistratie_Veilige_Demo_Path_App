@@ -44,7 +44,7 @@ function timesheet_expected_version(array $payload, bool $required): ?int
             auth_send_json([
                 'ok' => false,
                 'error' => 'invalid-payload',
-                'message' => 'expected_version is required for this action.',
+                'message' => 'De verwachte versie is verplicht voor deze actie.',
             ], 400);
         }
 
@@ -69,13 +69,13 @@ function timesheet_expected_version(array $payload, bool $required): ?int
 
 function timesheet_correction_message(array $payload): string
 {
-    $message = security_require_string_field($payload, 'correction_message', 'correction_message is required.', 2000);
+    $message = security_require_string_field($payload, 'correction_message', 'Correctiebericht is verplicht.', 2000);
     $message = trim($message);
     if ($message === '') {
         auth_send_json([
             'ok' => false,
             'error' => 'invalid-payload',
-            'message' => 'correction_message is required.',
+            'message' => 'Correctiebericht is verplicht.',
         ], 400);
     }
 
@@ -93,7 +93,7 @@ function timesheet_decimal(array $payload, string $field, float $default = 0.0):
         auth_send_json([
             'ok' => false,
             'error' => 'invalid-payload',
-            'message' => 'Field ' . $field . ' must be numeric.',
+            'message' => 'Het veld ' . $field . ' moet een getal zijn.',
         ], 400);
     }
 
@@ -102,7 +102,7 @@ function timesheet_decimal(array $payload, string $field, float $default = 0.0):
         auth_send_json([
             'ok' => false,
             'error' => 'invalid-payload',
-            'message' => 'Field ' . $field . ' cannot be negative.',
+            'message' => 'Het veld ' . $field . ' mag niet negatief zijn.',
         ], 400);
     }
 
@@ -147,7 +147,7 @@ function timesheet_employee_from_payload(PDO $pdo, array $currentUser, array $pa
             auth_send_json([
                 'ok' => false,
                 'error' => 'employee-profile-missing',
-                'message' => 'Employee account is not linked to an employee record.',
+                'message' => 'Dit account is niet gekoppeld aan een medewerkerprofiel.',
             ], 403);
         }
 
@@ -171,7 +171,7 @@ function timesheet_employee_from_payload(PDO $pdo, array $currentUser, array $pa
         auth_send_json([
             'ok' => false,
             'error' => 'invalid-payload',
-            'message' => 'employee_id is required for administrator writes.',
+            'message' => 'Een beheerder moet een medewerker opgeven bij deze actie.',
         ], 400);
     }
 
@@ -263,7 +263,7 @@ function timesheet_parse_day_entries(array $payload, int $year, int $month, floa
         auth_send_json([
             'ok' => false,
             'error' => 'invalid-payload',
-            'message' => 'day_entries is required and must be an array.',
+            'message' => 'De dagregels zijn verplicht en moeten een lijst zijn.',
         ], 400);
     }
 
@@ -581,7 +581,7 @@ function timesheet_payload_from_row(array $timesheet, array $dayEntries, array $
 }
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
-    $periodKey = security_require_string_field($_GET, 'period', 'Period is required.', 7);
+    $periodKey = security_require_string_field($_GET, 'period', 'Periode is verplicht.', 7);
     $period = timesheet_parse_period_key($periodKey);
 
     $employee = timesheet_employee_from_payload($pdo, $currentUser, $_GET);
@@ -639,8 +639,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
 security_require_csrf_token();
 $payload = security_read_json_body();
 
-$action = security_require_enum_field($payload, 'action', ['save_draft', 'submit', 'request_correction', 'approve'], 'Invalid timesheet action.');
-$period = timesheet_parse_period_key(security_require_string_field($payload, 'period', 'Period is required.', 7));
+$action = security_require_enum_field($payload, 'action', ['save_draft', 'submit', 'request_correction', 'approve'], 'Ongeldige actie voor de urenstaat.');
+$period = timesheet_parse_period_key(security_require_string_field($payload, 'period', 'Periode is verplicht.', 7));
 $employee = timesheet_employee_from_payload($pdo, $currentUser, $payload);
 timesheet_require_employee_period_access($config, $currentUser, $employee, $period);
 

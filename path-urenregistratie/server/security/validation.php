@@ -48,12 +48,12 @@ function security_require_string_field(array $payload, string $field, string $me
 
 function security_require_email_field(array $payload, string $field = 'email'): string
 {
-    $value = security_require_string_field($payload, $field, 'Email is required.', 254);
+    $value = security_require_string_field($payload, $field, 'E-mailadres is verplicht.', 254);
     if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
         auth_send_json([
             'ok' => false,
             'error' => 'invalid-payload',
-            'message' => 'Email is invalid.',
+            'message' => 'E-mailadres is ongeldig.',
         ], 400);
     }
 

@@ -38,7 +38,7 @@ if (!is_array($settings)) {
     auth_send_json([
         'ok' => false,
         'error' => 'invalid-payload',
-        'message' => 'settings payload is required',
+        'message' => 'Instellingengegevens zijn verplicht.',
     ], 400);
 }
 
@@ -170,7 +170,7 @@ try {
         auth_send_json([
             'ok' => false,
             'error' => 'invalid-payload',
-            'message' => 'invoiceNameDisplay is invalid.',
+            'message' => 'De weergavekeuze voor de factuurnaam is ongeldig.',
         ], 400);
     }
     $postalCity = settings_postal_city($settings['postalCity'] ?? '');

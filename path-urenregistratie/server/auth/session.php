@@ -227,7 +227,7 @@ function auth_require_method(string $method): void
         auth_send_json([
             'ok' => false,
             'error' => 'method-not-allowed',
-            'message' => 'Expected HTTP ' . strtoupper($method) . '.',
+            'message' => 'Dit adres verwacht een HTTP-' . strtoupper($method) . '-aanvraag.',
         ], 405);
     }
 }
@@ -471,7 +471,7 @@ function auth_require_role(array $allowedRoles, ?array $currentUser): void
         auth_send_json([
             'ok' => false,
             'error' => 'not-authenticated',
-            'message' => 'No active session.',
+            'message' => 'Geen actieve sessie.',
         ], 401);
     }
 
@@ -480,7 +480,7 @@ function auth_require_role(array $allowedRoles, ?array $currentUser): void
         auth_send_json([
             'ok' => false,
             'error' => 'forbidden',
-            'message' => 'Role is not allowed for this endpoint.',
+            'message' => 'Deze rol heeft hier geen toegang.',
         ], 403);
     }
 }

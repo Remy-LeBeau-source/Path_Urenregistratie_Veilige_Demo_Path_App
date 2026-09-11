@@ -15,8 +15,8 @@ $pdo = auth_pdo($config);
 $input = security_read_json_body();
 security_require_csrf_token();
 
-$rawToken    = security_require_string_field($input, 'token', 'token is required', 256);
-$newPassword = security_require_string_field($input, 'new_password', 'new_password is required', 1024);
+$rawToken    = security_require_string_field($input, 'token', 'Token is verplicht.', 256);
+$newPassword = security_require_string_field($input, 'new_password', 'Nieuw wachtwoord is verplicht.', 1024);
 
 if (strlen($newPassword) < 12) {
     auth_send_json(['ok' => false, 'error' => 'password-too-short',
@@ -36,16 +36,16 @@ $stmt->execute([':hash' => $tokenHash]);
 $row = $stmt->fetch();
 
 if (!$row) {
-    auth_send_json(['ok' => false, 'error' => 'invalid-token', 'message' => 'Invalid or expired reset token.'], 400);
+    auth_send_json(['ok' => false, 'error' => 'invalid-token', 'message' => 'Deze herstellink is ongeldig of verlopen.'], 400);
 }
 if ($row['used_at'] !== null) {
     auth_send_json(['ok' => false, 'error' => 'token-already-used', 'message' => 'Deze herstellink is al gebruikt. Vraag een nieuwe aan.'], 409);
 }
 if (new DateTimeImmutable('now', new DateTimeZone('UTC')) > new DateTimeImmutable((string)$row['expires_at'], new DateTimeZone('UTC'))) {
-    auth_send_json(['ok' => false, 'error' => 'token-expired', 'message' => 'Reset token has expired. Request a new one.'], 409);
+    auth_send_json(['ok' => false, 'error' => 'token-expired', 'message' => 'Deze herstellink is verlopen. Vraag een nieuwe aan.'], 409);
 }
 if ((int)$row['active'] !== 1) {
-    auth_send_json(['ok' => false, 'error' => 'account-inactive', 'message' => 'Account is not active.'], 403);
+    auth_send_json(['ok' => false, 'error' => 'account-inactive', 'message' => 'Dit account is niet actief.'], 403);
 }
 
 $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
@@ -67,4 +67,4 @@ try {
     auth_send_json(['ok' => false, 'error' => 'reset-failed', 'message' => 'Het wachtwoord kon niet worden bijgewerkt. Probeer het opnieuw.'], 500);
 }
 
-auth_send_json(['ok' => true, 'message' => 'Password updated successfully.']);
+auth_send_json(['ok' => true, 'message' => 'Wachtwoord succesvol bijgewerkt.']);

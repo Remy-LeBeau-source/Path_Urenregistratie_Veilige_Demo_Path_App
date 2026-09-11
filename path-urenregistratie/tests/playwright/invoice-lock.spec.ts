@@ -280,6 +280,62 @@ test('[INV-N-015] definitief gefactureerde uren kunnen niet voor correctie worde
   });
 });
 
+test('[INV-H-025] een goedgekeurde urenstaat mag terug naar correctie zolang er alleen een niet-vergrendelde conceptfactuur ligt', async ({ request }) => {
+  // TEST-E2E-27 (tests/remote/TEST-CHARTER.md): request_correction blokkeert
+  // sinds 11 sep pas bij een ECHT vergrendelde factuur (locked_at gezet), niet
+  // meer bij het enkele bestaan van een factuurrij -- een conceptfactuur is
+  // nooit verstuurd en wordt bij definitief maken toch opnieuw berekend.
+  // De echte app kan zelf geen factuurrij zonder locked_at opleveren (de
+  // enige INSERT, actie 'lock', zet 'm altijd meteen), dus deze case zet die
+  // toestand zelf neer via een TEST-only seedactie op test-reset.php.
+  const authApi = new AuthApi(request);
+  const timesheetApi = new TimesheetApi(request);
+
+  const approved = await test.step('Given een goedgekeurde urenstaat', async () => {
+    const submitted = await createSubmittedTimesheet(request, 9);
+    return approveTimesheet(request, submitted);
+  });
+
+  await test.step('And een niet-vergrendelde conceptfactuur die er via de echte app nooit kan liggen, maar hier TEST-only wordt neergezet', async () => {
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+    const csrfToken = await authApi.csrfToken();
+    const seed = await request.post('/server/api/test-reset.php', {
+      headers: { 'X-CSRF-Token': csrfToken },
+      data: {
+        action: 'seed_unlocked_invoice_concept',
+        confirm: 'SEED_TEST_UNLOCKED_INVOICE',
+        timesheet_id: approved.timesheetId,
+      },
+    });
+    const seedBody = await seed.json();
+    expect(seed.status(), JSON.stringify(seedBody)).toBe(200);
+    expect(seedBody.ok).toBe(true);
+    expect(String(seedBody.seeded?.invoice_number || '')).toContain('TEST-CONCEPT-');
+    await authApi.logout();
+  });
+
+  await test.step('When Backoffice deze maand alsnog voor correctie opent', async () => {
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+    const reopened = await timesheetApi.requestCorrection({
+      action: 'request_correction',
+      period: approved.period,
+      employeeId: approved.employeeId,
+      expectedVersion: approved.version,
+      correctionMessage: 'INV-H-025: een conceptfactuur mag heropenen niet blokkeren.',
+    });
+    expect(reopened.status, JSON.stringify(reopened.body)).toBe(200);
+    expect(reopened.body.ok).toBe(true);
+    expect(reopened.body.timesheet.status).toBe('correction');
+  });
+
+  await test.step('Then blijft de conceptfactuur zelf ongemoeid (nog steeds niet vergrendeld) en wordt de sessie afgesloten', async () => {
+    const readBack = await timesheetApi.read(approved.period, approved.employeeId);
+    expect(readBack.status).toBe(200);
+    expect(readBack.body.timesheet.status).toBe('correction');
+    await authApi.logout();
+  });
+});
+
 test('[INV-N-008] anonieme gebruiker kan factuur niet locken', async ({ request }) => {
   const invoiceApi = new InvoiceApi(request);
 

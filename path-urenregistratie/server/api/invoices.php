@@ -205,7 +205,7 @@ function invoices_employee_context(PDO $pdo, array $currentUser): array
         auth_send_json([
             'ok' => false,
             'error' => 'employee-profile-missing',
-            'message' => 'Employee account is not linked to an employee record.',
+            'message' => 'Dit account is niet gekoppeld aan een medewerkerprofiel.',
         ], 403);
     }
 
@@ -692,7 +692,7 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
             auth_send_json([
                 'ok' => false,
                 'error' => 'invalid-concept-pdf',
-                'message' => 'The controlled concept invoice PDF is missing or too large.',
+                'message' => 'De gecontroleerde conceptfactuur-PDF ontbreekt of is te groot.',
             ], 400);
         }
         $decodedPdf = base64_decode($encodedPdf, true);
@@ -700,7 +700,7 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
             auth_send_json([
                 'ok' => false,
                 'error' => 'invalid-concept-pdf',
-                'message' => 'The controlled concept invoice PDF is invalid.',
+                'message' => 'De gecontroleerde conceptfactuur-PDF is ongeldig.',
             ], 400);
         }
         $conceptPdfBytes = $decodedPdf;
@@ -793,7 +793,7 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
             auth_send_json([
                 'ok' => false,
                 'error' => 'invoice-already-locked',
-                'message' => 'Invoice is already finalized and immutable.',
+                'message' => 'De factuur is al definitief gemaakt en kan niet meer worden gewijzigd.',
             ], 409);
         }
 
@@ -928,7 +928,7 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
                 auth_send_json([
                     'ok' => false,
                     'error' => 'invoice-already-locked',
-                    'message' => 'Invoice is already finalized and immutable.',
+                    'message' => 'De factuur is al definitief gemaakt en kan niet meer worden gewijzigd.',
                 ], 409);
             }
         }
@@ -1074,7 +1074,7 @@ if (str_starts_with($contentType, 'multipart/form-data') && (string)($_POST['act
     invoices_upload_external($pdo, $config, $currentUser);
 }
 $payload = security_read_json_body();
-$action = security_require_enum_field($payload, 'action', ['lock'], 'Invalid invoice action.');
+$action = security_require_enum_field($payload, 'action', ['lock'], 'Ongeldige factuuractie.');
 
 if ($action === 'lock') {
     invoices_lock($pdo, $currentUser, $payload, $config);

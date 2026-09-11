@@ -142,4 +142,4 @@ if ($action === 'mark_announcement_read') {
 }
 
 auth_send_json(['ok' => false, 'error' => 'unknown-action',
-    'message' => 'action must be one of: mark_read, mark_all_read, mark_announcement_read'], 400);
+    'message' => 'Ongeldige actie voor meldingen.'], 400);
