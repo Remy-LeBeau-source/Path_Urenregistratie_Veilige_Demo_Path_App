@@ -46,6 +46,14 @@ Feature: Veilige productieconfiguratie en deployment
     When backup, migratie, baselineherstel, live-preflight en cutover in vaste volgorde staan
     Then zijn TEST-database, private opslag en beide loginrollen vóór vrijgave bewezen
 
+  @happy
+  Scenario: [SAFE-H-018] de accountbaseline-verificatie blijft correct nadat een genoemde tester zijn echte adres/wachtwoord heeft gekregen
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given veilige productieconfiguratie en deployment is voorbereid
+    When de flow voor SAFE-H-018 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat de accountbaseline-verificatie blijft correct nadat een genoemde tester zijn echte adres/wachtwoord heeft gekregen
+
   @negative
   Scenario: [SAFE-N-001] frontend source bevat geen plaintext demo-credentials
     # Testtechniek: Negatieve equivalentieklasse + error guessing
@@ -163,10 +171,10 @@ Feature: Veilige productieconfiguratie en deployment
     Then blijft TEST gesloten zonder whitelist en kan alleen de toegestane ontvanger door
 
   @happy
-  Scenario: [SAFE-H-013] TEST-mailsandbox opent atomisch voor twee toegestane TEST-ontvangers (sink + CC), plus met naam genoemde wachtwoordreset-testers
-    # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 29
-    Given twee toegestane TEST-ontvangers (primaire sink + CC), een genoemde wachtwoordreset-tester, en twee bijbehorende accounts zijn gedefinieerd
+  Scenario: [SAFE-H-013] TEST-mailsandbox opent atomisch voor twee toegestane TEST-ontvangers (sink + CC), plus vier met naam genoemde testers
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 32
+    Given twee toegestane TEST-ontvangers (primaire sink + CC), vier genoemde testers, en twee bijbehorende accounts zijn gedefinieerd
     When de TEST-mailsandboxconfigurator zonder uitvoerbevestiging wordt gestart
     Then blijft de check niet-mutatief en scheidt hij de mailsink van de TEST-accounts
     And zijn bevestiging, accounttransactie, backup, atomische write en deployguard aantoonbaar afgedwongen

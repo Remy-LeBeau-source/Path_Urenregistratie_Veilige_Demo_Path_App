@@ -29,6 +29,9 @@ Then("seed, accounts, auditrelatie en exact twaalf open acties herstelbaar blijv
 Given("de bewaakte TEST-baseline-CLI en deploybron zijn ingelezen");
 When("backup, migratie, baselineherstel, live-preflight en cutover in vaste volgorde staan");
 Then("zijn TEST-database, private opslag en beide loginrollen vóór vrijgave bewezen");
+Given("veilige productieconfiguratie en deployment is voorbereid");
+When("de flow voor SAFE-H-018 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat de accountbaseline-verificatie blijft correct nadat een genoemde tester zijn echte adres/wachtwoord heeft gekregen");
 Given("de frontend source wordt opgehaald");
 When("de flow voor SAFE-N-001 wordt uitgevoerd");
 Then("bevat de frontend geen plaintext demo-credentials");
@@ -75,7 +78,7 @@ Then("zijn TLS, dry-run, private storage, HSTS en niet-mutatieve checks afgedwon
 Given("het uitvoerbare TEST-mailbeleid wordt gecontroleerd");
 When("de productie-, test- en developmentconfiguraties worden doorgerekend");
 Then("blijft TEST gesloten zonder whitelist en kan alleen de toegestane ontvanger door");
-Given("twee toegestane TEST-ontvangers (primaire sink + CC), een genoemde wachtwoordreset-tester, en twee bijbehorende accounts zijn gedefinieerd");
+Given("twee toegestane TEST-ontvangers (primaire sink + CC), vier genoemde testers, en twee bijbehorende accounts zijn gedefinieerd");
 When("de TEST-mailsandboxconfigurator zonder uitvoerbevestiging wordt gestart");
 Then("blijft de check niet-mutatief en scheidt hij de mailsink van de TEST-accounts");
 And("zijn bevestiging, accounttransactie, backup, atomische write en deployguard aantoonbaar afgedwongen");

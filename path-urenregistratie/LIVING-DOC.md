@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 482 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 483 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 482 unieke case-ID's
+- Playwright executable cases: 483 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 483 unieke case-ID's
+- Totaal executable cases: 484 unieke case-ID's
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29
 - Database steps mappings: 1
-- Uitvoeringen: 518
-- Niet-mobile projectuitvoeringen: 446
+- Uitvoeringen: 519
+- Niet-mobile projectuitvoeringen: 447
 - Mobile functionele cases: 36
 - Pixel 7 / Chromium-uitvoeringen: 36
 - iPhone 13 / WebKit-uitvoeringen: 36
 
-De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 482 Playwright-functionele cases in totaal 518 resultaten op: 446 + (36 x 2) = 518.
+De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 483 Playwright-functionele cases in totaal 519 resultaten op: 447 + (36 x 2) = 519.
 
 ## Documentatieketen
 
@@ -507,13 +507,14 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 482 Playwri
 
 - Feature: `tests/playwright/features/production-safety.feature`
 - Source: `tests/playwright/production-safety.spec.ts`
-- Cases: 23
+- Cases: 24
 
 - [SAFE-H-001] login picker vult alleen lokaal demo-wachtwoord in wanneer hints beschikbaar zijn — Techniek: API-contract + equivalentieklasse · Assertions: 9
 - [SAFE-H-012] TEST toont accountkeuze met autofill en een afgeschermde gedeelde reset — Techniek: Beslissingstabel + equivalentieklassen + toestandsovergang · Assertions: 21
 - [SAFE-H-017] loopback-auto-allow blijft beperkt tot veilige lokale/test-hosts — Techniek: API-contract + equivalentieklasse · Assertions: 4
 - [SAFE-H-014] gedeelde TEST-reset herstelt alleen de exacte veilige 12-actiebaseline — Techniek: Beslissingstabel + equivalentieklassen + toestandsovergang · Assertions: 29
 - [SAFE-H-015] TEST-deploy herstelt en verifieert de vaste accountbaseline vóór cutover — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 27
+- [SAFE-H-018] de accountbaseline-verificatie blijft correct nadat een genoemde tester zijn echte adres/wachtwoord heeft gekregen — Techniek: API-contract + equivalentieklasse · Assertions: 4
 - [SAFE-N-001] frontend source bevat geen plaintext demo-credentials — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 3
 - [SAFE-N-002] writes zonder csrf blijven geblokkeerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
 - [SAFE-H-002] timesheet writeflow blijft werkend (draft + submit) — Techniek: API-contract + equivalentieklasse · Assertions: 8
@@ -528,7 +529,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 482 Playwri
 - [SAFE-N-007] productieconfigurator verwerkt DB-secret uitsluitend interactief en fail-closed — Techniek: Toestandsovergang · Assertions: 14
 - [SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 25
 - [SAFE-H-010] echte TEST-mail vereist opt-in en een ontvangers-whitelist — Techniek: API-contract + equivalentieklasse · Assertions: 16
-- [SAFE-H-013] TEST-mailsandbox opent atomisch voor twee toegestane TEST-ontvangers (sink + CC), plus met naam genoemde wachtwoordreset-testers — Techniek: Toestandsovergang · Assertions: 29
+- [SAFE-H-013] TEST-mailsandbox opent atomisch voor twee toegestane TEST-ontvangers (sink + CC), plus vier met naam genoemde testers — Techniek: API-contract + equivalentieklasse · Assertions: 32
 - [SAFE-H-006] eerste productieorganisatie wordt gevalideerd en zonder overschrijven ingericht — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 18
 - [SAFE-H-011] groene main-pipeline rolt exact dezelfde release veilig uit naar productie — Techniek: Toestandsovergang + foutinjectie + beslissingstabel · Assertions: 28
 - [SAFE-H-016] de eerste 1.x-uitrol normaliseert PROD naar de afgesproken baseline en controleert die streng — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 32
