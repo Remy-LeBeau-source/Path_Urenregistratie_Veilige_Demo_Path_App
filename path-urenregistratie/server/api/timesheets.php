@@ -874,6 +874,19 @@ try {
             }
 
             if ($existingStatus === 'approved') {
+                // Het echte slot op een gefactureerde maand zit hierboven: locken
+                // zet de status op 'invoiced' en die staat niet in de toegestane
+                // overgangen (bewezen door INV-N-015). Deze extra check keek
+                // alleen of er überhaupt een factuurrij bestond, en dat is te
+                // streng: een rij zonder locked_at is per definitie een concept
+                // dat nooit verstuurd is (mailen weigert zonder locked_at, zie
+                // queue.php) en waarvan de bedragen bij definitief maken tóch
+                // opnieuw uit de urenstaat worden berekend. In de praktijk trof
+                // deze tak dus alleen de conceptfacturen uit de demodata, met de
+                // melding "er is een factuur van gemaakt" terwijl er niets was
+                // gemaakt of verstuurd. Nu pas blokkeren als de factuur echt
+                // vergrendeld is; dat blijft staan als vangnet voor een
+                // gegevensstand die niet via de app kan ontstaan.
                 $invoice = $pdo->prepare(
                     'SELECT id, status, locked_at
                      FROM invoices
@@ -884,14 +897,14 @@ try {
                 );
                 $invoice->execute([':timesheet_id' => $timesheetId]);
                 $existingInvoice = $invoice->fetch();
-                if ($existingInvoice) {
+                if ($existingInvoice && $existingInvoice['locked_at'] !== null) {
                     if ($pdo->inTransaction()) {
                         $pdo->rollBack();
                     }
                     auth_send_json([
                         'ok' => false,
                         'error' => 'timesheet-invoiced',
-                        'message' => 'Een goedgekeurde urenstaat kan niet meer worden heropend zodra er een factuur van is gemaakt.',
+                        'message' => 'Deze maand is al definitief gefactureerd en kan niet meer worden heropend.',
                     ], 409);
                 }
             }

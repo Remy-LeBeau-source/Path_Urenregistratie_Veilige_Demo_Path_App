@@ -620,7 +620,7 @@ test('[TS-REV-UI-N-012] gefactureerde goedkeuring blijft bij serverweigering ver
     await route.fulfill({ status: 409, contentType: 'application/json', body: JSON.stringify({
       ok: false,
       error: 'timesheet-invoiced',
-      message: 'Een goedgekeurde urenstaat kan niet meer worden heropend zodra er een factuur van is gemaakt.',
+      message: 'Deze maand is al definitief gefactureerd en kan niet meer worden heropend.',
     }) });
   });
 
@@ -644,7 +644,7 @@ test('[TS-REV-UI-N-012] gefactureerde goedkeuring blijft bij serverweigering ver
 
   await test.step('Then blijft de maand goedgekeurd en krijgt Backoffice een duidelijke blokkade', async () => {
     await expect(page.locator('#modal')).toBeVisible();
-    await expect(page.locator('#toast')).toContainText('niet meer worden heropend zodra er een factuur van is gemaakt');
+    await expect(page.locator('#toast')).toContainText('al definitief gefactureerd en kan niet meer worden heropend');
     expect(correctionWrites).toBe(1);
     await page.locator('#modal-cancel').click();
     await expect(page.locator('#dashboard-employee-rows tr').filter({ hasText: 'Shawn-Douglas Nahar' })).toContainText('Goedgekeurd');
