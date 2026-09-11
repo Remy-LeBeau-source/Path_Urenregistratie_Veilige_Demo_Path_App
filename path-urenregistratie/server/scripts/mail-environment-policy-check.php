@@ -68,6 +68,31 @@ $namedTesterOtherChannelDelivery = mail_effective_delivery($testGuardedWithNamed
     'body_snapshot' => 'Bijlage.',
 ]);
 
+// Sinds 11 sep (gebruikersverzoek): naast wachtwoordreset mag een genoemde
+// tester ook expliciet opgegeven kanalen (hier: het urenoverzicht)
+// rechtstreeks ontvangen -- en de omleidingsmailbox blijft daarbij op de
+// hoogte via een gewone cc, ook bij de reset zelf.
+$testGuardedWithNamedTesterChannel = $testGuardedWithNamedTester;
+$testGuardedWithNamedTesterChannel['mail']['acceptance_test']['named_tester_timesheet_channels'] = ['timesheet_submission_receipt'];
+$namedTesterTimesheetDelivery = mail_effective_delivery($testGuardedWithNamedTesterChannel, [
+    'recipient_email' => $namedTester,
+    'channel' => 'timesheet_submission_receipt',
+    'subject_snapshot' => 'Urenoverzicht',
+    'body_snapshot' => 'Overzicht.',
+]);
+$namedTesterUnlistedChannelDelivery = mail_effective_delivery($testGuardedWithNamedTesterChannel, [
+    'recipient_email' => $namedTester,
+    'channel' => 'timesheet_final_approval',
+    'subject_snapshot' => 'Goedgekeurd',
+    'body_snapshot' => 'Melding.',
+]);
+$namedTesterResetDeliveryWithChannelConfig = mail_effective_delivery($testGuardedWithNamedTesterChannel, [
+    'recipient_email' => $namedTester,
+    'channel' => 'password_reset',
+    'subject_snapshot' => 'Wachtwoord resetten',
+    'body_snapshot' => 'Link.',
+]);
+
 $checks = [
     'production_enabled_without_mode_is_blocked' => !mail_real_delivery_allowed_for_environment($productionClosed),
     'production_disabled_mode_has_config_error' => mail_validate_relay_config($productionClosed) !== [],
@@ -97,8 +122,21 @@ $checks = [
         && ($closedResponse['token'] ?? '') === str_repeat('b', 64),
     'named_tester_password_reset_is_not_redirected' => $namedTesterResetDelivery['redirected'] === false
         && $namedTesterResetDelivery['recipient'] === $namedTester,
+    // De reset-uitzondering cc't de omleidingsmailbox altijd mee, niet pas
+    // zodra named_tester_timesheet_channels is ingevuld -- gebruikersverzoek
+    // 11 sep was expliciet "alles cc'en, ook de reset-link".
+    'named_tester_password_reset_ccs_the_sink' => $namedTesterResetDelivery['cc'] === $allowedAddress,
     'named_tester_other_channel_still_redirects_to_sink' => $namedTesterOtherChannelDelivery['redirected'] === true
         && $namedTesterOtherChannelDelivery['recipient'] === $allowedAddress,
+    'named_tester_timesheet_channel_is_not_redirected' => $namedTesterTimesheetDelivery['redirected'] === false
+        && $namedTesterTimesheetDelivery['recipient'] === $namedTester,
+    'named_tester_timesheet_channel_ccs_the_sink' => $namedTesterTimesheetDelivery['cc'] === $allowedAddress,
+    'named_tester_unlisted_channel_still_redirects_to_sink' => $namedTesterUnlistedChannelDelivery['redirected'] === true
+        && $namedTesterUnlistedChannelDelivery['recipient'] === $allowedAddress,
+    'named_tester_password_reset_still_works_alongside_channel_config' =>
+        $namedTesterResetDeliveryWithChannelConfig['redirected'] === false
+        && $namedTesterResetDeliveryWithChannelConfig['recipient'] === $namedTester
+        && $namedTesterResetDeliveryWithChannelConfig['cc'] === $allowedAddress,
 ];
 
 $ok = !in_array(false, $checks, true);

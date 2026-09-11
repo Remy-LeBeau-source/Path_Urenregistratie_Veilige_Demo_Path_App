@@ -36,6 +36,8 @@ Then("heeft de ontvangstmail een HTML-tegenhanger, en blijft de platte tekst gel
 And("heeft de goedkeuringsmail dezelfde HTML-tegenhanger");
 When("de flow voor EQ-H-042 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat het logo verschijnt in de urenoverzicht-handtekening zodra de app-origin https is");
+When("de flow voor EQ-H-043 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat een genoemde tester houdt zijn echte wachtwoord vast, ook nadat zijn adres is teruggezet na een reset-cyclus");
 When("de flow voor EQ-H-037 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat goedkeuren maakt exact één definitieve-goedkeuringsmail");
 When("de flow voor EQ-H-038 wordt uitgevoerd");

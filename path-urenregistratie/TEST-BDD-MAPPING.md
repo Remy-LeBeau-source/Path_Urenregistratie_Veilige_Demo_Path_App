@@ -172,6 +172,7 @@
 | EQ-H-040 | api | mail-delivery.feature | de urenoverzicht-PDF blijft compact: een volledige maand op één pagina | Equivalentieklassen | 5 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | de urenoverzicht-PDF blijft compact: een volledige maand op één pagina | Happy | 12 | Actueel |
 | EQ-H-041 | api | mail-delivery.feature | urenoverzicht-ontvangst- en goedkeuringsmail krijgen een HTML-tegenhanger met logo, platte tekst blijft ongewijzigd | Toestandsovergang | 11 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | urenoverzicht-ontvangst- en goedkeuringsmail krijgen een HTML-tegenhanger met logo, platte tekst blijft ongewijzigd | Happy | 12 | Actueel |
 | EQ-H-042 | api | mail-delivery.feature | het logo verschijnt in de urenoverzicht-handtekening zodra de app-origin https is | API-contract + equivalentieklasse | 2 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | het logo verschijnt in de urenoverzicht-handtekening zodra de app-origin https is | Happy | 12 | Actueel |
+| EQ-H-043 | api | mail-delivery.feature | een genoemde tester houdt zijn echte wachtwoord vast, ook nadat zijn adres is teruggezet na een reset-cyclus | Toestandsovergang | 3 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | een genoemde tester houdt zijn echte wachtwoord vast, ook nadat zijn adres is teruggezet na een reset-cyclus | Happy | 12 | Actueel |
 | EQ-H-037 | api | mail-delivery.feature | goedkeuren maakt exact één definitieve-goedkeuringsmail | Toestandsovergang | 7 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | goedkeuren maakt exact één definitieve-goedkeuringsmail | Happy | 12 | Actueel |
 | EQ-H-038 | api | mail-delivery.feature | herindienen na correctie maakt een eigen, tweede ontvangstmail | Beslissingstabel rollen en autorisatie | 8 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | herindienen na correctie maakt een eigen, tweede ontvangstmail | Happy | 12 | Actueel |
 | EQ-H-022 | api | mail-delivery.feature | één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie | API-contract + equivalentieklasse | 14 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie | Happy | 12 | Actueel |
@@ -503,9 +504,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 481
+- Playwright executable cases: 482
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 482
+- Totaal unieke executable cases: 483
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29

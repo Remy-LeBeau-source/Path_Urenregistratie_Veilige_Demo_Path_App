@@ -199,10 +199,13 @@ function mail_test_invitation_recipient(array $config): ?string
 
 /**
  * Naast de ene vaste testmailbox (mail_test_invitation_recipient) mogen op
- * TEST losse, met naam genoemde testers hun eigen echte wachtwoordreset
- * ontvangen -- bewust smal: alleen dit ene kanaal, niet elk TEST-mailtype.
- * Zonder dit kan een tester de reset-flow op zijn eigen account niet
- * uitproberen zonder ook al zijn overige TEST-mail te ontvangen.
+ * TEST losse, met naam genoemde testers hun eigen echte mail ontvangen --
+ * eerst alleen wachtwoordreset, sinds 11 sep ook voor de kanalen die
+ * mail_test_named_tester_timesheet_channels() teruggeeft (zie daar). Deze
+ * lijst blijft dus de bron van "wie is een genoemde tester", niet meer
+ * uitsluitend "wie mag zijn eigen reset ontvangen" -- de naam van de
+ * functie is gelijk gebleven om de config-sleutel (en dus
+ * configure-test-mail-sandbox.php) niet te hoeven omdopen.
  *
  * @return list<string>
  */
@@ -228,6 +231,38 @@ function mail_test_extra_password_reset_recipients(array $config): array
     return $recipients;
 }
 
+/**
+ * Welke kanalen, náást wachtwoordreset, een genoemde tester rechtstreeks op
+ * zijn eigen adres mag ontvangen (11 sep, gebruikersverzoek: Shawn, Stasjo,
+ * Marc en Brian moeten hun eigen urenoverzicht/goedkeuringsmail zien i.p.v.
+ * dat alles bij de omleidingsmailbox belandt). Bewust een eigen, expliciete
+ * lijst i.p.v. "elk kanaal": dezelfde smalle opzet als de reset-uitzondering
+ * hierboven, nu configureerbaar in plaats van hardgecodeerd.
+ *
+ * @return list<string>
+ */
+function mail_test_named_tester_timesheet_channels(array $config): array
+{
+    if (mail_environment($config) !== 'test') {
+        return [];
+    }
+    $mail = isset($config['mail']) && is_array($config['mail']) ? $config['mail'] : [];
+    $acceptance = isset($mail['acceptance_test']) && is_array($mail['acceptance_test'])
+        ? $mail['acceptance_test']
+        : [];
+    $raw = isset($acceptance['named_tester_timesheet_channels']) && is_array($acceptance['named_tester_timesheet_channels'])
+        ? $acceptance['named_tester_timesheet_channels']
+        : [];
+    $channels = [];
+    foreach ($raw as $candidate) {
+        $channel = strtolower(trim((string)$candidate));
+        if ($channel !== '') {
+            $channels[] = $channel;
+        }
+    }
+    return $channels;
+}
+
 /** @return array{recipient:string,cc:?string,subject:string,body:string,html:string,redirected:bool} */
 function mail_effective_delivery(array $config, array $delivery): array
 {
@@ -236,19 +271,35 @@ function mail_effective_delivery(array $config, array $delivery): array
     $subject = (string)($delivery['subject_snapshot'] ?? '');
     $body = (string)($delivery['body_snapshot'] ?? '');
     $html = (string)($delivery['html_snapshot'] ?? '');
+    $channel = strtolower(trim((string)($delivery['channel'] ?? '')));
     $fixedInvitationRecipient = mail_test_invitation_recipient($config);
-    $isPasswordResetChannel = strtolower(trim((string)($delivery['channel'] ?? ''))) === 'password_reset';
+    $isPasswordResetChannel = $channel === 'password_reset';
     $isFixedTestInvitation = $isPasswordResetChannel
         && $fixedInvitationRecipient !== null
         && strtolower($recipient) === $fixedInvitationRecipient;
-    $isNamedTesterPasswordReset = $isPasswordResetChannel
-        && in_array(strtolower($recipient), mail_test_extra_password_reset_recipients($config), true);
-    $isFixedTestInvitation = $isFixedTestInvitation || $isNamedTesterPasswordReset;
+    $isNamedTester = in_array(strtolower($recipient), mail_test_extra_password_reset_recipients($config), true);
+    $isNamedTesterPasswordReset = $isPasswordResetChannel && $isNamedTester;
+    $isNamedTesterTimesheetChannel = $isNamedTester
+        && in_array($channel, mail_test_named_tester_timesheet_channels($config), true);
+    $isNamedTesterCarveOut = $isNamedTesterPasswordReset || $isNamedTesterTimesheetChannel;
+    $isFixedTestInvitation = $isFixedTestInvitation || $isNamedTesterCarveOut;
     $sink = (bool)($delivery['acceptance_test'] ?? false) || $isFixedTestInvitation
         ? null
         : mail_test_sink_recipient($config);
     if ($sink === null) {
-        return compact('recipient', 'cc', 'subject', 'body', 'html') + ['redirected' => false];
+        // Een genoemde tester krijgt zijn eigen mail rechtstreeks -- geen
+        // omleidingsbanner, geen "TEST voor"-onderwerp, want dit IS zijn
+        // echte adres. Maar Backoffice mag daardoor niet blind worden voor
+        // wat er verstuurd wordt: dezelfde omleidingsmailbox die anders alles
+        // had gezien, krijgt hier een gewone cc mee (gebruikersverzoek 11 sep,
+        // expliciet ook voor de reset-link zelf -- geen aparte, stillere
+        // regeling voor dat ene kanaal).
+        $namedTesterCc = $isNamedTesterCarveOut ? mail_test_sink_recipient($config) : null;
+        if ($namedTesterCc !== null && $namedTesterCc === strtolower($recipient)) {
+            $namedTesterCc = null;
+        }
+        $effectiveCc = $namedTesterCc ?? $cc;
+        return compact('recipient', 'subject', 'body', 'html') + ['cc' => $effectiveCc, 'redirected' => false];
     }
 
     $redirectNoteHtml = $html !== ''

@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 481 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 482 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 481 unieke case-ID's
+- Playwright executable cases: 482 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 482 unieke case-ID's
+- Totaal executable cases: 483 unieke case-ID's
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29
 - Database steps mappings: 1
-- Uitvoeringen: 517
-- Niet-mobile projectuitvoeringen: 445
+- Uitvoeringen: 518
+- Niet-mobile projectuitvoeringen: 446
 - Mobile functionele cases: 36
 - Pixel 7 / Chromium-uitvoeringen: 36
 - iPhone 13 / WebKit-uitvoeringen: 36
 
-De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 481 Playwright-functionele cases in totaal 517 resultaten op: 445 + (36 x 2) = 517.
+De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 482 Playwright-functionele cases in totaal 518 resultaten op: 446 + (36 x 2) = 518.
 
 ## Documentatieketen
 
@@ -235,7 +235,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 481 Playwri
 
 - Feature: `tests/playwright/features/mail-delivery.feature`
 - Source: `tests/playwright/email-queue.spec.ts`
-- Cases: 49
+- Cases: 50
 
 - [EQ-H-001] factuurlock maakt queue-items aan met dry_run=true — Techniek: Toestandsovergang · Assertions: 5
 - [EQ-H-002] broker-channel stuurt alleen de factuur — Techniek: API-contract + equivalentieklasse · Assertions: 2
@@ -245,6 +245,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 481 Playwri
 - [EQ-H-040] de urenoverzicht-PDF blijft compact: een volledige maand op één pagina — Techniek: Equivalentieklassen · Assertions: 5
 - [EQ-H-041] urenoverzicht-ontvangst- en goedkeuringsmail krijgen een HTML-tegenhanger met logo, platte tekst blijft ongewijzigd — Techniek: Toestandsovergang · Assertions: 11
 - [EQ-H-042] het logo verschijnt in de urenoverzicht-handtekening zodra de app-origin https is — Techniek: API-contract + equivalentieklasse · Assertions: 2
+- [EQ-H-043] een genoemde tester houdt zijn echte wachtwoord vast, ook nadat zijn adres is teruggezet na een reset-cyclus — Techniek: Toestandsovergang · Assertions: 3
 - [EQ-H-037] goedkeuren maakt exact één definitieve-goedkeuringsmail — Techniek: Toestandsovergang · Assertions: 7
 - [EQ-H-038] herindienen na correctie maakt een eigen, tweede ontvangstmail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [EQ-H-022] één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie — Techniek: API-contract + equivalentieklasse · Assertions: 14
