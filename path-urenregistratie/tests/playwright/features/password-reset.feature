@@ -160,12 +160,12 @@ Feature: Wachtwoordherstel en misbruikbeveiliging
     Then staan website en slogan in de platte tekst en als eigen regels in de HTML
 
   @negative
-  Scenario: [PWD-N-017] elk ander mailkanaal dan wachtwoordherstel blijft platte tekst, zonder html_snapshot
-    # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 4
+  Scenario: [PWD-N-017] alleen wachtwoordherstel/uitnodiging en de urenoverzicht-ontvangst-/goedkeuringsmail krijgen een html_snapshot
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 6
     Given wachtwoordherstel en misbruikbeveiliging is voorbereid
     When de flow voor PWD-N-017 wordt uitgevoerd
-    Then wordt met Playwright-assertions bevestigd dat elk ander mailkanaal dan wachtwoordherstel blijft platte tekst, zonder html_snapshot
+    Then wordt met Playwright-assertions bevestigd dat alleen wachtwoordherstel/uitnodiging en de urenoverzicht-ontvangst-/goedkeuringsmail krijgen een html_snapshot
 
   @happy
   Scenario: [PWD-H-014] wachtwoord-vergeten op het inlogscherm verraadt niet welke e-mailadressen bestaan

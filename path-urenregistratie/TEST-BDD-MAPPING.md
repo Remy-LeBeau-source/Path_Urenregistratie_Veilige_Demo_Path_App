@@ -169,6 +169,8 @@
 | EQ-H-035 | api | mail-delivery.feature | submit maakt exact één medewerker-ontvangstmail | Beslissingstabel rollen en autorisatie | 6 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | submit maakt exact één medewerker-ontvangstmail | Happy | 12 | Actueel |
 | EQ-H-036 | api | mail-delivery.feature | submit met een geldige urenoverzicht-PDF krijgt attachment_policy=timesheet_receipt | Equivalentieklassen | 4 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | submit met een geldige urenoverzicht-PDF krijgt attachment_policy=timesheet_receipt | Happy | 12 | Actueel |
 | EQ-H-040 | api | mail-delivery.feature | de urenoverzicht-PDF blijft compact: een volledige maand op één pagina | Equivalentieklassen | 5 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | de urenoverzicht-PDF blijft compact: een volledige maand op één pagina | Happy | 12 | Actueel |
+| EQ-H-041 | api | mail-delivery.feature | urenoverzicht-ontvangst- en goedkeuringsmail krijgen een HTML-tegenhanger met logo, platte tekst blijft ongewijzigd | Toestandsovergang | 11 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | urenoverzicht-ontvangst- en goedkeuringsmail krijgen een HTML-tegenhanger met logo, platte tekst blijft ongewijzigd | Happy | 12 | Actueel |
+| EQ-H-042 | api | mail-delivery.feature | het logo verschijnt in de urenoverzicht-handtekening zodra de app-origin https is | API-contract + equivalentieklasse | 2 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | het logo verschijnt in de urenoverzicht-handtekening zodra de app-origin https is | Happy | 12 | Actueel |
 | EQ-H-037 | api | mail-delivery.feature | goedkeuren maakt exact één definitieve-goedkeuringsmail | Toestandsovergang | 7 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | goedkeuren maakt exact één definitieve-goedkeuringsmail | Happy | 12 | Actueel |
 | EQ-H-038 | api | mail-delivery.feature | herindienen na correctie maakt een eigen, tweede ontvangstmail | Beslissingstabel rollen en autorisatie | 8 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | herindienen na correctie maakt een eigen, tweede ontvangstmail | Happy | 12 | Actueel |
 | EQ-H-022 | api | mail-delivery.feature | één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie | API-contract + equivalentieklasse | 14 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie | Happy | 12 | Actueel |
@@ -326,7 +328,7 @@
 | PWD-H-020 | security | password-reset.feature | de accountuitnodiging krijgt een opgemaakte HTML-tegenhanger met logo en dezelfde link als de platte tekst | API-contract + equivalentieklasse | 7 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
 | PWD-H-021 | security | password-reset.feature | "wachtwoord vergeten" krijgt dezelfde opgemaakte handtekening als de uitnodiging | API-contract + equivalentieklasse | 5 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
 | PWD-H-022 | security | password-reset.feature | website en slogan komen, als ze zijn ingevuld, terug in zowel de platte als de HTML-handtekening | API-contract + equivalentieklasse | 5 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
-| PWD-N-017 | security | password-reset.feature | elk ander mailkanaal dan wachtwoordherstel blijft platte tekst, zonder html_snapshot | Negatieve equivalentieklasse + error guessing | 4 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
+| PWD-N-017 | security | password-reset.feature | alleen wachtwoordherstel/uitnodiging en de urenoverzicht-ontvangst-/goedkeuringsmail krijgen een html_snapshot | Toestandsovergang | 6 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
 | PWD-H-014 | security | password-reset.feature | wachtwoord-vergeten op het inlogscherm verraadt niet welke e-mailadressen bestaan | API-contract + equivalentieklasse | 11 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
 | PWD-N-015 | security | password-reset.feature | het resetscherm neemt het ingevulde adres over, weigert een leeg adres en laat terugkeren naar inloggen | Toestandsovergang | 10 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
 | PWD-N-016 | security | password-reset.feature | productie toont nooit dry-run-jargon aan iemand die zijn wachtwoord kwijt is | Negatieve equivalentieklasse + error guessing | 7 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
@@ -499,9 +501,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 477
+- Playwright executable cases: 479
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 478
+- Totaal unieke executable cases: 480
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29

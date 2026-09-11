@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 477 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 479 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 477 unieke case-ID's
+- Playwright executable cases: 479 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 478 unieke case-ID's
+- Totaal executable cases: 480 unieke case-ID's
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29
 - Database steps mappings: 1
-- Uitvoeringen: 513
-- Niet-mobile projectuitvoeringen: 441
+- Uitvoeringen: 515
+- Niet-mobile projectuitvoeringen: 443
 - Mobile functionele cases: 36
 - Pixel 7 / Chromium-uitvoeringen: 36
 - iPhone 13 / WebKit-uitvoeringen: 36
 
-De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 477 Playwright-functionele cases in totaal 513 resultaten op: 441 + (36 x 2) = 513.
+De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 479 Playwright-functionele cases in totaal 515 resultaten op: 443 + (36 x 2) = 515.
 
 ## Documentatieketen
 
@@ -234,7 +234,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 477 Playwri
 
 - Feature: `tests/playwright/features/mail-delivery.feature`
 - Source: `tests/playwright/email-queue.spec.ts`
-- Cases: 47
+- Cases: 49
 
 - [EQ-H-001] factuurlock maakt queue-items aan met dry_run=true — Techniek: Toestandsovergang · Assertions: 5
 - [EQ-H-002] broker-channel stuurt alleen de factuur — Techniek: API-contract + equivalentieklasse · Assertions: 2
@@ -242,6 +242,8 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 477 Playwri
 - [EQ-H-035] submit maakt exact één medewerker-ontvangstmail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 - [EQ-H-036] submit met een geldige urenoverzicht-PDF krijgt attachment_policy=timesheet_receipt — Techniek: Equivalentieklassen · Assertions: 4
 - [EQ-H-040] de urenoverzicht-PDF blijft compact: een volledige maand op één pagina — Techniek: Equivalentieklassen · Assertions: 5
+- [EQ-H-041] urenoverzicht-ontvangst- en goedkeuringsmail krijgen een HTML-tegenhanger met logo, platte tekst blijft ongewijzigd — Techniek: Toestandsovergang · Assertions: 11
+- [EQ-H-042] het logo verschijnt in de urenoverzicht-handtekening zodra de app-origin https is — Techniek: API-contract + equivalentieklasse · Assertions: 2
 - [EQ-H-037] goedkeuren maakt exact één definitieve-goedkeuringsmail — Techniek: Toestandsovergang · Assertions: 7
 - [EQ-H-038] herindienen na correctie maakt een eigen, tweede ontvangstmail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [EQ-H-022] één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie — Techniek: API-contract + equivalentieklasse · Assertions: 14
@@ -455,7 +457,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 477 Playwri
 - [PWD-H-020] de accountuitnodiging krijgt een opgemaakte HTML-tegenhanger met logo en dezelfde link als de platte tekst — Techniek: API-contract + equivalentieklasse · Assertions: 7
 - [PWD-H-021] "wachtwoord vergeten" krijgt dezelfde opgemaakte handtekening als de uitnodiging — Techniek: API-contract + equivalentieklasse · Assertions: 5
 - [PWD-H-022] website en slogan komen, als ze zijn ingevuld, terug in zowel de platte als de HTML-handtekening — Techniek: API-contract + equivalentieklasse · Assertions: 5
-- [PWD-N-017] elk ander mailkanaal dan wachtwoordherstel blijft platte tekst, zonder html_snapshot — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
+- [PWD-N-017] alleen wachtwoordherstel/uitnodiging en de urenoverzicht-ontvangst-/goedkeuringsmail krijgen een html_snapshot — Techniek: Toestandsovergang · Assertions: 6
 - [PWD-H-014] wachtwoord-vergeten op het inlogscherm verraadt niet welke e-mailadressen bestaan — Techniek: API-contract + equivalentieklasse · Assertions: 11
 - [PWD-N-015] het resetscherm neemt het ingevulde adres over, weigert een leeg adres en laat terugkeren naar inloggen — Techniek: Toestandsovergang · Assertions: 10
 - [PWD-N-016] productie toont nooit dry-run-jargon aan iemand die zijn wachtwoord kwijt is — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 7

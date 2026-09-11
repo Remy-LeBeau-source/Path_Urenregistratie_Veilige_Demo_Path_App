@@ -1094,7 +1094,8 @@ try {
                 (float)($latest['billable_hours'] ?? 0.0),
                 mail_is_dry_run($config),
                 $employeeName,
-                null
+                null,
+                $config
             );
             if ($mailApproval !== null && !mail_is_dry_run($config)) {
                 mail_dispatch_created($pdo, [['id' => (int)$mailApproval['id']]], $config);

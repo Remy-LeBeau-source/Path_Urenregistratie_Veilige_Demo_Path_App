@@ -575,24 +575,37 @@ test.describe('password reset api', () => {
     });
   });
 
-  test('[PWD-N-017] elk ander mailkanaal dan wachtwoordherstel blijft platte tekst, zonder html_snapshot', async () => {
-    // Decision table: html_snapshot bestaat alleen voor channel = "password_reset"
-    // (migratie 027). Migratie 022 koos bewust tegen een opgemaakte factuurmail
-    // om de bewezen platte-tekst-verzendlaag niet te raken; dat risico blijft
-    // gelden voor elk ander kanaal. Elke INSERT INTO email_deliveries in de
-    // codebase op dit moment wordt hier opgesomd, zodat een toekomstige nieuwe
-    // schrijfplek niet per ongeluk buiten deze toets valt.
+  test('[PWD-N-017] alleen wachtwoordherstel/uitnodiging en de urenoverzicht-ontvangst-/goedkeuringsmail krijgen een html_snapshot', async () => {
+    // Decision table (W13, bijgewerkt 11 sep): migratie 022 koos bewust tegen een
+    // opgemaakte factuurmail om de bewezen platte-tekst-verzendlaag niet te raken.
+    // Voor uitnodiging/wachtwoord-reset is dat al eerder losgelaten (migratie 027);
+    // op 11 sep is dat expliciet uitgebreid naar de urenoverzicht-ontvangst- en
+    // goedkeuringsmail. mail_insert_delivery() (server/mail/queue.php) is nu een
+    // gedeelde functie met een optionele $htmlBody als laatste positionele
+    // parameter -- deze toets controleert per aanroep of dat argument daadwerkelijk
+    // wordt meegegeven, i.p.v. (zoals vóór deze uitbreiding) de rauwe SQL-tekst op
+    // afwezigheid van de kolomnaam te controleren, wat nu voor elk kanaal zou slaan
+    // omdat de kolom in de gedeelde INSERT staat.
     const acceptance = await readFile(join(process.cwd(), 'server', 'mail', 'acceptance.php'), 'utf8');
     const queue = await readFile(join(process.cwd(), 'server', 'mail', 'queue.php'), 'utf8');
     const service = await readFile(join(process.cwd(), 'server', 'auth', 'password-reset-service.php'), 'utf8');
 
-    for (const [naam, bron] of [['acceptance.php', acceptance], ['queue.php', queue]] as const) {
-      const inserts = bron.match(/INSERT INTO email_deliveries[\s\S]*?VALUES[\s\S]*?\)'/g) || [];
-      expect(inserts.length, `${naam} hoort minstens één INSERT te bevatten om te toetsen`).toBeGreaterThan(0);
-      for (const insert of inserts) {
-        expect(insert, `${naam} mag geen html_snapshot invoegen`).not.toContain('html_snapshot');
-      }
+    // acceptance.php heeft zijn eigen, losse INSERT (niet via mail_insert_delivery())
+    // en blijft ongewijzigd platte tekst.
+    const acceptanceInserts = acceptance.match(/INSERT INTO email_deliveries[\s\S]*?VALUES[\s\S]*?\)'/g) || [];
+    expect(acceptanceInserts.length, 'acceptance.php hoort minstens één INSERT te bevatten om te toetsen').toBeGreaterThan(0);
+    for (const insert of acceptanceInserts) {
+      expect(insert, 'acceptance.php mag geen html_snapshot invoegen').not.toContain('html_snapshot');
     }
+
+    // queue.php: elke aanroep van mail_insert_delivery() apart beoordelen op of
+    // hij zijn (optionele, laatste) $htmlBody-argument daadwerkelijk meegeeft.
+    // `$id = mail_insert_delivery(` i.p.v. alleen de functienaam, anders matcht
+    // de niet-gulzige regex ook de functiedefinitie zelf.
+    const calls = queue.match(/\$id\s*=\s*mail_insert_delivery\(\s*[\s\S]*?\n\s*\);/g) || [];
+    expect(calls.length, 'queue.php hoort minstens 6 mail_insert_delivery()-aanroepen te bevatten om te toetsen').toBeGreaterThanOrEqual(6);
+    const metHtml = calls.filter(call => /,\s*\$html\s*\r?\n?\s*\);?\s*$/.test(call.trim()));
+    expect(metHtml.length, 'alleen de ontvangst- en goedkeuringsmail geven $html mee aan mail_insert_delivery()').toBe(2);
 
     const serviceInserts = service.match(/INSERT INTO email_deliveries[\s\S]*?VALUES[\s\S]*?\)'/g) || [];
     expect(serviceInserts.length).toBeGreaterThan(0);
