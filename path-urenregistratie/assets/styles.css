@@ -894,23 +894,36 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .small-button.send { border-color: var(--mint); background: var(--mint); color: var(--navy); }
 
 .employee-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
-.employee-card { border: 1px solid var(--line); border-radius: var(--radius); background: var(--vlak); padding: 22px; box-shadow: 0 8px 24px rgba(13,27,56,.035); }
+.employee-card { border: 1px solid var(--line-zacht); border-radius: var(--radius); background: var(--vlak); padding: 22px; box-shadow: var(--hoogte-kaart); }
 .employee-card-head { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
 .employee-card-head .mini-avatar { width: 45px; height: 45px; }
 .employee-identity { display: flex; align-items: center; gap: 12px; }
 .employee-identity strong, .employee-identity small { display: block; }
 .employee-identity strong { font-size: 13px; }
 .employee-identity small { margin-top: 4px; color: var(--muted); font-size: 10px; }
-.employee-details { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 20px; }
-.employee-details div { border-radius: 11px; background: var(--vlak-zacht); padding: 12px; }
+/* Klant, uren per week en broker stonden in grijze afgeronde vakjes en
+   leken daardoor invulvelden -- ze zijn alleen-lezen; aanpassen gaat via
+   "Gegevens aanpassen". Een vorm die iets belooft wat hij niet doet, kost
+   iedere lezer een klikje om erachter te komen. Nu wat het is: drie
+   label/waarde-paren, gescheiden door een haarlijn boven de rij. De waarde
+   mag daardoor ook groter dan het label, wat eerst omgekeerd aanvoelde
+   (label 9px, waarde 10px). */
+.employee-details { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px 18px; margin-top: 18px; border-top: 1px solid var(--line-zacht); padding-top: 16px; }
+.employee-details div { min-width: 0; }
 .employee-details small, .employee-details strong { display: block; }
-.employee-details small { color: var(--muted); font-size: 9px; letter-spacing: .05em; text-transform: uppercase; }
-.employee-details strong { margin-top: 5px; font-size: 10px; }
+.employee-details small { color: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+.employee-details strong { margin-top: 4px; overflow: hidden; color: var(--navy-tekst); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
 
 .settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 17px; }
-.settings-section-nav { display: flex; flex-wrap: wrap; gap: 7px; margin: -6px 0 18px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); box-shadow: var(--shadow); padding: 8px; }
-.settings-section-nav button { border: 1px solid transparent; border-radius: 999px; background: var(--surface-muted); color: var(--muted); cursor: pointer; padding: 8px 12px; font-size: 10px; font-weight: 800; }
-.settings-section-nav button:hover, .settings-section-nav button:focus-visible { border-color: var(--mint-dark); outline: 0; background: var(--green-light); color: var(--teal); }
+/* Deze knoppen springen naar een sectie verderop op de pagina; ze schakelen
+   niets om. In een witte kaart met rand en slagschaduw lazen ze als tabbladen,
+   en een tabrij zonder actieve tab is een belofte die niet wordt ingelost --
+   je blijft zoeken waar je bent. Zonder die kaart is het wat het is: een rij
+   verwijzingen boven de inhoud. Het pijltje maakt de richting expliciet. */
+.settings-section-nav { display: flex; flex-wrap: wrap; gap: 6px; margin: -6px 0 20px; border: 0; border-bottom: 1px solid var(--line-zacht); border-radius: 0; background: transparent; box-shadow: none; padding: 0 2px 14px; }
+.settings-section-nav button { display: inline-flex; align-items: center; gap: 6px; border: 1px solid transparent; border-radius: 999px; background: transparent; color: var(--muted); cursor: pointer; padding: 7px 12px; font-size: 10px; font-weight: 800; transition: border-color .18s ease, background .18s ease, color .18s ease; }
+.settings-section-nav button::after { content: "↓"; font-size: 11px; opacity: .55; }
+.settings-section-nav button:hover, .settings-section-nav button:focus-visible { border-color: color-mix(in srgb, var(--mint-dark) 45%, transparent); outline: 0; background: var(--green-light); color: var(--teal); }
 /* De sticky .topbar (min-height 88px, z-index 8) verborg de kop van elke
    sectie waarnaar de settings-section-nav-knoppen springen -- 18px was veel
    te weinig om eronderuit te komen, dus de bestemming landde onder de balk
@@ -962,9 +975,41 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .switch-track input:checked ~ .switch-thumb { background: var(--mint-dark); }
 .switch-track input:checked ~ .switch-thumb::before { transform: translateX(18px); }
 .brand-logo-preview { display: flex; align-items: center; gap: 14px; min-height: 72px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-muted); padding: 12px 14px; }
-.brand-logo-preview img { width: 130px; max-height: 54px; object-fit: contain; object-position: left center; }
+/* Het voorbeeld toont altijd de lichte logovariant (PATH_LOGO_OP_LICHT in
+   app.js) of een zelf geüploade PNG. In de donkere modus en in Nieuw stond dat
+   donkere woordmerk op een donkere ondergrond en was het niet te zien -- je
+   controleerde dus een logo dat je niet kon bekijken. Een lichte drager achter
+   het beeld lost dat op voor beide gevallen, ook voor een eigen logo waarvan we
+   de kleuren niet kennen. Zelfde aanpak als de logobadge in de topbalk. */
+.brand-logo-preview img { width: 130px; max-height: 54px; border-radius: 8px; background: #f4f1e6; object-fit: contain; object-position: left center; padding: 5px 9px; }
 .form-grid label { color: var(--muted); font-size: 10px; font-weight: 700; }
 .form-grid input, .form-grid select { width: 100%; height: 42px; margin-top: 6px; border: 1px solid var(--line); border-radius: 10px; background: var(--vlak); color: var(--ink); padding: 0 12px; }
+
+/* Een kleurkiezer die de volle kolombreedte krijgt, wordt een balk van
+   vijfhonderd pixels effen kleur -- het schreeuwt over het formulier heen en
+   het zegt niets meer dan een staal van vier centimeter. Zo groot als het
+   moet zijn om de kleur te zien en aan te klikken, niet groter. */
+.form-grid input[type="color"] { display: block; width: 78px; min-width: 78px; padding: 4px; cursor: pointer; }
+.form-grid input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+.form-grid input[type="color"]::-webkit-color-swatch { border: 1px solid var(--line); border-radius: 6px; }
+
+/* Het bestandsveld liet de systeemknop van de browser zien: een grijze knop
+   met Engelse tekst ("Choose File"), midden in een Nederlands formulier dat
+   verder volledig eigen opmaak heeft. De knop zelf blijft de echte
+   bestandskiezer -- alleen zijn uiterlijk doet nu mee. */
+.form-grid input[type="file"] { height: auto; min-height: 42px; padding: 7px 10px; font-size: 11px; }
+.form-grid input[type="file"]::file-selector-button {
+  margin-right: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-muted);
+  color: var(--teal);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  padding: 7px 12px;
+}
+.form-grid input[type="file"]::file-selector-button:hover { border-color: var(--mint); background: var(--green-light); }
 .settings-template-intro { margin: -6px 0 18px; color: var(--muted); font-size: 11px; line-height: 1.6; }
 .customer-timesheet-template-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
 .customer-timesheet-template-card { display: grid; gap: 13px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface-muted); padding: 16px; }
@@ -1413,7 +1458,28 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .team-account-avatar { display: grid; place-items: center; width: 30px; height: 30px; margin-left: -8px; border: 2px solid var(--surface); border-radius: 50%; background: var(--green-light); color: var(--teal); font-size: 9px; font-weight: 900; }
 .team-account-avatar.admins { background: var(--navy); color: #fff; }
 .employee-card.is-inactive { opacity: .72; }
-.employee-card-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 13px; }
+/* "Gegevens aanpassen" is de gewone handeling en staat vooraan; de twee
+   knoppen erachter zijn uitzonderingen. Marge ervoor duwt ze weg van de
+   gewone weg. */
+.employee-card-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 16px; }
+.employee-card-actions .text-button:first-child { margin-right: auto; }
+
+/* Deactiveren zag er precies zo uit als Wachtwoord resetten, terwijl het de
+   toegang van iemand afsluit. Niet permanent rood -- dat schreeuwt bij elke
+   kaart en went binnen een dag -- maar op het moment dat je erheen gaat:
+   rustig tot hover/focus, dan de waarschuwkleur. Alleen bij een actief
+   account; op een inactieve kaart heet dezelfde knop "Opnieuw activeren" en
+   is er niets te waarschuwen. */
+.employee-card:not(.is-inactive) [data-toggle-employee],
+.administrator-row [data-toggle-admin] {
+  transition: border-color .18s ease, background .18s ease, color .18s ease;
+}
+.employee-card:not(.is-inactive) [data-toggle-employee]:hover:not(:disabled),
+.employee-card:not(.is-inactive) [data-toggle-employee]:focus-visible:not(:disabled) {
+  border-color: color-mix(in srgb, var(--danger) 55%, var(--line));
+  background: color-mix(in srgb, var(--danger) 8%, var(--vlak));
+  color: var(--danger);
+}
 .administrators-panel { margin-top: 22px; }
 .administrator-list { display: grid; }
 .administrator-row { display: grid; grid-template-columns: 1fr auto auto; gap: 15px; align-items: center; border-top: 1px solid var(--line); padding: 14px 24px; }
