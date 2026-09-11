@@ -246,7 +246,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 document te controleren · 0 extern te bevestigen · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, externe bevestiging, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("1.1.1"), "Het zichtbare versienummer moet 1.1.1 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("1.1.2"), "Het zichtbare versienummer moet 1.1.2 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -1159,7 +1159,7 @@ click("#modal-confirm");
 click('[data-employee-scope="active"]');
 
 click('[data-view="settings"]');
-assert(document.querySelectorAll(".settings-section-nav [data-scroll-target]").length === 7 && document.querySelector("#settings-reminders") && document.querySelector("#settings-safety") && document.querySelector("#settings-audit"), "Instellingen moet een compact inhoudsmenu met zeven duidelijke onderdelen hebben");
+assert(document.querySelectorAll(".settings-section-nav [data-scroll-target]").length === 8 && document.querySelector("#settings-reminders") && document.querySelector("#settings-safety") && document.querySelector("#settings-audit") && document.querySelector("#settings-system"), "Instellingen moet een compact inhoudsmenu met acht duidelijke onderdelen hebben");
 assert(document.querySelector("#view-settings").textContent.includes("Afzonderlijke routes") && !document.querySelector("#view-settings").textContent.includes("Proces samen of apart nog bevestigen"), "Instellingen mag geen reeds genomen procesbesluit meer als open vraag tonen");
 assert(document.querySelector("#mail-template-list").textContent.includes("augustus"), "Brokerteksten moeten de gekozen periode gebruiken");
 assert(document.querySelector("#mail-recipient-settings-list").textContent.includes("Boekhouder") && document.querySelector("#mail-recipient-settings-list").textContent.includes("Salarisadministratie"), "Vaste ontvangers moeten één keer centraal beheerd worden");
@@ -2096,7 +2096,7 @@ assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Pla
 }
 
 dom.window.close();
-console.log("Path v1.1.1 volledige smoke test: geslaagd");
+console.log("Path v1.1.2 volledige smoke test: geslaagd");
 // app.js schedules browser refresh timers. In JSDOM those timers can keep Node
 // alive after every assertion has completed, which made the release check look
 // stuck. End explicitly only after the complete smoke contract is green.

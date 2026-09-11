@@ -66,6 +66,14 @@
 | AUD-H-011 | api | audit-log.feature | aanmaken, instellingen opslaan en verwijderen worden geauditeerd met de juiste actor | API-contract + equivalentieklasse | 9 | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | aanmaken, instellingen opslaan en verwijderen worden geauditeerd met de juiste actor | Happy | 16 | Actueel |
 | AUD-H-012 | api | audit-log.feature | auditlog filtert op actor_id (Instellingen > Auditlog: "wie deed dit") | Equivalentieklassen | 11 | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | auditlog filtert op actor_id (Instellingen > Auditlog: "wie deed dit") | Happy | 16 | Actueel |
 | AUD-H-013 | api | audit-log.feature | Instellingen > Auditlog toont wie/wat/wanneer en filtert op persoon en actie | Equivalentieklassen | 18 | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | Instellingen > Auditlog toont wie/wat/wanneer en filtert op persoon en actie | Happy | 16 | Actueel |
+| LOG-H-001 | api | server-log.feature | beheerder kan recente serverfouten ophalen, meest recente eerst | Negatieve equivalentieklasse + error guessing | 5 | server-log.steps.ts | server-log.spec.ts | API | Audit & Security | beheerder kan recente serverfouten ophalen, meest recente eerst | Happy | 16 | Actueel |
+| LOG-H-002 | api | server-log.feature | bladeren (offset) toont de volgende regels ervoor, zonder duplicaten | Negatieve equivalentieklasse + error guessing | 11 | server-log.steps.ts | server-log.spec.ts | API | Audit & Security | bladeren (offset) toont de volgende regels ervoor, zonder duplicaten | Happy | 16 | Actueel |
+| LOG-H-003 | api | server-log.feature | een leeg of ontbrekend logbestand levert een schone lege staat op | Negatieve equivalentieklasse + error guessing | 5 | server-log.steps.ts | server-log.spec.ts | API | Audit & Security | een leeg of ontbrekend logbestand levert een schone lege staat op | Happy | 16 | Actueel |
+| LOG-N-004 | api | server-log.feature | medewerker mag serverfouten niet inzien | Beslissingstabel rollen en autorisatie | 1 | server-log.steps.ts | server-log.spec.ts | API | Audit & Security | medewerker mag serverfouten niet inzien | Negative | 16 | Actueel |
+| LOG-N-005 | api | server-log.feature | anonieme gebruiker krijgt 401 op serverfouten | Beslissingstabel rollen en autorisatie | 1 | server-log.steps.ts | server-log.spec.ts | API | Audit & Security | anonieme gebruiker krijgt 401 op serverfouten | Negative | 16 | Actueel |
+| LOG-N-006 | api | server-log.feature | serverfoutenlog weigert POST | Negatieve equivalentieklasse + error guessing | 1 | server-log.steps.ts | server-log.spec.ts | API | Audit & Security | serverfoutenlog weigert POST | Negative | 16 | Actueel |
+| LOG-H-007 | api | server-log.feature | Instellingen > Systeem toont serverfouten en kan verder terugladen | Negatieve equivalentieklasse + error guessing | 8 | server-log.steps.ts | server-log.spec.ts | API | Audit & Security | Instellingen > Systeem toont serverfouten en kan verder terugladen | Happy | 16 | Actueel |
+| LOG-H-008 | api | server-log.feature | een leeg foutenlog toont de rustige lege staat | Negatieve equivalentieklasse + error guessing | 3 | server-log.steps.ts | server-log.spec.ts | API | Audit & Security | een leeg foutenlog toont de rustige lege staat | Happy | 16 | Actueel |
 | AUTH-H-001 | ui | auth.feature | Admin logt in en auth/me geeft de juiste gebruiker terug | Beslissingstabel rollen en autorisatie | 6 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Happy | 4 | Actueel |
 | AUTH-H-002 | ui | auth.feature | Medewerker logt in en auth/me geeft de juiste gebruiker terug | Beslissingstabel rollen en autorisatie | 3 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Happy | 4 | Actueel |
 | AUTH-H-003 | ui | auth.feature | Gebruiker logt uit en auth/me geeft authenticated false terug | End-to-end use-case + visuele contractasserties | 4 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Happy | 4 | Actueel |
@@ -507,10 +515,10 @@
 
 ## Totalen
 
-- Playwright executable cases: 485
+- Playwright executable cases: 493
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 486
-- Playwright features: 29
+- Totaal unieke executable cases: 494
+- Playwright features: 30
 - Database features: 1
-- Playwright steps mappings: 29
+- Playwright steps mappings: 30
 - Database steps mappings: 1

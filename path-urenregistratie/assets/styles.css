@@ -677,6 +677,10 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .audit-log-filters select { min-width: 200px; }
 .audit-log-table-wrap { overflow-x: auto; }
 .audit-log-table td.audit-log-actor small { color: var(--muted); }
+.server-log-list { max-height: 360px; overflow-y: auto; border: 1px solid var(--line); border-radius: 11px; background: var(--vlak); margin: 14px 0; }
+.server-log-list-line { padding: 7px 14px; border-bottom: 1px solid #edf1f2; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; line-height: 1.5; color: var(--navy-tekst); white-space: pre-wrap; word-break: break-word; }
+.server-log-list-line:last-child { border-bottom: none; }
+.server-log-actions { display: flex; gap: 10px; }
 .person-cell { display: flex; align-items: center; gap: 10px; }
 .mini-avatar { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; background: var(--green-light); color: var(--teal); font-size: 10px; font-weight: 800; }
 
