@@ -606,7 +606,13 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 /* Zelfde sticky-topbar-overlap als .settings-card[id] hierboven: de knoppen
    "Bekijk alle ... acties" / "N bij Backoffice" / "N wachten op medewerkers"
    springen hierheen en verstopten de kop van dit paneel achter de topbalk. */
-#admin-task-panel { scroll-margin-top: 104px; }
+/* De sticky topbalk heeft geen vaste hoogte: hij groeit mee met de inhoud en
+   met de letterweergave van het besturingssysteem. 104px was een momentopname
+   op deze machine; op de Linux-runner meet dezelfde balk 106 en landde het
+   paneel er 2,3 pixel achter (ADM-WR-H-022). app.js zet nu bij elke
+   hertekening en bij venstergrootte de gemeten hoogte in --topbar-hoogte; de
+   104px hieronder blijft als terugval voor het moment vóór de eerste meting. */
+#admin-task-panel { scroll-margin-top: calc(var(--topbar-hoogte, 104px) + 10px); }
 .workflow-panel { margin-bottom: 18px; padding: 24px; }
 .panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px 24px 17px; }
 .workflow-panel .panel-heading { padding: 0 0 24px; }
@@ -1012,7 +1018,9 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
    sectie waarnaar de settings-section-nav-knoppen springen -- 18px was veel
    te weinig om eronderuit te komen, dus de bestemming landde onder de balk
    in plaats van eronder. */
-.settings-card[id] { scroll-margin-top: 104px; }
+/* Zelfde verhaal als bij #admin-task-panel hierboven: gemeten hoogte, met de
+   oude 104px als terugval. De springlinks in Instellingen leunen hierop. */
+.settings-card[id] { scroll-margin-top: calc(var(--topbar-hoogte, 104px) + 10px); }
 .settings-card { padding: 24px; }
 .settings-card.full-width { grid-column: 1/-1; }
 .settings-card h3 { margin-bottom: 20px; }
@@ -1455,7 +1463,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .employee-customer-timesheet-card p { margin: 7px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
 .employee-customer-timesheet-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .employee-metrics .compact-metric { font-size: 20px; }
-.employee-open-overview { scroll-margin-top: 110px; margin: 0 0 22px; overflow: hidden; border-radius: 22px; background-color: var(--vlak); background-image: linear-gradient(180deg, var(--vlak), var(--vlak-zacht)); box-shadow: 0 16px 34px rgba(13,27,56,.06); }
+.employee-open-overview { scroll-margin-top: calc(var(--topbar-hoogte, 110px) + 16px); margin: 0 0 22px; overflow: hidden; border-radius: 22px; background-color: var(--vlak); background-image: linear-gradient(180deg, var(--vlak), var(--vlak-zacht)); box-shadow: 0 16px 34px rgba(13,27,56,.06); }
 .employee-open-overview .panel-heading { align-items: flex-start; }
 .employee-open-overview-list { display: grid; gap: 12px; padding: 0 24px 24px; }
 .employee-open-overview-next { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 24px 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); padding: 16px 18px; }

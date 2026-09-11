@@ -126,12 +126,27 @@ function simple_pdf_text_document(array $lines): string
     return simple_pdf_assemble($objects);
 }
 
-/** Render a branded text PDF with a PNG logo embedded as a JPEG image XObject. */
-function simple_pdf_branded_text_document(array $lines, string $logoPath): string
+/**
+ * Zet het PNG-logo om naar JPEG-bytes voor insluiting in een PDF.
+ *
+ * Het resultaat blijft binnen hetzelfde proces bewaard, per pad en per
+ * wijzigingstijd. Eén omzetting kost ongeveer 20 ms, wat niets is voor een
+ * enkele factuur, maar de TEST-baseline-reset bouwt er 27 achter elkaar en
+ * die reset draait bij elke geïsoleerde test opnieuw. Hetzelfde plaatje 27
+ * keer opnieuw coderen is puur wachttijd.
+ */
+function simple_pdf_logo_jpeg_bytes(string $logoPath): array
 {
+    static $cache = [];
+
     if (!function_exists('imagecreatefrompng') || !is_file($logoPath)) {
         throw new RuntimeException('PNG logo rendering is unavailable.');
     }
+    $sleutel = $logoPath . '|' . (string)@filemtime($logoPath);
+    if (isset($cache[$sleutel])) {
+        return $cache[$sleutel];
+    }
+
     $source = @imagecreatefrompng($logoPath);
     if ($source === false) {
         throw new RuntimeException('PNG logo could not be loaded.');
@@ -151,6 +166,18 @@ function simple_pdf_branded_text_document(array $lines, string $logoPath): strin
     if ($jpegBytes === '') {
         throw new RuntimeException('Logo JPEG conversion failed.');
     }
+
+    $cache[$sleutel] = ['bytes' => $jpegBytes, 'width' => $width, 'height' => $height];
+    return $cache[$sleutel];
+}
+
+/** Render a branded text PDF with a PNG logo embedded as a JPEG image XObject. */
+function simple_pdf_branded_text_document(array $lines, string $logoPath): string
+{
+    $logo = simple_pdf_logo_jpeg_bytes($logoPath);
+    $jpegBytes = $logo['bytes'];
+    $width = $logo['width'];
+    $height = $logo['height'];
 
     $pageW = 595.28;
     $pageH = 841.89;

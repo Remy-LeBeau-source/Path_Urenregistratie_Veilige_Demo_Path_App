@@ -8526,7 +8526,21 @@ function renderHoursWeekFilter(period, scope) {
 // .segmented-control i.p.v. hardgecodeerd voor één toolbar: een balk wordt
 // als sibling toegevoegd zodra er echt iets te schuiven valt, en verwijderd
 // zodra dat niet meer zo is (een filterlijst kan tussen renders krimpen).
+// De sticky topbalk bedekt de bovenkant van de pagina, dus alles waar een
+// knop naartoe springt heeft een scroll-margin nodig die minstens zo hoog is.
+// Die stond als vast getal (104px) in het stijlblad, en dat is precies zo
+// betrouwbaar als de aanname dat de balk overal even hoog rendert: op de
+// Linux-testrunner meet dezelfde balk 106 en landde het werkvoorraadpaneel
+// er 2,3 pixel achter (ADM-WR-H-022). Meten in plaats van aannemen.
+function meetTopbalkHoogte() {
+  const topbar = document.querySelector(".topbar");
+  if (!topbar) return;
+  const hoogte = Math.ceil(topbar.getBoundingClientRect().height);
+  if (hoogte > 0) document.documentElement.style.setProperty("--topbar-hoogte", hoogte + "px");
+}
+
 function refreshSegmentedControlScrollIndicators() {
+  meetTopbalkHoogte();
   document.querySelectorAll(".segmented-control").forEach(control => {
     // Deze functie zette hier eerst een eigen balk met duim als sibling neer.
     // Die is vervangen door een vervagende rand op de rij zelf (zie
