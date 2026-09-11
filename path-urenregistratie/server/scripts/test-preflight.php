@@ -55,7 +55,10 @@ try {
     $expectedSandboxRecipients = [
         'giovanno.maatsen@pathconsultancy.nl',
         'kenrich.lieveld@pathconsultancy.nl',
+        'marcderoon@pathconsultancy.nl',
         'stasjovanbakel@pathconsultancy.nl',
+        'brian.hek@pathconsultancy.nl',
+        'shawn.nahar@pathconsultancy.nl',
     ];
     sort($expectedSandboxRecipients);
     $mailClosed = ($mail['enabled'] ?? null) === false
