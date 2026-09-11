@@ -102,6 +102,7 @@
 | E2E-H-023 | integration | end-to-end-workflows.feature | twee nieuw toegevoegde ontvangers krijgen via de volledige GUI-keten ieder hun eigen factuurmail | Beslissingstabel rollen en autorisatie | 12 | end-to-end-workflows.steps.ts | business-workflows-*.spec.ts | DB / Integratie | Bedrijfsketens | twee nieuw toegevoegde ontvangers krijgen via de volledige GUI-keten ieder hun eigen factuurmail | Happy | 16 | Actueel |
 | E2E-H-024 | integration | end-to-end-workflows.feature | een nieuw account krijgt via de GUI toegang en zijn eigen tekst komt letterlijk in de verzonden mail | Beslissingstabel rollen en autorisatie | 21 | end-to-end-workflows.steps.ts | business-workflows-*.spec.ts | DB / Integratie | Bedrijfsketens | een nieuw account krijgt via de GUI toegang en zijn eigen tekst komt letterlijk in de verzonden mail | Happy | 16 | Actueel |
 | E2E-H-025 | integration | end-to-end-workflows.feature | een aangepaste standaardtekst werkt in de echte mail en is via de GUI terug te zetten | End-to-end use-case + visuele contractasserties | 15 | end-to-end-workflows.steps.ts | business-workflows-*.spec.ts | DB / Integratie | Bedrijfsketens | een aangepaste standaardtekst werkt in de echte mail en is via de GUI terug te zetten | Happy | 16 | Actueel |
+| E2E-H-029 | integration | end-to-end-workflows.feature | de urenoverzicht-ontvangst- en goedkeuringsmail zijn nu ook aanpasbaar bij Instellingen | Toestandsovergang | 8 | end-to-end-workflows.steps.ts | business-workflows-*.spec.ts | DB / Integratie | Bedrijfsketens | de urenoverzicht-ontvangst- en goedkeuringsmail zijn nu ook aanpasbaar bij Instellingen | Happy | 16 | Actueel |
 | E2E-N-021 | integration | end-to-end-workflows.feature | een gedeactiveerd account met historie blijft veilig bewaard en legt de blokkeerreden uit | Toestandsovergang | 20 | end-to-end-workflows.steps.ts | business-workflows-*.spec.ts | DB / Integratie | Bedrijfsketens | een gedeactiveerd account met historie blijft veilig bewaard en legt de blokkeerreden uit | Negative | 16 | Actueel |
 | E2E-H-017 | integration | end-to-end-workflows.feature | de volledige toegestane urenstatusketen bewaakt na iedere write status, eigenaar en taak | Beslissingstabel rollen en autorisatie | 18 | end-to-end-workflows.steps.ts | business-workflows-*.spec.ts | DB / Integratie | Bedrijfsketens | de volledige toegestane urenstatusketen bewaakt na iedere write status, eigenaar en taak | Happy | 16 | Actueel |
 | CTS-API-H-012 | api | customer-timesheets.feature | admin kan een ontbrekende klanturenstaat extern bevestigen en terugzetten | Beslissingstabel rollen en autorisatie | 15 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Happy | 10 | Actueel |
@@ -501,9 +502,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 479
+- Playwright executable cases: 480
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 480
+- Totaal unieke executable cases: 481
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29
