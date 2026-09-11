@@ -96,7 +96,7 @@ if (!$target) {
 if ($action === 'deactivate') {
     if (!(bool)$target['active']) {
         auth_send_json(['ok' => false, 'error' => 'already-inactive',
-            'message' => 'User is already deactivated.'], 409);
+            'message' => 'Gebruiker is al gedeactiveerd.'], 409);
     }
 
     if ((string)$target['role'] === 'administrator') {
@@ -131,7 +131,7 @@ if ($action === 'deactivate') {
 if ($action === 'reactivate') {
     if ((bool)$target['active']) {
         auth_send_json(['ok' => false, 'error' => 'already-active',
-            'message' => 'User is already active.'], 409);
+            'message' => 'Gebruiker is al actief.'], 409);
     }
 
     $pdo->prepare('UPDATE users SET active = 1, deactivated_at = NULL, deactivated_by = NULL WHERE id = :id')
@@ -302,4 +302,4 @@ if ($action === 'force_password_change') {
 }
 
 auth_send_json(['ok' => false, 'error' => 'unknown-action',
-    'message' => 'action must be one of: deactivate, reactivate, delete, force_password_change'], 400);
+    'message' => 'Ongeldige actie voor gebruikers.'], 400);

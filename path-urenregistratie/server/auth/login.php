@@ -68,7 +68,7 @@ function auth_maybe_log_failed_login_alert(PDO $pdo, ?int $companyId, string $em
 $input = security_read_json_body();
 security_require_csrf_token();
 $email = security_require_email_field($input, 'email');
-$password = security_require_string_field($input, 'password', 'Email and password are required.', 1024);
+$password = security_require_string_field($input, 'password', 'E-mailadres en wachtwoord zijn verplicht.', 1024);
 
 // Rate-limit: max 5 failed attempts per email in 15 minutes.
 try {

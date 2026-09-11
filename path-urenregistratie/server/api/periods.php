@@ -115,7 +115,7 @@ $periodId = (int)$period['id'];
 if ($action === 'close') {
     if ((string)$period['status'] === 'closed') {
         auth_send_json(['ok' => false, 'error' => 'already-closed',
-            'message' => 'Period is already closed.'], 409);
+            'message' => 'Periode is al afgesloten.'], 409);
     }
 
     // Warn if there are still open timesheets (allow but flag it).
@@ -172,4 +172,4 @@ if ($action === 'reopen') {
 }
 
 auth_send_json(['ok' => false, 'error' => 'unknown-action',
-    'message' => 'action must be one of: close, reopen'], 400);
+    'message' => 'Ongeldige actie voor de periode.'], 400);

@@ -15,8 +15,8 @@ $currentUser = auth_current_user($pdo);
 security_require_csrf_token();
 
 $input = security_read_json_body();
-$currentPassword = security_require_string_field($input, 'current_password', 'current_password is required', 1024);
-$newPassword = security_require_string_field($input, 'new_password', 'new_password is required', 1024);
+$currentPassword = security_require_string_field($input, 'current_password', 'Huidig wachtwoord is verplicht.', 1024);
+$newPassword = security_require_string_field($input, 'new_password', 'Nieuw wachtwoord is verplicht.', 1024);
 
 if (strlen($newPassword) < 12) {
     auth_send_json([
@@ -63,4 +63,4 @@ try {
 }
 
 session_regenerate_id(true);
-auth_send_json(['ok' => true, 'message' => 'Password updated successfully.']);
+auth_send_json(['ok' => true, 'message' => 'Wachtwoord succesvol bijgewerkt.']);

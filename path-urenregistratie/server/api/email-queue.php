@@ -34,7 +34,7 @@ if ($method === 'GET') {
     $allowedStatuses = ['queued', 'processing', 'sent', 'failed'];
     if ($statusFilter !== null && !in_array($statusFilter, $allowedStatuses, true)) {
         auth_send_json(['ok' => false, 'error' => 'invalid-status',
-            'message' => 'status must be one of: queued, processing, sent, failed'], 400);
+            'message' => 'Ongeldige status voor de mailwachtrij.'], 400);
     }
 
     $limit  = min(100, max(1, (int)($_GET['limit'] ?? 10)));
@@ -293,5 +293,5 @@ if ($action === 'reissue') {
 }
 
 auth_send_json(['ok' => false, 'error' => 'unknown-action',
-    'message' => 'action must be one of: enqueue, retry, reissue, set-test-delivery'], 400);
+    'message' => 'Ongeldige actie voor de mailwachtrij.'], 400);
 

@@ -187,13 +187,13 @@ if ($action === 'send' || $action === 'save_draft') {
 
     if ($action === 'send') {
         if ($title === '') {
-            auth_send_json(['ok' => false, 'error' => 'missing-title', 'message' => 'Title is required.'], 400);
+            auth_send_json(['ok' => false, 'error' => 'missing-title', 'message' => 'Titel is verplicht.'], 400);
         }
         if ($message === '') {
-            auth_send_json(['ok' => false, 'error' => 'missing-message', 'message' => 'Message is required.'], 400);
+            auth_send_json(['ok' => false, 'error' => 'missing-message', 'message' => 'Bericht is verplicht.'], 400);
         }
         if (empty($recipientIds) && $correctionOfId === null && $withdrawalOfId === null) {
-            auth_send_json(['ok' => false, 'error' => 'missing-recipients', 'message' => 'At least one recipient is required.'], 400);
+            auth_send_json(['ok' => false, 'error' => 'missing-recipients', 'message' => 'Kies minstens één ontvanger.'], 400);
         }
     } else {
         if ($title === '' && $message === '') {
@@ -327,7 +327,7 @@ if ($action === 'withdraw') {
         auth_send_json(['ok' => false, 'error' => 'missing-announcement-id'], 400);
     }
     if ($reason === '') {
-        auth_send_json(['ok' => false, 'error' => 'missing-withdrawal-reason', 'message' => 'Withdrawal reason is required.'], 400);
+        auth_send_json(['ok' => false, 'error' => 'missing-withdrawal-reason', 'message' => 'Reden voor intrekken is verplicht.'], 400);
     }
 
     $stmt = $pdo->prepare("SELECT id, status FROM announcements WHERE id = :id AND company_id = :cid");
@@ -433,4 +433,4 @@ if ($action === 'delete_draft') {
 }
 
 auth_send_json(['ok' => false, 'error' => 'unknown-action',
-    'message' => 'action must be one of: send, save_draft, withdraw, hide, delete_draft'], 400);
+    'message' => 'Ongeldige actie voor mededelingen.'], 400);

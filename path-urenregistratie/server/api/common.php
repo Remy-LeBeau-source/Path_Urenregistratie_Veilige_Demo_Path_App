@@ -25,7 +25,7 @@ function api_require_get_only(): void
         api_send_json([
             'ok' => false,
             'error' => 'method-not-allowed',
-            'message' => 'Only GET is allowed on this endpoint.'
+            'message' => 'Alleen GET is toegestaan op dit adres.'
         ], 405);
     }
 }
@@ -201,7 +201,7 @@ function api_require_employee_context(PDO $pdo, array $currentUser): array
         api_send_json([
             'ok' => false,
             'error' => 'employee-profile-missing',
-            'message' => 'Employee account is not linked to an employee record.',
+            'message' => 'Dit account is niet gekoppeld aan een medewerkerprofiel.',
         ], 403);
     }
 
@@ -220,7 +220,7 @@ function api_forbidden_company_scope(?int $requestedCompanyId, array $currentUse
         api_send_json([
             'ok' => false,
             'error' => 'forbidden-company-scope',
-            'message' => 'Requested company scope is not allowed for this session.',
+            'message' => 'De opgevraagde bedrijfsomgeving is niet toegestaan voor deze sessie.',
         ], 403);
     }
 }

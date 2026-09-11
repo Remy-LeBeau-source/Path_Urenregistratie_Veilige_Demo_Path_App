@@ -74,7 +74,7 @@ function staff_email(mixed $value): string
         auth_send_json([
             'ok' => false,
             'error' => 'invalid-payload',
-            'message' => 'A valid email address is required.',
+            'message' => 'Een geldig e-mailadres is verplicht.',
         ], 400);
     }
     return $email;
@@ -301,12 +301,12 @@ function staff_upsert_counterparty(PDO $pdo, int $companyId, string $type, strin
 if ($action === 'upsert_admin') {
     $admin = $payload['admin'] ?? null;
     if (!is_array($admin)) {
-        auth_send_json(['ok' => false, 'error' => 'invalid-payload', 'message' => 'admin payload is required'], 400);
+        auth_send_json(['ok' => false, 'error' => 'invalid-payload', 'message' => 'Beheerdergegevens zijn verplicht.'], 400);
     }
 
     $name = staff_string($admin['name'] ?? '', 160);
     if ($name === '') {
-        auth_send_json(['ok' => false, 'error' => 'invalid-payload', 'message' => 'Admin name is required.'], 400);
+        auth_send_json(['ok' => false, 'error' => 'invalid-payload', 'message' => 'Naam van de beheerder is verplicht.'], 400);
     }
 
     $email = staff_email($admin['email'] ?? '');
@@ -440,12 +440,12 @@ if ($action === 'upsert_admin') {
 if ($action === 'upsert_employee') {
     $employee = $payload['employee'] ?? null;
     if (!is_array($employee)) {
-        auth_send_json(['ok' => false, 'error' => 'invalid-payload', 'message' => 'employee payload is required'], 400);
+        auth_send_json(['ok' => false, 'error' => 'invalid-payload', 'message' => 'Medewerkergegevens zijn verplicht.'], 400);
     }
 
     $name = staff_string($employee['name'] ?? '', 160);
     if ($name === '') {
-        auth_send_json(['ok' => false, 'error' => 'invalid-payload', 'message' => 'Employee name is required.'], 400);
+        auth_send_json(['ok' => false, 'error' => 'invalid-payload', 'message' => 'Naam van de medewerker is verplicht.'], 400);
     }
 
     $email = staff_email($employee['email'] ?? '');

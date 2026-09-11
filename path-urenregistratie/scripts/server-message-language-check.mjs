@@ -47,7 +47,13 @@ function phpBestanden(map) {
 // Een melding met een Nederlands woord erin is Nederlands; dat weegt zwaarder
 // dan een Engelse treffer, omdat leenwoorden als "invalid", "PDF" en "token"
 // ook in Nederlandse zinnen voorkomen.
-const NEDERLANDS = /\b(de|het|een|niet|geen|kan|kunt|worden|wordt|moet|deze|dit|jouw|voor|met|bij|naar|van|om|dat|die|er|nog|al|alleen|opnieuw|zijn|is|en|of|te|op|aan|uit|meer|dan|reeds|gevonden|verzonden|opgeslagen|mislukt|vereist|toegestaan|ingesteld|controleer|probeer|neem|vul|kies|geef)\b/i;
+// "is" stond hier eerder ook in, maar is zowel Nederlands als Engels (een
+// linkwerkwoord in allebei de talen) -- een zin als "Title is required." werd
+// daardoor als Nederlands gezien vóórdat de Engelse treffer ("required") ooit
+// werd bekeken, en glipte zo stilletjes door deze poort heen (gevonden 11 sep,
+// zie R37 in BESLISTABEL.md voor de aanleiding). Verwijderd; elk overgebleven
+// woord hierin komt niet ook als gewoon Engels woord voor.
+const NEDERLANDS = /\b(de|het|een|niet|geen|kan|kunt|worden|wordt|moet|deze|dit|jouw|voor|met|bij|naar|van|om|dat|die|er|nog|al|alleen|opnieuw|zijn|en|of|te|op|aan|uit|meer|dan|reeds|gevonden|verzonden|opgeslagen|mislukt|vereist|toegestaan|ingesteld|controleer|probeer|neem|vul|kies|geef)\b/i;
 const ENGELS = /\b(the|must|cannot|could|does|was|were|are|been|only|already|required|allowed|at least|before|after|this|your|payload|endpoint|integer|positive|between|store|change|changed|reload|try again|exists|linked|scope|account|invoice|timesheet|announcement|administrator|administrators|draft|period|state|action|one of)\b/i;
 
 const gevonden = [];

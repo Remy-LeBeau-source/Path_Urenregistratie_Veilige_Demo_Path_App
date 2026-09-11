@@ -595,7 +595,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
         customer_timesheet_json([
             'ok' => false,
             'error' => 'invalid-payload',
-            'message' => 'period is required.',
+            'message' => 'Periode is verplicht.',
         ], 400);
     }
 
@@ -693,9 +693,9 @@ $action = security_require_enum_field(
     $payload,
     'action',
     ['save_draft', 'submit', 'approve', 'request_resubmit', 'mark_sent', 'mark_sent_to_broker', 'send_to_broker', 'mark_skipped', 'confirm_external', 'restore_missing'],
-    'Invalid customer timesheet action.'
+    'Ongeldige actie voor de klanturenstaat.'
 );
-$period = customer_timesheet_parse_period_key(security_require_string_field($payload, 'period', 'period is required.', 7));
+$period = customer_timesheet_parse_period_key(security_require_string_field($payload, 'period', 'Periode is verplicht.', 7));
 $employee = customer_timesheet_employee_from_payload($pdo, $currentUser, $payload);
 customer_timesheet_require_employee_period_access($config, $currentUser, $employee, $period);
 $companyId = (int)$currentUser['company_id'];
