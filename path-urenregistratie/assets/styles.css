@@ -618,6 +618,29 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .workflow-line { flex: 1; height: 1px; min-width: 20px; background: var(--line); margin: 0 12px; }
 .workflow-line.is-done { background: var(--mint); }
 
+/* Op een eigen pagina i.p.v. tussen de dashboardpanelen.
+   Dit paneel was ontworpen voor een smalle plek op het dashboard: vier fasen
+   geperst in de rechterhelft, met een ring van 54px ernaast en 9px bijschriften.
+   Sinds het zijn eigen scherm heeft (Procesvoortgang) staat diezelfde krappe
+   opzet in een leeg veld -- klein én verloren tegelijk. Hier krijgt het de
+   ruimte die er nu is: de meter boven de fasen in plaats van ernaast, en de
+   vier fasen over de volle breedte met leesbare bijschriften. Alleen op dit
+   scherm; op het dashboard blijft de compacte versie staan. */
+#view-teamstatus .workflow-overview { grid-template-columns: minmax(0, 1fr); gap: 26px; padding: 26px; }
+#view-teamstatus .workflow-progress-card { border-right: 0; border-bottom: 1px solid var(--line); padding: 0 0 22px; }
+#view-teamstatus .workflow-progress-card .progress-ring { --size: 74px; }
+#view-teamstatus .workflow-progress-card .progress-ring::before { width: 57px; height: 57px; }
+#view-teamstatus .workflow-progress-card strong { font-size: 15px; }
+#view-teamstatus .workflow-progress-card small { max-width: 60ch; font-size: 11px; }
+#view-teamstatus .workflow-step { min-width: 0; flex: 1 1 0; gap: 13px; }
+#view-teamstatus .workflow-step > span { width: 42px; height: 42px; font-size: 13px; }
+#view-teamstatus .workflow-step strong { font-size: 14px; }
+#view-teamstatus .workflow-step small { font-size: 11px; }
+@media (max-width: 900px) {
+  #view-teamstatus .workflow-track { align-items: flex-start; flex-direction: column; gap: 14px; }
+  #view-teamstatus .workflow-line { width: 1px; height: 18px; min-width: 0; flex: 0 0 auto; margin: 0 0 0 21px; }
+}
+
 .table-wrap { overflow-x: auto; }
 /* Cijfers die onder elkaar staan horen ook onder elkaar uit te lijnen.
    Zonder tabular-nums is een "1" smaller dan een "8", waardoor urenkolommen,
