@@ -19,7 +19,7 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <title>Uren & Facturatie</title>
-  <link rel="stylesheet" href="assets/styles.css?v=1.0.80">
+  <link rel="stylesheet" href="assets/styles.css?v=1.0.81">
   <link rel="stylesheet" href="assets/styles-new.css">
 </head>
 <body class="auth-booting">
@@ -98,7 +98,7 @@
       </form>
       <p class="login-note" id="auth-mode-indicator">Controle van auth-sessie wordt uitgevoerd.</p>
       <p class="login-note" id="local-login-note">De standaardgegevens gebruiken veilige voorbeeldadressen. Je mag zelf echte gegevens invoeren; deze lokale versie bewaart ze alleen in deze browser en e-mailverzending is uitgeschakeld.</p>
-      <footer class="login-footer"><span>© 2026 Path Consultancy IT · Ontwikkeld en beheerd door Team Path.</span><span>Versie 1.0.80</span></footer>
+      <footer class="login-footer"><span>© 2026 Path Consultancy IT · Ontwikkeld en beheerd door Team Path.</span><span>Versie 1.0.81</span></footer>
     </div>
   </section>
 
@@ -109,44 +109,67 @@
         <span data-app-name>Uren & Facturatie</span>
       </a>
 
+      <!-- Het beheermenu is opgeknipt in twee groepen omdat er twee werkelijk
+           verschillende soorten schermen in zaten: wat je dagelijks afwerkt
+           (Werkvoorraad) en wat je zelden aanraakt maar wel moet kunnen vinden
+           (Organisatie). In één vlakke lijst van zes stonden die door elkaar.
+           Het medewerkermenu blijft bewust vlak: drie items hoeven niet uit
+           elkaar gehaald, daar zou een kopje decoratie zijn i.p.v. informatie.
+           De groepen dragen dezelfde role-klassen als de knoppen erin, zodat
+           dezelfde rolschakelaar ze verbergt; op de telefoon krijgen ze
+           display:contents zodat de knoppenbalk onderin ongewijzigd blijft. -->
       <nav class="nav-list">
-        <button class="nav-item is-active role-admin-only" data-view="dashboard">
-          <span class="nav-marker"></span><span>Dashboard</span>
-          <span class="nav-count-group dashboard-work-count" id="dashboard-work-count" aria-label="Geen open acties" hidden>
-            <span class="nav-count is-backoffice" id="dashboard-backoffice-count" hidden>0</span>
-            <span class="nav-count is-employee" id="dashboard-employee-count" hidden>0</span>
-          </span>
-        </button>
-        <button class="nav-item role-employee-only" data-view="employee-dashboard" hidden>
-          <span class="nav-marker"></span><span>Dashboard</span>
-          <span class="nav-count" id="employee-dashboard-count" hidden>0</span>
-        </button>
-        <button class="nav-item role-employee-only" data-view="timesheet" hidden>
-          <span class="nav-marker"></span><span>Mijn uren</span>
-        </button>
-        <button class="nav-item role-employee-only" data-view="employee-announcements" hidden>
-          <span class="nav-marker"></span><span>Mededelingen</span>
-        </button>
-        <button class="nav-item role-admin-only" data-view="approvals">
-          <span class="nav-marker"></span><span>Goedkeuringen</span>
-          <span class="nav-count" id="approval-count">2</span>
-        </button>
-        <button class="nav-item role-admin-only" data-view="invoices">
-          <span class="nav-marker"></span><span>Facturen</span>
-          <span class="nav-count-group invoice-batch-count" id="invoice-batch-count" aria-label="Geen open maandcontroles" hidden>
-            <span class="nav-count is-blocked" id="invoice-batch-blocked-count" hidden>0</span>
-            <span class="nav-count is-ready" id="invoice-batch-ready-count" hidden>0</span>
-          </span>
-        </button>
-        <button class="nav-item role-admin-only" data-view="announcements">
-          <span class="nav-marker"></span><span>Mededelingen</span>
-        </button>
-        <button class="nav-item role-admin-only" data-view="employees">
-          <span class="nav-marker"></span><span>Medewerkers</span>
-        </button>
-        <button class="nav-item role-admin-only" data-view="settings">
-          <span class="nav-marker"></span><span>Instellingen</span>
-        </button>
+        <div class="nav-group role-employee-only" hidden>
+          <button class="nav-item role-employee-only" data-view="employee-dashboard" hidden>
+            <span class="nav-marker"></span><span>Dashboard</span>
+            <span class="nav-count" id="employee-dashboard-count" hidden>0</span>
+          </button>
+          <button class="nav-item role-employee-only" data-view="timesheet" hidden>
+            <span class="nav-marker"></span><span>Mijn uren</span>
+          </button>
+          <button class="nav-item role-employee-only" data-view="employee-announcements" hidden>
+            <span class="nav-marker"></span><span>Mededelingen</span>
+          </button>
+        </div>
+
+        <div class="nav-group role-admin-only">
+          <p class="nav-group-title" id="nav-groep-werk">Werkvoorraad</p>
+          <div class="nav-group-items" role="group" aria-labelledby="nav-groep-werk">
+            <button class="nav-item is-active role-admin-only" data-view="dashboard">
+              <span class="nav-marker"></span><span>Dashboard</span>
+              <span class="nav-count-group dashboard-work-count" id="dashboard-work-count" aria-label="Geen open acties" hidden>
+                <span class="nav-count is-backoffice" id="dashboard-backoffice-count" hidden>0</span>
+                <span class="nav-count is-employee" id="dashboard-employee-count" hidden>0</span>
+              </span>
+            </button>
+            <button class="nav-item role-admin-only" data-view="approvals">
+              <span class="nav-marker"></span><span>Goedkeuringen</span>
+              <span class="nav-count" id="approval-count">2</span>
+            </button>
+            <button class="nav-item role-admin-only" data-view="invoices">
+              <span class="nav-marker"></span><span>Facturen</span>
+              <span class="nav-count-group invoice-batch-count" id="invoice-batch-count" aria-label="Geen open maandcontroles" hidden>
+                <span class="nav-count is-blocked" id="invoice-batch-blocked-count" hidden>0</span>
+                <span class="nav-count is-ready" id="invoice-batch-ready-count" hidden>0</span>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div class="nav-group role-admin-only">
+          <p class="nav-group-title" id="nav-groep-organisatie">Organisatie</p>
+          <div class="nav-group-items" role="group" aria-labelledby="nav-groep-organisatie">
+            <button class="nav-item role-admin-only" data-view="employees">
+              <span class="nav-marker"></span><span>Medewerkers</span>
+            </button>
+            <button class="nav-item role-admin-only" data-view="announcements">
+              <span class="nav-marker"></span><span>Mededelingen</span>
+            </button>
+            <button class="nav-item role-admin-only" data-view="settings">
+              <span class="nav-marker"></span><span>Instellingen</span>
+            </button>
+          </div>
+        </div>
       </nav>
 
       <div class="sidebar-footer">
@@ -155,7 +178,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 1.0.80</span>
+      <span class="demo-badge">Versie 1.0.81</span>
       </div>
     </aside>
 
@@ -171,7 +194,7 @@
         <div class="topbar-title">
           <p class="eyebrow" id="organization-name">Path Consultancy</p>
           <h1 id="page-title">Urenoverzicht</h1>
-          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 1.0.80</span><span class="environment-badge" id="environment-badge" hidden></span></span>
+          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 1.0.81</span><span class="environment-badge" id="environment-badge" hidden></span></span>
         </div>
         <div class="topbar-actions">
           <nav class="new-admin-topnav role-admin-only" aria-label="Pilot hoofdnavigatie">
@@ -476,7 +499,7 @@
           <div class="customer-timesheet-admin-list" id="customer-timesheet-admin-list"></div>
         </section>
 
-        <!-- Ingang naar de procesmeter, die sinds v1.0.80 op een eigen scherm
+        <!-- Ingang naar de procesmeter, die sinds v1.0.81 op een eigen scherm
              staat. Het percentage blijft hier zichtbaar, zodat je de stand nog
              steeds in één blik hebt zonder het hele paneel op het Dashboard. -->
         <section class="panel workflow-teaser" id="workflow-teaser">
@@ -978,7 +1001,7 @@
       <footer class="app-footer" aria-label="Applicatie-informatie">
         <span>© 2026 Path Consultancy IT</span>
         <span>Ontwikkeld en beheerd door Team Path.</span>
-        <span class="app-footer-version">Versie 1.0.80</span>
+        <span class="app-footer-version">Versie 1.0.81</span>
       </footer>
     </main>
   </div>
@@ -1038,7 +1061,7 @@
   </div>
   <script vite-ignore defer src="assets/jspdf.umd.min.js"></script>
   <script vite-ignore defer src="assets/invoice-fonts.js"></script>
-  <script vite-ignore defer src="assets/app.js?v=1.0.80"></script>
-  <script vite-ignore defer src="assets/pwa-install.js?v=1.0.80"></script>
+  <script vite-ignore defer src="assets/app.js?v=1.0.81"></script>
+  <script vite-ignore defer src="assets/pwa-install.js?v=1.0.81"></script>
 </body>
 </html>

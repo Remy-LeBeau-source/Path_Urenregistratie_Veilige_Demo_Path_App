@@ -33,6 +33,19 @@
   --danger: #a34b4b;
   --shadow: 0 14px 35px rgba(13, 27, 56, 0.08);
   --radius: 18px;
+  /* Hoogteschaal. Rand en schaduw zeggen allebei "los object", en ze stonden
+     los van elkaar per component ingesteld: dezelfde schaduwwaarde op zes
+     plekken overgetypt, met net andere alfa's. Drie niveaus met een betekenis:
+       rust     -- ligt in de pagina (tabelrijen, vlakken binnen een paneel)
+       kaart    -- een zelfstandig blok op de achtergrond
+       zwevend  -- hangt boven de pagina (uitklap, dialoog, meldingen)
+     Wie een vierde nodig denkt te hebben, heeft meestal een hiërarchieprobleem
+     en geen schaduwprobleem. */
+  --hoogte-rust: none;
+  --hoogte-kaart: 0 1px 2px rgba(13, 27, 56, .04), 0 10px 30px rgba(13, 27, 56, .05);
+  --hoogte-zwevend: 0 18px 48px rgba(13, 27, 56, .16);
+  /* Randen horen zachter te worden naarmate de schaduw het werk overneemt. */
+  --line-zacht: #e8eeef;
   /* Koptypeschaal. Hiervoor stonden er zeven verschillende clamp()-waarden
      door het bestand voor wat in feite twee koptypes zijn: 28/40, 28/38,
      28/38, 27/37 voor schermkoppen en 25/33, 27/34 als mobiele varianten.
@@ -240,9 +253,27 @@ summary:focus-visible,
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 5px;
-  margin-top: 46px;
+  gap: 26px;
+  margin-top: 40px;
 }
+
+/* Groepen in het beheermenu (zie de toelichting in index.html). Het kopje is
+   een oriëntatiepunt, geen knop: klein, uitgespatieerd en gedempt, zodat het
+   zich niet met de items meet. De haarlijn erboven doet het scheiden -- bij de
+   eerste groep niet, want daar scheidt het logo al. */
+.nav-group { display: flex; flex-direction: column; gap: 5px; }
+.nav-group-items { display: flex; flex-direction: column; gap: 5px; }
+.nav-group-title {
+  margin: 0 0 4px;
+  border-top: 1px solid rgba(255, 255, 255, .08);
+  color: #7e93a6;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  padding: 14px 14px 0;
+  text-transform: uppercase;
+}
+.nav-group:first-child .nav-group-title { border-top: 0; padding-top: 0; }
 
 .nav-item {
   position: relative;
@@ -260,18 +291,37 @@ summary:focus-visible,
   transition: background .2s ease, color .2s ease, transform .2s ease;
 }
 
-.nav-item:hover { background: rgba(255,255,255,.07); color: #fff; transform: translateX(2px); }
-.nav-item.is-active { background: rgba(58, 189, 157, .15); color: #fff; }
+.nav-item:hover { background: rgba(255,255,255,.07); color: #fff; }
+.nav-item.is-active { background: rgba(58, 189, 157, .15); color: #fff; font-weight: 600; }
+
+/* "Je bent hier" is een plaats, geen accentkleur. Het gevulde vlak alleen zei
+   vooral "dit is opgelicht"; de rail links zegt wáár je staat, en laat de
+   vulling zachter zijn. */
+.nav-item.is-active::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--mint);
+}
 
 .nav-marker {
   width: 8px;
   height: 8px;
   border: 2px solid currentColor;
   border-radius: 3px;
+  /* Zes identieke ruitjes onder elkaar dragen geen informatie; ze mogen dus
+     wijken voor de tekst. Alleen het actieve ruitje vult zich en telt mee. */
+  opacity: .45;
   transform: rotate(45deg);
+  transition: opacity .2s ease;
 }
 
-.nav-item.is-active .nav-marker { border-color: var(--mint); background: var(--mint); }
+.nav-item:hover .nav-marker { opacity: .7; }
+.nav-item.is-active .nav-marker { border-color: var(--mint); background: var(--mint); opacity: 1; }
 .nav-count { margin-left: auto; border-radius: 999px; background: var(--mint); color: var(--navy); font-size: 11px; font-weight: 800; padding: 2px 7px; }
 .nav-count-group { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; }
 .nav-count-group[hidden] { display: none; }
@@ -281,7 +331,10 @@ summary:focus-visible,
 .nav-count.is-backoffice { background: var(--warning); }
 .nav-count.is-employee { background: var(--mint); }
 
-.sidebar-footer { display: grid; gap: 16px; }
+/* De voet hoort bij elkaar en niet bij de navigatie erboven: een haarlijn en
+   wat lucht maken daar één blok van, i.p.v. drie losse dingen die toevallig
+   onderaan zijn beland. */
+.sidebar-footer { display: grid; gap: 14px; border-top: 1px solid rgba(255, 255, 255, .08); padding-top: 18px; }
 .new-employee-bento { display: none; }
 .app-footer { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; margin-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 9px; padding: 16px 2px 4px; }
 .app-footer-version { margin-left: auto; }
@@ -294,8 +347,11 @@ summary:focus-visible,
 .topbar-context { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
 .environment-badge { display: inline-flex; width: fit-content; align-items: center; border: 1px solid #e6b66a; border-radius: 999px; background: #fff4df; color: #8b5200; font-size: 9px; font-weight: 900; letter-spacing: .08em; padding: 5px 9px; text-transform: uppercase; }
 .environment-badge.is-local { border-color: #8fd9c7; background: var(--green-light); color: var(--mint-dark-tekst); }
-.switch-role { width: fit-content; border: 0; border-bottom: 1px solid rgba(255,255,255,.23); background: transparent; color: #b9c7d3; cursor: pointer; font-size: 11px; padding: 0 0 3px; }
-.switch-role:hover { color: #fff; }
+/* Was een onderstreepte tekstlink en las daardoor als "ga hier weg". Het is
+   een handeling binnen de app, dus een rustige knop met een rand -- zichtbaar
+   klikbaar, maar zonder te concurreren met de navigatie erboven. */
+.switch-role { width: fit-content; border: 1px solid rgba(255,255,255,.16); border-radius: 9px; background: transparent; color: #b9c7d3; cursor: pointer; font-size: 11px; font-weight: 600; padding: 7px 11px; transition: border-color .2s ease, background .2s ease, color .2s ease; }
+.switch-role:hover { border-color: rgba(255,255,255,.34); background: rgba(255,255,255,.06); color: #fff; }
 
 .main-content {
   min-height: 100vh;
@@ -320,23 +376,62 @@ summary:focus-visible,
 .topbar h1 { margin: 2px 0 0; font-family: "Roboto Slab", Georgia, serif; font-size: var(--kop-topbalk); letter-spacing: 0; }
 .mobile-topbar-home { display: none; }
 .eyebrow, .section-label { margin: 0; color: var(--mint-dark-tekst); font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
-.topbar-actions { display: flex; align-items: center; gap: 12px; }
-.safety-badge { border: 1px solid #edcfa9; border-radius: 999px; background: var(--warning-bg); color: var(--warning-tekst); font-size: 9px; font-weight: 800; letter-spacing: .04em; padding: 7px 10px; text-transform: uppercase; white-space: nowrap; }
-.safety-badge.is-active { border-color: #86d6c1; background: #e3f7f1; color: #087a62; }
-.safety-badge.is-paused { border-color: #edcfa9; background: var(--warning-bg); color: var(--warning-tekst); }
+/* De topbalk had vijf bedieningselementen op gelijke sterkte: allemaal pillen
+   met een rand, allemaal even groot, allemaal even ver uit elkaar. Daardoor
+   leidde niets en las de hele rij als één blok knoppen. Onderscheid in plaats
+   van herstyling:
+     status   -- de mailstatus en de omgeving zijn meldingen, geen knoppen;
+     hulpmiddelen -- demo herstellen en de vormgevingswissel, rustig tot hover;
+     hoofdbediening -- de maandkiezer, het enige element dat wél een kaart mag zijn;
+     account  -- bel en avatar, met een haarlijn ervoor als scheiding.
+   De ruimte tussen de groepen is groter dan binnen een groep; dat doet het
+   werk dat vijf randen eerst probeerden te doen. */
+.topbar-actions { display: flex; align-items: center; gap: 10px; }
+.safety-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  background: transparent;
+  color: var(--warning-tekst);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  padding: 7px 2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.safety-badge::before { content: ""; width: 7px; height: 7px; flex: 0 0 auto; border-radius: 999px; background: currentColor; }
+.safety-badge.is-active { background: transparent; color: #0a6b57; }
+.safety-badge.is-paused { background: transparent; color: var(--warning-tekst); }
 .safety-badge.is-toggleable { cursor: pointer; }
 .safety-badge.is-toggleable:hover { filter: brightness(.97); }
 .safety-badge.is-toggleable:focus-visible { outline: 3px solid rgba(61, 195, 157, .3); outline-offset: 2px; }
 .mail-acceptance-controls { display: flex; align-items: center; gap: 8px; }
-.topbar-quick-reset { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); cursor: pointer; font-size: 10px; font-weight: 700; letter-spacing: .04em; padding: 7px 12px; text-transform: uppercase; }
-.topbar-quick-reset:hover { border-color: var(--mint); color: var(--mint-dark-tekst); }
+.topbar-quick-reset { border: 1px solid transparent; border-radius: 10px; background: transparent; color: var(--muted); cursor: pointer; font-size: 10px; font-weight: 700; letter-spacing: .04em; padding: 8px 11px; text-transform: uppercase; transition: border-color .18s ease, background .18s ease, color .18s ease; }
+.topbar-quick-reset:hover { border-color: var(--line); background: var(--surface); color: var(--mint-dark-tekst); }
+/* Marge links: begin van het blok hulpmiddelen, los van de statusmelding.
+   Niet in New, waar de rij al afbreekt en elke extra breedte een regel kost. */
+html:not([data-skin="new"]) .topbar-quick-reset { margin-left: 10px; }
 .appearance-switches { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 4px; }
 .appearance-switch { display: inline-flex; min-height: 34px; align-items: center; gap: 6px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; font: inherit; font-size: 10px; padding: 0 9px; }
 .appearance-switch strong { color: inherit; font-size: inherit; }
 .appearance-switch:hover, .appearance-switch[aria-pressed="true"] { background: var(--green-light); color: var(--mint-dark-tekst); }
 .appearance-switch:focus-visible { outline: 3px solid rgba(58,189,157,.3); outline-offset: 2px; }
 
-.period-control { display: flex; min-height: 48px; align-items: center; gap: 3px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: 0 5px 18px rgba(13,27,56,.04); padding: 0 4px; }
+/* De maandkiezer is de enige echte hoofdbediening in de balk en mag daarom als
+   enige een kaart zijn. Extra lucht ervoor markeert de overgang van
+   hulpmiddelen naar hoofdbediening. */
+.period-control { display: flex; min-height: 48px; align-items: center; gap: 3px; margin-left: 6px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: 0 5px 18px rgba(13,27,56,.05); padding: 0 4px; transition: border-color .18s ease, box-shadow .18s ease; }
+.period-control:hover, .period-control:focus-within { border-color: #b9ddd2; box-shadow: 0 7px 22px rgba(13,27,56,.08); }
+
+/* Haarlijn vóór het accountblok (bel en avatar): die twee horen bij elkaar en
+   niet bij de bediening ervoor.
+   Alleen in Klassiek. De New-skin zet in de beheerschermen bewust
+   flex-wrap:wrap op deze rij, en daar duwde de extra 32px de avatar naar een
+   eigen regel. Een scheiding die een afbreking veroorzaakt scheidt niets. */
+html:not([data-skin="new"]) .topbar-actions .topbar-popover:first-of-type { position: relative; margin-left: 16px; padding-left: 16px; }
+html:not([data-skin="new"]) .topbar-actions .topbar-popover:first-of-type::before { content: ""; position: absolute; top: 50%; left: 0; width: 1px; height: 26px; transform: translateY(-50%); background: var(--line); }
 .period-control button { width: 34px; height: 34px; border: 0; border-radius: 9px; background: transparent; cursor: pointer; font-size: 22px; line-height: 1; }
 .period-control button:hover { background: var(--green-light); }
 .period-picker-wrap { display: grid; min-width: 184px; gap: 1px; padding: 4px 3px; }
@@ -431,18 +526,33 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .progress-ring::before { grid-area: 1/1; width: 53px; height: 53px; border-radius: 50%; background: var(--navy-soft); content: ""; }
 .progress-ring span { z-index: 1; grid-area: 1/1; font-size: 13px; font-weight: 800; }
 
-.metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px; margin-bottom: 18px; }
-.metric-card { min-height: 128px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 20px; box-shadow: 0 8px 28px rgba(13,27,56,.035); }
+/* Vier tegels naast elkaar zijn één object, geen vier losse. Ze delen daarom
+   dezelfde binnenmaten en dezelfde volgorde van onderdelen: label boven, getal
+   groot, toelichting eronder, actie onderaan. Het getal draagt de tegel, dus
+   dat mag groter dan het was; het label wordt juist stiller. De tegel die
+   aandacht vraagt onderscheidt zich door kleur, niet door een ander formaat --
+   anders lijkt hij een andere soort. */
+/* Vast op vier kolommen liet het medewerkerdashboard -- dat er vijf heeft --
+   de laatste tegel alleen op een tweede rij staan, met drie lege plekken
+   ernaast. Een raster dat zich naar het aantal voegt vult de rij: vier tegels
+   bij beheer, vijf bij de medewerker, en het valt vanzelf netjes terug naarmate
+   het scherm smaller wordt. */
+.metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(196px, 1fr)); gap: 14px; margin-bottom: 18px; }
+.metric-card { display: flex; min-height: 138px; flex-direction: column; border: 1px solid var(--line-zacht); border-radius: 12px; background: var(--surface); padding: 20px; box-shadow: var(--hoogte-kaart); }
 .metric-card.attention { border-color: #efddc7; background: linear-gradient(150deg, #fff, #fff8ef); }
-.metric-label { display: block; color: var(--muted); font-size: 11px; font-weight: 600; }
-.metric-card > strong { display: block; margin: 10px 0 8px; color: var(--navy-tekst); font-family: "Roboto Slab", Georgia, serif; font-size: 28px; }
+.metric-label { display: block; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.metric-card > strong { display: block; margin: 12px 0 8px; color: var(--navy-tekst); font-family: "Roboto Slab", Georgia, serif; font-size: 32px; letter-spacing: -.01em; line-height: 1; }
 .metric-card > strong small { color: #9aa4ae; font-size: 15px; }
-.metric-link { display: block; width: fit-content; margin-top: 13px; border: 0; border-bottom: 1px solid currentColor; background: transparent; color: var(--teal); cursor: pointer; font: inherit; font-size: 11px; font-weight: 800; padding: 0 0 2px; }
+/* margin-top:auto duwt de actie naar de onderrand, zodat de vier links op
+   dezelfde hoogte staan ook als de toelichting erboven twee regels wordt.
+   Daarvoor sprongen ze per tegel, en dan lijken het vier losse kaartjes. */
+.metric-link { display: block; width: fit-content; margin-top: auto; padding-top: 13px; border: 0; background: transparent; color: var(--teal); cursor: pointer; font: inherit; font-size: 11px; font-weight: 800; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--teal) 35%, transparent); text-underline-offset: 4px; }
+.metric-link:hover { text-decoration-color: currentColor; }
 .metric-link:hover { color: var(--navy-tekst); }
 .metric-note { color: var(--muted); font-size: 11px; }
 .metric-note.positive { color: var(--mint-dark-tekst); }
 
-.panel { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: 0 8px 28px rgba(13,27,56,.035); }
+.panel { border: 1px solid var(--line-zacht); border-radius: var(--radius); background: var(--surface); box-shadow: var(--hoogte-kaart); }
 /* Zelfde sticky-topbar-overlap als .settings-card[id] hierboven: de knoppen
    "Bekijk alle ... acties" / "N bij Backoffice" / "N wachten op medewerkers"
    springen hierheen en verstopten de kop van dit paneel achter de topbalk. */
@@ -570,7 +680,12 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .hours-table tbody tr:hover { background: var(--vlak); }
 .hours-table td:first-child { min-width: 100px; color: var(--teal); font-size: 11px; font-weight: 800; }
 .hours-day-entry { display: grid; justify-items: center; gap: 7px; width: fit-content; margin: 0 auto; }
-.hours-table .date-number { display: inline-flex; min-width: 46px; min-height: 19px; align-items: center; justify-content: center; border-radius: 999px; background: var(--green-light); color: var(--teal); font-size: 9px; font-weight: 900; letter-spacing: .02em; text-transform: lowercase; }
+/* Elke dag droeg een mintgroene pil. Vijfentwintig accenten in één raster
+   betekent dat het accent niets meer aanwijst: het oog heeft geen plek om
+   te landen. De datum is een bijschrift bij het invoerveld, niet een status,
+   dus hij wordt een rustig label. Het groen komt daarmee vrij voor wat het
+   wél moet zeggen -- focus, vandaag, klaar. */
+.hours-table .date-number { display: inline-flex; min-width: 46px; min-height: 19px; align-items: center; justify-content: center; border-radius: 999px; background: transparent; color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: .03em; text-transform: lowercase; }
 .hours-table input { width: 64px; height: 42px; border: 1px solid var(--line); border-radius: 11px; background: var(--vlak); color: var(--navy-tekst); font-size: 14px; font-weight: 700; text-align: center; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
 .hours-table input:hover { border-color: #b9d9d1; }
 .hours-table input:focus { outline: 0; border-color: var(--mint); box-shadow: 0 0 0 4px rgba(58,189,157,.14); transform: translateY(-1px); }
@@ -583,7 +698,9 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .hours-day-presets button:disabled { cursor: default; opacity: .5; }
 .hours-table .outside-month { background: var(--vlak); color: var(--muted); }
 .outside-month-mark { display: grid; width: 64px; height: 42px; place-items: center; margin: 26px auto 0; border-radius: 11px; background: var(--vlak-zacht); color: var(--muted); }
-.hours-table .week-total { color: var(--navy-tekst); font-size: 12px; font-weight: 800; }
+/* Weektotalen staan onder elkaar en horen dus op de komma uit te lijnen;
+   met evenredige cijfers deden ze dat niet. */
+.hours-table .week-total { color: var(--navy-tekst); font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .hours-review-grid .workday-cell { display: table-cell; }
 .hours-review-grid .workday-cell .date-number { display: block; margin: 0 auto 7px; width: fit-content; }
 .hours-review-grid .workday-cell strong { display: block; color: var(--navy-tekst); font-size: 14px; }
@@ -968,6 +1085,13 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .sidebar { inset: auto 0 0; width: auto; height: 68px; padding: 7px 10px; box-shadow: 0 -7px 25px rgba(13,27,56,.16); }
   .brand, .sidebar-footer { display: none; }
   .nav-list { display: grid; grid-template-columns: repeat(6,1fr); gap: 3px; margin: 0; }
+  /* Onderin de telefoon is de navigatie een knoppenbalk, geen lijst met
+     kopjes. De groepen lossen daarom op in het raster (display:contents) en de
+     kopjes verdwijnen. De :not([hidden]) is nodig: een klassenselector wint van
+     het [hidden]-attribuut, en zonder die uitzondering zouden de knoppen van de
+     verkeerde rol alsnog in de balk verschijnen. */
+  .nav-group:not([hidden]), .nav-group-items { display: contents; }
+  .nav-group-title { display: none; }
   .nav-item { min-width: 0; min-height: 54px; flex-direction: column; justify-content: center; gap: 5px; padding: 3px; text-align: center; }
   .nav-item span:nth-child(2) { overflow: hidden; width: 100%; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
   .nav-count { position: absolute; top: 3px; right: 8px; }
@@ -1642,7 +1766,11 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 .help-inline-topics button { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--navy-tekst); cursor: pointer; font-size: 10px; font-weight: 900; padding: 8px 11px; text-align: left; }
 .help-inline-topics button:hover { border-color: var(--mint); background: var(--green-light); }
 
-html[data-theme="dark"] { color-scheme: dark; --ink: #e7eef4; --muted: #b1bfcb; --line: #2a3a4a; --surface: #111d2b; --background: #09131f; --green-light: #15352f; --teal: #64d7bd; --mint-dark: #51caae; --warning-bg: #332618; --warning: #efb76f; --shadow: 0 14px 35px rgba(0,0,0,.35);
+html[data-theme="dark"] { color-scheme: dark; --ink: #e7eef4; --muted: #b1bfcb; --line: #2a3a4a; --line-zacht: #223243; --surface: #111d2b; --background: #09131f; --green-light: #15352f; --teal: #64d7bd; --mint-dark: #51caae; --warning-bg: #332618; --warning: #efb76f; --shadow: 0 14px 35px rgba(0,0,0,.35);
+  /* Schaduwen moeten in het donker dieper en zwarter zijn; dezelfde blauwe
+     alfa's als in de lichte modus zijn daar onzichtbaar. */
+  --hoogte-kaart: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.28);
+  --hoogte-zwevend: 0 18px 48px rgba(0,0,0,.5);
   /* Tekstvarianten omgekeerd: in donkere modus moeten ze juist licht zijn.
      Zonder deze drie regels was 119 keer tekst onleesbaar, waarvan de helft
      op 1,00:1 -- dezelfde kleur als de achtergrond. */

@@ -43,8 +43,16 @@ test('[A11Y-H-002] admin-dashboard hoofdnavigatie is toetsenbordbereikbaar met h
     await expect(page.locator('#app-shell')).toBeVisible();
   });
 
-  await test.step('Then heeft elke hoofdnavigatieknop een herkenbare, unieke naam', async () => {
-    const navButtons = page.locator('nav [data-view]');
+  // De navigatie bevat de knoppen van beide rollen; de rolschakelaar verbergt
+  // wat niet bij je hoort. Deze case gaat over de navigatie van een beheerder,
+  // dus over de knoppen die een beheerder werkelijk ziet. Zonder :visible pakte
+  // 'nav [data-view]' ook de verborgen medewerkerknoppen mee -- dat ging lang
+  // goed omdat de beheerknop toevallig eerst in de HTML stond, maar het toetste
+  // iets anders dan de titel belooft: een verborgen knop is geen navigatie en
+  // een toetsenbordgebruiker bereikt hem nooit. Sinds het menu in groepen is
+  // opgeknipt staat die volgorde anders, en viel het verschil op.
+  await test.step('Then heeft elke zichtbare hoofdnavigatieknop een herkenbare naam', async () => {
+    const navButtons = page.locator('nav [data-view]:visible');
     const count = await navButtons.count();
     expect(count).toBeGreaterThan(0);
 
@@ -55,8 +63,8 @@ test('[A11Y-H-002] admin-dashboard hoofdnavigatie is toetsenbordbereikbaar met h
     }
   });
 
-  await test.step('When de eerste hoofdnavigatieknop via het toetsenbord wordt bediend', async () => {
-    const firstNavButton = page.locator('nav [data-view]').first();
+  await test.step('When de eerste zichtbare hoofdnavigatieknop via het toetsenbord wordt bediend', async () => {
+    const firstNavButton = page.locator('nav [data-view]:visible').first();
     await firstNavButton.focus();
     await expect(firstNavButton).toBeFocused();
     await page.keyboard.press('Enter');
@@ -158,7 +166,10 @@ test('[A11Y-H-005] elke interactieve elementsoort krijgt een zichtbare focusring
   });
 
   await test.step('And een via het toetsenbord gefocuste navigatieknop toont echt een outline', async () => {
-    const knop = page.locator('nav [data-view]').first();
+    // :visible om dezelfde reden als bij A11Y-H-002: de navigatie bevat ook de
+    // verborgen knoppen van de andere rol, en een verborgen knop kun je niet
+    // focussen -- dan slaat :focus-visible nooit aan en toetst de case niets.
+    const knop = page.locator('nav [data-view]:visible').first();
     await knop.evaluate(el => (el as HTMLElement).focus());
     // Tab vanaf de knop en terug: de browser markeert het element dan als
     // toetsenbord-gefocust zodat :focus-visible aanslaat.

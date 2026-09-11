@@ -169,6 +169,20 @@ html[data-skin="new"] .nav-item.is-active {
   color: var(--path-cream);
 }
 
+/* Groepskopjes in het beheermenu. Klassiek zet ze in kleinkapitaal met een
+   haarlijn; hier krijgen ze het editoriale schreefletterbeeld van deze skin,
+   zodat de opdeling in beide vormgevingen hetzelfde zegt maar niet hetzelfde
+   klinkt. */
+html[data-skin="new"] .nav-group-title {
+  border-top-color: rgba(126, 201, 156, .16);
+  color: rgba(126, 201, 156, .75);
+  font-family: var(--path-serif);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
 html[data-skin="new"] .topbar {
   background: color-mix(in srgb, var(--background) 88%, transparent);
   border-color: color-mix(in srgb, var(--line) 82%, transparent);
@@ -375,6 +389,28 @@ html[data-skin="new"] .app-shell:has(#view-employee-dashboard.is-active) #quick-
 html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) #quick-theme-toggle,
 html[data-skin="new"] .app-shell:has(#view-employee-announcements.is-active) #quick-theme-toggle {
   display: none;
+}
+
+/* "Rol kiezen" staat op Mijn uren wél in de balk (anders verdwijnt daar de
+   enige uitlogweg, want de zijbalk is hier verborgen -- LoginPage.logout()
+   valt op deze knop terug). Hij kreeg alleen geen eigen opmaak in deze skin en
+   viel als grijs blok uit de donkere balk. Zelfde rustige pil als de andere
+   hulpmiddelen ernaast, zodat hij meedoet in plaats van op te vallen. */
+html[data-skin="new"] .mobile-role-switch {
+  border: 1px solid rgba(126, 201, 156, .28);
+  border-radius: 12px;
+  background: rgba(75, 177, 136, .12);
+  color: #9fe0bd;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 9px 13px;
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+
+html[data-skin="new"] .mobile-role-switch:hover {
+  border-color: rgba(126, 201, 156, .5);
+  background: rgba(75, 177, 136, .2);
+  color: var(--path-cream);
 }
 
 /* Medewerkerroute: Mijn uren krijgt dezelfde eigen werkruimte als de bento.
@@ -906,13 +942,22 @@ html[data-skin="new"] .new-bento-day input:disabled { opacity: .55; }
 html[data-skin="new"] .new-bento-presets { display: grid; grid-column: 2; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 3px 27px 2px; }
 html[data-skin="new"] .new-bento-presets button { min-height: 34px; border: 1px solid #d5cab8; border-radius: 9px; background: #fbf8f2; color: #102235; cursor: pointer; font: 600 14px var(--path-sans); }
 html[data-skin="new"] .new-bento-presets button:hover { border-color: #5f9e78; background: #e6efe7; }
-html[data-skin="new"] .new-bento-week-total { display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid #cfc4b2; padding: 15px 5px 10px; }
-html[data-skin="new"] .new-bento-week-total strong { font: 400 22px var(--path-serif); }
+/* Het label mag afbreken, het getal niet: "0,0 uur" brak midden in het bedrag
+   over twee regels zodra het label lang werd ("Totaal · 4 werkdagen in deze
+   maand"). Een getal dat over een regeleinde valt is geen getal meer. */
+html[data-skin="new"] .new-bento-week-total { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; border-top: 1px solid #cfc4b2; padding: 15px 5px 10px; }
+html[data-skin="new"] .new-bento-week-total > span { min-width: 0; }
+html[data-skin="new"] .new-bento-week-total strong { flex: 0 0 auto; font: 400 22px var(--path-serif); white-space: nowrap; }
 html[data-skin="new"] .new-bento-fill-pattern-note { margin: 4px 5px 10px; color: #9aa8ad; font-size: 11px; line-height: 1.5; }
 html[data-skin="new"] .new-bento-week-actions { display: grid; gap: 8px; }
 html[data-skin="new"] .new-bento-week-actions .button { width: 100%; }
 
-html[data-skin="new"] .new-bento-gauge { display: grid; min-height: 315px; grid-column: 3; grid-row: 1; place-items: center; padding: 28px; text-align: center; }
+/* De ring, de balk en het percentage zijn samen één meter. Als grid met
+   place-items:center kreeg elk van de drie een eigen rij die meerekte met de
+   kaarthoogte: de ring bovenaan, het percentage vierhonderd pixels lager, en
+   een leegte ertussen waar niets staat. Een gecentreerde kolom met een vaste
+   tussenruimte houdt ze bij elkaar, hoe hoog de kaart ook wordt. */
+html[data-skin="new"] .new-bento-gauge { display: flex; min-height: 315px; flex-direction: column; align-items: center; justify-content: center; gap: 20px; grid-column: 3; grid-row: 1; padding: 28px; text-align: center; }
 /* Zelfde reden als in styles.css: cijfers die onder elkaar of naast elkaar
    staan moeten dezelfde breedte houden, anders verspringt de kolom zodra een
    1 een 8 wordt. Raakt alleen cijfers, niet de seriffen koppen zelf. */
@@ -1570,12 +1615,25 @@ html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.
   background: #081726;
 }
 
+/* Zes navigatietabs, een statusmelding, demo-herstel, twee vormgevingsknoppen,
+   de maandkiezer, de bel en de avatar passen niet op één regel -- ook niet op
+   1440px. Dat werd eerder opgelost door de hele kop te laten afbreken, met als
+   gevolg dat de merkpil in zijn eentje op een regel belandde en de kop uit twee
+   losse banden leek te bestaan.
+   Nu een bewuste kop in twee lagen: identiteit en navigatie bovenaan,
+   contextbediening eronder. De kop zelf breekt niet meer af (nowrap) en de
+   uitlijning bovenaan zet de merkpil op dezelfde regel als de tabs; alleen de
+   knoppenrij erbinnen wrapt. Dat is een bekende koppatroon en leest als een
+   keuze in plaats van als een ongeluk. */
 html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .topbar {
   border-bottom: 1px solid rgba(255, 255, 255, .09);
   background: #081726;
   box-shadow: none;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  align-items: flex-start;
   row-gap: 8px;
+  padding-top: 14px;
+  padding-bottom: 12px;
 }
 
 /* Zonder de zijbalk (die de sidebar-breedte anders reserveerde) past de hele
@@ -1592,9 +1650,15 @@ html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.
   display: none;
 }
 
+/* De merkpil stond op min-width 210px met een logo van 34px en was daarmee het
+   grootste element in de balk, terwijl het de enige is die niets doet behalve
+   terugbrengen naar de start. Doordat hij zoveel breedte opeiste, brak de rij
+   ernaast af en leek de balk uit twee losse banden te bestaan. Nu meegroeiend
+   met zijn inhoud, zodat merk, navigatie en bediening één rij vormen. */
 html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .mobile-topbar-home {
   display: flex;
-  min-width: 210px;
+  min-width: 0;
+  margin-right: 8px;
 }
 
 html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .mobile-brand-home {
@@ -1610,8 +1674,8 @@ html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.
 }
 
 html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .mobile-brand-home img {
-  width: 34px;
-  height: 34px;
+  width: 26px;
+  height: 26px;
   object-fit: contain;
 }
 
