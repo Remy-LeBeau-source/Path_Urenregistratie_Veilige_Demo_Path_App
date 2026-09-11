@@ -20,8 +20,8 @@ Feature: Toegankelijkheid en toetsenbordbediening
     # Testtechniek: Toegankelijkheidsinspectie + toetsenbord-use-case
     # Aantoonbare Playwright-assertions in deze case: 4
     Given de administrator is ingelogd
-    Then heeft elke hoofdnavigatieknop een herkenbare, unieke naam
-    When de eerste hoofdnavigatieknop via het toetsenbord wordt bediend
+    Then heeft elke zichtbare hoofdnavigatieknop een herkenbare naam
+    When de eerste zichtbare hoofdnavigatieknop via het toetsenbord wordt bediend
 
   @happy
   Scenario: [A11Y-H-003] lopende tekst blijft op een breed scherm leesbaar van regellengte

@@ -26,6 +26,15 @@ Feature: Facturen definitief maken en vergrendelen
     When Backoffice de gefactureerde maand alsnog voor correctie probeert te openen
     Then de definitieve factuur en urenstatus onveranderd blijven
 
+  @happy
+  Scenario: [INV-H-025] een goedgekeurde urenstaat mag terug naar correctie zolang er alleen een niet-vergrendelde conceptfactuur ligt
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given een goedgekeurde urenstaat
+    And een niet-vergrendelde conceptfactuur die er via de echte app nooit kan liggen, maar hier TEST-only wordt neergezet
+    When Backoffice deze maand alsnog voor correctie opent
+    Then blijft de conceptfactuur zelf ongemoeid (nog steeds niet vergrendeld) en wordt de sessie afgesloten
+
   @negative
   Scenario: [INV-N-008] anonieme gebruiker kan factuur niet locken
     # Testtechniek: Beslissingstabel rollen en autorisatie
