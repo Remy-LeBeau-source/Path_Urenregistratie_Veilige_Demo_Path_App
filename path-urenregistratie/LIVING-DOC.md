@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 476 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 477 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 476 unieke case-ID's
+- Playwright executable cases: 477 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 477 unieke case-ID's
+- Totaal executable cases: 478 unieke case-ID's
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29
 - Database steps mappings: 1
-- Uitvoeringen: 512
-- Niet-mobile projectuitvoeringen: 440
+- Uitvoeringen: 513
+- Niet-mobile projectuitvoeringen: 441
 - Mobile functionele cases: 36
 - Pixel 7 / Chromium-uitvoeringen: 36
 - iPhone 13 / WebKit-uitvoeringen: 36
 
-De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 476 Playwright-functionele cases in totaal 512 resultaten op: 440 + (36 x 2) = 512.
+De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 477 Playwright-functionele cases in totaal 513 resultaten op: 441 + (36 x 2) = 513.
 
 ## Documentatieketen
 
@@ -234,13 +234,14 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 476 Playwri
 
 - Feature: `tests/playwright/features/mail-delivery.feature`
 - Source: `tests/playwright/email-queue.spec.ts`
-- Cases: 46
+- Cases: 47
 
 - [EQ-H-001] factuurlock maakt queue-items aan met dry_run=true — Techniek: Toestandsovergang · Assertions: 5
 - [EQ-H-002] broker-channel stuurt alleen de factuur — Techniek: API-contract + equivalentieklasse · Assertions: 2
 - [EQ-H-003] EasySalary-channel heeft attachment_policy none — Techniek: Equivalentieklassen · Assertions: 2
 - [EQ-H-035] submit maakt exact één medewerker-ontvangstmail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 - [EQ-H-036] submit met een geldige urenoverzicht-PDF krijgt attachment_policy=timesheet_receipt — Techniek: Equivalentieklassen · Assertions: 4
+- [EQ-H-040] de urenoverzicht-PDF blijft compact: een volledige maand op één pagina — Techniek: Equivalentieklassen · Assertions: 5
 - [EQ-H-037] goedkeuren maakt exact één definitieve-goedkeuringsmail — Techniek: Toestandsovergang · Assertions: 7
 - [EQ-H-038] herindienen na correctie maakt een eigen, tweede ontvangstmail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [EQ-H-022] één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie — Techniek: API-contract + equivalentieklasse · Assertions: 14
@@ -458,7 +459,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 476 Playwri
 - [PWD-H-014] wachtwoord-vergeten op het inlogscherm verraadt niet welke e-mailadressen bestaan — Techniek: API-contract + equivalentieklasse · Assertions: 11
 - [PWD-N-015] het resetscherm neemt het ingevulde adres over, weigert een leeg adres en laat terugkeren naar inloggen — Techniek: Toestandsovergang · Assertions: 10
 - [PWD-N-016] productie toont nooit dry-run-jargon aan iemand die zijn wachtwoord kwijt is — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 7
-- [PWD-H-017] een uitnodigingslink opent het wachtwoordscherm, ook als er al iemand is ingelogd — Techniek: API-contract + equivalentieklasse · Assertions: 8
+- [PWD-H-017] een uitnodigingslink opent het wachtwoordscherm, ook als er al iemand is ingelogd — Techniek: API-contract + equivalentieklasse · Assertions: 10
 - [PWD-H-018] de accountuitnodiging gebruikt een aanpasbare welkomsttekst met een vaste afzender-handtekening — Techniek: API-contract + equivalentieklasse · Assertions: 8
 - [PWD-H-019] een beheerder mag dezelfde persoon meerdere keren achter elkaar uitnodigen, de publieke wachtwoord-vergeten blijft begrensd — Techniek: API-contract + equivalentieklasse · Assertions: 6
 

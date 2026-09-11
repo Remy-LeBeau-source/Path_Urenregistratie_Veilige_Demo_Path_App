@@ -168,6 +168,7 @@
 | EQ-H-003 | api | mail-delivery.feature | EasySalary-channel heeft attachment_policy none | Equivalentieklassen | 2 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | EasySalary-channel heeft attachment_policy none | Happy | 12 | Actueel |
 | EQ-H-035 | api | mail-delivery.feature | submit maakt exact één medewerker-ontvangstmail | Beslissingstabel rollen en autorisatie | 6 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | submit maakt exact één medewerker-ontvangstmail | Happy | 12 | Actueel |
 | EQ-H-036 | api | mail-delivery.feature | submit met een geldige urenoverzicht-PDF krijgt attachment_policy=timesheet_receipt | Equivalentieklassen | 4 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | submit met een geldige urenoverzicht-PDF krijgt attachment_policy=timesheet_receipt | Happy | 12 | Actueel |
+| EQ-H-040 | api | mail-delivery.feature | de urenoverzicht-PDF blijft compact: een volledige maand op één pagina | Equivalentieklassen | 5 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | de urenoverzicht-PDF blijft compact: een volledige maand op één pagina | Happy | 12 | Actueel |
 | EQ-H-037 | api | mail-delivery.feature | goedkeuren maakt exact één definitieve-goedkeuringsmail | Toestandsovergang | 7 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | goedkeuren maakt exact één definitieve-goedkeuringsmail | Happy | 12 | Actueel |
 | EQ-H-038 | api | mail-delivery.feature | herindienen na correctie maakt een eigen, tweede ontvangstmail | Beslissingstabel rollen en autorisatie | 8 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | herindienen na correctie maakt een eigen, tweede ontvangstmail | Happy | 12 | Actueel |
 | EQ-H-022 | api | mail-delivery.feature | één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie | API-contract + equivalentieklasse | 14 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie | Happy | 12 | Actueel |
@@ -329,7 +330,7 @@
 | PWD-H-014 | security | password-reset.feature | wachtwoord-vergeten op het inlogscherm verraadt niet welke e-mailadressen bestaan | API-contract + equivalentieklasse | 11 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
 | PWD-N-015 | security | password-reset.feature | het resetscherm neemt het ingevulde adres over, weigert een leeg adres en laat terugkeren naar inloggen | Toestandsovergang | 10 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
 | PWD-N-016 | security | password-reset.feature | productie toont nooit dry-run-jargon aan iemand die zijn wachtwoord kwijt is | Negatieve equivalentieklasse + error guessing | 7 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
-| PWD-H-017 | security | password-reset.feature | een uitnodigingslink opent het wachtwoordscherm, ook als er al iemand is ingelogd | API-contract + equivalentieklasse | 8 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
+| PWD-H-017 | security | password-reset.feature | een uitnodigingslink opent het wachtwoordscherm, ook als er al iemand is ingelogd | API-contract + equivalentieklasse | 10 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
 | PWD-H-018 | security | password-reset.feature | de accountuitnodiging gebruikt een aanpasbare welkomsttekst met een vaste afzender-handtekening | API-contract + equivalentieklasse | 8 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
 | PWD-H-019 | security | password-reset.feature | een beheerder mag dezelfde persoon meerdere keren achter elkaar uitnodigen, de publieke wachtwoord-vergeten blijft begrensd | API-contract + equivalentieklasse | 6 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
 | PILOT-H-001 | ui | pilot-page.feature | beide pilotpagina’s leven naast een ongewijzigde app | End-to-end use-case + visuele contractasserties | 10 | pilot-page.steps.ts | pilot-page.spec.ts | UI Desktop | 1919 Pilot | beide pilotpagina’s leven naast een ongewijzigde app | Happy | 18 | Actueel |
@@ -498,9 +499,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 476
+- Playwright executable cases: 477
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 477
+- Totaal unieke executable cases: 478
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29

@@ -780,6 +780,24 @@ test.describe('password reset api', () => {
       await expect(page).not.toHaveURL(/reset-password=/);
     });
 
+    // R18/E2E-H-024: initializeAuthSession()'s asynchrone /auth/me-check treft
+    // hier nog de sessie van de ingelogde beheerder aan en zette vroeger zelf
+    // opnieuw state.currentRole, waardoor de latere showPasswordResetForm()-
+    // aanroep zichzelf via logoutLocal() ondermijnde (hash-reset/picker-
+    // herbouw) net op het moment dat het formulier gebruikt wordt. Bewuste
+    // wachttijd zodat die asynchrone check de kans krijgt af te ronden vóórdat
+    // hier ingevuld/verzonden wordt -- zonder de fix in initializeAuthSession()
+    // (assets/app.js) zou dit de klik kunnen missen of de pagina resetten.
+    await test.step('And het formulier daadwerkelijk invullen en versturen lukt, ondanks de nog lopende sessiecheck', async () => {
+      await page.waitForTimeout(1_000);
+      await expect(page.locator('#auth-reset-complete-form'), 'moet zichtbaar blijven na de asynchrone sessiecheck').toBeVisible();
+      const nieuwWachtwoord = `UitnodigingNa!${uniek}`;
+      await page.locator('#auth-reset-new-password').fill(nieuwWachtwoord);
+      await page.locator('#auth-reset-confirm-password').fill(nieuwWachtwoord);
+      await page.locator('#auth-reset-complete-submit').click();
+      await expect(page.locator('#auth-reset-complete-feedback')).toContainText('Je wachtwoord is ingesteld');
+    });
+
     await auth.logout();
     await ctx.dispose();
   });

@@ -81,6 +81,7 @@ Then("krijgt die een bruikbare instructie zonder jargon of nep-token");
 Given("een uitgenodigde collega met een geldige eenmalige link");
 When("de beheerder ingelogd blijft en de link in dezelfde browser opent");
 Then("verschijnt het wachtwoordscherm en niet het dashboard");
+And("het formulier daadwerkelijk invullen en versturen lukt, ondanks de nog lopende sessiecheck");
 When("een beheerder de tekst bij Instellingen wil aanpassen");
 Then("wordt met Playwright-assertions bevestigd dat de accountuitnodiging gebruikt een aanpasbare welkomsttekst met een vaste afzender-handtekening");
 Given("een nieuwe medewerker met een verstuurde uitnodiging");

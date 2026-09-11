@@ -414,6 +414,46 @@ test.describe('email queue api', () => {
     await ctx.dispose();
   });
 
+  test('[EQ-H-040] de urenoverzicht-PDF blijft compact: een volledige maand op één pagina', async ({ page }) => {
+    // Gebruikersfeedback (11 sep, echte mail-screenshots): de bijlage besloeg
+    // twee pagina's voor één maand. buildTimesheetReceiptPdfBase64() (assets/app.js)
+    // is een pure functie -- rechtstreeks aanroepen in de browser levert dezelfde
+    // bytes op als een echte indiening, zonder een hele submit-cyclus nodig te
+    // hebben. Ruwe PDF-tekst is leesbaar omdat jsPDF hier zonder compressie draait.
+    await page.goto('/');
+    await page.waitForFunction(() => typeof (window as unknown as Record<string, unknown>).buildTimesheetReceiptPdfBase64 === 'function');
+
+    const base64 = await page.evaluate(() => {
+      type Day = { iso: string; label: string } | null;
+      const mkDay = (iso: string, label: string): Day => ({ iso, label });
+      const weekRows = [
+        { number: 36, year: 2026, days: [null, mkDay('2026-09-01', '1 sep'), mkDay('2026-09-02', '2 sep'), mkDay('2026-09-03', '3 sep'), mkDay('2026-09-04', '4 sep')] },
+        { number: 37, year: 2026, days: [mkDay('2026-09-07', '7 sep'), mkDay('2026-09-08', '8 sep'), mkDay('2026-09-09', '9 sep'), mkDay('2026-09-10', '10 sep'), mkDay('2026-09-11', '11 sep')] },
+        { number: 38, year: 2026, days: [mkDay('2026-09-14', '14 sep'), mkDay('2026-09-15', '15 sep'), mkDay('2026-09-16', '16 sep'), mkDay('2026-09-17', '17 sep'), mkDay('2026-09-18', '18 sep')] },
+        { number: 39, year: 2026, days: [mkDay('2026-09-21', '21 sep'), mkDay('2026-09-22', '22 sep'), mkDay('2026-09-23', '23 sep'), mkDay('2026-09-24', '24 sep'), mkDay('2026-09-25', '25 sep')] },
+        { number: 40, year: 2026, days: [mkDay('2026-09-28', '28 sep'), mkDay('2026-09-29', '29 sep'), mkDay('2026-09-30', '30 sep'), null, null] },
+      ];
+      const period = { key: '2026-09', label: 'September 2026', weekRows };
+      const employee = { name: 'EQ-H-040 Testpersoon', client: 'Testklant', role: 'Tester' };
+      const entries = weekRows.map((week, wi) => week.days.map((_d, di) => (wi === 1 ? 9 : wi === 4 && di < 3 ? 8 : 0)));
+      const confirmedEntries = entries.map(week => week.map(() => true));
+      const record = { entries, confirmedEntries };
+      const w = window as unknown as { buildTimesheetReceiptPdfBase64: (e: unknown, p: unknown, r: unknown) => string | null };
+      return w.buildTimesheetReceiptPdfBase64(employee, period, record);
+    });
+
+    expect(base64, 'jsPDF moet geladen zijn en een bijlage opleveren').toBeTruthy();
+    const raw = Buffer.from(String(base64), 'base64').toString('latin1');
+
+    const pageObjectCount = (raw.match(/\/Type\s*\/Page[^s]/g) || []).length;
+    expect(pageObjectCount, 'een volledige maand (5 weken) hoort op één pagina te passen').toBe(1);
+    for (const weekNumber of [36, 37, 38, 39, 40]) {
+      expect(raw, `Week ${weekNumber} moet in de PDF staan`).toContain(`Week ${weekNumber}`);
+    }
+    expect(raw).toContain('Totaal');
+    expect(raw).toContain('Robot Path IT');
+  });
+
   test('[EQ-H-037] goedkeuren maakt exact één definitieve-goedkeuringsmail', async () => {
     const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
     const authApi = new AuthApi(ctx);
