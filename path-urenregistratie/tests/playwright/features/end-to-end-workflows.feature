@@ -214,6 +214,14 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
     When Backoffice een eigen standaardtekst invoert en de keten afrondt
     Then zet Terug naar de meegeleverde tekst de eigen tekst weer weg
 
+  @happy
+  Scenario: [E2E-H-029] de urenoverzicht-ontvangst- en goedkeuringsmail zijn nu ook aanpasbaar bij Instellingen
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given bedrijfsketens van medewerker tot Backoffice is voorbereid
+    When de flow voor E2E-H-029 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat de urenoverzicht-ontvangst- en goedkeuringsmail zijn nu ook aanpasbaar bij Instellingen
+
   @negative
   Scenario: [E2E-N-021] een gedeactiveerd account met historie blijft veilig bewaard en legt de blokkeerreden uit
     # Testtechniek: Toestandsovergang

@@ -8745,11 +8745,23 @@ function standaardTekstBlok(kanaal) {
 // eigen onderdeel en niet in de uitklapper per ontvanger -- dat zou suggereren
 // dat je hem voor die ene ontvanger aanpast.
 const MAIL_KANAAL_NAMEN = {
+  timesheet_submission_receipt: "Urenoverzicht (ontvangstmail na indienen)",
+  timesheet_final_approval: "Uren goedgekeurd (bevestigingsmail)",
   broker: "Broker",
   accountant: "Boekhouding",
   payroll: "Salarisadministratie",
   other: "Overig",
   account_invitation: "Accountuitnodiging"
+};
+
+// Welke {velden} elk kanaal daadwerkelijk kent (server/mail/queue.php's eigen
+// $vars per kanaal). Een onbekend veld in een eigen tekst laat de mail niet
+// stil een lege plek tonen -- mail_assert_vars() blokkeert de verzending dan
+// hard. Alleen voor de twee nieuwe (11 sep) kanalen een hint: de vijf overige
+// hadden dit al zonder hint en dat bewust niet in dezelfde beurt aanpassen.
+const MAIL_KANAAL_VELDEN = {
+  timesheet_submission_receipt: "{medewerker}, {periode}, {uren}",
+  timesheet_final_approval: "{medewerker}, {periode}, {uren}"
 };
 
 function renderMailChannelTemplates() {
@@ -8768,12 +8780,14 @@ function renderMailChannelTemplates() {
     const geldt = mailStandaardTeksten[kanaal] || { subject: "", body: "" };
     const meegeleverd = mailMeegeleverdeTeksten[kanaal] || { subject: "", body: "" };
     const eigen = mailEigenTeksten.indexOf(kanaal) >= 0;
+    const velden = MAIL_KANAAL_VELDEN[kanaal];
     return '<article class="mail-channel-template" data-mail-channel="' + escapeHtml(kanaal) + '">' +
       '<div><strong>' + escapeHtml(MAIL_KANAAL_NAMEN[kanaal]) + '</strong>' +
         '<small>' + (eigen ? "Eigen tekst ingesteld" : "Standaardtekst zoals meegeleverd") + '</small></div>' +
       '<label class="route-template full">Onderwerp<input type="text" data-mail-channel-subject="' + escapeHtml(kanaal) + '" value="' + escapeHtml(geldt.subject || "") + '"></label>' +
       '<label class="route-template full">Begeleidende tekst<textarea rows="10" data-mail-channel-body="' + escapeHtml(kanaal) + '">' + escapeHtml(geldt.body || "") + '</textarea></label>' +
       '<p class="form-help full">De handtekening komt er automatisch onder. Leeg laten kan ook: dan geldt de meegeleverde tekst.</p>' +
+      (velden ? '<p class="form-help full">Beschikbare velden: ' + escapeHtml(velden) + '</p>' : "") +
       (eigen ? '<button class="text-button" type="button" data-mail-channel-reset="' + escapeHtml(kanaal) + '">Terug naar de meegeleverde tekst</button>' : "") +
     '</article>';
   }).join("");

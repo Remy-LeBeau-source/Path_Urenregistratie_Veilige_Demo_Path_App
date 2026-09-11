@@ -566,3 +566,59 @@ test('[E2E-H-025] een aangepaste standaardtekst werkt in de echte mail en is via
       'na herstel mag er geen eigen standaardtekst meer vastliggen').toBe(false);
   });
 });
+
+test('[E2E-H-029] de urenoverzicht-ontvangst- en goedkeuringsmail zijn nu ook aanpasbaar bij Instellingen', async ({ page }) => {
+  // De backend ondersteunde deze twee kanalen al generiek (mail_channel_templates_for()
+  // leest élk kanaal uit MAIL_CHANNEL_TEMPLATES) -- alleen MAIL_KANAAL_NAMEN in
+  // assets/app.js liet ze nooit zien in de editor. Deze case bewijst alleen het
+  // nieuwe stuk (de twee kanalen verschijnen en zijn opslaanbaar); het generieke
+  // typ/opslaan/herstel-mechanisme zelf bewijst E2E-H-025 al voor "accountant".
+  test.setTimeout(120_000);
+  const loginPage = new LoginPage(page);
+  const uniek = `${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 900 + 100)}`;
+  const eigenTekst = `Eigen urenoverzichtstekst ${uniek}`;
+
+  await loginPage.open();
+  await loginPage.loginAsAdmin();
+  await page.locator('button[data-view="settings"]').click();
+
+  const veld = page.locator('[data-mail-channel-body="timesheet_submission_receipt"]');
+  await openInstellingenPaneel(page, veld);
+  await expect(veld, 'het urenoverzicht-kanaal hoort nu in de editor te staan').toBeVisible({ timeout: 15_000 });
+  const meegeleverd = await veld.inputValue();
+  expect(meegeleverd.trim(), 'er hoort een meegeleverde tekst te staan').not.toBe('');
+  await expect(page.locator('[data-mail-channel-body="timesheet_final_approval"]'),
+    'de goedkeuringsmail hoort ook te verschijnen').toBeVisible();
+
+  await expect(async () => {
+    await veld.fill(eigenTekst);
+    await expect(veld).toHaveValue(eigenTekst, { timeout: 1_000 });
+  }).toPass({ timeout: 20_000, intervals: [250, 500, 1_000] });
+
+  const schrijf = page.waitForResponse(response =>
+    response.url().includes('/server/api/settings.php') && response.request().method() === 'POST');
+  await page.locator('#save-settings').click();
+  const opslag = await schrijf;
+  expect(opslag.ok(), 'het opslaan hoort te slagen').toBe(true);
+
+  const bootstrap = await (await page.request.get('/server/api/bootstrap.php')).json() as Json;
+  const aangepast = (bootstrap.mail_channel_customised as string[]) || [];
+  expect(aangepast.includes('timesheet_submission_receipt'),
+    'de server hoort de eigen tekst te hebben vastgelegd').toBe(true);
+
+  // Opruimen: terug naar de meegeleverde tekst, anders houdt een volgende run
+  // (of EQ-H-041/EQ-H-042, die op de meegeleverde body_snapshot rekenen) een
+  // vervuilde staat over.
+  await page.reload();
+  await page.locator('button[data-view="settings"]').click();
+  await openInstellingenPaneel(page, page.locator('[data-mail-channel-body="timesheet_submission_receipt"]'));
+  await page.locator('[data-mail-channel-reset="timesheet_submission_receipt"]').click();
+  const opruimSchrijf = page.waitForResponse(response =>
+    response.url().includes('/server/api/settings.php') && response.request().method() === 'POST');
+  await page.locator('#save-settings').click();
+  await opruimSchrijf;
+
+  const naOpruimen = await (await page.request.get('/server/api/bootstrap.php')).json() as Json;
+  expect(((naOpruimen.mail_channel_customised as string[]) || []).includes('timesheet_submission_receipt'),
+    'na opruimen mag er geen eigen tekst meer vastliggen').toBe(false);
+});

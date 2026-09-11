@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 479 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 480 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 479 unieke case-ID's
+- Playwright executable cases: 480 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 480 unieke case-ID's
+- Totaal executable cases: 481 unieke case-ID's
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29
 - Database steps mappings: 1
-- Uitvoeringen: 515
-- Niet-mobile projectuitvoeringen: 443
+- Uitvoeringen: 516
+- Niet-mobile projectuitvoeringen: 444
 - Mobile functionele cases: 36
 - Pixel 7 / Chromium-uitvoeringen: 36
 - iPhone 13 / WebKit-uitvoeringen: 36
 
-De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 479 Playwright-functionele cases in totaal 515 resultaten op: 443 + (36 x 2) = 515.
+De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 480 Playwright-functionele cases in totaal 516 resultaten op: 444 + (36 x 2) = 516.
 
 ## Documentatieketen
 
@@ -123,7 +123,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 479 Playwri
 
 - Feature: `tests/playwright/features/end-to-end-workflows.feature`
 - Source: `tests/playwright/business-workflows-*.spec.ts`
-- Cases: 24
+- Cases: 25
 
 - [E2E-H-018] iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF — Techniek: Equivalentieklassen · Assertions: 27
 - [E2E-N-020] een medewerker kan de Backoffice-keten niet uitvoeren en een weigering verandert niets — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 26
@@ -147,6 +147,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 479 Playwri
 - [E2E-H-023] twee nieuw toegevoegde ontvangers krijgen via de volledige GUI-keten ieder hun eigen factuurmail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
 - [E2E-H-024] een nieuw account krijgt via de GUI toegang en zijn eigen tekst komt letterlijk in de verzonden mail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 21
 - [E2E-H-025] een aangepaste standaardtekst werkt in de echte mail en is via de GUI terug te zetten — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 15
+- [E2E-H-029] de urenoverzicht-ontvangst- en goedkeuringsmail zijn nu ook aanpasbaar bij Instellingen — Techniek: Toestandsovergang · Assertions: 8
 - [E2E-N-021] een gedeactiveerd account met historie blijft veilig bewaard en legt de blokkeerreden uit — Techniek: Toestandsovergang · Assertions: 20
 - [E2E-H-017] de volledige toegestane urenstatusketen bewaakt na iedere write status, eigenaar en taak — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 18
 

@@ -109,6 +109,8 @@ Given("Backoffice de standaardtekst voor Boekhouding opent");
 When("Backoffice zonder wijziging opslaat, is er geen eigen tekst vastgelegd");
 When("Backoffice een eigen standaardtekst invoert en de keten afrondt");
 Then("zet Terug naar de meegeleverde tekst de eigen tekst weer weg");
+When("de flow voor E2E-H-029 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat de urenoverzicht-ontvangst- en goedkeuringsmail zijn nu ook aanpasbaar bij Instellingen");
 Given("een medewerker met echte uren-, login- en auditgeschiedenis");
 When("Backoffice de medewerker deactiveert");
 Then("kan het account niet meer inloggen en staat het niet in de actieve lijst");
