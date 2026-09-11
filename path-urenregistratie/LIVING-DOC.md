@@ -76,7 +76,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 479 Playwri
 - [ADM-WR-H-015] onderwerp, tekst en een eigen tekst per ontvanger blijven na F5 in het scherm staan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [ADM-WR-H-016] de routevinkjes van een opdracht blijven na opslaan en F5 staan zoals gezet — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 3
 - [ADM-WR-H-021] een sprong via de Instellingen-sectienavigatie laat de kop van die sectie echt zien, niet verstopt onder de topbalk — Techniek: API-contract + equivalentieklasse · Assertions: 3
-- [ADM-WR-H-022] "Open werkvoorraad" op het dashboard springt naar een paneel dat niet verstopt onder de topbalk — Techniek: API-contract + equivalentieklasse · Assertions: 3
+- [ADM-WR-H-022] "Open werkvoorraad" op het dashboard springt naar een paneel dat niet verstopt onder de topbalk — Techniek: API-contract + equivalentieklasse · Assertions: 4
 
 ### Auditlog en traceerbaarheid
 
@@ -178,18 +178,31 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 479 Playwri
 ### Dashboard en open werkvoorraad
 
 - Feature: `tests/playwright/features/dashboard.feature`
-- Source: `tests/playwright/dashboard.spec.ts`
+- Source: `tests/playwright/dashboard*.spec.ts`
 - Cases: 38
 
-- [DASH-H-001] admin dashboard opent zonder console errors — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [DASH-H-002] employee dashboard opent zonder console errors — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 1
-- [DASH-H-018] elke login en elke Dashboard-klik opent de actuele maand; een handmatige maand blijft alleen op andere schermen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 29
 - [DASH-H-025] "Mijn maanden" toont naast de urenstatus ook de klanturenstaat-status per maand — Techniek: Toestandsovergang · Assertions: 7
 - [DASH-H-021] de medewerker keert zowel via Dashboard als via Mijn uren terug naar de actuele maand na een blik op een oudere maand — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 10
 - [DASH-N-023] een medewerker kan niet naar een maand vóór de eigen indiensttreding bladeren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [DASH-N-024] een lokaal record van vóór indiensttreding verschijnt niet in Mijn maanden — Techniek: Toestandsovergang · Assertions: 2
 - [DASH-N-025] een gekozen klanturenstaat-bestand blijft niet hangen na een gewone maandwissel — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 3
 - [DASH-N-021] een lege oudere maand openen voegt geen fantoom-open-acties toe en houdt de kalendermaand in beeld — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 10
+- [DASH-N-009] medewerker teller blijft stabiel bij aug-juli-aug en dashboard triggert geen verborgen timesheet-read — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
+- [DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakiezer blijft leesbaar — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
+- [DASH-H-004] terugkeren naar medewerkerdashboard ververst de uren en behoudt maandlabels bij themawissel — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
+- [DASH-H-005] medewerker ziet open maanden compact en kan direct naar de juiste maand springen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
+- [DASH-H-014] medewerker krijgt de eerstvolgende concrete actie met juiste maand en taakroute — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 22
+- [DASH-N-015] medewerkerprioriteit kiest correctie boven document en toont niets als alles klaar is — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 15
+- [DASH-N-016] correctieactie ververst een verborgen rooster uit een eerdere maand — Techniek: Toestandsovergang · Assertions: 11
+- [DASH-N-018] medewerkerdashboard toont een laadtoestand tot de eerste werkvoorraad-sync — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
+- [DASH-H-006] medewerker mag tot 2 jaar vooruitkijken zonder fantoom-werkactie, maar niet verder — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
+- [DASH-H-007] september toont alleen historie vanaf de persoonlijke startmaand, en oktober blijft geen werkactie ondanks dat vooruitkijken nu mag — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 9
+- [DASH-H-024] startdatum verbergt procesmaand zonder uren of klanturenstaatactie te wissen — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 13
+- [DASH-H-023] medewerker kan met de browser-terug/-vooruit-knop door alle eigen schermen navigeren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
+- [DASH-N-026] het medewerkerdashboard blijft nooit op "Werkvoorraad laden" hangen, ook niet als de eerste serversync faalt — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
+- [DASH-H-001] admin dashboard opent zonder console errors — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
+- [DASH-H-018] elke login en elke Dashboard-klik opent de actuele maand; een handmatige maand blijft alleen op andere schermen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 29
 - [DASH-N-022] een medewerker met een toekomstige startdatum verschijnt niet in Teamstatus of Klanturenstaten vóór indiensttreding — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad niet — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 1
 - [DASH-N-008] voorbeeldgegevens herstellen houdt alle werkvoorraadtellers gelijk — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
@@ -197,27 +210,14 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 479 Playwri
 - [DASH-N-011] afgeronde Backoffice-taak en teller blijven na F5 stabiel, ongeacht het beginaantal — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 9
 - [DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker en Backoffice — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 24
 - [DASH-N-012] afgeronde verzendcontrole blijft na F5 weg, ongeacht het beginaantal — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
-- [DASH-N-009] medewerker teller blijft stabiel bij aug-juli-aug en dashboard triggert geen verborgen timesheet-read — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
 - [DASH-H-012] GUI-smoke scheidt werkacties van medewerkers- en beheerdersaccounts — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 35
-- [DASH-H-013] dashboardmodules tonen compacte documenten, procesfasen en teamacties — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
-- [DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakiezer blijft leesbaar — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
-- [DASH-H-004] terugkeren naar medewerkerdashboard ververst de uren en behoudt maandlabels bij themawissel — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
-- [DASH-H-005] medewerker ziet open maanden compact en kan direct naar de juiste maand springen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
-- [DASH-H-014] medewerker krijgt de eerstvolgende concrete actie met juiste maand en taakroute — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 22
-- [DASH-N-015] medewerkerprioriteit kiest correctie boven document en toont niets als alles klaar is — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 15
-- [DASH-N-016] correctieactie ververst een verborgen rooster uit een eerdere maand — Techniek: Toestandsovergang · Assertions: 11
+- [DASH-H-013] dashboardmodules tonen compacte documenten, procesfasen en teamacties — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 14
 - [DASH-N-017] beheerderdashboard toont een laadtoestand tot de eerste werkvoorraad-sync — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 7
-- [DASH-N-018] medewerkerdashboard toont een laadtoestand tot de eerste werkvoorraad-sync — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
-- [DASH-H-006] medewerker mag tot 2 jaar vooruitkijken zonder fantoom-werkactie, maar niet verder — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
-- [DASH-H-007] september toont alleen historie vanaf de persoonlijke startmaand, en oktober blijft geen werkactie ondanks dat vooruitkijken nu mag — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 9
-- [DASH-H-024] startdatum verbergt procesmaand zonder uren of klanturenstaatactie te wissen — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 13
 - [DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels — Techniek: Equivalentieklassen · Assertions: 30
 - [DASH-H-019] werkvoorraadhydratatie negeert toekomstperioden en begrenst parallelle reads — Techniek: Equivalentieklassen · Assertions: 6
 - [DASH-H-020] de actieteller benoemt dat de rij over alle maanden loopt — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 7
-- [DASH-N-019] een achtergrond-hertekening sluit het geopende profielmenu niet — Techniek: Toestandsovergang · Assertions: 10
+- [DASH-N-019] een achtergrond-hertekening sluit het geopende profielmenu niet — Techniek: Toestandsovergang · Assertions: 6
 - [DASH-H-022] beheerder kan met de browser-terug/-vooruit-knop door alle eigen schermen navigeren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
-- [DASH-H-023] medewerker kan met de browser-terug/-vooruit-knop door alle eigen schermen navigeren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
-- [DASH-N-026] het medewerkerdashboard blijft nooit op "Werkvoorraad laden" hangen, ook niet als de eerste serversync faalt — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
 - [DASH-N-027] het profielmenu verbergt "Ander account of rol" bij een echte login — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 
 ### Relationele database-integriteit
@@ -259,7 +259,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 479 Playwri
 - [EQ-N-024] buiten de beveiligde TEST-sandbox is geen mailschakelaar beschikbaar — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
 - [EQ-N-035] medewerker ziet de mailstatus-badge niet permanent op "laden" hangen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2
 - [EQ-N-017] niet-beschikbare acceptatieconsole blijft volledig uit beeld — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
-- [EQ-H-020] Backoffice finaliseert de branded serverfactuur en verzendt drie echte TEST-mails — Techniek: API-contract + equivalentieklasse · Assertions: 18
+- [EQ-H-020] Backoffice finaliseert de branded serverfactuur en verzendt drie echte TEST-mails — Techniek: API-contract + equivalentieklasse · Assertions: 19
 - [EQ-H-026] Backoffice verzendt de juiste officiële klanturenstaat via TEST naar Giovanno — Techniek: API-contract + equivalentieklasse · Assertions: 8
 - [EQ-N-034] ontbrekende factuurroute geeft een actiegerichte melding i.p.v. de kale servertekst — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
 - [EQ-N-021] factuurverzending blijft dicht zolang de serveruren niet zijn goedgekeurd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
@@ -374,7 +374,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 479 Playwri
 - Cases: 25
 
 - [MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikbaar — Techniek: Responsive viewport + end-to-end use-case · Assertions: 31
-- [MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documentupload bereiken — Techniek: Responsive viewport + end-to-end use-case · Assertions: 18
+- [MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documentupload bereiken — Techniek: Responsive viewport + end-to-end use-case · Assertions: 19
 - [MOB-H-003] mobiele correctie herindiening en administratieve goedkeuring zijn bereikbaar — Techniek: Responsive viewport + end-to-end use-case · Assertions: 10
 - [MOB-N-004] mobiele facturen touch targets en modals blijven binnen viewport — Techniek: Responsive viewport + end-to-end use-case · Assertions: 13
 - [MOB-H-005] mobiele verzendadministratie blijft leesbaar en toont geen geheime inhoud — Techniek: Responsive viewport + end-to-end use-case · Assertions: 15
@@ -397,7 +397,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 479 Playwri
 - [MOB-H-022] de mobiele Home-knop zet de maandkiezer terug op de actuele maand — Techniek: Responsive viewport + end-to-end use-case · Assertions: 6
 - [MOB-H-023] het sluitkruisje van een lange dialoog blijft op de telefoon in beeld — Techniek: Responsive viewport + end-to-end use-case · Assertions: 19
 - [MOB-H-024] een net ingelogde medewerker ziet op de telefoon een volledig geladen dashboard, ook als de eerste sync-afronding hapert — Techniek: Responsive viewport + end-to-end use-case · Assertions: 7
-- [MOB-H-025] elke .segmented-control krijgt een schuifbalk-indicator zodra hij écht overloopt, generiek voor de hele app — Techniek: Responsive viewport + end-to-end use-case · Assertions: 5
+- [MOB-H-025] elke .segmented-control krijgt een schuifrand zodra hij écht overloopt, generiek voor de hele app — Techniek: Responsive viewport + end-to-end use-case · Assertions: 6
 
 ### Meldingen beheren
 

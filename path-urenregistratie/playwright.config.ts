@@ -70,19 +70,26 @@ export default defineConfig({
       },
       testIgnore: ['**/mobile-ui.spec.ts'],
     },
+    // De mobiele projecten draaien een vaste lijst bestanden i.p.v. alles.
+    // Let op het patroon dashboard*.spec.ts: toen dashboard.spec.ts werd
+    // opgeknipt in een beheer- en een medewerkerdeel, viel het nieuwe bestand
+    // buiten een letterlijke '**/dashboard.spec.ts' en verloor het stilzwijgend
+    // zijn mobiele dekking -- 40 cases weg zonder dat er iets rood werd. Het
+    // patroon dekt nu de hele familie, zodat een volgende splitsing dat niet
+    // opnieuw veroorzaakt.
     {
       name: 'mobile-chrome',
       use: {
         ...devices['Pixel 7'],
       },
-      testMatch: ['**/mobile-ui.spec.ts', '**/skin.spec.ts', '**/business-workflows-*.spec.ts', '**/dashboard.spec.ts', '**/help-widget.spec.ts', '**/accessibility.spec.ts', '**/auth.spec.ts', '**/invoices.spec.ts', '**/pilot-page.spec.ts', '**/timesheet-review-ui.spec.ts'],
+      testMatch: ['**/mobile-ui.spec.ts', '**/skin.spec.ts', '**/business-workflows-*.spec.ts', '**/dashboard*.spec.ts', '**/help-widget.spec.ts', '**/accessibility.spec.ts', '**/auth.spec.ts', '**/invoices.spec.ts', '**/pilot-page.spec.ts', '**/timesheet-review-ui.spec.ts'],
     },
     {
       name: 'mobile-safari',
       use: {
         ...devices['iPhone 13'],
       },
-      testMatch: ['**/mobile-ui.spec.ts', '**/skin.spec.ts', '**/business-workflows-*.spec.ts', '**/dashboard.spec.ts', '**/help-widget.spec.ts', '**/accessibility.spec.ts', '**/auth.spec.ts', '**/invoices.spec.ts', '**/pilot-page.spec.ts', '**/timesheet-review-ui.spec.ts'],
+      testMatch: ['**/mobile-ui.spec.ts', '**/skin.spec.ts', '**/business-workflows-*.spec.ts', '**/dashboard*.spec.ts', '**/help-widget.spec.ts', '**/accessibility.spec.ts', '**/auth.spec.ts', '**/invoices.spec.ts', '**/pilot-page.spec.ts', '**/timesheet-review-ui.spec.ts'],
     },
   ],
 });

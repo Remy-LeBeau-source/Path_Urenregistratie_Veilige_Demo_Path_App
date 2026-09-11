@@ -242,7 +242,7 @@ Feature: Organisatie-instellingen beheren
   @happy
   Scenario: [ADM-WR-H-022] "Open werkvoorraad" op het dashboard springt naar een paneel dat niet verstopt onder de topbalk
     # Testtechniek: API-contract + equivalentieklasse
-    # Aantoonbare Playwright-assertions in deze case: 3
+    # Aantoonbare Playwright-assertions in deze case: 4
     Given organisatie-instellingen beheren is voorbereid
     When de flow voor ADM-WR-H-022 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat "Open werkvoorraad" op het dashboard springt naar een paneel dat niet verstopt onder de topbalk

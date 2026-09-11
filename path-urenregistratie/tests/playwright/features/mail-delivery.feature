@@ -202,7 +202,7 @@ Feature: Mailroutering en aflevering
   @happy
   Scenario: [EQ-H-020] Backoffice finaliseert de branded serverfactuur en verzendt drie echte TEST-mails
     # Testtechniek: API-contract + equivalentieklasse
-    # Aantoonbare Playwright-assertions in deze case: 18
+    # Aantoonbare Playwright-assertions in deze case: 19
     Given een goedgekeurde maar nog niet definitieve serverfactuur als Backoffice-taak klaarstaat
     When Backoffice de verzending één keer afrondt
     Then wordt eerst gelockt, niet te vroeg gequeued en verdwijnt de afgeronde vervolgtaak

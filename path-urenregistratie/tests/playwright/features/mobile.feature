@@ -18,7 +18,7 @@ Feature: Mobiele gebruikerservaring
   @happy
   Scenario: [MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documentupload bereiken
     # Testtechniek: Responsive viewport + end-to-end use-case
-    # Aantoonbare Playwright-assertions in deze case: 18
+    # Aantoonbare Playwright-assertions in deze case: 19
     Given een medewerker met een mobiele schrijfbare maand
     When uren als concept worden gewijzigd en daarna ingediend
     Then klanturenstaat en notificaties blijven mobiel bereikbaar
@@ -212,9 +212,9 @@ Feature: Mobiele gebruikerservaring
     Then staat er nergens meer een laadtekst en is het dashboard bruikbaar
 
   @happy
-  Scenario: [MOB-H-025] elke .segmented-control krijgt een schuifbalk-indicator zodra hij écht overloopt, generiek voor de hele app
+  Scenario: [MOB-H-025] elke .segmented-control krijgt een schuifrand zodra hij écht overloopt, generiek voor de hele app
     # Testtechniek: Responsive viewport + end-to-end use-case
-    # Aantoonbare Playwright-assertions in deze case: 5
+    # Aantoonbare Playwright-assertions in deze case: 6
     Given mobiele gebruikerservaring is voorbereid
     When de flow voor MOB-H-025 wordt uitgevoerd
-    Then wordt met Playwright-assertions bevestigd dat elke .segmented-control krijgt een schuifbalk-indicator zodra hij écht overloopt, generiek voor de hele app
+    Then wordt met Playwright-assertions bevestigd dat elke .segmented-control krijgt een schuifrand zodra hij écht overloopt, generiek voor de hele app
