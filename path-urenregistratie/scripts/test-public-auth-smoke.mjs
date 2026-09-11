@@ -10,7 +10,18 @@ const accounts = [
     role: 'administrator',
   },
   {
-    email: 'stasjo@example.invalid',
+    // Vijfde plek met dit patroon (11 sep): de gedeelde baseline-reset die
+    // hierboven draait zet deze vaste seed-medewerker meteen om naar zijn
+    // echte adres zodra de TEST-mailsandbox genoemde testers kent (zie
+    // test_reset_apply_named_tester_emails() in server/lib/test-reset.php) --
+    // op de echte TransIP TEST-omgeving is dat inmiddels altijd het geval. Een
+    // hardgecodeerd seedadres is hier dus altijd al verouderd tegen de tijd
+    // dat deze regel draait (de reset erboven heeft dan net plaatsgevonden).
+    // Env var laat het releasepipeline-blok (.github/workflows/release-
+    // pipeline.yml) het echte, actueel geconfigureerde adres meegeven; de
+    // standaardwaarde houdt lokale/CI-runs tegen de geïsoleerde testdatabase
+    // (waar geen naamgenoemde testers geconfigureerd zijn) ongewijzigd werkend.
+    email: String(process.env.TEST_PUBLIC_EMPLOYEE_EMAIL || 'stasjo@example.invalid'),
     password: String(process.env.TEST_PUBLIC_EMPLOYEE_PASSWORD || ''),
     role: 'employee',
   },

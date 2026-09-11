@@ -672,6 +672,11 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .data-table td { font-size: 12px; }
 .data-table td strong, .data-table td small { display: block; }
 .data-table td small { margin-top: 3px; color: var(--muted); font-size: 9px; }
+.audit-log-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px; margin: 14px 0; }
+.audit-log-filters label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; font-weight: 700; color: var(--muted); }
+.audit-log-filters select { min-width: 200px; }
+.audit-log-table-wrap { overflow-x: auto; }
+.audit-log-table td.audit-log-actor small { color: var(--muted); }
 .person-cell { display: flex; align-items: center; gap: 10px; }
 .mini-avatar { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; background: var(--green-light); color: var(--teal); font-size: 10px; font-weight: 800; }
 

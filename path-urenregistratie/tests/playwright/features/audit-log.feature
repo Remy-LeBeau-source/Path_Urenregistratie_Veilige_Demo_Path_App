@@ -93,3 +93,24 @@ Feature: Auditlog en traceerbaarheid
     Given de beheerder maakt een medewerker aan
     When de beheerder de bedrijfsinstellingen opslaat en meteen weer herstelt
     Then verdwijnt de testmedewerker weer zonder historie, ook geauditeerd
+
+  @happy
+  Scenario: [AUD-H-012] auditlog filtert op actor_id (Instellingen > Auditlog: "wie deed dit")
+    # Testtechniek: Equivalentieklassen
+    # Aantoonbare Playwright-assertions in deze case: 11
+    Given auditlog en traceerbaarheid is voorbereid
+    When er een echte actie is uitgevoerd door deze beheerder
+    Then geeft actor_id alleen gebeurtenissen van deze beheerder terug
+    And een niet-bestaand account levert geen resultaten op
+    And een niet-numerieke actor_id wordt genegeerd in plaats van een SQL-fout te geven
+
+  @happy
+  Scenario: [AUD-H-013] Instellingen > Auditlog toont wie/wat/wanneer en filtert op persoon en actie
+    # Testtechniek: Equivalentieklassen
+    # Aantoonbare Playwright-assertions in deze case: 18
+    Given een beheerder is beveiligd ingelogd
+    When de beheerder Instellingen > Auditlog opent
+    Then staan tijd, wie en wat per rij, meest recente eerst
+    And zijn beide personen en beide actietypen als filteropties beschikbaar
+    And filteren op persoon toont alleen zijn eigen gebeurtenissen
+    And filteren op actietype werkt onafhankelijk van het personenfilter

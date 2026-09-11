@@ -109,6 +109,11 @@ assert.match(workflow, /Verify public TEST account logins[\s\S]*test-public-auth
 assert.match(workflow, /live-docs:\s*[\s\S]*?name:\s*Publish Live Docs[\s\S]*?timeout-minutes:\s*10/, 'Release Living Docs artifact job must stop within ten minutes');
 assert.match(workflow, /TEST_PUBLIC_ADMIN_PASSWORD:\s*\$\{\{ secrets\.PLAYWRIGHT_ADMIN_PASSWORD \}\}/, 'Public TEST admin password must come from a protected environment secret');
 assert.match(workflow, /TEST_PUBLIC_EMPLOYEE_PASSWORD:\s*\$\{\{ secrets\.PLAYWRIGHT_EMPLOYEE_PASSWORD \}\}/, 'Public TEST employee password must come from a protected environment secret');
+// 11 sep: de gedeelde baseline-reset zet de seed-medewerker meteen om naar
+// zijn echte adres zodra de TEST-mailsandbox genoemde testers kent -- op de
+// echte TransIP-omgeving is dat altijd het geval. Zonder deze env var logt de
+// publieke inlogcontrole na de reset in op een adres dat net is verdwenen.
+assert.match(workflow, /TEST_PUBLIC_EMPLOYEE_EMAIL:\s*stasjovanbakel@pathconsultancy\.nl/, 'Public TEST employee login must target the current real named-tester address, not the stale seed address');
 assert.match(
   testRemote,
   /\$expected = \["giovanno\.maatsen@pathconsultancy\.nl", "kenrich\.lieveld@pathconsultancy\.nl", "marcderoon@pathconsultancy\.nl", "stasjovanbakel@pathconsultancy\.nl", "brian\.hek@pathconsultancy\.nl", "shawn\.nahar@pathconsultancy\.nl"\];/,
@@ -136,6 +141,7 @@ assert.match(
 );
 const publicAuthSmoke = await readFile(join(root, 'scripts', 'test-public-auth-smoke.mjs'), 'utf8');
 assert.doesNotMatch(publicAuthSmoke, /LocalDemo(?:Admin|Employee)2026/, 'Public TEST login smoke may not hardcode passwords');
+assert.match(publicAuthSmoke, /process\.env\.TEST_PUBLIC_EMPLOYEE_EMAIL \|\| 'stasjo@example\.invalid'/, 'Public auth smoke must read the employee email from the environment, with the bare seed address only as a local/CI fallback');
 assert.match(
   testRemote,
   /database-backup\.php[\s\S]*server\/migrate\.php[\s\S]*reset-test-baseline\.php[\s\S]*test-preflight\.php --config=server\/config\.local\.php --live[\s\S]*cutover_started=1/,

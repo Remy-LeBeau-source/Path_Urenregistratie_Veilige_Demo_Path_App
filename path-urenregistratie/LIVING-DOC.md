@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 483 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 485 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 483 unieke case-ID's
+- Playwright executable cases: 485 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 484 unieke case-ID's
+- Totaal executable cases: 486 unieke case-ID's
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29
 - Database steps mappings: 1
-- Uitvoeringen: 519
-- Niet-mobile projectuitvoeringen: 447
+- Uitvoeringen: 521
+- Niet-mobile projectuitvoeringen: 449
 - Mobile functionele cases: 36
 - Pixel 7 / Chromium-uitvoeringen: 36
 - iPhone 13 / WebKit-uitvoeringen: 36
 
-De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 483 Playwright-functionele cases in totaal 519 resultaten op: 447 + (36 x 2) = 519.
+De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 485 Playwright-functionele cases in totaal 521 resultaten op: 449 + (36 x 2) = 521.
 
 ## Documentatieketen
 
@@ -82,7 +82,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 483 Playwri
 
 - Feature: `tests/playwright/features/audit-log.feature`
 - Source: `tests/playwright/audit-log.spec.ts`
-- Cases: 11
+- Cases: 13
 
 - [AUD-H-001] admin kan auditlog ophalen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [AUD-H-002] auditlog filtert op entity_type — Techniek: Equivalentieklassen · Assertions: 3
@@ -95,6 +95,8 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 483 Playwri
 - [AUD-H-009] auditlog begrenst een hoge limiet op tweehonderd records — Techniek: Grenswaardenanalyse · Assertions: 2
 - [AUD-N-010] auditlog weigert POST — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
 - [AUD-H-011] aanmaken, instellingen opslaan en verwijderen worden geauditeerd met de juiste actor — Techniek: API-contract + equivalentieklasse · Assertions: 9
+- [AUD-H-012] auditlog filtert op actor_id (Instellingen > Auditlog: "wie deed dit") — Techniek: Equivalentieklassen · Assertions: 11
+- [AUD-H-013] Instellingen > Auditlog toont wie/wat/wanneer en filtert op persoon en actie — Techniek: Equivalentieklassen · Assertions: 18
 
 ### Inloggen, uitloggen en sessiebeheer
 
