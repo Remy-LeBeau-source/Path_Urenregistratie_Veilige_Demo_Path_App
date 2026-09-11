@@ -328,6 +328,17 @@ test('[SAFE-H-018] de accountbaseline-verificatie blijft correct nadat een genoe
     'foreach ($saved as $k => $v) { $v === false ? putenv($k) : putenv($k . "=" . $v); }',
     '$pdo->beginTransaction();',
     'try {',
+    // '888888888888'/'LocalDemoEmployee2026' zijn alleen de echte wachtwoorden
+    // op de daadwerkelijke TransIP TEST-database (zie tests/remote/test-site-
+    // smoke.spec.ts) -- deze case draait bewust tegen de lokale/CI-database,
+    // die andere (PLAYWRIGHT_ADMIN_PASSWORD/PLAYWRIGHT_EMPLOYEE_PASSWORD-
+    // gestuurde) wachtwoorden gebruikt. Zet daarom ook gio/joyce (id 1/2)
+    // expliciet in de exacte staat die de functie verwacht, zodat de case
+    // niet stilzwijgend leunt op wat de omgeving toevallig al aan boord heeft.
+    '  $pdo->prepare("UPDATE users SET email = :email, password_hash = :hash, force_password_change = 0 WHERE id = :id")',
+    '    ->execute([":email" => "gio@example.invalid", ":hash" => password_hash("888888888888", PASSWORD_DEFAULT), ":id" => 1]);',
+    '  $pdo->prepare("UPDATE users SET email = :email, password_hash = :hash, force_password_change = 0 WHERE id = :id")',
+    '    ->execute([":email" => "joyce@example.invalid", ":hash" => password_hash("888888888888", PASSWORD_DEFAULT), ":id" => 2]);',
     '  $realEmails = ["marcderoon@pathconsultancy.nl" => 3, "stasjovanbakel@pathconsultancy.nl" => 4, "brian.hek@pathconsultancy.nl" => 5, "shawn.nahar@pathconsultancy.nl" => 6];',
     '  foreach ($realEmails as $email => $id) {',
     '    $pdo->prepare("UPDATE users SET email = :email, password_hash = :hash, force_password_change = 1 WHERE id = :id")',
