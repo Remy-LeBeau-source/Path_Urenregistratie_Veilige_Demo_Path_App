@@ -1218,7 +1218,16 @@ const HELP_TOPICS = [
   { id: "employee-remove", roles: ["admin"], label: "Medewerker deactiveren", terms: "medewerker verwijderen weghalen deactiveren inactief historie", answer: "Medewerkers worden nooit hard verwijderd. Deactiveren stopt toegang en herinneringen, maar bewaart alle oude uren, goedkeuringen en facturen. Via het filter Inactief kun je iemand opnieuw activeren.", view: "employees" },
   { id: "admin", roles: ["admin"], label: "Beheerder beheren", terms: "beheerder toevoegen verwijderen deactiveren gio joyce toegang", answer: "Onder Medewerkers staat het beheerdersoverzicht. Je kunt een beheerder toevoegen of deactiveren. Jezelf en de laatste actieve beheerder kun je niet deactiveren, zodat de app bereikbaar blijft.", view: "employees" },
   { id: "privacy", roles: ["admin", "employee"], label: "Wie ziet wat?", terms: "privacy collega tarieven zien rol toegang medewerker beheerder", answer: "Een medewerker ziet uitsluitend het eigen dashboard, de eigen uren, meldingen en historie. Alleen beheerders zien collega’s, goedkeuringen, tarieven, facturen en instellingen." },
-  { id: "notifications", roles: ["admin", "employee"], label: "Meldingen", terms: "melding meldingen bel herinnering planning goedgekeurd e-mail aan uit", answer: "De bel telt urenstatussen, correcties, herinneringen en algemene mededelingen samen. Mijn mededelingen telt alleen algemene mededelingen. In Voorkeuren kun je aanvullende e-mailmeldingen aan- of uitzetten. E-mailverzending is nog uitgeschakeld." },
+  { id: "notifications", roles: ["admin", "employee"], label: "Meldingen", terms: "melding meldingen bel herinnering planning goedgekeurd e-mail aan uit", // Testfeedback 11 sep: de eerste zin klopte niet helemaal. Twee dingen
+// nagelopen in de code. (1) De bel telt ook klanturenstaat-meldingen
+// (goedgekeurd, opnieuw uploaden, upload ontbreekt) -- voor een medewerker
+// juist een van de vaakst voorkomende soorten, en die stond niet in het
+// rijtje. (2) "E-mailverzending is nog uitgeschakeld" was een harde
+// bewering in een tekst die in elke omgeving hetzelfde is; op TEST staat
+// verzending juist aan. De app toont de werkelijke stand al in de
+// verzendstatus bovenaan, dus verwijzen we daarnaar in plaats van het hier
+// nog eens te beweren.
+answer: "De bel telt alles bij elkaar wat op je wacht: urenstatussen, correctieverzoeken, klanturenstaat-meldingen, herinneringen en algemene mededelingen. Mijn mededelingen toont alleen de algemene mededelingen. In Voorkeuren zet je aanvullende e-mailmeldingen aan of uit. Of er op dit moment echt e-mail de deur uitgaat, zie je aan de verzendstatus bovenaan het scherm." },
   { id: "profile", roles: ["admin", "employee"], label: "Profiel en foto", terms: "profiel foto profielfoto naam e-mail account", answer: "Klik rechtsboven op je initialen en kies Mijn profiel. Je kunt nu lokaal een foto kiezen. Naam en zakelijk e-mailadres worden door een beheerder beheerd." },
   { id: "theme", roles: ["admin", "employee"], label: "Licht of donker", terms: "donker dark licht light automatisch thema uiterlijk voorkeur", answer: "Open rechtsboven Voorkeuren en kies Licht, Automatisch of Donker. Licht is standaard; Automatisch volgt de instelling van je computer of telefoon." },
   { id: "settings", roles: ["admin"], label: "Instellingen", terms: "instellingen organisatie logo kleuren bedrijf iban kvk btw betalingstermijn mailroutering ontvanger toevoegen", answer: "Instellingen bevat de eigen organisatienaam, huisstijl, factuurgegevens, mailroutering, vaste ontvangers en veiligheidsregels. Ontvangers krijgen een type en een zelfgekozen naam; daarna vink je ze per medewerker aan. De huidige versie bewaart dit lokaal en e-mailverzending staat uit.", view: "settings" },
@@ -4212,9 +4221,23 @@ function applyOrganizationBranding() {
   document.querySelectorAll("[data-brand-logo]").forEach(image => {
     // De desktopzijbalk heeft ook in de lichte modus een donkere ondergrond.
     // Kies daarom per logopositie het contrast, niet alleen op basis van het thema.
-    const onDarkSurface = Boolean(image.closest("#sidebar-brand"));
+    //
+    // De "Home"-pil in Nieuw hoort in dezelfde categorie. Die is in élke
+    // weergave van die skin donker (gemeten: rgb(14,35,52) tot rgb(15,38,57));
+    // de aanname in de oude toelichting dat het medewerkerdashboard daar een
+    // lichte pil had, gaat niet meer op. Er stond daarom een lichte chip achter
+    // het beeld om het donkere woordmerk leesbaar te houden -- maar daardoor
+    // zag je vooral die chip en nauwelijks het logo (twee keer gemeld).
+    const opMerkpilInNieuw = document.documentElement.dataset.skin === "new"
+      && Boolean(image.closest(".mobile-brand-home"));
+    const onDarkSurface = Boolean(image.closest("#sidebar-brand")) || opMerkpilInNieuw;
     image.src = brandLogoUrl(onDarkSurface || donkereModusActief() ? "donker" : "licht");
     image.alt = organizationName + " logo";
+    // Van het meegeleverde logo bestaat een witte variant, die rechtstreeks op
+    // de donkere pil kan. Van een zelf geüpload logo kennen we de kleuren niet;
+    // daar blijft de lichte chip de veilige drager. De opmaak leest dit
+    // onderscheid via het attribuut.
+    image.dataset.eigenLogo = state.settings.brandLogo ? "true" : "false";
   });
   const organizationLabel = document.querySelector("#organization-name");
   if (organizationLabel) organizationLabel.textContent = organizationName;

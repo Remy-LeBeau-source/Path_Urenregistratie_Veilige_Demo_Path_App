@@ -417,7 +417,14 @@ summary:focus-visible,
      account  -- bel en avatar, met een haarlijn ervoor als scheiding.
    De ruimte tussen de groepen is groter dan binnen een groep; dat doet het
    werk dat vijf randen eerst probeerden te doen. */
-.topbar-actions { display: flex; align-items: center; gap: 10px; }
+/* Deze rij mag afbreken zodra hij niet past -- op élke breedte, niet pas
+   onder 590px zoals eerst. Daartussen liep hij simpelweg buiten het venster:
+   op 1280 (een doodgewone laptop, én de breedte waarop alle desktoptests
+   draaien) stak de avatar er 8px overheen en kreeg de pagina een horizontale
+   schuifbalk. Dat stond er al voor deze ontwerpronde; het viel niet op omdat
+   alleen de mobiele tests op overloop controleren. Afbreken maakt de balk een
+   regel hoger, en dat is altijd beter dan inhoud die naast het scherm valt. */
+.topbar-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; row-gap: 8px; }
 .safety-badge {
   display: inline-flex;
   align-items: center;
@@ -1559,7 +1566,11 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .team-account-overview { display: grid; grid-template-columns: minmax(220px,.8fr) minmax(360px,1.2fr); gap: 24px; align-items: center; margin-bottom: 16px; padding: 20px 24px; }
 .team-account-overview-copy h3 { margin: 4px 0 2px; }
 .team-account-overview-copy small, .team-account-group small { color: var(--muted); font-size: 9px; }
-.team-account-groups { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+/* Twee vaste kolommen die pas bij 820px inklappen: daartussen (rond 900px)
+   pasten de twee groepen niet meer naast elkaar en liep het blok het venster
+   uit. Met auto-fit klapt hij in zodra het écht niet past, ongeacht waar het
+   breekpunt toevallig ligt. */
+.team-account-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
 .team-account-group { display: flex; align-items: center; gap: 13px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-muted); padding: 12px 14px; }
 .team-account-group strong, .team-account-group small { display: block; }
 .team-account-group strong { font-size: 11px; }
@@ -1737,7 +1748,10 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 .customer-timesheet-period-fields { display: grid; grid-template-columns: minmax(120px,1fr) 92px; gap: 8px; }
 .customer-timesheet-upload-grid .customer-timesheet-period-fields .month-picker-trigger { min-height: 42px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); padding: 9px 11px; }
 .customer-month-choice-panel { width: min(292px,calc(100vw - 48px)); }
-.customer-timesheet-upload-actions { display: flex; gap: 9px; justify-content: flex-end; }
+/* Mocht deze knoppenrij niet passen, dan breekt hij af i.p.v. het venster uit
+   te lopen -- dat gebeurde rond 980px, ruim boven het breekpunt waar hij op
+   één kolom overgaat. */
+.customer-timesheet-upload-actions { display: flex; flex-wrap: wrap; gap: 9px; justify-content: flex-end; }
 .customer-timesheet-upload-actions .button:disabled { opacity: .48; cursor: not-allowed; }
 .customer-timesheet-action-help { grid-column: 1/-1; color: var(--muted); font-size: 10px; line-height: 1.5; }
 .customer-timesheet-action-help.is-warning { color: var(--warning-tekst); font-weight: 700; }

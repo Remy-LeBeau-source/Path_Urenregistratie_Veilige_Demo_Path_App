@@ -158,6 +158,20 @@ html[data-skin="new"] .mobile-brand-home img[data-brand-logo] {
   box-sizing: content-box;
 }
 
+/* Herzien 11 sep. De chip hierboven maakte het donkere woordmerk leesbaar,
+   maar je zag vooral de chip en nauwelijks het logo -- twee keer gemeld.
+   Oorzaak: op deze pil stond de lichte logovariant terwijl de pil in élke
+   weergave van deze skin donker is. app.js kiest nu de witte variant voor
+   deze plek, en dan is er geen drager meer nodig: het logo staat gewoon op
+   de pil en mag ook groter. Alleen voor het meegeleverde logo -- van een
+   zelf geüpload logo kennen we de kleuren niet, dus dat houdt zijn chip. */
+html[data-skin="new"] .mobile-brand-home img[data-brand-logo][data-eigen-logo="false"] {
+  width: 82px;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+}
+
 html[data-skin="new"] .sidebar {
   background:
     radial-gradient(circle at 18% 10%, rgba(75, 177, 136, .18), transparent 16rem),
@@ -379,10 +393,16 @@ html[data-skin="new"] .app-shell:has(#view-employee-announcements.is-active) .mo
   padding: 9px 14px;
 }
 
+/* Hoogte bepaalt de maat, breedte volgt. Het woordmerk heeft een verhouding
+   van 466:216; in een vierkant van 34x34 met object-fit:contain werd het
+   teruggerekend naar 34x16 en was het niet meer te lezen. Dat vierkant paste
+   bij de oude chip-opzet (een badge naast de tekst); nu het logo zelf op de
+   pil staat, mag het zijn eigen vorm houden. */
 html[data-skin="new"] .app-shell:has(#view-employee-dashboard.is-active) .mobile-brand-home img,
 html[data-skin="new"] .app-shell:has(#view-employee-announcements.is-active) .mobile-brand-home img {
-  width: 34px;
-  height: 34px;
+  width: auto;
+  max-width: 96px;
+  height: 24px;
   object-fit: contain;
 }
 
@@ -470,8 +490,9 @@ html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .mobile-brand-ho
 }
 
 html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .mobile-brand-home img {
-  width: 34px;
-  height: 34px;
+  width: auto;
+  max-width: 96px;
+  height: 24px;
   object-fit: contain;
 }
 
@@ -599,9 +620,16 @@ html[data-skin="new"] #view-timesheet .hours-table th {
   color: #93a2a8;
 }
 
-html[data-skin="new"] #view-timesheet .hours-table td:first-child,
-html[data-skin="new"] #view-timesheet .hours-table .date-number {
+/* De weekaanduiding in de eerste kolom blijft groen: dat is de rij-identiteit.
+   De datum per dag wordt juist stil -- zie de toelichting bij
+   .hours-table .date-number verderop. Deze twee stonden op één regel en
+   kregen daardoor dezelfde kleur, terwijl ze niet hetzelfde doen. */
+html[data-skin="new"] #view-timesheet .hours-table td:first-child {
   color: #9bd3b4;
+}
+
+html[data-skin="new"] #view-timesheet .hours-table .date-number {
+  color: #9fb2ab;
 }
 
 html[data-skin="new"] #view-timesheet .hours-table input {
@@ -998,7 +1026,35 @@ html[data-skin="new"] .new-bento-gauge p { margin: 18px 0 10px; color: #c2cbc8; 
 html[data-skin="new"] .new-bento-gauge .linear-progress { width: min(280px, 100%); background: rgba(255,255,255,.08); }
 html[data-skin="new"] .new-bento-percentage { color: #70c98a; }
 
-html[data-skin="new"] .new-bento-customer { grid-column: 3; grid-row: 2; background: #eee8dc !important; color: #102235; padding: 0; overflow: hidden; }
+html[data-skin="new"] .new-bento-customer { position: relative; grid-column: 3; grid-row: 2; background: #eee8dc !important; color: #102235; padding: 0; overflow: hidden; }
+
+/* De foto zat opgesloten in de kop (330px hoog) en hield daar hard op. Zodra
+   je het kaartje openklapte, stond er onder die snijlijn een leeg crème vlak:
+   het beeld leek afgekapt in plaats van doorgetrokken (gemeld met foto).
+   Nu loopt hij door over het hele kaartje, maar vervaagt hij onder de kop weg
+   -- genoeg om als één doorlopend beeld te lezen, licht genoeg om het
+   formulier erover leesbaar te houden. Alleen in de open stand; dicht
+   verandert er niets. */
+html[data-skin="new"] .new-bento-customer[data-open="true"]::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background: url("../pilot/assets/1919/bento-timesheet-v2.png") right top / cover no-repeat;
+  opacity: .28;
+  -webkit-mask-image: linear-gradient(180deg, #000 0 42%, rgba(0, 0, 0, .22) 66%, transparent 88%);
+  mask-image: linear-gradient(180deg, #000 0 42%, rgba(0, 0, 0, .22) 66%, transparent 88%);
+  pointer-events: none;
+}
+
+/* De inhoud blijft boven dat doorlopende beeld staan. De uitklap krijgt een
+   lichte sluier mee zodat tekst en velden niet met de foto hoeven te
+   concurreren. */
+html[data-skin="new"] .new-bento-customer-head,
+html[data-skin="new"] .new-bento-customer-expand { position: relative; z-index: 1; }
+html[data-skin="new"] .new-bento-customer[data-open="true"] .new-bento-customer-expand {
+  background: linear-gradient(180deg, rgba(238, 232, 220, .72), rgba(238, 232, 220, .96) 38%);
+}
 html[data-skin="new"] .new-bento-customer-head { position: relative; min-height: 330px; }
 html[data-skin="new"] .new-bento-customer-head > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 html[data-skin="new"] .new-bento-customer-head::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(246,241,231,.98) 0 48%, rgba(246,241,231,.1) 78%); }
@@ -1065,6 +1121,76 @@ html[data-skin="new"] .new-bento-customer-expand .button-primary {
   box-shadow: none;
 }
 
+/* Dit kaartje is een licht eiland in een donkere skin, en alleen de knoppen
+   waren daarop afgestemd. De invoervelden, de statuspil en het mailblok
+   erbinnen vielen terug op de donkere basiskleuren van deze skin: bijna
+   zwarte velden en een donkergroen blok, midden op crème (gemeld met foto).
+   Kleur hoort bij de ondergrond waar hij op ligt, niet bij het thema in het
+   algemeen -- daarom hier één samenhangend licht palet voor alles binnen het
+   kaartje. Dezelfde tinten als de knopregels hierboven, zodat het één setje
+   blijft. */
+html[data-skin="new"] .new-bento-customer-expand :is(input, select, .month-picker-trigger) {
+  border-color: #cfc5b5;
+  background: #fbf9f4;
+  color: #102235;
+}
+
+html[data-skin="new"] .new-bento-customer-expand :is(input, select, .month-picker-trigger):focus,
+html[data-skin="new"] .new-bento-customer-expand :is(input, select, .month-picker-trigger):focus-visible {
+  border-color: #2f6a4c;
+  outline: 0;
+  box-shadow: 0 0 0 4px rgba(47, 106, 76, .18);
+}
+
+html[data-skin="new"] .new-bento-customer-expand input[type="file"]::file-selector-button {
+  border: 1px solid #cfc5b5;
+  background: #efe9dc;
+  color: #1d4b38;
+}
+
+html[data-skin="new"] .new-bento-customer-expand .month-choice-panel {
+  border-color: #cfc5b5;
+  background: #fbf9f4;
+}
+
+html[data-skin="new"] .new-bento-customer-expand .month-choice-panel button {
+  color: #102235;
+}
+
+html[data-skin="new"] .new-bento-customer-expand .month-choice-panel button:hover {
+  background: #efe9dc;
+}
+
+/* Het blok met de huidige stand en het mailvoorbeeld: geen donkere vlakken,
+   maar een iets dieper crème met een haarlijn -- zelfde familie als het
+   kaartje eromheen. */
+html[data-skin="new"] .new-bento-customer-expand :is(.customer-timesheet-current, .customer-timesheet-mail-preview) {
+  border: 1px solid #ddd5c6;
+  border-radius: 14px;
+  background: #f6f2e9;
+  color: #102235;
+}
+
+html[data-skin="new"] .new-bento-customer-expand :is(.customer-timesheet-current, .customer-timesheet-mail-preview) :is(p, span, small, pre, strong) {
+  color: #102235;
+}
+
+html[data-skin="new"] .new-bento-customer-expand .status-pill {
+  border-color: #cfc5b5;
+  background: #efe9dc;
+  color: #1d4b38;
+}
+
+html[data-skin="new"] .new-bento-customer-expand .small-button {
+  border-color: #cfc5b5;
+  background: #f9f6ef;
+  color: #1d4b38;
+}
+
+html[data-skin="new"] .new-bento-customer-expand .small-button:hover {
+  background: #fff;
+}
+
 html[data-skin="new"] .new-bento-steps { grid-column: 1 / span 2; grid-row: 2; padding: 28px 30px; }
 html[data-skin="new"] .new-bento-steps .section-label { color: #86c89e; }
 /* Echte segment-elementen tussen de stappen (i.p.v. één blinde ::before-lijn
@@ -1086,7 +1212,38 @@ html[data-skin="new"] .new-bento-steps li { position: relative; display: grid; f
    met de li's als grootste aandeel zodat de tekstblokken ruim blijven --
    zelfde aanpak als bij de stap-tracker hierboven in het beheerdersdashboard,
    die geen los groeiend contentblok naast de lijn had. */
-html[data-skin="new"] .new-bento-step-segment { display: block; flex: 1 1 20px; min-width: 20px; margin-top: 20px; height: 2px; border-radius: 2px; background: rgba(255, 255, 255, .14); }
+/* Herzien 11 sep, opnieuw gemeld met foto: "ze raken de bollen niet aan en
+   lijnen ontbreken". Twee oorzaken, allebei zichtbaar op die foto:
+   1. Elke bol draagt een halo van 5px in de paneelkleur (box-shadow 0 0 0 5px).
+      Die dekt het uiteinde van het lijnstuk af, dus tussen lijn en bol zat
+      altijd een gat van 5px -- hoe lang je het lijnstuk ook maakt.
+   2. Het lijnstuk liep alleen tússen de tekstblokken. De bol staat linksboven
+      in zijn blok, dus tussen de bol en het begin van dat lijnstuk lag de hele
+      breedte van het tekstblok ernaast leeg. Bij stap 1 stond daardoor
+      helemaal geen lijn.
+   Nu tekent elk blok zelf de lijn die uit zijn eigen bol vertrekt (li::after,
+   vanaf het hart van de bol tot de rand van het blok), en overbrugt het
+   lijnstuk het gat tot de volgende bol -- met negatieve marges zodat het
+   ónder de halo doorloopt en de bol echt raakt. De bol ligt erboven (z-index),
+   dus de lijn verdwijnt netjes achter de rand. Samen is het één doorlopende
+   lijn van bol tot bol. Het laatste blok krijgt geen uitgaande lijn. */
+html[data-skin="new"] .new-bento-step-segment { position: relative; z-index: 0; display: block; flex: 1 1 20px; min-width: 20px; margin-top: 20px; margin-inline: -7px; height: 2px; border-radius: 2px; background: rgba(255, 255, 255, .14); }
+
+html[data-skin="new"] .new-bento-steps li::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 20px;
+  left: 21px;
+  right: -7px;
+  height: 2px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, .14);
+}
+
+html[data-skin="new"] .new-bento-steps li:last-child::after { content: none; }
+html[data-skin="new"] .new-bento-steps li.is-done::after { background: #68b47a; box-shadow: 0 0 12px rgba(75, 177, 136, .24); }
+html[data-skin="new"] .new-bento-steps li.is-current::after { background: var(--path-amber); box-shadow: 0 0 12px rgba(217, 154, 60, .28); }
 html[data-skin="new"] .new-bento-step-segment.is-done { background: #68b47a; box-shadow: 0 0 12px rgba(75, 177, 136, .24); }
 html[data-skin="new"] .new-bento-step-segment.is-current { background: var(--path-amber); box-shadow: 0 0 12px rgba(217, 154, 60, .28); }
 html[data-skin="new"] .new-bento-steps i { position: relative; z-index: 1; display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid #4b6b82; border-radius: 50%; background: #163048; font-style: normal; box-shadow: 0 0 0 5px #0f293d; }
@@ -1173,9 +1330,16 @@ html[data-skin="new"] .announcement-item-head h3 {
   font-weight: 400;
 }
 
+/* Zie .announcement-meta in styles.css: ontvangers, mailkeuze en afzender zijn
+   feiten, geen invulvelden. Het vlak eromheen maakte er hier nog wel een
+   formulier van. */
 html[data-skin="new"] .announcement-meta span {
-  border-radius: 12px;
-  background: var(--vlak);
+  border-radius: 0;
+  background: transparent;
+}
+
+html[data-skin="new"] .announcement-meta {
+  border-top-color: rgba(255, 255, 255, .1);
 }
 
 /* Goedkeuringen + procesvoortgang — de 4-fasen-track als doorlopende
@@ -1270,9 +1434,13 @@ html[data-skin="new"] .hours-table td:first-child {
   color: var(--mint-dark-tekst);
 }
 
+/* Hier stonden vijfentwintig groene datumpillen in één raster, net als in
+   Klassiek. Daar zijn ze rustige bijschriften geworden zodat je de ingevulde
+   uren terugvindt; als die regel hier blijft staan, landt die verbetering in
+   deze skin niet -- en dit is juist de skin waar de gebruiker naar kijkt. */
 html[data-skin="new"] .hours-table .date-number {
-  background: var(--green-light);
-  color: var(--mint-dark-tekst);
+  background: transparent;
+  color: rgba(214, 226, 220, .62);
 }
 
 html[data-skin="new"] .hours-table input {
@@ -1496,8 +1664,15 @@ html[data-skin="new"] .employee-card-head .employee-identity strong {
   font-size: 15px;
 }
 
+/* Klassiek haalde de vakjes om klant/uren/broker weg omdat die op invulvelden
+   leken terwijl je er niets in kunt typen; hier stond nog een rand omheen die
+   datzelfde deed. Zelfde behandeling, zodat de twee skins hetzelfde zeggen. */
 html[data-skin="new"] .employee-details div {
-  border: 1px solid var(--line);
+  border: 0;
+}
+
+html[data-skin="new"] .employee-details {
+  border-top-color: rgba(255, 255, 255, .1);
 }
 
 html[data-skin="new"] .mini-avatar {
@@ -1687,8 +1862,9 @@ html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.
 }
 
 html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .mobile-brand-home img {
-  width: 26px;
-  height: 26px;
+  width: auto;
+  max-width: 88px;
+  height: 21px;
   object-fit: contain;
 }
 
