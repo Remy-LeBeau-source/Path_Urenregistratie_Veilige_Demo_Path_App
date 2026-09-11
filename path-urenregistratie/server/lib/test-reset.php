@@ -166,43 +166,66 @@ function test_reset_verify_remote_demo_credentials(PDO $pdo, array $config): int
         throw new RuntimeException('Canonical demo credentials may be verified only for the exact remote TEST contract.');
     }
 
-    $expected = [
-        'gio@example.invalid' => ['role' => 'administrator', 'password' => '888888888888'],
-        'joyce@example.invalid' => ['role' => 'administrator', 'password' => '888888888888'],
-        'marc@example.invalid' => ['role' => 'employee', 'password' => 'LocalDemoEmployee2026'],
-        'stasjo@example.invalid' => ['role' => 'employee', 'password' => 'LocalDemoEmployee2026'],
-        'brian@example.invalid' => ['role' => 'employee', 'password' => 'LocalDemoEmployee2026'],
-        'shawn@example.invalid' => ['role' => 'employee', 'password' => 'LocalDemoEmployee2026'],
+    // Vaste seed-id's (database/seed-demo-data.sql), niet e-mailadres: sinds
+    // test_reset_apply_named_tester_emails() bestaat, staat op de rijen van
+    // Marc/Stasjo/Brian/Shawn (id 3/4/5/6) hun echte @pathconsultancy.nl-adres
+    // in plaats van het @example.invalid-seedadres -- op id zoeken werkt
+    // ongeacht welk adres er op dat moment op de rij staat. Zie ook de
+    // toelichting bij test_reset_capture_named_tester_credentials() hierboven.
+    $expectedById = [
+        1 => ['email' => 'gio@example.invalid', 'role' => 'administrator', 'password' => '888888888888'],
+        2 => ['email' => 'joyce@example.invalid', 'role' => 'administrator', 'password' => '888888888888'],
+        3 => ['email' => 'marc@example.invalid', 'role' => 'employee', 'password' => 'LocalDemoEmployee2026'],
+        4 => ['email' => 'stasjo@example.invalid', 'role' => 'employee', 'password' => 'LocalDemoEmployee2026'],
+        5 => ['email' => 'brian@example.invalid', 'role' => 'employee', 'password' => 'LocalDemoEmployee2026'],
+        6 => ['email' => 'shawn@example.invalid', 'role' => 'employee', 'password' => 'LocalDemoEmployee2026'],
     ];
-    $placeholders = implode(', ', array_fill(0, count($expected), '?'));
+
+    // Een genoemde tester mag intussen ook zijn eigen echte wachtwoord hebben
+    // gezet via een echte resetmail (test_reset_restore_named_tester_credentials()
+    // herstelt precies dat na deze reset) -- dat is bedoeld gedrag, geen
+    // drift. Voor die id's verifieert deze functie daarom alleen het
+    // (configuratie-gedreven) echte adres, de rol en of het account actief
+    // is, niet meer het vaste demo-wachtwoord of de vaste force_password_change.
+    $namedTesterEmailById = [];
+    foreach (test_reset_named_tester_employee_email_mapping($config) as $entry) {
+        $namedTesterEmailById[$entry['id']] = $entry['email'];
+    }
+
+    $placeholders = implode(', ', array_fill(0, count($expectedById), '?'));
     $statement = $pdo->prepare(
-        'SELECT company_id, email, role, active, password_hash, force_password_change
-         FROM users WHERE email IN (' . $placeholders . ')'
+        'SELECT id, company_id, email, role, active, password_hash, force_password_change
+         FROM users WHERE id IN (' . $placeholders . ')'
     );
-    $statement->execute(array_keys($expected));
+    $statement->execute(array_keys($expectedById));
 
     $rows = [];
     foreach ($statement->fetchAll() as $row) {
-        $rows[strtolower(trim((string)$row['email']))] = $row;
+        $rows[(int)$row['id']] = $row;
     }
-    if (count($rows) !== count($expected)) {
+    if (count($rows) !== count($expectedById)) {
         throw new RuntimeException('The remote TEST demo account set is incomplete.');
     }
 
-    foreach ($expected as $email => $account) {
-        $row = $rows[$email] ?? null;
+    foreach ($expectedById as $id => $account) {
+        $row = $rows[$id] ?? null;
+        $isNamedTester = array_key_exists($id, $namedTesterEmailById);
+        $expectedEmail = $isNamedTester ? $namedTesterEmailById[$id] : $account['email'];
         $valid = is_array($row)
             && (int)$row['company_id'] === 1
+            && strtolower(trim((string)$row['email'])) === $expectedEmail
             && (string)$row['role'] === $account['role']
             && (int)$row['active'] === 1
-            && (int)$row['force_password_change'] === 0
-            && password_verify($account['password'], (string)$row['password_hash']);
+            && ($isNamedTester || (
+                (int)$row['force_password_change'] === 0
+                && password_verify($account['password'], (string)$row['password_hash'])
+            ));
         if (!$valid) {
             throw new RuntimeException('A remote TEST demo account does not match the canonical login baseline.');
         }
     }
 
-    return count($expected);
+    return count($expectedById);
 }
 
 /** @param array<string,array{password_hash:string,force_password_change:int}> $credentials */

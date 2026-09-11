@@ -310,8 +310,11 @@ html[data-skin="new"] .app-footer {
   padding-top: 20px;
 }
 
+/* margin-left blijft 0: in deze skin staat de versiepil direct achter de
+   copyrightregel in plaats van rechts uitgelijnd zoals in Klassiek. Dat is
+   een keuze en staat als eis in SKIN-H-006. */
 html[data-skin="new"] .app-footer-version {
-  margin-left: auto;
+  margin-left: 0;
   border: 1px solid var(--line);
   border-radius: 999px;
   color: var(--navy-tekst);

@@ -67,7 +67,7 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
   @happy
   Scenario: [SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en Klassiek
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 17
+    # Aantoonbare Playwright-assertions in deze case: 19
     Given een medewerkerdashboard met geladen urenstatus
     When de medewerker Nieuw activeert en via de bento naar Mijn uren navigeert
     Then de dashboardstatus gelijk blijft en Klassiek dezelfde gegevens toont
