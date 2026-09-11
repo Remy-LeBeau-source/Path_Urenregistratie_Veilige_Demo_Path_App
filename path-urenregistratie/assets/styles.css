@@ -851,9 +851,14 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .invoice-month-overview[hidden] { display: none; }
 .invoice-month-overview[data-state="blocked"] { border-left-color: var(--warning); background: linear-gradient(135deg,#fff,#fffaf4); }
 .invoice-month-overview[data-state="ready"] { border-left-color: var(--mint); background: linear-gradient(135deg,#fff,#f7fffc); }
-.invoice-month-overview-head { display: grid; grid-template-columns: minmax(0,.7fr) minmax(360px,1.3fr); gap: 16px; align-items: center; }
+/* De uitleg links stond op .7fr tegenover 1.3fr voor de maandkaarten rechts,
+   en kreeg 10px mee. In die smalle kolom brak elke zin over drie regels
+   terwijl er rechts ruimte over was. De verhouding is nu gelijk en de tekst
+   krijgt een leesbare maat -- het is de enige plek op dit scherm waar wordt
+   uitgelegd hoe je verder komt. */
+.invoice-month-overview-head { display: grid; grid-template-columns: minmax(0,1fr) minmax(340px,1fr); gap: 24px; align-items: center; }
 .invoice-month-overview-copy h3 { margin: 5px 0 0; color: var(--navy-tekst); font-family: var(--letter-kop); font-size: var(--kop-paneel); }
-.invoice-month-overview-copy p { margin: 6px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.invoice-month-overview-copy p { max-width: 58ch; margin: 8px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
 .invoice-month-overview-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 8px; }
 .invoice-month-overview-item { display: grid; min-height: 62px; grid-template-columns: minmax(0,1fr) auto; gap: 12px; align-items: center; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.82); color: var(--navy-tekst); cursor: pointer; padding: 10px 12px; text-align: left; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
 .invoice-month-overview-item:hover, .invoice-month-overview-item.is-current { border-color: #9edccb; background: var(--green-light); box-shadow: 0 8px 18px rgba(13,27,56,.07); transform: translateY(-1px); }
