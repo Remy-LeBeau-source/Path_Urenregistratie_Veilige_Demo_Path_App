@@ -60,7 +60,7 @@ php -r '
   $acceptance = is_array($mail["acceptance_test"] ?? null) ? $mail["acceptance_test"] : [];
   $allowed = mail_allowed_recipients($config);
   sort($allowed);
-  $expected = ["giovanno.maatsen@pathconsultancy.nl", "kenrich.lieveld@pathconsultancy.nl", "stasjovanbakel@pathconsultancy.nl"];
+  $expected = ["giovanno.maatsen@pathconsultancy.nl", "kenrich.lieveld@pathconsultancy.nl", "marcderoon@pathconsultancy.nl", "stasjovanbakel@pathconsultancy.nl", "brian.hek@pathconsultancy.nl", "shawn.nahar@pathconsultancy.nl"];
   sort($expected);
   $closed = ($mail["enabled"] ?? null) === false
       && ($mail["test_delivery_enabled"] ?? null) === false
