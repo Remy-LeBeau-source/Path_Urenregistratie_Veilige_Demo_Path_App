@@ -743,18 +743,33 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
    knoppen; de andere .segmented-control-rijen (Goedkeuringen, Facturen,
    Mededelingen, Medewerkers) hadden geen overflow-x en liepen dus gewoon uit
    hun bak bij genoeg knoppen op een smal scherm. Nu generiek op de basis-
-   klasse, plus dezelfde altijd-zichtbare schuifbalk-indicator (zie
-   .segmented-control-scroll-track/-thumb en
+   klasse, plus dezelfde altijd-zichtbare schuifaanduiding (zie
    refreshSegmentedControlScrollIndicators() in app.js) i.p.v. alleen de
-   overlay-scrollbar die op mobiel onzichtbaar blijft tot je 'm aanraakt. */
-.segmented-control { display: flex; gap: 4px; border-radius: 10px; background: #f0f4f4; padding: 3px; max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-color: var(--mint) rgba(13, 27, 56, .14); scrollbar-width: thin; }
-.segmented-control::-webkit-scrollbar { height: 7px; }
-.segmented-control::-webkit-scrollbar-track { border-radius: 999px; background: rgba(13, 27, 56, .14); }
-.segmented-control::-webkit-scrollbar-thumb { border-radius: 999px; background: var(--mint); }
+   overlay-scrollbar die op mobiel onzichtbaar blijft tot je 'm aanraakt.
+
+   Herzien 11 sep: er stonden inmiddels drie signalen boven elkaar dat deze
+   rij kan schuiven -- de tekst "Schuif voor andere weken", een eigen mint
+   balk met duim, en een mint gekleurde native scrollbar. Elk was los
+   toegevoegd zonder de vorige weg te halen, en samen lazen ze als een
+   voortgangsbalk die vol staat in plaats van als "hier valt meer te zien"
+   (de duim vult bijna de hele breedte zodra er maar net iets overloopt).
+   Nu één signaal: de rij vervaagt aan de kant waar nog inhoud zit, gestuurd
+   door data-schuifrand. De native scrollbar blijft staan als sleepgreep voor
+   de muis, maar neutraal en dun i.p.v. mint met pijlknoppen. */
+.segmented-control { display: flex; gap: 4px; border-radius: 10px; background: #f0f4f4; padding: 3px; max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-color: rgba(13, 27, 56, .26) transparent; scrollbar-width: thin; }
+.segmented-control::-webkit-scrollbar { height: 5px; }
+.segmented-control::-webkit-scrollbar-button { display: none; }
+.segmented-control::-webkit-scrollbar-track { background: transparent; }
+.segmented-control::-webkit-scrollbar-thumb { border-radius: 999px; background: rgba(13, 27, 56, .22); }
+.segmented-control:hover::-webkit-scrollbar-thumb { background: rgba(13, 27, 56, .34); }
+/* De maskerrand hoort bij de kant waar inhoud buiten beeld staat, dus hij
+   verdwijnt vanzelf zodra je het einde bereikt -- dat is precies het verschil
+   met een balk, die altijd blijft staan en niets meer zegt. */
+.segmented-control[data-schuifrand="rechts"] { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 34px), transparent 100%); mask-image: linear-gradient(to right, #000 calc(100% - 34px), transparent 100%); }
+.segmented-control[data-schuifrand="links"] { -webkit-mask-image: linear-gradient(to right, transparent 0, #000 34px); mask-image: linear-gradient(to right, transparent 0, #000 34px); }
+.segmented-control[data-schuifrand="beide"] { -webkit-mask-image: linear-gradient(to right, transparent 0, #000 34px, #000 calc(100% - 34px), transparent 100%); mask-image: linear-gradient(to right, transparent 0, #000 34px, #000 calc(100% - 34px), transparent 100%); }
 .segmented-control button { flex: 0 0 auto; white-space: nowrap; border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; font-size: 10px; font-weight: 700; padding: 7px 12px; }
 .segmented-control button.is-active { background: var(--vlak); color: var(--navy-tekst); box-shadow: 0 3px 9px rgba(13,27,56,.08); }
-.segmented-control-scroll-track { position: relative; height: 4px; margin: 6px 4px 0; border-radius: 999px; background: var(--line); overflow: hidden; }
-.segmented-control-scroll-thumb { position: absolute; top: 0; left: 0; height: 100%; min-width: 18px; border-radius: 999px; background: var(--mint); }
 .invoice-action { display: flex; align-items: center; gap: 6px; }
 .invoice-action-note { color: var(--muted); font-size: 9px; font-weight: 700; }
 .small-button { border: 1px solid var(--line); border-radius: 9px; background: var(--vlak); color: var(--teal); cursor: pointer; font-size: 10px; font-weight: 800; padding: 7px 10px; }
@@ -2777,6 +2792,12 @@ body.toont-installatieaanbod .main-content {
   .admin-task-heading p { font-size: 12px; }
   .admin-task-kind span { font-size: 11px; }
   .admin-task-kind strong { font-size: 13px; }
+  /* 11px is de leesbaarheidsondergrens op de telefoon (MOB-H-011); bij die
+     maat past "AUGUSTUS" niet meer in de 68px labelkolom, dus die groeit
+     mee. De balk zelf houdt zijn vaste 56px, want juist daardoor zijn de
+     maanden onderling te vergelijken. */
+  .admin-task-month { grid-template-columns: 78px 1fr 22px; }
+  .admin-task-month b { font-size: 11px; }
   .admin-task-month-heading small { font-size: 11px; }
   .admin-task-month-heading-copy > span { font-size: 12px; }
   .admin-task-month-heading-side small { font-size: 13px; }

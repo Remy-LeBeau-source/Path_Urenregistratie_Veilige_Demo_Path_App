@@ -8446,32 +8446,29 @@ function renderHoursWeekFilter(period, scope) {
 // zodra dat niet meer zo is (een filterlijst kan tussen renders krimpen).
 function refreshSegmentedControlScrollIndicators() {
   document.querySelectorAll(".segmented-control").forEach(control => {
+    // Deze functie zette hier eerst een eigen balk met duim als sibling neer.
+    // Die is vervangen door een vervagende rand op de rij zelf (zie
+    // .segmented-control[data-schuifrand] in styles.css); een balk die altijd
+    // blijft staan zegt niet waar de verborgen inhoud zit, een rand wel.
+    const overgeblevenBalk = control.nextElementSibling;
+    if (overgeblevenBalk?.classList.contains("segmented-control-scroll-track")) overgeblevenBalk.remove();
+
     const overflow = control.scrollWidth - control.clientWidth;
-    let track = control.nextElementSibling;
-    if (!track || !track.classList.contains("segmented-control-scroll-track")) track = null;
     if (overflow <= 1) {
-      if (track) track.hidden = true;
+      delete control.dataset.schuifrand;
       return;
     }
-    if (!track) {
-      track = document.createElement("div");
-      track.className = "segmented-control-scroll-track";
-      track.setAttribute("aria-hidden", "true");
-      const thumb = document.createElement("span");
-      thumb.className = "segmented-control-scroll-thumb";
-      track.appendChild(thumb);
-      control.insertAdjacentElement("afterend", track);
-      if (!control.dataset.scrollIndicatorBound) {
-        control.dataset.scrollIndicatorBound = "true";
-        control.addEventListener("scroll", refreshSegmentedControlScrollIndicators, { passive: true });
-      }
+    if (!control.dataset.scrollIndicatorBound) {
+      control.dataset.scrollIndicatorBound = "true";
+      control.addEventListener("scroll", refreshSegmentedControlScrollIndicators, { passive: true });
     }
-    track.hidden = false;
-    const thumb = track.firstElementChild;
-    const zichtbaarAandeel = Math.max(0.08, Math.min(1, control.clientWidth / control.scrollWidth));
-    const geschovenAandeel = Math.max(0, Math.min(1, control.scrollLeft / overflow));
-    thumb.style.width = (zichtbaarAandeel * 100) + "%";
-    thumb.style.left = (geschovenAandeel * (1 - zichtbaarAandeel) * 100) + "%";
+    // Een marge van 1px, want scrollLeft is bij zoomniveaus zelden precies 0
+    // of precies gelijk aan de overloop.
+    const linksVerborgen = control.scrollLeft > 1;
+    const rechtsVerborgen = control.scrollLeft < overflow - 1;
+    control.dataset.schuifrand = linksVerborgen && rechtsVerborgen
+      ? "beide"
+      : linksVerborgen ? "links" : "rechts";
   });
 }
 

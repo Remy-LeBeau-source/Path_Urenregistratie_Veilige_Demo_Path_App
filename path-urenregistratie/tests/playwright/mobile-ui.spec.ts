@@ -446,15 +446,20 @@ test('[MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documen
     await expect(page.locator('#hours-week-filter')).toHaveCSS('overflow-x', 'auto');
     // Testfeedback: de native overlay-scrollbar op #hours-week-filter blijft op
     // mobiel onzichtbaar tot je er actief op raakt, dus een stilstaand scherm
-    // liet nergens zien dat er meer weken te vinden waren. Deze eigen balk moet
-    // daarom altijd zichtbaar zijn zodra de weekknoppen breder zijn dan het
-    // scherm -- ongeacht licht/donker, want beide gebruiken dezelfde tokens.
-    // Generiek gemaakt voor elke .segmented-control (niet alleen deze), dus de
-    // balk verschijnt als sibling i.p.v. op een vast id.
-    const schuifbalk = page.locator('#hours-week-filter + .segmented-control-scroll-track');
-    await expect(schuifbalk).toBeVisible();
-    const duimBreedte = await schuifbalk.locator('.segmented-control-scroll-thumb').evaluate(el => parseFloat(getComputedStyle(el).width));
-    expect(duimBreedte, 'de schuifbalk hoort een echte, meetbare breedte te hebben').toBeGreaterThan(0);
+    // liet nergens zien dat er meer weken te vinden waren. Dat blijft de eis;
+    // de invulling is veranderd. Er stond eerst een eigen mint balk met duim
+    // onder de rij, die bij een kleine overloop bijna de hele breedte vulde en
+    // daardoor als een volle voortgangsbalk las. Nu vervaagt de rij aan de kant
+    // waar nog weken buiten beeld staan (data-schuifrand), wat wél zegt wélke
+    // kant. De oude balk hoort dus juist te zijn verdwenen.
+    const weekfilter = page.locator('#hours-week-filter');
+    await expect(page.locator('#hours-week-filter + .segmented-control-scroll-track')).toHaveCount(0);
+    await expect(weekfilter).toHaveAttribute('data-schuifrand', 'rechts');
+    // En na doorschuiven wijst de rand de andere kant op, in plaats van te
+    // blijven staan zoals de balk deed.
+    await weekfilter.evaluate(el => { el.scrollLeft = el.scrollWidth; });
+    await expect(weekfilter).toHaveAttribute('data-schuifrand', 'links');
+    await weekfilter.evaluate(el => { el.scrollLeft = 0; });
   });
 
   await test.step('When uren als concept worden gewijzigd en daarna ingediend', async () => {
@@ -1651,13 +1656,18 @@ test('[MOB-H-024] een net ingelogde medewerker ziet op de telefoon een volledig 
   });
 });
 
-test('[MOB-H-025] elke .segmented-control krijgt een schuifbalk-indicator zodra hij écht overloopt, generiek voor de hele app', async ({ page }) => {
+test('[MOB-H-025] elke .segmented-control krijgt een schuifrand zodra hij écht overloopt, generiek voor de hele app', async ({ page }) => {
   // MOB-H-002 bewijst dit al voor Mijn uren specifiek. Deze case bewijst het
   // generieke mechanisme zelf (refreshSegmentedControlScrollIndicators() in
   // app.js) los van app-data: een synthetische rij knoppen die gegarandeerd
   // overloopt, en een die dat gegarandeerd niet doet -- inclusief dat de
-  // balk weer verdwijnt zodra een eerder overlopende rij weer past (bv. na
-  // het wijzigen van een filterselectie met minder knoppen).
+  // aanduiding weer verdwijnt zodra een eerder overlopende rij weer past (bv.
+  // na het wijzigen van een filterselectie met minder knoppen).
+  //
+  // De aanduiding was een eigen balk met duim onder de rij; die is vervangen
+  // door data-schuifrand op de rij zelf, dat óók zegt welke kant de verborgen
+  // inhoud op zit. De eis is dus dezelfde gebleven, de meting verschoven van
+  // "is er een sibling-balk" naar "staat het randattribuut goed".
   const loginPage = new LoginPage(page);
   await loginPage.open();
   await loginPage.loginAsAdmin();
@@ -1682,30 +1692,34 @@ test('[MOB-H-025] elke .segmented-control krijgt een schuifbalk-indicator zodra 
     const passend = maakRij(1);
     w.refreshSegmentedControlScrollIndicators();
 
-    const balkOverlopend = overlopend.nextElementSibling;
-    const balkPassend = passend.nextElementSibling;
     const na1e = {
-      overlopendHeeftBalk: !!balkOverlopend?.classList.contains('segmented-control-scroll-track'),
-      overlopendBalkVerborgen: (balkOverlopend as HTMLElement | null)?.hidden,
-      passendGeenBalk: !balkPassend || !balkPassend.classList.contains('segmented-control-scroll-track') || (balkPassend as HTMLElement).hidden,
+      overlopendRand: overlopend.dataset.schuifrand,
+      passendRand: passend.dataset.schuifrand,
+      // De oude balk mag nergens meer als sibling opduiken.
+      geenOudeBalk: !document.querySelector('.segmented-control-scroll-track'),
     };
 
+    // Helemaal doorschuiven: de rand hoort van kant te wisselen i.p.v. te
+    // blijven staan waar hij stond.
+    overlopend.scrollLeft = overlopend.scrollWidth;
+    w.refreshSegmentedControlScrollIndicators();
+    const naDoorschuiven = overlopend.dataset.schuifrand;
+
     // Simuleer dat de overlopende rij daarna smal genoeg wordt (bv. minder
-    // knoppen na een filterwissel) -- de balk hoort dan weer te verdwijnen.
+    // knoppen na een filterwissel) -- de rand hoort dan weer te verdwijnen.
     while (overlopend.children.length > 1) overlopend.lastElementChild!.remove();
     w.refreshSegmentedControlScrollIndicators();
-    const naKrimpen = (overlopend.nextElementSibling as HTMLElement | null)?.hidden;
+    const naKrimpen = overlopend.dataset.schuifrand;
 
     overlopend.remove();
     passend.remove();
-    balkOverlopend?.remove();
-    balkPassend?.remove();
 
-    return { na1e, naKrimpen };
+    return { na1e, naDoorschuiven, naKrimpen };
   });
 
-  expect(uitkomst.na1e.overlopendHeeftBalk, 'een overlopende rij hoort een schuifbalk-indicator te krijgen').toBe(true);
-  expect(uitkomst.na1e.overlopendBalkVerborgen, 'de balk van een overlopende rij mag niet verborgen zijn').toBe(false);
-  expect(uitkomst.na1e.passendGeenBalk, 'een rij die past hoort geen zichtbare balk te krijgen').toBe(true);
-  expect(uitkomst.naKrimpen, 'de balk hoort weer te verdwijnen zodra de rij niet meer overloopt').toBe(true);
+  expect(uitkomst.na1e.overlopendRand, 'een overlopende rij hoort te wijzen naar de kant waar inhoud buiten beeld staat').toBe('rechts');
+  expect(uitkomst.na1e.passendRand, 'een rij die past hoort geen schuifrand te krijgen').toBeUndefined();
+  expect(uitkomst.na1e.geenOudeBalk, 'de oude schuifbalk met duim hoort nergens meer te staan').toBe(true);
+  expect(uitkomst.naDoorschuiven, 'aan het einde van de rij hoort de rand naar links te wijzen').toBe('links');
+  expect(uitkomst.naKrimpen, 'de schuifrand hoort te verdwijnen zodra de rij niet meer overloopt').toBeUndefined();
 });

@@ -1362,6 +1362,20 @@ html[data-skin="new"] .segmented-control {
   background: var(--vlak-zacht);
 }
 
+/* De schuifrand-vervaging zelf is kleurloos en werkt in beide skins; alleen
+   de sleepgreep moet hier oplichten in plaats van donker worden. */
+html[data-skin="new"] .segmented-control {
+  scrollbar-color: rgba(255, 255, 255, .28) transparent;
+}
+
+html[data-skin="new"] .segmented-control::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, .24);
+}
+
+html[data-skin="new"] .segmented-control:hover::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, .38);
+}
+
 html[data-skin="new"] .segmented-control button.is-active {
   background: var(--surface);
   color: var(--navy-tekst);
