@@ -15,16 +15,32 @@ concurrency:
 
 jobs:
   validate-and-test:
-    name: Validate and test (${{ matrix.shard }}/8)
+    name: Validate and test (${{ matrix.shard }}/12)
     runs-on: ubuntu-latest
     timeout-minutes: 25
     # Iedere shard heeft een eigen runner, MySQL-service en PHP-server. Zo blijft
-    # de volledige suite draaien, maar wachten de acht delen niet op elkaar.
+    # de volledige suite draaien, maar wachten de delen niet op elkaar.
+    #
+    # Van acht naar twaalf: bij acht delen liep shard 7 tegen het budget van
+    # 14 minuten aan en werd hij afgekapt (exitcode 124) terwijl alle 97 tot dan
+    # gedraaide cases groen waren -- een rode build zonder falende test. Playwright
+    # verdeelt op aantal cases, niet op duur, dus zo'n uitschieter komt terug zodra
+    # de suite groeit. Het budget oprekken zou de timeout als hangdetector
+    # uithollen; kleinere delen houden die scherp en korten bovendien de
+    # doorlooptijd in.
+    #
+    # De release-pijplijn kreeg op 10 sep exact dezelfde diagnose (shard 7 op
+    # 98/100 toen de klok afliep) en ging naar tien. Hier staat bewust twaalf en
+    # geen tien: die shard had naar schatting zo'n 17 minuten nodig, en bij tien
+    # delen kom je daarmee op ~13,6 minuten -- binnen de limiet, maar met minder
+    # dan een halve minuut speling, en de suite groeit nog. Twaalf geeft echte
+    # ruimte. Als de release-pijplijn hier alsnog tegenaan loopt, is twaalf ook
+    # daar de volgende stap.
     strategy:
       fail-fast: false
-      max-parallel: 8
+      max-parallel: 12
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
     defaults:
       run:
         working-directory: path-urenregistratie
@@ -262,7 +278,7 @@ jobs:
           PATH_APP_BASE_URL: http://127.0.0.1:8000
         # GitHub-cancel kan bij een vastgelopen browser traag reageren. GNU
         # timeout stuurt eerst TERM en forceert uiterlijk 30 seconden later KILL.
-        run: timeout --signal=TERM --kill-after=30s 14m npm run test:e2e -- --shard=${{ matrix.shard }}/8
+        run: timeout --signal=TERM --kill-after=30s 14m npm run test:e2e -- --shard=${{ matrix.shard }}/12
 
       - name: Upload Playwright report artifact
         if: always()
