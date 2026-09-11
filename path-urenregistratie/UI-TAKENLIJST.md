@@ -15,6 +15,7 @@ Status: `open` · `bezig` · `klaar (vX.Y.Z)` · `bewust niet`
 |---|---|---|---|
 | 13 | Opgeknipte schermen (Mijn maanden, Procesvoortgang, Klanturenstaat) zijn in New verborgen. Het opknippen landt daar dus niet. | gebruiker: "het opknippen zou je ook doorvoeren" | open |
 | 24 | Bot die bij elke versie een bericht naar het team stuurt. WhatsApp-groepen kunnen niet via de officiële API; mail of Teams/Slack wel. Wacht op keuze. | gebruiker | wacht op gebruiker |
+| 29 | "Standaardweek vullen" altijd laten overschrijven. LET OP: botst met een eerdere wens van Stasjo ("als ik ziek of vrij ben moet ik ze eruit kunnen halen"), die als eis in SKIN-H-023 staat. Advies: niet het gedrag van de bestaande knop omdraaien maar een aparte actie "week terugzetten naar standaard" toevoegen. Eerst kijken of taak 30 de klacht al wegneemt. | Shawn via WhatsApp | wacht op gebruiker |
 | 25 | Echte mailadressen van medewerkers op TEST, zodat zij de urenoverzichtmail ook zien. Adressen onbekend bij mij; herinneringstaak draait elke 15 min, dus collega's krijgen dan automatisch post. Wacht op adressen en akkoord. | gebruiker | wacht op gebruiker |
 | 15 | Statuslabels: kleuren zijn per scherm gegroeid; één systeem waarin een kleur overal hetzelfde betekent. | eigen voorstel | open |
 | 16 | Laadtoestanden ("Werkvoorraad laden…") staan als gewone tekst op de plek van een getal; het scherm springt. | eigen voorstel | open |
@@ -45,6 +46,8 @@ Status: `open` · `bezig` · `klaar (vX.Y.Z)` · `bewust niet`
 | 26 | De vier stappen in New: lijnen raakten de bollen niet (halo van 5px dekte het uiteinde af) en bij stap 1 ontbrak de lijn. Nu één doorlopende lijn van bol tot bol. | foto gebruiker | klaar (v1.0.92) |
 | 27 | Klanturenstaat-kaart in New: foto kapte hard af bij openklappen, en velden/statuspil/mailblok waren donker op crème. Foto loopt door en vervaagt; het hele kaartje is één licht palet. | foto gebruiker | klaar (v1.0.92) |
 | 28 | New-skin overschreef drie Klassiek-verbeteringen (datumpillen, medewerkergegevens, mededelingen-meta) waardoor die daar niet landden. | eigen vondst n.a.v. "ik zie geen verschil" | klaar (v1.0.92) |
+| 30 | De automatische standaardvulling draaide bij élke server-sync en vulde telkens elke dag op 0 opnieuw. Daardoor: een bewust leeg gelaten dag kwam terug, "Standaardweek vullen" had nooit iets te doen, en een net ingetypt uur kon worden overschreven in de race met het inlezen van de server (echte fout, raakte uren). Vult nu alleen nog bij een maand waar nog niets mee gebeurd is. | eigen vondst via SKIN-H-011 + melding Shawn | klaar (v1.0.95) |
+| 31 | Hulptekst over de bel noemde klanturenstaat-meldingen niet en beweerde hard dat e-mailverzending uitstond. | tester via foto | klaar (v1.0.92) |
 
 ## Bewust niet gedaan
 

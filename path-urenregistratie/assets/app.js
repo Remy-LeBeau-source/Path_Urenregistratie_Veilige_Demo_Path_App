@@ -4539,8 +4539,35 @@ function applyDayHoursDefaultsToRecord(record, employee, periodKey) {
   // Alleen doorzetten als period ook echt de huidige kalendermaand is.
   const now = new Date();
   if (now.getFullYear() !== period.year || now.getMonth() !== period.monthIndex) return;
+  // Alleen bij een maand waar nog niets mee gebeurd is. Dit draaide bij élke
+  // server-sync, en vulde dan opnieuw elke dag die op 0 stond. Drie dingen
+  // gingen daardoor mis:
+  //   1. Een dag die de medewerker bewust leeg liet, stond na herladen weer
+  //      op het patroon -- precies wat Stasjo's wens ("ziek of vrij eruit
+  //      kunnen halen") juist wilde voorkomen.
+  //   2. "Standaardweek vullen" had nooit meer iets te doen en leek kapot
+  //      (gemeld door Shawn, 11 sep).
+  //   3. Het racete met het inlezen van de serverwaarden, waardoor een net
+  //      ingetypt uur kon worden teruggezet naar het patroon (SKIN-H-011).
+  // Als voorzet bij een lege maand is de vulling nuttig; als terugkerende
+  // correctie op wat de medewerker zelf doet, niet.
+  if (!maandIsOnaangeroerd(record)) return;
   const activeWeekIndex = todaysWeekIndexInPeriod(period);
   fillStandardHoursInRecord(record, employee, period, [activeWeekIndex], { persistStatus: false });
+}
+
+// Onaangeroerd = nergens uren, nergens een bewust bevestigde dag, en nog geen
+// urenstaat op de server. Zodra één van die drie waar is, heeft de medewerker
+// (of Backoffice) zich over deze maand uitgesproken en houdt de automatische
+// vulling zich erbuiten.
+function maandIsOnaangeroerd(record) {
+  if (!record) return false;
+  if (Number(record.serverTimesheetId || 0) > 0) return false;
+  if (String(record.timesheetStatus || "draft") !== "draft") return false;
+  const heeftUren = (record.entries || []).some(week => (week || []).some(uren => Number(uren || 0) > 0));
+  if (heeftUren) return false;
+  const heeftBevestiging = (record.confirmedEntries || []).some(week => (week || []).some(Boolean));
+  return !heeftBevestiging;
 }
 
 function fillStandardHoursInRecord(record, employee, period, weekIndexes, options = {}) {
