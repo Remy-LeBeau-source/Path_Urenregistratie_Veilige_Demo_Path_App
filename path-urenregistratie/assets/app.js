@@ -11453,7 +11453,13 @@ function showEmployeeEditor(employeeId, prefill) {
     '<label>Contract<input id="edit-contract" value="' + escapeHtml(employee.contract) + '"></label>' +
     '<label>Uren per week<input id="edit-weekly-hours" type="number" min="0" step="0.5" value="' + weeklyHoursFor(employee) + '"></label>' +
     '<p class="full form-help">Eigen werkpatroon per weekdag (optioneel). Leeg = gelijk verdeeld over alle werkdagen, zoals nu. Ingevuld (bv. vrijdag 0) telt voortaan zo mee in de contracturen en staat als beginwaarde klaar in Mijn uren.</p>' +
+    // De vijf weekdagen stonden los in het tweekoloms formulierraster, waardoor
+    // vrijdag in zijn eentje op een vierde regel belandde. Het is een week, geen
+    // lijst: naast elkaar leest hij als een week en sluit hij aan op hoe het
+    // urenraster in Mijn uren er ook uitziet. Eigen rij, zelfde velden en id's.
+    '<div class="full modal-dagenrij">' +
     WEEKDAY_HOURS_FIELDS.map(field => '<label>' + field.label + '<input id="edit-hours-' + field.key + '" type="number" min="0" max="24" step="0.5" placeholder="gelijk verdeeld" value="' + (employee.dayHours && employee.dayHours[field.iso] !== undefined && employee.dayHours[field.iso] !== null ? employee.dayHours[field.iso] : "") + '"></label>').join("") +
+    '</div>' +
     '<p class="full modal-form-sectie">Opdracht en factuurroute</p>' +
     '<label>Klant<input id="edit-client" value="' + escapeHtml(employee.client) + '"></label>' +
     '<label>Projectcode<input id="edit-project" value="' + escapeHtml(employee.projectCode) + '"></label>' +

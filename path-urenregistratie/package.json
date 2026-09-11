@@ -1,6 +1,6 @@
 {
   "name": "path-urenregistratie",
-  "version": "1.0.84",
+  "version": "1.0.85",
   "private": true,
   "scripts": {
     "dev": "vite",

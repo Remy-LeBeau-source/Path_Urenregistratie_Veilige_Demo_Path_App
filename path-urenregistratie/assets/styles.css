@@ -1120,6 +1120,15 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .modal-form { display: grid !important; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 13px !important; color: var(--muted); }
 .modal-form label { display: block; color: var(--muted); font-size: 10px; font-weight: 700; }
 .modal-form label.full, .modal-form .full { grid-column: 1/-1; }
+/* De vijf weekdagen als week, niet als lijst: vijf gelijke kolommen die op een
+   smal scherm terugvallen op wat past. De invoervelden mogen hier smaller --
+   er gaan hoogstens twee cijfers en een komma in. */
+.modal-dagenrij { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 9px; }
+.modal-dagenrij label { font-size: 9px; letter-spacing: .03em; }
+.modal-dagenrij input { text-align: center; padding-inline: 6px; }
+@media (max-width: 560px) {
+  .modal-dagenrij { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 .modal-form input, .modal-form textarea { display: block; width: 100%; margin-top: 6px; border: 1px solid var(--line); border-radius: 10px; background: var(--vlak); color: var(--ink); font: inherit; font-size: 12px; padding: 10px 12px; }
 .modal-form input { height: 40px; }
 .modal-form textarea { min-height: 105px; resize: vertical; line-height: 1.5; }
@@ -1139,7 +1148,19 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .modal-form-sectie { margin: 6px 0 0; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
 .modal-form > .modal-form-sectie:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
 
-.modal-actions { display: flex; justify-content: flex-end; gap: 9px; }
+/* De knoppenrij stond binnen het scrollgebied en schoof dus mee naar beneden.
+   Bij een korte bevestiging maakt dat niets uit, maar het medewerkerformulier
+   is drie schermen lang: om op te slaan moest je eerst helemaal naar beneden,
+   zonder dat ergens te zien was dat daar een knop stond. Nu plakt de rij aan
+   de onderkant van de dialoog -- de inhoud schuift eronder door. De negatieve
+   marges trekken hem tot in de binnenmarge van .modal-scroll, zodat hij de
+   volle breedte pakt en de lijn erboven echt een scheiding is. */
+.modal-actions { position: sticky; bottom: 0; z-index: 2; display: flex; justify-content: flex-end; gap: 9px; margin: 22px -30px 0; border-top: 1px solid var(--line-zacht); background: var(--vlak); padding: 15px 30px 26px; }
+/* De balk levert zelf de ondermarge, anders blijft er onder hem een strook
+   van de binnenmarge over waar inhoud doorheen schuift. Alleen bij dialogen
+   die daadwerkelijk een knoppenrij hebben -- een dialoog zonder knoppen houdt
+   zijn gewone marge. */
+.modal-scroll:has(.modal-actions) { padding-bottom: 0; }
 .toast { position: fixed; right: 24px; bottom: 24px; z-index: 150; max-width: 350px; border-radius: 12px; background: var(--navy); color: #fff; box-shadow: var(--shadow); font-size: 12px; opacity: 0; padding: 14px 18px; pointer-events: none; transform: translateY(12px); transition: opacity .2s ease, transform .2s ease; }
 .toast.is-visible { opacity: 1; transform: none; }
 
@@ -1269,6 +1290,8 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .template-subject { grid-column: auto; grid-row: auto; }
   .announcement-meta { gap: 8px; }
   .modal-scroll { padding: 25px 20px; }
+  /* Zelfde vastgezette knoppenbalk, maar met de binnenmarge van dit formaat. */
+  .modal-actions { margin-inline: -20px; padding: 13px 20px 22px; }
   .modal-form { grid-template-columns: minmax(0, 1fr); }
   .modal-form label.full, .modal-form .full { grid-column: auto; }
   .modal-queue { grid-template-columns: 1fr 1fr; }
@@ -2521,6 +2544,8 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
   .modal-scroll {
     padding: 24px 18px 18px;
   }
+
+  .modal-actions { margin-inline: -18px; padding: 13px 18px 20px; }
 
   .modal h2 {
     padding-right: 38px;
