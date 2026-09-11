@@ -1159,7 +1159,7 @@ click("#modal-confirm");
 click('[data-employee-scope="active"]');
 
 click('[data-view="settings"]');
-assert(document.querySelectorAll(".settings-section-nav [data-scroll-target]").length === 6 && document.querySelector("#settings-reminders") && document.querySelector("#settings-safety"), "Instellingen moet een compact inhoudsmenu met zes duidelijke onderdelen hebben");
+assert(document.querySelectorAll(".settings-section-nav [data-scroll-target]").length === 7 && document.querySelector("#settings-reminders") && document.querySelector("#settings-safety") && document.querySelector("#settings-audit"), "Instellingen moet een compact inhoudsmenu met zeven duidelijke onderdelen hebben");
 assert(document.querySelector("#view-settings").textContent.includes("Afzonderlijke routes") && !document.querySelector("#view-settings").textContent.includes("Proces samen of apart nog bevestigen"), "Instellingen mag geen reeds genomen procesbesluit meer als open vraag tonen");
 assert(document.querySelector("#mail-template-list").textContent.includes("augustus"), "Brokerteksten moeten de gekozen periode gebruiken");
 assert(document.querySelector("#mail-recipient-settings-list").textContent.includes("Boekhouder") && document.querySelector("#mail-recipient-settings-list").textContent.includes("Salarisadministratie"), "Vaste ontvangers moeten één keer centraal beheerd worden");

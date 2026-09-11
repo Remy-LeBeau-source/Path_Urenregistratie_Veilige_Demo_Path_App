@@ -845,6 +845,7 @@
           <button type="button" data-scroll-target="settings-texts">Teksten</button>
           <button type="button" data-scroll-target="settings-reminders">Herinneringen</button>
           <button type="button" data-scroll-target="settings-safety">Veiligheid</button>
+          <button type="button" data-scroll-target="settings-audit">Auditlog</button>
         </nav>
         <div class="settings-grid">
           <section class="panel settings-card full-width" id="settings-organization">
@@ -1000,6 +1001,22 @@
               <li><strong>Factuurnummer vastgezet</strong><small>Na afgeronde verzendcontrole niet meer wijzigbaar</small></li>
               <li><strong>Auditlog bijgehouden</strong><small>Wie wijzigde of controleerde wat en wanneer</small></li>
             </ul>
+          </section>
+          <section class="panel settings-card full-width" id="settings-audit">
+            <div class="email-template-heading"><div><span class="section-label">Verantwoording</span><h3>Auditlog</h3></div><span class="status-pill status-approved" id="audit-log-count-pill">0 gebeurtenissen</span></div>
+            <p class="settings-template-intro">Wie deed wat en wanneer -- alleen zichtbaar voor beheerders. Filter op persoon of type actie om snel na te gaan wie een indiening, goedkeuring of wijziging heeft uitgevoerd.</p>
+            <div class="audit-log-filters">
+              <label>Wie<select id="audit-log-filter-actor" aria-label="Filter auditlog op persoon"><option value="">Iedereen</option></select></label>
+              <label>Wat<select id="audit-log-filter-event" aria-label="Filter auditlog op type actie"><option value="">Alle acties</option></select></label>
+              <button class="small-button" type="button" id="audit-log-refresh">Vernieuwen</button>
+            </div>
+            <div class="audit-log-table-wrap">
+              <table class="data-table audit-log-table" id="audit-log-table">
+                <thead><tr><th>Tijdstip</th><th>Wie</th><th>Wat</th><th>Waarover</th></tr></thead>
+                <tbody id="audit-log-rows"></tbody>
+              </table>
+            </div>
+            <div class="dashboard-action-empty" id="audit-log-empty" hidden><strong>Geen gebeurtenissen gevonden.</strong><br>Pas het filter aan of kom later terug.</div>
           </section>
         </div>
       </section>

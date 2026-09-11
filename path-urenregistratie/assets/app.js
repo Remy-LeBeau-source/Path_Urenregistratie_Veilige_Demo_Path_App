@@ -1654,7 +1654,14 @@ function requestLocalLoginHints() {
 
       authRuntime.localLoginHints = {
         adminPassword: String(data.adminPassword || ""),
-        employeePassword: String(data.employeePassword || "")
+        employeePassword: String(data.employeePassword || ""),
+        // Werknemer-id -> huidig echt adres, voor genoemde testers wier
+        // demo-adres (@example.invalid) door een baseline-reset al is
+        // vervangen. Zonder deze toewijzing vult de snelkeuze het verouderde
+        // demo-adres in, dat niet meer bestaat op de echte TEST-database.
+        employeeEmailOverrides: (data.employeeEmailOverrides && typeof data.employeeEmailOverrides === "object")
+          ? data.employeeEmailOverrides
+          : {}
       };
 
       return authRuntime.localLoginHints;
@@ -1665,6 +1672,17 @@ function requestLocalLoginHints() {
     });
 
   return authRuntime.localLoginHintsPromise;
+}
+
+// Geeft het echte, huidige e-mailadres voor deze medewerker terug als de
+// server er een kent (test_reset_named_tester_employee_email_mapping()),
+// anders het adres uit de demo-catalogus. Alleen relevant voor medewerkers:
+// de admin-accounts (Gio/Joyce) worden nooit gemigreerd.
+function resolveLoginEmail(role, account, hints) {
+  const fallback = String(account?.email || "").trim();
+  if (role !== "employee" || !account) return fallback;
+  const override = hints?.employeeEmailOverrides?.[String(account.id)];
+  return override ? String(override).trim() : fallback;
 }
 
 function prefillAuthCredentialsFromSelection(role, showFeedback = true) {
@@ -1688,6 +1706,11 @@ function prefillAuthCredentialsFromSelection(role, showFeedback = true) {
     const fallbackFeedback = "E-mail voorgeselecteerd. Vul je wachtwoord in.";
     const currentEmail = String(emailInput.value || "").trim().toLowerCase();
     if (currentEmail !== email.toLowerCase()) return;
+
+    const resolvedEmail = resolveLoginEmail(role, account, hints);
+    if (resolvedEmail && resolvedEmail.toLowerCase() !== email.toLowerCase()) {
+      emailInput.value = resolvedEmail;
+    }
 
     const hintedPassword = role === "admin"
       ? String(hints?.adminPassword || "").trim()
@@ -1733,6 +1756,16 @@ function triggerLoginChoice(role) {
   passwordInput.value = "";
 
   requestLocalLoginHints().then(hints => {
+    // Voor een genoemde tester (Marc/Stasjo/Brian/Shawn) is het demo-adres na
+    // de baseline-reset vervangen door zijn echte adres; zonder dit vulde de
+    // knop hier het verouderde @example.invalid-adres in en de inlogpoging
+    // faalde stil met "E-mailadres of wachtwoord is onjuist" (gemeld door de
+    // gebruiker: "de auto inlog werkt niet meer... voor medewerker").
+    const resolvedEmail = resolveLoginEmail(role, account, hints);
+    if (resolvedEmail && resolvedEmail.toLowerCase() !== email.toLowerCase()) {
+      emailInput.value = resolvedEmail;
+    }
+
     const hintedPassword = role === "admin"
       ? String(hints?.adminPassword || "").trim()
       : String(hints?.employeePassword || "").trim();

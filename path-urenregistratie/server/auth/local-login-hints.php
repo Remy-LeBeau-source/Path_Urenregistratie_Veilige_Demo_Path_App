@@ -3,6 +3,10 @@
 declare(strict_types=1);
 
 require __DIR__ . '/session.php';
+// Alleen voor test_reset_named_tester_employee_email_mapping(): een pure,
+// config-gedreven functie zonder neveneffecten. Vereist verder geen van de
+// resetlogica hieromheen.
+require __DIR__ . '/../lib/test-reset.php';
 
 auth_require_method('GET');
 
@@ -100,6 +104,23 @@ $employeePassword = $guardedTest
     ? 'LocalDemoEmployee2026'
     : trim((string)(getenv('PLAYWRIGHT_EMPLOYEE_PASSWORD') ?: ($envMap['PLAYWRIGHT_EMPLOYEE_PASSWORD'] ?? '')));
 
+// De medewerkerkaart voor snel inloggen (index.html/app.js) toont nog de
+// vaste demo-catalogus (@example.invalid). Zodra een genoemde tester zijn
+// echte adres heeft gekregen (test_reset_apply_named_tester_emails() in
+// server/lib/test-reset.php, gestuurd door dezelfde config hieronder) bestaat
+// dat demo-adres niet meer op de echte TEST-database, en faalt de
+// snelknop stil met "E-mailadres of wachtwoord is onjuist" -- gemeld door de
+// gebruiker ("de auto inlog werkt niet meer... voor medewerker"). Deze
+// toewijzing (werknemer-id -> huidig echt adres) laat de frontend het juiste
+// adres invullen in plaats van het verouderde demo-adres.
+$employeeEmailOverrides = [];
+$rawConfig = auth_try_load_raw_config();
+if (is_array($rawConfig)) {
+    foreach (test_reset_named_tester_employee_email_mapping($rawConfig) as $entry) {
+        $employeeEmailOverrides[(string)$entry['id']] = $entry['email'];
+    }
+}
+
 header('Cache-Control: no-store, private');
 
 auth_send_json([
@@ -107,4 +128,5 @@ auth_send_json([
     'enabled' => ($adminPassword !== '' || $employeePassword !== ''),
     'adminPassword' => $adminPassword,
     'employeePassword' => $employeePassword,
+    'employeeEmailOverrides' => $employeeEmailOverrides,
 ]);
