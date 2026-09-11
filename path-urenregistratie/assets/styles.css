@@ -439,7 +439,10 @@ summary:focus-visible,
 .safety-badge.is-toggleable:hover { filter: brightness(.97); }
 .safety-badge.is-toggleable:focus-visible { outline: 3px solid rgba(61, 195, 157, .3); outline-offset: 2px; }
 .mail-acceptance-controls { display: flex; align-items: center; gap: 8px; }
-.topbar-quick-reset { border: 1px solid transparent; border-radius: 10px; background: transparent; color: var(--muted); cursor: pointer; font-size: 10px; font-weight: 700; letter-spacing: .04em; padding: 8px 11px; text-transform: uppercase; transition: border-color .18s ease, background .18s ease, color .18s ease; }
+/* inline-flex met gap: tussen het pijltje en het woord stond in de HTML een
+   spatie, maar een flexcontainer gooit witruimte tussen items weg -- op de
+   knop stond daardoor "↶HERSTEL DEMO" aan elkaar geplakt. */
+.topbar-quick-reset { display: inline-flex; align-items: center; gap: 6px; border: 1px solid transparent; border-radius: 10px; background: transparent; color: var(--muted); cursor: pointer; font-size: 10px; font-weight: 700; letter-spacing: .04em; padding: 8px 11px; text-transform: uppercase; transition: border-color .18s ease, background .18s ease, color .18s ease; }
 .topbar-quick-reset:hover { border-color: var(--line); background: var(--surface); color: var(--mint-dark-tekst); }
 /* Marge links: begin van het blok hulpmiddelen, los van de statusmelding.
    Niet in New, waar de rij al afbreekt en elke extra breedte een regel kost. */
@@ -2151,7 +2154,17 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
     align-items: center;
   }
 
+  /* De knoppenrij stapelde op de telefoon tot vier losse regels: de
+     maandkiezer, dan "Herstel demo" alleen links, dan de vormgevingswissel,
+     dan bel en avatar met een gat ertussen. Samen met de merkregel en de
+     titel eroverheen was ruim een derde van het scherm op vóór de eerste
+     inhoud. Door de plaatsing expliciet te maken staat er niets meer in zijn
+     eentje op een regel: maandkiezer bovenaan (de enige bediening die er op
+     elk scherm toe doet), daaronder herstel + bel + avatar naast elkaar, en
+     als laatste de vormgevingswissel over de volle breedte. Drie regels in
+     plaats van vier, en geen zwevende elementen. */
   .appearance-switches {
+    order: 1;
     grid-column: 1 / -1;
     width: 100%;
   }
@@ -2168,9 +2181,18 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
     min-height: 42px;
     align-items: center;
     justify-content: center;
+    grid-column: 1;
     justify-self: start;
+    /* Op desktop is deze knop rustig tot hover; op een aanraakscherm bestaat
+       hover niet, dus daar moet de rand er meteen zijn -- anders leest hij
+       als losse tekst tussen de knoppen. */
+    border-color: var(--line);
+    background: var(--surface);
     padding-inline: 14px;
   }
+
+  .topbar-actions .topbar-popover:nth-last-of-type(2) { grid-column: 2; }
+  .topbar-actions .topbar-popover:last-of-type { grid-column: 3; }
 
   .period-control {
     order: -1;

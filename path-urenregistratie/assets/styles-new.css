@@ -250,6 +250,12 @@ html[data-skin="new"] :is(.form-grid input, .form-grid select, .modal-form input
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--path-green) 20%, transparent);
 }
 
+/* Een dag die buiten de maand valt kreeg in deze skin een eigen vlak in een
+   net andere donkerte dan de kaart eromheen. Op een lichte ondergrond werkt
+   dat (Klassiek), maar hier leest het als een gat in de tabel. Het streepje
+   in het midden zegt al genoeg; het vlak eromheen mag weg. */
+html[data-skin="new"] .hours-table .outside-month { background: transparent; }
+
 html[data-skin="new"] :is(.data-table th, .data-table td, .hours-table th, .hours-table td) {
   border-color: var(--line);
 }
