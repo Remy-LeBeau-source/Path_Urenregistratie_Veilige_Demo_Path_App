@@ -293,6 +293,83 @@ test('[SAFE-H-015] TEST-deploy herstelt en verifieert de vaste accountbaseline v
   });
 });
 
+test('[SAFE-H-018] de accountbaseline-verificatie blijft correct nadat een genoemde tester zijn echte adres/wachtwoord heeft gekregen', async () => {
+  // Echte TEST-storing (11 sep, gemeld door de herontwerp-peer): de vaste
+  // TransIP-cutover-verificatie zocht Marc/Stasjo/Brian/Shawn nog altijd op
+  // hun @example.invalid-seedadres. Zodra configure-test-mail-sandbox.php hun
+  // rij op hun echte adres zet (server/lib/test-reset.php,
+  // test_reset_apply_named_tester_emails()), vond die vaste e-mail-lookup nog
+  // maar 2 van de 6 rijen en faalde de hele cutover fail-closed met "The
+  // remote TEST demo account set is incomplete." -- terwijl er niets mis was.
+  // test_reset_verify_remote_demo_credentials() zoekt sindsdien op het vaste
+  // seed-id (3/4/5/6) i.p.v. e-mailadres, en toetst voor die id's het
+  // configuratie-gedreven echte adres in plaats van het demo-adres/-wachtwoord
+  // (een tester mag intussen ook zijn eigen wachtwoord hebben gezet via een
+  // echte resetmail). Dit geval bewijst dat rechtstreeks tegen de echte
+  // lokale _test-database, in een transactie die aan het eind teruggedraaid
+  // wordt zodat er niets van blijft hangen.
+  const php = [
+    'declare(strict_types=1);',
+    'require "server/auth/session.php";',
+    'require "server/lib/test-reset.php";',
+    '$localConfig = require "server/config.local.php";',
+    '$pdo = auth_pdo($localConfig);',
+    '$exact = [',
+    '  "environment" => "test",',
+    '  "app_origin" => "https://uren-test.pathconsultancy.nl",',
+    '  "allow_demo_migrations" => true,',
+    '  "database" => ["host" => "pathco-urentest.db.transip.me", "port" => 3306, "name" => "pathco_Urentest", "user" => "pathco_UrenTestUser"],',
+    '  "storage" => ["private_root" => "/data/sites/web/pathconsultancynl/private/path-uren-test"],',
+    '];',
+    '$overrideKeys = ["PATH_APP_DB_HOST","PLAYWRIGHT_DB_HOST","DB_HOST","PATH_APP_DB_PORT","PLAYWRIGHT_DB_PORT","DB_PORT","PATH_APP_DB_NAME","PLAYWRIGHT_DB_NAME","DB_NAME","PATH_APP_DB_USER","PLAYWRIGHT_DB_USER","DB_USER"];',
+    '$saved = [];',
+    'foreach ($overrideKeys as $k) { $saved[$k] = getenv($k); putenv($k); }',
+    '$result = ["sanity_exact_contract" => test_reset_remote_contract_is_exact($exact)];',
+    'foreach ($saved as $k => $v) { $v === false ? putenv($k) : putenv($k . "=" . $v); }',
+    '$pdo->beginTransaction();',
+    'try {',
+    '  $realEmails = ["marcderoon@pathconsultancy.nl" => 3, "stasjovanbakel@pathconsultancy.nl" => 4, "brian.hek@pathconsultancy.nl" => 5, "shawn.nahar@pathconsultancy.nl" => 6];',
+    '  foreach ($realEmails as $email => $id) {',
+    '    $pdo->prepare("UPDATE users SET email = :email, password_hash = :hash, force_password_change = 1 WHERE id = :id")',
+    '      ->execute([":email" => $email, ":hash" => password_hash("EQ-Echt-Wachtwoord-" . $id, PASSWORD_DEFAULT), ":id" => $id]);',
+    '  }',
+    '  $configured = $exact;',
+    '  $configured["mail"] = ["acceptance_test" => ["named_tester_employee_emails" => [',
+    '    ["id" => 3, "email" => "marcderoon@pathconsultancy.nl"],',
+    '    ["id" => 4, "email" => "stasjovanbakel@pathconsultancy.nl"],',
+    '    ["id" => 5, "email" => "brian.hek@pathconsultancy.nl"],',
+    '    ["id" => 6, "email" => "shawn.nahar@pathconsultancy.nl"],',
+    '  ]]];',
+    '  foreach ($overrideKeys as $k) { putenv($k); }',
+    '  try {',
+    '    $verified = test_reset_verify_remote_demo_credentials($pdo, $configured);',
+    '    $result["positive_named_tester_verified"] = $verified === 6;',
+    '  } catch (Throwable $e) {',
+    '    $result["positive_named_tester_verified"] = false;',
+    '    $result["positive_error"] = $e->getMessage();',
+    '  }',
+    '  try {',
+    '    test_reset_verify_remote_demo_credentials($pdo, $exact);',
+    '    $result["negative_drift_still_blocked"] = false;',
+    '  } catch (RuntimeException $e) {',
+    '    $result["negative_drift_still_blocked"] = true;',
+    '  }',
+    '  foreach ($saved as $k => $v) { $v === false ? putenv($k) : putenv($k . "=" . $v); }',
+    '} finally {',
+    '  $pdo->rollBack();',
+    '}',
+    'echo json_encode($result);',
+  ].join('\n');
+
+  const { stdout } = await execFileAsync('php', ['-r', php], { cwd: process.cwd(), windowsHide: true });
+  const result = JSON.parse(stdout) as Record<string, unknown>;
+
+  expect(result.sanity_exact_contract, 'de synthetische config moet exact de echte TransIP-contract-vorm hebben').toBe(true);
+  expect(result.positive_error).toBeUndefined();
+  expect(result.positive_named_tester_verified, 'een genoemde tester op zijn echte adres met een zelf gezet wachtwoord moet nog steeds verifiëren').toBe(true);
+  expect(result.negative_drift_still_blocked, 'zonder de configuratie-koppeling moet een adresmismatch nog altijd fail-closed blijven').toBe(true);
+});
+
 test('[SAFE-N-001] frontend source bevat geen plaintext demo-credentials', async ({ request }) => {
   let source = '';
 
