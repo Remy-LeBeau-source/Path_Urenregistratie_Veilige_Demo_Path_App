@@ -64,6 +64,8 @@
 | AUD-H-009 | api | audit-log.feature | auditlog begrenst een hoge limiet op tweehonderd records | Grenswaardenanalyse | 2 | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | auditlog begrenst een hoge limiet op tweehonderd records | Happy | 16 | Actueel |
 | AUD-N-010 | api | audit-log.feature | auditlog weigert POST | Negatieve equivalentieklasse + error guessing | 2 | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | auditlog weigert POST | Negative | 16 | Actueel |
 | AUD-H-011 | api | audit-log.feature | aanmaken, instellingen opslaan en verwijderen worden geauditeerd met de juiste actor | API-contract + equivalentieklasse | 9 | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | aanmaken, instellingen opslaan en verwijderen worden geauditeerd met de juiste actor | Happy | 16 | Actueel |
+| AUD-H-012 | api | audit-log.feature | auditlog filtert op actor_id (Instellingen > Auditlog: "wie deed dit") | Equivalentieklassen | 11 | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | auditlog filtert op actor_id (Instellingen > Auditlog: "wie deed dit") | Happy | 16 | Actueel |
+| AUD-H-013 | api | audit-log.feature | Instellingen > Auditlog toont wie/wat/wanneer en filtert op persoon en actie | Equivalentieklassen | 18 | audit-log.steps.ts | audit-log.spec.ts | API | Audit & Security | Instellingen > Auditlog toont wie/wat/wanneer en filtert op persoon en actie | Happy | 16 | Actueel |
 | AUTH-H-001 | ui | auth.feature | Admin logt in en auth/me geeft de juiste gebruiker terug | Beslissingstabel rollen en autorisatie | 6 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Happy | 4 | Actueel |
 | AUTH-H-002 | ui | auth.feature | Medewerker logt in en auth/me geeft de juiste gebruiker terug | Beslissingstabel rollen en autorisatie | 3 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Happy | 4 | Actueel |
 | AUTH-H-003 | ui | auth.feature | Gebruiker logt uit en auth/me geeft authenticated false terug | End-to-end use-case + visuele contractasserties | 4 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Happy | 4 | Actueel |
@@ -505,9 +507,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 483
+- Playwright executable cases: 485
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 484
+- Totaal unieke executable cases: 486
 - Playwright features: 29
 - Database features: 1
 - Playwright steps mappings: 29

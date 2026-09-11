@@ -30,6 +30,10 @@ $limit     = min(200, max(1, (int)($_GET['limit'] ?? 100)));
 $entityType = isset($_GET['entity_type']) ? trim((string)$_GET['entity_type']) : null;
 $entityId   = isset($_GET['entity_id'])   ? trim((string)$_GET['entity_id'])   : null;
 $eventType  = isset($_GET['event_type'])  ? trim((string)$_GET['event_type'])  : null;
+// actor_id: "wie deed dit" -- los van entity_id (waar de gebeurtenis over
+// gaat), voor het Instellingen > Auditlog-scherm dat filtert op de persoon
+// die de actie uitvoerde, niet op de medewerker wiens data het betreft.
+$actorId    = isset($_GET['actor_id'])    ? trim((string)$_GET['actor_id'])    : null;
 
 $sql = '
     SELECT
@@ -53,6 +57,10 @@ if ($entityId !== null && $entityId !== '') {
 if ($eventType !== null && $eventType !== '') {
     $sql .= ' AND al.event_type = :event_type';
     $params[':event_type'] = $eventType;
+}
+if ($actorId !== null && $actorId !== '' && ctype_digit($actorId)) {
+    $sql .= ' AND al.actor_user_id = :actor_id';
+    $params[':actor_id'] = (int)$actorId;
 }
 
 $sql .= ' ORDER BY al.created_at DESC LIMIT ' . $limit;

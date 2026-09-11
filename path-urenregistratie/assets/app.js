@@ -1348,7 +1348,8 @@ const readApiDebug = {
   mailAcceptance: null,
   notifications: null,
   announcements: null,
-  customerTimesheetsByPeriod: {}
+  customerTimesheetsByPeriod: {},
+  auditLog: null
 };
 
 const readApiRuntime = {
@@ -1391,6 +1392,16 @@ const readApiRuntime = {
   ,mailDeliveryQuery: ""
   ,mailDeliveryLimit: 10
   ,mailDeliveryOffset: 0
+  ,auditLogInFlight: false
+  ,lastAuditLogAt: 0
+  ,auditLogActorFilter: ""
+  ,auditLogEventFilter: ""
+  // Verzamelt elk actor/event_type dat ooit is gezien, zodat de filter-
+  // keuzelijsten opties niet stilzwijgend laten verdwijnen zodra een filter
+  // de zichtbare rijen versmalt -- alleen de tabel zelf volgt het actieve
+  // filter, de keuzelijsten blijven de volledige, opgebouwde verzameling tonen.
+  ,auditLogKnownActors: {}
+  ,auditLogKnownEventTypes: {}
 };
 
 let mailDeliverySearchTimer = null;
@@ -9307,6 +9318,129 @@ function renderMailDeliveryHistory() {
   }).join("") : '<div class="dashboard-action-empty"><strong>Nog geen applicatiemails.</strong><br>Na de eerste queue- of verzendactie verschijnt hier het resultaat.</div>';
 }
 
+// Herkenbare Nederlandse labels voor de event_type-waarden die de server
+// daadwerkelijk in audit_log schrijft (server/api/*.php, server/mail/*.php).
+// Een onbekende waarde valt terug op een geprettificeerde versie van de ruwe
+// slug, zodat een nieuw event_type nooit een lege of kapotte rij oplevert.
+const AUDIT_LOG_EVENT_LABELS = {
+  "timesheet.draft_saved": "Concept opgeslagen",
+  "timesheet.submitted": "Uren ingediend",
+  "timesheet.resubmitted": "Uren opnieuw ingediend",
+  "timesheet.correction_requested": "Correctie aangevraagd",
+  "timesheet.approval_reopened": "Goedkeuring heropend",
+  "timesheet.approved": "Uren goedgekeurd",
+  "customer_timesheet.draft_saved": "Klanturenstaat concept opgeslagen",
+  "customer_timesheet.submitted": "Klanturenstaat ingediend",
+  "customer_timesheet.externally_confirmed": "Klanturenstaat extern bevestigd",
+  "customer_timesheet.skipped": "Klanturenstaat overgeslagen",
+  "customer_timesheet.approved": "Klanturenstaat goedgekeurd",
+  "customer_timesheet.resubmit_requested": "Klanturenstaat: herindienen gevraagd",
+  "customer_timesheet.sent": "Klanturenstaat verzonden",
+  "customer_timesheet.sent_to_broker": "Klanturenstaat naar broker verzonden",
+  "customer_timesheet.restored": "Klanturenstaat hersteld",
+  "invoice.external_document_added": "Extern document toegevoegd aan factuur",
+  "invoice.locked": "Factuur vergrendeld",
+  "settings.company_saved": "Instellingen opgeslagen",
+  "user.admin_upsert": "Beheerder aangemaakt of gewijzigd",
+  "employee.upsert": "Medewerker aangemaakt of gewijzigd",
+  "email.queued": "Mail in wachtrij gezet",
+  "email.dry_run": "Mail voorbereid (proefmodus, niet verzonden)",
+  "email.retry_requested": "Nieuwe verzendpoging aangevraagd",
+  "email.manual_reissue_requested": "Mail handmatig opnieuw verstuurd",
+  "mail.acceptance_preview_created": "Acceptatietest-voorbeeld aangemaakt",
+  "mail.acceptance_test_dispatched": "Acceptatietestmail verstuurd",
+  "test.baseline_reset": "TEST-basisgegevens hersteld",
+};
+
+function auditLogEventLabel(eventType) {
+  const raw = String(eventType || "").trim();
+  if (!raw) return "Onbekende actie";
+  if (AUDIT_LOG_EVENT_LABELS[raw]) return AUDIT_LOG_EVENT_LABELS[raw];
+  return raw.replace(/[._]/g, " ").replace(/^./, char => char.toUpperCase());
+}
+
+function refreshAuditLogReadApi(force = false) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin")) return Promise.resolve(null);
+  const now = Date.now();
+  if (!force && (readApiRuntime.auditLogInFlight || (now - readApiRuntime.lastAuditLogAt) < 15000)) return Promise.resolve(null);
+  readApiRuntime.auditLogInFlight = true;
+
+  const params = new URLSearchParams({ limit: "150" });
+  if (readApiRuntime.auditLogActorFilter) params.set("actor_id", readApiRuntime.auditLogActorFilter);
+  if (readApiRuntime.auditLogEventFilter) params.set("event_type", readApiRuntime.auditLogEventFilter);
+
+  return fetchReadApi("/server/api/audit-log.php?" + params.toString())
+    .then(data => {
+      readApiRuntime.lastAuditLogAt = Date.now();
+      if (!data) {
+        setReadApiSource("auditLog", "fallback");
+        return null;
+      }
+      readApiDebug.auditLog = data;
+      setReadApiSource("auditLog", "api");
+      (Array.isArray(data.items) ? data.items : []).forEach(item => {
+        if (item && item.actor_id) {
+          readApiRuntime.auditLogKnownActors[item.actor_id] = item.actor_name || item.actor_email || ("Account #" + item.actor_id);
+        }
+        if (item && item.event_type) readApiRuntime.auditLogKnownEventTypes[item.event_type] = true;
+      });
+      renderAuditLog();
+      return data;
+    })
+    .finally(() => { readApiRuntime.auditLogInFlight = false; });
+}
+
+function renderAuditLog() {
+  if (typeof document === "undefined") return;
+  const rows = document.querySelector("#audit-log-rows");
+  const empty = document.querySelector("#audit-log-empty");
+  const countPill = document.querySelector("#audit-log-count-pill");
+  const actorFilter = document.querySelector("#audit-log-filter-actor");
+  const eventFilter = document.querySelector("#audit-log-filter-event");
+  if (!rows) return;
+
+  if (actorFilter && document.activeElement !== actorFilter) {
+    const knownActorOptions = Object.entries(readApiRuntime.auditLogKnownActors)
+      .sort((a, b) => String(a[1]).localeCompare(String(b[1]), "nl"))
+      .map(([id, label]) => '<option value="' + escapeHtml(String(id)) + '"' + (readApiRuntime.auditLogActorFilter === String(id) ? " selected" : "") + '>' + escapeHtml(String(label)) + '</option>').join("");
+    setStandardChoiceSelectOptions(actorFilter, '<option value="">Iedereen</option>' + knownActorOptions);
+  }
+  if (eventFilter && document.activeElement !== eventFilter) {
+    const knownEventOptions = Object.keys(readApiRuntime.auditLogKnownEventTypes)
+      .sort((a, b) => auditLogEventLabel(a).localeCompare(auditLogEventLabel(b), "nl"))
+      .map(type => '<option value="' + escapeHtml(type) + '"' + (readApiRuntime.auditLogEventFilter === type ? " selected" : "") + '>' + escapeHtml(auditLogEventLabel(type)) + '</option>').join("");
+    setStandardChoiceSelectOptions(eventFilter, '<option value="">Alle acties</option>' + knownEventOptions);
+  }
+
+  const data = readApiDebug.auditLog;
+  const items = Array.isArray(data && data.items) ? data.items : [];
+  if (countPill) countPill.textContent = items.length + (items.length === 1 ? " gebeurtenis" : " gebeurtenissen");
+
+  if (!data) {
+    rows.innerHTML = "";
+    if (empty) {
+      empty.hidden = false;
+      empty.innerHTML = authRuntime.mode === "auth"
+        ? "<strong>De auditlog wordt geladen.</strong>"
+        : "<strong>De auditlog is beschikbaar na beveiligd inloggen als beheerder.</strong>";
+    }
+    return;
+  }
+
+  if (empty) empty.hidden = items.length > 0;
+  rows.innerHTML = items.map(item => {
+    const actorLabel = item.actor_name || item.actor_email || (item.actor_id ? ("Account #" + item.actor_id) : "Onbekend account");
+    const actorEmail = item.actor_email && item.actor_name ? '<small>' + escapeHtml(String(item.actor_email)) + '</small>' : "";
+    const entity = item.entity_type ? escapeHtml(String(item.entity_type)) + (item.entity_id ? " #" + escapeHtml(String(item.entity_id)) : "") : "—";
+    return '<tr>' +
+      '<td>' + escapeHtml(mailDeliveryTimestampLabel(item.created_at)) + '</td>' +
+      '<td class="audit-log-actor"><strong>' + escapeHtml(String(actorLabel)) + '</strong>' + actorEmail + '</td>' +
+      '<td>' + escapeHtml(auditLogEventLabel(item.event_type)) + '</td>' +
+      '<td>' + entity + '</td>' +
+    '</tr>';
+  }).join("");
+}
+
 function nextMailRecipientId() {
   let index = 1;
   while (mailRecipientById("recipient-" + index)) index += 1;
@@ -9471,6 +9605,29 @@ function toggleReminderChoicePanel(trigger) {
   closeReminderChoicePanels(open ? panel.id : "");
   panel.hidden = !open;
   trigger.setAttribute("aria-expanded", String(open));
+}
+
+// initializeStandardChoiceMenus() bouwt de klik-panel-vervanging van een
+// <select> precies één keer (dataset.choiceReady bewaakt dat) en verbergt
+// daarna het echte element -- prima voor een vaste optielijst (Betalingstermijn,
+// Wanneer?), maar de auditlog-filters krijgen hun opties pas ná die eerste
+// opbouw, dynamisch, uit de servergegevens. Zonder deze functie bleef het
+// zichtbare klikpaneel op "Iedereen"/"Alle acties" staan terwijl het
+// onderliggende (verborgen) <select> stilletjes wél nieuwe opties kreeg --
+// precies het gat dat Playwright blootlegde (selectOption op een hidden
+// element time-out't). Alleen slopen en opnieuw opbouwen wanneer de opties
+// daadwerkelijk zijn veranderd, anders sluit een open paneel zichzelf bij
+// elke achtergrondverversing.
+function setStandardChoiceSelectOptions(select, optionsHtml) {
+  if (!select || select.innerHTML === optionsHtml) return;
+  select.innerHTML = optionsHtml;
+  const picker = document.getElementById(select.id + "-trigger")?.parentElement;
+  if (picker && picker.classList.contains("standard-choice-picker")) picker.remove();
+  delete select.dataset.choiceReady;
+  select.hidden = false;
+  select.removeAttribute("aria-hidden");
+  select.removeAttribute("tabindex");
+  initializeStandardChoiceMenus(select.parentElement || document);
 }
 
 function initializeStandardChoiceMenus(root = document) {
@@ -10304,8 +10461,10 @@ function showView(view, options = {}) {
   if (view === "settings") {
     renderMailAcceptanceConsole();
     renderMailDeliveryHistory();
+    renderAuditLog();
     refreshMailAcceptanceReadApi(false).then(renderMailAcceptanceConsole).catch(() => renderMailAcceptanceConsole());
     refreshEmailQueueReadApi(false).then(renderMailDeliveryHistory).catch(() => renderMailDeliveryHistory());
+    refreshAuditLogReadApi(false).catch(() => renderAuditLog());
   }
   const target = document.querySelector("#view-" + view);
   if (!target) return;
@@ -14141,6 +14300,26 @@ function updateMailDeliveryView(patch) {
   readApiRuntime.lastEmailQueueAt = 0;
   return refreshEmailQueueReadApi(true).then(renderMailDeliveryHistory);
 }
+
+document.querySelector("#audit-log-refresh")?.addEventListener("click", event => {
+  const button = event.currentTarget;
+  button.disabled = true;
+  button.textContent = "Vernieuwen…";
+  refreshAuditLogReadApi(true)
+    .catch(() => toast("Auditlog kon niet worden vernieuwd."))
+    .finally(() => {
+      button.disabled = false;
+      button.textContent = "Vernieuwen";
+    });
+});
+document.querySelector("#audit-log-filter-actor")?.addEventListener("change", event => {
+  readApiRuntime.auditLogActorFilter = String(event.currentTarget.value || "");
+  refreshAuditLogReadApi(true);
+});
+document.querySelector("#audit-log-filter-event")?.addEventListener("change", event => {
+  readApiRuntime.auditLogEventFilter = String(event.currentTarget.value || "");
+  refreshAuditLogReadApi(true);
+});
 
 function postMailDeliveryRecovery(action, deliveryId, extra = {}) {
   return requestAuthCsrf()

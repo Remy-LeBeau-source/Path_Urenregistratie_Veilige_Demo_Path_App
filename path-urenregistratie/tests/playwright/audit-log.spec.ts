@@ -1,6 +1,7 @@
 import { expect, request as playwrightRequest, test } from '@playwright/test';
 import { AuthApi } from './api/AuthApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
+import { LoginPage } from './pages/LoginPage';
 
 test.describe('audit log api', () => {
 
@@ -243,5 +244,153 @@ test.describe('audit log api', () => {
     });
 
     await ctx.dispose();
+  });
+
+  test('[AUD-H-012] auditlog filtert op actor_id (Instellingen > Auditlog: "wie deed dit")', async () => {
+    // Gebruikersvraag (11 sep): op TEST kunnen meerdere echte mensen (Giovanno,
+    // Marc, andere testers) in dezelfde omgeving acties uitvoeren -- de mail
+    // zelf laat alleen zien VOOR wie een gebeurtenis is, niet WIE de knop
+    // indrukte. Het nieuwe Instellingen > Auditlog-scherm filtert daarom ook
+    // op actor_id (wie), naast het bestaande entity_type/event_type (waarover).
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+
+    const admin = await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+    const adminId = Number(admin.user.id);
+
+    await test.step('When er een echte actie is uitgevoerd door deze beheerder', async () => {
+      const csrf = await ctx.get('/server/auth/csrf.php');
+      const token = String((await csrf.json()).csrf_token || '');
+      const bootstrap = await ctx.get('/server/api/bootstrap.php');
+      const settings = (await bootstrap.json()).settings ?? {};
+      const saved = await ctx.post('/server/api/settings.php', {
+        headers: { 'X-CSRF-Token': token }, data: { settings },
+      });
+      expect(saved.status()).toBe(200);
+    });
+
+    await test.step('Then geeft actor_id alleen gebeurtenissen van deze beheerder terug', async () => {
+      const res = await ctx.get(`/server/api/audit-log.php?actor_id=${adminId}&limit=50`);
+      expect(res.status()).toBe(200);
+      const body = await res.json();
+      expect(body.ok).toBe(true);
+      expect(body.count).toBeGreaterThan(0);
+      expect(body.items.every((i: { actor_id: number | null }) => i.actor_id === adminId)).toBe(true);
+    });
+
+    await test.step('And een niet-bestaand account levert geen resultaten op', async () => {
+      const res = await ctx.get('/server/api/audit-log.php?actor_id=999999999');
+      expect(res.status()).toBe(200);
+      const body = await res.json();
+      expect(body.ok).toBe(true);
+      expect(body.count).toBe(0);
+    });
+
+    await test.step('And een niet-numerieke actor_id wordt genegeerd in plaats van een SQL-fout te geven', async () => {
+      const res = await ctx.get('/server/api/audit-log.php?actor_id=1%20OR%201%3D1');
+      expect(res.status()).toBe(200);
+      const body = await res.json();
+      expect(body.ok).toBe(true);
+      expect(body.count).toBeGreaterThan(0);
+    });
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
+});
+
+test.describe('audit log ui', () => {
+  test('[AUD-H-013] Instellingen > Auditlog toont wie/wat/wanneer en filtert op persoon en actie', async ({ page }) => {
+    // Gebruikersvraag (11 sep): "hoe kan ik zien of ik dit doe of Marc" -- een
+    // ontvangen mail laat alleen zien voor wie een gebeurtenis is, niet wie de
+    // knop indrukte. Dit scherm maakt de al bestaande audit_log-tabel
+    // (server/api/audit-log.php) voor het eerst zichtbaar in de app zelf.
+    let requests: URL[] = [];
+    // Volgorde zoals de echte server 'm teruggeeft: ORDER BY created_at DESC
+    // (server/api/audit-log.php). De mock sorteert zelf niet, dus deze lijst
+    // moet al in aflopende tijdsvolgorde staan -- anders test dit alleen of
+    // het scherm een array kan tonen, niet of het de servervolgorde vertrouwt.
+    const items = [
+      {
+        id: 1, event_type: 'timesheet.approved', entity_type: 'timesheet', entity_id: '42',
+        actor_id: 1, actor_name: 'Giovanno Maatsen', actor_email: 'giovanno.maatsen@pathconsultancy.nl',
+        event_data: null, created_at: '2026-09-11 10:00:00',
+      },
+      {
+        id: 2, event_type: 'invoice.locked', entity_type: 'invoice', entity_id: '7',
+        actor_id: 2, actor_name: 'Kenrich Lieveld', actor_email: 'kenrich.lieveld@pathconsultancy.nl',
+        event_data: null, created_at: '2026-09-10 09:30:00',
+      },
+    ];
+
+    await page.route('**/server/api/audit-log.php*', async route => {
+      const url = new URL(route.request().url());
+      requests.push(url);
+      const actorId = url.searchParams.get('actor_id');
+      const eventType = url.searchParams.get('event_type');
+      const filtered = items.filter(item =>
+        (!actorId || String(item.actor_id) === actorId) && (!eventType || item.event_type === eventType));
+      await route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify({ ok: true, count: filtered.length, items: filtered }),
+      });
+    });
+
+    const login = new LoginPage(page);
+    await test.step('Given een beheerder is beveiligd ingelogd', async () => {
+      await login.open();
+      await login.loginAsAdmin();
+    });
+
+    await test.step('When de beheerder Instellingen > Auditlog opent', async () => {
+      await page.locator('button[data-view="settings"]').click();
+      await expect(page.locator('#audit-log-count-pill')).toHaveText('2 gebeurtenissen');
+      await page.locator('[data-scroll-target="settings-audit"]').click();
+      await page.locator('#settings-audit').scrollIntoViewIfNeeded();
+    });
+
+    await test.step('Then staan tijd, wie en wat per rij, meest recente eerst', async () => {
+      const rows = page.locator('#audit-log-rows tr');
+      await expect(rows).toHaveCount(2);
+      await expect(rows.nth(0)).toContainText('Giovanno Maatsen');
+      await expect(rows.nth(0)).toContainText('Uren goedgekeurd');
+      await expect(rows.nth(0)).toContainText('timesheet #42');
+      await expect(rows.nth(1)).toContainText('Kenrich Lieveld');
+      await expect(rows.nth(1)).toContainText('Factuur vergrendeld');
+      await expect(rows.nth(1)).toContainText('invoice #7');
+    });
+
+    await test.step('And zijn beide personen en beide actietypen als filteropties beschikbaar', async () => {
+      const actorOptions = await page.locator('#audit-log-filter-actor option').allTextContents();
+      expect(actorOptions).toEqual(expect.arrayContaining(['Iedereen', 'Giovanno Maatsen', 'Kenrich Lieveld']));
+      const eventOptions = await page.locator('#audit-log-filter-event option').allTextContents();
+      expect(eventOptions).toEqual(expect.arrayContaining(['Alle acties', 'Uren goedgekeurd', 'Factuur vergrendeld']));
+    });
+
+    // De app vervangt elke <select> bij het laden door een eigen klikpaneel
+    // (initializeStandardChoiceMenus() in assets/app.js) en verbergt het echte
+    // element -- selectOption() zou daarom altijd op een hidden element
+    // time-outen. Bedienen zoals een gebruiker dat doet: trigger-knop openen,
+    // dan de gewenste optie in het paneel aanklikken (zelfde patroon als de
+    // bestaande mail-delivery-status-filter in email-queue.spec.ts).
+    await test.step('And filteren op persoon toont alleen zijn eigen gebeurtenissen', async () => {
+      await page.locator('#audit-log-filter-actor-trigger').click();
+      await page.locator('[data-standard-choice-target="audit-log-filter-actor"][data-standard-choice-value="1"]').click();
+      await expect(page.locator('#audit-log-count-pill')).toHaveText('1 gebeurtenis');
+      await expect(page.locator('#audit-log-rows')).toContainText('Giovanno Maatsen');
+      await expect(page.locator('#audit-log-rows')).not.toContainText('Kenrich Lieveld');
+      expect(requests.at(-1)?.searchParams.get('actor_id')).toBe('1');
+    });
+
+    await test.step('And filteren op actietype werkt onafhankelijk van het personenfilter', async () => {
+      await page.locator('#audit-log-filter-actor-trigger').click();
+      await page.locator('[data-standard-choice-target="audit-log-filter-actor"][data-standard-choice-value=""]').click();
+      await page.locator('#audit-log-filter-event-trigger').click();
+      await page.locator('[data-standard-choice-target="audit-log-filter-event"][data-standard-choice-value="invoice.locked"]').click();
+      await expect(page.locator('#audit-log-count-pill')).toHaveText('1 gebeurtenis');
+      await expect(page.locator('#audit-log-rows')).toContainText('Kenrich Lieveld');
+      expect(requests.at(-1)?.searchParams.get('event_type')).toBe('invoice.locked');
+      expect(requests.at(-1)?.searchParams.get('actor_id')).toBeNull();
+    });
   });
 });

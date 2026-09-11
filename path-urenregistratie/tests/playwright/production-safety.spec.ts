@@ -328,20 +328,19 @@ test('[SAFE-H-018] de accountbaseline-verificatie blijft correct nadat een genoe
     'foreach ($saved as $k => $v) { $v === false ? putenv($k) : putenv($k . "=" . $v); }',
     '$pdo->beginTransaction();',
     'try {',
-    // De twee beheerrijen (id 1/2) worden hier eerst op de kale
-    // seed-baseline gezet. Dat is geen opsmuk maar noodzaak: CI en de
-    // releasepijplijn genereren per run een willekeurig beheer- en
-    // medewerkerwachtwoord en zetten die hash op alle zes baselineaccounts
-    // (scripts/bootstrap-playwright-db.mjs). In die omgeving kan een test die
-    // voor id 1/2 hard op het vaste demowachtwoord controleert nooit slagen,
-    // ook niet bij een herkansing -- en lokaal, waar die env-variabele niet
-    // staat, slaagt hij altijd. Deze case gaat over de verificatielogica,
-    // niet over wat de omgeving toevallig in de database heeft gezet, dus
-    // legt hij zijn eigen uitgangssituatie vast. Alles wordt aan het eind
-    // teruggedraaid.
-    '  $pdo->prepare("UPDATE users SET email = :email, role = \'administrator\', active = 1, force_password_change = 0, password_hash = :hash WHERE id = :id")',
+    // '888888888888'/'LocalDemoEmployee2026' zijn alleen de echte wachtwoorden
+    // op de daadwerkelijke TransIP TEST-database (zie tests/remote/test-site-
+    // smoke.spec.ts) -- deze case draait bewust tegen de lokale/CI-database,
+    // die andere (PLAYWRIGHT_ADMIN_PASSWORD/PLAYWRIGHT_EMPLOYEE_PASSWORD-
+    // gestuurde) wachtwoorden gebruikt. Zet daarom ook gio/joyce (id 1/2)
+    // expliciet in de exacte staat die de functie verwacht, zodat de case
+    // niet stilzwijgend leunt op wat de omgeving toevallig al aan boord heeft.
+    // (Onafhankelijk hetzelfde probleem gevonden en opgelost als op
+    // herontwerp; deze kant gekozen omdat hij tegen de echte TEST-cutover is
+    // getoetst.)
+    '  $pdo->prepare("UPDATE users SET email = :email, password_hash = :hash, force_password_change = 0 WHERE id = :id")',
     '    ->execute([":email" => "gio@example.invalid", ":hash" => password_hash("888888888888", PASSWORD_DEFAULT), ":id" => 1]);',
-    '  $pdo->prepare("UPDATE users SET email = :email, role = \'administrator\', active = 1, force_password_change = 0, password_hash = :hash WHERE id = :id")',
+    '  $pdo->prepare("UPDATE users SET email = :email, password_hash = :hash, force_password_change = 0 WHERE id = :id")',
     '    ->execute([":email" => "joyce@example.invalid", ":hash" => password_hash("888888888888", PASSWORD_DEFAULT), ":id" => 2]);',
     '  $realEmails = ["marcderoon@pathconsultancy.nl" => 3, "stasjovanbakel@pathconsultancy.nl" => 4, "brian.hek@pathconsultancy.nl" => 5, "shawn.nahar@pathconsultancy.nl" => 6];',
     '  foreach ($realEmails as $email => $id) {',
