@@ -2126,9 +2126,18 @@ html[data-skin="new"] .new-admin-topnav button.is-active {
   color: #6dcc7e;
 }
 
+/* 1560px liet op een breed scherm (2560px en breder) aan weerszijden meer dan
+   450px leeg staan -- de storyline-rijen en de open-actielijst eronder zijn
+   allebei rijgebaseerd en hebben niets aan die extra breedte, dus schaalden ze
+   niet mee en bleef de pagina in het midden hangen. Gemeld: "veel lege ruimte
+   links en rechts". Geen andere admin-schermen in deze skin (Medewerkers,
+   Facturen, Instellingen) hebben zo'n eigen breedtegrens; ze vullen gewoon
+   .main-content. 1840px is geen volledige breedte -- dat zou de rijen te
+   gestrekt maken -- maar geeft flink meer lucht dan 1560px zonder de kaarten
+   uit te rekken. */
 html[data-skin="new"] #view-dashboard.is-active {
   display: flex;
-  width: min(100%, 1560px);
+  width: min(100%, 1840px);
   flex-direction: column;
   gap: 20px;
   margin: 0 auto;
