@@ -1028,33 +1028,16 @@ html[data-skin="new"] .new-bento-percentage { color: #70c98a; }
 
 html[data-skin="new"] .new-bento-customer { position: relative; grid-column: 3; grid-row: 2; background: #eee8dc !important; color: #102235; padding: 0; overflow: hidden; }
 
-/* De foto zat opgesloten in de kop (330px hoog) en hield daar hard op. Zodra
-   je het kaartje openklapte, stond er onder die snijlijn een leeg crème vlak:
-   het beeld leek afgekapt in plaats van doorgetrokken (gemeld met foto).
-   Nu loopt hij door over het hele kaartje, maar vervaagt hij onder de kop weg
-   -- genoeg om als één doorlopend beeld te lezen, licht genoeg om het
-   formulier erover leesbaar te houden. Alleen in de open stand; dicht
-   verandert er niets. */
-html[data-skin="new"] .new-bento-customer[data-open="true"]::before {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  inset: 0;
-  background: url("../pilot/assets/1919/bento-timesheet-v2.png") right top / cover no-repeat;
-  opacity: .28;
-  -webkit-mask-image: linear-gradient(180deg, #000 0 42%, rgba(0, 0, 0, .22) 66%, transparent 88%);
-  mask-image: linear-gradient(180deg, #000 0 42%, rgba(0, 0, 0, .22) 66%, transparent 88%);
-  pointer-events: none;
-}
-
-/* De inhoud blijft boven dat doorlopende beeld staan. De uitklap krijgt een
-   lichte sluier mee zodat tekst en velden niet met de foto hoeven te
-   concurreren. */
+/* De foto die bij het openklappen hard afkapte is opgelost in het PATCH-blok
+   onderaan dit bestand: daar krimpt de kop tot een band zodra de kaart
+   openstaat, zodat er geen afgesneden beeld meer onder de snijlijn hangt.
+   Hier stond eerder een tweede oplossing voor hetzelfde -- de foto over de
+   hele kaart doortrekken en laten vervagen. Twee aanpakken die om dezelfde
+   ruimte vechten geeft een troebel beeld, dus die is weggehaald; de versie
+   uit het patchblok is met de gebruiker doorgenomen en blijft staan.
+   De z-index hieronder blijft wel nodig: de inhoud hoort boven het beeld. */
 html[data-skin="new"] .new-bento-customer-head,
 html[data-skin="new"] .new-bento-customer-expand { position: relative; z-index: 1; }
-html[data-skin="new"] .new-bento-customer[data-open="true"] .new-bento-customer-expand {
-  background: linear-gradient(180deg, rgba(238, 232, 220, .72), rgba(238, 232, 220, .96) 38%);
-}
 html[data-skin="new"] .new-bento-customer-head { position: relative; min-height: 330px; }
 html[data-skin="new"] .new-bento-customer-head > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 html[data-skin="new"] .new-bento-customer-head::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(246,241,231,.98) 0 48%, rgba(246,241,231,.1) 78%); }
@@ -1212,38 +1195,18 @@ html[data-skin="new"] .new-bento-steps li { position: relative; display: grid; f
    met de li's als grootste aandeel zodat de tekstblokken ruim blijven --
    zelfde aanpak als bij de stap-tracker hierboven in het beheerdersdashboard,
    die geen los groeiend contentblok naast de lijn had. */
-/* Herzien 11 sep, opnieuw gemeld met foto: "ze raken de bollen niet aan en
-   lijnen ontbreken". Twee oorzaken, allebei zichtbaar op die foto:
-   1. Elke bol draagt een halo van 5px in de paneelkleur (box-shadow 0 0 0 5px).
-      Die dekt het uiteinde van het lijnstuk af, dus tussen lijn en bol zat
-      altijd een gat van 5px -- hoe lang je het lijnstuk ook maakt.
-   2. Het lijnstuk liep alleen tússen de tekstblokken. De bol staat linksboven
-      in zijn blok, dus tussen de bol en het begin van dat lijnstuk lag de hele
-      breedte van het tekstblok ernaast leeg. Bij stap 1 stond daardoor
-      helemaal geen lijn.
-   Nu tekent elk blok zelf de lijn die uit zijn eigen bol vertrekt (li::after,
-   vanaf het hart van de bol tot de rand van het blok), en overbrugt het
-   lijnstuk het gat tot de volgende bol -- met negatieve marges zodat het
-   ónder de halo doorloopt en de bol echt raakt. De bol ligt erboven (z-index),
-   dus de lijn verdwijnt netjes achter de rand. Samen is het één doorlopende
-   lijn van bol tot bol. Het laatste blok krijgt geen uitgaande lijn. */
-html[data-skin="new"] .new-bento-step-segment { position: relative; z-index: 0; display: block; flex: 1 1 20px; min-width: 20px; margin-top: 20px; margin-inline: -7px; height: 2px; border-radius: 2px; background: rgba(255, 255, 255, .14); }
-
-html[data-skin="new"] .new-bento-steps li::after {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  top: 20px;
-  left: 21px;
-  right: -7px;
-  height: 2px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, .14);
-}
-
-html[data-skin="new"] .new-bento-steps li:last-child::after { content: none; }
-html[data-skin="new"] .new-bento-steps li.is-done::after { background: #68b47a; box-shadow: 0 0 12px rgba(75, 177, 136, .24); }
-html[data-skin="new"] .new-bento-steps li.is-current::after { background: var(--path-amber); box-shadow: 0 0 12px rgba(217, 154, 60, .28); }
+/* De doorlopende stappenlijn (bol tot bol) wordt verderop in dit bestand
+   afgemaakt, in het PATCH-blok onderaan. Hier staat alleen nog de basis van
+   het lijnstuk zelf.
+   Korte geschiedenis, zodat niemand dit nog eens dubbel oplost: op 11 sep is
+   deze lijn twee keer onafhankelijk gerepareerd, hier en in dat patchblok,
+   met dezelfde diagnose (de halo van 5px rond de bol knipt het uiteinde af,
+   en het lijnstuk liep alleen tussen de tekstblokken in plaats van van bol
+   tot bol). Beide werkten, maar twee implementaties van één fix in één
+   bestand is vragen om problemen. De versie uit het patchblok is behouden --
+   die is met de gebruiker doorgenomen -- en deze is teruggebracht tot de
+   basis. */
+html[data-skin="new"] .new-bento-step-segment { display: block; flex: 1 1 20px; min-width: 20px; margin-top: 20px; height: 2px; border-radius: 2px; background: rgba(255, 255, 255, .14); }
 html[data-skin="new"] .new-bento-step-segment.is-done { background: #68b47a; box-shadow: 0 0 12px rgba(75, 177, 136, .24); }
 html[data-skin="new"] .new-bento-step-segment.is-current { background: var(--path-amber); box-shadow: 0 0 12px rgba(217, 154, 60, .28); }
 html[data-skin="new"] .new-bento-steps i { position: relative; z-index: 1; display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid #4b6b82; border-radius: 50%; background: #163048; font-style: normal; box-shadow: 0 0 0 5px #0f293d; }
@@ -2661,4 +2624,317 @@ html[data-skin="new"] .new-bento-day:not(.is-active):focus-within {
   border-color: rgba(75, 177, 136, .55);
   box-shadow: 0 10px 24px rgba(16, 34, 53, .09);
   background: rgba(255, 251, 244, .9);
+}
+
+/* ==================================================================
+   PATCH voor assets/styles-new.css — medewerkerdashboard (New-skin)
+   Plak dit ONDERAAN styles-new.css, vóór de @media-blokken hoeven ze
+   niet: alles hieronder is even specifiek of specifieker dan het
+   origineel en staat later in het bestand, dus het wint vanzelf.
+   Geen nieuwe selectors, geen HTML-wijziging, geen JS.
+   ================================================================== */
+
+
+/* ------------------------------------------------------------------
+   1. De stappenlijn liep niet door
+   ------------------------------------------------------------------
+   Oorzaak: .new-bento-step-segment is een FLEX-BROER van de <li>, maar
+   de bol staat aan de LINKERRAND van die li en de tekst eronder maakt
+   de li breed. Het lijnstuk begint dus pas waar de tekstkolom eindigt
+   en loopt naar de volgende bol — vandaar een lijn die rechts van de
+   tekst zweeft en de vorige bol nooit raakt. Geen breedteprobleem,
+   een positieprobleem: het stuk tussen bol N en de rechterrand van
+   li N ontbrak volledig.
+
+   Oplossing: de li tekent zelf dat ontbrekende stuk als ::after, van
+   net naast de bol tot de rechterrand. Samen met het bestaande
+   segment ernaast is de baan nu dicht. De kleur volgt de li-status,
+   precies dezelfde logica als de segmenten al hadden: groen bij
+   afgerond, amber bij lopend, gedempt daarvoor. */
+
+html[data-skin="new"] .new-bento-steps li:not(:last-of-type)::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 20px;
+  left: 54px;
+  right: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, .14);
+}
+
+html[data-skin="new"] .new-bento-steps li.is-done:not(:last-of-type)::after {
+  background: #68b47a;
+  box-shadow: 0 0 12px rgba(75, 177, 136, .24);
+}
+
+html[data-skin="new"] .new-bento-steps li.is-current:not(:last-of-type)::after {
+  background: var(--path-amber);
+  box-shadow: 0 0 12px rgba(217, 154, 60, .28);
+}
+
+/* Het bestaande lijnstuk sluit nu aan op de ::after ernaast. De 5px-ring
+   om de bol (box-shadow op i) knipt de lijn anders alsnog door op het
+   aansluitpunt; een negatieve marge schuift het stuk eronder. */
+html[data-skin="new"] .new-bento-step-segment {
+  position: relative;
+  z-index: 0;
+  margin-inline: -5px;
+}
+
+/* De bol hoort boven de lijn te liggen, niet andersom. */
+html[data-skin="new"] .new-bento-steps i {
+  z-index: 2;
+}
+
+/* De tekst mag niet onder de lijn doorlopen op smalle kolommen. */
+html[data-skin="new"] .new-bento-steps li > :is(strong, span) {
+  position: relative;
+  z-index: 1;
+}
+
+
+/* ------------------------------------------------------------------
+   2. De foto bij uitklappen
+   ------------------------------------------------------------------
+   Dicht is de foto een volwaardige plaat van 330px: goed. Open groeit
+   de kaart naar ruim 900px, maar de foto blijft op 330px staan met een
+   formulier eronder — de plaat wordt dan een half afgesneden strook
+   met een grote lege ondermarge. Een foto die niet meegroeit moet
+   krimpen, niet blijven staan: open wordt hij een rustige kopband. */
+
+html[data-skin="new"] .new-bento-customer[data-open="true"] .new-bento-customer-head {
+  min-height: 208px;
+}
+
+html[data-skin="new"] .new-bento-customer[data-open="true"] .new-bento-customer-copy {
+  max-width: 66%;
+  padding: 26px 28px 84px;
+}
+
+html[data-skin="new"] .new-bento-customer[data-open="true"] .new-bento-customer-head > img {
+  object-position: 56% 62%;
+}
+
+/* Open loopt de foto van rechts naar links uit in het crème, in plaats
+   van als blok af te breken. Dicht blijft de bestaande verdeling staan. */
+html[data-skin="new"] .new-bento-customer[data-open="true"] .new-bento-customer-head::after {
+  background: linear-gradient(96deg,
+    rgba(246, 241, 231, .99) 0 34%,
+    rgba(246, 241, 231, .8) 52%,
+    rgba(246, 241, 231, .3) 74%,
+    rgba(246, 241, 231, 0) 100%);
+}
+
+html[data-skin="new"] .new-bento-customer[data-open="true"] h3 {
+  margin-top: 10px;
+  font-size: 32px;
+}
+
+/* Een haarlijn scheidt de kopband van het formulier; zonder die lijn
+   zweeft het invulgedeelte los onder de foto. */
+html[data-skin="new"] .new-bento-customer[data-open="true"] .new-bento-customer-expand {
+  border-top: 1px solid rgba(16, 34, 53, .12);
+  margin-top: 2px;
+  padding-top: 20px;
+}
+
+
+/* ------------------------------------------------------------------
+   3. Weekkaart — terug naar de rust van de mockup
+   ------------------------------------------------------------------
+   De drie snelkeuzeknoppen blijven (die kwamen uit testfeedback en
+   horen te blijven), maar ze domineerden de kaart: drie witte blokken
+   per dag, even zwaar als het uurgetal zelf. Ze worden kleiner en
+   stiller, zodat het uurgetal weer de hoofdrol heeft. */
+
+html[data-skin="new"] .new-bento-presets button {
+  min-height: 26px;
+  border-color: #ded5c5;
+  background: transparent;
+  color: #6b7570;
+  font: 600 12px var(--path-sans);
+}
+
+html[data-skin="new"] .new-bento-presets button:hover {
+  border-color: #5f9e78;
+  background: #e6efe7;
+  color: #102235;
+}
+
+/* Het uurgetal in de schreefletter, zoals de mockup — het was een vette
+   schreefloze en las daardoor als formulierveld in plaats van als bedrag.
+   Het veld houdt bewust WEL een zichtbaar kader. Een invulveld dat je
+   één keer per maand gebruikt moet vindbaar zijn zonder eerst te hoeven
+   hoveren; onzichtbare randen werken alleen op schermen die iemand
+   dagelijks ziet. Alleen de letter verandert, niet de herkenbaarheid. */
+html[data-skin="new"] .new-bento-day input {
+  border-color: #d9d0be;
+  background: #fbf8f2;
+  font: 400 21px var(--path-serif);
+  padding: 7px 8px;
+}
+
+html[data-skin="new"] .new-bento-day input:hover {
+  border-color: #bdb2a0;
+  background: #fff;
+}
+
+html[data-skin="new"] .new-bento-day input:focus {
+  border-color: #4bb188;
+  background: #fff;
+}
+
+html[data-skin="new"] .new-bento-day.is-active input {
+  border-color: rgba(255, 255, 255, .24);
+  background: rgba(255, 255, 255, .06);
+}
+
+
+/* ------------------------------------------------------------------
+   4. Hero — de bladeren waren bijna weg
+   ------------------------------------------------------------------
+   opacity .42 over een verloop van #214b39 → #102f26 drukt de foto zo
+   ver weg dat er een vlakke groene plaat overblijft. De mockup heeft
+   een zichtbaar blad links, donker weglopend naar rechts. Foto op
+   volle sterkte, leesbaarheid via een verloop eróverheen in plaats van
+   via doorzichtigheid — dan blijft het blad staan waar het niets in de
+   weg zit, en is de kop juist beter leesbaar. */
+
+html[data-skin="new"] .new-bento-hero > img {
+  opacity: 1;
+  object-position: 18% 62%;
+}
+
+html[data-skin="new"] .new-bento-hero::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(86% 72% at 20% 6%, rgba(74, 118, 88, .22) 0%, rgba(16, 47, 38, 0) 66%),
+    linear-gradient(112deg,
+      rgba(14, 40, 30, .9) 0%,
+      rgba(16, 44, 33, .78) 38%,
+      rgba(16, 47, 38, .52) 66%,
+      rgba(16, 47, 38, .36) 100%);
+}
+
+/* De knop stond als lichtgroene schijf op de plaat; in de mockup is het
+   een dieper olijfgroen met een duidelijke lichte ring eromheen. */
+html[data-skin="new"] .new-bento-go {
+  border-color: rgba(238, 229, 198, .5);
+  background: linear-gradient(158deg, #4a7a4c 0%, #3b6640 62%, #335839 100%);
+  box-shadow:
+    inset 0 2px 12px rgba(255, 255, 255, .14),
+    0 24px 54px rgba(2, 12, 22, .38),
+    0 0 0 20px rgba(255, 255, 255, .05),
+    0 0 0 38px rgba(255, 255, 255, .025);
+}
+
+html[data-skin="new"] .new-bento-go:hover {
+  background: linear-gradient(158deg, #548757 0%, #437247 62%, #3a6440 100%);
+}
+
+
+/* ------------------------------------------------------------------
+   5. Uitgeklapt formulier — donkere velden op een crème kaart
+   ------------------------------------------------------------------
+   Dit is het grootste probleem bij uitklappen, groter dan de foto.
+   Het verplaatste #customer-timesheet-upload-panel houdt de opmaak die
+   het op Mijn uren had: daar staat het op een donkere navy ondergrond,
+   dus kregen de velden #102b40 als vulling. Op dit crème kaartje worden
+   het zwarte balken — de maandkiezer, het jaartal, de bestandskiezer en
+   het e-mailvoorbeeld steken er alle vier als gaten uit.
+
+   De bestaande regels dekten al de drie knoppen (.button-ghost); de
+   velden zelf waren vergeten. Zelfde behandeling, zelfde palet. */
+
+html[data-skin="new"] .new-bento-customer-expand :is(
+  input,
+  select,
+  textarea,
+  .month-picker-trigger
+) {
+  border-color: #cfc5b5;
+  background: #fbf8f2;
+  color: #102235;
+}
+
+html[data-skin="new"] .new-bento-customer-expand :is(input, select, textarea):focus,
+html[data-skin="new"] .new-bento-customer-expand .month-picker-trigger:focus {
+  border-color: #4bb188;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(75, 177, 136, .2);
+}
+
+html[data-skin="new"] .new-bento-customer-expand input[type="file"] {
+  padding: 11px 13px;
+}
+
+/* De omhullende labelvlakken en het periodeblok waren halfdoorzichtig
+   navy — op crème leest dat als vuil, niet als vlak. */
+html[data-skin="new"] .new-bento-customer-expand :is(
+  .customer-timesheet-period-control,
+  .customer-timesheet-upload-grid label
+) {
+  border-color: rgba(16, 34, 53, .1);
+  background: rgba(255, 255, 255, .5);
+}
+
+html[data-skin="new"] .new-bento-customer-expand :is(
+  .customer-timesheet-field-label,
+  .customer-timesheet-upload-panel h3,
+  .customer-timesheet-mail-preview strong
+) {
+  color: #102235;
+}
+
+html[data-skin="new"] .new-bento-customer-expand :is(
+  .customer-timesheet-action-help,
+  .customer-timesheet-current,
+  .customer-timesheet-upload-panel > p
+) {
+  color: #5c6660;
+}
+
+/* Het e-mailvoorbeeld was een bijna-zwart groen blok met donkergroene
+   letters erin — slecht leesbaar én visueel het zwaarste element op de
+   kaart, terwijl het maar een voorbeeldtekst is. Nu een licht vlak met
+   een groene rand: herkenbaar als "dit gaat de deur uit", zonder te
+   schreeuwen. */
+html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-mail-preview {
+  border-color: rgba(47, 106, 76, .28);
+  background: #f2f6ef;
+  color: #33403a;
+}
+
+html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-mail-preview pre {
+  color: #33403a;
+}
+
+html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-mail-preview .section-label {
+  color: #2f6a4c;
+}
+
+/* Statusmelding "Nog niet ontvangen" rekte over de volle breedte uit tot
+   een donkere balk. Een status is een label, geen balk. */
+html[data-skin="new"] .new-bento-customer-expand .status-pill {
+  display: inline-flex;
+  width: auto;
+  align-self: start;
+  border: 1px solid rgba(217, 161, 60, .45);
+  background: rgba(217, 161, 60, .14);
+  color: #8a5c1c;
+}
+
+html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-current {
+  border-color: rgba(16, 34, 53, .12);
+  background: rgba(255, 255, 255, .5);
+}
+
+html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-current strong {
+  color: #102235;
 }
