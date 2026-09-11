@@ -85,7 +85,8 @@ function mail_insert_delivery(
     ?int   $timesheetId = null,
     ?int   $userId = null,
     ?int   $timesheetVersion = null,
-    ?string $pdfStorageKey = null
+    ?string $pdfStorageKey = null,
+    ?string $htmlBody = null
 ): int {
     $ccEmail = $ccEmail !== null && trim($ccEmail) !== '' ? trim($ccEmail) : null;
     $recipientEmail = trim($recipientEmail);
@@ -95,13 +96,18 @@ function mail_insert_delivery(
     if ($ccEmail !== null && !filter_var($ccEmail, FILTER_VALIDATE_EMAIL)) {
         throw new \RuntimeException('invalid-cc-email');
     }
+    // html_snapshot blijft voor de meeste kanalen NULL (impliciet, hieronder niet
+    // opgegeven) -- alleen de aanroepers die $htmlBody meegeven (op dit moment:
+    // de urenoverzicht-ontvangst- en goedkeuringsmail, zie BESLISTABEL.md W13)
+    // krijgen een opgemaakte tegenhanger. PWD-N-017 pint deze scope.
+    $htmlBody = $htmlBody !== null && trim($htmlBody) !== '' ? $htmlBody : null;
     $stmt = $pdo->prepare(
         'INSERT INTO email_deliveries
          (invoice_id, timesheet_id, timesheet_version, user_id, channel, recipient_email, cc_email, subject_snapshot, body_snapshot,
-          attachment_policy, pdf_storage_key, dry_run, status)
+          html_snapshot, attachment_policy, pdf_storage_key, dry_run, status)
          VALUES
          (:invoice_id, :timesheet_id, :timesheet_version, :user_id, :channel, :recipient_email, :cc_email, :subject, :body,
-          :attachment_policy, :pdf_storage_key, :dry_run, :status)'
+          :html, :attachment_policy, :pdf_storage_key, :dry_run, :status)'
     );
     $stmt->execute([
         ':invoice_id'       => $invoiceId,
@@ -113,6 +119,7 @@ function mail_insert_delivery(
         ':cc_email'         => $ccEmail,
         ':subject'          => $subject,
         ':body'             => $body,
+        ':html'             => $htmlBody,
         ':attachment_policy'=> $attachmentPolicy,
         ':pdf_storage_key'  => $pdfStorageKey,
         ':dry_run'          => $dryRun ? 1 : 0,
@@ -245,7 +252,9 @@ function mail_enqueue_timesheet_submission_receipt(
     mail_assert_vars($template['subject'], $vars, 'timesheet_submission_receipt.subject');
     mail_assert_vars($template['body'], $vars, 'timesheet_submission_receipt.body');
     $subject = mail_render($template['subject'], $vars);
-    $body = rtrim(mail_render($template['body'], $vars)) . "\n\nMet vriendelijke groet,\n\n" . mail_signature_for($pdo, $companyId);
+    $renderedBody = rtrim(mail_render($template['body'], $vars));
+    $body = $renderedBody . "\n\nMet vriendelijke groet,\n\n" . mail_signature_for($pdo, $companyId);
+    $html = mail_plain_body_to_html_paragraphs($renderedBody) . mail_signature_html_for($pdo, $companyId, $config);
 
     $attachmentPolicy = 'none';
     $pdfStorageKey = null;
@@ -276,7 +285,8 @@ function mail_enqueue_timesheet_submission_receipt(
         $timesheetId,
         (int)($employee['user_id'] ?? $actorUserId),
         $timesheetVersion,
-        $pdfStorageKey
+        $pdfStorageKey,
+        $html
     );
 
     mail_audit($pdo, $companyId, $actorUserId,
@@ -308,7 +318,8 @@ function mail_enqueue_timesheet_final_approval(
     float $totalHours,
     bool $dryRun,
     ?string $employeeName = null,
-    ?string $employeeEmail = null
+    ?string $employeeEmail = null,
+    array $config = []
 ): ?array {
     $existing = $pdo->prepare(
         'SELECT id FROM email_deliveries
@@ -349,7 +360,9 @@ function mail_enqueue_timesheet_final_approval(
     mail_assert_vars($template['subject'], $vars, 'timesheet_final_approval.subject');
     mail_assert_vars($template['body'], $vars, 'timesheet_final_approval.body');
     $subject = mail_render($template['subject'], $vars);
-    $body = rtrim(mail_render($template['body'], $vars)) . "\n\nMet vriendelijke groet,\n\n" . mail_signature_for($pdo, $companyId);
+    $renderedBody = rtrim(mail_render($template['body'], $vars));
+    $body = $renderedBody . "\n\nMet vriendelijke groet,\n\n" . mail_signature_for($pdo, $companyId);
+    $html = mail_plain_body_to_html_paragraphs($renderedBody) . mail_signature_html_for($pdo, $companyId, $config);
 
     $id = mail_insert_delivery(
         $pdo,
@@ -364,7 +377,8 @@ function mail_enqueue_timesheet_final_approval(
         $timesheetId,
         (int)($employee['user_id'] ?? $actorUserId),
         $timesheetVersion,
-        null
+        null,
+        $html
     );
 
     mail_audit($pdo, $companyId, $actorUserId,

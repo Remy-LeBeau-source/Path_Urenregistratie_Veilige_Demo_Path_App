@@ -58,6 +58,23 @@ Feature: Mailroutering en aflevering
     Then wordt met Playwright-assertions bevestigd dat de urenoverzicht-PDF blijft compact: een volledige maand op één pagina
 
   @happy
+  Scenario: [EQ-H-041] urenoverzicht-ontvangst- en goedkeuringsmail krijgen een HTML-tegenhanger met logo, platte tekst blijft ongewijzigd
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 11
+    Given mailroutering en aflevering is voorbereid
+    When de flow voor EQ-H-041 wordt uitgevoerd
+    Then heeft de ontvangstmail een HTML-tegenhanger, en blijft de platte tekst gelijk aan vóór W13
+    And heeft de goedkeuringsmail dezelfde HTML-tegenhanger
+
+  @happy
+  Scenario: [EQ-H-042] het logo verschijnt in de urenoverzicht-handtekening zodra de app-origin https is
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given mailroutering en aflevering is voorbereid
+    When de flow voor EQ-H-042 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat het logo verschijnt in de urenoverzicht-handtekening zodra de app-origin https is
+
+  @happy
   Scenario: [EQ-H-037] goedkeuren maakt exact één definitieve-goedkeuringsmail
     # Testtechniek: Toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 7

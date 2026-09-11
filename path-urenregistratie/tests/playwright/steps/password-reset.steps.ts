@@ -66,7 +66,7 @@ Given("de beheerder een website en slogan instelt");
 When("de flow voor PWD-H-022 wordt uitgevoerd");
 Then("staan website en slogan in de platte tekst en als eigen regels in de HTML");
 When("de flow voor PWD-N-017 wordt uitgevoerd");
-Then("wordt met Playwright-assertions bevestigd dat elk ander mailkanaal dan wachtwoordherstel blijft platte tekst, zonder html_snapshot");
+Then("wordt met Playwright-assertions bevestigd dat alleen wachtwoordherstel/uitnodiging en de urenoverzicht-ontvangst-/goedkeuringsmail krijgen een html_snapshot");
 When("een bestaand adres een resetverzoek doet");
 And("een onbekend adres exact hetzelfde verzoek doet");
 Then("is de melding woordelijk gelijk en noemt die het adres niet");

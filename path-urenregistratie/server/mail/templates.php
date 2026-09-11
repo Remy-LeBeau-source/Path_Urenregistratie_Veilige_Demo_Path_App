@@ -163,6 +163,60 @@ function mail_signature_for(PDO $pdo, int $companyId): string
 }
 
 /**
+ * HTML-tegenhanger van de handtekening, met logo -- op verzoek van de gebruiker
+ * (11 sep) uitgebreid naar de urenoverzicht-ontvangst- en goedkeuringsmail,
+ * dezelfde behandeling als `auth_signature_html()` al gaf aan de uitnodiging en
+ * wachtwoord-reset (zie BESLISTABEL.md W13). Bewust minimaal gehouden -- alleen
+ * logo + naam, geen contact-/website-/sloganregels zoals bij de uitnodiging --
+ * op expliciet verzoek ("in de body hoeft alleen een logo"). Eigen kleine kopie
+ * i.p.v. `auth_signature_html()` hergebruiken: die staat in server/auth en is
+ * niet gegarandeerd geladen op elk pad dat deze mails verstuurt, en hardcodeert
+ * "Robot Path IT" i.p.v. de aanpasbare `mail_signature_for()` te gebruiken.
+ */
+function mail_signature_html_for(PDO $pdo, int $companyId, array $config): string
+{
+    $signatureName = htmlspecialchars(mail_signature_for($pdo, $companyId), ENT_QUOTES);
+
+    $logoUrl = '';
+    try {
+        $origin = auth_app_origin_from_config($config);
+        if (preg_match('#^https://#i', $origin)) {
+            $logoUrl = $origin . '/assets/path-logo.png';
+        }
+    } catch (Throwable $e) {
+        $logoUrl = '';
+    }
+    $logoImg = $logoUrl !== ''
+        ? '<img src="' . htmlspecialchars($logoUrl, ENT_QUOTES) . '" alt="Path Consultancy" width="140" style="display:block;border:0;outline:none;max-width:140px;">'
+        : '';
+
+    return '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:20px;">'
+        . '<tr><td>' . $logoImg . '</td></tr>'
+        . '<tr><td style="padding-top:10px;font:bold 14px/1.3 Arial,Helvetica,sans-serif;color:#0d1b38;">' . $signatureName . '</td></tr>'
+        . '</table>';
+}
+
+/**
+ * Zet platte begeleidende tekst om naar veilige HTML-paragrafen. Kleine, eigen
+ * kopie van `auth_plain_body_to_html_paragraphs()` om dezelfde reden als
+ * hierboven (niet gegarandeerd geladen buiten het wachtwoord-reset-pad).
+ */
+function mail_plain_body_to_html_paragraphs(string $plainBody): string
+{
+    $escaped = htmlspecialchars(trim($plainBody), ENT_QUOTES);
+    $paragraphs = preg_split("/\n{2,}/", $escaped) ?: [$escaped];
+    $html = '';
+    foreach ($paragraphs as $paragraph) {
+        if (trim($paragraph) === '') {
+            continue;
+        }
+        $html .= '<p style="margin:0 0 14px;font:14px/1.5 Arial,Helvetica,sans-serif;color:#172332;">'
+            . nl2br($paragraph, false) . '</p>';
+    }
+    return $html;
+}
+
+/**
  * Welke kanalen een eigen tekst hebben staan.
  *
  * Dit is niet hetzelfde als 'wijkt af van de meegeleverde tekst'. Een opgeslagen

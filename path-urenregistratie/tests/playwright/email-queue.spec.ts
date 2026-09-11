@@ -67,6 +67,20 @@ async function laatsteMailBody(timesheetId: number, channel: string): Promise<st
   return uitvoer.stdout;
 }
 
+/** Zelfde patroon als laatsteMailBody(), maar dan voor html_snapshot (W13). */
+async function laatsteMailHtml(timesheetId: number, channel: string): Promise<string> {
+  const php = [
+    'require "server/auth/session.php";',
+    '$config=require "server/config.local.php";',
+    '$pdo=auth_pdo($config);',
+    '$stmt=$pdo->prepare("SELECT html_snapshot FROM email_deliveries WHERE timesheet_id=:tid AND channel=:channel ORDER BY id DESC LIMIT 1");',
+    '$stmt->execute([":tid"=>(int)$argv[1],":channel"=>$argv[2]]);',
+    'echo (string)($stmt->fetchColumn() ?: "");',
+  ].join(' ');
+  const uitvoer = await execFileAsync('php', ['-r', php, String(timesheetId), channel], { cwd: process.cwd(), windowsHide: true });
+  return uitvoer.stdout;
+}
+
 async function postJson(
   ctx: Awaited<ReturnType<typeof playwrightRequest.newContext>>,
   path: string,
@@ -452,6 +466,90 @@ test.describe('email queue api', () => {
     }
     expect(raw).toContain('Totaal');
     expect(raw).toContain('Robot Path IT');
+  });
+
+  test('[EQ-H-041] urenoverzicht-ontvangst- en goedkeuringsmail krijgen een HTML-tegenhanger met logo, platte tekst blijft ongewijzigd', async () => {
+    // Gebruikersverzoek (11 sep): "doe hetzelfde als wat de robot al kan bij een
+    // andere mail" -- BESLISTABEL W13 beperkte de HTML+logo-handtekening eerder
+    // bewust tot alleen uitnodiging/wachtwoord-reset, juist omdat de andere
+    // kanalen een PDF-bijlage hebben en de bewezen platte-tekst-laag niet
+    // geraakt mocht worden. Nu bewust uitgebreid; deze case bewijst beide kanten:
+    // er staat een echte HTML-tegenhanger (logo, aanpasbare naam), én de platte
+    // tekst (met PDF-bijlage voor de ontvangstmail) blijft intact.
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    const timesheetApi = new TimesheetApi(ctx);
+
+    await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+    const period = await findWritablePeriod(timesheetApi);
+    const draft = await timesheetApi.write({
+      action: 'save_draft', period, contractualHours: 160, billableHours: 8, leaveHours: 0,
+      dayEntries: [{ workDate: `${period}-01`, hours: 8, description: 'EQ-H-041' }],
+    });
+    expect(draft.status).toBe(200);
+    const submitted = await timesheetApi.write({
+      action: 'submit', period, contractualHours: 160, billableHours: 8, leaveHours: 0,
+      dayEntries: [{ workDate: `${period}-01`, hours: 8, description: 'EQ-H-041' }],
+      expectedVersion: draft.body.timesheet?.version as number,
+    });
+    expect(submitted.status).toBe(200);
+    const employeeId = Number(submitted.body.employee_id || 0);
+    const timesheetId = Number(submitted.body.timesheet?.id || 0);
+    const submittedVersion = Number(submitted.body.timesheet?.version || 0);
+    await authApi.logout();
+
+    await test.step('Then heeft de ontvangstmail een HTML-tegenhanger, en blijft de platte tekst gelijk aan vóór W13', async () => {
+      const plain = await laatsteMailBody(timesheetId, 'timesheet_submission_receipt');
+      const html = await laatsteMailHtml(timesheetId, 'timesheet_submission_receipt');
+      expect(plain, 'de platte tekst mag geen HTML-tags bevatten').not.toContain('<');
+      expect(plain).toContain('Robot Path IT');
+      expect(html, 'de ontvangstmail hoort nu ook een html_snapshot te hebben').not.toBe('');
+      expect(html).toContain('Robot Path IT');
+      expect(html).toContain('<table');
+      // Het logo-<img>-blok verschijnt alleen bij een https app_origin (lokaal
+      // en op de meeste CI-runs is dat http://127.0.0.1:8000) -- zelfde,
+      // al bestaande omgevingsgat als PWD-H-020/021, die er daarom voor kiezen
+      // de rendering direct met een synthetische https-config te bewijzen i.p.v.
+      // via een echte lokale aflevering. Zelfde aanpak hier.
+    });
+
+    const adminCtx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const adminAuthApi = new AuthApi(adminCtx);
+    const adminTimesheetApi = new TimesheetApi(adminCtx);
+    await adminAuthApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+    const approved = await adminTimesheetApi.approve({ period, employeeId, expectedVersion: submittedVersion });
+    expect(approved.status).toBe(200);
+    await adminAuthApi.logout();
+    await adminCtx.dispose();
+
+    await test.step('And heeft de goedkeuringsmail dezelfde HTML-tegenhanger', async () => {
+      const html = await laatsteMailHtml(timesheetId, 'timesheet_final_approval');
+      expect(html).not.toBe('');
+      expect(html).toContain('Robot Path IT');
+      expect(html).toContain('<table');
+    });
+
+    await ctx.dispose();
+  });
+
+  test('[EQ-H-042] het logo verschijnt in de urenoverzicht-handtekening zodra de app-origin https is', async () => {
+    // Zelfde omgevingsgat als PWD-H-020/021: lokaal/CI draait de app op
+    // http://127.0.0.1:8000, dus mail_signature_html_for()'s logo-<img> (die
+    // alleen bij https rendert, net als auth_signature_html()) is in een echte
+    // lokale aflevering nooit te zien. Roept de functie daarom direct aan met
+    // een synthetische https-config, zonder iets te versturen of op te slaan.
+    const php = [
+      'require "server/auth/session.php";',
+      'require_once "server/mail/templates.php";',
+      '$config=require "server/config.local.php";',
+      '$config["app_origin"]="https://uren-test.pathconsultancy.nl";',
+      '$pdo=auth_pdo($config);',
+      '$companyId=(int)$pdo->query("SELECT id FROM companies ORDER BY id LIMIT 1")->fetchColumn();',
+      'echo mail_signature_html_for($pdo, $companyId, $config);',
+    ].join(' ');
+    const uitvoer = await execFileAsync('php', ['-r', php], { cwd: process.cwd(), windowsHide: true });
+    expect(uitvoer.stdout).toContain('path-logo.png');
+    expect(uitvoer.stdout).toContain('https://uren-test.pathconsultancy.nl/assets/path-logo.png');
   });
 
   test('[EQ-H-037] goedkeuren maakt exact één definitieve-goedkeuringsmail', async () => {
