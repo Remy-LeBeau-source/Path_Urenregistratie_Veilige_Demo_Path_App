@@ -2169,8 +2169,28 @@ html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.
 html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) .new-admin-topnav {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 10px;
   margin-right: auto;
+}
+
+/* Werkvoorraad/Organisatie als losse groepen: krappe afstand binnen een groep,
+   een dunne verticale lijn ertussen -- zelfde bedoeling als de kopjes in de
+   Klassieke zijbalk, maar dan zonder ruimte voor een label in deze smalle balk. */
+.new-admin-topnav-group {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  position: relative;
+}
+
+.new-admin-topnav-group + .new-admin-topnav-group::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 6px;
+  bottom: 6px;
+  width: 1px;
+  background: rgba(255, 255, 255, .14);
 }
 
 html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) .new-admin-topnav button {
@@ -2838,6 +2858,10 @@ html[data-skin="new"] .admin-task-months .admin-task-month u {
   }
 
   html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) .new-admin-topnav button {
+    flex: 0 0 auto;
+  }
+
+  .new-admin-topnav-group {
     flex: 0 0 auto;
   }
 

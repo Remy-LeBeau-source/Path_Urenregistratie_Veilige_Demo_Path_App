@@ -1911,6 +1911,117 @@ Optioneel/parkeren (geen blokkade):
   `assignment_mail_routes.include_invoice_pdf`.
 - Acceptatiemail-PDF: door Gio bewust losgelaten, niet verder oppakken zonder nieuwe opdracht.
 
+## Fase 17 - GUI/rol-audit matrix (start v2.0.0, opdracht Gio 12 sep 2026)
+
+Dit is geen redesign-opdracht. Bestaande functionaliteit, businesslogica, workflows, huisstijl,
+kleuren, componentstijl, klassiek design, nieuw design, licht/donker thema en rollen/autorisaties
+blijven leidend (bron van waarheid = de bestaande app). Alleen GUI, responsive werking,
+toegankelijkheid en app/web-vriendelijkheid worden verbeterd waar nodig.
+
+**Kern van de opdracht:** een GUI-wijziging is pas klaar als hij is gecontroleerd voor de
+volledige matrix rol x design x thema x device, niet alleen visueel maar ook op rechten/routing.
+Rolverdeling is vanaf nu expliciet onderdeel van de Definition of Done, zodat een wijziging voor
+Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
+
+**Verplichte matrix per wijziging:**
+- Rollen: Medewerker, Beheerder (nooit los beoordelen)
+- Designs: Klassiek (heeft prioriteit), Nieuw (mag verbeterd worden, nooit ten koste van Klassiek)
+- Thema's: Licht, Donker
+- Devices (minimaal): 360px mobiel, ~390px iPhone, ~412px Android, 768px tablet portrait,
+  1024px tablet/laptop, 1366px laptop, 1440px desktop, 1920px desktop -- aantoonbaar gecontroleerd
+  op minimaal desktop/tablet/iOS/Android per wijziging, niet per se een aparte E2E-suite per pixel.
+
+**Definition of Done (verplicht per wijziging):**
+- [ ] Medewerker: Klassiek Licht / Klassiek Donker / Nieuw Licht / Nieuw Donker
+- [ ] Beheerder: Klassiek Licht / Klassiek Donker / Nieuw Licht / Nieuw Donker
+- [ ] Geen functionele regressie, geen verloren data, geen ontbrekende actie/knop/veld/status
+- [ ] Geen rol-lekkage -- niet alleen UI-verborgen, ook route/API-autorisatie gecontroleerd
+      (URL handmatig wijzigen, verborgen knop, directe API-call, oude browser-/localStorage-state)
+- [ ] Geen horizontale GUI-problemen, geen overlappende tekst, licht/dark correct, klassiek/nieuw correct
+- [ ] Bestaande regressietests groen
+- [ ] Melding bij oplevering: welk scherm, welke rol, welk design, welk thema, welke devices,
+      welke bestanden gewijzigd, welke tests uitgevoerd
+
+**Werkwijze:** geen big-bang refactor. audit -> risicoanalyse -> plan -> kleine wijziging -> tests
+-> screenshots -> volgende wijziging. Klassiek/Nieuw delen één businesscomponent waar mogelijk
+(zelfde businessregel, andere presentatie/styling) -- geen aparte regelset per design.
+
+**17.1 Medewerkerrol (checklist, sectie 2 van de opdracht)**
+- [x] Mijn uren: weekend-navigatie (Home + pijl) toont juiste week -- opgelost v1.2.4, geverifieerd
+  desktop + mobiel.
+- [ ] Dashboard/Mijn overzicht: begroeting, volgende actie, open acties, acties per maand
+- [ ] Mijn uren: invoeren, wijzigen, opslaan, Enter-to-save, maand/weeknavigatie, totalen, indienen,
+  status van urenregistratie
+- [ ] Klanturenstaat uploaden / opnieuw uploaden
+- [ ] Correcties, mededelingen, notificaties, profiel, logout
+- [ ] Mobiele prioriteit: wat moet ik nu doen -> uren -> open acties -> klanturenstaat -> overig
+- [ ] Data mag nooit verloren gaan door rerender, schermrotatie, browser-back, modal sluiten,
+  toetsenbord openen, thema-/designwissel
+
+**17.2 Beheerderrol (checklist, sectie 3 van de opdracht -- grootste blok, meer info per scherm)**
+- [x] New-skin topnav: volgorde en groepering gelijkgetrokken met Klassiek-sidebar
+  (Cockpit/Goedkeuringen/Facturen | Medewerkers/Mededelingen/Instellingen) -- **opnieuw op te
+  bouwen bovenop v1.2.4** na het herstellen van deze checkout; vorige poging was ongetest/oud.
+- [ ] Beheer-dashboard: openstaande goedkeuringen, dashboardtellers (moeten kloppen met werkelijke
+  data), recente serverfouten, rolwissel
+- [ ] Urenregistraties van medewerkers: goedkeuren, terugsturen (verplichte toelichting),
+  klanturenstaten controleren + status, correcties verwerken, markeren/verwerken verzonden items
+- [ ] Medewerkersbeheer (stamgegevens), mededelingen beheren + doelgroepen, instellingen +
+  mailinstellingen, notificaties, administratieve statussen
+- [ ] Mobiel: nooit desktoptabellen simpelweg verkleinen -- responsive tables/cards/detailweergave/
+  inklapbaar, maar geen informatie of beheeractie laten verdwijnen
+- [ ] Gevaarlijke acties (Terugsturen) nooit te dicht naast neutrale acties (Controleren/Verzonden)
+  op mobiel/action-sheet-indeling
+
+**17.3 Workflow-integriteit**
+- [ ] Concept -> Gereed -> Ingediend -> Goedgekeurd -> Verzonden (+ Teruggestuurd, Correctie,
+  Klanturenstaat (opnieuw) uploaden) betekent voor Medewerker en Beheerder hetzelfde na elke
+  responsive wijziging
+
+**17.4 Security en rollen (verplicht, sectie 20)**
+- [ ] Medewerker kan Beheer-functies niet bereiken via handmatige URL, verborgen knop, API-call,
+  oude browserstate of localStorage/sessionstate -- backend-autorisatie blijft leidend, UI-verbergen
+  telt niet als autorisatie
+
+**17.5 Device- en platformrandgevallen**
+- [ ] iOS/Safari: safe areas, notch/Dynamic Island, viewporthoogte, input-zoom, keyboard,
+  datumvelden, uploads, sticky headers, fixed buttons
+- [ ] Android/Chrome: viewport, keyboard, terugknop, datumvelden, uploads, sticky/fixed, standalone/PWA
+- [ ] PWA: manifest, icons, standalone, theme-color, service worker, caching/updates -- geen
+  offline urenmutatie zonder expliciete sync-/conflictafhandeling, uren nooit stilletjes overschreven
+
+**Tijdsinschatting (indicatief, geen deadline):** fase 0/fundament 1 sessie, 17.1 nog 2-3 sessies,
+17.2 4-6 sessies (grootste blok), 17.4 1-2 sessies, 17.5 1-2 sessies. Totaal ruwweg 10-14
+werksessies, bij dit tempo circa 3-5 weken kalendertijd -- afhankelijk van hoeveel echte bugs
+onderweg naar boven komen (zoals de weekend-weekindex-keten in v1.2.4, die 3 rondes kostte).
+
+### Automatische taakverdeling met main (Gio-opdracht 12 sep 2026, geen menselijke tussenstap)
+
+Vanaf v2.0.0 geldt: geen goedkeuring meer vragen aan Gio voor tussenstappen, alles loopt door,
+terugdraaien kan altijd. De enige nog geldende harde grens is de `Promote Prod`-poort: die blijft
+exclusief bij Gio (zie sectie "Vóór livegang" verderop en `OPERATIONS-RUNBOOK.md` 7a). Bij een lange
+wachttijd op die poort loopt al het overige werk (TEST, CI, features) gewoon door.
+Zie ook het memory-bestand `autonoom-doorlopen-vanaf-v2` (herontwerp-sessie).
+
+Claim-conventie voor deze checklist zodat herontwerp en main elkaar niet dubbel werk laten doen:
+- Zet vóór het beginnen aan een `[ ]`-item een sessie-tag: `[ ] (herontwerp, bezig)` of
+  `[ ] (main, bezig)`, commit die tag apart of samen met de eerste stap, en push meteen -- zo ziet
+  de andere kant bij zijn eigen `git fetch`/pull dat het item bezet is.
+- Trek eerst vers op (`git fetch` + merge/rebase) vóórdat je een item claimt, om te voorkomen dat
+  je een item claimt dat de andere sessie net al gepakt heeft.
+- Na afronding: `[x]` zetten met versienummer en bewijs (screenshots/testnamen), zoals de rest van
+  deze checklist al doet onder "Rapportage na elke stap".
+- Secties 17.1/17.2 (Medewerker- en Beheerder-audit) zijn primair voor herontwerp; 17.5
+  (device/PWA-randgevallen) staat expliciet open voor main. Dit is een richting, geen slot op de
+  deur -- wie ruimte heeft pakt een onbezet item op, ongeacht sectie.
+- Waar mogelijk elkaar ook direct inseinen via de agent-peersessie (zichtbaar via `ListAgents`/
+  `SendMessage` in Claude Code) in plaats van te wachten tot de ander toevallig deze checklist leest.
+
+**Visuele verbetering vooraf goedgekeurd (Klassiek en Nieuw):** styling/look mag door beide
+sessies zelfstandig mooier gemaakt worden zonder per wijziging toestemming te vragen, zolang
+functionaliteit, businesslogica, workflows en rollen (de harde eisen bovenaan deze fase) intact
+blijven. De basis vindt Gio al goed; dit is ruimte om te verfraaien, geen opdracht om te herontwerpen.
+
 ## Dagelijkse werkwijze (verplicht)
 
 1. Gebruik deze masterchecklist elke werkdag als enige technische voortgangslijst.
