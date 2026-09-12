@@ -93,6 +93,20 @@ $namedTesterResetDeliveryWithChannelConfig = mail_effective_delivery($testGuarde
     'body_snapshot' => 'Link.',
 ]);
 
+// UI-takenlijst #41 (gebruiker, 11 sep): onderwerp en tekst moeten exact
+// zoals productie blijven zodat je de echte mail beoordeelt, maar de
+// ontvanger moet wel kunnen zien dat het van TEST komt -- anders is een
+// echte werkinbox een TEST-mail niet van een productiemelding te
+// onderscheiden. html_snapshot expliciet meegeven: alleen dan hoort er ook
+// een HTML-onderschrift bij te komen, niet alleen in platte tekst.
+$namedTesterTimesheetDeliveryWithHtml = mail_effective_delivery($testGuardedWithNamedTesterChannel, [
+    'recipient_email' => $namedTester,
+    'channel' => 'timesheet_submission_receipt',
+    'subject_snapshot' => 'Urenoverzicht',
+    'body_snapshot' => 'Overzicht.',
+    'html_snapshot' => '<p>Overzicht.</p>',
+]);
+
 $checks = [
     'production_enabled_without_mode_is_blocked' => !mail_real_delivery_allowed_for_environment($productionClosed),
     'production_disabled_mode_has_config_error' => mail_validate_relay_config($productionClosed) !== [],
@@ -137,6 +151,16 @@ $checks = [
         $namedTesterResetDeliveryWithChannelConfig['redirected'] === false
         && $namedTesterResetDeliveryWithChannelConfig['recipient'] === $namedTester
         && $namedTesterResetDeliveryWithChannelConfig['cc'] === $allowedAddress,
+    'named_tester_delivery_subject_stays_unmodified' =>
+        $namedTesterTimesheetDelivery['subject'] === 'Urenoverzicht',
+    'named_tester_delivery_body_gets_test_footer' =>
+        str_contains($namedTesterTimesheetDelivery['body'], 'TEST-omgeving'),
+    'named_tester_delivery_html_gets_test_footer' =>
+        str_contains($namedTesterTimesheetDeliveryWithHtml['html'], 'TEST-omgeving'),
+    'named_tester_password_reset_also_gets_test_footer' =>
+        str_contains($namedTesterResetDelivery['body'], 'TEST-omgeving'),
+    'redirected_delivery_is_not_double_marked' =>
+        substr_count($namedTesterOtherChannelDelivery['body'] ?? '', 'TEST-omgeving') === 0,
 ];
 
 $ok = !in_array(false, $checks, true);
