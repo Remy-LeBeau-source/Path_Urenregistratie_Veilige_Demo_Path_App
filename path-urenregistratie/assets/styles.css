@@ -492,7 +492,12 @@ html:not([data-skin="new"]) .topbar-actions .topbar-popover:first-of-type::befor
 .period-picker-fields input:focus-visible, .month-picker-trigger:focus-visible, .month-choice-panel button:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--mint); }
 .month-picker { position: relative; display: block; min-width: 0; }
 .period-control .month-picker-trigger, .customer-timesheet-upload-grid .month-picker-trigger { display: flex; width: 100%; min-height: 26px; align-items: center; justify-content: space-between; gap: 8px; border: 0; border-radius: 7px; background: transparent; color: var(--navy-tekst); padding: 3px 6px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 800; text-align: left; }
-.month-picker-trigger::after { color: var(--muted); content: "▾"; font-size: 10px; }
+/* Een langere maandnaam (december, september) mag nooit tegen de ▾-pijl
+   aanschuiven -- gemeld met een screenshot. De naam krijgt een eigen element
+   (zie syncPeriodControls) dat mag inkorten; de pijl krijgt gegarandeerde
+   eigen ruimte die nooit wegvalt. */
+.month-picker-trigger-label { overflow: hidden; min-width: 0; white-space: nowrap; text-overflow: ellipsis; }
+.month-picker-trigger::after { flex: 0 0 auto; color: var(--muted); content: "▾"; font-size: 10px; }
 .period-control .month-picker-trigger:hover, .customer-timesheet-upload-grid .month-picker-trigger:hover { background: var(--green-light); }
 .month-choice-panel { position: absolute; z-index: 80; top: calc(100% + 7px); left: 0; display: grid; width: 292px; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: 0 18px 42px rgba(13,27,56,.18); padding: 10px; }
 .month-choice-panel[hidden] { display: none; }
