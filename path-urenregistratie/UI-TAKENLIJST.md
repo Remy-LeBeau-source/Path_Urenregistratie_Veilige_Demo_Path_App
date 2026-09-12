@@ -13,7 +13,6 @@ Status: `open` · `bezig` · `klaar (vX.Y.Z)` · `bewust niet`
 
 | # | Punt | Bron | Status |
 |---|---|---|---|
-| 24 | Bot die bij elke versie een bericht naar het team stuurt. WhatsApp-groepen kunnen niet via de officiële API; mail of Teams/Slack wel. Wacht op keuze. | gebruiker | wacht op gebruiker |
 | 18 | Donkere herokaart is een plat blok met een lichter kadertje. Geen foto van; huidige `.hero-card` heeft al gradient, schaduw en afgeronde hoeken, dus eerst een concreet voorbeeld nodig voordat hier tijd in gaat. | eigen voorstel | open, wacht op voorbeeld |
 | 19 | Hulp- en meldingenpaneel nu wel bekeken: screenshots gemaakt in Klassiek/New x licht/donker (ingelogd als beheerder). Geen concreet probleem gevonden -- kop, zoekveld, FAQ-tegels en "Contact opnemen" (bewust anders gekleurd, blijkbaar de meest gebruikte snelkeuze) zien er in alle vier de combinaties consistent uit. Geen fix gemaakt om geen probleem te verzinnen dat er niet is. | eigen voorstel | bekeken, geen concreet probleem |
 | 21 | PROD-goedkeuringspoort blokkeert de hele uitrolketen. Alleen de gebruiker kan die afhandelen. | eigen vondst | wacht op gebruiker |
@@ -70,3 +69,4 @@ Status: `open` · `bezig` · `klaar (vX.Y.Z)` · `bewust niet`
 |---|---|
 | Primaire knop naar dieper groen met witte tekst. | Haalt op de donkere herokaart de contrastnorm niet; mint met donkere tekst voldoet daar juist ruim. Een primaire kleur die per ondergrond verschilt kost complexiteit zonder winst. |
 | "Jouw uren in 4 stappen" uit New halen (punt 3 van Shawn). | Gebruiker bevestigde dat het laat zien in welke stap je zit en daar waarde heeft. Klassiek heeft dit blok niet. |
+| Bot die bij elke versie een bericht naar het team stuurt (WhatsApp kan niet via de officiële API, mail/Teams/Slack wel). | Gebruiker liet het punt vallen (12 sep 2026): "kan weg". Geen keuze meer nodig. |
