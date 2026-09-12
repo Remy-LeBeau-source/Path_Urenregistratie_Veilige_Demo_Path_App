@@ -1058,3 +1058,84 @@ test('[DASH-N-028] Mijn uren toont in het weekend de week waar vandaag in valt, 
     await expect(page.locator('#new-bento-week-title')).toHaveText('Week 38');
   });
 });
+
+test('[DASH-N-029] de pijl springt naar de eerstvolgende week met een leeg urenvak, ook terug in de tijd', async ({ page }) => {
+  // Gebruikerswens (12 sep 2026): de pijl moet niet zomaar één week
+  // opschuiven, maar naar de eerstvolgende week met nog een leeg urenvak
+  // springen -- dat kan dus ook een eerdere week zijn dan waar je nu staat.
+  // Alleen het inloggen zelf blijft op de week van vandaag landen; dit
+  // bewijst dat de pijl daarna zijn eigen, andere logica volgt.
+  const loginPage = new LoginPage(page);
+  await page.clock.setFixedTime(new Date('2026-09-12T10:00:00.000Z'));
+
+  await test.step('Given een medewerker op de week van vandaag (Week 37), met die week en de volgende al volledig ingevuld, maar een eerdere week nog leeg', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('#new-bento-week-title')).toHaveText('Week 37');
+
+    await page.evaluate(() => {
+      // @ts-expect-error debug-only voor deze directe controle
+      const employee = currentEmployee();
+      // @ts-expect-error debug-only voor deze directe controle
+      const period = currentPeriod();
+      // @ts-expect-error debug-only voor deze directe controle
+      const record = recordFor(employee.id, period.key);
+      // @ts-expect-error debug-only voor deze directe controle
+      const huidigeIndex = newEmployeeBentoWeekIndex(period);
+      if (!record.confirmedEntries) record.confirmedEntries = period.weekRows.map(() => [false, false, false, false, false]);
+      // Een week vóór vandaag zoeken met minstens één echte dag (een
+      // maandbegin kan midden in de week vallen, dus niet elke vroege
+      // weekrij heeft alle 5 dagen) en expliciet leeg + niet bevestigd
+      // maken (het "nog te doen"-vak).
+      const eerdereIndex = period.weekRows.findIndex((week: { days: unknown[] }, index: number) =>
+        index < huidigeIndex && week.days.some(Boolean));
+      if (eerdereIndex < 0) throw new Error('Geen week vóór vandaag met een echte dag gevonden om te legen.');
+      const eerdereWeek = period.weekRows[eerdereIndex];
+      const eerdereDagIndex = eerdereWeek.days.findIndex(Boolean);
+      record.entries[eerdereIndex] = [0, 0, 0, 0, 0];
+      record.confirmedEntries[eerdereIndex] = [false, false, false, false, false];
+      window.__eerdereDagIndex = eerdereDagIndex;
+      // Vandaag én alle weken erna in deze maand helemaal vullen, zodat de
+      // pijl pas na het aflopen van de rest van de maand terug hoeft te
+      // springen naar de eerdere, leeg gelaten week.
+      for (let weekIndex = huidigeIndex; weekIndex < period.weekRows.length; weekIndex += 1) {
+        const week = period.weekRows[weekIndex];
+        if (!week) continue;
+        record.entries[weekIndex] = week.days.map((day: unknown) => (day ? 8 : 0));
+        record.confirmedEntries[weekIndex] = week.days.map(() => true);
+      }
+      window.__eerdereIndex = eerdereIndex;
+      window.__verwachteWeeknummer = period.weekRows[eerdereIndex].number;
+      // @ts-expect-error debug-only voor deze directe controle
+      renderNewEmployeeBento(record, employee, period);
+    });
+  });
+
+  await test.step('When op de volgende-week-pijl wordt gedrukt', async () => {
+    await page.locator('#new-employee-bento [data-new-bento-week="next"]').click();
+  });
+
+  await test.step('Then springt de weergave terug naar de eerdere, nog lege week, niet naar Week 38', async () => {
+    const verwachtWeeknummer = await page.evaluate(() => (window as unknown as { __verwachteWeeknummer: number }).__verwachteWeeknummer);
+    await expect(page.locator('#new-bento-week-title')).toHaveText('Week ' + verwachtWeeknummer);
+    await expect(page.locator('#new-bento-week-title')).not.toHaveText('Week 38');
+  });
+
+  await test.step('And staat de focus op het eerste lege urenveld van die week', async () => {
+    const focusInfo = await page.evaluate(() => {
+      const w = window as unknown as { __eerdereIndex: number; __eerdereDagIndex: number };
+      const active = document.activeElement as HTMLInputElement | null;
+      return {
+        isHoursInput: Boolean(active?.classList.contains('new-bento-hours-input')),
+        weekIndex: active?.dataset.weekIndex,
+        dayIndex: active?.dataset.dayIndex,
+        verwachtWeekIndex: String(w.__eerdereIndex),
+        verwachtDagIndex: String(w.__eerdereDagIndex),
+      };
+    });
+    expect(focusInfo.isHoursInput).toBe(true);
+    expect(focusInfo.weekIndex).toBe(focusInfo.verwachtWeekIndex);
+    expect(focusInfo.dayIndex).toBe(focusInfo.verwachtDagIndex);
+  });
+});

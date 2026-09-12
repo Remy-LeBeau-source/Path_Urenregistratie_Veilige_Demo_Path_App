@@ -184,6 +184,15 @@ Feature: Dashboard en open werkvoorraad
     Then toont de weekkaart de week van vandaag (7-11 sep), niet de eerste week van de maand
     And telt Volgende week vanaf de juiste week verder, niet vanaf de eerste week van de maand
 
+  @negative
+  Scenario: [DASH-N-029] de pijl springt naar de eerstvolgende week met een leeg urenvak, ook terug in de tijd
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given een medewerker op de week van vandaag (Week 37), met die week en de volgende al volledig ingevuld, maar een eerdere week nog leeg
+    When op de volgende-week-pijl wordt gedrukt
+    Then springt de weergave terug naar de eerdere, nog lege week, niet naar Week 38
+    And staat de focus op het eerste lege urenveld van die week
+
   @happy
   Scenario: [DASH-H-001] admin dashboard opent zonder console errors
     # Testtechniek: Beslissingstabel rollen en autorisatie

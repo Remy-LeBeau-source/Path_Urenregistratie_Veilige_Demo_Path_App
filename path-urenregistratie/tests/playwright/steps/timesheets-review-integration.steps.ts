@@ -18,6 +18,7 @@ Given("de medewerker is ingelogd en heeft een schrijfbare testperiode");
 When("de medewerker een concept opslaat en daarna indient");
 And("de reviewcontext wisselt naar administrator");
 Then("een verouderde correctie-aanvraag wordt geblokkeerd met stale-version");
+Then("een correctie-aanvraag zonder toelichting wordt door de server geweigerd (sectie 20: UI-verbergen is geen autorisatie)");
 When("de administrator een geldige correctie-aanvraag uitvoert");
 Then("een tweede correctie op dezelfde versie wordt geweigerd");
 And("de context wisselt terug naar medewerker voor herindiening");

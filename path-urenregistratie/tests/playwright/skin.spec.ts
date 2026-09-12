@@ -892,6 +892,21 @@ test('[SKIN-H-017] Mijn uren toont bij een enkele week dezelfde bento-kaartjes a
     await dinsdag.locator('[data-new-bento-set="8"]').click();
     await expect(dinsdag.locator('.new-bento-hours-input')).toHaveValue('8', { timeout: 5_000 });
 
+    // De pijl springt sinds v2.0.4 naar de eerstvolgende week met nog een
+    // leeg urenvak, niet meer blind naar index+1 -- bij hergebruik van de
+    // gedeelde testmedewerker kan een eerdere test in deze suite week 37 al
+    // volledig hebben ingevuld. Week 37 hier expliciet leeg/onbevestigd
+    // zetten zodat de pijl deterministisch daar landt, ongeacht wat eerdere
+    // tests op dezelfde gedeelde medewerker achterlieten.
+    await page.evaluate(() => {
+      // @ts-expect-error debug-only voor deze directe controle
+      const period = currentPeriod();
+      // @ts-expect-error debug-only voor deze directe controle
+      const record = recordFor(currentEmployee().id, period.key);
+      if (record.entries[1]) record.entries[1] = [0, 0, 0, 0, 0];
+      if (record.confirmedEntries?.[1]) record.confirmedEntries[1] = [false, false, false, false, false];
+    });
+
     await page.locator('#hours-week-nav [data-new-bento-week="next"]').click();
     await expect(page.locator('#hours-week-nav-title')).toHaveText('Week 37');
   });
