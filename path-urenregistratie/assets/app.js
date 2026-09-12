@@ -5074,7 +5074,13 @@ function syncPeriodControls(monthSelector, yearSelector, periodKey) {
   const monthValue = String(parsed.monthIndex + 1).padStart(2, "0");
   month.value = monthValue;
   if (month.tagName === "BUTTON") {
-    month.textContent = MONTH_NAMES[parsed.monthIndex].charAt(0).toUpperCase() + MONTH_NAMES[parsed.monthIndex].slice(1);
+    // Losse <span> om de maandnaam i.p.v. een kale tekstknoop: een langere naam
+    // (december, september) kon anders tegen de ▾-pijl (:after) aan schuiven --
+    // gemeld met een screenshot. Met een eigen element kan de tekst netjes
+    // inkorten (ellipsis) i.p.v. tegen de pijl te overlappen, en de pijl krijgt
+    // zijn eigen vaste ruimte (styles.css, .month-picker-trigger-label/::after).
+    const maandnaam = MONTH_NAMES[parsed.monthIndex].charAt(0).toUpperCase() + MONTH_NAMES[parsed.monthIndex].slice(1);
+    month.innerHTML = '<span class="month-picker-trigger-label">' + escapeHtml(maandnaam) + "</span>";
     document.querySelectorAll('[data-month-control="' + monthSelector + '"]').forEach(button => {
       const active = button.dataset.periodMonth === monthValue;
       button.classList.toggle("is-active", active);
