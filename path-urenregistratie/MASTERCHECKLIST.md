@@ -1987,16 +1987,14 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   de adresbalk terug op het eigen dashboard. `[SEC-H-009]`/`[SEC-H-010]`, v2.0.1, skin-onafhankelijk.
 - [ ] Verborgen knop, directe API-call vanaf de medewerkerkant, oude browserstate/localStorage-state
   (resterende deelpunten van sectie 20, nog te doen)
-- [!] **Live TEST-bevinding (12 sep, gemeld door Gio met screenshot):** automatisch inloggen vult op
-  de live TEST-site het wachtwoord voor Beheer wel in, voor Medewerker nooit. Code geverifieerd:
-  `server/auth/local-login-hints.php` + migratie 005 kloppen (bcrypt van `LocalDemoEmployee2026`
-  bevestigd via `password_verify()`), dus dit wijst op live-configuratiedrift (waarschijnlijk
-  ontbrekende `PLAYWRIGHT_EMPLOYEE_PASSWORD` in de omgeving van de live TEST-server, of
-  `local_login_hints_is_guarded_test_host()`'s drie voorwaarden die daar net niet allemaal kloppen)
-  en niet op een aantoonbare codefout -- kan niet verder zonder live SSH/DB-toegang. Kortetermijn:
-  "TEST-gegevens herstellen" (Instellingen) zou het moeten verhelpen. Structureel: een
-  preflight-check toevoegen aan `test-preflight.php` die dit vastlegt zodat het niet stil kan
-  terugkomen (nog niet gebouwd, ~2-3 uur).
+- [x] **Live TEST-bevinding (12 sep, gemeld door Gio met screenshot), opgelost door main.** Eerste
+  hypothese (live-configuratiedrift, `PLAYWRIGHT_EMPLOYEE_PASSWORD` ontbreekt op de server) bleek
+  onjuist -- de echte oorzaak zat client-side: `employeeEmailOverrides` in `local-login-hints.php`
+  is gesleuteld op `users.id`, maar de statische snelkeuze-catalogus in `app.js` gebruikt zijn eigen
+  `employees.id` als `account.id` in `resolveLoginEmail()`. Brian's `employees.id` (3) botste
+  toevallig met Marc's `users.id` (3): Brian selecteren vulde Marc's echte adres in, en Marc zelf
+  (geen match) bleef op het verouderde demo-adres hangen. Elke catalogusrij kreeg een `dbUserId`,
+  `resolveLoginEmail()` verkiest dat nu boven `account.id`. Regressie `[AUTH-H-025]`. v2.0.3.
 
 **17.5 Device- en platformrandgevallen** (main, bezig)
 - [x] iOS/Safari safe areas -- eerste bevinding: Klassiek behandelt `env(safe-area-inset-top)`
