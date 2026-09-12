@@ -39,6 +39,19 @@ async function isolateFrontendState(page: Page): Promise<void> {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true }) });
   });
 
+  // Instellingen haalt sinds de Auditlog/Systeem-panelen (11 sep) deze twee
+  // ook automatisch op zodra de beheerder het scherm opent -- zonder mock
+  // vallen ze buiten deze volledig gemockte auth/state-sandbox door naar de
+  // echte server, die de gefingeerde sessie hier niet kent en 401 teruggeeft.
+  // Een test die console errors op nul controleert struikelt daar dan overheen,
+  // ook als de test zelf niets met deze twee schermen te maken heeft.
+  await page.route('**/server/api/audit-log.php*', async route => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, count: 0, items: [] }) });
+  });
+  await page.route('**/server/api/server-log.php*', async route => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, log_file: 'php-error.log', total_scanned: 0, offset: 0, limit: 200, count: 0, has_more: false, lines: [] }) });
+  });
+
   let authSessionUser: MockAuthUser | null = null;
 
   await page.route('**/server/auth/csrf.php*', async route => {

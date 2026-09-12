@@ -846,6 +846,7 @@
           <button type="button" data-scroll-target="settings-reminders">Herinneringen</button>
           <button type="button" data-scroll-target="settings-safety">Veiligheid</button>
           <button type="button" data-scroll-target="settings-audit">Auditlog</button>
+          <button type="button" data-scroll-target="settings-system">Systeem</button>
         </nav>
         <div class="settings-grid">
           <section class="panel settings-card full-width" id="settings-organization">
@@ -1017,6 +1018,16 @@
               </table>
             </div>
             <div class="dashboard-action-empty" id="audit-log-empty" hidden><strong>Geen gebeurtenissen gevonden.</strong><br>Pas het filter aan of kom later terug.</div>
+          </section>
+          <section class="panel settings-card full-width" id="settings-system">
+            <div class="email-template-heading"><div><span class="section-label">Diagnose</span><h3>Recente serverfouten</h3></div><span class="status-pill status-approved" id="server-log-count-pill">Nog niet geladen</span></div>
+            <p class="settings-template-intro">De laatste regels uit het serverfoutenlog, zonder dat daar SSH voor nodig is. Ouder dan 30 dagen bestaat niet meer -- dat ruimt de server zelf al automatisch op.</p>
+            <div class="server-log-list" id="server-log-list" aria-live="polite"></div>
+            <div class="dashboard-action-empty" id="server-log-empty" hidden><strong>Geen serverfouten gevonden.</strong><br>Zo blijft het.</div>
+            <div class="server-log-actions">
+              <button class="small-button" type="button" id="server-log-load-more" hidden>Meer laden</button>
+              <button class="small-button" type="button" id="server-log-refresh">Vernieuwen</button>
+            </div>
           </section>
         </div>
       </section>

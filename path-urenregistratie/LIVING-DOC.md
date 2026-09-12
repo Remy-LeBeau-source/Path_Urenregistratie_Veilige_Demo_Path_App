@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 485 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 493 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 485 unieke case-ID's
+- Playwright executable cases: 493 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 486 unieke case-ID's
-- Playwright features: 29
+- Totaal executable cases: 494 unieke case-ID's
+- Playwright features: 30
 - Database features: 1
-- Playwright steps mappings: 29
+- Playwright steps mappings: 30
 - Database steps mappings: 1
-- Uitvoeringen: 521
-- Niet-mobile projectuitvoeringen: 449
+- Uitvoeringen: 529
+- Niet-mobile projectuitvoeringen: 457
 - Mobile functionele cases: 36
 - Pixel 7 / Chromium-uitvoeringen: 36
 - iPhone 13 / WebKit-uitvoeringen: 36
 
-De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 485 Playwright-functionele cases in totaal 521 resultaten op: 449 + (36 x 2) = 521.
+De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 493 Playwright-functionele cases in totaal 529 resultaten op: 457 + (36 x 2) = 529.
 
 ## Documentatieketen
 
@@ -97,6 +97,21 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 485 Playwri
 - [AUD-H-011] aanmaken, instellingen opslaan en verwijderen worden geauditeerd met de juiste actor — Techniek: API-contract + equivalentieklasse · Assertions: 9
 - [AUD-H-012] auditlog filtert op actor_id (Instellingen > Auditlog: "wie deed dit") — Techniek: Equivalentieklassen · Assertions: 11
 - [AUD-H-013] Instellingen > Auditlog toont wie/wat/wanneer en filtert op persoon en actie — Techniek: Equivalentieklassen · Assertions: 18
+
+### Serverfoutenlog inzien
+
+- Feature: `tests/playwright/features/server-log.feature`
+- Source: `tests/playwright/server-log.spec.ts`
+- Cases: 8
+
+- [LOG-H-001] beheerder kan recente serverfouten ophalen, meest recente eerst — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
+- [LOG-H-002] bladeren (offset) toont de volgende regels ervoor, zonder duplicaten — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 11
+- [LOG-H-003] een leeg of ontbrekend logbestand levert een schone lege staat op — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
+- [LOG-N-004] medewerker mag serverfouten niet inzien — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
+- [LOG-N-005] anonieme gebruiker krijgt 401 op serverfouten — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
+- [LOG-N-006] serverfoutenlog weigert POST — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 1
+- [LOG-H-007] Instellingen > Systeem toont serverfouten en kan verder terugladen — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 8
+- [LOG-H-008] een leeg foutenlog toont de rustige lege staat — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 3
 
 ### Inloggen, uitloggen en sessiebeheer
 

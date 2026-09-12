@@ -1402,6 +1402,13 @@ const readApiRuntime = {
   // filter, de keuzelijsten blijven de volledige, opgebouwde verzameling tonen.
   ,auditLogKnownActors: {}
   ,auditLogKnownEventTypes: {}
+  ,serverLogInFlight: false
+  ,lastServerLogAt: 0
+  ,serverLogOffset: 0
+  ,serverLogLimit: 200
+  ,serverLogLines: []
+  ,serverLogHasMore: false
+  ,serverLogFile: ""
 };
 
 let mailDeliverySearchTimer = null;
@@ -9474,6 +9481,46 @@ function renderAuditLog() {
   }).join("");
 }
 
+function refreshServerLogReadApi(reset, force = false) {
+  if (!(API_ENABLED && authRuntime.mode === "auth" && state.currentRole === "admin")) return Promise.resolve(null);
+  const now = Date.now();
+  if (!force && (readApiRuntime.serverLogInFlight || (now - readApiRuntime.lastServerLogAt) < 15000)) return Promise.resolve(null);
+  readApiRuntime.serverLogInFlight = true;
+  if (reset) readApiRuntime.serverLogOffset = 0;
+
+  const params = new URLSearchParams({ limit: String(readApiRuntime.serverLogLimit), offset: String(readApiRuntime.serverLogOffset) });
+
+  return fetchReadApi("/server/api/server-log.php?" + params.toString())
+    .then(data => {
+      readApiRuntime.lastServerLogAt = Date.now();
+      if (!data) return null;
+      readApiRuntime.serverLogLines = reset ? data.lines.slice() : [...readApiRuntime.serverLogLines, ...data.lines];
+      readApiRuntime.serverLogHasMore = data.has_more === true;
+      readApiRuntime.serverLogFile = String(data.log_file || "");
+      readApiRuntime.serverLogOffset = readApiRuntime.serverLogOffset + data.count;
+      renderServerLog();
+      return data;
+    })
+    .finally(() => { readApiRuntime.serverLogInFlight = false; });
+}
+
+function renderServerLog() {
+  if (typeof document === "undefined") return;
+  const list = document.querySelector("#server-log-list");
+  const empty = document.querySelector("#server-log-empty");
+  const countPill = document.querySelector("#server-log-count-pill");
+  const loadMore = document.querySelector("#server-log-load-more");
+  if (!list) return;
+
+  const lines = readApiRuntime.serverLogLines;
+  if (countPill) {
+    countPill.textContent = lines.length === 0 ? "Geen fouten" : lines.length + " regel" + (lines.length === 1 ? "" : "s") + (readApiRuntime.serverLogFile ? " · " + readApiRuntime.serverLogFile : "");
+  }
+  if (empty) empty.hidden = lines.length > 0;
+  if (loadMore) loadMore.hidden = !readApiRuntime.serverLogHasMore;
+  list.innerHTML = lines.map(line => '<div class="server-log-list-line">' + escapeHtml(String(line)) + '</div>').join("");
+}
+
 function nextMailRecipientId() {
   let index = 1;
   while (mailRecipientById("recipient-" + index)) index += 1;
@@ -10495,9 +10542,11 @@ function showView(view, options = {}) {
     renderMailAcceptanceConsole();
     renderMailDeliveryHistory();
     renderAuditLog();
+    renderServerLog();
     refreshMailAcceptanceReadApi(false).then(renderMailAcceptanceConsole).catch(() => renderMailAcceptanceConsole());
     refreshEmailQueueReadApi(false).then(renderMailDeliveryHistory).catch(() => renderMailDeliveryHistory());
     refreshAuditLogReadApi(false).catch(() => renderAuditLog());
+    refreshServerLogReadApi(true).catch(() => renderServerLog());
   }
   const target = document.querySelector("#view-" + view);
   if (!target) return;
@@ -14352,6 +14401,28 @@ document.querySelector("#audit-log-filter-actor")?.addEventListener("change", ev
 document.querySelector("#audit-log-filter-event")?.addEventListener("change", event => {
   readApiRuntime.auditLogEventFilter = String(event.currentTarget.value || "");
   refreshAuditLogReadApi(true);
+});
+document.querySelector("#server-log-refresh")?.addEventListener("click", event => {
+  const button = event.currentTarget;
+  button.disabled = true;
+  button.textContent = "Vernieuwen…";
+  refreshServerLogReadApi(true, true)
+    .catch(() => toast("Serverfoutenlog kon niet worden vernieuwd."))
+    .finally(() => {
+      button.disabled = false;
+      button.textContent = "Vernieuwen";
+    });
+});
+document.querySelector("#server-log-load-more")?.addEventListener("click", event => {
+  const button = event.currentTarget;
+  button.disabled = true;
+  button.textContent = "Laden…";
+  refreshServerLogReadApi(false, true)
+    .catch(() => toast("Kon niet verder terugladen."))
+    .finally(() => {
+      button.disabled = false;
+      button.textContent = "Meer laden";
+    });
 });
 
 function postMailDeliveryRecovery(action, deliveryId, extra = {}) {

@@ -2088,10 +2088,15 @@ html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.
   padding: 9px 14px;
 }
 
+/* Zelfde maat als de merkpil op Mijn uren/Mijn maanden/medewerkerdashboard
+   (24px/96px). Deze stond nog op de oudere 21px/88px-verhouding van vóór die
+   aanpassing en bleef daardoor net iets te klein om als "Path" te lezen --
+   gemeld met een screenshot waarin het logo in zowel licht als donker niet
+   goed te zien was. */
 html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .mobile-brand-home img {
   width: auto;
-  max-width: 88px;
-  height: 21px;
+  max-width: 96px;
+  height: 24px;
   object-fit: contain;
 }
 
