@@ -1911,21 +1911,27 @@ Optioneel/parkeren (geen blokkade):
   `assignment_mail_routes.include_invoice_pdf`.
 - Acceptatiemail-PDF: door Gio bewust losgelaten, niet verder oppakken zonder nieuwe opdracht.
 
-## Fase 17 - GUI/rol-audit matrix (start v2.0.0, opdracht Gio 12 sep 2026)
+## Fase 17 - GUI-redesign, rol-audit matrix en apparaatgevallen (start v2.0.0, opdracht Gio 12 sep 2026, scope gecorrigeerd 12 sep 2026)
 
-Dit is geen redesign-opdracht. Bestaande functionaliteit, businesslogica, workflows, huisstijl,
-kleuren, componentstijl, klassiek design, nieuw design, licht/donker thema en rollen/autorisaties
-blijven leidend (bron van waarheid = de bestaande app). Alleen GUI, responsive werking,
-toegankelijkheid en app/web-vriendelijkheid worden verbeterd waar nodig.
+**Scope-correctie (12 sep, rechtstreeks met Gio):** de eerdere omschrijving "geen redesign-opdracht"
+was een verkeerde interpretatie. Gio's daadwerkelijke opdracht: **redesign met behoud van
+functionaliteit** -- mooier maken, voor zowel Klassiek als Nieuw, zonder dat er ook maar iets aan
+businesslogica, workflows of rollen/autorisaties stuk gaat. Eén fase, niet gesplitst: audit,
+rolveiligheid, apparaatgevallen én visuele verfraaiing lopen onder dezelfde regels. Bestaande
+functionaliteit, businesslogica, workflows en rollen/autorisaties blijven de harde, niet-onderhandelbare
+kern (bron van waarheid = de bestaande app); huisstijl, kleuren, componentstijl, klassiek design,
+nieuw design en licht/donker thema mogen wél bewust mooier gemaakt worden, mits niets daarvan de
+kern raakt.
 
-**Kern van de opdracht:** een GUI-wijziging is pas klaar als hij is gecontroleerd voor de
-volledige matrix rol x design x thema x device, niet alleen visueel maar ook op rechten/routing.
+**Kern van de opdracht:** elke wijziging (redesign of bugfix) is pas klaar als hij is gecontroleerd
+voor de volledige matrix rol x design x thema x device, niet alleen visueel maar ook op rechten/routing.
 Rolverdeling is vanaf nu expliciet onderdeel van de Definition of Done, zodat een wijziging voor
 Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
 
 **Verplichte matrix per wijziging:**
 - Rollen: Medewerker, Beheerder (nooit los beoordelen)
-- Designs: Klassiek (heeft prioriteit), Nieuw (mag verbeterd worden, nooit ten koste van Klassiek)
+- Designs: Klassiek en Nieuw mogen allebei mooier gemaakt worden; bij twijfel of een wijziging de
+  functionele kern raakt, weegt behoud van Klassiek het zwaarst (grootste bestaande gebruikersgroep)
 - Thema's: Licht, Donker
 - Devices (minimaal): 360px mobiel, ~390px iPhone, ~412px Android, 768px tablet portrait,
   1024px tablet/laptop, 1366px laptop, 1440px desktop, 1920px desktop -- aantoonbaar gecontroleerd
@@ -2047,10 +2053,11 @@ Claim-conventie voor deze checklist zodat herontwerp en main elkaar niet dubbel 
 - Waar mogelijk elkaar ook direct inseinen via de agent-peersessie (zichtbaar via `ListAgents`/
   `SendMessage` in Claude Code) in plaats van te wachten tot de ander toevallig deze checklist leest.
 
-**Visuele verbetering vooraf goedgekeurd (Klassiek en Nieuw):** styling/look mag door beide
-sessies zelfstandig mooier gemaakt worden zonder per wijziging toestemming te vragen, zolang
-functionaliteit, businesslogica, workflows en rollen (de harde eisen bovenaan deze fase) intact
-blijven. De basis vindt Gio al goed; dit is ruimte om te verfraaien, geen opdracht om te herontwerpen.
+**Visuele verbetering is de opdracht, niet alleen toegestaan (Klassiek en Nieuw):** styling/look
+mooier maken is expliciet onderdeel van Fase 17 (zie de scope-correctie hierboven), niet slechts
+losse ruimte ernaast. Beide sessies mogen dit zelfstandig doen zonder per wijziging toestemming te
+vragen, zolang functionaliteit, businesslogica, workflows en rollen (de harde eisen bovenaan deze
+fase) intact blijven.
 
 ## Dagelijkse werkwijze (verplicht)
 
