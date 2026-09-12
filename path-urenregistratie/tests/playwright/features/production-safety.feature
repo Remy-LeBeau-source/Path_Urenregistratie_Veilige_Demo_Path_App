@@ -171,10 +171,10 @@ Feature: Veilige productieconfiguratie en deployment
     Then blijft TEST gesloten zonder whitelist en kan alleen de toegestane ontvanger door
 
   @happy
-  Scenario: [SAFE-H-013] TEST-mailsandbox opent atomisch voor twee toegestane TEST-ontvangers (sink + CC), plus vier met naam genoemde testers
+  Scenario: [SAFE-H-013] TEST-mailsandbox opent atomisch voor twee toegestane TEST-ontvangers (sink + CC), een derde beheerdersaccount, plus vier met naam genoemde testers
     # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 32
-    Given twee toegestane TEST-ontvangers (primaire sink + CC), vier genoemde testers, en twee bijbehorende accounts zijn gedefinieerd
+    Given twee toegestane TEST-ontvangers (primaire sink + CC), een derde beheerdersaccount, vier genoemde testers, en drie bijbehorende accounts zijn gedefinieerd
     When de TEST-mailsandboxconfigurator zonder uitvoerbevestiging wordt gestart
     Then blijft de check niet-mutatief en scheidt hij de mailsink van de TEST-accounts
     And zijn bevestiging, accounttransactie, backup, atomische write en deployguard aantoonbaar afgedwongen

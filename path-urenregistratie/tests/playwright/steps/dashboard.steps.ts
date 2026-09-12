@@ -82,6 +82,10 @@ Then("een paginaherlading op een teruggenavigeerd scherm blijft daar staan, spri
 Given("de medewerker logt voor het eerst in terwijl de eerste werkvoorraad-sync mislukt");
 When("de hydratie via het vangnet afrondt");
 Then("toont geen enkele werkvoorraadplek nog een laadtekst");
+Given("een medewerker inlogt op een zaterdag");
+When("de flow voor DASH-N-028 wordt uitgevoerd");
+Then("toont de weekkaart de week van vandaag (7-11 sep), niet de eerste week van de maand");
+And("telt Volgende week vanaf de juiste week verder, niet vanaf de eerste week van de maand");
 Given("de administrator is ingelogd");
 When("de administrator het dashboard opent");
 Then("het dashboard toont admin-overzicht zonder consolefouten");

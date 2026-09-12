@@ -175,6 +175,15 @@ Feature: Dashboard en open werkvoorraad
     When de hydratie via het vangnet afrondt
     Then toont geen enkele werkvoorraadplek nog een laadtekst
 
+  @negative
+  Scenario: [DASH-N-028] Mijn uren toont in het weekend de week waar vandaag in valt, niet de eerste week van de maand
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given een medewerker inlogt op een zaterdag
+    When de flow voor DASH-N-028 wordt uitgevoerd
+    Then toont de weekkaart de week van vandaag (7-11 sep), niet de eerste week van de maand
+    And telt Volgende week vanaf de juiste week verder, niet vanaf de eerste week van de maand
+
   @happy
   Scenario: [DASH-H-001] admin dashboard opent zonder console errors
     # Testtechniek: Beslissingstabel rollen en autorisatie
@@ -269,7 +278,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-013] dashboardmodules tonen compacte documenten, procesfasen en teamacties
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 14
+    # Aantoonbare Playwright-assertions in deze case: 16
     Given Backoffice de vaste augustusbaseline opent
     When de flow voor DASH-H-013 wordt uitgevoerd
     Then toont klanturenstaten een verkoopklaar kaartenoverzicht

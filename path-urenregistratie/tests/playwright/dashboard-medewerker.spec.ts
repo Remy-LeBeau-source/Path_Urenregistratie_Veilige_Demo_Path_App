@@ -1034,7 +1034,7 @@ test('[DASH-N-026] het medewerkerdashboard blijft nooit op "Werkvoorraad laden" 
 // 12 september 2026 is een zaterdag binnen ISO-week 37 (7-13 sep, werkdagen
 // 7-11 sep in september); vóór de fix toonde de bento hier ten onrechte
 // "Week 36" (1-4 sep). Zie UI-TAKENLIJST.md.
-test('[DASH-N-023] Mijn uren toont in het weekend de week waar vandaag in valt, niet de eerste week van de maand', async ({ page }) => {
+test('[DASH-N-028] Mijn uren toont in het weekend de week waar vandaag in valt, niet de eerste week van de maand', async ({ page }) => {
   const loginPage = new LoginPage(page);
   await page.clock.setFixedTime(new Date('2026-09-12T10:00:00.000Z'));
 
