@@ -1,7 +1,7 @@
 import { test, expect, type APIRequestContext, type Page } from '@playwright/test';
 import {
   demoCreds, csrf, apiLogin, apiLogout, resetSharedBaseline, setTestMailDelivery,
-  uiLogin, uiLogout, periodeKey, nlBedrag, SINK, type Creds,
+  uiLogin, uiLogout, periodeKey, nlBedrag, SINK, employeeEmail, SEED_EMPLOYEE_IDS, type Creds,
   guiApprove, guiFinaliseInvoice, assertConceptInvoicePdf,
 } from './_helpers';
 
@@ -69,7 +69,7 @@ test('[TEST-E2E-02] wachtwoord vergeten: aanvraag, nieuw wachtwoord, oude link v
   const nieuwWachtwoord = `TestReset!${Date.now().toString().slice(-8)}`;
   // Bewust een ander demo-account dan stasjo (die gebruiken andere cases voor
   // login), zodat de 3-per-15-min-resetgrens elkaar niet in de weg zit.
-  const doelEmail = 'marc@example.invalid';
+  const doelEmail = employeeEmail(creds.employeeEmailOverrides, SEED_EMPLOYEE_IDS.marc);
 
   // TEST verstuurt normaal echte reset-mail (token alleen in de mail). Voor deze
   // geautomatiseerde flow pauzeren we de levering: dan valt de site terug op
@@ -343,7 +343,7 @@ test('[TEST-E2E-05] acceptatieconsole verstuurt de vijf scenario-mails naar de s
 test('[TEST-E2E-29] een wachtwoord-vergeten-aanvraag wordt op de live SMTP-weg echt verstuurd', async ({ request }) => {
   test.setTimeout(120_000);
   // Bewust een ander demo-account dan E2E-02 (marc) i.v.m. de 3-per-15-min-grens.
-  const doel = 'shawn@example.invalid';
+  const doel = employeeEmail(creds.employeeEmailOverrides, SEED_EMPLOYEE_IDS.shawn);
 
   // Given: maillevering staat aan (de normale TEST-stand). Geen pauze zoals E2E-02:
   // deze case toetst juist dat de mail de echte verzendweg naar de sink haalt en
@@ -393,7 +393,7 @@ test('[TEST-E2E-33] de wachtwoord-reset-drempel stopt de vierde aanvraag binnen 
   // Ander demo-account dan E2E-02 (marc) en E2E-29 (shawn) i.v.m. de 3-per-15-min-grens.
   // De baseline-reset in afterAll wist password_reset_tokens, dus per volledige run
   // begint de teller weer op nul; we meten het aantal nieuwe leveringen als delta.
-  const doel = 'brian@example.invalid';
+  const doel = employeeEmail(creds.employeeEmailOverrides, SEED_EMPLOYEE_IDS.brian);
 
   await apiLogin(request, creds.admin.email, creds.admin.password);
   await setTestMailDelivery(request, true);

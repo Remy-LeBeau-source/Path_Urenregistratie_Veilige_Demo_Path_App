@@ -1,7 +1,7 @@
 import { test, expect, type APIRequestContext } from '@playwright/test';
 import {
   demoCreds, csrf, apiLogin, apiLogout, resetSharedBaseline, setTestMailDelivery,
-  uiLogin, uiLogout, periodeKey, finaliseViaConceptUpload, type Creds,
+  uiLogin, uiLogout, periodeKey, finaliseViaConceptUpload, employeeEmail, SEED_EMPLOYEE_IDS, type Creds,
 } from './_helpers';
 
 // Verbreding van de TEST-regressie: alle demo-medewerkers, een zelf aangemaakte
@@ -9,9 +9,14 @@ import {
 // gedeelde TEST-data; afterAll zet de baseline terug.
 
 let creds: Creds;
+// Pas gevuld in beforeAll: hangt af van creds.employeeEmailOverrides (het
+// echte adres zodra de TEST-mailsandbox genoemde testers kent).
+let DEMO_EMPLOYEES: string[];
 
 test.beforeAll(async ({ request }) => {
   creds = await demoCreds(request);
+  DEMO_EMPLOYEES = [SEED_EMPLOYEE_IDS.marc, SEED_EMPLOYEE_IDS.stasjo, SEED_EMPLOYEE_IDS.brian, SEED_EMPLOYEE_IDS.shawn]
+    .map((seedId) => employeeEmail(creds.employeeEmailOverrides, seedId));
 });
 
 test.afterAll(async ({ request }) => {
@@ -20,13 +25,6 @@ test.afterAll(async ({ request }) => {
   await apiLogout(request);
   await resetSharedBaseline(request, creds);
 });
-
-const DEMO_EMPLOYEES = [
-  'marc@example.invalid',
-  'stasjo@example.invalid',
-  'brian@example.invalid',
-  'shawn@example.invalid',
-];
 
 // Een echt factuurnummer volgt de per-opdracht template <prefix>-{jaar}-{maandnaam}.
 // Nooit de generieke acceptatie-dummy PATH-2026-nnn.
@@ -218,7 +216,7 @@ test('[TEST-E2E-28] een medewerker komt niet bij de gegevens of acties van een a
   await apiLogin(request, creds.admin.email, creds.admin.password);
   const boot = await (await request.get('/server/api/bootstrap.php')).json();
   const marcUser = (boot.users as Array<Record<string, unknown>>)
-    .find((u) => String(u.email).toLowerCase() === 'marc@example.invalid');
+    .find((u) => String(u.email).toLowerCase() === employeeEmail(creds.employeeEmailOverrides, SEED_EMPLOYEE_IDS.marc));
   const marc = (boot.employees as Array<Record<string, unknown>>)
     .find((e) => Number(e.user_id) === Number(marcUser?.id));
   expect(marc, 'de demo-medewerker Marc hoort te bestaan').toBeTruthy();

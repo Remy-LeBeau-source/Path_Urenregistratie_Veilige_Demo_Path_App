@@ -3,35 +3,56 @@ import { jsPDF } from 'jspdf';
 
 export const SINK = 'giovanno.maatsen@pathconsultancy.nl';
 
-export type Creds = { admin: { email: string; password: string }; employee: { email: string; password: string } };
+export type EmployeeEmailOverrides = Record<string, string>;
+
+export type Creds = {
+  admin: { email: string; password: string };
+  employee: { email: string; password: string };
+  /**
+   * Werknemer-id -> huidig echt adres, zoals de server 'm nu daadwerkelijk
+   * op de rij heeft staan (server/auth/local-login-hints.php,
+   * employeeEmailOverrides). Vaste seed-id's: 3=Marc, 4=Stasjo, 5=Brian,
+   * 6=Shawn (database/seed-demo-data.sql). Leeg op elke omgeving zonder
+   * geconfigureerde genoemde testers (lokaal, CI) -- dan gelden gewoon de
+   * @example.invalid-seedadressen.
+   */
+  employeeEmailOverrides: EmployeeEmailOverrides;
+};
+
+/** Vaste seed-id's uit database/seed-demo-data.sql, voor SEED_EMPLOYEE_EMAIL/employeeEmail(). */
+export const SEED_EMPLOYEE_IDS = { marc: 3, stasjo: 4, brian: 5, shawn: 6 } as const;
+
+const SEED_EMPLOYEE_DEFAULT_EMAIL: Record<number, string> = {
+  [SEED_EMPLOYEE_IDS.marc]: 'marc@example.invalid',
+  [SEED_EMPLOYEE_IDS.stasjo]: 'stasjo@example.invalid',
+  [SEED_EMPLOYEE_IDS.brian]: 'brian@example.invalid',
+  [SEED_EMPLOYEE_IDS.shawn]: 'shawn@example.invalid',
+};
 
 /**
- * De demo-credentials die de TEST-site zelf voor de autofill vrijgeeft.
- *
- * BEKEND, NOG NIET OPGELOST GAT (11 sep, R39/R40 in BESLISTABEL.md): sinds de
- * genoemde-testers-mailrouting is Stasjo's echte seedrij (id 4) op de echte
- * TransIP TEST-omgeving verplaatst naar zijn echte adres
- * (stasjovanbakel@pathconsultancy.nl) zodra de mailsandbox geconfigureerd is
- * -- test_reset_apply_named_tester_emails() in server/lib/test-reset.php zet
- * dat na elke gedeelde reset opnieuw terug. Het hardgecodeerde
- * 'stasjo@example.invalid' hieronder (en op tientallen andere plekken in
- * deze map: live-regression-charter/-users/.spec.ts, test-site-smoke.spec.ts)
- * vindt die rij dan niet meer. Dit is de LIVE-regressiesuite (handmatig
- * gedraaid tegen de echte TEST-server, niet onderdeel van de CI-gate) --
- * daardoor nog niet blootgelegd door een falende pipeline, in tegenstelling
- * tot de zes CI/deploy-plekken die al wel gefixt zijn. Nog niet hersteld:
- * vereist eerst een keuze (op vast seed-id 3/4/5/6 zoeken i.p.v. e-mailadres,
- * zoals de zesde CI-fix al deed) en dan een gerichte doorloop van elke losse
- * hardcoded 'stasjo@example.invalid'/'marc@example.invalid'/etc. in deze map.
+ * Het adres waarop seed-medewerker `seedId` op dit moment daadwerkelijk
+ * bereikbaar is: het echte adres zodra de TEST-mailsandbox genoemde testers
+ * kent (test_reset_apply_named_tester_emails() zet dat na elke gedeelde
+ * reset terug), anders het vaste @example.invalid-seedadres. Enige plek die
+ * "welk adres hoort bij welke seed-medewerker" weet -- een losse hardgecodeerde
+ * 'stasjo@example.invalid' elders in deze map vond de rij niet meer zodra
+ * de mailsandbox actief werd (BESLISTABEL R39/R40).
  */
+export function employeeEmail(overrides: EmployeeEmailOverrides, seedId: number): string {
+  return overrides[String(seedId)] || SEED_EMPLOYEE_DEFAULT_EMAIL[seedId] || '';
+}
+
+/** De demo-credentials die de TEST-site zelf voor de autofill vrijgeeft. */
 export async function demoCreds(request: APIRequestContext): Promise<Creds> {
   const res = await request.get('/server/auth/local-login-hints.php', { headers: { Accept: 'application/json' } });
   expect(res.status(), 'local-login-hints hoort op TEST beschikbaar te zijn').toBe(200);
   const h = await res.json();
   expect(h.enabled, 'automatische login-fill hoort aan te staan op TEST').toBe(true);
+  const overrides = (h.employeeEmailOverrides || {}) as EmployeeEmailOverrides;
   return {
     admin: { email: 'gio@example.invalid', password: String(h.adminPassword) },
-    employee: { email: 'stasjo@example.invalid', password: String(h.employeePassword) },
+    employee: { email: employeeEmail(overrides, SEED_EMPLOYEE_IDS.stasjo), password: String(h.employeePassword) },
+    employeeEmailOverrides: overrides,
   };
 }
 
