@@ -116,8 +116,8 @@ assert.match(workflow, /TEST_PUBLIC_EMPLOYEE_PASSWORD:\s*\$\{\{ secrets\.PLAYWRI
 assert.match(workflow, /TEST_PUBLIC_EMPLOYEE_EMAIL:\s*stasjovanbakel@pathconsultancy\.nl/, 'Public TEST employee login must target the current real named-tester address, not the stale seed address');
 assert.match(
   testRemote,
-  /\$expected = \["giovanno\.maatsen@pathconsultancy\.nl", "kenrich\.lieveld@pathconsultancy\.nl", "marcderoon@pathconsultancy\.nl", "stasjovanbakel@pathconsultancy\.nl", "brian\.hek@pathconsultancy\.nl", "shawn\.nahar@pathconsultancy\.nl"\];/,
-  'Guarded TEST delivery must use exactly the primary sink, its acceptance CC recipient and the four named testers',
+  /\$expected = \["giovanno\.maatsen@pathconsultancy\.nl", "kenrich\.lieveld@pathconsultancy\.nl", "td_bv@teqdirectors\.nl", "marcderoon@pathconsultancy\.nl", "stasjovanbakel@pathconsultancy\.nl", "brian\.hek@pathconsultancy\.nl", "shawn\.nahar@pathconsultancy\.nl"\];/,
+  'Guarded TEST delivery must use exactly the primary sink, its acceptance CC recipient, the third admin account and the four named testers',
 );
 assert.doesNotMatch(
   testRemote,

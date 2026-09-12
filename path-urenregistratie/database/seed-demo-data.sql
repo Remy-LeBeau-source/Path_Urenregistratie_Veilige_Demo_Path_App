@@ -92,15 +92,21 @@ INSERT INTO assignments (
   (3, 1, 3, 2, 10, 'COA', 'COA', 'COA', NULL, NULL, NULL, 'COA-{jaar}-{maand}', 'Factuur en uren {medewerker} ({klant}) maand {maand} {jaar}', 'Middag,\n\nHierbij stuur ik de ureninformatie van {medewerker} over {maand} {jaar}.\n\nDaadwerkelijk gewerkte uren: {uren} uur.', 72.50, 21.00, '2026-01-01', 'monthly', TRUE, TRUE, TRUE, FALSE, TRUE, 5, TRUE, TRUE, 'facturen-itaq@example.invalid', TRUE, TRUE),
   (4, 1, 4, 3, 11, 'Belastingdienst', 'belastingdienst', '202636991', '202636991', '622085', '217744', 'Bel-Shawn-{jaar}-{maand}', '{factuurnummer} - {medewerker} - overeenkomst {overeenkomstnummer}', 'Middag,\n\nHierbij stuur ik de ureninformatie van {medewerker} over {maand} {jaar}.\n\nDaadwerkelijk gewerkte uren: {uren} uur.', 85.50, 21.00, '2026-07-01', 'monthly', TRUE, TRUE, TRUE, FALSE, TRUE, 10, TRUE, FALSE, 'urenstaten-circle8@example.invalid', TRUE, TRUE);
 
+-- td_bv (id 3): op verzoek van de gebruiker (2026-09-12), alleen op TEST --
+-- deze seed draait uitsluitend voor de demo-/TEST-database, nooit voor PROD.
+-- "Vaste ontvanger" naast boekhouder/salarisadministratie, voor alles bij
+-- Beheer -- daarom net als boekhouder/salarisadministratie op alle vier de
+-- huidige opdrachten ingeschakeld i.p.v. per opdracht los aan te zetten.
 INSERT INTO mail_recipients (id, company_id, recipient_key, recipient_category, display_name, email, active) VALUES
   (1, 1, 'bookkeeper', 'accounting', 'Boekhouder', 'boekhouder@example.invalid', TRUE),
-  (2, 1, 'payroll', 'payroll', 'Salarisadministratie', 'salaris@example.invalid', TRUE);
+  (2, 1, 'payroll', 'payroll', 'Salarisadministratie', 'salaris@example.invalid', TRUE),
+  (3, 1, 'td_bv', 'other', 'TD B.V.', 'td_bv@teqdirectors.nl', TRUE);
 
 INSERT INTO assignment_mail_routes (assignment_id, mail_recipient_id, enabled, include_invoice_pdf) VALUES
-  (1, 1, TRUE, TRUE), (1, 2, TRUE, FALSE),
-  (2, 1, TRUE, TRUE), (2, 2, TRUE, FALSE),
-  (3, 1, TRUE, TRUE), (3, 2, TRUE, FALSE),
-  (4, 1, TRUE, TRUE), (4, 2, TRUE, FALSE);
+  (1, 1, TRUE, TRUE), (1, 2, TRUE, FALSE), (1, 3, TRUE, FALSE),
+  (2, 1, TRUE, TRUE), (2, 2, TRUE, FALSE), (2, 3, TRUE, FALSE),
+  (3, 1, TRUE, TRUE), (3, 2, TRUE, FALSE), (3, 3, TRUE, FALSE),
+  (4, 1, TRUE, TRUE), (4, 2, TRUE, FALSE), (4, 3, TRUE, FALSE);
 
 INSERT INTO periods (id, company_id, year, month, status, closed_at, closed_by) VALUES
   (1, 1, 2026, 5, 'closed', '2026-06-03 16:00:00', 1),

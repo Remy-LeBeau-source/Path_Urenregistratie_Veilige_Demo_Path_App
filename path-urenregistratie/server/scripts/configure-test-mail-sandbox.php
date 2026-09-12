@@ -12,6 +12,11 @@ $expectedPath = '/data/sites/web/pathconsultancynl/private/path-uren-test/config
 $businessRecipient = 'giovanno.maatsen@pathconsultancy.nl';
 $invitationRecipient = $businessRecipient;
 $secondaryTestAccount = 'kenrich.lieveld@pathconsultancy.nl';
+// Derde beheerder-account op TEST (2026-09-12 verzoek). Alleen op de
+// allowlist en als acceptatieaccount -- $businessRecipient/$secondaryTestAccount
+// blijven bewust de enige omleidingsmailbox (test_sink_recipient/-cc), dat
+// mechanisme raakt dit niet aan.
+$thirdAcceptanceAccount = 'td_bv@teqdirectors.nl';
 // Losse, met naam genoemde testers die op TEST hun eigen echte mail moeten
 // kunnen ontvangen -- eerst alleen wachtwoordreset, sinds 11 sep (gebruikers-
 // verzoek) ook het urenoverzicht en de goedkeuringsmail, zie
@@ -37,6 +42,7 @@ $namedTesterTimesheetChannels = ['timesheet_submission_receipt', 'timesheet_fina
 $acceptanceAccounts = [
     ['email' => $businessRecipient, 'name' => 'Giovanno Maatsen'],
     ['email' => $secondaryTestAccount, 'name' => 'Kenrich Lieveld'],
+    ['email' => $thirdAcceptanceAccount, 'name' => 'TD B.V.'],
 ];
 $temporaryPath = null;
 $backupPath = null;
@@ -50,7 +56,7 @@ try {
             'mode' => 'check',
             'writes_performed' => false,
             'config_path' => $expectedPath,
-            'allowed_recipients' => [$businessRecipient, $secondaryTestAccount, ...$namedPasswordResetTesters],
+            'allowed_recipients' => [$businessRecipient, $secondaryTestAccount, $thirdAcceptanceAccount, ...$namedPasswordResetTesters],
             'test_sink_cc_recipient' => $secondaryTestAccount,
             'test_accounts' => array_column($acceptanceAccounts, 'email'),
             'named_tester_timesheet_channels' => $namedTesterTimesheetChannels,
@@ -79,7 +85,7 @@ try {
     $config['mail'] = is_array($config['mail'] ?? null) ? $config['mail'] : [];
     $config['mail']['enabled'] = true;
     $config['mail']['test_delivery_enabled'] = true;
-    $config['mail']['allowed_recipients'] = [$businessRecipient, $secondaryTestAccount, ...$namedPasswordResetTesters];
+    $config['mail']['allowed_recipients'] = [$businessRecipient, $secondaryTestAccount, $thirdAcceptanceAccount, ...$namedPasswordResetTesters];
     $config['mail']['test_redirect_all'] = true;
     $config['mail']['test_sink_recipient'] = $businessRecipient;
     $config['mail']['test_sink_cc_recipient'] = $secondaryTestAccount;
@@ -97,7 +103,7 @@ try {
     if ($relayErrors !== [] || !mail_real_delivery_allowed_for_environment($config)) {
         throw new RuntimeException('Guarded TEST relay configuration is invalid: ' . implode('; ', $relayErrors));
     }
-    foreach ([$businessRecipient, $secondaryTestAccount, ...$namedPasswordResetTesters] as $recipient) {
+    foreach ([$businessRecipient, $secondaryTestAccount, $thirdAcceptanceAccount, ...$namedPasswordResetTesters] as $recipient) {
         if (!mail_recipient_is_allowed($config, $recipient)) {
             throw new RuntimeException('TEST recipient is not protected by the exact allowlist.');
         }
@@ -169,7 +175,7 @@ try {
         'writes_performed' => true,
         'mail_enabled' => true,
         'test_delivery_enabled' => true,
-        'allowed_recipients' => [$businessRecipient, $secondaryTestAccount, ...$namedPasswordResetTesters],
+        'allowed_recipients' => [$businessRecipient, $secondaryTestAccount, $thirdAcceptanceAccount, ...$namedPasswordResetTesters],
         'test_sink_recipient' => $businessRecipient,
         'test_sink_cc_recipient' => $secondaryTestAccount,
         'test_accounts' => array_column($acceptanceAccounts, 'email'),

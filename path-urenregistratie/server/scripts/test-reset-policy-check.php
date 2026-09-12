@@ -86,8 +86,9 @@ $checks = [
     'public_test_preserves_only_acceptance_credentials' => $publicCredentialEmails === [
         'giovanno.maatsen@pathconsultancy.nl',
         'kenrich.lieveld@pathconsultancy.nl',
+        'td_bv@teqdirectors.nl',
     ],
-    'local_test_preserves_runtime_demo_credentials' => count($localCredentialEmails) === 8
+    'local_test_preserves_runtime_demo_credentials' => count($localCredentialEmails) === 9
         && in_array('gio@example.invalid', $localCredentialEmails, true)
         && in_array('stasjo@example.invalid', $localCredentialEmails, true),
     'both_acceptance_credentials_required_before_remote_reset' => str_contains($source, '$capturedCredentialEmails !== $requiredCredentialEmails')

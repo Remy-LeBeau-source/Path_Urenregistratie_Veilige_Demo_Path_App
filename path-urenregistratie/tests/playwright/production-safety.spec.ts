@@ -757,11 +757,15 @@ test('[SAFE-H-010] echte TEST-mail vereist opt-in en een ontvangers-whitelist', 
   });
 });
 
-test('[SAFE-H-013] TEST-mailsandbox opent atomisch voor twee toegestane TEST-ontvangers (sink + CC), plus vier met naam genoemde testers', async () => {
+test('[SAFE-H-013] TEST-mailsandbox opent atomisch voor twee toegestane TEST-ontvangers (sink + CC), een derde beheerdersaccount, plus vier met naam genoemde testers', async () => {
   let result: { ok?: boolean; mode?: string; writes_performed?: boolean; allowed_recipients?: string[]; test_accounts?: string[] } = {};
   const expectedRecipients = [
     'giovanno.maatsen@pathconsultancy.nl',
     'kenrich.lieveld@pathconsultancy.nl',
+    // Derde beheerdersaccount (2026-09-12 verzoek): alleen op de allowlist en
+    // als acceptatieaccount, geen sink/CC-rol -- zie server/lib/test-reset.php
+    // en configure-test-mail-sandbox.php.
+    'td_bv@teqdirectors.nl',
     // Met naam genoemde testers krijgen alleen echte levering voor hun eigen
     // wachtwoordreset én (sinds 11 sep, R39) het urenoverzicht/goedkeuring
     // (zie mail_test_extra_password_reset_recipients()/
@@ -776,11 +780,12 @@ test('[SAFE-H-013] TEST-mailsandbox opent atomisch voor twee toegestane TEST-ont
   const expectedAccounts = [
     'giovanno.maatsen@pathconsultancy.nl',
     'kenrich.lieveld@pathconsultancy.nl',
+    'td_bv@teqdirectors.nl',
   ];
 
-  await test.step('Given twee toegestane TEST-ontvangers (primaire sink + CC), vier genoemde testers, en twee bijbehorende accounts zijn gedefinieerd', async () => {
-    expect(expectedRecipients).toHaveLength(6);
-    expect(expectedAccounts).toHaveLength(2);
+  await test.step('Given twee toegestane TEST-ontvangers (primaire sink + CC), een derde beheerdersaccount, vier genoemde testers, en drie bijbehorende accounts zijn gedefinieerd', async () => {
+    expect(expectedRecipients).toHaveLength(7);
+    expect(expectedAccounts).toHaveLength(3);
   });
 
   await test.step('When de TEST-mailsandboxconfigurator zonder uitvoerbevestiging wordt gestart', async () => {

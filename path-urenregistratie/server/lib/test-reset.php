@@ -73,6 +73,7 @@ function test_reset_baseline_credential_emails(bool $preserveDemoCredentials): a
     $acceptanceAccounts = [
         'giovanno.maatsen@pathconsultancy.nl',
         'kenrich.lieveld@pathconsultancy.nl',
+        'td_bv@teqdirectors.nl',
     ];
     if (!$preserveDemoCredentials) {
         return $acceptanceAccounts;
@@ -109,6 +110,12 @@ function test_reset_acceptance_accounts(PDO $pdo, int $companyId): void
     $accounts = [
         ['id' => 1001, 'email' => 'giovanno.maatsen@pathconsultancy.nl', 'name' => 'Giovanno Maatsen'],
         ['id' => 1002, 'email' => 'kenrich.lieveld@pathconsultancy.nl', 'name' => 'Kenrich Lieveld'],
+        // Derde beheerder-account, uitsluitend op TEST: ontvangt dezelfde
+        // admin-brede meldingen als Giovanno/Kenrich, maar raakt bewust niet
+        // het aparte mail-veiligheidsmechanisme aan dat hun adressen ELDERS
+        // ook gebruiken (test_sink_recipient e.d. -- zie mail-acceptance-
+        // policy-check.php). Toegevoegd op verzoek van de gebruiker (2026-09-12).
+        ['id' => 1003, 'email' => 'td_bv@teqdirectors.nl', 'name' => 'TD B.V.'],
     ];
     $insert = $pdo->prepare(
         'INSERT INTO users

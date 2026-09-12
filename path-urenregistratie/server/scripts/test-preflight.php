@@ -55,6 +55,7 @@ try {
     $expectedSandboxRecipients = [
         'giovanno.maatsen@pathconsultancy.nl',
         'kenrich.lieveld@pathconsultancy.nl',
+        'td_bv@teqdirectors.nl',
         'marcderoon@pathconsultancy.nl',
         'stasjovanbakel@pathconsultancy.nl',
         'brian.hek@pathconsultancy.nl',
@@ -130,16 +131,17 @@ try {
             $accountStatement = $pdo->prepare(
                 'SELECT COUNT(*) FROM users
                  WHERE company_id = :company_id AND active = 1
-                   AND LOWER(email) IN (:business_email, :invitation_email)'
+                   AND LOWER(email) IN (:business_email, :invitation_email, :third_email)'
             );
             $accountStatement->execute([
                 ':company_id' => (int)($company['id'] ?? 1),
                 ':business_email' => 'giovanno.maatsen@pathconsultancy.nl',
                 ':invitation_email' => 'kenrich.lieveld@pathconsultancy.nl',
+                ':third_email' => 'td_bv@teqdirectors.nl',
             ]);
             $acceptanceAccountCount = (int)$accountStatement->fetchColumn();
         }
-        $checks['guarded_mail_accounts_active'] = !$mailGuarded || $acceptanceAccountCount === 2;
+        $checks['guarded_mail_accounts_active'] = !$mailGuarded || $acceptanceAccountCount === 3;
         $liveReport = [
             'database' => $db['name'],
             'demo_account_count' => $seedUsers,
