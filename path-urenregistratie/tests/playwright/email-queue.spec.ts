@@ -736,7 +736,7 @@ test.describe('email queue api', () => {
     await ctx.dispose();
   });
 
-  test('[EQ-H-022] één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie', async () => {
+  test('[EQ-H-022] één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie en de vaste TD B.V.-ontvanger', async () => {
     const { ctx, authApi, queueApi, invoiceId } = await createLockedInvoice();
 
     await test.step('Given één goedgekeurde urenstaat als factuur is afgerond', async () => {});
@@ -746,16 +746,26 @@ test.describe('email queue api', () => {
       expect(list.status).toBe(200);
       const items = (list.body.items as Array<Record<string, unknown>>)
         .filter(item => Number(item.invoice_id) === invoiceId);
-      const byChannel = new Map(items.map(item => [String(item.channel), item]));
+      // Kanaal 'other' is geen unieke sleutel meer: naast de vaste backoffice-
+      // archiefkopie loopt nu ook de zelf toegevoegde ontvanger TD B.V. (item 47,
+      // 2026-09-12) via ditzelfde kanaal/sjabloon -- beide bestaan tegelijk, dus
+      // op e-mailadres onderscheiden i.p.v. op kanaal.
+      const byChannel = new Map(
+        items.filter(item => String(item.channel) !== 'other').map(item => [String(item.channel), item]),
+      );
+      const otherItems = items.filter(item => String(item.channel) === 'other');
+      const archiveCopy = otherItems.find(item => item.recipient_email === 'backoffice@pathconsultancy.nl');
+      const tdBvCopy = otherItems.find(item => item.recipient_email === 'td_bv@teqdirectors.nl');
 
-      expect(items).toHaveLength(4);
-      expect([...byChannel.keys()].sort()).toEqual(['accountant', 'broker', 'other', 'payroll']);
+      expect(items).toHaveLength(5);
+      expect([...byChannel.keys()].sort()).toEqual(['accountant', 'broker', 'payroll']);
+      expect(otherItems).toHaveLength(2);
       expect(byChannel.get('broker')?.attachment_policy).toBe('invoice');
       expect(byChannel.get('accountant')?.attachment_policy).toBe('invoice');
       expect(byChannel.get('payroll')?.attachment_policy).toBe('none');
-      expect(byChannel.get('other')?.recipient_email).toBe('backoffice@pathconsultancy.nl');
-      expect(byChannel.get('other')?.attachment_policy).toBe('invoice');
-      expect(String(byChannel.get('other')?.subject_snapshot || '')).toMatch(/^Archiefkopie factuur /);
+      expect(archiveCopy?.attachment_policy).toBe('invoice');
+      expect(String(archiveCopy?.subject_snapshot || '')).toMatch(/^Archiefkopie factuur /);
+      expect(tdBvCopy?.attachment_policy).toBe('none');
       expect(new Set(items.map(item => Number(item.invoice_id)))).toEqual(new Set([invoiceId]));
 
       // De begeleidende tekst van de opdracht bereikt de broker en de
