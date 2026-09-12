@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/simple_pdf.php';
+// Voor de echte factuur-PDF in test_reset_seed_documents(). Alleen de
+// opbouw, geen verzoekgedrag: zie de toelichting in dat bestand.
+require_once __DIR__ . '/invoice-pdf.php';
 
 const TEST_RESET_REMOTE_ORIGIN = 'https://uren-test.pathconsultancy.nl';
 const TEST_RESET_REMOTE_DATABASE_HOST = 'pathco-urentest.db.transip.me';
@@ -478,36 +481,147 @@ function test_reset_seed_documents(PDO $pdo, array $config): array
         throw new RuntimeException('De private TEST-opslag is niet ingesteld.');
     }
     $counts = ['invoices' => 0, 'customer_timesheets' => 0];
-    $sources = [
-        'invoices' => ['count_key' => 'invoices', 'rows' => $pdo->query(
-            'SELECT pdf_storage_key AS storage_key, invoice_number AS label
-             FROM invoices WHERE pdf_storage_key IS NOT NULL AND pdf_storage_key <> ""'
-        )->fetchAll()],
-        'customer-timesheets' => ['count_key' => 'customer_timesheets', 'rows' => $pdo->query(
-            'SELECT storage_key, COALESCE(original_file_name, "Klanturenstaat") AS label
-             FROM customer_timesheets WHERE storage_key IS NOT NULL AND storage_key <> ""'
-        )->fetchAll()],
-    ];
-    foreach ($sources as $bucket => $source) {
-        foreach ($source['rows'] as $row) {
-            $path = test_reset_document_path($privateRoot, $bucket, (string)$row['storage_key']);
-            $directory = dirname($path);
-            if (!is_dir($directory) && !mkdir($directory, 0770, true) && !is_dir($directory)) {
-                throw new RuntimeException('De private TEST-documentmap kon niet worden gemaakt.');
-            }
-            $pdf = simple_pdf_text_document([
-                ['text' => 'PATH CONSULTANCY · TESTDOCUMENT', 'size' => 15],
-                'Uitsluitend voor acceptatie- en regressietesten.',
-                'Document: ' . (string)$row['label'],
-                'Omgeving: uren-test.pathconsultancy.nl',
-            ]);
-            if (!simple_pdf_looks_valid($pdf) || file_put_contents($path, $pdf) === false) {
-                throw new RuntimeException('Een TEST-PDF kon niet veilig worden opgebouwd.');
-            }
-            $counts[$source['count_key']]++;
+    // Beide soorten kregen hier hetzelfde document van vier regels ("PATH
+    // CONSULTANCY . TESTDOCUMENT"). Bij Openen/Downloaden in het
+    // documentarchief zag je dus voor de factuur én de urenstaat dezelfde
+    // lege pagina; gemeld met een screenshot. De factuur kán echt zijn -- de
+    // applicatie bouwt die zelf -- en de urenstaat mag een voorbeeld blijven,
+    // want die levert de klant aan en Path maakt hem niet, maar dan wel een
+    // voorbeeld dat eruitziet als een urenstaat.
+    $invoiceRows = $pdo->query(
+        'SELECT id, company_id, pdf_storage_key AS storage_key, invoice_number AS label
+         FROM invoices WHERE pdf_storage_key IS NOT NULL AND pdf_storage_key <> ""'
+    )->fetchAll();
+    foreach ($invoiceRows as $row) {
+        // De echte factuurbytes op de sleutel die de rij al heeft. Bewust
+        // niet via invoices_store_pdf_bytes(): die zet een nieuwe sleutel met
+        // een random token, en dan schuift pdf_storage_key bij elke reset
+        // terwijl server/scripts/e2e-state-inspect.php juist die kolom leest
+        // voor de isolatievingerafdruk. Lukt het bouwen niet (geen GD, een
+        // factuurrij zonder joinbare gegevens), dan valt het terug op het
+        // oude placeholderdocument: een reset mag hier niet op klappen.
+        $pdf = invoices_build_pdf_bytes($pdo, (int)$row['id'], (int)$row['company_id']);
+        if ($pdf === null || !simple_pdf_looks_valid($pdf)) {
+            $pdf = test_reset_placeholder_document((string)$row['label']);
         }
+        test_reset_write_document($privateRoot, 'invoices', (string)$row['storage_key'], $pdf);
+        $counts['invoices']++;
     }
+
+    $timesheetRows = $pdo->query(
+        'SELECT ct.storage_key,
+                COALESCE(ct.original_file_name, "Klanturenstaat") AS label,
+                e.full_name AS employee_name,
+                a.invoice_project_name,
+                CONCAT(p.year, "-", LPAD(p.month, 2, "0")) AS period_key,
+                t.billable_hours, t.leave_hours, t.sickness_hours, t.contractual_hours
+           FROM customer_timesheets ct
+           JOIN employees e ON e.id = ct.employee_id
+           JOIN periods p ON p.id = ct.period_id
+           JOIN assignments a ON a.id = ct.assignment_id
+           LEFT JOIN timesheets t ON t.employee_id = ct.employee_id AND t.period_id = ct.period_id
+          WHERE ct.storage_key IS NOT NULL AND ct.storage_key <> ""'
+    )->fetchAll();
+    foreach ($timesheetRows as $row) {
+        test_reset_write_document(
+            $privateRoot,
+            'customer-timesheets',
+            (string)$row['storage_key'],
+            test_reset_example_customer_timesheet($row)
+        );
+        $counts['customer_timesheets']++;
+    }
+
     return $counts;
+}
+
+/** Het oorspronkelijke, kale testdocument. Nog in gebruik als terugval. */
+function test_reset_placeholder_document(string $label): string
+{
+    return simple_pdf_text_document([
+        ['text' => 'PATH CONSULTANCY · TESTDOCUMENT', 'size' => 15],
+        'Uitsluitend voor acceptatie- en regressietesten.',
+        'Document: ' . $label,
+        'Omgeving: uren-test.pathconsultancy.nl',
+    ]);
+}
+
+/**
+ * Voorbeeldurenstaat in Path-opmaak, met de echte naam, klant, maand en uren
+ * van de rij waar het document bij hoort.
+ *
+ * Het woord TESTDOCUMENT staat bewust in de voettekst en mag daar niet
+ * verdwijnen: server/mail/dispatch.php gebruikt die marker om te voorkomen
+ * dat een voorbeelddocument ooit als echte factuur wordt meegemaild, en
+ * scripts/smoke-test.mjs legt dat vast.
+ *
+ * @param array<string,mixed> $row
+ */
+function test_reset_example_customer_timesheet(array $row): string
+{
+    $uren = static fn($waarde): string => number_format((float)($waarde ?? 0), 2, ',', '.');
+    $declarabel = (float)($row['billable_hours'] ?? 0);
+    $verlof = (float)($row['leave_hours'] ?? 0);
+    $ziekte = (float)($row['sickness_hours'] ?? 0);
+    $periode = (string)($row['period_key'] ?? '');
+    $maandLabel = preg_match('/^(\d{4})-(\d{2})$/', $periode, $delen) === 1
+        ? test_reset_month_name((int)$delen[2]) . ' ' . $delen[1]
+        : $periode;
+    $klant = trim((string)($row['invoice_project_name'] ?? ''));
+
+    $lines = [
+        ['text' => 'URENSTAAT', 'size' => 16],
+        ['text' => 'Path Consultancy IT · ' . $maandLabel, 'size' => 10],
+        ' ',
+        ['text' => 'Medewerker', 'size' => 9],
+        ['text' => (string)($row['employee_name'] ?? 'Onbekend'), 'size' => 12],
+        ...($klant !== '' ? [['text' => 'Opdracht: ' . $klant, 'size' => 9]] : []),
+        ' ',
+        ['text' => 'Omschrijving / Uren', 'size' => 9],
+        'Declarabele uren        ' . $uren($declarabel),
+        'Verlof                  ' . $uren($verlof),
+        'Ziekte                  ' . $uren($ziekte),
+        ' ',
+        ['text' => 'Totaal verantwoord      ' . $uren($declarabel + $verlof + $ziekte), 'size' => 12],
+        ...($row['contractual_hours'] !== null
+            ? ['Contracturen deze maand ' . $uren($row['contractual_hours'])]
+            : []),
+        ' ',
+        'Akkoord opdrachtgever: ..............................',
+        'Datum: ..............................',
+        ' ',
+        ['text' => 'TESTDOCUMENT — voorbeeldurenstaat voor acceptatie- en regressietesten.', 'size' => 8],
+        ['text' => 'Omgeving: uren-test.pathconsultancy.nl', 'size' => 8],
+    ];
+
+    $logoPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'path-logo.png';
+    try {
+        return simple_pdf_branded_text_document($lines, $logoPath);
+    } catch (RuntimeException $zonderGd) {
+        return simple_pdf_text_document_with_branding_fallback($lines);
+    }
+}
+
+function test_reset_month_name(int $month): string
+{
+    $namen = [
+        1 => 'Januari', 2 => 'Februari', 3 => 'Maart', 4 => 'April',
+        5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Augustus',
+        9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'December',
+    ];
+    return $namen[$month] ?? (string)$month;
+}
+
+function test_reset_write_document(string $privateRoot, string $bucket, string $storageKey, string $pdf): void
+{
+    $path = test_reset_document_path($privateRoot, $bucket, $storageKey);
+    $directory = dirname($path);
+    if (!is_dir($directory) && !mkdir($directory, 0770, true) && !is_dir($directory)) {
+        throw new RuntimeException('De private TEST-documentmap kon niet worden gemaakt.');
+    }
+    if (!simple_pdf_looks_valid($pdf) || file_put_contents($path, $pdf) === false) {
+        throw new RuntimeException('Een TEST-PDF kon niet veilig worden opgebouwd.');
+    }
 }
 
 /** @return array{users:int,employees:int,open_actions:int,verified_demo_accounts:int,documents:array{invoices:int,customer_timesheets:int}} */

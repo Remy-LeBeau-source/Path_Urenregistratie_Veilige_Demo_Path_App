@@ -311,6 +311,20 @@ test('[SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en K
     await loginPage.open();
     await loginPage.loginAsEmployee();
     await expect(page.locator('#employee-dashboard-hours')).toBeVisible();
+    // Zichtbaar is niet hetzelfde als geladen. Het dashboard toont eerst de
+    // lokale stand (0,0 uur) en tekent zichzelf opnieuw zodra bootstrap.php
+    // binnen is -- met daarin het eigen werkpatroon van de medewerker, dat
+    // een lege maand voorvult. Werd de beginwaarde vóór dat moment
+    // vastgelegd, dan vergeleek deze case straks een niet-geladen waarde met
+    // een geladen waarde en viel hij om op een verschil dat niets met
+    // navigeren te maken heeft. De case gaat over "blijft gelijk bij
+    // navigeren", dus hij moet van een bezonken waarde uitgaan.
+    await expect(async () => {
+      const eerste = await page.locator('#employee-dashboard-hours').innerText();
+      await page.waitForTimeout(600);
+      const tweede = await page.locator('#employee-dashboard-hours').innerText();
+      expect(tweede, 'de urenwaarde op het dashboard moet tot rust gekomen zijn').toBe(eerste);
+    }).toPass({ timeout: 20_000, intervals: [300, 600, 1_000] });
   });
 
   const medewerker = await page.locator('#workspace-name').innerText();

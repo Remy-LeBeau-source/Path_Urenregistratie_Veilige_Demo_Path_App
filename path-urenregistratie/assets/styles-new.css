@@ -53,6 +53,10 @@ html[data-skin="new"] {
   --vlak: #f7f9f5;
   --vlak-zacht: #eef1ea;
   --vlak-warm: #f9f5ec;
+  /* Eigen waarde voor deze skin; zie de toelichting bij --surface-muted in
+     styles.css. Die uit Klassiek is blauwgrijs en vloekt met het groengetinte
+     crème hier. */
+  --surface-muted: #edf1ea;
   --mint-dark-tekst: #235644;
   --warning-tekst: #8a5c1c;
   --danger: #a4514f;
@@ -103,6 +107,7 @@ html[data-skin="new"][data-theme="dark"] {
   --vlak: #0f2639;
   --vlak-zacht: #0b2031;
   --vlak-warm: #173428;
+  --surface-muted: #132c40;
   --mint-dark-tekst: #75c99e;
   --warning-bg: #352916;
   --warning-tekst: #e2ab4c;
@@ -156,6 +161,20 @@ html[data-skin="new"] .mobile-brand-home img[data-brand-logo] {
   border-radius: 10px;
   padding: 3px 6px;
   box-sizing: content-box;
+}
+
+/* Herzien 11 sep. De chip hierboven maakte het donkere woordmerk leesbaar,
+   maar je zag vooral de chip en nauwelijks het logo -- twee keer gemeld.
+   Oorzaak: op deze pil stond de lichte logovariant terwijl de pil in élke
+   weergave van deze skin donker is. app.js kiest nu de witte variant voor
+   deze plek, en dan is er geen drager meer nodig: het logo staat gewoon op
+   de pil en mag ook groter. Alleen voor het meegeleverde logo -- van een
+   zelf geüpload logo kennen we de kleuren niet, dus dat houdt zijn chip. */
+html[data-skin="new"] .mobile-brand-home img[data-brand-logo][data-eigen-logo="false"] {
+  width: 82px;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
 }
 
 html[data-skin="new"] .sidebar {
@@ -276,18 +295,29 @@ html[data-skin="new"] .modal-summary {
   background: var(--vlak-zacht);
 }
 
+/* Deze twee regels verwezen naar --font-sans en --tekst. Die tokens bestaan
+   in geen van beide stijlbladen, dus deden de declaraties niets en bleef de
+   voettekst er in Nieuw precies zo uitzien als in Klassiek (gemeld met een
+   screenshot van het beheerdashboard). De namen die hier horen zijn
+   --path-sans en --navy-tekst. */
 html[data-skin="new"] .app-footer {
+  margin-top: 28px;
   border-color: var(--line);
   color: var(--muted);
-  font-family: var(--font-sans);
-  letter-spacing: .02em;
+  font-family: var(--path-sans);
+  font-size: 10px;
+  letter-spacing: .04em;
+  padding-top: 20px;
 }
 
+/* margin-left blijft 0: in deze skin staat de versiepil direct achter de
+   copyrightregel in plaats van rechts uitgelijnd zoals in Klassiek. Dat is
+   een keuze en staat als eis in SKIN-H-006. */
 html[data-skin="new"] .app-footer-version {
   margin-left: 0;
   border: 1px solid var(--line);
   border-radius: 999px;
-  color: var(--tekst);
+  color: var(--navy-tekst);
   font-weight: 700;
   padding: 5px 10px;
 }
@@ -366,23 +396,37 @@ html[data-skin="new"] .app-shell:has(#view-employee-announcements.is-active) .mo
   min-width: 190px;
 }
 
+/* De pil is hier bewust donker, in beide thema's, net als op Mijn uren en op
+   de beheerschermen. Hij stond eerder op var(--surface)/var(--navy-tekst) en
+   was daardoor licht in de lichte modus -- terwijl app.js voor deze plek
+   altijd de wítte logovariant kiest. Wit woordmerk op een lichte pil: dat was
+   de overgebleven helft van "logo nog steeds onduidelijk". Eén vaste
+   ondergrond is hier ook de eerlijkste keuze, want het medewerkerdashboard
+   eronder is in beide thema's donker (de bento-kaarten staan vast op
+   --path-night-panel). */
 html[data-skin="new"] .app-shell:has(#view-employee-dashboard.is-active) .mobile-brand-home,
 html[data-skin="new"] .app-shell:has(#view-employee-announcements.is-active) .mobile-brand-home {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  border: 1px solid var(--line);
+  border: 1px solid rgba(255, 255, 255, .12);
   border-radius: 16px;
-  background: var(--surface);
-  color: var(--navy-tekst);
+  background: #0e2334;
+  color: #efe9dc;
   font: 700 15px var(--path-serif);
   padding: 9px 14px;
 }
 
+/* Hoogte bepaalt de maat, breedte volgt. Het woordmerk heeft een verhouding
+   van 466:216; in een vierkant van 34x34 met object-fit:contain werd het
+   teruggerekend naar 34x16 en was het niet meer te lezen. Dat vierkant paste
+   bij de oude chip-opzet (een badge naast de tekst); nu het logo zelf op de
+   pil staat, mag het zijn eigen vorm houden. */
 html[data-skin="new"] .app-shell:has(#view-employee-dashboard.is-active) .mobile-brand-home img,
 html[data-skin="new"] .app-shell:has(#view-employee-announcements.is-active) .mobile-brand-home img {
-  width: 34px;
-  height: 34px;
+  width: auto;
+  max-width: 96px;
+  height: 24px;
   object-fit: contain;
 }
 
@@ -400,6 +444,7 @@ html[data-skin="new"] .app-shell:has(#view-employee-announcements.is-active) .to
    redundante snelknop uit de topbar op de medewerkerschermen. */
 html[data-skin="new"] .app-shell:has(#view-employee-dashboard.is-active) #quick-theme-toggle,
 html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) #quick-theme-toggle,
+html[data-skin="new"] .app-shell:has(#view-historie.is-active) #quick-theme-toggle,
 html[data-skin="new"] .app-shell:has(#view-employee-announcements.is-active) #quick-theme-toggle {
   display: none;
 }
@@ -427,37 +472,50 @@ html[data-skin="new"] .mobile-role-switch:hover {
 }
 
 /* Medewerkerroute: Mijn uren krijgt dezelfde eigen werkruimte als de bento.
-   De bestaande velden en handlers blijven de bron van waarheid. */
-html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) {
+   De bestaande velden en handlers blijven de bron van waarheid.
+   Mijn maanden (#view-historie) hoort in dezelfde route en staat daarom in
+   dezelfde selectors: anders klapt de klassieke zijbalk terug zodra een
+   medewerker vanaf het dashboard zijn historie opent -- precies de zichtbare
+   terugval naar Klassiek die hierboven bij Mededelingen al is beschreven. De
+   weg terug is de knop "Naar Dashboard" in de kop van het scherm zelf, net
+   zoals Mijn uren het doet. */
+html[data-skin="new"] .app-shell:has(#view-timesheet.is-active),
+html[data-skin="new"] .app-shell:has(#view-historie.is-active) {
   background: #081726;
 }
 
-html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .sidebar {
+html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .sidebar,
+html[data-skin="new"] .app-shell:has(#view-historie.is-active) .sidebar {
   display: none;
 }
 
-html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .main-content {
+html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .main-content,
+html[data-skin="new"] .app-shell:has(#view-historie.is-active) .main-content {
   margin-left: 0;
   padding: 0 clamp(18px, 3vw, 48px) 52px;
   background: #081726;
 }
 
-html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .topbar {
+html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .topbar,
+html[data-skin="new"] .app-shell:has(#view-historie.is-active) .topbar {
   border-bottom-color: rgba(255, 255, 255, .09);
   background: #081726;
   box-shadow: none;
 }
 
-html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .topbar-title {
+html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .topbar-title,
+html[data-skin="new"] .app-shell:has(#view-historie.is-active) .topbar-title {
   display: block;
 }
 
-html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .mobile-topbar-home {
+html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .mobile-topbar-home,
+html[data-skin="new"] .app-shell:has(#view-historie.is-active) .mobile-topbar-home {
   display: flex;
   min-width: 190px;
 }
 
-html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .mobile-brand-home {
+html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .mobile-brand-home,
+html[data-skin="new"] .app-shell:has(#view-historie.is-active) .mobile-brand-home {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -469,13 +527,16 @@ html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .mobile-brand-ho
   padding: 9px 14px;
 }
 
-html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .mobile-brand-home img {
-  width: 34px;
-  height: 34px;
+html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .mobile-brand-home img,
+html[data-skin="new"] .app-shell:has(#view-historie.is-active) .mobile-brand-home img {
+  width: auto;
+  max-width: 96px;
+  height: 24px;
   object-fit: contain;
 }
 
-html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .topbar-title h1 {
+html[data-skin="new"] .app-shell:has(#view-timesheet.is-active) .topbar-title h1,
+html[data-skin="new"] .app-shell:has(#view-historie.is-active) .topbar-title h1 {
   color: #efe9dc;
   font: 400 var(--n-kop-topbalk)/1.05 var(--path-serif);
 }
@@ -492,10 +553,173 @@ html[data-skin="new"] #view-timesheet {
    linken (#employee-customer-timesheet-open) zit op een kaart die New-skin
    toch al verbergt, maar dit is een expliciete tweede garantie mocht iemand
    via de hash rechtstreeks naar #customer-timesheet navigeren. */
+/* #view-historie stond hier eerder ook in. Dat was een gat, geen keuze: in
+   Klassiek kan een medewerker zijn afgelopen maanden en hun status inzien, in
+   New helemaal niet -- en ook de ingang ernaartoe was verborgen. De
+   toelichting in de code zei dat de open-actiekaart die behoefte al dekte,
+   maar dat is iets anders: die gaat over wat nog open staat, niet over wat je
+   eerder hebt ingediend en goedgekeurd gekregen. Het scherm doet het gewoon,
+   dus het mag er zijn; hieronder staat de opmaak ervoor in deze skin.
+   #view-customer-timesheet en #view-teamstatus blijven wel verborgen, en dat
+   is wél een keuze: de klanturenstaat heeft in New een eigen uitklapkaart op
+   het dashboard, en de procesfasen staan al bovenaan de beheerstoryline. */
 html[data-skin="new"] #view-customer-timesheet,
-html[data-skin="new"] #view-historie,
 html[data-skin="new"] #view-teamstatus {
   display: none !important;
+}
+
+/* Mijn maanden in deze skin: een archief, niet een tabel. De rijen die in
+   Klassiek een tabelregel zijn worden hier kaarten, want dat is wat je ermee
+   doet -- je zoekt één maand op en opent hem, je vergelijkt geen kolommen. De
+   kolomkoppen blijven staan als rustige labelregel, zodat de uitlijning
+   leesbaar blijft. Zelfde bouwstenen als Mijn uren (donker paneel, hairline,
+   serif-kop) zodat de medewerkerroute één geheel blijft. Markup en handlers
+   zijn ongewijzigd; alleen opmaak. */
+html[data-skin="new"] #view-historie {
+  width: min(100%, 1100px);
+  margin: 0 auto;
+  color: #c9d5da;
+}
+
+html[data-skin="new"] #view-historie > .view-heading {
+  display: flex;
+  align-items: end;
+  margin: 0;
+  padding: 30px 0 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, .09);
+}
+
+html[data-skin="new"] #view-historie > .view-heading h2 {
+  margin: 8px 0 0;
+  color: #efe9dc;
+  font: 400 var(--n-kop-scherm)/1.02 var(--path-serif);
+}
+
+html[data-skin="new"] #view-historie > .view-heading p {
+  margin-top: 9px;
+  color: #8595a0;
+}
+
+html[data-skin="new"] #view-historie > .view-heading .text-button {
+  flex: 0 0 auto;
+  margin-bottom: 4px;
+  color: #9fe0bd;
+}
+
+/* Het paneel is hier geen kaart meer: de kaarten zitten erin. */
+html[data-skin="new"] #view-historie > .panel {
+  margin-top: 24px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+html[data-skin="new"] #view-historie .employee-history {
+  gap: 12px;
+}
+
+html[data-skin="new"] #view-historie .employee-history-head {
+  border-top: 0;
+  background: none;
+  color: #7f8e99;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  padding: 0 22px 4px;
+}
+
+html[data-skin="new"] #view-historie .employee-history-row {
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 20px;
+  background: rgba(15, 38, 57, .96);
+  padding: 18px 22px;
+  box-shadow: 0 18px 44px rgba(2, 12, 22, .18);
+  transition: border-color .18s ease, transform .18s ease;
+}
+
+html[data-skin="new"] #view-historie .employee-history-row:hover {
+  border-color: rgba(126, 201, 156, .34);
+  transform: translateY(-1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="new"] #view-historie .employee-history-row {
+    transition: none;
+  }
+
+  html[data-skin="new"] #view-historie .employee-history-row:hover {
+    transform: none;
+  }
+}
+
+/* De maandnaam is waar je op zoekt, dus die krijgt de serif en de maat. */
+html[data-skin="new"] #view-historie .employee-history-row > :first-child > strong {
+  color: #efe9dc;
+  font: 400 21px/1.15 var(--path-serif);
+}
+
+html[data-skin="new"] #view-historie .employee-history-row > :nth-child(2) > strong {
+  color: #efe9dc;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-skin="new"] #view-historie .employee-history-row small {
+  margin-top: 5px;
+  color: #8595a0;
+  font-size: 11px;
+}
+
+html[data-skin="new"] #view-historie .employee-history-current {
+  margin-left: 10px;
+  border: 1px solid rgba(217, 154, 60, .45);
+  background: rgba(217, 154, 60, .14);
+  color: #e7b25d;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  padding: 4px 9px;
+}
+
+html[data-skin="new"] #view-historie .employee-history-row .small-button {
+  border-color: rgba(126, 201, 156, .3);
+  background: rgba(75, 177, 136, .13);
+  color: #9fe0bd;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+html[data-skin="new"] #view-historie .employee-history-row .small-button:hover {
+  border-color: rgba(126, 201, 156, .55);
+  background: rgba(75, 177, 136, .22);
+}
+
+html[data-skin="new"] #view-historie .dashboard-action-empty {
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 20px;
+  background: rgba(15, 38, 57, .96);
+  color: #8595a0;
+  padding: 26px 22px;
+}
+
+@media (max-width: 860px) {
+  html[data-skin="new"] #view-historie > .view-heading {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  html[data-skin="new"] #view-historie > .view-heading .text-button {
+    align-self: flex-start;
+    margin-bottom: 0;
+  }
+
+  html[data-skin="new"] #view-historie .employee-history-row {
+    border-radius: 18px;
+    padding: 16px 18px;
+  }
 }
 
 html[data-skin="new"] #view-timesheet > .view-heading {
@@ -599,9 +823,16 @@ html[data-skin="new"] #view-timesheet .hours-table th {
   color: #93a2a8;
 }
 
-html[data-skin="new"] #view-timesheet .hours-table td:first-child,
-html[data-skin="new"] #view-timesheet .hours-table .date-number {
+/* De weekaanduiding in de eerste kolom blijft groen: dat is de rij-identiteit.
+   De datum per dag wordt juist stil -- zie de toelichting bij
+   .hours-table .date-number verderop. Deze twee stonden op één regel en
+   kregen daardoor dezelfde kleur, terwijl ze niet hetzelfde doen. */
+html[data-skin="new"] #view-timesheet .hours-table td:first-child {
   color: #9bd3b4;
+}
+
+html[data-skin="new"] #view-timesheet .hours-table .date-number {
+  color: #9fb2ab;
 }
 
 html[data-skin="new"] #view-timesheet .hours-table input {
@@ -791,7 +1022,12 @@ html[data-skin="new"] #view-timesheet .customer-timesheet-mail-preview pre {
    ook even uitgezonderd, maar dat gaf dubbele/inconsistente info naast de
    nieuwe #employee-open-overview-kaart die dezelfde "welke maanden staan
    open"-behoefte al in de bento-stijl dekt -- blijft dus weer verborgen. */
-html[data-skin="new"] #view-employee-dashboard > :not(.new-employee-bento):not(#employee-open-overview):not(#employee-dashboard-correction) {
+/* #employee-history-teaser staat er nu bij. Dat is de enige ingang naar Mijn
+   maanden, en zonder die regel had een medewerker in deze skin geen enkele
+   manier om zijn eerdere urenstaten terug te zien -- terwijl dat in Klassiek
+   wel kan. De open-actiekaart dekt die behoefte niet: die gaat over wat nog
+   open staat, niet over wat je eerder hebt ingediend en goedgekeurd gekregen. */
+html[data-skin="new"] #view-employee-dashboard > :not(.new-employee-bento):not(#employee-open-overview):not(#employee-dashboard-correction):not(#employee-history-teaser) {
   display: none !important;
 }
 
@@ -808,6 +1044,62 @@ html[data-skin="new"] #employee-open-overview {
 
 html[data-skin="new"] #employee-dashboard-correction {
   order: 2;
+}
+
+/* De ingang naar Mijn maanden. Onderaan, want het is naslag: eerst wat open
+   staat, dan een correctie, dan pas het archief. Bewust een smalle regel en
+   geen kaart -- het is een deur, geen informatie. */
+html[data-skin="new"] #employee-history-teaser {
+  order: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 22px;
+  background: rgba(15, 38, 57, .82);
+  box-shadow: none;
+  padding: 18px 24px;
+}
+
+html[data-skin="new"] #employee-history-teaser .section-label {
+  color: #7fc9a0;
+}
+
+html[data-skin="new"] #employee-history-teaser strong {
+  display: block;
+  margin-top: 5px;
+  color: #efe9dc;
+  font: 400 19px/1.2 var(--path-serif);
+}
+
+html[data-skin="new"] #employee-history-teaser .text-button {
+  flex: 0 0 auto;
+  border: 1px solid rgba(126, 201, 156, .3);
+  border-radius: 12px;
+  background: rgba(75, 177, 136, .13);
+  color: #9fe0bd;
+  font-weight: 700;
+  padding: 10px 15px;
+  transition: background .18s ease, border-color .18s ease;
+}
+
+html[data-skin="new"] #employee-history-teaser .text-button:hover {
+  border-color: rgba(126, 201, 156, .55);
+  background: rgba(75, 177, 136, .22);
+}
+
+@media (max-width: 720px) {
+  html[data-skin="new"] #employee-history-teaser {
+    flex-direction: column;
+    align-items: stretch;
+    border-radius: 18px;
+    padding: 16px 18px;
+  }
+
+  html[data-skin="new"] #employee-history-teaser .text-button {
+    width: 100%;
+  }
 }
 
 /* "Volgende actie": het idee van het oude hero-blok (één duidelijke
@@ -998,7 +1290,18 @@ html[data-skin="new"] .new-bento-gauge p { margin: 18px 0 10px; color: #c2cbc8; 
 html[data-skin="new"] .new-bento-gauge .linear-progress { width: min(280px, 100%); background: rgba(255,255,255,.08); }
 html[data-skin="new"] .new-bento-percentage { color: #70c98a; }
 
-html[data-skin="new"] .new-bento-customer { grid-column: 3; grid-row: 2; background: #eee8dc !important; color: #102235; padding: 0; overflow: hidden; }
+html[data-skin="new"] .new-bento-customer { position: relative; grid-column: 3; grid-row: 2; background: #eee8dc !important; color: #102235; padding: 0; overflow: hidden; }
+
+/* De foto die bij het openklappen hard afkapte is opgelost in het PATCH-blok
+   onderaan dit bestand: daar krimpt de kop tot een band zodra de kaart
+   openstaat, zodat er geen afgesneden beeld meer onder de snijlijn hangt.
+   Hier stond eerder een tweede oplossing voor hetzelfde -- de foto over de
+   hele kaart doortrekken en laten vervagen. Twee aanpakken die om dezelfde
+   ruimte vechten geeft een troebel beeld, dus die is weggehaald; de versie
+   uit het patchblok is met de gebruiker doorgenomen en blijft staan.
+   De z-index hieronder blijft wel nodig: de inhoud hoort boven het beeld. */
+html[data-skin="new"] .new-bento-customer-head,
+html[data-skin="new"] .new-bento-customer-expand { position: relative; z-index: 1; }
 html[data-skin="new"] .new-bento-customer-head { position: relative; min-height: 330px; }
 html[data-skin="new"] .new-bento-customer-head > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 html[data-skin="new"] .new-bento-customer-head::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(246,241,231,.98) 0 48%, rgba(246,241,231,.1) 78%); }
@@ -1065,6 +1368,76 @@ html[data-skin="new"] .new-bento-customer-expand .button-primary {
   box-shadow: none;
 }
 
+/* Dit kaartje is een licht eiland in een donkere skin, en alleen de knoppen
+   waren daarop afgestemd. De invoervelden, de statuspil en het mailblok
+   erbinnen vielen terug op de donkere basiskleuren van deze skin: bijna
+   zwarte velden en een donkergroen blok, midden op crème (gemeld met foto).
+   Kleur hoort bij de ondergrond waar hij op ligt, niet bij het thema in het
+   algemeen -- daarom hier één samenhangend licht palet voor alles binnen het
+   kaartje. Dezelfde tinten als de knopregels hierboven, zodat het één setje
+   blijft. */
+html[data-skin="new"] .new-bento-customer-expand :is(input, select, .month-picker-trigger) {
+  border-color: #cfc5b5;
+  background: #fbf9f4;
+  color: #102235;
+}
+
+html[data-skin="new"] .new-bento-customer-expand :is(input, select, .month-picker-trigger):focus,
+html[data-skin="new"] .new-bento-customer-expand :is(input, select, .month-picker-trigger):focus-visible {
+  border-color: #2f6a4c;
+  outline: 0;
+  box-shadow: 0 0 0 4px rgba(47, 106, 76, .18);
+}
+
+html[data-skin="new"] .new-bento-customer-expand input[type="file"]::file-selector-button {
+  border: 1px solid #cfc5b5;
+  background: #efe9dc;
+  color: #1d4b38;
+}
+
+html[data-skin="new"] .new-bento-customer-expand .month-choice-panel {
+  border-color: #cfc5b5;
+  background: #fbf9f4;
+}
+
+html[data-skin="new"] .new-bento-customer-expand .month-choice-panel button {
+  color: #102235;
+}
+
+html[data-skin="new"] .new-bento-customer-expand .month-choice-panel button:hover {
+  background: #efe9dc;
+}
+
+/* Het blok met de huidige stand en het mailvoorbeeld: geen donkere vlakken,
+   maar een iets dieper crème met een haarlijn -- zelfde familie als het
+   kaartje eromheen. */
+html[data-skin="new"] .new-bento-customer-expand :is(.customer-timesheet-current, .customer-timesheet-mail-preview) {
+  border: 1px solid #ddd5c6;
+  border-radius: 14px;
+  background: #f6f2e9;
+  color: #102235;
+}
+
+html[data-skin="new"] .new-bento-customer-expand :is(.customer-timesheet-current, .customer-timesheet-mail-preview) :is(p, span, small, pre, strong) {
+  color: #102235;
+}
+
+html[data-skin="new"] .new-bento-customer-expand .status-pill {
+  border-color: #cfc5b5;
+  background: #efe9dc;
+  color: #1d4b38;
+}
+
+html[data-skin="new"] .new-bento-customer-expand .small-button {
+  border-color: #cfc5b5;
+  background: #f9f6ef;
+  color: #1d4b38;
+}
+
+html[data-skin="new"] .new-bento-customer-expand .small-button:hover {
+  background: #fff;
+}
+
 html[data-skin="new"] .new-bento-steps { grid-column: 1 / span 2; grid-row: 2; padding: 28px 30px; }
 html[data-skin="new"] .new-bento-steps .section-label { color: #86c89e; }
 /* Echte segment-elementen tussen de stappen (i.p.v. één blinde ::before-lijn
@@ -1086,6 +1459,17 @@ html[data-skin="new"] .new-bento-steps li { position: relative; display: grid; f
    met de li's als grootste aandeel zodat de tekstblokken ruim blijven --
    zelfde aanpak als bij de stap-tracker hierboven in het beheerdersdashboard,
    die geen los groeiend contentblok naast de lijn had. */
+/* De doorlopende stappenlijn (bol tot bol) wordt verderop in dit bestand
+   afgemaakt, in het PATCH-blok onderaan. Hier staat alleen nog de basis van
+   het lijnstuk zelf.
+   Korte geschiedenis, zodat niemand dit nog eens dubbel oplost: op 11 sep is
+   deze lijn twee keer onafhankelijk gerepareerd, hier en in dat patchblok,
+   met dezelfde diagnose (de halo van 5px rond de bol knipt het uiteinde af,
+   en het lijnstuk liep alleen tussen de tekstblokken in plaats van van bol
+   tot bol). Beide werkten, maar twee implementaties van één fix in één
+   bestand is vragen om problemen. De versie uit het patchblok is behouden --
+   die is met de gebruiker doorgenomen -- en deze is teruggebracht tot de
+   basis. */
 html[data-skin="new"] .new-bento-step-segment { display: block; flex: 1 1 20px; min-width: 20px; margin-top: 20px; height: 2px; border-radius: 2px; background: rgba(255, 255, 255, .14); }
 html[data-skin="new"] .new-bento-step-segment.is-done { background: #68b47a; box-shadow: 0 0 12px rgba(75, 177, 136, .24); }
 html[data-skin="new"] .new-bento-step-segment.is-current { background: var(--path-amber); box-shadow: 0 0 12px rgba(217, 154, 60, .28); }
@@ -1173,9 +1557,16 @@ html[data-skin="new"] .announcement-item-head h3 {
   font-weight: 400;
 }
 
+/* Zie .announcement-meta in styles.css: ontvangers, mailkeuze en afzender zijn
+   feiten, geen invulvelden. Het vlak eromheen maakte er hier nog wel een
+   formulier van. */
 html[data-skin="new"] .announcement-meta span {
-  border-radius: 12px;
-  background: var(--vlak);
+  border-radius: 0;
+  background: transparent;
+}
+
+html[data-skin="new"] .announcement-meta {
+  border-top-color: rgba(255, 255, 255, .1);
 }
 
 /* Goedkeuringen + procesvoortgang — de 4-fasen-track als doorlopende
@@ -1270,9 +1661,13 @@ html[data-skin="new"] .hours-table td:first-child {
   color: var(--mint-dark-tekst);
 }
 
+/* Hier stonden vijfentwintig groene datumpillen in één raster, net als in
+   Klassiek. Daar zijn ze rustige bijschriften geworden zodat je de ingevulde
+   uren terugvindt; als die regel hier blijft staan, landt die verbetering in
+   deze skin niet -- en dit is juist de skin waar de gebruiker naar kijkt. */
 html[data-skin="new"] .hours-table .date-number {
-  background: var(--green-light);
-  color: var(--mint-dark-tekst);
+  background: transparent;
+  color: rgba(214, 226, 220, .62);
 }
 
 html[data-skin="new"] .hours-table input {
@@ -1496,8 +1891,15 @@ html[data-skin="new"] .employee-card-head .employee-identity strong {
   font-size: 15px;
 }
 
+/* Klassiek haalde de vakjes om klant/uren/broker weg omdat die op invulvelden
+   leken terwijl je er niets in kunt typen; hier stond nog een rand omheen die
+   datzelfde deed. Zelfde behandeling, zodat de twee skins hetzelfde zeggen. */
 html[data-skin="new"] .employee-details div {
-  border: 1px solid var(--line);
+  border: 0;
+}
+
+html[data-skin="new"] .employee-details {
+  border-top-color: rgba(255, 255, 255, .1);
 }
 
 html[data-skin="new"] .mini-avatar {
@@ -1686,9 +2088,15 @@ html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.
   padding: 9px 14px;
 }
 
+/* Zelfde maat als de merkpil op Mijn uren/Mijn maanden/medewerkerdashboard
+   (24px/96px). Deze stond nog op de oudere 21px/88px-verhouding van vóór die
+   aanpassing en bleef daardoor net iets te klein om als "Path" te lezen --
+   gemeld met een screenshot waarin het logo in zowel licht als donker niet
+   goed te zien was. */
 html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .mobile-brand-home img {
-  width: 26px;
-  height: 26px;
+  width: auto;
+  max-width: 96px;
+  height: 24px;
   object-fit: contain;
 }
 
@@ -1723,9 +2131,18 @@ html[data-skin="new"] .new-admin-topnav button.is-active {
   color: #6dcc7e;
 }
 
+/* 1560px liet op een breed scherm (2560px en breder) aan weerszijden meer dan
+   450px leeg staan -- de storyline-rijen en de open-actielijst eronder zijn
+   allebei rijgebaseerd en hebben niets aan die extra breedte, dus schaalden ze
+   niet mee en bleef de pagina in het midden hangen. Gemeld: "veel lege ruimte
+   links en rechts". Geen andere admin-schermen in deze skin (Medewerkers,
+   Facturen, Instellingen) hebben zo'n eigen breedtegrens; ze vullen gewoon
+   .main-content. 1840px is geen volledige breedte -- dat zou de rijen te
+   gestrekt maken -- maar geeft flink meer lucht dan 1560px zonder de kaarten
+   uit te rekken. */
 html[data-skin="new"] #view-dashboard.is-active {
   display: flex;
-  width: min(100%, 1560px);
+  width: min(100%, 1840px);
   flex-direction: column;
   gap: 20px;
   margin: 0 auto;
@@ -1868,9 +2285,15 @@ html[data-skin="new"] .new-admin-employee-row:hover {
   background: rgba(255, 255, 255, .025);
 }
 
+/* Selectie is geen status. Deze rij had een amberen ring en amberen
+   statustekst, terwijl amber in deze skin overal "actie vereist" betekent --
+   dus las "Voltooid" op de geselecteerde rij als een waarschuwing (gemeld:
+   "als je erop staat wordt Voltooid oranje en dat is verwarrend"). De
+   selectie is nu een neutrale, lichte omlijning en de status wordt vet; de
+   kleur van de status blijft zeggen wat hij altijd zei. */
 html[data-skin="new"] .new-admin-employee-row.is-selected {
-  background: rgba(255, 255, 255, .035);
-  box-shadow: inset 0 0 0 1px rgba(217, 161, 60, .42);
+  background: rgba(255, 255, 255, .045);
+  box-shadow: inset 0 0 0 1px rgba(244, 241, 230, .26);
 }
 
 html[data-skin="new"] .new-admin-employee-person,
@@ -1983,7 +2406,7 @@ html[data-skin="new"] .new-admin-employee-status {
 }
 
 html[data-skin="new"] .new-admin-employee-row.is-selected .new-admin-employee-status {
-  color: #d9a13c;
+  font-weight: 700;
 }
 
 html[data-skin="new"] .new-admin-employee-chevron {
@@ -2291,24 +2714,24 @@ html[data-skin="new"] #view-dashboard .customer-timesheet-admin-panel {
 /* Maandverdeling (zie .admin-task-months in styles.css) in de donkere
    New-opmaak: geen witte kaartjes maar verdiepte vlakken, mint-accent voor
    het aandeel. Zelfde structuur, eigen karakter. */
-html[data-skin="new"] .admin-task-month {
+html[data-skin="new"] .admin-task-months .admin-task-month {
   border-color: rgba(255, 255, 255, .1);
   background: rgba(255, 255, 255, .04);
 }
 
-html[data-skin="new"] .admin-task-month b {
+html[data-skin="new"] .admin-task-months .admin-task-month b {
   color: #8ea3ad;
 }
 
-html[data-skin="new"] .admin-task-month i {
+html[data-skin="new"] .admin-task-months .admin-task-month i {
   background: rgba(255, 255, 255, .12);
 }
 
-html[data-skin="new"] .admin-task-month i::before {
+html[data-skin="new"] .admin-task-months .admin-task-month i::before {
   background: #4bb188;
 }
 
-html[data-skin="new"] .admin-task-month u {
+html[data-skin="new"] .admin-task-months .admin-task-month u {
   color: #eef3ee;
   font-family: var(--path-serif);
   font-size: 15px;

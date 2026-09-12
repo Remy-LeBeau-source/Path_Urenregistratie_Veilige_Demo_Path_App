@@ -28,6 +28,15 @@
   --vlak: #ffffff;
   --vlak-zacht: #f6f9f8;
   --vlak-warm: #fffaf4;
+  /* --surface-muted werd op 19 plekken als achtergrond gebruikt (panelkoppen,
+     maandkoppen in de werkvoorraad, tabelrijen van het teamoverzicht, het
+     logovoorbeeld, de sjabloonkaart) maar was nergens gedefinieerd. Een
+     var() naar een onbekend token maakt de hele declaratie ongeldig, dus
+     kregen al die vlakken geen achtergrond in plaats van een verdiepte -- ze
+     stonden transparant op het paneel. Dat is een deel van de vlakheid die
+     bij "ik zie geen diepte" hoort. Iets donkerder dan --vlak-zacht, want
+     dit vlak ligt bínnen een paneel dat zelf al op --vlak-zacht staat. */
+  --surface-muted: #f1f5f4;
   --mint-dark-tekst: #037f63;
   --warning-tekst: #a5600d;
   --danger: #a34b4b;
@@ -417,7 +426,14 @@ summary:focus-visible,
      account  -- bel en avatar, met een haarlijn ervoor als scheiding.
    De ruimte tussen de groepen is groter dan binnen een groep; dat doet het
    werk dat vijf randen eerst probeerden te doen. */
-.topbar-actions { display: flex; align-items: center; gap: 10px; }
+/* Deze rij mag afbreken zodra hij niet past -- op élke breedte, niet pas
+   onder 590px zoals eerst. Daartussen liep hij simpelweg buiten het venster:
+   op 1280 (een doodgewone laptop, én de breedte waarop alle desktoptests
+   draaien) stak de avatar er 8px overheen en kreeg de pagina een horizontale
+   schuifbalk. Dat stond er al voor deze ontwerpronde; het viel niet op omdat
+   alleen de mobiele tests op overloop controleren. Afbreken maakt de balk een
+   regel hoger, en dat is altijd beter dan inhoud die naast het scherm valt. */
+.topbar-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; row-gap: 8px; }
 .safety-badge {
   display: inline-flex;
   align-items: center;
@@ -534,7 +550,14 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .hero-card .button-ghost:hover { background: rgba(255,255,255,.13); }
 .hero-task-math { position: relative; z-index: 1; display: grid; gap: 11px; border: 1px solid rgba(255,255,255,.18); border-radius: 10px; background: rgba(255,255,255,.06); padding: 18px; }
 .hero-task-math > span { color: #b9c7d4; font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
-.hero-task-math > strong { font-family: var(--letter-kop); font-size: 26px; }
+/* "Werkvoorraad laden…" is veel langer dan de uiteindelijke waarde ("7 open
+   acties") en woog op deze 26px-regel zwaar genoeg om te wrappen naar twee
+   regels; zodra de echte telling binnenkwam, kromp het blok weer terug en
+   verschoof alles eronder -- het scherm "sprong". Eén regel, met ellips
+   erachter als een tekst toch een keer te lang is; de tekstinhoud (en dus wat
+   een screenreader voorleest en wat een test met toHaveText() ziet) verandert
+   niet, alleen hoe hij visueel afbreekt. */
+.hero-task-math > strong { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-family: var(--letter-kop); font-size: 26px; }
 .hero-task-math > div { display: grid; gap: 3px; border-top: 1px solid rgba(255,255,255,.1); padding-top: 10px; }
 .hero-task-math small { color: #b9c7d4; font-size: 10px; }
 .hero-task-math b { color: #fff; font-size: 12px; line-height: 1.4; }
@@ -590,10 +613,22 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 /* Zelfde sticky-topbar-overlap als .settings-card[id] hierboven: de knoppen
    "Bekijk alle ... acties" / "N bij Backoffice" / "N wachten op medewerkers"
    springen hierheen en verstopten de kop van dit paneel achter de topbalk. */
-#admin-task-panel { scroll-margin-top: 104px; }
+/* De sticky topbalk heeft geen vaste hoogte: hij groeit mee met de inhoud en
+   met de letterweergave van het besturingssysteem. 104px was een momentopname
+   op deze machine; op de Linux-runner meet dezelfde balk 106 en landde het
+   paneel er 2,3 pixel achter (ADM-WR-H-022). app.js zet nu bij elke
+   hertekening en bij venstergrootte de gemeten hoogte in --topbar-hoogte; de
+   104px hieronder blijft als terugval voor het moment vóór de eerste meting. */
+#admin-task-panel { scroll-margin-top: calc(var(--topbar-hoogte, 104px) + 10px); }
 .workflow-panel { margin-bottom: 18px; padding: 24px; }
 .panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px 24px 17px; }
 .workflow-panel .panel-heading { padding: 0 0 24px; }
+/* Toelichtingsregel direct onder een panelkop (Klanturenstaten op het
+   Urenoverzicht). Deze klasse had helemaal geen opmaak: de alinea stond dus
+   op de panelrand terwijl de kop erboven 24px inspringt, en liep daardoor
+   zichtbaar links buiten de rest van de kaart. Gemeld met een screenshot van
+   het Nieuw-dashboard ("teveel naar links"), maar het gold in beide skins. */
+.open-periods-intro { max-width: 74ch; margin: -4px 0 16px; color: var(--muted); font-size: 12px; line-height: 1.6; padding: 0 24px; }
 .workflow-overview { display: grid; grid-template-columns: minmax(230px,.38fr) minmax(0,1fr); gap: 24px; align-items: center; border: 1px solid var(--line); border-radius: 16px; background: var(--surface-muted); padding: 18px; }
 .workflow-progress-card { display: flex; width: 100%; align-items: center; gap: 14px; margin: 0; border-right: 1px solid var(--line); color: var(--navy-tekst); padding: 2px 20px 2px 0; }
 .workflow-progress-card .progress-ring { --size: 54px; background: conic-gradient(var(--mint-dark) calc(var(--progress) * 1%), #dfe8e5 0); }
@@ -999,7 +1034,9 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
    sectie waarnaar de settings-section-nav-knoppen springen -- 18px was veel
    te weinig om eronderuit te komen, dus de bestemming landde onder de balk
    in plaats van eronder. */
-.settings-card[id] { scroll-margin-top: 104px; }
+/* Zelfde verhaal als bij #admin-task-panel hierboven: gemeten hoogte, met de
+   oude 104px als terugval. De springlinks in Instellingen leunen hierop. */
+.settings-card[id] { scroll-margin-top: calc(var(--topbar-hoogte, 104px) + 10px); }
 .settings-card { padding: 24px; }
 .settings-card.full-width { grid-column: 1/-1; }
 .settings-card h3 { margin-bottom: 20px; }
@@ -1442,7 +1479,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .employee-customer-timesheet-card p { margin: 7px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
 .employee-customer-timesheet-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .employee-metrics .compact-metric { font-size: 20px; }
-.employee-open-overview { scroll-margin-top: 110px; margin: 0 0 22px; overflow: hidden; border-radius: 22px; background-color: var(--vlak); background-image: linear-gradient(180deg, var(--vlak), var(--vlak-zacht)); box-shadow: 0 16px 34px rgba(13,27,56,.06); }
+.employee-open-overview { scroll-margin-top: calc(var(--topbar-hoogte, 110px) + 16px); margin: 0 0 22px; overflow: hidden; border-radius: 22px; background-color: var(--vlak); background-image: linear-gradient(180deg, var(--vlak), var(--vlak-zacht)); box-shadow: 0 16px 34px rgba(13,27,56,.06); }
 .employee-open-overview .panel-heading { align-items: flex-start; }
 .employee-open-overview-list { display: grid; gap: 12px; padding: 0 24px 24px; }
 .employee-open-overview-next { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 24px 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); padding: 16px 18px; }
@@ -1515,12 +1552,20 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .admin-task-months { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 /* Vaste kolombreedtes: anders krijgt "AUGUSTUS" een smallere balkbaan dan
    "JULI" en zijn de balkjes onderling niet meer te vergelijken -- precies
-   wat zo'n verdeling juist zichtbaar moet maken. */
-.admin-task-month { display: grid; grid-template-columns: 68px 1fr 22px; align-items: center; gap: 8px; flex: 0 0 auto; border: 1px solid var(--line); border-radius: 10px; padding: 7px 11px; background: var(--vlak); }
-.admin-task-month b { overflow: hidden; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .04em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
-.admin-task-month i { display: block; width: 56px; height: 4px; border-radius: 999px; background: var(--line); overflow: hidden; }
-.admin-task-month i::before { content: ""; display: block; width: var(--aandeel, 0%); height: 100%; border-radius: 999px; background: var(--mint); }
-.admin-task-month u { color: var(--navy-tekst); font-size: 13px; font-weight: 800; text-decoration: none; font-variant-numeric: tabular-nums; }
+   wat zo'n verdeling juist zichtbaar moet maken.
+
+   Let op de scope: .admin-task-month is per ongeluk twee componenten. Hier
+   zijn het de maandtegeltjes in #admin-task-months, verderop (.admin-task-list)
+   de uitklapbare maandsecties met hun eigen kop en lijst. Zonder deze scope
+   kreeg zo'n sectie het raster van een tegeltje: de kop werd in een kolom van
+   68px geperst en viel over de rijen heen. Gemeld met een screenshot van het
+   Urenoverzicht, waar "Eerdere maand - nog niet afgerond" dwars door
+   "Juli 2026 - 5 open acties" liep. */
+.admin-task-months .admin-task-month { display: grid; grid-template-columns: 68px 1fr 22px; align-items: center; gap: 8px; flex: 0 0 auto; border: 1px solid var(--line); border-radius: 10px; padding: 7px 11px; background: var(--vlak); }
+.admin-task-months .admin-task-month b { overflow: hidden; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .04em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.admin-task-months .admin-task-month i { display: block; width: 56px; height: 4px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.admin-task-months .admin-task-month i::before { content: ""; display: block; width: var(--aandeel, 0%); height: 100%; border-radius: 999px; background: var(--mint); }
+.admin-task-months .admin-task-month u { color: var(--navy-tekst); font-size: 13px; font-weight: 800; text-decoration: none; font-variant-numeric: tabular-nums; }
 
 .admin-task-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 9px; flex: 0 0 auto; white-space: nowrap; border-color: transparent; background: var(--green-light); color: var(--mint-dark-tekst); font-weight: 800; }
 .admin-task-toggle:hover { background: color-mix(in srgb, var(--green-light) 76%, var(--mint)); }
@@ -1530,7 +1575,10 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .admin-task-filters button { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); cursor: pointer; font-size: 9px; font-weight: 800; padding: 8px 11px; }
 .admin-task-filters button.is-active { border-color: var(--mint-dark); background: var(--green-light); color: var(--mint-dark-tekst); }
 .admin-task-list { display: grid; }
-.admin-task-month + .admin-task-month { border-top: 10px solid var(--surface-muted); }
+/* Scheiding tussen twee maandsecties in de lijst. Ongescoped raakte deze
+   regel ook de maandtegeltjes, die naast elkaar staan: elke tegel na de
+   eerste kreeg er een balk van 10px bovenop. */
+.admin-task-list .admin-task-month + .admin-task-month { border-top: 10px solid var(--surface-muted); }
 .admin-task-month-heading { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 18px; border: 0; border-bottom: 1px solid var(--line); background: var(--surface-muted); color: inherit; cursor: pointer; font: inherit; padding: 14px 24px; text-align: left; }
 .admin-task-month-heading:hover { background: color-mix(in srgb, var(--surface-muted) 78%, var(--green-light)); }
 .admin-task-month-heading:focus-visible { position: relative; z-index: 1; outline: 3px solid color-mix(in srgb, var(--mint-dark) 35%, transparent); outline-offset: -3px; }
@@ -1568,7 +1616,11 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .team-account-overview { display: grid; grid-template-columns: minmax(220px,.8fr) minmax(360px,1.2fr); gap: 24px; align-items: center; margin-bottom: 16px; padding: 20px 24px; }
 .team-account-overview-copy h3 { margin: 4px 0 2px; }
 .team-account-overview-copy small, .team-account-group small { color: var(--muted); font-size: 9px; }
-.team-account-groups { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+/* Twee vaste kolommen die pas bij 820px inklappen: daartussen (rond 900px)
+   pasten de twee groepen niet meer naast elkaar en liep het blok het venster
+   uit. Met auto-fit klapt hij in zodra het écht niet past, ongeacht waar het
+   breekpunt toevallig ligt. */
+.team-account-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
 .team-account-group { display: flex; align-items: center; gap: 13px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-muted); padding: 12px 14px; }
 .team-account-group strong, .team-account-group small { display: block; }
 .team-account-group strong { font-size: 11px; }
@@ -1746,7 +1798,10 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 .customer-timesheet-period-fields { display: grid; grid-template-columns: minmax(120px,1fr) 92px; gap: 8px; }
 .customer-timesheet-upload-grid .customer-timesheet-period-fields .month-picker-trigger { min-height: 42px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); padding: 9px 11px; }
 .customer-month-choice-panel { width: min(292px,calc(100vw - 48px)); }
-.customer-timesheet-upload-actions { display: flex; gap: 9px; justify-content: flex-end; }
+/* Mocht deze knoppenrij niet passen, dan breekt hij af i.p.v. het venster uit
+   te lopen -- dat gebeurde rond 980px, ruim boven het breekpunt waar hij op
+   één kolom overgaat. */
+.customer-timesheet-upload-actions { display: flex; flex-wrap: wrap; gap: 9px; justify-content: flex-end; }
 .customer-timesheet-upload-actions .button:disabled { opacity: .48; cursor: not-allowed; }
 .customer-timesheet-action-help { grid-column: 1/-1; color: var(--muted); font-size: 10px; line-height: 1.5; }
 .customer-timesheet-action-help.is-warning { color: var(--warning-tekst); font-weight: 700; }
@@ -1974,7 +2029,11 @@ html[data-theme="dark"] { color-scheme: dark; --ink: #e7eef4; --muted: #b1bfcb; 
      staat, blijft licht. */
   --vlak: #111d2b;
   --vlak-zacht: #16232f;
-  --vlak-warm: #2b2318; }
+  --vlak-warm: #2b2318;
+  /* Zie de toelichting bij --surface-muted in de lichte modus. Hier iets
+     lichter dan --surface, want in het donker ligt een verdiept vlak
+     hoger, niet lager. */
+  --surface-muted: #16242f; }
 html[data-theme="dark"] .login-screen { background: radial-gradient(circle at 15% 15%, rgba(58,189,157,.17), transparent 28%), #07111d; }
 html[data-theme="dark"] .login-panel,
 html[data-theme="dark"] .approval-card,
@@ -2083,6 +2142,7 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
   .employee-history-row { grid-template-columns: minmax(0, 1fr); }
   #employee-history.has-customer-timesheet-column .employee-history-row { grid-template-columns: minmax(0, 1fr); }
   .admin-task-month-heading, .admin-task-owner-heading, .admin-task-row { padding-inline: 18px; }
+  .open-periods-intro { padding-inline: 18px; }
   .correction-banner.dashboard-correction { grid-template-columns: auto 1fr; }
   .correction-banner.dashboard-correction .button { grid-column: 1/-1; width: 100%; }
   .administrator-row { grid-template-columns: minmax(0, 1fr); }
@@ -3134,8 +3194,8 @@ body.toont-installatieaanbod .main-content {
      maat past "AUGUSTUS" niet meer in de 68px labelkolom, dus die groeit
      mee. De balk zelf houdt zijn vaste 56px, want juist daardoor zijn de
      maanden onderling te vergelijken. */
-  .admin-task-month { grid-template-columns: 78px 1fr 22px; }
-  .admin-task-month b { font-size: 11px; }
+  .admin-task-months .admin-task-month { grid-template-columns: 78px 1fr 22px; }
+  .admin-task-months .admin-task-month b { font-size: 11px; }
   .admin-task-month-heading small { font-size: 11px; }
   .admin-task-month-heading-copy > span { font-size: 12px; }
   .admin-task-month-heading-side small { font-size: 13px; }

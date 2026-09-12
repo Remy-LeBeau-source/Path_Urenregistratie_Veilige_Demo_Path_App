@@ -1218,7 +1218,16 @@ const HELP_TOPICS = [
   { id: "employee-remove", roles: ["admin"], label: "Medewerker deactiveren", terms: "medewerker verwijderen weghalen deactiveren inactief historie", answer: "Medewerkers worden nooit hard verwijderd. Deactiveren stopt toegang en herinneringen, maar bewaart alle oude uren, goedkeuringen en facturen. Via het filter Inactief kun je iemand opnieuw activeren.", view: "employees" },
   { id: "admin", roles: ["admin"], label: "Beheerder beheren", terms: "beheerder toevoegen verwijderen deactiveren gio joyce toegang", answer: "Onder Medewerkers staat het beheerdersoverzicht. Je kunt een beheerder toevoegen of deactiveren. Jezelf en de laatste actieve beheerder kun je niet deactiveren, zodat de app bereikbaar blijft.", view: "employees" },
   { id: "privacy", roles: ["admin", "employee"], label: "Wie ziet wat?", terms: "privacy collega tarieven zien rol toegang medewerker beheerder", answer: "Een medewerker ziet uitsluitend het eigen dashboard, de eigen uren, meldingen en historie. Alleen beheerders zien collega’s, goedkeuringen, tarieven, facturen en instellingen." },
-  { id: "notifications", roles: ["admin", "employee"], label: "Meldingen", terms: "melding meldingen bel herinnering planning goedgekeurd e-mail aan uit", answer: "De bel telt urenstatussen, correcties, herinneringen en algemene mededelingen samen. Mijn mededelingen telt alleen algemene mededelingen. In Voorkeuren kun je aanvullende e-mailmeldingen aan- of uitzetten. E-mailverzending is nog uitgeschakeld." },
+  { id: "notifications", roles: ["admin", "employee"], label: "Meldingen", terms: "melding meldingen bel herinnering planning goedgekeurd e-mail aan uit", // Testfeedback 11 sep: de eerste zin klopte niet helemaal. Twee dingen
+// nagelopen in de code. (1) De bel telt ook klanturenstaat-meldingen
+// (goedgekeurd, opnieuw uploaden, upload ontbreekt) -- voor een medewerker
+// juist een van de vaakst voorkomende soorten, en die stond niet in het
+// rijtje. (2) "E-mailverzending is nog uitgeschakeld" was een harde
+// bewering in een tekst die in elke omgeving hetzelfde is; op TEST staat
+// verzending juist aan. De app toont de werkelijke stand al in de
+// verzendstatus bovenaan, dus verwijzen we daarnaar in plaats van het hier
+// nog eens te beweren.
+answer: "De bel telt alles bij elkaar wat op je wacht: urenstatussen, correctieverzoeken, klanturenstaat-meldingen, herinneringen en algemene mededelingen. Mijn mededelingen toont alleen de algemene mededelingen. In Voorkeuren zet je aanvullende e-mailmeldingen aan of uit. Of er op dit moment echt e-mail de deur uitgaat, zie je aan de verzendstatus bovenaan het scherm." },
   { id: "profile", roles: ["admin", "employee"], label: "Profiel en foto", terms: "profiel foto profielfoto naam e-mail account", answer: "Klik rechtsboven op je initialen en kies Mijn profiel. Je kunt nu lokaal een foto kiezen. Naam en zakelijk e-mailadres worden door een beheerder beheerd." },
   { id: "theme", roles: ["admin", "employee"], label: "Licht of donker", terms: "donker dark licht light automatisch thema uiterlijk voorkeur", answer: "Open rechtsboven Voorkeuren en kies Licht, Automatisch of Donker. Licht is standaard; Automatisch volgt de instelling van je computer of telefoon." },
   { id: "settings", roles: ["admin"], label: "Instellingen", terms: "instellingen organisatie logo kleuren bedrijf iban kvk btw betalingstermijn mailroutering ontvanger toevoegen", answer: "Instellingen bevat de eigen organisatienaam, huisstijl, factuurgegevens, mailroutering, vaste ontvangers en veiligheidsregels. Ontvangers krijgen een type en een zelfgekozen naam; daarna vink je ze per medewerker aan. De huidige versie bewaart dit lokaal en e-mailverzending staat uit.", view: "settings" },
@@ -1652,7 +1661,14 @@ function requestLocalLoginHints() {
 
       authRuntime.localLoginHints = {
         adminPassword: String(data.adminPassword || ""),
-        employeePassword: String(data.employeePassword || "")
+        employeePassword: String(data.employeePassword || ""),
+        // Werknemer-id -> huidig echt adres, voor genoemde testers wier
+        // demo-adres (@example.invalid) door een baseline-reset al is
+        // vervangen. Zonder deze toewijzing vult de snelkeuze het verouderde
+        // demo-adres in, dat niet meer bestaat op de echte TEST-database.
+        employeeEmailOverrides: (data.employeeEmailOverrides && typeof data.employeeEmailOverrides === "object")
+          ? data.employeeEmailOverrides
+          : {}
       };
 
       return authRuntime.localLoginHints;
@@ -1663,6 +1679,17 @@ function requestLocalLoginHints() {
     });
 
   return authRuntime.localLoginHintsPromise;
+}
+
+// Geeft het echte, huidige e-mailadres voor deze medewerker terug als de
+// server er een kent (test_reset_named_tester_employee_email_mapping()),
+// anders het adres uit de demo-catalogus. Alleen relevant voor medewerkers:
+// de admin-accounts (Gio/Joyce) worden nooit gemigreerd.
+function resolveLoginEmail(role, account, hints) {
+  const fallback = String(account?.email || "").trim();
+  if (role !== "employee" || !account) return fallback;
+  const override = hints?.employeeEmailOverrides?.[String(account.id)];
+  return override ? String(override).trim() : fallback;
 }
 
 function prefillAuthCredentialsFromSelection(role, showFeedback = true) {
@@ -1686,6 +1713,11 @@ function prefillAuthCredentialsFromSelection(role, showFeedback = true) {
     const fallbackFeedback = "E-mail voorgeselecteerd. Vul je wachtwoord in.";
     const currentEmail = String(emailInput.value || "").trim().toLowerCase();
     if (currentEmail !== email.toLowerCase()) return;
+
+    const resolvedEmail = resolveLoginEmail(role, account, hints);
+    if (resolvedEmail && resolvedEmail.toLowerCase() !== email.toLowerCase()) {
+      emailInput.value = resolvedEmail;
+    }
 
     const hintedPassword = role === "admin"
       ? String(hints?.adminPassword || "").trim()
@@ -1731,6 +1763,16 @@ function triggerLoginChoice(role) {
   passwordInput.value = "";
 
   requestLocalLoginHints().then(hints => {
+    // Voor een genoemde tester (Marc/Stasjo/Brian/Shawn) is het demo-adres na
+    // de baseline-reset vervangen door zijn echte adres; zonder dit vulde de
+    // knop hier het verouderde @example.invalid-adres in en de inlogpoging
+    // faalde stil met "E-mailadres of wachtwoord is onjuist" (gemeld door de
+    // gebruiker: "de auto inlog werkt niet meer... voor medewerker").
+    const resolvedEmail = resolveLoginEmail(role, account, hints);
+    if (resolvedEmail && resolvedEmail.toLowerCase() !== email.toLowerCase()) {
+      emailInput.value = resolvedEmail;
+    }
+
     const hintedPassword = role === "admin"
       ? String(hints?.adminPassword || "").trim()
       : String(hints?.employeePassword || "").trim();
@@ -4230,9 +4272,27 @@ function applyOrganizationBranding() {
   document.querySelectorAll("[data-brand-logo]").forEach(image => {
     // De desktopzijbalk heeft ook in de lichte modus een donkere ondergrond.
     // Kies daarom per logopositie het contrast, niet alleen op basis van het thema.
-    const onDarkSurface = Boolean(image.closest("#sidebar-brand"));
+    //
+    // De "Home"-pil in Nieuw hoort in dezelfde categorie: die is in élke
+    // weergave van die skin donker (#0e2334). Dat gold eerst alleen in de
+    // donkere modus -- op het medewerkerdashboard en Mededelingen stond de pil
+    // op var(--surface) en was daar in de lichte modus juist licht, waardoor
+    // het witte woordmerk dat hier wordt gekozen onleesbaar werd. Sindsdien
+    // staat die pil in styles-new.css vast op dezelfde donkere ondergrond, en
+    // is deze keuze in beide thema's de juiste. Er stond eerder een lichte chip
+    // achter het beeld om het donkere woordmerk leesbaar te houden -- maar
+    // daardoor zag je vooral die chip en nauwelijks het logo (twee keer
+    // gemeld).
+    const opMerkpilInNieuw = document.documentElement.dataset.skin === "new"
+      && Boolean(image.closest(".mobile-brand-home"));
+    const onDarkSurface = Boolean(image.closest("#sidebar-brand")) || opMerkpilInNieuw;
     image.src = brandLogoUrl(onDarkSurface || donkereModusActief() ? "donker" : "licht");
     image.alt = organizationName + " logo";
+    // Van het meegeleverde logo bestaat een witte variant, die rechtstreeks op
+    // de donkere pil kan. Van een zelf geüpload logo kennen we de kleuren niet;
+    // daar blijft de lichte chip de veilige drager. De opmaak leest dit
+    // onderscheid via het attribuut.
+    image.dataset.eigenLogo = state.settings.brandLogo ? "true" : "false";
   });
   const organizationLabel = document.querySelector("#organization-name");
   if (organizationLabel) organizationLabel.textContent = organizationName;
@@ -4534,8 +4594,35 @@ function applyDayHoursDefaultsToRecord(record, employee, periodKey) {
   // Alleen doorzetten als period ook echt de huidige kalendermaand is.
   const now = new Date();
   if (now.getFullYear() !== period.year || now.getMonth() !== period.monthIndex) return;
+  // Alleen bij een maand waar nog niets mee gebeurd is. Dit draaide bij élke
+  // server-sync, en vulde dan opnieuw elke dag die op 0 stond. Drie dingen
+  // gingen daardoor mis:
+  //   1. Een dag die de medewerker bewust leeg liet, stond na herladen weer
+  //      op het patroon -- precies wat Stasjo's wens ("ziek of vrij eruit
+  //      kunnen halen") juist wilde voorkomen.
+  //   2. "Standaardweek vullen" had nooit meer iets te doen en leek kapot
+  //      (gemeld door Shawn, 11 sep).
+  //   3. Het racete met het inlezen van de serverwaarden, waardoor een net
+  //      ingetypt uur kon worden teruggezet naar het patroon (SKIN-H-011).
+  // Als voorzet bij een lege maand is de vulling nuttig; als terugkerende
+  // correctie op wat de medewerker zelf doet, niet.
+  if (!maandIsOnaangeroerd(record)) return;
   const activeWeekIndex = todaysWeekIndexInPeriod(period);
   fillStandardHoursInRecord(record, employee, period, [activeWeekIndex], { persistStatus: false });
+}
+
+// Onaangeroerd = nergens uren, nergens een bewust bevestigde dag, en nog geen
+// urenstaat op de server. Zodra één van die drie waar is, heeft de medewerker
+// (of Backoffice) zich over deze maand uitgesproken en houdt de automatische
+// vulling zich erbuiten.
+function maandIsOnaangeroerd(record) {
+  if (!record) return false;
+  if (Number(record.serverTimesheetId || 0) > 0) return false;
+  if (String(record.timesheetStatus || "draft") !== "draft") return false;
+  const heeftUren = (record.entries || []).some(week => (week || []).some(uren => Number(uren || 0) > 0));
+  if (heeftUren) return false;
+  const heeftBevestiging = (record.confirmedEntries || []).some(week => (week || []).some(Boolean));
+  return !heeftBevestiging;
 }
 
 function fillStandardHoursInRecord(record, employee, period, weekIndexes, options = {}) {
@@ -5072,6 +5159,17 @@ function applySkin(hostname = window.location.hostname) {
   // volgende, toevallige herrender (of een handmatige F5) het rechttrok.
   if (changed && document.querySelector("#view-timesheet")?.classList.contains("is-active")) {
     renderHoursGrid();
+  }
+  // De merkopmaak kijkt naar de actieve skin (de "Home"-pil is in Nieuw altijd
+  // donker en heeft dus de witte logovariant nodig). In renderAll() draait
+  // applyOrganizationBranding() als eerste en applySkin() als laatste, dus bij
+  // de eerste tekening stond data-skin nog op "classic" toen de logokeuze werd
+  // gemaakt: in de lichte modus koos die dan het donkere woordmerk, dat
+  // vervolgens op de donkere pil onleesbaar werd. In de donkere modus viel het
+  // niet op, omdat daar toch al de witte variant werd gekozen. Zodra de skin
+  // wisselt moet die keuze dus opnieuw worden gemaakt.
+  if (changed && typeof applyOrganizationBranding === "function") {
+    applyOrganizationBranding();
   }
 }
 
@@ -5674,12 +5772,15 @@ function renderEmployeeDashboard() {
     const customerCell = showsCustomerTimesheetColumn
       ? '<div>' + customerTimesheetStatusPill(historyRecord) + '</div>'
       : '';
-    return '<div class="employee-history-row"><div><strong>' + escapeHtml(periodFromKey(key).label) + currentLabel + '</strong><small>' + escapeHtml(historyNote) + '</small></div><div><strong>' + hoursFormat.format(historyTotal) + ' uur</strong><small>totaal verantwoord</small></div><div>' + timesheetStatusPill(employee, historyRecord) + '</div>' + customerCell + '<button class="small-button" data-history-period="' + key + '">Open maand</button></div>';
+    // "totaal verantwoord" stond hier eerder onder elk uurtotaal. Dat is geen
+    // gegeven per maand maar de betekenis van de kolom, en zes keer dezelfde
+    // regel onder elkaar leest als ruis. Staat nu één keer in de kolomkop.
+    return '<div class="employee-history-row"><div><strong>' + escapeHtml(periodFromKey(key).label) + currentLabel + '</strong><small>' + escapeHtml(historyNote) + '</small></div><div><strong>' + hoursFormat.format(historyTotal) + ' uur</strong></div><div>' + timesheetStatusPill(employee, historyRecord) + '</div>' + customerCell + '<button class="small-button" data-history-period="' + key + '">Open maand</button></div>';
   }).join("");
   const historyHeadCustomerColumn = showsCustomerTimesheetColumn ? '<span>Klanturenstaat</span>' : '';
   document.querySelector("#employee-history").classList.toggle("has-customer-timesheet-column", showsCustomerTimesheetColumn);
   document.querySelector("#employee-history").innerHTML = historyRows
-    ? '<div class="employee-history-head" aria-hidden="true"><span>Maand</span><span>Uren</span><span>Status</span>' + historyHeadCustomerColumn + '<span>Actie</span></div>' + historyRows
+    ? '<div class="employee-history-head" aria-hidden="true"><span>Maand</span><span>Uren verantwoord</span><span>Status</span>' + historyHeadCustomerColumn + '<span>Actie</span></div>' + historyRows
     : '<div class="dashboard-action-empty">Er zijn nog geen maanden beschikbaar.</div>';
   // De historietabel staat sinds v1.0.73 op een eigen scherm; op het Dashboard
   // blijft alleen deze regel staan die zegt hoeveel er te zien is.
@@ -8476,7 +8577,21 @@ function renderHoursWeekFilter(period, scope) {
 // .segmented-control i.p.v. hardgecodeerd voor één toolbar: een balk wordt
 // als sibling toegevoegd zodra er echt iets te schuiven valt, en verwijderd
 // zodra dat niet meer zo is (een filterlijst kan tussen renders krimpen).
+// De sticky topbalk bedekt de bovenkant van de pagina, dus alles waar een
+// knop naartoe springt heeft een scroll-margin nodig die minstens zo hoog is.
+// Die stond als vast getal (104px) in het stijlblad, en dat is precies zo
+// betrouwbaar als de aanname dat de balk overal even hoog rendert: op de
+// Linux-testrunner meet dezelfde balk 106 en landde het werkvoorraadpaneel
+// er 2,3 pixel achter (ADM-WR-H-022). Meten in plaats van aannemen.
+function meetTopbalkHoogte() {
+  const topbar = document.querySelector(".topbar");
+  if (!topbar) return;
+  const hoogte = Math.ceil(topbar.getBoundingClientRect().height);
+  if (hoogte > 0) document.documentElement.style.setProperty("--topbar-hoogte", hoogte + "px");
+}
+
 function refreshSegmentedControlScrollIndicators() {
+  meetTopbalkHoogte();
   document.querySelectorAll(".segmented-control").forEach(control => {
     // Deze functie zette hier eerst een eigen balk met duim als sibling neer.
     // Die is vervangen door een vervagende rand op de rij zelf (zie

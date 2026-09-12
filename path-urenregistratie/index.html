@@ -20,7 +20,12 @@
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <title>Uren & Facturatie</title>
   <link rel="stylesheet" href="assets/styles.css?v=1.1.3">
-  <link rel="stylesheet" href="assets/styles-new.css">
+  <!-- Met versieparameter, net als styles.css hierboven. Zonder die parameter
+       houdt de browser (en een geïnstalleerde app helemaal) de oude New-skin
+       vast na een release: de versiebadge springt vooruit en Klassiek
+       vernieuwt, terwijl de hele Nieuw-vormgeving op de vorige versie blijft
+       staan. Gemeld als "ik zie geen verschil in de nieuwe versie". -->
+  <link rel="stylesheet" href="assets/styles-new.css?v=1.1.3">
 </head>
 <body class="auth-booting">
   <section class="login-screen" id="login-screen" aria-labelledby="login-title">
@@ -379,10 +384,10 @@
         </section>
       </section>
 
-      <!-- Klassiek-only, medewerkers: naslag van eerdere urenstaten. In New
-           was dit blok al verborgen (zie de :not()-regel op
-           #view-employee-dashboard in styles-new.css), dus daar verandert
-           niets. -->
+      <!-- Medewerkers: naslag van eerdere urenstaten. Dit scherm en de ingang
+           ernaartoe waren in New een tijd verborgen; dat was een gat, geen
+           keuze (zie de toelichting in styles-new.css). In beide skins
+           beschikbaar, met in New de kaartopmaak van de medewerkerroute. -->
       <section class="view role-employee-only" id="view-historie" data-title="Mijn maanden">
         <div class="view-heading">
           <div><span class="section-label">Historie</span><h2>Mijn maanden</h2><p>Huidige en eerdere urenstaten met hun laatste status.</p></div>

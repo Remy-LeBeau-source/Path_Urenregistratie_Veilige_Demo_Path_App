@@ -351,14 +351,21 @@ jobs:
             rm -f /tmp/php-server.pid
           fi
 
+      # Dezelfde tijdslimiet als ci.yml (22m binnen een stap van 23m, in een
+      # job van 35m). Die is daar op 11 sep van 14m naar 22m gegaan omdat een
+      # shard op de limiet afliep terwijl er niets kapot was; hier bleef 14m
+      # staan, en shard 9 liep daardoor op exit 124 -- de hele releaseketen
+      # stond stil zonder dat er een test faalde. Krap en beschermend zijn
+      # twee verschillende dingen: de limiet hoort een vastloper te vangen,
+      # niet een shard die simpelweg meer werk heeft gekregen.
       - name: Run E2E tests
-        timeout-minutes: 15
+        timeout-minutes: 23
         env:
           PATH_APP_BASE_URL: http://127.0.0.1:8000
           PLAYWRIGHT_ADMIN_EMAIL: gio@example.invalid
           PLAYWRIGHT_EMPLOYEE_EMAIL: stasjo@example.invalid
           PLAYWRIGHT_BLOB_REPORT: '1'
-        run: timeout --signal=TERM --kill-after=30s 14m npm run test:e2e -- --shard=${{ matrix.shard }}/10
+        run: timeout --signal=TERM --kill-after=30s 22m npm run test:e2e -- --shard=${{ matrix.shard }}/10
 
       - name: Upload mergeable release reports
         if: always()

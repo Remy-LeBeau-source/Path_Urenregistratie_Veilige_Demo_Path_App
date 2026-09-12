@@ -335,6 +335,9 @@ test('[SAFE-H-018] de accountbaseline-verificatie blijft correct nadat een genoe
     // gestuurde) wachtwoorden gebruikt. Zet daarom ook gio/joyce (id 1/2)
     // expliciet in de exacte staat die de functie verwacht, zodat de case
     // niet stilzwijgend leunt op wat de omgeving toevallig al aan boord heeft.
+    // (Onafhankelijk hetzelfde probleem gevonden en opgelost als op
+    // herontwerp; deze kant gekozen omdat hij tegen de echte TEST-cutover is
+    // getoetst.)
     '  $pdo->prepare("UPDATE users SET email = :email, password_hash = :hash, force_password_change = 0 WHERE id = :id")',
     '    ->execute([":email" => "gio@example.invalid", ":hash" => password_hash("888888888888", PASSWORD_DEFAULT), ":id" => 1]);',
     '  $pdo->prepare("UPDATE users SET email = :email, password_hash = :hash, force_password_change = 0 WHERE id = :id")',

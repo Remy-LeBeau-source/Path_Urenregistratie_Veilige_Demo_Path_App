@@ -607,7 +607,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 493 Playwri
 - [SKIN-H-005] Klassiek start licht en Nieuw donker en onthoudt daarna elk eigen thema — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
 - [SKIN-H-006] de echte medewerkerroute toont de live bento en blijft mobiel bedienbaar — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 24
 - [SKIN-H-008] Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en terugschakelen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 13
-- [SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en Klassiek — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 17
+- [SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en Klassiek — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 19
 - [SKIN-H-010] de admin-verhaallijn wisselt van medewerker en toont bijbehorende status — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [SKIN-H-026] tab-navigatie tussen uren-invoervelden in Nieuw springt niet terug naar het begin — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 4
 - [SKIN-H-011] een bewust opgeslagen 0 uur telt mee voor de weekvoortgang in Mijn uren — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 8
