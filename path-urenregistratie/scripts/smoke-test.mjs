@@ -853,7 +853,13 @@ const customerReminderState = JSON.parse(dom.window.localStorage.getItem("path-u
 assert(customerReminderState.notifications.length === notificationsBeforeCustomerReminder + 1 && customerReminderState.notifications.at(-1).title === "Klanturenstaat ontbreekt", "Backoffice moet vanuit de rustige maand een ontbrekende klanturenstaatherinnering kunnen klaarzetten");
 choosePeriod("#period-month-picker", "#period-year-picker", "2026-08");
 assert(document.querySelector("#customer-timesheet-admin-list").textContent.includes("Controle nodig"), "Een geüploade klanturenstaat moet voor Backoffice op Controle nodig staan");
-click('[data-review-customer-timesheet="1"][data-period-key="2026-08"]');
+// Sinds Klanturenstaten een eigen scherm heeft (v1.2.0) bestaat dezelfde
+// data-review-customer-timesheet-knop twee keer: hier in de werkvoorraad
+// (#admin-task-panel, met workflow-vervolg via openAdminTask) en nogmaals in
+// #customer-timesheet-admin-list (losstaand, zonder taak-workflow). Scope
+// naar de werkvoorraadrij, anders klikt een ongescopede selector op de
+// verkeerde kopie en blijft de factuur ten onrechte op concept staan.
+click('#admin-task-panel [data-review-customer-timesheet="1"][data-period-key="2026-08"]');
 assert(document.querySelector("#modal-title").textContent.includes("Marc de Roon") && document.querySelector("#modal-secondary").textContent === "Opnieuw uploaden vragen", "Backoffice moet een officiële PDF kunnen goedkeuren of opnieuw laten uploaden");
 assert(document.querySelector('#modal-summary [data-view-customer-timesheet="1"]'), "Backoffice moet de ingediende PDF kunnen bekijken voordat deze wordt goedgekeurd");
 assert(document.querySelector("#modal-summary").textContent.includes("Van Marc de Roon aan Path Backoffice") && document.querySelector("#modal-summary").textContent.includes("mijn klanturenstaat"), "De beheerder moet eerst het bericht van de medewerker bij de inzending zien");

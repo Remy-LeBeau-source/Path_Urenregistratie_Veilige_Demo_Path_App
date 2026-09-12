@@ -202,7 +202,11 @@ test('[INV-H-020] Backoffice kan een ontbrekende urenstaat extern bevestigen en 
     await loginPage.open();
     await loginPage.loginAsAdmin();
     await expect.poll(() => page.evaluate(() => window.adminOpenTasks().some(task => task.type === 'customer-external-confirm' && Number(task.employee.id) === 4))).toBe(true);
+    // Klanturenstaten kreeg een eigen scherm (v1.2.0); de kaart met deze knop
+    // staat niet meer op het Dashboard zelf.
+    await page.locator('[data-go="customer-timesheet-admin"]').click();
     await expect(page.locator('[data-confirm-customer-timesheet-external="4"]')).toBeVisible();
+    await page.locator('#view-customer-timesheet-admin [data-go="dashboard"]').click();
     await invoicesPage.open();
     await invoicesPage.selectPeriod('2026-09');
     await expect(page.locator('[data-document-focus="customer-timesheet"]')).toContainText('Urenstaat ontbreekt');
