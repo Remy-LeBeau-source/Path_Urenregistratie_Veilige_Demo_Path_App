@@ -1985,7 +1985,7 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
 - [ ] Verborgen knop, directe API-call vanaf de medewerkerkant, oude browserstate/localStorage-state
   (resterende deelpunten van sectie 20, nog te doen)
 
-**17.5 Device- en platformrandgevallen**
+**17.5 Device- en platformrandgevallen** (main, bezig)
 - [ ] iOS/Safari: safe areas, notch/Dynamic Island, viewporthoogte, input-zoom, keyboard,
   datumvelden, uploads, sticky headers, fixed buttons
 - [ ] Android/Chrome: viewport, keyboard, terugknop, datumvelden, uploads, sticky/fixed, standalone/PWA
