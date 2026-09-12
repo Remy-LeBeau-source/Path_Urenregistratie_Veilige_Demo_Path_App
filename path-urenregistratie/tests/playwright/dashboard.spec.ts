@@ -780,13 +780,22 @@ test('[DASH-H-013] dashboardmodules tonen compacte documenten, procesfasen en te
   });
 
   await test.step('Then toont klanturenstaten een verkoopklaar kaartenoverzicht', async () => {
+    // Klanturenstaten staat sinds de opknipronde op een eigen scherm
+    // (#view-customer-timesheet-admin), bereikt via de teaser op het
+    // Dashboard -- de inhoud zelf wordt hier al gerenderd vóór navigatie
+    // (renderCustomerTimesheetAdmin() kijkt niet naar welk scherm actief is),
+    // maar scrollIntoViewIfNeeded() vereist een zichtbaar element.
     await expect(page.locator('#customer-timesheet-admin-summary')).toHaveText('4 verwacht · 1 document te controleren · 0 extern te bevestigen · 0 wacht op medewerkers');
     await expect(page.locator('#customer-timesheet-admin-list .customer-timesheet-admin-row')).toHaveCount(4);
     await expect(page.locator('#customer-timesheet-admin-list .customer-timesheet-admin-meta')).toHaveCount(4);
     await expect(page.locator('#customer-timesheet-admin-list')).toContainText('Deadline');
     await expect(page.locator('#customer-timesheet-admin-list')).toContainText('Brokerroute');
-    await page.locator('#customer-timesheet-admin-panel').scrollIntoViewIfNeeded();
+    await page.locator('[data-go="customer-timesheet-admin"]').click();
+    await expect(page.locator('#view-customer-timesheet-admin')).toHaveClass(/is-active/);
+    await page.locator('#customer-timesheet-admin-list').scrollIntoViewIfNeeded();
     await attachBusinessScreenshot(page, 'GUI smoke · Klanturenstaten als compacte kaarten');
+    await page.locator('#view-customer-timesheet-admin [data-go="dashboard"]').click();
+    await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
   });
 
   await test.step('And proces en team tonen zonder lege tussenruimte duidelijke kerninformatie en acties', async () => {
@@ -807,7 +816,7 @@ test('[DASH-H-013] dashboardmodules tonen compacte documenten, procesfasen en te
     await expect(page.locator('.workflow-overview')).toBeVisible();
     await expect(page.locator('.workflow-overview .workflow-step')).toHaveCount(4);
     await attachBusinessScreenshot(page, 'GUI smoke · Procesfasen als compact overzicht');
-    await page.locator('[data-go="dashboard"]').first().click();
+    await page.locator('#view-teamstatus [data-go="dashboard"]').click();
     await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
   });
 });

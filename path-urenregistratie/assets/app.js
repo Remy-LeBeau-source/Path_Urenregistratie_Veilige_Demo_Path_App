@@ -6636,6 +6636,15 @@ function renderCustomerTimesheetAdmin() {
   }).length;
   const employeeCount = rows.filter(item => ["missing", "draft", "resubmit"].includes(customerTimesheetFor(item.record).status)).length;
   document.querySelector("#customer-timesheet-admin-summary").textContent = rows.length + " verwacht · " + reviewCount + " document" + (reviewCount === 1 ? "" : "en") + " te controleren · " + externalCount + " extern te bevestigen · " + employeeCount + " wacht op medewerker" + (employeeCount === 1 ? "" : "s");
+  // Dashboard-teaser (zie #customer-timesheet-admin-teaser in index.html):
+  // hetzelfde patroon als #employee-history-teaser-count, alleen het aantal
+  // dat nu daadwerkelijk actie vraagt bij Backoffice zelf (review + extern).
+  const teaserSummary = document.querySelector("#customer-timesheet-admin-teaser-summary");
+  if (teaserSummary) {
+    const backofficeActionCount = reviewCount + externalCount;
+    teaserSummary.textContent = "Klanturenstaten · " + rows.length + " verwacht"
+      + (backofficeActionCount > 0 ? " · " + backofficeActionCount + " bij Backoffice" : "");
+  }
 
   if (isCustomerTimesheetAdminApiMode()) {
     rows.forEach(item => refreshCustomerTimesheetReadApi(period.key, item.employee.id));

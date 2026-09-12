@@ -701,12 +701,16 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   font-variant-numeric: tabular-nums;
 }
 
-.data-table, .hours-table { width: 100%; border-collapse: collapse; }
+.data-table, .hours-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
 .data-table th, .data-table td { padding: 14px 22px; border-top: 1px solid #edf1f2; text-align: left; white-space: nowrap; }
 .data-table th { color: var(--tabelkop); font-size: 9px; letter-spacing: .07em; text-transform: uppercase; }
 .data-table td { font-size: 12px; }
 .data-table td strong, .data-table td small { display: block; }
 .data-table td small { margin-top: 3px; color: var(--muted); font-size: 9px; }
+/* Rijritme gelijk aan .hours-table: zonder hover voelde een rij in Facturen,
+   Auditlog en Teamstatus dood aan vergeleken met het urenraster ernaast. */
+.data-table tbody tr { transition: background .15s ease; }
+.data-table tbody tr:hover { background: var(--vlak); }
 .audit-log-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px; margin: 14px 0; }
 .audit-log-filters label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; font-weight: 700; color: var(--muted); }
 .audit-log-filters select { min-width: 200px; }
@@ -720,7 +724,10 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .mini-avatar { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; background: var(--green-light); color: var(--teal); font-size: 10px; font-weight: 800; }
 
 .status-pill { display: inline-flex; min-height: 25px; align-items: center; border-radius: 999px; font-size: 9px; font-weight: 800; padding: 4px 9px; }
-.status-approved, .status-sent { background: var(--green-light); color: var(--mint-dark-tekst); }
+/* .status-success (bv. "Extern bevestigd") had nooit een regel: de pil
+   toonde daardoor geen kleur, terwijl het semantisch dezelfde afgeronde
+   status is als goedgekeurd/verzonden. */
+.status-approved, .status-sent, .status-success { background: var(--green-light); color: var(--mint-dark-tekst); }
 .status-submitted, .status-ready { background: #eaf1fa; color: #315d91; }
 /* Vaste lichte pil met grijze tekst: bleef wit in de donkere modus, en 3,9:1 is
    ook bij daglicht te weinig voor een statuslabel. */
@@ -1826,7 +1833,6 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 .customer-timesheet-mail-preview span { color: var(--muted); font-size: 9px; text-transform: uppercase; }
 .customer-timesheet-mail-preview strong { margin-top: 4px; }
 .customer-timesheet-mail-preview pre { margin: 0; white-space: pre-wrap; color: var(--ink); font: inherit; line-height: 1.65; }
-.customer-timesheet-admin-panel .panel-heading p { margin: 6px 0 0; color: var(--muted); font-size: 10px; }
 .customer-timesheet-admin-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; padding: 16px 20px 20px; }
 .customer-timesheet-admin-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 13px; align-items: stretch; min-width: 0; padding: 16px; }
 .customer-timesheet-admin-person strong { color: var(--navy-tekst); font-size: 13px; }
@@ -2103,7 +2109,8 @@ html[data-theme="dark"] .hours-table td,
 html[data-theme="dark"] .summary-card dl div { border-color: var(--line); }
 html[data-theme="dark"] .hours-table th,
 html[data-theme="dark"] .hours-table .outside-month { background: #0d1825; }
-html[data-theme="dark"] .hours-table tbody tr:hover { background: #0e1a27; }
+html[data-theme="dark"] .hours-table tbody tr:hover,
+html[data-theme="dark"] .data-table tbody tr:hover { background: #0e1a27; }
 /* Deze losse uitzondering is niet meer nodig: .outside-month-mark staat nu op
    tokens die zelf al meewisselen, en #607181 haalde hier 3,4:1. */
 html[data-theme="dark"] .outside-month-mark { background: var(--vlak-zacht); color: var(--muted); }
@@ -3235,7 +3242,6 @@ body.toont-installatieaanbod .main-content {
   .customer-timesheet-action-help { font-size: 12px; }
   .customer-timesheet-admin-meta small { font-size: 11px; }
   .customer-timesheet-admin-meta strong { font-size: 12px; }
-  .customer-timesheet-admin-panel .panel-heading p { font-size: 12px; }
   .customer-timesheet-admin-person strong { font-size: 15px; }
   .customer-timesheet-field-label { font-size: 12px; }
   .customer-timesheet-flow span { font-size: 13px; }
