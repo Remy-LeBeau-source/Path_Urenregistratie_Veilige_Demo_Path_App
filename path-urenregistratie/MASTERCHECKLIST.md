@@ -2048,6 +2048,49 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
 - [ ] Android/Chrome: viewport, keyboard, terugknop, datumvelden, uploads, sticky/fixed, standalone/PWA
 - [ ] PWA: manifest, icons, standalone, theme-color, service worker, caching/updates -- geen
   offline urenmutatie zonder expliciete sync-/conflictafhandeling, uren nooit stilletjes overschreven
+- [x] **Testdekkingsgat (13 sep, uit `AUDIT-GUI-FASE17.md`):** geen enkel Playwright-project
+  draaide op een tabletbreedte (768/1024px) terwijl de opdracht dit expliciet vraagt. Nieuw
+  project `tablet-chromium` (768x1024, Chrome) toegevoegd aan `playwright.config.ts`, bewust
+  met een kleine kernlijst (`skin.spec.ts`, `dashboard*.spec.ts`, `accessibility.spec.ts`) i.p.v.
+  de volle mobiele lijst -- dit project bewaakt layout/overflow op tabletbreedte, geen
+  businesslogica die desktop/mobiel al bewijzen. Vooraf een losse, niet-gecommitte steekproef
+  gedaan (768x1024/1920x1080/360x740 x Klassiek/Nieuw x Beheerder/Medewerker, 12 combinaties):
+  geen horizontale overflow op het hoofdscherm. 360px-desktopdekking en 1440/1920px blijven
+  nog open (geen los CI-project, wel bevestigd geen acute bug op die breedtes).
+- [x] **Eerste tablet-chromium-run (13 sep) vond twee echte bugs op 721-820px, beide voortkomend
+  uit hetzelfde patroon: de sidebar wordt al bij `max-width:820px` de onderste navigatiebalk
+  (mobiel patroon), maar losse elementen die daarmee rekening houden schuiven pas bij een
+  smallere breedte (590px/720px) — een 100-230px brede kier waarin ze nog niet zijn aangepast.**
+  1. **Gefixt:** `.help-launcher` (de zwevende hulpknop) schoof pas vanaf 590px omhoog om de
+     navigatiebalk te ontwijken; tussen 591-820px stond hij er bovenop en onderschepte hij
+     klikken op navigatieknoppen (`[A11Y-H-004]`-gerelateerd effect en direct oorzaak van
+     `[DASH-H-021]`/`[DASH-N-018]`/`[DASH-H-023]` die faalden op klikken naast/onder de knop).
+     Fix: `@media (max-width:820px) { .help-launcher { bottom: 78px; } }`, geplaatst ná de
+     onvoorwaardelijke basisregel (`assets/styles.css`, rond de bestaande `.help-launcher`-
+     definitie) — een eerste plaatsingspoging vóór die basisregel werkte stil niet, want een
+     latere regel zonder `@media` wint altijd van een eerdere ongeacht viewport. Rol: beide
+     (element bestaat op elk ingelogd scherm). Design: Klassiek (styles-new.css heeft geen
+     eigen `.help-launcher`-regel, dus de fix werkt identiek in Nieuw). Thema: themaneutraal.
+     Devices: 721-820px, dus tablet-achtige breedtes; onschadelijk erbuiten. Discriminerend
+     bevestigd (tijdelijk teruggezet, `[DASH-H-021]` faalt exact op de klik-interceptie;
+     hersteld, slaagt in 11,7s i.p.v. de eerdere 15s-timeout-met-retries).
+  2. **NIET gefixt, gerapporteerd conform de opdracht ("leg eerst uit bij een grotere
+     wijziging"):** op dezelfde 721-820px-breedte is er helemaal geen zichtbare weg om uit te
+     loggen of van rol te wisselen. `#switch-role` zit in `.sidebar-footer`, die bij
+     `max-width:820px` volledig verdwijnt (de sidebar wordt de compacte onderbalk zonder
+     ruimte voor een footer); `#mobile-switch-role` zit in `.mobile-topbar-home`, die pas
+     vanaf `max-width:720px` verschijnt als onderdeel van een complete topbar-grid-herbouw
+     (stapeling van merk/titel/acties) die niet zomaar naar 820px uit te breiden is zonder
+     die hele herbouw mee te nemen op een breedte waar hij nooit getest is. Veroorzaakte de
+     cascade van `[DASH-N-018]`/`[DASH-H-023]`/en vervolgfouten in `dashboard.spec.ts` zodra
+     een test probeerde uit te loggen (`LoginPage.logout()`: "Geen zichtbare logout/switch-
+     role knop gevonden."). Rol: beide. Geen kleine, veilige CSS-fix mogelijk zonder een
+     bewuste keuze over waar dat controlepunt op deze breedte moet komen — vraagt een
+     plaatsingsbeslissing, geen regel. Alternatieven om te bespreken: (a) `#switch-role`
+     los tonen in de onderbalk als 7e/kleinere tegel, (b) een aparte, smallere
+     rolwissel-knop specifiek voor 721-820px los van beide bestaande implementaties,
+     (c) de `.mobile-topbar-home`-breekpunt optrekken naar 820px met een losse visuele
+     controle achteraf. Blijft open tot een keuze is gemaakt.
 
 **Tijdsinschatting (indicatief, geen deadline):** fase 0/fundament 1 sessie, 17.1 nog 2-3 sessies,
 17.2 4-6 sessies (grootste blok), 17.4 1-2 sessies, 17.5 1-2 sessies. Totaal ruwweg 10-14

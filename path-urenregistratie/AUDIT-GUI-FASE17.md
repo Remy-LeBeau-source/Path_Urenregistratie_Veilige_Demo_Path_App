@@ -182,6 +182,33 @@ en zijn recent bevestigd (12 sep, login-picker-bug `AUTH-H-025`).
    voor visuele verificatie).
 3. Tablet- en 360px-viewportdekking toevoegen aan de bestaande testprojecten
    (nieuwe vondst uit deze audit) — dekkingsgat, geen bevestigde bug.
+   **Eerste steekproef gedaan (13 sep):** los verificatiescript (geen onderdeel
+   van de suite, niet gecommit) geladen tegen de lokale server: 768x1024
+   (tablet), 1920x1080 (breed desktop) en 360x740 (kleinste mobiel) x
+   Klassiek/Nieuw x Beheerder/Medewerker, 12 combinaties, `scrollWidth` vs.
+   `clientWidth` op het hoofdscherm na inloggen. Alle 12 tonen `overflow=0` --
+   geen horizontale overflow-bug gevonden. Dit bevestigt alleen het hoofdscherm
+   direct na inloggen, dus het dekkingsgat zelf (geen permanente CI-viewport
+   voor tablet/360px) blijft staan; er was alleen geen acute, verborgen bug om
+   eerst te repareren voordat die dekking wordt toegevoegd.
+
+   **Update na de eerste echte `tablet-chromium`-testrun (74 cases, 13 sep):**
+   de steekproef hierboven testte alleen het hoofdscherm direct na inloggen en
+   miste daardoor twee echte bugs die pas bij interactie zichtbaar werden.
+   Beide komen uit hetzelfde patroon: de sidebar wordt al bij `max-width:820px`
+   de onderste navigatiebalk, maar losse elementen die daarmee rekening houden
+   schuiven pas bij een smallere breedte (590/720px) opzij — een 100-230px
+   brede kier. Gevonden en **gefixt**: `.help-launcher` (zwevende hulpknop)
+   overlapte de navigatieknoppen in die kier en onderschepte klikken —
+   discriminerend bevestigd, zie MASTERCHECKLIST.md 17.5. Gevonden en **NIET
+   gefixt, expliciet gerapporteerd** conform "leg eerst uit bij een grotere
+   wijziging": in diezelfde 720-820px-kier is er geen enkele zichtbare weg om
+   uit te loggen of van rol te wisselen (`#switch-role` verdwijnt met de
+   sidebar-footer, `#mobile-switch-role` verschijnt pas bij een complete
+   topbar-herbouw die zelf pas bij 720px begint) — dit veroorzaakte een lange
+   cascade van testfouten zodra een test probeerde uit te loggen. Zie
+   MASTERCHECKLIST.md 17.5 voor de volledige analyse en de drie voorgestelde
+   alternatieven; blijft open tot een plaatsingskeuze is gemaakt.
 
 **P2 — inconsistentie/accessibility:** Android/Chrome- en PWA-blok van 17.5 nog
 scherm voor scherm doorlopen (gepland, nog niet gestart).

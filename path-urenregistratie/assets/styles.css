@@ -1988,6 +1988,18 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 .help-launcher { position: fixed; right: 24px; bottom: 22px; z-index: 80; display: flex; min-height: 48px; align-items: center; gap: 8px; border: 0; border-radius: 999px; background: var(--navy); color: #fff; cursor: pointer; box-shadow: 0 16px 38px rgba(13,27,56,.25); padding: 6px 15px 6px 7px; }
 .help-launcher > span { display: grid; width: 35px; height: 35px; place-items: center; border-radius: 50%; background: var(--mint); color: var(--navy); font-size: 16px; font-weight: 900; }
 .help-launcher strong { font-size: 11px; }
+/* Fase 17-audit (13 sep): de sidebar wordt al bij max-width:820px de onderste
+   navigatiebalk (zie .sidebar), maar .help-launcher schoof pas vanaf 590px
+   omhoog om daarboven uit te komen. Tussen 591 en 820px stond de hulpknop dus
+   boven op de navigatieknoppen en onderschepte hij klikken (gevonden door het
+   nieuwe tablet-chromium-testproject op 768px). Moet ná deze onvoorwaardelijke
+   basisregel staan: een eerdere poging plaatste 'm er per ongeluk vóór, en een
+   latere regel zonder @media wint dan altijd, ongeacht viewport -- precies
+   hoe deze fix zelf de eerste keer stil faalde. Zelfde bottom-waarde als de
+   bestaande 590px-regel verderop, alleen breder toegepast. */
+@media (max-width: 820px) {
+  .help-launcher { bottom: 78px; }
+}
 .help-panel { position: fixed; right: 24px; bottom: 82px; z-index: 90; display: grid; width: min(420px, calc(100vw - 28px)); max-height: min(700px, calc(100vh - 110px)); grid-template-rows: auto auto minmax(120px,1fr) auto; overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); box-shadow: 0 28px 70px rgba(13,27,56,.24); transform-origin: bottom right; opacity: 0; transform: scale(.95) translateY(10px); transition: opacity .18s ease, transform .18s ease; }
 .help-panel.is-open { opacity: 1; transform: scale(1) translateY(0); }
 @media (prefers-reduced-motion: reduce) {
