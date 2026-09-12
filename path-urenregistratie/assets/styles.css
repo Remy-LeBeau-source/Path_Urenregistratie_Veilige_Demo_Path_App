@@ -1826,7 +1826,6 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 .customer-timesheet-mail-preview span { color: var(--muted); font-size: 9px; text-transform: uppercase; }
 .customer-timesheet-mail-preview strong { margin-top: 4px; }
 .customer-timesheet-mail-preview pre { margin: 0; white-space: pre-wrap; color: var(--ink); font: inherit; line-height: 1.65; }
-.customer-timesheet-admin-panel .panel-heading p { margin: 6px 0 0; color: var(--muted); font-size: 10px; }
 .customer-timesheet-admin-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; padding: 16px 20px 20px; }
 .customer-timesheet-admin-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 13px; align-items: stretch; min-width: 0; padding: 16px; }
 .customer-timesheet-admin-person strong { color: var(--navy-tekst); font-size: 13px; }
@@ -3235,7 +3234,6 @@ body.toont-installatieaanbod .main-content {
   .customer-timesheet-action-help { font-size: 12px; }
   .customer-timesheet-admin-meta small { font-size: 11px; }
   .customer-timesheet-admin-meta strong { font-size: 12px; }
-  .customer-timesheet-admin-panel .panel-heading p { font-size: 12px; }
   .customer-timesheet-admin-person strong { font-size: 15px; }
   .customer-timesheet-field-label { font-size: 12px; }
   .customer-timesheet-flow span { font-size: 13px; }

@@ -1089,6 +1089,62 @@ html[data-skin="new"] #employee-history-teaser .text-button:hover {
   background: rgba(75, 177, 136, .22);
 }
 
+/* #customer-timesheet-admin-teaser: dezelfde opknip als hierboven, nu voor
+   Klanturenstaten op het beheerdashboard. De order-waarde staat los
+   hieronder bij de rest van de beheerdashboard-ordening (order: 6), zodat
+   hij op precies de plek blijft staan waar het paneel eerst stond. */
+html[data-skin="new"] #customer-timesheet-admin-teaser {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 22px;
+  background: rgba(15, 38, 57, .82);
+  box-shadow: none;
+  padding: 18px 24px;
+}
+
+html[data-skin="new"] #customer-timesheet-admin-teaser .section-label {
+  color: #7fc9a0;
+}
+
+html[data-skin="new"] #customer-timesheet-admin-teaser strong {
+  display: block;
+  margin-top: 5px;
+  color: #efe9dc;
+  font: 400 19px/1.2 var(--path-serif);
+}
+
+html[data-skin="new"] #customer-timesheet-admin-teaser .text-button {
+  flex: 0 0 auto;
+  border: 1px solid rgba(126, 201, 156, .3);
+  border-radius: 12px;
+  background: rgba(75, 177, 136, .13);
+  color: #9fe0bd;
+  font-weight: 700;
+  padding: 10px 15px;
+  transition: background .18s ease, border-color .18s ease;
+}
+
+html[data-skin="new"] #customer-timesheet-admin-teaser .text-button:hover {
+  border-color: rgba(126, 201, 156, .55);
+  background: rgba(75, 177, 136, .22);
+}
+
+@media (max-width: 720px) {
+  html[data-skin="new"] #customer-timesheet-admin-teaser {
+    flex-direction: column;
+    align-items: stretch;
+    border-radius: 18px;
+    padding: 16px 18px;
+  }
+
+  html[data-skin="new"] #customer-timesheet-admin-teaser .text-button {
+    width: 100%;
+  }
+}
+
 @media (max-width: 720px) {
   html[data-skin="new"] #employee-history-teaser {
     flex-direction: column;
@@ -2016,15 +2072,15 @@ html[data-skin="new"] .correction-banner strong {
   display: none;
 }
 
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) {
   background: #081726;
 }
 
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .sidebar {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) .sidebar {
   display: none;
 }
 
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .main-content {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) .main-content {
   margin-left: 0;
   padding: 0 clamp(18px, 3vw, 48px) 48px;
   background: #081726;
@@ -2040,7 +2096,7 @@ html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.
    uitlijning bovenaan zet de merkpil op dezelfde regel als de tabs; alleen de
    knoppenrij erbinnen wrapt. Dat is een bekende koppatroon en leest als een
    keuze in plaats van als een ongeluk. */
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .topbar {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) .topbar {
   border-bottom: 1px solid rgba(255, 255, 255, .09);
   background: #081726;
   box-shadow: none;
@@ -2055,13 +2111,13 @@ html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.
    rij topbar-knoppen (thema/skin, maanddetail, melding, profiel, plus de
    pilot-tabs) niet altijd op 1280px breedte. Laat de knoppenrij liever naar
    een tweede regel wrappen dan horizontaal buiten het scherm laten lopen. */
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .topbar-actions {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) .topbar-actions {
   flex-wrap: wrap;
   justify-content: flex-end;
   row-gap: 8px;
 }
 
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .topbar-title {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) .topbar-title {
   display: none;
 }
 
@@ -2070,13 +2126,13 @@ html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.
    terugbrengen naar de start. Doordat hij zoveel breedte opeiste, brak de rij
    ernaast af en leek de balk uit twee losse banden te bestaan. Nu meegroeiend
    met zijn inhoud, zodat merk, navigatie en bediening één rij vormen. */
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .mobile-topbar-home {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) .mobile-topbar-home {
   display: flex;
   min-width: 0;
   margin-right: 8px;
 }
 
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .mobile-brand-home {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) .mobile-brand-home {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -2093,25 +2149,25 @@ html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.
    aanpassing en bleef daardoor net iets te klein om als "Path" te lezen --
    gemeld met een screenshot waarin het logo in zowel licht als donker niet
    goed te zien was. */
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .mobile-brand-home img {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) .mobile-brand-home img {
   width: auto;
   max-width: 96px;
   height: 24px;
   object-fit: contain;
 }
 
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .mobile-role-switch {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) .mobile-role-switch {
   display: none;
 }
 
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .new-admin-topnav {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) .new-admin-topnav {
   display: flex;
   align-items: center;
   gap: 3px;
   margin-right: auto;
 }
 
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .new-admin-topnav button {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) .new-admin-topnav button {
   border: 0;
   border-radius: 10px;
   background: transparent;
@@ -2121,8 +2177,8 @@ html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.
   cursor: pointer;
 }
 
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .new-admin-topnav button:hover,
-html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .new-admin-topnav button:focus-visible {
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) .new-admin-topnav button:hover,
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) .new-admin-topnav button:focus-visible {
   background: rgba(255, 255, 255, .07);
   color: #f2ecdf;
 }
@@ -2250,7 +2306,7 @@ html[data-skin="new"] #view-dashboard > .metric-grid {
 }
 
 html[data-skin="new"] #view-dashboard > .admin-task-panel { order: 5; }
-html[data-skin="new"] #view-dashboard > .customer-timesheet-admin-panel { order: 6; }
+html[data-skin="new"] #view-dashboard > #customer-timesheet-admin-teaser { order: 6; }
 
 html[data-skin="new"] .new-admin-employee-queue {
   overflow: hidden;
@@ -2629,8 +2685,7 @@ html[data-skin="new"] #view-dashboard :is(
   .dashboard-team-panel,
   .dashboard-next-action-card,
   .metric-card,
-  .admin-task-panel,
-  .customer-timesheet-admin-panel
+  .admin-task-panel
 ) {
   border: 1px solid rgba(255, 255, 255, .09);
   background: #0e2334;
@@ -2706,8 +2761,7 @@ html[data-skin="new"] #view-dashboard :is(.metric-link, .text-button) {
   color: #77c79f;
 }
 
-html[data-skin="new"] #view-dashboard .admin-task-panel,
-html[data-skin="new"] #view-dashboard .customer-timesheet-admin-panel {
+html[data-skin="new"] #view-dashboard .admin-task-panel {
   overflow: hidden;
 }
 
@@ -2761,15 +2815,15 @@ html[data-skin="new"] .admin-task-months .admin-task-month u {
 }
 
 @media (max-width: 720px) {
-  html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .main-content {
+  html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) .main-content {
     padding: 0 12px 84px;
   }
 
-  html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .mobile-topbar-home {
+  html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) .mobile-topbar-home {
     min-width: 0;
   }
 
-  html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .new-admin-topnav {
+  html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) .new-admin-topnav {
     grid-column: 1 / -1;
     width: 100%;
     min-width: 0;
@@ -2777,7 +2831,7 @@ html[data-skin="new"] .admin-task-months .admin-task-month u {
     scrollbar-width: thin;
   }
 
-  html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active) .new-admin-topnav button {
+  html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) .new-admin-topnav button {
     flex: 0 0 auto;
   }
 

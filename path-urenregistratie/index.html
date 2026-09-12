@@ -19,13 +19,13 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <title>Uren & Facturatie</title>
-  <link rel="stylesheet" href="assets/styles.css?v=1.1.2">
+  <link rel="stylesheet" href="assets/styles.css?v=1.2.0">
   <!-- Met versieparameter, net als styles.css hierboven. Zonder die parameter
        houdt de browser (en een geïnstalleerde app helemaal) de oude New-skin
        vast na een release: de versiebadge springt vooruit en Klassiek
        vernieuwt, terwijl de hele Nieuw-vormgeving op de vorige versie blijft
        staan. Gemeld als "ik zie geen verschil in de nieuwe versie". -->
-  <link rel="stylesheet" href="assets/styles-new.css?v=1.1.2">
+  <link rel="stylesheet" href="assets/styles-new.css?v=1.2.0">
 </head>
 <body class="auth-booting">
   <section class="login-screen" id="login-screen" aria-labelledby="login-title">
@@ -103,7 +103,7 @@
       </form>
       <p class="login-note" id="auth-mode-indicator">Controle van auth-sessie wordt uitgevoerd.</p>
       <p class="login-note" id="local-login-note">De standaardgegevens gebruiken veilige voorbeeldadressen. Je mag zelf echte gegevens invoeren; deze lokale versie bewaart ze alleen in deze browser en e-mailverzending is uitgeschakeld.</p>
-      <footer class="login-footer"><span>© 2026 Path Consultancy IT · Ontwikkeld en beheerd door Team Path.</span><span>Versie 1.1.2</span></footer>
+      <footer class="login-footer"><span>© 2026 Path Consultancy IT · Ontwikkeld en beheerd door Team Path.</span><span>Versie 1.2.0</span></footer>
     </div>
   </section>
 
@@ -183,7 +183,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 1.1.2</span>
+      <span class="demo-badge">Versie 1.2.0</span>
       </div>
     </aside>
 
@@ -199,7 +199,7 @@
         <div class="topbar-title">
           <p class="eyebrow" id="organization-name">Path Consultancy</p>
           <h1 id="page-title">Urenoverzicht</h1>
-          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 1.1.2</span><span class="environment-badge" id="environment-badge" hidden></span></span>
+          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 1.2.0</span><span class="environment-badge" id="environment-badge" hidden></span></span>
         </div>
         <div class="topbar-actions">
           <nav class="new-admin-topnav role-admin-only" aria-label="Pilot hoofdnavigatie">
@@ -398,6 +398,17 @@
         </section>
       </section>
 
+      <section class="view role-admin-only" id="view-customer-timesheet-admin" data-title="Klanturenstaten">
+        <div class="view-heading">
+          <div><span class="section-label">Documenten van de klant</span><h2 id="customer-timesheet-admin-title">Klanturenstaten · Juli 2026</h2><p id="customer-timesheet-admin-summary">4 verwacht · actuele documentstatus per medewerker</p></div>
+          <button class="text-button" data-go="dashboard">&larr; Naar Dashboard</button>
+        </div>
+        <section class="panel">
+          <p class="open-periods-intro">De medewerker uploadt hier het officiële bestand van de klant als PDF, JPG of PNG. Afbeeldingen worden veilig als PDF opgeslagen; de organisatie maakt zelf geen klanturenstaat.</p>
+          <div class="customer-timesheet-admin-list" id="customer-timesheet-admin-list"></div>
+        </section>
+      </section>
+
       <section class="view is-active" id="view-dashboard" data-title="Urenoverzicht">
         <section class="new-admin-storyline" aria-labelledby="new-admin-storyline-title">
           <div class="new-admin-storyline-heading">
@@ -498,13 +509,21 @@
           </div>
         </section>
 
-        <section class="panel customer-timesheet-admin-panel" id="customer-timesheet-admin-panel">
-          <div class="panel-heading"><div><span class="section-label">Documenten van de klant</span><h3 id="customer-timesheet-admin-title">Klanturenstaten · Juli 2026</h3><p id="customer-timesheet-admin-summary">4 verwacht · actuele documentstatus per medewerker</p></div><span class="updated-label">Staat los van uren indienen</span></div>
-          <p class="open-periods-intro">De medewerker uploadt hier het officiële bestand van de klant als PDF, JPG of PNG. Afbeeldingen worden veilig als PDF opgeslagen; de organisatie maakt zelf geen klanturenstaat.</p>
-          <div class="customer-timesheet-admin-list" id="customer-timesheet-admin-list"></div>
+        <!-- Klanturenstaten stond hier altijd uitgeklapt met de volledige
+             kaartenlijst. Dat is naslag/controlewerk voor Backoffice, geen
+             dagelijkse invoer, en maakte het Dashboard onnodig lang -- zelfde
+             soort knip als Mijn maanden eerder kreeg. Staat nu op een eigen
+             scherm (#view-customer-timesheet-admin), hier alleen nog de
+             samenvatting en een link ernaartoe. -->
+        <section class="panel employee-history-teaser" id="customer-timesheet-admin-teaser">
+          <div>
+            <span class="section-label">Documenten van de klant</span>
+            <strong id="customer-timesheet-admin-teaser-summary">Klanturenstaten</strong>
+          </div>
+          <button class="text-button" data-go="customer-timesheet-admin">Bekijk klanturenstaten &rarr;</button>
         </section>
 
-        <!-- Ingang naar de procesmeter, die sinds v1.1.2 op een eigen scherm
+        <!-- Ingang naar de procesmeter, die sinds v1.2.0 op een eigen scherm
              staat. Het percentage blijft hier zichtbaar, zodat je de stand nog
              steeds in één blik hebt zonder het hele paneel op het Dashboard. -->
         <section class="panel workflow-teaser" id="workflow-teaser">
@@ -1034,7 +1053,7 @@
       <footer class="app-footer" aria-label="Applicatie-informatie">
         <span>© 2026 Path Consultancy IT</span>
         <span>Ontwikkeld en beheerd door Team Path.</span>
-        <span class="app-footer-version">Versie 1.1.2</span>
+        <span class="app-footer-version">Versie 1.2.0</span>
       </footer>
     </main>
   </div>
@@ -1094,7 +1113,7 @@
   </div>
   <script vite-ignore defer src="assets/jspdf.umd.min.js"></script>
   <script vite-ignore defer src="assets/invoice-fonts.js"></script>
-  <script vite-ignore defer src="assets/app.js?v=1.1.2"></script>
-  <script vite-ignore defer src="assets/pwa-install.js?v=1.1.2"></script>
+  <script vite-ignore defer src="assets/app.js?v=1.2.0"></script>
+  <script vite-ignore defer src="assets/pwa-install.js?v=1.2.0"></script>
 </body>
 </html>
