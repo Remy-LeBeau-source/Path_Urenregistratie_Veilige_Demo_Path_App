@@ -3,6 +3,7 @@ import { AuthApi } from './api/AuthApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { LoginPage } from './pages/LoginPage';
 
 test('[SEC-H-001] csrf token endpoint werkt', async ({ request }) => {
   let response: APIResponse | null = null;
@@ -263,5 +264,57 @@ test('[SEC-N-008] cors weerspiegelt alleen een toegestane origin, nooit een onbe
     const headers = untrusted!.headers();
     expect(headers['access-control-allow-origin']).toBeUndefined();
     expect(headers['access-control-allow-credentials']).toBeUndefined();
+  });
+});
+
+// Fase 17.4 (GUI/rol-auditmatrix, v2.0.0): de API-autorisatie (ROLE-N-004/005
+// hierboven en in roles-api.spec.ts) was al gedekt, maar niets bewees dat de
+// UI zelf een medewerker ook daadwerkelijk wegstuurt bij een handmatige
+// beheer-URL. showView() in app.js normaliseert een beheerder-only view voor
+// een medewerker altijd terug naar employee-dashboard (adminViews.has(view)),
+// zowel via de hashchange-listener (live navigatie) als bij het opnieuw laden
+// van de pagina (hashViewOnLoad). Deze twee UI-tests bewijzen dat expliciet,
+// los van de al bestaande API-403's. Skin-onafhankelijk: showView() zit in de
+// gedeelde businesslogica, niet in styles.css/styles-new.css.
+test('[SEC-H-009] medewerker die handmatig naar een beheerscherm navigeert komt terug op het eigen dashboard', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given een ingelogde medewerker op het eigen dashboard', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await expect(page.locator('#app-shell')).toBeVisible();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+  });
+
+  await test.step('When de hash handmatig naar een beheerder-only scherm wordt gezet', async () => {
+    await page.evaluate(() => { window.location.hash = 'settings'; });
+  });
+
+  await test.step('Then blijft de medewerker op het eigen dashboard, niet op Instellingen', async () => {
+    await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
+    await expect(page.locator('#view-settings')).not.toHaveClass(/is-active/);
+    await expect(page).toHaveURL(/#employee-dashboard$/);
+  });
+});
+
+test('[SEC-H-010] medewerker die de pagina herlaadt met een beheer-URL in de adresbalk komt terug op het eigen dashboard', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given een ingelogde medewerker', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await expect(page.locator('#app-shell')).toBeVisible();
+  });
+
+  await test.step('When de pagina wordt herladen met een beheer-only hash al in de URL (bv. bewaarde link)', async () => {
+    const url = new URL(page.url());
+    url.hash = 'employees';
+    await page.goto(url.toString());
+  });
+
+  await test.step('Then start de medewerker alsnog op het eigen dashboard, niet op Medewerkersbeheer', async () => {
+    await expect(page.locator('#app-shell')).toBeVisible();
+    await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
+    await expect(page.locator('#view-employees')).not.toHaveClass(/is-active/);
   });
 });
