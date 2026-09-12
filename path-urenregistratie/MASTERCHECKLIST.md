@@ -1484,6 +1484,10 @@ Let op: dit staat los van GitHub commitnotificaties.
 - [x] Retry na tijdelijke fout (al aanwezig, getest: EQ-N-011).
 - [x] Maximaal aantal retries (al aanwezig, MAIL_MAX_ATTEMPTS).
 - [x] Foutstatus (al aanwezig, status='failed').
+- [x] Genoemde testers (Marc, Stasjo, Brian, Shawn) ontvangen op TEST hun eigen urenoverzicht-/
+  goedkeuringsmail en wachtwoordreset rechtstreeks op hun echte adres, met de omleidingsmailbox als
+  cc (11 sep, BESLISTABEL R39). Zes plekken met hardgecodeerde oude-adresaannames gevonden en gefixt
+  bij het uitrollen (BESLISTABEL R40); echte TransIP-deploy sindsdien bewezen groen (v1.1.2).
 - [-] Verplaatst naar de laatste fase (buiten VS Code): Gmail/Google Workspace-config, keuze SMTP vs. Gmail API, en het activeren van echte verzending (pas na acceptatie en expliciete goedkeuring). Zie Fase 16.
 
 Status Fase 12:
@@ -1590,8 +1594,12 @@ Status Fase 15:
 
 Dit is nu het verzamelpunt voor ieder open punt uit de hele checklist waarvoor je een browser naar een extern paneel (TransIP, GitHub-website, Google Workspace), een fysiek toestel, of een gesprek/administratieve actie nodig hebt. Alles wat in VS Code zelf (code, terminal, Playwright, git) gedaan kan worden, is in de eigen fase blijven staan.
 
-- [x] Auditlog-API voor beheerders met entity/event filters en secret-redactie.
-- [x] Zes API-regressies voor toegang, filters en gevoelige data.
+- [x] Auditlog-API voor beheerders met entity/event/actor-filters en secret-redactie.
+- [x] Instellingen > Auditlog: de API voor het eerst zichtbaar gemaakt in de app zelf (wie/wat/wanneer,
+  filterbaar op persoon en actietype) -- gebruikerswens 11 sep, `[AUD-H-012/013]`.
+- [x] Instellingen > Systeem: recente serverfouten inzien zonder SSH, leest de staart van het al
+  bestaande, al automatisch geroteerde foutenlog. `[LOG-H-001..003/007/008]`, `[LOG-N-004..006]`.
+- [x] Zeven API-/UI-regressies voor toegang, filters en gevoelige data (auditlog + serverlog samen).
 
 ### A. Eenmalig, vóór livegang (buiten VS Code)
 
