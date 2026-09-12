@@ -1736,3 +1736,39 @@ test('[MOB-H-025] elke .segmented-control krijgt een schuifrand zodra hij écht 
   expect(uitkomst.naDoorschuiven, 'aan het einde van de rij hoort de rand naar links te wijzen').toBe('links');
   expect(uitkomst.naKrimpen, 'de schuifrand hoort te verdwijnen zodra de rij niet meer overloopt').toBeUndefined();
 });
+
+test('[MOB-H-026] getypte velden blijven op 16px zodat iOS Safari niet inzoomt bij focus', async ({ page }) => {
+  // Fase 17.5-audit (device-/platformrandgevallen, main): een <input> onder
+  // 16px font-size laat iOS Safari de hele pagina inzoomen zodra het veld
+  // focus krijgt -- storend en al bewust vermeden voor .hours-input/
+  // .summary-hours-input, maar niet consequent overal. Vier echte getypte
+  // velden (geen knoppen, geen type="file") gecontroleerd: het inlogscherm
+  // (100% van de mobiele gebruikers ziet dit als eerste), een medewerker-
+  // veld in een modal (tientallen dialogen delen .modal-form), en het
+  // jaartal in de periodekiezer (bijna elk scherm).
+  const fontSize = (locator: ReturnType<Page['locator']>) =>
+    locator.evaluate(element => Number.parseFloat(getComputedStyle(element).fontSize));
+
+  await test.step('Given het inlogscherm nog niet is ingelogd', async () => {
+    await page.goto('/');
+    await expect(page.locator('#login-screen')).toBeVisible();
+    expect(await fontSize(page.locator('#auth-login-email')), 'e-mailveld op het inlogscherm').toBeGreaterThanOrEqual(16);
+    expect(await fontSize(page.locator('#auth-login-password')), 'wachtwoordveld op het inlogscherm').toBeGreaterThanOrEqual(16);
+  });
+
+  const loginPage = new LoginPage(page);
+  await loginPage.loginAsAdmin();
+
+  await test.step('When een beheerder een medewerker-editor (.modal-form) opent', async () => {
+    await openView(page, 'employees');
+    await page.locator('#add-employee').click();
+    await expect(page.locator('#modal')).toBeVisible();
+    expect(await fontSize(page.locator('#edit-name')), 'naamveld in de medewerker-editor').toBeGreaterThanOrEqual(16);
+    await page.locator('#modal-cancel').click();
+  });
+
+  await test.step('Then blijft ook het jaartal in de periodekiezer op 16px', async () => {
+    await expect(page.locator('#period-year-picker')).toBeVisible();
+    expect(await fontSize(page.locator('#period-year-picker')), 'jaartal in de periodekiezer').toBeGreaterThanOrEqual(16);
+  });
+});

@@ -1,0 +1,578 @@
+<!doctype html>
+<title>Fase 17 Richting</title>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ============ HOST CHROME TOKENS (het spec-vel, niet de app zelf) ============ */
+  :root{
+    --host-bg:#eef0ee; --host-surface:#ffffff; --host-surface-2:#e1e6e2;
+    --host-ink:#182422; --host-muted:#5c6b67; --host-line:#d2dad6;
+    --host-accent:#3d5a8a; --host-accent-strong:#24406b; --host-accent-soft:#e4eaf3;
+    --status-done:#2f7d55; --status-done-bg:#e4f2e9;
+    --status-open:#b3862c; --status-open-bg:#f8eed6;
+    --status-progress:#3d5a8a; --status-progress-bg:#e4eaf3;
+    --shadow-card:0 1px 2px rgba(24,36,34,.05), 0 12px 28px rgba(24,36,34,.07);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --host-bg:#11181a; --host-surface:#17201f; --host-surface-2:#1e2928;
+      --host-ink:#dee7e3; --host-muted:#93a29d; --host-line:#2a3634;
+      --host-accent:#7fa4d9; --host-accent-strong:#aac5ea; --host-accent-soft:#1c2a3c;
+      --status-done:#5fbf8c; --status-done-bg:#173327;
+      --status-open:#d9ac5c; --status-open-bg:#332a16;
+      --status-progress:#7fa4d9; --status-progress-bg:#1c2a3c;
+      --shadow-card:0 1px 2px rgba(0,0,0,.4), 0 12px 28px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --host-bg:#11181a; --host-surface:#17201f; --host-surface-2:#1e2928;
+    --host-ink:#dee7e3; --host-muted:#93a29d; --host-line:#2a3634;
+    --host-accent:#7fa4d9; --host-accent-strong:#aac5ea; --host-accent-soft:#1c2a3c;
+    --status-done:#5fbf8c; --status-done-bg:#173327;
+    --status-open:#d9ac5c; --status-open-bg:#332a16;
+    --status-progress:#7fa4d9; --status-progress-bg:#1c2a3c;
+    --shadow-card:0 1px 2px rgba(0,0,0,.4), 0 12px 28px rgba(0,0,0,.35);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--host-bg); color:var(--host-ink);
+    font-family:"IBM Plex Sans", system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1280px; margin:0 auto; padding:40px 28px 90px;}
+
+  /* ---- header ---- */
+  header.page{max-width:760px; margin-bottom:36px;}
+  .eyebrow{
+    font-family:"IBM Plex Mono", monospace; font-size:12px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--host-accent); font-weight:600;
+    display:flex; align-items:center; gap:8px;
+  }
+  .eyebrow::before{content:""; width:7px; height:7px; border-radius:50%; background:var(--host-accent); display:inline-block;}
+  h1{
+    font-size:clamp(28px,3.4vw,40px); line-height:1.12; margin:12px 0 14px;
+    text-wrap:balance; letter-spacing:-.01em; font-weight:700;
+  }
+  header.page p{font-size:15.5px; line-height:1.6; color:var(--host-muted); margin:0 0 8px; max-width:64ch;}
+  header.page p strong{color:var(--host-ink); font-weight:600;}
+
+  /* ---- legend ---- */
+  .legend{
+    display:flex; flex-wrap:wrap; gap:10px 22px; align-items:center;
+    margin-top:22px; padding:14px 18px; background:var(--host-surface);
+    border:1px solid var(--host-line); border-radius:12px; box-shadow:var(--shadow-card);
+    font-size:13px;
+  }
+  .legend-group{display:flex; align-items:center; gap:8px; color:var(--host-muted);}
+  .swatch{width:13px; height:13px; border-radius:4px; flex:none; display:inline-block;}
+  .sw-klassiek{background:#3abd9d;}
+  .sw-nieuw{background:#4bb188; border:1px solid #2a5f45;}
+  .legend-sep{width:1px; height:16px; background:var(--host-line);}
+  .chip{
+    font-family:"IBM Plex Mono", monospace; font-size:11px; font-weight:600;
+    padding:3px 8px; border-radius:999px; letter-spacing:.01em;
+  }
+  .chip.done{background:var(--status-done-bg); color:var(--status-done);}
+  .chip.open{background:var(--status-open-bg); color:var(--status-open);}
+  .chip.progress{background:var(--status-progress-bg); color:var(--status-progress);}
+
+  /* ---- role section ---- */
+  .role-section{margin-top:56px;}
+  .role-head{display:flex; align-items:baseline; gap:14px; margin-bottom:20px; flex-wrap:wrap;}
+  .role-head h2{font-size:22px; margin:0; font-weight:700; letter-spacing:-.005em;}
+  .role-head .sub{font-size:13.5px; color:var(--host-muted);}
+
+  .pair{
+    display:grid; grid-template-columns:1fr 1fr; gap:26px;
+  }
+  @media (max-width:920px){ .pair{grid-template-columns:1fr;} }
+
+  .frame-col{display:flex; flex-direction:column; gap:14px;}
+  .frame-label{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
+  .frame-label .name{display:flex; align-items:center; gap:8px; font-weight:600; font-size:14.5px;}
+  .frame-label .tag{
+    font-family:"IBM Plex Mono", monospace; font-size:10.5px; color:var(--host-muted);
+    text-transform:uppercase; letter-spacing:.06em;
+  }
+
+  .device{
+    border-radius:16px; overflow:hidden; box-shadow:var(--shadow-card);
+    border:1px solid var(--host-line);
+  }
+  .device-bar{
+    height:34px; display:flex; align-items:center; gap:6px; padding:0 12px;
+    font-family:"IBM Plex Mono", monospace; font-size:11px;
+  }
+  .device-bar .dots{display:flex; gap:5px; margin-right:8px;}
+  .device-bar .dot{width:8px; height:8px; border-radius:50%; opacity:.55;}
+  .device-body{padding:0;}
+
+  .checklist{
+    background:var(--host-surface); border:1px solid var(--host-line); border-radius:12px;
+    padding:14px 16px; box-shadow:var(--shadow-card);
+  }
+  .checklist ul{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:9px;}
+  .checklist li{display:flex; gap:9px; font-size:13px; line-height:1.5; align-items:flex-start;}
+  .checklist li .chip{flex:none; margin-top:1px;}
+  .checklist li span.txt{color:var(--host-ink);}
+  .checklist li span.ref{color:var(--host-muted); font-family:"IBM Plex Mono", monospace; font-size:11px;}
+
+  footer.page{
+    margin-top:64px; padding-top:22px; border-top:1px solid var(--host-line);
+    font-size:12.5px; color:var(--host-muted); display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  }
+  footer.page .fm{font-family:"IBM Plex Mono", monospace;}
+
+  /* ======================================================================
+     KLASSIEK mockup — echte tokens uit assets/styles.css, huidige TEST-staat
+     ====================================================================== */
+  .k-scope{
+    --k-navy:#0d1b38; --k-mint:#3abd9d; --k-mint-dark:#169276; --k-green-light:#e7f8f3;
+    --k-ink:#172332; --k-muted:#65717f; --k-line:#dfe6e9; --k-surface:#ffffff; --k-bg:#f6f9f8;
+    --k-warning:#a5600d; --k-warning-bg:#fff5e8; --k-danger:#a34b4b;
+    font-family:"Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    background:var(--k-bg); color:var(--k-ink);
+  }
+  .k-scope .device-bar{background:var(--k-navy); color:#cfe9e0;}
+  .k-scope .dot{background:#cfe9e0;}
+
+  .k-pad{padding:20px 20px 22px;}
+  .k-greet{font-size:19px; font-weight:700; color:var(--k-navy); margin:0 0 2px;}
+  .k-greet-sub{font-size:12.5px; color:var(--k-muted); margin:0 0 16px;}
+
+  .k-period{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--k-surface); border:1px solid var(--k-line); border-radius:10px;
+    padding:9px 12px; font-size:13px; font-weight:600; color:var(--k-navy); margin-bottom:14px;
+  }
+  .k-period .nav{color:var(--k-mint-dark); font-weight:700; cursor:pointer;}
+
+  .k-days{display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:14px;}
+  .k-day{
+    background:var(--k-surface); border:1px solid var(--k-line); border-radius:9px;
+    padding:8px 4px; text-align:center;
+  }
+  .k-day .d{font-size:10px; color:var(--k-muted); font-weight:700; text-transform:uppercase;}
+  .k-day .h{font-size:14px; font-weight:700; color:var(--k-navy); margin-top:3px;}
+  .k-day.today{border-color:var(--k-mint); box-shadow:0 0 0 1px var(--k-mint) inset;}
+  .k-day.off .h{color:var(--k-muted); font-weight:500;}
+
+  .k-total{
+    display:flex; justify-content:space-between; align-items:center;
+    background:var(--k-green-light); border-radius:10px; padding:11px 14px; margin-bottom:14px;
+  }
+  .k-total .lbl{font-size:12px; color:var(--k-mint-dark); font-weight:700; text-transform:uppercase; letter-spacing:.03em;}
+  .k-total .val{font-size:18px; font-weight:700; color:var(--k-navy);}
+
+  .k-actions{display:flex; gap:8px; margin-bottom:18px;}
+  .k-btn{
+    flex:1; text-align:center; border-radius:9px; padding:10px 10px; font-size:13px; font-weight:700;
+    border:1px solid var(--k-line); cursor:pointer;
+  }
+  .k-btn.primary{background:var(--k-mint-dark); border-color:var(--k-mint-dark); color:#fff;}
+  .k-btn.ghost{background:var(--k-surface); color:var(--k-navy);}
+
+  .k-steps{display:flex; align-items:center; gap:4px; margin-bottom:16px;}
+  .k-step{flex:1; height:5px; border-radius:3px; background:var(--k-line);}
+  .k-step.on{background:var(--k-mint);}
+  .k-steps-lbl{display:flex; justify-content:space-between; font-size:9.5px; color:var(--k-muted); margin-top:5px; margin-bottom:16px;}
+
+  .k-card{
+    background:var(--k-surface); border:1px solid var(--k-line); border-radius:10px;
+    padding:11px 13px; margin-bottom:9px; display:flex; justify-content:space-between; align-items:center; gap:10px;
+  }
+  .k-card .t{font-size:12.5px; font-weight:600; color:var(--k-navy);}
+  .k-card .s{font-size:11px; color:var(--k-muted);}
+  .k-pill{font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:999px; white-space:nowrap;}
+  .k-pill.ok{background:var(--k-green-light); color:var(--k-mint-dark);}
+  .k-pill.warn{background:var(--k-warning-bg); color:var(--k-warning);}
+
+  /* --- Klassiek beheerder --- */
+  .k-admin{display:flex;}
+  .k-side{
+    width:150px; background:var(--k-navy); color:#d8e6df; flex:none;
+    padding:16px 12px; display:flex; flex-direction:column; gap:3px; font-size:12px;
+  }
+  .k-side .b{font-size:10px; text-transform:uppercase; letter-spacing:.08em; opacity:.55; margin:10px 0 4px;}
+  .k-side .i{padding:7px 9px; border-radius:7px; font-weight:600;}
+  .k-side .i.on{background:rgba(58,189,157,.22); color:#7fe0c4;}
+  .k-main{flex:1; padding:18px 18px 20px; min-width:0;}
+  .k-kpis{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px;}
+  .k-kpi{background:var(--k-surface); border:1px solid var(--k-line); border-radius:10px; padding:10px;}
+  .k-kpi .n{font-size:19px; font-weight:700; color:var(--k-navy);}
+  .k-kpi .l{font-size:10px; color:var(--k-muted); font-weight:600; text-transform:uppercase; margin-top:2px;}
+  .k-row{
+    display:flex; align-items:center; gap:10px; background:var(--k-surface);
+    border:1px solid var(--k-line); border-radius:9px; padding:9px 11px; margin-bottom:7px;
+  }
+  .k-row .name{font-size:12.5px; font-weight:700; color:var(--k-navy); width:80px; flex:none;}
+  .k-row .meta{font-size:11px; color:var(--k-muted); flex:1;}
+  .k-row .acts{display:flex; gap:6px; flex:none;}
+  .k-mini{font-size:10.5px; font-weight:700; padding:5px 9px; border-radius:7px; cursor:pointer;}
+  .k-mini.approve{background:var(--k-mint-dark); color:#fff;}
+  .k-mini.reject{background:#fff; color:var(--k-danger); border:1px solid #e6cccb;}
+
+  /* ======================================================================
+     NIEUW mockup — zelfde schermopbouw en content als het echte, live
+     schermbeeld (werkvoorraad-hero, Donker/Klassiek-pills, tabbalk), maar
+     bewust verder gepolijst: dit is de richting, geen 1-op-1 kopie. Zelfde
+     donkere navy-basis en dezelfde informatie, wél rijkere gradiënt, meer
+     typografisch contrast (serif voor de begroeting) en een verfijndere
+     afwerking op kaarten/knoppen -- een voelbare stap mooier, geen andere app.
+     ====================================================================== */
+  .n-scope{
+    --n-bg:#081726; --n-panel:#0f2639; --n-panel-strong:#12293e; --n-tile:#152f47;
+    --n-ink:#e6ecef; --n-muted:#93a2a8; --n-line:rgba(255,255,255,.11);
+    --n-mint:#7fe0c4; --n-mint-strong:#4bb188; --n-amber:#d99a3c; --n-amber-bg:#3a2c14; --n-danger:#e0938f;
+    --n-hero-a:#0d1b38; --n-hero-b:#1c5a63; --n-gold:#e2c07a;
+    font-family:"Inter", system-ui, sans-serif;
+    background:radial-gradient(120% 90% at 15% -10%, #0f2c3a 0%, var(--n-bg) 55%); color:var(--n-ink);
+  }
+  .n-scope .serif{font-family:Georgia,"Times New Roman",serif;}
+  .n-scope .device-bar{background:#050d17; color:#8fa6ac;}
+  .n-scope .dot{background:#425b64;}
+
+  .n-pad{padding:14px 16px 20px;}
+
+  .n-topbar{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px;}
+  .n-period{display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700;}
+  .n-period .nav{color:var(--n-mint); font-weight:700;}
+  .n-topbar-icons{display:flex; align-items:center; gap:8px;}
+  .n-reset{
+    font-size:10px; font-weight:700; letter-spacing:.03em; color:var(--n-muted);
+    border:1px solid var(--n-line); border-radius:999px; padding:6px 10px; text-transform:uppercase;
+  }
+  .n-bell{width:30px; height:30px; border-radius:50%; border:1px solid var(--n-line); display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--n-muted); flex:none;}
+  .n-avatar{width:30px; height:30px; border-radius:50%; background:var(--n-mint); color:#06251c; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; flex:none;}
+
+  .n-pills{display:flex; gap:8px; margin-bottom:18px;}
+  .n-pill-toggle{
+    flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
+    background:var(--n-panel-strong); border:1px solid var(--n-line); color:var(--n-mint);
+    border-radius:999px; padding:9px 10px; font-size:12.5px; font-weight:700;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+  }
+
+  .n-hero{
+    position:relative; overflow:hidden;
+    background:linear-gradient(150deg, var(--n-hero-a) 0%, var(--n-hero-b) 78%, #21707a 100%);
+    color:#fff; border-radius:22px; padding:24px 22px 24px; margin-bottom:16px;
+    box-shadow:0 20px 44px rgba(3,12,22,.5), inset 0 1px 0 rgba(255,255,255,.06);
+  }
+  .n-hero::after{
+    content:""; position:absolute; top:-40%; right:-25%; width:70%; height:140%;
+    background:radial-gradient(circle, rgba(226,192,122,.16), transparent 65%); pointer-events:none;
+  }
+  .n-hero > *{position:relative;}
+  .n-hero .eyebrow2{font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--n-gold); display:block; margin-bottom:9px;}
+  .n-hero h3.serif{font-size:27px; font-weight:400; margin:0 0 16px; color:#fff; letter-spacing:-.01em;}
+  .n-hero .na-label{font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--n-mint); display:block; margin-bottom:6px;}
+  .n-hero p{font-size:14.5px; font-weight:600; line-height:1.45; margin:0 0 4px; color:#fff;}
+  .n-hero small{font-size:11.5px; color:rgba(255,255,255,.6); display:block; margin-bottom:16px;}
+  .n-hero .n-btn{width:100%; margin-bottom:9px;}
+  .n-hero .n-btn:last-child{margin-bottom:0;}
+
+  .n-btn{text-align:center; border-radius:13px; padding:13px 10px; font-size:13.5px; font-weight:700; cursor:pointer; display:block; letter-spacing:.01em;}
+  .n-btn.primary{background:linear-gradient(135deg, #9df0d5, var(--n-mint)); color:#06251c; box-shadow:0 8px 18px rgba(127,224,196,.28);}
+  .n-btn.ghost{background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.28); color:#fff; backdrop-filter:blur(2px);}
+
+  .n-panel-card{
+    background:linear-gradient(175deg, var(--n-panel), var(--n-panel-strong));
+    border:1px solid var(--n-line); border-radius:18px; padding:17px 17px 15px; margin-bottom:12px;
+    box-shadow:0 10px 26px rgba(3,12,22,.28);
+  }
+  .n-panel-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px;}
+  .n-panel-head .eyebrow2{font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--n-gold); display:block; margin-bottom:4px;}
+  .n-panel-head h4{font-size:16.5px; font-weight:700; margin:0; color:var(--n-ink); font-family:Georgia,serif;}
+  .n-panel-head .count{font-size:11px; color:var(--n-muted);}
+
+  .n-task{
+    background:var(--n-tile); border:1px solid var(--n-line); border-left:3px solid var(--n-mint); border-radius:13px;
+    padding:13px 14px; display:flex; justify-content:space-between; align-items:center; gap:10px;
+  }
+  .n-task .lbl{font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--n-mint); display:block; margin-bottom:3px;}
+  .n-task .t{font-size:13px; font-weight:700; color:var(--n-ink); line-height:1.35;}
+  .n-task .mini-btn{background:var(--n-mint); color:#06251c; font-size:11.5px; font-weight:700; padding:9px 13px; border-radius:9px; white-space:nowrap; box-shadow:0 6px 14px rgba(127,224,196,.25);}
+
+  .n-tabbar{
+    display:flex; border-top:1px solid var(--n-line); background:#050d17; padding:9px 6px 11px;
+  }
+  .n-tabbar .tab{flex:1; text-align:center; font-size:10.5px; font-weight:600; color:var(--n-muted); position:relative;}
+  .n-tabbar .tab .ic{display:block; font-size:15px; margin-bottom:3px; opacity:.7;}
+  .n-tabbar .tab.on .ic{opacity:1;}
+  .n-tabbar .tab .dot{width:5px; height:5px; border-radius:50%; background:var(--n-mint); margin:2px auto 0; opacity:0;}
+  .n-tabbar .tab.on{color:var(--n-mint); font-weight:700;}
+  .n-tabbar .tab.on .dot{opacity:1;}
+  .n-tabbar .tab .badge{
+    position:absolute; top:-11px; right:calc(50% - 22px); background:var(--n-mint); color:#06251c;
+    font-size:9px; font-weight:800; width:15px; height:15px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 3px 8px rgba(127,224,196,.4);
+  }
+
+  .n-card{
+    background:var(--n-panel); border:1px solid var(--n-line); border-radius:13px;
+    padding:12px 14px; margin-bottom:9px; display:flex; justify-content:space-between; align-items:center; gap:10px;
+  }
+  .n-card .t{font-size:12.5px; font-weight:600;}
+  .n-card .s{font-size:11px; color:var(--n-muted);}
+  .n-pill{font-size:10.5px; font-weight:600; padding:3px 9px; border-radius:999px; white-space:nowrap;}
+  .n-pill.ok{background:#173327; color:var(--n-mint);}
+  .n-pill.warn{background:var(--n-amber-bg); color:var(--n-amber);}
+
+  /* --- Nieuw beheerder: zelfde donkere identiteit, topnav i.p.v. tabbar --- */
+  .n-admin{display:flex; flex-direction:column;}
+  .n-topnav{
+    display:flex; gap:4px; padding:10px 16px; background:var(--n-panel-strong);
+    border-bottom:1px solid var(--n-line); font-size:11.5px; font-weight:600;
+  }
+  .n-topnav .i{padding:7px 11px; border-radius:999px; color:var(--n-muted);}
+  .n-topnav .i.on{background:linear-gradient(135deg,#9df0d5,var(--n-mint-strong)); color:#06251c; box-shadow:0 4px 12px rgba(127,224,196,.25);}
+  .n-main{padding:18px 16px 20px; background:radial-gradient(120% 80% at 20% -10%, #0f2c3a, var(--n-bg) 55%);}
+  .n-kpis{display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-bottom:16px;}
+  .n-kpi{background:linear-gradient(175deg,var(--n-panel),var(--n-panel-strong)); border:1px solid var(--n-line); border-top:2px solid var(--n-gold); border-radius:14px; padding:12px; box-shadow:0 8px 18px rgba(3,12,22,.25);}
+  .n-kpi .n{font-size:20px; font-weight:700; color:#fff; font-family:Georgia,serif;}
+  .n-kpi .l{font-size:9.5px; color:var(--n-muted); font-weight:600; text-transform:uppercase; letter-spacing:.04em; margin-top:3px;}
+  .n-emp{
+    background:linear-gradient(175deg,var(--n-panel),var(--n-panel-strong)); border:1px solid var(--n-line); border-radius:14px; padding:12px 14px; margin-bottom:9px;
+    box-shadow:0 8px 18px rgba(3,12,22,.22);
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .n-emp .top{display:flex; justify-content:space-between; align-items:center;}
+  .n-emp .name{font-size:12.5px; font-weight:700; color:#fff;}
+  .n-emp .meta{font-size:11px; color:var(--n-muted);}
+  .n-emp .acts{display:flex; gap:8px; justify-content:flex-end;}
+  .n-mini{font-size:10.5px; font-weight:700; padding:6px 11px; border-radius:8px; cursor:pointer;}
+  .n-mini.approve{background:var(--n-mint); color:#06251c;}
+  .n-mini.reject{background:transparent; color:var(--n-danger); border:1px solid rgba(224,147,143,.4);}
+</style>
+
+<div class="wrap">
+
+  <header class="page">
+    <div class="eyebrow">Fase 17 · richtingdocument</div>
+    <h1>Waar Klassiek en Nieuw nu staan — en waar de openstaande taken ze nog naartoe sturen</h1>
+    <p>
+      Vier vlakken, geen losse mockup: <strong>Medewerker</strong> en <strong>Beheerder</strong>,
+      elk in <strong>Klassiek</strong> (de kleuren en opbouw die vandaag op TEST draaien) en
+      <strong>Nieuw</strong> (dezelfde functionaliteit, in de bento/editorial-richting).
+      Onder elk vlak staat precies wat er uit <em>MASTERCHECKLIST.md</em> nog open staat voor
+      dat scherm — dit is geen ander ontwerp, het is de huidige stand plus de taken die er nog aankomen.
+    </p>
+    <p>Kleuren en fonts zijn de echte tokens uit <span class="fm" style="font-family:'IBM Plex Mono',monospace">assets/styles.css</span> en <span class="fm" style="font-family:'IBM Plex Mono',monospace">assets/styles-new.css</span> — geen losstaand kleurenpalet erbij verzonnen.</p>
+    <div class="legend">
+      <div class="legend-group"><span class="swatch sw-klassiek"></span> Klassiek — huidige TEST-staat</div>
+      <div class="legend-group"><span class="swatch sw-nieuw"></span> Nieuw — conceptrichting</div>
+      <div class="legend-sep"></div>
+      <div class="legend-group"><span class="chip done">klaar</span> afgerond &amp; getest</div>
+      <div class="legend-group"><span class="chip progress">bezig</span> in uitvoering</div>
+      <div class="legend-group"><span class="chip open">open</span> nog te doen</div>
+    </div>
+  </header>
+
+  <!-- ============================= MEDEWERKER ============================= -->
+  <section class="role-section">
+    <div class="role-head">
+      <h2>Medewerker</h2>
+      <span class="sub">Fase 17.1 — Mijn uren, de meest gebruikte schermen op mobiel</span>
+    </div>
+    <div class="pair">
+
+      <!-- Klassiek: medewerker -->
+      <div class="frame-col">
+        <div class="frame-label"><span class="name"><span class="swatch sw-klassiek"></span>Klassiek</span><span class="tag">Segoe UI · navy/mint</span></div>
+        <div class="device k-scope">
+          <div class="device-bar"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>uren-test.pathconsultancy.nl</div>
+          <div class="device-body">
+            <div class="k-pad">
+              <p class="k-greet">Welkom terug, Marc</p>
+              <p class="k-greet-sub">Vrijdag 28 augustus 2026</p>
+              <div class="k-period"><span class="nav">‹</span> Week 35 · 24–30 aug <span class="nav">›</span></div>
+              <div class="k-days">
+                <div class="k-day"><div class="d">Ma</div><div class="h">8</div></div>
+                <div class="k-day"><div class="d">Di</div><div class="h">8</div></div>
+                <div class="k-day"><div class="d">Wo</div><div class="h">8,5</div></div>
+                <div class="k-day today"><div class="d">Do</div><div class="h">8</div></div>
+                <div class="k-day off"><div class="d">Vr</div><div class="h">—</div></div>
+                <div class="k-day off"><div class="d">Za</div><div class="h">—</div></div>
+                <div class="k-day off"><div class="d">Zo</div><div class="h">—</div></div>
+              </div>
+              <div class="k-total"><span class="lbl">Weektotaal</span><span class="val">32,5 uur</span></div>
+              <div class="k-actions"><div class="k-btn ghost">Opslaan</div><div class="k-btn primary">Indienen ter controle</div></div>
+              <div class="k-steps">
+                <div class="k-step on"></div><div class="k-step on"></div><div class="k-step on"></div><div class="k-step"></div><div class="k-step"></div>
+              </div>
+              <div class="k-card"><div><div class="t">Klanturenstaat augustus</div><div class="s">Geüpload · 28 aug</div></div><span class="k-pill ok">Verwerkt</span></div>
+              <div class="k-card"><div><div class="t">Correctie juli — Stasjo</div><div class="s">Wacht op akkoord beheer</div></div><span class="k-pill warn">In behandeling</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="checklist">
+          <ul>
+            <li><span class="chip done">klaar</span><span class="txt">Weekend-navigatie (Home + pijl) toont juiste week</span><span class="ref">17.1</span></li>
+            <li><span class="chip done">klaar</span><span class="txt">"Standaardweek vullen" botst niet meer met bewust ingevulde 0-dagen</span><span class="ref">SKIN-H-028</span></li>
+            <li><span class="chip open">open</span><span class="txt">Mobiele prioriteit: wat moet ik nu doen → uren → open acties → klanturenstaat</span><span class="ref">17.1</span></li>
+            <li><span class="chip open">open</span><span class="txt">Geen dataverlies bij rerender, schermrotatie, toetsenbord, thema-wissel</span><span class="ref">17.1</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Nieuw: medewerker -->
+      <div class="frame-col">
+        <div class="frame-label"><span class="name"><span class="swatch sw-nieuw"></span>Nieuw · Donker</span><span class="tag">1-op-1 huidig scherm</span></div>
+        <div class="device n-scope">
+          <div class="device-bar"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>uren-test.pathconsultancy.nl</div>
+          <div class="device-body">
+            <div class="n-pad">
+              <div class="n-topbar">
+                <div class="n-period"><span class="nav">‹</span> September <span class="nav">▾</span> 2026 <span class="nav">›</span></div>
+                <div class="n-topbar-icons"><span class="n-reset">↶ Herstel demo</span><span class="n-bell">🔔</span><span class="n-avatar">MR</span></div>
+              </div>
+              <div class="n-pills">
+                <div class="n-pill-toggle">☾ Donker</div>
+                <div class="n-pill-toggle">⇄ Klassiek</div>
+              </div>
+              <div class="n-hero">
+                <span class="eyebrow2">Mijn werkvoorraad</span>
+                <h3 class="serif">Goedenavond, Marc</h3>
+                <span class="na-label">Volgende actie</span>
+                <p>Controleer je uren en dien deze maand in. voor September 2026.</p>
+                <small>September 2026 · actie 1 van 2</small>
+                <div class="n-btn primary">Open uren</div>
+                <div class="n-btn ghost">Bekijk alle 2 open acties</div>
+              </div>
+              <div class="n-panel-card">
+                <div class="n-panel-head">
+                  <div><span class="eyebrow2">Jouw acties</span><h4>Open acties per maand</h4></div>
+                  <span class="count">1 open maand</span>
+                </div>
+                <div class="n-task">
+                  <div><span class="lbl">Volgende actie</span><div class="t">Uren indienen voor<br>September 2026</div></div>
+                  <span class="mini-btn">Open uren</span>
+                </div>
+              </div>
+              <div class="n-card"><div><div class="t">Klanturenstaat augustus</div><div class="s">Geüpload · 28 aug</div></div><span class="n-pill ok">Verwerkt</span></div>
+              <div class="n-card"><div><div class="t">Correctie juli — Stasjo</div><div class="s">Wacht op akkoord beheer</div></div><span class="n-pill warn">In behandeling</span></div>
+            </div>
+            <div class="n-tabbar">
+              <div class="tab on"><span class="badge">2</span><span class="ic">◆</span>Dashboard<div class="dot"></div></div>
+              <div class="tab"><span class="ic">▤</span>Mijn uren</div>
+              <div class="tab"><span class="ic">✉</span>Mededelingen</div>
+            </div>
+          </div>
+        </div>
+        <div class="checklist">
+          <ul>
+            <li><span class="chip done">klaar</span><span class="txt">Werkvoorraad-hero, Donker/Klassiek-pills en onderste tabbalk staan al live op TEST</span><span class="ref">Fase 17</span></li>
+            <li><span class="chip open">open</span><span class="txt">iOS: viewporthoogte, keyboard-gedrag, datumvelden, sticky actiebalk onderin</span><span class="ref">17.5</span></li>
+            <li><span class="chip open">open</span><span class="txt">Android: terugknop-gedrag, standalone/PWA-check</span><span class="ref">17.5</span></li>
+            <li><span class="chip open">open</span><span class="txt">Geen enkel functieverschil t.o.v. Klassiek toegestaan — zelfde audit als links</span><span class="ref">17.1</span></li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================= BEHEERDER ============================= -->
+  <section class="role-section">
+    <div class="role-head">
+      <h2>Beheerder</h2>
+      <span class="sub">Fase 17.2 — grootste blok van de opdracht, meest informatiedichte schermen</span>
+    </div>
+    <div class="pair">
+
+      <!-- Klassiek: beheerder -->
+      <div class="frame-col">
+        <div class="frame-label"><span class="name"><span class="swatch sw-klassiek"></span>Klassiek</span><span class="tag">Sidebar-navigatie</span></div>
+        <div class="device k-scope">
+          <div class="device-bar"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>uren-test.pathconsultancy.nl</div>
+          <div class="device-body k-admin">
+            <div class="k-side">
+              <div class="i on">Cockpit</div>
+              <div class="i">Goedkeuringen</div>
+              <div class="i">Facturen</div>
+              <div class="b">Beheer</div>
+              <div class="i">Medewerkers</div>
+              <div class="i">Mededelingen</div>
+              <div class="i">Instellingen</div>
+            </div>
+            <div class="k-main">
+              <div class="k-kpis">
+                <div class="k-kpi"><div class="n">7</div><div class="l">Te goedkeuren</div></div>
+                <div class="k-kpi"><div class="n">2</div><div class="l">Klanturenstaten</div></div>
+                <div class="k-kpi"><div class="n">1</div><div class="l">Serverfout 24u</div></div>
+              </div>
+              <div class="k-row"><div class="name">Marc de Roon</div><div class="meta">Week 35 · 32,5u ingediend</div><div class="acts"><div class="k-mini approve">Goedkeuren</div><div class="k-mini reject">Terugsturen</div></div></div>
+              <div class="k-row"><div class="name">Stasjo</div><div class="meta">Week 35 · 40u ingediend</div><div class="acts"><div class="k-mini approve">Goedkeuren</div><div class="k-mini reject">Terugsturen</div></div></div>
+              <div class="k-row"><div class="name">Brian Hek</div><div class="meta">Correctie juli · wacht</div><div class="acts"><div class="k-mini approve">Goedkeuren</div><div class="k-mini reject">Terugsturen</div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="checklist">
+          <ul>
+            <li><span class="chip done">klaar</span><span class="txt">Handmatige URL/hash naar beheerscherm blijft afgeschermd, ook op UI-niveau</span><span class="ref">SEC-H-009/010</span></li>
+            <li><span class="chip done">klaar</span><span class="txt">Login-picker: employees.id/users.id-botsing (Brian→Marc) verholpen</span><span class="ref">AUTH-H-025</span></li>
+            <li><span class="chip open">open</span><span class="txt">Dashboardtellers moeten altijd kloppen met werkelijke data</span><span class="ref">17.2</span></li>
+            <li><span class="chip open">open</span><span class="txt">Gevaarlijke actie (Terugsturen) nooit te dicht bij neutrale actie op mobiel</span><span class="ref">17.2</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Nieuw: beheerder -->
+      <div class="frame-col">
+        <div class="frame-label"><span class="name"><span class="swatch sw-nieuw"></span>Nieuw</span><span class="tag">Topnav, zelfde groepering</span></div>
+        <div class="device n-scope">
+          <div class="device-bar"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>uren-test.pathconsultancy.nl</div>
+          <div class="device-body n-admin">
+            <div class="n-topnav">
+              <div class="i on">Cockpit</div><div class="i">Goedkeuringen</div><div class="i">Facturen</div>
+              <div class="i">Medewerkers</div><div class="i">Mededelingen</div><div class="i">Instellingen</div>
+            </div>
+            <div class="n-main">
+              <div class="n-kpis">
+                <div class="n-kpi"><div class="n">7</div><div class="l">Te goedkeuren</div></div>
+                <div class="n-kpi"><div class="n">2</div><div class="l">Klanturenstaten</div></div>
+                <div class="n-kpi"><div class="n">1</div><div class="l">Serverfout 24u</div></div>
+              </div>
+              <div class="n-emp">
+                <div class="top"><span class="name">Marc de Roon</span><span class="n-pill ok">Ingediend</span></div>
+                <div class="meta">Week 35 · 32,5 uur</div>
+                <div class="acts"><div class="n-mini reject">Terugsturen</div><div class="n-mini approve">Goedkeuren</div></div>
+              </div>
+              <div class="n-emp">
+                <div class="top"><span class="name">Stasjo</span><span class="n-pill ok">Ingediend</span></div>
+                <div class="meta">Week 35 · 40 uur</div>
+                <div class="acts"><div class="n-mini reject">Terugsturen</div><div class="n-mini approve">Goedkeuren</div></div>
+              </div>
+              <div class="n-emp">
+                <div class="top"><span class="name">Brian Hek</span><span class="n-pill warn">Correctie</span></div>
+                <div class="meta">Juli · wacht op akkoord</div>
+                <div class="acts"><div class="n-mini reject">Terugsturen</div><div class="n-mini approve">Goedkeuren</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="checklist">
+          <ul>
+            <li><span class="chip done">klaar</span><span class="txt">Topnav-volgorde en groepering gelijkgetrokken met Klassiek-sidebar</span><span class="ref">17.2</span></li>
+            <li><span class="chip done">klaar</span><span class="txt">iOS safe-area-inset op topbar hersteld (New-skin overschreef 'm stilzwijgend)</span><span class="ref">SKIN-H-027</span></li>
+            <li><span class="chip open">open</span><span class="txt">Mobiel: kaarten i.p.v. verkleinde tabellen, geen beheeractie mag verdwijnen</span><span class="ref">17.2</span></li>
+            <li><span class="chip open">open</span><span class="txt">Medewerkersbeheer, mededelingen-doelgroepen, instellingen — nog te doen</span><span class="ref">17.2</span></li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer class="page">
+    <span>Bron: <span class="fm">MASTERCHECKLIST.md</span> — Fase 17, scope gecorrigeerd 12 sep 2026 (redesign met behoud van functionaliteit, één fase)</span>
+    <span class="fm">v2.0.4 · main</span>
+  </footer>
+
+</div>
