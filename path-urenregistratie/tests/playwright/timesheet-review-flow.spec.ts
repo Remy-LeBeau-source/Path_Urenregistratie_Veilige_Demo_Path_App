@@ -145,6 +145,28 @@ test.describe('timesheet review flow api', () => {
       expect(staleCorrection.body.error).toBe('stale-version');
     });
 
+    await test.step('Then een correctie-aanvraag zonder toelichting wordt door de server geweigerd (sectie 20: UI-verbergen is geen autorisatie)', async () => {
+      // De klantinterface schakelt "Terugsturen" pas in zodra het tekstveld
+      // niet leeg is (showCorrectionEditor in app.js), maar dat is puur
+      // gemak -- een directe API-aanroep mag een lege toelichting niet
+      // stilzwijgend accepteren. Bewijst timesheet_correction_message()
+      // in server/api/timesheets.php onafhankelijk van de client.
+      const zonderToelichting = await timesheetApi.requestCorrection({
+        action: 'request_correction',
+        period,
+        employeeId,
+        expectedVersion: submittedVersion,
+        correctionMessage: '',
+      });
+      expect(zonderToelichting.status).toBe(400);
+      expect(zonderToelichting.body.ok).toBe(false);
+      expect(zonderToelichting.body.error).toBe('invalid-payload');
+      expect(String(zonderToelichting.body.message || '')).toContain('Correctiebericht is verplicht');
+
+      const nogSteedsSubmitted = await timesheetApi.read(period, employeeId);
+      expect(nogSteedsSubmitted.body.timesheet.status).toBe('submitted');
+    });
+
     await test.step('When de administrator een geldige correctie-aanvraag uitvoert', async () => {
       const correction = await timesheetApi.requestCorrection({
         action: 'request_correction',

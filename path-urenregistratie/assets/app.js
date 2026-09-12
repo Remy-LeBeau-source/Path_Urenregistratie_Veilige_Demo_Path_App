@@ -5421,6 +5421,59 @@ function updateWeekNavButtons(containerSelector, weekIndex, period) {
   if (next) next.disabled = weekIndex >= period.weekRows.length - 1;
 }
 
+// Een dag telt als "nog in te vullen" zolang hij nog op 0 staat en niet
+// bewust bevestigd is (zelfde onderscheid als fillStandardHoursInRecord
+// hierboven maakt) -- een dag die je zelf al op 0 hebt gezet (ziek/vrij)
+// telt dus niet mee als openstaand.
+function weekHeeftNogLegeWerkdag(record, period, weekIndex) {
+  const week = period.weekRows[weekIndex];
+  if (!week || !record?.entries?.[weekIndex]) return false;
+  return week.days.some((day, dayIndex) => {
+    if (!day) return false;
+    if (record.confirmedEntries?.[weekIndex]?.[dayIndex]) return false;
+    return Number(record.entries[weekIndex][dayIndex] || 0) <= 0;
+  });
+}
+
+// Gebruikerswens (12 sep 2026): de pijl in Mijn uren moet niet zomaar één
+// week opschuiven, maar naar de eerstvolgende week met een nog leeg
+// urenvak springen -- dat kan dus ook een eerdere week zijn dan waar je nu
+// staat (bv. een vergeten week terwijl deze week al is ingevuld). Alleen
+// het inloggen/openen van de pagina blijft altijd op de week van vandaag
+// landen (todaysWeekIndexInPeriod), dit gaat alleen over de pijlknoppen
+// zelf. Blijft binnen de huidige kalendermaand (period.weekRows), net als
+// de bestaande grenzen van de pijlknoppen zelf.
+function volgendeOnvolledigeWeekIndex(record, period, vanafIndex, richting) {
+  const totaal = period.weekRows.length;
+  for (let stap = 1; stap <= totaal; stap += 1) {
+    const kandidaat = ((vanafIndex + richting * stap) % totaal + totaal) % totaal;
+    if (weekHeeftNogLegeWerkdag(record, period, kandidaat)) return kandidaat;
+  }
+  return null;
+}
+
+// Zet de focus op het eerste nog-lege urenveld van de zojuist getoonde
+// week, zodat je na het drukken op de pijl meteen kunt typen i.p.v. eerst
+// zelf het juiste vakje te moeten zoeken.
+function focusEersteLegeBentoDag(record, period, weekIndex) {
+  const week = period.weekRows[weekIndex];
+  if (!week) return;
+  const dayIndex = week.days.findIndex((day, index) => day
+    && !record.confirmedEntries?.[weekIndex]?.[index]
+    && Number(record.entries[weekIndex][index] || 0) <= 0);
+  if (dayIndex < 0) return;
+  // Dezelfde dagkaartjes-opmaak (renderBentoDayCards) verschijnt op twee
+  // plekken met een eigen containerId: het Dashboard-weekkaartje
+  // (#new-bento-days) en Mijn uren in Nieuw bij een enkele week
+  // (#hours-grid-cards) -- alleen de zichtbare/niet-verborgen container is
+  // op dit moment de echte.
+  const selector = '.new-bento-hours-input[data-week-index="' + weekIndex + '"][data-day-index="' + dayIndex + '"]';
+  const input = ["#new-bento-days", "#hours-grid-cards"]
+    .map(containerId => document.querySelector(containerId + " " + selector))
+    .find(candidate => candidate && !candidate.disabled && candidate.offsetParent !== null);
+  if (input) input.focus();
+}
+
 function renderNewEmployeeBento(record, employee, period) {
   const bento = document.querySelector("#new-employee-bento");
   if (!bento) return;
@@ -13230,13 +13283,19 @@ function toonInstallatieAanbod() {
   const newBentoWeek = event.target.closest("[data-new-bento-week]");
   if (newBentoWeek) {
     const period = currentPeriod();
+    const employee = currentEmployee();
+    const record = recordFor(employee.id, period.key);
     const currentIndex = newEmployeeBentoWeekIndex(period);
     const delta = newBentoWeek.dataset.newBentoWeek === "previous" ? -1 : 1;
-    const nextIndex = Math.max(0, Math.min(period.weekRows.length - 1, currentIndex + delta));
+    const onvolledigeIndex = volgendeOnvolledigeWeekIndex(record, period, currentIndex, delta);
+    const nextIndex = onvolledigeIndex !== null
+      ? onvolledigeIndex
+      : Math.max(0, Math.min(period.weekRows.length - 1, currentIndex + delta));
     state.hoursWeekScope = "week-" + nextIndex;
     state.hoursWeekScopeTouched = true;
     persistState();
     rerenderActiveTimesheetView();
+    focusEersteLegeBentoDag(record, period, nextIndex);
     return;
   }
 
