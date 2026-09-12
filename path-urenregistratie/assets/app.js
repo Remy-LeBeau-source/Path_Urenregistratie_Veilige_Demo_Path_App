@@ -1158,7 +1158,7 @@ const roleProfiles = {
   employee: { label: "Medewerker", home: "employee-dashboard" }
 };
 
-const adminViews = new Set(["dashboard", "approvals", "invoices", "announcements", "employees", "settings", "teamstatus"]);
+const adminViews = new Set(["dashboard", "approvals", "invoices", "announcements", "employees", "settings", "teamstatus", "customer-timesheet-admin"]);
 const statusLabels = {
   draft: ["Nog invullen", "status-concept"],
   correction: ["Correctie nodig", "status-warning"],
@@ -4674,92 +4674,92 @@ function fillStandardHoursForCurrentScope() {
   toast(standardHoursButtonLabel() + ": " + formatStandardHoursPattern(employee) + ". Pas vrij, ziek of afwijkend werk daarna handmatig aan.");
 }
 
-// Standaardpatroon: 8 uur op elke werkdag als een medewerker geen eigen
-// werkpatroon per weekdag heeft ingesteld (zie WEEKDAY_HOURS_FIELDS). Bewust
-// een vast, makkelijk te begrijpen getal i.p.v. iets afgeleid van de (per
-// maand wisselende) maanduren -- dat zou de knop onvoorspelbaar maken.
-const DEFAULT_FILL_PATTERN_HOURS = 8;
-
-function fillPatternHoursForDay(employee, dayIndex) {
-  const override = employee.dayHours ? employee.dayHours[dayIndex + 1] : undefined;
-  return override !== undefined && override !== null ? Number(override) : DEFAULT_FILL_PATTERN_HOURS;
-}
-
-// "Standaardweek/-maand vullen": vult alleen dagen die nog nooit zijn
-// aangeraakt (0 uur, niet bevestigd) met het eigen werkpatroon van de
-// medewerker, of anders 8 uur op elke werkdag. Een dag die al uren heeft, of
-// die bewust op 0 is bevestigd (bv. "vrijdag altijd vrij"), blijft
-// ongemoeid -- deze knop mag nooit iets overschrijven dat de medewerker zelf
-// al heeft ingevuld of expliciet heeft leeggelaten. Geeft het aantal
-// daadwerkelijk gevulde dagen terug.
-function fillDefaultPatternForWeek(record, employee, period, weekIndex) {
-  const week = period.weekRows[weekIndex];
-  if (!week || !record.entries || !record.entries[weekIndex]) return 0;
-  let filled = 0;
-  week.days.forEach((day, dayIndex) => {
-    if (!day) return;
-    if (record.confirmedEntries?.[weekIndex]?.[dayIndex]) return;
-    const current = Number(record.entries[weekIndex][dayIndex] || 0);
-    if (current > 0) return;
-    const next = fillPatternHoursForDay(employee, dayIndex);
-    // Een patroondag van 0 uur (bv. "vrijdag altijd vrij") op een dag die al
-    // 0 is, verandert niets -- dan ook niet meetellen, anders meldt de knop
-    // "1 dag ingevuld" bij een tweede klik terwijl er niets is gebeurd (en
-    // zet hij onnodig de status op concept met een autosave erachteraan).
-    if (current === next) return;
-    record.entries[weekIndex][dayIndex] = next;
-    filled += 1;
+// "Week/Maand terugzetten naar standaard": UI-TAKENLIJST #29 legde een conflict
+// tussen twee testerswensen vast. Shawn wilde dat de vulknop altijd overschrijft;
+// Stasjo wilde juist dat een dag die hij bewust op 0 heeft gezet (bv. ziekte of
+// vrij) nooit wordt teruggezet -- precies wat fillStandardHoursInRecord hierboven
+// al beschermt via confirmedEntries/>0. Oplossing (het geadviseerde alternatief
+// uit de takenlijst, geen bestaand gedrag omgedraaid): de bestaande knop blijft
+// voor iedereen veilig, en deze nieuwe, aparte, bevestigde actie is de expliciete
+// uitzondering voor wie -- zoals Shawn -- bewust alles wil overschrijven. Anders
+// dan fillStandardHoursInRecord slaat deze functie geen enkele dag over.
+function resetStandardHoursInRecord(record, employee, period, weekIndexes) {
+  if (!record || !isTimesheetEditableForEmployee(record)) return 0;
+  let changed = 0;
+  weekIndexes.forEach(weekIndex => {
+    const week = period.weekRows[weekIndex];
+    if (!week || !record.entries || !record.entries[weekIndex]) return;
+    week.days.forEach((day, dayIndex) => {
+      if (!day) return;
+      const nextValue = standardHoursForDay(employee, dayIndex);
+      if (record.confirmedEntries?.[weekIndex]) record.confirmedEntries[weekIndex][dayIndex] = false;
+      if (Number(record.entries[weekIndex][dayIndex] || 0) === nextValue) return;
+      record.entries[weekIndex][dayIndex] = nextValue;
+      changed += 1;
+    });
   });
-  return filled;
+  if (changed) {
+    if (record.timesheetStatus !== "correction") record.timesheetStatus = "draft";
+    record.invoiceStatus = "concept";
+    record.payrollStatus = "concept";
+  }
+  return changed;
 }
 
-function fillDefaultPatternForMonth(record, employee, period) {
-  return period.weekRows.reduce((total, week, weekIndex) => total + fillDefaultPatternForWeek(record, employee, period, weekIndex), 0);
-}
-
-// Gedeeld door de bento-knop op het Dashboard en de knop op Mijn uren:
-// dezelfde vulling, dezelfde statusreset, dezelfde opslag en dezelfde toast.
-// weekIndex null = de hele maand. rerender krijgt (record, employee, period)
-// zodat elke plek zijn eigen scherm kan hertekenen.
-function applyFillDefaultPattern(weekIndex, rerender) {
+function resetStandardHoursForCurrentScope() {
   const employee = currentEmployee();
-  const record = recordFor(employee.id);
   const period = currentPeriod();
-  const filled = weekIndex === null
-    ? fillDefaultPatternForMonth(record, employee, period)
-    : fillDefaultPatternForWeek(record, employee, period, weekIndex);
-  if (filled === 0) {
-    toast("Alle dagen waren al ingevuld -- er is niets aangepast.");
+  const record = recordFor(employee.id, period.key);
+  if (!isTimesheetEditableForEmployee(record)) {
+    toast("Deze maand is vergrendeld en alleen-lezen.");
     return;
   }
-  if (record.timesheetStatus !== "correction") record.timesheetStatus = "draft";
-  record.invoiceStatus = "concept";
-  record.payrollStatus = "concept";
-  persistState();
-  scheduleDraftTimesheetWrite();
-  rerender(record, employee, period);
-  toast((filled === 1 ? "1 dag" : filled + " dagen") + " ingevuld met je standaardpatroon.");
+  const scopeLabel = standardHoursScopeLabel();
+  const scopeWoord = scopeLabel === "maand" ? "Maand" : "Week";
+  showModal({
+    label: "Uren terugzetten",
+    title: scopeWoord + " terugzetten naar je standaardpatroon?",
+    message: "Dit overschrijft elke dag in deze " + scopeLabel + " met je standaardpatroon (" + formatStandardHoursPattern(employee) + "), ook een dag die je bewust op 0 hebt gezet, bijvoorbeeld ziekte of vrij. Handmatig ingevulde uren in deze " + scopeLabel + " gaan hiermee verloren.",
+    confirm: scopeWoord + " terugzetten",
+    danger: true,
+    action: () => {
+      if (document.querySelector("#view-timesheet")?.classList.contains("is-active")) {
+        updateHoursTotal(false);
+      }
+      // Opnieuw opvragen i.p.v. de record/employee/period van vóór het openen
+      // van de modal hergebruiken: tussen klikken en bevestigen kan een
+      // achtergrond-sync het record in de state al hebben vervangen door een
+      // ander object (zelfde reden als elders in deze modules bij een
+      // vergelijkbare bevestigingsstap) -- muteren van de oude referentie zou
+      // dan stil verloren gaan.
+      const verseEmployee = currentEmployee();
+      const versePeriod = currentPeriod();
+      const verseRecord = recordFor(verseEmployee.id, versePeriod.key);
+      const changed = resetStandardHoursInRecord(verseRecord, verseEmployee, versePeriod, standardHoursWeekIndexes(versePeriod));
+      rerenderActiveTimesheetView();
+      closeModal();
+      if (!changed) {
+        toast("Alles stond al volgens je standaard" + scopeLabel + ".");
+        return;
+      }
+      persistState();
+      scheduleDraftTimesheetWrite();
+      renderDashboard();
+      renderApprovals();
+      renderInvoices();
+      toast(scopeWoord + " teruggezet naar je standaardpatroon.");
+    }
+  });
 }
 
-// Leesbare beschrijving van het patroon dat de knop toepast (bv. "Ma-do 9
-// uur · vr vrij"), voor de uitlegtekst eronder. Groepeert opeenvolgende
-// dagen met hetzelfde aantal uren, zodat het geen vijf losse getallen wordt.
-function fillPatternDescription(employee) {
-  const groups = [];
-  for (let dayIndex = 0; dayIndex < 5; dayIndex += 1) {
-    const hours = fillPatternHoursForDay(employee, dayIndex);
-    const last = groups[groups.length - 1];
-    if (last && last.hours === hours) {
-      last.to = WEEKDAY_SHORT[dayIndex];
-    } else {
-      groups.push({ from: WEEKDAY_SHORT[dayIndex], to: WEEKDAY_SHORT[dayIndex], hours });
-    }
-  }
-  return groups.map(group => {
-    const range = group.from === group.to ? group.from : group.from + "–" + group.to;
-    return range + " " + (group.hours > 0 ? hoursFormat.format(group.hours) + " uur" : "vrij");
-  }).join(" · ");
-}
+// fillDefaultPatternForWeek/-Month, applyFillDefaultPattern en
+// fillPatternDescription (dit blok) zijn 10 sep tijdens een rebase-conflict
+// vervangen door fillStandardHoursInRecord/fillStandardHoursForCurrentScope
+// hierboven (COPILOT_HANDOFF: "Codex' bredere illStandardHours*-flow als enige
+// standaardweekactie"), maar bleven als dode code staan -- nergens meer
+// aangeroepen, geen `#fill-default-pattern`-knop meer in index.html. Verwijderd
+// 12 sep bij het toevoegen van de terugzet-actie in dezelfde buurt, om niet nóg
+// een verwarrende dubbele standaarduren-implementatie in leven te houden.
 
 function ensurePeriodRecords(periodKey) {
   const period = periodFromKey(periodKey);
@@ -5448,6 +5448,12 @@ function renderNewEmployeeBento(record, employee, period) {
     standardFill.disabled = !editable;
     standardFill.title = "Vul 0- en lege dagen met je persoonlijke standaardweek: " + formatStandardHoursPattern(employee);
     standardFill.innerHTML = '<span aria-hidden="true">↺</span> ' + standardHoursButtonLabel();
+  }
+  const standardReset = document.querySelector("#new-employee-bento [data-standard-hours-reset]");
+  if (standardReset) {
+    standardReset.disabled = !editable;
+    standardReset.title = "Zet ELKE dag terug naar je standaardpatroon, ook een dag die je bewust op 0 hebt gezet: " + formatStandardHoursPattern(employee);
+    standardReset.innerHTML = '<span aria-hidden="true">⟲</span> ' + (standardHoursScopeLabel() === "maand" ? "Maand terugzetten" : "Week terugzetten");
   }
   if (fillPatternNote) {
     fillPatternNote.hidden = !editable;
@@ -8756,6 +8762,7 @@ function updateTimesheetSubmitUi(record) {
   const submit = document.querySelector("#submit-timesheet");
   const save = document.querySelector("#save-timesheet");
   const standardFill = document.querySelector("#fill-standard-hours");
+  const standardReset = document.querySelector("#reset-standard-hours");
   // A submitted month belongs to Backoffice and must stay read-only until an
   // explicit correction request returns ownership to the employee.
   const canSubmit = normalizedStatus === "draft" || normalizedStatus === "correction";
@@ -8774,6 +8781,12 @@ function updateTimesheetSubmitUi(record) {
     standardFill.disabled = !canSubmit;
     standardFill.textContent = standardHoursButtonLabel();
     standardFill.title = "Vul 0- en lege dagen met je persoonlijke standaardweek: " + formatStandardHoursPattern(currentEmployee());
+  }
+  if (standardReset) {
+    standardReset.hidden = !canSubmit;
+    standardReset.disabled = !canSubmit;
+    standardReset.textContent = standardHoursScopeLabel() === "maand" ? "Maand terugzetten" : "Week terugzetten";
+    standardReset.title = "Zet ELKE dag terug naar je standaardpatroon, ook een dag die je bewust op 0 hebt gezet: " + formatStandardHoursPattern(currentEmployee());
   }
   if (submit) {
     submit.hidden = !showSubmit;
@@ -13267,6 +13280,12 @@ function toonInstallatieAanbod() {
     return;
   }
 
+  const standardHoursReset = event.target.closest("[data-standard-hours-reset]");
+  if (standardHoursReset && !standardHoursReset.disabled) {
+    resetStandardHoursForCurrentScope();
+    return;
+  }
+
 
 
   const newBentoSave = event.target.closest("[data-new-bento-save]");
@@ -13734,6 +13753,7 @@ function showTimesheetSubmitConfirmation() {
 
 document.querySelector("#submit-timesheet").addEventListener("click", showTimesheetSubmitConfirmation);
 document.querySelector("#fill-standard-hours").addEventListener("click", fillStandardHoursForCurrentScope);
+document.querySelector("#reset-standard-hours").addEventListener("click", resetStandardHoursForCurrentScope);
 document.querySelector("#save-timesheet").addEventListener("click", () => {
   updateHoursTotal(true);
   const weekMatch = /^week-(\d+)$/.exec(String(state.hoursWeekScope || ""));

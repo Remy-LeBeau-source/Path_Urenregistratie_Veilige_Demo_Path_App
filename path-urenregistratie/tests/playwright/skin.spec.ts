@@ -1370,6 +1370,95 @@ test('[SKIN-H-023] "Standaardweek/-maand vullen" vult alleen lege dagen met het 
   }
 });
 
+test('[SKIN-H-028] "Week terugzetten" overschrijft ook een dag die bewust op 0 is bevestigd, na expliciete bevestiging', async ({ page }) => {
+  // UI-TAKENLIJST #29: conflict tussen twee testerswensen. Shawn wilde dat de
+  // vulknop altijd overschrijft; Stasjo wilde juist dat een dag die hij bewust
+  // op 0 zet (ziekte/vrij) nooit wordt teruggezet -- precies wat "Standaardweek
+  // vullen" (SKIN-H-023 hierboven) al bewijst. Gekozen oplossing: de bestaande
+  // knop blijft ongewijzigd veilig, en een aparte, bevestigde "Week
+  // terugzetten"-actie is de expliciete uitzondering voor wie dat wél wil.
+  // Deze test bewijst die nieuwe knop, niet de bestaande (die blijft
+  // ongemoeid en staat al onder SKIN-H-023).
+  const loginPage = new LoginPage(page);
+  await test.step('Given een ingelogde medewerker met Mijn uren open op een week met minstens één werkdag', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.evaluate(() => { window.location.hash = 'timesheet'; });
+    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+  });
+
+  // Niet blind weekIndex/dayIndex 0 aannemen: staat de maand niet op een
+  // maandag, dan is dag 0 van week 0 in de kalender null (bestaat niet) en
+  // slaan fill/reset 'm allebei stil over -- geen bug, maar wel een valse
+  // test. Zoek een echte, volledige werkweek op zodat maandag (index 0)
+  // gegarandeerd bestaat.
+  const plek = await test.step('When een volledige werkweek met een echte maandag wordt gezocht', async () => {
+    return page.evaluate(() => {
+      // @ts-expect-error debug-only voor deze directe controle
+      const period = currentPeriod();
+      // @ts-expect-error debug-only voor deze directe controle
+      const weekIndex = period.weekRows.findIndex((week: { days: unknown[] }) => week.days[0] && week.days[4]);
+      // @ts-expect-error debug-only voor deze directe controle
+      const patroon = weekIndex >= 0 ? standardHoursForDay(currentEmployee(), 0) : 0;
+      return { weekIndex, patroon };
+    });
+  });
+  test.skip(plek.weekIndex < 0, 'Geen enkele volledige ma-vr werkweek in de huidige testmaand.');
+  test.skip(plek.patroon <= 0, 'Standaardpatroon op maandag is zelf al 0 uur; geen zinvol contrast met de test se 0-dag.');
+
+  await test.step('And een werkdag bewust op 0 wordt bevestigd (ziek/vrij), afwijkend van het standaardpatroon', async () => {
+    // Bewust in maandscope (niet een specifieke week-N): standardHoursWeekIndexes()
+    // vertaalt een geklikte "week-N"-filterknop in Klassiek niet 1-op-1 naar
+    // diezelfde weekindex (die volgt newEmployeeBentoWeekIndex, bedoeld voor de
+    // New-bento-weeknavigatie) -- "maand" is hier de ondubbelzinnige scope die
+    // altijd elke week meeneemt, inclusief de hier gekozen echte werkweek.
+    await page.locator('[data-hours-week-scope="all"]').click();
+  });
+
+  await test.step('And "Standaardweek vullen" die bevestigde 0 met rust laat (bestaand, veilig gedrag)', async () => {
+    // Bevestigde 0-dag zetten en meteen "Standaardweek vullen" klikken in
+    // dezelfde evaluate, zonder gat ertussen: net als SKIN-H-023 hierboven al
+    // toelicht, kan een achtergrond-sync tussen een losse zet-stap en een
+    // latere klik de confirmedEntries-vlag op mobiel (andere timing dan
+    // desktop) alweer hebben achterhaald vóórdat de klik 'm leest.
+    const maandag = await page.evaluate(({ weekIndex, patroon }: { weekIndex: number; patroon: number }) => {
+      // @ts-expect-error debug-only voor deze directe controle
+      const employee = currentEmployee();
+      // @ts-expect-error debug-only voor deze directe controle
+      const period = currentPeriod();
+      // @ts-expect-error debug-only voor deze directe controle
+      const record = recordFor(employee.id, period.key);
+      window.__patroonMaandag = patroon;
+      record.entries[weekIndex][0] = 0;
+      record.timesheetStatus = 'draft';
+      if (!record.confirmedEntries) record.confirmedEntries = period.weekRows.map(() => [false, false, false, false, false]);
+      record.confirmedEntries[weekIndex][0] = true;
+      // @ts-expect-error debug-only voor deze directe controle
+      renderHoursGrid();
+      (document.querySelector('#fill-standard-hours') as HTMLElement | null)?.click();
+      return record.entries[weekIndex][0];
+    }, plek);
+    expect(maandag).toBe(0);
+  });
+
+  await test.step('Then vraagt "Week terugzetten" om bevestiging vóór hij iets overschrijft', async () => {
+    await page.locator('#reset-standard-hours').click();
+    await expect(page.locator('#modal')).toBeVisible();
+    await expect(page.locator('#modal-title')).toContainText('terugzetten');
+    await expect(page.locator('#modal-confirm')).toHaveClass(/button-danger/);
+  });
+
+  await test.step('And overschrijft na bevestiging ook de bewust-bevestigde 0-dag met het standaardpatroon', async () => {
+    await page.locator('#modal-confirm').click();
+    await page.waitForTimeout(300);
+    const maandagNaTerugzetten = await page.evaluate((weekIndex: number) => {
+      // @ts-expect-error debug-only voor deze directe controle
+      return recordFor(currentEmployee().id).entries[weekIndex][0];
+    }, plek.weekIndex);
+    expect(maandagNaTerugzetten).toBe(plek.patroon);
+  });
+});
+
 test('[SKIN-H-024] "Volgende actie" bovenaan Open acties per maand toont de eerstvolgende stap en blijft op het Dashboard', async ({ page }) => {
   // Vervangt wat het oude klassieke hero-blok deed (één duidelijke
   // eerstvolgende stap met knop) door dezelfde bento-kaarttaal te gebruiken

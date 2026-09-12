@@ -19,13 +19,13 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <title>Uren & Facturatie</title>
-  <link rel="stylesheet" href="assets/styles.css?v=2.0.1">
+  <link rel="stylesheet" href="assets/styles.css?v=2.0.2">
   <!-- Met versieparameter, net als styles.css hierboven. Zonder die parameter
        houdt de browser (en een geïnstalleerde app helemaal) de oude New-skin
        vast na een release: de versiebadge springt vooruit en Klassiek
        vernieuwt, terwijl de hele Nieuw-vormgeving op de vorige versie blijft
        staan. Gemeld als "ik zie geen verschil in de nieuwe versie". -->
-  <link rel="stylesheet" href="assets/styles-new.css?v=2.0.1">
+  <link rel="stylesheet" href="assets/styles-new.css?v=2.0.2">
 </head>
 <body class="auth-booting">
   <section class="login-screen" id="login-screen" aria-labelledby="login-title">
@@ -103,7 +103,7 @@
       </form>
       <p class="login-note" id="auth-mode-indicator">Controle van auth-sessie wordt uitgevoerd.</p>
       <p class="login-note" id="local-login-note">De standaardgegevens gebruiken veilige voorbeeldadressen. Je mag zelf echte gegevens invoeren; deze lokale versie bewaart ze alleen in deze browser en e-mailverzending is uitgeschakeld.</p>
-      <footer class="login-footer"><span>© 2026 Path Consultancy IT · Ontwikkeld en beheerd door Team Path.</span><span>Versie 2.0.1</span></footer>
+      <footer class="login-footer"><span>© 2026 Path Consultancy IT · Ontwikkeld en beheerd door Team Path.</span><span>Versie 2.0.2</span></footer>
     </div>
   </section>
 
@@ -183,7 +183,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 2.0.1</span>
+      <span class="demo-badge">Versie 2.0.2</span>
       </div>
     </aside>
 
@@ -199,7 +199,7 @@
         <div class="topbar-title">
           <p class="eyebrow" id="organization-name">Path Consultancy</p>
           <h1 id="page-title">Urenoverzicht</h1>
-          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 2.0.1</span><span class="environment-badge" id="environment-badge" hidden></span></span>
+          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 2.0.2</span><span class="environment-badge" id="environment-badge" hidden></span></span>
         </div>
         <div class="topbar-actions">
           <!-- Zelfde knip als de Klassieke zijbalk (Werkvoorraad/Organisatie, zie de
@@ -291,6 +291,7 @@
             <p class="new-bento-fill-pattern-note" id="new-bento-fill-pattern-note" hidden></p>
             <div class="new-bento-week-actions">
               <button class="button button-ghost" type="button" data-standard-hours-fill title="Vul lege dagen met je persoonlijke standaardweek"><span aria-hidden="true">↺</span> Standaardweek vullen</button>
+              <button class="button button-ghost" type="button" data-standard-hours-reset title="Zet ELKE dag terug naar je standaardpatroon, ook een dag die je bewust op 0 hebt gezet"><span aria-hidden="true">⟲</span> Week terugzetten</button>
               <button class="button button-ghost" type="button" data-new-bento-save title="Bewaar je wijzigingen zonder in te dienen"><span aria-hidden="true">↓</span> Concept opslaan</button>
               <button class="button button-primary" type="button" data-new-bento-submit title="Dien alle weken van deze maand in"><span aria-hidden="true">✓</span> Hele maand indienen</button>
             </div>
@@ -532,7 +533,7 @@
           <button class="text-button" data-go="customer-timesheet-admin">Bekijk klanturenstaten &rarr;</button>
         </section>
 
-        <!-- Ingang naar de procesmeter, die sinds v2.0.1 op een eigen scherm
+        <!-- Ingang naar de procesmeter, die sinds v2.0.2 op een eigen scherm
              staat. Het percentage blijft hier zichtbaar, zodat je de stand nog
              steeds in één blik hebt zonder het hele paneel op het Dashboard. -->
         <section class="panel workflow-teaser" id="workflow-teaser">
@@ -644,6 +645,7 @@
               <p><small id="hours-target-help">Dit blokkeert indienen nooit.</small></p>
               <div class="timesheet-action-buttons">
                 <button class="button button-ghost" id="fill-standard-hours" type="button" title="Vul lege dagen met je persoonlijke standaardweek">Standaardweek vullen</button>
+                <button class="button button-ghost" id="reset-standard-hours" type="button" title="Zet ELKE dag terug naar je standaardpatroon, ook een dag die je bewust op 0 hebt gezet">Week terugzetten</button>
                 <button class="button button-ghost" id="save-timesheet" type="button">Week opslaan</button>
                 <button class="button button-primary" id="submit-timesheet" type="button">Maand indienen</button>
               </div>
@@ -1062,7 +1064,7 @@
       <footer class="app-footer" aria-label="Applicatie-informatie">
         <span>© 2026 Path Consultancy IT</span>
         <span>Ontwikkeld en beheerd door Team Path.</span>
-        <span class="app-footer-version">Versie 2.0.1</span>
+        <span class="app-footer-version">Versie 2.0.2</span>
       </footer>
     </main>
   </div>
@@ -1122,7 +1124,7 @@
   </div>
   <script vite-ignore defer src="assets/jspdf.umd.min.js"></script>
   <script vite-ignore defer src="assets/invoice-fonts.js"></script>
-  <script vite-ignore defer src="assets/app.js?v=2.0.1"></script>
-  <script vite-ignore defer src="assets/pwa-install.js?v=2.0.1"></script>
+  <script vite-ignore defer src="assets/app.js?v=2.0.2"></script>
+  <script vite-ignore defer src="assets/pwa-install.js?v=2.0.2"></script>
 </body>
 </html>

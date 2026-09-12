@@ -318,3 +318,30 @@ test('[SEC-H-010] medewerker die de pagina herlaadt met een beheer-URL in de adr
     await expect(page.locator('#view-employees')).not.toHaveClass(/is-active/);
   });
 });
+
+// Audit-vondst 12 sep 2026: van de 13 schermen stond #view-customer-timesheet-admin
+// als enige NIET in de adminViews-Set die showView() gebruikt om een medewerker
+// terug te sturen -- hij werd in de praktijk al geblokkeerd, maar uitsluitend via
+// de generieke `[hidden] { display:none !important; }`-regel (styles.css), niet
+// via de expliciete rol-guard die alle 12 andere beheerschermen wél hebben. Nu
+// expliciet in adminViews opgenomen; deze test bewijst dat de hash/titel ook
+// correct terugvallen, niet alleen dat het scherm visueel verborgen blijft.
+test('[SEC-H-011] medewerker die naar Klanturenstaten (beheer) navigeert komt terug op het eigen dashboard', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given een ingelogde medewerker', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await expect(page.locator('#app-shell')).toBeVisible();
+  });
+
+  await test.step('When de hash handmatig naar het beheer-klanturenstatenscherm wordt gezet', async () => {
+    await page.evaluate(() => { window.location.hash = 'customer-timesheet-admin'; });
+  });
+
+  await test.step('Then blijft de medewerker op het eigen dashboard, met de bijbehorende hash en titel', async () => {
+    await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
+    await expect(page.locator('#view-customer-timesheet-admin')).not.toHaveClass(/is-active/);
+    await expect(page).toHaveURL(/#employee-dashboard$/);
+  });
+});

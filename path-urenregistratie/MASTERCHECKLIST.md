@@ -1949,6 +1949,9 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
 **17.1 Medewerkerrol (checklist, sectie 2 van de opdracht)**
 - [x] Mijn uren: weekend-navigatie (Home + pijl) toont juiste week -- opgelost v1.2.4, geverifieerd
   desktop + mobiel.
+- [x] "Standaardweek vullen"-conflict (UI-TAKENLIJST #29/#48) opgelost: bestaande knop blijft
+  veilig, nieuwe bevestigde "Week/Maand terugzetten"-knop overschrijft ook bewust-bevestigde
+  0-dagen. `[SKIN-H-028]`, v2.0.2, New-bento + Klassiek Mijn uren.
 - [ ] Dashboard/Mijn overzicht: begroeting, volgende actie, open acties, acties per maand
 - [ ] Mijn uren: invoeren, wijzigen, opslaan, Enter-to-save, maand/weeknavigatie, totalen, indienen,
   status van urenregistratie
@@ -1984,6 +1987,16 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   de adresbalk terug op het eigen dashboard. `[SEC-H-009]`/`[SEC-H-010]`, v2.0.1, skin-onafhankelijk.
 - [ ] Verborgen knop, directe API-call vanaf de medewerkerkant, oude browserstate/localStorage-state
   (resterende deelpunten van sectie 20, nog te doen)
+- [!] **Live TEST-bevinding (12 sep, gemeld door Gio met screenshot):** automatisch inloggen vult op
+  de live TEST-site het wachtwoord voor Beheer wel in, voor Medewerker nooit. Code geverifieerd:
+  `server/auth/local-login-hints.php` + migratie 005 kloppen (bcrypt van `LocalDemoEmployee2026`
+  bevestigd via `password_verify()`), dus dit wijst op live-configuratiedrift (waarschijnlijk
+  ontbrekende `PLAYWRIGHT_EMPLOYEE_PASSWORD` in de omgeving van de live TEST-server, of
+  `local_login_hints_is_guarded_test_host()`'s drie voorwaarden die daar net niet allemaal kloppen)
+  en niet op een aantoonbare codefout -- kan niet verder zonder live SSH/DB-toegang. Kortetermijn:
+  "TEST-gegevens herstellen" (Instellingen) zou het moeten verhelpen. Structureel: een
+  preflight-check toevoegen aan `test-preflight.php` die dit vastlegt zodat het niet stil kan
+  terugkomen (nog niet gebouwd, ~2-3 uur).
 
 **17.5 Device- en platformrandgevallen** (main, bezig)
 - [ ] iOS/Safari: safe areas, notch/Dynamic Island, viewporthoogte, input-zoom, keyboard,
