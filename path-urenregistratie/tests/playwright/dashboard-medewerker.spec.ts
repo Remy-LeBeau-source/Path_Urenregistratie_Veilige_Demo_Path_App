@@ -1026,3 +1026,35 @@ test('[DASH-N-026] het medewerkerdashboard blijft nooit op "Werkvoorraad laden" 
     await expect(page.locator('#employee-dashboard-next-label')).not.toHaveText('Bezig');
   });
 });
+
+// Regressie: todaysWeekIndexInPeriod (en mobileWeekScope) matchten "vandaag"
+// tegen week.days, dat alleen werkdagen bevat -- in het weekend was er dus
+// nooit een match en viel de bento altijd terug op week 0 (de eerste week
+// van de maand), ook al leefde de medewerker allang in een latere week.
+// 12 september 2026 is een zaterdag binnen ISO-week 37 (7-13 sep, werkdagen
+// 7-11 sep in september); vóór de fix toonde de bento hier ten onrechte
+// "Week 36" (1-4 sep). Zie UI-TAKENLIJST.md.
+test('[DASH-N-023] Mijn uren toont in het weekend de week waar vandaag in valt, niet de eerste week van de maand', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await page.clock.setFixedTime(new Date('2026-09-12T10:00:00.000Z'));
+
+  await test.step('Given een medewerker inlogt op een zaterdag', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+  });
+
+  await test.step('Then toont de weekkaart de week van vandaag (7-11 sep), niet de eerste week van de maand', async () => {
+    await expect(page.locator('#new-bento-week-title')).toHaveText('Week 37');
+    await expect(page.locator('#new-bento-week-range')).toContainText('7 september 2026');
+    await expect(page.locator('#new-bento-week-range')).toContainText('11 september 2026');
+  });
+
+  await test.step('And telt Volgende week vanaf de juiste week verder, niet vanaf de eerste week van de maand', async () => {
+    // #hours-week-nav (Mijn uren) heeft dezelfde data-new-bento-week-knoppen;
+    // scopen naar het dashboardkaartje, anders matcht de klik op twee.
+    await page.locator('#new-employee-bento [data-new-bento-week="next"]').click();
+    await expect(page.locator('#new-bento-week-title')).toHaveText('Week 38');
+  });
+});

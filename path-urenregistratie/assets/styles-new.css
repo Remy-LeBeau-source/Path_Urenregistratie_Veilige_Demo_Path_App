@@ -1456,7 +1456,13 @@ html[data-skin="new"] .new-bento-customer-expand .month-choice-panel {
   background: #fbf9f4;
 }
 
+/* Dit kaartje is met opzet altijd crème, ongeacht licht/donker (zie de
+   andere regels hierboven met vaste hexwaarden). De knop zelf kreeg alleen
+   een vaste tekstkleur en erfde de achtergrond van --surface-muted uit
+   styles.css -- dat token wordt in donkere modus donkerblauw, waardoor
+   donkere tekst op donkerblauw onleesbaar werd. Achtergrond nu ook vast. */
 html[data-skin="new"] .new-bento-customer-expand .month-choice-panel button {
+  background: #edf1ea;
   color: #102235;
 }
 
@@ -3268,9 +3274,16 @@ html[data-skin="new"] .new-bento-customer-expand .status-pill {
   color: #8a5c1c;
 }
 
+/* Was hier omgezet naar hetzelfde halfdoorzichtige wit als de labelvlakken
+   verderop -- dat klopt alleen zolang de achterliggende kaart crème is. Bij
+   een andere maand (geen klanturenstaat, "Nog niet ontvangen") krijgt de
+   kaart een donkerdere ondergrond en werd dit blok daardoor onleesbaar
+   donker. .customer-timesheet-current moet altijd zelf leesbaar zijn, dus
+   terug naar de solide crème uit de regel hierboven i.p.v. afhankelijk zijn
+   van wat erachter zit. */
 html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-current {
   border-color: rgba(16, 34, 53, .12);
-  background: rgba(255, 255, 255, .5);
+  background: #f6f2e9;
 }
 
 html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-current strong {

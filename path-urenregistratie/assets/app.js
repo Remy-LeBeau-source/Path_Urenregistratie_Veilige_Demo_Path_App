@@ -5309,7 +5309,14 @@ function renderEmployeeCustomerTimesheet(record, employee, period) {
 function todaysWeekIndexInPeriod(period) {
   const now = new Date();
   if (now.getFullYear() === period.year && now.getMonth() === period.monthIndex) {
-    const index = period.weekRows.findIndex(week => week.days.some(day => day && day.day === now.getDate()));
+    // Niet op exacte dagnummers matchen: week.days bevat alleen werkdagen
+    // (weekend wordt bij het opbouwen van weekRows overgeslagen), dus in
+    // het weekend was er nooit een match en viel dit altijd terug op week 0
+    // -- ook al lag "vandaag" allang in een latere week. Vergelijk in plaats
+    // daarvan het ISO-weeknummer van vandaag, dat is ook voor za/zo
+    // gedefinieerd en wijst naar dezelfde week als de omliggende werkdagen.
+    const todayIsoWeek = isoWeekInfo(utcDate(now.getFullYear(), now.getMonth(), now.getDate()));
+    const index = period.weekRows.findIndex(week => week.number === todayIsoWeek.week && week.year === todayIsoWeek.year);
     if (index >= 0) return index;
   }
   return 0;
@@ -5320,7 +5327,13 @@ function newEmployeeBentoWeekIndex(period) {
   const selectedIndex = selected ? Number(selected[1]) : -1;
   if (selectedIndex >= 0 && period.weekRows[selectedIndex]) return selectedIndex;
   const suggested = /^week-(\d+)$/.exec(mobileWeekScope(period));
-  return suggested && period.weekRows[Number(suggested[1])] ? Number(suggested[1]) : 0;
+  if (suggested && period.weekRows[Number(suggested[1])]) return Number(suggested[1]);
+  // mobileWeekScope() geeft alleen op telefoonbreedte een concrete week terug
+  // ("all" op desktop, waar de regex hierboven dus nooit matcht). Zonder deze
+  // terugval liet het weekkaartje op desktop bij een verse sessie altijd week
+  // 0 zien, los van welke dag het is -- niet alleen in het weekend, ook op
+  // elke andere dag voorbij de eerste week van de maand.
+  return todaysWeekIndexInPeriod(period);
 }
 
 function isTimesheetWeekComplete(record, periodWeek, weekIndex) {
