@@ -1,4 +1,5 @@
-import { test, expect, type Page, type ConsoleMessage } from '@playwright/test';
+import { test, expect, type Page, type ConsoleMessage, type APIRequestContext } from '@playwright/test';
+import { employeeEmail, SEED_EMPLOYEE_IDS, type EmployeeEmailOverrides } from './_helpers';
 
 // Read-only rondgang over de LIVE TEST-site. Geen schrijfacties: geen uren
 // indienen, niks goedkeuren, geen factuur vergrendelen, geen mail versturen.
@@ -8,7 +9,20 @@ import { test, expect, type Page, type ConsoleMessage } from '@playwright/test';
 
 const VERWACHTE_VERSIE = process.env.TEST_REMOTE_EXPECTED_VERSION || '0.9.159';
 const ADMIN = { email: 'gio@example.invalid', password: '888888888888' };
+// Pas gevuld in beforeAll: het adres kan het echte adres zijn zodra de
+// TEST-mailsandbox genoemde testers kent (zie _helpers.ts, employeeEmail())
+// i.p.v. het vaste @example.invalid-seedadres. Het wachtwoord blijft het
+// vaste demo-wachtwoord -- dit bestand doet geen schrijfacties en dus ook
+// nooit een echte wachtwoordreset die dat zou kunnen laten afwijken.
 const EMPLOYEE = { email: 'stasjo@example.invalid', password: 'LocalDemoEmployee2026' };
+
+test.beforeAll(async ({ request }: { request: APIRequestContext }) => {
+  const res = await request.get('/server/auth/local-login-hints.php', { headers: { Accept: 'application/json' } });
+  if (!res.ok()) return;
+  const h = await res.json();
+  const overrides = (h.employeeEmailOverrides || {}) as EmployeeEmailOverrides;
+  EMPLOYEE.email = employeeEmail(overrides, SEED_EMPLOYEE_IDS.stasjo);
+});
 
 function vangConsoleFouten(page: Page): string[] {
   const fouten: string[] = [];

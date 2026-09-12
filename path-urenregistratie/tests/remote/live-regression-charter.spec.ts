@@ -3,7 +3,7 @@ import { CustomerTimesheetApi } from '../playwright/api/CustomerTimesheetApi';
 import {
   demoCreds, csrf, apiLogin, apiLogout, resetSharedBaseline, setTestMailDelivery,
   uiLogin, uiLogout, guiSubmitHours, guiApprove, apiApprove, finaliseViaConceptUpload, assertConceptInvoicePdf,
-  createDemoEmployee, createDemoAdmin, validPdfBytes, currentPeriodKey, type Creds,
+  createDemoEmployee, createDemoAdmin, validPdfBytes, currentPeriodKey, employeeEmail, SEED_EMPLOYEE_IDS, type Creds,
 } from './_helpers';
 
 /**
@@ -301,7 +301,7 @@ test('[TEST-E2E-21] exploratory: mededeling plaatsen, ontvangen, intrekken met h
   await apiLogin(request, creds.admin.email, creds.admin.password);
   const boot = await (await request.get('/server/api/bootstrap.php')).json();
   // bootstrap: e-mailadressen staan op boot.users, niet op boot.employees.
-  const stasjoUser = (boot.users as Array<Record<string, unknown>>).find((u) => String(u.email) === 'stasjo@example.invalid');
+  const stasjoUser = (boot.users as Array<Record<string, unknown>>).find((u) => String(u.email) === employeeEmail(creds.employeeEmailOverrides, SEED_EMPLOYEE_IDS.stasjo));
   const ontvangerId = Number(stasjoUser?.id || 0);
   expect(ontvangerId, 'de demo-medewerker hoort een user_id te hebben').toBeGreaterThan(0);
 
@@ -327,7 +327,7 @@ test('[TEST-E2E-21] exploratory: mededeling plaatsen, ontvangen, intrekken met h
   await apiLogout(request);
 
   await test.step('De ontvanger ziet de mededeling in het eigen archief', async () => {
-    await uiLogin(page, 'stasjo@example.invalid', creds.employee.password);
+    await uiLogin(page, creds.employee.email, creds.employee.password);
     await page.locator('button[data-view="employee-announcements"]:visible').first().click();
     await expect(page.locator('#view-employee-announcements')).toHaveClass(/is-active/);
     await expect(page.locator('#employee-announcement-list')).toContainText(`Exploratory bericht ${stempel}`);
@@ -383,7 +383,7 @@ test('[TEST-E2E-34] een mededeling met scriptinhoud belandt als tekst bij de med
   await apiLogin(request, creds.admin.email, creds.admin.password);
   const boot = await (await request.get('/server/api/bootstrap.php')).json();
   const stasjoUser = (boot.users as Array<Record<string, unknown>>)
-    .find((u) => String(u.email) === 'stasjo@example.invalid');
+    .find((u) => String(u.email) === employeeEmail(creds.employeeEmailOverrides, SEED_EMPLOYEE_IDS.stasjo));
   const ontvangerId = Number(stasjoUser?.id || 0);
   expect(ontvangerId, 'de demo-medewerker hoort een user_id te hebben').toBeGreaterThan(0);
 
@@ -400,7 +400,7 @@ test('[TEST-E2E-34] een mededeling met scriptinhoud belandt als tekst bij de med
   expect(verzonden.status(), `verzenden: ${await verzonden.text()}`).toBe(200);
   await apiLogout(request);
 
-  await uiLogin(page, 'stasjo@example.invalid', creds.employee.password);
+  await uiLogin(page, creds.employee.email, creds.employee.password);
   await page.locator('button[data-view="employee-announcements"]:visible').first().click();
   await expect(page.locator('#view-employee-announcements')).toHaveClass(/is-active/);
   const lijst = page.locator('#employee-announcement-list');
@@ -754,7 +754,10 @@ test('[TEST-E2E-30] twee medewerkers met hetzelfde nummer-sjabloon in dezelfde p
 test('[TEST-E2E-31] Marc en Brian: volledige afrond-flow levert de branded jsPDF-factuur', async ({ page }) => {
   test.setTimeout(300_000);
   const ECHT = /^[A-Za-z][A-Za-z-]*-\d{4}-(januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december)$/;
-  for (const email of ['marc@example.invalid', 'brian@example.invalid']) {
+  for (const email of [
+    employeeEmail(creds.employeeEmailOverrides, SEED_EMPLOYEE_IDS.marc),
+    employeeEmail(creds.employeeEmailOverrides, SEED_EMPLOYEE_IDS.brian),
+  ]) {
     await uiLogin(page, email, creds.employee.password);
     const me = await (await page.request.get('/server/auth/me.php')).json();
     const boot = await (await page.request.get('/server/api/bootstrap.php')).json();
