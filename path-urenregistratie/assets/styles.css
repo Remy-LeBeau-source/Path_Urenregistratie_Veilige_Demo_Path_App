@@ -1653,8 +1653,14 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .administrators-panel { margin-top: 22px; }
 .administrator-list { display: grid; }
 .administrator-row { display: grid; grid-template-columns: 1fr auto auto; gap: 15px; align-items: center; border-top: 1px solid var(--line); padding: 14px 24px; }
+/* var(--accent) verwees hier naar een token dat nergens is gedefinieerd. Een
+   ongeldige waarde maakt de hele outline-declaratie ongeldig, dus kreeg een
+   dubbel-accountconflict alleen de zachte glow (box-shadow) te zien en niet de
+   bedoelde scherpe rand eromheen -- gevonden via een scan op alle var()-
+   verwijzingen zonder eigen definitie. --mint is dezelfde kleurfamilie als de
+   glow ernaast. */
 .account-conflict-focus {
-  outline: 3px solid var(--accent);
+  outline: 3px solid var(--mint);
   outline-offset: 3px;
   box-shadow: 0 0 0 7px rgba(66, 196, 164, 0.18);
 }
@@ -1810,7 +1816,10 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 .customer-timesheet-current > div, .customer-timesheet-admin-row { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 14px; align-items: center; border: 1px solid var(--line); border-radius: 13px; background: var(--surface-muted); padding: 13px 15px; }
 .customer-timesheet-current strong, .customer-timesheet-current small, .customer-timesheet-admin-row strong, .customer-timesheet-admin-row small { display: block; }
 .customer-timesheet-current small, .customer-timesheet-admin-row small { margin-top: 4px; color: var(--muted); }
-.customer-timesheet-mail-preview { display: grid; gap: 10px; margin-top: 16px; border: 1px solid #cde9e1; border-left: 3px solid var(--accent); border-radius: 9px; background: #effaf7; padding: 14px 16px; }
+/* Zelfde ongedefinieerde-token-bug als .account-conflict-focus hierboven:
+   var(--accent) bestond niet, dus stond dit kaartje zonder de bedoelde
+   linkerrand-accent. --mint sluit aan bij de mint-tint van dit kaartje. */
+.customer-timesheet-mail-preview { display: grid; gap: 10px; margin-top: 16px; border: 1px solid #cde9e1; border-left: 3px solid var(--mint); border-radius: 9px; background: #effaf7; padding: 14px 16px; }
 .customer-timesheet-mail-preview-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .customer-timesheet-mail-preview-heading > div { min-width: 0; }
 .customer-timesheet-mail-preview span, .customer-timesheet-mail-preview strong { display: block; }
