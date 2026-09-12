@@ -1972,7 +1972,11 @@ html[data-skin="new"] .mini-avatar {
 html[data-skin="new"] .team-account-overview-copy h3 {
   font-family: var(--path-serif);
   font-weight: 400;
-  color: var(--navy-tekst);
+  /* Geen eigen kleur meer: dit blok bestaat alleen op het Medewerkers-scherm
+     (altijd-donker beheer-canvas), en var(--navy-tekst) wisselde zelf met
+     data-theme -- bij Nieuw + Licht dezelfde onleesbare-tekst-op-donkere-
+     achtergrond-fout als bij .view-heading h2 hierboven. Erft nu gewoon de
+     vaste lichte kleur van .main-content. */
 }
 
 html[data-skin="new"] .team-account-group {
@@ -2090,6 +2094,21 @@ html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.
   margin-left: 0;
   padding: 0 clamp(18px, 3vw, 48px) 48px;
   background: #081726;
+}
+
+/* "Teambeheer" en "6 actieve accounts"/"Beheerders" (Medewerkers-scherm)
+   krijgen hun leesbare kleur normaal alleen via html[data-theme="dark"]-
+   regels of erven anders body's var(--ink) -- beide wisselen zelf met
+   data-theme, terwijl dit beheer-canvas altijd donker is (achtergrond
+   hierboven, onafhankelijk van het thema). Bij Nieuw + Licht was deze tekst
+   daardoor bijna onleesbaar. Bewust hier één-voor-één benoemd i.p.v. een
+   brede overervingsregel op .main-content: dat brak juist de medewerker-
+   naamkaartjes (.strong-tekst zonder eigen kleurregel, die wél de kleur voor
+   hun eigen lichte kaart-ondergrond nodig hebben, niet deze canvaskleur). */
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) .view-heading h2,
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) .panel-heading h3,
+html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) .team-account-overview-copy h3 {
+  color: #d8e1e3;
 }
 
 /* Zes navigatietabs, een statusmelding, demo-herstel, twee vormgevingsknoppen,
