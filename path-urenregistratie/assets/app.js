@@ -8545,12 +8545,13 @@ function renderMailTemplates() {
 function mobileWeekScope(period) {
   const mobile = typeof window.matchMedia === "function" && window.matchMedia("(max-width: 590px)").matches;
   if (!mobile) return "all";
-  const now = new Date();
-  if (now.getFullYear() === period.year && now.getMonth() === period.monthIndex) {
-    const weekIndex = period.weekRows.findIndex(week => week.days.some(day => day && day.day === now.getDate()));
-    if (weekIndex >= 0) return "week-" + weekIndex;
-  }
-  return period.weekRows.length ? "week-0" : "all";
+  // Zelfde weekend-gat als todaysWeekIndexInPeriod() had (zie de toelichting
+  // daar): een exacte dagnummer-match tegen week.days faalt in het weekend,
+  // omdat die array alleen werkdagen bevat. Hergebruik daarom dezelfde
+  // ISO-weekvergelijking i.p.v. een eigen, licht andere kopie van dezelfde
+  // fout te onderhouden.
+  const index = todaysWeekIndexInPeriod(period);
+  return period.weekRows[index] ? "week-" + index : (period.weekRows.length ? "week-0" : "all");
 }
 
 // allowReset staat de terugval op mobileWeekScope() alleen toe als Mijn uren
