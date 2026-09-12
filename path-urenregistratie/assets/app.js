@@ -529,6 +529,14 @@ function freshState() {
     employees: [
       {
         id: 1,
+        // Vaste seed-user-id (database/seed-demo-data.sql: employees.id 1-4
+        // koppelt aan users.id 3-6) -- resolveLoginEmail() gebruikt dit veld
+        // om de server-override (employeeEmailOverrides, gesleuteld op
+        // users.id) op te zoeken. Zonder dit botste employees.id toevallig
+        // met een ANDERE genoemde testers users.id (Brian's employees.id 3
+        // = Marc's users.id 3), waardoor de snelkeuze bij Brian per ongeluk
+        // Marc's echte adres invulde.
+        dbUserId: 3,
         name: "Marc de Roon",
         email: "marc@example.invalid",
         active: true,
@@ -564,6 +572,7 @@ function freshState() {
       },
       {
         id: 2,
+        dbUserId: 4,
         name: "Stasjo van Bakel",
         email: "stasjo@example.invalid",
         active: true,
@@ -599,6 +608,7 @@ function freshState() {
       },
       {
         id: 3,
+        dbUserId: 5,
         name: "Brian Hek",
         email: "brian@example.invalid",
         active: true,
@@ -634,6 +644,7 @@ function freshState() {
       },
       {
         id: 4,
+        dbUserId: 6,
         name: "Shawn-Douglas Nahar",
         email: "shawn@example.invalid",
         active: true,
@@ -1688,7 +1699,16 @@ function requestLocalLoginHints() {
 function resolveLoginEmail(role, account, hints) {
   const fallback = String(account?.email || "").trim();
   if (role !== "employee" || !account) return fallback;
-  const override = hints?.employeeEmailOverrides?.[String(account.id)];
+  // employeeEmailOverrides komt van de server gesleuteld op users.id, niet op
+  // employees.id -- account.id is voor de statische demo-picker de laatste
+  // (1-4), en botst toevallig met een ANDERE genoemde tester zijn users.id
+  // (bv. Brian employees.id 3 = Marc users.id 3). account.dbUserId draagt het
+  // juiste users.id zodra dat bekend is (server-gemergede medewerkers hebben
+  // dit al; de vier statische demo-catalogusrijen kregen het hier expliciet
+  // mee). Zonder deze voorkeur vulde de snelkeuze bij Brian per ongeluk
+  // Marc's echte adres in (gemeld door de gebruiker).
+  const overrideId = account.dbUserId != null ? account.dbUserId : account.id;
+  const override = hints?.employeeEmailOverrides?.[String(overrideId)];
   return override ? String(override).trim() : fallback;
 }
 

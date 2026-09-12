@@ -144,3 +144,11 @@ Feature: Inloggen, uitloggen en sessiebeheer
     Given inloggen, uitloggen en sessiebeheer is voorbereid
     When de flow voor AUTH-H-022 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat in productiemodus toont de app de naam van de ingelogde gebruiker
+
+  @happy
+  Scenario: [AUTH-H-025] de medewerker-snelkeuze vult het juiste, per-persoon echte adres in, niet dat van een andere genoemde tester
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given inloggen, uitloggen en sessiebeheer is voorbereid
+    When Marc wordt gekozen
+    Then krijgt Brian zijn eigen adres, niet dat van Marc

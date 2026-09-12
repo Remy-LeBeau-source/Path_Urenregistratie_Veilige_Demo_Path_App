@@ -350,7 +350,7 @@ test('[AUTH-H-009] lokale login benoemt de veilige testomgeving en productnaam',
     await expect(page.locator('#auth-login-email')).toHaveAttribute('placeholder', 'naam@pathconsultancy.nl');
     await expect(page.locator('#auth-login-submit')).toBeVisible();
     await expect(page.locator('.login-footer')).toContainText('© 2026 Path Consultancy');
-    await expect(page.locator('.login-footer')).toContainText('Versie 2.0.2');
+    await expect(page.locator('.login-footer')).toContainText('Versie 2.0.3');
   });
 
   await test.step('And kan het wachtwoord toegankelijk worden getoond en weer verborgen', async () => {
@@ -526,4 +526,45 @@ test('[AUTH-H-022] in productiemodus toont de app de naam van de ingelogde gebru
     page.locator('#workspace-name'),
     'in productiemodus moet de eigen naam verschijnen'
   ).toHaveText(serverName, { timeout: 15000 });
+});
+
+test('[AUTH-H-025] de medewerker-snelkeuze vult het juiste, per-persoon echte adres in, niet dat van een andere genoemde tester', async ({ page }) => {
+  // Gemeld door de gebruiker (12 sep): "als je met Brian inloggen zie je marc
+  // en bij marc kan je er soms niet in". Oorzaak: employeeEmailOverrides komt
+  // van de server gesleuteld op users.id (3=Marc/4=Stasjo/5=Brian/6=Shawn),
+  // maar de statische snelkeuze-catalogus in assets/app.js gebruikt zijn eigen
+  // employees.id (1=Marc/2=Stasjo/3=Brian/4=Shawn) als account.id --
+  // resolveLoginEmail() zocht de override op met dat verkeerde id, en Brian's
+  // employees.id (3) botste toevallig met Marc's users.id (3). Deze mock
+  // maakt die botsing hard reproduceerbaar zonder dat de echte TEST-mailbox-
+  // configuratie lokaal aanwezig hoeft te zijn.
+  await page.route('**/server/auth/local-login-hints.php*', async route => {
+    await route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true, enabled: true, adminPassword: '', employeePassword: 'TestWachtwoord!123',
+        employeeEmailOverrides: {
+          '3': 'marcderoon@pathconsultancy.nl',
+          '5': 'brian.hek@pathconsultancy.nl',
+        },
+      }),
+    });
+  });
+
+  await page.goto(appConfig.baseUrl);
+  const indicator = page.locator('#auth-mode-indicator');
+  await expect(indicator).toBeVisible({ timeout: 10_000 });
+  await expect(indicator).not.toHaveText(/Controle van auth-sessie wordt uitgevoerd\./, { timeout: 12_000 });
+
+  await test.step('When Marc wordt gekozen', async () => {
+    await page.locator('#login-employee-trigger').click();
+    await page.locator('#login-employee-choices button', { hasText: 'Marc de Roon' }).click();
+    await expect(page.locator('#auth-login-email')).toHaveValue('marcderoon@pathconsultancy.nl');
+  });
+
+  await test.step('Then krijgt Brian zijn eigen adres, niet dat van Marc', async () => {
+    await page.locator('#login-employee-trigger').click();
+    await page.locator('#login-employee-choices button', { hasText: 'Brian Hek' }).click();
+    await expect(page.locator('#auth-login-email')).toHaveValue('brian.hek@pathconsultancy.nl');
+  });
 });

@@ -66,3 +66,5 @@ Then("tonen beide avatars SB, niet SV");
 And("de initialen-functie klopt over de klassen namen heen");
 When("de flow voor AUTH-H-022 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat in productiemodus toont de app de naam van de ingelogde gebruiker");
+When("Marc wordt gekozen");
+Then("krijgt Brian zijn eigen adres, niet dat van Marc");

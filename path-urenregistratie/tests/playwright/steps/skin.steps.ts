@@ -102,6 +102,11 @@ When("de medewerker maandag van week 37 zelf al op 12 uur zet en daarna Standaar
 Then("blijft maandag op 12 (niet overschreven), en zijn dinsdag/woensdag/donderdag/vrijdag gevuld met het patroon");
 And("toont Mijn uren dezelfde knop, die van naam wisselt tussen week en hele maand");
 And("blijft de knop ook in Klassiek werken");
+Given("een ingelogde medewerker met Mijn uren open op een week met minstens één werkdag");
+When("een volledige werkweek met een echte maandag wordt gezocht");
+And("een werkdag bewust op 0 wordt bevestigd (ziek/vrij), afwijkend van het standaardpatroon");
+And("overschrijft na bevestiging ook de bewust-bevestigde 0-dag met het standaardpatroon");
+Then("wordt met Playwright-assertions bevestigd dat \"Week terugzetten\" overschrijft ook een dag die bewust op 0 is bevestigd, na expliciete bevestiging");
 When("op de knop van de Volgende actie wordt geklikt");
 Then("blijft het Dashboard actief, net als bij de losse maandregels eronder");
 Given("Klassiek: minstens twee losse dagcellen tonen allebei hun eigen 0/8/9, zonder te focussen");

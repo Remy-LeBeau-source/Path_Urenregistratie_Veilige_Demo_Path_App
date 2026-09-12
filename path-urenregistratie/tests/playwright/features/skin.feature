@@ -219,6 +219,16 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     And blijft de knop ook in Klassiek werken
 
   @happy
+  Scenario: [SKIN-H-028] "Week terugzetten" overschrijft ook een dag die bewust op 0 is bevestigd, na expliciete bevestiging
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given een ingelogde medewerker met Mijn uren open op een week met minstens één werkdag
+    When een volledige werkweek met een echte maandag wordt gezocht
+    And een werkdag bewust op 0 wordt bevestigd (ziek/vrij), afwijkend van het standaardpatroon
+    And overschrijft na bevestiging ook de bewust-bevestigde 0-dag met het standaardpatroon
+    Then wordt met Playwright-assertions bevestigd dat "Week terugzetten" overschrijft ook een dag die bewust op 0 is bevestigd, na expliciete bevestiging
+
+  @happy
   Scenario: [SKIN-H-024] "Volgende actie" bovenaan Open acties per maand toont de eerstvolgende stap en blijft op het Dashboard
     # Testtechniek: End-to-end use-case + visuele contractasserties
     # Aantoonbare Playwright-assertions in deze case: 11

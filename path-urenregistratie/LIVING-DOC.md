@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 495 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 500 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 495 unieke case-ID's
+- Playwright executable cases: 500 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 496 unieke case-ID's
+- Totaal executable cases: 501 unieke case-ID's
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
 - Database steps mappings: 1
-- Uitvoeringen: 531
-- Niet-mobile projectuitvoeringen: 459
+- Uitvoeringen: 536
+- Niet-mobile projectuitvoeringen: 464
 - Mobile functionele cases: 36
 - Pixel 7 / Chromium-uitvoeringen: 36
 - iPhone 13 / WebKit-uitvoeringen: 36
 
-De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 495 Playwright-functionele cases in totaal 531 resultaten op: 459 + (36 x 2) = 531.
+De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 500 Playwright-functionele cases in totaal 536 resultaten op: 464 + (36 x 2) = 536.
 
 ## Documentatieketen
 
@@ -117,7 +117,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 495 Playwri
 
 - Feature: `tests/playwright/features/auth.feature`
 - Source: `tests/playwright/auth.spec.ts`
-- Cases: 16
+- Cases: 17
 
 - [AUTH-H-001] Admin logt in en auth/me geeft de juiste gebruiker terug — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 - [AUTH-H-002] Medewerker logt in en auth/me geeft de juiste gebruiker terug — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
@@ -135,6 +135,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 495 Playwri
 - [AUTH-H-021] elke beheerder ziet na inloggen de eigen naam, nooit die van een collega — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [AUTH-H-024] avatar-initialen slaan Nederlandse tussenvoegsels over — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 4
 - [AUTH-H-022] in productiemodus toont de app de naam van de ingelogde gebruiker — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 2
+- [AUTH-H-025] de medewerker-snelkeuze vult het juiste, per-persoon echte adres in, niet dat van een andere genoemde tester — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 
 ### Bedrijfsketens van medewerker tot Backoffice
 
@@ -576,7 +577,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 495 Playwri
 
 - Feature: `tests/playwright/features/security.feature`
 - Source: `tests/playwright/security.spec.ts`
-- Cases: 16
+- Cases: 19
 
 - [SEC-H-001] csrf token endpoint werkt — Techniek: API-contract + equivalentieklasse · Assertions: 4
 - [SEC-H-002] login met csrf werkt — Techniek: API-contract + equivalentieklasse · Assertions: 2
@@ -594,12 +595,15 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 495 Playwri
 - [SEC-H-007] config voorbeeld bevat voorbereide CSP/CORS/HSTS flags — Techniek: API-contract + equivalentieklasse · Assertions: 3
 - [SEC-H-008] draaiende server zet de vaste beveiligingsheaders echt op elk antwoord — Techniek: API-contract + equivalentieklasse · Assertions: 5
 - [SEC-N-008] cors weerspiegelt alleen een toegestane origin, nooit een onbekende — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 7
+- [SEC-H-009] medewerker die handmatig naar een beheerscherm navigeert komt terug op het eigen dashboard — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
+- [SEC-H-010] medewerker die de pagina herlaadt met een beheer-URL in de adresbalk komt terug op het eigen dashboard — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
+- [SEC-H-011] medewerker die naar Klanturenstaten (beheer) navigeert komt terug op het eigen dashboard — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 
 ### Vormgevingsschakelaar (klassiek / nieuw)
 
 - Feature: `tests/playwright/features/skin.feature`
 - Source: `tests/playwright/skin.spec.ts`
-- Cases: 27
+- Cases: 28
 
 - [SKIN-H-001] de app start standaard in de klassieke vormgeving — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
 - [SKIN-H-002] Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
@@ -625,6 +629,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 495 Playwri
 - [SKIN-H-021] de medewerker blijft op het Dashboard: de pijl springt naar vandaag in het weekkaartje, open maanden staan er zichtbaar bij, en een skinwissel hertekent Mijn uren direct — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 19
 - [SKIN-H-022] een tweede herlading zet de skin/thema-voorkeur niet terug naar standaard — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 8
 - [SKIN-H-023] "Standaardweek/-maand vullen" vult alleen lege dagen met het eigen werkpatroon, in Nieuw en Klassiek — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 26
+- [SKIN-H-028] "Week terugzetten" overschrijft ook een dag die bewust op 0 is bevestigd, na expliciete bevestiging — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
 - [SKIN-H-024] "Volgende actie" bovenaan Open acties per maand toont de eerstvolgende stap en blijft op het Dashboard — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
 - [SKIN-H-025] de 0/8/9-snelkeuze bij elke dag staat altijd zichtbaar, in Klassiek en in Nieuw — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
 - [SKIN-H-027] Nieuw-skin beheer-topbar behoudt de safe-area-inset-top van de statusbalk — Techniek: Toestandsovergang · Assertions: 2

@@ -134,3 +134,27 @@ Feature: Authenticatie- en API-beveiliging
     Then weerspiegelt de server precies die origin met credentials toegestaan
     When hetzelfde verzoek een niet-vertrouwde origin meestuurt
     Then geeft de server geen Access-Control-Allow-Origin voor die origin terug
+
+  @happy
+  Scenario: [SEC-H-009] medewerker die handmatig naar een beheerscherm navigeert komt terug op het eigen dashboard
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given een ingelogde medewerker op het eigen dashboard
+    When de hash handmatig naar een beheerder-only scherm wordt gezet
+    Then blijft de medewerker op het eigen dashboard, niet op Instellingen
+
+  @happy
+  Scenario: [SEC-H-010] medewerker die de pagina herlaadt met een beheer-URL in de adresbalk komt terug op het eigen dashboard
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given een ingelogde medewerker
+    When de pagina wordt herladen met een beheer-only hash al in de URL (bv. bewaarde link)
+    Then start de medewerker alsnog op het eigen dashboard, niet op Medewerkersbeheer
+
+  @happy
+  Scenario: [SEC-H-011] medewerker die naar Klanturenstaten (beheer) navigeert komt terug op het eigen dashboard
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given een ingelogde medewerker
+    When de hash handmatig naar het beheer-klanturenstatenscherm wordt gezet
+    Then blijft de medewerker op het eigen dashboard, met de bijbehorende hash en titel
