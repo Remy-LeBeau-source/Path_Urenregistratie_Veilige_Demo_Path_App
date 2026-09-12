@@ -107,3 +107,5 @@ Then("blijft het Dashboard actief, net als bij de losse maandregels eronder");
 Given("Klassiek: minstens twee losse dagcellen tonen allebei hun eigen 0/8/9, zonder te focussen");
 When("naar Nieuw wordt gewisseld op dezelfde week");
 Then("tonen minstens twee bento-dagkaartjes allebei hun eigen 0/8/9, zonder te focussen");
+When("de flow voor SKIN-H-027 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat nieuw-skin beheer-topbar behoudt de safe-area-inset-top van de statusbalk");

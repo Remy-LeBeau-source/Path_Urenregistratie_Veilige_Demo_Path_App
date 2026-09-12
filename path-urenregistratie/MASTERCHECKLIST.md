@@ -1984,8 +1984,25 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   telt niet als autorisatie
 
 **17.5 Device- en platformrandgevallen** (main, bezig)
-- [ ] iOS/Safari: safe areas, notch/Dynamic Island, viewporthoogte, input-zoom, keyboard,
-  datumvelden, uploads, sticky headers, fixed buttons
+- [x] iOS/Safari safe areas -- eerste bevinding: Klassiek behandelt `env(safe-area-inset-top)`
+  op `.topbar` al correct (voorkomt dat de statusbalk/notch/Dynamic Island in standalone-PWA
+  "Rol kiezen" en andere kop-knoppen bedekt), maar de New-skin-laag voor alle beheerschermen
+  (Dashboard/Goedkeuringen/Facturen/Medewerkers/Instellingen/Mededelingen/Klanturenstaat-beheer)
+  overschreef dat stilzwijgend met een platte `padding-top: 14px` en trok de fix zo weer in.
+  Rol: Beheerder. Design: Nieuw (Klassiek ongemoeid, had de fix al). Thema: dit kopgedeelte
+  gebruikt vaste donkere kleuren ongeacht licht/donker, dus themaneutraal. Devices: relevant op
+  iOS-notch/Dynamic-Island-toestellen in standalone-PWA; env() resolvet naar 0px op desktop/Android/
+  gewone browser dus daar geen zichtbaar verschil. Bestand: `assets/styles-new.css` (calc() optelt
+  i.p.v. vervangt). Nieuwe regressie `[SKIN-H-027]`: bewijst de bronregel zelf (zelfde bekende
+  omgevingsgat als PWD-H-020/021/EQ-H-041 -- een live computed-style-check zou in een niet-genotchte
+  CI-browser met en zonder de fix identiek "14px" teruggeven en niets bewijzen), discriminerend
+  bevestigd (tijdelijk teruggezet, faalt exact zoals verwacht; hersteld, weer groen). Getest:
+  `skin.spec.ts` volledig (26 cases, 1 losstaande bestaande flake SKIN-H-011 geïsoleerd bevestigd
+  geslaagd), `contrast-licht-donker.mjs` groen, `npm run check` groen. Overige iOS-punten
+  (viewporthoogte, input-zoom, keyboard, datumvelden, uploads, sticky headers, overige fixed
+  buttons) nog te doen.
+- [ ] iOS/Safari: viewporthoogte, input-zoom, keyboard, datumvelden, uploads, sticky headers,
+  overige fixed buttons
 - [ ] Android/Chrome: viewport, keyboard, terugknop, datumvelden, uploads, sticky/fixed, standalone/PWA
 - [ ] PWA: manifest, icons, standalone, theme-color, service worker, caching/updates -- geen
   offline urenmutatie zonder expliciete sync-/conflictafhandeling, uren nooit stilletjes overschreven

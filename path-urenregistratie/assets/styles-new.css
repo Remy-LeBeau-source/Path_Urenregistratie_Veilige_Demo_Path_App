@@ -2109,7 +2109,14 @@ html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.
   flex-wrap: nowrap;
   align-items: flex-start;
   row-gap: 8px;
-  padding-top: 14px;
+  /* De basisregel (.topbar { padding-top: env(safe-area-inset-top) }) voorkomt
+     dat de statusbalk op een iPhone met notch/Dynamic Island in standalone-
+     PWA-modus over de kop heen valt (zie de toelichting bij die regel in
+     styles.css -- "Rol kiezen" werkte daardoor ooit wel in de browser maar
+     niet in de geïnstalleerde app). Deze New-skin-laag zette platte 14px
+     zonder de safe-area erbij op te tellen en trok die fix zo stilzwijgend
+     weer in voor elk beheerscherm hier. Optellen i.p.v. vervangen. */
+  padding-top: calc(14px + env(safe-area-inset-top, 0px));
   padding-bottom: 12px;
 }
 

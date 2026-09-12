@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 493 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 495 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 493 unieke case-ID's
+- Playwright executable cases: 495 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 494 unieke case-ID's
+- Totaal executable cases: 496 unieke case-ID's
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
 - Database steps mappings: 1
-- Uitvoeringen: 529
-- Niet-mobile projectuitvoeringen: 457
+- Uitvoeringen: 531
+- Niet-mobile projectuitvoeringen: 459
 - Mobile functionele cases: 36
 - Pixel 7 / Chromium-uitvoeringen: 36
 - iPhone 13 / WebKit-uitvoeringen: 36
 
-De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 493 Playwright-functionele cases in totaal 529 resultaten op: 457 + (36 x 2) = 529.
+De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 495 Playwright-functionele cases in totaal 531 resultaten op: 459 + (36 x 2) = 531.
 
 ## Documentatieketen
 
@@ -197,7 +197,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 493 Playwri
 
 - Feature: `tests/playwright/features/dashboard.feature`
 - Source: `tests/playwright/dashboard*.spec.ts`
-- Cases: 38
+- Cases: 39
 
 - [DASH-H-002] employee dashboard opent zonder console errors — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 1
 - [DASH-H-025] "Mijn maanden" toont naast de urenstatus ook de klanturenstaat-status per maand — Techniek: Toestandsovergang · Assertions: 7
@@ -219,6 +219,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 493 Playwri
 - [DASH-H-024] startdatum verbergt procesmaand zonder uren of klanturenstaatactie te wissen — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 13
 - [DASH-H-023] medewerker kan met de browser-terug/-vooruit-knop door alle eigen schermen navigeren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [DASH-N-026] het medewerkerdashboard blijft nooit op "Werkvoorraad laden" hangen, ook niet als de eerste serversync faalt — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
+- [DASH-N-028] Mijn uren toont in het weekend de week waar vandaag in valt, niet de eerste week van de maand — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
 - [DASH-H-001] admin dashboard opent zonder console errors — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [DASH-H-018] elke login en elke Dashboard-klik opent de actuele maand; een handmatige maand blijft alleen op andere schermen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 29
 - [DASH-N-022] een medewerker met een toekomstige startdatum verschijnt niet in Teamstatus of Klanturenstaten vóór indiensttreding — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
@@ -229,7 +230,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 493 Playwri
 - [DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker en Backoffice — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 24
 - [DASH-N-012] afgeronde verzendcontrole blijft na F5 weg, ongeacht het beginaantal — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
 - [DASH-H-012] GUI-smoke scheidt werkacties van medewerkers- en beheerdersaccounts — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 35
-- [DASH-H-013] dashboardmodules tonen compacte documenten, procesfasen en teamacties — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 14
+- [DASH-H-013] dashboardmodules tonen compacte documenten, procesfasen en teamacties — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 16
 - [DASH-N-017] beheerderdashboard toont een laadtoestand tot de eerste werkvoorraad-sync — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 7
 - [DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels — Techniek: Equivalentieklassen · Assertions: 30
 - [DASH-H-019] werkvoorraadhydratatie negeert toekomstperioden en begrenst parallelle reads — Techniek: Equivalentieklassen · Assertions: 6
@@ -265,7 +266,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 493 Playwri
 - [EQ-H-043] een genoemde tester houdt zijn echte wachtwoord vast, ook nadat zijn adres is teruggezet na een reset-cyclus — Techniek: Toestandsovergang · Assertions: 3
 - [EQ-H-037] goedkeuren maakt exact één definitieve-goedkeuringsmail — Techniek: Toestandsovergang · Assertions: 7
 - [EQ-H-038] herindienen na correctie maakt een eigen, tweede ontvangstmail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
-- [EQ-H-022] één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie — Techniek: API-contract + equivalentieklasse · Assertions: 14
+- [EQ-H-022] één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie en de vaste TD B.V.-ontvanger — Techniek: API-contract + equivalentieklasse · Assertions: 15
 - [EQ-H-004] action=enqueue voor gelockte factuur maakt nieuwe items aan — Techniek: Toestandsovergang · Assertions: 6
 - [EQ-H-005] action=list response bevat verplichte velden — Techniek: API-contract + equivalentieklasse · Assertions: 15
 - [EQ-H-015] Backoffice ziet veilige verzendhistorie zonder berichtinhoud — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 25
@@ -546,7 +547,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 493 Playwri
 - [SAFE-N-007] productieconfigurator verwerkt DB-secret uitsluitend interactief en fail-closed — Techniek: Toestandsovergang · Assertions: 14
 - [SAFE-H-005] SMTP-dispatch en operationele scripts blijven fail-closed — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 25
 - [SAFE-H-010] echte TEST-mail vereist opt-in en een ontvangers-whitelist — Techniek: API-contract + equivalentieklasse · Assertions: 16
-- [SAFE-H-013] TEST-mailsandbox opent atomisch voor twee toegestane TEST-ontvangers (sink + CC), plus vier met naam genoemde testers — Techniek: API-contract + equivalentieklasse · Assertions: 32
+- [SAFE-H-013] TEST-mailsandbox opent atomisch voor twee toegestane TEST-ontvangers (sink + CC), een derde beheerdersaccount, plus vier met naam genoemde testers — Techniek: API-contract + equivalentieklasse · Assertions: 32
 - [SAFE-H-006] eerste productieorganisatie wordt gevalideerd en zonder overschrijven ingericht — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 18
 - [SAFE-H-011] groene main-pipeline rolt exact dezelfde release veilig uit naar productie — Techniek: Toestandsovergang + foutinjectie + beslissingstabel · Assertions: 28
 - [SAFE-H-016] de eerste 1.x-uitrol normaliseert PROD naar de afgesproken baseline en controleert die streng — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 32
@@ -598,7 +599,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 493 Playwri
 
 - Feature: `tests/playwright/features/skin.feature`
 - Source: `tests/playwright/skin.spec.ts`
-- Cases: 26
+- Cases: 27
 
 - [SKIN-H-001] de app start standaard in de klassieke vormgeving — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
 - [SKIN-H-002] Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
@@ -626,6 +627,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 493 Playwri
 - [SKIN-H-023] "Standaardweek/-maand vullen" vult alleen lege dagen met het eigen werkpatroon, in Nieuw en Klassiek — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 26
 - [SKIN-H-024] "Volgende actie" bovenaan Open acties per maand toont de eerstvolgende stap en blijft op het Dashboard — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
 - [SKIN-H-025] de 0/8/9-snelkeuze bij elke dag staat altijd zichtbaar, in Klassiek en in Nieuw — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
+- [SKIN-H-027] Nieuw-skin beheer-topbar behoudt de safe-area-inset-top van de statusbalk — Techniek: Toestandsovergang · Assertions: 2
 
 ### Correctie- en goedkeuringsproces
 

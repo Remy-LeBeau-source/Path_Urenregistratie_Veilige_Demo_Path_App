@@ -44,7 +44,7 @@ When("de flow voor EQ-H-038 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat herindienen na correctie maakt een eigen, tweede ontvangstmail");
 Given("één goedgekeurde urenstaat als factuur is afgerond");
 When("de routes voor dezelfde factuur worden uitgelezen");
-Then("wordt met Playwright-assertions bevestigd dat één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie");
+Then("wordt met Playwright-assertions bevestigd dat één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie en de vaste TD B.V.-ontvanger");
 Given("een admin is ingelogd met een reeds gelockte factuur");
 When("action=enqueue wordt aangeroepen");
 Then("zijn de nieuwe items in de queue zichtbaar per invoiceId");

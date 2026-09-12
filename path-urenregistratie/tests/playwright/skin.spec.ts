@@ -1,4 +1,6 @@
 import { expect, test, request as playwrightRequest, type Locator } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { LoginPage } from './pages/LoginPage';
 import { openProfielmenu } from './pages/TopbarMenu';
 import { appConfig, requirePassword } from './fixtures/appConfig';
@@ -1461,4 +1463,32 @@ test('[SKIN-H-025] de 0/8/9-snelkeuze bij elke dag staat altijd zichtbaar, in Kl
     await dagen.first().locator('[data-new-bento-set="9"]').click();
     await expect(dagen.first().locator('.new-bento-hours-input')).toHaveValue('9');
   });
+});
+
+test('[SKIN-H-027] Nieuw-skin beheer-topbar behoudt de safe-area-inset-top van de statusbalk', async () => {
+  // Fase 17.5-audit (device-/platformrandgevallen, main, 12 sep): de bestaande
+  // basisregel .topbar { padding-top: env(safe-area-inset-top, 0px) } voorkomt
+  // dat de iOS-statusbalk (notch/Dynamic Island) in standalone-PWA-modus over
+  // de kop heen valt -- zonder die regel werkte "Rol kiezen" ooit wel in de
+  // browser maar niet in de geïnstalleerde app (zie de toelichting bij die
+  // regel in assets/styles.css). De New-skin-laag voor de beheerschermen
+  // (dashboard/goedkeuringen/facturen/medewerkers/instellingen/mededelingen/
+  // klanturenstaat-beheer) zette platte padding-top: 14px zonder de safe-area
+  // erbij op te tellen, en trok die fix zo stilzwijgend weer in voor elk van
+  // die schermen. env(safe-area-inset-top) resolvet in een gewone/CI-browser
+  // altijd naar 0px (geen notch aanwezig) -- een live getComputedStyle-check
+  // zou dus zowel met als zonder de fix exact "14px" teruggeven en niets
+  // bewijzen. Zelfde bekende omgevingsgat als PWD-H-020/021/EQ-H-041: de
+  // bronregel zelf is hier het enige betrouwbare bewijs.
+  const css = await readFile(join(process.cwd(), 'assets', 'styles-new.css'), 'utf8');
+  const selector = 'html[data-skin="new"] .app-shell:has(#view-dashboard.is-active, #view-approvals.is-active, #view-invoices.is-active, #view-employees.is-active, #view-settings.is-active, #view-announcements.is-active, #view-customer-timesheet-admin.is-active) .topbar {';
+  const start = css.indexOf(selector);
+  expect(start, 'de beheer-topbar-regel voor Nieuw hoort te bestaan').toBeGreaterThanOrEqual(0);
+  // Niet zoeken naar de eerste '}' na de selector: het commentaar bij de fix
+  // citeert de oude regel (".topbar { ... }") en die letterlijke accolades
+  // zouden de slice te vroeg afkappen. Een vast venster is hier eenvoudiger
+  // en robuuster dan een echte CSS-parser voor deze ene, kleine controle.
+  const block = css.slice(start, start + 1500);
+  expect(block, 'padding-top moet de safe-area-inset-top van de statusbalk optellen, niet vervangen')
+    .toMatch(/padding-top:\s*calc\(14px \+ env\(safe-area-inset-top, 0px\)\)/);
 });

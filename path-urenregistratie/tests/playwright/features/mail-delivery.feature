@@ -99,13 +99,13 @@ Feature: Mailroutering en aflevering
     Then wordt met Playwright-assertions bevestigd dat herindienen na correctie maakt een eigen, tweede ontvangstmail
 
   @happy
-  Scenario: [EQ-H-022] één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie
+  Scenario: [EQ-H-022] één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie en de vaste TD B.V.-ontvanger
     # Testtechniek: API-contract + equivalentieklasse
-    # Aantoonbare Playwright-assertions in deze case: 14
+    # Aantoonbare Playwright-assertions in deze case: 15
     Given één goedgekeurde urenstaat als factuur is afgerond
     When de routes voor dezelfde factuur worden uitgelezen
     And cleanup
-    Then wordt met Playwright-assertions bevestigd dat één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie
+    Then wordt met Playwright-assertions bevestigd dat één factuuractie maakt drie functionele routes plus een invoice-only backoffice-archiefkopie en de vaste TD B.V.-ontvanger
 
   @happy
   Scenario: [EQ-H-004] action=enqueue voor gelockte factuur maakt nieuwe items aan
