@@ -167,6 +167,35 @@ rechtstreeks over productie zonder expliciete toestemming en een verse pre-resto
 12. Alleen na ondertekende acceptatie mail activeren en één gecontroleerde echte proef verzenden.
 13. Pas na succesvolle HTTPS-observatieperiode HSTS afzonderlijk activeren.
 
+## 7a. Vastgelopen releasepijplijn door de PROD-goedkeuringspoort
+
+`release-pipeline.yml` draait op elke push naar `main` en loopt door tot en met `Deploy Test to
+TransIP`; de laatste stap, `Promote Prod (goedkeuring)`, is een handmatige GitHub Environment-
+review die op "waiting" blijft staan totdat iemand hem afhandelt. Dat is op zichzelf geen fout --
+TEST is dan al succesvol bijgewerkt.
+
+Het probleem: de workflow gebruikt `concurrency: group: release-pipeline, cancel-in-progress:
+false`, en `pilot-merge-queue.yml` wacht expliciet tot er geen releaserun meer "in progress" is op
+`main` voordat hij `herontwerp` mag doormergen. Een run die op de PROD-poort blijft "waiting" telt
+als in-progress, dus blokkeert hij stilzwijgend elke latere push totdat die ene poort wordt
+afgehandeld.
+
+**Toegestane oplossing:** die ene vastzittende run **afwijzen** (nooit goedkeuren) via de GitHub
+API, zodat de wachtrij vrijkomt zonder dat er iets naar PROD gaat:
+
+```bash
+gh run list --workflow=release-pipeline.yml --limit 1
+gh api repos/<owner>/<repo>/actions/runs/<run_id>/pending_deployments
+gh api --method POST repos/<owner>/<repo>/actions/runs/<run_id>/pending_deployments \
+  -f state=rejected -f comment="Afgewezen om de wachtrij vrij te maken; niet naar PROD." \
+  -F environment_ids[]=<id-uit-vorige-stap>
+```
+
+Dit is uitdrukkelijk toegestaan als routinehandeling (herbevestigd door de opdrachtgever op
+2026-09-12) om de doorstroom naar TEST niet te laten vaststaan. De harde grens blijft ongewijzigd:
+nooit goedkeuren, nooit zelf iets richting PROD activeren. Rejecten mag altijd zonder opnieuw te
+hoeven vragen; approven nooit, ook niet als daarom gevraagd lijkt te worden.
+
 ## 8. Rollback
 
 1. Stop mailqueue- en muterende cronjobs.
