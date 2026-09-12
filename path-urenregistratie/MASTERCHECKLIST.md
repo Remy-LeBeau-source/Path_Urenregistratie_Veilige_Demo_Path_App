@@ -1979,9 +1979,11 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   responsive wijziging
 
 **17.4 Security en rollen (verplicht, sectie 20)**
-- [ ] Medewerker kan Beheer-functies niet bereiken via handmatige URL, verborgen knop, API-call,
-  oude browserstate of localStorage/sessionstate -- backend-autorisatie blijft leidend, UI-verbergen
-  telt niet als autorisatie
+- [x] Handmatige URL/hash naar een beheerscherm: API-403 al gedekt (ROLE-N-004/005), nu ook UI-niveau
+  bewezen -- medewerker komt zowel bij live hash-navigatie als bij herladen met een beheer-URL al in
+  de adresbalk terug op het eigen dashboard. `[SEC-H-009]`/`[SEC-H-010]`, v2.0.1, skin-onafhankelijk.
+- [ ] Verborgen knop, directe API-call vanaf de medewerkerkant, oude browserstate/localStorage-state
+  (resterende deelpunten van sectie 20, nog te doen)
 
 **17.5 Device- en platformrandgevallen**
 - [ ] iOS/Safari: safe areas, notch/Dynamic Island, viewporthoogte, input-zoom, keyboard,
