@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 501 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 502 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 501 unieke case-ID's
+- Playwright executable cases: 502 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 502 unieke case-ID's
+- Totaal executable cases: 503 unieke case-ID's
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
 - Database steps mappings: 1
-- Uitvoeringen: 537
+- Uitvoeringen: 539
 - Niet-mobile projectuitvoeringen: 465
-- Mobile functionele cases: 36
-- Pixel 7 / Chromium-uitvoeringen: 36
-- iPhone 13 / WebKit-uitvoeringen: 36
+- Mobile functionele cases: 37
+- Pixel 7 / Chromium-uitvoeringen: 37
+- iPhone 13 / WebKit-uitvoeringen: 37
 
-De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 501 Playwright-functionele cases in totaal 537 resultaten op: 465 + (36 x 2) = 537.
+De 37 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 502 Playwright-functionele cases in totaal 539 resultaten op: 465 + (37 x 2) = 539.
 
 ## Documentatieketen
 
@@ -394,7 +394,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 501 Playwri
 
 - Feature: `tests/playwright/features/mobile.feature`
 - Source: `tests/playwright/mobile-ui.spec.ts`
-- Cases: 25
+- Cases: 26
 
 - [MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikbaar — Techniek: Responsive viewport + end-to-end use-case · Assertions: 31
 - [MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documentupload bereiken — Techniek: Responsive viewport + end-to-end use-case · Assertions: 19
@@ -421,6 +421,7 @@ De 36 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 501 Playwri
 - [MOB-H-023] het sluitkruisje van een lange dialoog blijft op de telefoon in beeld — Techniek: Responsive viewport + end-to-end use-case · Assertions: 19
 - [MOB-H-024] een net ingelogde medewerker ziet op de telefoon een volledig geladen dashboard, ook als de eerste sync-afronding hapert — Techniek: Responsive viewport + end-to-end use-case · Assertions: 7
 - [MOB-H-025] elke .segmented-control krijgt een schuifrand zodra hij écht overloopt, generiek voor de hele app — Techniek: Responsive viewport + end-to-end use-case · Assertions: 6
+- [MOB-H-026] getypte velden blijven op 16px zodat iOS Safari niet inzoomt bij focus — Techniek: Responsive viewport + end-to-end use-case · Assertions: 7
 
 ### Meldingen beheren
 

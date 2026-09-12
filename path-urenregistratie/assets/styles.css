@@ -239,8 +239,12 @@ summary:focus-visible,
 .login-panel.is-production-login .login-brand { margin-bottom: 34px; padding-bottom: 28px; border-bottom: 1px solid var(--line); }
 #auth-login-form { display: grid; gap: 9px; margin-top: 22px; }
 #auth-login-form > label { color: var(--navy-tekst); font-size: 12px; font-weight: 800; }
+/* 16px, niet 14px, en zonder mobiele media query: dit is het inlogscherm,
+   het eerste wat iedere mobiele gebruiker ziet. Onder 16px zoomt iOS Safari
+   de hele pagina in zodra e-mail of wachtwoord focus krijgt -- op geen
+   enkele breedte gewenst, dus meteen in de basisregel. */
 #auth-login-form > input,
-.login-password-field input { width: 100%; min-height: 50px; border: 1px solid var(--line); border-radius: 11px; background: var(--vlak); color: var(--navy-tekst); padding: 12px 14px; font: inherit; font-size: 14px; }
+.login-password-field input { width: 100%; min-height: 50px; border: 1px solid var(--line); border-radius: 11px; background: var(--vlak); color: var(--navy-tekst); padding: 12px 14px; font: inherit; font-size: 16px; }
 #auth-login-form > input:focus,
 .login-password-field input:focus { border-color: var(--mint-dark); outline: 3px solid rgba(58,189,157,.16); }
 .login-password-field { position: relative; display: block; }
@@ -1327,7 +1331,13 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .topbar h1 { font-size: 21px; }
   .period-picker-wrap { min-width: 166px; }
   .period-picker-fields { grid-template-columns: minmax(86px,1fr) 68px; }
-  .period-picker-fields input, .period-control .month-picker-trigger { font-size: 10px; }
+  /* #period-year-picker (het enige echte <input> hier) apart op 16px
+     gehouden, ook op deze smallere 590px-drempel -- anders wint de latere
+     720px-regel hierboven soms toevallig door bronvolgorde in plaats van
+     door een bewuste keuze. .month-picker-trigger is een knop, geen getypt
+     veld, en mag wel klein blijven. */
+  .period-picker-fields input { font-size: 16px; }
+  .period-control .month-picker-trigger { font-size: 10px; }
   .hero-card { border-radius: 18px; padding: 24px 20px; }
   .hero-copy h2 { font-size: 29px; }
   .hero-actions, .hero-actions .button { width: 100%; }
@@ -3248,9 +3258,10 @@ body.toont-installatieaanbod .main-content {
   .customer-timesheet-mail-preview span { font-size: 11px; }
   .customer-timesheet-template-card > small { font-size: 11px; }
   .customer-timesheet-template-card h4 { font-size: 17px; }
-  .customer-timesheet-template-card input { font-size: 14px; }
+  /* 16px: getypte onderwerp-/berichtvelden, zelfde iOS-zoomdrempel als elders. */
+  .customer-timesheet-template-card input { font-size: 16px; }
   .customer-timesheet-template-card label { font-size: 12px; }
-  .customer-timesheet-template-card textarea { font-size: 14px; }
+  .customer-timesheet-template-card textarea { font-size: 16px; }
   .customer-timesheet-upload-grid .month-choice-panel button { font-size: 13px; }
   .customer-timesheet-upload-grid .month-picker-trigger { font-size: 13px; }
   .customer-timesheet-upload-grid label { font-size: 12px; }
@@ -3390,10 +3401,16 @@ body.toont-installatieaanbod .main-content {
   .mobile-role-switch { font-size: 13px; }
   #modal-message { font-size: 14px; }
   .modal-form .form-help { font-size: 11px; }
-  .modal-form input { font-size: 14px; }
+  /* 16px, niet 14px: onder 16px zoomt iOS Safari de hele pagina in zodra dit
+     veld focus krijgt (hetzelfde al bewust opgelost voor .hours-input/
+     .summary-hours-input hierboven). Deze velden komen voor in tientallen
+     dialogen (medewerker/beheerder aanmaken, mededelingen, mailontvangers,
+     correcties) -- zonder deze regel springt de pagina bij elk van die
+     dialogen ongewenst uit op een iPhone. */
+  .modal-form input { font-size: 16px; }
   .modal-form label { font-size: 12px; }
   .modal-form label.route-toggle { font-size: 13px; }
-  .modal-form textarea { font-size: 14px; }
+  .modal-form textarea { font-size: 16px; }
   .modal-queue small { font-size: 11px; }
   .modal-queue strong { font-size: 13px; }
   .modal-summary > div { font-size: 13px; }
@@ -3413,7 +3430,10 @@ body.toont-installatieaanbod .main-content {
   .period-control .month-choice-panel button { font-size: 13px; }
   .period-control .month-picker-trigger { font-size: 14px; }
   .period-picker-caption { font-size: 11px; }
-  .period-picker-fields input { font-size: 14px; }
+  /* 16px: #period-year-picker (het enige echte <input> in dit stel, de
+     maandkiezer is een knop) is een getypt jaartal met een echt toetsenbord
+     op iOS -- onder 16px zoomt Safari de pagina in bij het openen ervan. */
+  .period-picker-fields input { font-size: 16px; }
   .popover-heading small { font-size: 11px; }
   .popover-heading strong { font-size: 15px; }
   .preference-row small { font-size: 11px; }

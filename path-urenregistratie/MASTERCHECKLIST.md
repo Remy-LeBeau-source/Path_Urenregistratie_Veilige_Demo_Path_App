@@ -2020,8 +2020,31 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   geslaagd), `contrast-licht-donker.mjs` groen, `npm run check` groen. Overige iOS-punten
   (viewporthoogte, input-zoom, keyboard, datumvelden, uploads, sticky headers, overige fixed
   buttons) nog te doen.
-- [ ] iOS/Safari: viewporthoogte, input-zoom, keyboard, datumvelden, uploads, sticky headers,
-  overige fixed buttons
+- [x] iOS/Safari input-zoom -- velden onder 16px `font-size` laten iOS Safari bij focus de hele
+  pagina inzoomen (bekend iOS-Safari-gedrag, niet instelbaar door de pagina). Doorgelicht: elk
+  `input`/`textarea` in `assets/styles.css` onder 16px, per geval beoordeeld (echt typeveld vs.
+  knop-achtige trigger vs. `type="file"`). Vijf plekken waren een echt getypt veld en zijn naar
+  16px gebracht: het inlogscherm (`#auth-login-form > input`, `.login-password-field input` --
+  basisregel zonder media query, want dit is het allereerste scherm dat elke mobiele gebruiker
+  ziet), `.modal-form input`/`textarea` (gedeeld door vrijwel alle dialogen), het jaartal in de
+  periodekiezer (`.period-picker-fields input`, in beide mobiele breekpunten; de maandknop
+  zelf bleef klein, dat is een `<button>` geen `<input>`), en `.customer-timesheet-template-card
+  input`/`textarea`. Rol: Medewerker en Beheerder (inlogscherm is rolloos, de rest raakt beide).
+  Design: Klassiek en Nieuw -- gecontroleerd dat `assets/styles-new.css` op dezelfde selectors
+  nooit `font-size` overschrijft (alleen rand/achtergrond/focuskleur), dus de fix werkt identiek
+  in beide skins zonder duplicatie. Thema: font-size is themaneutraal, licht en donker ongemoeid.
+  Devices: relevant op alle iOS Safari-toestellen (telefoon en tablet), onschadelijk op
+  desktop/Android. Bestand: `assets/styles.css`. Nieuwe regressie `[MOB-H-026]`
+  (`tests/playwright/mobile-ui.spec.ts`): controleert de berekende `font-size` op het
+  inlogscherm, in een `.modal-form`-dialoog en op het periodekiezer-jaartal. Discriminerend
+  bevestigd (tijdelijk teruggezet naar 14px, faalt exact op het inlogscherm zoals verwacht;
+  hersteld, weer groen). Getest: volledige `mobile-ui.spec.ts` op `mobile-chrome` groen,
+  `npm run docs:sync` en `npm run check` groen. Bewust nog niet meegenomen in deze wijziging
+  (kleine stap, geen big-bang): `.invoice-search input` (11px, smalle `min(320px, 40vw)`-breedte,
+  eerst visueel/screenshot verifiëren dat 16px niet knelt) en `.mail-channel-template
+  input`/`textarea` (13px, beheerder-only mailsjabloon-editor) -- volgende wijziging.
+- [ ] iOS/Safari: viewporthoogte, keyboard, datumvelden, uploads, sticky headers,
+  overige fixed buttons, resterend input-zoom (`.invoice-search`, `.mail-channel-template`)
 - [ ] Android/Chrome: viewport, keyboard, terugknop, datumvelden, uploads, sticky/fixed, standalone/PWA
 - [ ] PWA: manifest, icons, standalone, theme-color, service worker, caching/updates -- geen
   offline urenmutatie zonder expliciete sync-/conflictafhandeling, uren nooit stilletjes overschreven

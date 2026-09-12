@@ -98,3 +98,6 @@ When("de hydratie-afronding één keer klapt op de hertekening");
 Then("staat er nergens meer een laadtekst en is het dashboard bruikbaar");
 When("de flow voor MOB-H-025 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat elke .segmented-control krijgt een schuifrand zodra hij écht overloopt, generiek voor de hele app");
+Given("het inlogscherm nog niet is ingelogd");
+When("een beheerder een medewerker-editor (.modal-form) opent");
+Then("blijft ook het jaartal in de periodekiezer op 16px");
