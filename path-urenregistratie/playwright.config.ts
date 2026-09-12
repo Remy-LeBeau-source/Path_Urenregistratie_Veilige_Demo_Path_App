@@ -91,5 +91,22 @@ export default defineConfig({
       },
       testMatch: ['**/mobile-ui.spec.ts', '**/skin.spec.ts', '**/business-workflows-*.spec.ts', '**/dashboard*.spec.ts', '**/help-widget.spec.ts', '**/accessibility.spec.ts', '**/auth.spec.ts', '**/invoices.spec.ts', '**/pilot-page.spec.ts', '**/timesheet-review-ui.spec.ts'],
     },
+    // Fase 17-audit (13 sep): geen enkel project draaide op een tablet-breedte
+    // (768x1024, tussen mobiel en desktop in) -- de opdracht vraagt dit expliciet.
+    // Bewust een kleinere kernlijst dan de mobiele projecten (niet de volle
+    // business-workflows-* familie): dit project bestaat om layout/overflow op
+    // tabletbreedte te bewaken, niet om businesslogica nogmaals te bewijzen die
+    // desktop en mobiel al dekken. Klein houden voorkomt dat elke wijziging
+    // straks een derde keer dezelfde functionele cases in een derde viewport
+    // draait.
+    {
+      name: 'tablet-chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 768, height: 1024 },
+        isMobile: false,
+      },
+      testMatch: ['**/skin.spec.ts', '**/dashboard*.spec.ts', '**/accessibility.spec.ts'],
+    },
   ],
 });
