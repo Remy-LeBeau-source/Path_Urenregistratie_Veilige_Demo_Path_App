@@ -299,6 +299,22 @@ function mail_effective_delivery(array $config, array $delivery): array
             $namedTesterCc = null;
         }
         $effectiveCc = $namedTesterCc ?? $cc;
+        // Gebruikersverzoek (UI-takenlijst #41, 11 sep): onderwerp en tekst
+        // blijven exact zoals productie -- dat is het hele nut van deze
+        // rechtstreekse aflevering, zo beoordeel je de echte mail. Maar de
+        // ontvanger moet wel kunnen zien dat dit een TEST-mail is, anders is
+        // die niet van een echte productiemelding te onderscheiden op een
+        // echte werkinbox. Daarom alleen een rustig onderschrift, geen
+        // omleidingsbanner en geen onderwerpprefix.
+        if ($isNamedTesterCarveOut) {
+            if ($body !== '') {
+                $body = rtrim($body) . "\n\n---\nDeze mail komt van de TEST-omgeving.";
+            }
+            if ($html !== '') {
+                $html .= '<p style="margin:14px 0 0;font:12px/1.4 Arial,Helvetica,sans-serif;color:#8a94a6;">'
+                    . 'Deze mail komt van de TEST-omgeving.</p>';
+            }
+        }
         return compact('recipient', 'subject', 'body', 'html') + ['cc' => $effectiveCc, 'redirected' => false];
     }
 

@@ -5,7 +5,25 @@ export const SINK = 'giovanno.maatsen@pathconsultancy.nl';
 
 export type Creds = { admin: { email: string; password: string }; employee: { email: string; password: string } };
 
-/** De demo-credentials die de TEST-site zelf voor de autofill vrijgeeft. */
+/**
+ * De demo-credentials die de TEST-site zelf voor de autofill vrijgeeft.
+ *
+ * BEKEND, NOG NIET OPGELOST GAT (11 sep, R39/R40 in BESLISTABEL.md): sinds de
+ * genoemde-testers-mailrouting is Stasjo's echte seedrij (id 4) op de echte
+ * TransIP TEST-omgeving verplaatst naar zijn echte adres
+ * (stasjovanbakel@pathconsultancy.nl) zodra de mailsandbox geconfigureerd is
+ * -- test_reset_apply_named_tester_emails() in server/lib/test-reset.php zet
+ * dat na elke gedeelde reset opnieuw terug. Het hardgecodeerde
+ * 'stasjo@example.invalid' hieronder (en op tientallen andere plekken in
+ * deze map: live-regression-charter/-users/.spec.ts, test-site-smoke.spec.ts)
+ * vindt die rij dan niet meer. Dit is de LIVE-regressiesuite (handmatig
+ * gedraaid tegen de echte TEST-server, niet onderdeel van de CI-gate) --
+ * daardoor nog niet blootgelegd door een falende pipeline, in tegenstelling
+ * tot de zes CI/deploy-plekken die al wel gefixt zijn. Nog niet hersteld:
+ * vereist eerst een keuze (op vast seed-id 3/4/5/6 zoeken i.p.v. e-mailadres,
+ * zoals de zesde CI-fix al deed) en dan een gerichte doorloop van elke losse
+ * hardcoded 'stasjo@example.invalid'/'marc@example.invalid'/etc. in deze map.
+ */
 export async function demoCreds(request: APIRequestContext): Promise<Creds> {
   const res = await request.get('/server/auth/local-login-hints.php', { headers: { Accept: 'application/json' } });
   expect(res.status(), 'local-login-hints hoort op TEST beschikbaar te zijn').toBe(200);
