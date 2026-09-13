@@ -2061,8 +2061,26 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   beslissende. Dit item is daarmee veilig-door-ontwerp, niet veilig-door-één-vangnetregel. De
   waarde van de case zit in de toekomst: zou een herschrijving de client tóch op de bewaarde
   staat laten vertrouwen -- het echte risico -- dan valt hij om.
-- [ ] Verborgen knop, directe API-call vanaf de medewerkerkant
-  (resterende deelpunten van sectie 20, nog te doen)
+- [x] Verborgen knop / directe API-call vanaf de medewerkerkant. ROLE-N-004 dekte alleen endpoints
+  die in hun geheel beheerder-only zijn -- daar houdt `auth_require_role()` de medewerker al bij de
+  deur tegen. Het echte gat zat bij de gedeelde endpoints: `timesheets.php`,
+  `customer-timesheets.php` en `invoices.php` laten de medewerker bewust binnen (hij heeft ze nodig
+  voor zijn eigen uren) en bewaken de beheerdersacties pas per actie, middenin het bestand. Juist
+  die per-actie-gates zijn wat er valt als iemand een in de UI verborgen knop weer zichtbaar maakt
+  of de POST nabouwt, en ze waren nergens afgedekt. Doorgelicht en alle negen gates blijken correct
+  (`approve`, `request_correction`; `approve`, `request_resubmit`, `mark_sent`,
+  `mark_sent_to_broker`, `send_to_broker`, `confirm_external`; `lock`) -- **geen codewijziging,
+  alleen de ontbrekende regressie** `[ROLE-N-006]`, v2.0.24. Testontwerp: de case gebruikt bewust
+  de *eigen* medewerker en de *eigen lopende maand*, omdat in beide urenstaat-endpoints
+  `require_employee_period_access()` vóór de rolcheck draait -- op andermans urenstaat komt er ook
+  een 403, maar dan van de eigendomspoort, en dan bewijst de case niets over de rol. Daarom wordt
+  ook de foutcode `forbidden-action` geasserteerd (de periodepoort geeft `period-not-accessible`).
+  Tegenproef in de case zelf: `save_draft` op hetzelfde endpoint en dezelfde maand komt aantoonbaar
+  voorbij de rolgate. Discriminerend bewezen door de gate in `timesheets.php` tijdelijk om te
+  draaien naar `!== 'employee'`: de case faalde exact op de `approve`-regel (de medewerker kwam de
+  actie binnen), bronbestand daarna schoon teruggezet (geen diff) en de hele `roles-api.spec.ts`
+  weer groen (6 cases). Rol: Medewerker. Design/thema/device: niet van toepassing, dit is een
+  server-API-contract onder elke skin en elk toestel gelijk.
 - [x] **Live TEST-bevinding (12 sep, gemeld door Gio met screenshot), opgelost door main.** Eerste
   hypothese (live-configuratiedrift, `PLAYWRIGHT_EMPLOYEE_PASSWORD` ontbreekt op de server) bleek
   onjuist -- de echte oorzaak zat client-side: `employeeEmailOverrides` in `local-login-hints.php`

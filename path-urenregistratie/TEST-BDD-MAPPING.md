@@ -406,6 +406,7 @@
 | ROLE-H-002 | security | roles-authorization.feature | employee ziet alleen eigen data | Beslissingstabel rollen en autorisatie | 8 | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | employee ziet alleen eigen data | Happy | 4 | Actueel |
 | ROLE-N-004 | security | roles-authorization.feature | een medewerker krijgt 403 op elke beheerder-only schrijfactie | Beslissingstabel rollen en autorisatie | 3 | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | een medewerker krijgt 403 op elke beheerder-only schrijfactie | Negative | 4 | Actueel |
 | ROLE-N-005 | security | roles-authorization.feature | medewerker kan maanden voor de startdatum en na de huidige maand ook niet via de API openen | Beslissingstabel rollen en autorisatie | 8 | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | medewerker kan maanden voor de startdatum en na de huidige maand ook niet via de API openen | Negative | 4 | Actueel |
+| ROLE-N-006 | security | roles-authorization.feature | beheerder-only acties op gedeelde endpoints weigeren ook op de eigen urenstaat | Beslissingstabel rollen en autorisatie | 7 | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | beheerder-only acties op gedeelde endpoints weigeren ook op de eigen urenstaat | Negative | 4 | Actueel |
 | SEC-H-001 | security | security.feature | csrf token endpoint werkt | API-contract + equivalentieklasse | 4 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
 | SEC-H-002 | security | security.feature | login met csrf werkt | API-contract + equivalentieklasse | 2 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
 | SEC-H-003 | security | security.feature | logout met csrf werkt | API-contract + equivalentieklasse | 1 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
@@ -528,9 +529,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 506
+- Playwright executable cases: 507
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 507
+- Totaal unieke executable cases: 508
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30

@@ -189,3 +189,81 @@ test('[ROLE-N-005] medewerker kan maanden voor de startdatum en na de huidige ma
     await authApi.logout();
   });
 });
+
+test('[ROLE-N-006] beheerder-only acties op gedeelde endpoints weigeren ook op de eigen urenstaat', async ({ request }) => {
+  // Waarom deze case naast ROLE-N-004 bestaat.
+  // ROLE-N-004 dekt endpoints die in hun geheel beheerder-only zijn
+  // (users/staff/settings/announcements/periods): daar houdt auth_require_role()
+  // de medewerker al bij de deur tegen. De echte "verborgen knop" zit ergens
+  // anders: timesheets.php, customer-timesheets.php en invoices.php laten de
+  // medewerker bewust binnen -- hij heeft ze nodig voor zijn eigen uren -- en
+  // bewaken de beheerdersacties pas per actie, middenin het bestand. Precies
+  // die per-actie-gates zijn wat er valt als iemand een in de UI verborgen knop
+  // weer zichtbaar maakt of de POST rechtstreeks nabouwt, en ze werden nergens
+  // afgedekt.
+  //
+  // Waarom de eigen medewerker en de eigen huidige maand.
+  // In timesheets.php en customer-timesheets.php draait
+  // require_employee_period_access() VOOR de rolcheck. Zou deze case de urenstaat
+  // van een ander pakken, of een maand buiten de eigen grenzen, dan komt er ook
+  // een 403 terug -- maar van de eigendoms-/periodepoort, en dan bewijst de case
+  // niets over de rol. Door de eigen medewerker en de eigen lopende maand te
+  // gebruiken passeren we die eerste poort gegarandeerd en is de 403 die
+  // overblijft aantoonbaar de rolcheck. Daarom asserteren we ook de foutcode
+  // 'forbidden-action' en niet alleen de status: dat is de code die uitsluitend
+  // uit de rolgates komt, terwijl de periodepoort 'period-not-accessible' geeft.
+  const authApi = new AuthApi(request);
+  let employeeId = 0;
+  const now = new Date();
+  const period = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  const csrf = async () => String((await (await request.get('/server/auth/csrf.php')).json()).csrf_token || '');
+  const post = async (path: string, data: Record<string, unknown>) => {
+    const r = await request.post(path, { headers: { 'X-CSRF-Token': await csrf() }, data });
+    return { status: r.status(), body: await r.json().catch(() => ({} as Record<string, unknown>)) };
+  };
+
+  await test.step('Given een ingelogde medewerker met zijn eigen lopende maand', async () => {
+    const login = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+    expect(login.user.role).toBe('employee');
+    const bootstrap = await (await request.get('/server/api/bootstrap.php')).json();
+    employeeId = Number(bootstrap.employees?.[0]?.id || 0);
+    expect(employeeId).toBeGreaterThan(0);
+    const eigenMaand = await request.get(`/server/api/timesheets.php?period=${period}&employee_id=${employeeId}`);
+    expect(eigenMaand.status(), 'de eigendoms-/periodepoort moet openstaan, anders bewijst de 403 hierna niets').toBe(200);
+  });
+
+  await test.step('When hij de beheerdersacties op zijn eigen urenstaat rechtstreeks aanroept', async () => {
+    const perActieGates: Array<[string, Record<string, unknown>]> = [
+      // timesheets.php -- de goedkeurknop en "correctie vragen" uit het beheerscherm
+      ['/server/api/timesheets.php', { action: 'approve', period, employee_id: employeeId }],
+      ['/server/api/timesheets.php', { action: 'request_correction', period, employee_id: employeeId }],
+      // customer-timesheets.php -- de volledige beheerdersrij boven de klanturenstaat
+      ...['approve', 'request_resubmit', 'mark_sent', 'mark_sent_to_broker', 'send_to_broker', 'confirm_external'].map(
+        action => ['/server/api/customer-timesheets.php', { action, period, employee_id: employeeId }] as [string, Record<string, unknown>]
+      ),
+      // invoices.php -- "factuur definitief maken"
+      ['/server/api/invoices.php', { action: 'lock', period, employee_id: employeeId, timesheet_id: 1 }],
+    ];
+
+    for (const [path, payload] of perActieGates) {
+      const res = await post(path, payload);
+      const label = `${path} (${String(payload.action)})`;
+      expect(res.status, `${label}: status ${res.status} -- ${JSON.stringify(res.body).slice(0, 160)}`).toBe(403);
+      expect(res.body.error, `${label} moet op de rolcheck stranden, niet op eigendom/periode/validatie`).toBe('forbidden-action');
+    }
+  });
+
+  await test.step('Then blijft zijn eigen medewerkersactie op dezelfde endpoints wel toegestaan', async () => {
+    // Tegenproef: de 403's hierboven komen niet doordat het endpoint, de sessie
+    // of de CSRF-token stuk is. Met save_draft -- dezelfde medewerker, hetzelfde
+    // endpoint, dezelfde maand, alleen een actie die hij wel mag -- komt hij
+    // aantoonbaar voorbij de rolgate: hij krijgt de payloadvalidatie te zien.
+    // We sturen bewust geen echte dagregels mee; deze case hoort niets te
+    // schrijven, en juist die validatiefout bewijst dat hij binnen was.
+    const eigen = await post('/server/api/timesheets.php', { action: 'save_draft', period, employee_id: employeeId });
+    expect(eigen.status, `save_draft: ${JSON.stringify(eigen.body).slice(0, 160)}`).toBe(400);
+    expect(eigen.body.error, 'save_draft hoort niet op de rolcheck te stranden').toBe('invalid-payload');
+    await authApi.logout();
+  });
+});
