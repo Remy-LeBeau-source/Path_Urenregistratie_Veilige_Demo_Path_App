@@ -1330,7 +1330,24 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .eyebrow { display: none; }
   .notification-button { display: none; }
   .safety-badge { display: inline-flex; font-size: 9px; padding: 6px 8px; }
-  .topbar-quick-reset { display: none; }
+  /* Fase 17.5-audit (13 sep), derde keer ditzelfde patroon. Hier stond
+     `display: none`. Samen met de herstelregel in het 720px-blok verderop
+     (`.topbar-quick-reset:not([hidden]) { display: inline-flex; ... }`)
+     betekende dat: zichtbaar op desktop (>820px), zichtbaar op telefoon
+     (<=720px), en onzichtbaar in precies de band 721-820px. Deze regel was in
+     de praktijk dus geen "verberg op mobiel" maar een "verberg op tablet", wat
+     vrijwel zeker niet de bedoeling was -- op een iPad in portret had een
+     tester geen Herstel demo terwijl smallere én bredere schermen die wel
+     hebben. Gevonden doordat het nieuwe tablet-chromium-project 10 cases rood
+     zag gaan op #quick-reset-demo.
+
+     Waarom het weghalen veilig kan en niet blind is: de twee buren hierboven
+     (.eyebrow en .notification-button) blijven wél verborgen, dus de kop houdt
+     de ruimte die daar is vrijgemaakt; alleen deze ene knop komt terug. Dat is
+     gemeten op 768px met het tablet-project, dat juist op horizontale overflow
+     let -- zie MASTERCHECKLIST 17.5. De knop zelf is bovendien alleen op
+     LOCAL/TEST zichtbaar (syncResetControlVisibility), dus op productie
+     verandert er niets aan de kop. */
   .hero-card { margin-top: 20px; padding: 28px; }
   .workflow-track { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .workflow-heading-meta { justify-items: start; text-align: left; }

@@ -2097,6 +2097,24 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   selectornaam en vond die ook in het commentaar, waardoor hij groen bleef terwijl de regel al
   weg was. Nu wordt commentaar eerst gestript en op een echte `bottom:`-declaratie gecontroleerd;
   daarna faalt hij wél correct.
+- [x] **"Herstel demo" was onzichtbaar op tabletbreedte (13 sep) — vijfde en laatste vondst van
+  ditzelfde patroon.** Gevonden door de herontwerp-sessie, die de rode tablet-shards
+  terugvoerde op `#quick-reset-demo`: 10 verwijzingen in de tabletspecs, vandaar de omvang van
+  de cascade. `.topbar-quick-reset { display: none; }` stond in het 820px-blok, terwijl de
+  herstelregel (`:not([hidden]) { display: inline-flex; }`) pas in het 720px-blok komt. Netto
+  was die regel dus geen "verberg op mobiel" maar een **"verberg op tablet"**: zichtbaar boven
+  820px, zichtbaar onder 720px, weg in precies de band ertussen. Ik had dit gat zelf bij de
+  eerste tablet-run al gezien en toen bewust laten liggen als "vraagt een plaatsingsbeslissing";
+  dat is nu met een meting beslecht in plaats van op gevoel. **Zorg was of de kop op die
+  breedte de ruimte heeft** — bij 820px worden immers óók `.eyebrow` en `.notification-button`
+  verborgen, iemand heeft die kop daar bewust uitgedund. **Gemeten** met een los script op
+  721/768/800/820px, ingelogd als beheerder: knop zichtbaar op alle vier, en
+  `scrollWidth - clientWidth` is **0** — zowel op de pagina als binnen `.topbar` zelf. De twee
+  buren blijven verborgen, dus alleen deze ene knop komt terug in de ruimte die daar al vrij
+  was. Rol: beide, maar in de praktijk alleen relevant voor wie de knop ziet. Design:
+  skin-onafhankelijk. Omgeving: raakt productie niet — `syncResetControlVisibility()` toont hem
+  alleen op LOCAL/TEST, dus dit was een tester op een iPad in portret zonder Herstel demo.
+  Bevestigd: `[A11Y-H-004]` en `[DASH-N-010]` waren rood op tablet en zijn nu groen.
 - [ ] iOS/Safari resterend: keyboard (toetsenbord dat een knop afdekt), uploads
   (datumvelden vervallen: die bestaan niet, zie de Android-doorloop hieronder)
 - [x] **Android/Chrome-doorloop gedaan (13 sep), grotendeels in orde.** Statisch nagelopen in
