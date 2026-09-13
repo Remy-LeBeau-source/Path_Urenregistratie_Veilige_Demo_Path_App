@@ -1989,7 +1989,7 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   worden -- voorkomt dubbele ids/onderhoud. Beheerderskant (controleren, herinneren, extern
   bevestigen/terugzetten, brokerroute) is volledig doorontwikkeld, geen losse eindjes gevonden.
   Nog open: live/visuele bevestiging.
-- [ ] Correcties, mededelingen, notificaties, profiel, logout
+- [ ] (herontwerp, bezig) Correcties, mededelingen, notificaties, profiel, logout
 - [ ] Mobiele prioriteit: wat moet ik nu doen -> uren -> open acties -> klanturenstaat -> overig
 - [ ] Data mag nooit verloren gaan door rerender, schermrotatie, browser-back, modal sluiten,
   toetsenbord openen, thema-/designwissel
