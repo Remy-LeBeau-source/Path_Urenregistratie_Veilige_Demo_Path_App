@@ -1981,7 +1981,7 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   lokaal inloggen vereist een DB-bootstrapscript dat de met main gedeelde testdatabase kan
   aanpassen; bewust niet zonder overleg gedraaid. Klanturenstaat/correcties/mededelingen/
   notificaties/profiel/logout (overige 17.1-bullets) nog te doen.
-- [ ] Klanturenstaat uploaden / opnieuw uploaden
+- [ ] (herontwerp, bezig) Klanturenstaat uploaden / opnieuw uploaden
 - [ ] Correcties, mededelingen, notificaties, profiel, logout
 - [ ] Mobiele prioriteit: wat moet ik nu doen -> uren -> open acties -> klanturenstaat -> overig
 - [ ] Data mag nooit verloren gaan door rerender, schermrotatie, browser-back, modal sluiten,
