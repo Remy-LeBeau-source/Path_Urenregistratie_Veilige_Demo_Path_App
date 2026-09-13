@@ -461,27 +461,49 @@ test('[SKIN-H-011] een bewust opgeslagen 0 uur telt mee voor de weekvoortgang in
     }
     await expect(inputs.nth(aantalDagen - 1)).toHaveValue('');
     await page.locator('[data-new-bento-save]').click();
-    // De conceptwrite is gedebounced (700ms) en asynchroon; geef de server de
-    // kans om de expliciete 0-uur dagregel voor de actieve week te bewaren
-    // voordat de pagina herlaadt.
-    await page.waitForTimeout(1_500);
   });
 
   await test.step('Then heeft de server na een herlaad een eigen dagregel voor de laatste dag bewaard, ook al bleef die op 0 uur', async () => {
-    const [response] = await Promise.all([
-      page.waitForResponse(res => res.url().includes('/server/api/timesheets.php') && res.request().method() === 'GET'),
-      page.reload(),
-    ]);
+    // Twee dingen stonden hier eerder in de weg, allebei zichtbaar geworden als
+    // losse faalgevallen in de volle suite:
+    //
+    // 1. Na de Opslaan-klik werd 1,5 seconde blind gewacht op de gedebouncede
+    //    (700ms) conceptwrite. Onder volle belasting haalt die dat niet altijd,
+    //    en dan herlaadt de pagina vóór de opslag rond is -- de dagregel
+    //    bestaat dan nog niet en de case valt om op een undefined rij.
+    // 2. De GET-response werd opgevangen tijdens `page.reload()` en pas daarna
+    //    met `response.json()` uitgelezen. De body van een response die bij een
+    //    navigatie hoort mag Chrome intussen hebben weggegooid; dat geeft
+    //    "Protocol error (Network.getResponseBody): No resource with given
+    //    identifier found" -- geen assertiefout maar een infrastructuurfout,
+    //    precies zoals waargenomen.
+    //
+    // Beide weg door de serverstand op te vragen met een eigen request en
+    // daarop te pollen tot de opslag rond is, en pas daarna te herladen en de
+    // UI te controleren.
+    const laatsteDagNummer = String(Number(laatsteDagLabel)).padStart(2, '0');
+    // Het id expliciet meesturen i.p.v. vertrouwen op een impliciete "huidige
+    // medewerker"-afleiding server-side, net zoals [SKIN-H-016] verderop doet.
+    const eigenMedewerkerId = await page.evaluate(() => {
+      // @ts-expect-error debug-only, alleen voor deze directe controle-call
+      return currentEmployee().id;
+    });
+    await expect.poll(
+      async () => {
+        const response = await page.request.get(`/server/api/timesheets.php?period=2026-09&employee_id=${encodeURIComponent(String(eigenMedewerkerId))}`);
+        if (response.status() !== 200) return 'status-' + response.status();
+        const data = await response.json();
+        const dayEntries: Array<{ work_date: string; hours: number }> = data?.timesheet?.day_entries || [];
+        const laatsteDagRij = dayEntries.find(entry => entry.work_date.endsWith('-' + laatsteDagNummer));
+        return laatsteDagRij ? Number(laatsteDagRij.hours) : 'ontbreekt';
+      },
+      { message: 'de server moet een eigen dagregel bewaren voor de bewust op 0 gelaten dag', timeout: 15_000 },
+    ).toBe(0);
+
+    await page.reload();
     await expect(page.locator('#new-employee-bento')).toBeVisible();
     await expect(inputs.nth(0)).toHaveValue('8', { timeout: 10_000 });
     await expect(inputs.nth(aantalDagen - 1)).toHaveValue('');
-
-    const data = await response.json();
-    const dayEntries: Array<{ work_date: string; hours: number }> = data?.timesheet?.day_entries || [];
-    const laatsteDagNummer = String(Number(laatsteDagLabel)).padStart(2, '0');
-    const laatsteDagRij = dayEntries.find(entry => entry.work_date.endsWith('-' + laatsteDagNummer));
-    expect(laatsteDagRij, 'de server moet een eigen dagregel bewaren voor de bewust op 0 gelaten dag').toBeTruthy();
-    expect(Number(laatsteDagRij?.hours)).toBe(0);
   });
 });
 
@@ -806,7 +828,6 @@ test('[SKIN-H-016] een eigen werkpatroon per weekdag vult Mijn uren voor en telt
 
     await test.step('When de uren vanuit Mijn uren worden opgeslagen', async () => {
       await page.locator('#save-timesheet').click();
-      await page.waitForTimeout(1_500);
     });
 
     await test.step('Then heeft de server het patroon zelf bewaard: dinsdag 6 uur, vrijdag expliciet 0 uur', async () => {
@@ -815,20 +836,39 @@ test('[SKIN-H-016] een eigen werkpatroon per weekdag vult Mijn uren voor en telt
       // wachtwoordreset in dezelfde test) een paar keer nooit gematcht,
       // terwijl de knop-actie en de UI-assertie hierboven al lieten zien dat
       // het patroon goed staat.
+      //
+      // Hier stond eerst `await page.waitForTimeout(1_500)` na de Opslaan-klik,
+      // met daarna één enkele GET. Dat verplaatste de race alleen maar: bij een
+      // volle suite (acht shards op dezelfde runner) haalt de opslag-POST die
+      // anderhalve seconde niet altijd, en dan bestaat de vrijdagrij nog niet
+      // -- de case viel dan om op "vrijdagRij undefined" terwijl hij los, in een
+      // rustige omgeving, gewoon slaagde. Een vaste wachttijd kan per definitie
+      // niet weten wanneer de server klaar is; expect.poll wel, en die is hier
+      // al de gebruikelijke vorm (zie admin-writes.spec.ts). Slaagt de opslag
+      // snel, dan is dit meteen klaar i.p.v. altijd 1,5 seconde te kosten.
       const eigenMedewerkerId = await page.evaluate(() => {
         // @ts-expect-error debug-only, alleen voor deze directe controle-call
         return currentEmployee().id;
       });
-      const response = await page.request.get(`/server/api/timesheets.php?period=2026-09&employee_id=${encodeURIComponent(String(eigenMedewerkerId))}`);
-      expect(response.status()).toBe(200);
-      const data = await response.json();
-      const dayEntries: Array<{ work_date: string; hours: number }> = data?.timesheet?.day_entries || [];
-      const dinsdagRij = dayEntries.find(entry => entry.work_date.endsWith('-01'));
-      const vrijdagRij = dayEntries.find(entry => entry.work_date.endsWith('-04'));
-      expect(dinsdagRij, 'dinsdag 1 sep hoort als 6 uur bewaard te zijn').toBeTruthy();
-      expect(Number(dinsdagRij?.hours)).toBe(6);
-      expect(vrijdagRij, 'vrijdag 4 sep hoort als expliciete 0 uur bewaard te zijn').toBeTruthy();
-      expect(Number(vrijdagRij?.hours)).toBe(0);
+      const haalDagrijen = async (): Promise<Array<{ work_date: string; hours: number }>> => {
+        const response = await page.request.get(`/server/api/timesheets.php?period=2026-09&employee_id=${encodeURIComponent(String(eigenMedewerkerId))}`);
+        if (response.status() !== 200) return [];
+        const data = await response.json();
+        return data?.timesheet?.day_entries || [];
+      };
+
+      await expect.poll(
+        async () => {
+          const dagrijen = await haalDagrijen();
+          const dinsdag = dagrijen.find(entry => entry.work_date.endsWith('-01'));
+          const vrijdag = dagrijen.find(entry => entry.work_date.endsWith('-04'));
+          // Eén samengestelde waarde i.p.v. twee losse polls: pas als beide
+          // rijen er zijn is de opslag echt rond, en zo blijft de foutmelding
+          // bij een time-out zichtbaar maken wat er wél of niet stond.
+          return `dinsdag=${dinsdag ? Number(dinsdag.hours) : 'ontbreekt'} vrijdag=${vrijdag ? Number(vrijdag.hours) : 'ontbreekt'}`;
+        },
+        { message: 'de server hoort dinsdag op 6 uur en vrijdag als expliciete 0 uur te bewaren', timeout: 15_000 },
+      ).toBe('dinsdag=6 vrijdag=0');
     });
   } finally {
     // Zonder dit blijft de wegwerpmedewerker actief in de gedeelde demo-data
