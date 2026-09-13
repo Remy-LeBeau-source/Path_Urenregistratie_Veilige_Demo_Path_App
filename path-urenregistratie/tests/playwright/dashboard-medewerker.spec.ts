@@ -1223,7 +1223,7 @@ test('[DASH-H-026] het medewerkerdashboard houdt op telefoonbreedte de afgesprok
 // uit dat document: terug naar Mijn maanden, waar de nieuwe status van die maand
 // naast alle andere staat. Deze case bewaakt die keuze, zodat hij niet stil
 // terugvalt bij een volgende wijziging aan de indienflow.
-test('[DASH-H-026] na het opnieuw indienen van een correctie komt de medewerker op Mijn maanden uit', async ({ page }) => {
+test('[DASH-H-029] na het opnieuw indienen van een correctie komt de medewerker op Mijn maanden uit', async ({ page }) => {
   test.setTimeout(120_000);
   const loginPage = new LoginPage(page);
   await page.addInitScript(() => {

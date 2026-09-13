@@ -94,6 +94,8 @@ Given("een ingelogde medewerker op telefoonbreedte in Klassiek");
 When("de flow voor DASH-H-026 wordt uitgevoerd");
 Then("staat in Klassiek de volgende actie bovenaan, dan open acties, dan de klanturenstaat, dan de rest");
 And("staat in Nieuw open acties in ieder geval boven de correctie- en archiefingang");
+When("de medewerker de correctie opnieuw indient");
+Then("staat Mijn maanden open, zodat de nieuwe status zichtbaar is");
 Given("de administrator is ingelogd");
 When("de administrator het dashboard opent");
 Then("het dashboard toont admin-overzicht zonder consolefouten");

@@ -203,6 +203,14 @@ Feature: Dashboard en open werkvoorraad
     And staat in Nieuw open acties in ieder geval boven de correctie- en archiefingang
 
   @happy
+  Scenario: [DASH-H-029] na het opnieuw indienen van een correctie komt de medewerker op Mijn maanden uit
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given dashboard en open werkvoorraad is voorbereid
+    When de medewerker de correctie opnieuw indient
+    Then staat Mijn maanden open, zodat de nieuwe status zichtbaar is
+
+  @happy
   Scenario: [DASH-H-001] admin dashboard opent zonder console errors
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 1
