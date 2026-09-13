@@ -1257,6 +1257,12 @@ test('[DASH-H-029] na het opnieuw indienen van een correctie komt de medewerker 
   await test.step('When de medewerker de correctie opnieuw indient', async () => {
     await page.evaluate(() => { window.location.hash = 'timesheet'; });
     await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+    // Eerst naar "Hele maand". Op telefoonbreedte begint Mijn uren met één week
+    // en is de indienknop dan bewust verborgen -- je dient een maand in, geen
+    // week (TS-REV-UI-H-015). Zonder deze stap slaagde de case op desktop en
+    // viel hij om op mobiel, terwijl er niets stuk was.
+    await page.locator('[data-hours-week-scope="all"]').click();
+    await expect(page.locator('#submit-timesheet')).toBeVisible({ timeout: 10_000 });
     await page.locator('#submit-timesheet').click();
     await expect(page.locator('#modal')).toBeVisible();
     await page.locator('#modal-confirm').click();
