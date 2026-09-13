@@ -1594,11 +1594,43 @@ test('[SKIN-H-024] "Volgende actie" bovenaan Open acties per maand toont de eers
     // Regressie (10 sep, TEST-tester Shawn-Douglas): titel en periodedetail
     // liepen zonder regeleinde in elkaar over ("...September 2026September
     // 2026 · actie 1 van 2"), want strong/small stonden zonder display:block
-    // los tegen elkaar aan. Elk moet dus op een eigen regel (andere y) staan.
-    const titleBox = await page.locator('#employee-open-overview-next-title').boundingBox();
-    const metaBox = await page.locator('#employee-open-overview-next-meta').boundingBox();
-    expect(titleBox && metaBox, 'titel en periodedetail horen allebei een zichtbare bounding box te hebben').toBeTruthy();
-    expect(metaBox.y, 'periodedetail hoort op een eigen regel onder de titel te staan, niet ernaast').toBeGreaterThan(titleBox.y + titleBox.height - 2);
+    // los tegen elkaar aan. Elk moet dus op een eigen regel staan.
+    //
+    // Beide rechthoeken worden in één evaluate gelezen, niet in twee
+    // boundingBox()-aanroepen achter elkaar. Die twee aanroepen zijn twee
+    // momenten: valt er een herrender tussen, dan vergelijk je twee
+    // verschillende layouts. Op 13 sep viel deze case daardoor om met een
+    // periodedetail 56px bóven de onderkant van de titel -- een positie die in
+    // één layout helemaal niet bestaat. De poll dekt datzelfde venster: hij
+    // wacht tot de kaart uitgerenderd is in plaats van de eerste meting te
+    // geloven. De eis zelf is ongewijzigd: het detail hoort onder de titel.
+    //
+    // Wat deze meting bewaakt is `.employee-open-overview-next small` op
+    // display:block, en dat staat op twee plekken: styles.css:1612 (de basis,
+    // niet skin-gescoped) en styles-new.css voor Modern. Alleen de tweede
+    // terugzetten laat deze case groen -- een block-level small na een inline
+    // strong begint toch op een nieuwe regel. Tegenproef gedaan met beide op
+    // inline: dan valt hij om. Wie hier ooit gaat opruimen: het is die
+    // combinatie, niet één van de twee.
+    const regelstand = async () => page.evaluate(() => {
+      const titel = document.querySelector('#employee-open-overview-next-title');
+      const detail = document.querySelector('#employee-open-overview-next-meta');
+      if (!titel || !detail) return null;
+      const t = titel.getBoundingClientRect();
+      const d = detail.getBoundingClientRect();
+      if (!t.height || !d.height) return null;
+      return { onderkantTitel: t.bottom, bovenkantDetail: d.top, opEigenRegel: d.top > t.bottom - 2 };
+    });
+    await expect.poll(async () => (await regelstand())?.opEigenRegel, {
+      message: 'periodedetail hoort op een eigen regel onder de titel te staan, niet ernaast',
+      timeout: 10_000,
+    }).toBe(true);
+    // Nog één keer expliciet, zodat de foutmelding de gemeten waarden bevat als
+    // dit ooit echt stukgaat in plaats van alleen "verwacht true".
+    const stand = await regelstand();
+    expect(stand, 'titel en periodedetail horen allebei een zichtbare bounding box te hebben').toBeTruthy();
+    expect(stand!.bovenkantDetail, 'periodedetail hoort op een eigen regel onder de titel te staan, niet ernaast')
+      .toBeGreaterThan(stand!.onderkantTitel - 2);
   });
 
   await test.step('When op de knop van de Volgende actie wordt geklikt', async () => {
