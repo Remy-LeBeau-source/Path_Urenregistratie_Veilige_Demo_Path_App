@@ -2084,7 +2084,12 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
 
 **17.2 Beheerderrol (checklist, sectie 3 van de opdracht -- grootste blok, meer info per scherm)**
 
-> ### ⛔ P0 -- BEWEZEN: een mededeling komt bij de VERKEERDE persoon aan (13 sep, niet zelf gefixt)
+> ### ✅ P0 -- OPGELOST: een mededeling kwam bij de VERKEERDE persoon aan (13 sep)
+>
+> **Stand:** gevonden en bewezen door main, gefixt door de vormgevingslane, fix staat op main en is
+> hier nageverifieerd (`[ANN-H-009]` slaagt). De analyse hieronder blijft staan omdat de
+> reproductie en de oorzaak het bewaren waard zijn -- en omdat mijn eerste fixvoorstel te smal was:
+> zie de afronding bij "Mededelingen beheren + doelgroepen" verderop in 17.2.
 >
 > **Reproductie, volledig end-to-end gemeten op een verse testdatabase.** Beheerder opent
 > Mededelingen -> Nieuwe mededeling -> "Zelf medewerkers kiezen" -> vinkt **Marc de Roon** aan ->
@@ -2252,8 +2257,16 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   - [x] *Notificaties:* `notifications.spec.ts`, 11 cases (ophalen, mark_read/mark_all_read,
     unread-filter, limietgrens, 401, onbekende actie 400, tellers die gelijk teruglopen, en een
     oudere response die een gewiste teller niet mag herstellen).
-  - [ ] *Mededelingen beheren + doelgroepen:* **hier zit de P0 hierboven.** De doelgroepkeuze wordt
-    client-side bepaald en stuurt de verkeerde id-soort mee; dat deel blijft open tot die fix er is.
+  - [x] *Mededelingen beheren + doelgroepen:* **de P0 hierboven is opgelost en staat op main**
+    (vormgevingslane, met `[ANN-H-009]`; hier nageverifieerd op 13 sep: de case slaagt op main).
+    De fix is goed afgebakend en het is de moeite waard waaróm: er is één vertaling
+    `vertaalNaarServerGebruikerIds()` (`app.js` ~8218) **op de grens naar de server**, die
+    `employees.id` omzet naar `users.id` en `null` teruggeeft zodra één koppeling ontbreekt --
+    waarna de UI weigert met een melding in plaats van te gokken wie het bericht krijgt. Binnen het
+    bestand blijven `recipientIds` employees.id, zodat demomodus, het ontvangerslabel en de
+    e-mailselectie blijven kloppen; precies het risico dat mijn eerste voorstel (alleen de producent
+    omzetten) zou hebben veroorzaakt. Bij een correctie gaan de ids ongewijzigd door, terecht: die
+    komen uit `item.recipient_user_ids` en zijn dus al users.id.
   - [x] *Administratieve statussen:* doorgelicht 13 sep. In de echte app komt dit neer op de
     **factuurcyclus**, en die is ruim gedekt: `invoices.spec.ts` (zichtbaarheid per rol, periodefilter,
     bedrag berekend door de server uit uren x tarief, paginering bij 32 records, externe factuur
