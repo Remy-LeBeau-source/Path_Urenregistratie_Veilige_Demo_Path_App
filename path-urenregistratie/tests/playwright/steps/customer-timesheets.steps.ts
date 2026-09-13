@@ -33,6 +33,11 @@ Then("wordt met Playwright-assertions bevestigd dat employee kan geen klanturens
 Given("de medewerker is ingelogd met een ingediende klanturenstaat");
 When("de medewerker approve probeert uit te voeren");
 Then("de medewerker ook geen request_resubmit mag uitvoeren");
+Given("een ingediende klanturenstaat in een eigen vrije maand");
+When("de beheerder als verzonden probeert te markeren vóór de goedkeuring");
+Then("markeert de beheerder na goedkeuring wél als verzonden");
+And("mag daarna nog naar de brokerroute, met een vastgelegd tijdstip");
+And("weigert de server daarna opnieuw als verzonden markeren");
 Given("de beheerder is ingelogd");
 When("request_resubmit wordt aangeroepen met een lege toelichting");
 Then("verandert een ontbrekende toelichting ook niets als het veld helemaal ontbreekt");

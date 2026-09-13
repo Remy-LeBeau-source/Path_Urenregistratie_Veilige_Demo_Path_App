@@ -384,6 +384,90 @@ test.describe('customer timesheet api', () => {
     });
   });
 
+  test('[CTS-API-H-017] markeren als verzonden en als naar de broker verzonden volgt de toegestane volgorde', async ({ request }) => {
+    // Checklistpunt 17.2, deelpunt "markeren/verwerken verzonden items". Op
+    // 13 sep nagegaan: `mark_sent` en `mark_sent_to_broker` kwamen in de hele
+    // testsuite alleen voor in de type-unie van CustomerTimesheetApi en als
+    // VERBODEN actie voor een medewerker (`ROLE-N-006`). Er was geen enkele
+    // case die bewees dat ze voor een beheerder werken, laat staan dat ze de
+    // verkeerde volgorde weigeren. Geen codewijziging -- de server bewaakte het
+    // al, dit legt het vast.
+    //
+    // De toegestane overgangen (customer-timesheets.php ~1152 e.v.):
+    //   mark_sent           : alleen vanaf 'approved'            -> 'sent'
+    //   mark_sent_to_broker : vanaf 'approved' of 'sent'         -> 'sent_to_broker'
+    // Alles daarbuiten hoort 409 invalid-customer-timesheet-transition te geven.
+    //
+    // De case pakt een eigen vrije periode (findWritablePeriod) en staat
+    // losstaand, zodat hij de volgorde van andere cases niet verstoort.
+    const authApi = new AuthApi(request);
+    const customerApi = new CustomerTimesheetApi(request);
+    let period = '';
+    let employeeId = 0;
+    let assignmentId = 0;
+
+    await test.step('Given een ingediende klanturenstaat in een eigen vrije maand', async () => {
+      const employeeLogin = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      expect(employeeLogin.user.role).toBe('employee');
+      period = await findWritablePeriod(customerApi);
+      const draft = await customerApi.write({
+        action: 'save_draft',
+        period,
+        file: { name: 'klanturenstaat.pdf', mimeType: 'application/pdf', buffer: TINY_PDF_BUFFER },
+      });
+      expect(draft.status).toBe(200);
+      const submit = await customerApi.write({ action: 'submit', period });
+      expect(submit.status).toBe(200);
+      expect(submit.body.customer_timesheet.status).toBe('received');
+      employeeId = Number(submit.body.employee_id || 0);
+      assignmentId = Number(submit.body.assignment_id || 0);
+      expect(employeeId).toBeGreaterThan(0);
+      expect(assignmentId).toBeGreaterThan(0);
+      await authApi.logout();
+    });
+
+    await test.step('When de beheerder als verzonden probeert te markeren vóór de goedkeuring', async () => {
+      const adminLogin = await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+      expect(adminLogin.user.role).toBe('administrator');
+      // Nog 'received', dus nog niet goedgekeurd: dit hoort te stranden op de
+      // overgangscontrole en niet stilletzwijgend door te gaan.
+      const teVroeg = await customerApi.write({ action: 'mark_sent', period, employeeId, assignmentId });
+      expect(teVroeg.status, JSON.stringify(teVroeg.body).slice(0, 200)).toBe(409);
+      expect(teVroeg.body.error).toBe('invalid-customer-timesheet-transition');
+      const onveranderd = await customerApi.read(period, employeeId, assignmentId);
+      expect(onveranderd.body.customer_timesheet.status, 'een geweigerde markering mag de status niet verzetten').toBe('received');
+    });
+
+    await test.step('Then markeert de beheerder na goedkeuring wél als verzonden', async () => {
+      const approve = await customerApi.write({ action: 'approve', period, employeeId, assignmentId });
+      expect(approve.status).toBe(200);
+      expect(approve.body.customer_timesheet.status).toBe('approved');
+
+      const verzonden = await customerApi.write({ action: 'mark_sent', period, employeeId, assignmentId });
+      expect(verzonden.status, JSON.stringify(verzonden.body).slice(0, 200)).toBe(200);
+      expect(verzonden.body.customer_timesheet.status).toBe('sent');
+    });
+
+    await test.step('And mag daarna nog naar de brokerroute, met een vastgelegd tijdstip', async () => {
+      const naarBroker = await customerApi.write({ action: 'mark_sent_to_broker', period, employeeId, assignmentId });
+      expect(naarBroker.status, JSON.stringify(naarBroker.body).slice(0, 200)).toBe(200);
+      expect(naarBroker.body.customer_timesheet.status).toBe('sent_to_broker');
+      expect(naarBroker.body.customer_timesheet.sent_to_broker_at, 'de brokerroute hoort een tijdstip vast te leggen').toBeTruthy();
+    });
+
+    await test.step('And weigert de server daarna opnieuw als verzonden markeren', async () => {
+      // Tegenproef aan de andere kant van de poort: vanuit 'sent_to_broker' is
+      // mark_sent niet meer toegestaan. Zonder deze stap zou de case ook slagen
+      // als de overgangscontrole alleen maar "alles behalve received" toeliet.
+      const nogmaals = await customerApi.write({ action: 'mark_sent', period, employeeId, assignmentId });
+      expect(nogmaals.status, JSON.stringify(nogmaals.body).slice(0, 200)).toBe(409);
+      expect(nogmaals.body.error).toBe('invalid-customer-timesheet-transition');
+      const eindstand = await customerApi.read(period, employeeId);
+      expect(eindstand.body.customer_timesheet.status).toBe('sent_to_broker');
+      await authApi.logout();
+    });
+  });
+
   test('[CTS-API-N-013] request_resubmit zonder toelichting wordt door de server geweigerd', async ({ request }) => {
     // Sectie 20 / checklistpunt 17.2 ("terugsturen met verplichte toelichting").
     // De urenstaatkant bewijst dit al (timesheet-review-flow.spec.ts,

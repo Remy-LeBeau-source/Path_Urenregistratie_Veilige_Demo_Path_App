@@ -2165,6 +2165,20 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
     te vervangen door een kale `trim()`: de case faalde exact zoals verwacht (200 in plaats van
     400, status sprong naar `resubmit`), bronbestand daarna schoon teruggezet (geen diff) en weer
     groen.
+  - [x] **Markeren/verwerken verzonden items** -- `[CTS-API-H-017]`, v2.0.36. Gat gevonden op
+    13 sep: `mark_sent` en `mark_sent_to_broker` kwamen in de héle suite alleen voor in de
+    type-unie van `CustomerTimesheetApi` en als *verboden* actie voor een medewerker
+    (`ROLE-N-006`). Geen enkele case bewees dat ze voor een beheerder werken, laat staan dat ze de
+    verkeerde volgorde weigeren. Geen codewijziging -- de server bewaakte het al goed.
+    De case legt de toegestane volgorde vast: `mark_sent` alleen vanaf `approved` -> `sent`;
+    `mark_sent_to_broker` vanaf `approved` of `sent` -> `sent_to_broker` mét een vastgelegd
+    tijdstip. Hij toetst de poort aan **beide** kanten: te vroeg (nog `received`) geeft 409
+    `invalid-customer-timesheet-transition` en laat de status ongemoeid, en ná `sent_to_broker`
+    weigert `mark_sent` opnieuw -- die tweede kant is er expliciet, want zonder haar zou de case
+    ook slagen als de controle simpelweg "alles behalve received" toeliet. Discriminerend bewezen
+    door de overgangscontrole van `mark_sent` tijdelijk uit te schakelen: de case faalde exact
+    zoals verwacht (200 in plaats van 409), bronbestand daarna schoon teruggezet (geen diff),
+    suite weer 20/20. Losstaande case met een eigen vrije maand, conform de les hieronder.
   - **Testopzetles, bewaard omdat hij geld kost:** deze assertie stond eerst als extra stap
     middenin `[CTS-API-H-001]`. Daarmee ging de suite van 18/18 groen naar wisselend één uitvaller
     (eerst `CTS-API-H-006`/`H-016`, daarna `H-013`) -- allemaal cases die los gewoon slagen, en
@@ -2656,6 +2670,17 @@ op de achtergrond en draaide er gerichte Playwright-suites naast. Gevolg: twee c
 draaiden ze meteen groen. De suites delen de database en poort 8010; een tweede run erlangs
 vervuilt de uitslag. Regel: één testrun tegelijk, en bij een onverwachte uitvaller eerst nagaan of
 er nog iets anders liep -- vóór je een defect noteert.
+
+**Observatie voor Gio: `npm run check` kost ~15 minuten, bijna helemaal door de smoke-test
+(13 sep 2026, main).** Gemeten op een verder rustige machine: `node scripts/smoke-test.mjs` alleen
+al verbruikt ruim 900 CPU-seconden. De andere acht stappen samen zijn in een paar seconden klaar
+(`version:check`, `node --check`, taalcontrole, contrast, `test:design`, `test:bdd:design`,
+`test:db:config`, `test:ops` -- alle acht groen nagemeten op 2.0.32/2.0.33). De kosten zitten in
+wat de smoke doet: hij evalueert de volledige `assets/app.js` (878 KB) in JSDOM en draait daarna
+honderden `renderAll()`-rondes. Dat is geen defect en de test is waardevol, maar het botst wel met
+de afspraak "draai `check` vóór elke commit". Mogelijke richtingen als dit gaat knellen: de smoke
+opsplitsen in een snelle kern en een volledige variant, of hem uit de pre-commit-`check` halen en
+alleen in CI draaien. Niet zelf besloten -- dit raakt de kwaliteitspoort.
 
 **Een achtergrondtaak stoppen laat het kindproces draaien (13 sep 2026, main).** Twee gestopte
 runs bleken uren later nog `node scripts/smoke-test.mjs` te draaien (samen ruim 1800 CPU-seconden),
