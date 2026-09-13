@@ -1959,8 +1959,8 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   veilig, nieuwe bevestigde "Week/Maand terugzetten"-knop overschrijft ook bewust-bevestigde
   0-dagen. `[SKIN-H-028]`, v2.0.2, New-bento + Klassiek Mijn uren.
 - [ ] Dashboard/Mijn overzicht: begroeting, volgende actie, open acties, acties per maand
-- [ ] Mijn uren: invoeren, wijzigen, opslaan, Enter-to-save, maand/weeknavigatie, totalen, indienen,
-  status van urenregistratie
+- [ ] (herontwerp, bezig) Mijn uren: invoeren, wijzigen, opslaan, Enter-to-save, maand/weeknavigatie, totalen, indienen,
+  status van urenregistratie -- start: visuele check 0/8/9-sneltoetsen (New-skin, licht/donker), desktop
 - [ ] Klanturenstaat uploaden / opnieuw uploaden
 - [ ] Correcties, mededelingen, notificaties, profiel, logout
 - [ ] Mobiele prioriteit: wat moet ik nu doen -> uren -> open acties -> klanturenstaat -> overig
