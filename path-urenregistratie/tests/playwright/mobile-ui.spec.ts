@@ -7,6 +7,76 @@ import { LoginPage } from './pages/LoginPage';
 import { attachBusinessScreenshot } from './reporting/uiAttachments';
 import { openProfielmenu } from './pages/TopbarMenu';
 
+// Gedeeld door [MOB-H-030] (beheerschermen) en [MOB-H-031] (medewerkerschermen).
+//
+// Bewust één implementatie in plaats van twee kopieën: zouden de twee cases elk
+// hun eigen detector hebben, dan kan er één worden aangepast en geeft de andere
+// stilzwijgend een andere garantie. Dat is precies het soort verschil dat je pas
+// merkt als er iets doorheen glipt.
+//
+// Waarom deze meting en niet `documentElement.scrollWidth`: `assets/styles.css`
+// zet onder `@media (max-width: 720px)` `html, body { overflow-x: hidden }`. Op
+// elke telefoonbreedte is die meting daardoor per definitie 0 -- de pagina
+// scrollt niet zijwaarts, hij KLIPT. Een test daarop kan niet falen. Wat wél
+// telt is of er inhoud búiten de rechterrand ligt; geklipt betekent voor de
+// gebruiker onzichtbaar. Inhoud binnen een bewust horizontaal scrollbare
+// container telt niet mee: die is bereikbaar door te vegen.
+async function installeerBuitenBeeldMeter(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    (window as unknown as { vindBuitenBeeld: () => string[] }).vindBuitenBeeld = () => {
+      const breedte = window.innerWidth;
+      const inScroller = (el: Element) => {
+        let ouder = el.parentElement;
+        while (ouder && ouder !== document.body) {
+          const ox = getComputedStyle(ouder).overflowX;
+          if (ox === 'auto' || ox === 'scroll') return true;
+          ouder = ouder.parentElement;
+        }
+        return false;
+      };
+      const gevonden: string[] = [];
+      for (const el of Array.from(document.body.querySelectorAll<HTMLElement>('*'))) {
+        const r = el.getBoundingClientRect();
+        if (r.width < 1 || r.height < 1) continue;
+        const cs = getComputedStyle(el);
+        if (cs.visibility === 'hidden' || cs.display === 'none') continue;
+        if (r.right <= breedte + 1) continue;
+        if (inScroller(el)) continue;
+        // Mét de eigen tekst erbij, want een melding als "span.status-pill tot
+        // 367px" laat je op een scherm met tientallen pillen nog steeds zoeken.
+        // De tekst zegt meteen wélke het is.
+        const naam = el.id ? '#' + el.id : el.tagName.toLowerCase() + '.' + String(el.className || '').split(' ')[0];
+        const eigenTekst = Array.from(el.childNodes)
+          .filter(node => node.nodeType === 3)
+          .map(node => String(node.textContent || '').trim())
+          .join(' ')
+          .replace(/\s+/g, ' ')
+          .slice(0, 40);
+        gevonden.push(`${naam}${eigenTekst ? ` "${eigenTekst}"` : ''} tot ${Math.round(r.right)}px (viewport ${breedte}px)`);
+        if (gevonden.length >= 5) break;
+      }
+      return gevonden;
+    };
+  });
+}
+
+// Navigeert via de hash en meet daarna. Bewust niet via een navigatieknop:
+// Klassiek en Nieuw hebben op telefoonbreedte verschillende navigatie-chrome --
+// in Nieuw is er op 360px geen enkele zichtbare `button[data-view]`, want die
+// skin heeft zijn eigen balk. Deze meting gaat over layout per scherm, niet over
+// hoe je er komt.
+function maakSchermMeter(page: Page) {
+  return async (scherm: string, label: string, naVoorbereiding?: () => Promise<void>) => {
+    await page.evaluate(view => { window.location.hash = view; }, scherm);
+    await expect(page.locator(`#view-${scherm}`)).toHaveClass(/is-active/);
+    await page.waitForTimeout(600);
+    if (naVoorbereiding) await naVoorbereiding();
+    const buitenBeeld = await page.evaluate(() => (window as unknown as { vindBuitenBeeld: () => string[] }).vindBuitenBeeld());
+    expect(buitenBeeld, `${label}: deze inhoud valt op 360px buiten de rechterrand en is dus onbereikbaar -- ${JSON.stringify(buitenBeeld)}`)
+      .toEqual([]);
+  };
+}
+
 const MOBILE_PERIOD = '2026-01';
 const CORRECTION_MESSAGE = 'Controleer dag 2: dit moet 4 uur zijn.';
 
@@ -1985,58 +2055,8 @@ test('[MOB-H-030] op de kleinste gangbare telefoon (360px) scrollt geen enkel ho
   const loginPage = new LoginPage(page);
   await page.setViewportSize({ width: 360, height: 740 });
 
-  const metenOpScherm = async (scherm: string, label: string) => {
-    // Navigeren via de hash in plaats van via een navigatieknop. Reden: Klassiek
-    // en Nieuw hebben op telefoonbreedte verschillende navigatie-chrome -- in
-    // Nieuw is er op 360px geen enkele zichtbare `button[data-view]`, want die
-    // skin heeft zijn eigen balk. Deze case gaat over layout-overloop per
-    // scherm, niet over hoe je er komt; de hash brengt je in beide skins naar
-    // hetzelfde scherm en houdt de meting onafhankelijk van de navigatie.
-    await page.evaluate(view => { window.location.hash = view; }, scherm);
-    await expect(page.locator(`#view-${scherm}`)).toHaveClass(/is-active/);
-    await page.waitForTimeout(600);
-    const buitenBeeld = await page.evaluate(() => (window as unknown as { vindBuitenBeeld: () => string[] }).vindBuitenBeeld());
-    expect(buitenBeeld, `${label}: deze inhoud valt op 360px buiten de rechterrand en is dus onbereikbaar -- ${JSON.stringify(buitenBeeld)}`)
-      .toEqual([]);
-  };
-
-  // Eén keer in de pagina gezet; door beide skins heen hergebruikt.
-  await page.addInitScript(() => {
-    (window as unknown as { vindBuitenBeeld: () => string[] }).vindBuitenBeeld = () => {
-      const breedte = window.innerWidth;
-      const inScroller = (el: Element) => {
-        let ouder = el.parentElement;
-        while (ouder && ouder !== document.body) {
-          const ox = getComputedStyle(ouder).overflowX;
-          if (ox === 'auto' || ox === 'scroll') return true;
-          ouder = ouder.parentElement;
-        }
-        return false;
-      };
-      const gevonden: string[] = [];
-      for (const el of Array.from(document.body.querySelectorAll<HTMLElement>('*'))) {
-        const r = el.getBoundingClientRect();
-        if (r.width < 1 || r.height < 1) continue;
-        const cs = getComputedStyle(el);
-        if (cs.visibility === 'hidden' || cs.display === 'none') continue;
-        if (r.right <= breedte + 1) continue;
-        if (inScroller(el)) continue;
-        // Mét de eigen tekst erbij, want een melding als "span.status-pill tot
-        // 367px" laat je op een scherm met tientallen pillen nog steeds zoeken.
-        // De tekst zegt meteen wélke het is.
-        const naam = el.id ? '#' + el.id : el.tagName.toLowerCase() + '.' + String(el.className || '').split(' ')[0];
-        const eigenTekst = Array.from(el.childNodes)
-          .filter(node => node.nodeType === 3)
-          .map(node => String(node.textContent || '').trim())
-          .join(' ')
-          .replace(/\s+/g, ' ')
-          .slice(0, 40);
-        gevonden.push(`${naam}${eigenTekst ? ` "${eigenTekst}"` : ''} tot ${Math.round(r.right)}px (viewport ${breedte}px)`);
-        if (gevonden.length >= 5) break;
-      }
-      return gevonden;
-    };
-  });
+  const metenOpScherm = maakSchermMeter(page);
+  await installeerBuitenBeeldMeter(page);
 
   await test.step('Given een beheerder op een 360px-telefoon', async () => {
     await loginPage.open();
@@ -2082,5 +2102,83 @@ test('[MOB-H-030] op de kleinste gangbare telefoon (360px) scrollt geen enkel ho
     await page.evaluate(() => document.querySelector('#overloop-proef')?.remove());
     const naOpruimen = await page.evaluate(() => (window as unknown as { vindBuitenBeeld: () => string[] }).vindBuitenBeeld());
     expect(naOpruimen, 'na het opruimen hoort er niets meer buiten beeld te liggen').toEqual([]);
+  });
+});
+
+test('[MOB-H-031] op 360px valt ook op de medewerkerschermen niets buiten de rechterrand', async ({ page }) => {
+  // Tegenhanger van [MOB-H-030], dat alleen de beheerschermen dekt. De
+  // medewerkerkant ontbrak, en juist daar landt het ontwerpwerk: de hero met
+  // statuspil en maandtotaal, de dagregels met de 0/8/9-groep, de
+  // vijfstappenketen. Gesignaleerd door de vormgevingslane, die het handmatig
+  // had gemeten met deze meetwijze -- maar handmatig gemeten weet morgen
+  // niemand meer.
+  //
+  // Bewust een tweede case en niet de eerste uitgebreid. Twee redenen: twaalf
+  // schermwisselingen pasten al niet in de standaard testtijd (zie de time-out
+  // daar), en bij één case die alles doet zie je bij rood niet meer welke kant
+  // omvalt. Nu zegt de naam het meteen.
+  //
+  // De meting zelf is gedeeld met [MOB-H-030] (`installeerBuitenBeeldMeter` en
+  // `maakSchermMeter` boven in dit bestand), zodat beide cases dezelfde garantie
+  // geven en niet stilzwijgend uit elkaar lopen.
+  test.setTimeout(150_000);
+  const loginPage = new LoginPage(page);
+  await page.setViewportSize({ width: 360, height: 740 });
+
+  const metenOpScherm = maakSchermMeter(page);
+  await installeerBuitenBeeldMeter(page);
+
+  // Het maandverloop in Mijn maanden staat dichtgeklapt, dus een case die het
+  // scherm alleen opent mist die inhoud. Openklappen hoort erbij.
+  //
+  // Voorwaardelijk, met opzet: de knop bestaat vandaag nog niet op main (hij
+  // komt uit lopend ontwerpwerk aan de vormgevingskant). Zo dekt deze case hem
+  // automatisch zodra hij landt, zonder dat iemand hier eerst aan moet denken
+  // -- en zonder nu te falen op iets dat er nog niet is.
+  const klapMaandverloopOpen = async () => {
+    const knop = page.locator('#employee-history [data-history-verloop]').first();
+    if (await knop.count() === 0) return;
+    await knop.click();
+    await page.waitForTimeout(400);
+  };
+
+  await test.step('Given een medewerker op een 360px-telefoon', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
+  });
+
+  await test.step('Then valt er in Klassiek op geen enkel medewerkerscherm iets buiten beeld', async () => {
+    await metenOpScherm('employee-dashboard', 'Klassiek/employee-dashboard');
+    await metenOpScherm('timesheet', 'Klassiek/timesheet');
+    await metenOpScherm('historie', 'Klassiek/historie');
+    await metenOpScherm('historie', 'Klassiek/historie (maandverloop open)', klapMaandverloopOpen);
+  });
+
+  await test.step('And ook niet in de nieuwe vormgeving', async () => {
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await metenOpScherm('employee-dashboard', 'Nieuw/employee-dashboard');
+    await metenOpScherm('timesheet', 'Nieuw/timesheet');
+    await metenOpScherm('historie', 'Nieuw/historie');
+    await metenOpScherm('historie', 'Nieuw/historie (maandverloop open)', klapMaandverloopOpen);
+  });
+
+  await test.step('And de meting zou echte overloop ook hier zien', async () => {
+    // Zelfde zelfcontrole als in [MOB-H-030]: zonder deze stap is "niets
+    // gevonden" niet te onderscheiden van "de meting kijkt naar het verkeerde".
+    await page.evaluate(() => {
+      const proef = document.createElement('div');
+      proef.id = 'overloop-proef';
+      proef.style.cssText = 'width:2000px;height:8px;';
+      proef.textContent = 'PROEFTEKST';
+      document.body.appendChild(proef);
+    });
+    const metOverloop = await page.evaluate(() => (window as unknown as { vindBuitenBeeld: () => string[] }).vindBuitenBeeld());
+    expect(metOverloop.join(' | '), 'een bewust te breed element hoort door de meting gevonden te worden')
+      .toContain('overloop-proef');
+    expect(metOverloop.join(' | '), 'de melding hoort de tekst van het element te bevatten, anders is hij niet te herleiden')
+      .toContain('PROEFTEKST');
+    await page.evaluate(() => document.querySelector('#overloop-proef')?.remove());
   });
 });

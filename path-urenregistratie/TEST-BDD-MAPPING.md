@@ -317,7 +317,8 @@
 | MOB-H-028 | ui | mobile.feature | mobiele panelen meten hun hoogte aan de zichtbare viewport, niet aan 100vh | Responsive viewport + end-to-end use-case | 2 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | mobiele panelen meten hun hoogte aan de zichtbare viewport, niet aan 100vh | Happy | 15 | Actueel |
 | MOB-H-029 | ui | mobile.feature | elk zwevend element onderin wordt opgetild zodra de navigatiebalk verschijnt | Responsive viewport + end-to-end use-case | 2 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | elk zwevend element onderin wordt opgetild zodra de navigatiebalk verschijnt | Happy | 15 | Actueel |
 | MOB-H-027 | ui | mobile.feature | een uur met een komma getypt komt aan als 8,5 en niet als leeg veld | Responsive viewport + end-to-end use-case | 3 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | een uur met een komma getypt komt aan als 8,5 en niet als leeg veld | Happy | 15 | Actueel |
-| MOB-H-030 | ui | mobile.feature | op de kleinste gangbare telefoon (360px) scrollt geen enkel hoofdscherm horizontaal | Responsive viewport + end-to-end use-case | 7 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | op de kleinste gangbare telefoon (360px) scrollt geen enkel hoofdscherm horizontaal | Happy | 15 | Actueel |
+| MOB-H-030 | ui | mobile.feature | op de kleinste gangbare telefoon (360px) scrollt geen enkel hoofdscherm horizontaal | Responsive viewport + end-to-end use-case | 5 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | op de kleinste gangbare telefoon (360px) scrollt geen enkel hoofdscherm horizontaal | Happy | 15 | Actueel |
+| MOB-H-031 | ui | mobile.feature | op 360px valt ook op de medewerkerschermen niets buiten de rechterrand | Responsive viewport + end-to-end use-case | 4 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | op 360px valt ook op de medewerkerschermen niets buiten de rechterrand | Happy | 15 | Actueel |
 | NOT-H-001 | api | notifications.feature | ingelogde gebruiker kan notificaties ophalen | API-contract + equivalentieklasse | 5 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | ingelogde gebruiker kan notificaties ophalen | Happy | 15 | Actueel |
 | NOT-H-002 | api | notifications.feature | mark_all_read werkt zonder fouten | Toestandsovergang | 8 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | mark_all_read werkt zonder fouten | Happy | 15 | Actueel |
 | NOT-N-003 | api | notifications.feature | anonieme gebruiker krijgt 401 op notificaties | Beslissingstabel rollen en autorisatie | 1 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | anonieme gebruiker krijgt 401 op notificaties | Negative | 15 | Actueel |
@@ -540,9 +541,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 518
+- Playwright executable cases: 519
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 519
+- Totaal unieke executable cases: 520
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
