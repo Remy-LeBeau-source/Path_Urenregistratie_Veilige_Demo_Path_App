@@ -281,3 +281,13 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     Then staan er vijf stappen, in de volgorde uit het designcontract
     When de maand nog concept is maar de factuurstatus al op verwerkt staat
     And schuift de huidige stap mee zodra de maand is ingediend
+
+  @happy
+  Scenario: [SKIN-H-032] Klassiek en Modern tonen dezelfde statusketen, uit dezelfde bron
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 10
+    Given een maand die nog concept is terwijl de factuurstatus al op verwerkt staat
+    And geeft Modern bij dezelfde toestand exact dezelfde keten
+    And schuiven beide mee zodra de maand is ingediend
+    When de flow voor SKIN-H-032 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat klassiek en Modern tonen dezelfde statusketen, uit dezelfde bron
