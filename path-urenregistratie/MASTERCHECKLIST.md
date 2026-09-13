@@ -1958,7 +1958,7 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
 - [x] "Standaardweek vullen"-conflict (UI-TAKENLIJST #29/#48) opgelost: bestaande knop blijft
   veilig, nieuwe bevestigde "Week/Maand terugzetten"-knop overschrijft ook bewust-bevestigde
   0-dagen. `[SKIN-H-028]`, v2.0.2, New-bento + Klassiek Mijn uren.
-- [ ] Dashboard/Mijn overzicht: begroeting, volgende actie, open acties, acties per maand
+- [ ] (herontwerp, bezig) Dashboard/Mijn overzicht: begroeting, volgende actie, open acties, acties per maand
 - [ ] (herontwerp, bezig) Mijn uren: invoeren, wijzigen, opslaan, Enter-to-save, maand/weeknavigatie, totalen, indienen,
   status van urenregistratie. **Code-audit 13 sep (geen wijziging nodig, alles klopte al):**
   0/8/9-sneltoetsen bestaan in zowel Nieuw (`.new-bento-presets`) als Klassiek (`data-hours-set`,
