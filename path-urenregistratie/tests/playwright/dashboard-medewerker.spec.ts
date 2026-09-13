@@ -1216,72 +1216,12 @@ test('[DASH-H-026] het medewerkerdashboard houdt op telefoonbreedte de afgesprok
   });
 });
 
-// Ontwerpronde 13 sep, open besluit uit het handoff-document: waar komt de
-// medewerker terecht nadat hij een correctie opnieuw indient? Zonder deze regel
-// bleef hij achter in de oude maand, op een scherm dat er precies zo uitzag als
-// ervoor -- alleen de statuspil verried dat het gelukt was. Gekozen is optie 2
-// uit dat document: terug naar Mijn maanden, waar de nieuwe status van die maand
-// naast alle andere staat. Deze case bewaakt die keuze, zodat hij niet stil
-// terugvalt bij een volgende wijziging aan de indienflow.
-test('[DASH-H-029] na het opnieuw indienen van een correctie komt de medewerker op Mijn maanden uit', async ({ page }) => {
-  test.setTimeout(120_000);
-  const loginPage = new LoginPage(page);
-  await page.addInitScript(() => {
-    localStorage.setItem('path-install-afgewezen', String(Date.now()));
-  });
-  await loginPage.open();
-  await loginPage.loginAsEmployee();
-
-  await test.step('Given de lopende maand staat op "correctie gevraagd"', async () => {
-    await page.evaluate(() => {
-      const runtime = window as unknown as {
-        currentEmployee: () => { id: number };
-        currentPeriod: () => { key: string };
-        recordFor: (id: number, key?: string) => Record<string, unknown> & { correctionHistory: unknown[] };
-        persistState: () => void;
-        renderAll: () => void;
-      };
-      const record = runtime.recordFor(runtime.currentEmployee().id, runtime.currentPeriod().key);
-      record.timesheetStatus = 'correction';
-      record.correctionHistory = [{
-        requestedBy: 'Gio Maatsen',
-        requestedAt: '13 september 2026, 10:00',
-        message: 'Controleer de uren op maandag.',
-        resubmittedAt: ''
-      }];
-      runtime.persistState();
-      runtime.renderAll();
-    });
-  });
-
-  await test.step('When de medewerker de correctie opnieuw indient', async () => {
-    await page.evaluate(() => { window.location.hash = 'timesheet'; });
-    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
-    // Eerst naar "Hele maand". Op telefoonbreedte begint Mijn uren met één week
-    // en is de indienknop dan bewust verborgen -- je dient een maand in, geen
-    // week (TS-REV-UI-H-015). Zonder deze stap slaagde de case op desktop en
-    // viel hij om op mobiel, terwijl er niets stuk was.
-    await page.locator('[data-hours-week-scope="all"]').click();
-    await expect(page.locator('#submit-timesheet')).toBeVisible({ timeout: 10_000 });
-    await page.locator('#submit-timesheet').click();
-    await expect(page.locator('#modal')).toBeVisible();
-    await page.locator('#modal-confirm').click();
-  });
-
-  await test.step('Then springt de app op telefoonbreedte naar Mijn maanden, en blijft hij daarbuiten staan', async () => {
-    // De regel komt uit het mobiele ontwerp en geldt daarom alleen onder 720px.
-    // Deze case toetst allebei de kanten van die afbakening: op een smal scherm
-    // moet er genavigeerd worden, op een breed scherm juist niet. Zonder die
-    // tweede helft zou een per ongeluk ongescopete versie ongemerkt doorglippen
-    // -- en die versie liet [DASH-N-010] omvallen, een case die over iets heel
-    // anders gaat (herstel van het laatst geopende scherm na F5).
-    const breedte = page.viewportSize()?.width ?? 0;
-    if (breedte <= 720) {
-      await expect(page.locator('#view-historie')).toHaveClass(/is-active/, { timeout: 15_000 });
-      await expect(page.locator('#view-timesheet')).not.toHaveClass(/is-active/);
-    } else {
-      await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/, { timeout: 15_000 });
-      await expect(page.locator('#view-historie')).not.toHaveClass(/is-active/);
-    }
-  });
-});
+// Geen case voor "waar komt de medewerker terecht na een correctie". Het
+// handoff-document van 13 sep stelt die vraag als open besluit en adviseert
+// optie 2 (terug naar Mijn maanden). Dat is hier gebouwd en weer teruggedraaid:
+// bestaand gedrag herstelt na F5 het laatst geopende scherm, en [DASH-N-010]
+// dient augustus in -- in de demodata een correctie -- en verwacht daarna Mijn
+// uren terug. Een grens op 720px hielp niet: die case draait juist op de
+// telefoonprojecten (412 en 390px). De sprong komt terug zodra dat
+// herstelgedrag en het ontwerp op elkaar zijn afgestemd; dan hoort hier weer
+// een case te staan.

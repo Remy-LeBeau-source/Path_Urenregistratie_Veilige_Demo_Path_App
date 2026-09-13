@@ -13973,14 +13973,13 @@ async function submitCurrentTimesheet() {
   toast(wasCorrectie
     ? "Correctie voor " + currentPeriod().label + " is opnieuw ingediend."
     : "Uren zijn ingediend voor " + currentPeriod().label + ".");
-  // Alleen op telefoonbreedte. De bron van deze regel is het mobiele ontwerp
-  // (handoff/medewerker-wild.html), en op een breed scherm is de winst er ook
-  // niet: daar zie je de statuswijziging al zonder van scherm te wisselen.
-  // Bovendien botst het daar met bestaand gedrag dat na F5 het laatst geopende
-  // scherm herstelt -- [DASH-N-010] bewijst dat, en die case diende augustus in,
-  // wat in de demodata een correctie is. Ongescopet sprong die case daardoor
-  // naar Mijn maanden en viel hij om op iets waar hij niet over gaat.
-  if (wasCorrectie && window.matchMedia("(max-width: 720px)").matches) showView("historie");
+  // Van schermwissel na een correctie is bewust afgezien, al staat die in het
+  // mobiele ontwerp. Hij botst met bestaand gedrag dat na F5 het laatst
+  // geopende scherm herstelt: [DASH-N-010] dient augustus in, in de demodata
+  // een correctie, en verwacht daarna Mijn uren terug. Een breedtegrens hielp
+  // niet -- die case draait juist op telefoonprojecten (412 en 390px). Het
+  // blijft dus bij de melding hierboven; de sprong komt pas terug als het
+  // herstelgedrag en het ontwerp met elkaar in lijn zijn gebracht.
 }
 
 function showTimesheetSubmitConfirmation() {

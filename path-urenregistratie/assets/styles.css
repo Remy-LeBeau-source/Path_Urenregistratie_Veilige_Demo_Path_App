@@ -1073,8 +1073,18 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .employee-card { border: 1px solid var(--line-zacht); border-radius: var(--radius); background: var(--vlak); padding: 22px; box-shadow: var(--hoogte-kaart); }
 .employee-card-head { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
 .employee-card-head .mini-avatar { width: 45px; height: 45px; }
-.employee-identity { display: flex; align-items: center; gap: 12px; }
-.employee-identity strong, .employee-identity small { display: block; }
+/* min-width: 0 op allebei de niveaus. Zonder dat staat een flex-kind op
+   min-width: auto -- het krimpt dus niet onder zijn inhoud, en de naamregel met
+   het volledige e-mailadres duwt de statuspil rechts eruit. Op 360px viel de pil
+   daardoor buiten de rechterrand (367px in Klassiek, 371px in Nieuw), en onder
+   720px staat html,body op overflow-x: hidden -- je kunt er dus niet naartoe
+   vegen, hij is weg. [MOB-H-030] ving dat op de CI-runner; lokaal bleef hij
+   groen omdat Windows-fonts smaller renderen dan die van Linux. Dat verschil is
+   precies waarom hier speling hoort en geen preciezere breedte: hetzelfde blok
+   loopt anders om op een Android-systeemfont of bij vergrote tekst. */
+.employee-identity { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.employee-identity > span:last-child { min-width: 0; }
+.employee-identity strong, .employee-identity small { display: block; overflow-wrap: anywhere; }
 .employee-identity strong { font-size: 13px; }
 .employee-identity small { margin-top: 4px; color: var(--muted); font-size: 10px; }
 /* Klant, uren per week en broker stonden in grijze afgeronde vakjes en

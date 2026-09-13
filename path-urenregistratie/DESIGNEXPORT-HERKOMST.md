@@ -55,20 +55,33 @@ in de regressie.** Dus per increment:
    `max-width: 720px`-blok wijzigt, test het enige scherm waar hij niets doet.
 6. `npm run docs:sync` draaien en de gegenereerde bestanden meecommitten.
 
+## Eén link per ronde
+
+Sinds de avond van 13 september loopt de overdracht via **één bestand**: `handoff/OPDRACHT.md`.
+Daarin staan de vier doelpaden met verse links, wat elk bestand is, de eis om exact over te nemen,
+de testcheck en wat niet aangeraakt mag worden. Gio plakt alleen die ene URL. De vaste route die
+daarop volgt staat in `AGENTS.md` onder "Ontwerprondes medewerkerschermen"; hij hoeft niet per
+ronde herhaald te worden.
+
 ## Versie waartegen nu gebouwd wordt
 
-Opgehaald 2026-09-13T10:30Z, sha256 (eerste 16 tekens):
+Opgehaald 2026-09-13T19:01Z, sha256 (eerste 16 tekens):
 
 | Bestand | sha256 |
 | --- | --- |
-| `handoff/medewerker-wild.html` | `a1433f7c1bc8060b` |
-| `handoff/HANDOFF-MEDEWERKER-MOBIEL.md` | `09695ffab2f97044` |
-| `github.md` | `d75d512a2a10a123` |
+| `handoff/OPDRACHT.md` | `f8ce19acb0d1af85` |
+| `handoff/medewerker-wild.html` | `fa68d0690e5d79a0` |
+| `handoff/medewerker-gui.html` | `6c1697e8397366d9` |
+| `handoff/HANDOFF-MEDEWERKER-MOBIEL.md` | `5c3918cabca7459f` |
+| `handoff/DESIGN-BESLUITEN.md` | `b21d30835eaf178c` |
 
 Wijzigt een export, werk dan deze tabel bij in dezelfde commit als het bouwwerk dat erop volgt.
+Wat er in deze ronde precies veranderd is, staat per punt in `github.md` onder "Last sync".
 
 ## Wat hier (nog) niet ligt
 
-`medewerker-gui.html`, de desktop/GUI-variant. Die is in ontwikkeling en komt als aparte opdracht;
-in de ronde van 13 september is daar de hero-ring vervangen door een KPI-rij en het maandverloop van
-een inklapbare accordeon naar een vaste horizontale stappenbalk.
+`medewerker-gui.html` ligt er nu wél, maar wordt nog niet nagebouwd: de opdracht zegt expliciet dat
+de Klassiek-variant voor desktop/GUI in een aparte ronde komt.
+
+`handoff/DESIGN-BESLUITEN.md` is de export van het `CLAUDE.md` uit het designproject — het volledige
+designcontract. Niet te verwarren met een `CLAUDE.md` in deze repo; die is er niet.

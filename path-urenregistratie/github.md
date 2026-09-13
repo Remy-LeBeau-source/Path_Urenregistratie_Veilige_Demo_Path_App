@@ -3,7 +3,46 @@ branch: main
 path: path-urenregistratie
 
 ## Last sync
-date: 2026-09-13T14:05:00Z
+date: 2026-09-13T19:01:00Z
+
+### Ronde 13 sep (avond) — vastgesteld uit de diff van de exports
+Deze regel is aan de repo-kant geschreven: de vorige export is bewaard, de
+nieuwe ernaast gelegd en het verschil beschreven. Wild: 162 gewijzigde regels,
+GUI: 287.
+
+**`medewerker-wild.html` — vormgeving**
+- Salie-palet doorgevoerd in licht: `--bg:#dfe9e4`, `--surface:rgba(255,255,255,.66)`,
+  `--ink:#16241f`, `--muted:#5c6d66`, `--line:rgba(22,36,31,.09)`, `--line-zacht:rgba(22,36,31,.05)`
+- Twee nieuwe tokens: `--kaart-schaduw:0 1px 1px rgba(22,52,42,.03),0 6px 18px rgba(22,52,42,.055)`
+  en `--veld:linear-gradient(176deg,#d3e5dd 0%,#e4efea 34%,#f4f9f6 72%,#fbfdfc 100%)`
+  (in donker `--veld:none`). De shell krijgt `background-image:var(--veld)`.
+- Hero-verloop lichter: `linear-gradient(146deg,#e7f1ec 0%,#dceae5 46%,#c8ded7 100%)`
+- Kop herzien: Path-logo per thema, scheidingslijntje van 1px, titel en label op
+  één regel; themaknop van 40 naar 36px, radius 12 → 11
+- De statuspil boven het maandcijfer is **weg**
+- De spreuk staat er nu altijd, in de displayserif (14.5px, cursief); de
+  toelichting alleen nog als er echt iets te doen is (`heeftToelichting`)
+- Kaartschaduwen lopen via `var(--kaart-schaduw)` in plaats van een eigen
+  `0 10px 26px rgba(5,12,20,.14)`
+
+**`medewerker-wild.html` — gedrag**
+- **Geen "Week opslaan" meer.** De onderbalk toont tijdens invullen
+  "Automatisch opgeslagen" + weektotaal en de knop "Nog N dagen"; zodra de maand
+  vol is "Maandtotaal" + "Maand indienen"
+- Dagen die buiten de gekozen maand vallen verdwijnen uit de weekrijen
+- De maandbevestiging noemt nu ook de dagen die je **bewust** op 0,0 zette
+- "Vul de rest"-knop staat op `display:none`
+- Klanturenstaat per maand (`staatVoor`, `afgerond`, `oudsteOpen`) in plaats van
+  één status voor alles
+- Dashboardtitel is "September 2026" in plaats van "Path · september"
+- PDF-onderschrift: "je uren per week" (bedragen worden niet meer genoemd)
+- De "Wijzigen"-link bij "Afgerond — zelf gemaild" is weg
+
+**`medewerker-gui.html`** — dezelfde `--veld`/`Afgerond`/`Maand indienen`-lijn
+doorgetrokken naar de desktopvariant. Niet nagebouwd: de GUI komt per opdracht
+in een aparte ronde.
+
+## Sync history
 
 ### Ronde 13 sep (namiddag)
 - `Medewerker GUI.dc.html`: dashboard-ledger herzien (KPI-tegels, één groene actieknop, "Afgerond"-stap met reden), "vul alle gaten"-knop, gemaild-status ontkoppeld van goedgekeurd-tekst (dashboard + Maanden-pil)

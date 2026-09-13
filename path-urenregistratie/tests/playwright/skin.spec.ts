@@ -1797,3 +1797,59 @@ test('[SKIN-H-029] nog niet opgeslagen uren overleven rotatie, themawissel, moda
     await expect(klassiekVeld).toHaveValue(ingevuld);
   });
 });
+
+// Aanvulling op [MOB-H-030], dat op de CI-runner de statuspil op het
+// medewerkersbeheer-scherm buiten de rechterrand zag vallen (367px in Klassiek,
+// 371px in Nieuw, bij een viewport van 360px) terwijl dezelfde case op Windows
+// groen bleef. De oorzaak van dat verschil is lettertypemetriek: Linux heeft de
+// Windows-fonts niet en rendert dezelfde tekst een paar pixels breder.
+//
+// Daarom meet deze case niet de demogegevens maar zet hij zelf een lang, maar
+// volstrekt gewoon e-mailadres in de naamregel -- een adres zonder spaties dat
+// je bij een organisatie met een lange naam echt tegenkomt. Dan hangt de
+// uitkomst niet meer af van welke fonts de machine heeft: zonder speling duwt
+// die regel de pil er op elk platform uit.
+//
+// De fix is bewust speling en geen preciezere breedte: `min-width: 0` op de
+// twee flex-niveaus plus `overflow-wrap: anywhere` op de tekst. Een blok dat op
+// de pixel past, valt net zo goed om op een Android-systeemfont of bij vergrote
+// tekst.
+test('[SKIN-H-030] een lang e-mailadres duwt de statuspil niet buiten beeld op 360px', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  const langAdres = 'marc.van.der.steenhoven@stichting-thuiszorg-noordwest.example.invalid';
+
+  await test.step('Given een beheerder op een 360px-telefoon bij Medewerkers', async () => {
+    await page.setViewportSize({ width: 360, height: 740 });
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await page.evaluate(() => { window.location.hash = 'employees'; });
+    await expect(page.locator('#view-employees')).toHaveClass(/is-active/);
+    await expect(page.locator('.employee-card').first()).toBeVisible();
+  });
+
+  const zetLangAdres = async () => {
+    await page.locator('.employee-card').first().locator('.employee-identity small').evaluate(
+      (element, adres) => { element.textContent = 'Zorgprofessional · ' + adres; },
+      langAdres
+    );
+  };
+
+  const pilRechterrand = async () => page.locator('.employee-card').first()
+    .locator('.employee-card-head > .status-pill')
+    .evaluate(element => Math.round(element.getBoundingClientRect().right));
+
+  await test.step('Then blijft de pil in Klassiek binnen de rechterrand', async () => {
+    await zetLangAdres();
+    expect(await pilRechterrand(), 'de statuspil hoort binnen de 360px-viewport te blijven; wat erbuiten valt is onbereikbaar, want onder 720px staat html,body op overflow-x: hidden')
+      .toBeLessThanOrEqual(360);
+  });
+
+  await test.step('And ook in de nieuwe vormgeving', async () => {
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await expect(page.locator('.employee-card').first()).toBeVisible();
+    await zetLangAdres();
+    expect(await pilRechterrand(), 'Nieuw erft deze opmaak uit styles.css; ging Klassiek goed en Nieuw niet, dan overschrijft styles-new.css hem alsnog')
+      .toBeLessThanOrEqual(360);
+  });
+});
