@@ -5521,6 +5521,28 @@ function vulModernHerokop(record, period, aanZet) {
     + gevuldeWeken + " van " + totaalWeken + " " + (totaalWeken === 1 ? "week" : "weken") + " ingevuld";
 }
 
+// Weekstrook: één compacte chip per week van de maand, met het weeknummer en
+// het weektotaal. Uit de ontwerpronde van 13 sep, die de eerdere hoge kaarten
+// verving omdat die in een horizontale strip werden afgesneden -- overflow-x
+// klemt ook de hoogte, dat staat als valkuil in het handoff-document.
+// De chip zegt alleen waar je bent en waar je heen kunt; het invullen zelf
+// gebeurt onveranderd in de dagenlijst eronder.
+function renderWeekstrip(record, period, actieveWeekIndex) {
+  const strip = document.querySelector("#new-bento-weekstrip");
+  if (!strip) return;
+  strip.innerHTML = period.weekRows.map((week, index) => {
+    const uren = (record.entries?.[index] || []).reduce((som, waarde) => som + Number(waarde || 0), 0);
+    const actief = index === actieveWeekIndex;
+    return '<button type="button" role="tab" class="new-bento-weekchip"'
+      + (actief ? ' aria-selected="true"' : ' aria-selected="false"')
+      + ' data-weekstrip-index="' + index + '"'
+      + ' aria-label="Week ' + week.number + ', ' + hoursFormat.format(uren) + ' uur">'
+      + '<span>Week ' + week.number + '</span>'
+      + '<strong>' + hoursFormat.format(uren) + '</strong>'
+      + '</button>';
+  }).join("");
+}
+
 function renderNewEmployeeBento(record, employee, period) {
   const bento = document.querySelector("#new-employee-bento");
   if (!bento) return;
@@ -5557,6 +5579,7 @@ function renderNewEmployeeBento(record, employee, period) {
   document.querySelector("#new-bento-week-range").textContent = actualDays.length
     ? actualDays[0].label + " – " + actualDays[actualDays.length - 1].label
     : period.label;
+  renderWeekstrip(record, period, weekIndex);
   document.querySelector("#new-bento-days").innerHTML = renderBentoDayCards(week, weekIndex, record, editable, period);
   const weekTotal = record.entries[weekIndex].reduce((sum, value) => sum + Number(value || 0), 0);
   const weekBusinessDays = actualDays.length;
@@ -13385,6 +13408,20 @@ function toonInstallatieAanbod() {
     persistState();
     rerenderActiveTimesheetView();
     focusEersteLegeBentoDag(record, period, nextIndex);
+    return;
+  }
+
+  const weekstripChip = event.target.closest("[data-weekstrip-index]");
+  if (weekstripChip) {
+    // Rechtstreeks naar de gekozen week, zonder de sprong-naar-eerste-lege-week
+    // logica van de pijlen: wie een week aanwijst bedoelt precies die week.
+    const gekozen = Number(weekstripChip.dataset.weekstripIndex);
+    if (Number.isFinite(gekozen)) {
+      state.hoursWeekScope = "week-" + gekozen;
+      state.hoursWeekScopeTouched = true;
+      persistState();
+      rerenderActiveTimesheetView();
+    }
     return;
   }
 

@@ -3527,3 +3527,65 @@ html[data-skin="new"] #view-employee-dashboard .new-bento-contractregel { displa
     font-weight: 700;
   }
 }
+
+/* Weekstrook op telefoon — referentie handoff/medewerker-wild.html, ronde 13 sep.
+   Waarden letterlijk uit de bron: strook display:flex, gap 8px, marge -18px om
+   de kaartrand heen, padding 2px 18px 6px, overflow-x auto. Chip: min-height
+   44px, radius 11px, padding 0 12px, gap 8px, flex 0 0 auto. Label 10px/900 met
+   letter-spacing .1em in kapitalen, getal in de schreefletter op 16px/400 met
+   tabular-nums.
+
+   Bewust compacte chips en geen hoge kaarten: overflow-x klemt ook de hoogte,
+   waardoor hoge kaarten in een horizontale strip worden afgesneden. Dat staat
+   als valkuil in het handoff-document en is daar twee keer misgegaan. */
+html[data-skin="new"] #new-bento-weekstrip { display: none; }
+
+@media (max-width: 720px) {
+  html[data-skin="new"] #new-bento-weekstrip {
+    display: flex;
+    gap: 8px;
+    margin: 0 -14px;
+    padding: 2px 14px 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html[data-skin="new"] .new-bento-weekchip {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    border: 1px solid #d7cebe;
+    border-radius: 11px;
+    background: #fbf8f2;
+    color: #102235;
+    cursor: pointer;
+    padding: 0 12px;
+    scroll-snap-align: start;
+    transition: border-color .3s, background .3s;
+  }
+
+  html[data-skin="new"] .new-bento-weekchip[aria-selected="true"] {
+    border-color: #5f9e78;
+    background: #e6efe7;
+  }
+
+  html[data-skin="new"] .new-bento-weekchip span {
+    color: #6b7570;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  html[data-skin="new"] .new-bento-weekchip strong {
+    font-family: var(--path-serif);
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: -.02em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+}

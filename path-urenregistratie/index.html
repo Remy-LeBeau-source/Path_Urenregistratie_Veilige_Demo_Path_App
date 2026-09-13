@@ -296,6 +296,12 @@
               <div><strong id="new-bento-week-title">Week</strong><small id="new-bento-week-range"></small></div>
               <button type="button" data-new-bento-week="next" aria-label="Volgende week">›</button>
             </header>
+            <!-- Weekstrook uit de ontwerpronde van 13 sep: compacte chips op een
+                 horizontale scrollijn in plaats van hoge kaarten die afbreken.
+                 Alleen zichtbaar op telefoonbreedte; de pijlen ernaast blijven
+                 bestaan, want die hebben hun eigen gedrag (springen naar de
+                 eerstvolgende week met een leeg urenvak). -->
+            <div class="new-bento-weekstrip" id="new-bento-weekstrip" role="tablist" aria-label="Weken"></div>
             <div class="new-bento-days" id="new-bento-days"></div>
             <div class="new-bento-week-total"><span id="new-bento-week-total-label">Totaal deze week</span><strong id="new-bento-week-total">0,00</strong></div>
             <p class="new-bento-fill-pattern-note" id="new-bento-fill-pattern-note" hidden></p>
