@@ -13808,6 +13808,10 @@ async function submitCurrentTimesheet() {
   const employee = currentEmployee();
   const record = recordFor(employee.id);
   const submitButton = document.querySelector("#submit-timesheet");
+  // Vóór het indienen vastleggen: daarna staat de status op "submitted" en is
+  // niet meer te zien dat dit een correctie was. Bepaalt onderaan waar de
+  // medewerker terechtkomt.
+  const correctieVooraf = record.timesheetStatus === "correction";
 
   const serverSubmit = API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative() && state.currentRole === "employee";
   let submitPayload = null;
@@ -13880,7 +13884,23 @@ async function submitCurrentTimesheet() {
   addNotification({ audience: "employee", type: "submitted", employeeId: employee.id, title: "Uren wachten op controle", message: "Je uren voor " + currentPeriod().label + " zijn ingediend.", periodKey: currentPeriod().key, view: "employee-dashboard" });
   persistState();
   renderAll();
-  toast("Uren zijn ingediend voor " + currentPeriod().label + ".");
+
+  // De terugweg na een correctie. Zonder dit bleef de medewerker hangen in de
+  // oude maand waar hij de correctie doorvoerde, met een scherm dat er precies
+  // zo uitzag als ervoor -- hij kon alleen aan de statuspil zien dat het gelukt
+  // was. Het handoff-document van 13 sep legde dit als open besluit voor met
+  // drie opties; gekozen is optie 2 (terug naar Mijn maanden), de voorkeur van
+  // de ontwerpers en van mij: daar staat de nieuwe status van die maand naast
+  // alle andere, dus je ziét dat de correctie is aangekomen in plaats van dat
+  // je het moet geloven. Optie 1 (naar de lopende maand) verbergt juist het
+  // resultaat, en optie 3 laat je achter op een scherm dat niets nieuws toont.
+  // Alleen na een correctie: bij een gewone indiening is de medewerker al waar
+  // hij hoort te zijn.
+  const wasCorrectie = correctieVooraf;
+  toast(wasCorrectie
+    ? "Correctie voor " + currentPeriod().label + " is opnieuw ingediend."
+    : "Uren zijn ingediend voor " + currentPeriod().label + ".");
+  if (wasCorrectie) showView("historie");
 }
 
 function showTimesheetSubmitConfirmation() {

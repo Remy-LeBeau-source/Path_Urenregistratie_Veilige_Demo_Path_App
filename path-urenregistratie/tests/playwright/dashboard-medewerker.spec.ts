@@ -1215,3 +1215,55 @@ test('[DASH-H-026] het medewerkerdashboard houdt op telefoonbreedte de afgesprok
     expect(openActies, `open acties hoort boven het archief te staan (${blokken.join(' < ')})`).toBeLessThan(historie);
   });
 });
+
+// Ontwerpronde 13 sep, open besluit uit het handoff-document: waar komt de
+// medewerker terecht nadat hij een correctie opnieuw indient? Zonder deze regel
+// bleef hij achter in de oude maand, op een scherm dat er precies zo uitzag als
+// ervoor -- alleen de statuspil verried dat het gelukt was. Gekozen is optie 2
+// uit dat document: terug naar Mijn maanden, waar de nieuwe status van die maand
+// naast alle andere staat. Deze case bewaakt die keuze, zodat hij niet stil
+// terugvalt bij een volgende wijziging aan de indienflow.
+test('[DASH-H-026] na het opnieuw indienen van een correctie komt de medewerker op Mijn maanden uit', async ({ page }) => {
+  test.setTimeout(120_000);
+  const loginPage = new LoginPage(page);
+  await page.addInitScript(() => {
+    localStorage.setItem('path-install-afgewezen', String(Date.now()));
+  });
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+
+  await test.step('Given de lopende maand staat op "correctie gevraagd"', async () => {
+    await page.evaluate(() => {
+      const runtime = window as unknown as {
+        currentEmployee: () => { id: number };
+        currentPeriod: () => { key: string };
+        recordFor: (id: number, key?: string) => Record<string, unknown> & { correctionHistory: unknown[] };
+        persistState: () => void;
+        renderAll: () => void;
+      };
+      const record = runtime.recordFor(runtime.currentEmployee().id, runtime.currentPeriod().key);
+      record.timesheetStatus = 'correction';
+      record.correctionHistory = [{
+        requestedBy: 'Gio Maatsen',
+        requestedAt: '13 september 2026, 10:00',
+        message: 'Controleer de uren op maandag.',
+        resubmittedAt: ''
+      }];
+      runtime.persistState();
+      runtime.renderAll();
+    });
+  });
+
+  await test.step('When de medewerker de correctie opnieuw indient', async () => {
+    await page.evaluate(() => { window.location.hash = 'timesheet'; });
+    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+    await page.locator('#submit-timesheet').click();
+    await expect(page.locator('#modal')).toBeVisible();
+    await page.locator('#modal-confirm').click();
+  });
+
+  await test.step('Then staat Mijn maanden open, zodat de nieuwe status zichtbaar is', async () => {
+    await expect(page.locator('#view-historie')).toHaveClass(/is-active/, { timeout: 15_000 });
+    await expect(page.locator('#view-timesheet')).not.toHaveClass(/is-active/);
+  });
+});
