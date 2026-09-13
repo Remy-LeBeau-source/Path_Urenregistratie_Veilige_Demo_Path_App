@@ -3366,3 +3366,69 @@ html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-current {
 html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-current strong {
   color: #102235;
 }
+
+/* ==================================================================
+   Medewerkerdashboard op telefoon — referentie handoff/medewerker-wild.html
+   ==================================================================
+   Bron: de designexport van Gio, sha256 a1433f7c1bc8060b (zie
+   DESIGNEXPORT-HERKOMST.md). Waarden zijn letterlijk overgenomen uit die
+   bron, niet afgerond en niet geinterpreteerd -- dat is een expliciete eis.
+   De leesbare bron staat in handoff/medewerker-wild.bron.txt.
+
+   Bewust alleen de opmaak overgezet op de bestaande onderdelen, niet de DOM
+   nagebouwd: de referentie heeft een eigen componentstructuur, maar de app
+   heeft eigen ids en klassen waar bestaande Playwright-cases op staan. Een
+   DOM-verbouwing zou die zonder functionele reden breken.
+
+   Gescopet op telefoonbreedte: deze export is de referentie voor de web-app
+   en de iOS/Android-app. De desktop/GUI-variant is een aparte opdracht en
+   wordt hier bewust niet geraakt. */
+
+@media (max-width: 720px) {
+  /* Tokens uit het :root-blok van de referentie. Alleen wat hier gebruikt
+     wordt; de rest van de New-skin houdt zijn eigen tokens. */
+  html[data-skin="new"] #view-employee-dashboard {
+    --w-mint: #3abd9d;
+    --w-mint-tekst: #037f63;
+    --w-ink: #101d29;
+    --w-muted: #56655f;
+    --w-navy: #0d1b38;
+    --w-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  }
+
+  html[data-skin="new"][data-theme="dark"] #view-employee-dashboard {
+    --w-ink: #dde6ea;
+    --w-muted: #93a2ac;
+    --w-mint-tekst: #5fd3b3;
+  }
+
+  /* Begroeting: in de referentie een smalle, ver uiteengezette kapitaalregel
+     boven het getal, niet de huidige grote groene regel. */
+  html[data-skin="new"] #view-employee-dashboard .new-bento-greeting {
+    margin-bottom: 0;
+    color: var(--w-mint-tekst);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+  }
+
+  /* De kop is in de referentie het antwoord op "wat moet ik nu doen", in de
+     schreefletter op 23px -- niet de huidige display-kop van 58px. */
+  html[data-skin="new"] #view-employee-dashboard .new-bento-hero h2 {
+    margin: 8px 0 0;
+    font-family: var(--w-display);
+    font-size: 23px;
+    font-weight: 400;
+    letter-spacing: -.024em;
+    line-height: 1.18;
+    text-wrap: balance;
+  }
+
+  html[data-skin="new"] #view-employee-dashboard .new-bento-hero p {
+    margin: 14px 0 0;
+    font-size: 13.5px;
+    line-height: 1.6;
+    text-wrap: pretty;
+  }
+}
