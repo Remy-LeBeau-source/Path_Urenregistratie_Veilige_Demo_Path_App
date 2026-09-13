@@ -2115,8 +2115,35 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   skin-onafhankelijk. Omgeving: raakt productie niet — `syncResetControlVisibility()` toont hem
   alleen op LOCAL/TEST, dus dit was een tester op een iPad in portret zonder Herstel demo.
   Bevestigd: `[A11Y-H-004]` en `[DASH-N-010]` waren rood op tablet en zijn nu groen.
-- [ ] iOS/Safari resterend: keyboard (toetsenbord dat een knop afdekt), uploads
-  (datumvelden vervallen: die bestaan niet, zie de Android-doorloop hieronder)
+- [x] **Uploads op iOS doorgelicht (13 sep): in orde, inclusief het HEIC-geval.** Een iPhone
+  maakt foto's standaard in HEIC, en dat formaat komt nergens in deze codebase voor. Dat is
+  hier geen gat maar het juiste gedrag, om twee redenen. (1) Kiest de gebruiker via de
+  **Fotobibliotheek**, dan zet iOS de HEIC zelf om naar JPEG, juist omdat `accept`
+  `image/jpeg` noemt — de gewone route werkt dus gewoon. (2) Kiest hij via **Bladeren** een
+  `.HEIC` uit Bestanden, dan komt het bestand ongemoeid binnen en valt het buiten
+  `customerTimesheetSourceType()`. Nagelopen wat de gebruiker dan ziet, en dat is precies goed:
+  een expliciete uitleg in het scherm ("Dit bestandstype is niet toegestaan. Kies een PDF, JPG
+  of PNG."), knoppen die uitgeschakeld blijven, en een toast als hij toch probeert in te
+  dienen. Geen stille fout, geen verdwenen bestand. Echte HEIC-ondersteuning zou een nieuwe
+  functie zijn, geen fix: browsers kunnen HEIC niet in een canvas decoderen en jsPDF evenmin,
+  dus dat vraagt een decoder aan server- of clientkant. Bewust niet gedaan. Verder in orde:
+  `accept` noemt zowel MIME-types als extensies (nodig omdat de ene bestandskiezer het ene en
+  de andere het andere honoreert), en de 2 MB-grens geeft een eigen, duidelijke melding.
+- [ ] **iOS-toetsenbord dat de knoppen afdekt — risico beschreven, bewust niet zelf gefixt.**
+  De dialoogopbouw is op zich juist: `.modal-actions` staat met `position: sticky; bottom: 0`
+  binnen het scrollgebied `.modal-scroll`, dus de knoppen plakken onderaan het zichtbare deel
+  en scrollen nooit weg (gedekt door `[MOB-H-023]` en `[A11Y-H-006]`). Het probleem zit een
+  laag dieper: `.modal` begrenst zich met `calc(100dvh - 40px)`, en **`dvh` reageert niet op
+  het toetsenbord** — die eenheid volgt de browserbalken, niet het toetsenbord. Op iOS blijft
+  de dialoog dus even hoog terwijl het zichtbare gebied krimpt, waardoor de onderrand met die
+  knoppen achter het toetsenbord kan vallen bij het invullen van een lang formulier.
+  **Waarom niet zelf aangepast:** een robuuste oplossing is geen CSS-regel maar gedrag — de
+  `visualViewport`-API uitlezen en de dialoog meeschalen — en dat raakt élke dialoog in de app.
+  `interactive-widget=resizes-content` in de viewport-meta helpt alleen Chrome/Android, niet
+  iOS Safari, en verandert app-breed het layoutgedrag. De opdracht is hier expliciet: bewijs
+  eerst dat het probleem bestaat en voer geen grotere wijziging automatisch uit. Ik kan dit
+  niet aantonen zonder een echt iOS-toestel. **Voor te leggen aan Gio:** is dit ooit gemeld
+  door een tester, en mag de dialoog met `visualViewport` gaan meeschalen?
 - [x] **Android/Chrome-doorloop gedaan (13 sep), grotendeels in orde.** Statisch nagelopen in
   `index.html` en `assets/app.js`. **Viewport:** `width=device-width, initial-scale=1,
   viewport-fit=cover` — correct, en belangrijk: géén `user-scalable=no` of `maximum-scale`, dus
