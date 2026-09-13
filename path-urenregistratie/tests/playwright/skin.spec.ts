@@ -955,6 +955,15 @@ test('[SKIN-H-017] Mijn uren toont bij een enkele week dezelfde bento-kaartjes a
     await page.locator('[data-hours-week-scope="week-0"]').click();
   });
 
+  // Deze case zet de tweede week leeg om de weekpijl deterministisch te laten
+  // landen, en slaat dat sinds de raceherstelling ook echt op. Daarmee raakte
+  // hij [SKIN-H-028] verderop in dit bestand: die eist dat er vóór het
+  // terugzetten uren op dinsdag staan, en die stonden er niet meer. Gemeten in
+  // een volle bestandsrun, niet bedacht. Vandaar bewaren en in een finally
+  // terugzetten.
+  const herstelUrenstaat = await bewaarUrenstaat(page);
+  try {
+
   await test.step('Then toont Mijn uren dezelfde kaartjesstijl als de bento, met werkende week-pijlen', async () => {
     await expect(page.locator('#hours-table-wrap')).toBeHidden();
     await expect(page.locator('#hours-week-nav')).toBeVisible();
@@ -1019,6 +1028,10 @@ test('[SKIN-H-017] Mijn uren toont bij een enkele week dezelfde bento-kaartjes a
     await expect(page.locator('#hours-week-nav')).toBeHidden();
     await expect(page.locator('#hours-grid-cards')).toBeHidden();
   });
+
+  } finally {
+    await herstelUrenstaat();
+  }
 });
 
 test('[SKIN-H-018] Klanturenstaat-blok klapt inline open op het Dashboard, zonder weg te navigeren, en keert terug naar Mijn uren', async ({ page }) => {
