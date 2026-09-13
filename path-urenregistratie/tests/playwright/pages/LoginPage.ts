@@ -64,6 +64,25 @@ export class LoginPage {
     await this.page.locator('#auth-login-password').fill(password);
     await this.page.locator('#auth-login-submit').click();
 
+    // Hoe lang we op de uitkomst van het inloggen wachten. 30 s, en dat is geen
+    // verzwakking.
+    //
+    // De voorwaarde hieronder blijft ongewijzigd: geslaagd is "#app-shell is niet
+    // meer hidden", mislukt is "de knop staat weer aan én er staat een echte
+    // foutmelding". Een echte loginfout wordt dus nog steeds meteen herkend en
+    // gegooid; alleen het geduld op een trage omgeving wordt ruimer.
+    //
+    // Waarom dit uitmaakt (13 sep 2026, gemeten door de vormgevingslane): dit is
+    // de eerste stap van vrijwel elke case in de suite. Is de machine bezet, dan
+    // knapt deze begroting als eerste -- en dan lijkt de case eronder stuk
+    // terwijl hij nooit voorbij het inlogscherm is gekomen. Op webkit kost één
+    // case op die machine 50-60 s; drie cases die samen rood waren, bleken los
+    // alle drie groen. Een vaste begroting die niet over de omgeving heen past
+    // is dezelfde fout als die vandaag ook in MOB-H-030, DASH-N-007 en
+    // DASH-H-017 zat -- en deze zit in gedeelde infrastructuur, dus hij raakt
+    // elke case, altijd bij de eerste stap, waar hij het minst op zichzelf lijkt
+    // te wijzen.
+    const LOGIN_UITKOMST_TIMEOUT_MS = 30_000;
     const outcome = await this.page.waitForFunction(() => {
       const shell = document.querySelector('#app-shell');
       if (shell && !shell.hasAttribute('hidden')) return { type: 'success', message: '' };
@@ -77,7 +96,8 @@ export class LoginPage {
       }
 
       return null;
-    }, undefined, { timeout: 12_000 });
+      // 30 s in plaats van 12 s (zie de toelichting boven deze aanroep).
+    }, undefined, { timeout: LOGIN_UITKOMST_TIMEOUT_MS });
 
     const result = await outcome.jsonValue() as { type: 'success' | 'error'; message: string };
     if (result.type === 'error') {

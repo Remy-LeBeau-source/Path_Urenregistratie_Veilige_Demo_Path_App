@@ -895,7 +895,11 @@ test('[DASH-N-017] beheerderdashboard toont een laadtoestand tot de eerste werkv
 });
 
 test('[DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels', async ({ page }) => {
-  test.setTimeout(60_000);
+  // 60 s was te krap zodra de wachtvensters verderop ruimer werden: dan
+  // verplaats je de uitval alleen van een assertie naar een testtime-out, en
+  // dat ziet er nog minder uit als wat het is. Zie de toelichting bij de
+  // herocijfers verderop.
+  test.setTimeout(180_000);
   const loginPage = new LoginPage(page);
   let workflowReads = 0;
 
@@ -956,11 +960,26 @@ test('[DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij 
   });
 
   await test.step('Then blijven globale aantallen, eigenaren en taakidentiteiten gelijk', async () => {
-    await expect.poll(snapshot).toEqual(baseline);
+    await expect.poll(snapshot, { timeout: 20_000 }).toEqual(baseline);
     expect(baseline.total).toBe(baseline.actionable + baseline.waiting);
-    await expect(page.locator('#hero-task-total')).toHaveText(`${baseline.total} open acties`);
-    await expect(page.locator('#hero-backoffice-count')).toHaveText(String(baseline.actionable));
-    await expect(page.locator('#hero-employee-count')).toHaveText(String(baseline.waiting));
+    // Ruimer venster dan de standaard 5 s op de drie herocijfers, om dezelfde
+    // reden als bij [DASH-N-007] in dit bestand.
+    //
+    // De maandwissel hierboven (augustus -> juli -> augustus) laat de
+    // werkvoorraad opnieuw hydrateren. Tot dat rond is staat er letterlijk
+    // "Werkvoorraad laden…" in `#hero-task-total`, en op een trage omgeving
+    // duurt dat langer dan 5 s. Precies dat gebeurde: twee keer rood op de
+    // CI-pool (release-run 34779932639, shards 7 en 10, inclusief de
+    // herkansing) en ook hier lokaal op `tablet-chromium`. Twee onafhankelijke
+    // omgevingen, dus geen lokale ruis.
+    //
+    // Geen verzwakking: de geëiste waarden zijn ongewijzigd en komen nog steeds
+    // uit dezelfde `baseline`. Blijft de hydratatie hangen of levert hij andere
+    // cijfers, dan faalt de case net zo hard -- alleen na 20 s in plaats van 5.
+    const heroWacht = { timeout: 20_000 };
+    await expect(page.locator('#hero-task-total')).toHaveText(`${baseline.total} open acties`, heroWacht);
+    await expect(page.locator('#hero-backoffice-count')).toHaveText(String(baseline.actionable), heroWacht);
+    await expect(page.locator('#hero-employee-count')).toHaveText(String(baseline.waiting), heroWacht);
   });
 
   await test.step('And eigenaarfilters openen alleen hun concrete taakregels', async () => {
