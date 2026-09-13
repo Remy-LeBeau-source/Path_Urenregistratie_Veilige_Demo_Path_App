@@ -681,8 +681,33 @@ test('[DASH-N-012] afgeronde verzendcontrole blijft na F5 weg, ongeacht het begi
     }
     const invoiceButton = page.locator(`[data-admin-task-invoice="${completedEmployeeId}"][data-period-key="${completedPeriodKey}"]`);
     await expect(invoiceButton).toBeVisible();
+
     await invoiceButton.click();
-    await expect(page.locator('#modal-confirm')).toHaveText('Controle afronden');
+    // Diagnose bij falen, geen extra eis.
+    //
+    // Aanleiding (13 sep): deze case viel in een volledige bestandsrun één keer om
+    // met "verwacht Controle afronden, gekregen Voorbeeldgegevens herstellen" --
+    // de tekst van de resetmodal uit de Given-stap hierboven. `#modal-confirm` is
+    // één herbruikbaar element, dus die oude tekst blijft staan zodra de klik géén
+    // nieuwe modal opent. En `showInvoiceDeliveryCheck()` (app.js ~11389) stapt
+    // vóór het openen van de modal uit met alleen een toast: als de klanturenstaat
+    // nog niet klaar is voor facturatie, of als er al een serverfactuur is waarvan
+    // de urenstaat nog niet op approved/invoiced staat. Welke van de twee het was,
+    // stond nergens in de melding.
+    //
+    // Bewust NIET vooraf op een serverstatus gewacht. Dat heb ik geprobeerd en het
+    // was fout: de server rapporteert hier "submitted", terwijl de case gewoon
+    // slaagt -- de tweede uitstap geldt alleen als er al een serverfactuur bestaat,
+    // en die is er op dit punt niet. Een wachtconditie op approved legt de case dus
+    // een eis op die de app niet stelt. Dit blok voegt daarom niets toe aan wat er
+    // moet kloppen; het maakt alleen de melding bruikbaar op het moment dat het
+    // tóch misgaat.
+    const modalConfirm = page.locator('#modal-confirm');
+    if ((await modalConfirm.innerText().catch(() => '')).trim() !== 'Controle afronden') {
+      const toast = (await page.locator('#toast').innerText().catch(() => '')).trim();
+      expect(toast, `de verzendcontrole opende geen modal; toast: "${toast || '(leeg)'}"`).toBe('');
+    }
+    await expect(modalConfirm).toHaveText('Controle afronden');
     await page.locator('#modal-confirm').click();
     await expect(page.locator('#toast')).toContainText('klaargezet', { timeout: 15_000 });
 

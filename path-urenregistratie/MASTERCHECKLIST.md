@@ -2084,7 +2084,12 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
 
 **17.2 Beheerderrol (checklist, sectie 3 van de opdracht -- grootste blok, meer info per scherm)**
 
-> ### ⛔ P0 -- BEWEZEN: een mededeling komt bij de VERKEERDE persoon aan (13 sep, niet zelf gefixt)
+> ### ✅ P0 -- OPGELOST: een mededeling kwam bij de VERKEERDE persoon aan (13 sep)
+>
+> **Stand:** gevonden en bewezen door main, gefixt door de vormgevingslane, fix staat op main en is
+> hier nageverifieerd (`[ANN-H-009]` slaagt). De analyse hieronder blijft staan omdat de
+> reproductie en de oorzaak het bewaren waard zijn -- en omdat mijn eerste fixvoorstel te smal was:
+> zie de afronding bij "Mededelingen beheren + doelgroepen" verderop in 17.2.
 >
 > **Reproductie, volledig end-to-end gemeten op een verse testdatabase.** Beheerder opent
 > Mededelingen -> Nieuwe mededeling -> "Zelf medewerkers kiezen" -> vinkt **Marc de Roon** aan ->
@@ -2238,8 +2243,10 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
     Er is ook bewust géén opbouw nodig: de `review_note`-controle draait vóór élke
     toestandsovergangscontrole, dus de 400 komt aantoonbaar uit de lege toelichting en de case
     schrijft niets weg.
-- [ ] Medewerkersbeheer (stamgegevens), mededelingen beheren + doelgroepen, instellingen +
-  mailinstellingen, notificaties, administratieve statussen. **Dekking in kaart gebracht 13 sep.**
+- [x] Medewerkersbeheer (stamgegevens), mededelingen beheren + doelgroepen, instellingen +
+  mailinstellingen, notificaties, administratieve statussen. **Dekking in kaart gebracht 13 sep;
+  alle vijf deelpunten afgerond.** Het enige dat hier openstond was de P0 bij de doelgroepkeuze, en
+  die is opgelost en nageverifieerd.
   - [x] *Medewerkersbeheer / stamgegevens:* `user-management.spec.ts` (11 cases: lijst,
     (de)activeren, force_password_change, 401/403, jezelf niet deactiveren, dubbel deactiveren 409,
     definitief verwijderen mét en zónder zakelijke historie, resetlink vanuit Teambeheer) plus
@@ -2252,8 +2259,16 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   - [x] *Notificaties:* `notifications.spec.ts`, 11 cases (ophalen, mark_read/mark_all_read,
     unread-filter, limietgrens, 401, onbekende actie 400, tellers die gelijk teruglopen, en een
     oudere response die een gewiste teller niet mag herstellen).
-  - [ ] *Mededelingen beheren + doelgroepen:* **hier zit de P0 hierboven.** De doelgroepkeuze wordt
-    client-side bepaald en stuurt de verkeerde id-soort mee; dat deel blijft open tot die fix er is.
+  - [x] *Mededelingen beheren + doelgroepen:* **de P0 hierboven is opgelost en staat op main**
+    (vormgevingslane, met `[ANN-H-009]`; hier nageverifieerd op 13 sep: de case slaagt op main).
+    De fix is goed afgebakend en het is de moeite waard waaróm: er is één vertaling
+    `vertaalNaarServerGebruikerIds()` (`app.js` ~8218) **op de grens naar de server**, die
+    `employees.id` omzet naar `users.id` en `null` teruggeeft zodra één koppeling ontbreekt --
+    waarna de UI weigert met een melding in plaats van te gokken wie het bericht krijgt. Binnen het
+    bestand blijven `recipientIds` employees.id, zodat demomodus, het ontvangerslabel en de
+    e-mailselectie blijven kloppen; precies het risico dat mijn eerste voorstel (alleen de producent
+    omzetten) zou hebben veroorzaakt. Bij een correctie gaan de ids ongewijzigd door, terecht: die
+    komen uit `item.recipient_user_ids` en zijn dus al users.id.
   - [x] *Administratieve statussen:* doorgelicht 13 sep. In de echte app komt dit neer op de
     **factuurcyclus**, en die is ruim gedekt: `invoices.spec.ts` (zichtbaarheid per rol, periodefilter,
     bedrag berekend door de server uit uren x tarief, paginering bij 32 records, externe factuur
@@ -2776,6 +2791,45 @@ waard, want ik ben onderweg twee keer bijna de verkeerde kant op gegaan.
   extra taak) en beide keren wees de meting iets anders aan. Een bisect die naar een commit wijst,
   bewijst nog niet dat die commit fout is -- alleen dat er iets is veranderd. Hier was dat de
   snelheid.
+
+**Eigen cases nagelopen op "kan deze test überhaupt falen?" (13 sep, main).** Na de vals-groene
+meting in `[MOB-H-030]` heb ik alle tien de cases van deze nacht langs dezelfde lat gelegd. Elk
+ervan heeft óf een ingebouwde zelfcontrole, óf een uitgevoerde discriminerende proef:
+- ingebouwd: `[DASH-H-027]` (geantwoorde maandrij 41/7/99 en dan "48 / 99" eisen -- lokaal
+  onmogelijk), `[MOB-H-030]` (voegt zelf een te breed element in), `[SKIN-H-029]` (eist eerst dat
+  de DOM afweek), `[E2E-H-030]` (woord moet uit het bekende vocabulaire komen, anders telt
+  "beide leeg" als gelijk), `[ROLE-N-006]` (tegenproef: `save_draft` komt aantoonbaar voorbij de
+  rolgate), `[CTS-API-H-017]` (poort aan beide kanten getoetst).
+- extern bewezen door de bewaakte regel tijdelijk weg te halen: `[CTS-API-N-013]`,
+  `[CTS-API-H-017]`, `[DASH-H-028]` (employees-id's +10 -> faalt zoals bedoeld), `[ROLE-N-006]`.
+- bewust géén bewijskracht geclaimd: `[SEC-H-012]` -- de case slaagt ook zonder de scrubregel, dat
+  staat er letterlijk bij, en wat hij wél bewaakt staat erbij beschreven.
+`[DASH-H-026]` staat er tussenin: die eist dat elk gemeten blok gevonden wordt vóór hij posities
+vergelijkt, dus leeg-vs-leeg kan niet slagen.
+
+**`[MOB-H-030]` vond op CI een echte overflow die lokaal onzichtbaar is (13 sep).** Op de
+CI-runner meldt hij `span.status-pill` tot 367px (Klassiek) en 371px (Nieuw) op het
+medewerkersbeheer-scherm, bij een viewport van 360px. Lokaal slaagt hij op **beide** mobiele
+engines. Beide waarnemingen kloppen: het verschil is lettertypemetriek -- de CI-runner is Linux en
+mist de Windows-fonts, dus dezelfde tekst rendert daar breder en de pil valt net buiten de rand.
+**De vondst is dus geen testfout maar een marge van nul:** dat blok past hier op de pixel en valt
+om zodra een font breder rendert -- op CI, op een Android-toestel met een andere systeemfont, of bij
+een gebruiker die zijn tekstgrootte verhoogt. De juiste reparatie is daarom speling geven (de pil
+laten krimpen of wrappen) en niet een paar pixels opschuiven; dat laatste is morgen weer stuk.
+Opgepakt door de vormgevingslane, want het zit in `assets/styles.css`.
+**Les voor verificatie:** lokaal groen bewijst hier niets -- lokaal is de case groen mét het
+probleem. Alleen de CI-run telt.
+**Eigen fout die erbij hoorde:** de case liep op WebKit in de standaard testtime-out van 45 s
+(twaalf schermwisselingen: zes schermen x twee vormgevingen). Dat zag eruit als een layoutfout
+terwijl er alleen tijd tekort was. Verhoogd naar 150 s; meting en zelfcontrole ongewijzigd.
+
+**Nulmeting `tablet-chromium` (768px) op main, 13 sep: 77 geslaagd, 1 overgeslagen
+(`[SKIN-H-010]`, eigen skipvoorwaarde), nul rood.** Gedraaid vóórdat de vormgevingslane haar
+Klassieke telefoonopmaak op main zet. Reden: die opmaak zit in `@media (max-width: 720px)` en dit
+project draait op 768px -- de eerste breedte waar die regels juist níét meer gelden, en dus de plek
+waar een verkeerd gekozen grens zichtbaar wordt. Zonder deze nulmeting is een rode case daar niet
+te duiden: dan weet je niet of de nieuwe opmaak hem brak of dat hij er al stond. Dezelfde run na de
+landing herhalen; het verschil is het antwoord.
 
 **NOG OPEN: `dashboard.spec.ts` heeft wisselwerking tussen cases, in beide richtingen.** In de run
 waarin DASH-N-007 groen werd, viel `[DASH-N-012]` om op `#modal-confirm`: verwacht "Controle
