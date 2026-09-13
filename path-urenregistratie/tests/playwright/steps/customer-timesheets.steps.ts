@@ -33,6 +33,9 @@ Then("wordt met Playwright-assertions bevestigd dat employee kan geen klanturens
 Given("de medewerker is ingelogd met een ingediende klanturenstaat");
 When("de medewerker approve probeert uit te voeren");
 Then("de medewerker ook geen request_resubmit mag uitvoeren");
+Given("de beheerder is ingelogd");
+When("request_resubmit wordt aangeroepen met een lege toelichting");
+Then("verandert een ontbrekende toelichting ook niets als het veld helemaal ontbreekt");
 Given("de medewerker is ingelogd in een lege maand zonder klanturenstaatrecord");
 When("de medewerker eerst zonder en daarna met reden rechtstreeks gemaild registreert");
 Then("readback de nieuwe rij toont en restore_missing terugzet naar missing");

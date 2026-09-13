@@ -52,6 +52,14 @@ Feature: Klanturenstaten en documentverwerking
     Then de medewerker ook geen request_resubmit mag uitvoeren
     And cleanup: sessie sluiten voor testisolatie
 
+  @negative
+  Scenario: [CTS-API-N-013] request_resubmit zonder toelichting wordt door de server geweigerd
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given de beheerder is ingelogd
+    When request_resubmit wordt aangeroepen met een lege toelichting
+    Then verandert een ontbrekende toelichting ook niets als het veld helemaal ontbreekt
+
   @happy
   Scenario: [CTS-API-H-004] employee kan mark_skipped registreren en restore_missing terugdraaien
     # Testtechniek: Toestandsovergang
