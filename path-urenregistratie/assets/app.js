@@ -5512,6 +5512,19 @@ function vulMobieleHerokop(record, employee, period, needsHours, needsCustomerTi
   contractregel.textContent = "van " + hoursFormat.format(record.contractHours) + " uur contract · "
     + gevuldeWeken + " van " + totaalWeken + " " + (totaalWeken === 1 ? "week" : "weken") + " ingevuld";
   contractregel.hidden = false;
+
+  // De referentie zet onder de kop één brede knop met een woordlabel in plaats
+  // van de ronde pijl. Het gedrag van die knop blijft ongewijzigd (springen naar
+  // vandaag in het weekkaartje) -- alleen de tekst komt erbij, zodat op een
+  // telefoon te zien is wát er gebeurt. Het label volgt dezelfde volgorde als de
+  // kop erboven: eerst uren, dan klanturenstaat, anders naslag.
+  const knopLabel = document.querySelector("#new-bento-go-label");
+  if (knopLabel) {
+    knopLabel.textContent = needsHours
+      ? "Uren invullen"
+      : needsCustomerTimesheet ? "Klanturenstaat toevoegen" : "Mijn maanden bekijken";
+    knopLabel.hidden = false;
+  }
 }
 
 function renderNewEmployeeBento(record, employee, period) {

@@ -3517,4 +3517,39 @@ html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-current str
     font-size: 11.5px;
     font-weight: 700;
   }
+
+  /* Hoofdactie. In de app is dit een ronde pijlknop die rechtsonder in de hero
+     zweeft; de referentie maakt er een brede knop met woordlabel van, onder de
+     tekst. Alleen de vorm verandert -- de knop doet nog exact hetzelfde
+     (springen naar vandaag in het weekkaartje), dus geen gedragswijziging.
+     Waarden uit de bron: min-height:50px; border:0; border-radius:13px;
+     background:var(--mint); color:var(--navy); font-size:14.5px;
+     font-weight:700; box-shadow:0 8px 20px rgba(58,189,157,.32). */
+  html[data-skin="new"] #view-employee-dashboard .new-bento-go {
+    /* Bewust relative en niet static: de basisregel geeft deze knop z-index 1 om
+       hem boven de absoluut geplaatste achtergrondfoto van de hero te houden, en
+       een z-index werkt alleen op een gepositioneerd element. Met static viel de
+       knop achter de foto -- zichtbaar in de DOM, onzichtbaar op het scherm. */
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: auto;
+    min-height: 50px;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 18px;
+    border: 0;
+    border-radius: 13px;
+    background: var(--w-mint);
+    color: var(--w-navy);
+    font-family: var(--path-sans);
+    font-size: 14.5px;
+    font-weight: 700;
+    box-shadow: 0 8px 20px rgba(58, 189, 157, .32);
+  }
+
+  html[data-skin="new"] #view-employee-dashboard .new-bento-go-label {
+    font: inherit;
+  }
 }
