@@ -2792,6 +2792,21 @@ waard, want ik ben onderweg twee keer bijna de verkeerde kant op gegaan.
   bewijst nog niet dat die commit fout is -- alleen dat er iets is veranderd. Hier was dat de
   snelheid.
 
+**Eigen cases nagelopen op "kan deze test überhaupt falen?" (13 sep, main).** Na de vals-groene
+meting in `[MOB-H-030]` heb ik alle tien de cases van deze nacht langs dezelfde lat gelegd. Elk
+ervan heeft óf een ingebouwde zelfcontrole, óf een uitgevoerde discriminerende proef:
+- ingebouwd: `[DASH-H-027]` (geantwoorde maandrij 41/7/99 en dan "48 / 99" eisen -- lokaal
+  onmogelijk), `[MOB-H-030]` (voegt zelf een te breed element in), `[SKIN-H-029]` (eist eerst dat
+  de DOM afweek), `[E2E-H-030]` (woord moet uit het bekende vocabulaire komen, anders telt
+  "beide leeg" als gelijk), `[ROLE-N-006]` (tegenproef: `save_draft` komt aantoonbaar voorbij de
+  rolgate), `[CTS-API-H-017]` (poort aan beide kanten getoetst).
+- extern bewezen door de bewaakte regel tijdelijk weg te halen: `[CTS-API-N-013]`,
+  `[CTS-API-H-017]`, `[DASH-H-028]` (employees-id's +10 -> faalt zoals bedoeld), `[ROLE-N-006]`.
+- bewust géén bewijskracht geclaimd: `[SEC-H-012]` -- de case slaagt ook zonder de scrubregel, dat
+  staat er letterlijk bij, en wat hij wél bewaakt staat erbij beschreven.
+`[DASH-H-026]` staat er tussenin: die eist dat elk gemeten blok gevonden wordt vóór hij posities
+vergelijkt, dus leeg-vs-leeg kan niet slagen.
+
 **Nulmeting `tablet-chromium` (768px) op main, 13 sep: 77 geslaagd, 1 overgeslagen
 (`[SKIN-H-010]`, eigen skipvoorwaarde), nul rood.** Gedraaid vóórdat de vormgevingslane haar
 Klassieke telefoonopmaak op main zet. Reden: die opmaak zit in `@media (max-width: 720px)` en dit
