@@ -934,21 +934,36 @@ test('[SKIN-H-017] Mijn uren toont bij een enkele week dezelfde bento-kaartjes a
 
     // De pijl springt sinds v2.0.4 naar de eerstvolgende week met nog een
     // leeg urenvak, niet meer blind naar index+1 -- bij hergebruik van de
-    // gedeelde testmedewerker kan een eerdere test in deze suite week 37 al
-    // volledig hebben ingevuld. Week 37 hier expliciet leeg/onbevestigd
-    // zetten zodat de pijl deterministisch daar landt, ongeacht wat eerdere
-    // tests op dezelfde gedeelde medewerker achterlieten.
-    await page.evaluate(() => {
+    // gedeelde testmedewerker kan een eerdere test in deze suite de tweede
+    // week al volledig hebben ingevuld. Die week wordt hier expliciet
+    // leeg/onbevestigd gezet zodat de pijl daar deterministisch landt.
+    //
+    // Leegzetten, opslaan, hertekenen én klikken gebeuren in één evaluate.
+    // Stonden die stappen los, dan zit er een venster tussen waarin een
+    // achtergrond-sync de week alweer kan hebben teruggevuld -- en dan slaat de
+    // pijl hem over. Precies dat gebeurde in de release-pijplijn van 13 sep:
+    // verwacht week 37, gekregen week 38, twee keer op rij. Dezelfde race die
+    // [SKIN-H-028] hier eerder al opleverde.
+    //
+    // Het weeknummer komt uit de periode zelf en staat niet meer hard in de
+    // test. De eis blijft dezelfde: de pijl landt op de tweede week van de
+    // maand, want dat is de eerstvolgende met een leeg urenvak.
+    const tweedeWeek = await page.evaluate(() => {
       // @ts-expect-error debug-only voor deze directe controle
       const period = currentPeriod();
       // @ts-expect-error debug-only voor deze directe controle
       const record = recordFor(currentEmployee().id, period.key);
       if (record.entries[1]) record.entries[1] = [0, 0, 0, 0, 0];
       if (record.confirmedEntries?.[1]) record.confirmedEntries[1] = [false, false, false, false, false];
+      // @ts-expect-error debug-only voor deze directe controle
+      persistState();
+      // @ts-expect-error debug-only voor deze directe controle
+      renderHoursGrid();
+      (document.querySelector('#hours-week-nav [data-new-bento-week="next"]') as HTMLElement | null)?.click();
+      return 'Week ' + period.weekRows[1].number;
     });
 
-    await page.locator('#hours-week-nav [data-new-bento-week="next"]').click();
-    await expect(page.locator('#hours-week-nav-title')).toHaveText('Week 37');
+    await expect(page.locator('#hours-week-nav-title'), 'de pijl hoort op de eerstvolgende week met een leeg urenvak te landen').toHaveText(tweedeWeek);
   });
 
   await test.step('When Hele maand wordt gekozen', async () => {
