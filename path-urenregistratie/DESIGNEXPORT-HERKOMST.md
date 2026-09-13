@@ -34,6 +34,27 @@ overgenomen en niet geïnterpreteerd of afgerond.
 `medewerker-wild.bron.txt` is die uitgepakte, leesbare bron van `medewerker-wild.html`, bewaard zodat
 elke overgenomen hex-, px- en rgba-waarde na te trekken is zonder de bundel opnieuw uit te pakken.
 
+## Werkwijze per ontwerpwijziging (opdracht Gio, 13 september 2026)
+
+Gio exporteert vaker dan hij meldt. Kijk daarom **aan het begin van elke werkbeurt** wat er in de
+exports is veranderd, ook zonder aanleiding: haal ze opnieuw op, diff ze tegen de vorige versie en lees
+de nieuwe regel in `github.md`.
+
+Zijn opdracht is verder expliciet: **elke wijziging krijgt een testcase, hoe klein ook, en die gaat mee
+in de regressie.** Dus per increment:
+
+1. Ophalen en diffen; vaststellen wat er precies is gewijzigd.
+2. Bouwen met de exacte waarden uit de bron -- niets afronden, niets "verbeteren".
+3. Een Playwright-case schrijven die precies dat gedrag of die opmaak vastlegt, met een vrij
+   `[CODE-X-000]`-id (eerst controleren met grep; dubbele id's worden door de living-docs-poort
+   geweigerd en een `--grep` draait er dan stilletjes twee).
+4. Aantonen dat de case discriminerend is: wijziging tijdelijk terugzetten, case moet falen; wijziging
+   terug, case moet slagen. Een case die ook zonder de wijziging groen blijft bewaakt niets.
+5. De regressie draaien op de projecten waar de wijziging actief is. Zit de wijziging achter een media
+   query, draai dan de breedtes binnen én op de rand ervan -- alleen desktop draaien terwijl je een
+   `max-width: 720px`-blok wijzigt, test het enige scherm waar hij niets doet.
+6. `npm run docs:sync` draaien en de gegenereerde bestanden meecommitten.
+
 ## Versie waartegen nu gebouwd wordt
 
 Opgehaald 2026-09-13T10:30Z, sha256 (eerste 16 tekens):

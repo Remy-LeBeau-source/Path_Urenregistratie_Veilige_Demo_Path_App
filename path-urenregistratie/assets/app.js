@@ -5521,6 +5521,41 @@ function vulModernHerokop(record, period, aanZet) {
     + gevuldeWeken + " van " + totaalWeken + " " + (totaalWeken === 1 ? "week" : "weken") + " ingevuld";
 }
 
+// Ligt de bal bij de medewerker of bij Backoffice? Zelfde bron als de rest van
+// het scherm gebruikt (timesheetStatus en de klanturenstaat-status), zodat de
+// pil nooit iets anders beweert dan de statusregels eronder.
+function aanZetBijMedewerker(record, employee) {
+  const urenOpenstaand = ["draft", "correction"].includes(record.timesheetStatus);
+  const klantstaatOpenstaand = employee.customerTimesheetExpected !== false
+    && customerTimesheetNeedsEmployeeAction(customerTimesheetFor(record).status);
+  return urenOpenstaand || klantstaatOpenstaand;
+}
+
+// Vult de drie kerncijfers in de Klassieke hero: statuspil, maandtotaal als
+// groot getal en de contractregel. Uit handoff/medewerker-wild.html. De
+// zichtbaarheid zit in de opmaak (alleen telefoonbreedte), niet hier.
+function vulHeroKerncijfers(record, period, aanZet) {
+  const oog = document.querySelector("#employee-hero-oog");
+  const oogLabel = document.querySelector("#employee-hero-oog-label");
+  const maanduren = document.querySelector("#employee-hero-maanduren");
+  const contractregel = document.querySelector("#employee-hero-contractregel");
+  if (!oog || !oogLabel || !maanduren || !contractregel) return;
+
+  oog.dataset.stand = aanZet ? "jij" : "backoffice";
+  oogLabel.textContent = aanZet ? "Jij bent aan zet" : "Bij de Backoffice";
+
+  // Zelfde optelling als #hours-total en de voortgangskaart: uren plus verlof
+  // en ziekte. Bewust geen eigen som -- twee verschillende maandtotalen op een
+  // scherm is de verwarring die in v1.0.67 al is opgelost.
+  const totaal = totalEntries(record.entries) + Number(record.leave || 0) + Number(record.sick || 0);
+  maanduren.textContent = hoursFormat.format(totaal);
+
+  const totaalWeken = period.weekRows.length;
+  const gevuldeWeken = completedTimesheetWeeks(record, period);
+  contractregel.textContent = "van " + hoursFormat.format(record.contractHours) + " uur contract · "
+    + gevuldeWeken + " van " + totaalWeken + " " + (totaalWeken === 1 ? "week" : "weken") + " ingevuld";
+}
+
 // Weekstrook: één compacte chip per week van de maand, met het weeknummer en
 // het weektotaal. Uit de ontwerpronde van 13 sep, die de eerdere hoge kaarten
 // verving omdat die in een horizontale strip werden afgesneden -- overflow-x
@@ -5810,6 +5845,7 @@ function renderEmployeeDashboard() {
     }
   }
   document.querySelector("#employee-dashboard-greeting").textContent = greetingForNow() + ", " + firstName;
+  vulHeroKerncijfers(record, period, aanZetBijMedewerker(record, employee));
   document.querySelector("#employee-dashboard-next").textContent = next;
   document.querySelector("#employee-dashboard-next-label").textContent = awaitingOpenTasks ? "Bezig" : (nextOpenAction ? "Volgende actie" : "Deze maand");
   document.querySelector("#employee-dashboard-next-meta").textContent = awaitingOpenTasks

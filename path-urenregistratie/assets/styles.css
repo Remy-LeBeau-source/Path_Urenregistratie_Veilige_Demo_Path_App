@@ -3682,3 +3682,281 @@ body.toont-installatieaanbod .main-content {
   border-color: rgba(22, 146, 118, .58);
   background: #dff5ee;
 }
+
+/* ==================================================================
+   Medewerkerdashboard, telefoon — referentie handoff/medewerker-wild.html
+   ==================================================================
+   Bron: de designexport van Gio (zie DESIGNEXPORT-HERKOMST.md voor de sha256
+   van de versie waartegen is gebouwd). Waarden zijn letterlijk overgenomen,
+   niet afgerond en niet geinterpreteerd -- dat is een expliciete eis.
+
+   Deze vormgeving vervangt de oude Klassieke look op telefoonformaat. Modern
+   (data-skin="new") blijft ongemoeid: dat ontwerp loopt apart en mag hier niet
+   door veranderen, vandaar de :not()-afbakening. De desktop-GUI volgt later uit
+   handoff/medewerker-gui.html en wordt hier bewust niet geraakt. */
+
+/* Standaard verborgen, en bewust zonder het hidden-attribuut: regel 116 zet
+   [hidden] { display: none !important }, en daar komt geen media query
+   overheen. De zichtbaarheid is hier een opmaakvraag (welke breedte), geen
+   datavraag, dus die hoort in CSS te zitten en niet in JavaScript. */
+.employee-hero .hero-oog,
+.employee-hero .hero-maandtotaal,
+.employee-hero .hero-contractregel { display: none; }
+
+@media (max-width: 720px) {
+  html:not([data-skin="new"]) .employee-hero {
+    --w-mint-tekst: #037f63;
+    --w-muted: #56655f;
+    --w-hero-ink: #102235;
+    --w-hero-tekst: #3d4c56;
+    --w-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+
+    /* De hero is in de lichte modus zelf ook licht. Een donkere hero op een
+       lichte pagina is in het ontwerptraject expliciet afgekeurd en drie keer
+       teruggedraaid; dat mag niet terugkomen. */
+    background: linear-gradient(146deg, #c3d8d2 0%, #b4cfca 46%, #9dc4c1 100%);
+    border: 1px solid rgba(255, 255, 255, .5);
+    color: var(--w-hero-ink);
+    gap: 0;
+    padding: 22px 18px 20px;
+  }
+
+  html[data-theme="dark"]:not([data-skin="new"]) .employee-hero {
+    --w-mint-tekst: #5fd3b3;
+    --w-muted: #93a2ac;
+    --w-hero-ink: #fff;
+    --w-hero-tekst: #c6d5e0;
+    background: linear-gradient(142deg, #08142c 0%, #12294d 48%, #0f4a52 100%);
+    border-color: rgba(255, 255, 255, .1);
+  }
+
+  /* "Mijn werkvoorraad" is in het ontwerp geen aparte regel meer: de begroeting
+     zelf is de bovenste, ver uiteengezette kapitaalregel. */
+  html:not([data-skin="new"]) .employee-hero .section-label { display: none; }
+
+  html:not([data-skin="new"]) .employee-hero h2 {
+    margin: 0;
+    color: var(--w-mint-tekst);
+    font-family: var(--letter-tekst);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+  }
+
+  /* Statuspil: 999px, 10px/800, letter-spacing .1em, padding 5px 10px,
+     kapitalen, met een stip van 6px in dezelfde inktkleur ervoor. */
+  html:not([data-skin="new"]) .employee-hero .hero-oog {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 16px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .1em;
+    padding: 5px 10px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  html:not([data-skin="new"]) .employee-hero .hero-oog-stip {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentcolor;
+  }
+
+  html:not([data-skin="new"]) .employee-hero .hero-oog[data-stand="jij"] {
+    border: 1px solid #edc58f;
+    background: #fff5e8;
+    color: #a5600d;
+  }
+
+  html:not([data-skin="new"]) .employee-hero .hero-oog[data-stand="backoffice"] {
+    border: 1px solid rgba(16, 34, 53, .16);
+    background: rgba(255, 255, 255, .5);
+    color: var(--w-mint-tekst);
+  }
+
+  html[data-theme="dark"]:not([data-skin="new"]) .employee-hero .hero-oog[data-stand="jij"] {
+    border-color: #5a4526;
+    background: #2d2313;
+    color: #f0bd7a;
+  }
+
+  html[data-theme="dark"]:not([data-skin="new"]) .employee-hero .hero-oog[data-stand="backoffice"] {
+    border-color: rgba(255, 255, 255, .22);
+    background: rgba(255, 255, 255, .08);
+  }
+
+  /* Maandtotaal: schreefletter 64px/400, letter-spacing -.045em, tabular-nums,
+     regelhoogte .84 op de rij, 8px tussen getal en eenheid. */
+  html:not([data-skin="new"]) .employee-hero .hero-maandtotaal {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    margin: 10px 0 0;
+    line-height: .84;
+  }
+
+  html:not([data-skin="new"]) .employee-hero #employee-hero-maanduren {
+    color: var(--w-hero-ink);
+    font-family: var(--w-display);
+    font-size: 64px;
+    font-weight: 400;
+    letter-spacing: -.045em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  html:not([data-skin="new"]) .employee-hero .hero-maandtotaal-eenheid {
+    padding-bottom: 9px;
+    color: var(--w-muted);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+  }
+
+  html:not([data-skin="new"]) .employee-hero .hero-contractregel {
+    display: block;
+    margin-top: 7px;
+    color: var(--w-muted);
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+
+  /* "Volgende actie" wordt in het ontwerp het antwoord op "wat moet ik nu
+     doen", in de schreefletter op 23px. Het labeltje erboven vervalt: de zin
+     zegt het zelf al. */
+  html:not([data-skin="new"]) .employee-hero .employee-next-action-label { display: none; }
+
+  html:not([data-skin="new"]) .employee-hero p {
+    margin: 8px 0 0;
+    color: var(--w-hero-ink);
+    font-family: var(--w-display);
+    font-size: 23px;
+    font-weight: 400;
+    letter-spacing: -.024em;
+    line-height: 1.18;
+    text-wrap: balance;
+  }
+
+  html:not([data-skin="new"]) .employee-hero .employee-next-action-meta {
+    display: block;
+    margin-top: 14px;
+    color: var(--w-hero-tekst);
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+
+  /* Hoofdactie: min-height 50px, radius 13px, mint vlak met navy tekst,
+     14.5px/700 en de zachte mint-schaduw eronder. */
+  html:not([data-skin="new"]) .employee-hero .employee-hero-actions {
+    display: grid;
+    gap: 8px;
+    margin-top: 18px;
+  }
+
+  html:not([data-skin="new"]) .employee-hero .employee-hero-actions .button-primary {
+    min-height: 50px;
+    border: 0;
+    border-radius: 13px;
+    background: #3abd9d;
+    color: #0d1b38;
+    font-size: 14.5px;
+    font-weight: 700;
+    box-shadow: 0 8px 20px rgba(58, 189, 157, .32);
+  }
+
+  html:not([data-skin="new"]) .employee-hero .employee-hero-actions .button-ghost {
+    min-height: 50px;
+    border: 1px solid rgba(16, 34, 53, .1);
+    border-radius: 13px;
+    background: rgba(255, 255, 255, .4);
+    color: var(--w-hero-ink);
+    font-size: 14px;
+    font-weight: 700;
+  }
+}
+
+/* Dagregels in Mijn uren op telefoon, volgens dezelfde referentie als de hero
+   hierboven. In de export is een dag een rustige regel: dagnaam met datum
+   links, dan de 0/8/9-keuze als aaneengesloten groep, en rechts het invulveld
+   in de schreefletter. De app heeft dezelfde drie onderdelen maar in een andere
+   volgorde en met een ander uiterlijk; alleen de vorm gaat mee, de werking
+   blijft. Modern blijft ongemoeid (:not()-afbakening). */
+@media (max-width: 720px) {
+  html:not([data-skin="new"]) .hours-day-entry {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Volgorde uit de export: dag links, dan de snelkeuze, en het invulveld
+     rechts. In de markup staat het veld vóór de snelkeuze, dus die volgorde
+     wordt hier omgezet met order -- de DOM blijft ongemoeid, zodat de
+     tabvolgorde en de bestaande testselectors kloppen. */
+  html:not([data-skin="new"]) .hours-day-entry .date-number {
+    order: 1;
+    flex: 1;
+    min-width: 0;
+    color: var(--muted);
+    font-size: 11px;
+    /* De basisregel maakt dit label een inline-flex met gecentreerde inhoud;
+       met flex:1 erbij komt de tekst dan in het midden te hangen in plaats van
+       links, zoals in de export. */
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  html:not([data-skin="new"]) .hours-day-entry .hours-day-presets { order: 2; }
+  html:not([data-skin="new"]) .hours-day-entry .hours-input { order: 3; }
+
+  /* De snelkeuze is in het ontwerp één aaneengesloten groep met een rand
+     eromheen en haarlijnen ertussen, geen drie losse knoppen. */
+  html:not([data-skin="new"]) .hours-day-entry .hours-day-presets {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 0;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    overflow: hidden;
+  }
+
+  html:not([data-skin="new"]) .hours-day-entry .hours-day-presets button {
+    width: 44px;
+    min-height: 46px;
+    border: 0;
+    border-left: 1px solid var(--line);
+    border-radius: 0;
+    background: transparent;
+    color: var(--ink);
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  html:not([data-skin="new"]) .hours-day-entry .hours-day-presets button:first-child {
+    border-left: 0;
+  }
+
+  /* Het uurgetal in de schreefletter, zoals de export: het is een bedrag, geen
+     formulierveld. Breedte en hoogte exact uit de bron. */
+  html:not([data-skin="new"]) .hours-day-entry .hours-input {
+    width: 56px;
+    flex: 0 0 auto;
+    min-height: 46px;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    font-family: var(--letter-kop);
+    font-size: 17px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    padding: 0 6px;
+  }
+
+  html:not([data-skin="new"]) .hours-day-entry .hours-input:focus {
+    border-color: #3abd9d;
+  }
+}

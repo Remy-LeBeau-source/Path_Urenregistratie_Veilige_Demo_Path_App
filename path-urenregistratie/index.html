@@ -349,6 +349,17 @@
           <div>
             <span class="section-label">Mijn werkvoorraad</span>
             <h2 id="employee-dashboard-greeting">Goedemiddag</h2>
+            <!-- Statuspil, maandtotaal en contractregel uit de ontwerpreferentie
+                 handoff/medewerker-wild.html. Zichtbaarheid zit volledig in de
+                 opmaak (alleen telefoonbreedte), niet in JavaScript: het
+                 hidden-attribuut werkt hier niet, want styles.css zet [hidden]
+                 op display:none !important en daar komt geen media query
+                 overheen. -->
+            <span class="hero-oog" id="employee-hero-oog"><span class="hero-oog-stip" aria-hidden="true"></span><span id="employee-hero-oog-label"></span></span>
+            <div class="hero-maandtotaal" id="employee-hero-maandtotaal">
+              <strong id="employee-hero-maanduren">0,00</strong><span class="hero-maandtotaal-eenheid">uur</span>
+            </div>
+            <small class="hero-contractregel" id="employee-hero-contractregel"></small>
             <span class="employee-next-action-label" id="employee-dashboard-next-label">Volgende actie</span>
             <p id="employee-dashboard-next">Bekijk wat je als eerste moet afronden.</p>
             <small class="employee-next-action-meta" id="employee-dashboard-next-meta">Huidige maand</small>
