@@ -34,6 +34,9 @@ Given("de beheerder verstuurt een origineel bericht naar de vaste testmedewerker
 When("de beheerder een correctie verstuurt met nieuwe tekst");
 Then("ziet de medewerker alleen de gecorrigeerde tekst, niet de oude");
 And("cleanup: trek de gecorrigeerde mededeling in en verberg deze bij medewerkers");
+Given("de beheerder opent een nieuwe mededeling en kiest zelf de ontvangers");
+When("precies een medewerker wordt aangevinkt en het bericht wordt geplaatst");
+Then("heeft de server die medewerker als ontvanger, en niet iemand anders");
 Given("mededelingen versturen, intrekken en verbergen is voorbereid");
 When("de flow voor ANN-N-004 wordt uitgevoerd");
 Then("geeft intrekken zonder reden een nette 400 en blijft het bericht verzonden");

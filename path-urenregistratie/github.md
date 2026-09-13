@@ -3,12 +3,12 @@ branch: main
 path: path-urenregistratie
 
 ## Last sync
-date: 2026-09-13T09:36:30Z
+date: 2026-09-13T14:05:00Z
 
-### Ronde 13 sep (avond)
-- Zocht in de repo naar bestaande maandnavigatie-logica op het medewerkerdashboard (geen treffer in `path-urenregistratie/`) — vastgelegd in `handoff/HANDOFF-MEDEWERKER-MOBIEL.md` als "onzeker, laat Claude Code nakijken"
-- `Medewerker Wild.dc.html`: dashboard ontdubbeld (tegels weg, verloop inklapbaar), 0/8/9 weer contractonafhankelijk, urenveld selecteert zichzelf, maandpijl-terug naar de juiste maand
-- Handoff-document uitgesplitst in nieuw / bestaand / onzeker voor de overdracht
+### Ronde 13 sep (namiddag)
+- `Medewerker GUI.dc.html`: dashboard-ledger herzien (KPI-tegels, één groene actieknop, "Afgerond"-stap met reden), "vul alle gaten"-knop, gemaild-status ontkoppeld van goedgekeurd-tekst (dashboard + Maanden-pil)
+- Naamgeving vastgelegd: New-skin heet voortaan "Modern" i.p.v. "Nieuw", ook in de app zelf
+- Werkwijze overdracht vastgelegd: bij elke wijziging aan Wild/GUI volgt automatisch een verse export naar `handoff/`
 
 ### Updated in this project
 - Medewerker GUI.dc.html: hero-ring vervangen door KPI-rij (voltooid/weken/contracturen), "Verloop van de maand" van inklapbare accordion naar vaste horizontale stappenbalk — desktop-eigen in plaats van telefoonlayout uitgerekt
