@@ -2768,6 +2768,27 @@ allebei gemeten, niet beredeneerd:
    (`useFixedDemoClock` in een `beforeEach`, plus vaste maandsleutels in de fixture).
    Overblijvend: `assets/app.js` en `index.html` uit die merge. Gemeld bij de vormgevingslane,
    die dat bestand beheert.
+3. **Eén hypothese onderweg getoetst en weerlegd, met de meting erbij.** Het vermoeden was dat de
+   merge via `customerTimesheetFor()` een extra taak zou laten ontstaan. De drie schakels daarvan
+   kloppen wél (zie de losse notitie hieronder), maar de voorspelling niet. Zelfde probe op beide
+   bomen, beheerder ingelogd, vaste demoklok, 2,5 s wachten:
+   *voor-merge:* "12 open acties in 10 dossiers · Backoffice 7 · 5 wachten", rijen 12, hero
+   "Werkvoorraad laden…", owners leeg.
+   *na de merge:* exact dezelfde tekst en rijen, maar hero "12 open acties" en owners
+   "Backoffice 7 + wacht op medewerkers 5 = 12".
+   De aantallen zijn dus identiek en op de gewone main is alles onderling consistent. **Het enige
+   verschil is timing: de hero vult ná de merge eerder.** Dat past op wat deze case doet -- die
+   gate't `dashboard.php` bewust en injecteert een stale state -- dus de zoektocht hoort in wat er
+   nu eerder rendert, niet in de taaktelling.
+
+**Latent risico, los van bovenstaande: `customerTimesheetFor()` heet als een getter maar schrijft.**
+Regel ~4494: hij maakt `record.customerTimesheet` aan als die ontbreekt en vult standaardwaarden,
+met `status: "missing"` (`blankCustomerTimesheet`, ~228). En `missing` levert in `adminOpenTasks()`
+(~5960) een `customer-waiting`-taak op. Elke aanroep vanuit een renderpad kan de werkvoorraad dus
+in principe veranderen. Bij het onderzoek hierboven bleek dit **niet** de oorzaak -- de aantallen
+waren voor en na identiek -- maar het blijft een reëel valstrikpatroon: een naam die lezen belooft
+en schrijven doet. Opgemerkt door de vormgevingslane, hier vastgelegd zodat het niet verdwijnt.
+Geen wijziging: er is geen aantoonbaar defect, en de functie wordt overal gebruikt.
 
 **Twee races uit het gereedschap gehaald (13 sep 2026, main).** Allebei in `scripts/`, allebei
 naar aanleiding van iets concreets:
