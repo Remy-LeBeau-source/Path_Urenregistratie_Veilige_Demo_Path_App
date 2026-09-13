@@ -1958,7 +1958,16 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
 - [x] "Standaardweek vullen"-conflict (UI-TAKENLIJST #29/#48) opgelost: bestaande knop blijft
   veilig, nieuwe bevestigde "Week/Maand terugzetten"-knop overschrijft ook bewust-bevestigde
   0-dagen. `[SKIN-H-028]`, v2.0.2, New-bento + Klassiek Mijn uren.
-- [ ] (herontwerp, bezig) Dashboard/Mijn overzicht: begroeting, volgende actie, open acties, acties per maand
+- [ ] (herontwerp, bezig) Dashboard/Mijn overzicht: begroeting, volgende actie, open acties, acties per maand.
+  **Bevinding + fix (13 sep, v2.0.7):** Klassiek toonde "wachten op controle door Gio of Joyce"
+  (hardcoded namen) i.p.v. het overal elders gebruikte "Backoffice" (New-skin bento, klanturenstaat-
+  teksten). Gefixt naar "wachten op controle door Backoffice." `assets/app.js` regel ~5705. Geen test
+  raakte deze exacte string (gecontroleerd), `node --check` groen. **Nieuw-skin exclusielogica
+  geverifieerd correct:** `:not()`-selector in `styles-new.css` toont in Nieuw bewust alleen
+  `.new-employee-bento`, `#employee-open-overview`, `#employee-dashboard-correction`,
+  `#employee-history-teaser` en verbergt de rest van de Klassieke dashboard-content -- geen
+  dubbele/tegenstrijdige info, goed gedocumenteerd in de bestaande code-comments. Nog te doen:
+  `employeeOpenMonthSummaries`/meermaandenlogica verder doorlichten, live/visuele bevestiging.
 - [ ] (herontwerp, bezig) Mijn uren: invoeren, wijzigen, opslaan, Enter-to-save, maand/weeknavigatie, totalen, indienen,
   status van urenregistratie. **Code-audit 13 sep (geen wijziging nodig, alles klopte al):**
   0/8/9-sneltoetsen bestaan in zowel Nieuw (`.new-bento-presets`) als Klassiek (`data-hours-set`,
