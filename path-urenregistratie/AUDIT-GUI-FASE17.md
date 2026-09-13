@@ -223,6 +223,31 @@ en zijn recent bevestigd (12 sep, login-picker-bug `AUTH-H-025`).
 **P2 — inconsistentie/accessibility:** Android/Chrome- en PWA-blok van 17.5 nog
 scherm voor scherm doorlopen (gepland, nog niet gestart).
 
+4. **Nieuwe, gemeten vondst (13 sep) — mobiele prioriteitsvolgorde in Nieuw.
+   Vraagt een beslissing van Gio, bewust niet zelf doorgevoerd.** Afgesproken
+   volgorde op telefoonbreedte is: wat moet ik nu doen -> uren -> open acties ->
+   klanturenstaat -> overig. Op 412px gemeten met de echte scrollpositie van elk
+   blok klopt **Klassiek** volledig (hero 352 -> open acties 715 ->
+   klanturenstaat 1456 -> cijfers 1772 -> historie 2413; "uren" is hier de
+   primaire knop in de hero en geen eigen blok). **Nieuw wijkt af:** hero 255 ->
+   urenweek 688 -> voortgangsring 1576 -> klanturenstaat 1954 -> "Jouw uren in 4
+   stappen" 2349 -> **open acties 2789** -> historie 3550. Open acties staat dus
+   ruim drie telefoonschermen naar beneden, ná de klanturenstaat en zelfs ná een
+   puur uitleggend blok.
+   *Oorzaak:* `#view-employee-dashboard` is in Nieuw al een flex-kolom met
+   expliciete `order`-waarden (open acties 1, correctie 2, historie 4), maar
+   `.new-employee-bento` heeft er geen en valt dus als één geheel op de
+   standaard `order: 0` vóór alles.
+   *Waarom niet gefixt:* oplossen vraagt om het openbreken van de bento
+   (`display: contents` + per artikel een eigen order) in `assets/styles-new.css`
+   — een zichtbare herschikking van het startscherm, in een bestand van de
+   vormgevingslane. Dat valt onder "grotere wijziging: eerst stoppen en
+   uitleggen".
+   *Wat wél gedaan is:* regressie `[DASH-H-026]` legt de volgorde van Klassiek
+   vast en asserteert voor Nieuw alleen wat onbetwist is (open acties boven de
+   archiefingang) — juist om de afwijking niet als gewenst gedrag vast te
+   leggen.
+
 **P3 — puur cosmetisch:** geen nieuwe vondsten; het bestaande visuele-verfraaiingsspoor
 (zie `pilot/fase17-richtingpagina.html`) blijft een apart, expliciet
 goedgekeurd traject en geen audit-P3-punt.

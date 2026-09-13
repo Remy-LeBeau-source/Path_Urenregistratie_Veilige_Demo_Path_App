@@ -2004,7 +2004,26 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   redenering leidde in `093ec97d` tot het weghalen van de nog wél gebruikte `.status-draft`-regel
   (zie v2.0.10 hierboven). Dus eerst aantonen met een test of live-observatie, pas daarna opruimen.
   Nog te doen: correctie-afhandeling vanuit de medewerkerkant in Mijn uren zelf.
-- [ ] Mobiele prioriteit: wat moet ik nu doen -> uren -> open acties -> klanturenstaat -> overig
+- [x] Mobiele prioriteit: wat moet ik nu doen -> uren -> open acties -> klanturenstaat -> overig.
+  **Doorgemeten 13 sep op 412px in beide vormgevingen, met de echte scrollpositie van elk blok.**
+  Regressie `[DASH-H-026]`, v2.0.26. Geen codewijziging (zie hieronder waarom niet).
+  - **Klassiek klopt volledig:** hero met de volgende actie (352px) -> open acties (715) ->
+    klanturenstaat (1456) -> cijfers (1772) -> historie (2413). "Uren" heeft op dit dashboard geen
+    eigen blok; de primaire knop in de hero *is* de route ernaartoe, dus dat is stap 2. Deze volgorde
+    staat nu onder de regressie.
+  - **Nieuw wijkt af -- openstaande beslissing voor Gio, bewust niet zelf doorgevoerd.** Gemeten:
+    hero (255) -> urenweek (688) -> voortgangsring (1576) -> klanturenstaat (1954) -> "Jouw uren in
+    4 stappen" (2349) -> **open acties (2789)** -> historie (3550). Open acties staat dus ruim drie
+    telefoonschermen naar beneden, ná de klanturenstaat en zelfs ná een puur uitleggend blok.
+    Oorzaak is klein en duidelijk: `#view-employee-dashboard` is in Nieuw al een flex-kolom met
+    expliciete `order`-waarden (open acties 1, correctie 2, historie 4), maar `.new-employee-bento`
+    heeft er geen en valt dus als één geheel op de standaard `order: 0` vóór alles. Oplossen vraagt
+    om het openbreken van de bento (`display: contents` + per artikel een eigen order) in
+    `assets/styles-new.css`. Dat is (a) een zichtbare herschikking van het startscherm en (b)
+    een bestand van de vormgevingslane -- volgens de opdracht dus eerst melden, niet zelf doen.
+  - De regressie asserteert voor Nieuw daarom **alleen wat onbetwist is** (open acties boven de
+    archiefingang). Zou de volle volgorde nu al voor Nieuw geasserteerd worden, dan legde de test de
+    afwijking juist vast als gewenst gedrag.
 - [x] Data mag nooit verloren gaan door rerender, schermrotatie, browser-back, modal sluiten,
   toetsenbord openen, thema-/designwissel. **Doorgemeten 13 sep: er is geen dataverlies, dus geen
   codewijziging** -- alleen de ontbrekende regressie `[SKIN-H-029]`, v2.0.25. Een nog niet

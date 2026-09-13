@@ -194,6 +194,15 @@ Feature: Dashboard en open werkvoorraad
     And staat de focus op het eerste lege urenveld van die week
 
   @happy
+  Scenario: [DASH-H-026] het medewerkerdashboard houdt op telefoonbreedte de afgesproken prioriteitsvolgorde aan
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 11
+    Given een ingelogde medewerker op telefoonbreedte in Klassiek
+    When de flow voor DASH-H-026 wordt uitgevoerd
+    Then staat in Klassiek de volgende actie bovenaan, dan open acties, dan de klanturenstaat, dan de rest
+    And staat in Nieuw open acties in ieder geval boven de correctie- en archiefingang
+
+  @happy
   Scenario: [DASH-H-001] admin dashboard opent zonder console errors
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 1

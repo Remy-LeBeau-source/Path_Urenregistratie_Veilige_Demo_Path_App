@@ -90,6 +90,10 @@ Given("een medewerker op de week van vandaag (Week 37), met die week en de volge
 When("op de volgende-week-pijl wordt gedrukt");
 Then("springt de weergave terug naar de eerdere, nog lege week, niet naar Week 38");
 And("staat de focus op het eerste lege urenveld van die week");
+Given("een ingelogde medewerker op telefoonbreedte in Klassiek");
+When("de flow voor DASH-H-026 wordt uitgevoerd");
+Then("staat in Klassiek de volgende actie bovenaan, dan open acties, dan de klanturenstaat, dan de rest");
+And("staat in Nieuw open acties in ieder geval boven de correctie- en archiefingang");
 Given("de administrator is ingelogd");
 When("de administrator het dashboard opent");
 Then("het dashboard toont admin-overzicht zonder consolefouten");
