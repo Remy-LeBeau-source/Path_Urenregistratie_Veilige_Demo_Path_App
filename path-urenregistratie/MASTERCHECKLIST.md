@@ -2045,9 +2045,58 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   input`/`textarea` (13px, beheerder-only mailsjabloon-editor) -- volgende wijziging.
 - [ ] iOS/Safari: viewporthoogte, keyboard, datumvelden, uploads, sticky headers,
   overige fixed buttons, resterend input-zoom (`.invoice-search`, `.mail-channel-template`)
-- [ ] Android/Chrome: viewport, keyboard, terugknop, datumvelden, uploads, sticky/fixed, standalone/PWA
-- [ ] PWA: manifest, icons, standalone, theme-color, service worker, caching/updates -- geen
-  offline urenmutatie zonder expliciete sync-/conflictafhandeling, uren nooit stilletjes overschreven
+- [x] **Android/Chrome-doorloop gedaan (13 sep), grotendeels in orde.** Statisch nagelopen in
+  `index.html` en `assets/app.js`. **Viewport:** `width=device-width, initial-scale=1,
+  viewport-fit=cover` — correct, en belangrijk: géén `user-scalable=no` of `maximum-scale`, dus
+  inzoomen blijft mogelijk (de opdracht eist zoom 200%). **Datumvelden:** er is er géén. De app
+  gebruikt nergens `type="date"/"month"/"time"` maar een eigen maandknop + jaarveld, dus het
+  klassieke "native datepicker gedraagt zich anders op Android dan op iOS"-probleem bestaat hier
+  niet. **Toetsenbord:** `inputmode` wordt bewust en correct gezet — `decimal` op de urenvelden,
+  `numeric` op het jaartal, `email` op het inlogveld — precies de Android-toetsenbordoptimalisatie
+  die dit punt vraagt. **Uploads:** beide `type="file"`-velden zetten zowel MIME-types als
+  extensies in `accept` (`application/pdf,image/jpeg,image/png,.pdf,.jpg,...`); dat dubbele is
+  juist op Android nodig, waar de ene bestandskiezer alleen extensies en de andere alleen
+  MIME-types honoreert. **Terugknop:** gedekt door `[DASH-H-022]` (beheerder) en `[DASH-H-023]`
+  (medewerker), die met browser-terug/-vooruit door alle eigen schermen navigeren.
+- [ ] **Android-vervolg, nog empirisch te toetsen:** de urenvelden zijn `type="number"` met
+  `inputmode="decimal"`. Een Nederlands Android-toetsenbord biedt daar een **komma** aan, en bij
+  `type="number"` levert een komma in sommige browsers een lege `input.value` op in plaats van
+  8,5 — dat zou stil verlies van een ingevoerd uur betekenen (het soort urenveld-probleem waar
+  de opdracht expliciet voor waarschuwt). Aanwijzing dat het meevalt: `standardHoursForDay()`
+  doet al een `.replace(",", ".")`, dus ergens is dit onderkend, en er is nooit een melding over
+  geweest terwijl de app in gebruik is. Aanwijzing dat het niet vanzelf goed gaat: dat
+  `replace` zit op het **standaardpatroon**, niet op het pad dat een getypte waarde leest.
+  Verdient een echte Playwright-case op `mobile-chrome` die "8,5" in een urenveld typt en
+  controleert dat er 8,5 wordt opgeslagen — niet 0, niet leeg. Nog niet gedaan: de lokale
+  testserver was bezet door de skin-regressie.
+- [ ] Android/Chrome resterend: sticky/fixed gedrag, scroll en standalone/PWA op een echt toestel
+- [x] **PWA-doorloop gedaan (13 sep), één bevinding.** Alles nagelopen in `manifest.php`,
+  `assets/icon-*.png` en `sw.js`. **In orde:** het manifest is compleet (`id`, `name`,
+  `short_name`, `description`, `start_url`, `scope`, `display: standalone`,
+  `background_color`/`theme_color` `#0D1B38`, `lang: nl`, `dir`, `prefer_related_applications:
+  false`) en wordt serverseitig per omgeving anders benoemd ("Path TEST" vs productie), wat
+  precies goed is omdat de browser dit bestand zelf ophaalt bij "toevoegen aan beginscherm".
+  Alle drie de iconen bestaan echt (192, 512, maskable-512). De service worker is een bewuste,
+  gedocumenteerde no-op zonder `fetch`-handler: er is dus **geen** offline-schrijfmodel voor
+  uren — exact wat de opdracht eist ("voeg geen offline schrijfmodel toe zonder expliciet
+  ontwerp voor conflictafhandeling"). Dit punt is dus goed-door-ontwerp, niet vergeten.
+  **Bevinding (niet zelf gewijzigd, zie hieronder):** `'orientation' => 'portrait-primary'`
+  zet een geïnstalleerde PWA op Android vast in portret — draaien naar liggend is dan
+  onmogelijk. Dat botst met de opdracht, die tablets (768/1024px) expliciet als doelapparaat
+  noemt: juist de beheerschermen met brede tabellen hebben liggend het meest baat. Op iOS
+  negeert Safari de manifest-orientation grotendeels, dus dit raakt vooral Android-tablets.
+  Geen enkele test dekt dit (`grep orientation` in tests/scripts geeft niets), en de
+  toelichting boven in `manifest.php` legt alleen de naamgeving en theme_color uit, niet deze
+  keuze — het kan dus evengoed een onbedoelde default zijn als een besluit.
+  **Bewust niet zelf aangepast:** dit verandert het gedrag van de app op het beginscherm van
+  iedereen die hem al geïnstalleerd heeft; dat is een productbesluit, geen responsive-fix, en
+  de opdracht zegt expliciet "als er geen concreet probleem is: maak geen wijziging, bewijs
+  eerst dat het probleem bestaat". Ik kan het niet op een echt Android-tablet aantonen.
+  **Voorleggen aan Gio:** was portret-vast een bewuste keuze (telefoon-eerst), of mag dit naar
+  `any` zodat tablets kunnen draaien?
+- [ ] PWA-vervolg: caching-/updatestrategie blijft bewust open tot de go-live-beslissing
+  (Fase 16 "Offline-/updategedrag bepalen") -- geen offline urenmutatie zonder expliciete
+  sync-/conflictafhandeling, uren nooit stilletjes overschreven
 - [x] **Testdekkingsgat (13 sep, uit `AUDIT-GUI-FASE17.md`):** geen enkel Playwright-project
   draaide op een tabletbreedte (768/1024px) terwijl de opdracht dit expliciet vraagt. Nieuw
   project `tablet-chromium` (768x1024, Chrome) toegevoegd aan `playwright.config.ts`, bewust
@@ -2131,6 +2180,31 @@ mooier maken is expliciet onderdeel van Fase 17 (zie de scope-correctie hierbove
 losse ruimte ernaast. Beide sessies mogen dit zelfstandig doen zonder per wijziging toestemming te
 vragen, zolang functionaliteit, businesslogica, workflows en rollen (de harde eisen bovenaan deze
 fase) intact blijven.
+
+**Ontwerpbron voor de visuele kant (13 sep, Gio):** `pilot/fase17-richtingpagina.html` — de
+richtingpagina die Medewerker en Beheerder naast elkaar zet in Klassiek en Nieuw, gemaakt en door
+Gio beoordeeld met "mag nieuwer maken en afwijken, maar niet extreem; wel het gevoel van groot
+verschil en mooier". Gio noemt dit in gesprekken **"Cloud design"** (= Claude design). Zijn
+opdracht: de **échte** Nieuw-skin daarnaartoe brengen, niet de mockup als los document laten staan.
+Toets visuele wijzigingen aan Nieuw dus aan die pagina.
+
+**Voortgang richtingpagina → echte skin:**
+- [x] **Warm goud accent + diepte in de medewerker-bento** (v2.0.8). Twee dingen die de
+  richtingpagina onderscheidden van de toen bestaande skin. (1) Nieuw token `--path-gold: #e2c07a`
+  voor eyebrow-labels op de donkere bento-panelen (`.new-bento-hero`, `.new-bento-steps`), waar de
+  skin eerder overal mint gebruikte -- mint is in deze app óók de actiekleur, dus label en actie
+  waren visueel niet te scheiden. Bewust niet `--path-amber`: die betekent hier "actie vereist"
+  (statuspillen, Volgende actie-kaart). (2) De bento-kaarten kregen een zacht verloop
+  (`linear-gradient(172deg, --path-night-panel, --path-night-tile)`) in plaats van één platte
+  vulling, plus een warme radiale gloed rechtsboven in de hero (`::after`, `pointer-events: none`
+  zodat hij de knop eronder nooit blokkeert -- precies de fout die `.help-launcher` op
+  tabletbreedte wél maakte). Rol: Medewerker. Design: alleen Nieuw (Klassiek ongemoeid: alle
+  regels staan achter `html[data-skin="new"]`). Thema: de bento is in deze skin altijd donker,
+  dus themaneutraal; `contrast-licht-donker.mjs` groen gehouden. Devices: geen layout-wijziging,
+  alleen kleur/verloop, dus breedte-onafhankelijk. Bestand: `assets/styles-new.css`.
+- [ ] Resterend uit de richtingpagina, nog af te wegen: mint-gradiënt primaire knop met zachte
+  gloed (raakt `--path-amber` als huidige primaire kleur -- grotere beslissing, eerst voorleggen),
+  mint accentrand links op taakkaarten, gouden bovenrand op kpi-kaarten (beheer), tabbalk-iconen.
 
 ## Dagelijkse werkwijze (verplicht)
 
