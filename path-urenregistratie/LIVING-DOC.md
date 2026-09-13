@@ -234,7 +234,7 @@ De 41 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 517 Playwri
 - [DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus — Techniek: Toestandsovergang · Assertions: 17
 - [DASH-N-011] afgeronde Backoffice-taak en teller blijven na F5 stabiel, ongeacht het beginaantal — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 9
 - [DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker en Backoffice — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 24
-- [DASH-N-012] afgeronde verzendcontrole blijft na F5 weg, ongeacht het beginaantal — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
+- [DASH-N-012] afgeronde verzendcontrole blijft na F5 weg, ongeacht het beginaantal — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
 - [DASH-H-012] GUI-smoke scheidt werkacties van medewerkers- en beheerdersaccounts — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 35
 - [DASH-H-013] dashboardmodules tonen compacte documenten, procesfasen en teamacties — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 16
 - [DASH-N-017] beheerderdashboard toont een laadtoestand tot de eerste werkvoorraad-sync — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 7
@@ -431,7 +431,7 @@ De 41 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 517 Playwri
 - [MOB-H-028] mobiele panelen meten hun hoogte aan de zichtbare viewport, niet aan 100vh — Techniek: Responsive viewport + end-to-end use-case · Assertions: 2
 - [MOB-H-029] elk zwevend element onderin wordt opgetild zodra de navigatiebalk verschijnt — Techniek: Responsive viewport + end-to-end use-case · Assertions: 2
 - [MOB-H-027] een uur met een komma getypt komt aan als 8,5 en niet als leeg veld — Techniek: Responsive viewport + end-to-end use-case · Assertions: 3
-- [MOB-H-030] op de kleinste gangbare telefoon (360px) scrollt geen enkel hoofdscherm horizontaal — Techniek: Responsive viewport + end-to-end use-case · Assertions: 6
+- [MOB-H-030] op de kleinste gangbare telefoon (360px) scrollt geen enkel hoofdscherm horizontaal — Techniek: Responsive viewport + end-to-end use-case · Assertions: 7
 
 ### Meldingen beheren
 

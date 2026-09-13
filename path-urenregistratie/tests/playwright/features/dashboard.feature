@@ -278,7 +278,7 @@ Feature: Dashboard en open werkvoorraad
   @negative
   Scenario: [DASH-N-012] afgeronde verzendcontrole blijft na F5 weg, ongeacht het beginaantal
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 12
+    # Aantoonbare Playwright-assertions in deze case: 13
     Given de administrator is ingelogd, reset naar vaste baseline en keurt een ingediende urenstaat goed
     When de nieuwe verzendcontrole (invoice-delivery) wordt afgerond
     Then blijft de afgeronde verzendcontrole weg en de teller stabiel na F5

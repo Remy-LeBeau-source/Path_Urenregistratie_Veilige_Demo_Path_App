@@ -255,7 +255,7 @@ Feature: Mobiele gebruikerservaring
   @happy
   Scenario: [MOB-H-030] op de kleinste gangbare telefoon (360px) scrollt geen enkel hoofdscherm horizontaal
     # Testtechniek: Responsive viewport + end-to-end use-case
-    # Aantoonbare Playwright-assertions in deze case: 6
+    # Aantoonbare Playwright-assertions in deze case: 7
     Given een beheerder op een 360px-telefoon
     When de flow voor MOB-H-030 wordt uitgevoerd
     Then scrollt geen enkel beheerscherm horizontaal in Klassiek
