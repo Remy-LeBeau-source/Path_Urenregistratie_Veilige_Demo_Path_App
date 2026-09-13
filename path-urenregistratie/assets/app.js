@@ -5665,7 +5665,10 @@ function renderNewEmployeeBento(record, employee, period) {
   const standardReset = document.querySelector("#new-employee-bento [data-standard-hours-reset]");
   if (standardReset) {
     standardReset.disabled = !editable;
-    standardReset.title = "Zet ELKE dag terug naar je standaardpatroon, ook een dag die je bewust op 0 hebt gezet: " + formatStandardHoursPattern(employee);
+    // Sinds de ontwerpronde van 13 sep zet Terugzetten de week op 0,0 in plaats
+    // van op het standaardpatroon. Deze tekst beschreef nog het oude gedrag en
+    // beloofde dus het tegenovergestelde van wat de knop doet.
+    standardReset.title = "Zet ELKE dag van deze " + standardHoursScopeLabel() + " op 0,0, ook een dag die al uren had";
     standardReset.innerHTML = '<span aria-hidden="true">⟲</span> ' + (standardHoursScopeLabel() === "maand" ? "Maand terugzetten" : "Week terugzetten");
   }
   if (fillPatternNote) {
@@ -5718,15 +5721,82 @@ function renderNewEmployeeBento(record, employee, period) {
   const submitted = ["submitted", "approved", "invoiced"].includes(record.timesheetStatus);
   const reviewed = ["approved", "invoiced"].includes(record.timesheetStatus);
   const done = record.invoiceStatus === "simulated" || record.timesheetStatus === "invoiced";
-  const stepState = {
-    fill: totalEntries(record.entries) > 0 ? "is-done" : "is-current",
-    submit: submitted ? "is-done" : totalEntries(record.entries) > 0 ? "is-current" : "",
-    review: reviewed ? "is-done" : record.timesheetStatus === "submitted" ? "is-current" : "",
-    done: done ? "is-done" : reviewed ? "is-current" : ""
-  };
+  const klanturenstaatAf = customerTimesheetExternallyConfirmed(customerDocument)
+    || ["approved", "sent", "sent_to_broker"].includes(customerDocument.status);
+  const zelfGemaild = customerDocument.status === "skipped" && !customerTimesheetExternallyConfirmed(customerDocument);
+  const urenCompleet = totalWeeks > 0 && filledWeeks === totalWeeks;
+  const wekenOpen = Math.max(0, totalWeeks - filledWeeks);
+
+  // Vijf stappen sinds de ontwerpronde van 13 sep, met "Uren goedgekeurd" als
+  // eigen stap tussen indienen en de klanturenstaat. Daar hoort één harde regel
+  // uit het designcontract bij: geen stap mag groen staan zolang een eerdere nog
+  // open is. Die regel wordt hier niet per stap ingebouwd maar afgedwongen --
+  // eerst de ruwe "is dit af?"-vlaggen in ketenvolgorde, dan één keer erdoor
+  // lopen. Zo kan een latere wijziging aan één vlag de keten niet stilletjes
+  // doorbreken, en dat was precies wat er eerder kon gebeuren: "Afgerond" hing
+  // aan de factuurstatus terwijl de klanturenstaat helemaal niet in de keten
+  // zat, dus die stap kon groen staan met een openstaande klanturenstaat.
+  //
+  // De teksten komen uit handoff/medewerker-wild.bron.txt. Eén afwijking, en
+  // die is bewust: de bron zegt "N dagen open", want daar bestaan gaten per dag.
+  // De app rekent met hele weken (isTimesheetWeekComplete), dus hier staat
+  // "N weken open". Dagen-per-stuk hangt aan een besluit dat nog openstaat --
+  // zie de terugmelding over toekomstige werkdagen in github.md.
+  const stappen = [
+    {
+      key: "fill",
+      af: urenCompleet,
+      detail: urenCompleet ? "Compleet" : wekenOpen === 1 ? "1 week open" : wekenOpen + " weken open"
+    },
+    {
+      key: "submit",
+      af: submitted,
+      detail: submitted ? "Ingediend" : urenCompleet ? "Klaar om in te dienen" : "Nog niet"
+    },
+    {
+      key: "review",
+      af: reviewed,
+      detail: reviewed ? "Door de Backoffice" : submitted ? "Bij de Backoffice" : "Volgt na indienen"
+    },
+    {
+      key: "customer",
+      af: klanturenstaatAf,
+      detail: !submitted ? "Volgt na indienen"
+        : klanturenstaatAf ? "Aangeleverd"
+        : zelfGemaild ? "Rechtstreeks gemaild"
+        : "Nog niet aangeleverd"
+    },
+    {
+      key: "done",
+      af: done,
+      detail: done ? "De Backoffice heeft alles verwerkt"
+        : !submitted ? "Volgt"
+        : klanturenstaatAf ? "De Backoffice verwerkt de maand"
+        : "Volgt na de klanturenstaat"
+    }
+  ];
+
+  let ketenOpen = false;
+  const stepState = {};
+  stappen.forEach(stap => {
+    if (!ketenOpen && stap.af) {
+      stepState[stap.key] = "is-done";
+      return;
+    }
+    if (!ketenOpen) {
+      ketenOpen = true;
+      stepState[stap.key] = "is-current";
+      return;
+    }
+    stepState[stap.key] = "";
+  });
+  const stapDetails = stappen.reduce((alles, stap) => Object.assign(alles, { [stap.key]: stap.detail }), {});
+
   document.querySelectorAll("#new-bento-steps [data-step]").forEach(item => {
     item.classList.remove("is-done", "is-current");
     if (stepState[item.dataset.step]) item.classList.add(stepState[item.dataset.step]);
+    const detail = item.querySelector("[data-step-detail]");
+    if (detail && stapDetails[item.dataset.step]) detail.textContent = stapDetails[item.dataset.step];
   });
   // Het lijnstukje ná een stap volgt dezelfde staat als die stap zelf: pas
   // groen zodra de stap écht is afgerond, amber zolang die stap nu bezig is,
@@ -9041,7 +9111,10 @@ function updateTimesheetSubmitUi(record) {
     standardReset.hidden = !canSubmit;
     standardReset.disabled = !canSubmit;
     standardReset.textContent = standardHoursScopeLabel() === "maand" ? "Maand terugzetten" : "Week terugzetten";
-    standardReset.title = "Zet ELKE dag terug naar je standaardpatroon, ook een dag die je bewust op 0 hebt gezet: " + formatStandardHoursPattern(currentEmployee());
+    // Zie de gelijke tekst bij de Modern-knop: Terugzetten zet sinds 13 sep op
+    // 0,0 en niet meer op het standaardpatroon. Het patroon hoort hier dus niet
+    // meer bij -- dat staat wel bij "Standaardweek vullen", waar het klopt.
+    standardReset.title = "Zet ELKE dag van deze " + standardHoursScopeLabel() + " op 0,0, ook een dag die al uren had";
   }
   if (submit) {
     submit.hidden = !showSubmit;

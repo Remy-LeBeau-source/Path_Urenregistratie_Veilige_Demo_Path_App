@@ -1900,3 +1900,106 @@ test('[SKIN-H-030] een lang e-mailadres duwt de statuspil niet buiten beeld op 3
       .toBeLessThanOrEqual(360);
   });
 });
+
+// Ontwerpronde 13 sep (laat): de statusketen op het Modern-dashboard gaat van
+// vier naar vijf stappen, met "Uren goedgekeurd" als eigen stap tussen indienen
+// en de klanturenstaat. Daar hoort één harde regel bij uit het designcontract:
+// geen stap mag groen staan zolang een eerdere nog open is.
+//
+// Die regel was aantoonbaar geschonden. "Afgerond" hing aan de factuurstatus
+// (`invoiceStatus === "simulated"`), en de klanturenstaat zat helemaal niet in
+// de keten. Een maand die nog als concept openstond kon dus een groene
+// eindstap tonen. Deze case zet precies die toestand op en eist dat de keten
+// hem niet meer doorlaat.
+//
+// De regel is in de code niet per stap ingebouwd maar afgedwongen door één
+// doorloop van de keten, juist omdat een per-stap-variant stil kan omvallen
+// zodra iemand één vlag aanpast. Deze case bewaakt de uitkomst van die
+// doorloop, niet de implementatie.
+test('[SKIN-H-031] de vijf stappen lopen in volgorde en geen stap staat groen terwijl een eerdere nog open is', async ({ page }) => {
+  test.setTimeout(120_000);
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await expect(page.locator('#employee-dashboard-hours')).toBeVisible();
+  await page.locator('#quick-skin-toggle').click();
+  await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+
+  await test.step('Then staan er vijf stappen, in de volgorde uit het designcontract', async () => {
+    await expect(page.locator('#new-bento-steps li strong')).toHaveText([
+      'Uren ingevuld', 'Maand ingediend', 'Uren goedgekeurd', 'Klanturenstaat', 'Afgerond',
+    ]);
+  });
+
+  await test.step('When de maand nog concept is maar de factuurstatus al op verwerkt staat', async () => {
+    // Dit is de toestand waarin de oude keten "Afgerond" groen zette: de
+    // eindstap keek alleen naar de factuurstatus en niet naar wat ervoor kwam.
+    // Alles in één evaluate, inclusief het hertekenen, zodat een sync er niet
+    // tussen kan komen -- dezelfde reden als bij [SKIN-H-017] en [SKIN-H-028].
+    await page.evaluate(() => {
+      const runtime = window as unknown as {
+        currentEmployee: () => { id: number };
+        currentPeriod: () => { key: string; weekRows: unknown[] };
+        recordFor: (id: number, key?: string) => {
+          entries: number[][];
+          confirmedEntries?: boolean[][];
+          timesheetStatus: string;
+          invoiceStatus: string;
+        };
+        persistState: () => void;
+        renderAll: () => void;
+      };
+      const period = runtime.currentPeriod();
+      const record = runtime.recordFor(runtime.currentEmployee().id, period.key);
+      record.timesheetStatus = 'draft';
+      record.invoiceStatus = 'simulated';
+      record.entries = record.entries.map(() => [0, 0, 0, 0, 0]);
+      record.confirmedEntries = period.weekRows.map(() => [false, false, false, false, false]);
+      runtime.persistState();
+      runtime.renderAll();
+    });
+  });
+
+  await test.step('Then is "Uren ingevuld" de huidige stap en staat geen enkele stap erna groen', async () => {
+    await expect(page.locator('#new-bento-steps li[data-step="fill"]')).toHaveClass(/is-current/);
+    for (const stap of ['submit', 'review', 'customer', 'done']) {
+      await expect(
+        page.locator(`#new-bento-steps li[data-step="${stap}"]`),
+        `stap "${stap}" mag niet groen staan zolang "Uren ingevuld" nog de huidige stap is`
+      ).not.toHaveClass(/is-done/);
+    }
+    // En precies één huidige stap: twee amber bollen tegelijk is net zo fout
+    // als een groene stap te vroeg.
+    await expect(page.locator('#new-bento-steps li.is-current')).toHaveCount(1);
+  });
+
+  await test.step('And schuift de huidige stap mee zodra de maand is ingediend', async () => {
+    // De andere kant van de regel: zonder deze helft zou een keten die alles
+    // op "wacht" zet ook slagen.
+    await page.evaluate(() => {
+      const runtime = window as unknown as {
+        currentEmployee: () => { id: number };
+        currentPeriod: () => { key: string; weekRows: unknown[] };
+        recordFor: (id: number, key?: string) => {
+          entries: number[][];
+          confirmedEntries?: boolean[][];
+          timesheetStatus: string;
+        };
+        persistState: () => void;
+        renderAll: () => void;
+      };
+      const period = runtime.currentPeriod();
+      const record = runtime.recordFor(runtime.currentEmployee().id, period.key);
+      record.entries = record.entries.map(() => [8, 8, 8, 8, 8]);
+      record.confirmedEntries = period.weekRows.map(() => [true, true, true, true, true]);
+      record.timesheetStatus = 'submitted';
+      runtime.persistState();
+      runtime.renderAll();
+    });
+    await expect(page.locator('#new-bento-steps li[data-step="fill"]')).toHaveClass(/is-done/);
+    await expect(page.locator('#new-bento-steps li[data-step="submit"]')).toHaveClass(/is-done/);
+    await expect(page.locator('#new-bento-steps li[data-step="review"]')).toHaveClass(/is-current/);
+    await expect(page.locator('#new-bento-steps li[data-step="done"]')).not.toHaveClass(/is-done/);
+    await expect(page.locator('#new-bento-steps li.is-current')).toHaveCount(1);
+  });
+});

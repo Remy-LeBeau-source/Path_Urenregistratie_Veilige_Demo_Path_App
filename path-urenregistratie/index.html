@@ -307,7 +307,7 @@
             <p class="new-bento-fill-pattern-note" id="new-bento-fill-pattern-note" hidden></p>
             <div class="new-bento-week-actions">
               <button class="button button-ghost" type="button" data-standard-hours-fill title="Vul lege dagen met je persoonlijke standaardweek"><span aria-hidden="true">↺</span> Standaardweek vullen</button>
-              <button class="button button-ghost" type="button" data-standard-hours-reset title="Zet ELKE dag terug naar je standaardpatroon, ook een dag die je bewust op 0 hebt gezet"><span aria-hidden="true">⟲</span> Week terugzetten</button>
+              <button class="button button-ghost" type="button" data-standard-hours-reset title="Zet ELKE dag van deze week op 0,0, ook een dag die al uren had"><span aria-hidden="true">⟲</span> Week terugzetten</button>
               <button class="button button-ghost" type="button" data-new-bento-save title="Bewaar je wijzigingen zonder in te dienen"><span aria-hidden="true">↓</span> Concept opslaan</button>
               <button class="button button-primary" type="button" data-new-bento-submit title="Dien alle weken van deze maand in"><span aria-hidden="true">✓</span> Hele maand indienen</button>
             </div>
@@ -333,15 +333,17 @@
           </article>
 
           <article class="new-bento-steps">
-            <span class="section-label">Jouw uren in 4 stappen</span>
+            <span class="section-label">Jouw uren in 5 stappen</span>
             <ol id="new-bento-steps">
-              <li data-step="fill"><i>◷</i><strong>Uren invullen</strong><span>Vul alle weken makkelijk in.</span></li>
+              <li data-step="fill"><i>◷</i><strong>Uren ingevuld</strong><span data-step-detail>Vul alle weken makkelijk in.</span></li>
               <span class="new-bento-step-segment" data-step-segment="fill" aria-hidden="true"></span>
-              <li data-step="submit"><i>✓</i><strong>Indienen</strong><span>Dien de hele maand één keer in.</span></li>
+              <li data-step="submit"><i>✓</i><strong>Maand ingediend</strong><span data-step-detail>Dien de hele maand één keer in.</span></li>
               <span class="new-bento-step-segment" data-step-segment="submit" aria-hidden="true"></span>
-              <li data-step="review"><i>⌕</i><strong>Controle Backoffice</strong><span>Backoffice controleert de uren.</span></li>
+              <li data-step="review"><i>⌕</i><strong>Uren goedgekeurd</strong><span data-step-detail>Backoffice controleert de uren.</span></li>
               <span class="new-bento-step-segment" data-step-segment="review" aria-hidden="true"></span>
-              <li data-step="done"><i>✓</i><strong>Uren afgerond</strong><span>Facturatie kan worden verwerkt.</span></li>
+              <li data-step="customer"><i>⇧</i><strong>Klanturenstaat</strong><span data-step-detail>Volgt na indienen.</span></li>
+              <span class="new-bento-step-segment" data-step-segment="customer" aria-hidden="true"></span>
+              <li data-step="done"><i>✓</i><strong>Afgerond</strong><span data-step-detail>Volgt.</span></li>
             </ol>
           </article>
         </section>
@@ -672,7 +674,7 @@
               <p><small id="hours-target-help">Dit blokkeert indienen nooit.</small></p>
               <div class="timesheet-action-buttons">
                 <button class="button button-ghost" id="fill-standard-hours" type="button" title="Vul lege dagen met je persoonlijke standaardweek">Standaardweek vullen</button>
-                <button class="button button-ghost" id="reset-standard-hours" type="button" title="Zet ELKE dag terug naar je standaardpatroon, ook een dag die je bewust op 0 hebt gezet">Week terugzetten</button>
+                <button class="button button-ghost" id="reset-standard-hours" type="button" title="Zet ELKE dag van deze week op 0,0, ook een dag die al uren had">Week terugzetten</button>
                 <button class="button button-ghost" id="save-timesheet" type="button">Week opslaan</button>
                 <button class="button button-primary" id="submit-timesheet" type="button">Maand indienen</button>
               </div>

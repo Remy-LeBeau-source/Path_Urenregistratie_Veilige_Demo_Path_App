@@ -65,15 +65,26 @@ ronde herhaald te worden.
 
 ## Versie waartegen nu gebouwd wordt
 
-Opgehaald 2026-09-13T19:01Z, sha256 (eerste 16 tekens):
+Opgehaald 2026-09-13T20:35Z (export gestempeld 2026-09-13T20:34:50.229Z),
+sha256 (eerste 16 tekens):
 
 | Bestand | sha256 |
 | --- | --- |
-| `handoff/OPDRACHT.md` | `f8ce19acb0d1af85` |
-| `handoff/medewerker-wild.html` | `fa68d0690e5d79a0` |
-| `handoff/medewerker-gui.html` | `6c1697e8397366d9` |
-| `handoff/HANDOFF-MEDEWERKER-MOBIEL.md` | `5c3918cabca7459f` |
-| `handoff/DESIGN-BESLUITEN.md` | `b21d30835eaf178c` |
+| `handoff/OPDRACHT.md` | `58ea58c5ce4ec826` |
+| `handoff/medewerker-wild.html` | `c21b7ff3e1cc6b40` |
+| `handoff/medewerker-gui.html` | `8c8f46c7e4099059` |
+| `handoff/HANDOFF-MEDEWERKER-MOBIEL.md` | `18bb27b9d862ca97` |
+| `handoff/DESIGN-BESLUITEN.md` | `161242a8868d1714` |
+
+Vorige ronde (2026-09-13T19:01Z), bewaard om de diff te kunnen navertellen:
+`OPDRACHT.md f8ce19acb0d1af85`, `medewerker-wild.html fa68d0690e5d79a0`,
+`medewerker-gui.html 6c1697e8397366d9`,
+`HANDOFF-MEDEWERKER-MOBIEL.md 5c3918cabca7459f`,
+`DESIGN-BESLUITEN.md b21d30835eaf178c`.
+
+`OPDRACHT.md` draagt sinds deze ronde zelf een exportstempel op regel 3. Dat is
+handiger dan de sha256 voor de vraag "is dit de laatste versie": staat er een
+oudere tijd dan wat Gio net stuurde, dan is de link niet opnieuw opgehaald.
 
 Wijzigt een export, werk dan deze tabel bij in dezelfde commit als het bouwwerk dat erop volgt.
 Wat er in deze ronde precies veranderd is, staat per punt in `github.md` onder "Last sync".

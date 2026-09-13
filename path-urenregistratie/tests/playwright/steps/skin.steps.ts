@@ -125,3 +125,6 @@ Given("een beheerder op een 360px-telefoon bij Medewerkers");
 When("de flow voor SKIN-H-030 wordt uitgevoerd");
 Then("blijft de pil in Klassiek binnen de rechterrand");
 And("ook in de nieuwe vormgeving");
+Then("staan er vijf stappen, in de volgorde uit het designcontract");
+When("de maand nog concept is maar de factuurstatus al op verwerkt staat");
+And("schuift de huidige stap mee zodra de maand is ingediend");

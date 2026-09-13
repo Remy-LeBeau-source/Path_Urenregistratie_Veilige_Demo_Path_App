@@ -3,9 +3,102 @@ branch: main
 path: path-urenregistratie
 
 ## Last sync
-date: 2026-09-13T19:01:00Z
+date: 2026-09-13T20:34:50Z
+
+### Ronde 13 sep (laat) — vastgesteld uit de diff van de exports
+Wild: 103 gewijzigde regels, GUI: 134.
+
+**Statusketen van vier naar vijf stappen.** "Uren goedgekeurd" komt er als
+eigen stap tussen indienen en de klanturenstaat. De bron (`stapLijst`):
+`stap("Uren goedgekeurd", ingediend ? "Bij de Backoffice" : "Volgt na indienen", ingediend ? "nu" : "wacht")`,
+en Klanturenstaat en Afgerond staan op `wacht` zolang er niet is ingediend.
+Bij Maanden krijgt elke opengeklapte maand zijn eigen vijf stappen; een
+afgeronde maand staat vijf keer op groen met "De Backoffice heeft alles
+verwerkt".
+
+**Geen stap groen terwijl een eerdere nog open is.** Dat is de regel achter de
+`wacht`-standen hierboven.
+
+**Het woord "bedragen" verdwijnt uit medewerkercopy**, ook als "zonder
+bedragen" — dat suggereert dat er ergens wél bedragen spelen.
+
+**Alleen dagen tot en met vandaag gelden als ontbrekend.** In de bron:
+`const vandaag = new Date(); vandaag.setHours(23,59,59,999); if (d > vandaag) return;`
+in de gatenberekening.
+
+**Maandnavigatie besloten: de pijlen blijven.** Het alternatief met één link
+"← augustus bekijken" is gebouwd en teruggedraaid.
+
+Verder: demo-startsituatie staat nu standaard op `leeg`, de localStorage-sleutel
+is `pathWildStand3`, en schermwissels lopen via één `naar()` die een bewaarde
+stand terugzet.
+
+## Terugmelding uit de repo (13 sep, laat)
+
+**"bedragen" — niets te doen.** `index.html` heeft nul treffers. In `app.js`
+staat het twee keer, beide aan de beheerderskant: een label bij de
+mailroutering over de salarisadministratie (`app.js:12055`) en een comment.
+De medewerkerteksten zijn dus al schoon.
+
+**De vijfstappenketen is gebouwd, inclusief de regel.** Zie hieronder bij
+"Wat er deze ronde is nagebouwd".
+
+**"Alleen dagen tot en met vandaag" — de app kent deze regel NIET, en dit
+vraagt een besluit van Gio voordat ik hem inbouw.** De app rekent niet met
+gaten per dag maar met hele weken: `isTimesheetWeekComplete`
+(`app.js:5379`) noemt een week volledig zodra elke werkdag uren > 0 heeft óf
+bewust is opgeslagen. Toekomst speelt daar geen rol in. Gevolg: op de eerste
+van de maand staan alle weken als "niet volledig ingevuld" in de
+indienbevestiging, inclusief weken die nog niet geweest zijn.
+
+Waarom ik dit niet zelf doorvoer: de regel raakt `isTimesheetWeekComplete` en
+daarmee ook `completedTimesheetWeeks` en `incompleteTimesheetWeekLabels`. Die
+drie voeden de voortgangsring, "Volledig ingevuld: X van 5 weken", "Nog
+controleren" en nu ook de eerste stap van de keten. Met die regel erin wordt de
+lopende maand ineens "compleet" zodra de dagen tot vandaag gevuld zijn — dat
+verandert zichtbaar gedrag op elk medewerkerscherm en raakt bestaande cases.
+Dat is een productbeslissing, en het handoff-document zet hem zelf onder "vraagt
+een besluit van de opdrachtgever".
+
+Twee vragen die bij dat besluit horen: gaat de app mee naar gaten per dag (zoals
+de bron), of blijft het per week met alleen de toekomstregel erop? En geldt
+"tot en met vandaag" ook voor de voortgangsring, of alleen voor de meldingen?
+
+**Maandkiezer — ongewijzigd antwoord.** De pijlen zitten in
+`#global-period-control` in de topbalk en gelden voor de hele app,
+beheerschermen incluis; `shiftPeriodKey` (`app.js:161`) stapt vrij door zonder
+vergrendeling op de lopende maand. Het besluit "pijlen blijven, terug springt
+naar Maanden, vooruit vergrendeld" is dus niet in te bouwen zonder een globale
+besturing te veranderen. Het handoff-document zegt zelf: ligt het in de repo
+vast, dan heeft de repo voorrang.
+
+## Wat er deze ronde is nagebouwd (13 sep, laat)
+
+- `#new-bento-steps` gaat van vier naar vijf stappen: Uren ingevuld · Maand
+  ingediend · Uren goedgekeurd · Klanturenstaat · Afgerond. De koptekst heet nu
+  "Jouw uren in 5 stappen".
+- De stapregels zijn niet langer statische uitleg maar live detail, met de
+  teksten uit de bron ("Volgt na indienen", "Nog niet aangeleverd",
+  "De Backoffice verwerkt de maand", ...). Eén bewuste afwijking: waar de bron
+  "N dagen open" zegt staat hier "N weken open", omdat de app met hele weken
+  rekent — zie de terugmelding hierboven.
+- De regel "geen stap groen terwijl een eerdere nog open is" is afgedwongen via
+  één doorloop van de keten in plaats van per stap. Dat was nodig: "Afgerond"
+  hing aan de factuurstatus en de klanturenstaat zat niet in de keten, dus een
+  maand die nog concept was kon een groene eindstap tonen. `[SKIN-H-031]`
+  bewaakt dat, tegenproef gedaan.
+- De laatste stap heet "Afgerond" en niet meer "Uren afgerond" met de regel
+  "Facturatie kan worden verwerkt" — dat noemde facturatie tegen de medewerker.
+- Vier verouderde knoptitels bijgewerkt: "Week terugzetten" beschreef nog het
+  oude gedrag ("terug naar je standaardpatroon") terwijl die knop sinds deze
+  ontwerpronde op 0,0 zet. Stond in `index.html` twee keer en in `app.js` twee
+  keer.
+
+## Sync history
 
 ### Ronde 13 sep (avond) — vastgesteld uit de diff van de exports
+date: 2026-09-13T19:01:00Z
+
 Deze regel is aan de repo-kant geschreven: de vorige export is bewaard, de
 nieuwe ernaast gelegd en het verschil beschreven. Wild: 162 gewijzigde regels,
 GUI: 287.
@@ -42,7 +135,7 @@ GUI: 287.
 doorgetrokken naar de desktopvariant. Niet nagebouwd: de GUI komt per opdracht
 in een aparte ronde.
 
-## Terugmelding uit de repo (13 sep, avond)
+### Terugmelding uit de repo (13 sep, avond)
 
 Het handoff-document vraagt op twee punten om verificatie in de repo. Hier de
 uitkomst, met vindplaats, zodat het na te trekken is.
@@ -83,8 +176,6 @@ Verder zijn deze twee knoppen vastgelegd door minstens acht testaanroepen in
 uit het handoff-document ("haal de pijlen bij Mijn uren weg") is daarmee wel
 uitvoerbaar, maar het is een wijziging aan een globale besturing en geen
 detail van het medewerkerscherm. Dat vraagt een besluit van Gio, niet van mij.
-
-## Sync history
 
 ### Ronde 13 sep (namiddag)
 - `Medewerker GUI.dc.html`: dashboard-ledger herzien (KPI-tegels, één groene actieknop, "Afgerond"-stap met reden), "vul alle gaten"-knop, gemaild-status ontkoppeld van goedgekeurd-tekst (dashboard + Maanden-pil)

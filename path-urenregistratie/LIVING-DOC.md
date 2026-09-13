@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 518 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 519 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 518 unieke case-ID's
+- Playwright executable cases: 519 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 519 unieke case-ID's
+- Totaal executable cases: 520 unieke case-ID's
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
 - Database steps mappings: 1
-- Uitvoeringen: 559
-- Niet-mobile projectuitvoeringen: 477
+- Uitvoeringen: 560
+- Niet-mobile projectuitvoeringen: 478
 - Mobile functionele cases: 41
 - Pixel 7 / Chromium-uitvoeringen: 41
 - iPhone 13 / WebKit-uitvoeringen: 41
 
-De 41 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 518 Playwright-functionele cases in totaal 559 resultaten op: 477 + (41 x 2) = 559.
+De 41 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 519 Playwright-functionele cases in totaal 560 resultaten op: 478 + (41 x 2) = 560.
 
 ## Documentatieketen
 
@@ -619,7 +619,7 @@ De 41 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 518 Playwri
 
 - Feature: `tests/playwright/features/skin.feature`
 - Source: `tests/playwright/skin.spec.ts`
-- Cases: 30
+- Cases: 31
 
 - [SKIN-H-001] de app start standaard in de klassieke vormgeving — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
 - [SKIN-H-002] Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
@@ -651,6 +651,7 @@ De 41 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 518 Playwri
 - [SKIN-H-027] Nieuw-skin beheer-topbar behoudt de safe-area-inset-top van de statusbalk — Techniek: Toestandsovergang · Assertions: 2
 - [SKIN-H-029] nog niet opgeslagen uren overleven rotatie, themawissel, modal, designwissel en browser-back — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 15
 - [SKIN-H-030] een lang e-mailadres duwt de statuspil niet buiten beeld op 360px — Techniek: Toestandsovergang · Assertions: 6
+- [SKIN-H-031] de vijf stappen lopen in volgorde en geen stap staat groen terwijl een eerdere nog open is — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
 
 ### Correctie- en goedkeuringsproces
 

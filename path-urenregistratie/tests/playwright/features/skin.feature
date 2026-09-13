@@ -272,3 +272,12 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     When de flow voor SKIN-H-030 wordt uitgevoerd
     Then blijft de pil in Klassiek binnen de rechterrand
     And ook in de nieuwe vormgeving
+
+  @happy
+  Scenario: [SKIN-H-031] de vijf stappen lopen in volgorde en geen stap staat groen terwijl een eerdere nog open is
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 11
+    Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid
+    Then staan er vijf stappen, in de volgorde uit het designcontract
+    When de maand nog concept is maar de factuurstatus al op verwerkt staat
+    And schuift de huidige stap mee zodra de maand is ingediend

@@ -1153,7 +1153,9 @@ test('[DASH-H-026] het medewerkerdashboard houdt op telefoonbreedte de afgesprok
   //
   // Nieuw wijkt af, en dat is BEWUST NIET in deze case als "goed" vastgelegd:
   // gemeten stond `#employee-open-overview` op 2789px, dus na de klanturenstaat
-  // (1954) en zelfs na het puur uitleggende blok "Jouw uren in 4 stappen"
+  // (1954) en zelfs na het blok "Jouw uren in 5 stappen" (heette "in 4
+  // stappen" tot de ontwerpronde van 13 sep, en is sindsdien geen puur
+  // uitleggend blok meer maar een live statusketen)
   // (2349) -- ruim drie telefoonschermen naar beneden. De oorzaak is klein en
   // duidelijk: `#view-employee-dashboard` is in Nieuw al een flex-kolom met
   // expliciete `order`-waarden (open acties 1, correctie 2, historie 4), maar
