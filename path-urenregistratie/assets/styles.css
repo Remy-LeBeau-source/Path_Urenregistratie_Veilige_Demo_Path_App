@@ -1355,7 +1355,24 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .eyebrow { display: none; }
   .notification-button { display: none; }
   .safety-badge { display: inline-flex; font-size: 9px; padding: 6px 8px; }
-  .topbar-quick-reset { display: none; }
+  /* Fase 17.5-audit (13 sep), derde keer ditzelfde patroon. Hier stond
+     `display: none`. Samen met de herstelregel in het 720px-blok verderop
+     (`.topbar-quick-reset:not([hidden]) { display: inline-flex; ... }`)
+     betekende dat: zichtbaar op desktop (>820px), zichtbaar op telefoon
+     (<=720px), en onzichtbaar in precies de band 721-820px. Deze regel was in
+     de praktijk dus geen "verberg op mobiel" maar een "verberg op tablet", wat
+     vrijwel zeker niet de bedoeling was -- op een iPad in portret had een
+     tester geen Herstel demo terwijl smallere én bredere schermen die wel
+     hebben. Gevonden doordat het nieuwe tablet-chromium-project 10 cases rood
+     zag gaan op #quick-reset-demo.
+
+     Waarom het weghalen veilig kan en niet blind is: de twee buren hierboven
+     (.eyebrow en .notification-button) blijven wél verborgen, dus de kop houdt
+     de ruimte die daar is vrijgemaakt; alleen deze ene knop komt terug. Dat is
+     gemeten op 768px met het tablet-project, dat juist op horizontale overflow
+     let -- zie MASTERCHECKLIST 17.5. De knop zelf is bovendien alleen op
+     LOCAL/TEST zichtbaar (syncResetControlVisibility), dus op productie
+     verandert er niets aan de kop. */
   .hero-card { margin-top: 20px; padding: 28px; }
   .workflow-track { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .workflow-heading-meta { justify-items: start; text-align: left; }
@@ -1442,6 +1459,14 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .approval-actions { justify-content: stretch; }
   .approval-actions .button { flex: 1; }
   .invoice-toolbar { align-items: flex-start; flex-direction: column; }
+  /* Hier stapelt de factuurbalk tot een kolom, en dan is de vaste
+     `width: min(320px, 40vw)` van het zoekveld juist knellend: op een telefoon
+     van 375px is dat ~150px, terwijl de hele kolombreedte beschikbaar is. Met
+     de 16px uit het blok hierboven (iOS-zoomgrens) zou daar nauwelijks tekst
+     in passen. Volle breedte lost allebei op en sluit aan bij hoe de andere
+     bedieningselementen in deze balk zich hier al gedragen. */
+  .invoice-search { width: 100%; }
+  .invoice-search input { width: 100%; }
   .segmented-control { width: 100%; overflow-x: auto; }
   .employee-details, .form-grid, .team-account-overview, .team-account-groups, .administrator-row, .mail-recipient-setting, .mail-route-choice, .template-item, .announcement-meta, .customer-timesheet-admin-list { grid-template-columns: minmax(0, 1fr); }
   .team-account-overview, .team-account-groups, .administrator-row, .mail-recipient-setting, .mail-route-choice, .template-item { gap: 10px; }
@@ -2061,6 +2086,21 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
    bestaande 590px-regel verderop, alleen breder toegepast. */
 @media (max-width: 820px) {
   .help-launcher { bottom: 78px; }
+  /* Vervolg van dezelfde audit: .help-launcher bleek niet het enige vast
+     gepositioneerde element onderin dat de navigatiebalk niet kende. Nog twee
+     gevonden, met exact dezelfde oorzaak -- een lift die pas bij een smallere
+     breedte intreedt dan waar de balk ontstaat.
+     - .toast werd pas vanaf 590px opgetild, dus tussen 591 en 820px lag hij
+       op de navigatieknoppen. Hij heeft pointer-events:none en blokkeert dus
+       geen kliks, maar dekt de knoppen wel af zolang hij zichtbaar is.
+       Dezelfde waarde als de bestaande 590px-regel, alleen breder toegepast.
+     - .install-banner had helemaal geen lift, op geen enkele breedte, terwijl
+       zijn eigen toelichting zegt dat hij boven de balk hoort te staan. Die
+       heeft wél knoppen, dus die onderschepte de navigatie ook echt.
+       env(safe-area-inset-bottom) blijft erin: op een iPhone met home-balkje
+       moet hij daar nog steeds bovenuit komen. */
+  .toast { bottom: 82px; }
+  .install-banner { bottom: calc(78px + env(safe-area-inset-bottom, 0px)); }
 }
 .help-panel { position: fixed; right: 24px; bottom: 82px; z-index: 90; display: grid; width: min(420px, calc(100vw - 28px)); max-height: min(700px, calc(100vh - 110px)); grid-template-rows: auto auto minmax(120px,1fr) auto; overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); box-shadow: 0 28px 70px rgba(13,27,56,.24); transform-origin: bottom right; opacity: 0; transform: scale(.95) translateY(10px); transition: opacity .18s ease, transform .18s ease; }
 .help-panel.is-open { opacity: 1; transform: scale(1) translateY(0); }
@@ -2499,7 +2539,18 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
     right: 12px;
     left: 12px;
     width: auto;
+    /* Fase 17.5-audit (13 sep): hier stond alleen de 100vh-variant. Op mobiele
+       Safari is 100vh de GROTE viewport (adresbalk weggescrold), dus met de
+       adresbalk in beeld -- de normale toestand -- rekent dit paneel zich
+       hoger dan er zichtbaar is en valt de onderkant achter die balk. Dit is
+       exact dezelfde fout die voor .help-panel al is gevonden en opgelost
+       (zie de toelichting daar, "schoof de koptekst achter de mobiele
+       adresbalk"); .popover-panel was daarbij over het hoofd gezien, terwijl
+       juist de notificatiebel en het profielmenu erin zitten. Zelfde
+       oplossing: eerst vh als terugval voor oudere browsers, dan dvh voor
+       browsers die de zichtbare hoogte kennen. */
     max-height: calc(100vh - 170px);
+    max-height: calc(100dvh - 170px);
     overflow-y: auto;
   }
 
@@ -3200,6 +3251,13 @@ button,
    ---------------------------------------------------------------------------
    Onderin, want daar zit de duim. Boven de mobiele onderbalk zodat hij niets
    afdekt, en met ruimte voor de veilige zone van een iPhone.
+
+   Fase 17.5-audit (13 sep): die tweede zin klopte niet met de code. 16px is
+   niet boven de onderbalk -- die is 68px hoog en verschijnt al vanaf
+   max-width:820px (zie .sidebar). Deze banner staat bovendien buiten
+   #app-shell, dus hij legde zich op elke mobiele en tabletbreedte over de
+   navigatieknoppen heen, mét zijn eigen knoppen eroverheen. De lift staat nu
+   in het 820px-blok verderop, bij dezelfde breedte waar de balk ontstaat.
    --------------------------------------------------------------------------- */
 .install-banner {
   position: fixed;
@@ -3520,6 +3578,14 @@ body.toont-installatieaanbod .main-content {
      maandkiezer is een knop) is een getypt jaartal met een echt toetsenbord
      op iOS -- onder 16px zoomt Safari de pagina in bij het openen ervan. */
   .period-picker-fields input { font-size: 16px; }
+  /* De laatste twee getypte velden onder de 16px-grens, bij [MOB-H-026]
+     bewust uitgesteld omdat ze allebei eerst een blik op de breedte nodig
+     hadden. Zoekveld in de factuurbalk (was 11px) en de mailsjabloon-editor
+     onder Instellingen (was 13px); zonder deze regels zoomt iOS Safari bij
+     het aantikken ervan de hele pagina in. Voor .invoice-search zie ook de
+     breedteregel in het 590px-blok hieronder. */
+  .invoice-search input { font-size: 16px; }
+  .mail-channel-template input, .mail-channel-template textarea { font-size: 16px; }
   .popover-heading small { font-size: 11px; }
   .popover-heading strong { font-size: 15px; }
   .preference-row small { font-size: 11px; }

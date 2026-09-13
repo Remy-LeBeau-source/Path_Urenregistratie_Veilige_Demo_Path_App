@@ -101,6 +101,11 @@ Then("wordt met Playwright-assertions bevestigd dat elke .segmented-control krij
 Given("het inlogscherm nog niet is ingelogd");
 When("een beheerder een medewerker-editor (.modal-form) opent");
 Then("blijft ook het jaartal in de periodekiezer op 16px");
+Then("staan ook de twee diepere velden op 16px in de bron");
+When("de flow voor MOB-H-028 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat mobiele panelen meten hun hoogte aan de zichtbare viewport, niet aan 100vh");
+When("de flow voor MOB-H-029 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat elk zwevend element onderin wordt opgetild zodra de navigatiebalk verschijnt");
 Given("de medewerker staat met een leeg urenveld in Mijn uren");
 When("hij 8,5 typt zoals een Nederlands toetsenbord dat aanbiedt");
 Then("staat er een geloofwaardig aantal uren, geen leeg veld en geen 85");

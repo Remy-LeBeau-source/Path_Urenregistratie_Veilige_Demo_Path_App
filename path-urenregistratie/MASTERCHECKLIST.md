@@ -2084,8 +2084,80 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   (kleine stap, geen big-bang): `.invoice-search input` (11px, smalle `min(320px, 40vw)`-breedte,
   eerst visueel/screenshot verifiëren dat 16px niet knelt) en `.mail-channel-template
   input`/`textarea` (13px, beheerder-only mailsjabloon-editor) -- volgende wijziging.
-- [ ] iOS/Safari: viewporthoogte, keyboard, datumvelden, uploads, sticky headers,
-  overige fixed buttons, resterend input-zoom (`.invoice-search`, `.mail-channel-template`)
+- [x] **Resterende input-zoom afgerond (13 sep).** De twee velden die bij `[MOB-H-026]` bewust
+  waren uitgesteld omdat ze eerst een blik op hun breedte nodig hadden, staan nu ook op 16px in
+  het `max-width: 720px`-blok: `.invoice-search input` (was 11px) en `.mail-channel-template
+  input`/`textarea` (was 13px). Bij het zoekveld bleek de breedte inderdaad het echte probleem,
+  niet de lettergrootte: bij `max-width: 590px` stapelt `.invoice-toolbar` tot een kolom terwijl
+  het veld vastzat op `width: min(320px, 40vw)` — op een telefoon van 375px is dat ~150px, waar
+  met 16px nauwelijks tekst in past terwijl de hele kolombreedte beschikbaar is. Daar staat het
+  veld nu op volle breedte, wat ook beter aansluit bij de rest van die balk.
+  `[MOB-H-026]` uitgebreid met beide. De mailsjabloon-editor wordt live gemeten; het
+  factuurzoekveld via de **bronregel** in plaats van de berekende stijl, met reden: dat veld zit
+  in `#invoice-detail-panel`, dat `hidden` blijft zolang `awaitingInvoicesHydration()` waar is,
+  en in deze testcontext komt die hydratie niet rond — een live check zou daar altijd "hidden"
+  meten en dus niets bewijzen. Zelfde afweging en zelfde patroon als `[SKIN-H-027]`.
+- [x] **iOS viewporthoogte (13 sep): één echt gemiste plek gevonden en gefixt.** De opdracht
+  waarschuwt expliciet tegen de oude 100vh-aanpak. Dit bestand kende het probleem al — er staat
+  een uitgeschreven toelichting bij `.modal` ("op mobiel is 100vh de grote viewport") en op de
+  meeste plekken staat het juiste paar: eerst `vh` als terugval, dan `dvh`. Alle elf
+  `100vh`-voorkomens nagelopen. De `min-height: 100vh`-regels (`.app-shell` e.a.) zijn
+  onschadelijk: bij een minimumhoogte betekent te hoog rekenen alleen dat je iets kunt scrollen,
+  er wordt niets afgekapt. Eén `max-height` mistte de `dvh`-regel wél: **`.popover-panel`** in
+  het `max-width: 720px`-blok. Dat is het paneel van de **notificatiebel en het profielmenu** —
+  met de adresbalk in beeld rekent het zich hoger dan er zichtbaar is en valt de onderkant
+  erachter. Exact dezelfde fout die hier al voor `.help-panel` was gevonden en opgelost
+  ("schoof de koptekst achter de mobiele adresbalk"); `.popover-panel` was daarbij overgeslagen.
+  Zelfde oplossing toegepast. Rol: beide (bel en profielmenu staan op elk ingelogd scherm).
+  Design: Klassiek, en `styles-new.css` heeft geen eigen `.popover-panel`-hoogteregel, dus
+  identiek in Nieuw. Thema: themaneutraal. Devices: mobiele browsers met een in-/uitschuivende
+  adresbalk, met name iOS Safari. Nieuwe regressie `[MOB-H-028]`, die de bronregel controleert
+  (in een desktop-Chromium zonder adresbalk is `dvh` gelijk aan `vh`, dus een live
+  computed-style-check zou met én zonder de fix dezelfde waarde geven en niets bewijzen —
+  zelfde bekende omgevingsgat als `[SKIN-H-027]`) én bewaakt dat de `vh`-terugval blijft staan
+  voor browsers zonder `dvh`. Discriminerend bevestigd: zonder de fix faalt hij, met de fix
+  slaagt hij in 6,5s.
+- [x] **Sticky headers en zwevende knoppen (13 sep): nog twee plekken van hetzelfde patroon.**
+  Alle `position: sticky`- en `position: fixed`-elementen nagelopen. **In orde:** de sticky
+  `.topbar` (die heeft de safe-area-fix al, zie `[SKIN-H-027]`), en het sluitkruisje van een
+  dialoog — dat is bewust géén sticky maar absoluut vastgezet op een niet-scrollende schil,
+  met een uitgeschreven toelichting dat sticky daar op mobiel onbetrouwbaar bleek; gedekt door
+  `[MOB-H-023]` en `[A11Y-H-006]`. **Twee nieuwe vondsten, allebei dezelfde oorzaak als de
+  hulpknop-fix (v2.0.6):** een element onderin dat pas bij een smallere breedte wordt opgetild
+  dan waar de navigatiebalk ontstaat (820px). (1) `.toast` werd pas vanaf 590px opgetild, dus
+  tussen 591 en 820px lag hij op de navigatieknoppen — hij heeft `pointer-events: none` en
+  blokkeert dus geen kliks, maar dekt ze wel af. (2) `.install-banner` had **helemaal geen**
+  lift, op geen enkele breedte, terwijl zijn eigen toelichting letterlijk zegt "Boven de
+  mobiele onderbalk zodat hij niets afdekt" — die banner staat bovendien buiten `#app-shell`
+  en heeft eigen knoppen, dus die onderschepte de navigatie ook echt. Beide opgetild in het
+  820px-blok; bij de banner blijft `env(safe-area-inset-bottom)` erin voor het home-balkje.
+  **Nieuwe regressie `[MOB-H-029]` bewaakt de klasse, niet de losse gevallen:** hij eist dat
+  `.help-launcher`, `.toast` én `.install-banner` alle drie een eigen `bottom` krijgen in dat
+  blok, zodat een volgend zwevend element hier meteen tegenaan loopt. Discriminerend bevestigd
+  — en de eerste versie van die case was zélf fout: hij zocht met `includes()` naar de
+  selectornaam en vond die ook in het commentaar, waardoor hij groen bleef terwijl de regel al
+  weg was. Nu wordt commentaar eerst gestript en op een echte `bottom:`-declaratie gecontroleerd;
+  daarna faalt hij wél correct.
+- [x] **"Herstel demo" was onzichtbaar op tabletbreedte (13 sep) — vijfde en laatste vondst van
+  ditzelfde patroon.** Gevonden door de herontwerp-sessie, die de rode tablet-shards
+  terugvoerde op `#quick-reset-demo`: 10 verwijzingen in de tabletspecs, vandaar de omvang van
+  de cascade. `.topbar-quick-reset { display: none; }` stond in het 820px-blok, terwijl de
+  herstelregel (`:not([hidden]) { display: inline-flex; }`) pas in het 720px-blok komt. Netto
+  was die regel dus geen "verberg op mobiel" maar een **"verberg op tablet"**: zichtbaar boven
+  820px, zichtbaar onder 720px, weg in precies de band ertussen. Ik had dit gat zelf bij de
+  eerste tablet-run al gezien en toen bewust laten liggen als "vraagt een plaatsingsbeslissing";
+  dat is nu met een meting beslecht in plaats van op gevoel. **Zorg was of de kop op die
+  breedte de ruimte heeft** — bij 820px worden immers óók `.eyebrow` en `.notification-button`
+  verborgen, iemand heeft die kop daar bewust uitgedund. **Gemeten** met een los script op
+  721/768/800/820px, ingelogd als beheerder: knop zichtbaar op alle vier, en
+  `scrollWidth - clientWidth` is **0** — zowel op de pagina als binnen `.topbar` zelf. De twee
+  buren blijven verborgen, dus alleen deze ene knop komt terug in de ruimte die daar al vrij
+  was. Rol: beide, maar in de praktijk alleen relevant voor wie de knop ziet. Design:
+  skin-onafhankelijk. Omgeving: raakt productie niet — `syncResetControlVisibility()` toont hem
+  alleen op LOCAL/TEST, dus dit was een tester op een iPad in portret zonder Herstel demo.
+  Bevestigd: `[A11Y-H-004]` en `[DASH-N-010]` waren rood op tablet en zijn nu groen.
+- [ ] iOS/Safari resterend: keyboard (toetsenbord dat een knop afdekt), uploads
+  (datumvelden vervallen: die bestaan niet, zie de Android-doorloop hieronder)
 - [x] **Android/Chrome-doorloop gedaan (13 sep), grotendeels in orde.** Statisch nagelopen in
   `index.html` en `assets/app.js`. **Viewport:** `width=device-width, initial-scale=1,
   viewport-fit=cover` — correct, en belangrijk: géén `user-scalable=no` of `maximum-scale`, dus

@@ -306,7 +306,9 @@
 | MOB-H-023 | ui | mobile.feature | het sluitkruisje van een lange dialoog blijft op de telefoon in beeld | Responsive viewport + end-to-end use-case | 19 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | het sluitkruisje van een lange dialoog blijft op de telefoon in beeld | Happy | 15 | Actueel |
 | MOB-H-024 | ui | mobile.feature | een net ingelogde medewerker ziet op de telefoon een volledig geladen dashboard, ook als de eerste sync-afronding hapert | Responsive viewport + end-to-end use-case | 7 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | een net ingelogde medewerker ziet op de telefoon een volledig geladen dashboard, ook als de eerste sync-afronding hapert | Happy | 15 | Actueel |
 | MOB-H-025 | ui | mobile.feature | elke .segmented-control krijgt een schuifrand zodra hij écht overloopt, generiek voor de hele app | Responsive viewport + end-to-end use-case | 6 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | elke .segmented-control krijgt een schuifrand zodra hij écht overloopt, generiek voor de hele app | Happy | 15 | Actueel |
-| MOB-H-026 | ui | mobile.feature | getypte velden blijven op 16px zodat iOS Safari niet inzoomt bij focus | Responsive viewport + end-to-end use-case | 7 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | getypte velden blijven op 16px zodat iOS Safari niet inzoomt bij focus | Happy | 15 | Actueel |
+| MOB-H-026 | ui | mobile.feature | getypte velden blijven op 16px zodat iOS Safari niet inzoomt bij focus | Responsive viewport + end-to-end use-case | 9 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | getypte velden blijven op 16px zodat iOS Safari niet inzoomt bij focus | Happy | 15 | Actueel |
+| MOB-H-028 | ui | mobile.feature | mobiele panelen meten hun hoogte aan de zichtbare viewport, niet aan 100vh | Responsive viewport + end-to-end use-case | 2 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | mobiele panelen meten hun hoogte aan de zichtbare viewport, niet aan 100vh | Happy | 15 | Actueel |
+| MOB-H-029 | ui | mobile.feature | elk zwevend element onderin wordt opgetild zodra de navigatiebalk verschijnt | Responsive viewport + end-to-end use-case | 2 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | elk zwevend element onderin wordt opgetild zodra de navigatiebalk verschijnt | Happy | 15 | Actueel |
 | MOB-H-027 | ui | mobile.feature | een uur met een komma getypt komt aan als 8,5 en niet als leeg veld | Responsive viewport + end-to-end use-case | 3 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | een uur met een komma getypt komt aan als 8,5 en niet als leeg veld | Happy | 15 | Actueel |
 | NOT-H-001 | api | notifications.feature | ingelogde gebruiker kan notificaties ophalen | API-contract + equivalentieklasse | 5 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | ingelogde gebruiker kan notificaties ophalen | Happy | 15 | Actueel |
 | NOT-H-002 | api | notifications.feature | mark_all_read werkt zonder fouten | Toestandsovergang | 8 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | mark_all_read werkt zonder fouten | Happy | 15 | Actueel |
@@ -525,9 +527,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 503
+- Playwright executable cases: 505
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 504
+- Totaal unieke executable cases: 506
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
