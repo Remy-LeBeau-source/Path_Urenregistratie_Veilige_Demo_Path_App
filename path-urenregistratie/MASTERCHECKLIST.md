@@ -2223,8 +2223,18 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
     oudere response die een gewiste teller niet mag herstellen).
   - [ ] *Mededelingen beheren + doelgroepen:* **hier zit de P0 hierboven.** De doelgroepkeuze wordt
     client-side bepaald en stuurt de verkeerde id-soort mee; dat deel blijft open tot die fix er is.
-  - [ ] *Administratieve statussen:* deels geraakt via 17.3 (`[E2E-H-030]`, zie daar); de
-    factuur-/payrollstatussen nog apart doorlopen.
+  - [x] *Administratieve statussen:* doorgelicht 13 sep. In de echte app komt dit neer op de
+    **factuurcyclus**, en die is ruim gedekt: `invoices.spec.ts` (zichtbaarheid per rol, periodefilter,
+    bedrag berekend door de server uit uren x tarief, paginering bij 32 records, externe factuur
+    per PDF/JPG/PNG, medewerker mag dat niet, factuurcontrole blokkeert zolang de klanturenstaat
+    ontbreekt, ontbrekende serverfactuur wordt bij afronden aangemaakt), plus `invoice-lock.spec.ts`
+    en `invoice-company-identity.spec.ts`.
+    **`payrollStatus` blijkt géén administratieve status maar interne boekhouding van de client:**
+    hij wordt afgeleid van de factuurstatus (`app.js` ~220 en ~3861), gaat nooit naar de server
+    (`payroll_status` bestaat nergens in `server/`) en wordt nergens als statuspil getoond -- de
+    enige payroll-tekst in de UI is een privacynotitie over wat de salarisadministratie wél en niet
+    ontvangt. Er valt hier dus niets te dekken wat nog niet via de factuurstatus gedekt is; het
+    apart testen zou een veld bewaken dat geen gebruiker ziet.
 - [x] Mobiel: nooit desktoptabellen simpelweg verkleinen -- responsive tables/cards/detailweergave/
   inklapbaar, maar geen informatie of beheeractie laten verdwijnen. **Doorgemeten 13 sep, geen
   wijziging nodig.** Per beheerscherm (Dashboard, Goedkeuringen, Facturen, Medewerkers,
