@@ -4711,8 +4711,22 @@ function resetStandardHoursInRecord(record, employee, period, weekIndexes) {
     if (!week || !record.entries || !record.entries[weekIndex]) return;
     week.days.forEach((day, dayIndex) => {
       if (!day) return;
-      const nextValue = standardHoursForDay(employee, dayIndex);
-      if (record.confirmedEntries?.[weekIndex]) record.confirmedEntries[weekIndex][dayIndex] = false;
+      // Ontwerpronde 13 sep (handoff/medewerker-mobiel): "Terugzetten zet de
+      // week op 0,0, niet op standaarduren." Daarvóór zette deze actie elke dag
+      // op het standaardpatroon. Dat was de oplossing voor het conflict tussen
+      // Shawn en Stasjo (zie de toelichting boven deze functie); die oplossing
+      // blijft overeind, want de knop die alleen lege dagen vult is ongewijzigd
+      // en beschermt een bewust op 0 gezette dag nog steeds. Wat verandert is
+      // wat déze aparte, bevestigde actie doet: leegmaken in plaats van
+      // terugzetten naar standaard. Eén regel, dus eenvoudig terug te draaien.
+      const nextValue = 0;
+      // De dagen worden als bewust-op-0 gemarkeerd, niet als onaangeraakt. Met
+      // false blijft een 0 een "nog niet ingevulde" dag, en dan vult de app hem
+      // bij de eerstvolgende voorvulling gewoon weer met het standaardpatroon --
+      // gemeten: de week stond na het terugzetten meteen weer op 0,7.2,7.2,7.2,
+      // 7.2. Een medewerker die bewust op "terugzetten" drukt, heeft die 0 juist
+      // wél gekozen.
+      if (record.confirmedEntries?.[weekIndex]) record.confirmedEntries[weekIndex][dayIndex] = true;
       if (Number(record.entries[weekIndex][dayIndex] || 0) === nextValue) return;
       record.entries[weekIndex][dayIndex] = nextValue;
       changed += 1;
@@ -4738,8 +4752,8 @@ function resetStandardHoursForCurrentScope() {
   const scopeWoord = scopeLabel === "maand" ? "Maand" : "Week";
   showModal({
     label: "Uren terugzetten",
-    title: scopeWoord + " terugzetten naar je standaardpatroon?",
-    message: "Dit overschrijft elke dag in deze " + scopeLabel + " met je standaardpatroon (" + formatStandardHoursPattern(employee) + "), ook een dag die je bewust op 0 hebt gezet, bijvoorbeeld ziekte of vrij. Handmatig ingevulde uren in deze " + scopeLabel + " gaan hiermee verloren.",
+    title: "Hele " + scopeLabel + " terugzetten?",
+    message: "Dit zet elke dag in deze " + scopeLabel + " op 0,0 uur, ook een dag die je bewust op 0 hebt gezet en een dag die je zelf hebt ingevuld. Je uren in deze " + scopeLabel + " gaan hiermee verloren. Wil je juist je standaardweek terugkrijgen, gebruik dan " + standardHoursButtonLabel() + ".",
     confirm: scopeWoord + " terugzetten",
     danger: true,
     action: () => {
@@ -4759,7 +4773,7 @@ function resetStandardHoursForCurrentScope() {
       rerenderActiveTimesheetView();
       closeModal();
       if (!changed) {
-        toast("Alles stond al volgens je standaard" + scopeLabel + ".");
+        toast("Deze " + scopeLabel + " stond al helemaal op 0,0.");
         return;
       }
       persistState();
@@ -4767,7 +4781,7 @@ function resetStandardHoursForCurrentScope() {
       renderDashboard();
       renderApprovals();
       renderInvoices();
-      toast(scopeWoord + " teruggezet naar je standaardpatroon.");
+      toast(scopeWoord + " teruggezet naar 0,0.");
     }
   });
 }

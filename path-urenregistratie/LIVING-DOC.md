@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 514 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 515 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 514 unieke case-ID's
+- Playwright executable cases: 515 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 515 unieke case-ID's
+- Totaal executable cases: 516 unieke case-ID's
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
 - Database steps mappings: 1
-- Uitvoeringen: 555
-- Niet-mobile projectuitvoeringen: 473
+- Uitvoeringen: 556
+- Niet-mobile projectuitvoeringen: 474
 - Mobile functionele cases: 41
 - Pixel 7 / Chromium-uitvoeringen: 41
 - iPhone 13 / WebKit-uitvoeringen: 41
 
-De 41 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 514 Playwright-functionele cases in totaal 555 resultaten op: 473 + (41 x 2) = 555.
+De 41 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 515 Playwright-functionele cases in totaal 556 resultaten op: 474 + (41 x 2) = 556.
 
 ## Documentatieketen
 
@@ -643,7 +643,7 @@ De 41 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 514 Playwri
 - [SKIN-H-021] de medewerker blijft op het Dashboard: de pijl springt naar vandaag in het weekkaartje, open maanden staan er zichtbaar bij, en een skinwissel hertekent Mijn uren direct — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 19
 - [SKIN-H-022] een tweede herlading zet de skin/thema-voorkeur niet terug naar standaard — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 8
 - [SKIN-H-023] "Standaardweek/-maand vullen" vult alleen lege dagen met het eigen werkpatroon, in Nieuw en Klassiek — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 26
-- [SKIN-H-028] "Week terugzetten" overschrijft ook een dag die bewust op 0 is bevestigd, na expliciete bevestiging — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 5
+- [SKIN-H-028] "Week terugzetten" overschrijft ook een dag die bewust op 0 is bevestigd, na expliciete bevestiging — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
 - [SKIN-H-024] "Volgende actie" bovenaan Open acties per maand toont de eerstvolgende stap en blijft op het Dashboard — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
 - [SKIN-H-025] de 0/8/9-snelkeuze bij elke dag staat altijd zichtbaar, in Klassiek en in Nieuw — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
 - [SKIN-H-027] Nieuw-skin beheer-topbar behoudt de safe-area-inset-top van de statusbalk — Techniek: Toestandsovergang · Assertions: 2

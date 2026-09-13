@@ -105,7 +105,7 @@ And("blijft de knop ook in Klassiek werken");
 Given("een ingelogde medewerker met Mijn uren open op een week met minstens één werkdag");
 When("een volledige werkweek met een echte maandag wordt gezocht");
 And("een werkdag bewust op 0 wordt bevestigd (ziek/vrij), afwijkend van het standaardpatroon");
-And("overschrijft na bevestiging ook de bewust-bevestigde 0-dag met het standaardpatroon");
+And("zet na bevestiging de hele week op 0,0, ook een dag die wel uren had");
 Then("wordt met Playwright-assertions bevestigd dat \"Week terugzetten\" overschrijft ook een dag die bewust op 0 is bevestigd, na expliciete bevestiging");
 When("op de knop van de Volgende actie wordt geklikt");
 Then("blijft het Dashboard actief, net als bij de losse maandregels eronder");

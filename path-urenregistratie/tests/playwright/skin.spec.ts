@@ -1505,7 +1505,18 @@ test('[SKIN-H-028] "Week terugzetten" overschrijft ook een dag die bewust op 0 i
     await expect(page.locator('#modal-confirm')).toHaveClass(/button-danger/);
   });
 
-  await test.step('And overschrijft na bevestiging ook de bewust-bevestigde 0-dag met het standaardpatroon', async () => {
+  await test.step('And zet na bevestiging de hele week op 0,0, ook een dag die wel uren had', async () => {
+    // Ontwerpronde 13 sep: "Terugzetten" zet de week op 0,0 in plaats van op
+    // het standaardpatroon. De case toetst daarom nu een dag die vóór het
+    // terugzetten wél uren had -- niet de bewust op 0 gezette dag, want die
+    // stond al op 0 en zou dus ook slagen als het terugzetten helemaal niets
+    // deed. Zo blijft de controle discriminerend.
+    const voorafDinsdag = await page.evaluate((weekIndex: number) => {
+      // @ts-expect-error debug-only voor deze directe controle
+      return Number(recordFor(currentEmployee().id).entries[weekIndex][1] || 0);
+    }, plek.weekIndex);
+    expect(voorafDinsdag, 'dinsdag hoort vóór het terugzetten uren te hebben, anders bewijst deze stap niets').toBeGreaterThan(0);
+
     await page.locator('#modal-confirm').click();
 
     // Hier stond een blinde waitForTimeout(300). Het terugzetten loopt via een
@@ -1535,27 +1546,23 @@ test('[SKIN-H-028] "Week terugzetten" overschrijft ook een dag die bewust op 0 i
     // [SKIN-H-023] -- die maken allebei hun eigen wegwerpmedewerker aan en
     // raken de gedeelde demomedewerker niet aan.)
     //
-    // Dit verzwakt de controle niet: waar het om gaat is dat "Week terugzetten"
-    // de bewust bevestigde 0 overschrijft mét het standaardpatroon. Bleef het
-    // terugzetten uit, dan stond er nog steeds 0 -- en 0 is hieronder expliciet
-    // uitgesloten.
+    // Gecontroleerd wordt de hele week, niet één dag: "Terugzetten" hoort elke
+    // dag op 0,0 te zetten, ook een dag die de medewerker zelf had ingevuld.
     await expect
       .poll(
         async () =>
           page.evaluate((weekIndex: number) => {
             // @ts-expect-error debug-only voor deze directe controle
-            const maandag = recordFor(currentEmployee().id).entries[weekIndex][0];
-            // @ts-expect-error debug-only voor deze directe controle
-            const patroon = standardHoursForDay(currentEmployee(), 0);
-            return patroon > 0 && maandag === patroon;
+            const dagen = recordFor(currentEmployee().id).entries[weekIndex] || [];
+            return dagen.map((waarde: unknown) => Number(waarde || 0)).join(",");
           }, plek.weekIndex),
         {
           timeout: 15_000,
           message:
-            'maandag hoort na "Week terugzetten" gelijk te zijn aan het actuele standaardpatroon, en niet op de bevestigde 0 te blijven staan',
+            'na "Week terugzetten" horen alle dagen van de week op 0,0 te staan, ook de dag die daarvoor uren had',
         }
       )
-      .toBe(true);
+      .toMatch(/^0(,0)*$/);
   });
 });
 
