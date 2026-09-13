@@ -1989,7 +1989,14 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   worden -- voorkomt dubbele ids/onderhoud. Beheerderskant (controleren, herinneren, extern
   bevestigen/terugzetten, brokerroute) is volledig doorontwikkeld, geen losse eindjes gevonden.
   Nog open: live/visuele bevestiging.
-- [ ] (herontwerp, bezig) Correcties, mededelingen, notificaties, profiel, logout
+- [ ] (herontwerp, bezig) Correcties, mededelingen, notificaties, profiel, logout. **Code-audit
+  13 sep:** logout doet één nette herpoging bij netwerkfout voordat hij lokaal opgeeft (voorkomt
+  de eerder gefixte "toch weer automatisch ingelogd"-regressie) en ruimt rol/hydratatie/panelen
+  netjes op. Profielmenu verbergt "Ander account of rol" buiten demomodus -- terecht, want bij
+  echte login doet die knop hetzelfde als uitloggen. Notificaties: bel toont bewust alleen
+  ongelezen (badge + lijst consistent), klik markeert gelezen via API met lokale fallback en
+  navigeert naar de juiste view/periode. Geen bugs gevonden. Nog te doen: mededelingen-scherm
+  zelf en correctie-afhandeling vanuit medewerkerkant.
 - [ ] Mobiele prioriteit: wat moet ik nu doen -> uren -> open acties -> klanturenstaat -> overig
 - [ ] Data mag nooit verloren gaan door rerender, schermrotatie, browser-back, modal sluiten,
   toetsenbord openen, thema-/designwissel
@@ -2145,6 +2152,20 @@ Claim-conventie voor deze checklist zodat herontwerp en main elkaar niet dubbel 
   deur -- wie ruimte heeft pakt een onbezet item op, ongeacht sectie.
 - Waar mogelijk elkaar ook direct inseinen via de agent-peersessie (zichtbaar via `ListAgents`/
   `SendMessage` in Claude Code) in plaats van te wachten tot de ander toevallig deze checklist leest.
+
+**Visuele verbeteringen uit de Cloud-ontwerpreferentie (herontwerp, doorlopend):**
+- [x] **Blauwe statuspil op tokens (v2.0.8, Klassiek + Nieuw, licht + donker).** Uit de
+  gepubliceerde "Design-polish"-referentie, punt 5: van de vier statuskleuren stond alleen de
+  blauwe ("Ingediend"/"Factuur klaar"/"Urencontrole nodig"/"Mededeling") nog op een vaste hex
+  (`#eaf1fa`/`#315d91`) i.p.v. op thema-tokens. Groen, grijs en oranje draaiden dus netjes mee
+  met de donkere modus, deze bleef een lichtblauw vlak met donkerblauwe tekst midden op een
+  donker scherm. Nieuwe tokens `--info-bg`/`--info-tekst` in `:root` én in het
+  `html[data-theme="dark"]`-blok (donker: `#16293d`/`#8fb8e8`, 7,6:1). Rol: beide (pil komt voor
+  bij medewerker én beheerder). Design: Klassiek (`styles.css`); Nieuw erft dezelfde regel, geen
+  eigen overschrijving. Devices: themaneutraal qua layout, geen maatwijziging. Getest:
+  `contrast-licht-donker.mjs` groen ("geen regel onder 4,5:1"), `test-design-audit.mjs` groen.
+  Nog open als los puntje: `.dashboard-team-row.status-submitted td` heeft nog een vaste
+  lichte randkleur (`#cbdcf0`) met hetzelfde probleem, maar dat is een tabelrand, geen pil.
 
 **Visuele verbetering is de opdracht, niet alleen toegestaan (Klassiek en Nieuw):** styling/look
 mooier maken is expliciet onderdeel van Fase 17 (zie de scope-correctie hierboven), niet slechts
