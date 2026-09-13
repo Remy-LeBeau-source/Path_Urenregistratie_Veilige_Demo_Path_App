@@ -107,6 +107,40 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+// Wacht tot een toestand echt bereikt is in plaats van een vast aantal
+// milliseconden te hopen.
+//
+// Aanleiding (13 sep 2026): het opslaan van een klanturenstaatconcept werd
+// gevolgd door `await new Promise(r => setTimeout(r, 20))`. Op een belaste
+// machine is 20 ms te kort en viel de smoke om op "Een PDF moet eerst als
+// concept bewaard kunnen worden", terwijl er niets mis was -- de opslag was
+// simpelweg nog niet rond. Drie runs ervoor en de run erna waren groen op exact
+// dezelfde code, dus dat was een race in de test, geen fout in de app.
+//
+// Belangrijk: dit maakt de test niet zachter. De assertie erna blijft
+// ongewijzigd, en blijft de toestand nooit bereikt worden, dan loopt deze
+// helper af en faalt de smoke alsnog -- alleen met een duidelijkere melding.
+async function wachtTot(voorwaarde, beschrijving, maxMs = 4000) {
+  const deadline = Date.now() + maxMs;
+  for (;;) {
+    let bereikt = false;
+    try {
+      bereikt = Boolean(voorwaarde());
+    } catch {
+      bereikt = false;
+    }
+    if (bereikt) return;
+    if (Date.now() >= deadline) {
+      throw new Error(`Wachten op "${beschrijving}" liep af na ${maxMs} ms`);
+    }
+    await new Promise(resolve => dom.window.setTimeout(resolve, 10));
+  }
+}
+
+function demoStaat() {
+  return JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final"));
+}
+
 const ids = [...document.querySelectorAll("[id]")].map(element => element.id);
 assert(new Set(ids).size === ids.length, "Ieder element-id moet uniek zijn");
 assert(styles.includes("@media (max-width: 590px)"), "Er moet een mobiele layout voor smalle telefoons bestaan");
@@ -246,7 +280,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 document te controleren · 0 extern te bevestigen · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, externe bevestiging, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("2.0.39"), "Het zichtbare versienummer moet 2.0.39 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("2.0.40"), "Het zichtbare versienummer moet 2.0.40 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -599,14 +633,14 @@ document.querySelector("#customer-timesheet-file").dispatchEvent(new Event("chan
 assert(!document.querySelector("#customer-timesheet-save-draft").disabled && !document.querySelector("#customer-timesheet-submit").disabled, "Na een geldig bestand moeten Concept opslaan en Indienen bij Backoffice direct actief worden");
 const notificationsBeforeCustomerConcept = JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final")).notifications.length;
 click("#customer-timesheet-save-draft");
-await new Promise(resolve => dom.window.setTimeout(resolve, 20));
-const draftCustomerState = JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final"));
+await wachtTot(() => demoStaat().records["2026-09"]["2"].customerTimesheet.status === "draft", "klanturenstaat 2026-09 opgeslagen als concept");
+const draftCustomerState = demoStaat();
 assert(draftCustomerState.records["2026-09"]["2"].customerTimesheet.status === "draft", "Een PDF moet eerst als concept bewaard kunnen worden");
 assert(draftCustomerState.notifications.length === notificationsBeforeCustomerConcept, "Een concept mag nog geen Backoffice-melding maken");
 assert(document.querySelector("#customer-timesheet-status").textContent.includes("Concept"), "De medewerker moet duidelijk zien dat een concept nog niet is ingediend");
 click("#customer-timesheet-submit");
-await new Promise(resolve => dom.window.setTimeout(resolve, 20));
-const uploadedCustomerState = JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final"));
+await wachtTot(() => demoStaat().records["2026-09"]["2"].customerTimesheet.status === "received", "klanturenstaat 2026-09 ingediend bij Backoffice");
+const uploadedCustomerState = demoStaat();
 assert(uploadedCustomerState.records["2026-09"]["2"].customerTimesheet.status === "received", "Indienen bij Backoffice moet het concept op Controle nodig zetten");
 assert(uploadedCustomerState.records["2026-09"]["2"].customerTimesheet.fileName === "Klanturenstaat_Stasjo_van_Bakel_2026-09.pdf", "De bestandsnaam moet automatisch medewerker, jaar en maand bevatten");
 assert(uploadedCustomerState.records["2026-09"]["2"].customerTimesheet.fileData.startsWith("data:application/pdf"), "De lokale voorbereiding moet de gekozen PDF bewaren");
@@ -617,8 +651,8 @@ const customerTimesheetPng = new dom.window.File(["voorbeeldafbeelding"], "klant
 Object.defineProperty(document.querySelector("#customer-timesheet-file"), "files", { value: [customerTimesheetPng], configurable: true });
 document.querySelector("#customer-timesheet-file").dispatchEvent(new Event("change", { bubbles: true }));
 click("#customer-timesheet-save-draft");
-await new Promise(resolve => dom.window.setTimeout(resolve, 20));
-const convertedImageState = JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final")).records["2026-10"]["2"].customerTimesheet;
+await wachtTot(() => demoStaat().records["2026-10"]["2"].customerTimesheet.status === "draft", "PNG-klanturenstaat 2026-10 opgeslagen als concept");
+const convertedImageState = demoStaat().records["2026-10"]["2"].customerTimesheet;
 assert(convertedImageState.status === "draft" && convertedImageState.originalFileName === "klant_oktober.png", "Een PNG moet eerst als klanturenstaatconcept kunnen worden opgeslagen");
 assert(convertedImageState.fileName === "Klanturenstaat_Stasjo_van_Bakel_2026-10.pdf" && convertedImageState.fileData.startsWith("data:application/pdf"), "JPG en PNG moeten automatisch één gestandaardiseerde PDF opleveren");
 choosePeriod("#customer-timesheet-month", "#customer-timesheet-year", "2027-01");
@@ -853,7 +887,7 @@ const customerReminderState = JSON.parse(dom.window.localStorage.getItem("path-u
 assert(customerReminderState.notifications.length === notificationsBeforeCustomerReminder + 1 && customerReminderState.notifications.at(-1).title === "Klanturenstaat ontbreekt", "Backoffice moet vanuit de rustige maand een ontbrekende klanturenstaatherinnering kunnen klaarzetten");
 choosePeriod("#period-month-picker", "#period-year-picker", "2026-08");
 assert(document.querySelector("#customer-timesheet-admin-list").textContent.includes("Controle nodig"), "Een geüploade klanturenstaat moet voor Backoffice op Controle nodig staan");
-// Sinds Klanturenstaten een eigen scherm heeft (v2.0.39) bestaat dezelfde
+// Sinds Klanturenstaten een eigen scherm heeft (v2.0.40) bestaat dezelfde
 // data-review-customer-timesheet-knop twee keer: hier in de werkvoorraad
 // (#admin-task-panel, met workflow-vervolg via openAdminTask) en nogmaals in
 // #customer-timesheet-admin-list (losstaand, zonder taak-workflow). Scope
@@ -2102,7 +2136,7 @@ assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Pla
 }
 
 dom.window.close();
-console.log("Path v2.0.39 volledige smoke test: geslaagd");
+console.log("Path v2.0.40 volledige smoke test: geslaagd");
 // app.js schedules browser refresh timers. In JSDOM those timers can keep Node
 // alive after every assertion has completed, which made the release check look
 // stuck. End explicitly only after the complete smoke contract is green.

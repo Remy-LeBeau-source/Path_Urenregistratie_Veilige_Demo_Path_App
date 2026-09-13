@@ -2717,6 +2717,30 @@ draaiden ze meteen groen. De suites delen de database en poort 8010; een tweede 
 vervuilt de uitslag. Regel: één testrun tegelijk, en bij een onverwachte uitvaller eerst nagaan of
 er nog iets anders liep -- vóór je een defect noteert.
 
+**Twee races uit het gereedschap gehaald (13 sep 2026, main).** Allebei in `scripts/`, allebei
+naar aanleiding van iets concreets:
+- **`smoke-test.mjs` viel één keer om op "Een PDF moet eerst als concept bewaard kunnen worden".**
+  Drie runs ervoor en de run erna waren groen op exact dezelfde `app.js` -- er was op main sinds de
+  laatste app.js-commit niets aan dat bestand veranderd, dus dit was een race in de test. Oorzaak:
+  na het klikken op Concept opslaan stond `await new Promise(r => setTimeout(r, 20))`, en 20 ms is
+  te kort op een belaste machine. Alle drie zulke plekken vervangen door een `wachtTot()`-helper die
+  op de echte toestand wacht. **Dit maakt de test niet zachter:** de oorspronkelijke asserties
+  blijven ongewijzigd staan en blijven falen als de toestand verkeerd is; blijft de toestand
+  helemaal uit, dan loopt de helper af en faalt de smoke alsnog, met een duidelijkere melding.
+  Juist daarom kan deze wijziging geen vals groen opleveren -- het vangnet is de assertie, niet de
+  wachttijd.
+- **`docs:sync` maakte tientallen bestanden "gewijzigd" zonder inhoudelijke wijziging.** Het script
+  schreef altijd met LF terwijl de gegenereerde bestanden in de working tree CRLF zijn, dus de
+  eerste sync na een verse checkout herschreef élk feature- en stepsbestand. Dat is niet alleen
+  ruis: de herontwerp-sessie kreeg er een **stil mislukte `git merge`** door (git weigert te mergen
+  met ongecommitte wijzigingen) en pushte in de veronderstelling dat main was meegenomen, waarna de
+  merge-wachtrij op alle acht shards omviel. Het script schrijft nu alleen als de inhoud echt
+  verandert en bewaart daarbij de bestaande regeleindes. Gemeten: na het terugzetten van de
+  gegenereerde bestanden herschrijft een verse sync nog 4 bestanden (precies de bestanden die door
+  een nieuwe case veranderen) in plaats van ~70, en een tweede sync direct erna herschrijft er 0.
+  De sync meldt dat aantal nu ook in zijn slotregel.
+  **Les erachter:** ruis die je leert negeren, verbergt op een dag iets echts.
+
 **Een meting die niet kán falen is geen bewijs (13 sep 2026, main).** Bij het afdekken van het
 360px-gat schreef ik eerst een case die `documentElement.scrollWidth` tegen `clientWidth` zette --
 de voor de hand liggende overflow-controle. Als laatste stap liet ik de case bewust een element van
