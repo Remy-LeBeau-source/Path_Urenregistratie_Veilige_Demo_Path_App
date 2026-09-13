@@ -2007,6 +2007,25 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
 - [ ] Mobiele prioriteit: wat moet ik nu doen -> uren -> open acties -> klanturenstaat -> overig
 - [ ] Data mag nooit verloren gaan door rerender, schermrotatie, browser-back, modal sluiten,
   toetsenbord openen, thema-/designwissel
+- [x] **Live/visuele bevestiging van de vier hierboven (13 sep, main).** De vier items zijn op
+  13 sep van herontwerp aan main overgedragen (zie de werkverdeling op die tak, commit
+  `bdd49ec3`); de code-audit was daar al gedaan en concludeerde "geen wijziging nodig", met als
+  enige openstaande punt live/visuele bevestiging. Die is nu gedaan: medewerkerdashboard en
+  Mijn uren op telefoonbreedte (412px), in **alle vier de combinaties** Klassiek/Nieuw x
+  licht/donker, ingelogd als echte medewerker. Geen afgekapte tekst, geen horizontale overflow,
+  geen onleesbare combinatie. Twee dingen expliciet nagemeten in plaats van ingeschat, omdat ze
+  op de schermafdruk verdacht oogden:
+  - De zwevende hulpknop leek de weekkiezer te overlappen. **Gemeten** met `elementFromPoint`
+    over alle knoppen, invoervelden, selects en links: hij dekt **nul** bedienbare elementen af.
+    De indruk klopte niet.
+  - De statuspil "Nog invullen" leek in Klassiek+licht platte tekst zonder pil. **Gemeten:** het
+    is wel degelijk een pil (`border-radius: 999px`), alleen met een zeer lichte achtergrond
+    (`rgb(246,249,248)` op tekst `rgb(101,113,127)`; in Nieuw net zo). Consistent tussen de
+    skins en de contrastpoort is groen, dus geen defect -- als observatie doorgegeven aan de
+    vormgevingslane.
+  Meteen ook visuele bevestiging van twee fixes van deze nacht: de installatiebanner staat nu
+  boven de onderste navigatiebalk (die volledig zichtbaar blijft), en "Herstel demo" is op
+  tabletbreedte weer aanwezig.
 
 **17.2 Beheerderrol (checklist, sectie 3 van de opdracht -- grootste blok, meer info per scherm)**
 - [x] New-skin topnav: volgorde en groepering gelijkgetrokken met Klassiek-sidebar
@@ -2156,8 +2175,35 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   skin-onafhankelijk. Omgeving: raakt productie niet — `syncResetControlVisibility()` toont hem
   alleen op LOCAL/TEST, dus dit was een tester op een iPad in portret zonder Herstel demo.
   Bevestigd: `[A11Y-H-004]` en `[DASH-N-010]` waren rood op tablet en zijn nu groen.
-- [ ] iOS/Safari resterend: keyboard (toetsenbord dat een knop afdekt), uploads
-  (datumvelden vervallen: die bestaan niet, zie de Android-doorloop hieronder)
+- [x] **Uploads op iOS doorgelicht (13 sep): in orde, inclusief het HEIC-geval.** Een iPhone
+  maakt foto's standaard in HEIC, en dat formaat komt nergens in deze codebase voor. Dat is
+  hier geen gat maar het juiste gedrag, om twee redenen. (1) Kiest de gebruiker via de
+  **Fotobibliotheek**, dan zet iOS de HEIC zelf om naar JPEG, juist omdat `accept`
+  `image/jpeg` noemt — de gewone route werkt dus gewoon. (2) Kiest hij via **Bladeren** een
+  `.HEIC` uit Bestanden, dan komt het bestand ongemoeid binnen en valt het buiten
+  `customerTimesheetSourceType()`. Nagelopen wat de gebruiker dan ziet, en dat is precies goed:
+  een expliciete uitleg in het scherm ("Dit bestandstype is niet toegestaan. Kies een PDF, JPG
+  of PNG."), knoppen die uitgeschakeld blijven, en een toast als hij toch probeert in te
+  dienen. Geen stille fout, geen verdwenen bestand. Echte HEIC-ondersteuning zou een nieuwe
+  functie zijn, geen fix: browsers kunnen HEIC niet in een canvas decoderen en jsPDF evenmin,
+  dus dat vraagt een decoder aan server- of clientkant. Bewust niet gedaan. Verder in orde:
+  `accept` noemt zowel MIME-types als extensies (nodig omdat de ene bestandskiezer het ene en
+  de andere het andere honoreert), en de 2 MB-grens geeft een eigen, duidelijke melding.
+- [ ] **iOS-toetsenbord dat de knoppen afdekt — risico beschreven, bewust niet zelf gefixt.**
+  De dialoogopbouw is op zich juist: `.modal-actions` staat met `position: sticky; bottom: 0`
+  binnen het scrollgebied `.modal-scroll`, dus de knoppen plakken onderaan het zichtbare deel
+  en scrollen nooit weg (gedekt door `[MOB-H-023]` en `[A11Y-H-006]`). Het probleem zit een
+  laag dieper: `.modal` begrenst zich met `calc(100dvh - 40px)`, en **`dvh` reageert niet op
+  het toetsenbord** — die eenheid volgt de browserbalken, niet het toetsenbord. Op iOS blijft
+  de dialoog dus even hoog terwijl het zichtbare gebied krimpt, waardoor de onderrand met die
+  knoppen achter het toetsenbord kan vallen bij het invullen van een lang formulier.
+  **Waarom niet zelf aangepast:** een robuuste oplossing is geen CSS-regel maar gedrag — de
+  `visualViewport`-API uitlezen en de dialoog meeschalen — en dat raakt élke dialoog in de app.
+  `interactive-widget=resizes-content` in de viewport-meta helpt alleen Chrome/Android, niet
+  iOS Safari, en verandert app-breed het layoutgedrag. De opdracht is hier expliciet: bewijs
+  eerst dat het probleem bestaat en voer geen grotere wijziging automatisch uit. Ik kan dit
+  niet aantonen zonder een echt iOS-toestel. **Voor te leggen aan Gio:** is dit ooit gemeld
+  door een tester, en mag de dialoog met `visualViewport` gaan meeschalen?
 - [x] **Android/Chrome-doorloop gedaan (13 sep), grotendeels in orde.** Statisch nagelopen in
   `index.html` en `assets/app.js`. **Viewport:** `width=device-width, initial-scale=1,
   viewport-fit=cover` — correct, en belangrijk: géén `user-scalable=no` of `maximum-scale`, dus
@@ -2171,6 +2217,27 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   juist op Android nodig, waar de ene bestandskiezer alleen extensies en de andere alleen
   MIME-types honoreert. **Terugknop:** gedekt door `[DASH-H-022]` (beheerder) en `[DASH-H-023]`
   (medewerker), die met browser-terug/-vooruit door alle eigen schermen navigeren.
+- [x] **CORRECTIE op het punt hieronder (13 sep): het was wél een echte bug, en erger dan
+  "leeg veld".** Mijn conclusie "risico grotendeels weerlegd" was fout, en de reden is
+  leerzaam. Bij `type="number"` bepaalt de **UI-taal van de browser** wat een geldig
+  decimaalteken is — niet `navigator.language` en niet de taal van de pagina. Deze machine
+  draait op Nederlands, dus hier werd "8,5" netjes 8.5 en zag ik de case drie keer groen. In
+  CI (Engelstalig) viel hij om, op beide mobiele projecten, inclusief retry — gemeld door de
+  herontwerp-sessie. Gemeten met Chromium op een kaal veld: `--lang=nl-NL` geeft `"8.5"`,
+  `--lang=en-US` geeft **`"85"`**. Dus niet leeg, maar **85 uur op één dag**, stil en zonder
+  melding. Een Nederlander met een Engels ingestelde telefoon raakt dit. Let op voor volgende
+  keer: **Playwright's `locale`-optie helpt hier niet** — die zet alleen `navigator.language`
+  en Accept-Language, niet de UI-taal die `type="number"` gebruikt. Dat moet via een
+  opstartvlag (`--lang=`).
+  **Gefixt** met een `beforeinput`-handler in `assets/app.js` die een getypte komma in elk
+  `type="number"`-veld vervangt door een punt. Bewust géén overstap naar `type="text"`: dat
+  zou het numerieke toetsenbord, de stappen van 0,5 en min/max opofferen voor een randgeval.
+  Er gaat niets verloren wat nu wel werkt, want die komma wordt vandaag door de browser toch
+  al weggegooid. Dekt meteen ook de klassieke urentabel en `#summary-leave`/`#summary-sick`.
+  `[MOB-H-027]` dwingt nu zelf een Engelstalige browser af (eigen `chromium.launch` binnen die
+  ene case, zodat de rest van het bestand ongemoeid blijft), anders bewijst hij alleen iets
+  over de machine waarop hij toevallig draait. Discriminerend bevestigd: zonder de fix faalt
+  hij op "een dag kan nooit meer dan 24 uur hebben, veld bevat 85"; met de fix groen.
 - [x] **Android-komma in het urenveld getoetst (13 sep), risico grotendeels weerlegd.** De
   urenvelden zijn `type="number"` met `inputmode="decimal"`; een Nederlands Android-toetsenbord
   biedt daar een **komma** aan, en bij `type="number"` kan een komma in sommige browsers een

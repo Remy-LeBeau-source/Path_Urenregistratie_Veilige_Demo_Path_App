@@ -1507,12 +1507,55 @@ test('[SKIN-H-028] "Week terugzetten" overschrijft ook een dag die bewust op 0 i
 
   await test.step('And overschrijft na bevestiging ook de bewust-bevestigde 0-dag met het standaardpatroon', async () => {
     await page.locator('#modal-confirm').click();
-    await page.waitForTimeout(300);
-    const maandagNaTerugzetten = await page.evaluate((weekIndex: number) => {
-      // @ts-expect-error debug-only voor deze directe controle
-      return recordFor(currentEmployee().id).entries[weekIndex][0];
-    }, plek.weekIndex);
-    expect(maandagNaTerugzetten).toBe(plek.patroon);
+
+    // Hier stond een blinde waitForTimeout(300). Het terugzetten loopt via een
+    // hertekening en een opslagronde, en onder de belasting van een volledige
+    // suite haalt dat die 300 ms niet altijd -- dan leest de controle hieronder
+    // de oude waarde en valt de case om met "Expected 7.2, Received 9", terwijl
+    // er niets stuk is. Precies dezelfde oorzaak als bij SKIN-H-011 en
+    // SKIN-H-016, die om deze reden al zijn herschreven.
+    //
+    // expect.poll wacht op de uitkomst zelf in plaats van op de klok, en laat
+    // bij een échte fout zien wat er dan wél stond.
+    //
+    // Het standaardpatroon wordt hier opnieuw gelezen in plaats van de waarde
+    // van bovenaan de case te hergebruiken. Reden: die bovenste uitlezing
+    // gebeurt vóórdat de serversync binnen is en levert dan de lokale
+    // terugvalwaarde op -- 36 contracturen gelijk verdeeld over 5 dagen = 7,2.
+    // De echte waarde staat in de seed: migratie
+    // 038_demo_employee_day_hours_pattern.sql geeft Stasjo van Bakel 36 uur met
+    // vrijdag vrij, dus ma/di/wo/do 9 uur. Zodra de sync landt rekent de app
+    // met die 9 en klopt de vergelijking met 7,2 niet meer -- "Expected 7.2,
+    // Received 9", terwijl het terugzetten zelf gewoon goed werkte.
+    //
+    // Dat is dus deterministisch en geen timing: vijftien seconden pollen hielp
+    // niet. Los draaien slaagde alleen doordat de assertie daar nog vóór de
+    // sync landde. (Eerdere vermoedens die NIET kloppen, zodat niemand ze
+    // opnieuw najaagt: het is geen vervuiling door [SKIN-H-016] of
+    // [SKIN-H-023] -- die maken allebei hun eigen wegwerpmedewerker aan en
+    // raken de gedeelde demomedewerker niet aan.)
+    //
+    // Dit verzwakt de controle niet: waar het om gaat is dat "Week terugzetten"
+    // de bewust bevestigde 0 overschrijft mét het standaardpatroon. Bleef het
+    // terugzetten uit, dan stond er nog steeds 0 -- en 0 is hieronder expliciet
+    // uitgesloten.
+    await expect
+      .poll(
+        async () =>
+          page.evaluate((weekIndex: number) => {
+            // @ts-expect-error debug-only voor deze directe controle
+            const maandag = recordFor(currentEmployee().id).entries[weekIndex][0];
+            // @ts-expect-error debug-only voor deze directe controle
+            const patroon = standardHoursForDay(currentEmployee(), 0);
+            return patroon > 0 && maandag === patroon;
+          }, plek.weekIndex),
+        {
+          timeout: 15_000,
+          message:
+            'maandag hoort na "Week terugzetten" gelijk te zijn aan het actuele standaardpatroon, en niet op de bevestigde 0 te blijven staan',
+        }
+      )
+      .toBe(true);
   });
 });
 
