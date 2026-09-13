@@ -2021,8 +2021,17 @@ test('[MOB-H-030] op de kleinste gangbare telefoon (360px) scrollt geen enkel ho
         if (cs.visibility === 'hidden' || cs.display === 'none') continue;
         if (r.right <= breedte + 1) continue;
         if (inScroller(el)) continue;
+        // Mét de eigen tekst erbij, want een melding als "span.status-pill tot
+        // 367px" laat je op een scherm met tientallen pillen nog steeds zoeken.
+        // De tekst zegt meteen wélke het is.
         const naam = el.id ? '#' + el.id : el.tagName.toLowerCase() + '.' + String(el.className || '').split(' ')[0];
-        gevonden.push(`${naam} tot ${Math.round(r.right)}px (viewport ${breedte}px)`);
+        const eigenTekst = Array.from(el.childNodes)
+          .filter(node => node.nodeType === 3)
+          .map(node => String(node.textContent || '').trim())
+          .join(' ')
+          .replace(/\s+/g, ' ')
+          .slice(0, 40);
+        gevonden.push(`${naam}${eigenTekst ? ` "${eigenTekst}"` : ''} tot ${Math.round(r.right)}px (viewport ${breedte}px)`);
         if (gevonden.length >= 5) break;
       }
       return gevonden;
@@ -2058,11 +2067,18 @@ test('[MOB-H-030] op de kleinste gangbare telefoon (360px) scrollt geen enkel ho
       const proef = document.createElement('div');
       proef.id = 'overloop-proef';
       proef.style.cssText = 'width:2000px;height:8px;';
+      proef.textContent = 'PROEFTEKST';
       document.body.appendChild(proef);
     });
     const metOverloop = await page.evaluate(() => (window as unknown as { vindBuitenBeeld: () => string[] }).vindBuitenBeeld());
     expect(metOverloop.join(' | '), 'een bewust te breed element hoort door de meting gevonden te worden')
       .toContain('overloop-proef');
+    // En de melding moet bruikbaar zijn, niet alleen kloppen. Een uitslag als
+    // "span.status-pill tot 367px" laat je op een scherm met tientallen pillen
+    // nog steeds zoeken; met de eigen tekst erbij weet je meteen wélke. Dit
+    // bewaakt dat die tekst er ook echt in blijft staan.
+    expect(metOverloop.join(' | '), 'de melding hoort de tekst van het element te bevatten, anders is hij niet te herleiden')
+      .toContain('PROEFTEKST');
     await page.evaluate(() => document.querySelector('#overloop-proef')?.remove());
     const naOpruimen = await page.evaluate(() => (window as unknown as { vindBuitenBeeld: () => string[] }).vindBuitenBeeld());
     expect(naOpruimen, 'na het opruimen hoort er niets meer buiten beeld te liggen').toEqual([]);
