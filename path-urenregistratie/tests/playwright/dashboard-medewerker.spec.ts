@@ -1268,8 +1268,20 @@ test('[DASH-H-029] na het opnieuw indienen van een correctie komt de medewerker 
     await page.locator('#modal-confirm').click();
   });
 
-  await test.step('Then staat Mijn maanden open, zodat de nieuwe status zichtbaar is', async () => {
-    await expect(page.locator('#view-historie')).toHaveClass(/is-active/, { timeout: 15_000 });
-    await expect(page.locator('#view-timesheet')).not.toHaveClass(/is-active/);
+  await test.step('Then springt de app op telefoonbreedte naar Mijn maanden, en blijft hij daarbuiten staan', async () => {
+    // De regel komt uit het mobiele ontwerp en geldt daarom alleen onder 720px.
+    // Deze case toetst allebei de kanten van die afbakening: op een smal scherm
+    // moet er genavigeerd worden, op een breed scherm juist niet. Zonder die
+    // tweede helft zou een per ongeluk ongescopete versie ongemerkt doorglippen
+    // -- en die versie liet [DASH-N-010] omvallen, een case die over iets heel
+    // anders gaat (herstel van het laatst geopende scherm na F5).
+    const breedte = page.viewportSize()?.width ?? 0;
+    if (breedte <= 720) {
+      await expect(page.locator('#view-historie')).toHaveClass(/is-active/, { timeout: 15_000 });
+      await expect(page.locator('#view-timesheet')).not.toHaveClass(/is-active/);
+    } else {
+      await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/, { timeout: 15_000 });
+      await expect(page.locator('#view-historie')).not.toHaveClass(/is-active/);
+    }
   });
 });
