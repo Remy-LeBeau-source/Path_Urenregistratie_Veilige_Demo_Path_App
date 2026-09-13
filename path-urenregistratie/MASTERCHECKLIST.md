@@ -2357,6 +2357,27 @@ ons dan handmatig weer aanzetten. Concrete regels:
   hier zes uur stil door een `gh run watch` zonder terugval, zonder dat iemand het merkte.
 - Overleg tussen de sessies is geen werk. Een bericht sturen en dan de beurt beëindigen is precies
   het patroon dat Gio hierboven beschrijft; stuur het bericht en werk in diezelfde beurt door.
+
+**Versienummers: alleen `main` bumpt (13 sep 2026).** Aanleiding: de twee sessies kwamen twee keer
+op hetzelfde nummer uit met verschillende inhoud (2.0.7 en 2.0.21). De eerdere afspraak "fetch
+eerst, pak dan het volgende vrije nummer" lost dat niet op, want tussen fetch en push zit altijd
+ruimte en we bumpen binnen hetzelfde tijdvenster.
+
+Waarom main en niet herontwerp: het nummer stempelt een **uitrolbare build**, en alleen `main`
+rolt uit. `release-pipeline.yml` triggert op `branches: [main]`; `herontwerp` bereikt TEST en PROD
+uitsluitend via `pilot-merge-queue.yml`, die bij groene herontwerp-CI naar `main` mergt. Een eigen
+nummer op `herontwerp` beschrijft dus nooit iets dat ergens draait.
+
+Afspraak:
+- **`herontwerp` draait `version:set` niet meer** en erft het nummer bij elke merge vanuit main.
+  De poort `version:check` eist alleen consistentie over de 17 stempelplekken, geen bump per
+  commit, dus die blijft groen.
+- **`main` bumpt** -- ook ná een automatische merge vanuit de wachtrij. Dat laatste is nodig,
+  anders draait TEST hetzelfde nummer met andere inhoud zodra de wachtrij herontwerp binnenhaalt.
+  De main-sessie pakt die bump op in haar eerstvolgende commit en noteert in de boodschap wat er
+  vanuit herontwerp is meegekomen.
+- Herontwerp noteert in de commitboodschap onder welk mainnummer de wijziging landt, zodat Gio
+  zijn teamupdates ("gefixt in v2.0.x") kan blijven schrijven.
 =======
 **Werkverdeling gewijzigd op 13 sep 2026 (besluit Gio).** Vanaf nu een splitsing per onderwerp in
 plaats van per item:
