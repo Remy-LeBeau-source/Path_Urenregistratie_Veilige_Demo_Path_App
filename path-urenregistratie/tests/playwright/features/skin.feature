@@ -263,3 +263,12 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     And overleeft de waarde een modal die geopend en geannuleerd wordt
     And staat dezelfde dag na de designwissel ook in Klassiek op de ingevulde waarde
     And overleeft de waarde browser-back na wegnavigeren
+
+  @happy
+  Scenario: [SKIN-H-030] een lang e-mailadres duwt de statuspil niet buiten beeld op 360px
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given een beheerder op een 360px-telefoon bij Medewerkers
+    When de flow voor SKIN-H-030 wordt uitgevoerd
+    Then blijft de pil in Klassiek binnen de rechterrand
+    And ook in de nieuwe vormgeving

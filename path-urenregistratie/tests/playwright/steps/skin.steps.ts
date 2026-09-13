@@ -121,3 +121,7 @@ And("overleeft de waarde een themawissel via Voorkeuren");
 And("overleeft de waarde een modal die geopend en geannuleerd wordt");
 And("staat dezelfde dag na de designwissel ook in Klassiek op de ingevulde waarde");
 And("overleeft de waarde browser-back na wegnavigeren");
+Given("een beheerder op een 360px-telefoon bij Medewerkers");
+When("de flow voor SKIN-H-030 wordt uitgevoerd");
+Then("blijft de pil in Klassiek binnen de rechterrand");
+And("ook in de nieuwe vormgeving");
