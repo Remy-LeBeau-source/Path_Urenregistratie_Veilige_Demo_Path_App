@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 511 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 512 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 511 unieke case-ID's
+- Playwright executable cases: 512 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 512 unieke case-ID's
+- Totaal executable cases: 513 unieke case-ID's
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
 - Database steps mappings: 1
-- Uitvoeringen: 551
-- Niet-mobile projectuitvoeringen: 471
+- Uitvoeringen: 552
+- Niet-mobile projectuitvoeringen: 472
 - Mobile functionele cases: 40
 - Pixel 7 / Chromium-uitvoeringen: 40
 - iPhone 13 / WebKit-uitvoeringen: 40
 
-De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 511 Playwright-functionele cases in totaal 551 resultaten op: 471 + (40 x 2) = 551.
+De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 512 Playwright-functionele cases in totaal 552 resultaten op: 472 + (40 x 2) = 552.
 
 ## Documentatieketen
 
@@ -141,7 +141,7 @@ De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 511 Playwri
 
 - Feature: `tests/playwright/features/end-to-end-workflows.feature`
 - Source: `tests/playwright/business-workflows-*.spec.ts`
-- Cases: 25
+- Cases: 26
 
 - [E2E-H-018] iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF — Techniek: Equivalentieklassen · Assertions: 27
 - [E2E-N-020] een medewerker kan de Backoffice-keten niet uitvoeren en een weigering verandert niets — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 26
@@ -168,6 +168,7 @@ De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 511 Playwri
 - [E2E-H-029] de urenoverzicht-ontvangst- en goedkeuringsmail zijn nu ook aanpasbaar bij Instellingen — Techniek: Toestandsovergang · Assertions: 8
 - [E2E-N-021] een gedeactiveerd account met historie blijft veilig bewaard en legt de blokkeerreden uit — Techniek: Toestandsovergang · Assertions: 20
 - [E2E-H-017] de volledige toegestane urenstatusketen bewaakt na iedere write status, eigenaar en taak — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 18
+- [E2E-H-030] dezelfde urenstaat toont de medewerker en Backoffice hetzelfde statuswoord — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 
 ### Klanturenstaten en documentverwerking
 

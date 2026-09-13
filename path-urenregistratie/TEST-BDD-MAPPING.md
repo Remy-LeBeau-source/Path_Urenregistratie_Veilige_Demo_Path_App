@@ -116,6 +116,7 @@
 | E2E-H-029 | integration | end-to-end-workflows.feature | de urenoverzicht-ontvangst- en goedkeuringsmail zijn nu ook aanpasbaar bij Instellingen | Toestandsovergang | 8 | end-to-end-workflows.steps.ts | business-workflows-*.spec.ts | DB / Integratie | Bedrijfsketens | de urenoverzicht-ontvangst- en goedkeuringsmail zijn nu ook aanpasbaar bij Instellingen | Happy | 16 | Actueel |
 | E2E-N-021 | integration | end-to-end-workflows.feature | een gedeactiveerd account met historie blijft veilig bewaard en legt de blokkeerreden uit | Toestandsovergang | 20 | end-to-end-workflows.steps.ts | business-workflows-*.spec.ts | DB / Integratie | Bedrijfsketens | een gedeactiveerd account met historie blijft veilig bewaard en legt de blokkeerreden uit | Negative | 16 | Actueel |
 | E2E-H-017 | integration | end-to-end-workflows.feature | de volledige toegestane urenstatusketen bewaakt na iedere write status, eigenaar en taak | Beslissingstabel rollen en autorisatie | 18 | end-to-end-workflows.steps.ts | business-workflows-*.spec.ts | DB / Integratie | Bedrijfsketens | de volledige toegestane urenstatusketen bewaakt na iedere write status, eigenaar en taak | Happy | 16 | Actueel |
+| E2E-H-030 | integration | end-to-end-workflows.feature | dezelfde urenstaat toont de medewerker en Backoffice hetzelfde statuswoord | Beslissingstabel rollen en autorisatie | 8 | end-to-end-workflows.steps.ts | business-workflows-*.spec.ts | DB / Integratie | Bedrijfsketens | dezelfde urenstaat toont de medewerker en Backoffice hetzelfde statuswoord | Happy | 16 | Actueel |
 | CTS-API-H-012 | api | customer-timesheets.feature | admin kan een ontbrekende klanturenstaat extern bevestigen en terugzetten | Beslissingstabel rollen en autorisatie | 15 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Happy | 10 | Actueel |
 | CTS-API-H-009 | api | customer-timesheets.feature | brokerroute koppelt de officiële klanturenstaat aan dezelfde medewerker en periode | Beslissingstabel rollen en autorisatie | 12 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Happy | 10 | Actueel |
 | CTS-API-H-001 | api | customer-timesheets.feature | employee uploadt klanturenstaat, dient in en downloadt; admin kan goedkeuren en resubmit vragen | Beslissingstabel rollen en autorisatie | 28 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Happy | 10 | Actueel |
@@ -533,9 +534,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 511
+- Playwright executable cases: 512
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 512
+- Totaal unieke executable cases: 513
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30

@@ -122,3 +122,6 @@ When("de medewerker zijn uren indient");
 Then("staat de urenstaat op ingediend en is Backoffice eigenaar");
 And("weigert de server iedere wijziging door de medewerker");
 And("keurt Backoffice goed, waarna de medewerker nog steeds niets kan wijzigen");
+Given("Backoffice de teamtabel open heeft met de status van een medewerker");
+When("de flow voor E2E-H-030 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat dezelfde urenstaat toont de medewerker en Backoffice hetzelfde statuswoord");

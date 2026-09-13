@@ -2150,14 +2150,37 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
     groen.
   - **Testopzetles, bewaard omdat hij geld kost:** deze assertie stond eerst als extra stap
     middenin `[CTS-API-H-001]`. Daarmee ging de suite van 18/18 groen naar wisselend één uitvaller
-    (eerst `CTS-API-H-006`/`H-016`, daarna `H-013`) -- allemaal cases die los gewoon slagen. Eerst
-    vergeleken met een baseline zónder de wijziging, want "het zal wel flaky zijn" was hier
-    aantoonbaar fout: het extra request verschuift de timing van die lange flow. Als losstaande
-    case raakt hij niemands volgorde en is de suite weer 19/19. Er is ook bewust géén opbouw nodig:
-    de `review_note`-controle draait vóór élke toestandsovergangscontrole, dus de 400 komt
-    aantoonbaar uit de lege toelichting en de case schrijft niets weg.
+    (eerst `CTS-API-H-006`/`H-016`, daarna `H-013`) -- allemaal cases die los gewoon slagen, en
+    allemaal cases die ná H-001 draaien, dus de volgorde maakt een effect van mijn stap mogelijk.
+    Als losstaande case raakt hij niemands volgorde en is de suite 19/19.
+    **Eerlijk over de oorzaak:** dát het verschil er was is gemeten (met een baseline zónder de
+    wijziging); *waarom* is niet bewezen. Een verschuiving in de timing van die lange flow is
+    aannemelijk, maar later diezelfde dag viel in `business-workflows-status.spec.ts` een case om
+    die aantoonbaar niets met de wijziging te maken had (`E2E-H-017` draaide als eerste, vóór de
+    nieuwe case, en was bij herhaling gewoon groen). Deze suites kennen dus ook losstaande
+    flakiness. De conclusie "zet zo'n negatieve assertie losstaand neer" blijft staan -- die is
+    sowieso beter van opzet -- maar de timingverklaring is een vermoeden, geen meting.
+    Er is ook bewust géén opbouw nodig: de `review_note`-controle draait vóór élke
+    toestandsovergangscontrole, dus de 400 komt aantoonbaar uit de lege toelichting en de case
+    schrijft niets weg.
 - [ ] Medewerkersbeheer (stamgegevens), mededelingen beheren + doelgroepen, instellingen +
-  mailinstellingen, notificaties, administratieve statussen
+  mailinstellingen, notificaties, administratieve statussen. **Dekking in kaart gebracht 13 sep.**
+  - [x] *Medewerkersbeheer / stamgegevens:* `user-management.spec.ts` (11 cases: lijst,
+    (de)activeren, force_password_change, 401/403, jezelf niet deactiveren, dubbel deactiveren 409,
+    definitief verwijderen mét en zónder zakelijke historie, resetlink vanuit Teambeheer) plus
+    `admin-writes.spec.ts` voor `upsert_employee` (aanmaken/wijzigen, dubbel e-mailadres geweigerd
+    mét zichtbare melding i.p.v. stil falen, latere startdatum met bevestiging en echte historische
+    impact van de server).
+  - [x] *Instellingen + mailinstellingen:* `admin-writes.spec.ts` (company/settings server-led
+    opslaan, eigen tekst per ontvanger, onderwerp/begeleidende tekst per opdracht), aangevuld door
+    `business-workflows-mail.spec.ts`, `email-queue.spec.ts` en `invoice-company-identity.spec.ts`.
+  - [x] *Notificaties:* `notifications.spec.ts`, 11 cases (ophalen, mark_read/mark_all_read,
+    unread-filter, limietgrens, 401, onbekende actie 400, tellers die gelijk teruglopen, en een
+    oudere response die een gewiste teller niet mag herstellen).
+  - [ ] *Mededelingen beheren + doelgroepen:* **hier zit de P0 hierboven.** De doelgroepkeuze wordt
+    client-side bepaald en stuurt de verkeerde id-soort mee; dat deel blijft open tot die fix er is.
+  - [ ] *Administratieve statussen:* deels geraakt via 17.3 (`[E2E-H-030]`, zie daar); de
+    factuur-/payrollstatussen nog apart doorlopen.
 - [x] Mobiel: nooit desktoptabellen simpelweg verkleinen -- responsive tables/cards/detailweergave/
   inklapbaar, maar geen informatie of beheeractie laten verdwijnen. **Doorgemeten 13 sep, geen
   wijziging nodig.** Per beheerscherm (Dashboard, Goedkeuringen, Facturen, Medewerkers,
@@ -2213,6 +2236,20 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
 - [ ] Concept -> Gereed -> Ingediend -> Goedgekeurd -> Verzonden (+ Teruggestuurd, Correctie,
   Klanturenstaat (opnieuw) uploaden) betekent voor Medewerker en Beheerder hetzelfde na elke
   responsive wijziging
+  - [x] **Statuswoorden zijn aan beide kanten gelijk** -- `[E2E-H-030]`, v2.0.33. Geen wijziging
+    nodig: het klopt vandaag door de opzet. Er is één gedeelde `statusLabels`-map en één
+    `timesheetStatusInfo()` die beide kanten voedt -- de medewerkerpil `#timesheet-status` op Mijn
+    uren (`app.js` ~8751) en de cel "Urenstatus" in de teamtabel van Backoffice (~7383). De case
+    leest die twee uit twee losse sessies (beheerder, daarna de medewerker zelf) en eist dat ze
+    identiek zijn. **Ook bewust geëist dat het woord uit het bekende vocabulaire komt**, want
+    anders zou "beide kanten tonen niets" ook als "gelijk" tellen.
+    *Eerlijk over de bewijskracht:* de discriminatie is structureel (gaan de vocabulaires uit
+    elkaar lopen, dan verschillen de strings) plus die vocabulairecontrole. Een harde
+    discriminerende proef door één kant tijdelijk te veranderen is niet gedaan -- dat zit in
+    `assets/app.js`, dat op dit moment bij de vormgevingslane in beheer is.
+    Eén nuance die geen fout is: in de maandbatch van Backoffice heet `draft` bewust "Nog niet
+    ingediend" waar de medewerker "Nog invullen" ziet (~7623) -- dezelfde toestand, vanuit elk
+    perspectief benoemd. Suite groen (2 cases).
 - [ ] **BEVINDING 13 sep, bewezen, wacht op go van Gio -- "Mededeling intrekken" doet in de echte
   app niet wat de app zelf belooft.** Gevonden bij het uitzoeken van het openstaande 17.1-punt over
   de `withdrawn`-tak in `renderEmployeeAnnouncementArchive`. Geen wijziging doorgevoerd: de fix zit
