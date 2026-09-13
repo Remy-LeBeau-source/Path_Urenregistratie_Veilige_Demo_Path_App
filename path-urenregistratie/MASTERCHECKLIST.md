@@ -2121,6 +2121,23 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
 > **Voorstel aan Gio:** dit met voorrang fixen, mét een regressie die de UI-keuze end-to-end
 > volgt (kies medewerker X -> server bewaart de `users.id` van X) in plaats van de POST na te
 > bouwen, want juist dat verschil liet deze fout al die tijd door.
+>
+> **Nagetrokken: is dit de enige plek? Ja voor de user-id-kant, maar er is een latent broertje.**
+> De hele client stuurt maar op twee plekken een user-id naar de server: `recipient_user_ids`
+> (regel ~8263, de fout hierboven) en `{ action, user_id: dbUserId }` bij gebruikersbeheer
+> (~12512), en die tweede gebruikt netjes `dbUserId`. Verder geen instanties.
+> **Wel gevonden, en geen fout van vandaag:** `localEmployee.id` wordt bij het hydrateren nooit op
+> de database-id gezet (~3134-3160) -- de statische catalogusrij houdt zijn eigen id, en de echte
+> `employees.id` komt er als `dbEmployeeId` naast te staan. De urenstaat-payloads sturen
+> `employee_id: Number(employee.id)` (~2003) en de beheerdersacties goedkeuren/correctie-vragen
+> sturen `employeeId: id` uit de knop (~10962, ~11123) -- allemaal die catalogus-id. Dat werkt
+> vandaag omdat de twee toevallig samenvallen: gemeten zijn de client-id's 1/2/3/4 en de
+> `employees.id` in de database ook 1/2/3/4. Zou dat ooit uiteenlopen (een bedrijf waarvan de
+> employees-rijen niet bij 1 beginnen, of na een verwijdering), dan keurt een beheerder de uren
+> van de verkeerde medewerker goed. **Bewust geen wijziging:** er is vandaag geen aantoonbaar
+> probleem, en de opdracht is daar duidelijk over. Maar het ligt pal naast de fix die de
+> vormgevingslane nu maakt, dus daar gemeld -- `dbEmployeeId` gebruiken waar een `employees.id`
+> bedoeld is, is dezelfde beweging als `dbUserId` gebruiken waar een `users.id` bedoeld is.
 - [x] New-skin topnav: volgorde en groepering gelijkgetrokken met Klassiek-sidebar
   (Cockpit/Goedkeuringen/Facturen | Medewerkers/Mededelingen/Instellingen) -- **opnieuw op te
   bouwen bovenop v1.2.4** na het herstellen van deze checkout; vorige poging was ongetest/oud.
