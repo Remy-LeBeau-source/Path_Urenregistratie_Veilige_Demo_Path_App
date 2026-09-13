@@ -2781,6 +2781,11 @@ allebei gemeten, niet beredeneerd:
    gate't `dashboard.php` bewust en injecteert een stale state -- dus de zoektocht hoort in wat er
    nu eerder rendert, niet in de taaktelling.
 
+*Opruimen niet vergeten:* voor deze bisect staat er een losse worktree op `C:\Path-premerge-check`
+(detached op 68eb2272, met eigen `node_modules`, database `path_urenregistratie_premerge_test` en
+poort 8020). Bewust blijven staan zolang dit onderzoek loopt, zodat een vervolgmeting geen nieuwe
+`npm ci` kost. Weghalen met `git worktree remove` zodra `[DASH-N-007]` weer groen is.
+
 **Latent risico, los van bovenstaande: `customerTimesheetFor()` heet als een getter maar schrijft.**
 Regel ~4494: hij maakt `record.customerTimesheet` aan als die ontbreekt en vult standaardwaarden,
 met `status: "missing"` (`blankCustomerTimesheet`, ~228). En `missing` levert in `adminOpenTasks()`
