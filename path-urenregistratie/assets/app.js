@@ -5480,6 +5480,40 @@ function focusEersteLegeBentoDag(record, period, weekIndex) {
   if (input) input.focus();
 }
 
+// Vult de drie onderdelen die de mobiele referentie boven de kop zet: een
+// statuspil ("jij bent aan zet" / "bij de Backoffice"), het maandtotaal als
+// groot getal, en de contractregel eronder. De referentie toont die alleen op
+// telefoonformaat; de elementen staan altijd in de DOM en worden door CSS
+// getoond of verborgen, zodat er geen tweede renderpad ontstaat dat op desktop
+// iets anders doet.
+function vulMobieleHerokop(record, employee, period, needsHours, needsCustomerTimesheet) {
+  const oog = document.querySelector("#new-bento-oog");
+  const oogLabel = document.querySelector("#new-bento-oog-label");
+  const maandtotaal = document.querySelector("#new-bento-maandtotaal");
+  const maanduren = document.querySelector("#new-bento-maanduren");
+  const contractregel = document.querySelector("#new-bento-contractregel");
+  if (!oog || !oogLabel || !maandtotaal || !maanduren || !contractregel) return;
+
+  const aanZet = needsHours || needsCustomerTimesheet;
+  oog.dataset.stand = aanZet ? "jij" : "backoffice";
+  oogLabel.textContent = aanZet ? "Jij bent aan zet" : "Bij de Backoffice";
+  oog.hidden = false;
+
+  // Het getal is het maandtotaal inclusief verlof en ziekte, dezelfde optelling
+  // als #hours-total en de voortgangskaart gebruiken -- niet een eigen som, want
+  // twee verschillende maandtotalen op hetzelfde scherm is precies de verwarring
+  // die de voortgangskaart in v1.0.67 al opleverde.
+  const totaal = totalEntries(record.entries) + Number(record.leave || 0) + Number(record.sick || 0);
+  maanduren.textContent = hoursFormat.format(totaal);
+  maandtotaal.hidden = false;
+
+  const totaalWeken = period.weekRows.length;
+  const gevuldeWeken = completedTimesheetWeeks(record, period);
+  contractregel.textContent = "van " + hoursFormat.format(record.contractHours) + " uur contract · "
+    + gevuldeWeken + " van " + totaalWeken + " " + (totaalWeken === 1 ? "week" : "weken") + " ingevuld";
+  contractregel.hidden = false;
+}
+
 function renderNewEmployeeBento(record, employee, period) {
   const bento = document.querySelector("#new-employee-bento");
   if (!bento) return;
@@ -5510,6 +5544,10 @@ function renderNewEmployeeBento(record, employee, period) {
     }
   }
   document.querySelector("#new-bento-period-label").textContent = period.label;
+  // Statuspil, maandtotaal en contractregel uit de mobiele referentie
+  // (handoff/medewerker-wild.html). De teksten volgen de bestaande statussen
+  // van de app, zodat er geen tweede waarheid over "waar sta ik" ontstaat.
+  vulMobieleHerokop(record, employee, period, needsHours, needsCustomerTimesheet);
   document.querySelector("#new-bento-week-title").textContent = "Week " + week.number;
   const actualDays = week.days.filter(Boolean);
   document.querySelector("#new-bento-week-range").textContent = actualDays.length

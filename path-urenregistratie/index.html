@@ -19,13 +19,13 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <title>Uren & Facturatie</title>
-  <link rel="stylesheet" href="assets/styles.css?v=2.0.20">
+  <link rel="stylesheet" href="assets/styles.css?v=2.0.21">
   <!-- Met versieparameter, net als styles.css hierboven. Zonder die parameter
        houdt de browser (en een geïnstalleerde app helemaal) de oude New-skin
        vast na een release: de versiebadge springt vooruit en Klassiek
        vernieuwt, terwijl de hele Nieuw-vormgeving op de vorige versie blijft
        staan. Gemeld als "ik zie geen verschil in de nieuwe versie". -->
-  <link rel="stylesheet" href="assets/styles-new.css?v=2.0.20">
+  <link rel="stylesheet" href="assets/styles-new.css?v=2.0.21">
 </head>
 <body class="auth-booting">
   <section class="login-screen" id="login-screen" aria-labelledby="login-title">
@@ -103,7 +103,7 @@
       </form>
       <p class="login-note" id="auth-mode-indicator">Controle van auth-sessie wordt uitgevoerd.</p>
       <p class="login-note" id="local-login-note">De standaardgegevens gebruiken veilige voorbeeldadressen. Je mag zelf echte gegevens invoeren; deze lokale versie bewaart ze alleen in deze browser en e-mailverzending is uitgeschakeld.</p>
-      <footer class="login-footer"><span>© 2026 Path Consultancy IT · Ontwikkeld en beheerd door Team Path.</span><span>Versie 2.0.20</span></footer>
+      <footer class="login-footer"><span>© 2026 Path Consultancy IT · Ontwikkeld en beheerd door Team Path.</span><span>Versie 2.0.21</span></footer>
     </div>
   </section>
 
@@ -183,7 +183,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 2.0.20</span>
+      <span class="demo-badge">Versie 2.0.21</span>
       </div>
     </aside>
 
@@ -199,7 +199,7 @@
         <div class="topbar-title">
           <p class="eyebrow" id="organization-name">Path Consultancy</p>
           <h1 id="page-title">Urenoverzicht</h1>
-          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 2.0.20</span><span class="environment-badge" id="environment-badge" hidden></span></span>
+          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 2.0.21</span><span class="environment-badge" id="environment-badge" hidden></span></span>
         </div>
         <div class="topbar-actions">
           <!-- Zelfde knip als de Klassieke zijbalk (Werkvoorraad/Organisatie, zie de
@@ -273,6 +273,16 @@
             <div class="new-bento-hero-copy">
               <span class="new-bento-greeting" id="new-bento-greeting">Goedemiddag</span>
               <span class="section-label" id="new-bento-period-label">Deze maand</span>
+              <!-- Statuspil, urengetal en contractregel komen uit de mobiele
+                   referentie (handoff/medewerker-wild.html). Ze staan hier
+                   altijd in de DOM maar zijn alleen zichtbaar in de New-skin op
+                   telefoonbreedte; op desktop en in Klassiek blijft het scherm
+                   ongewijzigd tot de aparte GUI-opdracht. -->
+              <span class="new-bento-oog" id="new-bento-oog" hidden><span class="new-bento-oog-stip" aria-hidden="true"></span><span id="new-bento-oog-label"></span></span>
+              <div class="new-bento-maandtotaal" id="new-bento-maandtotaal" hidden>
+                <strong id="new-bento-maanduren">0,00</strong><span class="new-bento-maandtotaal-eenheid">uur</span>
+              </div>
+              <small class="new-bento-contractregel" id="new-bento-contractregel" hidden></small>
               <h2 id="new-bento-hero-title">Begin met<br>je uren</h2>
               <p id="new-bento-hero-copy">Registreer je uren voor deze week. Je wijzigingen worden veilig als concept bewaard.</p>
             </div>
@@ -533,7 +543,7 @@
           <button class="text-button" data-go="customer-timesheet-admin">Bekijk klanturenstaten &rarr;</button>
         </section>
 
-        <!-- Ingang naar de procesmeter, die sinds v2.0.20 op een eigen scherm
+        <!-- Ingang naar de procesmeter, die sinds v2.0.21 op een eigen scherm
              staat. Het percentage blijft hier zichtbaar, zodat je de stand nog
              steeds in één blik hebt zonder het hele paneel op het Dashboard. -->
         <section class="panel workflow-teaser" id="workflow-teaser">
@@ -1064,7 +1074,7 @@
       <footer class="app-footer" aria-label="Applicatie-informatie">
         <span>© 2026 Path Consultancy IT</span>
         <span>Ontwikkeld en beheerd door Team Path.</span>
-        <span class="app-footer-version">Versie 2.0.20</span>
+        <span class="app-footer-version">Versie 2.0.21</span>
       </footer>
     </main>
   </div>
@@ -1124,7 +1134,7 @@
   </div>
   <script vite-ignore defer src="assets/jspdf.umd.min.js"></script>
   <script vite-ignore defer src="assets/invoice-fonts.js"></script>
-  <script vite-ignore defer src="assets/app.js?v=2.0.20"></script>
-  <script vite-ignore defer src="assets/pwa-install.js?v=2.0.20"></script>
+  <script vite-ignore defer src="assets/app.js?v=2.0.21"></script>
+  <script vite-ignore defer src="assets/pwa-install.js?v=2.0.21"></script>
 </body>
 </html>
