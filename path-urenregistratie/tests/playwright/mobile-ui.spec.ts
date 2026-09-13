@@ -1947,3 +1947,119 @@ test('[MOB-H-027] een uur met een komma getypt komt aan als 8,5 en niet als leeg
     await browser.close();
   }
 });
+
+test('[MOB-H-030] op de kleinste gangbare telefoon (360px) scrollt geen enkel hoofdscherm horizontaal', async ({ page }) => {
+  // Fase 17-audit, P1-punt 3: er draaide geen enkel project op 360px, de
+  // kleinste breedte die je bij Android nog echt tegenkomt. De bestaande
+  // mobiele projecten zitten op 412px (Pixel 7) en 390px (iPhone 13).
+  //
+  // Bewust één gerichte case en geen vijfde project. Dezelfde afweging als bij
+  // `tablet-chromium` in playwright.config.ts: een extra project draait dezelfde
+  // functionele cases nóg een keer in nóg een viewport, terwijl het risico op
+  // 360px puur layout is. Deze case dekt dat risico op elk hoofdscherm, in
+  // beide vormgevingen, en kost één testcase.
+  //
+  // Waarom deze case NIET `documentElement.scrollWidth` vergelijkt, al lag dat
+  // voor de hand. `assets/styles.css` zet onder `@media (max-width: 720px)`
+  // `html, body { overflow-x: hidden }`. Op elke telefoonbreedte is die meting
+  // daardoor per definitie 0 -- de pagina scrollt niet zijwaarts, hij KLIPT.
+  // Een test op basis daarvan is vals groen: hij kan niet falen. Dat is hier
+  // gemeten en niet beredeneerd: een bewust ingevoegd element van 2000px breed
+  // liet de paginameting onbewogen.
+  //
+  // Wat wél telt is of er inhoud búiten de rechterrand ligt: geklipt betekent
+  // voor de gebruiker onzichtbaar. Daarom wordt per zichtbaar element gekeken
+  // of de rechterrand voorbij de viewport valt. Elementen binnen een bewust
+  // horizontaal scrollbare container (`.table-wrap`, `.segmented-control` --
+  // `overflow-x: auto`) tellen niet mee: die zijn bereikbaar door te vegen, en
+  // dat is een ontwerpkeuze, geen verlies.
+  //
+  // Ook niet gebruikt: `scrollWidth > clientWidth` per element. Dat telt
+  // padding mee en meldde op 13 sep negen "overlopende" koppen in Instellingen
+  // die alle negen vals alarm waren.
+  const loginPage = new LoginPage(page);
+  await page.setViewportSize({ width: 360, height: 740 });
+
+  const metenOpScherm = async (scherm: string, label: string) => {
+    // Navigeren via de hash in plaats van via een navigatieknop. Reden: Klassiek
+    // en Nieuw hebben op telefoonbreedte verschillende navigatie-chrome -- in
+    // Nieuw is er op 360px geen enkele zichtbare `button[data-view]`, want die
+    // skin heeft zijn eigen balk. Deze case gaat over layout-overloop per
+    // scherm, niet over hoe je er komt; de hash brengt je in beide skins naar
+    // hetzelfde scherm en houdt de meting onafhankelijk van de navigatie.
+    await page.evaluate(view => { window.location.hash = view; }, scherm);
+    await expect(page.locator(`#view-${scherm}`)).toHaveClass(/is-active/);
+    await page.waitForTimeout(600);
+    const buitenBeeld = await page.evaluate(() => (window as unknown as { vindBuitenBeeld: () => string[] }).vindBuitenBeeld());
+    expect(buitenBeeld, `${label}: deze inhoud valt op 360px buiten de rechterrand en is dus onbereikbaar -- ${JSON.stringify(buitenBeeld)}`)
+      .toEqual([]);
+  };
+
+  // Eén keer in de pagina gezet; door beide skins heen hergebruikt.
+  await page.addInitScript(() => {
+    (window as unknown as { vindBuitenBeeld: () => string[] }).vindBuitenBeeld = () => {
+      const breedte = window.innerWidth;
+      const inScroller = (el: Element) => {
+        let ouder = el.parentElement;
+        while (ouder && ouder !== document.body) {
+          const ox = getComputedStyle(ouder).overflowX;
+          if (ox === 'auto' || ox === 'scroll') return true;
+          ouder = ouder.parentElement;
+        }
+        return false;
+      };
+      const gevonden: string[] = [];
+      for (const el of Array.from(document.body.querySelectorAll<HTMLElement>('*'))) {
+        const r = el.getBoundingClientRect();
+        if (r.width < 1 || r.height < 1) continue;
+        const cs = getComputedStyle(el);
+        if (cs.visibility === 'hidden' || cs.display === 'none') continue;
+        if (r.right <= breedte + 1) continue;
+        if (inScroller(el)) continue;
+        const naam = el.id ? '#' + el.id : el.tagName.toLowerCase() + '.' + String(el.className || '').split(' ')[0];
+        gevonden.push(`${naam} tot ${Math.round(r.right)}px (viewport ${breedte}px)`);
+        if (gevonden.length >= 5) break;
+      }
+      return gevonden;
+    };
+  });
+
+  await test.step('Given een beheerder op een 360px-telefoon', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
+  });
+
+  await test.step('Then scrollt geen enkel beheerscherm horizontaal in Klassiek', async () => {
+    for (const scherm of ['dashboard', 'approvals', 'invoices', 'employees', 'announcements', 'settings']) {
+      await metenOpScherm(scherm, `Klassiek/${scherm}`);
+    }
+  });
+
+  await test.step('And ook niet in de nieuwe vormgeving', async () => {
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    for (const scherm of ['dashboard', 'approvals', 'invoices', 'employees', 'announcements', 'settings']) {
+      await metenOpScherm(scherm, `Nieuw/${scherm}`);
+    }
+  });
+
+  await test.step('And de meting zou echte overloop wél zien', async () => {
+    // Zonder deze stap is "geen overloop gevonden" niet te onderscheiden van
+    // "de meting kijkt naar het verkeerde". Hier wordt bewust één te breed
+    // element in de pagina gezet; de pagina hoort dan aantoonbaar zijwaarts te
+    // scrollen. Daarna weer weg, zodat de case niets achterlaat.
+    await page.evaluate(() => {
+      const proef = document.createElement('div');
+      proef.id = 'overloop-proef';
+      proef.style.cssText = 'width:2000px;height:8px;';
+      document.body.appendChild(proef);
+    });
+    const metOverloop = await page.evaluate(() => (window as unknown as { vindBuitenBeeld: () => string[] }).vindBuitenBeeld());
+    expect(metOverloop.join(' | '), 'een bewust te breed element hoort door de meting gevonden te worden')
+      .toContain('overloop-proef');
+    await page.evaluate(() => document.querySelector('#overloop-proef')?.remove());
+    const naOpruimen = await page.evaluate(() => (window as unknown as { vindBuitenBeeld: () => string[] }).vindBuitenBeeld());
+    expect(naOpruimen, 'na het opruimen hoort er niets meer buiten beeld te liggen').toEqual([]);
+  });
+});

@@ -2121,6 +2121,23 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
 > **Voorstel aan Gio:** dit met voorrang fixen, mét een regressie die de UI-keuze end-to-end
 > volgt (kies medewerker X -> server bewaart de `users.id` van X) in plaats van de POST na te
 > bouwen, want juist dat verschil liet deze fout al die tijd door.
+>
+> **Nagetrokken: is dit de enige plek? Ja voor de user-id-kant, maar er is een latent broertje.**
+> De hele client stuurt maar op twee plekken een user-id naar de server: `recipient_user_ids`
+> (regel ~8263, de fout hierboven) en `{ action, user_id: dbUserId }` bij gebruikersbeheer
+> (~12512), en die tweede gebruikt netjes `dbUserId`. Verder geen instanties.
+> **Wel gevonden, en geen fout van vandaag:** `localEmployee.id` wordt bij het hydrateren nooit op
+> de database-id gezet (~3134-3160) -- de statische catalogusrij houdt zijn eigen id, en de echte
+> `employees.id` komt er als `dbEmployeeId` naast te staan. De urenstaat-payloads sturen
+> `employee_id: Number(employee.id)` (~2003) en de beheerdersacties goedkeuren/correctie-vragen
+> sturen `employeeId: id` uit de knop (~10962, ~11123) -- allemaal die catalogus-id. Dat werkt
+> vandaag omdat de twee toevallig samenvallen: gemeten zijn de client-id's 1/2/3/4 en de
+> `employees.id` in de database ook 1/2/3/4. Zou dat ooit uiteenlopen (een bedrijf waarvan de
+> employees-rijen niet bij 1 beginnen, of na een verwijdering), dan keurt een beheerder de uren
+> van de verkeerde medewerker goed. **Bewust geen wijziging:** er is vandaag geen aantoonbaar
+> probleem, en de opdracht is daar duidelijk over. Maar het ligt pal naast de fix die de
+> vormgevingslane nu maakt, dus daar gemeld -- `dbEmployeeId` gebruiken waar een `employees.id`
+> bedoeld is, is dezelfde beweging als `dbUserId` gebruiken waar een `users.id` bedoeld is.
 - [x] New-skin topnav: volgorde en groepering gelijkgetrokken met Klassiek-sidebar
   (Cockpit/Goedkeuringen/Facturen | Medewerkers/Mededelingen/Instellingen) -- **opnieuw op te
   bouwen bovenop v1.2.4** na het herstellen van deze checkout; vorige poging was ongetest/oud.
@@ -2594,6 +2611,16 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   risico sterk in (de invoer wordt niet verworpen en niet verminkt) maar sluit afwijkend gedrag
   op een echt Nederlands Android-toestel niet 100% uit; dat vraagt een test op een fysiek
   toestel. Rol: Medewerker. Design: skin-onafhankelijk (`.hours-input` bestaat in beide).
+- [x] **360px-dekkingsgat gedicht** -- `[MOB-H-030]`, v2.0.39. De bestaande projecten draaien op
+  412px (Pixel 7), 390px (iPhone 13), 768px (tablet) en desktop; 360px -- de kleinste breedte die
+  je bij Android nog echt tegenkomt -- was nergens gedekt. Bewust **één gerichte case en geen vijfde
+  project**, met dezelfde afweging als bij `tablet-chromium`: een extra project draait dezelfde
+  functionele cases nóg een keer in nóg een viewport, terwijl het risico op 360px puur layout is.
+  De case loopt alle zes beheerschermen af in **beide** vormgevingen en navigeert via de hash in
+  plaats van via navigatieknoppen -- nodig, want in Nieuw bestaat er op 360px geen enkele zichtbare
+  `button[data-view]`; die skin heeft eigen navigatie-chrome. Uitkomst: **geen enkele inhoud valt
+  buiten de rechterrand.** Zie de les hierboven over waarom de eerste versie van deze meting
+  waardeloos was, en de correctie in `AUDIT-GUI-FASE17.md` P1-punt 3.
 - [ ] Android/Chrome resterend: sticky/fixed gedrag, scroll en standalone/PWA op een echt toestel
 - [x] **PWA-doorloop gedaan (13 sep), één bevinding.** Alles nagelopen in `manifest.php`,
   `assets/icon-*.png` en `sw.js`. **In orde:** het manifest is compleet (`id`, `name`,
@@ -2706,6 +2733,42 @@ op de achtergrond en draaide er gerichte Playwright-suites naast. Gevolg: twee c
 draaiden ze meteen groen. De suites delen de database en poort 8010; een tweede run erlangs
 vervuilt de uitslag. Regel: één testrun tegelijk, en bij een onverwachte uitvaller eerst nagaan of
 er nog iets anders liep -- vóór je een defect noteert.
+
+**Twee races uit het gereedschap gehaald (13 sep 2026, main).** Allebei in `scripts/`, allebei
+naar aanleiding van iets concreets:
+- **`smoke-test.mjs` viel één keer om op "Een PDF moet eerst als concept bewaard kunnen worden".**
+  Drie runs ervoor en de run erna waren groen op exact dezelfde `app.js` -- er was op main sinds de
+  laatste app.js-commit niets aan dat bestand veranderd, dus dit was een race in de test. Oorzaak:
+  na het klikken op Concept opslaan stond `await new Promise(r => setTimeout(r, 20))`, en 20 ms is
+  te kort op een belaste machine. Alle drie zulke plekken vervangen door een `wachtTot()`-helper die
+  op de echte toestand wacht. **Dit maakt de test niet zachter:** de oorspronkelijke asserties
+  blijven ongewijzigd staan en blijven falen als de toestand verkeerd is; blijft de toestand
+  helemaal uit, dan loopt de helper af en faalt de smoke alsnog, met een duidelijkere melding.
+  Juist daarom kan deze wijziging geen vals groen opleveren -- het vangnet is de assertie, niet de
+  wachttijd.
+- **`docs:sync` maakte tientallen bestanden "gewijzigd" zonder inhoudelijke wijziging.** Het script
+  schreef altijd met LF terwijl de gegenereerde bestanden in de working tree CRLF zijn, dus de
+  eerste sync na een verse checkout herschreef élk feature- en stepsbestand. Dat is niet alleen
+  ruis: de herontwerp-sessie kreeg er een **stil mislukte `git merge`** door (git weigert te mergen
+  met ongecommitte wijzigingen) en pushte in de veronderstelling dat main was meegenomen, waarna de
+  merge-wachtrij op alle acht shards omviel. Het script schrijft nu alleen als de inhoud echt
+  verandert en bewaart daarbij de bestaande regeleindes. Gemeten: na het terugzetten van de
+  gegenereerde bestanden herschrijft een verse sync nog 4 bestanden (precies de bestanden die door
+  een nieuwe case veranderen) in plaats van ~70, en een tweede sync direct erna herschrijft er 0.
+  De sync meldt dat aantal nu ook in zijn slotregel.
+  **Les erachter:** ruis die je leert negeren, verbergt op een dag iets echts.
+
+**Een meting die niet kán falen is geen bewijs (13 sep 2026, main).** Bij het afdekken van het
+360px-gat schreef ik eerst een case die `documentElement.scrollWidth` tegen `clientWidth` zette --
+de voor de hand liggende overflow-controle. Als laatste stap liet ik de case bewust een element van
+2000px breed invoegen en eiste dat de meting dán zou uitslaan. Dat deed hij niet. Oorzaak:
+`assets/styles.css` zet onder `@media (max-width: 720px)` `html, body { overflow-x: hidden }`, dus
+op telefoonbreedte klipt de pagina in plaats van te scrollen en is die meting altijd 0. Zonder die
+zelfcontrole had ik een test gecommit die niet kón falen -- en dezelfde meting stond als bewijs
+onder een conclusie in `AUDIT-GUI-FASE17.md` (P1-punt 3), die nu gecorrigeerd is.
+**Regel:** bij elke nieuwe meting een stap die aantoont dat de meting het probleem zou vinden.
+Bij voorkeur in de case zelf, niet als eenmalige proef -- dan blijft hij ook beschermen tegen een
+latere wijziging die de meting stilzwijgend blind maakt.
 
 **Observatie voor Gio: `npm run check` kost ~15 minuten, bijna helemaal door de smoke-test
 (13 sep 2026, main).** Gemeten op een verder rustige machine: `node scripts/smoke-test.mjs` alleen

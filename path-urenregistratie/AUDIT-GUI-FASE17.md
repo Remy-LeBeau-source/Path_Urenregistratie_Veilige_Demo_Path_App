@@ -219,6 +219,25 @@ notificaties, mogelijk e-mail) en de betekenis van de bestaande losse
    voor tablet/360px) blijft staan; er was alleen geen acute, verborgen bug om
    eerst te repareren voordat die dekking wordt toegevoegd.
 
+   > **Correctie op de steekproef hierboven (13 sep, later die dag).** Voor
+   > 360x740 bewijst die meting niets. `assets/styles.css` zet onder
+   > `@media (max-width: 720px)` `html, body { overflow-x: hidden }`. Op elke
+   > breedte tot en met 720px is `documentElement.scrollWidth` daardoor per
+   > definitie gelijk aan `clientWidth`: de pagina scrollt niet zijwaarts, hij
+   > **klipt**. "overflow=0" is daar dus geen uitslag maar een garantie. Gemeten
+   > en niet beredeneerd: een bewust ingevoegd element van 2000px breed liet de
+   > paginameting onbewogen. Voor 768x1024 en 1920x1080 blijft de steekproef wél
+   > geldig -- die liggen boven het breekpunt.
+   > **Opgelost, niet alleen gemeld:** `[MOB-H-030]` meet nu per zichtbaar
+   > element of de rechterrand voorbij de viewport valt (geklipt = voor de
+   > gebruiker onzichtbaar), en slaat inhoud binnen een bewust horizontaal
+   > scrollbare container over. De case draagt zijn eigen controle: hij voegt
+   > een te breed element in en eist dat de meting dát wél vindt -- zonder die
+   > stap zou de case vals groen zijn geweest, precies zoals de oude meting.
+   > Uitkomst op 360x740, alle zes beheerschermen, in beide vormgevingen: **geen
+   > enkele inhoud valt buiten de rechterrand.** De conclusie klopte dus, maar
+   > stond tot nu toe op ondeugdelijk bewijs.
+
    **Update na de eerste echte `tablet-chromium`-testrun (74 cases, 13 sep):**
    de steekproef hierboven testte alleen het hoofdscherm direct na inloggen en
    miste daardoor twee echte bugs die pas bij interactie zichtbaar werden.
