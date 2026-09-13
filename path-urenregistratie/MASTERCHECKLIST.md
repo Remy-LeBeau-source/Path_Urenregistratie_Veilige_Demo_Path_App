@@ -2852,6 +2852,26 @@ waar een verkeerd gekozen grens zichtbaar wordt. Zonder deze nulmeting is een ro
 te duiden: dan weet je niet of de nieuwe opmaak hem brak of dat hij er al stond. Dezelfde run na de
 landing herhalen; het verschil is het antwoord.
 
+**OPGELOST EN BEVESTIGD (14 sep 00:53): de uitrol naar TEST werkt weer.** In de log van de eerste
+geslaagde run sinds 12-09 12:28 staat `TEST live smoke passed: version=2.0.54` gevolgd door
+`Public TEST shared baseline reset verified` -- de vervangen accountcontrole slaagt dus.
+
+**Er bleek een tweede, samenhangende oorzaak, en die verklaart waarom er een hele avond niets
+landde.** De wachtstap in `pilot-merge-queue.yml` (regel 61) wacht tot er nul actieve
+release-runs op main zijn, terwijl `release-pipeline.yml` op `cancel-in-progress: false` staat
+(regel 24): elke push naar main zet er dus een run van 20-35 minuten bij in plaats van de vorige af
+te breken. Zolang beide lanes bleven pushen was er altijd een actieve run en kwam de wachtrij nooit
+aan de beurt -- vier keer op één avond, twee groene commits die vergeefs een uur stonden te wachten.
+Die wachtstap heeft één ontsnappingsklep: een run die alleen nog op de handmatige PROD-poort wacht
+telt niet als blokkerend. **Maar die klep eist `Deploy Test` op `completed` én `success`, en dat was
+sinds 12-09 nooit waar.** De twee oorzaken grepen dus in elkaar: het verouderde accountaantal
+sloopte niet alleen de uitrol zelf, maar ook het mechanisme dat de wachtrij vrij moest houden. Zodra
+de deploy weer slaagde werkte de klep meteen en zette de wachtrij main door.
+
+**Werkafspraak die hieruit volgt (beide lanes):** wie iets wil laten landen claimt het venster, en
+de ander pusht dan niets naar main -- ook geen docs en geen versiebump -- tot "geland" gemeld is.
+Lokaal committen mag gewoon door.
+
 **OPGELOST: de uitrol naar TEST stond 36 uur vast op een verouderd accountaantal (13 sep, v2.0.52).**
 Aanleiding: Gio vroeg wanneer er voor het laatst iets naar TEST was gegaan. Die vraag dwong me naar
 de deploy-job zelf te kijken in plaats van naar de testpoort ervóór -- en daar lag het.
