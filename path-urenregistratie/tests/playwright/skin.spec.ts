@@ -1679,3 +1679,114 @@ test('[SKIN-H-027] Nieuw-skin beheer-topbar behoudt de safe-area-inset-top van d
   expect(block, 'padding-top moet de safe-area-inset-top van de statusbalk optellen, niet vervangen')
     .toMatch(/padding-top:\s*calc\(14px \+ env\(safe-area-inset-top, 0px\)\)/);
 });
+
+test('[SKIN-H-029] nog niet opgeslagen uren overleven rotatie, themawissel, modal, designwissel en browser-back', async ({ page }) => {
+  // Checklistpunt 17.1: "Data mag nooit verloren gaan door rerender,
+  // schermrotatie, browser-back, modal sluiten, toetsenbord openen,
+  // thema-/designwissel." Doorgemeten op 13 sep: er is GEEN dataverlies, dus
+  // deze case legt bestaand, correct gedrag vast in plaats van een fix te
+  // bewaken. Dat is hier bewust: het mechanisme is subtiel (zie hieronder) en
+  // precies het soort ding dat bij een herontwerp van de urenweergave stil
+  // omvalt, met verloren ingevulde uren als gevolg.
+  //
+  // Wat de meting liet zien, en waarom de case per dagsleutel meet.
+  // Klassiek en Nieuw houden voor dezelfde dag ELK hun eigen invoerveld in de
+  // DOM (`#hours-grid .hours-input` resp. `#new-bento-days
+  // .new-bento-hours-input`), beide gesleuteld op data-week-index +
+  // data-day-index. Een eerste meting die simpelweg het eerste veld las, leek
+  // dataverlies te tonen: Klassiek gaf 9 terug waar Nieuw 7 stond. Dat was een
+  // meetfout op twee niveaus -- Klassiek toont de hele maand (dus is .first()
+  // een andere dag dan de huidige week van de bento), en het Klassieke veld
+  // stond nog op een verouderde render van een inactieve view. Zodra de
+  // gebruiker in Klassiek echt naar Mijn uren navigeert, wordt dat blok uit de
+  // state herbouwd en staat de ingevulde 7 er wel. De state is dus
+  // gezaghebbend, niet de DOM -- daarom meet deze case per dagsleutel en pas
+  // nadat de doelview actief is.
+  //
+  // Wat deze case NIET dekt: "toetsenbord openen". Een echt mobiel toetsenbord
+  // valt in Chromium niet op te roepen; het waarneembare gevolg ervan is een
+  // krimpende viewport, en die kant wordt hier via setViewportSize wel gedekt.
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given een medewerker met een ingevuld maar nog niet opgeslagen uurveld in Nieuw', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i, { timeout: 20_000 });
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await expect(page.locator('#new-employee-bento')).toBeVisible();
+  });
+
+  const bentoVelden = page.locator('#new-bento-days .new-bento-hours-input');
+  const aantalDagen = await bentoVelden.count();
+  test.skip(aantalDagen < 1, 'Geen werkdag in de huidige week; er valt niets in te vullen.');
+
+  const sleutel = await bentoVelden.nth(0).evaluate(el => `${el.getAttribute('data-week-index')}/${el.getAttribute('data-day-index')}`);
+  const [weekIndex, dagIndex] = sleutel.split('/');
+  const bentoVeld = page.locator(`#new-bento-days .new-bento-hours-input[data-week-index="${weekIndex}"][data-day-index="${dagIndex}"]`);
+  const klassiekVeld = page.locator(`#hours-grid .hours-input[data-week-index="${weekIndex}"][data-day-index="${dagIndex}"]`);
+
+  // De verouderde render van het Klassieke blok, zoals die bij het inloggen is
+  // neergezet. Hierop is de hele case gebouwd: de in te vullen waarde wordt
+  // bewust ANDERS gekozen dan deze, zodat de eindassertie niet per ongeluk kan
+  // slagen doordat er toevallig al hetzelfde getal stond. Zo meet de case
+  // aantoonbaar de herbouw uit de state en niet de toestand van de DOM.
+  const klassiekVoorInvullen = await klassiekVeld.inputValue();
+  const ingevuld = klassiekVoorInvullen.trim() === '7' ? '6' : '7';
+
+  await test.step(`When de dag op ${ingevuld} uur wordt gezet zonder op te slaan`, async () => {
+    await bentoVeld.fill(ingevuld);
+    await expect(bentoVeld).toHaveValue(ingevuld);
+  });
+
+  await test.step('Then overleeft de waarde schermrotatie en elke viewportwissel', async () => {
+    for (const [breedte, hoogte] of [[412, 915], [915, 412], [768, 1024], [1280, 800]] as const) {
+      await page.setViewportSize({ width: breedte, height: hoogte });
+      await expect(bentoVeld, `na viewport ${breedte}x${hoogte} hoort de ingevulde waarde te blijven staan`).toHaveValue(ingevuld);
+    }
+  });
+
+  await test.step('And overleeft de waarde een themawissel via Voorkeuren', async () => {
+    // De licht/donker-snelknop in de topbar is op de medewerkerschermen in
+    // Nieuw bewust verborgen (zie styles-new.css bij #quick-theme-toggle), dus
+    // hier de route die de medewerker echt heeft.
+    await openProfielmenu(page);
+    await page.locator('[data-profile-action="preferences"]').click();
+    await page.locator('#pref-theme-trigger').click();
+    await page.locator('[data-standard-choice-target="pref-theme"][data-standard-choice-value="dark"]').click();
+    await page.locator('#modal-confirm').click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await expect(bentoVeld).toHaveValue(ingevuld);
+  });
+
+  await test.step('And overleeft de waarde een modal die geopend en geannuleerd wordt', async () => {
+    await openProfielmenu(page);
+    await page.locator('[data-profile-action="preferences"]').click();
+    await page.locator('#modal-cancel').click();
+    await expect(bentoVeld).toHaveValue(ingevuld);
+  });
+
+  await test.step('And staat dezelfde dag na de designwissel ook in Klassiek op de ingevulde waarde', async () => {
+    // Eerst vastleggen dat het Klassieke veld op dit moment nog de oude render
+    // toont: dat is wat de eindassertie hieronder discriminerend maakt.
+    expect(await klassiekVeld.inputValue(), 'het inactieve Klassieke blok hoort nog de oude render te tonen -- zonder dat verschil bewijst deze case niets')
+      .not.toBe(ingevuld);
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+    await page.locator('button[data-view="timesheet"]').first().click();
+    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+    await expect(klassiekVeld, 'de state hoort gezaghebbend te zijn, niet de vorige render van dit blok').toHaveValue(ingevuld);
+    // Ook na rotatie binnen Klassiek, want daar zit de kaartweergave onder een
+    // eigen breekpunt.
+    await page.setViewportSize({ width: 412, height: 915 });
+    await expect(klassiekVeld).toHaveValue(ingevuld);
+    await page.setViewportSize({ width: 1280, height: 800 });
+  });
+
+  await test.step('And overleeft de waarde browser-back na wegnavigeren', async () => {
+    await page.locator('button[data-view="employee-dashboard"]').first().click();
+    await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
+    await page.goBack();
+    await expect(klassiekVeld).toHaveValue(ingevuld);
+  });
+});

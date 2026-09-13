@@ -2005,8 +2005,27 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   (zie v2.0.10 hierboven). Dus eerst aantonen met een test of live-observatie, pas daarna opruimen.
   Nog te doen: correctie-afhandeling vanuit de medewerkerkant in Mijn uren zelf.
 - [ ] Mobiele prioriteit: wat moet ik nu doen -> uren -> open acties -> klanturenstaat -> overig
-- [ ] Data mag nooit verloren gaan door rerender, schermrotatie, browser-back, modal sluiten,
-  toetsenbord openen, thema-/designwissel
+- [x] Data mag nooit verloren gaan door rerender, schermrotatie, browser-back, modal sluiten,
+  toetsenbord openen, thema-/designwissel. **Doorgemeten 13 sep: er is geen dataverlies, dus geen
+  codewijziging** -- alleen de ontbrekende regressie `[SKIN-H-029]`, v2.0.25. Een nog niet
+  opgeslagen uurveld overleeft vier viewportwissels (412x915, 915x412, 768x1024, 1280x800), een
+  themawissel via Voorkeuren -> Uiterlijk, een geopende en geannuleerde modal, de designwissel naar
+  Klassiek (ook na rotatie binnen Klassiek) en browser-back.
+  **Eén meetfout onderweg, leerzaam genoeg om te bewaren:** een eerste meting leek wél dataverlies
+  te tonen. Klassiek en Nieuw houden voor dezelfde dag élk hun eigen invoerveld in de DOM
+  (`#hours-grid .hours-input` resp. `#new-bento-days .new-bento-hours-input`), beide gesleuteld op
+  `data-week-index` + `data-day-index`. Simpelweg het eerste veld lezen gaf 9 waar 7 stond -- maar
+  dat was een andere dag (Klassiek toont de hele maand, de bento alleen de huidige week) én een
+  verouderde render van een inactieve view. Zodra de gebruiker in Klassiek echt naar Mijn uren
+  navigeert, wordt dat blok uit de state herbouwd en staat de ingevulde waarde er wel. **De state is
+  gezaghebbend, niet de DOM.** Daarom meet de case per dagsleutel en pas nadat de doelview actief is.
+  Discriminerend zonder `app.js` aan te raken (peer-eigendom): de case kiest de in te vullen waarde
+  bewust ánders dan wat het Klassieke veld op dat moment toont, en asserteert vóór de designwissel
+  expliciet dat die twee verschillen -- zo meet de eindassertie aantoonbaar de herbouw uit de state
+  en niet een toevallig al gelijk getal. `skin.spec.ts` volledig groen (28 cases).
+  **Niet gedekt, eerlijk benoemd:** "toetsenbord openen". Een echt mobiel toetsenbord valt in
+  Chromium niet op te roepen; het waarneembare gevolg (krimpende viewport) wordt wel gedekt. Rol:
+  Medewerker. Design: Klassiek én Nieuw. Thema: licht én donker (de themawissel zit in de case).
 - [x] **Live/visuele bevestiging van de vier hierboven (13 sep, main).** De vier items zijn op
   13 sep van herontwerp aan main overgedragen (zie de werkverdeling op die tak, commit
   `bdd49ec3`); de code-audit was daar al gedaan en concludeerde "geen wijziging nodig", met als

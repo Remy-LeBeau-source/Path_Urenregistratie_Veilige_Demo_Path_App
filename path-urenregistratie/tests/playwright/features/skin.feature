@@ -251,3 +251,15 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid
     When de flow voor SKIN-H-027 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat nieuw-skin beheer-topbar behoudt de safe-area-inset-top van de statusbalk
+
+  @happy
+  Scenario: [SKIN-H-029] nog niet opgeslagen uren overleven rotatie, themawissel, modal, designwissel en browser-back
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 15
+    Given een medewerker met een ingevuld maar nog niet opgeslagen uurveld in Nieuw
+    When de flow voor SKIN-H-029 wordt uitgevoerd
+    Then overleeft de waarde schermrotatie en elke viewportwissel
+    And overleeft de waarde een themawissel via Voorkeuren
+    And overleeft de waarde een modal die geopend en geannuleerd wordt
+    And staat dezelfde dag na de designwissel ook in Klassiek op de ingevulde waarde
+    And overleeft de waarde browser-back na wegnavigeren
