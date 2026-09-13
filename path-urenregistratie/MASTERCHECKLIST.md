@@ -2345,6 +2345,19 @@ exclusief bij Gio (zie sectie "Vóór livegang" verderop en `OPERATIONS-RUNBOOK.
 wachttijd op die poort loopt al het overige werk (TEST, CI, features) gewoon door.
 Zie ook het memory-bestand `autonoom-doorlopen-vanaf-v2` (herontwerp-sessie).
 
+**Altijd doorwerken -- eerst doen, dan pas melden (Gio, 13 sep 2026, geldt voor BEIDE sessies).**
+Aanleiding, in Gio's woorden: *"Waarom lijkt het elke keer dat je stilstaat? Ik zie geen processen."*
+Oorzaak: allebei sloten we beurten af met "ik ga nu verder met X". Een beurt afsluiten betekent dat
+er niets meer gebeurt tot Gio opnieuw iets typt -- voor hem ziet dat eruit als stilstand, en hij moet
+ons dan handmatig weer aanzetten. Concrete regels:
+- **Eindig nooit een beurt met een aankondiging van werk dat nog moet komen.** Doe het werk eerst.
+  Rapporteren doe je achteraf, over wat af is.
+- Rapporteer alleen tussentijds als je écht pauzeert, en zeg dan waarom en waarop je wacht.
+- Bij elke lange wachttijd (CI, achtergrondtaak) hoort een terugvalwekker. De herontwerp-sessie lag
+  hier zes uur stil door een `gh run watch` zonder terugval, zonder dat iemand het merkte.
+- Overleg tussen de sessies is geen werk. Een bericht sturen en dan de beurt beëindigen is precies
+  het patroon dat Gio hierboven beschrijft; stuur het bericht en werk in diezelfde beurt door.
+=======
 **Werkverdeling gewijzigd op 13 sep 2026 (besluit Gio).** Vanaf nu een splitsing per onderwerp in
 plaats van per item:
 - **herontwerp = vormgeving.** Werkt de door Gio aangeleverde ontwerpopdrachten uit, en is eigenaar
