@@ -5702,7 +5702,7 @@ function renderEmployeeDashboard() {
     note = "Actie nodig";
   }
   if (record.timesheetStatus === "submitted") {
-    next = "Je uren zijn ingediend en wachten op controle door Gio of Joyce.";
+    next = "Je uren zijn ingediend en wachten op controle door Backoffice.";
     action = "Ingediende uren bekijken";
     note = "Wacht op controle";
   }
