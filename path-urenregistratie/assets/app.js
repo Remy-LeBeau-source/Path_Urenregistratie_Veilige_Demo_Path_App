@@ -5222,7 +5222,7 @@ function syncAppearanceSwitches(hostname = window.location.hostname) {
     // als statuslabel dan als knop. Het rasterpictogram (◫) is vervangen door een
     // wisselpictogram (⇄) dat "omschakelen" communiceert, ongeacht welke stand
     // actief is; het gedrag (beide kanten op tikken) was al goed.
-    skinButton.innerHTML = '<span aria-hidden="true">⇄</span><strong>' + (vernieuwd ? "Nieuw" : "Klassiek") + "</strong>";
+    skinButton.innerHTML = '<span aria-hidden="true">⇄</span><strong>' + (vernieuwd ? "Modern" : "Klassiek") + "</strong>";
   }
 }
 
@@ -5480,53 +5480,6 @@ function focusEersteLegeBentoDag(record, period, weekIndex) {
   if (input) input.focus();
 }
 
-// Vult de drie onderdelen die de mobiele referentie boven de kop zet: een
-// statuspil ("jij bent aan zet" / "bij de Backoffice"), het maandtotaal als
-// groot getal, en de contractregel eronder. De referentie toont die alleen op
-// telefoonformaat; de elementen staan altijd in de DOM en worden door CSS
-// getoond of verborgen, zodat er geen tweede renderpad ontstaat dat op desktop
-// iets anders doet.
-function vulMobieleHerokop(record, employee, period, needsHours, needsCustomerTimesheet) {
-  const oog = document.querySelector("#new-bento-oog");
-  const oogLabel = document.querySelector("#new-bento-oog-label");
-  const maandtotaal = document.querySelector("#new-bento-maandtotaal");
-  const maanduren = document.querySelector("#new-bento-maanduren");
-  const contractregel = document.querySelector("#new-bento-contractregel");
-  if (!oog || !oogLabel || !maandtotaal || !maanduren || !contractregel) return;
-
-  const aanZet = needsHours || needsCustomerTimesheet;
-  oog.dataset.stand = aanZet ? "jij" : "backoffice";
-  oogLabel.textContent = aanZet ? "Jij bent aan zet" : "Bij de Backoffice";
-  oog.hidden = false;
-
-  // Het getal is het maandtotaal inclusief verlof en ziekte, dezelfde optelling
-  // als #hours-total en de voortgangskaart gebruiken -- niet een eigen som, want
-  // twee verschillende maandtotalen op hetzelfde scherm is precies de verwarring
-  // die de voortgangskaart in v1.0.67 al opleverde.
-  const totaal = totalEntries(record.entries) + Number(record.leave || 0) + Number(record.sick || 0);
-  maanduren.textContent = hoursFormat.format(totaal);
-  maandtotaal.hidden = false;
-
-  const totaalWeken = period.weekRows.length;
-  const gevuldeWeken = completedTimesheetWeeks(record, period);
-  contractregel.textContent = "van " + hoursFormat.format(record.contractHours) + " uur contract · "
-    + gevuldeWeken + " van " + totaalWeken + " " + (totaalWeken === 1 ? "week" : "weken") + " ingevuld";
-  contractregel.hidden = false;
-
-  // De referentie zet onder de kop één brede knop met een woordlabel in plaats
-  // van de ronde pijl. Het gedrag van die knop blijft ongewijzigd (springen naar
-  // vandaag in het weekkaartje) -- alleen de tekst komt erbij, zodat op een
-  // telefoon te zien is wát er gebeurt. Het label volgt dezelfde volgorde als de
-  // kop erboven: eerst uren, dan klanturenstaat, anders naslag.
-  const knopLabel = document.querySelector("#new-bento-go-label");
-  if (knopLabel) {
-    knopLabel.textContent = needsHours
-      ? "Uren invullen"
-      : needsCustomerTimesheet ? "Klanturenstaat toevoegen" : "Mijn maanden bekijken";
-    knopLabel.hidden = false;
-  }
-}
-
 function renderNewEmployeeBento(record, employee, period) {
   const bento = document.querySelector("#new-employee-bento");
   if (!bento) return;
@@ -5557,10 +5510,6 @@ function renderNewEmployeeBento(record, employee, period) {
     }
   }
   document.querySelector("#new-bento-period-label").textContent = period.label;
-  // Statuspil, maandtotaal en contractregel uit de mobiele referentie
-  // (handoff/medewerker-wild.html). De teksten volgen de bestaande statussen
-  // van de app, zodat er geen tweede waarheid over "waar sta ik" ontstaat.
-  vulMobieleHerokop(record, employee, period, needsHours, needsCustomerTimesheet);
   document.querySelector("#new-bento-week-title").textContent = "Week " + week.number;
   const actualDays = week.days.filter(Boolean);
   document.querySelector("#new-bento-week-range").textContent = actualDays.length
@@ -12863,7 +12812,7 @@ function showPreferences() {
   ;
   const emailRow = '<div class="preference-row"><span><strong>Aanvullende e-mailmeldingen</strong><small>Zet je dit uit, dan blijven meldingen in de app wel zichtbaar</small></span><input id="pref-email-notifications" aria-label="Aanvullende e-mailmeldingen" type="checkbox"' + (profile.source.emailNotificationsEnabled !== false ? " checked" : "") + '></div>';
   const skinRow = testAccountToolsAllowed(window.location.hostname)
-    ? '<div class="preference-row"><span><strong>Vormgeving</strong><small>Klassiek is de huidige stijl; Nieuw is de vernieuwde TEST-weergave</small></span><select id="pref-skin" aria-label="Vormgeving"><option value="classic"' + (state.preferences.skin !== "new" ? " selected" : "") + '>Klassiek</option><option value="new"' + (state.preferences.skin === "new" ? " selected" : "") + '>Nieuw (pilot)</option></select></div>'
+    ? '<div class="preference-row"><span><strong>Vormgeving</strong><small>Klassiek is de huidige stijl; Modern is de vernieuwde TEST-weergave</small></span><select id="pref-skin" aria-label="Vormgeving"><option value="classic"' + (state.preferences.skin !== "new" ? " selected" : "") + '>Klassiek</option><option value="new"' + (state.preferences.skin === "new" ? " selected" : "") + '>Modern (pilot)</option></select></div>'
     : '';
   const summary = '<div class="preference-list"><div class="preference-row"><span><strong>Uiterlijk</strong><small>Nieuw begint standaard donker; je keuze wordt per vormgeving onthouden</small></span><select id="pref-theme" aria-label="Uiterlijk"><option value="light"' + (state.preferences.theme === "light" ? " selected" : "") + '>Licht</option><option value="system"' + (state.preferences.theme === "system" ? " selected" : "") + '>Automatisch</option><option value="dark"' + (state.preferences.theme === "dark" ? " selected" : "") + '>Donker</option></select></div>' + skinRow + adminRows + emailRow + '</div>';
   showModal({
