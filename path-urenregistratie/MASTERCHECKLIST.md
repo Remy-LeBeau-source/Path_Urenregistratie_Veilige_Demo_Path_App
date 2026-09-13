@@ -2777,6 +2777,14 @@ waard, want ik ben onderweg twee keer bijna de verkeerde kant op gegaan.
   bewijst nog niet dat die commit fout is -- alleen dat er iets is veranderd. Hier was dat de
   snelheid.
 
+**Nulmeting `tablet-chromium` (768px) op main, 13 sep: 77 geslaagd, 1 overgeslagen
+(`[SKIN-H-010]`, eigen skipvoorwaarde), nul rood.** Gedraaid vóórdat de vormgevingslane haar
+Klassieke telefoonopmaak op main zet. Reden: die opmaak zit in `@media (max-width: 720px)` en dit
+project draait op 768px -- de eerste breedte waar die regels juist níét meer gelden, en dus de plek
+waar een verkeerd gekozen grens zichtbaar wordt. Zonder deze nulmeting is een rode case daar niet
+te duiden: dan weet je niet of de nieuwe opmaak hem brak of dat hij er al stond. Dezelfde run na de
+landing herhalen; het verschil is het antwoord.
+
 **NOG OPEN: `dashboard.spec.ts` heeft wisselwerking tussen cases, in beide richtingen.** In de run
 waarin DASH-N-007 groen werd, viel `[DASH-N-012]` om op `#modal-confirm`: verwacht "Controle
 afronden", gekregen "Voorbeeldgegevens herstellen" -- dus een andere modal stond nog open. Los
