@@ -644,7 +644,7 @@ De 41 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 516 Playwri
 - [SKIN-H-021] de medewerker blijft op het Dashboard: de pijl springt naar vandaag in het weekkaartje, open maanden staan er zichtbaar bij, en een skinwissel hertekent Mijn uren direct — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 19
 - [SKIN-H-022] een tweede herlading zet de skin/thema-voorkeur niet terug naar standaard — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 8
 - [SKIN-H-023] "Standaardweek/-maand vullen" vult alleen lege dagen met het eigen werkpatroon, in Nieuw en Klassiek — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 26
-- [SKIN-H-028] "Week terugzetten" overschrijft ook een dag die bewust op 0 is bevestigd, na expliciete bevestiging — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 5
+- [SKIN-H-028] "Week terugzetten" overschrijft ook een dag die bewust op 0 is bevestigd, na expliciete bevestiging — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
 - [SKIN-H-024] "Volgende actie" bovenaan Open acties per maand toont de eerstvolgende stap en blijft op het Dashboard — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
 - [SKIN-H-025] de 0/8/9-snelkeuze bij elke dag staat altijd zichtbaar, in Klassiek en in Nieuw — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
 - [SKIN-H-027] Nieuw-skin beheer-topbar behoudt de safe-area-inset-top van de statusbalk — Techniek: Toestandsovergang · Assertions: 2
