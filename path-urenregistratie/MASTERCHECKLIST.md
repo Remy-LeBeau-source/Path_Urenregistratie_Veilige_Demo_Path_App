@@ -2043,8 +2043,41 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   (kleine stap, geen big-bang): `.invoice-search input` (11px, smalle `min(320px, 40vw)`-breedte,
   eerst visueel/screenshot verifiëren dat 16px niet knelt) en `.mail-channel-template
   input`/`textarea` (13px, beheerder-only mailsjabloon-editor) -- volgende wijziging.
-- [ ] iOS/Safari: viewporthoogte, keyboard, datumvelden, uploads, sticky headers,
-  overige fixed buttons, resterend input-zoom (`.invoice-search`, `.mail-channel-template`)
+- [x] **Resterende input-zoom afgerond (13 sep).** De twee velden die bij `[MOB-H-026]` bewust
+  waren uitgesteld omdat ze eerst een blik op hun breedte nodig hadden, staan nu ook op 16px in
+  het `max-width: 720px`-blok: `.invoice-search input` (was 11px) en `.mail-channel-template
+  input`/`textarea` (was 13px). Bij het zoekveld bleek de breedte inderdaad het echte probleem,
+  niet de lettergrootte: bij `max-width: 590px` stapelt `.invoice-toolbar` tot een kolom terwijl
+  het veld vastzat op `width: min(320px, 40vw)` — op een telefoon van 375px is dat ~150px, waar
+  met 16px nauwelijks tekst in past terwijl de hele kolombreedte beschikbaar is. Daar staat het
+  veld nu op volle breedte, wat ook beter aansluit bij de rest van die balk.
+  `[MOB-H-026]` uitgebreid met beide. De mailsjabloon-editor wordt live gemeten; het
+  factuurzoekveld via de **bronregel** in plaats van de berekende stijl, met reden: dat veld zit
+  in `#invoice-detail-panel`, dat `hidden` blijft zolang `awaitingInvoicesHydration()` waar is,
+  en in deze testcontext komt die hydratie niet rond — een live check zou daar altijd "hidden"
+  meten en dus niets bewijzen. Zelfde afweging en zelfde patroon als `[SKIN-H-027]`.
+- [x] **iOS viewporthoogte (13 sep): één echt gemiste plek gevonden en gefixt.** De opdracht
+  waarschuwt expliciet tegen de oude 100vh-aanpak. Dit bestand kende het probleem al — er staat
+  een uitgeschreven toelichting bij `.modal` ("op mobiel is 100vh de grote viewport") en op de
+  meeste plekken staat het juiste paar: eerst `vh` als terugval, dan `dvh`. Alle elf
+  `100vh`-voorkomens nagelopen. De `min-height: 100vh`-regels (`.app-shell` e.a.) zijn
+  onschadelijk: bij een minimumhoogte betekent te hoog rekenen alleen dat je iets kunt scrollen,
+  er wordt niets afgekapt. Eén `max-height` mistte de `dvh`-regel wél: **`.popover-panel`** in
+  het `max-width: 720px`-blok. Dat is het paneel van de **notificatiebel en het profielmenu** —
+  met de adresbalk in beeld rekent het zich hoger dan er zichtbaar is en valt de onderkant
+  erachter. Exact dezelfde fout die hier al voor `.help-panel` was gevonden en opgelost
+  ("schoof de koptekst achter de mobiele adresbalk"); `.popover-panel` was daarbij overgeslagen.
+  Zelfde oplossing toegepast. Rol: beide (bel en profielmenu staan op elk ingelogd scherm).
+  Design: Klassiek, en `styles-new.css` heeft geen eigen `.popover-panel`-hoogteregel, dus
+  identiek in Nieuw. Thema: themaneutraal. Devices: mobiele browsers met een in-/uitschuivende
+  adresbalk, met name iOS Safari. Nieuwe regressie `[MOB-H-028]`, die de bronregel controleert
+  (in een desktop-Chromium zonder adresbalk is `dvh` gelijk aan `vh`, dus een live
+  computed-style-check zou met én zonder de fix dezelfde waarde geven en niets bewijzen —
+  zelfde bekende omgevingsgat als `[SKIN-H-027]`) én bewaakt dat de `vh`-terugval blijft staan
+  voor browsers zonder `dvh`. Discriminerend bevestigd: zonder de fix faalt hij, met de fix
+  slaagt hij in 6,5s.
+- [ ] iOS/Safari resterend: keyboard, uploads, sticky headers, overige fixed buttons
+  (datumvelden vervallen: die bestaan niet, zie de Android-doorloop hieronder)
 - [x] **Android/Chrome-doorloop gedaan (13 sep), grotendeels in orde.** Statisch nagelopen in
   `index.html` en `assets/app.js`. **Viewport:** `width=device-width, initial-scale=1,
   viewport-fit=cover` — correct, en belangrijk: géén `user-scalable=no` of `maximum-scale`, dus

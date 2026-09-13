@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import { captureConsoleErrors, clearConsoleErrors } from './fixtures/consoleErrors';
 import { useFixedDemoClock } from './fixtures/fixedDemoClock';
@@ -1771,6 +1773,67 @@ test('[MOB-H-026] getypte velden blijven op 16px zodat iOS Safari niet inzoomt b
     await expect(page.locator('#period-year-picker')).toBeVisible();
     expect(await fontSize(page.locator('#period-year-picker')), 'jaartal in de periodekiezer').toBeGreaterThanOrEqual(16);
   });
+
+  // De twee velden die bij de eerste ronde van deze case bewust zijn
+  // uitgesteld: ze stonden allebei onder de grens (11px en 13px) maar hadden
+  // eerst een blik op hun breedte nodig. Nu meegenomen zodat ze niet stil
+  // terug kunnen zakken.
+  await test.step('Then staan ook de twee diepere velden op 16px in de bron', async () => {
+    // Deze twee worden via de bronregel gecontroleerd en niet via de berekende
+    // stijl, omdat ze in deze testcontext geen afmetingen hebben en een live
+    // check dus altijd "hidden" zou meten -- dat bewijst niets. Zelfde
+    // afweging en zelfde patroon als [SKIN-H-027].
+    //
+    // #invoice-search zit in #invoice-detail-panel, dat `hidden` blijft zolang
+    // awaitingInvoicesHydration() waar is; die hydratie komt hier niet rond.
+    // .mail-channel-template wordt dynamisch in #mail-channel-template-list
+    // gerenderd binnen de sectienavigatie van Instellingen, en is daardoor op
+    // telefoonbreedte niet zonder meer in beeld te brengen.
+    const css = await readFile(join(process.cwd(), 'assets', 'styles.css'), 'utf8');
+    const mobielBlok = css.slice(css.indexOf('@media (max-width: 720px)'));
+
+    expect(
+      /\.invoice-search input\s*\{[^}]*font-size:\s*16px/.test(mobielBlok),
+      'het factuurzoekveld hoort op mobiel op 16px te staan, anders zoomt iOS Safari in'
+    ).toBe(true);
+
+    expect(
+      /\.mail-channel-template input[^{]*\{[^}]*font-size:\s*16px/.test(mobielBlok),
+      'de mailsjabloon-editor hoort op mobiel op 16px te staan, anders zoomt iOS Safari in'
+    ).toBe(true);
+  });
+});
+
+test('[MOB-H-028] mobiele panelen meten hun hoogte aan de zichtbare viewport, niet aan 100vh', async () => {
+  // Fase 17.5-audit (iOS/Safari, viewporthoogte). Op mobiele Safari is 100vh
+  // de GROTE viewport: de hoogte alsof de adresbalk is weggescrold. Met de
+  // adresbalk in beeld -- de normale toestand -- rekent een paneel met een op
+  // 100vh gebaseerde max-height zich dus hoger dan er zichtbaar is, en valt de
+  // onderkant achter die balk. Dit bestand kende die fout al voor .help-panel
+  // en loste hem daar op met een dvh-regel; .popover-panel (notificatiebel en
+  // profielmenu) was daarbij over het hoofd gezien.
+  //
+  // Bronregel en niet de berekende stijl, met reden: in een desktop-Chromium
+  // zonder adresbalk is dvh gelijk aan vh, dus een live getComputedStyle-check
+  // geeft met en zonder deze fix exact dezelfde waarde en bewijst niets.
+  // Zelfde bekende omgevingsgat en zelfde patroon als [SKIN-H-027].
+  const css = await readFile(join(process.cwd(), 'assets', 'styles.css'), 'utf8');
+
+  const paneelRegel = css.slice(css.indexOf('.popover-panel {', css.indexOf('@media (max-width: 720px)')));
+  const paneelBlok = paneelRegel.slice(0, paneelRegel.indexOf('}'));
+
+  expect(
+    paneelBlok.includes('100dvh'),
+    'het popover-paneel (bel en profielmenu) hoort zijn max-height aan dvh te meten, anders valt de onderkant op iOS achter de adresbalk'
+  ).toBe(true);
+
+  // De vh-regel moet blijven staan als terugval voor browsers zonder dvh --
+  // hem vervangen in plaats van aanvullen zou oudere browsers zonder enige
+  // hoogtebegrenzing achterlaten.
+  expect(
+    paneelBlok.includes('100vh'),
+    'de vh-variant hoort als terugval te blijven staan voor browsers zonder dvh-ondersteuning'
+  ).toBe(true);
 });
 
 test('[MOB-H-027] een uur met een komma getypt komt aan als 8,5 en niet als leeg veld', async ({ page }) => {

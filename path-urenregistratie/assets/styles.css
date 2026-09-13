@@ -1417,6 +1417,14 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
   .approval-actions { justify-content: stretch; }
   .approval-actions .button { flex: 1; }
   .invoice-toolbar { align-items: flex-start; flex-direction: column; }
+  /* Hier stapelt de factuurbalk tot een kolom, en dan is de vaste
+     `width: min(320px, 40vw)` van het zoekveld juist knellend: op een telefoon
+     van 375px is dat ~150px, terwijl de hele kolombreedte beschikbaar is. Met
+     de 16px uit het blok hierboven (iOS-zoomgrens) zou daar nauwelijks tekst
+     in passen. Volle breedte lost allebei op en sluit aan bij hoe de andere
+     bedieningselementen in deze balk zich hier al gedragen. */
+  .invoice-search { width: 100%; }
+  .invoice-search input { width: 100%; }
   .segmented-control { width: 100%; overflow-x: auto; }
   .employee-details, .form-grid, .team-account-overview, .team-account-groups, .administrator-row, .mail-recipient-setting, .mail-route-choice, .template-item, .announcement-meta, .customer-timesheet-admin-list { grid-template-columns: minmax(0, 1fr); }
   .team-account-overview, .team-account-groups, .administrator-row, .mail-recipient-setting, .mail-route-choice, .template-item { gap: 10px; }
@@ -2467,7 +2475,18 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
     right: 12px;
     left: 12px;
     width: auto;
+    /* Fase 17.5-audit (13 sep): hier stond alleen de 100vh-variant. Op mobiele
+       Safari is 100vh de GROTE viewport (adresbalk weggescrold), dus met de
+       adresbalk in beeld -- de normale toestand -- rekent dit paneel zich
+       hoger dan er zichtbaar is en valt de onderkant achter die balk. Dit is
+       exact dezelfde fout die voor .help-panel al is gevonden en opgelost
+       (zie de toelichting daar, "schoof de koptekst achter de mobiele
+       adresbalk"); .popover-panel was daarbij over het hoofd gezien, terwijl
+       juist de notificatiebel en het profielmenu erin zitten. Zelfde
+       oplossing: eerst vh als terugval voor oudere browsers, dan dvh voor
+       browsers die de zichtbare hoogte kennen. */
     max-height: calc(100vh - 170px);
+    max-height: calc(100dvh - 170px);
     overflow-y: auto;
   }
 
@@ -3488,6 +3507,14 @@ body.toont-installatieaanbod .main-content {
      maandkiezer is een knop) is een getypt jaartal met een echt toetsenbord
      op iOS -- onder 16px zoomt Safari de pagina in bij het openen ervan. */
   .period-picker-fields input { font-size: 16px; }
+  /* De laatste twee getypte velden onder de 16px-grens, bij [MOB-H-026]
+     bewust uitgesteld omdat ze allebei eerst een blik op de breedte nodig
+     hadden. Zoekveld in de factuurbalk (was 11px) en de mailsjabloon-editor
+     onder Instellingen (was 13px); zonder deze regels zoomt iOS Safari bij
+     het aantikken ervan de hele pagina in. Voor .invoice-search zie ook de
+     breedteregel in het 590px-blok hieronder. */
+  .invoice-search input { font-size: 16px; }
+  .mail-channel-template input, .mail-channel-template textarea { font-size: 16px; }
   .popover-heading small { font-size: 11px; }
   .popover-heading strong { font-size: 15px; }
   .preference-row small { font-size: 11px; }
