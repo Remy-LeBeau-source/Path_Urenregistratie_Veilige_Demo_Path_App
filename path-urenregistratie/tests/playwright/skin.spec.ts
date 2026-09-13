@@ -2215,3 +2215,60 @@ test('[SKIN-H-033] het medewerkerdashboard rekt op een breed scherm niet verder 
     expect(breedte, 'op een gewoon desktopvenster hoort de grens niets te doen').toBeGreaterThan(850);
   });
 });
+
+// Glanslaag 5 uit het designcontract: de indrukgloed. Waarden exact uit
+// handoff/medewerker-wild.bron.txt -- de hoofdknop krimpt naar .965 met een
+// mintschaduw, een gewone knop naar .975 zonder gloed.
+//
+// Dit verving een :active-regel die zichtbaar niets deed: die zette
+// `translateY(0)` terug op een knop die alleen bij hover zweeft, dus op een
+// aanraakscherm en bij toetsenbordbediening gebeurde er niets. Deze case toetst
+// daarom niet dat er "een regel bestaat" maar dat de knop bij indrukken echt
+// van maat verandert.
+test('[SKIN-H-034] een ingedrukte knop krimpt, en de hoofdactie krijgt de mintgloed', async ({ page }) => {
+  test.setTimeout(120_000);
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+
+  const hoofdknop = page.locator('#employee-dashboard-action');
+  await expect(hoofdknop).toBeVisible();
+
+  const stijlNu = () => hoofdknop.evaluate(el => {
+    const cs = getComputedStyle(el);
+    return { transform: cs.transform, schaduw: cs.boxShadow };
+  });
+
+  const rust = await stijlNu();
+
+  await test.step('When de hoofdactie ingedrukt wordt gehouden', async () => {
+    const doos = await hoofdknop.boundingBox();
+    if (!doos) throw new Error('de hoofdactie hoort een zichtbare bounding box te hebben');
+    await page.mouse.move(doos.x + doos.width / 2, doos.y + doos.height / 2);
+    await page.mouse.down();
+  });
+
+  await test.step('Then krimpt hij zichtbaar en licht de mintschaduw op', async () => {
+    // Niet op de letterlijke matrix vergelijken: browsers rekenen scale om naar
+    // een matrix en ronden af. De eis is dat hij kleiner wordt dan in rust.
+    //
+    // En pollen in plaats van één meting. De knop heeft een overgang van .16s
+    // op transform, en de muis erheen bewegen zet éérst de hover-stand aan
+    // (translateY(-1px)). Meet je direct na mouse.down(), dan vang je die
+    // overgang halverwege en staat de schaal nog op 1. Dat maakte deze case bij
+    // de eerste opzet wisselvallig: eerste run rood, tweede groen. De eis is
+    // ongewijzigd, hij krijgt alleen de tijd die de overgang nodig heeft.
+    const schaal = (waarde: string) => {
+      const m = /matrix\(([-\d.]+)/.exec(waarde);
+      return m ? Number(m[1]) : 1;
+    };
+    await expect.poll(async () => schaal((await stijlNu()).transform), {
+      message: `de hoofdactie hoort bij indrukken te krimpen (rust: ${rust.transform})`,
+      timeout: 5_000,
+    }).toBeLessThan(1);
+    const ingedrukt = await stijlNu();
+    expect(ingedrukt.schaduw, 'de hoofdactie hoort bij indrukken de mintgloed te tonen').toContain('58, 189, 157');
+    await page.mouse.up();
+  });
+});

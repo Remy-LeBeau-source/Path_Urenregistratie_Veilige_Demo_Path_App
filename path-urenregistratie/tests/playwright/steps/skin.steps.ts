@@ -136,3 +136,5 @@ Then("wordt met Playwright-assertions bevestigd dat klassiek en Modern tonen dez
 When("de flow voor SKIN-H-033 wordt uitgevoerd");
 Then("blijft het dashboard op een breed venster binnen 1060px");
 And("blijft er op een gewoon desktopvenster niets afgeknepen");
+When("de hoofdactie ingedrukt wordt gehouden");
+Then("krimpt hij zichtbaar en licht de mintschaduw op");

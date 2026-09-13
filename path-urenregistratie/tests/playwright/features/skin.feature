@@ -300,3 +300,11 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     When de flow voor SKIN-H-033 wordt uitgevoerd
     Then blijft het dashboard op een breed venster binnen 1060px
     And blijft er op een gewoon desktopvenster niets afgeknepen
+
+  @happy
+  Scenario: [SKIN-H-034] een ingedrukte knop krimpt, en de hoofdactie krijgt de mintgloed
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid
+    When de hoofdactie ingedrukt wordt gehouden
+    Then krimpt hij zichtbaar en licht de mintschaduw op

@@ -589,7 +589,22 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 @media (hover: hover) and (pointer: fine) {
   .button:hover { transform: translateY(-1px); }
 }
-.button:active:not(:disabled) { transform: translateY(0); filter: brightness(.97); }
+/* Glanslaag 5 uit het designcontract, de indrukgloed. Waarden exact uit
+   handoff/medewerker-wild.bron.txt: de hoofdknop krijgt daar
+   `style-active="transform:scale(.965);box-shadow:0 2px 26px rgba(58,189,157,.6)"`,
+   de tweede knop `transform:scale(.975)`. Dat vervangt hier de oude
+   `translateY(0) + brightness(.97)` -- die deed bij een knop die niet zweeft
+   zichtbaar niets, want er was geen verschuiving om terug te draaien.
+
+   De gloed alleen op de primaire knop: de mintschaduw hoort bij de hoofdactie,
+   en op elke knop zou hij niets meer aanwijzen. Bij minder beweging blijft de
+   knop stilstaan en houdt alleen de lichte verdonkering over. */
+.button:active:not(:disabled) { transform: scale(.975); filter: brightness(.97); }
+.button-primary:active:not(:disabled) { transform: scale(.965); box-shadow: 0 2px 26px rgba(58,189,157,.6); }
+@media (prefers-reduced-motion: reduce) {
+  .button:active:not(:disabled),
+  .button-primary:active:not(:disabled) { transform: none; }
+}
 .button:disabled { cursor: not-allowed; filter: grayscale(.25); opacity: .48; transform: none; }
 .button-primary { background: var(--mint); color: var(--navy); box-shadow: 0 8px 18px rgba(58,189,157,.2); }
 .button-primary:hover { background: #48caa9; box-shadow: 0 11px 23px rgba(58,189,157,.25); }
