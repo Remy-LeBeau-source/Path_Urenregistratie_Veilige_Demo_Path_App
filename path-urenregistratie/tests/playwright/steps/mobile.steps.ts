@@ -109,3 +109,8 @@ Then("wordt met Playwright-assertions bevestigd dat elk zwevend element onderin 
 Given("de medewerker staat met een leeg urenveld in Mijn uren");
 When("hij 8,5 typt zoals een Nederlands toetsenbord dat aanbiedt");
 Then("staat er een geloofwaardig aantal uren, geen leeg veld en geen 85");
+Given("een beheerder op een 360px-telefoon");
+When("de flow voor MOB-H-030 wordt uitgevoerd");
+Then("scrollt geen enkel beheerscherm horizontaal in Klassiek");
+And("ook niet in de nieuwe vormgeving");
+And("de meting zou echte overloop wél zien");

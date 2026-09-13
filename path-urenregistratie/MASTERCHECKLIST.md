@@ -2594,6 +2594,16 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   risico sterk in (de invoer wordt niet verworpen en niet verminkt) maar sluit afwijkend gedrag
   op een echt Nederlands Android-toestel niet 100% uit; dat vraagt een test op een fysiek
   toestel. Rol: Medewerker. Design: skin-onafhankelijk (`.hours-input` bestaat in beide).
+- [x] **360px-dekkingsgat gedicht** -- `[MOB-H-030]`, v2.0.39. De bestaande projecten draaien op
+  412px (Pixel 7), 390px (iPhone 13), 768px (tablet) en desktop; 360px -- de kleinste breedte die
+  je bij Android nog echt tegenkomt -- was nergens gedekt. Bewust **één gerichte case en geen vijfde
+  project**, met dezelfde afweging als bij `tablet-chromium`: een extra project draait dezelfde
+  functionele cases nóg een keer in nóg een viewport, terwijl het risico op 360px puur layout is.
+  De case loopt alle zes beheerschermen af in **beide** vormgevingen en navigeert via de hash in
+  plaats van via navigatieknoppen -- nodig, want in Nieuw bestaat er op 360px geen enkele zichtbare
+  `button[data-view]`; die skin heeft eigen navigatie-chrome. Uitkomst: **geen enkele inhoud valt
+  buiten de rechterrand.** Zie de les hierboven over waarom de eerste versie van deze meting
+  waardeloos was, en de correctie in `AUDIT-GUI-FASE17.md` P1-punt 3.
 - [ ] Android/Chrome resterend: sticky/fixed gedrag, scroll en standalone/PWA op een echt toestel
 - [x] **PWA-doorloop gedaan (13 sep), één bevinding.** Alles nagelopen in `manifest.php`,
   `assets/icon-*.png` en `sw.js`. **In orde:** het manifest is compleet (`id`, `name`,
@@ -2706,6 +2716,18 @@ op de achtergrond en draaide er gerichte Playwright-suites naast. Gevolg: twee c
 draaiden ze meteen groen. De suites delen de database en poort 8010; een tweede run erlangs
 vervuilt de uitslag. Regel: één testrun tegelijk, en bij een onverwachte uitvaller eerst nagaan of
 er nog iets anders liep -- vóór je een defect noteert.
+
+**Een meting die niet kán falen is geen bewijs (13 sep 2026, main).** Bij het afdekken van het
+360px-gat schreef ik eerst een case die `documentElement.scrollWidth` tegen `clientWidth` zette --
+de voor de hand liggende overflow-controle. Als laatste stap liet ik de case bewust een element van
+2000px breed invoegen en eiste dat de meting dán zou uitslaan. Dat deed hij niet. Oorzaak:
+`assets/styles.css` zet onder `@media (max-width: 720px)` `html, body { overflow-x: hidden }`, dus
+op telefoonbreedte klipt de pagina in plaats van te scrollen en is die meting altijd 0. Zonder die
+zelfcontrole had ik een test gecommit die niet kón falen -- en dezelfde meting stond als bewijs
+onder een conclusie in `AUDIT-GUI-FASE17.md` (P1-punt 3), die nu gecorrigeerd is.
+**Regel:** bij elke nieuwe meting een stap die aantoont dat de meting het probleem zou vinden.
+Bij voorkeur in de case zelf, niet als eenmalige proef -- dan blijft hij ook beschermen tegen een
+latere wijziging die de meting stilzwijgend blind maakt.
 
 **Observatie voor Gio: `npm run check` kost ~15 minuten, bijna helemaal door de smoke-test
 (13 sep 2026, main).** Gemeten op een verder rustige machine: `node scripts/smoke-test.mjs` alleen

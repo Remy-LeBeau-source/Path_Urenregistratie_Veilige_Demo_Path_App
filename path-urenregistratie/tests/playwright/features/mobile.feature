@@ -251,3 +251,13 @@ Feature: Mobiele gebruikerservaring
     Given de medewerker staat met een leeg urenveld in Mijn uren
     When hij 8,5 typt zoals een Nederlands toetsenbord dat aanbiedt
     Then staat er een geloofwaardig aantal uren, geen leeg veld en geen 85
+
+  @happy
+  Scenario: [MOB-H-030] op de kleinste gangbare telefoon (360px) scrollt geen enkel hoofdscherm horizontaal
+    # Testtechniek: Responsive viewport + end-to-end use-case
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given een beheerder op een 360px-telefoon
+    When de flow voor MOB-H-030 wordt uitgevoerd
+    Then scrollt geen enkel beheerscherm horizontaal in Klassiek
+    And ook niet in de nieuwe vormgeving
+    And de meting zou echte overloop wél zien

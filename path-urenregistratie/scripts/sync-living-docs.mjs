@@ -264,10 +264,45 @@ for (const file of readdirSync(stepsDir).filter((file) => file.endsWith('.steps.
   if (!expectedSteps.has(file)) rmSync(path.join(stepsDir, file));
 }
 
+// Schrijf alleen als de INHOUD verandert, en bewaar daarbij de regeleindes die
+// het bestand al had.
+//
+// Waarom dit er is (13 sep 2026). Dit script schreef altijd met LF, terwijl de
+// gegenereerde bestanden in de working tree als CRLF staan. Gevolg: de eerste
+// docs:sync na een verse checkout maakte élk feature- en stepsbestand
+// "gewijzigd" zonder ook maar één inhoudelijke wijziging -- tientallen bestanden
+// ruis bij elke commit. Dat is niet alleen lelijk: de herontwerp-sessie kreeg
+// er een stil mislukte `git merge` door (git weigert te mergen met ongecommitte
+// wijzigingen) en pushte in de veronderstelling dat main was meegenomen, wat de
+// merge-wachtrij op alle acht shards liet omvallen. Ruis die je leert negeren,
+// verbergt op een dag iets echts.
+function schrijfAlsGewijzigd(bestandspad, nieuweInhoud) {
+  let bestaand = null;
+  try {
+    bestaand = readFileSync(bestandspad, 'utf8');
+  } catch {
+    bestaand = null;
+  }
+
+  // Vergelijk op inhoud, niet op regeleinde: anders blijft elke sync het
+  // bestand herschrijven puur omdat de tekens verschillen.
+  const genormaliseerd = (tekst) => tekst.replace(/\r\n/g, '\n');
+  if (bestaand !== null && genormaliseerd(bestaand) === genormaliseerd(nieuweInhoud)) {
+    return false;
+  }
+
+  // Nieuw bestand: LF, zoals dit script altijd al deed. Bestaand bestand: neem
+  // over wat er stond, zodat een CRLF-tree CRLF blijft.
+  const gebruiktCrlf = bestaand !== null && bestaand.includes('\r\n');
+  writeFileSync(bestandspad, gebruiktCrlf ? nieuweInhoud.replace(/\r?\n/g, '\r\n') : nieuweInhoud);
+  return true;
+}
+
+let gewijzigdeBestanden = 0;
 for (const definition of definitions) {
   const cases = inventory.filter((testCase) => testCase.kind === definition.kind && testCase.feature === definition.feature);
-  writeFileSync(path.join(featuresDir, definition.feature), featureContent(definition, cases));
-  writeFileSync(path.join(stepsDir, definition.steps), stepsContent(definition, cases));
+  if (schrijfAlsGewijzigd(path.join(featuresDir, definition.feature), featureContent(definition, cases))) gewijzigdeBestanden += 1;
+  if (schrijfAlsGewijzigd(path.join(stepsDir, definition.steps), stepsContent(definition, cases))) gewijzigdeBestanden += 1;
 }
 
 const mappingRows = inventory.map((testCase) => {
@@ -314,7 +349,7 @@ ${mappingRows}
 - Playwright steps mappings: ${playwrightFeatureCount}
 - Database steps mappings: ${dbFeatureCount}
 `;
-writeFileSync(path.join(root, 'TEST-BDD-MAPPING.md'), mapping);
+if (schrijfAlsGewijzigd(path.join(root, 'TEST-BDD-MAPPING.md'), mapping)) gewijzigdeBestanden += 1;
 
 const domainSections = definitions.map((definition) => {
   const cases = inventory.filter((testCase) => testCase.kind === definition.kind && testCase.feature === definition.feature);
@@ -373,6 +408,6 @@ ${domainSections}
 4. Controleer de feature/steps/spec/Allure mapping.
 5. Draai \`npm run test:e2e\`, \`npm run allure:generate\` en \`npm run check\`.
 `;
-writeFileSync(path.join(root, 'LIVING-DOC.md'), livingDoc);
+if (schrijfAlsGewijzigd(path.join(root, 'LIVING-DOC.md'), livingDoc)) gewijzigdeBestanden += 1;
 
-console.log(`Living Documentation gesynchroniseerd: ${playwrightCount} Playwright cases, ${dbCount} DB cases, ${inventory.length} total executable cases.`);
+console.log(`Living Documentation gesynchroniseerd: ${playwrightCount} Playwright cases, ${dbCount} DB cases, ${inventory.length} total executable cases; ${gewijzigdeBestanden} bestand(en) herschreven.`);
