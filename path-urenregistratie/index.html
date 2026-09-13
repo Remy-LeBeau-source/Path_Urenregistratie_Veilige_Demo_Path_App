@@ -273,6 +273,16 @@
             <div class="new-bento-hero-copy">
               <span class="new-bento-greeting" id="new-bento-greeting">Goedemiddag</span>
               <span class="section-label" id="new-bento-period-label">Deze maand</span>
+              <!-- Statuspil, maandtotaal en contractregel uit de mobiele
+                   referentie (handoff/medewerker-wild.html). Zichtbaarheid zit
+                   volledig in de opmaak, niet in JavaScript: het hidden-attribuut
+                   werkt hier niet omdat styles.css [hidden] op display:none
+                   !important zet, en geen media query komt daaroverheen. -->
+              <span class="new-bento-oog" id="new-bento-oog"><span class="new-bento-oog-stip" aria-hidden="true"></span><span id="new-bento-oog-label"></span></span>
+              <div class="new-bento-maandtotaal" id="new-bento-maandtotaal">
+                <strong id="new-bento-maanduren">0,00</strong><span class="new-bento-maandtotaal-eenheid">uur</span>
+              </div>
+              <small class="new-bento-contractregel" id="new-bento-contractregel"></small>
               <h2 id="new-bento-hero-title">Begin met<br>je uren</h2>
               <p id="new-bento-hero-copy">Registreer je uren voor deze week. Je wijzigingen worden veilig als concept bewaard.</p>
             </div>
@@ -333,15 +343,6 @@
           <div>
             <span class="section-label">Mijn werkvoorraad</span>
             <h2 id="employee-dashboard-greeting">Goedemiddag</h2>
-            <!-- Statuspil, maandtotaal en contractregel uit de ontwerpreferentie
-                 handoff/medewerker-wild.html. Ze staan altijd in de DOM; de
-                 opmaak bepaalt waar ze verschijnen (nu telefoonbreedte in
-                 Klassiek), zodat er geen tweede renderpad ontstaat. -->
-            <span class="hero-oog" id="employee-hero-oog"><span class="hero-oog-stip" aria-hidden="true"></span><span id="employee-hero-oog-label"></span></span>
-            <div class="hero-maandtotaal" id="employee-hero-maandtotaal">
-              <strong id="employee-hero-maanduren">0,00</strong><span class="hero-maandtotaal-eenheid">uur</span>
-            </div>
-            <small class="hero-contractregel" id="employee-hero-contractregel"></small>
             <span class="employee-next-action-label" id="employee-dashboard-next-label">Volgende actie</span>
             <p id="employee-dashboard-next">Bekijk wat je als eerste moet afronden.</p>
             <small class="employee-next-action-meta" id="employee-dashboard-next-meta">Huidige maand</small>

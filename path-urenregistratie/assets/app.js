@@ -5480,32 +5480,23 @@ function focusEersteLegeBentoDag(record, period, weekIndex) {
   if (input) input.focus();
 }
 
-// Ligt de bal bij de medewerker of bij Backoffice? Zelfde bron als de rest van
-// het scherm gebruikt (timesheetStatus en de klanturenstaat-status), zodat de
-// pil nooit iets anders beweert dan de statusregels eronder.
-function aanZetBijMedewerker(record, employee) {
-  const urenOpenstaand = ["draft", "correction"].includes(record.timesheetStatus);
-  const klantstaatOpenstaand = employee.customerTimesheetExpected !== false
-    && customerTimesheetNeedsEmployeeAction(customerTimesheetFor(record).status);
-  return urenOpenstaand || klantstaatOpenstaand;
-}
-
-// Vult de drie kerncijfers boven de "volgende actie"-tekst: een statuspil, het
-// maandtotaal als groot getal en de contractregel. Komt uit de ontwerpreferentie
-// handoff/medewerker-wild.html; de elementen blijven `hidden` en worden door de
-// opmaak zichtbaar gemaakt waar ze horen.
-function vulHeroKerncijfers(record, period, aanZet) {
-  const oog = document.querySelector("#employee-hero-oog");
-  const oogLabel = document.querySelector("#employee-hero-oog-label");
-  const maanduren = document.querySelector("#employee-hero-maanduren");
-  const contractregel = document.querySelector("#employee-hero-contractregel");
+// Vult de drie kerncijfers in de Modern-hero: een statuspil die zegt wie aan
+// zet is, het maandtotaal als groot getal en de contractregel eronder. Uit de
+// ontwerpreferentie handoff/medewerker-wild.html. De zichtbaarheid zit in de
+// opmaak (alleen telefoonbreedte), niet hier -- dat is een breedtevraag, geen
+// datavraag.
+function vulModernHerokop(record, period, aanZet) {
+  const oog = document.querySelector("#new-bento-oog");
+  const oogLabel = document.querySelector("#new-bento-oog-label");
+  const maanduren = document.querySelector("#new-bento-maanduren");
+  const contractregel = document.querySelector("#new-bento-contractregel");
   if (!oog || !oogLabel || !maanduren || !contractregel) return;
 
   oog.dataset.stand = aanZet ? "jij" : "backoffice";
   oogLabel.textContent = aanZet ? "Jij bent aan zet" : "Bij de Backoffice";
 
-  // Zelfde optelling als #hours-total en de voortgangskaart: uren plus verlof en
-  // ziekte. Bewust geen eigen som -- twee verschillende maandtotalen op een
+  // Zelfde optelling als #hours-total en de voortgangskaart: uren plus verlof
+  // en ziekte. Bewust geen eigen som -- twee verschillende maandtotalen op een
   // scherm is precies de verwarring die in v1.0.67 al is opgelost.
   const totaal = totalEntries(record.entries) + Number(record.leave || 0) + Number(record.sick || 0);
   maanduren.textContent = hoursFormat.format(totaal);
@@ -5546,6 +5537,7 @@ function renderNewEmployeeBento(record, employee, period) {
     }
   }
   document.querySelector("#new-bento-period-label").textContent = period.label;
+  vulModernHerokop(record, period, needsHours || needsCustomerTimesheet);
   document.querySelector("#new-bento-week-title").textContent = "Week " + week.number;
   const actualDays = week.days.filter(Boolean);
   document.querySelector("#new-bento-week-range").textContent = actualDays.length
@@ -5781,7 +5773,6 @@ function renderEmployeeDashboard() {
     }
   }
   document.querySelector("#employee-dashboard-greeting").textContent = greetingForNow() + ", " + firstName;
-  vulHeroKerncijfers(record, period, aanZetBijMedewerker(record, employee));
   document.querySelector("#employee-dashboard-next").textContent = next;
   document.querySelector("#employee-dashboard-next-label").textContent = awaitingOpenTasks ? "Bezig" : (nextOpenAction ? "Volgende actie" : "Deze maand");
   document.querySelector("#employee-dashboard-next-meta").textContent = awaitingOpenTasks
