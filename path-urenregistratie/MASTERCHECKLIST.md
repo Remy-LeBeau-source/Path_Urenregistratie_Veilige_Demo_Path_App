@@ -1995,8 +1995,15 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   netjes op. Profielmenu verbergt "Ander account of rol" buiten demomodus -- terecht, want bij
   echte login doet die knop hetzelfde als uitloggen. Notificaties: bel toont bewust alleen
   ongelezen (badge + lijst consistent), klik markeert gelezen via API met lokale fallback en
-  navigeert naar de juiste view/periode. Geen bugs gevonden. Nog te doen: mededelingen-scherm
-  zelf en correctie-afhandeling vanuit medewerkerkant.
+  navigeert naar de juiste view/periode. Geen bugs gevonden. Mededelingen (medewerkerarchief)
+  doorgelicht: filters, ongelezen-telling en intrekken werken consistent. **Wel te verifiëren
+  (bewust niet zelf "dood" verklaard):** in `renderEmployeeAnnouncementArchive` sluit de
+  basisfilter `item.status !== "withdrawn"` uit, terwijl verderop in dezelfde functie een
+  `withdrawalNote` wordt opgebouwd voor precies `item.status === "withdrawn"`, en het
+  archieffilter "withdrawn" op diezelfde toestand test. Dat lijkt onbereikbaar, maar exact zo'n
+  redenering leidde in `093ec97d` tot het weghalen van de nog wél gebruikte `.status-draft`-regel
+  (zie v2.0.10 hierboven). Dus eerst aantonen met een test of live-observatie, pas daarna opruimen.
+  Nog te doen: correctie-afhandeling vanuit de medewerkerkant in Mijn uren zelf.
 - [ ] Mobiele prioriteit: wat moet ik nu doen -> uren -> open acties -> klanturenstaat -> overig
 - [ ] Data mag nooit verloren gaan door rerender, schermrotatie, browser-back, modal sluiten,
   toetsenbord openen, thema-/designwissel
