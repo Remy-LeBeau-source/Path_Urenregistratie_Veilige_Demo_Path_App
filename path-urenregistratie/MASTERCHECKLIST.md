@@ -2899,6 +2899,31 @@ Claim-conventie voor deze checklist zodat herontwerp en main elkaar niet dubbel 
 - Waar mogelijk elkaar ook direct inseinen via de agent-peersessie (zichtbaar via `ListAgents`/
   `SendMessage` in Claude Code) in plaats van te wachten tot de ander toevallig deze checklist leest.
 
+**Medewerkerscherm op telefoon volgens `handoff/medewerker-wild.html` (herontwerp, 13 sep):**
+
+Werkwijze die Gio hierbij oplegde staat in `DESIGNEXPORT-HERKOMST.md`: exports elke werkbeurt
+opnieuw ophalen en diffen, exacte waarden overnemen, en **elke wijziging krijgt een eigen testcase,
+hoe klein ook, discriminerend bevestigd en gedraaid op de breedtes waar de wijziging actief is.**
+
+- [x] Hero: begroeting als kapitaalregel, statuspil "Jij bent aan zet" / "Bij de Backoffice",
+  maandtotaal als groot getal in de schreefletter, contractregel. In Klassiek én Modern; het
+  maandtotaal gebruikt dezelfde optelling als `#hours-total` (geen tweede waarheid, zie v1.0.67).
+- [x] Dagregels in Mijn uren: dag links, 0/8/9 als aaneengesloten groep, uurgetal rechts in de
+  schreefletter. Volgorde via `order`, DOM ongemoeid zodat tabvolgorde en selectors blijven kloppen.
+- [x] Weekstrook met compacte chips ("Week 36 · 40,0") in Modern. Bewust chips en geen hoge kaarten:
+  `overflow-x` klemt ook de hoogte, een valkuil die in het handoff-document staat.
+- [x] "Terugzetten" zet de week op 0,0 i.p.v. op standaarduren. Dagen worden daarbij als bewust-op-0
+  gemarkeerd, anders vult de app ze meteen weer voor. **Gevolg, gemeld aan Gio:** "Standaardweek
+  vullen" laat die dagen daarna met rust. `[SKIN-H-028]` herschreven, toetst nu de hele week.
+- [x] Terugweg na een correctie: naar Mijn maanden, zodat de nieuwe status zichtbaar is (optie 2 uit
+  het handoff-document). **Alleen onder 720px** -- ongescopet liet dit `[DASH-N-010]` omvallen, een
+  case die over schermherstel na F5 gaat. `[DASH-H-029]` toetst beide kanten van die afbakening.
+- [x] Nagekeken en géén werk nodig: het maandverloop is in de app nooit inklapbaar geweest (die
+  inklap zat alleen in het ontwerpartefact) en de klanturenstaat staat al altijd op het dashboard.
+- [ ] Nog te doen uit deze ronde: pop-ups midden op het scherm met donkere waas, de indien-
+  bevestiging met 0,0-waarschuwing, opslaan dat niet meer vergrendelt, en "Alle N dagen vullen".
+- [ ] Desktop-GUI (`handoff/medewerker-gui.html`) -- aparte, latere opdracht, nog niet bouwen.
+
 **Visuele verbeteringen uit de Cloud-ontwerpreferentie (herontwerp, doorlopend):**
 - [x] **Blauwe statuspil op tokens (v2.0.8, Klassiek + Nieuw, licht + donker).** Uit de
   gepubliceerde "Design-polish"-referentie, punt 5: van de vier statuskleuren stond alleen de
