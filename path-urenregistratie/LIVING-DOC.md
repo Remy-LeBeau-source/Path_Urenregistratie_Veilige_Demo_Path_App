@@ -141,7 +141,7 @@ De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 512 Playwri
 
 - Feature: `tests/playwright/features/end-to-end-workflows.feature`
 - Source: `tests/playwright/business-workflows-*.spec.ts`
-- Cases: 25
+- Cases: 26
 
 - [E2E-H-018] iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF — Techniek: Equivalentieklassen · Assertions: 27
 - [E2E-N-020] een medewerker kan de Backoffice-keten niet uitvoeren en een weigering verandert niets — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 26
@@ -168,6 +168,7 @@ De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 512 Playwri
 - [E2E-H-029] de urenoverzicht-ontvangst- en goedkeuringsmail zijn nu ook aanpasbaar bij Instellingen — Techniek: Toestandsovergang · Assertions: 8
 - [E2E-N-021] een gedeactiveerd account met historie blijft veilig bewaard en legt de blokkeerreden uit — Techniek: Toestandsovergang · Assertions: 20
 - [E2E-H-017] de volledige toegestane urenstatusketen bewaakt na iedere write status, eigenaar en taak — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 18
+- [E2E-H-030] dezelfde urenstaat toont de medewerker en Backoffice hetzelfde statuswoord — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 
 ### Klanturenstaten en documentverwerking
 

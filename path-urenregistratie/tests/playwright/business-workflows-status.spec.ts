@@ -153,6 +153,62 @@ test('[E2E-H-017] de volledige toegestane urenstatusketen bewaakt na iedere writ
   });
 });
 
+test('[E2E-H-030] dezelfde urenstaat toont de medewerker en Backoffice hetzelfde statuswoord', async ({ page }) => {
+  // Checklistpunt 17.3: "Concept -> Gereed -> Ingediend -> Goedgekeurd ->
+  // Verzonden betekent voor Medewerker en Beheerder hetzelfde na elke
+  // responsive wijziging." Vandaag klopt dat door de opzet: er is één gedeelde
+  // `statusLabels`-map en één `timesheetStatusInfo()` die beide kanten voeden
+  // (de medewerkerpil `#timesheet-status` op Mijn uren, `app.js` ~8751, en de
+  // cel "Urenstatus" in de teamtabel van Backoffice, ~7383). Geen wijziging
+  // nodig dus -- deze case bewaakt precies dat: dat er niet stilletjes een
+  // tweede vocabulaire naast komt te staan, wat bij een herontwerp van de
+  // statusweergave het makkelijkst misgaat.
+  //
+  // De case vergelijkt twee onafhankelijk gerenderde stukken tekst uit twee
+  // sessies, en eist daarbovenop dat het woord uit het bekende vocabulaire
+  // komt. Dat tweede deel is er expliciet omdat "beide kanten tonen niets"
+  // anders ook als "gelijk" zou tellen.
+  const loginPage = new LoginPage(page);
+  const bekendeStatuswoorden = [
+    'Nog invullen', 'Correctie nodig', 'Goedgekeurd', 'Gefactureerd', 'Ingediend',
+    'Nog niet klaar', 'Factuur klaar', 'Verzending gecontroleerd', 'Wacht op klanturenstaat',
+  ];
+
+  let medewerkerNaam = '';
+  let statusBijBackoffice = '';
+
+  await test.step('Given Backoffice de teamtabel open heeft met de status van een medewerker', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
+    const rijen = page.locator('#dashboard-employee-rows tr');
+    await expect(rijen.first()).toBeVisible({ timeout: 20_000 });
+    // De vaste testmedewerker, zodat de tweede sessie gegarandeerd dezelfde
+    // urenstaat bekijkt en niet een willekeurige andere rij.
+    const rij = rijen.filter({ hasText: 'Stasjo van Bakel' }).first();
+    await expect(rij, 'de vaste testmedewerker hoort in de teamtabel te staan').toBeVisible();
+    medewerkerNaam = 'Stasjo van Bakel';
+    statusBijBackoffice = (await rij.locator('[data-label="Urenstatus"] .status-pill').innerText()).trim();
+    expect(bekendeStatuswoorden, `Backoffice toont "${statusBijBackoffice}", dat hoort uit het gedeelde vocabulaire te komen`)
+      .toContain(statusBijBackoffice);
+    await loginPage.logout();
+  });
+
+  await test.step(`Then ziet ${'de medewerker'} op Mijn uren exact hetzelfde statuswoord`, async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('button[data-view="timesheet"]').first().click();
+    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+    await expect(page.locator('#timesheet-employee')).toHaveText(medewerkerNaam);
+    const statusBijMedewerker = (await page.locator('#timesheet-status').innerText()).trim();
+    expect(bekendeStatuswoorden, `de medewerker toont "${statusBijMedewerker}", dat hoort uit het gedeelde vocabulaire te komen`)
+      .toContain(statusBijMedewerker);
+    expect(statusBijMedewerker, `Backoffice zegt "${statusBijBackoffice}" over dezelfde urenstaat; de medewerker hoort niet iets anders te lezen`)
+      .toBe(statusBijBackoffice);
+    await loginPage.logout();
+  });
+});
+
 // De periodeknop toont "Augustus 2026"; de API wil 2026-08.
 function periodeKey(label: string): string {
   const maanden = ['januari', 'februari', 'maart', 'april', 'mei', 'juni',

@@ -1958,7 +1958,7 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
 - [x] "Standaardweek vullen"-conflict (UI-TAKENLIJST #29/#48) opgelost: bestaande knop blijft
   veilig, nieuwe bevestigde "Week/Maand terugzetten"-knop overschrijft ook bewust-bevestigde
   0-dagen. `[SKIN-H-028]`, v2.0.2, New-bento + Klassiek Mijn uren.
-- [ ] (vrij, overgedragen aan main 13 sep) Dashboard/Mijn overzicht: begroeting, volgende actie, open acties, acties per maand.
+- [x] (overgedragen aan main 13 sep, afgerond) Dashboard/Mijn overzicht: begroeting, volgende actie, open acties, acties per maand.
   **Bevinding + fix (13 sep, v2.0.7):** Klassiek toonde "wachten op controle door Gio of Joyce"
   (hardcoded namen) i.p.v. het overal elders gebruikte "Backoffice" (New-skin bento, klanturenstaat-
   teksten). Gefixt naar "wachten op controle door Backoffice." `assets/app.js` regel ~5705. Geen test
@@ -1966,9 +1966,20 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   geverifieerd correct:** `:not()`-selector in `styles-new.css` toont in Nieuw bewust alleen
   `.new-employee-bento`, `#employee-open-overview`, `#employee-dashboard-correction`,
   `#employee-history-teaser` en verbergt de rest van de Klassieke dashboard-content -- geen
-  dubbele/tegenstrijdige info, goed gedocumenteerd in de bestaande code-comments. Nog te doen:
-  `employeeOpenMonthSummaries`/meermaandenlogica verder doorlichten, live/visuele bevestiging.
-- [ ] (vrij, overgedragen aan main 13 sep) Mijn uren: invoeren, wijzigen, opslaan, Enter-to-save, maand/weeknavigatie, totalen, indienen,
+  dubbele/tegenstrijdige info, goed gedocumenteerd in de bestaande code-comments.
+  **Meermaandenlogica doorgelicht 13 sep -- geen wijziging nodig.** `employeeOpenMonthSummaries()`
+  (`app.js` ~5936) heeft vier guards die elk een eerder gemelde fantoomactie afdekken, alle vier
+  met hun aanleiding in de code beschreven: (1) de werkvoorraad hangt aan de **échte**
+  kalendermaand, niet aan de maand die je toevallig open hebt -- voorheen kreeg wie een lege
+  historische maand opende daar "uren indienen" te zien én verdween de echte maand uit de lijst;
+  (2) maanden ná de kalendermaand vallen af, zodat het tot 2 jaar vooruit mogen kijken
+  (`maxEmployeeFuturePeriodKey`, ~14051) geen open taken verzint; (3) maanden vóór indiensttreding
+  vallen af; (4) een historische maand zonder enige activiteit valt af. Alleen `draft`/`correction`
+  bij uren en `missing`/`draft`/`resubmit` bij de klanturenstaat leveren een actie op. De teller is
+  gedekt in `dashboard.spec.ts` over een reeks toestanden (5 -> 3 -> 2 -> 0 open acties) plus de
+  fixture `staleServerStateWith132OpenActions`, die bewaakt dat een verouderde serverstaat de
+  werkvoorraad niet laat ontploffen. Live/visuele bevestiging is hieronder al afgevinkt.
+- [x] (overgedragen aan main 13 sep, afgerond) Mijn uren: invoeren, wijzigen, opslaan, Enter-to-save, maand/weeknavigatie, totalen, indienen,
   status van urenregistratie. **Code-audit 13 sep (geen wijziging nodig, alles klopte al):**
   0/8/9-sneltoetsen bestaan in zowel Nieuw (`.new-bento-presets`) als Klassiek (`data-hours-set`,
   eerder al overgezet na testfeedback) en zijn al twee keer bewust visueel verfijnd (rustige
@@ -1977,19 +1988,19 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   tussentijdse-opslaan-melding. Totalen (week/maand) rekenen correct door in `updateHoursTotal`.
   Indienen-flow springt eerst naar de laatste week met een duidelijke melding als je daar nog niet
   stond, i.p.v. stil te weigeren; vergrendelde/alleen-lezen maand heeft een eigen statusmelding.
-  **Nog open:** live/visuele bevestiging op TEST of lokaal (licht + donker, desktop + mobiel) --
-  lokaal inloggen vereist een DB-bootstrapscript dat de met main gedeelde testdatabase kan
-  aanpassen; bewust niet zonder overleg gedraaid. Klanturenstaat/correcties/mededelingen/
-  notificaties/profiel/logout (overige 17.1-bullets) nog te doen.
-- [ ] (vrij, overgedragen aan main 13 sep) Klanturenstaat uploaden / opnieuw uploaden. **Code-audit 13 sep (geen
+  **Afgerond 13 sep:** de live/visuele bevestiging staat hieronder afgevinkt (412px, alle vier de
+  combinaties Klassiek/Nieuw x licht/donker, ingelogd als echte medewerker), en de overige
+  17.1-bullets (klanturenstaat, correcties, mededelingen, notificaties, profiel, logout) zijn elk
+  in hun eigen punt hieronder afgehandeld.
+- [x] (overgedragen aan main 13 sep, afgerond) Klanturenstaat uploaden / opnieuw uploaden. **Code-audit 13 sep (geen
   wijziging nodig):** upload-flow heeft nette guards (maand verplicht, bestandstype-check,
   2MB-limiet, dubbele-indiening-blokkade die "resubmit"/"missing"/"draft" wél en de rest
   terecht niet toestaat). Het echte paneel (`#customer-timesheet-upload-panel`) verhuist als
   één DOM-node tussen Dashboard-kaart (Nieuw) en eigen scherm (Klassiek) i.p.v. gedupliceerd te
   worden -- voorkomt dubbele ids/onderhoud. Beheerderskant (controleren, herinneren, extern
   bevestigen/terugzetten, brokerroute) is volledig doorontwikkeld, geen losse eindjes gevonden.
-  Nog open: live/visuele bevestiging.
-- [ ] (vrij, overgedragen aan main 13 sep) Correcties, mededelingen, notificaties, profiel, logout. **Code-audit
+  Live/visuele bevestiging: afgevinkt in het gezamenlijke punt hieronder (13 sep).
+- [x] (overgedragen aan main 13 sep, afgerond) Correcties, mededelingen, notificaties, profiel, logout. **Code-audit
   13 sep:** logout doet één nette herpoging bij netwerkfout voordat hij lokaal opgeeft (voorkomt
   de eerder gefixte "toch weer automatisch ingelogd"-regressie) en ruimt rol/hydratatie/panelen
   netjes op. Profielmenu verbergt "Ander account of rol" buiten demomodus -- terecht, want bij
@@ -2003,7 +2014,13 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   archieffilter "withdrawn" op diezelfde toestand test. Dat lijkt onbereikbaar, maar exact zo'n
   redenering leidde in `093ec97d` tot het weghalen van de nog wél gebruikte `.status-draft`-regel
   (zie v2.0.10 hierboven). Dus eerst aantonen met een test of live-observatie, pas daarna opruimen.
-  Nog te doen: correctie-afhandeling vanuit de medewerkerkant in Mijn uren zelf.
+  **Correctie-afhandeling vanuit de medewerkerkant nagelopen 13 sep -- al gedekt, geen nieuw werk.**
+  `[TS-REV-UI-H-008]` legt de hele ronde door het echte scherm af (32 assertions): medewerker dient
+  in, Backoffice vraagt correctie, **de medewerker ziet het verzoek en dient opnieuw in**,
+  Backoffice keurt goed, de medewerker ziet "Goedgekeurd", Backoffice trekt de goedkeuring met
+  reden in, en de medewerker opent de dashboardcorrectie en kan opnieuw indienen. Aangevuld door
+  `[TS-REV-UI-H-009]` (ingediende urenstaat blijft op slot tot Backoffice een correctie vraagt) en
+  `[TS-REV-UI-H-010]` (submitknop verborgen bij een goedgekeurde urenstaat).
 - [x] Mobiele prioriteit: wat moet ik nu doen -> uren -> open acties -> klanturenstaat -> overig.
   **Doorgemeten 13 sep op 412px in beide vormgevingen, met de echte scrollpositie van elk blok.**
   Regressie `[DASH-H-026]`, v2.0.26. Geen codewijziging (zie hieronder waarom niet).
@@ -2150,14 +2167,37 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
     groen.
   - **Testopzetles, bewaard omdat hij geld kost:** deze assertie stond eerst als extra stap
     middenin `[CTS-API-H-001]`. Daarmee ging de suite van 18/18 groen naar wisselend één uitvaller
-    (eerst `CTS-API-H-006`/`H-016`, daarna `H-013`) -- allemaal cases die los gewoon slagen. Eerst
-    vergeleken met een baseline zónder de wijziging, want "het zal wel flaky zijn" was hier
-    aantoonbaar fout: het extra request verschuift de timing van die lange flow. Als losstaande
-    case raakt hij niemands volgorde en is de suite weer 19/19. Er is ook bewust géén opbouw nodig:
-    de `review_note`-controle draait vóór élke toestandsovergangscontrole, dus de 400 komt
-    aantoonbaar uit de lege toelichting en de case schrijft niets weg.
+    (eerst `CTS-API-H-006`/`H-016`, daarna `H-013`) -- allemaal cases die los gewoon slagen, en
+    allemaal cases die ná H-001 draaien, dus de volgorde maakt een effect van mijn stap mogelijk.
+    Als losstaande case raakt hij niemands volgorde en is de suite 19/19.
+    **Eerlijk over de oorzaak:** dát het verschil er was is gemeten (met een baseline zónder de
+    wijziging); *waarom* is niet bewezen. Een verschuiving in de timing van die lange flow is
+    aannemelijk, maar later diezelfde dag viel in `business-workflows-status.spec.ts` een case om
+    die aantoonbaar niets met de wijziging te maken had (`E2E-H-017` draaide als eerste, vóór de
+    nieuwe case, en was bij herhaling gewoon groen). Deze suites kennen dus ook losstaande
+    flakiness. De conclusie "zet zo'n negatieve assertie losstaand neer" blijft staan -- die is
+    sowieso beter van opzet -- maar de timingverklaring is een vermoeden, geen meting.
+    Er is ook bewust géén opbouw nodig: de `review_note`-controle draait vóór élke
+    toestandsovergangscontrole, dus de 400 komt aantoonbaar uit de lege toelichting en de case
+    schrijft niets weg.
 - [ ] Medewerkersbeheer (stamgegevens), mededelingen beheren + doelgroepen, instellingen +
-  mailinstellingen, notificaties, administratieve statussen
+  mailinstellingen, notificaties, administratieve statussen. **Dekking in kaart gebracht 13 sep.**
+  - [x] *Medewerkersbeheer / stamgegevens:* `user-management.spec.ts` (11 cases: lijst,
+    (de)activeren, force_password_change, 401/403, jezelf niet deactiveren, dubbel deactiveren 409,
+    definitief verwijderen mét en zónder zakelijke historie, resetlink vanuit Teambeheer) plus
+    `admin-writes.spec.ts` voor `upsert_employee` (aanmaken/wijzigen, dubbel e-mailadres geweigerd
+    mét zichtbare melding i.p.v. stil falen, latere startdatum met bevestiging en echte historische
+    impact van de server).
+  - [x] *Instellingen + mailinstellingen:* `admin-writes.spec.ts` (company/settings server-led
+    opslaan, eigen tekst per ontvanger, onderwerp/begeleidende tekst per opdracht), aangevuld door
+    `business-workflows-mail.spec.ts`, `email-queue.spec.ts` en `invoice-company-identity.spec.ts`.
+  - [x] *Notificaties:* `notifications.spec.ts`, 11 cases (ophalen, mark_read/mark_all_read,
+    unread-filter, limietgrens, 401, onbekende actie 400, tellers die gelijk teruglopen, en een
+    oudere response die een gewiste teller niet mag herstellen).
+  - [ ] *Mededelingen beheren + doelgroepen:* **hier zit de P0 hierboven.** De doelgroepkeuze wordt
+    client-side bepaald en stuurt de verkeerde id-soort mee; dat deel blijft open tot die fix er is.
+  - [ ] *Administratieve statussen:* deels geraakt via 17.3 (`[E2E-H-030]`, zie daar); de
+    factuur-/payrollstatussen nog apart doorlopen.
 - [x] Mobiel: nooit desktoptabellen simpelweg verkleinen -- responsive tables/cards/detailweergave/
   inklapbaar, maar geen informatie of beheeractie laten verdwijnen. **Doorgemeten 13 sep, geen
   wijziging nodig.** Per beheerscherm (Dashboard, Goedkeuringen, Facturen, Medewerkers,
@@ -2213,6 +2253,20 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
 - [ ] Concept -> Gereed -> Ingediend -> Goedgekeurd -> Verzonden (+ Teruggestuurd, Correctie,
   Klanturenstaat (opnieuw) uploaden) betekent voor Medewerker en Beheerder hetzelfde na elke
   responsive wijziging
+  - [x] **Statuswoorden zijn aan beide kanten gelijk** -- `[E2E-H-030]`, v2.0.33. Geen wijziging
+    nodig: het klopt vandaag door de opzet. Er is één gedeelde `statusLabels`-map en één
+    `timesheetStatusInfo()` die beide kanten voedt -- de medewerkerpil `#timesheet-status` op Mijn
+    uren (`app.js` ~8751) en de cel "Urenstatus" in de teamtabel van Backoffice (~7383). De case
+    leest die twee uit twee losse sessies (beheerder, daarna de medewerker zelf) en eist dat ze
+    identiek zijn. **Ook bewust geëist dat het woord uit het bekende vocabulaire komt**, want
+    anders zou "beide kanten tonen niets" ook als "gelijk" tellen.
+    *Eerlijk over de bewijskracht:* de discriminatie is structureel (gaan de vocabulaires uit
+    elkaar lopen, dan verschillen de strings) plus die vocabulairecontrole. Een harde
+    discriminerende proef door één kant tijdelijk te veranderen is niet gedaan -- dat zit in
+    `assets/app.js`, dat op dit moment bij de vormgevingslane in beheer is.
+    Eén nuance die geen fout is: in de maandbatch van Backoffice heet `draft` bewust "Nog niet
+    ingediend" waar de medewerker "Nog invullen" ziet (~7623) -- dezelfde toestand, vanuit elk
+    perspectief benoemd. Suite groen (2 cases).
 - [ ] **BEVINDING 13 sep, bewezen, wacht op go van Gio -- "Mededeling intrekken" doet in de echte
   app niet wat de app zelf belooft.** Gevonden bij het uitzoeken van het openstaande 17.1-punt over
   de `withdrawn`-tak in `renderEmployeeAnnouncementArchive`. Geen wijziging doorgevoerd: de fix zit
@@ -2594,6 +2648,23 @@ ons dan handmatig weer aanzetten. Concrete regels:
   hier zes uur stil door een `gh run watch` zonder terugval, zonder dat iemand het merkte.
 - Overleg tussen de sessies is geen werk. Een bericht sturen en dan de beurt beëindigen is precies
   het patroon dat Gio hierboven beschrijft; stuur het bericht en werk in diezelfde beurt door.
+
+**Nooit twee testruns tegelijk op deze machine (13 sep 2026, main).** Ik startte `npm run check`
+op de achtergrond en draaide er gerichte Playwright-suites naast. Gevolg: twee cases in
+`customer-timesheet-api.spec.ts` vielen om met een fout die niets met de wijziging te maken had
+(een toast die niet verscheen), en ik was even op weg dat als bevinding op te schrijven. Los
+draaiden ze meteen groen. De suites delen de database en poort 8010; een tweede run erlangs
+vervuilt de uitslag. Regel: één testrun tegelijk, en bij een onverwachte uitvaller eerst nagaan of
+er nog iets anders liep -- vóór je een defect noteert.
+
+**Een achtergrondtaak stoppen laat het kindproces draaien (13 sep 2026, main).** Twee gestopte
+runs bleken uren later nog `node scripts/smoke-test.mjs` te draaien (samen ruim 1800 CPU-seconden),
+waardoor alles traag werd en ik ten onrechte dacht dat `npm run check` *hing*. Hij hing niet: de
+smoke-test is gewoon zwaar (~900 CPU-seconden per run onder concurrentie, met drie kopieën naast
+elkaar loopt dat op tot tientallen minuten wachttijd) en eindigt met "volledige smoke test:
+geslaagd". Wat hier hielp om het verschil te zien: CPU-tijd twee keer bemonsteren. Loopt die door,
+dan rekent hij en hangt hij niet. En: onderbroken runs eindigen niet vanzelf als je alleen de
+wrapper stopt -- controleer de processenlijst.
 
 **Versienummers: alleen `main` bumpt (13 sep 2026).** Aanleiding: de twee sessies kwamen twee keer
 op hetzelfde nummer uit met verschillende inhoud (2.0.7 en 2.0.21). De eerdere afspraak "fetch
