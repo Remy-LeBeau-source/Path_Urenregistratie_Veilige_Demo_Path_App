@@ -2331,6 +2331,27 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
     andere lane en/of een workflowwijziging, dus eerst melden.
   - **Bewust geen regressie vastgelegd:** een test die de huidige 8px asserteert zou de afwijking
     juist als gewenst gedrag vastleggen. De test hoort bij de fix.
+  - **Beslisklaar uitgewerkt (13 sep), zodat de keuze van Gio meteen uitvoerbaar is.** De opmaak
+    zit op twee plekken: `.approval-actions { display: flex; flex-wrap: wrap; gap: 8px; }`
+    (`assets/styles.css` regel 905) en, binnen `@media (max-width: 590px)`,
+    `.approval-actions { justify-content: stretch; }` plus `.approval-actions .button { flex: 1; }`
+    (regels 1459-1460). Die `flex: 1` is waarom de drie knoppen op 412px elk 100px breed zijn en
+    met 8px ertussen op één regel passen.
+    - **(a) Eigen regel voor de definitieve actie.** In het 590px-blok de goedkeurknop op een eigen
+      rij zetten (`.approval-actions [data-approve] { flex-basis: 100%; }`), waarmee "Bekijken" en
+      "Correctie vragen" samen de bovenste regel houden. Eén regel CSS, geen gedragswijziging, en
+      `flex-wrap: wrap` staat er al. Kleinste ingreep met het grootste effect op het echte risico:
+      een mistik naar rechts komt dan niet meer op "Goedkeuren" uit.
+    - **(b) Drempel op de rij-"Goedkeuren".** `data-approve` gaat nu via één klik rechtstreeks naar
+      `approveEmployee()` (`assets/app.js` ~13556), terwijl de modalvariant wél een bevestiging
+      heeft. Dit dicht het risico het grondigst, maar het verandert een workflow die beheerders
+      dagelijks gebruiken -- dus alleen met expliciete go.
+    - **(c) Volgorde omdraaien.** "Correctie vragen" als laatste zetten (`app.js` ~7600), zodat de
+      gevaarlijke actie niet tussen twee andere staat. Goedkoop, maar het verplaatst het probleem:
+      dan grenst "Correctie vragen" aan "Goedkeuren" in plaats van andersom.
+    **Aanbeveling:** (a), eventueel later aangevuld met (b). (a) is één regel in de vormgevingslane,
+    raakt geen enkele workflow en is direct met een regressie vast te leggen (afstand of eigen regel
+    meten op 412px, met dezelfde zelfcontrole-opzet als `[MOB-H-030]`).
 
 **17.3 Workflow-integriteit**
 - [x] Concept -> Gereed -> Ingediend -> Goedgekeurd -> Verzonden (+ Teruggestuurd, Correctie,
