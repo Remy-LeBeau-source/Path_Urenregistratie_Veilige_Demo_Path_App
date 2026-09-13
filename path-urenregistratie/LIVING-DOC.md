@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 511 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 512 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 511 unieke case-ID's
+- Playwright executable cases: 512 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 512 unieke case-ID's
+- Totaal executable cases: 513 unieke case-ID's
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
 - Database steps mappings: 1
-- Uitvoeringen: 551
-- Niet-mobile projectuitvoeringen: 471
+- Uitvoeringen: 552
+- Niet-mobile projectuitvoeringen: 472
 - Mobile functionele cases: 40
 - Pixel 7 / Chromium-uitvoeringen: 40
 - iPhone 13 / WebKit-uitvoeringen: 40
 
-De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 511 Playwright-functionele cases in totaal 551 resultaten op: 471 + (40 x 2) = 551.
+De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 512 Playwright-functionele cases in totaal 552 resultaten op: 472 + (40 x 2) = 552.
 
 ## Documentatieketen
 
@@ -451,13 +451,14 @@ De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 511 Playwri
 
 - Feature: `tests/playwright/features/announcements.feature`
 - Source: `tests/playwright/announcements.spec.ts`
-- Cases: 8
+- Cases: 9
 
 - [ANN-H-001] beheerder verstuurt een mededeling aan een gekozen medewerker — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [ANN-H-002] een concept blijft intern en kan daarna definitief worden verwijderd — Techniek: API-contract + equivalentieklasse · Assertions: 7
 - [ANN-H-003] intrekken met reden en daarna verbergen bij medewerkers — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [ANN-H-007] "Bij medewerkers verwijderen" laat het bericht echt verdwijnen bij de medewerker, maar blijft intern zichtbaar — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
 - [ANN-H-008] een correctie laat de medewerker alleen de nieuwste tekst zien, niet de oorspronkelijke — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 9
+- [ANN-H-009] een via het scherm gekozen medewerker wordt ook bij de server als die medewerker bewaard — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
 - [ANN-N-004] intrekken zonder reden wordt geweigerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 3
 - [ANN-N-005] verzenden zonder titel, bericht of ontvanger wordt geweigerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [ANN-N-006] een medewerker kan zelf geen mededeling versturen en anoniem is alles dicht — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2

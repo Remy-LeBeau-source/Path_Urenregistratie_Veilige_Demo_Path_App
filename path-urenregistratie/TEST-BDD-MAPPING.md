@@ -329,6 +329,7 @@
 | ANN-H-003 | api | announcements.feature | intrekken met reden en daarna verbergen bij medewerkers | Beslissingstabel rollen en autorisatie | 7 | announcements.steps.ts | announcements.spec.ts | API | Mededelingen | intrekken met reden en daarna verbergen bij medewerkers | Happy | 15 | Actueel |
 | ANN-H-007 | api | announcements.feature | "Bij medewerkers verwijderen" laat het bericht echt verdwijnen bij de medewerker, maar blijft intern zichtbaar | Beslissingstabel rollen en autorisatie | 13 | announcements.steps.ts | announcements.spec.ts | API | Mededelingen | "Bij medewerkers verwijderen" laat het bericht echt verdwijnen bij de medewerker, maar blijft intern zichtbaar | Happy | 15 | Actueel |
 | ANN-H-008 | api | announcements.feature | een correctie laat de medewerker alleen de nieuwste tekst zien, niet de oorspronkelijke | Beslissingstabel rollen en autorisatie | 9 | announcements.steps.ts | announcements.spec.ts | API | Mededelingen | een correctie laat de medewerker alleen de nieuwste tekst zien, niet de oorspronkelijke | Happy | 15 | Actueel |
+| ANN-H-009 | api | announcements.feature | een via het scherm gekozen medewerker wordt ook bij de server als die medewerker bewaard | Beslissingstabel rollen en autorisatie | 5 | announcements.steps.ts | announcements.spec.ts | API | Mededelingen | een via het scherm gekozen medewerker wordt ook bij de server als die medewerker bewaard | Happy | 15 | Actueel |
 | ANN-N-004 | api | announcements.feature | intrekken zonder reden wordt geweigerd | Negatieve equivalentieklasse + error guessing | 3 | announcements.steps.ts | announcements.spec.ts | API | Mededelingen | intrekken zonder reden wordt geweigerd | Negative | 15 | Actueel |
 | ANN-N-005 | api | announcements.feature | verzenden zonder titel, bericht of ontvanger wordt geweigerd | Negatieve equivalentieklasse + error guessing | 6 | announcements.steps.ts | announcements.spec.ts | API | Mededelingen | verzenden zonder titel, bericht of ontvanger wordt geweigerd | Negative | 15 | Actueel |
 | ANN-N-006 | api | announcements.feature | een medewerker kan zelf geen mededeling versturen en anoniem is alles dicht | Beslissingstabel rollen en autorisatie | 2 | announcements.steps.ts | announcements.spec.ts | API | Mededelingen | een medewerker kan zelf geen mededeling versturen en anoniem is alles dicht | Negative | 15 | Actueel |
@@ -533,9 +534,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 511
+- Playwright executable cases: 512
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 512
+- Totaal unieke executable cases: 513
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30

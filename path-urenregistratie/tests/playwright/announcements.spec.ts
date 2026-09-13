@@ -46,6 +46,26 @@ async function standardEmployeeUserId(ctx: Awaited<ReturnType<typeof playwrightR
   return Number(employee!.id);
 }
 
+// De users.id die bij een getoonde medewerkersnaam hoort. Onafhankelijk van de
+// app opgehaald (rechtstreeks uit bootstrap), zodat de controle niet dezelfde
+// vertaling gebruikt als de code die getoetst wordt.
+async function gebruikerIdVanNaam(
+  ctx: Awaited<ReturnType<typeof playwrightRequest.newContext>>,
+  naam: string
+) {
+  const bootstrap = await ctx.get('/server/api/bootstrap.php');
+  const body = await bootstrap.json();
+  // Rechtstreeks uit de employees-tabel: daar staat full_name naast user_id, en
+  // dat is precies de koppeling die de app moet maken. Zo controleert de test
+  // niet met dezelfde vertaling die getoetst wordt.
+  const medewerker = (body.employees as Array<{ full_name?: string; user_id?: number }>)
+    .find(item => String(item.full_name || '').trim() === naam);
+  expect(medewerker, `medewerker "${naam}" moet in bootstrap staan`).toBeTruthy();
+  const gebruikerId = Number(medewerker!.user_id);
+  expect(gebruikerId, `medewerker "${naam}" moet aan een gebruiker gekoppeld zijn`).toBeGreaterThan(0);
+  return gebruikerId;
+}
+
 test.describe('announcements api', () => {
   test('[ANN-H-001] beheerder verstuurt een mededeling aan een gekozen medewerker', async () => {
     const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
@@ -329,6 +349,83 @@ test.describe('announcements api', () => {
       expect(hidden.body.ok).toBe(true);
       await authApi.logout();
     });
+  });
+
+  // Deze case bestaat omdat elke andere mededelingen-case de POST zelf opbouwt
+  // met een users.id uit bootstrap. Daardoor werd het clientpad -- vinkje in het
+  // scherm, writeAnnouncementToApi, server -- nergens gedraaid, en juist daar
+  // zat een verwisseling: de vinkjes dragen employees.id, de server verwacht
+  // users.id. In een echte database lopen die uiteen (employees 1/2/3/4 horen
+  // bij users 3/4/5/6), dus een bericht voor de ene medewerker werd bij de
+  // andere persoon bezorgd, soms bij een beheerder. Er ging geen belletje af,
+  // want announcements.php controleert alleen dat het bestaande users.id's
+  // binnen hetzelfde bedrijf zijn. Zelfde fout-klasse als AUTH-H-025.
+  //
+  // De test kiest daarom bewust via de interface en controleert daarna bij de
+  // server wie er is vastgelegd. Een test die de POST nabouwt kan deze fout per
+  // definitie niet zien.
+  test('[ANN-H-009] een via het scherm gekozen medewerker wordt ook bij de server als die medewerker bewaard', async ({ page }) => {
+    // Aparte, zelf ingelogde context voor de servercontroles. Bewust niet
+    // page.request: die deelt de sessie van de pagina en liep hier vast, en
+    // bovendien hoort de controle onafhankelijk te zijn van wat de pagina zelf
+    // aan het doen is.
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+    const loginPage = new LoginPage(page);
+    const suffix = Date.now().toString().slice(-7);
+    const title = `Ontvangerproef ${suffix}`;
+    let verwachtGebruikerId = 0;
+    let medewerkerNaam = '';
+
+    await test.step('Given de beheerder opent een nieuwe mededeling en kiest zelf de ontvangers', async () => {
+      verwachtGebruikerId = await standardEmployeeUserId(ctx);
+      await loginPage.open();
+      await loginPage.loginAsAdmin();
+      await page.locator('[data-view="announcements"]:visible').first().click();
+      await expect(page.locator('#view-announcements')).toHaveClass(/is-active/);
+      await page.locator("#add-announcement").click();
+      await expect(page.locator('#announcement-title')).toBeVisible();
+      // Een <select> in een dialoog wordt opgewaardeerd tot een keuzemenu-widget
+      // en de native select is dan hidden; bedienen gaat via de trigger en de
+      // optieknoppen (zelfde patroon als bij #pref-skin in skin.spec.ts).
+      await page.locator('#announcement-audience-trigger').click();
+      await page.locator('[data-standard-choice-target="announcement-audience"][data-standard-choice-value="selected"]').click();
+      await expect(page.locator('#announcement-recipient-choices')).toBeVisible();
+    });
+
+    await test.step('When precies een medewerker wordt aangevinkt en het bericht wordt geplaatst', async () => {
+      // Bewust de eerste medewerker in de lijst, en daarna de verwachting
+      // afleiden uit diezelfde persoon. Eerst stond hier de vaste
+      // testmedewerker als verwachting terwijl de test de eerste in de lijst
+      // aanvinkte -- dan vergelijk je twee verschillende mensen en faalt de
+      // test terwijl de app het goed doet.
+      const keuze = page.locator('.recipient-choice').first();
+      medewerkerNaam = ((await keuze.locator('strong').textContent()) || '').trim();
+      expect(medewerkerNaam, 'er moet een medewerker aan te vinken zijn').not.toBe('');
+      verwachtGebruikerId = await gebruikerIdVanNaam(ctx, medewerkerNaam);
+      await keuze.locator('[data-announcement-recipient]').check();
+      await page.locator('#announcement-title').fill(title);
+      await page.locator('#announcement-message').fill(`Bericht voor precies een ontvanger (${suffix}).`);
+      await page.locator('#modal-confirm').click();
+      await expect(page.locator('#modal')).toBeHidden({ timeout: 15_000 });
+    });
+
+    await test.step('Then heeft de server die medewerker als ontvanger, en niet iemand anders', async () => {
+      await expect.poll(async () => {
+        const lijst = await listAnnouncements(ctx);
+        if (lijst.status !== 200) return 'status-' + lijst.status;
+        const bericht = (lijst.body.items as Array<{ title: string; recipient_user_ids?: number[] }> | undefined)
+          ?.find(item => item.title === title);
+        if (!bericht) return 'bericht-nog-niet-zichtbaar';
+        return JSON.stringify((bericht.recipient_user_ids || []).map(Number));
+      }, {
+        message: `de mededeling voor ${medewerkerNaam} hoort bij users.id ${verwachtGebruikerId} te liggen`,
+        timeout: 15_000,
+      }).toBe(JSON.stringify([verwachtGebruikerId]));
+    });
+
+    await ctx.dispose();
   });
 
   test('[ANN-N-004] intrekken zonder reden wordt geweigerd', async () => {

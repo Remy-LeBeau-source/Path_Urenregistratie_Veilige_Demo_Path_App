@@ -51,6 +51,14 @@ Feature: Mededelingen versturen, intrekken en verbergen
     Then ziet de medewerker alleen de gecorrigeerde tekst, niet de oude
     And cleanup: trek de gecorrigeerde mededeling in en verberg deze bij medewerkers
 
+  @happy
+  Scenario: [ANN-H-009] een via het scherm gekozen medewerker wordt ook bij de server als die medewerker bewaard
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given de beheerder opent een nieuwe mededeling en kiest zelf de ontvangers
+    When precies een medewerker wordt aangevinkt en het bericht wordt geplaatst
+    Then heeft de server die medewerker als ontvanger, en niet iemand anders
+
   @negative
   Scenario: [ANN-N-004] intrekken zonder reden wordt geweigerd
     # Testtechniek: Negatieve equivalentieklasse + error guessing

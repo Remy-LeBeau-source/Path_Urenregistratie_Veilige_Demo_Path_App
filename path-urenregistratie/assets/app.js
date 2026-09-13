@@ -8209,6 +8209,23 @@ function renderEmployeeAnnouncementArchive() {
   }).join("");
 }
 
+// Zet employees.id om naar de users.id die de server als ontvanger verwacht.
+// Geeft null terug zodra één koppeling ontbreekt: dan is niet vast te stellen
+// wie het bericht zou ontvangen, en een gok is hier het gevaar zelf.
+// Bewust alleen op de grens naar de server: binnen dit bestand blijven
+// recipientIds employees.id, want de demomodus en alle lokale consumenten
+// (storeAnnouncement, het ontvangerslabel, de e-mailselectie) rekenen daarop.
+function vertaalNaarServerGebruikerIds(employeeIds) {
+  const vertaald = [];
+  for (const id of employeeIds) {
+    const employee = employeeById(id);
+    const gebruikerId = employee && employee.dbUserId != null ? Number(employee.dbUserId) : null;
+    if (!Number.isFinite(gebruikerId) || gebruikerId <= 0) return null;
+    vertaald.push(gebruikerId);
+  }
+  return vertaald;
+}
+
 function announcementRecipientIds(correctionOfId) {
   if (correctionOfId) {
     const original = announcementById(correctionOfId);
@@ -8294,10 +8311,32 @@ function saveAnnouncementFromEditor(correctionOfId, draftId, asDraft) {
 
   if (API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative() && state.currentRole === "admin") {
     const original = correctionOfId ? announcementById(correctionOfId) : null;
+    // recipientIds zijn employees.id (zo staan ze in de vinkjes en zo gebruikt
+    // de rest van dit bestand ze); de server verwacht users.id. Die twee lopen
+    // in een echte database uiteen -- employees 1/2/3/4 horen daar bij users
+    // 3/4/5/6. Zonder vertaalslag werd een mededeling voor Marc bij Gio
+    // bezorgd, een beheerder, en kreeg Marc niets. Er ging geen belletje af
+    // omdat announcements.php alleen controleert dát het bestaande users.id's
+    // binnen hetzelfde bedrijf zijn, en 1 t/m 4 bestaan allemaal.
+    // Zelfde fout-klasse als AUTH-H-025 (inloggen vulde het adres van een
+    // andere medewerker in), nu op de verzendkant van mededelingen.
+    // Let op het onderscheid: bij een correctie komen de ontvangers uit een
+    // bestaande mededeling, en die is voor een beheerder vanaf de server
+    // gehydrateerd -- daar staan dus al users.id in (zie het isAdmin-blok bij
+    // refreshAnnouncementsReadApi). Die nog een keer vertalen zou ze juist
+    // stukmaken. Alleen de ontvangers die uit de vinkjes of de doelgroepkeuze
+    // komen, zijn employees.id en moeten vertaald worden.
+    const serverRecipientIds = original ? recipientIds : vertaalNaarServerGebruikerIds(recipientIds);
+    if (!serverRecipientIds) {
+      // Bewust weigeren in plaats van gokken: bij een onbekende koppeling weten
+      // we niet wie het bericht zou krijgen, en dat is precies het risico.
+      toast("Kan de ontvangers niet betrouwbaar bepalen. Ververs de pagina en probeer het opnieuw.");
+      return;
+    }
     writeAnnouncementToApi(asDraft ? "save_draft" : "send", {
       title,
       message,
-      recipient_user_ids: recipientIds,
+      recipient_user_ids: serverRecipientIds,
       audience_label: original ? ("Zelfde ontvangers als bericht #" + correctionOfId) : (audienceValue + ":" + recipientIds.length),
       email_requested: emailRequested,
       correction_of_id: correctionOfId || null
