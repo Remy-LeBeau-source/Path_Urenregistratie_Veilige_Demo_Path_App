@@ -2092,8 +2092,32 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   klanturenstaten controleren + status, correcties verwerken, markeren/verwerken verzonden items
 - [ ] Medewerkersbeheer (stamgegevens), mededelingen beheren + doelgroepen, instellingen +
   mailinstellingen, notificaties, administratieve statussen
-- [ ] Mobiel: nooit desktoptabellen simpelweg verkleinen -- responsive tables/cards/detailweergave/
-  inklapbaar, maar geen informatie of beheeractie laten verdwijnen
+- [x] Mobiel: nooit desktoptabellen simpelweg verkleinen -- responsive tables/cards/detailweergave/
+  inklapbaar, maar geen informatie of beheeractie laten verdwijnen. **Doorgemeten 13 sep, geen
+  wijziging nodig.** Per beheerscherm (Dashboard, Goedkeuringen, Facturen, Medewerkers,
+  Mededelingen, Instellingen) is op 1280px én op 412px de volledige inventaris opgehaald --
+  zichtbare knoppen/links, `<th>`-koppen, `data-label`-waarden -- en tegen elkaar afgezet.
+  - **Geen enkele beheeractie verdwijnt op telefoonbreedte.** Het verschil in knoppen was op elk
+    scherm nul of positief (mobiel heeft er soms méér, doordat de onderste navigatiebalk meetelt).
+  - **De dashboardtabel doet precies wat het punt vraagt:** op 412px zijn de zes `<th>`-koppen weg
+    en staan diezelfde zes als `data-label` op de cellen -- de kolomnamen verhuizen dus mee de
+    kaartweergave in in plaats van te verdwijnen. Extra bevestiging dat er niet simpelweg verkleind
+    wordt: op déze schermen is juist de *desktopweergave* degene met een horizontale scroller
+    (1 stuk), en op telefoon nul.
+  - **Nul horizontale pagina-overflow** op alle zes de schermen
+    (`documentElement.scrollWidth === clientWidth === 412`).
+  - **Eén vals alarm, waard om te onthouden.** De eerste meting meldde 13 horizontaal overlopende
+    elementen in Instellingen tegen 5 op desktop. Nagemeten bleken het negen
+    `settings-card-heading`-koppen met 5-6px "overloop", allemaal `display: block` met
+    `padding-right: 34px`. Per kind gemeten kwam er niets voorbij de rand van de kop
+    (`voorbijOuder` negatief) en was niets afgekapt (`eigenAfkapping: 0`), en de pagina zelf
+    scrolde niet. **`scrollWidth > clientWidth` telt padding mee en geeft dus vals alarm op elk
+    blok met padding-right.** Alleen de pagina-brede controle
+    (`documentElement.scrollWidth` vs `clientWidth`) zegt echt iets. Dat raakt ook de
+    overflow-steekproef in AUDIT-GUI-FASE17.md P1-punt 3, die dezelfde techniek gebruikt -- daar
+    was de conclusie toevallig wél juist, omdat die op documentniveau meet.
+  - Rol: Beheerder. Design: gemeten in de actieve skin; de kaartomzetting zit op de gedeelde
+    `data-label`-opmaak. Devices: 1280x900 en 412x915.
 - [ ] Gevaarlijke acties (Terugsturen) nooit te dicht naast neutrale acties (Controleren/Verzonden)
   op mobiel/action-sheet-indeling
   - **BEVINDING 13 sep, gemeten, wacht op go van Gio. Geen wijziging doorgevoerd.** Op 412px
