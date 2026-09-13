@@ -1960,7 +1960,18 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   0-dagen. `[SKIN-H-028]`, v2.0.2, New-bento + Klassiek Mijn uren.
 - [ ] Dashboard/Mijn overzicht: begroeting, volgende actie, open acties, acties per maand
 - [ ] (herontwerp, bezig) Mijn uren: invoeren, wijzigen, opslaan, Enter-to-save, maand/weeknavigatie, totalen, indienen,
-  status van urenregistratie -- start: visuele check 0/8/9-sneltoetsen (New-skin, licht/donker), desktop
+  status van urenregistratie. **Code-audit 13 sep (geen wijziging nodig, alles klopte al):**
+  0/8/9-sneltoetsen bestaan in zowel Nieuw (`.new-bento-presets`) als Klassiek (`data-hours-set`,
+  eerder al overgezet na testfeedback) en zijn al twee keer bewust visueel verfijnd (rustige
+  secundaire knop naast het uurgetal). Enter-to-save + focus-naar-volgende-dag werkt in beide
+  skins (`handleBentoDayCardKeydown` resp. `handleEnterSave`/`#hours-grid .hours-input`), met
+  tussentijdse-opslaan-melding. Totalen (week/maand) rekenen correct door in `updateHoursTotal`.
+  Indienen-flow springt eerst naar de laatste week met een duidelijke melding als je daar nog niet
+  stond, i.p.v. stil te weigeren; vergrendelde/alleen-lezen maand heeft een eigen statusmelding.
+  **Nog open:** live/visuele bevestiging op TEST of lokaal (licht + donker, desktop + mobiel) --
+  lokaal inloggen vereist een DB-bootstrapscript dat de met main gedeelde testdatabase kan
+  aanpassen; bewust niet zonder overleg gedraaid. Klanturenstaat/correcties/mededelingen/
+  notificaties/profiel/logout (overige 17.1-bullets) nog te doen.
 - [ ] Klanturenstaat uploaden / opnieuw uploaden
 - [ ] Correcties, mededelingen, notificaties, profiel, logout
 - [ ] Mobiele prioriteit: wat moet ik nu doen -> uren -> open acties -> klanturenstaat -> overig
