@@ -2066,11 +2066,59 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   tabletbreedte weer aanwezig.
 
 **17.2 Beheerderrol (checklist, sectie 3 van de opdracht -- grootste blok, meer info per scherm)**
+
+> ### ⛔ P0 -- BEWEZEN: een mededeling komt bij de VERKEERDE persoon aan (13 sep, niet zelf gefixt)
+>
+> **Reproductie, volledig end-to-end gemeten op een verse testdatabase.** Beheerder opent
+> Mededelingen -> Nieuwe mededeling -> "Zelf medewerkers kiezen" -> vinkt **Marc de Roon** aan ->
+> plaatst de mededeling. De server slaat als ontvanger `user_id = 1` op: **Gio Maatsen, een
+> beheerder**. Marc (`users.id = 3`) krijgt niets.
+>
+> **Oorzaak -- exact dezelfde fout-klasse als `AUTH-H-025`, op een tweede plek.**
+> `announcementRecipientIds()` (`assets/app.js` ~8175) geeft `employee.id` terug, en
+> `saveAnnouncementFromEditor()` (~8263) stuurt dat veld één op één door als
+> `recipient_user_ids`. Maar voor uit de database gehydrateerde medewerkers is `employee.id` de
+> **`employees.id`**; de echte `users.id` staat apart in `dbUserId` (~3174). In deze database
+> lopen die twee twee posities uit elkaar: employees 1/2/3/4 = users 3/4/5/6. In de DOM
+> nagemeten: de ontvangervinkjes dragen `value="1|2|3|4"`. Er zit onderweg geen vertaalslag --
+> `writeAnnouncementToApi()` stuurt de payload letterlijk door.
+>
+> **Waarom niets dit tegenhoudt.** `announcements.php` controleert alleen *dát* elke id een
+> `users.id` binnen hetzelfde bedrijf is -- en 1 t/m 4 bestaan allemaal. De aanroep is dus geldig
+> en er komt geen enkele foutmelding. De bestaande testdekking mist het volledig omdat
+> `announcements.spec.ts` de ontvangers zelf uit `bootstrap.users` haalt (echte user-ids) en de
+> POST rechtstreeks doet -- precies het clientpad met de fout wordt nergens gedraaid.
+>
+> **Gevolg.** "Alle actieve medewerkers" levert af bij users 1,2,3,4 = **Gio (beheerder), Joyce
+> (beheerder), Marc, Stasjo** -- terwijl **Brian en Shawn nooit iets krijgen**. Een bericht voor
+> één medewerker belandt bij een ander. Dit is een vertrouwelijkheidsprobleem, geen cosmetisch punt.
+>
+> **Bewust nog niet gefixt, en waarom.** De fix zelf is klein en duidelijk (`dbUserId` gebruiken
+> in `announcementRecipientIds()` en als `value` van de ontvangervinkjes, met een expliciete
+> weigering wanneer die ontbreekt -- liever een foutmelding dan een gok). Maar `assets/app.js` is
+> op dit moment in beheer bij de vormgevingslane, en dit verandert wie er berichten ontvangt: dat
+> valt onder "grotere wijziging: eerst stoppen en uitleggen". De regressie hoort bij de fix en is
+> daarom ook nog niet vastgelegd -- een test die het huidige gedrag asserteert zou de fout
+> vastleggen als gewenst.
+>
+> **Voorstel aan Gio:** dit met voorrang fixen, mét een regressie die de UI-keuze end-to-end
+> volgt (kies medewerker X -> server bewaart de `users.id` van X) in plaats van de POST na te
+> bouwen, want juist dat verschil liet deze fout al die tijd door.
 - [x] New-skin topnav: volgorde en groepering gelijkgetrokken met Klassiek-sidebar
   (Cockpit/Goedkeuringen/Facturen | Medewerkers/Mededelingen/Instellingen) -- **opnieuw op te
   bouwen bovenop v1.2.4** na het herstellen van deze checkout; vorige poging was ongetest/oud.
-- [ ] Beheer-dashboard: openstaande goedkeuringen, dashboardtellers (moeten kloppen met werkelijke
-  data), recente serverfouten, rolwissel
+- [x] Beheer-dashboard: openstaande goedkeuringen, dashboardtellers (moeten kloppen met werkelijke
+  data), recente serverfouten, rolwissel. **Alle vier deelpunten nagelopen 13 sep; alleen de
+  tellers hadden nog geen enkele dekking, de rest bleek al goed gedekt.**
+  - *Openstaande goedkeuringen:* `dashboard.spec.ts` toetst zowel de werkvoorraadteller in de
+    navigatie (`#dashboard-work-count`, inclusief de uitgesplitste `aria-label`
+    "12 open acties: 7 bij Backoffice, 5 wacht op medewerkers") als het verborgen-zijn bij nul,
+    en de medewerkerkant (`#employee-open-task-total`) over een hele reeks toestanden.
+  - *Recente serverfouten:* `server-log.spec.ts`, acht cases -- API-volgorde (nieuwste eerst),
+    bladeren zonder duplicaten, lege/ontbrekende logstaat, medewerker mag niet, anoniem 401,
+    POST geweigerd, plus twee UI-cases op Instellingen > Systeem.
+  - *Rolwissel:* gedekt in `dashboard.spec.ts` en `mobile-ui.spec.ts`, inclusief het onderscheid
+    desktop (`#switch-role`) vs mobiel (`#mobile-switch-role`).
   - [x] **Dashboardtellers kloppen met de werkelijke data** -- `[DASH-H-027]`, v2.0.28. Er was
     hiervoor geen énkele test: geen bestaande case raakte `#metric-submitted`, `#metric-approved`
     of hun bijschriften (gecontroleerd 13 sep). Geen codewijziging nodig, de tellers bleken correct.

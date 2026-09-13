@@ -171,7 +171,21 @@ geen openstaand, onbehandeld GUI-issue in de lijst dat deze audit moest overdoen
 
 ## Prioriteitenlijst
 
-**P0 — data/autorisatie/gebroken functionaliteit:** rol en autorisatie zijn schoon
+**P0 — ERNSTIGSTE VONDST (13 sep): een mededeling komt bij de verkeerde
+persoon aan.** End-to-end gemeten: de beheerder vinkt in de UI "Marc de Roon"
+aan en plaatst de mededeling; de server bewaart als ontvanger `user_id = 1` =
+**Gio Maatsen, een beheerder**. Marc (`users.id 3`) krijgt niets. Oorzaak is
+dezelfde fout-klasse als `AUTH-H-025` op een tweede plek:
+`announcementRecipientIds()` geeft `employee.id` (= `employees.id`) terug en dat
+gaat ongewijzigd mee als `recipient_user_ids`, terwijl de echte `users.id` apart
+in `dbUserId` staat -- in deze database lopen ze twee posities uit elkaar
+(employees 1-4 = users 3-6). De server accepteert het omdat die ids wél bestaan.
+"Alle actieve medewerkers" bezorgt daardoor bij twee beheerders en twee
+medewerkers, terwijl Brian en Shawn nooit iets krijgen. Niet zelf gefixt: de fix
+verandert wie berichten ontvangt en `assets/app.js` is bij de vormgevingslane in
+beheer. Volledige analyse, oorzaak en voorgestelde fix in MASTERCHECKLIST.md 17.2.
+
+**P0 — overig: data/autorisatie/gebroken functionaliteit:** rol en autorisatie zijn schoon
 (`roles-api.spec.ts` incl. de nieuwe `ROLE-N-006` per-actie-gates, `SEC-H-009/010/011/012`,
 alles groen; 12 sep login-picker-bug `AUTH-H-025`). **Wél één gebroken workflow
 gevonden op 13 sep, bewezen en beschreven, wacht op go van Gio:** "Mededeling
