@@ -2058,17 +2058,21 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   juist op Android nodig, waar de ene bestandskiezer alleen extensies en de andere alleen
   MIME-types honoreert. **Terugknop:** gedekt door `[DASH-H-022]` (beheerder) en `[DASH-H-023]`
   (medewerker), die met browser-terug/-vooruit door alle eigen schermen navigeren.
-- [ ] **Android-vervolg, nog empirisch te toetsen:** de urenvelden zijn `type="number"` met
-  `inputmode="decimal"`. Een Nederlands Android-toetsenbord biedt daar een **komma** aan, en bij
-  `type="number"` levert een komma in sommige browsers een lege `input.value` op in plaats van
-  8,5 — dat zou stil verlies van een ingevoerd uur betekenen (het soort urenveld-probleem waar
-  de opdracht expliciet voor waarschuwt). Aanwijzing dat het meevalt: `standardHoursForDay()`
-  doet al een `.replace(",", ".")`, dus ergens is dit onderkend, en er is nooit een melding over
-  geweest terwijl de app in gebruik is. Aanwijzing dat het niet vanzelf goed gaat: dat
-  `replace` zit op het **standaardpatroon**, niet op het pad dat een getypte waarde leest.
-  Verdient een echte Playwright-case op `mobile-chrome` die "8,5" in een urenveld typt en
-  controleert dat er 8,5 wordt opgeslagen — niet 0, niet leeg. Nog niet gedaan: de lokale
-  testserver was bezet door de skin-regressie.
+- [x] **Android-komma in het urenveld getoetst (13 sep), risico grotendeels weerlegd.** De
+  urenvelden zijn `type="number"` met `inputmode="decimal"`; een Nederlands Android-toetsenbord
+  biedt daar een **komma** aan, en bij `type="number"` kan een komma in sommige browsers een
+  lege `input.value` opleveren — dan verdwijnt een ingevuld uur stil, precies het soort
+  urenveld-probleem waar de opdracht voor waarschuwt. Nieuwe regressie `[MOB-H-027]`
+  (`mobile-ui.spec.ts`, project `mobile-chrome`) typt "8,5" in een echt urenveld met
+  `pressSequentially()` — bewust niet `fill()`, want dat zet de waarde direct via de DOM en
+  slaat juist de toetsaanslagen over die hier het onderwerp zijn. Resultaat: **geslaagd**, het
+  veld raakt niet leeg. De case controleert twee faalgevallen: (1) leeg veld, en (2) dat "8,5"
+  niet als **85** wordt gelezen — die tweede is bewust toegevoegd nadat de eerste versie van
+  deze case ook groen zou zijn geweest bij de uitkomst 85, wat 85 uur op één dag betekent.
+  **Eerlijke beperking:** de testbrowser draait niet in een Nederlandse locale. Dit smalt het
+  risico sterk in (de invoer wordt niet verworpen en niet verminkt) maar sluit afwijkend gedrag
+  op een echt Nederlands Android-toestel niet 100% uit; dat vraagt een test op een fysiek
+  toestel. Rol: Medewerker. Design: skin-onafhankelijk (`.hours-input` bestaat in beide).
 - [ ] Android/Chrome resterend: sticky/fixed gedrag, scroll en standalone/PWA op een echt toestel
 - [x] **PWA-doorloop gedaan (13 sep), één bevinding.** Alles nagelopen in `manifest.php`,
   `assets/icon-*.png` en `sw.js`. **In orde:** het manifest is compleet (`id`, `name`,

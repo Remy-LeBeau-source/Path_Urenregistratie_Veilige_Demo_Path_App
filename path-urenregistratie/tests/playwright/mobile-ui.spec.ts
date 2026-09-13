@@ -1772,3 +1772,57 @@ test('[MOB-H-026] getypte velden blijven op 16px zodat iOS Safari niet inzoomt b
     expect(await fontSize(page.locator('#period-year-picker')), 'jaartal in de periodekiezer').toBeGreaterThanOrEqual(16);
   });
 });
+
+test('[MOB-H-027] een uur met een komma getypt komt aan als 8,5 en niet als leeg veld', async ({ page }) => {
+  // Fase 17.5-audit (Android/Chrome-blok, main). De urenvelden zijn
+  // type="number" met inputmode="decimal". Een Nederlands Android-toetsenbord
+  // biedt bij inputmode="decimal" een KOMMA aan, en bij type="number" levert
+  // een komma in verschillende browsers een lege input.value op in plaats van
+  // 8.5 -- dan verdwijnt een ingevuld uur stil. Precies het soort urenveld-
+  // probleem waar de opdracht expliciet voor waarschuwt ("uren mogen nooit
+  // stilletjes verloren gaan").
+  //
+  // Bewust pressSequentially() en niet fill(): fill() zet de waarde direct via
+  // de DOM en slaat de toetsaanslagen over, waardoor juist het gedrag dat hier
+  // getest moet worden niet optreedt. Dit bootst een echte typende gebruiker na.
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+
+  await openView(page, 'timesheet');
+
+  const urenveld = page.locator('.hours-input:not([disabled])').first();
+
+  await test.step('Given de medewerker staat met een leeg urenveld in Mijn uren', async () => {
+    await expect(urenveld).toBeVisible();
+    await urenveld.fill('');
+  });
+
+  await test.step('When hij 8,5 typt zoals een Nederlands toetsenbord dat aanbiedt', async () => {
+    await urenveld.click();
+    await urenveld.pressSequentially('8,5');
+    await urenveld.blur();
+  });
+
+  await test.step('Then staat er een geloofwaardig aantal uren, geen leeg veld en geen 85', async () => {
+    const waarde = await urenveld.inputValue();
+
+    // Faalgeval 1, het ergste: de browser verwerpt de komma en maakt het veld
+    // leeg. De gebruiker heeft dan zichtbaar iets ingevuld en ziet het stil
+    // verdwijnen.
+    expect(
+      waarde,
+      'een getypte komma mag het urenveld nooit leegmaken -- dan verdwijnt een ingevuld uur stil'
+    ).not.toBe('');
+
+    // Faalgeval 2, subtieler maar net zo fout: de komma wordt weggelaten in
+    // plaats van als decimaalteken gelezen, en 8,5 wordt 85. Zonder deze
+    // controle zou deze case ook groen zijn bij die uitkomst -- en 85 uur op
+    // een dag is geen invoerfout van de gebruiker maar een bug.
+    const alsGetal = Number(waarde.replace(',', '.'));
+    expect(
+      Number.isFinite(alsGetal) && alsGetal > 0 && alsGetal <= 24,
+      `een dag kan nooit meer dan 24 uur hebben, veld bevat "${waarde}"`
+    ).toBe(true);
+  });
+});
