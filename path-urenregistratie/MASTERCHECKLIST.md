@@ -2138,6 +2138,20 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
 > probleem, en de opdracht is daar duidelijk over. Maar het ligt pal naast de fix die de
 > vormgevingslane nu maakt, dus daar gemeld -- `dbEmployeeId` gebruiken waar een `employees.id`
 > bedoeld is, is dezelfde beweging als `dbUserId` gebruiken waar een `users.id` bedoeld is.
+>
+> **Bewaking toegevoegd in plaats van een fix: `[DASH-H-028]`, v2.0.42.** De vormgevingslane en ik
+> zijn het eens dat een fix zonder falend geval een fix zonder vangnet is, zeker in code die
+> goedkeuren raakt. Wat wél kan is detectie zonder gedragswijziging: deze case leest elke
+> goedkeurkaart op Goedkeuringen en eist dat de id op de kaart én op de goedkeurknop gelijk is aan
+> de `employees.id` die de server voor **die naam** teruggeeft. Bewust via de naam vergeleken: die
+> is voor de beheerder het bewijs van wie hij goedkeurt, en een controle van het type "bestaat deze
+> id" zou een verwisseling tussen twee medewerkers niet zien.
+> *Discriminerend bewezen, en onderweg zelf bijna misgegaan:* eerst haalde de case de serverdata op
+> met `page.request`, en dat loopt buiten de pagina om -- een gesimuleerde afwijking (employees-id's
+> +10) kwam daardoor niet eens aan en de case bleef groen. Dat was geen bewijs maar een blinde
+> vlek. Na het ophalen via de pagina zelf faalde hij exact zoals bedoeld: *"de kaart van Marc de
+> Roon draagt id 1, maar in de database is dat employees.id 11"*. Daarna simulatie verwijderd en
+> weer groen.
 - [x] New-skin topnav: volgorde en groepering gelijkgetrokken met Klassiek-sidebar
   (Cockpit/Goedkeuringen/Facturen | Medewerkers/Mededelingen/Instellingen) -- **opnieuw op te
   bouwen bovenop v1.2.4** na het herstellen van deze checkout; vorige poging was ongetest/oud.
@@ -2733,6 +2747,51 @@ op de achtergrond en draaide er gerichte Playwright-suites naast. Gevolg: twee c
 draaiden ze meteen groen. De suites delen de database en poort 8010; een tweede run erlangs
 vervuilt de uitslag. Regel: één testrun tegelijk, en bij een onverwachte uitvaller eerst nagaan of
 er nog iets anders liep -- vóór je een defect noteert.
+
+**OPGELOST: `[DASH-N-007]` was tijdgevoelig, niet stuk (13 sep 2026, main).** v2.0.43.
+Het begon als "main is rood na de merge" en eindigde ergens anders. De route erheen is het bewaren
+waard, want ik ben onderweg twee keer bijna de verkeerde kant op gegaan.
+- **Eerste meting was ongeldig.** Zeven losse runs rood -- maar de eerste drie liepen dwars door een
+  testrun van de andere sessie heen. Pas na wachten tot die klaar was telde de meting. (Zie de
+  regel "een testrun tegelijk" hierboven; dit was de tweede keer op één dag.)
+- **Tweede spoor: de merge.** Zelfde bestand, zelfde positie #4, zelfde voorgangers: op 68eb2272
+  volledig groen (19/19), op de huidige main rood. Gemeten op een losse worktree met eigen
+  database en poort. Dat wees hard naar de merge -- en zo heb ik het ook gemeld.
+- **Maar de aantallen waren identiek.** Probe op beide bomen: "12 open acties in 10 dossiers ·
+  Backoffice 7 · 5 wachten", 12 rijen, in beide gevallen. Het enige verschil: de hero was ná de
+  merge al gevuld waar hij daarvóór na 2,5 s nog "Werkvoorraad laden…" toonde. Geen extra werk,
+  maar eerder klaar. Daarmee viel ook de hypothese af dat `customerTimesheetFor()` een extra taak
+  liet ontstaan (die schakels kloppen wél, zie de notitie hieronder, maar de voorspelling niet).
+- **De echte oorzaak.** De case gate't `dashboard.php` bewust en injecteert een stale staat; hero
+  en lijst komen dus niet tegelijk binnen. De `expect.poll` stond op de standaard 5 s. Of ze binnen
+  dat venster samenkwamen hing af van de snelheid van de machine -- de case mat mede hoe traag de
+  app is. De vormgevingslane zei het raakste: **je wil hem niet groen zien worden door de app
+  trager te maken.**
+- **Fix: het wachtvenster naar 20 s, verder niets.** Alle zes de voorwaarden blijven geëist, dus
+  lopen hero en lijst structureel uiteen dan faalt hij nog steeds -- alleen later. Juist daarom
+  ónderscheidt deze wijziging de twee gevallen in plaats van er één te verbergen. Uitkomst: groen,
+  óók losstaand, wat meteen mijn eerdere conclusie corrigeert dat hij van zijn voorgangers zou
+  afhangen -- losstaand was hij simpelweg trager (koude start) en dus eerder buiten het venster.
+- **Wat ik hieruit meeneem:** twee keer een plausibel verhaal gehad (eerst de merge, toen een
+  extra taak) en beide keren wees de meting iets anders aan. Een bisect die naar een commit wijst,
+  bewijst nog niet dat die commit fout is -- alleen dat er iets is veranderd. Hier was dat de
+  snelheid.
+
+**NOG OPEN: `dashboard.spec.ts` heeft wisselwerking tussen cases, in beide richtingen.** In de run
+waarin DASH-N-007 groen werd, viel `[DASH-N-012]` om op `#modal-confirm`: verwacht "Controle
+afronden", gekregen "Voorbeeldgegevens herstellen" -- dus een andere modal stond nog open. Los
+draait die case twee van de twee keer groen. Precies het spiegelbeeld van DASH-N-007. Bewust niet
+vannacht nog "even" gefixt: dat vraagt uitzoeken welke case zijn modal laat staan, en dat is
+echt werk, geen timeout-verhoging. Eerstvolgende kandidaat voor deze lane.
+
+**Latent risico, los van bovenstaande: `customerTimesheetFor()` heet als een getter maar schrijft.**
+Regel ~4494: hij maakt `record.customerTimesheet` aan als die ontbreekt en vult standaardwaarden,
+met `status: "missing"` (`blankCustomerTimesheet`, ~228). En `missing` levert in `adminOpenTasks()`
+(~5960) een `customer-waiting`-taak op. Elke aanroep vanuit een renderpad kan de werkvoorraad dus
+in principe veranderen. Bij het onderzoek hierboven bleek dit **niet** de oorzaak -- de aantallen
+waren voor en na identiek -- maar het blijft een reëel valstrikpatroon: een naam die lezen belooft
+en schrijven doet. Opgemerkt door de vormgevingslane, hier vastgelegd zodat het niet verdwijnt.
+Geen wijziging: er is geen aantoonbaar defect, en de functie wordt overal gebruikt.
 
 **Twee races uit het gereedschap gehaald (13 sep 2026, main).** Allebei in `scripts/`, allebei
 naar aanleiding van iets concreets:

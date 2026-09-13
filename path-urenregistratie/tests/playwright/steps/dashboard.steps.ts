@@ -169,3 +169,6 @@ When("de serverwaarheid voor diezelfde maand wordt opgehaald");
 Then("tonen de tellers exact de getallen van de server");
 And("spreken de bijschriften de tellers niet tegen");
 And("wint de server aantoonbaar van een eigen telling, ook bij getallen die lokaal onmogelijk zijn");
+Given("Backoffice de openstaande goedkeuringen open heeft");
+When("de flow voor DASH-H-028 wordt uitgevoerd");
+Then("hoort bij elke naam op een goedkeurkaart de employees.id uit de database");
