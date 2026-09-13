@@ -1958,7 +1958,7 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
 - [x] "Standaardweek vullen"-conflict (UI-TAKENLIJST #29/#48) opgelost: bestaande knop blijft
   veilig, nieuwe bevestigde "Week/Maand terugzetten"-knop overschrijft ook bewust-bevestigde
   0-dagen. `[SKIN-H-028]`, v2.0.2, New-bento + Klassiek Mijn uren.
-- [ ] (vrij, overgedragen aan main 13 sep) Dashboard/Mijn overzicht: begroeting, volgende actie, open acties, acties per maand.
+- [x] (overgedragen aan main 13 sep, afgerond) Dashboard/Mijn overzicht: begroeting, volgende actie, open acties, acties per maand.
   **Bevinding + fix (13 sep, v2.0.7):** Klassiek toonde "wachten op controle door Gio of Joyce"
   (hardcoded namen) i.p.v. het overal elders gebruikte "Backoffice" (New-skin bento, klanturenstaat-
   teksten). Gefixt naar "wachten op controle door Backoffice." `assets/app.js` regel ~5705. Geen test
@@ -1966,9 +1966,20 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   geverifieerd correct:** `:not()`-selector in `styles-new.css` toont in Nieuw bewust alleen
   `.new-employee-bento`, `#employee-open-overview`, `#employee-dashboard-correction`,
   `#employee-history-teaser` en verbergt de rest van de Klassieke dashboard-content -- geen
-  dubbele/tegenstrijdige info, goed gedocumenteerd in de bestaande code-comments. Nog te doen:
-  `employeeOpenMonthSummaries`/meermaandenlogica verder doorlichten, live/visuele bevestiging.
-- [ ] (vrij, overgedragen aan main 13 sep) Mijn uren: invoeren, wijzigen, opslaan, Enter-to-save, maand/weeknavigatie, totalen, indienen,
+  dubbele/tegenstrijdige info, goed gedocumenteerd in de bestaande code-comments.
+  **Meermaandenlogica doorgelicht 13 sep -- geen wijziging nodig.** `employeeOpenMonthSummaries()`
+  (`app.js` ~5936) heeft vier guards die elk een eerder gemelde fantoomactie afdekken, alle vier
+  met hun aanleiding in de code beschreven: (1) de werkvoorraad hangt aan de **échte**
+  kalendermaand, niet aan de maand die je toevallig open hebt -- voorheen kreeg wie een lege
+  historische maand opende daar "uren indienen" te zien én verdween de echte maand uit de lijst;
+  (2) maanden ná de kalendermaand vallen af, zodat het tot 2 jaar vooruit mogen kijken
+  (`maxEmployeeFuturePeriodKey`, ~14051) geen open taken verzint; (3) maanden vóór indiensttreding
+  vallen af; (4) een historische maand zonder enige activiteit valt af. Alleen `draft`/`correction`
+  bij uren en `missing`/`draft`/`resubmit` bij de klanturenstaat leveren een actie op. De teller is
+  gedekt in `dashboard.spec.ts` over een reeks toestanden (5 -> 3 -> 2 -> 0 open acties) plus de
+  fixture `staleServerStateWith132OpenActions`, die bewaakt dat een verouderde serverstaat de
+  werkvoorraad niet laat ontploffen. Live/visuele bevestiging is hieronder al afgevinkt.
+- [x] (overgedragen aan main 13 sep, afgerond) Mijn uren: invoeren, wijzigen, opslaan, Enter-to-save, maand/weeknavigatie, totalen, indienen,
   status van urenregistratie. **Code-audit 13 sep (geen wijziging nodig, alles klopte al):**
   0/8/9-sneltoetsen bestaan in zowel Nieuw (`.new-bento-presets`) als Klassiek (`data-hours-set`,
   eerder al overgezet na testfeedback) en zijn al twee keer bewust visueel verfijnd (rustige
@@ -1977,19 +1988,19 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   tussentijdse-opslaan-melding. Totalen (week/maand) rekenen correct door in `updateHoursTotal`.
   Indienen-flow springt eerst naar de laatste week met een duidelijke melding als je daar nog niet
   stond, i.p.v. stil te weigeren; vergrendelde/alleen-lezen maand heeft een eigen statusmelding.
-  **Nog open:** live/visuele bevestiging op TEST of lokaal (licht + donker, desktop + mobiel) --
-  lokaal inloggen vereist een DB-bootstrapscript dat de met main gedeelde testdatabase kan
-  aanpassen; bewust niet zonder overleg gedraaid. Klanturenstaat/correcties/mededelingen/
-  notificaties/profiel/logout (overige 17.1-bullets) nog te doen.
-- [ ] (vrij, overgedragen aan main 13 sep) Klanturenstaat uploaden / opnieuw uploaden. **Code-audit 13 sep (geen
+  **Afgerond 13 sep:** de live/visuele bevestiging staat hieronder afgevinkt (412px, alle vier de
+  combinaties Klassiek/Nieuw x licht/donker, ingelogd als echte medewerker), en de overige
+  17.1-bullets (klanturenstaat, correcties, mededelingen, notificaties, profiel, logout) zijn elk
+  in hun eigen punt hieronder afgehandeld.
+- [x] (overgedragen aan main 13 sep, afgerond) Klanturenstaat uploaden / opnieuw uploaden. **Code-audit 13 sep (geen
   wijziging nodig):** upload-flow heeft nette guards (maand verplicht, bestandstype-check,
   2MB-limiet, dubbele-indiening-blokkade die "resubmit"/"missing"/"draft" wél en de rest
   terecht niet toestaat). Het echte paneel (`#customer-timesheet-upload-panel`) verhuist als
   één DOM-node tussen Dashboard-kaart (Nieuw) en eigen scherm (Klassiek) i.p.v. gedupliceerd te
   worden -- voorkomt dubbele ids/onderhoud. Beheerderskant (controleren, herinneren, extern
   bevestigen/terugzetten, brokerroute) is volledig doorontwikkeld, geen losse eindjes gevonden.
-  Nog open: live/visuele bevestiging.
-- [ ] (vrij, overgedragen aan main 13 sep) Correcties, mededelingen, notificaties, profiel, logout. **Code-audit
+  Live/visuele bevestiging: afgevinkt in het gezamenlijke punt hieronder (13 sep).
+- [x] (overgedragen aan main 13 sep, afgerond) Correcties, mededelingen, notificaties, profiel, logout. **Code-audit
   13 sep:** logout doet één nette herpoging bij netwerkfout voordat hij lokaal opgeeft (voorkomt
   de eerder gefixte "toch weer automatisch ingelogd"-regressie) en ruimt rol/hydratatie/panelen
   netjes op. Profielmenu verbergt "Ander account of rol" buiten demomodus -- terecht, want bij
@@ -2003,7 +2014,13 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   archieffilter "withdrawn" op diezelfde toestand test. Dat lijkt onbereikbaar, maar exact zo'n
   redenering leidde in `093ec97d` tot het weghalen van de nog wél gebruikte `.status-draft`-regel
   (zie v2.0.10 hierboven). Dus eerst aantonen met een test of live-observatie, pas daarna opruimen.
-  Nog te doen: correctie-afhandeling vanuit de medewerkerkant in Mijn uren zelf.
+  **Correctie-afhandeling vanuit de medewerkerkant nagelopen 13 sep -- al gedekt, geen nieuw werk.**
+  `[TS-REV-UI-H-008]` legt de hele ronde door het echte scherm af (32 assertions): medewerker dient
+  in, Backoffice vraagt correctie, **de medewerker ziet het verzoek en dient opnieuw in**,
+  Backoffice keurt goed, de medewerker ziet "Goedgekeurd", Backoffice trekt de goedkeuring met
+  reden in, en de medewerker opent de dashboardcorrectie en kan opnieuw indienen. Aangevuld door
+  `[TS-REV-UI-H-009]` (ingediende urenstaat blijft op slot tot Backoffice een correctie vraagt) en
+  `[TS-REV-UI-H-010]` (submitknop verborgen bij een goedgekeurde urenstaat).
 - [x] Mobiele prioriteit: wat moet ik nu doen -> uren -> open acties -> klanturenstaat -> overig.
   **Doorgemeten 13 sep op 412px in beide vormgevingen, met de echte scrollpositie van elk blok.**
   Regressie `[DASH-H-026]`, v2.0.26. Geen codewijziging (zie hieronder waarom niet).
