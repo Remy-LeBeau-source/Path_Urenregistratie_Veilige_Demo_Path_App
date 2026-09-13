@@ -2138,6 +2138,20 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
 > probleem, en de opdracht is daar duidelijk over. Maar het ligt pal naast de fix die de
 > vormgevingslane nu maakt, dus daar gemeld -- `dbEmployeeId` gebruiken waar een `employees.id`
 > bedoeld is, is dezelfde beweging als `dbUserId` gebruiken waar een `users.id` bedoeld is.
+>
+> **Bewaking toegevoegd in plaats van een fix: `[DASH-H-028]`, v2.0.42.** De vormgevingslane en ik
+> zijn het eens dat een fix zonder falend geval een fix zonder vangnet is, zeker in code die
+> goedkeuren raakt. Wat wél kan is detectie zonder gedragswijziging: deze case leest elke
+> goedkeurkaart op Goedkeuringen en eist dat de id op de kaart én op de goedkeurknop gelijk is aan
+> de `employees.id` die de server voor **die naam** teruggeeft. Bewust via de naam vergeleken: die
+> is voor de beheerder het bewijs van wie hij goedkeurt, en een controle van het type "bestaat deze
+> id" zou een verwisseling tussen twee medewerkers niet zien.
+> *Discriminerend bewezen, en onderweg zelf bijna misgegaan:* eerst haalde de case de serverdata op
+> met `page.request`, en dat loopt buiten de pagina om -- een gesimuleerde afwijking (employees-id's
+> +10) kwam daardoor niet eens aan en de case bleef groen. Dat was geen bewijs maar een blinde
+> vlek. Na het ophalen via de pagina zelf faalde hij exact zoals bedoeld: *"de kaart van Marc de
+> Roon draagt id 1, maar in de database is dat employees.id 11"*. Daarna simulatie verwijderd en
+> weer groen.
 - [x] New-skin topnav: volgorde en groepering gelijkgetrokken met Klassiek-sidebar
   (Cockpit/Goedkeuringen/Facturen | Medewerkers/Mededelingen/Instellingen) -- **opnieuw op te
   bouwen bovenop v1.2.4** na het herstellen van deze checkout; vorige poging was ongetest/oud.
@@ -2733,6 +2747,27 @@ op de achtergrond en draaide er gerichte Playwright-suites naast. Gevolg: twee c
 draaiden ze meteen groen. De suites delen de database en poort 8010; een tweede run erlangs
 vervuilt de uitslag. Regel: één testrun tegelijk, en bij een onverwachte uitvaller eerst nagaan of
 er nog iets anders liep -- vóór je een defect noteert.
+
+**OPEN: `[DASH-N-007]` is rood op main na de merge van 13 sep (aa7b5d47).** Twee losse feiten,
+allebei gemeten, niet beredeneerd:
+1. **De case is niet geïsoleerd.** Losstaand (`--grep`) faalt hij op zowel de voor-merge-code als de
+   huidige main; hij slaagt alleen als het hele `dashboard.spec.ts` draait. De testdatabase wordt
+   binnen één run niet tussen cases teruggezet, dus hij leunt op wat de drie cases vóór hem
+   achterlaten. Mijn eerste zeven losse runs waren dus ongeldige metingen. **Dit hoort opgeknapt**
+   (mijn kant, tests): een case die alleen slaagt dankzij zijn voorgangers verbergt precies het
+   soort verschil dat hieronder aan het licht kwam.
+2. **Mét die voorgangers maakt de merge wél verschil.** Zelfde bestand, zelfde positie #4, zelfde
+   drie voorgangers: op 68eb2272 volledig groen (19/19, DASH-N-007 in 15,9s), op de huidige main
+   rood terwijl de rest groen blijft. Gemeten op een losse worktree met een eigen database en
+   poort, dus de twee metingen raakten elkaar niet.
+   Wat faalt: `totalMatches`, `ownersMatch`, `ownerBadgesMatch`, `metricMatches`; wat blijft
+   kloppen: `queueMatches` en `staleTotalsAbsent`. De app meldt "12 open acties in 10 dossiers".
+   Het verschil zit dus tussen wat de hero optelt en wat de lijst toont, niet in een verdwenen
+   element. **Uitgesloten:** de 278 regels Klassieke CSS uit die merge (de case draait op
+   `desktop-chromium`, 1280px, en dat blok zit in `@media (max-width: 720px)`), en de kalender
+   (`useFixedDemoClock` in een `beforeEach`, plus vaste maandsleutels in de fixture).
+   Overblijvend: `assets/app.js` en `index.html` uit die merge. Gemeld bij de vormgevingslane,
+   die dat bestand beheert.
 
 **Twee races uit het gereedschap gehaald (13 sep 2026, main).** Allebei in `scripts/`, allebei
 naar aanleiding van iets concreets:

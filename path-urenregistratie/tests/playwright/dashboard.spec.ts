@@ -1267,3 +1267,72 @@ test('[DASH-H-027] de dashboardtellers van Backoffice komen exact uit de serverd
 
   await loginPage.logout();
 });
+
+test('[DASH-H-028] elke goedkeurknop draagt de echte employees.id van de getoonde medewerker', async ({ page }) => {
+  // Bewaking, geen gedragswijziging. Aanleiding: bij het natrekken van de
+  // mededelingen-P0 (employees.id verstuurd waar users.id hoort) bleek dat de
+  // client zijn medewerkers-id's uit een statische catalogus haalt --
+  // `localEmployee.id` wordt bij het hydrateren nooit op de database-id gezet;
+  // de echte `employees.id` komt er als `dbEmployeeId` naast te staan
+  // (`app.js` ~3134-3160). De beheerdersacties goedkeuren en correctie-vragen
+  // sturen die catalogus-id door als `employee_id`.
+  //
+  // Vandaag gaat dat goed omdat de twee reeksen samenvallen: gemeten zijn de
+  // client-id's 1/2/3/4 en de `employees.id` in de database ook 1/2/3/4. Er is
+  // dus GEEN defect en er is bewust niets aan de code veranderd -- een fix
+  // zonder falend geval is een fix zonder vangnet, en dit pad raakt goedkeuren.
+  //
+  // Wat deze case wél doet: luid klagen zodra die aanname niet meer klopt. Zou
+  // ooit een bedrijf worden toegevoegd waarvan de employees-rijen niet bij 1
+  // beginnen, of zou er een medewerker verwijderd worden, dan loopt de
+  // koppeling stil scheef en keurt een beheerder de uren van iemand anders
+  // goed. Deze case valt dan om, op de plek waar het misgaat.
+  //
+  // De vergelijking gaat bewust via de NAAM op de kaart: die is voor de
+  // gebruiker het bewijs van wie hij goedkeurt, en de id eronder moet daarbij
+  // horen. Een vergelijking van alleen "is het een bestaande id" zou een
+  // verwisseling tussen twee medewerkers niet zien.
+  const loginPage = new LoginPage(page);
+  await suppressInstallBanner(page);
+
+  await test.step('Given Backoffice de openstaande goedkeuringen open heeft', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await page.locator('button[data-view="approvals"]').first().click();
+    await expect(page.locator('#view-approvals')).toHaveClass(/is-active/);
+    await expect(page.locator('.approval-card').first()).toBeVisible({ timeout: 30_000 });
+  });
+
+  await test.step('Then hoort bij elke naam op een goedkeurkaart de employees.id uit de database', async () => {
+    const kaarten = await page.locator('.approval-card').evaluateAll(els => els.map(el => ({
+      clientId: Number(el.getAttribute('data-approval-card')),
+      naam: (el.querySelector('.approval-person strong')?.textContent || '').trim(),
+      goedkeurId: Number(el.querySelector('[data-approve]')?.getAttribute('data-approve')),
+    })));
+    expect(kaarten.length, 'de demodatabase hoort openstaande goedkeuringen te bevatten').toBeGreaterThan(0);
+
+    // Bewust via de pagina zelf ophalen en niet via page.request: dan
+    // vergelijken we de getoonde id's met exact de gegevens die de app heeft
+    // gekregen. page.request loopt buiten de pagina om, waardoor een
+    // gesimuleerde afwijking in deze case niet eens zou aankomen -- dat is bij
+    // het opzetten van deze bewaking daadwerkelijk gebeurd en maakte de proef
+    // stil waardeloos.
+    const bootstrap = await page.evaluate(async () => {
+      const response = await fetch('/server/api/bootstrap.php', { headers: { Accept: 'application/json' } });
+      return response.json();
+    });
+    const dbPerNaam = new Map<string, number>(
+      (bootstrap.employees as Array<{ id: number; full_name: string }>).map(e => [String(e.full_name).trim(), Number(e.id)])
+    );
+
+    for (const kaart of kaarten) {
+      const verwacht = dbPerNaam.get(kaart.naam);
+      expect(verwacht, `"${kaart.naam}" staat op een goedkeurkaart maar niet in de serverlijst met medewerkers`).toBeDefined();
+      expect(kaart.clientId, `de kaart van ${kaart.naam} draagt id ${kaart.clientId}, maar in de database is dat employees.id ${verwacht} -- de catalogus-id en de database-id lopen uiteen`)
+        .toBe(verwacht);
+      expect(kaart.goedkeurId, `de goedkeurknop van ${kaart.naam} hoort dezelfde id te dragen als de kaart`).toBe(verwacht);
+    }
+  });
+
+  await loginPage.logout();
+});

@@ -179,6 +179,7 @@
 | DASH-H-022 | ui | dashboard.feature | beheerder kan met de browser-terug/-vooruit-knop door alle eigen schermen navigeren | Beslissingstabel rollen en autorisatie | 1 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | beheerder kan met de browser-terug/-vooruit-knop door alle eigen schermen navigeren | Happy | 15 | Actueel |
 | DASH-N-027 | ui | dashboard.feature | het profielmenu verbergt "Ander account of rol" bij een echte login | Beslissingstabel rollen en autorisatie | 4 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | het profielmenu verbergt "Ander account of rol" bij een echte login | Negative | 15 | Actueel |
 | DASH-H-027 | ui | dashboard.feature | de dashboardtellers van Backoffice komen exact uit de serverdata, niet uit een eigen berekening | Beslissingstabel rollen en autorisatie | 12 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | de dashboardtellers van Backoffice komen exact uit de serverdata, niet uit een eigen berekening | Happy | 15 | Actueel |
+| DASH-H-028 | ui | dashboard.feature | elke goedkeurknop draagt de echte employees.id van de getoonde medewerker | Beslissingstabel rollen en autorisatie | 6 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | elke goedkeurknop draagt de echte employees.id van de getoonde medewerker | Happy | 15 | Actueel |
 | DB-H-002 | integration | database-relations.feature | geen enkele kerntabel bevat een weesverwijzing | API-contract + equivalentieklasse | 1 | database-relations.steps.ts | database-integrity.spec.ts | DB / Integratie | Database & Infrastructure | geen enkele kerntabel bevat een weesverwijzing | Happy | 16 | Actueel |
 | DB-H-003 | integration | database-relations.feature | de afhankelijke tabellen hebben de beloofde ON DELETE CASCADE | API-contract + equivalentieklasse | 4 | database-relations.steps.ts | database-integrity.spec.ts | DB / Integratie | Database & Infrastructure | de afhankelijke tabellen hebben de beloofde ON DELETE CASCADE | Happy | 16 | Actueel |
 | DB-N-005 | integration | database-relations.feature | een verwijderde medewerker zonder historie laat geen weesrijen achter | Beslissingstabel rollen en autorisatie | 7 | database-relations.steps.ts | database-integrity.spec.ts | DB / Integratie | Database & Infrastructure | een verwijderde medewerker zonder historie laat geen weesrijen achter | Negative | 16 | Actueel |
@@ -537,9 +538,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 514
+- Playwright executable cases: 516
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 515
+- Totaal unieke executable cases: 517
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
