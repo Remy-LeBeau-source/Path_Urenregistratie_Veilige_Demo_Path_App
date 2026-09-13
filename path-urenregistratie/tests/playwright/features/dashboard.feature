@@ -361,3 +361,13 @@ Feature: Dashboard en open werkvoorraad
     Given een echt ingelogde medewerker
     When de medewerker het profielmenu opent
     Then wordt met Playwright-assertions bevestigd dat het profielmenu verbergt "Ander account of rol" bij een echte login
+
+  @happy
+  Scenario: [DASH-H-027] de dashboardtellers van Backoffice komen exact uit de serverdata, niet uit een eigen berekening
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 12
+    Given de administrator heeft het dashboard open
+    When de serverwaarheid voor diezelfde maand wordt opgehaald
+    Then tonen de tellers exact de getallen van de server
+    And spreken de bijschriften de tellers niet tegen
+    And wint de server aantoonbaar van een eigen telling, ook bij getallen die lokaal onmogelijk zijn

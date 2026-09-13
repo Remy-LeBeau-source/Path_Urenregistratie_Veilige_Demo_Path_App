@@ -164,3 +164,8 @@ Then("brengt browser-vooruit telkens het volgende scherm terug, in dezelfde volg
 Given("een echt ingelogde medewerker");
 When("de medewerker het profielmenu opent");
 Then("wordt met Playwright-assertions bevestigd dat het profielmenu verbergt \"Ander account of rol\" bij een echte login");
+Given("de administrator heeft het dashboard open");
+When("de serverwaarheid voor diezelfde maand wordt opgehaald");
+Then("tonen de tellers exact de getallen van de server");
+And("spreken de bijschriften de tellers niet tegen");
+And("wint de server aantoonbaar van een eigen telling, ook bij getallen die lokaal onmogelijk zijn");

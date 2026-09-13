@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 509 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 510 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 509 unieke case-ID's
+- Playwright executable cases: 510 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 510 unieke case-ID's
+- Totaal executable cases: 511 unieke case-ID's
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
 - Database steps mappings: 1
-- Uitvoeringen: 549
-- Niet-mobile projectuitvoeringen: 469
+- Uitvoeringen: 550
+- Niet-mobile projectuitvoeringen: 470
 - Mobile functionele cases: 40
 - Pixel 7 / Chromium-uitvoeringen: 40
 - iPhone 13 / WebKit-uitvoeringen: 40
 
-De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 509 Playwright-functionele cases in totaal 549 resultaten op: 469 + (40 x 2) = 549.
+De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 510 Playwright-functionele cases in totaal 550 resultaten op: 470 + (40 x 2) = 550.
 
 ## Documentatieketen
 
@@ -198,7 +198,7 @@ De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 509 Playwri
 
 - Feature: `tests/playwright/features/dashboard.feature`
 - Source: `tests/playwright/dashboard*.spec.ts`
-- Cases: 41
+- Cases: 42
 
 - [DASH-H-002] employee dashboard opent zonder console errors — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 1
 - [DASH-H-025] "Mijn maanden" toont naast de urenstatus ook de klanturenstaat-status per maand — Techniek: Toestandsovergang · Assertions: 7
@@ -241,6 +241,7 @@ De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 509 Playwri
 - [DASH-N-019] een achtergrond-hertekening sluit het geopende profielmenu niet — Techniek: Toestandsovergang · Assertions: 6
 - [DASH-H-022] beheerder kan met de browser-terug/-vooruit-knop door alle eigen schermen navigeren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [DASH-N-027] het profielmenu verbergt "Ander account of rol" bij een echte login — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
+- [DASH-H-027] de dashboardtellers van Backoffice komen exact uit de serverdata, niet uit een eigen berekening — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
 
 ### Relationele database-integriteit
 

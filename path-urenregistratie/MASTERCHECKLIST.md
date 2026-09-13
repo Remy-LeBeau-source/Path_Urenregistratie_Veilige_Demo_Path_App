@@ -2071,6 +2071,23 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   bouwen bovenop v1.2.4** na het herstellen van deze checkout; vorige poging was ongetest/oud.
 - [ ] Beheer-dashboard: openstaande goedkeuringen, dashboardtellers (moeten kloppen met werkelijke
   data), recente serverfouten, rolwissel
+  - [x] **Dashboardtellers kloppen met de werkelijke data** -- `[DASH-H-027]`, v2.0.28. Er was
+    hiervoor geen énkele test: geen bestaande case raakte `#metric-submitted`, `#metric-approved`
+    of hun bijschriften (gecontroleerd 13 sep). Geen codewijziging nodig, de tellers bleken correct.
+    De tellers hebben twee bronnen: de serverwaarheid uit `/server/api/dashboard.php` (`per_maand`,
+    de rij van de actieve maand) en een lokale terugvaltelling uit de gerenderde rijen
+    (`fallbackSubmitted`/`fallbackApproved`/`fallbackOpen`, `app.js` ~7388). Die twee kunnen
+    uiteenlopen -- de API telt élke urenstaat van de maand, de rijen alleen wat het dashboard toont
+    -- en dán liegt de teller. De case vergelijkt daarom met de API-rij van precies de maand die de
+    app open heeft (`#period-picker`), niet met het scherm, en controleert ook dat de bijschriften
+    de koppen niet tegenspreken (`totaal - ingediend`, en het aantal openstaande controles).
+    **Discriminerend in de case zelf ingebouwd**, want een simpele vergelijking kan meeliften op
+    toeval als server en terugvaltelling hetzelfde getal geven: de laatste stap antwoordt
+    `dashboard.php` met een maandrij die lokaal onmogelijk is (41 gecontroleerd, 7 open, 99
+    medewerkers) en eist daarna letterlijk "48 / 99" op het scherm. Dat getal kan geen lokale
+    telling opleveren, dus is bewezen dat de server wint. `dashboard.spec.ts` volledig groen
+    (19 cases). Rol: Beheerder. Design/thema: de tellers zijn dezelfde DOM-knopen in Klassiek en
+    Nieuw; device-onafhankelijk.
 - [ ] Urenregistraties van medewerkers: goedkeuren, terugsturen (verplichte toelichting),
   klanturenstaten controleren + status, correcties verwerken, markeren/verwerken verzonden items
 - [ ] Medewerkersbeheer (stamgegevens), mededelingen beheren + doelgroepen, instellingen +
