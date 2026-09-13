@@ -101,3 +101,6 @@ Then("wordt met Playwright-assertions bevestigd dat elke .segmented-control krij
 Given("het inlogscherm nog niet is ingelogd");
 When("een beheerder een medewerker-editor (.modal-form) opent");
 Then("blijft ook het jaartal in de periodekiezer op 16px");
+Given("de medewerker staat met een leeg urenveld in Mijn uren");
+When("hij 8,5 typt zoals een Nederlands toetsenbord dat aanbiedt");
+Then("staat er een geloofwaardig aantal uren, geen leeg veld en geen 85");

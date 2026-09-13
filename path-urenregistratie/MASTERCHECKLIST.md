@@ -2079,9 +2079,62 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   input`/`textarea` (13px, beheerder-only mailsjabloon-editor) -- volgende wijziging.
 - [ ] iOS/Safari: viewporthoogte, keyboard, datumvelden, uploads, sticky headers,
   overige fixed buttons, resterend input-zoom (`.invoice-search`, `.mail-channel-template`)
-- [ ] Android/Chrome: viewport, keyboard, terugknop, datumvelden, uploads, sticky/fixed, standalone/PWA
-- [ ] PWA: manifest, icons, standalone, theme-color, service worker, caching/updates -- geen
-  offline urenmutatie zonder expliciete sync-/conflictafhandeling, uren nooit stilletjes overschreven
+- [x] **Android/Chrome-doorloop gedaan (13 sep), grotendeels in orde.** Statisch nagelopen in
+  `index.html` en `assets/app.js`. **Viewport:** `width=device-width, initial-scale=1,
+  viewport-fit=cover` — correct, en belangrijk: géén `user-scalable=no` of `maximum-scale`, dus
+  inzoomen blijft mogelijk (de opdracht eist zoom 200%). **Datumvelden:** er is er géén. De app
+  gebruikt nergens `type="date"/"month"/"time"` maar een eigen maandknop + jaarveld, dus het
+  klassieke "native datepicker gedraagt zich anders op Android dan op iOS"-probleem bestaat hier
+  niet. **Toetsenbord:** `inputmode` wordt bewust en correct gezet — `decimal` op de urenvelden,
+  `numeric` op het jaartal, `email` op het inlogveld — precies de Android-toetsenbordoptimalisatie
+  die dit punt vraagt. **Uploads:** beide `type="file"`-velden zetten zowel MIME-types als
+  extensies in `accept` (`application/pdf,image/jpeg,image/png,.pdf,.jpg,...`); dat dubbele is
+  juist op Android nodig, waar de ene bestandskiezer alleen extensies en de andere alleen
+  MIME-types honoreert. **Terugknop:** gedekt door `[DASH-H-022]` (beheerder) en `[DASH-H-023]`
+  (medewerker), die met browser-terug/-vooruit door alle eigen schermen navigeren.
+- [x] **Android-komma in het urenveld getoetst (13 sep), risico grotendeels weerlegd.** De
+  urenvelden zijn `type="number"` met `inputmode="decimal"`; een Nederlands Android-toetsenbord
+  biedt daar een **komma** aan, en bij `type="number"` kan een komma in sommige browsers een
+  lege `input.value` opleveren — dan verdwijnt een ingevuld uur stil, precies het soort
+  urenveld-probleem waar de opdracht voor waarschuwt. Nieuwe regressie `[MOB-H-027]`
+  (`mobile-ui.spec.ts`, project `mobile-chrome`) typt "8,5" in een echt urenveld met
+  `pressSequentially()` — bewust niet `fill()`, want dat zet de waarde direct via de DOM en
+  slaat juist de toetsaanslagen over die hier het onderwerp zijn. Resultaat: **geslaagd**, het
+  veld raakt niet leeg. De case controleert twee faalgevallen: (1) leeg veld, en (2) dat "8,5"
+  niet als **85** wordt gelezen — die tweede is bewust toegevoegd nadat de eerste versie van
+  deze case ook groen zou zijn geweest bij de uitkomst 85, wat 85 uur op één dag betekent.
+  **Eerlijke beperking:** de testbrowser draait niet in een Nederlandse locale. Dit smalt het
+  risico sterk in (de invoer wordt niet verworpen en niet verminkt) maar sluit afwijkend gedrag
+  op een echt Nederlands Android-toestel niet 100% uit; dat vraagt een test op een fysiek
+  toestel. Rol: Medewerker. Design: skin-onafhankelijk (`.hours-input` bestaat in beide).
+- [ ] Android/Chrome resterend: sticky/fixed gedrag, scroll en standalone/PWA op een echt toestel
+- [x] **PWA-doorloop gedaan (13 sep), één bevinding.** Alles nagelopen in `manifest.php`,
+  `assets/icon-*.png` en `sw.js`. **In orde:** het manifest is compleet (`id`, `name`,
+  `short_name`, `description`, `start_url`, `scope`, `display: standalone`,
+  `background_color`/`theme_color` `#0D1B38`, `lang: nl`, `dir`, `prefer_related_applications:
+  false`) en wordt serverseitig per omgeving anders benoemd ("Path TEST" vs productie), wat
+  precies goed is omdat de browser dit bestand zelf ophaalt bij "toevoegen aan beginscherm".
+  Alle drie de iconen bestaan echt (192, 512, maskable-512). De service worker is een bewuste,
+  gedocumenteerde no-op zonder `fetch`-handler: er is dus **geen** offline-schrijfmodel voor
+  uren — exact wat de opdracht eist ("voeg geen offline schrijfmodel toe zonder expliciet
+  ontwerp voor conflictafhandeling"). Dit punt is dus goed-door-ontwerp, niet vergeten.
+  **Bevinding (niet zelf gewijzigd, zie hieronder):** `'orientation' => 'portrait-primary'`
+  zet een geïnstalleerde PWA op Android vast in portret — draaien naar liggend is dan
+  onmogelijk. Dat botst met de opdracht, die tablets (768/1024px) expliciet als doelapparaat
+  noemt: juist de beheerschermen met brede tabellen hebben liggend het meest baat. Op iOS
+  negeert Safari de manifest-orientation grotendeels, dus dit raakt vooral Android-tablets.
+  Geen enkele test dekt dit (`grep orientation` in tests/scripts geeft niets), en de
+  toelichting boven in `manifest.php` legt alleen de naamgeving en theme_color uit, niet deze
+  keuze — het kan dus evengoed een onbedoelde default zijn als een besluit.
+  **Bewust niet zelf aangepast:** dit verandert het gedrag van de app op het beginscherm van
+  iedereen die hem al geïnstalleerd heeft; dat is een productbesluit, geen responsive-fix, en
+  de opdracht zegt expliciet "als er geen concreet probleem is: maak geen wijziging, bewijs
+  eerst dat het probleem bestaat". Ik kan het niet op een echt Android-tablet aantonen.
+  **Voorleggen aan Gio:** was portret-vast een bewuste keuze (telefoon-eerst), of mag dit naar
+  `any` zodat tablets kunnen draaien?
+- [ ] PWA-vervolg: caching-/updatestrategie blijft bewust open tot de go-live-beslissing
+  (Fase 16 "Offline-/updategedrag bepalen") -- geen offline urenmutatie zonder expliciete
+  sync-/conflictafhandeling, uren nooit stilletjes overschreven
 - [x] **Testdekkingsgat (13 sep, uit `AUDIT-GUI-FASE17.md`):** geen enkel Playwright-project
   draaide op een tabletbreedte (768/1024px) terwijl de opdracht dit expliciet vraagt. Nieuw
   project `tablet-chromium` (768x1024, Chrome) toegevoegd aan `playwright.config.ts`, bewust
@@ -2108,23 +2161,30 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
      Devices: 721-820px, dus tablet-achtige breedtes; onschadelijk erbuiten. Discriminerend
      bevestigd (tijdelijk teruggezet, `[DASH-H-021]` faalt exact op de klik-interceptie;
      hersteld, slaagt in 11,7s i.p.v. de eerdere 15s-timeout-met-retries).
-  2. **NIET gefixt, gerapporteerd conform de opdracht ("leg eerst uit bij een grotere
-     wijziging"):** op dezelfde 721-820px-breedte is er helemaal geen zichtbare weg om uit te
-     loggen of van rol te wisselen. `#switch-role` zit in `.sidebar-footer`, die bij
-     `max-width:820px` volledig verdwijnt (de sidebar wordt de compacte onderbalk zonder
-     ruimte voor een footer); `#mobile-switch-role` zit in `.mobile-topbar-home`, die pas
-     vanaf `max-width:720px` verschijnt als onderdeel van een complete topbar-grid-herbouw
-     (stapeling van merk/titel/acties) die niet zomaar naar 820px uit te breiden is zonder
-     die hele herbouw mee te nemen op een breedte waar hij nooit getest is. Veroorzaakte de
-     cascade van `[DASH-N-018]`/`[DASH-H-023]`/en vervolgfouten in `dashboard.spec.ts` zodra
-     een test probeerde uit te loggen (`LoginPage.logout()`: "Geen zichtbare logout/switch-
-     role knop gevonden."). Rol: beide. Geen kleine, veilige CSS-fix mogelijk zonder een
-     bewuste keuze over waar dat controlepunt op deze breedte moet komen — vraagt een
-     plaatsingsbeslissing, geen regel. Alternatieven om te bespreken: (a) `#switch-role`
-     los tonen in de onderbalk als 7e/kleinere tegel, (b) een aparte, smallere
-     rolwissel-knop specifiek voor 721-820px los van beide bestaande implementaties,
-     (c) de `.mobile-topbar-home`-breekpunt optrekken naar 820px met een losse visuele
-     controle achteraf. Blijft open tot een keuze is gemaakt.
+  2. **Ook gefixt (zwaarder punt, daarom eerst apart uitgeschreven):** op dezelfde
+     721-820px-breedte was er helemaal geen zichtbare weg om uit te loggen of van rol te
+     wisselen. `#switch-role` zit in `.sidebar-footer`, die bij `max-width:820px` volledig
+     verdween (de sidebar wordt daar de compacte onderbalk zonder ruimte voor een footer);
+     `#mobile-switch-role` zit in `.mobile-topbar-home`, die pas vanaf `max-width:720px`
+     verschijnt als onderdeel van een complete topbar-grid-herbouw (stapeling van
+     merk/titel/acties). Tussen die twee breedtes bestond dus geen enkel controlepunt.
+     Veroorzaakte de cascade van `[DASH-N-018]`/`[DASH-H-023]` en vervolgfouten in
+     `dashboard.spec.ts` zodra een test probeerde uit te loggen (`LoginPage.logout()`:
+     "Geen zichtbare logout/switch-role knop gevonden."). Rol: beide. Gekozen oplossing
+     (alternatief b van de drie overwogen: niet de hele topbar-herbouw naar 820px optrekken,
+     want die is ontworpen voor telefoonbreedte en daar nooit getest): `#switch-role` zelf
+     wordt in die kier een zwevende knop, exact dezelfde stijltaal als `.help-launcher`
+     (vaste positie, donkere pil, zelfde `bottom: 78px` boven de navigatiebalk) maar
+     **linksonder** zodat de twee elkaar nooit overlappen. Randgeval dat dit bijna stil liet
+     falen: `.sidebar-footer` stond op `display: none`, en dat verbergt kinderen
+     onherroepelijk — een kind kan dat niet met zijn eigen `display` terugdraaien. De footer
+     staat daarom nu op `display: contents` met de twee onderdelen die hier niet passen
+     (avatar/naam, versiebadge) los verborgen; zelfde patroon als `.nav-group` hierboven al
+     gebruikt. Design: Klassiek (`styles-new.css` heeft geen eigen `.switch-role`- of
+     `.sidebar-footer`-regel, dus identiek in Nieuw). Thema: themaneutraal (vaste donkere
+     pil, zoals de hulpknop). Devices: 721-820px; onschadelijk erbuiten. Discriminerend
+     bevestigd: met de fix slaagt `[DASH-N-018]` (26,0s), zonder de fix faalt hij exact op
+     `LoginPage.logout()` met "Geen zichtbare logout/switch-role knop gevonden."
 
 **Tijdsinschatting (indicatief, geen deadline):** fase 0/fundament 1 sessie, 17.1 nog 2-3 sessies,
 17.2 4-6 sessies (grootste blok), 17.4 1-2 sessies, 17.5 1-2 sessies. Totaal ruwweg 10-14
@@ -2172,6 +2232,31 @@ mooier maken is expliciet onderdeel van Fase 17 (zie de scope-correctie hierbove
 losse ruimte ernaast. Beide sessies mogen dit zelfstandig doen zonder per wijziging toestemming te
 vragen, zolang functionaliteit, businesslogica, workflows en rollen (de harde eisen bovenaan deze
 fase) intact blijven.
+
+**Ontwerpbron voor de visuele kant (13 sep, Gio):** `pilot/fase17-richtingpagina.html` — de
+richtingpagina die Medewerker en Beheerder naast elkaar zet in Klassiek en Nieuw, gemaakt en door
+Gio beoordeeld met "mag nieuwer maken en afwijken, maar niet extreem; wel het gevoel van groot
+verschil en mooier". Gio noemt dit in gesprekken **"Cloud design"** (= Claude design). Zijn
+opdracht: de **échte** Nieuw-skin daarnaartoe brengen, niet de mockup als los document laten staan.
+Toets visuele wijzigingen aan Nieuw dus aan die pagina.
+
+**Voortgang richtingpagina → echte skin:**
+- [x] **Warm goud accent + diepte in de medewerker-bento** (v2.0.8). Twee dingen die de
+  richtingpagina onderscheidden van de toen bestaande skin. (1) Nieuw token `--path-gold: #e2c07a`
+  voor eyebrow-labels op de donkere bento-panelen (`.new-bento-hero`, `.new-bento-steps`), waar de
+  skin eerder overal mint gebruikte -- mint is in deze app óók de actiekleur, dus label en actie
+  waren visueel niet te scheiden. Bewust niet `--path-amber`: die betekent hier "actie vereist"
+  (statuspillen, Volgende actie-kaart). (2) De bento-kaarten kregen een zacht verloop
+  (`linear-gradient(172deg, --path-night-panel, --path-night-tile)`) in plaats van één platte
+  vulling, plus een warme radiale gloed rechtsboven in de hero (`::after`, `pointer-events: none`
+  zodat hij de knop eronder nooit blokkeert -- precies de fout die `.help-launcher` op
+  tabletbreedte wél maakte). Rol: Medewerker. Design: alleen Nieuw (Klassiek ongemoeid: alle
+  regels staan achter `html[data-skin="new"]`). Thema: de bento is in deze skin altijd donker,
+  dus themaneutraal; `contrast-licht-donker.mjs` groen gehouden. Devices: geen layout-wijziging,
+  alleen kleur/verloop, dus breedte-onafhankelijk. Bestand: `assets/styles-new.css`.
+- [ ] Resterend uit de richtingpagina, nog af te wegen: mint-gradiënt primaire knop met zachte
+  gloed (raakt `--path-amber` als huidige primaire kleur -- grotere beslissing, eerst voorleggen),
+  mint accentrand links op taakkaarten, gouden bovenrand op kpi-kaarten (beheer), tabbalk-iconen.
 
 ## Dagelijkse werkwijze (verplicht)
 

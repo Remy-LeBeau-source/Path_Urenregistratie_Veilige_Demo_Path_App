@@ -200,15 +200,25 @@ en zijn recent bevestigd (12 sep, login-picker-bug `AUTH-H-025`).
    schuiven pas bij een smallere breedte (590/720px) opzij — een 100-230px
    brede kier. Gevonden en **gefixt**: `.help-launcher` (zwevende hulpknop)
    overlapte de navigatieknoppen in die kier en onderschepte klikken —
-   discriminerend bevestigd, zie MASTERCHECKLIST.md 17.5. Gevonden en **NIET
-   gefixt, expliciet gerapporteerd** conform "leg eerst uit bij een grotere
-   wijziging": in diezelfde 720-820px-kier is er geen enkele zichtbare weg om
-   uit te loggen of van rol te wisselen (`#switch-role` verdwijnt met de
-   sidebar-footer, `#mobile-switch-role` verschijnt pas bij een complete
-   topbar-herbouw die zelf pas bij 720px begint) — dit veroorzaakte een lange
-   cascade van testfouten zodra een test probeerde uit te loggen. Zie
-   MASTERCHECKLIST.md 17.5 voor de volledige analyse en de drie voorgestelde
-   alternatieven; blijft open tot een plaatsingskeuze is gemaakt.
+   discriminerend bevestigd, zie MASTERCHECKLIST.md 17.5. Gevonden en **ook
+   gefixt, na eerst de keuze expliciet uitgeschreven te hebben** (conform "leg
+   eerst uit bij een grotere wijziging"): in diezelfde 720-820px-kier was er
+   geen enkele zichtbare weg om uit te loggen of van rol te wisselen
+   (`#switch-role` verdween met de sidebar-footer, `#mobile-switch-role`
+   verschijnt pas bij een complete topbar-herbouw die zelf pas bij 720px
+   begint) — dit veroorzaakte een lange cascade van testfouten zodra een test
+   probeerde uit te loggen. Van de drie afgewogen alternatieven is (b) gekozen:
+   `#switch-role` wordt in die kier een zwevende knop in dezelfde stijltaal als
+   de hulpknop, maar linksonder. Niet de hele topbar-herbouw naar 820px
+   optrekken — die is voor telefoonbreedte ontworpen en daar nooit getest. Zie
+   MASTERCHECKLIST.md 17.5 voor de volledige analyse, inclusief het
+   `display:none`-randgeval dat deze fix bijna stil liet falen.
+
+   **Les die uit deze twee fixes volgt, breder dan Fase 17:** een `@media`-regel
+   die vóór een onvoorwaardelijke regel voor dezelfde selector staat, verliest
+   altijd — ongeacht viewport. Beide fixes faalden hier eerst stil op. Bij elke
+   volgende responsive fix: controleer de bronvolgorde, niet alleen of de
+   media query "klopt".
 
 **P2 — inconsistentie/accessibility:** Android/Chrome- en PWA-blok van 17.5 nog
 scherm voor scherm doorlopen (gepland, nog niet gestart).

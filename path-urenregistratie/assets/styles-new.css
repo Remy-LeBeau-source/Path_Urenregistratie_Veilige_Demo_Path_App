@@ -74,6 +74,14 @@ html[data-skin="new"] {
   --path-green: #4bb188;
   --path-amber: #d99a3c;
   --path-cream: #f4f1e6;
+  /* Fase 17 (13 sep, uit pilot/fase17-richtingpagina.html -- het richtingontwerp
+     dat Gio heeft goedgekeurd met "mooier, groot verschil, niet extreem"):
+     een warm goud als puur decoratief accent voor eyebrow-labels op de donkere
+     bento-panelen. Bewust NIET --path-amber: die kleur betekent in deze app
+     "actie vereist" (statuspillen, de Volgende actie-kaart) en is daar te
+     verzadigd voor. Dit goud is lichter en zachter, zit alleen op
+     kleinkapitaal-labels en draagt dus geen status. */
+  --path-gold: #e2c07a;
   --path-serif: "Path Editorial", Georgia, "Times New Roman", serif;
   --path-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   /* Klassiek en New delen veel selectors; --letter-kop is de rol "kop" en
@@ -1217,13 +1225,17 @@ html[data-skin="new"] #view-employee-dashboard .new-employee-bento {
   color: var(--path-cream);
 }
 
+/* De vlakke vulling is een zachte verloop geworden (richtingpagina: "meer
+   diepte"). Zelfde twee tokens die de skin al gebruikt, alleen van boven naar
+   onder over de kaart i.p.v. één platte kleur -- op een 30px-ronde kaart van
+   570px hoog is dat het verschil tussen een vlak en een object. */
 html[data-skin="new"] .new-employee-bento > article {
   position: relative;
   min-width: 0;
   overflow: hidden;
   border: 1px solid rgba(214, 227, 219, .24);
   border-radius: 30px;
-  background: var(--path-night-panel);
+  background: linear-gradient(172deg, var(--path-night-panel), var(--path-night-tile));
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .025), 0 24px 65px rgba(2, 12, 22, .22);
 }
 
@@ -1233,6 +1245,21 @@ html[data-skin="new"] .new-bento-hero {
   min-height: 570px;
   background: linear-gradient(145deg, #214b39, #102f26 74%);
   padding: clamp(34px, 5vw, 68px);
+}
+
+/* Warme gloed rechtsboven, uit de richtingpagina. Puur licht, geen vorm: hij
+   tilt de rechterbovenhoek op zodat de hero niet als één plat groen vlak leest.
+   pointer-events:none zodat hij de knop eronder (.new-bento-go) nooit blokkeert
+   -- precies de fout die .help-launcher op tabletbreedte wél maakte. */
+html[data-skin="new"] .new-bento-hero::after {
+  content: "";
+  position: absolute;
+  top: -35%;
+  right: -20%;
+  width: 65%;
+  height: 130%;
+  background: radial-gradient(circle, rgba(226, 192, 122, .14), transparent 65%);
+  pointer-events: none;
 }
 
 html[data-skin="new"] .new-bento-hero > img {
@@ -1247,7 +1274,7 @@ html[data-skin="new"] .new-bento-hero > img {
 html[data-skin="new"] .new-bento-hero-copy,
 html[data-skin="new"] .new-bento-handoff,
 html[data-skin="new"] .new-bento-go { position: relative; z-index: 1; }
-html[data-skin="new"] .new-bento-hero .section-label { color: #9bd4ae; font-size: 13px; }
+html[data-skin="new"] .new-bento-hero .section-label { color: var(--path-gold); font-size: 13px; }
 html[data-skin="new"] .new-bento-greeting { display: block; margin-bottom: 10px; color: #9bd4ae; font-size: 18px; font-weight: 700; letter-spacing: .04em; }
 html[data-skin="new"] .new-bento-hero h2 { margin: 22px 0; color: #f4eee3; font: 400 var(--n-kop-hero)/.94 var(--path-serif); letter-spacing: -.035em; }
 html[data-skin="new"] .new-bento-hero p { max-width: 440px; color: rgba(244, 241, 230, .86); font-size: 16px; line-height: 1.6; }
@@ -1501,7 +1528,7 @@ html[data-skin="new"] .new-bento-customer-expand .small-button:hover {
 }
 
 html[data-skin="new"] .new-bento-steps { grid-column: 1 / span 2; grid-row: 2; padding: 28px 30px; }
-html[data-skin="new"] .new-bento-steps .section-label { color: #86c89e; }
+html[data-skin="new"] .new-bento-steps .section-label { color: var(--path-gold); }
 /* Echte segment-elementen tussen de stappen (i.p.v. één blinde ::before-lijn
    over de hele breedte): zo sluit elk stukje lijn precies aan op de bolletjes
    ernaast (flex-volgorde, geen los-berekende absolute positie), en kan elk

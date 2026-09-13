@@ -226,3 +226,11 @@ Feature: Mobiele gebruikerservaring
     Given het inlogscherm nog niet is ingelogd
     When een beheerder een medewerker-editor (.modal-form) opent
     Then blijft ook het jaartal in de periodekiezer op 16px
+
+  @happy
+  Scenario: [MOB-H-027] een uur met een komma getypt komt aan als 8,5 en niet als leeg veld
+    # Testtechniek: Responsive viewport + end-to-end use-case
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given de medewerker staat met een leeg urenveld in Mijn uren
+    When hij 8,5 typt zoals een Nederlands toetsenbord dat aanbiedt
+    Then staat er een geloofwaardig aantal uren, geen leeg veld en geen 85
