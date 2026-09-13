@@ -5879,7 +5879,9 @@ function renderEmployeeDashboard() {
   document.querySelector("#employee-history").classList.toggle("has-customer-timesheet-column", showsCustomerTimesheetColumn);
   document.querySelector("#employee-history").innerHTML = historyRows
     ? '<div class="employee-history-head" aria-hidden="true"><span>Maand</span><span>Uren verantwoord</span><span>Status</span>' + historyHeadCustomerColumn + '<span>Actie</span></div>' + historyRows
-    : '<div class="dashboard-action-empty">Er zijn nog geen maanden beschikbaar.</div>';
+    // Zelfde vorm als de andere .dashboard-action-empty-blokken (korte kop,
+    // één regel uitleg); dit was als enige nog een kale zin zonder uitleg.
+    : '<div class="dashboard-action-empty"><strong>Nog geen maanden beschikbaar.</strong><br>Zodra je een maand hebt ingevuld en ingediend, verschijnt die hier.</div>';
   // De historietabel staat sinds v1.0.73 op een eigen scherm; op het Dashboard
   // blijft alleen deze regel staan die zegt hoeveel er te zien is.
   const historyTeaserCount = document.querySelector("#employee-history-teaser-count");
