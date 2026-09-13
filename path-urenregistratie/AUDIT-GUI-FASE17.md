@@ -171,9 +171,22 @@ geen openstaand, onbehandeld GUI-issue in de lijst dat deze audit moest overdoen
 
 ## Prioriteitenlijst
 
-**P0 — data/autorisatie/gebroken functionaliteit:** geen gevonden. Alle
-rol-/autorisatiecontroles (`roles-api.spec.ts`, `SEC-H-009/010/011`) staan groen
-en zijn recent bevestigd (12 sep, login-picker-bug `AUTH-H-025`).
+**P0 — data/autorisatie/gebroken functionaliteit:** rol en autorisatie zijn schoon
+(`roles-api.spec.ts` incl. de nieuwe `ROLE-N-006` per-actie-gates, `SEC-H-009/010/011/012`,
+alles groen; 12 sep login-picker-bug `AUTH-H-025`). **Wél één gebroken workflow
+gevonden op 13 sep, bewezen en beschreven, wacht op go van Gio:** "Mededeling
+intrekken" doet in de echte app niet wat de app in diezelfde modal belooft. De
+bevestigingstekst zegt dat de ontvangers één intrekkingsmelding met de reden
+krijgen en dat de oorspronkelijke tekst uit hun lijst verdwijnt; demomodus doet
+dat ook, maar `server/api/announcements.php action=withdraw` maakt geen
+intrekkingsmelding en laat `hidden_from_employees` op 0. Gemeten gevolg op een
+verse database: de medewerker ziet het ingetrokken bericht nog steeds, alleen met
+de pil "Gelezen", zonder markering en zonder reden -- terwijl de API de reden wél
+meelevert. Backoffice denkt dus dat het bericht terug is. Volledige analyse plus
+de voorgestelde minimale server-side fix staan in MASTERCHECKLIST.md 17.3; niet
+zelf doorgevoerd omdat het een verzendende workflow verandert (nieuwe
+notificaties, mogelijk e-mail) en de betekenis van de bestaande losse
+`hide`-stap raakt.
 
 **P1 — mobiele/desktop-bediening die echt hindert:**
 1. Resterende iOS 17.5-punten afmaken (viewporthoogte, keyboard, datumvelden,

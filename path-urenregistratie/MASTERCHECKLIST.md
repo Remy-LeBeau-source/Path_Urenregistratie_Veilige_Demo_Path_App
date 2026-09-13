@@ -2084,6 +2084,48 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
 - [ ] Concept -> Gereed -> Ingediend -> Goedgekeurd -> Verzonden (+ Teruggestuurd, Correctie,
   Klanturenstaat (opnieuw) uploaden) betekent voor Medewerker en Beheerder hetzelfde na elke
   responsive wijziging
+- [ ] **BEVINDING 13 sep, bewezen, wacht op go van Gio -- "Mededeling intrekken" doet in de echte
+  app niet wat de app zelf belooft.** Gevonden bij het uitzoeken van het openstaande 17.1-punt over
+  de `withdrawn`-tak in `renderEmployeeAnnouncementArchive`. Geen wijziging doorgevoerd: de fix zit
+  in de workflow zelf en dat is per opdracht "eerst stoppen en uitleggen".
+  - **Wat de app belooft.** De bevestigingsmodal bij intrekken zegt letterlijk: *"Dezelfde
+    ontvangers krijgen één nieuwe intrekkingsmelding met de reden. De oorspronkelijke tekst
+    verdwijnt direct uit hun bel en mededelingenlijst en blijft alleen intern voor beheerders
+    bewaard."* (`assets/app.js` ~8482). De meldingstekst erna herhaalt dat: *"medewerkers zien
+    alleen de nieuwe intrekkingsmelding"* (~8502).
+  - **Wat demomodus doet: exact dat.** De demotak (~8507-8530) zet `status = "withdrawn"` (waarmee
+    de basisfilter in `renderEmployeeAnnouncementArchive` het origineel uitsluit) én maakt een
+    tweede mededeling `kind: "withdrawal"` met `"Een eerdere mededeling is ingetrokken.\nReden: " +
+    reason`.
+  - **Wat de echte server doet: geen van beide.** `server/api/announcements.php` `action=withdraw`
+    zet alleen `status='withdrawn'` + de intrekkingsvelden op de rij en zet de bestaande
+    notificaties op *gelezen*. Er wordt geen intrekkingsmelding aangemaakt en `hidden_from_employees`
+    blijft 0. Het aanvinkvakje `#announcement-withdrawal-email` wordt in deze tak helemaal niet
+    gebruikt. Alleen de losse `action=hide` verwijdert de notificaties, en die roept de UI hier niet
+    aan.
+  - **Gemeten gevolg (verse database, lijst echt gerenderd).** Beheerder verstuurt, medewerker ziet
+    het bericht, beheerder trekt in zonder verbergen. De medewerker ziet de kaart dan nog steeds,
+    met als enige verschil de pil "Gelezen": geen intrekkingsmarkering, geen reden. Terwijl
+    `announcements.php` voor die medewerker de rij wél teruggeeft met `status: "withdrawn"` en de
+    volledige `withdrawal_reason` -- de gegevens zijn er, de medewerkerlijst gebruikt ze niet, want
+    die rendert uit notificaties met een hard gezette `status: "sent"`
+    (`employeeAnnouncementItemsFromNotifications`, ~10310).
+  - **Gebruikersgevolg.** Backoffice ziet "Ingetrokken" en denkt dat het bericht terug is; de
+    medewerker leest het nog steeds als een gewoon bericht en krijgt de reden nooit. Dat is precies
+    het soort stille tegenspraak waar dit checklistpunt over gaat.
+  - **Voorgestelde fix (nog niet gedaan), minimaal en server-side:** laat `action=withdraw`
+    hetzelfde doen als de demotak -- `hidden_from_employees = 1` zetten en de notificaties van het
+    origineel verwijderen (wat `action=hide` al doet), plus één nieuwe `kind='withdrawal'`-rij met
+    de reden en notificaties voor dezelfde ontvangers. **Waarom dit niet zomaar gedaan is:** het
+    verandert een verzendende workflow (nieuwe notificaties, mogelijk e-mail via het
+    aanvinkvakje) en raakt de betekenis van de bestaande losse `hide`-stap en de tests die
+    intrekken+verbergen nu als twee stappen bewijzen. Daarom eerst deze uitleg, dan de go.
+  - **Zijconclusie voor het openstaande 17.1-punt:** de `withdrawalNote`-tak op regel ~8161 is
+    inderdaad onbereikbaar (de basisfilter een regel eerder sluit `status === "withdrawn"` al uit),
+    en de tak `kind === "withdrawal"` ernaast is dat níet. **Toch niet opgeruimd** -- exact zo'n
+    redenering leidde in `093ec97d` tot het weghalen van een nog wél gebruikte regel. Bovendien
+    wordt die tak juist wél zinvol zodra de fix hierboven is doorgevoerd. Het punt is daarmee
+    beantwoord: geen dode code weghalen, wel een echt defect gevonden.
 
 **17.4 Security en rollen (verplicht, sectie 20)**
 - [x] Handmatige URL/hash naar een beheerscherm: API-403 al gedekt (ROLE-N-004/005), nu ook UI-niveau
