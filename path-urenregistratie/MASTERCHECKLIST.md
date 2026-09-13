@@ -2153,8 +2153,21 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
     telling opleveren, dus is bewezen dat de server wint. `dashboard.spec.ts` volledig groen
     (19 cases). Rol: Beheerder. Design/thema: de tellers zijn dezelfde DOM-knopen in Klassiek en
     Nieuw; device-onafhankelijk.
-- [ ] Urenregistraties van medewerkers: goedkeuren, terugsturen (verplichte toelichting),
-  klanturenstaten controleren + status, correcties verwerken, markeren/verwerken verzonden items
+- [x] Urenregistraties van medewerkers: goedkeuren, terugsturen (verplichte toelichting),
+  klanturenstaten controleren + status, correcties verwerken, markeren/verwerken verzonden items.
+  **Alle vijf deelpunten gedekt (13 sep); twee gaten gevonden en gedicht, geen codewijziging nodig.**
+  - *Goedkeuren:* `[E2E-H-017]` legt de keten via het echte scherm af inclusief de sloten
+    (server weigert een wijziging door de medewerker met 409 `timesheet-locked`, versie blijft
+    gelijk); `[TS-REV-API-H-006]` bewijst dat twee gelijktijdige goedkeuringen exact één winnaar
+    opleveren.
+  - *Terugsturen met verplichte toelichting:* urenstaat al gedekt
+    (`timesheet-review-flow.spec.ts`), klanturenstaat was een gat en is nu `[CTS-API-N-013]`.
+  - *Klanturenstaten controleren + status:* `customer-timesheet-api.spec.ts` (20 cases: uploaden,
+    indienen, downloaden, goedkeuren, opnieuw laten uploaden, extern bevestigen en terugzetten,
+    overslaan/herstellen, brokerroute, bestandsgrenzen).
+  - *Correcties verwerken:* `[TS-REV-API-H-005]` (met optimistic locking) en de browserronde
+    `[TS-REV-UI-H-008]`, inclusief het intrekken van een goedkeuring en opnieuw indienen.
+  - *Markeren/verwerken verzonden items:* was een gat, nu `[CTS-API-H-017]` (zie hieronder).
   - [x] **Terugsturen met verplichte toelichting, beide kanten.** Urenstaat was al gedekt: een
     `request_correction` met lege toelichting geeft 400 `invalid-payload` en de urenstaat blijft op
     `submitted` (`timesheet-review-flow.spec.ts`, bewijst `timesheet_correction_message()`
@@ -2264,9 +2277,22 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
     juist als gewenst gedrag vastleggen. De test hoort bij de fix.
 
 **17.3 Workflow-integriteit**
-- [ ] Concept -> Gereed -> Ingediend -> Goedgekeurd -> Verzonden (+ Teruggestuurd, Correctie,
+- [x] Concept -> Gereed -> Ingediend -> Goedgekeurd -> Verzonden (+ Teruggestuurd, Correctie,
   Klanturenstaat (opnieuw) uploaden) betekent voor Medewerker en Beheerder hetzelfde na elke
-  responsive wijziging
+  responsive wijziging. **Nagelopen 13 sep; de keten is op alle drie de assen gedekt.**
+  - *Dezelfde keten op desktop:* `[E2E-H-017]` loopt hem via het echte scherm af en toetst ook de
+    sloten (server weigert een wijziging na indienen met 409 `timesheet-locked`, versie ongewijzigd).
+  - *Dezelfde keten op een telefoon:* `[MOB-H-002]` (concept opslaan, indienen, documentupload
+    bereikbaar) en `[MOB-H-003]` (correctie, herindiening én administratieve goedkeuring
+    bereikbaar op telefoonbreedte). Dat is precies het "na elke responsive wijziging"-deel.
+  - *Teruggestuurd/correctie, heen en terug:* `[TS-REV-UI-H-008]`, inclusief het intrekken van een
+    goedkeuring en opnieuw indienen.
+  - *Klanturenstaat (opnieuw) uploaden en verzenden:* de `customer-timesheet-api`-suite, met
+    `[CTS-API-N-013]` (terugsturen vraagt een toelichting) en `[CTS-API-H-017]` (markeren als
+    verzonden volgt de toegestane volgorde) als de twee stukken die vannacht ontbraken.
+  - *Hetzelfde woord voor beide rollen:* `[E2E-H-030]` hierboven.
+  Wat hieronder open blijft is geen gat in de keten zelf maar één bewezen bevinding in de
+  mededelingen-workflow.
   - [x] **Statuswoorden zijn aan beide kanten gelijk** -- `[E2E-H-030]`, v2.0.33. Geen wijziging
     nodig: het klopt vandaag door de opzet. Er is één gedeelde `statusLabels`-map en één
     `timesheetStatusInfo()` die beide kanten voedt -- de medewerkerpil `#timesheet-status` op Mijn
