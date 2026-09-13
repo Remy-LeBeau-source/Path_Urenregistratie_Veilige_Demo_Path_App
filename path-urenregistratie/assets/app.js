@@ -5480,6 +5480,42 @@ function focusEersteLegeBentoDag(record, period, weekIndex) {
   if (input) input.focus();
 }
 
+// Ligt de bal bij de medewerker of bij Backoffice? Zelfde bron als de rest van
+// het scherm gebruikt (timesheetStatus en de klanturenstaat-status), zodat de
+// pil nooit iets anders beweert dan de statusregels eronder.
+function aanZetBijMedewerker(record, employee) {
+  const urenOpenstaand = ["draft", "correction"].includes(record.timesheetStatus);
+  const klantstaatOpenstaand = employee.customerTimesheetExpected !== false
+    && customerTimesheetNeedsEmployeeAction(customerTimesheetFor(record).status);
+  return urenOpenstaand || klantstaatOpenstaand;
+}
+
+// Vult de drie kerncijfers boven de "volgende actie"-tekst: een statuspil, het
+// maandtotaal als groot getal en de contractregel. Komt uit de ontwerpreferentie
+// handoff/medewerker-wild.html; de elementen blijven `hidden` en worden door de
+// opmaak zichtbaar gemaakt waar ze horen.
+function vulHeroKerncijfers(record, period, aanZet) {
+  const oog = document.querySelector("#employee-hero-oog");
+  const oogLabel = document.querySelector("#employee-hero-oog-label");
+  const maanduren = document.querySelector("#employee-hero-maanduren");
+  const contractregel = document.querySelector("#employee-hero-contractregel");
+  if (!oog || !oogLabel || !maanduren || !contractregel) return;
+
+  oog.dataset.stand = aanZet ? "jij" : "backoffice";
+  oogLabel.textContent = aanZet ? "Jij bent aan zet" : "Bij de Backoffice";
+
+  // Zelfde optelling als #hours-total en de voortgangskaart: uren plus verlof en
+  // ziekte. Bewust geen eigen som -- twee verschillende maandtotalen op een
+  // scherm is precies de verwarring die in v1.0.67 al is opgelost.
+  const totaal = totalEntries(record.entries) + Number(record.leave || 0) + Number(record.sick || 0);
+  maanduren.textContent = hoursFormat.format(totaal);
+
+  const totaalWeken = period.weekRows.length;
+  const gevuldeWeken = completedTimesheetWeeks(record, period);
+  contractregel.textContent = "van " + hoursFormat.format(record.contractHours) + " uur contract · "
+    + gevuldeWeken + " van " + totaalWeken + " " + (totaalWeken === 1 ? "week" : "weken") + " ingevuld";
+}
+
 function renderNewEmployeeBento(record, employee, period) {
   const bento = document.querySelector("#new-employee-bento");
   if (!bento) return;
@@ -5745,6 +5781,7 @@ function renderEmployeeDashboard() {
     }
   }
   document.querySelector("#employee-dashboard-greeting").textContent = greetingForNow() + ", " + firstName;
+  vulHeroKerncijfers(record, period, aanZetBijMedewerker(record, employee));
   document.querySelector("#employee-dashboard-next").textContent = next;
   document.querySelector("#employee-dashboard-next-label").textContent = awaitingOpenTasks ? "Bezig" : (nextOpenAction ? "Volgende actie" : "Deze maand");
   document.querySelector("#employee-dashboard-next-meta").textContent = awaitingOpenTasks
