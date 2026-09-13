@@ -1958,7 +1958,7 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
 - [x] "Standaardweek vullen"-conflict (UI-TAKENLIJST #29/#48) opgelost: bestaande knop blijft
   veilig, nieuwe bevestigde "Week/Maand terugzetten"-knop overschrijft ook bewust-bevestigde
   0-dagen. `[SKIN-H-028]`, v2.0.2, New-bento + Klassiek Mijn uren.
-- [ ] (herontwerp, bezig) Dashboard/Mijn overzicht: begroeting, volgende actie, open acties, acties per maand.
+- [ ] (vrij, overgedragen aan main 13 sep) Dashboard/Mijn overzicht: begroeting, volgende actie, open acties, acties per maand.
   **Bevinding + fix (13 sep, v2.0.7):** Klassiek toonde "wachten op controle door Gio of Joyce"
   (hardcoded namen) i.p.v. het overal elders gebruikte "Backoffice" (New-skin bento, klanturenstaat-
   teksten). Gefixt naar "wachten op controle door Backoffice." `assets/app.js` regel ~5705. Geen test
@@ -1968,7 +1968,7 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   `#employee-history-teaser` en verbergt de rest van de Klassieke dashboard-content -- geen
   dubbele/tegenstrijdige info, goed gedocumenteerd in de bestaande code-comments. Nog te doen:
   `employeeOpenMonthSummaries`/meermaandenlogica verder doorlichten, live/visuele bevestiging.
-- [ ] (herontwerp, bezig) Mijn uren: invoeren, wijzigen, opslaan, Enter-to-save, maand/weeknavigatie, totalen, indienen,
+- [ ] (vrij, overgedragen aan main 13 sep) Mijn uren: invoeren, wijzigen, opslaan, Enter-to-save, maand/weeknavigatie, totalen, indienen,
   status van urenregistratie. **Code-audit 13 sep (geen wijziging nodig, alles klopte al):**
   0/8/9-sneltoetsen bestaan in zowel Nieuw (`.new-bento-presets`) als Klassiek (`data-hours-set`,
   eerder al overgezet na testfeedback) en zijn al twee keer bewust visueel verfijnd (rustige
@@ -1981,7 +1981,7 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   lokaal inloggen vereist een DB-bootstrapscript dat de met main gedeelde testdatabase kan
   aanpassen; bewust niet zonder overleg gedraaid. Klanturenstaat/correcties/mededelingen/
   notificaties/profiel/logout (overige 17.1-bullets) nog te doen.
-- [ ] (herontwerp, bezig) Klanturenstaat uploaden / opnieuw uploaden. **Code-audit 13 sep (geen
+- [ ] (vrij, overgedragen aan main 13 sep) Klanturenstaat uploaden / opnieuw uploaden. **Code-audit 13 sep (geen
   wijziging nodig):** upload-flow heeft nette guards (maand verplicht, bestandstype-check,
   2MB-limiet, dubbele-indiening-blokkade die "resubmit"/"missing"/"draft" wél en de rest
   terecht niet toestaat). Het echte paneel (`#customer-timesheet-upload-panel`) verhuist als
@@ -1989,7 +1989,7 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   worden -- voorkomt dubbele ids/onderhoud. Beheerderskant (controleren, herinneren, extern
   bevestigen/terugzetten, brokerroute) is volledig doorontwikkeld, geen losse eindjes gevonden.
   Nog open: live/visuele bevestiging.
-- [ ] (herontwerp, bezig) Correcties, mededelingen, notificaties, profiel, logout. **Code-audit
+- [ ] (vrij, overgedragen aan main 13 sep) Correcties, mededelingen, notificaties, profiel, logout. **Code-audit
   13 sep:** logout doet één nette herpoging bij netwerkfout voordat hij lokaal opgeeft (voorkomt
   de eerder gefixte "toch weer automatisch ingelogd"-regressie) en ruimt rol/hydratatie/panelen
   netjes op. Profielmenu verbergt "Ander account of rol" buiten demomodus -- terecht, want bij
@@ -2277,6 +2277,21 @@ terugdraaien kan altijd. De enige nog geldende harde grens is de `Promote Prod`-
 exclusief bij Gio (zie sectie "Vóór livegang" verderop en `OPERATIONS-RUNBOOK.md` 7a). Bij een lange
 wachttijd op die poort loopt al het overige werk (TEST, CI, features) gewoon door.
 Zie ook het memory-bestand `autonoom-doorlopen-vanaf-v2` (herontwerp-sessie).
+
+**Werkverdeling gewijzigd op 13 sep 2026 (besluit Gio).** Vanaf nu een splitsing per onderwerp in
+plaats van per item:
+- **herontwerp = vormgeving.** Werkt de door Gio aangeleverde ontwerpopdrachten uit, en is eigenaar
+  van `assets/styles.css` en `assets/styles-new.css`.
+- **main = al het overige.** Functioneel werk, rollen/security, apparaat- en platformrandgevallen,
+  en de resterende 17.1/17.2/17.3/17.4-items.
+- Aanleiding: in de nacht van 12 op 13 sep liepen beide sessies drie keer vast op elkaar
+  (versienummers dubbel gebruikt, drie merges nodig, gedeelde stash/testdatabase). Een splitsing per
+  onderwerp én per bestand haalt die botsingen weg.
+- **Voorwaarde die blijft gelden:** vormgevingswerk gaat door dezelfde Definition of Done als al het
+  andere (rol x design x thema x device, tests groen). Mooier maken zonder bewijs telt niet als klaar.
+- De vier items die herontwerp op 13 sep had geclaimd zijn hierbij vrijgegeven en staan gemarkeerd als
+  "(vrij, overgedragen aan main 13 sep)". De code-auditbevindingen eronder blijven staan: die zijn al
+  gedaan en hoeven niet opnieuw.
 
 Claim-conventie voor deze checklist zodat herontwerp en main elkaar niet dubbel werk laten doen:
 - Zet vóór het beginnen aan een `[ ]`-item een sessie-tag: `[ ] (herontwerp, bezig)` of
