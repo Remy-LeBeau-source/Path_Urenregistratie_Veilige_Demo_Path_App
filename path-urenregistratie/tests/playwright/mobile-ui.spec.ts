@@ -1977,6 +1977,11 @@ test('[MOB-H-030] op de kleinste gangbare telefoon (360px) scrollt geen enkel ho
   // Ook niet gebruikt: `scrollWidth > clientWidth` per element. Dat telt
   // padding mee en meldde op 13 sep negen "overlopende" koppen in Instellingen
   // die alle negen vals alarm waren.
+  // Twaalf schermwisselingen (zes schermen x twee vormgevingen), elk met een
+  // hertekening. Op WebKit paste dat niet in de standaard 45 s en liep de case
+  // in een testtime-out -- wat er als een layoutfout uitzag terwijl er alleen
+  // tijd tekort was.
+  test.setTimeout(150_000);
   const loginPage = new LoginPage(page);
   await page.setViewportSize({ width: 360, height: 740 });
 

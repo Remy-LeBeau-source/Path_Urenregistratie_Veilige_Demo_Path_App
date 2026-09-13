@@ -2807,6 +2807,22 @@ ervan heeft óf een ingebouwde zelfcontrole, óf een uitgevoerde discriminerende
 `[DASH-H-026]` staat er tussenin: die eist dat elk gemeten blok gevonden wordt vóór hij posities
 vergelijkt, dus leeg-vs-leeg kan niet slagen.
 
+**`[MOB-H-030]` vond op CI een echte overflow die lokaal onzichtbaar is (13 sep).** Op de
+CI-runner meldt hij `span.status-pill` tot 367px (Klassiek) en 371px (Nieuw) op het
+medewerkersbeheer-scherm, bij een viewport van 360px. Lokaal slaagt hij op **beide** mobiele
+engines. Beide waarnemingen kloppen: het verschil is lettertypemetriek -- de CI-runner is Linux en
+mist de Windows-fonts, dus dezelfde tekst rendert daar breder en de pil valt net buiten de rand.
+**De vondst is dus geen testfout maar een marge van nul:** dat blok past hier op de pixel en valt
+om zodra een font breder rendert -- op CI, op een Android-toestel met een andere systeemfont, of bij
+een gebruiker die zijn tekstgrootte verhoogt. De juiste reparatie is daarom speling geven (de pil
+laten krimpen of wrappen) en niet een paar pixels opschuiven; dat laatste is morgen weer stuk.
+Opgepakt door de vormgevingslane, want het zit in `assets/styles.css`.
+**Les voor verificatie:** lokaal groen bewijst hier niets -- lokaal is de case groen mét het
+probleem. Alleen de CI-run telt.
+**Eigen fout die erbij hoorde:** de case liep op WebKit in de standaard testtime-out van 45 s
+(twaalf schermwisselingen: zes schermen x twee vormgevingen). Dat zag eruit als een layoutfout
+terwijl er alleen tijd tekort was. Verhoogd naar 150 s; meting en zelfcontrole ongewijzigd.
+
 **Nulmeting `tablet-chromium` (768px) op main, 13 sep: 77 geslaagd, 1 overgeslagen
 (`[SKIN-H-010]`, eigen skipvoorwaarde), nul rood.** Gedraaid vóórdat de vormgevingslane haar
 Klassieke telefoonopmaak op main zet. Reden: die opmaak zit in `@media (max-width: 720px)` en dit
