@@ -42,6 +42,48 @@ GUI: 287.
 doorgetrokken naar de desktopvariant. Niet nagebouwd: de GUI komt per opdracht
 in een aparte ronde.
 
+## Terugmelding uit de repo (13 sep, avond)
+
+Het handoff-document vraagt op twee punten om verificatie in de repo. Hier de
+uitkomst, met vindplaats, zodat het na te trekken is.
+
+**Punt 0 — "Verifieer of de bestaande autosave dit al dekt." Ja, volledig.**
+`#hours-grid` slaat bij elke toetsaanslag op: `assets/app.js:13741` hangt een
+`input`-listener op die `updateHoursTotal(true)` aanroept, en die functie
+eindigt in `persistState()`. De app heeft er zelfs al een statusregel voor,
+`#hours-autosave-status` in `index.html:649`, die standaard "Wijzigingen worden
+automatisch opgeslagen" toont en na een wijziging "Automatisch opgeslagen om
+HH:MM" (`app.js:9073`). In servermodus wordt dat "Gesynchroniseerd met server om
+HH:MM" of "Niet gesynchroniseerd: ..." (`app.js:2665` en `2676`).
+
+Wat "Week opslaan" (`#save-timesheet`) daar bovenop doet is precies niets aan
+opslaan: de handler op `app.js:14024` roept `updateHoursTotal(true)` nog een
+keer aan en toont een toast. De knop weghalen kost dus geen functionaliteit.
+De winst van het ontwerp zit elders: die statusregel staat nu weggestopt in het
+blok "Invoerweergave", terwijl het ontwerp hem in de onderbalk zet waar je hem
+ziet. Dat is de echte verbetering, niet het autosaven zelf.
+
+**Punt "onzeker" — wat de maandkiezer doet. Dit ligt vast, en breder dan
+gedacht.** De pijlen zijn geen dashboardpijlen: ze zitten in
+`#global-period-control` in de topbalk (`index.html:229` en `244`) en gelden voor
+de hele app. `changePeriod(delta)` (`app.js:14300`) zet de periode via
+`shiftPeriodKey` en doet een volledige `renderAll()`, met een toast "Periode
+gewijzigd naar ...". Ook beheerschermen hangen eraan — `index.html:874` zegt
+letterlijk "De getoonde werkstatussen horen bij <maand>".
+
+Twee gevolgen voor het ontwerpvoorstel:
+- "Vorige maand springt naar Maanden met die maand opengeklapt" kan niet zomaar:
+  dezelfde knop bedient ook Facturen, Goedkeuringen en Teambeheer. Een
+  scherm-wisselend gedrag zou daar onverklaarbaar zijn.
+- "Volgende maand vergrendeld op de lopende maand" bestaat nu niet:
+  `shiftPeriodKey` (`app.js:161`) stapt vrij door en begrenst alleen het jaartal.
+
+Verder zijn deze twee knoppen vastgelegd door minstens acht testaanroepen in
+`dashboard-medewerker.spec.ts` en `business-workflows-e2e.spec.ts`. Het advies
+uit het handoff-document ("haal de pijlen bij Mijn uren weg") is daarmee wel
+uitvoerbaar, maar het is een wijziging aan een globale besturing en geen
+detail van het medewerkerscherm. Dat vraagt een besluit van Gio, niet van mij.
+
 ## Sync history
 
 ### Ronde 13 sep (namiddag)
