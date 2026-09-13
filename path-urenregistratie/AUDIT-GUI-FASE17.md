@@ -233,6 +233,21 @@ notificaties, mogelijk e-mail) en de betekenis van de bestaande losse
    volgende responsive fix: controleer de bronvolgorde, niet alleen of de
    media query "klopt".
 
+5. **Nieuwe, gemeten vondst (13 sep) — "Goedkeuren" staat op telefoonbreedte 8px
+   naast "Correctie vragen" en heeft geen bevestiging. Vraagt een beslissing van
+   Gio.** Op 412px staan de drie rij-acties op Goedkeuringen in één flexrij
+   (`.approval-actions`, `gap: 8px`, `flex-wrap: wrap`): knoppen van 100x62px met
+   8px ertussen, en "Correctie vragen" ingeklemd tussen "Bekijken" en
+   "Goedkeuren". De knopgroottes zijn ruim genoeg; de eis die dit raakt is de
+   scheiding van gevaarlijke van neutrale acties. Risico zit niet bij "Correctie
+   vragen" (die vraagt eerst een getypte reden, bewust zonder voorinvulling) maar
+   bij `data-approve`: dat gaat via één klik rechtstreeks naar
+   `approveEmployee()` zonder bevestiging, en zet urenstaat op goedgekeurd,
+   factuur op klaar plus twee meldingen. Volledige analyse en de drie mogelijke
+   richtingen staan in MASTERCHECKLIST.md 17.2. Bewust geen regressie vastgelegd:
+   een test die de huidige 8px asserteert zou de afwijking als gewenst gedrag
+   vastleggen.
+
 **P2 — inconsistentie/accessibility:** Android/Chrome- en PWA-blok van 17.5 nog
 scherm voor scherm doorlopen (gepland, nog niet gestart).
 

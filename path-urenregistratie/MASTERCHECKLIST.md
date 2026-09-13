@@ -2096,6 +2096,28 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   inklapbaar, maar geen informatie of beheeractie laten verdwijnen
 - [ ] Gevaarlijke acties (Terugsturen) nooit te dicht naast neutrale acties (Controleren/Verzonden)
   op mobiel/action-sheet-indeling
+  - **BEVINDING 13 sep, gemeten, wacht op go van Gio. Geen wijziging doorgevoerd.** Op 412px
+    (telefoon) staan de drie rij-acties op Goedkeuringen in één flexrij:
+    `.approval-actions` = `display:flex; gap:8px; flex-wrap:wrap`. Gemeten per rij: elke knop is
+    100x62px en de tussenruimte is **8px**, met **"Correctie vragen" ingeklemd tussen "Bekijken" en
+    "Goedkeuren"** (beide buren op 8px, zelfde regel). De knoppen zelf zijn ruim genoeg (62px hoog,
+    boven de 44/48px-richtlijn); het probleem is puur de scheiding die dit checklistpunt eist.
+  - **Waarom dit echt risico is, en in welke richting.** "Correctie vragen" is veilig ontworpen:
+    die opent een modal waarin de bevestigknop uitgeschakeld blijft tot er een reden is getypt, en
+    er wordt bewust niets voorgevuld (`showCorrectionEditor`, met dat argument expliciet in een
+    comment). De gevaarlijke kant is de andere: `data-approve` gaat via één klik rechtstreeks naar
+    `approveEmployee()` (`app.js` ~13556), **zonder bevestiging**. Eén mistik van 8px naar rechts
+    zet dus `timesheetStatus = "approved"` en `invoiceStatus = "ready"`, stuurt de medewerker een
+    "uren goedgekeurd"-melding en zet een factuurmelding klaar. Dat is de stap die je niet per
+    ongeluk wil doen, en juist die heeft geen drempel.
+  - **Drie mogelijke richtingen (niet zelf gekozen):** (a) op telefoonbreedte de gevaarlijke/
+    definitieve actie visueel en ruimtelijk losmaken van de neutrale (grotere gap of eigen regel) --
+    `assets/styles.css`, vormgevingslane; (b) de rij-"Goedkeuren" dezelfde bevestigingsdrempel
+    geven die de modalvariant al heeft -- `assets/app.js`, verandert een workflow; (c) de volgorde
+    zo zetten dat de gevaarlijke actie niet tussen twee andere staat. Allemaal in bestanden van de
+    andere lane en/of een workflowwijziging, dus eerst melden.
+  - **Bewust geen regressie vastgelegd:** een test die de huidige 8px asserteert zou de afwijking
+    juist als gewenst gedrag vastleggen. De test hoort bij de fix.
 
 **17.3 Workflow-integriteit**
 - [ ] Concept -> Gereed -> Ingediend -> Goedgekeurd -> Verzonden (+ Teruggestuurd, Correctie,
