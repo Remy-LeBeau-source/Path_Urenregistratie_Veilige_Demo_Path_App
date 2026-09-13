@@ -115,7 +115,15 @@ test('[ROLE-N-004] een medewerker krijgt 403 op elke beheerder-only schrijfactie
   });
 
   await test.step('And ook de leesbare beheerdersbronnen blijven dicht', async () => {
-    for (const path of ['/server/api/audit-log.php', '/server/api/email-queue.php', '/server/api/mail-acceptance.php']) {
+    // server-log.php is hier op 13 sep bij gekomen. Dat endpoint bewaakt zijn
+    // rol correct (auth_require_role(['administrator'])) maar was als enige
+    // beheerder-endpoint niet in deze lijst opgenomen -- gevonden door elk
+    // bestand in server/api/ af te zetten tegen wat deze case dekt. De andere
+    // niet-genoemde bestanden bleken terecht afwezig: common.php en
+    // mail-recipients.php zijn gedeelde bibliotheken en geen endpoints,
+    // notifications.php is bewust voor beide rollen, en test-reset.php is
+    // alleen op LOCAL/TEST bereikbaar en heeft zijn eigen poort.
+    for (const path of ['/server/api/audit-log.php', '/server/api/email-queue.php', '/server/api/mail-acceptance.php', '/server/api/server-log.php']) {
       const r = await request.get(path);
       expect([401, 403], `${path}: ${r.status()}`).toContain(r.status());
     }
