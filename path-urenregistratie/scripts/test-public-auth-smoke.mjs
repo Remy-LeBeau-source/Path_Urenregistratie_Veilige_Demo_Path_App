@@ -111,7 +111,32 @@ async function resetSharedBaseline(session) {
   const reset = await resetResponse.json();
   assert.equal(resetResponse.status, 200, 'Public TEST baseline reset failed');
   assert.equal(reset.ok, true, 'Public TEST baseline reset did not confirm success');
-  assert.equal(reset.reset?.users, 8, 'Public TEST reset must restore six demo and two acceptance accounts');
+  // Bewust GEEN exact aantal actieve gebruikers meer.
+  //
+  // Hier stond `assert.equal(reset.reset?.users, 8, ...)`, en dat heeft de weg
+  // naar TEST 36 uur dichtgezet zonder dat iemand het doorhad. Op 12-09 om 12:35
+  // is `td_bv@teqdirectors.nl` als derde acceptatie-beheerder toegevoegd
+  // (`server/lib/test-reset.php`, `test_reset_acceptance_accounts()`, commit
+  // b640f105, op verzoek van de opdrachtgever). Daarmee werden het er negen.
+  // Dit script is sinds 11-09 niet meer aangeraakt, dus de verwachting groeide
+  // niet mee. Gevolg: de deploy naar TEST slaagde daarna elke keer -- er staat
+  // in dezelfde log "TEST live smoke passed" -- maar viel hierna om, waardoor de
+  // hele pijplijn rood kleurde en het leek alsof er niets meer op TEST kwam.
+  //
+  // Een vast totaal is hier ook de verkeerde bewaking: een account erbij is een
+  // normale, gewenste gebeurtenis en hoort geen uitrol te blokkeren. Wat wél
+  // moet kloppen, staat een regel verderop en is scherper: alle zes canonieke
+  // demo-accounts zijn geverifieerd mét hun wachtwoord. Die controle vangt het
+  // echte risico (een tester kan niet meer inloggen).
+  //
+  // Deze regel vangt het complement: er mogen nooit minder actieve accounts zijn
+  // dan er geverifieerd zijn. Accounts erbij is prima, accounts kwijt niet.
+  const actieveGebruikers = Number(reset.reset?.users ?? 0);
+  const geverifieerdeDemoAccounts = Number(reset.reset?.verified_demo_accounts ?? 0);
+  assert.ok(
+    actieveGebruikers >= geverifieerdeDemoAccounts && geverifieerdeDemoAccounts > 0,
+    `Public TEST reset left ${actieveGebruikers} active accounts while ${geverifieerdeDemoAccounts} demo accounts were verified -- accounts may be added, never lost`,
+  );
   assert.equal(reset.reset?.employees, 4, 'Public TEST reset must restore four demo employees');
   assert.equal(reset.reset?.open_actions, 12, 'Public TEST reset must restore the twelve-action baseline');
   assert.equal(reset.reset?.verified_demo_accounts, 6, 'Public TEST reset must verify all six canonical demo accounts');

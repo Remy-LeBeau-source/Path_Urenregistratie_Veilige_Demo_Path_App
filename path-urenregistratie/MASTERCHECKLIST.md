@@ -2852,6 +2852,31 @@ waar een verkeerd gekozen grens zichtbaar wordt. Zonder deze nulmeting is een ro
 te duiden: dan weet je niet of de nieuwe opmaak hem brak of dat hij er al stond. Dezelfde run na de
 landing herhalen; het verschil is het antwoord.
 
+**OPGELOST: de uitrol naar TEST stond 36 uur vast op een verouderd accountaantal (13 sep, v2.0.52).**
+Aanleiding: Gio vroeg wanneer er voor het laatst iets naar TEST was gegaan. Die vraag dwong me naar
+de deploy-job zelf te kijken in plaats van naar de testpoort ervóór -- en daar lag het.
+- **De deploy sláágt.** In dezelfde log staat `Cutover: moving current live content to rollback
+  root...` gevolgd door `TEST live smoke passed: version=2.0.38`. TEST draait dus gewoon nieuwe
+  code. Wat daarna omvalt is `scripts/test-public-auth-smoke.mjs`:
+  `Public TEST reset must restore six demo and two acceptance accounts -- actual: 9, expected: 8`.
+  De pijplijn kleurt daardoor rood en het lijkt alsof er niets op TEST komt.
+- **Oorzaak.** Op 12-09 om 12:35 is `td_bv@teqdirectors.nl` als derde acceptatie-beheerder
+  toegevoegd (`server/lib/test-reset.php`, `test_reset_acceptance_accounts()`, commit b640f105, op
+  verzoek van Gio). Zes demo + drie acceptatie = negen. Het smoke-script is sinds 11-09 niet meer
+  aangeraakt. De laatste geslaagde deploy was 12-09 om **12:28**, zeven minuten vóór die commit.
+  Elke deploy daarna strandde op deze ene regel: 36 uur, 127 commits.
+- **Fix, en waarom niet simpelweg 8 -> 9.** Een vast totaal is hier de verkeerde bewaking: een
+  account erbij is normaal en gewenst en hoort geen uitrol te blokkeren -- precies wat Gio ook zei.
+  De regel ernaast doet het echte werk al (`verified_demo_accounts === 6`: alle zes canonieke
+  demo-accounts geverifieerd mét wachtwoord). De vervangende regel vangt het complement: er mogen
+  nooit minder actieve accounts zijn dan er geverifieerd zijn. Accounts erbij mag, accounts kwijt
+  niet. Doorgerekend: 9/6, 8/6, 12/6 en 6/6 gaan door; 5/6, 3/6 en 0/0 vallen om.
+- **Les, en die is groter dan deze regel.** Wij waren allebei de hele avond Playwright-uitvallen aan
+  het repareren. Die blokkeerden de deploy pas vanaf ~19:35; daarvóór kwam hij er wél aan toe en
+  viel hij hierop om. We repareerden dus echte problemen, maar niet het probleem. Een rode pijplijn
+  vertelt je wáár hij stopte, niet waaróm hij al dagen niet aankwam -- kijk bij een langdurige
+  blokkade eerst naar de laatste stap die ooit geslaagd is, niet naar de eerste die nu faalt.
+
 **NOG OPEN: `dashboard.spec.ts` heeft wisselwerking tussen cases, in beide richtingen.** In de run
 waarin DASH-N-007 groen werd, viel `[DASH-N-012]` om op `#modal-confirm`: verwacht "Controle
 afronden", gekregen "Voorbeeldgegevens herstellen" -- dus een andere modal stond nog open. Los
