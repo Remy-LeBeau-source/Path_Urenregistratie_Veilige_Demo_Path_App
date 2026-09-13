@@ -1958,11 +1958,52 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
 - [x] "Standaardweek vullen"-conflict (UI-TAKENLIJST #29/#48) opgelost: bestaande knop blijft
   veilig, nieuwe bevestigde "Week/Maand terugzetten"-knop overschrijft ook bewust-bevestigde
   0-dagen. `[SKIN-H-028]`, v2.0.2, New-bento + Klassiek Mijn uren.
-- [ ] Dashboard/Mijn overzicht: begroeting, volgende actie, open acties, acties per maand
-- [ ] Mijn uren: invoeren, wijzigen, opslaan, Enter-to-save, maand/weeknavigatie, totalen, indienen,
-  status van urenregistratie
-- [ ] Klanturenstaat uploaden / opnieuw uploaden
-- [ ] Correcties, mededelingen, notificaties, profiel, logout
+- [ ] (vrij, overgedragen aan main 13 sep) Dashboard/Mijn overzicht: begroeting, volgende actie, open acties, acties per maand.
+  **Bevinding + fix (13 sep, v2.0.7):** Klassiek toonde "wachten op controle door Gio of Joyce"
+  (hardcoded namen) i.p.v. het overal elders gebruikte "Backoffice" (New-skin bento, klanturenstaat-
+  teksten). Gefixt naar "wachten op controle door Backoffice." `assets/app.js` regel ~5705. Geen test
+  raakte deze exacte string (gecontroleerd), `node --check` groen. **Nieuw-skin exclusielogica
+  geverifieerd correct:** `:not()`-selector in `styles-new.css` toont in Nieuw bewust alleen
+  `.new-employee-bento`, `#employee-open-overview`, `#employee-dashboard-correction`,
+  `#employee-history-teaser` en verbergt de rest van de Klassieke dashboard-content -- geen
+  dubbele/tegenstrijdige info, goed gedocumenteerd in de bestaande code-comments. Nog te doen:
+  `employeeOpenMonthSummaries`/meermaandenlogica verder doorlichten, live/visuele bevestiging.
+- [ ] (vrij, overgedragen aan main 13 sep) Mijn uren: invoeren, wijzigen, opslaan, Enter-to-save, maand/weeknavigatie, totalen, indienen,
+  status van urenregistratie. **Code-audit 13 sep (geen wijziging nodig, alles klopte al):**
+  0/8/9-sneltoetsen bestaan in zowel Nieuw (`.new-bento-presets`) als Klassiek (`data-hours-set`,
+  eerder al overgezet na testfeedback) en zijn al twee keer bewust visueel verfijnd (rustige
+  secundaire knop naast het uurgetal). Enter-to-save + focus-naar-volgende-dag werkt in beide
+  skins (`handleBentoDayCardKeydown` resp. `handleEnterSave`/`#hours-grid .hours-input`), met
+  tussentijdse-opslaan-melding. Totalen (week/maand) rekenen correct door in `updateHoursTotal`.
+  Indienen-flow springt eerst naar de laatste week met een duidelijke melding als je daar nog niet
+  stond, i.p.v. stil te weigeren; vergrendelde/alleen-lezen maand heeft een eigen statusmelding.
+  **Nog open:** live/visuele bevestiging op TEST of lokaal (licht + donker, desktop + mobiel) --
+  lokaal inloggen vereist een DB-bootstrapscript dat de met main gedeelde testdatabase kan
+  aanpassen; bewust niet zonder overleg gedraaid. Klanturenstaat/correcties/mededelingen/
+  notificaties/profiel/logout (overige 17.1-bullets) nog te doen.
+- [ ] (vrij, overgedragen aan main 13 sep) Klanturenstaat uploaden / opnieuw uploaden. **Code-audit 13 sep (geen
+  wijziging nodig):** upload-flow heeft nette guards (maand verplicht, bestandstype-check,
+  2MB-limiet, dubbele-indiening-blokkade die "resubmit"/"missing"/"draft" wél en de rest
+  terecht niet toestaat). Het echte paneel (`#customer-timesheet-upload-panel`) verhuist als
+  één DOM-node tussen Dashboard-kaart (Nieuw) en eigen scherm (Klassiek) i.p.v. gedupliceerd te
+  worden -- voorkomt dubbele ids/onderhoud. Beheerderskant (controleren, herinneren, extern
+  bevestigen/terugzetten, brokerroute) is volledig doorontwikkeld, geen losse eindjes gevonden.
+  Nog open: live/visuele bevestiging.
+- [ ] (vrij, overgedragen aan main 13 sep) Correcties, mededelingen, notificaties, profiel, logout. **Code-audit
+  13 sep:** logout doet één nette herpoging bij netwerkfout voordat hij lokaal opgeeft (voorkomt
+  de eerder gefixte "toch weer automatisch ingelogd"-regressie) en ruimt rol/hydratatie/panelen
+  netjes op. Profielmenu verbergt "Ander account of rol" buiten demomodus -- terecht, want bij
+  echte login doet die knop hetzelfde als uitloggen. Notificaties: bel toont bewust alleen
+  ongelezen (badge + lijst consistent), klik markeert gelezen via API met lokale fallback en
+  navigeert naar de juiste view/periode. Geen bugs gevonden. Mededelingen (medewerkerarchief)
+  doorgelicht: filters, ongelezen-telling en intrekken werken consistent. **Wel te verifiëren
+  (bewust niet zelf "dood" verklaard):** in `renderEmployeeAnnouncementArchive` sluit de
+  basisfilter `item.status !== "withdrawn"` uit, terwijl verderop in dezelfde functie een
+  `withdrawalNote` wordt opgebouwd voor precies `item.status === "withdrawn"`, en het
+  archieffilter "withdrawn" op diezelfde toestand test. Dat lijkt onbereikbaar, maar exact zo'n
+  redenering leidde in `093ec97d` tot het weghalen van de nog wél gebruikte `.status-draft`-regel
+  (zie v2.0.10 hierboven). Dus eerst aantonen met een test of live-observatie, pas daarna opruimen.
+  Nog te doen: correctie-afhandeling vanuit de medewerkerkant in Mijn uren zelf.
 - [ ] Mobiele prioriteit: wat moet ik nu doen -> uren -> open acties -> klanturenstaat -> overig
 - [ ] Data mag nooit verloren gaan door rerender, schermrotatie, browser-back, modal sluiten,
   toetsenbord openen, thema-/designwissel
@@ -2316,6 +2357,21 @@ ons dan handmatig weer aanzetten. Concrete regels:
   hier zes uur stil door een `gh run watch` zonder terugval, zonder dat iemand het merkte.
 - Overleg tussen de sessies is geen werk. Een bericht sturen en dan de beurt beëindigen is precies
   het patroon dat Gio hierboven beschrijft; stuur het bericht en werk in diezelfde beurt door.
+=======
+**Werkverdeling gewijzigd op 13 sep 2026 (besluit Gio).** Vanaf nu een splitsing per onderwerp in
+plaats van per item:
+- **herontwerp = vormgeving.** Werkt de door Gio aangeleverde ontwerpopdrachten uit, en is eigenaar
+  van `assets/styles.css` en `assets/styles-new.css`.
+- **main = al het overige.** Functioneel werk, rollen/security, apparaat- en platformrandgevallen,
+  en de resterende 17.1/17.2/17.3/17.4-items.
+- Aanleiding: in de nacht van 12 op 13 sep liepen beide sessies drie keer vast op elkaar
+  (versienummers dubbel gebruikt, drie merges nodig, gedeelde stash/testdatabase). Een splitsing per
+  onderwerp én per bestand haalt die botsingen weg.
+- **Voorwaarde die blijft gelden:** vormgevingswerk gaat door dezelfde Definition of Done als al het
+  andere (rol x design x thema x device, tests groen). Mooier maken zonder bewijs telt niet als klaar.
+- De vier items die herontwerp op 13 sep had geclaimd zijn hierbij vrijgegeven en staan gemarkeerd als
+  "(vrij, overgedragen aan main 13 sep)". De code-auditbevindingen eronder blijven staan: die zijn al
+  gedaan en hoeven niet opnieuw.
 
 Claim-conventie voor deze checklist zodat herontwerp en main elkaar niet dubbel werk laten doen:
 - Zet vóór het beginnen aan een `[ ]`-item een sessie-tag: `[ ] (herontwerp, bezig)` of
@@ -2330,6 +2386,20 @@ Claim-conventie voor deze checklist zodat herontwerp en main elkaar niet dubbel 
   deur -- wie ruimte heeft pakt een onbezet item op, ongeacht sectie.
 - Waar mogelijk elkaar ook direct inseinen via de agent-peersessie (zichtbaar via `ListAgents`/
   `SendMessage` in Claude Code) in plaats van te wachten tot de ander toevallig deze checklist leest.
+
+**Visuele verbeteringen uit de Cloud-ontwerpreferentie (herontwerp, doorlopend):**
+- [x] **Blauwe statuspil op tokens (v2.0.8, Klassiek + Nieuw, licht + donker).** Uit de
+  gepubliceerde "Design-polish"-referentie, punt 5: van de vier statuskleuren stond alleen de
+  blauwe ("Ingediend"/"Factuur klaar"/"Urencontrole nodig"/"Mededeling") nog op een vaste hex
+  (`#eaf1fa`/`#315d91`) i.p.v. op thema-tokens. Groen, grijs en oranje draaiden dus netjes mee
+  met de donkere modus, deze bleef een lichtblauw vlak met donkerblauwe tekst midden op een
+  donker scherm. Nieuwe tokens `--info-bg`/`--info-tekst` in `:root` én in het
+  `html[data-theme="dark"]`-blok (donker: `#16293d`/`#8fb8e8`, 7,6:1). Rol: beide (pil komt voor
+  bij medewerker én beheerder). Design: Klassiek (`styles.css`); Nieuw erft dezelfde regel, geen
+  eigen overschrijving. Devices: themaneutraal qua layout, geen maatwijziging. Getest:
+  `contrast-licht-donker.mjs` groen ("geen regel onder 4,5:1"), `test-design-audit.mjs` groen.
+  Nog open als los puntje: `.dashboard-team-row.status-submitted td` heeft nog een vaste
+  lichte randkleur (`#cbdcf0`) met hetzelfde probleem, maar dat is een tabelrand, geen pil.
 
 **Visuele verbetering is de opdracht, niet alleen toegestaan (Klassiek en Nieuw):** styling/look
 mooier maken is expliciet onderdeel van Fase 17 (zie de scope-correctie hierboven), niet slechts

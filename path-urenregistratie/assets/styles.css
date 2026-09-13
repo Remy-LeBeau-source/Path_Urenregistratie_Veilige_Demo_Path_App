@@ -39,6 +39,18 @@
   --surface-muted: #f1f5f4;
   --mint-dark-tekst: #037f63;
   --warning-tekst: #a5600d;
+  /* De blauwe "loopt nog"-statuspil (.status-submitted/.status-ready) stond als
+     enige van de vier statuskleuren op een vaste hex i.p.v. op tokens. Gevolg:
+     groen, grijs en oranje draaiden netjes mee met de donkere modus, maar deze
+     bleef een lichtblauw vlak met donkerblauwe tekst midden in een donker
+     scherm. Zelfde tint, nu wel als token zodat het donkere blok hem kan
+     omdraaien -- precies zoals bij --warning-bg/--warning-tekst. */
+  --info-bg: #eaf1fa;
+  --info-tekst: #315d91;
+  /* Amberkleurige "let op"-rand (correctiebanner, aandachtsrijen in de
+     teamtabel). Stond op twee plekken als dezelfde vaste hex; als token kan
+     het donkere blok hem omdraaien zonder dat de lichte modus verandert. */
+  --warning-rand: #edc58f;
   --danger: #a34b4b;
   --shadow: 0 14px 35px rgba(13, 27, 56, 0.08);
   --radius: 18px;
@@ -766,7 +778,7 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
    toonde daardoor geen kleur, terwijl het semantisch dezelfde afgeronde
    status is als goedgekeurd/verzonden. */
 .status-approved, .status-sent, .status-success { background: var(--green-light); color: var(--mint-dark-tekst); }
-.status-submitted, .status-ready { background: #eaf1fa; color: #315d91; }
+.status-submitted, .status-ready { background: var(--info-bg); color: var(--info-tekst); }
 /* Vaste lichte pil met grijze tekst: bleef wit in de donkere modus, en 3,9:1 is
    ook bij daglicht te weinig voor een statuslabel. */
 .status-concept { background: var(--vlak-zacht); color: var(--muted); }
@@ -791,10 +803,23 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .dashboard-team-table td:last-child { border-right: 1px solid var(--line); border-radius: 0 12px 12px 0; text-align: right; }
 .dashboard-team-table .person-cell strong { color: var(--navy-tekst); font-size: 12px; }
 .dashboard-team-table .dashboard-team-row.status-submitted td { border-color: #cbdcf0; background: var(--vlak-zacht); }
+/* Deze twee statusrijen raakten hun markering kwijt in "Dekkingsronde 3: dode
+   CSS opgeruimd" (093ec97d). Daar is de declaratie van de .status-draft-regel
+   verwijderd, maar de erboven staande, met een komma verbonden selector voor
+   .status-correction bleef staan -- die plakte daardoor aan de volgende regel
+   (.dashboard-team-action { min-width: 116px }). Twee gevolgen: correctie- en
+   conceptrijen waren in de teamtabel niet meer van een gewone rij te
+   onderscheiden, en elke cel van een correctierij kreeg ten onrechte de
+   min-width die alleen voor de actiekolom bedoeld was. .status-draft is
+   bovendien niet dood: app.js bouwt de klasse dynamisch op uit
+   record.timesheetStatus, en "draft" is juist de meest voorkomende stand.
+   Randkleur nu via --warning i.p.v. de vaste #edc58f, zodat de rij ook in de
+   donkere modus meekleurt (de achtergrond stond al op een token). */
 .dashboard-team-table .dashboard-team-row.status-correction td,
+.dashboard-team-table .dashboard-team-row.status-draft td { border-color: var(--warning-rand); background: var(--vlak-warm); }
 .dashboard-team-action { min-width: 116px; }
 
-.correction-banner { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 14px; align-items: start; margin: 0 0 18px; border: 1px solid #edc58f; border-radius: 16px; background: var(--warning-bg); color: var(--ink); padding: 17px 19px; }
+.correction-banner { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 14px; align-items: start; margin: 0 0 18px; border: 1px solid var(--warning-rand); border-radius: 16px; background: var(--warning-bg); color: var(--ink); padding: 17px 19px; }
 .correction-banner.dashboard-correction { grid-template-columns: auto minmax(0,1fr) auto; align-items: center; }
 .correction-banner-icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; background: var(--warning); color: var(--navy); font-size: 16px; font-weight: 900; }
 .correction-banner strong, .correction-banner p, .correction-banner small { display: block; }
@@ -2140,6 +2165,13 @@ html[data-theme="dark"] { color-scheme: dark; --ink: #e7eef4; --muted: #b1bfcb; 
   --navy-tekst: #dbe6f2;
   --mint-dark-tekst: #5fd7ba;
   --warning-tekst: #f0bd7a;
+  /* Diepblauw vlak met lichtblauwe letter, in dezelfde verhouding als
+     --warning-bg/--warning-tekst hierboven (7,6:1, ruim boven de 4,5:1). */
+  --info-bg: #16293d;
+  --info-tekst: #8fb8e8;
+  /* Gedempter dan de lichte variant: op een donkere ondergrond schreeuwt
+     hetzelfde lichte amber, terwijl een rand alleen hoeft af te bakenen. */
+  --warning-rand: #7a5a2c;
   --tabelkop: #b1bfcb;
   /* En de vlakken zelf. Deze drie ontbraken hier, en dat was geen detail: de
      tekstkleuren hierboven werden wel licht, de vlakken bleven wit. Zo kreeg je
