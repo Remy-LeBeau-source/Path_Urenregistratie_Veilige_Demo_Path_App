@@ -245,7 +245,22 @@ test('[DASH-N-007] afwijkend API-totaal overschrijft de concrete werkvoorraad ni
         staleTotalsAbsent: !['#hero-task-total', '#hero-task-owners', '#metric-actions']
           .some(selector => /(?:132|205)/.test(text(selector)))
       };
-    })).toEqual({
+    // Ruimer wachtvenster dan de standaard 5 s, met opzet.
+    //
+    // Op 13 sep viel deze case om terwijl er geen gedrag was veranderd: de
+    // aantallen bleven identiek (12 acties in 10 dossiers, 12 rijen, Backoffice
+    // 7 + medewerkers 5), maar de hero vulde ná een wijziging elders eerder dan
+    // daarvoor. De case gate't `dashboard.php` bewust en injecteert een stale
+    // staat; hero en lijst komen daardoor niet op hetzelfde moment binnen. Met
+    // 5 s hing het van de snelheid van de machine af of ze binnen het venster
+    // samenkwamen -- de case mat dus mede hoe traag de app is, en dat is niet
+    // wat hij hoort te bewaken.
+    //
+    // Dit verzwakt de assertie niet: er wordt nog steeds geëist dat álle zes
+    // waar zijn. Komen hero en lijst structureel niet overeen, dan faalt hij
+    // net zo hard, alleen na 20 s in plaats van na 5. Juist daarom onderscheidt
+    // deze wijziging de twee gevallen in plaats van er een te verbergen.
+    }), { timeout: 20_000 }).toEqual({
       hasRows: true,
       totalMatches: true,
       ownersMatch: true,

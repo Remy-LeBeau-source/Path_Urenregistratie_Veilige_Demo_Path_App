@@ -2748,43 +2748,41 @@ draaiden ze meteen groen. De suites delen de database en poort 8010; een tweede 
 vervuilt de uitslag. Regel: één testrun tegelijk, en bij een onverwachte uitvaller eerst nagaan of
 er nog iets anders liep -- vóór je een defect noteert.
 
-**OPEN: `[DASH-N-007]` is rood op main na de merge van 13 sep (aa7b5d47).** Twee losse feiten,
-allebei gemeten, niet beredeneerd:
-1. **De case is niet geïsoleerd.** Losstaand (`--grep`) faalt hij op zowel de voor-merge-code als de
-   huidige main; hij slaagt alleen als het hele `dashboard.spec.ts` draait. De testdatabase wordt
-   binnen één run niet tussen cases teruggezet, dus hij leunt op wat de drie cases vóór hem
-   achterlaten. Mijn eerste zeven losse runs waren dus ongeldige metingen. **Dit hoort opgeknapt**
-   (mijn kant, tests): een case die alleen slaagt dankzij zijn voorgangers verbergt precies het
-   soort verschil dat hieronder aan het licht kwam.
-2. **Mét die voorgangers maakt de merge wél verschil.** Zelfde bestand, zelfde positie #4, zelfde
-   drie voorgangers: op 68eb2272 volledig groen (19/19, DASH-N-007 in 15,9s), op de huidige main
-   rood terwijl de rest groen blijft. Gemeten op een losse worktree met een eigen database en
-   poort, dus de twee metingen raakten elkaar niet.
-   Wat faalt: `totalMatches`, `ownersMatch`, `ownerBadgesMatch`, `metricMatches`; wat blijft
-   kloppen: `queueMatches` en `staleTotalsAbsent`. De app meldt "12 open acties in 10 dossiers".
-   Het verschil zit dus tussen wat de hero optelt en wat de lijst toont, niet in een verdwenen
-   element. **Uitgesloten:** de 278 regels Klassieke CSS uit die merge (de case draait op
-   `desktop-chromium`, 1280px, en dat blok zit in `@media (max-width: 720px)`), en de kalender
-   (`useFixedDemoClock` in een `beforeEach`, plus vaste maandsleutels in de fixture).
-   Overblijvend: `assets/app.js` en `index.html` uit die merge. Gemeld bij de vormgevingslane,
-   die dat bestand beheert.
-3. **Eén hypothese onderweg getoetst en weerlegd, met de meting erbij.** Het vermoeden was dat de
-   merge via `customerTimesheetFor()` een extra taak zou laten ontstaan. De drie schakels daarvan
-   kloppen wél (zie de losse notitie hieronder), maar de voorspelling niet. Zelfde probe op beide
-   bomen, beheerder ingelogd, vaste demoklok, 2,5 s wachten:
-   *voor-merge:* "12 open acties in 10 dossiers · Backoffice 7 · 5 wachten", rijen 12, hero
-   "Werkvoorraad laden…", owners leeg.
-   *na de merge:* exact dezelfde tekst en rijen, maar hero "12 open acties" en owners
-   "Backoffice 7 + wacht op medewerkers 5 = 12".
-   De aantallen zijn dus identiek en op de gewone main is alles onderling consistent. **Het enige
-   verschil is timing: de hero vult ná de merge eerder.** Dat past op wat deze case doet -- die
-   gate't `dashboard.php` bewust en injecteert een stale state -- dus de zoektocht hoort in wat er
-   nu eerder rendert, niet in de taaktelling.
+**OPGELOST: `[DASH-N-007]` was tijdgevoelig, niet stuk (13 sep 2026, main).** v2.0.43.
+Het begon als "main is rood na de merge" en eindigde ergens anders. De route erheen is het bewaren
+waard, want ik ben onderweg twee keer bijna de verkeerde kant op gegaan.
+- **Eerste meting was ongeldig.** Zeven losse runs rood -- maar de eerste drie liepen dwars door een
+  testrun van de andere sessie heen. Pas na wachten tot die klaar was telde de meting. (Zie de
+  regel "een testrun tegelijk" hierboven; dit was de tweede keer op één dag.)
+- **Tweede spoor: de merge.** Zelfde bestand, zelfde positie #4, zelfde voorgangers: op 68eb2272
+  volledig groen (19/19), op de huidige main rood. Gemeten op een losse worktree met eigen
+  database en poort. Dat wees hard naar de merge -- en zo heb ik het ook gemeld.
+- **Maar de aantallen waren identiek.** Probe op beide bomen: "12 open acties in 10 dossiers ·
+  Backoffice 7 · 5 wachten", 12 rijen, in beide gevallen. Het enige verschil: de hero was ná de
+  merge al gevuld waar hij daarvóór na 2,5 s nog "Werkvoorraad laden…" toonde. Geen extra werk,
+  maar eerder klaar. Daarmee viel ook de hypothese af dat `customerTimesheetFor()` een extra taak
+  liet ontstaan (die schakels kloppen wél, zie de notitie hieronder, maar de voorspelling niet).
+- **De echte oorzaak.** De case gate't `dashboard.php` bewust en injecteert een stale staat; hero
+  en lijst komen dus niet tegelijk binnen. De `expect.poll` stond op de standaard 5 s. Of ze binnen
+  dat venster samenkwamen hing af van de snelheid van de machine -- de case mat mede hoe traag de
+  app is. De vormgevingslane zei het raakste: **je wil hem niet groen zien worden door de app
+  trager te maken.**
+- **Fix: het wachtvenster naar 20 s, verder niets.** Alle zes de voorwaarden blijven geëist, dus
+  lopen hero en lijst structureel uiteen dan faalt hij nog steeds -- alleen later. Juist daarom
+  ónderscheidt deze wijziging de twee gevallen in plaats van er één te verbergen. Uitkomst: groen,
+  óók losstaand, wat meteen mijn eerdere conclusie corrigeert dat hij van zijn voorgangers zou
+  afhangen -- losstaand was hij simpelweg trager (koude start) en dus eerder buiten het venster.
+- **Wat ik hieruit meeneem:** twee keer een plausibel verhaal gehad (eerst de merge, toen een
+  extra taak) en beide keren wees de meting iets anders aan. Een bisect die naar een commit wijst,
+  bewijst nog niet dat die commit fout is -- alleen dat er iets is veranderd. Hier was dat de
+  snelheid.
 
-*Opruimen niet vergeten:* voor deze bisect staat er een losse worktree op `C:\Path-premerge-check`
-(detached op 68eb2272, met eigen `node_modules`, database `path_urenregistratie_premerge_test` en
-poort 8020). Bewust blijven staan zolang dit onderzoek loopt, zodat een vervolgmeting geen nieuwe
-`npm ci` kost. Weghalen met `git worktree remove` zodra `[DASH-N-007]` weer groen is.
+**NOG OPEN: `dashboard.spec.ts` heeft wisselwerking tussen cases, in beide richtingen.** In de run
+waarin DASH-N-007 groen werd, viel `[DASH-N-012]` om op `#modal-confirm`: verwacht "Controle
+afronden", gekregen "Voorbeeldgegevens herstellen" -- dus een andere modal stond nog open. Los
+draait die case twee van de twee keer groen. Precies het spiegelbeeld van DASH-N-007. Bewust niet
+vannacht nog "even" gefixt: dat vraagt uitzoeken welke case zijn modal laat staan, en dat is
+echt werk, geen timeout-verhoging. Eerstvolgende kandidaat voor deze lane.
 
 **Latent risico, los van bovenstaande: `customerTimesheetFor()` heet als een getter maar schrijft.**
 Regel ~4494: hij maakt `record.customerTimesheet` aan als die ontbreekt en vult standaardwaarden,
