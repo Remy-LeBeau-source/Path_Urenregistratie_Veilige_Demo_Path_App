@@ -3879,3 +3879,84 @@ body.toont-installatieaanbod .main-content {
     font-weight: 700;
   }
 }
+
+/* Dagregels in Mijn uren op telefoon, volgens dezelfde referentie als de hero
+   hierboven. In de export is een dag een rustige regel: dagnaam met datum
+   links, dan de 0/8/9-keuze als aaneengesloten groep, en rechts het invulveld
+   in de schreefletter. De app heeft dezelfde drie onderdelen maar in een andere
+   volgorde en met een ander uiterlijk; alleen de vorm gaat mee, de werking
+   blijft. Modern blijft ongemoeid (:not()-afbakening). */
+@media (max-width: 720px) {
+  html:not([data-skin="new"]) .hours-day-entry {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Volgorde uit de export: dag links, dan de snelkeuze, en het invulveld
+     rechts. In de markup staat het veld vóór de snelkeuze, dus die volgorde
+     wordt hier omgezet met order -- de DOM blijft ongemoeid, zodat de
+     tabvolgorde en de bestaande testselectors kloppen. */
+  html:not([data-skin="new"]) .hours-day-entry .date-number {
+    order: 1;
+    flex: 1;
+    min-width: 0;
+    color: var(--muted);
+    font-size: 11px;
+    /* De basisregel maakt dit label een inline-flex met gecentreerde inhoud;
+       met flex:1 erbij komt de tekst dan in het midden te hangen in plaats van
+       links, zoals in de export. */
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  html:not([data-skin="new"]) .hours-day-entry .hours-day-presets { order: 2; }
+  html:not([data-skin="new"]) .hours-day-entry .hours-input { order: 3; }
+
+  /* De snelkeuze is in het ontwerp één aaneengesloten groep met een rand
+     eromheen en haarlijnen ertussen, geen drie losse knoppen. */
+  html:not([data-skin="new"]) .hours-day-entry .hours-day-presets {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 0;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    overflow: hidden;
+  }
+
+  html:not([data-skin="new"]) .hours-day-entry .hours-day-presets button {
+    width: 44px;
+    min-height: 46px;
+    border: 0;
+    border-left: 1px solid var(--line);
+    border-radius: 0;
+    background: transparent;
+    color: var(--ink);
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  html:not([data-skin="new"]) .hours-day-entry .hours-day-presets button:first-child {
+    border-left: 0;
+  }
+
+  /* Het uurgetal in de schreefletter, zoals de export: het is een bedrag, geen
+     formulierveld. Breedte en hoogte exact uit de bron. */
+  html:not([data-skin="new"]) .hours-day-entry .hours-input {
+    width: 56px;
+    flex: 0 0 auto;
+    min-height: 46px;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    font-family: var(--letter-kop);
+    font-size: 17px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    padding: 0 6px;
+  }
+
+  html:not([data-skin="new"]) .hours-day-entry .hours-input:focus {
+    border-color: #3abd9d;
+  }
+}
