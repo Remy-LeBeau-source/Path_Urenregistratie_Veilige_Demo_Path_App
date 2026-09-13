@@ -2180,3 +2180,38 @@ test('[SKIN-H-032] Klassiek en Modern tonen dezelfde statusketen, uit dezelfde b
     await herstelUrenstaat();
   }
 });
+
+// Ontwerpronde 13 sep (nacht): de dashboardkolom in de desktopreferentie krijgt
+// een bovengrens. Exacte waarde uit handoff/medewerker-gui.html:
+// `<div data-kolom="" style="gap:18px;max-width:1060px">`.
+//
+// Waarom dit een eigen case krijgt en niet "je ziet het toch wel": de grens
+// bijt pas boven ongeveer 1378px vensterbreedte. Alle vier de bestaande
+// projecten draaien smaller (1280, 768, 412, 390), dus geen enkele bestaande
+// case komt er ooit langs. Deze zet de viewport daarom expliciet breder.
+test('[SKIN-H-033] het medewerkerdashboard rekt op een breed scherm niet verder uit dan 1060px', async ({ page }) => {
+  test.setTimeout(120_000);
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+  await expect(page.locator('#employee-dashboard-hours')).toBeVisible();
+
+  await test.step('Then blijft het dashboard op een breed venster binnen 1060px', async () => {
+    await page.setViewportSize({ width: 1800, height: 1000 });
+    const breedte = await page.locator('#view-employee-dashboard')
+      .evaluate(el => Math.round(el.getBoundingClientRect().width));
+    expect(breedte, 'zonder bovengrens loopt dit scherm door tot de volle vensterbreedte')
+      .toBeLessThanOrEqual(1060);
+  });
+
+  await test.step('And blijft er op een gewoon desktopvenster niets afgeknepen', async () => {
+    // De andere kant: een te strakke grens zou hier zichtbaar zijn. Op 1280px
+    // is er na de zijbalk en de padding ruim 900px beschikbaar, en dat hoort
+    // het dashboard gewoon te vullen.
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const breedte = await page.locator('#view-employee-dashboard')
+      .evaluate(el => Math.round(el.getBoundingClientRect().width));
+    expect(breedte, 'op een gewoon desktopvenster hoort de grens niets te doen').toBeGreaterThan(850);
+  });
+});

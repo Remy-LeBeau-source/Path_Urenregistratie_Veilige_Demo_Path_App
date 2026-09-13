@@ -3,9 +3,69 @@ branch: main
 path: path-urenregistratie
 
 ## Last sync
-date: 2026-09-13T20:34:50Z
+date: 2026-09-14T00:30:00Z
+
+### Ronde 13 sep (nacht) — vastgesteld uit de diff van de exports
+GUI: 254 gewijzigde regels, Wild: 10.
+
+**De GUI-weekstaat volgt nu de bestaande app.** Het handoff-document zegt het
+expliciet: schakelaar Hele maand / per week, alleen Ma–Vr, datum boven het veld,
+0/8/9 klein onder elk veld, weektotaal rechts, vul- en terugzetknoppen die met
+de modus meebewegen — "bewust géén nieuw ontwerp, controleer of de bestaande
+implementatie al zo werkt en neem alleen de opmaak over".
+
+**De dashboardbreedte is begrensd.** In de bron:
+`<div data-kolom="" style="gap:18px;max-width:1060px">`.
+
+**GUI: 0/8/9 één keer in plaats van per dag**, in een balk onderaan die op de
+dag met focus werkt. Dat wijkt af van de vastgelegde app-eis "0/8/9 altijd
+zichtbaar per dag", die voor de web app blijft gelden. Vraagt bevestiging.
+
+**Wild:** de onderbalk toont nu altijd "Automatisch opgeslagen" met het
+weektotaal, in plaats van om te schakelen naar "Maandtotaal" zodra de maand vol
+is.
+
+### Terugmelding uit de repo (13 sep, nacht)
+
+**De weekstaat werkt al precies zo. Niets te bouwen.** Nagelopen punt voor
+punt:
+- Schakelaar Hele maand / per week: `#hours-week-filter` met
+  `[data-hours-week-scope]`-knoppen (`index.html:673`, gevuld in `app.js:8993`).
+- Alleen Ma–Vr: `periodFromKey` (`app.js:128`) slaat zaterdag en zondag over, en
+  `WEEKDAY_SHORT` (`app.js:56`) heeft vijf dagen.
+- Datum boven het veld, 0/8/9 eronder: `.hours-day-entry` is een grid met
+  `justify-items: center` (`styles.css:853`) en de dagcel zet ze in die volgorde
+  neer (`app.js:8965`).
+- Weektotaal rechts: de tabel heeft een eigen Totaal-kolom.
+- Vul- en terugzetknoppen bewegen mee: `standardHoursButtonLabel()` en
+  `standardHoursScopeLabel()` schakelen tussen "maand" en "week".
+
+**De breedtebegrenzing is gebouwd**, zie hieronder.
+
+**0/8/9 in één balk in plaats van per dag: niet gebouwd, en dat is bewust.**
+Dit vraagt om bevestiging én het botst met een vastgelegde eis. De web app moet
+de snelkeuze per dag houden ("harde eis van de medewerkers", designcontract punt
+6), en in deze repo is dat één component: dezelfde `.hours-day-entry` rendert op
+telefoon én desktop. Een balk-variant voor breed scherm betekent dus twee
+weergaven van hetzelfde veld naast elkaar. Dat is te doen, maar het is een
+productbeslissing en geen opmaakwijziging.
+
+### Wat er is nagebouwd (13 sep, nacht)
+
+- `#view-employee-dashboard` krijgt in Klassiek `max-width: 1060px`, exact de
+  waarde uit de desktopreferentie. Geen media query nodig: onder die breedte
+  doet de regel niets, en op het desktop-testproject (1280px) blijft er na de
+  zijbalk en padding 962px over, dus daar verandert niets. Hij bijt pas boven
+  ongeveer 1378px vensterbreedte.
+- `[SKIN-H-033]` bewaakt dat, met de viewport expliciet op 1800px — geen van de
+  vier bestaande projecten komt anders ooit langs die grens. Tegenproef: zonder
+  de regel meet hij 1482px.
+
+## Sync history
 
 ### Ronde 13 sep (laat) — vastgesteld uit de diff van de exports
+date: 2026-09-13T20:34:50Z
+
 Wild: 103 gewijzigde regels, GUI: 134.
 
 **Statusketen van vier naar vijf stappen.** "Uren goedgekeurd" komt er als
@@ -33,7 +93,7 @@ Verder: demo-startsituatie staat nu standaard op `leeg`, de localStorage-sleutel
 is `pathWildStand3`, en schermwissels lopen via één `naar()` die een bewaarde
 stand terugzet.
 
-## Terugmelding uit de repo (13 sep, laat)
+### Terugmelding uit de repo (13 sep, laat)
 
 **"bedragen" — niets te doen.** `index.html` heeft nul treffers. In `app.js`
 staat het twee keer, beide aan de beheerderskant: een label bij de
@@ -72,7 +132,7 @@ naar Maanden, vooruit vergrendeld" is dus niet in te bouwen zonder een globale
 besturing te veranderen. Het handoff-document zegt zelf: ligt het in de repo
 vast, dan heeft de repo voorrang.
 
-## Wat er deze ronde is nagebouwd (13 sep, laat)
+### Wat er is nagebouwd (13 sep, laat)
 
 - `#new-bento-steps` gaat van vier naar vijf stappen: Uren ingevuld · Maand
   ingediend · Uren goedgekeurd · Klanturenstaat · Afgerond. De koptekst heet nu
@@ -93,8 +153,6 @@ vast, dan heeft de repo voorrang.
   oude gedrag ("terug naar je standaardpatroon") terwijl die knop sinds deze
   ontwerpronde op 0,0 zet. Stond in `index.html` twee keer en in `app.js` twee
   keer.
-
-## Sync history
 
 ### Ronde 13 sep (avond) — vastgesteld uit de diff van de exports
 date: 2026-09-13T19:01:00Z

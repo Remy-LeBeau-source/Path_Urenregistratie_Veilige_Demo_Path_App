@@ -1569,6 +1569,21 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .profile-menu > button:hover { background: var(--vlak-zacht); }
 .profile-menu .danger-menu-item { margin-top: 4px; border-top: 1px solid var(--line); border-radius: 0 0 9px 9px; color: var(--danger); }
 
+/* Het medewerkerdashboard krijgt een bovengrens in de breedte. Waarde exact uit
+   de desktopreferentie (handoff/medewerker-gui.html): de dashboardkolom staat
+   daar op `max-width:1060px`. Zonder die grens rekt dit scherm op een breed
+   monitor door tot de volle vensterbreedte, en dan staan een hero-regel en een
+   maandregel over anderhalve meter uit elkaar.
+
+   Geen media query nodig: op telefoon- en tabletbreedte is het venster smaller
+   dan 1060px, dus de regel doet daar niets. Ook op het desktop-testproject
+   (1280px) verandert er niets -- met de zijbalk van 250px en 34px padding
+   blijft er 962px over. Hij bijt pas boven ongeveer 1378px vensterbreedte,
+   precies waar het probleem zit.
+
+   Alleen Klassiek: de bento in Modern heeft een eigen driekolomsraster met een
+   eigen maatvoering, en die hoort hier niet onder te vallen. */
+html:not([data-skin="new"]) #view-employee-dashboard { max-width: 1060px; }
 .employee-hero { display: grid; grid-template-columns: minmax(0, 720px); gap: 34px; align-items: center; margin: 30px 0 18px; border-radius: 24px; background: linear-gradient(135deg, #0d1b38, #174b55); color: #fff; padding: 36px 40px; box-shadow: 0 18px 45px rgba(13,27,56,.14); }
 .employee-hero.is-complete { padding-block: 28px; }
 /* Shawn's punt (WhatsApp, screenshot met "MIJN OPEN ACTIES" rood omcirkeld):

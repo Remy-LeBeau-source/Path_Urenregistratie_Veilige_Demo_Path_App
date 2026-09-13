@@ -133,3 +133,6 @@ And("geeft Modern bij dezelfde toestand exact dezelfde keten");
 And("schuiven beide mee zodra de maand is ingediend");
 When("de flow voor SKIN-H-032 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat klassiek en Modern tonen dezelfde statusketen, uit dezelfde bron");
+When("de flow voor SKIN-H-033 wordt uitgevoerd");
+Then("blijft het dashboard op een breed venster binnen 1060px");
+And("blijft er op een gewoon desktopvenster niets afgeknepen");

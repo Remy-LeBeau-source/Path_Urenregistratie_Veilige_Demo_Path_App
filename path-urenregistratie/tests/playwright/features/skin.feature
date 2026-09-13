@@ -291,3 +291,12 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     And schuiven beide mee zodra de maand is ingediend
     When de flow voor SKIN-H-032 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat klassiek en Modern tonen dezelfde statusketen, uit dezelfde bron
+
+  @happy
+  Scenario: [SKIN-H-033] het medewerkerdashboard rekt op een breed scherm niet verder uit dan 1060px
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid
+    When de flow voor SKIN-H-033 wordt uitgevoerd
+    Then blijft het dashboard op een breed venster binnen 1060px
+    And blijft er op een gewoon desktopvenster niets afgeknepen

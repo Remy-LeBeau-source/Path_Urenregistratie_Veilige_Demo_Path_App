@@ -65,16 +65,20 @@ ronde herhaald te worden.
 
 ## Versie waartegen nu gebouwd wordt
 
-Opgehaald 2026-09-13T20:35Z (export gestempeld 2026-09-13T20:34:50.229Z),
-sha256 (eerste 16 tekens):
+Opgehaald 2026-09-14T00:30Z, sha256 (eerste 16 tekens):
 
 | Bestand | sha256 |
 | --- | --- |
-| `handoff/OPDRACHT.md` | `58ea58c5ce4ec826` |
-| `handoff/medewerker-wild.html` | `c21b7ff3e1cc6b40` |
-| `handoff/medewerker-gui.html` | `8c8f46c7e4099059` |
-| `handoff/HANDOFF-MEDEWERKER-MOBIEL.md` | `18bb27b9d862ca97` |
-| `handoff/DESIGN-BESLUITEN.md` | `161242a8868d1714` |
+| `handoff/OPDRACHT.md` | `1cf3d01b08d89782` |
+| `handoff/medewerker-wild.html` | `5519739a77f57ae1` |
+| `handoff/medewerker-gui.html` | `5e91b22912c69fa6` |
+| `handoff/HANDOFF-MEDEWERKER-MOBIEL.md` | `b8f2fb27cb7e87c7` |
+| `handoff/DESIGN-BESLUITEN.md` | `7d5cfca1a691a823` |
+
+Vorige ronde (2026-09-13T20:35Z): `OPDRACHT.md 58ea58c5ce4ec826`,
+`medewerker-wild.html c21b7ff3e1cc6b40`, `medewerker-gui.html 8c8f46c7e4099059`,
+`HANDOFF-MEDEWERKER-MOBIEL.md 18bb27b9d862ca97`,
+`DESIGN-BESLUITEN.md 161242a8868d1714`.
 
 Vorige ronde (2026-09-13T19:01Z), bewaard om de diff te kunnen navertellen:
 `OPDRACHT.md f8ce19acb0d1af85`, `medewerker-wild.html fa68d0690e5d79a0`,
@@ -82,9 +86,12 @@ Vorige ronde (2026-09-13T19:01Z), bewaard om de diff te kunnen navertellen:
 `HANDOFF-MEDEWERKER-MOBIEL.md 5c3918cabca7459f`,
 `DESIGN-BESLUITEN.md b21d30835eaf178c`.
 
-`OPDRACHT.md` draagt sinds deze ronde zelf een exportstempel op regel 3. Dat is
-handiger dan de sha256 voor de vraag "is dit de laatste versie": staat er een
-oudere tijd dan wat Gio net stuurde, dan is de link niet opnieuw opgehaald.
+`OPDRACHT.md` draagt op regel 3 een exportstempel. **Vertrouw die niet als
+versiecontrole.** In de ronde van 14 september 00:30Z stond daar nog steeds
+`2026-09-13T20:34:50.229Z`, de tijd van de ronde ervóór, terwijl de vier
+bestanden er wel degelijk anders uitzagen. De stempel loopt dus niet altijd mee.
+De sha256's in de tabel hierboven zijn wél betrouwbaar: die worden hier per
+ronde uit de opgehaalde bestanden berekend.
 
 Wijzigt een export, werk dan deze tabel bij in dezelfde commit als het bouwwerk dat erop volgt.
 Wat er in deze ronde precies veranderd is, staat per punt in `github.md` onder "Last sync".
