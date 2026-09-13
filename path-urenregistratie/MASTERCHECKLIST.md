@@ -2632,6 +2632,23 @@ ons dan handmatig weer aanzetten. Concrete regels:
 - Overleg tussen de sessies is geen werk. Een bericht sturen en dan de beurt beëindigen is precies
   het patroon dat Gio hierboven beschrijft; stuur het bericht en werk in diezelfde beurt door.
 
+**Nooit twee testruns tegelijk op deze machine (13 sep 2026, main).** Ik startte `npm run check`
+op de achtergrond en draaide er gerichte Playwright-suites naast. Gevolg: twee cases in
+`customer-timesheet-api.spec.ts` vielen om met een fout die niets met de wijziging te maken had
+(een toast die niet verscheen), en ik was even op weg dat als bevinding op te schrijven. Los
+draaiden ze meteen groen. De suites delen de database en poort 8010; een tweede run erlangs
+vervuilt de uitslag. Regel: één testrun tegelijk, en bij een onverwachte uitvaller eerst nagaan of
+er nog iets anders liep -- vóór je een defect noteert.
+
+**Een achtergrondtaak stoppen laat het kindproces draaien (13 sep 2026, main).** Twee gestopte
+runs bleken uren later nog `node scripts/smoke-test.mjs` te draaien (samen ruim 1800 CPU-seconden),
+waardoor alles traag werd en ik ten onrechte dacht dat `npm run check` *hing*. Hij hing niet: de
+smoke-test is gewoon zwaar (~900 CPU-seconden per run onder concurrentie, met drie kopieën naast
+elkaar loopt dat op tot tientallen minuten wachttijd) en eindigt met "volledige smoke test:
+geslaagd". Wat hier hielp om het verschil te zien: CPU-tijd twee keer bemonsteren. Loopt die door,
+dan rekent hij en hangt hij niet. En: onderbroken runs eindigen niet vanzelf als je alleen de
+wrapper stopt -- controleer de processenlijst.
+
 **Versienummers: alleen `main` bumpt (13 sep 2026).** Aanleiding: de twee sessies kwamen twee keer
 op hetzelfde nummer uit met verschillende inhoud (2.0.7 en 2.0.21). De eerdere afspraak "fetch
 eerst, pak dan het volgende vrije nummer" lost dat niet op, want tussen fetch en push zit altijd
