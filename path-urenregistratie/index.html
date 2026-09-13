@@ -390,6 +390,30 @@
           <div><strong>Correctie gevraagd</strong><p id="employee-dashboard-correction-message"></p><small id="employee-dashboard-correction-meta"></small></div>
           <button class="button button-primary" data-go="timesheet">Correctie openen</button>
         </section>
+        <!-- Dezelfde vijfstappenketen als in Modern, in de Klassieke opmaak.
+             De standen komen uit statusKetenStappen() in app.js, dus uit
+             dezelfde bron: twee berekeningen van één keten lopen uit elkaar
+             zodra er één wordt aangepast.
+
+             Hij staat hier en niet direct onder de hero, al zet de
+             ontwerpreferentie het verloop daar. Reden: in Klassiek zit tussen
+             de hero en dit punt "Open acties per maand" plus de
+             correctiemelding, en dat zijn de twee blokken waarvoor je dit
+             scherm opent. Een uitlegblok van vijf stappen daarboven duwt ze op
+             telefoonbreedte een screen naar beneden -- exact de klacht die in
+             Nieuw al is opgetekend bij [DASH-H-004]. De volgorde ten opzichte
+             van de klanturenstaat is wél die van het ontwerp: verloop eerst,
+             dan de kaart. -->
+        <section class="panel employee-status-keten" id="employee-status-keten">
+          <div class="panel-heading"><div><span class="section-label">Jouw maand</span><h3>Jouw uren in 5 stappen</h3></div><small id="employee-status-keten-nu"></small></div>
+          <ol id="employee-status-keten-list">
+            <li data-keten-step="fill"><span class="keten-bol" aria-hidden="true"></span><strong>Uren ingevuld</strong><small data-keten-detail></small></li>
+            <li data-keten-step="submit"><span class="keten-bol" aria-hidden="true"></span><strong>Maand ingediend</strong><small data-keten-detail></small></li>
+            <li data-keten-step="review"><span class="keten-bol" aria-hidden="true"></span><strong>Uren goedgekeurd</strong><small data-keten-detail></small></li>
+            <li data-keten-step="customer"><span class="keten-bol" aria-hidden="true"></span><strong>Klanturenstaat</strong><small data-keten-detail></small></li>
+            <li data-keten-step="done"><span class="keten-bol" aria-hidden="true"></span><strong>Afgerond</strong><small data-keten-detail></small></li>
+          </ol>
+        </section>
         <section class="employee-customer-timesheet-card" id="employee-customer-timesheet-card">
           <div>
             <span class="section-label">Klanturenstaat · <span id="employee-customer-timesheet-period">Juli 2026</span></span>

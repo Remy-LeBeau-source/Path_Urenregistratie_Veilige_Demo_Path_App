@@ -36,6 +36,42 @@ async function genormaliseerdeTekst(locator: Locator): Promise<string> {
   return locator.evaluate(element => String(element.textContent || '').replace(/\s+/g, ' ').trim());
 }
 
+// Bewaart de urenstaat van de gedeelde demomedewerker en geeft een functie
+// terug die hem terugzet. Nodig voor cases die een hele maand vullen of
+// indienen: die toestand blijft anders staan en verandert wat latere cases in
+// dezelfde run zien. Gemeten, niet bedacht -- zonder terugzetten viel
+// [DASH-H-025] om op een augustus die geen correctie meer nodig had en
+// [DASH-N-021] op een open-actieteller die op 1 uitkwam. Aanroepen in een
+// try/finally, zodat het ook gebeurt als de case faalt.
+async function bewaarUrenstaat(page: import('@playwright/test').Page): Promise<() => Promise<void>> {
+  type Runtime = {
+    currentEmployee: () => { id: number };
+    currentPeriod: () => { key: string };
+    recordFor: (id: number, key?: string) => Record<string, unknown>;
+    persistState: () => void;
+    renderAll: () => void;
+  };
+  const vooraf = await page.evaluate(() => {
+    const runtime = window as unknown as Runtime;
+    const record = runtime.recordFor(runtime.currentEmployee().id, runtime.currentPeriod().key);
+    return JSON.stringify({
+      entries: record.entries,
+      confirmedEntries: record.confirmedEntries,
+      timesheetStatus: record.timesheetStatus,
+      invoiceStatus: record.invoiceStatus,
+    });
+  });
+  return async () => {
+    await page.evaluate(bewaard => {
+      const runtime = window as unknown as Runtime;
+      const record = runtime.recordFor(runtime.currentEmployee().id, runtime.currentPeriod().key);
+      Object.assign(record, JSON.parse(bewaard));
+      runtime.persistState();
+      runtime.renderAll();
+    }, vooraf);
+  };
+}
+
 test('[SKIN-H-001] de app start standaard in de klassieke vormgeving', async ({ page }) => {
   const loginPage = new LoginPage(page);
 
@@ -1924,6 +1960,13 @@ test('[SKIN-H-031] de vijf stappen lopen in volgorde en geen stap staat groen te
   await expect(page.locator('#employee-dashboard-hours')).toBeVisible();
   await page.locator('#quick-skin-toggle').click();
   await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+  // Deze case zet de gedeelde demomedewerker in een extreme toestand (hele
+  // maand gevuld en ingediend). Zonder terugzetten lopen latere cases daar
+  // tegenaan: bij een eerste opzet viel [DASH-H-025] om op een augustus die
+  // geen correctie meer nodig had, en [DASH-N-021] op een open-actieteller die
+  // op 1 stond.
+  const herstelUrenstaat = await bewaarUrenstaat(page);
+  try {
 
   await test.step('Then staan er vijf stappen, in de volgorde uit het designcontract', async () => {
     await expect(page.locator('#new-bento-steps li strong')).toHaveText([
@@ -2002,4 +2045,125 @@ test('[SKIN-H-031] de vijf stappen lopen in volgorde en geen stap staat groen te
     await expect(page.locator('#new-bento-steps li[data-step="done"]')).not.toHaveClass(/is-done/);
     await expect(page.locator('#new-bento-steps li.is-current')).toHaveCount(1);
   });
+
+  } finally {
+    await herstelUrenstaat();
+  }
+});
+
+// De vijfstappenketen staat sinds "alles voor Klassiek" in beide vormgevingen,
+// maar de standen komen uit één functie (statusKetenStappen in app.js). Deze
+// case bewaakt precies die afspraak: dezelfde toestand hoort in Klassiek en
+// Modern dezelfde keten te geven, stap voor stap, inclusief de detailregels.
+//
+// Waarom dat bewaakt moet worden: gaat iemand later één van de twee weergaven
+// aanpassen en rekent die zijn eigen standen uit, dan lopen ze uit elkaar en
+// merkt niemand het -- de twee blokken zijn nooit tegelijk zichtbaar. Precies
+// die val staat in styles-new.css opgeschreven bij .new-bento-step-segment:
+// één lijnstuk dat op 11 sep twee keer onafhankelijk werd gerepareerd.
+test('[SKIN-H-032] Klassiek en Modern tonen dezelfde statusketen, uit dezelfde bron', async ({ page }) => {
+  test.setTimeout(120_000);
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await expect(page.locator('#employee-dashboard-hours')).toBeVisible();
+  // Zelfde reden als bij [SKIN-H-031]: deze case laat de maand ingediend
+  // achter en dat verandert wat latere cases zien.
+  const herstelUrenstaat = await bewaarUrenstaat(page);
+  try {
+
+  await test.step('Given een maand die nog concept is terwijl de factuurstatus al op verwerkt staat', async () => {
+    // Dezelfde toestand als in [SKIN-H-031]: die liet de oude keten een groene
+    // eindstap tonen boven een openstaande klanturenstaat.
+    await page.evaluate(() => {
+      const runtime = window as unknown as {
+        currentEmployee: () => { id: number };
+        currentPeriod: () => { key: string; weekRows: unknown[] };
+        recordFor: (id: number, key?: string) => {
+          entries: number[][];
+          confirmedEntries?: boolean[][];
+          timesheetStatus: string;
+          invoiceStatus: string;
+        };
+        persistState: () => void;
+        renderAll: () => void;
+      };
+      const period = runtime.currentPeriod();
+      const record = runtime.recordFor(runtime.currentEmployee().id, period.key);
+      record.timesheetStatus = 'draft';
+      record.invoiceStatus = 'simulated';
+      record.entries = record.entries.map(() => [0, 0, 0, 0, 0]);
+      record.confirmedEntries = period.weekRows.map(() => [false, false, false, false, false]);
+      runtime.persistState();
+      runtime.renderAll();
+    });
+  });
+
+  const klassiekeKeten = async () => page.evaluate(() =>
+    Array.from(document.querySelectorAll('#employee-status-keten-list [data-keten-step]')).map(li => ({
+      key: (li as HTMLElement).dataset.ketenStep,
+      stand: li.classList.contains('is-af') ? 'af' : li.classList.contains('is-nu') ? 'nu' : 'wacht',
+      detail: String(li.querySelector('[data-keten-detail]')?.textContent || '').trim(),
+    })));
+
+  const modernKeten = async () => page.evaluate(() =>
+    Array.from(document.querySelectorAll('#new-bento-steps [data-step]')).map(li => ({
+      key: (li as HTMLElement).dataset.step,
+      stand: li.classList.contains('is-done') ? 'af' : li.classList.contains('is-current') ? 'nu' : 'wacht',
+      detail: String(li.querySelector('[data-step-detail]')?.textContent || '').trim(),
+    })));
+
+  let klassiek: Array<{ key?: string; stand: string; detail: string }> = [];
+
+  await test.step('Then toont Klassiek vijf stappen met "Uren ingevuld" als huidige en niets erna groen', async () => {
+    klassiek = await klassiekeKeten();
+    expect(klassiek.map(s => s.key)).toEqual(['fill', 'submit', 'review', 'customer', 'done']);
+    expect(klassiek.map(s => s.stand), 'geen stap mag groen staan zolang "Uren ingevuld" nog de huidige is')
+      .toEqual(['nu', 'wacht', 'wacht', 'wacht', 'wacht']);
+    await expect(page.locator('#employee-status-keten-nu')).toHaveText('Stap 1 van 5 · Uren ingevuld');
+  });
+
+  await test.step('And geeft Modern bij dezelfde toestand exact dezelfde keten', async () => {
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    const modern = await modernKeten();
+    expect(modern, 'Klassiek en Modern horen dezelfde keten te tonen; wijkt dit af, dan rekent een van de twee zijn eigen standen uit in plaats van statusKetenStappen te gebruiken')
+      .toEqual(klassiek);
+  });
+
+  await test.step('And schuiven beide mee zodra de maand is ingediend', async () => {
+    // De andere kant: zonder deze helft zou een keten die in beide
+    // vormgevingen altijd hetzelfde verkeerde antwoord geeft ook slagen.
+    await page.evaluate(() => {
+      const runtime = window as unknown as {
+        currentEmployee: () => { id: number };
+        currentPeriod: () => { key: string; weekRows: unknown[] };
+        recordFor: (id: number, key?: string) => {
+          entries: number[][];
+          confirmedEntries?: boolean[][];
+          timesheetStatus: string;
+        };
+        persistState: () => void;
+        renderAll: () => void;
+      };
+      const period = runtime.currentPeriod();
+      const record = runtime.recordFor(runtime.currentEmployee().id, period.key);
+      record.entries = record.entries.map(() => [8, 8, 8, 8, 8]);
+      record.confirmedEntries = period.weekRows.map(() => [true, true, true, true, true]);
+      record.timesheetStatus = 'submitted';
+      runtime.persistState();
+      runtime.renderAll();
+    });
+    const modernNa = await modernKeten();
+    expect(modernNa.map(s => s.stand)).toEqual(['af', 'af', 'nu', 'wacht', 'wacht']);
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+    const klassiekNa = await klassiekeKeten();
+    expect(klassiekNa, 'ook na een statuswissel horen beide vormgevingen gelijk te lopen').toEqual(modernNa);
+    await expect(page.locator('#employee-status-keten-nu')).toHaveText('Stap 3 van 5 · Uren goedgekeurd');
+  });
+
+  } finally {
+    await herstelUrenstaat();
+  }
 });

@@ -5376,6 +5376,122 @@ function newEmployeeBentoWeekIndex(period) {
   return todaysWeekIndexInPeriod(period);
 }
 
+// De statusketen van de medewerker in vijf stappen: Uren ingevuld · Maand
+// ingediend · Uren goedgekeurd · Klanturenstaat · Afgerond. Ontwerpronde 13 sep;
+// "Uren goedgekeurd" is toen als eigen stap tussen indienen en de
+// klanturenstaat gezet, en de klanturenstaat stond tot dat moment helemaal niet
+// in de keten.
+//
+// Eén functie voor beide vormgevingen, met opzet. Klassiek en Modern tonen
+// dezelfde keten in een andere opmaak, en twee implementaties van dezelfde
+// statuslogica lopen uit elkaar zodra er één wordt aangepast. Het commentaar bij
+// .new-bento-step-segment in styles-new.css bewaart precies dat verhaal: één
+// lijnstuk dat op 11 sep twee keer onafhankelijk werd gerepareerd.
+//
+// De harde regel uit het designcontract -- geen stap staat groen zolang een
+// eerdere nog open is -- wordt hier afgedwongen en niet per stap ingebouwd.
+// Eerst de ruwe "is dit af?"-vlaggen in ketenvolgorde, dan één doorloop: de
+// eerste niet-afgeronde stap wordt de huidige, alles daarna wacht. Een latere
+// wijziging aan één vlag kan de keten daarmee niet stilletjes doorbreken. Dat
+// was geen hypothetisch risico: "Afgerond" hing aan de factuurstatus terwijl de
+// klanturenstaat buiten de keten stond, dus een maand die nog concept was kon
+// een groene eindstap tonen.
+//
+// De teksten komen uit handoff/medewerker-wild.bron.txt. Eén bewuste afwijking:
+// de bron zegt "N dagen open", want daar bestaan gaten per dag. De app rekent
+// met hele weken (isTimesheetWeekComplete), dus hier staat "N weken open".
+// Gaten per dag hangen aan een besluit dat nog openstaat -- zie de terugmelding
+// over toekomstige werkdagen in github.md.
+function statusKetenStappen(record, period) {
+  const customerDocument = customerTimesheetFor(record);
+  const submitted = ["submitted", "approved", "invoiced"].includes(record.timesheetStatus);
+  const reviewed = ["approved", "invoiced"].includes(record.timesheetStatus);
+  const done = record.invoiceStatus === "simulated" || record.timesheetStatus === "invoiced";
+  const klanturenstaatAf = customerTimesheetExternallyConfirmed(customerDocument)
+    || ["approved", "sent", "sent_to_broker"].includes(customerDocument.status);
+  const zelfGemaild = customerDocument.status === "skipped" && !customerTimesheetExternallyConfirmed(customerDocument);
+  const totalWeeks = period.weekRows.length;
+  const filledWeeks = completedTimesheetWeeks(record, period);
+  const urenCompleet = totalWeeks > 0 && filledWeeks === totalWeeks;
+  const wekenOpen = Math.max(0, totalWeeks - filledWeeks);
+
+  const ruw = [
+    {
+      key: "fill",
+      titel: "Uren ingevuld",
+      af: urenCompleet,
+      detail: urenCompleet ? "Compleet" : wekenOpen === 1 ? "1 week open" : wekenOpen + " weken open"
+    },
+    {
+      key: "submit",
+      titel: "Maand ingediend",
+      af: submitted,
+      detail: submitted ? "Ingediend" : urenCompleet ? "Klaar om in te dienen" : "Nog niet"
+    },
+    {
+      key: "review",
+      titel: "Uren goedgekeurd",
+      af: reviewed,
+      detail: reviewed ? "Door de Backoffice" : submitted ? "Bij de Backoffice" : "Volgt na indienen"
+    },
+    {
+      key: "customer",
+      titel: "Klanturenstaat",
+      af: klanturenstaatAf,
+      detail: !submitted ? "Volgt na indienen"
+        : klanturenstaatAf ? "Aangeleverd"
+        : zelfGemaild ? "Rechtstreeks gemaild"
+        : "Nog niet aangeleverd"
+    },
+    {
+      key: "done",
+      titel: "Afgerond",
+      af: done,
+      detail: done ? "De Backoffice heeft alles verwerkt"
+        : !submitted ? "Volgt"
+        : klanturenstaatAf ? "De Backoffice verwerkt de maand"
+        : "Volgt na de klanturenstaat"
+    }
+  ];
+
+  let ketenOpen = false;
+  return ruw.map(stap => {
+    let stand = "wacht";
+    if (!ketenOpen && stap.af) {
+      stand = "af";
+    } else if (!ketenOpen) {
+      ketenOpen = true;
+      stand = "nu";
+    }
+    return { key: stap.key, titel: stap.titel, detail: stap.detail, stand };
+  });
+}
+
+// De Klassieke weergave van dezelfde keten. Alleen opmaak: welke stap waar
+// staat komt uit statusKetenStappen(), net als bij Modern.
+function vulStatusKeten(record, period) {
+  const lijst = document.querySelector("#employee-status-keten-list");
+  if (!lijst) return;
+  const stappen = statusKetenStappen(record, period);
+  lijst.querySelectorAll("[data-keten-step]").forEach(item => {
+    item.classList.remove("is-af", "is-nu", "is-wacht");
+    const stap = stappen.find(s => s.key === item.dataset.ketenStep);
+    if (!stap) return;
+    item.classList.add("is-" + stap.stand);
+    const detail = item.querySelector("[data-keten-detail]");
+    if (detail) detail.textContent = stap.detail;
+  });
+  const nu = document.querySelector("#employee-status-keten-nu");
+  if (nu) {
+    const huidig = stappen.find(stap => stap.stand === "nu");
+    // Geen huidige stap betekent dat alle vijf af zijn: de maand is helemaal
+    // verwerkt. Dan is "stap N van 5" misleidend en hoort er een slotregel.
+    nu.textContent = huidig
+      ? "Stap " + (stappen.indexOf(huidig) + 1) + " van 5 · " + huidig.titel
+      : "Alle vijf stappen afgerond";
+  }
+}
+
 function isTimesheetWeekComplete(record, periodWeek, weekIndex) {
   const businessDayIndexes = periodWeek.days.map((day, dayIndex) => day ? dayIndex : -1).filter(dayIndex => dayIndex >= 0);
   // Een werkdag telt mee zodra er uren > 0 op staan, óf zodra de dag bewust
@@ -5718,93 +5834,29 @@ function renderNewEmployeeBento(record, employee, period) {
   customerStatus.textContent = customerLabel;
   customerNote.textContent = customerMessage;
 
-  const submitted = ["submitted", "approved", "invoiced"].includes(record.timesheetStatus);
-  const reviewed = ["approved", "invoiced"].includes(record.timesheetStatus);
-  const done = record.invoiceStatus === "simulated" || record.timesheetStatus === "invoiced";
-  const klanturenstaatAf = customerTimesheetExternallyConfirmed(customerDocument)
-    || ["approved", "sent", "sent_to_broker"].includes(customerDocument.status);
-  const zelfGemaild = customerDocument.status === "skipped" && !customerTimesheetExternallyConfirmed(customerDocument);
-  const urenCompleet = totalWeeks > 0 && filledWeeks === totalWeeks;
-  const wekenOpen = Math.max(0, totalWeeks - filledWeeks);
-
-  // Vijf stappen sinds de ontwerpronde van 13 sep, met "Uren goedgekeurd" als
-  // eigen stap tussen indienen en de klanturenstaat. Daar hoort één harde regel
-  // uit het designcontract bij: geen stap mag groen staan zolang een eerdere nog
-  // open is. Die regel wordt hier niet per stap ingebouwd maar afgedwongen --
-  // eerst de ruwe "is dit af?"-vlaggen in ketenvolgorde, dan één keer erdoor
-  // lopen. Zo kan een latere wijziging aan één vlag de keten niet stilletjes
-  // doorbreken, en dat was precies wat er eerder kon gebeuren: "Afgerond" hing
-  // aan de factuurstatus terwijl de klanturenstaat helemaal niet in de keten
-  // zat, dus die stap kon groen staan met een openstaande klanturenstaat.
-  //
-  // De teksten komen uit handoff/medewerker-wild.bron.txt. Eén afwijking, en
-  // die is bewust: de bron zegt "N dagen open", want daar bestaan gaten per dag.
-  // De app rekent met hele weken (isTimesheetWeekComplete), dus hier staat
-  // "N weken open". Dagen-per-stuk hangt aan een besluit dat nog openstaat --
-  // zie de terugmelding over toekomstige werkdagen in github.md.
-  const stappen = [
-    {
-      key: "fill",
-      af: urenCompleet,
-      detail: urenCompleet ? "Compleet" : wekenOpen === 1 ? "1 week open" : wekenOpen + " weken open"
-    },
-    {
-      key: "submit",
-      af: submitted,
-      detail: submitted ? "Ingediend" : urenCompleet ? "Klaar om in te dienen" : "Nog niet"
-    },
-    {
-      key: "review",
-      af: reviewed,
-      detail: reviewed ? "Door de Backoffice" : submitted ? "Bij de Backoffice" : "Volgt na indienen"
-    },
-    {
-      key: "customer",
-      af: klanturenstaatAf,
-      detail: !submitted ? "Volgt na indienen"
-        : klanturenstaatAf ? "Aangeleverd"
-        : zelfGemaild ? "Rechtstreeks gemaild"
-        : "Nog niet aangeleverd"
-    },
-    {
-      key: "done",
-      af: done,
-      detail: done ? "De Backoffice heeft alles verwerkt"
-        : !submitted ? "Volgt"
-        : klanturenstaatAf ? "De Backoffice verwerkt de maand"
-        : "Volgt na de klanturenstaat"
-    }
-  ];
-
-  let ketenOpen = false;
-  const stepState = {};
-  stappen.forEach(stap => {
-    if (!ketenOpen && stap.af) {
-      stepState[stap.key] = "is-done";
-      return;
-    }
-    if (!ketenOpen) {
-      ketenOpen = true;
-      stepState[stap.key] = "is-current";
-      return;
-    }
-    stepState[stap.key] = "";
-  });
-  const stapDetails = stappen.reduce((alles, stap) => Object.assign(alles, { [stap.key]: stap.detail }), {});
-
+  // De vijf stappen komen uit één gedeelde bron (statusKetenStappen), zodat
+  // Klassiek en Modern niet twee keer dezelfde keten berekenen. Dat is hier
+  // geen theoretisch punt: styles-new.css bewaart de geschiedenis van een
+  // lijnstuk dat op één dag twee keer onafhankelijk is gerepareerd.
+  const stappen = statusKetenStappen(record, period);
   document.querySelectorAll("#new-bento-steps [data-step]").forEach(item => {
     item.classList.remove("is-done", "is-current");
-    if (stepState[item.dataset.step]) item.classList.add(stepState[item.dataset.step]);
+    const stap = stappen.find(s => s.key === item.dataset.step);
+    if (!stap) return;
+    if (stap.stand === "af") item.classList.add("is-done");
+    if (stap.stand === "nu") item.classList.add("is-current");
     const detail = item.querySelector("[data-step-detail]");
-    if (detail && stapDetails[item.dataset.step]) detail.textContent = stapDetails[item.dataset.step];
+    if (detail) detail.textContent = stap.detail;
   });
   // Het lijnstukje ná een stap volgt dezelfde staat als die stap zelf: pas
   // groen zodra de stap écht is afgerond, amber zolang die stap nu bezig is,
   // anders gedempt -- nooit vooruit groen op een stap die nog moet gebeuren.
   document.querySelectorAll("#new-bento-steps [data-step-segment]").forEach(segment => {
     segment.classList.remove("is-done", "is-current");
-    const state = stepState[segment.dataset.stepSegment];
-    if (state) segment.classList.add(state);
+    const stap = stappen.find(s => s.key === segment.dataset.stepSegment);
+    if (!stap) return;
+    if (stap.stand === "af") segment.classList.add("is-done");
+    if (stap.stand === "nu") segment.classList.add("is-current");
   });
 }
 
@@ -5950,6 +6002,7 @@ function renderEmployeeDashboard() {
   }
   document.querySelector("#employee-dashboard-greeting").textContent = greetingForNow() + ", " + firstName;
   vulHeroKerncijfers(record, period, aanZetBijMedewerker(record, employee));
+  vulStatusKeten(record, period);
   document.querySelector("#employee-dashboard-next").textContent = next;
   document.querySelector("#employee-dashboard-next-label").textContent = awaitingOpenTasks ? "Bezig" : (nextOpenAction ? "Volgende actie" : "Deze maand");
   document.querySelector("#employee-dashboard-next-meta").textContent = awaitingOpenTasks

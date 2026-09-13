@@ -1598,6 +1598,33 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 .employee-customer-timesheet-card p { margin: 7px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
 .employee-customer-timesheet-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .employee-metrics .compact-metric { font-size: 20px; }
+/* De vijfstappenketen in Klassiek. Dezelfde standen als in Modern (ze komen
+   uit statusKetenStappen in app.js), maar in de Klassieke kaarttaal in plaats
+   van de bento: paneel op --vlak, mint voor afgerond, amber voor de huidige
+   stap, gedempt voor wat nog wacht. Die drie kleuren zijn niet verzonnen maar
+   dezelfde die de statuspillen hier al gebruiken.
+
+   De lijn tussen de bollen is één ::before per stap in plaats van losse
+   lijnstuk-elementen. Reden: in Modern zijn die lijnstukken flex-broers van de
+   <li> en dat heeft daar twee keer een reparatie gekost (zie het commentaar bij
+   .new-bento-step-segment). Een ::before die aan de bol zelf hangt kan niet uit
+   de rij lopen. De laatste stap krijgt geen lijn, anders loopt hij door naar
+   niets. */
+.employee-status-keten { margin: 0 0 22px; }
+#employee-status-keten-list { display: grid; gap: 0; margin: 0; padding: 0 16px 16px; list-style: none; }
+#employee-status-keten-list li { position: relative; display: grid; grid-template-columns: 26px 1fr; align-items: start; gap: 0 12px; padding: 0 0 16px; }
+#employee-status-keten-list li:last-child { padding-bottom: 0; }
+#employee-status-keten-list li::before { content: ""; position: absolute; top: 20px; bottom: 0; left: 9px; width: 2px; background: var(--line); }
+#employee-status-keten-list li:last-child::before { display: none; }
+#employee-status-keten-list li.is-af::before { background: var(--mint); }
+.keten-bol { position: relative; z-index: 1; display: block; width: 20px; height: 20px; margin-top: 1px; border: 2px solid var(--line); border-radius: 50%; background: var(--vlak); }
+#employee-status-keten-list li.is-af .keten-bol { border-color: var(--mint); background: var(--mint); }
+#employee-status-keten-list li.is-nu .keten-bol { border-color: var(--warning-rand); background: var(--warning-bg); box-shadow: 0 0 0 4px var(--warning-bg); }
+#employee-status-keten-list li strong { grid-column: 2; color: var(--navy-tekst); font-size: 14px; }
+#employee-status-keten-list li small { grid-column: 2; margin-top: 2px; color: var(--muted); font-size: 11.5px; }
+#employee-status-keten-list li.is-af strong { color: var(--mint-dark-tekst); }
+#employee-status-keten-list li.is-nu strong { color: var(--warning-tekst); }
+#employee-status-keten-list li.is-wacht strong { color: var(--muted); font-weight: 600; }
 .employee-open-overview { scroll-margin-top: calc(var(--topbar-hoogte, 110px) + 16px); margin: 0 0 22px; overflow: hidden; border-radius: 22px; background-color: var(--vlak); background-image: linear-gradient(180deg, var(--vlak), var(--vlak-zacht)); box-shadow: 0 16px 34px rgba(13,27,56,.06); }
 .employee-open-overview .panel-heading { align-items: flex-start; }
 .employee-open-overview-list { display: grid; gap: 12px; padding: 0 24px 24px; }
