@@ -114,3 +114,7 @@ When("de flow voor MOB-H-030 wordt uitgevoerd");
 Then("scrollt geen enkel beheerscherm horizontaal in Klassiek");
 And("ook niet in de nieuwe vormgeving");
 And("de meting zou echte overloop wél zien");
+Given("een medewerker op een 360px-telefoon");
+When("de flow voor MOB-H-031 wordt uitgevoerd");
+Then("valt er in Klassiek op geen enkel medewerkerscherm iets buiten beeld");
+And("de meting zou echte overloop ook hier zien");

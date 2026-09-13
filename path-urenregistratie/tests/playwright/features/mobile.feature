@@ -255,9 +255,19 @@ Feature: Mobiele gebruikerservaring
   @happy
   Scenario: [MOB-H-030] op de kleinste gangbare telefoon (360px) scrollt geen enkel hoofdscherm horizontaal
     # Testtechniek: Responsive viewport + end-to-end use-case
-    # Aantoonbare Playwright-assertions in deze case: 7
+    # Aantoonbare Playwright-assertions in deze case: 5
     Given een beheerder op een 360px-telefoon
     When de flow voor MOB-H-030 wordt uitgevoerd
     Then scrollt geen enkel beheerscherm horizontaal in Klassiek
     And ook niet in de nieuwe vormgeving
     And de meting zou echte overloop wél zien
+
+  @happy
+  Scenario: [MOB-H-031] op 360px valt ook op de medewerkerschermen niets buiten de rechterrand
+    # Testtechniek: Responsive viewport + end-to-end use-case
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given een medewerker op een 360px-telefoon
+    When de flow voor MOB-H-031 wordt uitgevoerd
+    Then valt er in Klassiek op geen enkel medewerkerscherm iets buiten beeld
+    And ook niet in de nieuwe vormgeving
+    And de meting zou echte overloop ook hier zien
