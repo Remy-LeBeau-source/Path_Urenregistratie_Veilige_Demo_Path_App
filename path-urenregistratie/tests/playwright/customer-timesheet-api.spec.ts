@@ -384,6 +384,49 @@ test.describe('customer timesheet api', () => {
     });
   });
 
+  test('[CTS-API-N-013] request_resubmit zonder toelichting wordt door de server geweigerd', async ({ request }) => {
+    // Sectie 20 / checklistpunt 17.2 ("terugsturen met verplichte toelichting").
+    // De urenstaatkant bewijst dit al (timesheet-review-flow.spec.ts,
+    // timesheet_correction_message), maar voor de klanturenstaat bestond er nog
+    // geen enkele case die een LEGE toelichting probeert. De beheerdersUI
+    // schakelt de knop pas in zodra er tekst staat, maar dat is gemak, geen
+    // autorisatie -- een rechtstreekse API-aanroep mag een lege reden niet
+    // stilzwijgend accepteren.
+    //
+    // Waarom deze case losstaat en geen extra stap in [CTS-API-H-001] is: zo
+    // geprobeerd, en de suite werd er onbetrouwbaar van (18/18 groen zonder,
+    // wisselend één uitvaller mét -- een extra request middenin die lange flow
+    // verschuift de timing van de rest). Losstaand raakt hij niemands volgorde.
+    //
+    // Er is bewust geen opbouw nodig: `customer_timesheet_required_text()` voor
+    // `review_note` draait in customer-timesheets.php vóór élke
+    // toestandsovergangscontrole, dus de 400 komt aantoonbaar uit de lege
+    // toelichting en niet uit de status van de klanturenstaat. De case schrijft
+    // daardoor ook niets weg.
+    const authApi = new AuthApi(request);
+    const customerApi = new CustomerTimesheetApi(request);
+
+    await test.step('Given de beheerder is ingelogd', async () => {
+      const login = await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+      expect(login.user.role).toBe('administrator');
+    });
+
+    await test.step('When request_resubmit wordt aangeroepen met een lege toelichting', async () => {
+      const leeg = await customerApi.write({ action: 'request_resubmit', period: '2026-07', employeeId: 1, reviewNote: '   ' });
+      expect(leeg.status, JSON.stringify(leeg.body).slice(0, 200)).toBe(400);
+      expect(leeg.body.ok).toBe(false);
+      expect(leeg.body.error).toBe('invalid-payload');
+      expect(String(leeg.body.message || '')).toContain('review_note');
+    });
+
+    await test.step('Then verandert een ontbrekende toelichting ook niets als het veld helemaal ontbreekt', async () => {
+      const zonderVeld = await customerApi.write({ action: 'request_resubmit', period: '2026-07', employeeId: 1 });
+      expect(zonderVeld.status, JSON.stringify(zonderVeld.body).slice(0, 200)).toBe(400);
+      expect(zonderVeld.body.error).toBe('invalid-payload');
+      await authApi.logout();
+    });
+  });
+
   test('[CTS-API-H-004] employee kan mark_skipped registreren en restore_missing terugdraaien', async ({ request }) => {
     const authApi = new AuthApi(request);
     const customerApi = new CustomerTimesheetApi(request);

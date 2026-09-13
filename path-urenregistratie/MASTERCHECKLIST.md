@@ -2090,6 +2090,24 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
     Nieuw; device-onafhankelijk.
 - [ ] Urenregistraties van medewerkers: goedkeuren, terugsturen (verplichte toelichting),
   klanturenstaten controleren + status, correcties verwerken, markeren/verwerken verzonden items
+  - [x] **Terugsturen met verplichte toelichting, beide kanten.** Urenstaat was al gedekt: een
+    `request_correction` met lege toelichting geeft 400 `invalid-payload` en de urenstaat blijft op
+    `submitted` (`timesheet-review-flow.spec.ts`, bewijst `timesheet_correction_message()`
+    los van de client). **Klanturenstaat had dit gat nog**: geen enkele case probeerde een lege
+    `review_note` bij `request_resubmit`. Toegevoegd als `[CTS-API-N-013]`, v2.0.31. Geen
+    codewijziging -- de server bewaakte het al correct.
+    Discriminerend bewezen door `customer_timesheet_required_text()` voor `review_note` tijdelijk
+    te vervangen door een kale `trim()`: de case faalde exact zoals verwacht (200 in plaats van
+    400, status sprong naar `resubmit`), bronbestand daarna schoon teruggezet (geen diff) en weer
+    groen.
+  - **Testopzetles, bewaard omdat hij geld kost:** deze assertie stond eerst als extra stap
+    middenin `[CTS-API-H-001]`. Daarmee ging de suite van 18/18 groen naar wisselend één uitvaller
+    (eerst `CTS-API-H-006`/`H-016`, daarna `H-013`) -- allemaal cases die los gewoon slagen. Eerst
+    vergeleken met een baseline zónder de wijziging, want "het zal wel flaky zijn" was hier
+    aantoonbaar fout: het extra request verschuift de timing van die lange flow. Als losstaande
+    case raakt hij niemands volgorde en is de suite weer 19/19. Er is ook bewust géén opbouw nodig:
+    de `review_note`-controle draait vóór élke toestandsovergangscontrole, dus de 400 komt
+    aantoonbaar uit de lege toelichting en de case schrijft niets weg.
 - [ ] Medewerkersbeheer (stamgegevens), mededelingen beheren + doelgroepen, instellingen +
   mailinstellingen, notificaties, administratieve statussen
 - [x] Mobiel: nooit desktoptabellen simpelweg verkleinen -- responsive tables/cards/detailweergave/
