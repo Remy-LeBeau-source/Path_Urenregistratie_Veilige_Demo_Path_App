@@ -2051,7 +2051,17 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
 - [x] Handmatige URL/hash naar een beheerscherm: API-403 al gedekt (ROLE-N-004/005), nu ook UI-niveau
   bewezen -- medewerker komt zowel bij live hash-navigatie als bij herladen met een beheer-URL al in
   de adresbalk terug op het eigen dashboard. `[SEC-H-009]`/`[SEC-H-010]`, v2.0.1, skin-onafhankelijk.
-- [ ] Verborgen knop, directe API-call vanaf de medewerkerkant, oude browserstate/localStorage-state
+- [x] Oude browserstate / localStorage-state: een medewerker die zijn bewaarde staat opent en
+  `currentRole` handmatig op `admin` zet, krijgt na herladen geen beheerscherm. `[SEC-H-012]`,
+  v2.0.23. **Eerlijke notitie bij deze case:** hij bewaakt géén enkele regel code. Gemeten:
+  met `saved.currentRole = null` (app.js bij het inlezen) uitgecommentarieerd slaagt hij nog
+  steeds. Dat komt doordat localStorage hier structureel niet gezaghebbend is -- `persistState()`
+  schrijft de rol nooit weg (`copy.currentRole = null`) en na het inloggen zet de server-profielrespons
+  `state.currentRole` onvoorwaardelijk. Drie lagen dus, met de geauthenticeerde sessie als
+  beslissende. Dit item is daarmee veilig-door-ontwerp, niet veilig-door-één-vangnetregel. De
+  waarde van de case zit in de toekomst: zou een herschrijving de client tóch op de bewaarde
+  staat laten vertrouwen -- het echte risico -- dan valt hij om.
+- [ ] Verborgen knop, directe API-call vanaf de medewerkerkant
   (resterende deelpunten van sectie 20, nog te doen)
 - [x] **Live TEST-bevinding (12 sep, gemeld door Gio met screenshot), opgelost door main.** Eerste
   hypothese (live-configuratiedrift, `PLAYWRIGHT_EMPLOYEE_PASSWORD` ontbreekt op de server) bleek

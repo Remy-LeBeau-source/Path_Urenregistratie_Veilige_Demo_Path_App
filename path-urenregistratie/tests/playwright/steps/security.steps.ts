@@ -64,3 +64,5 @@ When("de pagina wordt herladen met een beheer-only hash al in de URL (bv. bewaar
 Then("start de medewerker alsnog op het eigen dashboard, niet op Medewerkersbeheer");
 When("de hash handmatig naar het beheer-klanturenstatenscherm wordt gezet");
 Then("blijft de medewerker op het eigen dashboard, met de bijbehorende hash en titel");
+When("de bewaarde staat handmatig op de beheerdersrol wordt gezet");
+Then("start de app na herladen gewoon als medewerker");

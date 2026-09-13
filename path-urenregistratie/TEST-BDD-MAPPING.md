@@ -425,6 +425,7 @@
 | SEC-H-009 | security | security.feature | medewerker die handmatig naar een beheerscherm navigeert komt terug op het eigen dashboard | Beslissingstabel rollen en autorisatie | 5 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
 | SEC-H-010 | security | security.feature | medewerker die de pagina herlaadt met een beheer-URL in de adresbalk komt terug op het eigen dashboard | Beslissingstabel rollen en autorisatie | 4 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
 | SEC-H-011 | security | security.feature | medewerker die naar Klanturenstaten (beheer) navigeert komt terug op het eigen dashboard | Beslissingstabel rollen en autorisatie | 4 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
+| SEC-H-012 | security | security.feature | een in localStorage naar beheerder gezette rol geeft geen beheerscherm | Beslissingstabel rollen en autorisatie | 6 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
 | SKIN-H-001 | ui | skin.feature | de app start standaard in de klassieke vormgeving | End-to-end use-case + visuele contractasserties | 3 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de app start standaard in de klassieke vormgeving | Happy | 19 | Actueel |
 | SKIN-H-002 | ui | skin.feature | Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan | End-to-end use-case + visuele contractasserties | 6 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan | Happy | 19 | Actueel |
 | SKIN-H-003 | ui | skin.feature | terug naar "Klassiek" herstelt de klassieke vormgeving en bewaart die | Herstelbaarheid + toestandsovergang | 5 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | terug naar "Klassiek" herstelt de klassieke vormgeving en bewaart die | Happy | 19 | Actueel |
@@ -449,7 +450,7 @@
 | SKIN-H-021 | ui | skin.feature | de medewerker blijft op het Dashboard: de pijl springt naar vandaag in het weekkaartje, open maanden staan er zichtbaar bij, en een skinwissel hertekent Mijn uren direct | Beslissingstabel rollen en autorisatie | 19 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de medewerker blijft op het Dashboard: de pijl springt naar vandaag in het weekkaartje, open maanden staan er zichtbaar bij, en een skinwissel hertekent Mijn uren direct | Happy | 19 | Actueel |
 | SKIN-H-022 | ui | skin.feature | een tweede herlading zet de skin/thema-voorkeur niet terug naar standaard | End-to-end use-case + visuele contractasserties | 8 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | een tweede herlading zet de skin/thema-voorkeur niet terug naar standaard | Happy | 19 | Actueel |
 | SKIN-H-023 | ui | skin.feature | "Standaardweek/-maand vullen" vult alleen lege dagen met het eigen werkpatroon, in Nieuw en Klassiek | Beslissingstabel rollen en autorisatie | 26 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | "Standaardweek/-maand vullen" vult alleen lege dagen met het eigen werkpatroon, in Nieuw en Klassiek | Happy | 19 | Actueel |
-| SKIN-H-028 | ui | skin.feature | "Week terugzetten" overschrijft ook een dag die bewust op 0 is bevestigd, na expliciete bevestiging | End-to-end use-case + visuele contractasserties | 6 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | "Week terugzetten" overschrijft ook een dag die bewust op 0 is bevestigd, na expliciete bevestiging | Happy | 19 | Actueel |
+| SKIN-H-028 | ui | skin.feature | "Week terugzetten" overschrijft ook een dag die bewust op 0 is bevestigd, na expliciete bevestiging | End-to-end use-case + visuele contractasserties | 5 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | "Week terugzetten" overschrijft ook een dag die bewust op 0 is bevestigd, na expliciete bevestiging | Happy | 19 | Actueel |
 | SKIN-H-024 | ui | skin.feature | "Volgende actie" bovenaan Open acties per maand toont de eerstvolgende stap en blijft op het Dashboard | End-to-end use-case + visuele contractasserties | 11 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | "Volgende actie" bovenaan Open acties per maand toont de eerstvolgende stap en blijft op het Dashboard | Happy | 19 | Actueel |
 | SKIN-H-025 | ui | skin.feature | de 0/8/9-snelkeuze bij elke dag staat altijd zichtbaar, in Klassiek en in Nieuw | End-to-end use-case + visuele contractasserties | 11 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de 0/8/9-snelkeuze bij elke dag staat altijd zichtbaar, in Klassiek en in Nieuw | Happy | 19 | Actueel |
 | SKIN-H-027 | ui | skin.feature | Nieuw-skin beheer-topbar behoudt de safe-area-inset-top van de statusbalk | Toestandsovergang | 2 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | Nieuw-skin beheer-topbar behoudt de safe-area-inset-top van de statusbalk | Happy | 19 | Actueel |
@@ -527,9 +528,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 505
+- Playwright executable cases: 506
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 506
+- Totaal unieke executable cases: 507
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30

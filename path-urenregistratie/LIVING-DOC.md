@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 505 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 506 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 505 unieke case-ID's
+- Playwright executable cases: 506 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 506 unieke case-ID's
+- Totaal executable cases: 507 unieke case-ID's
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
 - Database steps mappings: 1
-- Uitvoeringen: 545
-- Niet-mobile projectuitvoeringen: 465
+- Uitvoeringen: 546
+- Niet-mobile projectuitvoeringen: 466
 - Mobile functionele cases: 40
 - Pixel 7 / Chromium-uitvoeringen: 40
 - iPhone 13 / WebKit-uitvoeringen: 40
 
-De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 505 Playwright-functionele cases in totaal 545 resultaten op: 465 + (40 x 2) = 545.
+De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 506 Playwright-functionele cases in totaal 546 resultaten op: 466 + (40 x 2) = 546.
 
 ## Documentatieketen
 
@@ -582,7 +582,7 @@ De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 505 Playwri
 
 - Feature: `tests/playwright/features/security.feature`
 - Source: `tests/playwright/security.spec.ts`
-- Cases: 19
+- Cases: 20
 
 - [SEC-H-001] csrf token endpoint werkt — Techniek: API-contract + equivalentieklasse · Assertions: 4
 - [SEC-H-002] login met csrf werkt — Techniek: API-contract + equivalentieklasse · Assertions: 2
@@ -603,6 +603,7 @@ De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 505 Playwri
 - [SEC-H-009] medewerker die handmatig naar een beheerscherm navigeert komt terug op het eigen dashboard — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
 - [SEC-H-010] medewerker die de pagina herlaadt met een beheer-URL in de adresbalk komt terug op het eigen dashboard — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [SEC-H-011] medewerker die naar Klanturenstaten (beheer) navigeert komt terug op het eigen dashboard — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
+- [SEC-H-012] een in localStorage naar beheerder gezette rol geeft geen beheerscherm — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 
 ### Vormgevingsschakelaar (klassiek / nieuw)
 
@@ -634,7 +635,7 @@ De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 505 Playwri
 - [SKIN-H-021] de medewerker blijft op het Dashboard: de pijl springt naar vandaag in het weekkaartje, open maanden staan er zichtbaar bij, en een skinwissel hertekent Mijn uren direct — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 19
 - [SKIN-H-022] een tweede herlading zet de skin/thema-voorkeur niet terug naar standaard — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 8
 - [SKIN-H-023] "Standaardweek/-maand vullen" vult alleen lege dagen met het eigen werkpatroon, in Nieuw en Klassiek — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 26
-- [SKIN-H-028] "Week terugzetten" overschrijft ook een dag die bewust op 0 is bevestigd, na expliciete bevestiging — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
+- [SKIN-H-028] "Week terugzetten" overschrijft ook een dag die bewust op 0 is bevestigd, na expliciete bevestiging — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 5
 - [SKIN-H-024] "Volgende actie" bovenaan Open acties per maand toont de eerstvolgende stap en blijft op het Dashboard — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
 - [SKIN-H-025] de 0/8/9-snelkeuze bij elke dag staat altijd zichtbaar, in Klassiek en in Nieuw — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
 - [SKIN-H-027] Nieuw-skin beheer-topbar behoudt de safe-area-inset-top van de statusbalk — Techniek: Toestandsovergang · Assertions: 2

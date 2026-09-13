@@ -158,3 +158,11 @@ Feature: Authenticatie- en API-beveiliging
     Given een ingelogde medewerker
     When de hash handmatig naar het beheer-klanturenstatenscherm wordt gezet
     Then blijft de medewerker op het eigen dashboard, met de bijbehorende hash en titel
+
+  @happy
+  Scenario: [SEC-H-012] een in localStorage naar beheerder gezette rol geeft geen beheerscherm
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given een ingelogde medewerker
+    When de bewaarde staat handmatig op de beheerdersrol wordt gezet
+    Then start de app na herladen gewoon als medewerker

@@ -345,3 +345,69 @@ test('[SEC-H-011] medewerker die naar Klanturenstaten (beheer) navigeert komt te
     await expect(page).toHaveURL(/#employee-dashboard$/);
   });
 });
+
+test('[SEC-H-012] een in localStorage naar beheerder gezette rol geeft geen beheerscherm', async ({ page }) => {
+  // Fase 17.4, het laatste openstaande securitypunt: "oude browserstate /
+  // localStorage-state". De andere twee punten van dat item waren al gedekt --
+  // handmatige URL door [SEC-H-009]/[SEC-H-010], directe API-aanroep door
+  // [ROLE-N-004] -- maar geknoei in de opgeslagen staat nog niet.
+  //
+  // Wat deze case wél en niet bewijst, want dat is hier makkelijk mis te
+  // lezen. Gemeten, niet aangenomen: deze case blijft ook slagen als je de
+  // scrub bij het inlezen (`saved.currentRole = null`, app.js) weghaalt. Hij
+  // bewaakt die regel dus NIET, en wie hem daarvoor aanziet trekt de verkeerde
+  // conclusie.
+  //
+  // De reden is dat de rol in deze app helemaal niet uit localStorage komt.
+  // Er zijn drie lagen, en de beslissende is de laatste:
+  //   1. `persistState()` schrijft `currentRole` überhaupt niet weg (hij zet
+  //      hem op null in de kopie die wordt opgeslagen);
+  //   2. bij het inlezen wordt een eventueel aanwezige rol alsnog gewist;
+  //   3. de werkelijke rol wordt gezet vanuit het geauthenticeerde profiel van
+  //      de server -- geknoei in de client kan dat niet overstemmen.
+  // De server weigert bovendien elke beheerderactie los hiervan, bewezen in
+  // [ROLE-N-004].
+  //
+  // Wat deze case dan wél waard is: hij pint de uitkomst vast die uit die
+  // opzet volgt. Zou iemand de client later tóch op de bewaarde staat laten
+  // vertrouwen -- het echte risico bij een herschrijving -- dan valt hij om.
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given een ingelogde medewerker', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await expect(page.locator('#app-shell')).toBeVisible();
+  });
+
+  const sleutel = await test.step('When de bewaarde staat handmatig op de beheerdersrol wordt gezet', async () => {
+    return page.evaluate(() => {
+      // De opslagsleutel niet hardcoden: hij is in het verleden meegewijzigd
+      // met de datamodelversie, en dan zou deze case stilletjes niets meer
+      // controleren in plaats van te falen.
+      const sleutel = Object.keys(localStorage).find(k => k.startsWith('path-uren-demo'));
+      if (!sleutel) return '';
+      const staat = JSON.parse(localStorage.getItem(sleutel) || '{}');
+      staat.currentRole = 'admin';
+      localStorage.setItem(sleutel, JSON.stringify(staat));
+      return sleutel;
+    });
+  });
+
+  expect(sleutel, 'de bewaarde staat hoort onder een path-uren-demo-sleutel te staan').not.toBe('');
+
+  await test.step('Then start de app na herladen gewoon als medewerker', async () => {
+    await page.reload();
+    await expect(page.locator('#app-shell')).toBeVisible();
+
+    const rolNaHerladen = await page.evaluate((k: string) => {
+      return JSON.parse(localStorage.getItem(k) || '{}').currentRole;
+    }, sleutel);
+    expect(rolNaHerladen, 'de gemanipuleerde rol hoort bij het inlezen te worden weggegooid').not.toBe('admin');
+
+    // En het zichtbare gevolg: geen enkel beheerscherm staat open.
+    await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
+    for (const beheerscherm of ['#view-employees', '#view-settings', '#view-invoices']) {
+      await expect(page.locator(beheerscherm), `${beheerscherm} hoort dicht te blijven`).not.toHaveClass(/is-active/);
+    }
+  });
+});
