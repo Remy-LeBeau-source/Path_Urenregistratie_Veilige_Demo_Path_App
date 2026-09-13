@@ -2074,23 +2074,30 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
      Devices: 721-820px, dus tablet-achtige breedtes; onschadelijk erbuiten. Discriminerend
      bevestigd (tijdelijk teruggezet, `[DASH-H-021]` faalt exact op de klik-interceptie;
      hersteld, slaagt in 11,7s i.p.v. de eerdere 15s-timeout-met-retries).
-  2. **NIET gefixt, gerapporteerd conform de opdracht ("leg eerst uit bij een grotere
-     wijziging"):** op dezelfde 721-820px-breedte is er helemaal geen zichtbare weg om uit te
-     loggen of van rol te wisselen. `#switch-role` zit in `.sidebar-footer`, die bij
-     `max-width:820px` volledig verdwijnt (de sidebar wordt de compacte onderbalk zonder
-     ruimte voor een footer); `#mobile-switch-role` zit in `.mobile-topbar-home`, die pas
-     vanaf `max-width:720px` verschijnt als onderdeel van een complete topbar-grid-herbouw
-     (stapeling van merk/titel/acties) die niet zomaar naar 820px uit te breiden is zonder
-     die hele herbouw mee te nemen op een breedte waar hij nooit getest is. Veroorzaakte de
-     cascade van `[DASH-N-018]`/`[DASH-H-023]`/en vervolgfouten in `dashboard.spec.ts` zodra
-     een test probeerde uit te loggen (`LoginPage.logout()`: "Geen zichtbare logout/switch-
-     role knop gevonden."). Rol: beide. Geen kleine, veilige CSS-fix mogelijk zonder een
-     bewuste keuze over waar dat controlepunt op deze breedte moet komen — vraagt een
-     plaatsingsbeslissing, geen regel. Alternatieven om te bespreken: (a) `#switch-role`
-     los tonen in de onderbalk als 7e/kleinere tegel, (b) een aparte, smallere
-     rolwissel-knop specifiek voor 721-820px los van beide bestaande implementaties,
-     (c) de `.mobile-topbar-home`-breekpunt optrekken naar 820px met een losse visuele
-     controle achteraf. Blijft open tot een keuze is gemaakt.
+  2. **Ook gefixt (zwaarder punt, daarom eerst apart uitgeschreven):** op dezelfde
+     721-820px-breedte was er helemaal geen zichtbare weg om uit te loggen of van rol te
+     wisselen. `#switch-role` zit in `.sidebar-footer`, die bij `max-width:820px` volledig
+     verdween (de sidebar wordt daar de compacte onderbalk zonder ruimte voor een footer);
+     `#mobile-switch-role` zit in `.mobile-topbar-home`, die pas vanaf `max-width:720px`
+     verschijnt als onderdeel van een complete topbar-grid-herbouw (stapeling van
+     merk/titel/acties). Tussen die twee breedtes bestond dus geen enkel controlepunt.
+     Veroorzaakte de cascade van `[DASH-N-018]`/`[DASH-H-023]` en vervolgfouten in
+     `dashboard.spec.ts` zodra een test probeerde uit te loggen (`LoginPage.logout()`:
+     "Geen zichtbare logout/switch-role knop gevonden."). Rol: beide. Gekozen oplossing
+     (alternatief b van de drie overwogen: niet de hele topbar-herbouw naar 820px optrekken,
+     want die is ontworpen voor telefoonbreedte en daar nooit getest): `#switch-role` zelf
+     wordt in die kier een zwevende knop, exact dezelfde stijltaal als `.help-launcher`
+     (vaste positie, donkere pil, zelfde `bottom: 78px` boven de navigatiebalk) maar
+     **linksonder** zodat de twee elkaar nooit overlappen. Randgeval dat dit bijna stil liet
+     falen: `.sidebar-footer` stond op `display: none`, en dat verbergt kinderen
+     onherroepelijk — een kind kan dat niet met zijn eigen `display` terugdraaien. De footer
+     staat daarom nu op `display: contents` met de twee onderdelen die hier niet passen
+     (avatar/naam, versiebadge) los verborgen; zelfde patroon als `.nav-group` hierboven al
+     gebruikt. Design: Klassiek (`styles-new.css` heeft geen eigen `.switch-role`- of
+     `.sidebar-footer`-regel, dus identiek in Nieuw). Thema: themaneutraal (vaste donkere
+     pil, zoals de hulpknop). Devices: 721-820px; onschadelijk erbuiten. Discriminerend
+     bevestigd: met de fix slaagt `[DASH-N-018]` (26,0s), zonder de fix faalt hij exact op
+     `LoginPage.logout()` met "Geen zichtbare logout/switch-role knop gevonden."
 
 **Tijdsinschatting (indicatief, geen deadline):** fase 0/fundament 1 sessie, 17.1 nog 2-3 sessies,
 17.2 4-6 sessies (grootste blok), 17.4 1-2 sessies, 17.5 1-2 sessies. Totaal ruwweg 10-14
